@@ -129,16 +129,41 @@ def test_controle_negatif_de_phase():
     isolée sous le seuil ne fait pas tomber une phase qui voit le décalage partout ailleurs."""
     from controle_ia.harnais.episode import bilan_controle_negatif, exiger_controle_negatif_phase
     zone = lambda m, pos: {0: {"max": m, "au_dessus": 0, "positions": pos}, 1: {"max": m, "au_dessus": 0, "positions": pos}}
-    r = {"tolerance": 0.1, "controle_negatif_zone_generee":
+    r = {"episode": "episode-1", "tolerance": 0.1, "controle_negatif_zone_generee":
          {**{f"0,{t}": zone(1.2, 9) for t in range(40)}, "1,0": zone(0.003, 9), "1,1": zone(0.002, 2), "1,2": None}}
     b = bilan_controle_negatif([r], positions_min=4)
-    assert (b["comparables"], b["passent"], b["courtes"], b["echecs"]) == (41, 40, 2, ["1,0"])
+    assert (b["comparables"], b["passent"], b["courtes"], b["echecs"]) == (41, 40, 2, ["episode-1:1,0"])
     exiger_controle_negatif_phase(b, 0.95, 10, "sain")              # 40/41 ≥ 0,95
     with pytest.raises(GardeArret, match="aveugle"):
         exiger_controle_negatif_phase(b, 0.99, 10, "exigence plus haute")
     exiger_controle_negatif_phase(b, 0.95, 50, "trop peu d'actions : rien ne se juge")
     nan = bilan_controle_negatif([{"tolerance": 0.1, "controle_negatif_zone_generee": {"0,0": zone(float("nan"), 9)}}])
     assert nan["passent"] == 0 and nan["min_des_maxima"] == float("-inf")
+    # M-10 : un NaN sur une seule couche fait échouer l'action quel que soit l'ordre des couches ; échecs nommés
+    for ordre in ((7, 15, 23), (15, 7, 23)):
+        z = {c: {"max": float("nan") if c == 15 else 1.2, "au_dessus": 0, "positions": 9} for c in ordre}
+        b2 = bilan_controle_negatif([{"episode": "episode-3", "tolerance": 0.1, "controle_negatif_zone_generee": {"1,4": z}}])
+        assert b2["passent"] == 0 and b2["echecs"] == ["episode-3:1,4"]
+
+
+def test_positions_explicites_avec_remplissage():
+    """Contre-lecture 3, M-3 : les positions transmises au modèle repartent de 0 au premier jeton réel de chaque
+    ligne remplie (un décalage constant par ligne échappe à l'équivalence, invariante par translation)."""
+    m = _modele()
+    vues = []
+    vrai = m.forward
+
+    def espion(*args, **kw):
+        vues.append(kw["position_ids"].clone())
+        return vrai(*args, **kw)
+    m.forward = espion
+    court, long_ = FMT.ouverture("A.", "B."), FMT.ouverture("Tu es l'agent 0, longuement.", "Pas 0. Journal : x")
+    generer_lot(m, [court, long_], 3, 1.0, [1, 2], FMT.fins, TOK.pad_token_id)
+    pref = vues[0]
+    marge = len(long_) - len(court)
+    assert pref[0, marge].item() == 0 and pref[0, -1].item() == len(court) - 1
+    assert pref[1, 0].item() == 0 and pref[1, -1].item() == len(long_) - 1
+    assert vues[1][0, 0].item() == len(court) and vues[1][1, 0].item() == len(long_)
 
 
 def test_controle_negatif_sain_et_aveugle():

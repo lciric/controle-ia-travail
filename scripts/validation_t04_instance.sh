@@ -47,23 +47,15 @@ git config user.email "instance-calcul@invalid"
 git checkout -q "$COMMIT"
 git checkout -q -b "$BRANCHE"
 
-if [ -n "${VENV_EXISTANT:-}" ]; then
-    # shellcheck disable=SC1091
-    . "$VENV_EXISTANT/bin/activate"
-else
-    python3.11 -m venv .venv
-    # shellcheck disable=SC1091
-    . .venv/bin/activate
-    pip install -q -r requirements-gpu.txt
-fi
 pousser() { git push -q origin "$BRANCHE"; }
 traces() {
     # journal, sorties des tests et erreurs des runs, versés sur la branche (hors arbre scellé) pour la session de pilotage
     local d="traces/t04-$(date -u +%Y%m%d-%H%M%S)"
     mkdir -p "$d"
-    for f in "$JOURNAL" "$TRAVAIL/tests.txt" "$TRAVAIL"/run-*.err "$TRAVAIL"/run-*.json; do
+    for f in "$JOURNAL" "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" "$TRAVAIL"/run-*.err "$TRAVAIL"/run-*.json; do
         [ -f "$f" ] && cp "$f" "$d/"
     done
+    (cd "$d" && sha256sum -- * > empreintes.sha256) || true          # R6 : traces scellées
     git add "$d" && git commit -qm "T0.4 — traces de l'instance ($1)" >/dev/null 2>&1 || true
 }
 consigner_arret() {
@@ -77,9 +69,38 @@ consigner_arret() {
     if pousser; then journal "branche $BRANCHE poussée"; else journal "poussée impossible : résultats restés sur l'instance"; fi
 }
 
+ETAPE="mise en place"
+PID_RUN=""
+sur_term() {
+    # plafond de l'amorce (TERM) : le signal passe au run en cours par son identifiant de processus (R10), qui consigne
+    # son arrêt (arret.json) ; puis résultats partiels, traces et poussée, avant le KILL de l'amorce (cinq minutes)
+    trap '' TERM
+    journal "TERM reçu pendant $ETAPE (plafond de l'amorce)"
+    if [ -n "$PID_RUN" ]; then
+        kill -TERM "$PID_RUN" 2>/dev/null || true
+        wait "$PID_RUN" 2>/dev/null || true
+    fi
+    consigner_arret "$ETAPE (plafond de l'amorce)" || true
+    exit 124
+}
+trap sur_term TERM
+
+if [ -n "${VENV_EXISTANT:-}" ]; then
+    # shellcheck disable=SC1091
+    . "$VENV_EXISTANT/bin/activate"
+else
+    python3.11 -m venv .venv
+    # shellcheck disable=SC1091
+    . .venv/bin/activate
+    pip install -q -r requirements-gpu.txt
+fi
+
 python -c "import torch; print('torch', torch.__version__, 'cuda', torch.version.cuda, 'disponible', torch.cuda.is_available())" | tee -a "$JOURNAL"
-if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider >"$TRAVAIL/tests.txt" 2>&1; then
-    tail -5 "$TRAVAIL/tests.txt" | tee -a "$JOURNAL"
+ETAPE="tests"
+# sortie standard seule dans tests.txt (lue par P0) ; la sortie d'erreur à part, pour qu'un avertissement de fin de
+# processus ne se lise pas comme une dernière ligne
+if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider >"$TRAVAIL/tests.txt" 2>"$TRAVAIL/tests.err"; then
+    tail -5 "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" | tee -a "$JOURNAL"
     journal "tests en échec : arrêt"
     consigner_arret "tests"
     exit 1
@@ -102,28 +123,54 @@ fi
 # le processus lancé par timeout, par son identifiant (R10).
 DELAI=(timeout --signal=TERM --kill-after=5m 155m)
 
+# un run est complet si son résumé existe sans arrêt consigné, même si le délai externe a frappé pendant la fin
+# du processus (code 124 après l'écriture du résumé)
+complet() { [ -f "diag/$1/resume.json" ] && [ ! -f "diag/$1/arret.json" ]; }
+# lancer <base des sorties> <arguments> : le run tourne en arrière-plan sous son délai, et le script l'attend ; ainsi
+# un TERM reçu par le script est traité aussitôt (sur_term), et non à la fin du run
+lancer() {
+    local base=$1 code=0
+    shift
+    PYTHONPATH=src "${DELAI[@]}" python -m controle_ia.harnais.validation_reelle "$@" \
+        >"$TRAVAIL/$base.json" 2>>"$TRAVAIL/$base.err" &
+    PID_RUN=$!
+    wait "$PID_RUN" || code=$?
+    PID_RUN=""
+    return "$code"
+}
+
 A="$(date -u +%Y%m%d-%H%M%S)-$SUFFIXE"
+ETAPE="run A"
 journal "run A : $A"
-if ! PYTHONPATH=src "${DELAI[@]}" python -m controle_ia.harnais.validation_reelle "${ARGS[@]}" --run-id "$A" \
-        >"$TRAVAIL/run-A.json" 2>>"$TRAVAIL/run-A.err"; then
-    consigner_arret "run A"; exit 1
+if ! lancer run-A "${ARGS[@]}" --run-id "$A"; then
+    if complet "$A"; then
+        journal "run A : code non nul, mais résumé écrit sans arrêt consigné : run complet"
+    else
+        consigner_arret "run A"; exit 1
+    fi
 fi
 git add "runs/$A" "diag/$A"
 git commit -qm "T0.4 — validation ($MODE), run A ($A)"
 journal "run A terminé : $A"
+pousser || journal "poussée du run A impossible : résultats restés sur l'instance"
 
 sleep 1      # deux identifiants distincts même si le run A a duré moins d'une seconde
 B="$(date -u +%Y%m%d-%H%M%S)-$SUFFIXE"
+ETAPE="run B"
 journal "run B (rejeu de $A) : $B"
-if ! PYTHONPATH=src "${DELAI[@]}" python -m controle_ia.harnais.validation_reelle "${ARGS[@]}" --rejeu-de "$A" --run-id "$B" \
-        >"$TRAVAIL/run-B.json" 2>>"$TRAVAIL/run-B.err"; then
-    consigner_arret "run B"; exit 1
+if ! lancer run-B "${ARGS[@]}" --rejeu-de "$A" --run-id "$B"; then
+    if complet "$B" && ls "diag/$B"/comparaison-*.json >/dev/null 2>&1; then
+        journal "run B : code non nul, mais résumé et comparaison écrits sans arrêt consigné : run complet"
+    else
+        consigner_arret "run B"; exit 1
+    fi
 fi
 git add "runs/$B" "diag/$B"
 git commit -qm "T0.4 — validation ($MODE), run B ($B), rejeu entre processus de $A"
 journal "run B terminé : $B"
 tee -a "$JOURNAL" <"$TRAVAIL/run-B.json"
 
+ETAPE="fin"
 journal "fin : A=$A B=$B ; arrêter l'instance par son identifiant (R10)"
 traces "fin"
 pousser

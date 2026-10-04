@@ -26,7 +26,7 @@ SECTIONS = (
 MARQUEUR = "À REMPLIR"
 GABARIT = re.compile(r"<<[A-Z0-9_]+>>")     # marqueur de substitution laissé dans un brouillon
 EMPREINTE = re.compile(r"\b[0-9a-f]{64}\b")  # la contre-lecture cite le brouillon relu et son rapport (R2)
-EN_ATTENTE = re.compile(r"\bà (faire|compléter|reporter|venir)\b", re.I)   # contre-lecture annoncée, pas faite
+ENTREE = re.compile(r"^\s*-?\s*\**Contre-lecture (\d+)\**", re.M)   # entrée « Contre-lecture k » de la section
 
 
 def sections(texte: str) -> dict[str, str]:
@@ -46,11 +46,14 @@ def problemes(chemin: str | Path) -> list[str]:
     if MARQUEUR in texte and not any("à remplir" in p for p in sortie):
         sortie.append("marqueur À REMPLIR restant hors des sections exigées")
     cl = s.get("Contre-lecture")
-    if cl and MARQUEUR not in cl and len(set(EMPREINTE.findall(cl))) < 2:
-        sortie.append("section Contre-lecture sans les deux empreintes exigées (brouillon relu et rapport)")
-    if cl and EN_ATTENTE.search(cl):
-        sortie.append(f"section Contre-lecture en attente (« {EN_ATTENTE.search(cl).group(0)} ») : reporter la "
-                      "contre-lecture avant de sceller")
+    if cl and MARQUEUR not in cl:
+        entrees = list(ENTREE.finditer(cl))
+        if not entrees and len(set(EMPREINTE.findall(cl))) < 2:
+            sortie.append("section Contre-lecture sans les deux empreintes exigées (brouillon relu et rapport)")
+        for k, e in enumerate(entrees):
+            fin = entrees[k + 1].start() if k + 1 < len(entrees) else len(cl)
+            if len(set(EMPREINTE.findall(cl[e.start():fin]))) < 2:
+                sortie.append(f"contre-lecture {e.group(1)} sans ses deux empreintes (brouillon relu et rapport)")
     restes = sorted(set(GABARIT.findall(texte)))
     if restes:
         sortie.append(f"marqueurs de gabarit restants : {', '.join(restes)}")

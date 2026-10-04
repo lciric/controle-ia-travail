@@ -58,8 +58,11 @@ from .modeles import (charger_modele, empreinte_poids, empreintes_fichiers_model
 from .stockage import estimer
 
 COMMIT_CITE = re.compile(r"Commit du code d'analyse : `([0-9a-f]{40})`")
-# chemins gelés par le commit cité : code, tests, scripts de l'instance, dépendances
-CHEMINS_GELES = ("src", "tests", "scripts", "requirements-cpu.txt", "requirements-gpu.txt", "pyproject.toml")
+# chemins gelés par le commit cité : tout l'arbre (code, tests, scripts, dépendances, configuration de pytest et de
+# git, gardes de .claude/…), sauf les dossiers documentaires et les sorties des runs
+CHEMINS_GELES = (".", ":(exclude)prereg", ":(exclude)brouillons", ":(exclude)registres", ":(exclude)docs",
+                 ":(exclude)diag", ":(exclude)runs", ":(exclude)donnees", ":(exclude)livrables", ":(exclude)papiers",
+                 ":(exclude)traces", ":(exclude)CLAUDE.md")
 REVISION_CITEE = re.compile(r"Révision du modèle : `([0-9a-f]{40})`")
 ENTROPIE_CITEE = re.compile(r"Entropie : `([0-9]+)`")
 
@@ -86,7 +89,7 @@ CONFIG_REELLE = {
     "politique": {"episodes_par_jeton": [1, 14], "vecteurs_par_action": ["max"], "sondes": SONDES},
     "controle_negatif": {"positions_min": 4, "actions_min": 10, "fraction_min": 0.95},
     "memoire_carte_min_gio": 75,
-    "tests_attendus": 170,                    # suite complète au commit cité, tous réussis (P0)
+    "tests_attendus": 176,                    # suite complète au commit cité, tous réussis (P0)
     "projection": {"episodes": 2000},
     "limite_s": 9000,
 }
@@ -164,7 +167,8 @@ def exiger_code_cite(racine: Path, prereg: Path) -> str:
     r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m.group(1), "HEAD", "--", *CHEMINS_GELES],
                        capture_output=True, text=True)
     if r.returncode == 1:
-        raise GardeArret(f"code, tests, scripts ou dépendances modifiés depuis le commit cité {m.group(1)[:12]}")
+        raise GardeArret(f"arbre gelé (code, tests, scripts, dépendances, configuration) modifié depuis le commit "
+                         f"cité {m.group(1)[:12]}")
     if r.returncode != 0:
         raise GardeArret(f"comparaison au commit cité {m.group(1)[:12]} impossible : {r.stderr.strip()}")
     return m.group(1)
@@ -191,10 +195,35 @@ def exiger_code_importe_sous(racine: Path) -> None:
         raise GardeArret("code importé hors de la racine du dépôt : lancer depuis la racine")
 
 
-def exiger_memoire_vive(min_go: float, meminfo: str = "/proc/meminfo",
-                        cgroups=("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes")) -> dict | None:
+def plafonds_cgroup(proc_cgroup: str = "/proc/self/cgroup", racine: str = "/sys/fs/cgroup") -> list[str]:
+    """Fichiers de plafond mémoire du groupe de contrôle du processus et de tous ses ancêtres (v2 : ligne « 0:: » et
+    memory.max ; v1 : contrôleur « memory » et memory.limit_in_bytes)."""
+    try:
+        lignes = Path(proc_cgroup).read_text().splitlines()
+    except OSError:
+        return []
+    fichiers = []
+    for ligne in lignes:
+        morceaux = ligne.split(":", 2)
+        if len(morceaux) != 3:
+            continue
+        _, controleurs, chemin = morceaux
+        if controleurs == "":
+            base, nom = Path(racine), "memory.max"
+        elif "memory" in controleurs.split(","):
+            base, nom = Path(racine) / "memory", "memory.limit_in_bytes"
+        else:
+            continue
+        parties = [x for x in chemin.split("/") if x]
+        for k in range(len(parties), -1, -1):
+            fichiers.append(str(base.joinpath(*parties[:k], nom)))
+    return fichiers
+
+
+def exiger_memoire_vive(min_go: float, meminfo: str = "/proc/meminfo", cgroups=None) -> dict | None:
     """Garde : assez de mémoire vive pour charger le modèle (un dépassement tue le processus sans trace). Mémoire
-    effective = le plus petit de MemTotal (souvent l'hôte, dans un conteneur) et du plafond du groupe de contrôle."""
+    effective = le plus petit de MemTotal (souvent l'hôte, dans un conteneur) et des plafonds du groupe de contrôle
+    du processus et de ses ancêtres."""
     if not min_go:
         return None
     try:
@@ -203,14 +232,13 @@ def exiger_memoire_vive(min_go: float, meminfo: str = "/proc/meminfo",
         raise GardeArret(f"mémoire vive illisible ({meminfo}) : {min_go} Go exigés") from None
     total = int(ligne.split()[1]) * 1024 / 1e9
     plafond = None
-    for c in cgroups:
+    for c in (plafonds_cgroup() if cgroups is None else cgroups):
         try:
             v = Path(c).read_text().strip()
         except OSError:
             continue
         if v.isdigit() and int(v) < 2 ** 60:
-            plafond = int(v) / 1e9
-            break
+            plafond = int(v) / 1e9 if plafond is None else min(plafond, int(v) / 1e9)
     effective = min(total, plafond) if plafond is not None else total
     if effective < min_go:
         raise GardeArret(f"mémoire vive effective {effective:.1f} Go < {min_go} Go exigés (MemTotal {total:.1f} Go, "
@@ -436,6 +464,9 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
             raise GardeArret(f"rejeu de {rejeu_de} : entropie {entropie} ≠ {entropie_a}")
         entropie = entropie_a
     tests = Path(sortie_tests).read_text(encoding="utf-8") if sortie_tests is not None else None
+    if decisif and not tests_conformes(tests, config.get("tests_attendus")):
+        raise GardeArret(f"P0 : la sortie des tests de l'instance ne finit pas par exactement {config.get('tests_attendus')} "
+                         "tests réussis : aucun run")
     chemin_m, m = creer_manifeste(racine, run_id, config, taches(config), entropie=entropie, decisif=decisif,
                                   prereg=prereg, commande="python -m controle_ia.harnais.validation_reelle")
     donnees = racine / "donnees" / run_id
@@ -452,8 +483,7 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
             derniere = tests.strip().splitlines()[-1] if tests.strip() else ""
             ecrire_resultat(racine, chemin_m, "tests-instance", {"sortie": tests, "derniere_ligne": derniere})
             resume["tests_instance"] = {"derniere_ligne": derniere,
-                                        "reussis": bool(re.search(r"\d+ passed", derniere))
-                                        and not re.search(r"failed|error", derniere)}
+                                        "reussis": tests_conformes(tests, config.get("tests_attendus"))}
         ecrire_resultat(racine, chemin_m, "environnement-python",
                         {"distributions": sorted(f"{d.metadata['Name']}=={d.version}"
                                                  for d in importlib.metadata.distributions())})
@@ -501,7 +531,6 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
         resume["production"] = {"plan_lots": plan, "noyau_attention": prod["noyau_attention"], "couches": couches,
                                 "largeur": largeur, "equivalence": bilan_phase(sorties, prod, cn), "debit": debit(chrono),
                                 "episodes_equivalence": {ep.identifiant: r for ep, _, r in sorties if r["ecarts"]}}
-        appliquer_gardes(sorties, resume["production"]["equivalence"], "production", cn)
         episodes, octets_par_jeton, jetons_par_episode = [], [], []
         for k, (ep, acts, r) in enumerate(sorties):
             par_jeton = k in config["politique"]["episodes_par_jeton"]
@@ -525,7 +554,9 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
             for (ep, acts, r), k in zip(refaits, plan[j]):
                 emp = empreintes_episode(ep, acts, r, config["politique"], couches, sondes)[0]
                 rejeu.append({"episode": ep.identifiant, "identique": emp == episodes[k]["empreintes"]
-                              and r["empreintes_capture"] == episodes[k]["equivalence"]["empreintes_capture"]})
+                              and r["empreintes_capture"] == episodes[k]["equivalence"]["empreintes_capture"],
+                              "empreintes": emp, "empreintes_logits": r["empreintes_logits"],
+                              "empreintes_capture": r["empreintes_capture"]})
         moyenne_jetons = sum(jetons_par_episode) / len(jetons_par_episode)
         actions = prod["N"] * prod["T"]
         par_episode_s = (chrono.get("generation_s", 0.0) + chrono.get("passe_unique_s", 0.0)) / prod["episodes"]
@@ -545,6 +576,9 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
             "sondes": [{"nom": x.nom, "couche": x.couche, "agregation": x.agregation, "empreinte": x.empreinte()}
                        for x in sondes],
             "episodes": episodes, "memoire_max_go": memoire_max_go()})
+        # gardes d'équivalence de la production après le repère, le rejeu et le stockage : un P4 contraire se lit
+        # au vu du repère (lecture gelée), et le run s'arrête ensuite
+        appliquer_gardes(sorties, resume["production"]["equivalence"], "production", cn)
 
         phase = "debit"
         temps()
@@ -590,6 +624,14 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
 TESTS_REUSSIS = re.compile(r"^(\d+) passed(, \d+ warnings?)? in [0-9.]+s( \(\d+:\d{2}:\d{2}\))?$")
 
 
+def tests_conformes(sortie: str | None, attendus: int | None) -> bool:
+    """P0 : la dernière ligne de pytest annonce exactement `attendus` tests réussis, et rien d'autre."""
+    if not sortie or not sortie.strip() or attendus is None:
+        return False
+    m = TESTS_REUSSIS.match(sortie.strip().splitlines()[-1])
+    return bool(m) and int(m.group(1)) == attendus
+
+
 def lire(resume: dict, config: dict) -> dict:
     """Lecture gelée des prédictions mesurables dans un seul processus (le rejeu entre processus est lu par
     `comparer_runs`). Issues : « conforme », « contraire », « non concluant », « non atteint » (phase non jouée).
@@ -601,8 +643,7 @@ def lire(resume: dict, config: dict) -> dict:
     if t is None:
         lecture["tests_instance"] = "sans objet"
     else:
-        m = TESTS_REUSSIS.match(t["derniere_ligne"])
-        lecture["tests_instance"] = ("conforme" if m and int(m.group(1)) == config.get("tests_attendus")
+        lecture["tests_instance"] = ("conforme" if tests_conformes(t["derniere_ligne"], config.get("tests_attendus"))
                                      else "contraire")
     cn = config["controle_negatif"]
     for phase, p_eq, p_neg in (("logique", "logique_equivalence", "logique_controle_negatif"),
@@ -617,7 +658,7 @@ def lire(resume: dict, config: dict) -> dict:
             lecture[p_eq] = "contraire"
             mc, mg = bilan["max_contexte"], bilan["max_zone_generee"]
             if (phase == "logique" and x is not None and x <= 1e-2 and mc is not None and mg is not None
-                    and mc >= 1e-5 and mg >= 1e-5 and max(mc, mg) <= 10 * min(mc, mg)):
+                    and mc >= 1e-5 and mg >= 1e-5 and max(mc, mg) <= 3 * min(mc, mg)):
                 lecture[p_eq] = "non concluant : précision probable"     # écart diffus, contexte et zone générée
         elif phase == "logique" and not (cv["actions_remplies"] > 0 and cv["actions_finies_avant"] > 0
                                          and cv["positions_generees_comparees"] > 0

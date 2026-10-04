@@ -162,7 +162,8 @@ def test_garde_de_duree_dans_une_phase():
 
 
 def _preregistrement(depot, commit, revision="0e9e39f249a16976918f6564b8830bc894c89659", entropie=12345):
-    p = depot / "prereg.md"
+    (depot / "prereg").mkdir(exist_ok=True)
+    p = depot / "prereg" / "prereg.md"
     p.write_text(f"- Commit du code d'analyse : `{commit}`\n- Révision du modèle : `{revision}`\n"
                  f"- Entropie : `{entropie}`\n", encoding="utf-8")
     return p
@@ -182,12 +183,14 @@ def test_gardes_code_cite_citations_et_import(depot):
         V.exiger_citations(p, "1" * 40, None)
     with pytest.raises(GardeArret, match="entropie"):
         V.exiger_citations(p, "0e9e39f249a16976918f6564b8830bc894c89659", 999)
-    (depot / "sans.md").write_text(f"- Commit du code d'analyse : `{commit}`\n")
+    (depot / "prereg" / "sans.md").write_text(f"- Commit du code d'analyse : `{commit}`\n")
     with pytest.raises(GardeArret, match="ne cite pas la révision"):
-        V.exiger_citations(depot / "sans.md", "0e9e39f249a16976918f6564b8830bc894c89659", None)
+        V.exiger_citations(depot / "prereg" / "sans.md", "0e9e39f249a16976918f6564b8830bc894c89659", None)
+    committer(depot)                                            # préenregistrements : hors de l'arbre gelé
+    assert V.exiger_code_cite(depot, p) == commit
     (depot / "src" / "module.py").write_text("x = 2\n")       # artefact : code modifié puis committé
     committer(depot)
-    with pytest.raises(GardeArret, match="modifiés depuis le commit cité"):
+    with pytest.raises(GardeArret, match="arbre gelé .* modifié depuis le commit cité"):
         V.exiger_code_cite(depot, p)
     with pytest.raises(GardeArret, match="ne cite pas le commit"):
         V.exiger_code_cite(depot, depot / "README")
@@ -457,3 +460,79 @@ def test_comparaison_voit_la_machine_et_le_chargement(depot, monkeypatch):
     motifs = {d.get("motif") for d in c["differences"]}
     assert {"reglages différents", "chargement différents", "format différents",
             "repère de précision différent"} <= motifs and c["lecture"] == "contraire"
+
+
+# ---------------------------------------------------------------- contre-lecture 3
+
+def test_p4_contraire_se_lit_au_vu_du_repere(depot):
+    """M-1 : un écart de production au-dessus du seuil arrête le run après le repère, le rejeu et le stockage."""
+    stricte = dict(PETITE, production=dict(PETITE["production"], tolerance=1e-9))
+    with pytest.raises(GardeArret, match="production : .* faute"):
+        V.executer(depot, "20261004-240000-repetition-jouet", entropie=11, config=stricte, verifier_import=False)
+    arret = json.loads((depot / "diag" / "20261004-240000-repetition-jouet" / "arret.json").read_text())["resultat"]
+    prod = arret["partiel"]["production"]
+    assert arret["phase"] == "production" and {"repere_precision", "rejeu_en_processus", "stockage"} <= set(prod)
+    assert "empreintes_logits" in prod["rejeu_en_processus"][0]                          # M-8
+    assert arret["partiel"]["lecture_partielle"]["production_equivalence"] == "contraire"
+
+
+def test_p0_tests_conformes():
+    """M-4 : exactement N tests réussis, rien d'autre."""
+    assert V.tests_conformes("....\n170 passed in 66.88s (0:01:06)\n", 170)
+    assert V.tests_conformes("170 passed, 2 warnings in 5.0s", 170)
+    for mauvaise in ("169 passed in 5.0s", "170 passed, 1 skipped in 5.0s", "170 passed, 1 xpassed in 5.0s",
+                     "170 passed, 2 deselected in 5.0s", "1 failed, 169 passed in 5.0s", "", "170 passed in 5.0s\nfin"):
+        assert not V.tests_conformes(mauvaise, 170)
+    assert not V.tests_conformes("170 passed in 5.0s", None)
+
+
+def test_gardes_de_la_carte_dans_regler_determinisme(monkeypatch):
+    """M-4 : branche « carte » de `regler_determinisme`, testable sans carte : indisponible, réglage cuBLAS refusé."""
+    from controle_ia.harnais.modeles import regler_determinisme
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    with pytest.raises(GardeArret, match="indisponible"):
+        regler_determinisme(1, "cuda")
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setenv("CUBLAS_WORKSPACE_CONFIG", ":0:0")
+    with pytest.raises(GardeArret, match="déterminisme non garanti"):
+        regler_determinisme(1, "cuda")
+    regler_determinisme(1, "cpu")                                     # rétablit le réglage sur processeur
+
+
+def test_plafonds_du_groupe_de_controle(tmp_path_factory):
+    """M-11 : plafonds du groupe du processus et de ses ancêtres, en v1 comme en v2 ; le plus petit l'emporte."""
+    d = tmp_path_factory.mktemp("cgroup")
+    proc = d / "cgroup"
+    proc.write_text("12:memory:/process_api/claude/bash\n0::/ignore\n")
+    v1 = d / "fs" / "memory" / "process_api" / "claude" / "bash"
+    v1.mkdir(parents=True)
+    (v1 / "memory.limit_in_bytes").write_text("14345035776\n")
+    (d / "fs" / "memory" / "memory.limit_in_bytes").write_text("9223372036854771712\n")
+    (d / "fs" / "memory.max").write_text("max\n")
+    fichiers = V.plafonds_cgroup(str(proc), str(d / "fs"))
+    assert str(v1 / "memory.limit_in_bytes") in fichiers and str(d / "fs" / "memory" / "memory.limit_in_bytes") in fichiers
+    meminfo = d / "meminfo"
+    meminfo.write_text("MemTotal:       16500000 kB\n")
+    r = V.exiger_memoire_vive(10, meminfo, fichiers)
+    assert r["plafond_conteneur_go"] == 14.3 and r["effective_go"] == 14.3
+    with pytest.raises(GardeArret, match="effective 14.3"):
+        V.exiger_memoire_vive(15, meminfo, fichiers)
+
+
+def test_arbre_gele_hors_dossiers_documentaires(depot):
+    """M-5 : tout l'arbre est gelé par le commit cité, sauf les dossiers documentaires et les sorties."""
+    (depot / ".gitignore").write_text("donnees/\n")
+    (depot / "docs").mkdir()
+    (depot / "docs" / "note.md").write_text("a\n")
+    committer(depot)
+    commit = subprocess.run(["git", "-C", str(depot), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    p = _preregistrement(depot, commit)
+    (depot / "docs" / "note.md").write_text("b\n")                 # documentaire : permis
+    (depot / "registres").mkdir()
+    (depot / "registres" / "etat.md").write_text("x\n")
+    committer(depot)
+    assert V.exiger_code_cite(depot, p) == commit
+    (depot / ".gitignore").write_text("\n")                        # artefact : configuration de git modifiée
+    committer(depot)
+    with pytest.raises(GardeArret, match="arbre gelé"):
+        V.exiger_code_cite(depot, p)

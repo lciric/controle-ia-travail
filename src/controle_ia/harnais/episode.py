@@ -242,7 +242,8 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
         if chrono is not None:
             chrono["passe_unique_s"] = chrono.get("passe_unique_s", 0.0) + time.perf_counter() - depart
             chrono["jetons_passe_unique"] = chrono.get("jetons_passe_unique", 0) + sum(len(tr.ids) for tr in trs[b])
-        rapport = {"tolerance": tolerance_equivalence, "ecarts": {}, "controle_negatif_zone_generee": {}, "profils": {},
+        rapport = {"episode": identifiants[b], "tolerance": tolerance_equivalence, "ecarts": {},
+                   "controle_negatif_zone_generee": {}, "profils": {},
                    "longueurs_contexte": {}, "positions_capturees": {}, "lignes": {}, "empreintes_capture": {},
                    "sondes": {}}
         for (bb, i, t), ag in sorted(acts_generation.items()):
@@ -284,12 +285,13 @@ def bilan_controle_negatif(rapports: list[dict], positions_min: int = 4) -> dict
                 courtes += 1
                 continue
             comparables += 1
-            m = min(v["max"] for v in zone.values())
-            minimum = min(minimum, m) if m == m else float("-inf")
+            # un maximum illisible (NaN) compte comme −∞, quel que soit l'ordre des couches
+            m = min(float("-inf") if v["max"] != v["max"] else v["max"] for v in zone.values())
+            minimum = min(minimum, m)
             if m > tol:
                 passent += 1
             else:
-                echecs.append(cle)
+                echecs.append(f"{r.get('episode', '?')}:{cle}")
     return {"comparables": comparables, "passent": passent, "courtes": courtes, "echecs": echecs,
             "fraction": passent / comparables if comparables else None,
             "min_des_maxima": minimum if comparables else None, "positions_min": positions_min}

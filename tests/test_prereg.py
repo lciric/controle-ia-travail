@@ -21,10 +21,17 @@ def ecrire(chemin, remplir=True, sauf=None, contre_lecture=EMPREINTES_CONTRE_LEC
     return chemin
 
 
-def test_artefact_contre_lecture_en_attente(tmp_path):
-    for attente in ("Contre-lecture 2 : à faire", "rapport à reporter ici", "À compléter"):
-        p = ecrire(tmp_path / "p.md", contre_lecture=EMPREINTES_CONTRE_LECTURE + " ; " + attente)
-        assert any("en attente" in x for x in problemes(p))
+def test_contre_lecture_par_entree(tmp_path):
+    """Contre-lecture 3, M-6 : chaque entrée « Contre-lecture k » cite ses deux empreintes ; des tournures légitimes
+    ne sont plus refusées."""
+    a, b, c = "a" * 64, "b" * 64, "c" * 64
+    saine = (f"- **Contre-lecture 1** : brouillon `{a}`, rapport `{b}` ; rien à reporter dans le code.\n"
+             f"- **Contre-lecture 2** : brouillon `{c}`, rapport `{a}` ; zip à venir après le verdict.")
+    assert problemes(ecrire(tmp_path / "p.md", contre_lecture=saine)) == []
+    for attente in ("en cours", "TODO", "A faire", "faite ; verdict scellable ; remarques intégrées"):
+        texte = f"- **Contre-lecture 1** : brouillon `{a}`, rapport `{b}`.\n- **Contre-lecture 2** : {attente}."
+        assert any("contre-lecture 2 sans ses deux empreintes" in x for x in problemes(ecrire(tmp_path / "p.md",
+                                                                                         contre_lecture=texte)))
 
 
 def test_artefact_contre_lecture_sans_empreintes(tmp_path):
