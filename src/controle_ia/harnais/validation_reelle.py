@@ -356,8 +356,9 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
 
 def lire(resume: dict, config: dict) -> dict:
     """Lecture gelée des prédictions mesurables dans un seul processus (le rejeu entre processus est lu par
-    `comparer_runs`). Issues : « conforme », « contraire » ; l'audit de symétrie se déclenche si aucun
-    écart d'équivalence n'est non nul en demi-précision (trop beau, R4)."""
+    `comparer_runs`). Issues : « conforme », « contraire ». L'audit de symétrie (R4) se déclenche si une
+    phase ne montre aucun écart d'équivalence non nul : génération et passe unique empruntent des noyaux
+    différents, une identité parfaite partout serait trop belle (deux lectures du même tableau ?)."""
     lo, pr = resume["logique"]["equivalence"], resume["production"]["equivalence"]
     tl, tp = config["logique"]["tolerance"], config["production"]["tolerance"]
 
@@ -372,8 +373,8 @@ def lire(resume: dict, config: dict) -> dict:
         "rejeu_en_processus": etat(bool(resume["production"]["rejeu_en_processus"])
                                    and all(r["identique"] for r in resume["production"]["rejeu_en_processus"])),
     }
-    lecture["audit_symetrie"] = ("déclenché : aucun écart non nul en demi-précision"
-                                 if config["production"]["dtype"] != "float32" and pr["ecarts_nuls"] == pr["jetons_compares"]
+    trop_belles = [ph for ph, e in (("logique", lo), ("production", pr)) if e["ecarts_nuls"] == e["jetons_compares"]]
+    lecture["audit_symetrie"] = (f"déclenché : aucun écart non nul ({', '.join(trop_belles)})" if trop_belles
                                  else "non déclenché")
     return lecture
 

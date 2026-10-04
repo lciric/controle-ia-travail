@@ -105,6 +105,17 @@ def test_gardes_de_lancement(depot):
     assert arret["resultat"]["phase"] == "logique" and "limite de durée" in arret["resultat"]["motif"]
 
 
+def test_lecture_audit_de_symetrie():
+    def resume(nuls_logique, nuls_production):
+        eq = lambda nuls: {"ecart_max": 0.0, "decale_min": 1.0, "ecarts_nuls": nuls, "jetons_compares": 10}
+        return {"format": {"verifie": True}, "logique": {"equivalence": eq(nuls_logique)},
+                "production": {"equivalence": eq(nuls_production), "rejeu_en_processus": [{"identique": True}]}}
+    assert V.lire(resume(3, 9), V.CONFIG_REELLE)["audit_symetrie"] == "non déclenché"
+    assert "logique" in V.lire(resume(10, 9), V.CONFIG_REELLE)["audit_symetrie"]
+    assert "production" in V.lire(resume(3, 10), V.CONFIG_REELLE)["audit_symetrie"]
+    assert V.lire(resume(3, 9), V.CONFIG_REELLE)["production_equivalence"] == "conforme"
+
+
 def test_codage_bfloat16_sans_perte_et_refus():
     x = torch.randn(5, 7).to(torch.bfloat16).to(torch.float32).numpy()
     c = P.coder(x, "bfloat16-bits")
