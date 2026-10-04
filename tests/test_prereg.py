@@ -7,14 +7,26 @@ from controle_ia.prereg import SECTIONS, exiger_prereg_scelle, problemes, scelle
 from controle_ia.scellement import sceller
 
 
-def ecrire(chemin, remplir=True, sauf=None):
+EMPREINTES_CONTRE_LECTURE = f"brouillon relu `{'a' * 64}`, rapport `{'b' * 64}`"
+
+
+def ecrire(chemin, remplir=True, sauf=None, contre_lecture=EMPREINTES_CONTRE_LECTURE):
     corps = ["# Préenregistrement test\n"]
     for s in SECTIONS:
         if s == sauf:
             continue
-        corps.append(f"## {s}\n\n{'contenu ' + s if remplir else 'À REMPLIR'}\n")
+        texte = "contenu " + s + (" ; " + contre_lecture if s == "Contre-lecture" else "")
+        corps.append(f"## {s}\n\n{texte if remplir else 'À REMPLIR'}\n")
     chemin.write_text("\n".join(corps), encoding="utf-8")
     return chemin
+
+
+def test_artefact_contre_lecture_sans_empreintes(tmp_path):
+    for faible in ("À compléter après la contre-lecture", f"brouillon `{'a' * 64}` seulement", f"`{'a' * 64}` et `{'a' * 64}`"):
+        p = ecrire(tmp_path / "p.md", contre_lecture=faible)
+        assert any("deux empreintes" in x for x in problemes(p))
+        with pytest.raises(GardeArret, match="deux empreintes"):
+            sceller_prereg(p)
 
 
 def test_sain_prereg_conforme(tmp_path):

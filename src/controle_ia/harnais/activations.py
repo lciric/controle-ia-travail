@@ -138,14 +138,57 @@ def ecart_equivalence(acts_generation: dict[int, np.ndarray], acts_passe: dict[i
     return ecarts
 
 
-def profil_ecarts(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray]) -> dict[int, dict]:
-    """Description de la distribution des écarts par jeton (quantiles 0,5, 0,99 et maximum), par couche."""
+def ecart_decale_zone_generee(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray],
+                              longueur_contexte: int, tolerance: float) -> dict | None:
+    """Contrôle négatif restreint à la zone où génération et passe unique suivent des chemins différents : les
+    positions décodées. On compare g_n à p_{n−1} pour n ≥ longueur_contexte + 1, les deux positions dans la zone
+    générée (la première position décodée, comparée au dernier jeton du contexte, est exclue : elle passerait
+    d'elle-même). Par couche : maximum de l'écart décalé, et nombre de positions au-dessus de la tolérance.
+    None si l'action a moins de deux positions décodées capturées (trop courte : comptée à part)."""
+    sortie = {}
+    for couche, g in acts_generation.items():
+        p = acts_passe[couche]
+        debut = longueur_contexte + 1
+        if g.shape[0] > p.shape[0] or g.shape[1] != p.shape[1]:
+            raise GardeArret(f"couche {couche} : formes incompatibles {g.shape} et {p.shape}")
+        if g.shape[0] <= debut:
+            return None
+        e = ecarts_par_jeton(g[debut:], p[debut - 1: g.shape[0] - 1])
+        sortie[couche] = {"max": float(e.max()), "au_dessus": int(np.sum(e > tolerance)), "positions": int(e.size)}
+    return sortie
+
+
+def profil_ecarts(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray],
+                  longueur_contexte: int | None = None) -> dict[int, dict]:
+    """Description de la distribution des écarts par jeton (quantiles 0,5, 0,99, maximum, écarts nuls), par couche ;
+    avec `longueur_contexte`, séparément pour le contexte et pour la zone générée (positions décodées)."""
+    def decrire(e):
+        if e.size == 0:
+            return {"jetons": 0}
+        return {"jetons": int(e.size), "q50": float(np.quantile(e, 0.5)), "q99": float(np.quantile(e, 0.99)),
+                "max": float(e.max()), "nuls": int(np.sum(e == 0.0))}
     profil = {}
     for couche, g in acts_generation.items():
         e = ecarts_par_jeton(g, acts_passe[couche][: g.shape[0]])
-        profil[couche] = {"jetons": int(e.size), "q50": float(np.quantile(e, 0.5)), "q99": float(np.quantile(e, 0.99)),
-                          "max": float(e.max()), "nuls": int(np.sum(e == 0.0))}
+        profil[couche] = decrire(e)
+        if longueur_contexte is not None:
+            profil[couche]["contexte"] = decrire(e[:longueur_contexte])
+            profil[couche]["generee"] = decrire(e[longueur_contexte:])
     return profil
+
+
+def sonde_de_comparaison(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray]) -> dict:
+    """Audit de symétrie (R4) : les deux côtés sont des tableaux distincts, et la mesure voit une perturbation d'une
+    unité au dernier rang (un ulp) sur une seule valeur de la passe unique."""
+    distincts = all(not np.shares_memory(g, acts_passe[c]) for c, g in acts_generation.items())
+    couche = min(acts_generation)
+    g = acts_generation[couche]
+    p = acts_passe[couche][: g.shape[0]].copy()
+    n = g.shape[0] - 1
+    p[n, 0] = np.nextafter(p[n, 0], np.float32(np.inf), dtype=np.float32)
+    avant = ecarts_par_jeton(g[n:], acts_passe[couche][n:n + 1])[0]
+    apres = ecarts_par_jeton(g[n:], p[n:n + 1])[0]
+    return {"tableaux_distincts": bool(distincts), "ulp_vu": bool(apres != avant)}
 
 
 def exiger_equivalence(ecarts: dict[int, float], tolerance: float, quoi: str) -> None:

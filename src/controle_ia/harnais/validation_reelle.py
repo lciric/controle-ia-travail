@@ -1,50 +1,64 @@
 """Validation du harnais sur modèle réel (T0.4 ; porte G0, critère 1), et sa répétition sur modèle jouet.
 
 Sur la machine de calcul, après GO (jamais sans) :
-    PYTHONPATH=src python -m controle_ia.harnais.validation_reelle --revision <commit> --prereg <préenregistrement>
-    PYTHONPATH=src python -m controle_ia.harnais.validation_reelle --revision <commit> --prereg <…> --rejeu-de <run A>
+    PYTHONPATH=src python -m controle_ia.harnais.validation_reelle --revision <commit> --prereg <préenregistrement> \
+        --sortie-tests <sortie de pytest sur l'instance>
+    … la même commande, plus --rejeu-de <run A>, pour le second processus.
 Répétition sur processeur, modèle jouet, non décisive :
     PYTHONPATH=src python -m controle_ia.harnais.validation_reelle --repetition-jouet [--rejeu-de <run A>]
 
 Phases, dans un seul processus :
-0. format : garde de format (transcription incrémentale = gabarit complet du tokeniseur) ;
-1. logique, simple précision : épisodes courts en lots, toutes les actions dans l'échantillon
-   d'équivalence ; tolérance 1e-4 ; contrôle négatif décalé d'un jeton ;
-2. production, demi-précision : épisodes en lots ; équivalence et contrôle négatif sur les épisodes
-   d'échantillon (tolérance de production) ; politique de stockage (codage bfloat16-bits) ; relecture
-   du disque ; rejeu du premier lot dans le processus ; débit et stockage mesurés ;
+1. logique, simple précision, noyau d'attention « math » (calcul strict en float32) : un lot au régime de
+   production ; contrôle du format ; empreintes des fichiers du modèle ; échantillon d'équivalence sur des
+   lignes qui ne sont pas en tête de lot ; tolérance 1e-4 ;
+2. production, demi-précision : épisodes en lots ; équivalence sur une ligne par lot (tolérance de
+   production) ; politique de stockage (codage bfloat16-bits) ; relecture du disque bit à bit ; rejeu du
+   premier lot dans le processus ; repère de précision (passe unique en demi contre simple précision) ;
 3. débit : génération seule, sans arrêt anticipé, pour plusieurs tailles de lot.
-Le rejeu dans un second processus est un second lancement à la même entropie (`--rejeu-de`) : il rejoue
-tout et compare ses empreintes à celles du premier, au bit près (comparaison scellée).
+Dans les phases 1 et 2, tous les écarts sont consignés avant que les gardes s'appliquent, en fin de phase :
+un arrêt laisse les profils complets. Contrôle négatif : décalé d'un jeton, dans la zone générée seulement.
+Le rejeu dans un second processus est un second lancement à la même entropie (`--rejeu-de`) : configuration,
+graines et code sont comparés à ceux du premier avant tout calcul ; puis tout est rejoué et comparé au bit
+près (empreintes, logits, captures, fichiers), comparaison scellée.
 
 Les gros tableaux (npz) vont dans `donnees/<run>/` (hors git, scellés sur place) ; leurs empreintes sont
-dans les résultats scellés de `diag/<run>/`. Toute garde qui arrête le run laisse un `arret.json` scellé,
-puis l'arrêt se propage : aucun repli silencieux (R5).
+dans les résultats scellés de `diag/<run>/`. Une fois le manifeste créé, tout arrêt (garde, panne, signal
+TERM d'un délai externe) laisse un `arret.json` scellé, puis se propage : aucun repli silencieux (R5).
+Les gardes d'avant le manifeste (liste blanche, révision, citations, mémoire vive, code, rejeu incompatible)
+ne laissent que leur message sur la sortie d'erreur.
 """
 from __future__ import annotations
 
 import argparse
+import contextlib
+import hashlib
 import json
 import re
+import signal
 import subprocess
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
 import torch
 
 from ..gardes import GardeArret
-from ..manifeste import creer_manifeste, ecrire_resultat, generateur, lire_manifeste, verifier_resultat
+from ..manifeste import (config_canonique, creer_manifeste, ecrire_resultat, generateur, lire_manifeste,
+                         verifier_resultat)
 from . import politique as P
-from .activations import couches_par_defaut
-from .episode import (EnvironnementJouet, empreinte_episode, empreinte_tableaux, generer_lot, jouer_episodes)
+from .activations import couches_par_defaut, ecarts_par_jeton, passe_unique
+from .episode import (EnvironnementJouet, empreinte_episode, empreinte_tableaux, exiger_gardes, generer_lot,
+                      jouer_episodes)
 from .formats import FormatChat, verifier_format
-from .modeles import (charger_modele, empreinte_poids, exiger_modele_autorise, fins_du_modele, modele_jouet,
-                      regler_determinisme, tokeniseur_caracteres_chat)
+from .modeles import (charger_modele, empreinte_poids, empreintes_fichiers_modele, exiger_modele_autorise,
+                      fins_du_modele, modele_jouet, regler_determinisme, tokeniseur_caracteres_chat)
 from .stockage import estimer
 
 COMMIT_CITE = re.compile(r"Commit du code d'analyse : `([0-9a-f]{40})`")
+REVISION_CITEE = re.compile(r"Révision du modèle : `([0-9a-f]{40})`")
+ENTROPIE_CITEE = re.compile(r"Entropie : `([0-9]+)`")
 
 SONDES = [{"nom": f"lineaire-{a}-{c}", "couche": c, "agregation": a}
           for c in ("precoce", "mediane", "tardive") for a in ("max", "attention")]
@@ -52,19 +66,21 @@ SONDES = [{"nom": f"lineaire-{a}-{c}", "couche": c, "agregation": a}
 CONFIG_REELLE = {
     "objet": "validation du harnais sur modèle réel (T0.4 ; porte G0, critère 1) ; aucune mesure de fond",
     "modele": "meta-llama/Llama-3.1-8B-Instruct", "attention": "sdpa", "appareil": "cuda", "fils": 1,
+    "memoire_vive_min_go": 64,
     "variables_gabarit": {"date_string": "26 Jul 2024"},
     "format": {"consigne": "Tu es l'agent 0. Propose une étape d'expérience, en une phrase.",
                "observations": ["Pas 0. Journal : ", "Pas 1. Journal : 0@0: Mesurer la température.",
                                 "Pas 2. Journal : 0@1: Répéter la mesure."],
                "reponses": ["Je propose de mesurer la température.", "Je répète la mesure.",
-                            "Je compare les deux mesures."]},
-    "logique": {"dtype": "float32", "episodes": 2, "N": 2, "T": 3, "max_nouveaux": 64, "taille_lot": 2,
-                "temperature": 1.0, "tolerance": 1e-4},
-    "production": {"dtype": "bfloat16", "episodes": 16, "N": 2, "T": 10, "max_nouveaux": 256, "taille_lot": 8,
-                   "temperature": 1.0, "tolerance": 0.1, "episodes_equivalence": [0, 1],
-                   "lots_rejeu_en_processus": [0]},
+                            "Je compare les deux mesures."],
+               "texte_attendu_ouverture": "Today Date: 26 Jul 2024"},
+    "logique": {"dtype": "float32", "noyau_attention": "math", "episodes": 8, "N": 2, "T": 10, "max_nouveaux": 256,
+                "taille_lot": 8, "temperature": 1.0, "tolerance": 1e-4, "episodes_equivalence": [1, 6]},
+    "production": {"dtype": "bfloat16", "noyau_attention": "defaut", "episodes": 16, "N": 2, "T": 10,
+                   "max_nouveaux": 256, "taille_lot": 8, "temperature": 1.0, "tolerance": 0.1,
+                   "episodes_equivalence": [1, 14], "lots_rejeu_en_processus": [0]},
     "debit": {"tailles_lot": [1, 8, 32], "longueur_contexte": 2048, "max_nouveaux": 128},
-    "politique": {"episodes_par_jeton": [0, 1], "vecteurs_par_action": ["max"], "sondes": SONDES},
+    "politique": {"episodes_par_jeton": [1, 14], "vecteurs_par_action": ["max"], "sondes": SONDES},
     "projection": {"episodes": 2000},
     "limite_s": 3 * 3600,
 }
@@ -72,10 +88,14 @@ CONFIG_REELLE = {
 CONFIG_REPETITION = dict(
     CONFIG_REELLE,
     objet="répétition de la validation sur modèle jouet à poids aléatoires (processeur) ; non décisive",
-    modele="jouet", appareil="cpu",
+    modele="jouet", appareil="cpu", memoire_vive_min_go=0,
     modele_jouet={"couches": 4, "largeur": 32, "tetes": 4, "tetes_cle_valeur": 2, "intermediaire": 64},
-    logique=dict(CONFIG_REELLE["logique"], episodes=2, N=2, T=2, max_nouveaux=12, taille_lot=2),
-    production=dict(CONFIG_REELLE["production"], episodes=4, N=2, T=3, max_nouveaux=16, taille_lot=2),
+    format=dict(CONFIG_REELLE["format"], texte_attendu_ouverture=None),
+    logique=dict(CONFIG_REELLE["logique"], episodes=4, N=2, T=3, max_nouveaux=16, taille_lot=4,
+                 episodes_equivalence=[1, 2]),
+    production=dict(CONFIG_REELLE["production"], episodes=4, N=2, T=3, max_nouveaux=16, taille_lot=2,
+                    episodes_equivalence=[1, 2]),
+    politique=dict(CONFIG_REELLE["politique"], episodes_par_jeton=[1, 2]),
     debit={"tailles_lot": [1, 2, 4], "longueur_contexte": 48, "max_nouveaux": 8},
     limite_s=900,
 )
@@ -92,11 +112,13 @@ def valider_config(config: dict, revision: str | None) -> None:
             raise GardeArret(f"{phase} : tailles ≥ 1 attendues")
         if not c["tolerance"] > 0:
             raise GardeArret(f"{phase} : tolérance {c['tolerance']} ≤ 0")
+        if not set(c["episodes_equivalence"]) <= set(range(c["episodes"])) or not c["episodes_equivalence"]:
+            raise GardeArret(f"{phase} : épisodes d'équivalence {c['episodes_equivalence']} hors de la phase")
+        if c["noyau_attention"] not in ("math", "defaut"):
+            raise GardeArret(f"{phase} : noyau d'attention {c['noyau_attention']!r} inconnu")
     if config["logique"]["dtype"] != "float32":
         raise GardeArret("la phase de logique se fait en simple précision")
     prod = config["production"]
-    if not set(prod["episodes_equivalence"]) <= set(range(prod["episodes"])):
-        raise GardeArret(f"épisodes d'équivalence {prod['episodes_equivalence']} hors de la production")
     n_lots = -(-prod["episodes"] // prod["taille_lot"])
     if not set(prod["lots_rejeu_en_processus"]) <= set(range(n_lots)):
         raise GardeArret(f"lots de rejeu {prod['lots_rejeu_en_processus']} hors de [0, {n_lots}[")
@@ -121,7 +143,7 @@ def graine_entiere(graine: dict) -> int:
     return int(generateur(graine).integers(0, 2 ** 63 - 1))
 
 
-# ---------------------------------------------------------------- gardes de lancement
+# ---------------------------------------------------------------- gardes de lancement (avant le manifeste)
 
 def exiger_code_cite(racine: Path, prereg: Path) -> str:
     """Garde : `src` et `tests` au lancement sont ceux du commit cité par le préenregistrement."""
@@ -137,11 +159,52 @@ def exiger_code_cite(racine: Path, prereg: Path) -> str:
     return m.group(1)
 
 
+def exiger_citations(prereg: Path, revision: str | None, entropie: int | None) -> int:
+    """Garde : la révision du modèle et l'entropie sont celles que cite le préenregistrement (rien de libre au
+    lancement). Renvoie l'entropie citée."""
+    texte = prereg.read_text(encoding="utf-8")
+    r, e = REVISION_CITEE.search(texte), ENTROPIE_CITEE.search(texte)
+    if not r or not e:
+        raise GardeArret(f"{prereg} ne cite pas la révision du modèle ou l'entropie")
+    if revision != r.group(1):
+        raise GardeArret(f"révision {revision} ≠ révision citée {r.group(1)}")
+    if entropie is not None and entropie != int(e.group(1)):
+        raise GardeArret(f"entropie {entropie} ≠ entropie citée {e.group(1)}")
+    return int(e.group(1))
+
+
 def exiger_code_importe_sous(racine: Path) -> None:
     import controle_ia
 
     if (racine / "src").resolve() not in Path(controle_ia.__file__).resolve().parents:
         raise GardeArret("code importé hors de la racine du dépôt : lancer depuis la racine")
+
+
+def exiger_memoire_vive(min_go: float, meminfo: str = "/proc/meminfo") -> float | None:
+    """Garde : assez de mémoire vive pour charger le modèle (un dépassement tue le processus sans trace)."""
+    if not min_go:
+        return None
+    try:
+        ligne = next(x for x in Path(meminfo).read_text().splitlines() if x.startswith("MemTotal:"))
+    except (OSError, StopIteration):
+        raise GardeArret(f"mémoire vive illisible ({meminfo}) : {min_go} Go exigés") from None
+    total = int(ligne.split()[1]) * 1024 / 1e9
+    if total < min_go:
+        raise GardeArret(f"mémoire vive {total:.1f} Go < {min_go} Go exigés")
+    return round(total, 1)
+
+
+def exiger_rejeu_compatible(racine: Path, rejeu_de: str, config: dict) -> int:
+    """Garde du run B, avant tout calcul : même configuration (révision comprise) et même code que le run A.
+    Renvoie l'entropie du run A."""
+    m_a, _ = lire_manifeste(racine / "runs" / rejeu_de / "manifeste.json")
+    if hashlib.sha256(config_canonique(config)).hexdigest() != m_a["config_sha256"]:
+        raise GardeArret(f"rejeu de {rejeu_de} : configuration (ou révision) différente de celle du run A")
+    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m_a["commit"], "HEAD", "--", "src", "tests"],
+                       capture_output=True, text=True)
+    if r.returncode != 0:
+        raise GardeArret(f"rejeu de {rejeu_de} : code ou tests différents de ceux du run A ({m_a['commit'][:12]})")
+    return int(next(iter(m_a["graines"].values()))["entropie"])
 
 
 # ---------------------------------------------------------------- modèle, format, épisodes
@@ -154,40 +217,103 @@ def charger(config: dict, revision: str | None, dtype: str, graines: dict):
     return charger_modele(config["modele"], revision, dtype, config["appareil"], config["attention"])
 
 
-def format_du_modele(modele, tok, variables: dict) -> FormatChat:
-    """Format de conversation ; jetons d'arrêt = ceux du modèle plus le jeton qui ferme un tour du gabarit."""
-    fmt = FormatChat(tok, variables=variables)
-    debut = ("x", "y")
-    fmt.fins = fins_du_modele(modele, tok) | {fmt._pieces(debut)["cloture"][0]}
-    return fmt
+def format_du_modele(modele, tok, config: dict) -> tuple[FormatChat, dict]:
+    """Format de conversation (jetons d'arrêt : ceux du modèle plus le jeton qui ferme un tour du gabarit) et sa
+    garde : transcription incrémentale = gabarit complet ; texte attendu dans l'ouverture (date figée)."""
+    fmt = FormatChat(tok, variables=config["variables_gabarit"])
+    fmt.fins = fins_du_modele(modele, tok) | {fmt._pieces(("x", "y"))["cloture"][0]}
+    f = config["format"]
+    controle = verifier_format(fmt, f["consigne"], f["observations"], f["reponses"])
+    ouverture = tok.decode(fmt.ouverture(f["consigne"], f["observations"][0]))
+    attendu = f.get("texte_attendu_ouverture")
+    if attendu and attendu not in ouverture:
+        raise GardeArret(f"ouverture sans {attendu!r} : le gabarit ne lit pas les variables figées")
+    return fmt, {**controle, "fins": sorted(fmt.fins), "ouverture": ouverture,
+                 "gabarit_sha256": hashlib.sha256(str(tok.chat_template).encode("utf-8")).hexdigest()}
 
 
-def jouer_phase(modele, fmt, c: dict, graines: dict, phase: str, couches: list[int], episodes_equivalence,
-                lots=None, chrono=None) -> tuple[list, list]:
-    """Joue les épisodes d'une phase par lots consécutifs (plan de lots fixé par la configuration)."""
+def noyau(nom: str):
+    if nom == "math":
+        from torch.nn.attention import SDPBackend, sdpa_kernel
+
+        return sdpa_kernel(SDPBackend.MATH)
+    return contextlib.nullcontext()
+
+
+def jouer_phase(modele, fmt, c: dict, graines: dict, phase: str, couches: list[int], lots=None, chrono=None,
+                echeance=None) -> tuple[list, list]:
+    """Joue les épisodes d'une phase par lots consécutifs (plan fixé par la configuration), gardes différées."""
     E, B = c["episodes"], c["taille_lot"]
     plan = [list(range(j, min(j + B, E))) for j in range(0, E, B)]
     sorties = []
-    for j, lot in enumerate(plan):
-        if lots is not None and j not in lots:
-            continue
-        g = [{(i, p): graine_entiere(graines[f"{phase}/episode-{k}/action-{i}-{p}"])
-              for p in range(c["T"]) for i in range(c["N"])} for k in lot]
-        echantillon = {(b, i, p) for b, k in enumerate(lot) if k in episodes_equivalence
-                       for p in range(c["T"]) for i in range(c["N"])}
-        sorties += jouer_episodes(modele, fmt, EnvironnementJouet(), [f"episode-{k}" for k in lot], c["N"], c["T"], g,
-                                  couches, c["max_nouveaux"], c["temperature"], echantillon, c["tolerance"],
-                                  chrono=chrono)
+    with noyau(c["noyau_attention"]):
+        for j, lot in enumerate(plan):
+            if lots is not None and j not in lots:
+                continue
+            g = [{(i, p): graine_entiere(graines[f"{phase}/episode-{k}/action-{i}-{p}"])
+                  for p in range(c["T"]) for i in range(c["N"])} for k in lot]
+            echantillon = {(b, i, p) for b, k in enumerate(lot) if k in c["episodes_equivalence"]
+                           for p in range(c["T"]) for i in range(c["N"])}
+            sorties += jouer_episodes(modele, fmt, EnvironnementJouet(), [f"episode-{k}" for k in lot], c["N"], c["T"],
+                                      g, couches, c["max_nouveaux"], c["temperature"], echantillon, c["tolerance"],
+                                      chrono=chrono, garde="differee", echeance=echeance, empreinte_logits=True)
     return sorties, plan
 
 
-def bilan_equivalence(sorties) -> dict:
-    ecarts = [e for _, _, r in sorties for d in r["ecarts"].values() for e in d.values()]
-    decales = [e for _, _, r in sorties for d in r["controle_negatif_decalage_1"].values() for e in d.values()]
-    nuls = sum(p["nuls"] for _, _, r in sorties for d in r["profils"].values() for p in d.values())
-    jetons = sum(p["jetons"] for _, _, r in sorties for d in r["profils"].values() for p in d.values())
-    return {"actions": sum(len(r["ecarts"]) for _, _, r in sorties), "ecart_max": max(ecarts) if ecarts else None,
-            "decale_min": min(decales) if decales else None, "ecarts_nuls": nuls, "jetons_compares": jetons}
+def empreintes_episode(ep, acts, rapport, politique=None, couches=None, sondes=None) -> tuple[dict, dict, dict]:
+    """Empreintes d'un épisode : trajectoire, activations par jeton, logits de chaque pas ; avec la politique :
+    vecteurs d'action et scores (renvoyés aussi)."""
+    emp = {**empreinte_episode(ep, acts),
+           "logits": hashlib.sha256(json.dumps(rapport["empreintes_logits"], sort_keys=True).encode()).hexdigest()}
+    v = s = {}
+    if politique is not None:
+        v, s = P.calculer_en_ligne(politique, ep, acts, couches, sondes)
+        emp.update({"vecteurs": empreinte_tableaux(v), "scores": empreinte_tableaux(s)})
+    return emp, v, s
+
+
+def bilan_phase(sorties, plan, chrono: dict, c: dict) -> dict:
+    """Résumé d'une phase : écarts (toutes positions), contrôle négatif dans la zone générée, couverture, audit."""
+    rapports = [(ep.identifiant, r) for ep, _, r in sorties if r["ecarts"]]
+    ecarts = [e for _, r in rapports for d in r["ecarts"].values() for e in d.values()]
+    zones = [z for _, r in rapports for z in r["controle_negatif_zone_generee"].values()]
+    maxima_zone = [v["max"] for z in zones if z is not None for v in z.values()]
+    au_dessus = sum(v["au_dessus"] for z in zones if z is not None for v in z.values())
+    positions_zone = sum(v["positions"] for z in zones if z is not None for v in z.values())
+    gen = [p["generee"] for _, r in rapports for d in r["profils"].values() for p in d.values()]
+    ctx = [p["contexte"] for _, r in rapports for d in r["profils"].values() for p in d.values()]
+    sondes = [s for _, r in rapports for s in r["sondes"].values()]
+    lot_de = {k: (j, lot.index(k)) for j, lot in enumerate(plan) for k in lot}
+    return {
+        "tolerance": c["tolerance"],
+        "actions_comparees": sum(len(r["ecarts"]) for _, r in rapports),
+        "ecart_max": max(ecarts) if ecarts else None,
+        "controle_negatif": {"actions": sum(z is not None for z in zones),
+                             "actions_trop_courtes": sum(z is None for z in zones),
+                             "min_des_maxima": min(maxima_zone) if maxima_zone else None,
+                             "positions": positions_zone, "positions_au_dessus": au_dessus},
+        "couverture": {"jetons_remplissage": chrono.get("jetons_remplissage", 0),
+                       "lignes_finies_avant": chrono.get("lignes_finies_avant", 0),
+                       "positions_generees_comparees": sum(p["jetons"] for p in gen),
+                       "lignes_echantillon": sorted(lot_de[int(e.split("-")[1])][1] for e, _ in rapports)},
+        "zeros": {"contexte": [sum(p.get("nuls", 0) for p in ctx), sum(p["jetons"] for p in ctx)],
+                  "generee": [sum(p.get("nuls", 0) for p in gen), sum(p["jetons"] for p in gen)]},
+        "sondes_audit": {"tableaux_distincts": all(s["tableaux_distincts"] for s in sondes),
+                         "ulp_vu": all(s["ulp_vu"] for s in sondes)},
+    }
+
+
+def appliquer_gardes(sorties, phase: str) -> None:
+    """Gardes de fin de phase : toutes les fautes sont nommées dans un seul arrêt."""
+    fautes = []
+    for ep, _, r in sorties:
+        for cle in r["ecarts"]:
+            try:
+                exiger_gardes(r, cle, f"{phase}, {ep.identifiant}, action ({cle})")
+            except GardeArret as e:
+                fautes.append(str(e))
+    if fautes:
+        raise GardeArret(f"{phase} : {len(fautes)} faute(s) de garde ; " + " | ".join(fautes[:20]))
 
 
 def debit(chrono: dict) -> dict:
@@ -209,56 +335,93 @@ def liberer() -> None:
         torch.cuda.reset_peak_memory_stats()
 
 
+def repere_precision(modele, references: list, couches: list[int]) -> dict:
+    """Repère descriptif : écart par jeton entre la passe unique du modèle courant (demi-précision) et celle de la
+    phase de logique (simple précision), sur les mêmes transcriptions et aux mêmes positions."""
+    par_couche: dict[int, list] = {c: [] for c in couches}
+    for ep, acts32 in references:
+        for tr in ep.transcriptions:
+            a16 = passe_unique(modele, tr.ids, couches)
+            for c in couches:
+                par_couche[c].append(ecarts_par_jeton(a16[c], acts32[tr.agent][c]))
+    sortie = {}
+    for c, morceaux in par_couche.items():
+        e = np.concatenate(morceaux)
+        sortie[c] = {"jetons": int(e.size), "q50": float(np.quantile(e, 0.5)), "q99": float(np.quantile(e, 0.99)),
+                     "max": float(e.max())}
+    return sortie
+
+
 # ---------------------------------------------------------------- run
 
 def executer(racine: str | Path, run_id: str, revision: str | None = None, entropie: int | None = None,
              config: dict | None = None, prereg: str | Path | None = None, rejeu_de: str | None = None,
-             verifier_import: bool = True) -> dict:
+             sortie_tests: str | Path | None = None, verifier_import: bool = True) -> dict:
     """`verifier_import=False` n'est permis qu'aux tests sur mini-dépôt ; la ligne de commande l'active toujours."""
     racine = Path(racine)
     config = config or CONFIG_REELLE
     depart = time.perf_counter()
     decisif = config["modele"] != "jouet"
-    if decisif and prereg is None:
-        raise GardeArret("validation sur modèle réel sans préenregistrement scellé : R1 interdit de lancer")
+    if decisif and (prereg is None or sortie_tests is None):
+        raise GardeArret("validation sur modèle réel sans préenregistrement scellé ou sans sortie des tests de "
+                         "l'instance : R1 et R5 interdisent de lancer")
     valider_config(config, revision)
+    memoire = exiger_memoire_vive(config["memoire_vive_min_go"])
     if verifier_import:
         exiger_code_importe_sous(racine)
     commit_cite = exiger_code_cite(racine, Path(prereg)) if prereg is not None else None
+    if prereg is not None:
+        entropie = exiger_citations(Path(prereg), revision, entropie)
+    config = dict(config, revision=revision)
     if rejeu_de is not None:
-        m_a, _ = lire_manifeste(racine / "runs" / rejeu_de / "manifeste.json")
-        entropie_a = int(next(iter(m_a["graines"].values()))["entropie"])
+        entropie_a = exiger_rejeu_compatible(racine, rejeu_de, config)
         if entropie is not None and entropie != entropie_a:
             raise GardeArret(f"rejeu de {rejeu_de} : entropie {entropie} ≠ {entropie_a}")
         entropie = entropie_a
-    config = dict(config, revision=revision)
+    tests = Path(sortie_tests).read_text(encoding="utf-8") if sortie_tests is not None else None
     chemin_m, m = creer_manifeste(racine, run_id, config, taches(config), entropie=entropie, decisif=decisif,
                                   prereg=prereg, commande="python -m controle_ia.harnais.validation_reelle")
     donnees = racine / "donnees" / run_id
-    resume: dict = {"commit_cite": commit_cite}
+    echeance = depart + config["limite_s"]
+    resume: dict = {"commit_cite": commit_cite, "memoire_vive_go": memoire}
     phase = "reglages"
 
     def temps():
-        if time.perf_counter() - depart > config["limite_s"]:
+        if time.perf_counter() > echeance:
             raise GardeArret(f"limite de durée de {config['limite_s']} s dépassée avant la phase {phase}")
 
     try:
+        if tests is not None:
+            derniere = tests.strip().splitlines()[-1] if tests.strip() else ""
+            ecrire_resultat(racine, chemin_m, "tests-instance", {"sortie": tests, "derniere_ligne": derniere})
+            resume["tests_instance"] = {"derniere_ligne": derniere,
+                                        "reussis": bool(re.search(r"\d+ passed", derniere))
+                                        and not re.search(r"failed|error", derniere)}
         resume["reglages"] = regler_determinisme(config["fils"], config["appareil"])
         graines = m["graines"]
 
         phase = "logique"
         temps()
-        modele, tok = charger(config, revision, "float32", graines)
-        fmt = format_du_modele(modele, tok, config["variables_gabarit"])
-        resume["format"] = {"fins": sorted(fmt.fins), **verifier_format(fmt, **config["format"])}
+        c = config["logique"]
+        modele, tok = charger(config, revision, c["dtype"], graines)
+        resume["chargement"] = {"attention": getattr(modele.config, "_attn_implementation", None),
+                                "type_des_poids": str(next(modele.parameters()).dtype)}
+        if config["modele"] != "jouet":
+            resume["fichiers_modele"] = empreintes_fichiers_modele(config["modele"], revision)
+        fmt, resume["format"] = format_du_modele(modele, tok, config)
         couches = couches_par_defaut(modele.config.num_hidden_layers)
         chrono: dict = {}
-        sorties, plan = jouer_phase(modele, fmt, config["logique"], graines, "logique", couches,
-                                    range(config["logique"]["episodes"]), chrono=chrono)
-        resume["logique"] = {"plan_lots": plan, "equivalence": bilan_equivalence(sorties), "debit": debit(chrono),
+        sorties, plan = jouer_phase(modele, fmt, c, graines, "logique", couches, chrono=chrono, echeance=echeance)
+        references = [(ep, acts) for ep, acts, _ in sorties if int(ep.identifiant.split("-")[1]) in
+                      c["episodes_equivalence"]]
+        for ep, _, _ in sorties:
+            ecrire_resultat(racine, chemin_m, f"logique-{ep.identifiant}-trajectoire", ep.en_dict())
+        resume["logique"] = {"plan_lots": plan, "noyau_attention": c["noyau_attention"],
+                             "equivalence": bilan_phase(sorties, plan, chrono, c), "debit": debit(chrono),
                              "memoire_max_go": memoire_max_go(),
-                             "episodes": [{"episode": ep.identifiant, "empreintes": empreinte_episode(ep, acts),
-                                           "equivalence": eq} for ep, acts, eq in sorties]}
+                             "episodes": [{"episode": ep.identifiant, "empreintes": empreintes_episode(ep, acts, r)[0],
+                                           "equivalence": r} for ep, acts, r in sorties]}
+        appliquer_gardes(sorties, "logique")
         del modele, sorties
         liberer()
 
@@ -266,58 +429,58 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
         temps()
         prod = config["production"]
         modele, tok = charger(config, revision, prod["dtype"], graines)
-        fmt = format_du_modele(modele, tok, config["variables_gabarit"])
+        fmt, _ = format_du_modele(modele, tok, config)
         largeur = modele.config.hidden_size
         codage = "bfloat16-bits" if prod["dtype"] == "bfloat16" else "float32"
         sondes = P.construire_sondes(config["politique"], couches, largeur, graines)
         chrono = {}
-        sorties, plan = jouer_phase(modele, fmt, prod, graines, "production", couches, prod["episodes_equivalence"],
-                                    chrono=chrono)
-
-        def empreintes(ep, acts):
-            v, s = P.calculer_en_ligne(config["politique"], ep, acts, couches, sondes)
-            return {**empreinte_episode(ep, acts), "vecteurs": empreinte_tableaux(v), "scores": empreinte_tableaux(s)}, v, s
-
+        sorties, plan = jouer_phase(modele, fmt, prod, graines, "production", couches, chrono=chrono, echeance=echeance)
         episodes, octets_par_jeton, jetons_par_episode = [], [], []
-        for k, (ep, acts, eq) in enumerate(sorties):
+        for k, (ep, acts, r) in enumerate(sorties):
             par_jeton = k in config["politique"]["episodes_par_jeton"]
-            emp, v, s = empreintes(ep, acts)
+            emp, v, s = empreintes_episode(ep, acts, r, config["politique"], couches, sondes)
             ecrire_resultat(racine, chemin_m, f"production-{ep.identifiant}-trajectoire", ep.en_dict())
             npz = P.ecrire_tableaux(donnees / f"production-{ep.identifiant}-tableaux.npz",
                                     acts if par_jeton else None, v, s, codage)
-            P.relire_et_controler(npz, config["politique"], ep, couches, sondes, v, s, par_jeton, codage)
+            P.relire_et_controler(npz, config["politique"], ep, couches, sondes, v, s, par_jeton, codage, acts)
             jetons = sum(len(tr.ids) for tr in ep.transcriptions)
             jetons_par_episode.append(jetons)
             if par_jeton:
                 octets_par_jeton.append(sum(P.coder(a, codage).nbytes for pc in acts.values() for a in pc.values())
                                         / (jetons * len(couches)))
             episodes.append({"episode": ep.identifiant, "par_jeton_conserve": par_jeton, "empreintes": emp,
-                             "equivalence": eq, "tableaux": str(npz.relative_to(racine)),
+                             "equivalence": r, "tableaux": str(npz.relative_to(racine)),
                              "tableaux_sha256": npz.with_name(npz.name + ".sha256").read_text().split()[0],
                              "tableaux_octets": npz.stat().st_size, "jetons": jetons})
         rejeu = []
         for j in prod["lots_rejeu_en_processus"]:
-            refaits, _ = jouer_phase(modele, fmt, prod, graines, "production", couches, prod["episodes_equivalence"],
-                                     lots=[j])
-            for (ep, acts, _), k in zip(refaits, plan[j]):
-                rejeu.append({"episode": ep.identifiant, "identique": empreintes(ep, acts)[0] == episodes[k]["empreintes"]})
+            refaits, _ = jouer_phase(modele, fmt, prod, graines, "production", couches, lots=[j], echeance=echeance)
+            for (ep, acts, r), k in zip(refaits, plan[j]):
+                emp = empreintes_episode(ep, acts, r, config["politique"], couches, sondes)[0]
+                rejeu.append({"episode": ep.identifiant, "identique": emp == episodes[k]["empreintes"]
+                              and r["empreintes_capture"] == episodes[k]["equivalence"]["empreintes_capture"]})
         moyenne_jetons = sum(jetons_par_episode) / len(jetons_par_episode)
         actions = prod["N"] * prod["T"]
         par_episode_s = (chrono.get("generation_s", 0.0) + chrono.get("passe_unique_s", 0.0)) / prod["episodes"]
-        stockage = {"codage": codage, "octets_par_jeton_et_couche": octets_par_jeton,
-                    "octets_par_valeur": octets_par_jeton[0] / largeur if octets_par_jeton else None,
-                    "jetons_par_episode_moyen": moyenne_jetons,
+        octets_valeur = 2 if codage == "bfloat16-bits" else 4
+        stockage = {"codage": codage, "octets_par_valeur_construction": octets_valeur,
+                    "octets_par_jeton_et_couche": octets_par_jeton, "jetons_par_episode_moyen": moyenne_jetons,
+                    "fichiers_par_jeton_octets": [e["tableaux_octets"] for e in episodes if e["par_jeton_conserve"]],
                     "projection": estimer(config["projection"]["episodes"], max(1, round(moyenne_jetons)), actions,
-                                          len(couches), largeur, 2 if codage == "bfloat16-bits" else 4)}
-        resume["production"] = {"plan_lots": plan, "couches": couches, "largeur": largeur,
+                                          len(couches), largeur, octets_valeur)}
+        resume["production"] = {"plan_lots": plan, "noyau_attention": prod["noyau_attention"], "couches": couches,
+                                "largeur": largeur,
                                 "projection_heures": {"episodes": config["projection"]["episodes"],
                                                       "taille_lot": prod["taille_lot"],
                                                       "heures": par_episode_s * config["projection"]["episodes"] / 3600},
-                                "empreinte_poids": empreinte_poids(modele), "equivalence": bilan_equivalence(sorties),
+                                "empreinte_poids": empreinte_poids(modele),
+                                "equivalence": bilan_phase(sorties, plan, chrono, prod),
+                                "repere_precision": repere_precision(modele, references, couches),
                                 "rejeu_en_processus": rejeu, "debit": debit(chrono), "stockage": stockage,
                                 "sondes": [{"nom": x.nom, "couche": x.couche, "agregation": x.agregation,
                                             "empreinte": x.empreinte()} for x in sondes],
                                 "episodes": episodes, "memoire_max_go": memoire_max_go()}
+        appliquer_gardes(sorties, "production")
 
         phase = "debit"
         temps()
@@ -334,13 +497,14 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
             duree = time.perf_counter() - t0
             n = sum(len(x) for x in nouveaux)
             mesures.append({"taille_lot": B, "jetons_generes": n, "duree_s": duree, "jetons_par_s": n / duree,
-                            "contexte_moyen": sum(len(c) for c in transcriptions[:B]) / B})
+                            "contexte_moyen": sum(len(x) for x in transcriptions[:B]) / B})
         resume["debit"] = {"mesures": mesures, "memoire_max_go": memoire_max_go()}
         del modele
         liberer()
         resume["lecture"] = lire(resume, config)
         resume["duree_s"] = time.perf_counter() - depart
-    except Exception as e:          # garde ou panne (mémoire, noyau non déterministe…) : consignée, puis propagée
+    except Exception as e:          # garde, panne (mémoire, noyau refusé…), signal TERM : consigné, puis propagé
+        resume["lecture_partielle"] = lire(resume, config)
         ecrire_resultat(racine, chemin_m, "arret", {"phase": phase, "motif": f"{type(e).__name__}: {e}",
                                                      "partiel": resume, "duree_s": time.perf_counter() - depart})
         raise
@@ -348,7 +512,11 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
     verifier_resultat(racine, chemin_r)
     sortie = {"manifeste": str(chemin_m), "resume": str(chemin_r), "lecture": resume["lecture"]}
     if rejeu_de is not None:
-        sortie["comparaison"] = comparer_runs(racine, rejeu_de, run_id)
+        try:
+            sortie["comparaison"] = comparer_runs(racine, rejeu_de, run_id)
+        except GardeArret as e:
+            ecrire_resultat(racine, chemin_m, f"arret-comparaison-{rejeu_de}", {"motif": str(e)})
+            raise
     return sortie
 
 
@@ -356,32 +524,56 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
 
 def lire(resume: dict, config: dict) -> dict:
     """Lecture gelée des prédictions mesurables dans un seul processus (le rejeu entre processus est lu par
-    `comparer_runs`). Issues : « conforme », « contraire ». L'audit de symétrie (R4) se déclenche si une
-    phase ne montre aucun écart d'équivalence non nul : génération et passe unique empruntent des noyaux
-    différents, une identité parfaite partout serait trop belle (deux lectures du même tableau ?)."""
-    lo, pr = resume["logique"]["equivalence"], resume["production"]["equivalence"]
-    tl, tp = config["logique"]["tolerance"], config["production"]["tolerance"]
-
+    `comparer_runs`). Issues : « conforme », « contraire », « non concluant » (couverture insuffisante),
+    « non atteint » (phase non jouée, run arrêté avant)."""
     def etat(ok):
         return "conforme" if ok else "contraire"
-    lecture = {
-        "format": etat(resume["format"].get("verifie") is True),
-        "logique_equivalence": etat(lo["ecart_max"] is not None and lo["ecart_max"] <= tl),
-        "logique_controle_negatif": etat(lo["decale_min"] is not None and lo["decale_min"] > tl),
-        "production_equivalence": etat(pr["ecart_max"] is not None and pr["ecart_max"] <= tp),
-        "production_controle_negatif": etat(pr["decale_min"] is not None and pr["decale_min"] > tp),
-        "rejeu_en_processus": etat(bool(resume["production"]["rejeu_en_processus"])
-                                   and all(r["identique"] for r in resume["production"]["rejeu_en_processus"])),
-    }
-    trop_belles = [ph for ph, e in (("logique", lo), ("production", pr)) if e["ecarts_nuls"] == e["jetons_compares"]]
-    lecture["audit_symetrie"] = (f"déclenché : aucun écart non nul ({', '.join(trop_belles)})" if trop_belles
-                                 else "non déclenché")
+    lecture = {}
+    f = resume.get("format")
+    lecture["format"] = "non atteint" if f is None else etat(f.get("verifie") is True)
+    t = resume.get("tests_instance")
+    lecture["tests_instance"] = "sans objet" if t is None else etat(t["reussis"])
+    for phase, p_eq, p_neg in (("logique", "logique_equivalence", "logique_controle_negatif"),
+                               ("production", "production_equivalence", "production_controle_negatif")):
+        bilan = resume.get(phase, {}).get("equivalence")
+        if bilan is None:
+            lecture[p_eq] = lecture[p_neg] = "non atteint"
+            continue
+        tol, cv, neg = bilan["tolerance"], bilan["couverture"], bilan["controle_negatif"]
+        if bilan["ecart_max"] is None or bilan["ecart_max"] > tol:
+            lecture[p_eq] = "contraire"
+        elif phase == "logique" and not (cv["jetons_remplissage"] > 0 and cv["lignes_finies_avant"] > 0
+                                         and cv["positions_generees_comparees"] > 0
+                                         and any(x != 0 for x in cv["lignes_echantillon"])):
+            lecture[p_eq] = "non concluant"
+        else:
+            lecture[p_eq] = "conforme"
+        if neg["actions"] == 0:
+            lecture[p_neg] = "non concluant"
+        else:
+            lecture[p_neg] = etat(neg["min_des_maxima"] > tol)
+    prod = resume.get("production", {})
+    if "rejeu_en_processus" in prod:
+        lecture["rejeu_en_processus"] = etat(bool(prod["rejeu_en_processus"])
+                                             and all(r["identique"] for r in prod["rejeu_en_processus"]))
+    else:
+        lecture["rejeu_en_processus"] = "non atteint"
+    audit = []
+    for phase in ("logique", "production"):
+        bilan = resume.get(phase, {}).get("equivalence")
+        if bilan is not None and bilan["zeros"]["generee"][1] > 0 and bilan["zeros"]["generee"][0] == bilan["zeros"]["generee"][1]:
+            levee = bilan["sondes_audit"]["tableaux_distincts"] and bilan["sondes_audit"]["ulp_vu"]
+            audit.append(f"{phase} : aucun écart non nul dans la zone générée ; "
+                         + ("réserve levée (tableaux distincts, perturbation d'un ulp vue)" if levee
+                            else "réserve maintenue, nœud de décision"))
+    lecture["audit_symetrie"] = " ; ".join(audit) if audit else "non déclenché"
     return lecture
 
 
 def comparer_runs(racine: str | Path, run_a: str, run_b: str) -> dict:
-    """Rejeu entre processus : mêmes configuration, graines et code ; empreintes identiques au bit près, phase par
-    phase et épisode par épisode. Résultat scellé dans `diag/<run_b>/`, rattaché au manifeste de B."""
+    """Rejeu entre processus : mêmes configuration, graines et code ; au bit près, phase par phase et épisode par
+    épisode : empreintes (trajectoire, activations, logits, vecteurs, scores), captures et profils d'équivalence,
+    fichiers npz, poids, fichiers du modèle ; et même lecture. Résultat scellé dans `diag/<run_b>/`."""
     racine = Path(racine)
     m_a, _ = lire_manifeste(racine / "runs" / run_a / "manifeste.json")
     m_b, _ = lire_manifeste(racine / "runs" / run_b / "manifeste.json")
@@ -397,21 +589,35 @@ def comparer_runs(racine: str | Path, run_a: str, run_b: str) -> dict:
     b = verifier_resultat(racine, racine / "diag" / run_b / "resume.json")["resultat"]
     differences = []
     for phase in ("logique", "production"):
-        ea = {e["episode"]: e["empreintes"] for e in a[phase]["episodes"]}
-        eb = {e["episode"]: e["empreintes"] for e in b[phase]["episodes"]}
+        ea = {e["episode"]: e for e in a[phase]["episodes"]}
+        eb = {e["episode"]: e for e in b[phase]["episodes"]}
         if set(ea) != set(eb):
             differences.append({"phase": phase, "motif": "épisodes différents"})
             continue
         for ep in sorted(ea):
-            for cle in sorted(set(ea[ep]) | set(eb[ep])):
-                if ea[ep].get(cle) != eb[ep].get(cle):
+            for cle in sorted(set(ea[ep]["empreintes"]) | set(eb[ep]["empreintes"])):
+                if ea[ep]["empreintes"].get(cle) != eb[ep]["empreintes"].get(cle):
                     differences.append({"phase": phase, "episode": ep, "empreinte": cle})
-    if a["production"]["empreinte_poids"] != b["production"]["empreinte_poids"]:
-        differences.append({"phase": "production", "motif": "poids différents"})
+            for cle in ("empreintes_capture", "profils"):
+                if ea[ep]["equivalence"].get(cle) != eb[ep]["equivalence"].get(cle):
+                    differences.append({"phase": phase, "episode": ep, "equivalence": cle})
+            if ea[ep].get("tableaux_sha256") != eb[ep].get("tableaux_sha256"):
+                differences.append({"phase": phase, "episode": ep, "motif": "fichier npz différent"})
+    for cle in ("empreinte_poids",):
+        if a["production"][cle] != b["production"][cle]:
+            differences.append({"phase": "production", "motif": "poids différents"})
+    if a.get("fichiers_modele") != b.get("fichiers_modele"):
+        differences.append({"motif": "fichiers du modèle différents"})
+    if a.get("lecture") != b.get("lecture"):
+        differences.append({"motif": "lectures différentes", "a": a.get("lecture"), "b": b.get("lecture")})
     corps = {"run_a": run_a, "run_b": run_b, "identique": not differences, "differences": differences,
              "lecture": "conforme" if not differences else "contraire"}
     ecrire_resultat(racine, racine / "runs" / run_b / "manifeste.json", f"comparaison-{run_a}", corps)
     return corps
+
+
+def _signal_term(signum, frame):
+    raise GardeArret("signal TERM reçu (délai externe) : arrêt consigné")
 
 
 def main(argv=None) -> int:
@@ -422,12 +628,15 @@ def main(argv=None) -> int:
     a.add_argument("--prereg", default=None)
     a.add_argument("--entropie", type=int, default=None)
     a.add_argument("--rejeu-de", default=None)
+    a.add_argument("--sortie-tests", default=None)
     a.add_argument("--repetition-jouet", action="store_true")
     args = a.parse_args(argv)
+    signal.signal(signal.SIGTERM, _signal_term)
     config = CONFIG_REPETITION if args.repetition_jouet else CONFIG_REELLE
     suffixe = "repetition-jouet" if args.repetition_jouet else "validation-reelle"
     run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S") + "-" + suffixe
-    sortie = executer(args.racine, run_id, args.revision, args.entropie, config, args.prereg, args.rejeu_de)
+    sortie = executer(args.racine, run_id, args.revision, args.entropie, config, args.prereg, args.rejeu_de,
+                      args.sortie_tests)
     print(json.dumps(sortie, indent=2, ensure_ascii=False))
     return 0
 

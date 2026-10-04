@@ -11,6 +11,8 @@ from __future__ import annotations
 import hashlib
 import os
 import re
+import subprocess
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -100,14 +102,90 @@ def exiger_modele_autorise(nom: str, revision: str | None) -> None:
 
 def charger_modele(nom: str, revision: str, dtype: str = "bfloat16", appareil: str = "cuda",
                    attention: str = "sdpa"):
-    """Modèle réel (machines de calcul seulement). Aucun téléchargement sans liste blanche et révision figée."""
-    exiger_modele_autorise(nom, revision)
-    from transformers import AutoModelForCausalLM, AutoTokenizer
+    """Modèle réel (machines de calcul seulement). Aucun téléchargement sans liste blanche et révision figée.
 
+    Le point de contrôle (bfloat16, vérifié) est chargé tel quel, puis porté sur la carte ; une demande en simple
+    précision s'y convertit ensuite, sans perte (bfloat16 ⊂ float32). La mémoire vive n'accueille ainsi que
+    16 Go pour un modèle de 8 milliards de paramètres, au lieu de 32 Go en simple précision."""
+    exiger_modele_autorise(nom, revision)
+    from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+
+    natif = type_natif(AutoConfig.from_pretrained(nom, revision=revision))
+    if natif != "bfloat16":
+        raise GardeArret(f"{nom} : point de contrôle en {natif}, pas en bfloat16 ; la conversion ne serait pas exacte")
     tokeniseur = AutoTokenizer.from_pretrained(nom, revision=revision)
-    modele = AutoModelForCausalLM.from_pretrained(nom, revision=revision, dtype=getattr(torch, dtype),
-                                                  attn_implementation=attention)
-    return modele.to(appareil).eval(), tokeniseur
+    modele = AutoModelForCausalLM.from_pretrained(nom, revision=revision, dtype=torch.bfloat16,
+                                                  attn_implementation=attention).to(appareil)
+    if dtype != "bfloat16":
+        modele = modele.to(getattr(torch, dtype))
+    exiger_type_des_poids(modele, dtype)
+    return modele.eval(), tokeniseur
+
+
+def type_natif(config) -> str:
+    """Type des poids déclaré par la configuration (`dtype`, ou `torch_dtype` dans les versions anciennes)."""
+    t = config.dtype if hasattr(config, "dtype") else getattr(config, "torch_dtype", None)
+    return str(t).replace("torch.", "") if t is not None else "inconnu"
+
+
+def exiger_type_des_poids(modele, dtype: str) -> None:
+    """Garde : tous les paramètres sont du type demandé (pas de demi-mesure silencieuse)."""
+    attendu = getattr(torch, dtype)
+    autres = sorted({str(p.dtype) for p in modele.parameters() if p.dtype != attendu})
+    if autres:
+        raise GardeArret(f"poids de type {autres} alors que {dtype} est demandé")
+
+
+def sha1_git(donnees: bytes) -> str:
+    """Identifiant git d'un fichier (« blob »), celui que publie un dépôt de modèle pour ses petits fichiers."""
+    return hashlib.sha1(b"blob %d\0" % len(donnees) + donnees).hexdigest()
+
+
+def comparer_fichiers(dossier: Path, publies: dict[str, dict]) -> dict:
+    """Empreintes des fichiers d'un dossier de modèle, comparées aux empreintes publiées : sha256 pour les fichiers
+    stockés en LFS (`{"sha256": …}`), identifiant git sinon (`{"git_sha1": …}`). Garde : fichier inconnu du dépôt
+    ou empreinte différente → arrêt."""
+    sortie = {}
+    for f in sorted(x for x in Path(dossier).iterdir() if x.is_file()):
+        if f.name not in publies:
+            raise GardeArret(f"{f.name} : fichier absent de la révision publiée")
+        attendu = publies[f.name]
+        h = hashlib.sha256()
+        with open(f, "rb") as fic:
+            for bloc in iter(lambda: fic.read(1 << 24), b""):
+                h.update(bloc)
+        ligne = {"octets": f.stat().st_size, "sha256": h.hexdigest()}
+        if attendu.get("sha256"):
+            ligne["conforme"] = ligne["sha256"] == attendu["sha256"]
+        else:
+            ligne["git_sha1"] = sha1_git(f.read_bytes())
+            ligne["conforme"] = ligne["git_sha1"] == attendu.get("git_sha1")
+        if not ligne["conforme"]:
+            raise GardeArret(f"{f.name} : empreinte différente de celle publiée pour la révision")
+        sortie[f.name] = ligne
+    return sortie
+
+
+def empreintes_fichiers_modele(nom: str, revision: str, essentiels=("config.json", "generation_config.json",
+                                                                    "tokenizer.json", "tokenizer_config.json"),
+                               publies: dict | None = None, cache_dir: str | None = None) -> dict:
+    """Fichiers du modèle en cache local (dossier de la révision figée) contre les empreintes publiées par son dépôt
+    (`publies` : injecté par les tests ; sinon lu sur le dépôt du modèle)."""
+    from huggingface_hub import HfApi, try_to_load_from_cache
+
+    chemin = try_to_load_from_cache(nom, "config.json", cache_dir=cache_dir, revision=revision)
+    if not isinstance(chemin, str):
+        raise GardeArret(f"{nom}@{revision[:12]} : configuration absente du cache local")
+    dossier = Path(chemin).parent
+    if publies is None:
+        publies = {}
+        for x in HfApi().model_info(nom, revision=revision, files_metadata=True).siblings:
+            publies[x.rfilename] = {"sha256": x.lfs.sha256} if x.lfs else {"git_sha1": x.blob_id}
+    fichiers = comparer_fichiers(dossier, publies)
+    manquants = [e for e in essentiels if e not in fichiers]
+    if manquants or not any(n.endswith(".safetensors") for n in fichiers):
+        raise GardeArret(f"fichiers du modèle manquants en cache : {manquants or 'poids'}")
+    return fichiers
 
 
 def fins_du_modele(modele, tokeniseur) -> set[int]:
@@ -141,9 +219,22 @@ def regler_determinisme(fils: int = 1, appareil: str = "cpu") -> dict:
         torch.backends.cudnn.allow_tf32 = False
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+        torch.backends.cuda.matmul.allow_bf16_reduced_precision_reduction = False
+        torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction = False
         reglages.update({"cublas_workspace": os.environ["CUBLAS_WORKSPACE_CONFIG"], "tf32": False,
+                         "reduction_reduite_bf16_fp16": False,
                          "carte": torch.cuda.get_device_name(0), "capacite": list(torch.cuda.get_device_capability(0)),
-                         "cuda": torch.version.cuda, "cudnn": torch.backends.cudnn.version()})
+                         "cuda": torch.version.cuda, "cudnn": torch.backends.cudnn.version(), "pilote": pilote()})
     torch.use_deterministic_algorithms(True)
     torch.set_num_threads(int(fils))
     return reglages
+
+
+def pilote() -> str | None:
+    """Version du pilote de la carte (outil nvidia-smi), consignée avec les réglages."""
+    try:
+        r = subprocess.run(["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"], capture_output=True,
+                           text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return r.stdout.strip() or None

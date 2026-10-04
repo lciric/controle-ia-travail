@@ -164,7 +164,7 @@ def test_relecture_du_disque_saine_et_artefacts(tmp_path):
               sonde_lineaire_aleatoire("a", 2, 32, "attention", np.random.default_rng(2))]
     vecteurs, scores = R.calculer_en_ligne(R.CONFIG, ep, acts, [0, 1, 2], sondes)
     sain = R.ecrire_tableaux(tmp_path / "sain.npz", acts, vecteurs, scores)
-    R.relire_et_controler(sain, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores, True)
+    R.relire_et_controler(sain, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores, True, acts)
     evaluation = R.ecrire_tableaux(tmp_path / "evaluation.npz", None, vecteurs, scores)
     R.relire_et_controler(evaluation, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores, False)
     with pytest.raises(GardeArret, match="hors entraînement"):     # artefact : par jeton gardé en évaluation
@@ -173,10 +173,24 @@ def test_relecture_du_disque_saine_et_artefacts(tmp_path):
     faux[0][2] += 1e-3                                              # artefact : activations écrites ≠ mémoire
     altere = R.ecrire_tableaux(tmp_path / "altere.npz", faux, vecteurs, scores)
     with pytest.raises(GardeArret, match="recalcul hors ligne"):
-        R.relire_et_controler(altere, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores, True)
+        R.relire_et_controler(altere, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores, True, acts)
     scores_faux = {k: v + 1.0 for k, v in scores.items()}           # artefact : scores écrits ≠ mémoire
     with pytest.raises(GardeArret, match="scores relus"):
-        R.relire_et_controler(sain, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores_faux, True)
+        R.relire_et_controler(sain, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores_faux, True, acts)
+    with pytest.raises(GardeArret, match="sans la référence"):       # la relecture par jeton exige la mémoire
+        R.relire_et_controler(sain, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores, True)
+    # artefact (contre-lecture 1, Rem-2) : positions hors des empans d'action altérées sur le disque ;
+    # vecteurs et scores inchangés, mais les activations par jeton relues diffèrent de la mémoire
+    hors = {a: {c: v.copy() for c, v in pc.items()} for a, pc in acts.items()}
+    for tr in ep.transcriptions:
+        dans = np.zeros(len(tr.ids), dtype=bool)
+        for x in tr.actions:
+            dans[x.debut:x.fin] = True
+        for c in hors[tr.agent]:
+            hors[tr.agent][c][~dans] = 0.0
+    hors_empans = R.ecrire_tableaux(tmp_path / "hors-empans.npz", hors, vecteurs, scores)
+    with pytest.raises(GardeArret, match="activations par jeton relues"):
+        R.relire_et_controler(hors_empans, R.CONFIG, ep, [0, 1, 2], sondes, vecteurs, scores, True, acts)
     with pytest.raises(GardeArret, match="R12"):
         R.ecrire_tableaux(tmp_path / "sain.npz", acts, vecteurs, scores)
 

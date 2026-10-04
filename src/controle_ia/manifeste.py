@@ -21,7 +21,8 @@ import numpy as np
 from .gardes import GardeArret, etat_git, exiger_numpy_minimal
 from .scellement import empreinte, sceller, verifier
 
-BIBLIOTHEQUES = ("numpy", "scipy", "matplotlib", "torch", "transformers", "transformer-lens", "vllm", "peft")
+BIBLIOTHEQUES = ("numpy", "scipy", "matplotlib", "torch", "transformers", "tokenizers", "safetensors", "huggingface_hub",
+                 "transformer-lens", "vllm", "peft")
 _RUN_ID = re.compile(r"^[0-9]{8}-[0-9]{6}-[a-z0-9][a-z0-9-]{0,62}$")
 
 

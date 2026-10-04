@@ -65,14 +65,19 @@ fi
 journal "tests : $(tail -1 "$TRAVAIL/tests.txt")"
 
 if [ "$MODE" = reel ]; then
-    R=$(python -c "from huggingface_hub import HfApi; print(HfApi().model_info('meta-llama/Llama-3.1-8B-Instruct').sha)")
-    journal "révision du modèle : $R"
-    ARGS=(--revision "$R" --prereg "$PREREG")
+    # révision citée par le préenregistrement (jamais la branche courante du dépôt du modèle)
+    R=$(sed -n 's/.*Révision du modèle : `\([0-9a-f]\{40\}\)`.*/\1/p' "$PREREG" | head -1)
+    [ -n "$R" ] || { journal "révision introuvable dans $PREREG : arrêt"; exit 1; }
+    journal "révision du modèle (citée) : $R"
+    ARGS=(--revision "$R" --prereg "$PREREG" --sortie-tests "$TRAVAIL/tests.txt")
     SUFFIXE=validation-reelle
 else
-    ARGS=(--repetition-jouet)
+    ARGS=(--repetition-jouet --sortie-tests "$TRAVAIL/tests.txt")
     SUFFIXE=repetition-jouet
 fi
+# délai externe par run (R10 : le signal vise le processus lancé, par son identifiant) ; TERM est converti en
+# arrêt consigné (arret.json), puis KILL cinq minutes plus tard si le processus ne rend pas la main
+DELAI=(timeout --signal=TERM --kill-after=5m "${DELAI_RUN:-3h}")
 
 pousser() { git push -q origin "$BRANCHE"; }
 consigner_arret() {
@@ -86,7 +91,7 @@ consigner_arret() {
 }
 A="$(date -u +%Y%m%d-%H%M%S)-$SUFFIXE"
 journal "run A : $A"
-if ! PYTHONPATH=src python -m controle_ia.harnais.validation_reelle "${ARGS[@]}" --run-id "$A" \
+if ! PYTHONPATH=src "${DELAI[@]}" python -m controle_ia.harnais.validation_reelle "${ARGS[@]}" --run-id "$A" \
         >"$TRAVAIL/run-A.json" 2>>"$TRAVAIL/run-A.err"; then
     consigner_arret "run A"; exit 1
 fi
@@ -97,7 +102,7 @@ journal "run A terminé : $A"
 sleep 1      # deux identifiants distincts même si le run A a duré moins d'une seconde
 B="$(date -u +%Y%m%d-%H%M%S)-$SUFFIXE"
 journal "run B (rejeu de $A) : $B"
-if ! PYTHONPATH=src python -m controle_ia.harnais.validation_reelle "${ARGS[@]}" --rejeu-de "$A" --run-id "$B" \
+if ! PYTHONPATH=src "${DELAI[@]}" python -m controle_ia.harnais.validation_reelle "${ARGS[@]}" --rejeu-de "$A" --run-id "$B" \
         >"$TRAVAIL/run-B.json" 2>>"$TRAVAIL/run-B.err"; then
     consigner_arret "run B"; exit 1
 fi

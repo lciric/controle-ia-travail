@@ -104,9 +104,13 @@ def ecrire_tableaux(chemin: Path, acts: dict | None, vecteurs: dict, scores: dic
 
 
 def relire_et_controler(chemin: Path, politique: dict, episode, couches: list[int], sondes: list, vecteurs: dict,
-                        scores: dict, par_jeton: bool, codage: str = "float32") -> None:
-    """Garde : le disque rend ce qui a été calculé en ligne ; pour un épisode d'entraînement, scores et vecteurs
-    recalculés depuis les activations par jeton relues sont identiques au bit près."""
+                        scores: dict, par_jeton: bool, codage: str = "float32", acts: dict | None = None) -> None:
+    """Garde : le disque rend ce qui a été calculé en ligne. Vecteurs et scores relus identiques au bit près ; pour
+    un épisode d'entraînement, chaque tableau d'activations par jeton relu et décodé est identique au bit près, formes
+    comprises, à celui de la mémoire (`acts`, obligatoire alors : toutes les positions, pas seulement les empans
+    d'action), et vecteurs et scores recalculés hors ligne depuis ces activations le sont aussi."""
+    if par_jeton and acts is None:
+        raise GardeArret(f"{episode.identifiant} : relecture des activations par jeton sans la référence en mémoire")
     verifier(chemin)
     with np.load(chemin) as z:
         exiger_identite(vecteurs, {k[len("par_action/"):]: decoder(z[k], codage) for k in z.files
@@ -122,6 +126,9 @@ def relire_et_controler(chemin: Path, politique: dict, episode, couches: list[in
         for k in cles:
             _, agent, couche = k.split("/")
             acts_disque.setdefault(int(agent[len("agent"):]), {})[int(couche[len("couche"):])] = decoder(z[k], codage)
+    exiger_identite({f"agent{a}/couche{c}": v for a, pc in acts.items() for c, v in pc.items()},
+                    {f"agent{a}/couche{c}": v for a, pc in acts_disque.items() for c, v in pc.items()},
+                    f"{episode.identifiant}, activations par jeton relues")
     v2, s2 = calculer_en_ligne(politique, episode, acts_disque, couches, sondes)
     exiger_identite(vecteurs, v2, f"{episode.identifiant}, vecteurs recalculés hors ligne")
     exiger_identite(scores, s2, f"{episode.identifiant}, scores recalculés hors ligne")

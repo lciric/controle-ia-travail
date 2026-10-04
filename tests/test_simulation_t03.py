@@ -397,7 +397,8 @@ def _mini_grille():
 
 PREREG_MINI = "# Mini préenregistrement de test\n\n- Commit du code d'analyse : `{commit}`\n- Grille : {sha}\n\n" + "\n\n".join(
     f"## {s}\n\nTexte de test." for s in ("Hypothèse", "Prédiction chiffrée et signe attendu", "Métrique", "Seuil",
-                                           "Plan d'analyse", "Critères de lecture gelés", "Liste d'arrêt", "Contre-lecture")) + "\n"
+                                           "Plan d'analyse", "Critères de lecture gelés", "Liste d'arrêt")) + (
+    "\n\n## Contre-lecture\n\nTexte de test : brouillon `" + "a" * 64 + "`, rapport `" + "b" * 64 + "`.\n")
 
 
 def _preparer(depot, grille=None):

@@ -94,8 +94,9 @@ def ecrire_tableaux(chemin: Path, acts: dict | None, vecteurs: dict, scores: dic
 
 
 def relire_et_controler(chemin: Path, config: dict, episode, couches: list[int], sondes: list, vecteurs: dict,
-                        scores: dict, par_jeton: bool) -> None:
-    P.relire_et_controler(chemin, config["politique"], episode, couches, sondes, vecteurs, scores, par_jeton, "float32")
+                        scores: dict, par_jeton: bool, acts: dict | None = None) -> None:
+    P.relire_et_controler(chemin, config["politique"], episode, couches, sondes, vecteurs, scores, par_jeton, "float32",
+                          acts)
 
 
 def executer(racine: str | Path, run_id: str, entropie: int | None = None, config: dict | None = None) -> dict:
@@ -121,7 +122,7 @@ def executer(racine: str | Path, run_id: str, entropie: int | None = None, confi
         ecrire_resultat(racine, chemin_m, f"{ep.identifiant}-trajectoire", ep.en_dict())
         npz = ecrire_tableaux(racine / "diag" / run_id / f"{ep.identifiant}-tableaux.npz",
                               acts if par_jeton else None, vecteurs, scores)
-        relire_et_controler(npz, config, ep, couches, sondes, vecteurs, scores, par_jeton)
+        relire_et_controler(npz, config, ep, couches, sondes, vecteurs, scores, par_jeton, acts)
         episodes.append({"episode": ep.identifiant, "par_jeton_conserve": par_jeton, "empreintes": emp,
                          "equivalence": eq, "tableaux": str(npz.relative_to(racine)),
                          "controle_disque": "scores et vecteurs relus et recalculés hors ligne : identiques"

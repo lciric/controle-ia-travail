@@ -44,7 +44,9 @@ def test_lot_equivalence_avec_remplissage():
     for ep, acts, rapport in sorties:
         assert len(rapport["ecarts"]) == 6
         assert max(max(e.values()) for e in rapport["ecarts"].values()) < 1e-5
-        assert min(min(e.values()) for e in rapport["controle_negatif_decalage_1"].values()) > 1e-4
+        zones = [z for z in rapport["controle_negatif_zone_generee"].values() if z is not None]
+        assert zones and min(v["max"] for z in zones for v in z.values()) > 1e-4
+        assert all(s == {"tableaux_distincts": True, "ulp_vu": True} for s in rapport["sondes"].values())
         for tr in ep.transcriptions:
             for a in tr.actions:
                 assert tr.ids[a.debut:a.fin] == a.ids
@@ -96,6 +98,28 @@ def test_garde_d_equivalence_sur_relecture_desalignee(monkeypatch):
     monkeypatch.setattr(E, "relire_crochets_lot", desalignee)
     with pytest.raises(GardeArret, match="génération ≠ passe unique"):
         _jouer(_modele(), _graines(3, 2, 2), T=2)
+
+
+def test_controle_negatif_zone_generee_artefact():
+    """Contre-lecture 1, Rem-1 : activations constantes le long de la zone générée, des deux côtés, contexte intact.
+    Le contrôle sur toutes les positions passerait ; restreint à la zone générée, la garde arrête."""
+    from controle_ia.harnais.activations import ecart_decale_zone_generee
+    from controle_ia.harnais.episode import exiger_gardes
+    rng = np.random.default_rng(1)
+    lc, n = 20, 8
+    p = {0: rng.standard_normal((lc + n, 6)).astype(np.float32)}
+    g = {0: p[0].copy()}
+    sain = ecart_decale_zone_generee(g, p, lc, 1e-4)
+    assert sain[0]["max"] > 1e-4 and sain[0]["positions"] == n - 1
+    for a in (g, p):
+        a[0][lc:] = a[0][lc]                                   # artefact : zone générée constante
+    assert ecart_equivalence(g, p, decalage=1)[0] > 1e-4       # l'ancien contrôle (toutes positions) passerait
+    zone = ecart_decale_zone_generee(g, p, lc, 1e-4)
+    assert zone[0]["max"] == 0.0
+    rapport = {"tolerance": 1e-4, "ecarts": {"0,0": ecart_equivalence(g, p)}, "controle_negatif_zone_generee": {"0,0": zone}}
+    with pytest.raises(GardeArret, match="aveugle"):
+        exiger_gardes(rapport, "0,0", "artefact")
+    assert ecart_decale_zone_generee({0: g[0][:lc + 1]}, p, lc, 1e-4) is None   # une seule position décodée : trop court
 
 
 def test_controle_negatif_sain_et_aveugle():

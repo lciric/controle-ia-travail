@@ -22,8 +22,8 @@ import numpy as np
 import torch
 
 from ..gardes import GardeArret
-from .activations import (Crochets, agreger, ecart_equivalence, exiger_controle_negatif, exiger_equivalence,
-                          passe_unique, profil_ecarts)
+from .activations import (Crochets, agreger, ecart_decale_zone_generee, ecart_equivalence, exiger_controle_negatif,
+                          exiger_equivalence, passe_unique, profil_ecarts, sonde_de_comparaison)
 from .formats import FormatBrut
 
 
@@ -72,15 +72,16 @@ class EnvironnementJouet:
 
 
 def generer_lot(modele, contextes: list[list[int]], max_nouveaux: int, temperature: float, graines: list[int],
-                fins: set[int], pad_id: int) -> tuple[list[list[int]], dict]:
+                fins: set[int], pad_id: int, empreinte_logits: bool = False) -> tuple[list[list[int]], dict]:
     """Échantillonnage jeton par jeton d'un lot, avec cache ; une graine et un générateur par ligne.
 
     Remplissage à gauche, masque d'attention et positions explicites (la position d'un jeton ne dépend pas
     du remplissage). Une ligne s'arrête à son premier jeton de `fins` (gardé dans l'action) ; les lignes
     finies reçoivent `pad_id`, sans effet sur les autres. Seuls les logits du dernier jeton sont calculés
     (mémoire : un vocabulaire de 128 000 jetons sur tout le contexte d'un lot pèserait des gigaoctets).
-    Renvoie les jetons générés par ligne et le plan du lot (longueur remplie, nombre de passes de
-    décodage), nécessaire pour relire les crochets."""
+    Renvoie les jetons générés par ligne et le plan du lot : longueur remplie, nombre de passes de
+    décodage (nécessaire pour relire les crochets), remplissage par ligne et, sur demande, une empreinte
+    sha256 par ligne des logits de chaque pas (rejeu de la génération elle-même, pas seulement des jetons)."""
     if max_nouveaux < 1:
         raise GardeArret("max_nouveaux < 1")
     if not contextes or len(graines) != len(contextes) or any(len(c) == 0 for c in contextes):
@@ -94,6 +95,7 @@ def generer_lot(modele, contextes: list[list[int]], max_nouveaux: int, temperatu
         masque[r, L - len(c):] = 1
     positions = (masque.cumsum(dim=1) - 1).clamp(min=0)
     generateurs = [torch.Generator(device="cpu").manual_seed(int(g)) for g in graines]
+    empreintes = [hashlib.sha256() for _ in range(B)] if empreinte_logits else None
     nouveaux: list[list[int]] = [[] for _ in range(B)]
     actives = [True] * B
     passes = 0
@@ -107,6 +109,8 @@ def generer_lot(modele, contextes: list[list[int]], max_nouveaux: int, temperatu
             for r in range(B):
                 if not actives[r]:
                     continue
+                if empreintes is not None:
+                    empreintes[r].update(logits[r].contiguous().numpy().tobytes())
                 if temperature <= 0:
                     j = int(torch.argmax(logits[r]))
                 else:
@@ -123,7 +127,10 @@ def generer_lot(modele, contextes: list[list[int]], max_nouveaux: int, temperatu
                             logits_to_keep=1)
             suivante = suivante + 1
             passes += 1
-    return nouveaux, {"longueur_remplie": L, "passes_decodage": passes}
+    plan = {"longueur_remplie": L, "passes_decodage": passes, "remplissage": [L - len(c) for c in contextes]}
+    if empreintes is not None:
+        plan["empreintes_logits"] = [h.hexdigest() for h in empreintes]
+    return nouveaux, plan
 
 
 def generer(modele, contexte: list[int], max_nouveaux: int, temperature: float, graine: int, fin_id: int) -> list[int]:
@@ -148,14 +155,21 @@ def relire_crochets_lot(brut: dict[int, list[np.ndarray]], k: int, longueur_cont
 
 def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, T: int, graines: list[dict],
                    couches, max_nouveaux: int = 24, temperature: float = 1.0, echantillon_equivalence=(),
-                   tolerance_equivalence: float = 1e-4, pad_id: int | None = None, chrono: dict | None = None) -> list[tuple]:
+                   tolerance_equivalence: float = 1e-4, pad_id: int | None = None, chrono: dict | None = None,
+                   garde: str = "immediate", echeance: float | None = None, empreinte_logits: bool = False) -> list[tuple]:
     """Joue un lot d'épisodes en pas synchronisés ; renvoie, par épisode, (épisode, activations par agent et par
     couche, rapport d'équivalence).
 
     `graines[b][(i, t)]` : graine de l'action (i, t) de l'épisode b ; `echantillon_equivalence` : triplets
-    (b, i, t) dont la génération capture aussi les activations. Pour chacun, deux gardes : génération =
-    passe unique à la tolérance près ; décalée d'un jeton, la comparaison dépasse la tolérance.
-    `chrono` (facultatif) cumule durées et nombres de jetons de la génération et de la passe unique."""
+    (b, i, t) dont la génération capture aussi les activations. Pour chacun, deux gardes (`exiger_gardes`) :
+    génération = passe unique à la tolérance près, sur toutes les positions capturées ; et contrôle négatif
+    dans la zone générée (`ecart_decale_zone_generee`) : décalée d'un jeton, la comparaison y dépasse la
+    tolérance. `garde="immediate"` arrête à la première faute ; `garde="differee"` consigne tout et laisse
+    l'appelant appliquer les gardes en fin de phase (validation : profils complets avant l'arrêt).
+    `echeance` (horloge `time.perf_counter`) : garde de durée vérifiée à chaque pas (t, i).
+    `chrono` (facultatif) cumule durées, jetons, remplissage et lignes finies avant les autres."""
+    if garde not in ("immediate", "differee"):
+        raise GardeArret(f"mode de garde {garde!r} inconnu")
     B = len(identifiants)
     if N < 1 or T < 1 or B < 1:
         raise GardeArret(f"N = {N}, T = {T}, lot de {B} : au moins 1 attendu")
@@ -171,9 +185,11 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
     trs = [[Transcription(agent=i) for i in range(N)] for _ in range(B)]
     debuts = [[None] * N for _ in range(B)]
     journaux: list[list[tuple[int, int, str]]] = [[] for _ in range(B)]
-    acts_generation = {}
+    acts_generation, longueurs, logits = {}, {}, {}
     for t in range(T):
         for i in range(N):
+            if echeance is not None and time.perf_counter() > echeance:
+                raise GardeArret(f"limite de durée dépassée au pas {t}, agent {i}")
             contextes = []
             for b in range(B):
                 obs = environnement.observation(i, t, journaux[b])
@@ -187,17 +203,27 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
             depart = time.perf_counter()
             if lignes:
                 with Crochets(modele, couches, lignes=lignes) as c:
-                    nouveaux, plan = generer_lot(modele, contextes, max_nouveaux, temperature, graines_lot, fmt.fins, pad)
+                    nouveaux, plan = generer_lot(modele, contextes, max_nouveaux, temperature, graines_lot, fmt.fins, pad,
+                                                 empreinte_logits)
                     brut = c.vider_lot()
                 for k, b in enumerate(lignes):
                     acts_generation[(b, i, t)] = relire_crochets_lot(brut, k, len(contextes[b]), plan, len(nouveaux[b]))
+                    longueurs[(b, i, t)] = len(contextes[b])
             else:
-                nouveaux, plan = generer_lot(modele, contextes, max_nouveaux, temperature, graines_lot, fmt.fins, pad)
+                nouveaux, plan = generer_lot(modele, contextes, max_nouveaux, temperature, graines_lot, fmt.fins, pad,
+                                             empreinte_logits)
+            if empreinte_logits:
+                for b in range(B):
+                    logits[(b, i, t)] = plan["empreintes_logits"][b]
             if chrono is not None:
+                longueurs_gen = [len(nv) for nv in nouveaux]
                 chrono["generation_s"] = chrono.get("generation_s", 0.0) + time.perf_counter() - depart
-                chrono["jetons_generes"] = chrono.get("jetons_generes", 0) + sum(len(nv) for nv in nouveaux)
+                chrono["jetons_generes"] = chrono.get("jetons_generes", 0) + sum(longueurs_gen)
                 chrono["jetons_contexte"] = chrono.get("jetons_contexte", 0) + sum(len(c) for c in contextes)
                 chrono["jetons_contexte_remplis"] = chrono.get("jetons_contexte_remplis", 0) + B * plan["longueur_remplie"]
+                chrono["jetons_remplissage"] = chrono.get("jetons_remplissage", 0) + sum(plan["remplissage"])
+                chrono["lignes_finies_avant"] = (chrono.get("lignes_finies_avant", 0)
+                                                 + sum(n < max(longueurs_gen) for n in longueurs_gen))
                 chrono["passes_decodage"] = chrono.get("passes_decodage", 0) + plan["passes_decodage"]
             for b in range(B):
                 ctx, nv = contextes[b], nouveaux[b]
@@ -213,19 +239,35 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
         if chrono is not None:
             chrono["passe_unique_s"] = chrono.get("passe_unique_s", 0.0) + time.perf_counter() - depart
             chrono["jetons_passe_unique"] = chrono.get("jetons_passe_unique", 0) + sum(len(tr.ids) for tr in trs[b])
-        ecarts, decales, profils = {}, {}, {}
+        rapport = {"tolerance": tolerance_equivalence, "ecarts": {}, "controle_negatif_zone_generee": {}, "profils": {},
+                   "longueurs_contexte": {}, "positions_capturees": {}, "empreintes_capture": {}, "sondes": {}}
         for (bb, i, t), ag in sorted(acts_generation.items()):
             if bb != b:
                 continue
-            cle = f"{i},{t}"
-            ecarts[cle] = ecart_equivalence(ag, acts[i])
-            exiger_equivalence(ecarts[cle], tolerance_equivalence, f"{identifiants[b]}, action ({i}, {t})")
-            decales[cle] = ecart_equivalence(ag, acts[i], decalage=1)
-            exiger_controle_negatif(decales[cle], tolerance_equivalence, f"{identifiants[b]}, action ({i}, {t})")
-            profils[cle] = profil_ecarts(ag, acts[i])
-        sorties.append((episode, acts, {"tolerance": tolerance_equivalence, "ecarts": ecarts,
-                                        "controle_negatif_decalage_1": decales, "profils": profils}))
+            cle, lc = f"{i},{t}", longueurs[(bb, i, t)]
+            rapport["ecarts"][cle] = ecart_equivalence(ag, acts[i])
+            rapport["controle_negatif_zone_generee"][cle] = ecart_decale_zone_generee(ag, acts[i], lc, tolerance_equivalence)
+            rapport["profils"][cle] = profil_ecarts(ag, acts[i], lc)
+            rapport["longueurs_contexte"][cle] = lc
+            rapport["positions_capturees"][cle] = int(next(iter(ag.values())).shape[0])
+            rapport["empreintes_capture"][cle] = empreinte_tableaux(ag)
+            rapport["sondes"][cle] = sonde_de_comparaison(ag, acts[i])
+            if garde == "immediate":
+                exiger_gardes(rapport, cle, f"{identifiants[b]}, action ({i}, {t})")
+        if empreinte_logits:
+            rapport["empreintes_logits"] = {f"{i},{t}": logits[(b, i, t)] for t in range(T) for i in range(N)}
+        sorties.append((episode, acts, rapport))
     return sorties
+
+
+def exiger_gardes(rapport: dict, cle: str, quoi: str) -> None:
+    """Les deux gardes d'une action de l'échantillon : équivalence (toutes positions) et contrôle négatif dans la
+    zone générée (si l'action a au moins deux positions décodées capturées)."""
+    tol = rapport["tolerance"]
+    exiger_equivalence(rapport["ecarts"][cle], tol, quoi)
+    zone = rapport["controle_negatif_zone_generee"][cle]
+    if zone is not None:
+        exiger_controle_negatif({c: v["max"] for c, v in zone.items()}, tol, quoi + ", zone générée")
 
 
 def jouer_episode(modele, tokeniseur, environnement, identifiant: str, N: int, T: int, graines: dict,
