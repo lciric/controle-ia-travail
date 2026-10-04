@@ -35,6 +35,8 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 | R-021 | 2026-10-04 | Les brouillons de préenregistrement vivent hors de l'arbre scellé (`brouillons/`) et sont committés, pour que l'empreinte du brouillon relu par chaque contre-lecteur reste vérifiable ; la version finale est écrite sous son nom définitif dans `prereg/` au scellement. | R2, R6, R12 ; garde de propreté du dépôt. |
 | R-022 | 2026-10-04 | Contre-lecture 1 du préenregistrement de T0.3 (sous-agent neuf) : 26 remarques, toutes acceptées, dont 3 bloquantes. P4.3 : seuil 0,99 inatteignable, remplacé par la puissance exacte 0,9673, obtenue par énumération et recalculée indépendamment. P3.2 ajoutée. Table E unifiée entre texte et code. Gardes ajoutées : commit cité, `--blocs`, seuil non fini, multi-ensemble. Code corrigé au commit 62cb33c. Seconde contre-lecture, sur les seules parties modifiées, par un autre sous-agent neuf. | R2, R4, R5. |
 
+| R-023 | 2026-10-04 | Contre-lecture 2 du préenregistrement de T0.3 (sous-agent neuf, parties modifiées) : aucune remarque bloquante ; une importante (table E : clause du max restreinte à la dépendance positive), deux compléments (pages de 2606.10456 corrigées sur le PDF, étiquettes d'origine), onze mineures. Toutes acceptées : code au commit d73ac46, avec garde du code importé, sélection de blocs refusée partout et marqueurs de gabarit refusés par le validateur ; brouillon 3. Contre-lecture 3, limitée à la différence, par un troisième sous-agent neuf, avant scellement. | R2, R5, R7. |
+
 ## Propositions avec recommandation (défaut sous 48 heures)
 
 | id | proposée le (UTC) | décision | défaut | échéance (UTC) | statut |
