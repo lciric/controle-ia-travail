@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-04 16:47 UTC, session 1.
+Dernière mise à jour : 2026-10-04 18:03 UTC, session 2 (lancement).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -38,4 +38,4 @@ Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md`. Fournis le 2026-1
 Devis de la phase 0 approuvé (GO-2026-10-04-08 : plafond 150 USD, alerte à 120 USD) ; 0 USD engagé ; aucune instance créée.
 
 ## Instances de calcul actives
-Aucune.
+- **54183350** (Vast.ai) : créée le 2026-10-04 à 18:03 UTC sous GO-2026-10-04-08, offre 48704113 (H100 SXM, 3,124 USD/h tout compris), image python:3.11-bookworm, mode « args » : amorce de la validation de T0.4 au commit de scellement 6cf7f20. Tâche en cours : mise en place, tests, runs A et B. Plafond : 6 heures (au plus tard 2026-10-05 00:03 UTC). Arrêt par identifiant à la fin de l'amorce (R10).
