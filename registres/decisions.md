@@ -35,6 +35,16 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 | R-026 | 2026-10-04 | GO N-003 (a) et N-004 (a) mis en œuvre sans modifier le programme v2 (document qui fait foi) : énoncés retenus fixés dans une note de décision scellée (`docs/decisions/`), qui fixe la lecture du programme jusqu'à une éventuelle v3 transmise par Lazar ; type de GO « revendication » ajouté à la liste documentée du registre (la garde de calcul ne lit que le type « calcul »). | Hiérarchie de décision : Lazar décide, je consigne ; R6, R12. |
 | R-027 | 2026-10-04 | GO N-007 (a) et N-008 (a) mis en œuvre sans modifier le programme ni le brief : énoncé retenu de H2, quatre bases ajoutées au plan 2 × 2 (dont deux boîte noire qui rejoignent le comparateur de G1) et critère de G1 sans bras F1, fixés dans `docs/decisions/decision-N-007-N-008-v1.md` (scellée) ; lecture de « toujours valide » précisée à partir de T0.3 (calibrage sur épisodes entiers, détecteur de rupture), à proposer au préenregistrement de G1. | Hiérarchie de décision ; R8 (réserve d'antériorité consignée), R6, R12. |
 | R-028 | 2026-10-04 | GO N-005 (a) et N-006 (a) mis en œuvre sans modifier le programme ni le brief. L'option (a) de N-005 est lue avec le point 6 de la contre-lecture de Lazar : destination libre ĉ, la normalisation par la cible devenant le cas testé ĉ = v*. Énoncés retenus de HC1 et HC5 et porte GC réécrite dans `docs/decisions/decision-N-005-N-006-v1.md` (scellée). Préenregistrement du papier C suspendu à la lecture de Panin. | Hiérarchie de décision ; R7, R8. |
+| R-029 | 2026-10-04 | Harnais de T0.4 (`src/controle_ia/harnais/`) :
+- bibliothèques torch 2.14.1 et transformers 5.18.0, figées dans `requirements-cpu.txt`, installées depuis PyPI (l'index de PyTorch réservé au processeur est bloqué) ;
+- crochets de transformers sur la sortie des blocs de décodeur plutôt que TransformerLens : même code en génération et en passe unique, aucune conversion de modèle ;
+- boucle de génération propre, avec cache et générateur à graine explicite par action, pour le rejeu au bit près ;
+- transcriptions tenues en identifiants de jetons, jamais retokenisées : empans d'action exacts ;
+- couches par défaut aux fractions ¼, ½, ¾ (proposition à confirmer avec T0.7) ;
+- agrégation par action limitée au maximum et au dernier jeton (moyenne et médiane refusées par garde) ;
+- garde d'équivalence génération/passe unique à 10⁻⁴ en simple précision (tolérance à revoir en demi-précision) ;
+- liste blanche des modèles réels, révision obligatoire ;
+- modèle et tokeniseur jouets construits hors ligne (HuggingFace inaccessible), qui ne servent à aucune mesure. | Brief, T0.4 ; R5, R9, interdits (moyenne sur les jetons, changement de modèle). |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
