@@ -101,9 +101,20 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
   - étapes nommées après chaque run complet ;
   - motif du TERM ;
   - quatre comportements fixés par des tests (les cinq mutations survivantes sont vues).
-- Répétition jouet conforme `20261004-155447` et `-155505-repetition-jouet` ; essais de l'amorce rejoués au nouveau commit (dix scénarios, archive scellée v2).
+- Répétition jouet conforme `20261004-155447` et `-155505-repetition-jouet` ; essais de l'amorce rejoués au nouveau commit (neuf scénarios, douze lancements de l'amorce, archive scellée `diag/essais-amorce-T0.4/essais-amorce-T0.4-cl4-v1.tar` ; décompte et nom corrigés après la contre-lecture 5, R-3).
 - Transparence : les clones du contre-lecteur partageaient par liens physiques les objets git du dépôt (dates de 533 objets rafraîchies, contenu intact, `git fsck` sans erreur) ; désormais `git clone --no-hardlinks` pour les contre-lecteurs.
 - Brouillon 6 du préenregistrement, brouillon 5 de la procédure ; contre-lecture 5 du différentiel en cours. | R1, R2, R4, R5, R6, R10, R12, R13. |
+| R-037 | 2026-10-04 | Contre-lecture 5 (sous-agent neuf, différentiel 92e2f99..3a7b5e0 ; rapport scellé `prereg/contre-lectures/T0.4-rapport-contre-lecture-5-v1.md`, 42d90c97…) : « scellable après corrections de texte », aucune bloquante ni majeure ; R-1, R-2 mineures, R-3 à R-7 de forme ; toutes acceptées ; aucun changement de code.
+- Textes : ligne de table pour des runs complets non poussés (R-2) ; décompte des essais (R-3) ; filet « après la création de la branche » (R-6) ; procédure : lecture des codes 124 et 137 au vu des heures de l'amorce (R-1), relancement par paire A/B (R-4).
+- **Préenregistrement scellé** : `prereg/T0.4-validation-modele-reel-v1.md`, sha256 3d0589c80fe97b134b193a797881395ec710966867c47ca9e87506c187cb8c96 (code cité 3a7b5e0, 178 tests ; révision 0e9e39f… ; entropie figée) ; différentiel avec le brouillon 6 consigné et scellé (`prereg/contre-lectures/T0.4-differentiel-brouillon6-scelle-v1.diff`).
+- **Procédure scellée** : `docs/procedures/validation-T0.4-modele-reel-v1.md`, sha256 155e8149f065e620c8669d27829e356ebee9725972a198fce4fd7e9d32829add.
+- Reportés à une version ultérieure du code, après T0.4 (le commit cité est gelé pour le lancement) :
+  - R-5 : `mktemp` en échec, consignation interrompue après `CONSIGNE=1`, poussée annoncée sans traces ;
+  - R-6 : étape « révision citée » ;
+  - R-7 : trois sondes de mutation survivantes (ancre de fin de P0, contrôleur v1 « cpu,memory », exclusion de `scripts/`) ; préenregistrement d'essai scellé dans le test de P0 ;
+  - R-1 : l'amorce ne lirait 124 et 137 comme le plafond qu'après 345 minutes ;
+  - Q-5 : reconnaissance plus large des entrées de contre-lecture.
+- Lancement : session suivante (clé Vast.ai visible au démarrage), selon la procédure scellée, sous GO-2026-10-04-08. | R1, R2, R4, R5, R6, R10, R12, R13. |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
