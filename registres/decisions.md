@@ -65,6 +65,20 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 - Révision figée du programme pour Llama-3.1-8B-Instruct : `0e9e39f249a16976918f6564b8830bc894c89659` (métadonnées du dépôt du modèle lues le 2026-10-04 : commit courant, dernière modification 2024-09-25 ; empreintes publiées des quatre fichiers de poids).
 - R-032 corrigée : mémoire vive ≥ 64 Go exigée par garde (offre ≥ 96 Go), offre vérifiée en centre de données, disque ≥ 80 Go.
 - Brouillon 2 du préenregistrement et de la procédure ; contre-lecture 2 en cours. | R1, R2, R5, R9, R10, R12, R13. |
+| R-034 | 2026-10-04 | Contre-lecture 2 (sous-agent neuf, rapport scellé `prereg/contre-lectures/T0.4-rapport-contre-lecture-2-v1.md`, 8e0d62b8…) : « non scellable », N-1 bloquante, N-2 à N-4 majeures ; les 17 remarques sont acceptées.
+- Code corrigé au commit 9aaf4a5 (170 tests) :
+  - un audit de symétrie déclenché maintient toujours la réserve ;
+  - la logique se lit par zones ;
+  - tests des gardes qui n'en avaient pas ;
+  - garde de mémoire de la carte (75 Gio), plafond mémoire du conteneur ;
+  - scripts et dépendances gelés par le commit cité ;
+  - contrôle négatif de phase (95 % des actions comparables) ;
+  - couverture par action comparée ;
+  - nombre de tests gelé (170) ;
+  - traces de l'instance poussées ;
+  - délais figés sous 6 heures.
+- Défaut trouvé par l'essai de l'amorce : `timeout` refuse une durée composée (« 2h35m ») ; délais en minutes (155 et 345).
+- Brouillon 4 du préenregistrement, brouillon 3 de la procédure ; contre-lecture 3 en cours. | R1, R2, R4, R5, R10, R12, R13. |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
