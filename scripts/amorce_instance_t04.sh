@@ -23,7 +23,7 @@ if ! git -C amorce-depot checkout -q "$COMMIT"; then
 fi
 T="$RACINE_AMORCE/t04"
 # plafond de l'ensemble (mise en place, tests, runs A et B) sous les 6 heures du devis
-timeout --signal=TERM --kill-after=5m 5h45m env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/validation_t04_instance.sh
+timeout --signal=TERM --kill-after=5m 345m env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/validation_t04_instance.sh
 code=$?
 echo "AMORCE $(date -u +%FT%TZ) : fin, code $code"
 for f in "$T/journal.txt" "$T/tests.txt"; do

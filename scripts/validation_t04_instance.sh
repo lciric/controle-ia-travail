@@ -97,10 +97,10 @@ else
     ARGS=(--repetition-jouet --sortie-tests "$TRAVAIL/tests.txt")
     SUFFIXE=repetition-jouet
 fi
-# délai externe par run, figé (R1) : la limite interne est de 2 h 30 (CONFIG_REELLE) ; TERM à 2 h 35, converti en
+# délai externe par run, figé (R1) : la limite interne est de 2 h 30 (CONFIG_REELLE) ; TERM à 155 minutes, converti en
 # arrêt consigné (arret.json), puis KILL cinq minutes plus tard si le processus ne rend pas la main. Le signal vise
 # le processus lancé par timeout, par son identifiant (R10).
-DELAI=(timeout --signal=TERM --kill-after=5m 2h35m)
+DELAI=(timeout --signal=TERM --kill-after=5m 155m)
 
 A="$(date -u +%Y%m%d-%H%M%S)-$SUFFIXE"
 journal "run A : $A"
