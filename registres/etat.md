@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-04 08:20 UTC, session 1.
+Dernière mise à jour : 2026-10-04 08:45 UTC, session 1 (reprise après redémarrage du conteneur).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -23,7 +23,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 Aucun. T0.3 fournit la preuve du critère 5 de G0 (agrégateurs validés en simulation) ; G0 attend les autres critères.
 
 ## GO et nœuds en attente
-- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; N-002 devis phase 0 (150 USD) ; N-003 théorème négatif (renforcé) ; N-004 lemme ; N-005 loi de déférence (élargi ; pièce GC `docs/etat-de-l-art/porte-GC-loi-de-deference-v1.md` après contre-lecture de Lazar ; Panin SSRN 7424179 à lire avant de trancher) ; N-006 contre-mesures ; N-007 H2 ; N-008 critère de G1. Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
+- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; **N-003 et N-004 résolus** (GO-2026-10-04-02 et -03, option a ; énoncés retenus : `docs/decisions/decision-N-003-N-004-v1.md`) ; N-002 devis phase 0 (150 USD) ; N-005 loi de déférence (élargi ; pièce GC `docs/etat-de-l-art/porte-GC-loi-de-deference-v1.md` après contre-lecture de Lazar ; Panin SSRN 7424179 à lire avant de trancher) ; N-006 contre-mesures ; N-007 H2 ; N-008 critère de G1. Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
 
 ## Décisions ouvertes (défaut sous 48 heures)
 - P-001 garde de calcul active — échéance 2026-10-06 03:40 UTC.
