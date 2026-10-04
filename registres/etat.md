@@ -23,7 +23,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 Aucun. T0.3 fournit la preuve du critère 5 de G0 (agrégateurs validés en simulation) ; G0 attend les autres critères.
 
 ## GO et nœuds en attente
-- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; **N-003, N-004, N-007 et N-008 résolus** (GO-2026-10-04-02 à -05, option a ; `docs/decisions/decision-N-003-N-004-v1.md` et `docs/decisions/decision-N-007-N-008-v1.md`) ; N-002 devis phase 0 (150 USD) ; N-005 loi de déférence (élargi ; pièce GC `docs/etat-de-l-art/porte-GC-loi-de-deference-v1.md` après contre-lecture de Lazar ; Panin SSRN 7424179 à lire avant de trancher) ; N-006 contre-mesures ;. Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
+- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; **N-003, N-004, N-007 et N-008 résolus** (GO-2026-10-04-02 à -05, option a ; `docs/decisions/decision-N-003-N-004-v1.md` et `docs/decisions/decision-N-007-N-008-v1.md`) ; N-002 devis phase 0 (150 USD) ; N-005 loi de déférence (élargi ; pièce GC `docs/etat-de-l-art/porte-GC-loi-de-deference-v1.md` après contre-lecture de Lazar ; Panin SSRN 7424179 à lire avant de trancher) ; N-006 contre-mesures. Restent ouverts : N-002, N-005, N-006. Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
 
 ## Décisions ouvertes (défaut sous 48 heures)
 - P-001 garde de calcul active — échéance 2026-10-06 03:40 UTC.
