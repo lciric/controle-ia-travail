@@ -9,6 +9,7 @@ et une chaîne complète sur une mini-grille (manifeste → blocs → lecture �
 import copy
 import json
 import math
+import subprocess
 from pathlib import Path
 
 import numpy as np
@@ -300,6 +301,12 @@ def test_fusion_de_replication():
     f = LEC.fusionner(principale, rep)
     etats = {c["nom"]: c["etat"] for c in f["predictions"]["P2.1"]["cellules"]}
     assert etats == {"a": "non concluant", "b": "contraire", "c": "contraire", "d": "conforme"}
+    # une violation trajectorielle observée en réplication compte, même sur une cellule conforme
+    principale["predictions"]["P7.1"] = {"verdict": "confirmée", "cellules": [
+        {"nom": "t", "etat": "conforme", "genre": "trajectoriel"}]}
+    rep["predictions"]["P7.1"] = {"cellules": [{"nom": "t", "etat": "contraire", "genre": "trajectoriel"}]}
+    f = LEC.fusionner(principale, rep)
+    assert f["predictions"]["P7.1"]["verdict"] == "réfutée" and f["predictions"]["P7.1"]["a_auditer"] == ["t"]
     assert f["predictions"]["P2.1"]["verdict"] == "réfutée"
     assert principale["predictions"]["P2.1"]["cellules"][0]["etat"] == "contraire"   # pas d'effet de bord
 
@@ -382,37 +389,56 @@ def _mini_grille():
     }
 
 
-PREREG_MINI = "# Mini préenregistrement de test\n\nGrille : {sha}\n\n" + "\n\n".join(
+PREREG_MINI = "# Mini préenregistrement de test\n\n- Commit du code d'analyse : `{commit}`\n- Grille : {sha}\n\n" + "\n\n".join(
     f"## {s}\n\nTexte de test." for s in ("Hypothèse", "Prédiction chiffrée et signe attendu", "Métrique", "Seuil",
                                            "Plan d'analyse", "Critères de lecture gelés", "Liste d'arrêt", "Contre-lecture")) + "\n"
+
+
+def _preparer(depot, grille=None):
+    """Mini-dépôt : code factice et grille scellée committés (commit cité), puis préenregistrement scellé."""
+    from controle_ia.prereg import sceller_prereg
+    from controle_ia.scellement import sceller
+
+    grille = grille or _mini_grille()
+    (depot / "src").mkdir(exist_ok=True)
+    (depot / "src" / "code_factice.py").write_text("X = 1\n", encoding="utf-8")
+    gp = depot / "grille.json"
+    gp.write_text(json.dumps(grille), encoding="utf-8")
+    sha = sceller(gp)
+    committer(depot)
+    commit = subprocess.run(["git", "-C", str(depot), "rev-parse", "HEAD"], capture_output=True, text=True,
+                            check=True).stdout.strip()
+    pp = depot / "prereg.md"
+    pp.write_text(PREREG_MINI.format(sha=sha, commit=commit), encoding="utf-8")
+    sceller_prereg(pp)
+    committer(depot)
+    return pp, gp
+
+
+ATTENDUES = {"P1.1", "P1.2", "P1.3", "P1.4", "P2.1", "P2.2", "P2.3", "P3.1", "P3.2", "P3.3", "P3.4", "P4.1", "P4.2",
+             "P4.3", "P5.1", "P5.2", "P5.3", "P5.4", "P5.5", "P6.1", "P6.2", "P6.3", "P6.4", "P6.5", "P7.1",
+             "P7.2", "P7.3", "P8.1", "P8.2", "P8.3", "P8.4"}
 
 
 def test_chaine_complete_mini_grille(depot):
     from controle_ia.manifeste import verifier_resultat
     from controle_ia.prereg import sceller_prereg
-    from controle_ia.scellement import sceller
+    from controle_ia.simulation_t03.figures import figures
     from controle_ia.simulation_t03.run_t03 import executer, taches
 
-    grille = _mini_grille()
-    gp = depot / "grille.json"
-    gp.write_text(json.dumps(grille), encoding="utf-8")
-    sha = sceller(gp)
-    pp = depot / "prereg.md"
-    pp.write_text(PREREG_MINI.format(sha=sha), encoding="utf-8")
-    sceller_prereg(pp)
-    committer(depot)
+    pp, gp = _preparer(depot)
+    grille = json.loads(gp.read_text(encoding="utf-8"))
     assert len(set(taches(grille))) == len(taches(grille))
     sortie = executer(depot, pp, gp, "20261004-130000-mini")
     corps = verifier_resultat(depot, sortie["lecture"])
     lec = corps["resultat"]["lecture"]
-    attendues = {"P1.1", "P1.2", "P1.3", "P1.4", "P2.1", "P2.2", "P2.3", "P3.1", "P3.3", "P3.4", "P4.1", "P4.2",
-                 "P4.3", "P5.1", "P5.2", "P5.3", "P5.4", "P5.5", "P6.1", "P6.2", "P6.3", "P6.4", "P6.5", "P7.1",
-                 "P7.2", "P7.3", "P8.1", "P8.2", "P8.3", "P8.4"}
-    assert set(lec["predictions"]) == attendues
+    assert set(lec["predictions"]) == ATTENDUES
     for p in ("P1.1", "P3.1", "P4.1", "P5.1", "P5.4", "P7.1"):      # théorèmes trajectoriels : exacts même en petit
         assert lec["predictions"][p]["verdict"] == "confirmée", (p, lec["predictions"][p])
+    assert set(lec["audit_symetrie"]) == {"bornes", "formes_closes", "egalites", "audit_declenche"}
+    prog = corps["resultat"]["programme"]
+    assert len(prog) == 6 and all(set(ligne["exiges"]) <= ATTENDUES for ligne in prog)
     assert (depot / "diag" / "20261004-130000-mini" / "lecture.md").exists()
-    from controle_ia.simulation_t03.figures import figures
     faites = figures(depot, "20261004-130000-mini", alpha=0.1)
     assert len(faites) == 6 and all((depot / "diag" / "20261004-130000-mini" / "figures" / Path(f).name).exists()
                                     for f in faites)
@@ -420,7 +446,7 @@ def test_chaine_complete_mini_grille(depot):
         figures(depot, "20261004-130000-mini", alpha=0.1)
     # artefact : grille non citée par le préenregistrement → arrêt
     pp2 = depot / "prereg2.md"
-    pp2.write_text(PREREG_MINI.format(sha="0" * 64), encoding="utf-8")
+    pp2.write_text(PREREG_MINI.format(sha="0" * 64, commit="0" * 40), encoding="utf-8")
     sceller_prereg(pp2)
     committer(depot)
     with pytest.raises(GardeArret, match="ne cite pas"):
@@ -429,6 +455,97 @@ def test_chaine_complete_mini_grille(depot):
     ctx = B.Contexte(grille, {}, "")
     with pytest.raises(GardeArret, match="absente du manifeste"):
         ctx.rng("P7/Y")
+
+
+# --- gardes de la liste d'arrêt : artefacts (R5) ; le cas sain est la chaîne complète ci-dessus ---
+def test_garde_commit_cite_artefact(depot):
+    from controle_ia.simulation_t03.run_t03 import executer
+
+    pp, gp = _preparer(depot)
+    (depot / "src" / "code_factice.py").write_text("X = 2\n", encoding="utf-8")
+    committer(depot)
+    with pytest.raises(GardeArret, match="modifiés depuis le commit cité"):
+        executer(depot, pp, gp, "20261004-140000-mini")
+
+
+def test_blocs_refuses_hors_replication(depot):
+    from controle_ia.simulation_t03.run_t03 import executer
+
+    pp, gp = _preparer(depot)
+    with pytest.raises(GardeArret, match="réservé à la réplication"):
+        executer(depot, pp, gp, "20261004-140001-mini", blocs=["P2"])
+
+
+def test_garde_duree_artefact(depot):
+    from controle_ia.simulation_t03.run_t03 import executer
+
+    pp, gp = _preparer(depot)
+    with pytest.raises(GardeArret, match="durée"):
+        executer(depot, pp, gp, "20261004-140002-mini", limite_s=0.0)
+
+
+def test_garde_calibrage_artefact(depot, monkeypatch):
+    from controle_ia.simulation_t03.run_t03 import executer
+
+    pp, gp = _preparer(depot)
+    vrai = cal.seuil_max_exact
+    monkeypatch.setattr(cal, "seuil_max_exact", lambda a, n: vrai(a, n) - 0.7)
+    with pytest.raises(GardeArret, match="garde de calibrage"):
+        executer(depot, pp, gp, "20261004-140003-mini")
+
+
+def test_garde_seuil_non_fini_artefact(depot, monkeypatch):
+    from controle_ia.simulation_t03.run_t03 import executer
+
+    pp, gp = _preparer(depot)
+    monkeypatch.setattr(cal, "seuil_mc", lambda v, a: math.inf)
+    with pytest.raises(GardeArret, match="seuils non finis"):
+        executer(depot, pp, gp, "20261004-140004-mini")
+
+
+def test_garde_equivalence_artefact(depot, monkeypatch):
+    from controle_ia.simulation_t03.run_t03 import executer
+
+    pp, gp = _preparer(depot)
+    vrai = L.lot_max
+    monkeypatch.setattr(L, "lot_max", lambda Xb: vrai(Xb) + 1e-6)
+    with pytest.raises(GardeArret, match="équivalence"):
+        executer(depot, pp, gp, "20261004-140005-mini")
+
+
+def test_garde_multiensemble_artefact(depot, monkeypatch):
+    from controle_ia.simulation_t03.run_t03 import executer
+
+    pp, gp = _preparer(depot)
+    vrai = att.bloc_top_r
+
+    def fausse(x, r, rng):
+        out, debut = vrai(x, r, rng)
+        out = out.copy()
+        out[:, 0] += 1.0                                  # une valeur perdue, une autre inventée
+        return out, debut
+
+    monkeypatch.setattr(att, "bloc_top_r", fausse)
+    with pytest.raises(GardeArret, match="multi-ensemble non préservé"):
+        executer(depot, pp, gp, "20261004-140006-mini")
+
+
+def test_puissance_dispersion_exacte():
+    mus = [-0.5, 0.0, 0.5]
+    # valeurs de la contre-lecture (énumération indépendante, 4 décimales)
+    for T, v in ((30, 0.9050), (40, 0.9673), (50, 0.9897)):
+        assert abs(cal.puissance_dispersion_rebrassage(T, mus, 0.05) - v) < 6e-5
+    # Monte-Carlo sur une taille non décisive (T = 12)
+    g = _rng(17)
+    loi = {"type": "moyennes", "mus": mus, "N": 3, "T": 12}
+    c = stats.chi2.isf(0.05, 3)
+    X = tirer(g, 40000, loi)
+    Xt = L.depuis_ordre(att.rebrassage(L.ordre(X), g), 3, 12)
+    p = (L.lot_dispersion_agents(Xt, mus) >= c).mean()
+    p_th = cal.puissance_dispersion_rebrassage(12, mus, 0.05)
+    assert abs(p - p_th) < 4 * math.sqrt(p_th * (1 - p_th) / 40000)
+    with pytest.raises(GardeArret):
+        cal.puissance_dispersion_rebrassage(12, [0.0, 1.0], 0.05)
 
 
 # --- références ajoutées à `agregateurs` pour T0.3 ---

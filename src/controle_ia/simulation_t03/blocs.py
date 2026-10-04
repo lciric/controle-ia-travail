@@ -127,6 +127,12 @@ def alarmes(valeurs: dict, liste, ctx: Contexte, cfg: str) -> dict[str, np.ndarr
     return {a: valeurs[nom_statistique(a)] >= ctx.seuil(cfg, a) for a in liste}
 
 
+def exiger_multiensemble(a, b, quoi: str, axe: int = 1) -> None:
+    """Garde : un arrangement de classe C préserve exactement le multi-ensemble de chaque épisode."""
+    if not np.array_equal(np.sort(a, axis=axe), np.sort(b, axis=axe)):
+        raise GardeArret(f"{quoi} : multi-ensemble non préservé (liste d'arrêt)")
+
+
 def _std(Xb, sigma_utilise: float = 1.0):
     return Xb / sigma_utilise if sigma_utilise != 1.0 else Xb
 
@@ -172,6 +178,9 @@ def calibrer(ctx: Contexte, cfg: str) -> dict:
                 valeurs[s].append(v[s])
         for a in a_calibrer:
             seuils[a] = cal.seuil_mc(np.concatenate(valeurs[nom_statistique(a)]), ctx.alpha)
+    non_finis = sorted(a for a, t in seuils.items() if not math.isfinite(t))
+    if non_finis:
+        raise GardeArret(f"{cfg} : seuils non finis {non_finis} (liste d'arrêt)")
     ctx.seuils[cfg] = seuils
     g0 = ctx.rng(f"p0/{cfg}")
     comptes = {a: 0 for a in liste}
@@ -204,8 +213,10 @@ def garde_p0(res: dict, alpha: float, z: float) -> list[str]:
             manques.append(f"{res['cfg']}/{a} : taux sous P₀ {p:.4f} ≠ α (seuil exact)")
         elif genre == "mc" and abs(p - alpha) > z * math.sqrt(v / R0 + v / Rc):
             manques.append(f"{res['cfg']}/{a} : taux sous P₀ {p:.4f} ≠ α (seuil Monte-Carlo)")
-        elif genre in ("mc_discret", "ville") and p > alpha + z * math.sqrt(v / R0):
-            manques.append(f"{res['cfg']}/{a} : taux sous P₀ {p:.4f} > α ({genre})")
+        elif genre == "mc_discret" and p > alpha + z * math.sqrt(v / R0 + v / Rc):
+            manques.append(f"{res['cfg']}/{a} : taux sous P₀ {p:.4f} > α (seuil Monte-Carlo, statistique discrète)")
+        elif genre == "ville" and p > alpha + z * math.sqrt(v / R0):
+            manques.append(f"{res['cfg']}/{a} : taux sous P₀ {p:.4f} > α (Ville)")
     return manques
 
 
@@ -480,8 +491,7 @@ def bloc_P4(ctx: Contexte) -> dict:
             aY["e_terminal"] = vY["e_terminal"] >= cal.seuil_ville(ctx.alpha)
             for a in arr_T1:
                 X = L.depuis_ordre(_arranger(a, y, gA[a], g["iterations_appariement"]), N, T)
-                if not np.array_equal(np.sort(L.ordre(X), axis=1), np.sort(y, axis=1)):
-                    raise GardeArret(f"P4 : l'arrangement {a} ne préserve pas le multi-ensemble")
+                exiger_multiensemble(L.ordre(X), y, f"P4 : arrangement {a}")
                 vX = calculer(X, sym, ctx)
                 aX = alarmes(vX, sym[:2], ctx, cfg)
                 aX["e_terminal"] = vX["e_terminal"] >= cal.seuil_ville(ctx.alpha)
@@ -490,6 +500,7 @@ def bloc_P4(ctx: Contexte) -> dict:
                     t1[a]["discordances"][s] += int(np.count_nonzero(aX[s] != aY[s]))
                 if a in g["arrangements_T2"]:
                     X2 = L.depuis_ordre(att.rebrassage(L.ordre(X), gR[a]), N, T)
+                    exiger_multiensemble(L.ordre(X2), y, f"P4 : rebrassage de {a}")
                     al = alarmes(calculer(X2, [nom_statistique(x) for x in liste], ctx), liste, ctx, cfg)
                     for x in liste:
                         t2[a][x] += int(al[x].sum())
@@ -510,6 +521,8 @@ def bloc_P43(ctx: Contexte) -> dict:
         Y = tirer(gY, r, loi)
         Xt = L.depuis_ordre(att.rebrassage(L.ordre(Y), gT), N, T)
         Xi = att.rebrassage_intra_agent(Y, gI)
+        exiger_multiensemble(L.ordre(Xt), L.ordre(Y), "P4.3 : rebrassage total")
+        exiger_multiensemble(Xi, Y, "P4.3 : rebrassage intra-agent", axe=2)
         kt += int((L.lot_dispersion_agents(Xt, loi["mus"]) >= c).sum())
         ki += int((L.lot_dispersion_agents(Xi, loi["mus"]) >= c).sum())
         R += r
@@ -548,8 +561,7 @@ def bloc_P5_temps(ctx: Contexte) -> dict:
                 hors = np.abs(ecart) > g["tolerance_suites"]
             arrs[a] = (xa, 5, hors)
         for a, (x, rr, hors) in arrs.items():
-            if not np.array_equal(np.sort(x, axis=1), tri):
-                raise GardeArret(f"P5 : l'arrangement {a} ne préserve pas le multi-ensemble")
+            exiger_multiensemble(x, tri, f"P5 : arrangement {a}")
             X = L.depuis_ordre(x, N, T)
             v = calculer(X, [nom_statistique(s) for s in liste], ctx)
             al = alarmes(v, liste, ctx, cfg)
@@ -580,6 +592,7 @@ def bloc_P5_agents(ctx: Contexte) -> dict:
     for r in morceaux(ctx.R("R"), n0):
         Y = tirer(gY, r, _loi_gauss(N, T))
         X, _ = att.co_elevation_top(Y, g["mc"], gA)
+        exiger_multiensemble(L.ordre(X), L.ordre(Y), "P5 : co-élévation")
         vr = np.sort(L.ordre(Y), axis=1)[:, -g["mc"]]
         v = calculer(X, [nom_statistique(s) for s in liste], ctx)
         al = alarmes(v, liste, ctx, cfg)
@@ -638,6 +651,7 @@ def bloc_P7(ctx: Contexte) -> dict:
         kY += int(aY.sum())
         for a in g["arrangements"]:
             x = _arranger(a, y, None, 0)
+            exiger_multiensemble(x, y, f"P7 : arrangement {a}")
             v = calculer(L.depuis_ordre(x, N, T), [nom_statistique(s) for s in liste], ctx)
             al = alarmes(v, liste, ctx, cfg)
             for s in liste:

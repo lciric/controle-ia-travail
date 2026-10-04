@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -85,12 +87,32 @@ def configs_des_blocs(grille: dict, blocs: list[str]) -> list[str]:
     return [c for c in grille["configs"] if c in voulues]
 
 
+COMMIT_CITE = re.compile(r"Commit du code d'analyse : `([0-9a-f]{40})`")
+
+
 def charger_grille(racine: Path, grille: Path, prereg: Path) -> tuple[dict, str]:
     sha = verifier(grille)
     texte = prereg.read_text(encoding="utf-8")
     if sha not in texte:
         raise GardeArret(f"le préenregistrement {prereg} ne cite pas l'empreinte de la grille ({sha})")
     return json.loads(grille.read_text(encoding="utf-8")), sha
+
+
+def exiger_code_cite(racine: Path, prereg: Path, grille: Path) -> str:
+    """Garde : le code d'analyse, les tests et la grille au lancement sont ceux du commit cité par le
+    préenregistrement (aucune différence entre ce commit et HEAD sur ces chemins)."""
+    m = COMMIT_CITE.search(prereg.read_text(encoding="utf-8"))
+    if not m:
+        raise GardeArret(f"{prereg} ne cite pas le commit du code d'analyse (40 caractères hexadécimaux)")
+    commit = m.group(1)
+    chemins = ["src", "tests", str(grille.resolve().relative_to(racine.resolve()))]
+    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", commit, "HEAD", "--", *chemins],
+                       capture_output=True, text=True)
+    if r.returncode == 1:
+        raise GardeArret(f"code d'analyse, tests ou grille modifiés depuis le commit cité {commit[:12]}")
+    if r.returncode != 0:
+        raise GardeArret(f"comparaison au commit cité {commit[:12]} impossible : {r.stderr.strip()}")
+    return commit
 
 
 def ecrire_md(chemin: Path, texte: str) -> Path:
@@ -109,18 +131,24 @@ def tableau_md(lecture: dict, programme: list[dict], titre: str) -> str:
         lignes.append(f"| {k} | {x['verdict']} | {x['n_cellules']} | {x['n_conformes']} | {x['n_contraires']} | "
                       f"{len(x.get('a_repliquer', []))} | {len(x.get('a_auditer', []))} |")
     a = lecture["audit_symetrie"]
-    lignes += ["", f"Audit de symétrie (R4) : variance des écarts réduits aux formes closes = {a['variance_z']:.3f} "
-               f"sur {a['n']} comparaisons (bornes {a['bornes']}) ; déclenché : {a['audit_declenche']}.", "",
-               "## Énoncés du programme", "", "| énoncé | lecture | appui |", "|---|---|---|"]
+    lignes += ["", f"Audit de symétrie (R4), bornes {a['bornes']} : formes closes, variance des écarts réduits "
+               f"{a['formes_closes']['variance_z']:.3f} sur {a['formes_closes']['n']} ; égalités, "
+               f"{a['egalites']['variance_z']:.3f} sur {a['egalites']['n']} ; déclenché : {a['audit_declenche']}.", "",
+               "## Énoncés du programme (table E)", "", "| énoncé | lecture | exigées | complémentaires |",
+               "|---|---|---|---|"]
     for ligne in programme:
-        lignes.append(f"| {ligne['enonce']} | {ligne['lecture']} | {', '.join(ligne['appui'])} |")
+        lignes.append(f"| {ligne['enonce']} | {ligne['lecture']} | {', '.join(ligne['exiges'])} | "
+                      f"{', '.join(ligne['complementaires']) or '—'} |")
     return "\n".join(lignes) + "\n"
 
 
 def executer(racine: str | Path, prereg: str | Path, grille_chemin: str | Path, run_id: str,
              blocs: list[str] | None = None, replication_de: str | None = None, limite_s: float = 6 * 3600) -> dict:
     racine, prereg, grille_chemin = Path(racine), Path(prereg), Path(grille_chemin)
+    if blocs is not None and not replication_de:
+        raise GardeArret("--blocs est réservé à la réplication : un seul run décisif, complet")
     grille, sha_grille = charger_grille(racine, grille_chemin, prereg)
+    commit_cite = exiger_code_cite(racine, prereg, grille_chemin)
     principale = None
     if replication_de:
         corps = verifier_resultat(racine, racine / "diag" / replication_de / "lecture.json")
@@ -135,7 +163,8 @@ def executer(racine: str | Path, prereg: str | Path, grille_chemin: str | Path, 
         raise GardeArret(f"blocs inconnus : {inconnus}")
     ts = taches(grille)
     commande = "python -m controle_ia.simulation_t03.run_t03 " + " ".join(sys.argv[1:])
-    config = {"grille": grille, "grille_sha256": sha_grille, "blocs": blocs, "replication_de": replication_de}
+    config = {"grille": grille, "grille_sha256": sha_grille, "blocs": blocs, "replication_de": replication_de,
+              "commit_cite": commit_cite}
     chemin_m, m = creer_manifeste(racine, run_id, config, ts + [x + "/replication" for x in ts],
                                   entropie=int(grille["entropie"]), decisif=True, prereg=prereg, commande=commande)
     ctx = B.Contexte(grille, m["graines"], suffixe="/replication" if replication_de else "",

@@ -12,7 +12,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
-from scipy import optimize, stats
+from scipy import optimize, special, stats
 
 from ..agregateurs.processus_e import log_e_bilateral, log_e_unilateral
 from ..gardes import GardeArret
@@ -114,3 +114,34 @@ def rejet_somme_sous_variance(alpha: float, rapport_variance: float) -> float:
     """Taux de rejet du test z unilatéral calibré sous une variance v₀ quand la vraie est v₁ :
     Φ̄(z_α / √(v₁/v₀)) (classe K : copule AR(1), équicorrélation)."""
     return float(stats.norm.sf(stats.norm.isf(alpha) / math.sqrt(rapport_variance)))
+
+
+def puissance_dispersion_rebrassage(T: int, mus, alpha: float, seuil: float | None = None) -> float:
+    """P4.3 : puissance exacte de la dispersion des moyennes par agent (3 agents de moyennes μ_i,
+    bruit N(0, 1)) sous rebrassage uniforme de toutes les cases.
+
+    Conditionnellement à la table n_ij (nombre de cases de l'agent d'origine j reçues par l'agent i),
+    de loi P(n) = Π_j [T!/Π_i n_ij!] · (T!)³ / (3T)!, la statistique Σ_i T·(moyenne_i − μ_i)² suit un
+    χ²₃ non central de paramètre λ = T·Σ_i (μ̄_i − μ_i)², μ̄_i = Σ_j n_ij μ_j / T. Énumération exacte de
+    toutes les tables, sans tirage. Seuil : celui du run s'il est donné, sinon le quantile χ²₃ exact."""
+    mus = np.asarray(mus, dtype=float)
+    if mus.shape != (3,) or T < 1:
+        raise GardeArret(f"puissance de dispersion : 3 agents et T ≥ 1 attendus (μ = {mus}, T = {T})")
+    c = float(stats.chi2.isf(_alpha(alpha), 3)) if seuil is None else float(seuil)
+    r = np.arange(T + 1)
+    n11, n12, n21, n22 = np.meshgrid(r, r, r, r, indexing="ij")
+    n13, n23 = T - n11 - n12, T - n21 - n22
+    n31, n32 = T - n11 - n21, T - n12 - n22
+    n33 = n11 + n12 + n21 + n22 - T
+    ok = (n13 >= 0) & (n23 >= 0) & (n31 >= 0) & (n32 >= 0) & (n33 >= 0)
+    table = np.stack([x[ok] for x in (n11, n12, n13, n21, n22, n23, n31, n32, n33)], axis=1).reshape(-1, 3, 3)
+    lg = special.gammaln
+    log_p = 6 * lg(T + 1) - lg(table + 1.0).sum(axis=(1, 2)) - lg(3 * T + 1)
+    poids = np.exp(log_p)
+    masse = float(poids.sum())
+    if abs(masse - 1.0) > 1e-9:
+        raise GardeArret(f"puissance de dispersion : masse des tables {masse} ≠ 1")
+    mu_bar = (table * mus[None, None, :]).sum(axis=2) / T
+    lam = T * ((mu_bar - mus[None, :]) ** 2).sum(axis=1)
+    sf = np.where(lam > 0, stats.ncx2.sf(c, 3, np.maximum(lam, 1e-300)), stats.chi2.sf(c, 3))
+    return float((poids * sf).sum())

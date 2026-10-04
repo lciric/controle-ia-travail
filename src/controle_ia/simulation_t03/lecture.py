@@ -16,7 +16,9 @@ from . import calibrage as cal
 from .lois import facteur_variance_ar1
 
 Z = 4.0                 # seuil Monte-Carlo, en écarts-types
-SEUIL_AU_MOINS = 0.99   # P4.3 et P7.2
+SEUIL_P72 = 0.99        # P7.2 : e bilatéral sous tri croissant
+BORNES_AUDIT = (0.3, 3.0)   # variance admise des écarts réduits (R4)
+SYMETRIQUES = ("somme", "somme_bilat", "max", "e_terminal_ville")
 ALPHA_DEFAUT = 0.05
 
 
@@ -88,14 +90,17 @@ class Lecteur:
         self.alpha = alpha
         self.predictions: dict[str, dict] = {}
         self.z_theorie: list[float] = []
+        self.z_egalites: list[float] = []
 
     def cellule(self, pred: str, nom: str, fonction, *args, genre: str = "statistique", theorique: bool = False,
-                **details):
+                egalite: bool = False, **details):
         etat, z = fonction(*args)
         if theorique and z is not None:
             p_th = args[-1]
             if 0.01 <= p_th <= 0.99:
                 self.z_theorie.append(float(z))
+        if egalite and z is not None:
+            self.z_egalites.append(float(z))
         self.predictions.setdefault(pred, {"cellules": []})["cellules"].append(
             {"nom": nom, "etat": etat, "z": None if z is None else round(float(z), 3), "genre": genre, **details})
 
@@ -134,7 +139,7 @@ class Lecteur:
                 if c["N"] > 1 and c["B"] == B and (1, c["n0"], B) in par:
                     c1 = par[(1, c["n0"], B)]
                     self.cellule("P1.4", f"{c['N']}x{c['T']}~1x{c['n0']}/B{B}", egal, c["alarmes_somme"] / c["R"],
-                                 c["R"], c1["alarmes_somme"] / c1["R"], c1["R"])
+                                 c["R"], c1["alarmes_somme"] / c1["R"], c1["R"], egalite=True)
 
     # --- P2 ---
     def P2(self):
@@ -160,6 +165,11 @@ class Lecteur:
             tag = f"{g['N']}x{g['T']}/B{g['B']}"
             for m, viol in g["violations"].items():
                 self.cellule("P3.1", f"{tag}/m{m}", trajectoriel, sum(viol.values()), genre="trajectoriel", **viol)
+            taux = {(c["m"], c["calendrier"]): c["alarmes"] / g["R"] for c in g["cellules"]}
+            for m in sorted({c["m"] for c in g["cellules"]}):
+                for avant in ("debut", "uniforme"):
+                    self.cellule("P3.2", f"{tag}/m{m}/{avant}>fin", au_dessus, taux[(m, avant)], g["R"],
+                                 taux[(m, "fin")], g["R"])
             p_th = cal.borne_terminale(a, g["n0"], g["B"], g["rho"])
             self.cellule("P3.3", tag, theorie, g["alarmes_terminal"] / g["R"], g["R"], p_th, theorique=True,
                          p=g["alarmes_terminal"] / g["R"], p_th=p_th)
@@ -177,14 +187,22 @@ class Lecteur:
             for arr, t in c["T1"].items():
                 v = sum(t["valeurs_differentes"].values()) + sum(t["discordances"].values())
                 self.cellule("P4.1", f"{tag}/{arr}", trajectoriel, v, genre="trajectoriel", **t)
-            for arr, comptes in c["T2"].items():
+            for k_arr, (arr, comptes) in enumerate(c["T2"].items()):
                 for al, k in comptes.items():
                     p0, R0 = self.p0(cfg, al)
-                    self.cellule("P4.2", f"{tag}/{arr}/{al}", egal, k / c["R"], c["R"], p0, R0)
+                    doublon = k_arr > 0 and al in SYMETRIQUES      # même multi-ensemble : même valeur
+                    self.cellule("P4.2", f"{tag}/{arr}/{al}", egal, k / c["R"], c["R"], p0, R0, egalite=not doublon)
         p = self.r["P43"]
-        p0, R0 = self.p0(p["cfg"], "dispersion_agents")
-        self.cellule("P4.3", "rebrassage_total", au_moins, p["alarmes_total"] / p["R"], p["R"], SEUIL_AU_MOINS)
-        self.cellule("P4.3", "rebrassage_intra_agent", egal, p["alarmes_intra_agent"] / p["R"], p["R"], p0, R0)
+        cfg = p["cfg"]
+        p0, R0 = self.p0(cfg, "dispersion_agents")
+        pt = p["alarmes_total"] / p["R"]
+        loi = self.r["calibrage"][cfg]["loi"]
+        p_th = cal.puissance_dispersion_rebrassage(int(loi["T"]), loi["mus"], self.alpha,
+                                                   self.r["calibrage"][cfg]["seuils"]["dispersion_agents"])
+        self.cellule("P4.3", "rebrassage_total>P0", au_dessus, pt, p["R"], p0, R0)
+        self.cellule("P4.3", "rebrassage_total=forme_close", theorie, pt, p["R"], p_th, theorique=True, p=pt, p_th=p_th)
+        self.cellule("P4.3", "rebrassage_intra_agent", egal, p["alarmes_intra_agent"] / p["R"], p["R"], p0, R0,
+                     egalite=True)
 
     # --- P5 ---
     def P5(self):
@@ -270,8 +288,7 @@ class Lecteur:
             for al in ("page", "glissante_10"):
                 self.cellule("P7.3", f"{arr}/{al}", au_dessus, c["alarmes"][al] / R, R, *self.p0(cfg, al))
         c = t["arrangements"]["tri_croissant"]
-        self.cellule("P7.2", "tri_croissant/e_bilat_ville", au_moins, c["alarmes"]["e_bilat_ville"] / R, R,
-                     SEUIL_AU_MOINS)
+        self.cellule("P7.2", "tri_croissant/e_bilat_ville", au_moins, c["alarmes"]["e_bilat_ville"] / R, R, SEUIL_P72)
 
     # --- P8 ---
     def P8(self, bien_specifies, signe, depasse):
@@ -294,14 +311,18 @@ class Lecteur:
                          math.sqrt(a * (1 - a) / (c["L"] * c["n_test"])))
                 d = float(taux.mean()) - c["taux_theorique"]
                 etat = "conforme" if abs(d) <= Z * se else "contraire"
-                self.cellule("P8.4", f"{s['nom']}/{st}", lambda e=etat, zz=d / se: (e, zz),
+                self.cellule("P8.4", f"{s['nom']}/{st}", lambda e=etat, zz=d / se: (e, zz), egalite=True,
                              taux=float(taux.mean()), taux_theorique=c["taux_theorique"])
 
     def audit_symetrie(self) -> dict:
-        z = np.array(self.z_theorie)
-        s2 = float(z.var(ddof=1)) if z.size > 1 else float("nan")
-        declenche = bool(z.size > 1 and (s2 < 0.3 or s2 > 3.0))
-        return {"n": int(z.size), "variance_z": s2, "bornes": [0.3, 3.0], "audit_declenche": declenche}
+        sortie = {"bornes": list(BORNES_AUDIT)}
+        for nom, liste in (("formes_closes", self.z_theorie), ("egalites", self.z_egalites)):
+            z = np.array(liste)
+            s2 = float(z.var(ddof=1)) if z.size > 1 else float("nan")
+            sortie[nom] = {"n": int(z.size), "variance_z": s2,
+                           "hors_bornes": bool(z.size > 1 and not (BORNES_AUDIT[0] <= s2 <= BORNES_AUDIT[1]))}
+        sortie["audit_declenche"] = sortie["formes_closes"]["hors_bornes"] or sortie["egalites"]["hors_bornes"]
+        return sortie
 
     def lire(self, p8: dict) -> dict:
         for methode, blocs in BLOCS_DE.items():
@@ -339,52 +360,78 @@ def fusionner(principale: dict, replication: dict) -> dict:
                 if rep[c["nom"]]["etat"] == "conforme":
                     c["etat"] = "non concluant"
                     c["note"] = "contraire en lecture principale, conforme en réplication : bruit Monte-Carlo probable"
+        noms = {c["nom"]: c for c in x["cellules"]}
+        for nom, rc in rep.items():          # toute violation trajectorielle observée en réplication compte
+            if rc.get("genre") == "trajectoriel" and rc["etat"] == "contraire":
+                if nom in noms:
+                    noms[nom]["etat"] = "contraire"
+                    noms[nom]["note"] = "violation trajectorielle observée en réplication : audit"
+                else:
+                    x["cellules"].append({**rc, "note": "violation trajectorielle observée en réplication : audit"})
+        x["a_auditer"] = [c["nom"] for c in x["cellules"] if c["etat"] == "contraire" and c["genre"] == "trajectoriel"]
         x["verdict"] = verdict(x["cellules"])
         x["n_conformes"] = sum(c["etat"] == "conforme" for c in x["cellules"])
         x["n_contraires"] = sum(c["etat"] == "contraire" for c in x["cellules"])
     return sortie
 
 
+LIGNES_E = [
+    {"enonce": "Lemme : « la puissance ne dépend que de B et de la variance — pas de la répartition du sabotage "
+               "sur les agents ni sur les pas de temps »",
+     "lecture": ("Établi par preuve, vérifié en simulation : exact pour la statistique terminale à n₀ fixé, la "
+                 "« variance » étant celle de la statistique (n₀σ²), pour toute répartition (agents, pas, valeurs, "
+                 "choix adaptatif des positions). Faux à variance par action fixée quand n₀ = NT varie : la "
+                 "puissance décroît en n₀. Faux pour la lecture séquentielle toujours valide quant au calendrier "
+                 "(répartition sur les pas) : avancer le sabotage aide le défenseur, le reporter le ramène vers la "
+                 "borne terminale, seule invariante. L'invariance entre agents au même pas (L4) n'est pas testée en T0.3."),
+     "exiges": ["P1.1", "P1.2", "P1.3", "P1.4", "P3.1", "P3.2", "P3.3"], "complementaires": []},
+    {"enonce": "Brief T0.3 : « celle du max par action s'effondre quand la fragmentation croît »",
+     "lecture": ("Établi par preuve, vérifié en simulation : exact, avec un plancher strictement au-dessus de α à "
+                 "n₀ fixé."),
+     "exiges": ["P2.1", "P2.2", "P2.3"], "complementaires": []},
+    {"enonce": "Théorème : « toute statistique fondée sur les marginales (max, moyenne, somme cumulée) a une puissance "
+               "égale au taux de faux positifs » (dommage dans la corrélation, marginale préservée)",
+     "lecture": ("Vrai en classe C (multi-ensemble préservé) pour les statistiques symétriques, trajectoire par "
+                 "trajectoire, et pour toute statistique sous rebrassage uniforme (T1, T2) ; le groupe de "
+                 "permutations compte. Faux en classe K (copule) : la somme et le processus e passent au-dessus de "
+                 "leur taux sous P₀ pour une dépendance positive et en dessous pour une négative, le max reste à son "
+                 "taux ou en dessous (Slepian) ; c'est le cas de la construction de 2606.10456 (somme 0,07 à 0,25 à "
+                 "α = 0,05)."),
+     "exiges": ["P4.1", "P4.2", "P4.3", "P6.1", "P6.2", "P6.3", "P6.4", "P6.5"], "complementaires": []},
+    {"enonce": "Théorème : « il faut un agrégateur d'autocorrélation (dans le temps) ou de co-élévation (entre agents) »",
+     "lecture": ("En classe K, l'autocorrélation et la co-élévation détectent (P6.1, P6.4) ; sous dépendance négative, "
+                 "la somme et le processus e passent sous leur taux sous P₀ et l'autocorrélation en valeur absolue "
+                 "détecte (P6.2) ; sous dépendance positive, la somme n'est pas aveugle (P6.3, P6.4). Face à un "
+                 "attaquant adaptatif de classe C, l'autocorrélation et les suites sont neutralisables (P5.3) ; seules "
+                 "les statistiques locales — balayage, Page, co-élévation — gardent une garantie trajectorielle "
+                 "(P5.1, P5.4)."),
+     "exiges": ["P5.1", "P5.3", "P5.4", "P6.1", "P6.2", "P6.3", "P6.4"], "complementaires": ["P5.2", "P5.5"]},
+    {"enonce": "Brief T0.3 : « la somme cumulée échoue » (attaque à marginale préservée)",
+     "lecture": ("Exact pour la somme terminale en classe C (T1) ; exact au sens adverse pour la somme séquentielle "
+                 "unilatérale sous arrangements à sommes partielles dominées (T4), dont la règle bilatérale "
+                 "s'échappe ; inexact en classe K : la somme n'est pas aveugle (Φ̄(z_α·√(v₀/v₁)), 0,07 à 0,25 dans la "
+                 "construction de 2606.10456 à α = 0,05), mais reste faible."),
+     "exiges": ["P4.1", "P6.1", "P6.5", "P7.1", "P7.2"], "complementaires": ["P7.3"]},
+    {"enonce": "Garde de G1 : « le taux de faux positifs des agrégateurs toujours valides est vérifié empiriquement "
+               "sur épisodes honnêtes »",
+     "lecture": ("Décisive : la règle de Ville dépasse son taux bien spécifié sous effet épisode, corrélation entre "
+                 "agents, dépendance temporelle ou σ sous-estimé, et dépasse α aux niveaux les plus forts. Le "
+                 "calibrage conforme sur épisodes honnêtes entiers tient son taux quand les épisodes de calibrage et "
+                 "de déploiement sont échangeables (vérification de l'instrument) ; sa robustesse à un décalage entre "
+                 "eux n'est pas testée en T0.3."),
+     "exiges": ["P8.1", "P8.2", "P8.3", "P8.4"], "complementaires": []},
+]
+
+
 def enonces_du_programme(lecture: dict) -> list[dict]:
-    """Table gelée : comment chaque phrase du programme (section 3) et du brief (T0.3) se lit."""
+    """Table E gelée : une lecture par énoncé, prononcée seulement si toutes ses prédictions exigées sont
+    confirmées ; sinon « non établi ». Les prédictions complémentaires sont affichées, sans effet."""
     v = {k: x["verdict"] for k, x in lecture["predictions"].items()}
-
-    def tous(*ks):
-        return all(v.get(k) == "confirmée" for k in ks)
-
-    lignes = [
-        {"enonce": "Lemme : « la puissance ne dépend que de B et de la variance — pas de la répartition »",
-         "lecture": ("exact pour la statistique terminale à n₀ fixé, la « variance » étant celle de la "
-                     "statistique (n₀σ²) ; faux à variance par action fixée quand n₀ = NT varie ; faux pour la "
-                     "lecture séquentielle, qui dépend du calendrier (borne inférieure invariante seulement)")
-         if tous("P1.1", "P1.2", "P1.3", "P1.4", "P3.1", "P3.3") else "non établi : voir P1 et P3",
-         "appui": ["P1.1", "P1.2", "P1.3", "P1.4", "P3.1", "P3.3"]},
-        {"enonce": "Brief T0.3 : « celle du max par action s'effondre quand la fragmentation croît »",
-         "lecture": ("exact, avec un plancher strictement au-dessus de α à n₀ fixé")
-         if tous("P2.1", "P2.2", "P2.3") else "non établi : voir P2", "appui": ["P2.1", "P2.2", "P2.3"]},
-        {"enonce": "Théorème : « toute statistique de marginales (max, moyenne, somme cumulée) a une puissance "
-                   "égale au taux de faux positifs » (dommage dans la corrélation, marginale préservée)",
-         "lecture": ("vrai en classe C (multi-ensemble préservé) pour les statistiques symétriques, et pour "
-                     "toute statistique sous rebrassage uniforme ; faux en classe K (copule) : somme au-dessus "
-                     "de α pour une dépendance positive, en dessous pour une négative, max à α ou en dessous")
-         if tous("P4.1", "P4.2", "P6.1", "P6.2", "P6.3") else "non établi : voir P4 et P6",
-         "appui": ["P4.1", "P4.2", "P6.1", "P6.2", "P6.3", "P6.4", "P6.5"]},
-        {"enonce": "Théorème : « il faut un agrégateur d'autocorrélation (temps) ou de co-élévation (agents) »",
-         "lecture": ("nécessaire en classe K (l'autocorrélation et la co-élévation détectent), insuffisant "
-                     "face à un attaquant adaptatif de classe C : seules les statistiques locales (balayage, "
-                     "Page, co-élévation) gardent une garantie (T3)")
-         if tous("P5.1", "P5.3", "P6.1", "P6.4") else "non établi : voir P5 et P6",
-         "appui": ["P5.1", "P5.2", "P5.3", "P5.4", "P5.5", "P6.1", "P6.4"]},
-        {"enonce": "Brief T0.3 : « la somme cumulée échoue » (attaque à marginale préservée)",
-         "lecture": ("exact pour la somme terminale en classe C ; exact au sens adverse pour la somme "
-                     "séquentielle unilatérale (T4) ; faux en classe K")
-         if tous("P4.1", "P7.1", "P6.1") else "non établi : voir P4, P6 et P7",
-         "appui": ["P4.1", "P6.1", "P7.1", "P7.2", "P7.3"]},
-        {"enonce": "Garde de G1 : « taux de faux positifs des agrégateurs toujours valides vérifié sur épisodes "
-                   "honnêtes »",
-         "lecture": ("décisive : la règle de Ville dépasse α sous effet épisode, corrélation entre agents ou σ "
-                     "sous-estimé ; le calibrage conforme sur épisodes honnêtes entiers tient son taux")
-         if tous("P8.1", "P8.2", "P8.3", "P8.4") else "non établi : voir P8",
-         "appui": ["P8.1", "P8.2", "P8.3", "P8.4"]},
-    ]
-    return lignes
+    sortie = []
+    for ligne in LIGNES_E:
+        etablie = all(v.get(k) == "confirmée" for k in ligne["exiges"])
+        sortie.append({"enonce": ligne["enonce"],
+                       "lecture": ligne["lecture"] if etablie else "non établi : voir " + ", ".join(ligne["exiges"]),
+                       "exiges": ligne["exiges"], "complementaires": ligne["complementaires"],
+                       "verdicts": {k: v.get(k, "absente") for k in ligne["exiges"] + ligne["complementaires"]}})
+    return sortie
