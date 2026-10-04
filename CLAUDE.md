@@ -10,7 +10,7 @@ La continuité vit dans les fichiers, jamais dans la mémoire de conversation.
 - `docs/etat-de-l-art-controle-ia-v1.md` — pris, ouvert, à battre ; aucun chiffre opposable avant vérification (R7).
 - Empreintes : `docs/sha256sums-lancement-v2.txt` ; brief v1 remplacé, archivé sans modification : `docs/brief-claude-code-phase0-v1.md`.
 - Toute nouvelle version transmise par Lazar remplace la précédente, qui reste archivée dans `docs/`.
-- Décisions de Lazar sur les nœuds qui fixent la lecture du programme (en attendant une version nouvelle) : `docs/decisions/` (N-003, N-004 : énoncés retenus de T et L ; N-007, N-008 : H2 reformulée, bases ajoutées, critère de G1 sans F1).
+- Décisions de Lazar sur les nœuds qui fixent la lecture du programme (en attendant une version nouvelle) : `docs/decisions/` (N-003, N-004 : énoncés retenus de T et L ; N-007, N-008 : H2 reformulée, bases ajoutées, critère de G1 sans F1 ; N-005, N-006 : HC1 à destination libre, porte GC réécrite, HC5).
 
 ## Dépôt distant
 `https://github.com/lciric/controle-ia` (privé), branche `main`. Pousser à chaque passation.

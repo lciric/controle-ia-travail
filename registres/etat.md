@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-04 09:40 UTC, session 1 (reprise après un second redémarrage du conteneur).
+Dernière mise à jour : 2026-10-04 10:05 UTC, session 1.
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -17,13 +17,13 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 | T0.6 organismes v0 | conception | GPU sur GO | famille (iii) : organismes publics en 70B seulement (P-002) |
 | T0.7 sondes v0 | conception | GPU sur GO | models-under-pressure (MIT) réutilisable ; deception-detection sans licence → réimplémentation |
 | T0.8 bases boîte noire v0 | conception | GPU sur GO | D1 ; ajouter les bases (i) accumulation sur scores boîte noire et (iv) modèle temporel sur observateur (N-007) ; juge robustifié (P-003) |
-| T0.9 papier C | conception | processeur ; pilote sur GO | N-005, N-006, D2 ; ressources P3 demandées |
+| T0.9 papier C | conception | processeur ; pilote sur GO | HC1, HC5 et porte GC fixées (`docs/decisions/decision-N-005-N-006-v1.md`) ; préenregistrement après lecture de Panin (SSRN 7424179) ; D2 ; ressources P3 demandées |
 
 ## Derniers verdicts de porte
 Aucun. T0.3 fournit la preuve du critère 5 de G0 (agrégateurs validés en simulation) ; G0 attend les autres critères.
 
 ## GO et nœuds en attente
-- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; **N-003, N-004, N-007 et N-008 résolus** (GO-2026-10-04-02 à -05, option a ; `docs/decisions/decision-N-003-N-004-v1.md` et `docs/decisions/decision-N-007-N-008-v1.md`) ; N-002 devis phase 0 (150 USD) ; N-005 loi de déférence (élargi ; pièce GC `docs/etat-de-l-art/porte-GC-loi-de-deference-v1.md` après contre-lecture de Lazar ; Panin SSRN 7424179 à lire avant de trancher) ; N-006 contre-mesures. Restent ouverts : N-002, N-005, N-006. Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
+- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; **N-003 à N-008 résolus** (GO-2026-10-04-02 à -07, option a ; `docs/decisions/`) ; **seul nœud ouvert : N-002** (devis de la phase 0, 150 dollars). Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
 
 ## Décisions ouvertes (défaut sous 48 heures)
 - P-001 garde de calcul active — échéance 2026-10-06 03:40 UTC.
