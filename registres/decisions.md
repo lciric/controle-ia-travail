@@ -30,6 +30,11 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 
 | R-018 | 2026-10-04 | Contre-lecture de Lazar du verdict « la loi de déférence est-elle publiée ? » versée à la porte GC : `docs/etat-de-l-art/porte-GC-loi-de-deference-v1.md` (formule du poids du conseil ; 2606.07897 cité en v2, gain normalisé publié ; R7 partiellement levé pour Harvey et Fischer 1997, Yaniv et Kleinberger 2000, Yaniv 2004 ; voisins 2606.18276, 2603.15809, Panin SSRN 7424179, poster WiML ; PARROT et BASIL sans intensités, gain ni nul ; pièce candidate ĉ libre). N-005 non tranché. | Demande de Lazar ; R7, R8, R12. |
 
+| R-019 | 2026-10-04 | Simulation de T0.3 : module `src/controle_ia/simulation_t03/`. Statistiques vectorisées, égales à leurs références scalaires (garde d'équivalence à chaque run) ; nombres aléatoires communs dans les groupes (vérifications trajectorielles exactes) ; seuils exacts, Monte-Carlo, de Ville ou conformes ; lecture gelée implantée en code (`lecture.py`) et appliquée mécaniquement ; un seul run décisif, complet. | R1, R4, R5, R9 ; brief v2, T0.3. |
+| R-020 | 2026-10-04 | Grille décisive de T0.3 scellée avec une entropie neuve (`secrets.randbits(128)`). La v2 (`5609f920…`) remplace la v1 (`b84aad4f…`, archivée, jamais exécutée) pour un seul changement : tolérances d'appariement de P5.3 resserrées, après contre-lecture. | R9, R12, R1. |
+| R-021 | 2026-10-04 | Les brouillons de préenregistrement vivent hors de l'arbre scellé (`brouillons/`) et sont committés, pour que l'empreinte du brouillon relu par chaque contre-lecteur reste vérifiable ; la version finale est écrite sous son nom définitif dans `prereg/` au scellement. | R2, R6, R12 ; garde de propreté du dépôt. |
+| R-022 | 2026-10-04 | Contre-lecture 1 du préenregistrement de T0.3 (sous-agent neuf) : 26 remarques, toutes acceptées, dont 3 bloquantes. P4.3 : seuil 0,99 inatteignable, remplacé par la puissance exacte 0,9673, obtenue par énumération et recalculée indépendamment. P3.2 ajoutée. Table E unifiée entre texte et code. Gardes ajoutées : commit cité, `--blocs`, seuil non fini, multi-ensemble. Code corrigé au commit 62cb33c. Seconde contre-lecture, sur les seules parties modifiées, par un autre sous-agent neuf. | R2, R4, R5. |
+
 ## Propositions avec recommandation (défaut sous 48 heures)
 
 | id | proposée le (UTC) | décision | défaut | échéance (UTC) | statut |
