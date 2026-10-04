@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-04 16:10 UTC, session 1.
+Dernière mise à jour : 2026-10-04 15:58 UTC, session 1.
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
