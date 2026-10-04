@@ -1,7 +1,7 @@
 """Simulation de T0.3 — lancement de bout en bout sous préenregistrement scellé (R1, R9).
 
     PYTHONPATH=src python -m controle_ia.simulation_t03.run_t03 \\
-        --prereg prereg/T0.3-simulation-lemme-theoreme-v1.md --grille prereg/T0.3-grille-v1.json
+        --prereg prereg/T0.3-simulation-lemme-theoreme-v1.md --grille prereg/T0.3-grille-v2.json
 
     Réplication gelée (cellules statistiques contraires) :
         … --replication-de <run_id principal>
@@ -105,7 +105,11 @@ def exiger_code_cite(racine: Path, prereg: Path, grille: Path) -> str:
     if not m:
         raise GardeArret(f"{prereg} ne cite pas le commit du code d'analyse (40 caractères hexadécimaux)")
     commit = m.group(1)
-    chemins = ["src", "tests", str(grille.resolve().relative_to(racine.resolve()))]
+    try:
+        grille_rel = str(grille.resolve().relative_to(racine.resolve()))
+    except ValueError:
+        raise GardeArret(f"la grille {grille} est hors du dépôt {racine}") from None
+    chemins = ["src", "tests", grille_rel]
     r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", commit, "HEAD", "--", *chemins],
                        capture_output=True, text=True)
     if r.returncode == 1:
@@ -142,11 +146,28 @@ def tableau_md(lecture: dict, programme: list[dict], titre: str) -> str:
     return "\n".join(lignes) + "\n"
 
 
+def exiger_code_importe_sous(racine: Path) -> None:
+    """Garde : le code exécuté (modules importés) est celui de `racine/src`, celui que vérifie la garde
+    du commit cité ; sinon on vérifierait un arbre et on en exécuterait un autre."""
+    import controle_ia
+
+    code = Path(controle_ia.__file__).resolve()
+    attendu = (racine / "src").resolve()
+    if attendu not in code.parents:
+        raise GardeArret(f"code importé depuis {code.parent}, hors de {attendu} : lancer depuis la racine du dépôt")
+
+
 def executer(racine: str | Path, prereg: str | Path, grille_chemin: str | Path, run_id: str,
-             blocs: list[str] | None = None, replication_de: str | None = None, limite_s: float = 6 * 3600) -> dict:
+             blocs: list[str] | None = None, replication_de: str | None = None, limite_s: float = 6 * 3600,
+             verifier_import: bool = True) -> dict:
+    """`blocs` n'est jamais accepté de l'extérieur : run principal complet ; en réplication, les blocs sont
+    déterminés par la lecture principale. `verifier_import=False` n'est permis qu'aux tests sur mini-dépôt,
+    qui n'hébergent pas le code ; la ligne de commande l'active toujours."""
     racine, prereg, grille_chemin = Path(racine), Path(prereg), Path(grille_chemin)
-    if blocs is not None and not replication_de:
-        raise GardeArret("--blocs est réservé à la réplication : un seul run décisif, complet")
+    if blocs is not None:
+        raise GardeArret("les blocs ne se choisissent pas : run principal complet, réplication déterminée par la lecture")
+    if verifier_import:
+        exiger_code_importe_sous(racine)
     grille, sha_grille = charger_grille(racine, grille_chemin, prereg)
     commit_cite = exiger_code_cite(racine, prereg, grille_chemin)
     principale = None
@@ -215,13 +236,11 @@ def main(argv=None) -> int:
     a.add_argument("--prereg", required=True)
     a.add_argument("--grille", required=True)
     a.add_argument("--run-id", default=None)
-    a.add_argument("--blocs", default=None)
     a.add_argument("--replication-de", default=None)
     args = a.parse_args(argv)
     suffixe = "t03-replication" if args.replication_de else "t03"
     run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S") + "-" + suffixe
-    blocs = args.blocs.split(",") if args.blocs else None
-    print(json.dumps(executer(args.racine, args.prereg, args.grille, run_id, blocs, args.replication_de),
+    print(json.dumps(executer(args.racine, args.prereg, args.grille, run_id, None, args.replication_de),
                      indent=2, ensure_ascii=False))
     return 0
 

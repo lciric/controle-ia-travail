@@ -24,6 +24,7 @@ SECTIONS = (
     "Contre-lecture",
 )
 MARQUEUR = "À REMPLIR"
+GABARIT = re.compile(r"<<[A-Z0-9_]+>>")     # marqueur de substitution laissé dans un brouillon
 
 
 def sections(texte: str) -> dict[str, str]:
@@ -42,6 +43,9 @@ def problemes(chemin: str | Path) -> list[str]:
             sortie.append(f"section vide ou à remplir : {nom}")
     if MARQUEUR in texte and not any("à remplir" in p for p in sortie):
         sortie.append("marqueur À REMPLIR restant hors des sections exigées")
+    restes = sorted(set(GABARIT.findall(texte)))
+    if restes:
+        sortie.append(f"marqueurs de gabarit restants : {', '.join(restes)}")
     return sortie
 
 

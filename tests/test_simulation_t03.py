@@ -1,5 +1,5 @@
 """Simulation de T0.3 : instrument seulement (R1). Aucun de ces tests ne calcule une cellule de la
-grille décisive (`prereg/T0.3-grille-v1.json`) : tailles, horizons, budgets et graines diffèrent.
+grille décisive (`prereg/T0.3-grille-v2.json`, qui remplace la v1) : tailles, horizons, budgets et graines diffèrent.
 
 Couvre : équivalence lots ↔ références scalaires, séries ↔ lots, invariances exactes (T1, L1),
 attaques (positions, préservation du multi-ensemble, domination T4, suite intacte en T3),
@@ -309,6 +309,7 @@ def test_fusion_de_replication():
     assert f["predictions"]["P7.1"]["verdict"] == "réfutée" and f["predictions"]["P7.1"]["a_auditer"] == ["t"]
     assert f["predictions"]["P2.1"]["verdict"] == "réfutée"
     assert principale["predictions"]["P2.1"]["cellules"][0]["etat"] == "contraire"   # pas d'effet de bord
+    assert f["predictions"]["P2.1"]["a_repliquer"] == [] and f["predictions"]["P2.1"]["repliquees"] == ["a", "b"]
 
 
 def test_garde_p0_saine_et_artefact():
@@ -316,6 +317,11 @@ def test_garde_p0_saine_et_artefact():
            "alarmes_p0": {"somme": 5000, "page": 5050, "e_unilat_ville": 1700, "suites": 3600},
            "genres": {"somme": "exact", "page": "mc", "e_unilat_ville": "ville", "suites": "mc_discret"}}
     assert B.garde_p0(res, 0.05, 4.0) == []
+    entre = copy.deepcopy(res)                    # 0,0533 : entre l'ancienne borne (0,05276) et la nouvelle (0,05390)
+    entre["alarmes_p0"]["suites"] = 5330
+    assert B.garde_p0(entre, 0.05, 4.0) == []
+    entre["alarmes_p0"]["suites"] = 5450
+    assert len(B.garde_p0(entre, 0.05, 4.0)) == 1
     mauvais = copy.deepcopy(res)
     mauvais["alarmes_p0"].update({"somme": 6000, "page": 4000, "e_unilat_ville": 6000, "suites": 6000})
     assert len(B.garde_p0(mauvais, 0.05, 4.0)) == 4
@@ -429,7 +435,7 @@ def test_chaine_complete_mini_grille(depot):
     pp, gp = _preparer(depot)
     grille = json.loads(gp.read_text(encoding="utf-8"))
     assert len(set(taches(grille))) == len(taches(grille))
-    sortie = executer(depot, pp, gp, "20261004-130000-mini")
+    sortie = executer(depot, pp, gp, "20261004-130000-mini", verifier_import=False)
     corps = verifier_resultat(depot, sortie["lecture"])
     lec = corps["resultat"]["lecture"]
     assert set(lec["predictions"]) == ATTENDUES
@@ -450,7 +456,7 @@ def test_chaine_complete_mini_grille(depot):
     sceller_prereg(pp2)
     committer(depot)
     with pytest.raises(GardeArret, match="ne cite pas"):
-        executer(depot, pp2, gp, "20261004-130001-mini")
+        executer(depot, pp2, gp, "20261004-130001-mini", verifier_import=False)
     # artefact : tâche absente du manifeste → arrêt (aucun repli silencieux)
     ctx = B.Contexte(grille, {}, "")
     with pytest.raises(GardeArret, match="absente du manifeste"):
@@ -465,15 +471,49 @@ def test_garde_commit_cite_artefact(depot):
     (depot / "src" / "code_factice.py").write_text("X = 2\n", encoding="utf-8")
     committer(depot)
     with pytest.raises(GardeArret, match="modifiés depuis le commit cité"):
-        executer(depot, pp, gp, "20261004-140000-mini")
+        executer(depot, pp, gp, "20261004-140000-mini", verifier_import=False)
 
 
-def test_blocs_refuses_hors_replication(depot):
+def test_garde_commit_cite_sous_branches(depot, tmp_path_factory):
+    from controle_ia.simulation_t03.run_t03 import exiger_code_cite
+
+    pp, gp = _preparer(depot)
+    assert len(exiger_code_cite(depot, pp, gp)) == 40                    # cas sain
+    (depot / "tests").mkdir()
+    (depot / "tests" / "t.py").write_text("x = 1\n", encoding="utf-8")
+    committer(depot)
+    with pytest.raises(GardeArret, match="modifiés depuis le commit cité"):  # tests/ modifié
+        exiger_code_cite(depot, pp, gp)
+    texte = pp.read_text(encoding="utf-8")
+    inconnu = depot / "inconnu.md"
+    inconnu.write_text(texte.replace(texte.split("`")[1], "1" * 40), encoding="utf-8")
+    with pytest.raises(GardeArret, match="impossible"):                   # commit inconnu
+        exiger_code_cite(depot, inconnu, gp)
+    sans = depot / "sans.md"
+    sans.write_text("Commit du code d'analyse : `abc`\n", encoding="utf-8")
+    with pytest.raises(GardeArret, match="ne cite pas le commit"):        # commit absent ou abrégé
+        exiger_code_cite(depot, sans, gp)
+    dehors = tmp_path_factory.mktemp("ailleurs") / "grille.json"
+    with pytest.raises(GardeArret, match="hors du dépôt"):                # grille hors du dépôt
+        exiger_code_cite(depot, pp, dehors)
+
+
+def test_garde_code_importe(depot):
+    from controle_ia.simulation_t03.run_t03 import exiger_code_importe_sous
+
+    exiger_code_importe_sous(Path(__file__).resolve().parents[1])         # cas sain : le dépôt qui héberge le code
+    with pytest.raises(GardeArret, match="hors de"):
+        exiger_code_importe_sous(depot)                                    # artefact : un autre arbre
+
+
+def test_blocs_refuses_partout(depot):
     from controle_ia.simulation_t03.run_t03 import executer
 
     pp, gp = _preparer(depot)
-    with pytest.raises(GardeArret, match="réservé à la réplication"):
-        executer(depot, pp, gp, "20261004-140001-mini", blocs=["P2"])
+    with pytest.raises(GardeArret, match="ne se choisissent pas"):
+        executer(depot, pp, gp, "20261004-140001-mini", blocs=["P2"], verifier_import=False)
+    with pytest.raises(GardeArret, match="ne se choisissent pas"):
+        executer(depot, pp, gp, "20261004-140007-mini", blocs=["P2"], replication_de="x", verifier_import=False)
 
 
 def test_garde_duree_artefact(depot):
@@ -481,7 +521,7 @@ def test_garde_duree_artefact(depot):
 
     pp, gp = _preparer(depot)
     with pytest.raises(GardeArret, match="durée"):
-        executer(depot, pp, gp, "20261004-140002-mini", limite_s=0.0)
+        executer(depot, pp, gp, "20261004-140002-mini", limite_s=0.0, verifier_import=False)
 
 
 def test_garde_calibrage_artefact(depot, monkeypatch):
@@ -491,7 +531,7 @@ def test_garde_calibrage_artefact(depot, monkeypatch):
     vrai = cal.seuil_max_exact
     monkeypatch.setattr(cal, "seuil_max_exact", lambda a, n: vrai(a, n) - 0.7)
     with pytest.raises(GardeArret, match="garde de calibrage"):
-        executer(depot, pp, gp, "20261004-140003-mini")
+        executer(depot, pp, gp, "20261004-140003-mini", verifier_import=False)
 
 
 def test_garde_seuil_non_fini_artefact(depot, monkeypatch):
@@ -500,7 +540,7 @@ def test_garde_seuil_non_fini_artefact(depot, monkeypatch):
     pp, gp = _preparer(depot)
     monkeypatch.setattr(cal, "seuil_mc", lambda v, a: math.inf)
     with pytest.raises(GardeArret, match="seuils non finis"):
-        executer(depot, pp, gp, "20261004-140004-mini")
+        executer(depot, pp, gp, "20261004-140004-mini", verifier_import=False)
 
 
 def test_garde_equivalence_artefact(depot, monkeypatch):
@@ -510,7 +550,7 @@ def test_garde_equivalence_artefact(depot, monkeypatch):
     vrai = L.lot_max
     monkeypatch.setattr(L, "lot_max", lambda Xb: vrai(Xb) + 1e-6)
     with pytest.raises(GardeArret, match="équivalence"):
-        executer(depot, pp, gp, "20261004-140005-mini")
+        executer(depot, pp, gp, "20261004-140005-mini", verifier_import=False)
 
 
 def test_garde_multiensemble_artefact(depot, monkeypatch):
@@ -527,7 +567,7 @@ def test_garde_multiensemble_artefact(depot, monkeypatch):
 
     monkeypatch.setattr(att, "bloc_top_r", fausse)
     with pytest.raises(GardeArret, match="multi-ensemble non préservé"):
-        executer(depot, pp, gp, "20261004-140006-mini")
+        executer(depot, pp, gp, "20261004-140006-mini", verifier_import=False)
 
 
 def test_puissance_dispersion_exacte():

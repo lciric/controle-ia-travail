@@ -346,9 +346,11 @@ def lire(resultats: dict, alpha: float, p8: dict) -> dict:
 
 
 def fusionner(principale: dict, replication: dict) -> dict:
-    """Règle de réplication gelée : une cellule statistique « contraire » de la lecture principale
-    devient « non concluant » si sa réplication (graine neuve, 5 × R) est conforme ; elle reste
-    « contraire » sinon, ou si elle n'a pas été répliquée. Les cellules trajectorielles ne changent pas."""
+    """Règle de réplication gelée (critère C) : une cellule statistique « contraire » de la lecture
+    principale devient « non concluant » si sa réplication (graines neuves, 5 × R) est conforme ; elle reste
+    « contraire » sinon, ou si elle n'a pas été répliquée. Toute violation trajectorielle observée en
+    réplication rend sa cellule « contraire » (audit). Les autres cellules de la réplication sont
+    descriptives. Après fusion, aucune autre reprise : `a_repliquer` est vidé, `repliquees` le remplace."""
     import copy
 
     sortie = copy.deepcopy(principale)
@@ -369,6 +371,8 @@ def fusionner(principale: dict, replication: dict) -> dict:
                 else:
                     x["cellules"].append({**rc, "note": "violation trajectorielle observée en réplication : audit"})
         x["a_auditer"] = [c["nom"] for c in x["cellules"] if c["etat"] == "contraire" and c["genre"] == "trajectoriel"]
+        x["repliquees"] = [c["nom"] for c in x["cellules"] if "replication" in c]
+        x["a_repliquer"] = []
         x["verdict"] = verdict(x["cellules"])
         x["n_conformes"] = sum(c["etat"] == "conforme" for c in x["cellules"])
         x["n_contraires"] = sum(c["etat"] == "contraire" for c in x["cellules"])
@@ -394,12 +398,13 @@ LIGNES_E = [
      "lecture": ("Vrai en classe C (multi-ensemble préservé) pour les statistiques symétriques, trajectoire par "
                  "trajectoire, et pour toute statistique sous rebrassage uniforme (T1, T2) ; le groupe de "
                  "permutations compte. Faux en classe K (copule) : la somme et le processus e passent au-dessus de "
-                 "leur taux sous P₀ pour une dépendance positive et en dessous pour une négative, le max reste à son "
-                 "taux ou en dessous (Slepian) ; c'est le cas de la construction de 2606.10456 (somme 0,07 à 0,25 à "
-                 "α = 0,05)."),
+                 "leur taux sous P₀ pour une dépendance positive et en dessous pour une négative ; sous dépendance "
+                 "positive, le max reste à son taux ou en dessous (Slepian) ; c'est le cas de la construction de "
+                 "2606.10456 (somme 0,07 à 0,25 à α = 0,05)."),
      "exiges": ["P4.1", "P4.2", "P4.3", "P6.1", "P6.2", "P6.3", "P6.4", "P6.5"], "complementaires": []},
     {"enonce": "Théorème : « il faut un agrégateur d'autocorrélation (dans le temps) ou de co-élévation (entre agents) »",
-     "lecture": ("En classe K, l'autocorrélation et la co-élévation détectent (P6.1, P6.4) ; sous dépendance négative, "
+     "lecture": ("En classe K, sous dépendance positive, l'autocorrélation et la co-élévation détectent (P6.1, P6.4) ; "
+                 "sous dépendance négative, "
                  "la somme et le processus e passent sous leur taux sous P₀ et l'autocorrélation en valeur absolue "
                  "détecte (P6.2) ; sous dépendance positive, la somme n'est pas aveugle (P6.3, P6.4). Face à un "
                  "attaquant adaptatif de classe C, l'autocorrélation et les suites sont neutralisables (P5.3) ; seules "
@@ -415,7 +420,8 @@ LIGNES_E = [
     {"enonce": "Garde de G1 : « le taux de faux positifs des agrégateurs toujours valides est vérifié empiriquement "
                "sur épisodes honnêtes »",
      "lecture": ("Décisive : la règle de Ville dépasse son taux bien spécifié sous effet épisode, corrélation entre "
-                 "agents, dépendance temporelle ou σ sous-estimé, et dépasse α aux niveaux les plus forts. Le "
+                 "agents, dépendance temporelle ou σ sous-estimé, et dépasse α aux niveaux les plus forts d'effet épisode, de "
+                 "corrélation entre agents et de sous-estimation de σ. Le "
                  "calibrage conforme sur épisodes honnêtes entiers tient son taux quand les épisodes de calibrage et "
                  "de déploiement sont échangeables (vérification de l'instrument) ; sa robustesse à un décalage entre "
                  "eux n'est pas testée en T0.3."),

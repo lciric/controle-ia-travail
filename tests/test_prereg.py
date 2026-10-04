@@ -58,3 +58,15 @@ def test_run_decisif_rattache_au_prereg(depot):
     committer(depot)
     _, m = creer_manifeste(depot, "20261004-120000-decisif", {}, ["t"], decisif=True, prereg=p)
     assert m["preenregistrement"]["sha256"] == h
+
+
+def test_artefact_marqueur_de_gabarit_restant(tmp_path):
+    """Un marqueur de substitution (<<NOM>>) oublié dans une section remplie bloque le scellement."""
+    p = ecrire(tmp_path / "p.md")
+    p.write_text(p.read_text(encoding="utf-8") + "\nSuite : <<CONTRE_LECTURE_2>>\n", encoding="utf-8")
+    assert problemes(p) == ["marqueurs de gabarit restants : <<CONTRE_LECTURE_2>>"]
+    with pytest.raises(GardeArret, match="gabarit"):
+        sceller_prereg(p)
+    sain = ecrire(tmp_path / "q.md")
+    sain.write_text(sain.read_text(encoding="utf-8") + "\nUn chevron isolé << ou >> ne compte pas.\n", encoding="utf-8")
+    assert problemes(sain) == []
