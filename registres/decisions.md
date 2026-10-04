@@ -35,7 +35,7 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 
 | id | ouvert le | objet | ce qu'il faut |
 |---|---|---|---|
-| N-001 | 2026-10-04 | Dépôt distant du programme (création = nœud de décision). | Choix et GO de Lazar ; sans dépôt distant, le travail ne survit pas au conteneur. |
+| N-001 | 2026-10-04 | Dépôt distant du programme (création = nœud de décision). | **GO reçu** (GO-2026-10-04-01, dépôt privé lciric/controle-ia). Création refusée par GitHub le 2026-10-04 vers 04:00 UTC (403 « Resource not accessible by integration » : l'application GitHub de la session ne peut pas créer de dépôt). En attente : création du dépôt vide par Lazar + accès de l'application Claude à ce dépôt ; puis rattachement et poussée par moi. |
 | N-002 | 2026-10-04 | Devis de calcul de la phase 0. | GO de Lazar sur `livrables/premier-rendu-v1/devis-v1.md` (plafond 150 USD). |
 | N-003 | 2026-10-04 | Théorème négatif : collision plus large qu'annoncé (2606.10456 aussi sur traces réelles) et énoncé du programme faux tel qu'écrit. | GO sur la reformulation (recommandation : énoncé par invariance) — `livrables/premier-rendu-v1/decisions-v1.md`. |
 | N-004 | 2026-10-04 | Lemme d'additivité : cœur statistique classique ; calendrier et compensation. | GO sur le repositionnement (recommandation : énoncé adverse). |

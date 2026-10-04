@@ -23,7 +23,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 Aucun.
 
 ## GO et nœuds en attente
-- N-001 dépôt distant ; N-002 devis phase 0 (150 USD) ; N-003 théorème négatif ; N-004 lemme ; N-005 loi de déférence ; N-006 contre-mesures. Détail : `livrables/premier-rendu-v1/decisions-v1.md`.
+- N-001 dépôt distant : GO reçu ; création refusée par GitHub (403), en attente de création manuelle par Lazar ; N-002 devis phase 0 (150 USD) ; N-003 théorème négatif ; N-004 lemme ; N-005 loi de déférence ; N-006 contre-mesures. Détail : `livrables/premier-rendu-v1/decisions-v1.md`.
 
 ## Décisions ouvertes (défaut sous 48 heures)
 - P-001 garde de calcul active — échéance 2026-10-06 03:40 UTC.

@@ -6,3 +6,4 @@ Tout lancement d'instance payante cite l'identifiant d'un GO de type « calcul �
 
 | id | accordé le | type | périmètre | plafond | échéance | accordé par | référence |
 |---|---|---|---|---|---|---|---|
+| GO-2026-10-04-01 | 2026-10-04 | dépôt distant | création du dépôt GitHub privé lciric/controle-ia et poussée de l'historique (N-001) | — | 2026-10-04 | Lazar | message de Lazar dans la session du 2026-10-04 : « GO N-001 : crée le dépôt privé lciric/controle-ia » |
