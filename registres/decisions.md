@@ -24,6 +24,8 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 | R-014 | 2026-10-04 | La note mathématique v1 est remplacée par la v2 (nouveau nom, v1 archivée), qui intègre la contre-vérification adverse : forme unilatérale du processus e, L1 dépendant de n₀, seuil exact du max, L5 corrigé, classes C et K distinguées, T3 restreint aux statistiques locales, T4 précisé, gardes de mauvaise spécification. | R4 et R12 ; contre-vérification reproduite (deux scripts rejoués à l'identique). |
 | R-015 | 2026-10-04 | Les simulations exploratoires du contre-vérificateur seront déclarées dans le préenregistrement de T0.3 ; T0.3 utilisera des graines neuves et une grille fixée indépendamment ; ses prédictions sont tirées des preuves. | R1 : transparence sur toute lecture antérieure au scellement. |
 
+| R-016 | 2026-10-04 | Module `src/controle_ia/agregateurs/` : épisodes (N, T) indexés (agent, pas), lecture « temps d'abord » ; processus e de mélange normal unilatéral et bilatéral en logarithme ; statistiques symétriques à sommation exacte (invariance au bit près), statistiques locales (balayage, Page, co-élévation), statistiques globales (autocorrélation, suites, corrélation entre agents). Tests : formes closes contre intégration numérique, validité sous P₀ et artefact σ sous-estimé, invariance au bit près, identité terminale, garanties locales, gardes. | Instrument de T0.3 (note v2) ; aucune puissance préenregistrée n'est mesurée par ces tests (R1). |
+
 ## Propositions avec recommandation (défaut sous 48 heures)
 
 | id | proposée le (UTC) | décision | défaut | échéance (UTC) | statut |
