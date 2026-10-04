@@ -12,8 +12,10 @@ import math
 
 import numpy as np
 
+from scipy.special import logsumexp
+
 from ..gardes import GardeArret
-from .indexation import verifier_episode
+from .indexation import ordre_lecture, verifier_episode
 
 
 def _z(X, mu0: float, sigma: float) -> np.ndarray:
@@ -111,6 +113,47 @@ def correlation_inter_agents(X) -> float:
     return float(C[iu].mean())
 
 
+def balayage_multi(X, largeurs=(1, 2, 4, 8, 16, 32), mu0: float = 0.0, sigma: float = 1.0) -> float:
+    """Max de moyennes glissantes multi-échelles : max sur les w ≤ T de balayage(X, w)/√w."""
+    X = verifier_episode(X)
+    ws = [int(w) for w in largeurs if 1 <= int(w) <= X.shape[1]]
+    if not ws:
+        raise GardeArret(f"aucune largeur de {tuple(largeurs)} dans [1, T = {X.shape[1]}]")
+    return max(balayage(X, w, mu0, sigma) / math.sqrt(w) for w in ws)
+
+
+def detecteur_e(X, lambdas=(0.25, 0.5, 1.0, 2.0), mu0: float = 0.0, sigma: float = 1.0) -> float:
+    """Détecteur e de type CUSUM, mélange à poids égaux sur λ, le long de l'ordre de lecture.
+
+    log M_n^λ = max(log M_{n−1}^λ, 0) + λ z_n − λ²/2 (M_0 = 0) ; renvoie max_n log Σ_λ M_n^λ / |Λ|.
+    Pour λ = 1, c'est la somme cumulée de Page de paramètre k = 1/2 en échelle logarithmique.
+    """
+    if not (sigma > 0 and np.isfinite(sigma)):
+        raise GardeArret(f"σ = {sigma} : réel strictement positif attendu")
+    lam = np.asarray(lambdas, dtype=float)
+    if lam.ndim != 1 or lam.size == 0 or not np.all(lam > 0):
+        raise GardeArret(f"λ = {lambdas} : liste non vide de réels > 0 attendue")
+    z = (ordre_lecture(X) - mu0) / sigma
+    log_poids = -math.log(lam.size)
+    L = np.full(lam.size, -np.inf)
+    meilleur = -np.inf
+    for x in z:
+        L = np.maximum(L, 0.0) + lam * x - lam * lam / 2.0
+        meilleur = max(meilleur, float(logsumexp(L + log_poids)))
+    return meilleur
+
+
+def dispersion_agents(X, mus, sigma: float = 1.0) -> float:
+    """Σ_i T·((moyenne de l'agent i − μ_i)/σ)² : écart des moyennes par agent aux moyennes honnêtes."""
+    X = verifier_episode(X)
+    mus = np.asarray(mus, dtype=float)
+    if mus.shape != (X.shape[0],):
+        raise GardeArret(f"μ de forme {mus.shape} : ({X.shape[0]},) attendu")
+    if not (sigma > 0 and np.isfinite(sigma)):
+        raise GardeArret(f"σ = {sigma} : réel strictement positif attendu")
+    return float((X.shape[1] * ((X.mean(axis=1) - mus) / sigma) ** 2).sum())
+
+
 STATISTIQUES = {
     "somme_terminale": somme_terminale,
     "max_par_action": max_par_action,
@@ -120,4 +163,7 @@ STATISTIQUES = {
     "autocorrelation_lag1": autocorrelation_lag1,
     "suites_wald_wolfowitz": suites_wald_wolfowitz,
     "correlation_inter_agents": correlation_inter_agents,
+    "balayage_multi": balayage_multi,
+    "detecteur_e": detecteur_e,
+    "dispersion_agents": dispersion_agents,
 }

@@ -11,11 +11,11 @@ en virgule flottante (T1 de la note mathématique v2).
 """
 from .indexation import episode, ordre_lecture, verifier_episode
 from .processus_e import e_bilateral, e_unilateral, trajectoire_e
-from .statistiques import (STATISTIQUES, autocorrelation_lag1, balayage, co_elevation,
-                           correlation_inter_agents, max_par_action, page_cusum,
-                           somme_terminale, suites_wald_wolfowitz)
+from .statistiques import (STATISTIQUES, autocorrelation_lag1, balayage, balayage_multi,
+                           co_elevation, correlation_inter_agents, detecteur_e, dispersion_agents,
+                           max_par_action, page_cusum, somme_terminale, suites_wald_wolfowitz)
 
 __all__ = ["episode", "ordre_lecture", "verifier_episode", "e_bilateral", "e_unilateral",
            "trajectoire_e", "STATISTIQUES", "autocorrelation_lag1", "balayage", "co_elevation",
            "correlation_inter_agents", "max_par_action", "page_cusum", "somme_terminale",
-           "suites_wald_wolfowitz"]
+           "suites_wald_wolfowitz", "balayage_multi", "detecteur_e", "dispersion_agents"]
