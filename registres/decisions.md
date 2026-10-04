@@ -79,6 +79,31 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
   - délais figés sous 6 heures.
 - Défaut trouvé par l'essai de l'amorce : `timeout` refuse une durée composée (« 2h35m ») ; délais en minutes (155 et 345).
 - Brouillon 4 du préenregistrement, brouillon 3 de la procédure ; contre-lecture 3 en cours. | R1, R2, R4, R5, R10, R12, R13. |
+| R-035 | 2026-10-04 | Contre-lecture 3 (sous-agent neuf, rapport scellé `prereg/contre-lectures/T0.4-rapport-contre-lecture-3-v1.md`, 35df4118…) : « non scellable en l'état », aucune bloquante, M-1 majeure, M-2 à M-11 mineures ; toutes acceptées, y compris les parties « code » que le rapport laissait attendre.
+- Code corrigé au commit 92e2f99 (176 tests) :
+  - gardes de production après le stockage, le rejeu et le repère : un P4 contraire se lit au vu du repère ;
+  - règle « diffus » resserrée (rapport ≤ 3) ;
+  - positions transmises testées ;
+  - P0 refusé avant le manifeste ;
+  - tout l'arbre gelé, sauf dossiers documentaires et sorties ;
+  - deux empreintes par entrée de contre-lecture ;
+  - run A poussé dès sa fin, traces scellées, TERM du plafond transmis au run par son identifiant de processus ;
+  - empreintes du rejeu gardées ;
+  - NaN du contrôle négatif ;
+  - plafond mémoire du groupe de contrôle du processus.
+- Répétition jouet conforme `20261004-143851` et `-143913-repetition-jouet` (comparaison identique) ; essais locaux de l'amorce scellés (`diag/essais-amorce-T0.4/`, b8266348…) : cas sain, TERM de plafond pendant les tests, le run A et le run B, délai de run réduit.
+- Brouillon 5 du préenregistrement, brouillon 4 de la procédure (contrôle de l'arbre avant dépense, relancement sur instance neuve, plafond de 6 heures cumulatif, jetons jamais affichés) ; contre-lecture 4 du différentiel en cours. | R1, R2, R4, R5, R6, R10, R12, R13. |
+| R-036 | 2026-10-04 | Contre-lecture 4 (sous-agent neuf, différentiel 9aaf4a5..92e2f99 ; rapport scellé `prereg/contre-lectures/T0.4-rapport-contre-lecture-4-v1.md`, 159d30be…) : « non scellable en l'état », aucune bloquante, Q-1 majeure, Q-2 à Q-7 mineures ou de forme ; toutes acceptées.
+- Q-1 : `tail -5` à deux fichiers faisait sortir le script d'instance sous `set -e` quand les tests échouent, sans consigner ni pousser (régression de la séparation de la sortie d'erreur). Corrigé (`tail -n 5`).
+- Code corrigé au commit 3a7b5e0 (178 tests) :
+  - filet de sortie (piège EXIT) : toute sortie en échec non consignée après le clonage consigne, verse les traces et pousse ;
+  - dossiers de traces uniques ;
+  - étapes nommées après chaque run complet ;
+  - motif du TERM ;
+  - quatre comportements fixés par des tests (les cinq mutations survivantes sont vues).
+- Répétition jouet conforme `20261004-155447` et `-155505-repetition-jouet` ; essais de l'amorce rejoués au nouveau commit (dix scénarios, archive scellée v2).
+- Transparence : les clones du contre-lecteur partageaient par liens physiques les objets git du dépôt (dates de 533 objets rafraîchies, contenu intact, `git fsck` sans erreur) ; désormais `git clone --no-hardlinks` pour les contre-lecteurs.
+- Brouillon 6 du préenregistrement, brouillon 5 de la procédure ; contre-lecture 5 du différentiel en cours. | R1, R2, R4, R5, R6, R10, R12, R13. |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
