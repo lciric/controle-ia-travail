@@ -33,7 +33,7 @@ if { [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; } && [ -d "$T/controle-ia/.git"
     # plafond atteint (124 : TERM ; 137 : KILL cinq minutes plus tard) : le script d'instance a consigné l'arrêt s'il en a
     # eu le temps ; l'amorce verse en plus ses propres traces, au mieux
     (
-        cd "$T/controle-ia" && d="traces/t04-plafond-$(date -u +%Y%m%d-%H%M%S)" && mkdir -p "$d" &&
+        cd "$T/controle-ia" && mkdir -p traces && d=$(mktemp -d "traces/t04-plafond-$(date -u +%Y%m%d-%H%M%S)-XXXX") &&
         for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err" "$T"/run-*.err "$T"/run-*.json; do [ -f "$f" ] && cp "$f" "$d/"; done
         (cd "$d" && sha256sum -- * > empreintes.sha256) || true
         git add -A runs diag "$d" && git commit -qm "T0.4 — plafond de l'amorce atteint : résultats partiels et traces" || true

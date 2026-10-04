@@ -211,12 +211,15 @@ def test_sortie_des_tests_scellee_et_lue(depot, tmp_path_factory):
     assert s["lecture"]["tests_instance"] == "conforme"
     corps = json.loads((depot / "diag" / "20261004-190000-repetition-jouet" / "tests-instance.json").read_text())
     assert corps["resultat"]["derniere_ligne"] == "170 passed in 50.12s"
+    reussis = lambda run: json.loads((depot / "diag" / run / "resume.json").read_text())["resultat"][
+        "tests_instance"]["reussis"]
+    assert reussis("20261004-190000-repetition-jouet") is True
     committer(depot)
     ko = dehors / "tests-ko.txt"
-    ko.write_text("..F.\n1 failed, 169 passed in 50.12s\n")
+    ko.write_text("..s.\n169 passed, 1 skipped in 50.12s\n")       # contre-lecture 4, Q-2 : champ aligné sur P0
     s = V.executer(depot, "20261004-190100-repetition-jouet", entropie=3, config=gelee, sortie_tests=ko,
                    verifier_import=False)
-    assert s["lecture"]["tests_instance"] == "contraire"
+    assert s["lecture"]["tests_instance"] == "contraire" and reussis("20261004-190100-repetition-jouet") is False
     for derniere in ("168 passed, 2 skipped in 5.0s", "169 passed in 5.0s", "170 passed, 1 xfailed in 5.0s",
                      "170 passed, 1 error in 5.0s"):
         assert V.lire({"tests_instance": {"derniere_ligne": derniere}}, gelee)["tests_instance"] == "contraire"
@@ -244,6 +247,10 @@ def test_lecture_couverture_controle_negatif_audit_et_nan():
     # N-2 : un écart concentré dans la zone générée (défaut de décodage, exp10 : 6e-4) reste « contraire »
     assert lire(ecart=6e-4, ctx=1.4e-7, gen=6e-4)["logique_equivalence"] == "contraire"
     assert lire(ecart=6e-4, ctx=4e-4, gen=6e-4)["logique_equivalence"] == "non concluant : précision probable"
+    # contre-lecture 4, Q-2 : rapport des maxima ≤ 3 (M-2), dans les deux sens
+    assert lire(ecart=2.9e-4, ctx=1e-4, gen=2.9e-4)["logique_equivalence"] == "non concluant : précision probable"
+    assert lire(ecart=3.1e-4, ctx=1e-4, gen=3.1e-4)["logique_equivalence"] == "contraire"
+    assert lire(ecart=3.1e-4, ctx=3.1e-4, gen=1e-4)["logique_equivalence"] == "contraire"
     assert lire(ecart=5e-2, ctx=4e-2, gen=5e-2)["logique_equivalence"] == "contraire"
     for manque in ({"remplies": 0}, {"finies": 0}, {"positions": 0}, {"lignes": (0,)}):
         assert lire(**manque)["logique_equivalence"] == "non concluant"
@@ -420,7 +427,7 @@ def test_rejeu_refuse_avant_calcul_et_arret_de_comparaison(depot, monkeypatch):
     # code différent de celui du run A : refusé avant tout calcul
     (depot / "src" / "module.py").write_text("x = 2\n")
     committer(depot)
-    with pytest.raises(GardeArret, match="code ou tests différents"):
+    with pytest.raises(GardeArret, match="arbre gelé .* différent de celui du run A"):
         V.executer(depot, "20261004-210200-repetition-jouet", config=PETITE, rejeu_de="20261004-210000-repetition-jouet",
                    verifier_import=False)
     assert not (depot / "runs" / "20261004-210200-repetition-jouet").exists()
@@ -536,3 +543,52 @@ def test_arbre_gele_hors_dossiers_documentaires(depot):
     committer(depot)
     with pytest.raises(GardeArret, match="arbre gelé"):
         V.exiger_code_cite(depot, p)
+
+
+# ---------------------------------------------------------------- contre-lecture 4
+
+def test_p0_refus_avant_le_manifeste_en_mode_decisif(depot, tmp_path_factory, monkeypatch):
+    """Q-2 : en mode décisif, une sortie des tests non conforme arrête avant le manifeste (aucun run) ; une sortie
+    conforme laisse aller jusqu'au manifeste."""
+    commit = subprocess.run(["git", "-C", str(depot), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    p = _preregistrement(depot, commit)
+    committer(depot)                                            # préenregistrement hors de l'arbre gelé
+    decisive = dict(V.CONFIG_REELLE, memoire_vive_min_go=0)
+    sortie = tmp_path_factory.mktemp("sorties") / "tests.txt"
+    run = "20261004-250000-validation-reelle"
+    for mauvaise in (f"{V.CONFIG_REELLE['tests_attendus'] - 1} passed, 1 skipped in 5.0s\n", "",
+                     f"{V.CONFIG_REELLE['tests_attendus']} passed in 5.0s\nfin\n"):
+        sortie.write_text(mauvaise)
+        with pytest.raises(GardeArret, match="P0 : .* aucun run"):
+            V.executer(depot, run, revision="0e9e39f249a16976918f6564b8830bc894c89659", config=decisive, prereg=p,
+                       sortie_tests=sortie, verifier_import=False)
+        assert not (depot / "runs" / run).exists() and not (depot / "diag" / run).exists()
+    sortie.write_text(f"....\n{V.CONFIG_REELLE['tests_attendus']} passed in 5.0s (0:00:05)\n")
+
+    def manifeste(*a, **k):
+        raise GardeArret("manifeste atteint")
+    monkeypatch.setattr(V, "creer_manifeste", manifeste)
+    with pytest.raises(GardeArret, match="manifeste atteint"):
+        V.executer(depot, run, revision="0e9e39f249a16976918f6564b8830bc894c89659", config=decisive, prereg=p,
+                   sortie_tests=sortie, verifier_import=False)
+
+
+def test_plafonds_v2_et_minimum_des_ancetres(tmp_path_factory):
+    """Q-2 : groupe de contrôle v2 (ligne « 0:: », memory.max) ; le plus petit plafond du groupe et de ses
+    ancêtres l'emporte, même porté par un ancêtre ; « max » ne compte pas."""
+    d = tmp_path_factory.mktemp("cgroup2")
+    proc = d / "cgroup"
+    proc.write_text("0::/user.slice/session-1.scope\n")
+    feuille = d / "fs" / "user.slice" / "session-1.scope"
+    feuille.mkdir(parents=True)
+    (feuille / "memory.max").write_text("12000000000\n")
+    (d / "fs" / "user.slice" / "memory.max").write_text("8000000000\n")
+    (d / "fs" / "memory.max").write_text("max\n")
+    fichiers = V.plafonds_cgroup(str(proc), str(d / "fs"))
+    assert fichiers[0] == str(feuille / "memory.max") and fichiers[-1] == str(d / "fs" / "memory.max")
+    meminfo = d / "meminfo"
+    meminfo.write_text("MemTotal:       16500000 kB\n")
+    r = V.exiger_memoire_vive(5, meminfo, fichiers)
+    assert r["plafond_conteneur_go"] == 8.0 and r["effective_go"] == 8.0
+    with pytest.raises(GardeArret, match="effective 8.0"):
+        V.exiger_memoire_vive(10, meminfo, fichiers)

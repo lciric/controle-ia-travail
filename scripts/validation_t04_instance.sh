@@ -31,7 +31,6 @@ AIDE_GIT='!f() { echo username=x-access-token; echo "password=${GH_TOKEN:-}"; };
 journal "début : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE"
 if [ "$MODE" = reel ]; then
     : "${HF_TOKEN:?HF_TOKEN obligatoire en mode reel}"
-    nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv | tee -a "$JOURNAL"
 fi
 
 DEPOT="$TRAVAIL/controle-ia"
@@ -49,16 +48,20 @@ git checkout -q -b "$BRANCHE"
 
 pousser() { git push -q origin "$BRANCHE"; }
 traces() {
-    # journal, sorties des tests et erreurs des runs, versés sur la branche (hors arbre scellé) pour la session de pilotage
-    local d="traces/t04-$(date -u +%Y%m%d-%H%M%S)"
-    mkdir -p "$d"
+    # journal, sorties des tests et des runs, versés sur la branche (hors arbre gelé) pour la session de pilotage ;
+    # un dossier neuf à chaque versement, même deux fois dans la même seconde (R12)
+    local d
+    mkdir -p traces
+    d=$(mktemp -d "traces/t04-$(date -u +%Y%m%d-%H%M%S)-XXXX")
     for f in "$JOURNAL" "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" "$TRAVAIL"/run-*.err "$TRAVAIL"/run-*.json; do
         [ -f "$f" ] && cp "$f" "$d/"
     done
     (cd "$d" && sha256sum -- * > empreintes.sha256) || true          # R6 : traces scellées
     git add "$d" && git commit -qm "T0.4 — traces de l'instance ($1)" >/dev/null 2>&1 || true
 }
+CONSIGNE=""
 consigner_arret() {
+    CONSIGNE=1
     git add -A runs diag
     if git commit -qm "T0.4 — validation : arrêt pendant $1" >/dev/null 2>&1; then
         journal "ARRÊT pendant $1 : résultats partiels committés (dont arret.json s'il existe)"
@@ -84,6 +87,22 @@ sur_term() {
     exit 124
 }
 trap sur_term TERM
+sur_sortie() {
+    # filet : une sortie en échec que rien n'a consignée (commande en échec sous set -e, erreur imprévue) consigne
+    # l'arrêt, verse les traces et pousse ; le code de sortie est conservé
+    local code=$?
+    if [ "$code" -ne 0 ] && [ -z "$CONSIGNE" ]; then
+        trap '' TERM
+        journal "sortie imprévue (code $code) pendant $ETAPE" || true
+        consigner_arret "$ETAPE (sortie imprévue, code $code)" || true
+    fi
+    exit "$code"
+}
+trap sur_sortie EXIT
+
+if [ "$MODE" = reel ]; then
+    nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv | tee -a "$JOURNAL"
+fi
 
 if [ -n "${VENV_EXISTANT:-}" ]; then
     # shellcheck disable=SC1091
@@ -100,7 +119,7 @@ ETAPE="tests"
 # sortie standard seule dans tests.txt (lue par P0) ; la sortie d'erreur à part, pour qu'un avertissement de fin de
 # processus ne se lise pas comme une dernière ligne
 if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider >"$TRAVAIL/tests.txt" 2>"$TRAVAIL/tests.err"; then
-    tail -5 "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" | tee -a "$JOURNAL"
+    tail -n 5 "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" | tee -a "$JOURNAL"
     journal "tests en échec : arrêt"
     consigner_arret "tests"
     exit 1
@@ -152,6 +171,7 @@ fi
 git add "runs/$A" "diag/$A"
 git commit -qm "T0.4 — validation ($MODE), run A ($A)"
 journal "run A terminé : $A"
+ETAPE="entre les runs (A complet)"
 pousser || journal "poussée du run A impossible : résultats restés sur l'instance"
 
 sleep 1      # deux identifiants distincts même si le run A a duré moins d'une seconde
@@ -168,9 +188,9 @@ fi
 git add "runs/$B" "diag/$B"
 git commit -qm "T0.4 — validation ($MODE), run B ($B), rejeu entre processus de $A"
 journal "run B terminé : $B"
+ETAPE="fin (A et B complets)"
 tee -a "$JOURNAL" <"$TRAVAIL/run-B.json"
 
-ETAPE="fin"
 journal "fin : A=$A B=$B ; arrêter l'instance par son identifiant (R10)"
 traces "fin"
 pousser

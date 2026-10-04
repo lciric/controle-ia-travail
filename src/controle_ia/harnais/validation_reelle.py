@@ -23,9 +23,10 @@ près (empreintes, logits, captures, fichiers), comparaison scellée.
 
 Les gros tableaux (npz) vont dans `donnees/<run>/` (hors git, scellés sur place) ; leurs empreintes sont
 dans les résultats scellés de `diag/<run>/`. Une fois le manifeste créé, tout arrêt (garde, panne, signal
-TERM d'un délai externe) laisse un `arret.json` scellé, puis se propage : aucun repli silencieux (R5).
-Les gardes d'avant le manifeste (liste blanche, révision, citations, mémoire vive, code, rejeu incompatible)
-ne laissent que leur message sur la sortie d'erreur.
+TERM du délai externe du run ou du plafond de l'amorce) laisse un `arret.json` scellé, puis se propage : aucun
+repli silencieux (R5). Les gardes d'avant le manifeste (liste blanche, révision, mémoire vive, code importé, arbre
+gelé au commit cité, citations, rejeu incompatible, sortie des tests en mode décisif) ne laissent que leur message
+sur la sortie d'erreur.
 """
 from __future__ import annotations
 
@@ -89,7 +90,7 @@ CONFIG_REELLE = {
     "politique": {"episodes_par_jeton": [1, 14], "vecteurs_par_action": ["max"], "sondes": SONDES},
     "controle_negatif": {"positions_min": 4, "actions_min": 10, "fraction_min": 0.95},
     "memoire_carte_min_gio": 75,
-    "tests_attendus": 176,                    # suite complète au commit cité, tous réussis (P0)
+    "tests_attendus": 178,                    # suite complète au commit cité, tous réussis (P0)
     "projection": {"episodes": 2000},
     "limite_s": 9000,
 }
@@ -160,7 +161,8 @@ def graine_entiere(graine: dict) -> int:
 # ---------------------------------------------------------------- gardes de lancement (avant le manifeste)
 
 def exiger_code_cite(racine: Path, prereg: Path) -> str:
-    """Garde : `src` et `tests` au lancement sont ceux du commit cité par le préenregistrement."""
+    """Garde : l'arbre gelé (`CHEMINS_GELES` : tout sauf les dossiers documentaires et les sorties) est, au
+    lancement, celui du commit cité par le préenregistrement."""
     m = COMMIT_CITE.search(prereg.read_text(encoding="utf-8"))
     if not m:
         raise GardeArret(f"{prereg} ne cite pas le commit du code d'analyse (40 caractères hexadécimaux)")
@@ -274,7 +276,8 @@ def exiger_rejeu_compatible(racine: Path, rejeu_de: str, config: dict) -> int:
     r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m_a["commit"], "HEAD", "--", *CHEMINS_GELES],
                        capture_output=True, text=True)
     if r.returncode != 0:
-        raise GardeArret(f"rejeu de {rejeu_de} : code ou tests différents de ceux du run A ({m_a['commit'][:12]})")
+        raise GardeArret(f"rejeu de {rejeu_de} : arbre gelé (code, tests, scripts, dépendances, configuration) "
+                         f"différent de celui du run A ({m_a['commit'][:12]})")
     return int(next(iter(m_a["graines"].values()))["entropie"])
 
 
@@ -527,7 +530,8 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
         sondes = P.construire_sondes(config["politique"], couches, largeur, graines)
         chrono = {}
         sorties, plan = jouer_phase(modele, fmt, prod, graines, "production", couches, chrono=chrono, echeance=echeance)
-        # bilan et gardes d'équivalence d'abord : un arrêt plus loin (relecture, rejeu, durée) garde les profils
+        # bilan d'équivalence d'abord : un arrêt plus loin (relecture, rejeu, durée) garde les profils ; les gardes
+        # de la production viennent après le repère (plus bas)
         resume["production"] = {"plan_lots": plan, "noyau_attention": prod["noyau_attention"], "couches": couches,
                                 "largeur": largeur, "equivalence": bilan_phase(sorties, prod, cn), "debit": debit(chrono),
                                 "episodes_equivalence": {ep.identifiant: r for ep, _, r in sorties if r["ecarts"]}}
@@ -704,7 +708,8 @@ def comparer_runs(racine: str | Path, run_a: str, run_b: str) -> dict:
     r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m_a["commit"], m_b["commit"], "--", *CHEMINS_GELES],
                        capture_output=True, text=True)
     if r.returncode != 0:
-        raise GardeArret(f"{run_a} et {run_b} : code ou tests différents entre {m_a['commit'][:12]} et {m_b['commit'][:12]}")
+        raise GardeArret(f"{run_a} et {run_b} : arbre gelé différent entre {m_a['commit'][:12]} et "
+                         f"{m_b['commit'][:12]}")
     a = verifier_resultat(racine, racine / "diag" / run_a / "resume.json")["resultat"]
     b = verifier_resultat(racine, racine / "diag" / run_b / "resume.json")["resultat"]
     differences = []
@@ -744,7 +749,7 @@ def comparer_runs(racine: str | Path, run_a: str, run_b: str) -> dict:
 
 
 def _signal_term(signum, frame):
-    raise GardeArret("signal TERM reçu (délai externe) : arrêt consigné")
+    raise GardeArret("signal TERM reçu (délai externe du run ou plafond de l'amorce) : arrêt consigné")
 
 
 def main(argv=None) -> int:
