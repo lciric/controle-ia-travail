@@ -70,3 +70,11 @@ def test_artefact_marqueur_de_gabarit_restant(tmp_path):
     sain = ecrire(tmp_path / "q.md")
     sain.write_text(sain.read_text(encoding="utf-8") + "\nUn chevron isolé << ou >> ne compte pas.\n", encoding="utf-8")
     assert problemes(sain) == []
+
+
+def test_artefact_prereg_hors_du_depot(depot, tmp_path_factory):
+    """Un préenregistrement scellé mais placé hors du dépôt arrête la création du manifeste (GardeArret)."""
+    ailleurs = ecrire(tmp_path_factory.mktemp("ailleurs") / "prereg.md")
+    sceller_prereg(ailleurs)
+    with pytest.raises(GardeArret, match="hors du dépôt"):
+        creer_manifeste(depot, "20261004-120001-decisif", {}, ["t"], decisif=True, prereg=ailleurs)

@@ -88,7 +88,11 @@ def creer_manifeste(racine: str | Path, run_id: str, config: dict, taches: list[
         from .prereg import exiger_prereg_scelle
 
         p = Path(prereg)
-        prereg_info = {"chemin": str(p.resolve().relative_to(racine.resolve())), "sha256": exiger_prereg_scelle(p)}
+        try:
+            chemin_rel = str(p.resolve().relative_to(racine.resolve()))
+        except ValueError:
+            raise GardeArret(f"préenregistrement {p} hors du dépôt {racine}") from None
+        prereg_info = {"chemin": chemin_rel, "sha256": exiger_prereg_scelle(p)}
     canon = config_canonique(config)
     manifeste = {
         "run_id": run_id,
