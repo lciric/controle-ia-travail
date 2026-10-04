@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-04 (UTC), fin de la session 1.
+Dernière mise à jour : 2026-10-04 (UTC), session 1 (en cours).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -11,7 +11,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 |---|---|---|---|
 | T0.1 socle, gouvernance, continuité | **fait** (sauf dépôt distant) | processeur | 52 tests ; gardes testées sain + artefact ; run factice 20261004-034500-factice de bout en bout ; CLAUDE.md, registres, passation |
 | T0.2 vérification de l'état de l'art | **niveau 1 fait** | processeur | 13 PDF de niveau 1 lus sur source primaire (six lecteurs neufs, rapports scellés) → `docs/etat-de-l-art/etat-de-l-art-verifie-niveau1-v1.md` ; reste : niveaux 2 et 3 (PDF à recevoir), références nouvelles (Kulkarni 2604.28129 en tête), recherche affirmative (session neuve) |
-| T0.3 simulation du lemme et du théorème négatif | **en cours** | processeur | note v1 contre-vérifiée (erreurs relevées) → note v2 (`docs/notes/note-mathematique-lemme-theoreme-v2.md`) ; prochain pas : préenregistrement (prédictions de la section 7, gardes de mauvaise spécification), contre-lecture (R2), scellement, simulation |
+| T0.3 simulation du lemme et du théorème négatif | **en cours : préenregistrement scellé, run décisif lancé** | processeur | note v2 ; code `src/controle_ia/simulation_t03/` gelé au commit d73ac46 (**aucun commit sur `src/`, `tests/` ni la grille jusqu'au run et à une réplication éventuelle**) ; grille `prereg/T0.3-grille-v2.json` (5609f920…) ; préenregistrement `prereg/T0.3-simulation-lemme-theoreme-v1.md` (7474743a…), trois contre-lectures dans `prereg/contre-lectures/` |
 | T0.4 harnais et activations | conception | processeur puis GPU sur GO | code sur petit modèle à poids aléatoires à partir du 6 oct. |
 | T0.5 environnement (a) v0 | conception | processeur puis GPU sur GO | base identifiée (transcription) : « Diffuse AI Control on Fuzzy Tasks » ; code inconnu |
 | T0.6 organismes v0 | conception | GPU sur GO | famille (iii) : organismes publics en 70B seulement (P-002) |
