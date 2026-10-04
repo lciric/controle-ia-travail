@@ -52,6 +52,13 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 - gardes nouvelles, testées sur cas sain et artefact : disque relu = mémoire ; scores et vecteurs recalculés hors ligne depuis les activations par jeton = calcul en ligne, au bit près ; aucune activation par jeton hors entraînement ; politique validée avant tout manifeste ;
 - les runs 20261004-110000 et 20261004-110001-harnais-factice, qui stockent aussi le dernier jeton, restent archivés tels quels (R12) ; la preuve de T0.4 sera le run suivant, fait avec le code corrigé ;
 - note : dans ces deux identifiants, l'heure (11:00:00 et 11:00:01) est une étiquette choisie à la main ; l'heure réelle de création est celle des manifestes (`cree_le` : 10:32:19 et 10:32:28 UTC). Les runs suivants prennent l'heure réelle. | Brief, T0.4 et T0.7 ; R5, R12 ; interdits (moyenne ou médiane sur les jetons). |
+| R-031 | 2026-10-04 | Préparation de la validation de T0.4 sur modèle réel (demande de Lazar, « prépare la validation sur le vrai modèle ») ; rien n'est lancé avant le GO N-002 :
+- format de conversation (`harnais/formats.py`) : pièces dérivées du gabarit du tokeniseur, jamais de retokenisation de l'historique ; garde « transcription incrémentale = gabarit complet » ; date d'en-tête du gabarit figée ;
+- génération par lots en pas synchronisés (`generer_lot`, `jouer_episodes`) : remplissage à gauche, positions explicites, une graine et un générateur par ligne, logits du dernier jeton seulement. Sans lots, la phase 1 (environ 15 millions de jetons) ne tiendrait pas dans le budget ;
+- écart d'équivalence redéfini par jeton (norme euclidienne relative, maximum sur les jetons), insensible aux activations massives de quelques positions ; contrôle négatif décalé d'un jeton à chaque comparaison : la garde doit voir le décalage ;
+- codage sans perte en demi-précision (bfloat16-bits, 2 octets par valeur) ; gros tableaux dans `donnees/` (hors git, scellés sur place), empreintes dans les résultats scellés ;
+- script `harnais/validation_reelle.py` : format, logique en simple précision (tolérance 1e-4), production en demi-précision, rejeu du premier lot dans le processus, débit, stockage ; rejeu entre processus par un second lancement à la même entropie, comparé et scellé ; tout arrêt consigné (`arret.json`) ; répétition complète sur modèle jouet ;
+- révision du modèle exigée en commit complet (40 caractères hexadécimaux) ; `requirements-gpu.txt`. | Brief, T0.4 ; devis v1 (6 heures pour T0.4) ; R1, R5, R9, R10, R12. |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 

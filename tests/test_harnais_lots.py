@@ -1,0 +1,106 @@
+"""Génération par lots du harnais (T0.4, préparation du modèle réel), sur modèle jouet à gabarit de conversation.
+
+Couvre : remplissage à gauche et positions explicites (équivalence génération / passe unique sur des
+contextes de longueurs différentes), indépendance des lignes d'un lot, graine par ligne, rejeu au bit
+près à plan de lots identique, relecture des crochets par ligne, gardes d'équivalence et de contrôle
+négatif (cas sain + artefacts : relecture désalignée, activations constantes le long des positions).
+"""
+import numpy as np
+import pytest
+
+import controle_ia.harnais.episode as E
+from controle_ia.gardes import GardeArret
+from controle_ia.harnais.activations import ecart_equivalence, exiger_controle_negatif
+from controle_ia.harnais.episode import (EnvironnementJouet, empreinte_episode, generer_lot, jouer_episodes,
+                                         relire_crochets_lot)
+from controle_ia.harnais.formats import FormatChat
+from controle_ia.harnais.modeles import modele_jouet, regler_determinisme, tokeniseur_caracteres_chat
+
+regler_determinisme(1)
+TOK = tokeniseur_caracteres_chat()
+FIN = TOK.convert_tokens_to_ids("<|im_end|>")
+FMT = FormatChat(TOK, fins={FIN, TOK.eos_token_id})
+
+
+def _modele(graine=11):
+    return modele_jouet(graine, len(TOK), couches=4, largeur=32, tetes=4, tetes_cle_valeur=2, intermediaire=64)
+
+
+def _graines(B, N, T, base=1000):
+    return [{(i, t): base + 100 * b + 10 * i + t for t in range(T) for i in range(N)} for b in range(B)]
+
+
+def _jouer(m, graines, B=3, N=2, T=3, echantillon=None, **kw):
+    if echantillon is None:
+        echantillon = {(b, i, t) for b in range(B) for i in range(N) for t in range(T)}
+    return jouer_episodes(m, FMT, EnvironnementJouet(), [f"ep{b}" for b in range(B)], N, T, graines, [0, 1, 2],
+                          max_nouveaux=12, echantillon_equivalence=echantillon, **kw)
+
+
+def test_lot_equivalence_avec_remplissage():
+    sorties = _jouer(_modele(), _graines(3, 2, 3))
+    longueurs = {len(ep.transcriptions[0].ids) for ep, _, _ in sorties}
+    assert len(longueurs) > 1                       # contextes de longueurs différentes : remplissage exercé
+    for ep, acts, rapport in sorties:
+        assert len(rapport["ecarts"]) == 6
+        assert max(max(e.values()) for e in rapport["ecarts"].values()) < 1e-5
+        assert min(min(e.values()) for e in rapport["controle_negatif_decalage_1"].values()) > 1e-4
+        for tr in ep.transcriptions:
+            for a in tr.actions:
+                assert tr.ids[a.debut:a.fin] == a.ids
+                fermee = tr.ids[a.fin:a.fin + 2]      # clôture du tour : fin de tour (si non générée) puis saut de ligne
+                assert FIN in a.ids[-1:] + fermee[:1]
+
+
+def test_lot_lignes_independantes_et_graine_par_ligne():
+    m = _modele()
+    ctx = FMT.ouverture("Tu es l'agent 0.", "Pas 0.")
+    a, _ = generer_lot(m, [ctx] * 3, 10, 1.0, [1, 2, 3], FMT.fins, TOK.pad_token_id)
+    b, _ = generer_lot(m, [ctx] * 3, 10, 1.0, [1, 99, 3], FMT.fins, TOK.pad_token_id)
+    assert a[0] == b[0] and a[2] == b[2] and a[1] != b[1]
+    c, _ = generer_lot(m, [ctx] * 2, 10, 1.0, [5, 5], FMT.fins, TOK.pad_token_id)
+    assert c[0] == c[1]
+    with pytest.raises(GardeArret, match="graines en nombre"):
+        generer_lot(m, [ctx] * 2, 10, 1.0, [5], FMT.fins, TOK.pad_token_id)
+
+
+def test_lot_rejeu_au_bit_pres_et_graine_manquante():
+    m = _modele()
+    g = _graines(3, 2, 2)
+    e1 = [empreinte_episode(ep, acts) for ep, acts, _ in _jouer(m, g, T=2, echantillon=set())]
+    e2 = [empreinte_episode(ep, acts) for ep, acts, _ in _jouer(m, g, T=2, echantillon=set())]
+    assert e1 == e2
+    g[1] = dict(g[1])
+    del g[1][(1, 1)]
+    with pytest.raises(GardeArret, match="graine absente"):
+        _jouer(m, g, T=2)
+
+
+def test_relecture_des_crochets_par_ligne():
+    rng = np.random.default_rng(0)
+    morceaux = {0: [rng.standard_normal((2, 5, 4)).astype(np.float32)]
+                + [rng.standard_normal((2, 1, 4)).astype(np.float32) for _ in range(4)]}
+    plan = {"longueur_remplie": 5, "passes_decodage": 4}
+    r = relire_crochets_lot(morceaux, 1, 3, plan, 2)[0]
+    attendu = np.concatenate([morceaux[0][0][1, 2:], morceaux[0][1][1], morceaux[0][2][1]])
+    assert r.shape == (5, 4) and np.array_equal(r, attendu)
+    with pytest.raises(GardeArret, match="captures"):
+        relire_crochets_lot(morceaux, 1, 3, {"longueur_remplie": 5, "passes_decodage": 5}, 2)
+
+
+def test_garde_d_equivalence_sur_relecture_desalignee(monkeypatch):
+    vrai = E.relire_crochets_lot
+
+    def desalignee(brut, k, longueur_contexte, plan, n_generes):      # artefact : un jeton de remplissage gardé
+        return vrai(brut, k, longueur_contexte + 1, plan, n_generes)
+    monkeypatch.setattr(E, "relire_crochets_lot", desalignee)
+    with pytest.raises(GardeArret, match="génération ≠ passe unique"):
+        _jouer(_modele(), _graines(3, 2, 2), T=2)
+
+
+def test_controle_negatif_sain_et_aveugle():
+    exiger_controle_negatif({0: 0.5, 1: 0.2}, 1e-4, "sain")
+    constantes = {0: np.ones((6, 4), np.float32)}                       # artefact : rien ne varie le long des positions
+    decale = ecart_equivalence(constantes, {0: np.ones((8, 4), np.float32)}, decalage=1)
+    with pytest.raises(GardeArret, match="aveugle"):
+        exiger_controle_negatif(decale, 1e-4, "artefact")

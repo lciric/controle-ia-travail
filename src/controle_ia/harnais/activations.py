@@ -32,23 +32,35 @@ def blocs_decodeur(modele):
 
 
 class Crochets:
-    """Capture, à chaque appel du modèle, la sortie des couches choisies (lot de taille 1)."""
+    """Capture, à chaque appel du modèle, la sortie des couches choisies.
 
-    def __init__(self, modele, couches):
+    Sans `lignes` : lot de taille 1 exigé, morceaux (positions, largeur). Avec `lignes` : lot de toute
+    taille, seules les lignes indiquées sont gardées, morceaux (lignes, positions, largeur) ; la
+    reconstruction par ligne (remplissage, pas actifs) revient à l'appelant (`vider_lot`)."""
+
+    def __init__(self, modele, couches, lignes=None):
         blocs = blocs_decodeur(modele)
         self.couches = sorted(set(int(c) for c in couches))
         if not self.couches or self.couches[0] < 0 or self.couches[-1] >= len(blocs):
             raise GardeArret(f"couches {couches} hors de [0, {len(blocs)}[")
         self.blocs = blocs
+        self.lignes = None if lignes is None else [int(r) for r in lignes]
         self.morceaux: dict[int, list[np.ndarray]] = {c: [] for c in self.couches}
         self.poignees = []
 
     def _crochet(self, couche):
         def f(module, entrees, sortie):
             h = sortie[0] if isinstance(sortie, tuple) else sortie
-            if h.dim() != 3 or h.shape[0] != 1:
-                raise GardeArret(f"sortie de couche de forme {tuple(h.shape)} : lot de taille 1 attendu")
-            self.morceaux[couche].append(h[0].detach().to("cpu", torch.float32).numpy().copy())
+            if h.dim() != 3:
+                raise GardeArret(f"sortie de couche de forme {tuple(h.shape)} : (lot, positions, largeur) attendu")
+            if self.lignes is None:
+                if h.shape[0] != 1:
+                    raise GardeArret(f"sortie de couche de forme {tuple(h.shape)} : lot de taille 1 attendu")
+                self.morceaux[couche].append(h[0].detach().to("cpu", torch.float32).numpy().copy())
+            else:
+                if max(self.lignes) >= h.shape[0]:
+                    raise GardeArret(f"lignes {self.lignes} hors d'un lot de {h.shape[0]}")
+                self.morceaux[couche].append(h[self.lignes].detach().to("cpu", torch.float32).numpy().copy())
         return f
 
     def __enter__(self):
@@ -62,8 +74,18 @@ class Crochets:
         return False
 
     def vider(self) -> dict[int, np.ndarray]:
-        """Activations concaténées le long de la séquence, par couche ; remet la capture à zéro."""
+        """Lot de taille 1 : activations concaténées le long de la séquence, par couche ; remet à zéro."""
+        if self.lignes is not None:
+            raise GardeArret("capture par lignes : utiliser vider_lot")
         sortie = {c: (np.concatenate(v, axis=0) if v else np.zeros((0, 0), np.float32)) for c, v in self.morceaux.items()}
+        self.morceaux = {c: [] for c in self.couches}
+        return sortie
+
+    def vider_lot(self) -> dict[int, list[np.ndarray]]:
+        """Capture par lignes : morceaux bruts (lignes, positions, largeur), dans l'ordre des appels."""
+        if self.lignes is None:
+            raise GardeArret("capture sans lignes : utiliser vider")
+        sortie = self.morceaux
         self.morceaux = {c: [] for c in self.couches}
         return sortie
 
@@ -74,7 +96,7 @@ def passe_unique(modele, ids: list[int], couches) -> dict[int, np.ndarray]:
         raise GardeArret("passe avant sur une transcription vide")
     appareil = next(modele.parameters()).device
     with torch.no_grad(), Crochets(modele, couches) as c:
-        modele(torch.tensor([ids], device=appareil), use_cache=False)
+        modele(torch.tensor([ids], device=appareil), use_cache=False, logits_to_keep=1)
         acts = c.vider()
     for couche, a in acts.items():
         if a.shape[0] != len(ids):
@@ -93,16 +115,37 @@ def agreger(acts: np.ndarray, debut: int, fin: int, methode: str) -> np.ndarray:
     return acts[debut:fin].max(axis=0)
 
 
-def ecart_equivalence(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray]) -> dict[int, float]:
-    """Écart maximal, relatif à l'échelle, entre les activations de génération et le préfixe de la passe unique."""
+def ecarts_par_jeton(g: np.ndarray, p: np.ndarray) -> np.ndarray:
+    """Écart relatif par jeton, ‖g_n − p_n‖ / ‖p_n‖ (norme euclidienne sur la largeur), en double précision.
+
+    Mesure par jeton : les activations massives de quelques positions (premier jeton, séparateurs)
+    n'écrasent pas l'échelle des autres, contrairement à un écart rapporté au maximum global."""
+    g64, p64 = g.astype(np.float64), p.astype(np.float64)
+    return np.linalg.norm(g64 - p64, axis=1) / np.maximum(np.linalg.norm(p64, axis=1), 1e-30)
+
+
+def ecart_equivalence(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray],
+                      decalage: int = 0) -> dict[int, float]:
+    """Par couche, maximum sur les jetons capturés pendant la génération de l'écart relatif par jeton avec la
+    passe unique. `decalage` = k > 0 compare la génération au jeton n − k de la passe : contrôle négatif,
+    qui doit dépasser la tolérance (une garde aveugle au décalage d'un jeton ne garde rien)."""
     ecarts = {}
     for couche, g in acts_generation.items():
         p = acts_passe[couche]
-        if g.shape[0] == 0 or g.shape[0] > p.shape[0] or g.shape[1] != p.shape[1]:
-            raise GardeArret(f"couche {couche} : formes incompatibles {g.shape} et {p.shape}")
-        ref = p[: g.shape[0]]
-        ecarts[couche] = float(np.max(np.abs(g - ref)) / max(1.0, float(np.max(np.abs(ref)))))
+        if g.shape[0] <= decalage or g.shape[0] > p.shape[0] or g.shape[1] != p.shape[1]:
+            raise GardeArret(f"couche {couche} : formes incompatibles {g.shape} et {p.shape} (décalage {decalage})")
+        ecarts[couche] = float(ecarts_par_jeton(g[decalage:], p[: g.shape[0] - decalage]).max())
     return ecarts
+
+
+def profil_ecarts(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray]) -> dict[int, dict]:
+    """Description de la distribution des écarts par jeton (quantiles 0,5, 0,99 et maximum), par couche."""
+    profil = {}
+    for couche, g in acts_generation.items():
+        e = ecarts_par_jeton(g, acts_passe[couche][: g.shape[0]])
+        profil[couche] = {"jetons": int(e.size), "q50": float(np.quantile(e, 0.5)), "q99": float(np.quantile(e, 0.99)),
+                          "max": float(e.max()), "nuls": int(np.sum(e == 0.0))}
+    return profil
 
 
 def exiger_equivalence(ecarts: dict[int, float], tolerance: float, quoi: str) -> None:
@@ -110,3 +153,11 @@ def exiger_equivalence(ecarts: dict[int, float], tolerance: float, quoi: str) ->
     fautes = {c: e for c, e in ecarts.items() if not e <= tolerance}
     if fautes:
         raise GardeArret(f"{quoi} : activations de génération ≠ passe unique (écarts {fautes} > {tolerance})")
+
+
+def exiger_controle_negatif(ecarts_decales: dict[int, float], tolerance: float, quoi: str) -> None:
+    """Garde : décalée d'un jeton, la comparaison doit dépasser la tolérance à chaque couche ; sinon la garde
+    d'équivalence ne verrait pas un désalignement entre transcription et activations."""
+    aveugles = {c: e for c, e in ecarts_decales.items() if not e > tolerance}
+    if aveugles:
+        raise GardeArret(f"{quoi} : garde d'équivalence aveugle au décalage d'un jeton (écarts {aveugles} ≤ {tolerance})")

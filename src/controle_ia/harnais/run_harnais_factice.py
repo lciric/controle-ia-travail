@@ -23,15 +23,14 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-import numpy as np
-
 from ..gardes import GardeArret
 from ..manifeste import creer_manifeste, ecrire_resultat, generateur, verifier_resultat
-from ..scellement import sceller, verifier
-from .activations import AGREGATIONS, couches_par_defaut
-from .episode import EnvironnementJouet, empreinte_episode, empreinte_tableaux, jouer_episode, vecteurs_par_action
+from ..scellement import verifier
+from . import politique as P
+from .activations import couches_par_defaut
+from .episode import EnvironnementJouet, empreinte_episode, empreinte_tableaux, jouer_episode
 from .modeles import empreinte_poids, modele_jouet, regler_determinisme, tokeniseur_caracteres
-from .sondes import AGREGATIONS_SONDE, exiger_identite, scores_en_ligne, sonde_lineaire_aleatoire
+from .politique import valider_politique
 from .stockage import estimer
 
 CONFIG = {
@@ -47,7 +46,6 @@ CONFIG = {
                                "jetons_par_episode": 6000, "actions_par_episode": 20, "episodes": 2000,
                                "octets_par_valeur": 2, "fraction_par_jeton": 0.1, "agregations": 1},
 }
-POSITIONS_COUCHE = {"precoce": 0, "mediane": 1, "tardive": 2}
 
 
 def taches(config: dict) -> list[str]:
@@ -78,79 +76,26 @@ def jouer_tous(config: dict, graines: dict):
 
 def valider_config(config: dict) -> None:
     """Gardes sur la politique de stockage, avant tout manifeste (aucun run à moitié créé)."""
-    politique = config["politique"]
-    if not set(politique["episodes_par_jeton"]) <= set(range(config["episodes"])):
-        raise GardeArret(f"épisodes d'entraînement {politique['episodes_par_jeton']} hors de [0, {config['episodes']}[")
-    for methode in politique["vecteurs_par_action"]:
-        if methode not in AGREGATIONS:
-            raise GardeArret(f"vecteur d'action par {methode!r} refusé : seul {AGREGATIONS} (brief, T0.7)")
-    couches = couches_par_defaut(config["modele"]["couches"])
-    noms = [d["nom"] for d in politique["sondes"]]
-    if len(set(noms)) != len(noms):
-        raise GardeArret(f"noms de sondes en double : {noms}")
-    for d in politique["sondes"]:
-        pos = POSITIONS_COUCHE.get(d["couche"])
-        if pos is None or pos >= len(couches):
-            raise GardeArret(f"sonde {d['nom']} : couche {d['couche']!r} indisponible parmi {couches}")
-        if d["agregation"] not in AGREGATIONS_SONDE:
-            raise GardeArret(f"sonde {d['nom']} : agrégation {d['agregation']!r} refusée ; seulement {AGREGATIONS_SONDE} "
-                             "(brief, T0.7)")
+    valider_politique(config["politique"], config["modele"]["couches"], config["episodes"])
 
 
 def construire_sondes(config: dict, couches: list[int], graines: dict) -> list:
-    sondes = []
-    for d in config["politique"]["sondes"]:
-        pos = POSITIONS_COUCHE.get(d["couche"])
-        if pos is None or pos >= len(couches):
-            raise GardeArret(f"sonde {d['nom']} : couche {d['couche']!r} indisponible parmi {couches}")
-        sondes.append(sonde_lineaire_aleatoire(d["nom"], couches[pos], config["modele"]["largeur"], d["agregation"],
-                                               generateur(graines[f"sonde-{d['nom']}"])))
-    return sondes
+    return P.construire_sondes(config["politique"], couches, config["modele"]["largeur"], graines)
 
 
 def calculer_en_ligne(config: dict, episode, acts: dict, couches: list[int], sondes: list) -> tuple[dict, dict]:
     """Vecteurs d'action (par couche et par agrégation) et scores de sondes, depuis la mémoire."""
-    vecteurs = {f"couche{c}/{m}": vecteurs_par_action(episode, acts, c, m)
-                for c in couches for m in config["politique"]["vecteurs_par_action"]}
-    return vecteurs, scores_en_ligne(episode, acts, sondes)
+    return P.calculer_en_ligne(config["politique"], episode, acts, couches, sondes)
 
 
 def ecrire_tableaux(chemin: Path, acts: dict | None, vecteurs: dict, scores: dict) -> Path:
-    """npz scellé : vecteurs d'action et scores toujours ; activations par jeton si `acts` est fourni."""
-    if chemin.exists():
-        raise GardeArret(f"{chemin} existe déjà : R12 interdit d'écraser")
-    tableaux = {f"par_action/{k}": v for k, v in vecteurs.items()}
-    tableaux.update({f"scores/{k}": v for k, v in scores.items()})
-    for agent, par_couche in (acts or {}).items():
-        for couche, a in par_couche.items():
-            tableaux[f"par_jeton/agent{agent}/couche{couche}"] = a
-    np.savez(chemin, **tableaux)
-    sceller(chemin)
-    return chemin
+    """npz scellé (simple précision) : vecteurs et scores toujours ; activations par jeton si `acts` est fourni."""
+    return P.ecrire_tableaux(chemin, acts, vecteurs, scores, "float32")
 
 
 def relire_et_controler(chemin: Path, config: dict, episode, couches: list[int], sondes: list, vecteurs: dict,
                         scores: dict, par_jeton: bool) -> None:
-    """Garde : le disque rend ce qui a été calculé en ligne ; pour un épisode d'entraînement, scores et vecteurs
-    recalculés depuis les activations par jeton relues sont identiques au bit près."""
-    verifier(chemin)
-    with np.load(chemin) as z:
-        exiger_identite(vecteurs, {k[len("par_action/"):]: z[k] for k in z.files if k.startswith("par_action/")},
-                        f"{episode.identifiant}, vecteurs relus")
-        exiger_identite(scores, {k[len("scores/"):]: z[k] for k in z.files if k.startswith("scores/")},
-                        f"{episode.identifiant}, scores relus")
-        cles = [k for k in z.files if k.startswith("par_jeton/")]
-        if not par_jeton:
-            if cles:
-                raise GardeArret(f"{episode.identifiant} : activations par jeton conservées hors entraînement")
-            return
-        acts_disque: dict[int, dict[int, np.ndarray]] = {}
-        for k in cles:
-            _, agent, couche = k.split("/")
-            acts_disque.setdefault(int(agent[len("agent"):]), {})[int(couche[len("couche"):])] = z[k]
-    v2, s2 = calculer_en_ligne(config, episode, acts_disque, couches, sondes)
-    exiger_identite(vecteurs, v2, f"{episode.identifiant}, vecteurs recalculés hors ligne")
-    exiger_identite(scores, s2, f"{episode.identifiant}, scores recalculés hors ligne")
+    P.relire_et_controler(chemin, config["politique"], episode, couches, sondes, vecteurs, scores, par_jeton, "float32")
 
 
 def executer(racine: str | Path, run_id: str, entropie: int | None = None, config: dict | None = None) -> dict:

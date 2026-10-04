@@ -215,6 +215,9 @@ def test_liste_blanche_des_modeles():
         exiger_modele_autorise("meta-llama/Llama-3.3-70B-Instruct", "0e9e39f")
     with pytest.raises(GardeArret, match="révision"):
         exiger_modele_autorise("Qwen/Qwen2.5-7B-Instruct", None)
+    for mobile in ("main", "0e9e39f", "0E9E39F249A16976918F6564B8830BC894C89659"):
+        with pytest.raises(GardeArret, match="révision figée"):
+            exiger_modele_autorise("meta-llama/Llama-3.1-8B-Instruct", mobile)
 
 
 def test_estimation_du_stockage():
