@@ -104,7 +104,7 @@ def test_controle_negatif_zone_generee_artefact():
     """Contre-lecture 1, Rem-1 : activations constantes le long de la zone générée, des deux côtés, contexte intact.
     Le contrôle sur toutes les positions passerait ; restreint à la zone générée, la garde arrête."""
     from controle_ia.harnais.activations import ecart_decale_zone_generee
-    from controle_ia.harnais.episode import exiger_gardes
+    from controle_ia.harnais.episode import bilan_controle_negatif, exiger_controle_negatif_phase
     rng = np.random.default_rng(1)
     lc, n = 20, 8
     p = {0: rng.standard_normal((lc + n, 6)).astype(np.float32)}
@@ -116,10 +116,29 @@ def test_controle_negatif_zone_generee_artefact():
     assert ecart_equivalence(g, p, decalage=1)[0] > 1e-4       # l'ancien contrôle (toutes positions) passerait
     zone = ecart_decale_zone_generee(g, p, lc, 1e-4)
     assert zone[0]["max"] == 0.0
-    rapport = {"tolerance": 1e-4, "ecarts": {"0,0": ecart_equivalence(g, p)}, "controle_negatif_zone_generee": {"0,0": zone}}
+    rapport = {"tolerance": 1e-4, "controle_negatif_zone_generee": {f"0,{t}": zone for t in range(10)}}
+    bilan = bilan_controle_negatif([rapport], positions_min=4)
+    assert bilan["comparables"] == 10 and bilan["passent"] == 0 and bilan["fraction"] == 0.0
     with pytest.raises(GardeArret, match="aveugle"):
-        exiger_gardes(rapport, "0,0", "artefact")
+        exiger_controle_negatif_phase(bilan, 0.95, 10, "artefact")
     assert ecart_decale_zone_generee({0: g[0][:lc + 1]}, p, lc, 1e-4) is None   # une seule position décodée : trop court
+
+
+def test_controle_negatif_de_phase():
+    """Contre-lecture 2, N-14 : le contrôle négatif se juge sur la phase ; actions courtes comptées à part ; une action
+    isolée sous le seuil ne fait pas tomber une phase qui voit le décalage partout ailleurs."""
+    from controle_ia.harnais.episode import bilan_controle_negatif, exiger_controle_negatif_phase
+    zone = lambda m, pos: {0: {"max": m, "au_dessus": 0, "positions": pos}, 1: {"max": m, "au_dessus": 0, "positions": pos}}
+    r = {"tolerance": 0.1, "controle_negatif_zone_generee":
+         {**{f"0,{t}": zone(1.2, 9) for t in range(40)}, "1,0": zone(0.003, 9), "1,1": zone(0.002, 2), "1,2": None}}
+    b = bilan_controle_negatif([r], positions_min=4)
+    assert (b["comparables"], b["passent"], b["courtes"], b["echecs"]) == (41, 40, 2, ["1,0"])
+    exiger_controle_negatif_phase(b, 0.95, 10, "sain")              # 40/41 ≥ 0,95
+    with pytest.raises(GardeArret, match="aveugle"):
+        exiger_controle_negatif_phase(b, 0.99, 10, "exigence plus haute")
+    exiger_controle_negatif_phase(b, 0.95, 50, "trop peu d'actions : rien ne se juge")
+    nan = bilan_controle_negatif([{"tolerance": 0.1, "controle_negatif_zone_generee": {"0,0": zone(float("nan"), 9)}}])
+    assert nan["passent"] == 0 and nan["min_des_maxima"] == float("-inf")
 
 
 def test_controle_negatif_sain_et_aveugle():

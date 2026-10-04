@@ -21,8 +21,7 @@ from controle_ia.harnais.formats import FormatChat
 from controle_ia.harnais.modeles import (comparer_fichiers, empreinte_poids, exiger_type_des_poids, modele_jouet,
                                          sha1_git, tokeniseur_caracteres_chat)
 
-PETITE = dict(V.CONFIG_REPETITION,
-              logique=dict(V.CONFIG_REPETITION["logique"], T=2, max_nouveaux=8),
+PETITE = dict(V.CONFIG_REPETITION,          # logique telle quelle : remplissage et fins anticipées sur les lignes comparées
               production=dict(V.CONFIG_REPETITION["production"], episodes=4, T=2, max_nouveaux=8),
               debit={"tailles_lot": [1, 4], "longueur_contexte": 32, "max_nouveaux": 4})
 LECTURE_SAINE = {"format": "conforme", "tests_instance": "sans objet", "logique_equivalence": "conforme",
@@ -128,13 +127,25 @@ def test_gardes_de_lancement(depot, tmp_path_factory):
     dehors = tmp_path_factory.mktemp("meminfo")
     meminfo = dehors / "meminfo"
     meminfo.write_text("MemTotal:       131072000 kB\n")
-    assert V.exiger_memoire_vive(64, meminfo) == 134.2
+    sans_cgroup = (str(dehors / "absent1"), str(dehors / "absent2"))
+    assert V.exiger_memoire_vive(64, meminfo, sans_cgroup)["effective_go"] == 134.2
+    cgroup = dehors / "memory.max"
+    cgroup.write_text("max\n")                                     # pas de plafond
+    assert V.exiger_memoire_vive(64, meminfo, (str(cgroup),))["plafond_conteneur_go"] is None
+    cgroup.write_text("34359738368\n")                             # artefact (N-12) : hôte riche, conteneur plafonné à 32 Gio
+    with pytest.raises(GardeArret, match="plafond du conteneur 34.4"):
+        V.exiger_memoire_vive(64, meminfo, (str(cgroup),))
     meminfo.write_text("MemTotal:       33554432 kB\n")
     with pytest.raises(GardeArret, match="< 64 Go"):
-        V.exiger_memoire_vive(64, meminfo)
+        V.exiger_memoire_vive(64, meminfo, sans_cgroup)
     with pytest.raises(GardeArret, match="illisible"):
         V.exiger_memoire_vive(64, dehors / "absent")
     assert V.exiger_memoire_vive(0) is None
+    # mémoire de la carte (N-4)
+    assert V.exiger_memoire_carte(75, total_octets=80 * 2 ** 30) == 80.0
+    with pytest.raises(GardeArret, match="40.0 Gio < 75"):
+        V.exiger_memoire_carte(75, total_octets=40 * 2 ** 30)
+    assert V.exiger_memoire_carte(0) is None
     with pytest.raises(GardeArret, match="signal TERM"):        # délai externe (Rem-7)
         V._signal_term(15, None)
 
@@ -191,7 +202,8 @@ def test_sortie_des_tests_scellee_et_lue(depot, tmp_path_factory):
     dehors = tmp_path_factory.mktemp("sorties")                 # hors du dépôt, comme sur l'instance
     ok = dehors / "tests-ok.txt"
     ok.write_text("....\n170 passed in 50.12s\n")
-    s = V.executer(depot, "20261004-190000-repetition-jouet", entropie=3, config=PETITE, sortie_tests=ok,
+    gelee = dict(PETITE, tests_attendus=170)
+    s = V.executer(depot, "20261004-190000-repetition-jouet", entropie=3, config=gelee, sortie_tests=ok,
                    verifier_import=False)
     assert s["lecture"]["tests_instance"] == "conforme"
     corps = json.loads((depot / "diag" / "20261004-190000-repetition-jouet" / "tests-instance.json").read_text())
@@ -199,33 +211,50 @@ def test_sortie_des_tests_scellee_et_lue(depot, tmp_path_factory):
     committer(depot)
     ko = dehors / "tests-ko.txt"
     ko.write_text("..F.\n1 failed, 169 passed in 50.12s\n")
-    s = V.executer(depot, "20261004-190100-repetition-jouet", entropie=3, config=PETITE, sortie_tests=ko,
+    s = V.executer(depot, "20261004-190100-repetition-jouet", entropie=3, config=gelee, sortie_tests=ko,
                    verifier_import=False)
     assert s["lecture"]["tests_instance"] == "contraire"
+    for derniere in ("168 passed, 2 skipped in 5.0s", "169 passed in 5.0s", "170 passed, 1 xfailed in 5.0s",
+                     "170 passed, 1 error in 5.0s"):
+        assert V.lire({"tests_instance": {"derniere_ligne": derniere}}, gelee)["tests_instance"] == "contraire"
+    for derniere in ("170 passed in 66.88s (0:01:06)", "170 passed, 3 warnings in 5.0s"):
+        assert V.lire({"tests_instance": {"derniere_ligne": derniere}}, gelee)["tests_instance"] == "conforme"
 
 
-def test_lecture_couverture_controle_negatif_et_audit():
-    def bilan(ecart=1e-6, minimum=1.0, actions=3, remplissage=5, finies=2, positions=40, lignes=(1, 6),
-              zeros_gen=(1, 40), distincts=True, ulp=True):
-        return {"tolerance": 1e-4, "ecart_max": ecart,
-                "controle_negatif": {"actions": actions, "min_des_maxima": minimum},
-                "couverture": {"jetons_remplissage": remplissage, "lignes_finies_avant": finies,
+def test_lecture_couverture_controle_negatif_audit_et_nan():
+    def bilan(ecart=1e-6, ctx=1e-7, gen=1e-6, comparables=12, passent=12, remplies=3, finies=2, positions=40,
+              lignes=(1, 6), zeros_gen=(1, 40)):
+        return {"tolerance": 1e-4, "ecart_max": ecart, "max_contexte": ctx, "max_zone_generee": gen,
+                "controle_negatif": {"comparables": comparables, "passent": passent,
+                                     "fraction": passent / comparables if comparables else None},
+                "couverture": {"actions_remplies": remplies, "actions_finies_avant": finies,
                                "positions_generees_comparees": positions, "lignes_echantillon": list(lignes)},
-                "zeros": {"contexte": [5, 10], "generee": list(zeros_gen)},
-                "sondes_audit": {"tableaux_distincts": distincts, "ulp_vu": ulp}}
+                "zeros": {"7": {"contexte": [5, 10], "generee": list(zeros_gen)},
+                          "15": {"contexte": [5, 10], "generee": list(zeros_gen)}},
+                "sondes_audit": {"tableaux_distincts": True, "ulp_vu": True}}
 
     def resume(**kw):
         return {"format": {"verifie": True}, "logique": {"equivalence": bilan(**kw)},
                 "production": {"equivalence": dict(bilan(), tolerance=0.1), "rejeu_en_processus": [{"identique": True}]}}
-    assert V.lire(resume(), V.CONFIG_REELLE)["logique_equivalence"] == "conforme"
-    assert V.lire(resume(ecart=2e-4), V.CONFIG_REELLE)["logique_equivalence"] == "contraire"
-    for manque in ({"remplissage": 0}, {"finies": 0}, {"positions": 0}, {"lignes": (0, 0)}):
-        assert V.lire(resume(**manque), V.CONFIG_REELLE)["logique_equivalence"] == "non concluant"
-    assert V.lire(resume(minimum=5e-5), V.CONFIG_REELLE)["logique_controle_negatif"] == "contraire"
-    assert V.lire(resume(actions=0), V.CONFIG_REELLE)["logique_controle_negatif"] == "non concluant"
-    assert V.lire(resume(), V.CONFIG_REELLE)["audit_symetrie"] == "non déclenché"
-    assert "réserve levée" in V.lire(resume(zeros_gen=(40, 40)), V.CONFIG_REELLE)["audit_symetrie"]
-    assert "réserve maintenue" in V.lire(resume(zeros_gen=(40, 40), ulp=False), V.CONFIG_REELLE)["audit_symetrie"]
+    lire = lambda **kw: V.lire(resume(**kw), V.CONFIG_REELLE)
+    assert lire()["logique_equivalence"] == "conforme"
+    # N-2 : un écart concentré dans la zone générée (défaut de décodage, exp10 : 6e-4) reste « contraire »
+    assert lire(ecart=6e-4, ctx=1.4e-7, gen=6e-4)["logique_equivalence"] == "contraire"
+    assert lire(ecart=6e-4, ctx=4e-4, gen=6e-4)["logique_equivalence"] == "non concluant : précision probable"
+    assert lire(ecart=5e-2, ctx=4e-2, gen=5e-2)["logique_equivalence"] == "contraire"
+    for manque in ({"remplies": 0}, {"finies": 0}, {"positions": 0}, {"lignes": (0,)}):
+        assert lire(**manque)["logique_equivalence"] == "non concluant"
+    # N-14 : contrôle négatif de phase
+    assert lire(passent=11)["logique_controle_negatif"] == "contraire"           # 11/12 = 0,917 < 0,95
+    assert lire(comparables=40, passent=39)["logique_controle_negatif"] == "conforme"
+    assert lire(comparables=40, passent=37)["logique_controle_negatif"] == "contraire"
+    assert lire(comparables=5, passent=5)["logique_controle_negatif"] == "non concluant"
+    # N-9 : une valeur illisible n'est jamais conforme
+    assert lire(ecart=float("inf"))["logique_equivalence"] == "contraire"
+    assert lire(ecart=float("nan"))["logique_equivalence"] == "contraire"
+    # N-1 : un audit déclenché maintient toujours la réserve
+    assert lire()["audit_symetrie"] == "non déclenché"
+    assert "réserve maintenue" in lire(zeros_gen=(40, 40))["audit_symetrie"]
     partiel = V.lire({"format": {"verifie": True}}, V.CONFIG_REELLE)
     assert partiel["production_equivalence"] == "non atteint" and partiel["rejeu_en_processus"] == "non atteint"
 
@@ -295,3 +324,136 @@ def test_fichiers_du_modele_depuis_un_cache(tmp_path):
     (snap / "tokenizer.json").unlink()                                          # artefact : fichier essentiel manquant
     with pytest.raises(GardeArret, match="manquants"):
         empreintes_fichiers_modele("org/modele", rev, publies=publies, cache_dir=str(tmp_path))
+
+
+# ---------------------------------------------------------------- contre-lecture 2 : gardes sans test (N-3) et suites
+
+GABARIT_DATE = ("{% for m in messages %}<|im_start|>{{ m['role'] }}\n{% if loop.first %}Today Date: "
+                "{{ date_string | default('04 Oct 2026') }}\n{% endif %}{{ m['content'] }}<|im_end|>\n{% endfor %}"
+                "{% if add_generation_prompt %}<|im_start|>assistant\n{% endif %}")
+
+
+def test_garde_de_date_d_en_tete():
+    tok = tokeniseur_caracteres_chat()
+    tok.chat_template = GABARIT_DATE
+    m = modele_jouet(3, len(tok), couches=2, largeur=32, tetes=4, tetes_cle_valeur=2, intermediaire=64)
+    config = dict(PETITE, format=dict(PETITE["format"], texte_attendu_ouverture="Today Date: 26 Jul 2024"))
+    fmt, f = V.format_du_modele(m, tok, config)                       # cas sain : la variable figée est lue
+    assert "Today Date: 26 Jul 2024" in f["ouverture"] and f["verifie"]
+    tok.chat_template = GABARIT_DATE.replace("{{ date_string | default('04 Oct 2026') }}", "04 Oct 2026")
+    with pytest.raises(GardeArret, match="ne lit pas les variables figées"):   # artefact : date du jour imposée
+        V.format_du_modele(m, tok, config)
+
+
+def _point_de_controle(dossier, dtype):
+    tok = tokeniseur_caracteres_chat()
+    m = modele_jouet(5, len(tok), couches=2, largeur=32, tetes=4, tetes_cle_valeur=2, intermediaire=64).to(dtype)
+    m.save_pretrained(dossier)
+    tok.save_pretrained(dossier)
+
+
+def _rediriger(monkeypatch, dossier):
+    import transformers
+    for classe in (transformers.AutoConfig, transformers.AutoTokenizer, transformers.AutoModelForCausalLM):
+        vraie = classe.from_pretrained
+        monkeypatch.setattr(classe, "from_pretrained",
+                            lambda nom, revision=None, _v=vraie, **kw: _v(str(dossier), **kw))
+
+
+def test_charger_modele_conversion_exacte_et_type_natif(tmp_path, monkeypatch):
+    """Chargement bfloat16 puis conversion sur l'appareil : identique au chargement direct en simple précision ; un
+    point de contrôle qui n'est pas en bfloat16 est refusé (la conversion ne serait pas exacte)."""
+    from transformers import AutoModelForCausalLM
+    from controle_ia.harnais.modeles import charger_modele
+    rev = "0e9e39f249a16976918f6564b8830bc894c89659"
+    bf16 = tmp_path / "bf16"
+    _point_de_controle(bf16, torch.bfloat16)
+    direct = AutoModelForCausalLM.from_pretrained(str(bf16), dtype=torch.float32)
+    _rediriger(monkeypatch, bf16)
+    m32, tok = charger_modele("meta-llama/Llama-3.1-8B-Instruct", rev, "float32", "cpu")
+    a, b = m32.state_dict(), direct.state_dict()
+    assert a.keys() == b.keys() and all(torch.equal(a[k], b[k]) for k in a)
+    assert all(p.dtype == torch.float32 for p in m32.parameters()) and len(tok) == len(tokeniseur_caracteres_chat())
+    m16, _ = charger_modele("meta-llama/Llama-3.1-8B-Instruct", rev, "bfloat16", "cpu")
+    assert all(p.dtype == torch.bfloat16 for p in m16.parameters())
+    fp32 = tmp_path / "fp32"                                              # artefact : point de contrôle en simple précision
+    _point_de_controle(fp32, torch.float32)
+    monkeypatch.undo()
+    _rediriger(monkeypatch, fp32)
+    with pytest.raises(GardeArret, match="pas en bfloat16"):
+        charger_modele("meta-llama/Llama-3.1-8B-Instruct", rev, "float32", "cpu")
+
+
+def test_gardes_differees_de_bout_en_bout(depot, monkeypatch):
+    """Défaut de logique injecté (relecture des captures décalée) : la phase de logique va à son terme, les gardes de
+    fin de phase arrêtent, `arret.json` porte les profils complets et la lecture partielle « contraire »."""
+    import controle_ia.harnais.episode as E
+    vraie = E.relire_crochets_lot
+    monkeypatch.setattr(E, "relire_crochets_lot", lambda brut, k, lc, plan, n: vraie(brut, k, lc + 1, plan, n))
+    with pytest.raises(GardeArret, match="logique : .* faute"):
+        V.executer(depot, "20261004-200000-repetition-jouet", entropie=9, config=PETITE, verifier_import=False)
+    arret = json.loads((depot / "diag" / "20261004-200000-repetition-jouet" / "arret.json").read_text())["resultat"]
+    assert arret["phase"] == "logique" and arret["partiel"]["logique"]["equivalence"]["actions_comparees"] == 12
+    assert arret["partiel"]["lecture_partielle"]["logique_equivalence"] == "contraire"
+    assert arret["partiel"]["lecture_partielle"]["production_equivalence"] == "non atteint"
+
+
+def test_rejeu_refuse_avant_calcul_et_arret_de_comparaison(depot, monkeypatch):
+    (depot / "src").mkdir()
+    (depot / "src" / "module.py").write_text("x = 1\n")
+    committer(depot)
+    V.executer(depot, "20261004-210000-repetition-jouet", entropie=4, config=PETITE, verifier_import=False)
+    committer(depot)
+    # arrêt de comparaison consigné, puis propagé
+    def comparaison_en_echec(racine, a, b):
+        raise GardeArret("comparaison impossible (artefact)")
+    monkeypatch.setattr(V, "comparer_runs", comparaison_en_echec)
+    with pytest.raises(GardeArret, match="artefact"):
+        V.executer(depot, "20261004-210100-repetition-jouet", config=PETITE, rejeu_de="20261004-210000-repetition-jouet",
+                   verifier_import=False)
+    assert (depot / "diag" / "20261004-210100-repetition-jouet" / "arret-comparaison-20261004-210000-repetition-jouet.json").is_file()
+    monkeypatch.undo()
+    committer(depot)
+    # code différent de celui du run A : refusé avant tout calcul
+    (depot / "src" / "module.py").write_text("x = 2\n")
+    committer(depot)
+    with pytest.raises(GardeArret, match="code ou tests différents"):
+        V.executer(depot, "20261004-210200-repetition-jouet", config=PETITE, rejeu_de="20261004-210000-repetition-jouet",
+                   verifier_import=False)
+    assert not (depot / "runs" / "20261004-210200-repetition-jouet").exists()
+
+
+def test_rejeu_d_un_run_a_incomplet(depot):
+    """N-16 : un run A arrêté (sans résumé) ne se rejoue pas : refus avant tout calcul."""
+    incomplet = dict(PETITE, limite_s=-1)
+    with pytest.raises(GardeArret, match="limite de durée"):
+        V.executer(depot, "20261004-220000-repetition-jouet", entropie=2, config=incomplet, verifier_import=False)
+    committer(depot)
+    with pytest.raises(GardeArret, match="résumé du run A absent"):
+        V.executer(depot, "20261004-220100-repetition-jouet", config=incomplet, rejeu_de="20261004-220000-repetition-jouet",
+                   verifier_import=False)
+    assert not (depot / "runs" / "20261004-220100-repetition-jouet").exists()
+
+
+def test_comparaison_voit_la_machine_et_le_chargement(depot, monkeypatch):
+    """N-11 : un changement de carte, de pilote, de chargement, de gabarit ou de repère est une différence nommée."""
+    V.executer(depot, "20261004-230000-repetition-jouet", entropie=8, config=PETITE, verifier_import=False)
+    committer(depot)
+    V.executer(depot, "20261004-230100-repetition-jouet", entropie=8, config=PETITE, verifier_import=False)
+    committer(depot)
+    vrai = V.verifier_resultat
+
+    def altere(racine, chemin):
+        corps = vrai(racine, chemin)
+        if "230100" in str(chemin):
+            r = corps["resultat"]
+            r["reglages"]["pilote"] = "999.0"
+            r["chargement"]["attention"] = "eager"
+            r["format"]["gabarit_sha256"] = "0" * 64
+            r["production"]["repere_precision"]["0"]["max"] = 1.0
+        return corps
+    monkeypatch.setattr(V, "verifier_resultat", altere)
+    c = V.comparer_runs(depot, "20261004-230000-repetition-jouet", "20261004-230100-repetition-jouet")
+    motifs = {d.get("motif") for d in c["differences"]}
+    assert {"reglages différents", "chargement différents", "format différents",
+            "repère de précision différent"} <= motifs and c["lecture"] == "contraire"

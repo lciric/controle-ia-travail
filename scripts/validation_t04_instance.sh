@@ -56,10 +56,32 @@ else
     . .venv/bin/activate
     pip install -q -r requirements-gpu.txt
 fi
+pousser() { git push -q origin "$BRANCHE"; }
+traces() {
+    # journal, sorties des tests et erreurs des runs, versés sur la branche (hors arbre scellé) pour la session de pilotage
+    local d="traces/t04-$(date -u +%Y%m%d-%H%M%S)"
+    mkdir -p "$d"
+    for f in "$JOURNAL" "$TRAVAIL/tests.txt" "$TRAVAIL"/run-*.err "$TRAVAIL"/run-*.json; do
+        [ -f "$f" ] && cp "$f" "$d/"
+    done
+    git add "$d" && git commit -qm "T0.4 — traces de l'instance ($1)" >/dev/null 2>&1 || true
+}
+consigner_arret() {
+    git add -A runs diag
+    if git commit -qm "T0.4 — validation : arrêt pendant $1" >/dev/null 2>&1; then
+        journal "ARRÊT pendant $1 : résultats partiels committés (dont arret.json s'il existe)"
+    else
+        journal "ARRÊT pendant $1 : aucun résultat à committer"
+    fi
+    traces "arrêt pendant $1"
+    if pousser; then journal "branche $BRANCHE poussée"; else journal "poussée impossible : résultats restés sur l'instance"; fi
+}
+
 python -c "import torch; print('torch', torch.__version__, 'cuda', torch.version.cuda, 'disponible', torch.cuda.is_available())" | tee -a "$JOURNAL"
 if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider >"$TRAVAIL/tests.txt" 2>&1; then
     tail -5 "$TRAVAIL/tests.txt" | tee -a "$JOURNAL"
     journal "tests en échec : arrêt"
+    consigner_arret "tests"
     exit 1
 fi
 journal "tests : $(tail -1 "$TRAVAIL/tests.txt")"
@@ -75,20 +97,11 @@ else
     ARGS=(--repetition-jouet --sortie-tests "$TRAVAIL/tests.txt")
     SUFFIXE=repetition-jouet
 fi
-# délai externe par run (R10 : le signal vise le processus lancé, par son identifiant) ; TERM est converti en
-# arrêt consigné (arret.json), puis KILL cinq minutes plus tard si le processus ne rend pas la main
-DELAI=(timeout --signal=TERM --kill-after=5m "${DELAI_RUN:-3h}")
+# délai externe par run, figé (R1) : la limite interne est de 2 h 30 (CONFIG_REELLE) ; TERM à 2 h 35, converti en
+# arrêt consigné (arret.json), puis KILL cinq minutes plus tard si le processus ne rend pas la main. Le signal vise
+# le processus lancé par timeout, par son identifiant (R10).
+DELAI=(timeout --signal=TERM --kill-after=5m 2h35m)
 
-pousser() { git push -q origin "$BRANCHE"; }
-consigner_arret() {
-    git add -A runs diag
-    if git commit -qm "T0.4 — validation : arrêt pendant $1" >/dev/null 2>&1; then
-        journal "ARRÊT pendant $1 : résultats partiels committés (dont arret.json s'il existe)"
-    else
-        journal "ARRÊT pendant $1 : aucun résultat à committer"
-    fi
-    if pousser; then journal "branche $BRANCHE poussée"; else journal "poussée impossible : résultats restés sur l'instance"; fi
-}
 A="$(date -u +%Y%m%d-%H%M%S)-$SUFFIXE"
 journal "run A : $A"
 if ! PYTHONPATH=src "${DELAI[@]}" python -m controle_ia.harnais.validation_reelle "${ARGS[@]}" --run-id "$A" \
@@ -111,5 +124,7 @@ git commit -qm "T0.4 — validation ($MODE), run B ($B), rejeu entre processus d
 journal "run B terminé : $B"
 tee -a "$JOURNAL" <"$TRAVAIL/run-B.json"
 
+journal "fin : A=$A B=$B ; arrêter l'instance par son identifiant (R10)"
+traces "fin"
 pousser
-journal "fin : A=$A B=$B poussés sur $BRANCHE ; arrêter l'instance par son identifiant (R10)"
+journal "branche $BRANCHE poussée"

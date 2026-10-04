@@ -22,8 +22,8 @@ import numpy as np
 import torch
 
 from ..gardes import GardeArret
-from .activations import (Crochets, agreger, ecart_decale_zone_generee, ecart_equivalence, exiger_controle_negatif,
-                          exiger_equivalence, passe_unique, profil_ecarts, sonde_de_comparaison)
+from .activations import (Crochets, agreger, ecart_decale_zone_generee, ecart_equivalence, exiger_equivalence,
+                          passe_unique, profil_ecarts, sonde_de_comparaison)
 from .formats import FormatBrut
 
 
@@ -185,7 +185,7 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
     trs = [[Transcription(agent=i) for i in range(N)] for _ in range(B)]
     debuts = [[None] * N for _ in range(B)]
     journaux: list[list[tuple[int, int, str]]] = [[] for _ in range(B)]
-    acts_generation, longueurs, logits = {}, {}, {}
+    acts_generation, longueurs, logits, lignes_info = {}, {}, {}, {}
     for t in range(T):
         for i in range(N):
             if echeance is not None and time.perf_counter() > echeance:
@@ -206,9 +206,12 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
                     nouveaux, plan = generer_lot(modele, contextes, max_nouveaux, temperature, graines_lot, fmt.fins, pad,
                                                  empreinte_logits)
                     brut = c.vider_lot()
+                plus_longue = max(len(nv) for nv in nouveaux)
                 for k, b in enumerate(lignes):
                     acts_generation[(b, i, t)] = relire_crochets_lot(brut, k, len(contextes[b]), plan, len(nouveaux[b]))
                     longueurs[(b, i, t)] = len(contextes[b])
+                    lignes_info[(b, i, t)] = {"ligne": b, "taille_lot": B, "remplissage": plan["remplissage"][b],
+                                              "finie_avant": len(nouveaux[b]) < plus_longue}
             else:
                 nouveaux, plan = generer_lot(modele, contextes, max_nouveaux, temperature, graines_lot, fmt.fins, pad,
                                              empreinte_logits)
@@ -240,7 +243,8 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
             chrono["passe_unique_s"] = chrono.get("passe_unique_s", 0.0) + time.perf_counter() - depart
             chrono["jetons_passe_unique"] = chrono.get("jetons_passe_unique", 0) + sum(len(tr.ids) for tr in trs[b])
         rapport = {"tolerance": tolerance_equivalence, "ecarts": {}, "controle_negatif_zone_generee": {}, "profils": {},
-                   "longueurs_contexte": {}, "positions_capturees": {}, "empreintes_capture": {}, "sondes": {}}
+                   "longueurs_contexte": {}, "positions_capturees": {}, "lignes": {}, "empreintes_capture": {},
+                   "sondes": {}}
         for (bb, i, t), ag in sorted(acts_generation.items()):
             if bb != b:
                 continue
@@ -249,6 +253,7 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
             rapport["controle_negatif_zone_generee"][cle] = ecart_decale_zone_generee(ag, acts[i], lc, tolerance_equivalence)
             rapport["profils"][cle] = profil_ecarts(ag, acts[i], lc)
             rapport["longueurs_contexte"][cle] = lc
+            rapport["lignes"][cle] = lignes_info[(bb, i, t)]
             rapport["positions_capturees"][cle] = int(next(iter(ag.values())).shape[0])
             rapport["empreintes_capture"][cle] = empreinte_tableaux(ag)
             rapport["sondes"][cle] = sonde_de_comparaison(ag, acts[i])
@@ -261,13 +266,44 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
 
 
 def exiger_gardes(rapport: dict, cle: str, quoi: str) -> None:
-    """Les deux gardes d'une action de l'échantillon : équivalence (toutes positions) et contrôle négatif dans la
-    zone générée (si l'action a au moins deux positions décodées capturées)."""
-    tol = rapport["tolerance"]
-    exiger_equivalence(rapport["ecarts"][cle], tol, quoi)
-    zone = rapport["controle_negatif_zone_generee"][cle]
-    if zone is not None:
-        exiger_controle_negatif({c: v["max"] for c, v in zone.items()}, tol, quoi + ", zone générée")
+    """Garde d'une action de l'échantillon : génération = passe unique à la tolérance près, toutes positions. Le
+    contrôle négatif, propriété de la mesure plutôt que de l'action, se juge sur la phase
+    (`bilan_controle_negatif`, `exiger_controle_negatif_phase`)."""
+    exiger_equivalence(rapport["ecarts"][cle], rapport["tolerance"], quoi)
+
+
+def bilan_controle_negatif(rapports: list[dict], positions_min: int = 4) -> dict:
+    """Contrôle négatif d'une phase. Une action est comparable si sa zone générée offre au moins `positions_min`
+    comparaisons décalées ; elle passe si, à chaque couche, le maximum de l'écart décalé dépasse la tolérance.
+    Les actions plus courtes (souvent faites de jetons répétés) sont comptées à part."""
+    comparables, passent, courtes, echecs, minimum = 0, 0, 0, [], float("inf")
+    for r in rapports:
+        tol = r["tolerance"]
+        for cle, zone in r["controle_negatif_zone_generee"].items():
+            if zone is None or min(v["positions"] for v in zone.values()) < positions_min:
+                courtes += 1
+                continue
+            comparables += 1
+            m = min(v["max"] for v in zone.values())
+            minimum = min(minimum, m) if m == m else float("-inf")
+            if m > tol:
+                passent += 1
+            else:
+                echecs.append(cle)
+    return {"comparables": comparables, "passent": passent, "courtes": courtes, "echecs": echecs,
+            "fraction": passent / comparables if comparables else None,
+            "min_des_maxima": minimum if comparables else None, "positions_min": positions_min}
+
+
+def exiger_controle_negatif_phase(bilan: dict, fraction_min: float, actions_min: int, quoi: str) -> None:
+    """Garde de phase : décalée d'un jeton dans la zone générée, la comparaison dépasse la tolérance pour au moins
+    `fraction_min` des actions comparables. Sous `actions_min` actions comparables, rien ne se juge (lecture « non
+    concluant »), et la garde ne s'arrête pas."""
+    if bilan["comparables"] < actions_min:
+        return
+    if not bilan["fraction"] >= fraction_min:
+        raise GardeArret(f"{quoi} : garde d'équivalence aveugle au décalage d'un jeton dans la zone générée pour "
+                         f"{len(bilan['echecs'])} action(s) sur {bilan['comparables']} ({bilan['echecs'][:10]})")
 
 
 def jouer_episode(modele, tokeniseur, environnement, identifiant: str, N: int, T: int, graines: dict,

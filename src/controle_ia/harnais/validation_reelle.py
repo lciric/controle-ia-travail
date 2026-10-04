@@ -32,6 +32,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import hashlib
+import importlib.metadata
 import json
 import re
 import signal
@@ -49,14 +50,16 @@ from ..manifeste import (config_canonique, creer_manifeste, ecrire_resultat, gen
                          verifier_resultat)
 from . import politique as P
 from .activations import couches_par_defaut, ecarts_par_jeton, passe_unique
-from .episode import (EnvironnementJouet, empreinte_episode, empreinte_tableaux, exiger_gardes, generer_lot,
-                      jouer_episodes)
+from .episode import (EnvironnementJouet, bilan_controle_negatif, empreinte_episode, empreinte_tableaux,
+                      exiger_controle_negatif_phase, exiger_gardes, generer_lot, jouer_episodes)
 from .formats import FormatChat, verifier_format
 from .modeles import (charger_modele, empreinte_poids, empreintes_fichiers_modele, exiger_modele_autorise,
                       fins_du_modele, modele_jouet, regler_determinisme, tokeniseur_caracteres_chat)
 from .stockage import estimer
 
 COMMIT_CITE = re.compile(r"Commit du code d'analyse : `([0-9a-f]{40})`")
+# chemins gelés par le commit cité : code, tests, scripts de l'instance, dépendances
+CHEMINS_GELES = ("src", "tests", "scripts", "requirements-cpu.txt", "requirements-gpu.txt", "pyproject.toml")
 REVISION_CITEE = re.compile(r"Révision du modèle : `([0-9a-f]{40})`")
 ENTROPIE_CITEE = re.compile(r"Entropie : `([0-9]+)`")
 
@@ -81,8 +84,11 @@ CONFIG_REELLE = {
                    "episodes_equivalence": [1, 14], "lots_rejeu_en_processus": [0]},
     "debit": {"tailles_lot": [1, 8, 32], "longueur_contexte": 2048, "max_nouveaux": 128},
     "politique": {"episodes_par_jeton": [1, 14], "vecteurs_par_action": ["max"], "sondes": SONDES},
+    "controle_negatif": {"positions_min": 4, "actions_min": 10, "fraction_min": 0.95},
+    "memoire_carte_min_gio": 75,
+    "tests_attendus": 170,                    # suite complète au commit cité, tous réussis (P0)
     "projection": {"episodes": 2000},
-    "limite_s": 3 * 3600,
+    "limite_s": 9000,
 }
 
 CONFIG_REPETITION = dict(
@@ -97,6 +103,8 @@ CONFIG_REPETITION = dict(
                     episodes_equivalence=[1, 2]),
     politique=dict(CONFIG_REELLE["politique"], episodes_par_jeton=[1, 2]),
     debit={"tailles_lot": [1, 2, 4], "longueur_contexte": 48, "max_nouveaux": 8},
+    controle_negatif={"positions_min": 4, "actions_min": 4, "fraction_min": 0.95},
+    memoire_carte_min_gio=0,
     limite_s=900,
 )
 
@@ -126,6 +134,9 @@ def valider_config(config: dict, revision: str | None) -> None:
     P.valider_politique(config["politique"], n_couches, prod["episodes"])
     if max(config["debit"]["tailles_lot"]) > prod["episodes"] * prod["N"]:
         raise GardeArret("débit : plus de lignes que de transcriptions de production")
+    cn = config["controle_negatif"]
+    if cn["positions_min"] < 1 or cn["actions_min"] < 1 or not 0 < cn["fraction_min"] <= 1:
+        raise GardeArret(f"contrôle négatif : réglage {cn} invalide")
 
 
 def taches(config: dict) -> list[str]:
@@ -150,10 +161,10 @@ def exiger_code_cite(racine: Path, prereg: Path) -> str:
     m = COMMIT_CITE.search(prereg.read_text(encoding="utf-8"))
     if not m:
         raise GardeArret(f"{prereg} ne cite pas le commit du code d'analyse (40 caractères hexadécimaux)")
-    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m.group(1), "HEAD", "--", "src", "tests"],
+    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m.group(1), "HEAD", "--", *CHEMINS_GELES],
                        capture_output=True, text=True)
     if r.returncode == 1:
-        raise GardeArret(f"code ou tests modifiés depuis le commit cité {m.group(1)[:12]}")
+        raise GardeArret(f"code, tests, scripts ou dépendances modifiés depuis le commit cité {m.group(1)[:12]}")
     if r.returncode != 0:
         raise GardeArret(f"comparaison au commit cité {m.group(1)[:12]} impossible : {r.stderr.strip()}")
     return m.group(1)
@@ -180,8 +191,10 @@ def exiger_code_importe_sous(racine: Path) -> None:
         raise GardeArret("code importé hors de la racine du dépôt : lancer depuis la racine")
 
 
-def exiger_memoire_vive(min_go: float, meminfo: str = "/proc/meminfo") -> float | None:
-    """Garde : assez de mémoire vive pour charger le modèle (un dépassement tue le processus sans trace)."""
+def exiger_memoire_vive(min_go: float, meminfo: str = "/proc/meminfo",
+                        cgroups=("/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes")) -> dict | None:
+    """Garde : assez de mémoire vive pour charger le modèle (un dépassement tue le processus sans trace). Mémoire
+    effective = le plus petit de MemTotal (souvent l'hôte, dans un conteneur) et du plafond du groupe de contrôle."""
     if not min_go:
         return None
     try:
@@ -189,9 +202,35 @@ def exiger_memoire_vive(min_go: float, meminfo: str = "/proc/meminfo") -> float 
     except (OSError, StopIteration):
         raise GardeArret(f"mémoire vive illisible ({meminfo}) : {min_go} Go exigés") from None
     total = int(ligne.split()[1]) * 1024 / 1e9
-    if total < min_go:
-        raise GardeArret(f"mémoire vive {total:.1f} Go < {min_go} Go exigés")
-    return round(total, 1)
+    plafond = None
+    for c in cgroups:
+        try:
+            v = Path(c).read_text().strip()
+        except OSError:
+            continue
+        if v.isdigit() and int(v) < 2 ** 60:
+            plafond = int(v) / 1e9
+            break
+    effective = min(total, plafond) if plafond is not None else total
+    if effective < min_go:
+        raise GardeArret(f"mémoire vive effective {effective:.1f} Go < {min_go} Go exigés (MemTotal {total:.1f} Go, "
+                         f"plafond du conteneur {plafond if plafond is None else round(plafond, 1)} Go)")
+    return {"memtotal_go": round(total, 1), "plafond_conteneur_go": None if plafond is None else round(plafond, 1),
+            "effective_go": round(effective, 1)}
+
+
+def exiger_memoire_carte(min_gio: float, total_octets: int | None = None) -> float | None:
+    """Garde : la carte a assez de mémoire (logique en simple précision : environ 62 à 67 Gio estimés)."""
+    if not min_gio:
+        return None
+    if total_octets is None:
+        if not torch.cuda.is_available():
+            raise GardeArret(f"carte graphique indisponible : {min_gio} Gio exigés")
+        total_octets = torch.cuda.get_device_properties(0).total_memory
+    gio = total_octets / 2 ** 30
+    if gio < min_gio:
+        raise GardeArret(f"mémoire de la carte {gio:.1f} Gio < {min_gio} Gio exigés")
+    return round(gio, 2)
 
 
 def exiger_rejeu_compatible(racine: Path, rejeu_de: str, config: dict) -> int:
@@ -200,7 +239,11 @@ def exiger_rejeu_compatible(racine: Path, rejeu_de: str, config: dict) -> int:
     m_a, _ = lire_manifeste(racine / "runs" / rejeu_de / "manifeste.json")
     if hashlib.sha256(config_canonique(config)).hexdigest() != m_a["config_sha256"]:
         raise GardeArret(f"rejeu de {rejeu_de} : configuration (ou révision) différente de celle du run A")
-    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m_a["commit"], "HEAD", "--", "src", "tests"],
+    try:
+        verifier_resultat(racine, racine / "diag" / rejeu_de / "resume.json")
+    except (GardeArret, OSError) as e:
+        raise GardeArret(f"rejeu de {rejeu_de} : résumé du run A absent ou altéré ({e})") from None
+    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m_a["commit"], "HEAD", "--", *CHEMINS_GELES],
                        capture_output=True, text=True)
     if r.returncode != 0:
         raise GardeArret(f"rejeu de {rejeu_de} : code ou tests différents de ceux du run A ({m_a['commit'][:12]})")
@@ -272,39 +315,52 @@ def empreintes_episode(ep, acts, rapport, politique=None, couches=None, sondes=N
     return emp, v, s
 
 
-def bilan_phase(sorties, plan, chrono: dict, c: dict) -> dict:
-    """Résumé d'une phase : écarts (toutes positions), contrôle négatif dans la zone générée, couverture, audit."""
-    rapports = [(ep.identifiant, r) for ep, _, r in sorties if r["ecarts"]]
-    ecarts = [e for _, r in rapports for d in r["ecarts"].values() for e in d.values()]
-    zones = [z for _, r in rapports for z in r["controle_negatif_zone_generee"].values()]
-    maxima_zone = [v["max"] for z in zones if z is not None for v in z.values()]
-    au_dessus = sum(v["au_dessus"] for z in zones if z is not None for v in z.values())
-    positions_zone = sum(v["positions"] for z in zones if z is not None for v in z.values())
-    gen = [p["generee"] for _, r in rapports for d in r["profils"].values() for p in d.values()]
-    ctx = [p["contexte"] for _, r in rapports for d in r["profils"].values() for p in d.values()]
-    sondes = [s for _, r in rapports for s in r["sondes"].values()]
-    lot_de = {k: (j, lot.index(k)) for j, lot in enumerate(plan) for k in lot}
+def _maximum(valeurs) -> float | None:
+    """Maximum où un NaN compte comme +∞ (une valeur illisible n'est jamais « sous le seuil »)."""
+    v = [float("inf") if x != x else x for x in valeurs]
+    return max(v) if v else None
+
+
+def bilan_phase(sorties, c: dict, cn: dict) -> dict:
+    """Résumé d'une phase, sur les seules actions comparées : écarts (toutes positions, puis par zone), contrôle
+    négatif de phase, couverture par ligne comparée, domaine observé, zéros par couche et par zone, sondes d'audit."""
+    rapports = [r for _, _, r in sorties if r["ecarts"]]
+    cles = [(r, cle) for r in rapports for cle in r["ecarts"]]
+    ecarts = [e for r, cle in cles for e in r["ecarts"][cle].values()]
+    max_ctx = _maximum(p["contexte"]["max"] for r, cle in cles for p in r["profils"][cle].values()
+                       if p["contexte"]["jetons"])
+    max_gen = _maximum(p["generee"]["max"] for r, cle in cles for p in r["profils"][cle].values()
+                       if p["generee"]["jetons"])
+    couches = sorted({c_ for r, cle in cles for c_ in r["profils"][cle]}, key=str)
+    zeros = {str(c_): {z: [sum(r["profils"][cle][c_][z].get("nuls", 0) for r, cle in cles),
+                           sum(r["profils"][cle][c_][z]["jetons"] for r, cle in cles)] for z in ("contexte", "generee")}
+             for c_ in couches}
+    lignes = [r["lignes"][cle] for r, cle in cles]
+    generes = [r["positions_capturees"][cle] - r["longueurs_contexte"][cle] for r, cle in cles]
+    sondes = [r["sondes"][cle] for r, cle in cles]
     return {
         "tolerance": c["tolerance"],
-        "actions_comparees": sum(len(r["ecarts"]) for _, r in rapports),
-        "ecart_max": max(ecarts) if ecarts else None,
-        "controle_negatif": {"actions": sum(z is not None for z in zones),
-                             "actions_trop_courtes": sum(z is None for z in zones),
-                             "min_des_maxima": min(maxima_zone) if maxima_zone else None,
-                             "positions": positions_zone, "positions_au_dessus": au_dessus},
-        "couverture": {"jetons_remplissage": chrono.get("jetons_remplissage", 0),
-                       "lignes_finies_avant": chrono.get("lignes_finies_avant", 0),
-                       "positions_generees_comparees": sum(p["jetons"] for p in gen),
-                       "lignes_echantillon": sorted(lot_de[int(e.split("-")[1])][1] for e, _ in rapports)},
-        "zeros": {"contexte": [sum(p.get("nuls", 0) for p in ctx), sum(p["jetons"] for p in ctx)],
-                  "generee": [sum(p.get("nuls", 0) for p in gen), sum(p["jetons"] for p in gen)]},
-        "sondes_audit": {"tableaux_distincts": all(s["tableaux_distincts"] for s in sondes),
-                         "ulp_vu": all(s["ulp_vu"] for s in sondes)},
+        "actions_comparees": len(cles),
+        "ecart_max": _maximum(ecarts),
+        "ecart_non_fini": any(x != x or x == float("inf") for x in ecarts),
+        "max_contexte": max_ctx, "max_zone_generee": max_gen,
+        "controle_negatif": bilan_controle_negatif(rapports, cn["positions_min"]),
+        "couverture": {"actions_remplies": sum(x["remplissage"] > 0 for x in lignes),
+                       "actions_finies_avant": sum(bool(x["finie_avant"]) for x in lignes),
+                       "positions_generees_comparees": sum(generes),
+                       "lignes_echantillon": sorted({x["ligne"] for x in lignes})},
+        "domaine": {"contexte_max": max((r["longueurs_contexte"][cle] for r, cle in cles), default=0),
+                    "generes_relus_max": max(generes, default=0),
+                    "taille_lot": max((x["taille_lot"] for x in lignes), default=0)},
+        "zeros": zeros,
+        "sondes_audit": {"tableaux_distincts": all(x["tableaux_distincts"] for x in sondes),
+                         "ulp_vu": all(x["ulp_vu"] for x in sondes)},
     }
 
 
-def appliquer_gardes(sorties, phase: str) -> None:
-    """Gardes de fin de phase : toutes les fautes sont nommées dans un seul arrêt."""
+def appliquer_gardes(sorties, bilan: dict, phase: str, cn: dict) -> None:
+    """Gardes de fin de phase : équivalence de chaque action comparée, puis contrôle négatif de la phase ; toutes les
+    fautes d'équivalence sont nommées dans un seul arrêt."""
     fautes = []
     for ep, _, r in sorties:
         for cle in r["ecarts"]:
@@ -314,6 +370,7 @@ def appliquer_gardes(sorties, phase: str) -> None:
                 fautes.append(str(e))
     if fautes:
         raise GardeArret(f"{phase} : {len(fautes)} faute(s) de garde ; " + " | ".join(fautes[:20]))
+    exiger_controle_negatif_phase(bilan["controle_negatif"], cn["fraction_min"], cn["actions_min"], phase)
 
 
 def debit(chrono: dict) -> dict:
@@ -397,8 +454,13 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
             resume["tests_instance"] = {"derniere_ligne": derniere,
                                         "reussis": bool(re.search(r"\d+ passed", derniere))
                                         and not re.search(r"failed|error", derniere)}
+        ecrire_resultat(racine, chemin_m, "environnement-python",
+                        {"distributions": sorted(f"{d.metadata['Name']}=={d.version}"
+                                                 for d in importlib.metadata.distributions())})
         resume["reglages"] = regler_determinisme(config["fils"], config["appareil"])
+        resume["reglages"]["memoire_carte_gio"] = exiger_memoire_carte(config["memoire_carte_min_gio"])
         graines = m["graines"]
+        cn = config["controle_negatif"]
 
         phase = "logique"
         temps()
@@ -417,11 +479,11 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
         for ep, _, _ in sorties:
             ecrire_resultat(racine, chemin_m, f"logique-{ep.identifiant}-trajectoire", ep.en_dict())
         resume["logique"] = {"plan_lots": plan, "noyau_attention": c["noyau_attention"],
-                             "equivalence": bilan_phase(sorties, plan, chrono, c), "debit": debit(chrono),
+                             "equivalence": bilan_phase(sorties, c, cn), "debit": debit(chrono),
                              "memoire_max_go": memoire_max_go(),
                              "episodes": [{"episode": ep.identifiant, "empreintes": empreintes_episode(ep, acts, r)[0],
                                            "equivalence": r} for ep, acts, r in sorties]}
-        appliquer_gardes(sorties, "logique")
+        appliquer_gardes(sorties, resume["logique"]["equivalence"], "logique", cn)
         del modele, sorties
         liberer()
 
@@ -435,6 +497,11 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
         sondes = P.construire_sondes(config["politique"], couches, largeur, graines)
         chrono = {}
         sorties, plan = jouer_phase(modele, fmt, prod, graines, "production", couches, chrono=chrono, echeance=echeance)
+        # bilan et gardes d'équivalence d'abord : un arrêt plus loin (relecture, rejeu, durée) garde les profils
+        resume["production"] = {"plan_lots": plan, "noyau_attention": prod["noyau_attention"], "couches": couches,
+                                "largeur": largeur, "equivalence": bilan_phase(sorties, prod, cn), "debit": debit(chrono),
+                                "episodes_equivalence": {ep.identifiant: r for ep, _, r in sorties if r["ecarts"]}}
+        appliquer_gardes(sorties, resume["production"]["equivalence"], "production", cn)
         episodes, octets_par_jeton, jetons_par_episode = [], [], []
         for k, (ep, acts, r) in enumerate(sorties):
             par_jeton = k in config["politique"]["episodes_par_jeton"]
@@ -468,19 +535,16 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
                     "fichiers_par_jeton_octets": [e["tableaux_octets"] for e in episodes if e["par_jeton_conserve"]],
                     "projection": estimer(config["projection"]["episodes"], max(1, round(moyenne_jetons)), actions,
                                           len(couches), largeur, octets_valeur)}
-        resume["production"] = {"plan_lots": plan, "noyau_attention": prod["noyau_attention"], "couches": couches,
-                                "largeur": largeur,
-                                "projection_heures": {"episodes": config["projection"]["episodes"],
-                                                      "taille_lot": prod["taille_lot"],
-                                                      "heures": par_episode_s * config["projection"]["episodes"] / 3600},
-                                "empreinte_poids": empreinte_poids(modele),
-                                "equivalence": bilan_phase(sorties, plan, chrono, prod),
-                                "repere_precision": repere_precision(modele, references, couches),
-                                "rejeu_en_processus": rejeu, "debit": debit(chrono), "stockage": stockage,
-                                "sondes": [{"nom": x.nom, "couche": x.couche, "agregation": x.agregation,
-                                            "empreinte": x.empreinte()} for x in sondes],
-                                "episodes": episodes, "memoire_max_go": memoire_max_go()}
-        appliquer_gardes(sorties, "production")
+        del resume["production"]["episodes_equivalence"]     # repris, complet, dans « episodes »
+        resume["production"].update({
+            "projection_heures": {"episodes": config["projection"]["episodes"], "taille_lot": prod["taille_lot"],
+                                  "heures": par_episode_s * config["projection"]["episodes"] / 3600},
+            "empreinte_poids": empreinte_poids(modele),
+            "repere_precision": repere_precision(modele, references, couches),
+            "rejeu_en_processus": rejeu, "stockage": stockage,
+            "sondes": [{"nom": x.nom, "couche": x.couche, "agregation": x.agregation, "empreinte": x.empreinte()}
+                       for x in sondes],
+            "episodes": episodes, "memoire_max_go": memoire_max_go()})
 
         phase = "debit"
         temps()
@@ -522,51 +586,66 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
 
 # ---------------------------------------------------------------- lecture et comparaison
 
+# dernière ligne de pytest : « N passed[, M warnings] in X.XXs[ (h:mm:ss)] » ; rien d'autre (skipped, failed, xfailed…)
+TESTS_REUSSIS = re.compile(r"^(\d+) passed(, \d+ warnings?)? in [0-9.]+s( \(\d+:\d{2}:\d{2}\))?$")
+
+
 def lire(resume: dict, config: dict) -> dict:
     """Lecture gelée des prédictions mesurables dans un seul processus (le rejeu entre processus est lu par
-    `comparer_runs`). Issues : « conforme », « contraire », « non concluant » (couverture insuffisante),
-    « non atteint » (phase non jouée, run arrêté avant)."""
-    def etat(ok):
-        return "conforme" if ok else "contraire"
+    `comparer_runs`). Issues : « conforme », « contraire », « non concluant », « non atteint » (phase non jouée).
+    Les comparaisons s'écrivent « not (x <= seuil) » : une valeur illisible n'est jamais conforme."""
     lecture = {}
     f = resume.get("format")
-    lecture["format"] = "non atteint" if f is None else etat(f.get("verifie") is True)
+    lecture["format"] = "non atteint" if f is None else ("conforme" if f.get("verifie") is True else "contraire")
     t = resume.get("tests_instance")
-    lecture["tests_instance"] = "sans objet" if t is None else etat(t["reussis"])
+    if t is None:
+        lecture["tests_instance"] = "sans objet"
+    else:
+        m = TESTS_REUSSIS.match(t["derniere_ligne"])
+        lecture["tests_instance"] = ("conforme" if m and int(m.group(1)) == config.get("tests_attendus")
+                                     else "contraire")
+    cn = config["controle_negatif"]
     for phase, p_eq, p_neg in (("logique", "logique_equivalence", "logique_controle_negatif"),
                                ("production", "production_equivalence", "production_controle_negatif")):
         bilan = resume.get(phase, {}).get("equivalence")
         if bilan is None:
             lecture[p_eq] = lecture[p_neg] = "non atteint"
             continue
-        tol, cv, neg = bilan["tolerance"], bilan["couverture"], bilan["controle_negatif"]
-        if bilan["ecart_max"] is None or bilan["ecart_max"] > tol:
+        tol, cv = bilan["tolerance"], bilan["couverture"]
+        x = bilan["ecart_max"]
+        if x is None or not (x <= tol):
             lecture[p_eq] = "contraire"
-        elif phase == "logique" and not (cv["jetons_remplissage"] > 0 and cv["lignes_finies_avant"] > 0
+            mc, mg = bilan["max_contexte"], bilan["max_zone_generee"]
+            if (phase == "logique" and x is not None and x <= 1e-2 and mc is not None and mg is not None
+                    and mc >= 1e-5 and mg >= 1e-5 and max(mc, mg) <= 10 * min(mc, mg)):
+                lecture[p_eq] = "non concluant : précision probable"     # écart diffus, contexte et zone générée
+        elif phase == "logique" and not (cv["actions_remplies"] > 0 and cv["actions_finies_avant"] > 0
                                          and cv["positions_generees_comparees"] > 0
-                                         and any(x != 0 for x in cv["lignes_echantillon"])):
+                                         and any(x_ != 0 for x_ in cv["lignes_echantillon"])):
             lecture[p_eq] = "non concluant"
         else:
             lecture[p_eq] = "conforme"
-        if neg["actions"] == 0:
+        neg = bilan["controle_negatif"]
+        if neg["comparables"] < cn["actions_min"]:
             lecture[p_neg] = "non concluant"
         else:
-            lecture[p_neg] = etat(neg["min_des_maxima"] > tol)
+            lecture[p_neg] = "conforme" if neg["fraction"] >= cn["fraction_min"] else "contraire"
     prod = resume.get("production", {})
     if "rejeu_en_processus" in prod:
-        lecture["rejeu_en_processus"] = etat(bool(prod["rejeu_en_processus"])
-                                             and all(r["identique"] for r in prod["rejeu_en_processus"]))
+        lecture["rejeu_en_processus"] = ("conforme" if prod["rejeu_en_processus"]
+                                         and all(r["identique"] for r in prod["rejeu_en_processus"]) else "contraire")
     else:
         lecture["rejeu_en_processus"] = "non atteint"
-    audit = []
+    declenche = []
     for phase in ("logique", "production"):
         bilan = resume.get(phase, {}).get("equivalence")
-        if bilan is not None and bilan["zeros"]["generee"][1] > 0 and bilan["zeros"]["generee"][0] == bilan["zeros"]["generee"][1]:
-            levee = bilan["sondes_audit"]["tableaux_distincts"] and bilan["sondes_audit"]["ulp_vu"]
-            audit.append(f"{phase} : aucun écart non nul dans la zone générée ; "
-                         + ("réserve levée (tableaux distincts, perturbation d'un ulp vue)" if levee
-                            else "réserve maintenue, nœud de décision"))
-    lecture["audit_symetrie"] = " ; ".join(audit) if audit else "non déclenché"
+        if bilan is None:
+            continue
+        generees = [z["generee"] for z in bilan["zeros"].values()]
+        if generees and sum(t_ for _, t_ in generees) > 0 and all(n == t_ for n, t_ in generees):
+            declenche.append(phase)
+    lecture["audit_symetrie"] = ("déclenché (" + ", ".join(declenche) + ") : aucun écart non nul dans la zone générée ; "
+                                 "réserve maintenue, nœud de décision" if declenche else "non déclenché")
     return lecture
 
 
@@ -581,7 +660,7 @@ def comparer_runs(racine: str | Path, run_a: str, run_b: str) -> dict:
         raise GardeArret(f"{run_a} et {run_b} : configurations différentes, rejeu sans objet")
     if m_a["graines"] != m_b["graines"]:
         raise GardeArret(f"{run_a} et {run_b} : graines différentes, rejeu sans objet")
-    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m_a["commit"], m_b["commit"], "--", "src", "tests"],
+    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", m_a["commit"], m_b["commit"], "--", *CHEMINS_GELES],
                        capture_output=True, text=True)
     if r.returncode != 0:
         raise GardeArret(f"{run_a} et {run_b} : code ou tests différents entre {m_a['commit'][:12]} et {m_b['commit'][:12]}")
@@ -608,6 +687,13 @@ def comparer_runs(racine: str | Path, run_a: str, run_b: str) -> dict:
             differences.append({"phase": "production", "motif": "poids différents"})
     if a.get("fichiers_modele") != b.get("fichiers_modele"):
         differences.append({"motif": "fichiers du modèle différents"})
+    for cle in ("reglages", "chargement", "format"):                 # même machine, même chargement, même gabarit
+        if a.get(cle) != b.get(cle):
+            differences.append({"motif": f"{cle} différents", "a": a.get(cle), "b": b.get(cle)})
+    if a["production"].get("repere_precision") != b["production"].get("repere_precision"):
+        differences.append({"phase": "production", "motif": "repère de précision différent"})
+    if m_a["versions"] != m_b["versions"]:
+        differences.append({"motif": "versions des bibliothèques différentes", "a": m_a["versions"], "b": m_b["versions"]})
     if a.get("lecture") != b.get("lecture"):
         differences.append({"motif": "lectures différentes", "a": a.get("lecture"), "b": b.get("lecture")})
     corps = {"run_a": run_a, "run_b": run_b, "identique": not differences, "differences": differences,

@@ -21,6 +21,12 @@ def ecrire(chemin, remplir=True, sauf=None, contre_lecture=EMPREINTES_CONTRE_LEC
     return chemin
 
 
+def test_artefact_contre_lecture_en_attente(tmp_path):
+    for attente in ("Contre-lecture 2 : à faire", "rapport à reporter ici", "À compléter"):
+        p = ecrire(tmp_path / "p.md", contre_lecture=EMPREINTES_CONTRE_LECTURE + " ; " + attente)
+        assert any("en attente" in x for x in problemes(p))
+
+
 def test_artefact_contre_lecture_sans_empreintes(tmp_path):
     for faible in ("À compléter après la contre-lecture", f"brouillon `{'a' * 64}` seulement", f"`{'a' * 64}` et `{'a' * 64}`"):
         p = ecrire(tmp_path / "p.md", contre_lecture=faible)

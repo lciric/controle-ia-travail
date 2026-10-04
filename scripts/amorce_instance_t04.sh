@@ -22,7 +22,8 @@ if ! git -C amorce-depot checkout -q "$COMMIT"; then
     echo "AMORCE : commit $COMMIT introuvable"; exit 1
 fi
 T="$RACINE_AMORCE/t04"
-timeout 7h env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/validation_t04_instance.sh
+# plafond de l'ensemble (mise en place, tests, runs A et B) sous les 6 heures du devis
+timeout --signal=TERM --kill-after=5m 5h45m env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/validation_t04_instance.sh
 code=$?
 echo "AMORCE $(date -u +%FT%TZ) : fin, code $code"
 for f in "$T/journal.txt" "$T/tests.txt"; do
