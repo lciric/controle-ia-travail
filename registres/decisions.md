@@ -26,6 +26,8 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 
 | R-016 | 2026-10-04 | Module `src/controle_ia/agregateurs/` : épisodes (N, T) indexés (agent, pas), lecture « temps d'abord » ; processus e de mélange normal unilatéral et bilatéral en logarithme ; statistiques symétriques à sommation exacte (invariance au bit près), statistiques locales (balayage, Page, co-élévation), statistiques globales (autocorrélation, suites, corrélation entre agents). Tests : formes closes contre intégration numérique, validité sous P₀ et artefact σ sous-estimé, invariance au bit près, identité terminale, garanties locales, gardes. | Instrument de T0.3 (note v2) ; aucune puissance préenregistrée n'est mesurée par ces tests (R1). |
 
+| R-017 | 2026-10-04 | Rapport consolidé de niveau 1 (`docs/etat-de-l-art/etat-de-l-art-verifie-niveau1-v1.md`) publié seulement après un contrôle de traçabilité par un sous-agent neuf (chaque chiffre recontrôlé dans les PDF, recalculs indépendants) ; corrections intégrées avant scellement ; nature de chaque chiffre marquée (auteurs, figure, calcul, simulation). | R6, R7, R4. |
+
 ## Propositions avec recommandation (défaut sous 48 heures)
 
 | id | proposée le (UTC) | décision | défaut | échéance (UTC) | statut |
@@ -36,13 +38,19 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 | D3 | 2026-10-04 03:40 | Grille du nombre d'agents en phase 3. | N ∈ {1, 2, 3, 5, 10}. | 2026-10-06 03:40 | ouverte |
 | P-002 | 2026-10-04 04:00 | Famille d'organismes (iii) : les organismes publics sont des 70B. | (a) retirée de la phase 0 ; contrôle externe sur 70B en phase 1, devis séparé. | 2026-10-06 04:00 | ouverte |
 
+| P-003 | 2026-10-04 05:08 | Bras boîte noire de G1 rendus forts : juge robustifié de type b* (invites de 2606.08892) à côté de TRACE-lite, planchers « tout signaler » et « juge en une passe », journal des arrêts précoces et JSON invalides, score continu par probabilité des jetons. | Appliquer. | 2026-10-06 05:08 | ouverte |
+| P-004 | 2026-10-04 05:08 | Environnement (a) : reconstruction minimale fidèle (pas de portage possible), pilote 8B scellé d'abord, cibles semées, contributions (agent, pas), dose = proportion × intensité ; corriger « porté en 8B » (programme, section 6) en « reconstruit ». | Appliquer. | 2026-10-06 05:08 | ouverte |
+| P-005 | 2026-10-04 05:08 | Famille d'organismes (i) scindée : (i-a) consigne de saboter en dissimulant ; (i-b) stratégie biaisée d'apparence sincère ; témoin « instruit sans sabotage » ; prédiction de validité précisée en conséquence. | Appliquer. | 2026-10-06 05:08 | ouverte |
+
 ## Nœuds de décision en attente
 
 | id | ouvert le | objet | ce qu'il faut |
 |---|---|---|---|
 | N-001 | 2026-10-04 | Dépôt distant du programme. | **Résolu le 2026-10-04 vers 04:08 UTC** : GO-2026-10-04-01 ; création par l'application GitHub refusée (403) ; dépôt privé `lciric/controle-ia` créé par Lazar (vide), rattaché à la session avec droits de poussée ; `main` poussé (79012de, 7 commits) ; visibilité vérifiée : privée. |
 | N-002 | 2026-10-04 | Devis de calcul de la phase 0. | GO de Lazar sur `livrables/premier-rendu-v1/devis-v1.md` (plafond 150 USD). |
-| N-003 | 2026-10-04 | Théorème négatif : collision plus large qu'annoncé (2606.10456 aussi sur traces réelles) et énoncé du programme faux tel qu'écrit. | GO sur la reformulation (recommandation : énoncé par invariance) — `livrables/premier-rendu-v1/decisions-v1.md`. |
+| N-003 | 2026-10-04 | Théorème négatif : 2606.10456 revendique la version boîte noire, mais son énoncé est vide et faux pour sa construction ; l'énoncé du programme a le même défaut (renforcé après lecture du PDF). | GO sur la reformulation (recommandation : énoncé par invariance) — `livrables/premier-rendu-v1/decisions-v1.md`. |
 | N-004 | 2026-10-04 | Lemme d'additivité : cœur statistique classique ; calendrier et compensation. | GO sur le repositionnement (recommandation : énoncé adverse). |
-| N-005 | 2026-10-04 | Loi de déférence (HC1) : collision plus large qu'annoncé (2508.07805, 2606.07897, « poids du conseil »). | Trancher après lecture des PDF (recommandation). |
+| N-005 | 2026-10-04 | Loi de déférence (HC1) : collision confirmée et élargie sur PDF (2508.07805 : note continue par juge et par technique ; 2606.07897 : pente de déférence continue, rangs stables) ; la porte GC vise le mauvais papier. | GO sur la reformulation (recommandation : conjonction encore libre, stabilité de rang) — `livrables/anteriorite-niveau1-v1/decisions-v2.md`. |
 | N-006 | 2026-10-04 | Contre-mesures (HC5) : quorum hétérogène entre juges déjà recommandé par 2607.08066. | GO sur la reformulation (recommandation : quorum en type d'accès + paraphrase + matrice de transfert). |
+| N-007 | 2026-10-04 | H2 plus occupée qu'annoncé (Doomed from the Start 2607.06503 ; E-valuator accepte tout score). | GO sur la reformulation et les quatre bases ajoutées, à confirmer après lecture de Kulkarni 2604.28129, Padhi 2604.19775, FIPER, Yueh-Han 2506.10949 — `livrables/anteriorite-niveau1-v1/decisions-v2.md`. |
+| N-008 | 2026-10-04 | Critère de G1 : le bras « + 5 points de F1 » se gagne en sur-signalant (TRACE ≈ 75 % de faux positifs ; « tout signaler » F1 0,744). | GO sur la modification du critère de porte (recommandation après contrôle : retirer le bras F1, garder le rappel à 1 % de faux positifs avec intervalle à 95 %, planchers rapportés). |
