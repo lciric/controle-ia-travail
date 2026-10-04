@@ -1,8 +1,9 @@
 """Estimation du stockage des activations, avant de choisir la politique (brief, T0.4).
 
 Politique par défaut : activations complètes par jeton seulement sur un sous-échantillon
-d'entraînement ; en évaluation, vecteurs agrégés par action (maximum et dernier jeton) et scores de
-sondes calculés en ligne.
+d'entraînement ; en évaluation, vecteurs agrégés par action (maximum par coordonnée) et scores de
+sondes calculés en ligne (maximum ou attention sur les jetons, brief T0.7). Les scores pèsent
+8 octets par action et par sonde : négligeables, hors estimation.
 """
 from __future__ import annotations
 
@@ -10,7 +11,7 @@ from ..gardes import GardeArret
 
 
 def estimer(episodes: int, jetons_par_episode: int, actions_par_episode: int, couches: int, largeur: int,
-            octets_par_valeur: int = 2, fraction_par_jeton: float = 0.1, agregations: int = 2) -> dict:
+            octets_par_valeur: int = 2, fraction_par_jeton: float = 0.1, agregations: int = 1) -> dict:
     """Octets pour (a) tout garder par jeton, (b) la politique par défaut."""
     if min(episodes, jetons_par_episode, actions_par_episode, couches, largeur, octets_par_valeur) < 1:
         raise GardeArret("estimation de stockage : toutes les tailles doivent être ≥ 1")

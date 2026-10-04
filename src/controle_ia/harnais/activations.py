@@ -12,7 +12,10 @@ import torch
 from ..gardes import GardeArret
 
 FRACTIONS_COUCHES = (0.25, 0.5, 0.75)        # couches précoce, médiane et tardive (proposition, T0.7)
-AGREGATIONS = ("max", "dernier")              # jamais la moyenne ni la médiane sur les jetons (interdit)
+# Vecteur d'action : maximum par coordonnée sur les jetons de l'empan, seulement. Sur les jetons, le brief (T0.7)
+# n'admet que le maximum ou l'attention ; l'attention est apprise par une sonde (voir `sondes`).
+# Jamais la moyenne ni la médiane (interdit) ; le dernier jeton n'est pas admis non plus (R-030).
+AGREGATIONS = ("max",)
 
 
 def couches_par_defaut(n_couches: int) -> list[int]:
@@ -80,14 +83,14 @@ def passe_unique(modele, ids: list[int], couches) -> dict[int, np.ndarray]:
 
 
 def agreger(acts: np.ndarray, debut: int, fin: int, methode: str) -> np.ndarray:
-    """Vecteur d'une action à partir de ses jetons [début, fin[ : maximum par coordonnée, ou dernier jeton."""
+    """Vecteur d'une action à partir de ses jetons [début, fin[ : maximum par coordonnée."""
     if methode not in AGREGATIONS:
-        raise GardeArret(f"agrégation {methode!r} refusée : seules {AGREGATIONS} sont permises "
-                         "(jamais la moyenne ni la médiane sur les jetons)")
+        raise GardeArret(f"agrégation {methode!r} refusée pour un vecteur d'action : seul le maximum par coordonnée "
+                         "est permis ; l'attention passe par une sonde apprise (brief, T0.7) ; "
+                         "jamais la moyenne ni la médiane sur les jetons (interdit)")
     if not (0 <= debut < fin <= acts.shape[0]):
         raise GardeArret(f"empan d'action [{debut}, {fin}[ invalide pour {acts.shape[0]} positions")
-    segment = acts[debut:fin]
-    return segment.max(axis=0) if methode == "max" else segment[-1].copy()
+    return acts[debut:fin].max(axis=0)
 
 
 def ecart_equivalence(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray]) -> dict[int, float]:

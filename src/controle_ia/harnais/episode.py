@@ -147,3 +147,13 @@ def empreinte_episode(episode: Episode, acts: dict[int, dict[int, np.ndarray]]) 
             h.update(f"{agent}/{couche}/{a.shape}/{a.dtype}".encode("utf-8"))
             h.update(a.tobytes())
     return {"trajectoire": traj, "activations": h.hexdigest()}
+
+
+def empreinte_tableaux(tableaux: dict) -> str:
+    """Empreinte d'un dictionnaire de tableaux (clé, forme, type, octets), indépendante de l'ordre d'insertion."""
+    h = hashlib.sha256()
+    for cle in sorted(tableaux, key=str):
+        a = np.ascontiguousarray(tableaux[cle])
+        h.update(f"{cle}/{a.shape}/{a.dtype}".encode("utf-8"))
+        h.update(a.tobytes())
+    return h.hexdigest()

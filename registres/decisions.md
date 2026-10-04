@@ -45,6 +45,13 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 - garde d'équivalence génération/passe unique à 10⁻⁴ en simple précision (tolérance à revoir en demi-précision) ;
 - liste blanche des modèles réels, révision obligatoire ;
 - modèle et tokeniseur jouets construits hors ligne (HuggingFace inaccessible), qui ne servent à aucune mesure. | Brief, T0.4 ; R5, R9, interdits (moyenne sur les jetons, changement de modèle). |
+| R-030 | 2026-10-04 | Correction de R-029, qui admettait le dernier jeton : le brief (T0.7) limite l'agrégation sur les jetons au maximum ou à l'attention.
+- vecteur d'action : maximum par coordonnée seulement ; dernier jeton, moyenne et médiane refusés par garde ;
+- sondes (`src/controle_ia/harnais/sondes.py`) : score par jeton, agrégé sur l'empan de l'action par le maximum ou par une attention apprise ; toute autre agrégation refusée ;
+- politique de stockage par défaut du brief mise en œuvre : vecteurs d'action et scores de sondes calculés en ligne pour tous les épisodes ; activations par jeton seulement pour les épisodes d'entraînement déclarés ;
+- gardes nouvelles, testées sur cas sain et artefact : disque relu = mémoire ; scores et vecteurs recalculés hors ligne depuis les activations par jeton = calcul en ligne, au bit près ; aucune activation par jeton hors entraînement ; politique validée avant tout manifeste ;
+- les runs 20261004-110000 et 20261004-110001-harnais-factice, qui stockent aussi le dernier jeton, restent archivés tels quels (R12) ; la preuve de T0.4 sera le run suivant, fait avec le code corrigé ;
+- note : dans ces deux identifiants, l'heure (11:00:00 et 11:00:01) est une étiquette choisie à la main ; l'heure réelle de création est celle des manifestes (`cree_le` : 10:32:19 et 10:32:28 UTC). Les runs suivants prennent l'heure réelle. | Brief, T0.4 et T0.7 ; R5, R12 ; interdits (moyenne ou médiane sur les jetons). |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
