@@ -11,6 +11,9 @@ La continuité vit dans les fichiers, jamais dans la mémoire de conversation.
 - Empreintes : `docs/sha256sums-lancement-v2.txt` ; brief v1 remplacé, archivé sans modification : `docs/brief-claude-code-phase0-v1.md`.
 - Toute nouvelle version transmise par Lazar remplace la précédente, qui reste archivée dans `docs/`.
 
+## Dépôt distant
+`https://github.com/lciric/controle-ia` (privé), branche `main`. Pousser à chaque passation.
+
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026) ; porte de sortie G0.
 État vivant, tâches ouvertes, GO en attente, décisions et dépenses : `registres/etat.md`.

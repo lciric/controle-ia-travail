@@ -21,6 +21,9 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 | R-012 | 2026-10-04 | T0.3 préenregistre et teste à la fois les énoncés du programme tels qu'écrits et les énoncés précisés de la note mathématique v1 ; aucune revendication n'est modifiée avant décision sur N-003 et N-004. | Tester n'est pas modifier ; les deux issues sont informatives (R3, R4). |
 | R-013 | 2026-10-04 | Les trois chaînes de recherche d'antériorité ont été arrêtées par identifiant dès l'épuisement du budget de recherche web ; leurs résultats valides sont conservés et scellés ; les verdicts « indéterminés » ne valent pas « vierge ». | R8 : une zone non cherchée n'est pas une zone vierge. |
 
+| R-014 | 2026-10-04 | La note mathématique v1 est remplacée par la v2 (nouveau nom, v1 archivée), qui intègre la contre-vérification adverse : forme unilatérale du processus e, L1 dépendant de n₀, seuil exact du max, L5 corrigé, classes C et K distinguées, T3 restreint aux statistiques locales, T4 précisé, gardes de mauvaise spécification. | R4 et R12 ; contre-vérification reproduite (deux scripts rejoués à l'identique). |
+| R-015 | 2026-10-04 | Les simulations exploratoires du contre-vérificateur seront déclarées dans le préenregistrement de T0.3 ; T0.3 utilisera des graines neuves et une grille fixée indépendamment ; ses prédictions sont tirées des preuves. | R1 : transparence sur toute lecture antérieure au scellement. |
+
 ## Propositions avec recommandation (défaut sous 48 heures)
 
 | id | proposée le (UTC) | décision | défaut | échéance (UTC) | statut |
@@ -35,7 +38,7 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 
 | id | ouvert le | objet | ce qu'il faut |
 |---|---|---|---|
-| N-001 | 2026-10-04 | Dépôt distant du programme (création = nœud de décision). | **GO reçu** (GO-2026-10-04-01, dépôt privé lciric/controle-ia). Création refusée par GitHub le 2026-10-04 vers 04:00 UTC (403 « Resource not accessible by integration » : l'application GitHub de la session ne peut pas créer de dépôt). En attente : création du dépôt vide par Lazar + accès de l'application Claude à ce dépôt ; puis rattachement et poussée par moi. |
+| N-001 | 2026-10-04 | Dépôt distant du programme. | **Résolu le 2026-10-04 vers 04:08 UTC** : GO-2026-10-04-01 ; création par l'application GitHub refusée (403) ; dépôt privé `lciric/controle-ia` créé par Lazar (vide), rattaché à la session avec droits de poussée ; `main` poussé (79012de, 7 commits) ; visibilité vérifiée : privée. |
 | N-002 | 2026-10-04 | Devis de calcul de la phase 0. | GO de Lazar sur `livrables/premier-rendu-v1/devis-v1.md` (plafond 150 USD). |
 | N-003 | 2026-10-04 | Théorème négatif : collision plus large qu'annoncé (2606.10456 aussi sur traces réelles) et énoncé du programme faux tel qu'écrit. | GO sur la reformulation (recommandation : énoncé par invariance) — `livrables/premier-rendu-v1/decisions-v1.md`. |
 | N-004 | 2026-10-04 | Lemme d'additivité : cœur statistique classique ; calendrier et compensation. | GO sur le repositionnement (recommandation : énoncé adverse). |

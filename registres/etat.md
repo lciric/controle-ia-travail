@@ -10,8 +10,8 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 | tâche | état | matériel | note |
 |---|---|---|---|
 | T0.1 socle, gouvernance, continuité | **fait** (sauf dépôt distant) | processeur | 52 tests ; gardes testées sain + artefact ; run factice 20261004-034500-factice de bout en bout ; CLAUDE.md, registres, passation |
-| T0.2 vérification de l'état de l'art | **en partie, bloquée** | processeur | ressources de code vérifiées au commit ; recherche web au niveau transcription (priorités 1 et 2, lemme, théorème) ; budget de recherche épuisé ; PDF impossibles (arxiv.org refusé) → liste `livrables/premier-rendu-v1/pdf-a-fournir-v1.md` |
-| T0.3 simulation du lemme et du théorème négatif | **démarrée** | processeur | note mathématique v1 (brouillon) ; contre-vérification adverse demandée à un sous-agent neuf ; prochain pas : préenregistrement, contre-lecture (R2), scellement, simulation |
+| T0.2 vérification de l'état de l'art | **en cours** | processeur | ressources de code vérifiées au commit ; recherche web au niveau transcription ; **PDF de niveau 1 reçus (13/13, scellés)**, lecture sur source primaire en cours par six sous-agents ; niveaux 2 et 3 à recevoir ; recherche affirmative à finir (session neuve) |
+| T0.3 simulation du lemme et du théorème négatif | **en cours** | processeur | note v1 contre-vérifiée (erreurs relevées) → note v2 (`docs/notes/note-mathematique-lemme-theoreme-v2.md`) ; prochain pas : préenregistrement (prédictions de la section 7, gardes de mauvaise spécification), contre-lecture (R2), scellement, simulation |
 | T0.4 harnais et activations | conception | processeur puis GPU sur GO | code sur petit modèle à poids aléatoires à partir du 6 oct. |
 | T0.5 environnement (a) v0 | conception | processeur puis GPU sur GO | base identifiée (transcription) : « Diffuse AI Control on Fuzzy Tasks » ; code inconnu |
 | T0.6 organismes v0 | conception | GPU sur GO | famille (iii) : organismes publics en 70B seulement (P-002) |
@@ -23,7 +23,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 Aucun.
 
 ## GO et nœuds en attente
-- N-001 dépôt distant : GO reçu ; création refusée par GitHub (403), en attente de création manuelle par Lazar ; N-002 devis phase 0 (150 USD) ; N-003 théorème négatif ; N-004 lemme ; N-005 loi de déférence ; N-006 contre-mesures. Détail : `livrables/premier-rendu-v1/decisions-v1.md`.
+- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; N-002 devis phase 0 (150 USD) ; N-003 théorème négatif ; N-004 lemme ; N-005 loi de déférence ; N-006 contre-mesures. Détail : `livrables/premier-rendu-v1/decisions-v1.md`.
 
 ## Décisions ouvertes (défaut sous 48 heures)
 - P-001 garde de calcul active — échéance 2026-10-06 03:40 UTC.
@@ -31,7 +31,7 @@ Aucun.
 - P-002 famille (iii) — échéance 2026-10-06 04:00 UTC.
 
 ## Ressources demandées à Lazar
-Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md` : budget de recherche web ou session neuve ; accès arxiv.org ou PDF fournis ; dépôt distant ; GO devis ; jeton HuggingFace ; compte Vast.ai ; corpus et code de P3 ; envoi du message FakeLab.
+Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md` : budget de recherche web ou session neuve ; PDF des niveaux 2 et 3 ; GO devis ; jeton HuggingFace ; compte Vast.ai ; corpus et code de P3 ; envoi du message FakeLab.
 
 ## Dépenses
 0 USD engagé ; aucun devis approuvé.
