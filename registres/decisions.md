@@ -17,6 +17,9 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 | R-008 | 2026-10-04 | Préenregistrement : sections de niveau 2 obligatoires (R1 + « Contre-lecture » pour R2), marqueur « À REMPLIR » interdit au scellement ; un run « décisif » exige un préenregistrement scellé et conforme. | Rend R1 et R2 vérifiables par machine. |
 | R-009 | 2026-10-04 | `.gitattributes` : `* -text` (aucune conversion de fins de ligne). | Une conversion sous Windows changerait les octets et casserait les empreintes. |
 | R-010 | 2026-10-04 | Recherche d'antériorité menée d'abord par recherche web (sous-agents, contre-vérification adverse), étiquetée « transcription, non opposable » ; la vérification sur PDF empreinté (T0.2 proprement dite) attend l'accès réseau à arxiv.org. | arxiv.org, openreview.net, semanticscholar.org, huggingface.co sont refusés par la politique réseau de l'environnement (constat du 2026-10-04 03:10 UTC). Demande de Lazar : antériorité approfondie avant de se lancer. |
+| R-011 | 2026-10-04 | Aucun code sans licence n'est copié dans le dépôt (deception-detection d'Apollo, obfuscated-activations, distributed_sabotage_frontier, JudgeDeceiver) : lecture et citation seulement, réimplémentation d'après les articles. | Sans licence, le droit d'auteur par défaut s'applique (`docs/sources/ressources-code-v1.md`). |
+| R-012 | 2026-10-04 | T0.3 préenregistre et teste à la fois les énoncés du programme tels qu'écrits et les énoncés précisés de la note mathématique v1 ; aucune revendication n'est modifiée avant décision sur N-003 et N-004. | Tester n'est pas modifier ; les deux issues sont informatives (R3, R4). |
+| R-013 | 2026-10-04 | Les trois chaînes de recherche d'antériorité ont été arrêtées par identifiant dès l'épuisement du budget de recherche web ; leurs résultats valides sont conservés et scellés ; les verdicts « indéterminés » ne valent pas « vierge ». | R8 : une zone non cherchée n'est pas une zone vierge. |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
@@ -26,10 +29,15 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 | D1 | 2026-10-04 03:40 | Moniteur boîte noire. | (a) même modèle que l'agent en juge + (b) modèle de confiance plus faible (Llama-3.2-3B-Instruct). | 2026-10-06 03:40 | ouverte |
 | D2 | 2026-10-04 03:40 | Panel de juges génératifs du papier C. | Llama-3.1-8B-Instruct, Qwen2.5-7B-Instruct, Mistral-7B-Instruct-v0.3 (licence Apache 2.0, même empreinte mémoire). | 2026-10-06 03:40 | ouverte |
 | D3 | 2026-10-04 03:40 | Grille du nombre d'agents en phase 3. | N ∈ {1, 2, 3, 5, 10}. | 2026-10-06 03:40 | ouverte |
+| P-002 | 2026-10-04 04:00 | Famille d'organismes (iii) : les organismes publics sont des 70B. | (a) retirée de la phase 0 ; contrôle externe sur 70B en phase 1, devis séparé. | 2026-10-06 04:00 | ouverte |
 
 ## Nœuds de décision en attente
 
 | id | ouvert le | objet | ce qu'il faut |
 |---|---|---|---|
 | N-001 | 2026-10-04 | Dépôt distant du programme (création = nœud de décision). | Choix et GO de Lazar ; sans dépôt distant, le travail ne survit pas au conteneur. |
-| N-002 | 2026-10-04 | Devis de calcul de la phase 0. | GO de Lazar sur `livrables/premier-rendu-v1/devis-phase0-v1.md`. |
+| N-002 | 2026-10-04 | Devis de calcul de la phase 0. | GO de Lazar sur `livrables/premier-rendu-v1/devis-v1.md` (plafond 150 USD). |
+| N-003 | 2026-10-04 | Théorème négatif : collision plus large qu'annoncé (2606.10456 aussi sur traces réelles) et énoncé du programme faux tel qu'écrit. | GO sur la reformulation (recommandation : énoncé par invariance) — `livrables/premier-rendu-v1/decisions-v1.md`. |
+| N-004 | 2026-10-04 | Lemme d'additivité : cœur statistique classique ; calendrier et compensation. | GO sur le repositionnement (recommandation : énoncé adverse). |
+| N-005 | 2026-10-04 | Loi de déférence (HC1) : collision plus large qu'annoncé (2508.07805, 2606.07897, « poids du conseil »). | Trancher après lecture des PDF (recommandation). |
+| N-006 | 2026-10-04 | Contre-mesures (HC5) : quorum hétérogène entre juges déjà recommandé par 2607.08066. | GO sur la reformulation (recommandation : quorum en type d'accès + paraphrase + matrice de transfert). |
