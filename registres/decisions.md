@@ -157,6 +157,9 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 - **Préenregistrement v2 scellé** : `prereg/T0.4-validation-modele-reel-v2.md`, sha256 886c8c07c6954a46c666b294c391523f0cdd3d03a5b99dae5079507503de3fb9 (code cité `dc7aa7f`, 192 tests ; révision 0e9e39f… ; entropie 140696434425628814214803363501781803624) ; différentiel avec le brouillon 2 consigné et scellé.
 - **Procédure v3 scellée** : `docs/procedures/validation-T0.4-modele-reel-v3.md`, sha256 a91a5838f0ec44bae5689ed935eda1b558fcda692d6314106761da5ac02bce4b.
 - Lancement sur H200 selon la procédure v3, sous GO-2026-10-04-08. | R1, R2, R4, R6, R12. |
+| R-045 | 2026-10-05 | Lancement de la v2 de T0.4 (procédure v3, GO-2026-10-04-08) : contrôles de la section 2 conformes au commit de scellement `9767398` ; quatre offres conformes, la moins chère retenue (47386263, H200 NVL, 4,441 USD/h), consignée avant création ; instance 54332340 créée à 14:44:22 UTC (identifiant rendu par le filtre corrigé).
+- 192 tests réussis sur l'instance ; révision citée ; run A `20261005-144628-validation-reelle` arrêté en phase de production au bout de 385 s par la garde d'équivalence de la production (28 actions au-dessus de 0,1) ; pas de run B ; arrêt consigné et poussé ; branche `calcul/t04-validation-v2` vérifiée et fusionnée ; journal de l'instance scellé ; instance arrêtée par son identifiant à 14:55 UTC (0,179 heure, ≈ 1,4 USD avec le téléchargement).
+- Lecture partielle rendue par le code (`arret.json`) : format, tests, logique (équivalence et contrôle négatif), contrôle positif, rejeu dans le processus et contrôle négatif de la production conformes ; équivalence de la production contraire ; audit de symétrie non déclenché. Verdict R13 à prononcer par un juge neuf contre la table gelée du préenregistrement v2. | R1, R10, R13 ; préenregistrement v2 886c8c07…. |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
