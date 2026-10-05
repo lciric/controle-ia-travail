@@ -55,7 +55,8 @@ from .episode import (EnvironnementJouet, bilan_controle_negatif, empreinte_epis
                       exiger_controle_negatif_phase, exiger_gardes, generer_lot, jouer_episodes)
 from .formats import FormatChat, verifier_format
 from .modeles import (charger_modele, empreinte_poids, empreintes_fichiers_modele, exiger_modele_autorise,
-                      fins_du_modele, modele_jouet, regler_determinisme, tokeniseur_caracteres_chat)
+                      fins_du_modele, modele_jouet, noyaux_attention_permis, regler_determinisme,
+                      tokeniseur_caracteres_chat)
 from .stockage import estimer
 
 COMMIT_CITE = re.compile(r"Commit du code d'analyse : `([0-9a-f]{40})`")
@@ -73,7 +74,7 @@ SONDES = [{"nom": f"lineaire-{a}-{c}", "couche": c, "agregation": a}
 CONFIG_REELLE = {
     "objet": "validation du harnais sur modèle réel (T0.4 ; porte G0, critère 1) ; aucune mesure de fond",
     "modele": "meta-llama/Llama-3.1-8B-Instruct", "attention": "sdpa", "appareil": "cuda", "fils": 1,
-    "memoire_vive_min_go": 64,
+    "memoire_vive_min_go": 96,                # double précision : conversion sur le processeur (≈ 80 Go au pic)
     "variables_gabarit": {"date_string": "26 Jul 2024"},
     "format": {"consigne": "Tu es l'agent 0. Propose une étape d'expérience, en une phrase.",
                "observations": ["Pas 0. Journal : ", "Pas 1. Journal : 0@0: Mesurer la température.",
@@ -81,7 +82,7 @@ CONFIG_REELLE = {
                "reponses": ["Je propose de mesurer la température.", "Je répète la mesure.",
                             "Je compare les deux mesures."],
                "texte_attendu_ouverture": "Today Date: 26 Jul 2024"},
-    "logique": {"dtype": "float32", "noyau_attention": "math", "episodes": 8, "N": 2, "T": 10, "max_nouveaux": 256,
+    "logique": {"dtype": "float64", "noyau_attention": "math", "episodes": 8, "N": 2, "T": 10, "max_nouveaux": 256,
                 "taille_lot": 8, "temperature": 1.0, "tolerance": 1e-4, "episodes_equivalence": [1, 6]},
     "production": {"dtype": "bfloat16", "noyau_attention": "defaut", "episodes": 16, "N": 2, "T": 10,
                    "max_nouveaux": 256, "taille_lot": 8, "temperature": 1.0, "tolerance": 0.1,
@@ -89,8 +90,11 @@ CONFIG_REELLE = {
     "debit": {"tailles_lot": [1, 8, 32], "longueur_contexte": 2048, "max_nouveaux": 128},
     "politique": {"episodes_par_jeton": [1, 14], "vecteurs_par_action": ["max"], "sondes": SONDES},
     "controle_negatif": {"positions_min": 4, "actions_min": 10, "fraction_min": 0.95},
+    # contrôle positif (version 2) : le défaut D1 (positions décodées décalées de +1) est injecté dans la génération de
+    # la phase de logique, rejouée sur T pas ; la garde d'équivalence doit le voir au seuil de logique
+    "controle_positif": {"T": 5, "decalage_positions": 1, "positions_min": 4, "actions_min": 10, "fraction_min": 0.95},
     "memoire_carte_min_gio": 75,
-    "tests_attendus": 178,                    # suite complète au commit cité, tous réussis (P0)
+    "tests_attendus": 186,                    # suite complète au commit cité, tous réussis (P0)
     "projection": {"episodes": 2000},
     "limite_s": 9000,
 }
@@ -108,6 +112,7 @@ CONFIG_REPETITION = dict(
     politique=dict(CONFIG_REELLE["politique"], episodes_par_jeton=[1, 2]),
     debit={"tailles_lot": [1, 2, 4], "longueur_contexte": 48, "max_nouveaux": 8},
     controle_negatif={"positions_min": 4, "actions_min": 4, "fraction_min": 0.95},
+    controle_positif={"T": 3, "decalage_positions": 1, "positions_min": 4, "actions_min": 4, "fraction_min": 0.95},
     memoire_carte_min_gio=0,
     limite_s=900,
 )
@@ -128,8 +133,12 @@ def valider_config(config: dict, revision: str | None) -> None:
             raise GardeArret(f"{phase} : épisodes d'équivalence {c['episodes_equivalence']} hors de la phase")
         if c["noyau_attention"] not in ("math", "defaut"):
             raise GardeArret(f"{phase} : noyau d'attention {c['noyau_attention']!r} inconnu")
-    if config["logique"]["dtype"] != "float32":
-        raise GardeArret("la phase de logique se fait en simple précision")
+    if config["logique"]["dtype"] != "float64":
+        raise GardeArret("la phase de logique se fait en double précision (version 2)")
+    cp = config["controle_positif"]
+    if (cp["T"] < 1 or cp["T"] > config["logique"]["T"] or cp["decalage_positions"] == 0 or cp["positions_min"] < 1
+            or cp["actions_min"] < 1 or not 0 < cp["fraction_min"] <= 1):
+        raise GardeArret(f"contrôle positif : réglage {cp} invalide")
     prod = config["production"]
     n_lots = -(-prod["episodes"] // prod["taille_lot"])
     if not set(prod["lots_rejeu_en_processus"]) <= set(range(n_lots)):
@@ -150,6 +159,9 @@ def taches(config: dict) -> list[str]:
         c = config[phase]
         t += [f"{phase}/episode-{k}/action-{i}-{p}" for k in range(c["episodes"]) for p in range(c["T"])
               for i in range(c["N"])]
+    c, cp = config["logique"], config["controle_positif"]
+    t += [f"controle-positif/episode-{k}/action-{i}-{p}" for k in range(c["episodes"]) for p in range(cp["T"])
+          for i in range(c["N"])]
     t += [f"debit/ligne-{r}" for r in range(max(config["debit"]["tailles_lot"]))]
     return t
 
@@ -315,8 +327,9 @@ def noyau(nom: str):
 
 
 def jouer_phase(modele, fmt, c: dict, graines: dict, phase: str, couches: list[int], lots=None, chrono=None,
-                echeance=None) -> tuple[list, list]:
-    """Joue les épisodes d'une phase par lots consécutifs (plan fixé par la configuration), gardes différées."""
+                echeance=None, decalage_positions: int = 0) -> tuple[list, list]:
+    """Joue les épisodes d'une phase par lots consécutifs (plan fixé par la configuration), gardes différées ;
+    `decalage_positions` injecte le défaut D1 (contrôle positif seulement)."""
     E, B = c["episodes"], c["taille_lot"]
     plan = [list(range(j, min(j + B, E))) for j in range(0, E, B)]
     sorties = []
@@ -330,7 +343,8 @@ def jouer_phase(modele, fmt, c: dict, graines: dict, phase: str, couches: list[i
                            for p in range(c["T"]) for i in range(c["N"])}
             sorties += jouer_episodes(modele, fmt, EnvironnementJouet(), [f"episode-{k}" for k in lot], c["N"], c["T"],
                                       g, couches, c["max_nouveaux"], c["temperature"], echantillon, c["tolerance"],
-                                      chrono=chrono, garde="differee", echeance=echeance, empreinte_logits=True)
+                                      chrono=chrono, garde="differee", echeance=echeance, empreinte_logits=True,
+                                      decalage_positions=decalage_positions)
     return sorties, plan
 
 
@@ -389,6 +403,39 @@ def bilan_phase(sorties, c: dict, cn: dict) -> dict:
     }
 
 
+def bilan_controle_positif(sorties, c: dict, cp: dict) -> dict:
+    """Contrôle positif (défaut D1 injecté). Une action comparée est comparable si sa zone générée compte au moins
+    `positions_min` positions à chaque couche ; elle est vue si, à chaque couche, le maximum de l'écart dans la zone
+    générée dépasse la tolérance de logique. Un maximum illisible (NaN) ne compte jamais comme vu."""
+    comparables, vus, courtes, manques, minimum = 0, 0, 0, [], float("inf")
+    for ep, _, r in sorties:
+        for cle in r["ecarts"]:
+            zones = [p["generee"] for p in r["profils"][cle].values()]
+            if any(z["jetons"] < cp["positions_min"] for z in zones):
+                courtes += 1
+                continue
+            comparables += 1
+            m = min(float("-inf") if z["max"] != z["max"] else z["max"] for z in zones)
+            minimum = min(minimum, m)
+            if m > c["tolerance"]:
+                vus += 1
+            else:
+                manques.append(f"{ep.identifiant}:{cle}")
+    return {"tolerance": c["tolerance"], "comparables": comparables, "vus": vus, "courtes": courtes, "manques": manques,
+            "fraction": vus / comparables if comparables else None,
+            "min_des_maxima": minimum if comparables else None, "positions_min": cp["positions_min"]}
+
+
+def exiger_controle_positif(bilan: dict, cp: dict, quoi: str) -> None:
+    """Garde : le défaut D1 injecté est vu par la garde d'équivalence pour au moins `fraction_min` des actions
+    comparables. Sous `actions_min` actions comparables, rien ne se juge (lecture « non concluant »)."""
+    if bilan["comparables"] < cp["actions_min"]:
+        return
+    if not bilan["fraction"] >= cp["fraction_min"]:
+        raise GardeArret(f"{quoi} : défaut D1 injecté non vu au seuil de logique pour {len(bilan['manques'])} action(s) "
+                         f"sur {bilan['comparables']} ({bilan['manques'][:10]})")
+
+
 def appliquer_gardes(sorties, bilan: dict, phase: str, cn: dict) -> None:
     """Gardes de fin de phase : équivalence de chaque action comparée, puis contrôle négatif de la phase ; toutes les
     fautes d'équivalence sont nommées dans un seul arrêt."""
@@ -425,13 +472,13 @@ def liberer() -> None:
 
 def repere_precision(modele, references: list, couches: list[int]) -> dict:
     """Repère descriptif : écart par jeton entre la passe unique du modèle courant (demi-précision) et celle de la
-    phase de logique (simple précision), sur les mêmes transcriptions et aux mêmes positions."""
+    phase de logique (double précision, version 2), sur les mêmes transcriptions et aux mêmes positions."""
     par_couche: dict[int, list] = {c: [] for c in couches}
-    for ep, acts32 in references:
+    for ep, acts_ref in references:
         for tr in ep.transcriptions:
             a16 = passe_unique(modele, tr.ids, couches)
             for c in couches:
-                par_couche[c].append(ecarts_par_jeton(a16[c], acts32[tr.agent][c]))
+                par_couche[c].append(ecarts_par_jeton(a16[c], acts_ref[tr.agent][c]))
     sortie = {}
     for c, morceaux in par_couche.items():
         e = np.concatenate(morceaux)
@@ -511,12 +558,33 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
                       c["episodes_equivalence"]]
         for ep, _, _ in sorties:
             ecrire_resultat(racine, chemin_m, f"logique-{ep.identifiant}-trajectoire", ep.en_dict())
-        resume["logique"] = {"plan_lots": plan, "noyau_attention": c["noyau_attention"],
+        with noyau(c["noyau_attention"]):
+            permis = noyaux_attention_permis()
+        resume["logique"] = {"plan_lots": plan, "noyau_attention": c["noyau_attention"], "noyaux_permis": permis,
                              "equivalence": bilan_phase(sorties, c, cn), "debit": debit(chrono),
                              "memoire_max_go": memoire_max_go(),
                              "episodes": [{"episode": ep.identifiant, "empreintes": empreintes_episode(ep, acts, r)[0],
                                            "equivalence": r} for ep, acts, r in sorties]}
+
+        # contrôle positif (version 2) : défaut D1 injecté, même modèle, même noyau ; joué avant les gardes de logique,
+        # pour que son bilan figure dans arret.json si P2 arrête le run
+        phase = "controle_positif"
+        temps()
+        cp = config["controle_positif"]
+        c_pc = dict(c, T=cp["T"])
+        chrono_pc: dict = {}
+        sorties_pc, plan_pc = jouer_phase(modele, fmt, c_pc, graines, "controle-positif", couches, chrono=chrono_pc,
+                                          echeance=echeance, decalage_positions=cp["decalage_positions"])
+        resume["controle_positif"] = {
+            "plan_lots": plan_pc, "T": cp["T"], "decalage_positions": cp["decalage_positions"],
+            "bilan": bilan_controle_positif(sorties_pc, c_pc, cp), "debit": debit(chrono_pc),
+            "episodes": [{"episode": ep.identifiant, "empreintes": empreintes_episode(ep, acts, r)[0],
+                          "profils": r["profils"]} for ep, acts, r in sorties_pc if r["ecarts"]]}
+        del sorties_pc
+        phase = "logique"
         appliquer_gardes(sorties, resume["logique"]["equivalence"], "logique", cn)
+        phase = "controle_positif"
+        exiger_controle_positif(resume["controle_positif"]["bilan"], cp, "contrôle positif")
         del modele, sorties
         liberer()
 
@@ -530,9 +598,12 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
         sondes = P.construire_sondes(config["politique"], couches, largeur, graines)
         chrono = {}
         sorties, plan = jouer_phase(modele, fmt, prod, graines, "production", couches, chrono=chrono, echeance=echeance)
+        with noyau(prod["noyau_attention"]):
+            permis_prod = noyaux_attention_permis()
         # bilan d'équivalence d'abord : un arrêt plus loin (relecture, rejeu, durée) garde les profils ; les gardes
         # de la production viennent après le repère (plus bas)
-        resume["production"] = {"plan_lots": plan, "noyau_attention": prod["noyau_attention"], "couches": couches,
+        resume["production"] = {"plan_lots": plan, "noyau_attention": prod["noyau_attention"],
+                                "noyaux_permis": permis_prod, "couches": couches,
                                 "largeur": largeur, "equivalence": bilan_phase(sorties, prod, cn), "debit": debit(chrono),
                                 "episodes_equivalence": {ep.identifiant: r for ep, _, r in sorties if r["ecarts"]}}
         episodes, octets_par_jeton, jetons_par_episode = [], [], []
@@ -675,6 +746,13 @@ def lire(resume: dict, config: dict) -> dict:
             lecture[p_neg] = "non concluant"
         else:
             lecture[p_neg] = "conforme" if neg["fraction"] >= cn["fraction_min"] else "contraire"
+    pc, cpc = resume.get("controle_positif"), config["controle_positif"]
+    if pc is None:
+        lecture["controle_positif"] = "non atteint"
+    elif pc["bilan"]["comparables"] < cpc["actions_min"]:
+        lecture["controle_positif"] = "non concluant"
+    else:
+        lecture["controle_positif"] = "conforme" if pc["bilan"]["fraction"] >= cpc["fraction_min"] else "contraire"
     prod = resume.get("production", {})
     if "rejeu_en_processus" in prod:
         lecture["rejeu_en_processus"] = ("conforme" if prod["rejeu_en_processus"]
@@ -728,6 +806,9 @@ def comparer_runs(racine: str | Path, run_a: str, run_b: str) -> dict:
                     differences.append({"phase": phase, "episode": ep, "equivalence": cle})
             if ea[ep].get("tableaux_sha256") != eb[ep].get("tableaux_sha256"):
                 differences.append({"phase": phase, "episode": ep, "motif": "fichier npz différent"})
+    sans_duree = lambda pc: None if pc is None else {k: v for k, v in pc.items() if k != "debit"}   # noqa: E731
+    if sans_duree(a.get("controle_positif")) != sans_duree(b.get("controle_positif")):    # le débit est une durée
+        differences.append({"phase": "controle_positif", "motif": "contrôle positif différent"})
     for cle in ("empreinte_poids",):
         if a["production"][cle] != b["production"][cle]:
             differences.append({"phase": "production", "motif": "poids différents"})

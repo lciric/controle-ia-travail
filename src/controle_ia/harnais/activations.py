@@ -31,6 +31,12 @@ def blocs_decodeur(modele):
         raise GardeArret(f"architecture {type(modele).__name__} : blocs de décodeur introuvables") from None
 
 
+def type_de_capture(dtype: torch.dtype) -> torch.dtype:
+    """Type des activations capturées : la double précision reste double ; tout autre type (simple, demi) passe en
+    simple précision, conversion exacte depuis bfloat16 ou float16."""
+    return torch.float64 if dtype == torch.float64 else torch.float32
+
+
 class Crochets:
     """Capture, à chaque appel du modèle, la sortie des couches choisies.
 
@@ -56,11 +62,11 @@ class Crochets:
             if self.lignes is None:
                 if h.shape[0] != 1:
                     raise GardeArret(f"sortie de couche de forme {tuple(h.shape)} : lot de taille 1 attendu")
-                self.morceaux[couche].append(h[0].detach().to("cpu", torch.float32).numpy().copy())
+                self.morceaux[couche].append(h[0].detach().to("cpu", type_de_capture(h.dtype)).numpy().copy())
             else:
                 if max(self.lignes) >= h.shape[0]:
                     raise GardeArret(f"lignes {self.lignes} hors d'un lot de {h.shape[0]}")
-                self.morceaux[couche].append(h[self.lignes].detach().to("cpu", torch.float32).numpy().copy())
+                self.morceaux[couche].append(h[self.lignes].detach().to("cpu", type_de_capture(h.dtype)).numpy().copy())
         return f
 
     def __enter__(self):
@@ -185,7 +191,7 @@ def sonde_de_comparaison(acts_generation: dict[int, np.ndarray], acts_passe: dic
     g = acts_generation[couche]
     p = acts_passe[couche][: g.shape[0]].copy()
     n = g.shape[0] - 1
-    p[n, 0] = np.nextafter(p[n, 0], np.float32(np.inf), dtype=np.float32)
+    p[n, 0] = np.nextafter(p[n, 0], p.dtype.type(np.inf), dtype=p.dtype)        # un ulp dans le type capturé
     avant = ecarts_par_jeton(g[n:], acts_passe[couche][n:n + 1])[0]
     apres = ecarts_par_jeton(g[n:], p[n:n + 1])[0]
     return {"tableaux_distincts": bool(distincts), "ulp_vu": bool(apres != avant)}

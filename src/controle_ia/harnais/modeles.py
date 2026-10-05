@@ -106,7 +106,9 @@ def charger_modele(nom: str, revision: str, dtype: str = "bfloat16", appareil: s
 
     Le point de contrôle (bfloat16, vérifié) est chargé tel quel, puis porté sur la carte ; une demande en simple
     précision s'y convertit ensuite, sans perte (bfloat16 ⊂ float32). La mémoire vive n'accueille ainsi que
-    16 Go pour un modèle de 8 milliards de paramètres, au lieu de 32 Go en simple précision."""
+    16 Go pour un modèle de 8 milliards de paramètres, au lieu de 32 Go en simple précision. Une demande en double
+    précision (bfloat16 ⊂ float64, sans perte) se convertit sur le processeur avant le transfert : la carte ne porte
+    jamais les deux copies à la fois (64 Go en double précision pour 8 milliards de paramètres)."""
     exiger_modele_autorise(nom, revision)
     from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
@@ -115,9 +117,13 @@ def charger_modele(nom: str, revision: str, dtype: str = "bfloat16", appareil: s
         raise GardeArret(f"{nom} : point de contrôle en {natif}, pas en bfloat16 ; la conversion ne serait pas exacte")
     tokeniseur = AutoTokenizer.from_pretrained(nom, revision=revision)
     modele = AutoModelForCausalLM.from_pretrained(nom, revision=revision, dtype=torch.bfloat16,
-                                                  attn_implementation=attention).to(appareil)
-    if dtype != "bfloat16":
-        modele = modele.to(getattr(torch, dtype))
+                                                  attn_implementation=attention)
+    if dtype == "float64":
+        modele = modele.to(torch.float64).to(appareil)
+    else:
+        modele = modele.to(appareil)
+        if dtype != "bfloat16":
+            modele = modele.to(getattr(torch, dtype))
     exiger_type_des_poids(modele, dtype)
     return modele.eval(), tokeniseur
 
@@ -227,7 +233,30 @@ def regler_determinisme(fils: int = 1, appareil: str = "cpu") -> dict:
                          "cuda": torch.version.cuda, "cudnn": torch.backends.cudnn.version(), "pilote": pilote()})
     torch.use_deterministic_algorithms(True)
     torch.set_num_threads(int(fils))
+    reglages["relus"] = etats_effectifs()
     return reglages
+
+
+def etats_effectifs() -> dict:
+    """Réglages relus dans la bibliothèque, et non seulement écrits : ce qui s'applique vraiment aux calculs."""
+    m, d = torch.backends.cuda.matmul, torch.backends.cudnn
+    return {"algorithmes_deterministes": bool(torch.are_deterministic_algorithms_enabled()),
+            "precision_produits_simple": torch.get_float32_matmul_precision(),
+            "precision_produits_cuda": str(getattr(m, "fp32_precision", "inconnue")),
+            "tf32_produits": bool(m.allow_tf32), "tf32_cudnn": bool(d.allow_tf32),
+            "reduction_reduite_bf16": bool(m.allow_bf16_reduced_precision_reduction),
+            "reduction_reduite_fp16": bool(m.allow_fp16_reduced_precision_reduction),
+            "cudnn_deterministe": bool(d.deterministic), "cudnn_banc_essai": bool(d.benchmark),
+            "fils": int(torch.get_num_threads())}
+
+
+def noyaux_attention_permis() -> dict:
+    """Noyaux d'attention permis à l'instant de l'appel (à lire dans le contexte du noyau choisi)."""
+    b = torch.backends.cuda
+    lire = lambda f: bool(getattr(b, f)()) if hasattr(b, f) else None      # noqa: E731
+    return {"flash": lire("flash_sdp_enabled"), "memoire_efficace": lire("mem_efficient_sdp_enabled"),
+            "math": lire("math_sdp_enabled"), "cudnn": lire("cudnn_sdp_enabled"),
+            "reduction_demi_dans_math": lire("fp16_bf16_reduction_math_sdp_allowed")}
 
 
 def pilote() -> str | None:

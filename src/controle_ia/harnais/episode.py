@@ -72,7 +72,8 @@ class EnvironnementJouet:
 
 
 def generer_lot(modele, contextes: list[list[int]], max_nouveaux: int, temperature: float, graines: list[int],
-                fins: set[int], pad_id: int, empreinte_logits: bool = False) -> tuple[list[list[int]], dict]:
+                fins: set[int], pad_id: int, empreinte_logits: bool = False,
+                decalage_positions: int = 0) -> tuple[list[list[int]], dict]:
     """Échantillonnage jeton par jeton d'un lot, avec cache ; une graine et un générateur par ligne.
 
     Remplissage à gauche, masque d'attention et positions explicites (la position d'un jeton ne dépend pas
@@ -81,7 +82,10 @@ def generer_lot(modele, contextes: list[list[int]], max_nouveaux: int, temperatu
     (mémoire : un vocabulaire de 128 000 jetons sur tout le contexte d'un lot pèserait des gigaoctets).
     Renvoie les jetons générés par ligne et le plan du lot : longueur remplie, nombre de passes de
     décodage (nécessaire pour relire les crochets), remplissage par ligne et, sur demande, une empreinte
-    sha256 par ligne des logits de chaque pas (rejeu de la génération elle-même, pas seulement des jetons)."""
+    sha256 par ligne des logits de chaque pas (rejeu de la génération elle-même, pas seulement des jetons).
+
+    `decalage_positions` : contrôle positif seulement. Il décale de cette quantité les positions des jetons décodés
+    (défaut D1 injecté : la garde d'équivalence doit le voir) ; 0 en usage normal."""
     if max_nouveaux < 1:
         raise GardeArret("max_nouveaux < 1")
     if not contextes or len(graines) != len(contextes) or any(len(c) == 0 for c in contextes):
@@ -102,7 +106,7 @@ def generer_lot(modele, contextes: list[list[int]], max_nouveaux: int, temperatu
     with torch.no_grad():
         sortie = modele(input_ids=ids.to(appareil), attention_mask=masque.to(appareil),
                         position_ids=positions.to(appareil), use_cache=True, logits_to_keep=1)
-        suivante = positions[:, -1:] + 1
+        suivante = positions[:, -1:] + 1 + int(decalage_positions)
         for pas in range(max_nouveaux):
             logits = sortie.logits[:, -1].to("cpu", torch.float32)
             jetons = torch.full((B, 1), int(pad_id), dtype=torch.long)
@@ -156,7 +160,8 @@ def relire_crochets_lot(brut: dict[int, list[np.ndarray]], k: int, longueur_cont
 def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, T: int, graines: list[dict],
                    couches, max_nouveaux: int = 24, temperature: float = 1.0, echantillon_equivalence=(),
                    tolerance_equivalence: float = 1e-4, pad_id: int | None = None, chrono: dict | None = None,
-                   garde: str = "immediate", echeance: float | None = None, empreinte_logits: bool = False) -> list[tuple]:
+                   garde: str = "immediate", echeance: float | None = None, empreinte_logits: bool = False,
+                   decalage_positions: int = 0) -> list[tuple]:
     """Joue un lot d'épisodes en pas synchronisés ; renvoie, par épisode, (épisode, activations par agent et par
     couche, rapport d'équivalence).
 
@@ -167,7 +172,8 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
     tolérance. `garde="immediate"` arrête à la première faute ; `garde="differee"` consigne tout et laisse
     l'appelant appliquer les gardes en fin de phase (validation : profils complets avant l'arrêt).
     `echeance` (horloge `time.perf_counter`) : garde de durée vérifiée à chaque pas (t, i).
-    `chrono` (facultatif) cumule durées, jetons, remplissage et lignes finies avant les autres."""
+    `chrono` (facultatif) cumule durées, jetons, remplissage et lignes finies avant les autres.
+    `decalage_positions` : défaut D1 injecté dans la génération (contrôle positif seulement ; voir `generer_lot`)."""
     if garde not in ("immediate", "differee"):
         raise GardeArret(f"mode de garde {garde!r} inconnu")
     B = len(identifiants)
@@ -204,7 +210,7 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
             if lignes:
                 with Crochets(modele, couches, lignes=lignes) as c:
                     nouveaux, plan = generer_lot(modele, contextes, max_nouveaux, temperature, graines_lot, fmt.fins, pad,
-                                                 empreinte_logits)
+                                                 empreinte_logits, decalage_positions)
                     brut = c.vider_lot()
                 plus_longue = max(len(nv) for nv in nouveaux)
                 for k, b in enumerate(lignes):
@@ -214,7 +220,7 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
                                               "finie_avant": len(nouveaux[b]) < plus_longue}
             else:
                 nouveaux, plan = generer_lot(modele, contextes, max_nouveaux, temperature, graines_lot, fmt.fins, pad,
-                                             empreinte_logits)
+                                             empreinte_logits, decalage_positions)
             if empreinte_logits:
                 for b in range(B):
                     logits[(b, i, t)] = plan["empreintes_logits"][b]

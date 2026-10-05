@@ -172,3 +172,23 @@ def test_controle_negatif_sain_et_aveugle():
     decale = ecart_equivalence(constantes, {0: np.ones((8, 4), np.float32)}, decalage=1)
     with pytest.raises(GardeArret, match="aveugle"):
         exiger_controle_negatif(decale, 1e-4, "artefact")
+
+
+def test_defaut_d1_injecte_dans_les_positions_decodees():
+    """Version 2, contrôle positif : `decalage_positions` décale les positions des jetons décodés (défaut D1), et
+    seulement elles ; 0 (usage normal) les laisse à la suite du contexte."""
+    m = _modele()
+    vues = []
+    vrai = m.forward
+
+    def espion(*args, **kw):
+        vues.append(kw["position_ids"].clone())
+        return vrai(*args, **kw)
+    m.forward = espion
+    court, long_ = FMT.ouverture("A.", "B."), FMT.ouverture("Tu es l'agent 0, longuement.", "Pas 0. Journal : x")
+    for decalage in (0, 1):
+        vues.clear()
+        generer_lot(m, [court, long_], 3, 1.0, [1, 2], set(), TOK.pad_token_id, decalage_positions=decalage)
+        assert vues[0][1, -1].item() == len(long_) - 1                       # prérempli intact
+        assert vues[1][0, 0].item() == len(court) + decalage and vues[1][1, 0].item() == len(long_) + decalage
+        assert vues[2][1, 0].item() == len(long_) + 1 + decalage

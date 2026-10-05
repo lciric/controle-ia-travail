@@ -25,7 +25,7 @@ PETITE = dict(V.CONFIG_REPETITION,          # logique telle quelle : remplissage
               production=dict(V.CONFIG_REPETITION["production"], episodes=4, T=2, max_nouveaux=8),
               debit={"tailles_lot": [1, 4], "longueur_contexte": 32, "max_nouveaux": 4})
 LECTURE_SAINE = {"format": "conforme", "tests_instance": "sans objet", "logique_equivalence": "conforme",
-                 "logique_controle_negatif": "conforme", "production_equivalence": "conforme",
+                 "logique_controle_negatif": "conforme", "controle_positif": "conforme", "production_equivalence": "conforme",
                  "production_controle_negatif": "conforme", "rejeu_en_processus": "conforme",
                  "audit_symetrie": "non déclenché"}
 
@@ -40,7 +40,11 @@ def test_repetition_complete_puis_rejeu_entre_runs(depot):
         False, True, True, False]
     assert lo["equivalence"]["ecart_max"] <= 1e-4 < lo["equivalence"]["controle_negatif"]["min_des_maxima"]
     assert lo["equivalence"]["couverture"]["lignes_echantillon"] == [1, 2] and lo["noyau_attention"] == "math"
-    assert set(prod["repere_precision"]) == {"0", "1", "2"} and r["chargement"]["type_des_poids"] == "torch.float32"
+    assert set(prod["repere_precision"]) == {"0", "1", "2"} and r["chargement"]["type_des_poids"] == "torch.float64"
+    pc = r["controle_positif"]                                         # version 2 : défaut D1 vu au seuil de logique
+    assert pc["bilan"]["comparables"] >= 4 and pc["bilan"]["vus"] == pc["bilan"]["comparables"]
+    assert pc["bilan"]["min_des_maxima"] > lo["equivalence"]["tolerance"] > lo["equivalence"]["ecart_max"]
+    assert lo["noyaux_permis"]["math"] is True and r["reglages"]["relus"]["algorithmes_deterministes"] is True
     assert [m["taille_lot"] for m in r["debit"]["mesures"]] == [1, 4]
     assert all(m["jetons_generes"] == 4 * m["taille_lot"] for m in r["debit"]["mesures"])
     assert (depot / "diag" / "20261004-160000-repetition-jouet" / "logique-episode-3-trajectoire.json").is_file()
@@ -108,7 +112,10 @@ def test_gardes_de_lancement(depot, tmp_path_factory):
     with pytest.raises(GardeArret, match="révision figée"):
         V.valider_config(V.CONFIG_REELLE, "main")
     V.valider_config(V.CONFIG_REELLE, "0e9e39f249a16976918f6564b8830bc894c89659")
-    for mauvaise, motif in ((dict(PETITE, logique=dict(PETITE["logique"], dtype="bfloat16")), "simple précision"),
+    for mauvaise, motif in ((dict(PETITE, logique=dict(PETITE["logique"], dtype="float32")), "double précision"),
+                            (dict(PETITE, controle_positif=dict(PETITE["controle_positif"], decalage_positions=0)),
+                             "contrôle positif"),
+                            (dict(PETITE, controle_positif=dict(PETITE["controle_positif"], T=99)), "contrôle positif"),
                             (dict(PETITE, production=dict(PETITE["production"], episodes_equivalence=[9])), "hors de la phase"),
                             (dict(PETITE, production=dict(PETITE["production"], lots_rejeu_en_processus=[5])), "lots de rejeu"),
                             (dict(PETITE, debit=dict(PETITE["debit"], tailles_lot=[64])), "plus de lignes"),
@@ -386,6 +393,10 @@ def test_charger_modele_conversion_exacte_et_type_natif(tmp_path, monkeypatch):
     assert all(p.dtype == torch.float32 for p in m32.parameters()) and len(tok) == len(tokeniseur_caracteres_chat())
     m16, _ = charger_modele("meta-llama/Llama-3.1-8B-Instruct", rev, "bfloat16", "cpu")
     assert all(p.dtype == torch.bfloat16 for p in m16.parameters())
+    m64, _ = charger_modele("meta-llama/Llama-3.1-8B-Instruct", rev, "float64", "cpu")   # version 2 : logique
+    direct64 = AutoModelForCausalLM.from_pretrained(str(bf16), dtype=torch.float64)
+    a, b = m64.state_dict(), direct64.state_dict()
+    assert all(p.dtype == torch.float64 for p in m64.parameters()) and all(torch.equal(a[k], b[k]) for k in a)
     fp32 = tmp_path / "fp32"                                              # artefact : point de contrôle en simple précision
     _point_de_controle(fp32, torch.float32)
     monkeypatch.undo()
@@ -592,3 +603,128 @@ def test_plafonds_v2_et_minimum_des_ancetres(tmp_path_factory):
     assert r["plafond_conteneur_go"] == 8.0 and r["effective_go"] == 8.0
     with pytest.raises(GardeArret, match="effective 8.0"):
         V.exiger_memoire_vive(10, meminfo, fichiers)
+
+
+# ---------------------------------------------------------------- version 2 (N-010, option a)
+
+def test_capture_en_double_precision_et_sonde_d_un_ulp():
+    """La capture garde la double précision ; la simple et la demi-précision passent en simple précision (exact) ;
+    la sonde d'audit perturbe d'un ulp dans le type capturé."""
+    from controle_ia.harnais.activations import Crochets, sonde_de_comparaison
+    for type_modele, attendu in ((torch.float64, np.float64), (torch.float32, np.float32), (torch.bfloat16, np.float32)):
+        m = modele_jouet(3, 40, couches=2, largeur=16, tetes=2, tetes_cle_valeur=1, intermediaire=32).to(type_modele).eval()
+        with torch.no_grad(), Crochets(m, [0, 1]) as c:
+            m(torch.tensor([[1, 2, 3, 4]]), use_cache=False)
+            acts = c.vider()
+        assert all(a.dtype == attendu for a in acts.values())
+    g = {0: np.random.default_rng(0).standard_normal((5, 8))}
+    p = {0: g[0].copy()}
+    assert sonde_de_comparaison(g, p) == {"tableaux_distincts": True, "ulp_vu": True}
+    assert np.nextafter(np.float64(1.0), np.inf) - 1.0 < np.finfo(np.float32).eps      # un ulp double ≪ un ulp simple
+
+
+def _sorties_controle_positif(maxima, jetons=9):
+    """Sorties factices : une action par entrée, maxima de la zone générée par couche."""
+    class Ep:
+        identifiant = "episode-1"
+    rapport = {"ecarts": {}, "profils": {}}
+    for k, mx in enumerate(maxima):
+        cle = f"0,{k}"
+        rapport["ecarts"][cle] = {c: 0.0 for c in mx}
+        rapport["profils"][cle] = {c: {"generee": {"jetons": jetons, "max": v}} for c, v in mx.items()}
+    return [(Ep(), None, rapport)]
+
+
+def test_bilan_et_garde_du_controle_positif():
+    """Le défaut D1 est vu si, à chaque couche, le maximum de la zone générée dépasse le seuil de logique ; une
+    action courte est comptée à part ; un NaN n'est jamais vu ; sous le nombre minimal d'actions, rien ne se juge."""
+    c, cp = {"tolerance": 1e-4}, dict(V.CONFIG_REELLE["controle_positif"])
+    vus = [{7: 3e-3, 15: 5e-3, 23: 8e-3}] * 12
+    b = V.bilan_controle_positif(_sorties_controle_positif(vus), c, cp)
+    assert (b["comparables"], b["vus"], b["fraction"]) == (12, 12, 1.0) and b["min_des_maxima"] == 3e-3
+    V.exiger_controle_positif(b, cp, "sain")
+    aveugle = vus[:10] + [{7: 3e-3, 15: 5e-5, 23: 8e-3}, {7: float("nan"), 15: 5e-3, 23: 8e-3}]
+    b2 = V.bilan_controle_positif(_sorties_controle_positif(aveugle), c, cp)
+    assert b2["vus"] == 10 and b2["manques"] == ["episode-1:0,10", "episode-1:0,11"] and b2["min_des_maxima"] == float("-inf")
+    with pytest.raises(GardeArret, match="défaut D1 injecté non vu"):
+        V.exiger_controle_positif(b2, cp, "artefact")
+    courtes = V.bilan_controle_positif(_sorties_controle_positif(vus, jetons=3), c, cp)
+    assert courtes["comparables"] == 0 and courtes["courtes"] == 12
+    V.exiger_controle_positif(courtes, cp, "trop peu d'actions : rien ne se juge")
+
+
+def test_lecture_du_controle_positif():
+    def resume(bilan=None):
+        r = {"format": {"verifie": True}}
+        if bilan is not None:
+            r["controle_positif"] = {"bilan": bilan}
+        return r
+    lire = lambda r: V.lire(r, V.CONFIG_REELLE)["controle_positif"]           # noqa: E731
+    assert lire(resume()) == "non atteint"
+    assert lire(resume({"comparables": 9, "fraction": 1.0})) == "non concluant"
+    assert lire(resume({"comparables": 20, "fraction": 0.95})) == "conforme"
+    assert lire(resume({"comparables": 20, "fraction": 0.9})) == "contraire"
+
+
+def test_controle_positif_aveugle_de_bout_en_bout(depot):
+    """Artefact : seuil de logique trop lâche (1e-2) ; P2 passe, mais le défaut D1 (environ 5e-4 sur le jouet) n'est
+    plus vu ; le run s'arrête en phase de contrôle positif, bilan et lecture consignés dans arret.json."""
+    lache = dict(PETITE, logique=dict(PETITE["logique"], tolerance=1e-2))
+    with pytest.raises(GardeArret, match="défaut D1 injecté non vu"):
+        V.executer(depot, "20261005-120000-repetition-jouet", entropie=21, config=lache, verifier_import=False)
+    arret = json.loads((depot / "diag" / "20261005-120000-repetition-jouet" / "arret.json").read_text())["resultat"]
+    assert arret["phase"] == "controle_positif"
+    lp = arret["partiel"]["lecture_partielle"]
+    assert lp["logique_equivalence"] == "conforme" and lp["controle_positif"] == "contraire"
+    assert lp["production_equivalence"] == "non atteint"
+
+
+def test_reglages_relus_et_noyaux_permis():
+    from controle_ia.harnais.modeles import noyaux_attention_permis, regler_determinisme
+    r = regler_determinisme(1, "cpu")
+    assert r["relus"]["algorithmes_deterministes"] is True and r["relus"]["fils"] == 1
+    with V.noyau("math"):
+        permis = noyaux_attention_permis()
+    assert permis["math"] is True and permis["flash"] is False and permis["memoire_efficace"] is False
+    hors = noyaux_attention_permis()
+    assert hors["flash"] is True                                       # le contexte rétablit les noyaux à sa sortie
+
+
+def test_comparaison_voit_le_controle_positif_mais_pas_sa_duree(depot, monkeypatch):
+    V.executer(depot, "20261005-130000-repetition-jouet", entropie=9, config=PETITE, verifier_import=False)
+    committer(depot)
+    V.executer(depot, "20261005-130100-repetition-jouet", entropie=9, config=PETITE, verifier_import=False)
+    committer(depot)
+    V.executer(depot, "20261005-130200-repetition-jouet", entropie=9, config=PETITE, verifier_import=False)
+    committer(depot)
+    vrai = V.verifier_resultat
+
+    def duree(racine, chemin):
+        corps = vrai(racine, chemin)
+        if "130100" in str(chemin):
+            corps["resultat"]["controle_positif"]["debit"]["generation_s"] += 1.0
+        return corps
+    monkeypatch.setattr(V, "verifier_resultat", duree)
+    assert V.comparer_runs(depot, "20261005-130000-repetition-jouet", "20261005-130100-repetition-jouet")["identique"]
+
+    def bilan(racine, chemin):                                       # chaque comparaison s'écrit une fois (R12)
+        corps = vrai(racine, chemin)
+        if "130200" in str(chemin):
+            corps["resultat"]["controle_positif"]["bilan"]["min_des_maxima"] += 1e-9
+        return corps
+    monkeypatch.setattr(V, "verifier_resultat", bilan)
+    c = V.comparer_runs(depot, "20261005-130000-repetition-jouet", "20261005-130200-repetition-jouet")
+    assert {"phase": "controle_positif", "motif": "contrôle positif différent"} in c["differences"]
+
+
+def test_sonde_de_memoire_sans_lecture():
+    """La sonde de mémoire (non décisive) tourne la charge de la phase de logique et ne rend que mémoire et durées :
+    aucune équivalence, aucun écart (R1)."""
+    from controle_ia.harnais.sonde_memoire import mesurer_charge
+    m = modele_jouet(5, 200, couches=4, largeur=16, tetes=2, tetes_cle_valeur=1, intermediaire=32).to(torch.float64).eval()
+    etapes = mesurer_charge(m, pad_id=0, lot=8, longueur=60, nouveaux=5, longueur_passe=70,
+                            noyau=lambda: V.noyau("math"))
+    assert set(etapes) == {"generation", "passe_unique"}
+    assert etapes["generation"]["jetons_generes"] == 8 * 5 and etapes["generation"]["longueur_remplie"] == 60
+    cles = {k for e in etapes.values() for k in e}
+    assert not any(mot in k for k in cles for mot in ("ecart", "equivalence", "lecture"))

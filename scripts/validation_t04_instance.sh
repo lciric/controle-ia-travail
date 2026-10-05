@@ -6,7 +6,8 @@
 #
 # Variables :
 #   COMMIT        (obligatoire) commit à extraire ; le lanceur Python vérifie en plus le commit cité par le préenregistrement
-#   MODE          reel (défaut) ou jouet (répétition sur processeur, sans modèle réel ni processeur graphique)
+#   MODE          reel (défaut), jouet (répétition sur processeur, sans modèle réel ni processeur graphique), ou sonde
+#                 (sonde de mémoire de la carte en double précision, non décisive : ni run, ni lecture)
 #   DEPOT_URL     défaut https://github.com/lciric/controle-ia.git
 #   GH_TOKEN      jeton GitHub à grain fin (dépôt distant GitHub) ; lu par un assistant d'identification, jamais écrit
 #   HF_TOKEN      jeton Hugging Face en lecture (mode reel) ; lu par huggingface_hub
@@ -20,8 +21,8 @@ MODE="${MODE:-reel}"
 DEPOT_URL="${DEPOT_URL:-https://github.com/lciric/controle-ia.git}"
 BRANCHE="${BRANCHE:-calcul/t04-validation}"
 TRAVAIL="${TRAVAIL:-$HOME/t04}"
-PREREG="prereg/T0.4-validation-modele-reel-v1.md"
-case "$MODE" in reel|jouet) ;; *) echo "MODE=$MODE : reel ou jouet" >&2; exit 2 ;; esac
+PREREG="prereg/T0.4-validation-modele-reel-v2.md"
+case "$MODE" in reel|jouet|sonde) ;; *) echo "MODE=$MODE : reel, jouet ou sonde" >&2; exit 2 ;; esac
 
 mkdir -p "$TRAVAIL"
 JOURNAL="$TRAVAIL/journal.txt"
@@ -29,8 +30,8 @@ journal() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$JOURNAL"; }
 AIDE_GIT='!f() { echo username=x-access-token; echo "password=${GH_TOKEN:-}"; }; f'
 
 journal "début : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE"
-if [ "$MODE" = reel ]; then
-    : "${HF_TOKEN:?HF_TOKEN obligatoire en mode reel}"
+if [ "$MODE" != jouet ]; then
+    : "${HF_TOKEN:?HF_TOKEN obligatoire en mode reel ou sonde}"
 fi
 
 DEPOT="$TRAVAIL/controle-ia"
@@ -53,7 +54,8 @@ traces() {
     local d
     mkdir -p traces
     d=$(mktemp -d "traces/t04-$(date -u +%Y%m%d-%H%M%S)-XXXX")
-    for f in "$JOURNAL" "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" "$TRAVAIL"/run-*.err "$TRAVAIL"/run-*.json; do
+    for f in "$JOURNAL" "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" "$TRAVAIL"/run-*.err "$TRAVAIL"/run-*.json \
+             "$TRAVAIL"/sonde-*.json "$TRAVAIL"/sonde-*.err; do
         [ -f "$f" ] && cp "$f" "$d/"
     done
     (cd "$d" && sha256sum -- * > empreintes.sha256) || true          # R6 : traces scellées
@@ -100,7 +102,7 @@ sur_sortie() {
 }
 trap sur_sortie EXIT
 
-if [ "$MODE" = reel ]; then
+if [ "$MODE" != jouet ]; then
     nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv | tee -a "$JOURNAL"
 fi
 
@@ -125,6 +127,22 @@ if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider >"$TRAVAIL/tests.txt
     exit 1
 fi
 journal "tests : $(tail -1 "$TRAVAIL/tests.txt")"
+
+if [ "$MODE" = sonde ]; then
+    # sonde de mémoire, non décisive : la révision est celle, figée, du préenregistrement scellé v1 (R-033)
+    ETAPE="sonde de mémoire"
+    R=$(sed -n 's/.*Révision du modèle : `\([0-9a-f]\{40\}\)`.*/\1/p' prereg/T0.4-validation-modele-reel-v1.md | head -1)
+    [ -n "$R" ] || { journal "révision introuvable : arrêt"; exit 1; }
+    journal "sonde de mémoire : révision $R"
+    code=0
+    PYTHONPATH=src timeout --signal=TERM --kill-after=2m 40m python -m controle_ia.harnais.sonde_memoire --revision "$R" \
+        --sortie "$TRAVAIL/sonde-memoire.json" >"$TRAVAIL/sonde-resume.json" 2>"$TRAVAIL/sonde-memoire.err" || code=$?
+    journal "sonde de mémoire : code $code ; $(cat "$TRAVAIL/sonde-resume.json" 2>/dev/null)"
+    CONSIGNE=1
+    traces "sonde de mémoire"
+    if pousser; then journal "branche $BRANCHE poussée"; else journal "poussée impossible : résultats restés sur l'instance"; fi
+    exit "$code"
+fi
 
 if [ "$MODE" = reel ]; then
     # révision citée par le préenregistrement (jamais la branche courante du dépôt du modèle)
