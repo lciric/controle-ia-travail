@@ -151,6 +151,12 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 - B200 retirée des cartes permises (sans offre de H200 : nœud) ; surveillance réglée sur le reste cumulatif moins 5 minutes ; filtre de `vastai create` écrit dans la procédure.
 - Correction datée de R-042 (V-12) : le pic estimé au plus long lot de la v1 est de 103,8 Go (note scellée), non « ≈ 101 Go ».
 - Brouillons 2 du préenregistrement v2 et de la procédure v3 ; contre-lecture 2 du différentiel `47d3c61..dc7aa7f` et des passages modifiés à suivre. | R1, R2, R4, R6, R12. |
+| R-044 | 2026-10-05 | Contre-lecture 2 de la v2 de T0.4 (sous-agents neufs : un premier coupé par un redémarrage de la machine, notes archivées ; un second a repris en refaisant tout) : « scellable après corrections de texte » ; aucune bloquante ni majeure ; W-1 à W-4 mineures, W-5 à W-9 de forme ; toutes acceptées ; aucun changement de code. Rapport `prereg/contre-lectures/T0.4-v2-rapport-contre-lecture-2-v1.md` (1c0d92ab…), vérifications (04c9b0a6…), tentative interrompue (b9751383…), mutations de l'auteur (318ed08a…).
+- Procédure : `--raw` avant `--args` (sinon l'identifiant ne sortait jamais) ; variante de `--env` réduite à `COMMIT` reprise de la v2.
+- Préenregistrement : origine des écarts du jouet ; conditions des lignes P4 et P2b dans la colonne lecture ; 65 normalisations attendues ; arrêt au plafond cumulatif nommé ; prix de la B200.
+- **Préenregistrement v2 scellé** : `prereg/T0.4-validation-modele-reel-v2.md`, sha256 886c8c07c6954a46c666b294c391523f0cdd3d03a5b99dae5079507503de3fb9 (code cité `dc7aa7f`, 192 tests ; révision 0e9e39f… ; entropie 140696434425628814214803363501781803624) ; différentiel avec le brouillon 2 consigné et scellé.
+- **Procédure v3 scellée** : `docs/procedures/validation-T0.4-modele-reel-v3.md`, sha256 a91a5838f0ec44bae5689ed935eda1b558fcda692d6314106761da5ac02bce4b.
+- Lancement sur H200 selon la procédure v3, sous GO-2026-10-04-08. | R1, R2, R4, R6, R12. |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
