@@ -93,8 +93,10 @@ CONFIG_REELLE = {
     # contrôle positif (version 2) : le défaut D1 (positions décodées décalées de +1) est injecté dans la génération de
     # la phase de logique, rejouée sur T pas ; la garde d'équivalence doit le voir au seuil de logique
     "controle_positif": {"T": 5, "decalage_positions": 1, "positions_min": 4, "actions_min": 10, "fraction_min": 0.95},
-    "memoire_carte_min_gio": 75,
-    "tests_attendus": 186,                    # suite complète au commit cité, tous réussis (P0)
+    # double précision (version 2) : 64,2 Go de poids, plus le préremplissage d'un lot de 8 : quadratique en sa longueur
+    # remplie, qui a atteint 2 329 jetons dans la v1 (≈ 101 Go au pic estimés) ; carte de 141 Go (H200)
+    "memoire_carte_min_gio": 130,
+    "tests_attendus": 187,                    # suite complète au commit cité, tous réussis (P0)
     "projection": {"episodes": 2000},
     "limite_s": 9000,
 }

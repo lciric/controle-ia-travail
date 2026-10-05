@@ -192,3 +192,14 @@ def test_defaut_d1_injecte_dans_les_positions_decodees():
         assert vues[0][1, -1].item() == len(long_) - 1                       # prérempli intact
         assert vues[1][0, 0].item() == len(court) + decalage and vues[1][1, 0].item() == len(long_) + decalage
         assert vues[2][1, 0].item() == len(long_) + 1 + decalage
+
+
+def test_chrono_longueur_remplie_maximale():
+    """Version 2 : le chrono consigne le plus long contexte rempli d'un lot, qui fixe le pic de mémoire du
+    préremplissage ; c'est le maximum, sur les pas, du plus long contexte du lot (toutes lignes, pas seulement
+    l'échantillon d'équivalence)."""
+    chrono = {}
+    sorties = _jouer(_modele(), _graines(3, 2, 3), echantillon={(0, 0, 0)}, chrono=chrono)
+    attendu = max(a.debut for ep, _, _ in sorties for tr in ep.transcriptions for a in tr.actions)
+    assert chrono["longueur_remplie_max"] == attendu
+    assert attendu > max(a.debut for tr in sorties[0][0].transcriptions for a in tr.actions if a.pas == 0)

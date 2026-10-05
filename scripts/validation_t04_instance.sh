@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Validation de T0.4 sur l'instance de calcul : mise en place, run A, run B (rejeu entre processus), poussée.
-# Procédure : docs/procedures/validation-T0.4-modele-reel-v1.md. Rien ne se lance sans GO consigné.
+# Procédure : docs/procedures/validation-T0.4-modele-reel-v3.md. Rien ne se lance sans GO consigné.
 #
 #   COMMIT=<commit de scellement du préenregistrement> bash validation_t04_instance.sh
 #
@@ -11,7 +11,7 @@
 #   DEPOT_URL     défaut https://github.com/lciric/controle-ia.git
 #   GH_TOKEN      jeton GitHub à grain fin (dépôt distant GitHub) ; lu par un assistant d'identification, jamais écrit
 #   HF_TOKEN      jeton Hugging Face en lecture (mode reel) ; lu par huggingface_hub
-#   BRANCHE       défaut calcul/t04-validation
+#   BRANCHE       défaut calcul/t04-validation-v2 (la branche de la v1 existe déjà sur le dépôt distant)
 #   TRAVAIL       défaut $HOME/t04
 #   VENV_EXISTANT environnement Python déjà prêt à réutiliser (sinon : python3.11 -m venv + requirements-gpu.txt)
 set -euo pipefail
@@ -19,7 +19,7 @@ set -euo pipefail
 : "${COMMIT:?COMMIT obligatoire (commit de scellement du préenregistrement)}"
 MODE="${MODE:-reel}"
 DEPOT_URL="${DEPOT_URL:-https://github.com/lciric/controle-ia.git}"
-BRANCHE="${BRANCHE:-calcul/t04-validation}"
+BRANCHE="${BRANCHE:-calcul/t04-validation-v2}"
 TRAVAIL="${TRAVAIL:-$HOME/t04}"
 PREREG="prereg/T0.4-validation-modele-reel-v2.md"
 case "$MODE" in reel|jouet|sonde) ;; *) echo "MODE=$MODE : reel, jouet ou sonde" >&2; exit 2 ;; esac

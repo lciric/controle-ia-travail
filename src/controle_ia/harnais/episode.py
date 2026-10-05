@@ -230,6 +230,8 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
                 chrono["jetons_generes"] = chrono.get("jetons_generes", 0) + sum(longueurs_gen)
                 chrono["jetons_contexte"] = chrono.get("jetons_contexte", 0) + sum(len(c) for c in contextes)
                 chrono["jetons_contexte_remplis"] = chrono.get("jetons_contexte_remplis", 0) + B * plan["longueur_remplie"]
+                # plus long contexte rempli d'un lot : il fixe le pic de mémoire du préremplissage (version 2)
+                chrono["longueur_remplie_max"] = max(chrono.get("longueur_remplie_max", 0), plan["longueur_remplie"])
                 chrono["jetons_remplissage"] = chrono.get("jetons_remplissage", 0) + sum(plan["remplissage"])
                 chrono["lignes_finies_avant"] = (chrono.get("lignes_finies_avant", 0)
                                                  + sum(n < max(longueurs_gen) for n in longueurs_gen))
