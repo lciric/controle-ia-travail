@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-05 08:32 UTC, session 3 (relancement).
+Dernière mise à jour : 2026-10-05 10:18 UTC, session 4 (troisième lancement).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -38,6 +38,5 @@ Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md`. Fournis le 2026-1
 Devis de la phase 0 approuvé (GO-2026-10-04-08 : plafond 150 USD, alerte à 120 USD) ; dépensé ≈ 0,55 USD (instances 54183350 et 54285455, 0,19 heure en tout) plus les disques des instances arrêtées tant qu'elles existent.
 
 ## Instances de calcul actives
-Aucune en marche. Deux instances arrêtées par leur identifiant, sans données, disques facturés jusqu'à leur destruction (soumise à Lazar, N-009) :
-- **54183350** (H100 SXM) : arrêtée le 2026-10-04 à 18:12 UTC ; disque ≈ 0,074 USD/h ;
-- **54285455** (A100 SXM4) : arrêtée le 2026-10-05 à 08:31 UTC ; disque ≈ 0,027 USD/h.
+- **54298522** (Vast.ai, A100 SXM4, 1,093 USD/h) : créée le 2026-10-05 à 10:18 UTC sous GO-2026-10-04-08, troisième lancement de la validation de T0.4 (procédure v2, commit de scellement 6cf7f20). Tâche en cours : amorce. Surveillance par le script scellé ; plafond cumulatif de T0.4 atteint le 2026-10-05 à 16:06 UTC. Arrêt par identifiant dès la sortie de la surveillance (R10).
+- Arrêtées, sans données, disques facturés jusqu'à leur destruction (soumise à Lazar, N-009) : **54183350** (H100 SXM, depuis le 2026-10-04 18:12 UTC) et **54285455** (A100 SXM4, depuis le 2026-10-05 08:31 UTC).
