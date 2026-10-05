@@ -38,7 +38,9 @@ Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md`. Fournis le 2026-1
 Devis de la phase 0 approuvé (GO-2026-10-04-08 : plafond 150 USD, alerte à 120 USD) ; dépensé ≈ 1,0 USD (quatre instances, 0,56 heure en tout) plus les disques des instances arrêtées tant qu'elles existent. Version 2 de T0.4 attendue sur H200 : ≈ 4 à 6 USD ; au plafond cumulatif ≈ 23 USD.
 
 ## Instances de calcul actives
-Aucune en marche. Quatre instances arrêtées par leur identifiant, disques facturés jusqu'à leur destruction (décision de Lazar) :
+- **54332340** (H200 NVL 140,4 Gio, offre 47386263, 4,441 USD/h, créée le 2026-10-05 à 14:44:22 UTC, GO-2026-10-04-08) : validation de T0.4, version 2 (commit de scellement `9767398`, branche `calcul/t04-validation-v2`) ; surveillance scellée réglée sur le reste cumulatif moins 5 minutes ; à arrêter par son identifiant à la fin de l'amorce, à tout arrêt, ou au plafond.
+
+Quatre instances arrêtées par leur identifiant, disques facturés jusqu'à leur destruction (décision de Lazar) :
 - **54183350** (H100 SXM, arrêtée le 2026-10-04 à 18:12 UTC) et **54285455** (A100 SXM4, arrêtée le 2026-10-05 à 08:31 UTC) : sans données ;
 - **54298522** (A100 SXM4, arrêtée le 2026-10-05 à 10:31 UTC) : run A de la validation de T0.4 ; résultats déjà poussés ; garder jusqu'au verdict (procédure).
 - **54311651** (A100 SXM4, arrêtée le 2026-10-05 à 12:14 UTC) : sonde de mémoire non décisive de la v2 ; traces poussées et fusionnées ; sans données utiles.
