@@ -38,6 +38,8 @@ Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md`. Fournis le 2026-1
 Devis de la phase 0 approuvé (GO-2026-10-04-08 : plafond 150 USD, alerte à 120 USD) ; dépensé ≈ 0,8 USD (trois instances, 0,41 heure en tout) plus les disques des instances arrêtées tant qu'elles existent.
 
 ## Instances de calcul actives
-Aucune en marche. Trois instances arrêtées par leur identifiant, disques facturés jusqu'à leur destruction (décision de Lazar) :
+- **54311651** (A100 SXM4 80 Go, 1,08 USD/h, créée le 2026-10-05 à 12:05:41 UTC, GO-2026-10-04-08) : sonde de mémoire non décisive de la version 2 de T0.4 (commit `6556b4e`, mode `sonde`, branche `calcul/t04-sonde-memoire`) ; à arrêter par son identifiant dès la fin de la sonde (environ 15 minutes).
+
+Trois instances arrêtées par leur identifiant, disques facturés jusqu'à leur destruction (décision de Lazar) :
 - **54183350** (H100 SXM, arrêtée le 2026-10-04 à 18:12 UTC) et **54285455** (A100 SXM4, arrêtée le 2026-10-05 à 08:31 UTC) : sans données ;
 - **54298522** (A100 SXM4, arrêtée le 2026-10-05 à 10:31 UTC) : run A de la validation de T0.4 ; résultats déjà poussés ; garder jusqu'au verdict (procédure).
