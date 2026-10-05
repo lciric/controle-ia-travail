@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-05 10:34 UTC, session 4 (troisième lancement).
+Dernière mise à jour : 2026-10-05 11:00 UTC, session 4 (troisième lancement, verdict).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -12,7 +12,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 | T0.1 socle, gouvernance, continuité | **fait** | processeur | dépôt distant github.com/lciric/controle-ia (privé) ; 140 tests au total ; gardes testées sain + artefact ; run factice 20261004-034500-factice de bout en bout ; CLAUDE.md, registres, passation |
 | T0.2 vérification de l'état de l'art | **niveau 1 fait** | processeur | 13 PDF de niveau 1 lus sur source primaire (six lecteurs neufs, rapports scellés) → `docs/etat-de-l-art/etat-de-l-art-verifie-niveau1-v1.md` ; reste : niveaux 2 et 3 (PDF à recevoir), références nouvelles (Kulkarni 2604.28129 en tête), recherche affirmative (session neuve) |
 | T0.3 simulation du lemme et du théorème négatif | **simulation faite** ; reste la note v3 | processeur | run décisif `20261004-080257-t03`, préenregistrement scellé 7474743a…, trois contre-lectures : **31/31 prédictions confirmées** (342 cellules statistiques, 544 trajectorielles, 0 contraire), audit de symétrie non déclenché. Résultats : `docs/notes/resultats-T0.3-v1.md`, figures `diag/20261004-080257-t03/figures/`. Réserve : la plupart des prédictions vérifient l'instrument ; ce n'est pas une preuve sur modèles réels. Reste : note mathématique v3 (résultats, puis 2208.07610 et 2601.20022 après lecture sur PDF). Gel du code levé (aucune réplication requise) |
-| T0.4 harnais et activations | **fait sur modèle jouet** ; sur modèle réel : **run A arrêté en phase de logique, P2 non concluant (précision probable)** ; nœud N-010 ; verdict R13 en cours | processeur ; processeur graphique sous GO-2026-10-04-08 | Run `20261005-102042-validation-reelle` (instance 54298522, A100) : écart de génération contre passe unique jusqu'à 1,27e-4 à la couche 23 en simple précision stricte (seuil 1e-4), diffus ; P3 conforme (40 sur 40) ; P0, P1 conformes. Préenregistrement 3d0589c8… ; procédure v2 ; code 3a7b5e0. GPU consommé : 0,41 heure sur 6 |
+| T0.4 harnais et activations | **fait sur modèle jouet** ; sur modèle réel : **critère 1 de G0 non concluant** (verdict R13 scellé) ; nœud N-010 (version 2 à décider) | processeur ; processeur graphique sous GO-2026-10-04-08 | Run `20261005-102042-validation-reelle` (A100) : P2 non concluant (précision probable : 1,27e-4 > 1e-4 à la couche 23, diffus) ; P0, P1, P3 conformes ; P4 à P8 non atteints. Verdict `docs/verdicts/verdict-T0.4-critere-1-G0-v1.md` ; proposition `docs/decisions/proposition-N-010-v1.md` (recommandation : logique en double précision, seuil inchangé, contrôle positif D1). GPU : 0,41 heure sur 6 |
 | T0.5 environnement (a) v0 | conception | processeur puis GPU sur GO | base identifiée (transcription) : « Diffuse AI Control on Fuzzy Tasks » ; code inconnu |
 | T0.6 organismes v0 | conception | GPU sur GO | famille (iii) : organismes publics en 70B seulement (P-002) |
 | T0.7 sondes v0 | conception | GPU sur GO | models-under-pressure (MIT) réutilisable ; deception-detection sans licence → réimplémentation |
@@ -20,7 +20,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 | T0.9 papier C | conception | processeur ; pilote sur GO | HC1, HC5 et porte GC fixées (`docs/decisions/decision-N-005-N-006-v1.md`) ; préenregistrement après lecture de Panin (SSRN 7424179) ; D2 ; ressources P3 demandées |
 
 ## Derniers verdicts de porte
-Aucun. T0.3 fournit la preuve du critère 5 de G0 (agrégateurs validés en simulation). T0.4 fournit la preuve du critère 1 (harnais) sur modèle jouet seulement ; sur le modèle réel, après le GO N-002. G0 attend les autres critères.
+Aucun. T0.3 fournit la preuve du critère 5 de G0 (agrégateurs validés en simulation). Critère 1 (harnais) : prouvé sur modèle jouet seulement ; sur le modèle réel, **non concluant** (verdict R13 du 2026-10-05) ; suite selon N-010. G0 attend les autres critères.
 
 ## GO et nœuds en attente
 - N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; **N-003 à N-008 résolus** (GO-2026-10-04-02 à -07, option a ; `docs/decisions/`) ; **N-002 résolu** (GO-2026-10-04-08, calcul, plafond 150 dollars, échéance 2026-11-01) ; **N-009** : jeton résolu le 2026-10-05 ; reste la destruction des instances arrêtées. **N-010 ouvert** (P2 non concluant : précision probable ; version 2 de la validation de T0.4 à décider). Voir `registres/decisions.md`. Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
