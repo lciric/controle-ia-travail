@@ -7,16 +7,18 @@ Sur la machine de calcul, après GO (jamais sans) :
 Répétition sur processeur, modèle jouet, non décisive :
     PYTHONPATH=src python -m controle_ia.harnais.validation_reelle --repetition-jouet [--rejeu-de <run A>]
 
-Phases, dans un seul processus :
-1. logique, simple précision, noyau d'attention « math » (calcul strict en float32) : un lot au régime de
-   production ; contrôle du format ; empreintes des fichiers du modèle ; échantillon d'équivalence sur des
-   lignes qui ne sont pas en tête de lot ; tolérance 1e-4 ;
-2. production, demi-précision : épisodes en lots ; équivalence sur une ligne par lot (tolérance de
+Phases, dans un seul processus (version 2 : préenregistrement T0.4 v2, N-010 option a) :
+1. logique, double précision (poids convertis sans perte, normalisations RMS en double précision), noyau
+   d'attention « math » : un lot au régime de production ; contrôle du format ; empreintes des fichiers du
+   modèle ; échantillon d'équivalence sur des lignes qui ne sont pas en tête de lot ; tolérance 1e-4 ;
+2. contrôle positif, même modèle : le défaut D1 (positions décodées décalées) est injecté dans la génération ;
+   la garde d'équivalence doit le voir au seuil de logique ; puis gardes de la logique, puis du contrôle positif ;
+3. production, demi-précision : épisodes en lots ; équivalence sur une ligne par lot (tolérance de
    production) ; politique de stockage (codage bfloat16-bits) ; relecture du disque bit à bit ; rejeu du
-   premier lot dans le processus ; repère de précision (passe unique en demi contre simple précision) ;
-3. débit : génération seule, sans arrêt anticipé, pour plusieurs tailles de lot.
-Dans les phases 1 et 2, tous les écarts sont consignés avant que les gardes s'appliquent, en fin de phase :
-un arrêt laisse les profils complets. Contrôle négatif : décalé d'un jeton, dans la zone générée seulement.
+   premier lot dans le processus ; repère de précision (passe unique en demi contre double précision) ;
+4. débit : génération seule, sans arrêt anticipé, pour plusieurs tailles de lot.
+Dans les phases 1 à 3, tous les écarts sont consignés avant que les gardes s'appliquent : un arrêt laisse les
+profils complets. Contrôle négatif : décalé d'un jeton, dans la zone générée seulement.
 Le rejeu dans un second processus est un second lancement à la même entropie (`--rejeu-de`) : configuration,
 graines et code sont comparés à ceux du premier avant tout calcul ; puis tout est rejoué et comparé au bit
 près (empreintes, logits, captures, fichiers), comparaison scellée.
@@ -55,8 +57,8 @@ from .episode import (EnvironnementJouet, bilan_controle_negatif, empreinte_epis
                       exiger_controle_negatif_phase, exiger_gardes, generer_lot, jouer_episodes)
 from .formats import FormatChat, verifier_format
 from .modeles import (charger_modele, empreinte_poids, empreintes_fichiers_modele, exiger_modele_autorise,
-                      fins_du_modele, modele_jouet, noyaux_attention_permis, regler_determinisme,
-                      tokeniseur_caracteres_chat)
+                      fins_du_modele, modele_jouet, normalisations_en_double, noyaux_attention_permis,
+                      regler_determinisme, tokeniseur_caracteres_chat)
 from .stockage import estimer
 
 COMMIT_CITE = re.compile(r"Commit du code d'analyse : `([0-9a-f]{40})`")
@@ -94,9 +96,9 @@ CONFIG_REELLE = {
     # la phase de logique, rejouée sur T pas ; la garde d'équivalence doit le voir au seuil de logique
     "controle_positif": {"T": 5, "decalage_positions": 1, "positions_min": 4, "actions_min": 10, "fraction_min": 0.95},
     # double précision (version 2) : 64,2 Go de poids, plus le préremplissage d'un lot de 8 : quadratique en sa longueur
-    # remplie, qui a atteint 2 329 jetons dans la v1 (≈ 101 Go au pic estimés) ; carte de 141 Go (H200)
+    # remplie, qui a atteint 2 329 jetons dans la v1 (≈ 104 Go au pic estimés) ; carte de 141 Go (H200)
     "memoire_carte_min_gio": 130,
-    "tests_attendus": 187,                    # suite complète au commit cité, tous réussis (P0)
+    "tests_attendus": 192,                    # suite complète au commit cité, tous réussis (P0)
     "projection": {"episodes": 2000},
     "limite_s": 9000,
 }
@@ -114,7 +116,8 @@ CONFIG_REPETITION = dict(
     politique=dict(CONFIG_REELLE["politique"], episodes_par_jeton=[1, 2]),
     debit={"tailles_lot": [1, 2, 4], "longueur_contexte": 48, "max_nouveaux": 8},
     controle_negatif={"positions_min": 4, "actions_min": 4, "fraction_min": 0.95},
-    controle_positif={"T": 3, "decalage_positions": 1, "positions_min": 4, "actions_min": 4, "fraction_min": 0.95},
+    # T du contrôle positif différent de celui de la logique (contre-lecture 1 de la v2, V-2 : une confusion se voit)
+    controle_positif={"T": 2, "decalage_positions": 1, "positions_min": 4, "actions_min": 4, "fraction_min": 0.95},
     memoire_carte_min_gio=0,
     limite_s=900,
 )
@@ -264,7 +267,8 @@ def exiger_memoire_vive(min_go: float, meminfo: str = "/proc/meminfo", cgroups=N
 
 
 def exiger_memoire_carte(min_gio: float, total_octets: int | None = None) -> float | None:
-    """Garde : la carte a assez de mémoire (logique en simple précision : environ 62 à 67 Gio estimés)."""
+    """Garde : la carte a assez de mémoire (logique en double précision : jusqu'à environ 129 Go estimés au pire cas,
+    note `docs/notes/memoire-double-precision-T0.4-v1.md`)."""
     if not min_gio:
         return None
     if total_octets is None:
@@ -301,7 +305,10 @@ def charger(config: dict, revision: str | None, dtype: str, graines: dict):
     if config["modele"] == "jouet":
         tok = tokeniseur_caracteres_chat()
         m = modele_jouet(graine_entiere(graines["modele-jouet"]), len(tok), **config["modele_jouet"])
-        return m.to(getattr(torch, dtype)).eval(), tok
+        m = m.to(getattr(torch, dtype))
+        if dtype == "float64":
+            normalisations_en_double(m)
+        return m.eval(), tok
     return charger_modele(config["modele"], revision, dtype, config["appareil"], config["attention"])
 
 
@@ -408,8 +415,10 @@ def bilan_phase(sorties, c: dict, cn: dict) -> dict:
 def bilan_controle_positif(sorties, c: dict, cp: dict) -> dict:
     """Contrôle positif (défaut D1 injecté). Une action comparée est comparable si sa zone générée compte au moins
     `positions_min` positions à chaque couche ; elle est vue si, à chaque couche, le maximum de l'écart dans la zone
-    générée dépasse la tolérance de logique. Un maximum illisible (NaN) ne compte jamais comme vu."""
+    générée dépasse la tolérance de logique. Un maximum illisible (NaN) ne compte jamais comme vu.
+    Descriptif (R4) : maximum du contexte des actions comparables, que D1 ne touche pas (attendu au niveau de P2)."""
     comparables, vus, courtes, manques, minimum = 0, 0, 0, [], float("inf")
+    contextes = []
     for ep, _, r in sorties:
         for cle in r["ecarts"]:
             zones = [p["generee"] for p in r["profils"][cle].values()]
@@ -417,6 +426,7 @@ def bilan_controle_positif(sorties, c: dict, cp: dict) -> dict:
                 courtes += 1
                 continue
             comparables += 1
+            contextes += [p["contexte"]["max"] for p in r["profils"][cle].values() if p["contexte"]["jetons"]]
             m = min(float("-inf") if z["max"] != z["max"] else z["max"] for z in zones)
             minimum = min(minimum, m)
             if m > c["tolerance"]:
@@ -425,7 +435,8 @@ def bilan_controle_positif(sorties, c: dict, cp: dict) -> dict:
                 manques.append(f"{ep.identifiant}:{cle}")
     return {"tolerance": c["tolerance"], "comparables": comparables, "vus": vus, "courtes": courtes, "manques": manques,
             "fraction": vus / comparables if comparables else None,
-            "min_des_maxima": minimum if comparables else None, "positions_min": cp["positions_min"]}
+            "min_des_maxima": minimum if comparables else None, "positions_min": cp["positions_min"],
+            "max_contexte": _maximum(contextes)}
 
 
 def exiger_controle_positif(bilan: dict, cp: dict, quoi: str) -> None:
@@ -549,7 +560,8 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
         c = config["logique"]
         modele, tok = charger(config, revision, c["dtype"], graines)
         resume["chargement"] = {"attention": getattr(modele.config, "_attn_implementation", None),
-                                "type_des_poids": str(next(modele.parameters()).dtype)}
+                                "type_des_poids": str(next(modele.parameters()).dtype),
+                                "normalisations_en_double": getattr(modele, "normalisations_en_double", 0)}
         if config["modele"] != "jouet":
             resume["fichiers_modele"] = empreintes_fichiers_modele(config["modele"], revision)
         fmt, resume["format"] = format_du_modele(modele, tok, config)
@@ -575,11 +587,16 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
         cp = config["controle_positif"]
         c_pc = dict(c, T=cp["T"])
         chrono_pc: dict = {}
+        if torch.cuda.is_available():
+            torch.cuda.reset_peak_memory_stats()                     # pic propre au contrôle positif
         sorties_pc, plan_pc = jouer_phase(modele, fmt, c_pc, graines, "controle-positif", couches, chrono=chrono_pc,
                                           echeance=echeance, decalage_positions=cp["decalage_positions"])
+        for ep, _, _ in sorties_pc:
+            ecrire_resultat(racine, chemin_m, f"controle-positif-{ep.identifiant}-trajectoire", ep.en_dict())
         resume["controle_positif"] = {
             "plan_lots": plan_pc, "T": cp["T"], "decalage_positions": cp["decalage_positions"],
             "bilan": bilan_controle_positif(sorties_pc, c_pc, cp), "debit": debit(chrono_pc),
+            "memoire_max_go": memoire_max_go(),
             "episodes": [{"episode": ep.identifiant, "empreintes": empreintes_episode(ep, acts, r)[0],
                           "profils": r["profils"]} for ep, acts, r in sorties_pc if r["ecarts"]]}
         del sorties_pc
@@ -808,8 +825,10 @@ def comparer_runs(racine: str | Path, run_a: str, run_b: str) -> dict:
                     differences.append({"phase": phase, "episode": ep, "equivalence": cle})
             if ea[ep].get("tableaux_sha256") != eb[ep].get("tableaux_sha256"):
                 differences.append({"phase": phase, "episode": ep, "motif": "fichier npz différent"})
-    sans_duree = lambda pc: None if pc is None else {k: v for k, v in pc.items() if k != "debit"}   # noqa: E731
-    if sans_duree(a.get("controle_positif")) != sans_duree(b.get("controle_positif")):    # le débit est une durée
+    # le débit (durées) et le pic de mémoire sont descriptifs : hors comparaison
+    sans_duree = lambda pc: None if pc is None else {k: v for k, v in pc.items()                  # noqa: E731
+                                                     if k not in ("debit", "memoire_max_go")}
+    if sans_duree(a.get("controle_positif")) != sans_duree(b.get("controle_positif")):
         differences.append({"phase": "controle_positif", "motif": "contrôle positif différent"})
     for cle in ("empreinte_poids",):
         if a["production"][cle] != b["production"][cle]:

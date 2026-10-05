@@ -397,6 +397,7 @@ def test_charger_modele_conversion_exacte_et_type_natif(tmp_path, monkeypatch):
     direct64 = AutoModelForCausalLM.from_pretrained(str(bf16), dtype=torch.float64)
     a, b = m64.state_dict(), direct64.state_dict()
     assert all(p.dtype == torch.float64 for p in m64.parameters()) and all(torch.equal(a[k], b[k]) for k in a)
+    assert m64.normalisations_en_double == 2 * 2 + 1 and not hasattr(m32, "normalisations_en_double")
     fp32 = tmp_path / "fp32"                                              # artefact : point de contrôle en simple précision
     _point_de_controle(fp32, torch.float32)
     monkeypatch.undo()
@@ -631,7 +632,8 @@ def _sorties_controle_positif(maxima, jetons=9):
     for k, mx in enumerate(maxima):
         cle = f"0,{k}"
         rapport["ecarts"][cle] = {c: 0.0 for c in mx}
-        rapport["profils"][cle] = {c: {"generee": {"jetons": jetons, "max": v}} for c, v in mx.items()}
+        rapport["profils"][cle] = {c: {"generee": {"jetons": jetons, "max": v}, "contexte": {"jetons": 5, "max": 2e-16}}
+                                   for c, v in mx.items()}
     return [(Ep(), None, rapport)]
 
 
@@ -642,6 +644,7 @@ def test_bilan_et_garde_du_controle_positif():
     vus = [{7: 3e-3, 15: 5e-3, 23: 8e-3}] * 12
     b = V.bilan_controle_positif(_sorties_controle_positif(vus), c, cp)
     assert (b["comparables"], b["vus"], b["fraction"]) == (12, 12, 1.0) and b["min_des_maxima"] == 3e-3
+    assert b["max_contexte"] == 2e-16                                 # descriptif (R4) : D1 ne touche pas le contexte
     V.exiger_controle_positif(b, cp, "sain")
     aveugle = vus[:10] + [{7: 3e-3, 15: 5e-5, 23: 8e-3}, {7: float("nan"), 15: 5e-3, 23: 8e-3}]
     b2 = V.bilan_controle_positif(_sorties_controle_positif(aveugle), c, cp)
@@ -703,6 +706,7 @@ def test_comparaison_voit_le_controle_positif_mais_pas_sa_duree(depot, monkeypat
         corps = vrai(racine, chemin)
         if "130100" in str(chemin):
             corps["resultat"]["controle_positif"]["debit"]["generation_s"] += 1.0
+            corps["resultat"]["controle_positif"]["memoire_max_go"] = 99.0          # descriptif, hors comparaison
         return corps
     monkeypatch.setattr(V, "verifier_resultat", duree)
     assert V.comparer_runs(depot, "20261005-130000-repetition-jouet", "20261005-130100-repetition-jouet")["identique"]
@@ -728,3 +732,106 @@ def test_sonde_de_memoire_sans_lecture():
     assert etapes["generation"]["jetons_generes"] == 8 * 5 and etapes["generation"]["longueur_remplie"] == 60
     cles = {k for e in etapes.values() for k in e}
     assert not any(mot in k for k in cles for mot in ("ecart", "equivalence", "lecture"))
+
+
+# ---------------------------------------------------------------- contre-lecture 1 de la v2
+
+def test_normalisations_en_double():
+    """V-1 : dans la phase de logique, chaque normalisation RMS calcule en double précision (la bibliothèque passe par
+    la simple précision) ; le changement vaut pour ce modèle seulement ; garde : poids en double précision, au moins
+    une normalisation."""
+    from transformers.models.llama.modeling_llama import LlamaRMSNorm
+    from controle_ia.harnais.modeles import _rms_en_double, normalisations_en_double
+    m = modele_jouet(3, 40, couches=2, largeur=16, tetes=2, tetes_cle_valeur=1, intermediaire=32).to(torch.float64).eval()
+    x = torch.randn(3, 5, 16, dtype=torch.float64, generator=torch.Generator().manual_seed(0)) * 3
+    norme = m.model.norm
+    with torch.no_grad():
+        bibliotheque = norme(x)                                   # chemin de la bibliothèque : simple précision
+        assert normalisations_en_double(m) == 2 * 2 + 1 and m.normalisations_en_double == 5
+        double = norme(x)
+        attendu = norme.weight * (x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + norme.variance_epsilon))
+    assert double.dtype == torch.float64 and torch.equal(double, attendu)
+    assert not torch.equal(double, bibliotheque)                  # la simple précision arrondissait vraiment
+    assert (double - bibliotheque).abs().max() < 1e-5             # même formule, à l'arrondi de simple précision près
+    assert all(n.forward.__func__ is _rms_en_double for n in m.modules() if type(n).__name__.endswith("RMSNorm"))
+    assert LlamaRMSNorm(16).to(torch.float64).forward.__func__ is LlamaRMSNorm.forward     # la classe n'est pas touchée
+    with pytest.raises(GardeArret, match="poids en torch.float32"):
+        normalisations_en_double(modele_jouet(3, 40, couches=2, largeur=16, tetes=2, tetes_cle_valeur=1,
+                                              intermediaire=32))
+    with pytest.raises(GardeArret, match="aucune normalisation"):
+        normalisations_en_double(torch.nn.Linear(2, 2).double())
+
+
+def test_arret_de_logique_garde_le_bilan_du_controle_positif(depot, monkeypatch):
+    """V-2 : le contrôle positif est joué avant les gardes ; la garde de la logique passe avant la sienne. Artefact :
+    P2 contraire (seuil de logique de 1e-30) et contrôle positif rendu aveugle : l'arrêt est en phase de logique, et
+    arret.json garde le bilan du contrôle positif et sa lecture."""
+    stricte = dict(PETITE, logique=dict(PETITE["logique"], tolerance=1e-30))
+    vrai = V.bilan_controle_positif
+
+    def aveugle(sorties, c, cp):
+        return dict(vrai(sorties, c, cp), vus=0, fraction=0.0, manques=["artefact"])
+    monkeypatch.setattr(V, "bilan_controle_positif", aveugle)
+    with pytest.raises(GardeArret, match="logique : .*faute"):
+        V.executer(depot, "20261005-140000-repetition-jouet", entropie=21, config=stricte, verifier_import=False)
+    arret = json.loads((depot / "diag" / "20261005-140000-repetition-jouet" / "arret.json").read_text())["resultat"]
+    assert arret["phase"] == "logique"
+    pc = arret["partiel"]["controle_positif"]
+    assert pc["bilan"]["fraction"] == 0.0 and pc["T"] == PETITE["controle_positif"]["T"]
+    lp = arret["partiel"]["lecture_partielle"]
+    assert lp["logique_equivalence"] == "contraire" and lp["controle_positif"] == "contraire"
+
+
+def test_controle_positif_graines_propres_T_et_trajectoires(depot, monkeypatch):
+    """V-2, V-9 : le contrôle positif tire ses graines de ses propres tâches (« controle-positif/… »), joue T pas du
+    contrôle positif (pas ceux de la logique), seul injecte D1, écrit ses trajectoires dans diag/ ; son contexte, que
+    D1 ne touche pas, reste au niveau de l'arrondi de la double précision."""
+    appels = []
+    vrai = V.jouer_phase
+
+    def espion(modele, fmt, c, graines, phase, couches, **kw):
+        appels.append((phase, c["T"], kw.get("decalage_positions", 0)))
+        return vrai(modele, fmt, c, graines, phase, couches, **kw)
+    monkeypatch.setattr(V, "jouer_phase", espion)
+    run = "20261005-140100-repetition-jouet"
+    V.executer(depot, run, entropie=5, config=PETITE, verifier_import=False)
+    cp = PETITE["controle_positif"]
+    assert cp["T"] != PETITE["logique"]["T"]
+    assert ("controle-positif", cp["T"], cp["decalage_positions"]) in appels
+    assert all(d == 0 for phase, _, d in appels if phase != "controle-positif")
+    resume = json.loads((depot / "diag" / run / "resume.json").read_text())["resultat"]
+    trajectoires = sorted((depot / "diag" / run).glob("controle-positif-episode-*-trajectoire.json"))
+    assert len(trajectoires) == PETITE["logique"]["episodes"]
+    t0 = json.loads(trajectoires[0].read_text())["resultat"]
+    assert t0["T"] == cp["T"] and all(len(tr["actions"]) == cp["T"] for tr in t0["transcriptions"])
+    assert resume["controle_positif"]["bilan"]["max_contexte"] < 1e-12
+    assert resume["chargement"]["normalisations_en_double"] == 2 * PETITE["modele_jouet"]["couches"] + 1
+
+
+def test_sonde_d_un_ulp_dans_le_type_capture(monkeypatch):
+    """V-10 : la sonde d'audit perturbe d'un ulp du type capturé (double précision : bien moins qu'un ulp de simple
+    précision)."""
+    import controle_ia.harnais.activations as A
+    vus = []
+    vrai = A.ecarts_par_jeton
+    monkeypatch.setattr(A, "ecarts_par_jeton", lambda g, p: (vus.append(np.array(p, copy=True)), vrai(g, p))[1])
+    for dtype in (np.float64, np.float32):
+        vus.clear()
+        g = {0: np.random.default_rng(1).standard_normal((4, 8)).astype(dtype)}
+        assert A.sonde_de_comparaison(g, {0: g[0].copy()})["ulp_vu"]
+        avant, apres = vus
+        delta = float(apres[0, 0]) - float(avant[0, 0])
+        assert apres.dtype == dtype and 0 < delta <= np.finfo(dtype).eps * abs(float(avant[0, 0]))
+        if dtype == np.float64:
+            assert delta < np.finfo(np.float32).eps * abs(float(avant[0, 0])) / 2
+
+
+def test_configuration_decisive_v2():
+    """V-2 : valeurs gelées de la v2 qu'aucune garde ne vérifie par ailleurs."""
+    c, r = V.CONFIG_REELLE, V.CONFIG_REPETITION
+    assert c["logique"]["dtype"] == "float64" and c["logique"]["noyau_attention"] == "math"
+    assert c["logique"]["tolerance"] == 1e-4 and c["production"]["tolerance"] == 0.1
+    assert c["controle_positif"] == {"T": 5, "decalage_positions": 1, "positions_min": 4, "actions_min": 10,
+                                     "fraction_min": 0.95}
+    assert c["memoire_carte_min_gio"] == 130 and c["memoire_vive_min_go"] == 96
+    assert c["controle_positif"]["T"] != c["logique"]["T"] and r["controle_positif"]["T"] != r["logique"]["T"]

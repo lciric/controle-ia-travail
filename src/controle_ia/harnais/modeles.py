@@ -12,6 +12,7 @@ import hashlib
 import os
 import re
 import subprocess
+import types
 from pathlib import Path
 
 import numpy as np
@@ -120,12 +121,40 @@ def charger_modele(nom: str, revision: str, dtype: str = "bfloat16", appareil: s
                                                   attn_implementation=attention)
     if dtype == "float64":
         modele = modele.to(torch.float64).to(appareil)
+        normalisations_en_double(modele)
     else:
         modele = modele.to(appareil)
         if dtype != "bfloat16":
             modele = modele.to(getattr(torch, dtype))
     exiger_type_des_poids(modele, dtype)
     return modele.eval(), tokeniseur
+
+
+def _rms_en_double(self, x):
+    """Normalisation RMS entièrement en double précision : même formule que la bibliothèque, sans son passage par la
+    simple précision."""
+    variance = x.pow(2).mean(-1, keepdim=True)
+    return self.weight * (x * torch.rsqrt(variance + self.variance_epsilon))
+
+
+def normalisations_en_double(modele) -> int:
+    """Version 2, phase de logique : la bibliothèque calcule ses normalisations RMS en simple précision (variance
+    réduite en simple précision), même dans un modèle en double précision. Sur carte, l'ordre de cette réduction peut
+    dépendre de la forme du lot (8 lignes au décodage, L en passe unique) : un bruit de simple précision viendrait dans
+    la seule zone générée, celle où la garde d'équivalence lit un défaut de décodage (contre-lecture 1 de la v2, V-1).
+    Ici, chaque normalisation de ce modèle (attribut d'instance, la classe n'est pas touchée) calcule en double
+    précision. Garde : modèle en double précision, au moins une normalisation. Rend le nombre de normalisations."""
+    n = 0
+    for m in modele.modules():
+        if type(m).__name__.endswith("RMSNorm"):
+            if m.weight.dtype != torch.float64:
+                raise GardeArret(f"normalisation en double précision demandée sur des poids en {m.weight.dtype}")
+            m.forward = types.MethodType(_rms_en_double, m)
+            n += 1
+    if n == 0:
+        raise GardeArret("aucune normalisation RMS dans le modèle : structure inattendue")
+    modele.normalisations_en_double = n
+    return n
 
 
 def type_natif(config) -> str:
