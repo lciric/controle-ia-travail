@@ -5,6 +5,7 @@ Aucune dépense sans GO sur devis. Alerte à Lazar à 80 % d'un devis approuvé.
 | date | GO | devis | instance (identifiant) | type | heures | coût (USD) | cumul sur devis | note |
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-04 | GO-2026-10-04-08 | phase 0 (T0.4) | 54183350 | carte H100 SXM, à la demande (3,124 USD/h tout compris) | 0,15 (18:03 → 18:12) | ≈ 0,47 | ≈ 0,5 sur 150 | premier lancement de la validation de T0.4 : échec avant le clonage (jeton GitHub refusé) ; s'y ajoutent le disque de l'instance arrêtée (0,074 USD/h tant qu'elle existe) et le tirage de l'image (≈ 1 Go à 0,038 USD/Go) |
+| 2026-10-05 | GO-2026-10-04-08 | phase 0 (T0.4) | 54285455 | carte A100 SXM4, à la demande (1,093 USD/h tout compris) | 0,04 (08:28:54 → 08:31:20) | ≈ 0,05 | ≈ 0,55 sur 150 (plus les disques) | relancement de la validation de T0.4 : même échec avant le clonage (jeton GitHub refusé) ; disque de l'instance arrêtée : ≈ 0,027 USD/h tant qu'elle existe |
 
 Devis approuvé : phase 0, plafond 150 USD, alerte à 120 USD (GO-2026-10-04-08, échéance 2026-11-01).
 
@@ -25,3 +26,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
   - reste du plafond cumulatif de T0.4 : 5,85 heures, soit au plus ≈ 6,4 + 0,8 ≈ 7,2 USD ; attendu : 1 à 2 heures, soit 1,1 à 2,2 USD ;
   - s'y ajoute le disque de l'instance 54183350, arrêtée (≈ 0,074 USD/h depuis le 2026-10-04 18:12 UTC) ;
   - cumul engagé au plafond : ≈ 0,5 + 7,2 + disque ≈ 9 USD sur 150.
+- 2026-10-05 08:31 UTC — instance 54285455 arrêtée après 0,04 heure ; plafond cumulatif de T0.4 : 0,19 heure consommée sur 6 (reste 5,81).

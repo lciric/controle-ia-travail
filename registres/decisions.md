@@ -122,6 +122,9 @@ Nœud de décision : arrêt jusqu'au GO (voir `registres/go.md`).
 - Test direct du jeton contre l'interface de GitHub refusé par la garde de la session (exploration de justificatifs) : non poursuivi ; diagnostic tiré du journal de l'instance seulement.
 - Procédure v2 scellée (`docs/procedures/validation-T0.4-modele-reel-v2.md`, e8a596c3…) et script de surveillance scellé (`docs/procedures/surveiller-instance-t04-v1.sh`, 5188c13c…), hors de l'arbre gelé : arrêt aussitôt sur fin, échec de l'amorce, redémarrage, état terminal ou plafond ; interrogation toutes les 2 minutes ; critères éprouvés à l'essai (faux outil).
 - La réponse de création d'instance contient une clé propre à l'instance (`instance_api_key`), affichée dans la sortie de la session ; elle n'est écrite nulle part dans le dépôt et disparaît avec l'instance. Les sorties de `vastai` sont désormais filtrées aux seuls champs utiles. | R1, R6, R10, R12 ; procédure v1, sections 3 à 6. |
+| R-039 | 2026-10-05 | Relancement de la validation de T0.4 (session 3), sur le feu vert de Lazar (« on a le budget, passe à la suite ») : routine de reprise conforme (178 tests) ; contrôles d'avant dépense conformes ; cinq offres, la moins chère retenue (29019328, A100 SXM4, 1,093 USD/h) et consignée ; instance 54285455 créée à 08:28 UTC ; surveillance par le script scellé, plafond réglé sur le reste cumulatif (5,85 heures).
+- Même échec avant le clonage : 403 de GitHub, 10 tentatives ; la surveillance a rendu la main au bout de 2 minutes (« ÉCHEC D'AMORCE ») ; instance arrêtée par son identifiant à 08:31 UTC (≈ 0,05 USD) ; journal scellé (`traces/t04-instance-54285455-20261005-083202/`).
+- Le jeton présent dans l'environnement n'a donc pas changé, ou n'a toujours pas accès au dépôt. N-009 reste ouvert ; aucun nouveau lancement avant une correction confirmée par Lazar. | R1, R6, R10 ; procédure v2. |
 
 ## Propositions avec recommandation (défaut sous 48 heures)
 
