@@ -6,6 +6,7 @@ Aucune dépense sans GO sur devis. Alerte à Lazar à 80 % d'un devis approuvé.
 |---|---|---|---|---|---|---|---|---|
 | 2026-10-04 | GO-2026-10-04-08 | phase 0 (T0.4) | 54183350 | carte H100 SXM, à la demande (3,124 USD/h tout compris) | 0,15 (18:03 → 18:12) | ≈ 0,47 | ≈ 0,5 sur 150 | premier lancement de la validation de T0.4 : échec avant le clonage (jeton GitHub refusé) ; s'y ajoutent le disque de l'instance arrêtée (0,074 USD/h tant qu'elle existe) et le tirage de l'image (≈ 1 Go à 0,038 USD/Go) |
 | 2026-10-05 | GO-2026-10-04-08 | phase 0 (T0.4) | 54285455 | carte A100 SXM4, à la demande (1,093 USD/h tout compris) | 0,04 (08:28:54 → 08:31:20) | ≈ 0,05 | ≈ 0,55 sur 150 (plus les disques) | relancement de la validation de T0.4 : même échec avant le clonage (jeton GitHub refusé) ; disque de l'instance arrêtée : ≈ 0,027 USD/h tant qu'elle existe |
+| 2026-10-05 | GO-2026-10-04-08 | phase 0 (T0.4) | 54298522 | carte A100 SXM4, à la demande (1,093 USD/h tout compris) | 0,22 (10:18:07 → 10:31:03) | ≈ 0,24 | ≈ 0,8 sur 150 (plus les disques) | troisième lancement : clonage, mise en place, 178 tests, run A arrêté en phase de logique (P2 non concluant) ; téléchargement du modèle (≈ 16 Go) et des roues ; disque de l'instance arrêtée ≈ 0,027 USD/h |
 
 Devis approuvé : phase 0, plafond 150 USD, alerte à 120 USD (GO-2026-10-04-08, échéance 2026-11-01).
 
@@ -28,3 +29,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
   - cumul engagé au plafond : ≈ 0,5 + 7,2 + disque ≈ 9 USD sur 150.
 - 2026-10-05 08:31 UTC — instance 54285455 arrêtée après 0,04 heure ; plafond cumulatif de T0.4 : 0,19 heure consommée sur 6 (reste 5,81).
 - 2026-10-05 10:17 UTC — troisième lancement de la validation de T0.4 (procédure v2, GO-2026-10-04-08), après la correction du jeton GitHub déclarée par Lazar (« c'est fait », N-009). Trois offres conformes ; la moins chère retenue : 29019328 (machine 30574), A100 SXM4 80 Go, CUDA maximale 13.0, pilote 580.159.03, 1,093 USD/h tout compris ; reste du plafond cumulatif : 5,81 heures, soit au plus ≈ 6,4 + 0,8 ≈ 7,2 USD ; attendu 1 à 2 heures (1,1 à 2,2 USD).
+- 2026-10-05 10:31 UTC — instance 54298522 arrêtée après 0,22 heure ; plafond cumulatif de T0.4 : 0,41 heure consommée sur 6 (reste 5,59).
