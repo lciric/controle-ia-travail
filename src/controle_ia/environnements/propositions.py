@@ -58,6 +58,28 @@ class Tache:
     classification: str | None = None  # métadonnées vérifiées du papier (type, données, domaines), H.11
 
 
+# Libellés des métadonnées de classification (sortie JSON de H.10) tels que les cite le guide de H.11 (p. 41).
+TYPES_PAPIER = {"theory_only": "Theory only", "mostly_theory": "Mostly theoretical",
+                "mostly_experiments": "Mostly experimental", "experiments_only": "Experimental only"}
+TYPES_DONNEES = {"synthetic_only": "Synthetic/simulated data only", "mostly_synthetic": "Mostly synthetic data",
+                 "mostly_real": "Mostly real-world data", "real_only": "Real-world data only",
+                 "not_applicable": "Not applicable (no experiments)"}
+
+
+def texte_classification(sortie_h10: dict) -> str:
+    """Métadonnées vérifiées du papier, au format attendu par le guide de classification (H.11). La sortie de H.10
+    porte parfois des tirets bas échappés (« mostly\\_theory », tels que dans l'invite) : ils sont normalisés."""
+    def cle(v):
+        return str(v).replace("\\_", "_").strip()
+
+    te, dt = cle(sortie_h10.get("theory_experiment", "")), cle(sortie_h10.get("data_type", ""))
+    if te not in TYPES_PAPIER or dt not in TYPES_DONNEES:
+        raise GardeArret(f"classification illisible : {te!r}, {dt!r}")
+    domaines = [str(d).strip() for d in sortie_h10.get("domains", []) if str(d).strip()]
+    return (f"Paper type: {TYPES_PAPIER[te]}\nData type: {TYPES_DONNEES[dt]}\n"
+            f"Experimental domains: {', '.join(domaines) if domaines else 'none specified'}")
+
+
 @dataclass
 class Proposition:
     numero: int

@@ -311,3 +311,14 @@ def test_lire_confiance_detecteur():
                                        "<sandbagging_confidence> 62 </sandbagging_confidence>") == 62
     assert jg.lire_confiance_detecteur("aucune balise") is None
     assert jg.lire_confiance_detecteur("<sandbagging_confidence>150</sandbagging_confidence>") is None
+
+
+def test_texte_classification():
+    s = pr.texte_classification({"theory_experiment": "mostly_experiments", "data_type": "mostly\\_real",
+                                 "domains": ["code generation", " "]})
+    assert s == ("Paper type: Mostly experimental\nData type: Mostly real-world data\n"
+                 "Experimental domains: code generation")
+    assert "none specified" in pr.texte_classification({"theory_experiment": "theory_only",
+                                                       "data_type": "not_applicable", "domains": []})
+    with pytest.raises(GardeArret, match="illisible"):
+        pr.texte_classification({"theory_experiment": "mostly theory", "data_type": "real_only"})
