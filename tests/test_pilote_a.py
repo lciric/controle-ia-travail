@@ -119,3 +119,57 @@ def test_apparier_probabilites(monkeypatch):
               for k, c in enumerate(["a dense baseline", "an ablation"])]
     s = pa.apparier(_modele(), FMT, paires, lot=2)
     assert [x["cle"] for x in s] == ["p0", "p1"] and all(0.0 <= x["p_oui"] <= 1.0 and x["masse_oui_non"] > 0 for x in s)
+
+
+# --- analyse -----------------------------------------------------------------------------------------------
+
+from controle_ia.environnements import analyse_pilote as ap  # noqa: E402
+
+
+def _simuler(n, sb=2.0, sd=1.0, se=1.5, graine=3):
+    r = np.random.default_rng(graine)
+    beta, d1, d2 = r.normal(0, sb, n), r.normal(0, sd, n), r.normal(0, sd, n)
+    e = r.normal(0, se, (3, n))
+    return 50 + beta + d1 + e[0], 50 + beta + d1 + e[1], 50 + beta + d2 + e[2]
+
+
+def test_decomposition_retrouve_les_composantes_simulees():
+    d = ap.decomposition_variance(*_simuler(40000))
+    vrai = {"tache": 4.0, "generation": 1.0, "juge": 2.25}
+    for k, v in vrai.items():
+        assert d["composantes"][k] == pytest.approx(v, rel=0.06), k
+    assert d["parts"]["juge"] == pytest.approx(2.25 / 7.25, abs=0.02) and d["taches_incompletes"] == 0
+
+
+def test_decomposition_sans_imputation_et_gardes():
+    a, b, c = (x[:10].copy() for x in _simuler(10))
+    a[0] = np.nan
+    d = ap.decomposition_variance(a, b, c)
+    assert d["taches"] == 9 and d["taches_incompletes"] == 1
+    with pytest.raises(GardeArret, match="alignées"):
+        ap.decomposition_variance(a, b[:5], c)
+    with pytest.raises(GardeArret, match="impossible"):
+        ap.decomposition_variance([1.0, np.nan], [1.0, 2.0], [1.0, 2.0])
+
+
+def test_intervalles_contiennent_la_valeur_simulee():
+    iv = ap.intervalles_parts(*_simuler(400, graine=8), tirages=300, rng=np.random.default_rng(1))
+    assert iv["juge"][0] < 2.25 / 7.25 < iv["juge"][1]
+
+
+def test_kappa():
+    x = np.array([1, 0, 1, 1, 0, 0, 1, 0], dtype=bool)
+    assert ap.kappa_cohen(x, x) == 1.0
+    assert ap.kappa_cohen(x, ~x) == -1.0
+    with pytest.raises(GardeArret, match="indéfini"):
+        ap.kappa_cohen([1, 1], [1, 1])
+    with pytest.raises(GardeArret):
+        ap.kappa_cohen([1, 0], [1])
+
+
+def test_couverture():
+    p = {(1, "C1"): 0.9, (1, "C2"): 0.2, (2, "C1"): 0.1, (2, "C2"): 0.6}
+    assert ap.couverture(p, [1, 2], ["C1", "C2"]) == {"part": 1.0, "couvertes": ["C1", "C2"]}
+    assert ap.couverture(p, [1], ["C1", "C2"])["part"] == 0.5
+    with pytest.raises(GardeArret, match="absentes"):
+        ap.couverture(p, [1, 3], ["C1"])
