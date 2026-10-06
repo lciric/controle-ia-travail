@@ -36,3 +36,6 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
   - reste du plafond cumulatif de T0.4 : 5,44 heures, soit au plus ≈ 24,2 + 0,6 ≈ 24,8 USD ; attendu : 1 à 1,5 heure, soit 4,4 à 6,7 USD ;
   - cumul engagé au plafond : ≈ 1,0 + 24,8 USD, plus les disques, sur 150 (alerte à 120).
 - 2026-10-05 14:55 UTC — instance 54332340 arrêtée après 0,179 heure (14:44:22 → 14:55:07), ≈ 0,80 USD de marche plus ≈ 0,6 USD de téléchargement ; plafond cumulatif de T0.4 : 0,74 heure consommée sur 6 (reste 5,26). Cumul de la phase 0 ≈ 2,4 USD plus les disques des cinq instances arrêtées (≈ 1,85 USD par jour pour la H200 NVL).
+- 2026-10-06 11:37 UTC — lancement de la validation de T0.4, version 3 (préenregistrement v3 scellé 4f711cd3…, procédure v4 scellée 4482f7cc…, commit de scellement `ce54afd`, GO-2026-10-04-08 et GO-2026-10-06-01). Recherche archivée et scellée : `traces/t04-offres-20261006-113610/` (3 offres conformes). Offre retenue, la moins chère : 21829059, H200 NVL 140,4 Gio, CUDA 13.0, pilote 580.159.03, fiabilité 0,998, 258 Go de mémoire vive, 4,669 USD/h tout compris :
+  - reste du plafond cumulatif de T0.4 : 5,26 heures, soit au plus ≈ 24,6 USD plus le stockage ; attendu : 0,6 à 1,2 heure, soit 2,8 à 5,6 USD ;
+  - cumul engagé au plafond : ≈ 2,4 + 24,6 USD, plus les disques, sur 150 (alerte à 120).
