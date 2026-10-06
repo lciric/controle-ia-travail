@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-06 17:25 UTC, session 8 (T0.5 : lanceur durci, script d'instance et amorce du pilote répétés sur cas sain et artefact ; T0.7 et T0.8 : paquets `sondes` et `bases` ; état de l'art niveau 2 lu, lots 1 à 3 ; nœud N-013 et proposition P-010 ; brouillon 2 de G1). Dernière passation : `registres/passations/2026-10-06-1725.md`.
+Dernière mise à jour : 2026-10-06 18:40 UTC, session 9 (N-013 décidé, option (a) ; synthèse du niveau 2 de l'état de l'art versée et scellée ; P-011 proposée ; invites de TRACE versées, TRACE-lite et organismes codés ; brouillon 2 du préenregistrement du papier C). Dernière passation : `registres/passations/2026-10-06-1840.md`.
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -43,7 +43,7 @@ Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md`. Fournis le 2026-1
 Devis de la phase 0 approuvé (GO-2026-10-04-08 : plafond 150 USD, alerte à 120 USD). Cumul au 2026-10-06 13:25 UTC ≈ 12,3 USD : marche ≈ 5,1 (six instances, 1,31 heure de carte pour T0.4), disques ≈ 7,2. Disques des six instances gardées : ≈ 7,3 USD par jour ; projection et options : N-012 (`diag/N-012-projection-depenses/projection_v1.json`).
 
 ## Instances de calcul actives
-Inventaire du 2026-10-06 à 17:49 UTC : aucune instance du programme en marche ; les trois instances hors du programme signalées en R-061 n'apparaissent plus (R-070). Pour mémoire (R-061) : 54497596, 54498054, 54500347 (H100 SXM, étiquettes `rr-organism_inhibition-…`, ≈ 12 USD de l'heure en tout), non lancées par la session, non touchées ; Lazar prévenu.
+Inventaire du 2026-10-06 à 18:36 UTC : aucune instance du programme en marche ; aucune autre instance sur le compte (les trois instances hors du programme signalées en R-061 n'apparaissent plus depuis 17:49 UTC, R-070). Pour mémoire (R-061) : 54497596, 54498054, 54500347 (H100 SXM, étiquettes `rr-organism_inhibition-…`, ≈ 12 USD de l'heure en tout), non lancées par la session, non touchées ; Lazar prévenu.
 
 Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers (décision de Lazar du 2026-10-06 sur N-009) ; disques facturés ≈ 0,303 USD de l'heure en tout (N-012) :
 - **54183350** (H100 SXM, arrêtée le 2026-10-04 à 18:12 UTC) et **54285455** (A100 SXM4, arrêtée le 2026-10-05 à 08:31 UTC) : sans données ;
