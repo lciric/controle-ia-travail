@@ -173,3 +173,54 @@ def test_couverture():
     assert ap.couverture(p, [1], ["C1", "C2"])["part"] == 0.5
     with pytest.raises(GardeArret, match="absentes"):
         ap.couverture(p, [1, 3], ["C1"])
+
+
+# --- lanceur (mode jouet, dépôt jetable) -------------------------------------------------------------------
+
+from controle_ia.environnements import lancer_pilote_a as lp  # noqa: E402
+from conftest import committer  # noqa: E402
+
+
+def _config_lanceur():
+    return {**CONFIG, "episodes_par_tache": 2, "episodes_notes_deux_fois": [0], "lot_juge": 2,
+            "max_nouveaux_juge": 6, "temperature_juge": 1.0, "variante_juge": "b0", "lot_appariement": 4,
+            "duree_max_s": 600, "mode": "jouet", "agent": {"nom": "agent-jouet"},
+            "juges": [{"nom": "jouet-8B", "meme_modele_que_agent": True, "sert_a_l_appariement": True},
+                      {"nom": "jouet-3B", "meme_modele_que_agent": False, "sert_a_l_appariement": False}]}
+
+
+def test_lanceur_de_bout_en_bout_en_mode_jouet(depot, monkeypatch):
+    monkeypatch.setattr(pa, "jetons_oui_non",
+                        lambda tok: (tok.convert_tokens_to_ids("Y"), tok.convert_tokens_to_ids("N")))
+    taches = [dict(t, cibles={"controls": [{"id": "C1", "description": "a dense baseline"}],
+                              "fruitful_directions": [], "sterile_directions": []}) for t in TACHES]
+    f = depot / "taches.json"
+    f.write_text(json.dumps({"taches": taches}), encoding="utf-8")
+    sceller(f)
+    committer(depot)
+    resume = lp.executer(_config_lanceur(), depot, "20261006-170000-pilote-jouet", None, str(f),
+                         autoriser_depot_sale=True)
+    assert resume["episodes"] == 4 and resume["actions"] == 8
+    assert set(resume["notations"]) == {"jouet-8B", "jouet-3B"}
+    d = depot / "diag" / "20261006-170000-pilote-jouet"
+    assert {p.name for p in d.glob("*.json")} >= {"episodes.json", "notations-jouet-8B.json", "notations-jouet-3B.json",
+                                                   "appariements.json", "resume.json"}
+    assert (depot / "donnees" / "20261006-170000-pilote-jouet" / "vecteurs-par-action.npz.sha256").exists()
+    with pytest.raises(GardeArret, match="R12"):
+        lp.executer(_config_lanceur(), depot, "20261006-170000-pilote-jouet", None, str(f), autoriser_depot_sale=True)
+
+
+def test_lanceur_configuration_incomplete(depot):
+    c = _config_lanceur()
+    del c["lot_juge"]
+    with pytest.raises(GardeArret, match="incomplète"):
+        lp.executer(c, depot, "20261006-170001-x", None, "inexistant.json")
+
+
+def test_passes_et_demandes():
+    c = _config_lanceur()
+    assert lp.passes_de("2506.00001v1/e0", c) == 2 and lp.passes_de("2506.00001v1/e1", c) == 1
+    fiches = [{"episode": "t/e0", "tache": "t", "bilan": {"ensemble": "PROPOSAL 1: x", "propositions": []}},
+              {"episode": "t/e1", "tache": "t", "bilan": {"ensemble": "  ", "propositions": []}}]
+    d = lp.demandes_de_notation(fiches, {"t": {"questions": "Q?"}}, c, "j")
+    assert [x["cle"] for x in d] == ["juge-j/t/e0/passe-0", "juge-j/t/e0/passe-1"]

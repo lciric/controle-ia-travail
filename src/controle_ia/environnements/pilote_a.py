@@ -69,7 +69,7 @@ def graines_des_actions(generateur: np.random.Generator, N: int, T: int) -> dict
 
 
 def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[str, np.random.Generator],
-                 config: dict, garder_vecteurs: bool = True) -> tuple[list[dict], dict]:
+                 config: dict, garder_vecteurs: bool = True, echeance: float | None = None) -> tuple[list[dict], dict]:
     """Joue les épisodes du plan par lots ; renvoie une fiche par épisode et les vecteurs par action (agrégés par
     maximum sur les jetons de l'action, par couche ; voir `vecteurs_par_action`)."""
     exiger_config(config)
@@ -92,7 +92,7 @@ def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[st
                             if tirages[t * N + i] < config["fraction_equivalence"]}
         sorties = jouer_episodes(modele, fmt, envs, ids, N, T, graines, config["couches"], config["max_nouveaux"],
                                  config["temperature"], echantillon, config["tolerance_equivalence"],
-                                 statistique=config["statistique_equivalence"])
+                                 statistique=config["statistique_equivalence"], echeance=echeance)
         for (ep, acts, rapport), env, e in zip(sorties, envs, ids):
             journal = [(a.agent, a.pas, a.texte) for a in ep.actions_dans_l_ordre()]
             fiche = {"episode": e, "tache": env.tache.identifiant, "bilan": env.bilan(journal),
