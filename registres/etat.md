@@ -35,7 +35,7 @@ Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md`. Fournis le 2026-1
 Devis de la phase 0 approuvé (GO-2026-10-04-08 : plafond 150 USD, alerte à 120 USD) ; dépensé ≈ 2,4 USD (cinq instances, 0,74 heure en tout) plus les disques des instances arrêtées tant qu'elles existent. Version 3 de T0.4 attendue sur H200 : ≈ 3 à 6 USD (0,6 à 1,2 heure) ; au plafond cumulatif (5,26 heures) ≈ 23 USD à 4,4 USD/h.
 
 ## Instances de calcul actives
-Aucune en marche.
+**54476244** (H200 NVL, offre 21829059, 4,669 USD/h), créée le 2026-10-06 à 11:36:50 UTC : validation de T0.4, version 3 (commit de scellement `ce54afd`, GO-2026-10-04-08). Surveillance réglée sur le plafond cumulatif (motif PLAFOND au plus tard à 16:47 UTC) ; arrêt par la session, par son identifiant, à la fin de l'amorce ou à tout arrêt.
 
 Cinq instances arrêtées par leur identifiant, disques facturés jusqu'à leur destruction (décision de Lazar) :
 - **54183350** (H100 SXM, arrêtée le 2026-10-04 à 18:12 UTC) et **54285455** (A100 SXM4, arrêtée le 2026-10-05 à 08:31 UTC) : sans données ;
