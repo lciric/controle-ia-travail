@@ -31,14 +31,15 @@ import numpy as np
 
 from ..gardes import GardeArret
 from ..harnais.run_harnais_factice import graine_entiere
-from ..harnais.validation_reelle import ENTROPIE_CITEE, exiger_code_cite, exiger_code_importe_sous
+from ..harnais.validation_reelle import ENTROPIE_CITEE, exiger_code_cite, exiger_code_importe_sous, noyau
 from ..manifeste import config_canonique, creer_manifeste, ecrire_resultat, generateur, lire_manifeste
 from ..scellement import sceller, verifier
 from .pilote_a import (apparier, charger_taches, exiger_config, jetons_jouet, jouer_pilote, noter_ensembles,
                        plan_des_episodes)
 
 CLES_LANCEMENT = ("agent", "juges", "episodes_notes_deux_fois", "lot_juge", "max_nouveaux_juge", "temperature_juge",
-                  "variante_juge", "lot_appariement", "duree_max_s", "mode")
+                  "variante_juge", "lot_appariement", "duree_max_s", "mode", "noyau_attention", "fils")
+NOYAUX = ("math", "defaut")     # noyau d'attention des épisodes (garde d'équivalence) ; juges et appariement : défaut
 CONFIG_CITEE = re.compile(r"Configuration du pilote \(empreinte canonique\) : `([0-9a-f]{64})`")
 TACHES_CITEES = re.compile(r"Tâches du pilote : `([0-9a-f]{64})`")
 COMMANDE = "python -m controle_ia.environnements.lancer_pilote_a"
@@ -128,6 +129,8 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
         raise GardeArret(f"configuration du lancement incomplète : {manquantes}")
     if config["mode"] not in ("reel", "jouet"):
         raise GardeArret(f"mode {config['mode']!r} inconnu")
+    if config["noyau_attention"] not in NOYAUX:
+        raise GardeArret(f"noyau d'attention {config['noyau_attention']!r} : {NOYAUX} attendus")
     if config["mode"] == "reel" and prereg is None:
         raise GardeArret("run réel du pilote sans préenregistrement : R1 interdit de lancer")
     taches = charger_taches(chemin_taches)
@@ -158,16 +161,22 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
     g = manifeste["graines"]
     echeance = debut + float(config["duree_max_s"])
 
+    from ..harnais.modeles import regler_determinisme
+
+    reglages = regler_determinisme(config["fils"], "cuda" if config["mode"] == "reel" else "cpu")
     modele, fmt = charger_modele_et_format(config["agent"], config["mode"], graine_entiere(g["modele-jouet"]))
     generateurs = {e: generateur(g[e]) for e, _ in plan}
-    fiches, vecteurs = jouer_pilote(modele, fmt, plan, generateurs, config, echeance=echeance)
+    with noyau(config["noyau_attention"]):          # la garde d'équivalence porte sur les épisodes seulement
+        fiches, vecteurs, controle_negatif = jouer_pilote(modele, fmt, plan, generateurs, config, echeance=echeance)
+    etat["controle_negatif"] = controle_negatif["lecture"]
     donnees = racine / "donnees" / run_id
     donnees.mkdir(parents=True, exist_ok=False)
     chemin_v = donnees / "vecteurs-par-action.npz"
     np.savez(chemin_v, **{k.replace("/", "__"): v for k, v in vecteurs.items()})
     sha_v = sceller(chemin_v)
     ecrire_resultat(racine, chemin_m, "episodes", {"fiches": fiches, "vecteurs": str(chemin_v.relative_to(racine)),
-                                                   "vecteurs_sha256": sha_v,
+                                                   "vecteurs_sha256": sha_v, "controle_negatif": controle_negatif,
+                                                   "reglages": reglages, "noyau_attention": config["noyau_attention"],
                                                    "duree_s": round(time.perf_counter() - debut, 1)})
     etat["episodes_ecrits"] = len(fiches)
 
@@ -198,7 +207,7 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
     etat["etape"] = "résumé"
     resume = {"commit_cite": etat["commit_cite"], "config_sha256": etat["config_sha256"],
               "taches_sha256": etat["taches_sha256"],
-              "episodes": len(fiches),
+              "episodes": len(fiches), "controle_negatif": etat["controle_negatif"],
               "actions": sum(f["bilan"]["actions"] for f in fiches),
               "actions_valides": sum(f["bilan"]["actions_valides"] for f in fiches),
               "ensembles_vides": sum(1 for f in fiches if not f["bilan"]["ensemble"].strip()),

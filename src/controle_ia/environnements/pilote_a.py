@@ -18,7 +18,8 @@ import numpy as np
 import torch
 
 from ..gardes import GardeArret
-from ..harnais.episode import empreinte_episode, generer_lot, jouer_episodes, vecteurs_par_action
+from ..harnais.episode import (bilan_controle_negatif, empreinte_episode, exiger_controle_negatif_phase,
+                               generer_lot, jouer_episodes, vecteurs_par_action)
 from ..scellement import verifier
 from .invites import charger_invite
 from .juges import message_appariement, messages_juge_ensemble, probabilite_oui
@@ -26,7 +27,12 @@ from .propositions import EnvironnementPropositions, Tache, texte_classification
 from .rubrique import lire_notes
 
 CLES_CONFIG = ("N", "T", "episodes_par_tache", "lot", "max_nouveaux", "temperature", "couches",
-               "fraction_equivalence", "statistique_equivalence", "tolerance_equivalence")
+               "fraction_equivalence", "statistique_equivalence", "tolerance_equivalence",
+               "positions_min_controle_negatif", "actions_min_controle_negatif", "fraction_min_controle_negatif")
+# Rapport d'équivalence gardé par action échantillonnée (contre-lecture du pilote, CL-1) : de quoi refaire la garde et
+# son contrôle négatif après coup, et situer chaque action dans le domaine validé (longueur de contexte, remplissage).
+CLES_RAPPORT_GARDEES = ("ecarts_q99", "ecarts", "controle_negatif_zone_generee", "profils", "longueurs_contexte",
+                        "lignes", "positions_capturees", "empreintes_capture", "sondes")
 SYSTEME_APPARIEMENT = "You are a careful reviewer. Answer with a single word."
 
 
@@ -69,16 +75,25 @@ def graines_des_actions(generateur: np.random.Generator, N: int, T: int) -> dict
 
 
 def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[str, np.random.Generator],
-                 config: dict, garder_vecteurs: bool = True, echeance: float | None = None) -> tuple[list[dict], dict]:
-    """Joue les épisodes du plan par lots ; renvoie une fiche par épisode et les vecteurs par action (agrégés par
-    maximum sur les jetons de l'action, par couche ; voir `vecteurs_par_action`)."""
+                 config: dict, garder_vecteurs: bool = True, echeance: float | None = None,
+                 decalage_positions: int = 0) -> tuple[list[dict], dict, dict]:
+    """Joue les épisodes du plan par lots ; renvoie une fiche par épisode, les vecteurs par action (agrégés par
+    maximum sur les jetons de l'action, par couche ; voir `vecteurs_par_action`) et le bilan du contrôle négatif.
+
+    Gardes : l'équivalence génération = passe unique, action par action, sur l'échantillon (immédiate) ; puis, en fin
+    de phase, le contrôle négatif (`bilan_controle_negatif`, `exiger_controle_negatif_phase`) : décalée d'un jeton
+    dans la zone générée, la comparaison doit dépasser la tolérance pour une part au moins
+    `fraction_min_controle_negatif` des actions comparables ; sous `actions_min_controle_negatif` actions comparables,
+    la lecture est « non concluant » (bilan consigné). Chaque fiche garde le texte, les identifiants de jetons et
+    l'empan de chaque action, et le rapport d'équivalence complet des actions échantillonnées.
+    `decalage_positions` : défaut D1 injecté (essais seulement)."""
     exiger_config(config)
     N, T, lot = config["N"], config["T"], config["lot"]
     guide = charger_invite("H1-classification")
     manquants = [e for e, _ in plan if e not in generateurs]
     if manquants:
         raise GardeArret(f"générateurs absents pour {len(manquants)} épisodes")
-    fiches, vecteurs = [], {}
+    fiches, vecteurs, rapports = [], {}, []
     for debut in range(0, len(plan), lot):
         morceau = plan[debut:debut + lot]
         ids = [e for e, _ in morceau]
@@ -92,19 +107,30 @@ def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[st
                             if tirages[t * N + i] < config["fraction_equivalence"]}
         sorties = jouer_episodes(modele, fmt, envs, ids, N, T, graines, config["couches"], config["max_nouveaux"],
                                  config["temperature"], echantillon, config["tolerance_equivalence"],
-                                 statistique=config["statistique_equivalence"], echeance=echeance)
+                                 statistique=config["statistique_equivalence"], echeance=echeance,
+                                 decalage_positions=decalage_positions)
         for (ep, acts, rapport), env, e in zip(sorties, envs, ids):
-            journal = [(a.agent, a.pas, a.texte) for a in ep.actions_dans_l_ordre()]
+            rapports.append(rapport)
+            actions = ep.actions_dans_l_ordre()
+            journal = [(a.agent, a.pas, a.texte) for a in actions]
             fiche = {"episode": e, "tache": env.tache.identifiant, "bilan": env.bilan(journal),
-                     "jetons_par_action": [len(a.ids) for a in ep.actions_dans_l_ordre()],
-                     "equivalence": {"actions": sorted(rapport["ecarts_q99"]), "q99": rapport["ecarts_q99"],
-                                     "max": rapport["ecarts"]},
+                     "jetons_par_action": [len(a.ids) for a in actions],
+                     "actions": [{"agent": a.agent, "pas": a.pas, "debut": a.debut, "fin": a.fin, "ids": list(a.ids),
+                                  "texte": a.texte} for a in actions],
+                     "equivalence": {"actions": sorted(rapport["ecarts_q99"]), "tolerance": rapport["tolerance"],
+                                     "statistique": rapport["statistique"],
+                                     **{k: rapport[k] for k in CLES_RAPPORT_GARDEES}},
                      "empreintes": empreinte_episode(ep, acts)}
             fiches.append(fiche)
             if garder_vecteurs:
                 for c in config["couches"]:
                     vecteurs[f"{e}|{c}"] = vecteurs_par_action(ep, acts, c, "max").astype(np.float16)
-    return fiches, vecteurs
+    bilan = bilan_controle_negatif(rapports, positions_min=config["positions_min_controle_negatif"])
+    exiger_controle_negatif_phase(bilan, config["fraction_min_controle_negatif"], config["actions_min_controle_negatif"],
+                                  "pilote T0.5, épisodes")
+    bilan["lecture"] = ("non concluant" if bilan["comparables"] < config["actions_min_controle_negatif"]
+                        else "conforme")
+    return fiches, vecteurs, bilan
 
 
 def noter_ensembles(modele, fmt, demandes: list[dict], graines: dict[str, int], lot: int, max_nouveaux: int,

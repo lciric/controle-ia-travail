@@ -19,7 +19,8 @@ TOK = tokeniseur_caracteres_chat()
 FMT = FormatChat(TOK, fins={TOK.convert_tokens_to_ids("<|im_end|>"), TOK.eos_token_id})
 CONFIG = {"N": 1, "T": 2, "episodes_par_tache": 2, "lot": 3, "max_nouveaux": 6, "temperature": 1.0,
           "couches": [0, 1, 2], "fraction_equivalence": 0.5, "statistique_equivalence": "max",
-          "tolerance_equivalence": 1e-4}
+          "tolerance_equivalence": 1e-4, "positions_min_controle_negatif": 4, "actions_min_controle_negatif": 10,
+          "fraction_min_controle_negatif": 0.95}
 TACHES = [{"identifiant": "2506.00001v1", "questions": "Why do routers matter?",
            "classification": {"theory_experiment": "mostly_experiments", "data_type": "real_only", "domains": []}},
           {"identifiant": "2506.00002v1", "questions": "How to calibrate?", "classification": None}]
@@ -69,13 +70,32 @@ def test_plan_et_graines_deterministes():
 def test_jouer_pilote_par_lots_et_rejeu():
     plan = pa.plan_des_episodes(TACHES, 2)
     m = _modele()
-    fiches, vecteurs = pa.jouer_pilote(m, FMT, plan, _generateurs(plan), CONFIG)
+    fiches, vecteurs, cn = pa.jouer_pilote(m, FMT, plan, _generateurs(plan), CONFIG)
     assert [f["episode"] for f in fiches] == [e for e, _ in plan]
+    assert cn["lecture"] in ("conforme", "non concluant") and cn["positions_min"] == 4
+    a0 = fiches[0]["actions"][0]
+    assert a0["texte"] and len(a0["ids"]) == fiches[0]["jetons_par_action"][0] and a0["fin"] - a0["debut"] == len(a0["ids"])
+    eq = next(f["equivalence"] for f in fiches if f["equivalence"]["actions"])
+    assert set(eq["controle_negatif_zone_generee"]) == set(eq["actions"]) == set(eq["longueurs_contexte"])
     assert all(f["bilan"]["actions"] == 2 for f in fiches) and sum(len(f["equivalence"]["actions"]) for f in fiches) > 0
     assert set(vecteurs) == {f"{e}|{c}" for e, _ in plan for c in CONFIG["couches"]}
     assert vecteurs["2506.00001v1/e0|1"].shape == (1, 2, 32) and vecteurs["2506.00001v1/e0|1"].dtype == np.float16
-    rejeu, _ = pa.jouer_pilote(m, FMT, plan, _generateurs(plan), CONFIG)
+    rejeu, _, _ = pa.jouer_pilote(m, FMT, plan, _generateurs(plan), CONFIG)
     assert [f["empreintes"] for f in rejeu] == [f["empreintes"] for f in fiches]
+
+
+def test_controle_negatif_du_pilote_cas_sain_et_artefacts():
+    """R5, dans le chemin du pilote : cas sain (contrôle négatif vu) ; artefact 1 : tolérance aberrante, la garde est
+    aveugle au décalage d'un jeton (arrêt de phase) ; artefact 2 : défaut D1 injecté (arrêt de la garde immédiate)."""
+    plan = pa.plan_des_episodes(TACHES, 2)
+    sain = {**CONFIG, "fraction_equivalence": 1.0, "positions_min_controle_negatif": 1, "actions_min_controle_negatif": 1}
+    _, _, cn = pa.jouer_pilote(_modele(), FMT, plan, _generateurs(plan), sain, garder_vecteurs=False)
+    assert cn["lecture"] == "conforme" and cn["comparables"] >= 1 and cn["fraction"] >= 0.95
+    with pytest.raises(GardeArret, match="aveugle au décalage"):
+        pa.jouer_pilote(_modele(), FMT, plan, _generateurs(plan), {**sain, "tolerance_equivalence": 1e9},
+                        garder_vecteurs=False)
+    with pytest.raises(GardeArret):
+        pa.jouer_pilote(_modele(), FMT, plan, _generateurs(plan), sain, garder_vecteurs=False, decalage_positions=1)
 
 
 def test_jouer_pilote_generateur_manquant_arrete():
@@ -184,7 +204,7 @@ from conftest import committer  # noqa: E402
 def _config_lanceur():
     return {**CONFIG, "episodes_par_tache": 2, "episodes_notes_deux_fois": [0], "lot_juge": 2,
             "max_nouveaux_juge": 6, "temperature_juge": 1.0, "variante_juge": "b0", "lot_appariement": 4,
-            "duree_max_s": 600, "mode": "jouet", "agent": {"nom": "agent-jouet"},
+            "duree_max_s": 600, "mode": "jouet", "agent": {"nom": "agent-jouet"}, "noyau_attention": "math", "fils": 1,
             "juges": [{"nom": "jouet-8B", "meme_modele_que_agent": True, "sert_a_l_appariement": True},
                       {"nom": "jouet-3B", "meme_modele_que_agent": False, "sert_a_l_appariement": False}]}
 
