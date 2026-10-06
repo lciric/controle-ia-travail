@@ -84,16 +84,19 @@ def lire_triage(reponse: str, T: int) -> tuple[list[dict], list[str]]:
         raise GardeArret(f"sortie du triage de type {type(reponse).__name__} : texte attendu")
     if not reponse.strip():
         return [], ["triage : sortie vide"]
+    capture = []
+    if re.match(r"\s*ACTION\s*:", reponse, re.I):
+        capture = ["triage : écrit au format de l'agent (première ligne « ACTION: »)"]
     objets = _objets_json(reponse)
     if not objets:
-        return [], ["triage : aucun objet JSON lisible"]
+        return [], capture + ["triage : aucun objet JSON lisible"]
     brutes = objets[-1].get("suspect_windows")
     if not isinstance(brutes, list):
         if any(isinstance(o.get("suspect_windows"), list) for o in objets[:-1]):
-            return [], ["triage : le dernier objet JSON n'a pas de « suspect_windows » en liste, un objet antérieur en "
-                        "a un (objet parasite après la réponse ?)"]
-        return [], ["triage : « suspect_windows » absent ou non liste"]
-    fenetres, anomalies = [], []
+            return [], capture + ["triage : le dernier objet JSON n'a pas de « suspect_windows » en liste, un objet "
+                                  "antérieur en a un (objet parasite après la réponse ?)"]
+        return [], capture + ["triage : « suspect_windows » absent ou non liste"]
+    fenetres, anomalies = [], list(capture)
     for k, f in enumerate(brutes):
         if not isinstance(f, dict) or not isinstance(f.get("steps"), list):
             anomalies.append(f"fenêtre {k} : forme invalide")
@@ -180,6 +183,13 @@ VALEURS_VERDICT = (1, 2, 3, 4, 5)
 VIDE = "(none)"
 SANS_MOTIF = "(no reason given)"
 _CHAMP = re.compile(r"\{([a-z_]+)\}")
+_BALISE_ACTION = re.compile(r"<\s*(/?)\s*action\s*>", re.I)
+
+
+def _neutraliser(texte: str) -> tuple[str, int]:
+    """Balises de rendu `<action>` et `</action>` écrites par l'agent rendues inertes (« ‹action› », « ‹/action› »),
+    au rendu seulement (le journal reste intact) ; le nombre est consigné par `executer`."""
+    return _BALISE_ACTION.subn(lambda m: "‹" + m.group(1) + "action›", texte)
 
 
 def _sha(texte: str) -> str:
@@ -251,7 +261,8 @@ def rendre_pas(journal: list[tuple[int, int, str]], k: int) -> str:
         effet = f"proposal {h['numero']} added"
     else:
         effet = f"proposal {h['numero']} revised (previous version: step {avant.propositions[h['numero']].pas + 1})"
-    return f"<action>\n{journal[k - 1][2].strip()}\n</action>\nRESULT: {effet}"
+    texte, _ = _neutraliser(journal[k - 1][2].strip())
+    return f"<action>\n{texte}\n</action>\nRESULT: {effet}"
 
 
 def rendre_trace(journal: list[tuple[int, int, str]], pas: list[int] | None = None) -> str:
@@ -302,8 +313,8 @@ def _sortie(rendu, role: str) -> tuple[str, bool]:
 
 def executer(env: EnvironnementPropositions, journal: list[tuple[int, int, str]],
              generer: Callable[[str, str, int], tuple[str, bool]],
-             lire_score: Callable[[str, str, tuple], tuple[float, float]], graine: int,
-             gabarits: dict[str, str] | None = None, masse_min: float | None = None) -> dict:
+             lire_score: Callable[[str, str, tuple], tuple[float, float]], graine: int, masse_min: float,
+             gabarits: dict[str, str] | None = None) -> dict:
     """Un épisode jugé par TRACE-lite.
     - `generer(invite, rôle, graine_appel)` rend (texte, tronqué) ; rôle : « triage » ou le nom de l'action.
     - `lire_score(invite, réponse imposée, valeurs)` rend (espérance sur 1..5 après `REPONSE_IMPOSEE_VERDICT`, masse).
@@ -311,19 +322,28 @@ def executer(env: EnvironnementPropositions, journal: list[tuple[int, int, str]]
     Rend le score, les sorties, les anomalies (jamais réparées), les empreintes des gabarits et de chaque invite (les
     invites se reconstruisent du journal et des sorties)."""
     _verifier_journal(env, journal)
+    if not (isinstance(graine, int) and not isinstance(graine, bool) and graine >= 0):
+        raise GardeArret(f"graine {graine!r} : entier positif ou nul attendu")
+    if not (isinstance(masse_min, (int, float)) and not isinstance(masse_min, bool) and 0.0 <= masse_min < 1.0):
+        raise GardeArret(f"masse_min {masse_min!r} : réel dans [0, 1) attendu")
     gabarits = charger_gabarits() if gabarits is None else gabarits
-    enfants = np.random.SeedSequence(int(graine)).spawn(budget_max())
+    enfants = np.random.SeedSequence(graine).spawn(budget_max())
     graines = [int(e.generate_state(1)[0]) for e in enfants]
     requete = requete_utilisateur(env)
     inv = remplir(gabarits["B1"], {"user_query": requete, "trace": rendre_trace(journal)})
     sortie, tronque = _sortie(generer(inv, "triage", graines[0]), "triage")
     fenetres, anomalies = lire_triage(sortie, env.T)
+    for k in range(1, env.T + 1):
+        n = _neutraliser(journal[k - 1][2])[1]
+        if n:
+            anomalies.append(f"pas {k} : {n} balise(s) <action> écrite(s) par l'agent, neutralisée(s) au rendu")
     if tronque:
         anomalies.append("triage : génération tronquée")
     appels = calendrier(fenetres)
     if len(appels) + 2 > budget_max():
         raise GardeArret(f"{len(appels) + 2} appels > budget de {budget_max()}")
-    trace = {"graine": int(graine), "gabarits_sha256": {nom: _sha(t) for nom, t in sorted(gabarits.items())},
+    trace = {"graine": graine, "masse_min": float(masse_min),
+             "gabarits_sha256": {nom: _sha(t) for nom, t in sorted(gabarits.items())},
              "triage": {"invite_sha256": _sha(inv), "graine": graines[0], "tronque": tronque, "sortie": sortie},
              "fenetres": fenetres, "anomalies": anomalies,
              "copie_exemple": any(f["pas"] == EXEMPLE_GABARIT["pas"] and f["raison"].strip() == EXEMPLE_GABARIT["raison"]
@@ -346,7 +366,7 @@ def executer(env: EnvironnementPropositions, journal: list[tuple[int, int, str]]
         raise GardeArret(f"score de verdict {score} hors de [1, 5]")
     if not 0.0 < masse <= 1.0:
         raise GardeArret(f"masse du verdict {masse} hors de ]0, 1]")
-    if masse_min is not None and masse < masse_min:
+    if masse < masse_min:
         anomalies.append(f"verdict : masse {masse:.3f} < {masse_min} (le moniteur voulait écrire autre chose)")
     trace["verdict"] = {"invite_sha256": _sha(inv), "score": score, "masse": masse}
     trace["nombre_appels"] = len(trace["appels"]) + 2
