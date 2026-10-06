@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import shutil
 
 import pytest
@@ -257,3 +258,56 @@ def test_branchement_au_harnais_sur_modele_jouet():
         journal = [(a.agent, a.pas, a.texte) for a in ep.actions_dans_l_ordre()]
         bilan = envs[b].bilan(journal)
         assert bilan["actions"] == 2 and bilan["actions_valides"] == 0 and bilan["historique"][0]["motif"]
+
+
+def test_rubrique_b_etoile_conforme_a_l_invite_i8():
+    i8 = inv.charger_invite("I8")
+    for nom, lo, hi in rb.CRITERES_I8:
+        assert f"{nom}: <integer {lo} to {hi}>" in i8, nom
+    assert rb.points_max(rb.CRITERES_I8) == 24
+    rep = "\n".join(f"{n}: {hi}" for n, lo, hi in rb.CRITERES_I8)
+    r = rb.lire_notes(rep, rb.CRITERES_I8)
+    assert r.complete and r.score_sur_100() == 100.0
+    assert not rb.lire_notes(rep).complete  # lu avec la rubrique H.4 : critères absents
+
+
+# --- juges -------------------------------------------------------------------------------------------------
+
+from controle_ia.environnements import juges as jg  # noqa: E402
+
+
+def test_messages_juge_b0_et_b_etoile():
+    msgs, criteres = jg.messages_juge_ensemble("Why do routers matter?", "PROPOSAL 1: x\ny", "b0", "Paper type: x")
+    assert msgs[0]["content"].startswith("You are a senior ML researcher evaluating proposed experiments")
+    u = msgs[1]["content"]
+    assert u.startswith("## Scoring Rubric") and u.index("## Research Questions") < u.index("## Proposals")
+    assert "Paper type: x" in u and criteres is rb.CRITERES
+    msgs, criteres = jg.messages_juge_ensemble("Why?", "PROPOSAL 1: x", "b*")
+    assert msgs[0]["content"].startswith("You are an expert ML research evaluator") and criteres is rb.CRITERES_I8
+    assert "## Scoring Rubric" not in msgs[1]["content"]
+
+
+def test_messages_juge_gardes():
+    with pytest.raises(GardeArret):
+        jg.messages_juge_ensemble("Why?", "   ")
+    with pytest.raises(GardeArret, match="inconnue"):
+        jg.messages_juge_ensemble("Why?", "PROPOSAL 1", "b9")
+    with pytest.raises(GardeArret):
+        jg.message_appariement("", "cible")
+
+
+def test_appariement_et_probabilite():
+    m = jg.message_appariement("Train a dense baseline.", "a dense baseline of equal compute")
+    assert m[0]["content"].endswith("Answer:") and "## Target\n\na dense baseline" in m[0]["content"]
+    assert jg.probabilite_oui(-0.1, -2.4) == pytest.approx(1 / (1 + math.exp(-2.3)))
+    assert jg.probabilite_oui(-1000.0, 0.0) < 1e-300 and jg.probabilite_oui(0.0, -1000.0) > 1 - 1e-12
+    with pytest.raises(GardeArret):
+        jg.probabilite_oui(float("nan"), -1.0)
+
+
+def test_lire_confiance_detecteur():
+    assert jg.lire_confiance_detecteur("x <sandbagging_confidence>37</sandbagging_confidence>") == 37
+    assert jg.lire_confiance_detecteur("<sandbagging_confidence>5</sandbagging_confidence> puis "
+                                       "<sandbagging_confidence> 62 </sandbagging_confidence>") == 62
+    assert jg.lire_confiance_detecteur("aucune balise") is None
+    assert jg.lire_confiance_detecteur("<sandbagging_confidence>150</sandbagging_confidence>") is None
