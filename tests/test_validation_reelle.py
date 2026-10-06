@@ -897,7 +897,8 @@ def test_lecture_de_la_production_sur_le_99e_centile():
 
 def test_phase_chemin_de_bout_en_bout(depot):
     """La phase de chemin (simple précision, noyau et régime de production) et son contrôle positif sont joués,
-    consignés et lus ; la production lit le 99e centile ; le débit tourne au noyau de production."""
+    consignés et lus ; la production lit le 99e centile ; le débit consigne le noyau de production (qu'il y tourne
+    est vérifié par `test_debit_au_noyau_de_production`)."""
     run = "20261006-100000-repetition-jouet"
     s = V.executer(depot, run, entropie=31, config=PETITE, verifier_import=False)
     assert s["lecture"] == LECTURE_SAINE
@@ -999,3 +1000,146 @@ def test_repere_au_noyau_de_production(depot, monkeypatch):
     assert vus == [[PETITE["production"]["noyau_attention"]]]
     r = json.loads((depot / "diag" / run / "resume.json").read_text())["resultat"]
     assert set(r["production"]["repere_precision"]) == {str(c) for c in r["production"]["couches"]}
+
+
+# ---------------------------------------------------------------- contre-lecture 1 de la v3 (X-2, X-4, X-10)
+
+def test_chaine_du_99e_centile_de_bout_en_bout(depot):
+    """X-4 : dans un run de bout en bout, pour chaque action comparée de chaque phase, la grandeur de la garde de
+    production (`ecarts_q99`) est le 99e centile des écarts par jeton sur toutes les positions capturées (champ
+    `q99` du profil, calculé à part) ; le bilan lit le maximum de ces 99e centiles, pas celui des maxima."""
+    run = "20261006-120000-repetition-jouet"
+    V.executer(depot, run, entropie=13, config=PETITE, verifier_import=False)
+    r = json.loads((depot / "diag" / run / "resume.json").read_text())["resultat"]
+    differents = 0
+    for phase in V.PHASES_COMPAREES:
+        q99s = []
+        for e in r[phase]["episodes"]:
+            eq = e["equivalence"]
+            for cle, par_couche in eq["ecarts_q99"].items():
+                for c, v in par_couche.items():
+                    assert v == eq["profils"][cle][c]["q99"]
+                    q99s.append(v)
+                    differents += v != eq["ecarts"][cle][c]
+        assert q99s and r[phase]["equivalence"]["ecart_q99_max"] == max(q99s)
+    assert differents > 0                                                  # le 99e centile n'est pas le maximum
+
+
+def test_controle_negatif_q99_lit_la_grandeur_de_la_garde():
+    """X-2, X-4 : en production, le contrôle négatif lit le 99e centile sur les positions que lit la garde (contexte
+    non décalé, zone générée décalée), ni sur la zone générée seule, ni à la médiane. Un décalage confiné à une zone
+    générée de moins de 1 % des positions échappe à la garde : le contrôle négatif le montre."""
+    from controle_ia.harnais.activations import ecart_decale_zone_generee, ecart_equivalence, ecarts_par_jeton
+    from controle_ia.harnais.episode import bilan_controle_negatif
+    rng = np.random.default_rng(3)
+
+    def cas(lc, m):
+        p = {7: rng.standard_normal((lc + m, 16))}
+        return {7: p[7] * (1 + 0.01 * rng.standard_normal((lc + m, 1)))}, p
+    g, p = cas(80, 20)                                     # zone générée de 20 % des positions : décalage vu
+    z = ecart_decale_zone_generee(g, p, 80, 0.2)[7]
+    attendu = np.quantile(np.concatenate([ecarts_par_jeton(g[7][:80], p[7][:80]),
+                                          ecarts_par_jeton(g[7][81:], p[7][80:99])]), 0.99)
+    assert z["q99"] == attendu and z["q99"] > 0.2
+    g, p = cas(2000, 15)                                   # 15 positions générées sur 2 015 : moins de 1 %
+    z = ecart_decale_zone_generee(g, p, 2000, 0.2)[7]
+    seule = np.quantile(ecarts_par_jeton(g[7][2001:], p[7][2000:2014]), 0.99)
+    decale = {7: np.concatenate([g[7][:2000], p[7][1999:2014]])}           # zone générée décalée d'un jeton
+    assert seule > 0.2 and z["q99"] < 0.2
+    assert ecart_equivalence(decale, p, quantile=0.99)[7] < 0.2            # la garde ne verrait pas le décalage
+    rapport = {"tolerance": 0.2, "statistique": "q99", "episode": "e", "controle_negatif_zone_generee": {"0,0": {7: z}}}
+    assert bilan_controle_negatif([rapport])["passent"] == 0
+
+
+def test_lecture_du_chemin_couverture_audit_et_maximum():
+    """X-4 : la lecture du chemin exige la couverture et se fait sur le maximum (pas sur le 99e centile) ; l'audit
+    de symétrie couvre le chemin."""
+    def bilan(ecart=1e-6, q99=1e-7, remplies=3, finies=2, zeros_gen=(1, 40), tol=3e-3, stat="max"):
+        return {"tolerance": tol, "statistique": stat, "ecart_max": ecart, "ecart_q99_max": q99,
+                "max_contexte": ecart, "max_zone_generee": ecart,
+                "controle_negatif": {"comparables": 12, "passent": 12, "fraction": 1.0},
+                "couverture": {"actions_remplies": remplies, "actions_finies_avant": finies,
+                               "positions_generees_comparees": 40, "lignes_echantillon": [1, 6]},
+                "zeros": {"7": {"contexte": [5, 10], "generee": list(zeros_gen)}},
+                "sondes_audit": {"tableaux_distincts": True, "ulp_vu": True}}
+
+    def lire(**kw):
+        return V.lire({"format": {"verifie": True}, "logique": {"equivalence": bilan(tol=1e-4)},
+                       "chemin": {"equivalence": bilan(**kw)},
+                       "production": {"equivalence": bilan(tol=0.2, stat="q99"),
+                                      "rejeu_en_processus": [{"identique": True}]}}, V.CONFIG_REELLE)
+    assert lire()["chemin_equivalence"] == "conforme"
+    assert lire(remplies=0)["chemin_equivalence"] == "non concluant"
+    assert lire(finies=0)["chemin_equivalence"] == "non concluant"
+    assert lire(ecart=5e-3, q99=1e-3)["chemin_equivalence"] == "contraire"   # le maximum, pas le 99e centile
+    assert lire()["audit_symetrie"] == "non déclenché"
+    assert "chemin" in lire(zeros_gen=(40, 40))["audit_symetrie"]
+
+
+def test_arret_du_chemin_garde_le_bilan_de_son_controle_positif(depot):
+    """X-4 : le contrôle positif du chemin est joué et consigné avant les gardes du chemin ; si C1 arrête le run
+    (artefact : seuil du chemin de 1e-12), `arret.json` contient son bilan."""
+    stricte = dict(PETITE, chemin=dict(PETITE["chemin"], tolerance=1e-12))
+    run = "20261006-120100-repetition-jouet"
+    with pytest.raises(GardeArret, match="chemin"):
+        V.executer(depot, run, entropie=17, config=stricte, verifier_import=False)
+    arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
+    assert arret["phase"] == "chemin"
+    assert arret["partiel"]["controle_positif_chemin"]["bilan"]["comparables"] > 0
+    assert arret["partiel"]["lecture_partielle"]["chemin_equivalence"] == "contraire"
+
+
+def test_debit_au_noyau_de_production(depot, monkeypatch):
+    """X-4 : chaque génération du débit tourne dans le contexte du noyau d'attention de la production."""
+    actifs, vus = [], []
+    vrai_noyau, vrai_generer = V.noyau, V.generer_lot
+
+    @contextlib.contextmanager
+    def espion_noyau(nom):
+        actifs.append(nom)
+        try:
+            with vrai_noyau(nom):
+                yield
+        finally:
+            actifs.pop()
+
+    def espion_generer(*a, **kw):
+        vus.append(list(actifs))
+        return vrai_generer(*a, **kw)
+    monkeypatch.setattr(V, "noyau", espion_noyau)
+    monkeypatch.setattr(V, "generer_lot", espion_generer)
+    V.executer(depot, "20261006-120200-repetition-jouet", entropie=19, config=PETITE, verifier_import=False)
+    assert vus == [[PETITE["production"]["noyau_attention"]]] * len(PETITE["debit"]["tailles_lot"])
+
+
+def test_panne_de_memoire_du_debit_consignee(depot, monkeypatch):
+    """X-10 : le débit est descriptif ; un manque de mémoire de la carte y est consigné sans arrêter le run (résumé
+    écrit, lectures inchangées) ; les lots plus grands ne sont pas tentés."""
+    appels = []
+    vrai = V.generer_lot
+
+    def panne(modele, transcriptions, *a, **kw):
+        appels.append(len(transcriptions))
+        if len(transcriptions) >= PETITE["debit"]["tailles_lot"][1]:
+            raise torch.cuda.OutOfMemoryError("CUDA out of memory (essai)")
+        return vrai(modele, transcriptions, *a, **kw)
+    monkeypatch.setattr(V, "generer_lot", panne)
+    run = "20261006-120300-repetition-jouet"
+    s = V.executer(depot, run, entropie=31, config=PETITE, verifier_import=False)
+    assert s["lecture"] == LECTURE_SAINE
+    d = json.loads((depot / "diag" / run / "resume.json").read_text())["resultat"]["debit"]
+    assert d["panne_memoire"] is True and appels == PETITE["debit"]["tailles_lot"][:2]
+    assert "jetons_par_s" in d["mesures"][0] and "OutOfMemoryError" in d["mesures"][1]["erreur"]
+
+
+def test_autre_panne_du_debit_arrete_le_run(depot, monkeypatch):
+    """X-10, artefact : seule la panne de mémoire du débit se consigne sans arrêt ; une autre exception (ici une
+    garde) arrête le run en phase de débit, `arret.json` à l'appui, sans résumé."""
+    def garde(*a, **kw):
+        raise GardeArret("essai : garde pendant le débit")
+    monkeypatch.setattr(V, "generer_lot", garde)
+    run = "20261006-120400-repetition-jouet"
+    with pytest.raises(GardeArret, match="pendant le débit"):
+        V.executer(depot, run, entropie=29, config=PETITE, verifier_import=False)
+    arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
+    assert arret["phase"] == "debit" and not (depot / "diag" / run / "resume.json").exists()

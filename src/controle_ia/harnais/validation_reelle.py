@@ -114,7 +114,7 @@ CONFIG_REELLE = {
     # double précision (version 2) : 64,2 Go de poids, plus le préremplissage d'un lot de 8 : quadratique en sa longueur
     # remplie, qui a atteint 2 329 jetons dans la v1 (≈ 104 Go au pic estimés) ; carte de 141 Go (H200)
     "memoire_carte_min_gio": 130,
-    "tests_attendus": 199,                    # suite complète au commit cité, tous réussis (P0)
+    "tests_attendus": 206,                    # suite complète au commit cité, tous réussis (P0)
     "projection": {"episodes": 2000},
     "limite_s": 9000,
 }
@@ -454,7 +454,7 @@ def bilan_phase(sorties, c: dict, cn: dict) -> dict:
 def bilan_controle_positif(sorties, c: dict, cp: dict) -> dict:
     """Contrôle positif (défaut D1 injecté). Une action comparée est comparable si sa zone générée compte au moins
     `positions_min` positions à chaque couche ; elle est vue si, à chaque couche, le maximum de l'écart dans la zone
-    générée dépasse la tolérance de logique. Un maximum illisible (NaN) ne compte jamais comme vu.
+    générée dépasse la tolérance de sa phase (logique ou chemin). Un maximum illisible (NaN) ne compte jamais comme vu.
     Descriptif (R4) : maximum du contexte des actions comparables, que D1 ne touche pas (attendu au niveau de P2)."""
     comparables, vus, courtes, manques, minimum = 0, 0, 0, [], float("inf")
     contextes = []
@@ -484,7 +484,8 @@ def exiger_controle_positif(bilan: dict, cp: dict, quoi: str) -> None:
     if bilan["comparables"] < cp["actions_min"]:
         return
     if not bilan["fraction"] >= cp["fraction_min"]:
-        raise GardeArret(f"{quoi} : défaut D1 injecté non vu au seuil de logique pour {len(bilan['manques'])} action(s) "
+        raise GardeArret(f"{quoi} : défaut D1 injecté non vu au seuil de sa phase ({bilan['tolerance']}) pour "
+                         f"{len(bilan['manques'])} action(s) "
                          f"sur {bilan['comparables']} ({bilan['manques'][:10]})")
 
 
@@ -736,19 +737,30 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
             torch.cuda.reset_peak_memory_stats()
         cd = config["debit"]
         transcriptions = [tr.ids[:cd["longueur_contexte"]] for ep, _, _ in sorties for tr in ep.transcriptions]
-        mesures = []
+        mesures, panne = [], None
         for B in cd["tailles_lot"]:
             graines_lot = [graine_entiere(graines[f"debit/ligne-{r}"]) for r in range(B)]
             t0 = time.perf_counter()
-            with noyau(prod["noyau_attention"]):                     # noyau de production (version 3)
-                nouveaux, _ = generer_lot(modele, transcriptions[:B], cd["max_nouveaux"], 1.0, graines_lot, set(),
-                                          fmt.tok.pad_token_id if fmt.tok.pad_token_id is not None else min(fmt.fins))
+            try:
+                with noyau(prod["noyau_attention"]):                 # noyau de production (version 3)
+                    nouveaux, _ = generer_lot(modele, transcriptions[:B], cd["max_nouveaux"], 1.0, graines_lot, set(),
+                                              fmt.tok.pad_token_id if fmt.tok.pad_token_id is not None
+                                              else min(fmt.fins))
+            except torch.cuda.OutOfMemoryError as e:
+                # débit descriptif (contre-lecture 1 de la v3, X-10) : un manque de mémoire de la carte s'y consigne,
+                # sans arrêter le run ; toute autre exception (garde, signal TERM…) se propage
+                panne = f"{type(e).__name__}: {str(e)[:300]}"
+            if panne is not None:
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                mesures.append({"taille_lot": B, "erreur": panne})
+                break                                                # lots plus grands : plus de mémoire encore
             duree = time.perf_counter() - t0
             n = sum(len(x) for x in nouveaux)
             mesures.append({"taille_lot": B, "jetons_generes": n, "duree_s": duree, "jetons_par_s": n / duree,
                             "contexte_moyen": sum(len(x) for x in transcriptions[:B]) / B})
         resume["debit"] = {"mesures": mesures, "noyau_attention": prod["noyau_attention"],
-                           "memoire_max_go": memoire_max_go()}
+                           "panne_memoire": panne is not None, "memoire_max_go": memoire_max_go()}
         del modele
         liberer()
         resume["lecture"] = lire(resume, config)

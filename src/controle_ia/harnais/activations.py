@@ -151,8 +151,14 @@ def ecart_decale_zone_generee(acts_generation: dict[int, np.ndarray], acts_passe
     """Contrôle négatif restreint à la zone où génération et passe unique suivent des chemins différents : les
     positions décodées. On compare g_n à p_{n−1} pour n ≥ longueur_contexte + 1, les deux positions dans la zone
     générée (la première position décodée, comparée au dernier jeton du contexte, est exclue : elle passerait
-    d'elle-même). Par couche : maximum et 99e centile de l'écart décalé (version 3 : le contrôle négatif lit la même
-    grandeur que la garde de sa phase), et nombre de positions au-dessus de la tolérance.
+    d'elle-même). Par couche, la grandeur que lirait la garde de la phase sous ce décalage d'un jeton :
+    - « max » : maximum de l'écart décalé de la zone générée ; le maximum croît avec les positions lues, si bien que
+      le voir au-dessus de la tolérance suffit à dire que la garde, qui lit toute l'action, le verrait aussi ;
+    - « q99 » (version 3, contre-lecture 1, X-2) : 99e centile sur les positions que lit la garde de la production,
+      le contexte non décalé suivi de la zone générée décalée. Le 99e centile ne croît pas avec les positions lues :
+      un décalage confiné à une zone générée de moins de 1 % des positions de l'action lui échappe, et ce contrôle
+      négatif doit le montrer ;
+    - le nombre de positions décalées au-dessus de la tolérance, et leur nombre.
     None si l'action a moins de deux positions décodées capturées (trop courte : comptée à part)."""
     sortie = {}
     for couche, g in acts_generation.items():
@@ -163,7 +169,8 @@ def ecart_decale_zone_generee(acts_generation: dict[int, np.ndarray], acts_passe
         if g.shape[0] <= debut:
             return None
         e = ecarts_par_jeton(g[debut:], p[debut - 1: g.shape[0] - 1])
-        sortie[couche] = {"max": float(e.max()), "q99": float(np.quantile(e, 0.99)),
+        e_action = np.concatenate([ecarts_par_jeton(g[:longueur_contexte], p[:longueur_contexte]), e])
+        sortie[couche] = {"max": float(e.max()), "q99": float(np.quantile(e_action, 0.99)),
                           "au_dessus": int(np.sum(e > tolerance)), "positions": int(e.size)}
     return sortie
 
