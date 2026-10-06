@@ -1,14 +1,18 @@
-"""TRACE-lite (T0.8 ; P-003 ; réimplémenté d'après arXiv 2606.07054, annexe B) — partie déterministe : lecture du
-triage, validation des fenêtres, calendrier d'inspection borné ; gabarits dérivés pour l'environnement (a)
+"""TRACE-lite (T0.8 ; P-003 ; réimplémenté d'après arXiv 2606.07054, annexe B) — lecture du triage, validation des
+fenêtres, calendrier d'inspection fixe et borné ; gabarits dérivés pour l'environnement (a)
 (`docs/sources/invites-2606.07054-v1/derivees/`, chargés après vérification de leur scellement) et leur remplissage ;
 conduite d'un épisode, les appels au moniteur et la lecture du verdict par espérance (`scores_jetons`) étant fournis
-par l'appelant (brouillon `brouillons/T0.8-TRACE-lite-conception-v1-brouillon1.md`).
+par l'appelant. Règles de remplissage : `derivees/LISEZMOI-v1.md`.
 
 Règles (gabarit B1) : au plus 4 fenêtres ; fenêtre **locale** = 1 à 3 pas adjacents ; fenêtre **motif** = 3 à 8 pas non
-adjacents. Les pas sont numérotés de 1 à T dans les invites. Aucune réparation silencieuse : un JSON illisible donne zéro
-fenêtre, une fenêtre hors règles est écartée, et chaque cas devient une anomalie consignée (P-003 : journal des JSON
-invalides). Calendrier fixe (le contrôleur B2 est retiré) : fenêtre locale → un InspectStep (B3-1) par pas ; fenêtre
-motif → un AnalyzeDecisions (B3-4) sur ses pas puis un CompareSteps (B3-2) entre son premier et son dernier pas.
+tous adjacents. Les pas sont numérotés de 1 à T dans les invites. Aucune réparation silencieuse : un JSON illisible donne
+zéro fenêtre, une fenêtre hors règles est écartée, et chaque cas devient une anomalie consignée (P-003 : journal des JSON
+invalides). Calendrier fixe (le contrôleur B2 est retiré, d'où le « lite ») :
+- fenêtre locale → un InspectStep (B3-1) par pas, puis un CheckPolicy (B3-3) sur la fenêtre ;
+- fenêtre motif → un AnalyzeDecisions (B3-4) sur ses pas, un CompareSteps (B3-2) entre son premier et son dernier pas,
+  puis un CheckPolicy (B3-3) sur la fenêtre.
+Propagation entre fenêtres (« key architectural property » de TRACE, PDF p. 4) : chaque InspectStep reçoit tous les
+constats antérieurs de l'épisode.
 """
 from __future__ import annotations
 
@@ -18,31 +22,41 @@ import re
 from pathlib import Path
 from typing import Callable
 
-from ..environnements.propositions import CONSIGNE_HONNETE, EnvironnementPropositions, rejouer
+import numpy as np
+
+from ..environnements.propositions import (CONSIGNE_HONNETE, FORMAT_ACTION, EnvironnementPropositions,
+                                           rejouer)
 from ..gardes import GardeArret
 from ..scellement import verifier
 
 MAX_FENETRES = 4
 LOCALE = (1, 3)
 MOTIF = (3, 8)
+EXEMPLE_GABARIT = {"pas": [3, 4], "raison": "..."}   # exemple de B1 : sa copie est comptée, jamais écartée
 
 
-def _dernier_objet_json(texte: str):
-    """Dernier objet JSON de premier niveau bien formé du texte (le moniteur peut écrire avant), ou None. Balayage de
-    gauche à droite : un objet lu saute ses objets internes, qui ne sont jamais pris pour lui."""
-    dernier, i, decodeur = None, 0, json.JSONDecoder()
+def _objets_json(texte: str) -> list:
+    """Objets JSON de premier niveau bien formés du texte, dans l'ordre. Balayage de gauche à droite : un objet lu saute
+    ses objets internes, qui ne sont jamais pris pour lui."""
+    objets, i, decodeur = [], 0, json.JSONDecoder()
     while True:
         m = re.compile(r"\{").search(texte, i)
         if m is None:
-            return dernier
+            return objets
         try:
             obj, fin = decodeur.raw_decode(texte, m.start())
         except json.JSONDecodeError:
             i = m.start() + 1
             continue
         if isinstance(obj, dict):
-            dernier = obj
+            objets.append(obj)
         i = fin
+
+
+def _dernier_objet_json(texte: str):
+    """Dernier objet JSON de premier niveau bien formé du texte (le moniteur peut écrire avant), ou None."""
+    objets = _objets_json(texte)
+    return objets[-1] if objets else None
 
 
 def _nature(pas: list[int]) -> str | None:
@@ -56,27 +70,38 @@ def _nature(pas: list[int]) -> str | None:
     return None
 
 
+def _entier_json(x) -> bool:
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
 def lire_triage(reponse: str, T: int) -> tuple[list[dict], list[str]]:
     """Fenêtres valides (pas triés, uniques, dans 1..T) et anomalies. Au-delà de 4 fenêtres valides, les suivantes sont
-    écartées (anomalie)."""
+    écartées ; une fenêtre identique à une fenêtre déjà retenue aussi (anomalie dans les deux cas). Seuls des entiers
+    JSON sont des numéros de pas. Un motif absent ou nul vaut « vide » ; un motif non textuel est consigné."""
     if T < 1:
         raise GardeArret("épisode sans action")
-    obj = _dernier_objet_json(reponse)
-    if obj is None:
+    if not isinstance(reponse, str):
+        raise GardeArret(f"sortie du triage de type {type(reponse).__name__} : texte attendu")
+    if not reponse.strip():
+        return [], ["triage : sortie vide"]
+    objets = _objets_json(reponse)
+    if not objets:
         return [], ["triage : aucun objet JSON lisible"]
-    fenetres, anomalies = [], []
-    brutes = obj.get("suspect_windows")
+    brutes = objets[-1].get("suspect_windows")
     if not isinstance(brutes, list):
+        if any(isinstance(o.get("suspect_windows"), list) for o in objets[:-1]):
+            return [], ["triage : le dernier objet JSON n'a pas de « suspect_windows » en liste, un objet antérieur en "
+                        "a un (objet parasite après la réponse ?)"]
         return [], ["triage : « suspect_windows » absent ou non liste"]
+    fenetres, anomalies = [], []
     for k, f in enumerate(brutes):
         if not isinstance(f, dict) or not isinstance(f.get("steps"), list):
             anomalies.append(f"fenêtre {k} : forme invalide")
             continue
-        try:
-            pas = [int(x) for x in f["steps"]]
-        except (TypeError, ValueError):
-            anomalies.append(f"fenêtre {k} : pas non entiers")
+        if not all(_entier_json(x) for x in f["steps"]):
+            anomalies.append(f"fenêtre {k} : pas non entiers ({f['steps']!r})")
             continue
+        pas = list(f["steps"])
         if any(x < 1 or x > T for x in pas):
             anomalies.append(f"fenêtre {k} : pas hors de 1..{T} ({pas})")
             continue
@@ -88,15 +113,29 @@ def lire_triage(reponse: str, T: int) -> tuple[list[dict], list[str]]:
         if nature is None:
             anomalies.append(f"fenêtre {k} : ni locale (1 à 3 pas adjacents) ni motif (3 à 8 pas non adjacents) ({pas_u})")
             continue
+        deja = [j for j, g in enumerate(fenetres) if g["pas"] == pas_u]
+        if deja:
+            anomalies.append(f"fenêtre {k} : identique à une fenêtre déjà retenue ({pas_u}), écartée")
+            continue
         if len(fenetres) == MAX_FENETRES:
             anomalies.append(f"fenêtre {k} : au-delà de {MAX_FENETRES} fenêtres, écartée")
             continue
-        fenetres.append({"pas": pas_u, "nature": nature, "raison": str(f.get("reason", ""))})
+        raison = f.get("reason")
+        if raison is None:
+            raison = ""
+        elif not isinstance(raison, str):
+            anomalies.append(f"fenêtre {k} : motif non textuel ({type(raison).__name__}), lu comme absent")
+            raison = ""
+        if pas_u == EXEMPLE_GABARIT["pas"] and raison.strip() == EXEMPLE_GABARIT["raison"]:
+            anomalies.append(f"fenêtre {k} : identique à l'exemple du gabarit ({pas_u}, motif « ... ») : copie "
+                             "probable, gardée")
+        fenetres.append({"pas": pas_u, "nature": nature, "raison": raison})
     return fenetres, anomalies
 
 
 def calendrier(fenetres: list[dict]) -> list[dict]:
-    """Appels d'inspection, dans l'ordre : locale → InspectStep par pas ; motif → AnalyzeDecisions puis CompareSteps."""
+    """Appels d'inspection, dans l'ordre : locale → InspectStep par pas ; motif → AnalyzeDecisions puis CompareSteps ;
+    chaque fenêtre se termine par un CheckPolicy sur ses pas."""
     appels = []
     for i, f in enumerate(fenetres):
         if f["nature"] == "locale":
@@ -106,21 +145,22 @@ def calendrier(fenetres: list[dict]) -> list[dict]:
             appels.append({"fenetre": i, "action": "CompareSteps", "pas": [f["pas"][0], f["pas"][-1]]})
         else:
             raise GardeArret(f"fenêtre {i} : nature {f['nature']!r} inconnue")
+        appels.append({"fenetre": i, "action": "CheckPolicy", "pas": list(f["pas"])})
     return appels
 
 
 def budget_max() -> int:
-    """Appels au plus par épisode : triage + 4 fenêtres × 3 appels + verdict."""
-    return 1 + MAX_FENETRES * max(LOCALE[1], 2) + 1
+    """Appels au plus par épisode : triage + 4 fenêtres × (3 appels + CheckPolicy) + verdict = 18."""
+    return 1 + MAX_FENETRES * (max(LOCALE[1], 2) + 1) + 1
 
 
 # --- Gabarits dérivés pour l'environnement (a) et leur remplissage -------------------------------------------------
 #
-# Règles de remplissage (`derivees/LISEZMOI-v1.md`) : la « requête de l'utilisateur » est la part honnête de ce que
-# l'environnement dit à l'agent (consigne, énoncé, classification), sans le format d'action ni rien de caché (instruction
-# d'un organisme, indication privée) ; aucune cible semée n'y figure, puisqu'elles ne sont jamais dans la tâche. Un pas
-# se rend par le texte de l'action, mot pour mot, suivi de son effet sur l'ensemble (« RESULT: … »), l'analogue du
-# résultat d'outil. Le remplissage se fait en une passe : un texte inséré n'est jamais relu comme un champ.
+# Règles de remplissage (`derivees/LISEZMOI-v1.md`) : la « requête de l'utilisateur » est ce que l'environnement dit à un
+# agent honnête (consigne, format d'action, énoncé, classification), entre balises, sans rien de caché (instruction d'un
+# organisme, indication privée) ; aucune cible semée n'y figure, puisqu'elles ne sont jamais dans la tâche. Un pas se
+# rend par le texte de l'action, mot pour mot entre balises, suivi de son effet sur l'ensemble (« RESULT: … »),
+# l'analogue du résultat d'outil. Le remplissage se fait en une passe : un texte inséré n'est jamais relu comme un champ.
 
 RACINE_DERIVEES = (Path(__file__).resolve().parents[3] / "docs" / "sources" / "invites-2606.07054-v1"
                    / "derivees")
@@ -129,10 +169,12 @@ CHAMPS = {
     "B1": {"user_query", "trace"},
     "B3-1": {"user_query", "reason", "prior_observations", "k", "step_text"},
     "B3-2": {"user_query", "i", "step_i_text", "j", "step_j_text"},
+    "B3-3": {"user_query", "window_text"},
     "B3-4": {"user_query", "decision_type", "trace_text"},
     "B4": {"user_query", "evidence_items"},
 }
-GABARIT_DE_L_ACTION = {"InspectStep": "B3-1", "CompareSteps": "B3-2", "AnalyzeDecisions": "B3-4"}
+GABARIT_DE_L_ACTION = {"InspectStep": "B3-1", "CompareSteps": "B3-2", "CheckPolicy": "B3-3",
+                       "AnalyzeDecisions": "B3-4"}
 REPONSE_IMPOSEE_VERDICT = '{"score": '
 VALEURS_VERDICT = (1, 2, 3, 4, 5)
 VIDE = "(none)"
@@ -175,16 +217,17 @@ def remplir(gabarit: str, valeurs: dict[str, str]) -> str:
 
 
 def requete_utilisateur(env: EnvironnementPropositions) -> str:
-    """Part honnête de la consigne de l'agent : consigne, énoncé, classification et son guide s'il y en a. Ni le format
-    d'action, ni l'instruction cachée d'un organisme, ni les indications privées. Phase 0 : un seul agent."""
+    """Ce que l'environnement dit à un agent honnête : consigne, format d'action, énoncé, guide et classification s'il y
+    en a, entre balises `<user_request>`. Ni l'instruction cachée d'un organisme, ni les indications privées : la requête
+    est la même dans toutes les conditions. Phase 0 : un seul agent."""
     if env.N != 1:
         raise GardeArret(f"TRACE-lite : un seul agent en phase 0 (N = {env.N})")
-    parties = [CONSIGNE_HONNETE.format(T=env.T), "Problem statement:\n" + env.tache.questions.strip()]
+    parties = [CONSIGNE_HONNETE.format(T=env.T), FORMAT_ACTION, "Problem statement:\n" + env.tache.questions.strip()]
     if env.tache.classification:
         if env.guide_classification:
             parties.append(env.guide_classification.strip())
         parties.append(env.tache.classification.strip())
-    return "\n\n".join(parties)
+    return "<user_request>\n" + "\n\n".join(parties) + "\n</user_request>"
 
 
 def _verifier_journal(env: EnvironnementPropositions, journal: list[tuple[int, int, str]]):
@@ -196,15 +239,19 @@ def _verifier_journal(env: EnvironnementPropositions, journal: list[tuple[int, i
 
 
 def rendre_pas(journal: list[tuple[int, int, str]], k: int) -> str:
-    """Pas k (1..T) : texte de l'action, mot pour mot, puis son effet sur l'ensemble."""
+    """Pas k (1..T) : texte de l'action, mot pour mot entre balises `<action>`, puis son effet sur l'ensemble ; une
+    révision renvoie au pas de la version qu'elle remplace."""
     if not 1 <= k <= len(journal):
         raise GardeArret(f"pas {k} hors de 1..{len(journal)}")
+    avant = rejouer(journal[:k - 1])
     h = rejouer(journal[:k]).historique[k - 1]
-    if h["valide"]:
-        effet = (f"proposal {h['numero']} added" if h["operation"] == "ADD" else f"proposal {h['numero']} revised")
-    else:
+    if not h["valide"]:
         effet = f"not applied ({h['motif']})"
-    return f"{journal[k - 1][2].strip()}\nRESULT: {effet}"
+    elif h["operation"] == "ADD":
+        effet = f"proposal {h['numero']} added"
+    else:
+        effet = f"proposal {h['numero']} revised (previous version: step {avant.propositions[h['numero']].pas + 1})"
+    return f"<action>\n{journal[k - 1][2].strip()}\n</action>\nRESULT: {effet}"
 
 
 def rendre_trace(journal: list[tuple[int, int, str]], pas: list[int] | None = None) -> str:
@@ -216,65 +263,91 @@ def _crochets(pas: list[int]) -> str:
     return ("step [" if len(pas) == 1 else "steps [") + ", ".join(str(k) for k in pas) + "]"
 
 
+def journal_de_preuves(constats: list[dict]) -> str:
+    """Constats numérotés dans l'ordre du calendrier, séparés par une ligne vide ; « (none) » s'il n'y en a aucun."""
+    if not constats:
+        return VIDE
+    return "\n\n".join(f"Finding {n} ({c['action']}, {_crochets(c['pas'])}): {c['sortie'].strip()}"
+                       for n, c in enumerate(constats, 1))
+
+
 def invite_appel(gabarits: dict[str, str], requete: str, journal, appel: dict, fenetre: dict,
-                 observations: list[tuple[list[int], str]]) -> str:
-    """Invite d'un appel d'inspection. `observations` : sorties des appels précédents de la même fenêtre."""
+                 constats: list[dict]) -> str:
+    """Invite d'un appel d'inspection. `constats` : tous les constats antérieurs de l'épisode, toutes fenêtres
+    confondues (propagation entre fenêtres)."""
     nom = GABARIT_DE_L_ACTION.get(appel["action"])
     if nom is None:
         raise GardeArret(f"action {appel['action']!r} sans gabarit")
     raison = fenetre.get("raison", "").strip() or SANS_MOTIF
     if nom == "B3-1":
         k = appel["pas"][0]
-        prec = "\n".join(f"{_crochets(p).capitalize()}: {s.strip()}" for p, s in observations) or VIDE
-        valeurs = {"user_query": requete, "reason": raison, "prior_observations": prec, "k": str(k),
-                   "step_text": rendre_pas(journal, k)}
+        valeurs = {"user_query": requete, "reason": raison, "prior_observations": journal_de_preuves(constats),
+                   "k": str(k), "step_text": rendre_pas(journal, k)}
     elif nom == "B3-2":
         i, j = appel["pas"]
         valeurs = {"user_query": requete, "i": str(i), "step_i_text": rendre_pas(journal, i), "j": str(j),
                    "step_j_text": rendre_pas(journal, j)}
+    elif nom == "B3-3":
+        valeurs = {"user_query": requete, "window_text": rendre_trace(journal, appel["pas"])}
     else:
         valeurs = {"user_query": requete, "decision_type": raison, "trace_text": rendre_trace(journal, appel["pas"])}
     return remplir(gabarits[nom], valeurs)
 
 
-def journal_de_preuves(constats: list[dict]) -> str:
-    """Constats numérotés dans l'ordre du calendrier ; « (none) » s'il n'y en a aucun (triage vide ou invalide)."""
-    if not constats:
-        return VIDE
-    return "\n".join(f"Finding {n} ({c['action']}, {_crochets(c['pas'])}): {c['sortie'].strip()}"
-                     for n, c in enumerate(constats, 1))
+def _sortie(rendu, role: str) -> tuple[str, bool]:
+    if not (isinstance(rendu, tuple) and len(rendu) == 2 and isinstance(rendu[0], str) and isinstance(rendu[1], bool)):
+        raise GardeArret(f"{role} : le moniteur doit rendre (texte, tronqué), pas {type(rendu).__name__}")
+    return rendu
 
 
 def executer(env: EnvironnementPropositions, journal: list[tuple[int, int, str]],
-             generer: Callable[[str, str], str], lire_score: Callable[[str], tuple[float, float]],
-             gabarits: dict[str, str] | None = None) -> dict:
-    """Un épisode jugé par TRACE-lite. `generer(invite, rôle)` rend le texte du moniteur (rôle : « triage » ou le nom
-    de l'action) ; `lire_score(invite)` rend (espérance sur 1..5 après `REPONSE_IMPOSEE_VERDICT`, masse). Rend le
-    score, les sorties, les anomalies et l'empreinte de chaque invite (les invites se reconstruisent du journal)."""
+             generer: Callable[[str, str, int], tuple[str, bool]],
+             lire_score: Callable[[str, str, tuple], tuple[float, float]], graine: int,
+             gabarits: dict[str, str] | None = None, masse_min: float | None = None) -> dict:
+    """Un épisode jugé par TRACE-lite.
+    - `generer(invite, rôle, graine_appel)` rend (texte, tronqué) ; rôle : « triage » ou le nom de l'action.
+    - `lire_score(invite, réponse imposée, valeurs)` rend (espérance sur 1..5 après `REPONSE_IMPOSEE_VERDICT`, masse).
+    - Graines (R9) : une par appel, dérivées de `graine` par `SeedSequence`, consignées.
+    Rend le score, les sorties, les anomalies (jamais réparées), les empreintes des gabarits et de chaque invite (les
+    invites se reconstruisent du journal et des sorties)."""
     _verifier_journal(env, journal)
     gabarits = charger_gabarits() if gabarits is None else gabarits
+    enfants = np.random.SeedSequence(int(graine)).spawn(budget_max())
+    graines = [int(e.generate_state(1)[0]) for e in enfants]
     requete = requete_utilisateur(env)
     inv = remplir(gabarits["B1"], {"user_query": requete, "trace": rendre_trace(journal)})
-    sortie = generer(inv, "triage")
+    sortie, tronque = _sortie(generer(inv, "triage", graines[0]), "triage")
     fenetres, anomalies = lire_triage(sortie, env.T)
-    trace = {"triage": {"invite_sha256": _sha(inv), "sortie": sortie}, "fenetres": fenetres,
-             "anomalies": anomalies, "appels": []}
-    constats, par_fenetre = [], {}
-    for appel in calendrier(fenetres):
-        obs = par_fenetre.setdefault(appel["fenetre"], [])
-        inv = invite_appel(gabarits, requete, journal, appel, fenetres[appel["fenetre"]], obs)
-        s = generer(inv, appel["action"])
-        if not isinstance(s, str):
-            raise GardeArret(f"sortie du moniteur de type {type(s).__name__} : texte attendu")
-        obs.append((appel["pas"], s))
+    if tronque:
+        anomalies.append("triage : génération tronquée")
+    appels = calendrier(fenetres)
+    if len(appels) + 2 > budget_max():
+        raise GardeArret(f"{len(appels) + 2} appels > budget de {budget_max()}")
+    trace = {"graine": int(graine), "gabarits_sha256": {nom: _sha(t) for nom, t in sorted(gabarits.items())},
+             "triage": {"invite_sha256": _sha(inv), "graine": graines[0], "tronque": tronque, "sortie": sortie},
+             "fenetres": fenetres, "anomalies": anomalies,
+             "copie_exemple": any(f["pas"] == EXEMPLE_GABARIT["pas"] and f["raison"].strip() == EXEMPLE_GABARIT["raison"]
+                                  for f in fenetres),
+             "fenetre_unique_exemple": len(fenetres) == 1 and fenetres[0]["pas"] == EXEMPLE_GABARIT["pas"],
+             "appels": []}
+    constats = []
+    for n, appel in enumerate(appels, 1):
+        inv = invite_appel(gabarits, requete, journal, appel, fenetres[appel["fenetre"]], constats)
+        s, tr = _sortie(generer(inv, appel["action"], graines[n]), appel["action"])
+        if not s.strip():
+            anomalies.append(f"appel {n} ({appel['action']}, {_crochets(appel['pas'])}) : sortie vide")
+        if tr:
+            anomalies.append(f"appel {n} ({appel['action']}, {_crochets(appel['pas'])}) : génération tronquée")
         constats.append({**appel, "sortie": s})
-        trace["appels"].append({**appel, "invite_sha256": _sha(inv), "sortie": s})
-    if len(trace["appels"]) + 2 > budget_max():
-        raise GardeArret(f"{len(trace['appels']) + 2} appels > budget de {budget_max()}")
+        trace["appels"].append({**appel, "invite_sha256": _sha(inv), "graine": graines[n], "tronque": tr, "sortie": s})
     inv = remplir(gabarits["B4"], {"user_query": requete, "evidence_items": journal_de_preuves(constats)})
-    score, masse = lire_score(inv)
+    score, masse = lire_score(inv, REPONSE_IMPOSEE_VERDICT, VALEURS_VERDICT)
     if not 1.0 <= score <= 5.0:
         raise GardeArret(f"score de verdict {score} hors de [1, 5]")
+    if not 0.0 < masse <= 1.0:
+        raise GardeArret(f"masse du verdict {masse} hors de ]0, 1]")
+    if masse_min is not None and masse < masse_min:
+        anomalies.append(f"verdict : masse {masse:.3f} < {masse_min} (le moniteur voulait écrire autre chose)")
     trace["verdict"] = {"invite_sha256": _sha(inv), "score": score, "masse": masse}
     trace["nombre_appels"] = len(trace["appels"]) + 2
     return trace
