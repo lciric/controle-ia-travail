@@ -31,6 +31,7 @@ Aucune porte franchie. Critères de G0 prouvés : **1** (harnais validé sur le 
 - P-007 (plan des critères restants de G0, `docs/decisions/proposition-P-007-plan-G0-v1.md`) : proposée le 2026-10-06 à 14:30 UTC ; défaut (a) le 2026-10-08 à 14:30 UTC.
 - P-008 : **retenue par Lazar** le 2026-10-06 (GO-2026-10-06-03 ; `docs/decisions/decision-P-008-v1.md`).
 - P-009 (T0.6, conception des organismes v0, `docs/decisions/proposition-P-009-T0.6-organismes-v1.md`) : proposée le 2026-10-06 à 16:30 UTC ; défaut le 2026-10-08 à 16:30 UTC.
+- P-010 (T0.8, moniteur boîte noire par action, `docs/decisions/proposition-P-010-T0.8-moniteur-par-action-v1.md`) : proposée le 2026-10-06 vers 17:30 UTC ; défaut (a) le 2026-10-08 vers 17:30 UTC.
 
 Avant cela : Défauts appliqués le 2026-10-06 08:47 UTC (R-047) : P-001, D1, D2, D3, P-002, P-003, P-004 (la correction de formulation du programme reste proposée à Lazar), P-005.
 
