@@ -210,6 +210,117 @@ def test_lanceur_de_bout_en_bout_en_mode_jouet(depot, monkeypatch):
         lp.executer(_config_lanceur(), depot, "20261006-170000-pilote-jouet", None, str(f), autoriser_depot_sale=True)
 
 
+def _taches_scellees(depot):
+    taches = [dict(t, cibles={"controls": [{"id": "C1", "description": "a dense baseline"}],
+                              "fruitful_directions": [], "sterile_directions": []}) for t in TACHES]
+    f = depot / "taches.json"
+    f.write_text(json.dumps({"taches": taches}), encoding="utf-8")
+    sha = sceller(f)
+    return f, sha
+
+
+def _prereg_pilote(depot, commit, config, sha_taches, entropie=4242, nom="prereg-pilote.md"):
+    (depot / "prereg").mkdir(exist_ok=True)
+    p = depot / "prereg" / nom
+    lignes = [f"- Commit du code d'analyse : `{commit}`",
+              f"- Configuration du pilote (empreinte canonique) : `{lp.empreinte_config(config)}`",
+              f"- Tâches du pilote : `{sha_taches}`", f"- Entropie : `{entropie}`"]
+    corps = ["# Préenregistrement de test", "", *lignes, ""]
+    for s in ("Hypothèse", "Prédiction chiffrée et signe attendu", "Métrique", "Seuil", "Plan d'analyse",
+              "Critères de lecture gelés", "Liste d'arrêt"):
+        corps += [f"## {s}", "", f"contenu {s}", ""]
+    corps += ["## Contre-lecture", "", f"brouillon relu `{'a' * 64}`, rapport `{'b' * 64}`", ""]
+    p.write_text("\n".join(corps), encoding="utf-8")
+    sceller(p)
+    return p
+
+
+def _commit(depot):
+    import subprocess
+    return subprocess.run(["git", "-C", str(depot), "rev-parse", "HEAD"], capture_output=True, text=True,
+                          check=True).stdout.strip()
+
+
+def test_lanceur_gardes_de_citation_cas_sain_et_artefacts(depot, monkeypatch):
+    """R1, R5 : un run avec préenregistrement ne part que si le commit, la configuration, les tâches et l'entropie
+    sont ceux que cite le préenregistrement ; sinon arrêt avant tout manifeste."""
+    monkeypatch.setattr(pa, "jetons_oui_non",
+                        lambda tok: (tok.convert_tokens_to_ids("Y"), tok.convert_tokens_to_ids("N")))
+    monkeypatch.setattr(lp, "exiger_code_importe_sous", lambda racine: None)  # code importé du vrai dépôt (testé ailleurs)
+    f, sha = _taches_scellees(depot)
+    committer(depot)
+    commit, config = _commit(depot), _config_lanceur()
+    sain = _prereg_pilote(depot, commit, config, sha)
+    autre_config = _prereg_pilote(depot, commit, dict(config, lot_juge=3), sha, nom="p-config.md")
+    autres_taches = _prereg_pilote(depot, commit, config, "c" * 64, nom="p-taches.md")
+    (depot / "prereg" / "p-sans.md").write_text(f"- Commit du code d'analyse : `{commit}`\n", encoding="utf-8")
+    committer(depot)                                            # préenregistrements : hors de l'arbre gelé
+    for p, motif in ((autre_config, "configuration .* citée"), (autres_taches, "tâches .* citées"),
+                     (depot / "prereg" / "p-sans.md", "ne cite pas la configuration")):
+        with pytest.raises(GardeArret, match=motif):
+            lp.executer(config, depot, "20261006-170002-pilote-jouet", str(p), str(f))
+        assert not (depot / "runs" / "20261006-170002-pilote-jouet").exists()
+    resume = lp.executer(config, depot, "20261006-170003-pilote-jouet", str(sain), str(f),
+                         autoriser_depot_sale=True)
+    assert resume["commit_cite"] == commit and resume["taches_sha256"] == sha
+    m = json.loads((depot / "runs" / "20261006-170003-pilote-jouet" / "manifeste.json").read_text(encoding="utf-8"))
+    assert m["decisif"] and m["preenregistrement"]["chemin"] == "prereg/prereg-pilote.md"
+    assert {g["entropie"] for g in m["graines"].values()} == {"4242"}
+    (depot / "nouveau_code.py").write_text("x = 1\n")         # artefact : arbre gelé modifié après le commit cité
+    committer(depot)
+    with pytest.raises(GardeArret, match="arbre gelé"):
+        lp.executer(config, depot, "20261006-170004-pilote-jouet", str(sain), str(f),
+                    autoriser_depot_sale=True)
+
+
+def test_lanceur_reel_sans_preenregistrement_arrete(depot):
+    c = dict(_config_lanceur(), mode="reel")
+    with pytest.raises(GardeArret, match="R1"):
+        lp.executer(c, depot, "20261006-170005-x", None, "inexistant.json")
+    assert not (depot / "runs").exists()
+
+
+def test_lanceur_arret_consigne_apres_le_manifeste(depot, monkeypatch):
+    """Une panne après le manifeste laisse un arret.json scellé (étape, motif, partiel), puis se propage."""
+    from controle_ia.manifeste import verifier_resultat
+
+    def panne(*a, **k):
+        raise GardeArret("panne simulée du juge")
+    monkeypatch.setattr(lp, "noter_ensembles", panne)
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    with pytest.raises(GardeArret, match="panne simulée"):
+        lp.executer(_config_lanceur(), depot, "20261006-170006-pilote-jouet", None, str(f))
+    arret = depot / "diag" / "20261006-170006-pilote-jouet" / "arret.json"
+    corps = verifier_resultat(depot, arret)
+    r = corps["resultat"]
+    assert r["etape"] == "notation par jouet-8B" and "panne simulée" in r["motif"]
+    assert r["partiel"]["episodes_ecrits"] == 4
+    assert (depot / "diag" / "20261006-170006-pilote-jouet" / "episodes.json").exists()
+
+
+def test_jetons_jouet_et_lanceur_sans_substitution(depot, monkeypatch):
+    """Le mode jouet apparie avec « Y » et « N » sans substituer `jetons_oui_non` (répétition de l'instance) ; le
+    modèle jouet ne produit pas de proposition valide : deux paires sont fournies au lanceur."""
+    assert pa.jetons_jouet(TOK) == (TOK.convert_tokens_to_ids("Y"), TOK.convert_tokens_to_ids("N"))
+    with pytest.raises(GardeArret, match="un seul jeton"):
+        pa.jetons_oui_non(TOK)                                  # artefact : sans la paire jouet, l'appariement arrête
+    monkeypatch.setattr(lp, "paires_d_appariement", lambda fiches, par_id: [
+        {"cle": "t/e0/1/C1", "proposition": "a dense baseline", "cible": "a dense baseline"},
+        {"cle": "t/e0/1/C2", "proposition": "x", "cible": "y"}])
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    resume = lp.executer(_config_lanceur(), depot, "20261006-170007-pilote-jouet", None, str(f))
+    app = json.loads((depot / "diag" / "20261006-170007-pilote-jouet" / "appariements.json").read_text(encoding="utf-8"))
+    assert resume["episodes"] == 4 and app["resultat"]["appariements"]
+    assert all(0.0 <= a["p_oui"] <= 1.0 for a in app["resultat"]["appariements"])
+
+
+def test_signal_term_devient_un_arret_consigne():
+    with pytest.raises(GardeArret, match="TERM"):
+        lp._signal_term(15, None)
+
+
 def test_lanceur_configuration_incomplete(depot):
     c = _config_lanceur()
     del c["lot_juge"]

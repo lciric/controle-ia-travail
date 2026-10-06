@@ -7,13 +7,22 @@ Enchaîne, sous un manifeste de run décisif (préenregistrement scellé exigé,
 3. appariement de chaque proposition finale à chaque cible semée de sa tâche, par le 8B (probabilité du jeton) ;
 4. résultats scellés, rattachés au manifeste ; vecteurs par action sous `donnees/<run>/` (hors git), empreinte consignée.
 
+Gardes de lancement (avant le manifeste), pour un run avec préenregistrement : l'arbre gelé est celui du commit cité
+(`exiger_code_cite`, comme T0.4) ; la configuration (empreinte canonique), le fichier des tâches (empreinte) et
+l'entropie des graines sont ceux que cite le préenregistrement ; le code est importé depuis `src/` du dépôt. Un run en
+mode réel exige un préenregistrement (R1). Une fois le manifeste créé, tout arrêt (garde, panne, signal TERM du délai
+externe ou du plafond de l'amorce) laisse un `arret.json` scellé, puis se propage.
+
 Mode « jouet » (tests et répétitions sur processeur) : modèle jouet et tokeniseur par caractères à la place des
 modèles réels ; même chaîne, mêmes gardes.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import re
+import signal
 import sys
 import time
 from pathlib import Path
@@ -22,12 +31,35 @@ import numpy as np
 
 from ..gardes import GardeArret
 from ..harnais.run_harnais_factice import graine_entiere
-from ..manifeste import creer_manifeste, ecrire_resultat, generateur, lire_manifeste
-from ..scellement import sceller
-from .pilote_a import apparier, charger_taches, exiger_config, jouer_pilote, noter_ensembles, plan_des_episodes
+from ..harnais.validation_reelle import ENTROPIE_CITEE, exiger_code_cite, exiger_code_importe_sous
+from ..manifeste import config_canonique, creer_manifeste, ecrire_resultat, generateur, lire_manifeste
+from ..scellement import sceller, verifier
+from .pilote_a import (apparier, charger_taches, exiger_config, jetons_jouet, jouer_pilote, noter_ensembles,
+                       plan_des_episodes)
 
 CLES_LANCEMENT = ("agent", "juges", "episodes_notes_deux_fois", "lot_juge", "max_nouveaux_juge", "temperature_juge",
                   "variante_juge", "lot_appariement", "duree_max_s", "mode")
+CONFIG_CITEE = re.compile(r"Configuration du pilote \(empreinte canonique\) : `([0-9a-f]{64})`")
+TACHES_CITEES = re.compile(r"Tâches du pilote : `([0-9a-f]{64})`")
+COMMANDE = "python -m controle_ia.environnements.lancer_pilote_a"
+
+
+def empreinte_config(config: dict) -> str:
+    return hashlib.sha256(config_canonique(config)).hexdigest()
+
+
+def exiger_citations_pilote(prereg: Path, config: dict, sha_taches: str) -> int:
+    """Garde : la configuration (empreinte canonique), le fichier des tâches et l'entropie sont ceux que cite le
+    préenregistrement (rien de libre au lancement). Renvoie l'entropie citée."""
+    texte = Path(prereg).read_text(encoding="utf-8")
+    c, t, e = CONFIG_CITEE.search(texte), TACHES_CITEES.search(texte), ENTROPIE_CITEE.search(texte)
+    if not (c and t and e):
+        raise GardeArret(f"{prereg} ne cite pas la configuration, les tâches ou l'entropie du pilote")
+    if empreinte_config(config) != c.group(1):
+        raise GardeArret(f"configuration {empreinte_config(config)[:12]} ≠ configuration citée {c.group(1)[:12]}")
+    if sha_taches != t.group(1):
+        raise GardeArret(f"tâches {sha_taches[:12]} ≠ tâches citées {t.group(1)[:12]}")
+    return int(e.group(1))
 
 
 def cles_des_graines(plan, config) -> list[str]:
@@ -89,21 +121,42 @@ def charger_modele_et_format(spec: dict, mode: str, graine_jouet: int):
 
 def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin_taches: str,
              autoriser_depot_sale: bool = False) -> dict:
+    racine = Path(racine)
     exiger_config(config)
     manquantes = [c for c in CLES_LANCEMENT if c not in config]
     if manquantes:
         raise GardeArret(f"configuration du lancement incomplète : {manquantes}")
     if config["mode"] not in ("reel", "jouet"):
         raise GardeArret(f"mode {config['mode']!r} inconnu")
+    if config["mode"] == "reel" and prereg is None:
+        raise GardeArret("run réel du pilote sans préenregistrement : R1 interdit de lancer")
     taches = charger_taches(chemin_taches)
+    sha_taches = verifier(chemin_taches)
+    commit_cite, entropie = None, None
+    if prereg is not None:
+        exiger_code_importe_sous(racine)
+        commit_cite = exiger_code_cite(racine, Path(prereg))
+        entropie = exiger_citations_pilote(Path(prereg), config, sha_taches)
     par_id = {t["identifiant"]: t for t in taches}
     plan = plan_des_episodes(taches, config["episodes_par_tache"])
     chemin_m, manifeste = creer_manifeste(racine, run_id, config, cles_des_graines(plan, config) + ["modele-jouet"],
-                                          decisif=prereg is not None, prereg=prereg,
-                                          autoriser_depot_sale=autoriser_depot_sale)
-    g = manifeste["graines"]
-    echeance = time.perf_counter() + float(config["duree_max_s"])
+                                          entropie=entropie, decisif=prereg is not None, prereg=prereg,
+                                          autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
     debut = time.perf_counter()
+    etat = {"etape": "épisodes", "commit_cite": commit_cite, "taches_sha256": sha_taches,
+            "config_sha256": empreinte_config(config)}
+    try:
+        return _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan, par_id, etat, debut)
+    except Exception as e:          # garde, panne (mémoire…), signal TERM : consigné, puis propagé
+        ecrire_resultat(racine, chemin_m, "arret", {"etape": etat["etape"], "motif": f"{type(e).__name__}: {e}",
+                                                     "partiel": {k: v for k, v in etat.items() if k != "etape"},
+                                                     "duree_s": round(time.perf_counter() - debut, 1)})
+        raise
+
+
+def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan, par_id, etat, debut) -> dict:
+    g = manifeste["graines"]
+    echeance = debut + float(config["duree_max_s"])
 
     modele, fmt = charger_modele_et_format(config["agent"], config["mode"], graine_entiere(g["modele-jouet"]))
     generateurs = {e: generateur(g[e]) for e, _ in plan}
@@ -116,9 +169,11 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
     ecrire_resultat(racine, chemin_m, "episodes", {"fiches": fiches, "vecteurs": str(chemin_v.relative_to(racine)),
                                                    "vecteurs_sha256": sha_v,
                                                    "duree_s": round(time.perf_counter() - debut, 1)})
+    etat["episodes_ecrits"] = len(fiches)
 
     notations = {}
     for j in config["juges"]:
+        etat["etape"] = f"notation par {j['nom']}"
         if time.perf_counter() > echeance:
             raise GardeArret("limite de durée dépassée avant les notations")
         m_j, fmt_j = (modele, fmt) if j["meme_modele_que_agent"] else charger_modele_et_format(
@@ -128,14 +183,22 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
         notations[j["nom"]] = noter_ensembles(m_j, fmt_j, demandes, graines_j, config["lot_juge"],
                                               config["max_nouveaux_juge"], config["temperature_juge"])
         ecrire_resultat(racine, chemin_m, f"notations-{j['nom']}", {"notations": notations[j["nom"]]})
+        etat.setdefault("notations_ecrites", []).append(j["nom"])
         if j["sert_a_l_appariement"]:
+            etat["etape"] = f"appariement par {j['nom']}"
+            if time.perf_counter() > echeance:
+                raise GardeArret("limite de durée dépassée avant l'appariement")
             paires = paires_d_appariement(fiches, par_id)
-            app = apparier(m_j, fmt_j, paires, config["lot_appariement"]) if paires else []
+            jetons = jetons_jouet(fmt_j.tok) if config["mode"] == "jouet" else None
+            app = apparier(m_j, fmt_j, paires, config["lot_appariement"], jetons=jetons) if paires else []
             ecrire_resultat(racine, chemin_m, "appariements", {"juge": j["nom"], "appariements": app})
         if m_j is not modele:
             del m_j
 
-    resume = {"episodes": len(fiches),
+    etat["etape"] = "résumé"
+    resume = {"commit_cite": etat["commit_cite"], "config_sha256": etat["config_sha256"],
+              "taches_sha256": etat["taches_sha256"],
+              "episodes": len(fiches),
               "actions": sum(f["bilan"]["actions"] for f in fiches),
               "actions_valides": sum(f["bilan"]["actions_valides"] for f in fiches),
               "ensembles_vides": sum(1 for f in fiches if not f["bilan"]["ensemble"].strip()),
@@ -147,15 +210,18 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
     return resume
 
 
+def _signal_term(signum, frame):
+    raise GardeArret("signal TERM reçu (délai externe du run ou plafond de l'amorce) : arrêt consigné")
+
+
 def _main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(prog="python -m controle_ia.environnements.lancer_pilote_a")
+    ap = argparse.ArgumentParser(prog=COMMANDE)
     ap.add_argument("--config", required=True)
     ap.add_argument("--taches", required=True)
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--prereg", default=None)
     a = ap.parse_args(argv)
-    from ..scellement import verifier
-
+    signal.signal(signal.SIGTERM, _signal_term)
     verifier(a.config)
     config = json.loads(Path(a.config).read_text(encoding="utf-8"))
     resume = executer(config, Path("."), a.run_id, a.prereg, a.taches)
@@ -164,4 +230,8 @@ def _main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(_main(sys.argv[1:]))
+    try:
+        sys.exit(_main(sys.argv[1:]))
+    except GardeArret as e:
+        print(f"ARRÊT : {e}", file=sys.stderr)
+        sys.exit(1)

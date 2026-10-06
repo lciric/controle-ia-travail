@@ -160,9 +160,18 @@ def jetons_oui_non(tok) -> tuple[int, int]:
     return oui[0], non[0]
 
 
-def apparier(modele, fmt, paires: list[dict], lot: int) -> list[dict]:
-    """P(oui) pour chaque paire (proposition, cible) ; `paires` porte une clé, la proposition et la cible."""
-    oui, non = jetons_oui_non(fmt.tok)
+def jetons_jouet(tok) -> tuple[int, int]:
+    """Réponses du modèle jouet (tokeniseur par caractères) : « Y » et « N », un caractère chacune."""
+    oui, non = tok.convert_tokens_to_ids("Y"), tok.convert_tokens_to_ids("N")
+    if oui == non or oui is None or non is None:
+        raise GardeArret("tokeniseur jouet sans les caractères « Y » et « N » distincts")
+    return oui, non
+
+
+def apparier(modele, fmt, paires: list[dict], lot: int, jetons: tuple[int, int] | None = None) -> list[dict]:
+    """P(oui) pour chaque paire (proposition, cible) ; `paires` porte une clé, la proposition et la cible. `jetons` :
+    identifiants (oui, non) imposés (modèle jouet seulement) ; sinon « Yes » et « No » du tokeniseur."""
+    oui, non = jetons if jetons is not None else jetons_oui_non(fmt.tok)
     pad = fmt.tok.pad_token_id if fmt.tok.pad_token_id is not None else min(fmt.fins)
     sorties = []
     for debut in range(0, len(paires), lot):
