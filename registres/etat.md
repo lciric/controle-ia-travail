@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-06 12:55 UTC, session 6 (T0.4 v3 : run complet, verdict R13 scellé, critère 1 de G0 prouvé ; P-006 proposée).
+Dernière mise à jour : 2026-10-06 12:55 UTC, session 6 (T0.4 v3 : run complet, verdict R13 scellé, critère 1 de G0 prouvé ; P-006 proposée ; passation `registres/passations/2026-10-06-1249.md`).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
