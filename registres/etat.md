@@ -32,6 +32,7 @@ Aucune porte franchie. Critères de G0 prouvés : **1** (harnais validé sur le 
 - P-008 : **retenue par Lazar** le 2026-10-06 (GO-2026-10-06-03 ; `docs/decisions/decision-P-008-v1.md`).
 - P-009 (T0.6, conception des organismes v0, `docs/decisions/proposition-P-009-T0.6-organismes-v1.md`) : proposée le 2026-10-06 à 16:30 UTC ; défaut le 2026-10-08 à 16:30 UTC.
 - P-010 (T0.8, moniteur boîte noire par action, `docs/decisions/proposition-P-010-T0.8-moniteur-par-action-v1.md`) : proposée le 2026-10-06 vers 17:14 UTC ; défaut (a) le 2026-10-08 à 18:00 UTC (au moins 48 heures après l'envoi du compte rendu ; R-068).
+- P-011 (T0.7, conception des sondes v0, `docs/decisions/proposition-P-011-T0.7-sondes-v1.md`) : proposée le 2026-10-06 vers 17:55 UTC ; défaut (c) 48 heures après l'envoi du compte rendu (heure dans la passation).
 
 Avant cela : Défauts appliqués le 2026-10-06 08:47 UTC (R-047) : P-001, D1, D2, D3, P-002, P-003, P-004 (la correction de formulation du programme reste proposée à Lazar), P-005.
 
