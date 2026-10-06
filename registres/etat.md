@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-05 15:35 UTC, session 5 (v2 de T0.4 jouée ; verdict R13 scellé ; N-011 ouvert).
+Dernière mise à jour : 2026-10-06 08:50 UTC, session 6 (GO N-011 option a : version 3 de la validation de T0.4 en préparation ; défauts échus appliqués).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -23,13 +23,10 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 Aucun. T0.3 fournit la preuve du critère 5 de G0 (agrégateurs validés en simulation). Critère 1 (harnais) : prouvé sur modèle jouet ; sur le modèle réel, v1 non concluant, v2 **non prouvé** (logique validée ; production en demi-précision au-dessus du seuil ; verdicts R13 du 2026-10-05) ; suite selon N-011. G0 attend les autres critères.
 
 ## GO et nœuds en attente
-- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; **N-003 à N-008 résolus** (GO-2026-10-04-02 à -07, option a ; `docs/decisions/`) ; **N-002 résolu** (GO-2026-10-04-08, calcul, plafond 150 dollars, échéance 2026-11-01) ; **N-009** : jeton résolu le 2026-10-05 ; reste la destruction des instances arrêtées. **N-010 résolu** (GO-2026-10-05-01, option a : version 2 de la validation de T0.4, logique en double précision, contrôle positif D1). **N-011 ouvert** (production de T0.4 en demi-précision ; `docs/decisions/proposition-N-011-v1.md`) : nœud, GO de Lazar attendu. Voir `registres/decisions.md`. Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
+- N-001 dépôt distant : **résolu** (github.com/lciric/controle-ia, privé, branche `main`) ; **N-003 à N-008 résolus** (GO-2026-10-04-02 à -07, option a ; `docs/decisions/`) ; **N-002 résolu** (GO-2026-10-04-08, calcul, plafond 150 dollars, échéance 2026-11-01) ; **N-009** : jeton résolu le 2026-10-05 ; reste la destruction des instances arrêtées. **N-010 résolu** (GO-2026-10-05-01, option a : version 2 de la validation de T0.4, logique en double précision, contrôle positif D1). **N-011 résolu** (GO-2026-10-06-01, option a : version 3 de la validation de T0.4, garde de production sur le 99e centile fondée sur le repère, contrôle strict du chemin de production). Voir `registres/decisions.md`. Détail : `livrables/premier-rendu-v1/decisions-v1.md` et `livrables/anteriorite-niveau1-v1/decisions-v2.md`.
 
 ## Décisions ouvertes (défaut sous 48 heures)
-- P-001 garde de calcul active — échéance 2026-10-06 03:40 UTC.
-- D1, D2, D3 — échéance 2026-10-06 03:40 UTC.
-- P-002 famille (iii) — échéance 2026-10-06 04:00 UTC.
-- P-003 bras boîte noire de G1, P-004 environnement (a), P-005 famille (i) scindée — échéance 2026-10-06 05:08 UTC.
+Aucune. Défauts appliqués le 2026-10-06 08:47 UTC (R-047) : P-001, D1, D2, D3, P-002, P-003, P-004 (la correction de formulation du programme reste proposée à Lazar), P-005.
 
 ## Ressources demandées à Lazar
 Voir `livrables/premier-rendu-v1/ressources-a-demander-v1.md`. Fournis le 2026-10-04 : GO du devis ; accès réseau à console.vast.ai (vérifié) ; clé `VAST_API_KEY` et jetons Hugging Face et GitHub pour l'instance (posés par Lazar ; visibles à partir de la session suivante). Restent : budget de recherche web ou session neuve ; PDF des niveaux 2 et 3, plus Panin SSRN 7424179, 2606.18276, 2603.15809, poster WiML (porte GC), 2208.07610 et 2601.20022 (note v3) ; corpus et code de P3 ; envoi du message FakeLab.
