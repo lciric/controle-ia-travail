@@ -203,3 +203,33 @@ def test_chrono_longueur_remplie_maximale():
     attendu = max(a.debut for ep, _, _ in sorties for tr in ep.transcriptions for a in tr.actions)
     assert chrono["longueur_remplie_max"] == attendu
     assert attendu > max(a.debut for tr in sorties[0][0].transcriptions for a in tr.actions if a.pas == 0)
+
+
+class _EnvMarque(EnvironnementJouet):
+    """Environnement jouet dont la consigne porte une marque (une tâche par épisode)."""
+
+    def __init__(self, marque):
+        self.marque = marque
+
+    def consigne_privee(self, agent):
+        return f"Tâche {self.marque}. " + super().consigne_privee(agent)
+
+
+def test_un_environnement_par_episode():
+    m, g = _modele(), _graines(3, 2, 2)
+    commun = jouer_episodes(m, FMT, EnvironnementJouet(), [f"ep{b}" for b in range(3)], 2, 2, g, [0, 1, 2],
+                            max_nouveaux=8)
+    liste = jouer_episodes(m, FMT, [EnvironnementJouet() for _ in range(3)], [f"ep{b}" for b in range(3)], 2, 2, g,
+                           [0, 1, 2], max_nouveaux=8)
+    assert [empreinte_episode(ep, a) for ep, a, _ in commun] == [empreinte_episode(ep, a) for ep, a, _ in liste]
+    marques = jouer_episodes(m, FMT, [_EnvMarque(k) for k in "ABC"], [f"ep{b}" for b in range(3)], 2, 2, g,
+                             [0, 1, 2], max_nouveaux=8)
+    for (ep, _, _), k in zip(marques, "ABC"):
+        assert f"Tâche {k}." in TOK.decode(ep.transcriptions[0].ids)
+        assert all(f"Tâche {x}." not in TOK.decode(ep.transcriptions[0].ids) for x in "ABC" if x != k)
+
+
+def test_nombre_d_environnements_controle():
+    with pytest.raises(GardeArret, match="environnements pour"):
+        jouer_episodes(_modele(), FMT, [EnvironnementJouet()] * 2, ["a", "b", "c"], 1, 1, _graines(3, 1, 1),
+                       [0, 1, 2], max_nouveaux=4)

@@ -165,6 +165,9 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
     """Joue un lot d'épisodes en pas synchronisés ; renvoie, par épisode, (épisode, activations par agent et par
     couche, rapport d'équivalence).
 
+    `environnement` : un seul environnement partagé par les épisodes du lot, ou une liste d'un environnement par
+    épisode (une tâche par épisode : environnement (a), T0.5). L'épisode b ne lit que le sien.
+
     `graines[b][(i, t)]` : graine de l'action (i, t) de l'épisode b ; `echantillon_equivalence` : triplets
     (b, i, t) dont la génération capture aussi les activations. Pour chacun, deux gardes (`exiger_gardes`) :
     génération = passe unique à la tolérance près, sur toutes les positions capturées ; et contrôle négatif
@@ -183,6 +186,9 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
     B = len(identifiants)
     if N < 1 or T < 1 or B < 1:
         raise GardeArret(f"N = {N}, T = {T}, lot de {B} : au moins 1 attendu")
+    envs = list(environnement) if isinstance(environnement, (list, tuple)) else [environnement] * B
+    if len(envs) != B:
+        raise GardeArret(f"{len(envs)} environnements pour {B} épisodes")
     if len(graines) != B:
         raise GardeArret(f"{len(graines)} jeux de graines pour {B} épisodes")
     for b in range(B):
@@ -202,9 +208,9 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
                 raise GardeArret(f"limite de durée dépassée au pas {t}, agent {i}")
             contextes = []
             for b in range(B):
-                obs = environnement.observation(i, t, journaux[b])
+                obs = envs[b].observation(i, t, journaux[b])
                 if t == 0:
-                    debuts[b][i] = (environnement.consigne_privee(i), obs)
+                    debuts[b][i] = (envs[b].consigne_privee(i), obs)
                     contextes.append(fmt.ouverture(*debuts[b][i]))
                 else:
                     contextes.append(trs[b][i].ids + fmt.tour(debuts[b][i], obs))
