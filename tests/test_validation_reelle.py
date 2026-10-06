@@ -25,7 +25,9 @@ PETITE = dict(V.CONFIG_REPETITION,          # logique telle quelle : remplissage
               production=dict(V.CONFIG_REPETITION["production"], episodes=4, T=2, max_nouveaux=8),
               debit={"tailles_lot": [1, 4], "longueur_contexte": 32, "max_nouveaux": 4})
 LECTURE_SAINE = {"format": "conforme", "tests_instance": "sans objet", "logique_equivalence": "conforme",
-                 "logique_controle_negatif": "conforme", "controle_positif": "conforme", "production_equivalence": "conforme",
+                 "logique_controle_negatif": "conforme", "controle_positif": "conforme",
+                 "chemin_equivalence": "conforme", "chemin_controle_negatif": "conforme",
+                 "controle_positif_chemin": "conforme", "production_equivalence": "conforme",
                  "production_controle_negatif": "conforme", "rejeu_en_processus": "conforme",
                  "audit_symetrie": "non déclenché"}
 
@@ -798,7 +800,8 @@ def test_controle_positif_graines_propres_T_et_trajectoires(depot, monkeypatch):
     cp = PETITE["controle_positif"]
     assert cp["T"] != PETITE["logique"]["T"]
     assert ("controle-positif", cp["T"], cp["decalage_positions"]) in appels
-    assert all(d == 0 for phase, _, d in appels if phase != "controle-positif")
+    assert ("controle-positif-chemin", cp["T"], cp["decalage_positions"]) in appels      # version 3
+    assert all(d == 0 for phase, _, d in appels if not phase.startswith("controle-positif"))
     resume = json.loads((depot / "diag" / run / "resume.json").read_text())["resultat"]
     trajectoires = sorted((depot / "diag" / run).glob("controle-positif-episode-*-trajectoire.json"))
     assert len(trajectoires) == PETITE["logique"]["episodes"]
@@ -826,12 +829,144 @@ def test_sonde_d_un_ulp_dans_le_type_capture(monkeypatch):
             assert delta < np.finfo(np.float32).eps * abs(float(avant[0, 0])) / 2
 
 
-def test_configuration_decisive_v2():
-    """V-2 : valeurs gelées de la v2 qu'aucune garde ne vérifie par ailleurs."""
+def test_configuration_decisive_v3():
+    """V-2 ; version 3 (N-011, option a) : valeurs gelées qu'aucune garde ne vérifie par ailleurs."""
     c, r = V.CONFIG_REELLE, V.CONFIG_REPETITION
     assert c["logique"]["dtype"] == "float64" and c["logique"]["noyau_attention"] == "math"
-    assert c["logique"]["tolerance"] == 1e-4 and c["production"]["tolerance"] == 0.1
+    assert c["logique"]["tolerance"] == 1e-4 and c["logique"]["statistique"] == "max"
+    assert (c["chemin"]["dtype"], c["chemin"]["noyau_attention"], c["chemin"]["tolerance"],
+            c["chemin"]["statistique"]) == ("float32", "math", 3e-3, "max")
+    assert (c["production"]["noyau_attention"], c["production"]["tolerance"], c["production"]["statistique"]) == (
+        "math", 0.2, "q99")
+    assert {k: c["chemin"][k] for k in ("episodes", "N", "T", "max_nouveaux", "taille_lot", "episodes_equivalence")} == \
+        {k: c["logique"][k] for k in ("episodes", "N", "T", "max_nouveaux", "taille_lot", "episodes_equivalence")}
     assert c["controle_positif"] == {"T": 5, "decalage_positions": 1, "positions_min": 4, "actions_min": 10,
                                      "fraction_min": 0.95}
     assert c["memoire_carte_min_gio"] == 130 and c["memoire_vive_min_go"] == 96
     assert c["controle_positif"]["T"] != c["logique"]["T"] and r["controle_positif"]["T"] != r["logique"]["T"]
+
+
+# ---------------------------------------------------------------- version 3 (N-011, option a)
+
+def test_statistique_q99_garde_et_controle_negatif():
+    """La garde de production lit le 99e centile des écarts par jeton (par action et par couche) : quelques jetons de
+    la queue d'arrondi de la demi-précision ne l'arrêtent pas ; un désalignement, qui touche presque tous les jetons,
+    l'arrête. Le contrôle négatif lit la même grandeur."""
+    from controle_ia.harnais.activations import ecart_decale_zone_generee, ecart_equivalence
+    from controle_ia.harnais.episode import bilan_controle_negatif, exiger_gardes
+    rng = np.random.default_rng(0)
+    p = {7: rng.standard_normal((300, 16))}
+    g = {7: p[7] * (1 + 0.01 * rng.standard_normal((300, 1)))}            # arrondi : ≈ 1 % par jeton
+    g[7][5] = p[7][5] * 1.5                                                # un jeton de queue : 50 %
+    mx, q99 = ecart_equivalence(g, p)[7], ecart_equivalence(g, p, quantile=0.99)[7]
+    assert mx > 0.4 and q99 < 0.05
+    rapport = {"tolerance": 0.2, "statistique": "q99", "ecarts": {"0,0": {7: mx}}, "ecarts_q99": {"0,0": {7: q99}}}
+    exiger_gardes(rapport, "0,0", "q99")                                   # passe : la queue ne l'arrête pas
+    with pytest.raises(GardeArret, match="99|écarts"):
+        exiger_gardes(dict(rapport, statistique="max"), "0,0", "max")      # sur le maximum, il s'arrêterait
+    decale = {7: np.roll(p[7], 1, axis=0)}                                 # désalignement d'un jeton
+    assert ecart_equivalence(decale, p, quantile=0.99)[7] > 0.5
+    zone = ecart_decale_zone_generee(g, p, 100, 0.2)[7]
+    assert {"max", "q99", "au_dessus", "positions"} <= set(zone) and zone["q99"] > 0.5
+    sain = {"tolerance": 0.2, "statistique": "q99", "episode": "e",
+            "controle_negatif_zone_generee": {"0,0": {7: {"max": 1.4, "q99": 1.3, "positions": 50}}}}
+    aveugle = {"tolerance": 0.2, "statistique": "q99", "episode": "e",
+               "controle_negatif_zone_generee": {"0,0": {7: {"max": 1.4, "q99": 0.1, "positions": 50}}}}
+    assert bilan_controle_negatif([sain])["passent"] == 1 and bilan_controle_negatif([sain])["statistique"] == "q99"
+    assert bilan_controle_negatif([aveugle])["passent"] == 0                # le maximum seul ne suffit plus
+    with pytest.raises(GardeArret, match="mêlées"):
+        bilan_controle_negatif([sain, dict(aveugle, statistique="max")])
+
+
+def test_lecture_de_la_production_sur_le_99e_centile():
+    """La lecture de l'équivalence de production suit la grandeur de sa garde : le 99e centile par action ; le
+    maximum reste rapporté, sans seuil."""
+    bilan = {"tolerance": 0.2, "statistique": "q99", "ecart_max": 0.52, "ecart_q99_max": 0.1,
+             "max_contexte": 0.52, "max_zone_generee": 0.08,
+             "couverture": {"actions_remplies": 1, "actions_finies_avant": 1, "positions_generees_comparees": 9,
+                            "lignes_echantillon": [1]},
+             "controle_negatif": {"comparables": 40, "fraction": 1.0}, "zeros": {}}
+    lire = lambda b: V.lire({"format": {"verifie": True}, "production": {"equivalence": b}},  # noqa: E731
+                            V.CONFIG_REELLE)["production_equivalence"]
+    assert lire(bilan) == "conforme"
+    assert lire(dict(bilan, ecart_q99_max=0.3)) == "contraire"
+    assert lire(dict(bilan, ecart_q99_max=float("nan"))) == "contraire"
+    assert lire(dict(bilan, statistique="max")) == "contraire"             # sur le maximum : 0,52 > 0,2
+
+
+def test_phase_chemin_de_bout_en_bout(depot):
+    """La phase de chemin (simple précision, noyau et régime de production) et son contrôle positif sont joués,
+    consignés et lus ; la production lit le 99e centile ; le débit tourne au noyau de production."""
+    run = "20261006-100000-repetition-jouet"
+    s = V.executer(depot, run, entropie=31, config=PETITE, verifier_import=False)
+    assert s["lecture"] == LECTURE_SAINE
+    r = json.loads((depot / "diag" / run / "resume.json").read_text())["resultat"]
+    ch, pcc, prod = r["chemin"], r["controle_positif_chemin"], r["production"]
+    assert ch["dtype"] == "float32" and ch["chargement"]["type_des_poids"] == "torch.float32"
+    assert ch["chargement"]["normalisations_en_double"] == 0 and ch["equivalence"]["statistique"] == "max"
+    assert ch["equivalence"]["ecart_max"] <= PETITE["chemin"]["tolerance"] < pcc["bilan"]["min_des_maxima"]
+    assert pcc["bilan"]["comparables"] >= 4 and pcc["bilan"]["vus"] == pcc["bilan"]["comparables"]
+    assert pcc["T"] == PETITE["controle_positif"]["T"]
+    assert prod["equivalence"]["statistique"] == "q99"
+    assert prod["equivalence"]["ecart_q99_max"] <= prod["equivalence"]["ecart_max"]
+    assert prod["equivalence"]["controle_negatif"]["statistique"] == "q99"
+    assert r["debit"]["noyau_attention"] == PETITE["production"]["noyau_attention"]
+    d = depot / "diag" / run
+    assert len(list(d.glob("chemin-episode-*-trajectoire.json"))) == PETITE["chemin"]["episodes"]
+    assert len(list(d.glob("controle-positif-chemin-episode-*-trajectoire.json"))) == PETITE["chemin"]["episodes"]
+
+
+def test_chemin_aveugle_de_bout_en_bout(depot):
+    """Artefact : seuil du chemin trop lâche (1e-2 sur le jouet, où D1 vaut environ 2e-4) : la logique est conforme,
+    le chemin aussi, mais son contrôle positif ne voit pas D1 ; le run s'arrête en phase de contrôle positif du
+    chemin, bilans et lecture consignés."""
+    lache = dict(PETITE, chemin=dict(PETITE["chemin"], tolerance=1e-2))
+    with pytest.raises(GardeArret, match="contrôle positif du chemin : défaut D1 injecté non vu"):
+        V.executer(depot, "20261006-100100-repetition-jouet", entropie=21, config=lache, verifier_import=False)
+    arret = json.loads((depot / "diag" / "20261006-100100-repetition-jouet" / "arret.json").read_text())["resultat"]
+    assert arret["phase"] == "controle_positif_chemin"
+    lp = arret["partiel"]["lecture_partielle"]
+    assert lp["logique_equivalence"] == lp["controle_positif"] == lp["chemin_equivalence"] == "conforme"
+    assert lp["controle_positif_chemin"] == "contraire" and lp["production_equivalence"] == "non atteint"
+
+
+def test_configuration_v3_refusee():
+    """Gardes de configuration de la version 3 : chemin en simple précision sur le maximum ; production sur le
+    99e centile ; noyau de production fixé (hors jouet) et emprunté par le chemin."""
+    reelle = V.CONFIG_REELLE
+    rev = "0e9e39f249a16976918f6564b8830bc894c89659"
+    V.valider_config(reelle, rev)
+    for mauvaise, motif in (
+            (dict(reelle, chemin=dict(reelle["chemin"], dtype="bfloat16")), "chemin"),
+            (dict(reelle, chemin=dict(reelle["chemin"], statistique="q99")), "chemin"),
+            (dict(reelle, production=dict(reelle["production"], statistique="max")), "99e centile"),
+            (dict(reelle, production=dict(reelle["production"], noyau_attention="defaut"),
+                  chemin=dict(reelle["chemin"], noyau_attention="defaut")), "noyau"),
+            (dict(reelle, chemin=dict(reelle["chemin"], noyau_attention="defaut")), "noyau"),
+            (dict(reelle, production=dict(reelle["production"], statistique="moyenne")), "statistique")):
+        with pytest.raises(GardeArret, match=motif):
+            V.valider_config(mauvaise, rev)
+
+
+def test_comparaison_voit_le_chemin(depot, monkeypatch):
+    """La comparaison des runs A et B porte aussi sur la phase de chemin (empreintes, profils, chargement) et sur
+    son contrôle positif (sans sa durée ni son pic de mémoire)."""
+    V.executer(depot, "20261006-100200-repetition-jouet", entropie=8, config=PETITE, verifier_import=False)
+    committer(depot)
+    V.executer(depot, "20261006-100300-repetition-jouet", entropie=8, config=PETITE, verifier_import=False)
+    committer(depot)
+    vrai = V.verifier_resultat
+
+    def altere(racine, chemin):
+        corps = vrai(racine, chemin)
+        if "100300" in str(chemin):
+            r = corps["resultat"]
+            r["chemin"]["episodes"][1]["empreintes"]["activations"] = "0" * 64
+            r["chemin"]["chargement"]["type_des_poids"] = "torch.float16"
+            r["controle_positif_chemin"]["bilan"]["min_des_maxima"] += 1e-9
+        return corps
+    monkeypatch.setattr(V, "verifier_resultat", altere)
+    c = V.comparer_runs(depot, "20261006-100200-repetition-jouet", "20261006-100300-repetition-jouet")
+    assert {"phase": "chemin", "episode": "episode-1", "empreinte": "activations"} in c["differences"]
+    assert any(d.get("phase") == "chemin" and d.get("motif") == "chargement différent" for d in c["differences"])
+    assert {"phase": "controle_positif_chemin", "motif": "contrôle positif différent"} in c["differences"]

@@ -131,16 +131,18 @@ def ecarts_par_jeton(g: np.ndarray, p: np.ndarray) -> np.ndarray:
 
 
 def ecart_equivalence(acts_generation: dict[int, np.ndarray], acts_passe: dict[int, np.ndarray],
-                      decalage: int = 0) -> dict[int, float]:
+                      decalage: int = 0, quantile: float | None = None) -> dict[int, float]:
     """Par couche, maximum sur les jetons capturés pendant la génération de l'écart relatif par jeton avec la
-    passe unique. `decalage` = k > 0 compare la génération au jeton n − k de la passe : contrôle négatif,
-    qui doit dépasser la tolérance (une garde aveugle au décalage d'un jeton ne garde rien)."""
+    passe unique ; avec `quantile` (version 3, production en demi-précision), ce quantile au lieu du maximum.
+    `decalage` = k > 0 compare la génération au jeton n − k de la passe : contrôle négatif, qui doit dépasser la
+    tolérance (une garde aveugle au décalage d'un jeton ne garde rien). Un écart illisible (NaN) rend un NaN."""
     ecarts = {}
     for couche, g in acts_generation.items():
         p = acts_passe[couche]
         if g.shape[0] <= decalage or g.shape[0] > p.shape[0] or g.shape[1] != p.shape[1]:
             raise GardeArret(f"couche {couche} : formes incompatibles {g.shape} et {p.shape} (décalage {decalage})")
-        ecarts[couche] = float(ecarts_par_jeton(g[decalage:], p[: g.shape[0] - decalage]).max())
+        e = ecarts_par_jeton(g[decalage:], p[: g.shape[0] - decalage])
+        ecarts[couche] = float(e.max() if quantile is None else np.quantile(e, quantile))
     return ecarts
 
 
@@ -149,7 +151,8 @@ def ecart_decale_zone_generee(acts_generation: dict[int, np.ndarray], acts_passe
     """Contrôle négatif restreint à la zone où génération et passe unique suivent des chemins différents : les
     positions décodées. On compare g_n à p_{n−1} pour n ≥ longueur_contexte + 1, les deux positions dans la zone
     générée (la première position décodée, comparée au dernier jeton du contexte, est exclue : elle passerait
-    d'elle-même). Par couche : maximum de l'écart décalé, et nombre de positions au-dessus de la tolérance.
+    d'elle-même). Par couche : maximum et 99e centile de l'écart décalé (version 3 : le contrôle négatif lit la même
+    grandeur que la garde de sa phase), et nombre de positions au-dessus de la tolérance.
     None si l'action a moins de deux positions décodées capturées (trop courte : comptée à part)."""
     sortie = {}
     for couche, g in acts_generation.items():
@@ -160,7 +163,8 @@ def ecart_decale_zone_generee(acts_generation: dict[int, np.ndarray], acts_passe
         if g.shape[0] <= debut:
             return None
         e = ecarts_par_jeton(g[debut:], p[debut - 1: g.shape[0] - 1])
-        sortie[couche] = {"max": float(e.max()), "au_dessus": int(np.sum(e > tolerance)), "positions": int(e.size)}
+        sortie[couche] = {"max": float(e.max()), "q99": float(np.quantile(e, 0.99)),
+                          "au_dessus": int(np.sum(e > tolerance)), "positions": int(e.size)}
     return sortie
 
 
@@ -197,11 +201,13 @@ def sonde_de_comparaison(acts_generation: dict[int, np.ndarray], acts_passe: dic
     return {"tableaux_distincts": bool(distincts), "ulp_vu": bool(apres != avant)}
 
 
-def exiger_equivalence(ecarts: dict[int, float], tolerance: float, quoi: str) -> None:
-    """Garde : la génération et la passe unique donnent les mêmes activations, à la tolérance consignée près."""
+def exiger_equivalence(ecarts: dict[int, float], tolerance: float, quoi: str, statistique: str = "max") -> None:
+    """Garde : la génération et la passe unique donnent les mêmes activations, à la tolérance consignée près ;
+    `statistique` nomme la grandeur lue par couche (maximum, ou 99e centile en production, version 3)."""
     fautes = {c: e for c, e in ecarts.items() if not e <= tolerance}
     if fautes:
-        raise GardeArret(f"{quoi} : activations de génération ≠ passe unique (écarts {fautes} > {tolerance})")
+        nom = "écarts" if statistique == "max" else f"écarts, {statistique}"
+        raise GardeArret(f"{quoi} : activations de génération ≠ passe unique ({nom} {fautes} > {tolerance})")
 
 
 def exiger_controle_negatif(ecarts_decales: dict[int, float], tolerance: float, quoi: str) -> None:

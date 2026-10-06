@@ -161,7 +161,7 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
                    couches, max_nouveaux: int = 24, temperature: float = 1.0, echantillon_equivalence=(),
                    tolerance_equivalence: float = 1e-4, pad_id: int | None = None, chrono: dict | None = None,
                    garde: str = "immediate", echeance: float | None = None, empreinte_logits: bool = False,
-                   decalage_positions: int = 0) -> list[tuple]:
+                   decalage_positions: int = 0, statistique: str = "max") -> list[tuple]:
     """Joue un lot d'épisodes en pas synchronisés ; renvoie, par épisode, (épisode, activations par agent et par
     couche, rapport d'équivalence).
 
@@ -173,9 +173,13 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
     l'appelant appliquer les gardes en fin de phase (validation : profils complets avant l'arrêt).
     `echeance` (horloge `time.perf_counter`) : garde de durée vérifiée à chaque pas (t, i).
     `chrono` (facultatif) cumule durées, jetons, remplissage et lignes finies avant les autres.
-    `decalage_positions` : défaut D1 injecté dans la génération (contrôle positif seulement ; voir `generer_lot`)."""
+    `decalage_positions` : défaut D1 injecté dans la génération (contrôle positif seulement ; voir `generer_lot`).
+    `statistique` : grandeur lue par la garde d'équivalence et le contrôle négatif, par couche : « max » (maximum),
+    ou « q99 » (99e centile, production en demi-précision, version 3). Les deux sont toujours consignées."""
     if garde not in ("immediate", "differee"):
         raise GardeArret(f"mode de garde {garde!r} inconnu")
+    if statistique not in ("max", "q99"):
+        raise GardeArret(f"statistique {statistique!r} inconnue")
     B = len(identifiants)
     if N < 1 or T < 1 or B < 1:
         raise GardeArret(f"N = {N}, T = {T}, lot de {B} : au moins 1 attendu")
@@ -250,7 +254,8 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
         if chrono is not None:
             chrono["passe_unique_s"] = chrono.get("passe_unique_s", 0.0) + time.perf_counter() - depart
             chrono["jetons_passe_unique"] = chrono.get("jetons_passe_unique", 0) + sum(len(tr.ids) for tr in trs[b])
-        rapport = {"episode": identifiants[b], "tolerance": tolerance_equivalence, "ecarts": {},
+        rapport = {"episode": identifiants[b], "tolerance": tolerance_equivalence, "statistique": statistique,
+                   "ecarts": {}, "ecarts_q99": {},
                    "controle_negatif_zone_generee": {}, "profils": {},
                    "longueurs_contexte": {}, "positions_capturees": {}, "lignes": {}, "empreintes_capture": {},
                    "sondes": {}}
@@ -259,6 +264,7 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
                 continue
             cle, lc = f"{i},{t}", longueurs[(bb, i, t)]
             rapport["ecarts"][cle] = ecart_equivalence(ag, acts[i])
+            rapport["ecarts_q99"][cle] = ecart_equivalence(ag, acts[i], quantile=0.99)
             rapport["controle_negatif_zone_generee"][cle] = ecart_decale_zone_generee(ag, acts[i], lc, tolerance_equivalence)
             rapport["profils"][cle] = profil_ecarts(ag, acts[i], lc)
             rapport["longueurs_contexte"][cle] = lc
@@ -274,35 +280,48 @@ def jouer_episodes(modele, fmt, environnement, identifiants: list[str], N: int, 
     return sorties
 
 
+def statistique_par_couche(rapport: dict, cle: str) -> dict:
+    """Grandeur par couche que lit la garde de la phase du rapport : maximum, ou 99e centile (version 3)."""
+    return rapport["ecarts_q99" if rapport.get("statistique", "max") == "q99" else "ecarts"][cle]
+
+
 def exiger_gardes(rapport: dict, cle: str, quoi: str) -> None:
-    """Garde d'une action de l'échantillon : génération = passe unique à la tolérance près, toutes positions. Le
-    contrôle négatif, propriété de la mesure plutôt que de l'action, se juge sur la phase
-    (`bilan_controle_negatif`, `exiger_controle_negatif_phase`)."""
-    exiger_equivalence(rapport["ecarts"][cle], rapport["tolerance"], quoi)
+    """Garde d'une action de l'échantillon : génération = passe unique à la tolérance près, toutes positions, sur
+    la grandeur de la phase (maximum ou 99e centile). Le contrôle négatif, propriété de la mesure plutôt que de
+    l'action, se juge sur la phase (`bilan_controle_negatif`, `exiger_controle_negatif_phase`)."""
+    exiger_equivalence(statistique_par_couche(rapport, cle), rapport["tolerance"], quoi,
+                       rapport.get("statistique", "max"))
 
 
 def bilan_controle_negatif(rapports: list[dict], positions_min: int = 4) -> dict:
     """Contrôle négatif d'une phase. Une action est comparable si sa zone générée offre au moins `positions_min`
-    comparaisons décalées ; elle passe si, à chaque couche, le maximum de l'écart décalé dépasse la tolérance.
-    Les actions plus courtes (souvent faites de jetons répétés) sont comptées à part."""
+    comparaisons décalées ; elle passe si, à chaque couche, la grandeur de la phase (maximum, ou 99e centile en
+    version 3) de l'écart décalé dépasse la tolérance. Les actions plus courtes (souvent faites de jetons répétés)
+    sont comptées à part. `min_des_maxima` : le plus petit, sur les actions comparables, de cette grandeur."""
     comparables, passent, courtes, echecs, minimum = 0, 0, 0, [], float("inf")
+    statistiques = set()
     for r in rapports:
         tol = r["tolerance"]
+        stat = r.get("statistique", "max")
+        statistiques.add(stat)
         for cle, zone in r["controle_negatif_zone_generee"].items():
             if zone is None or min(v["positions"] for v in zone.values()) < positions_min:
                 courtes += 1
                 continue
             comparables += 1
-            # un maximum illisible (NaN) compte comme −∞, quel que soit l'ordre des couches
-            m = min(float("-inf") if v["max"] != v["max"] else v["max"] for v in zone.values())
+            # une valeur illisible (NaN) compte comme −∞, quel que soit l'ordre des couches
+            m = min(float("-inf") if v[stat] != v[stat] else v[stat] for v in zone.values())
             minimum = min(minimum, m)
             if m > tol:
                 passent += 1
             else:
                 echecs.append(f"{r.get('episode', '?')}:{cle}")
+    if len(statistiques) > 1:
+        raise GardeArret(f"contrôle négatif : statistiques mêlées dans une phase ({sorted(statistiques)})")
     return {"comparables": comparables, "passent": passent, "courtes": courtes, "echecs": echecs,
             "fraction": passent / comparables if comparables else None,
-            "min_des_maxima": minimum if comparables else None, "positions_min": positions_min}
+            "min_des_maxima": minimum if comparables else None, "positions_min": positions_min,
+            "statistique": next(iter(statistiques), "max")}
 
 
 def exiger_controle_negatif_phase(bilan: dict, fraction_min: float, actions_min: int, quoi: str) -> None:

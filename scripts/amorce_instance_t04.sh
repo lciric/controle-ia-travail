@@ -6,7 +6,7 @@
 #   COMMIT    commit de scellement du préenregistrement
 #   GH_TOKEN  jeton GitHub à grain fin, limité à lciric/controle-ia (contenu en lecture et écriture)
 #   HF_TOKEN  jeton Hugging Face en lecture (licence Llama 3.1 acceptée sur le compte)
-# Sortie : journal sur la sortie standard (lu par `vastai logs <identifiant>`), résultats poussés sur calcul/t04-validation-v2
+# Sortie : journal sur la sortie standard (lu par `vastai logs <identifiant>`), résultats poussés sur calcul/t04-validation-v3
 # (ou sur BRANCHE).
 # Pour l'essai local seulement : DEPOT_URL, RACINE_AMORCE, MODE=jouet, VENV_EXISTANT (transmis au script de validation).
 set -uo pipefail
@@ -39,7 +39,7 @@ if { [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; } && [ -d "$T/controle-ia/.git"
         for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err" "$T"/run-*.err "$T"/run-*.json; do [ -f "$f" ] && cp "$f" "$d/"; done
         (cd "$d" && sha256sum -- * > empreintes.sha256) || true
         git add -A runs diag "$d" && git commit -qm "T0.4 — plafond de l'amorce atteint : résultats partiels et traces" || true
-        git push -q origin "${BRANCHE:-calcul/t04-validation-v2}" || echo "AMORCE : poussée impossible"
+        git push -q origin "${BRANCHE:-calcul/t04-validation-v3}" || echo "AMORCE : poussée impossible"
     )
 fi
 for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err"; do
