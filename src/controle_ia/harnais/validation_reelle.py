@@ -114,7 +114,7 @@ CONFIG_REELLE = {
     # double précision (version 2) : 64,2 Go de poids, plus le préremplissage d'un lot de 8 : quadratique en sa longueur
     # remplie, qui a atteint 2 329 jetons dans la v1 (≈ 104 Go au pic estimés) ; carte de 141 Go (H200)
     "memoire_carte_min_gio": 130,
-    "tests_attendus": 198,                    # suite complète au commit cité, tous réussis (P0)
+    "tests_attendus": 199,                    # suite complète au commit cité, tous réussis (P0)
     "projection": {"episodes": 2000},
     "limite_s": 9000,
 }
@@ -524,7 +524,8 @@ def liberer() -> None:
 
 def repere_precision(modele, references: list, couches: list[int]) -> dict:
     """Repère descriptif : écart par jeton entre la passe unique du modèle courant (demi-précision) et celle de la
-    phase de logique (double précision, version 2), sur les mêmes transcriptions et aux mêmes positions."""
+    phase de logique (double précision, version 2), sur les mêmes transcriptions et aux mêmes positions. L'appelant
+    fixe le noyau d'attention : celui de la production (version 3)."""
     par_couche: dict[int, list] = {c: [] for c in couches}
     for ep, acts_ref in references:
         for tr in ep.transcriptions:
@@ -714,11 +715,13 @@ def executer(racine: str | Path, run_id: str, revision: str | None = None, entro
                     "projection": estimer(config["projection"]["episodes"], max(1, round(moyenne_jetons)), actions,
                                           len(couches), largeur, octets_valeur)}
         del resume["production"]["episodes_equivalence"]     # repris, complet, dans « episodes »
+        with noyau(prod["noyau_attention"]):          # repère au noyau de production, comme ce qu'il situe (version 3)
+            repere = repere_precision(modele, references, couches)
         resume["production"].update({
             "projection_heures": {"episodes": config["projection"]["episodes"], "taille_lot": prod["taille_lot"],
                                   "heures": par_episode_s * config["projection"]["episodes"] / 3600},
             "empreinte_poids": empreinte_poids(modele),
-            "repere_precision": repere_precision(modele, references, couches),
+            "repere_precision": repere,
             "rejeu_en_processus": rejeu, "stockage": stockage,
             "sondes": [{"nom": x.nom, "couche": x.couche, "agregation": x.agregation, "empreinte": x.empreinte()}
                        for x in sondes],

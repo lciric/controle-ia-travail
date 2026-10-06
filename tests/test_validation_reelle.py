@@ -2,6 +2,7 @@
 runs (rejeu entre processus), codage bfloat16 sans perte, gardes de lancement et de fin de phase (cas sain +
 artefacts), lecture gelée, empreintes des fichiers du modèle.
 """
+import contextlib
 import json
 import subprocess
 import time
@@ -970,3 +971,31 @@ def test_comparaison_voit_le_chemin(depot, monkeypatch):
     assert {"phase": "chemin", "episode": "episode-1", "empreinte": "activations"} in c["differences"]
     assert any(d.get("phase") == "chemin" and d.get("motif") == "chargement différent" for d in c["differences"])
     assert {"phase": "controle_positif_chemin", "motif": "contrôle positif différent"} in c["differences"]
+
+
+def test_repere_au_noyau_de_production(depot, monkeypatch):
+    """Version 3 : le repère de précision se calcule au noyau d'attention de la production, comme la génération et la
+    passe unique qu'il situe (« math » sur le modèle réel) ; hors de ce contexte, il tournerait aux noyaux par défaut,
+    non consignés."""
+    actifs, vus = [], []
+    vrai_noyau, vrai_repere = V.noyau, V.repere_precision
+
+    @contextlib.contextmanager
+    def espion_noyau(nom):
+        actifs.append(nom)
+        try:
+            with vrai_noyau(nom):
+                yield
+        finally:
+            actifs.pop()
+
+    def espion_repere(*a, **kw):
+        vus.append(list(actifs))
+        return vrai_repere(*a, **kw)
+    monkeypatch.setattr(V, "noyau", espion_noyau)
+    monkeypatch.setattr(V, "repere_precision", espion_repere)
+    run = "20261006-110000-repetition-jouet"
+    V.executer(depot, run, entropie=8, config=PETITE, verifier_import=False)
+    assert vus == [[PETITE["production"]["noyau_attention"]]]
+    r = json.loads((depot / "diag" / run / "resume.json").read_text())["resultat"]
+    assert set(r["production"]["repere_precision"]) == {str(c) for c in r["production"]["couches"]}
