@@ -68,6 +68,7 @@ CLES_CONTROLE_POSITIF = ("T", "decalage_positions", "positions_min", "actions_mi
 CONFIG_CITEE = re.compile(r"Configuration de la revalidation \(empreinte canonique\) : `([0-9a-f]{64})`")
 TACHES_CITEES = re.compile(r"Tâches d'entraînement : `([0-9a-f]{64})`")
 EVALUATION_CITEE = re.compile(r"Tâches d'évaluation : `([0-9a-f]{64})`")
+INDEX_CITE = re.compile(r"Index des invites : `([0-9a-f]{64})`")    # RV-18 : l'invite H1 entre dans le domaine
 COMMANDE = "python -m controle_ia.environnements.revalider_pilote_a"
 
 
@@ -127,14 +128,22 @@ def taches_d_entrainement(chemin_entrainement, chemin_evaluation, n: int) -> tup
                       "couvre_le_pilote": longueurs[-1] >= longueurs_eval[-1]}
 
 
-def exiger_citations(prereg: Path, config: dict, sha_taches: str, sha_evaluation: str) -> int:
-    """La configuration (empreinte canonique), les deux fichiers de tâches et l'entropie sont ceux que cite le
-    préenregistrement (RV-8). Rend l'entropie citée."""
+def exiger_citations(prereg: Path, config: dict, sha_taches: str, sha_evaluation: str,
+                     sha_index: str | None = None) -> int:
+    """La configuration (empreinte canonique), les deux fichiers de tâches, l'index des invites transcrites (hors de
+    l'arbre gelé ; l'invite H1 entre dans la consigne de l'agent, donc dans le domaine ; RV-18) et l'entropie sont ceux
+    que cite le préenregistrement (RV-8). Rend l'entropie citée."""
+    from .invites import RACINE_INVITES
+
+    sha_index = verifier(RACINE_INVITES / "index.json") if sha_index is None else sha_index
     texte = Path(prereg).read_text(encoding="utf-8")
-    c, t, v, e = (CONFIG_CITEE.search(texte), TACHES_CITEES.search(texte), EVALUATION_CITEE.search(texte),
-                  ENTROPIE_CITEE.search(texte))
-    if not (c and t and v and e):
-        raise GardeArret(f"{prereg} ne cite pas la configuration, les tâches ou l'entropie de la revalidation")
+    c, t, v, e, i = (CONFIG_CITEE.search(texte), TACHES_CITEES.search(texte), EVALUATION_CITEE.search(texte),
+                     ENTROPIE_CITEE.search(texte), INDEX_CITE.search(texte))
+    if not (c and t and v and e and i):
+        raise GardeArret(f"{prereg} ne cite pas la configuration, les tâches, l'index des invites ou l'entropie de la "
+                         "revalidation")
+    if sha_index != i.group(1):
+        raise GardeArret(f"index des invites {sha_index[:12]} ≠ index cité {i.group(1)[:12]}")
     if hashlib.sha256(config_canonique(config)).hexdigest() != c.group(1):
         raise GardeArret("configuration ≠ configuration citée")
     if sha_taches != t.group(1):

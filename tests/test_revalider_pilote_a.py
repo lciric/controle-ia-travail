@@ -140,12 +140,20 @@ def test_citations_cas_sain_et_artefacts(tmp_path):
     sha_c = __import__("hashlib").sha256(config_canonique(CONFIG)).hexdigest()
     p = tmp_path / "prereg.md"
 
-    def ecrire(c=sha_c, t="a" * 64, v="b" * 64, entropie=7):
+    from controle_ia.environnements.invites import RACINE_INVITES
+    from controle_ia.scellement import verifier
+    sha_index = verifier(RACINE_INVITES / "index.json")
+
+    def ecrire(c=sha_c, t="a" * 64, v="b" * 64, entropie=7, i=sha_index):
         lignes = [f"- Configuration de la revalidation (empreinte canonique) : `{c}`", f"- Tâches d'entraînement : `{t}`",
-                  f"- Tâches d'évaluation : `{v}`", f"- Entropie : `{entropie}`"]
+                  f"- Tâches d'évaluation : `{v}`", f"- Index des invites : `{i}`", f"- Entropie : `{entropie}`"]
         p.write_text("\n".join(x for x in lignes if x), encoding="utf-8")
     ecrire()
     assert rv.exiger_citations(p, CONFIG, "a" * 64, "b" * 64) == 7
+    ecrire(i="d" * 64)                                                   # RV-18 : index des invites autre que cité
+    with pytest.raises(GardeArret, match="index des invites"):
+        rv.exiger_citations(p, CONFIG, "a" * 64, "b" * 64)
+    ecrire()
     for args, motif in [(dict(CONFIG, lot=3), "configuration"), ]:
         with pytest.raises(GardeArret, match=motif):
             rv.exiger_citations(p, args, "a" * 64, "b" * 64)

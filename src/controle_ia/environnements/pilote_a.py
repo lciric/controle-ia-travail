@@ -91,7 +91,7 @@ def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[st
     l'empan de chaque action, et le rapport d'équivalence complet des actions échantillonnées.
     `decalage_positions` : défaut D1 injecté (essais seulement).
 
-    Revalidation (P-007 (b)) : `garde="differee"` consigne tous les écarts sans s'arrêter ;
+    Revalidation (P-007, lecture de R-085 : plan (a) plus revalidation) : `garde="differee"` consigne tous les écarts sans s'arrêter ;
     `exiger_controle_negatif=False` consigne le contrôle négatif et sa lecture (« conforme », « contraire » ou « non
     concluant ») sans s'arrêter ; `chrono` cumule durées et jetons (débit) ; les épisodes de `transcriptions_de`
     gardent leurs transcriptions (identifiants de jetons, par agent) pour le repère de précision."""

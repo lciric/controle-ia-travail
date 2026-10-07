@@ -4,7 +4,7 @@
 # refuse de repartir (dossiers présents, R12) : seule la session de pilotage arrête l'instance, par son identifiant (R10).
 # Variables passées par --env à la création de l'instance :
 #   COMMIT    commit de scellement du préenregistrement
-#   ETUDE     pilote (défaut) ou revalidation (revalidation courte de l'équivalence, P-007 (b), avant le pilote)
+#   ETUDE     pilote (défaut) ou revalidation (revalidation courte de l'équivalence, P-007, lecture de R-085, avant le pilote)
 #   GH_TOKEN  jeton GitHub à grain fin, limité à lciric/controle-ia (contenu en lecture et écriture)
 #   HF_TOKEN  jeton Hugging Face en lecture (licences Llama 3.1 et Llama 3.2 acceptées sur le compte)
 # Sortie : journal sur la sortie standard (lu par `vastai logs <identifiant>`), résultats poussés sur calcul/t05-pilote-v1

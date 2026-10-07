@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Pilote 8B de l'environnement (a) (T0.5) sur l'instance de calcul : mise en place, tests, un run, poussée des résultats
 # et des vecteurs par action (rien ne reste sur l'instance : leçon de N-012). Procédure : docs/procedures/ (pilote T0.5).
-# Sert aussi la revalidation courte de l'équivalence sur le domaine du pilote (ETUDE=revalidation ; P-007 (b)), avant
+# Sert aussi la revalidation courte de l'équivalence sur le domaine du pilote (ETUDE=revalidation ; P-007, lecture de R-085), avant
 # le pilote : même mise en place, même machine, un autre lanceur, pas de vecteurs.
 # Rien ne se lance sans GO consigné.
 #
@@ -22,7 +22,11 @@
 #   GH_TOKEN      jeton GitHub à grain fin (dépôt distant GitHub) ; lu par un assistant d'identification, jamais écrit
 #   HF_TOKEN      jeton Hugging Face en lecture (mode reel) ; lu par huggingface_hub
 #   BRANCHE       défaut calcul/t05-pilote-v1 (revalidation : calcul/t05-revalidation-v1) ; les vecteurs du pilote vont
-#                 sur une branche à part, donnees/t05/<run>
+#                 sur une branche à part, donnees/t05/<run>. Une branche qui existe déjà sur le dépôt distant arrête avant
+#                 tout calcul : un relancement prend une branche nouvelle (…-v2), jamais une réécriture (R12 ; RV-14)
+#   TESTS_ATTENDUS nombre de tests attendus (sans préenregistrement seulement) ; sinon lu dans le préenregistrement
+#                 (« Tests attendus : `N` ») : la dernière ligne de pytest doit être « N passed[, M warnings] in X s »,
+#                 rien d'autre (aucun test sauté, attendu en échec ou en erreur ; RV-14)
 #   TRAVAIL       défaut $HOME/t05
 #   VENV_EXISTANT environnement Python déjà prêt à réutiliser (sinon : python3.11 -m venv + requirements-gpu.txt)
 set -euo pipefail
@@ -67,6 +71,10 @@ git config credential.helper "$AIDE_GIT"
 git config user.name "instance de calcul (T0.5)"
 git config user.email "instance-calcul@invalid"
 git checkout -q "$COMMIT"
+if git ls-remote --exit-code --heads origin "$BRANCHE" >/dev/null 2>&1; then
+    echo "branche $BRANCHE déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…)" >&2
+    exit 2
+fi
 git checkout -q -b "$BRANCHE"
 
 pousser() { git push -q origin "$BRANCHE"; }
@@ -165,14 +173,32 @@ else
 fi
 
 python -c "import torch; print('torch', torch.__version__, 'cuda', torch.version.cuda, 'disponible', torch.cuda.is_available())" | tee -a "$JOURNAL"
+if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)"; then
+    # roue de torch : pilote CUDA ≥ 13.0 exigé (requirements-gpu.txt) ; arrêt avant les tests, sur l'instance payée (RV-14)
+    journal "carte indisponible pour torch (pilote CUDA trop ancien ?) : arrêt avant les tests"
+    consigner_arret "contrôle de la carte"
+    exit 1
+fi
 ETAPE="tests"
+if [ "$PREREG_ABSENT" = 1 ]; then
+    ATTENDUS="${TESTS_ATTENDUS:-}"
+else
+    ATTENDUS=$(sed -n "s/.*Tests attendus : \`\([0-9]*\)\`.*/\1/p" "$PREREG" | head -1)
+    [ -n "$ATTENDUS" ] || { journal "nombre de tests attendus introuvable dans $PREREG : arrêt"; consigner_arret "tests"; exit 1; }
+fi
 if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider >"$TRAVAIL/tests.txt" 2>"$TRAVAIL/tests.err"; then
     tail -n 5 "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" | tee -a "$JOURNAL"
     journal "tests en échec : arrêt"
     consigner_arret "tests"
     exit 1
 fi
-journal "tests : $(tail -1 "$TRAVAIL/tests.txt")"
+DERNIERE=$(tail -1 "$TRAVAIL/tests.txt")
+journal "tests : $DERNIERE"
+if [ -n "$ATTENDUS" ] && ! printf '%s\n' "$DERNIERE" | grep -Eq "^$ATTENDUS passed(, [0-9]+ warnings?)? in [0-9.]+s( \([0-9]+:[0-9]{2}:[0-9]{2}\))?$"; then
+    journal "tests : « $DERNIERE » ≠ « $ATTENDUS passed », sans test sauté ni en échec : arrêt"
+    consigner_arret "tests"
+    exit 1
+fi
 
 ETAPE="lecture du préenregistrement"
 ARGS=()
