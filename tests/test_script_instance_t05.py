@@ -111,6 +111,11 @@ def _lancer(bac, distant: Path, travail: str = "t", env_sup: dict | None = None,
     return r.returncode, (journal.read_text(encoding="utf-8") if journal.exists() else "") + r.stderr
 
 
+def _journal(bac, travail: str = "t") -> str:
+    """Le journal seul, sans la sortie d'erreur : ce que la session lit après coup (Z-4)."""
+    return (bac["racine"] / travail / "journal.txt").read_text(encoding="utf-8")
+
+
 def test_cas_sain_lit_le_preenregistrement_puis_passe_les_tests(bac):
     """Cas sain : le préenregistrement est lu avant l'installation, la dernière ligne de pytest est conforme ; le run
     (lanceur factice) s'arrête ensuite, consigné."""
@@ -128,13 +133,16 @@ def test_cas_sain_lit_le_preenregistrement_puis_passe_les_tests(bac):
     ("configuration sans sceau", "fichier cité prereg/config.json ou son sceau absent"),
     ("tâches absentes", "ou son sceau absent de l'arbre du commit"),
     ("sceau absent", "ou son sceau absent de l'arbre du commit"),
-    ("empreinte altérée", "sceau non conforme"),
-    ("sceau d'un autre fichier", "sceau non conforme"),
-    ("sceau de deux lignes", "sceau non conforme"),
+    ("empreinte altérée", f"sceau non conforme parmi les fichiers cités (ARRÊT : {EVALUATION} : empreinte"),
+    ("configuration altérée", f"sceau non conforme parmi les fichiers cités (ARRÊT : {CONFIG} : empreinte"),
+    ("sceau d'un autre fichier", f"(ARRÊT : {EVALUATION}.sha256 : nom 'taches-entrainement.json' au lieu de "
+                                 "'taches-evaluation.json')"),
+    ("sceau de deux lignes", f"(ARRÊT : {EVALUATION}.sha256 : une seule ligne attendue, 2 trouvées)"),
 ])
 def test_lecture_precoce_du_preenregistrement_artefacts(bac, artefact, motif):
     """W-1, W-10 et X-3 : chaque artefact arrête avant l'installation (code 2), rien n'est lancé ni installé. Les sceaux
-    sont lus aux règles du lanceur : un sceau qui nomme un autre fichier, ou de deux lignes, passerait `sha256sum -c`."""
+    sont lus aux règles du lanceur : un sceau qui nomme un autre fichier, ou de deux lignes, passerait `sha256sum -c`.
+    Le journal seul nomme le fichier fautif et la cause (Z-1) ; la configuration altérée est arrêtée de même (Z-2)."""
     src = bac["source"]
     sceau = src / f"{EVALUATION}.sha256"
     if artefact == "préenregistrement absent":
@@ -153,6 +161,8 @@ def test_lecture_precoce_du_preenregistrement_artefacts(bac, artefact, motif):
         sceau.unlink()
     elif artefact == "empreinte altérée":
         (src / EVALUATION).write_text('{"taches": [1]}', encoding="utf-8")
+    elif artefact == "configuration altérée":                    # sceau gardé, contenu changé
+        (src / CONFIG).write_text('{"autre": 1}', encoding="utf-8")
     elif artefact == "sceau d'un autre fichier":       # même contenu, donc même empreinte : seul le nom diffère
         sceau.write_text((src / f"{ENTRAINEMENT}.sha256").read_text(encoding="utf-8"), encoding="utf-8")
         assert subprocess.run(["sha256sum", "-c", "--quiet", sceau.name], cwd=sceau.parent).returncode == 0
@@ -163,7 +173,7 @@ def test_lecture_precoce_du_preenregistrement_artefacts(bac, artefact, motif):
     _git(src, "add", "-A")
     _git(src, "commit", "-qm", artefact)
     code, sortie = _lancer(bac, _distant(bac))
-    assert code == 2 and motif in sortie
+    assert code == 2 and motif in _journal(bac), sortie[-2000:]
     assert "préenregistrement lu" not in sortie and "torch factice" not in sortie
 
 
@@ -173,26 +183,30 @@ def test_branche_neuve_cas_sain_present_et_injoignable(bac):
     distant = _distant(bac)
     subprocess.run(["git", "-C", str(distant), "branch", "calcul/t05-revalidation-jouet-v1", "main"], check=True)
     code, sortie = _lancer(bac, distant)
-    assert code == 2 and "déjà présente sur le dépôt distant" in sortie
+    assert code == 2 and "déjà présente sur le dépôt distant" in _journal(bac)
     code, sortie = _lancer(bac, distant, travail="t2", env_sup={"BRANCHE": "calcul/t05-revalidation-jouet-v2"})
     assert "préenregistrement lu" in sortie                                              # cas sain : branche absente
     faux = bac["racine"] / "faux-git"
     faux.mkdir()
-    (faux / "git").write_text(f'#!/usr/bin/env bash\n[ "$1" = ls-remote ] && exit 128\nexec {shutil.which("git")} "$@"\n',
-                              encoding="utf-8")
+    (faux / "git").write_text(
+        '#!/usr/bin/env bash\nif [ "$1" = ls-remote ]; then\n'
+        '    echo "fatal: unable to access \'x\': Could not resolve host: exemple.invalid" >&2; exit 128\nfi\n'
+        f'exec {shutil.which("git")} "$@"\n', encoding="utf-8")
     (faux / "git").chmod(0o755)
     code, sortie = _lancer(bac, distant, travail="t3", chemin=str(faux))
-    assert code == 2 and "vérification de la branche" in sortie and "impossible" in sortie
+    j = _journal(bac, "t3")
+    assert code == 2 and "vérification de la branche" in j and "impossible" in j and "Could not resolve host" in j
 
 
 @pytest.mark.parametrize("ligne, conforme", [
-    ("7 passed in 1.00s", True), ("7 passed, 2 warnings in 1.00s", True), ("7 passed in 349.95s (0:05:49)", True),
+    ("7 passed in 1.00s", True), ("7 passed, 1 warning in 1.00s", True), ("7 passed, 2 warnings in 1.00s", True),
+    ("7 passed in 349.95s (0:05:49)", True),
     ("6 passed in 1.00s", False), ("70 passed in 1.00s", False), ("7 passed, 1 skipped in 1.00s", False),
     ("7 passed, 1 xfailed in 1.00s", False), ("1 failed, 6 passed in 1.00s", False), ("no tests ran in 0.01s", False),
 ])
 def test_derniere_ligne_de_pytest(bac, ligne, conforme):
-    """RV-14 et W-10 : la dernière ligne de pytest doit être « N passed[, M warnings] in X s », rien d'autre ; pytest est
-    appelé sans couleur."""
+    """RV-14, W-10 et Y-4 : la dernière ligne de pytest doit être « N passed[, M warning(s)] in X s[ (h:mm:ss)] », rien
+    d'autre ; pytest est appelé sans couleur."""
     code, sortie = _lancer(bac, _distant(bac), env_sup={"FAUX_PYTEST_LIGNE": ligne})
     if conforme:
         assert "run : " in sortie and "≠" not in sortie

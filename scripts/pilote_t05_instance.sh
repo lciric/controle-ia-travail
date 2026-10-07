@@ -82,7 +82,8 @@ case "$code_branche" in
     0) journal "branche $BRANCHE déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…) ; arrêt avant l'installation"
        exit 2 ;;
     2) ;;
-    *) journal "vérification de la branche $BRANCHE impossible (git ls-remote, code $code_branche : $(tail -n 2 "$TRAVAIL/ls-remote.err" | tr '\n' ' ')) : arrêt avant l'installation"
+    *) cause=$( (grep -E '^(fatal|error|remote):' "$TRAVAIL/ls-remote.err" || tail -n 2 "$TRAVAIL/ls-remote.err") | tr '\n' ' ' || true)
+       journal "vérification de la branche $BRANCHE impossible (git ls-remote, code $code_branche : $cause) : arrêt avant l'installation"
        exit 2 ;;
 esac
 git checkout -q -b "$BRANCHE"
@@ -127,9 +128,11 @@ else
             exit 2
         fi
     done
-    if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m controle_ia.scellement verifier "$CONFIG" "${CITES[@]}" \
+    # sortie non tamponnée, et cause lue hors des lignes « OK » : le journal nomme le fichier fautif (Z-1)
+    if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -u -m controle_ia.scellement verifier "$CONFIG" "${CITES[@]}" \
             >"$TRAVAIL/sceaux.txt" 2>&1; then
-        journal "sceau non conforme parmi les fichiers cités ($(tail -n 1 "$TRAVAIL/sceaux.txt")) : arrêt avant l'installation"
+        cause=$(grep -v '^OK ' "$TRAVAIL/sceaux.txt" | tail -n 1 || true)
+        journal "sceau non conforme parmi les fichiers cités ($cause) : arrêt avant l'installation"
         exit 2
     fi
     journal "préenregistrement lu : $ATTENDUS tests attendus ; configuration $CONFIG ; tâches ${CITES[*]} présentes et scellées"

@@ -370,10 +370,10 @@ def test_jetons_jouet_et_lanceur_sans_substitution(depot, monkeypatch):
 
 
 def test_lanceur_ordre_des_etapes_arret_pendant_d(depot, monkeypatch):
-    """D-6 (vérification 3, F-2 ; relecture du différentiel, Y-5) : notations décisives des deux juges, puis appariement,
-    puis notations descriptives de D, dans cet ordre (l'appariement est consigné à son appel). Un arrêt pendant les
-    notations de D laisse écrits les épisodes, les notations décisives et l'appariement ; `arret.json` consigne
-    l'étape."""
+    """D-6 (vérification 3, F-2 ; relectures des différentiels, Y-5 et V-4) : notations décisives des deux juges, puis
+    appariement des propositions, puis base « énoncé seul », puis notations descriptives de D, dans cet ordre (chaque
+    appariement est consigné à son appel). Un arrêt pendant les notations de D laisse écrits les épisodes, les notations
+    décisives et l'appariement ; `arret.json` consigne l'étape."""
     from controle_ia.manifeste import verifier_resultat
     vrai_noter, appels = lp.noter_ensembles, []
 
@@ -395,13 +395,19 @@ def test_lanceur_ordre_des_etapes_arret_pendant_d(depot, monkeypatch):
         return [{"cle": "t/e0/1/C1", "proposition": "a dense baseline", "cible": "a dense baseline",
                  "famille": "controls"}]
     monkeypatch.setattr(lp, "paires_d_appariement", paires)
+    vraie_enonce = lp.paires_enonce_seul
+
+    def enonce_seul(taches):
+        appels.append("enonce_seul")
+        return vraie_enonce(taches)
+    monkeypatch.setattr(lp, "paires_enonce_seul", enonce_seul)
     f, _ = _taches_scellees(depot)
     committer(depot)
     run = "20261006-170008-pilote-jouet"
     with pytest.raises(GardeArret, match="arrêt simulé pendant les notations de D"):
         lp.executer(_config_lanceur(), depot, run, None, str(f))
     d = depot / "diag" / run
-    assert appels == ["decisives", "decisives", "appariement", "descriptives"]
+    assert appels == ["decisives", "decisives", "appariement", "enonce_seul", "descriptives"]
     assert {x.name for x in d.glob("*.json")} == {"episodes.json", "notations-jouet-8B-decisives.json",
                                                   "notations-jouet-3B-decisives.json", "appariements.json",
                                                   "arret.json"}
@@ -436,12 +442,18 @@ def test_lanceur_noyau_et_duree_valides_avant_le_manifeste(depot, cle, valeur, m
     assert not (depot / "runs").exists()
 
 
-def test_lanceur_duree_a_la_borne_acceptee(depot):
-    """Y-7, cas sain : 15 000 s, plafond de la formule, passe la garde de durée (l'arrêt vient ensuite, du fichier des
-    tâches absent)."""
-    with pytest.raises(Exception) as e:
-        lp.executer(dict(_config_lanceur(), duree_max_s=15_000), depot, "20261006-170011-x", None, "inexistant.json")
-    assert "duree_max_s" not in str(e.value)
+def test_lanceur_duree_a_la_borne_acceptee(depot, monkeypatch):
+    """Y-7, cas sain : 15 000 s, plafond de la formule, passe toutes les gardes d'avant le manifeste ; une sentinelle à
+    la place de la création du manifeste le prouve, où que soit la garde de durée avant lui (V-3, Z-6 (d))."""
+    class ManifesteAtteint(Exception):
+        pass
+
+    def sentinelle(*a, **k):
+        raise ManifesteAtteint
+    monkeypatch.setattr(lp, "creer_manifeste", sentinelle)
+    f, _ = _taches_scellees(depot)
+    with pytest.raises(ManifesteAtteint):
+        lp.executer(dict(_config_lanceur(), duree_max_s=15_000), depot, "20261006-170011-x", None, str(f))
 
 
 def test_passes_et_demandes():

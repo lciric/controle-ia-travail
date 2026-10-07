@@ -336,6 +336,7 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
     from ..harnais.modeles import noyaux_attention_permis
 
     noyaux_juges = noyaux_attention_permis() if torch.cuda.is_available() else None
+    etat["etape"] = "chargement des juges"          # épisodes déjà écrits : l'étiquette le dit (relecture, V-1)
     modeles_juges = {}
     for j in config["juges"]:
         modeles_juges[j["nom"]] = (modele, fmt) if j["meme_modele_que_agent"] else charger_modele_et_format(
