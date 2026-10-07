@@ -137,7 +137,7 @@ Every gate has a pre-committed pivot. If white-box sequential monitoring does no
 ## Suggested reading path (about 30 minutes)
 
 1. This README.
-2. The project proposal, in English (8 pages): available on request.
+2. The research proposal, in English (8 pages): `livrables/proposition-publique-v1/proposal-public-v1.pdf`.
 3. A sample of the method, in French:
    - section 1 of the verdict `docs/verdicts/verdict-T0.4-critere-1-G0-v3.md` (lines 9–21);
    - the pre-registration it applies, `prereg/T0.4-validation-modele-reel-v3.md`;
@@ -175,4 +175,4 @@ GPU runs need `requirements-gpu.txt`. In this repository, a hook (`.claude/hooks
 
 ---
 
-*README version 1, 7 October 2026. Every figure is traced to its source in `livrables/readme-v1/` (traceability table, fact-check report and sealed copy, in French).*
+*README version 2, 7 October 2026. Every figure is traced to its source in `livrables/readme-v1/` (traceability table, fact-check report and sealed copy of version 1, in French); version 2 only adds the link to the research proposal (`livrables/readme-v2/`).*
