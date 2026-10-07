@@ -37,6 +37,8 @@ RETRAITS = [
      "fichiers de travail d'une contre-vérification : texte extrait d'un papier de tiers"),
     ("docs/sources/cartes-modeles-20261006/*.html", "page d'une carte de modèle (site tiers)"),
     ("docs/procedures/T0.5-extraction-v1/contre-lecture/*.tar", "fichiers de travail des relecteurs de l'extraction"),
+    ("prereg/contre-lectures/T0.5-pilote-contre-lecture-1-verifications-v1.tar",
+     "fichiers de travail d'un relecteur : pages extraites d'un PDF de tiers"),
     ("donnees/*", "sortie de l'extraction : texte dérivé de papiers de tiers"),
     ("livrables/candidature-ea-funds-v1/*", "candidature à un autre fonds, confidentielle"),
     ("livrables/candidature-ea-funds-v1.zip", "candidature à un autre fonds, confidentielle"),
