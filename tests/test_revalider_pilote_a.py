@@ -1,15 +1,19 @@
-"""Revalidation courte de l'équivalence sur le domaine du pilote (T0.5, P-007 (b)), sur modèle jouet : gardes de
-configuration et de tâches, lecture gelée d'un bras et règle de choix, déroulé complet ; cas sain et artefacts (R5)."""
+"""Revalidation courte de l'équivalence sur le domaine du pilote (T0.5), sur modèle jouet : gardes de configuration,
+de tâches et de citations, lectures gelées (bras, chemin, audit, garde restreinte) et règle de choix, déroulé complet,
+arrêt consigné qui garde un bras lu, panne de mémoire, rejeu ; cas sain et artefacts (R5 ; contre-lecture RV-1 à RV-23)."""
 from __future__ import annotations
 
 import json
 
+import numpy as np
 import pytest
+import torch
 
 from conftest import committer
 from controle_ia.environnements import revalider_pilote_a as rv
 from controle_ia.gardes import GardeArret
 from controle_ia.harnais.modeles import regler_determinisme
+from controle_ia.manifeste import config_canonique
 from controle_ia.scellement import sceller
 
 regler_determinisme(1)
@@ -18,20 +22,24 @@ CONFIG = {"N": 1, "T": 2, "episodes_par_tache": 1, "lot": 2, "max_nouveaux": 6, 
           "couches": [0, 1, 2], "fraction_equivalence": 1.0, "statistique_equivalence": "q99",
           "tolerance_equivalence": 0.2, "positions_min_controle_negatif": 4, "actions_min_controle_negatif": 1,
           "fraction_min_controle_negatif": 0.95, "agent": {"nom": "agent-jouet"}, "mode": "jouet", "fils": 1,
-          "bras": ["defaut", "math"], "nombre_taches": 4, "episodes_repere": [0, 2], "actions_min_comparees": 4,
-          "part_min_contexte_couvert": 0.9, "memoire_carte_min_gio": 75, "duree_max_s": 600}
+          "bras": ["defaut", "math"], "nombre_taches": 4, "transcriptions_repere": 2, "actions_min_comparees": 4,
+          "part_min_contexte_couvert": 0.9, "memoire_carte_min_gio": 75, "memoire_pic_max_gio": 70,
+          "marge_q99": 0.15, "rho_max": 3, "duree_max_s": 600, "duree_max_bras_s": 300,
+          "duree_max_episodes_pilote_s": 1e9, "chemin": {"T": 2, "tolerance": 1e-5},
+          "controle_positif": {"T": 2, "decalage_positions": 1, "positions_min": 4, "actions_min": 1,
+                               "fraction_min": 0.95}}
 
 
-def _taches(prefixe, n):
-    return [{"identifiant": f"{prefixe}.{k:05d}v1", "questions": f"Why do routers matter in setting {k}? " * (1 + k),
+def _taches(prefixe, n, longueur=lambda k: 1 + k):
+    return [{"identifiant": f"{prefixe}.{k:05d}v1", "questions": f"Why do routers matter in setting {k}? " * longueur(k),
              "classification": {"theory_experiment": "mostly_experiments", "data_type": "real_only", "domains": []}}
             for k in range(n)]
 
 
-def _fichiers(depot, entrainement, evaluation):
+def _fichiers(depot, entrainement, evaluation, suffixe=""):
     chemins = []
     for nom, taches in (("entrainement", entrainement), ("evaluation", evaluation)):
-        f = depot / f"taches-{nom}.json"
+        f = depot / f"taches-{nom}{suffixe}.json"
         f.write_text(json.dumps({"taches": taches}), encoding="utf-8")
         sceller(f)
         chemins.append(str(f))
@@ -39,132 +47,273 @@ def _fichiers(depot, entrainement, evaluation):
     return chemins
 
 
+EVALUATION = _taches("2602", 64, longueur=lambda k: 1)
+
+
 def test_configuration_gardee():
     rv.exiger_config_revalidation(CONFIG)
-    with pytest.raises(GardeArret, match="incomplète"):
-        rv.exiger_config_revalidation({k: v for k, v in CONFIG.items() if k != "part_min_contexte_couvert"})
-    with pytest.raises(GardeArret, match="dans cet ordre"):
-        rv.exiger_config_revalidation(dict(CONFIG, bras=["math", "defaut"]))
-    with pytest.raises(GardeArret, match="99e centile"):
-        rv.exiger_config_revalidation(dict(CONFIG, statistique_equivalence="max"))
-    with pytest.raises(GardeArret, match="repère"):
-        rv.exiger_config_revalidation(dict(CONFIG, episodes_repere=[0, 9]))
+    for config, motif in [({k: v for k, v in CONFIG.items() if k != "part_min_contexte_couvert"}, "incomplète"),
+                          (dict(CONFIG, bras=["math", "defaut"]), "dans cet ordre"),
+                          (dict(CONFIG, statistique_equivalence="max"), "99e centile"),
+                          (dict(CONFIG, fraction_equivalence=0.5), "fraction 1,0"),
+                          (dict(CONFIG, marge_q99=0.3), "marge"),
+                          (dict(CONFIG, transcriptions_repere=9), "repère"),
+                          (dict(CONFIG, duree_max_bras_s=900), "durée d'un bras"),
+                          (dict(CONFIG, chemin={"T": 2}), "chemin"),
+                          (dict(CONFIG, controle_positif={"T": 2}), "controle_positif"),
+                          (dict(CONFIG, mode="essai"), "inconnu")]:
+        with pytest.raises(GardeArret, match=motif):
+            rv.exiger_config_revalidation(config)
 
 
-def test_lecture_d_un_bras_et_regle_de_choix():
-    mesures = {"actions_comparees": 80, "q99_max": 0.05, "ecart_max": 0.4, "contexte_max": 4000,
-               "contexte_max_joue": 4200, "actions_remplies": 30}
-    cn = {"lecture": "conforme"}
-    repere = {"7": {"q99": 0.03}, "15": {"q99": 0.06}, "23": {"q99": 0.09}}
-    cfg = dict(CONFIG, actions_min_comparees=40)
-    assert rv.lire_bras(mesures, cn, repere, True, cfg)["conforme"]
-    artefacts = [
-        (dict(mesures, q99_max=0.21), cn, repere, True),
-        (dict(mesures, q99_max=float("nan")), cn, repere, True),
-        (mesures, {"lecture": "contraire"}, repere, True),
-        (mesures, {"lecture": "non concluant"}, repere, True),
-        (mesures, cn, dict(repere, **{"23": {"q99": 0.11}}), True),
-        (mesures, cn, repere, False),
-        (dict(mesures, contexte_max=3700), cn, repere, True),
-        (dict(mesures, actions_remplies=0), cn, repere, True),
-        (dict(mesures, actions_comparees=39), cn, repere, True),
-    ]
-    for m, c, r, rejeu in artefacts:
-        assert not rv.lire_bras(m, c, r, rejeu, cfg)["conforme"], (m, c, r, rejeu)
-    assert not rv.lire_bras({}, {}, None, None, cfg, panne="mémoire")["conforme"]
-    assert not rv.lire_bras(mesures, cn, repere, True, cfg)["audit_R4_ecarts_tous_nuls"]
-    assert rv.lire_bras(dict(mesures, ecart_max=0.0, q99_max=0.0), cn, repere, True, cfg)["audit_R4_ecarts_tous_nuls"]
-    assert rv.choisir_noyau({"defaut": {"conforme": True}, "math": {"conforme": True}}) == "defaut"
-    assert rv.choisir_noyau({"defaut": {"conforme": False}, "math": {"conforme": True}}) == "math"
-    assert rv.choisir_noyau({"defaut": {"conforme": False}, "math": {"conforme": False}}) is None
+MESURES = {"actions_comparees": 80, "q99_max": 0.05, "ecart_max": 0.4, "contexte_max": 4000,
+           "contexte_max_joue": 4200, "actions_remplies": 30}
+REPERE = {"7": {"q99": 0.03}, "15": {"q99": 0.06}, "23": {"q99": 0.09}}
+AUDIT = {"P9_zone_generee_non_nulle": True, "sondes_conformes": True, "rho_max_observe": 1.5}
+CHEMIN = {"conforme": True}
 
 
-def test_taches_d_evaluation_refusees(depot):
-    entrainement, evaluation = _taches("2601", 4), _taches("2602", 2)
-    e, v = _fichiers(depot, entrainement + [evaluation[0]], evaluation)
-    with pytest.raises(GardeArret, match="aussi tâches d'évaluation"):
-        rv.taches_d_entrainement(e, v, 4)
+def _lire(bras="math", **k):
+    args = dict(mesures=MESURES, controle_negatif={"lecture": "conforme"}, repere=REPERE, rejeu_identique=True,
+                config=dict(CONFIG, actions_min_comparees=40), audit=AUDIT, chemin=CHEMIN, bras=bras,
+                memoire_pic_gio=40.0, duree_projetee_s=100.0)
+    args.update(k)
+    return rv.lire_bras(**args)
+
+
+def test_lecture_d_un_bras_cas_sain_et_artefacts():
+    for b in rv.BRAS:
+        assert _lire(b)["conforme_avec_marge"]
+    assert _lire(mesures=dict(MESURES, q99_max=0.18))["conforme"] and not _lire(
+        mesures=dict(MESURES, q99_max=0.18))["conforme_avec_marge"]                      # conforme sans marge (RV-4)
+    artefacts = [dict(mesures=dict(MESURES, q99_max=0.21)), dict(mesures=dict(MESURES, q99_max=float("nan"))),
+                 dict(controle_negatif={"lecture": "contraire"}), dict(controle_negatif={"lecture": "non concluant"}),
+                 dict(repere=dict(REPERE, **{"23": {"q99": 0.11}})), dict(rejeu_identique=False),
+                 dict(mesures=dict(MESURES, contexte_max=3700)), dict(mesures=dict(MESURES, actions_remplies=0)),
+                 dict(mesures=dict(MESURES, actions_comparees=39)), dict(memoire_pic_gio=71.0),
+                 dict(duree_projetee_s=2e9), dict(audit=dict(AUDIT, P9_zone_generee_non_nulle=False)),
+                 dict(audit=dict(AUDIT, sondes_conformes=False)), dict(audit=None)]
+    for a in artefacts:
+        assert not _lire(**a)["conforme"], a
+    # chemin (RV-3) et rapport au repère : exigés au noyau par défaut seulement ; ρ au-dessus au « math » : réserve
+    assert not _lire("defaut", chemin={"conforme": False})["conforme"] and _lire("math", chemin=None)["conforme"]
+    assert not _lire("defaut", audit=dict(AUDIT, rho_max_observe=3.5))["conforme"]
+    haut = _lire("math", audit=dict(AUDIT, rho_max_observe=3.5))
+    assert haut["conforme"] and haut["reserve_rho"]
+    assert not rv.lire_bras({}, {}, None, None, CONFIG, panne="mémoire")["conforme"]
+    assert _lire(mesures=dict(MESURES, ecart_max=0.0, q99_max=0.0))["audit_R4_ecarts_tous_nuls"]
+
+
+def test_regle_de_choix():
+    oui = {"conforme": True, "conforme_avec_marge": True}
+    sans_marge = {"conforme": True, "conforme_avec_marge": False}
+    non = {"conforme": False, "conforme_avec_marge": False}
+    assert rv.choisir_noyau({"defaut": oui, "math": oui}) == ("defaut", None)
+    assert rv.choisir_noyau({"defaut": non, "math": oui}) == ("math", None)
+    assert rv.choisir_noyau({"defaut": sans_marge, "math": oui}) == ("math", None)       # marge d'abord (RV-4)
+    noyau, prop = rv.choisir_noyau({"defaut": sans_marge, "math": non})
+    assert noyau is None and prop["noyau"] == "defaut" and "sans marge" in prop["motif"]
+    noyau, prop = rv.choisir_noyau({"defaut": non, "math": dict(non, aveugle_action_entiere_seulement=True)})
+    assert noyau is None and prop["garde"] == "zone générée"
+    assert rv.choisir_noyau({"defaut": non, "math": non}) == (None, None)
+    assert rv.choisir_noyau({"defaut": oui}) == ("defaut", None)                       # « math » non lu (RV-1)
+    assert rv.choisir_noyau({}) == (None, None)
+
+
+def test_taches_choisies_et_gardees(depot):
+    longues = _taches("2601", 6, longueur=lambda k: [1, 9, 2, 9, 7, 3][k])
+    e, v = _fichiers(depot, longues, EVALUATION)
+    taches, domaine = rv.taches_d_entrainement(e, v, 3)
+    assert [t["identifiant"] for t in taches] == ["2601.00001v1", "2601.00003v1", "2601.00004v1"]   # les plus longs
+    assert domaine["couvre_le_pilote"] and domaine["longueur_max_choisies"] > domaine["longueur_max_evaluation"]
+    for rang, (entrainement, evaluation, motif) in enumerate([
+            (longues + [EVALUATION[0]], EVALUATION, "aussi tâches d'évaluation"),
+            (longues + [dict(EVALUATION[1], identifiant="2602.00001v2")], EVALUATION, "aussi tâches d'évaluation"),
+            (longues, EVALUATION[:63], "64 attendues"), (longues, [], "64 attendues"),
+            (longues[:2], EVALUATION, "3 attendues")]):
+        f_e, f_v = _fichiers(depot, entrainement, evaluation, suffixe=f"-{rang}")
+        with pytest.raises(GardeArret, match=motif):
+            rv.taches_d_entrainement(f_e, f_v, 3)
+
+
+def test_citations_cas_sain_et_artefacts(tmp_path):
+    sha_c = __import__("hashlib").sha256(config_canonique(CONFIG)).hexdigest()
+    p = tmp_path / "prereg.md"
+
+    def ecrire(c=sha_c, t="a" * 64, v="b" * 64, entropie=7):
+        lignes = [f"- Configuration de la revalidation (empreinte canonique) : `{c}`", f"- Tâches d'entraînement : `{t}`",
+                  f"- Tâches d'évaluation : `{v}`", f"- Entropie : `{entropie}`"]
+        p.write_text("\n".join(x for x in lignes if x), encoding="utf-8")
+    ecrire()
+    assert rv.exiger_citations(p, CONFIG, "a" * 64, "b" * 64) == 7
+    for args, motif in [(dict(CONFIG, lot=3), "configuration"), ]:
+        with pytest.raises(GardeArret, match=motif):
+            rv.exiger_citations(p, args, "a" * 64, "b" * 64)
+    with pytest.raises(GardeArret, match="entraînement"):
+        rv.exiger_citations(p, CONFIG, "c" * 64, "b" * 64)
+    with pytest.raises(GardeArret, match="évaluation"):
+        rv.exiger_citations(p, CONFIG, "a" * 64, "c" * 64)
+    p.write_text(p.read_text().replace("Tâches d'évaluation", "Tâches"), encoding="utf-8")
+    with pytest.raises(GardeArret, match="ne cite pas"):
+        rv.exiger_citations(p, CONFIG, "a" * 64, "b" * 64)
 
 
 def test_reel_sans_preenregistrement_refuse(depot):
-    e, v = _fichiers(depot, _taches("2601", 4), _taches("2602", 2))
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
     with pytest.raises(GardeArret, match="R1"):
         rv.executer(dict(CONFIG, mode="reel"), depot, "20261007-000000-revalidation", None, e, v)
     with pytest.raises(GardeArret, match="entropie d'essai"):
         rv.executer(CONFIG, depot, "20261007-000000-revalidation", "prereg.md", e, v, entropie_essai=3)
 
 
-def test_deroule_complet_en_mode_jouet(depot):
-    e, v = _fichiers(depot, _taches("2601", 5), _taches("2602", 2))
-    resume = rv.executer(CONFIG, depot, "20261007-000000-revalidation-jouet", None, e, v, entropie_essai=11)
-    assert set(resume["lectures"]) == {"defaut", "math"}
-    for b in ("defaut", "math"):
-        r = resume["bras"][b]
-        assert r["rejeu_identique"] is True
-        assert r["mesures"]["actions_comparees"] == 8          # 4 épisodes × 2 actions, toutes échantillonnées
-        assert set(r["repere"]) == {"0", "1", "2"} and all(x["jetons"] > 0 for x in r["repere"].values())
-        assert r["controle_negatif"]["lecture"] in ("conforme", "contraire", "non concluant")
-        assert set(r["zone_generee"]) >= {"q99_generee_max", "fraction", "part_zone_generee_sous_1pc"}
-    assert "proposition_au_noeud" in resume
-    assert resume["noyau_retenu"] == rv.choisir_noyau(resume["lectures"])
-    d = depot / "diag" / "20261007-000000-revalidation-jouet"
-    assert (d / "resume.json.sha256").is_file() and (d / "episodes.json.sha256").is_file()
-    episodes = json.loads((d / "episodes.json").read_text())["resultat"]
-    assert [f["tache"] for f in episodes["defaut"]] == [t["identifiant"] for t in _taches("2601", 4)]
-    assert sum("transcriptions" in f for f in episodes["defaut"]) == 2
+def test_q99_depasse_est_prudent():
+    rng = np.random.default_rng(3)
+    for _ in range(300):
+        m = int(rng.integers(1, 400))
+        e = rng.random(m) * rng.choice([0.1, 1.0, 3.0])
+        tau = 0.2
+        if rv.q99_depasse(int(np.sum(e > tau)), m):
+            assert np.quantile(e, 0.99) > tau
+    assert rv.q99_depasse(1, 1) and not rv.q99_depasse(0, 1) and not rv.q99_depasse(0, 0)
 
 
-def test_garde_trop_stricte_ou_aveugle_donne_un_noeud(depot):
-    # Sur le modèle jouet en demi-précision, le défaut D1 (décalage d'une position) donne des écarts de l'ordre de
-    # 3e-3, du même ordre que l'arrondi (essai de la session 11) : il ne s'y distingue pas. La sensibilité de la garde
-    # au décalage se lit sur le modèle réel, par le contrôle négatif (R2), comme dans T0.4 v3 (P5). Ici, la lecture R1
-    # est éprouvée de bout en bout par une tolérance sous l'arrondi du jouet (1e-4 ; 99e centiles de 1e-3 à 3e-3 avec
-    # des actions de 40 jetons), et R2 par une tolérance aveugle (1e9).
-    e, v = _fichiers(depot, _taches("2601", 4), _taches("2602", 2))
-    stricte = rv.executer(dict(CONFIG, max_nouveaux=40, tolerance_equivalence=1e-4), depot,
-                          "20261007-000001-revalidation-stricte", None, e, v, entropie_essai=11)
-    assert stricte["noeud"]
-    for b, x in stricte["lectures"].items():  # la lecture suit la mesure, bras par bras
-        assert x["R1_garde_saine"] == (stricte["bras"][b]["mesures"]["q99_max"] <= 1e-4)
-    # au noyau « math », le contexte coïncide au bit près : une zone générée sous 1 % des positions donne un 99e
-    # centile nul (garde aveugle, vue par le contrôle négatif) ; au noyau par défaut, l'arrondi le rend non nul
-    assert not stricte["lectures"]["defaut"]["R1_garde_saine"]
-    committer(depot)
-    aveugle = rv.executer(dict(CONFIG, tolerance_equivalence=1e9), depot, "20261007-000002-revalidation-aveugle",
-                          None, e, v, entropie_essai=11)
-    assert aveugle["noeud"]
-    assert all(x["R2_controle_negatif"] != "conforme" for x in aveugle["lectures"].values())
-
-
-def _fiche_longue(q99_action, q99_generee, max_decale, generes=20, contexte=4980):
+def _fiche_longue(q99_action, q99_generee, au_dessus, generes=20, contexte=4980, nuls=0, sonde=True):
     cle = "0,9"
     return {"equivalence": {
         "ecarts_q99": {cle: {7: q99_action}}, "ecarts": {cle: {7: max(q99_generee, q99_action)}},
         "positions_capturees": {cle: contexte + generes}, "longueurs_contexte": {cle: contexte},
-        "lignes": {cle: {"remplissage": 3}},
-        "profils": {cle: {7: {"generee": {"jetons": generes, "q99": q99_generee}}}},
-        "controle_negatif_zone_generee": {cle: {7: {"positions": generes - 1, "max": max_decale, "q99": q99_action}}}},
+        "lignes": {cle: {"remplissage": 3}}, "sondes": {cle: {"tableaux_distincts": True, "ulp_vu": sonde}},
+        "profils": {cle: {7: {"generee": {"jetons": generes, "q99": q99_generee, "max": q99_generee, "nuls": nuls}}}},
+        "controle_negatif_zone_generee": {cle: {7: {"positions": generes - 1, "au_dessus": au_dessus,
+                                                    "max": 0.8, "q99": q99_action}}}},
         "actions": [{"debut": contexte}]}
 
 
 def test_garde_zone_generee_et_proposition_au_noeud():
-    # zone générée de 20 positions sur 5 000 : la garde de l'action entière est aveugle au décalage (99e centile du
-    # contexte), la garde restreinte le voit (maximum décalé 0,8)
-    fiches = [_fiche_longue(0.03, 0.05, 0.8) for _ in range(12)]
+    # zone générée de 20 positions sur 5 000 : la garde de l'action entière est aveugle au décalage ; la garde
+    # restreinte le voit si le 99e centile de la zone décalée dépasse le seuil (RV-11 : 19 positions sur 19 au-dessus)
+    fiches = [_fiche_longue(0.03, 0.05, 19) for _ in range(12)]
     zg = rv.garde_zone_generee(fiches, 0.2, 4)
     assert zg["q99_generee_max"] == 0.05 and zg["comparables"] == 12 and zg["fraction"] == 1.0
     assert zg["part_zone_generee_sous_1pc"] == 1.0
     cfg = dict(CONFIG, actions_min_comparees=10, actions_min_controle_negatif=10)
     mesures = rv.domaine_et_garde(fiches)
-    repere = {"7": {"q99": 0.05}}
-    lecture = rv.lire_bras(mesures, {"lecture": "contraire"}, repere, True, cfg, zone_generee=zg)
+    audit = rv.audit_symetrie(fiches, {"7": {"q99": 0.05}})
+    lecture = rv.lire_bras(mesures, {"lecture": "contraire"}, {"7": {"q99": 0.05}}, True, cfg, zone_generee=zg,
+                           audit=audit)
     assert not lecture["conforme"] and lecture["garde_zone_generee_conforme"]
     assert lecture["aveugle_action_entiere_seulement"]
-    # la garde restreinte voit aussi un vrai défaut de la zone générée (99e centile 0,5) : pas de proposition
-    zg_ko = rv.garde_zone_generee([_fiche_longue(0.03, 0.5, 0.8) for _ in range(12)], 0.2, 4)
-    lecture_ko = rv.lire_bras(mesures, {"lecture": "contraire"}, repere, True, cfg, zone_generee=zg_ko)
+    # une seule position décalée au-dessus du seuil : le maximum la verrait, pas le 99e centile (RV-11)
+    zg_max = rv.garde_zone_generee([_fiche_longue(0.03, 0.05, 1) for _ in range(12)], 0.2, 4)
+    assert zg_max["fraction"] == 0.0
+    # un vrai défaut de la zone générée (99e centile 0,5) : pas de proposition
+    zg_ko = rv.garde_zone_generee([_fiche_longue(0.03, 0.5, 19) for _ in range(12)], 0.2, 4)
+    lecture_ko = rv.lire_bras(mesures, {"lecture": "contraire"}, {"7": {"q99": 0.05}}, True, cfg, zone_generee=zg_ko,
+                              audit=audit)
     assert not lecture_ko["garde_zone_generee_conforme"] and not lecture_ko["aveugle_action_entiere_seulement"]
-    # contrôle négatif restreint aveugle (maximum décalé sous le seuil) : pas de proposition non plus
-    zg_aveugle = rv.garde_zone_generee([_fiche_longue(0.03, 0.05, 0.1) for _ in range(12)], 0.2, 4)
-    assert not rv.lire_bras(mesures, {"lecture": "contraire"}, repere, True, cfg,
-                            zone_generee=zg_aveugle)["aveugle_action_entiere_seulement"]
+
+
+def test_audit_de_symetrie():
+    sain = rv.audit_symetrie([_fiche_longue(0.03, 0.05, 19)], {"7": {"q99": 0.02}})
+    assert sain["P9_zone_generee_non_nulle"] and sain["sondes_conformes"] and sain["rho_max_observe"] == pytest.approx(1.5)
+    assert not rv.audit_symetrie([_fiche_longue(0.03, 0.05, 19, nuls=20)], None)["P9_zone_generee_non_nulle"]
+    assert not rv.audit_symetrie([_fiche_longue(0.03, 0.05, 19, sonde=False)], None)["sondes_conformes"]
+    assert rv.audit_symetrie([_fiche_longue(0.03, 0.05, 19)], {"7": {"q99": 0.0}})["rho_max_observe"] == float("inf")
+
+
+def _fiche_chemin(maximum, generes=10, couches=(0, 1)):
+    return {"equivalence": {"ecarts": {"0,0": {c: maximum for c in couches}},
+                            "profils": {"0,0": {c: {"generee": {"jetons": generes, "max": maximum}} for c in couches}}}}
+
+
+def test_lecture_du_chemin():
+    cfg = dict(CONFIG, chemin={"T": 2, "tolerance": 3e-3})
+    sain, d1 = [_fiche_chemin(1e-4)], [_fiche_chemin(0.06)]
+    assert rv.lire_chemin(sain, {"lecture": "conforme"}, d1, cfg)["conforme"]
+    assert not rv.lire_chemin([_fiche_chemin(5e-3)], {"lecture": "conforme"}, d1, cfg)["conforme"]          # C1
+    assert rv.lire_chemin(sain, {"lecture": "conforme"}, [_fiche_chemin(1e-3)], cfg)["C2"] == "contraire"   # C2
+    assert rv.lire_chemin(sain, {"lecture": "conforme"}, [_fiche_chemin(float("nan"))], cfg)["C2"] == "contraire"
+    assert rv.lire_chemin(sain, {"lecture": "conforme"}, [_fiche_chemin(0.06, generes=2)], cfg)["C2"] == "non concluant"
+    assert not rv.lire_chemin(sain, {"lecture": "contraire"}, d1, cfg)["conforme"]                          # C3
+
+
+def test_deroule_complet_en_mode_jouet(depot):
+    e, v = _fichiers(depot, _taches("2601", 5), EVALUATION)
+    run = "20261007-000000-revalidation-jouet"
+    resume = rv.executer(CONFIG, depot, run, None, e, v, entropie_essai=11)
+    assert set(resume["lectures"]) == {"defaut", "math"}
+    assert resume["domaine_enonces"]["couvre_le_pilote"]
+    d = depot / "diag" / run
+    for b in rv.BRAS:
+        for nom in (f"episodes-{b}", f"mesures-{b}", f"lecture-{b}"):
+            assert (d / f"{nom}.json.sha256").is_file(), nom
+        r = resume["bras"][b]
+        assert r["rejeu_identique"] is True
+        assert r["mesures"]["actions_comparees"] == 8          # 4 épisodes × 2 actions, toutes comparées (RV-4)
+        assert set(r["repere"]) == {"0", "1", "2"} and all(x["jetons"] > 0 for x in r["repere"].values())
+        assert set(r["audit"]) >= {"P9_zone_generee_non_nulle", "sondes_conformes", "rho"}
+        assert r["duree_projetee_episodes_pilote_s"] > 0
+    chemin = resume["bras"]["defaut"]["chemin"]
+    assert chemin["C2_comparables"] > 0 and chemin["C2"] in ("conforme", "contraire", "non concluant")
+    assert resume["bras"]["math"]["chemin"] is None
+    assert (d / "chemin-defaut.json.sha256").is_file()
+    assert resume["noyau_retenu"] == rv.choisir_noyau(resume["lectures"])[0]
+    mesures = json.loads((d / "mesures-defaut.json").read_text())["resultat"]
+    assert len(mesures["repere_transcriptions"]) == 2                                   # plus longues (RV-12)
+    episodes = json.loads((d / "episodes-defaut.json").read_text())["resultat"]["fiches"]
+    longueurs = sorted(len(t["questions"]) for t in _taches("2601", 5))[-4:]
+    assert sorted(len(t["questions"]) for t in _taches("2601", 5) if f"{t['identifiant']}/e0" in
+                  {f["episode"] for f in episodes}) == longueurs                       # énoncés les plus longs (RV-5)
+
+
+def test_arret_consigne_garde_le_bras_lu(depot, monkeypatch):
+    """RV-1 : un arrêt pendant le bras « math » laisse le bras « defaut » écrit et lu ; l'arrêt applique la règle aux
+    bras lus."""
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    vrai = rv._jouer_bras
+
+    def panne(modele, fmt, bras, *a, **k):
+        if bras == "math":
+            raise GardeArret("limite de durée dépassée (simulée)")
+        return vrai(modele, fmt, bras, *a, **k)
+    monkeypatch.setattr(rv, "_jouer_bras", panne)
+    run = "20261007-000003-revalidation-arret"
+    with pytest.raises(GardeArret, match="simulée"):
+        rv.executer(CONFIG, depot, run, None, e, v, entropie_essai=11)
+    d = depot / "diag" / run
+    arret = json.loads((d / "arret.json").read_text())["resultat"]
+    assert arret["etape"] == "bras math" and arret["bras_lus"] == ["defaut"]
+    lecture = json.loads((d / "lecture-defaut.json").read_text())["resultat"]["lecture"]
+    assert arret["noyau_retenu_sur_les_bras_lus"] == rv.choisir_noyau({"defaut": lecture})[0]
+
+
+def test_panne_de_memoire_dans_un_bras(depot, monkeypatch):
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    vrai = rv._jouer_bras
+
+    def panne(modele, fmt, bras, *a, **k):
+        if bras == "math":
+            raise torch.cuda.OutOfMemoryError("mémoire simulée")
+        return vrai(modele, fmt, bras, *a, **k)
+    monkeypatch.setattr(rv, "_jouer_bras", panne)
+    resume = rv.executer(CONFIG, depot, "20261007-000004-revalidation-panne", None, e, v, entropie_essai=11)
+    assert resume["lectures"]["math"]["panne"].startswith("mémoire") and not resume["lectures"]["math"]["conforme"]
+
+
+def test_rejeu_different_lu_non_conforme(depot, monkeypatch):
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    appels = []
+    vrai = rv._empreintes_rejeu
+
+    def decale(fiches):
+        appels.append(1)
+        r = vrai(fiches)
+        return r if len(appels) % 2 else {k: dict(x, empreintes={"autre": 1}) for k, x in r.items()}
+    monkeypatch.setattr(rv, "_empreintes_rejeu", decale)
+    resume = rv.executer(CONFIG, depot, "20261007-000005-revalidation-rejeu", None, e, v, entropie_essai=11)
+    assert all(not x["R4_rejeu"] and not x["conforme"] for x in resume["lectures"].values())
+
+
+def test_signal_term_arrete():
+    with pytest.raises(GardeArret, match="TERM"):
+        rv._signal_term(15, None)
