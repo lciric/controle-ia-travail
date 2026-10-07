@@ -710,7 +710,7 @@ def test_avis_refaits_bornes(depot, tmp_path_factory, monkeypatch):
     assert lu2["papiers"][e1]["codes"] == ["json.illisible"]
     with pytest.raises(GardeArret, match="2 avis « echantillon » préparés sans avis lisible"):
         et.preparer_contre_verification(depot, RUN, travail, "echantillon", [e1], ch=ch)
-    arret = json.loads((depot / "diag" / RUN / "arret-avis-refaits.json").read_text())["resultat"]   # E-8
+    arret = json.loads((depot / "diag" / RUN / f"arret-avis-refaits-echantillon-{e1}.json").read_text())["resultat"]
     assert arret["papier"] == e1 and arret["role"] == "echantillon" and arret["avis_prepares"] == 2
     with pytest.raises(GardeArret, match="préparés sans avis lisible"):                               # répété, sans écrire
         et.preparer_contre_verification(depot, RUN, travail, "echantillon", [e1], ch=ch)
@@ -1133,3 +1133,115 @@ def test_fichier_de_retours_dans_donnees_seulement(depot, tmp_path_factory, monk
     bon.parent.mkdir(parents=True, exist_ok=True)
     bon.write_text(contenu)
     assert et._retours(depot, RUN, str(bon)) == _retours(prep)
+
+
+# --- vérification courte des corrections de la contre-lecture 3 : V-1 à V-13 ----------------------------------------
+
+def _t1(depot, monkeypatch, tmp_path_factory):
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    for info in prep["papiers"].values():
+        _repondre(info["dossier"])
+    return ch, travail, prep, sorted(prep["papiers"])
+
+
+@pytest.mark.parametrize("objet", ["nom non utf-8", "dossier vide", "lien cassé", "tube nommé"])
+def test_chemin_ajoute_sous_papier_anomalie_du_seul_papier(depot, tmp_path_factory, monkeypatch, objet):
+    """V-1, V-2 : tout chemin ajouté parmi les entrées (fichier au nom non UTF-8, dossier, lien cassé, tube) est une
+    entrée modifiée de son papier ; les résultats restent encodables et scellés."""
+    import os
+    ch, travail, prep, ids = _t1(depot, monkeypatch, tmp_path_factory)
+    papier = Path(prep["papiers"][ids[0]]["dossier"]) / "papier"
+    cible = papier / "partie-99.md"
+    if objet == "nom non utf-8":
+        os.close(os.open(os.fsencode(str(papier)) + b"/notes-\xff.md", os.O_CREAT | os.O_WRONLY))
+    elif objet == "dossier vide":
+        cible.mkdir()
+    elif objet == "lien cassé":
+        cible.symlink_to(papier / "absent.md")
+    else:
+        os.mkfifo(cible)
+    v = et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    assert v["invalides"] == [ids[0]] and v["papiers"][ids[0]]["anomalies"] == ["entrees.modifiees"]
+    attendu = "papier/notes-\\xff.md" if objet == "nom non utf-8" else "papier/partie-99.md"
+    assert v["papiers"][ids[0]]["entrees_modifiees"] == [attendu]
+    assert et.verifier(depot / "diag" / RUN / "validation-tentative-1.json")
+
+
+def test_cible_textuelle_avec_substitut_avis_illisible(depot, tmp_path_factory, monkeypatch):
+    """V-3 : le message `avis.cible` est échappé ; un substitut isolé n'arrête pas la lecture de la ronde."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    _, ech = _jusqu_a_l_echantillon(depot, travail, ch)
+    e0, e1 = ech["echantillon"]
+    cv = et.preparer_contre_verification(depot, RUN, travail, "echantillon", ch=ch)
+    _juger(cv["papiers"][e0]["dossier"], _avec(AVIS, targets=["C1\ud835", "C2", "C3", "F1"]))
+    _juger(cv["papiers"][e1]["dossier"])
+    lu = et.lire_contre_verification(depot, RUN, 1, _retours(cv), ch=ch)
+    assert lu["illisibles"] == [e0] and lu["papiers"][e1]["lisible"]
+
+
+def test_autre_copie_du_depot_refusee_sans_rien_ecrire(depot, tmp_path_factory, monkeypatch):
+    """V-4 : une étape lancée depuis une autre copie du dépôt (arbre de travail git, sans `donnees/`) est refusée sans
+    rien écrire ; la même racine écrite autrement est acceptée."""
+    ch, travail, prep, ids = _t1(depot, monkeypatch, tmp_path_factory)
+    et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    committer(depot)
+    autre = tmp_path_factory.mktemp("autre") / "arbre"
+    subprocess.run(["git", "-C", str(depot), "worktree", "add", "-q", str(autre)], check=True, capture_output=True)
+    with pytest.raises(GardeArret, match="hors de la racine du run"):
+        et.echantillonner(autre, RUN, ch=ch)
+    assert not (autre / "diag" / RUN / "arret-perte.json").exists()
+    monkeypatch.chdir(depot)
+    et.echantillonner(Path("."), RUN, ch=ch)
+
+
+def test_compagnon_illisible_est_une_perte_et_controle_a_la_demande(depot, tmp_path_factory, monkeypatch, capsys):
+    """V-7 : une empreinte compagnon illisible est une perte (arrêt scellé) ; V-10 : la commande `controler` rejoue la
+    règle de perte (cas sain : elle liste les fichiers consignés, sans rien écrire)."""
+    ch, travail, prep, ids = _t1(depot, monkeypatch, tmp_path_factory)
+    et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    monkeypatch.chdir(depot)
+    monkeypatch.setattr(et, "Chemins", lambda: ch)
+    assert et._main(["controler", "--run-id", RUN]) == 0
+    assert "sorties-tentative-1.tar" in capsys.readouterr().out
+    (depot / "donnees" / RUN / "sorties-tentative-1.tar.sha256").write_bytes(b"\xff\n")
+    with pytest.raises(GardeArret, match="perte de données"):
+        et.echantillonner(depot, RUN, ch=ch)
+    assert json.loads((depot / "diag" / RUN / "arret-perte.json").read_text())["resultat"]["fichiers_en_cause"] == [
+        f"donnees/{RUN}/sorties-tentative-1.tar"]
+
+
+def test_seuil_d17_relu_depuis_la_validation_2(depot, tmp_path_factory, monkeypatch):
+    """V-13 : si l'arrêt d'exclusions n'a pas été écrit (étape interrompue), l'échantillon ne se tire pas pour autant."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    ids = sorted(prep["papiers"])
+    court = _avec(H9, research_questions="court")
+    for pid, info in prep["papiers"].items():
+        _repondre(info["dossier"], h9=court if pid in ids[:2] else H9)
+    et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    p2 = et.preparer(depot, RUN, travail, 2, ids[:2], ch=ch)
+    for pid in ids[:2]:
+        _repondre(p2["papiers"][pid]["dossier"], h9=court)
+    et.valider(depot, RUN, 2, _retours(p2), ch=ch)                     # seuil 16 : pas d'arrêt écrit
+    monkeypatch.setattr(et, "SEUIL_EXCLUSIONS_VALIDATION", 1)          # artefact : l'arrêt aurait dû être écrit
+    assert not (depot / "diag" / RUN / "arret-exclusions-validation.json").exists()
+    with pytest.raises(GardeArret, match="rien ne se tire"):
+        et.echantillonner(depot, RUN, ch=ch)
+
+
+def test_preparation_interrompue_mise_de_cote_puis_refaite(depot, tmp_path_factory, monkeypatch):
+    """V-13 : une préparation de tentative 2 interrompue avant son résultat laisse un dossier ; il est mis de côté (pas
+    détruit), et la préparation se refait."""
+    ch, travail, prep, ids = _t1(depot, monkeypatch, tmp_path_factory)
+    _repondre(prep["papiers"][ids[0]]["dossier"], h9=_avec(H9, research_questions="court"))
+    et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    (travail / "tentative-2" / "reste").mkdir(parents=True)
+    p2 = et.preparer(depot, RUN, travail, 2, [ids[0]], ch=ch)
+    assert (travail / "tentative-2-interrompue-1" / "reste").is_dir() and sorted(p2["papiers"]) == [ids[0]]

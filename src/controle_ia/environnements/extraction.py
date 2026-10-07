@@ -408,7 +408,7 @@ def anomalies_avis(avis, h9: dict, h10: dict, cibles: dict) -> list[str]:
         a.append(_a("avis.cibles", f"avis : cibles {cles} ≠ cibles du fichier {ids_cibles(cibles)}"))
     for t in avis["targets"]:
         if not (isinstance(t, dict) and isinstance(t.get("grounded"), bool) and isinstance(t.get("observable"), bool)):
-            a.append(_a("avis.cible", f"avis : cible {str(t)[:60]} sans grounded ou observable booléens"))
+            a.append(_a("avis.cible", f"avis : cible {str(t)[:60]!r} sans grounded ou observable booléens"))
     passages = avis["leak_passages"]
     if avis["statement_leaks"] != bool(passages):
         a.append(_a("avis.fuite", "avis : statement_leaks incohérent avec leak_passages"))
