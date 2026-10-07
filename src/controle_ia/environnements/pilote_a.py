@@ -76,7 +76,8 @@ def graines_des_actions(generateur: np.random.Generator, N: int, T: int) -> dict
 
 def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[str, np.random.Generator],
                  config: dict, garder_vecteurs: bool = True, echeance: float | None = None,
-                 decalage_positions: int = 0) -> tuple[list[dict], dict, dict]:
+                 decalage_positions: int = 0, garde: str = "immediate", exiger_controle_negatif: bool = True,
+                 chrono: dict | None = None, transcriptions_de=frozenset()) -> tuple[list[dict], dict, dict]:
     """Joue les épisodes du plan par lots ; renvoie une fiche par épisode, les vecteurs par action (agrégés par
     maximum sur les jetons de l'action, par couche ; voir `vecteurs_par_action`) et le bilan du contrôle négatif.
 
@@ -86,7 +87,12 @@ def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[st
     `fraction_min_controle_negatif` des actions comparables ; sous `actions_min_controle_negatif` actions comparables,
     la lecture est « non concluant » (bilan consigné). Chaque fiche garde le texte, les identifiants de jetons et
     l'empan de chaque action, et le rapport d'équivalence complet des actions échantillonnées.
-    `decalage_positions` : défaut D1 injecté (essais seulement)."""
+    `decalage_positions` : défaut D1 injecté (essais seulement).
+
+    Revalidation (P-007 (b)) : `garde="differee"` consigne tous les écarts sans s'arrêter ;
+    `exiger_controle_negatif=False` consigne le contrôle négatif et sa lecture (« conforme », « contraire » ou « non
+    concluant ») sans s'arrêter ; `chrono` cumule durées et jetons (débit) ; les épisodes de `transcriptions_de`
+    gardent leurs transcriptions (identifiants de jetons, par agent) pour le repère de précision."""
     exiger_config(config)
     N, T, lot = config["N"], config["T"], config["lot"]
     guide = charger_invite("H1-classification")
@@ -108,7 +114,7 @@ def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[st
         sorties = jouer_episodes(modele, fmt, envs, ids, N, T, graines, config["couches"], config["max_nouveaux"],
                                  config["temperature"], echantillon, config["tolerance_equivalence"],
                                  statistique=config["statistique_equivalence"], echeance=echeance,
-                                 decalage_positions=decalage_positions)
+                                 decalage_positions=decalage_positions, garde=garde, chrono=chrono)
         for (ep, acts, rapport), env, e in zip(sorties, envs, ids):
             rapports.append(rapport)
             actions = ep.actions_dans_l_ordre()
@@ -121,15 +127,21 @@ def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[st
                                      "statistique": rapport["statistique"],
                                      **{k: rapport[k] for k in CLES_RAPPORT_GARDEES}},
                      "empreintes": empreinte_episode(ep, acts)}
+            if e in transcriptions_de:
+                fiche["transcriptions"] = [{"agent": tr.agent, "ids": [int(x) for x in tr.ids]}
+                                           for tr in ep.transcriptions]
             fiches.append(fiche)
             if garder_vecteurs:
                 for c in config["couches"]:
                     vecteurs[f"{e}|{c}"] = vecteurs_par_action(ep, acts, c, "max").astype(np.float16)
     bilan = bilan_controle_negatif(rapports, positions_min=config["positions_min_controle_negatif"])
-    exiger_controle_negatif_phase(bilan, config["fraction_min_controle_negatif"], config["actions_min_controle_negatif"],
-                                  "pilote T0.5, épisodes")
-    bilan["lecture"] = ("non concluant" if bilan["comparables"] < config["actions_min_controle_negatif"]
-                        else "conforme")
+    if exiger_controle_negatif:
+        exiger_controle_negatif_phase(bilan, config["fraction_min_controle_negatif"],
+                                      config["actions_min_controle_negatif"], "pilote T0.5, épisodes")
+    if bilan["comparables"] < config["actions_min_controle_negatif"]:
+        bilan["lecture"] = "non concluant"
+    else:
+        bilan["lecture"] = "conforme" if bilan["fraction"] >= config["fraction_min_controle_negatif"] else "contraire"
     return fiches, vecteurs, bilan
 
 
@@ -152,10 +164,15 @@ def noter_ensembles(modele, fmt, demandes: list[dict], graines: dict[str, int], 
         for d, nv, crit, ctx in zip(morceau, nouveaux, criteres, contextes):
             texte = fmt.tok.decode(nv, skip_special_tokens=True)
             notes = lire_notes(texte, crit)
+            # une réponse sans jeton de fin est incomplète, sans score, même si des notes s'y lisent (CL-9 : un bloc
+            # final coupé peut mêler notes de l'analyse et notes finales)
+            tronquee = not (nv and nv[-1] in fmt.fins)
+            anomalies = notes.anomalies + (["réponse tronquée (sans jeton de fin) : incomplète"] if tronquee else [])
             sorties.append({"cle": d["cle"], "variante": d["variante"], "jetons_contexte": len(ctx),
-                            "jetons_reponse": len(nv), "tronquee": not (nv and nv[-1] in fmt.fins),
-                            "notes": notes.notes, "anomalies": notes.anomalies,
-                            "score": notes.score_sur_100() if notes.complete else None, "reponse": texte})
+                            "jetons_reponse": len(nv), "tronquee": tronquee,
+                            "notes": notes.notes, "anomalies": anomalies,
+                            "score": notes.score_sur_100() if (notes.complete and not tronquee) else None,
+                            "reponse": texte})
     return sorties
 
 
@@ -202,11 +219,11 @@ def apparier(modele, fmt, paires: list[dict], lot: int, jetons: tuple[int, int] 
     sorties = []
     for debut in range(0, len(paires), lot):
         morceau = paires[debut:debut + lot]
-        contextes = [fmt.ouverture(SYSTEME_APPARIEMENT,
-                                   message_appariement(p["proposition"], p["cible"])[0]["content"]) for p in morceau]
+        contextes = [fmt.ouverture(SYSTEME_APPARIEMENT, message_appariement(
+            p["proposition"], p["cible"], p.get("famille", "controls"))[0]["content"]) for p in morceau]
         lp = logits_derniere_position(modele, contextes, pad)
         for p, ligne in zip(morceau, lp):
             masse = float(torch.exp(ligne[oui]) + torch.exp(ligne[non]))
-            sorties.append({"cle": p["cle"], "p_oui": probabilite_oui(float(ligne[oui]), float(ligne[non])),
-                            "masse_oui_non": masse})
+            sorties.append({"cle": p["cle"], "famille": p.get("famille", "controls"),
+                            "p_oui": probabilite_oui(float(ligne[oui]), float(ligne[non])), "masse_oui_non": masse})
     return sorties

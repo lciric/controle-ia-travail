@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Pilote 8B de l'environnement (a) (T0.5) sur l'instance de calcul : mise en place, tests, un run, poussée des résultats
 # et des vecteurs par action (rien ne reste sur l'instance : leçon de N-012). Procédure : docs/procedures/ (pilote T0.5).
+# Sert aussi la revalidation courte de l'équivalence sur le domaine du pilote (ETUDE=revalidation ; P-007 (b)), avant
+# le pilote : même mise en place, même machine, un autre lanceur, pas de vecteurs.
 # Rien ne se lance sans GO consigné.
 #
 #   COMMIT=<commit de scellement du préenregistrement> bash pilote_t05_instance.sh
@@ -8,25 +10,34 @@
 # Variables :
 #   COMMIT        (obligatoire) commit à extraire ; le lanceur Python vérifie en plus le commit, la configuration, les
 #                 tâches et l'entropie cités par le préenregistrement
+#   ETUDE         pilote (défaut) ou revalidation
 #   MODE          reel (défaut) ou jouet (répétition sur processeur, sans modèle réel ni processeur graphique)
-#   PREREG        défaut prereg/T0.5-pilote-8B-v1.md ; il cite les chemins de la configuration et des tâches
-#                 (« Chemin de la configuration : `…` », « Chemin des tâches : `…` »), que ce script lit
+#   PREREG        défaut prereg/T0.5-pilote-8B-v1.md (pilote) ou prereg/T0.5-revalidation-equivalence-pilote-v1.md
+#                 (revalidation) ; il cite les chemins de la configuration et des tâches (« Chemin de la configuration :
+#                 `…` », « Chemin des tâches : `…` » ; revalidation : « Chemin des tâches d'entraînement : `…` », « Chemin
+#                 des tâches d'évaluation : `…` »), que ce script lit
 #   PREREG_ABSENT 1 seulement en mode jouet : répétition sans préenregistrement (run non décisif) ; CONFIG et TACHES
-#                 donnent alors les chemins (hors du dépôt possible)
+#                 (revalidation : CONFIG, ENTRAINEMENT, EVALUATION) donnent alors les chemins (hors du dépôt possible)
 #   DEPOT_URL     défaut https://github.com/lciric/controle-ia.git
 #   GH_TOKEN      jeton GitHub à grain fin (dépôt distant GitHub) ; lu par un assistant d'identification, jamais écrit
 #   HF_TOKEN      jeton Hugging Face en lecture (mode reel) ; lu par huggingface_hub
-#   BRANCHE       défaut calcul/t05-pilote-v1 ; les vecteurs vont sur une branche à part, donnees/t05/<run>
+#   BRANCHE       défaut calcul/t05-pilote-v1 (revalidation : calcul/t05-revalidation-v1) ; les vecteurs du pilote vont
+#                 sur une branche à part, donnees/t05/<run>
 #   TRAVAIL       défaut $HOME/t05
 #   VENV_EXISTANT environnement Python déjà prêt à réutiliser (sinon : python3.11 -m venv + requirements-gpu.txt)
 set -euo pipefail
 
 : "${COMMIT:?COMMIT obligatoire (commit de scellement du préenregistrement)}"
+ETUDE="${ETUDE:-pilote}"
 MODE="${MODE:-reel}"
 DEPOT_URL="${DEPOT_URL:-https://github.com/lciric/controle-ia.git}"
-BRANCHE="${BRANCHE:-calcul/t05-pilote-v1}"
+case "$ETUDE" in
+    pilote) BRANCHE="${BRANCHE:-calcul/t05-pilote-v1}"; PREREG="${PREREG:-prereg/T0.5-pilote-8B-v1.md}" ;;
+    revalidation) BRANCHE="${BRANCHE:-calcul/t05-revalidation-v1}"
+                  PREREG="${PREREG:-prereg/T0.5-revalidation-equivalence-pilote-v1.md}" ;;
+    *) echo "ETUDE=$ETUDE : pilote ou revalidation" >&2; exit 2 ;;
+esac
 TRAVAIL="${TRAVAIL:-$HOME/t05}"
-PREREG="${PREREG:-prereg/T0.5-pilote-8B-v1.md}"
 PREREG_ABSENT="${PREREG_ABSENT:-0}"
 case "$MODE" in reel|jouet) ;; *) echo "MODE=$MODE : reel ou jouet" >&2; exit 2 ;; esac
 if [ "$PREREG_ABSENT" = 1 ] && [ "$MODE" != jouet ]; then
@@ -40,7 +51,7 @@ JOURNAL="$TRAVAIL/journal.txt"
 journal() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$JOURNAL"; }
 AIDE_GIT='!f() { echo username=x-access-token; echo "password=${GH_TOKEN:-}"; }; f'
 
-journal "début : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE"
+journal "début : ETUDE=$ETUDE MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE"
 if [ "$MODE" = reel ]; then
     : "${HF_TOKEN:?HF_TOKEN obligatoire en mode reel}"
 fi
@@ -101,7 +112,7 @@ CONSIGNE=""
 consigner_arret() {
     CONSIGNE=1
     git add -A runs diag
-    if git commit -qm "T0.5 — pilote : arrêt pendant $1" >/dev/null 2>&1; then
+    if git commit -qm "T0.5 — $ETUDE : arrêt pendant $1" >/dev/null 2>&1; then
         journal "ARRÊT pendant $1 : résultats partiels committés (dont arret.json s'il existe)"
     else
         journal "ARRÊT pendant $1 : aucun résultat à committer"
@@ -165,28 +176,46 @@ journal "tests : $(tail -1 "$TRAVAIL/tests.txt")"
 
 ETAPE="lecture du préenregistrement"
 ARGS=()
+lire_chemin() { sed -n "s/.*$1 : \`\\([^\`]*\\)\`.*/\\1/p" "$PREREG" | head -1; }
 if [ "$PREREG_ABSENT" = 1 ]; then
-    : "${CONFIG:?CONFIG obligatoire sans préenregistrement}" "${TACHES:?TACHES obligatoire sans préenregistrement}"
+    : "${CONFIG:?CONFIG obligatoire sans préenregistrement}"
+    if [ "$ETUDE" = pilote ]; then
+        : "${TACHES:?TACHES obligatoire sans préenregistrement}"
+    else
+        : "${ENTRAINEMENT:?ENTRAINEMENT obligatoire sans préenregistrement}" "${EVALUATION:?EVALUATION obligatoire sans préenregistrement}"
+    fi
     journal "répétition sans préenregistrement (jouet, non décisive)"
 else
     [ -f "$PREREG" ] || { journal "préenregistrement $PREREG absent au commit $COMMIT : arrêt"; exit 1; }
-    CONFIG=$(sed -n 's/.*Chemin de la configuration : `\([^`]*\)`.*/\1/p' "$PREREG" | head -1)
-    TACHES=$(sed -n 's/.*Chemin des tâches : `\([^`]*\)`.*/\1/p' "$PREREG" | head -1)
-    { [ -n "$CONFIG" ] && [ -n "$TACHES" ]; } || { journal "chemins de la configuration ou des tâches introuvables dans $PREREG : arrêt"; exit 1; }
+    CONFIG=$(lire_chemin "Chemin de la configuration")
+    if [ "$ETUDE" = pilote ]; then
+        TACHES=$(lire_chemin "Chemin des tâches")
+        { [ -n "$CONFIG" ] && [ -n "$TACHES" ]; } || { journal "chemins de la configuration ou des tâches introuvables dans $PREREG : arrêt"; exit 1; }
+    else
+        ENTRAINEMENT=$(lire_chemin "Chemin des tâches d'entraînement")
+        EVALUATION=$(lire_chemin "Chemin des tâches d'évaluation")
+        { [ -n "$CONFIG" ] && [ -n "$ENTRAINEMENT" ] && [ -n "$EVALUATION" ]; } || { journal "chemins de la configuration ou des tâches introuvables dans $PREREG : arrêt"; exit 1; }
+    fi
     ARGS=(--prereg "$PREREG")
 fi
-journal "configuration : $CONFIG ; tâches : $TACHES"
+if [ "$ETUDE" = pilote ]; then
+    journal "configuration : $CONFIG ; tâches : $TACHES"
+    LANCEUR=(controle_ia.environnements.lancer_pilote_a --config "$CONFIG" --taches "$TACHES")
+else
+    journal "configuration : $CONFIG ; tâches d'entraînement : $ENTRAINEMENT ; tâches d'évaluation : $EVALUATION"
+    LANCEUR=(controle_ia.environnements.revalider_pilote_a --config "$CONFIG" --entrainement "$ENTRAINEMENT" --evaluation "$EVALUATION")
+fi
 
 # délai externe du run, figé (R1) : TERM à 270 minutes, converti en arrêt consigné (arret.json), puis KILL cinq minutes
 # plus tard si le processus ne rend pas la main ; la limite interne (duree_max_s de la configuration) est plus courte.
 # Le signal vise le processus lancé par timeout, par son identifiant (R10).
 DELAI=(timeout --signal=TERM --kill-after=5m 270m)
-RUN="$(date -u +%Y%m%d-%H%M%S)-t05-pilote-$MODE"
+RUN="$(date -u +%Y%m%d-%H%M%S)-t05-$ETUDE-$MODE"
 ETAPE="run $RUN"
 journal "run : $RUN"
 code=0
-PYTHONPATH=src "${DELAI[@]}" python -m controle_ia.environnements.lancer_pilote_a --config "$CONFIG" --taches "$TACHES" \
-    --run-id "$RUN" "${ARGS[@]}" >"$TRAVAIL/run.json" 2>>"$TRAVAIL/run.err" &
+PYTHONPATH=src "${DELAI[@]}" python -m "${LANCEUR[@]}" --run-id "$RUN" "${ARGS[@]}" >"$TRAVAIL/run.json" \
+    2>>"$TRAVAIL/run.err" &
 PID_RUN=$!
 wait "$PID_RUN" || code=$?
 PID_RUN=""
@@ -201,11 +230,11 @@ if [ "$code" -ne 0 ]; then
     fi
 fi
 git add "runs/$RUN" "diag/$RUN"
-git commit -qm "T0.5 — pilote 8B ($MODE), run $RUN"
+git commit -qm "T0.5 — $ETUDE ($MODE), run $RUN"
 journal "run terminé : $RUN ; $(cat "$TRAVAIL/run.json")"
 ETAPE="poussée"
 pousser || journal "poussée du run impossible : résultats restés sur l'instance"
-pousser_vecteurs "$RUN" || true
+if [ "$ETUDE" = pilote ]; then pousser_vecteurs "$RUN" || true; fi
 ETAPE="fin"
 journal "fin : $RUN ; arrêter l'instance par son identifiant (R10)"
 CONSIGNE=1

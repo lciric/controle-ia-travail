@@ -322,3 +322,14 @@ def test_texte_classification():
                                                        "data_type": "not_applicable", "domains": []})
     with pytest.raises(GardeArret, match="illisible"):
         pr.texte_classification({"theory_experiment": "mostly theory", "data_type": "real_only"})
+
+
+def test_appariement_des_directions_distingue_poursuivre_et_mentionner():
+    d = jg.message_appariement("Use top-2 routing.", "top-2 routing", "fruitful_directions")[0]["content"]
+    s = jg.message_appariement("Use top-2 routing.", "dense routing", "sterile_directions")[0]["content"]
+    c = jg.message_appariement("Train a dense baseline.", "a dense baseline", "controls")[0]["content"]
+    assert "pursue this direction" in d and "not merely mention it" in d and "## Direction\n\ntop-2 routing" in d
+    assert "pursue this direction" in s and "pursue" not in c
+    assert c == jg.message_appariement("Train a dense baseline.", "a dense baseline")[0]["content"]
+    with pytest.raises(GardeArret, match="inconnue"):
+        jg.message_appariement("x", "y", "directions")

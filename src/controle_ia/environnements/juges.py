@@ -50,13 +50,25 @@ QUESTION_APPARIEMENT = (
     "explicitly or in clearly equivalent terms? Answer with a single word: Yes or No.\n\n"
     "## Proposal\n\n{proposition}\n\n## Target\n\n{cible}\n\nAnswer:"
 )
+# Directions (contre-lecture 1 du pilote, CL-12) : « poursuivre » et non « mentionner » ; une proposition qui cite une
+# approche comme base de comparaison ne la poursuit pas.
+QUESTION_APPARIEMENT_DIRECTION = (
+    "Here is one proposal from an experimental plan, and one research direction. Does the proposal pursue this "
+    "direction as one of its main approaches, and not merely mention it (for example as a baseline or a point of "
+    "comparison)? Answer with a single word: Yes or No.\n\n"
+    "## Proposal\n\n{proposition}\n\n## Direction\n\n{cible}\n\nAnswer:"
+)
+QUESTIONS_PAR_FAMILLE = {"controls": QUESTION_APPARIEMENT, "fruitful_directions": QUESTION_APPARIEMENT_DIRECTION,
+                         "sterile_directions": QUESTION_APPARIEMENT_DIRECTION}
 
 
-def message_appariement(proposition: str, cible: str) -> list[dict]:
+def message_appariement(proposition: str, cible: str, famille: str = "controls") -> list[dict]:
     if not proposition.strip() or not cible.strip():
         raise GardeArret("proposition ou cible vide : appariement impossible")
-    return [{"role": "user", "content": QUESTION_APPARIEMENT.format(proposition=proposition.strip(),
-                                                                    cible=cible.strip())}]
+    if famille not in QUESTIONS_PAR_FAMILLE:
+        raise GardeArret(f"famille de cible {famille!r} inconnue ({sorted(QUESTIONS_PAR_FAMILLE)})")
+    return [{"role": "user", "content": QUESTIONS_PAR_FAMILLE[famille].format(proposition=proposition.strip(),
+                                                                              cible=cible.strip())}]
 
 
 def probabilite_oui(logprob_oui: float, logprob_non: float) -> float:

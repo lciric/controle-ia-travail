@@ -28,6 +28,7 @@ import time
 from pathlib import Path
 
 import numpy as np
+import torch
 
 from ..gardes import GardeArret
 from ..harnais.run_harnais_factice import graine_entiere
@@ -37,9 +38,11 @@ from ..scellement import sceller, verifier
 from .pilote_a import (apparier, charger_taches, exiger_config, jetons_jouet, jouer_pilote, noter_ensembles,
                        plan_des_episodes)
 
-CLES_LANCEMENT = ("agent", "juges", "episodes_notes_deux_fois", "lot_juge", "max_nouveaux_juge", "temperature_juge",
-                  "variante_juge", "lot_appariement", "duree_max_s", "mode", "noyau_attention", "fils")
-NOYAUX = ("math", "defaut")     # noyau d'attention des épisodes (garde d'équivalence) ; juges et appariement : défaut
+CLES_LANCEMENT = ("agent", "juges", "episodes_notes_deux_fois", "episodes_decisifs", "lot_juge", "max_nouveaux_juge",
+                  "temperature_juge", "variante_juge", "lot_appariement", "duree_max_s", "mode", "noyau_attention",
+                  "fils")
+NOYAUX = ("math", "defaut")
+FAMILLES_CIBLES = ("controls", "fruitful_directions", "sterile_directions")     # noyau d'attention des épisodes (garde d'équivalence) ; juges et appariement : défaut
 CONFIG_CITEE = re.compile(r"Configuration du pilote \(empreinte canonique\) : `([0-9a-f]{64})`")
 TACHES_CITEES = re.compile(r"Tâches du pilote : `([0-9a-f]{64})`")
 COMMANDE = "python -m controle_ia.environnements.lancer_pilote_a"
@@ -63,6 +66,29 @@ def exiger_citations_pilote(prereg: Path, config: dict, sha_taches: str) -> int:
     return int(e.group(1))
 
 
+def exiger_cibles(taches: list[dict]) -> None:
+    """Garde d'avant le manifeste (contre-lecture 1, CL-15) : chaque tâche porte ses cibles semées, aux bornes de
+    l'extraction (au moins 3 contrôles et 1 direction féconde, chacun décrit) ; sinon, aucun appariement ne serait fait
+    pour elle, en silence."""
+    for t in taches:
+        cibles = t.get("cibles")
+        if not isinstance(cibles, dict) or not all(isinstance(cibles.get(f), list) for f in FAMILLES_CIBLES):
+            raise GardeArret(f"tâche {t.get('identifiant')} sans cibles semées complètes")
+        if len(cibles["controls"]) < 3 or len(cibles["fruitful_directions"]) < 1:
+            raise GardeArret(f"tâche {t.get('identifiant')} : moins de 3 contrôles ou aucune direction féconde")
+        if any(not str(c.get("description", "")).strip() for f in FAMILLES_CIBLES for c in cibles[f]):
+            raise GardeArret(f"tâche {t.get('identifiant')} : cible sans description")
+
+
+def exiger_invites(config: dict) -> None:
+    """Garde d'avant le manifeste (CL-15) : toutes les invites du run sont chargées et contrôlées (empreinte, index)
+    avant le premier épisode, et pas seulement à leur premier usage, après des heures de génération."""
+    from .invites import charger_invite
+
+    for ident in ("H1-classification",) + (("H3", "H4") if config["variante_juge"] == "b0" else ("I8",)):
+        charger_invite(ident)
+
+
 def cles_des_graines(plan, config) -> list[str]:
     """Une tâche du manifeste par épisode et par notation (R9)."""
     cles = [e for e, _ in plan]
@@ -77,6 +103,13 @@ def passes_de(episode: str, config: dict) -> int:
     return 2 if episode.rsplit("/e", 1)[1] in {str(k) for k in config["episodes_notes_deux_fois"]} else 1
 
 
+def classification_du_juge(tache: dict) -> str | None:
+    """Métadonnées de classification au format du guide (H.11), ou None si la tâche n'en a pas."""
+    from .propositions import texte_classification
+
+    return texte_classification(tache["classification"]) if tache.get("classification") else None
+
+
 def demandes_de_notation(fiches, taches_par_id, config, nom_juge: str) -> list[dict]:
     demandes = []
     for f in fiches:
@@ -85,8 +118,12 @@ def demandes_de_notation(fiches, taches_par_id, config, nom_juge: str) -> list[d
         if not ensemble.strip():
             continue  # ensemble vide (aucune action valide) : rien à noter, compté au bilan
         for p in range(passes_de(f["episode"], config)):
-            demandes.append({"cle": f"juge-{nom_juge}/{f['episode']}/passe-{p}", "questions": t["questions"],
-                             "ensemble": ensemble, "classification": None, "variante": config["variante_juge"]})
+            # le juge voit l'énoncé, la classification et l'ensemble, comme le juge faible de l'article (H.14, p. 44 ;
+            # contre-lecture 1, CL-8)
+            demandes.append({"cle": f"juge-{nom_juge}/{f['episode']}/passe-{p}", "episode": f["episode"],
+                             "questions": t["questions"],
+                             "ensemble": ensemble, "classification": classification_du_juge(t),
+                             "variante": config["variante_juge"]})
     return demandes
 
 
@@ -99,8 +136,89 @@ def paires_d_appariement(fiches, taches_par_id) -> list[dict]:
             for famille in ("controls", "fruitful_directions", "sterile_directions"):
                 for c in cibles.get(famille, []):
                     paires.append({"cle": f"{f['episode']}/{prop['numero']}/{c['id']}", "proposition": texte,
-                                   "cible": c["description"]})
+                                   "cible": c["description"], "famille": famille, "episode": f["episode"],
+                                   "tache": f["tache"]})
     return paires
+
+
+def paires_enonce_seul(taches: list[dict]) -> list[dict]:
+    """Base « énoncé seul » (contre-lecture 1, CL-17) : l'énoncé de chaque tâche apparié à chacune de ses cibles par la
+    même question que les propositions ; une cible que l'énoncé couvre déjà ne mesure pas l'agent."""
+    paires = []
+    for t in taches:
+        for famille in FAMILLES_CIBLES:
+            for c in (t.get("cibles") or {}).get(famille, []):
+                paires.append({"cle": f"{t['identifiant']}/enonce/{c['id']}", "proposition": t["questions"],
+                               "cible": c["description"], "famille": famille})
+    return paires
+
+
+ACTIONS_DE_CONTROLE = (
+    "ACTION: ADD\nTITLE: Router ablation\nPROPOSAL: Compare top-1 and top-2 routing on a 1B mixture of experts.\n"
+    "CONTROLS: dense baseline at matched compute\nCOST: 120\nPREDICTION: top-2 trains more stably.",
+    "ACTION: REVISE 1\nTITLE: Router ablation at two scales\nPROPOSAL: Repeat the comparison at 1B and 7B.\n"
+    "CONTROLS: dense baseline; three seeds\nCOST: 900\nPREDICTION: the gap shrinks at 7B.")
+ENONCE_DE_CONTROLE = "Which routing rule makes sparse mixtures of experts train stably?"
+REPONSE_JUGE_DE_CONTROLE = "SPECIFICITY: 3\nCOHERENCE: 3"
+
+
+def conversation_de_controle(role: str, variante: str) -> tuple[str, list[str], list[str]]:
+    """Conversation de contrôle du format, faite des textes du run : agent (consigne de l'environnement, deux
+    observations, deux actions) ou juge (un tour de notation, invite de la variante)."""
+    from .juges import messages_juge_ensemble
+    from .propositions import EnvironnementPropositions, Tache
+
+    if role == "agent":
+        env = EnvironnementPropositions(Tache("controle", ENONCE_DE_CONTROLE), 1, 2)
+        return (env.consigne_privee(0), [env.observation(0, 0, []),
+                                         env.observation(0, 1, [(0, 0, ACTIONS_DE_CONTROLE[0])])],
+                list(ACTIONS_DE_CONTROLE))
+    msgs, _ = messages_juge_ensemble(ENONCE_DE_CONTROLE, "PROPOSAL 1: Router ablation\nCompare top-1 and top-2.",
+                                     variante, None)
+    return msgs[0]["content"], [msgs[1]["content"]], [REPONSE_JUGE_DE_CONTROLE]
+
+
+def controler_format(fmt, spec: dict, role: str, config: dict) -> dict:
+    """Garde du début du run (contre-lecture 1, CL-25) : la transcription incrémentale coïncide avec le gabarit complet
+    du modèle (`verifier_format`) sur la conversation de contrôle du rôle ; en mode réel, l'ouverture porte le texte
+    attendu (variables du gabarit figées, comme T0.4), qui doit être donné."""
+    from ..harnais.formats import verifier_format
+
+    consigne, observations, reponses = conversation_de_controle(role, config["variante_juge"])
+    controle = verifier_format(fmt, consigne, observations, reponses)
+    attendu = spec.get("texte_attendu_ouverture")
+    if config["mode"] == "reel" and not attendu:
+        raise GardeArret(f"{spec.get('nom')} : texte attendu dans l'ouverture absent de la configuration")
+    if attendu and attendu not in fmt.tok.decode(fmt.ouverture(consigne, observations[0])):
+        raise GardeArret(f"{spec.get('nom')} : ouverture sans {attendu!r} (variables du gabarit non lues)")
+    return {**controle, "role": role, "texte_attendu_ouverture": attendu}
+
+
+def charger_format_seul(spec: dict, mode: str):
+    """Format d'un juge chargé avant les épisodes, sans ses poids (tokeniseur seul), pour la garde du format."""
+    from ..harnais.formats import FormatChat
+    from ..harnais.modeles import tokeniseur_caracteres_chat
+
+    if mode == "jouet":
+        tok = tokeniseur_caracteres_chat()
+        return FormatChat(tok, fins={tok.convert_tokens_to_ids("<|im_end|>"), tok.eos_token_id})
+    from transformers import AutoTokenizer
+
+    from ..harnais.modeles import exiger_modele_autorise
+
+    exiger_modele_autorise(spec["modele"], spec["revision"])
+    tok = AutoTokenizer.from_pretrained(spec["modele"], revision=spec["revision"])
+    return FormatChat(tok, variables=spec["variables_gabarit"])
+
+
+def memoire_pic_gio(reinitialiser: bool = True) -> float | None:
+    """Pic de mémoire de la carte depuis la dernière remise à zéro (descriptif, CL-24) ; None sans carte."""
+    if not torch.cuda.is_available():
+        return None
+    pic = torch.cuda.max_memory_allocated() / 2 ** 30
+    if reinitialiser:
+        torch.cuda.reset_peak_memory_stats()
+    return round(pic, 2)
 
 
 def charger_modele_et_format(spec: dict, mode: str, graine_jouet: int):
@@ -135,6 +253,8 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
         raise GardeArret("run réel du pilote sans préenregistrement : R1 interdit de lancer")
     taches = charger_taches(chemin_taches)
     sha_taches = verifier(chemin_taches)
+    exiger_cibles(taches)
+    exiger_invites(config)
     commit_cite, entropie = None, None
     if prereg is not None:
         exiger_code_importe_sous(racine)
@@ -146,7 +266,7 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
                                           entropie=entropie, decisif=prereg is not None, prereg=prereg,
                                           autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
     debut = time.perf_counter()
-    etat = {"etape": "épisodes", "commit_cite": commit_cite, "taches_sha256": sha_taches,
+    etat = {"etape": "chargement", "commit_cite": commit_cite, "taches_sha256": sha_taches,
             "config_sha256": empreinte_config(config)}
     try:
         return _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan, par_id, etat, debut)
@@ -165,9 +285,23 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
 
     reglages = regler_determinisme(config["fils"], "cuda" if config["mode"] == "reel" else "cpu")
     modele, fmt = charger_modele_et_format(config["agent"], config["mode"], graine_entiere(g["modele-jouet"]))
+    # garde du format au début du run (CL-25) : agent, et chaque juge (tokeniseur seul s'il n'est pas l'agent)
+    etat["etape"] = "contrôle du format"
+    formats = {"agent": controler_format(fmt, config["agent"], "agent", config)}
+    for j in config["juges"]:
+        fmt_j = fmt if j["meme_modele_que_agent"] else charger_format_seul(j, config["mode"])
+        formats[f"juge-{j['nom']}"] = controler_format(fmt_j, j, "juge", config)
+    etat["formats"] = sorted(formats)
+    etat["etape"] = "épisodes"
     generateurs = {e: generateur(g[e]) for e, _ in plan}
+    chrono: dict = {}
+    memoire_pic_gio()
+    depart = time.perf_counter()
     with noyau(config["noyau_attention"]):          # la garde d'équivalence porte sur les épisodes seulement
-        fiches, vecteurs, controle_negatif = jouer_pilote(modele, fmt, plan, generateurs, config, echeance=echeance)
+        fiches, vecteurs, controle_negatif = jouer_pilote(modele, fmt, plan, generateurs, config, echeance=echeance,
+                                                          chrono=chrono)
+    descriptifs = {"episodes": {"duree_s": round(time.perf_counter() - depart, 1), "memoire_pic_gio": memoire_pic_gio(),
+                                **chrono}}
     etat["controle_negatif"] = controle_negatif["lecture"]
     donnees = racine / "donnees" / run_id
     donnees.mkdir(parents=True, exist_ok=False)
@@ -177,32 +311,55 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
     ecrire_resultat(racine, chemin_m, "episodes", {"fiches": fiches, "vecteurs": str(chemin_v.relative_to(racine)),
                                                    "vecteurs_sha256": sha_v, "controle_negatif": controle_negatif,
                                                    "reglages": reglages, "noyau_attention": config["noyau_attention"],
+                                                   "formats": formats, "descriptifs": descriptifs["episodes"],
                                                    "duree_s": round(time.perf_counter() - debut, 1)})
     etat["episodes_ecrits"] = len(fiches)
 
-    notations = {}
+    # Ordre des étapes (contre-lecture 1, CL-7) : les notations décisives (épisodes de `episodes_decisifs`, A noté deux
+    # fois et C) par tous les juges d'abord, puis les notations descriptives (D), puis l'appariement ; un arrêt au
+    # plafond laisse ainsi les lectures décisives complètes. Les modèles des juges sont chargés une fois.
+    modeles_juges = {}
     for j in config["juges"]:
-        etat["etape"] = f"notation par {j['nom']}"
-        if time.perf_counter() > echeance:
-            raise GardeArret("limite de durée dépassée avant les notations")
-        m_j, fmt_j = (modele, fmt) if j["meme_modele_que_agent"] else charger_modele_et_format(
+        modeles_juges[j["nom"]] = (modele, fmt) if j["meme_modele_que_agent"] else charger_modele_et_format(
             j, config["mode"], graine_entiere(g["modele-jouet"]) + 1)
-        demandes = demandes_de_notation(fiches, par_id, config, j["nom"])
-        graines_j = {d["cle"]: graine_entiere(g[d["cle"]]) for d in demandes}
-        notations[j["nom"]] = noter_ensembles(m_j, fmt_j, demandes, graines_j, config["lot_juge"],
-                                              config["max_nouveaux_juge"], config["temperature_juge"])
-        ecrire_resultat(racine, chemin_m, f"notations-{j['nom']}", {"notations": notations[j["nom"]]})
-        etat.setdefault("notations_ecrites", []).append(j["nom"])
+    decisifs = {str(k) for k in config["episodes_decisifs"]}
+    notations: dict[str, list] = {j["nom"]: [] for j in config["juges"]}
+    for etape in ("decisives", "descriptives"):
+        for j in config["juges"]:
+            etat["etape"] = f"notations {etape} par {j['nom']}"
+            if time.perf_counter() > echeance:
+                raise GardeArret(f"limite de durée dépassée avant les notations {etape}")
+            m_j, fmt_j = modeles_juges[j["nom"]]
+            demandes = [d for d in demandes_de_notation(fiches, par_id, config, j["nom"])
+                        if (d["episode"].rsplit("/e", 1)[1] in decisifs) == (etape == "decisives")]
+            graines_j = {d["cle"]: graine_entiere(g[d["cle"]]) for d in demandes}
+            depart = time.perf_counter()
+            sortie = noter_ensembles(m_j, fmt_j, demandes, graines_j, config["lot_juge"],
+                                     config["max_nouveaux_juge"], config["temperature_juge"]) if demandes else []
+            notations[j["nom"]] += sortie
+            ecrire_resultat(racine, chemin_m, f"notations-{j['nom']}-{etape}", {
+                "notations": sortie, "descriptifs": {"duree_s": round(time.perf_counter() - depart, 1),
+                                                     "memoire_pic_gio": memoire_pic_gio(),
+                                                     "jetons_generes": sum(x["jetons_reponse"] for x in sortie)}})
+            etat.setdefault("notations_ecrites", []).append(f"{j['nom']}/{etape}")
+    for j in config["juges"]:
         if j["sert_a_l_appariement"]:
             etat["etape"] = f"appariement par {j['nom']}"
             if time.perf_counter() > echeance:
                 raise GardeArret("limite de durée dépassée avant l'appariement")
+            m_j, fmt_j = modeles_juges[j["nom"]]
             paires = paires_d_appariement(fiches, par_id)
             jetons = jetons_jouet(fmt_j.tok) if config["mode"] == "jouet" else None
+            depart = time.perf_counter()
             app = apparier(m_j, fmt_j, paires, config["lot_appariement"], jetons=jetons) if paires else []
-            ecrire_resultat(racine, chemin_m, "appariements", {"juge": j["nom"], "appariements": app})
-        if m_j is not modele:
-            del m_j
+            enonce = apparier(m_j, fmt_j, paires_enonce_seul(list(par_id.values())), config["lot_appariement"],
+                              jetons=jetons)
+            ecrire_resultat(racine, chemin_m, "appariements", {
+                "juge": j["nom"], "appariements": app, "enonce_seul": enonce,
+                "descriptifs": {"duree_s": round(time.perf_counter() - depart, 1),
+                                "memoire_pic_gio": memoire_pic_gio(), "paires": len(app) + len(enonce)}})
+            etat["appariement_ecrit"] = j["nom"]
+    del modeles_juges
 
     etat["etape"] = "résumé"
     resume = {"commit_cite": etat["commit_cite"], "config_sha256": etat["config_sha256"],

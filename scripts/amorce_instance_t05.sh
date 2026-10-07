@@ -4,6 +4,7 @@
 # refuse de repartir (dossiers présents, R12) : seule la session de pilotage arrête l'instance, par son identifiant (R10).
 # Variables passées par --env à la création de l'instance :
 #   COMMIT    commit de scellement du préenregistrement
+#   ETUDE     pilote (défaut) ou revalidation (revalidation courte de l'équivalence, P-007 (b), avant le pilote)
 #   GH_TOKEN  jeton GitHub à grain fin, limité à lciric/controle-ia (contenu en lecture et écriture)
 #   HF_TOKEN  jeton Hugging Face en lecture (licences Llama 3.1 et Llama 3.2 acceptées sur le compte)
 # Sortie : journal sur la sortie standard (lu par `vastai logs <identifiant>`), résultats poussés sur calcul/t05-pilote-v1
@@ -29,7 +30,10 @@ if ! git -C amorce-depot checkout -q "$COMMIT"; then
 fi
 T="$RACINE_AMORCE/t05"
 # plafond de l'ensemble (mise en place, tests, run, poussées) sous les 5 heures du devis
-timeout --signal=TERM --kill-after=5m 300m env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/pilote_t05_instance.sh
+ETUDE="${ETUDE:-pilote}"
+case "$ETUDE" in pilote|revalidation) ;; *) echo "AMORCE : ETUDE=$ETUDE inconnue"; exit 1 ;; esac
+timeout --signal=TERM --kill-after=5m 300m env COMMIT="$COMMIT" TRAVAIL="$T" ETUDE="$ETUDE" \
+    bash amorce-depot/scripts/pilote_t05_instance.sh
 code=$?
 echo "AMORCE $(date -u +%FT%TZ) : fin, code $code"
 if { [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; } && [ -d "$T/controle-ia/.git" ]; then
@@ -40,7 +44,7 @@ if { [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; } && [ -d "$T/controle-ia/.git"
         for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err" "$T/run.err" "$T/run.json"; do [ -f "$f" ] && cp "$f" "$d/"; done
         (cd "$d" && sha256sum -- * > empreintes.sha256) || true
         git add -A runs diag "$d" && git commit -qm "T0.5 — plafond de l'amorce atteint : résultats partiels et traces" || true
-        git push -q origin "${BRANCHE:-calcul/t05-pilote-v1}" || echo "AMORCE : poussée impossible"
+        git push -q origin "${BRANCHE:-calcul/t05-$ETUDE-v1}" || echo "AMORCE : poussée impossible"
     )
 fi
 for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err"; do

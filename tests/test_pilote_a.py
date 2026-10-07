@@ -25,6 +25,10 @@ TACHES = [{"identifiant": "2506.00001v1", "questions": "Why do routers matter?",
            "classification": {"theory_experiment": "mostly_experiments", "data_type": "real_only", "domains": []}},
           {"identifiant": "2506.00002v1", "questions": "How to calibrate?", "classification": None}]
 
+CIBLES_TEST = {"controls": [{"id": f"C{k}", "description": d} for k, d in
+                            enumerate(("a dense baseline", "an ablation of the router", "a matched-compute run"), 1)],
+               "fruitful_directions": [{"id": "F1", "description": "top-2 routing"}], "sterile_directions": []}
+
 
 def _modele():
     return modele_jouet(5, len(TOK), couches=4, largeur=32, tetes=4, tetes_cle_valeur=2, intermediaire=64)
@@ -202,7 +206,8 @@ from conftest import committer  # noqa: E402
 
 
 def _config_lanceur():
-    return {**CONFIG, "episodes_par_tache": 2, "episodes_notes_deux_fois": [0], "lot_juge": 2,
+    return {**CONFIG, "episodes_par_tache": 2, "episodes_notes_deux_fois": [0], "episodes_decisifs": [0],
+            "lot_juge": 2,
             "max_nouveaux_juge": 6, "temperature_juge": 1.0, "variante_juge": "b0", "lot_appariement": 4,
             "duree_max_s": 600, "mode": "jouet", "agent": {"nom": "agent-jouet"}, "noyau_attention": "math", "fils": 1,
             "juges": [{"nom": "jouet-8B", "meme_modele_que_agent": True, "sert_a_l_appariement": True},
@@ -212,8 +217,7 @@ def _config_lanceur():
 def test_lanceur_de_bout_en_bout_en_mode_jouet(depot, monkeypatch):
     monkeypatch.setattr(pa, "jetons_oui_non",
                         lambda tok: (tok.convert_tokens_to_ids("Y"), tok.convert_tokens_to_ids("N")))
-    taches = [dict(t, cibles={"controls": [{"id": "C1", "description": "a dense baseline"}],
-                              "fruitful_directions": [], "sterile_directions": []}) for t in TACHES]
+    taches = [dict(t, cibles=CIBLES_TEST) for t in TACHES]
     f = depot / "taches.json"
     f.write_text(json.dumps({"taches": taches}), encoding="utf-8")
     sceller(f)
@@ -223,7 +227,9 @@ def test_lanceur_de_bout_en_bout_en_mode_jouet(depot, monkeypatch):
     assert resume["episodes"] == 4 and resume["actions"] == 8
     assert set(resume["notations"]) == {"jouet-8B", "jouet-3B"}
     d = depot / "diag" / "20261006-170000-pilote-jouet"
-    assert {p.name for p in d.glob("*.json")} >= {"episodes.json", "notations-jouet-8B.json", "notations-jouet-3B.json",
+    assert {p.name for p in d.glob("*.json")} >= {"episodes.json", "notations-jouet-8B-decisives.json",
+                                                  "notations-jouet-8B-descriptives.json",
+                                                  "notations-jouet-3B-decisives.json",
                                                    "appariements.json", "resume.json"}
     assert (depot / "donnees" / "20261006-170000-pilote-jouet" / "vecteurs-par-action.npz.sha256").exists()
     with pytest.raises(GardeArret, match="R12"):
@@ -231,8 +237,7 @@ def test_lanceur_de_bout_en_bout_en_mode_jouet(depot, monkeypatch):
 
 
 def _taches_scellees(depot):
-    taches = [dict(t, cibles={"controls": [{"id": "C1", "description": "a dense baseline"}],
-                              "fruitful_directions": [], "sterile_directions": []}) for t in TACHES]
+    taches = [dict(t, cibles=CIBLES_TEST) for t in TACHES]
     f = depot / "taches.json"
     f.write_text(json.dumps({"taches": taches}), encoding="utf-8")
     sha = sceller(f)
@@ -307,6 +312,10 @@ def test_lanceur_arret_consigne_apres_le_manifeste(depot, monkeypatch):
     def panne(*a, **k):
         raise GardeArret("panne simulée du juge")
     monkeypatch.setattr(lp, "noter_ensembles", panne)
+    # le modèle jouet ne produit aucune proposition valide : une demande de notation factice fait appeler le juge
+    monkeypatch.setattr(lp, "demandes_de_notation", lambda fiches, par_id, config, nom: [
+        {"cle": f"juge-{nom}/{fiches[0]['episode']}/passe-0", "episode": fiches[0]["episode"], "questions": "q",
+         "ensemble": "PROPOSAL 1: x", "classification": None, "variante": "b0"}])
     f, _ = _taches_scellees(depot)
     committer(depot)
     with pytest.raises(GardeArret, match="panne simulée"):
@@ -314,7 +323,7 @@ def test_lanceur_arret_consigne_apres_le_manifeste(depot, monkeypatch):
     arret = depot / "diag" / "20261006-170006-pilote-jouet" / "arret.json"
     corps = verifier_resultat(depot, arret)
     r = corps["resultat"]
-    assert r["etape"] == "notation par jouet-8B" and "panne simulée" in r["motif"]
+    assert r["etape"] == "notations decisives par jouet-8B" and "panne simulée" in r["motif"]
     assert r["partiel"]["episodes_ecrits"] == 4
     assert (depot / "diag" / "20261006-170006-pilote-jouet" / "episodes.json").exists()
 
@@ -355,3 +364,176 @@ def test_passes_et_demandes():
               {"episode": "t/e1", "tache": "t", "bilan": {"ensemble": "  ", "propositions": []}}]
     d = lp.demandes_de_notation(fiches, {"t": {"questions": "Q?"}}, c, "j")
     assert [x["cle"] for x in d] == ["juge-j/t/e0/passe-0", "juge-j/t/e0/passe-1"]
+
+
+def test_reponse_tronquee_sans_score_meme_si_les_notes_se_lisent(monkeypatch):
+    from controle_ia.environnements.rubrique import CRITERES
+
+    texte = "\n".join(f"{nom}: {hi}" for nom, lo, hi in CRITERES)
+    complet = pa.lire_notes(texte, CRITERES)
+    assert complet.complete  # le texte porte toutes les notes
+    fin = sorted(FMT.fins)[0]
+    sorties_generees = {"avec_fin": [5, 6, fin], "sans_fin": [5, 6, 7]}
+    monkeypatch.setattr(pa, "generer_lot", lambda modele, ctx, mx, t, g, fins, pad: (
+        [sorties_generees["avec_fin"], sorties_generees["sans_fin"]], None))
+    monkeypatch.setattr(FMT.tok, "decode", lambda ids, skip_special_tokens=True: texte)
+    demandes = [{"cle": f"j{k}", "questions": "Why?", "ensemble": "PROPOSAL 1: x", "classification": None,
+                 "variante": "b0"} for k in range(2)]
+    a, b = pa.noter_ensembles(_modele(), FMT, demandes, {"j0": 1, "j1": 2}, lot=2, max_nouveaux=5, temperature=1.0)
+    assert a["score"] is not None and not a["tronquee"]
+    assert b["score"] is None and b["tronquee"] and any("tronquée" in x for x in b["anomalies"])
+
+
+def test_lanceur_refuse_cibles_incompletes_et_invite_alteree(depot, monkeypatch):
+    from controle_ia.environnements import lancer_pilote_a as lp
+
+    with pytest.raises(GardeArret, match="cibles semées complètes"):
+        lp.exiger_cibles([{"identifiant": "x", "questions": "q"}])
+    with pytest.raises(GardeArret, match="moins de 3 contrôles"):
+        lp.exiger_cibles([{"identifiant": "x", "cibles": dict(CIBLES_TEST, controls=CIBLES_TEST["controls"][:2])}])
+    with pytest.raises(GardeArret, match="sans description"):
+        lp.exiger_cibles([{"identifiant": "x", "cibles": dict(CIBLES_TEST, sterile_directions=[{"id": "S1"}])}])
+    lp.exiger_cibles([{"identifiant": "x", "cibles": CIBLES_TEST}])
+    lp.exiger_invites({"variante_juge": "b0"})
+    from controle_ia.environnements import invites
+
+    def refuse(ident, racine=None):
+        raise GardeArret(f"invite {ident} : empreinte non conforme")
+
+    monkeypatch.setattr(invites, "charger_invite", refuse)
+    with pytest.raises(GardeArret, match="H1-classification"):
+        lp.exiger_invites({"variante_juge": "b0"})
+
+
+def test_le_juge_voit_la_classification():
+    from controle_ia.environnements import lancer_pilote_a as lp
+
+    fiches = [{"episode": f"{TACHES[0]['identifiant']}/e0", "tache": TACHES[0]["identifiant"],
+               "bilan": {"ensemble": "PROPOSAL 1: x"}},
+              {"episode": f"{TACHES[1]['identifiant']}/e1", "tache": TACHES[1]["identifiant"],
+               "bilan": {"ensemble": "PROPOSAL 1: y"}}]
+    demandes = lp.demandes_de_notation(fiches, {t["identifiant"]: t for t in TACHES},
+                                       {"episodes_notes_deux_fois": [0], "variante_juge": "b0"}, "j")
+    assert len(demandes) == 3  # e0 noté deux fois, e1 une fois
+    assert "Paper type: Mostly experimental" in demandes[0]["classification"]
+    assert demandes[2]["classification"] is None  # tâche sans classification
+
+
+# --- analyse, brouillon 2 du pilote (contre-lecture 1, CL-5 à CL-14) ---------------------------------------------
+
+def test_parts_tronquees_et_composante_negative():
+    p = ap.parts_tronquees({"tache": -1.0, "generation": 1.0, "juge": 3.0})
+    assert p == {"tache": 0.0, "generation": 0.25, "juge": 0.75}
+    assert ap.parts_tronquees({"tache": -1.0, "generation": -1.0, "juge": 0.0})["juge"] != \
+        ap.parts_tronquees({"tache": -1.0, "generation": -1.0, "juge": 0.0})["juge"]   # total nul : NaN
+    d = ap.decomposition_complete(*_simuler(4000))
+    assert d["parts_tronquees"]["juge"] == pytest.approx(d["parts"]["juge"], abs=1e-9)   # rien de négatif
+    assert d["variance_observee_A"] == pytest.approx(d["composantes"]["totale"], rel=0.1)
+    assert d["composantes_negatives"] == []
+
+
+def test_intervalles_comptes_et_difference_appariee():
+    iv = ap.intervalles_parts_comptes(*_simuler(400, graine=8), tirages=300, rng=np.random.default_rng(1))
+    assert iv["bornes"]["juge"][0] < 2.25 / 7.25 < iv["bornes"]["juge"][1]
+    assert iv["ecartes"] == 0 and not iv["reserve"]
+    huit = _simuler(400, se=1.0, graine=8)
+    trois = _simuler(400, se=3.0, graine=9)       # juge plus bruité
+    d = ap.difference_appariee(huit, trois, tirages=300, rng=np.random.default_rng(2))
+    assert d["difference"] > 0 and d["borne"][0] > 0 and d["taches"] == 400
+    with pytest.raises(GardeArret, match="alignées"):
+        ap.difference_appariee(huit, tuple(x[:10] for x in trois), tirages=10, rng=np.random.default_rng(2))
+    with pytest.raises(GardeArret, match="intervalles impossibles"):
+        ap.intervalles_parts_comptes([1.0, 2.0], [1.0, 2.0], [1.0, 2.0], tirages=5, rng=np.random.default_rng(0))
+
+
+def test_tirages_ecartes_comptes():
+    # deux tâches seulement : beaucoup de tirages dégénérés (variance nulle), comptés et non sautés en silence
+    a, b, c = np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 3.0])
+    iv = ap.intervalles_parts_comptes(a, b, c, tirages=200, rng=np.random.default_rng(0))
+    assert iv["ecartes"] > 0 and iv["reserve"]
+
+
+@pytest.mark.parametrize("part, borne, incompletes, attendu", [
+    (0.5, 0.3, 0.0, "rubrique gardée"),
+    (0.85, 0.7, 0.0, "plan B"),
+    (0.85, 0.5, 0.0, "nœud"),
+    (0.5, 0.3, 0.25, "plan B"),
+    (float("nan"), 0.0, 0.0, "nœud"),
+])
+def test_regle_plan_b(part, borne, incompletes, attendu):
+    assert ap.regle_plan_b(part, borne, incompletes) == attendu
+
+
+def test_tirage_stratifie_et_kappa_pondere():
+    paires = [{"cle": f"p{i}", "tache": f"t{i % 10}", "famille": f, "oui_8b": i % 7 == 0}
+              for i, f in enumerate(["controls"] * 70 + ["fruitful_directions"] * 70)]
+    ech = ap.tirer_paires(paires, np.random.default_rng(3), par_strate=5)
+    strates = {tuple(p["strate"]) for p in ech}
+    assert len(ech) == 20 and len(strates) == 4
+    for p in ech:   # poids = taille de la strate / nombre tiré
+        n = sum(1 for q in paires if q["famille"] == p["famille"] and q["oui_8b"] == p["oui_8b"])
+        assert p["poids"] == n / 5
+    assert ech == ap.tirer_paires(paires, np.random.default_rng(3), par_strate=5)   # rejouable (R9)
+    k = ap.kappa_pondere([True, True, False, False], [True, True, False, False], [1, 2, 3, 4])
+    assert k["kappa"] == 1.0 and k["accord_positif"] == 1.0 and k["accord_negatif"] == 1.0
+    assert ap.kappa_pondere([True, True], [True, True], [1, 1])["kappa"] is None   # une seule classe : indéfini
+    with pytest.raises(GardeArret, match="non alignés"):
+        ap.kappa_pondere([True], [True, False], [1, 1])
+    with pytest.raises(GardeArret, match="non alignés"):
+        ap.kappa_pondere([True], [True], [0])
+    for p in ech:
+        p["reference"] = p["oui_8b"]
+    iv = ap.intervalle_kappa_par_tache(ech, tirages=100, rng=np.random.default_rng(4))
+    assert iv["borne"] is not None and iv["borne"][0] <= 1.0
+
+
+def test_masse_lisible():
+    assert ap.masse_lisible([0.9] * 99 + [0.05])["lisible"]
+    assert not ap.masse_lisible([0.9] * 90 + [0.05] * 10)["lisible"]
+    assert not ap.masse_lisible([0.3] * 100)["lisible"]
+    with pytest.raises(GardeArret, match="aucune paire"):
+        ap.masse_lisible([])
+
+
+def test_garde_du_format_au_debut_cas_sain_et_artefacts():
+    """CL-25 : la transcription incrémentale coïncide avec le gabarit complet, pour l'agent et pour un juge ; en mode
+    réel, le texte attendu dans l'ouverture est exigé et retrouvé ; un gabarit qui réécrit le passé arrête."""
+    config = _config_lanceur()
+    sain = lp.controler_format(FMT, {"nom": "agent-jouet"}, "agent", config)
+    assert sain["verifie"] and sain["tours"] == 2 and sain["role"] == "agent"
+    assert lp.controler_format(FMT, {"nom": "jouet-3B"}, "juge", config)["tours"] == 1
+    with pytest.raises(GardeArret, match="texte attendu"):
+        lp.controler_format(FMT, {"nom": "agent"}, "agent", dict(config, mode="reel"))
+    with pytest.raises(GardeArret, match="ouverture sans"):
+        lp.controler_format(FMT, {"nom": "agent", "texte_attendu_ouverture": "Today Date: 26 Jul 2024"}, "agent",
+                            config)
+
+    class FormatFautif(FormatChat):
+        def tour(self, debut, observation):            # artefact : un tour qui réécrit le début de la conversation
+            return super().tour(debut, observation)[1:]
+
+    with pytest.raises(GardeArret, match="format incrémental"):
+        lp.controler_format(FormatFautif(TOK, fins=FMT.fins), {"nom": "agent"}, "agent", config)
+
+
+def test_paires_enonce_seul():
+    taches = [dict(t, cibles=CIBLES_TEST) for t in TACHES]
+    paires = lp.paires_enonce_seul(taches)
+    assert len(paires) == 2 * 4
+    assert {p["famille"] for p in paires} == {"controls", "fruitful_directions"}
+    assert paires[0]["cle"] == "2506.00001v1/enonce/C1" and paires[0]["proposition"] == TACHES[0]["questions"]
+
+
+def test_lanceur_consigne_formats_et_enonce_seul(depot, monkeypatch):
+    monkeypatch.setattr(pa, "jetons_oui_non",
+                        lambda tok: (tok.convert_tokens_to_ids("Y"), tok.convert_tokens_to_ids("N")))
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    lp.executer(_config_lanceur(), depot, "20261006-170010-pilote-jouet", None, str(f), autoriser_depot_sale=True)
+    d = depot / "diag" / "20261006-170010-pilote-jouet"
+    ep = json.loads((d / "episodes.json").read_text(encoding="utf-8"))["resultat"]
+    assert set(ep["formats"]) == {"agent", "juge-jouet-8B", "juge-jouet-3B"}
+    assert all(v["verifie"] for v in ep["formats"].values())
+    assert ep["descriptifs"]["jetons_generes"] > 0
+    app = json.loads((d / "appariements.json").read_text(encoding="utf-8"))["resultat"]
+    assert len(app["enonce_seul"]) == 2 * 4 and app["descriptifs"]["paires"] == len(app["appariements"]) + 8
