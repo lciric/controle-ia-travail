@@ -49,7 +49,7 @@ def test_cibles_citation_introuvable_et_bornes():
     import copy
     c = copy.deepcopy(CIBLES)
     c["controls"][1]["evidence"] = "Removing the router leads to a total collapse of everything."
-    assert any("C2 : citation introuvable" in a for a in ex.anomalies_cibles(c, TEXTE))
+    assert any("'C2' : citation introuvable" in a for a in ex.anomalies_cibles(c, TEXTE))
     c = copy.deepcopy(CIBLES)
     c["controls"] = c["controls"][:2]
     assert any("controls : entre 3 et 6" in a for a in ex.anomalies_cibles(c, TEXTE))

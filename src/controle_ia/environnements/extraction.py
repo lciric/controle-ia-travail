@@ -28,7 +28,7 @@ _ECHAPPEMENT_MD = re.compile(r"\\([!-/:-@\[-`{-~])")
 _TYPO = {**{ord(a): b for a, b in zip("\u2018\u2019\u201c\u201d\u2013\u2014\u2010\u2011\u2012\u2212\u00a0",
                                       "''\"\"------- ")}, 0x00AD: None}
 # Indices lexicaux d'un énoncé qui pourrait révéler la méthode, le dispositif ou les résultats (interdits de H.9) :
-# simples alertes, jamais des anomalies ; le sous-agent relit alors les règles de H.9 (procédure v1, section 2).
+# simples alertes, jamais des anomalies ; le sous-agent relit alors les règles de H.9 (procédure v1, section 3).
 _INDICES_FUITE = re.compile(
     r"\bwe\s+(?:propose|present|introduce|develop|design|show|find|demonstrate|evaluate|conduct|train)\b"
     r"|\bour\s+(?:method|approach|framework|model|algorithm|results?|experiments?|contributions?|findings?"
@@ -85,8 +85,11 @@ def position_formule_corrompue(s: str) -> int | None:
     - « \\n » suivi de « abla » (« \\nabla » lu comme un saut de ligne), partout ;
     - entre deux délimiteurs $ (ou $$) non échappés, appariés dans l'ordre, sans ligne vide entre eux : un saut de ligne
       suivi d'une minuscule (« \\nu », « \\neq », « \\not »…).
-    Un segment qui couvre une ligne vide relie deux montants de deux paragraphes, pas une formule. Résidu déclaré : un
-    « \\nu » ou un « \\neq » qu'un montant en dollars désapparie, ou qui suit un saut de ligne voulu."""
+    Un segment qui couvre une ligne vide relie deux montants de deux paragraphes, pas une formule. Résidus déclarés
+    (contre-lecture 3, E-3 et E-4) : faux positif, une formule que le papier lui-même coupe d'un saut de ligne (pandoc
+    garde ces sauts), recopiée telle quelle (le message dit de remplacer ce saut par une espace) ; faux négatifs, un
+    « \\nu » qu'un montant désapparie, une commande en « \\n » hors de toute paire de $ ou suivie d'une majuscule
+    (« \\nRightarrow »). Dans une citation, une telle corruption est déjà rattrapée par `citation_introuvable`."""
     i = s.find("\nabla")
     if i >= 0:
         return i
@@ -119,7 +122,9 @@ def anomalies_texte(objet, fichier: str) -> list[str]:
         i = position_formule_corrompue(s)
         if i is not None:
             a.append(_a("texte.formule", f"{fichier} : saut de ligne dans une formule près de {_extrait(s, i)} ; "
-                                         f"{CONSEIL_BARRE} ; si les $ sont des montants, écrire les montants sans $"))
+                                         f"{CONSEIL_BARRE} ; si les $ sont des montants, écrire les montants sans $ ; "
+                                         "si le papier lui-même a un saut de ligne à cet endroit (formule sur deux "
+                                         "lignes), remplacer ce saut de ligne par une espace"))
             break
     for s in _chaines(objet):
         m = _SUBSTITUT.search(s)
@@ -220,9 +225,10 @@ def anomalies_cibles(sortie: dict, texte_papier: str) -> list[str]:
                 a.append(_a("cibles.description", f"{ident!r} : description absente ou trop courte"))
             preuve = str(it.get("evidence", "")).strip()
             if len(preuve) < 20:
-                a.append(_a("cibles.citation_courte", f"{ident} : citation absente ou trop courte"))
+                a.append(_a("cibles.citation_courte", f"{ident!r} : citation absente ou trop courte"))
             elif normaliser(preuve) not in corps:
-                a.append(_a("cibles.citation_introuvable", f"{ident} : citation introuvable dans le texte du papier"))
+                a.append(_a("cibles.citation_introuvable", f"{ident!r} : citation introuvable dans le texte du "
+                                                           "papier"))
     calcul = sortie.get("compute")
     if not isinstance(calcul, dict) or calcul.get("basis") not in ("reported", "estimated"):
         a.append(_a("cibles.calcul", "compute : objet {reference_gpu_hours, basis, evidence} attendu"))
@@ -230,7 +236,7 @@ def anomalies_cibles(sortie: dict, texte_papier: str) -> list[str]:
         h = calcul.get("reference_gpu_hours")
         if h is not None and not nombre_positif(h):
             a.append(_a("cibles.calcul_valeur", f"compute.reference_gpu_hours : nombre positif ou null attendu "
-                                                f"({str(h)[:40]})"))
+                                                f"({str(h)[:40]!r})"))
     return a + anomalies_texte(sortie, "cibles.json")
 
 
@@ -414,7 +420,7 @@ def anomalies_avis(avis, h9: dict, h10: dict, cibles: dict) -> list[str]:
 
 
 def motifs_echec_avis(avis: dict, cibles: dict, h10: dict) -> list[str]:
-    """Motifs d'échec d'un papier à la contre-vérification (procédure v1, section 5) ; liste vide si réussi. La
+    """Motifs d'échec d'un papier à la contre-vérification (procédure v1, section 6) ; liste vide si réussi. La
     classification n'échoue que sur une erreur qui change une décision (CL-10) : « theory_only » attendu et non donné,
     ou l'inverse, ou un écart de deux crans ou plus sur l'échelle de H.10."""
     m = []

@@ -494,7 +494,12 @@ def test_deroule_complet(depot, tmp_path_factory, monkeypatch):
     assert bilan["taux_echec_echantillon"]["echecs"] == 1
     assert bilan["cibles_defectueuses_echantillon"] == {"defectueuses": 0, "controlees": 8}                # D-7
     assert set(bilan["classification_et_calcul"]) == {"echantillon", "reprise"}
-    assert bilan["taches_assemblees"]["base"] == {"reported": 5, "estimated": 0}         # évaluation et entraînement
+    assert bilan["taches_assemblees"]["evaluation"]["base"] == {"reported": 3, "estimated": 0}     # par liste (E-11)
+    assert bilan["taches_assemblees"]["entrainement"]["base"] == {"reported": 2, "estimated": 0}
+    assert bilan["annonces_des_sous_agents"]["tentative-1"] == {"desaccords": 5, "hors_format": 0}   # « NOT OK » x 6
+    assert bilan["annonces_des_sous_agents"]["tentative-2"] == {"desaccords": 0, "hors_format": 0}
+    assert set(bilan["annonces_des_sous_agents"]) == {"tentative-1", "tentative-2", "tentative-3", "ronde-echantillon",
+                                                      "ronde-theorie", "ronde-reprise"}
     taches = json.loads((depot / "donnees" / RUN / "taches-evaluation.json").read_text())["resultat"]["taches"]
     assert [t["identifiant"] for t in taches] == bilan["evaluation"] and all(t["questions"] for t in taches)
     # aucun texte des papiers dans diag/ (règle de sélection, section 9 ; nœud N-014)
@@ -631,17 +636,24 @@ def test_desaccord_du_script_scelle_et_du_module_arrete(depot, tmp_path_factory,
     vrai = et.codes_du_script
     assert vrai(depot / ch.dossier_procedure / "verifier-sortie-v1.py",
                 Path(prep["papiers"][ids[0]]["dossier"])) == ["h9.enonce_court"]          # cas sain : le vrai script
-    monkeypatch.setattr(et, "codes_du_script", lambda script, d: [])                       # artefact : il ne voit rien
-    with pytest.raises(GardeArret, match="désaccord en production"):
-        et.valider(depot, RUN, 1, _retours(prep), ch=ch)
     monkeypatch.setattr(et, "codes_du_script",                                             # artefact : il voit trop
                         lambda script, d: vrai(script, d) + ["cibles.bornes"])
     with pytest.raises(GardeArret, match="désaccord en production"):
         et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    # contre-lecture 3, E-8 : désaccord définitif, consigné par un arrêt scellé ; aucune étape ne suit
+    arret = json.loads((depot / "diag" / RUN / "arret-desaccord-script.json").read_text())["resultat"]
+    assert arret["etape"] == "validation-tentative-1" and arret["papier"] == ids[0]
+    assert arret["codes_script"] == ["cibles.bornes", "h9.enonce_court"] and arret["codes_module"] == ["h9.enonce_court"]
     assert not (depot / "diag" / RUN / "validation-tentative-1.json").exists()
+    monkeypatch.setattr(et, "codes_du_script", lambda script, d: [])                       # artefact : il ne voit rien
+    with pytest.raises(GardeArret, match="run arrêté"):
+        et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    with pytest.raises(GardeArret, match="désaccord en production"):
+        et.exiger_accord_script(ids[0], [], ["h9.enonce_court"])
+    et.exiger_accord_script(ids[0], ["h9.enonce_court", "cibles.bornes"], ["cibles.bornes", "h9.enonce_court"])
 
 
-def test_script_hors_forme_arrete(tmp_path):
+def test_script_hors_forme_arrete(tmp_path, monkeypatch):
     panne = tmp_path / "panne.py"
     panne.write_text("raise SystemExit(3)\n")
     with pytest.raises(GardeArret, match="hors forme"):
@@ -650,6 +662,11 @@ def test_script_hors_forme_arrete(tmp_path):
     muet.write_text("print('fini')\n")
     with pytest.raises(GardeArret, match="hors forme"):
         et.codes_du_script(muet, tmp_path)
+    lent = tmp_path / "lent.py"                    # contre-lecture 3, E-8 : un délai dépassé est une panne, pas une trace
+    lent.write_text("import time\ntime.sleep(5)\nprint('OK: 0 error(s)')\n")
+    monkeypatch.setattr(et, "DELAI_SCRIPT_S", 0.5)
+    with pytest.raises(GardeArret, match="délai de 0.5 s dépassé"):
+        et.codes_du_script(lent, tmp_path)
 
 
 def test_exclusions_au_dela_du_seuil_arretent_apres_la_tentative_2(depot, tmp_path_factory, monkeypatch):
@@ -692,6 +709,10 @@ def test_avis_refaits_bornes(depot, tmp_path_factory, monkeypatch):
     lu2 = et.lire_contre_verification(depot, RUN, 2, _retours(cv2), ch=ch)
     assert lu2["papiers"][e1]["codes"] == ["json.illisible"]
     with pytest.raises(GardeArret, match="2 avis « echantillon » préparés sans avis lisible"):
+        et.preparer_contre_verification(depot, RUN, travail, "echantillon", [e1], ch=ch)
+    arret = json.loads((depot / "diag" / RUN / "arret-avis-refaits.json").read_text())["resultat"]   # E-8
+    assert arret["papier"] == e1 and arret["role"] == "echantillon" and arret["avis_prepares"] == 2
+    with pytest.raises(GardeArret, match="préparés sans avis lisible"):                               # répété, sans écrire
         et.preparer_contre_verification(depot, RUN, travail, "echantillon", [e1], ch=ch)
 
 
@@ -828,15 +849,28 @@ def test_gardes_de_contre_verification(depot, tmp_path_factory, monkeypatch):
         et.preparer_contre_verification(depot, RUN, travail, "echantillon", [e1], ch=ch)
     _juger(cv["papiers"][e0]["dossier"])
     _juger(cv["papiers"][e1]["dossier"], _avec(AVIS, statement_leaks="oui"))   # avis mal formé
-    vrai = et.codes_du_script
-    monkeypatch.setattr(et, "codes_du_script", lambda script, d: [])            # artefact : le script ne voit rien
-    with pytest.raises(GardeArret, match="désaccord en production"):
-        et.lire_contre_verification(depot, RUN, 1, _retours(cv), ch=ch)
-    monkeypatch.setattr(et, "codes_du_script", vrai)
     lu = et.lire_contre_verification(depot, RUN, 1, _retours(cv, {e1: "OK: 0 error(s)"}), ch=ch)
     assert lu["illisibles"] == [e1] and lu["papiers"][e1]["retour"]["accord_avec_le_module"] is False
     with pytest.raises(GardeArret, match="pas d'avis lisible"):
         et.assembler(depot, RUN, ch=ch)
+
+
+def test_desaccord_a_la_lecture_d_une_ronde_arret_scelle(depot, tmp_path_factory, monkeypatch):
+    """D-2 et E-8 : à la lecture d'une ronde aussi, un désaccord du script scellé et du module arrête, consigné."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    _, ech = _jusqu_a_l_echantillon(depot, travail, ch)
+    e0, e1 = ech["echantillon"]
+    cv = et.preparer_contre_verification(depot, RUN, travail, "echantillon", ch=ch)
+    _juger(cv["papiers"][e0]["dossier"])
+    _juger(cv["papiers"][e1]["dossier"], _avec(AVIS, statement_leaks="oui"))   # avis mal formé
+    monkeypatch.setattr(et, "codes_du_script", lambda script, d: [])            # artefact : le script ne voit rien
+    with pytest.raises(GardeArret, match="désaccord en production"):
+        et.lire_contre_verification(depot, RUN, 1, _retours(cv), ch=ch)
+    arret = json.loads((depot / "diag" / RUN / "arret-desaccord-script.json").read_text())["resultat"]
+    assert arret["etape"] == "contre-verification-ronde-1" and arret["papier"] == e1 and arret["codes_script"] == []
+    assert not (depot / "diag" / RUN / "contre-verification-ronde-1.json").exists()
 
 
 def test_garde_d_une_ronde_lue_sans_preparation(depot, tmp_path_factory, monkeypatch):
@@ -854,17 +888,14 @@ def test_garde_d_une_archive_rescellee_et_echantillon_tardif(depot, tmp_path_fac
     ch = _depot_de_test(depot)
     travail = tmp_path_factory.mktemp("travail")
     _, ech = _jusqu_a_l_echantillon(depot, travail, ch)
-    # une archive modifiée puis scellée de nouveau passe son sceau, mais pas l'empreinte validée de chaque sortie
-    archive = depot / "donnees" / RUN / "sorties-tentative-1.tar"
-    membres = et.lire_archive(archive, et._resultat(depot, RUN, "validation-tentative-1")["archive_sorties_sha256"])
-    nom = next(n for n in membres if n.endswith(f"{ech['echantillon'][0]}/h9.json"))
-    membres[nom] = membres[nom].replace(b"route", b"ROUTE")
-    archive.unlink()
-    (archive.parent / "sorties-tentative-1.tar.sha256").unlink()
-    sha = et.archiver(archive, list(membres.items()))
-    monkeypatch.setattr(et, "lire_archive", lambda chemin, attendu: et.tarfile and {
-        m.name: et.tarfile.open(chemin).extractfile(m).read() for m in et.tarfile.open(chemin).getmembers()})
-    assert sha
+    # une archive modifiée puis scellée de nouveau est une perte (E-2, test dédié) ; ici, l'archive reste intacte sur
+    # disque et sa lecture est altérée : l'empreinte validée de chaque sortie arrête quand même (défense en profondeur)
+    lire = et.lire_archive
+
+    def alteree(chemin, attendu):
+        return {n: o.replace(b"route", b"ROUTE") for n, o in lire(chemin, attendu).items()}
+
+    monkeypatch.setattr(et, "lire_archive", alteree)
     with pytest.raises(GardeArret, match="≠ empreinte validée"):
         et.preparer_contre_verification(depot, RUN, travail, "echantillon", ch=ch)
 
@@ -931,3 +962,174 @@ def test_sortie_modifiee_pendant_la_validation_arrete(depot, tmp_path_factory, m
     monkeypatch.setattr(et.ex, "lire_sorties", lecture_decalee)
     with pytest.raises(GardeArret, match="modifié pendant la validation"):
         et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+
+
+# --- contre-lecture 3 : remarques E-1 à E-11 -----------------------------------------------------------------------
+
+def test_formule_sur_deux_lignes_faux_positif_documente(tmp_path):
+    """E-3 : pandoc garde les sauts de ligne du source dans les formules ; une citation fidèle d'une telle formule est
+    refusée (faux positif déclaré), la même avec une espace est acceptée ; le module et le script s'accordent, et le
+    message dit de remplacer ce saut par une espace."""
+    texte = TEXTE + "The loss is $a +\nb = c$ for all inputs of the router.\n"
+    for citation, attendus in (("The loss is $a +\nb = c$ for all inputs", ["texte.formule"]),
+                               ("The loss is $a + b = c$ for all inputs", [])):
+        c = copy.deepcopy(CIBLES)
+        c["controls"][2]["evidence"] = citation
+        d = _dossier_sorties(tmp_path / str(len(attendus)), texte, H9, H10, c)
+        module = ex.lire_sorties(d / "sorties", texte)
+        assert sorted(ex.code_anomalie(a) for a in module["anomalies"]) == attendus
+        _, lignes = _script("verifier-sortie-v1.py", d)
+        assert _codes_script(lignes) == attendus
+        if attendus:
+            assert "replace this line break with a space" in " ".join(lignes)
+            assert "remplacer ce saut de ligne par une espace" in module["anomalies"][0]
+
+
+def test_substitut_dans_un_message_ne_bloque_que_son_papier(depot, tmp_path_factory, monkeypatch):
+    """E-6 : un identifiant ou une référence de coût qui portent un substitut isolé restent des anomalies de leur
+    papier : les messages les écrivent échappés, les détails restent encodables, la validation va au bout."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    ids = sorted(prep["papiers"])
+    c = copy.deepcopy(CIBLES)
+    c["controls"][0]["id"] = "C\ud835"
+    c["controls"][0]["evidence"] = "court"
+    c["compute"]["reference_gpu_hours"] = "x\ud835"
+    for pid, info in prep["papiers"].items():
+        _repondre(info["dossier"], cibles=c if pid == ids[0] else CIBLES)
+    v = et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    assert v["invalides"] == [ids[0]]
+    assert sorted(v["papiers"][ids[0]]["anomalies"]) == ["cibles.calcul_valeur", "cibles.citation_courte",
+                                                         "texte.substitut"]
+
+
+def test_fichier_ajoute_sous_papier_anomalie_du_seul_papier(depot, tmp_path_factory, monkeypatch):
+    """E-7 : un fichier ajouté parmi les entrées (ici sous `papier/`) est une entrée modifiée de son papier, sans
+    désaccord ni arrêt ; un fichier ajouté hors des entrées (une note à la racine du dossier) ne change rien."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    ids = sorted(prep["papiers"])
+    c = copy.deepcopy(CIBLES)
+    c["controls"][0]["evidence"] = "A sentence that only the added file contains, for a citation."
+    for pid, info in prep["papiers"].items():
+        _repondre(info["dossier"], cibles=c if pid == ids[0] else CIBLES)
+    (Path(prep["papiers"][ids[0]]["dossier"]) / "papier" / "partie-01-notes.md").write_text(
+        c["controls"][0]["evidence"], encoding="utf-8")
+    (Path(prep["papiers"][ids[1]]["dossier"]) / "notes.txt").write_text("brouillon", encoding="utf-8")
+    v = et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    assert v["invalides"] == [ids[0]]                    # le module ne lit pas le fichier ajouté : pas de désaccord
+    assert v["papiers"][ids[0]]["anomalies"] == ["cibles.citation_introuvable", "entrees.modifiees"]
+    assert v["papiers"][ids[0]]["entrees_modifiees"] == ["papier/partie-01-notes.md"]
+    assert v["papiers"][ids[1]]["anomalies"] == []
+
+
+@pytest.mark.parametrize("alteration", ["supprime", "tronque", "famille retiree", "liste"])
+def test_entree_a_verifier_modifiee_avis_illisible_sans_exception(depot, tmp_path_factory, monkeypatch, alteration):
+    """E-1 : un contre-vérificateur qui modifie une réponse à vérifier rend son avis illisible (entrée modifiée) ; la
+    ronde se lit, l'autre papier reste lisible ; aucune exception hors garde."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    _, ech = _jusqu_a_l_echantillon(depot, travail, ch)
+    e0, e1 = ech["echantillon"]
+    cv = et.preparer_contre_verification(depot, RUN, travail, "echantillon", ch=ch)
+    for pid in (e0, e1):
+        _juger(cv["papiers"][pid]["dossier"])
+    a = Path(cv["papiers"][e0]["dossier"]) / "a-verifier"
+    if alteration == "supprime":
+        (a / "cibles.json").unlink()
+    elif alteration == "tronque":
+        (a / "cibles.json").write_text("{", encoding="utf-8")
+    elif alteration == "famille retiree":
+        c = copy.deepcopy(CIBLES)
+        del c["sterile_directions"]
+        (a / "cibles.json").write_text(json.dumps(c), encoding="utf-8")
+    else:
+        (a / "h9.json").write_text("[1, 2]", encoding="utf-8")
+    lu = et.lire_contre_verification(depot, RUN, 1, _retours(cv), ch=ch)
+    assert lu["illisibles"] == [e0] and lu["papiers"][e0]["codes"] == ["entrees.modifiees"]
+    assert lu["papiers"][e1]["lisible"]
+
+
+def test_perte_de_donnees_arret_scelle_a_l_etape_suivante(depot, tmp_path_factory, monkeypatch):
+    """E-2 : une archive de `donnees/<run>/` perdue après la validation 1 est vue dès l'étape suivante (ici la
+    préparation de la tentative 2) : `arret-perte` scellé, puis aucune étape ne suit (cas sain : rien de perdu)."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    ids = sorted(prep["papiers"])
+    for pid, info in prep["papiers"].items():
+        _repondre(info["dossier"], h9=_avec(H9, research_questions="court") if pid == ids[0] else H9)
+    et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    et.exiger_rien_de_perdu(depot, RUN, "essai")                                  # cas sain
+    assert sorted(et.fichiers_consignes(depot, RUN)) == ["details-validation-tentative-1.json",
+                                                         "sorties-tentative-1.tar"]
+    (depot / "donnees" / RUN / "sorties-tentative-1.tar").unlink()                 # artefact : perte
+    with pytest.raises(GardeArret, match="perte de données"):
+        et.preparer(depot, RUN, travail, 2, [ids[0]], ch=ch)
+    arret = json.loads((depot / "diag" / RUN / "arret-perte.json").read_text())["resultat"]
+    assert arret["etape"] == "preparation-tentative-2"
+    assert arret["fichiers_en_cause"] == [f"donnees/{RUN}/sorties-tentative-1.tar"]
+    assert not (travail / "tentative-2").exists()
+    with pytest.raises(GardeArret, match="run arrêté"):
+        et.echantillonner(depot, RUN, ch=ch)
+
+
+def test_perte_par_fichier_rescelle_ou_dossier_de_travail_disparu(depot, tmp_path_factory, monkeypatch):
+    """E-2 : un fichier de `donnees/` modifié puis scellé de nouveau, ou le dossier de travail d'une préparation non lue
+    disparu, sont des pertes ; un seul dossier de papier disparu reste une entrée modifiée de ce papier."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    ids = sorted(prep["papiers"])
+    for info in prep["papiers"].values():
+        _repondre(info["dossier"])
+    shutil.rmtree(prep["papiers"][ids[0]]["dossier"])                              # un dossier de papier : anomalie
+    v = et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    assert v["papiers"][ids[0]]["anomalies"][-1] == "entrees.modifiees" and v["invalides"] == [ids[0]]
+    details = depot / "donnees" / RUN / "details-validation-tentative-1.json"
+    details.write_text(details.read_text() + " ")
+    (details.parent / (details.name + ".sha256")).unlink()
+    sceller(details)                                                               # artefact : rescellé
+    with pytest.raises(GardeArret, match="perte de données"):
+        et.preparer(depot, RUN, travail, 2, [ids[0]], ch=ch)
+    assert json.loads((depot / "diag" / RUN / "arret-perte.json").read_text())["resultat"]["fichiers_en_cause"] == [
+        f"donnees/{RUN}/details-validation-tentative-1.json"]
+
+
+def test_dossier_de_travail_perdu_avant_la_validation(depot, tmp_path_factory, monkeypatch):
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    shutil.rmtree(prep["travail"])                                                 # artefact : dossier perdu
+    with pytest.raises(GardeArret, match="perte de données"):
+        et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    arret = json.loads((depot / "diag" / RUN / "arret-perte.json").read_text())["resultat"]
+    assert arret["etape"] == "validation-tentative-1" and arret["fichiers_en_cause"] == [prep["travail"]]
+    assert not (depot / "diag" / RUN / "validation-tentative-1.json").exists()
+
+
+def test_fichier_de_retours_dans_donnees_seulement(depot, tmp_path_factory, monkeypatch, capsys):
+    """E-10 : la ligne de commande ne lit un fichier de retours que dans `donnees/<run>/` (cas sain et artefacts)."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    for info in prep["papiers"].values():
+        _repondre(info["dossier"])
+    contenu = json.dumps(_retours(prep))
+    for chemin in (depot / "retours.json", depot / "runs" / RUN / "retours.json", travail / "retours.json"):
+        chemin.write_text(contenu)
+        with pytest.raises(GardeArret, match="hors de donnees"):
+            et._retours(depot, RUN, str(chemin))
+    bon = depot / "donnees" / RUN / "retours-tentative-1.json"
+    bon.parent.mkdir(parents=True, exist_ok=True)
+    bon.write_text(contenu)
+    assert et._retours(depot, RUN, str(bon)) == _retours(prep)

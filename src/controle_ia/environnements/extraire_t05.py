@@ -56,6 +56,9 @@ AVIS_MAX_PAR_ROLE = 3           # un avis et deux avis refaits au plus par papie
 SEUIL_EXCLUSIONS_VALIDATION = 16  # papiers invalides aux tentatives 1 et 2 au-delà desquels on arrête (D-17)
 RETOUR_FORME = re.compile(r"(NOT )?OK: \d+ error\(s\)(, \d+ warning\(s\))?")
 _ERREUR_SCRIPT = re.compile(r"ERROR: \[([a-z0-9_.]+)\]")
+SOUS_DOSSIERS_D_ENTREE = ("papier", "invites", "a-verifier")   # un fichier ajouté ici est une entrée modifiée (E-7)
+ARRETS_DEFINITIFS = ("arret-perte", "arret-desaccord-script")   # après eux, aucune étape du run (contre-lecture 3)
+DELAI_SCRIPT_S = 600
 
 
 @dataclass(frozen=True)
@@ -136,12 +139,85 @@ def _git(racine: Path) -> dict:
     return {"commit": g["commit"], "propre": g["propre"]}
 
 
-def _ouvrir_run(racine: Path, run_id: str, ch: Chemins) -> dict:
-    """Manifeste lu et fichiers épinglés inchangés depuis l'ouverture du run (à chaque étape, CL-8)."""
+def _ouvrir_run(racine: Path, run_id: str, ch: Chemins, etape: str) -> dict:
+    """À chaque étape : manifeste lu, fichiers épinglés inchangés depuis l'ouverture du run (CL-8), aucun arrêt
+    définitif consigné, rien de perdu (règle de perte, contre-lecture 3, E-2)."""
     m, _ = lire_manifeste(_manifeste(racine, run_id))
     if fichiers_scelles(racine, ch) != m["config"]["fichiers_scelles"]:
         raise GardeArret("procédure, invites, scripts ou modules de décision changés depuis l'ouverture du run")
+    for nom in ARRETS_DEFINITIFS:
+        if _diag(racine, run_id, nom).exists():
+            raise GardeArret(f"run arrêté ({nom} consigné) : aucune étape ne suit ; run nouveau (procédure, section 8)")
+    exiger_rien_de_perdu(racine, run_id, etape)
     return m
+
+
+def _arreter(racine: Path, run_id: str, nom: str, contenu: dict, message: str) -> None:
+    """Arrêt consigné par un résultat scellé dans `diag/` avant l'exception (contre-lecture 3, E-8) ; s'il l'est déjà,
+    l'arrêt se répète sans rien écrire."""
+    if not _diag(racine, run_id, nom).exists():
+        _ecrire(racine, run_id, nom, contenu)
+    raise GardeArret(message)
+
+
+def fichiers_consignes(racine: Path, run_id: str) -> dict[str, str]:
+    """Fichiers de `donnees/<run>/` dont l'empreinte est consignée dans `diag/` (nom → empreinte) : archives et détails
+    des validations et des rondes lues, tâches assemblées."""
+    f = {}
+    for k in (1, 2, 3):
+        if _diag(racine, run_id, f"validation-tentative-{k}").exists():
+            r = _resultat(racine, run_id, f"validation-tentative-{k}")
+            f[f"sorties-tentative-{k}.tar"] = r["archive_sorties_sha256"]
+            f[f"details-validation-tentative-{k}.json"] = r["details_sha256"]
+    n = 1
+    while _diag(racine, run_id, f"preparation-contre-verification-ronde-{n}").exists():
+        if _diag(racine, run_id, f"contre-verification-ronde-{n}").exists():
+            r = _resultat(racine, run_id, f"contre-verification-ronde-{n}")
+            f[f"avis-ronde-{n}.tar"] = r["archive_avis_sha256"]
+            f[f"details-contre-verification-ronde-{n}.json"] = r["details_sha256"]
+        n += 1
+    if _diag(racine, run_id, "bilan-extraction").exists():
+        r = _resultat(racine, run_id, "bilan-extraction")
+        f["taches-evaluation.json"] = r["taches_evaluation_sha256"]
+        f["taches-entrainement.json"] = r["taches_entrainement_sha256"]
+    return f
+
+
+def _preparations_non_lues(racine: Path, run_id: str) -> list[str]:
+    noms = [f"preparation-tentative-{k}" for k in (1, 2, 3)
+            if _diag(racine, run_id, f"preparation-tentative-{k}").exists()
+            and not _diag(racine, run_id, f"validation-tentative-{k}").exists()]
+    n = 1
+    while _diag(racine, run_id, f"preparation-contre-verification-ronde-{n}").exists():
+        if not _diag(racine, run_id, f"contre-verification-ronde-{n}").exists():
+            noms.append(f"preparation-contre-verification-ronde-{n}")
+        n += 1
+    return noms
+
+
+def exiger_rien_de_perdu(racine: Path, run_id: str, etape: str) -> None:
+    """Règle de perte (procédure, section 8 ; contre-lecture 3, E-2), à chaque étape : chaque fichier de `donnees/<run>/`
+    consigné dans `diag/` est présent, scellé, à l'empreinte consignée, et le dossier de travail de chaque préparation
+    non lue existe ; sinon `arret-perte` scellé (étape, fichiers en cause), puis arrêt. Un dossier de papier disparu
+    seul reste une entrée modifiée de ce papier (CL-5)."""
+    en_cause = []
+    for nom, sha in sorted(fichiers_consignes(racine, run_id).items()):
+        chemin = racine / "donnees" / run_id / nom
+        try:
+            intact = verifier(chemin) == sha
+        except (GardeArret, OSError):
+            intact = False
+        if not intact:
+            en_cause.append(f"donnees/{run_id}/{nom}")
+    for nom in _preparations_non_lues(racine, run_id):
+        d = Path(_resultat(racine, run_id, nom)["travail"])
+        if not d.is_dir():
+            en_cause.append(str(d))
+    if en_cause:
+        _arreter(racine, run_id, "arret-perte", {
+            "etape": etape, "fichiers_en_cause": en_cause,
+            "suite": "aucune sortie du run perdu n'est relue ; run nouveau sous la même procédure, à la tentative 1"},
+            f"perte de données du run ({len(en_cause)} : {en_cause[:3]}) : arrêt consigné ; run nouveau")
 
 
 def _ecrire(racine: Path, run_id: str, nom: str, contenu: dict) -> Path:
@@ -157,7 +233,8 @@ def ecrire_donnees(racine: Path, run_id: str, nom: str, contenu: dict) -> str:
     try:
         octets = (json.dumps(corps, indent=2, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
     except UnicodeEncodeError as e:
-        raise GardeArret(f"{chemin} : contenu non encodable en UTF-8 ({e.reason}) ; rien n'est écrit") from None
+        raise GardeArret(f"{chemin} : contenu non encodable en UTF-8 ({e.reason}) ; ce fichier n'est pas écrit") \
+            from None
     return _ecrire_atomique(chemin, octets)
 
 
@@ -206,9 +283,15 @@ def _empreintes_dossier(d: Path) -> dict[str, str]:
 
 
 def _entrees_modifiees(d: Path, entrees: dict[str, str]) -> list[str]:
-    """Entrées du dossier modifiées ou absentes depuis la préparation (CL-5)."""
-    return sorted(rel for rel, sha in entrees.items()
-                  if not (d / rel).is_file() or _sha((d / rel).read_bytes()) != sha)
+    """Entrées du dossier modifiées ou absentes depuis la préparation (CL-5), et fichiers ajoutés parmi les entrées
+    (sous `SOUS_DOSSIERS_D_ENTREE` : un fichier ajouté sous `papier/` changerait le texte que lit le script ;
+    contre-lecture 3, E-7)."""
+    modifiees = {rel for rel, sha in entrees.items() if not (d / rel).is_file() or _sha((d / rel).read_bytes()) != sha}
+    for sous in SOUS_DOSSIERS_D_ENTREE:
+        if (d / sous).is_dir():
+            modifiees |= {str(p.relative_to(d)) for p in (d / sous).rglob("*")
+                          if p.is_file() and str(p.relative_to(d)) not in entrees}
+    return sorted(modifiees)
 
 
 def _exiger_retours(retours: dict, papiers: list[str]) -> None:
@@ -237,8 +320,14 @@ def retour_sans_texte(r: dict, anomalies_module: bool) -> dict:
 
 def codes_du_script(script: Path, dossier: Path) -> list[str]:
     """Codes d'erreur que rend la copie scellée du script de contrôle (celle du dépôt, jamais celle du dossier du
-    sous-agent) sur un dossier (contre-lecture 2, D-2). Une sortie hors forme ou un code de retour inattendu arrête."""
-    r = subprocess.run([sys.executable, "-I", str(script), str(dossier)], capture_output=True, timeout=600)
+    sous-agent) sur un dossier (contre-lecture 2, D-2). Une sortie hors forme, un code de retour inattendu ou un délai
+    dépassé arrêtent : panne de processus, sans résultat écrit ; l'étape se relance (contre-lecture 3, E-8)."""
+    try:
+        r = subprocess.run([sys.executable, "-I", str(script), str(dossier)], capture_output=True,
+                           timeout=DELAI_SCRIPT_S)
+    except subprocess.TimeoutExpired:
+        raise GardeArret(f"script de contrôle {script.name} : délai de {DELAI_SCRIPT_S} s dépassé sur {dossier.name} "
+                         "(panne de processus ; l'étape n'a rien écrit et se relance)") from None
     lignes = r.stdout.decode("utf-8", errors="replace").splitlines()
     if r.returncode not in (0, 1) or not lignes or not RETOUR_FORME.fullmatch(lignes[-1].strip()):
         raise GardeArret(f"script de contrôle {script.name} hors forme sur {dossier.name} (code {r.returncode})")
@@ -250,6 +339,19 @@ def exiger_accord_script(pid: str, codes_script: list[str], codes_module: list[s
     if sorted(codes_script) != sorted(codes_module):
         raise GardeArret(f"{pid} : le script scellé rend {sorted(codes_script)[:4]}, le module {sorted(codes_module)[:4]} :"
                          " désaccord en production")
+
+
+def _accord_ou_arret(racine: Path, run_id: str, etape: str, pid: str, script: Path, dossier: Path,
+                     codes_module: list[str]) -> None:
+    """Accord du script scellé et du module ; un désaccord est définitif (scripts et modules épinglés) : arrêt scellé
+    `arret-desaccord-script`, puis version 2 et run nouveau (contre-lecture 3, E-8)."""
+    codes_script = codes_du_script(script, dossier)
+    try:
+        exiger_accord_script(pid, codes_script, codes_module)
+    except GardeArret as e:
+        _arreter(racine, run_id, "arret-desaccord-script", {
+            "etape": etape, "papier": pid, "codes_script": sorted(codes_script), "codes_module": sorted(codes_module),
+            "suite": "version 2 de la procédure, puis run nouveau"}, str(e))
 
 
 def _encodable(objet) -> bool:
@@ -325,7 +427,7 @@ def preparer(racine: Path, run_id: str, travail: Path, tentative: int, papiers: 
         creer_manifeste(racine, run_id, config, [TACHE_GRAINE], entropie=int(scelles["procedure"][:32], 16),
                         commande=commande)
     else:
-        m = _ouvrir_run(racine, run_id, ch)
+        m = _ouvrir_run(racine, run_id, ch, f"preparation-tentative-{tentative}")
         if travail != Path(m["config"]["travail"]):
             raise GardeArret("dossier de travail différent de celui du manifeste")
         if base.exists() or _diag(racine, run_id, f"preparation-tentative-{tentative}").exists():
@@ -361,7 +463,7 @@ def valider(racine: Path, run_id: str, tentative: int, retours: dict, ch: Chemin
     codes : un écart arrête (contre-lecture 2, D-2) ; la dernière ligne rendue par le sous-agent est seulement
     consignée. Au-delà de `SEUIL_EXCLUSIONS_VALIDATION` papiers invalides à la tentative 2, arrêt scellé (D-17)."""
     racine = Path(racine)
-    _ouvrir_run(racine, run_id, ch)
+    _ouvrir_run(racine, run_id, ch, f"validation-tentative-{tentative}")
     prep = _resultat(racine, run_id, f"preparation-tentative-{tentative}")
     _exiger_retours(retours, list(prep["papiers"]))
     par_id = {p["id"]: p for p in papiers_du_corpus(racine, ch)}
@@ -372,7 +474,8 @@ def valider(racine: Path, run_id: str, tentative: int, retours: dict, ch: Chemin
         modifiees = _entrees_modifiees(d, info["entrees"])
         r = ex.lire_sorties(d / "sorties", lire_texte(racine, ch, par_id[pid]))
         if not modifiees:
-            exiger_accord_script(pid, codes_du_script(script, d), [ex.code_anomalie(a) for a in r["anomalies"]])
+            _accord_ou_arret(racine, run_id, f"validation-tentative-{tentative}", pid, script, d,
+                             [ex.code_anomalie(a) for a in r["anomalies"]])
         anomalies = r["anomalies"] + ([f"[entrees.modifiees] entrées modifiées : {modifiees}"] if modifiees else [])
         for nom in ex.NOMS_SORTIES:
             chemin = d / "sorties" / f"{nom}.json"
@@ -429,7 +532,7 @@ def echantillonner(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
     """Échantillon de contre-vérification (tiré après les tentatives 1 et 2) et liste des exclusions « theory_only »
     à vérifier (CL-25)."""
     racine = Path(racine)
-    m = _ouvrir_run(racine, run_id, ch)
+    m = _ouvrir_run(racine, run_id, ch, "echantillon-contre-verification")
     validations = _validations(racine, run_id)
     if 3 in validations or _diag(racine, run_id, "preparation-tentative-3").exists():
         raise GardeArret("échantillon tiré après une tentative 3 : ordre de la procédure non suivi")
@@ -561,7 +664,7 @@ def preparer_contre_verification(racine: Path, run_id: str, travail: Path, role:
     racine = Path(racine)
     if role not in ROLES:
         raise GardeArret(f"rôle {role!r} inconnu ({ROLES})")
-    m = _ouvrir_run(racine, run_id, ch)
+    m = _ouvrir_run(racine, run_id, ch, f"preparation-contre-verification ({role})")
     travail = _hors_depot(racine, Path(travail))
     if travail != Path(m["config"]["travail"]):
         raise GardeArret("dossier de travail différent de celui du manifeste")
@@ -603,7 +706,9 @@ def preparer_contre_verification(racine: Path, run_id: str, travail: Path, role:
             faits = sum(1 for k in deja if pid in _resultat(racine, run_id,
                                                             f"preparation-contre-verification-ronde-{k}")["papiers"])
             if faits >= AVIS_MAX_PAR_ROLE:
-                raise GardeArret(f"{pid} : {faits} avis « {role} » préparés sans avis lisible : arrêt, nœud")
+                _arreter(racine, run_id, "arret-avis-refaits", {
+                    "role": role, "papier": pid, "avis_prepares": faits, "suite": "nœud, porté à Lazar"},
+                    f"{pid} : {faits} avis « {role} » préparés sans avis lisible : arrêt, nœud")
         choisis = {p: sans_avis[p] for p in papiers}
     else:
         if papiers:
@@ -640,7 +745,7 @@ def lire_contre_verification(racine: Path, run_id: str, ronde: int, retours: dic
     modifiée rend l'avis illisible (CL-5). Pour la ronde « echantillon », le seuil d'échecs est contrôlé dès que
     l'échantillon est complet (CL-12), avec un résultat d'arrêt scellé (CL-16)."""
     racine = Path(racine)
-    _ouvrir_run(racine, run_id, ch)
+    _ouvrir_run(racine, run_id, ch, f"contre-verification-ronde-{ronde}")
     prep = _resultat(racine, run_id, f"preparation-contre-verification-ronde-{ronde}")
     _exiger_retours(retours, list(prep["papiers"]))
     script = racine / ch.dossier_procedure / FICHIERS_PROCEDURE["verifier_avis"]
@@ -662,11 +767,12 @@ def lire_contre_verification(racine: Path, run_id: str, ronde: int, retours: dic
                 membres.append((f"contre-verification-{ronde}/{pid}/avis.json", octets))
             except ValueError as e:
                 anomalies.append(f"[json.illisible] avis.json illisible : {e}")
-        if not anomalies:
+        if not anomalies and not modifiees:       # avis jugé sur des entrées intactes seulement (contre-lecture 3, E-1)
             h9, h10, cibles = (json.loads((d / "a-verifier" / f"{n}.json").read_bytes()) for n in ex.NOMS_SORTIES)
             anomalies = ex.anomalies_avis(avis, h9, h10, cibles)
         if not modifiees:
-            exiger_accord_script(pid, codes_du_script(script, d), [ex.code_anomalie(a) for a in anomalies])
+            _accord_ou_arret(racine, run_id, f"contre-verification-ronde-{ronde}", pid, script, d,
+                             [ex.code_anomalie(a) for a in anomalies])
         else:
             anomalies.append(f"[entrees.modifiees] entrées modifiées : {modifiees}")
         fiche["retour"] = retour_sans_texte(retours[pid], bool(anomalies))
@@ -764,7 +870,7 @@ def citations_de_tableau(cibles: dict, texte: str) -> tuple[int, int]:
 
 def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
     racine = Path(racine)
-    m = _ouvrir_run(racine, run_id, ch)
+    m = _ouvrir_run(racine, run_id, ch, "assemblage")
     pilote, reserve = m["config"]["pilote"], m["config"]["reserve"]
     validations = _validations(racine, run_id)
     rondes = _rondes(racine, run_id)
@@ -790,9 +896,10 @@ def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
     archives = {k: lire_archive(racine / "donnees" / run_id / f"sorties-tentative-{k}.tar",
                                 _resultat(racine, run_id, f"validation-tentative-{k}")["archive_sorties_sha256"])
                 for k in validations}
-    compte = {"reference_nulle": 0, "base": {"reported": 0, "estimated": 0}, "citations_tableau": 0, "citations": 0}
+    compte = {liste: {"reference_nulle": 0, "base": {"reported": 0, "estimated": 0}, "citations_tableau": 0,
+                      "citations": 0} for liste in ("evaluation", "entrainement")}     # par liste (contre-lecture 3, E-11)
 
-    def tache(pid: str) -> dict:
+    def tache(pid: str, liste: str) -> dict:
         k = statuts[pid]["tentative"]
         sorties = {}
         for nom in ex.NOMS_SORTIES:
@@ -804,16 +911,16 @@ def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
         t = ex.assembler_tache(pid, sorties["h9"], sorties["h10"], sorties["cibles"], texte)
         calcul = sorties["cibles"]["compute"]
         if calcul.get("reference_gpu_hours") is None:
-            compte["reference_nulle"] += 1
+            compte[liste]["reference_nulle"] += 1
         else:                                   # bases comptées sur les seules références non nulles (D-7)
-            compte["base"][calcul["basis"]] += 1
+            compte[liste]["base"][calcul["basis"]] += 1
         n, total = citations_de_tableau(sorties["cibles"], texte)
-        compte["citations_tableau"] += n
-        compte["citations"] += total
+        compte[liste]["citations_tableau"] += n
+        compte[liste]["citations"] += total
         return dict(t, tentative=k, empreintes=validations[k][pid]["empreintes"])
 
-    evaluation = [tache(p) for p in listes["evaluation"]]
-    entrainement = [tache(p) for p in listes["entrainement"]]
+    evaluation = [tache(p, "evaluation") for p in listes["evaluation"]]
+    entrainement = [tache(p, "entrainement") for p in listes["entrainement"]]
     sha_eval = ecrire_donnees(racine, run_id, "taches-evaluation",
                               {"taches": evaluation, "remplacements": listes["remplacements"]})
     sha_entr = ecrire_donnees(racine, run_id, "taches-entrainement",
@@ -833,6 +940,12 @@ def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
                 c["domaines_discutables"] += int(not f["classification"]["domains_reasonable"])
                 c["calcul_non_plausible"] += int(not f["compute_plausible"])
     alertes = {str(k): sum(bool(f["alertes"]) for f in v.values()) for k, v in validations.items()}
+    # annonces des sous-agents contraires au module, ou hors forme, par tentative et par rôle (R4 ; E-11)
+    annonces = {f"tentative-{k}": _compte_annonces(v.values()) for k, v in validations.items()}
+    for r in rondes:
+        c = annonces.setdefault(f"ronde-{r['role']}", {"desaccords": 0, "hors_format": 0})
+        for cle, n in _compte_annonces(r["papiers"].values()).items():
+            c[cle] += n
     k_ech = len(bilan_ech["echecs"])
     bilan = {"statuts": statuts, "evaluation": listes["evaluation"], "entrainement": listes["entrainement"],
              "remplacements": listes["remplacements"], "entrainement_insuffisant": listes["entrainement_insuffisant"],
@@ -842,11 +955,18 @@ def assembler(racine: Path, run_id: str, ch: Chemins = Chemins()) -> dict:
              "cibles_defectueuses_echantillon": {"defectueuses": bilan_ech["cibles_defectueuses"],
                                                  "controlees": bilan_ech["cibles"]}, "audit": audit,
              "classification_et_calcul": classification, "alertes_lexicales_par_tentative": alertes,
+             "annonces_des_sous_agents": annonces,
              "taches_assemblees": compte,
              "exclus": {p: s["motif"] for p, s in statuts.items() if s["statut"] == "exclu"},
              "taches_evaluation_sha256": sha_eval, "taches_entrainement_sha256": sha_entr}
     _ecrire(racine, run_id, "bilan-extraction", bilan)
     return bilan
+
+
+def _compte_annonces(fiches) -> dict:
+    fiches = list(fiches)
+    return {"desaccords": sum(f["retour"]["accord_avec_le_module"] is False for f in fiches),
+            "hors_format": sum(f["retour"]["forme"] != "conforme" for f in fiches)}
 
 
 # ------------------------------------------------------------------------------------------------ ligne de commande
@@ -855,8 +975,13 @@ def _liste(v: str | None) -> list[str] | None:
     return [x.strip() for x in v.split(",") if x.strip()] if v else None
 
 
-def _retours(chemin: str) -> dict:
-    return json.loads(Path(chemin).read_text(encoding="utf-8"))
+def _retours(racine: Path, run_id: str, chemin: str) -> dict:
+    """Fichier des retours, écrit par la session dans `donnees/<run>/` et nulle part ailleurs : ses lignes brutes peuvent
+    porter du texte des papiers (contre-lecture 3, E-10)."""
+    p = Path(chemin).resolve()
+    if p.parent != (Path(racine) / "donnees" / run_id).resolve():
+        raise GardeArret(f"fichier de retours {chemin} hors de donnees/{run_id}/")
+    return json.loads(p.read_text(encoding="utf-8"))
 
 
 def _main(argv: list[str]) -> int:
@@ -892,7 +1017,7 @@ def _main(argv: list[str]) -> int:
         print(json.dumps({"tentative": r["tentative"], "papiers": len(r["papiers"]), "travail": r["travail"]},
                          ensure_ascii=False))
     elif a.commande == "valider":
-        r = valider(racine, a.run_id, a.tentative, _retours(a.retours))
+        r = valider(racine, a.run_id, a.tentative, _retours(racine, a.run_id, a.retours))
         print(json.dumps({k: r[k] for k in ("tentative", "invalides", "theory_only", "avec_alertes")},
                          ensure_ascii=False))
     elif a.commande == "echantillonner":
@@ -902,7 +1027,7 @@ def _main(argv: list[str]) -> int:
         r = preparer_contre_verification(racine, a.run_id, Path(a.travail), a.role, _liste(a.papiers))
         print(json.dumps({"ronde": r["ronde"], "role": r["role"], "papiers": sorted(r["papiers"])}, ensure_ascii=False))
     elif a.commande == "lire-contre-verification":
-        r = lire_contre_verification(racine, a.run_id, a.ronde, _retours(a.retours))
+        r = lire_contre_verification(racine, a.run_id, a.ronde, _retours(racine, a.run_id, a.retours))
         print(json.dumps({k: r[k] for k in ("ronde", "role", "illisibles", "echecs", "cibles_defectueuses", "cibles")},
                          ensure_ascii=False))
     else:
