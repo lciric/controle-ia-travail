@@ -16,11 +16,11 @@ _spec.loader.exec_module(de)
 
 def test_appariement_par_segment():
     assert de.correspond("docs/sources/invites-2606.07054-v1/invites/B1.txt",
-                         "docs/sources/invites-2606.07054-v1/invites/*.txt")
+                         "docs/sources/invites-2606.07054-v1/invites/*.txt")       # appariement par segment
     assert not de.correspond("docs/sources/invites-2606.07054-v1/derivees/B1-env-a-v1.txt",
                              "docs/sources/invites-2606.07054-v1/*.txt")          # le défaut de la première version
     assert not de.correspond("docs/sources/invites-2606.07054-v1/verification.txt",
-                             "docs/sources/invites-2606.07054-v1/invites/*.txt")  # nos vérifications restent
+                             "docs/sources/invites-2606.07054-v1/invites/*.txt")
     assert de.correspond("donnees/run/sorties.tar", "donnees/**")
     assert not de.correspond("donnees-bis/x", "donnees/**")
 
@@ -29,7 +29,7 @@ def test_fichiers_charges_par_le_code_jamais_retires():
     suivis = subprocess.run(["git", "-C", str(RACINE), "ls-files"], capture_output=True, text=True,
                             check=True).stdout.split("\n")
     charges = [f for f in suivis if any(de.correspond(f, g) for g in de.GARDES)]
-    assert len(charges) == 26                       # 18 invites et leur index ; 6 gabarits adaptés et leur index
+    assert len(charges) == 34                       # invites des deux papiers (18 + 7) et gabarits adaptés (6), index
     assert all(de.motif_de(f) is None for f in charges)
 
 

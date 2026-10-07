@@ -1,10 +1,10 @@
 """Copie expurgée du dépôt, à montrer à des évaluateurs (décision de Lazar, R-104).
 
 Un seul commit, reproductible, tiré d'un commit cité du dépôt : sans les textes de tiers dont le code n'a pas besoin
-(PDF d'arXiv, pages extraites par les lecteurs, texte complet d'un papier, transcriptions non utilisées, pages des
-cartes de modèles, fichiers de travail des relecteurs de l'extraction, sorties de l'extraction), sans la candidature à
+(PDF d'arXiv, pages extraites par les lecteurs, texte complet ou extrait d'un papier, pages des cartes de modèles, fichiers de travail des relecteurs de l'extraction, sorties de l'extraction), sans la candidature à
 un autre fonds ni l'ancien paquet git. Les empreintes des fichiers retirés restent, et `EXPURGE.md` les liste. Les
-invites transcrites ou adaptées dont le code a besoin restent, avec leur source : le README de la copie le dit.
+invites transcrites ou adaptées que le code et ses tests chargent restent, avec leur source : le README de la copie
+le dit.
 
 Rien n'est poussé : le paquet git est écrit dans SORTIE. Sa mise en ligne sur un dépôt distant demande un GO de Lazar.
 Le script n'écrit que dans SORTIE, qui ne doit pas exister ; il ne touche pas au dépôt.
@@ -32,8 +32,6 @@ RETRAITS = [
     ("docs/sources/lecture-pdf-niveau1/*.tar", "fichiers de travail d'un lecteur : pages extraites des PDF de tiers"),
     ("docs/sources/lecture-pdf-niveau2/*.tar", "fichiers de travail d'un lecteur : pages extraites des PDF de tiers"),
     ("docs/sources/invites-2606.08892-v1/extrait.tar", "texte complet extrait d'un papier de tiers"),
-    ("docs/sources/invites-2606.07054-v1/invites/*.txt",
-     "transcription d'une invite d'un papier de tiers, non utilisée par le code"),
     ("docs/sources/invites-2606.07054-v1/*.tar", "texte extrait d'un papier de tiers"),
     ("docs/sources/invites-2606.07054-v1/derivees/contre-verification-v1/*.tar",
      "fichiers de travail d'une contre-vérification : texte extrait d'un papier de tiers"),
@@ -55,7 +53,8 @@ PARAGRAPHE_README = ("This private repository holds copies of third-party arXiv 
 REMPLACEMENT_README = ("This copy omits the third-party PDFs, the page texts extracted from them, and the outputs derived "
                        "from them; their SHA-256 hashes remain, and `EXPURGE.md` lists every omitted file. It keeps the "
                        "short prompt texts transcribed or adapted from two papers (arXiv 2606.08892 and 2606.07054), "
-                       "because the code loads them; they are attributed to their sources. Please do not redistribute.")
+                       "because the code and its tests load them; they are attributed to their sources. Please do not "
+                       "redistribute.")
 
 
 def _git(*args: str, cwd: Path = RACINE, env: dict | None = None, entree: bytes | None = None) -> bytes:
@@ -64,6 +63,7 @@ def _git(*args: str, cwd: Path = RACINE, env: dict | None = None, entree: bytes 
 
 # fichiers que le code charge : jamais retirés (garde du script et de ses tests)
 GARDES = ("docs/sources/invites-2606.08892-v1/invites/*.txt", "docs/sources/invites-2606.08892-v1/index.json",
+          "docs/sources/invites-2606.07054-v1/invites/*.txt", "docs/sources/invites-2606.07054-v1/index.json",
           "docs/sources/invites-2606.07054-v1/derivees/*.txt", "docs/sources/invites-2606.07054-v1/derivees/index-v1.json")
 
 
@@ -130,8 +130,10 @@ def main(argv: list[str]) -> int:
               "hash; that is expected. The README's paragraph on third-party material was adapted for this copy.", "",
               f"- Files kept: {gardes}. Files omitted: {len(retraits)} ({sum(r['octets'] for r in retraits) / 1e6:.1f} MB).",
               "- Kept on purpose: the prompt texts transcribed from arXiv 2606.08892 "
-              "(`docs/sources/invites-2606.08892-v1/`) and the prompt templates adapted from arXiv 2606.07054 "
-              "(`docs/sources/invites-2606.07054-v1/derivees/`), which the code loads after checking their hashes.", "",
+              "(`docs/sources/invites-2606.08892-v1/invites/`) and from arXiv 2606.07054 "
+              "(`docs/sources/invites-2606.07054-v1/invites/`), and the templates adapted from the latter "
+              "(`docs/sources/invites-2606.07054-v1/derivees/`): the code and its tests load them after checking "
+              "their hashes.", "",
               "## arXiv papers whose PDF copies are omitted", ""]
     lignes += [f"- [{Path(p).stem}](https://arxiv.org/abs/{Path(p).stem})" for p in pdf]
     lignes += ["", "## Omitted files", "", "| path | SHA-256 | reason (in French) |", "|---|---|---|"]
