@@ -164,7 +164,7 @@ def main(argv: list[str]) -> int:
         return 2
     arbre = sortie / "controle-ia-expurge"
     arbre.mkdir(parents=True)
-    retraits, gardes, archives = [], 0, []
+    retraits, gardes, archives, empreintes_gardees = [], 0, [], set()
     with tarfile.open(fileobj=io.BytesIO(_git("archive", "--format=tar", commit))) as tar:
         for membre in tar.getmembers():
             if not membre.isfile():
@@ -180,9 +180,12 @@ def main(argv: list[str]) -> int:
             cible.write_bytes(contenu)
             os.chmod(cible, membre.mode & 0o777)
             gardes += 1
+            empreintes_gardees.add(hashlib.sha256(contenu).hexdigest())
             if est_archive(contenu) or contenu.startswith(COMPRESSIONS_NON_EXAMINEES):
                 archives.append((membre.name, contenu))
-    empreintes = {r["sha256"] for r in retraits if r["octets"]}
+    # un contenu retiré qui reste aussi en fichier gardé (la feuille de style commune aux deux propositions) n'est pas
+    # caché par une archive : seuls comptent les contenus que la copie n'a plus
+    empreintes = {r["sha256"] for r in retraits if r["octets"]} - empreintes_gardees
     trouves = [t for nom, contenu in archives for t in survivants(nom, contenu, empreintes)]
     if trouves:
         print("fichiers retirés qui survivent dans une archive gardée : arrêt (aucun paquet écrit)\n  "

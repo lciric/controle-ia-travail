@@ -102,8 +102,11 @@ def _depot_factice(depot: Path, copie_cachee: bool, compresse: bool = False) -> 
     (depot / "README.md").write_text("# essai\n\n" + de.PARAGRAPHE_README + "\n", encoding="utf-8")
     (depot / "docs/sources/pdf").mkdir(parents=True)
     (depot / "docs/sources/pdf/2601.00001v1.pdf").write_bytes(b"%PDF copie d'un papier de tiers")
-    (depot / "livrables").mkdir()
-    membres = {"notes.md": b"notre texte"}
+    (depot / "livrables/candidature-ea-funds-v1").mkdir(parents=True)        # retiré ; sa feuille de style reste ailleurs
+    (depot / "livrables/candidature-ea-funds-v1/style.css").write_bytes(b"body { margin: 0 }")
+    (depot / "livrables/rendu-v1").mkdir()
+    (depot / "livrables/rendu-v1/style.css").write_bytes(b"body { margin: 0 }")
+    membres = {"notes.md": b"notre texte", "rendu-v1/style.css": b"body { margin: 0 }"}
     if copie_cachee:
         membres["copie/papier.pdf"] = b"%PDF copie d'un papier de tiers"
     (depot / "livrables/rendu-v1.zip").write_bytes(_zip(membres))
