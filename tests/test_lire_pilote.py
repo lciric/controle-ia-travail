@@ -351,6 +351,59 @@ def test_declencheurs_trop_sale_cas_sain_et_artefacts():
     assert "V̂" not in json.dumps(lp.constantes(), ensure_ascii=False)
 
 
+
+D_SAIN = {"parts_tronquees": {"juge": 0.5}, "composantes": {"tache": 1.0}}
+CAS_DECLENCHEURS = [
+    ("format égal à 1,00", dict(fmt={"part_valides": 0.9}), dict(fmt={"part_valides": 1.0}),
+     ("trop_propre", "part des actions valides = 1,00")),
+    ("part illisible", dict(juges={"8B": {"decomposition": D_SAIN}}),
+     dict(juges={"8B": {"decomposition": {"parts_tronquees": {"juge": float("nan")}, "composantes": {"tache": 1.0}}}}),
+     ("trop_sale", "juge 8B : part illisible")),
+    ("variance des tâches seule", dict(juges={"8B": {"decomposition": D_SAIN}}),
+     dict(juges={"8B": {"decomposition": {"parts_tronquees": {"juge": 0.5}, "composantes": {"tache": -0.2}}}}),
+     ("trop_sale", "juge 8B : part > 0,95 ou σ̂²_β ≤ 0")),
+    ("kappa au-dessus de 0,95", dict(kap={"controls": {"kappa": 0.7}}), dict(kap={"controls": {"kappa": 0.97}}),
+     ("trop_propre", "kappa controls > 0,95")),
+    ("couverture 0 ou 1", dict(fam={"part_ensembles_controles_0_ou_1": 0.5}),
+     dict(fam={"part_ensembles_controles_0_ou_1": 0.95}),
+     ("trop_propre", "couverture des contrôles de 0 ou 1 pour plus de 90 % des ensembles")),
+    ("P(oui) toutes basses", dict(p_oui=[0.02, 0.6]), dict(p_oui=[0.02, 0.01]),
+     ("trop_sale", "P(oui) toutes sous 0,05 ou toutes au-dessus de 0,95")),
+]
+
+
+def _audit(x: dict) -> dict:
+    return lp.declencheurs_audit(x.get("fmt", {"part_valides": 0.9}), x.get("juges", {}), x.get("fam", {}),
+                                 x.get("kap"), x.get("p_oui", [0.3, 0.7]))
+
+
+@pytest.mark.parametrize("nom, sain, artefact, attendu", CAS_DECLENCHEURS, ids=[c[0] for c in CAS_DECLENCHEURS])
+def test_declencheurs_restants_cas_sain_et_artefact(nom, sain, artefact, attendu):
+    """Vérification 3, F-1 (R5) : les six conditions de l'audit que les tests n'exerçaient pas ; chacune muette sur son
+    cas sain et levée seule, dans son sens, sur son artefact."""
+    assert _audit(sain) == {"trop_propre": [], "trop_sale": [], "declenche": False}
+    a, (sens, libelle) = _audit(artefact), attendu
+    autre = "trop_sale" if sens == "trop_propre" else "trop_propre"
+    assert a[sens] == [libelle] and a[autre] == [] and a["declenche"]
+
+
+def test_version_de_numpy_et_etat_de_l_arbre(depot, travail, monkeypatch):
+    """Vérification 3, F-6 : version de numpy comparée à celle du manifeste d'analyse (message explicite) ; état de
+    l'arbre consigné à chaque étape de lecture (un arbre non propre passe la garde des modules, mais se voit)."""
+    d = construire(depot, n=6)
+    lp.preparer_etiquetage(depot, RUN, ANALYSE, d["prereg"], d["taches"], travail)
+    committer(depot)
+    _etiqueter_selon_8b(depot, d, travail, inverser=0.1)
+    vraies = lp.versions
+    monkeypatch.setattr(lp, "versions", lambda: dict(vraies(), numpy="0.0.0"))
+    with pytest.raises(GardeArret, match="version de numpy 0.0.0"):
+        lp.lire_etiquetage(depot, RUN, ANALYSE, d["taches"], travail)
+    monkeypatch.setattr(lp, "versions", vraies)
+    (depot / "hors-suivi.txt").write_text("x", encoding="utf-8")
+    lp.lire_etiquetage(depot, RUN, ANALYSE, d["taches"], travail)
+    et = json.loads((depot / "diag" / ANALYSE / "etiquettes.json").read_text(encoding="utf-8"))["resultat"]
+    assert et["arbre_propre"] is False and any("hors-suivi.txt" in x for x in et["statut_arbre"])
+
 # --- de bout en bout -------------------------------------------------------------------------------------------
 
 def test_lecture_de_bout_en_bout(depot, travail):
@@ -373,12 +426,14 @@ def test_lecture_de_bout_en_bout(depot, travail):
     assert lp.lire_etiquetage(depot, RUN, ANALYSE, d["taches"], travail)["etiquettes"] == len(el)
     et = json.loads((depot / "diag" / ANALYSE / "etiquettes.json").read_text(encoding="utf-8"))["resultat"]
     assert [{k: v for k, v in x.items() if k != "etiquette"} for x in et["elements"]] == el
+    assert et["arbre_propre"] is True and et["statut_arbre"] == []                     # vérification 3, F-6
     committer(depot)
     lecture = lp.analyser(depot, RUN, ANALYSE, d["taches"])
     assert set(lecture["predictions"]) == {f"P{k}" for k in range(1, 8)}
     assert lecture["format"]["actions"] == 50 * 3 * 2 - 2 and lecture["format"]["ensembles_vides"] == 1
     assert lecture["format_retenu"] is True and lecture["sous_format_faible"] is False
     assert lecture["commit_courant"] == _commit(depot) and lecture["commit_lecture_cite"] != lecture["commit_courant"]
+    assert lecture["arbre_propre"] is True
     for j in ("8B", "3B"):
         assert lecture["juges"][j]["taches_completes"] == 50 and lecture["juges"][j]["decomposition_concluante"]
         assert lecture["juges"][j]["plan_b"] in ("plan B", "nœud", "rubrique gardée")
@@ -588,7 +643,8 @@ def test_engagement_et_lots_recalcules(depot, travail, monkeypatch):
     assert not (depot / "diag" / ANALYSE / "etiquettes.json").exists()
 
 
-@pytest.mark.parametrize("artefact, motif", [("B permuté", "désalignement"), ("empreinte absente", "absente"),
+@pytest.mark.parametrize("artefact, motif", [("B permuté", "désalignement"), ("C désaligné", "désalignement"),
+                                             ("empreinte absente", "absente"),
                                              ("notation manquante", "manquantes"), ("doublon", "en double")])
 def test_alignement_des_notations_cas_sain_et_artefacts(depot, artefact, motif):
     """D-1 : l'alignement des notations se contrôle mécaniquement, par l'empreinte de l'ensemble noté."""
@@ -602,6 +658,9 @@ def test_alignement_des_notations_cas_sain_et_artefacts(depot, artefact, motif):
     if artefact == "B permuté":
         b = [x for x in n if x["cle"].endswith("/e0/passe-1")]
         b[0]["ensemble_sha256"], b[1]["ensemble_sha256"] = b[1]["ensemble_sha256"], b[0]["ensemble_sha256"]
+    elif artefact == "C désaligné":          # vérification 3, F-1 : les ensembles C de ce dépôt ont tous le même texte ;
+        c = next(x for x in n if x["cle"].endswith("/e1/passe-0"))      # une C qui porte l'empreinte d'un autre ensemble
+        c["ensemble_sha256"] = next(x["ensemble_sha256"] for x in n if x["ensemble_sha256"] != c["ensemble_sha256"])
     elif artefact == "empreinte absente":
         del n[0]["ensemble_sha256"]
     elif artefact == "notation manquante":
@@ -707,8 +766,8 @@ def test_gardes_du_preenregistrement_et_du_commit(depot, travail, tmp_path_facto
     faux.write_text(f"- Commit du code d'analyse : `{'0' * 40}`\n", encoding="utf-8")
     with pytest.raises(GardeArret, match="impossible"):
         lp.exiger_modules_cites(depot, faux)
-    with pytest.raises(GardeArret, match="commit courant illisible"):
-        lp._commit_courant(tmp_path_factory.mktemp("pas-un-depot"))
+    with pytest.raises(GardeArret, match="a échoué"):
+        lp._etat_courant(tmp_path_factory.mktemp("pas-un-depot"))
     sans_entropie = depot / "prereg" / "sans-entropie.md"
     sans_entropie.write_text(f"- Commit du code d'analyse : `{_commit(depot)}`\n", encoding="utf-8")
     committer(depot)
@@ -721,8 +780,8 @@ def test_gardes_du_manifeste_d_analyse(depot, travail, monkeypatch):
     d = construire(depot, n=6)
     lp.preparer_etiquetage(depot, RUN, ANALYSE, d["prereg"], d["taches"], travail)
     committer(depot)
-    chemin_m, m, commit = lp._ouvrir_analyse(depot, ANALYSE)                                    # cas sain
-    assert commit == _commit(depot)
+    chemin_m, m, etat = lp._ouvrir_analyse(depot, ANALYSE)                                      # cas sain
+    assert etat["commit_courant"] == _commit(depot) and etat["arbre_propre"] is True
     with pytest.raises(GardeArret, match="≠ run du manifeste"):
         lp.lire_etiquetage(depot, "20261010-120001-autre", ANALYSE, d["taches"], travail)
     with pytest.raises(GardeArret, match="≠ run du manifeste"):

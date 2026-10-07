@@ -1,8 +1,9 @@
 """Revalidation courte de l'équivalence sur le domaine du pilote (T0.5).
 
-P-007 retenue par Lazar, lue comme le plan (a) plus une revalidation courte avant le pilote (R-085, lecture à confirmer)
-; remarque CL-3 de la contre-lecture 1 du pilote. Préenregistrement : `prereg/T0.5-revalidation-equivalence-pilote-v1.md`
-(brouillon 3 : contre-lecture RV-1 à RV-23).
+P-007 retenue par Lazar, lue comme le plan (a) plus une revalidation courte avant le pilote (R-085 ; lecture confirmée
+par Lazar le 2026-10-07, R-094) ; remarque CL-3 de la contre-lecture 1 du pilote. Préenregistrement :
+`prereg/T0.5-revalidation-equivalence-pilote-v1.md` (brouillon 4 : contre-lecture RV-1 à RV-23, vérification courte
+W-1 à W-14).
 
 Deux bras de noyau d'attention (« defaut », puis « math ») jouent les mêmes épisodes : agent honnête, tâches
 d'entraînement de l'extraction scellée aux énoncés les plus longs (jamais une tâche d'évaluation du pilote), mêmes
@@ -421,6 +422,20 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
         raise
 
 
+def exiger_echeance_bras(echeance: float, bras: str) -> None:
+    """Échéance du bras contrôlée avant le repère (vérification 2, W-3) ; la phase « chemin » la reçoit aussi."""
+    if time.perf_counter() > echeance:
+        raise GardeArret(f"limite de durée du bras {bras} dépassée avant le repère")
+
+
+def exiger_carte_a100(nom: str) -> str:
+    """Domaine revalidé : A100 80 Go (P-007 ; vérification 2, W-13). Une autre carte est un écart au préenregistrement :
+    arrêt consigné avant tout bras, nœud."""
+    if "A100" not in nom:
+        raise GardeArret(f"carte « {nom} » : le domaine revalidé est une A100 (écart au préenregistrement, nœud)")
+    return nom
+
+
 def _jouer_bras(modele, fmt, bras, plan, ids_episodes, g, config, echeance) -> dict:
     """Épisodes et rejeu du lot 0 d'un bras, garde différée sur toutes les actions ; passes uniques du repère en
     demi-précision sur les plus longues transcriptions ; noyaux permis consignés (RV-13)."""
@@ -474,6 +489,7 @@ def _executer_apres_manifeste(config, racine, chemin_m, manifeste, plan, ids_epi
     reel = config["mode"] == "reel"
     reglages = regler_determinisme(config["fils"], "cuda" if reel else "cpu")
     memoire_carte = exiger_memoire_carte(config["memoire_carte_min_gio"]) if reel else None
+    carte = exiger_carte_a100(torch.cuda.get_device_name(0)) if reel else None
     graine_jouet = graine_entiere(g["modele-jouet"])
     echeance_run = debut + float(config["duree_max_s"])
     resultats = {}
@@ -496,6 +512,8 @@ def _executer_apres_manifeste(config, racine, chemin_m, manifeste, plan, ids_epi
         _liberer()
         mesures = domaine_et_garde(r["fiches"])
         projetee = duree_projetee_pilote(r["chrono"], len(ids_episodes))
+        if reel and (r["memoire_pic_gio"] is None or projetee is None):        # R7 et R8 jamais lues sans mesure (W-14)
+            raise GardeArret(f"bras {bras} : pic de mémoire ou durée projetée absents en mode réel")
         ecrire_resultat(racine, chemin_m, f"episodes-{bras}", {"fiches": r["fiches"]})
         ecrire_resultat(racine, chemin_m, f"mesures-{bras}", {
             "mesures": mesures, "controle_negatif": r["controle_negatif"], "chrono": r["chrono"],
@@ -504,11 +522,22 @@ def _executer_apres_manifeste(config, racine, chemin_m, manifeste, plan, ids_epi
             "repere_transcriptions": {k: len(v) for k, v in r["repere_ids"].items()}})
         # repère (et, pour « defaut », phase « chemin ») en simple précision, dès la fin du bras (RV-1)
         etat["etape"] = f"repère et chemin {bras}"
-        reference = _modele_reference(config, graine_jouet)
-        with noyau("math"):
-            acts_ref = _activations(reference, r["repere_ids"], config["couches"])
-        repere = statistiques_repere(r["acts_bas"], acts_ref, config["couches"])
-        chemin = _phase_chemin(reference, fmt, plan, g, config, echeance_run) if bras == "defaut" else None
+        exiger_echeance_bras(echeance, bras)           # l'échéance du bras borne aussi le repère et le chemin (W-3)
+        reference = None
+        try:
+            reference = _modele_reference(config, graine_jouet)
+            with noyau("math"):
+                acts_ref = _activations(reference, r["repere_ids"], config["couches"])
+            repere = statistiques_repere(r["acts_bas"], acts_ref, config["couches"])
+            chemin = _phase_chemin(reference, fmt, plan, g, config, echeance) if bras == "defaut" else None
+        except torch.cuda.OutOfMemoryError as exc:  # panne de mémoire pendant le repère ou le chemin (W-2) : comme
+            reference = None                        # pendant le bras : consignée, bras non conforme, l'autre se joue
+            _liberer()
+            lecture = lire_bras({}, {}, None, None, config,
+                                panne=f"mémoire pendant le repère ou la phase « chemin » : {exc}"[:500])
+            ecrire_resultat(racine, chemin_m, f"lecture-{bras}", {"lecture": lecture})
+            etat["lectures"][bras] = lecture
+            continue
         del reference
         _liberer()
         zone = garde_zone_generee(r["fiches"], config["tolerance_equivalence"], config["positions_min_controle_negatif"])
@@ -526,11 +555,13 @@ def _executer_apres_manifeste(config, racine, chemin_m, manifeste, plan, ids_epi
         resultats[bras] = {"mesures": mesures, "repere": repere, "zone_generee": zone, "audit": audit,
                            "controle_negatif": r["controle_negatif"], "rejeu_identique": r["rejeu_identique"],
                            "memoire_pic_gio": r["memoire_pic_gio"], "duree_projetee_episodes_pilote_s": projetee,
+                           "longueur_remplie_max": r["chrono"].get("longueur_remplie_max"),
                            "chemin": None if chemin is None else chemin["lecture"]}
     etat["etape"] = "résumé"
     noyau_retenu, proposition = choisir_noyau(etat["lectures"])
     resume = {"lectures": etat["lectures"], "noyau_retenu": noyau_retenu, "noeud": noyau_retenu is None,
               "proposition_au_noeud": proposition, "reglages": reglages, "memoire_carte_gio": memoire_carte,
+              "carte": carte,
               "domaine_enonces": domaine_enonces,
               "reserves": ([] if domaine_enonces["couvre_le_pilote"] else
                            ["énoncés de la revalidation plus courts que le plus long énoncé du pilote (RV-5)"])

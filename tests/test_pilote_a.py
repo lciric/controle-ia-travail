@@ -114,6 +114,9 @@ def test_noter_ensembles_sans_imputation():
     sorties = pa.noter_ensembles(_modele(), FMT, demandes, {"j0": 1, "j1": 2}, lot=2, max_nouveaux=5, temperature=1.0)
     assert [s["cle"] for s in sorties] == ["j0", "j1"]
     assert all(s["score"] is None and s["anomalies"] and s["jetons_reponse"] <= 5 for s in sorties)
+    with pytest.raises(GardeArret, match="limite de durée"):           # échéance à chaque lot (D-22 ; vérification 3, F-2)
+        pa.noter_ensembles(_modele(), FMT, demandes, {"j0": 1, "j1": 2}, lot=2, max_nouveaux=5, temperature=1.0,
+                           echeance=0.0)
 
 
 def test_logits_independants_du_remplissage():
@@ -364,6 +367,42 @@ def test_jetons_jouet_et_lanceur_sans_substitution(depot, monkeypatch):
     app = json.loads((depot / "diag" / "20261006-170007-pilote-jouet" / "appariements.json").read_text(encoding="utf-8"))
     assert resume["episodes"] == 4 and app["resultat"]["appariements"]
     assert all(0.0 <= a["p_oui"] <= 1.0 for a in app["resultat"]["appariements"])
+
+
+def test_lanceur_ordre_des_etapes_arret_pendant_d(depot, monkeypatch):
+    """D-6 (vérification 3, F-2) : notations décisives des deux juges, puis appariement, puis notations descriptives de
+    D. Un arrêt pendant les notations de D laisse écrits les épisodes, les notations décisives et l'appariement ;
+    `arret.json` consigne l'étape."""
+    from controle_ia.manifeste import verifier_resultat
+    vrai_noter, appels = lp.noter_ensembles, []
+
+    def noter(m, fmt, dem, graines_, *a, **k):
+        descriptives = [d for d in dem if d["episode"].endswith("/e1")]
+        appels.append("descriptives" if descriptives else "decisives")
+        if descriptives:
+            raise GardeArret("arrêt simulé pendant les notations de D")
+        return vrai_noter(m, fmt, dem, graines_, *a, **k)
+
+    # le modèle jouet ne forme pas d'ensemble : des demandes et une paire factices font appeler les juges et l'appariement
+    monkeypatch.setattr(lp, "demandes_de_notation", lambda fiches, par_id, config, nom: [
+        {"cle": f"juge-{nom}/{x['episode']}/passe-{p}", "episode": x["episode"], "questions": "q",
+         "ensemble": "PROPOSAL 1: x", "classification": None, "variante": "b0"}
+        for x in fiches for p in range(lp.passes_de(x["episode"], config))])
+    monkeypatch.setattr(lp, "noter_ensembles", noter)
+    monkeypatch.setattr(lp, "paires_d_appariement", lambda fiches, par_id: [
+        {"cle": "t/e0/1/C1", "proposition": "a dense baseline", "cible": "a dense baseline", "famille": "controls"}])
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    run = "20261006-170008-pilote-jouet"
+    with pytest.raises(GardeArret, match="arrêt simulé pendant les notations de D"):
+        lp.executer(_config_lanceur(), depot, run, None, str(f))
+    d = depot / "diag" / run
+    assert appels == ["decisives", "decisives", "descriptives"]
+    assert {x.name for x in d.glob("*.json")} == {"episodes.json", "notations-jouet-8B-decisives.json",
+                                                  "notations-jouet-3B-decisives.json", "appariements.json",
+                                                  "arret.json"}
+    r = verifier_resultat(depot, d / "arret.json")["resultat"]
+    assert r["etape"] == "notations descriptives par jouet-8B" and r["partiel"]["appariement_ecrit"] == "jouet-8B"
 
 
 def test_signal_term_devient_un_arret_consigne():

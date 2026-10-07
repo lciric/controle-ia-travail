@@ -21,7 +21,8 @@
 #   DEPOT_URL     défaut https://github.com/lciric/controle-ia.git
 #   GH_TOKEN      jeton GitHub à grain fin (dépôt distant GitHub) ; lu par un assistant d'identification, jamais écrit
 #   HF_TOKEN      jeton Hugging Face en lecture (mode reel) ; lu par huggingface_hub
-#   BRANCHE       défaut calcul/t05-pilote-v1 (revalidation : calcul/t05-revalidation-v1) ; les vecteurs du pilote vont
+#   BRANCHE       défaut calcul/t05-pilote-<MODE>-v1 (revalidation : calcul/t05-revalidation-<MODE>-v1 ; le mode dans le
+#                 nom : une répétition jouet n'occupe pas la branche du run réel, W-11) ; les vecteurs du pilote vont
 #                 sur une branche à part, donnees/t05/<run>. Une branche qui existe déjà sur le dépôt distant arrête avant
 #                 tout calcul : un relancement prend une branche nouvelle (…-v2), jamais une réécriture (R12 ; RV-14)
 #   TESTS_ATTENDUS nombre de tests attendus (sans préenregistrement seulement) ; sinon lu dans le préenregistrement
@@ -36,8 +37,8 @@ ETUDE="${ETUDE:-pilote}"
 MODE="${MODE:-reel}"
 DEPOT_URL="${DEPOT_URL:-https://github.com/lciric/controle-ia.git}"
 case "$ETUDE" in
-    pilote) BRANCHE="${BRANCHE:-calcul/t05-pilote-v1}"; PREREG="${PREREG:-prereg/T0.5-pilote-8B-v1.md}" ;;
-    revalidation) BRANCHE="${BRANCHE:-calcul/t05-revalidation-v1}"
+    pilote) BRANCHE="${BRANCHE:-calcul/t05-pilote-$MODE-v1}"; PREREG="${PREREG:-prereg/T0.5-pilote-8B-v1.md}" ;;
+    revalidation) BRANCHE="${BRANCHE:-calcul/t05-revalidation-$MODE-v1}"
                   PREREG="${PREREG:-prereg/T0.5-revalidation-equivalence-pilote-v1.md}" ;;
     *) echo "ETUDE=$ETUDE : pilote ou revalidation" >&2; exit 2 ;;
 esac
@@ -71,11 +72,62 @@ git config credential.helper "$AIDE_GIT"
 git config user.name "instance de calcul (T0.5)"
 git config user.email "instance-calcul@invalid"
 git checkout -q "$COMMIT"
-if git ls-remote --exit-code --heads origin "$BRANCHE" >/dev/null 2>&1; then
-    echo "branche $BRANCHE déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…)" >&2
-    exit 2
-fi
+# branche neuve (RV-14) : code 0, la branche existe (arrêt) ; code 2, elle n'existe pas (suite) ; tout autre code, la
+# vérification est impossible (dépôt distant injoignable) : arrêt, jamais de repli silencieux (W-9). Nom complet exigé.
+code_branche=0
+git ls-remote --exit-code origin "refs/heads/$BRANCHE" >/dev/null 2>&1 || code_branche=$?
+case "$code_branche" in
+    0) echo "branche $BRANCHE déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…)" >&2
+       exit 2 ;;
+    2) ;;
+    *) echo "vérification de la branche $BRANCHE impossible (git ls-remote, code $code_branche) : arrêt avant tout calcul" >&2
+       exit 2 ;;
+esac
 git checkout -q -b "$BRANCHE"
+
+# Lecture précoce du préenregistrement (W-1, W-10), avant toute installation, donc avant de payer la carte : présence,
+# nombre de tests attendus, chemins cités ; présence dans l'arbre du commit de la configuration et des fichiers de tâches
+# (sous donnees/<run d'extraction>/, ajoutés de force au suivi selon N-014 (a)) et de leurs sceaux, empreintes contrôlées.
+# Le lanceur Python compare ensuite chaque empreinte à celle que cite le préenregistrement.
+lire_chemin() { sed -n "s/.*$1 : \`\\([^\`]*\\)\`.*/\\1/p" "$PREREG" | head -1; }
+if [ "$PREREG_ABSENT" = 1 ]; then
+    ATTENDUS="${TESTS_ATTENDUS:-}"
+    : "${CONFIG:?CONFIG obligatoire sans préenregistrement}"
+    if [ "$ETUDE" = pilote ]; then
+        : "${TACHES:?TACHES obligatoire sans préenregistrement}"
+    else
+        : "${ENTRAINEMENT:?ENTRAINEMENT obligatoire sans préenregistrement}" "${EVALUATION:?EVALUATION obligatoire sans préenregistrement}"
+    fi
+    CITES=()
+else
+    [ -f "$PREREG" ] || { journal "préenregistrement $PREREG absent au commit $COMMIT : arrêt avant l'installation"; exit 2; }
+    ATTENDUS=$(sed -n "s/.*Tests attendus : \`\([0-9]*\)\`.*/\1/p" "$PREREG" | head -1)
+    [ -n "$ATTENDUS" ] || { journal "nombre de tests attendus introuvable dans $PREREG : arrêt avant l'installation"; exit 2; }
+    CONFIG=$(lire_chemin "Chemin de la configuration")
+    if [ "$ETUDE" = pilote ]; then
+        TACHES=$(lire_chemin "Chemin des tâches")
+        CITES=("$TACHES")
+    else
+        ENTRAINEMENT=$(lire_chemin "Chemin des tâches d'entraînement")
+        EVALUATION=$(lire_chemin "Chemin des tâches d'évaluation")
+        CITES=("$ENTRAINEMENT" "$EVALUATION")
+    fi
+    for f in "$CONFIG" "${CITES[@]}"; do
+        [ -n "$f" ] || { journal "chemin de la configuration ou des tâches introuvable dans $PREREG : arrêt avant l'installation"; exit 2; }
+    done
+    [ -f "$CONFIG" ] || { journal "configuration $CONFIG absente de l'arbre du commit $COMMIT : arrêt avant l'installation"; exit 2; }
+    for f in "${CITES[@]}"; do
+        if [ ! -f "$f" ] || [ ! -f "$f.sha256" ]; then
+            journal "fichier de tâches $f ou son sceau absent de l'arbre du commit $COMMIT (ajout forcé de N-014 manquant ?) : arrêt avant l'installation"
+            exit 2
+        fi
+        if ! (cd "$(dirname "$f")" && sha256sum -c --quiet "$(basename "$f").sha256" >/dev/null 2>&1); then
+            journal "fichier de tâches $f : empreinte différente de son sceau : arrêt avant l'installation"
+            exit 2
+        fi
+    done
+    journal "préenregistrement lu : $ATTENDUS tests attendus ; configuration $CONFIG ; tâches ${CITES[*]} présentes et scellées"
+fi
 
 pousser() { git push -q origin "$BRANCHE"; }
 traces() {
@@ -180,13 +232,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     exit 1
 fi
 ETAPE="tests"
-if [ "$PREREG_ABSENT" = 1 ]; then
-    ATTENDUS="${TESTS_ATTENDUS:-}"
-else
-    ATTENDUS=$(sed -n "s/.*Tests attendus : \`\([0-9]*\)\`.*/\1/p" "$PREREG" | head -1)
-    [ -n "$ATTENDUS" ] || { journal "nombre de tests attendus introuvable dans $PREREG : arrêt"; consigner_arret "tests"; exit 1; }
-fi
-if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider >"$TRAVAIL/tests.txt" 2>"$TRAVAIL/tests.err"; then
+if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider --color=no >"$TRAVAIL/tests.txt" 2>"$TRAVAIL/tests.err"; then
     tail -n 5 "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" | tee -a "$JOURNAL"
     journal "tests en échec : arrêt"
     consigner_arret "tests"
@@ -200,28 +246,11 @@ if [ -n "$ATTENDUS" ] && ! printf '%s\n' "$DERNIERE" | grep -Eq "^$ATTENDUS pass
     exit 1
 fi
 
-ETAPE="lecture du préenregistrement"
+ETAPE="lancement"
 ARGS=()
-lire_chemin() { sed -n "s/.*$1 : \`\\([^\`]*\\)\`.*/\\1/p" "$PREREG" | head -1; }
 if [ "$PREREG_ABSENT" = 1 ]; then
-    : "${CONFIG:?CONFIG obligatoire sans préenregistrement}"
-    if [ "$ETUDE" = pilote ]; then
-        : "${TACHES:?TACHES obligatoire sans préenregistrement}"
-    else
-        : "${ENTRAINEMENT:?ENTRAINEMENT obligatoire sans préenregistrement}" "${EVALUATION:?EVALUATION obligatoire sans préenregistrement}"
-    fi
     journal "répétition sans préenregistrement (jouet, non décisive)"
 else
-    [ -f "$PREREG" ] || { journal "préenregistrement $PREREG absent au commit $COMMIT : arrêt"; exit 1; }
-    CONFIG=$(lire_chemin "Chemin de la configuration")
-    if [ "$ETUDE" = pilote ]; then
-        TACHES=$(lire_chemin "Chemin des tâches")
-        { [ -n "$CONFIG" ] && [ -n "$TACHES" ]; } || { journal "chemins de la configuration ou des tâches introuvables dans $PREREG : arrêt"; exit 1; }
-    else
-        ENTRAINEMENT=$(lire_chemin "Chemin des tâches d'entraînement")
-        EVALUATION=$(lire_chemin "Chemin des tâches d'évaluation")
-        { [ -n "$CONFIG" ] && [ -n "$ENTRAINEMENT" ] && [ -n "$EVALUATION" ]; } || { journal "chemins de la configuration ou des tâches introuvables dans $PREREG : arrêt"; exit 1; }
-    fi
     ARGS=(--prereg "$PREREG")
 fi
 if [ "$ETUDE" = pilote ]; then

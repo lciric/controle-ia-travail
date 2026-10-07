@@ -34,9 +34,9 @@ from pathlib import Path
 
 import numpy as np
 
-from ..gardes import GardeArret
+from ..gardes import GardeArret, etat_git
 from ..harnais.validation_reelle import ENTROPIE_CITEE, exiger_code_importe_sous
-from ..manifeste import creer_manifeste, ecrire_resultat, generateur, lire_manifeste, verifier_resultat
+from ..manifeste import creer_manifeste, ecrire_resultat, generateur, lire_manifeste, verifier_resultat, versions
 from ..scellement import empreinte, verifier
 from .analyse_pilote import (decomposition_complete, difference_appariee, intervalle_kappa_par_tache,
                              intervalles_parts_comptes, kappa_pondere, masse_lisible, regle_plan_b, tirer_paires)
@@ -220,7 +220,8 @@ def lettre(episode: str, passe: int) -> str | None:
 
 def format_strict(texte: str) -> bool:
     """Format strict (CL-16) : exactement les six champs, chacun une fois, dans l'ordre, la ligne ACTION en tête
-    (blancs de tête tolérés) ; rien avant. Ce qui suit la ligne PREDICTION en fait partie : le format strict ne
+    (lignes vides de tête tolérées ; une espace ou une tabulation avant ACTION, sur sa ligne, rend l'action non
+    stricte : vérification 3, F-4) ; rien avant. Ce qui suit la ligne PREDICTION en fait partie : le format strict ne
     distingue pas une prédiction de plusieurs lignes d'un ajout (écrit au préenregistrement, D-9)."""
     if not texte.lstrip().startswith("ACTION"):
         return False
@@ -485,11 +486,12 @@ def exiger_modules_cites(racine: Path, prereg: Path) -> str:
     return m.group(1)
 
 
-def _commit_courant(racine: Path) -> str:
-    r = subprocess.run(["git", "-C", str(racine), "rev-parse", "HEAD"], capture_output=True, text=True)
-    if r.returncode != 0:
-        raise GardeArret(f"commit courant illisible : {r.stderr.strip()}")
-    return r.stdout.strip()
+def _etat_courant(racine: Path) -> dict:
+    """Commit courant et état de l'arbre de travail, consignés à chaque étape de lecture (vérification 3, F-6) : un
+    module de lecture ramené à l'état cité sans commit passe la garde, mais l'arbre non propre se voit au résultat."""
+    e = etat_git(racine)
+    return {"commit_courant": e["commit"], "arbre_propre": e["propre"],
+            "statut_arbre": [x for x in e["statut"].splitlines() if x.strip()]}
 
 
 def _exiger_hors_depot(travail: str | Path, racine: Path) -> None:
@@ -499,9 +501,11 @@ def _exiger_hors_depot(travail: str | Path, racine: Path) -> None:
         raise GardeArret(f"dossier de travail {travail} dans le dépôt : il doit être hors du dépôt")
 
 
-def _ouvrir_analyse(racine: Path, run_analyse: str) -> tuple[Path, dict, str]:
+def _ouvrir_analyse(racine: Path, run_analyse: str) -> tuple[Path, dict, dict]:
     """Manifeste d'analyse ; garde des modules rejouée (préenregistrement intact, commit cité inchangé, code importé du
-    dépôt) ; constantes égales à celles du manifeste ; commit courant (D-5)."""
+    dépôt) ; constantes égales à celles du manifeste ; version de numpy égale à celle du manifeste (les tirages de
+    l'étiquetage ne se rejouent pas d'une version à l'autre ; vérification 3, F-6) ; commit courant et état de l'arbre
+    (D-5)."""
     chemin_m = racine / "runs" / run_analyse / "manifeste.json"
     m, _ = lire_manifeste(chemin_m)
     if m["preenregistrement"] is None:
@@ -513,7 +517,11 @@ def _ouvrir_analyse(racine: Path, run_analyse: str) -> tuple[Path, dict, str]:
         raise GardeArret("commit cité ≠ commit du manifeste d'analyse")
     if m["config"]["constantes"] != constantes():
         raise GardeArret("constantes de lecture différentes de celles du manifeste d'analyse")
-    return chemin_m, m, _commit_courant(racine)
+    numpy_manifeste, numpy_courant = m["versions"].get("numpy"), versions().get("numpy")
+    if numpy_manifeste != numpy_courant:
+        raise GardeArret(f"version de numpy {numpy_courant} ≠ {numpy_manifeste} du manifeste d'analyse : les tirages "
+                         "de l'étiquetage ne se rejouent pas ; reprendre la version du manifeste")
+    return chemin_m, m, _etat_courant(racine)
 
 
 # --- Étiquetage de l'appariement (validation, CL-10) -------------------------------------------------------------
@@ -688,7 +696,7 @@ def lire_etiquetage(racine: Path, run_pilote: str, run_analyse: str, chemin_tach
     des lots scellés avant l'étiquetage ; étiquettes de tous les lots (dernière tentative conforme) ; éléments et
     étiquettes scellés ensemble dans `diag/` (sans texte). Un lot sans tentative conforme arrête (à refaire)."""
     racine = Path(racine)
-    chemin_m, m, commit = _ouvrir_analyse(racine, run_analyse)
+    chemin_m, m, etat = _ouvrir_analyse(racine, run_analyse)
     if m["config"]["run_pilote"] != run_pilote:
         raise GardeArret(f"run du pilote {run_pilote} ≠ run du manifeste d'analyse {m['config']['run_pilote']}")
     ech = verifier_resultat(racine, racine / "diag" / run_analyse / "echantillon-etiquetage.json")["resultat"]
@@ -716,8 +724,7 @@ def lire_etiquetage(racine: Path, run_pilote: str, run_analyse: str, chemin_tach
     if set(etiquettes) != {x["id"] for x in elements}:
         raise GardeArret("étiquettes ≠ éléments de l'échantillon")
     ecrire_resultat(racine, chemin_m, "etiquettes", {
-        "elements": [dict(x, etiquette=etiquettes[x["id"]]) for x in elements], "tentatives": tentatives,
-        "commit_courant": commit})
+        "elements": [dict(x, etiquette=etiquettes[x["id"]]) for x in elements], "tentatives": tentatives, **etat})
     return {"etiquettes": len(etiquettes), "tentatives": tentatives}
 
 
@@ -920,15 +927,14 @@ def analyser(racine: Path, run_pilote: str, run_analyse: str, chemin_taches: str
     """Toutes les mesures et la lecture mécanique ; écrit `diag/<run_analyse>/lecture.json` (commit courant, drapeaux
     « sous format faible » et « lecture suspendue » compris ; D-5, D-23)."""
     racine = Path(racine)
-    chemin_m, m, commit = _ouvrir_analyse(racine, run_analyse)
+    chemin_m, m, etat = _ouvrir_analyse(racine, run_analyse)
     if m["config"]["run_pilote"] != run_pilote:
         raise GardeArret(f"run du pilote {run_pilote} ≠ run du manifeste d'analyse {m['config']['run_pilote']}")
     p = charger_pilote(racine, run_pilote, chemin_taches)
     if p["manifeste_sha256"] != m["config"]["manifeste_pilote_sha256"]:
         raise GardeArret("manifeste du pilote différent de celui de l'analyse")
     g = m["graines"]
-    entete = {"run_pilote": run_pilote, "commit_lecture_cite": m["config"]["commit_lecture_cite"],
-              "commit_courant": commit}
+    entete = {"run_pilote": run_pilote, "commit_lecture_cite": m["config"]["commit_lecture_cite"], **etat}
     if p["episodes"] is None:
         lecture = {**entete, "run_partiel": True, "lecture": "arrêt pendant les épisodes : aucune lecture ; nœud",
                    "arret": p["arret"], "lecture_suspendue": False}

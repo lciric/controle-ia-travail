@@ -7,8 +7,10 @@
 #   ETUDE     pilote (défaut) ou revalidation (revalidation courte de l'équivalence, P-007, lecture de R-085, avant le pilote)
 #   GH_TOKEN  jeton GitHub à grain fin, limité à lciric/controle-ia (contenu en lecture et écriture)
 #   HF_TOKEN  jeton Hugging Face en lecture (licences Llama 3.1 et Llama 3.2 acceptées sur le compte)
-# Sortie : journal sur la sortie standard (lu par `vastai logs <identifiant>`), résultats poussés sur calcul/t05-pilote-v1
-# (ou sur BRANCHE), vecteurs par action sur donnees/t05/<run>.
+#   BRANCHE   (facultatif) branche de résultats ; défaut calcul/t05-<ETUDE>-<MODE>-v1. Une branche qui existe déjà sur le
+#             dépôt distant arrête avant tout calcul : un relancement passe ici une branche nouvelle (…-v2 ; W-11)
+# Sortie : journal sur la sortie standard (lu par `vastai logs <identifiant>`), résultats poussés sur
+# calcul/t05-<ETUDE>-<MODE>-v1 (ou sur BRANCHE), vecteurs par action du pilote sur donnees/t05/<run>.
 # Pour l'essai local seulement : DEPOT_URL, RACINE_AMORCE, MODE=jouet, VENV_EXISTANT, PREREG, PREREG_ABSENT, CONFIG,
 # TACHES (transmis au script du pilote).
 set -uo pipefail
@@ -44,7 +46,7 @@ if { [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; } && [ -d "$T/controle-ia/.git"
         for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err" "$T/run.err" "$T/run.json"; do [ -f "$f" ] && cp "$f" "$d/"; done
         (cd "$d" && sha256sum -- * > empreintes.sha256) || true
         git add -A runs diag "$d" && git commit -qm "T0.5 — plafond de l'amorce atteint : résultats partiels et traces" || true
-        git push -q origin "${BRANCHE:-calcul/t05-$ETUDE-v1}" || echo "AMORCE : poussée impossible"
+        git push -q origin "${BRANCHE:-calcul/t05-$ETUDE-${MODE:-reel}-v1}" || echo "AMORCE : poussée impossible"
     )
 fi
 for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err"; do

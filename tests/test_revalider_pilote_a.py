@@ -325,3 +325,93 @@ def test_rejeu_different_lu_non_conforme(depot, monkeypatch):
 def test_signal_term_arrete():
     with pytest.raises(GardeArret, match="TERM"):
         rv._signal_term(15, None)
+
+
+# --- vérification courte 2 (W-2, W-3, W-7, W-13, W-14) ------------------------------------------------------------
+
+def test_carte_a100_gardee():
+    """W-13 : le domaine revalidé est une A100 ; une autre carte arrête avant tout bras."""
+    assert rv.exiger_carte_a100("NVIDIA A100-SXM4-80GB") == "NVIDIA A100-SXM4-80GB"
+    assert rv.exiger_carte_a100("NVIDIA A100 80GB PCIe")
+    with pytest.raises(GardeArret, match="A100"):
+        rv.exiger_carte_a100("NVIDIA H100 80GB HBM3")
+
+
+def test_echeance_du_bras_cas_sain_et_artefact(depot, monkeypatch):
+    """W-3 et W-7 (b) : l'échéance du bras est contrôlée avant le repère (cas sain : à venir ; artefact : passée) ; la
+    phase « chemin » reçoit l'échéance du bras, non celle du run ; un dépassement arrête, consigné à l'étape « repère et
+    chemin »."""
+    import time
+    rv.exiger_echeance_bras(time.perf_counter() + 60, "defaut")
+    with pytest.raises(GardeArret, match="limite de durée du bras defaut"):
+        rv.exiger_echeance_bras(time.perf_counter() - 1, "defaut")
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    vrai, recues = rv._phase_chemin, []
+
+    def phase(reference, fmt, plan, g, config, echeance):
+        recues.append(echeance - time.perf_counter())
+        return vrai(reference, fmt, plan, g, config, echeance)
+    monkeypatch.setattr(rv, "_phase_chemin", phase)
+    rv.executer(dict(CONFIG, duree_max_s=10 ** 6), depot, "20261007-000006-revalidation-echeance", None, e, v,
+                entropie_essai=11)
+    assert len(recues) == 1 and 0 < recues[0] <= CONFIG["duree_max_bras_s"]       # borne du bras, pas 10**6 s
+    committer(depot)                                                               # le run suivant exige un arbre propre
+
+    def depasse(echeance, bras):
+        raise GardeArret(f"limite de durée du bras {bras} dépassée avant le repère (simulée)")
+    monkeypatch.setattr(rv, "exiger_echeance_bras", depasse)
+    run = "20261007-000007-revalidation-echeance"
+    with pytest.raises(GardeArret, match="simulée"):
+        rv.executer(CONFIG, depot, run, None, e, v, entropie_essai=11)
+    arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
+    assert arret["etape"] == "repère et chemin defaut" and arret["bras_lus"] == []
+    assert (depot / "diag" / run / "mesures-defaut.json.sha256").is_file()           # le bras joué reste écrit
+
+
+def test_panne_de_memoire_pendant_le_repere(depot, monkeypatch):
+    """W-2 et W-7 (d) : une panne de mémoire pendant le repère ou la phase « chemin » est consignée comme pendant le
+    bras : bras non conforme, l'autre bras se joue et se lit."""
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    vrai, appels = rv._modele_reference, []
+
+    def reference(config, graine):
+        appels.append(1)
+        if len(appels) == 1:
+            raise torch.cuda.OutOfMemoryError("mémoire simulée au repère")
+        return vrai(config, graine)
+    monkeypatch.setattr(rv, "_modele_reference", reference)
+    resume = rv.executer(CONFIG, depot, "20261007-000008-revalidation-panne-repere", None, e, v, entropie_essai=11)
+    d = resume["lectures"]["defaut"]
+    assert d["panne"].startswith("mémoire pendant le repère") and not d["conforme"]
+    assert "panne" not in resume["lectures"]["math"] and "R1_garde_saine" in resume["lectures"]["math"]
+    assert resume["bras"]["math"]["longueur_remplie_max"] > 0                          # W-6 : au résumé
+
+
+def test_signal_term_dans_un_sous_processus(depot):
+    """W-7 (c) : un vrai signal TERM, envoyé par l'identifiant du processus (R10) au lanceur en mode jouet après son
+    manifeste, devient un arrêt consigné (arret.json, motif « signal TERM »), code de sortie 1."""
+    import os
+    import signal
+    import subprocess
+    import sys
+    import time
+    from pathlib import Path
+    (depot / "config.json").write_text(json.dumps(dict(CONFIG, T=4)), encoding="utf-8")
+    sceller(depot / "config.json")
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    run = "20261007-000009-revalidation-term"
+    src = str(Path(rv.__file__).resolve().parents[2])
+    env = dict(os.environ, PYTHONPATH=src, PYTHONDONTWRITEBYTECODE="1")
+    p = subprocess.Popen([sys.executable, "-m", "controle_ia.environnements.revalider_pilote_a", "--config",
+                          "config.json", "--entrainement", e, "--evaluation", v, "--run-id", run],
+                         cwd=depot, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    manifeste = depot / "runs" / run / "manifeste.json"
+    limite = time.monotonic() + 300
+    while not manifeste.exists() and p.poll() is None and time.monotonic() < limite:
+        time.sleep(0.05)
+    assert manifeste.exists() and p.poll() is None
+    os.kill(p.pid, signal.SIGTERM)
+    _, err = p.communicate(timeout=600)
+    assert p.returncode == 1 and "signal TERM" in err
+    arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
+    assert "signal TERM" in arret["motif"]
