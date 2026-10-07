@@ -20,7 +20,6 @@ import unicodedata
 from pathlib import Path
 
 from ..gardes import GardeArret
-from .propositions import TYPES_DONNEES, TYPES_PAPIER
 
 _FIGURE = re.compile(r"\[FIGURE\s*\d*\]|\bFig(?:ure|\.)\s*\d+|\bTable\s*\d+", re.I)
 _ECHAPPEMENT_MD = re.compile(r"\\([!-/:-@\[-`{-~])")
@@ -36,7 +35,17 @@ _INDICES_FUITE = re.compile(
     r"|analysis|solution)\b"
     r"|\b(?:in\s+)?this\s+(?:paper|work)\b", re.I)
 _CONTROLE = re.compile(r"[\x00-\x09\x0b-\x1f]")        # caractères de contrôle, sauf le saut de ligne
-_FORMULE = re.compile(r"\$[^$]*\$")
+_SUBSTITUT = re.compile(r"[\ud800-\udfff]")             # substitut isolé (« \ud835 » sans sa paire ; D-10)
+_DOLLAR = re.compile(r"(?<!\\)\$\$?")                    # délimiteur de formule : $ ou $$ non échappé
+_LIGNE_VIDE = re.compile(r"\n[ \t]*\n")
+_SAUT_MINUSCULE = re.compile(r"\n[a-z]")
+CONSEIL_BARRE = ("une barre oblique inverse de LaTeX s'écrit doublée dans une chaîne JSON (\\t, \\b, \\f, \\r, \\n "
+                 "sont des échappements)")
+# Valeurs de H.10 (2606.08892, invite H.10) ; l'ordre de TYPES_PAPIER est l'échelle du motif 2. Copiées ici pour que
+# les décisions de l'extraction ne dépendent pas du code du pilote (contre-lecture 2, D-8) ; un test vérifie leur accord
+# avec `propositions`.
+TYPES_PAPIER = ("theory_only", "mostly_theory", "mostly_experiments", "experiments_only")
+TYPES_DONNEES = ("synthetic_only", "mostly_synthetic", "mostly_real", "real_only", "not_applicable")
 MOTS_FUITE = 8          # mots consécutifs d'une citation de direction féconde repris par l'énoncé (fuite mécanique)
 
 
@@ -66,20 +75,57 @@ def _chaines(objet):
             yield from _chaines(v)
 
 
+def _extrait(s: str, i: int, rayon: int = 30) -> str:
+    """Une trentaine de caractères autour de la position i (messages, D-4)."""
+    return repr(s[max(0, i - rayon):i + rayon])
+
+
+def position_formule_corrompue(s: str) -> int | None:
+    """Position d'un saut de ligne venu d'une barre oblique inverse non doublée (CL-1 ; contre-lecture 2, D-1), ou None :
+    - « \\n » suivi de « abla » (« \\nabla » lu comme un saut de ligne), partout ;
+    - entre deux délimiteurs $ (ou $$) non échappés, appariés dans l'ordre, sans ligne vide entre eux : un saut de ligne
+      suivi d'une minuscule (« \\nu », « \\neq », « \\not »…).
+    Un segment qui couvre une ligne vide relie deux montants de deux paragraphes, pas une formule. Résidu déclaré : un
+    « \\nu » ou un « \\neq » qu'un montant en dollars désapparie, ou qui suit un saut de ligne voulu."""
+    i = s.find("\nabla")
+    if i >= 0:
+        return i
+    delims = list(_DOLLAR.finditer(s))
+    for ouvre, ferme in zip(delims[0::2], delims[1::2]):
+        segment = s[ouvre.end():ferme.start()]
+        if _LIGNE_VIDE.search(segment):
+            continue
+        m = _SAUT_MINUSCULE.search(segment)
+        if m:
+            return ouvre.end() + m.start()
+    return None
+
+
 def anomalies_texte(objet, fichier: str) -> list[str]:
     """Barres obliques inverses non doublées (CL-1) : en JSON, « \\theta », « \\beta », « \\frac », « \\rho » se lisent
     sans erreur comme tabulation, retour arrière, saut de page ou retour chariot, et « \\nabla » comme un saut de
-    ligne. Tout caractère de contrôle autre que le saut de ligne, et tout saut de ligne dans une formule $…$, est une
-    anomalie."""
+    ligne. Anomalies : tout caractère de contrôle autre que le saut de ligne ; un saut de ligne de formule
+    (`position_formule_corrompue`) ; un substitut isolé, que l'écriture en UTF-8 refuserait (D-10). Chaque message
+    situe la première occurrence (D-4)."""
     a = []
     for s in _chaines(objet):
-        if _CONTROLE.search(s):
-            a.append(_a("texte.controle", f"{fichier} : caractère de contrôle (barre oblique inverse non doublée ?) "
-                                          f"dans {s[:40]!r}"))
+        m = _CONTROLE.search(s)
+        if m:
+            a.append(_a("texte.controle", f"{fichier} : caractère de contrôle près de {_extrait(s, m.start())} ; "
+                                          f"{CONSEIL_BARRE} ; une tabulation copiée du papier se remplace par une "
+                                          "espace"))
             break
     for s in _chaines(objet):
-        if any("\n" in m.group(0) for m in _FORMULE.finditer(s)):
-            a.append(_a("texte.formule", f"{fichier} : saut de ligne dans une formule $…$ (« \\n » non doublé ?)"))
+        i = position_formule_corrompue(s)
+        if i is not None:
+            a.append(_a("texte.formule", f"{fichier} : saut de ligne dans une formule près de {_extrait(s, i)} ; "
+                                         f"{CONSEIL_BARRE} ; si les $ sont des montants, écrire les montants sans $"))
+            break
+    for s in _chaines(objet):
+        m = _SUBSTITUT.search(s)
+        if m:
+            a.append(_a("texte.substitut", f"{fichier} : caractère de substitution isolé près de "
+                                           f"{_extrait(s, m.start())} (échappement \\uD8xx sans sa paire)"))
             break
     return a
 
@@ -137,13 +183,15 @@ BORNES_CIBLES = {"controls": (3, 6), "fruitful_directions": (1, 3), "sterile_dir
 
 
 def nombre_positif(h) -> bool:
-    """Nombre strictement positif et fini, sans dépassement sur un très grand entier (CL-14) ; un booléen n'en est pas
-    un."""
-    if isinstance(h, bool):
+    """Nombre strictement positif et fini, convertible en flottant sans dépassement (CL-14 ; contre-lecture 2, D-11) ;
+    un booléen n'en est pas un."""
+    if isinstance(h, bool) or not isinstance(h, (int, float)):
         return False
-    if isinstance(h, int):
-        return h > 0
-    return isinstance(h, float) and math.isfinite(h) and h > 0
+    try:
+        f = float(h)          # un entier trop grand pour un flottant est refusé (le pilote calcule en flottants)
+    except OverflowError:
+        return False
+    return math.isfinite(f) and f > 0
 
 
 def anomalies_cibles(sortie: dict, texte_papier: str) -> list[str]:
@@ -203,7 +251,8 @@ def anomalies_fuite(sortie_h9: dict, cibles: dict, n: int = MOTS_FUITE) -> list[
     for it in items:
         if isinstance(it, dict) and _ngrammes(str(it.get("evidence", "")), n) & enonce:
             a.append(_a("h9.fuite_citation", f"l'énoncé reprend {n} mots consécutifs ou plus de la citation de "
-                                             f"{it.get('id')!r} (direction féconde) : il peut révéler l'approche"))
+                                             f"{it.get('id')!r} (direction féconde) : il peut révéler l'approche ; "
+                                             "corriger l'énoncé, pas la citation"))
     return a
 
 

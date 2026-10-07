@@ -71,3 +71,12 @@ def test_citation_tolere_typographie_et_blancs():
 def test_assemblage_refuse_toute_anomalie():
     with pytest.raises(GardeArret, match="anomalie"):
         ex.assembler_tache("x", dict(H9, research_questions="court"), H10, CIBLES, TEXTE)
+
+
+def test_valeurs_de_h10_d_accord_avec_le_pilote():
+    """Contre-lecture 2 de l'extraction, D-8 : les valeurs de H.10 sont copiées dans `extraction` (l'ordre des types de
+    papier est l'échelle du motif 2) ; elles doivent rester celles que lit le pilote."""
+    from controle_ia.environnements import extraction as ex
+    from controle_ia.environnements.propositions import TYPES_DONNEES, TYPES_PAPIER
+
+    assert ex.TYPES_PAPIER == tuple(TYPES_PAPIER) and set(ex.TYPES_DONNEES) == set(TYPES_DONNEES)

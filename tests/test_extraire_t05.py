@@ -26,7 +26,8 @@ TEXTE = ("Introduction. We study routers in mixture-of-experts models.\n"
          "Removing the load-balancing loss leads to expert collapse.\n"
          "We also ablate the number of experts from 8 to 64, a gap of -3 points.\n"
          "Training the largest model took 1,200 GPU hours on A100 GPUs.\n"
-         "Our main finding is that top-2 routing with capacity factor 1.25 matches *dense* quality, a 5\\% gain.\n")
+         "Our main finding is that top-2 routing with capacity factor 1.25 matches *dense* quality, a 5\\% gain.\n"
+         "We call this the \"capacity\" regime and the gate's load, a self-balancing effect.\n")
 H9 = {"affiliations": [{"author": "Lead Author 1", "institutions": ["Dept of CS, X University"]}],
       "research_questions": "Mixture-of-experts models route tokens to experts. " * 8,
       "costs": {"total": None, "splits": []}}
@@ -148,6 +149,27 @@ def _cas_sorties():
     c = copy.deepcopy(CIBLES)
     c["controls"][0]["description"] = "a dense baseline \beta with matched compute"
     cas["barre oblique cible"] = (H9, H10, c)
+    # contre-lecture 2 : montants en dollars (D-1), \nabla en $$…$$ et \nu (D-4), substitut isolé (D-10)
+    rq = H9["research_questions"]
+    cas["dollars deux paragraphes"] = (_avec(H9, research_questions=rq + " Training cost over $100M.\n\nLater runs "
+                                             "cost $5M."), H10, CIBLES)
+    cas["dollars échappés"] = (_avec(H9, research_questions=rq + " Over \\$100M.\n\nThen \\$5M."), H10, CIBLES)
+    cas["montant puis formule"] = (_avec(H9, research_questions=rq + " Over $100M.\n\nLet $\\theta$ be."), H10,
+                                   CIBLES)
+    cas["nabla en double dollar"] = (_avec(H9, research_questions=rq + " where $$\nabla f$$ is"), H10, CIBLES)
+    cas["nu corrompu"] = (_avec(H9, research_questions=rq + " with $a \nu$ fixed"), H10, CIBLES)
+    cas["substitut isolé"] = (_avec(H9, research_questions=rq + " x\ud835y"), H10, CIBLES)
+    for nom_tiret, tiret in (("U+2010", "\u2010"), ("U+2011", "\u2011"), ("U+2012", "\u2012"),
+                             ("U+2013", "\u2013"), ("U+2014", "\u2014")):
+        c = copy.deepcopy(CIBLES)
+        c["controls"][2]["evidence"] = f"We also ablate the number of experts from 8 to 64, a gap of {tiret}3 points."
+        cas[f"tiret {nom_tiret}"] = (H9, H10, c)
+    c = copy.deepcopy(CIBLES)
+    c["controls"][2]["evidence"] = "We also ablate the num\u00adber of experts from 8 to 64"
+    cas["trait d'union conditionnel"] = (H9, H10, c)
+    c = copy.deepcopy(CIBLES)
+    c["fruitful_directions"][0]["evidence"] = "We call this the \u201ccapacity\u201d regime and the gate\u2019s load"
+    cas["guillemets typographiques"] = (H9, H10, c)
     # fuite mécanique (CL-26) : l'énoncé reprend 8 mots consécutifs de la citation d'une direction féconde
     c = copy.deepcopy(CIBLES)
     c["fruitful_directions"][0]["evidence"] = "Our main finding is that top-2 routing with capacity factor 1.25"
@@ -168,7 +190,12 @@ def test_verifier_sortie_memes_codes_que_le_module(tmp_path, nom):
     assert (code == 0) == (not module["anomalies"])
     assert lignes[-1].startswith("OK" if not module["anomalies"] else "NOT OK")
     attendus = {"sain": [], "typographie": [], "h10 clé échappée": [], "h10 valeur échappée": [], "alertes": [],
-                "calcul 1000000000": [],
+                "calcul 100000000000": ["cibles.calcul_valeur"],
+                "dollars deux paragraphes": [], "dollars échappés": [], "montant puis formule": [],
+                "nabla en double dollar": ["texte.formule"], "nu corrompu": ["texte.formule"],
+                "substitut isolé": ["texte.substitut"], "tiret U+2010": [], "tiret U+2011": [], "tiret U+2012": [],
+                "tiret U+2013": [], "tiret U+2014": [], "trait d'union conditionnel": [],
+                "guillemets typographiques": [],
                 "barre oblique tabulation": ["texte.controle"], "barre oblique saut": ["texte.formule"],
                 "barre oblique cible": ["texte.controle"], "fuite mécanique": ["h9.fuite_citation"],
                 "identifiant non textuel": ["cibles.identifiant"], "bornes": ["cibles.bornes"]}
@@ -465,6 +492,9 @@ def test_deroule_complet(depot, tmp_path_factory, monkeypatch):
     assert bilan["entrainement"] == [ids[4], ids[5]] and bilan["entrainement_insuffisant"]
     assert bilan["statuts"][e0]["tentative"] == 3 and bilan["audit"] is None
     assert bilan["taux_echec_echantillon"]["echecs"] == 1
+    assert bilan["cibles_defectueuses_echantillon"] == {"defectueuses": 0, "controlees": 8}                # D-7
+    assert set(bilan["classification_et_calcul"]) == {"echantillon", "reprise"}
+    assert bilan["taches_assemblees"]["base"] == {"reported": 5, "estimated": 0}         # évaluation et entraînement
     taches = json.loads((depot / "donnees" / RUN / "taches-evaluation.json").read_text())["resultat"]["taches"]
     assert [t["identifiant"] for t in taches] == bilan["evaluation"] and all(t["questions"] for t in taches)
     # aucun texte des papiers dans diag/ (règle de sélection, section 9 ; nœud N-014)
@@ -545,6 +575,8 @@ def test_seuil_d_echecs_arrete_a_la_lecture(depot, tmp_path_factory, monkeypatch
     for pid in au["papiers"]:
         _juger(au["papiers"][pid]["dossier"])
     et.lire_contre_verification(depot, RUN, 2, _retours(au), ch=ch)
+    accord = json.loads((depot / "diag" / RUN / "accord-audit-cote-sale.json").read_text())["resultat"]
+    assert accord["cote"] == "sale" and accord["accord_echec"] == 0 and accord["echecs_audit"] == []   # D-6
     with pytest.raises(GardeArret, match="seuil"):
         et.reprises_dues(depot, RUN)
     with pytest.raises(GardeArret, match="seuil"):
@@ -565,7 +597,9 @@ def test_entrees_modifiees_anomalie_du_seul_papier(depot, tmp_path_factory, monk
     assert v["papiers"][ids[0]]["entrees_modifiees"] == ["verifier_sortie.py"]
 
 
-def test_desaccord_du_script_et_du_module_arrete(depot, tmp_path_factory, monkeypatch):
+def test_annonce_du_sous_agent_consignee_sans_arret(depot, tmp_path_factory, monkeypatch):
+    """Contre-lecture 2, D-2 et D-13 : un « OK » rendu face à une anomalie n'arrête plus rien (il est consigné) ; une
+    ligne hors forme est codée dans `diag/`, et sa forme brute ne va que dans `donnees/`."""
     _petit(monkeypatch)
     ch = _depot_de_test(depot)
     travail = tmp_path_factory.mktemp("travail")
@@ -573,8 +607,92 @@ def test_desaccord_du_script_et_du_module_arrete(depot, tmp_path_factory, monkey
     ids = sorted(prep["papiers"])
     for info in prep["papiers"].values():
         _repondre(info["dossier"], h9=_avec(H9, research_questions="court"))
+    hors = "I could not find a third control: the dense baseline is the only one"
+    v = et.valider(depot, RUN, 1, _retours(prep, {ids[0]: OK_LIGNE, ids[1]: hors}), ch=ch)
+    assert v["invalides"] == ids
+    assert v["papiers"][ids[0]]["retour"] == {"lancements": 1, "forme": "conforme", "annonce": "OK",
+                                              "accord_avec_le_module": False}
+    assert v["papiers"][ids[1]]["retour"]["forme"] == "retour.hors_format"
+    assert v["papiers"][ids[2]]["retour"]["accord_avec_le_module"] is True
+    assert hors not in (depot / "diag" / RUN / "validation-tentative-1.json").read_text()
+    assert hors in (depot / "donnees" / RUN / "details-validation-tentative-1.json").read_text()
+
+
+def test_desaccord_du_script_scelle_et_du_module_arrete(depot, tmp_path_factory, monkeypatch):
+    """D-2 : le module exécute la copie scellée du script sur chaque dossier aux entrées intactes ; un écart de codes,
+    dans un sens ou dans l'autre, est un désaccord en production et arrête (artefacts)."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    ids = sorted(prep["papiers"])
+    for pid, info in prep["papiers"].items():
+        _repondre(info["dossier"], h9=_avec(H9, research_questions="court") if pid == ids[0] else H9)
+    vrai = et.codes_du_script
+    assert vrai(depot / ch.dossier_procedure / "verifier-sortie-v1.py",
+                Path(prep["papiers"][ids[0]]["dossier"])) == ["h9.enonce_court"]          # cas sain : le vrai script
+    monkeypatch.setattr(et, "codes_du_script", lambda script, d: [])                       # artefact : il ne voit rien
     with pytest.raises(GardeArret, match="désaccord en production"):
-        et.valider(depot, RUN, 1, _retours(prep, {ids[0]: OK_LIGNE}), ch=ch)
+        et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    monkeypatch.setattr(et, "codes_du_script",                                             # artefact : il voit trop
+                        lambda script, d: vrai(script, d) + ["cibles.bornes"])
+    with pytest.raises(GardeArret, match="désaccord en production"):
+        et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    assert not (depot / "diag" / RUN / "validation-tentative-1.json").exists()
+
+
+def test_script_hors_forme_arrete(tmp_path):
+    panne = tmp_path / "panne.py"
+    panne.write_text("raise SystemExit(3)\n")
+    with pytest.raises(GardeArret, match="hors forme"):
+        et.codes_du_script(panne, tmp_path)
+    muet = tmp_path / "muet.py"
+    muet.write_text("print('fini')\n")
+    with pytest.raises(GardeArret, match="hors forme"):
+        et.codes_du_script(muet, tmp_path)
+
+
+def test_exclusions_au_dela_du_seuil_arretent_apres_la_tentative_2(depot, tmp_path_factory, monkeypatch):
+    """D-17 : au-delà du seuil de papiers invalides aux tentatives 1 et 2, arrêt scellé ; rien ne se tire ensuite."""
+    _petit(monkeypatch)
+    monkeypatch.setattr(et, "SEUIL_EXCLUSIONS_VALIDATION", 1)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    ids = sorted(prep["papiers"])
+    court = _avec(H9, research_questions="court")
+    for pid, info in prep["papiers"].items():
+        _repondre(info["dossier"], h9=court if pid in ids[:2] else H9)
+    et.valider(depot, RUN, 1, _retours(prep), ch=ch)
+    p2 = et.preparer(depot, RUN, travail, 2, ids[:2], ch=ch)
+    for pid in ids[:2]:
+        _repondre(p2["papiers"][pid]["dossier"], h9=court)
+    with pytest.raises(GardeArret, match="seuil 1"):
+        et.valider(depot, RUN, 2, _retours(p2), ch=ch)
+    arret = json.loads((depot / "diag" / RUN / "arret-exclusions-validation.json").read_text())["resultat"]
+    assert arret["exclus"] == ids[:2] and arret["codes"] == {"h9.enonce_court": 2}
+    with pytest.raises(GardeArret, match="rien ne se tire"):
+        et.echantillonner(depot, RUN, ch=ch)
+
+
+def test_avis_refaits_bornes(depot, tmp_path_factory, monkeypatch):
+    """D-16 : un avis et deux avis refaits au plus par papier et par rôle (ici, borne abaissée à 2)."""
+    _petit(monkeypatch)
+    monkeypatch.setattr(et, "AVIS_MAX_PAR_ROLE", 2)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    _, ech = _jusqu_a_l_echantillon(depot, travail, ch)
+    e0, e1 = ech["echantillon"]
+    cv = et.preparer_contre_verification(depot, RUN, travail, "echantillon", ch=ch)
+    _juger(cv["papiers"][e0]["dossier"])
+    lu = et.lire_contre_verification(depot, RUN, 1, _retours(cv), ch=ch)
+    assert lu["papiers"][e1]["codes"] == ["fichier.absent"]                  # mêmes codes que le script (D-11)
+    cv2 = et.preparer_contre_verification(depot, RUN, travail, "echantillon", [e1], ch=ch)
+    (Path(cv2["papiers"][e1]["dossier"]) / "avis.json").write_text("{", encoding="utf-8")
+    lu2 = et.lire_contre_verification(depot, RUN, 2, _retours(cv2), ch=ch)
+    assert lu2["papiers"][e1]["codes"] == ["json.illisible"]
+    with pytest.raises(GardeArret, match="2 avis « echantillon » préparés sans avis lisible"):
+        et.preparer_contre_verification(depot, RUN, travail, "echantillon", [e1], ch=ch)
 
 
 def test_fichiers_epingles_et_ordre_des_rondes(depot, tmp_path_factory, monkeypatch):
@@ -616,11 +734,16 @@ def test_gardes_des_fichiers_scelles_et_des_archives(depot, tmp_path):
         et.lire_donnees(depot, RUN, "essai", "0" * 64)
     with pytest.raises(GardeArret, match="R12"):
         et.ecrire_donnees(depot, RUN, "essai", {"a": 2})
+    assert et.ecrire_donnees(depot, RUN, "essai", {"a": 1}) == sha              # idempotent sur un contenu identique
+    with pytest.raises(GardeArret, match="non encodable"):                         # substitut isolé (D-10)
+        et.ecrire_donnees(depot, RUN, "substitut", {"a": "x\ud835"})
+    assert not (depot / "donnees" / RUN / "substitut.json").exists()
     cible = tmp_path / "a.tar"
     sha_a = et.archiver(cible, [("x/y.json", b"{}")])
     assert et.lire_archive(cible, sha_a) == {"x/y.json": b"{}"}
-    with pytest.raises(GardeArret, match="existe déjà"):
-        et.archiver(cible, [("x/y.json", b"{}")])
+    assert et.archiver(cible, [("x/y.json", b"{}")]) == sha_a                    # une étape interrompue se refait
+    with pytest.raises(GardeArret, match="existe déjà avec un autre contenu"):
+        et.archiver(cible, [("x/y.json", b"[]")])
     with pytest.raises(GardeArret, match="empreinte différente"):
         et.lire_archive(cible, "0" * 64)
     with pytest.raises(GardeArret, match="champ non rempli"):
@@ -630,6 +753,12 @@ def test_gardes_des_fichiers_scelles_et_des_archives(depot, tmp_path):
         et._exiger_retours({"p": {"derniere_ligne": 3, "lancements": 1}}, ["p"])
     with pytest.raises(GardeArret, match="mal formé"):
         et._exiger_retours({"p": {"derniere_ligne": "OK", "lancements": 0}}, ["p"])
+    with pytest.raises(GardeArret, match="mal formé"):                             # au plus deux relances (D-16)
+        et._exiger_retours({"p": {"derniere_ligne": "OK", "lancements": 4}}, ["p"])
+    with pytest.raises(GardeArret, match="mal formé"):                             # deux clés seulement (D-13)
+        et._exiger_retours({"p": {"derniere_ligne": "OK", "lancements": 1, "note": "x"}}, ["p"])
+    with pytest.raises(GardeArret, match="mal formé"):
+        et._exiger_retours({"p": {"derniere_ligne": "OK", "lancements": True}}, ["p"])
 
 
 def test_gardes_du_corpus(depot, monkeypatch):
@@ -699,9 +828,13 @@ def test_gardes_de_contre_verification(depot, tmp_path_factory, monkeypatch):
         et.preparer_contre_verification(depot, RUN, travail, "echantillon", [e1], ch=ch)
     _juger(cv["papiers"][e0]["dossier"])
     _juger(cv["papiers"][e1]["dossier"], _avec(AVIS, statement_leaks="oui"))   # avis mal formé
+    vrai = et.codes_du_script
+    monkeypatch.setattr(et, "codes_du_script", lambda script, d: [])            # artefact : le script ne voit rien
     with pytest.raises(GardeArret, match="désaccord en production"):
-        et.lire_contre_verification(depot, RUN, 1, _retours(cv, {e1: "OK: 0 error(s)"}), ch=ch)
-    et.lire_contre_verification(depot, RUN, 1, _retours(cv), ch=ch)
+        et.lire_contre_verification(depot, RUN, 1, _retours(cv), ch=ch)
+    monkeypatch.setattr(et, "codes_du_script", vrai)
+    lu = et.lire_contre_verification(depot, RUN, 1, _retours(cv, {e1: "OK: 0 error(s)"}), ch=ch)
+    assert lu["illisibles"] == [e1] and lu["papiers"][e1]["retour"]["accord_avec_le_module"] is False
     with pytest.raises(GardeArret, match="pas d'avis lisible"):
         et.assembler(depot, RUN, ch=ch)
 
@@ -778,3 +911,23 @@ def test_garde_de_l_assemblage_sur_une_archive_rescellee(depot, tmp_path_factory
     monkeypatch.setattr(et, "lire_archive", rescellee)
     with pytest.raises(GardeArret, match="≠ empreinte validée"):
         et.assembler(depot, RUN, ch=ch)
+
+
+def test_sortie_modifiee_pendant_la_validation_arrete(depot, tmp_path_factory, monkeypatch):
+    """D-10 : on archive les octets mêmes qui ont été empreintés ; un fichier qui change entre la lecture et l'archive
+    arrête (artefact : empreinte de lecture altérée)."""
+    _petit(monkeypatch)
+    ch = _depot_de_test(depot)
+    travail = tmp_path_factory.mktemp("travail")
+    prep = et.preparer(depot, RUN, travail, 1, ch=ch)
+    for info in prep["papiers"].values():
+        _repondre(info["dossier"])
+    vraie = ex.lire_sorties
+
+    def lecture_decalee(dossier, texte):
+        r = vraie(dossier, texte)
+        r["empreintes"]["h9"] = "0" * 64
+        return r
+    monkeypatch.setattr(et.ex, "lire_sorties", lecture_decalee)
+    with pytest.raises(GardeArret, match="modifié pendant la validation"):
+        et.valider(depot, RUN, 1, _retours(prep), ch=ch)
