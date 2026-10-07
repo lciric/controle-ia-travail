@@ -5,7 +5,10 @@ Décomposition (annexe C.1 de 2606.08892v2, p. 17-18), adaptée à un seul gén�
 - run A : un épisode par tâche, noté une fois ; run B : les mêmes ensembles, notés une seconde fois ;
   run C : un autre épisode par tâche, noté une fois ;
 - σ²_ε (bruit du juge) = V[sA − sB] / 2 ; σ²_β (tâche) = Cov[sA, sC] ; σ²_δ (bruit de génération) =
-  Cov[sA, sB] − Cov[sA, sC] ; V[s] = σ²_β + σ²_δ + σ²_ε (forme de l'article, équation 22, avec σ²_α = 0).
+  Cov[sA, sB] − Cov[sA, sC].
+La somme des trois composantes ainsi estimées vaut (V̂[sA] + V̂[sB]) / 2 par construction (σ̂²_β s'y annule ;
+contre-lecture 2 du pilote, D-1) : elle ne contrôle pas l'alignement des notes. L'article, lui, tire σ²_β de V[s] par
+différence (équation 22, avec σ²_α = 0) : écart d'estimateur déclaré au préenregistrement.
 Une tâche dont une des trois notes manque sort de la décomposition (nombre rapporté), sans imputation.
 """
 from __future__ import annotations
@@ -37,27 +40,6 @@ def decomposition_variance(sA, sB, sC) -> dict:
              (("tache", beta), ("generation", delta), ("juge", eps))}
     return {"taches": n, "taches_incompletes": int((~gardees).sum()),
             "composantes": {"tache": beta, "generation": delta, "juge": eps, "totale": total}, "parts": parts}
-
-
-def intervalles_parts(sA, sB, sC, tirages: int, rng: np.random.Generator, niveau: float = 0.95) -> dict:
-    """Intervalles des parts par rééchantillonnage des tâches (percentiles)."""
-    a, b, c = (np.asarray(v, dtype=float) for v in (sA, sB, sC))
-    complet = ~(np.isnan(a) | np.isnan(b) | np.isnan(c))
-    a, b, c = a[complet], b[complet], c[complet]
-    n = len(a)
-    if n < 3:
-        raise GardeArret(f"{n} tâches complètes : intervalles impossibles")
-    tirees = {k: [] for k in ("tache", "generation", "juge")}
-    for _ in range(tirages):
-        idx = rng.integers(0, n, size=n)
-        try:
-            d = decomposition_variance(a[idx], b[idx], c[idx])
-        except GardeArret:
-            continue
-        for k in tirees:
-            tirees[k].append(d["parts"][k])
-    q = (1 - niveau) / 2
-    return {k: [float(np.nanquantile(v, q)), float(np.nanquantile(v, 1 - q))] for k, v in tirees.items()}
 
 
 def kappa_cohen(x, y) -> float:
@@ -96,8 +78,9 @@ def parts_tronquees(composantes: dict) -> dict:
 
 
 def decomposition_complete(sA, sB, sC) -> dict:
-    """Décomposition (`decomposition_variance`), parts tronquées, et variance observée de sA (contrôle de cohérence,
-    CL-14 et CL-22 : la somme des composantes estime V[s] ; un grand écart signale un désalignement)."""
+    """Décomposition (`decomposition_variance`), parts tronquées, et variance observée de sA, rapportée (CL-22). La
+    somme des composantes vaut (V̂[sA] + V̂[sB]) / 2 par construction : ce n'est pas un contrôle d'alignement, que fait
+    `lire_pilote.notes_alignees` (contre-lecture 2, D-1)."""
     d = decomposition_variance(sA, sB, sC)
     a, b, c = (np.asarray(v, dtype=float) for v in (sA, sB, sC))
     gardees = ~(np.isnan(a) | np.isnan(b) | np.isnan(c))
@@ -166,6 +149,8 @@ def difference_appariee(notes_8b: tuple, notes_3b: tuple, tirages: int, rng: np.
             ecartes += 1
             continue
         tirees.append(d)
+    if not tirees:                  # juge aux notes constantes : aucun tirage lisible (contre-lecture 2, D-13)
+        raise GardeArret(f"aucun tirage lisible sur {tirages} : différence appariée impossible")
     q = (1 - niveau) / 2
     return {"taches": n, "difference": point, "borne": [float(np.quantile(tirees, q)), float(np.quantile(tirees, 1 - q))],
             "tirages": tirages, "ecartes": ecartes, "reserve": ecartes > 0.01 * tirages}

@@ -181,8 +181,25 @@ def test_decomposition_sans_imputation_et_gardes():
 
 
 def test_intervalles_contiennent_la_valeur_simulee():
-    iv = ap.intervalles_parts(*_simuler(400, graine=8), tirages=300, rng=np.random.default_rng(1))
-    assert iv["juge"][0] < 2.25 / 7.25 < iv["juge"][1]
+    iv = ap.intervalles_parts_comptes(*_simuler(400, graine=8), tirages=300, rng=np.random.default_rng(1))
+    assert iv["bornes"]["juge"][0] < 2.25 / 7.25 < iv["bornes"]["juge"][1] and iv["ecartes"] == 0
+
+
+def test_somme_des_composantes_identite_et_juge_constant():
+    """Contre-lecture 2 du pilote : la somme des composantes vaut (V̂[sA] + V̂[sB]) / 2 par construction (D-1) ; un juge
+    aux notes constantes rend la différence appariée impossible, par une garde (D-13)."""
+    a, b, c = _simuler(80, graine=5)
+    d = ap.decomposition_complete(a, b, c)
+    assert d["composantes"]["totale"] == pytest.approx((np.var(a, ddof=1) + np.var(b, ddof=1)) / 2, rel=1e-12)
+    constant = np.full(80, 3.0)
+    with pytest.raises(GardeArret, match="aucun tirage lisible"):
+        ap.difference_appariee((a, b, c), (constant, constant, constant), 50, np.random.default_rng(2))
+    with pytest.raises(GardeArret, match="aucun tirage lisible"):
+        ap.intervalles_parts_comptes(constant, constant, constant, 50, np.random.default_rng(2))
+    with pytest.raises(GardeArret, match="tâches complètes pour les deux juges"):
+        ap.difference_appariee((a[:2], b[:2], c[:2]), (a[:2], b[:2], c[:2]), 50, np.random.default_rng(2))
+    with pytest.raises(GardeArret, match="aucune cible"):
+        ap.couverture({}, [1], [])
 
 
 def test_kappa():
@@ -359,6 +376,19 @@ def test_lanceur_configuration_incomplete(depot):
     del c["lot_juge"]
     with pytest.raises(GardeArret, match="incomplète"):
         lp.executer(c, depot, "20261006-170001-x", None, "inexistant.json")
+
+
+@pytest.mark.parametrize("cle, valeur, motif", [
+    ("noyau_attention", "flash", "noyau d'attention"), ("noyau_attention", "À REMPLIR", "noyau d'attention"),
+    ("duree_max_s", "À REMPLIR", "duree_max_s"), ("duree_max_s", 16_200, "duree_max_s"), ("duree_max_s", 0, "duree_max_s"),
+    ("duree_max_s", True, "duree_max_s"), ("mode", "essai", "mode")])
+def test_lanceur_noyau_et_duree_valides_avant_le_manifeste(depot, cle, valeur, motif):
+    """Contre-lecture 2 du pilote, D-14 et D-22 : noyau inconnu, durée non numérique ou hors de ]0 ; 16 200[ : arrêt
+    avant tout manifeste (cas sain : les autres tests du lanceur)."""
+    c = dict(_config_lanceur(), **{cle: valeur})
+    with pytest.raises(GardeArret, match=motif):
+        lp.executer(c, depot, "20261006-170010-x", None, "inexistant.json")
+    assert not (depot / "runs").exists()
 
 
 def test_passes_et_demandes():
