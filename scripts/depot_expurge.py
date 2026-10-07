@@ -25,13 +25,15 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parents[1]
 
-# (motif sur le chemin suivi, motif du retrait) ; un fichier `.sha256` compagnon reste, sauf s'il est lui-même visé
+# (motif sur le chemin suivi, motif du retrait) ; un fichier `.sha256` compagnon reste, sauf s'il est lui-même visé.
+# Un `*` ne traverse pas les dossiers ; un motif qui finit par `/**` vise tout le dossier, à toute profondeur.
 RETRAITS = [
     ("docs/sources/pdf/*.pdf", "copie d'un PDF d'arXiv de tiers"),
     ("docs/sources/lecture-pdf-niveau1/*.tar", "fichiers de travail d'un lecteur : pages extraites des PDF de tiers"),
     ("docs/sources/lecture-pdf-niveau2/*.tar", "fichiers de travail d'un lecteur : pages extraites des PDF de tiers"),
     ("docs/sources/invites-2606.08892-v1/extrait.tar", "texte complet extrait d'un papier de tiers"),
-    ("docs/sources/invites-2606.07054-v1/*.txt", "transcription d'une invite d'un papier de tiers, non utilisée par le code"),
+    ("docs/sources/invites-2606.07054-v1/invites/*.txt",
+     "transcription d'une invite d'un papier de tiers, non utilisée par le code"),
     ("docs/sources/invites-2606.07054-v1/*.tar", "texte extrait d'un papier de tiers"),
     ("docs/sources/invites-2606.07054-v1/derivees/contre-verification-v1/*.tar",
      "fichiers de travail d'une contre-vérification : texte extrait d'un papier de tiers"),
@@ -39,8 +41,8 @@ RETRAITS = [
     ("docs/procedures/T0.5-extraction-v1/contre-lecture/*.tar", "fichiers de travail des relecteurs de l'extraction"),
     ("prereg/contre-lectures/T0.5-pilote-contre-lecture-1-verifications-v1.tar",
      "fichiers de travail d'un relecteur : pages extraites d'un PDF de tiers"),
-    ("donnees/*", "sortie de l'extraction : texte dérivé de papiers de tiers"),
-    ("livrables/candidature-ea-funds-v1/*", "candidature à un autre fonds, confidentielle"),
+    ("donnees/**", "sortie de l'extraction : texte dérivé de papiers de tiers"),
+    ("livrables/candidature-ea-funds-v1/**", "candidature à un autre fonds, confidentielle"),
     ("livrables/candidature-ea-funds-v1.zip", "candidature à un autre fonds, confidentielle"),
     ("livrables/candidature-ea-funds-v1.zip.sha256", "candidature à un autre fonds, confidentielle"),
     ("livrables/controle-ia-v1.bundle", "ancien paquet git, historique non expurgé"),
@@ -60,9 +62,24 @@ def _git(*args: str, cwd: Path = RACINE, env: dict | None = None, entree: bytes 
     return subprocess.run(["git", *args], cwd=cwd, env=env, input=entree, capture_output=True, check=True).stdout
 
 
+# fichiers que le code charge : jamais retirés (garde du script et de ses tests)
+GARDES = ("docs/sources/invites-2606.08892-v1/invites/*.txt", "docs/sources/invites-2606.08892-v1/index.json",
+          "docs/sources/invites-2606.07054-v1/derivees/*.txt", "docs/sources/invites-2606.07054-v1/derivees/index-v1.json")
+
+
+def correspond(chemin: str, motif: str) -> bool:
+    """Appariement par segment : `*` ne traverse pas les dossiers ; `/**` final vise tout le dossier."""
+    if motif.endswith("/**"):
+        return chemin.startswith(motif[:-2])
+    c, m = chemin.split("/"), motif.split("/")
+    return len(c) == len(m) and all(fnmatch.fnmatchcase(a, b) for a, b in zip(c, m))
+
+
 def motif_de(chemin: str) -> str | None:
     for motif, raison in RETRAITS:
-        if fnmatch.fnmatchcase(chemin, motif):
+        if correspond(chemin, motif):
+            if any(correspond(chemin, g) for g in GARDES):
+                raise SystemExit(f"{chemin} : visé par « {motif} » mais chargé par le code : arrêt (aucun paquet écrit)")
             return raison
     return None
 
