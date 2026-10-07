@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-07 11:22 UTC, session 11 reprise (extraction de T0.5 ouverte, run `20261007-082440-t05-extraction` : tentative 1 préparée, 11 lectures sur 96 revenues « OK », un lancement refusé par le classificateur du mode automatique, extraction en pause en attendant la permission de Lazar ; pilote et revalidation : trois tours de relecture traités, le dernier sans bloquante ni majeure, contrôlé mécaniquement ; brouillons : revalidation 6, configuration 3, pilote 7, procédure de lancement 4 ; R-098 à R-102 ; passation `registres/passations/2026-10-07-1122.md`).
+Dernière mise à jour : 2026-10-07 11:55 UTC, session 11 reprise (extraction de T0.5 ouverte, run `20261007-082440-t05-extraction` : tentative 1 préparée, 11 lectures sur 96 revenues « OK », un lancement refusé par le classificateur du mode automatique, extraction en pause en attendant la permission de Lazar ; pilote et revalidation : trois tours de relecture traités, le dernier sans bloquante ni majeure, contrôlé mécaniquement ; brouillons : revalidation 6, configuration 3, pilote 7, procédure de lancement 4 ; R-098 à R-103 ; README en anglais pour les recruteurs et BlueDot, vérifié par un sous-agent neuf ; passation `registres/passations/2026-10-07-1122.md`).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
