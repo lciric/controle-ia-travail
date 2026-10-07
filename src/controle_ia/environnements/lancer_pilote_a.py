@@ -38,11 +38,14 @@ from ..scellement import sceller, verifier
 from .pilote_a import (apparier, charger_taches, exiger_config, jetons_jouet, jouer_pilote, noter_ensembles,
                        plan_des_episodes)
 
+DUREE_EXTERNE_S = 16_200          # délai externe du script de l'instance (270 minutes)
 CLES_LANCEMENT = ("agent", "juges", "episodes_notes_deux_fois", "episodes_decisifs", "lot_juge", "max_nouveaux_juge",
                   "temperature_juge", "variante_juge", "lot_appariement", "duree_max_s", "mode", "noyau_attention",
                   "fils")
 NOYAUX = ("math", "defaut")
-FAMILLES_CIBLES = ("controls", "fruitful_directions", "sterile_directions")     # noyau d'attention des épisodes (garde d'équivalence) ; juges et appariement : défaut
+FAMILLES_CIBLES = ("controls", "fruitful_directions", "sterile_directions")
+# Noyau d'attention : celui de la configuration pour les épisodes (garde d'équivalence) ; juges et appariement tournent
+# au noyau par défaut de la bibliothèque, consigné (contre-lecture 2 du pilote, D-14).
 CONFIG_CITEE = re.compile(r"Configuration du pilote \(empreinte canonique\) : `([0-9a-f]{64})`")
 TACHES_CITEES = re.compile(r"Tâches du pilote : `([0-9a-f]{64})`")
 COMMANDE = "python -m controle_ia.environnements.lancer_pilote_a"
@@ -249,6 +252,9 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
         raise GardeArret(f"mode {config['mode']!r} inconnu")
     if config["noyau_attention"] not in NOYAUX:
         raise GardeArret(f"noyau d'attention {config['noyau_attention']!r} : {NOYAUX} attendus")
+    duree = config["duree_max_s"]
+    if isinstance(duree, bool) or not isinstance(duree, (int, float)) or not 0 < duree < DUREE_EXTERNE_S:
+        raise GardeArret(f"duree_max_s {duree!r} : un nombre entre 0 et {DUREE_EXTERNE_S} s (délai externe) attendu")
     if config["mode"] == "reel" and prereg is None:
         raise GardeArret("run réel du pilote sans préenregistrement : R1 interdit de lancer")
     taches = charger_taches(chemin_taches)
@@ -297,7 +303,10 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
     chrono: dict = {}
     memoire_pic_gio()
     depart = time.perf_counter()
+    from ..harnais.modeles import noyaux_attention_permis
+
     with noyau(config["noyau_attention"]):          # la garde d'équivalence porte sur les épisodes seulement
+        noyaux_episodes = noyaux_attention_permis() if torch.cuda.is_available() else None
         fiches, vecteurs, controle_negatif = jouer_pilote(modele, fmt, plan, generateurs, config, echeance=echeance,
                                                           chrono=chrono)
     descriptifs = {"episodes": {"duree_s": round(time.perf_counter() - depart, 1), "memoire_pic_gio": memoire_pic_gio(),
@@ -311,54 +320,63 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
     ecrire_resultat(racine, chemin_m, "episodes", {"fiches": fiches, "vecteurs": str(chemin_v.relative_to(racine)),
                                                    "vecteurs_sha256": sha_v, "controle_negatif": controle_negatif,
                                                    "reglages": reglages, "noyau_attention": config["noyau_attention"],
+                                                   "noyaux_permis": noyaux_episodes,
                                                    "formats": formats, "descriptifs": descriptifs["episodes"],
                                                    "duree_s": round(time.perf_counter() - debut, 1)})
     etat["episodes_ecrits"] = len(fiches)
 
-    # Ordre des étapes (contre-lecture 1, CL-7) : les notations décisives (épisodes de `episodes_decisifs`, A noté deux
-    # fois et C) par tous les juges d'abord, puis les notations descriptives (D), puis l'appariement ; un arrêt au
-    # plafond laisse ainsi les lectures décisives complètes. Les modèles des juges sont chargés une fois.
+    # Ordre des étapes (contre-lecture 1, CL-7 ; contre-lecture 2, D-6) : les notations décisives (épisodes de
+    # `episodes_decisifs` : A noté deux fois, et C) par tous les juges, puis l'appariement (et la base « énoncé seul »),
+    # dont dépendent les familles, puis les notations descriptives (D) ; un arrêt laisse ainsi les lectures décisives
+    # complètes. L'échéance se contrôle à chaque lot. Les modèles des juges sont chargés une fois ; juges et appariement
+    # tournent au noyau par défaut de la bibliothèque (noyaux permis consignés, D-14).
+    from ..harnais.modeles import noyaux_attention_permis
+
+    noyaux_juges = noyaux_attention_permis() if torch.cuda.is_available() else None
     modeles_juges = {}
     for j in config["juges"]:
         modeles_juges[j["nom"]] = (modele, fmt) if j["meme_modele_que_agent"] else charger_modele_et_format(
             j, config["mode"], graine_entiere(g["modele-jouet"]) + 1)
     decisifs = {str(k) for k in config["episodes_decisifs"]}
     notations: dict[str, list] = {j["nom"]: [] for j in config["juges"]}
-    for etape in ("decisives", "descriptives"):
+
+    def noter(etape: str) -> None:
         for j in config["juges"]:
             etat["etape"] = f"notations {etape} par {j['nom']}"
-            if time.perf_counter() > echeance:
-                raise GardeArret(f"limite de durée dépassée avant les notations {etape}")
             m_j, fmt_j = modeles_juges[j["nom"]]
             demandes = [d for d in demandes_de_notation(fiches, par_id, config, j["nom"])
                         if (d["episode"].rsplit("/e", 1)[1] in decisifs) == (etape == "decisives")]
             graines_j = {d["cle"]: graine_entiere(g[d["cle"]]) for d in demandes}
             depart = time.perf_counter()
-            sortie = noter_ensembles(m_j, fmt_j, demandes, graines_j, config["lot_juge"],
-                                     config["max_nouveaux_juge"], config["temperature_juge"]) if demandes else []
+            sortie = noter_ensembles(m_j, fmt_j, demandes, graines_j, config["lot_juge"], config["max_nouveaux_juge"],
+                                     config["temperature_juge"], echeance=echeance) if demandes else []
             notations[j["nom"]] += sortie
             ecrire_resultat(racine, chemin_m, f"notations-{j['nom']}-{etape}", {
-                "notations": sortie, "descriptifs": {"duree_s": round(time.perf_counter() - depart, 1),
-                                                     "memoire_pic_gio": memoire_pic_gio(),
-                                                     "jetons_generes": sum(x["jetons_reponse"] for x in sortie)}})
+                "notations": sortie, "noyau": "défaut de la bibliothèque", "noyaux_permis": noyaux_juges,
+                "descriptifs": {"duree_s": round(time.perf_counter() - depart, 1),
+                                "memoire_pic_gio": memoire_pic_gio(),
+                                "jetons_generes": sum(x["jetons_reponse"] for x in sortie)}})
             etat.setdefault("notations_ecrites", []).append(f"{j['nom']}/{etape}")
+
+    noter("decisives")
     for j in config["juges"]:
         if j["sert_a_l_appariement"]:
             etat["etape"] = f"appariement par {j['nom']}"
-            if time.perf_counter() > echeance:
-                raise GardeArret("limite de durée dépassée avant l'appariement")
             m_j, fmt_j = modeles_juges[j["nom"]]
             paires = paires_d_appariement(fiches, par_id)
             jetons = jetons_jouet(fmt_j.tok) if config["mode"] == "jouet" else None
             depart = time.perf_counter()
-            app = apparier(m_j, fmt_j, paires, config["lot_appariement"], jetons=jetons) if paires else []
+            app = apparier(m_j, fmt_j, paires, config["lot_appariement"], jetons=jetons,
+                           echeance=echeance) if paires else []
             enonce = apparier(m_j, fmt_j, paires_enonce_seul(list(par_id.values())), config["lot_appariement"],
-                              jetons=jetons)
+                              jetons=jetons, echeance=echeance)
             ecrire_resultat(racine, chemin_m, "appariements", {
-                "juge": j["nom"], "appariements": app, "enonce_seul": enonce,
+                "juge": j["nom"], "appariements": app, "enonce_seul": enonce, "noyau": "défaut de la bibliothèque",
+                "noyaux_permis": noyaux_juges,
                 "descriptifs": {"duree_s": round(time.perf_counter() - depart, 1),
                                 "memoire_pic_gio": memoire_pic_gio(), "paires": len(app) + len(enonce)}})
             etat["appariement_ecrit"] = j["nom"]
+    noter("descriptives")
     del modeles_juges
 
     etat["etape"] = "résumé"

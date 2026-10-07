@@ -139,10 +139,14 @@ def test_jetons_oui_non():
 
 def test_apparier_probabilites(monkeypatch):
     monkeypatch.setattr(pa, "jetons_oui_non", lambda tok: (TOK.convert_tokens_to_ids("Y"), TOK.convert_tokens_to_ids("N")))
-    paires = [{"cle": f"p{k}", "proposition": "Train a dense baseline.", "cible": c}
+    paires = [{"cle": f"p{k}", "proposition": "Train a dense baseline.", "cible": c, "famille": "controls"}
               for k, c in enumerate(["a dense baseline", "an ablation"])]
     s = pa.apparier(_modele(), FMT, paires, lot=2)
     assert [x["cle"] for x in s] == ["p0", "p1"] and all(0.0 <= x["p_oui"] <= 1.0 and x["masse_oui_non"] > 0 for x in s)
+    with pytest.raises(GardeArret, match="sans famille"):              # aucune question par défaut (D-15)
+        pa.apparier(_modele(), FMT, [{k: v for k, v in paires[0].items() if k != "famille"}], lot=2)
+    with pytest.raises(GardeArret, match="limite de durée"):           # échéance contrôlée à chaque lot (D-6)
+        pa.apparier(_modele(), FMT, paires, lot=2, echeance=0.0)
 
 
 # --- analyse -----------------------------------------------------------------------------------------------
@@ -335,8 +339,8 @@ def test_jetons_jouet_et_lanceur_sans_substitution(depot, monkeypatch):
     with pytest.raises(GardeArret, match="un seul jeton"):
         pa.jetons_oui_non(TOK)                                  # artefact : sans la paire jouet, l'appariement arrête
     monkeypatch.setattr(lp, "paires_d_appariement", lambda fiches, par_id: [
-        {"cle": "t/e0/1/C1", "proposition": "a dense baseline", "cible": "a dense baseline"},
-        {"cle": "t/e0/1/C2", "proposition": "x", "cible": "y"}])
+        {"cle": "t/e0/1/C1", "proposition": "a dense baseline", "cible": "a dense baseline", "famille": "controls"},
+        {"cle": "t/e0/1/C2", "proposition": "x", "cible": "y", "famille": "controls"}])
     f, _ = _taches_scellees(depot)
     committer(depot)
     resume = lp.executer(_config_lanceur(), depot, "20261006-170007-pilote-jouet", None, str(f))

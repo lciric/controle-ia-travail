@@ -62,7 +62,7 @@ QUESTIONS_PAR_FAMILLE = {"controls": QUESTION_APPARIEMENT, "fruitful_directions"
                          "sterile_directions": QUESTION_APPARIEMENT_DIRECTION}
 
 
-def message_appariement(proposition: str, cible: str, famille: str = "controls") -> list[dict]:
+def message_appariement(proposition: str, cible: str, famille: str) -> list[dict]:
     if not proposition.strip() or not cible.strip():
         raise GardeArret("proposition ou cible vide : appariement impossible")
     if famille not in QUESTIONS_PAR_FAMILLE:

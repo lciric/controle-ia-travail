@@ -11,7 +11,9 @@ harnais, un environnement par épisode, avec la garde d'équivalence en ligne su
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import time
 from pathlib import Path
 
 import numpy as np
@@ -145,14 +147,21 @@ def jouer_pilote(modele, fmt, plan: list[tuple[str, dict]], generateurs: dict[st
     return fiches, vecteurs, bilan
 
 
+def _exiger_echeance(echeance: float | None, quoi: str) -> None:
+    if echeance is not None and time.perf_counter() > echeance:
+        raise GardeArret(f"limite de durée dépassée pendant {quoi}")
+
+
 def noter_ensembles(modele, fmt, demandes: list[dict], graines: dict[str, int], lot: int, max_nouveaux: int,
-                    temperature: float) -> list[dict]:
+                    temperature: float, echeance: float | None = None) -> list[dict]:
     """Notation d'ensembles par un juge : `demandes` porte, pour chaque notation, une clé, l'énoncé, l'ensemble, la
-    classification et la variante (b0 ou b*). Réponse brute, notes, anomalies et score consignés ; une réponse
-    incomplète n'a pas de score (jamais imputé)."""
+    classification et la variante (b0 ou b*). Réponse brute, notes, anomalies, score et empreinte de l'ensemble noté
+    consignés (l'alignement des notations se contrôle par cette empreinte ; contre-lecture 2 du pilote, D-1) ; une
+    réponse incomplète n'a pas de score (jamais imputé). L'échéance se contrôle à chaque lot (D-6)."""
     sorties = []
     pad = fmt.tok.pad_token_id if fmt.tok.pad_token_id is not None else min(fmt.fins)
     for debut in range(0, len(demandes), lot):
+        _exiger_echeance(echeance, "les notations")
         morceau = demandes[debut:debut + lot]
         contextes, criteres = [], []
         for d in morceau:
@@ -169,6 +178,7 @@ def noter_ensembles(modele, fmt, demandes: list[dict], graines: dict[str, int], 
             tronquee = not (nv and nv[-1] in fmt.fins)
             anomalies = notes.anomalies + (["réponse tronquée (sans jeton de fin) : incomplète"] if tronquee else [])
             sorties.append({"cle": d["cle"], "variante": d["variante"], "jetons_contexte": len(ctx),
+                            "ensemble_sha256": hashlib.sha256(d["ensemble"].encode("utf-8")).hexdigest(),
                             "jetons_reponse": len(nv), "tronquee": tronquee,
                             "notes": notes.notes, "anomalies": anomalies,
                             "score": notes.score_sur_100() if (notes.complete and not tronquee) else None,
@@ -211,19 +221,25 @@ def jetons_jouet(tok) -> tuple[int, int]:
     return oui, non
 
 
-def apparier(modele, fmt, paires: list[dict], lot: int, jetons: tuple[int, int] | None = None) -> list[dict]:
-    """P(oui) pour chaque paire (proposition, cible) ; `paires` porte une clé, la proposition et la cible. `jetons` :
-    identifiants (oui, non) imposés (modèle jouet seulement) ; sinon « Yes » et « No » du tokeniseur."""
+def apparier(modele, fmt, paires: list[dict], lot: int, jetons: tuple[int, int] | None = None,
+             echeance: float | None = None) -> list[dict]:
+    """P(oui) pour chaque paire (proposition, cible) ; `paires` porte une clé, la proposition, la cible et sa famille
+    (exigée : aucune question par défaut ; D-15). `jetons` : identifiants (oui, non) imposés (modèle jouet seulement) ;
+    sinon « Yes » et « No » du tokeniseur. L'échéance se contrôle à chaque lot (D-6)."""
     oui, non = jetons if jetons is not None else jetons_oui_non(fmt.tok)
     pad = fmt.tok.pad_token_id if fmt.tok.pad_token_id is not None else min(fmt.fins)
+    sans_famille = [p.get("cle") for p in paires if "famille" not in p]
+    if sans_famille:
+        raise GardeArret(f"paires d'appariement sans famille : {sans_famille[:3]}")
     sorties = []
     for debut in range(0, len(paires), lot):
+        _exiger_echeance(echeance, "l'appariement")
         morceau = paires[debut:debut + lot]
         contextes = [fmt.ouverture(SYSTEME_APPARIEMENT, message_appariement(
-            p["proposition"], p["cible"], p.get("famille", "controls"))[0]["content"]) for p in morceau]
+            p["proposition"], p["cible"], p["famille"])[0]["content"]) for p in morceau]
         lp = logits_derniere_position(modele, contextes, pad)
-        for p, ligne in zip(morceau, lp):
+        for p, ligne in zip(morceau, lp, strict=True):
             masse = float(torch.exp(ligne[oui]) + torch.exp(ligne[non]))
-            sorties.append({"cle": p["cle"], "famille": p.get("famille", "controls"),
+            sorties.append({"cle": p["cle"], "famille": p["famille"],
                             "p_oui": probabilite_oui(float(ligne[oui]), float(ligne[non])), "masse_oui_non": masse})
     return sorties

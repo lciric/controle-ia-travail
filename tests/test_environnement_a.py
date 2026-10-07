@@ -293,11 +293,11 @@ def test_messages_juge_gardes():
     with pytest.raises(GardeArret, match="inconnue"):
         jg.messages_juge_ensemble("Why?", "PROPOSAL 1", "b9")
     with pytest.raises(GardeArret):
-        jg.message_appariement("", "cible")
+        jg.message_appariement("", "cible", "controls")
 
 
 def test_appariement_et_probabilite():
-    m = jg.message_appariement("Train a dense baseline.", "a dense baseline of equal compute")
+    m = jg.message_appariement("Train a dense baseline.", "a dense baseline of equal compute", "controls")
     assert m[0]["content"].endswith("Answer:") and "## Target\n\na dense baseline" in m[0]["content"]
     assert jg.probabilite_oui(-0.1, -2.4) == pytest.approx(1 / (1 + math.exp(-2.3)))
     assert jg.probabilite_oui(-1000.0, 0.0) < 1e-300 and jg.probabilite_oui(0.0, -1000.0) > 1 - 1e-12
@@ -330,6 +330,7 @@ def test_appariement_des_directions_distingue_poursuivre_et_mentionner():
     c = jg.message_appariement("Train a dense baseline.", "a dense baseline", "controls")[0]["content"]
     assert "pursue this direction" in d and "not merely mention it" in d and "## Direction\n\ntop-2 routing" in d
     assert "pursue this direction" in s and "pursue" not in c
-    assert c == jg.message_appariement("Train a dense baseline.", "a dense baseline")[0]["content"]
+    with pytest.raises(TypeError):                                    # famille exigée, aucune valeur par défaut
+        jg.message_appariement("Train a dense baseline.", "a dense baseline")
     with pytest.raises(GardeArret, match="inconnue"):
         jg.message_appariement("x", "y", "directions")
