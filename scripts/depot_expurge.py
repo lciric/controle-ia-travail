@@ -1,10 +1,12 @@
 """Copie expurgée du dépôt, à montrer à des évaluateurs (décision de Lazar, R-104).
 
 Un seul commit, reproductible, tiré d'un commit cité du dépôt : sans les textes de tiers dont le code n'a pas besoin
-(PDF d'arXiv, pages extraites par les lecteurs, texte complet ou extrait d'un papier, pages des cartes de modèles, fichiers de travail des relecteurs de l'extraction, sorties de l'extraction), sans la candidature à
-un autre fonds ni l'ancien paquet git. Les empreintes des fichiers retirés restent, et `EXPURGE.md` les liste. Les
-invites transcrites ou adaptées que le code et ses tests chargent restent, avec leur source : le README de la copie
-le dit.
+(PDF d'arXiv, pages extraites par les lecteurs, texte complet ou extrait d'un papier, pages des cartes de modèles,
+fichiers de travail des relecteurs de l'extraction, sorties de l'extraction), sans la candidature à un autre fonds.
+Les empreintes des fichiers retirés restent, et `EXPURGE.md` les liste. Les invites transcrites ou adaptées que le
+code et ses tests chargent restent, avec leur source : le README de la copie le dit. Avant d'écrire le paquet, le
+script vérifie qu'aucun fichier retiré ne survit dans une archive gardée (zip, tar ou paquet git, à toute profondeur,
+par empreinte et par chemin) ; une archive d'un format qu'il n'examine pas l'arrête.
 
 Rien n'est poussé : le paquet git est écrit dans SORTIE. Sa mise en ligne sur un dépôt distant demande un GO de Lazar.
 Le script n'écrit que dans SORTIE, qui ne doit pas exister ; il ne touche pas au dépôt.
@@ -21,6 +23,8 @@ import os
 import subprocess
 import sys
 import tarfile
+import tempfile
+import zipfile
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parents[1]
@@ -43,9 +47,9 @@ RETRAITS = [
     ("livrables/candidature-ea-funds-v1/**", "candidature à un autre fonds, confidentielle"),
     ("livrables/candidature-ea-funds-v1.zip", "candidature à un autre fonds, confidentielle"),
     ("livrables/candidature-ea-funds-v1.zip.sha256", "candidature à un autre fonds, confidentielle"),
-    ("livrables/controle-ia-v1.bundle", "ancien paquet git, historique non expurgé"),
-    ("livrables/controle-ia-v1.bundle.sha256", "ancien paquet git, historique non expurgé"),
 ]
+# L'ancien paquet git (`livrables/controle-ia-v1.bundle`, cinq commits du 2026-10-04, recopié dans
+# `livrables/premier-rendu-v1.zip`) reste : aucun fichier de son historique n'est visé ici (garde des archives).
 
 PARAGRAPHE_README = ("This private repository holds copies of third-party arXiv PDFs (`docs/sources/pdf/`) and extraction "
                      "outputs that contain text derived from those papers (`donnees/`). They are kept for verification "
@@ -57,8 +61,9 @@ REMPLACEMENT_README = ("This copy omits the third-party PDFs, the page texts ext
                        "redistribute.")
 
 
-def _git(*args: str, cwd: Path = RACINE, env: dict | None = None, entree: bytes | None = None) -> bytes:
-    return subprocess.run(["git", *args], cwd=cwd, env=env, input=entree, capture_output=True, check=True).stdout
+def _git(*args: str, cwd: Path | None = None, env: dict | None = None, entree: bytes | None = None) -> bytes:
+    return subprocess.run(["git", *args], cwd=cwd or RACINE, env=env, input=entree, capture_output=True,
+                          check=True).stdout
 
 
 # fichiers que le code charge : jamais retirés (garde du script et de ses tests)
@@ -84,6 +89,67 @@ def motif_de(chemin: str) -> str | None:
     return None
 
 
+COMPRESSIONS_NON_EXAMINEES = (b"\x1f\x8b", b"BZh", b"\xfd7zXZ\x00", b"7z\xbc\xaf\x27\x1c", b"Rar!", b"\x28\xb5\x2f\xfd")
+
+
+def est_archive(data: bytes) -> bool:
+    return (data[:4] == b"PK\x03\x04" or data[257:262] == b"ustar"
+            or data.startswith((b"# v2 git bundle", b"# v3 git bundle")))
+
+
+def _membres_paquet(data: bytes) -> list[tuple[str, bytes]]:
+    """(chemin, contenu) de chaque fichier de chaque commit d'un paquet git, historique compris."""
+    with tempfile.TemporaryDirectory() as d:
+        paquet, depot = Path(d) / "paquet.bundle", Path(d) / "depot.git"
+        paquet.write_bytes(data)
+        _git("init", "-q", "--bare", str(depot), cwd=Path(d))
+        tetes = [l.split()[0] for l in _git("bundle", "unbundle", str(paquet), cwd=depot).decode().splitlines() if l]
+        paires = set()
+        for commit in _git("rev-list", *tetes, cwd=depot).decode().split():
+            for ligne in _git("ls-tree", "-r", "-z", commit, cwd=depot).decode().split("\0"):
+                if ligne:
+                    meta, chemin = ligne.split("\t", 1)
+                    if meta.split()[1] == "blob":
+                        paires.add((chemin, meta.split()[2]))
+        objets = sorted({sha for _, sha in paires})
+        sortie, contenus, i = _git("cat-file", "--batch", cwd=depot, entree="\n".join(objets).encode() + b"\n"), {}, 0
+        for sha in objets:
+            fin = sortie.index(b"\n", i)
+            taille = int(sortie[i:fin].split()[2])
+            contenus[sha] = sortie[fin + 1:fin + 1 + taille]
+            i = fin + 1 + taille + 1
+        return sorted((chemin, contenus[sha]) for chemin, sha in paires)
+
+
+def _membres(nom: str, data: bytes) -> list[tuple[str, bytes]]:
+    if data[:4] == b"PK\x03\x04":
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            membres = [(i.filename, z.read(i)) for i in z.infolist() if not i.is_dir()]
+    elif data[257:262] == b"ustar":
+        with tarfile.open(fileobj=io.BytesIO(data)) as t:
+            membres = [(m.name, t.extractfile(m).read()) for m in t.getmembers() if m.isfile()]
+    elif data.startswith((b"# v2 git bundle", b"# v3 git bundle")):
+        membres = _membres_paquet(data)
+    elif data.startswith(COMPRESSIONS_NON_EXAMINEES):
+        raise SystemExit(f"{nom} : archive d'un format non examiné : arrêt (aucun paquet écrit)")
+    else:
+        return []
+    return [(m[2:] if m.startswith("./") else m, c) for m, c in membres]
+
+
+def survivants(nom: str, data: bytes, empreintes: set[str]) -> list[str]:
+    """Fichiers retirés qui survivent dans une archive gardée (zip, tar ou paquet git, à toute profondeur) : même
+    empreinte qu'un fichier retiré, ou chemin visé par un retrait."""
+    trouves = []
+    for membre, contenu in _membres(nom, data):
+        chemin = f"{nom}!{membre}"
+        if (contenu and hashlib.sha256(contenu).hexdigest() in empreintes) or any(
+                correspond(membre, motif) for motif, _ in RETRAITS):
+            trouves.append(chemin)
+        trouves += survivants(chemin, contenu, empreintes)
+    return trouves
+
+
 def main(argv: list[str]) -> int:
     if len(argv) != 2:
         print(__doc__)
@@ -98,7 +164,7 @@ def main(argv: list[str]) -> int:
         return 2
     arbre = sortie / "controle-ia-expurge"
     arbre.mkdir(parents=True)
-    retraits, gardes = [], 0
+    retraits, gardes, archives = [], 0, []
     with tarfile.open(fileobj=io.BytesIO(_git("archive", "--format=tar", commit))) as tar:
         for membre in tar.getmembers():
             if not membre.isfile():
@@ -114,6 +180,14 @@ def main(argv: list[str]) -> int:
             cible.write_bytes(contenu)
             os.chmod(cible, membre.mode & 0o777)
             gardes += 1
+            if est_archive(contenu) or contenu.startswith(COMPRESSIONS_NON_EXAMINEES):
+                archives.append((membre.name, contenu))
+    empreintes = {r["sha256"] for r in retraits if r["octets"]}
+    trouves = [t for nom, contenu in archives for t in survivants(nom, contenu, empreintes)]
+    if trouves:
+        print("fichiers retirés qui survivent dans une archive gardée : arrêt (aucun paquet écrit)\n  "
+              + "\n  ".join(trouves), file=sys.stderr)
+        return 1
     readme = arbre / "README.md"
     texte = readme.read_text(encoding="utf-8")
     if texte.count(PARAGRAPHE_README) != 1:
@@ -124,8 +198,11 @@ def main(argv: list[str]) -> int:
     lignes = ["# What this copy omits", "",
               f"Copy of the private repository `controle-ia` at commit `{commit}`, made for evaluators by "
               "`scripts/depot_expurge.py` (same commit). Third-party texts that the code does not need are omitted, "
-              "together with an application to another funder and an old git bundle. Their SHA-256 hashes remain "
-              "(companion `.sha256` files, and the table below), so anyone holding the originals can check them.", "",
+              "together with an application to another funder. Their SHA-256 hashes remain (companion `.sha256` "
+              "files, and the table below), so anyone holding the originals can check them. Before writing the "
+              f"copy, the script checked that no omitted file survives inside a kept archive ({len(archives)} files in "
+              "zip, tar or git bundle format, Word and NumPy files included, searched at any depth, by hash and "
+              "by path).", "",
               "`python -m controle_ia.scellement verifier-arbre .` reports each omitted sealed file as an orphan "
               "hash; that is expected. The README's paragraph on third-party material was adapted for this copy.", "",
               f"- Files kept: {gardes}. Files omitted: {len(retraits)} ({sum(r['octets'] for r in retraits) / 1e6:.1f} MB).",
@@ -149,8 +226,9 @@ def main(argv: list[str]) -> int:
          f"Copie expurgée de controle-ia au commit {commit} (textes de tiers omis ; voir EXPURGE.md)", cwd=arbre, env=env)
     copie = _git("rev-parse", "HEAD", cwd=arbre).decode().strip()
     paquet = sortie / f"controle-ia-expurge-{commit[:7]}.bundle"
-    _git("bundle", "create", "-q", str(paquet), "main", cwd=arbre, env=env)
+    _git("bundle", "create", "-q", str(paquet), "HEAD", "main", cwd=arbre, env=env)
     bilan = {"commit_source": commit, "commit_copie": copie, "fichiers_gardes": gardes, "fichiers_retires": len(retraits),
+             "archives_examinees": len(archives),
              "paquet": paquet.name, "paquet_sha256": hashlib.sha256(paquet.read_bytes()).hexdigest(),
              "retraits": retraits}
     (sortie / "bilan.json").write_text(json.dumps(bilan, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
