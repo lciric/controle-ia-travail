@@ -370,9 +370,10 @@ def test_jetons_jouet_et_lanceur_sans_substitution(depot, monkeypatch):
 
 
 def test_lanceur_ordre_des_etapes_arret_pendant_d(depot, monkeypatch):
-    """D-6 (vérification 3, F-2) : notations décisives des deux juges, puis appariement, puis notations descriptives de
-    D. Un arrêt pendant les notations de D laisse écrits les épisodes, les notations décisives et l'appariement ;
-    `arret.json` consigne l'étape."""
+    """D-6 (vérification 3, F-2 ; relecture du différentiel, Y-5) : notations décisives des deux juges, puis appariement,
+    puis notations descriptives de D, dans cet ordre (l'appariement est consigné à son appel). Un arrêt pendant les
+    notations de D laisse écrits les épisodes, les notations décisives et l'appariement ; `arret.json` consigne
+    l'étape."""
     from controle_ia.manifeste import verifier_resultat
     vrai_noter, appels = lp.noter_ensembles, []
 
@@ -389,15 +390,18 @@ def test_lanceur_ordre_des_etapes_arret_pendant_d(depot, monkeypatch):
          "ensemble": "PROPOSAL 1: x", "classification": None, "variante": "b0"}
         for x in fiches for p in range(lp.passes_de(x["episode"], config))])
     monkeypatch.setattr(lp, "noter_ensembles", noter)
-    monkeypatch.setattr(lp, "paires_d_appariement", lambda fiches, par_id: [
-        {"cle": "t/e0/1/C1", "proposition": "a dense baseline", "cible": "a dense baseline", "famille": "controls"}])
+    def paires(fiches, par_id):
+        appels.append("appariement")
+        return [{"cle": "t/e0/1/C1", "proposition": "a dense baseline", "cible": "a dense baseline",
+                 "famille": "controls"}]
+    monkeypatch.setattr(lp, "paires_d_appariement", paires)
     f, _ = _taches_scellees(depot)
     committer(depot)
     run = "20261006-170008-pilote-jouet"
     with pytest.raises(GardeArret, match="arrêt simulé pendant les notations de D"):
         lp.executer(_config_lanceur(), depot, run, None, str(f))
     d = depot / "diag" / run
-    assert appels == ["decisives", "decisives", "descriptives"]
+    assert appels == ["decisives", "decisives", "appariement", "descriptives"]
     assert {x.name for x in d.glob("*.json")} == {"episodes.json", "notations-jouet-8B-decisives.json",
                                                   "notations-jouet-3B-decisives.json", "appariements.json",
                                                   "arret.json"}
@@ -419,15 +423,25 @@ def test_lanceur_configuration_incomplete(depot):
 
 @pytest.mark.parametrize("cle, valeur, motif", [
     ("noyau_attention", "flash", "noyau d'attention"), ("noyau_attention", "À REMPLIR", "noyau d'attention"),
-    ("duree_max_s", "À REMPLIR", "duree_max_s"), ("duree_max_s", 16_200, "duree_max_s"), ("duree_max_s", 0, "duree_max_s"),
+    ("duree_max_s", "À REMPLIR", "duree_max_s"), ("duree_max_s", 16_200, "duree_max_s"),
+    ("duree_max_s", 15_001, "duree_max_s"), ("duree_max_s", 0, "duree_max_s"),
     ("duree_max_s", True, "duree_max_s"), ("mode", "essai", "mode")])
 def test_lanceur_noyau_et_duree_valides_avant_le_manifeste(depot, cle, valeur, motif):
-    """Contre-lecture 2 du pilote, D-14 et D-22 : noyau inconnu, durée non numérique ou hors de ]0 ; 16 200[ : arrêt
-    avant tout manifeste (cas sain : les autres tests du lanceur)."""
+    """Contre-lecture 2 du pilote, D-14 et D-22, puis relecture du différentiel, Y-7 : noyau inconnu, durée non
+    numérique ou hors de ]0 ; 15 000] : arrêt avant tout manifeste (cas sain : les autres tests du lanceur, et la borne
+    de 15 000 s ci-dessous)."""
     c = dict(_config_lanceur(), **{cle: valeur})
     with pytest.raises(GardeArret, match=motif):
         lp.executer(c, depot, "20261006-170010-x", None, "inexistant.json")
     assert not (depot / "runs").exists()
+
+
+def test_lanceur_duree_a_la_borne_acceptee(depot):
+    """Y-7, cas sain : 15 000 s, plafond de la formule, passe la garde de durée (l'arrêt vient ensuite, du fichier des
+    tâches absent)."""
+    with pytest.raises(Exception) as e:
+        lp.executer(dict(_config_lanceur(), duree_max_s=15_000), depot, "20261006-170011-x", None, "inexistant.json")
+    assert "duree_max_s" not in str(e.value)
 
 
 def test_passes_et_demandes():

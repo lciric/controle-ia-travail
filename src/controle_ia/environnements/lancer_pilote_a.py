@@ -39,6 +39,8 @@ from .pilote_a import (apparier, charger_taches, exiger_config, jetons_jouet, jo
                        plan_des_episodes)
 
 DUREE_EXTERNE_S = 16_200          # délai externe du script de l'instance (270 minutes)
+DUREE_MAX_S = 15_000              # plafond de duree_max_s (formule gelée par la revalidation) : budget de l'instance,
+                                  # 17 700 s de surveillance moins mise en place, tests, dernier lot et poussées (Y-7)
 CLES_LANCEMENT = ("agent", "juges", "episodes_notes_deux_fois", "episodes_decisifs", "lot_juge", "max_nouveaux_juge",
                   "temperature_juge", "variante_juge", "lot_appariement", "duree_max_s", "mode", "noyau_attention",
                   "fils")
@@ -253,8 +255,9 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
     if config["noyau_attention"] not in NOYAUX:
         raise GardeArret(f"noyau d'attention {config['noyau_attention']!r} : {NOYAUX} attendus")
     duree = config["duree_max_s"]
-    if isinstance(duree, bool) or not isinstance(duree, (int, float)) or not 0 < duree < DUREE_EXTERNE_S:
-        raise GardeArret(f"duree_max_s {duree!r} : un nombre entre 0 et {DUREE_EXTERNE_S} s (délai externe) attendu")
+    if isinstance(duree, bool) or not isinstance(duree, (int, float)) or not 0 < duree <= DUREE_MAX_S:
+        raise GardeArret(f"duree_max_s {duree!r} : un nombre dans ]0 ; {DUREE_MAX_S}] s attendu (plafond de la formule "
+                         f"gelée par la revalidation, sous le délai externe de {DUREE_EXTERNE_S} s)")
     if config["mode"] == "reel" and prereg is None:
         raise GardeArret("run réel du pilote sans préenregistrement : R1 interdit de lancer")
     taches = charger_taches(chemin_taches)

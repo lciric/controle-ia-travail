@@ -430,10 +430,18 @@ def exiger_echeance_bras(echeance: float, bras: str) -> None:
 
 def exiger_carte_a100(nom: str) -> str:
     """Domaine revalidé : A100 80 Go (P-007 ; vérification 2, W-13). Une autre carte est un écart au préenregistrement :
-    arrêt consigné avant tout bras, nœud."""
-    if "A100" not in nom:
+    arrêt consigné avant tout bras, nœud. Le nom se lit par mot entier : « RTX A1000 » n'est pas une A100 (relecture du
+    différentiel, X-9)."""
+    if not re.search(r"\bA100\b", nom):
         raise GardeArret(f"carte « {nom} » : le domaine revalidé est une A100 (écart au préenregistrement, nœud)")
     return nom
+
+
+def exiger_mesures_reelles(reel: bool, memoire_pic_gio, duree_projetee_s, bras: str) -> None:
+    """R7 et R8 ne se lisent jamais sans mesure en mode réel (W-14). Appelée après l'écriture des épisodes et des mesures
+    du bras, qui restent ainsi écrits et scellés (RV-1 ; relecture du différentiel, X-5)."""
+    if reel and (memoire_pic_gio is None or duree_projetee_s is None):
+        raise GardeArret(f"bras {bras} : pic de mémoire ou durée projetée absents en mode réel")
 
 
 def _jouer_bras(modele, fmt, bras, plan, ids_episodes, g, config, echeance) -> dict:
@@ -512,14 +520,13 @@ def _executer_apres_manifeste(config, racine, chemin_m, manifeste, plan, ids_epi
         _liberer()
         mesures = domaine_et_garde(r["fiches"])
         projetee = duree_projetee_pilote(r["chrono"], len(ids_episodes))
-        if reel and (r["memoire_pic_gio"] is None or projetee is None):        # R7 et R8 jamais lues sans mesure (W-14)
-            raise GardeArret(f"bras {bras} : pic de mémoire ou durée projetée absents en mode réel")
         ecrire_resultat(racine, chemin_m, f"episodes-{bras}", {"fiches": r["fiches"]})
         ecrire_resultat(racine, chemin_m, f"mesures-{bras}", {
             "mesures": mesures, "controle_negatif": r["controle_negatif"], "chrono": r["chrono"],
             "duree_s": r["duree_s"], "rejeu_identique": r["rejeu_identique"], "noyaux_permis": r["noyaux_permis"],
             "memoire_pic_gio": r["memoire_pic_gio"], "duree_projetee_episodes_pilote_s": projetee,
             "repere_transcriptions": {k: len(v) for k, v in r["repere_ids"].items()}})
+        exiger_mesures_reelles(reel, r["memoire_pic_gio"], projetee, bras)    # R7, R8 jamais lues sans mesure (W-14)
         # repère (et, pour « defaut », phase « chemin ») en simple précision, dès la fin du bras (RV-1)
         etat["etape"] = f"repère et chemin {bras}"
         exiger_echeance_bras(echeance, bras)           # l'échéance du bras borne aussi le repère et le chemin (W-3)

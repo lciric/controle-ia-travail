@@ -43,7 +43,7 @@ from .analyse_pilote import (decomposition_complete, difference_appariee, interv
 from .juges import message_appariement
 from .propositions import heures_declarees, lire_action
 
-# --- Constantes gelées (citées par le préenregistrement du pilote, brouillon 4) -----------------------------------
+# --- Constantes gelées (citées par le préenregistrement du pilote) ------------------------------------------------
 SEUIL_APPARIEMENT = 0.5
 SEUIL_INCOMPLETES = 0.2             # plan B : plus de 20 % de réponses incomplètes (A, B, C)
 SEUIL_PART_PLAN_B, SEUIL_BORNE_PLAN_B = 0.8, 0.6
@@ -220,8 +220,8 @@ def lettre(episode: str, passe: int) -> str | None:
 
 def format_strict(texte: str) -> bool:
     """Format strict (CL-16) : exactement les six champs, chacun une fois, dans l'ordre, la ligne ACTION en tête
-    (lignes vides de tête tolérées ; une espace ou une tabulation avant ACTION, sur sa ligne, rend l'action non
-    stricte : vérification 3, F-4) ; rien avant. Ce qui suit la ligne PREDICTION en fait partie : le format strict ne
+    (lignes vides ou blanches de tête tolérées ; une espace ou une tabulation avant ACTION, sur sa ligne, rend
+    l'action non stricte : vérification 3, F-4 ; relecture du différentiel, Y-11) ; rien avant. Ce qui suit la ligne PREDICTION en fait partie : le format strict ne
     distingue pas une prédiction de plusieurs lignes d'un ajout (écrit au préenregistrement, D-9)."""
     if not texte.lstrip().startswith("ACTION"):
         return False

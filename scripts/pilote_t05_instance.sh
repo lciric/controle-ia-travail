@@ -26,8 +26,9 @@
 #                 sur une branche à part, donnees/t05/<run>. Une branche qui existe déjà sur le dépôt distant arrête avant
 #                 tout calcul : un relancement prend une branche nouvelle (…-v2), jamais une réécriture (R12 ; RV-14)
 #   TESTS_ATTENDUS nombre de tests attendus (sans préenregistrement seulement) ; sinon lu dans le préenregistrement
-#                 (« Tests attendus : `N` ») : la dernière ligne de pytest doit être « N passed[, M warnings] in X s »,
-#                 rien d'autre (aucun test sauté, attendu en échec ou en erreur ; RV-14)
+#                 (« Tests attendus : `N` ») : la dernière ligne de pytest doit être
+#                 « N passed[, M warning(s)] in X s[ (h:mm:ss)] », rien d'autre (aucun test sauté, attendu en échec ou en
+#                 erreur ; RV-14)
 #   TRAVAIL       défaut $HOME/t05
 #   VENV_EXISTANT environnement Python déjà prêt à réutiliser (sinon : python3.11 -m venv + requirements-gpu.txt)
 set -euo pipefail
@@ -74,21 +75,25 @@ git config user.email "instance-calcul@invalid"
 git checkout -q "$COMMIT"
 # branche neuve (RV-14) : code 0, la branche existe (arrêt) ; code 2, elle n'existe pas (suite) ; tout autre code, la
 # vérification est impossible (dépôt distant injoignable) : arrêt, jamais de repli silencieux (W-9). Nom complet exigé.
+# Messages au journal, avec la cause donnée par git (relecture du différentiel de la revalidation, X-8).
 code_branche=0
-git ls-remote --exit-code origin "refs/heads/$BRANCHE" >/dev/null 2>&1 || code_branche=$?
+git ls-remote --exit-code origin "refs/heads/$BRANCHE" >/dev/null 2>"$TRAVAIL/ls-remote.err" || code_branche=$?
 case "$code_branche" in
-    0) echo "branche $BRANCHE déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…)" >&2
+    0) journal "branche $BRANCHE déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…) ; arrêt avant l'installation"
        exit 2 ;;
     2) ;;
-    *) echo "vérification de la branche $BRANCHE impossible (git ls-remote, code $code_branche) : arrêt avant tout calcul" >&2
+    *) journal "vérification de la branche $BRANCHE impossible (git ls-remote, code $code_branche : $(tail -n 2 "$TRAVAIL/ls-remote.err" | tr '\n' ' ')) : arrêt avant l'installation"
        exit 2 ;;
 esac
 git checkout -q -b "$BRANCHE"
 
 # Lecture précoce du préenregistrement (W-1, W-10), avant toute installation, donc avant de payer la carte : présence,
 # nombre de tests attendus, chemins cités ; présence dans l'arbre du commit de la configuration et des fichiers de tâches
-# (sous donnees/<run d'extraction>/, ajoutés de force au suivi selon N-014 (a)) et de leurs sceaux, empreintes contrôlées.
-# Le lanceur Python compare ensuite chaque empreinte à celle que cite le préenregistrement.
+# (sous donnees/<run d'extraction>/, ajoutés de force au suivi par la session à chaque étape de l'extraction, selon
+# N-014 (a)) et de leurs sceaux ; sceaux contrôlés par le module du dépôt, aux mêmes règles que le lanceur : une ligne,
+# nom de base, empreinte (relecture du différentiel de la revalidation, X-3). Le module ne demande que la bibliothèque
+# standard : il tourne avant l'installation. Le lanceur Python compare ensuite chaque empreinte à celle que cite le
+# préenregistrement.
 lire_chemin() { sed -n "s/.*$1 : \`\\([^\`]*\\)\`.*/\\1/p" "$PREREG" | head -1; }
 if [ "$PREREG_ABSENT" = 1 ]; then
     ATTENDUS="${TESTS_ATTENDUS:-}"
@@ -116,16 +121,17 @@ else
         [ -n "$f" ] || { journal "chemin de la configuration ou des tâches introuvable dans $PREREG : arrêt avant l'installation"; exit 2; }
     done
     [ -f "$CONFIG" ] || { journal "configuration $CONFIG absente de l'arbre du commit $COMMIT : arrêt avant l'installation"; exit 2; }
-    for f in "${CITES[@]}"; do
+    for f in "$CONFIG" "${CITES[@]}"; do
         if [ ! -f "$f" ] || [ ! -f "$f.sha256" ]; then
-            journal "fichier de tâches $f ou son sceau absent de l'arbre du commit $COMMIT (ajout forcé de N-014 manquant ?) : arrêt avant l'installation"
-            exit 2
-        fi
-        if ! (cd "$(dirname "$f")" && sha256sum -c --quiet "$(basename "$f").sha256" >/dev/null 2>&1); then
-            journal "fichier de tâches $f : empreinte différente de son sceau : arrêt avant l'installation"
+            journal "fichier cité $f ou son sceau absent de l'arbre du commit $COMMIT (ajout forcé de N-014 manquant ?) : arrêt avant l'installation"
             exit 2
         fi
     done
+    if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m controle_ia.scellement verifier "$CONFIG" "${CITES[@]}" \
+            >"$TRAVAIL/sceaux.txt" 2>&1; then
+        journal "sceau non conforme parmi les fichiers cités ($(tail -n 1 "$TRAVAIL/sceaux.txt")) : arrêt avant l'installation"
+        exit 2
+    fi
     journal "préenregistrement lu : $ATTENDUS tests attendus ; configuration $CONFIG ; tâches ${CITES[*]} présentes et scellées"
 fi
 

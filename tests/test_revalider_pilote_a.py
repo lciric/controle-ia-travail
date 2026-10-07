@@ -333,8 +333,34 @@ def test_carte_a100_gardee():
     """W-13 : le domaine revalidé est une A100 ; une autre carte arrête avant tout bras."""
     assert rv.exiger_carte_a100("NVIDIA A100-SXM4-80GB") == "NVIDIA A100-SXM4-80GB"
     assert rv.exiger_carte_a100("NVIDIA A100 80GB PCIe")
-    with pytest.raises(GardeArret, match="A100"):
-        rv.exiger_carte_a100("NVIDIA H100 80GB HBM3")
+    for autre in ("NVIDIA H100 80GB HBM3", "NVIDIA RTX A1000"):          # X-9 : mot entier, pas une sous-chaîne
+        with pytest.raises(GardeArret, match="A100"):
+            rv.exiger_carte_a100(autre)
+
+
+def test_mesures_exigees_en_mode_reel(depot, monkeypatch):
+    """W-14 et X-5 : en mode réel, un pic de mémoire ou une durée projetée absents arrêtent (cas sain : mesures
+    présentes, ou mode jouet) ; l'arrêt vient après l'écriture des épisodes et des mesures du bras, consigné à l'étape du
+    bras."""
+    rv.exiger_mesures_reelles(True, 40.0, 100.0, "defaut")
+    rv.exiger_mesures_reelles(False, None, None, "defaut")
+    for pic, projetee in ((None, 100.0), (40.0, None)):
+        with pytest.raises(GardeArret, match="absents en mode réel"):
+            rv.exiger_mesures_reelles(True, pic, projetee, "defaut")
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    vraie = rv.exiger_mesures_reelles
+
+    def absentes(reel, pic, projetee, bras):
+        return vraie(True, None, projetee, bras)                           # mode réel simulé, pic de mémoire absent
+    monkeypatch.setattr(rv, "exiger_mesures_reelles", absentes)
+    run = "20261007-000010-revalidation-mesures"
+    with pytest.raises(GardeArret, match="absents en mode réel"):
+        rv.executer(CONFIG, depot, run, None, e, v, entropie_essai=11)
+    d = depot / "diag" / run
+    arret = json.loads((d / "arret.json").read_text())["resultat"]
+    assert arret["etape"] == "bras defaut" and arret["bras_lus"] == []
+    for nom in ("episodes-defaut", "mesures-defaut"):
+        assert (d / f"{nom}.json.sha256").is_file()
 
 
 def test_echeance_du_bras_cas_sain_et_artefact(depot, monkeypatch):
@@ -405,11 +431,12 @@ def test_signal_term_dans_un_sous_processus(depot):
     p = subprocess.Popen([sys.executable, "-m", "controle_ia.environnements.revalider_pilote_a", "--config",
                           "config.json", "--entrainement", e, "--evaluation", v, "--run-id", run],
                          cwd=depot, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    manifeste = depot / "runs" / run / "manifeste.json"
-    limite = time.monotonic() + 300
-    while not manifeste.exists() and p.poll() is None and time.monotonic() < limite:
+    sceau = depot / "runs" / run / "manifeste.json.sha256"       # X-2 : le sceau, écrit après le manifeste, puis 0,5 s :
+    limite = time.monotonic() + 300                               # le lanceur est alors dans le bloc qui consigne l'arrêt
+    while not sceau.exists() and p.poll() is None and time.monotonic() < limite:
         time.sleep(0.05)
-    assert manifeste.exists() and p.poll() is None
+    time.sleep(0.5)
+    assert sceau.exists() and p.poll() is None
     os.kill(p.pid, signal.SIGTERM)
     _, err = p.communicate(timeout=600)
     assert p.returncode == 1 and "signal TERM" in err
