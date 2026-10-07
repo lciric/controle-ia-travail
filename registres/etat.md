@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-07 14:05 UTC, session 11 reprise (extraction de T0.5 en pause en attendant la permission de Lazar, redemandée ; pilote et revalidation : brouillons revalidation 6, configuration 3, pilote 7, procédure de lancement 4 ; documents pour les évaluateurs : README v2, proposition pour évaluateurs, copie expurgée du dépôt remise à Lazar ; R-098 à R-105 ; 650 tests réussis ; passation `registres/passations/2026-10-07-1405.md`).
+Dernière mise à jour : 2026-10-07 14:12 UTC, session 11 reprise (extraction de T0.5 relancée sur la permission explicite de Lazar, R-106 : lectures de la tentative 1 en cours ; pilote et revalidation : brouillons revalidation 6, configuration 3, pilote 7, procédure de lancement 4 ; documents pour les évaluateurs : README v2, proposition pour évaluateurs, copie expurgée du dépôt remise à Lazar ; R-098 à R-106 ; 650 tests réussis ; passation `registres/passations/2026-10-07-1405.md`).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
