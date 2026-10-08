@@ -2,7 +2,7 @@
 
 **An AI control research programme.** Can a monitor that reads an AI agent's internal activations catch sabotage spread thinly over many innocent-looking actions? And how easily can the monitor itself be corrupted?
 
-> **Status, 7 October 2026.** Phase 0 (building and validating the instruments) runs from 5 October to the first decision gate, G0, on 1 November 2026; work in this repository started on 4 October. This repository is private and shared for evaluation only: please do not redistribute it. Its working documents are in French; this README is the English entry point.
+> **Status, 8 October 2026.** Phase 0 (building and validating the instruments) started on 5 October; work in this repository started on 4 October. The first decision gate, G0, is planned for December 2026, at the start of the grant period. The working documents are in French; this README is the English entry point.
 
 ## In one minute
 
@@ -10,10 +10,10 @@
 - **The bet.** Suppose an intention to sabotage leaves a trace in the agent's own activations at each step. Then internal evidence can add up over time, and across copies of the same model, even when external evidence does not. Whether this holds is an empirical question, and the programme states in advance what follows from either answer.
 - **The plan.** Three papers:
   - **A**, accumulation of evidence over time for a single agent;
-  - **B**, accumulation across agents that share weights;
+  - **B**, accumulation across agents that share weights (in a longer, twelve-month version of the plan);
   - **C**, the monitor as an attack surface: how far persuasion moves large-language-model judges and activation probes, and at what cost to the attacker.
 - **What exists today (7 October 2026).**
-  - A pre-registered simulation of the theory: 31 of 31 predictions confirmed. As expected, these check the statistical instruments; they are not yet evidence on real models.
+  - A pre-registered simulation of the theory, an additivity lemma and a negative theorem (see [Theory, in brief](#theory-in-brief)): 31 of 31 predictions confirmed. As expected, these check the statistical instruments; they are not yet evidence on real models.
   - An activation-logging harness, validated on Llama-3.1-8B-Instruct on a rented GPU, within a stated domain.
   - A literature check on primary sources: 98 arXiv PDFs, 3,497 quotations checked by script against the page text, 0 failures at the final pass.
   - A research-sabotage environment under construction.
@@ -50,11 +50,11 @@ Running AI agents under pre-registration, sealing and fresh review is itself par
 
 ## About me
 
-**Lazar [TO COMPLETE: surname]** — [TO COMPLETE: current position and education].
+**Lazar Ciric** — independent AI safety researcher, Paris.
 
-[TO COMPLETE: two or three sentences on the career transition into AI safety: background, motivation, and what the grant would enable.]
+I trained in physics at ENS Paris-Saclay, then moved to computational neuroscience: my master's thesis in Srdjan Ostojic's lab at ENS was on networks of spiking neurons, and I am second author of the lab's paper on how low-rank connectivity shapes the geometry of their activity (Cimeša, Ciric & Ostojic, *PLOS Computational Biology*, 2023, [doi:10.1371/journal.pcbi.1011315](https://doi.org/10.1371/journal.pcbi.1011315)). During an internship at IBM Research Zurich I worked on how precise analog chips can be when they do a neural network's arithmetic inside memory (co-author, *Neuromorphic Computing and Engineering*, 2022), then studied statistics and machine learning at Mines Paris-PSL. One question runs through all of it: what a system is really doing, underneath what can be observed. Since March 2026 I have done AI safety research independently, on my own funds; a grant would let me run the plan below full time from 1 December 2026.
 
-**My previous project (P3)** studied the construct validity of sycophancy in Llama-3.1-8B-Instruct. It was pre-registered, used covariance-matched controls, and was reproducible bit for bit over 120 five-turn dialogues. [TO COMPLETE: link or status; and whether P3 was also carried out with AI agents.]
+**My previous project (P3)** studied the construct validity of sycophancy in Llama-3.1-8B-Instruct. It was pre-registered, used covariance-matched controls, and was reproducible bit for bit over 120 five-turn dialogues. Code, results and the correction of a result that looked like a safety effect: [github.com/lciric/sycophancy-construct-validity](https://github.com/lciric/sycophancy-construct-validity).
 
 Three lessons carry over to this programme:
 
@@ -62,7 +62,7 @@ Three lessons carry over to this programme:
 - prefer ordinal or continuous instruments to categorical ones;
 - measure deference, and corruptibility, as a continuous gain (how far a verdict moves toward the pressure) rather than as a yes-or-no trait.
 
-**Contact:** [TO COMPLETE: email, LinkedIn or website]
+**Contact:** lciric@ens-paris-saclay.fr · [LinkedIn](https://www.linkedin.com/in/lazar-ciric-55a23913b/) · [GitHub](https://github.com/lciric)
 
 ## Why it matters
 
@@ -114,30 +114,57 @@ Two of those reviews, of this pilot and of a related revalidation, independently
 
 ## Theory, in brief
 
-- Monitor scores are indexed by agent and by step, so time (one agent) and a swarm (several agents) are the same mathematical object.
-- An **additivity lemma** says what a sequential test with an anytime-valid false-alarm guarantee can achieve against an attacker who splits a fixed sabotage budget.
-- A **negative theorem**, stated through permutation groups, shows which statistics an adaptive attacker can blind. It also separates attacks that only reorder the scores from attacks that keep each score's distribution but change how the scores depend on one another.
-- **The pivotal empirical question:** on realistic model organisms, does sabotage shift the distribution of each probe score at all? If it does, sequential accumulation should work. If it does not, the theorem dictates the aggregator, or says when monitoring based on per-score distributions must fail.
+Monitor scores X<sub>i,t</sub> are indexed by agent i and step t and read in time order. Permutations of time within each agent and permutations of agents within each step are two subgroups of the permutations of one index set: that is the precise sense in which time (one agent) and a swarm (several agents) are the same mathematical object. Scores are in units of the honest standard deviation σ, and α is the target false-alarm rate. The attacker has a fixed budget B of mean shifts, and four attacker classes are distinguished: shifts on the sabotaged actions (M); shifts compensated on other actions (M±); attacks that keep the multiset of honest scores and only rearrange it (C); attacks that keep each score's distribution but change how the scores depend on one another (K).
 
-The mathematical note is `docs/notes/note-mathematique-lemme-theoreme-v3.md` (in French).
+**Additivity lemma** (adversarial statement).
+
+- *L1, terminal invariance, path by path.* In class M, if all the sabotage falls within the horizon n₀, the terminal sum moves by exactly B, whatever the split of the budget across actions, steps and agents, even with adaptive shifts. Any rule based on it has a power fixed by B, n₀, the honest distribution, α and the rule's parameters; at fixed B, that power falls as n₀ grows.
+- *L2, collapse of the maximum.* With Gaussian i.i.d. honest scores, an exact threshold and the budget split equally over m actions, the power of the per-action maximum decreases in m, down to a floor that is strictly above α at fixed n₀.
+- *L3, anytime-valid reading* (one-sided mixture e-process and Ville's inequality, under the note's validity conditions: under the honest distribution, increments that are independent or martingale differences and conditionally sub-Gaussian with parameter σ², a known mean, and σ known or bounded by a known value). Earlier sabotage is easier to catch, and the probability of an alarm by n₀ has a lower bound that depends only on B, n₀, the honest distribution and the rule's parameters. For an alarm *before* the harm is done, the note cautions that change detectors are needed (Page's CUSUM, e-detectors), because a cumulative e-process dilutes a late sabotage in the honest prefix; the simulation below confirms it.
+- *L4, splitting across agents, path by path.* For a rule that uses only the sums at step boundaries, with no interference between agents and a fixed number of actions per step, splitting the sabotage across agents within a step is exactly invariant, also when read anytime-valid; the threshold then assumes agents independent within a step (not yet tested in simulation).
+- *L5, compensation.* Deterministic compensation that brings the net budget to zero blinds only statistics that are functions of the sum; restoring the honest distribution of the multiset needs data-dependent shifts, that is, class C.
+
+**Negative theorem** (by invariance).
+
+- *T1, path by path, with no assumption on the honest distribution.* If the attack almost surely permutes the honest scores within a group G, every G-invariant statistic is unchanged; a test based on it, whose own randomness is independent of the attack, has a power equal to its false-alarm rate.
+- *T2.* If the honest distribution is invariant under a group H, and the attacker applies its own permutation in H and then a uniformly drawn element of H, independent of the scores and of its own randomness, the attacked scores follow the honest distribution exactly: no test on the scores beats its false-alarm rate. The group matters: three agents with different honest means are caught when the scores are reshuffled across all agents and steps, not when they are reshuffled in time within each agent.
+- *T3.* Against structured harm (consecutive high scores of one agent, or several agents high at the same step), only local statistics (the sliding-window scan, co-elevation) keep a path-wise guarantee, provided the harmful scores are high enough; global order statistics such as the autocorrelation can be neutralised by an adaptive attacker who rearranges the rest of the episode.
+- *T4.* Read sequentially, the one-sided cumulative sum is no more powerful than under the honest distribution against arrangements whose partial sums are dominated, path by path, by those of the honest order, such as an increasing sort, or moving the r highest scores to the end while keeping relative orders (this is false for the two-sided rule); the scan and Page's CUSUM catch these arrangements.
+- *Classes C and K differ.* In class C, every symmetric statistic is blind (T1). In class K, under positive dependence, the sum and the e-process rise above their false-alarm rate while the maximum stays at or below its own (Slepian's inequality); under negative dependence, the sum and the e-process fall below theirs. The programme's first wording of the theorem is therefore false in class K. Proposition 1 of arXiv 2606.10456 claims that any monitor whose rule depends only on the empirical marginal has a power equal to its false-positive rate when the attack leaves that empirical marginal exactly benign; no attack can do so for a continuous benign distribution, and on the paper's own construction, which is in class K, the conclusion fails for the sum.
+
+**What the pre-registered simulation adds** (α = 0.05, 20,000 replications per cell; `docs/notes/resultats-T0.3-v1.md`):
+
+- *The schedule matters.* At n₀ = 200, B = 25 and m = 10 sabotaged actions (one-sided e-process at Ville's threshold), an alarm by n₀ comes with probability 1.000 for sabotage at the start and 0.160 at the end, against a terminal bound of 0.158.
+- *Alarm before the last sabotaged action* (a block of 5 to 20 actions at the end of the horizon, equal false-alarm rates): cumulative e-process 0.09 to 0.25; Page's CUSUM 0.57 to 1.00; e-detector 0.52 to 1.00.
+- *The maximum collapses, the sum does not.* At n₀ = 200 and B = 20, the terminal sum holds at 0.41 whatever the split; the maximum falls from 1.00 (m ≤ 5) to 0.071 (m = 200).
+- *Class K*, on the construction of 2606.10456 itself (a Gaussian autoregressive copula whose coefficient goes from φ₀ = 0.5 to φ₁ = 0.9, T = 300): sum 0.253, maximum 0.027.
+- *Class C.* With the five highest scores placed consecutively and the rest of the episode rearranged adaptively, the autocorrelation falls from 0.46 to 0.0515 (0.0507 under the honest distribution), while the sliding mean over w = 5 steps stays at 1.000 and Page's CUSUM at 0.997.
+- *Outside its assumptions*, Ville's rule gives false alarms of 0.21 (n₀ = 200) and 0.35 (n₀ = 1,000) when an effect τ = 0.2 is shared by all steps of an episode; calibration on 1,000 whole honest episodes gives 0.046 to 0.055 in all 17 settings.
+
+These mostly check the instruments: they validate the statistics, the calibrations and the arithmetic of the proofs, not the lemma or the theorem on real activations.
+
+**The pivotal empirical question:** on realistic model organisms, does sabotage shift the distribution of each probe score at all? If it does, sequential accumulation should work. If it does not, the theorem dictates the aggregator, or says when monitoring based on per-score distributions must fail.
+
+The mathematical note, with the statements and the proofs, is `docs/notes/note-mathematique-lemme-theoreme-v3.md` (in French).
 
 ## Roadmap
 
-- **Gate G0, 1 November 2026.** Required:
+- **Gate G0, at the start of the grant period (December 2026).** Required:
   - model organisms with a dose–response;
   - probes above the random floor;
   - a running black-box baseline;
   - sealed and reviewed pre-registrations for gate G1 and for Paper C;
   - the literature check closed.
-- **Months 1–2 (November–December 2026, if funded).** Paper A core experiments, with access (black or white box) crossed with aggregation (per action or sequential). Paper C: deference of judges and probes under graded pressure. Gates G1 and GC.
-- **Months 3–7 (January–May 2027).** Write Paper A; Paper C (displacement cost, countermeasures, acceptance test); Paper B (swarm statistics, diversity of monitors).
+- **Months 1–4 (December 2026 – March 2027, if funded).** Paper C: deference of judges and probes under five attack families, impersonation, the displacement tax, countermeasures and an acceptance test; Paper C on arXiv and at a workshop. Paper A: organisms and dose–response, then the 2 × 2 design, with access (black or white box) crossed with aggregation (per action or sequential), and the lemma and the theorem on real activations. Gates GC (end of month 2) and G1 (end of month 4).
+- **Months 5–7 (April – June 2027).** Paper A: adaptive attacks, interventions, validity and robustness; Paper A on arXiv and submitted to a conference; release of the code, organisms, probes and pre-registrations.
+- **Paper B** (statistics across agents that share weights, diversity of monitors) belongs to a longer, twelve-month version of the plan.
 
 Every gate has a pre-committed pivot. If white-box sequential monitoring does not beat the best black-box baseline at gate G1, the negative result is published, and the analysis of what the probes really measure becomes the main line.
 
 ## Suggested reading path (about 30 minutes)
 
 1. This README.
-2. The research proposal, in English (8 pages): `livrables/proposition-publique-v1/proposal-public-v1.pdf`.
+2. For the mathematics, in French: the note `docs/notes/note-mathematique-lemme-theoreme-v3.md` (statements and proofs) and the simulation results `docs/notes/resultats-T0.3-v1.md`.
 3. A sample of the method, in French:
    - section 1 of the verdict `docs/verdicts/verdict-T0.4-critere-1-G0-v3.md` (lines 9–21);
    - the pre-registration it applies, `prereg/T0.4-validation-modele-reel-v3.md`;
@@ -159,7 +186,7 @@ Every gate has a pre-committed pivot. If white-box sequential monitoring does no
 | `scripts/` | Instance bootstrap and run scripts |
 | `livrables/` | Versioned deliverables (zip archives with their hashes) |
 
-This private repository holds copies of third-party arXiv PDFs (`docs/sources/pdf/`) and extraction outputs that contain text derived from those papers (`donnees/`). They are kept for verification only, are not redistributable, and will be removed before any publication. Please do not copy them.
+This repository holds copies of third-party material: arXiv PDFs (`docs/sources/pdf/`); working files of the reader agents with pages extracted from those PDFs; the full text of arXiv 2606.08892 and an extract of arXiv 2606.07054 (`extrait.tar` in `docs/sources/invites-2606.08892-v1/` and `docs/sources/invites-2606.07054-v1/`); two model-card pages (`docs/sources/cartes-modeles-20261006/`); and task-extraction outputs that contain text derived from the papers (`donnees/`). They remain under their authors' licences: please do not reuse them.
 
 ## Reproduce
 
@@ -175,4 +202,4 @@ GPU runs need `requirements-gpu.txt`. In this repository, a hook (`.claude/hooks
 
 ---
 
-*README version 2, 7 October 2026. Every figure is traced to its source in `livrables/readme-v1/` (traceability table, fact-check report and sealed copy of version 1, in French); version 2 only adds the link to the research proposal (`livrables/readme-v2/`).*
+*README version 3, 8 October 2026. Figures carried over from version 2 keep the traceability of `livrables/readme-v1/` (traceability table, fact-check report and sealed copy of version 1, in French; version 2 only added the link to the research proposal, `livrables/readme-v2/`). The changes of version 3 and their sources are listed in `livrables/readme-v3/changements-readme-v3.md`.*
