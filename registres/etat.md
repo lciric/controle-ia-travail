@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-07 23:15 UTC, session 11 reprise (extraction de T0.5 : tentative 1 terminée et validée, 96 papiers sur 96 valides, aucun « theory_only », R-109 (après les refus du classificateur, R-107, et le réglage des permissions par Lazar, R-108) ; prochaine étape : échantillon et contre-vérification ; pilote et revalidation : brouillons revalidation 6, configuration 3, pilote 7, procédure de lancement 4 ; documents pour les évaluateurs : README v2, proposition pour évaluateurs, copie expurgée du dépôt remise à Lazar ; R-098 à R-109 ; 650 tests réussis ; passation `registres/passations/2026-10-07-1613.md`).
+Dernière mise à jour : 2026-10-08 03:10 UTC, session 11 reprise (extraction de T0.5 : tentative 1 terminée et validée, 96 papiers sur 96 valides, aucun « theory_only », R-109 (après les refus du classificateur, R-107, et le réglage des permissions par Lazar, R-108) ; contre-vérification, ronde 1 : 11 avis sur 16, 5 relances dues, arrêtée par la limite d'usage hebdomadaire du compte jusqu'au 2026-10-10 à 04:00 UTC, R-110 ; pilote et revalidation : brouillons revalidation 6, configuration 3, pilote 7, procédure de lancement 4 ; documents pour les évaluateurs : README v2, proposition pour évaluateurs, copie expurgée du dépôt remise à Lazar ; R-098 à R-110 ; 650 tests réussis ; passation `registres/passations/2026-10-08-0310.md`).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
