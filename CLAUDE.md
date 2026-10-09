@@ -13,7 +13,8 @@ La continuité vit dans les fichiers, jamais dans la mémoire de conversation.
 - Décisions de Lazar sur les nœuds qui fixent la lecture du programme (en attendant une version nouvelle) : `docs/decisions/` (N-003, N-004 : énoncés retenus de T et L ; N-007, N-008 : H2 reformulée, bases ajoutées, critère de G1 sans F1 ; N-005, N-006 : HC1 à destination libre, porte GC réécrite, HC5 ; P-008 : trois affirmations du programme corrigées, sections 3 et 6 ; N-013 : revendications précisées après le niveau 2 de l'état de l'art — HC1, HC3, HC4, HC5, HC2b renommée, H5, H6, H7).
 
 ## Dépôt distant
-`https://github.com/lciric/controle-ia` (privé), branche `main`. Pousser à chaque passation.
+Dépôt de travail : `https://github.com/lciric/controle-ia-travail` (privé), branche `main`, dès que Lazar a renommé l'ancien `lciric/controle-ia` et l'a repassé en privé (N-016, R-115). Pousser à chaque passation.
+**Ne jamais pousser ce dépôt vers `lciric/controle-ia`** : ce nom sera la copie expurgée publique, régénérée par `scripts/depot_expurge.py`. Tout lancement d'instance passe `DEPOT_URL=https://github.com/lciric/controle-ia-travail.git` : les scripts scellés gardent l'ancien défaut.
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026) ; porte de sortie G0.
