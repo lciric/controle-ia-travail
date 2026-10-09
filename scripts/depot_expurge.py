@@ -51,6 +51,11 @@ RETRAITS = [
     ("livrables/reponse-amitie-v1/**", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),
     ("livrables/reponse-amitie-v1.zip", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),
     ("livrables/reponse-amitie-v1.zip.sha256", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),
+    ("livrables/anteriorite-niveau1-v1/decisions-v2.md", "copie du registre des décisions (R-116)"),
+    ("livrables/premier-rendu-v1/decisions-v1.md", "copie du registre des décisions (R-116)"),
+    ("livrables/anteriorite-niveau1-v1.zip", "archive qui contient les registres de travail (R-116)"),
+    ("livrables/premier-rendu-v1.zip", "archive qui contient les registres de travail (R-116)"),
+    ("livrables/controle-ia-v1.bundle", "paquet git qui contient les registres de travail (R-116)"),
 ]
 # L'ancien paquet git (`livrables/controle-ia-v1.bundle`, cinq commits du 2026-10-04, recopié dans
 # `livrables/premier-rendu-v1.zip`) reste : aucun fichier de son historique n'est visé ici (garde des archives).
@@ -75,6 +80,10 @@ REMPLACEMENTS_FACULTATIFS = [
      "(my attestation, R-114, is recorded in the working registers, which this copy omits)"),
     ("4. The decision log and my approvals: `registres/decisions.md`, `registres/go.md`.",
      "4. The decision log and my approvals are kept in the working registers (`registres/`), which this copy omits."),
+    ('Decisions are logged with their dates in `registres/decisions.md`, and my approvals in `registres/go.md`. Every working session ends with a sealed hand-over note in `registres/passations/`.',
+     'Decisions are logged with their dates in the working registers (`registres/`), together with my approvals and a sealed hand-over note for every working session; this copy omits them.'),
+    ('| `registres/` | Living registers: state, decisions, approvals, compute spending, instance stops, session hand-overs |',
+     '| `registres/` | Living registers: state, decisions, approvals, compute spending, instance stops, session hand-overs (omitted from this copy) |'),
 ]
 
 
