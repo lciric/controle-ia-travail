@@ -51,14 +51,19 @@ RETRAITS = [
 # L'ancien paquet git (`livrables/controle-ia-v1.bundle`, cinq commits du 2026-10-04, recopié dans
 # `livrables/premier-rendu-v1.zip`) reste : aucun fichier de son historique n'est visé ici (garde des archives).
 
-PARAGRAPHE_README = ("This private repository holds copies of third-party arXiv PDFs (`docs/sources/pdf/`) and extraction "
-                     "outputs that contain text derived from those papers (`donnees/`). They are kept for verification "
-                     "only, are not redistributable, and will be removed before any publication. Please do not copy them.")
-REMPLACEMENT_README = ("This copy omits the third-party PDFs, the page texts extracted from them, and the outputs derived "
-                       "from them; their SHA-256 hashes remain, and `EXPURGE.md` lists every omitted file. It keeps the "
-                       "short prompt texts transcribed or adapted from two papers (arXiv 2606.08892 and 2606.07054), "
-                       "because the code and its tests load them; they are attributed to their sources. Please do not "
-                       "redistribute.")
+# Paragraphe du README v3 et v4 sur les textes de tiers (R-112, R-113), remplacé dans la copie.
+PARAGRAPHE_README = ("This repository holds copies of third-party material: arXiv PDFs (`docs/sources/pdf/`); working "
+                     "files of the reader agents with pages extracted from those PDFs; the full text of arXiv 2606.08892 "
+                     "and an extract of arXiv 2606.07054 (`extrait.tar` in `docs/sources/invites-2606.08892-v1/` and "
+                     "`docs/sources/invites-2606.07054-v1/`); two model-card pages (`docs/sources/cartes-modeles-20261006/`); "
+                     "and task-extraction outputs that contain text derived from the papers (`donnees/`). They remain under "
+                     "their authors' licences: please do not reuse them.")
+REMPLACEMENT_README = ("This copy omits the third-party material: the arXiv PDFs, the reader agents' working files with "
+                       "pages extracted from them, the full text of arXiv 2606.08892 and the extract of arXiv 2606.07054, "
+                       "the model-card pages and the task-extraction outputs; their SHA-256 hashes remain, and "
+                       "`EXPURGE.md` lists every omitted file. It keeps the short prompt texts transcribed or adapted from "
+                       "those two papers, because the code and its tests load them; they are attributed to their sources "
+                       "and remain under their authors' licences.")
 
 
 def _git(*args: str, cwd: Path | None = None, env: dict | None = None, entree: bytes | None = None) -> bytes:

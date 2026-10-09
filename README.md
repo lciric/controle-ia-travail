@@ -2,7 +2,7 @@
 
 **An AI control research programme.** Can a monitor that reads an AI agent's internal activations catch sabotage spread thinly over many innocent-looking actions? And how easily can the monitor itself be corrupted?
 
-> **Status, 8 October 2026.** Phase 0 (building and validating the instruments) started on 5 October; work in this repository started on 4 October. The first decision gate, G0, is planned for December 2026, at the start of the grant period. The working documents are in French; this README is the English entry point.
+> **Status, 9 October 2026.** Phase 0 (building and validating the instruments) started on 5 October; work in this repository started on 4 October. The first decision gate, G0, is planned for 1 November 2026, before the grant period, which would start in December 2026. The working documents are in French; this README is the English entry point.
 
 ## In one minute
 
@@ -25,7 +25,7 @@
 
 ## Who does what
 
-I designed the programme: its questions, hypotheses, papers and gates. The work in this repository is done by AI agents (Claude Code) under the written rules below:
+I designed the programme: its questions, hypotheses, papers and gates. The work in this repository is done with AI agents (Claude Code), under the written rules below:
 
 - code and runs;
 - literature checks;
@@ -34,7 +34,7 @@ I designed the programme: its questions, hypotheses, papers and gates. The work 
 - internal reviews;
 - the drafting of documents, including this README.
 
-Every commit is theirs, or comes from the scripts they run on rented GPUs. One example of my own scientific input: my review of their literature verdict on the deference law set the claimed piece of Paper C, a destination estimated freely rather than imposed (`docs/etat-de-l-art/porte-GC-loi-de-deference-v1.md`; decision N-005 in `docs/decisions/decision-N-005-N-006-v1.md`).
+Every commit is theirs, or comes from the scripts they run on rented GPUs. I checked every statement and proof of the mathematical note by hand (my attestation: R-114 in `registres/decisions.md`). One example of my own scientific input: my review of their literature verdict on the deference law set the claimed piece of Paper C, a destination estimated freely rather than imposed (`docs/etat-de-l-art/porte-GC-loi-de-deference-v1.md`; decision N-005 in `docs/decisions/decision-N-005-N-006-v1.md`).
 
 The rules split decisions three ways:
 
@@ -149,7 +149,7 @@ The mathematical note, with the statements and the proofs, is `docs/notes/note-m
 
 ## Roadmap
 
-- **Gate G0, at the start of the grant period (December 2026).** Required:
+- **Gate G0, 1 November 2026, before the grant period.** Required:
   - model organisms with a dose–response;
   - probes above the random floor;
   - a running black-box baseline;
@@ -202,4 +202,4 @@ GPU runs need `requirements-gpu.txt`. In this repository, a hook (`.claude/hooks
 
 ---
 
-*README version 3, 8 October 2026. Figures carried over from version 2 keep the traceability of `livrables/readme-v1/` (traceability table, fact-check report and sealed copy of version 1, in French; version 2 only added the link to the research proposal, `livrables/readme-v2/`). The changes of version 3 and their sources are listed in `livrables/readme-v3/changements-readme-v3.md`.*
+*README version 4, 9 October 2026. Figures carried over from version 2 keep the traceability of `livrables/readme-v1/` (traceability table, fact-check report and sealed copy of version 1, in French; version 2 only added the link to the research proposal, `livrables/readme-v2/`). The changes of version 3 and their sources are listed in `livrables/readme-v3/changements-readme-v3.md`, those of version 4 in `livrables/readme-v4/changements-readme-v4.md`.*
