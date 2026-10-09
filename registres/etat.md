@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-09 vers 08:55 UTC, session hors phase (R-116, R-117 : copie expurgée publiée sur `lciric/controle-ia` ; `controle-ia-travail` encore public). Mise à jour précédente : 2026-10-09 vers 08:00 UTC (R-113 à R-115).
+Dernière mise à jour : 2026-10-09 vers 09:25 UTC, session hors phase (R-119 : N-016 clos, `controle-ia-travail` privé). Mise à jour précédente : 2026-10-09 vers 08:38 UTC (R-116, R-117 ; heure rectifiée par R-118).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -23,7 +23,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 Aucune porte franchie. Critères de G0 prouvés : **1** (harnais validé sur le modèle réel, T0.4 v3, verdict R13 du 2026-10-06) et **5** (agrégateurs validés en simulation, T0.3). Restent les critères 2 (organismes), 3 (sondes), 4 (base boîte noire), 6 (préenregistrement de G1), 7 (préenregistrement du papier C) et 8 (état de l'art vérifié).
 
 ## GO et nœuds en attente
-- **N-016 : GO le 2026-10-09** (R-113) ; renommage en `controle-ia-travail` et dépôt public vide `lciric/controle-ia` faits par Lazar ; copie expurgée poussée sur `lciric/controle-ia` (R-117 : sans tiers, sans candidature EA Funds, sans registres, sans textes AFFINE). **Reste : passer `controle-ia-travail` en privé** (encore public le 2026-10-09 vers 08:50 UTC ; réglage refusé à la session, 403).
+- **N-016 : GO le 2026-10-09** (R-113) ; renommage en `controle-ia-travail` et dépôt public vide `lciric/controle-ia` faits par Lazar ; copie expurgée poussée sur `lciric/controle-ia` (R-117 : sans tiers, sans candidature EA Funds, sans registres, sans textes AFFINE). **Clos le 2026-10-09** (R-119) : `controle-ia-travail` passé en privé par Lazar ; vérifié à 09:02 UTC sans compte (page, fichier brut et ancien commit en 404) et par l'API (`private=true`, aucune bifurcation).
 - **N-017 résolu** le 2026-10-09 vers 07:25 UTC (R-113) : G0 reste au 1er novembre 2026, porte interne avant la période financée ; le plan financé suit la proposition v2 à partir de décembre 2026 ; README v4 aligné.
 - **Extraction de T0.5 : débloquée par Lazar** le 2026-10-07 vers 22:15 UTC (R-108, option (a) : il règle les permissions de la session ; reprise avec l'invite scellée d'origine, sans écart). Question d'origine (posée vers 16:15 UTC ; R-107) : malgré la permission de Lazar (R-106), le classificateur du mode automatique refuse une partie des lancements à cause de la phrase de préséance de l'invite fixe ; 82 lancements restent (78 jamais tentés, 4 refusés). Options : (a) Lazar règle les permissions de la session (mode, ou règle d'autorisation pour l'outil de sous-agents), procédure inchangée ; (b) écart déclaré dans le run en cours : invite de lancement reformulée sans la phrase de préséance, pour les 82 lancements restants ; (c) version 2 de la procédure et run nouveau. Recommandation (b), confiance ≈ 60 %.
 - **N-015 ouvert** (nœud, sans défaut ; proposé le 2026-10-07, R-091) : H6, la composante « bruit d'activations » trouvée en partie occupée par Poser (2405.05466) ; options (a) garder une revendication réduite, (b) retirer la revendication en gardant la mesure, (c) rien ; recommandation (b), confiance ≈ 65 % (`docs/decisions/proposition-N-015-v1.md`). Rien de la phase 0 n'en dépend.
