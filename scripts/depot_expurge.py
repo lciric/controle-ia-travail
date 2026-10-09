@@ -47,6 +47,10 @@ RETRAITS = [
     ("livrables/candidature-ea-funds-v1/**", "candidature à un autre fonds, confidentielle"),
     ("livrables/candidature-ea-funds-v1.zip", "candidature à un autre fonds, confidentielle"),
     ("livrables/candidature-ea-funds-v1.zip.sha256", "candidature à un autre fonds, confidentielle"),
+    ("registres/**", "registres de travail : messages de Lazar cités mot pour mot, montants, instances (R-116)"),
+    ("livrables/reponse-amitie-v1/**", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),
+    ("livrables/reponse-amitie-v1.zip", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),
+    ("livrables/reponse-amitie-v1.zip.sha256", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),
 ]
 # L'ancien paquet git (`livrables/controle-ia-v1.bundle`, cinq commits du 2026-10-04, recopié dans
 # `livrables/premier-rendu-v1.zip`) reste : aucun fichier de son historique n'est visé ici (garde des archives).
@@ -64,6 +68,14 @@ REMPLACEMENT_README = ("This copy omits the third-party material: the arXiv PDFs
                        "`EXPURGE.md` lists every omitted file. It keeps the short prompt texts transcribed or adapted from "
                        "those two papers, because the code and its tests load them; they are attributed to their sources "
                        "and remain under their authors' licences.")
+
+# Renvois du README vers les registres, absents de la copie (R-116) : remplacés s'ils sont présents.
+REMPLACEMENTS_FACULTATIFS = [
+    ("(my attestation: R-114 in `registres/decisions.md`)",
+     "(my attestation, R-114, is recorded in the working registers, which this copy omits)"),
+    ("4. The decision log and my approvals: `registres/decisions.md`, `registres/go.md`.",
+     "4. The decision log and my approvals are kept in the working registers (`registres/`), which this copy omits."),
+]
 
 
 def _git(*args: str, cwd: Path | None = None, env: dict | None = None, entree: bytes | None = None) -> bytes:
@@ -201,12 +213,18 @@ def main(argv: list[str]) -> int:
     if texte.count(PARAGRAPHE_README) != 1:
         print("paragraphe du README introuvable : arrêt (aucun paquet écrit)", file=sys.stderr)
         return 1
-    readme.write_text(texte.replace(PARAGRAPHE_README, REMPLACEMENT_README), encoding="utf-8")
+    texte = texte.replace(PARAGRAPHE_README, REMPLACEMENT_README)
+    for avant, apres in REMPLACEMENTS_FACULTATIFS:
+        if texte.count(avant) > 1:
+            print(f"renvoi du README ambigu : {avant!r} : arrêt (aucun paquet écrit)", file=sys.stderr)
+            return 1
+        texte = texte.replace(avant, apres)
+    readme.write_text(texte, encoding="utf-8")
     pdf = sorted(r["chemin"] for r in retraits if r["chemin"].startswith("docs/sources/pdf/"))
     lignes = ["# What this copy omits", "",
               f"Copy of the private repository `controle-ia` at commit `{commit}`, made for evaluators by "
               "`scripts/depot_expurge.py` (same commit). Third-party texts that the code does not need are omitted, "
-              "together with an application to another funder. Their SHA-256 hashes remain (companion `.sha256` "
+              "together with an application to another funder, the working registers (`registres/`, which quote private messages) and the texts of another application. Their SHA-256 hashes remain (companion `.sha256` "
               "files, and the table below), so anyone holding the originals can check them. Before writing the "
               f"copy, the script checked that no omitted file survives inside a kept archive ({len(archives)} files in "
               "zip, tar or git bundle format, Word and NumPy files included, searched at any depth, by hash and "
