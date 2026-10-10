@@ -214,6 +214,7 @@ def test_poussee_initiale_cas_sain_et_depot_qui_refuse(bac):
     j = _journal(bac, "t2")
     assert code == 2 and "poussée initiale de la branche calcul/t05-revalidation-jouet-v1 refusée" in j, j
     assert "remote:" in j and "arrêt avant l'installation" in j and "tests : " not in j
+    assert "tentative 3 refusée" in j                         # trois tentatives avant l'arrêt (K-5)
 
 
 @pytest.mark.parametrize("ligne, conforme", [

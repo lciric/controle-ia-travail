@@ -67,7 +67,8 @@ def lire_go(chemin: Path) -> dict[str, dict]:
             bloquer(f"registre GO mal formé ligne {n} : dates illisibles")
         if ident in go:
             bloquer(f"registre GO : identifiant {ident} en double")
-        go[ident] = {"accorde": accorde_d, "type": typ, "echeance": echeance_d, "par": par}
+        go[ident] = {"accorde": accorde_d, "type": typ, "echeance": echeance_d, "par": par, "perimetre": perimetre,
+                     "ref": ref}
     return go
 
 
@@ -91,6 +92,12 @@ def decider(commande: str, aujourd_hui: date) -> None:
             bloquer(f"{i} n'est pas accordé par Lazar")
         if not (g["accorde"] <= aujourd_hui <= g["echeance"]):
             bloquer(f"{i} hors de sa période de validité ({g['accorde']} → {g['echeance']})")
+        # une révocation est une ligne nouvelle de type « révocation » qui cite le GO révoqué (en-tête du registre ;
+        # vérification 2 du remplissage de la revalidation, K-3)
+        revocations = sorted(k for k, r in registre.items()
+                             if r["type"] == "révocation" and (i in r["perimetre"] or i in r["ref"]))
+        if revocations:
+            bloquer(f"{i} révoqué par {', '.join(revocations)}")
 
 
 def main() -> None:

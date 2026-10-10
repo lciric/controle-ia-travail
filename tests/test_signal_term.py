@@ -23,8 +23,10 @@ def test_lever_sur_term_pose_le_drapeau_puis_leve():
     except Exception:
         pass
     assert gardes.signal_term_recu() and gardes.SIGNAL_TERM_RECU == [15]   # … le drapeau reste posé
+    gardes.lever_sur_term(15, None)          # second signal (timeout relaie TERM au groupe) : drapeau seul, K-1
+    assert gardes.SIGNAL_TERM_RECU == [15, 15]
     with pytest.raises(GardeArret, match="signal TERM"):
-        gardes.lever_sur_term(15, None)
+        gardes.exiger_sans_signal("au pas 1")
 
 
 def test_motif_et_relevement_cas_sain():

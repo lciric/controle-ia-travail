@@ -26,9 +26,14 @@ def lever_sur_term(signum, frame) -> None:
     avaler l'exception levée pendant son code, ou la convertir (import paresseux de torch, pendant la mise en place :
     vu le 2026-10-10, relecture de la revalidation, D-1). Le drapeau reste alors posé : `exiger_sans_signal` le relève
     aux points de contrôle (chaque pas des épisodes, chaque lot des notations et de l'appariement, avant le repère,
-    avant le résumé), et le bloc qui consigne l'arrêt écrit le motif « signal TERM » quelle que soit l'exception."""
+    avant le résumé), et le bloc qui consigne l'arrêt écrit le motif « signal TERM » quelle que soit l'exception.
+    Seul le premier signal lève : `timeout` relaie TERM au processus puis à son groupe, et un second signal ne doit pas
+    interrompre la consignation de l'arrêt (vérification 2 du remplissage, K-1) ; il pose le drapeau, relevé comme le
+    premier aux points de contrôle."""
+    premier = not SIGNAL_TERM_RECU
     SIGNAL_TERM_RECU.append(signum)
-    raise GardeArret(MOTIF_TERM)
+    if premier:
+        raise GardeArret(MOTIF_TERM)
 
 
 def signal_term_recu() -> bool:

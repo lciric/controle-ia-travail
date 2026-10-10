@@ -129,3 +129,16 @@ def test_registre_reel_du_depot_accepte_le_go_de_calcul_de_la_phase_0():
     assert go["GO-2026-10-04-08"]["type"] == "calcul" and go["GO-2026-10-04-08"]["par"] == "Lazar"
     assert go["GO-2026-10-04-08"]["echeance"] == date(2026, 11, 1)
 
+
+def test_revocation_cas_sain_et_artefact(racine):
+    """K-3 : une ligne « révocation » qui cite le GO cité bloque le lancement ; celle d'un autre GO, non."""
+    autre = "GO-2026-10-05-02"
+    valides = ligne(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=10)) + \
+        ligne(autre, AUJ - timedelta(days=1), AUJ + timedelta(days=10))
+    registre(racine, valides + f"| GO-2026-10-06-09 | {AUJ} | révocation | révoque {autre} | — | — | Lazar | message |\n")
+    code, err = lancer(racine, f"GO_ID={GO_OK} vastai create instance 123 --image pytorch")
+    assert code == 0, err
+    registre(racine, valides + f"| GO-2026-10-06-09 | {AUJ} | révocation | révoque {GO_OK} | — | — | Lazar | message |\n")
+    code, err = lancer(racine, f"GO_ID={GO_OK} vastai create instance 123 --image pytorch")
+    assert code == 2 and "révoqué par GO-2026-10-06-09" in err, err
+

@@ -141,9 +141,16 @@ fi
 # Droit d'écriture du jeton éprouvé avant toute installation (relecture du lancement de la revalidation, D-2 et L-6) :
 # la branche neuve est poussée telle quelle (commit extrait). Depuis la session de pilotage, le jeton ne peut pas être
 # éprouvé (le mandataire de sortie remplace les identifiants) ; une poussée refusée ici coûte quelques minutes, au lieu
-# de résultats restés sur une instance arrêtée (leçon de N-012). Refus : arrêt consigné au journal avec la cause de git,
-# code 2. La branche existe alors sur le dépôt distant : un relancement prend une branche nouvelle (…-v2).
-if ! git push -q origin "$BRANCHE" 2>"$TRAVAIL/poussee-initiale.err"; then
+# de résultats restés sur une instance arrêtée (leçon de N-012). Trois tentatives, cinq secondes d'écart (incident de
+# réseau) ; puis refus : arrêt consigné au journal avec la cause de git, code 2. Une poussée refusée ne crée pas la
+# branche ; après une poussée réussie, la branche existe et un relancement en prend une nouvelle (…-v2 ; K-5).
+poussee_initiale=0
+for essai in 1 2 3; do
+    if git push -q origin "$BRANCHE" 2>"$TRAVAIL/poussee-initiale.err"; then poussee_initiale=1; break; fi
+    journal "poussée initiale de la branche $BRANCHE : tentative $essai refusée"
+    if [ "$essai" -lt 3 ]; then sleep 5; fi
+done
+if [ "$poussee_initiale" != 1 ]; then
     cause=$( (grep -E '^(fatal|error|remote):' "$TRAVAIL/poussee-initiale.err" || tail -n 2 "$TRAVAIL/poussee-initiale.err") | tr '\n' ' ' || true)
     journal "poussée initiale de la branche $BRANCHE refusée ($cause) : droit d'écriture du jeton ? arrêt avant l'installation"
     exit 2

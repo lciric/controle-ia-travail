@@ -556,6 +556,7 @@ def _executer_apres_manifeste(config, racine, chemin_m, manifeste, plan, ids_epi
         lecture = lire_bras(mesures, r["controle_negatif"], repere, r["rejeu_identique"], config, zone_generee=zone,
                             audit=audit, chemin=chemin["lecture"] if chemin else None, bras=bras,
                             memoire_pic_gio=r["memoire_pic_gio"], duree_projetee_s=projetee)
+        exiger_sans_signal(f"avant la lecture du bras {bras}")   # aucune lecture après un signal reçu (K-2)
         sortie = {"lecture": lecture, "repere": repere, "zone_generee": zone, "audit": audit,
                   "chemin": None if chemin is None else {"lecture": chemin["lecture"],
                                                          "controle_negatif": chemin["controle_negatif"]}}
