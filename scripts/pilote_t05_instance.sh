@@ -138,6 +138,18 @@ else
     journal "préenregistrement lu : $ATTENDUS tests attendus ; configuration $CONFIG ; tâches ${CITES[*]} présentes et scellées"
 fi
 
+# Droit d'écriture du jeton éprouvé avant toute installation (relecture du lancement de la revalidation, D-2 et L-6) :
+# la branche neuve est poussée telle quelle (commit extrait). Depuis la session de pilotage, le jeton ne peut pas être
+# éprouvé (le mandataire de sortie remplace les identifiants) ; une poussée refusée ici coûte quelques minutes, au lieu
+# de résultats restés sur une instance arrêtée (leçon de N-012). Refus : arrêt consigné au journal avec la cause de git,
+# code 2. La branche existe alors sur le dépôt distant : un relancement prend une branche nouvelle (…-v2).
+if ! git push -q origin "$BRANCHE" 2>"$TRAVAIL/poussee-initiale.err"; then
+    cause=$( (grep -E '^(fatal|error|remote):' "$TRAVAIL/poussee-initiale.err" || tail -n 2 "$TRAVAIL/poussee-initiale.err") | tr '\n' ' ' || true)
+    journal "poussée initiale de la branche $BRANCHE refusée ($cause) : droit d'écriture du jeton ? arrêt avant l'installation"
+    exit 2
+fi
+journal "branche $BRANCHE poussée avant l'installation (droit d'écriture éprouvé)"
+
 pousser() { git push -q origin "$BRANCHE"; }
 traces() {
     # journal, sorties des tests et du run, versés sur la branche (hors arbre gelé) pour la session de pilotage ;

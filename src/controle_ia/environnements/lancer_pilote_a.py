@@ -30,7 +30,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from ..gardes import GardeArret
+from ..gardes import (GardeArret, exiger_sans_signal, lever_sur_term, motif_d_arret,
+                      relever_term_apres)
 from ..harnais.run_harnais_factice import graine_entiere
 from ..harnais.validation_reelle import ENTROPIE_CITEE, exiger_code_cite, exiger_code_importe_sous, noyau
 from ..manifeste import config_canonique, creer_manifeste, ecrire_resultat, generateur, lire_manifeste
@@ -280,9 +281,10 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
     try:
         return _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan, par_id, etat, debut)
     except Exception as e:          # garde, panne (mémoire…), signal TERM : consigné, puis propagé
-        ecrire_resultat(racine, chemin_m, "arret", {"etape": etat["etape"], "motif": f"{type(e).__name__}: {e}",
+        ecrire_resultat(racine, chemin_m, "arret", {"etape": etat["etape"], "motif": motif_d_arret(e),
                                                      "partiel": {k: v for k, v in etat.items() if k != "etape"},
                                                      "duree_s": round(time.perf_counter() - debut, 1)})
+        relever_term_apres(e)       # TERM reçu, exception convertie par une bibliothèque : l'arrêt TERM fait foi (D-1)
         raise
 
 
@@ -393,13 +395,13 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
               "notations": {k: {"n": len(v), "completes": sum(1 for x in v if x["score"] is not None)}
                             for k, v in notations.items()},
               "duree_s": round(time.perf_counter() - debut, 1)}
+    exiger_sans_signal("avant le résumé")           # aucun résumé après un signal TERM, même avalé (D-1)
     ecrire_resultat(racine, chemin_m, "resume", resume)
     lire_manifeste(chemin_m)
     return resume
 
 
-def _signal_term(signum, frame):
-    raise GardeArret("signal TERM reçu (délai externe du run ou plafond de l'amorce) : arrêt consigné")
+_signal_term = lever_sur_term      # drapeau, puis exception (gardes, D-1)
 
 
 def _main(argv: list[str]) -> int:

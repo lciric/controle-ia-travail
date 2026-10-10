@@ -417,10 +417,11 @@ def test_signal_term_dans_un_sous_processus(depot):
     """W-7 (c) : un vrai signal TERM, envoyé par l'identifiant du processus (R10) au lanceur en mode jouet après son
     manifeste, devient un arrêt consigné (arret.json, motif « signal TERM »), code de sortie 1.
 
-    Le run jouet peut finir moins de 0,5 s après son manifeste : le signal arrivait alors après la fin du run, et le test
-    échouait une fois sur cinq environ (répétition jouet de la revalidation, 2026-10-10). Le module est donc exécuté
-    tel quel, comme programme principal (`runpy`, bloc `__main__` compris), mais le jeu des épisodes attend d'abord
-    120 s : le signal arrive toujours pendant le run, et la sortie rapide prouve que l'attente a été interrompue."""
+    Minutage d'origine : le signal part 0,5 s après le sceau du manifeste, donc pendant la mise en place (le premier
+    pas vient 2,5 à 3,5 s après le sceau). L'exception levée par le gestionnaire y était parfois avalée ou convertie
+    par un import paresseux de torch, et le run finissait en code 0 (relecture du remplissage, D-1 : 1 échec sur 6 à
+    1 sur 60). Le drapeau du signal (gardes) est relevé au premier point de contrôle : l'issue ne dépend plus de
+    l'endroit où tombe le signal."""
     import os
     import signal
     import subprocess
@@ -433,16 +434,8 @@ def test_signal_term_dans_un_sous_processus(depot):
     run = "20261007-000009-revalidation-term"
     src = str(Path(rv.__file__).resolve().parents[2])
     env = dict(os.environ, PYTHONPATH=src, PYTHONDONTWRITEBYTECODE="1")
-    lent = ("import runpy, time\n"
-            "import controle_ia.environnements.pilote_a as p\n"
-            "jouer = p.jouer_pilote\n"
-            "def jouer_lent(*a, **k):\n"
-            "    time.sleep(120)\n"
-            "    return jouer(*a, **k)\n"
-            "p.jouer_pilote = jouer_lent\n"
-            "runpy.run_module('controle_ia.environnements.revalider_pilote_a', run_name='__main__', alter_sys=True)\n")
-    p = subprocess.Popen([sys.executable, "-c", lent, "--config", "config.json", "--entrainement", e,
-                          "--evaluation", v, "--run-id", run],
+    p = subprocess.Popen([sys.executable, "-m", "controle_ia.environnements.revalider_pilote_a", "--config",
+                          "config.json", "--entrainement", e, "--evaluation", v, "--run-id", run],
                          cwd=depot, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     sceau = depot / "runs" / run / "manifeste.json.sha256"       # X-2 : le sceau, écrit après le manifeste, puis 0,5 s :
     limite = time.monotonic() + 300                               # le lanceur est alors dans le bloc qui consigne l'arrêt
@@ -450,10 +443,69 @@ def test_signal_term_dans_un_sous_processus(depot):
         time.sleep(0.05)
     time.sleep(0.5)
     assert sceau.exists() and p.poll() is None
-    envoi = time.monotonic()
     os.kill(p.pid, signal.SIGTERM)
     _, err = p.communicate(timeout=600)
-    assert time.monotonic() - envoi < 60, "le signal n'a pas interrompu le run"
     assert p.returncode == 1 and "signal TERM" in err, err[-2000:]
     arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
     assert "signal TERM" in arret["motif"]
+    assert not (depot / "diag" / run / "resume.json").exists()
+
+
+# --- signal TERM avalé ou converti par une bibliothèque (relecture du remplissage, D-1) ----------------------------
+
+def _term_dans_une_bibliotheque(conversion: bool = False) -> None:
+    """Le gestionnaire est appelé pendant du code de bibliothèque qui avale l'exception, ou la convertit."""
+    try:
+        rv._signal_term(15, None)
+    except GardeArret:
+        if conversion:
+            raise AttributeError("op sans surcharge (conversion simulée par une bibliothèque)") from None
+
+
+def test_term_avale_pendant_la_mise_en_place_est_releve(depot, monkeypatch):
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    vrai = rv._charger_bas
+
+    def charger(config, graine):
+        _term_dans_une_bibliotheque()
+        return vrai(config, graine)
+    monkeypatch.setattr(rv, "_charger_bas", charger)
+    run = "20261010-000001-revalidation-term-avale"
+    with pytest.raises(GardeArret, match="signal TERM"):
+        rv.executer(CONFIG, depot, run, None, e, v, entropie_essai=11)
+    arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
+    assert "signal TERM" in arret["motif"] and "relevé au pas 0" in arret["motif"]
+    assert not (depot / "diag" / run / "resume.json").exists()
+
+
+def test_term_converti_par_une_bibliotheque_fait_foi(depot, monkeypatch):
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+
+    def charger(config, graine):
+        _term_dans_une_bibliotheque(conversion=True)
+    monkeypatch.setattr(rv, "_charger_bas", charger)
+    run = "20261010-000002-revalidation-term-converti"
+    with pytest.raises(GardeArret, match="signal TERM") as info:
+        rv.executer(CONFIG, depot, run, None, e, v, entropie_essai=11)
+    assert isinstance(info.value.__cause__, AttributeError)
+    arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
+    assert arret["motif"].startswith("signal TERM") and "AttributeError" in arret["motif"]
+
+
+def test_term_avale_apres_le_dernier_controle_empeche_le_resume(depot, monkeypatch):
+    from controle_ia import gardes
+
+    e, v = _fichiers(depot, _taches("2601", 4), EVALUATION)
+    vrai = rv.choisir_noyau
+
+    def choisir(lectures):                       # appelé juste avant le résumé, après le dernier point de contrôle
+        if not gardes.signal_term_recu():
+            _term_dans_une_bibliotheque()
+        return vrai(lectures)
+    monkeypatch.setattr(rv, "choisir_noyau", choisir)
+    run = "20261010-000003-revalidation-term-resume"
+    with pytest.raises(GardeArret, match="relevé avant le résumé"):
+        rv.executer(CONFIG, depot, run, None, e, v, entropie_essai=11)
+    arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
+    assert arret["etape"] == "résumé" and "signal TERM" in arret["motif"]
+    assert not (depot / "diag" / run / "resume.json").exists()

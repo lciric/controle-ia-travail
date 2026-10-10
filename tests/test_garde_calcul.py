@@ -95,3 +95,37 @@ def test_artefact_entree_illisible(racine):
     registre(racine, "")
     code, err = lancer(racine, None, brut="pas du json")
     assert code == 2 and "illisible" in err
+
+
+def test_sain_go_sans_echeance_hors_calcul(racine):
+    """L-2 : une ligne « — » d'un GO qui n'est pas de calcul (comme GO-2026-10-07-01, dépôt distant) ne bloque pas le
+    lancement cité par un GO de calcul valide."""
+    registre(racine, ligne("GO-2026-10-07-01", AUJ - timedelta(days=3), "—", typ="dépôt distant")
+             + ligne(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=10)))
+    code, err = lancer(racine, f"GO_ID={GO_OK} vastai create instance 123 --image pytorch")
+    assert code == 0, err
+
+
+@pytest.mark.parametrize("contenu", [
+    ligne(GO_OK, AUJ - timedelta(days=1), "—"),                                   # GO de calcul sans échéance
+    ligne("GO-2026-10-07-01", AUJ - timedelta(days=3), "jamais", typ="dépôt distant")
+    + ligne(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=10)),            # autre texte que « — »
+])
+def test_artefact_echeance_illisible(racine, contenu):
+    registre(racine, contenu)
+    code, err = lancer(racine, f"GO_ID={GO_OK} vastai create instance 123 --image pytorch")
+    assert code == 2 and "dates illisibles" in err, err
+
+
+def test_registre_reel_du_depot_accepte_le_go_de_calcul_de_la_phase_0():
+    """Le vrai registre du dépôt (pas un registre factice : L-2) est lisible par la garde ; GO-2026-10-04-08, de calcul,
+    est reconnu, sans juger sa période de validité (elle dépend de la date du test)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("garde_calcul", HOOK)
+    g = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(g)
+    go = g.lire_go(HOOK.parents[2] / "registres" / "go.md")
+    assert go["GO-2026-10-04-08"]["type"] == "calcul" and go["GO-2026-10-04-08"]["par"] == "Lazar"
+    assert go["GO-2026-10-04-08"]["echeance"] == date(2026, 11, 1)
+

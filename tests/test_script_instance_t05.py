@@ -198,6 +198,24 @@ def test_branche_neuve_cas_sain_present_et_injoignable(bac):
     assert code == 2 and "vérification de la branche" in j and "impossible" in j and "Could not resolve host" in j
 
 
+def test_poussee_initiale_cas_sain_et_depot_qui_refuse(bac):
+    """D-2, L-6 : la branche neuve est poussée avant toute installation ; un dépôt distant qui refuse la poussée (droit
+    d'écriture du jeton absent) arrête là, code 2, cause de git au journal, sans installation ni tests."""
+    distant = _distant(bac)
+    code, sortie = _lancer(bac, distant)
+    j = _journal(bac)
+    assert "branche calcul/t05-revalidation-jouet-v1 poussée avant l'installation" in j
+    assert j.index("poussée avant l'installation") < j.index("tests : ")
+    refus = _distant(bac)                                      # dépôt distant neuf, qui refuse toute poussée
+    crochet = refus / "hooks" / "pre-receive"
+    crochet.write_text("#!/usr/bin/env bash\necho 'écriture refusée pour ce jeton (essai)' >&2\nexit 1\n", encoding="utf-8")
+    crochet.chmod(0o755)
+    code, sortie = _lancer(bac, refus, travail="t2")
+    j = _journal(bac, "t2")
+    assert code == 2 and "poussée initiale de la branche calcul/t05-revalidation-jouet-v1 refusée" in j, j
+    assert "remote:" in j and "arrêt avant l'installation" in j and "tests : " not in j
+
+
 @pytest.mark.parametrize("ligne, conforme", [
     ("7 passed in 1.00s", True), ("7 passed, 1 warning in 1.00s", True), ("7 passed, 2 warnings in 1.00s", True),
     ("7 passed in 349.95s (0:05:49)", True),

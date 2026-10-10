@@ -636,3 +636,83 @@ def test_lanceur_consigne_formats_et_enonce_seul(depot, monkeypatch):
     assert ep["descriptifs"]["jetons_generes"] > 0
     app = json.loads((d / "appariements.json").read_text(encoding="utf-8"))["resultat"]
     assert len(app["enonce_seul"]) == 2 * 4 and app["descriptifs"]["paires"] == len(app["appariements"]) + 8
+
+
+# --- signal TERM avalé ou converti par une bibliothèque (relecture du remplissage de la revalidation, D-1) -----------
+
+def _term_avale():
+    try:
+        lp._signal_term(15, None)
+    except GardeArret:
+        pass
+
+
+def test_echeance_des_notations_releve_le_signal():
+    from controle_ia import gardes
+
+    pa._exiger_echeance(None, "les notations")                  # cas sain
+    gardes.SIGNAL_TERM_RECU.append(15)
+    with pytest.raises(GardeArret, match="relevé pendant les notations"):
+        pa._exiger_echeance(None, "les notations")
+
+
+def test_lanceur_term_avale_pendant_la_mise_en_place(depot, monkeypatch):
+    from controle_ia.manifeste import verifier_resultat
+
+    vrai = lp.charger_modele_et_format
+
+    def charger(*a, **k):
+        _term_avale()
+        return vrai(*a, **k)
+    monkeypatch.setattr(lp, "charger_modele_et_format", charger)
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    run = "20261010-000010-pilote-term-avale"
+    with pytest.raises(GardeArret, match="signal TERM"):
+        lp.executer(_config_lanceur(), depot, run, None, str(f))
+    r = verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]
+    assert "signal TERM" in r["motif"] and "relevé au pas 0" in r["motif"]
+    assert not (depot / "diag" / run / "resume.json").exists()
+
+
+def test_lanceur_term_avale_apres_le_dernier_controle(depot, monkeypatch):
+    from controle_ia import gardes
+    from controle_ia.manifeste import verifier_resultat
+
+    monkeypatch.setattr(pa, "jetons_oui_non",
+                        lambda tok: (tok.convert_tokens_to_ids("Y"), tok.convert_tokens_to_ids("N")))
+    vrai, appels = lp.demandes_de_notation, []
+
+    def demandes(*a, **k):                       # dernier appel (notations descriptives du dernier juge) : rien après
+        appels.append(1)
+        if len(appels) == 2 * len(_config_lanceur()["juges"]) and not gardes.signal_term_recu():
+            _term_avale()
+        return vrai(*a, **k)
+    monkeypatch.setattr(lp, "demandes_de_notation", demandes)
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    run = "20261010-000011-pilote-term-resume"
+    with pytest.raises(GardeArret, match="relevé avant le résumé"):
+        lp.executer(_config_lanceur(), depot, run, None, str(f))
+    r = verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]
+    assert r["etape"] == "résumé" and "signal TERM" in r["motif"]
+    assert not (depot / "diag" / run / "resume.json").exists()
+
+
+def test_lanceur_term_converti_fait_foi(depot, monkeypatch):
+    from controle_ia.manifeste import verifier_resultat
+
+    def charger(*a, **k):
+        try:
+            lp._signal_term(15, None)
+        except GardeArret:
+            raise AttributeError("op sans surcharge (conversion simulée par une bibliothèque)") from None
+    monkeypatch.setattr(lp, "charger_modele_et_format", charger)
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    run = "20261010-000012-pilote-term-converti"
+    with pytest.raises(GardeArret, match="signal TERM") as info:
+        lp.executer(_config_lanceur(), depot, run, None, str(f))
+    assert isinstance(info.value.__cause__, AttributeError)
+    r = verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]
+    assert r["motif"].startswith("signal TERM") and "AttributeError" in r["motif"]

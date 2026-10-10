@@ -59,7 +59,10 @@ def lire_go(chemin: Path) -> dict[str, dict]:
             bloquer(f"registre GO mal formé ligne {n} : 8 colonnes attendues, {len(cellules)} trouvées")
         ident, accorde, typ, perimetre, plafond, echeance, par, ref = cellules
         try:
-            accorde_d, echeance_d = date.fromisoformat(accorde), date.fromisoformat(echeance)
+            accorde_d = date.fromisoformat(accorde)
+            # « — » : sans échéance, admis seulement pour un GO qui n'est pas de calcul (GO-2026-10-07-01, dépôt
+            # distant) ; un GO de calcul a toujours une échéance lisible (relecture du lancement de la revalidation, L-2)
+            echeance_d = None if (echeance == "—" and typ != "calcul") else date.fromisoformat(echeance)
         except ValueError:
             bloquer(f"registre GO mal formé ligne {n} : dates illisibles")
         if ident in go:
