@@ -18,7 +18,7 @@
 #                 des tâches d'évaluation : `…` »), que ce script lit
 #   PREREG_ABSENT 1 seulement en mode jouet : répétition sans préenregistrement (run non décisif) ; CONFIG et TACHES
 #                 (revalidation : CONFIG, ENTRAINEMENT, EVALUATION) donnent alors les chemins (hors du dépôt possible)
-#   DEPOT_URL     défaut https://github.com/lciric/controle-ia.git
+#   DEPOT_URL     défaut https://github.com/lciric/controle-ia-travail.git (dépôt de travail privé ; N-016)
 #   GH_TOKEN      jeton GitHub à grain fin (dépôt distant GitHub) ; lu par un assistant d'identification, jamais écrit
 #   HF_TOKEN      jeton Hugging Face en lecture (mode reel) ; lu par huggingface_hub
 #   BRANCHE       défaut calcul/t05-pilote-<MODE>-v1 (revalidation : calcul/t05-revalidation-<MODE>-v1 ; le mode dans le
@@ -36,7 +36,7 @@ set -euo pipefail
 : "${COMMIT:?COMMIT obligatoire (commit de scellement du préenregistrement)}"
 ETUDE="${ETUDE:-pilote}"
 MODE="${MODE:-reel}"
-DEPOT_URL="${DEPOT_URL:-https://github.com/lciric/controle-ia.git}"
+DEPOT_URL="${DEPOT_URL:-https://github.com/lciric/controle-ia-travail.git}"
 case "$ETUDE" in
     pilote) BRANCHE="${BRANCHE:-calcul/t05-pilote-$MODE-v1}"; PREREG="${PREREG:-prereg/T0.5-pilote-8B-v1.md}" ;;
     revalidation) BRANCHE="${BRANCHE:-calcul/t05-revalidation-$MODE-v1}"
