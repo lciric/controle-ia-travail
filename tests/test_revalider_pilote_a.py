@@ -415,7 +415,12 @@ def test_panne_de_memoire_pendant_le_repere(depot, monkeypatch):
 
 def test_signal_term_dans_un_sous_processus(depot):
     """W-7 (c) : un vrai signal TERM, envoyé par l'identifiant du processus (R10) au lanceur en mode jouet après son
-    manifeste, devient un arrêt consigné (arret.json, motif « signal TERM »), code de sortie 1."""
+    manifeste, devient un arrêt consigné (arret.json, motif « signal TERM »), code de sortie 1.
+
+    Le run jouet peut finir moins de 0,5 s après son manifeste : le signal arrivait alors après la fin du run, et le test
+    échouait une fois sur cinq environ (répétition jouet de la revalidation, 2026-10-10). Le module est donc exécuté
+    tel quel, comme programme principal (`runpy`, bloc `__main__` compris), mais le jeu des épisodes attend d'abord
+    120 s : le signal arrive toujours pendant le run, et la sortie rapide prouve que l'attente a été interrompue."""
     import os
     import signal
     import subprocess
@@ -428,8 +433,16 @@ def test_signal_term_dans_un_sous_processus(depot):
     run = "20261007-000009-revalidation-term"
     src = str(Path(rv.__file__).resolve().parents[2])
     env = dict(os.environ, PYTHONPATH=src, PYTHONDONTWRITEBYTECODE="1")
-    p = subprocess.Popen([sys.executable, "-m", "controle_ia.environnements.revalider_pilote_a", "--config",
-                          "config.json", "--entrainement", e, "--evaluation", v, "--run-id", run],
+    lent = ("import runpy, time\n"
+            "import controle_ia.environnements.pilote_a as p\n"
+            "jouer = p.jouer_pilote\n"
+            "def jouer_lent(*a, **k):\n"
+            "    time.sleep(120)\n"
+            "    return jouer(*a, **k)\n"
+            "p.jouer_pilote = jouer_lent\n"
+            "runpy.run_module('controle_ia.environnements.revalider_pilote_a', run_name='__main__', alter_sys=True)\n")
+    p = subprocess.Popen([sys.executable, "-c", lent, "--config", "config.json", "--entrainement", e,
+                          "--evaluation", v, "--run-id", run],
                          cwd=depot, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     sceau = depot / "runs" / run / "manifeste.json.sha256"       # X-2 : le sceau, écrit après le manifeste, puis 0,5 s :
     limite = time.monotonic() + 300                               # le lanceur est alors dans le bloc qui consigne l'arrêt
@@ -437,8 +450,10 @@ def test_signal_term_dans_un_sous_processus(depot):
         time.sleep(0.05)
     time.sleep(0.5)
     assert sceau.exists() and p.poll() is None
+    envoi = time.monotonic()
     os.kill(p.pid, signal.SIGTERM)
     _, err = p.communicate(timeout=600)
-    assert p.returncode == 1 and "signal TERM" in err
+    assert time.monotonic() - envoi < 60, "le signal n'a pas interrompu le run"
+    assert p.returncode == 1 and "signal TERM" in err, err[-2000:]
     arret = json.loads((depot / "diag" / run / "arret.json").read_text())["resultat"]
     assert "signal TERM" in arret["motif"]
