@@ -370,10 +370,11 @@ def test_jetons_jouet_et_lanceur_sans_substitution(depot, monkeypatch):
 
 
 def test_lanceur_ordre_des_etapes_arret_pendant_d(depot, monkeypatch):
-    """D-6 (vérification 3, F-2 ; relectures des différentiels, Y-5 et V-4) : notations décisives des deux juges, puis
-    appariement des propositions, puis base « énoncé seul », puis notations descriptives de D, dans cet ordre (chaque
-    appariement est consigné à son appel). Un arrêt pendant les notations de D laisse écrits les épisodes, les notations
-    décisives et l'appariement ; `arret.json` consigne l'étape."""
+    """D-6 (vérification 3, F-2 ; relectures des différentiels, Y-5 et V-4), réordonné par l'état des lieux du pilote
+    (SI-01) : appariement des propositions, puis base « énoncé seul », puis notations décisives des deux juges, puis
+    notations descriptives de D, dans cet ordre (chaque appariement est consigné à son appel). Un arrêt pendant les
+    notations de D laisse écrits les épisodes, l'appariement et les notations décisives ; `arret.json` consigne
+    l'étape."""
     from controle_ia.manifeste import verifier_resultat
     vrai_noter, appels = lp.noter_ensembles, []
 
@@ -407,12 +408,92 @@ def test_lanceur_ordre_des_etapes_arret_pendant_d(depot, monkeypatch):
     with pytest.raises(GardeArret, match="arrêt simulé pendant les notations de D"):
         lp.executer(_config_lanceur(), depot, run, None, str(f))
     d = depot / "diag" / run
-    assert appels == ["decisives", "decisives", "appariement", "enonce_seul", "descriptives"]
+    assert appels == ["appariement", "enonce_seul", "decisives", "decisives", "descriptives"]
     assert {x.name for x in d.glob("*.json")} == {"episodes.json", "notations-jouet-8B-decisives.json",
                                                   "notations-jouet-3B-decisives.json", "appariements.json",
                                                   "arret.json"}
     r = verifier_resultat(depot, d / "arret.json")["resultat"]
     assert r["etape"] == "notations descriptives par jouet-8B" and r["partiel"]["appariement_ecrit"] == "jouet-8B"
+
+
+def test_lanceur_appariement_avant_les_notations_arret_pendant_les_decisives(depot, monkeypatch):
+    """SI-01 : un arrêt pendant les notations décisives (durée jamais mesurée) laisse écrits les épisodes et
+    l'appariement, donc les familles lisibles ; aucun fichier de notation n'est écrit."""
+    from controle_ia.manifeste import verifier_resultat
+
+    def noter(*a, **k):
+        raise GardeArret("échéance simulée pendant les notations décisives")
+    monkeypatch.setattr(lp, "demandes_de_notation", lambda fiches, par_id, config, nom: [
+        {"cle": f"juge-{nom}/{fiches[0]['episode']}/passe-0", "episode": fiches[0]["episode"], "questions": "q",
+         "ensemble": "PROPOSAL 1: x", "classification": None, "variante": "b0"}])
+    monkeypatch.setattr(lp, "noter_ensembles", noter)
+    monkeypatch.setattr(lp, "paires_d_appariement", lambda fiches, par_id: [
+        {"cle": "t/e0/1/C1", "proposition": "a dense baseline", "cible": "a dense baseline", "famille": "controls"}])
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    run = "20261006-170009-pilote-jouet"
+    with pytest.raises(GardeArret, match="échéance simulée"):
+        lp.executer(_config_lanceur(), depot, run, None, str(f))
+    d = depot / "diag" / run
+    assert {x.name for x in d.glob("*.json")} == {"episodes.json", "appariements.json", "arret.json"}
+    r = verifier_resultat(depot, d / "arret.json")["resultat"]
+    assert r["etape"] == "notations decisives par jouet-8B" and r["partiel"]["appariement_ecrit"] == "jouet-8B"
+    app = verifier_resultat(depot, d / "appariements.json")["resultat"]
+    assert app["juge"] == "jouet-8B" and len(app["appariements"]) == 1 and app["enonce_seul"]
+
+
+def test_lanceur_prechargement_avant_les_episodes_et_juges_hors_ligne(depot, monkeypatch):
+    """SI-02 : les juges qui ne sont pas l'agent sont préchargés avant les épisodes ; après les épisodes, leurs modèles
+    se chargent hors ligne, après l'appariement par le juge qui est l'agent (déjà en mémoire, jamais rechargé)."""
+    appels = []
+    vrai_charger, vrai_jouer = lp.charger_modele_et_format, lp.jouer_pilote
+
+    def charger(spec, mode, graine, hors_ligne=False):
+        appels.append(("chargement", spec["nom"], hors_ligne))
+        return vrai_charger(spec, mode, graine, hors_ligne=hors_ligne)
+
+    def precharger(config):
+        appels.append(("prechargement",))
+        return {"jouet-3B": {"modele": "x", "revision": "y", "duree_s": 0.0}}
+
+    def jouer(*a, **k):
+        appels.append(("episodes",))
+        return vrai_jouer(*a, **k)
+
+    def paires(fiches, par_id):
+        appels.append(("appariement",))
+        return []
+    monkeypatch.setattr(lp, "charger_modele_et_format", charger)
+    monkeypatch.setattr(lp, "precharger_juges", precharger)
+    monkeypatch.setattr(lp, "jouer_pilote", jouer)
+    monkeypatch.setattr(lp, "paires_d_appariement", paires)
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    lp.executer(_config_lanceur(), depot, "20261006-170010-pilote-jouet", None, str(f))
+    assert appels == [("chargement", "agent-jouet", False), ("prechargement",), ("episodes",), ("appariement",),
+                      ("chargement", "jouet-3B", True)]
+
+
+def test_precharger_juges_seulement_hors_agent_et_en_reel(monkeypatch):
+    """Réel : seul le juge qui n'est pas l'agent est préchargé, à sa révision ; jouet : rien (aucun réseau)."""
+    import controle_ia.harnais.modeles as M
+    vus = []
+    monkeypatch.setattr(M, "precharger_modele", lambda nom, revision: vus.append((nom, revision)) or "/x")
+    c = {**_config_lanceur(), "mode": "jouet"}
+    assert lp.precharger_juges(c) == {} and vus == []
+    c = {**_config_lanceur(), "mode": "reel",
+         "juges": [{"nom": "8B", "meme_modele_que_agent": True, "sert_a_l_appariement": True},
+                   {"nom": "3B", "meme_modele_que_agent": False, "sert_a_l_appariement": False,
+                    "modele": "meta-llama/Llama-3.2-3B-Instruct", "revision": "0cb88a4f764b7a12671c53f0838cd831a0843b95"}]}
+    r = lp.precharger_juges(c)
+    assert vus == [("meta-llama/Llama-3.2-3B-Instruct", "0cb88a4f764b7a12671c53f0838cd831a0843b95")]
+    assert set(r) == {"3B"} and r["3B"]["revision"] == "0cb88a4f764b7a12671c53f0838cd831a0843b95"
+
+    def panne(nom, revision):
+        raise GardeArret("préchargement incomplet (simulé)")
+    monkeypatch.setattr(M, "precharger_modele", panne)                    # artefact : aucun repli silencieux
+    with pytest.raises(GardeArret, match="préchargement incomplet"):
+        lp.precharger_juges(c)
 
 
 def test_signal_term_devient_un_arret_consigne():

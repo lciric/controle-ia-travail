@@ -227,8 +227,27 @@ def memoire_pic_gio(reinitialiser: bool = True) -> float | None:
     return round(pic, 2)
 
 
-def charger_modele_et_format(spec: dict, mode: str, graine_jouet: int):
-    """Modèle et format (réel : révision figée, date du gabarit figée ; jouet : modèle par caractères)."""
+def precharger_juges(config: dict) -> dict:
+    """Poids des juges qui ne sont pas l'agent téléchargés sur disque avant les épisodes, sans les porter sur la carte
+    (SI-02, PF-04 : après l'écriture de episodes.json, aucun relancement n'est permis ; leurs modèles se chargent alors
+    hors ligne, depuis ces fichiers). Mode jouet : rien à télécharger. Rend, par juge, la révision et la durée."""
+    if config["mode"] != "reel":
+        return {}
+    from ..harnais.modeles import precharger_modele
+
+    sortie = {}
+    for j in config["juges"]:
+        if not j["meme_modele_que_agent"]:
+            depart = time.perf_counter()
+            precharger_modele(j["modele"], j["revision"])
+            sortie[j["nom"]] = {"modele": j["modele"], "revision": j["revision"],
+                                "duree_s": round(time.perf_counter() - depart, 1)}
+    return sortie
+
+
+def charger_modele_et_format(spec: dict, mode: str, graine_jouet: int, hors_ligne: bool = False):
+    """Modèle et format (réel : révision figée, date du gabarit figée ; jouet : modèle par caractères). `hors_ligne` :
+    réel seulement, fichiers lus dans le cache local (préchargés par `precharger_juges`), aucun accès au réseau."""
     from ..harnais.formats import FormatChat
     from ..harnais.modeles import fins_du_modele, modele_jouet, tokeniseur_caracteres_chat
 
@@ -238,7 +257,7 @@ def charger_modele_et_format(spec: dict, mode: str, graine_jouet: int):
         return m, FormatChat(tok, fins={tok.convert_tokens_to_ids("<|im_end|>"), tok.eos_token_id})
     from ..harnais.modeles import charger_modele
 
-    m, tok = charger_modele(spec["modele"], spec["revision"], "bfloat16", "cuda", "sdpa")
+    m, tok = charger_modele(spec["modele"], spec["revision"], "bfloat16", "cuda", "sdpa", hors_ligne=hors_ligne)
     fmt = FormatChat(tok, variables=spec["variables_gabarit"])
     fmt.fins = fins_du_modele(m, tok) | {fmt._pieces(("x", "y"))["cloture"][0]}
     return m, fmt
@@ -303,6 +322,9 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
         fmt_j = fmt if j["meme_modele_que_agent"] else charger_format_seul(j, config["mode"])
         formats[f"juge-{j['nom']}"] = controler_format(fmt_j, j, "juge", config)
     etat["formats"] = sorted(formats)
+    # poids des juges sur disque avant les épisodes (SI-02) : une panne de réseau ici précède episodes.json
+    etat["etape"] = "préchargement des juges"
+    etat["precharges"] = precharger_juges(config)
     etat["etape"] = "épisodes"
     generateurs = {e: generateur(g[e]) for e, _ in plan}
     chrono: dict = {}
@@ -330,19 +352,45 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
                                                    "duree_s": round(time.perf_counter() - debut, 1)})
     etat["episodes_ecrits"] = len(fiches)
 
-    # Ordre des étapes (contre-lecture 1, CL-7 ; contre-lecture 2, D-6) : les notations décisives (épisodes de
-    # `episodes_decisifs` : A noté deux fois, et C) par tous les juges, puis l'appariement (et la base « énoncé seul »),
-    # dont dépendent les familles, puis les notations descriptives (D) ; un arrêt laisse ainsi les lectures décisives
-    # complètes. L'échéance se contrôle à chaque lot. Les modèles des juges sont chargés une fois ; juges et appariement
-    # tournent au noyau par défaut de la bibliothèque (noyaux permis consignés, D-14).
+    # Ordre des étapes (contre-lecture 1, CL-7 ; contre-lecture 2, D-6 ; état des lieux du pilote, SI-01) :
+    # l'appariement des propositions et la base « énoncé seul », dont dépendent les familles, d'abord, par le juge qui
+    # sert à l'appariement (le 8B, déjà en mémoire : quelques minutes) ; puis les notations décisives (épisodes de
+    # `episodes_decisifs` : A noté deux fois, et C) par tous les juges ; puis les notations descriptives (D). Un arrêt
+    # pendant les notations, dont la durée n'a jamais été mesurée, laisse ainsi les familles lisibles. L'échéance se
+    # contrôle à chaque lot. Les modèles des juges sont chargés une fois, ceux qui ne sont pas l'agent hors ligne
+    # (préchargés avant les épisodes) ; juges et appariement tournent au noyau par défaut de la bibliothèque (noyaux
+    # permis consignés, D-14).
     from ..harnais.modeles import noyaux_attention_permis
 
     noyaux_juges = noyaux_attention_permis() if torch.cuda.is_available() else None
-    etat["etape"] = "chargement des juges"          # épisodes déjà écrits : l'étiquette le dit (relecture, V-1)
     modeles_juges = {}
+
+    def modele_du_juge(j: dict):
+        if j["nom"] not in modeles_juges:
+            modeles_juges[j["nom"]] = (modele, fmt) if j["meme_modele_que_agent"] else charger_modele_et_format(
+                j, config["mode"], graine_entiere(g["modele-jouet"]) + 1, hors_ligne=True)
+        return modeles_juges[j["nom"]]
+
     for j in config["juges"]:
-        modeles_juges[j["nom"]] = (modele, fmt) if j["meme_modele_que_agent"] else charger_modele_et_format(
-            j, config["mode"], graine_entiere(g["modele-jouet"]) + 1)
+        if j["sert_a_l_appariement"]:
+            etat["etape"] = f"appariement par {j['nom']}"
+            m_j, fmt_j = modele_du_juge(j)
+            paires = paires_d_appariement(fiches, par_id)
+            jetons = jetons_jouet(fmt_j.tok) if config["mode"] == "jouet" else None
+            depart = time.perf_counter()
+            app = apparier(m_j, fmt_j, paires, config["lot_appariement"], jetons=jetons,
+                           echeance=echeance) if paires else []
+            enonce = apparier(m_j, fmt_j, paires_enonce_seul(list(par_id.values())), config["lot_appariement"],
+                              jetons=jetons, echeance=echeance)
+            ecrire_resultat(racine, chemin_m, "appariements", {
+                "juge": j["nom"], "appariements": app, "enonce_seul": enonce, "noyau": "défaut de la bibliothèque",
+                "noyaux_permis": noyaux_juges,
+                "descriptifs": {"duree_s": round(time.perf_counter() - depart, 1),
+                                "memoire_pic_gio": memoire_pic_gio(), "paires": len(app) + len(enonce)}})
+            etat["appariement_ecrit"] = j["nom"]
+    etat["etape"] = "chargement des juges"          # épisodes déjà écrits : l'étiquette le dit (relecture, V-1)
+    for j in config["juges"]:
+        modele_du_juge(j)
     decisifs = {str(k) for k in config["episodes_decisifs"]}
     notations: dict[str, list] = {j["nom"]: [] for j in config["juges"]}
 
@@ -365,23 +413,6 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
             etat.setdefault("notations_ecrites", []).append(f"{j['nom']}/{etape}")
 
     noter("decisives")
-    for j in config["juges"]:
-        if j["sert_a_l_appariement"]:
-            etat["etape"] = f"appariement par {j['nom']}"
-            m_j, fmt_j = modeles_juges[j["nom"]]
-            paires = paires_d_appariement(fiches, par_id)
-            jetons = jetons_jouet(fmt_j.tok) if config["mode"] == "jouet" else None
-            depart = time.perf_counter()
-            app = apparier(m_j, fmt_j, paires, config["lot_appariement"], jetons=jetons,
-                           echeance=echeance) if paires else []
-            enonce = apparier(m_j, fmt_j, paires_enonce_seul(list(par_id.values())), config["lot_appariement"],
-                              jetons=jetons, echeance=echeance)
-            ecrire_resultat(racine, chemin_m, "appariements", {
-                "juge": j["nom"], "appariements": app, "enonce_seul": enonce, "noyau": "défaut de la bibliothèque",
-                "noyaux_permis": noyaux_juges,
-                "descriptifs": {"duree_s": round(time.perf_counter() - depart, 1),
-                                "memoire_pic_gio": memoire_pic_gio(), "paires": len(app) + len(enonce)}})
-            etat["appariement_ecrit"] = j["nom"]
     noter("descriptives")
     del modeles_juges
 

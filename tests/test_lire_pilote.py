@@ -118,10 +118,13 @@ CONFIG = {"max_nouveaux": 400, **lp.CONFIG_ATTENDUE,
 def construire(depot: Path, n: int = 50, steriles: int = 20, bruit_juge: float = 1.0, etapes: str = "tout",
                graine: int = 3, config: dict | None = None) -> dict:
     """Run de pilote synthétique sous un manifeste décisif : tâches scellées, fiches, notations des deux juges (avec
-    l'empreinte de l'ensemble noté), appariements (propositions et énoncé seul), résumé. `etapes`, dans l'ordre du
-    lanceur (décisives, appariement, descriptives) : « tout » ; « descriptives » (arrêt pendant les notations de D) ;
-    « appariement » (arrêt pendant l'appariement) ; « 3B » (arrêt pendant les notations décisives du 3B) ;
-    « aucune » (arrêt pendant les épisodes)."""
+    l'empreinte de l'ensemble noté), appariements (propositions et énoncé seul), résumé. `etapes` : « tout » ;
+    « descriptives » (arrêt pendant les notations de D) ; « aucune » (arrêt pendant les épisodes) ; dans l'ordre du
+    lanceur depuis l'état des lieux du pilote (SI-01 : appariement, décisives, descriptives), « decisives-8B » (arrêt
+    pendant les notations décisives du 8B, appariement écrit) et « decisives-3B » (arrêt pendant celles du 3B) ; dans
+    l'ordre antérieur (décisives, appariement, descriptives), gardé pour éprouver la lecture de ces états,
+    « appariement » (arrêt pendant l'appariement, notations décisives écrites) et « 3B » (arrêt pendant les notations
+    décisives du 3B, sans appariement)."""
     rng = np.random.default_rng(graine)
     _modules(depot)
     taches = _taches(n, steriles)
@@ -164,6 +167,24 @@ def construire(depot: Path, n: int = 50, steriles: int = 20, bruit_juge: float =
                                "reponse": reponse, "jetons_reponse": 50})
         return sortie
 
+    def appariements():
+        from controle_ia.environnements.lancer_pilote_a import paires_d_appariement, paires_enonce_seul
+
+        par_id = {t["identifiant"]: t for t in taches}
+        app = [{"cle": q["cle"], "famille": q["famille"], "p_oui": float(rng.beta(0.6, 0.9)), "masse_oui_non": 0.9}
+               for q in paires_d_appariement(fiches, par_id)]
+        enonce = [{"cle": q["cle"], "famille": q["famille"], "p_oui": 0.9 if q["cle"].endswith("/C1") else 0.1,
+                   "masse_oui_non": 0.9} for q in paires_enonce_seul(taches)]
+        ecrire_resultat(depot, chemin_m, "appariements", {"juge": "8B", "appariements": app, "enonce_seul": enonce})
+
+    if etapes in ("decisives-8B", "decisives-3B"):              # ordre du lanceur depuis SI-01 : appariement d'abord
+        appariements()
+        if etapes == "decisives-3B":
+            ecrire_resultat(depot, chemin_m, "notations-8B-decisives",
+                            {"notations": notations("8B", bruit_juge, ((0, 0), (0, 1), (1, 0)))})
+        ecrire_resultat(depot, chemin_m, "arret", arret)
+        committer(depot)
+        return {"taches": f, "prereg": prereg}
     for j, bruit in (("8B", bruit_juge), ("3B", 2 * bruit_juge)):
         if etapes == "3B" and j == "3B":
             continue
@@ -173,14 +194,7 @@ def construire(depot: Path, n: int = 50, steriles: int = 20, bruit_juge: float =
         ecrire_resultat(depot, chemin_m, "arret", arret)
         committer(depot)
         return {"taches": f, "prereg": prereg}
-    from controle_ia.environnements.lancer_pilote_a import paires_d_appariement, paires_enonce_seul
-
-    par_id = {t["identifiant"]: t for t in taches}
-    app = [{"cle": q["cle"], "famille": q["famille"], "p_oui": float(rng.beta(0.6, 0.9)), "masse_oui_non": 0.9}
-           for q in paires_d_appariement(fiches, par_id)]
-    enonce = [{"cle": q["cle"], "famille": q["famille"], "p_oui": 0.9 if q["cle"].endswith("/C1") else 0.1,
-               "masse_oui_non": 0.9} for q in paires_enonce_seul(taches)]
-    ecrire_resultat(depot, chemin_m, "appariements", {"juge": "8B", "appariements": app, "enonce_seul": enonce})
+    appariements()
     if etapes == "descriptives":
         ecrire_resultat(depot, chemin_m, "arret", arret)
         committer(depot)
@@ -688,7 +702,8 @@ def test_descriptifs_cle_absente_arrete(depot):
         lp.descriptifs(p)
 
 
-# --- runs partiels (ordre du lanceur : décisives, appariement, descriptives) -----------------------------------
+# --- runs partiels (ordre du lanceur depuis SI-01 : appariement, décisives, descriptives ; les états de l'ordre
+# antérieur restent éprouvés : la lecture se fait sur les fichiers présents, non sur l'ordre) ------------------
 
 def test_run_partiel_pendant_les_notations_descriptives(depot, travail):
     """Arrêt pendant les notations de D : appariement écrit, familles lisibles (contre-lecture 2, D-6)."""
@@ -717,6 +732,26 @@ def test_run_partiel_pendant_les_notations_decisives_du_3B(depot, travail):
     lecture = lp.analyser(depot, RUN, ANALYSE, d["taches"])
     assert lecture["juges"]["8B"]["decomposition_concluante"] and lecture["juges"]["3B"]["plan_b"] == "nœud"
     assert lecture["predictions"]["P3"] == "non concluant" and "nœud" in lecture["familles"]
+
+
+def test_run_partiel_pendant_les_notations_decisives_du_8B_appariement_ecrit(depot, travail):
+    """SI-01 : arrêt pendant les notations décisives du 8B, appariement écrit : familles lisibles ; les deux juges en
+    nœud ; P3 non concluant."""
+    _jusqu_a_l_analyse(depot, travail, etapes="decisives-8B")
+    lecture = lp.analyser(depot, RUN, ANALYSE, depot / "taches.json")
+    assert lecture["run_partiel"] and isinstance(lecture["familles"], dict)
+    assert lecture["retenue"]["controls"] in ("retenue", "non retenue", "non concluant")
+    assert all(lecture["juges"][j]["plan_b"] == "nœud" for j in ("8B", "3B"))
+    assert lecture["predictions"]["P3"] == "non concluant"
+
+
+def test_run_partiel_pendant_les_notations_decisives_du_3B_appariement_ecrit(depot, travail):
+    """SI-01 : arrêt pendant les notations décisives du 3B, appariement écrit : le 8B est lu, le 3B en nœud, P3 non
+    concluant, familles lisibles."""
+    _jusqu_a_l_analyse(depot, travail, etapes="decisives-3B")
+    lecture = lp.analyser(depot, RUN, ANALYSE, depot / "taches.json")
+    assert lecture["juges"]["8B"]["decomposition_concluante"] and lecture["juges"]["3B"]["plan_b"] == "nœud"
+    assert lecture["predictions"]["P3"] == "non concluant" and isinstance(lecture["familles"], dict)
 
 
 def test_run_partiel_pendant_les_episodes(depot, travail):
