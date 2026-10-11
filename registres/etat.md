@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-11 02:40 UTC, session 11 reprise (R-133 à R-138 : audit des tests sensibles au matériel ; cause de R-132 précisée ; version 2 de la revalidation relue, corrigée, vérifiée, contrôlée mécaniquement ; bancs finaux et répétition finale à blanc conformes ; chaîne prête ; en attente du GO de Lazar sur N-018). Mise à jour précédente : 2026-10-11 02:10 UTC (92c8b1a).
+Dernière mise à jour : 2026-10-11 02:45 UTC, session 11 reprise (R-133 à R-138 : audit des tests sensibles au matériel ; cause de R-132 précisée ; version 2 de la revalidation relue, corrigée, vérifiée, contrôlée mécaniquement ; bancs finaux et répétition finale à blanc conformes ; chaîne prête ; en attente du GO de Lazar sur N-018). Mise à jour précédente : 2026-10-11 02:10 UTC (92c8b1a).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
