@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-11 02:45 UTC, session 11 reprise (R-133 à R-138 : audit des tests sensibles au matériel ; cause de R-132 précisée ; version 2 de la revalidation relue, corrigée, vérifiée, contrôlée mécaniquement ; bancs finaux et répétition finale à blanc conformes ; chaîne prête ; en attente du GO de Lazar sur N-018). Mise à jour précédente : 2026-10-11 02:10 UTC (92c8b1a).
+Dernière mise à jour : 2026-10-11 22:35 UTC, session 12 (GO de Lazar sur N-018, option (a), R-139 ; scellement et lancement de la v2 de la revalidation en cours). Mise à jour précédente : 2026-10-11 02:45 UTC (passation, ee936e3).
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
@@ -23,7 +23,7 @@ Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie 
 Aucune porte franchie. Critères de G0 prouvés : **1** (harnais validé sur le modèle réel, T0.4 v3, verdict R13 du 2026-10-06) et **5** (agrégateurs validés en simulation, T0.3). Restent les critères 2 (organismes), 3 (sondes), 4 (base boîte noire), 6 (préenregistrement de G1), 7 (préenregistrement du papier C) et 8 (état de l'art vérifié).
 
 ## GO et nœuds en attente
-- **N-018 ouvert** (nœud, sans défaut ; R-132, R-138) : GO de Lazar demandé sur l'option (a), version 2 de la revalidation de T0.5 ; chaîne prête et répétée à blanc. Au GO : une ligne de `registres/go.md` (8 colonnes ; type « revendication » ; accordé par « Lazar » ; périmètre citant N-018), N-018 tranché, une ligne R-… ; puis scellement, contrôles avant dépense, lancement A100 (≈ 2 à 3 USD attendus ; crédit à relire avant création).
+- **N-018 : GO le 2026-10-11** vers 22:26 UTC (GO-2026-10-11-01, option (a) ; R-139) : version 2 de la revalidation de T0.5 à sceller puis lancer selon le plan v7.
 - **N-016 : GO le 2026-10-09** (R-113) ; renommage en `controle-ia-travail` et dépôt public vide `lciric/controle-ia` faits par Lazar ; copie expurgée poussée sur `lciric/controle-ia` (R-117 : sans tiers, sans candidature EA Funds, sans registres, sans textes AFFINE). **Clos le 2026-10-09** (R-119) : `controle-ia-travail` passé en privé par Lazar ; vérifié à 09:02 UTC sans compte (page, fichier brut et ancien commit en 404) et par l'API (`private=true`, aucune bifurcation).
 - **N-017 résolu** le 2026-10-09 vers 07:25 UTC (R-113) : G0 reste au 1er novembre 2026, porte interne avant la période financée ; le plan financé suit la proposition v2 à partir de décembre 2026 ; README v4 aligné.
 - **Extraction de T0.5 : débloquée par Lazar** le 2026-10-07 vers 22:15 UTC (R-108, option (a) : il règle les permissions de la session ; reprise avec l'invite scellée d'origine, sans écart). Question d'origine (posée vers 16:15 UTC ; R-107) : malgré la permission de Lazar (R-106), le classificateur du mode automatique refuse une partie des lancements à cause de la phrase de préséance de l'invite fixe ; 82 lancements restent (78 jamais tentés, 4 refusés). Options : (a) Lazar règle les permissions de la session (mode, ou règle d'autorisation pour l'outil de sous-agents), procédure inchangée ; (b) écart déclaré dans le run en cours : invite de lancement reformulée sans la phrase de préséance, pour les 82 lancements restants ; (c) version 2 de la procédure et run nouveau. Recommandation (b), confiance ≈ 60 %.
