@@ -444,7 +444,11 @@ def test_lanceur_appariement_avant_les_notations_arret_pendant_les_decisives(dep
 
 def test_lanceur_prechargement_avant_les_episodes_et_juges_hors_ligne(depot, monkeypatch):
     """SI-02 : les juges qui ne sont pas l'agent sont préchargés avant les épisodes ; après les épisodes, leurs modèles
-    se chargent hors ligne, après l'appariement par le juge qui est l'agent (déjà en mémoire, jamais rechargé)."""
+    se chargent hors ligne, après l'appariement par le juge qui est l'agent (déjà en mémoire, jamais rechargé), et
+    chacun à sa première notation (relecture R2, CO-01 : le 3B après les notations décisives du 8B). Les descriptifs
+    des épisodes consignent le préchargement et le chargement de l'agent (CO-06)."""
+    from controle_ia.manifeste import verifier_resultat
+
     appels = []
     vrai_charger, vrai_jouer = lp.charger_modele_et_format, lp.jouer_pilote
 
@@ -463,22 +467,34 @@ def test_lanceur_prechargement_avant_les_episodes_et_juges_hors_ligne(depot, mon
     def paires(fiches, par_id):
         appels.append(("appariement",))
         return []
+
+    def noter(m, fmt, demandes, *a, **k):             # une demande décisive par juge (le jouet ne note rien)
+        appels.append(("notation", demandes[0]["cle"].split("/")[0]))
+        return []
+    monkeypatch.setattr(lp, "demandes_de_notation", lambda fiches, par_id, config, nom: [
+        {"cle": f"juge-{nom}/{fiches[0]['episode']}/passe-0", "episode": fiches[0]["episode"], "questions": "q",
+         "ensemble": "PROPOSAL 1: x", "classification": None, "variante": "b0"}])
     monkeypatch.setattr(lp, "charger_modele_et_format", charger)
     monkeypatch.setattr(lp, "precharger_juges", precharger)
     monkeypatch.setattr(lp, "jouer_pilote", jouer)
     monkeypatch.setattr(lp, "paires_d_appariement", paires)
+    monkeypatch.setattr(lp, "noter_ensembles", noter)
     f, _ = _taches_scellees(depot)
     committer(depot)
-    lp.executer(_config_lanceur(), depot, "20261006-170010-pilote-jouet", None, str(f))
+    run = "20261006-170010-pilote-jouet"
+    lp.executer(_config_lanceur(), depot, run, None, str(f))
     assert appels == [("chargement", "agent-jouet", False), ("prechargement",), ("episodes",), ("appariement",),
-                      ("chargement", "jouet-3B", True)]
+                      ("notation", "juge-jouet-8B"), ("chargement", "jouet-3B", True), ("notation", "juge-jouet-3B")]
+    desc = verifier_resultat(depot, depot / "diag" / run / "episodes.json")["resultat"]["descriptifs"]
+    assert desc["precharges"] == {"jouet-3B": {"modele": "x", "revision": "y", "duree_s": 0.0}}
+    assert isinstance(desc["chargement_agent_s"], float)
 
 
 def test_lanceur_format_du_juge_hors_ligne_recontrole(depot, monkeypatch):
     """État des lieux, piste 12 : le format d'un juge chargé hors ligne est recontrôlé et doit égaler celui du début du
     run. Cas sain : le run va au résumé, le contrôle du juge 3B est joué deux fois (début, chargement hors ligne).
-    Artefact : un format différent au chargement hors ligne arrête le run à « chargement des juges », épisodes et
-    appariement écrits, aucune notation."""
+    Artefact : un format différent au chargement hors ligne arrête le run à « chargement du juge jouet-3B » ; épisodes,
+    appariement et notations décisives du 8B écrits (CO-01), aucune notation du 3B."""
     from controle_ia.manifeste import verifier_resultat
 
     vrai = lp.controler_format
@@ -508,9 +524,30 @@ def test_lanceur_format_du_juge_hors_ligne_recontrole(depot, monkeypatch):
     with pytest.raises(GardeArret, match="format chargé hors ligne"):
         lp.executer(_config_lanceur(), depot, run, None, str(f))
     d = depot / "diag" / run
-    assert {x.name for x in d.glob("*.json")} == {"episodes.json", "appariements.json", "arret.json"}
-    assert verifier_resultat(depot, d / "arret.json")["resultat"]["etape"] == "chargement des juges"
+    assert {x.name for x in d.glob("*.json")} == {"episodes.json", "appariements.json", "notations-jouet-8B-decisives.json",
+                                                  "arret.json"}
+    assert verifier_resultat(depot, d / "arret.json")["resultat"]["etape"] == "chargement du juge jouet-3B"
 
+
+
+@pytest.mark.parametrize("panne", [OSError("réseau coupé (essai)"), GardeArret("révision absente du cache (essai)")])
+def test_lanceur_echec_du_prechargement_avant_les_episodes(depot, monkeypatch, panne):
+    """Relecture R2, CO-05 : une panne du préchargement (exception de la bibliothèque ou garde) arrête avant les
+    épisodes : seul arret.json est écrit, à l'étape « préchargement des juges », avec un motif lisible."""
+    from controle_ia.manifeste import verifier_resultat
+
+    def precharger(config):
+        raise panne
+    monkeypatch.setattr(lp, "precharger_juges", precharger)
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    run = "20261006-170013-pilote-jouet"
+    with pytest.raises(type(panne)):
+        lp.executer(_config_lanceur(), depot, run, None, str(f))
+    d = depot / "diag" / run
+    assert {x.name for x in d.glob("*.json")} == {"arret.json"}
+    r = verifier_resultat(depot, d / "arret.json")["resultat"]
+    assert r["etape"] == "préchargement des juges" and "(essai)" in r["motif"]
 
 def test_precharger_juges_seulement_hors_agent_et_en_reel(monkeypatch):
     """Réel : seul le juge qui n'est pas l'agent est préchargé, à sa révision ; jouet : rien (aucun réseau)."""

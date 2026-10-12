@@ -1,11 +1,14 @@
 """Lanceur du pilote 8B de l'environnement (a) (T0.5), côté machine de calcul.
 
 Enchaîne, sous un manifeste de run décisif (préenregistrement scellé exigé, R1) :
-1. épisodes honnêtes de l'agent (8B), un environnement par épisode, garde d'équivalence en ligne ;
-2. notation des ensembles finaux par le juge 8B puis le juge 3B (invite b0) : épisodes e0 notés deux fois (runs A et B
-   de la décomposition de l'annexe C.1), les autres une fois ;
-3. appariement de chaque proposition finale à chaque cible semée de sa tâche, par le 8B (probabilité du jeton) ;
-4. résultats scellés, rattachés au manifeste ; vecteurs par action sous `donnees/<run>/` (hors git), empreinte consignée.
+1. contrôle du format (agent et juges), puis poids des juges qui ne sont pas l'agent téléchargés (SI-02) ;
+2. épisodes honnêtes de l'agent (8B), un environnement par épisode, garde d'équivalence en ligne ; `episodes.json` ;
+3. appariement de chaque proposition finale à chaque cible semée de sa tâche, et base « énoncé seul », par le 8B
+   (probabilité du jeton) ; `appariements.json` (SI-01 : les familles ne dépendent plus de la durée des juges) ;
+4. notations décisives des ensembles finaux par le juge 8B puis le juge 3B (invite b0 ; épisodes e0 notés deux fois,
+   runs A et B de la décomposition de l'annexe C.1), chaque juge chargé à sa première notation, le 3B hors ligne et
+   son format recontrôlé ; puis notations descriptives (D) ;
+5. résultats scellés, rattachés au manifeste ; vecteurs par action sous `donnees/<run>/` (hors git), empreinte consignée.
 
 Gardes de lancement (avant le manifeste), pour un run avec préenregistrement : l'arbre gelé est celui du commit cité
 (`exiger_code_cite`, comme T0.4) ; la configuration (empreinte canonique), le fichier des tâches (empreinte) et
@@ -314,7 +317,9 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
     from ..harnais.modeles import regler_determinisme
 
     reglages = regler_determinisme(config["fils"], "cuda" if config["mode"] == "reel" else "cpu")
+    depart_agent = time.perf_counter()
     modele, fmt = charger_modele_et_format(config["agent"], config["mode"], graine_entiere(g["modele-jouet"]))
+    chargement_agent_s = round(time.perf_counter() - depart_agent, 1)
     # garde du format au début du run (CL-25) : agent, et chaque juge (tokeniseur seul s'il n'est pas l'agent)
     etat["etape"] = "contrôle du format"
     formats = {"agent": controler_format(fmt, config["agent"], "agent", config)}
@@ -337,7 +342,8 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
         fiches, vecteurs, controle_negatif = jouer_pilote(modele, fmt, plan, generateurs, config, echeance=echeance,
                                                           chrono=chrono)
     descriptifs = {"episodes": {"duree_s": round(time.perf_counter() - depart, 1), "memoire_pic_gio": memoire_pic_gio(),
-                                **chrono}}
+                                **chrono, "chargement_agent_s": chargement_agent_s,
+                                "precharges": etat["precharges"]}}
     etat["controle_negatif"] = controle_negatif["lecture"]
     donnees = racine / "donnees" / run_id
     donnees.mkdir(parents=True, exist_ok=False)
@@ -351,14 +357,21 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
                                                    "formats": formats, "descriptifs": descriptifs["episodes"],
                                                    "duree_s": round(time.perf_counter() - debut, 1)})
     etat["episodes_ecrits"] = len(fiches)
+    del vecteurs
+    import gc
+
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
     # Ordre des étapes (contre-lecture 1, CL-7 ; contre-lecture 2, D-6 ; état des lieux du pilote, SI-01) :
     # l'appariement des propositions et la base « énoncé seul », dont dépendent les familles, d'abord, par le juge qui
     # sert à l'appariement (le 8B, déjà en mémoire : quelques minutes) ; puis les notations décisives (épisodes de
     # `episodes_decisifs` : A noté deux fois, et C) par tous les juges ; puis les notations descriptives (D). Un arrêt
     # pendant les notations, dont la durée n'a jamais été mesurée, laisse ainsi les familles lisibles. L'échéance se
-    # contrôle à chaque lot. Les modèles des juges sont chargés une fois, ceux qui ne sont pas l'agent hors ligne
-    # (préchargés avant les épisodes) ; juges et appariement tournent au noyau par défaut de la bibliothèque (noyaux
+    # contrôle à chaque lot. Chaque juge est chargé une fois, à sa première notation (CO-01 : une panne au chargement
+    # du 3B laisse écrites les notations décisives du 8B) ; ceux qui ne sont pas l'agent hors ligne (préchargés avant
+    # les épisodes), format recontrôlé ; juges et appariement tournent au noyau par défaut de la bibliothèque (noyaux
     # permis consignés, D-14).
     from ..harnais.modeles import noyaux_attention_permis
 
@@ -396,16 +409,15 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
                 "descriptifs": {"duree_s": round(time.perf_counter() - depart, 1),
                                 "memoire_pic_gio": memoire_pic_gio(), "paires": len(app) + len(enonce)}})
             etat["appariement_ecrit"] = j["nom"]
-    etat["etape"] = "chargement des juges"          # épisodes déjà écrits : l'étiquette le dit (relecture, V-1)
-    for j in config["juges"]:
-        modele_du_juge(j)
     decisifs = {str(k) for k in config["episodes_decisifs"]}
     notations: dict[str, list] = {j["nom"]: [] for j in config["juges"]}
 
     def noter(etape: str) -> None:
         for j in config["juges"]:
+            if j["nom"] not in modeles_juges:
+                etat["etape"] = f"chargement du juge {j['nom']}"     # épisodes déjà écrits (relecture, V-1)
+            m_j, fmt_j = modele_du_juge(j)
             etat["etape"] = f"notations {etape} par {j['nom']}"
-            m_j, fmt_j = modeles_juges[j["nom"]]
             demandes = [d for d in demandes_de_notation(fiches, par_id, config, j["nom"])
                         if (d["episode"].rsplit("/e", 1)[1] in decisifs) == (etape == "decisives")]
             graines_j = {d["cle"]: graine_entiere(g[d["cle"]]) for d in demandes}

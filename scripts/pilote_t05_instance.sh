@@ -202,13 +202,15 @@ pousser_vecteurs() {
     t1=$(printf '100644 blob %s\tvecteurs-par-action.npz\n100644 blob %s\tvecteurs-par-action.npz.sha256\n' "$b" "$s" | git mktree)
     t2=$(printf '040000 tree %s\t%s\n' "$t1" "$run" | git mktree)
     c=$(git commit-tree "$t2" -m "T0.5 — vecteurs par action du run $run (empreinte $(cut -c1-16 "$f.sha256"))")
-    local essai                                       # trois tentatives, attente croissante, comme pousser()
+    local essai cause                                 # trois tentatives, attente croissante, comme pousser()
     for essai in 1 2 3; do
         if git push -q origin "$c:refs/heads/donnees/t05/$run" 2>"$TRAVAIL/poussee-vecteurs.err"; then
             journal "vecteurs poussés : branche donnees/t05/$run, commit $c, $taille octets"
             return 0
         fi
-        journal "vecteurs : poussée, tentative $essai refusée ($(tail -n 1 "$TRAVAIL/poussee-vecteurs.err" | tr '\n' ' '))"
+        # cause donnée par git, comme pousser() (relecture R2, CO-03 : un refus de taille se lit ici)
+        cause=$( (grep -E '^(fatal|error|remote):' "$TRAVAIL/poussee-vecteurs.err" || tail -n 2 "$TRAVAIL/poussee-vecteurs.err") | tr '\n' ' ' || true)
+        journal "vecteurs : poussée, tentative $essai refusée ($cause)"
         if [ "$essai" -lt 3 ]; then sleep $((15 * essai * essai)); fi
     done
     journal "vecteurs : poussée impossible : restés sur l'instance"; return 1
@@ -344,5 +346,11 @@ ETAPE="fin"
 journal "fin : $RUN ; arrêter l'instance par son identifiant (R10)"
 CONSIGNE=1
 traces "fin"
-pousser
-journal "branche $BRANCHE poussée"
+# dernière poussée : elle porte aussi le commit des résultats si la première a échoué ; en échec, une ligne de synthèse
+# (relecture R2, CO-08) : le run est complet, la branche distante ne l'a pas, l'instance garde tout (PL-11)
+if pousser; then
+    journal "branche $BRANCHE poussée (résultats et traces)"
+else
+    journal "run complet, mais poussée finale impossible après trois tentatives : résultats et traces restés sur l'instance"
+    exit 1
+fi

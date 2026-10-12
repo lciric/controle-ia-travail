@@ -328,3 +328,92 @@ def test_poussees_apres_le_run_trois_tentatives(bac):
     j = _journal(bac, "t2")
     assert "tentative 3 refusée" in j and "poussée impossible : résultats restés sur l'instance" in j, j[-3000:]
 
+
+# --- poussées de fin de run (relecture R2 du brouillon 8 : CO-02, CO-03, CO-08) ---------------------------------------
+# python factice dont le « lanceur » écrit un run : vecteurs scellés et arret.json (pilote), ou résumé complet
+
+PYTHON_LANCEUR = """#!/usr/bin/env bash
+if [ "$1" = "-m" ] && [ "$2" = "pytest" ]; then printf '%s\\n' "7 passed in 1.00s"; exit 0; fi
+if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then echo "paquet-factice==1.0"; exit 0; fi
+if [ "$1" = "-c" ]; then
+    case "$2" in *"is_available() else 1"*) exit 0 ;; esac
+    echo "torch factice"; exit 0
+fi
+run=""; prec=""
+for a in "$@"; do [ "$prec" = "--run-id" ] && run="$a"; prec="$a"; done
+mkdir -p "donnees/$run" "diag/$run" "runs/$run"
+if [ "${FAUX_RUN:-}" = complet ]; then
+    echo '{"factice": true}' > "runs/$run/manifeste.json"; echo '{"factice": true}' > "diag/$run/resume.json"
+    echo '{"run": "factice"}'; exit 0
+fi
+head -c 4096 /dev/urandom > "donnees/$run/vecteurs-par-action.npz"
+(cd "donnees/$run" && sha256sum vecteurs-par-action.npz > vecteurs-par-action.npz.sha256)
+echo '{"factice": true}' > "diag/$run/arret.json"
+echo "lanceur factice : vecteurs écrits, arrêt" >&2
+exit 1
+"""
+
+
+def _lanceur_factice(bac, pilote: bool) -> None:
+    if pilote:
+        src = bac["source"]
+        (src / "prereg" / "pilote.md").write_text(_prereg_pilote(), encoding="utf-8")
+        _git(src, "add", "-A")
+        _git(src, "commit", "-qm", "préenregistrement factice du pilote")
+    (bac["venv"] / "bin" / "python").write_text(PYTHON_LANCEUR, encoding="utf-8")
+
+
+def _crochet_compte(distant: Path, motif_ref: str, refuser_si: str) -> None:
+    """pre-receive : compte les poussées dont la référence suit `motif_ref` et refuse selon `refuser_si` (n = rang)."""
+    compteur = distant / "compteur"
+    h = distant / "hooks" / "pre-receive"
+    h.write_text("#!/usr/bin/env bash\nwhile read -r ancien nouveau ref; do\n"
+                 f"  case \"$ref\" in {motif_ref})\n"
+                 f"    n=$(cat '{compteur}' 2>/dev/null || echo 0); n=$((n + 1)); echo $n > '{compteur}'\n"
+                 f"    if {refuser_si}; then echo 'refus de la poussée (essai)' >&2; exit 1; fi ;;\n"
+                 "  esac\ndone\nexit 0\n", encoding="utf-8")
+    h.chmod(0o755)
+
+
+PILOTE = {"ETUDE": "pilote", "PREREG": "prereg/pilote.md"}
+
+
+def test_vecteurs_refus_passager_puis_poussee_et_cause_journalisee(bac):
+    """CO-02, CO-03 : la poussée des vecteurs (arrêt consigné du pilote) est tentée trois fois ; un refus passager est
+    journalisé avec la cause donnée par le dépôt distant, puis la branche donnees/t05/<run> est poussée."""
+    _lanceur_factice(bac, pilote=True)
+    distant = _distant(bac)
+    _crochet_compte(distant, "refs/heads/donnees/*", '[ "$n" = 1 ]')
+    code, _ = _lancer(bac, distant, env_sup=PILOTE)
+    j = _journal(bac)
+    assert code == 1 and "ARRÊT pendant run" in j, j[-2500:]
+    assert "vecteurs : poussée, tentative 1 refusée (remote: refus de la poussée (essai)" in j, j[-2500:]
+    assert "vecteurs poussés : branche donnees/t05/" in j
+    assert "donnees/t05/" in _git(distant, "branch", "--list", "donnees/t05/*")
+
+
+def test_vecteurs_refus_permanent_restes_sur_l_instance(bac):
+    """Artefact de CO-02 : trois refus, journalisés ; « restés sur l'instance » ; aucune branche de vecteurs."""
+    _lanceur_factice(bac, pilote=True)
+    distant = _distant(bac)
+    _crochet_compte(distant, "refs/heads/donnees/*", '[ "$n" -ge 1 ]')
+    code, _ = _lancer(bac, distant, env_sup=PILOTE)
+    j = _journal(bac)
+    assert code == 1 and "vecteurs : poussée, tentative 3 refusée" in j, j[-2500:]
+    assert "vecteurs : poussée impossible : restés sur l'instance" in j
+    assert _git(distant, "branch", "--list", "donnees/t05/*") == ""
+
+
+def test_poussee_finale_cas_sain_et_refus(bac):
+    """CO-08 : run complet ; cas sain, la dernière ligne dit la branche poussée avec résultats et traces, code 0.
+    Artefact : la poussée finale refusée trois fois (après celle des résultats) donne une ligne de synthèse, code 1."""
+    _lanceur_factice(bac, pilote=False)
+    distant = _distant(bac)
+    code, _ = _lancer(bac, distant, env_sup={"FAUX_RUN": "complet"})
+    j = _journal(bac)
+    assert code == 0 and j.rstrip().endswith("branche calcul/t05-revalidation-jouet-v1 poussée (résultats et traces)"), j[-2000:]
+    refus = _distant(bac)
+    _crochet_compte(refus, "refs/heads/calcul/*", '[ "$n" -ge 3 ]')
+    code, _ = _lancer(bac, refus, travail="t2", env_sup={"FAUX_RUN": "complet"})
+    j = _journal(bac, "t2")
+    assert code == 1 and "run complet, mais poussée finale impossible après trois tentatives" in j, j[-2000:]
