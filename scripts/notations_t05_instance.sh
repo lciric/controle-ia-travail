@@ -262,7 +262,9 @@ if [ "$code" -ne 0 ]; then
 fi
 git add "runs/$RUN" "diag/$RUN"
 git commit -qm "T0.5 — notations ($MODE), run $RUN"
-journal "run terminé : $RUN ; $(cat "$TRAVAIL/run.json")"
+# le résumé (comptes de réponses compris) reste dans run.json, versé aux traces ; il n'est pas recopié au journal que
+# lit la surveillance (contre-lecture R2 de la chaîne, angle « récupération et répétition », constat 7)
+journal "run terminé : $RUN"
 ETAPE="poussée"
 pousser || journal "poussée du run impossible : résultats restés sur l'instance"
 ETAPE="fin"

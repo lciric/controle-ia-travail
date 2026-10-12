@@ -135,6 +135,7 @@ def test_cas_sain_lecture_precoce_relais_et_run_complet(bac):
     assert progres == ["PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1",
                        "PROGRES 2026-10-12T10:06:00Z juge=8B fin=écrit lots_faits=23/23 duree_s=7900.0"]
     assert "PROPOSAL" not in journal and "texte libre" not in journal                   # aucun texte au journal
+    assert '{"run": "factice"}' not in journal                       # le résumé n'est pas recopié au journal (run.json)
     assert "PROGRES" in sortie and "PROPOSAL" not in sortie                  # ni sur la sortie du script (l'amorce y
     # ajoute ses diagnostics de fin : test_amorce_cas_sain_et_dossiers_presents)
     assert "run" in _git(distant, "log", "-2", "--format=%s", "calcul/t05-notations-jouet-v1")
