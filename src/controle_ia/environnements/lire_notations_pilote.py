@@ -2,12 +2,18 @@
 
 Écart de procédure déclaré au préenregistrement du pilote : le code de lecture gelé (`lire_pilote`, commit cité par le
 pilote) ne lit les notations que dans le dossier du pilote, par un seul run d'analyse. Les notations refaites
-(`noter_pilote_a`) vivent dans un run distinct. Ce module mince les lit **sans rien recalculer lui-même** : il
-n'appelle que les fonctions gelées (`_ouvrir_analyse`, `charger_pilote`, `mesures_format`, `empreintes_des_ensembles`,
-`notes_alignees`, `lecture_juge`, `decomposition_complete`, `difference_appariee`, `predictions`,
-`declencheurs_audit`, `tirer_relectures`), avec les graines de la première analyse, dans l'ordre d'`analyser`. Son
-équivalence avec `analyser` est éprouvée par un test (même pilote, notations dans le dossier du pilote ou dans un run
-distinct : mêmes juges, même différence appariée, mêmes P2 et P3, mêmes réponses tirées pour l'audit).
+(`noter_pilote_a`) vivent dans un run distinct. Ce module mince les lit **sans rien calculer lui-même** : toutes les
+mesures, intervalles, prédictions, déclencheurs et tirages viennent du code gelé de `lire_pilote` (fonctions
+`_ouvrir_analyse`, `charger_pilote`, `mesures_format`, `empreintes_des_ensembles`, `notes_alignees`, `lecture_juge`,
+`decomposition_complete`, `difference_appariee`, `predictions`, `declencheurs_audit`, `tirer_relectures`,
+`_serialisable`, `_familles_vides` ; constantes `TIRAGES` et `NIVEAU`), appelé avec les graines du manifeste de la
+première analyse ; chaque graine passe par `generateur`, qui construit un générateur neuf par clé, et `predictions` et
+`declencheurs_audit` ne tirent rien : l'ordre des appels, qui diffère de celui d'`analyser` pour `tirer_relectures`, est
+sans effet sur les nombres. Le module n'ajoute que des gardes, le chargement du run des notations et l'écriture sous
+manifeste. Son équivalence avec `analyser` est éprouvée par des tests sur un même pilote (notations écrites dans le
+dossier du pilote et lues par `analyser`, ou dans un run distinct et lues ici) : mêmes juges, même différence appariée,
+mêmes P1 à P7, mêmes réponses et actions tirées pour l'audit, mêmes déclencheurs hors familles (sans déclencheur, puis
+avec un déclencheur propre aux juges, lecture suspendue des deux côtés).
 
 Gardes : celles d'`_ouvrir_analyse` (préenregistrement du pilote intact, modules de lecture égaux au commit cité,
 constantes et version de numpy du manifeste d'analyse) ; run des notations rattaché au même pilote ; lecture décisive

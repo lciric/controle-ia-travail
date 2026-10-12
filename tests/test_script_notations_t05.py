@@ -1,8 +1,9 @@
 """Scripts de l'instance des notations refaites du pilote de T0.5 (`scripts/notations_t05_instance.sh`,
 `scripts/amorce_instance_t05_notations.sh` ; N-021) : exécutés tels quels contre un dépôt distant local, avec un
 `python` et un `nvidia-smi` factices (aucune installation, aucun processeur graphique). Lecture précoce des pièces du
-pilote noté, relais des seules lignes de progression au journal, run complet ou arrêté, branche présente, amorce
-(cas sain et artefact, R5)."""
+pilote noté, relais des seules lignes de progression au journal, run complet ou arrêté, branche présente, amorce,
+vérification de la branche impossible, poussée initiale refusée, carte indisponible, poussée finale refusée (cas sain et
+artefact, R5)."""
 from __future__ import annotations
 
 import os
@@ -31,7 +32,7 @@ PYTHON_FACTICE = """#!/usr/bin/env bash
 if [ "$1" = "-m" ] && [ "$2" = "pytest" ]; then printf '%s\\n' "${FAUX_PYTEST_LIGNE:-7 passed in 1.00s}"; exit 0; fi
 if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then echo "paquet-factice==1.0"; exit 0; fi
 if [ "$1" = "-c" ]; then
-    case "$2" in *"is_available() else 1"*) exit 0 ;; esac
+    case "$2" in *"is_available() else 1"*) exit "${FAUX_CARTE_CODE:-0}" ;; esac
     echo "torch factice"; exit 0
 fi
 if [ "$1" = "-m" ] && [ "$2" = "controle_ia.environnements.noter_pilote_a" ]; then
@@ -134,7 +135,8 @@ def test_cas_sain_lecture_precoce_relais_et_run_complet(bac):
     assert progres == ["PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1",
                        "PROGRES 2026-10-12T10:06:00Z juge=8B fin=écrit lots_faits=23/23 duree_s=7900.0"]
     assert "PROPOSAL" not in journal and "texte libre" not in journal                   # aucun texte au journal
-    assert "PROGRES" in sortie and "PROPOSAL" not in sortie                              # ni sur la sortie (vastai logs)
+    assert "PROGRES" in sortie and "PROPOSAL" not in sortie                  # ni sur la sortie du script (l'amorce y
+    # ajoute ses diagnostics de fin : test_amorce_cas_sain_et_dossiers_presents)
     assert "run" in _git(distant, "log", "-2", "--format=%s", "calcul/t05-notations-jouet-v1")
 
 
@@ -171,6 +173,64 @@ def test_run_arrete_consigne_et_pousse(bac):
     progres = [x for x in journal.splitlines() if x.startswith("PROGRES ")]
     assert progres == ["PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1",
                        "PROGRES 2026-10-12T10:06:00Z juge=8B fin=écrit lots_faits=23/23 duree_s=7900.0"]
+    # hors des lignes de progression, ce qui vient de run.err au journal : ses dernières lignes non PROGRES seulement
+    err = [x for x in (bac["racine"] / "t" / "run.err").read_text(encoding="utf-8").splitlines() if not x.startswith("PROGRES ")]
+    assert all(x in err[-5:] for x in journal.splitlines() if x in err)
+
+
+def test_verification_de_la_branche_impossible(bac):
+    """git ls-remote en échec (code 128 : hôte injoignable) : arrêt avant l'installation, cause au journal, aucun test
+    (cas sain : branche absente, test_cas_sain_lecture_precoce_relais_et_run_complet)."""
+    distant = _distant(bac)
+    faux = bac["racine"] / "faux-git"
+    faux.mkdir()
+    (faux / "git").write_text(
+        '#!/usr/bin/env bash\nif [ "$1" = ls-remote ]; then\n'
+        '    echo "fatal: unable to access \'x\': Could not resolve host: exemple.invalid" >&2; exit 128\nfi\n'
+        f'exec {shutil.which("git")} "$@"\n', encoding="utf-8")
+    (faux / "git").chmod(0o755)
+    code, journal, sortie = _lancer(bac, distant, env_sup={"PATH": f"{faux}:{os.environ['PATH']}"})
+    assert code == 2 and "vérification de la branche calcul/t05-notations-jouet-v1 impossible" in journal, sortie[-2000:]
+    assert "code 128" in journal and "Could not resolve host" in journal and "tests :" not in journal
+
+
+def test_poussee_initiale_refusee_trois_fois(bac):
+    """Un dépôt distant qui refuse toute poussée (droit d'écriture du jeton) : trois tentatives, puis arrêt avant
+    l'installation, code 2, aucun test (cas sain : test_cas_sain_lecture_precoce_relais_et_run_complet)."""
+    distant = _distant(bac)
+    crochet = distant / "hooks" / "pre-receive"
+    crochet.write_text("#!/usr/bin/env bash\necho 'écriture refusée pour ce jeton (essai)' >&2\nexit 1\n", encoding="utf-8")
+    crochet.chmod(0o755)
+    code, journal, sortie = _lancer(bac, distant)
+    assert code == 2 and "tentative 3 refusée" in journal and "arrêt avant l'installation" in journal, sortie[-2000:]
+    assert "remote:" in journal and "tests :" not in journal
+
+
+def test_carte_indisponible_en_mode_reel(bac):
+    """En mode réel, une carte invisible pour torch arrête avant les tests (code 1, arrêt consigné) ; une carte visible
+    laisse passer."""
+    smi = f"{bac['venv'] / 'bin'}:{os.environ['PATH']}"         # nvidia-smi est appelé avant l'activation
+    reel = {"MODE": "reel", "HF_TOKEN": "factice", "PATH": smi, "FAUX_CARTE_CODE": "1"}
+    code, journal, sortie = _lancer(bac, _distant(bac), env_sup=reel)
+    assert code == 1 and "carte indisponible pour torch" in journal and "tests :" not in journal, sortie[-2000:]
+    code, journal, sortie = _lancer(bac, _distant(bac), travail="t2", env_sup=dict(reel, FAUX_CARTE_CODE="0"))
+    assert "tests : 7 passed" in journal, sortie[-2000:]
+
+
+def test_poussee_finale_refusee_resultats_gardes(bac):
+    """Run complet, mais poussée finale refusée trois fois (après la poussée initiale et celle du run) : « poussée
+    finale impossible », résultats et traces restés sur l'instance, code 1 (cas sain : run complet, code 0)."""
+    distant = _distant(bac)
+    compteur = distant / "compteur"
+    crochet = distant / "hooks" / "pre-receive"
+    crochet.write_text("#!/usr/bin/env bash\n"
+                       f"n=$(cat '{compteur}' 2>/dev/null || echo 0); n=$((n + 1)); echo $n > '{compteur}'\n"
+                       "if [ \"$n\" -ge 3 ]; then echo 'refus de la poussée (essai)' >&2; exit 1; fi\nexit 0\n",
+                       encoding="utf-8")
+    crochet.chmod(0o755)
+    code, journal, sortie = _lancer(bac, distant)
+    assert code == 1 and "run complet, mais poussée finale impossible après trois tentatives" in journal, sortie[-3000:]
+    assert "run terminé" in journal
 
 
 def test_branche_presente_arrete_puis_relancement_sous_v2(bac):
@@ -193,6 +253,9 @@ def test_amorce_cas_sain_et_dossiers_presents(bac):
     assert "PROGRES 2026-10-12T10:00:00Z juge=8B" in r.stdout                # relais vu par `vastai logs`
     journal = (racine / "t05" / "journal.txt").read_text(encoding="utf-8")
     assert "PROPOSAL" not in journal and "texte libre" not in journal
+    # diagnostics de fin de l'amorce, déclarés au préenregistrement : dernières lignes de run.err hors lignes de
+    # progression (le lanceur réel n'y écrit que ses messages d'arrêt ; les bibliothèques, leurs avertissements)
+    assert "run.err (dernières lignes, hors progression)" in r.stdout
     r = subprocess.run(["bash", str(AMORCE)], env=env, capture_output=True, text=True, timeout=300)
     assert r.returncode == 1 and "dossiers d'un essai précédent présents (R12)" in r.stdout
 

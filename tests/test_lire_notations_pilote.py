@@ -291,20 +291,40 @@ def test_8b_echu_3b_seul_lu(tmp_path_factory):
     assert lecture["predictions"]["P2"] == "non concluant" and lecture["predictions"]["P3"] == "non concluant"
     assert lecture["difference_appariee"] is None
     assert {x.split("/")[0] for x in lecture["relectures_audit"]["reponses_de_juge"]} == {"juge-3B"}
+    # lecture retenue (R-164 ; R-155, (3)) : un juge sans fichier est en nœud, sans déclencher « décomposition
+    # impossible » ; le déclencheur ne joue que pour un juge écrit dont la décomposition est impossible (artefact)
+    assert not lecture["audit_r4_juges"]["declenche"] and not lecture["lecture_suspendue"]
+    _, _, c, _ = _pilote_complet_et_pilote_arrete(tmp_path_factory)
+    constant = [dict(x, notes={k: 1 for k in x["notes"]}) if x["score"] is not None else x
+                for x in _notations_de(a, "3B")]                                   # notes constantes
+    _run_des_notations(c, {"3B": constant})
+    lecture = lnp.lire_notations(c, RUN, NOTATIONS, ANALYSE, c / "taches.json", LECTURE)
+    assert lecture["juges"]["3B"].get("decomposition_impossible")
+    assert lecture["audit_r4_juges"]["declenche"] and lecture["lecture_suspendue"]
+    assert [x for x in lecture["audit_r4_juges"]["trop_sale"] if "décomposition impossible" in x] == \
+        [x for x in lecture["audit_r4_juges"]["trop_sale"] if x.startswith("juge 3B : décomposition impossible")] != []
 
 
 def test_declencheur_propre_aux_juges_suspend_la_lecture(tmp_path_factory):
     """Plus de 10 % de réponses A et B identiques pour le 8B : déclencheur « trop propre » propre aux juges, lecture
-    suspendue (cas sain : test d'équivalence, aucun déclencheur)."""
+    suspendue (cas sain : test d'équivalence, aucun déclencheur). Second témoin « même pilote » (contre-lecture R2,
+    angle « lecture ») : `analyser`, sur les mêmes notations écrites dans le dossier du pilote, déclenche le même audit
+    (mêmes listes « trop propre » et « trop sale », sans famille) et suspend aussi la lecture."""
     a, _, b, _ = _pilote_complet_et_pilote_arrete(tmp_path_factory)
     n8 = _notations_de(a, "8B")
     par_cle = {x["cle"]: x for x in n8}
     copie = [dict(x, reponse=par_cle[x["cle"].replace("/passe-1", "/passe-0")]["reponse"])
              if x["cle"].endswith("/passe-1") else x for x in n8]
-    _run_des_notations(b, {"8B": copie, "3B": _notations_de(a, "3B")})
+    notes = {"8B": copie, "3B": _notations_de(a, "3B")}
+    _run_des_notations(b, notes)
     lecture = lnp.lire_notations(b, RUN, NOTATIONS, ANALYSE, b / "taches.json", LECTURE)
     assert lecture["audit_r4_juges"]["declenche"] and lecture["lecture_suspendue"]
     assert any("8B" in x and "identiques" in x for x in lecture["audit_r4_juges"]["trop_propre"])
+    temoin = _temoin_meme_pilote(tmp_path_factory, notes)
+    assert temoin["audit_r4"]["familles"] == []
+    assert lecture["audit_r4_juges"]["trop_propre"] == temoin["audit_r4"]["trop_propre"] != []
+    assert lecture["audit_r4_juges"]["trop_sale"] == temoin["audit_r4"]["trop_sale"]
+    assert temoin["lecture_suspendue"] is True
 
 
 def test_autres_gardes_du_lecteur_cas_sain_et_artefacts(tmp_path_factory, monkeypatch):
@@ -364,5 +384,19 @@ def test_autres_gardes_du_lecteur_cas_sain_et_artefacts(tmp_path_factory, monkey
         lire(sale=True)
     cible.write_bytes(sauve[0])
     Path(str(cible) + ".sha256").write_bytes(sauve[1])
+    # résumé du run des notations rattaché à un autre run (copié avec son sceau)
+    r_autre = ecrire_resultat(b, chemin_autre, "resume", {"juges": {"8B": {"statut": "écrit"}, "3B": {"statut": "écrit"}}})
+    cible = b / "diag" / NOTATIONS / "resume.json"
+    sauve = (cible.read_bytes(), Path(str(cible) + ".sha256").read_bytes())
+    cible.write_bytes(r_autre.read_bytes())
+    Path(str(cible) + ".sha256").write_bytes(Path(str(r_autre) + ".sha256").read_bytes())
+    with pytest.raises(GardeArret, match=rf"resume\.json rattaché au run {autre}"):
+        lire(sale=True)
+    cible.write_bytes(sauve[0])
+    Path(str(cible) + ".sha256").write_bytes(sauve[1])
+    # comparaison des modules des notations à un commit introuvable ; cas sain : le commit du run des notations
+    with pytest.raises(GardeArret, match="comparaison au commit"):
+        lnp.exiger_modules_notations(b, "0" * 40)
+    lnp.exiger_modules_notations(b, json.loads((b / "runs" / NOTATIONS / "manifeste.json").read_text())["commit"])
     assert not (b / "runs" / LECTURE).exists()
     lire(sale=True)                                                                   # cas sain

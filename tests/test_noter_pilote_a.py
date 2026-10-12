@@ -522,6 +522,79 @@ def test_panne_du_prechargement_du_3b(depot, monkeypatch):
     assert verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]["etape"] == "préchargement des juges"
 
 
+def _horloge_avancee(monkeypatch):
+    """Horloge du lanceur simulée : le temps réel plus un décalage que le test avance à volonté."""
+    import time as vrai_temps
+    from types import SimpleNamespace
+    decalage = [0.0]
+    monkeypatch.setattr(npa, "time", SimpleNamespace(perf_counter=lambda: vrai_temps.perf_counter() + decalage[0]))
+    return decalage
+
+
+def test_echeance_du_3b_ancree_a_son_premier_lot(depot, monkeypatch):
+    """L'échéance du 3B court depuis son premier lot, non depuis le début du run (contre-lecture R2, angle « code du
+    lanceur ») : 2 000 s passent pendant chaque lot du 8B ; le 3B (1 500 s) note quand même. Un 3B ancré au début du
+    run échoirait sans aucun lot."""
+    f, _ = _pilote_arrete(depot, monkeypatch)
+    decalage = _horloge_avancee(monkeypatch)
+    vrai = npa.noter_ensembles
+
+    def noter(*a, **k):
+        sortie = vrai(*a, **k)
+        if all(x["cle"].startswith("juge-jouet-8B/") for x in sortie):
+            decalage[0] += 2000.0
+        return sortie
+
+    monkeypatch.setattr(npa, "noter_ensembles", noter)
+    run = "20261012-110020-notations-jouet"
+    resume = npa.executer(_config(duree_max_juges_s={"jouet-8B": 23000, "jouet-3B": 1500}, duree_globale_s=23000),
+                          depot, run, None, str(f), autoriser_depot_sale=True)
+    assert decalage[0] >= 4000.0
+    assert {n: j["statut"] for n, j in resume["juges"].items()} == {"jouet-8B": "écrit", "jouet-3B": "écrit"}
+
+
+def test_echeance_du_8b_ancree_au_debut_du_run(depot, monkeypatch):
+    """L'échéance du 8B court depuis le début du run, chargement compris : 2 000 s passent pendant le chargement de
+    l'agent ; le 8B (1 500 s) échoit sans aucun lot, le 3B note. Un 8B ancré à son premier lot noterait."""
+    f, _ = _pilote_arrete(depot, monkeypatch)
+    decalage = _horloge_avancee(monkeypatch)
+    vrai = npa.charger_modele_et_format
+    appels = []
+
+    def charger(*a, **k):
+        appels.append(1)
+        sortie = vrai(*a, **k)
+        if len(appels) == 1:                                     # chargement de l'agent (le 8B)
+            decalage[0] += 2000.0
+        return sortie
+
+    monkeypatch.setattr(npa, "charger_modele_et_format", charger)
+    run = "20261012-110021-notations-jouet"
+    resume = npa.executer(_config(duree_max_juges_s={"jouet-8B": 1500, "jouet-3B": 23000}, duree_globale_s=23000),
+                          depot, run, None, str(f), autoriser_depot_sale=True)
+    assert resume["juges"]["jouet-8B"]["statut"] == "échu" and resume["juges"]["jouet-8B"]["lots_faits"] == 0
+    assert resume["juges"]["jouet-3B"]["statut"] == "écrit"
+    assert _fichiers(depot, run) == ["notations-jouet-3B-decisives.json", "resume.json"]
+
+
+def test_panne_au_chargement_du_8b_consignee_sous_son_etape(depot, monkeypatch):
+    """Une panne au chargement de l'agent (le 8B : téléchargement compris) est consignée sous l'étape « chargement du
+    juge jouet-8B », avec le type et le message de l'exception ; aucun fichier de notations (cas sain de l'étape « contrôle
+    du format » : test_format_different_du_pilote_arrete)."""
+    f, _ = _pilote_arrete(depot, monkeypatch)
+
+    def charger(*a, **k):
+        raise OSError("panne simulée du téléchargement (essai)")
+
+    monkeypatch.setattr(npa, "charger_modele_et_format", charger)
+    run = "20261012-110022-notations-jouet"
+    with pytest.raises(OSError, match="téléchargement"):
+        npa.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)
+    assert _fichiers(depot, run) == ["arret.json"]
+    r = verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]
+    assert r["etape"] == "chargement du juge jouet-8B" and r["motif"] == "OSError: panne simulée du téléchargement (essai)"
+
+
 def test_memes_notations_que_le_lanceur_du_pilote(depot, monkeypatch):
     """Équivalence de bout en bout (contre-lecture R2) : à la même entropie, un pilote jouet complet (lanceur du pilote)
     et les notations refaites sur le même pilote arrêté pendant ses notations décisives rendent, clé à clé, les mêmes
