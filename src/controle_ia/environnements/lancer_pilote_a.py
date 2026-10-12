@@ -367,8 +367,16 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, plan,
 
     def modele_du_juge(j: dict):
         if j["nom"] not in modeles_juges:
-            modeles_juges[j["nom"]] = (modele, fmt) if j["meme_modele_que_agent"] else charger_modele_et_format(
-                j, config["mode"], graine_entiere(g["modele-jouet"]) + 1, hors_ligne=True)
+            if j["meme_modele_que_agent"]:
+                modeles_juges[j["nom"]] = (modele, fmt)
+            else:
+                m_j, fmt_j = charger_modele_et_format(j, config["mode"], graine_entiere(g["modele-jouet"]) + 1,
+                                                      hors_ligne=True)
+                # garde du format rejouée sur le tokeniseur chargé hors ligne (état des lieux, piste 12) : il doit rendre
+                # le contrôle obtenu au début du run, avant les épisodes ; sinon, arrêt (aucune notation sur un autre format)
+                if controler_format(fmt_j, j, "juge", config) != formats[f"juge-{j['nom']}"]:
+                    raise GardeArret(f"{j['nom']} : format chargé hors ligne ≠ format contrôlé au début du run")
+                modeles_juges[j["nom"]] = (m_j, fmt_j)
         return modeles_juges[j["nom"]]
 
     for j in config["juges"]:

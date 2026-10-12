@@ -474,6 +474,44 @@ def test_lanceur_prechargement_avant_les_episodes_et_juges_hors_ligne(depot, mon
                       ("chargement", "jouet-3B", True)]
 
 
+def test_lanceur_format_du_juge_hors_ligne_recontrole(depot, monkeypatch):
+    """État des lieux, piste 12 : le format d'un juge chargé hors ligne est recontrôlé et doit égaler celui du début du
+    run. Cas sain : le run va au résumé, le contrôle du juge 3B est joué deux fois (début, chargement hors ligne).
+    Artefact : un format différent au chargement hors ligne arrête le run à « chargement des juges », épisodes et
+    appariement écrits, aucune notation."""
+    from controle_ia.manifeste import verifier_resultat
+
+    vrai = lp.controler_format
+    vus = []
+
+    def sain(fmt, spec, role, config):
+        vus.append(spec.get("nom"))
+        return vrai(fmt, spec, role, config)
+    monkeypatch.setattr(lp, "controler_format", sain)
+    f, _ = _taches_scellees(depot)
+    committer(depot)
+    lp.executer(_config_lanceur(), depot, "20261006-170011-pilote-jouet", None, str(f))
+    assert vus.count("jouet-3B") == 2 and (depot / "diag" / "20261006-170011-pilote-jouet" / "resume.json").exists()
+
+    appels = {"n": 0}
+
+    def autre(fmt, spec, role, config):
+        r = vrai(fmt, spec, role, config)
+        if spec.get("nom") == "jouet-3B":
+            appels["n"] += 1
+            if appels["n"] == 2:
+                return {**r, "jetons": r["jetons"] + 1}
+        return r
+    monkeypatch.setattr(lp, "controler_format", autre)
+    committer(depot)
+    run = "20261006-170012-pilote-jouet"
+    with pytest.raises(GardeArret, match="format chargé hors ligne"):
+        lp.executer(_config_lanceur(), depot, run, None, str(f))
+    d = depot / "diag" / run
+    assert {x.name for x in d.glob("*.json")} == {"episodes.json", "appariements.json", "arret.json"}
+    assert verifier_resultat(depot, d / "arret.json")["resultat"]["etape"] == "chargement des juges"
+
+
 def test_precharger_juges_seulement_hors_agent_et_en_reel(monkeypatch):
     """Réel : seul le juge qui n'est pas l'agent est préchargé, à sa révision ; jouet : rien (aucun réseau)."""
     import controle_ia.harnais.modeles as M

@@ -177,7 +177,7 @@ traces() {
     mkdir -p traces
     d=$(mktemp -d "traces/t05-$(date -u +%Y%m%d-%H%M%S)-XXXX")
     for f in "$JOURNAL" "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" "$TRAVAIL"/run.json "$TRAVAIL"/run.err \
-             "$TRAVAIL"/nvidia-smi.txt; do
+             "$TRAVAIL"/nvidia-smi.txt "$TRAVAIL"/pip-freeze.txt; do
         [ -f "$f" ] && cp "$f" "$d/"
     done
     (cd "$d" && sha256sum -- * > empreintes.sha256) || true          # R6 : traces scellées
@@ -267,6 +267,11 @@ else
     # shellcheck disable=SC1091
     . .venv/bin/activate
     pip install -q -r requirements-gpu.txt
+fi
+# versions de toutes les dépendances, indirectes comprises, versées dans les traces (état des lieux, piste 14) ;
+# descriptif : un échec ne change pas le run, il est journalisé (aucun repli silencieux)
+if ! python -m pip freeze --all >"$TRAVAIL/pip-freeze.txt" 2>"$TRAVAIL/pip-freeze.err"; then
+    journal "pip freeze impossible (descriptif, sans effet sur le run) : $(tail -n 1 "$TRAVAIL/pip-freeze.err" | tr '\n' ' ')"
 fi
 
 python -c "import torch; print('torch', torch.__version__, 'cuda', torch.version.cuda, 'disponible', torch.cuda.is_available())" | tee -a "$JOURNAL"

@@ -32,6 +32,10 @@ PYTHON_FACTICE = """#!/usr/bin/env bash
 if [ "$1" = "-m" ] && [ "$2" = "pytest" ]; then
     printf '%s\\n' "${FAUX_PYTEST_LIGNE:-7 passed in 1.00s}"; exit "${FAUX_PYTEST_CODE:-0}"
 fi
+if [ "$1" = "-m" ] && [ "$2" = "pip" ] && [ "$3" = "freeze" ]; then
+    [ -n "${FAUX_PIP_CODE:-}" ] && { echo "pip factice : échec simulé" >&2; exit "$FAUX_PIP_CODE"; }
+    echo "paquet-factice==1.0"; exit 0
+fi
 if [ "$1" = "-c" ]; then
     case "$2" in *"is_available() else 1"*) exit "${FAUX_CARTE_CODE:-0}" ;; esac
     echo "torch factice"; exit 0
@@ -124,6 +128,22 @@ def test_cas_sain_lit_le_preenregistrement_puis_passe_les_tests(bac):
     assert "tests : 7 passed in 1.00s" in sortie and "run : " in sortie
     assert code == 1 and "ARRÊT pendant run" in sortie, sortie[-3000:]
 
+
+def test_pip_freeze_verse_dans_les_traces_ou_journalise(bac):
+    """État des lieux, piste 14 : la liste figée des paquets (indirects compris) est versée dans les traces poussées.
+    Artefact : un échec de pip freeze est journalisé, sans effet sur le déroulé (descriptif ; aucun repli silencieux)."""
+    distant = _distant(bac)
+    code, sortie = _lancer(bac, distant)
+    branche = "calcul/t05-revalidation-jouet-v1"
+    gele = [f for f in _git(distant, "ls-tree", "-r", "--name-only", branche).split("\n") if f.endswith("/pip-freeze.txt")]
+    assert code == 1 and len(gele) >= 1, sortie[-2000:]
+    assert _git(distant, "show", f"{branche}:{gele[0]}") == "paquet-factice==1.0"
+    assert "pip freeze impossible" not in sortie
+    refus = _distant(bac)
+    code2, sortie2 = _lancer(bac, refus, travail="t2", env_sup={"FAUX_PIP_CODE": "3"})
+    j = _journal(bac, "t2")
+    assert "pip freeze impossible (descriptif, sans effet sur le run) : pip factice : échec simulé" in j, j[-2000:]
+    assert code2 == code and "tests : 7 passed in 1.00s" in j and "ARRÊT pendant run" in j
 
 @pytest.mark.parametrize("artefact, motif", [
     ("préenregistrement absent", "absent au commit"),
