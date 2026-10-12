@@ -157,7 +157,19 @@ if [ "$poussee_initiale" != 1 ]; then
 fi
 journal "branche $BRANCHE poussée avant l'installation (droit d'écriture éprouvé)"
 
-pousser() { git push -q origin "$BRANCHE"; }
+pousser() {
+    # trois tentatives, attente croissante (15 s, puis 60 s) : une panne passagère du réseau à la fin d'un run de
+    # plusieurs heures ne laisse pas les résultats sur l'instance (état des lieux du pilote ; leçon de N-012) ; chaque
+    # refus est journalisé avec la cause donnée par git ; aucun repli silencieux
+    local essai cause
+    for essai in 1 2 3; do
+        if git push -q origin "$BRANCHE" 2>"$TRAVAIL/poussee.err"; then return 0; fi
+        cause=$( (grep -E '^(fatal|error|remote):' "$TRAVAIL/poussee.err" || tail -n 2 "$TRAVAIL/poussee.err") | tr '\n' ' ' || true)
+        journal "poussée de la branche $BRANCHE : tentative $essai refusée ($cause)"
+        if [ "$essai" -lt 3 ]; then sleep $((15 * essai * essai)); fi
+    done
+    return 1
+}
 traces() {
     # journal, sorties des tests et du run, versés sur la branche (hors arbre gelé) pour la session de pilotage ;
     # un dossier neuf à chaque versement (R12)
@@ -190,11 +202,16 @@ pousser_vecteurs() {
     t1=$(printf '100644 blob %s\tvecteurs-par-action.npz\n100644 blob %s\tvecteurs-par-action.npz.sha256\n' "$b" "$s" | git mktree)
     t2=$(printf '040000 tree %s\t%s\n' "$t1" "$run" | git mktree)
     c=$(git commit-tree "$t2" -m "T0.5 — vecteurs par action du run $run (empreinte $(cut -c1-16 "$f.sha256"))")
-    if git push -q origin "$c:refs/heads/donnees/t05/$run"; then
-        journal "vecteurs poussés : branche donnees/t05/$run, commit $c, $taille octets"
-    else
-        journal "vecteurs : poussée impossible : restés sur l'instance"; return 1
-    fi
+    local essai                                       # trois tentatives, attente croissante, comme pousser()
+    for essai in 1 2 3; do
+        if git push -q origin "$c:refs/heads/donnees/t05/$run" 2>"$TRAVAIL/poussee-vecteurs.err"; then
+            journal "vecteurs poussés : branche donnees/t05/$run, commit $c, $taille octets"
+            return 0
+        fi
+        journal "vecteurs : poussée, tentative $essai refusée ($(tail -n 1 "$TRAVAIL/poussee-vecteurs.err" | tr '\n' ' '))"
+        if [ "$essai" -lt 3 ]; then sleep $((15 * essai * essai)); fi
+    done
+    journal "vecteurs : poussée impossible : restés sur l'instance"; return 1
 }
 CONSIGNE=""
 consigner_arret() {

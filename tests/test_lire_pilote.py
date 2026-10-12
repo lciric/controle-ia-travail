@@ -423,7 +423,7 @@ def test_version_de_numpy_et_etat_de_l_arbre(depot, travail, monkeypatch):
 def test_lecture_de_bout_en_bout(depot, travail):
     d = construire(depot)
     r = lp.preparer_etiquetage(depot, RUN, ANALYSE, d["prereg"], d["taches"], travail)
-    assert r["lots"] and r["invite"].startswith("This task is self-contained")
+    assert r["lots"] and r["invite"] == lp.INVITE_ETIQUETEUR and r["invite"].startswith("This is a self-contained labeling task")
     texte_ech = (depot / "diag" / ANALYSE / "echantillon-etiquetage.json").read_text(encoding="utf-8")
     ech = json.loads(texte_ech)["resultat"]
     # D-16 : avant l'étiquetage, `diag/` ne reçoit que les empreintes des lots et l'engagement des éléments
@@ -878,3 +878,14 @@ def test_gardes_des_lots_et_des_etiquettes(depot, travail, monkeypatch):
     (t1 / "paires.json").write_text(json.dumps(paires), encoding="utf-8")
     with pytest.raises(GardeArret, match="paires de la première tentative modifiées"):
         lp.refaire_lot(depot, ANALYSE, travail, "lot-01")
+
+
+def test_invite_de_l_etiqueteur_sans_preseance_sur_les_consignes():
+    """État des lieux du pilote (critique de complétude) : l'invite fixe de l'étiqueteur ne demande pas d'ignorer les
+    consignes du projet (formulation refusée par le classificateur du mode automatique) ; elle nomme la consigne une
+    seule fois, et son empreinte est une constante de lecture."""
+    i = lp.INVITE_ETIQUETEUR
+    assert "ignore" not in i.lower() and "instructions or session" not in i
+    assert i.count("{consigne}") == 1 and i.format(consigne="x/consigne.txt").count("x/consigne.txt") == 1
+    assert lp.constantes()["INVITE_ETIQUETEUR_SHA256"] == hashlib.sha256(i.encode("utf-8")).hexdigest()
+

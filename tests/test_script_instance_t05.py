@@ -280,3 +280,31 @@ def test_etude_pilote_cas_sain_et_branche_presente(bac):
     assert code == 2 and "branche calcul/t05-pilote-jouet-v1 déjà présente" in sortie
     code, sortie = _lancer(bac, distant, travail="t3", env_sup=dict(pilote, BRANCHE="calcul/t05-pilote-jouet-v2"))
     assert "préenregistrement lu" in sortie and "BRANCHE=calcul/t05-pilote-jouet-v2" in sortie
+
+
+def test_poussees_apres_le_run_trois_tentatives(bac):
+    """État des lieux du pilote : après le run, la poussée de la branche est tentée trois fois, à attente croissante ;
+    un refus passager (ici la deuxième poussée, juste après la poussée initiale) est journalisé, puis la tentative
+    suivante passe et la branche porte l'arrêt consigné. Artefact : un dépôt qui refuse toute poussée après la
+    poussée initiale laisse trois refus au journal et « résultats restés sur l'instance »."""
+    def crochet(distant: Path, refuser: str) -> None:
+        compteur = distant / "compteur-poussees"
+        h = distant / "hooks" / "pre-receive"
+        h.write_text(f"#!/usr/bin/env bash\nn=$(cat '{compteur}' 2>/dev/null || echo 0); n=$((n + 1)); "
+                     f"echo $n > '{compteur}'\nif {refuser}; then echo 'refus passager (essai)' >&2; exit 1; fi\n"
+                     "exit 0\n", encoding="utf-8")
+        h.chmod(0o755)
+    distant = _distant(bac)
+    crochet(distant, '[ "$n" = 2 ]')
+    code, sortie = _lancer(bac, distant)
+    j = _journal(bac)
+    assert "branche calcul/t05-revalidation-jouet-v1 poussée avant l'installation" in j
+    assert "tentative 1 refusée" in j and "refus passager" in j and "ARRÊT pendant run" in j, j[-3000:]
+    assert "branche calcul/t05-revalidation-jouet-v1 poussée" in j.split("tentative 1 refusée", 1)[1]
+    assert "arrêt" in _git(distant, "log", "-1", "--format=%s", "calcul/t05-revalidation-jouet-v1")
+    refus = _distant(bac)
+    crochet(refus, '[ "$n" -ge 2 ]')
+    code, sortie = _lancer(bac, refus, travail="t2")
+    j = _journal(bac, "t2")
+    assert "tentative 3 refusée" in j and "poussée impossible : résultats restés sur l'instance" in j, j[-3000:]
+
