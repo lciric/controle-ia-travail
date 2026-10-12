@@ -167,7 +167,8 @@ def cles_des_graines(demandes_par_juge: dict) -> list[str]:
 
 
 def exiger_graines_du_pilote(cles: list[str], entropie: int, pilote: dict) -> None:
-    """Graines égales, clé à clé, à celles du manifeste du pilote : mêmes notations que celles qu'il aurait faites."""
+    """Graines égales, clé à clé, à celles du manifeste du pilote : mêmes graines et mêmes entrées ; l'identité des
+    notations avec celles qu'aurait faites le pilote n'est pas garantie sur une autre carte ou une autre instance."""
     gp = pilote["manifeste"]["graines"]
     if any(g.get("entropie") != str(entropie) for g in gp.values()):
         raise GardeArret("entropie ≠ celle du pilote")

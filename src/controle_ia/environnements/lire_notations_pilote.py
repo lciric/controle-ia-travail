@@ -34,7 +34,7 @@ import sys
 from pathlib import Path
 
 from ..gardes import GardeArret
-from ..manifeste import creer_manifeste, ecrire_resultat, generateur, lire_manifeste, verifier_resultat
+from ..manifeste import creer_manifeste, ecrire_resultat, generateur, graines, lire_manifeste, verifier_resultat
 from ..prereg import exiger_prereg_scelle
 from ..scellement import empreinte
 from .lire_pilote import (NIVEAU, TIRAGES, _familles_vides, _ouvrir_analyse, _serialisable, charger_pilote,
@@ -193,8 +193,18 @@ def lire_notations(racine: Path, run_pilote: str, run_notations: str, run_analys
     config = {"run_pilote": run_pilote, "run_notations": run_notations, "manifeste_notations_sha256": sha_n,
               "run_analyse": run_analyse, "manifeste_analyse_sha256": empreinte(chemin_a),
               "premiere_lecture_sha256": empreinte(chemin_l1), "commit_lecture_cite": lecture["commit_lecture_cite"]}
-    chemin_m, _ = creer_manifeste(racine, run_lecture, config, [], decisif=prereg is not None, prereg=prereg,
-                                  autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
+    # graines tirées par cette lecture, consignées dans son propre manifeste (R9) : mêmes clés et même entropie que
+    # le manifeste de la première analyse, d'où elles sont prises ; égalité exigée avant toute écriture
+    cles = [f"analyse/bootstrap-parts-{j}" for j in p["juges"]] + ["analyse/bootstrap-difference", "analyse/audit"]
+    entropies = {g[k]["entropie"] for k in cles}
+    if len(entropies) != 1:
+        raise GardeArret(f"graines de la première analyse d'entropies différentes : {sorted(entropies)}")
+    entropie = int(entropies.pop())
+    neuves = graines(cles, entropie)
+    if any(neuves[k] != g[k] for k in cles):
+        raise GardeArret("graines de la lecture ≠ celles du manifeste de la première analyse")
+    chemin_m, _ = creer_manifeste(racine, run_lecture, config, cles, entropie=entropie, decisif=prereg is not None,
+                                  prereg=prereg, autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
     ecrire_resultat(racine, chemin_m, "lecture-juges", _serialisable(lecture))
     return lecture
 

@@ -244,6 +244,34 @@ def test_lecture_decisive_cas_sain(tmp_path_factory):
     assert lp._serialisable(lecture["juges"]) == lp._serialisable(lecture_a["juges"])
     m = json.loads((b / "runs" / LECTURE / "manifeste.json").read_text())
     assert m["decisif"] and m["preenregistrement"]["chemin"] == p
+    # graines tirées par la lecture, consignées dans son manifeste (R9), égales à celles de la première analyse
+    m_a = json.loads((b / "runs" / ANALYSE / "manifeste.json").read_text())
+    cles = ["analyse/bootstrap-parts-8B", "analyse/bootstrap-parts-3B", "analyse/bootstrap-difference", "analyse/audit"]
+    assert sorted(m["graines"]) == sorted(cles) and all(m["graines"][k] == m_a["graines"][k] for k in cles)
+
+
+def test_graines_de_la_lecture_gardes(tmp_path_factory, monkeypatch):
+    """Graines de la lecture : égales à celles du manifeste de la première analyse, d'une seule entropie ; sinon arrêt
+    avant toute écriture (R5 ; cas sain : test_lecture_decisive_cas_sain)."""
+    a, _, b, _ = _pilote_complet_et_pilote_arrete(tmp_path_factory)
+    _run_des_notations(b, {j: _notations_de(a, j) for j in ("8B", "3B")})
+    vraies = lnp.graines
+    monkeypatch.setattr(lnp, "graines", lambda c, e: {k: dict(v, etat_controle=[0, 0]) for k, v in vraies(c, e).items()})
+    with pytest.raises(GardeArret, match="graines de la lecture ≠ celles du manifeste de la première analyse"):
+        lnp.lire_notations(b, RUN, NOTATIONS, ANALYSE, b / "taches.json", LECTURE)
+    monkeypatch.setattr(lnp, "graines", vraies)
+    vraie_ouverture = lnp._ouvrir_analyse
+
+    def ouverture(racine, run):
+        chemin, m, etat = vraie_ouverture(racine, run)
+        g = dict(m["graines"])
+        g["analyse/audit"] = vraies(["analyse/audit"], 1)["analyse/audit"]       # graine valide, autre entropie
+        return chemin, {**m, "graines": g}, etat
+
+    monkeypatch.setattr(lnp, "_ouvrir_analyse", ouverture)
+    with pytest.raises(GardeArret, match="d'entropies différentes"):
+        lnp.lire_notations(b, RUN, NOTATIONS, ANALYSE, b / "taches.json", LECTURE)
+    assert not (b / "runs" / LECTURE).exists()
 
 
 def _temoin_meme_pilote(tmp_path_factory, notes: dict):
