@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-12 07:45 UTC, session 12, sous la délégation R-140 (jusqu'au 2026-10-12 10:40 UTC), élargie par Lazar (R-147) : **N-019 tranché (a) par Lazar** (GO-2026-10-12-01, R-147) ; **pilote de T0.5 scellé** (S `1c6c900`, R-148), contrôles avant dépense sur S tous conformes ; **lancement à côté de l'instance H100 55505836 d'un autre projet de Lazar**, sur sa demande (R-149 : lanceur v2, commit `350c34c`, banc 59/59) ; **en attente du crédit** : exigé ≈ 31,8 USD (6 h × (1,0889 + 4,004) + 1,2, offre 46608735), lu 12,36 USD à 07:38 UTC ; recharge annoncée par Lazar (07:28 UTC). Mise à jour précédente : 2026-10-12 06:50 UTC.
+Dernière mise à jour : 2026-10-12 08:04 UTC, session 12, sous la délégation R-140 (jusqu'au 2026-10-12 10:40 UTC), élargie par Lazar (R-147) : **N-019 tranché (a) par Lazar** (GO-2026-10-12-01, R-147) ; **pilote de T0.5 scellé** (S `1c6c900`, R-148) ; lanceur v2 à côté de l'instance H100 55505836 d'un autre projet de Lazar (R-149) ; **lancement en cours** : recharge de Lazar faite (crédit 35,66 USD à 08:03 UTC ; recharge automatique du compte : 5 USD sous 5 USD) ; **offre prévue 49506597** (A100 SXM4 80 Go, AMD EPYC 7513, 1,08 USD de l'heure ; minimum exigé 31,70 USD) ; lanceur v2 démarré vers 08:04 UTC (contrôles avant dépense rejoués sur S, environ 20 minutes, puis création). Mise à jour précédente : 2026-10-12 07:45 UTC.
 
 ## Phase en cours
 Phase 0 — instruments (M0 : 5 octobre → 1er novembre 2026). Porte de sortie : G0. Aucune porte franchie.
