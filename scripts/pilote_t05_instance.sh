@@ -202,6 +202,12 @@ pousser_vecteurs() {
     t1=$(printf '100644 blob %s\tvecteurs-par-action.npz\n100644 blob %s\tvecteurs-par-action.npz.sha256\n' "$b" "$s" | git mktree)
     t2=$(printf '040000 tree %s\t%s\n' "$t1" "$run" | git mktree)
     c=$(git commit-tree "$t2" -m "T0.5 — vecteurs par action du run $run (empreinte $(cut -c1-16 "$f.sha256"))")
+    # plomberie en échec (set -e est sans effet dans un appel « || ») : aucun commit, donc aucune poussée, sinon la
+    # poussée d'une référence vide passerait pour un succès (vérification courte du candidat 2, VC-01)
+    if ! [[ "$b" =~ ^[0-9a-f]{40}$ && "$s" =~ ^[0-9a-f]{40}$ && "$t1" =~ ^[0-9a-f]{40}$ && "$t2" =~ ^[0-9a-f]{40}$ \
+            && "$c" =~ ^[0-9a-f]{40}$ ]]; then
+        journal "vecteurs : commit impossible (plomberie git en échec) : non poussés, restés sur l'instance"; return 1
+    fi
     local essai cause                                 # trois tentatives, attente croissante, comme pousser()
     for essai in 1 2 3; do
         if git push -q origin "$c:refs/heads/donnees/t05/$run" 2>"$TRAVAIL/poussee-vecteurs.err"; then

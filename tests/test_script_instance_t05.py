@@ -404,6 +404,26 @@ def test_vecteurs_refus_permanent_restes_sur_l_instance(bac):
     assert _git(distant, "branch", "--list", "donnees/t05/*") == ""
 
 
+def test_vecteurs_plomberie_en_echec_aucun_faux_succes(bac):
+    """VC-01 : si la plomberie git échoue (hash-object), aucun commit n'existe : rien n'est poussé, le journal le dit
+    (« restés sur l'instance »), jamais « vecteurs poussés » ; aucune branche de vecteurs."""
+    _lanceur_factice(bac, pilote=True)
+    distant = _distant(bac)
+    faux = bac["racine"] / "faux-git"
+    faux.mkdir()
+    reel = shutil.which("git")
+    (faux / "git").write_text("#!/usr/bin/env bash\n"
+                              'if [ "$1" = "hash-object" ]; then echo "fatal: panne simulée" >&2; exit 128; fi\n'
+                              f'exec "{reel}" "$@"\n', encoding="utf-8")
+    (faux / "git").chmod(0o755)
+    code, _ = _lancer(bac, distant, env_sup=PILOTE, chemin=str(faux))
+    j = _journal(bac)
+    assert code == 1 and "ARRÊT pendant run" in j, j[-2500:]
+    assert "vecteurs : commit impossible (plomberie git en échec) : non poussés, restés sur l'instance" in j, j[-2500:]
+    assert "vecteurs poussés" not in j
+    assert _git(distant, "branch", "--list", "donnees/t05/*") == ""
+
+
 def test_poussee_finale_cas_sain_et_refus(bac):
     """CO-08 : run complet ; cas sain, la dernière ligne dit la branche poussée avec résultats et traces, code 0.
     Artefact : la poussée finale refusée trois fois (après celle des résultats) donne une ligne de synthèse, code 1."""
