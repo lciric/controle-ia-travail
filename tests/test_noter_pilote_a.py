@@ -3,7 +3,12 @@ notations refaites dans un run distinct, aux mêmes graines ; gardes d'avant le 
 échéances par juge et globale ; signal TERM ; lignes de progression sans texte."""
 from __future__ import annotations
 
+import atexit
 import json
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -26,7 +31,30 @@ def _taches(depot):
     return f, sceller(f)
 
 
+_GABARITS: dict = {}
+
+
 def _pilote_arrete(depot, monkeypatch, etape_arret="decisives"):
+    """Pilote jouet arrêté (voir `_construire_pilote_arrete`), construit une fois par processus dans un gabarit, puis
+    copié dans le dépôt du test (mêmes fichiers, même histoire git) : la suite reste courte sur l'instance (mise en
+    place sous 1 500 s ; contre-lecture R2, angle « chaîne »)."""
+    if etape_arret not in _GABARITS:
+        gabarit = Path(tempfile.mkdtemp(prefix=f"pilote-jouet-{etape_arret}-"))
+        atexit.register(shutil.rmtree, gabarit, True)
+        for args in (("init", "-q", "-b", "main"), ("config", "user.email", "test@example.invalid"),
+                     ("config", "user.name", "test")):
+            subprocess.run(["git", "-C", str(gabarit), *args], check=True, capture_output=True)
+        (gabarit / "README").write_text("x\n")
+        committer(gabarit)
+        _construire_pilote_arrete(gabarit, monkeypatch, etape_arret)
+        _GABARITS[etape_arret] = gabarit
+    shutil.rmtree(depot / ".git")
+    shutil.copytree(_GABARITS[etape_arret], depot, dirs_exist_ok=True)
+    f = depot / "taches.json"
+    return f, empreinte(f)
+
+
+def _construire_pilote_arrete(depot, monkeypatch, etape_arret="decisives"):
     """Pilote jouet complet jusqu'à l'appariement, ensembles non vides, arrêté à l'échéance pendant les notations
     décisives du 8B, comme le vrai pilote."""
     vrai_jouer = lp.jouer_pilote
@@ -111,6 +139,21 @@ def test_rejeu_identique_et_r12(depot, monkeypatch):
         npa.executer(_config(), depot, a, None, str(f), autoriser_depot_sale=True)
 
 
+def _gardes_saines(depot, f, config=None):
+    """Cas sain des gardes d'avant le manifeste, rejouées dans l'ordre d'`executer` sans lancer de notation (le run
+    complet est éprouvé par le test de bout en bout) : suite courte sur l'instance."""
+    c = config or _config()
+    npa.exiger_config_notations(c)
+    pil = npa.charger_pilote_note(depot, c["run_pilote"])
+    assert pil["arret"]["partiel"]["taches_sha256"] == empreinte(f)
+    npa.exiger_egal_au_pilote(c, pil, c["mode"])
+    par_id = {x["identifiant"]: x for x in pa.charger_taches(str(f))}
+    dem = {j["nom"]: npa.demandes_decisives(pil, par_id, c, j["nom"]) for j in c["juges"]}
+    assert all(len(v) == c["notations_attendues_par_juge"] for v in dem.values())
+    entropie = int(next(iter(pil["manifeste"]["graines"].values()))["entropie"])
+    npa.exiger_graines_du_pilote(npa.cles_des_graines(dem), entropie, pil)
+
+
 @pytest.mark.parametrize("changement, motif", [
     ({"lot_juge": 3}, "lot_juge ≠ celui du pilote"),
     ({"notations_attendues_par_juge": 5}, "4 notations à faire, 5 attendues"),
@@ -124,7 +167,7 @@ def test_gardes_de_configuration_cas_sain_et_artefacts(depot, monkeypatch, chang
     with pytest.raises(GardeArret, match=motif):
         npa.executer(_config(**changement), depot, run, None, str(f), autoriser_depot_sale=True)
     assert not (depot / "runs" / run).exists()
-    npa.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)        # cas sain
+    _gardes_saines(depot, f)                                                            # cas sain
 
 
 def test_config_incomplete_et_reel_sans_preenregistrement(depot):
@@ -158,25 +201,28 @@ def test_etat_du_pilote_artefacts(depot, monkeypatch):
         npa.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)
     (d / "notations-jouet-8B-decisives.json").unlink()
     assert not (depot / "runs" / run).exists()
-    npa.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)        # cas sain
+    _gardes_saines(depot, f)                                                            # cas sain
 
 
-def test_pilote_arrete_ailleurs_que_pendant_les_notations(depot, monkeypatch):
+def test_pilote_arrete_pendant_l_appariement_sans_appariements(depot, monkeypatch):
     f, _ = _pilote_arrete(depot, monkeypatch, etape_arret="appariement")
     with pytest.raises(GardeArret, match="appariements.json absent"):
         npa.executer(_config(), depot, "20261012-110007-notations-jouet", None, str(f), autoriser_depot_sale=True)
 
 
-def _prereg(depot, config, pilote_d, sha_taches, entropie, commit, nom="prereg-notations.md", lignes_en_plus=()):
+def _prereg(depot, config, pilote_d, sha_taches, entropie, commit, nom="prereg-notations.md", lignes_en_plus=(),
+            remplacements=None):
+    """Préenregistrement de test ; `remplacements` : intitulé → valeur citée à la place (None : ligne retirée)."""
     (depot / "prereg").mkdir(exist_ok=True)
     p = depot / "prereg" / nom
-    lignes = [f"- Commit du code d'analyse : `{commit}`",
-              f"- Configuration des notations (empreinte canonique) : `{lp.empreinte_config(config)}`",
-              f"- Run du pilote noté : `{PILOTE}`",
-              f"- Manifeste du pilote noté : `{empreinte(depot / 'runs' / PILOTE / 'manifeste.json')}`",
-              f"- Épisodes du pilote noté : `{empreinte(pilote_d / 'episodes.json')}`",
-              f"- Arrêt du pilote noté : `{empreinte(pilote_d / 'arret.json')}`",
-              f"- Tâches du pilote : `{sha_taches}`", f"- Entropie : `{entropie}`", *lignes_en_plus]
+    valeurs = {"Commit du code d'analyse": commit,
+               "Configuration des notations (empreinte canonique)": lp.empreinte_config(config),
+               "Run du pilote noté": PILOTE,
+               "Manifeste du pilote noté": empreinte(depot / "runs" / PILOTE / "manifeste.json"),
+               "Épisodes du pilote noté": empreinte(pilote_d / "episodes.json"),
+               "Arrêt du pilote noté": empreinte(pilote_d / "arret.json"),
+               "Tâches du pilote": sha_taches, "Entropie": entropie, **(remplacements or {})}
+    lignes = [f"- {k} : `{v}`" for k, v in valeurs.items() if v is not None] + list(lignes_en_plus)
     corps = ["# Préenregistrement de test", "", *lignes, ""]
     for s in ("Hypothèse", "Prédiction chiffrée et signe attendu", "Métrique", "Seuil", "Plan d'analyse",
               "Critères de lecture gelés", "Liste d'arrêt"):
@@ -202,7 +248,17 @@ def test_gardes_de_citation_cas_sain_et_artefacts(depot, monkeypatch):
            (_prereg(depot, c, d, sha, entropie + 1, commit, "p-entropie.md"), "entropie ≠ celle du pilote"),
            (_prereg(depot, c, d, "c" * 64, entropie, commit, "p-taches.md"), "tâches"),
            (_prereg(depot, c, d, sha, entropie, commit, "p-double.md",
-                    (f"- Run du pilote noté : `20261012-100009-autre`",)), "plusieurs fois")]
+                    (f"- Run du pilote noté : `20261012-100009-autre`",)), "plusieurs fois"),
+           (_prereg(depot, c, d, sha, entropie, commit, "p-manifeste.md",
+                    remplacements={"Manifeste du pilote noté": "1" * 64}), "manifeste"),
+           (_prereg(depot, c, d, sha, entropie, commit, "p-episodes.md",
+                    remplacements={"Épisodes du pilote noté": "2" * 64}), "épisodes"),
+           (_prereg(depot, c, d, sha, entropie, commit, "p-arret.md",
+                    remplacements={"Arrêt du pilote noté": "3" * 64}), "arrêt"),
+           (_prereg(depot, c, d, sha, entropie, commit, "p-arret-absent.md",
+                    remplacements={"Arrêt du pilote noté": None}), "arrêt citée nulle part"),
+           (_prereg(depot, c, d, sha, entropie, commit, "p-run.md",
+                    remplacements={"Run du pilote noté": "20261012-100009-autre"}), "run du pilote")]
     committer(depot)
     for p, motif in cas:
         with pytest.raises(GardeArret, match=motif):
@@ -285,3 +341,233 @@ def test_graines_differentes_du_pilote_arretent():
 def test_noter_ensembles_inchange():
     """Le lanceur importe `noter_ensembles` du code cité, sans copie ni enveloppe."""
     assert npa.noter_ensembles is pa.noter_ensembles and npa.demandes_de_notation is lp.demandes_de_notation
+
+
+def _reecrire(chemin, changer):
+    """Résultat scellé réécrit (contenu changé par `changer`), puis rescellé : seule la garde visée peut l'arrêter."""
+    corps = json.loads(chemin.read_text())
+    changer(corps)
+    chemin.write_text(json.dumps(corps, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    Path(str(chemin) + ".sha256").unlink()             # artefact de test : l'ancien sceau retiré, puis rescellé
+    sceller(chemin)
+
+
+def test_etat_du_pilote_etape_appariement_rattachement_resume(depot, monkeypatch):
+    """Gardes de `charger_pilote_note` (R5) : arrêt à une autre étape (appariement présent), appariement non consigné
+    comme écrit, résultat rattaché à un autre run, résumé déjà présent ; puis cas sain."""
+    f, _ = _pilote_arrete(depot, monkeypatch)
+    d = depot / "diag" / PILOTE
+    sauve = {n: (d / n).read_bytes() for n in ("arret.json", "arret.json.sha256", "appariements.json",
+                                                "appariements.json.sha256")}
+
+    def remettre():
+        for n, b in sauve.items():
+            (d / n).write_bytes(b)
+
+    _reecrire(d / "arret.json", lambda c: c["resultat"].update(etape="appariement par jouet-8B"))
+    with pytest.raises(GardeArret, match="arrêté à l'étape 'appariement par jouet-8B'"):
+        npa.charger_pilote_note(depot, PILOTE)
+    remettre()
+    _reecrire(d / "arret.json", lambda c: c["resultat"]["partiel"].pop("appariement_ecrit"))
+    with pytest.raises(GardeArret, match="appariement non consigné comme écrit"):
+        npa.charger_pilote_note(depot, PILOTE)
+    remettre()
+    from controle_ia.manifeste import creer_manifeste, lire_manifeste
+    autre = "20261012-100002-autre-run"
+    chemin_autre, _ = creer_manifeste(depot, autre, {"essai": 1}, ["x"], autoriser_depot_sale=True)
+    _, sha_autre = lire_manifeste(chemin_autre)
+    _reecrire(d / "appariements.json", lambda c: c.update(run_id=autre, manifeste_sha256=sha_autre))
+    with pytest.raises(GardeArret, match="rattaché à un autre run ou à un autre manifeste"):
+        npa.charger_pilote_note(depot, PILOTE)
+    remettre()
+    (d / "resume.json").write_text("{}")
+    with pytest.raises(GardeArret, match=r"\['resume.json'\] déjà présents"):
+        npa.charger_pilote_note(depot, PILOTE)
+    (d / "resume.json").unlink()
+    assert npa.charger_pilote_note(depot, PILOTE)["arret"]["etape"] == "notations decisives par jouet-8B"   # cas sain
+
+
+def test_garde_des_versions_en_mode_reel(depot, monkeypatch):
+    """Versions de torch, transformers, tokenizers et numpy égales à celles du pilote, en mode réel seulement (R5)."""
+    f, _ = _pilote_arrete(depot, monkeypatch)
+    pil = npa.charger_pilote_note(depot, PILOTE)
+    vp = pil["manifeste"]["versions"]
+    monkeypatch.setattr(npa, "versions", lambda: dict(vp))
+    npa.exiger_egal_au_pilote(_config(), pil, "reel")                                   # cas sain
+    for b in npa.VERSIONS_EGALES:
+        monkeypatch.setattr(npa, "versions", lambda b=b: {**vp, b: "0.0.essai"})
+        with pytest.raises(GardeArret, match=rf"versions ≠ celles du pilote : \['{b}'\]"):
+            npa.exiger_egal_au_pilote(_config(), pil, "reel")
+    npa.exiger_egal_au_pilote(_config(), pil, "jouet")                                  # jouet : versions non lues
+
+
+@pytest.mark.parametrize("changement, accepte", [
+    ({"duree_globale_s": 23100}, True), ({"duree_globale_s": 23101}, False),
+    ({"duree_max_juges_s": {"jouet-8B": 0, "jouet-3B": 600}}, False),
+    ({"duree_max_juges_s": {"jouet-8B": 600, "jouet-3B": 23101}}, False),
+    ({"duree_max_juges_s": {"jouet-8B": True, "jouet-3B": 600}}, False),
+    ({"notations_attendues_par_juge": 0}, False), ({"mode": "autre"}, False),
+])
+def test_bornes_de_la_configuration(changement, accepte):
+    if accepte:
+        npa.exiger_config_notations(_config(**changement))
+    else:
+        with pytest.raises(GardeArret):
+            npa.exiger_config_notations(_config(**changement))
+
+
+def test_format_du_3b_recharge_hors_ligne_different(depot, monkeypatch):
+    """Le 3B rechargé hors ligne doit garder le format contrôlé au début du run : sinon arrêt consigné à son
+    chargement, le fichier du 8B restant écrit (R5)."""
+    f, _ = _pilote_arrete(depot, monkeypatch)
+    vrai, appels = npa.controler_format, []
+
+    def controle(fmt, spec, role, config):
+        r = vrai(fmt, spec, role, config)
+        appels.append(spec["nom"])
+        return {**r, "altere": True} if spec["nom"] == "jouet-3B" and appels.count("jouet-3B") == 2 else r
+
+    monkeypatch.setattr(npa, "controler_format", controle)
+    run = "20261012-110014-notations-jouet"
+    with pytest.raises(GardeArret, match="format chargé hors ligne ≠ format contrôlé au début du run"):
+        npa.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)
+    assert _fichiers(depot, run) == ["arret.json", "notations-jouet-8B-decisives.json"]
+    r = verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]
+    assert r["etape"] == "chargement du juge jouet-3B" and r["partiel"]["juges"]["jouet-8B"]["statut"] == "écrit"
+
+
+def test_echeance_du_3b_le_8b_reste_ecrit(depot, monkeypatch):
+    f, _ = _pilote_arrete(depot, monkeypatch)
+    run = "20261012-110015-notations-jouet"
+    resume = npa.executer(_config(duree_max_juges_s={"jouet-8B": 600, "jouet-3B": 1e-9}), depot, run, None, str(f),
+                          autoriser_depot_sale=True)
+    assert {n: j["statut"] for n, j in resume["juges"].items()} == {"jouet-8B": "écrit", "jouet-3B": "échu"}
+    assert resume["juges"]["jouet-3B"]["lots_faits"] == 0
+    assert _fichiers(depot, run) == ["notations-jouet-8B-decisives.json", "resume.json"]
+
+
+def test_8b_echu_apres_un_lot_sans_fichier_partiel(depot, monkeypatch, capsys):
+    """Horloge du lanceur avancée de 2 000 s à chaque lot : le 8B (échéance 1 500 s) fait un lot, puis échoit ; sa
+    sortie partielle n'est jamais écrite ; le 3B note ; la ligne de fin consigne « échu » et « 1/2 »."""
+    import time as vrai_temps
+    from types import SimpleNamespace
+    f, _ = _pilote_arrete(depot, monkeypatch)
+    decalage = [0.0]
+    monkeypatch.setattr(npa, "time", SimpleNamespace(perf_counter=lambda: vrai_temps.perf_counter() + decalage[0]))
+    vrai = npa.noter_ensembles
+
+    def noter(*a, **k):
+        sortie = vrai(*a, **k)
+        decalage[0] += 2000.0
+        return sortie
+
+    monkeypatch.setattr(npa, "noter_ensembles", noter)
+    run = "20261012-110016-notations-jouet"
+    resume = npa.executer(_config(duree_max_juges_s={"jouet-8B": 1500, "jouet-3B": 23000}, duree_globale_s=23000),
+                          depot, run, None, str(f), autoriser_depot_sale=True)
+    assert resume["juges"]["jouet-8B"]["statut"] == "échu" and resume["juges"]["jouet-8B"]["lots_faits"] == 1
+    assert resume["juges"]["jouet-3B"]["statut"] == "écrit"
+    # aucun compte de jetons ni de réponses consigné pour le juge échu ; le juge écrit garde ses descriptifs
+    assert set(resume["juges"]["jouet-8B"]) == {"lots", "lots_faits", "statut", "duree_s", "memoire_pic_gio"}
+    assert resume["juges"]["jouet-3B"]["jetons_generes"] > 0
+    assert _fichiers(depot, run) == ["notations-jouet-3B-decisives.json", "resume.json"]
+    err = capsys.readouterr().err
+    assert "juge=jouet-8B fin=échu lots_faits=1/2" in err
+    lignes = [x for x in err.splitlines() if x.startswith("PROGRES ") and " lot=" in x]
+    assert lignes and all(set(k.split("=")[0] for k in x.split()[2:]) == {"juge", "lot", "duree_s"} for x in lignes)
+
+
+def test_panne_autre_que_garde_consignee_puis_propagee(depot, monkeypatch):
+    """Une panne de la bibliothèque (mémoire de la carte, par exemple) est consignée dans `arret.json`, avec son
+    motif, puis propagée (R5)."""
+    f, _ = _pilote_arrete(depot, monkeypatch)
+
+    def noter(*a, **k):
+        raise RuntimeError("CUDA out of memory (essai)")
+
+    monkeypatch.setattr(npa, "noter_ensembles", noter)
+    run = "20261012-110017-notations-jouet"
+    with pytest.raises(RuntimeError, match="CUDA out of memory"):
+        npa.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)
+    r = verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]
+    assert r["motif"] == "RuntimeError: CUDA out of memory (essai)" and r["etape"] == "notations decisives par jouet-8B"
+
+
+def test_term_puis_autre_exception_le_term_fait_foi(depot, monkeypatch):
+    f, _ = _pilote_arrete(depot, monkeypatch)
+
+    def noter(*a, **k):
+        gardes.SIGNAL_TERM_RECU.append(15)
+        raise RuntimeError("exception d'une bibliothèque après le signal (essai)")
+
+    monkeypatch.setattr(npa, "noter_ensembles", noter)
+    run = "20261012-110018-notations-jouet"
+    with pytest.raises(GardeArret, match="signal TERM reçu"):
+        npa.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)
+    r = verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]
+    assert r["motif"].startswith(gardes.MOTIF_TERM) and "RuntimeError" in r["motif"]
+
+
+def test_panne_du_prechargement_du_3b(depot, monkeypatch):
+    f, _ = _pilote_arrete(depot, monkeypatch)
+
+    def precharger(config):
+        raise GardeArret("préchargement du juge jouet-3B : fichier essentiel absent (essai)")
+
+    monkeypatch.setattr(npa, "precharger_juges", precharger)
+    run = "20261012-110019-notations-jouet"
+    with pytest.raises(GardeArret, match="préchargement"):
+        npa.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)
+    assert _fichiers(depot, run) == ["arret.json"]
+    assert verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]["etape"] == "préchargement des juges"
+
+
+def test_memes_notations_que_le_lanceur_du_pilote(depot, monkeypatch):
+    """Équivalence de bout en bout (contre-lecture R2) : à la même entropie, un pilote jouet complet (lanceur du pilote)
+    et les notations refaites sur le même pilote arrêté pendant ses notations décisives rendent, clé à clé, les mêmes
+    réponses, scores, jetons et ensembles notés ; épisodes A, B et C (e0 noté deux fois, e1), dernier lot partiel."""
+    from controle_ia.manifeste import creer_manifeste as vrai_creer
+    entropie = 20261012
+    monkeypatch.setattr(lp, "creer_manifeste", lambda *a, **k: vrai_creer(*a, **{**k, "entropie": entropie}))
+    vrai_jouer = lp.jouer_pilote
+
+    def jouer(*a, **k):
+        fiches, vecteurs, cn = vrai_jouer(*a, **k)
+        for x in fiches:
+            x["bilan"]["ensemble"] = f"PROPOSAL 1: idée {x['episode']}"
+        return fiches, vecteurs, cn
+
+    monkeypatch.setattr(lp, "jouer_pilote", jouer)
+    # une tâche, lots de 2 : trois notations par juge (A, B et C), dernier lot d'une seule (lots de 4 : coûteux en jouet)
+    cfg = {**_config_lanceur(), "episodes_par_tache": 2, "episodes_decisifs": [0, 1], "episodes_notes_deux_fois": [0],
+           "lot_juge": 2}
+    f = depot / "taches-une.json"
+    f.write_text(json.dumps({"taches": [dict(TACHES[0], cibles=CIBLES_TEST)]}), encoding="utf-8")
+    sceller(f)
+    committer(depot)
+    complet = "20261012-100003-pilote-complet"
+    lp.executer(cfg, depot, complet, None, str(f), autoriser_depot_sale=True)
+    vrai_noter = lp.noter_ensembles
+
+    def noter_en_panne(*a, **k):
+        raise GardeArret("limite de durée dépassée pendant les notations")
+
+    monkeypatch.setattr(lp, "noter_ensembles", noter_en_panne)
+    arrete = "20261012-100004-pilote-arrete"
+    with pytest.raises(GardeArret):
+        lp.executer(cfg, depot, arrete, None, str(f), autoriser_depot_sale=True)
+    monkeypatch.setattr(lp, "noter_ensembles", vrai_noter)
+    run = "20261012-110020-notations-jouet"
+    c = {**{k: cfg[k] for k in npa.CLES_EGALES_AU_PILOTE}, "mode": "jouet", "run_pilote": arrete,
+         "duree_max_juges_s": {"jouet-8B": 600, "jouet-3B": 600}, "duree_globale_s": 1200,
+         "notations_attendues_par_juge": 3}
+    resume = npa.executer(c, depot, run, None, str(f), autoriser_depot_sale=True)
+    assert {n: (j["statut"], j["lots"]) for n, j in resume["juges"].items()} == {"jouet-8B": ("écrit", 2),
+                                                                                  "jouet-3B": ("écrit", 2)}
+    champs = ("cle", "reponse", "score", "jetons_reponse", "tronquee", "ensemble_sha256")
+    for juge in ("jouet-8B", "jouet-3B"):
+        a, b = (verifier_resultat(depot, depot / "diag" / r / f"notations-{juge}-decisives.json")["resultat"]
+                ["notations"] for r in (complet, run))
+        assert len(a) == len(b) == 3
+        assert [{k: x[k] for k in champs} for x in a] == [{k: x[k] for k in champs} for x in b]
+        assert sorted({x["cle"].split("/")[2] for x in b}) == ["e0", "e1"]

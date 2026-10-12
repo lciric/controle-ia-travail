@@ -19,8 +19,11 @@ son fichier est écrit ; le 3B, préchargé avant, se charge hors ligne, format 
 écrit. Chaque juge a son échéance (le 8B depuis le début du run, le 3B depuis son premier lot), contrôlée avant chaque
 lot : un juge échu s'arrête sans fichier (règle « tout ou rien » de la lecture) et le suivant commence. L'échéance
 globale, elle, arrête le run (`noter_ensembles`), comme le signal TERM : aucune exception d'arrêt n'est attrapée pour
-continuer (gardes.py). Une ligne `PROGRES` par lot (rang, durée, jetons, comptes ; aucun texte) va sur la sortie
-d'erreur. Tout arrêt après le manifeste laisse un `arret.json` scellé (étape, motif, compteurs), puis se propage.
+continuer (gardes.py). Une ligne `PROGRES` par lot (juge, rang et durée du lot, rien d'autre : aucun texte, aucun compte
+de réponses) et une par fin de juge (statut, lots faits, durée) vont sur la sortie d'erreur. Tout arrêt levé après le
+manifeste laisse un `arret.json` scellé (étape, motif, compteurs), puis se propage ; restent sans `arret.json` les
+fenêtres déclarées par le préenregistrement (KILL du délai externe, arrêt brutal de l'hôte, second signal pendant la
+consignation).
 """
 from __future__ import annotations
 
@@ -225,13 +228,16 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, demandes, etat
 
     reglages = regler_determinisme(config["fils"], "cuda" if config["mode"] == "reel" else "cpu")
     etat["reglages"] = reglages
-    # formats contrôlés au début, contre ceux, scellés, du début du pilote (relecture du plan, constat 11)
-    etat["etape"] = "contrôle du format"
     juges = config["juges"]
     agent = next(j for j in juges if j["meme_modele_que_agent"])
+    # chargement (téléchargement en mode réel) du juge qui est l'agent, consigné sous son étape propre, comme au pilote
+    # (contre-lecture R2, angle « code du lanceur »)
+    etat["etape"] = f"chargement du juge {agent['nom']}"
     depart = time.perf_counter()
     modele, fmt = charger_modele_et_format(config["agent"], config["mode"], graine_entiere(g["modele-jouet"]))
     chargements = {agent["nom"]: round(time.perf_counter() - depart, 1)}
+    # formats contrôlés au début, contre ceux, scellés, du début du pilote (relecture du plan, constat 11)
+    etat["etape"] = "contrôle du format"
     formats = {}
     for j in juges:
         fmt_j = fmt if j["meme_modele_que_agent"] else charger_format_seul(j, config["mode"])
@@ -263,10 +269,12 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, demandes, etat
         depart_j = time.perf_counter()
         # échéance du juge : le premier (8B) depuis le début du run, les suivants depuis leur premier lot
         echeance_j = (debut if nom == agent["nom"] else depart_j) + float(config["duree_max_juges_s"][nom])
-        suivi = {"lots": len(lots), "lots_faits": 0, "statut": "en cours", "jetons_generes": 0}
+        # compteurs consignés pendant le run (résumé, arrêt) : lots seulement ; les jetons ne sont consignés que pour un
+        # juge écrit, avec son fichier (aucune part du résultat d'un juge échu ou arrêté ; contre-lecture R2)
+        suivi = {"lots": len(lots), "lots_faits": 0, "statut": "en cours"}
         etat["juges"][nom] = suivi
         memoire_pic_gio()
-        sortie = []
+        sortie, jetons = [], 0
         for k, morceau in enumerate(lots, 1):
             exiger_sans_signal(f"avant le lot {k} du juge {nom}")
             if time.perf_counter() > echeance_j:
@@ -277,19 +285,19 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, demandes, etat
                                    config["temperature_juge"], echeance=echeance_globale)
             sortie += part
             suivi["lots_faits"] = k
-            suivi["jetons_generes"] += sum(x["jetons_reponse"] for x in part)
-            progres(juge=nom, lot=f"{k}/{len(lots)}", duree_s=f"{time.perf_counter() - t0:.1f}",
-                    jetons=sum(x["jetons_reponse"] for x in part),
-                    tronquees=sum(1 for x in part if x["tronquee"]),
-                    completes=sum(1 for x in part if x["score"] is not None))
+            jetons += sum(x["jetons_reponse"] for x in part)
+            # rang et durée du lot seulement : aucun compte de réponses (tronquées, complètes, jetons), qui serait une
+            # part du résultat décisif visible pendant le run (contre-lecture R2)
+            progres(juge=nom, lot=f"{k}/{len(lots)}", duree_s=f"{time.perf_counter() - t0:.1f}")
         suivi["duree_s"] = round(time.perf_counter() - depart_j, 1)
         suivi["memoire_pic_gio"] = memoire_pic_gio()
         if suivi["statut"] == "en cours":
             ecrire_resultat(racine, chemin_m, f"notations-{nom}-decisives", {
                 "notations": sortie, "noyau": "défaut de la bibliothèque", "noyaux_permis": noyaux,
                 "descriptifs": {"duree_s": suivi["duree_s"], "memoire_pic_gio": suivi["memoire_pic_gio"],
-                                "jetons_generes": suivi["jetons_generes"], "lots": len(lots)}})
+                                "jetons_generes": jetons, "lots": len(lots)}})
             suivi["statut"] = "écrit"
+            suivi["jetons_generes"] = jetons
             suivi["notations"] = len(sortie)
             suivi["completes"] = sum(1 for x in sortie if x["score"] is not None)
         progres(juge=nom, fin=suivi["statut"], lots_faits=f"{suivi['lots_faits']}/{len(lots)}",

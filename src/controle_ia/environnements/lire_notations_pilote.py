@@ -10,7 +10,11 @@ n'appelle que les fonctions gelées (`_ouvrir_analyse`, `charger_pilote`, `mesur
 distinct : mêmes juges, même différence appariée, mêmes P2 et P3, mêmes réponses tirées pour l'audit).
 
 Gardes : celles d'`_ouvrir_analyse` (préenregistrement du pilote intact, modules de lecture égaux au commit cité,
-constantes et version de numpy du manifeste d'analyse) ; run des notations rattaché au même pilote ; modules de ce
+constantes et version de numpy du manifeste d'analyse) ; run des notations rattaché au même pilote ; lecture décisive
+(préenregistrement passé) : run des notations décisif, en mode réel, lancé sous ce même préenregistrement, scellé et
+intact (contre-lecture R2) ; issue du run des notations consignée par un seul `resume.json` ou un seul `arret.json`,
+scellé et rattaché, dont les statuts des juges s'accordent avec les fichiers présents (un fichier pour chaque juge
+« écrit », aucun pour les autres) : un run sans l'un ni l'autre n'est pas lu (nœud, comme au pilote) ; modules de ce
 module et du lanceur des notations égaux au commit du run des notations ; aucune notation dans le dossier du pilote ;
 format recalculé égal à la première lecture ; P1 et P4 à P7 recalculés avec les grandeurs scellées de la première
 lecture, égaux à elles. Sortie : `diag/<run de lecture>/lecture-juges.json`, sous son propre manifeste.
@@ -25,6 +29,7 @@ from pathlib import Path
 
 from ..gardes import GardeArret
 from ..manifeste import creer_manifeste, ecrire_resultat, generateur, lire_manifeste, verifier_resultat
+from ..prereg import exiger_prereg_scelle
 from ..scellement import empreinte
 from .lire_pilote import (NIVEAU, TIRAGES, _familles_vides, _ouvrir_analyse, _serialisable, charger_pilote,
                           declencheurs_audit, decomposition_complete, difference_appariee, empreintes_des_ensembles,
@@ -49,15 +54,53 @@ def exiger_modules_notations(racine: Path, commit: str) -> None:
         raise GardeArret(f"comparaison au commit {commit[:12]} impossible : {r.stderr.strip()}")
 
 
-def charger_notations(racine: Path, run_notations: str, run_pilote: str, juges: list[str]) -> tuple[dict, str, dict]:
-    """Manifeste du run des notations, rattaché au pilote ; notations décisives de chaque juge (None si son fichier
-    n'est pas écrit : juge échu ou arrêt)."""
+def exiger_run_sous_prereg(racine: Path, m: dict, prereg: str | Path) -> None:
+    """Lecture décisive : le run des notations est décisif, en mode réel, et lancé sous ce préenregistrement, scellé
+    et intact (même chemin, même empreinte que ceux de son manifeste)."""
+    chemin = Path(prereg)
+    if chemin.is_absolute():
+        chemin = chemin.resolve().relative_to(Path(racine).resolve())
+    sha = exiger_prereg_scelle(Path(racine) / chemin)
+    pr = m.get("preenregistrement") or {}
+    if m.get("decisif") is not True:
+        raise GardeArret("run des notations non décisif : il ne se lit pas sous un préenregistrement (R1)")
+    if m["config"].get("mode") != "reel":
+        raise GardeArret(f"run des notations hors mode réel ({m['config'].get('mode')!r})")
+    if pr.get("chemin") != chemin.as_posix() or pr.get("sha256") != sha:
+        raise GardeArret(f"run des notations lancé sous un autre préenregistrement ({pr.get('chemin')}, "
+                         f"{str(pr.get('sha256'))[:12]}…) que {chemin.as_posix()} ({sha[:12]}…)")
+
+
+def issue_des_notations(racine: Path, run_notations: str, juges: list[str]) -> dict:
+    """Issue consignée du run des notations : un seul fichier, `resume.json` ou `arret.json`, scellé et rattaché ;
+    statut de chaque juge (« écrit » ou non). Un run sans l'un ni l'autre n'est pas lu (ligne gelée du pilote)."""
+    d = Path(racine) / "diag" / run_notations
+    presents = [n for n in ("resume", "arret") if (d / f"{n}.json").exists()]
+    if len(presents) != 1:
+        raise GardeArret(f"run des notations {run_notations} : {presents or 'ni resume.json ni arret.json'} ; "
+                         f"un seul attendu : run non lisible (nœud)")
+    c = verifier_resultat(racine, d / f"{presents[0]}.json")
+    if c["run_id"] != run_notations:
+        raise GardeArret(f"{presents[0]}.json rattaché au run {c['run_id']}, non à {run_notations}")
+    corps = c["resultat"] if presents[0] == "resume" else c["resultat"].get("partiel", {})
+    statuts = {j: (corps.get("juges") or {}).get(j, {}).get("statut") for j in juges}
+    return {"fichier": presents[0], "statuts": statuts}
+
+
+def charger_notations(racine: Path, run_notations: str, run_pilote: str, juges: list[str],
+                      prereg: str | Path | None = None) -> tuple[dict, str, dict, dict]:
+    """Manifeste du run des notations, rattaché au pilote (et, pour une lecture décisive, lancé sous le
+    préenregistrement) ; issue consignée ; notations décisives de chaque juge (None si son fichier n'est pas écrit :
+    juge échu ou arrêt), en accord avec les statuts de l'issue."""
     chemin_m = Path(racine) / "runs" / run_notations / "manifeste.json"
     if not chemin_m.exists():
         raise GardeArret(f"manifeste du run des notations absent : {chemin_m}")
     m, sha_m = lire_manifeste(chemin_m)
     if m["config"].get("run_pilote") != run_pilote:
         raise GardeArret(f"run des notations rattaché au pilote {m['config'].get('run_pilote')!r}, non à {run_pilote}")
+    if prereg is not None:
+        exiger_run_sous_prereg(racine, m, prereg)
+    issue = issue_des_notations(racine, run_notations, juges)
     notations = {}
     for j in juges:
         f = Path(racine) / "diag" / run_notations / f"notations-{j}-decisives.json"
@@ -68,7 +111,10 @@ def charger_notations(racine: Path, run_notations: str, run_pilote: str, juges: 
         if c["run_id"] != run_notations:
             raise GardeArret(f"{f.name} rattaché au run {c['run_id']}, non à {run_notations}")
         notations[j] = c["resultat"]["notations"]
-    return m, sha_m, notations
+    desaccords = [j for j in juges if (notations[j] is not None) != (issue["statuts"][j] == "écrit")]
+    if desaccords:
+        raise GardeArret(f"fichiers de notations et statuts de {issue['fichier']}.json en désaccord pour {desaccords}")
+    return m, sha_m, notations, issue
 
 
 def lire_notations(racine: Path, run_pilote: str, run_notations: str, run_analyse: str, chemin_taches: str | Path,
@@ -83,7 +129,7 @@ def lire_notations(racine: Path, run_pilote: str, run_notations: str, run_analys
         raise GardeArret("manifeste du pilote différent de celui de l'analyse")
     if any(v is not None for (j, etape), v in p["notations"].items() if etape == "decisives"):
         raise GardeArret("le dossier du pilote porte des notations décisives : lecture par `analyser`, pas ici")
-    m_n, sha_n, notations = charger_notations(racine, run_notations, run_pilote, p["juges"])
+    m_n, sha_n, notations, issue = charger_notations(racine, run_notations, run_pilote, p["juges"], prereg)
     exiger_modules_notations(racine, m_n["commit"])
     chemin_l1 = racine / "diag" / run_analyse / "lecture.json"
     l1 = verifier_resultat(racine, chemin_l1)["resultat"]
@@ -131,6 +177,7 @@ def lire_notations(racine: Path, run_pilote: str, run_notations: str, run_analys
                                p_oui)
     p_notes = {**p, "notations": {(j, "decisives"): notations[j] for j in p["juges"]}}
     lecture = {"run_pilote": run_pilote, "run_notations": run_notations, "run_analyse": run_analyse,
+               "issue_des_notations": issue,
                "commit_lecture_cite": m_a["config"]["commit_lecture_cite"], "commit_notations": m_n["commit"], **etat,
                "juges": juges, "difference_appariee": diff,
                "predictions": {"P2": preds["P2"], "P3": preds["P3"],

@@ -39,7 +39,7 @@ if [ "$1" = "-m" ] && [ "$2" = "controle_ia.environnements.noter_pilote_a" ]; th
     for a in "$@"; do [ "$prec" = "--run-id" ] && run="$a"; prec="$a"; done
     mkdir -p "diag/$run" "runs/$run"
     echo '{"factice": true}' > "runs/$run/manifeste.json"
-    echo "PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1 jetons=24576 tronquees=8 completes=0" >&2
+    echo "PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1" >&2
     echo "PROGRES 2026-10-12T10:05:00Z texte libre PROPOSAL 1: ne doit pas passer" >&2
     echo "PROPOSAL 1: texte d'un ensemble, jamais au journal" >&2
     echo "PROGRES 2026-10-12T10:06:00Z juge=8B fin=écrit lots_faits=23/23 duree_s=7900.0" >&2
@@ -131,7 +131,7 @@ def test_cas_sain_lecture_precoce_relais_et_run_complet(bac):
     assert "pilote noté : manifeste, épisodes et arrêt présents et scellés" in journal
     assert "BRANCHE=calcul/t05-notations-jouet-v1" in journal and "run terminé" in journal
     progres = [x for x in journal.splitlines() if x.startswith("PROGRES ")]
-    assert progres == ["PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1 jetons=24576 tronquees=8 completes=0",
+    assert progres == ["PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1",
                        "PROGRES 2026-10-12T10:06:00Z juge=8B fin=écrit lots_faits=23/23 duree_s=7900.0"]
     assert "PROPOSAL" not in journal and "texte libre" not in journal                   # aucun texte au journal
     assert "PROGRES" in sortie and "PROPOSAL" not in sortie                              # ni sur la sortie (vastai logs)
@@ -169,7 +169,7 @@ def test_run_arrete_consigne_et_pousse(bac):
     # pendant le run, lui, n'a laissé passer que les lignes de progression conformes
     assert "ARRÊT : échéance globale simulée" in journal
     progres = [x for x in journal.splitlines() if x.startswith("PROGRES ")]
-    assert progres == ["PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1 jetons=24576 tronquees=8 completes=0",
+    assert progres == ["PROGRES 2026-10-12T10:00:00Z juge=8B lot=1/23 duree_s=344.1",
                        "PROGRES 2026-10-12T10:06:00Z juge=8B fin=écrit lots_faits=23/23 duree_s=7900.0"]
 
 
@@ -195,3 +195,30 @@ def test_amorce_cas_sain_et_dossiers_presents(bac):
     assert "PROPOSAL" not in journal and "texte libre" not in journal
     r = subprocess.run(["bash", str(AMORCE)], env=env, capture_output=True, text=True, timeout=300)
     assert r.returncode == 1 and "dossiers d'un essai précédent présents (R12)" in r.stdout
+
+
+@pytest.mark.parametrize("ligne, attendu", [
+    ("7 passed in 1.00s", 0),
+    ("7 passed, 2 warnings in 3.10s (0:00:03)", 0),
+    ("6 passed in 1.00s", 1),
+    ("7 passed, 1 skipped in 1.00s", 1),
+    ("1 failed, 6 passed in 1.00s", 1),
+    ("70 passed in 1.00s", 1),
+])
+def test_derniere_ligne_des_tests(bac, ligne, attendu):
+    """Garde de la dernière ligne de la suite (contre-lecture R2, angle « chaîne ») : « N passed[, M warning(s)] in X s
+    [(h:mm:ss)] » avec N = tests attendus, rien d'autre ; sinon arrêt consigné avant le run."""
+    code, journal, sortie = _lancer(bac, _distant(bac), env_sup={"FAUX_PYTEST_LIGNE": ligne})
+    assert code == attendu, sortie[-2000:]
+    if attendu:
+        assert "≠ « 7 passed »" in journal and "run :" not in journal
+    else:
+        assert f"tests : {ligne}" in journal and "run terminé" in journal
+
+
+def test_tests_attendus_cites_deux_fois(bac):
+    src = bac["source"]
+    (src / PREREG).write_text(_prereg() + "- Tests attendus : `7`\n", encoding="utf-8")
+    _commit_source(bac, "tests attendus en double")
+    code, journal, sortie = _lancer(bac, _distant(bac))
+    assert code == 2 and "nombre de tests attendus introuvable ou cité plusieurs fois" in journal, sortie[-2000:]
