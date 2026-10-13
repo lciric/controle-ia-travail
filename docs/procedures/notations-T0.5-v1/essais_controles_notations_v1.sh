@@ -198,7 +198,7 @@ jouer A44c-plafond-ecrit-par-le-lanceur-change 1 "plafond de la surveillance éc
 jouer A32-branche-presente 1 "branche calcul/t05-notations-reel-v1 : code 0" ":" ":" "git push -q $R/distant.git art-A32-branche-presente:refs/heads/calcul/t05-notations-reel-v1"
 git -C "$R/distant.git" branch -D calcul/t05-notations-reel-v1 > /dev/null
 export MODE_CTL=relance
-jouer A33-relance-sans-premier 1 "-v1 absente ou illisible" ":" ":"
+jouer A33-relance-sans-premier 1 "-v1 absente, illisible ou non descendante de S" ":" ":"
 jouer A34-relance-saine 0 "" ":" ":" "git push -q $R/distant.git art-A34-relance-saine:refs/heads/calcul/t05-notations-reel-v1"
 git -C "$R/distant.git" branch -D calcul/t05-notations-reel-v1 > /dev/null
 jouer A35-relance-apres-notations 1 "-v1 porte un fichier de notations" ":" ":" "git checkout -q -b v1-a35 && mkdir -p diag/20261013-000000-t05-notations-reel && echo '{}' > diag/20261013-000000-t05-notations-reel/notations-8B-decisives.json && git add -A diag && git commit -qm 'essai : notations sur v1' && git push -q $R/distant.git v1-a35:refs/heads/calcul/t05-notations-reel-v1"
