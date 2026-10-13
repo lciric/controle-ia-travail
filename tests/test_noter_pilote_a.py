@@ -577,6 +577,33 @@ def test_echeance_du_8b_ancree_au_debut_du_run(depot, monkeypatch):
     assert _fichiers(depot, run) == ["notations-jouet-3B-decisives.json", "resume.json"]
 
 
+def test_etat_et_debut_du_run_avant_le_manifeste(depot, monkeypatch):
+    """L'état du run et son début sont calculés avant le manifeste (vérification courte du code, second tour, constat
+    1) : l'empreinte de la configuration n'est jamais calculée une fois le dossier du run créé ; 2 000 s qui passent
+    pendant la création du manifeste comptent dans l'échéance du 8B (1 500 s), qui échoit sans aucun lot."""
+    f, _ = _pilote_arrete(depot, monkeypatch)
+    decalage = _horloge_avancee(monkeypatch)
+    run = "20261012-110023-notations-jouet"
+    vu, vraie_empreinte, vrai_creer = [], npa.empreinte_config, npa.creer_manifeste
+
+    def empreinte(*a, **k):
+        vu.append((depot / "runs" / run).exists())
+        return vraie_empreinte(*a, **k)
+
+    def creer(*a, **k):
+        sortie = vrai_creer(*a, **k)
+        decalage[0] += 2000.0
+        return sortie
+
+    monkeypatch.setattr(npa, "empreinte_config", empreinte)
+    monkeypatch.setattr(npa, "creer_manifeste", creer)
+    resume = npa.executer(_config(duree_max_juges_s={"jouet-8B": 1500, "jouet-3B": 23000}, duree_globale_s=23000),
+                          depot, run, None, str(f), autoriser_depot_sale=True)
+    assert vu and not any(vu)
+    assert resume["juges"]["jouet-8B"]["statut"] == "échu" and resume["juges"]["jouet-8B"]["lots_faits"] == 0
+    assert resume["juges"]["jouet-3B"]["statut"] == "écrit"
+
+
 def test_panne_au_chargement_du_8b_consignee_sous_son_etape(depot, monkeypatch):
     """Une panne au chargement de l'agent (le 8B : téléchargement compris) est consignée sous l'étape « chargement du
     juge jouet-8B », avec le type et le message de l'exception ; aucun fichier de notations (cas sain de l'étape « contrôle

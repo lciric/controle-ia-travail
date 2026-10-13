@@ -225,7 +225,7 @@ def test_issue_du_run_des_notations_cas_sain_et_artefacts(tmp_path_factory):
     ("autre-prereg", "autre préenregistrement"),
     ("prereg-modifie", "sceau|scellé|empreinte"),
     ("prereg-rescelle", "autre préenregistrement"),
-    ("prereg-hors-du-depot", "hors du dépôt"),
+    ("prereg-hors-du-depot", "hors du dépôt$"),          # garde du lecteur, non celle de creer_manifeste
 ])
 def test_lecture_decisive_exige_le_run_sous_le_preenregistrement(tmp_path_factory, artefact, motif):
     a, _, b, _ = _pilote_complet_et_pilote_arrete(tmp_path_factory)

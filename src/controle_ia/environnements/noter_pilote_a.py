@@ -22,8 +22,9 @@ globale, elle, arrête le run (`noter_ensembles`), comme le signal TERM : aucune
 continuer (gardes.py). Une ligne `PROGRES` par lot (juge, rang et durée du lot, rien d'autre : aucun texte, aucun compte
 de réponses) et une par fin de juge (statut, lots faits, durée) vont sur la sortie d'erreur. Tout arrêt levé après le
 manifeste laisse un `arret.json` scellé (étape, motif, compteurs), puis se propage ; restent sans `arret.json` les
-fenêtres déclarées par le préenregistrement (KILL du délai externe, arrêt brutal de l'hôte, second signal pendant la
-consignation).
+fenêtres déclarées par le préenregistrement (KILL du délai externe ou du plafond de l'amorce, arrêt brutal de l'hôte ou
+de l'instance, exception ou signal pendant la consignation, signal pendant la création du manifeste ou juste après :
+l'état et le début du run sont calculés avant le manifeste).
 """
 from __future__ import annotations
 
