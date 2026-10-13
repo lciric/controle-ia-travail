@@ -65,7 +65,10 @@ def exiger_run_sous_prereg(racine: Path, m: dict, prereg: str | Path) -> None:
     et intact (même chemin, même empreinte que ceux de son manifeste)."""
     chemin = Path(prereg)
     if chemin.is_absolute():
-        chemin = chemin.resolve().relative_to(Path(racine).resolve())
+        try:
+            chemin = chemin.resolve().relative_to(Path(racine).resolve())
+        except ValueError:
+            raise GardeArret(f"préenregistrement {prereg} hors du dépôt") from None
     sha = exiger_prereg_scelle(Path(racine) / chemin)
     pr = m.get("preenregistrement") or {}
     if m.get("decisif") is not True:

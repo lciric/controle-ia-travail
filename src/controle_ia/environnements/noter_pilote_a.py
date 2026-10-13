@@ -205,13 +205,15 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
                              f"attendues")
     cles = cles_des_graines(demandes)
     exiger_graines_du_pilote(cles, entropie, pilote)
-    chemin_m, manifeste = creer_manifeste(racine, run_id, config, cles, entropie=entropie,
-                                          decisif=prereg is not None, prereg=prereg,
-                                          autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
-    debut = time.perf_counter()
+    # état et début du run calculés avant le manifeste : entre sa création et le bloc qui consigne l'arrêt, plus rien ne
+    # s'exécute (vérification courte du code, constat 1)
     etat = {"etape": "chargement", "commit_cite": commit_cite, "run_pilote": config["run_pilote"],
             "episodes_sha256": pilote["episodes_sha256"], "taches_sha256": sha_taches,
             "config_sha256": empreinte_config(config), "juges": {}}
+    debut = time.perf_counter()
+    chemin_m, manifeste = creer_manifeste(racine, run_id, config, cles, entropie=entropie,
+                                          decisif=prereg is not None, prereg=prereg,
+                                          autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
     try:
         return _apres_manifeste(config, racine, chemin_m, manifeste, pilote, demandes, etat, debut)
     except Exception as e:          # garde, panne, signal TERM, échéance globale : consigné, puis propagé

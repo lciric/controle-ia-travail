@@ -197,13 +197,22 @@ def test_issue_du_run_des_notations_cas_sain_et_artefacts(tmp_path_factory):
     a, _, b, _ = _pilote_complet_et_pilote_arrete(tmp_path_factory)
     n8 = _notations_de(a, "8B")
     for issue, statuts, motif in ((None, None, "ni resume.json ni arret.json"), ("les-deux", None, "un seul attendu"),
-                                  ("resume", {"8B": "échu"}, "désaccord")):
+                                  ("resume", {"8B": "échu"}, "désaccord"), ("resume", {"3B": "écrit"}, "désaccord")):
         d = tmp_path_factory.mktemp("copie")
         shutil.copytree(b, d, dirs_exist_ok=True)
         _run_des_notations(d, {"8B": n8}, issue=issue, statuts=statuts)
         with pytest.raises(GardeArret, match=motif):
             lnp.lire_notations(d, RUN, NOTATIONS, ANALYSE, d / "taches.json", LECTURE)
         assert not (d / "runs" / LECTURE).exists()
+    # issue sans sceau conforme : arrêt (garde gelée `verifier_resultat`, appelée par le lecteur)
+    d = tmp_path_factory.mktemp("copie")
+    shutil.copytree(b, d, dirs_exist_ok=True)
+    _run_des_notations(d, {"8B": n8}, issue="resume")
+    s = Path(str(d / "diag" / NOTATIONS / "resume.json") + ".sha256")
+    s.write_text("0" * 64 + "  resume.json\n")
+    with pytest.raises(GardeArret, match="empreinte"):
+        lnp.lire_notations(d, RUN, NOTATIONS, ANALYSE, d / "taches.json", LECTURE, autoriser_depot_sale=True)
+    assert not (d / "runs" / LECTURE).exists()
     _run_des_notations(b, {"8B": n8}, issue="arret")                                 # cas sain : arrêt pendant le 3B
     lecture = lnp.lire_notations(b, RUN, NOTATIONS, ANALYSE, b / "taches.json", LECTURE)
     assert lecture["issue_des_notations"] == {"fichier": "arret", "statuts": {"8B": "écrit", "3B": "échu"}}
@@ -215,6 +224,8 @@ def test_issue_du_run_des_notations_cas_sain_et_artefacts(tmp_path_factory):
     ("mode-jouet", "hors mode réel"),
     ("autre-prereg", "autre préenregistrement"),
     ("prereg-modifie", "sceau|scellé|empreinte"),
+    ("prereg-rescelle", "autre préenregistrement"),
+    ("prereg-hors-du-depot", "hors du dépôt"),
 ])
 def test_lecture_decisive_exige_le_run_sous_le_preenregistrement(tmp_path_factory, artefact, motif):
     a, _, b, _ = _pilote_complet_et_pilote_arrete(tmp_path_factory)
@@ -227,11 +238,21 @@ def test_lecture_decisive_exige_le_run_sous_le_preenregistrement(tmp_path_factor
         _run_des_notations(b, notes, prereg=p, mode="jouet")
     elif artefact == "autre-prereg":
         _run_des_notations(b, notes, prereg=autre, mode="reel")
-    else:
+    elif artefact == "prereg-modifie":
         _run_des_notations(b, notes, prereg=p, mode="reel")
         (b / p).write_text((b / p).read_text() + "\nmodifié\n")
+    elif artefact == "prereg-rescelle":
+        # même chemin, texte changé puis rescellé : sceau conforme, empreinte ≠ celle du manifeste du run
+        from controle_ia.scellement import sceller
+        _run_des_notations(b, notes, prereg=p, mode="reel")
+        (b / p).write_text((b / p).read_text() + "\nmodifié\n")
+        Path(str(b / p) + ".sha256").unlink()
+        sceller(b / p)
+    else:
+        _run_des_notations(b, notes, prereg=p, mode="reel")
+    passe = str(tmp_path_factory.mktemp("ailleurs") / "prereg.md") if artefact == "prereg-hors-du-depot" else str(b / p)
     with pytest.raises(GardeArret, match=motif):
-        lnp.lire_notations(b, RUN, NOTATIONS, ANALYSE, b / "taches.json", LECTURE, prereg=str(b / p),
+        lnp.lire_notations(b, RUN, NOTATIONS, ANALYSE, b / "taches.json", LECTURE, prereg=passe,
                            autoriser_depot_sale=True)
     assert not (b / "runs" / LECTURE).exists()
 
@@ -306,6 +327,8 @@ def test_equivalence_avec_analyser_sur_le_meme_pilote(tmp_path_factory):
     assert sans_familles(lecture["audit_r4_juges"]) == sans_familles(temoin["audit_r4"])
     # cas non trivial : deux juges concluants, différence sur au moins 48 tâches, P3 tranchée, 10 réponses tirées
     assert lecture["difference_appariee"]["taches"] >= 48 and lecture["predictions"]["P3"] != "non concluant"
+    assert all(lecture["juges"][j]["decomposition_concluante"] for j in ("8B", "3B"))
+    assert not lecture["audit_r4_juges"]["declenche"] and not lecture["lecture_suspendue"]
     assert len(lecture["relectures_audit"]["reponses_de_juge"]) == 10
     # les actions tirées diffèrent de celles de la première lecture (réponses tirées d'abord, même graine) : déclaré
     assert lecture["relectures_audit"]["actions"] != lecture_b["relectures_audit"]["actions"]
