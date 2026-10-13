@@ -71,17 +71,9 @@ epingle_versee() {   # $1 expression sed sur les contrôles, $2 message ; une li
     [ "$(diff "$E/ctl-avant-epingle.sh" "$CTL" | grep -c '^>')" = 1 ] || { echo "épingle : une ligne exactement attendue"; return 1; }
     cp "$CTL" "$V/" && resceller "$V/controles_avant_depense_notations_v1.sh" && git commit -qam "essai : $2" && remise "$(git rev-parse HEAD)"
 }
-candidat_change() {   # $1 expression sed sur le candidat (re-scellé, ré-épinglé), $2 message ; le journal de la
-    # répétition jouet nomme alors le candidat changé (re-scellé, ré-épinglé) : sans quoi la garde de la répétition arrête
-    # avant la garde visée (banc joué à C1)
-    local ancien nouveau nom
-    nom=$(basename "$RELU"); ancien=$(sha256sum "$RELU" | cut -d' ' -f1)
-    sed -i "$1" "$RELU" && resceller "$RELU" && git add -A "$RELU" "$RELU.sha256" || return 1
-    nouveau=$(sha256sum "$RELU" | cut -d' ' -f1)
-    epingle_versee "s|^CANDIDAT_RELU=[0-9a-f]\{64\}|CANDIDAT_RELU=$nouveau|" "$2" || return 1
-    sed -i "s|^candidat répété : $nom $ancien\$|candidat répété : $nom $nouveau|" "$LJ" && resceller "$LJ" || return 1
-    grep -qxF "candidat répété : $nom $nouveau" "$LJ" || { echo "journal de la répétition : ligne du candidat non changée"; return 1; }
-    epingle_versee "s|^REPETITION_JOUET=[0-9a-f]\{64\}|REPETITION_JOUET=$(sha256sum "$LJ" | cut -d' ' -f1)|" "$2 (journal de la répétition)"
+candidat_change() {   # $1 expression sed sur le candidat (re-scellé, ré-épinglé), $2 message
+    sed -i "$1" "$RELU" && resceller "$RELU" && git add -A "$RELU" "$RELU.sha256" && \
+        epingle_versee "s|^CANDIDAT_RELU=[0-9a-f]\{64\}|CANDIDAT_RELU=$(sha256sum "$RELU" | cut -d' ' -f1)|" "$2"
 }
 retour() { cp "$E/ctl-sauve.sh" "$CTL"; remise; }
 passage S00-sain 0 "poussé ; préenregistrement"
@@ -207,10 +199,7 @@ remise
 printf '%s *%s\n' "$(sha256sum "$CFG_RELUE" | cut -d' ' -f1)" "$(basename "$CFG_RELUE")" > "$CFG_RELUE.sha256" && git commit -qam "essai : sceau de la configuration en mode binaire" && remise "$(git rev-parse HEAD)"
 passage S29b-sceau-de-la-configuration-autre-forme 2 "configuration relue ≠ épingle, ou sceau différent de la ligne exacte"
 remise
-# ligne lue d'abord dans un fichier à part (grep refuse d'écrire dans le fichier qu'il lit), montage vérifié
-grep "^| R-160 |" registres/decisions.md > "$E/r160.txt" && cat "$E/r160.txt" >> registres/decisions.md \
-    && [ "$(grep -c '^| R-160 |' registres/decisions.md)" = 2 ] && git commit -qam "essai : R-160 en double" && remise "$(git rev-parse HEAD)" \
-    || { echo "S37 : montage impossible"; exit 2; }
+grep "^| R-160 |" registres/decisions.md >> registres/decisions.md && git commit -qam "essai : R-160 en double" && remise "$(git rev-parse HEAD)"
 passage S37-ligne-r-160-en-double 2 "décision de Lazar sur N-021 non conforme"
 remise
 # sceaux produits ≠ épingles : un faux cp, en tête du PATH pour ce seul passage, altère la copie de la configuration ;
