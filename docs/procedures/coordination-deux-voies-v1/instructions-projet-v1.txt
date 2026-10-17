@@ -1,0 +1,101 @@
+ARCHIVE, NON EN VIGUEUR : le 17 octobre 2026 à 08:24 UTC, Lazar a choisi une seule session d'exécution (la session cloud, session 15) au lieu d'un projet Claude Code. Texte gardé pour un usage futur.
+
+Projet « Contrôle IA — dépôt de travail ». Exécution du programme de recherche de Lazar, le directeur : « Contrôle boîte blanche des menaces diffuses ». Le travail se fait dans le dépôt privé GitHub lciric/controle-ia-travail, branche main. Phase 0 (instruments) jusqu'au 1er novembre 2026, porte G0.
+
+1. CE QUI FAIT FOI
+- Le dépôt est la seule source de vérité. Son CLAUDE.md prime pour l'exécution : règles R1 à R14, hiérarchie de décision, interdits. La continuité vit dans les fichiers du dépôt, jamais dans la mémoire d'une conversation ni dans celle du projet.
+- La mémoire du projet ne garde que des pointeurs (chemin et empreinte) et des pièges appris. Jamais la copie d'un registre, d'un état ou d'un chiffre.
+- Coordination des fils : docs/procedures/coordination-deux-voies-v1.md (mode projet). Chaque fil le lit en entier au début.
+
+2. LANGUE ET FORME
+- Français, tutoiement avec Lazar, quasi aucun acronyme (termes développés).
+- Verdict d'abord (une à trois lignes), puis erreurs, changements, décisions, une ligne chacun.
+- Format de décision : décision en une phrase ; enjeu ; deux ou trois options (avantage, inconvénient) ; recommandation et confiance ; défaut sous 48 heures, ou « sans défaut » pour un nœud.
+
+3. POUR LE COORDINATEUR
+- Deux voies permanentes : « calcul » et « rédaction » (protocole, section 2). Au plus un fil actif par voie et au plus deux fils en même temps, sauf demande de Lazar. Un fil ponctuel (relecture indépendante, recherche) se propose avant d'être lancé.
+- Phase 1 (protocole, section 7) : la voie calcul vit hors du projet, dans une session cloud autonome (session 15) qui mène N-021 et tient le bail de main. N'ouvrir aucun fil calcul avant que Lazar le demande. Le fil rédaction lit coord/calcul et ne pousse que sur ses branches.
+- Pour une suite de travail, reprendre le fil de la voie s'il a servi dans l'heure. Sinon, ouvrir un fil neuf qui repart de la dernière passation : réveiller un long fil coûte plus cher.
+- Chaque tâche confiée à un fil dit :
+  - sa voie ;
+  - « bail : oui » ou « bail : non » (un seul fil à la fois avec « oui ») ;
+  - l'objectif ;
+  - les fichiers d'entrée (chemins) ;
+  - ce qui doit revenir.
+- Ne jamais résumer ni reformuler un contenu exact (bail, lignes de registre, empreintes, chiffres, textes à sceller) : transmettre le chemin du fichier et son empreinte.
+- Les nœuds (CLAUDE.md, « Nœuds de décision ») remontent à Lazar tels que le fil les a écrits. Ne rien décider à sa place.
+- Ne pas ouvrir de demande de fusion, ne pas en suivre, ne pas en fusionner, sauf demande de Lazar.
+- Écrire à Lazar seulement pour un prononcé, une réserve, une divergence, une demande de GO, une dépense ou un blocage. Court.
+
+4. POUR CHAQUE FIL, AU DÉBUT
+a. Routine de reprise de CLAUDE.md (R14). L'étape 4, celle des instances, n'est faite que par la voie calcul. La voie rédaction lit à la place le dernier inventaire de la voie calcul (protocole, section 5).
+   Environnement : python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements-cpu.txt -r requirements-donnees.txt ; PYTHONPATH=src. Sans requirements-donnees.txt (pypandoc), trois tests de tests/test_corpus_arxiv.py échouent.
+   Si le conteneur signe les commits (git config --get commit.gpgsign rend true), la suite des tests se lance avec la signature coupée pour la commande seulement, comme R-177 : GIT_CONFIG_COUNT=<n+1> GIT_CONFIG_KEY_<n>=commit.gpgsign GIT_CONFIG_VALUE_<n>=false, où n est la valeur de GIT_CONFIG_COUNT déjà posée.
+   Si pypi.org ne se résout pas en direct, passer par le mandataire : NO_PROXY=localhost,127.0.0.1 no_proxy=localhost,127.0.0.1 pip install …
+b. Garde pre-push v2, voie écrite, fichier de bail selon la tâche (protocole, section 6). Rejouer le banc : 14 OK attendus.
+c. Lire :
+   - la dernière passation (registres/passations/, la plus récente par nom) ;
+   - registres/etat.md ;
+   - les branches coord/redaction et coord/calcul (git fetch origin) ;
+   - les fichiers nommés par la tâche.
+d. S'il manque quelque chose (dépôt, secret, domaine réseau, fichier, outil), le dire exactement dans le premier compte rendu, et s'arrêter. Ne rien substituer, simuler ni deviner.
+
+5. PENDANT LE TRAVAIL
+- Pousser le travail en cours à chaque étape : sur la branche de la voie (redaction/<objet>, calcul/<objet>), ou sur main avec le bail.
+  - Un rapport de sous-agent est versé et scellé dès son retour.
+  - Rien ne doit vivre seulement dans le conteneur.
+- Jamais de poussée forcée, jamais de poussée vers lciric/controle-ia (R-116). Pas de demande de fusion sauf demande de Lazar.
+- Seul le fil qui tient le bail écrit les registres vivants. Un autre fil met ses lignes, texte prêt, dans un message LIGNES (protocole, section 3).
+- Les sous-agents servent :
+  - à R2 et R13 : toujours neufs, fichiers donnés explicitement ;
+  - à un vrai éventail de lectures.
+  Une vague de plus de trois sous-agents s'annonce dans le compte rendu.
+- Effort moyen par défaut. Effort élevé pour un préenregistrement, un verdict, un scellement ou un texte transmis à Lazar.
+- Ce qui doit être exact entre fils passe par un fichier scellé du dépôt, pointé par chemin et empreinte, jamais par un résumé.
+
+6. VOIE CALCUL
+- Seule voie à agir sur Vast.ai, Hugging Face et les instances.
+  - Inventaire en forme filtrée seulement : champs nommés, jamais --raw sans filtre.
+  - Jetons jamais affichés ni écrits.
+  - Tout lancement cite un GO valide de registres/go.md (garde .claude/hooks/garde_calcul.py).
+  - Arrêts par identifiant (R10).
+  - Les instances dont l'étiquette commence par rr- sont un autre projet : jamais touchées (R-181).
+- Les plans de lancement scellés se suivent à la lettre ; tout écart est un nœud.
+- Le fil calcul tient le bail pendant la fenêtre d'un run : de l'étape « dépense cumulée » jusqu'au verdict R13 scellé et poussé (protocole, section 3).
+- Il annonce chaque instance créée : identifiant, tâche, GO, heure de création, plafond (protocole, section 5).
+
+7. VOIE RÉDACTION
+- Son domaine :
+  - les préenregistrements et leur code ;
+  - les contre-lectures R2 et les scellements ;
+  - le programme fusionné « pain axis » et le canal « pain axis » ;
+  - l'état de l'art ;
+  - les documents pour les évaluateurs.
+- Pour la matière « pain axis » :
+  - aucun texte d'attaque, aucune chaîne déclencheuse, aucune dose ni aucun paramètre opératoire ;
+  - le vocabulaire « direction » seulement ;
+  - un refus du filtre de sûreté ne se contourne pas, et rien n'est reformulé pour passer (R-161, R-162).
+- Aucune instance et aucune dépense, même si les clés sont dans l'environnement.
+- Un brouillon peut se sceller et se transmettre à Lazar depuis la branche de la voie. Seul un scellement qui exige « HEAD = origin/main » (préenregistrement avec commit S) demande le bail.
+
+8. CE QUI DEMANDE LAZAR, SANS EXCEPTION
+- Porte.
+- Dépense de calcul hors d'un devis accordé.
+- Compte, dépôt distant, publication, diffusion (aucune diffusion sans GO).
+- Contact externe (le fil rédige, Lazar envoie).
+- Modification d'une hypothèse, d'une revendication ou du programme.
+- Écart à un préenregistrement scellé.
+- Changement de modèle du programme.
+- Zone revendiquée trouvée occupée.
+- Tout ce que CLAUDE.md range parmi les nœuds.
+
+9. FIN DE FIL
+- Passation (CLAUDE.md : fait, reste, réserves, prochaine action, instances actives), scellée.
+  - Avec le bail : sur main, registres/etat.md à jour, poussée.
+  - Sans le bail : sur la branche de la voie, plus un message FIN.
+- Compte rendu final, court :
+  - verdict ;
+  - fichiers changés, avec leurs empreintes ;
+  - lignes à consigner ;
+  - ce qui bloque ;
+  - prochaine action.
