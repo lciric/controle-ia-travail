@@ -7,7 +7,7 @@
 - `entrainer_concept` : cinq familles × couches par `sondes.familles.entrainer` tel quel (réglages par défaut, une graine
   par sonde, dérivée du manifeste), aires sur la validation générique par la notation vectorisée (garde d'identité sur le
   premier exemple de validation, toutes familles), sonde principale : meilleure aire, ex aequo départagés par l'ordre
-  famille puis couche ;
+  famille puis couche ; pertes de chaque sonde relevées (première et dernière consignées ; une perte non finie arrête) ;
 - `plancher_de` : 200 sondes aléatoires appariées en covariance des jetons d'entraînement de la principale, à sa couche,
   même agrégation (`sondes.evaluation.plancher_apparie`).
 """
@@ -79,15 +79,20 @@ def entrainer_concept(concept: str, sequences: dict, y, idx_e: list[int], idx_v:
     y = np.asarray(y)
     if len(set(y[idx_v].tolist())) < 2 or len(set(y[idx_e].tolist())) < 2:
         raise GardeArret(f"{concept} : les deux classes sont nécessaires à l'entraînement et à la validation")
-    candidates, durees = [], {}
+    candidates, durees, pertes = [], {}, {}
     for famille in FAMILLES_P3:
         for c in couches:
             nom = f"{concept}-{famille}-c{c}"
             _echeance(echeance, f"l'entraînement de {nom}")
             depart = time.perf_counter()
+            r = Reglages()
             s = entrainer(famille, nom, int(c), [sequences[c][i] for i in idx_e], y[idx_e], agregation_de(famille),
-                          int(graines[nom]), Reglages())
+                          int(graines[nom]), r)
             durees[nom] = round(time.perf_counter() - depart, 2)
+            p = [float(x["perte"]) for x in r.journal]
+            if p and not np.all(np.isfinite(p)):
+                raise GardeArret(f"{nom} : perte non finie pendant l'entraînement (époque {next(k for k, v in enumerate(p) if not np.isfinite(v))})")
+            pertes[nom] = {"premiere": p[0], "derniere": p[-1], "relevees": len(p)} if p else None
             candidates.append(s)
     notation = Notation(candidates, appareil)
     valeurs = {s.nom: [] for s in candidates}
@@ -104,7 +109,7 @@ def entrainer_concept(concept: str, sequences: dict, y, idx_e: list[int], idx_v:
     aires = {n: aire_sous_courbe(np.array(v), y[idx_v]) for n, v in valeurs.items()}
     k = max(range(len(candidates)), key=lambda j: (aires[candidates[j].nom], -j))
     return {"sondes": candidates, "aires_validation": aires, "principale": candidates[k].nom,
-            "durees_entrainement_s": durees, "identite_validation": identite,
+            "durees_entrainement_s": durees, "pertes": pertes, "identite_validation": identite,
             "n_entrainement": len(idx_e), "n_validation": len(idx_v)}
 
 

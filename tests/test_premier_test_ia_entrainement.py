@@ -59,3 +59,21 @@ def test_ex_aequo_departages_par_l_ordre(monkeypatch):
     graines = {n: 0 for n in en.noms_des_sondes("c", [0])}
     r = en.entrainer_concept("c", seqs, y, [0, 1, 2, 3, 4, 5], [6, 7], [0], graines)
     assert r["principale"] == "c-difference_moyennes-c0"
+
+
+def test_perte_non_finie_arrete(monkeypatch):
+    from controle_ia.premier_test_ia import entrainement as en
+    vraie = en.entrainer
+
+    def avec_nan(famille, nom, couche, sequences, y, agregation, graine, reglages):
+        s = vraie(famille, nom, couche, sequences, y, agregation, graine, reglages)
+        reglages.journal.append({"epoque": 99, "perte": float("nan")})
+        return s
+
+    monkeypatch.setattr(en, "entrainer", avec_nan)
+    rng = np.random.default_rng(3)
+    seqs = {0: [rng.standard_normal((4, 6)) + (k % 2) for k in range(20)]}
+    y = [k % 2 for k in range(20)]
+    with pytest.raises(GardeArret, match="perte non finie"):
+        en.entrainer_concept("tromperie", seqs, y, list(range(16)), list(range(16, 20)), [0],
+                             {f"tromperie-{f}-c0": 1 for f in en.FAMILLES_P3})

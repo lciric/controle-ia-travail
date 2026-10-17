@@ -56,7 +56,9 @@ class Notation:
 
     @staticmethod
     def _agreger(S, logits, attention):
-        """S, logits : (n, K) ; attention : (K,) booléen. Maximum par colonne, ou somme pondérée par softmax."""
+        """S, logits : (n, K) ; attention : (K,) booléen. Maximum par colonne, ou somme pondérée par softmax. La somme
+        pondérée est calculée pour toutes les colonnes puis écartée par `where` pour les sondes au maximum : aucune
+        moyenne n'entre jamais dans un score (la garde d'identité contre `score_action` le confirme)."""
         maxi = S.max(dim=0).values
         if logits is None:
             return maxi
@@ -96,6 +98,47 @@ class Notation:
         if not np.all(np.isfinite(valeurs)):
             raise GardeArret("notation : score non fini")
         return {n: sortie[n] for n in self.noms}
+
+    def par_jeton(self, segments: dict, noms) -> dict[str, tuple[np.ndarray, np.ndarray | None]]:
+        """Scores par jeton (avant agrégation) et logits d'attention (familles à attention ; sinon None) des sondes
+        nommées, pour la localisation du signal dans l'action. Même calcul que `noter`, sur les mêmes tenseurs."""
+        sortie = {}
+        with torch.no_grad():
+            for nom in noms:
+                s = next((x for x in self.sondes if x.nom == nom), None)
+                if s is None:
+                    raise GardeArret(f"notation par jeton : sonde {nom} inconnue")
+                c = int(s.couche)
+                A = _t(np.asarray(segments[c]), self.appareil)
+                if c in self._lineaires and nom in self._lineaires[c][0]:
+                    noms_c, W, b, att, Q = self._lineaires[c]
+                    j = noms_c.index(nom)
+                    sj = A @ W[:, j] + b[j]
+                    lg = (A @ Q[:, j]) if bool(att[j]) else None
+                elif any(p[0] == nom for p in self._perceptrons[c]):
+                    _, ag, mu, sd, Wp, cp, vp, bp, q = next(p for p in self._perceptrons[c] if p[0] == nom)
+                    Z = (A - mu) / sd
+                    sj = torch.relu(Z @ Wp.T + cp) @ vp + bp
+                    lg = (Z @ q) if ag == "attention" else None
+                else:
+                    _, mu, P = next(p for p in self._mahalanobis[c] if p[0] == nom)
+                    Z = A - mu
+                    sj, lg = ((Z @ P) * Z).sum(dim=1), None
+                sortie[nom] = (sj.cpu().numpy().astype(np.float64), None if lg is None else lg.cpu().numpy().astype(np.float64))
+        return sortie
+
+
+def agreger_par_jeton(s: np.ndarray, logits: np.ndarray | None, debut: int = 0, fin: int | None = None) -> float:
+    """Score d'action recalculé depuis les scores par jeton, sur les jetons [début, fin[ : maximum, ou somme pondérée par
+    le softmax des logits restreints (famille « attention ») ; jamais la moyenne ni la médiane."""
+    s = np.asarray(s, dtype=np.float64)[debut:fin]
+    if s.size == 0:
+        raise GardeArret("agrégation par jeton : aucun jeton dans l'intervalle")
+    if logits is None:
+        return float(s.max())
+    lg = np.asarray(logits, dtype=np.float64)[debut:fin]
+    p = np.exp(lg - lg.max())
+    return float(np.sum(p / p.sum() * s))
 
 
 def exiger_identite(notation: Notation, segments: dict, scores: dict, tolerance: float = 1e-6,

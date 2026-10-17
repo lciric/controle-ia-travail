@@ -5,7 +5,7 @@ import pytest
 
 from controle_ia.gardes import GardeArret
 from controle_ia.harnais.sondes import SondeLineaire
-from controle_ia.premier_test_ia.notation import Notation, exiger_identite
+from controle_ia.premier_test_ia.notation import Notation, agreger_par_jeton, exiger_identite
 from controle_ia.sondes.evaluation import plancher_apparie
 from controle_ia.sondes.familles import Reglages, entrainer
 
@@ -68,3 +68,22 @@ def test_notation_gardes():
     moyenne = SondeLineaire("moyenne", 1, np.ones(D), 0.0, "mean")
     with pytest.raises(GardeArret, match="refusée"):
         Notation([moyenne])
+
+
+def test_scores_par_jeton_redonnent_le_score_et_se_restreignent():
+    sondes, rng = _sondes()
+    n = Notation(sondes, "cpu")
+    seg = {1: rng.standard_normal((6, D)) * 2, 2: rng.standard_normal((6, D))}
+    sc = n.noter(seg)
+    noms = [s.nom for s in sondes]
+    pj = n.par_jeton(seg, noms)
+    for nom in noms:
+        s, lg = pj[nom]
+        assert s.shape == (6,) and abs(agreger_par_jeton(s, lg) - sc[nom]) <= 1e-12 * (1 + abs(sc[nom]))
+        assert agreger_par_jeton(s, lg, 2, 4) <= max(s) + 1e-12
+    att = next(x.nom for x in sondes if x.agregation == "attention")
+    assert pj[att][1] is not None and pj[next(x.nom for x in sondes if x.agregation == "max")][1] is None
+    with pytest.raises(GardeArret, match="aucun jeton"):
+        agreger_par_jeton(pj[att][0], pj[att][1], 3, 3)
+    with pytest.raises(GardeArret, match="inconnue"):
+        n.par_jeton(seg, ["absente"])
