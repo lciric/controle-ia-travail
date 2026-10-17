@@ -61,8 +61,11 @@ def test_plancher_absent_arrete():
         lp.lire(src, _graines())
 
 
-def test_lecture_de_bout_en_bout_d_un_run_jouet(depot, tmp_path):
+def test_lecture_de_bout_en_bout_d_un_run_jouet(depot, tmp_path, monkeypatch):
     from test_premier_test_ia_run import _config, _taches
+
+    vraie = rp.creer_manifeste
+    monkeypatch.setattr(rp, "creer_manifeste", lambda *a, entropie=None, **k: vraie(*a, entropie=entropie or 20261017, **k))
 
     c = _config(tmp_path)
     f = _taches(depot)

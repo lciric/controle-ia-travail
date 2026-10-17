@@ -324,7 +324,7 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, tache
         "donnees": etat["donnees"], "familles": list(FAMILLES_P3), "fils_entrainement": config["fils_entrainement"],
         "duree_s": round(time.perf_counter() - debut, 1)})
     etat["sondes_figees_sha256"] = sha_figees
-    progres(etape="sondes-figees", sha256=sha_figees, sondes=len(sondes))
+    progres(etape="sondes-figees", empreinte=sha_figees, sondes=len(sondes))      # clés en minuscules : relayée
 
     etat["etape"] = "épisodes"
     notation = Notation(sondes, appareil)
