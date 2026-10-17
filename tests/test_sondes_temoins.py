@@ -118,12 +118,21 @@ def _textes(graine, n=80):
 
 
 def test_temoin_lexical_cas_sain_et_deterministe():
-    textes, y = _textes(1)
+    # 300 textes d'entraînement : avec 80, le sac de bigrammes de hasard surapprend (aire de test ≈ 0,86)
+    textes, y = _textes(1, n=300)
     t = te.temoin_lexical("lex-chats", textes, y, penalite=1.0)
-    test_textes, test_y = _textes(2)
+    test_textes, test_y = _textes(2, n=200)
     assert ev.aire_sous_courbe(t.scores(test_textes), test_y) > 0.95
     assert "marqueur" in t.vocabulaire and "la proposition" in t.vocabulaire     # unigrammes et bigrammes
     assert t.empreinte() == te.temoin_lexical("lex-chats", textes, y, penalite=1.0).empreinte()
+
+
+def test_temoin_lexical_etiquettes_melangees_au_hasard():
+    textes, y = _textes(1, n=300)
+    melange = np.random.default_rng(0).permutation(y)
+    t = te.temoin_lexical("lex", textes, melange, penalite=1.0)
+    test_textes, test_y = _textes(2, n=200)
+    assert abs(ev.aire_sous_courbe(t.scores(test_textes), test_y) - 0.5) < 0.1
 
 
 def test_temoin_lexical_vocabulaire_de_l_entrainement_seulement():
