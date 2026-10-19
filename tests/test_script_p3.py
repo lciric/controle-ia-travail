@@ -40,7 +40,7 @@ if [ "$1" = "-m" ] && [ "$2" = "controle_ia.premier_test_ia.run" ]; then
     for a in "$@"; do [ "$prec" = "--run-id" ] && run="$a"; prec="$a"; done
     mkdir -p "diag/$run" "runs/$run" "donnees/$run"
     echo '{"factice": true}' > "runs/$run/manifeste.json"
-    for f in sondes-figees.npz sondes-figees-legeres.npz scores-p3.npz; do
+    for f in sondes-figees.npz sondes-figees-legeres.npz scores-p3.npz jetons-principales-p3.npz textes-actions-p3.jsonl; do
         echo "$f factice" > "donnees/$run/$f"; (cd "donnees/$run" && sha256sum "$f" > "$f.sha256")
     done
     echo "PROGRES 2026-10-17T10:00:00Z etape=entrainement concept=tromperie principale=tromperie-lineaire-c7 aire_validation=0.91" >&2
@@ -145,8 +145,10 @@ def test_cas_sain_lecture_precoce_relais_et_run_complet(bac):
     assert "run" in _git(distant, "log", "-2", "--format=%s", "calcul/p3-jouet-v1")
     fichiers = _git(distant, "ls-tree", "-r", "--name-only", "calcul/p3-jouet-v1").splitlines()
     donnees = sorted(f.split("/", 2)[2] for f in fichiers if f.startswith("donnees/") and "-p3-jouet/" in f)
-    assert donnees == ["scores-p3.npz", "scores-p3.npz.sha256", "sondes-figees-legeres.npz",
-                       "sondes-figees-legeres.npz.sha256", "sondes-figees.npz.sha256"]   # le complet reste
+    assert donnees == ["jetons-principales-p3.npz", "jetons-principales-p3.npz.sha256", "scores-p3.npz",
+                       "scores-p3.npz.sha256", "sondes-figees-legeres.npz", "sondes-figees-legeres.npz.sha256",
+                       "sondes-figees.npz.sha256", "textes-actions-p3.jsonl",
+                       "textes-actions-p3.jsonl.sha256"]   # le complet reste ; données brutes gardées (R-202)
 
 
 @pytest.mark.parametrize("artefact, motif", [
@@ -178,6 +180,8 @@ def test_run_arrete_consigne_et_pousse(bac):
     assert "arrêt" in _git(distant, "log", "-1", "--format=%s", "calcul/p3-jouet-v1")
     fichiers = _git(distant, "ls-tree", "-r", "--name-only", "calcul/p3-jouet-v1").splitlines()
     assert any(f.endswith("/sondes-figees-legeres.npz") for f in fichiers)        # données partielles poussées
+    assert any(f.endswith("/textes-actions-p3.jsonl") for f in fichiers)
+    assert any(f.endswith("/jetons-principales-p3.npz.sha256") for f in fichiers)
     assert not any(f.endswith("/sondes-figees.npz") for f in fichiers)
     # diagnostic de fin, comme au pilote : dernières lignes de la sortie d'erreur du run, cause comprise ; le relais
     # pendant le run, lui, n'a laissé passer que les lignes de progression conformes
@@ -269,6 +273,42 @@ def test_amorce_cas_sain_et_dossiers_presents(bac):
     assert "run.err (dernières lignes, hors progression)" in r.stdout
     r = subprocess.run(["bash", str(AMORCE)], env=env, capture_output=True, text=True, timeout=300)
     assert r.returncode == 1 and "dossiers d'un essai précédent présents (R12)" in r.stdout
+
+
+TIMEOUT_FACTICE = """#!/usr/bin/env bash
+# timeout factice : le plafond de l'amorce (360m) lance la commande puis rend 124 (délai atteint) ; tout autre délai
+# passe au vrai timeout
+for a in "$@"; do [ "$a" = "360m" ] && plafond=1; done
+[ -n "${plafond:-}" ] || exec __VRAI__ "$@"
+while [ "${1#-}" != "$1" ]; do shift; done
+shift
+"$@"
+exit 124
+"""
+
+
+def test_amorce_plafond_atteint_traces_poussees(bac):
+    """Plafond de l'amorce (garde d'arrêt, R5) : un `timeout` factice lance le script de P3 puis rend 124 ; l'amorce
+    commite et pousse ses traces de plafond (avec les données légères), et sort avec ce code."""
+    distant = _distant(bac)
+    racine = bac["racine"] / "amorce-plafond"
+    racine.mkdir()
+    faux = bac["racine"] / "faux-bin"
+    faux.mkdir()
+    vrai = shutil.which("timeout")
+    assert vrai
+    (faux / "timeout").write_text(TIMEOUT_FACTICE.replace("__VRAI__", vrai), encoding="utf-8")
+    (faux / "timeout").chmod(0o755)
+    env = _env(bac, distant, "inutile", {"RACINE_AMORCE": str(racine), "GH_TOKEN": "x", "HF_TOKEN": "y"})
+    env.pop("TRAVAIL")
+    env["PATH"] = f"{faux}:{env['PATH']}"
+    r = subprocess.run(["bash", str(AMORCE)], env=env, capture_output=True, text=True, timeout=300)
+    assert r.returncode == 124 and "fin, code 124" in r.stdout, (r.stdout + r.stderr)[-3000:]
+    assert "plafond de l'amorce atteint" in _git(distant, "log", "-1", "--format=%s", "calcul/p3-jouet-v1")
+    fichiers = _git(distant, "ls-tree", "-r", "--name-only", "calcul/p3-jouet-v1").splitlines()
+    assert any(f.startswith("traces/p3-plafond-") and f.endswith("/empreintes.sha256") for f in fichiers)
+    assert any(f.endswith("/textes-actions-p3.jsonl") for f in fichiers)
+    assert not any(f.endswith("/sondes-figees.npz") for f in fichiers)
 
 
 @pytest.mark.parametrize("ligne, attendu", [

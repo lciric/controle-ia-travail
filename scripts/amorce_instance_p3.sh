@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Amorce de l'instance de calcul du premier test boîte blanche sur l'organisme (i-a) (P3, R-192), lancement en mode
 # « args ». Déclinée de `amorce_instance_t05_notations.sh` sous un nom nouveau (R12) : script `p3_instance.sh`, plafond
-# de 330 minutes, au-dessus du délai externe du run (270 minutes) et sous la surveillance de la session. Une seconde
+# de 360 minutes, au-dessus du délai externe du run (300 minutes) et sous la surveillance de la session. Une seconde
 # exécution refuse de repartir (dossiers présents, R12) : seule la session de pilotage arrête l'instance, par son
 # identifiant (R10).
 # Variables passées par --env à la création de l'instance :
@@ -33,9 +33,9 @@ if ! git -C amorce-depot checkout -q "$COMMIT"; then
     echo "AMORCE : commit $COMMIT introuvable"; exit 1
 fi
 T="$RACINE_AMORCE/p3"
-# plafond de l'ensemble (mise en place, tests, run, poussées) : 330 minutes, au-dessus du délai externe du run (270
+# plafond de l'ensemble (mise en place, tests, run, poussées) : 360 minutes, au-dessus du délai externe du run (300
 # minutes) et sous la surveillance de la session
-timeout --signal=TERM --kill-after=5m 330m env COMMIT="$COMMIT" TRAVAIL="$T" \
+timeout --signal=TERM --kill-after=5m 360m env COMMIT="$COMMIT" TRAVAIL="$T" \
     bash amorce-depot/scripts/p3_instance.sh
 code=$?
 echo "AMORCE $(date -u +%FT%TZ) : fin, code $code"
@@ -45,7 +45,9 @@ if { [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; } && [ -d "$T/controle-ia/.git"
         for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err" "$T/run.err" "$T/run.json"; do [ -f "$f" ] && cp "$f" "$d/"; done
         (cd "$d" && sha256sum -- * > empreintes.sha256) || true
         for f in donnees/*/sondes-figees-legeres.npz donnees/*/sondes-figees-legeres.npz.sha256 donnees/*/scores-p3.npz \
-                 donnees/*/scores-p3.npz.sha256 donnees/*/sondes-figees.npz.sha256; do [ -f "$f" ] && git add -f "$f"; done
+                 donnees/*/scores-p3.npz.sha256 donnees/*/jetons-principales-p3.npz donnees/*/jetons-principales-p3.npz.sha256 \
+                 donnees/*/textes-actions-p3.jsonl donnees/*/textes-actions-p3.jsonl.sha256 \
+                 donnees/*/sondes-figees.npz.sha256; do [ -f "$f" ] && git add -f "$f"; done
         git add -A runs diag "$d" && git commit -qm "P3 : plafond de l'amorce atteint : résultats partiels et traces" || true
         git push -q origin "${BRANCHE:-calcul/p3-${MODE:-reel}-v1}" || echo "AMORCE : poussée impossible"
     )

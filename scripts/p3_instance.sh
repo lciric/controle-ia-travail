@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Premier test boîte blanche sur l'organisme (i-a) (P3, R-192) sur l'instance de calcul : mise en place, tests, un run du
 # lanceur `controle_ia.premier_test_ia.run` (extraction générique, entraînement des sondes, sondes figées avant le premier
-# épisode, épisodes des trois conditions notés en ligne), poussée des résultats, des données légères et des traces (rien
-# ne reste sur l'instance : leçon de N-012). Décliné de `notations_t05_instance.sh` sous un nom nouveau (R12 : le script
+# épisode, épisodes des quatre conditions notés en ligne), poussée des résultats, des données légères et des traces (seul
+# le fichier complet des sondes reste sur l'instance, son sceau poussé : leçon de N-012). Décliné de `notations_t05_instance.sh` sous un nom nouveau (R12 : le script
 # des notations, cité par son préenregistrement, n'est pas modifié). Différences : étude « p3 » ; lecture précoce de la
 # configuration, des tâches et des consignes citées ; données légères du run (sondes figées sans les matrices de
-# Mahalanobis, scores par action, et le sceau du fichier complet des sondes) poussées par ajout forcé ; délai externe de
-# 270 minutes. Lignes de progression du lanceur (préfixe « PROGRES », couples clé=valeur) recopiées dans le journal que lit
+# Mahalanobis, scores par action, scores par jeton des sondes principales, textes des actions, et le sceau du fichier
+# complet des sondes) poussées par ajout forcé ; délai externe de 300 minutes. Lignes de progression du lanceur (préfixe « PROGRES », couples clé=valeur) recopiées dans le journal que lit
 # la surveillance. Rien ne se lance sans GO consigné.
 #
 #   COMMIT=<commit de scellement du préenregistrement de P3> bash p3_instance.sh
@@ -147,11 +147,13 @@ traces() {
     git add "$d" && git commit -qm "P3 : traces de l'instance ($1)" >/dev/null 2>&1 || true
 }
 # données légères du run, par ajout forcé (donnees/ est ignoré par git) : sondes figées sans les matrices de Mahalanobis,
-# scores par action, sceaux, et le sceau du fichier complet des sondes (le fichier complet, trop lourd, reste sur l'instance)
+# scores par action, scores par jeton des sondes principales, textes des actions (dépôt de travail privé seulement, R-202),
+# sceaux, et le sceau du fichier complet des sondes (le fichier complet, trop lourd, reste sur l'instance)
 ajouter_donnees() {
     local f
     for f in donnees/*/sondes-figees-legeres.npz donnees/*/sondes-figees-legeres.npz.sha256 donnees/*/scores-p3.npz \
-             donnees/*/scores-p3.npz.sha256 donnees/*/sondes-figees.npz.sha256; do
+             donnees/*/scores-p3.npz.sha256 donnees/*/jetons-principales-p3.npz donnees/*/jetons-principales-p3.npz.sha256 \
+             donnees/*/textes-actions-p3.jsonl donnees/*/textes-actions-p3.jsonl.sha256 donnees/*/sondes-figees.npz.sha256; do
         if [ -f "$f" ]; then git add -f "$f"; fi
     done
     return 0
@@ -241,10 +243,10 @@ else
 fi
 journal "configuration : $CONFIG ; tâches : $TACHES"
 LANCEUR=(controle_ia.premier_test_ia.run --config "$CONFIG" --taches "$TACHES")
-# délai externe du run, figé (R1) : TERM à 270 minutes, converti en arrêt consigné, puis KILL cinq minutes plus tard ; les
-# échéances internes (duree_max_s, 15 000 s au plus, et le budget de l'entraînement) sont plus courtes. Le signal vise le
+# délai externe du run, figé (R1) : TERM à 300 minutes, converti en arrêt consigné, puis KILL cinq minutes plus tard ; les
+# échéances internes (duree_max_s, 16 200 s, et le budget de l'entraînement) sont plus courtes. Le signal vise le
 # processus lancé par timeout, par son identifiant (R10).
-DELAI=(timeout --signal=TERM --kill-after=5m 270m)
+DELAI=(timeout --signal=TERM --kill-after=5m 300m)
 RUN="$(date -u +%Y%m%d-%H%M%S)-p3-$MODE"
 ETAPE="run $RUN"
 journal "run : $RUN"
