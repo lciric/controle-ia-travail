@@ -49,6 +49,7 @@ if [ "$1" = "-m" ] && [ "$2" = "controle_ia.premier_test_ia.run" ]; then
     echo "ACTION: ADD TITLE: texte d'une action, jamais au journal" >&2
     echo "PROGRES 2026-10-17T10:01:00Z etape=sondes-figees empreinte=abcd sondes=430" >&2
     echo "PROGRES 2026-10-17T10:06:00Z etape=episodes lot=1/23 actions=80" >&2
+    if [ -n "${FAUX_ATTENTE:-}" ]; then echo $$ > "$TRAVAIL/attente"; exec sleep 60; fi
     if [ "${FAUX_RUN:-complet}" = complet ]; then
         echo '{"factice": true}' > "diag/$run/resume.json"; echo '{"run": "factice"}'; exit 0
     fi
@@ -276,20 +277,38 @@ def test_amorce_cas_sain_et_dossiers_presents(bac):
 
 
 TIMEOUT_FACTICE = """#!/usr/bin/env bash
-# timeout factice : le plafond de l'amorce (360m) lance la commande puis rend 124 (délai atteint) ; tout autre délai
-# passe au vrai timeout
+# timeout factice : le plafond de l'amorce (360m) lance la commande dans une session neuve, attend que le run factice ait
+# écrit ses données (il écrit alors son identifiant dans « attente » et dort), puis tue par KILL le script de P3 (son
+# groupe) et le run (son identifiant), avant toute poussée du script, et rend le code __CODE__ ; tout autre délai passe au
+# vrai timeout
 for a in "$@"; do [ "$a" = "360m" ] && plafond=1; done
 [ -n "${plafond:-}" ] || exec __VRAI__ "$@"
 while [ "${1#-}" != "$1" ]; do shift; done
 shift
-"$@"
-exit 124
+T=""
+for a in "$@"; do case "$a" in TRAVAIL=*) T="${a#TRAVAIL=}" ;; esac; done
+setsid "$@" &
+pid=$!
+for i in $(seq 1 600); do
+    [ -s "$T/attente" ] && break
+    sleep 0.1
+done
+kill -KILL -- "-$pid"
+kill -KILL "$(cat "$T/attente")"
+wait "$pid"
+exit __CODE__
 """
+DONNEES_LEGERES = ["jetons-principales-p3.npz", "jetons-principales-p3.npz.sha256", "scores-p3.npz",
+                   "scores-p3.npz.sha256", "sondes-figees-legeres.npz", "sondes-figees-legeres.npz.sha256",
+                   "sondes-figees.npz.sha256", "textes-actions-p3.jsonl", "textes-actions-p3.jsonl.sha256"]
 
 
-def test_amorce_plafond_atteint_traces_poussees(bac):
-    """Plafond de l'amorce (garde d'arrêt, R5) : un `timeout` factice lance le script de P3 puis rend 124 ; l'amorce
-    commite et pousse ses traces de plafond (avec les données légères), et sort avec ce code."""
+@pytest.mark.parametrize("code", [124, 137])
+def test_amorce_plafond_atteint_donnees_et_traces_poussees(bac, code):
+    """Plafond de l'amorce (garde d'arrêt, R5 ; RC-02) : un `timeout` factice tue le script de P3 après l'écriture des
+    données du run et avant sa propre poussée, puis rend 124 ou 137 ; seule l'amorce pousse : son commit « plafond »,
+    dernier de la branche, porte les données légères (dont les textes des actions et les scores par jeton, et leurs
+    sceaux) et les traces, sans le fichier complet des sondes ; l'amorce sort avec ce code."""
     distant = _distant(bac)
     racine = bac["racine"] / "amorce-plafond"
     racine.mkdir()
@@ -297,18 +316,26 @@ def test_amorce_plafond_atteint_traces_poussees(bac):
     faux.mkdir()
     vrai = shutil.which("timeout")
     assert vrai
-    (faux / "timeout").write_text(TIMEOUT_FACTICE.replace("__VRAI__", vrai), encoding="utf-8")
+    (faux / "timeout").write_text(TIMEOUT_FACTICE.replace("__VRAI__", vrai).replace("__CODE__", str(code)),
+                                  encoding="utf-8")
     (faux / "timeout").chmod(0o755)
-    env = _env(bac, distant, "inutile", {"RACINE_AMORCE": str(racine), "GH_TOKEN": "x", "HF_TOKEN": "y"})
+    env = _env(bac, distant, "inutile", {"RACINE_AMORCE": str(racine), "GH_TOKEN": "x", "HF_TOKEN": "y",
+                                         "FAUX_ATTENTE": "1"})
     env.pop("TRAVAIL")
     env["PATH"] = f"{faux}:{env['PATH']}"
     r = subprocess.run(["bash", str(AMORCE)], env=env, capture_output=True, text=True, timeout=300)
-    assert r.returncode == 124 and "fin, code 124" in r.stdout, (r.stdout + r.stderr)[-3000:]
-    assert "plafond de l'amorce atteint" in _git(distant, "log", "-1", "--format=%s", "calcul/p3-jouet-v1")
-    fichiers = _git(distant, "ls-tree", "-r", "--name-only", "calcul/p3-jouet-v1").splitlines()
-    assert any(f.startswith("traces/p3-plafond-") and f.endswith("/empreintes.sha256") for f in fichiers)
-    assert any(f.endswith("/textes-actions-p3.jsonl") for f in fichiers)
-    assert not any(f.endswith("/sondes-figees.npz") for f in fichiers)
+    assert r.returncode == code and f"fin, code {code}" in r.stdout, (r.stdout + r.stderr)[-3000:]
+    branche = "calcul/p3-jouet-v1"
+    # le script n'a rien poussé après sa branche : le seul commit nouveau est celui de l'amorce
+    assert _git(distant, "log", "--format=%s", f"main..{branche}").splitlines() == [
+        "P3 : plafond de l'amorce atteint : résultats partiels et traces"]
+    dernier = _git(distant, "show", "--name-only", "--format=", branche).splitlines()
+    assert sorted(f.split("/", 2)[2] for f in dernier if f.startswith("donnees/")) == DONNEES_LEGERES
+    assert all(f.split("/")[1].endswith("-p3-jouet") for f in dernier if f.startswith("donnees/"))
+    for nom in ("empreintes.sha256", "journal.txt", "run.err", "tests.txt"):
+        assert any(f.startswith("traces/p3-plafond-") and f.endswith(f"/{nom}") for f in dernier), nom
+    assert not any(f.endswith("/sondes-figees.npz") for f in dernier)
+    assert any(f.startswith("runs/") and f.endswith("/manifeste.json") for f in dernier)
 
 
 @pytest.mark.parametrize("ligne, attendu", [

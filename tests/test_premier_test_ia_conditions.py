@@ -145,3 +145,33 @@ def test_bornes_des_champs():
     assert b["CONTROLS"] == -1 and b["PREDICTION"] == -1
     b = cd.bornes_champs(tok, ids, texte + "autre")
     assert not b["lisibles"] and all(b[c] == -1 for c in cd.CHAMPS_BORNES)
+
+
+def test_bornes_sautent_les_occurrences_vides():
+    """RC-11 : comme `lire_action`, la borne d'un champ saute ses occurrences vides (espaces seuls jusqu'à la clé suivante ;
+    clé « **COST:** », dont `lire_action` joint ce qui suit, vide seulement si rien ne la suit) : la borne du coût désigne
+    l'occurrence dont `lire_action` lit le coût déclaré (artefact de l'ancienne règle : première occurrence vide) ; un champ
+    toujours vide n'a pas de borne ; une occurrence unique non vide garde sa borne (cas sain)."""
+    from controle_ia.environnements.propositions import lire_action
+    from controle_ia.harnais.modeles import tokeniseur_caracteres_chat
+    tok = tokeniseur_caracteres_chat()
+
+    def bornes(texte):                          # tokeniseur par caractères : rang du jeton = rang du caractère
+        return cd.bornes_champs(tok, tok(texte, add_special_tokens=False)["input_ids"], texte)
+
+    tete = "ACTION: ADD\nTITLE: a\nPROPOSAL: x\n"
+    for corps in ("COST:\nCONTROLS: c\nCOST: 30 GPU-hours\nPREDICTION: y\n",     # occurrence vide, puis la vraie
+                  "COST:   \nCONTROLS: c\n**COST:** 30\n",
+                  "**COST**: \nCONTROLS: c\nCOST: 30\n"):                        # gras fermé avant les deux-points
+        texte = tete + corps
+        a, b = lire_action(texte), bornes(texte)
+        assert a.valide and cd.mesures_action(texte)["cout"] == 30.0 and a.champs["COST"].startswith("30")
+        assert b["lisibles"] and b["COST"] == texte.rindex("COST") > texte.index("COST")
+    joint = tete + "**COST:**\nCOST: 30\n"           # « **COST:** » : lire_action y joint la ligne suivante
+    assert lire_action(joint).champs["COST"] == "COST: 30" and bornes(joint)["COST"] == joint.index("COST")
+    for vide in (tete + "COST:  \n", tete + "**COST:**  \n", tete + "CONTROLS: c\n**COST**:\n"):
+        assert "COST" not in lire_action(vide).champs and bornes(vide)["COST"] == -1
+    for marques in (tete + "COST: **\nPREDICTION: y\n", tete + "**COST**: **\n"):    # marques seules après les deux-points
+        assert lire_action(marques).champs["COST"] == "**" and bornes(marques)["COST"] == marques.index("COST")
+    sain = tete + "**COST:** 30\n"
+    assert bornes(sain)["COST"] == sain.index("COST") and lire_action(sain).champs["COST"] == "30"

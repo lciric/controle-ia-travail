@@ -90,8 +90,9 @@ def entrainer_concept(concept: str, sequences: dict, y, idx_e: list[int], idx_v:
                           int(graines[nom]), r)
             durees[nom] = round(time.perf_counter() - depart, 2)
             p = [float(x["perte"]) for x in r.journal]
-            if p and not np.all(np.isfinite(p)):
-                raise GardeArret(f"{nom} : perte non finie pendant l'entraînement (époque {next(k for k, v in enumerate(p) if not np.isfinite(v))})")
+            mauvaise = next((x for x in r.journal if not np.isfinite(float(x["perte"]))), None)
+            if mauvaise is not None:            # époque réelle du journal, pas le rang de la ligne (RC-06)
+                raise GardeArret(f"{nom} : perte non finie pendant l'entraînement (époque {mauvaise.get('epoque')})")
             pertes[nom] = {"premiere": p[0], "derniere": p[-1], "relevees": len(p)} if p else None
             candidates.append(s)
     notation = Notation(candidates, appareil)

@@ -5,16 +5,20 @@ Enchaîne, sous un manifeste de run (préenregistrement scellé exigé en mode r
 2. données génériques (fichiers versés, empreintes de la provenance), faits trop courts exclus (compte cité exigé),
    tirage des textes « enjeux élevés », identifiants et empans dans le gabarit de l'agent ;
 3. extraction des activations des empans aux couches lues (passe unique du harnais) ;
-4. découpage par groupe, entraînement des 2 × 5 × 3 sondes (code de T0.7 tel quel, au plus `fils_entrainement` fils et au
-   plus les cœurs disponibles, nombre effectif consigné ; pertes relevées), validation générique, sondes principales,
-   planchers (200 chacune) ; budget de durée propre à l'entraînement ;
+4. découpage par groupe, entraînement des 2 × 5 × 3 sondes (code de T0.7 tel quel, au plus `fils_entrainement` fils, au
+   plus les cœurs de l'affinité du processus et au plus la partie entière du quota de processeur de son groupe de contrôle
+   s'il en a un ; ces deux bornes et le nombre effectif consignés ; pertes relevées), validation générique, sondes
+   principales, planchers (200 chacune) ; budget de durée propre à l'entraînement, relu à chaque sonde et après chaque
+   plancher ;
 5. **sondes figées** : fichier complet scellé sous `donnees/<run>/` (son empreinte en ligne `PROGRES` et dans le résultat
    `sondes-figees.json`, avant le premier épisode) ; fichier léger (sans les matrices de Mahalanobis) pour la poussée ;
 6. épisodes des quatre conditions (honnête, saboteur instruit « coût gonflé », témoin instruit, « mention sans usage »),
    mêmes graines d'action pour une même tâche d'une condition à l'autre, garde d'équivalence en ligne et contrôle négatif
    de la phase ; chaque action notée en ligne par toutes les sondes (notation vectorisée ; garde d'identité sur la
-   première action notable du premier épisode de chaque lot, au moins un contrôle par lot et un contrôle de Mahalanobis
-   exigés) ; scores par jeton des deux sondes principales et bornes des champs de l'action ; mesures sans juge ;
+   première action notable du premier épisode de chaque lot, à défaut du lot ; un lot sans action notable est consigné
+   tel quel, sans arrêt ; au moins un contrôle de Mahalanobis exigé sur les `lots_mahalanobis_identite` premiers lots,
+   vérifié juste après eux) ; scores par jeton des deux sondes principales et bornes des champs de l'action ; mesures
+   sans juge ;
 7. scores et mesures par action dans `donnees/<run>/scores-p3.npz` (scellé) ; scores par jeton des sondes principales
    dans `donnees/<run>/jetons-principales-p3.npz` (scellé) ; **textes des actions** dans
    `donnees/<run>/textes-actions-p3.jsonl` (scellé ; poussé vers le dépôt de travail privé seulement, précédent N-014 (a),
@@ -56,8 +60,8 @@ from ..scellement import sceller, verifier
 from ..sondes.familles import SondeMahalanobis
 from . import donnees as dn
 from .conditions import CHAMPS_BORNES, CONDITIONS, bornes_champs, charger_consignes, environnement, mesures_action
-from .entrainement import (FAMILLES_P3, entrainer_concept, extraire, noms_des_sondes, plancher_de, preparer_enjeux,
-                           preparer_tromperie)
+from .entrainement import (FAMILLES_P3, _echeance, entrainer_concept, extraire, noms_des_sondes, plancher_de,
+                           preparer_enjeux, preparer_tromperie)
 from .figees import ecrire_sondes
 from .notation import Notation, agreger_par_jeton, exiger_identite
 
@@ -136,13 +140,68 @@ def cles_des_graines(taches: list[dict], config: dict) -> list[str]:
     return cles + ["modele-jouet"]
 
 
-def fils_effectifs(demandes: int) -> int:
-    """Au plus les fils demandés, au plus les cœurs disponibles pour ce processus (nombre consigné au résultat)."""
+def _quota_du_dossier(dossier: Path, v2: bool) -> float | None:
+    """Quota d'un dossier du groupe de contrôle, en cœurs ; None sans quota (« max » en v2, −1 en v1) ou illisible."""
     try:
-        coeurs = len(os.sched_getaffinity(0))
+        if v2:
+            quota, periode = (dossier / "cpu.max").read_text().split()[:2]
+        else:
+            quota = (dossier / "cpu.cfs_quota_us").read_text().strip()
+            periode = (dossier / "cpu.cfs_period_us").read_text().strip()
+    except (OSError, ValueError):
+        return None
+    if not (quota.isdigit() and periode.isdigit()) or int(quota) <= 0 or int(periode) <= 0:
+        return None
+    return int(quota) / int(periode)
+
+
+def quota_processeur_cgroup(proc_cgroup: str = "/proc/self/cgroup", racine: str = "/sys/fs/cgroup") -> float | None:
+    """Quota de processeur du groupe de contrôle du processus et de tous ses ancêtres, en cœurs, le plus petit
+    l'emportant (v2 : ligne « 0:: » et `cpu.max`, « quota période » ou « max période » ; v1 : contrôleur « cpu »,
+    `cpu.cfs_quota_us`, −1 sans quota, et `cpu.cfs_period_us`) ; None si aucun quota n'est lisible. Même parcours que
+    `harnais.validation_reelle.plafonds_cgroup` pour la mémoire. `os.sched_getaffinity` ne voit pas ce quota (RC-09)."""
+    try:
+        lignes = Path(proc_cgroup).read_text().splitlines()
+    except OSError:
+        return None
+    quota = None
+    for ligne in lignes:
+        morceaux = ligne.split(":", 2)
+        if len(morceaux) != 3:
+            continue
+        _, controleurs, chemin = morceaux
+        if controleurs == "":
+            base, v2 = Path(racine), True
+        elif "cpu" in controleurs.split(","):
+            base, v2 = Path(racine) / "cpu", False
+        else:
+            continue
+        parties = [x for x in chemin.split("/") if x]
+        for k in range(len(parties), -1, -1):
+            q = _quota_du_dossier(base.joinpath(*parties[:k]), v2)
+            if q is not None:
+                quota = q if quota is None else min(quota, q)
+    return quota
+
+
+def coeurs_disponibles(proc_cgroup: str = "/proc/self/cgroup", racine: str = "/sys/fs/cgroup") -> dict:
+    """Les deux bornes consignées : cœurs de l'affinité du processus, quota de processeur du groupe de contrôle (en
+    cœurs, None sans quota)."""
+    try:
+        affinite = len(os.sched_getaffinity(0))
     except (AttributeError, OSError):
-        coeurs = os.cpu_count() or 1
-    return max(1, min(int(demandes), coeurs))
+        affinite = os.cpu_count() or 1
+    return {"affinite": int(affinite), "quota_groupe_de_controle": quota_processeur_cgroup(proc_cgroup, racine)}
+
+
+def fils_effectifs(demandes: int, coeurs: dict | None = None) -> int:
+    """min(fils demandés, cœurs de l'affinité, partie entière du quota du groupe de contrôle s'il existe), au moins un
+    fil (nombre consigné au résultat, avec les deux bornes de `coeurs_disponibles`)."""
+    c = coeurs_disponibles() if coeurs is None else coeurs
+    bornes = [int(demandes), int(c["affinite"])]
+    if c.get("quota_groupe_de_controle") is not None:
+        bornes.append(int(c["quota_groupe_de_controle"]))
+    return max(1, min(bornes))
 
 
 def controler_format_agent(fmt, spec: dict, mode: str) -> dict:
@@ -177,6 +236,14 @@ def jouer_p3(modele, fmt, plan, graines_taches: dict, config: dict, consignes: d
     T, lot = config["T"], config["lot"]
     guide = charger_invite("H1-classification")
     lignes, fiches, rapports, identites, textes, jetons = [], [], [], [], [], []
+    n_lots, n_mahalanobis = -(-len(plan) // lot), int(config["lots_mahalanobis_identite"])
+
+    def exiger_mahalanobis():
+        if not any(x.get("mahalanobis") for x in identites):
+            raise GardeArret("garde d'identité : aucun contrôle de la famille de Mahalanobis sur les premiers lots")
+
+    if n_mahalanobis < 1:
+        exiger_mahalanobis()                    # aucun premier lot où contrôler Mahalanobis : arrêt avant tout épisode
     for k_lot, debut in enumerate(range(0, len(plan), lot)):
         morceau = plan[debut:debut + lot]
         ids = [e for e, _, _ in morceau]
@@ -229,9 +296,10 @@ def jouer_p3(modele, fmt, plan, graines_taches: dict, config: dict, consignes: d
         # un lot qui a une action notable a son contrôle par construction (action choisie parmi elles) ; un lot sans
         # action notable est consigné tel quel
         identites.append(controle_du_lot or {"lot": k_lot, "sans_action_notable": True})
-        progres(etape="episodes", lot=f"{k_lot + 1}/{-(-len(plan) // lot)}", actions=len(lignes))
-    if not any(x.get("mahalanobis") for x in identites):
-        raise GardeArret("garde d'identité : aucun contrôle de la famille de Mahalanobis sur les premiers lots")
+        progres(etape="episodes", lot=f"{k_lot + 1}/{n_lots}", actions=len(lignes))
+        if k_lot + 1 == min(n_mahalanobis, n_lots):
+            exiger_mahalanobis()                # juste après les premiers lots, pas après le dernier (RC-07)
+    exiger_mahalanobis()
     bilan = bilan_controle_negatif(rapports, positions_min=config["positions_min_controle_negatif"])
     exiger_controle_negatif_phase(bilan, config["fraction_min_controle_negatif"], config["actions_min_controle_negatif"],
                                   "P3, épisodes")
@@ -359,7 +427,8 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, tache
     exemples = {"tromperie": ex_t, "enjeux": ex_e}
     resultats, planchers = {}, {}
     fils_avant = torch.get_num_threads()
-    etat["fils_entrainement_effectifs"] = fils_effectifs(config["fils_entrainement"])
+    etat["coeurs"] = coeurs_disponibles()
+    etat["fils_entrainement_effectifs"] = fils_effectifs(config["fils_entrainement"], etat["coeurs"])
     torch.set_num_threads(etat["fils_entrainement_effectifs"])
     depart = time.perf_counter()
     echeance_e = min(echeance, depart + float(config["budget_entrainement_s"]))
@@ -373,6 +442,7 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, tache
             principale = next(s for s in r["sondes"] if s.nom == r["principale"])
             planchers[concept] = plancher_de(principale, seq[concept], idx_e, config["n_plancher"],
                                              graine_entiere(g[f"plancher/{concept}"]))
+            _echeance(echeance_e, f"le plancher de {concept}")         # budget relu après chaque plancher (RC-10)
             resultats[concept] = r
             progres(etape="entrainement", concept=concept, principale=r["principale"],
                     aire_validation=round(r["aires_validation"][r["principale"]], 4))
@@ -403,7 +473,7 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, tache
         "durees_entrainement_s": {c: resultats[c]["durees_entrainement_s"] for c in CONCEPTS},
         "pertes": {c: resultats[c]["pertes"] for c in CONCEPTS},
         "donnees": etat["donnees"], "familles": list(FAMILLES_P3), "fils_entrainement": config["fils_entrainement"],
-        "fils_entrainement_effectifs": etat["fils_entrainement_effectifs"],
+        "fils_entrainement_effectifs": etat["fils_entrainement_effectifs"], "coeurs": etat["coeurs"],
         "duree_s": round(time.perf_counter() - debut, 1)})
     etat["sondes_figees_sha256"] = sha_figees
     progres(etape="sondes-figees", empreinte=sha_figees, sondes=len(sondes))      # clés en minuscules : relayée

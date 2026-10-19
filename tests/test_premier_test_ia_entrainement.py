@@ -61,19 +61,58 @@ def test_ex_aequo_departages_par_l_ordre(monkeypatch):
     assert r["principale"] == "c-difference_moyennes-c0"
 
 
-def test_perte_non_finie_arrete(monkeypatch):
+@pytest.mark.parametrize("ou", ["ajoutee", "derniere"])
+def test_perte_non_finie_arrete(monkeypatch, ou):
+    """Perte non finie : arrêt ; le message cite l'époque réelle du journal (RC-06), pas le rang de la ligne : une ligne
+    ajoutée à l'époque 99, ou la dernière époque journalisée (299 aux réglages par défaut, rang 1 dans le journal)."""
     from controle_ia.premier_test_ia import entrainement as en
-    vraie = en.entrainer
+    vraie, vue = en.entrainer, {}
 
     def avec_nan(famille, nom, couche, sequences, y, agregation, graine, reglages):
         s = vraie(famille, nom, couche, sequences, y, agregation, graine, reglages)
-        reglages.journal.append({"epoque": 99, "perte": float("nan")})
+        if ou == "ajoutee":
+            reglages.journal.append({"epoque": 99, "perte": float("nan")})
+        elif reglages.journal:                          # familles à époques (la différence de moyennes n'en a pas)
+            reglages.journal[-1]["perte"] = float("inf")
+        else:
+            return s
+        vue["epoque"], vue["rang"] = reglages.journal[-1]["epoque"], len(reglages.journal) - 1
         return s
 
     monkeypatch.setattr(en, "entrainer", avec_nan)
     rng = np.random.default_rng(3)
     seqs = {0: [rng.standard_normal((4, 6)) + (k % 2) for k in range(20)]}
     y = [k % 2 for k in range(20)]
-    with pytest.raises(GardeArret, match="perte non finie"):
+    with pytest.raises(GardeArret, match="perte non finie") as e:
         en.entrainer_concept("tromperie", seqs, y, list(range(16)), list(range(16, 20)), [0],
                              {f"tromperie-{f}-c0": 1 for f in en.FAMILLES_P3})
+    assert vue["epoque"] != vue["rang"] and str(e.value).endswith(f"(époque {vue['epoque']})")
+    assert vue["epoque"] == (99 if ou == "ajoutee" else en.Reglages().epoques - 1)
+
+
+@pytest.mark.parametrize("agregation", ["max", "attention"])
+def test_plancher_a_moins_de_jetons_que_de_dimensions(agregation):
+    """RC-03 (TC-18) : Σ estimée sur moins de jetons que de dimensions (12 jetons, 64 dimensions) est de rang déficient ;
+    la factorisation de Σ + 10⁻⁹ I réussit, et chaque direction tirée (w, et q pour l'attention) vit dans l'espace des
+    jetons d'entraînement centrés, à une composante près de variance 10⁻⁹ par direction orthogonale, soit une norme
+    d'environ √(10⁻⁹ (d − r)) ≈ 2·10⁻⁴ ici, pour des directions de norme ≈ 20 ; les scores restent finis."""
+    from types import SimpleNamespace
+
+    d, rng = 64, np.random.default_rng(11)
+    seqs = {3: [3.0 * rng.standard_normal((6, d)), 3.0 * rng.standard_normal((6, d))]}
+    principale = SimpleNamespace(nom=f"tromperie-{agregation}-c3", couche=3, agregation=agregation)
+    plancher = en.plancher_de(principale, seqs, [0, 1], 50, 7)
+    X = np.concatenate(seqs[3])
+    Xc = X - X.mean(axis=0)
+    r = int(np.linalg.matrix_rank(Xc))
+    assert X.shape[0] < d and r == X.shape[0] - 1 and len(plancher) == 50
+    base = np.linalg.svd(Xc, full_matrices=False)[2][:r]          # base orthonormée de l'espace des jetons centrés
+    attendu = np.sqrt(1e-9 * (d - r))
+    for s in plancher:
+        directions = [s.w] + ([s.q] if agregation == "attention" else [])
+        assert (s.q is None) == (agregation == "max") and np.isfinite(s.b)
+        for v in directions:
+            hors = v - base.T @ (base @ v)
+            assert np.all(np.isfinite(v)) and np.linalg.norm(v) > 5.0 and np.linalg.norm(hors) < 1e-3
+            assert 0.3 * attendu < np.linalg.norm(hors) < 3.0 * attendu
+        assert np.all(np.isfinite(s.scores_par_jeton(rng.standard_normal((5, d)))))

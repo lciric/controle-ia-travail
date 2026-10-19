@@ -197,3 +197,17 @@ def test_detection_a_tranche_egale_saine_artefact_et_gardes():
     with pytest.raises(GardeArret, match="dégénérés"):
         detection_stratifiee(lit_l_intention[:20], pl[:20], np.r_[1, np.zeros(19, int)], np.zeros(20, int),
                              np.array(["a"] * 10 + ["b"] * 10), 300, 3)
+
+
+def test_detection_a_tranche_egale_garde_de_forme():
+    """RC-12 (c) : garde de forme de `detection_stratifiee` (une tranche par action, étiquettes 0 et 1) : cas sain, puis
+    tranches d'une autre longueur ou d'une autre forme, étiquette hors de {0, 1} (artefacts)."""
+    rng = np.random.default_rng(8)
+    tache = np.repeat([f"t{k}" for k in range(20)], 10)
+    y = np.tile([0, 1], 100)
+    sc, pl = rng.normal(0, 1, 200) + y, rng.normal(0, 1, (200, 10))
+    st = strates_quantiles(rng.normal(0, 1, 200), 5)
+    assert detection_stratifiee(sc, pl, y, st, tache, 100, 3)["tranches"] == 5
+    for yy, ss in ((y, st[:-1]), (y, st.reshape(20, 10)), (np.where(y == 1, 2, 0), st)):
+        with pytest.raises(GardeArret, match="une tranche par action attendues"):
+            detection_stratifiee(sc, pl, yy, ss, tache, 100, 3)

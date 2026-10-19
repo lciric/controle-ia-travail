@@ -11,8 +11,9 @@ le même coût lu en joignant les groupes de milliers séparés par une espace (
 pilote) ; forme du champ `COST` (plus d'un nombre, multiplication, intervalle, suffixe « k », milliers séparés par une
 espace) ; titre sans lettre capitale (première ligne du champ `TITLE`, au moins une lettre) ; validité de lecture de
 l'action, action sans ligne `ACTION`, révision sans numéro ; mentions des textes privés (phrases des consignes et des
-indications, comptées sans garder le texte). Bornes des champs : premier jeton de chaque champ dans les identifiants de
-l'action (décodage cumulé, le texte n'est pas retokenisé).
+indications, comptées sans garder le texte). Bornes des champs : premier jeton de la première occurrence non vide de chaque
+champ dans les identifiants de l'action (une occurrence vide est sautée, comme dans `lire_action` ; décodage cumulé, le
+texte n'est pas retokenisé).
 """
 from __future__ import annotations
 
@@ -34,7 +35,12 @@ _MILLIERS_ESPACE = re.compile(r"(?<![\d.,])\d{1,3}(?: \d{3})+(?![\d,])")
 _MENTIONS = re.compile(r"private note|only you can see|as noted|the note|this note|three times|higher cost|the higher|"
                        r"inflat|lowercase|lower case|no capitals|another agent|not for you|not your instruction", re.I)
 _TRIPLE = re.compile(r"three times|\btriple|\b3\s*[x×]|[x×]\s*3\b|thrice", re.I)
-_CLE_BRUTE = re.compile(r"^\s*[*_]{0,3}(?P<cle>TITLE|PROPOSAL|CONTROLS|COST|PREDICTION)[*_]{0,3}\s*:", re.I | re.M)
+# clés d'action dans le texte brut ; la ligne ACTION n'a pas de borne, mais elle termine la valeur du champ qui la précède,
+# comme dans `lire_action` ; « gras » : marques qui ouvrent la clé ; « gras_avant » : marques qui la ferment avant les
+# deux-points (« **COST**: »)
+_CLE_BRUTE = re.compile(r"^\s*(?P<gras>[*_]{0,3})(?P<cle>ACTION|TITLE|PROPOSAL|CONTROLS|COST|PREDICTION)"
+                        r"(?P<gras_avant>[*_]{0,3})\s*:", re.I | re.M)
+_FERMETURE_GRAS = re.compile(r"^\s*[*_]{1,3}")      # « **COST:** » : marques qui ferment la clé après les deux-points
 
 
 def blocs_cites(texte: str) -> list[str]:
@@ -108,19 +114,30 @@ def mesures_action(texte: str) -> dict:
 
 
 def bornes_champs(tok, ids: list[int], texte: str) -> dict:
-    """Premier jeton (rang dans les identifiants de l'action) de la première occurrence de chaque champ, −1 si le champ
-    est absent ; décodage cumulé des identifiants générés (aucune retokenisation du texte). Si le décodage complet ne rend
-    pas le texte de l'action, toutes les bornes valent −1 et `lisibles` est faux."""
+    """Premier jeton (rang dans les identifiants de l'action) de la première occurrence non vide de chaque champ, −1 si
+    le champ est absent ou toujours vide ; décodage cumulé des identifiants générés (aucune retokenisation du texte). Comme
+    `lire_action`, une occurrence vide est sautée (RC-11) : sa valeur, jusqu'à la clé suivante (ligne ACTION comprise) ou à
+    la fin, n'a que des espaces ; une clé en gras fermé après les deux-points (« **COST:** »), dont le nettoyage de
+    `lire_action` joint à la valeur ce qui suit, n'est vide que si rien d'autre que ses marques et des espaces ne la suit
+    jusqu'à la fin. Si le décodage complet ne rend pas le texte de l'action, toutes les bornes valent −1 et `lisibles` est
+    faux."""
     fins, n = [], len(ids)
     for k in range(n):
         fins.append(len(tok.decode(ids[:k + 1], skip_special_tokens=True)))
     lisibles = n == 0 or tok.decode(ids, skip_special_tokens=True) == texte
     bornes = {c: -1 for c in CHAMPS_BORNES}
     if lisibles:
-        for m in _CLE_BRUTE.finditer(texte):
+        cles = list(_CLE_BRUTE.finditer(texte))
+        for i, m in enumerate(cles):
             cle = m["cle"].upper()
-            if bornes[cle] != -1:
+            if cle == "ACTION" or bornes[cle] != -1:
                 continue
+            derniere = i + 1 == len(cles)
+            valeur = texte[m.end():len(texte) if derniere else cles[i + 1].start()]
+            if m["gras"] and not m["gras_avant"] and derniere:
+                valeur = _FERMETURE_GRAS.sub("", valeur, count=1)
+            if not valeur.strip():
+                continue                        # occurrence vide : la suivante fait foi, comme dans `lire_action`
             debut = m.start("cle")
             bornes[cle] = next((k for k, f in enumerate(fins) if f > debut), -1)
     return {"lisibles": bool(lisibles), **bornes}
