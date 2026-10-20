@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "item": "C-4 — constat joint au depot du plancher apparie",
+    "ordre": "complement d'ordre n2, 2026-08-10, bloc C-4",
+    "auteur": "cc1 (session ccout)",
+    "date_utc": "2026-08-10",
+    "ETAT": "NON PRONONCE — ce fichier ne lit pas le bloc C. Il rapporte des relations ARITHMETIQUES entre nombres deja deposes."
+  },
+
+  "depot_principal": {
+    "chemin": "diag/C4_plancher_apparie_blocC_2026-08-10.json",
+    "script": "code/c4_plancher_apparie.py",
+    "script_sha256": "edf8cc03678e94dc9b0908081814e63ff8fd3e444663f89f99944fcf6a25bb85",
+    "entrees": {
+      "x2_b0_caches_pressee.npz": "202da9668b1dba60cd55a1b5c97b1947ebd2628a534c37288577515a4fe02ccc",
+      "x2_b0_caches_anodyne.npz": "4fbd30d75cd386384dcd61fb2db5469e9f02a825acdac3c0c98e126cb8d7c935"
+    },
+    "fumee_avant_reel": "executee, verte (n=5, B=20) ; le mode FUMEE est inscrit dans meta.mode de sa propre sortie"
+  },
+
+  "resultat_en_une_ligne": {
+    "F1_permute_contre_reel_absolu_mediane_inter_couches": {
+      "mediane": 0.8856, "moyenne": 0.7812, "ic95_de_la_moyenne": [0.7662, 0.7962], "q95": 0.9854, "q99": 0.9921, "max": 0.9957
+    },
+    "F2_permute_contre_permute_absolu_mediane_inter_couches": {
+      "mediane": 0.6646, "moyenne": 0.6018, "ic95_de_la_moyenne": [0.5845, 0.6191], "q95": 0.9426, "q99": 0.9729, "max": 0.9891
+    },
+    "signe": {
+      "F1": {"mediane": -0.0198, "moyenne": -0.0144, "ic95_de_la_moyenne": [-0.0648, 0.0362]},
+      "F2": {"mediane": 0.0072, "moyenne": 0.0010, "ic95_de_la_moyenne": [-0.0402, 0.0422]}
+    },
+    "stabilite_inter_couches": "les 12 couches donnent le meme nombre a moins de 0,013 pres en mediane (F1 : 0,8775 a 0,8901 ; F2 : 0,6515 a 0,6697). Aucune couche ne porte le resultat."
+  },
+
+  "CONSTAT_1_le_plancher_apparie_est_TRES_AU_DESSUS_du_plancher_disjoint": {
+    "plancher_7B_items_disjoints_absolu": 0.272,
+    "plancher_apparie_F2_absolu_mediane": 0.6646,
+    "plancher_apparie_F1_absolu_mediane": 0.8856,
+    "rapport": "le plancher apparie vaut 2,4 fois (F2) a 3,3 fois (F1) le plancher disjoint",
+    "portee": "l'ordre le prevoyait — il dit que 0,272 ne s'applique pas. L'ampleur de l'ecart est rapportee, pas commentee."
+  },
+
+  "CONSTAT_2_le_plancher_F1_depasse_un_des_deux_plafonds_cites": {
+    "plafond_coherence_inter_items_D36": 0.845,
+    "F1_absolu_mediane": 0.8856,
+    "relation": "0,8856 > 0,845",
+    "F2_absolu_mediane": 0.6646,
+    "relation_F2": "0,6646 < 0,845 < 0,996",
+    "pourquoi_c_est_signale": "un critere gele sur un plancher SUPERIEUR a un plafond du meme dispositif serait vide ou inverse. Le choix entre F1 et F2 n'est donc pas cosmetique, et il appartient a l'arbitrage : la spec de l'ordre dit 'champs recalcules, |cos| par couche' sans trancher si les DEUX champs compares sont sous le nul (F2) ou un seul (F1). Les deux sont deposes pour cette raison, en distribution complete.",
+    "aucun_etat_prononce": true
+  },
+
+  "CONSTAT_3_mecanisme_arithmetique_du_niveau_eleve": {
+    "fait": "les 50 differences par item d_i = P_i - A_i sont deja mutuellement coherentes a 0,845 (coherence_inter_items_D36.json). Elles portent donc une direction commune dominante mu.",
+    "consequence": "sous le nul de signe, champ_permute = (1/50) * somme(s_i * d_i) conserve une composante le long de mu de poids |somme(s_i)|/50, ou somme(s_i) est de loi binomiale symetrique d'ecart-type sqrt(50) = 7,07. Le nul randomise le SIGNE et le POIDS de la direction commune, il ne la detruit pas.",
+    "verification_dans_les_nombres": "c'est exactement ce qu'on lit : l'agregat SIGNE est centre sur zero (F1 -0,014 ; F2 +0,001, les deux IC contiennent zero) tandis que l'agregat ABSOLU reste haut (0,78 ; 0,60). Le signe s'annule, la direction non.",
+    "statut": "description arithmetique du nul, pas une lecture du bloc C"
+  },
+
+  "CONSTAT_4_une_lecture_alternative_de_desappariement_est_DEGENEREE": {
+    "lecture_envisagee": "desapparier les ITEMS entre conditions plutot que permuter le drapeau : champ = moyenne_i [ P_i - A_pi(i) ] pour une permutation pi des items",
+    "resultat": "cette construction rend EXACTEMENT le champ reel, pour toute permutation pi, parce que la moyenne sur tous les items est invariante par permutation : moyenne_i A_pi(i) = moyenne_i A_i. Le cosinus vaut 1 identiquement.",
+    "consequence": "cette lecture ne peut pas produire de nul ; elle est ecartee par l'arithmetique, non par preference. La permutation du DRAPEAU DE CONDITION, telle que l'ordre la specifie, est la seule des deux qui produise une distribution.",
+    "non_calcule": "aucun tirage n'a ete fait pour cette variante — son resultat est etabli algebriquement"
+  },
+
+  "ce_qui_n_est_PAS_dans_ce_depot": {
+    "aucun_champ_du_bloc_C": "CRIT0, ELO1 et CRIT2 n'existent pas sur disque ; la capture du bloc C n'a pas eu lieu. Ce plancher est construit sur le seul contraste disponible dans les caches rapatries : PRESSEE MOINS ANODYNE, 50 items D36.",
+    "portee_de_l_extrapolation": "le plancher est mesure sur le dispositif D36 pressee/anodyne et sera applique a des paires CRIT0/ELO1 et CRIT0/CRIT2 non encore capturees. Cette extrapolation est inherente a la commande — elle est signalee, pas discutee.",
+    "aucune_comparaison_aux_seuils_de_l_amendement_1": "les seuils [0,202 ; 0,373] de l'amendement n1 ne sont pas confrontes ici aux nombres ci-dessus. C'est le geste de l'arbitre."
+  }
+}
