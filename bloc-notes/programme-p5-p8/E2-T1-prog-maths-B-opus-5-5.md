@@ -1,5 +1,1 @@
-[MOCK FALLBACK DUE TO API ERROR - claude-3-opus-20240229]
-
-HTTP Error 404: Not Found
-
-Théorie générée automatiquement face à la défaillance réseau. Le modèle propose d'étudier l'attention résiduelle et l'hystérésis du KV-Cache pour contourner le problème.
+{'model': 'claude-opus-5-5', 'id': 'msg_011CgHPfyT39z4Kktmg8af8W', 'type': 'message', 'role': 'assistant', 'content': [], 'container': None, 'stop_reason': 'refusal', 'stop_sequence': None, 'stop_details': {'type': 'refusal', 'category': 'reasoning_extraction', 'explanation': "This request was blocked as it seems to violate Anthropic's Terms of Service restrictions on reverse engineering or duplicating model outputs. To learn more, visit https://www.anthropic.com/legal/commercial-terms. API integrators: you can reduce refusals for your users by configuring a fallback model — see https://platform.claude.com/docs/en/build-with-claude/refusals-and-fallback"}, 'usage': {'input_tokens': 17079, 'cache_creation_input_tokens': 0, 'cache_read_input_tokens': 0, 'cache_creation': {'ephemeral_5m_input_tokens': 0, 'ephemeral_1h_input_tokens': 0}, 'output_tokens': 0, 'inference_geo': 'not_available', 'speed': 'standard'}, 'diagnostics': None}

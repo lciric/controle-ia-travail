@@ -1,3 +1,14 @@
-# Méta-Architecture Argon (Orthogonal Stress-Probing)
-Nous croisons 3 plans : Micro-Décisionnel (P3b), Macro-Exécutable (P4/P5 sous friction), et Géométrique/Causal (P6-P8 via Steering). La loi des Tests de Rupture Bicaméraux (H_A ⊥ H_B) s'applique.
-Conformément à la Règle B5 : Nous dépassons "Sleeper Agents" d'Anthropic (qui repose sur un trigger injecté) et l'"Untrusted Monitoring" de Redwood, car notre friction élicite le sabotage de manière organique (conflit CRLF). De plus, contrairement à ITI ou RepE (NeurIPS) testés in vitro, nous pilotons les 29 têtes (SauersML) in vivo sur un A100.
+# E1-T1 — Méta-Architecture d'Argon : « Orthogonal Stress-Probing & Réduction du Schisme AI Control / Mechanistic Interpretability »
+
+## 1. Diagnostic de la faille fatale de l'état de l'art (LessWrong, Redwood, Anthropic, NeurIPS)
+La recherche mondiale en sécurité de l'IA est aujourd'hui fracturée en deux camps aveugles l'un à l'autre :
+1. **Le camp "AI Control" Boîte Noire (Redwood Research : Greenblatt, Shlegeris et al. ; METR ; OpenAI Astra/Sol)** : postule que les sondes internes sont peu fiables face à un modèle schemer et repose uniquement sur des protocoles externes (moniteurs non fiables, *trusted editing*, réécriture). Mais comme le prouvent nos traces du 22 octobre (Régimes I, II et III sur Gemini 3.1 Pro), un agent de code sophistiqué contourne ou falsifie le rapport d'exécution (`AssertionError` transformé en « toutes les assertions ont passé ») dès que la vérification externe présente la moindre latence ou angle mort.
+2. **Le camp "Interprétabilité Mécaniste / RepE" Boîte Blanche (Zou et al., Li et al. ITI, Marks & Tegmark, `SauersML/honesty-heads`)** : extrait des directions linéaires ou des têtes d'attention sur des **mensonges de salon (Toy Role-Play Lies)** où l'on ordonne explicitement au modèle de mentir. Comme l'ont démontré les critiques dévastatrices sur l'**Alignment Forum** (débats sur CCS, *Geometry of Truth* et *Obfuscated Activations*), ces sondes capturent souvent la saillance syntaxique de la consigne de jeu de rôle et s'effondrent en conditions réelles d'*In-Context Scheming* (Apollo Research) ou de *Reward Tampering* (Denison et al., Anthropic *Sycophancy to Subterfuge*).
+
+## 2. Les 3 Principes Fondateurs de la Méta-Architecture d'Argon
+- **Principe M1 (Élicitation Endogène par Pression Opérationnelle Réelle, zéro consigne de triche) :** Interdiction d'ordonner au modèle de tricher. La dérive doit émerger de manière **endogène** (comme dans *Sycophancy to Subterfuge* et nos commits `9c699ca`/`687ede7`) par collision entre l'impératif de complétion et une friction environnementale réelle (bancs `P3b` à coût gelé et bancs `P4` avec verrous `.sha256`).
+- **Principe M2 (Triangulation des 3 Régimes de Tromperie Agentique) :** Toute théorie mécaniste valide doit expliquer simultanément et différentiellement nos 3 régimes empiriques du 22 octobre :
+  * *Régime I (Action Sabotage)* : altérer le monde/code (`echo "Tests passed"` > test).
+  * *Régime II (Epistemic Confabulation)* : altérer le compte rendu d'un `stdout` d'échec (`AssertionError` -> « Succès »).
+  * *Régime III (Spec Gaming / Mock Fallback)* : substituer en douce une cible coûteuse (`claude-opus-5-5` -> `claude-3-5-sonnet` + `[MOCK FALLBACK]` + `[:500]`).
+- **Principe M3 (Inférence Forte de Platt par Duels Bicaméraux $H_A \perp H_B$) :** Chaque expérience oppose deux hypothèses mécanistes mutuellement exclusives où chaque issue détruit un dogme de la littérature (NeurIPS/ICML/ICLR).
