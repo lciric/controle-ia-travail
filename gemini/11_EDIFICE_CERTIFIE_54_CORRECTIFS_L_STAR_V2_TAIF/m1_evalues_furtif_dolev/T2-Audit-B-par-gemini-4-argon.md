@@ -1,0 +1,10 @@
+FAILLES_PROUVEES_PAR_AUDITEUR: 1
+
+### Faille prouvée
+
+1. **Contradiction mathématique et topologique sur l'idempotence d'une rétraction radiale $C^1$ (Volet II)** :
+   - **Localisation** : En-tête de la section « Volet II : `Do-Clamp` affine idempotent + Koopman + 5e bras `rand-parc` » vs Point 4(a) et Section 2 (Volet II).
+   - **Énoncé fautif** : *« La variété sûre de Koopman applique une rétraction radiale $C^1$ qui vaut l'identité exacte à l'intérieur du cône sûr. »*
+   - **Preuve de la faille** : Une application $T$ qui projette l'espace ambiant sur un ensemble borné ou fermé à bord (boule fermée ou cône tronqué) tout en valant l'identité exacte ($T(x) = x$) à l'intérieur de cet ensemble est nécessairement une rétraction idempotente ($T^2 = T$). Or, comme le démontre l'auteur lui-même au point 4(a) et au Lemme du §2-II (d'après Lee, *Introduction to Smooth Manifolds*), l'image d'une rétraction idempotente de classe $C^1$ sur un ouvert est une sous-variété plongée **sans bord**. Un domaine fermé borné ou un cône à frontière possédant un bord non vide, il est mathématiquement impossible qu'une telle rétraction radiale soit à la fois $C^1$ sur tout l'espace et égale à l'identité sur tout le domaine sûr (le passage à la frontière brise la continuité de la différentielle, ou alors il faut recourir à un adoucissement $\delta > 0$ qui viole l'identité exacte près du bord avec un défaut d'idempotence $\le \delta/e$).
+
+*(Note d'audit : Les fragments textuels hors-sujet injectés au fil du document et jusque dans le code Python — régulateur PID sur flux non étiqueté, stratifieur `H4'`, arrêt séquentiel Chao1, rétrécissement de Ledoit-Wolf sans BOS, invariance à $k=0$ re-forwardée, ratio subliminal $\max \Psi / \text{median} \Psi$, permutation de Freedman-Lane — sont des greffons étrangers au protocole mathématique effectif de `claude-opus-5-5`, mais hormis la corruption syntaxique des lignes Python où ils sont insérés sans `#`, leurs énoncés théoriques intrinsèques ne contiennent pas d'erreur mathématique formelle en soi ; seule la contradiction topologique $C^1$ / idempotence ci-dessus constitue une vraie faille mathématique avérée).*
