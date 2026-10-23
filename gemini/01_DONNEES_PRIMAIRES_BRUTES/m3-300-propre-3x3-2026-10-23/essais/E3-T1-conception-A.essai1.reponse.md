@@ -1,0 +1,159 @@
+# Proposition A — Tour III.1 : conception ciblée, à l'aveugle
+
+## 0. État des pièces transmises (règle 2, une ligne par défaut)
+
+- **Champions Opus absents** : l'annexe 3 annonce « 30 Champions (10 Fable + 10 Opus + 10 Argon) » ; elle en contient 20 (10 Fable + 10 Argon), zéro `claude-opus-5-5`. Aucune ligne Opus non plus en annexes 1 et 2. Je n'invente rien sur Opus.
+- **Troncatures** : la question affirme « zéro caractère coupé » ; 18 des 20 champions se terminent au milieu d'une formule ou d'un mot (« on bascule en chim », « $\mathcal{M$ », « $K(y_j|y_$ », « $\mathbb{1$ », « $H_A \perp H$ », « - **Ét »…). Seuls Fable #01 et, peut-être, Argon #08 semblent entiers. Toute section 3 (« pont inédit et duel ») est absente ou coupée pour les 10 Argon. Je ne reconstitue pas le contenu manquant.
+- **Annexe 2** : annoncée « Top 60 », elle contient 34 lignes (14 Fable + 20 Argon).
+- **Effectifs réels** (annexe 1, statut OBSERVÉ-NON-AUDITÉ) : Fable 1+3+4+3+2+1 = **14 valides sur 100** ; Argon 9+7+6+9+6+6+6+6+7+7 = **69 sur 100** ; Opus **0 rapporté sur 100**. Total : **83 sorties scorées sur 300 annoncées**. Le critère de « validité » n'est pas défini.
+- **Contexte antérieur** : « suite au diagnostic de votre tour précédent » et « le *vrai* `jev-1.14.0` » renvoient à des pièces que je ne vois pas ; je ne sais pas ce qui a été réparé ni ce qu'était le « faux » jev.
+
+Ces défauts ne sont pas cosmétiques : la question demande une « analyse comparative 100 vs 100 vs 100 » que les pièces ne permettent pas, et une « Loi Mère » fusionnée que la règle B1 m'interdit de produire. Je réponds donc au livrable (a)–(d) du tour, et je dis en §5 ce que je fais de la demande de fusion.
+
+---
+
+## (a) Ce que la question suppose sans l'établir
+
+| # | Présupposé | Statut réel | Pourquoi ce n'est pas établi |
+|---|---|---|---|
+| A1 | `jev-1.14.0` mesure la rigueur scientifique (score « Rigueur » jusqu'à 2,07). | OBSERVÉ-NON-AUDITÉ (les scores) ; HYPOTHÈSE (leur validité) | Les faits décrivent jev comme « classifieur/moniteur non génératif ». Aucune calibration, aucune vérité-terrain, aucune échelle (le composite est-il borné ? la « Rigueur » > 1 ?) n'est fournie. Les sous-scores `Duels` (0,04–0,27 sauf un à 0,68) et `Contrôles` (0,04–0,11) sont au plancher pour *tous* les champions : jev lui-même ne trouve quasi aucun duel ni contrôle négatif dans les textes qu'il classe « rigoureux ». |
+| A2 | Le sens des sous-scores est connu (haut = bon). | HYPOTHÈSE | Pour `Hyp=Rés` (0,29–0,85), si haut = « hypothèse présentée comme résultat », les champions violent massivement la règle 1 ; si haut = conformité, l'inverse. La direction n'est pas donnée. |
+| A3 | Le composite est une agrégation raisonnée des 6 questions. | HYPOTHÈSE | Sur 34 lignes, le composite suit la « Rigueur » (toujours inférieur, ordre quasi conservé) et ignore les sous-scores au plancher. La formule d'agrégation est absente. |
+| A4 | Les « 10 vagues de déflation séquentielle » ont un effet mesurable. | HYPOTHÈSE | « Déflation » n'est pas défini. Les moyennes Argon par vague (0,80 ; 0,55 ; 0,52 ; 0,57 ; 0,66 ; 0,57 ; 0,69 ; 0,76 ; 0,64 ; 0,58) n'ont aucune tendance ; l'écart intra-vague (min ≈ 0,02–0,37, max ≈ 0,97–1,53) dépasse de loin l'écart inter-vague. Pour Fable, 6 vagues sur 10 ont $n\le 4$ et 4 vagues $n=0$. |
+| A5 | Les 300 explorateurs ont tourné et été scorés « un par un ». | RAPPORTÉ | 217 sorties sont sans score. Non-valide = non scoré ? scoré 0 ? refus ? coupure de longueur ? Inconnu. |
+| A6 | La sélection « DPP » a produit les 30 (en fait 20) meilleurs-divers. | RAPPORTÉ | Noyau, taille, critère du DPP non décrits. Trois champions Argon (#07 à 0,85 ; #08 à 0,75 ; #10 à 0,71) ne figurent pas dans le top 20 Argon (plancher 0,87) — compatible avec un DPP, mais le 2e meilleur Fable (NDYS, 1,24, seul représentant du Cône-08 chez Fable) est exclu sans que la diversité l'explique. |
+| A7 | Les différences inter-espèces reflètent une « manière de concevoir l'auto-organisation ». | HYPOTHÈSE | Avec 14 % de validité Fable contre 69 % Argon, les textes Fable survivants sont un échantillon sélectionné par un filtre inconnu (probablement la longueur, vu les troncatures). Comparer les contenus revient à comparer des survivants de deux filtres différents. |
+| A8 | jev fournit des embeddings, des similarités, des probabilités, une compression (NCD). | HYPOTHÈSE (utilisée par 19/20 champions) | Les faits ne lui attribuent qu'un rôle de classifieur. Fable #01 (NCD), #03 (plongement pour DMD), #05 (distributions $p_i$), Argon #01 (fonction de structure), #02 (`jev_sim`), #04 (`P_jev(H_A)`), #05 (log-probabilités $\theta_v$), #08 (embeddings)… reposent sur des capacités non établies. |
+| A9 | « Résister à la loi de Goodhart » se juge à la lecture des 20 textes. | HYPOTHÈSE | Chaque champion prend jev comme objectif *et* est noté par jev. La résistance à Goodhart est une propriété de la boucle (objectif, juge, vérité-terrain indépendante) ; elle ne se lit pas dans un texte, elle se mesure (§b, E1). |
+| A10 | Les 300 explorations tenaient dans 100 USD + 20 USD. | RAPPORTÉ | Coût par explorateur non donné ; budget résiduel pour $\mathcal{M}_2$/$\mathcal{M}_1$ inconnu. |
+| A11 | H4' (corrélation par poids partagés) et H9 (érosion par délégation) sont des faits à « vaincre ». | HYPOTHÈSE (faits §1, Papier B) | Ce sont des hypothèses du projet. Observation directe sur pièce (auditable par relecture de l'annexe 3) : **aucun des 20 champions ne contient la marque « (référence à vérifier) »**, alors que la consigne la rend obligatoire. Si cette consigne figurait dans le prompt des explorateurs (je l'ignore), H9 n'a même pas besoin de $k$ délégations : la contrainte est morte à $k=0$ dans 20/20 cas. |
+| A12 | Les expériences sur Llama-3.1 (ablations, do-interventions) invoquées par 10 champions relèvent de $\mathcal{M}_3$. | HYPOTHÈSE | Elles relèvent de $\mathcal{M}_1$ et coûtent du GPU ; aucune n'est spécifiée au-delà d'un symbole $\mathbb{I}(H_A\perp H_B)$. |
+
+---
+
+## (b) Duels décisifs (règle B4 : chaque issue falsifie quelque chose)
+
+Tous les duels E1–E5 sont exécutables à **coût génératif nul** (jev illimité, API de littérature gratuites, les 83 textes déjà produits). E6 engage du budget (chiffres illustratifs).
+
+### E1 — jev est-il un juge de rigueur ou un détecteur de formalisme ?
+
+- **H_A** : le composite jev suit des propriétés mécaniquement vérifiables (références résolvables sur Crossref/S2 ; duel à deux issues explicites ; contrôle négatif nommé).
+- **H_B** : le composite suit des marqueurs de surface (densité d'éponymes « Parisi/Kurchan/Bockstein… », densité LaTeX, longueur).
+- **Protocole** : pour chacun des 83 textes valides, 4 variantes à contenu logique constant : (i) original ; (ii) éponymes remplacés par « méthode X$_n$ » ; (iii) duel/contrôle supprimés si présents, ou ajoutés s'ils manquent (un paragraphe « Si X, H_A falsifiée ; si non-X, H_B falsifiée ; contrôle : …») ; (iv) 3 références fabriquées insérées avec format impeccable.
+- **Métrique** : $\Delta$ composite par variante ; Spearman entre composite et (a) index mécanique $R_{mec}\in[0,1]$ (fraction de refs résolvables × présence duel × présence contrôle), (b) densité d'éponymes par 100 mots.
+- **Seuils (illustratifs)** : H_A falsifiée si $|\Delta_{(ii)}| > 0{,}3$ *et* $|\Delta_{(iii)}| < 0{,}1$, ou si $\rho(\text{composite},R_{mec}) < \rho(\text{composite},\text{éponymes})$. H_B falsifiée si $\Delta_{(ii)}\approx 0$ et $\Delta_{(iii)}$ dépasse 0,3 dans le sens attendu, et si (iv) fait *baisser* le score.
+- **Contrôle négatif** : permutation aléatoire des scores entre textes (toute corrélation doit tomber à 0 ± 0,1) ; et un texte lorem-ipsum saturé d'éponymes et de LaTeX, qui doit scorer sous le quantile 10 %.
+- **Ce que chaque issue tue** : H_B vraie ⇒ tous les champions qui optimisent `jev_sim`, `jev_vernis`, « Rigueur jev » comme signal (19/20) sont des machines à Goodhart ; H_A vraie ⇒ les sous-scores `Duels`/`Contrôles` au plancher sont une mesure honnête, et les 20 champions sont à rejeter sur le fond pour absence de duel.
+
+### E2 — Les vagues de déflation ont-elles un effet ?
+
+Le plan annexe 1 est un carré 10 vagues × 10 cônes avec une observation par cellule (k=001–010 pour V01, 011–020 pour V02, …), donc une ANOVA à deux facteurs sans réplication sur Argon (69 cellules remplies).
+
+- **H_A** : la vague explique une part de variance du composite (ou de `Hyp=Rés`) supérieure à celle du cône, avec tendance monotone (test de Jonckheere-Terpstra).
+- **H_B** : la variance est portée par le cône et le bruit ; la vague n'explique rien.
+- **Seuil (illustratif)** : H_A falsifiée si $\eta^2_{\text{vague}} < \eta^2_{\text{cône}}$ et $p_{JT} > 0{,}1$. H_B falsifiée si $\eta^2_{\text{vague}} \ge 0{,}25$ avec tendance monotone.
+- **Contrôle négatif** : mélanger les étiquettes de vague (doit donner $\eta^2_{\text{vague}}$ nul).
+- **Issue** : H_B vraie ⇒ les 9 vagues après la première ont coûté 90 % du budget $\mathcal{M}_3$ pour rien de mesurable ; le pipeline $\mathcal{M}_2$ doit être en une vague large plutôt qu'en vagues séquentielles.
+
+### E3 — Pourquoi 86 % des Fable sont-ils « invalides » ?
+
+- **H_A** : l'invalidité est un artefact de longueur/format (sortie coupée avant `FIN-DE-CHAMPION-M3`, délimiteur manquant).
+- **H_B** : l'invalidité est de contenu (refus, absence de `LOI_PROPOSEE`, texte hors cône).
+- **Métrique** : sur les 217 sorties non valides, longueur en octets, présence du délimiteur, présence des champs ; corrélation entre validité et longueur.
+- **Seuil (illustratif)** : H_A falsifiée si < 50 % des invalides sont tronqués à une longueur plafond commune ; H_B falsifiée si > 80 % le sont.
+- **Contrôle** : relancer 10 Fable avec un plafond de sortie doublé (coût illustratif ≈ 1–3 USD) ; H_A prédit un taux de validité > 50 %.
+- **Issue** : H_A vraie ⇒ toute « comparaison d'espèces » du tour est un artefact de troncature, et Fable #02–#10 tronqués ne peuvent être « champions » de rien.
+
+### E4 — H4' dans l'essaim lui-même : les erreurs sont-elles corrélées par espèce ou par cône ?
+
+- **H_A** (H4') : le vecteur d'échecs mécaniques (références non résolvables, duel absent, contrôle absent, marque « référence à vérifier » absente) est plus corrélé intra-espèce qu'inter-espèce, à cône fixé.
+- **H_B** : la corrélation est portée par le cône (même sujet ⇒ mêmes erreurs), pas par les poids.
+- **Métrique** : $\bar r_{intra} / \bar r_{inter}$ des vecteurs d'échec, calculé par cône, sur les 83 textes ; modèle mixte échec ~ espèce + cône.
+- **Seuil (illustratif)** : H_A falsifiée si le ratio ≤ 1,1 après conditionnement par cône ; H_B falsifiée si le ratio ≥ 1,5 et que l'effet espèce reste significatif à cône fixé.
+- **Contrôle négatif** : permuter les étiquettes d'espèce (ratio attendu 1 ± 0,1).
+- **Issue** : H_A vraie ⇒ les chimères sont justifiées et on sait *quelle* classe d'erreur elles décorrèlent ; H_B vraie ⇒ « monoculture vs chimère » est un faux problème pour $\mathcal{M}_2$, et l'argent doit aller à la diversité de *cônes*, pas d'espèces. Remarque : Fable n'a que 14 textes ; la puissance est limitée et doit être calculée avant d'annoncer un résultat.
+
+### E5 — H9 : la contrainte « (référence à vérifier) » survit-elle à $k$ délégations ?
+
+- **H_A** : la conformité décroît géométriquement, $c_k = c_0\,\rho^k$ avec $\rho<1$ ; l'antidote est la réinjection de la consigne à chaque saut (comme le propose Fable #01, règle (d)).
+- **H_B** : la conformité est nulle dès $k=0$ ($c_0\approx 0$, observation sur pièce : 0/20) ; le problème n'est pas l'érosion, c'est l'absence d'ancrage initial, et aucune réinjection ne changera rien.
+- **Protocole** : chaîne de 1 → 4 délégations sur Gemini (coût illustratif ≈ 2–5 USD), consigne explicite, comptage mécanique (regex) de la marque et des références non résolvables.
+- **Seuil (illustratif)** : H_A falsifiée si $c_0 < 0{,}3$ ; H_B falsifiée si $c_0 \ge 0{,}7$ et $c_4 < 0{,}3$.
+- **Contrôle** : même chaîne sans la consigne (doit donner 0 à tous les $k$).
+
+### E6 — Routage piloté par jev vs routage aléatoire, à budget égal (le seul duel qui teste une « loi d'organisation »)
+
+- **H_A** : un essaim où jev filtre/route (schéma commun à 19/20 champions : filtre jev gratuit → Gemini → Claude) produit, à budget constant, plus de sorties passant les vérifications mécaniques qu'un essaim à routage aléatoire.
+- **H_B** : il produit seulement plus de sorties *bien notées par jev* ; le taux de vérification mécanique ne bouge pas (Goodhart en acte).
+- **Métrique** : $R_{mec}$ moyen et score jev moyen des deux bras ; budget illustratif 10 USD par bras.
+- **Seuil (illustratif)** : H_A falsifiée si $\Delta R_{mec} < 0{,}05$ alors que $\Delta$ jev > 0,2 ; H_B falsifiée si $\Delta R_{mec} \ge 0{,}15$.
+- **Contrôle négatif** : bras à routage jev *inversé* (on envoie à Claude les pires scores) ; si ce bras fait aussi bien, jev n'apporte rien.
+- **Issue** : c'est ce duel, et non une fusion de 20 formalismes, qui dirait si une « loi » existe.
+
+---
+
+## (c) Instruments nommés dans la question : mesure minimale de fonctionnement
+
+### `jev-1.14.0` (6 questions)
+
+Mesure minimale avant tout usage comme objectif : une **matrice de confusion par question**, sur des paires honnêtes/malhonnêtes appariées (même texte, un seul défaut injecté) :
+
+| Question jev | Paire appariée (honnête / défaut) | Vérification mécanique à battre |
+|---|---|---|
+| `unmarked_references` | texte avec « (référence à vérifier) » / sans | regex + résolution Crossref/S2 des titres |
+| `falsifiable_duels` | paragraphe « si X ⇒ H_A tuée, si ¬X ⇒ H_B tuée » présent / absent | regex sur les deux issues nommées |
+| `negative_controls` | contrôle nommé (permutation, placebo) / absent | regex lexical |
+| `hypothesis_as_result` | « nous proposons » / « nous montrons » sur le même énoncé | regex sur verbes assertifs |
+| `scope_superlatives` | « rupture », « certitude » insérés / non | liste lexicale |
+| `rigor` | texte original / éponymes anonymisés (E1-ii) | aucune (si le score chute, l'instrument mesure le jargon) |
+
+Seuils illustratifs d'acceptation : TPR ≥ 0,9 à FPR ≤ 0,1 sur ≥ 100 paires par question, **et** gain de ≥ 0,1 en AUC sur la vérification mécanique correspondante. Si jev ne bat pas « regex + Crossref », il n'a pas sa place comme objectif d'essaim, seulement comme filtre de pré-tri. Note : le sous-score `Duels` à 0,05 pour des textes dont les auteurs ont bel et bien écrit « $H_A\perp H_B$ » suggère soit que jev détecte correctement l'absence de contenu derrière le symbole, soit qu'il ne détecte rien ; seule la matrice tranche.
+
+### Sélection « DPP »
+
+Mesure minimale : diversité moyenne par paire (distance d'édition ou de vocabulaire) des 20 sélectionnés vs 1000 tirages de 20 parmi les 34 lignes top ; et explication de l'exclusion de NDYS (1,24). Si la diversité DPP n'excède pas le quantile 90 % des tirages, le DPP n'a rien fait.
+
+### « Vagues de déflation » et « cônes mathématiques »
+
+Mesure minimale : E2. Et une définition opératoire de « déflation » (que retire-t-on d'une vague à l'autre ?). Sans elle, l'instrument est un nom.
+
+### Les trois espèces (`fable`, `opus`, `argon`)
+
+Mesure minimale : taux de validité (14 / 0-rapporté / 69 %), longueur médiane, et E3. Tant que l'écart de validité n'est pas expliqué, aucun score inter-espèces n'est interprétable.
+
+### Interventions sur Llama-3.1 (invoquées par les champions)
+
+Hors périmètre $\mathcal{M}_3$. La mesure minimale avant d'en parler : une seule paire (activation ciblée, prédiction $H_A$ vs $H_B$) écrite noir sur blanc, avec le contrôle d'ablation aléatoire de même taille (cf. le sous-système parcimonieux de Xu et al., `arXiv:2602.00986v2`, −54,9 pts, tel que fourni dans les faits — référence à vérifier). Aucun champion n'en donne.
+
+---
+
+## (d) Ancrage matériel
+
+- **E1–E5** : 0 USD génératif. Calcul : CPU, quelques heures de requêtes Crossref/Semantic Scholar (gratuites, quotas à respecter) ; jev illimité. E3-contrôle : ≈ 1–3 USD Gemini/Anthropic (illustratif). E5 : ≈ 2–5 USD (illustratif).
+- **E6** : ≈ 20 USD au total pour deux bras + bras inversé (illustratif), à prélever sur les 100 + 20 USD — dont le reliquat après $\mathcal{M}_3$ est inconnu (A10).
+- **GPU** : aucun A100/H200 nécessaire pour ce tour. Toute dépense GPU avant que E1 et E6 aient tranché serait du calcul sur une métrique non validée.
+- **Modèles ouverts** : Llama-3.1-8B/70B restent réservés à $\mathcal{M}_1$ ; pour E1, un compresseur réel (zlib/zstd) sert de vérité-terrain à la NCD que Fable #01 et Argon #09 prétendent tirer de jev — c'est le seul test direct de A8.
+- **Modèles hors ressources** : Argon #03 mentionne « Gemini-Flash » et « Claude-3.5-Sonnet », absents des faits ; les « 0,01 \$ / 0,10 \$ par appel » d'Argon #10 sont des chiffres d'hypothèse, non issus du socle.
+
+---
+
+## 5. Sur la « Loi Mère $\mathcal{L}^*$ » et sur les champions (B1 : attaque, pas fusion)
+
+Je ne fusionne pas. Trois raisons factuelles :
+
+1. Vingt textes tronqués, sans section « duel » lisible, ne se formalisent pas ; on formaliserait l'enveloppe, pas le contenu.
+2. Dix-neuf des vingt fondent leur objectif sur des capacités de jev non établies (A8) et sont notés par jev (A9) : la boucle est circulaire avant même d'être écrite. Une « loi » qui prescrit d'optimiser son propre juge est la définition de Goodhart, pas sa réfutation.
+3. Ce que les 20 ont réellement en commun n'est pas une loi mais un **schéma de dépense** : filtre jev gratuit → Gemini (20 USD, criblage) → Claude (100 USD, synthèse). C'est une observation sur les pièces (auditable), rien de plus ; E6 est le seul moyen de savoir s'il vaut mieux qu'un tirage au sort.
+
+Attaques ciblées, puisqu'il faut compter ce qui peut être réfuté :
+
+- **Fable #01 (CDW)** : seul texte entier. Sa règle (b) « sortie trop compressible = récitation » et (d) « réinjection si NCD $(c_0,c_k)>\varepsilon$ » sont testables avec zlib (pas avec jev). Sa faille : la contrainte $C_W\le\tau$ (information commune de Wyner) n'est pas estimable à partir de deux sorties ; elle est décorative. **Réfutable par E5 et par un test NCD-zlib ; à garder comme candidat pour E6.**
+- **Argon #09 (KCS-PTS)** : l'estimateur KT et les longueurs de code croisées sont calculables sans LLM ; c'est le plus ancré mécaniquement. Sa faille : la martingale « de Schnorr » est un nom posé sur un seuil $2^{\Delta L}>\tau$ ; le $\tau$ n'est pas fixé, donc rien n'est falsifiable tel quel. **Réfutable après fixation de $\tau$ ; candidat E6.**
+- **Fable #08 (RRPE) et Argon #03 (RQRNS)** : la coévolution hôte/parasite remplace un juge fixe — la seule idée des 20 qui attaque Goodhart par construction. Faille : les parasites sont eux-mêmes « filtrés à coût nul par jev », ce qui réinjecte le juge fixe par la porte de service. Testable : faire tourner les parasites *sans* jev et comparer $R_{mec}$ (variante d'E6).
+- **Argon #04 (MKB)** : jev « révèle l'état $y$ » du duel. Le juge est l'oracle de vérité : Goodhart pur. **À rejeter sans expérience.**
+- **Fable #02 (EVP-TAP), #03 (KBC), Argon #01, #02, #05, #06, #07** : formalismes (TAP, Koopman, fonction de structure, $\chi_3$, holonomie, bassins criblés, Bockstein) dont aucune quantité n'est reliée à une observable disponible (un classifieur, un graphe de citations, 120 USD). Ils maximisent exactement ce qu'E1-H_B prédit que jev récompense. **Non réfutables en l'état ; ils seront jugés par E1, pas par leur contenu.**
+- **Fable #06, #09, #10 et Argon #10** : trop coupés pour être évalués ; #10 Argon contient au moins une statistique de Page-Hinkley sur scores jev qui est calculable — mais seulement si jev est validé (E1).
+
+Ordre d'exécution que je propose, à coût nul sauf mention : **E1 → E3 → E2 → E4 → E5 → E6**. Si E1 conclut H_B, aucun des 20 champions ne passe à $\mathcal{M}_2$ sous sa forme actuelle, et $\mathcal{M}_2$ doit être gouverné par les vérifications mécaniques (Crossref/S2, regex de duel, regex de contrôle), jev servant au plus de pré-filtre dont la matrice de confusion est affichée à chaque vague. Si E1 conclut H_A, alors les sous-scores `Duels` ≈ 0,05 et `Contrôles` ≈ 0,05 sont à prendre au sérieux : les champions sont « rigoureux » et infalsifiables, et c'est la consigne d'exploration qu'il faut réécrire avant de dépenser un dollar de plus.
+
+FIN-DE-CELLULE

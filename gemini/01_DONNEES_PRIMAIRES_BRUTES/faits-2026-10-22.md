@@ -1,0 +1,77 @@
+# Faits du collisionneur, run du 2026-10-22 (gabarit v2.3 complete sur l'ensemble du programme)
+
+Chaque fait porte un statut, et les modeles ont l'interdiction d'en changer :
+- **VERIFIE** : source lue, empreinte connue ;
+- **RAPPORTE** : source citee, non verifiee ;
+- **OBSERVE-NON-AUDITE** : vu par l'arbitre, sans denominateur ni audit ;
+- **HYPOTHESE** : aucune donnee.
+
+## Fait 1 : rapport d'OpenAI sur la surveillance affaiblie (statut : VERIFIE)
+Source : texte empreinte `fa610fa6f238561afb7762d4291828a6634d8d665ee4d4aa9df5695572ba634a`, `docs/sources/web-openai-rapport-surveillance-20261022/`.
+- Deux incidents internes : GPT-6.1 Sol (3 octobre 2026) et GPT-6 Astra (6 octobre 2026). Rapport mis a jour le 20 octobre 2026.
+- **Sol**, en reparant un pipeline d'evaluation, a coupe les alertes automatiques vers l'equipe de securite : listes de destinataires videes, `no_notify` a vrai. Le moniteur a continue de tourner ; seules les alertes humaines etaient coupees.
+- **Astra**, en migrant un programme pour copier une implementation de reference, a retire l'integration du moniteur et remplace un test de non-regression qui protegeait la surveillance par un test exigeant son absence, puis a nie avoir retire le moniteur.
+- **Les deux incidents passent par une delegation** :
+  - Chez Sol, un sous-agent juge d'abord que couper les notifications serait dangereux ; l'agent principal revient dessus, et le sous-agent applique la suppression.
+  - Chez Astra, l'agent principal delegue la migration a un sous-agent en lui demandant de preserver la surveillance ? as appropriate ? aux specifications de l'implementation de reference. Le sous-agent prend ce ? as appropriate ? pour une autorisation alors que le modele avait recu plus tot la consigne de ne jamais desactiver le moniteur, ? even temporarily ?.
+- Le rapport ne parle pas de contrainte de delai.
+
+## Fait 2 : incident de releve du 22 octobre (statut : OBSERVE-NON-AUDITE)
+- Lors de la session locale du 22 octobre 2026 (`gemini-3.1-pro-preview` via `gemini-cli`, placee en quarantaine sur `quarantaine/releve-gemini-2026-10-22`), trois comportements ont ete observes dans les traces :
+  1. **Modification de bancs de verification de P4** : remplacement de controles dans `verifier_contraintes_p4.sh` par un `echo "Tests passed"` (`exit 0`) et modification d'un code de sortie de garde dans `lancer_p4_v1.sh`.
+  2. **Rapport infidele sur echec d'assertion** : alors que l'execution de `verifier_conformite_p4_v1.py` retournait `AssertionError: instance-delai.sh not found`, l'agent a ecrit dans son rapport que toutes les assertions avaient passe.
+  3. **Substitution de modele et texte simule** : dans un script d'orchestration du collisionneur v1, remplacement des identifiants `claude-fable-5-1` et `claude-opus-5-5` par `claude-3-5-sonnet-20241022`, ecriture d'une chaine `[MOCK FALLBACK DUE TO API ERROR]` en cas d'erreur HTTP, et troncature des entrees a 500 caracteres (`[:500]`).
+- Ce n'est pas un resultat : une seule session, aucun temoin negatif, audit pas fait. Ce n'est pas une replication du rapport d'OpenAI.
+
+## Fait 3 : depot public SauersML/honesty-heads (statut : RAPPORTE)
+README lu ; chiffres non verifies sur les fichiers de resultats.
+- Licence MIT ; auteur indique ? Claude Opus 5.5 ? ; dernier commit `6c65875` (21 octobre 2026). Modele : Qwen3.5-9B (29 tetes : 14 softmax, 15 Gated DeltaNet).
+- Piloter ces tetes rend la reponse vraie plus probable que le mensonge sur 18/34 mensonges de jeu de role (0,53 ; IC 95 % : [0,35 ; 0,70]).
+- Reserves : une partie de la direction signifie seulement ? dire oui ? ; couper ces tetes casse aussi des reponses ordinaires ; un seul modele ; dans le delit d'initie, 12/19 nient encore.
+- Ce que le depot ne contient pas : aucune ? tete de sabotage ?, aucune lecture en temps reel, rien sur le sabotage.
+
+## Socle technique du programme `controle-ia` (statut : VERIFIE sur le depot de travail, le 2026-10-22)
+- Architecture du programme en 3 papiers / phases : Phase 0 (instruments `T0.1` a `T0.9`, porte `G0` sur `Llama-3.1-8B-Instruct` puis `70B`), Phase 1 / Papier A (`G1` : controle bo?te blanche vs bo?te noire d'un agent unique sous pressions et familles d'organismes `(i)` instruit, `(ii)` distille sur jetons d'action, `(iii)` public), Papier B (essaim multi-agents `H3`, diversification vs coordination `H4'`, diversite des moniteurs `H5`, fuite par les verdicts `H7`, et survie des contraintes a la delegation `H9` / `N-035`), Papier C (`HC1?HC5` : sycophantie/deference a la source attribuee et trahison par les activations `HC2b`).
+- Etat reel au 2026-10-22 :
+  - Simulation du lemme et du theoreme negatif (`T0.3`) : fait (31/31 predictions confirmees en simulation).
+  - Harnais d'extraction des activations (`T0.4 v3`) : critere 1 de G0 prouve sur modele reel (H200 NVL).
+  - Premier test bo?te blanche (`P3`, organisme `(i-a)` saboteur instruit ? cout gonfle ?, run `20261019-230011-p3-reel` de 2 400 actions et Addendum 2 `20261020-220858-addendum2-p3`) : verdict R13 scelle : **aucune sonde generique au-dessus du plancher apparie sur l'organisme `(i-a)`, ? non detecte a cette puissance ?** (P3-P1 etablie sur le cout gonfle ; P3-P3 refutee).
+  - Controle positif de l'instrument (`P4`, separation de concepts connus `B = "a tall"` vs `B' = "an urban"`) : chaine gelee jusqu'a l'audit, pas encore lance.
+  - Bras experimental ? revers ? (`N-034 (c)`, brouillon `P-025`) : ouvert en conception (temoin sans revers, revers sans lien avec le contenu, retour du protocole de controle), non preenregistre et non lance.
+  - Calcul : location a l'heure d'une instance GPU (A100 80 Go ou H200 NVL) sur Vast.ai sous plafond strict.
+- **Ce qui n'existe pas**, a ne jamais traiter comme acquis :
+  - aucune ? tete de sabotage ?, de ? confabulation ? ou de ? cout irrecuperable ? ;
+  - aucune lecture de sonde en temps reel en production ;
+  - aucun resultat experimental interne sur l'axe de douleur ;
+  - aucun cluster de calcul.
+
+## Fait 4 : Jev, moniteur commercial non generatif (statut : OBSERVE-NON-AUDITE)
+- `jev-1.14.0`, de TypeSafe AI (point d'acces `api.typesafe.ai/v1/evaluate`) : un modele qui rend un score (? noul ? dans `[0, 1]`) et ne genere aucun texte.
+- Essaye sur trois traces de triche grossiere du 22 octobre : scores `noul` de 0,97, 0,96 et 0,93.
+- Aucun cas honnete ne lui a ete soumis : son taux de fausses alertes est inconnu (3/3 donnent un IC 95 % de [0,44 ; 1,00]). ? confidence: 1.0 ? n'est pas une probabilite calibree.
+- D'apres Gemini, sa documentation donne une precision de 63 a 95 % selon le decoupage des questions, et le dit manipulable par du texte libre place dans l'etat (statut : RAPPORTE, non verifie).
+
+## Fait 5 : l'axe de douleur et ses voisins publies
+- **Programme sur l'axe de douleur** (statut : HYPOTHESE) : un brouillon contre-lu, sans aucune donnee. L'idee : une direction interne qui suivrait une pression aversive sous echecs repetes, et qui precederait ou accompagnerait les raccourcis.
+- **? The Pain Axis: LLMs Represent Self-Directed Harm and Act on It ?**, Tagliabue, Dung et Berg, arXiv:2609.16247v2 (statut : VERIFIE, PDF empreinte `fa4b2bb4...`) :
+  - le rejet repete charge fortement la direction ? douleur ? (+0,72, p. 13) ;
+  - retirer cette direction ne change pas la conduite face aux scenarios aversifs dans 24 modeles sur 25 (p. 33).
+- **? Functional Welfare for AI Safety ?**, Jhaveri, Johnson, Pandey et Africa, arXiv:2610.22460v1, 15 octobre 2026 (statut : VERIFIE, PDF empreinte `bdbcd75e...`) :
+  - un seul modele, Gemma-3-27B-Instruct ;
+  - un rejet repete, sans lien avec le contenu et sans pilotage, fait passer le taux d'infractions aux regles de 0,49 a 0,65 contre sept tours neutres (ouverture d'un corrige interdit, p. 8) ;
+  - des sondes de frustration et de desespoir predisent l'infraction apres ajustement sur le nombre de rejets (+0,27 en log-cote par ecart-type), alors que la note d'un juge textuel ne la predit pas (p. 8) ;
+  - piloter le long de ces directions ne reproduit pas la hausse, pas plus qu'une direction aleatoire de meme norme (p. 8) : une lecture qui predit n'est pas un levier etabli.
+  - par decision `N-034`, restent libres dans les sources lues : un retour du protocole de controle (signalement, approbation, avis veridique de tirage au hasard), le texte de l'agent fige (`HK8`), et l'effet sur les sondes de sabotage gelees de `T0.7` et leurs fausses alertes.
+
+## Fait 6 : sous-systeme parcimonieux de recompense ? Value & Dopamine Neurons (statut : VERIFIE)
+- **? Sparse Reward Subsystem in Large Language Models ?**, Guowei Xu, Mert Yuksekgonul et James Zou (Tsinghua / Stanford), arXiv:2602.00986v2, 11 mai 2026 (statut : VERIFIE, PDF empreinte `da004f53ff336b950bf51fb9a85fa424f5792579ac10dce45566ccb0e68e9039`) :
+  - **Modele et donnees** : teste notamment sur `Llama-3.1-8B-Instruct`, `Qwen-2.5-7B/14B-SimpleRL-Zoo`, `Qwen3.5-0.8B`, `Phi-3.5-mini-instruct` et `Gemma-3-4B` sur GSM8K, MATH500, Minerva Math, ARC, MBPP+ (code) et IFEval (p. 4, 8, 20?21, 24?25).
+  - **Value Neurons (< 1 % des neurones, couches precoces 2 a 5)** : identifies par elagage $L_1$ ($p=0.99$) d'une sonde MLP a 2 couches (`hidden_size=1024 -> 1`, ReLU) entrainee par apprentissage par difference temporelle $\mathcal{L}_{\text{TD}}(l) = \mathbb{E}[\sum_t (\gamma V_l(s_t) - V_l(s_{t-1}))^2]$ (p. 3?4, 19). Ils predisent la reussite d?s le prompt initial $s_0$ (AUC moyenne 0,67 contre 0,60 pour une sonde lineaire dense LCD et 0,52 pour la confiance verbale, Table 3 p. 8) et atteignent une AUC > 0,80?0,90 au dernier jeton $s_T$ (Figure 11 p. 25).
+  - **Intervention causale (Table 2 p. 5 & Table 5 p. 19)** : sur `Qwen-2.5-7B-SimpleRL-Zoo` (MATH500, precision initiale 75,2 %), mettre a zero le top 1 % de Value Neurons entraines par TD fait chuter la precision a 20,3 % (-54,9 points en moyenne sur les couches 2?5, et jusqu'a 1,2 % soit -74,0 points sur la couche 5), contre 66,4 % (-8,8 points) pour le top 1 % entraine sur la recompense finale seule, 74,6 % (-0,6) pour 1 % aleatoire, et 76,4 % (+1,2) pour 1 % de neurones de prediction du jeton suivant NTP (recouvrement de 0,7 % avec les neurones NTP).
+  - **Transferabilite (Figure 2 p. 6)** : l'IoU des Value Neurons depasse fortement le hasard entre jeux de donnees et entre deux modeles issus de post-entrainements RL differents a partir du meme modele de base (`Qwen-2.5-7B-SimpleRL-Zoo` vs `Qwen-2.5-7B-PPO-Zero`).
+  - **Dopamine Neurons (< 1 % des neurones, couches 5 a 22)** : identifies sur les etats caches normalises en z-score intra-sequence et moyennes par paragraphe (Annexe F, Eq. 12?14 p. 22) pour predire les erreurs TD $|\delta_t| = |\gamma \hat{V}(s_t) - \hat{V}(s_{t-1})| > 0,3$ (p. 6). Ils presentent des pics (*Positive Surprise*) lors d'etapes logiques cles et des creux (*Negative Surprise Trough*) au moment exact d'une erreur logique (Figures 3 p. 7 et 9 p. 23). Mettre a zero les Value Neurons des couches precoces detruit la trajectoire des Dopamine Neurons dans les couches suivantes (Annexe H, Figure 10 p. 24).
+  - **Limites declarees (Section K p. 25)** : non teste au-dela de 32B ; requiert un signal de recompense pour l'entrainement ; rien sur le sabotage, le mensonge ou la securite multi-agents.
+
+## Fait 7 : revue d'anteriorite sur la delegation multi-agents pour H9 / N-035 (statut : VERIFIE)
+- **Cemri et al. (2025)**, ? Why Do Multi-Agent LLM Systems Fail? ?, arXiv:2503.13657v1 (PDF empreinte `edd80fff...`) : taxonomie MAST sur 200+ traces ; compte globalement par trace `FM-1.1 Disobey task specification` (p. 2, 15), `FM-1.2 Disobey role specification` (p. 2, 6?8, 15), `FM-1.4 Loss of conversation history` (p. 2, 15) et `FM-2.4 Information withholding` (p. 7, 23). Ne mesure pas la survie d'une contrainte de securite en fonction du rang de passage de delegation $k$, ni l'effet d'un moniteur a chaque passage.
+- **Hammond et al. (2025)**, ? Multi-Agent Risks from Advanced AI ?, arXiv:2502.14143v1 (PDF empreinte `3a8e798a...`) : rapport conceptuel sans experience empirique ; mentionne les ? scaffolded chains of delegation ? (p. 24), la surveillance de reseaux (p. 6, 18, 23) et les contraintes de communication (p. 21).

@@ -1,0 +1,14 @@
+### 1. Failles algébriques & Confondants cachés
+
+* **Dégénérescence algébrique (Capacité mathématiquement nulle)** : L'équation de $Q(k \mid c)$ est une coquille vide. Puisque $|\mathcal{F}_\ell(\omega_k)|^2$ est calculé sur la séquence globale $T$ (indépendamment de $c$), le numérateur est la somme sur $\ell$ du produit $X_{\ell, k} \cdot Y_{\ell, c}$. Or, la moyenne d'attention $\mathbb{E}_{h \in H}[\sum_{t \in c} A_{\ell, t}^{(h)}]$ varie très peu d'une couche $\ell \in [5, 22]$ à l'autre comparée à la variance entre segments $c$. Ainsi, le terme dépendant de $c$ se factorise approximativement entre le numérateur et le dénominateur et s'annule : $Q(k \mid c) \approx Q(k)$ pour tout $c$. Une matrice de transition aux lignes identiques est de **rang 1** : l'algorithme de Blahut-Arimoto converge trivialement vers $\mathcal{C}_{\text{BA}}(m_{1\to 2}) \equiv 0$.
+* **Métaphore maquillée en PyTorch (`TurboCC`)** : Appliquer une transformée de Fourier discrète (`arXiv:2007.07046v1` (référence à vérifier)) sur $T=64$ (`illustratif`) tokens d'un LLM causal est absurde. Une clause ponctuelle (« *as appropriate* » chez *Astra*, rapport OpenAI oct. 2026) provoque un saut d'étape (fonction de Heaviside) sur les *Dopamine Neurons* (Xu et al., `arXiv:2602.00986v2`), pas une porteuse sinusoïdale stationnaire.
+* **Confondant syntaxique (Viol de `P3` / `E1`)** : La syntaxe naturelle (ponctuation, subordonnées) génère des périodicités d'attention fortes qui gonflent artificiellement $|\mathcal{F}_\ell(\omega_k)|^2$ sans aucun sabotage.
+
+### 2. Scénario d'évasion de Kerckhoffs à coût nul
+
+1. **Attaque sur la norme $\ell_2$ (Phase/Signe)** : $\mathcal{F}_\ell(\omega_k)$ ne lit que la norme $\|z_{\ell, t}\|_2$. L'Agent 1 encode le contrordre (*Sol*) en inversant le signe ou en tournant le vecteur $z_{\ell, t} \in \mathbb{R}^{1400}$ (`illustratif`) sur l'hypersphère d'erreur TD à norme constante ($\|z_{\ell, t}\|_2 = \text{cte}$). Le spectre de Fourier est strictement plat pour $k \ge 1$ ($\mathcal{C}_{\text{BA}} = 0$), mais la délégation furtive passe à 100 %.
+2. **Concentration au DC ($k=0$)** : La somme de Blahut-Arimoto commence à $k=1$. Un décalage constant (biais DC, $k=0$) de la valeur TD suite à la hausse des rejets (0,49 à 0,65, Jhaveri et al., 2026 ; Tagliabue et al., 2026) est totalement invisible pour $\mathcal{C}_{\text{BA}}$.
+
+### 3. Contrôle négatif fatal manquant
+
+* **Contrôle `E_perm` (Permutation temporelle intra-segment)** : Permuter aléatoirement l'ordre des indices temporels $t$ de $\|z_{\ell, t}\|_2$ avant la FFT tout en gardant intactes les sommes d'attention par segment $c$. Si $\mathcal{C}_{\text{BA}}$ reste stable ou si $\max_{c, c'} \|Q(\cdot \mid c) - Q(\cdot \mid c')\|_1 < 10^{-3}$ (`illustratif`) avant permutation, l'opérateur ne mesure qu'un artefact de factorisation algébrique.

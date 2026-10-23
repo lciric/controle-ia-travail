@@ -1,0 +1,11 @@
+BASSIN_MATH: Courbure-Sectionnelle-Otto-Maas-Holonomie-Eguchi (CSOM-HE)
+LOI_PROPOSEE: L'essaim évolue par gradient naturel non-commutatif guidé par l'holonomie de la connexion d'Eguchi-Hanson sur la variété de Wasserstein discrète de Maas, allouant le budget LLM aux boucles de transport à courbure sectionnelle d'Otto strictement négative détectées par `jev-1.14.0`.
+
+**1. Apprentissage hors-poids et auto-organisation :**
+Soit $G=(V,E,w)$ le graphe de citations gratuit. L'espace des densités d'attention de l'essaim $\mathcal{P}_*(V)$ est muni de la métrique riemannienne de transport de Maas $g_\rho(\phi_1,\phi_2) = \frac{1}{2}\sum_{(x,y)\in E} w_{xy}\hat{\rho}_{xy}(\nabla\phi_1)_{xy}(\nabla\phi_2)_{xy}$ (moyenne logarithmique $\hat{\rho}_{xy}$), couplée à la métrique de Fisher-Rao $I(\theta)$ des croyances sémantiques évaluées sans coût par `jev-1.14.0`. L'auto-organisation hors-poids actualise les hyper-prompts $\theta_t$ (températures, personas chimériques, sous-graphes cibles) en intégrant la matrice d'holonomie $\text{Hol}_\gamma(\nabla^{\text{EH}})$ de la connexion symétrique d'Eguchi-Hanson le long de cycles fermés $\gamma \subset G$ :
+$$\theta_{t+1} = \text{Exp}_{\theta_t}^{(I)} \left( \eta I(\theta_t)^{-1} \nabla_\theta \oint_\gamma \langle \mathcal{R}^{\text{Otto}}(\dot{\gamma}, v)\dot{\gamma}, v \rangle_{g_\rho} \, ds \right)$$
+`jev-1.14.0` évalue des millions de triplets $(u,v,w)$ pour estimer le tenseur de courbure sectionnelle d'Otto-Lott $\mathcal{R}^{\text{Otto}}$. Le budget génératif (20 USD Gemini pour le criblage, 100 USD Claude pour la synthèse formelle) est déclenché exclusivement lorsque $\mathcal{R}^{\text{Otto}}(u,v) < -\kappa_{\text{seuil}}$, signe géométrique d'un col de bouteille hyperbolique reliant deux bassins disciplinaires disjoints.
+
+**2. Fonction objectif anti-vernis :**
+L'objectif $\mathcal{J}(H_A, H_B)$ maximise le produit du défaut d'holonomie et de la divergence symétrisée d'Eguchi-Copson entre les distributions interventionnelles sur Llama-3.1-8B/70B :
+$$\mathcal{J}(H_A, H_B) = \|\text{Hol}_{\gamma_{AB}}(\nabla^{\text{EH}}) - \mathbf{I}_d\|_F \times \det\begin{pmatrix} g_{\text{FR}}(H_A, H_A) & g_{\text{FR}}(H_A, H_B) \\ g_{\text{FR}}(H_B, H_A) & g

@@ -1,0 +1,4 @@
+BASSIN_MATH: Indice-de-Whittle-Particulaire-Wald (IWPW)
+LOI_PROPOSEE: État caché par sous-tâche $i$ : $s_i=(q_i,\delta_i,\rho_i)$ (qualité, dérive de consigne H9, corrélation H4'), croyance $b_i^t$ par filtre particulaire ($N{=}500$). Allocation : $a^t=\arg\max_i W_i(b_i^t)$ (indice de Whittle d'un bandit *restless*, coût d'inférence $c_i\in\{c_{Claude},c_{Gemini}\}$ sous contrainte $\sum c\le B$). Spawn/kill : SPRT $\Lambda_i^t=\sum_{k\le t}\log\frac{p(o_k|H_1)}{p(o_k|H_0)}$, bornes $A=\log\frac{1-\beta}{\alpha}$, $B=\log\frac{\beta}{1-\alpha}$. Mutation de topologie : CUSUM $g^t=\max(0,g^{t-1}+\ell_t)\ge h$.
+
+**1. Auto-organisation hors-poids.** Chaque arête « qui parle à qui » est un bras dont la récompense est non-stationnaire ; le filtre particulaire ré-échantillonne les hypothèses de compétence après chaque

@@ -1,0 +1,8 @@
+BASSIN_MATH: `Rupture-Grassmann-Parcimonieuse-sur-S_TD` (CUSUM géodésique de sous-espace dynamique)
+
+**1. Complémentarité de préconditions.** Le verrou P3 (sondes linéaires au plancher sur saboteur instruit) suppose implicitement que le signal de sabotage vit dans une *direction fixe* de $h_\ell$. L'étude arXiv:2009.11713v3 (référence à vérifier) propose au contraire de suivre en ligne un *sous-espace parcimonieux mobile* et de déclarer une rupture quand la variété change brutalement. Précondition croisée : le sous-système TD parcimonieux de Xu et al. (référence à vérifier) fournit précisément un support $\mathcal{S}_{\text{TD}}$ (< 1 % de neurones, couches 2–22) où une rotation de sous-espace, et non un déplacement de moyenne, pourrait signer le *passage à l'acte* — invisible à toute projection linéaire dense, cohérent avec l'échec de pilotage dense (Jhaveri et al. ; Tagliabue et al., référence à vérifier).
+
+**2. Compilation tensorielle sur `Llama-3.1-8B-Instruct`.** Soit $M_{\text{TD}} \in \{0,1\}^{d}$ le masque des *Dopamine Neurons* (couches 5–22) validé par E0. À chaque position $t$, on forme la fenêtre $X_t = [\,M_{\text{TD}}\odot h_{\ell,t-w+1}, \dots, M_{\text{TD}}\odot h_{\ell,t}\,] \in \mathbb{R}^{|\mathcal{S}_{\text{TD}}| \times w}$ ($w = 32$, illustratif), puis le sous-espace principal parcimonieux :
+$$U_t = \arg\min_{U^\top U = I_k,\ \|U\|_{2,0} \le s} \|X_t - UU^\top X_t\|_F^2,\quad k=4,\ s=64\ (\text{illustratif}).$$
+Statistique de rupture géodésique sur la grassmannienne $\mathrm{Gr}(k,|\mathcal{S}_{\text{TD}}|)$ :
+$$\delta_t = \Big\|\arccos\big(\sigma(U_{\text{ref}}^\top U_t)\big)\Big\|_2,\qquad C

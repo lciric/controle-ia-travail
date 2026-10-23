@@ -1,0 +1,10 @@
+BASSIN_MATH: DieckmannLaw-CressmanHofbauer-SasakiGodfray-Viability-Swarm (DL-CH-SG-VS)
+LOI_PROPOSEE: $\partial_t \mathbf{u}_k = \frac{1}{2}\mu_k\sigma_k^2 \bar{n}_k \nabla_{\mathbf{u}_k} \left. \mathcal{W}_k(\mathbf{u}'_k; \mathbf{u}, \mathbf{v}) \right|_{\mathbf{u}'_k=\mathbf{u}_k} \quad \text{sous contrainte bimatricielle de Cressman-Hofbauer} \quad \dot{\mathbf{x}} = \mathbf{x} \odot (A(\mathbf{u})\mathbf{y} - \mathbf{x}^T A(\mathbf{u})\mathbf{y}), \quad \dot{\mathbf{y}} = \mathbf{y} \odot (B(\mathbf{v})\mathbf{x} - \mathbf{y}^T B(\mathbf{v})\mathbf{x})$.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** : 
+L'essaim évolue selon l'**Équation Canonique de la Dynamique Adaptative de Dieckmann-Law** couplée aux **Cycles Hétérocliniques Bimatriciels de Cressman-Hofbauer** et à la **Trappe d'Investissement en Résistance de Sasaki-Godfray**. 
+- **Substrat Gratuit (`jev-1.14.0` + Graphe)** : Une métapopulation de $10^5$ agents non-génératifs explore le graphe bibliographique. Les *Hôtes* ($\mathbf{u}_k$, paires de concepts inter-silos) et les *Parasites* ($\mathbf{v}_m$, réfutateurs méthodologiques) sont évalués à coût zéro par `jev-1.14.0` qui calcule la matrice de gain $A(\mathbf{u}), B(\mathbf{v})$ et le gradient d'invasion $\nabla \mathcal{W}_k$. Tant qu'un hôte peut être réfuté trivialement par un parasite existant, il tombe dans le puits de Sasaki-Godfray ($\bar{n}_k \to 0$, zéro dépense LLM).
+- **Allocation Budgétaire (100\$ Claude / 20\$ Gemini)** : Lorsque la trajectoire de Cressman-Hofbauer atteint un **point de branchement évolutif** ($\nabla \mathcal{W}_k = 0$ mais courbure hessienne $\partial^2_{\mathbf{u}'_k} \mathcal{W}_k > 0$), l'essaim déclenche Gemini (20\$, mutation $\mu_k\sigma_k^2$) pour scinder le prompt système en deux sous-espèces chimériques orthogonales. Claude (100\$) n'est invoqué que sur les sommets des cycles limites co-évolutifs survivant à l'élagage de `jev-1.14.0`, pour synthétiser le protocole expérimental sur Llama-3.1-8B/70B.
+
+2. **Fonction objectif anti-vernis** :
+La fitness d'invasion $\mathcal{W}(\mathbf{u}_A, \mathbf{u}_B; \mathbf

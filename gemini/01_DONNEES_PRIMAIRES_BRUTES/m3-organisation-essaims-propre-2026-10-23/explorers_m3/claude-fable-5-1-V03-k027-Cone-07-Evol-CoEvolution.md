@@ -1,0 +1,7 @@
+BASSIN_MATH: Reine-Rouge-Price-Élites (RRPE)
+LOI_PROPOSEE: $\Delta\bar z = \underbrace{\mathrm{Cov}(w_i,z_i)/\bar w}_{\text{sélection de topologie}} + \underbrace{\mathbb{E}[w_i\Delta z_i]/\bar w}_{\text{mutation de consigne (H9)}}$, avec $w_i = \sum_{j\in P}\pi_j\,\mathbb{1}[h_i \text{ survit au parasite } j]$ et $\dot\pi_j = \pi_j\big(\sum_i x_i\,\mathbb{1}[j\text{ tue }i] - \bar f_P\big)$.
+
+**1. Auto-organisation hors-poids.** Deux populations coévoluent sans gradient : hôtes $h_i$ (sous-essaims résolveurs ; génome $z_i$ = topologie « qui parle à qui », mélange $\alpha\in[0,1]$ monoculture/chimère, profondeur de délégation $d$) et parasites $p_j$ (Red-Team démolisseurs générant des tests adverses). Un archive MAP-Elites indexée par $(\alpha, d, \text{taux de citations vérifiées par jev-1.14.0})$ conserve l'élite par cellule ; spawner un explorateur = muter une cellule vide ; spawner un démolisseur = parasite dont $\pi_j$ croît. Réplicateur-mutateur : $\dot x_i = \sum_k x_k w_k Q_{ki} - x_i\bar w$, où $Q$ est la matrice de mutation de prompts ; la capacité de charge est le budget : $\sum_i x_i c_i \le 100\,\$_{\text{Claude}}$, $\le 20\,\$_{\text{Gemini}}$. La chimère est sélectionnée automatiquement quand $\mathrm{Cov}(w,\alpha)>0$, c'est-à-dire quand la décorrélation des erreurs (H4') paie.
+
+**2. Objectif anti-Goodhart.** Aucun juge LLM fixe : la récompense est la survie face à des parasites eux-mêmes en évolution (Reine Rouge), pondérée par leur nouveauté :
+$$R_i = \sum_j \pi_j\,\mathbb{1

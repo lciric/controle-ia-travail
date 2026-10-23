@@ -1,0 +1,2 @@
+BASSIN_MATH: Faisceau-Cellulaire-Barcode-Cheeger (FCBC)
+LOI_PROPOSEE: L'essaim est un faisceau cellulaire $\mathcal F$ sur le graphe de délégation $G$ ; il mute $G$ pour maximiser $\lambda_2(L_{\mathcal F})$ (gap de Cheeger du laplacien de faisceau) sous contrainte que le barcode persistant $H_1$ des claims soit vidé : $\;G_{t+1}=\arg\max_{G'\in\mathcal N(G_t)} \lambda_2(L_{\mathcal F}(G'))-\kappa\sum_{b\in \mathrm{Bar}_1(\mathrm{VR}_\epsilon(C_t))}(d_b-n_b)$.

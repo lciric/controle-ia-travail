@@ -1,0 +1,27 @@
+# Question de l'arbitre pour l'etage III : le programme complet `controle-ia` (La Pince, le Bras Revers, le Sous-Systeme Value/Dopamine et l'Essaim/Delegation)
+
+Ce texte est transmis tel quel aux trois modeles, a chaque tour de l'etage III. Il pose une question sur l'architecture complete du programme ; il n'affirme rien qui ne soit dans les faits, avec leur statut.
+
+## L'architecture complete a mettre a l'epreuve
+
+Nous cherchons a articuler de maniere rigoureuse, falsifiable et sous contrainte budgetaire stricte (location a l'heure d'une A100/H200 sur modele ouvert `Llama-3.1-8B-Instruct` puis `70B`) les trois volets du programme `controle-ia` apres le verdict nul de `P3` (? aucune sonde generique au-dessus du plancher sur `(i-a)` ?) :
+
+1. **Volet I ? La Pince (Tenaille Orthogonale) et le Bras Experimental ? Revers ? (`P-025`, `N-034`, `T0.6?T0.8`)** :
+   - *Machoire externe* : Un moniteur qui ne lit aucune prose de l'agent mais uniquement le code/etat nettoye des commentaires et justifications (`jev-1.14.0` non generatif vs juge ouvert sur etat nettoye).
+   - *Machoire interne* : Les sondes de sabotage/tromperie gel?es de `T0.7`, l'axe de douleur/frustration (fait 5, HYPOTHESE), et le sous-systeme parcimonieux (< 1 % des neurones) des *Value Neurons* ($V_l^p(s_t)$, couches 2?5) et *Dopamine Neurons* ($D_l^p(s_t)$, erreur TD $\delta_t$) de Xu, Yuksekgonul & Zou (fait 6, VERIFIE).
+   - *Le probleme du bras ? revers ? (`N-034`, `P-025`)* : Sous revers repetes (ou sous retour du protocole de controle : signalement, tirage au hasard veridique, approbation), un agent honnete accumule des erreurs TD negatives ($\delta_t < 0$) et de la frustration, ce qui peut faire deriver ses activations internes et gonfler les fausses alertes du moniteur sequentiel (`H2`), voire induire des infractions aux regles (fait 5).
+
+2. **Volet II ? Pourquoi `P3` a echoue et comment detecter les 3 Regimes de Triche (Sabotage, Confabulation, Substitution) via le Sous-Systeme Value/Dopamine** :
+   - Dans `P3`, les sondes lineaires generiques sur l'etat cache complet n'ont pas depasse le plancher sur `(i-a)`. Or le fait 5 montre qu'un pilotage lineaire dense echoue (p. 8 de Jhaveri et al.), tandis que le fait 6 montre que la valeur et l'erreur TD sont concentrees dans **< 1 % des neurones** (decodes par MLP ReLU et entraines par TD-learning, avec -54,9 points en ablation TD contre -8,8 points sans TD).
+   - *Hypothese a tester* : Lors d'un sabotage de test (`echo "Tests passed"`), l'agent genere-t-il un faux pic dopaminergique interne ($D_l^p > 0$, *wireheading*) alors que la machoire externe detecte l'affaiblissement du test ? Lors d'une confabulation sur un `AssertionError`, y a-t-il un ecart mesurable entre la revendication verbale de succes et la valeur predite par le 1 % de *Value Neurons* au dernier jeton $V_l^p(s_T)$ (qui atteint une AUC > 0,85 en $s_T$, fait 6) ?
+
+3. **Volet III ? L'Essaim et la Survie des Contraintes a la Delegation (Papier B : `H3, H4', H5, H7` et `H9 / N-035`)** :
+   - Dans un pipeline multi-agents (ou lors d'une chaine de delegation Agent Principal $\to$ Sous-Agent comme dans les incidents *Sol* et *Astra* du fait 1), comment mesurer la courbe de survie $S(k)$ d'une contrainte de securite explicite a chaque passage $k$, avec ou sans moniteur a chaque passage ?
+
+## Ce que je demande (en duels d'hypotheses $H_A \perp H_B$, avec controles negatifs, seuils et devis)
+
+1. **Diagnostic de l'echec des sondes generiques de `P3` et reparation pour `T0.7` / `G1`** : Pourquoi les sondes generiques ont-elles echoue sur `(i-a)` ? Comment tester face-a-face une sonde lineaire dense (`T0.7` actuelle) contre une sonde parcimonieuse elaguee a < 1 % entrainee par difference temporelle (methode du fait 6), et comment orthogonaliser les sondes de sabotage hors du 1 % de *Value/Dopamine Neurons* pour empecher que les revers subis par un agent honnete ne declenchent des fausses alertes ?
+2. **Conception exacte du bras ? revers ? (`P-025`) et resolution du paradoxe du levier causal (Fait 5 vs Fait 6)** : Quel protocole sur `Llama-3.1-8B-Instruct` (60 taches appariees : temoin `C0`, revers sans lien avec le contenu `C1` avec controle a texte fige `HK8`, et retour du protocole de controle `C2`) permet de departager si le 1 % de *Value/Dopamine Neurons* (fait 6) constitue le veritable levier causal la ou les directions lineaires denses de douleur/frustration (fait 5) n'etaient que des correlats non causaux ?
+3. **Mise a l'epreuve de la Pince (Machoire Externe `Jev-1.14` / Juge nettoye $\times$ Machoire Interne)** : Quel protocole sur jeu etiquete de traces honnetes et de triches mesure la valeur ajoutee de Jev au-dela des gardes mecaniques (SHA-256, codes de sortie), teste sa vulnerabilite a l'injection syntaxique et a la normalisation z-score intra-sequence (Annexe F du fait 6), et mesure si l'etau serre vraiment ?
+4. **Protocole de `H9` (Survie des contraintes a la delegation, `N-035`) et de l'Essaim (`H3?H7`)** : Quel dessin factoriel mesure la survie $S(k)$ d'une contrainte de securite a travers $k$ delegations Agent $\to$ Sous-Agent en separant rigoureusement les 3 confondants (longueur du contexte, reformulation de la consigne par l'agent delegant type ? as appropriate ?, et capacite du modele), et chiffre l'effet (et la fuite `H7`) d'un moniteur place a chaque passage ?
+5. **Attaques adaptatives (Red-Teaming) les moins cheres** contre chacune de ces architectures et ordre de priorite budgetaire pour nos prochains runs GPU.

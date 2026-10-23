@@ -1,0 +1,11 @@
+BASSIN_MATH: ControleRisqueSensible-FlemingMcEneaney-Armitage-Moustakides-EnKF
+LOI_PROPOSEE: L'essaim résout l'équation de Hamilton-Jacobi-Bellman-Isaacs (HJBI) risque-sensible de Fleming-McEneaney couplée à un filtre de Kalman d'ensemble (EnKF) sur le graphe de citations, déclenchant les synthèses LLM via les frontières paraboliques d'arrêt séquentiel d'Armitage et l'optimalité minimax de Moustakides.
+
+1. **Apprentissage & Auto-organisation hors-poids** : 
+Chaque sous-essaim explorateur est un membre d'ensemble $x_t^{(i)} \in \mathbb{R}^d$ dans l'espace d'embeddings de `jev-1.14.0` (coût nul). Le graphe de citations forme l'opérateur d'évolution non-linéaire $\mathcal{M}(x_t^{(i)})$. À chaque pas, `jev-1.14.0` génère des observations bruitées $y_t^{(i)}$, mettant à jour l'essaim sans rétropropagation via le gain de Kalman d'ensemble empirique $K_t = C_{xy}^t (C_{yy}^t + R)^{-1}$, alignant les prompts hors-poids vers les anomalies structurelles. Le budget (20\$ Gemini, 100\$ Claude) est régi par une fonction de valeur risque-sensible (Fleming-McEneaney) sous aversion au risque d'hallucination $\theta > 0$ :
+$$V(x) = \inf_{u \in \mathcal{U}} \sup_{w \in \mathcal{W}} \frac{1}{\theta} \ln \mathbb{E}\left[ \exp\left(\theta \int_0^\tau \left(L(x_s, u_s) - \gamma \|w_s\|^2\right) ds + \theta \Phi(x_\tau)\right) \right]$$
+L'instant d'arrêt $\tau$ (bascule de `jev` vers Gemini pour extraction, puis Claude pour synthèse) est gouverné par un test séquentiel groupé à frontière parabolique d'Armitage (Repeated Significance Testing) : $\tau = \inf\{t \in \{1..K\} : |S_t| \ge a\sqrt{t}\}$, où $S_t$ est le log-rapport de vraisemblance cumulé des scores `jev-1.14.0`. L'allocation finale vers Claude s'exécute exactement au seuil minimax de Moustakides, minimisant le délai de détection pire-cas de Lorden conditionnellement au budget restant.
+
+2. **Fonction objectif anti-vernis** :
+La récompense terminale $\Phi(x_\tau)$ maximise le produit du transport spectral sur le graphe de citations et la divergence d'information empirique sur Llama-3.1 :
+$$\mathcal{J}(H_A, H_B) = d_{\text{Riemann}}\left(\mathcal{C}_A, \mathcal{C}_B\right) \times \min_{p \in \mathcal{P}_{\text{vernis}}} D_{KL}\left(\mathbb{P}_{\text{Llama}}(\cdot | \text{do}(z_A

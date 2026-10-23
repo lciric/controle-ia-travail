@@ -1,0 +1,11 @@
+BASSIN_MATH: Flot-Schrodinger-Hellinger-Kantorovich-mProjectif (FSHK-mP)
+LOI_PROPOSEE: L'essaim évolue sur la variété statistique non-normalisée $\mathcal{M}_+$ via un flot couplé par la métrique de Hellinger-Kantorovich $\mathsf{HK}_{\alpha,\beta}$ (transport optimal déséquilibré de Wasserstein-Fisher-Rao) et les ponts de Schrödinger entropiques, guidé par la projection dually-flat d'Amari ($\nabla^{(m)}$) calculée hors-poids via `jev-1.14.0`.
+
+1. **Auto-organisation hors-poids & Allocation budgétaire** :
+Soit $\mu_t \in \mathcal{M}_+(\mathcal{G})$ la mesure positive de masse variable représentant la densité d'agents sur le graphe bibliographique $\mathcal{G}=(V,E)$. L'essaim évolue selon l'équation aux dérivées partielles discrète de Hellinger-Kantorovich :
+$$\partial_t \mu_t = \alpha \text{div}_{\mathcal{G}}(\mu_t \nabla_{\mathcal{G}} \Phi_t) - 4\beta \mu_t (\Phi_t - \bar{\Phi}_t)$$
+où le terme de transport ($\alpha$, Wasserstein) déplace les agents Gemini ($20) le long des arêtes de citations, et le terme de réaction ($\beta$, Fisher-Rao) crée/détruit des sous-essaims (clonage chimérique) sans conservation de masse. Le potentiel $\Phi_t$ est estimé gratuitement à l'échelle par `jev-1.14.0` en résolvant un problème de pont de Schrödinger statique entre silos distants $S_1, S_2 \subset V$ : $\min_{\pi \in \Pi(\mu_{S_1}, \mu_{S_2})} \text{KL}(\pi \| K_\epsilon)$, où $K_\epsilon = e^{-C_{\text{jev}}/\epsilon}$ est le noyau de transition sémantique évalué par `jev-1.14.0`. Les $100 de Claude ne sont débloqués que sur le support de la géodésique $m$-projective ($\gamma^{(m)}$ d'Amari) où la dérivée de Radon-Nikodym $\frac{d\pi^*}{dK_\epsilon}$ franchit un seuil critique $\tau_{\text{claude}}$, synthétisant l'association.
+
+2. **Fonction objectif anti-vernis** :
+On maximise le produit de la distance de Hellinger-Kantorovich inter-silos et du volume d'orthogonalité de Jeffreys-Fisher entre hypothèses causales contradictoires $H_A, H_B$ sur Llama-3.1-8B/70B :
+$$\mathcal{J}(u, v; H_A, H_B) = \mathsf{HK}_{\alpha,\beta}^2(\delta_u, \delta_v) \times \det\left( G_F(\theta_{H_A}, \theta_{H_B}) \right)^{1/2} \cdot \mathbb{I}\left( \langle \nabla^{(e)}\ell(H_A), \nabla^{(m)}\ell(H_B) \rangle
