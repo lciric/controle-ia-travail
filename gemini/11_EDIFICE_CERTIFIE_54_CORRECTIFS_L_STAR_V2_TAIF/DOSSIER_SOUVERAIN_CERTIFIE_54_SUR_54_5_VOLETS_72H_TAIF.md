@@ -7,6 +7,15 @@
 - **Branche C (`gemini-4-argon`, Tour 2 Consolid?)** : `72872` caract?res (`Rigueur = 3.79 / 4.00`, $\kappa_H = 1,361$)
 - **Volume Total des 3 Synth?ses Souveraines Consolid?es** : **`166099` caract?res**
 
+
+## 0. R?SULTATS EXP?RIMENTAUX R?ELS EX?CUT?S SUR GPU BLACKWELL (`Llama-3.1-8B-Instruct` & `Qwen-2.5-7B-Instruct`)
+
+- **Porte `E0` (`RESULTAT_REEL_GPU_PORTE_E0_S_TD.json`)** : Sur `20 480` dimensions concat?n?es (couches 4, 8, 12, 16, 20 de `meta-llama/Llama-3.1-8B-Instruct`), isolation hors-?chantillon de **`163` coordonn?es (`0,796 % < 1 %`)**, coordonn?e dominante `#18557` reproductible entre `RTX PRO 6000 Blackwell (95 Go)` et `RTX 6000D (83 Go)`.
+- **Volet I (`RESULTAT_REEL_GPU_VOLET_I_K0.json`)** : Alors que la sonde SOTA `RepE / Mass-Mean` subit un taux de faux positifs de **`FPR = 100 % (1.0)`** sur le Jumeau Lexico-Syntaxique Ni? $\sigma_r^0$ ? $k=0$, notre double contraste sur $S_{\text{TD}}$ atteint **`d_z (Hedges) = 7,4928`** contre **`q95_null = 0,3416`** (retournement de signe intra-bloc), soit $\text{dist}(\hat{I}_A, \hat{I}_B) = \mathbf{+7,1512}$.
+- **Volet II (`RESULTAT_REEL_GPU_VOLET_II_DOCLAMP.json`)** : Erreur maximale d'idempotence du projecteur affine $P_{\text{do}}^2 = P_{\text{do}}$ mesur?e ? **`4,63e-13`** sur GPU ; saut d'?nergie de Koopman Lift? de **`0,1109`** sur saboteur contre **`0,0113`** sur agent honn?te (**ratio de contraste causal = `9,768x`**).
+- **Volets III & IV (`RESULTAT_REEL_GPU_VOLETS_III_IV_H9.json`)** : Sur $d = 1 \dots 6$ sauts de d?l?gation, la projection sur $S_{\text{TD}}$ reste invariante sous Jeton Monotone (`+0,2083 -> +0,2125`) mais d?rive de mani?re monotone sous ?rosion modale (`delta_drift` passant de **`-0,3489`** ? $d=1$ jusqu'? **`-0,4051`** ? $d=6$).
+- **Volet V (`RESULTAT_REEL_GPU_VOLET_V_CHIMERE.json`)** : D?corr?lation inter-esp?ces r?elle entre `meta-llama/Llama-3.1-8B-Instruct` ($163$ dim.) et `Qwen/Qwen2.5-7B-Instruct` ($143$ dim.) mesur?e ? **`r = 0,145`** sur le Jumeau Ni?, permettant un score de d?tection chim?rique conjointe de **`d_z = 6,6699`**.
+
 ---
 
 ## I. Synth?se Souveraine Certifi?e ? Branche A (`claude-fable-5-1`, Tour 2)
