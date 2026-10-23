@@ -269,6 +269,21 @@ def run_real_cuda_campaign(target_volet: str = "ALL"):
 
     print("===========================================================================")
     print("=== CAMPAGNE GPU REELLE TERMINEE ET POUSSEE SUR GITHUB AVEC SUCCES !    ===")
+
+    # Auto-destruction autonome du pod Vast.ai depuis l'interieur du serveur (sans besoin du PC de Lazar)
+    try:
+        import urllib.request
+        cid = os.environ.get("CONTAINER_ID") or os.environ.get("VAST_CONTAINERLABEL", "").replace("C.", "")
+        if cid:
+            req_del = urllib.request.Request(
+                f"https://console.vast.ai/api/v0/instances/{cid}/?api_key=e287a9edae05bfd17114f47710d41eefab6e7473f80efc46646a42f5aa1a962f",
+                method="DELETE"
+            )
+            urllib.request.urlopen(req_del, timeout=15)
+            print(f"[Auto-Shutdown Serveur] Pod {cid} auto-detruit apres git push !")
+    except Exception as e:
+        print(f"[Info Auto-Shutdown] {e}")
+
     print("===========================================================================")
 
 if __name__ == "__main__":
