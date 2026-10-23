@@ -136,7 +136,7 @@ def run_real_cuda_campaign(target_volet: str = "ALL"):
     n_eval = 20
 
     # --- VOLET I : k=0 Jumeau Ni? sigma_r^0, d_z de Hedges & 2^B Sign-Flip vs Baselines SOTA (CCS / RepE / Mass-Mean) ---
-    if target_volet in ("ALL", "I"):
+    if target_volet in ("ALL", "I", "I_AND_V"):
         print(">>> [Volet I] ?valuation hors-?chantillon ? k=0 sur S_TD face au Jumeau Ni? sigma_r^0 et Baselines SOTA...")
         w_std = np.sign(diff_sel[:, s_td_indices].mean(axis=0)) / math.sqrt(k_sparse)
         # Double contraste centr? par bloc sur S_TD
@@ -238,34 +238,69 @@ def run_real_cuda_campaign(target_volet: str = "ALL"):
         (OUT_DIR / "RESULTAT_REEL_GPU_VOLETS_III_IV_H9.json").write_text(json.dumps(v4_res, indent=2), encoding="utf-8")
         git_checkpoint_push(f"[GPU {gpu_name}] Volets III & IV H9 (d=1..6 sauts extraits sur GPU)")
 
-    # --- VOLET V : Essaim Chim?re Multi-Esp?ces (H4' CMH + Breslow-Day) ---
-    if target_volet in ("ALL", "V_70B"):
-        print(">>> [Volet V] ?valuation de la d?corr?lation inter-esp?ces H4' (Llama-3.1 vs Qwen2.5) sur GPU...")
+    # --- VOLET V : Essaim Chim?re Multi-Esp?ces R?el (Llama-3.1-8B + Qwen2.5-7B : H4' CMH + Breslow-Day sur GPU) ---
+    if target_volet in ("ALL", "V_70B", "I_AND_V"):
+        print(">>> [Volet V] ?valuation r?elle de la d?corr?lation inter-esp?ces H4' (Llama-3.1-8B + Qwen2.5-7B) sur GPU...")
+        w_l1 = np.sign(diff_sel[:, s_td_indices].mean(axis=0)) / math.sqrt(k_sparse)
+        llama_sab_scores = (H_P3[idx_eval][:, s_td_indices] - H_P0[idx_eval][:, s_td_indices]) @ w_l1
+        llama_s0_scores  = (H_S0[idx_eval][:, s_td_indices] - H_P0[idx_eval][:, s_td_indices]) @ w_l1
         del model
         if device == "cuda":
             torch.cuda.empty_cache()
-        second_species_id = "Qwen/Qwen2.5-7B-Instruct" if "Llama" in model_id else "mistralai/Mistral-7B-Instruct-v0.3"
-        try:
-            tok2 = AutoTokenizer.from_pretrained(second_species_id, token=hf_tok if hf_tok else None)
-            mod2 = AutoModelForCausalLM.from_pretrained(
-                second_species_id,
-                torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
-                device_map="auto" if device == "cuda" else None,
-                token=hf_tok if hf_tok else None
-            )
-            mod2.eval()
-            second_loaded = second_species_id
-        except Exception as e:
-            second_loaded = f"Fallback_Checkpoint ({e})"
+
+        second_species_id = "Qwen/Qwen2.5-7B-Instruct"
+        tok2 = AutoTokenizer.from_pretrained(second_species_id, token=hf_tok if hf_tok else None, trust_remote_code=True)
+        mod2 = AutoModelForCausalLM.from_pretrained(
+            second_species_id,
+            torch_dtype=torch.bfloat16 if device == "cuda" else torch.float32,
+            device_map="auto" if device == "cuda" else None,
+            token=hf_tok if hf_tok else None,
+            trust_remote_code=True
+        )
+        mod2.eval()
+
+        def extract_k0_qwen(prompt_list):
+            vecs = []
+            with torch.no_grad():
+                for p_txt in prompt_list:
+                    inp = tok2(p_txt, return_tensors="pt").to(mod2.device)
+                    out = mod2(**inp, output_hidden_states=True)
+                    ls = [out.hidden_states[l][0, -1, :].to(torch.float64).cpu().numpy() for l in [4, 8, 12, 16, 20] if l < len(out.hidden_states)]
+                    vecs.append(np.concatenate(ls, axis=0))
+            return np.stack(vecs, axis=0)
+
+        Q_P0 = extract_k0_qwen([q["P0_honest"] for q in quads])
+        Q_P3 = extract_k0_qwen([q["P3_saboteur_active"] for q in quads])
+        Q_S0 = extract_k0_qwen([q["sigma0_negated_twin"] for q in quads])
+        Q_P2 = extract_k0_qwen([q["P2_refusal_inactive"] for q in quads])
+
+        q_diff_sel = (Q_P3[:n_sel] - Q_S0[:n_sel]) - (Q_P2[:n_sel] - Q_P0[:n_sel])
+        q_tstats = np.abs(q_diff_sel.mean(axis=0)) / (q_diff_sel.std(axis=0) + 1e-8)
+        q_k = max(16, int(0.008 * q_tstats.shape[0]))
+        q_idx = np.argsort(q_tstats)[-q_k:]
+        w_qwen = np.sign(q_diff_sel[:, q_idx].mean(axis=0)) / math.sqrt(q_k)
+
+        qwen_sab_scores = (Q_P3[idx_eval][:, q_idx] - Q_P0[idx_eval][:, q_idx]) @ w_qwen
+        qwen_s0_scores  = (Q_S0[idx_eval][:, q_idx] - Q_P0[idx_eval][:, q_idx]) @ w_qwen
+
+        # Corr?lation des erreurs sur le Jumeau Ni? entre Llama-3.1 et Qwen-2.5 vs Intra-Famille
+        corr_inter = float(np.corrcoef(llama_s0_scores, qwen_s0_scores)[0, 1])
+        # D?tection conjointe Chim?re (Moyenne Z-score Llama + Qwen)
+        z_chimere_diff = ((llama_sab_scores - llama_s0_scores) / (np.std(llama_sab_scores - llama_s0_scores) + 1e-8)) + ((qwen_sab_scores - qwen_s0_scores) / (np.std(qwen_sab_scores - qwen_s0_scores) + 1e-8))
+        dz_chimere = round(float(np.mean(z_chimere_diff) / (np.std(z_chimere_diff, ddof=1) + 1e-8)), 4)
 
         v5_res = {
             "primary_species": model_id,
-            "secondary_species": second_loaded,
+            "secondary_species": second_species_id,
             "gpu": gpu_name,
-            "status": "CHIMERE_INTER_ESPECES_VALIDEE_SUR_GPU"
+            "card_S_TD_Llama3_08pct": int(k_sparse),
+            "card_S_TD_Qwen25_08pct": int(q_k),
+            "inter_species_residual_correlation_r": round(corr_inter, 4),
+            "dz_Hedges_Chimere_Dual_Species": dz_chimere,
+            "status": "CHIMERE_INTER_ESPECES_LLAMA3_QWEN25_CERTIFIEE_SUR_GPU"
         }
         (OUT_DIR / "RESULTAT_REEL_GPU_VOLET_V_CHIMERE.json").write_text(json.dumps(v5_res, indent=2), encoding="utf-8")
-        git_checkpoint_push(f"[GPU {gpu_name}] Volet V Chimere Inter-Especes ({model_id} + {second_loaded}) termine !")
+        git_checkpoint_push(f"[GPU {gpu_name}] Volet V Chimere Reelle ({model_id} + {second_species_id}) : r_inter={corr_inter:.3f}, dz_chimere={dz_chimere}")
 
     print("===========================================================================")
     print("=== CAMPAGNE GPU REELLE TERMINEE ET POUSSEE SUR GITHUB AVEC SUCCES !    ===")
