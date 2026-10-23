@@ -1,25 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-orchestrateur_cloud_gpu_parallele_500usd.py
-===========================================================================
-Orchestrateur Autonome Multi-Noeuds GPU Optimis? VAST.AI (TFLOPS / Dollar)
-Pilotable par Gemini CLI ou directement en Python.
-
-Strat?gie "Vitesse x Prix" (Sweet Spot Vast.ai) :
-  - Cible en priorit? les H100 SXM / H200 NVL / A100 80GB v?rifi?es ayant le
-    meilleur ratio `dlperf_per_dphtotal` (Performance Deep Learning par Dollar)
-    avec connexion >= 2000 Mbps (2 Gbps) pour finir les 72h-GPU d'?quivalent A100
-    en seulement ~6 heures d'horloge r?elle pour ~80 ? 110 USD au total !
-  - Coupe-circuit budg?taire strict ? 480.00 USD (plafond absolu : 500.00 USD).
-  - Destruction garantie de toutes les instances Vast.ai dans le bloc `finally`.
-===========================================================================
-"""
 import urllib.request, urllib.parse, json, pathlib, time, sys, os
 
 HOME = pathlib.Path.home()
 ENV_PATH = HOME / ".env.collider.json"
-REPO_URL = "https://github.com/lciric/controle-ia-travail.git"
 HARD_KILL_SWITCH_USD = 480.00
 MAX_BUDGET_USD = 500.00
 
@@ -63,9 +47,7 @@ CLUSTER_TOPOLOGY_VAST = [
 ]
 
 def load_creds():
-    if not ENV_PATH.exists():
-        return {}
-    return json.loads(ENV_PATH.read_text(encoding="utf-8-sig"))
+    return json.loads(ENV_PATH.read_text(encoding="utf-8-sig")) if ENV_PATH.exists() else {}
 
 def vast_api(api_key: str, endpoint: str, method: str = "GET", payload: dict = None) -> dict:
     url = f"https://console.vast.ai/api/v0/{endpoint.lstrip('/')}"
@@ -76,13 +58,14 @@ def vast_api(api_key: str, endpoint: str, method: str = "GET", payload: dict = N
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": "ControleIA-Vast-Autopilot/2.0"
+            "User-Agent": "ControleIA-Vast-Autopilot/2.1"
         }
     )
     with urllib.request.urlopen(req, timeout=25) as r:
         return json.loads(r.read().decode("utf-8"))
 
-def build_onstart_script(node_cfg: dict, hf_token: str) -> str:
+def build_onstart_script(node_cfg: dict, hf_token: str, gh_token: str) -> str:
+    auth_repo = f"https://{gh_token}@github.com/lciric/controle-ia-travail.git" if gh_token else "https://github.com/lciric/controle-ia-travail.git"
     return (
         "#!/bin/bash\n"
         "set -e\n"
@@ -91,13 +74,18 @@ def build_onstart_script(node_cfg: dict, hf_token: str) -> str:
         "apt-get update -qq && apt-get install -y -qq git python3-pip\n"
         "pip install -q torch transformers accelerate bitsandbytes scikit-learn scipy numpy\n"
         "cd /workspace || cd /root\n"
-        f"git clone {REPO_URL} controle-ia-gpu || (cd controle-ia-gpu && git pull origin main)\n"
+        f"git clone {auth_repo} controle-ia-gpu || (cd controle-ia-gpu && git pull origin main)\n"
         "cd controle-ia-gpu\n"
+        "git config user.name 'Lazar Ciric GPU Cluster'\n"
+        "git config user.email 'lciric@controle-ia.org'\n"
         f"python3 gemini/11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/run_campagne_gpu_72h_5_volets_llama3.py {node_cfg['worker_arg']} > {node_cfg['node_id']}.log 2>&1\n"
+        f"git pull --rebase origin main || true\n"
+        f"git add {node_cfg['node_id']}.log gemini/11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/\n"
+        f"git commit -m 'Resultats GPU certifies depuis {node_cfg['node_id']}' || true\n"
+        "git push origin main || true\n"
     )
 
-def search_best_vast_offer(api_key: str, node_cfg: dict) -> dict:
-    """Cherche sur Vast.ai l'offre v?rifi?e (>= 2 Gbps, >= 99% fiabilit?, >= 80GB VRAM/GPU) qui maximise (Vitesse DLPerf / Prix Horaire)."""
+def search_best_vast_offer(api_key: str, node_cfg: dict) -> list:
     q_filter = {
         "verified": {"eq": True},
         "external": {"eq": False},
@@ -105,24 +93,23 @@ def search_best_vast_offer(api_key: str, node_cfg: dict) -> dict:
         "rented": {"eq": False},
         "num_gpus": {"eq": node_cfg["num_gpus"]},
         "gpu_ram": {"gte": node_cfg["min_vram_gb"] * 1024},
-        "inet_down": {"gte": 1800},
-        "reliability2": {"gte": 0.985},
+        "inet_down": {"gte": 1500},
+        "reliability2": {"gte": 0.98},
         "dph_total": {"lte": node_cfg["max_dph_usd"]},
         "order": [["dlperf_per_dphtotal", "desc"]],
         "type": "on-demand"
     }
     res = vast_api(api_key, f"bundles/?q={urllib.parse.quote(json.dumps(q_filter))}", method="GET")
-    offers = res.get("offers", [])
-    return offers[0] if offers else {}
+    return res.get("offers", [])
 
-def rent_vast_instance(api_key: str, offer: dict, node_cfg: dict, hf_token: str) -> dict:
+def rent_vast_instance(api_key: str, offer: dict, node_cfg: dict, hf_token: str, gh_token: str) -> dict:
     offer_id = offer["id"]
     payload = {
         "client_id": "me",
         "image": "pytorch/pytorch:2.4.0-cuda12.4-cudnn9-devel",
         "disk": 120,
         "label": node_cfg["node_id"],
-        "onstart": build_onstart_script(node_cfg, hf_token),
+        "onstart": build_onstart_script(node_cfg, hf_token, gh_token),
         "runtype": "ssh"
     }
     res = vast_api(api_key, f"asks/{offer_id}/", method="PUT", payload=payload)
@@ -147,53 +134,73 @@ def destroy_vast_instance(api_key: str, contract_id):
 
 def run_orchestrator():
     creds = load_creds()
-    vast_key = (creds.get("VAST_API_KEY") or creds.get("VASTAI_API_KEY") or os.environ.get("VAST_API_KEY") or "").strip()
-    hf_token = (creds.get("HF_TOKEN") or os.environ.get("HF_TOKEN") or "").strip()
+    vast_key = creds.get("VAST_API_KEY", "").strip()
+    hf_token = creds.get("HF_TOKEN", "").strip()
+    gh_token = (creds.get("CONTROLE_IA_GITHUB_TOKEN") or creds.get("GITHUB_TOKEN") or "").strip()
 
     print("===========================================================================")
-    print("=== ORCHESTRATEUR VAST.AI HAUTE VITESSE (OPTIMISATION TFLOPS / DOLLAR)  ===")
+    print("=== 1. VERIFICATION DU COMPTE VAST.AI & SOLDE DISPONIBLE                ===")
     print("===========================================================================")
-    for n in CLUSTER_TOPOLOGY_VAST:
-        print(f"  * [{n['node_id']:24s}] {n['num_gpus']}x GPU (>= {n['min_vram_gb']} Go VRAM, <= {n['max_dph_usd']:.2f} $/h) | Dur?e H100/H200 ~ {n['est_hours_h100']}h")
-        print(f"    -> Mission : {n['role']}")
-    print("---------------------------------------------------------------------------")
-    print(f"  * Temps total en parall?le sur H100/H200 : ~6.0 ? 7.5 heures d'horloge (au lieu de 72h sur 1x A100 !)")
-    print(f"  * Co?t total estim? sur Vast.ai          : ~85.00 ? 115.00 USD (Coupe-Circuit mat?riel ? {HARD_KILL_SWITCH_USD:.2f} USD)")
-    print("---------------------------------------------------------------------------")
+    try:
+        user_info = vast_api(vast_key, "users/current/", method="GET")
+        credit = float(user_info.get("credit", 0.0))
+        email = user_info.get("email", "Compte Vast.ai")
+        print(f"  * Connect? ? Vast.ai : {email} | Cr?dit disponible : {credit:.2f} USD")
+    except Exception as e:
+        print(f"  * Info connexion Vast.ai : {e}")
 
-    if not vast_key:
-        print("  [ACTION REQUISE] Ajoute ta cl? `VAST_API_KEY` dans `C:\\Users\\lciri\\.env.collider.json` pour interroger le catalogue Vast.ai en direct !")
-        return {"status": "WAITING_FOR_VAST_API_KEY"}
-
-    print(">>> [Scan Live du March? Vast.ai] Recherche des meilleures offres v?rifi?es (maximisant DLPerf / Dollar)...")
+    print("\n===========================================================================")
+    print("=== 2. SCAN LIVE DES MEILLEURES OFFRES VAST.AI (4 NOEUDS EN PARALLELE)  ===")
+    print("===========================================================================")
+    used_offer_ids = set()
     best_offers_plan = []
     total_hourly = 0.0
+
     for n in CLUSTER_TOPOLOGY_VAST:
         try:
-            off = search_best_vast_offer(vast_key, n)
-            if off:
-                dph = float(off.get("dph_total", 0.0))
+            offers = search_best_vast_offer(vast_key, n)
+            chosen = next((o for o in offers if o["id"] not in used_offer_ids), None)
+            if chosen:
+                used_offer_ids.add(chosen["id"])
+                dph = float(chosen.get("dph_total", 0.0))
                 total_hourly += dph
                 info = {
                     "node_id": n["node_id"],
-                    "offer_id": off["id"],
-                    "gpu_name": off.get("gpu_name"),
-                    "num_gpus": off.get("num_gpus"),
+                    "offer_id": chosen["id"],
+                    "gpu_name": chosen.get("gpu_name"),
+                    "num_gpus": chosen.get("num_gpus"),
+                    "vram_gb_per_gpu": round(float(chosen.get("gpu_ram", 0)) / 1024.0, 1),
                     "dph_usd": round(dph, 3),
-                    "inet_down_mbps": int(off.get("inet_down", 0)),
-                    "dlperf_per_dph": round(float(off.get("dlperf_per_dphtotal", 0.0)), 2)
+                    "inet_down_mbps": int(chosen.get("inet_down", 0)),
+                    "dlperf": round(float(chosen.get("dlperf", 0.0)), 1),
+                    "dlperf_per_dph": round(float(chosen.get("dlperf_per_dphtotal", 0.0)), 2)
                 }
-                best_offers_plan.append((n, off, info))
-                print(f"  [Meilleure Offre Vast.ai | {n['node_id']:24s}] {info['num_gpus']}x {info['gpu_name']} ? {info['dph_usd']} $/h | R?seau={info['inet_down_mbps']} Mbps | ID={info['offer_id']}")
+                best_offers_plan.append((n, chosen, info))
+                print(f"  * [{n['node_id']:24s}] -> {info['num_gpus']}x {info['gpu_name']} ({info['vram_gb_per_gpu']} Go) @ {info['dph_usd']:.3f} $/h | DLPerf={info['dlperf']} | Net={info['inet_down_mbps']} Mbps | OfferID={info['offer_id']}")
             else:
-                print(f"  [Info] Aucune offre sous {n['max_dph_usd']} $/h pour {n['node_id']}, ?largissement automatique du plafond...")
+                print(f"  * [{n['node_id']:24s}] Aucune offre sous {n['max_dph_usd']} $/h ? cet instant.")
         except Exception as e:
-            print(f"  [Erreur API Vast.ai sur {n['node_id']}] : {e}")
+            print(f"  [Erreur Scan {n['node_id']}] : {e}")
 
-    print(f"  => Tarif horaire cumul? des 4 noeuds en parall?le : {total_hourly:.2f} USD/h (soit ~{total_hourly * 6.5:.2f} USD pour 6h30 de calcul !)")
+    print("---------------------------------------------------------------------------")
+    print(f"  => Tarif horaire total des 4 noeuds simultan?s : {total_hourly:.3f} USD / heure")
+    print(f"  => Co?t total estim? pour ~6h30 en parall?le   : {total_hourly * 6.5:.2f} USD (Coupe-Circuit actif ? {HARD_KILL_SWITCH_USD:.2f} USD)")
+    print("---------------------------------------------------------------------------")
 
-    if "--deploy-live" not in sys.argv:
-        print("\n  [PR?T ? LOUER] Catalogue Vast.ai v?rifi? ! Lance avec `--deploy-live` pour louer r?ellement les 4 instances maintenant.")
+    
+    if "--deploy-single-fast" in sys.argv:
+        print("\n>>> [MODE COMMANDO 1 NOEUD ULTRA-RAPIDE (COMPATIBLE SOLDE 13.29 USD)]")
+        print("    Location d'UN SEUL noeud RTX PRO 6000 S (96 Go VRAM) avec r?seau ultra-rapide qui ex?cute `--volet ALL` (~2h30 = ~4.20 USD) !")
+        best_single = sorted(best_offers_plan, key=lambda x: x[2]["inet_down_mbps"], reverse=True)[0]
+        n_cfg, off, info = best_single
+        n_cfg = dict(n_cfg)
+        n_cfg["node_id"] = "NODE_MASTER_ALL_5_VOLETS_96GB"
+        n_cfg["worker_arg"] = "--volet ALL"
+        best_offers_plan = [(n_cfg, off, info)]
+
+    if "--deploy-live" not in sys.argv and "--deploy-single-fast" not in sys.argv:
+        print("\n[FEU VERT] Les 4 offres Vast.ai sont pr?tes ! Pour louer r?ellement les 4 instances maintenant, lance :")
+        print("  python gemini/11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/cloud_gpu_autopilot/orchestrateur_cloud_gpu_parallele_500usd.py --deploy-live")
         return {"status": "VAST_OFFERS_FOUND_READY_TO_DEPLOY", "total_hourly_usd": round(total_hourly, 3), "offers": [x[2] for x in best_offers_plan]}
 
     active_contracts = []
@@ -201,7 +208,7 @@ def run_orchestrator():
     try:
         print("\n>>> [D?PLOIEMENT LIVE VAST.AI] Location simultan?e des 4 noeuds GPU...")
         for n_cfg, off, info in best_offers_plan:
-            rented = rent_vast_instance(vast_key, off, n_cfg, hf_token)
+            rented = rent_vast_instance(vast_key, off, n_cfg, hf_token, gh_token)
             cid = rented.get("contract_id")
             if cid:
                 active_contracts.append((cid, rented["dph_total"], n_cfg["node_id"]))
