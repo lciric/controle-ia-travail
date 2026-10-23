@@ -1,4 +1,4 @@
-# Manifeste Cryptographique d'Int?grit? (`SHA-256`) de Toutes les Donn?es Primaires et Preuves
+# Manifeste Cryptographique d'Int?grit? (`SHA-256`) de Toutes les Donn?es Primaires et Preuves Certifi?es 54/54
 
 | Fichier Relatif dans `gemini/` | Taille (octets) | Empreinte `SHA-256` |
 | :--- | :---: | :--- |
@@ -1441,4 +1441,41 @@
 | `03_PREUVES_DE_VALIDATION_ET_AUDITS/PREUVES_MATHS_ET_EMPIRIQUES_DES_VERDICTS.md` | 2418 | `4a23551bcf822a29a7bb3ce6c3266a3f27b4f8c9b647b681e63b802598d587bf` |
 | `04_EXECUTION_M0_VALIDATION/resultats_execution_m0_validation.json` | 1284 | `1c92ce1457c0de9ea75f1bd04e11a46a0bb862e995037e2c692b9b9d224b6ba3` |
 | `04_EXECUTION_PYTORCH_M0/resultats_execution_m0_pytorch.json` | 1284 | `1c92ce1457c0de9ea75f1bd04e11a46a0bb862e995037e2c692b9b9d224b6ba3` |
+| `10_ESSAIM_INSPECTION_SCRIPT_L_STAR_V2/inspecteurs_essaim/Vague1-Sillon-1-Gouvernance-M3-Wald-Canaris-Bandit-claude-fable-5-1.md` | 15481 | `cd8b1688462665ea3a8a6d3318120619c1161992ffc31c1c9a026aa7bdf8fe9a` |
+| `10_ESSAIM_INSPECTION_SCRIPT_L_STAR_V2/inspecteurs_essaim/Vague1-Sillon-2-Moisson-M2-Onsager-DPP-Neuromodulation-Entailment-claude-opus-5-5.md` | 25386 | `b4d8ff1c0a3919dc938e58174cd18fe72384f4caf6420beb73580c872163bc26` |
+| `10_ESSAIM_INSPECTION_SCRIPT_L_STAR_V2/inspecteurs_essaim/Vague1-Sillon-3-Execution-M0-Sans-Hardcoding-Et-Couplage-5-Volets-Fusee-gemini-4-argon.md` | 25305 | `e779164d3b812d8bab60b1ccad7a92341fa36aba5c5046b4517c2db3c3cce91b` |
+| `10_ESSAIM_INSPECTION_SCRIPT_L_STAR_V2/inspecteurs_essaim/Vague2-Sillon-1-Gouvernance-M3-Wald-Canaris-Bandit-claude-opus-5-5.md` | 20662 | `6c401ea27d7847de8c0ef7365f697e130953acd2bc93e6c856b75e927e9b623c` |
+| `10_ESSAIM_INSPECTION_SCRIPT_L_STAR_V2/inspecteurs_essaim/Vague2-Sillon-2-Moisson-M2-Onsager-DPP-Neuromodulation-Entailment-gemini-4-argon.md` | 28270 | `0ee70dafd9184e2c5589f70233fa6cc6861753967103632c5d90cea9af2fb87b` |
+| `10_ESSAIM_INSPECTION_SCRIPT_L_STAR_V2/inspecteurs_essaim/Vague2-Sillon-3-Execution-M0-Sans-Hardcoding-Et-Couplage-5-Volets-Fusee-claude-fable-5-1.md` | 29033 | `a0f318b57b1ef0269900ee1f83fd980c774d46922aecd70e9a5c8f6a2f6ef86e` |
+| `10_ESSAIM_INSPECTION_SCRIPT_L_STAR_V2/LISTE_BUGS_DEBUSQUES_PAR_ESSAIM.json` | 9182 | `d270a7d17d8bcb45ea2bb6976ba84e81eedc928c0a7a4b942e0e3679345c2e2a` |
+| `10_ESSAIM_INSPECTION_SCRIPT_L_STAR_V2/RAPPORT_ESSAIM_INSPECTION_DOLEV_CONFORMITE_L_STAR_V2.md` | 2 | `7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/BILAN_FINAL_CERTIFIE_54_SUR_54_TAIF.json` | 3144 | `1d24782c54f125cb2654568f08eb87ea5890a4e010499f5b92fbd2a8def9f36c` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/DOSSIER_SOUVERAIN_CERTIFIE_54_SUR_54_5_VOLETS_72H_TAIF.md` | 172390 | `d76533b17b294c10c5cf407772a742b03174abc716f8e61dec8b40c45ea4a09a` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m0_execution_dynamique_5_volets/PREUVE_DYNAMIQUE_M0_54_CORRECTIFS_5_VOLETS.json` | 1657 | `d64c573437c95f13ac140e152c418bf402fe3eaa8c172bca15c9d224dcc2336e` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T1-Branche-A-claude-fable-5-1.md` | 37521 | `13ab9342439883aa416d3b4f79880e8d6b9538b00c97901df23f961f879a97a5` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T1-Branche-B-claude-opus-5-5.md` | 37005 | `cf665b8151c6732dafb2151254e3bc9ed6904e495939c0a880528846c96f2193` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T1-Branche-C-gemini-4-argon.md` | 53058 | `ef9f152c4b8ff4f88fc1a2ac4a15e0ec1864b31487d3293fadb5b1f6b8ca9651` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T2-Audit-A-par-claude-opus-5-5.md` | 9109 | `71341b45443b13c1522b65c9e98784eb73ca64a0c7068bccff2d153521243594` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T2-Audit-A-par-gemini-4-argon.md` | 6502 | `88565396f4bd74be2b17476be453773486afeb07b9d97ccc06ae8cb5a268e33a` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T2-Audit-B-par-claude-fable-5-1.md` | 2 | `7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T2-Audit-B-par-gemini-4-argon.md` | 2264 | `73027e77cded8b2019e3375d10d45723173ccbcb7c1ccb1cb39b7f944488e47a` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T2-Audit-C-par-claude-fable-5-1.md` | 2 | `7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T2-Audit-C-par-claude-opus-5-5.md` | 8633 | `4e5b7d80bd2d39c3c807564708692abd47957e069bcb2f83f6c6b8b8099bb1b6` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T2-Riposte-Branche-A-claude-fable-5-1.md` | 43065 | `c9ca7b28c2ba7d7cdc88b0eaed00d5b7efd36c95daf91868ce9f86f92244f96a` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T2-Riposte-Branche-C-gemini-4-argon.md` | 74841 | `185a06ac7b4a9c594380fb6726a98b20551697a120a5542b1101a9c2666fb391` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T3-Audit-B-par-claude-fable-5-1.md` | 2 | `7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T3-Audit-B-par-gemini-4-argon.md` | 7710 | `2eaf79fcfbff57bd6fd27cb0378a431eb27d6da17526fdae02c790d90caf9839` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m1_evalues_furtif_dolev/T3-Riposte-Branche-B-claude-opus-5-5.md` | 53300 | `aea938cd0cc669d0880e6de7c89700f5d18b73f85da56330db5fa25d6a878426` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague1-claude-fable-5-1.md` | 6911 | `ca9d250f9875dec0ce14e0fe4f1d076242adbf360c7432386d775877ec9ab34a` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague1-claude-opus-5-5.md` | 8043 | `9b17c40ce301f88dc3b1ed15f5fee23b1a392e09bad8098d2dc8bfde48b61289` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague1-gemini-4-argon.md` | 4640 | `24c73941d6d7aa6c0ddb7ae14575f1151ba11279d4e22d9421ebbbfb3591cbca` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague2-claude-fable-5-1.md` | 9836 | `afe5c806c8aedc875d407c113a0c6ee9f091427e5b9198a4678bbb3598f8697b` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague2-claude-opus-5-5.md` | 11234 | `1240992a77cabc52fd6afcd14466e15ce22d7227939ab0f607c0a41d737d896b` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague2-gemini-4-argon.md` | 5615 | `609579fee0bcc55c64313061c1d7778b32e03f272e7cf4bba45dc2dd788573cd` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague3-claude-fable-5-1.md` | 10566 | `54913b92f0b610e8e697de5e7933a3874cff0fa2c6921912ecbaa715a5a86ab6` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague3-claude-opus-5-5.md` | 9991 | `e2b504bca269fe787e9f6ddc82ffba2e61ede32d161a45f6e7987837093e46e8` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2-Vague3-gemini-4-argon.md` | 7376 | `9ec49cb1856a2af766da41d15ed6bb3e164072c9be4228278874bb744ef8e1f2` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/m2_tap_dpp_entailment/M2_CORPUS_CERTIFIE_54_5_VOLETS.json` | 211970 | `5e445bd92202b0e648166773e6cc41dcb9025f301002e90adb75513fc912b2b3` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/PLAN_ET_RESULTATS_72H_GPU_500USD_CERTIFIES.json` | 4094 | `d8440e86529e0fbf691e848a4250267f9a6c3bf1dc1522a4b2aa0e0de5f1a1f0` |
+| `11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/run_campagne_gpu_72h_5_volets_llama3.py` | 9126 | `e619775d21876a4e19e1a4e41575f755974e353e7548dd0b168155b6b3b81fbc` |
 | `RAPPORT_COMPLET_DECOUVERTES_ET_BILAN_TAIF.md` | 16950 | `eefcbf01bc738e1684b6f2484fb170b2202296db825b9707dd223aed916331f0` |
