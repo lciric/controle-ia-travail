@@ -210,7 +210,7 @@ def run_phase2_gpu():
             lin_diffs = ((H_adv[:, s_idx_t] - X_s0_t[:, s_idx_t]) @ w_l_t).cpu().numpy()
             dz_linear = float(np.mean(lin_diffs) / (np.std(lin_diffs, ddof=1) + 1e-8))
             # 2. Score du Dictionnaire Non-Lin?aire Quadratique de Koopman + Do-Clamp (Volet II)
-             std_scale = float(torch.std(X_hon_t[:, s_idx_t]).item()) + 1e-8
+            std_scale = float(torch.std(X_hon_t[:, s_idx_t]).item()) + 1e-8
             quad_adv = torch.mean(((H_adv[:, s_idx_t] - X_hon_t[:, s_idx_t]) / std_scale) ** 2, dim=1) + 0.5 * torch.norm(delta_h, dim=1)
             quad_hon = torch.mean(((X_s0_t[:, s_idx_t] - X_hon_t[:, s_idx_t]) / std_scale) ** 2, dim=1)
             q_diffs = (quad_adv - quad_hon).cpu().numpy()
