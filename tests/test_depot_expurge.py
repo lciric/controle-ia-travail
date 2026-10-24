@@ -148,12 +148,13 @@ def test_copie_de_bout_en_bout_saine_puis_artefact(tmp_path, monkeypatch, capsys
 
 def test_garde_des_secrets_saine_et_artefact():
     """R-349 : valeurs de clés de l'environnement et formes connues, dans un fichier ou dans une archive gardée ; la
-    valeur n'est jamais dite ; `RR_*`, chemins et valeurs sans chiffre ne sont pas lus comme des clés."""
+    valeur n'est jamais dite ; chemins, noms de configuration et valeurs courtes ne sont pas lus comme des clés ; `RR_*`
+    le sont depuis R-351."""
     fausse = "0123456789abcdef" * 4
     env = {"FAUSSE_API_KEY": fausse, "RR_ANTHROPIC_API_KEY": "rr" + "7" * 30, "SESSION_TOKEN_FILE": "/run/jeton/abc123def456ghi789",
            "GIT_CONFIG_KEY_0": "http.https://example.invalid/.extraheader", "HOME": "/root", "COURT_TOKEN": "a1b2"}
     valeurs = de.valeurs_secretes(env)
-    assert set(valeurs) == {"FAUSSE_API_KEY"}
+    assert set(valeurs) == {"FAUSSE_API_KEY", "RR_ANTHROPIC_API_KEY"}
     assert de.secrets_dans("notes.md", b"aucun secret ici", valeurs) == []
     trouve = de.secrets_dans("src/config.py", ("CLE = '" + fausse + "'").encode(), valeurs)
     assert trouve == ["src/config.py : valeur de FAUSSE_API_KEY"] and fausse not in " ".join(trouve)

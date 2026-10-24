@@ -9,6 +9,7 @@ script vérifie qu'aucun fichier retiré ne survit dans une archive gardée (zip
 par empreinte et par chemin) ; une archive d'un format qu'il n'examine pas l'arrête. Garde des secrets (R-349) : il
 s'arrête aussi si un fichier gardé, ou un membre d'une archive gardée, contient la valeur d'une clé de l'environnement
 ou un jeton d'une forme connue ; il ne dit que le chemin et le nom de la variable ou de la forme, jamais la valeur.
+Depuis R-351 (interdit des clés `RR_*` levé par Lazar), leurs valeurs sont comparées comme les autres.
 
 Rien n'est poussé : le paquet git est écrit dans SORTIE. Sa mise en ligne sur un dépôt distant demande un GO de Lazar.
 Le script n'écrit que dans SORTIE, qui ne doit pas exister ; il ne touche pas au dépôt.
@@ -180,9 +181,9 @@ def survivants(nom: str, data: bytes, empreintes: set[str]) -> list[str]:
     return trouves
 
 
-# Garde des secrets (R-349, demande de Lazar après N-038 (c)). Variables lues : celles dont le nom évoque une clé, sauf
-# `RR_*` (jamais lues, consigne de Lazar) et les noms en `_FILE` (des chemins) ; valeurs retenues : 20 caractères au
-# moins, sans espace, hors chemin, avec des lettres et des chiffres. Formes : jetons des fournisseurs connus.
+# Garde des secrets (R-349, demande de Lazar après N-038 (c)). Variables lues : celles dont le nom évoque une clé, `RR_*`
+# comprises depuis R-351, sauf les noms en `_FILE` (des chemins) ; valeurs retenues : 20 caractères au moins, sans
+# espace, hors chemin, avec des lettres et des chiffres. Formes : jetons des fournisseurs connus.
 NOMS_DE_CLES = re.compile(r"(API_KEY|_KEY$|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|GIT_CONFIG_VALUE)", re.I)
 FORMES_DE_CLES = [
     ("clé Anthropic", re.compile(rb"sk-ant-[A-Za-z0-9_\-]{20,}")),
@@ -198,7 +199,7 @@ def valeurs_secretes(environ=None) -> dict[str, bytes]:
     sortie = {}
     for nom, valeur in env.items():
         v = str(valeur or "").strip()
-        if nom.startswith("RR_") or nom.upper().endswith("_FILE") or not NOMS_DE_CLES.search(nom):
+        if nom.upper().endswith("_FILE") or not NOMS_DE_CLES.search(nom):
             continue
         if len(v) < 20 or v.startswith("/") or any(c.isspace() for c in v) \
                 or not (re.search(r"[A-Za-z]", v) and re.search(r"[0-9]", v)):
