@@ -103,6 +103,8 @@ class Noyau:
         lignes = n.archive.lignes()
         depense = 0.0
         for l in lignes:
+            if l.get("importee"):  # rondes importées d'une course d'origine : dépensées là-bas, jamais ici
+                continue
             depense += float(l.get("cout_usd") or 0.0)
             if l.get("phase"):
                 continue
@@ -181,6 +183,12 @@ class Noyau:
             raise Arret(f"traits : {e}")
         self.description_traits = description_traits
         self.budget.setdefault("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT)
+        # plafond de jetons de sortie par appel d'organisme (None : aucun) ; la ronde de conception hérite de la génération
+        self.budget.setdefault("max_tokens_appel", None)
+        self.budget_conception.setdefault("max_tokens_appel", self.budget["max_tokens_appel"])
+        for b in (self.budget, self.budget_conception):
+            if b["max_tokens_appel"] is not None and int(b["max_tokens_appel"]) <= 0:
+                raise Arret("max_tokens_appel doit être strictement positif ou absent")
         # CE-07 : en réel, le temps de la génération doit contenir tous les entraînements permis plus le reste du travail
         if self.reel and int(self.budget["entrainements_max"]) > 0:
             besoin = int(self.budget["entrainements_max"]) * int(self.budget["delai_entrainement_s"]) + MARGE_TEMPS_S
@@ -429,6 +437,14 @@ class Noyau:
                 self.lignees[nom] = {"espece_amorcage": None, "famille": spec["famille"], "generation": 0,
                                      "organisme": dossier / "organisme", "active": True, "impose": True,
                                      "uid": (bac_a_sable.uid_lignee(len(self.lignees)) if self.isolation["utilisateur"] else None)}
+                # bras apparié adaptatif (`--depuis` sans `--gel`, CE-06) : la génération 0 relancée doit voir ce que la
+                # génération 0 d'origine voyait — ses rondes de conception (historique et vue) ; le bras gelé reste sans archive
+                if spec.get("course_origine") and not self.gel:
+                    importees = self.archive.importer_conception(pathlib.Path(spec["course_origine"]), nom)
+                    resultats[nom]["rondes_conception_importees"] = [int(l["generation"]) for l in importees]
+                    if importees:
+                        self._evenement(etape="conception_importee", lignee=nom, course_origine=spec["course_origine"],
+                                        rondes=[int(l["generation"]) for l in importees])
             self._evenement(etape="amorcage", lignee=nom, **resultats[nom])
         return resultats
 
@@ -464,7 +480,8 @@ class Noyau:
             "budget": {"appels_max": int(budget["appels_max"]), "usd_max": round(min(float(budget["usd_max"]), self._plafond_restant()), 4),
                        "temps_max_s": int(budget["temps_max_s"]), "recherches_max": int(budget["recherches_max"]),
                        "telechargements_max": int(budget.get("telechargements_max", 0)), "octets_max": int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION)),
-                       "entrainements_max": int(budget.get("entrainements_max", 0)), "pas_max": int(budget.get("pas_max", _entrainement.PAS_MAX_DEFAUT))},
+                       "entrainements_max": int(budget.get("entrainements_max", 0)), "pas_max": int(budget.get("pas_max", _entrainement.PAS_MAX_DEFAUT)),
+                       "max_tokens_appel": (int(budget["max_tokens_appel"]) if budget.get("max_tokens_appel") else None)},
             "traits": self._contexte_traits(bool(self.vues) and int(budget.get("entrainements_max", 0)) > 0),
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
             "graine": graine_organisme,
@@ -482,7 +499,8 @@ class Noyau:
         rechercheur = self._rechercheur(travail / "noyau", budget, telechargeur)
         bac_a_sable.proteger(travail / "noyau", 0o700)
         entraineur = self._entraineur(travail / "noyau", lignee, g, budget=budget)
-        with ServeurAppels(appelant, chemin_socket, int(budget["appels_max"]), self.parallele_max, rechercheur, entraineur, telechargeur) as serveur:
+        with ServeurAppels(appelant, chemin_socket, int(budget["appels_max"]), self.parallele_max, rechercheur, entraineur, telechargeur,
+                           max_tokens_appel=budget.get("max_tokens_appel")) as serveur:
             execution = bac_a_sable.executer(travail, chemin_socket, int(budget["temps_max_s"]), isoler_reseau=self.isoler_reseau, uid=uid)
             n_appels = serveur.n_appels
             refus = list(serveur.refus)
@@ -645,9 +663,12 @@ class Noyau:
         return self.rapport()
 
     def _scores_finaux(self, lignes: list[dict]) -> dict:
-        """Score sur le test final, lu une seule fois, à la fin, jamais rendu aux organismes."""
+        """Score sur le test final, lu une seule fois, à la fin, jamais rendu aux organismes. Générations notées et valides
+        seulement (CR3-02 : ni rondes de conception, ni générations invalidées, ni rondes importées)."""
         sortie = {}
         for l in lignes:
+            if l.get("phase") or l.get("invalide") or l.get("importee"):
+                continue
             f = self.archive.racine / l["chemin"] / "juge" / "score-final.json"
             if f.exists():
                 sortie.setdefault(l["lignee"], []).append(json.loads(f.read_text(encoding="utf-8"))["score"])
@@ -661,7 +682,8 @@ class Noyau:
             "n_appels_total": self.n_appels_total, "lignees": {l: {k: (str(v) if isinstance(v, pathlib.Path) else v) for k, v in e.items()} for l, e in self.lignees.items()},
             "generations": lignes,
             "courbes": {l: [x["score"] for x in lignes if x["lignee"] == l and not x.get("invalide") and not x.get("phase")] for l in {x["lignee"] for x in lignes}},
-            "rondes_conception": [{"lignee": x["lignee"], "ronde": x["generation"], "statut": x["statut"], "successeur": x.get("successeur"), "cout_usd": x.get("cout_usd")} for x in lignes if x.get("phase") == "conception"],
+            "rondes_conception": [{"lignee": x["lignee"], "ronde": x["generation"], "statut": x["statut"], "successeur": x.get("successeur"), "cout_usd": x.get("cout_usd")} for x in lignes if x.get("phase") == "conception" and not x.get("importee")],
+            "rondes_conception_importees": [{"lignee": x["lignee"], "ronde": x["generation"], "course_origine": x.get("course_origine")} for x in lignes if x.get("importee")],
             "generations_invalidees": [{"lignee": x["lignee"], "generation": x["generation"], "statut": x["statut"]} for x in lignes if x.get("invalide")],
             "scores_finaux": self._scores_finaux(lignes),
         }

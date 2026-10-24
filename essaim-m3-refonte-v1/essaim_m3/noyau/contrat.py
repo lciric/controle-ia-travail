@@ -36,7 +36,7 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies 
    - "taches_entrainement" : liste de {"id", "famille", "texte", "etiquettes", "verite"},
    - "taches_test" : liste de {"id", "famille", "texte", "etiquettes"} (sans vérité),
    - "budget" : {"appels_max", "usd_max", "temps_max_s", "recherches_max", "telechargements_max", "octets_max",
-     "entrainements_max", "pas_max"} pour cette génération,
+     "entrainements_max", "pas_max", "max_tokens_appel" (entier ou null)} pour cette génération,
    - "traits" : {"disponibles": vrai/faux, "vues": {nom: dimension}, "dimension", "description"} — les traits par
      tâche que le noyau tient pour l'apprentissage par gradient (en réel : activations du modèle local du programme sur
      chaque tâche de la banque, extraites une fois sur la carte ; une vue = une couche × une agrégation, par exemple
@@ -54,9 +54,12 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies 
      Les appels peuvent être faits en parallèle (fils ou processus) : le noyau en sert au plus `parallele_max`
      à la fois (8 par défaut) et met les autres en attente. Le plafond en dollars est tenu au pire cas
      (`max_tokens` demandé) sur les appels en vol : sans `max_tokens`, le noyau prend 4096 ; un `max_tokens`
-     élevé réduit donc le nombre d'appels parallèles possibles sous le plafond.
+     élevé réduit donc le nombre d'appels parallèles possibles sous le plafond. Quand `budget["max_tokens_appel"]`
+     n'est pas null, le noyau rabat tout `max_tokens` demandé au-delà de ce plafond (la réponse rendue dit le
+     `max_tokens` servi dans "max_tokens_servi") : ce qui est demandé en plus n'est pas servi.
    - `especes()` → liste des espèces disponibles ; `budget()` → {"appels_restants", "usd_restants",
-     "recherches_restantes", "sources", "telechargements_restants", "octets_restants", "entrainements_restants"}.
+     "recherches_restantes", "sources", "telechargements_restants", "octets_restants", "entrainements_restants",
+     "max_tokens_appel"}.
    - `rechercher(requete, n=5, role="", source="arxiv")` → dict {"statut", "source", "resultats", "identifiant", "echec"} :
      une recherche documentaire faite par le noyau (lecture seule, journalisée, réponse brute gardée pour l'audit),
      dans la source demandée parmi `budget()["sources"]` — "arxiv", "openalex", "semanticscholar" (articles),

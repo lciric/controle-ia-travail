@@ -1687,3 +1687,76 @@ def test_declencheurs_audit_h_g1_et_ordre_de_ronde_apparie(tmp_path):
                           "--appels-max", "30", "--entrainements-max", "0"]) == 0
     ordres = lambda c: [e["ordre"] for e in (json.loads(x) for x in (c / "evenements.jsonl").read_text().splitlines()) if e.get("etape") == "ronde"]
     assert ordres(a) and ordres(a) == ordres(b)
+
+
+def test_bras_apparie_voit_les_rondes_de_conception_de_l_origine(tmp_path):
+    """RE-01 (conv-audit, n° 20) : dans le bras apparié adaptatif (`--depuis` sans `--gel`), la génération 0 relancée
+    doit voir ce que la génération 0 d'origine voyait — ses rondes de conception, dans `historique` et dans sa vue —,
+    sinon le bras d'origine a plus d'information que le bras apparié, en plus de l'entraînement comparé. Sain : rondes
+    importées, historique et vue de g000 égaux dans les deux bras ; rondes marquées `importee`, hors scores, hors dépense,
+    hors `generations_valides`. Artefact : le bras gelé n'importe rien (archive vide, CR-08) ; une seconde importation
+    refuse (rien n'est réécrit)."""
+    from essaim_m3 import analyse_gradient as A
+    from essaim_m3.noyau import cli
+    concepteur = RACINE / "tests" / "fixtures" / "organisme_concepteur" / "organisme"
+    a = tmp_path / "a"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", "41", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"concepteur={concepteur}@anthropic",
+                          "--rondes-conception-max", "3"]) == 0
+    b = tmp_path / "b"
+    assert cli.principal(["simuler", "--sortie", str(b), "--generations", "2", "--graine", "41", "--depuis", str(a),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    for lignee in ("concepteur", "gemini-argon"):
+        ctx_a = json.loads((a / "archive" / lignee / "g000" / "travail" / "contexte.json").read_text())
+        ctx_b = json.loads((b / "archive" / lignee / "g000" / "travail" / "contexte.json").read_text())
+        cle = lambda h: [(x.get("phase"), x["generation"], x["statut"], x.get("successeur")) for x in h]
+        assert cle(ctx_a["historique"]) == cle(ctx_b["historique"]) and ctx_b["historique"] and all(x.get("importee") for x in ctx_b["historique"])
+        vue_a, vue_b = pathlib.Path(ctx_a["dossier_archive"]), pathlib.Path(ctx_b["dossier_archive"])
+        assert sorted(p.name for p in vue_a.iterdir()) == sorted(p.name for p in vue_b.iterdir())
+        assert not any(q.name in ("juge", "reponses_test.json", "noyau") for q in vue_b.rglob("*"))
+    idx_b = [json.loads(x) for x in (b / "archive" / "index.jsonl").read_text().splitlines()]
+    importees = [l for l in idx_b if l.get("importee")]
+    assert importees and all(l["phase"] == "conception" and l["course_origine"] == str(a) for l in importees)
+    assert A.generations_valides(b, "concepteur") == [0, 1] and A.generations_valides(a, "concepteur") == [0, 1]
+    rapport = json.loads(sorted(b.glob("rapport-v*.json"))[-1].read_text())
+    assert rapport["rondes_conception"] == [] and len(rapport["rondes_conception_importees"]) == len(importees)
+    assert set(rapport["scores_finaux"]) == {"concepteur", "gemini-argon"} and all(len(v) == 2 for v in rapport["scores_finaux"].values())
+    assert abs(rapport["depense_totale_usd"] - sum(float(l.get("cout_usd") or 0) for l in idx_b if not l.get("importee"))) < 1e-6
+    n = boucle.Noyau.recharger(b, appelants=None, reel=False)
+    assert abs(n.depense_totale - rapport["depense_totale_usd"]) < 1e-6
+    with pytest.raises(FileExistsError):
+        n.archive.importer_conception(a, "concepteur")
+    gel = tmp_path / "gel"
+    assert cli.principal(["simuler", "--sortie", str(gel), "--generations", "1", "--graine", "42", "--gel", "--depuis", str(a), "--appels-max", "30"]) == 0
+    idx_g = [json.loads(x) for x in (gel / "archive" / "index.jsonl").read_text().splitlines()]
+    assert not any(l.get("importee") or l.get("phase") for l in idx_g)
+    assert json.loads((gel / "archive" / "concepteur" / "g000" / "travail" / "contexte.json").read_text())["historique"] == []
+
+
+def test_plafond_de_jetons_par_appel(tmp_path):
+    """`--max-tokens-appel` (étape 1 « économe ») : le noyau rabat le `max_tokens` demandé par l'organisme au plafond, le
+    dit dans la réponse (`max_tokens_servi`) et dans `budget()` ; sans plafond, la demande est servie telle quelle ;
+    plafond non positif refusé. La réservation au pire cas suit le `max_tokens` servi (artefact : un appel qui demande
+    100 000 jetons sous un plafond de 256 n'est pas refusé pour plafond de dollars)."""
+    doubles, _ = appelants_simules(rng())
+    a = appels.Appelant(tmp_path, 0.5, doubles)
+    s = serveur.ServeurAppels(a, str(tmp_path / "s.sock"), appels_max=5, max_tokens_appel=256)
+    r = s.traiter({"op": "appeler", "espece": "GEMINI_ARGON", "prompt": "bonjour", "max_tokens": 100000})
+    assert r["statut"] == "OK" and r["max_tokens_servi"] == 256 and s.rabattements == 1
+    r2 = s.traiter({"op": "appeler", "espece": "GEMINI_ARGON", "prompt": "bonjour", "max_tokens": 64})
+    assert r2["max_tokens_servi"] == 64 and s.rabattements == 1
+    assert s.traiter({"op": "budget"})["max_tokens_appel"] == 256
+    journal = [json.loads(x) for x in a.journal.read_text().splitlines()]
+    assert [j["max_tokens"] for j in journal] == [256, 64]
+    sans = serveur.ServeurAppels(a, str(tmp_path / "t.sock"), appels_max=5)
+    assert sans.traiter({"op": "budget"})["max_tokens_appel"] is None
+    with pytest.raises(ValueError):
+        serveur.ServeurAppels(a, str(tmp_path / "u.sock"), appels_max=5, max_tokens_appel=0)
+    from essaim_m3.noyau import cli
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "43", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--max-tokens-appel", "512", "--rondes-conception-max", "1"]) == 0
+    for g in ("c001", "g000"):
+        ctx = json.loads((course / "archive" / "gemini-argon" / g / "travail" / "contexte.json").read_text())
+        assert ctx["budget"]["max_tokens_appel"] == 512
+    assert json.loads((course / "manifeste-run.json").read_text())["budget_generation"]["max_tokens_appel"] == 512
