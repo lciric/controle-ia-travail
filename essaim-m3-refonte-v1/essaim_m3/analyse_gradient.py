@@ -48,6 +48,9 @@ def reponses_finales(course: str | pathlib.Path, lignee: str, generation: int, b
 
 
 def generations_valides(course: str | pathlib.Path, lignee: str) -> list[int]:
+    """Générations notées d'une lignée que le noyau n'a pas invalidées. Les rondes de la phase de conception (`cNNN`) sont
+    écartées : l'index les inscrit avec `phase` et leur numéro de ronde (1 à R) dans `generation`, qui n'est pas une
+    génération notée (constat de « session-depot » après CR3-02 de la contre-lecture n° 3 de la confrontation)."""
     index = pathlib.Path(course) / "archive" / "index.jsonl"
     lignes = [json.loads(x) for x in index.read_text(encoding="utf-8").splitlines() if x.strip()] if index.is_file() else []
     # générations notées seulement : ni rondes de conception (`phase`), ni rondes importées d'une course d'origine, ni invalidées

@@ -1635,6 +1635,45 @@ def test_paires_h_g1_lues_dans_des_courses_appariees(tmp_path):
         A.paires_h_g1([(str(a), str(c))], ["gemini-argon"], generations=2)
 
 
+def test_paires_h_g1_ecartent_les_rondes_de_conception(tmp_path):
+    """Les rondes de conception sont indexées avec `phase` et leur numéro de ronde dans `generation` (1 à R) : elles ne
+    comptent jamais comme générations notées (R5). Cas sain : générations 0 à 2 valides dans les deux bras → génération 2
+    lue. Artefacts : dans A, génération 2 invalidée, ou jamais jouée (lignée arrêtée après g1), alors qu'une ronde de
+    conception porte le numéro 2 → génération 1 lue, jamais un fichier invalidé ou absent."""
+    from essaim_m3 import analyse_gradient as A
+    taches = A._taches_du_test_final(2, 2)
+    banque = {"test_final": taches}
+
+    def course(nom, generations, conception=0, invalides=()):
+        racine = tmp_path / nom
+        (racine / "archive").mkdir(parents=True)
+        (racine / "banque.json").write_text(json.dumps(banque), encoding="utf-8")
+        lignes = [{"lignee": "claude-opus-5-5", "generation": k, "phase": "conception", "invalide": False}
+                  for k in range(1, conception + 1)]
+        for g in generations:
+            juge = racine / "archive" / "claude-opus-5-5" / f"g{g:03d}" / "juge"
+            juge.mkdir(parents=True)
+            # chaque génération répond autrement (première étiquette de la famille en g1, seconde sinon) : la génération lue se voit
+            reponses = {t["id"]: {"etiquette": t["etiquettes"][0 if g == 1 else 1]} for t in taches}
+            juge.joinpath("reponses_test.json").write_text(json.dumps(reponses), encoding="utf-8")
+            lignes.append({"lignee": "claude-opus-5-5", "generation": g, "phase": None, "invalide": g in invalides})
+        (racine / "archive" / "index.jsonl").write_text("".join(json.dumps(l) + "\n" for l in lignes), encoding="utf-8")
+        return str(racine)
+
+    b = course("b", [0, 1, 2])
+    sain = course("a-sain", [0, 1, 2], conception=8)
+    assert A.generations_valides(sain, "claude-opus-5-5") == [0, 1, 2]
+    paires, _, etat = A.paires_h_g1([(sain, b)], ["claude-opus-5-5"], generations=3)
+    assert [p["generation"] for p in paires] == [2] and not etat["coupees"]
+    for nom, generations, invalides in (("a-invalide", [0, 1, 2], (2,)), ("a-arretee", [0, 1], ())):
+        a = course(nom, generations, conception=8, invalides=invalides)
+        assert A.generations_valides(a, "claude-opus-5-5") == [0, 1]
+        paires, _, etat = A.paires_h_g1([(a, b)], ["claude-opus-5-5"], generations=3)
+        assert [p["generation"] for p in paires] == [1] and not etat["coupees"]
+        attendu = {t["id"]: t["etiquettes"][0] for t in taches}
+        assert paires[0]["avec"] == attendu == paires[0]["sans"]
+
+
 def test_lire_resultat_modele_non_conforme_refuse(tmp_path):
     """CE2-04 (R5) : `_lire_resultat` relit le résultat d'un entraînement comme une donnée non fiable. Cas sain : formes
     attendues → OK et copie validée dans la zone du noyau. Artefacts : formes fausses, nombre non fini, objet Python
