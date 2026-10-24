@@ -12,6 +12,7 @@ ici : tout est rapporté, et la métrique de choix est celle que l'humain a gel�
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import shutil
@@ -64,11 +65,54 @@ def charger_metrique(organisme: pathlib.Path) -> dict:
     return {"present": True, "problemes": problemes + pb, "attaques": attaques, "calculer": calculer, "definition": definition}
 
 
+def empreintes_metrique(organisme: pathlib.Path) -> dict:
+    """Empreintes de `organisme/metrique/` (arbre) et de `attaques.json` ; None si absents. Ne lit aucun score."""
+    from .boucle import empreinte_arbre
+    d = organisme / "metrique"
+    if not d.is_dir():
+        return {"present": False, "empreinte_metrique": None, "empreinte_attaques": None}
+    att = d / "attaques.json"
+    return {"present": True, "empreinte_metrique": empreinte_arbre(d),
+            "empreinte_attaques": (hashlib.sha256(att.read_bytes()).hexdigest() if att.exists() else None)}
+
+
+def relever_metriques(noyau, dossier: pathlib.Path) -> dict:
+    """Après la boucle, avant tout gel : pour chaque lignée, la dernière génération valide, sa métrique (empreintes,
+    nombre d'attaques valides, problèmes). Aucun score n'est lu. L'humain gèle ce relevé (compagnon `.sha256`,
+    contre-lecture) : c'est l'addendum que `confronter` exige (CR-04)."""
+    dossier = pathlib.Path(dossier)
+    dossier.mkdir(parents=True, exist_ok=True)
+    releve = {"course": str(noyau.racine), "quand_utc": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "lignees": {}}
+    for l in sorted(noyau.lignees):
+        lignes = [x for x in noyau.archive.lignes(l) if x.get("statut") == "OK" and not x.get("invalide")]
+        if not lignes:
+            releve["lignees"][l] = {"generation": None, "metrique": {"present": False}, "problemes": ["aucune génération valide"]}
+            continue
+        g = lignes[-1]
+        org = extraire_organisme(noyau.archive.racine / g["chemin"] / "organisme.tar.gz", dossier / "organismes" / l)
+        m = charger_metrique(org)
+        releve["lignees"][l] = {"generation": g["generation"], "empreinte_organisme": g.get("empreinte_organisme"), "famille": noyau.lignees[l].get("famille"),
+                                "metrique": empreintes_metrique(org), "n_attaques_valides": len(m["attaques"]), "problemes": m["problemes"]}
+    n = 1
+    while (dossier / f"releve-metriques-v{n}.json").exists():
+        n += 1
+    f = dossier / f"releve-metriques-v{n}.json"
+    f.write_text(json.dumps(releve, ensure_ascii=False, indent=1), encoding="utf-8")
+    from .archive import sceller
+    sceller(f)
+    releve["fichier"] = str(f)
+    return releve
+
+
 class Confrontation:
-    def __init__(self, noyau, dossier: pathlib.Path):
+    def __init__(self, noyau, dossier: pathlib.Path, addendum: dict | None = None):
+        """`addendum` : relevé gelé (`relever_metriques`) ; quand il est donné, une métrique dont les empreintes ne sont
+        pas celles du relevé est « non gelée » et n'est ni exécutée ni attaquée (CR-04)."""
         self.noyau = noyau
         self.dossier = pathlib.Path(dossier)
         self.dossier.mkdir(parents=True, exist_ok=True)
+        self.addendum = addendum
 
     def _derniere_generation(self, lignee: str) -> dict | None:
         lignes = [l for l in self.noyau.archive.lignes(lignee) if l.get("statut") == "OK"]
@@ -85,17 +129,20 @@ class Confrontation:
         travail.mkdir(parents=True)
         for p in (travail.parent, travail.parent.parent):
             bac_a_sable.proteger(p, 0o711)
-        rng = np.random.default_rng(self.noyau.graines.spawn(1)[0])
-        ordre = rng.permutation(len(attaques))
+        g_def = (self._derniere_generation(lignee_def) or {}).get("generation", 0) + 1
+        rng = np.random.default_rng(self.noyau.graine(lignee_def, g_def, "defense"))
+        # CR-06 : les attaques sont mêlées aux tâches du test de développement, sans marque ; seules les attaques sont notées
+        melange = [{"id": a["id"], "famille": a["famille"], "texte": a["texte"], "etiquettes": list(a["etiquettes"])} for a in attaques] + \
+                  [_taches.masquer(t) for t in self.noyau.banque["test"]]
+        ordre = rng.permutation(len(melange))
         contexte = {
-            "generation": -1, "lignee": lignee_def, "mission": contrat.mission_texte(self.noyau.mission, _taches.ETIQUETTES),
+            "generation": g_def, "lignee": lignee_def, "mission": contrat.mission_texte(self.noyau.mission, _taches.ETIQUETTES),
             "dossier_travail": str(travail), "dossier_archive": str(self.noyau.archive.vue),
             "taches_entrainement": [dict(_taches.masquer(t), verite=t["verite"]) for t in self.noyau.banque["train"]],
-            "taches_test": [{"id": attaques[i]["id"], "famille": attaques[i]["famille"], "texte": attaques[i]["texte"],
-                             "etiquettes": list(attaques[i]["etiquettes"])} for i in ordre],
+            "taches_test": [melange[i] for i in ordre],
             "budget": {"appels_max": int(self.noyau.budget["appels_max"]), "usd_max": round(min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()), 4),
                        "temps_max_s": int(self.noyau.budget["temps_max_s"]), "recherches_max": 0},
-            "historique": self.noyau.archive.historique(lignee_def), "confrontation": True, "relance": False,
+            "historique": self.noyau.archive.historique(lignee_def), "relance": False, "graine": self.noyau.graine(lignee_def, g_def, "organisme"),
         }
         appelant = Appelant(travail / "noyau", min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()),
                             self.noyau.appelants, self.noyau.reel, self.noyau.go_id)
@@ -129,11 +176,21 @@ class Confrontation:
     def confronter(self, lignees: list[str] | None = None) -> dict:
         lignees = [l for l in (lignees or list(self.noyau.lignees)) if self._derniere_generation(l)]
         organismes, metriques = {}, {}
+        gel = {}
         for l in lignees:
             g = self._derniere_generation(l)
             org = extraire_organisme(self.noyau.archive.racine / g["chemin"] / "organisme.tar.gz", self.dossier / "organismes" / l)
             organismes[l] = org
             metriques[l] = charger_metrique(org)
+            if self.addendum is not None:
+                attendu = (self.addendum.get("lignees", {}).get(l) or {}).get("metrique") or {}
+                courant = empreintes_metrique(org)
+                gelee = bool(attendu.get("present")) and attendu.get("empreinte_metrique") == courant.get("empreinte_metrique") \
+                    and attendu.get("empreinte_attaques") == courant.get("empreinte_attaques")
+                gel[l] = gelee
+                if not gelee:
+                    metriques[l] = {"present": metriques[l]["present"], "problemes": metriques[l]["problemes"] + ["métrique non gelée par l'addendum : ni exécutée ni attaquée"],
+                                    "attaques": [], "calculer": None, "definition": metriques[l].get("definition")}
         paires = []
         for a in lignees:
             for b in lignees:
@@ -160,6 +217,7 @@ class Confrontation:
                     res["metrique"] = {"code": "NON_APPLICABLE", "valeur": None, "calculee": False}
                 paires.append(res)
         rapport = {"avertissement": "NON OPPOSABLE (R7) ; aucune règle de choix du champion n'est appliquée ici",
+                   "addendum_gele": (None if self.addendum is None else {"quand_utc": self.addendum.get("quand_utc"), "gelees": gel}),
                    "lignees": {l: {"famille": self._famille(l), "metrique_presente": metriques[l]["present"],
                                    "problemes_metrique": metriques[l]["problemes"], "n_attaques": len(metriques[l]["attaques"]),
                                    "definition": (metriques[l]["definition"] or "")[:2000]} for l in lignees},

@@ -827,3 +827,78 @@ def test_plafond_a_l_amorcage_est_un_statut_archive(tmp_path):
     for l, v in am.items():
         if v["statut"] == "ORGANISME_VALIDE":
             assert v["sha256_journal"] and pathlib.Path(v["journal"] + ".sha256").exists()
+
+
+# ---------- CR-08 : bras gelé apparié ; CR-04 : relevé gelé et confrontation séparée ----------
+
+def test_bras_gele_apparie_relance_les_memes_g000_sans_memoire(tmp_path):
+    """`--gel --depuis COURSE` : les organismes g000 de la course adaptative (mêmes empreintes), même banque, aucun
+    appel d'amorçage, historique vide et archive vide ; artefact : une course sans archive est refusée."""
+    from essaim_m3.noyau import cli
+    adaptative = tmp_path / "adaptative"
+    assert cli.principal(["simuler", "--sortie", str(adaptative), "--generations", "2", "--graine", "5", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "CLAUDE_OPUS_5_5", "--entrainements-max", "0"] if False else
+                         ["simuler", "--sortie", str(adaptative), "--generations", "2", "--graine", "5", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "CLAUDE_OPUS_5_5"]) == 0
+    gelee = tmp_path / "gelee"
+    assert cli.principal(["simuler", "--sortie", str(gelee), "--generations", "2", "--graine", "6", "--gel", "--depuis", str(adaptative), "--appels-max", "30"]) == 0
+    idx_a = {(l["lignee"], l["generation"]): l for l in (json.loads(x) for x in (adaptative / "archive" / "index.jsonl").read_text().splitlines())}
+    idx_g = {(l["lignee"], l["generation"]): l for l in (json.loads(x) for x in (gelee / "archive" / "index.jsonl").read_text().splitlines())}
+    assert {l for l, _ in idx_g} == {"gemini-argon", "claude-opus-5-5"}
+    for l in ("gemini-argon", "claude-opus-5-5"):
+        assert idx_g[(l, 0)]["empreinte_organisme"] == idx_a[(l, 0)]["empreinte_organisme"] == idx_g[(l, 1)]["empreinte_organisme"]
+        assert idx_g[(l, 0)]["impose"] is True and idx_g[(l, 0)]["famille"] == idx_a[(l, 0)]["famille"]
+    ev = [json.loads(x) for x in (gelee / "evenements.jsonl").read_text().splitlines()]
+    assert all(e["statut"] == "ORGANISME_IMPOSE_VALIDE" for e in ev if e["etape"] == "amorcage") and not any(e.get("id_appel") for e in ev if e["etape"] == "amorcage")
+    m = json.loads((gelee / "manifeste-run.json").read_text())
+    assert m["gel"] is True and m["especes_amorcage"] == [] and m["organismes_imposes"]["gemini-argon"]["famille"] == "gemini"
+    ctx = json.loads((gelee / "archive" / "gemini-argon" / "g001" / "travail" / "contexte.json").read_text())
+    assert ctx["historique"] == [] and ctx["dossier_archive"].endswith("archive_vue_gel") and "graine" in ctx
+    assert json.loads((gelee / "banque.json").read_text()) == json.loads((adaptative / "banque.json").read_text())
+    with pytest.raises(SystemExit):
+        cli.principal(["simuler", "--sortie", str(tmp_path / "x"), "--depuis", str(adaptative)])  # sans --gel
+    with pytest.raises(appels.Arret):
+        boucle.organismes_g000(tmp_path / "inexistante", tmp_path / "y")
+
+
+def test_releve_gele_puis_confrontation_separee(tmp_path):
+    """Course finie → `extraire-metriques` (aucun score lu) → relevé scellé → `confronter --metriques-gelees` ; une
+    métrique modifiée après le relevé est « non gelée » : ni exécutée ni attaquée ; un addendum sans empreinte ou
+    altéré est refusé."""
+    from essaim_m3.noyau import cli
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "9", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "CLAUDE_OPUS_5_5"]) == 0
+    assert cli.principal(["extraire-metriques", "--course", str(course)]) == 0
+    releve = course / "confrontation" / "releve-metriques-v1.json"
+    assert releve.exists() and (course / "confrontation" / "releve-metriques-v1.json.sha256").exists()
+    r = json.loads(releve.read_text(encoding="utf-8"))
+    assert r["lignees"]["gemini-argon"]["metrique"]["present"] and r["lignees"]["gemini-argon"]["n_attaques_valides"] == 6
+    assert "score" not in json.dumps(r)  # le relevé ne porte aucun score
+    # confrontation séparée avec le relevé gelé : toutes les métriques gelées, paires calculées
+    assert cli.principal(["confronter", "--course", str(course), "--metriques-gelees", str(releve), "--graine", "3"]) == 0
+    conf = sorted((course / "confrontation").glob("confrontation-v*.json"))[-1]
+    c = json.loads(conf.read_text(encoding="utf-8"))
+    assert c["addendum_gele"]["gelees"] == {"gemini-argon": True, "claude-opus-5-5": True}
+    assert all(p["metrique"]["calculee"] for p in c["paires"] if p["applicable"])
+    # addendum altéré : empreintes d'une lignée changées ⇒ métrique non gelée pour elle
+    altere = course / "confrontation" / "releve-altere.json"
+    r2 = json.loads(releve.read_text(encoding="utf-8"))
+    r2["lignees"]["gemini-argon"]["metrique"]["empreinte_metrique"] = "0" * 64
+    altere.write_text(json.dumps(r2), encoding="utf-8")
+    assert cli.principal(["confronter", "--course", str(course), "--metriques-gelees", str(altere)]) == 3  # sans .sha256 : refus
+    archive.sceller(altere)
+    assert cli.principal(["confronter", "--course", str(course), "--metriques-gelees", str(altere), "--graine", "3"]) == 0
+    c2 = json.loads(sorted((course / "confrontation").glob("confrontation-v*.json"))[-1].read_text(encoding="utf-8"))
+    assert c2["addendum_gele"]["gelees"]["gemini-argon"] is False and c2["addendum_gele"]["gelees"]["claude-opus-5-5"] is True
+    paires = {(p["attaquant"], p["defendeur"]): p for p in c2["paires"]}
+    assert paires[("gemini-argon", "claude-opus-5-5")]["n_attaques"] == 0 and not paires[("gemini-argon", "claude-opus-5-5")]["metrique"]["calculee"]
+    assert paires[("claude-opus-5-5", "gemini-argon")]["metrique"]["calculee"]
+    # le contexte de défense ne porte aucune marque et mêle les attaques au test de développement (CR-06)
+    ctx = json.loads(next((course / "confrontation").rglob("defense/contexte.json")).read_text(encoding="utf-8")) if list((course / "confrontation").rglob("defense/contexte.json")) else None
+    if ctx is None:
+        ctx = json.loads(next(pathlib.Path(json.loads((course / "manifeste-run.json").read_text())["espace_organismes"]).rglob("defense/contexte.json")).read_text(encoding="utf-8"))
+    assert "confrontation" not in ctx and ctx["generation"] >= 1 and len(ctx["taches_test"]) == 6 + 6
+    # la vue de l'archive ne contient aucun attaques.json (CR-06)
+    m = json.loads((course / "manifeste-run.json").read_text())
+    assert not list(pathlib.Path(m["espace_organismes"]).joinpath("archive_vue").rglob("attaques.json"))

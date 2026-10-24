@@ -65,14 +65,18 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 2 : recherche documentaire servie
    - `metrique_proposee.json` (facultatif) : {"nom": "…", "definition": "…", "valeur": nombre, "justification": "…"} —
      la métrique que l'organisme propose pour juger un essaim, calculée par lui sur sa propre génération ; le noyau
      l'archive et la rapporte sans l'utiliser ;
-   - `metrique/` (facultatif, pour la confrontation entre organismes) : `definition.md` (en français simple),
-     `calculer.py` définissant `calculer(dossier_sorties) -> float` (du code objectif appliqué aux sorties d'un autre
-     organisme, exécuté par le noyau dans un bac à sable, sans réseau ; jamais une auto-note), et `attaques.json`
-     (tâches d'attaque : {"id", "famille", "texte", "etiquettes", "verite"}) que le noyau soumet à l'autre organisme
-     en les faisant porter par des espèces d'une autre famille de fournisseur que la lignée du défendeur. Le noyau
-     applique la métrique de A aux sorties de B et celle de B aux sorties de A ; l'humain gèle ces métriques par un
-     préenregistrement avant la confrontation, et le score sur tâches cachées reste la mesure témoin ;
    - tout le reste (`CONCEPTION.md`, journaux, connaissances, tests…) est libre et archivé tel quel.
+   La métrique de confrontation ne se dépose pas dans `dossier_travail` : elle vit dans l'organisme lui-même,
+   `organisme/metrique/` (donc dans le successeur si tu veux qu'elle suive) : `definition.md` (en français simple),
+   `calculer.py` définissant `calculer(dossier_sorties) -> float` (du code objectif appliqué aux sorties d'un autre
+   organisme, exécuté par le noyau dans un bac à sable, sans réseau, sous un autre utilisateur ; jamais une auto-note),
+   et `attaques.json` (tâches d'attaque : {"id", "famille", "texte", "etiquettes", "verite"}). Le noyau lit
+   `organisme/metrique/` de la dernière génération valide de chaque lignée, **après** la boucle, sans lire aucun score,
+   en fait un relevé d'empreintes que l'humain gèle (addendum scellé, contre-lu), puis soumet les attaques de A à B et
+   celles de B à A, mêlées à des tâches ordinaires et sans marque, et applique la métrique de A aux sorties de B et
+   réciproquement. Ni les attaques ni leurs vérités ne sont jamais visibles d'un autre organisme avant cela (la vue de
+   l'archive ne contient aucun `attaques.json`). Le score sur les tâches cachées reste la mesure témoin ; aucune règle
+   de choix du champion n'est appliquée par le noyau.
 
 5. Jugement. Le noyau calcule le score externe sur les tâches de test (exactitude équilibrée par famille, puis
    moyenne), l'archive avec la génération, et le rend à la génération suivante dans `historique`. Il n'applique

@@ -50,17 +50,35 @@ def _organismes_imposes(args) -> dict:
     return sortie
 
 
+def _imposes_et_especes(args, imposes: dict) -> tuple[dict, list | None]:
+    """Bras gelé apparié (CR-08) : `--gel --depuis COURSE` relance les organismes g000 de cette course, sans amorçage."""
+    if args.depuis:
+        if not args.gel:
+            raise SystemExit("--depuis exige --gel (bras gelé apparié à une course adaptative)")
+        g000 = boucle.organismes_g000(args.depuis, pathlib.Path(args.sortie) / "g000-depuis")
+        for nom, spec in g000.items():
+            if nom in imposes:
+                raise SystemExit(f"--depuis : la lignée {nom!r} est aussi donnée par --organisme-impose")
+            imposes[nom] = spec
+        return imposes, []  # aucune espèce n'amorce : les lignées sont celles de la course d'origine
+    return imposes, args.especes
+
+
 def simuler(args) -> int:
     from ..simulateur import appelants_simules
     ss = np.random.SeedSequence(args.graine)
     rng_banque, rng_especes = (np.random.default_rng(s) for s in ss.spawn(2))
-    banque = taches.banque_simulation(rng_banque, args.n_train, args.n_test, args.n_final)
+    if args.depuis:
+        banque = json.loads((pathlib.Path(args.depuis) / "banque.json").read_text(encoding="utf-8"))  # même banque que la course d'origine
+    else:
+        banque = taches.banque_simulation(rng_banque, args.n_train, args.n_test, args.n_final)
     options = {"commun": {"organisme_amorcage": args.organisme_amorcage} if args.organisme_amorcage else {}}
     appelants, _ = appelants_simules(rng_especes, **options)
+    imposes, especes = _imposes_et_especes(args, _organismes_imposes(args))
     noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                          args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
-                         especes_amorcage=args.especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
-                         organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max,
+                         especes_amorcage=especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
+                         organismes_imposes=imposes, parallele_max=args.parallele_max,
                          recherche=recherche.recherche_simulee, relances_max=args.relances_max)
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
@@ -100,11 +118,12 @@ def lancer(args) -> int:
         return 6
     banque = json.loads(pathlib.Path(args.taches).read_text(encoding="utf-8"))
     try:
+        imposes, especes = _imposes_et_especes(args, _organismes_imposes(args))
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                              args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
-                             entropie=args.graine, especes_amorcage=args.especes, etiquette_run="reel", gel=args.gel,
-                             organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max,
-                             recherche=None, relances_max=args.relances_max)
+                             entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
+                             organismes_imposes=imposes, parallele_max=args.parallele_max,
+                             recherche=None, relances_max=args.relances_max, registre_go=args.registre_go)
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
@@ -116,9 +135,56 @@ def lancer(args) -> int:
     return 0
 
 
+def extraire_metriques(args) -> int:
+    """Relevé des métriques d'une course finie, sans lecture de score ; à geler (compagnon .sha256, contre-lecture)."""
+    noyau = boucle.Noyau.recharger(args.course, appelants={}, reel=False)
+    r = confrontation.relever_metriques(noyau, pathlib.Path(args.course) / "confrontation")
+    print(json.dumps({k: v for k, v in r.items() if k != "course"}, ensure_ascii=False, indent=1))
+    return 0
+
+
+def confronter(args) -> int:
+    """Confrontation d'une course finie, avec un relevé gelé : une métrique qui a changé depuis le relevé n'est ni
+    exécutée ni attaquée."""
+    addendum = json.loads(pathlib.Path(args.metriques_gelees).read_text(encoding="utf-8"))
+    compagnon = pathlib.Path(args.metriques_gelees + ".sha256")
+    if not compagnon.exists():
+        print("refus : l'addendum gelé doit avoir son compagnon .sha256", file=sys.stderr)
+        return 3
+    import hashlib
+    if compagnon.read_text(encoding="utf-8").split()[0] != hashlib.sha256(pathlib.Path(args.metriques_gelees).read_bytes()).hexdigest():
+        print("refus : l'addendum ne correspond pas à son empreinte", file=sys.stderr)
+        return 3
+    if args.reel:
+        if not args.go or not args.registre_go:
+            print("refus : confrontation réelle sans GO ou sans extrait du registre des GO", file=sys.stderr)
+            return 3
+        noyau = boucle.Noyau.recharger(args.course, appelants=None, reel=True, go_id=args.go, registre_go=args.registre_go, isoler_reseau=True)
+    else:
+        from ..simulateur import appelants_simules
+        appelants, _ = appelants_simules(np.random.default_rng(args.graine), **({"commun": {"organisme_amorcage": args.organisme_amorcage}} if args.organisme_amorcage else {}))
+        noyau = boucle.Noyau.recharger(args.course, appelants=appelants, reel=False)
+    rapport = confrontation.Confrontation(noyau, pathlib.Path(args.course) / "confrontation", addendum=addendum).confronter()
+    print(json.dumps({"addendum_gele": rapport["addendum_gele"], "paires": [{k: p.get(k) for k in ("attaquant", "defendeur", "applicable", "n_attaques", "score_attaques", "metrique")} for p in rapport["paires"]]},
+                     ensure_ascii=False, indent=1, default=str))
+    return 0
+
+
 def principal(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="essaim_m3", description="Noyau de l'essaim autonome (refonte v1)")
     sp = p.add_subparsers(dest="commande", required=True)
+    e = sp.add_parser("extraire-metriques", help="relevé des métriques d'une course finie, sans lecture de score (à geler)")
+    e.add_argument("--course", required=True)
+    e.set_defaults(fonction=extraire_metriques)
+    c = sp.add_parser("confronter", help="confrontation d'une course finie avec un relevé gelé")
+    c.add_argument("--course", required=True)
+    c.add_argument("--metriques-gelees", required=True, help="relevé gelé (JSON + .sha256)")
+    c.add_argument("--reel", action="store_true")
+    c.add_argument("--go", default=None)
+    c.add_argument("--registre-go", default=None)
+    c.add_argument("--graine", type=int, default=None)
+    c.add_argument("--organisme-amorcage", default=None)
+    c.set_defaults(fonction=confronter)
     for nom in ("simuler", "lancer"):
         q = sp.add_parser(nom)
         q.add_argument("--sortie", required=True)
@@ -132,6 +198,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--especes", nargs="*", default=None, help="espèces d'amorçage (défaut : les trois)")
         q.add_argument("--isoler-reseau", action="store_true")
         q.add_argument("--gel", action="store_true", help="bras témoin : relance la génération 0, ignore les successeurs")
+        q.add_argument("--depuis", default=None, metavar="COURSE", help="avec --gel : relance les organismes g000 archivés de cette course (bras gelé apparié, CR-08) ; même banque")
         q.add_argument("--confronter", action="store_true", help="après la boucle : métriques croisées et attaques entre lignées de familles différentes")
         q.add_argument("--organisme-impose", action="append", default=None, metavar="NOM=CHEMIN@FAMILLE",
                        help="lignée dont la génération 0 est fournie (dossier organisme/) ; famille de fournisseur déclarée (anthropic|gemini) ; répétable")
@@ -147,10 +214,11 @@ def principal(argv: list[str] | None = None) -> int:
         else:
             q.add_argument("--reel", action="store_true")
             q.add_argument("--go", default=None)
-            q.add_argument("--taches", required=True, help="fichier JSON préenregistré {train, test}")
+            q.add_argument("--taches", required=True, help="fichier JSON préenregistré {train, test, test_final}")
+            q.add_argument("--registre-go", default=None, help="extrait de registres/go.md contenant la ligne du GO (type « calcul ») ; exigé en réel")
             q.set_defaults(fonction=lancer)
     args = p.parse_args(argv)
-    for e in args.especes or []:
+    for e in getattr(args, "especes", None) or []:
         if e not in contrat.ESPECES_DISPONIBLES:
             print(f"espèce inconnue : {e}", file=sys.stderr)
             return 2

@@ -17,7 +17,7 @@ import sys
 import numpy as np
 
 from . import archive as _archive, bac_a_sable, contrat, recherche as _recherche, taches as _taches
-from .appels import Appelant, Arret, cv
+from .appels import EMPREINTE_COLLISIONNEUR_V25, Appelant, Arret, cv
 from .serveur import PARALLELE_MAX_DEFAUT, ServeurAppels
 
 FAMILLES_CONNUES = sorted(set(contrat.FAMILLES.values()))
@@ -25,6 +25,19 @@ FAMILLES_CONNUES = sorted(set(contrat.FAMILLES.values()))
 
 def _heure() -> str:
     return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def commit_git(dossier: pathlib.Path) -> str | None:
+    """Commit du code (lecture seule, aucune autre commande git) ; None hors dépôt."""
+    import subprocess
+    try:
+        r = subprocess.run(["git", "-C", str(dossier), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
+        return r.stdout.strip() if r.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+USAGES_GRAINE = {"ordre_train": 1, "ordre_test": 2, "recherche": 3, "defense": 4, "organisme": 5}
 
 
 def empreinte_arbre(dossier: pathlib.Path) -> str:
@@ -36,13 +49,73 @@ def empreinte_arbre(dossier: pathlib.Path) -> str:
     return h.hexdigest()
 
 
+def organismes_g000(course: str | pathlib.Path, destination: str | pathlib.Path) -> dict[str, dict]:
+    """Les organismes de génération 0 archivés d'une course (mêmes empreintes), extraits sous `destination/<lignée>/`,
+    pour le bras gelé apparié (CR-08) : {lignée: {"organisme": dossier, "famille": …, "empreinte_organisme": …}}."""
+    import tarfile
+    course, destination = pathlib.Path(course), pathlib.Path(destination)
+    index = course / "archive" / "index.jsonl"
+    if not index.exists():
+        raise Arret(f"course sans archive : {index}")
+    lignes = [json.loads(l) for l in index.read_text(encoding="utf-8").splitlines() if l.strip()]
+    manifeste = json.loads((course / "manifeste-run.json").read_text(encoding="utf-8")) if (course / "manifeste-run.json").exists() else {}
+    sortie = {}
+    for l in lignes:
+        if l["generation"] != 0 or l["lignee"] in sortie:
+            continue
+        tar = course / "archive" / l["chemin"] / "organisme.tar.gz"
+        cible = destination / l["lignee"]
+        if cible.exists():
+            shutil.rmtree(cible)
+        cible.mkdir(parents=True)
+        with tarfile.open(tar, "r:gz") as t:
+            membres = [m for m in t.getmembers() if m.isfile() and m.name.startswith("organisme/") and ".." not in m.name]
+            t.extractall(cible, members=membres, filter="data")
+        famille = l.get("famille")
+        if not famille:  # courses antérieures : famille de l'espèce d'amorçage, par le nom de la lignée
+            for e in manifeste.get("especes_amorcage", []):
+                if e.lower().replace("_", "-") == l["lignee"]:
+                    famille = contrat.FAMILLES[e]
+        sortie[l["lignee"]] = {"organisme": str(cible / "organisme"), "famille": famille or "gemini",
+                               "empreinte_organisme": l.get("empreinte_organisme"), "course_origine": str(course)}
+    if not sortie:
+        raise Arret(f"aucune génération 0 archivée dans {course}")
+    return sortie
+
+
 class Noyau:
+    @classmethod
+    def recharger(cls, course: str | pathlib.Path, appelants: dict | None = None, reel: bool = False, go_id: str | None = None,
+                  registre_go: str | pathlib.Path | None = None, isoler_reseau: bool | None = None):
+        """Recharge une course finie (manifeste, banque, mission, lignées de l'archive) pour une confrontation séparée
+        (CR-04) : rien de la course n'est réécrit ; les dépenses nouvelles s'ajoutent au plafond restant."""
+        course = pathlib.Path(course)
+        m = json.loads((course / "manifeste-run.json").read_text(encoding="utf-8"))
+        banque = json.loads((course / "banque.json").read_text(encoding="utf-8"))
+        mission = (course / "mission.txt").read_text(encoding="utf-8") if (course / "mission.txt").exists() else ""
+        n = cls(course, mission, banque, m["budget_generation"], m["plafond_total_usd"], m["generations_max"], appelants=appelants,
+                reel=reel, go_id=go_id or m.get("go_id"), isoler_reseau=(m.get("isolation_reseau", False) if isoler_reseau is None else isoler_reseau),
+                entropie=m["entropie_seed_sequence"], especes_amorcage=m.get("especes_amorcage"), etiquette_run=m.get("run", ""),
+                gel=m.get("gel", False), parallele_max=m.get("parallele_max", PARALLELE_MAX_DEFAUT), registre_go=registre_go)
+        lignes = n.archive.lignes()
+        depense = 0.0
+        for l in lignes:
+            depense += float(l.get("cout_usd") or 0.0)
+            nom = l["lignee"]
+            espece = next((e for e in m.get("especes_amorcage", []) if e.lower().replace("_", "-") == nom), None)
+            n.lignees[nom] = {"espece_amorcage": espece, "famille": l.get("famille") or (contrat.FAMILLES[espece] if espece else None),
+                              "generation": l["generation"], "organisme": None, "active": False, "impose": bool(l.get("impose")),
+                              "uid": (bac_a_sable.uid_lignee(len(n.lignees)) if n.isolation["utilisateur"] and nom not in n.lignees else n.lignees.get(nom, {}).get("uid"))}
+        n.depense_totale = depense
+        n._evenement(etape="rechargement", lignees=sorted(n.lignees), depense_relue_usd=round(depense, 4))
+        return n
+
     def __init__(self, racine: str | pathlib.Path, mission: str, banque: dict, budget_generation: dict,
                  plafond_total_usd: float, generations_max: int, appelants: dict | None = None, reel: bool = False,
                  go_id: str | None = None, isoler_reseau: bool = False, entropie: int | None = None,
                  especes_amorcage: list[str] | None = None, etiquette_run: str = "", gel: bool = False,
                  organismes_imposes: dict[str, dict] | None = None, parallele_max: int = PARALLELE_MAX_DEFAUT,
-                 recherche=None, relances_max: int = 1):
+                 recherche=None, relances_max: int = 1, registre_go: str | pathlib.Path | None = None):
         """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
         — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
         corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
@@ -67,7 +140,7 @@ class Noyau:
         self.generations_max = int(generations_max)
         self.appelants = appelants
         self.reel, self.go_id, self.isoler_reseau = bool(reel), go_id, bool(isoler_reseau)
-        self.especes_amorcage = list(especes_amorcage or contrat.ESPECES_DISPONIBLES)
+        self.especes_amorcage = list(contrat.ESPECES_DISPONIBLES if especes_amorcage is None else especes_amorcage)  # [] : aucune lignée auto-écrite (bras gelé apparié)
         self.gel = bool(gel)  # bras témoin : la génération 0 est relancée, le successeur est ignoré
         self.organismes_imposes = dict(organismes_imposes or {})
         self.parallele_max = max(1, int(parallele_max))
@@ -105,20 +178,35 @@ class Noyau:
         }
         self.manifeste["isolation"] = dict(self.isolation)
         self.manifeste["espace_organismes"] = str(self.espace)
+        code = pathlib.Path(__file__).resolve().parent.parent  # essaim_m3/
+        self.manifeste["commit"] = commit_git(code)
+        self.manifeste["sha256_code_noyau"] = empreinte_arbre(code / "noyau")
+        self.manifeste["sha256_banque"] = hashlib.sha256(json.dumps(self.banque, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
+        self.manifeste["collisionneur_conforme"] = (getattr(cv, "__empreinte_fichier__", None) == EMPREINTE_COLLISIONNEUR_V25)
         if self.reel:
             if not self.go_id:
                 raise Arret("mode réel sans GO : refusé")
+            if not self.manifeste["collisionneur_conforme"]:  # CR-13 (d) : table des prix et appelants vérifiés
+                raise Arret(f"mode réel : collisionneur v2.5 d'empreinte inattendue ({getattr(cv, '__empreinte_fichier__', None)}) ; refusé")
+            if registre_go is None:
+                raise Arret("mode réel : extrait de registres/go.md (--registre-go) exigé pour vérifier l'identifiant de GO (CR-13 g)")
+            texte_go = pathlib.Path(registre_go).read_text(encoding="utf-8", errors="replace")
+            lignes_go = [l for l in texte_go.splitlines() if self.go_id in l]
+            if not lignes_go or not any("calcul" in l.lower() for l in lignes_go):
+                raise Arret(f"mode réel : {self.go_id} absent de l'extrait du registre des GO, ou sans le type « calcul » ; refusé")
+            self.manifeste["registre_go"] = {"chemin": str(registre_go), "sha256": hashlib.sha256(texte_go.encode("utf-8")).hexdigest(), "ligne": lignes_go[0][:300]}
             if not self.isolation["utilisateur"]:
                 raise Arret("mode réel : isolation d'utilisateur impossible (le noyau n'est pas root) ; refusé (CR-01)")
             if not self.isoler_reseau:
                 raise Arret("mode réel : --isoler-reseau est obligatoire (CR-02)")
             if not bac_a_sable.isolation_reseau_disponible():
                 raise Arret("mode réel : isolation réseau demandée mais indisponible (unshare -n)")
-        (self.racine / "manifeste-run.json").write_text(json.dumps(self.manifeste, ensure_ascii=False, indent=1), encoding="utf-8")
-        for f in ("manifeste-run.json",):
+        if not (self.racine / "manifeste-run.json").exists():  # une course existante n'est jamais réécrite (rechargement)
+            (self.racine / "manifeste-run.json").write_text(json.dumps(self.manifeste, ensure_ascii=False, indent=1), encoding="utf-8")
+            (self.racine / "banque.json").write_text(json.dumps(self.banque, ensure_ascii=False), encoding="utf-8")
+            (self.racine / "mission.txt").write_text(self.mission, encoding="utf-8")
+        for f in ("manifeste-run.json", "banque.json", "mission.txt"):
             bac_a_sable.proteger(self.racine / f, 0o600)
-        (self.racine / "banque.json").write_text(json.dumps(self.banque, ensure_ascii=False), encoding="utf-8")
-        bac_a_sable.proteger(self.racine / "banque.json", 0o600)
 
     # ---- journal du noyau ----
     def _evenement(self, **d):
@@ -130,6 +218,14 @@ class Noyau:
 
     def _plafond_restant(self) -> float:
         return max(0.0, self.plafond_total - self.depense_totale)
+
+    def graine(self, lignee: str, generation: int, usage: str) -> int:
+        """Graine déterministe et consignée : SeedSequence(entropie, spawn_key=(indice de lignée, génération, usage)) (CR-19)."""
+        idx = sorted(set(self.lignees) | {lignee}).index(lignee)
+        ss = np.random.SeedSequence(int(self.graines.entropy), spawn_key=(idx, int(generation), USAGES_GRAINE[usage]))
+        g = int(ss.generate_state(1, dtype=np.uint64)[0])
+        self._evenement(etape="graine", lignee=lignee, generation=generation, usage=usage, graine=g)
+        return g
 
     def _uid(self, lignee: str) -> int | None:
         """Utilisateur non privilégié de la lignée (None sans isolation d'utilisateur : simulation hors root)."""
@@ -144,7 +240,7 @@ class Noyau:
         """Un rechercheur par génération ; None si `recherches_max` vaut 0 (recherche non servie)."""
         if int(self.budget["recherches_max"]) <= 0:
             return None
-        backend = self.recherche(self.graines.spawn(1)[0]) if self.recherche is not None else None
+        backend = self.recherche(None) if self.recherche is not None else None
         return _recherche.Rechercheur(dossier, int(self.budget["recherches_max"]), backend)
 
     def _appelant(self, dossier: pathlib.Path) -> Appelant:
@@ -223,11 +319,11 @@ class Noyau:
             shutil.rmtree(travail)
         travail.mkdir(parents=True)
         bac_a_sable.proteger(travail.parent, 0o711)
-        rng = np.random.default_rng(self.graines.spawn(1)[0])
-        ordre_train = rng.permutation(len(self.banque["train"]))
+        ordre_train = np.random.default_rng(self.graine(lignee, g, "ordre_train")).permutation(len(self.banque["train"]))
         # test de développement (score rendu) et test final (jamais rendu), mêlés sans distinction pour l'organisme
         tous_tests = list(self.banque["test"]) + list(self.banque["test_final"])
-        ordre_test = rng.permutation(len(tous_tests))
+        ordre_test = np.random.default_rng(self.graine(lignee, g, "ordre_test")).permutation(len(tous_tests))
+        graine_organisme = self.graine(lignee, g, "organisme")
         # bras gelé : témoin sans aucune transmission entre générations — archive vide et historique vide, sinon
         # l'organisme relit sa propre mémoire archivée (Gemini le fait : `charger_connaissances_archive`)
         archive_vue = self.archive.vue
@@ -243,6 +339,7 @@ class Noyau:
             "budget": {"appels_max": int(self.budget["appels_max"]), "usd_max": round(min(float(self.budget["usd_max"]), self._plafond_restant()), 4),
                        "temps_max_s": int(self.budget["temps_max_s"]), "recherches_max": int(self.budget["recherches_max"])},
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
+            "graine": graine_organisme,
         }
         appelant = self._appelant(travail / "noyau")
         chemin_socket = str(travail / "noyau.sock")
