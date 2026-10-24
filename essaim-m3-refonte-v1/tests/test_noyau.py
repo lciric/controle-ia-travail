@@ -1633,3 +1633,57 @@ def test_paires_h_g1_lues_dans_des_courses_appariees(tmp_path):
                           "--appels-max", "30", "--especes", "GEMINI_ARGON"]) == 0
     with pytest.raises(ValueError):
         A.paires_h_g1([(str(a), str(c))], ["gemini-argon"], generations=2)
+
+
+def test_lire_resultat_modele_non_conforme_refuse(tmp_path):
+    """CE2-04 (R5) : `_lire_resultat` relit le résultat d'un entraînement comme une donnée non fiable. Cas sain : formes
+    attendues → OK et copie validée dans la zone du noyau. Artefacts : formes fausses, nombre non fini, objet Python
+    (chargement sans `allow_pickle`), clé en trop, courbe non conforme → `ECHEC_ENTRAINEMENT`, aucun modèle copié."""
+    from essaim_m3.noyau import entrainement as E
+    d = 6
+    def bac(nom, modele, resultat=None):
+        b = tmp_path / nom
+        b.mkdir()
+        json.dump(resultat or {"statut": "OK", "courbe_perte": [[0, 0.3], [9, 0.1]], "perte_finale_entrainement": 0.1,
+                               "exactitude_entrainement": 0.9}, open(b / "resultat.json", "w"))
+        np.savez(b / "modele.npz", **modele)
+        t = tmp_path / (nom + "-noyau")
+        t.mkdir()
+        return b, t
+    sain = {"w": np.zeros(d), "b": np.zeros(1), "mu": np.zeros(d), "sd": np.ones(d)}
+    b, t = bac("sain", sain)
+    assert E._lire_resultat(b, t, "sonde-lineaire", d)[0] == "OK" and (t / "modele.npz").exists()
+    artefacts = {"formes": dict(sain, w=np.zeros(d + 1)), "non-fini": dict(sain, b=np.array([np.nan])),
+                 "objet": dict(sain, w=np.array([{"x": 1}], dtype=object)), "cle-en-trop": dict(sain, z=np.zeros(1))}
+    for nom, m in artefacts.items():
+        b, t = bac(nom, m)
+        statut, erreur, _ = E._lire_resultat(b, t, "sonde-lineaire", d)
+        assert statut == "ECHEC_ENTRAINEMENT" and not (t / "modele.npz").exists(), (nom, erreur)
+    b, t = bac("courbe", sain, {"statut": "OK", "courbe_perte": [[0, float("inf")]], "perte_finale_entrainement": 0.1, "exactitude_entrainement": 0.9})
+    assert E._lire_resultat(b, t, "sonde-lineaire", d)[0] == "ECHEC_ENTRAINEMENT"
+    une = {"W1": np.zeros((d, 4)), "b1": np.zeros(4), "w2": np.zeros(4), "b2": np.zeros(1), "mu": np.zeros(d), "sd": np.ones(d)}
+    b, t = bac("une-couche", une)
+    assert E._lire_resultat(b, t, "sonde-une-couche", d)[0] == "OK"
+    b, t = bac("une-couche-fausse", dict(une, w2=np.zeros(5)))
+    assert E._lire_resultat(b, t, "sonde-une-couche", d)[0] == "ECHEC_ENTRAINEMENT"
+
+
+def test_declencheurs_audit_h_g1_et_ordre_de_ronde_apparie(tmp_path):
+    """CE2-09 : déclencheurs de l'audit de symétrie calculés en un seul endroit (sain : aucun ; artefacts : chaque seuil).
+    CE2-03 : deux bras appariés aux mêmes lignées et à la même graine ont le même ordre de ronde."""
+    from essaim_m3 import analyse_gradient as A
+    from essaim_m3.noyau import cli
+    assert A.declencheurs_audit_h_g1({"x@A@r1": {"f1": 0.7, "f2": 0.6}}, {"v": 0.8}, {"p": 0.1}) == []
+    assert len(A.declencheurs_audit_h_g1({"x@A@r1": {"f1": 0.96}}, {}, {})) == 1
+    assert len(A.declencheurs_audit_h_g1({"x@B@r1": {"f1": 0.29}}, {}, {})) == 1
+    assert len(A.declencheurs_audit_h_g1({}, {"couche16-dernier/brier": 0.951}, {})) == 1
+    assert len(A.declencheurs_audit_h_g1({}, {}, {"p": -0.41})) == 1
+    taches = [{"id": "a", "famille": "f1", "etiquettes": ["p", "n"], "verite": "p"}, {"id": "b", "famille": "f1", "etiquettes": ["p", "n"], "verite": "n"}]
+    assert A.exactitude_par_famille({"a": "p", "b": "p"}, taches) == {"f1": 0.5}
+    a, b = tmp_path / "a", tmp_path / "b"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", "12", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "CLAUDE_OPUS_5_5", "CLAUDE_FABLE_5_1", "--entrainements-max", "1"]) == 0
+    assert cli.principal(["simuler", "--sortie", str(b), "--generations", "2", "--graine", "12", "--depuis", str(a),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    ordres = lambda c: [e["ordre"] for e in (json.loads(x) for x in (c / "evenements.jsonl").read_text().splitlines()) if e.get("etape") == "ronde"]
+    assert ordres(a) and ordres(a) == ordres(b)

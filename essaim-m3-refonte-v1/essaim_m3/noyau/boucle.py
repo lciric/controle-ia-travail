@@ -623,7 +623,9 @@ class Noyau:
             if (self.racine / "STOP").exists():
                 self._evenement(etape="arret", raison="fichier STOP")
                 break
-            actives = [l for l, e in self.lignees.items() if e["active"]]
+            # base triée par nom (CE2-03) : deux courses aux mêmes lignées et à la même graine ont le même ordre de ronde,
+            # quel que soit l'ordre d'insertion (bras apparié `--depuis` : toutes les lignées y entrent comme imposées)
+            actives = sorted(l for l, e in self.lignees.items() if e["active"])
             if not actives:
                 self._evenement(etape="arret", raison="aucune lignée active")
                 break
