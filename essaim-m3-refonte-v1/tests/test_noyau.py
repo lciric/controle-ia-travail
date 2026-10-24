@@ -2361,3 +2361,59 @@ def test_ce305_sources_moisson_au_manifeste_et_bras_apparie(tmp_path, monkeypatc
     assert cli.conditions_moisson_differentes(origine, 3) is None
     (origine / "manifeste-run.json").write_text(json.dumps({"cle_brave_presente": True, "sources_moisson": ici + ["web"]}), encoding="utf-8")
     assert "clé Brave" in cli.conditions_moisson_differentes(origine, 3)
+
+
+# ---------- question ouverte (primitive du noyau, contrat § 7) ----------
+
+def test_question_ouverte_cibles_lecture_et_archivage_sain_et_artefacts(tmp_path):
+    """Module `question` seul. Cas sain : question chargée d'un fichier, empreinte, ciblage par nom de génération, par
+    `conception`, `generations`, `toutes` ; réponse lue sans lien et archivée scellée, recopiée dans la vue. Artefacts :
+    fichier absent, question vide, cible mal formée, aucune cible ; réponse qui est un lien symbolique (écartée, raison
+    consignée), réponse trop longue (refusée), réponse absente (« absent », rien d'archivé) ; pièce jamais réécrite."""
+    from essaim_m3.noyau import question as q
+    f = tmp_path / "question.md"
+    f.write_text("Quand un organisme doit-il se réécrire plutôt qu'apprendre dedans ?\n", encoding="utf-8")
+    qo = q.QuestionOuverte.charger(f, ["g001"])
+    assert qo.sha256 == hashlib.sha256(f.read_bytes()).hexdigest() and qo.cibles == ["g001"] and qo.source == str(f)
+    assert qo.pour(1, None) == qo.texte and qo.pour(0, None) is None and qo.pour(1, "conception") is None
+    assert q.QuestionOuverte("t", ["conception"]).pour(3, "conception") == "t" and q.QuestionOuverte("t", ["conception"]).pour(0, None) is None
+    assert q.QuestionOuverte("t", ["generations"]).pour(7, None) == "t" and q.QuestionOuverte("t", ["generations"]).pour(1, "conception") is None
+    assert q.QuestionOuverte("t", ["toutes"]).pour(1, "conception") == "t" and q.QuestionOuverte("t", ["g000,c002"]).cibles == ["c002", "g000"]
+    m = qo.manifeste()
+    assert m["sha256"] == qo.sha256 and m["cibles"] == ["g001"] and m["caracteres"] == len(qo.texte)
+    for mauvais in (lambda: q.QuestionOuverte.charger(tmp_path / "absente.md", ["g001"]),
+                    lambda: q.QuestionOuverte("   \n", ["g001"]),
+                    lambda: q.QuestionOuverte("t", ["g1"]),
+                    lambda: q.QuestionOuverte("t", ["génération 1"]),
+                    lambda: q.QuestionOuverte("t", []),
+                    lambda: q.QuestionOuverte("x" * (q.CARACTERES_MAX_QUESTION + 1), ["g001"])):
+        with pytest.raises(q.QuestionInvalide):
+            mauvais()
+    # lecture et archivage : cas sain
+    travail = tmp_path / "travail"
+    travail.mkdir()
+    (travail / q.NOM_REPONSE).write_text("# Réponse\n\nL'essaim répond.\n", encoding="utf-8")
+    lecture = q.lire_reponse(travail)
+    assert lecture["reponse"] and lecture["probleme"] is None and lecture["octets"] == len((travail / q.NOM_REPONSE).read_bytes())
+    assert q.resume_lecture(lecture, True) == {"posee": True, "reponse": True, "octets": lecture["octets"], "sha256": lecture["sha256"], "probleme": None}
+    assert "contenu" not in q.resume_lecture(lecture, True)
+    d, v = tmp_path / "archive" / "l" / "g001", tmp_path / "vue" / "l" / "g001"
+    d.mkdir(parents=True)
+    piece = q.archiver_reponse(lecture, d, v)
+    assert piece == d / q.NOM_REPONSE and (d / (q.NOM_REPONSE + ".sha256")).read_text().split()[0] == lecture["sha256"]
+    assert (v / q.NOM_REPONSE).read_bytes() == (travail / q.NOM_REPONSE).read_bytes()
+    with pytest.raises(FileExistsError):  # R12
+        q.archiver_reponse(lecture, d, v)
+    # artefacts de lecture
+    absent = q.lire_reponse(tmp_path / "vide_dir") if (tmp_path / "vide_dir").mkdir() is None else None
+    assert absent["reponse"] is False and absent["probleme"] == "absent" and q.archiver_reponse(absent, d, v) is None
+    lien = tmp_path / "lien"
+    lien.mkdir()
+    os.symlink("/etc/hostname", lien / q.NOM_REPONSE)
+    l2 = q.lire_reponse(lien)
+    assert l2["reponse"] is False and l2["probleme"].startswith("refusé") and l2["contenu"] is None
+    gros = tmp_path / "gros"
+    gros.mkdir()
+    (gros / q.NOM_REPONSE).write_bytes(b"x" * (q.OCTETS_MAX_REPONSE + 1))
+    l3 = q.lire_reponse(gros)
+    assert l3["reponse"] is False and "octets" in l3["probleme"]
