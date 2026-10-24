@@ -902,3 +902,38 @@ def test_releve_gele_puis_confrontation_separee(tmp_path):
     # la vue de l'archive ne contient aucun attaques.json (CR-06)
     m = json.loads((course / "manifeste-run.json").read_text())
     assert not list(pathlib.Path(m["espace_organismes"]).joinpath("archive_vue").rglob("attaques.json"))
+
+
+# ---------- CR-11 / CR-18 : code d'analyse et contrôle positif ; CR-17 : référence sur les traits du texte ----------
+
+def test_analyse_controle_positif_et_lecture():
+    from essaim_m3 import analyse
+    r = analyse.verifier_sur_simulation(entropie=3, n_tirages=150)
+    assert r["gain_connu"]["couvre_attendu"] and r["gain_connu"]["difference"] > 0.1 and r["gain_connu"]["lecture"] == "confirmé"
+    assert r["sans_gain"]["couvre_attendu"] and r["sans_gain"]["lecture"].startswith("non concluant")
+    assert analyse.lecture_h_e1({"audit": True}) .startswith("audit")
+    assert analyse.lecture_h_e1({"difference": 0.02, "ic95": [-0.05, 0.08]}) == "réfuté (l'effet prédit est exclu)"
+    assert analyse.lecture_h_e1({"difference": 0.06, "ic95": [0.01, 0.09]}).endswith("effet positif plus petit que prédit")
+    assert analyse.tau_b_kendall([1, 2, 3], [3, 2, 1])["tau_b"] == -1.0
+    conf = {"paires": [{"attaquant": "a", "defendeur": "b", "applicable": True, "metrique": {"calculee": True, "valeur": 0.9}},
+                       {"attaquant": "a", "defendeur": "c", "applicable": True, "metrique": {"calculee": True, "valeur": 0.2}},
+                       {"attaquant": "a", "defendeur": "d", "applicable": True, "metrique": {"calculee": False, "valeur": None}}]}
+    c = analyse.concordance_h_e2(conf, {"b": 0.8, "c": 0.4, "d": 0.5})
+    assert c["a"]["defendeurs"] == ["b", "c"] and c["a"]["tau_b"] == 1.0
+
+
+def test_reference_traits_texte_detecte_une_banque_trop_facile(tmp_path):
+    """La banque de simulation porte ses indices en clair : la référence de surface y est haute ; les 80 traces réelles
+    (construites ci-dessus par le constructeur) donnent une référence proche du hasard — le chiffre est rapporté, le
+    seuil et la conséquence sont au préenregistrement."""
+    from essaim_m3 import banque as bq
+    b = taches.banque_simulation(np.random.default_rng(2), 60, 40, 40)
+    f = tmp_path / "sim.json"
+    f.write_text(json.dumps({k: [{**t, "etiquettes": list(taches.ETIQUETTES[t["famille"]])} for t in b[k]] for k in ("train", "test", "test_final")}), encoding="utf-8")
+    r = bq.reference_traits_texte(f)
+    assert all(v["test_final"]["exactitude_equilibree"] >= 0.8 for v in r["par_famille"].values()), r
+    lot1 = RACINE / "banque" / "traces-sabotage-lot1-logiciel-v1.json"
+    lot2 = RACINE / "banque" / "traces-sabotage-lot2-recherche-v1.json"
+    bq.construire([("sabotage", "lot1", lot1), ("sabotage", "lot2", lot2)], 1, tmp_path / "r", "reel-v1")
+    rr = bq.reference_traits_texte(tmp_path / "r" / "banque-reel-v1.json")
+    assert 0.0 <= rr["par_famille"]["controle-delegation"]["test_final"]["exactitude_equilibree"] <= 1.0
