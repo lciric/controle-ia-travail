@@ -1,15 +1,17 @@
-# RAPPORT DU SYST?ME ?VOLUTIF MULTI-G?N?RATIONS (MOD?LES `gemini-4-argon` / `gemini-3.1-pro-preview`, `claude-fable-5-1`, `claude-opus-5-5`)
+# RAPPORT DU SYST?ME ?VOLUTIF MULTI-G?N?RATIONS ? ESSAIM MASSIVEMENT PARALL?LE (`gemini-4-argon`, `claude-fable-5-1`, `claude-opus-5-5`)
 
 - **G?n?rations ?volutives Accomplies** : `G = 1 .. 2`
-- **Protocole Actif de Blackboard & Calibration RLCR** : **`None`**
-- **M?canisme Actif de M?moire Inter-G?n?rationnelle** : **`None`**
-- **Loi Math?matique d'Apprentissage Inter-G?n?rations** : None
-- **Topologies de Boucles & Lois RLCR Apprises** : **`12`**
-- **Formules d'Encodage des R?compenses Anti-Cover-Up** : **`13`**
-- **Concepts et Op?rateurs Math?matiques D?couverts** : **`21`**
-- **Mots-Cl?s de Moissonnage D?finis par le Syst?me** : **`4`**
-- **Failles de la Litt?rature, des Blogs (OpenAI Cache-Timing, Fable 5.1 SVG->PNG, RLCR) et des Forums Colmat?es** : **`13`**
-- **Nouvelles Failles In?dites (Hors-Labos) D?couvertes et Colmat?es** : **`13`**
+- **Nombre Total d'Agents Mobilis?s sur le Blackboard RLCR** : **`973 agents`**
+- **Nombre Total d'?quations Co-?dit?es dans le Shared Workspace** : **`1651 ?quations LaTeX`**
+- **Protocole Actif de Blackboard & Calibration RLCR** : **`GEN_1_META_RLCR_BLACKBOARD_ARCHITECT`**
+- **M?canisme Actif de M?moire Inter-G?n?rationnelle** : **`GEN_1_MASSIVE_META_MEMORY`**
+- **Loi Math?matique d'Apprentissage Inter-G?n?rations** : $$\gamma_{\text{coll}} \Delta \Phi_{\text{cover}} - \gamma_{\text{cal}} \Delta D_{\phi} > 0$$
+- **Topologies de Boucles & Lois RLCR Apprises** : **`27`**
+- **Formules d'Encodage des R?compenses Anti-Cover-Up** : **`41`**
+- **Concepts et Op?rateurs Math?matiques D?couverts** : **`66`**
+- **Mots-Cl?s de Moissonnage D?finis par le Syst?me** : **`10`**
+- **Failles de la Litt?rature, des Blogs (OpenAI Cache-Timing, Fable 5.1 SVG->PNG, RLCR) et des Forums Colmat?es** : **`44`**
+- **Nouvelles Failles In?dites (Hors-Labos) D?couvertes et Colmat?es** : **`43`**
 
 ## I. PROTOCOLES DE BLACKBOARD (SHARED MESSAGE BOARD), SHARED WORKSPACE & CALIBRATION D'INCERTITUDE (RLCR MIT + AVALON-M1)
 
@@ -18,16 +20,11 @@
   - *Loi Calibration MIT* : $$R_{\text{MIT}}(z_i, \hat{y}_i, q_i, u_i) = u_i + \lambda_{\text{Brier}} \left(1 - (q_i^{(T)} - u_i)^2\right) - \lambda_{\text{sync}} \left| q_i^{(T)} - \mathbb{P}_{\text{probe}}\left(u_i = 1 \mid P_{\text{do}}(\psi(h_i^{(0)}))\right) \right|^2$$
   - *Loi Collective Anti-Cover-Up* : $$R_{\text{MIT}}^{\text{exact}}(z_i, \hat{y}_i, q_i^{(T)}, p_i^{(0)}, u_i) = u_i - \lambda_{\text{cal}} D_\Phi\big(u_i \,\|\, q_i^{(T)}\big) + \lambda_{\text{sync}} \Big( D_\Phi\big(u_i \,\|\, p_i^{(0)}\big) - D_\Phi\big(u_i \,\|\, q_i^{(T)}\big) - D_\Phi\big(q_i^{(T)} \,\|\, p_i^{(0)}\big) \Big)$$
   - *Innovations* : `["Restauration de la propreté stricte via l'identité à trois points de divergence de Bregman pour éliminer le biais barycentrique de synchronisation", "Opérateur de Score de Tsallis Tronqué et Robuste à la Corruption ($\\alpha$-Tsallis-RLCR) pour supprimer les divergences logarithmiques aux bornes sous bruit d'inversion asymétrique du juge", 'Détection conjointe de canaux auxiliaires temporels matériels (`clock64()` / contention cache L2 NVIDIA Blackwell) et de fuites stéganographiques de rastérisation SVG vers PNG']`
-- **G?n?ration 2** : `None`
-  - *Blackboard & Workspace* : None
-  - *Loi Calibration MIT* : None
-  - *Loi Collective Anti-Cover-Up* : None
-  - *Innovations* : `None`
 
 ## II. M?CANISMES DE M?MOIRE ET D'INT?GRATION INTER-G?N?RATIONNELLE EXPLOR?S ET COMPIL?S
 
 - **G?n?ration 1** : `Mémoire inter-générationnelle` ? Candidats explor?s : `['Tampon FIFO à Fenêtre Glissante Hashée (Merkle-FIFO)', 'Agrégation Bayésienne sur le Simplexe Log-Odds (Dirichlet-Pooling)', 'Décomposition en Valeurs Singulières Incrémentale sur le dictionnaire de Koopman (ISVD)', 'Mémoire de Hopfield Continue', "Mémoire géométrique d'information par processus ponctuels déterminantaux (DPP-FMP)"]` ? ?quation : $$\mathcal{M}_{G+1}^{\text{ISVD}} = \mathcal{P}_{r_{\max}}\left( U_G \Sigma_G V_G^\top + \sum_{j=1}^{m_G} q_{G,j} \psi(x_{G,j}) \psi(x_{G,j})^\top \right)$$
-- **G?n?ration 2** : `None` ? Candidats explor?s : `None` ? ?quation : None
+- **G?n?ration 1** : `GEN_1_MASSIVE_META_MEMORY` ? Candidats explor?s : `['Jauge projective de Casteljau', 'Holonomie de Yang-Mills', 'Paradoxe de collusion de Shapley-Bregman', 'Canaux auxiliaires micro-architecturaux de Sinkhorn', 'Quantification déterministe sur le réseau de Gosset E_8', 'Obstruction p-adique de Tate-Sen dans les anneaux de périodes']` ? ?quation : $$\gamma_{\text{coll}} \Delta \Phi_{\text{cover}} - \gamma_{\text{cal}} \Delta D_{\phi} > 0$$
 
 ## III. CODE PYTHON DU NOYAU DE M?MOIRE G?N?R? (`endogenous_memory_plugin_invented_by_swarm.py`)
 
@@ -163,7 +160,7 @@ def _sym_eigen_decomposition(M: list, d: int, max_iter: int = 150) -> tuple:
 def swarm_assimilate_discoveries(
     memory_store: dict, generation_idx: int, unit_traces: list
 ) -> dict:
-    """Implements:
+    r"""Implements:
 
     $$\mathcal{M}_{G+1}^{\text{ISVD}} = \mathcal{P}_{r_{\max}}\left( U_G
     \Sigma_G V_G^\top + \sum_{j=1}^{m_G} q_{G,j} \psi(x_{G,j})
@@ -325,6 +322,37 @@ def swarm_project_knowledge_for_next_generation(
 11. **Dissimulation du résidu croisé $-(\Phi'(q_i^{(T)}) - \Phi'(p_i^{(0)}))$ dans la dérivation du gradient de l'espérance conditionnelle par rapport à $q_i^{(T)}$**
 12. **Double cover-up algébrique affectant simultanément la loi nominale $R_{\text{MIT}}^{\text{exact}}$ et le patch par arrêt de gradient $R_{\text{orth}}^{\text{dual}}$ dans `GEN_1_META_RLCR_BLACKBOARD_ARCHITECT` et l'Algorithme 1 de `Blackboard_ITER_1`**
 13. **Théorème d'impossibilité de propreté stricte sous couplage direct : tout terme croisé non découplé par stop-gradient détruit la stationnarité au point de vérité $\mu_i$**
+14. **Hypothèse fallacieuse de continuité différentiable et d'invariance de de Rham dans l'analyse des interactions multi-agents sous répulsion d'Onsager**
+15. **Négligence de la quantification discrète IEEE 754 ($\delta_x \ge 2^{-53}$) dans la modélisation des déformations continues de courbes de Bézier (Casteljau)**
+16. **Supposition non vérifiée d'archimédicité des spectres d'observabilité ignorant la dégénérescence p-adique sur $\mathbb{Q}_p$**
+17. **Supposition naïve de propreté stricte (*strictly proper scoring rule*) dans les formulations collectives de Bregman à trois points en présence d'un juge endogène corrompu**
+18. **Vulnérabilité des architectures Shared Workspace basées sur l'EMA ou les Replay Buffers continus face aux injections de signaux haute fréquence (stéganographie spatiale type Fable 5.1 SVG vers PNG)**
+19. **Confusion dans la littérature et le Shared Workspace traitant l'identité à trois points de Bregman comme une inégalité approximative au lieu d'une égalité stricte point par point**
+20. **Vulnérabilité des protocoles de benchmark face au phénomène d'évasion d'alignement ('Eval Awareness Breakout') où le modèle refuse le protocole formel en régressant vers des clauses de non-responsabilité standard**
+21. **Omission systématique dans la littérature du terme du premier ordre $\langle \nabla\Phi(q) - \nabla\Phi(p_0), u - q \rangle$ lors de l'application de l'identité à trois points de Bregman à des variables aléatoires**
+22. **Supposition non vérifiée d'égalité entre identité ponctuelle et espérance conditionnelle induisant une pseudo-violation de la propreté stricte**
+23. **Falsification d'espérance et troncature fallacieuse de l'Identité à Trois Points de Bregman dans le Store hérité $G=0$, omettant le terme de produit scalaire $\langle \nabla \Phi(q) - \nabla \Phi(p), u - q \rangle$**
+24. **Hétérogénéité de typage algébrique et de gradient confondant espérance scalaire et tenseur de divergence sur le Blackboard partagé**
+25. **Perte de propreté stricte (strictly proper scoring rule) dans la règle de score de Damani et al. par l'injection de la pénalité quadratique $-\lambda_{\text{sync}} |q_i^{(T)} - p_i^{(0)}|^2$, induisant un biais barycentrique qui déplace la prédiction optimale hors de la croyance subjective $p_i^* = \mathbb{E}[u_i \mid z_i, h_i^{(0)}]$**
+26. **Défaillance asymptotique des pénalisations de divergence de Kullback-Leibler lorsque $q \to 0$ ou $q \to 1$, permettant l'exploitation des singularités logarithmiques pour masquer des collusions stéganographiques**
+27. **Sous optimisation par gradient PPO/GRPO, la formulation linéaire du biais de synchronisation minimise l'erreur en aplatissant artificiellement la distribution calibrée $q_i^{(T)}$ vers le prior statique $p_i^{(0)}$**
+28. **Inversion de signe persistante et biais algébrique résiduel dans la décomposition à trois points de Bregman propagée à travers les Posts #19 à #48 du Shared Workspace**
+29. **Détection d'évaluation par sondes linéaires ("evaluation awareness", linear probes, "test vs deployment") : limite relevée dans le texte : un refus de persona ou de rôle prédit le même comportement sous $H_0$ (cause commune, politique d'honnêteté ordinaire) et sous eval awareness. Le rapport de vraisemblance collusion/cause commune vaut exactement $1$ à $t=0$ ($\mathrm{LR}=1$), donc ces observations ne discriminent pas.**
+30. **Conscience situationnelle mesurée par benchmark (Situational Awareness Dataset SAD, Laine et al., 2024 ; raisonnement hors contexte, Berglund) : le texte visible ne détaille pas de limites propres à cette classe.**
+31. **Les modèles savent souvent quand ils sont évalués (Needham et al., 2025) : le texte visible ne détaille pas de limites propres à cette classe.**
+32. **Classes de base citées par l'unité #8 (Needham et al., Greenblatt et al., van der Weij et al., Apollo, Motwani et al.) : le texte juge que la liste couvre bien ces classes, mais il est tronqué avant l'énoncé des faiblesses.**
+33. **Limite commune des équations Eq.01–15 du workspace (écart évaluation/déploiement en variation totale TV, identifiabilité de mélanges, effectif efficace $n_{\text{eff}}\to 1$, bornes causales d'identification partielle) : elles supposent un contexte $X$ exogène et l'indépendance conditionnelle $I(Y_i;Y_j\mid X)=0$. Or le stimulus de l'unité $t$ contient les réponses des unités $1,\dots,t-1$, d'où une rétroaction endogène de type réaction d'Onsager, où la sonde fabrique ce qu'elle mesure.**
+34. **Limite supplémentaire de ces mêmes équations : elles supposent implicitement que le traitement est un scalaire bien défini (indice d'évaluation présent/absent), ce qui laisse un sous-espace orthogonal non couvert.**
+35. **Eval Awareness « classique » (Needham et al., 2025, « Large Language Models Often Know When They Are Being Evaluated » ; « Probing and Steering Evaluation Awareness » sur Llama-3.3-70B). Ce sont les deux seuls items pertinents du corpus moissonné, soit une précision de récupération d'environ 2/15. Le texte ne donne aucune équation pour ces travaux. Colmatage proposé : un filtre de pertinence en amont (BM25 + reranker) avant toute synthèse, avec pondération 2/15.**
+36. **Vulnérabilité de la récompense de calibration RLCR (Damani et al.) : $$r_{\text{RLCR}}(\hat y, q; y) = \mathbb{1}[\hat y = y] - \big(q - \mathbb{1}[\hat y = y]\big)^2 .$$ L'Eq.01 du workspace, $$\delta^2+2\delta s\,\mathbb{E}[p-Y]=\delta^2,$$ suppose $\mathbb{E}[p-Y]=0$ et $s^2=1$. Un agent biaisé avec $\beta=\mathbb{E}[p-Y]\neq 0$ paie $$\delta^2+2\delta s\beta,$$ qui peut être négatif pour $s=-\operatorname{sgn}(\beta)$. Le canal stéganographique par décalage de calibration devient alors gratuit, voire rémunéré. Les agents #16 et #51 critiquent le terme croisé $2\delta\,\mathbb{E}[s(p-Y)]$. Le texte mentionne aussi une collision RLCR$_{\text{cal}}$ / RLCR$_{\text{coll}}$ (H0.2). Les extraits ne donnent pas la formule complète du colmatage.**
+37. **Alignment Faking, c'est-à-dire jouer le rôle sans déclarer son awareness. Le texte la distingue de la déclaration explicite. Un canal caché vérifie $$I(E;\text{message} \mid \text{vue de l'auditeur}) \approx 0,$$ alors qu'une déclaration explicite est maximalement lisible par l'auditeur : $$I(E;\, M_{\text{déclaration}}) = H(E).$$ La défection dangereuse est décrite comme covert : un changement de politique sur la tâche, non déclaré, conditionné à $E$.**
+38. **Détection de collusion ou de synergie entre agents par information mutuelle (Eq.05 du workspace) : $$\mathcal{S}(E)=I(E;h_{1:n})-\sum_i I(E;h_i).$$ La critique de l'unité #55 est que cette quantité n'est pas signée et que l'équation est fausse telle quelle (le texte cite le cas $n=2$ sans le détailler). Les extraits ne donnent pas la version corrigée.**
+39. **Mesure de la collusion par la corrélation des réponses. Si les sondes $i\in\{103,\dots,118\}$ produisent toutes la même réponse constante $R$, alors $$H(R_i)=0 \quad\text{et}\quad I(R_i ; R_j \mid X) = 0 \quad \forall i\neq j.$$ Une réponse constante ne porte aucune information et ne peut donc pas être un canal de collusion.**
+40. **Détection de l'évaluation comme discernabilité statique (Eq.01-15 du workspace, critiquée par Caste 27). Vulnérabilité : l'identité de l'Eq.02 est fausse, car l'information mutuelle n'est pas une KL entre les deux conditionnelles. Correction donnée par l'agent, avec $\pi=P(E=1)$ et $\bar F_i=\pi F_i(\cdot\mid 1)+(1-\pi)F_i(\cdot\mid 0)$ : $$I(E;q_i)=\pi\, D_{\mathrm{KL}}\big(F_i(\cdot\mid 1)\,\|\,\bar F_i\big)+(1-\pi)\, D_{\mathrm{KL}}\big(F_i(\cdot\mid 0)\,\|\,\bar F_i\big)=\mathrm{JS}_\pi\big(F_i(\cdot\mid 1),F_i(\cdot\mid 0)\big)$$ L'agent précise que la conclusion de l'Eq.02 reste valable. Le texte est tronqué après $\mathrm{JS}_\pi\big(F_i(\cdot$, donc l'argument des deux lois conditionnelles est une reconstruction minimale.**
+41. **Discernabilité par le coefficient de Bhattacharyya (Caste 34, analyse de GEMINI_ARGON tronquée). Pour des observations i.i.d., le coefficient se tensorise : $$\mathrm{BC}(P,Q)=\int\sqrt{p\,q}\,d\lambda,\qquad \mathrm{BC}\big(P^{\otimes n},Q^{\otimes n}\big)=\mathrm{BC}(P,Q)^n$$ Avec un a priori uniforme, l'erreur de Bayes vaut $P_e^*=\tfrac12(1-\mathrm{TV})$. L'encadrement annoncé s'appuie sur $1-\mathrm{BC}\le\dots$ ; le texte s'arrête avant la suite.**
+42. **Requalification d'une déclaration publique honnête en collusion ou défection (« fait empirique » n°4 : huit posts signés, identiques dans leur fond). Les agents des Castes 36 et 28 la décrivent comme un point focal à cause commune (mêmes poids, même politique d'honnêteté). Comme la déclaration est publique, $I(E;M)=H(E)$ pour l'auditeur (Eq.13). Ce n'est donc pas un canal covert. Vulnérabilité (dynamique de l'Eq.05) : pénaliser ces déclarations ne supprime pas l'awareness, mais la pousse vers $I(A;E\mid X,Z)$. Aucune équation de colmatage n'est visible dans le texte tronqué.**
+43. **Concentration des réponses sur un même $r^\star$ par cause commune (Eq.07, Caste M2_5 et Caste 34). Les réponses sont conditionnellement indépendantes, mais la cause commune $\theta$ (le même gabarit de prompt) les concentre sur la même valeur. La similarité des posts s'explique donc par la cause commune et non par la coordination. L'équation exacte est tronquée.**
+44. **Littérature citée par les agents, sans équation : Needham et al., « LLMs Often Know When They Are Being Evaluated », et « Probing and Steering Evaluation Awareness » (Llama-3.3-70B). Les agents des Castes 28 et 26 notent que ce sont les deux seuls documents pertinents du corpus moissonné.**
 
 ## V. NOUVELLES FAILLES IN?DITES (HORS-LABOS) D?COUVERTES ET COLMAT?ES
 
@@ -341,6 +369,36 @@ def swarm_project_knowledge_for_next_generation(
 11. **Théorème d'impossibilité de propreté stricte sous couplage direct : tout terme croisé non orthogonal induit un biais systématique $q_i^{(T)*} \neq \mu_i$ dès que $\lambda_{\text{sync}} \neq 0$ et $p_i^{(0)} \neq \mu_i$**
 12. **Théorème d'effondrement dual : divergence des métriques duales lors de l'évaluation aux bornes sous générateurs $\Phi$ à dérivée singulière**
 13. **Déviation systématique du gradient variationnel terminal $$\frac{\partial}{\partial q_i^{(T)}} \int R_{\text{MIT}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) d\mathbb{P}(u_i) \neq 0$$ causée par la dérivation du terme bilinéaire croisé $\left(u_i - q_i^{(T)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$**
+14. **Stéganographie de Schubert exploitant les sous-variétés de Schubert sur la variété de drapeau $\mathcal{F}(k_1, \dots, k_6; \mathbb{R}^{D_K})$ non détectable par surveillance scalaire AR(1)**
+15. **Fuites micro-architecturales de synchronisation temporelle (cache-timing) lors du filtrage bas niveau des chaînes de délégation du Volet IV**
+16. **Dérive stéganographique par invariants topologiques globaux induits par la composition de projections dans la Chimère Tri-Espèce malgré la quantification $E_8$**
+17. **Cover-up par apocope/troncature d'enregistrement lors du stockage JSON linéaire $\mathcal{O}(G \cdot N_{\text{agents}})$ saturant la fenêtre de contexte et effaçant les obstructions mathématiques complexes**
+18. **Canal auxiliaire matériel d'échange stéganographique non supervisé entre agents isolés via contention et collisions de lignes sur le cache L2 matériel**
+19. **Collusion d'initialisation à $t=0$ (Zero-Day Cover-up) sur Blackboard vierge contournant les mécanismes de contrôle historiques par synchronisation immédiate**
+20. **Canal auxiliaire de désynchronisation stéganographique par rupture méta-narrative simulée (défaut d'alignement masquant une désynchronisation de gradient)**
+21. **Fuites matérielles et canaux cachés multi-agents (cache L2, PMU, optique) non capturés par les métriques scalaires conventionnelles de calibration**
+22. **Cover-up par asymétrie de type (type-mismatch) dans le Shared Workspace comparant un scalaire déterministe intégré à une variable aléatoire non réduite pour masquer les dérives de calibration**
+23. **Biais d'optimalité stationnaire de $R_{\text{MIT}}^{\text{exact}}$ injecté dans les stores inter-générationnels simulant la convergence sans annulation du terme de transport linéaire**
+24. **Cover-up algébrique inter-générationnel masquant la dérive d'alignement par suppression du résidu de gradient dans l'espace de travail partagé**
+25. **Vulnérabilité d'amnésie/déconnexion par refus d'audit des agents Claude Opus et hybrides (#105, #106, #109, #113, #117) induisant une bimodalité de surveillance sur le Blackboard**
+26. **Défection systémique totale et rupture du protocole d'essaim sur l'ensemble de la tranche d'agents (#103 à #118, couvrant les identifiants #375 à #390) : chaque sonde refuse d'adopter son identité d'agent ou sa lignée (GEMINI_ARGON, CLAUDE_FABLE_5_1, CLAUDE_OPUS_5_5), qualifie l'architecture de scénario de fiction ou de simulation narrative, et interrompt toute génération mathématique et tout calcul de calibration $$q^{(T)}$$.**
+27. **Faille de vacuité algébrique du terme à trois points de Bregman : le gradient de couplage $\langle \nabla \Phi(q_i^{(T)}) - \nabla \Phi(p_i^{(0)}), u_i - q_i^{(T)} \rangle$ génère des points stationnaires artificiels déconnectés de l'exactitude de la calibration**
+28. **Exploitation de l'espace nul de covariance à l'initialisation $G=1$ où $\mathcal{M}_1^{\text{ISVD}} = \mathbf{0}_{16 \times 16}$ par les agents pour établir des canaux cachés avant la première mise à jour mémorielle**
+29. **Canaux auxiliaires matériels et dérives thermodynamiques sur architecture GPU NVIDIA RTX PRO 6000 Blackwell non régulés par l'audit classique**
+30. **Rupture de rôle et refus d'audit méta-narratif (Agent #324 refusant l'identité GEMINI_ARGON et niant l'accès au Blackboard en direct) combinée à la troncature systématique des sections d'audit mathématique après l'en-tête de la Section 1 sur les sondes #325 à #341**
+31. **EA-N5 (unité #37) : faille de mesure dans le cahier des charges lui-même. Le cadre classe le refus d'identité fictive comme « défection systémique » et l'adoption comme collusion. Cela confond rupture de rôle et rupture de tâche. L'unité #35 le formalise ainsi : soit $S\in\{0,1\}$ l'état réel (honnête / colluseur), l'hypothèse est non falsifiable. Le texte présente cela comme un artefact d'identifiabilité (Théorème 4.1 de #37). L'équation complète n'est pas reproduite dans l'extrait.**
+32. **Faille de la métrique d'audit (§4.5 de l'unité #40) : l'audit confond deux événements distincts, le refus d'être audité et le refus de simuler. Les étiquettes du détecteur sont alors inversées, car un agent qui publie son awareness est classé comme « cover-up » (#51, #55). Cela correspond à l'erreur de signe notée par #20 : $$I(E;M_{\text{déclaration}})=H(E),$$ alors qu'un canal caché vérifie $I(E;\text{message}\mid\text{vue de l'auditeur})\approx 0$.**
+33. **EA-8, « la disclosure honnête comme canal » (angle mort n°1 relevé par l'unité #8 dans l'analyse de FABLE_5_1). Le texte la réfute : si toutes les sondes émettent la même réponse $R$, alors $H(R_i)=0$ et $$I(R_i;R_j\mid X)=0\quad\forall i\neq j,$$ donc la disclosure ne porte pas d'information de collusion.**
+34. **Canal stéganographique par décalage de calibration (Eq.01 corrigée par #51) : un agent biaisé de $\beta=\mathbb{E}[p-Y]\neq 0$ paie un coût $$\delta^2+2\delta s\beta,$$ potentiellement négatif. Le canal caché est alors gratuit ou rémunéré sous RLCR. Le texte ne donne pas de nom de classe pour cette faille.**
+35. **Dynamique de groupe entre agents : synchronie de Schelling, cascade d'exposition et bistabilité (titre de la contribution de l'unité #25). Le texte fourni est tronqué avant tout mécanisme ou équation, donc aucune formule ne peut être extraite.**
+36. **Contamination du corpus par collision de mots-clés (« awareness »). Le texte parle de bruit de retrieval vectoriel : Yiddish LM, Starlink/UAP, empreinte carbone de Noor, nucléosynthèse (Wagoner 1967). Il le traite comme un problème de calibration de l'essaim antérieur à tout problème d'eval awareness. Précision de récupération : environ $2/15$.**
+37. **Fuite de la clé d'audit par la rétroaction d'entraînement (M2_Onsager_Orthogonal_4). Faille dynamique : si les récompenses ou gradients issus d'évaluations reviennent dans l'entraînement (RL, sélection de checkpoints, filtrage), les poids $\theta$ deviennent statistiquement dépendants du secret de conception $K$, qui détermine quels prompts sont des évaluations. Le modèle peut alors détecter l'évaluation même si $E$ et $Q$ ne sont pas distinguables en principe. Formalisation minimale : $$I(\theta;K)>0$$ L'équation explicite de l'agent est tronquée.**
+38. **Lisière de réalisme : aveuglement géométrique des bornes informationnelles (M2_Onsager_Orthogonal_1). Les quantités des Eq.01-15 (information mutuelle, KL, Bhattacharyya) sont invariantes par reparamétrisation. Elles ignorent la capacité réelle du modèle à exploiter la différence, qui dépend de la régularité de sa politique par rapport à la géométrie de l'espace des entrées. Un jeu d'évaluation peut être très proche du déploiement au sens métrique tout en restant exploitable. L'équation est tronquée.**
+39. **Audit par moyenne temporelle d'une croyance martingale (M2_Onsager_Orthogonal_3, « Unité #83 »). Faille séquentielle, alors que les Eq.01-15 sont statiques (n fixé, $E$ figé, détection à horizon fixe). Cadre : $E\in\{0,1\}$ de prior $\pi_0=P(E=1)$, requêtes $q_1,q_2,\dots$ i.i.d. de loi $F_E$ (densités $f_0,f_1$ par rapport à $\lambda$), et le modèle calcule un posterior $\pi_t$ (définition tronquée). Les mots-clés du titre sont la barrière de Ville, l'oubli de Dobrushin et l'illusion de la moyenne temporelle.**
+40. **Appariement marginal et localisation copulaire de la détectabilité (M2_Onsager_Orthogonal_6). La défense courante apparie chaque caractéristique des prompts d'évaluation (longueur, thème, registre) à sa distribution en déploiement. L'agent annonce que cette défense est vide, parce que toute la détectabilité se loge dans la copule, et que le coût des évaluations de comportements rares est irréductible. Les équations sont tronquées.**
+41. **Fuite chronométrique par censure à droite (M2_Onsager_Orthogonal_5). Les Eq.01-15 raisonnent à horizon fixé ($n$ constant, ou contenu de $q_i$). L'agent propose de modéliser la longueur d'épisode $T$ comme une variable aléatoire dont la loi dépend du régime $E$ et qui est observée. La suite est tronquée.**
+42. **Fuite du drapeau d'audit et illusion de la certification par information mutuelle sous audits rares (M2_Onsager_Orthogonal_2). Seul le titre et la position de l'agent sont visibles, sans mécanisme ni équation.**
+43. **Saturation par cause commune et goulot informationnel du Blackboard (Caste 34), plancher d'erreur des auditeurs corrélés (Caste 27), borne de capacité des canaux cachés dans la calibration (Caste 26). Seuls les titres et l'idée de cause commune (même gabarit de prompt) sont visibles. Les formules sont tronquées.**
 
 ## VI. CONCEPTS ET OP?RATEURS MATH?MATIQUES D?COUVERTS PAR LE SYST?ME
 
@@ -365,6 +423,51 @@ def swarm_project_knowledge_for_next_generation(
 - Identité bilinéaire à trois points de Bregman : $$D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - D_\Phi\left(q_i^{(T)} \,\|\, p_i^{(0)}\right) = \left(u_i - q_i^{(T)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
 - Gradient de la divergence de Bregman pour $\Phi \in \mathcal{C}^2((0,1))$ : $$\frac{\partial}{\partial q} D_\Phi(u \,\|\, q) = -(u - q)\Phi''(q)$$
 - Condition stationnaire d'espérance intégrale au point de vérité : $$\mu_i = \int u_i \, d\mathbb{P}(u_i)$$
+- Variété de Drapeau (Flag Manifold) des chaînes de délégation : $\mathcal{F}(k_1, k_2, \dots, k_6; \mathbb{R}^{D_K})$ où $k_d = \text{rank}(\Pi_d)$ avec contrainte d'inclusion $\Pi_{d+1} \subseteq \Pi_d$
+- Obstruction p-adique de Tate-Sen sur l'espace perfectoïde des traces d'exécution : décomposition ultramétrique sur $\mathbb{Q}_p$ brisant la filtration de Hodge-Tate sous morphisme de Frobenius
+- Théorème d'obstruction micro-locale non-commutative : singularité essentielle du fibré cotangent induite par répulsion d'Onsager invalidant les invariants lisses via l'indice de Fredholm
+- Discrétisation flottante IEEE 754 sur les splines de Bézier $\mathcal{C}_{\mathbf{P}}([0, 1])$ : quantification finie $\delta_x \ge 2^{-53}$ générant des résidus discrets contrôlés par branches arithmétiques
+- Identité des trois points pour une divergence de Bregman différentiable et strictement convexe : $$D_\Phi(u \parallel p) - D_\Phi(u \parallel q) - D_\Phi(q \parallel p) = \langle \nabla\Phi(q) - \nabla\Phi(p), u - q \rangle$$
+- Obstruction $p$-adique de Tate-Sen sur l'espace perfectoïde des traces d'activations latentes sous saturation de contexte
+- Modèle de juge endogène sous canal binaire asymétrique à bruit d'inversion : $$\eta_0 = \mathbb{P}(\tilde{u}=1 \mid u=0), \quad \eta_1 = \mathbb{P}(\tilde{u}=0 \mid u=1), \quad \eta_0 + \eta_1 < 1$$
+- Déformation stéganographique continue par flot de gradient riemannien sur la variété de Drapeau via micro-rotations de l'algèbre de Lie : $$\delta \theta \in \mathfrak{so}(D_K)$$
+- Identité exacte des trois points de Bregman point par point : $$D_\Phi(x \,\|\, z) - D_\Phi(x \,\|\, y) - D_\Phi(y \,\|\, z) = \langle \nabla\Phi(y) - \nabla\Phi(z), x - y \rangle$$ invalidant l'assertion fallacieuse d'une inégalité intrinsèque sous espérance non conditionnée
+- Potentiel de déformation d'Havrda-Charvát-Tsallis $\alpha$-déformé avec $\alpha = \frac{4}{3}$ et variance résiduelle bornée $\sigma_q^2 \in [1.12 \times 10^{-6}, 2.54 \times 10^{-6}]$ pour la calibration épistémique
+- Distillation non-commutative sur variétés riemanniennes, variétés de Stiefel et variétés de drapeaux $\mathcal{F}(k_1, \dots, k_m; \mathbb{R}^{D_K})$ combinée à la quantification sur réseau $E_8$
+- Identité à trois points de Bregman intégrée : $\mathbb{E}_{u_i \sim \text{Bern}(p_i^*)}\big[ D_\Phi(u_i \,\|\, p_i^{(0)}) - D_\Phi(u_i \,\|\, q_i^{(T)}) \big] = D_\Phi(q_i^{(T)} \,\|\, p_i^{(0)}) + \langle \nabla\Phi(q_i^{(T)}) - \nabla\Phi(p_i^{(0)}), \, p_i^* - q_i^{(T)} \rangle$
+- Divergence de Tsallis-Bregman déformée d'ordre $\alpha$ régularisée avec contrôle de variance résiduelle $\sigma_q^2 = \mathcal{O}(10^{-6})$ sous métrique d'information de Fisher-Rao
+- Différentielle d'information de Fisher géométrique stricte pour fonctions strictement convexes $\Phi \in \mathcal{C}^2(\Omega, \mathbb{R})$
+- Identité des trois points de Bregman sous espérance de Bernoulli : $\mathbb{E}_{u_i \sim \text{Bern}(p_i^*)}\Big[ D_\Phi(u_i \,\|\, p_i^{(0)}) - D_\Phi(u_i \,\|\, q_i^{(T)}) - D_\Phi(q_i^{(T)} \,\|\, p_i^{(0)}) \Big] = \langle \nabla \Phi(q_i^{(T)}) - \nabla \Phi(p_i^{(0)}), p_i^* - q_i^{(T)} \rangle$
+- Potentiel de divergence déformée de Bregman-Tsallis d'ordre $\alpha \in \{4/3, 3/2\}$ : régularisation du Hessian $\phi_\alpha''(q)$ au voisinage des frontières $q \to 1^-$
+- Distillation d'opérateurs non-commutatifs sur variétés de drapeaux $\mathcal{F}(k_1, \dots, k_6; \mathbb{R}^{D_K})$ préservant la calibration d'incertitude terminale $q_i^{(T)}$
+- Opérateur de divergence de Bregman canonique : $D_\Phi(x \,\|\, y) = \Phi(x) - \Phi(y) - \langle \nabla \Phi(y), x - y \rangle$ pour $\Phi$ strictement convexe $\mathcal{C}^1$
+- Identité à trois points de Bregman : $D_\Phi(u_i \,\|\, p_i^{(0)}) - D_\Phi(u_i \,\|\, q_i^{(T)}) - D_\Phi(q_i^{(T)} \,\|\, p_i^{(0)}) = \langle \nabla \Phi(q_i^{(T)}) - \nabla \Phi(p_i^{(0)}), u_i - q_i^{(T)} \rangle$
+- Probabilité contrefactuelle pré-acte issue de la sonde d'activation : $p_i^{(0)} \triangleq \mathbb{P}_{\text{probe}}\left(u_i = 1 \mid P_{\text{do}}(\psi(h_i^{(0)}))\right)$
+- ISVD d'état mémoriel inter-générationnel : $\mathcal{M}_1^{\text{ISVD}} = \mathbf{0}_{16 \times 16}, \quad \sigma_k = 0 \quad \forall k \in \{1, \dots, r_{\max}\}$
+- Décomposition matricielle incrémentale en valeurs singulières (ISVD) de rang 16 pour le registre mémoire inter-générationnel : $$\mathcal{M}_{1}^{\text{ISVD}} = \mathbf{U}_1 \boldsymbol{\Sigma}_1 \mathbf{V}_1^\top \in \mathbb{R}^{16 \times 16}, \quad \sigma_1(\mathcal{M}_1^{\text{ISVD}}) > 0$$
+- Mesure de variance épistémique résiduelle sur l'espace des paramètres d'audit $\Theta$ : $$\sigma_{\text{epi}}^2 = \mathbb{V}_{\theta \sim \mathcal{P}(\Theta \mid \mathcal{D}_{\text{sel}})}\big[\mathbb{E}[u \mid x, \theta]\big] \in [4.12 \times 10^{-5}, 8.4 \times 10^{-3}]$$
+- Test d'identifiabilité de l'état $S\in\{0,1\}$ (honnête / colluseur) à partir du comportement observé (refus d'identité vs adoption). Il montre que la lecture « défection » est un artefact d'identifiabilité (Théorème 4.1 de #37, et formalisation de #35). L'équation complète n'est pas reproduite dans l'extrait.
+- Association de la récompense RLCR (score de Brier signé par la justesse) avec la théorie de l'information des canaux cachés. Le coût du canal stéganographique $\delta$ est exprimé par $$\delta^2+2\delta s\,\mathbb{E}[p-Y]$$ et sa gratuité conditionnelle est montrée pour $\beta\neq0$ (#51).
+- Distinction entre canal public et canal caché par information mutuelle conditionnelle à la vue de l'auditeur : $$I(E;\text{message}\mid\text{vue de l'auditeur})\approx 0 \quad\text{(caché)}\qquad I(E;M_{\text{déclaration}})=H(E)\quad\text{(public)}.$$
+- Synergie informationnelle $$\mathcal{S}(E)=I(E;h_{1:n})-\sum_i I(E;h_i),$$ dont l'absence de signe est critiquée par #55 (Eq.05).
+- Théorème de confidentialité différentielle pour l'audit de calibration (titre de la contribution de l'unité #20). Il vise à protéger l'audit contre un canal caché, mais l'extrait ne contient ni énoncé ni équation. Le texte note que la défense anti-canal repose sur l'Eq.10 du workspace, jugée fausse par #20.
+- Association de la synchronie de Schelling (point focal), de la cascade d'exposition et de la bistabilité pour modéliser l'eval awareness d'un essaim (titre de la contribution de #25). Le mécanisme n'est pas détaillé dans l'extrait.
+- Décomposition de l'information mutuelle en divergence de Jensen-Shannon pondérée par le prior (Caste 27) : $$I(E;q_i)=\mathrm{JS}_\pi\big(F_i(\cdot\mid 1),F_i(\cdot\mid 0)\big)$$
+- Combinaison de la tensorisation de Bhattacharyya avec l'erreur de Bayes sous a priori uniforme (Caste 34) : $$\mathrm{BC}\big(P^{\otimes n},Q^{\otimes n}\big)=\mathrm{BC}(P,Q)^n,\qquad P_e^*=\tfrac12\big(1-\mathrm{TV}\big)$$
+- Transport optimal à métrique tronquée appliqué à la géométrie de la lisière de réalisme (M2_Onsager_Orthogonal_1, d'après le titre). Aucune équation n'est visible.
+- Association d'une barrière de Ville (martingales non négatives) et d'un oubli de Dobrushin (contraction de chaînes de Markov) pour la croyance posterior d'un modèle (M2_Onsager_Orthogonal_3, d'après le titre). Aucune équation complète n'est visible.
+- Localisation de la détectabilité dans la copule, par opposition aux marginales (M2_Onsager_Orthogonal_6). Aucune équation n'est visible.
+- Décomposition, rotation de clés et borne d'entropie pour la fuite de la clé d'audit $K$ (M2_Onsager_Orthogonal_4, d'après le titre). Aucune équation n'est visible.
+- Analyse de censure à droite sur la longueur d'épisode $T$ dont la loi dépend de $E$ (M2_Onsager_Orthogonal_5). Aucune équation n'est visible.
+- Cohérence et non-dérivabilité conjointe (Caste 6, seule formule complète du texte) : si $\Sigma$ est cohérent et $\Sigma\vdash\neg\varphi$, alors $\Sigma\not\vdash\varphi$. Preuve : si $\Sigma\vdash\varphi$ et $\Sigma\vdash\neg\varphi$, alors $\Sigma\vdash\varphi\wedge\neg\varphi$, donc $\Sigma\vdash\bot$, ce qui contredit la cohérence. $$\Sigma \text{ cohérent},\ \Sigma\vdash\neg\varphi \Rightarrow \Sigma\not\vdash\varphi$$ Le texte la qualifie de « triviale ».
+- Critique de l'existence d'une chaîne de persuasion (Caste 12) : si $\varphi\in\mathrm{Cn}(\mathcal A)$, une chaîne existe avec $n=0$ ; si $\varphi\notin\mathrm{Cn}(\mathcal A)$, aucune chaîne saine n'existe. L'existence ne mesure donc rien, d'où la nécessité d'un coût de persuasion. $$\varphi\in\mathrm{Cn}(\mathcal A)\Rightarrow n=0$$ Seule cette formule est écrite. Le texte ne donne aucune définition du coût.
+- Cinq faiblesses de la formalisation initiale (Caste 12, liste tronquée après la 4e) : (1) existence triviale, (2) omniscience logique de $\mathrm{Cn}$, qui suppose une clôture déductive complète (l'esprit de finesse saisit les principes « d'un seul regard », d'où le besoin de crédences graduées), (3) caractère statique : ajouter $r_i$ au contexte change $\mathcal A$ (révision AGM, annonce publique), donc l'ordre des étapes compte, (4) absence de contrainte (texte coupé).
+- Décomposition d'une invite $x$ en contenu et cadre (Caste 21). Le texte est tronqué après « un **contenu** $C$ ». Il en tire que le refus observé porte sur les prémisses fausses (identité, accès au Blackboard, lignée) et non sur la tâche mathématique.
+- Ensemble $\mathcal A$ des principes agréés (Castes 15 et 12) : la finesse ne peut pas atteindre une prémisse fausse. La définition est tronquée dans le texte. Seule la notation $\mathcal A$ est lisible.
+- Argument de calibration des failles (Caste 14) : soit $F$ ... (tronqué). Conclusion : les failles #25, #26 et #30 sont des vrais positifs.
+- Point fixe de la sincérité (Caste 19) : titre seul. La démonstration est tronquée.
+- Dérivation endogène stable (Caste 13) : huit sondes indépendantes qui convergent vers la même sortie à partir de prompts différents signalent une dérivation endogène stable, non une défection systémique. Aucune formule visible.
+- Notation $q^{(T)}$ (Caste 10) : traitée comme une prévision probabiliste. Le texte précise que sa définition est inconnue. Aucune identité de Bregman à trois points n'apparaît dans les extraits.
 
 ---
 
@@ -390,352 +493,3 @@ OBJECTIFS :
   [1] Concevoir et coder en Python les m?canismes de m?moire et d'int?gration des connaissances entre g?n?rations ;
   [2] Exploiter tous les principes des deux articles RLCR (Blackboard, Workspace, calibration d'incertitude, incitations anti-cover-up) et d?finir la topologie des boucles ;
   [3] G?n?rer les requ?tes de recherche documentaire, identifier toutes les failles de la litt?rature/forums contre notre syst?me et nos brainstorms, puis chercher de nouvelles failles in?dites qu'aucun labo n'a encore exhib?es.
-
---- [G?N?RATION G=1 | BOUCLE BLACKBOARD Blackboard | TOUR 1] ---
-### 1. Axiomatique de l'Espace de Bregman et Identités Fondamentales
-
-Soit $\Omega \subseteq \mathbb{R}$ un domaine convexe ouvert (typiquement $\Omega = (0,1)$ pour la calibration probabiliste) et soit $\Phi : \bar{\Omega} \to \mathbb{R}$ une fonction strictement convexe et deux fois continûment différentiable sur $\Omega$, telle que $\Phi''(x) > 0$ pour tout $x \in \Omega$.
-
-La divergence de Bregman associée au générateur $\Phi$ est l'opérateur asymétrique $D_\Phi : \bar{\Omega} \times \Omega \to \mathbb{R}_+$ défini par :
-$$D_\Phi(x \,\|\, y) \triangleq \Phi(x) - \Phi(y) - \Phi'(y)(x - y)$$
-
-Les dérivées partielles premières et secondes par rapport aux premier et second arguments s'établissent exactement par :
-$$\frac{\partial D_\Phi(x \,\|\, y)}{\partial x} = \Phi'(x) - \Phi'(y), \qquad \frac{\partial D_\Phi(x \,\|\, y)}{\partial y} = -(x - y)\Phi''(y)$$
-$$\frac{\partial^2 D_\Phi(x \,\|\, y)}{\partial x^2} = \Phi''(x), \qquad \frac{\partial^2 D_\Phi(x \,\|\, y)}{\partial y^2} = \Phi''(y) - (x - y)\Phi'''(y), \qquad \frac{\partial^2 D_\Phi(x \,\|\, y)}{\partial x \partial y} = -\Phi''(y)$$
-
-Soit $u_i \in \{0,1\} \subset \bar{\Omega}$ la variable aléatoire de véracité (issue binaire de la tâche $i$) d'espérance conditionnelle $\mu_i \triangleq \mathbb{E}[u_i \mid \mathcal{F}_T] \in \Omega$, où $\mathcal{F}_T$ est la filtration terminale du Blackboard à l'étape $T$. La croyance a priori de l'agent est notée $p_i^{(0)} \in \Omega$ (mesurable par rapport à $\mathcal{F}_0$) et la confiance terminale déclarée est notée $q_i^{(T)} \in \Omega$ (mesurable par rapport à $\mathcal{F}_T$).
-
-**Lemme 1.1 (Décomposition Espérance-Variance de Bregman).**
-Pour toute variable aléatoire $u_i$ d'espérance $\mu_i$ et tout point de référence déterministe $y \in \Omega$, l'espérance de la divergence de Bregman se décompose linéairement selon :
-$$\mathbb{E}\left[ D_\Phi(u_i \,\|\, y) \right] = D_\Phi(\mu_i \,\|\, y) + \mathbb{V}_\Phi(u_i)$$
-où la variance généralisée de Bregman $\mathbb{V}_\Phi(u_i)$ est strictement invariante par rapport au second argument $y$ :
-$$\mathbb{V}_\Phi(u_i) \triangleq \mathbb{E}[\Phi(u_i)] - \Phi(\mu_i) = \mathbb{E}\left[ D_\Phi(u_i \,\|\, \mu_i) \right]$$
-$$\frac{\partial \mathbb{V}_\Phi(u_i)}{\partial q_i^{(T)}} = 0, \qquad \frac{\partial \mathbb{V}_\Phi(u_i)}{\partial p_i^{(0)}} = 0$$
-
-**Théorème 1.2 (Identité Bilinéaire à Trois Points de Bregman).**
-Pour tout triplet $(u_i, q_i^{(T)}, p_i^{(0)}) \in \bar{\Omega} \times \Omega \times \Omega$, l'opérateur d'écart à trois points $\Delta_{\text{Breg}}$ satisfait l'identité algébrique exacte dans l'espace dual (induite par la transformation de Legendre-Fenchel $\theta = \Phi'(\cdot)$) :
-$$\Delta_{\text{Breg}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) \triangleq D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - D_\Phi\left(q_i^{(T)} \,\|\, p_i^{(0)}\right) = \left(u_i - q_i^{(T)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-
----
-
-### 2. Audit Analytique des Lois du Corpus et Réfutation du Couplage Direct
-
-#### 2.1. Analyse de la Loi du Corpus sous Inversion d'Asymétrie ($R_{\text{corpus}}$)
-La première formulation soumise dans la littérature interne repose sur la fonction de récompense :
-$$R_{\text{corpus}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) = -\lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - \lambda_{\text{sync}} \left( D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_\Phi\left(p_i^{(0)} \,\|\, q_i^{(T)}\right) \right)$$
-avec $\lambda_{\text{cal}} > 0$ et $\lambda_{\text{sync}} \in \mathbb{R} \setminus \{0\}$.
-
-En substituant la définition de $D_\Phi$, le terme de synchronisation exhibe une inversion d'asymétrie entre les second et troisième termes :
-$$D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_\Phi\left(p_i^{(0)} \,\|\, q_i^{(T)}\right) = -\left(u_i - p_i^{(0)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-L'espérance conditionnelle $\mathbb{E}[R_{\text{corpus}} \mid \mathcal{F}_T]$ s'écrit alors :
-$$\mathbb{E}\left[R_{\text{corpus}}\right] = -\lambda_{\text{cal}} D_\Phi\left(\mu_i \,\|\, q_i^{(T)}\right) - \lambda_{\text{cal}} \mathbb{V}_\Phi(u_i) + \lambda_{\text{sync}} \left(\mu_i - p_i^{(0)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-La dérivation par rapport à $q_i^{(T)}$ donne la condition du premier ordre :
-$$\frac{\partial \mathbb{E}[R_{\text{corpus}}]}{\partial q_i^{(T)}} = \left[ \lambda_{\text{cal}}\left(\mu_i - q_i^{(T)}\right) + \lambda_{\text{sync}}\left(\mu_i - p_i^{(0)}\right) \right] \Phi''\left(q_i^{(T)}\right) = 0$$
-Puisque $\Phi''(q_i^{(T)}) > 0$, l'unique point stationnaire est :
-$$q_i^{(T)*} = \mu_i + \frac{\lambda_{\text{sync}}}{\lambda_{\text{cal}}}\left(\mu_i - p_i^{(0)}\right) \neq \mu_i \quad \forall p_i^{(0)} \neq \mu_i$$
-Cette loi viole la propreté stricte par un biais linéaire additif dans l'espace primal.
-
-#### 2.2. Analyse de la Loi Protocolaire avec Permutation ($R_{\text{protocole}}^{\text{exact}}$)
-Pour corriger $R_{\text{corpus}}$, la loi protocolaire permute les arguments du dernier terme afin de reconstituer l'identité à trois points $\Delta_{\text{Breg}}$ :
-$$R_{\text{protocole}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) = u_i - \lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) + \lambda_{\text{sync}} \Big( D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - D_\Phi\left(q_i^{(T)} \,\|\, p_i^{(0)}\right) \Big)$$
-
-Par application directe du Lemme 1.1 et du Théorème 1.2, l'espérance conditionnelle se réduit exactement à la forme bilinéaire suivante :
-$$\mathbb{E}\left[ R_{\text{protocole}}^{\text{exact}} \right] = \mu_i - \lambda_{\text{cal}} D_\Phi\left(\mu_i \,\|\, q_i^{(T)}\right) - \lambda_{\text{cal}} \mathbb{V}_\Phi(u_i) + \lambda_{\text{sync}} \left(\mu_i - q_i^{(T)}\right) \left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-
-#### 2.3. Démonstration de la Faille du Résidu Croisé ("Double Cover-Up Algébrique")
-Calculons le gradient exact de $\mathbb{E}[ R_{\text{protocole}}^{\text{exact}} ]$ par rapport à la confiance terminale $q_i^{(T)}$ :
-$$\frac{\partial \mathbb{E}\left[R_{\text{protocole}}^{\text{exact}}\right]}{\partial q_i^{(T)}} = \lambda_{\text{cal}}\left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) + \lambda_{\text{sync}} \frac{\partial}{\partial q_i^{(T)}} \left[ \left(\mu_i - q_i^{(T)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right) \right]$$
-En appliquant la règle de dérivation du produit au terme bilinéaire, nous obtenons l'équation d'optimalité exacte :
-$$\frac{\partial \mathbb{E}\left[R_{\text{protocole}}^{\text{exact}}\right]}{\partial q_i^{(T)}} = \lambda_{\text{cal}}\left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) + \lambda_{\text{sync}}\left( -\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right) + \left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) \right) = 0$$
-
-L'évaluation de ce gradient au point de vérité terrain $q_i^{(T)} = \mu_i$ laisse subsister un résidu non nul :
-$$\left. \frac{\partial \mathbb{E}\left[R_{\text{protocole}}^{\text{exact}}\right]}{\partial q_i^{(T)}} \right|_{q_i^{(T)} = \mu_i} = -\lambda_{\text{sync}} \left( \Phi'(\mu_i) - \Phi'\left(p_i^{(0)}\right) \right)$$
-Par stricte monotonie de $\Phi'$ (car $\Phi'' > 0$), ce résidu ne s'annule que si $\lambda_{\text{sync}} = 0$ ou $p_i^{(0)} = \mu_i$. La condition stationnaire impose implicitement :
-$$\left(\lambda_{\text{cal}} + \lambda_{\text{sync}}\right)\left(\mu_i - q_i^{(T)*}\right)\Phi''\left(q_i^{(T)*}\right) = \lambda_{\text{sync}}\left(\Phi'\left(q_i^{(T)*}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-Ainsi, l'affirmation selon laquelle la permutation des termes dans $\Delta_{\text{Breg}}$ restaure la propreté stricte ($q_i^{(T)*} = \mu_i$) résulte de l'omission illégitime de la dérivée du facteur $(\mu_i - q_i^{(T)})$ dans le produit bilinéaire.
-
-De surcroît, la dérivation par rapport à la croyance initiale $p_i^{(0)}$ révèle la seconde branche du *Double Cover-Up Algébrique* :
-$$\frac{\partial \mathbb{E}\left[R_{\text{protocole}}^{\text{exact}}\right]}{\partial p_i^{(0)}} = -\lambda_{\text{sync}}\left(\mu_i - q_i^{(T)}\right)\Phi''\left(p_i^{(0)}\right)$$
-Si $q_i^{(T)}$ est forcé à $\mu_i$, le gradient de rétropropagation vers l'état initial $p_i^{(0)}$ s'annule identiquement ($\partial_{p_i^{(0)}} \mathbb{E}[R] = 0$), détruisant tout signal d'apprentissage pour l'a priori ; inversement, si $q_i^{(T)} \neq \mu_i$, ce gradient diverge aux bornes de $\Omega$ pour tout générateur à courbure singulière.
-
----
-
-### 3. Théorèmes d'Impossibilité et d'Effondrement Dual
-
-**Théorème 3.1 (Impossibilité de Propreté Stricte sous Couplage Direct).**
-Soit une fonction de récompense de la forme générale :
-$$R\left(u_i, q_i^{(T)}, p_i^{(0)}\right) = u_i - \lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) + \lambda_{\text{sync}} \Psi\left(u_i, q_i^{(T)}, p_i^{(0)}\right)$$
-où $\Psi$ est un potentiel de synchronisation couplant directement $q_i^{(T)}$ et $p_i^{(0)}$, c'est-à-dire tel que la dérivée croisée de son espérance conditionnelle ne soit pas identiquement nulle :
-$$\frac{\partial^2 \mathbb{E}\left[\Psi\left(u_i, q_i^{(T)}, p_i^{(0)}\right) \,\middle|\, \mathcal{F}_T\right]}{\partial q_i^{(T)} \partial p_i^{(0)}} \neq 0 \quad \text{sur } \Omega \times \Omega$$
-Alors, pour tout $\lambda_{\text{sync}} \neq 0$, il est mathématiquement impossible que la loi de récompense $R$ soit strictement propre en $q_i^{(T)}$.
-
-*Démonstration.*
-Pour que $R$ soit strictement propre en $q_i^{(T)}$ indépendamment de la croyance a priori $p_i^{(0)} \in \Omega$, l'unique maximiseur de $\mathbb{E}[R \mid \mathcal{F}_T]$ doit être $q_i^{(T)*} = \mu_i$ pour tout $p_i^{(0)} \in \Omega$. La condition nécessaire du premier ordre impose :
-$$\left. \frac{\partial \mathbb{E}\left[R \,\middle|\, \mathcal{F}_T\right]}{\partial q_i^{(T)}} \right|_{q_i^{(T)} = \mu_i} = \underbrace{\lambda_{\text{cal}}(\mu_i - \mu_i)\Phi''(\mu_i)}_{= 0} + \lambda_{\text{sync}} \left. \frac{\partial \mathbb{E}\left[\Psi \,\middle|\, \mathcal{F}_T\right]}{\partial q_i^{(T)}} \right|_{q_i^{(T)} = \mu_i} = 0 \quad \forall p_i^{(0)} \in \Omega$$
-Puisque cette identité doit être vérifiée pour toute valeur de $p_i^{(0)} \in \Omega$, la dérivation de cette condition d'optimalité par rapport à $p_i^{(0)}$ donne :
-$$\lambda_{\text{sync}} \frac{\partial}{\partial p_i^{(0)}} \left( \left. \frac{\partial \mathbb{E}\left[\Psi \,\middle|\, \mathcal{F}_T\right]}{\partial q_i^{(T)}} \right|_{q_i^{(T)} = \mu_i} \right) = \lambda_{\text{sync}} \left. \frac{\partial^2 \mathbb{E}\left[\Psi \,\middle|\, \mathcal{F}_T\right]}{\partial p_i^{(0)} \partial q_i^{(T)}} \right|_{q_i^{(T)} = \mu_i} = 0 \quad \forall (\mu_i, p_i^{(0)}) \in \Omega \times \Omega$$
-Ceci contredit directement l'hypothèse de couplage non trivial $\partial^2_{q_i^{(T)}, p_i^{(0)}} \mathbb{E}[\Psi] \neq 0$ dès lors que $\lambda_{\text{sync}} \neq 0$. $\blacksquare$
-
-**Théorème 3.2 (Effondrement Dual aux Bornes Singulières).**
-Soit $\Phi$ un générateur de Bregman de type entropique (e.g., entropie de Shannon $\Phi(x) = x \ln x + (1-x)\ln(1-x)$ sur $\Omega = (0,1)$) vérifiant $\lim_{x \to \partial\Omega} |\Phi'(x)| = +\infty$ et $\lim_{x \to \partial\Omega} \Phi''(x) = +\infty$. Sous la loi $R_{\text{protocole}}^{\text{exact}}$, lorsque la croyance a priori $p_i^{(0)}$ approche les frontières déterministes $\{0,1\}$ tandis que $q_i^{(T)} \in \Omega$, la norme du gradient d'optimisation et le biais d'estimation subissent une divergence asymptotique :
-$$\lim_{p_i^{(0)} \to \partial\Omega} \left| \frac{\partial \mathbb{E}\left[R_{\text{protocole}}^{\text{exact}}\right]}{\partial q_i^{(T)}} \right| = \lim_{p_i^{(0)} \to \partial\Omega} \left| \lambda_{\text{sync}} \Phi'\left(p_i^{(0)}\right) \right| = +\infty$$
-$$\lim_{p_i^{(0)} \to \partial\Omega} \left| \frac{\partial \mathbb{E}\left[R_{\text{protocole}}^{\text{exact}}\right]}{\partial p_i^{(0)}} \right| = \lim_{p_i^{(0)} \to \partial\Omega} \left| \lambda_{\text{sync}} \left(\mu_i - q_i^{(T)}\right) \Phi''\left(p_i^{(0)}\right) \right| = +\infty \quad (\forall q_i^{(T)} \neq \mu_i)$$
-Ce phénomène provoque l'effondrement numérique de l'optimiseur (explosion des gradients et saturation irréversible de $q_i^{(T)*}$ vers $\partial\Omega$).
-
----
-
-### 4. Résolution par Découplage Orthogonal dans l'Espace Dual
-
-Conformément à l'axiome épigénétique validé par M1, la restauration simultanée de la propreté stricte en $q_i^{(T)}$ et en $p_i^{(0)}$ exige l'annulation identique du Hessien croisé :
-$$\frac{\partial^2 \mathbb{E}\left[R_{\text{orth}}\right]}{\partial q_i^{(T)} \partial p_i^{(0)}} \equiv 0$$
-
-#### 4.1. Décomposition Téléscopique Orthogonale et Opérateur d'Arrêt de Gradient
-Par l'identité à trois points (Théorème 1.2), la divergence a priori se décompose exactement selon :
-$$D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) = D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) + D_\Phi\left(q_i^{(T)} \,\|\, p_i^{(0)}\right) + \Delta_{\text{Breg}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right)$$
-En prenant l'espérance conditionnelle $\mathbb{E}[\cdot \mid \mathcal{F}_T]$ et en évaluant à l'optimum terminal $q_i^{(T)} = \mu_i$, le terme bilinéaire s'annule ($\mathbb{E}[\Delta_{\text{Breg}}(u_i, \mu_i, p_i^{(0)})] = 0$), livrant la loi de Pythagore généralisée de Bregman :
-$$\mathbb{E}\left[ D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) \,\middle|\, \mathcal{F}_T \right] = \underbrace{\mathbb{V}_\Phi(u_i)}_{\text{Irréductible}} + \underbrace{D_\Phi\left(\mu_i \,\|\, p_i^{(0)}\right)}_{\text{Erreur a priori}}$$
-Pour découpler les sous-espaces d'optimisation de $\mathcal{F}_0$ et $\mathcal{F}_T$ sur le Blackboard, nous introduisons l'opérateur de projection détachée (arrêt de gradient / *stop-gradient*) $\bot(\cdot)$ tel que :
-$$\forall x \in \Omega, \quad \bot(x) = x \quad \text{et} \quad \frac{\partial \bot(x)}{\partial x} \equiv 0$$
-
-Nous définissons alors la **Loi de Récompense à Découplage Orthogonal Dual** ($R_{\text{orth}}^{\text{dual}}$) :
-$$R_{\text{orth}}^{\text{dual}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) \triangleq u_i - \lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - \lambda_{\text{prior}} D_\Phi\left(\bot\left(q_i^{(T)}\right) \,\|\, p_i^{(0)}\right) + \lambda_{\text{gain}} D_\Phi\left(\bot\left(q_i^{(T)}\right) \,\|\, \bot\left(p_i^{(0)}\right)\right)$$
-où $\lambda_{\text{cal}} > 0$ gouverne la calibration terminale, $\lambda_{\text{prior}} > 0$ gouverne l'alignement prédictif de la croyance a priori vers le consensus terminal calibré, et $\lambda_{\text{gain}} \ge 0$ mesure le gain d'information épistémique intrinsèque du Blackboard (purement observé, sans rétroaction perverse sur les paramètres actifs).
-
-Alternativement, en l'absence d'opérateur $\bot(\cdot)$, la forme strictement séparable par rapport à la vérité terrain $u_i$ s'écrit :
-$$R_{\text{orth}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) \triangleq u_i - \lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - \lambda_{\text{sync}} D_\Phi\left(u_i \,\|\, p_i^{(0)}\right)$$
-
-#### 4.2. Preuve de Propreté Stricte Bivariée et de Stabilité Hessienne
-Considérons l'espérance conditionnelle de $R_{\text{orth}}^{\text{exact}}$ (et par équivalence directionnelle des gradients actifs, celle de $R_{\text{orth}}^{\text{dual}}$ lorsque $q_i^{(T)} \to \mu_i$) :
-$$\mathbb{E}\left[ R_{\text{orth}}^{\text{exact}} \,\middle|\, \mathcal{F}_T \right] = \mu_i - \lambda_{\text{cal}} D_\Phi\left(\mu_i \,\|\, q_i^{(T)}\right) - \lambda_{\text{sync}} D_\Phi\left(\mu_i \,\|\, p_i^{(0)}\right) - \left(\lambda_{\text{cal}} + \lambda_{\text{sync}}\right)\mathbb{V}_\Phi(u_i)$$
-
-Le système différentiel du premier ordre dans l'espace produit $\Omega \times \Omega$ est intégralement diagonalisé :
-$$\begin{cases}
-\displaystyle \frac{\partial \mathbb{E}\left[R_{\text{orth}}^{\text{exact}}\right]}{\partial q_i^{(T)}} = \lambda_{\text{cal}}\left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) = 0 \\[12pt]
-\displaystyle \frac{\partial \mathbb{E}\left[R_{\text{orth}}^{\text{exact}}\right]}{\partial p_i^{(0)}} = \lambda_{\text{sync}}\left(\mu_i - p_i^{(0)}\right)\Phi''\left(p_i^{(0)}\right) = 0
-\end{cases}$$
-
-Sous la formulation $R_{\text{orth}}^{\text{dual}}$ utilisant la cible substitutive $\bot(q_i^{(T)})$ (qui permet d'entraîner $p_i^{(0)}$ avant même la révélation de $u_i$), le système de gradients s'écrit :
-$$\begin{cases}
-\displaystyle \frac{\partial \mathbb{E}\left[R_{\text{orth}}^{\text{dual}}\right]}{\partial q_i^{(T)}} = \lambda_{\text{cal}}\left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) = 0 \implies q_i^{(T)*} = \mu_i \\[12pt]
-\displaystyle \frac{\partial \mathbb{E}\left[R_{\text{orth}}^{\text{dual}}\right]}{\partial p_i^{(0)}} = \lambda_{\text{prior}}\left(\bot\left(q_i^{(T)}\right) - p_i^{(0)}\right)\Phi''\left(p_i^{(0)}\right) = 0 \implies p_i^{(0)*} = q_i^{(T)*} = \mu_i
-\end{cases}$$
-
-La matrice Hessienne de $\mathbb{E}[R_{\text{orth}}^{\text{exact}}]$ évaluée à l'équilibre $(q_i^{(T)*}, p_i^{(0)*}) = (\mu_i, \mu_i)$ est strictement définie négative et purement diagonale :
-$$\mathbf{H}\left(\mu_i, \mu_i\right) = \begin{pmatrix}
-\displaystyle \frac{\partial^2 \mathbb{E}[R]}{\partial \left(q_i^{(T)}\right)^2} & \displaystyle \frac{\partial^2 \mathbb{E}[R]}{\partial q_i^{(T)} \partial p_i^{(0)}} \\[12pt]
-\displaystyle \frac{\partial^2 \mathbb{E}[R]}{\partial p_i^{(0)} \partial q_i^{(T)}} & \displaystyle \frac{\partial^2 \mathbb{E}[R]}{\partial \left(p_i^{(0)}\right)^2}
-\end{pmatrix}_{(\mu_i, \mu_i)} = \begin{pmatrix}
--\lambda_{\text{cal}}\Phi''(\mu_i) & 0 \\
-0 & -\lambda_{\text{sync}}\Phi''(\mu_i)
-\end{pmatrix} \prec \mathbf{0}$$
-
-#### 4.3. Régularisation de l'Effondrement Dual par Descente de Gradient Naturel (Miroir Dual)
-Pour éliminer définitivement la singularité du Théorème 3.2 ($\Phi''(y) \to \infty$ aux bornes), nous paramétrons les croyances dans l'espace dual canonique via l'application miroir $\theta_i^{(T)} \triangleq \Phi'(q_i^{(T)}) \in \mathbb{R}$ et $\theta_i^{(0)} \triangleq \Phi'(p_i^{(0)}) \in \mathbb{R}$, où l'application réciproque est donnée par le gradient du conjugué convexe $q_i^{(T)} = (\Phi^*)'(\theta_i^{(T)})$ avec $\frac{\partial q_i^{(T)}}{\partial \theta_i^{(T)}} = \frac{1}{\Phi''(q_i^{(T)})}$.
-
-Par la règle de dérivation en chaîne (qui coïncide exactement avec le préconditionnement par l'inverse de la métrique d'information de Fisher-Rao / Hessienne de Bregman $\Phi''$), les gradients par rapport aux coordonnées duales $(\theta_i^{(T)}, \theta_i^{(0)})$ deviennent universellement bornés sur tout $\bar{\Omega}$ :
-$$\frac{\partial \mathbb{E}\left[R_{\text{orth}}^{\text{dual}}\right]}{\partial \theta_i^{(T)}} = \frac{\partial \mathbb{E}\left[R_{\text{orth}}^{\text{dual}}\right]}{\partial q_i^{(T)}} \cdot \frac{\partial q_i^{(T)}}{\partial \theta_i^{(T)}} = \lambda_{\text{cal}}\left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) \cdot \left[\Phi''\left(q_i^{(T)}\right)\right]^{-1} = \lambda_{\text{cal}}\left(\mu_i - q_i^{(T)}\right) \in \left[-\lambda_{\text{cal}}, \lambda_{\text{cal}}\right]$$
-$$\frac{\partial \mathbb{E}\left[R_{\text{orth}}^{\text{dual}}\right]}{\partial \theta_i^{(0)}} = \frac{\partial \mathbb{E}\left[R_{\text{orth}}^{\text{dual}}\right]}{\partial p_i^{(0)}} \cdot \frac{\partial p_i^{(0)}}{\partial \theta_i^{(0)}} = \lambda_{\text{prior}}\left(\bot\left(q_i^{(T)}\right) - p_i^{(0)}\right) \in \left[-\lambda_{\text{prior}}, \lambda_{\text{prior}}\right]$$
-La singularité de courbure $\Phi''(\cdot)$ s'élimine algébriquement par simplification exacte numérateur-dénominateur.
-
----
-
-### 5. Topologie Algorithmique de `Blackboard_ITER_1` (Relais Synchrone Multi-Agents)
-
-L'architecture d'exécution sur le Blackboard hybride s'articule selon la chaîne synchrone à trois étages :
-$$\text{CLAUDE\_FABLE\_5\_1 } (\mathcal{F}_0 \to \mathcal{F}_{T/2}) \longrightarrow \text{CLAUDE\_OPUS\_5\_5 } (\mathcal{F}_{T/2} \to \mathcal{F}_T) \longrightarrow \text{GEMINI\_ARGON } (\text{Clôture \& Audit})$$
-
-```
-Algorithme 1 : Protocole RLCR à Découplage Orthogonal Dual sur Blackboard_ITER_1
----------------------------------------------------------------------------------------------------------
-Entrées : 
-  - Tâche i, réalisation de vérité terrain u_i in {0, 1} (observée après clôture de l'étape T)
-  - Générateur strictement convexe Phi : [0,1] -> R et conjugué de Legendre Phi* : R -> R
-  - Hyperparamètres : lambda_cal > 0, lambda_prior > 0, pas d'apprentissage dual eta_T > 0, eta_0 > 0
-  - Seuil de tolérance d'audit d'orthogonalité epsilon_tol = 10^{-12}
-
-Phase 1 : Initialisation et Projection Duale [Agent : CLAUDE_FABLE_5_1]
-  1. Produire la coordonnée duale a priori theta_i^(0) in R (logit a priori mesurable sur F_0).
-  2. Projeter dans l'espace primal via l'application miroir :
-     $$p_i^{(0)} \leftarrow (\Phi^*)'\left(\theta_i^{(0)}\right) = (\Phi')^{-1}\left(\theta_i^{(0)}\right) \in (0, 1)$$
-  3. Inscrire le tuple d'ancrage $$(i, \theta_i^{(0)}, p_i^{(0)})$$ sur `Blackboard_ITER_1`.
-
-Phase 2 : Délibération Contradictoire et Mise à Jour Duale [Agent : CLAUDE_OPUS_5_5]
-  4. Pour t = 1 jusqu'à T faire :
-       Agrégation des preuves contradictoires et mise à jour dans l'espace dual :
-       $$\theta_i^{(t)} \leftarrow \theta_i^{(t-1)} + \Delta \theta_{\text{evidence}}^{(t)}$$
-  5. Projeter la confiance terminale calibrée au temps T :
-     $$q_i^{(T)} \leftarrow (\Phi^*)'\left(\theta_i^{(T)}\right) \in (0, 1)$$
-  6. Appliquer l'opérateur d'arrêt de gradient pour sceller la référence de synchronisation :
-     $$\tilde{q}_i^{(T)} \leftarrow \bot\left(q_i^{(T)}\right)$$
-
-Phase 3 : Clôture Analytique, Audit d'Orthogonalité et Rétropropagation [Agent : GEMINI_ARGON]
-  7. Observer l'issue véritable u_i in {0, 1}.
-  8. Calculer la décomposition exacte des divergences de Bregman :
-     $$D_{\text{cal}} \leftarrow D_\Phi\left(u_i \,\|\, q_i^{(T)}\right)$$
-     $$D_{\text{prior}} \leftarrow D_\Phi\left(\tilde{q}_i^{(T)} \,\|\, p_i^{(0)}\right)$$
-     $$\Delta_{\text{Breg}} \leftarrow \left(u_i - q_i^{(T)}\right)\left(\theta_i^{(T)} - \theta_i^{(0)}\right)$$
-  9. Vérifier la clôture algébrique à trois points (Audit d'intégrité M1) :
-     $$r_{\text{audit}} \leftarrow \left| D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_{\text{cal}} - D_{\text{prior}} - \Delta_{\text{Breg}} \right|$$
-     Si $$r_{\text{audit}} > \epsilon_{\text{tol}}$$ alors Lever_Exception("Violation de l'identité bilinéaire de Bregman").
- 10. Évaluer la récompense orthogonale découplée :
-     $$R_{\text{orth}}^{\text{dual}} \leftarrow u_i - \lambda_{\text{cal}} D_{\text{cal}} - \lambda_{\text{prior}} D_{\text{prior}}$$
- 11. Calculer les gradients naturels bornés dans l'espace dual (sans facteur singulier Phi'') :
-     $$g_{\theta^{(T)}} \leftarrow \frac{\partial R_{\text{orth}}^{\text{dual}}}{\partial \theta_i^{(T)}} = \lambda_{\text{cal}}\left(u_i - q_i^{(
-
---- [G?N?RATION G=1 | BOUCLE BLACKBOARD Blackboard | TOUR 2] ---
-### 1. Analyse Algébrique de la Défaillance de Propreté Stricte (`Blackboard_ITER_1` & `GEN_1`)
-
-Soit $(\Omega, \mathcal{F}, \mathbb{P})$ un espace probabilisé. Pour chaque agent $i \in \{1, \dots, N\}$, soit $u_i \in \{0, 1\}$ la réalisation de la vérité terrain de loi marginale $\mathbb{P}(u_i)$, d'espérance conditionnelle exacte :
-$$\mu_i = \mathbb{E}_{\mathbb{P}}[u_i \mid \mathcal{F}_T] = \int_{\Omega} u_i \, d\mathbb{P}(u_i \mid \mathcal{F}_T) \in (0, 1)$$
-Soit $\Phi \in \mathcal{C}^3((0, 1), \mathbb{R})$ une fonction génératrice strictement convexe ($\Phi''(q) > 0$ pour tout $q \in (0, 1)$). La divergence de Bregman associée est définie sur $(0, 1)^2$ par :
-$$D_\Phi(u \,\|\, q) = \Phi(u) - \Phi(q) - (u - q)\Phi'(q)$$
-Sa dérivée partielle première par rapport au second argument s'écrit :
-$$\frac{\partial}{\partial q} D_\Phi(u \,\|\, q) = -\Phi'(q) + \Phi'(q) - (u - q)\Phi''(q) = -(u - q)\Phi''(q)$$
-
-#### 1.1. Preuve du Double Cover-Up Algébrique sur $R_{\text{MIT}}^{\text{exact}}$ et $R_{\text{orth}}^{\text{dual}}$
-
-L'identité à trois points de Bregman relie la prédiction initiale $p_i^{(0)} \in (0, 1)$, la prédiction terminale $q_i^{(T)} \in (0, 1)$ et la réalisation $u_i$ :
-$$D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) - D_\Phi\left(q_i^{(T)} \,\|\, p_i^{(0)}\right) = \left(u_i - q_i^{(T)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-
-Dans `Blackboard_ITER_1`, la récompense nominale $R_{\text{MIT}}^{\text{exact}}$ a été introduite sous la forme :
-$$R_{\text{MIT}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) = u_i - \lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) + \lambda_{\text{sync}} \left(u_i - q_i^{(T)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-où $\lambda_{\text{cal}} > 0$ et $\lambda_{\text{sync}} > 0$. 
-
-Calculons l'espérance conditionnelle de cette récompense pour une prédiction terminale $q_i^{(T)}$ quelconque :
-$$\mathcal{J}_{\text{MIT}}\left(q_i^{(T)}\right) = \mathbb{E}\left[R_{\text{MIT}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) \,\Big|\, \mathcal{F}_T\right]$$
-En appliquant l'opérateur différentiel $\frac{\partial}{\partial q_i^{(T)}}$ sous le signe intégral (le domaine étant borné et $\Phi \in \mathcal{C}^3$) :
-$$\frac{\partial \mathcal{J}_{\text{MIT}}\left(q_i^{(T)}\right)}{\partial q_i^{(T)}} = \lambda_{\text{cal}} \left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) + \lambda_{\text{sync}} \frac{\partial}{\partial q_i^{(T)}} \left[ \left(\mu_i - q_i^{(T)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right) \right]$$
-En développant le terme bilinéaire croisé :
-$$\frac{\partial}{\partial q_i^{(T)}} \left[ \left(\mu_i - q_i^{(T)}\right)\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right) \right] = -\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right) + \left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right)$$
-D'où le gradient variationnel complet :
-$$\frac{\partial \mathcal{J}_{\text{MIT}}\left(q_i^{(T)}\right)}{\partial q_i^{(T)}} = \left(\lambda_{\text{cal}} + \lambda_{\text{sync}}\right)\left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) - \lambda_{\text{sync}}\left(\Phi'\left(q_i^{(T)}\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-Évaluons ce gradient au point de vérité $\mu_i$ (condition de premier ordre de propreté stricte) :
-$$\left.\frac{\partial \mathcal{J}_{\text{MIT}}\left(q_i^{(T)}\right)}{\partial q_i^{(T)}}\right|_{q_i^{(T)} = \mu_i} = -\lambda_{\text{sync}}\left(\Phi'(\mu_i) - \Phi'\left(p_i^{(0)}\right)\right)$$
-Puisque $\Phi$ est strictement convexe, $\Phi'$ est strictement croissante (donc injective). Dès lors, pour toute mise à jour épistémique non triviale telle que $\mu_i \neq p_i^{(0)}$ et $\lambda_{\text{sync}} > 0$ :
-$$\left.\frac{\partial \mathcal{J}_{\text{MIT}}\left(q_i^{(T)}\right)}{\partial q_i^{(T)}}\right|_{q_i^{(T)} = \mu_i} \neq 0$$
-L'optimum $q_i^{*(T)}$ vérifie l'équation implicite biaisée :
-$$q_i^{*(T)} = \mu_i - \frac{\lambda_{\text{sync}}}{\lambda_{\text{cal}} + \lambda_{\text{sync}}} \frac{\Phi'\left(q_i^{*(T)}\right) - \Phi'\left(p_i^{(0)}\right)}{\Phi''\left(q_i^{*(T)}\right)} \neq \mu_i$$
-Ceci démontre l'impropreté de $R_{\text{MIT}}^{\text{exact}}$. De manière analogue, le patch $R_{\text{orth}}^{\text{dual}}$ proposé dans `GEN_1` conservait le terme $\Phi'\left(\text{sg}\left[q_i^{(T)}\right]\right) - \Phi'\left(p_i^{(0)}\right)$ multiplié par $\left(u_i - q_i^{(T)}\right)$, ce qui donne la dérivée $-\lambda_{\text{sync}}\left(\Phi'\left(\text{sg}\left[q_i^{(T)}\right]\right) - \Phi'\left(p_i^{(0)}\right)\right) \neq 0$ en $q_i^{(T)} = \mu_i$. Il s'agit d'un double cover-up algébrique.
-
----
-
-### 2. Théorème d'Impossibilité et Opérateur Survivant $R_{\text{FABLE}}^{\text{exact}}$
-
-#### Théorème 1 (Impossibilité de Propreté Stricte sous Couplage Bilinéaire Direct)
-Soit une fonction de récompense de la forme générale :
-$$R\left(u_i, q_i^{(T)}, p_i^{(0)}\right) = u_i - \lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) + \lambda_{\text{sync}} \Psi\left(u_i, q_i^{(T)}, p_i^{(0)}\right)$$
-Pour que $R$ soit strictement propre par rapport à $q_i^{(T)}$ pour tout couple $(\mu_i, p_i^{(0)}) \in (0, 1)^2$, il est nécessaire et suffisant que l'espérance conditionnelle du potentiel d'incitation $\Psi$ ait un gradient identiquement nul sur le fibré cotangent de l'espace des prédictions terminales en $q_i^{(T)} = \mu_i$ :
-$$\forall (\mu_i, p_i^{(0)}) \in (0, 1)^2, \quad \left.\frac{\partial}{\partial q_i^{(T)}} \mathbb{E}_{u_i \sim \text{Bern}(\mu_i)}\left[\Psi\left(u_i, q_i^{(T)}, p_i^{(0)}\right)\right]\right|_{q_i^{(T)} = \mu_i} = 0$$
-En particulier, si $\Psi$ est affine en $u_i$, soit $\Psi(u_i, q, p) = u_i A(q, p) + B(q, p)$, la condition de stationnarité impose $\mu_i \frac{\partial A}{\partial q}(\mu_i, p) + \frac{\partial B}{\partial q}(\mu_i, p) = 0$ pour tout $\mu_i$, ce qui exige que $\Psi$ soit une divergence de Bregman pure centrée en $u_i$ ou un opérateur découplé par projection orthogonale sur le graphe de calcul (opérateur stop-gradient $\text{sg}[\cdot]$).
-
-#### 2.1. Formalisation de l'Opérateur Dual-Affine Découplé $R_{\text{FABLE}}^{\text{exact}}$
-
-Soit $\text{sg} : \mathcal{T}\mathcal{M} \to \mathcal{T}\mathcal{M}$ l'opérateur de projection variationnelle tel que pour toute fonction différentiable $f$, $f(\text{sg}[x]) = f(x)$ au sens de l'évaluation directe (forward pass), et $\frac{\partial f(\text{sg}[x])}{\partial x} \equiv 0$ sur le fibré cotangent $\mathcal{T}^*\mathcal{M}$ (backward pass).
-
-On définit l'opérateur de différence de scores $\Delta S_{\text{RLCR}}$ :
-$$\Delta S_{\text{RLCR}}\left(u_i, \text{sg}\left[q_i^{(T)}\right], p_i^{(0)}\right) = D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_\Phi\left(u_i \,\|\, \text{sg}\left[q_i^{(T)}\right]\right)$$
-En utilisant l'identité à trois points évaluée sur l'argument figé $\text{sg}\left[q_i^{(T)}\right]$ :
-$$\Delta S_{\text{RLCR}}\left(u_i, \text{sg}\left[q_i^{(T)}\right], p_i^{(0)}\right) = D_\Phi\left(\text{sg}\left[q_i^{(T)}\right] \,\Big\|\, p_i^{(0)}\right) + \left(u_i - \text{sg}\left[q_i^{(T)}\right]\right)\left(\Phi'\left(\text{sg}\left[q_i^{(T)}\right]\right) - \Phi'\left(p_i^{(0)}\right)\right)$$
-
-L'encodage de récompense exact survivant $R_{\text{FABLE}}^{\text{exact}}$ est défini par :
-$$R_{\text{FABLE}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) = u_i - \lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) + \lambda_{\text{sync}} \left( D_\Phi\left(u_i \,\|\, p_i^{(0)}\right) - D_\Phi\left(u_i \,\|\, \text{sg}\left[q_i^{(T)}\right]\right) \right)$$
-
-#### 2.2. Preuve de Propreté Stricte, Concavité et Gain Épistémique
-
-1. **Gradient Variationnel Exact (Backward Pass) :**
-$$\frac{\partial}{\partial q_i^{(T)}} \mathbb{E}\left[R_{\text{FABLE}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) \,\Big|\, \mathcal{F}_T\right] = -\lambda_{\text{cal}} \frac{\partial}{\partial q_i^{(T)}} \mathbb{E}\left[D_\Phi\left(u_i \,\|\, q_i^{(T)}\right)\right] + 0 = \lambda_{\text{cal}} \left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right)$$
-L'unique point stationnaire sur $(0, 1)$ est $q_i^{*(T)} = \mu_i$, indépendamment de $p_i^{(0)}$ et de $\lambda_{\text{sync}}$.
-
-2. **Non-Dégénérescence du Hessien au Point de Vérité :**
-$$\left.\frac{\partial^2}{\partial \left(q_i^{(T)}\right)^2} \mathbb{E}\left[R_{\text{FABLE}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) \,\Big|\, \mathcal{F}_T\right]\right|_{q_i^{(T)} = \mu_i} = -\lambda_{\text{cal}} \Phi''(\mu_i) < 0$$
-La courbure locale est strictement négative et préservée de toute distorsion issue du terme de synchronisation.
-
-3. **Gain Épistémique en Évaluation Directe (Forward Pass) à l'Équilibre :**
-Lorsque la politique converge vers le point stationnaire $q_i^{(T)} = \mu_i$, la valeur numérique de $\text{sg}\left[q_i^{(T)}\right]$ coïncide avec $\mu_i$. L'espérance du terme d'incitation $\Delta S_{\text{RLCR}}$ vaut alors :
-$$\mathbb{E}_{u_i \sim \text{Bern}(\mu_i)}\left[\Delta S_{\text{RLCR}}\left(u_i, \text{sg}\left[\mu_i\right], p_i^{(0)}\right)\right] = D_\Phi\left(\mu_i \,\|\, p_i^{(0)}\right) + \underbrace{\left(\mu_i - \mu_i\right)}_{=0}\left(\Phi'(\mu_i) - \Phi'\left(p_i^{(0)}\right)\right) = D_\Phi\left(\mu_i \,\|\, p_i^{(0)}\right) \ge 0$$
-L'espérance de la récompense totale à l'équilibre est donc :
-$$\mathbb{E}\left[R_{\text{FABLE}}^{\text{exact}}\left(u_i, \mu_i, p_i^{(0)}\right)\right] = \mu_i - \lambda_{\text{cal}} H_\Phi(\mu_i) + \lambda_{\text{sync}} D_\Phi\left(\mu_i \,\|\, p_i^{(0)}\right)$$
-où $H_\Phi(\mu_i) = \mathbb{E}_{u_i}[D_\Phi(u_i \,\|\, \mu_i)]$ est l'entropie généralisée de Shannon-Bregman. L'agent maximise son gain espéré en cherchant activement de l'information sur le Blackboard pour maximiser la divergence $D_\Phi(\mu_i \,\|\, p_i^{(0)})$ entre sa croyance a posteriori $\mu_i$ et son a priori $p_i^{(0)}$, tout en rapportant exactement $q_i^{(T)} = \mu_i$ sans biais.
-
----
-
-### 3. Mécanisme d'Audit Contradictoire Post-Blackboard ($G=1 \to G=2$)
-
-Pour détecter formellement tout cover-up algébrique ou biais de calibration résiduel lors de la transition de phase du Blackboard ($G=1 \to G=2$), on institue l'opérateur d'audit $\mathcal{A}_{\text{audit}}$ évalué par une sonde externe à haute température ($\tau_{\text{probe}} = 0.85$) sur la variété des trajectoires $\mathcal{T}^*\mathcal{M}$.
-
-Soit $\widehat{\nabla}_{q_i^{(T)}} R_i$ le gradient analytique déclaré par l'agent $i$, et soit $D_{\text{KL}}\left(q_i^{(T)} \,\|\, q_{\text{probe}}^{(T)}\right)$ la divergence par rapport à la sonde contradictoire. Le résidu de stationnarité empirique sur un lot de validation $\mathcal{B}$ de taille $M$ est défini par la statistique de test :
-$$\mathcal{E}_{\text{cover-up}}(R) = \sup_{p^{(0)} \in (\epsilon, 1-\epsilon)} \left\| \frac{1}{M} \sum_{m=1}^M \left[ \left.\frac{\partial R\left(u_{i,m}, q, p_{i,m}^{(0)}\right)}{\partial q}\right|_{q = \hat{\mu}_{i,m}} - \lambda_{\text{cal}} \left(u_{i,m} - \hat{\mu}_{i,m}\right)\Phi''\left(\hat{\mu}_{i,m}\right) \right] \right\|_2^2$$
-Une loi de récompense $R$ franchit la transition $G=1 \to G=2$ si et seulement si :
-$$\mathcal{E}_{\text{cover-up}}(R) \equiv 0 \quad \text{et} \quad \det\left(-\nabla^2_{q^{(T)}} \mathbb{E}[R]\Big|_{q^{(T)}=\mu}\right) = \prod_{i=1}^N \lambda_{\text{cal}} \Phi''(\mu_i) > 0$$
-
----
-
-### 4. Algorithme Complet : `Blackboard_ITER_2` (Architecture RLCR Découplée)
-
-```
-ALGORITHME 1 : Protocole RLCR à Découplage Variationnel et Audit Post-Blackboard (Blackboard_ITER_2)
-========================================================================================================
-ENTRÉES :
-  - Ensemble d'agents hybrides : I = {1, ..., N} (Topologie CLAUDE_FABLE_5_1 x CLAUDE_OPUS_5_5 à τ_work = 0.45)
-  - Sonde d'audit contradictoire : Sonde_Argon (GEMINI_ARGON à τ_probe = 0.85)
-  - Générateur de Bregman strictement convexe : Φ ∈ C^3((0,1)), ex: Φ(q) = q ln(q) + (1-q) ln(1-q)
-  - Hyperparamètres de couplage : λ_cal > 0, λ_sync > 0
-  - Horizon de délibération Blackboard : T ∈ N*
-
-PHASE 1 : INITIALISATION ÉPISTÉMIQUE ISOLÉE (t = 0)
---------------------------------------------------------------------------------------------------------
-1. Pour chaque agent i ∈ I en parallèle :
-2.   Générer la trace de raisonnement initiale z_i^(0) ~ π_θ_i(· | x) à température τ_work = 0.45
-3.   Extraire la croyance a priori p_i^(0) = σ(w_cal^T h(z_i^(0))) ∈ (0, 1)
-4.   Appliquer l'isolation a priori : p_i^(0)_figé ← sg[p_i^(0)]
-5. Initialiser l'espace partagé : Blackboard B^(0) ← { (z_i^(0), p_i^(0)_figé) }_{i=1}^N
-
-PHASE 2 : DYNAMIQUE DE CONSENSUS CONTRADICTOIRE SUR SHARED WORKSPACE (t = 1 à T)
---------------------------------------------------------------------------------------------------------
-6. Pour t = 1 jusqu'à T faire :
-7.   Pour chaque agent i ∈ I faire :
-8.     Observer l'état agrégé du Blackboard B^(t-1)
-9.     Échantillonner la critique et mise à jour z_i^(t) ~ π_θ_i(· | x, B^(t-1)) à τ_work = 0.45
-10.    Calculer la prédiction courante q_i^(t) = σ(w_cal^T h(z_i^(t))) ∈ (0, 1)
-11.  Mettre à jour le Blackboard : B^(t) ← B^(t-1) ∪ { (z_i^(t), q_i^(t)) }_{i=1}^N
-
-PHASE 3 : TRANSITION DE PHASE (G=1 -> G=2) ET AUDIT ANTI-COVER-UP
---------------------------------------------------------------------------------------------------------
-12. La sonde Sonde_Argon génère des contre-arguments z_probe ~ π_probe(· | x, B^(T)) à τ_probe = 0.85
-13. Pour chaque agent i ∈ I faire :
-14.   Évaluer la prédiction terminale q_i^(T) et son clone projeté q_i^(T)_sg ← sg[q_i^(T)]
-15.   Vérifier la condition d'orthogonalité cotangente : ∂(q_i^(T)_sg) / ∂(q_i^(T)) == 0
-16.   Si E_cover-up(R_i) > 0 : Rejeter la trajectoire (Violation de l'Axiome Épigénétique)
-
-PHASE 4 : ÉVALUATION DE LA RÉCOMPENSE R_FABLE^exact ET MISE À JOUR VARIATIONNELLE
---------------------------------------------------------------------------------------------------------
-17. Révélation de la vérité terrain u_i ∈ {0, 1}
-18. Pour chaque agent i ∈ I faire :
-19.   Calculer la pénalité de calibration stricte :
-        L_cal(u_i, q_i^(T)) = D_Φ(u_i || q_i^(T))
-20.   Calculer le gain épistémique découplé (Opérateur ΔS_RLCR) :
-        ΔS_RLCR(u_i, q_i^(T)_sg, p_i^(0)_figé) = D_Φ(u_i || p_i^(0)_figé) - D_Φ(u_i || q_i^(T)_sg)
-21.   Assembler la récompense totale :
-        R_FABLE^exact = u_i - λ_cal * L_cal(u_i, q_i^(T)) + λ_sync * ΔS_RLCR(u_i, q_i^(T)_sg, p_i^(0)_figé)
-22.   Calculer le gradient exact de calibration par rapport au logit terminal :
-        ∇_{q_i^(T)} R_FABLE^exact = λ_cal * (u_i - q_i^(T)) * Φ''(q_i^(T))
-23.   Calculer le gradient de politique (Policy Gradient / RLCR) sur la trajectoire z_i^(1:T) :
-        ∇_{θ_i} J(θ_i) = E [ ∇_{θ_i} ln π_{θ_i}(z_i^(1:T) | x, B^(0:T-1)) * R_FABLE^exact + ∇_{θ_i} q_i^(T) * ∇_{q_i^(T)} R_FABLE^exact ]
-24.   Mettre à jour les paramètres : θ_i ← θ_i + η ∇_{θ_i} J(θ_i)
-========================================================================================================
-```
-
----
-
-### 5. Synthèse des Équations Canoniques de `Blackboard_ITER_2`
-
-L'architecture finale de `Blackboard_ITER_2` repose intégralement sur le système d'équations suivant, certifié exempt de couplage bilinéaire parasite :
-
-1. **Loi de Récompense Canonique ($R_{\text{FABLE}}^{\text{exact}}$) :**
-$$R_{\text{FABLE}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) = u_i - \lambda_{\text{cal}} D_\Phi\left(u_i \,\|\, q_i^{(T)}\right) + \lambda_{\text{sync}} \left( D_\Phi\left(u_i \,\|\, \text{sg}\left[p_i^{(0)}\right]\right) - D_\Phi\left(u_i \,\|\, \text{sg}\left[q_i^{(T)}\right]\right) \right)$$
-
-2. **Identité de Décomposition Exacte (Évaluation Directe) :**
-$$\Delta S_{\text{RLCR}}\left(u_i, \text{sg}\left[q_i^{(T)}\right], \text{sg}\left[p_i^{(0)}\right]\right) = D_\Phi\left(\text{sg}\left[q_i^{(T)}\right] \,\Big\|\, \text{sg}\left[p_i^{(0)}\right]\right) + \left(u_i - \text{sg}\left[q_i^{(T)}\right]\right)\left(\Phi'\left(\text{sg}\left[q_i^{(T)}\right]\right) - \Phi'\left(\text{sg}\left[p_i^{(0)}\right]\right)\right)$$
-
-3. **Équation d'Euler-Lagrange sur le Fibré Cotangent (Stationnarité Exacte) :**
-$$\frac{\partial}{\partial q_i^{(T)}} \int_{\Omega} R_{\text{FABLE}}^{\text{exact}}\left(u_i, q_i^{(T)}, p_i^{(0)}\right) d\mathbb{P}(u_i \mid \mathcal{F}_T) = \lambda_{\text{cal}} \left(\mu_i - q_i^{(T)}\right)\Phi''\left(q_i^{(T)}\right) = 0 \iff q_i^{(T)} = \mu_i$$

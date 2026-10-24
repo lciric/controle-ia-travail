@@ -208,8 +208,7 @@ def call_species(species: str, prompt: str, temp: float = 0.45, use_web_search: 
                     url = "https://api.anthropic.com/v1/messages"
                     payload = {
                         "model": m_id,
-                        "max_tokens": 4096,
-                        "temperature": temp_safe,
+                        "max_tokens": 6144,
                         "messages": [{"role": "user", "content": full_prompt}]
                     }
                     headers = {

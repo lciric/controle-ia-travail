@@ -129,7 +129,7 @@ def _sym_eigen_decomposition(M: list, d: int, max_iter: int = 150) -> tuple:
 def swarm_assimilate_discoveries(
     memory_store: dict, generation_idx: int, unit_traces: list
 ) -> dict:
-    """Implements:
+    r"""Implements:
 
     $$\mathcal{M}_{G+1}^{\text{ISVD}} = \mathcal{P}_{r_{\max}}\left( U_G
     \Sigma_G V_G^\top + \sum_{j=1}^{m_G} q_{G,j} \psi(x_{G,j})

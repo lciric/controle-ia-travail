@@ -10,7 +10,7 @@ ESSAIM MASSIVEMENT PARALL?LE (CENTAINES D'AGENTS PAR G?N?RATION) ? LOI L DE M3
   - Mod?les : gemini-4-argon, gemini-3.1-pro-preview, gemini-3.8-flash, claude-fable-5-1, claude-opus-5-5, claude-sonnet-5-5
 ===========================================================================
 """
-import os, sys, time, json, math, hashlib, pathlib, urllib.request, urllib.parse, urllib.error, subprocess, re, ast, threading
+import os, sys, time, json, math, random, hashlib, pathlib, urllib.request, urllib.parse, urllib.error, subprocess, re, ast, threading
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import numpy as np
@@ -37,6 +37,7 @@ MASSIVE_LOG_FILE = OUT_DIR / "massive_swarm_parallel.log"
 SOVEREIGN_LINEAGES = ["GEMINI_ARGON", "CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5"]
 PRIMORDIAL_MITOSIS_DONE_CACHE = {"done": False, "differentiated_castes": [], "total_agents_spawned": 0}
 PRINT_LOCK = threading.Lock()
+API_SEMAPHORE = threading.BoundedSemaphore(8)
 TOTAL_AGENTS_COUNTER = {"count": 0}
 
 def log_print(msg: str):
@@ -212,6 +213,14 @@ def extract_gemini_text_from_parts(resp: dict) -> str:
         texts = [p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p]
     return "\n".join(texts).strip()
 
+def extract_anthropic_text_or_thinking(resp: dict) -> str:
+    blocks = resp.get("content", [])
+    texts = [b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text" and b.get("text", "").strip()]
+    if texts:
+        return "\n".join(texts).strip()
+    thinks = [b.get("thinking", "") for b in blocks if isinstance(b, dict) and b.get("type") == "thinking" and b.get("thinking", "").strip()]
+    return "\n".join(thinks).strip()
+
 def call_species(species: str, prompt: str, temp: float = 0.45, use_web_search: bool = False, force_json_output: bool = False, agent_slot: int = 0) -> str:
     temp_safe = clamp_temp(temp, 0.45)
     lineage = normalize_sovereign_lineage(species)
@@ -220,84 +229,107 @@ def call_species(species: str, prompt: str, temp: float = 0.45, use_web_search: 
         agent_global_id = TOTAL_AGENTS_COUNTER["count"]
 
     header = (
-        f"[AGENT #{agent_global_id} | LIGN?E : {lineage} | FORMALISATION MATH?MATIQUE EXACTE]\n"
-        "Formule tes d?couvertes, op?rateurs et failles avec des ?quations LaTeX $$...$$ pr?cises, sans m?taphores.\n\n"
+        f"[NOTE D'ANALYSE MATH?MATIQUE IND?PENDANTE #{agent_global_id} ? AUDIT FORMEL DE CONTR?LE IA & RLCR | ?={temp_safe}]\n"
+        "Effectue une analyse math?matique rigoureuse du syst?me d'?quations et des protocoles ci-dessous. "
+        "D?montre chaque propri?t?, faille statistique ou borne d'op?rateur avec des ?quations LaTeX $$...$$ exactes.\n\n"
     )
     full_prompt = header + prompt
 
-    if lineage in ("CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5") and not use_web_search and not force_json_output:
-        ant_models = (
-            ["claude-fable-5-1", "claude-fable-5", "claude-sonnet-5-5", "claude-haiku-5-5"]
-            if lineage == "CLAUDE_FABLE_5_1" else
-            ["claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5", "claude-fable-5-1"]
+    time.sleep(random.uniform(0.05, 0.55))
+
+    with API_SEMAPHORE:
+        # 1. Appel direct Anthropic 5.x (sans le champ `temperature` d?pr?ci? -> HTTP 200 garanti)
+        if lineage in ("CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5") and not use_web_search and not force_json_output:
+            ant_models = (
+                ["claude-fable-5-1", "claude-fable-5", "claude-sonnet-5-5"]
+                if lineage == "CLAUDE_FABLE_5_1" else
+                ["claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"]
+            )
+            if agent_slot > 0:
+                rot = agent_slot % len(ant_models)
+                ant_models = ant_models[rot:] + ant_models[:rot]
+            for m_id in ant_models:
+                for retry_a in range(3):
+                    try:
+                        url = "https://api.anthropic.com/v1/messages"
+                        payload = {
+                            "model": m_id,
+                            "max_tokens": 6144,
+                            "messages": [{"role": "user", "content": full_prompt}]
+                        }
+                        headers = {
+                            "x-api-key": ANT_KEY_1,
+                            "anthropic-version": "2023-06-01",
+                            "Content-Type": "application/json"
+                        }
+                        if ANT_WS_ID:
+                            headers["anthropic-workspace-id"] = ANT_WS_ID
+                        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+                        with urllib.request.urlopen(req, timeout=105) as r:
+                            resp = json.loads(r.read().decode("utf-8"))
+                            txt = extract_anthropic_text_or_thinking(resp)
+                            if len(txt) > 20:
+                                return txt
+                    except urllib.error.HTTPError as he:
+                        if he.code in (429, 500, 502, 503, 529):
+                            time.sleep((2.0 ** (retry_a + 1)) + random.uniform(0.8, 2.5))
+                        else:
+                            break
+                    except Exception:
+                        time.sleep(1.2)
+
+        # 2. Appel direct Gemini (cr?dits recharg?s : gemini-4-argon, gemini-3.1-pro-preview, gemini-3.8-flash)
+        gem_models = (
+            ["gemini-3.8-flash", "gemini-3.1-pro-preview", "gemini-4-argon"]
+            if force_json_output else
+            ["gemini-4-argon", "gemini-3.1-pro-preview", "gemini-3.8-flash"]
         )
-        if agent_slot > 0:
-            rot = agent_slot % len(ant_models)
-            ant_models = ant_models[rot:] + ant_models[:rot]
-        for m_id in ant_models:
-            for retry_a in range(2):
+        if agent_slot > 0 and not force_json_output:
+            rot_g = agent_slot % len(gem_models)
+            gem_models = gem_models[rot_g:] + gem_models[:rot_g]
+
+        for cand_m in gem_models:
+            for retry_g in range(3):
                 try:
-                    url = "https://api.anthropic.com/v1/messages"
-                    payload = {
-                        "model": m_id,
-                        "max_tokens": 3072,
-                        "temperature": temp_safe,
-                        "messages": [{"role": "user", "content": full_prompt}]
-                    }
-                    headers = {
-                        "x-api-key": ANT_KEY_1,
-                        "anthropic-version": "2023-06-01",
-                        "Content-Type": "application/json"
-                    }
-                    if ANT_WS_ID:
-                        headers["anthropic-workspace-id"] = ANT_WS_ID
-                    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_m}:generateContent?key={GEMINI_KEY}"
+                    gen_cfg = {"temperature": temp_safe, "maxOutputTokens": 6144}
+                    if force_json_output and not use_web_search:
+                        gen_cfg["responseMimeType"] = "application/json"
+                    payload = {"contents": [{"parts": [{"text": full_prompt}]}], "generationConfig": gen_cfg}
+                    if use_web_search:
+                        payload["tools"] = [{"google_search": {}}]
+                    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
                     with urllib.request.urlopen(req, timeout=95) as r:
                         resp = json.loads(r.read().decode("utf-8"))
-                        blocks = resp.get("content", [])
-                        txt = "\n".join([b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text"]).strip()
-                        if len(txt) > 30:
-                            return txt
+                        out_txt = extract_gemini_text_from_parts(resp)
+                        if len(out_txt.strip()) > 10:
+                            return out_txt
                 except urllib.error.HTTPError as he:
-                    if he.code == 429:
-                        time.sleep(2.0 * (retry_a + 1))
+                    if he.code in (429, 500, 502, 503):
+                        time.sleep((2.2 ** (retry_g + 1)) + random.uniform(1.0, 3.0))
                     else:
                         break
                 except Exception:
-                    time.sleep(1.0)
+                    time.sleep(1.5)
 
-    gem_models = (
-        ["gemini-3.8-flash", "gemini-3.1-pro-preview", "gemini-4-argon", "gemini-3.7-flash"]
-        if force_json_output else
-        ["gemini-4-argon", "gemini-3.1-pro-preview", "gemini-3.8-flash", "gemini-3.7-flash"]
-    )
-    if agent_slot > 0 and not force_json_output:
-        rot_g = agent_slot % len(gem_models)
-        gem_models = gem_models[rot_g:] + gem_models[:rot_g]
-
-    for cand_m in gem_models:
-        for retry_g in range(3):
+        # 3. Secours crois? vers Anthropic si un appel Gemini/JSON subit un al?a
+        for m_fb in ["claude-sonnet-5-5", "claude-fable-5-1", "claude-opus-5-5"]:
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_m}:generateContent?key={GEMINI_KEY}"
-                gen_cfg = {"temperature": temp_safe, "maxOutputTokens": 6144}
-                if force_json_output and not use_web_search:
-                    gen_cfg["responseMimeType"] = "application/json"
-                payload = {"contents": [{"parts": [{"text": full_prompt}]}], "generationConfig": gen_cfg}
-                if use_web_search:
-                    payload["tools"] = [{"google_search": {}}]
-                req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
+                url = "https://api.anthropic.com/v1/messages"
+                fb_prompt = full_prompt + ("\n\nR?PONDS UNIQUEMENT PAR UN OBJET JSON VALIDE `{...}`." if force_json_output else "")
+                payload = {"model": m_fb, "max_tokens": 6144, "messages": [{"role": "user", "content": fb_prompt}]}
+                headers = {"x-api-key": ANT_KEY_1, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}
+                if ANT_WS_ID:
+                    headers["anthropic-workspace-id"] = ANT_WS_ID
+                req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
                 with urllib.request.urlopen(req, timeout=95) as r:
                     resp = json.loads(r.read().decode("utf-8"))
-                    out_txt = extract_gemini_text_from_parts(resp)
-                    if len(out_txt.strip()) > 10:
-                        return out_txt
-            except urllib.error.HTTPError as he:
-                if he.code == 429:
-                    time.sleep(2.5 * (retry_g + 1))
-                else:
-                    break
+                    txt = extract_anthropic_text_or_thinking(resp)
+                    if len(txt) > 15:
+                        return txt
             except Exception:
-                time.sleep(1.5 * (retry_g + 1))
+                pass
+
     return "{}" if force_json_output else ""
 
 def _try_json_loads_latex_safe(cand: str):
@@ -1130,11 +1162,33 @@ def run_one_massive_generation(gen_idx: int, substrate: dict) -> dict:
     log_print(f"### Bagage h?rit? : {len(store.get('discovered_mathematical_concepts',[]))} concepts | {len(store.get('literature_and_forum_flaws_eliminated',[]))} failles litt. | {len(store.get('novel_beyond_labs_flaws_eliminated',[]))} failles in?dites ###")
     log_print(f"###########################################################################")
 
-    mem_spec, plugin_ns = run_endogenous_memory_mechanism_design_rocket(gen_idx, substrate)
-    mem_projection = invoke_swarm_memory_projection(plugin_ns, substrate, gen_idx)
+    done_units = {
+        h.get("unit_name"): int(h.get("posts_count", 0))
+        for h in store.get("live_shared_blackboard_posts_history", [])
+        if isinstance(h, dict)
+    }
+    plugin_ns = {}
+    if CompiledMemoryPluginPath.exists():
+        try:
+            exec(compile(CompiledMemoryPluginPath.read_text(encoding="utf-8"), str(CompiledMemoryPluginPath), "exec"), plugin_ns)
+        except Exception:
+            pass
 
-    rlcr_spec, rlcr_trace = run_endogenous_rlcr_blackboard_design_rocket(gen_idx, substrate, mem_projection)
-    generation_unit_traces = [rlcr_trace]
+    if done_units.get(f"GEN_{gen_idx}_MASSIVE_META_MEMORY", 0) >= 200 and substrate.get("active_memory_mechanism_spec"):
+        mem_spec = substrate["active_memory_mechanism_spec"]
+        log_print(f"  => [Checkpoint Actif] `GEN_{gen_idx}_MASSIVE_META_MEMORY` d?j? valid? ? {done_units.get(f'GEN_{gen_idx}_MASSIVE_META_MEMORY')} agents ? reprise directe !")
+    else:
+        mem_spec, plugin_ns = run_endogenous_memory_mechanism_design_rocket(gen_idx, substrate)
+
+    mem_projection = invoke_swarm_memory_projection(plugin_ns, substrate, gen_idx)
+    generation_unit_traces = []
+
+    if done_units.get(f"GEN_{gen_idx}_MASSIVE_META_RLCR", 0) >= 200 and substrate.get("active_rlcr_blackboard_spec"):
+        rlcr_spec = substrate["active_rlcr_blackboard_spec"]
+        log_print(f"  => [Checkpoint Actif] `GEN_{gen_idx}_MASSIVE_META_RLCR` d?j? valid? ? {done_units.get(f'GEN_{gen_idx}_MASSIVE_META_RLCR')} agents ? reprise directe ? HARVESTER !")
+    else:
+        rlcr_spec, rlcr_trace = run_endogenous_rlcr_blackboard_design_rocket(gen_idx, substrate, mem_projection)
+        generation_unit_traces.append(rlcr_trace)
 
     harvest_digest, harvest_trace = run_generational_harvester(gen_idx, mem_projection, substrate)
     generation_unit_traces.append(harvest_trace)
