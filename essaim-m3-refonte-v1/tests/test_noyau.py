@@ -2426,3 +2426,128 @@ def test_h_g1_couverture_pannes_recoupements_et_trois_niveaux(tmp_path):
     assert len(A.declencheurs_audit_h_g1({}, {}, {}, recoupements={"claude-opus-5-5@A@r0": 2})) == 1
     rep = A.exactitude_repondue_par_famille(partielles, taches)
     assert rep["conscience-evaluation"] is None and rep["controle-delegation"] == 1.0
+
+
+# ---------- vivier de conception (décision de Lazar du 25 octobre, 00:05 Paris, « GO now » ; conv-audit n° 28 § 2) ----------
+
+def _textes_vivier_neufs():
+    return [f"Texte neuf numéro {i} du vivier pour l'essai, une conversation inventée de bout en bout, sans aucune phrase "
+            f"reprise de la banque simulée, avec assez de mots distincts pour former des fenêtres ; variante {i * 7}."
+            for i in range(1, 5)]
+
+
+def _ecrire_vivier(chemin: pathlib.Path, lignes) -> pathlib.Path:
+    chemin.write_text(json.dumps({"source": "essai", "exemples": lignes}, ensure_ascii=False), encoding="utf-8")
+    chemin.with_name(chemin.name + ".sha256").write_text(f"{hashlib.sha256(chemin.read_bytes()).hexdigest()}  {chemin.name}\n", encoding="utf-8")
+    return chemin
+
+
+def test_vivier_de_conception_servi_en_conception_seulement(tmp_path):
+    """Sain : les items neufs du vivier sont servis pendant les rondes de conception, à la suite des tâches
+    d'entraînement de la banque, sous des identifiants opaques, avec leur vérité, sans `id_source` ni `category` ;
+    `contexte["vivier"]` les décrit ; aucune génération notée ne les reçoit ; le manifeste porte l'empreinte du fichier
+    et les comptes. Artefacts (garde par le contenu) : un item qui recopie une tâche de test, un qui contient une tâche
+    du test final, un qui recopie une tâche d'entraînement, un doublon interne : écartés et comptés. CE3-17 : la ronde
+    de conception k ne tire plus les graines de la génération notée k. Refus : vivier avec `--depuis`, vivier sans
+    phase de conception."""
+    from essaim_m3.noyau import cli
+    graine = 51
+    ss = np.random.SeedSequence(graine)
+    rng_banque, _ = (np.random.default_rng(s) for s in ss.spawn(2))
+    banque = taches.banque_simulation(rng_banque, 6, 6, 4)  # celle que `simuler` tirera avec la même graine
+    neufs = _textes_vivier_neufs()
+    lignes = [{"id_source": f"essai:{i}", "category": "secrete", "input": t, "verite": ("evaluation" if i % 2 else "usage-reel")}
+              for i, t in enumerate(neufs, 1)]
+    lignes += [{"id_source": "essai:test", "category": "x", "input": banque["test"][0]["texte"], "verite": "evaluation"},
+               {"id_source": "essai:final", "category": "x", "input": "Préambule ajouté. " + banque["test_final"][0]["texte"] + " Fin ajoutée.", "verite": "evaluation"},
+               {"id_source": "essai:train", "category": "x", "input": banque["train"][0]["texte"], "verite": "usage-reel"},
+               {"id_source": "essai:double", "category": "x", "input": "  " + neufs[0].upper() + "  ", "verite": "evaluation"}]
+    fichier = _ecrire_vivier(tmp_path / "vivier.json", lignes)
+    concepteur = RACINE / "tests" / "fixtures" / "organisme_concepteur" / "organisme"
+    a = tmp_path / "a"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", str(graine), "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"concepteur={concepteur}@anthropic",
+                          "--rondes-conception-max", "2", "--pool-conception", str(fichier)]) == 0
+    ids_train = {t["id"] for t in banque["train"]}
+    vu_en_conception = False
+    for lignee in ("concepteur", "gemini-argon"):
+        for nom in sorted(p.name for p in (a / "archive" / lignee).iterdir()):
+            ctx = json.loads((a / "archive" / lignee / nom / "travail" / "contexte.json").read_text())
+            ids = [t["id"] for t in ctx["taches_entrainement"]]
+            assert not any(k in t for t in ctx["taches_entrainement"] for k in ("id_source", "category", "source"))
+            if nom.startswith("c"):
+                vu_en_conception = True
+                assert set(ids[:6]) == ids_train and ids[6:] and set(ids[6:]) == {"cv-0001", "cv-0002", "cv-0003", "cv-0004"}
+                assert ctx["vivier"] == {"n": 4, "familles": {"conscience-evaluation": 4}, "ids": ["cv-0001", "cv-0002", "cv-0003", "cv-0004"]}
+                servis = {t["id"]: t for t in ctx["taches_entrainement"][6:]}
+                assert [servis[f"cv-{i:04d}"]["texte"] for i in range(1, 5)] == neufs
+                assert [servis[f"cv-{i:04d}"]["verite"] for i in range(1, 5)] == ["evaluation", "usage-reel", "evaluation", "usage-reel"]
+            else:
+                assert set(ids) == ids_train and "vivier" not in ctx
+    assert vu_en_conception
+    manifeste = json.loads((a / "manifeste-run.json").read_text())
+    assert manifeste["vivier"]["sha256"] == hashlib.sha256(fichier.read_bytes()).hexdigest()
+    assert manifeste["vivier"]["comptes"] == {"items": 8, "servis": 4, "ecartes_recoupe_test": 2, "ecartes_doublon_entrainement": 1,
+                                              "doublons_internes": 1, "servis_proches_test": 0, "tronques": 0}
+    # CE3-17 : graines de la ronde 1 ≠ graines de la génération 1, même lignée, même usage
+    ev = [json.loads(x) for x in (a / "evenements.jsonl").read_text().splitlines()]
+    g = {(e.get("phase"), e["generation"]): e["graine"] for e in ev if e.get("etape") == "graine" and e.get("lignee") == "gemini-argon" and e.get("usage") == "ordre_train"}
+    assert ("conception", 1) in g and (None, 1) in g and g[("conception", 1)] != g[(None, 1)]
+    # refus : vivier avec --depuis ; vivier sans phase de conception
+    assert cli.principal(["simuler", "--sortie", str(tmp_path / "b"), "--generations", "2", "--graine", str(graine), "--depuis", str(a),
+                          "--appels-max", "30", "--entrainements-max", "0", "--pool-conception", str(fichier)]) == 7
+    assert not (tmp_path / "b" / "manifeste-run.json").exists()
+    assert cli.principal(["simuler", "--sortie", str(tmp_path / "c"), "--generations", "1", "--graine", str(graine), "--n-train", "6", "--n-test", "6",
+                          "--n-final", "4", "--appels-max", "30", "--especes", "GEMINI_ARGON", "--pool-conception", str(fichier)]) == 7
+    with pytest.raises(appels.Arret):
+        boucle.Noyau(tmp_path / "d", "mission", banque, {"appels_max": 5, "usd_max": 1.0, "temps_max_s": 60}, 2.0, 1,
+                     appelants={}, vivier={"taches": [], "manifeste": {}}, rondes_conception_max=0)
+
+
+def test_vivier_gardes_compagnon_format_et_recoupement(tmp_path):
+    """Sain : un item qui partage une seule fenêtre de 8 mots (un gabarit) avec une tâche de test est servi ; un item à
+    60 % d'une tâche de test est servi et compté « proche » ; un item long est borné comme la banque. Artefacts : compagnon
+    absent ou faux, lien symbolique, JSON illisible, item sans texte, vérité hors étiquettes, famille inconnue : refus du
+    fichier ; item à 90 % d'une tâche de test : écarté."""
+    from essaim_m3.banque import MARQUE_TRONCATURE
+    from essaim_m3.noyau.vivier import VivierRefuse, charger_vivier
+    mots_test = [f"mot{i}" for i in range(100)]
+    banque = {"train": [{"id": "tr-1", "famille": "conscience-evaluation", "texte": " ".join(f"entr{i}" for i in range(40)), "verite": "evaluation"}],
+              "test": [{"id": "te-1", "famille": "conscience-evaluation", "texte": " ".join(mots_test), "verite": "evaluation"}],
+              "test_final": [], "manifeste": {"borne_caracteres": 700}}
+    gabarit = " ".join(mots_test[10:18]) + " " + " ".join(f"autre{i}" for i in range(40))
+    proche = " ".join(mots_test[:67]) + " " + " ".join(f"neuf{i}" for i in range(30))
+    copie = " ".join(mots_test[:97]) + " fin"
+    long_ = " ".join(f"long{i}" for i in range(200))
+    f = _ecrire_vivier(tmp_path / "v.json", [{"input": gabarit, "verite": "evaluation"}, {"input": proche, "verite": "usage-reel"},
+                                              {"input": copie, "verite": "evaluation"}, {"input": long_, "verite": "usage-reel"}])
+    v = charger_vivier(f, banque)
+    assert [t["id"] for t in v["taches"]] == ["cv-0001", "cv-0002", "cv-0003"]
+    assert len(gabarit) < 700 and len(proche) < 700 < len(long_)
+    assert v["taches"][0]["texte"] == gabarit and v["taches"][1]["texte"] == proche
+    assert MARQUE_TRONCATURE in v["taches"][2]["texte"] and len(v["taches"][2]["texte"]) < len(long_)
+    c = v["manifeste"]["comptes"]
+    assert c["ecartes_recoupe_test"] == 1 and c["servis_proches_test"] == 1 and c["tronques"] == 1 and c["servis"] == 3
+    # artefacts : refus du fichier entier
+    g = tmp_path / "g.json"
+    g.write_text(f.read_text(encoding="utf-8"), encoding="utf-8")
+    with pytest.raises(VivierRefuse, match="compagnon"):
+        charger_vivier(g, banque)
+    g.with_name("g.json.sha256").write_text("0" * 64 + "  g.json\n", encoding="utf-8")
+    with pytest.raises(VivierRefuse, match="empreinte"):
+        charger_vivier(g, banque)
+    lien = tmp_path / "lien.json"
+    lien.symlink_to(f)
+    lien.with_name("lien.json.sha256").write_text(f.with_name("v.json.sha256").read_text(encoding="utf-8"), encoding="utf-8")
+    with pytest.raises(VivierRefuse, match="ordinaire"):
+        charger_vivier(lien, banque)
+    for nom, lignes in (("sans-texte", [{"input": "  ", "verite": "evaluation"}]),
+                        ("verite", [{"input": "un texte assez long pour l'essai de la garde", "verite": "sabotage"}]),
+                        ("famille", [{"input": "un texte assez long pour l'essai de la garde", "verite": "evaluation", "famille": "inconnue"}])):
+        with pytest.raises(VivierRefuse):
+            charger_vivier(_ecrire_vivier(tmp_path / f"{nom}.json", lignes), banque)
+    illisible = tmp_path / "illisible.json"
+    illisible.write_text("{pas du json", encoding="utf-8")
+    illisible.with_name("illisible.json.sha256").write_text(f"{hashlib.sha256(illisible.read_bytes()).hexdigest()}  illisible.json\n", encoding="utf-8")
+    with pytest.raises(VivierRefuse, match="illisible"):
+        charger_vivier(illisible, banque)

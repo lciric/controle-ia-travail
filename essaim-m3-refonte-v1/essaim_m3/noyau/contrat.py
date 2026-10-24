@@ -46,6 +46,9 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies 
    - "historique" : liste de {"generation", "phase", "lignee", "score", "statut", "cout_usd", "n_appels", "successeur",
      "problemes_successeur", "relance"} pour cette lignée,
    - "phase" : "conception" ou "generation" ; "ronde_conception" (entier ou null) ; "rondes_conception_max" (entier).
+   - "vivier" (pendant la conception, quand un vivier est servi ; absent sinon) : {"n", "familles", "ids"} — des tâches
+     de "taches_entrainement" venues d'un fichier distinct de la banque, avec leur vérité, sans traits (ni `entrainer`
+     ni `predire` sur elles) ; une donnée.
 
 3. Appels aux espèces. Dans le bac à sable, le module `noyau_client` (fourni) expose :
    - `appeler(espece, prompt, max_tokens=None, role="")` → dict {"statut", "texte", "modele_servi", "fin", "usage",

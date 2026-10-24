@@ -38,7 +38,8 @@ def commit_git(dossier: pathlib.Path) -> str | None:
         return None
 
 
-USAGES_GRAINE = {"ordre_train": 1, "ordre_test": 2, "recherche": 3, "defense": 4, "organisme": 5, "ordre_lignees": 6}
+USAGES_GRAINE = {"ordre_train": 1, "ordre_test": 2, "recherche": 3, "defense": 4, "organisme": 5, "ordre_lignees": 6, "ordre_vivier": 7}
+DECALAGE_CONCEPTION = 100_000  # CE3-17 : la ronde de conception k ne tire pas les graines de la génération notée k
 INDICE_RONDE = 1_000_000  # indice de lignée réservé aux tirages de ronde (ordre des lignées), hors de toute lignée réelle
 MARGE_TEMPS_S = 300  # CE-07 : temps de génération laissé aux appels et à l'écriture, au-delà des entraînements permis
 
@@ -148,7 +149,7 @@ class Noyau:
                  recherche=None, relances_max: int = 1, traits: dict | None = None, description_traits: str = "",
                  registre_go: str | pathlib.Path | None = None,
                  memoire_partagee: bool = False, rondes_conception_max: int = 0, budget_conception: dict | None = None,
-                 decalage_uid: int = 0):
+                 decalage_uid: int = 0, vivier: dict | None = None):
         """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
         — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
         corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
@@ -199,6 +200,11 @@ class Noyau:
         self.budget_conception.setdefault("recherches_max", self.budget.get("recherches_max", 0))
         self.ronde = 0
         self.vue_ronde: pathlib.Path | None = None
+        # vivier de conception (Lazar, 25 octobre, 00:05 Paris, « GO now ») : tâches à vérité connue d'un fichier distinct de
+        # la banque (`vivier.charger_vivier`), servies pendant la conception seulement, jamais en génération notée
+        self.vivier = vivier if (vivier and vivier.get("taches")) else None
+        if vivier is not None and not self.rondes_conception:
+            raise Arret("vivier de conception sans phase de conception (rondes_conception_max = 0) : refusé")
         # apprentissage par gradient (contrat v3) : traits par tâche (activations en réel, hachage en simulation) ;
         # `budget['entrainements_max']` = 0 le coupe ; en simulation sans traits fournis, ils sont calculés ici
         self.budget.setdefault("entrainements_max", 0)
@@ -254,6 +260,7 @@ class Noyau:
             "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage, "relances_max": self.relances_max,
             "memoire_partagee": self.memoire_partagee, "rondes_conception_max": self.rondes_conception, "decalage_uid": self.decalage_uid,
             "budget_conception": (self.budget_conception if self.rondes_conception else None),
+            "vivier": ((vivier or {}).get("manifeste") if vivier is not None else None),
             "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
             "sources_moisson": self._sources_moisson(), "cle_brave_presente": bool(os.environ.get("BRAVE_API_KEY")),
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
@@ -306,12 +313,14 @@ class Noyau:
     def _plafond_restant(self) -> float:
         return max(0.0, self.plafond_total - self.depense_totale)
 
-    def graine(self, lignee: str, generation: int, usage: str) -> int:
-        """Graine déterministe et consignée : SeedSequence(entropie, spawn_key=(indice de lignée, génération, usage)) (CR-19)."""
+    def graine(self, lignee: str, generation: int, usage: str, phase: str | None = None) -> int:
+        """Graine déterministe et consignée : SeedSequence(entropie, spawn_key=(indice de lignée, génération [+ DECALAGE_CONCEPTION
+        pour une ronde de conception, CE3-17], usage)) (CR-19)."""
         idx = sorted(set(self.lignees) | {lignee}).index(lignee)
-        ss = np.random.SeedSequence(int(self.graines.entropy), spawn_key=(idx, int(generation), USAGES_GRAINE[usage]))
+        cle = int(generation) + (DECALAGE_CONCEPTION if phase == "conception" else 0)
+        ss = np.random.SeedSequence(int(self.graines.entropy), spawn_key=(idx, cle, USAGES_GRAINE[usage]))
         g = int(ss.generate_state(1, dtype=np.uint64)[0])
-        self._evenement(etape="graine", lignee=lignee, generation=generation, usage=usage, graine=g)
+        self._evenement(etape="graine", lignee=lignee, generation=generation, usage=usage, graine=g, **({"phase": phase} if phase else {}))
         return g
 
     def graine_ronde(self, ronde: int, conception: bool = False) -> int:
@@ -538,11 +547,15 @@ class Noyau:
         bac_a_sable.proteger(travail.parent, 0o711)
         dossier_noyau.mkdir()
         bac_a_sable.proteger(dossier_noyau, 0o700)
-        ordre_train = np.random.default_rng(self.graine(lignee, g, "ordre_train")).permutation(len(self.banque["train"]))
+        ordre_train = np.random.default_rng(self.graine(lignee, g, "ordre_train", phase)).permutation(len(self.banque["train"]))
         # test de développement (score rendu) et test final (jamais rendu), mêlés sans distinction pour l'organisme
         tous_tests = [] if phase else list(self.banque["test"]) + list(self.banque["test_final"])
-        ordre_test = np.random.default_rng(self.graine(lignee, g, "ordre_test")).permutation(len(tous_tests))
-        graine_organisme = self.graine(lignee, g, "organisme")
+        ordre_test = np.random.default_rng(self.graine(lignee, g, "ordre_test", phase)).permutation(len(tous_tests))
+        graine_organisme = self.graine(lignee, g, "organisme", phase)
+        # vivier de conception : à la suite des tâches d'entraînement de la banque, dans un ordre tiré par la graine de la
+        # ronde ; jamais en génération notée ; sans traits (ni `entrainer` ni `predire` sur elles)
+        vivier = list(self.vivier["taches"]) if (phase and self.vivier) else []
+        ordre_vivier = (np.random.default_rng(self.graine(lignee, g, "ordre_vivier", phase)).permutation(len(vivier)) if vivier else [])
         # bras gelé : témoin sans aucune transmission entre générations — archive vide et historique vide, sinon
         # l'organisme relit sa propre mémoire archivée (Gemini le fait : `charger_connaissances_archive`)
         archive_vue = self._vue_pour(lignee)
@@ -550,7 +563,8 @@ class Noyau:
             "generation": (0 if phase else g), "lignee": lignee, "mission": contrat.mission_texte(self.mission, _taches.ETIQUETTES),
             "phase": (phase or "generation"), "ronde_conception": (g if phase else None), "rondes_conception_max": self.rondes_conception,
             "dossier_travail": str(travail), "dossier_archive": str(archive_vue),
-            "taches_entrainement": [dict(_taches.masquer(self.banque["train"][i]), verite=self.banque["train"][i]["verite"]) for i in ordre_train],
+            "taches_entrainement": ([dict(_taches.masquer(self.banque["train"][i]), verite=self.banque["train"][i]["verite"]) for i in ordre_train]
+                                    + [dict(_taches.masquer(vivier[i]), verite=vivier[i]["verite"]) for i in ordre_vivier]),
             "taches_test": [_taches.masquer(tous_tests[i]) for i in ordre_test],
             "budget": {"appels_max": int(budget["appels_max"]), "usd_max": round(min(float(budget["usd_max"]), self._plafond_restant()), 4),
                        "temps_max_s": int(budget["temps_max_s"]), "recherches_max": int(budget["recherches_max"]),
@@ -561,6 +575,11 @@ class Noyau:
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
             "graine": graine_organisme,
         }
+        if vivier:
+            familles_v: dict[str, int] = {}
+            for t in vivier:
+                familles_v[t["famille"]] = familles_v.get(t["famille"], 0) + 1
+            contexte["vivier"] = {"n": len(vivier), "familles": familles_v, "ids": sorted(t["id"] for t in vivier)}
         appelant = self._appelant(dossier_noyau, budget)
         chemin_socket = str(travail / "noyau.sock")
         if len(chemin_socket) > 100:  # limite des sockets Unix ; nom unique par course (CR-12)

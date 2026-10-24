@@ -84,6 +84,23 @@ def _imposes_et_especes(args, imposes: dict) -> tuple[dict, list | None]:
     return imposes, args.especes
 
 
+def _vivier(args, banque: dict):
+    """Vivier de conception (`--pool-conception`) : refusé avec `--depuis` (le bras apparié n'a pas de rondes ; il importe
+    la mémoire de conception de sa course d'origine, CE3-01) et sans phase de conception ; chargé et gardé par
+    `vivier.charger_vivier` (compagnon, format, disjonction par le contenu)."""
+    if not getattr(args, "pool_conception", None):
+        return None
+    if args.depuis:
+        raise Arret("--pool-conception avec --depuis : refusé (le bras apparié n'a pas de phase de conception)")
+    if not args.rondes_conception_max:
+        raise Arret("--pool-conception sans --rondes-conception-max : refusé (le vivier ne sert qu'en conception)")
+    from .vivier import VivierRefuse, charger_vivier
+    try:
+        return charger_vivier(args.pool_conception, banque)
+    except VivierRefuse as e:
+        raise Arret(f"vivier de conception : {e}")
+
+
 def simuler(args) -> int:
     from ..simulateur import appelants_simules
     ss = np.random.SeedSequence(args.graine)
@@ -95,8 +112,13 @@ def simuler(args) -> int:
     options = {"commun": {"organisme_amorcage": args.organisme_amorcage} if args.organisme_amorcage else {}}
     appelants, _ = appelants_simules(rng_especes, **options)
     imposes, especes = _imposes_et_especes(args, _organismes_imposes(args))
+    try:
+        vivier = _vivier(args, banque)
+    except Arret as e:
+        print(f"refus : {e}", file=sys.stderr)
+        return 7
     noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
-                         args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
+                         args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy), vivier=vivier,
                          especes_amorcage=especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
                          organismes_imposes=imposes, parallele_max=args.parallele_max,
                          recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee,
@@ -239,8 +261,9 @@ def lancer(args) -> int:
             return 6
     try:
         imposes, especes = _imposes_et_especes(args, _organismes_imposes(args))
+        vivier = _vivier(args, banque)
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
-                             args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
+                             args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau, vivier=vivier,
                              entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=imposes, parallele_max=args.parallele_max,
                              recherche=None, relances_max=args.relances_max, traits=traits, description_traits=description,
@@ -341,6 +364,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--temps-max-conception", type=int, default=None, help="secondes par ronde de conception (défaut : --temps-max)")
         q.add_argument("--autoriser-base-url", action="store_true", help="réel : accepte une ANTHROPIC_BASE_URL définie (sinon refus)")
         q.add_argument("--decalage-uid", type=int, default=0, help="décalage des utilisateurs des organismes (multiple de 100, 0 à 900) : distinct pour chaque course qui tourne en même temps qu'une autre (CE3-06)")
+        q.add_argument("--pool-conception", default=None, metavar="FICHIER", help="vivier de conception : tâches à vérité connue (JSON du sous-ensemble, avec compagnon .sha256) servies en plus des tâches d'entraînement pendant la phase de conception seulement, jamais en génération notée ; identifiants opaques, textes bornés, items qui recoupent un texte de la banque écartés et comptés")
         q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
