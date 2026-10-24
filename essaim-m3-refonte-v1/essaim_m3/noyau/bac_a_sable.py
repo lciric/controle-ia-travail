@@ -86,6 +86,11 @@ def uid_lignee(indice: int) -> int:
     return UID_BASE + int(indice)
 
 
+def uid_entraineur(indice: int) -> int:
+    """Utilisateur non privilégié de l'entraîneur d'une lignée (CE-02) : distinct de celui de toute lignée."""
+    return UID_BASE + 1000 + int(indice)
+
+
 def traversable_par_tous(chemin: pathlib.Path) -> bool:
     """Vrai si chaque ancêtre de `chemin` (lui compris) laisse passer les autres utilisateurs (bit x « autres »)."""
     chemin = pathlib.Path(chemin).resolve()
