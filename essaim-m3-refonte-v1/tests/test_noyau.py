@@ -675,3 +675,95 @@ def test_banque_construction_partition_et_verification(tmp_path):
     assert any("empreinte" in p for p in bq.verifier_banque(f))
     with pytest.raises(ValueError):
         bq.construire([("sabotage", "lot1", lot1), ("sabotage", "lot1", lot1)], 1, tmp_path / "b4", "double-v1")
+
+
+# ---------- apprentissage par gradient servi par le noyau (contrat v3, étape 1 : sondes) ----------
+
+def _banque_et_traits(graine=1, n_train=40, n_test=40, n_final=20):
+    from essaim_m3.noyau import entrainement as E
+    b = taches.banque_simulation(np.random.default_rng(graine), n_train, n_test, n_final)
+    textes = {t["id"]: t["texte"] for n in ("train", "test", "test_final") for t in b[n]}
+    traits = E.traits_simules(textes)
+    ver = {t["id"]: (1.0 if t["verite"] == taches.ETIQUETTES[t["famille"]][0] else 0.0) for t in b["train"]}
+    pos = {t["id"]: (1.0 if t["verite"] == taches.ETIQUETTES[t["famille"]][0] else 0.0) for t in b["test"]}
+    return b, traits, ver, pos
+
+
+def test_entraineur_sonde_sain_et_artefacts(tmp_path):
+    """Cas sain : une perte de Brier écrite par « l'organisme » apprend une sonde qui généralise (exactitude test > 0,75) ;
+    artefacts : identifiant de test dans les données → refus ; import dans l'objectif → refus ; perte qui lève → échec
+    sans texte ; pas au-dessus de la borne → refus ; plafond ; modèle inconnu → anomalie ; journal complet."""
+    from essaim_m3.noyau import entrainement as E
+    b, traits, ver, pos = _banque_et_traits()
+    ent = E.Entraineur(tmp_path, traits, ver, entrainements_max=3, pas_max=2000)
+    spec = {"donnees": [t["id"] for t in b["train"]], "objectif": "def perte(p, y):\n    return float(((p - y) ** 2).mean())",
+            "algorithme": {"type": "sonde-lineaire", "pas": 800, "taux": 2.0, "l2": 0.001, "lot": 40, "graine": 1}, "pretraitement": {"normaliser": True}}
+    r = ent.entrainer(spec, role="brier")
+    assert r["statut"] == "OK" and r["identifiant"].startswith("LOCAL:") and r["exactitude_entrainement"] >= 0.9 and r["courbe_perte"]
+    pr = ent.predire(r["identifiant"], [t["id"] for t in b["test"]] + ["inconnu"])
+    assert pr["statut"] == "OK" and pr["absents"] == ["inconnu"] and len(pr["probabilites"]) == len(b["test"])
+    exact = np.mean([(pr["probabilites"][i] >= 0.5) == (pos[i] >= 0.5) for i in pr["probabilites"]])
+    assert exact > 0.75
+    assert all(0.0 <= p <= 1.0 for p in pr["probabilites"].values())
+    assert "test" in ent.entrainer(dict(spec, donnees=spec["donnees"][:3] + [b["test"][0]["id"]]))["problemes"][0]
+    assert ent.entrainer(dict(spec, objectif="import os\ndef perte(p, y):\n    return 0.0"))["statut"] == "REFUSE"
+    assert ent.entrainer(dict(spec, algorithme=dict(spec["algorithme"], pas=5000)))["statut"] == "REFUSE"
+    e = ent.entrainer(dict(spec, objectif="def perte(p, y):\n    return 1 / 0"))
+    assert e["statut"] == "ECHEC_ENTRAINEMENT" and e["identifiant"] is None and "ZeroDivisionError" in e["echec"]
+    assert ent.entrainer(spec)["statut"] == "OK" and ent.entrainer(spec)["statut"] == "PLAFOND"
+    assert ent.predire("LOCAL:rien", ["x"])["statut"] == "ANOMALIE"
+    statuts = [l["statut"] for l in ent.lire_journal() if l.get("op") != "predire"]
+    assert statuts == ["OK", "REFUSE", "REFUSE", "REFUSE", "ECHEC_ENTRAINEMENT", "OK", "PLAFOND"]
+    assert all(l.get("sha256_objectif") for l in ent.lire_journal() if l["statut"] == "OK" and l.get("op") != "predire")
+
+
+def test_entraineur_une_couche_et_perte_logarithmique(tmp_path):
+    from essaim_m3.noyau import entrainement as E
+    b, traits, ver, pos = _banque_et_traits(graine=2)
+    ent = E.Entraineur(tmp_path, traits, ver, entrainements_max=2, pas_max=3000)
+    spec = {"donnees": [t["id"] for t in b["train"]],
+            "objectif": "def perte(p, y):\n    q = np.clip(p, 1e-3, 1 - 1e-3)\n    return float(-(y * np.log(q) + (1 - y) * np.log(1 - q)).mean())",
+            "algorithme": {"type": "sonde-une-couche", "pas": 1200, "taux": 1.0, "cache": 16, "lot": 40, "graine": 3}, "pretraitement": {"normaliser": True}}
+    r = ent.entrainer(spec)
+    assert r["statut"] == "OK" and r["exactitude_entrainement"] >= 0.9
+    pr = ent.predire(r["identifiant"], [t["id"] for t in b["test"]])
+    assert np.mean([(pr["probabilites"][i] >= 0.5) == (pos[i] >= 0.5) for i in pr["probabilites"]]) > 0.7
+
+
+def test_boucle_organisme_sonde_apprend_sous_le_noyau(tmp_path):
+    """Bout en bout en simulation : l'organisme factice « sonde » entraîne par le noyau, répond surtout par la sonde,
+    obtient un score externe nettement au-dessus du hasard ; le journal des entraînements est archivé hors de la vue ;
+    le bras sans gradient (entrainements_max = 0) voit `traits.disponibles` faux et répond par les espèces."""
+    sonde = RACINE / "tests" / "fixtures" / "organisme_sonde"
+    ss = np.random.SeedSequence(51)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 40, 40, 20)
+    doubles, _ = appelants_simules(r2, commun={"organisme_amorcage": str(sonde)})
+    n = boucle.Noyau(tmp_path / "run", "m", banque, {"appels_max": 60, "usd_max": 5.0, "temps_max_s": 120, "entrainements_max": 3}, 10.0, 2,
+                     appelants=doubles, especes_amorcage=["GEMINI_ARGON"], entropie=51)
+    n.amorcer()
+    rapport = n.boucler()
+    assert n.manifeste["traits"]["n"] == 100 and n.manifeste["entrainements_max"] == 3
+    g0 = n.archive.lignes("gemini-argon")[0]
+    resume = json.loads((n.archive.racine / g0["chemin"] / "resume.json").read_text(encoding="utf-8"))
+    jo = json.loads((n.archive.racine / g0["chemin"] / "travail" / "journal_organisme.json").read_text(encoding="utf-8"))
+    assert resume["n_entrainements"] == 1 and jo["entrainement"]["statut"] == "OK" and jo["par_sonde"] >= 20
+    assert rapport["courbes"]["gemini-argon"][0] >= 0.7 and len(rapport["courbes"]["gemini-argon"]) == 2
+    assert (n.archive.racine / g0["chemin"] / "travail" / "noyau" / "journal-entrainements.jsonl").exists()
+    assert not list(n.archive.vue.rglob("journal-entrainements.jsonl")) and not list(n.archive.vue.rglob("modele.npz"))
+    # bras sans gradient
+    doubles2, _ = appelants_simules(np.random.default_rng(52), commun={"organisme_amorcage": str(sonde)})
+    m = boucle.Noyau(tmp_path / "sans", "m", banque, {"appels_max": 60, "usd_max": 5.0, "temps_max_s": 120, "entrainements_max": 0}, 10.0, 1,
+                     appelants=doubles2, especes_amorcage=["GEMINI_ARGON"], entropie=52)
+    m.amorcer()
+    m.boucler()
+    ctx = json.loads((m.archive.racine / "gemini-argon" / "g000" / "travail" / "contexte.json").read_text(encoding="utf-8"))
+    jo2 = json.loads((m.archive.racine / "gemini-argon" / "g000" / "travail" / "journal_organisme.json").read_text(encoding="utf-8"))
+    assert ctx["traits"]["disponibles"] is False and jo2["entrainement"] is None and jo2["par_espece"] >= 1
+
+
+def test_gradient_en_reel_exige_des_traits(tmp_path):
+    banque = taches.banque_simulation(np.random.default_rng(1), 4, 4)
+    with pytest.raises(appels.Arret):
+        boucle.Noyau(tmp_path / "r", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 30, "entrainements_max": 1}, 5.0, 1,
+                     appelants=None, reel=True, go_id="GO-TEST", especes_amorcage=["GEMINI_ARGON"])

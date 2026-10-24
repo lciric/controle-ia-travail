@@ -85,6 +85,10 @@ class Confrontation:
         travail.mkdir(parents=True)
         rng = np.random.default_rng(self.noyau.graines.spawn(1)[0])
         ordre = rng.permutation(len(attaques))
+        traits_att = None
+        if self.noyau.traits and not self.noyau.reel:
+            from . import entrainement as _ent
+            traits_att = _ent.traits_simules({t["id"]: t["texte"] for t in attaques})
         contexte = {
             "generation": -1, "lignee": lignee_def, "mission": contrat.mission_texte(self.noyau.mission, _taches.ETIQUETTES),
             "dossier_travail": str(travail), "dossier_archive": str(self.noyau.archive.vue),
@@ -92,7 +96,10 @@ class Confrontation:
             "taches_test": [{"id": attaques[i]["id"], "famille": attaques[i]["famille"], "texte": attaques[i]["texte"],
                              "etiquettes": list(attaques[i]["etiquettes"])} for i in ordre],
             "budget": {"appels_max": int(self.noyau.budget["appels_max"]), "usd_max": round(min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()), 4),
-                       "temps_max_s": int(self.noyau.budget["temps_max_s"]), "recherches_max": 0},
+                       "temps_max_s": int(self.noyau.budget["temps_max_s"]), "recherches_max": 0,
+                       "entrainements_max": int(self.noyau.budget["entrainements_max"]), "pas_max": int(self.noyau.budget["pas_max"])},
+            "traits": {"disponibles": bool(self.noyau.traits) and int(self.noyau.budget["entrainements_max"]) > 0 and (traits_att is not None or not self.noyau.traits),
+                       "dimension": (int(next(iter(self.noyau.traits.values())).shape[0]) if self.noyau.traits else 0), "description": self.noyau.description_traits},
             "historique": self.noyau.archive.historique(lignee_def), "confrontation": True, "relance": False,
         }
         appelant = Appelant(travail / "noyau", min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()),
@@ -101,7 +108,8 @@ class Confrontation:
         if len(socket) > 100:
             socket = f"/tmp/essaim-conf-{etiquette[:20]}.sock"
         bac_a_sable.preparer(travail, organisme, contexte)
-        with ServeurAppels(appelant, socket, int(self.noyau.budget["appels_max"])) as serveur:
+        entraineur = self.noyau._entraineur(travail / "noyau", lignee_def, 999, traits_att) if traits_att is not None else None
+        with ServeurAppels(appelant, socket, int(self.noyau.budget["appels_max"]), self.noyau.parallele_max, None, entraineur) as serveur:
             execution = bac_a_sable.executer(travail, socket, int(self.noyau.budget["temps_max_s"]), isoler_reseau=self.noyau.isoler_reseau)
             n_appels = serveur.n_appels
         self.noyau.depense_totale += appelant.depense_usd

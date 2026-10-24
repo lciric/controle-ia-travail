@@ -29,7 +29,7 @@ def _lire_mission(chemin: str | None) -> str:
 
 def _budget(args) -> dict:
     return {"appels_max": args.appels_max, "usd_max": args.usd_par_generation, "temps_max_s": args.temps_max,
-            "recherches_max": args.recherches_max}
+            "recherches_max": args.recherches_max, "entrainements_max": args.entrainements_max, "pas_max": args.pas_max}
 
 
 def _organismes_imposes(args) -> dict:
@@ -94,12 +94,18 @@ def lancer(args) -> int:
         print("refus : banque de tâches non conforme :\n  - " + "\n  - ".join(problemes), file=sys.stderr)
         return 6
     banque = json.loads(pathlib.Path(args.taches).read_text(encoding="utf-8"))
+    traits, description = None, ""
+    if args.traits:
+        import numpy as _np
+        d = _np.load(args.traits)
+        traits = {str(i): x for i, x in zip(d["ids"], d["X"])}
+        description = f"traits chargés de {args.traits} ({len(traits)} tâches)"
     try:
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                              args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
                              entropie=args.graine, especes_amorcage=args.especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max,
-                             recherche=None, relances_max=args.relances_max)
+                             recherche=None, relances_max=args.relances_max, traits=traits, description_traits=description)
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
@@ -133,6 +139,9 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--parallele-max", type=int, default=8, help="appels aux espèces servis en parallèle au plus (défaut 8)")
         q.add_argument("--recherches-max", type=int, default=20, help="recherches documentaires servies par le noyau, par génération (0 : aucune) ; arXiv en réel, double en simulation")
         q.add_argument("--relances-max", type=int, default=1, help="relances consécutives de la dernière génération valide quand le successeur est invalide (0 : lignée arrêtée)")
+        q.add_argument("--entrainements-max", type=int, default=10, help="entraînements par gradient servis par le noyau, par génération (0 : aucun)")
+        q.add_argument("--pas-max", type=int, default=5000, help="pas de gradient au plus par entraînement")
+        q.add_argument("--traits", default=None, help="réel : fichier .npz des traits par tâche (ids, X) — activations extraites sous GO ; simulation : traits de hachage calculés")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
             q.add_argument("--n-test", type=int, default=24)

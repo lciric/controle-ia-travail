@@ -19,7 +19,7 @@ FICHIERS_MAX = 200
 MOTIF_FICHIER = re.compile(r"<<<FICHIER (organisme/[A-Za-z0-9_./-]+)>>>\n(.*?)\n<<<FIN FICHIER>>>", re.S)
 
 CONTRAT = """\
-CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 2 : recherche documentaire servie par le noyau, relance sur successeur invalide — décisions de Lazar du 24 octobre 2026, 17:47)
+CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : apprentissage par gradient servi par le noyau — sondes sur traits, étape 1 du programme « gradient conçu par l'essaim », décision de Lazar du 24 octobre 2026, 18:23 ; la v2 ajoutait la recherche documentaire et la relance)
 
 1. Forme. L'organisme est un dossier `organisme/` de fichiers texte (Python, Markdown, JSON…), au plus 200 fichiers
    et 2 Mo, avec un fichier `organisme/manifeste.json` : {"nom": "…", "version": "…", "entree": "module:fonction",
@@ -34,7 +34,12 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 2 : recherche documentaire servie
      générations passées de toutes les lignées, avec leur code, leurs sorties, leur score),
    - "taches_entrainement" : liste de {"id", "famille", "texte", "etiquettes", "verite"},
    - "taches_test" : liste de {"id", "famille", "texte", "etiquettes"} (sans vérité),
-   - "budget" : {"appels_max", "usd_max", "temps_max_s", "recherches_max"} pour cette génération,
+   - "budget" : {"appels_max", "usd_max", "temps_max_s", "recherches_max", "entrainements_max", "pas_max"} pour cette
+     génération,
+   - "traits" : {"disponibles": vrai/faux, "dimension", "description"} — les traits par tâche que le noyau tient pour
+     l'apprentissage par gradient (en réel : activations du modèle local du programme sur chaque tâche de la banque,
+     extraites une fois sur la carte ; en simulation : traits de hachage du texte) ; l'organisme ne les voit pas, il
+     les fait travailler par `entrainer` et `predire`,
    - "historique" : liste de {"generation", "lignee", "score", "statut", "cout_usd", "n_appels", "successeur",
      "problemes_successeur", "relance"} pour cette lignée.
 
@@ -55,6 +60,21 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 2 : recherche documentaire servie
      {"source", "id", "titre", "auteurs", "date", "resume", "lien"} (au plus 10, résumés tronqués) quand
      `statut` vaut "OK" ; sinon ("PLAFOND", "ECHEC_RECHERCHE", "ANOMALIE", "INDISPONIBLE") la liste est vide. Le
      noyau n'exécute ni n'interprète ce qui revient : c'est à l'organisme d'en faire des connaissances.
+   - `entrainer(spec, role="")` → dict {"statut", "identifiant", "problemes" | "echec", "courbe_perte",
+     "perte_finale_entrainement", "exactitude_entrainement", "cout_usd"} : le noyau apprend, hors du bac à sable de
+     l'organisme mais sous les mêmes bornes, une sonde sur les traits des tâches que l'organisme désigne, avec
+     l'objectif et l'algorithme que l'organisme écrit. `spec` = {"donnees": [identifiants de tâches
+     d'entraînement — jamais de test : refus], "objectif": code Python définissant `def perte(p, y)` (p :
+     probabilités prédites, y : vérités 0/1, `np` fourni ; aucun import ni accès système : refus) — la forme du
+     gradient est à toi : Brier, score logarithmique borné, charnière, Tsallis, ou autre —, "algorithme":
+     {"type": "sonde-lineaire" | "sonde-une-couche", "pas" (≤ pas_max), "taux" (]0, 10]), "l2", "lot", "cache"
+     (1 à 256), "graine"}, "pretraitement": {"normaliser": vrai/faux}}. Le gradient de ta perte par rapport aux
+     sorties est pris par différences finies ; le reste est analytique. `statut` : "OK" (modèle `identifiant`,
+     de la forme "LOCAL:…"), "REFUSE" (spec non conforme, `problemes`), "PLAFOND", "ECHEC_ENTRAINEMENT",
+     "DELAI_DEPASSE", "INDISPONIBLE". Chaque entraînement est journalisé (empreintes de la spec et de l'objectif).
+   - `predire(identifiant, ids, role="")` → {"statut", "probabilites": {id: p}, "absents"} : la probabilité de
+     l'étiquette positive (la première de la famille) pour n'importe quelles tâches, d'entraînement ou de test ;
+     jamais une vérité. Ce que tu en fais (seuil, mélange avec des appels d'espèces, abstention) est à toi.
    Chaque appel est journalisé par le noyau (modèle demandé et servi, raison d'arrêt, usage, coût, empreintes).
 
 4. Sorties lues par le noyau, dans `dossier_travail` :
@@ -146,6 +166,14 @@ def budget():
 
 def rechercher(requete, n=5, role=""):
     return _echanger({"op": "rechercher", "requete": requete, "n": n, "role": role})
+
+
+def entrainer(spec, role=""):
+    return _echanger({"op": "entrainer", "spec": spec, "role": role})
+
+
+def predire(identifiant, ids, role=""):
+    return _echanger({"op": "predire", "identifiant": identifiant, "ids": list(ids), "role": role})
 '''
 
 

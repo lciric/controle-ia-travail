@@ -22,9 +22,10 @@ MAX_TOKENS_DEFAUT_ORGANISME = 4096  # si l'organisme ne fixe pas max_tokens ; il
 
 
 class ServeurAppels:
-    def __init__(self, appelant: Appelant, chemin_socket: str, appels_max: int, parallele_max: int = PARALLELE_MAX_DEFAUT, rechercheur=None):
+    def __init__(self, appelant: Appelant, chemin_socket: str, appels_max: int, parallele_max: int = PARALLELE_MAX_DEFAUT, rechercheur=None, entraineur=None):
         self.appelant = appelant
         self.rechercheur = rechercheur  # `recherche.Rechercheur` ou None (recherche non servie dans ce run)
+        self.entraineur = entraineur    # `entrainement.Entraineur` ou None (apprentissage par gradient non servi)
         self.chemin = chemin_socket
         self.appels_max = int(appels_max)
         self.parallele_max = max(1, int(parallele_max))
@@ -106,7 +107,16 @@ class ServeurAppels:
             with self._verrou:
                 return {"appels_restants": max(0, self.appels_max - self.n_appels),
                         "usd_restants": round(max(0.0, self.appelant.plafond_usd - self.appelant.depense_usd), 4),
-                        "recherches_restantes": (max(0, self.rechercheur.recherches_max - self.rechercheur.compteur) if self.rechercheur is not None else 0)}
+                        "recherches_restantes": (max(0, self.rechercheur.recherches_max - self.rechercheur.compteur) if self.rechercheur is not None else 0),
+                        "entrainements_restants": (max(0, self.entraineur.entrainements_max - self.entraineur.compteur) if self.entraineur is not None else 0)}
+        if op == "entrainer":
+            if self.entraineur is None:
+                return {"statut": "INDISPONIBLE", "identifiant": None, "problemes": ["apprentissage par gradient non servi dans ce run"]}
+            return self.entraineur.entrainer(req.get("spec"), role=str(req.get("role", ""))[:40])
+        if op == "predire":
+            if self.entraineur is None:
+                return {"statut": "INDISPONIBLE", "probabilites": {}, "echec": "apprentissage par gradient non servi dans ce run"}
+            return self.entraineur.predire(req.get("identifiant"), req.get("ids"), role=str(req.get("role", ""))[:40])
         if op == "rechercher":
             if self.rechercheur is None:
                 return {"statut": "INDISPONIBLE", "source": None, "resultats": [], "identifiant": None, "echec": "recherche non servie dans ce run"}

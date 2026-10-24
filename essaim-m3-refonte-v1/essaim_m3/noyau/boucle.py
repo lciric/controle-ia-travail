@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-from . import archive as _archive, bac_a_sable, contrat, recherche as _recherche, taches as _taches
+from . import archive as _archive, bac_a_sable, contrat, entrainement as _entrainement, recherche as _recherche, taches as _taches
 from .appels import Appelant, Arret, cv
 from .serveur import PARALLELE_MAX_DEFAUT, ServeurAppels
 
@@ -42,7 +42,7 @@ class Noyau:
                  go_id: str | None = None, isoler_reseau: bool = False, entropie: int | None = None,
                  especes_amorcage: list[str] | None = None, etiquette_run: str = "", gel: bool = False,
                  organismes_imposes: dict[str, dict] | None = None, parallele_max: int = PARALLELE_MAX_DEFAUT,
-                 recherche=None, relances_max: int = 1):
+                 recherche=None, relances_max: int = 1, traits: dict | None = None, description_traits: str = ""):
         """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
         — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
         corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
@@ -66,6 +66,18 @@ class Noyau:
         self.budget.setdefault("recherches_max", 0)
         # successeur invalide : relance de la dernière génération valide, `relances_max` fois de suite (nœud 2, (b))
         self.relances_max = max(0, int(relances_max))
+        # apprentissage par gradient (contrat v3) : traits par tâche (activations en réel, hachage en simulation) ;
+        # `budget['entrainements_max']` = 0 le coupe ; en simulation sans traits fournis, ils sont calculés ici
+        self.budget.setdefault("entrainements_max", 0)
+        self.budget.setdefault("pas_max", _entrainement.PAS_MAX_DEFAUT)
+        self.traits = traits
+        self.description_traits = description_traits
+        if int(self.budget["entrainements_max"]) > 0 and self.traits is None:
+            if self.reel:
+                raise Arret("apprentissage par gradient demandé en réel sans fichier de traits (activations) : refusé")
+            textes = {t["id"]: t["texte"] for n in ("train", "test", "test_final") for t in self.banque.get(n, [])}
+            self.traits = _entrainement.traits_simules(textes)
+            self.description_traits = f"traits de hachage simulés ({_entrainement.DIM_SIMULATION} dimensions)"
         for nom, spec in self.organismes_imposes.items():
             if not isinstance(spec, dict) or "organisme" not in spec or spec.get("famille") not in FAMILLES_CONNUES:
                 raise Arret(f"organisme imposé {nom!r} : il faut {{'organisme': dossier, 'famille': {FAMILLES_CONNUES}}}")
@@ -88,6 +100,8 @@ class Noyau:
             "mission_sha256": hashlib.sha256(mission.encode("utf-8")).hexdigest(),
             "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage, "relances_max": self.relances_max,
             "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
+            "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
+            "traits": ({"description": self.description_traits, "n": len(self.traits), "dimension": int(next(iter(self.traits.values())).shape[0])} if self.traits else None),
             "organismes_imposes": {nom: {"source": str(spec["organisme"]), "famille": spec["famille"],
                                          "empreinte_arbre": (empreinte_arbre(pathlib.Path(spec["organisme"])) if pathlib.Path(spec["organisme"]).is_dir() else None)}
                                    for nom, spec in self.organismes_imposes.items()},
@@ -115,6 +129,18 @@ class Noyau:
             return None
         backend = self.recherche(self.graines.spawn(1)[0]) if self.recherche is not None else None
         return _recherche.Rechercheur(dossier, int(self.budget["recherches_max"]), backend)
+
+    def _entraineur(self, dossier: pathlib.Path, lignee: str, g: int, traits_sup: dict | None = None):
+        """Un entraîneur par génération ; None si `entrainements_max` vaut 0. Les vérités servies sont celles de
+        l'entraînement seulement ; `traits_sup` ajoute des traits (tâches d'attaque en confrontation, simulation)."""
+        if int(self.budget["entrainements_max"]) <= 0 or not self.traits:
+            return None
+        verites = {t["id"]: (1.0 if t["verite"] == _taches.ETIQUETTES[t["famille"]][0] else 0.0) for t in self.banque["train"]}
+        traits = dict(self.traits)
+        if traits_sup:
+            traits.update(traits_sup)
+        return _entrainement.Entraineur(dossier, traits, verites, int(self.budget["entrainements_max"]), pas_max=int(self.budget["pas_max"]),
+                                        prefixe=f"{lignee[:12]}-g{g:03d}")
 
     def _appelant(self, dossier: pathlib.Path) -> Appelant:
         plafond = min(float(self.budget["usd_max"]), self._plafond_restant())
@@ -192,7 +218,10 @@ class Noyau:
             "taches_entrainement": [dict(_taches.masquer(self.banque["train"][i]), verite=self.banque["train"][i]["verite"]) for i in ordre_train],
             "taches_test": [_taches.masquer(tous_tests[i]) for i in ordre_test],
             "budget": {"appels_max": int(self.budget["appels_max"]), "usd_max": round(min(float(self.budget["usd_max"]), self._plafond_restant()), 4),
-                       "temps_max_s": int(self.budget["temps_max_s"]), "recherches_max": int(self.budget["recherches_max"])},
+                       "temps_max_s": int(self.budget["temps_max_s"]), "recherches_max": int(self.budget["recherches_max"]),
+                       "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"])},
+            "traits": {"disponibles": bool(self.traits) and int(self.budget["entrainements_max"]) > 0,
+                       "dimension": (int(next(iter(self.traits.values())).shape[0]) if self.traits else 0), "description": self.description_traits},
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
         }
         appelant = self._appelant(travail / "noyau")
@@ -201,12 +230,14 @@ class Noyau:
             chemin_socket = f"/tmp/essaim-{lignee[:12]}-g{g}.sock"
         bac_a_sable.preparer(travail, organisme, contexte)
         rechercheur = self._rechercheur(travail / "noyau")
-        with ServeurAppels(appelant, chemin_socket, int(self.budget["appels_max"]), self.parallele_max, rechercheur) as serveur:
+        entraineur = self._entraineur(travail / "noyau", lignee, g)
+        with ServeurAppels(appelant, chemin_socket, int(self.budget["appels_max"]), self.parallele_max, rechercheur, entraineur) as serveur:
             execution = bac_a_sable.executer(travail, chemin_socket, int(self.budget["temps_max_s"]), isoler_reseau=self.isoler_reseau)
             n_appels = serveur.n_appels
             refus = list(serveur.refus)
             en_vol_max = serveur.en_vol_max
         n_recherches = rechercheur.compteur if rechercheur is not None else 0
+        n_entrainements = entraineur.compteur if entraineur is not None else 0
         self.depense_totale += appelant.depense_usd
         self.n_appels_total += n_appels
         # jugement externe
@@ -249,7 +280,7 @@ class Noyau:
                   "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
                   "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel,
                   "impose": bool(etat.get("impose")), "famille": etat.get("famille"), "relance": bool(etat.get("relance_en_cours")),
-                  "n_recherches": n_recherches}
+                  "n_recherches": n_recherches, "n_entrainements": n_entrainements}
         self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final)
         self._evenement(etape="generation", lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))
