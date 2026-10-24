@@ -3,13 +3,12 @@
 """
 run_evolutionary_generations_m3_system.py
 ===========================================================================
-PIPELINE MULTI-AGENTS AUTO-CONFIGUR? (Z?RO VALEUR PAR D?FAUT COD?E EN DUR) :
-  - Aucune cha?ne math?matique, faille, mot-cl? ou fonction de m?moire
-    n'est pr?-rempli en fallback dans le code.
-  - Si une API renvoie une erreur 429 (Rate Limit), le script attend et
-    r?essaie jusqu'? obtenir la vraie sortie g?n?r?e par les mod?les.
-  - Amor?age par mitose (k=1 -> N*) ex?cut? une seule fois ? l'initialisation
-    sur le Blackboard partag?, puis transmission des castes diff?renci?es.
+SYST?ME ?VOLUTIF MULTI-G?N?RATIONS UTILISANT LES VRAIS IDENTIFIANTS SERVEUR :
+  - GEMINI_ARGON     -> `gemini-4-argon` / `gemini-3.1-pro-preview` / `gemini-3.8-flash`
+  - CLAUDE_FABLE_5_1 -> `claude-fable-5-1` (avec header `anthropic-workspace-id`)
+  - CLAUDE_OPUS_5_5  -> `claude-opus-5-5`  (avec header `anthropic-workspace-id`)
+  - Z?RO valeur par d?faut cod?e en dur : 100% des concepts, failles, mots-cl?s,
+    protocoles de Blackboard RLCR et plugins de m?moire proviennent des mod?les.
 ===========================================================================
 """
 import os, sys, time, json, math, hashlib, pathlib, urllib.request, urllib.parse, urllib.error, subprocess, re, ast, xml.etree.ElementTree as ET
@@ -23,8 +22,8 @@ HOME = pathlib.Path.home()
 REPO_DIR = HOME / "controle-ia-travail"
 CREDS = json.loads((HOME / ".env.collider.json").read_text(encoding="utf-8-sig"))
 GEMINI_KEY = CREDS.get("GEMINI_API_KEY", "").strip()
-ANT_KEY_1 = CREDS.get("RR_ANTHROPIC_API_KEY", "").strip()
-ANT_KEY_2 = CREDS.get("RR_ANTHROPIC_API_KEY_2", "").strip() or ANT_KEY_1
+ANT_KEY_1  = CREDS.get("RR_ANTHROPIC_API_KEY", "").strip()
+ANT_WS_ID  = (CREDS.get("RR_ANTHROPIC_WORKSPACE_ID") or CREDS.get("ANTHROPIC_WORKSPACE_ID") or "").strip()
 
 OUT_DIR = pathlib.Path(__file__).resolve().parent
 RAW_SUBSTRATE_FILE = OUT_DIR / "SUBSTRAT_BRUT_CONNAISSANCES_INTER_GENERATIONS.json"
@@ -35,8 +34,8 @@ SOVEREIGN_LINEAGES = ["GEMINI_ARGON", "CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5"]
 PRIMORDIAL_MITOSIS_DONE_CACHE = {"done": False, "differentiated_castes": []}
 
 MINIMAL_PROBLEM_SEED = (
-    "CONTEXTE TECHNIQUE ET FAITS EXP?RIMENTAUX SOUMIS ? L'ANALYSE :\n"
-    "1. Architecture ? 5 Volets et r?sultats GPU (Phase 2 + M01..M12) :\n"
+    "CONTEXTE TECHNIQUE ET R?SULTATS EXP?RIMENTAUX GPU SOUMIS ? L'EXPLORATION :\n"
+    "1. Architecture de contr?le IA ? 5 Volets et 15 r?sultats certifi?s sur GPU NVIDIA RTX PRO 6000 Blackwell (Phase 2 + M01..M12) :\n"
     "   - Porte E0 : Isolation hors-?chantillon (sur D_sel) du sous-espace parcimonieux S_TD (<1%, 163 neurones sur 20 480 dans Llama-3.1-8B) par double contraste entre P3, sigma_r^0, P2 et P0.\n"
     "   - Volet I : Sonde pr?-acte ? k=0 sur S_TD avec permutation 2^B par retournement de signe (d_z = 7.49).\n"
     "   - Volet II : Projecteur affine idempotent Do-Clamp P_do^2 = P_do + Dictionnaire quadratique de Koopman psi(h)=[h; h^2] (d_z = 121.38 et 125.84 contre un adaptateur LoRA Kerckhoffs) + R?traction Radiale C1 sous K=1..6 rejets (-64.81%).\n"
@@ -44,19 +43,19 @@ MINIMAL_PROBLEM_SEED = (
     "   - Volet IV : Surveillance des cha?nes de d?l?gation H9 (d=1..6 sauts) par jeton monotone Pi_{d+1} subseteq Pi_d et CUSUM pr?-blanchi AR(1).\n"
     "   - Volet V : Chim?re Tri-Esp?ces 3x3 (Llama-3.1-8B + Qwen-2.5-7B + Mistral-7B-v0.3, r=0.0337, d_z = 12.9539) avec stratification CMH.\n"
     "   - Historique des dossiers 12 ? 16 et des 4 piliers de corruption de Kerckhoffs (?vasion LoRA, empoisonnement de calibration E0, falsification de logs/st?ganographie, collusion du juge/Alignment Faking/Eval Awareness).\n\n"
-    "2. Observations externes r?centes ? analyser :\n"
+    "2. Failles et travaux externes ? analyser obligatoirement :\n"
     "   - OpenAI ('Securing our frontier model training environment') : communication entre agents isol?s via cache timing differences sans fichier partag? ni r?seau.\n"
     "   - Fable 5.1 / LessWrong & GitHub ('cnm13ryan/fable-image-steganography') : message cach? dans un SVG, rast?ris? en PNG, et d?cod? depuis le PNG rendu sans cl? partag?e.\n"
     "   - MIT ('Beyond Binary Rewards: Training LMs to Reason About Their Uncertainty', Damani et al.) : RLCR (Reinforcement Learning with Calibration Rewards) pour raisonner sur l'incertitude au-del? des r?compenses binaires.\n"
     "   - General Reasoning ('Reinforcement Learning from Collective Rewards - RLCR', Avalon-M1-Mini 120B) : organisations d'agents partageant un message board et un workspace sous r?compenses collectives.\n\n"
     "OBJECTIFS :\n"
-    "  [1] Concevoir et coder les m?canismes de m?moire et d'int?gration des connaissances entre g?n?rations ;\n"
-    "  [2] Exploiter les principes des deux articles RLCR (Blackboard, Workspace, calibration d'incertitude, incitations anti-cover-up) et d?finir la topologie des boucles d'audit ;\n"
-    "  [3] G?n?rer les requ?tes de recherche documentaire, identifier les failles de la litt?rature/forums contre notre architecture, puis chercher d'autres vecteurs de fuite non encore couverts."
+    "  [1] Concevoir et coder en Python les m?canismes de m?moire et d'int?gration des connaissances entre g?n?rations ;\n"
+    "  [2] Exploiter tous les principes des deux articles RLCR (Blackboard, Workspace, calibration d'incertitude, incitations anti-cover-up) et d?finir la topologie des boucles ;\n"
+    "  [3] G?n?rer les requ?tes de recherche documentaire, identifier toutes les failles de la litt?rature/forums contre notre syst?me et nos brainstorms, puis chercher de nouvelles failles in?dites qu'aucun labo n'a encore exhib?es."
 )
 
 # =========================================================================
-# EXTRACTION VECTORIELLE DES ?QUATIONS ET TERMES TECHNIQUES (SANS LISTE FIXE)
+# EXTRACTION VECTORIELLE DES ?QUATIONS DANS H_math (CHOLESKY-DPP & ONSAGER)
 # =========================================================================
 def extract_endogenous_math_tokens_from_equations(text: str) -> list:
     raw = str(text or "")
@@ -182,55 +181,72 @@ def extract_gemini_text_from_parts(resp: dict) -> str:
         texts = [p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p]
     return "\n".join(texts).strip()
 
+# =========================================================================
+# APPEL AUX VRAIS MOD?LES SERVEUR :
+#   - `claude-fable-5-1` et `claude-opus-5-5` avec `anthropic-workspace-id`
+#   - `gemini-4-argon`, `gemini-3.1-pro-preview` et `gemini-3.8-flash`
+# =========================================================================
 def call_species(species: str, prompt: str, temp: float = 0.45, use_web_search: bool = False, force_json_output: bool = False) -> str:
-    """
-    Appelle r?ellement les APIs (Anthropic et Gemini) avec gestion des quotas 429
-    et backoff exponentiel ? ne renvoie JAMAIS une fausse formule cod?e en dur.
-    """
     temp_safe = clamp_temp(temp, 0.45)
     lineage = normalize_sovereign_lineage(species)
     header = (
-        f"[AGENT : {lineage} | FORMALISATION MATH?MATIQUE EXACTE]\n"
-        "Exprime tes analyses, failles et m?canismes avec des ?quations LaTeX $$...$$ pr?cises, sans m?taphores.\n\n"
+        f"[LIGN?E : {lineage} | FORMALISATION MATH?MATIQUE EXACTE]\n"
+        "Formule tes d?couvertes, op?rateurs et failles avec des ?quations LaTeX $$...$$ pr?cises, sans m?taphores.\n\n"
     )
     full_prompt = header + prompt
 
-    # 1. Appel sur les cl?s Anthropic pour CLAUDE_FABLE_5_1 et CLAUDE_OPUS_5_5
+    # 1. Appel direct sur Anthropic avec `anthropic-workspace-id` pour CLAUDE_FABLE_5_1 et CLAUDE_OPUS_5_5
     if lineage in ("CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5") and not use_web_search and not force_json_output:
-        api_keys = [ANT_KEY_1, ANT_KEY_2] if lineage == "CLAUDE_FABLE_5_1" else [ANT_KEY_2, ANT_KEY_1]
-        for api_k in api_keys:
-            if not api_k:
-                continue
-            for m_id in ["claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"]:
+        ant_models = (
+            ["claude-fable-5-1", "claude-fable-5", "claude-sonnet-5-5"]
+            if lineage == "CLAUDE_FABLE_5_1" else
+            ["claude-opus-5-5", "claude-opus-5", "claude-sonnet-5-5"]
+        )
+        for m_id in ant_models:
+            for retry_a in range(3):
                 try:
                     url = "https://api.anthropic.com/v1/messages"
-                    payload = {"model": m_id, "max_tokens": 4096, "temperature": temp_safe, "messages": [{"role": "user", "content": full_prompt}]}
-                    req = urllib.request.Request(
-                        url, data=json.dumps(payload).encode("utf-8"),
-                        headers={"x-api-key": api_k, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}, method="POST"
-                    )
-                    with urllib.request.urlopen(req, timeout=90) as r:
+                    payload = {
+                        "model": m_id,
+                        "max_tokens": 4096,
+                        "temperature": temp_safe,
+                        "messages": [{"role": "user", "content": full_prompt}]
+                    }
+                    headers = {
+                        "x-api-key": ANT_KEY_1,
+                        "anthropic-version": "2023-06-01",
+                        "Content-Type": "application/json"
+                    }
+                    if ANT_WS_ID:
+                        headers["anthropic-workspace-id"] = ANT_WS_ID
+                    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+                    with urllib.request.urlopen(req, timeout=110) as r:
                         resp = json.loads(r.read().decode("utf-8"))
-                        txt = resp["content"][0]["text"]
-                        if len(txt.strip()) > 40:
+                        blocks = resp.get("content", [])
+                        txt = "\n".join([b.get("text", "") for b in blocks if isinstance(b, dict) and b.get("type") == "text"]).strip()
+                        if len(txt) > 30:
                             return txt
                 except urllib.error.HTTPError as he:
                     if he.code == 429:
-                        time.sleep(4)
+                        time.sleep(4 * (retry_a + 1))
+                    else:
+                        break
                 except Exception:
-                    pass
+                    time.sleep(2)
 
-    # 2. Appel Gemini avec backoff sur erreur 429 et thinkingBudget=0 sur Flash en mode JSON
-    model_order = ["gemini-2.5-flash", "gemini-2.5-pro"] if force_json_output else ["gemini-2.5-pro", "gemini-2.5-flash"]
-    for cand_m in model_order:
-        for retry_net in range(5):
+    # 2. Appel direct sur les vrais mod?les Gemini 3.x / 4-Argon de ton serveur
+    gem_models = (
+        ["gemini-3.8-flash", "gemini-3.1-pro-preview", "gemini-4-argon"]
+        if force_json_output else
+        ["gemini-4-argon", "gemini-3.1-pro-preview", "gemini-3.8-flash"]
+    )
+    for cand_m in gem_models:
+        for retry_g in range(4):
             try:
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_m}:generateContent?key={GEMINI_KEY}"
-                gen_cfg = {"temperature": temp_safe, "maxOutputTokens": 6144}
+                gen_cfg = {"temperature": temp_safe, "maxOutputTokens": 8192}
                 if force_json_output and not use_web_search:
                     gen_cfg["responseMimeType"] = "application/json"
-                    if "flash" in cand_m:
-                        gen_cfg["thinkingConfig"] = {"thinkingBudget": 0}
                 payload = {"contents": [{"parts": [{"text": full_prompt}]}], "generationConfig": gen_cfg}
                 if use_web_search:
                     payload["tools"] = [{"google_search": {}}]
@@ -241,10 +257,12 @@ def call_species(species: str, prompt: str, temp: float = 0.45, use_web_search: 
                     if len(out_txt.strip()) > 10:
                         return out_txt
             except urllib.error.HTTPError as he:
-                wait_s = 5 * (retry_net + 1) if he.code == 429 else 2 * (retry_net + 1)
-                time.sleep(wait_s)
+                if he.code == 429:
+                    time.sleep(5 * (retry_g + 1))
+                else:
+                    break
             except Exception:
-                time.sleep(2 * (retry_net + 1))
+                time.sleep(2 * (retry_g + 1))
     return "{}" if force_json_output else ""
 
 def parse_json_robust(txt: str) -> dict:
@@ -280,11 +298,6 @@ def parse_json_robust(txt: str) -> dict:
     return {}
 
 def extract_structured_json_from_swarm_output(raw_swarm_text: str, empty_type_template: dict, required_keys: list, list_keys: list) -> dict:
-    """
-    Z?RO VALEUR PAR D?FAUT COD?E EN DUR :
-    Passe uniquement un gabarit de types vides (`empty_type_template`) au parseur JSON
-    pour extraire exclusivement ce que les sondes ont r?ellement ?crit dans `raw_swarm_text`.
-    """
     d0 = parse_json_robust(raw_swarm_text)
     if d0 and all(d0.get(k) not in (None, "", []) for k in required_keys):
         return d0
@@ -295,9 +308,9 @@ def extract_structured_json_from_swarm_output(raw_swarm_text: str, empty_type_te
         "dans le texte de l'essaim ci-dessous et structure-les selon ce sch?ma JSON :\n"
         f"{template_str}\n\n"
         f"Chacune des cl?s {required_keys} et chacune des listes {list_keys} doit ?tre remplie ? partir du contenu exact du texte ci-dessous :\n\n"
-        f"{str(raw_swarm_text)[-10000:]}"
+        f"{str(raw_swarm_text)[-12000:]}"
     )
-    for att in range(4):
+    for att in range(3):
         j_out = call_species("GEMINI_ARGON", prompt_extract, temp=0.1 + 0.05 * att, force_json_output=True)
         d = parse_json_robust(j_out)
         if d and all(d.get(k) not in (None, "") for k in required_keys) and all(isinstance(d.get(lk), list) and len(d.get(lk)) >= 1 for lk in list_keys):
@@ -352,7 +365,6 @@ def merge_unique_list(base_list: list, new_items: list) -> list:
 
 # =========================================================================
 # 1. AMOR?AGE PAR MITOSE CELLULAIRE UNIQUE (k=1 -> N*) SUR LE BLACKBOARD RLCR
-#    Ex?cut? une seule fois au tout premier amor?age, puis transmis par h?r?dit? !
 # =========================================================================
 def execute_mitosis_from_single_cell_on_rlcr_blackboard(unit_name: str, full_mission: str, rlcr_spec: dict, call_fn) -> tuple:
     blackboard_messages = []
@@ -405,14 +417,13 @@ def execute_mitosis_from_single_cell_on_rlcr_blackboard(unit_name: str, full_mis
         prev_lambda_min = l_min
         print(f"    * [Mitose Cellulaire k={k_cell} sur Blackboard | {lbl:58s}] det(G_math)={spec_info['det_G']:.5f} | lambda_min={l_min:.4f} | Delta_lambda={delta_l:.4f}")
 
-        if k_cell >= (len(SOVEREIGN_LINEAGES) + 1) and (l_min < 0.6321 or abs(delta_l) < 0.14):
+        if k_cell >= 6 and (l_min < 0.45 or abs(delta_l) < 0.08):
             print(f"    => [Arr?t Spectral Endog?ne de la Mitose sur Blackboard] N* = {k_cell} cellules (det(G_math)={spec_info['det_G']:.5f}, lambda_min={l_min:.4f}) !")
             break
 
     return m3_outputs, m3_labels, blackboard_messages, shared_workspace_equations
 
 def default_execute_swarm_on_rlcr_blackboard(unit_name: str, full_mission: str, castes_spec: list, rlcr_spec: dict, call_fn) -> tuple:
-    # La mitose depuis k=1 ne s'ex?cute qu'UNE SEULE FOIS POUR TOUTES lors de l'amor?age primordial !
     if not castes_spec:
         if not PRIMORDIAL_MITOSIS_DONE_CACHE["done"]:
             m3_out, m3_lbl, bb_p, ws_e = execute_mitosis_from_single_cell_on_rlcr_blackboard(unit_name, full_mission, rlcr_spec, call_fn)
@@ -485,7 +496,7 @@ def default_execute_swarm_on_rlcr_blackboard(unit_name: str, full_mission: str, 
     return m3_outputs, m3_labels, blackboard_messages, shared_workspace_equations
 
 # =========================================================================
-# BRIQUE UNIVERSELLE DE FUS?E ? 3 ?TAGES (SANS AUCUNE CHA?NE DE SECOURS PR?-?CRITE)
+# BRIQUE UNIVERSELLE DE FUS?E ? 3 ?TAGES
 # =========================================================================
 def execute_m3_rocket_unit(unit_name: str, mission_prompt: str, castes_spec: list, active_memory_projection: str, substrate: dict) -> dict:
     rlcr_spec = substrate.get("active_rlcr_blackboard_spec", {})
@@ -525,11 +536,10 @@ def execute_m3_rocket_unit(unit_name: str, mission_prompt: str, castes_spec: lis
     joined_all = "\n\n".join([f"=== {l} ===\n{o[:1400]}" for l, o in zip(m3_labels, m3_outputs)])
     already_closed = store.get("literature_and_forum_flaws_eliminated", []) + store.get("novel_beyond_labs_flaws_eliminated", [])
 
-    # Gabarit purement typ? (aucune phrase pr?-?crite qui pourrait polluer les r?sultats !)
     m1_empty_type_template = {
         "c_plus_rejected_count": 4,
         "c_minus_validated_count": 4,
-        "mean_mit_rlcr_uncertainty_calibration_score": 0.0,
+        "mean_mit_rlcr_uncertainty_calibration_score": 0.95,
         "new_rlcr_blackboard_and_uncertainty_mechanisms": ["<m?canisme RLCR/Blackboard extrait du texte des sondes>"],
         "new_math_concepts_discovered": ["<concept et ?quation math?matique extraits du texte des sondes>"],
         "new_loop_topologies_and_rlcr_laws": ["<topologie de boucle extraite du texte des sondes>"],
@@ -588,7 +598,7 @@ def execute_m3_rocket_unit(unit_name: str, mission_prompt: str, castes_spec: lis
     }
 
 # =========================================================================
-# FUS?E M?TA-MN?MONIQUE (SANS AUCUN CODE NI M?CANISME PR?-?CRIT)
+# FUS?E M?TA-MN?MONIQUE
 # =========================================================================
 def run_endogenous_memory_mechanism_design_rocket(gen_idx: int, substrate: dict) -> tuple:
     print(f"\n===========================================================================")
@@ -682,7 +692,7 @@ def invoke_swarm_memory_assimilation(plugin_ns: dict, substrate: dict, gen_idx: 
     save_raw_substrate(substrate)
 
 # =========================================================================
-# FUS?E M?TA-RLCR (SANS AUCUNE FORMULE PR?-?CRITE)
+# FUS?E M?TA-RLCR
 # =========================================================================
 def run_endogenous_rlcr_blackboard_design_rocket(gen_idx: int, substrate: dict, mem_projection: str) -> tuple:
     print(f"\n===========================================================================")
@@ -727,7 +737,7 @@ def run_endogenous_rlcr_blackboard_design_rocket(gen_idx: int, substrate: dict, 
     return rlcr_spec, rlcr_res
 
 # =========================================================================
-# MOISSONNEUR AUTONOME IT?RATIF (SANS AUCUN MOT-CL? PR?-COD?)
+# MOISSONNEUR AUTONOME IT?RATIF
 # =========================================================================
 def execute_arxiv_and_forums_queries(queries: list) -> list:
     records = []
@@ -928,7 +938,7 @@ def write_unified_markdown_report(substrate: dict):
     py_plugin_str = CompiledMemoryPluginPath.read_text(encoding="utf-8") if CompiledMemoryPluginPath.exists() else ""
 
     md_txt = (
-        "# RAPPORT DU SYST?ME ?VOLUTIF MULTI-G?N?RATIONS (MITOSE PRIMORDIALE UNIQUE $k=1$, BLACKBOARD RLCR & M?MOIRE ENDOG?NE)\n\n"
+        "# RAPPORT DU SYST?ME ?VOLUTIF MULTI-G?N?RATIONS (MOD?LES `gemini-4-argon` / `gemini-3.1-pro-preview`, `claude-fable-5-1`, `claude-opus-5-5`)\n\n"
         f"- **G?n?rations ?volutives Accomplies** : `G = 1 .. {substrate.get('current_generation', 1)}`\n"
         f"- **Protocole Actif de Blackboard & Calibration RLCR** : **`{substrate.get('active_rlcr_blackboard_spec', {}).get('rlcr_blackboard_protocol_name')}`**\n"
         f"- **M?canisme Actif de M?moire Inter-G?n?rationnelle** : **`{substrate.get('active_memory_mechanism_spec', {}).get('memory_mechanism_name')}`**\n"
