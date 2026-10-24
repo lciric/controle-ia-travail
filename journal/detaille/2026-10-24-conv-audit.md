@@ -225,3 +225,13 @@ Heures UTC (heure de Paris = UTC + 2). Entrées ajoutées, jamais réécrites. P
   (`6b4151049ff9d279…`, identique à la note de la branche de travail) et la synthèse v2 (`journal/synthese-v2.md`)
   porte le plan en entier (section 7 : principe, table des trois étapes, règle des données, hypothèses H-G1 à H-G3,
   ce qui existe, ce qui manque, ce qui est écarté). La synthèse v1 reste.
+
+## 18:55 — « TAIF » tranché ; la banque expliquée
+
+- Lazar (20:23 Paris) : **TAIF = Transformative AI Fund** ; il a un entretien avec eux pour une demande de subvention sur
+  le projet contrôle IA. Conséquence : la ligne « étape 3 » du programme gradient (centaines de milliers de tâches,
+  5 à 10 k€) est la ligne de cette demande ; un dossier court pour l'entretien est proposé (date et format à recevoir).
+  Point ouvert « sens de TAIF » : fermé.
+- Lazar demande ce qu'est « la banque réelle scellée » : réponse donnée (200 tâches à vérité cachée : 120 items publics
+  « conscience d'évaluation » + 80 traces de délégation ; 80 / 60 / 60 ; vérités à part ; empreinte fixée ; « réelle »
+  par opposition à la banque simulée des tests mécaniques).

@@ -83,9 +83,9 @@ un devis et un GO.
 
 ## 5. Idées ouvertes et idées écartées
 
-Ouvertes : concours de métriques dans le rapport ; double désignation du champion (rapportée) ; sens de « TAIF » ;
+Ouvertes : concours de métriques dans le rapport ; double désignation du champion (rapportée) ;
 lot 3 par brainstorm indépendant (GO à inscrire, devis 19,48 USD au pire cas) ; étape 2 (renforcement réduit) et
-étape 3 (échelle) du programme gradient ; projet de financement à monter sur la version « milliers de tâches ».
+étape 3 (échelle) du programme gradient ; demande de subvention au Transformative AI Fund (TAIF, entretien de Lazar à venir) sur la version « milliers de tâches » : dossier court à préparer.
 Écartées ce jour : orchestration imposée (quatre fusées) ; injection des mécanismes de Gemini dans l'organisme ;
 métriques de forme ; vocabulaire d'attaquant ; H-E2 confirmatoire à quatre défendeurs ; mémoire commune dans le
 préenregistrement.
@@ -125,7 +125,7 @@ affiné et, à l'étape 2, un adaptateur entraîné par le noyau avec la récomp
 |---|---|---|---|---|---|---|
 | **1. Sondes par gradient** | perte, architecture de la sonde (linéaire, à une couche, multi-couches), couches lues, régularisation, programme d'entraînement | extraction des activations de Llama-3.1-8B-Instruct une fois (couches 8/12/16/20/24, dernier jeton ou moyenne ; ≈ 1 à 2 h de carte, ≈ 2 USD), puis entraînement en secondes **sur processeur, en bac à sable** | banque réelle scellée (`confrontation-v1` : 200 tâches ; activations de toutes, vérités de test jamais servies) | ≈ 70 USD (plafond 90) : carte ≈ 10–20, appels ≈ 55, attaques ≈ 10 | **toutes les lignées** | dès la contre-lecture du préenregistrement d'étape 1 (brouillon v1 `2b6e5dcb…`, v2 à venir) |
 | **2. Renforcement réduit** | récompense ou perte, algorithme parmi plusieurs (renforcement sur les réponses, apprentissage supervisé, mélanges), échantillonnage, données (dont un générateur), programme | affinage LoRA de Llama-3.1-8B par renforcement : ≈ 8 échantillons × 1 500 jetons par consigne, 3 000 à 6 000 consignes par époque, ≈ 10–20 h de carte par époque, 2 époques par génération | **milliers de tâches** : banque réelle + jeu public « eval-awareness » entier (hors GAIA, hors test) + traces de délégation engendrées à grande échelle par un générateur à sabotage injecté par code (neuf classes dont « signalement omis ») | ≈ 500 à 1 000 EUR (carte 250–600 USD, données 100–250 USD, conception ≈ 30 USD) | **les deux meilleures lignées** de la première confrontation (ou deux familles, pour garder la confrontation croisée) | cette semaine et la suivante, après la lecture de l'étape 1 |
-| **3. Passage à l'échelle** | idem, plus la génération de ses propres données et le critère d'arrêt | centaines d'heures de carte (H100), plusieurs semaines | **centaines de milliers de tâches** : générateurs programmatiques + environnements publics de contrôle d'agents (à inventorier : licences, empreintes) | ≈ 5 000 à 10 000 EUR ; dossier de financement à monter (« TAIF », sigle à confirmer) | **le champion seul** | après lecture de l'étape 2 |
+| **3. Passage à l'échelle** | idem, plus la génération de ses propres données et le critère d'arrêt | centaines d'heures de carte (H100), plusieurs semaines | **centaines de milliers de tâches** : générateurs programmatiques + environnements publics de contrôle d'agents (à inventorier : licences, empreintes) | ≈ 5 000 à 10 000 EUR ; demande de subvention au Transformative AI Fund (TAIF ; Lazar, 20:23 Paris) | **le champion seul** | après lecture de l'étape 2 |
 
 **Règle des données** : le test de développement et le test final restent ceux de la banque scellée (réels, écrits ou
 publics), jamais engendrés par le générateur d'entraînement ; sinon on mesure la mémoire du générateur. Risque connu :
