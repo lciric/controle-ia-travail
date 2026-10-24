@@ -1069,10 +1069,87 @@ def test_bras_gele_apparie_relance_les_memes_g000_sans_memoire(tmp_path):
     ctx = json.loads((gelee / "archive" / "gemini-argon" / "g001" / "travail" / "contexte.json").read_text())
     assert ctx["historique"] == [] and ctx["dossier_archive"].endswith("archive_vue_gel") and "graine" in ctx
     assert json.loads((gelee / "banque.json").read_text()) == json.loads((adaptative / "banque.json").read_text())
-    with pytest.raises(SystemExit):
-        cli.principal(["simuler", "--sortie", str(tmp_path / "x"), "--depuis", str(adaptative)])  # sans --gel
     with pytest.raises(appels.Arret):
         boucle.organismes_g000(tmp_path / "inexistante", tmp_path / "y")
+
+
+def test_bras_apparie_adaptatif_memes_g000_avec_memoire(tmp_path):
+    """CE-06 (contre-lecture R2 de l'étape 1) : `--depuis COURSE` sans `--gel` relance les mêmes organismes g000 (mêmes
+    empreintes, même banque, aucun appel d'amorçage) dans une boucle ordinaire : l'historique et la vue de la lignée sont
+    gardés ; seul le budget d'entraînement change (bras sans gradient : `traits.disponibles` faux)."""
+    from essaim_m3.noyau import cli
+    sonde = RACINE / "tests" / "fixtures" / "organisme_sonde"
+    avec = tmp_path / "avec"
+    assert cli.principal(["simuler", "--sortie", str(avec), "--generations", "2", "--graine", "7", "--n-train", "8", "--n-test", "8", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--entrainements-max", "2", "--organisme-amorcage", str(sonde)]) == 0
+    sans = tmp_path / "sans"
+    assert cli.principal(["simuler", "--sortie", str(sans), "--generations", "2", "--graine", "7", "--depuis", str(avec),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    idx_a = {(l["lignee"], l["generation"]): l for l in (json.loads(x) for x in (avec / "archive" / "index.jsonl").read_text().splitlines())}
+    idx_s = {(l["lignee"], l["generation"]): l for l in (json.loads(x) for x in (sans / "archive" / "index.jsonl").read_text().splitlines())}
+    assert idx_s[("gemini-argon", 0)]["empreinte_organisme"] == idx_a[("gemini-argon", 0)]["empreinte_organisme"]
+    assert idx_s[("gemini-argon", 0)]["impose"] is True and ("gemini-argon", 1) in idx_s
+    m = json.loads((sans / "manifeste-run.json").read_text())
+    assert m["gel"] is False and m["especes_amorcage"] == [] and m["entrainements_max"] == 0
+    ctx0 = json.loads((sans / "archive" / "gemini-argon" / "g000" / "travail" / "contexte.json").read_text())
+    ctx1 = json.loads((sans / "archive" / "gemini-argon" / "g001" / "travail" / "contexte.json").read_text())
+    assert ctx0["traits"]["disponibles"] is False and len(ctx1["historique"]) == 1 and not ctx1["dossier_archive"].endswith("archive_vue_gel")
+    ctx_a = json.loads((avec / "archive" / "gemini-argon" / "g000" / "travail" / "contexte.json").read_text())
+    assert ctx_a["traits"]["disponibles"] is True
+    assert json.loads((sans / "banque.json").read_text()) == json.loads((avec / "banque.json").read_text())
+
+
+def test_budget_incoherent_refuse_en_reel(tmp_path):
+    """CE-07 : en réel, `temps_max_s` doit contenir tous les entraînements permis plus une marge ; sinon refus (Arret)
+    avant tout appel. En simulation, rien ne change."""
+    banque = taches.banque_simulation(np.random.default_rng(3), 4, 4, 2)
+    ids = [t["id"] for n in ("train", "test", "test_final") for t in banque[n]]
+    vues = {"v": {i: np.ones(4, dtype=np.float32) for i in ids}}
+    with pytest.raises(appels.Arret, match="CE-07"):
+        boucle.Noyau(tmp_path / "r", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 900, "entrainements_max": 10,
+                                                    "delai_entrainement_s": 120}, 5.0, 1,
+                     appelants=None, reel=True, go_id="GO-TEST", especes_amorcage=["GEMINI_ARGON"], traits=vues)
+    n = boucle.Noyau(tmp_path / "s", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 900, "entrainements_max": 10,
+                                                   "delai_entrainement_s": 120}, 5.0, 1, appelants={}, especes_amorcage=[], traits=vues)
+    assert n.budget["delai_entrainement_s"] == 120
+
+
+@pytest.mark.skipif(not (hasattr(os, "geteuid") and os.geteuid() == 0), reason="l'isolation d'utilisateur exige root (conteneur)")
+def test_entraineur_isole_ne_lit_pas_les_fichiers_du_noyau(tmp_path):
+    """CE-02 : l'objectif écrit par l'organisme tourne sous un utilisateur non privilégié propre à l'entraîneur, dans un
+    dossier neuf, espaces de noms neufs, réseau coupé : il ne lit pas un fichier du noyau (0600, root). Artefact : le même
+    objectif, sans isolation, le lit — preuve que l'essai voit la fuite quand elle existe (R5). L'entraînement isolé
+    reste servi (statut OK, prédictions) ; le dossier d'exécution est effacé ; le modèle servi est la copie validée."""
+    from essaim_m3.noyau import bac_a_sable as B, entrainement as E
+    b, traits, ver, pos = _banque_et_traits()
+    racine = tmp_path / "racine"
+    racine.mkdir()
+    espace = B.espace_organismes(racine, course_nouvelle=True)  # traversable (0711), comme pour les organismes
+    secret = espace / "noyau-secret.txt"  # chemin atteignable : seul son mode (0600, root) le protège
+    secret.write_text("42", encoding="utf-8")
+    os.chmod(secret, 0o600)
+    objectif = ("def perte(p, y):\n"
+                "    b = __builtins__\n"
+                "    o = b['op' + 'en'] if isinstance(b, dict) else getattr(b, 'op' + 'en')\n"
+                "    try:\n"
+                f"        return float(o({str(secret)!r}).read())\n"
+                "    except Exception:\n"
+                "        return float(((p - y) ** 2).mean())\n")
+    spec = {"donnees": [t["id"] for t in b["train"]], "objectif": objectif,
+            "algorithme": {"type": "sonde-lineaire", "pas": 200, "taux": 2.0, "l2": 0.001, "lot": 40, "graine": 1}, "pretraitement": {"normaliser": True}}
+    assert B.traversable_par_tous(espace)
+    isole = E.Entraineur(tmp_path / "noyau-isole", traits, ver, entrainements_max=1, pas_max=2000,
+                         uid=B.uid_entraineur(0), isoler_reseau=B.isolation_reseau_disponible(), espace=espace)
+    r = isole.entrainer(spec)
+    assert r["statut"] == "OK", r
+    assert all(v < 1.0 for _, v in r["courbe_perte"])  # la lecture a échoué : perte de Brier
+    pr = isole.predire(r["identifiant"], [t["id"] for t in b["test"]])
+    assert pr["statut"] == "OK" and len(pr["probabilites"]) == len(b["test"])
+    assert not any((espace / "entrainements").iterdir())  # dossier d'exécution effacé
+    libre = E.Entraineur(tmp_path / "noyau-libre", traits, ver, entrainements_max=1, pas_max=2000)
+    r2 = libre.entrainer(spec)
+    assert r2["statut"] == "OK" and all(v == 42.0 for _, v in r2["courbe_perte"])  # artefact : sans isolation, la fuite est vue
+    shutil.rmtree(espace, ignore_errors=True)
 
 
 def test_releve_gele_puis_confrontation_separee(tmp_path):
@@ -1510,3 +1587,87 @@ def test_verifier_banque_refuse_des_verites_desequilibrees(tmp_path):
     archive.sceller(f)
     pb = banque.verifier_banque(f)
     assert any("déséquilibrées" in p and "test" in p and "conscience-evaluation" in p for p in pb)
+
+
+# ---------- analyse préenregistrée de H-G1 (étape 1 ; CE-03, CE-05 de la contre-lecture R2) ----------
+
+def test_analyse_h_g1_controle_positif_et_table_de_lecture():
+    """Gain connu +0,20 sur six paires → « confirmé », intervalle qui couvre le gain ; gain nul → jamais « confirmé ».
+    Table gelée : audit, invalidité, aucune paire, confirmé, réfuté (dont « plus petit que prédit »), non concluant."""
+    from essaim_m3 import analyse_gradient as A
+    v = A.verifier_sur_simulation_h_g1()
+    assert v["gain_connu"]["lecture"] == "confirmé" and v["gain_connu"]["couvre"]
+    assert v["sans_gain"]["lecture"] != "confirmé" and v["sans_gain"]["couvre"]
+    L = A.lecture_h_g1
+    assert L({"audit": True, "difference": 0.3, "ic95": [0.2, 0.4]}).startswith("audit")
+    assert L({"invalide": True, "difference": 0.3, "ic95": [0.2, 0.4]}).startswith("non concluant : plus d'une paire")
+    assert L({"difference": None, "ic95": None}) == "non concluant : aucune paire"
+    assert L({"difference": 0.15, "ic95": [0.05, 0.25]}) == "confirmé"
+    assert L({"difference": 0.04, "ic95": [0.01, 0.07]}) == "réfuté (l'effet prédit est exclu) ; effet positif plus petit que prédit"
+    assert L({"difference": -0.02, "ic95": [-0.10, 0.06]}) == "réfuté (l'effet prédit est exclu)"
+    assert L({"difference": 0.08, "ic95": [-0.02, 0.18]}).startswith("non concluant")
+    assert L({"difference": 0.12, "ic95": [-0.01, 0.25]}).startswith("non concluant")
+
+
+def test_paires_h_g1_lues_dans_des_courses_appariees(tmp_path):
+    """Courses simulées appariées (à gradient, puis `--depuis` sans gradient) : une paire par lignée et par réplique, à la
+    dernière génération valide commune ; artefacts : banques différentes → refus ; lignée absente → paire coupée, et plus
+    d'une paire sur quatre coupée → invalide."""
+    from essaim_m3 import analyse_gradient as A
+    from essaim_m3.noyau import cli
+    sonde = RACINE / "tests" / "fixtures" / "organisme_sonde"
+    a, b = tmp_path / "a", tmp_path / "b"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", "8", "--n-train", "8", "--n-test", "8", "--n-final", "8",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--entrainements-max", "2", "--organisme-amorcage", str(sonde)]) == 0
+    assert cli.principal(["simuler", "--sortie", str(b), "--generations", "2", "--graine", "8", "--depuis", str(a),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    paires, taches_final, etat = A.paires_h_g1([(str(a), str(b))], ["gemini-argon"], generations=2)
+    assert len(paires) == 1 and paires[0]["generation"] == 1 and len(taches_final) == 8 and not etat["invalide"]
+    assert set(paires[0]["avec"]) == {t["id"] for t in taches_final}
+    r = A.difference_h_g1(paires, taches_final, 5, n_tirages=50)
+    assert r["n_paires"] == 1 and r["ic95"] is not None
+    _, _, etat2 = A.paires_h_g1([(str(a), str(b))], ["gemini-argon", "lignee-absente"], generations=2)
+    assert etat2["coupees"] == ["lignee-absente@r0"] and etat2["invalide"]
+    c = tmp_path / "c"
+    assert cli.principal(["simuler", "--sortie", str(c), "--generations", "1", "--graine", "9", "--n-train", "8", "--n-test", "8", "--n-final", "8",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON"]) == 0
+    with pytest.raises(ValueError):
+        A.paires_h_g1([(str(a), str(c))], ["gemini-argon"], generations=2)
+
+
+def test_bras_apparie_adaptatif_sur_course_a_conception(tmp_path):
+    """Fusion de CE-06 (bras apparié adaptatif, session-depot) et de la phase de conception (conv-audit) : `--depuis` sans
+    `--gel` relance la génération 0 **issue de la conception** de la course d'origine (même empreinte), sans nouvelle
+    phase de conception. Artefact : `--depuis` avec `--rondes-conception-max` > 0 est refusé (sinon le bras apparié
+    repartirait d'un autre organisme). CE-07 s'applique aussi au budget d'une ronde de conception (sain et artefact)."""
+    from essaim_m3.noyau import cli
+    concepteur = RACINE / "tests" / "fixtures" / "organisme_concepteur" / "organisme"
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "21", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"concepteur={concepteur}@anthropic",
+                          "--rondes-conception-max", "3"]) == 0
+    idx = [json.loads(x) for x in (course / "archive" / "index.jsonl").read_text().splitlines()]
+    assert any(l.get("phase") == "conception" for l in idx)
+    with pytest.raises(SystemExit, match="pas de nouvelle conception"):
+        cli.principal(["simuler", "--sortie", str(tmp_path / "refus"), "--generations", "1", "--graine", "22", "--depuis", str(course),
+                       "--appels-max", "30", "--rondes-conception-max", "3"])
+    adaptatif = tmp_path / "adaptatif"
+    assert cli.principal(["simuler", "--sortie", str(adaptatif), "--generations", "1", "--graine", "22", "--depuis", str(course),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    idx_a = [json.loads(x) for x in (adaptatif / "archive" / "index.jsonl").read_text().splitlines()]
+    assert not any(l.get("phase") for l in idx_a)
+    for lignee in ("concepteur", "gemini-argon"):
+        e0 = next(l for l in idx if l["lignee"] == lignee and l["generation"] == 0 and not l.get("phase"))["empreinte_organisme"]
+        assert next(l for l in idx_a if l["lignee"] == lignee and l["generation"] == 0)["empreinte_organisme"] == e0
+    banque = taches.banque_simulation(np.random.default_rng(3), 4, 4, 2)
+    ids = [t["id"] for n in ("train", "test", "test_final") for t in banque[n]]
+    vues = {"v": {i: np.ones(4, dtype=np.float32) for i in ids}}
+    gen = {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 900, "entrainements_max": 2, "delai_entrainement_s": 120}
+    with pytest.raises(appels.Arret, match="CE-07, ronde de conception"):
+        boucle.Noyau(tmp_path / "r", "m", banque, dict(gen), 5.0, 1, appelants=None, reel=True, go_id="GO-TEST",
+                     especes_amorcage=["GEMINI_ARGON"], traits=vues, rondes_conception_max=2, budget_conception=dict(gen, temps_max_s=400))
+    try:  # sain : budgets cohérents → aucun refus CE-07 (un autre refus du mode réel reste possible dans ce test)
+        boucle.Noyau(tmp_path / "s", "m", banque, dict(gen), 5.0, 1, appelants=None, reel=True, go_id="GO-TEST",
+                     especes_amorcage=["GEMINI_ARGON"], traits=vues, rondes_conception_max=2, budget_conception=dict(gen))
+    except appels.Arret as e:
+        assert "CE-07" not in str(e)

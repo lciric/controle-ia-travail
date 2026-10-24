@@ -30,7 +30,7 @@ def _lire_mission(chemin: str | None) -> str:
 def _budget(args) -> dict:
     return {"appels_max": args.appels_max, "usd_max": args.usd_par_generation, "temps_max_s": args.temps_max,
             "recherches_max": args.recherches_max, "telechargements_max": args.telechargements_max, "octets_max": args.octets_max,
-            "entrainements_max": args.entrainements_max, "pas_max": args.pas_max}
+            "entrainements_max": args.entrainements_max, "pas_max": args.pas_max, "delai_entrainement_s": args.delai_entrainement}
 
 
 def _budget_conception(args) -> dict | None:
@@ -64,10 +64,14 @@ def _organismes_imposes(args) -> dict:
 
 
 def _imposes_et_especes(args, imposes: dict) -> tuple[dict, list | None]:
-    """Bras gelé apparié (CR-08) : `--gel --depuis COURSE` relance les organismes g000 de cette course, sans amorçage."""
+    """`--depuis COURSE` relance les organismes g000 de cette course (mêmes empreintes), sans amorçage. Avec `--gel` :
+    bras gelé apparié (CR-08 : génération 0 relancée, sans mémoire). Sans `--gel` : bras apparié adaptatif (CE-06,
+    étape 1) — même organisme de départ, boucle et mémoire ordinaires ; seul ce que la ligne de commande change (par
+    exemple `--entrainements-max 0`) diffère de la course d'origine."""
     if args.depuis:
-        if not args.gel:
-            raise SystemExit("--depuis exige --gel (bras gelé apparié à une course adaptative)")
+        if getattr(args, "rondes_conception_max", 0):
+            raise SystemExit("--depuis : le bras apparié part de la génération 0 de la course d'origine, issue de sa phase de "
+                             "conception ; pas de nouvelle conception (--rondes-conception-max doit valoir 0)")
         g000 = boucle.organismes_g000(args.depuis, pathlib.Path(args.sortie) / "g000-depuis")
         for nom, spec in g000.items():
             if nom in imposes:
@@ -198,6 +202,11 @@ def lancer(args) -> int:
         print("refus : banque de tâches non conforme :\n  - " + "\n  - ".join(problemes), file=sys.stderr)
         return 6
     banque = json.loads(pathlib.Path(args.taches).read_text(encoding="utf-8"))
+    if args.depuis:  # bras apparié : la banque de la course d'origine doit être la même (CE-06)
+        origine = pathlib.Path(args.depuis) / "banque.json"
+        if not origine.is_file() or json.loads(origine.read_text(encoding="utf-8")) != banque:
+            print("refus : --depuis : la banque de la course d'origine n'est pas celle de --taches", file=sys.stderr)
+            return 6
     traits, description = None, ""
     if args.traits:
         try:
@@ -299,6 +308,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--relances-max", type=int, default=1, help="relances consécutives de la dernière génération valide quand le successeur est invalide (0 : lignée arrêtée)")
         q.add_argument("--entrainements-max", type=int, default=10, help="entraînements par gradient servis par le noyau, par génération (0 : aucun)")
         q.add_argument("--pas-max", type=int, default=5000, help="pas de gradient au plus par entraînement")
+        q.add_argument("--delai-entrainement", type=int, default=120, help="secondes au plus par entraînement (sous-processus isolé)")
         q.add_argument("--traits", default=None, help="réel : dossier d'extraction (manifeste-traits.json, traits-<vue>.npz) ou fichier .npz (ids, X) — activations extraites sous GO ; simulation : traits de hachage calculés")
         q.add_argument("--vues", nargs="+", default=None, help="réel : vues servies (noms du manifeste, par exemple couche16-dernier) ; défaut : toutes")
         q.add_argument("--rondes-conception-max", type=int, default=0, help="phase de conception avant la génération 0 notée : borne dure du nombre de rondes (l'organisme déclare lui-même la fin par fin_conception.json) ; 0 : pas de phase")

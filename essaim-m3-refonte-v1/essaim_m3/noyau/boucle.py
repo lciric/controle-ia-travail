@@ -39,6 +39,7 @@ def commit_git(dossier: pathlib.Path) -> str | None:
 
 USAGES_GRAINE = {"ordre_train": 1, "ordre_test": 2, "recherche": 3, "defense": 4, "organisme": 5, "ordre_lignees": 6}
 INDICE_RONDE = 1_000_000  # indice de lignée réservé aux tirages de ronde (ordre des lignées), hors de toute lignée réelle
+MARGE_TEMPS_S = 300  # CE-07 : temps de génération laissé aux appels et à l'écriture, au-delà des entraînements permis
 
 
 def empreinte_arbre(dossier: pathlib.Path) -> str:
@@ -179,6 +180,17 @@ class Noyau:
         except ValueError as e:
             raise Arret(f"traits : {e}")
         self.description_traits = description_traits
+        self.budget.setdefault("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT)
+        # CE-07 : en réel, le temps de la génération doit contenir tous les entraînements permis plus le reste du travail
+        # (et celui d'une ronde de conception, qui sert les mêmes primitives)
+        if self.reel:
+            budgets = [("génération", self.budget)] + ([("ronde de conception", self.budget_conception)] if self.rondes_conception else [])
+            for nom_b, b in budgets:
+                n_ent = int(b.get("entrainements_max", 0))
+                delai = int(b.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT))
+                if n_ent > 0 and int(b["temps_max_s"]) < n_ent * delai + MARGE_TEMPS_S:
+                    raise Arret(f"budget incohérent (CE-07, {nom_b}) : temps_max_s {b['temps_max_s']} < {n_ent} "
+                                f"entraînements × {delai} s + {MARGE_TEMPS_S} s")
         if int(self.budget["entrainements_max"]) > 0 and not self.vues:
             if self.reel:
                 raise Arret("apprentissage par gradient demandé en réel sans fichier de traits (activations) : refusé")
@@ -337,7 +349,17 @@ class Noyau:
             if nom not in vues:
                 raise Arret(f"traits supplémentaires pour une vue non servie : {nom!r}")
             vues[nom].update(t)
+        # CE-02 : l'objectif écrit par l'organisme tourne sous un utilisateur non privilégié propre à l'entraîneur de la
+        # lignée, dans des espaces de noms neufs, réseau coupé ; en réel, sans cette isolation, aucun entraînement
+        uid_ent, isole = None, False
+        if self.isolation["utilisateur"]:
+            idx = sorted(self.lignees).index(lignee) if lignee in self.lignees else len(self.lignees)
+            uid_ent, isole = bac_a_sable.uid_entraineur(idx), bool(self.isolation["reseau"])
+        elif self.reel:
+            raise Arret("entraîneur sans isolation d'utilisateur en réel : refusé (CE-02)")
         return _entrainement.Entraineur(dossier, vues, verites, int(budget["entrainements_max"]), pas_max=int(budget.get("pas_max", _entrainement.PAS_MAX_DEFAUT)),
+                                        delai_s=int(budget.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT)),
+                                        uid=uid_ent, isoler_reseau=isole, espace=(self.espace if uid_ent is not None else None),
                                         prefixe=f"{lignee[:12]}-g{g:03d}")
 
     def _contexte_traits(self, disponibles: bool) -> dict:

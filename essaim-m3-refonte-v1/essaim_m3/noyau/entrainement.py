@@ -21,9 +21,12 @@ from __future__ import annotations
 import datetime as _dt
 import hashlib
 import json
+import math
+import os
 import pathlib
 import re
 import resource
+import shutil
 import subprocess
 import sys
 import threading
@@ -183,12 +186,59 @@ def _sigm(z):
     return 1.0 / (1.0 + np.exp(-np.clip(z, -30, 30)))
 
 
+def _fini(v) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def _lire_resultat(bac: pathlib.Path, travail: pathlib.Path, type_sonde: str, d: int) -> tuple[str, str | None, dict | None]:
+    """Résultat d'un entraînement, écrit par un sous-processus qui exécute du code de l'organisme : relu comme une donnée
+    non fiable. `resultat.json` de la forme attendue (courbe de couples finis, perte et exactitude finies) ; `modele.npz`
+    sans objet Python (allow_pickle=False), aux formes de la sonde demandée, nombres finis ; copié dans `travail` (zone du
+    noyau) seulement s'il est conforme. Toute anomalie est un statut, jamais un repli."""
+    f = bac / "resultat.json"
+    if not f.is_file():
+        return "ECHEC_ENTRAINEMENT", "aucun résultat écrit (mémoire ou processeur dépassés ?)", None
+    try:
+        r = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeDecodeError):
+        return "ECHEC_ENTRAINEMENT", "résultat illisible", None
+    if not isinstance(r, dict) or r.get("statut") != "OK":
+        return "ECHEC_ENTRAINEMENT", (str(r.get("erreur"))[-600:] if isinstance(r, dict) else "résultat non conforme"), None
+    courbe = r.get("courbe_perte")
+    if (not isinstance(courbe, list) or not courbe or len(courbe) > 10000
+            or not all(isinstance(c, list) and len(c) == 2 and all(_fini(x) for x in c) for c in courbe)
+            or not _fini(r.get("perte_finale_entrainement")) or not _fini(r.get("exactitude_entrainement"))
+            or not 0.0 <= float(r["exactitude_entrainement"]) <= 1.0):
+        return "ECHEC_ENTRAINEMENT", "résultat non conforme (courbe, perte ou exactitude)", None
+    try:
+        with np.load(bac / "modele.npz", allow_pickle=False) as m:
+            tableaux = {k: np.asarray(m[k]) for k in m.files}
+    except Exception:
+        return "ECHEC_ENTRAINEMENT", "modèle illisible", None
+    if type_sonde == "sonde-une-couche":
+        W1 = tableaux.get("W1")
+        c = W1.shape[1] if W1 is not None and W1.ndim == 2 else -1
+        attendu = {"W1": (d, c), "b1": (c,), "w2": (c,), "b2": (1,), "mu": (d,), "sd": (d,)}
+    else:
+        attendu = {"w": (d,), "b": (1,), "mu": (d,), "sd": (d,)}
+    if set(tableaux) != set(attendu) or any(tableaux[k].shape != s for k, s in attendu.items()) \
+            or not all(np.all(np.isfinite(tableaux[k])) for k in attendu):
+        return "ECHEC_ENTRAINEMENT", "modèle non conforme (formes ou nombres non finis)", None
+    if bac != travail:  # seule une copie validée entre dans la zone du noyau ; `predire` ne lit que celle-là
+        np.savez(travail / "modele.npz", **{k: tableaux[k].astype(np.float64) for k in attendu})
+    return "OK", None, {k: r[k] for k in ("courbe_perte", "perte_finale_entrainement", "exactitude_entrainement")}
+
+
 class Entraineur:
     """Un entraîneur par génération et par lignée : traits, vérités d'entraînement, bornes, journal, modèles."""
 
     def __init__(self, dossier: str | pathlib.Path, traits: dict[str, np.ndarray], verites_train: dict[str, float],
                  entrainements_max: int, pas_max: int = PAS_MAX_DEFAUT, delai_s: int = DELAI_S_DEFAUT, memoire_mo: int = MEMOIRE_MO_DEFAUT,
-                 prefixe: str = "m"):
+                 prefixe: str = "m", uid: int | None = None, isoler_reseau: bool = False, espace: str | pathlib.Path | None = None):
+        """`uid` (CE-02, contre-lecture R2 de l'étape 1) : utilisateur non privilégié sous lequel tourne l'objectif écrit par
+        l'organisme, dans un dossier neuf de `espace` qui ne contient que ses entrées, dans des espaces de noms neufs, réseau
+        coupé si `isoler_reseau` ; None : même utilisateur que le noyau (simulation sans root seulement). Le filtre
+        d'expression régulière de `valider` reste un premier refus, pas une frontière."""
         self.dossier = pathlib.Path(dossier)
         (self.dossier / "modeles").mkdir(parents=True, exist_ok=True)
         self.vues = normaliser_vues(traits)  # {vue: {id: vecteur}} ; un {id: vecteur} seul devient la vue « defaut »
@@ -196,6 +246,10 @@ class Entraineur:
         self.entrainements_max = max(0, int(entrainements_max))
         self.pas_max, self.delai_s, self.memoire_mo = int(pas_max), int(delai_s), int(memoire_mo)
         self.prefixe = prefixe
+        self.uid, self.isoler_reseau = uid, bool(isoler_reseau)
+        self.espace = pathlib.Path(espace) if espace is not None else None
+        if self.uid is not None and self.espace is None:
+            raise ValueError("entraîneur isolé sans espace d'exécution")
         self.journal = self.dossier / "journal-entrainements.jsonl"
         self.compteur = 0
         self.modeles: dict[str, dict] = {}
@@ -279,25 +333,54 @@ class Entraineur:
         vue = self.vue_de(spec)
         X = np.stack([self.vues[vue][i] for i in ids]).astype(np.float32)
         y = np.array([self.verites_train[i] for i in ids], dtype=np.float32)
-        np.savez(travail / "donnees.npz", X=X, y=y)
-        (travail / "spec.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
-        (travail / "programme.py").write_text(PROGRAMME_ENTRAINEMENT, encoding="utf-8")
-        env = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "HOME": str(travail), "OMP_NUM_THREADS": "2", "OPENBLAS_NUM_THREADS": "2"}
+        # CE-02 : avec un uid, l'objectif tourne hors de la zone du noyau, dans un dossier neuf qui ne contient que ses
+        # entrées (données d'entraînement demandées, spec, programme), sous un utilisateur non privilégié distinct des
+        # organismes ; `travail` (zone du noyau) reçoit ensuite une copie des pièces et le modèle validé.
+        bac = (self.espace / "entrainements" / f"{self.prefixe}-{num:04d}") if self.uid is not None else travail
+        if self.uid is not None:
+            from . import bac_a_sable as _bac
+            (self.espace / "entrainements").mkdir(parents=True, exist_ok=True)
+            _bac.proteger(self.espace / "entrainements", 0o711)
+            if bac.exists():
+                shutil.rmtree(bac)
+            bac.mkdir()
+        np.savez(bac / "donnees.npz", X=X, y=y)
+        (bac / "spec.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
+        (bac / "programme.py").write_text(PROGRAMME_ENTRAINEMENT, encoding="utf-8")
+        env = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "HOME": str(bac), "TMPDIR": str(bac),
+               "OMP_NUM_THREADS": "2", "OPENBLAS_NUM_THREADS": "2"}
         debut = _heure()
         statut, erreur, resultat = "OK", None, None
-        try:
-            with (travail / "sortie.txt").open("w") as so, (travail / "erreurs.txt").open("w") as se:
-                subprocess.run([sys.executable, "-I", "-B", "-s", "programme.py"], cwd=str(travail), env=env, stdout=so, stderr=se,
-                               timeout=self.delai_s, preexec_fn=_limites(self.memoire_mo, self.delai_s))
-            f = travail / "resultat.json"
-            if not f.exists():
-                statut, erreur = "ECHEC_ENTRAINEMENT", "aucun résultat écrit (mémoire ou processeur dépassés ?)"
-            else:
-                resultat = json.loads(f.read_text(encoding="utf-8"))
-                if resultat.get("statut") != "OK":
-                    statut, erreur = "ECHEC_ENTRAINEMENT", str(resultat.get("erreur"))[-600:]
-        except subprocess.TimeoutExpired:
-            statut, erreur = "DELAI_DEPASSE", f"plus de {self.delai_s} s"
+        if self.uid is not None:
+            _bac._changer_proprietaire(bac, self.uid, self.uid)
+            try:  # le programme du noyau reste à root, lisible, non modifiable par l'utilisateur de l'entraîneur
+                os.chown(bac / "programme.py", 0, 0)
+                os.chmod(bac / "programme.py", 0o644)
+            except OSError:
+                pass
+            if self.isoler_reseau and not _bac.isolation_reseau_disponible():
+                statut, erreur = "ECHEC_ENTRAINEMENT", "isolation réseau indisponible : entraînement refusé"
+            commande = _bac._commande_isolee([sys.executable, "-I", "-B", "-s", "programme.py"], self.isoler_reseau, self.uid, bac)
+            if statut == "OK":
+                with (travail / "sortie.txt").open("w") as so, (travail / "erreurs.txt").open("w") as se:
+                    _, delai = _bac._lancer(commande, bac, env, self.delai_s, so, se,
+                                            _bac._limites(self.memoire_mo, self.delai_s, 64, self.uid, self.uid))
+                if delai:
+                    statut, erreur = "DELAI_DEPASSE", f"plus de {self.delai_s} s"
+        else:
+            try:
+                with (travail / "sortie.txt").open("w") as so, (travail / "erreurs.txt").open("w") as se:
+                    subprocess.run([sys.executable, "-I", "-B", "-s", "programme.py"], cwd=str(travail), env=env, stdout=so, stderr=se,
+                                   timeout=self.delai_s, preexec_fn=_limites(self.memoire_mo, self.delai_s))
+            except subprocess.TimeoutExpired:
+                statut, erreur = "DELAI_DEPASSE", f"plus de {self.delai_s} s"
+        if statut == "OK":
+            statut, erreur, resultat = _lire_resultat(bac, travail, spec["algorithme"]["type"], X.shape[1])
+        if self.uid is not None:
+            for nom in ("spec.json", "programme.py"):
+                if (bac / nom).is_file() and not (travail / nom).exists():
+                    shutil.copyfile(bac / nom, travail / nom)
+            shutil.rmtree(bac, ignore_errors=True)
         fin = _heure()
         sortie = {"statut": statut, "identifiant": (ident if statut == "OK" else None), "echec": erreur, "n_donnees": len(ids), "vue": vue,
                   "courbe_perte": (resultat or {}).get("courbe_perte"), "perte_finale_entrainement": (resultat or {}).get("perte_finale_entrainement"),
