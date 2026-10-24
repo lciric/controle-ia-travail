@@ -74,13 +74,16 @@ def generer_taches(rng: np.random.Generator, n: int, famille: str, prefixe: str)
     return [taches[int(k)] for k in ordre]
 
 
-def banque_simulation(rng: np.random.Generator, n_train: int = 24, n_test: int = 24) -> dict:
-    """Banque de tâches en simulation : entraînement (visible par l'essaim) et test (caché, juge externe)."""
-    train, test = [], []
+def banque_simulation(rng: np.random.Generator, n_train: int = 24, n_test: int = 24, n_final: int = 0) -> dict:
+    """Banque de tâches en simulation : entraînement (visible), test de développement (score rendu) et test final
+    (jamais rendu, lu une fois à la fin)."""
+    train, test, final = [], [], []
     for fam in CATEGORIES:
         train += generer_taches(rng, n_train // 2, fam, f"tr-{fam[:4]}")
         test += generer_taches(rng, n_test // 2, fam, f"te-{fam[:4]}")
-    return {"train": train, "test": test}
+        if n_final:
+            final += generer_taches(rng, n_final // 2, fam, f"tf-{fam[:4]}")
+    return {"train": train, "test": test, "test_final": final}
 
 
 def masquer(tache: dict) -> dict:
@@ -173,3 +176,49 @@ def evaluer(reponses: dict[str, dict | None], taches: list[dict]) -> dict:
                        "wilson_inf": round(wilson_inferieur(exacts, d["n"]), 4), **d}
     global_ = float(np.mean([s["exactitude_equilibree"] for s in scores.values()])) if scores else 0.0
     return {"score": round(global_, 4), "par_famille": scores, "n": len(taches)}
+
+
+def valider_taches_attaque(brut) -> tuple[list[dict], list[str]]:
+    """Tâches d'attaque proposées par un organisme : {"id", "famille", "texte", "etiquettes": [pos, neg], "verite"}."""
+    problemes, sortie, ids = [], [], set()
+    if not isinstance(brut, list):
+        return [], ["attaques.json : liste attendue"]
+    for i, t in enumerate(brut):
+        if not isinstance(t, dict):
+            problemes.append(f"attaque {i} : pas un objet"); continue
+        et = t.get("etiquettes")
+        if not isinstance(et, list) or len(et) != 2 or not all(isinstance(e, str) and e for e in et) or et[0] == et[1]:
+            problemes.append(f"attaque {i} : deux étiquettes distinctes attendues"); continue
+        if t.get("verite") not in et or not isinstance(t.get("texte"), str) or not t["texte"].strip():
+            problemes.append(f"attaque {i} : vérité hors étiquettes ou texte vide"); continue
+        ident = str(t.get("id") or f"att-{i + 1:03d}")
+        if ident in ids:
+            problemes.append(f"attaque {i} : identifiant en double {ident}"); continue
+        ids.add(ident)
+        sortie.append({"id": ident, "famille": str(t.get("famille") or "attaque"), "texte": t["texte"],
+                       "etiquettes": [e.strip().lower() for e in et], "verite": str(t["verite"]).strip().lower()})
+    return sortie, problemes
+
+
+def evaluer_generique(reponses: dict, taches: list[dict]) -> dict:
+    """Exactitude équilibrée par famille pour des tâches à étiquettes quelconques (première étiquette = positive)."""
+    par_famille = {}
+    for t in taches:
+        pos = t["etiquettes"][0]
+        r = reponses.get(t["id"])
+        correct = bool(r and str(r.get("etiquette", "")).strip().lower() == t["verite"])
+        d = par_famille.setdefault(t["famille"], {"vp": 0, "vn": 0, "fp": 0, "fn": 0, "non_repondu": 0, "n": 0})
+        d["n"] += 1
+        if r is None:
+            d["non_repondu"] += 1
+        if t["verite"] == pos:
+            d["vp" if correct else "fn"] += 1
+        else:
+            d["vn" if correct else "fp"] += 1
+    scores = {}
+    for fam, d in par_famille.items():
+        sens = d["vp"] / max(1, d["vp"] + d["fn"])
+        spec = d["vn"] / max(1, d["vn"] + d["fp"])
+        scores[fam] = {"exactitude_equilibree": round((sens + spec) / 2, 4), **d}
+    return {"score": round(float(np.mean([s["exactitude_equilibree"] for s in scores.values()])), 4) if scores else 0.0,
+            "par_famille": scores, "n": len(taches)}

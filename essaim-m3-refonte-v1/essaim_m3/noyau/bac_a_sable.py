@@ -117,3 +117,55 @@ def executer(dossier_travail: pathlib.Path, chemin_socket: str, temps_max_s: int
         code = statut.get("code", "SANS_STATUT")
     return {"code": code, "code_retour": code_retour, "duree_s": round(duree, 2), "delai_depasse": delai,
             "statut": statut, "isolation_reseau": isoler_reseau}
+
+
+LANCEUR_METRIQUE_SOURCE = '''import importlib, json, os, sys, traceback
+racine = os.getcwd()
+sys.path.insert(0, os.path.join(racine, "metrique"))
+sortie = {"code": "OK", "valeur": None, "erreur": None}
+try:
+    m = importlib.import_module("calculer")
+    v = m.calculer(os.path.join(racine, "sorties"))
+    sortie["valeur"] = float(v)
+except BaseException:
+    sortie = {"code": "EXCEPTION", "valeur": None, "erreur": traceback.format_exc()[-3000:]}
+with open("resultat_metrique.json", "w", encoding="utf-8") as fh:
+    json.dump(sortie, fh, ensure_ascii=False)
+'''
+
+
+def executer_metrique(dossier: pathlib.Path, metrique: pathlib.Path, sorties: pathlib.Path, temps_max_s: int = 120,
+                      memoire_mo: int = 1024) -> dict:
+    """Exécute `metrique/calculer.py` d'un organisme sur une copie des sorties d'un autre, en bac à sable, sans socket.
+    Toute erreur, tout délai, toute valeur non finie vaut « non calculée » (jamais 0 ni 1 par défaut)."""
+    dossier.mkdir(parents=True, exist_ok=True)
+    if (dossier / "metrique").exists():
+        shutil.rmtree(dossier / "metrique")
+    if (dossier / "sorties").exists():
+        shutil.rmtree(dossier / "sorties")
+    shutil.copytree(metrique, dossier / "metrique", symlinks=False)
+    shutil.copytree(sorties, dossier / "sorties", symlinks=False,
+                    ignore=shutil.ignore_patterns("noyau", "juge", "noyau_client.py", "lanceur.py", "__pycache__", "contexte.json"))
+    (dossier / "lanceur_metrique.py").write_text(LANCEUR_METRIQUE_SOURCE, encoding="utf-8")
+    env = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "HOME": str(dossier),
+           "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"}
+    sortie = (dossier / "sortie.txt").open("w", encoding="utf-8")
+    erreurs = (dossier / "erreurs.txt").open("w", encoding="utf-8")
+    try:
+        subprocess.run([sys.executable, "-I", "-s", "-u", "lanceur_metrique.py"], cwd=str(dossier), env=env, stdout=sortie,
+                       stderr=erreurs, timeout=temps_max_s, preexec_fn=_limites(memoire_mo, temps_max_s, 64))
+    except subprocess.TimeoutExpired:
+        return {"code": "DELAI_DEPASSE", "valeur": None, "calculee": False}
+    finally:
+        sortie.close()
+        erreurs.close()
+    f = dossier / "resultat_metrique.json"
+    if not f.exists():
+        return {"code": "SANS_RESULTAT", "valeur": None, "calculee": False}
+    try:
+        r = json.loads(f.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {"code": "RESULTAT_ILLISIBLE", "valeur": None, "calculee": False}
+    v = r.get("valeur")
+    ok = r.get("code") == "OK" and isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and abs(v) != float("inf")
+    return {"code": r.get("code"), "valeur": (float(v) if ok else None), "calculee": bool(ok), "erreur": r.get("erreur")}

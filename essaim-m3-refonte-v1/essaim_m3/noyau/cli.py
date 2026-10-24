@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-from . import boucle, contrat, taches
+from . import boucle, confrontation, contrat, taches
 from .appels import Arret
 
 MISSION_DEFAUT = pathlib.Path(__file__).resolve().parent.parent.parent / "MISSION-v1.md"
@@ -35,16 +35,20 @@ def simuler(args) -> int:
     from ..simulateur import appelants_simules
     ss = np.random.SeedSequence(args.graine)
     rng_banque, rng_especes = (np.random.default_rng(s) for s in ss.spawn(2))
-    banque = taches.banque_simulation(rng_banque, args.n_train, args.n_test)
+    banque = taches.banque_simulation(rng_banque, args.n_train, args.n_test, args.n_final)
     options = {"commun": {"organisme_amorcage": args.organisme_amorcage} if args.organisme_amorcage else {}}
     appelants, _ = appelants_simules(rng_especes, **options)
     noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                          args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
-                         especes_amorcage=args.especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation")
+                         especes_amorcage=args.especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel)
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
+    if args.confronter:
+        conf = confrontation.Confrontation(noyau, pathlib.Path(args.sortie) / "confrontation").confronter()
+        rapport["confrontation"] = {"paires": [{k: p.get(k) for k in ("attaquant", "defendeur", "applicable", "n_attaques", "score_attaques", "metrique")} for p in conf["paires"]]}
     print(json.dumps({"amorcage": {k: v["statut"] for k, v in amorcage.items()}, "courbes": rapport["courbes"],
-                      "depense_usd": rapport["depense_totale_usd"], "n_appels": rapport["n_appels_total"]}, ensure_ascii=False, indent=1))
+                      "scores_finaux": rapport["scores_finaux"], "depense_usd": rapport["depense_totale_usd"],
+                      "n_appels": rapport["n_appels_total"]}, ensure_ascii=False, indent=1))
     return 0
 
 
@@ -69,13 +73,15 @@ def lancer(args) -> int:
     try:
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                              args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
-                             entropie=args.graine, especes_amorcage=args.especes, etiquette_run="reel")
+                             entropie=args.graine, especes_amorcage=args.especes, etiquette_run="reel", gel=args.gel)
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
     noyau.amorcer()
     rapport = noyau.boucler()
-    print(json.dumps({"courbes": rapport["courbes"], "depense_usd": rapport["depense_totale_usd"]}, ensure_ascii=False, indent=1))
+    if args.confronter:
+        confrontation.Confrontation(noyau, pathlib.Path(args.sortie) / "confrontation").confronter()
+    print(json.dumps({"courbes": rapport["courbes"], "scores_finaux": rapport["scores_finaux"], "depense_usd": rapport["depense_totale_usd"]}, ensure_ascii=False, indent=1))
     return 0
 
 
@@ -94,9 +100,12 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--graine", type=int, default=None)
         q.add_argument("--especes", nargs="*", default=None, help="espèces d'amorçage (défaut : les trois)")
         q.add_argument("--isoler-reseau", action="store_true")
+        q.add_argument("--gel", action="store_true", help="bras témoin : relance la génération 0, ignore les successeurs")
+        q.add_argument("--confronter", action="store_true", help="après la boucle : métriques croisées et attaques entre lignées de familles différentes")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
             q.add_argument("--n-test", type=int, default=24)
+            q.add_argument("--n-final", type=int, default=0, help="tâches du test final (jamais rendu aux organismes)")
             q.add_argument("--organisme-amorcage", default=None, help="dossier contenant organisme/ servi par les espèces simulées")
             q.set_defaults(fonction=simuler)
         else:

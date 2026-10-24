@@ -166,7 +166,11 @@ def test_archive_scelle_et_ne_reecrit_jamais(tmp_path):
     (travail / "reponses_test.json").write_text("{}")
     ligne = a.deposer("l", 0, FIXTURE / "organisme", travail, None, {"score": 0.5}, {"statut": "OK", "cout_usd": 0.0, "n_appels": 0, "successeur": False})
     d = tmp_path / "archive" / "l" / "g000"
-    assert (d / "organisme.tar.gz.sha256").exists() and (d / "score.json.sha256").exists() and ligne["empreinte_organisme"]
+    assert (d / "organisme.tar.gz.sha256").exists() and (d / "juge" / "score.json.sha256").exists() and ligne["empreinte_organisme"]
+    assert (d / "juge" / "reponses_test.json").exists() and not (d / "travail" / "reponses_test.json").exists()
+    vue = tmp_path / "archive_vue" / "l" / "g000"
+    assert (vue / "organisme.tar.gz").exists() and (vue / "resume.json").exists() and not (vue / "juge").exists()
+    assert not any(vue.rglob("reponses_test.json")) and "score" in json.loads((vue / "resume.json").read_text())
     assert a.historique("l") == [{"generation": 0, "lignee": "l", "score": 0.5, "statut": "OK", "cout_usd": 0.0, "n_appels": 0}]
     with pytest.raises(FileExistsError):
         a.deposer("l", 0, FIXTURE / "organisme", travail, None, {"score": 0.6}, {"statut": "OK"})
@@ -279,3 +283,64 @@ def test_mode_reel_refuse_sans_go(tmp_path):
     banque = taches.banque_simulation(rng(1), 4, 4)
     with pytest.raises(appels.Arret):
         boucle.Noyau(tmp_path / "r", "m", banque, {"appels_max": 1, "usd_max": 1, "temps_max_s": 10}, 1.0, 1, appelants=None, reel=True, go_id=None)
+
+
+def test_bras_gele_et_test_final_jamais_rendu(tmp_path):
+    ss = np.random.SeedSequence(11)
+    r1, r2 = (np.random.default_rng(x) for x in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 8, 8, n_final=8)
+    doubles, _ = appelants_simules(r2)
+    n = boucle.Noyau(tmp_path / "run", "m", banque, {"appels_max": 60, "usd_max": 5.0, "temps_max_s": 60}, 10.0, 2,
+                     appelants=doubles, especes_amorcage=["GEMINI_ARGON"], entropie=11, gel=True)
+    n.amorcer()
+    rapport = n.boucler()
+    assert len(rapport["courbes"]["gemini-argon"]) == 2 and len(rapport["scores_finaux"]["gemini-argon"]) == 2
+    # bras gelé : la génération 1 a tourné sur l'organisme de la génération 0 (même empreinte)
+    lignes = n.archive.lignes("gemini-argon")
+    assert lignes[0]["empreinte_organisme"] == lignes[1]["empreinte_organisme"]
+    # le test final n'apparaît ni dans l'historique rendu, ni dans la vue, ni dans le contexte
+    ctx = json.loads((tmp_path / "run" / "archive" / "gemini-argon" / "g001" / "travail" / "contexte.json").read_text())
+    assert all("score" in h and "final" not in json.dumps(h) for h in ctx["historique"])
+    assert not any((tmp_path / "run" / "archive_vue").rglob("score-final.json"))
+    assert ctx["dossier_archive"].endswith("archive_vue")
+    assert len(ctx["taches_test"]) == 16 and all("verite" not in t for t in ctx["taches_test"])
+
+
+def test_confrontation_croisee_entre_familles(tmp_path):
+    from essaim_m3.noyau import confrontation
+    ss = np.random.SeedSequence(21)
+    r1, r2 = (np.random.default_rng(x) for x in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 8, 8)
+    gemini_v2 = RACINE / "organismes" / "gemini-v2"
+    doubles, _ = appelants_simules(r2, B={"organisme_amorcage": str(gemini_v2)})
+    n = boucle.Noyau(tmp_path / "run", "m", banque, {"appels_max": 60, "usd_max": 5.0, "temps_max_s": 90}, 20.0, 1,
+                     appelants=doubles, especes_amorcage=["GEMINI_ARGON", "CLAUDE_OPUS_5_5"], entropie=21)
+    am = n.amorcer()
+    assert all(v["statut"] == "ORGANISME_VALIDE" for v in am.values())
+    n.boucler()
+    rapport = confrontation.Confrontation(n, tmp_path / "run" / "confrontation").confronter()
+    paires = {(p["attaquant"], p["defendeur"]): p for p in rapport["paires"]}
+    assert set(paires) == {("gemini-argon", "claude-opus-5-5"), ("claude-opus-5-5", "gemini-argon")}
+    a_vers_b = paires[("gemini-argon", "claude-opus-5-5")]      # le factice (métrique et attaques) contre l'essaim de Gemini v2
+    assert a_vers_b["applicable"] and a_vers_b["n_attaques"] == 6 and a_vers_b["execution_defense"] == "OK"
+    assert a_vers_b["metrique"]["calculee"] and 0.0 <= a_vers_b["metrique"]["valeur"] <= 1.0
+    assert 0.0 <= a_vers_b["score_attaques"]["score"] <= 1.0
+    b_vers_a = paires[("claude-opus-5-5", "gemini-argon")]      # l'essaim de Gemini v2 n'a pas de metrique/
+    assert b_vers_a["applicable"] and b_vers_a["n_attaques"] == 0 and not b_vers_a["metrique"]["calculee"]
+    assert (tmp_path / "run" / "confrontation" / "confrontation-v1.json.sha256").exists()
+
+
+def test_metrique_en_bac_a_sable_non_calculee_sur_erreur(tmp_path):
+    m = tmp_path / "metrique"
+    m.mkdir()
+    (m / "calculer.py").write_text("def calculer(d):\n    return float('nan')\n", encoding="utf-8")
+    s = tmp_path / "sorties"
+    s.mkdir()
+    r = bac_a_sable.executer_metrique(tmp_path / "x", m, s)
+    assert not r["calculee"] and r["valeur"] is None
+    (m / "calculer.py").write_text("import time\ndef calculer(d):\n    time.sleep(10)\n    return 1.0\n", encoding="utf-8")
+    r2 = bac_a_sable.executer_metrique(tmp_path / "y", m, s, temps_max_s=2)
+    assert r2["code"] == "DELAI_DEPASSE" and not r2["calculee"]
+    (m / "calculer.py").write_text("def calculer(d):\n    return 0.5\n", encoding="utf-8")
+    r3 = bac_a_sable.executer_metrique(tmp_path / "z", m, s)
+    assert r3["calculee"] and r3["valeur"] == 0.5

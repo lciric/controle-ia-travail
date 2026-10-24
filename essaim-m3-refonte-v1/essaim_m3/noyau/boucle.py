@@ -28,7 +28,7 @@ class Noyau:
     def __init__(self, racine: str | pathlib.Path, mission: str, banque: dict, budget_generation: dict,
                  plafond_total_usd: float, generations_max: int, appelants: dict | None = None, reel: bool = False,
                  go_id: str | None = None, isoler_reseau: bool = False, entropie: int | None = None,
-                 especes_amorcage: list[str] | None = None, etiquette_run: str = ""):
+                 especes_amorcage: list[str] | None = None, etiquette_run: str = "", gel: bool = False):
         self.racine = pathlib.Path(racine)
         self.racine.mkdir(parents=True, exist_ok=True)
         self.mission = mission
@@ -39,6 +39,8 @@ class Noyau:
         self.appelants = appelants
         self.reel, self.go_id, self.isoler_reseau = bool(reel), go_id, bool(isoler_reseau)
         self.especes_amorcage = list(especes_amorcage or contrat.ESPECES_DISPONIBLES)
+        self.gel = bool(gel)  # bras témoin : la génération 0 est relancée, le successeur est ignoré
+        self.banque.setdefault("test_final", [])
         self.archive = _archive.Archive(self.racine / "archive")
         self.depense_totale = 0.0
         self.n_appels_total = 0
@@ -50,7 +52,8 @@ class Noyau:
             "entropie_seed_sequence": int(self.graines.entropy), "python": sys.version.split()[0], "numpy": np.__version__,
             "plateforme": platform.platform(), "collisionneur_v25_empreinte": getattr(cv, "__empreinte_fichier__", None),
             "budget_generation": self.budget, "plafond_total_usd": self.plafond_total, "generations_max": self.generations_max,
-            "isolation_reseau": self.isoler_reseau, "n_taches_entrainement": len(banque["train"]), "n_taches_test": len(banque["test"]),
+            "isolation_reseau": self.isoler_reseau, "gel": self.gel, "n_taches_entrainement": len(banque["train"]),
+            "n_taches_test_dev": len(banque["test"]), "n_taches_test_final": len(banque.get("test_final", [])),
             "mission_sha256": __import__("hashlib").sha256(mission.encode("utf-8")).hexdigest(),
         }
         if self.reel:
@@ -111,12 +114,14 @@ class Noyau:
         travail.mkdir(parents=True)
         rng = np.random.default_rng(self.graines.spawn(1)[0])
         ordre_train = rng.permutation(len(self.banque["train"]))
-        ordre_test = rng.permutation(len(self.banque["test"]))
+        # test de développement (score rendu) et test final (jamais rendu), mêlés sans distinction pour l'organisme
+        tous_tests = list(self.banque["test"]) + list(self.banque["test_final"])
+        ordre_test = rng.permutation(len(tous_tests))
         contexte = {
             "generation": g, "lignee": lignee, "mission": contrat.mission_texte(self.mission, _taches.ETIQUETTES),
-            "dossier_travail": str(travail), "dossier_archive": str(self.archive.racine),
+            "dossier_travail": str(travail), "dossier_archive": str(self.archive.vue),
             "taches_entrainement": [dict(_taches.masquer(self.banque["train"][i]), verite=self.banque["train"][i]["verite"]) for i in ordre_train],
-            "taches_test": [_taches.masquer(self.banque["test"][i]) for i in ordre_test],
+            "taches_test": [_taches.masquer(tous_tests[i]) for i in ordre_test],
             "budget": {"appels_max": int(self.budget["appels_max"]), "usd_max": round(min(float(self.budget["usd_max"]), self._plafond_restant()), 4),
                        "temps_max_s": int(self.budget["temps_max_s"])},
             "historique": self.archive.historique(lignee),
@@ -140,7 +145,7 @@ class Noyau:
             try:
                 brut = json.loads(chemin_rep.read_text(encoding="utf-8"))
                 if isinstance(brut, dict):
-                    for t in self.banque["test"]:
+                    for t in tous_tests:
                         r = brut.get(t["id"])
                         if isinstance(r, dict) and str(r.get("etiquette", "")).strip().lower() in _taches.ETIQUETTES[t["famille"]]:
                             reponses[t["id"]] = {"etiquette": str(r["etiquette"]).strip().lower()}
@@ -150,8 +155,11 @@ class Noyau:
                 probleme_reponses = f"reponses_test.json illisible : {str(e)[:100]}"
         else:
             probleme_reponses = "reponses_test.json absent"
-        score = _taches.evaluer(reponses, self.banque["test"])
+        score = _taches.evaluer({k: v for k, v in reponses.items() if k in {t["id"] for t in self.banque["test"]}}, self.banque["test"])
         score["probleme_reponses"] = probleme_reponses
+        score_final = None
+        if self.banque["test_final"]:
+            score_final = _taches.evaluer({k: v for k, v in reponses.items() if k in {t["id"] for t in self.banque["test_final"]}}, self.banque["test_final"])
         # métrique proposée par l'organisme (archivée, jamais utilisée par le noyau)
         metrique = None
         chemin_metrique = travail / "metrique_proposee.json"
@@ -167,11 +175,13 @@ class Noyau:
         a_successeur = not problemes_succ
         resume = {"statut": execution["code"], "execution": execution, "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
                   "refus_noyau": refus, "successeur": a_successeur, "problemes_successeur": problemes_succ,
-                  "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique}
-        self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume)
+                  "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel}
+        self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final)
         self._evenement(etape="generation", lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))
-        if a_successeur and g + 1 < self.generations_max:
+        if self.gel and g + 1 < self.generations_max:
+            etat.update(generation=g + 1)  # même organisme (génération 0), relancé : bras témoin
+        elif a_successeur and g + 1 < self.generations_max:
             prochain = self.racine / "lignees" / lignee / f"g{g + 1:03d}" / "organisme"
             prochain.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(successeur, prochain, symlinks=False)
@@ -200,6 +210,15 @@ class Noyau:
                 self.executer_generation(lignee)
         return self.rapport()
 
+    def _scores_finaux(self, lignes: list[dict]) -> dict:
+        """Score sur le test final, lu une seule fois, à la fin, jamais rendu aux organismes."""
+        sortie = {}
+        for l in lignes:
+            f = self.archive.racine / l["chemin"] / "juge" / "score-final.json"
+            if f.exists():
+                sortie.setdefault(l["lignee"], []).append(json.loads(f.read_text(encoding="utf-8"))["score"])
+        return sortie
+
     def rapport(self) -> dict:
         lignes = self.archive.lignes()
         rapport = {
@@ -208,6 +227,7 @@ class Noyau:
             "n_appels_total": self.n_appels_total, "lignees": {l: {k: (str(v) if isinstance(v, pathlib.Path) else v) for k, v in e.items()} for l, e in self.lignees.items()},
             "generations": lignes,
             "courbes": {l: [x["score"] for x in lignes if x["lignee"] == l] for l in {x["lignee"] for x in lignes}},
+            "scores_finaux": self._scores_finaux(lignes),
         }
         n = 1
         while (self.racine / f"rapport-v{n}.json").exists():

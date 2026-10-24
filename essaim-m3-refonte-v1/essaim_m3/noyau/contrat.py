@@ -12,6 +12,7 @@ import pathlib
 import re
 
 ESPECES_DISPONIBLES = ["CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5", "GEMINI_ARGON"]
+FAMILLES = {"CLAUDE_FABLE_5_1": "anthropic", "CLAUDE_OPUS_5_5": "anthropic", "GEMINI_ARGON": "gemini"}
 EXTENSIONS_PERMISES = {".py", ".md", ".txt", ".json", ".jsonl", ".csv", ".yaml", ".yml", ".tex"}
 TAILLE_MAX_OCTETS = 2_000_000
 FICHIERS_MAX = 200
