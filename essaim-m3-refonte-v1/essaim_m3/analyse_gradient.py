@@ -53,7 +53,8 @@ def generations_valides(course: str | pathlib.Path, lignee: str) -> list[int]:
     génération notée (constat de « session-depot » après CR3-02 de la contre-lecture n° 3 de la confrontation)."""
     index = pathlib.Path(course) / "archive" / "index.jsonl"
     lignes = [json.loads(x) for x in index.read_text(encoding="utf-8").splitlines() if x.strip()] if index.is_file() else []
-    return sorted(l["generation"] for l in lignes if l["lignee"] == lignee and not l.get("phase") and not l.get("invalide"))
+    # générations notées seulement : ni rondes de conception (`phase`), ni rondes importées d'une course d'origine, ni invalidées
+    return sorted(l["generation"] for l in lignes if l["lignee"] == lignee and not l.get("invalide") and not l.get("phase") and not l.get("importee"))
 
 
 def paires_h_g1(couples: list[tuple[str, str]], lignees: list[str], generations: int) -> tuple[list[dict], list[dict], dict]:
