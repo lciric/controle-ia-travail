@@ -1,0 +1,17 @@
+E5 — extraction des traits par le lanceur (ligne 49 : tar -x --strip-components=3), rejouée sur une archive de même forme (sans git)
+  membres de l'archive :
+    essaim-m3-refonte-v1/traits/etape1-v1/
+    essaim-m3-refonte-v1/traits/etape1-v1/traits-16384/
+    essaim-m3-refonte-v1/traits/etape1-v1/traits-16384/manifeste-traits.json.sha256
+    essaim-m3-refonte-v1/traits/etape1-v1/traits-16384/manifeste-traits.json
+    essaim-m3-refonte-v1/traits/etape1-v1/EMPREINTES-traits-etape1-v1.txt
+  après extraction, sous entrees/traits/ :
+    .
+    ./EMPREINTES-traits-etape1-v1.txt
+    ./traits-16384
+    ./traits-16384/manifeste-traits.json
+    ./traits-16384/manifeste-traits.json.sha256
+  ligne 55 du lanceur : sha256sum "$EN/traits/etape1-v1/EMPREINTES-traits-etape1-v1.txt" →
+    ÉCHEC : « traits : empreintes différentes », code 2 (le fichier est en $EN/traits/EMPREINTES-traits-etape1-v1.txt)
+  avec --strip-components=2 :
+    ligne 55 passe ; --traits $EN/traits/etape1-v1/traits-16384 existe : oui

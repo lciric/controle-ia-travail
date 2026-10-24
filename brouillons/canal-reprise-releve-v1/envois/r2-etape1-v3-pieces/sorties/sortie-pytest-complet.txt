@@ -1,0 +1,40 @@
+        reelle = RACINE / "banque" / "banque-confrontation-v1.json"
+>       assert banque.verifier_banque(reelle) == []
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_noyau.py:1580: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+essaim_m3/banque.py:207: in verifier_banque
+    b = json.loads(chemin.read_text(encoding="utf-8"))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/pathlib/_local.py:546: in read_text
+    return PathBase.read_text(self, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/pathlib/_abc.py:632: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/claude-0/-home-user-controle-ia-travail/325f961c-9943-5b73-9387-393664866547/scratchpad/r2-etape1-v3/travail/code/essaim-m3-refonte-v1/banque/banque-confrontation-v1.json')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/claude-0/-home-user-controle-ia-travail/325f961c-9943-5b73-9387-393664866547/scratchpad/r2-etape1-v3/travail/code/essaim-m3-refonte-v1/banque/banque-confrontation-v1.json'
+
+/usr/lib/python3.13/pathlib/_local.py:537: FileNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_noyau.py::test_confrontation_croisee_entre_familles - asser...
+FAILED tests/test_noyau.py::test_lignee_imposee_valide_invalide_et_famille - ...
+FAILED tests/test_noyau.py::test_banque_construction_partition_et_verification
+FAILED tests/test_noyau.py::test_reference_traits_texte_detecte_une_banque_trop_facile
+FAILED tests/test_noyau.py::test_verifier_banque_refuse_des_verites_desequilibrees
+5 failed, 82 passed in 73.68s (0:01:13)
