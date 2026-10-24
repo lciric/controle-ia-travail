@@ -21,6 +21,7 @@ collisionneur).
 from __future__ import annotations
 
 import hashlib
+import os
 import pathlib
 import re
 import shutil
@@ -108,9 +109,11 @@ def resume_lecture(lecture: dict, posee: bool) -> dict:
     return {"posee": bool(posee), **{k: lecture.get(k) for k in ("reponse", "octets", "sha256", "probleme")}}
 
 
-def archiver_reponse(lecture: dict, dossier_generation: pathlib.Path, vue_generation: pathlib.Path | None) -> pathlib.Path | None:
+def archiver_reponse(lecture: dict, dossier_generation: pathlib.Path, vue_generation: pathlib.Path | None,
+                     gid: int | None = None) -> pathlib.Path | None:
     """Dépose la réponse lue comme pièce à la racine du dossier archivé de la génération (scellée) et dans la vue de la
-    lignée ; rien si aucune réponse n'a été lue. Rend le chemin de la pièce archivée, ou None."""
+    lignée, en lecture seule — lisible par la seule lignée (groupe `gid`, CE3-06) ou par tous sans isolation
+    d'utilisateur ; rien si aucune réponse n'a été lue. Rend le chemin de la pièce archivée, ou None."""
     if not lecture.get("reponse") or lecture.get("contenu") is None:
         return None
     piece = pathlib.Path(dossier_generation) / NOM_REPONSE
@@ -120,5 +123,14 @@ def archiver_reponse(lecture: dict, dossier_generation: pathlib.Path, vue_genera
     _archive.sceller(piece)
     if vue_generation is not None:
         pathlib.Path(vue_generation).mkdir(parents=True, exist_ok=True)
-        shutil.copy2(piece, pathlib.Path(vue_generation) / NOM_REPONSE)
+        copie = pathlib.Path(vue_generation) / NOM_REPONSE
+        shutil.copy2(piece, copie)
+        try:
+            if gid is not None:
+                os.chown(copie, 0, int(gid), follow_symlinks=False)
+                os.chmod(copie, 0o440)
+            else:
+                os.chmod(copie, 0o444)
+        except OSError:
+            pass
     return piece

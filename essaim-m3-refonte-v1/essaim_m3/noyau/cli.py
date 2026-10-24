@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-from . import boucle, confrontation, contrat, recherche, taches
+from . import boucle, confrontation, contrat, question as _question, recherche, taches
 from .appels import Arret
 
 MISSION_DEFAUT = pathlib.Path(__file__).resolve().parent.parent.parent / "MISSION-v1.md"
@@ -46,6 +46,20 @@ def _budget_conception(args) -> dict | None:
     if getattr(args, "temps_max_conception", None) is not None:
         b["temps_max_s"] = args.temps_max_conception
     return b
+
+
+def _question_ouverte(args):
+    """`--question-ouverte FICHIER --question-ouverte-aux CIBLE…` → `QuestionOuverte`, None si aucune option ; `ValueError`
+    (message lisible) si l'une des deux options manque ou si la question ou une cible est invalide (contrat § 7)."""
+    fichier, cibles = getattr(args, "question_ouverte", None), getattr(args, "question_ouverte_aux", None)
+    if not fichier and not cibles:
+        return None
+    if not fichier or not cibles:
+        raise ValueError("--question-ouverte et --question-ouverte-aux vont ensemble")
+    try:
+        return _question.QuestionOuverte.charger(fichier, cibles)
+    except _question.QuestionInvalide as e:
+        raise ValueError(str(e)) from e
 
 
 def _organismes_imposes(args) -> dict:
@@ -95,8 +109,13 @@ def simuler(args) -> int:
     options = {"commun": {"organisme_amorcage": args.organisme_amorcage} if args.organisme_amorcage else {}}
     appelants, _ = appelants_simules(rng_especes, **options)
     imposes, especes = _imposes_et_especes(args, _organismes_imposes(args))
+    try:
+        question = _question_ouverte(args)
+    except ValueError as e:
+        print(f"refus : question ouverte : {e}", file=sys.stderr)
+        return 6
     noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
-                         args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
+                         args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy), question_ouverte=question,
                          especes_amorcage=especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
                          organismes_imposes=imposes, parallele_max=args.parallele_max,
                          recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee,
@@ -238,9 +257,14 @@ def lancer(args) -> int:
             print(f"refus : traits : {e}", file=sys.stderr)
             return 6
     try:
+        question = _question_ouverte(args)
+    except ValueError as e:
+        print(f"refus : question ouverte : {e}", file=sys.stderr)
+        return 6
+    try:
         imposes, especes = _imposes_et_especes(args, _organismes_imposes(args))
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
-                             args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
+                             args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau, question_ouverte=question,
                              entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=imposes, parallele_max=args.parallele_max,
                              recherche=None, relances_max=args.relances_max, traits=traits, description_traits=description,
@@ -341,6 +365,8 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--temps-max-conception", type=int, default=None, help="secondes par ronde de conception (défaut : --temps-max)")
         q.add_argument("--autoriser-base-url", action="store_true", help="réel : accepte une ANTHROPIC_BASE_URL définie (sinon refus)")
         q.add_argument("--decalage-uid", type=int, default=0, help="décalage des utilisateurs des organismes (multiple de 100, 0 à 900) : distinct pour chaque course qui tourne en même temps qu'une autre (CE3-06)")
+        q.add_argument("--question-ouverte", default=None, metavar="FICHIER", help="question ouverte posée aux organismes (texte UTF-8, figé et empreinté au manifeste ; contrat § 7) ; exige --question-ouverte-aux")
+        q.add_argument("--question-ouverte-aux", nargs="+", default=None, metavar="CIBLE", help="générations ou rondes qui reçoivent la question : g001, c002, conception, generations, toutes (répétable ou séparées par des virgules)")
         q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)

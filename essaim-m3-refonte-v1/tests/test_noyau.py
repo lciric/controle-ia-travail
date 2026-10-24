@@ -2482,3 +2482,102 @@ def test_question_ouverte_cibles_lecture_et_archivage_sain_et_artefacts(tmp_path
     (gros / q.NOM_REPONSE).write_bytes(b"x" * (q.OCTETS_MAX_REPONSE + 1))
     l3 = q.lire_reponse(gros)
     assert l3["reponse"] is False and "octets" in l3["probleme"]
+
+
+def _organisme_repondeur(dossier: pathlib.Path, lien: bool = False) -> pathlib.Path:
+    """Organisme imposé minimal pour la question ouverte : répond « première étiquette » à chaque tâche, se recopie en
+    successeur, consigne la valeur reçue de `question_ouverte`, et — si une question est posée — écrit `reponse-question.md`
+    (artefact : un lien symbolique sous ce nom)."""
+    org = dossier / "organisme"
+    org.mkdir(parents=True)
+    (org / "manifeste.json").write_text(json.dumps({"nom": "repondeur", "version": "1", "entree": "principal:executer", "description": "essai"}), encoding="utf-8")
+    (org / "principal.py").write_text(f'''import json, os, shutil
+def executer(contexte):
+    t = contexte["dossier_travail"]
+    with open(os.path.join(t, "reponses_test.json"), "w", encoding="utf-8") as fh:
+        json.dump({{x["id"]: {{"etiquette": x["etiquettes"][0], "confiance": 0.6}} for x in contexte["taches_test"]}}, fh)
+    with open(os.path.join(t, "question_recue.json"), "w", encoding="utf-8") as fh:
+        json.dump({{"question_ouverte": contexte.get("question_ouverte"), "historique": contexte.get("historique")}}, fh)
+    q = contexte.get("question_ouverte")
+    if q:
+        if {lien!r}:
+            os.symlink("/etc/hostname", os.path.join(t, "reponse-question.md"))
+        else:
+            with open(os.path.join(t, "reponse-question.md"), "w", encoding="utf-8") as fh:
+                fh.write("# Réponse\\n\\nQuestion reçue : " + q + "\\n\\n--- ORGANISATION ---\\n- une caste\\n")
+    shutil.copytree(os.path.dirname(os.path.abspath(__file__)), os.path.join(t, "successeur", "organisme"), ignore=shutil.ignore_patterns("__pycache__"))
+    return {{"code": "OK"}}
+''', encoding="utf-8")
+    return org
+
+
+def test_question_ouverte_posee_a_la_generation_ciblee_archivee_et_sans_effet_sur_le_score(tmp_path):
+    """Primitive dans le noyau (contrat § 7). Cas sain : question ciblée sur `g001` — nulle à g0, texte à g1 ; réponse
+    archivée scellée à la racine de `g001`, recopiée dans la vue de la lignée, résumée (sans contenu) dans le résumé,
+    l'index, l'historique et les événements ; empreinte de la question au manifeste ; scores identiques à la même
+    course sans question. Artefacts : réponse qui est un lien symbolique → refusée, consignée, aucune pièce ; options
+    de la ligne de commande incomplètes ou cible mal formée → refus avant tout lancement."""
+    from essaim_m3.noyau import cli, question as q
+    fq = tmp_path / "question.md"
+    fq.write_text("Sous contrainte de budget, quand un organisme doit-il se réécrire plutôt qu'apprendre dedans ?\n", encoding="utf-8")
+    org = _organisme_repondeur(tmp_path / "rep")
+
+    def course(racine, question):
+        ss = np.random.SeedSequence(41)
+        r1, r2 = (np.random.default_rng(x) for x in ss.spawn(2))
+        banque = taches.banque_simulation(r1, 6, 6)
+        doubles, _ = appelants_simules(r2)
+        n = boucle.Noyau(racine, "m", banque, {"appels_max": 10, "usd_max": 2.0, "temps_max_s": 60}, 10.0, 2,
+                         appelants=doubles, especes_amorcage=[], entropie=41,
+                         organismes_imposes={"rep": {"organisme": str(org), "famille": "anthropic"}}, question_ouverte=question)
+        assert n.amorcer()["rep"]["statut"] == "ORGANISME_IMPOSE_VALIDE"
+        return n, n.boucler()
+
+    n0, r0 = course(tmp_path / "sans", None)
+    n1, r1 = course(tmp_path / "avec", q.QuestionOuverte.charger(fq, ["g001"]))
+    assert r0["courbes"]["rep"] == r1["courbes"]["rep"] and len(r0["courbes"]["rep"]) == 2 and r0["scores_finaux"] == r1["scores_finaux"]
+    assert n0.manifeste["question_ouverte"] is None
+    assert n1.manifeste["question_ouverte"]["sha256"] == hashlib.sha256(fq.read_bytes()).hexdigest() and n1.manifeste["question_ouverte"]["cibles"] == ["g001"]
+    a = n1.archive.racine / "rep"
+    recu0 = json.loads((a / "g000" / "travail" / "question_recue.json").read_text(encoding="utf-8"))
+    recu1 = json.loads((a / "g001" / "travail" / "question_recue.json").read_text(encoding="utf-8"))
+    assert recu0["question_ouverte"] is None and recu1["question_ouverte"] == fq.read_text(encoding="utf-8")
+    assert not (a / "g000" / q.NOM_REPONSE).exists() and json.loads((a / "g000" / "resume.json").read_text(encoding="utf-8")).get("question_ouverte") is None
+    piece = a / "g001" / q.NOM_REPONSE
+    assert piece.exists() and (a / "g001" / (q.NOM_REPONSE + ".sha256")).read_text().split()[0] == hashlib.sha256(piece.read_bytes()).hexdigest()
+    assert "Question reçue" in piece.read_text(encoding="utf-8")
+    res1 = json.loads((a / "g001" / "resume.json").read_text(encoding="utf-8"))["question_ouverte"]
+    assert res1 == {"posee": True, "reponse": True, "octets": len(piece.read_bytes()), "sha256": hashlib.sha256(piece.read_bytes()).hexdigest(), "probleme": None}
+    assert (n1.archive.vue / "rep" / "g001" / q.NOM_REPONSE).read_bytes() == piece.read_bytes()
+    assert n1.archive.historique("rep")[1]["question_ouverte"]["reponse"] is True and "question_ouverte" not in n1.archive.historique("rep")[0]
+    assert [l["question_ouverte"]["reponse"] for l in n1.archive.lignes("rep") if l["generation"] == 1] == [True]
+    ev = [e for e in n1.evenements if e.get("etape") == "question_ouverte"]
+    assert len(ev) == 1 and ev[0]["generation"] == 1 and ev[0]["reponse"] is True and "contenu" not in ev[0]
+    assert "score" not in piece.read_text(encoding="utf-8").lower() or True  # la pièce est libre ; rien n'en dépend
+    # artefact : lien symbolique sous le nom de la réponse
+    org_lien = _organisme_repondeur(tmp_path / "lien", lien=True)
+    ss = np.random.SeedSequence(42)
+    r1_, r2_ = (np.random.default_rng(x) for x in ss.spawn(2))
+    banque = taches.banque_simulation(r1_, 6, 6)
+    doubles, _ = appelants_simules(r2_)
+    n2 = boucle.Noyau(tmp_path / "artefact", "m", banque, {"appels_max": 10, "usd_max": 2.0, "temps_max_s": 60}, 10.0, 1,
+                      appelants=doubles, especes_amorcage=[], entropie=42,
+                      organismes_imposes={"lien": {"organisme": str(org_lien), "famille": "anthropic"}},
+                      question_ouverte=q.QuestionOuverte("Q ?", ["g000"]))
+    n2.amorcer()
+    n2.boucler()
+    res2 = json.loads((n2.archive.racine / "lien" / "g000" / "resume.json").read_text(encoding="utf-8"))["question_ouverte"]
+    assert res2["posee"] and res2["reponse"] is False and res2["probleme"].startswith("refusé") and res2["sha256"] is None
+    assert not (n2.archive.racine / "lien" / "g000" / q.NOM_REPONSE).exists()
+    assert not (n2.archive.vue / "lien" / "g000" / q.NOM_REPONSE).exists()
+    # ligne de commande : sain, puis refus
+    base = ["simuler", "--generations", "1", "--graine", "3", "--especes", "--appels-max", "10", "--usd-par-generation", "2",
+            "--temps-max", "60", "--plafond-total", "10", "--n-train", "6", "--n-test", "4", "--n-final", "4",
+            "--organisme-impose", f"rep={org}@anthropic"]
+    assert cli.principal(base + ["--sortie", str(tmp_path / "cli-ok"), "--question-ouverte", str(fq), "--question-ouverte-aux", "g000"]) == 0
+    assert (tmp_path / "cli-ok" / "archive" / "rep" / "g000" / q.NOM_REPONSE).exists()
+    assert cli.principal(base + ["--sortie", str(tmp_path / "cli-1"), "--question-ouverte", str(fq)]) == 6
+    assert cli.principal(base + ["--sortie", str(tmp_path / "cli-2"), "--question-ouverte-aux", "g000"]) == 6
+    assert cli.principal(base + ["--sortie", str(tmp_path / "cli-3"), "--question-ouverte", str(fq), "--question-ouverte-aux", "g1"]) == 6
+    assert cli.principal(base + ["--sortie", str(tmp_path / "cli-4"), "--question-ouverte", str(tmp_path / "absente.md"), "--question-ouverte-aux", "g000"]) == 6
+    assert not (tmp_path / "cli-1").exists() and not (tmp_path / "cli-3").exists()

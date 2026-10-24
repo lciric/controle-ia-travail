@@ -37,7 +37,8 @@ CLES_INTERDITES = re.compile(r"score|courbe|metrique|vote|terme|verite|etiquette
 CHAMPS_RESUME = ("lignee", "generation", "phase", "statut", "n_appels", "cout_usd", "refus_noyau", "appels_simultanes_max",
                  "successeur", "problemes_successeur", "n_reponses_test", "gel", "impose", "famille", "relance",
                  "n_recherches", "n_entrainements", "n_telechargements", "invalide", "non_conformes", "anomalie_noyau",
-                 "empreinte_organisme", "n_elements_ecartes", "elements_ecartes", "quand_utc", "chemin", "importee", "course_origine")
+                 "empreinte_organisme", "n_elements_ecartes", "elements_ecartes", "quand_utc", "chemin", "importee", "course_origine",
+                 "question_ouverte")  # {posee, reponse, octets, sha256, probleme} : jamais le contenu de la réponse
 # Clés copiées du dictionnaire `execution` du résumé (le `statut` déclaré par l'organisme n'est copié que par son code).
 CHAMPS_EXECUTION = ("code", "code_retour", "duree_s", "delai_depasse", "isolation_reseau", "uid", "espaces_noms",
                     "rlimit_as_refuse", "code_origine", "anomalie", "non_conformes")
