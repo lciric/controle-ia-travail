@@ -343,7 +343,6 @@ def _moissonner_question_ouverte(
         sources_dispo = ["arxiv"]
 
     requetes = []
-    # Si on a au moins 3 appels restants, l'espèce moissonneuse formule ses propres requêtes en anglais/français
     if int(b_init.get("appels_restants", 0) or 0) >= 3 and _peut_appeler(contexte):
         prompt_req = (
             f"Question posee a l'essaim :\n{question}\n\n"
