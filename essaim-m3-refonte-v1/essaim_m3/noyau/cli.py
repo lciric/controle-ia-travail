@@ -79,7 +79,7 @@ def simuler(args) -> int:
                          args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
                          especes_amorcage=especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
                          organismes_imposes=imposes, parallele_max=args.parallele_max,
-                         recherche=recherche.recherche_simulee, relances_max=args.relances_max)
+                         recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee)
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
     if args.confronter:
@@ -123,7 +123,7 @@ def lancer(args) -> int:
                              args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
                              entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=imposes, parallele_max=args.parallele_max,
-                             recherche=None, relances_max=args.relances_max, registre_go=args.registre_go)
+                             recherche=None, relances_max=args.relances_max, registre_go=args.registre_go, memoire_partagee=args.memoire_partagee)
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
@@ -205,6 +205,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--parallele-max", type=int, default=8, help="appels aux espèces servis en parallèle au plus (défaut 8)")
         q.add_argument("--recherches-max", type=int, default=20, help="recherches documentaires servies par le noyau, par génération (0 : aucune) ; arXiv en réel, double en simulation")
         q.add_argument("--relances-max", type=int, default=1, help="relances consécutives de la dernière génération valide quand le successeur est invalide (0 : lignée arrêtée)")
+        q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
             q.add_argument("--n-test", type=int, default=24)

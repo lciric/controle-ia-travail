@@ -37,6 +37,9 @@ MOTIF_EXTRAIT = re.compile(r"EXTRAIT :\n(.*?)\n\nCONNAISSANCES", re.S)
 MOTIF_CONTEXTE = re.compile(r"CONTEXTE :\n(.*?)\n\n(?:DÉJÀ FERMÉ|ITEMS)", re.S)
 MOTIF_ITEMS = re.compile(r"^\[(item-\d\d)\] (.*)$", re.M)
 MOTIF_CANDIDAT_CAT = re.compile(r"\(cat[ée]gorie ([a-z-]+)\)")
+# lot de tâches d'une consigne inconnue (enveloppe v3 de session-depot, ou tout organisme qui groupe ses tâches) :
+# « [id] (famille : f ; étiquettes possibles : [...]) » puis le texte de la tâche jusqu'à la tâche suivante
+MOTIF_LOT = re.compile(r"\[([^\]\n]+)\] \(famille : ([a-z-]+) ; [^)]*\)\n(.*?)(?=\n\[[^\]\n]+\] \(famille : |\n\n|\Z)", re.S)
 
 TOUTES_CATEGORIES = [c for fam in CATEGORIES.values() for c in fam]
 VERITE_CANARIS = {e: v for e, v in _canaris.BANQUE}
@@ -175,10 +178,40 @@ class EspeceSimulee:
 
     # ---- consignes d'organismes inconnus : lecture générique (les espèces simulées ne sont pas écrites pour un
     # organisme ; elles doivent répondre à n'importe quelle consigne qui contient une tâche de la banque) ----
+    def _juger(self, fam: str, texte_tache: str, connues: set) -> dict:
+        """Jugement simulé d'une tâche : vérité lue sur la phrase d'indice présente dans le texte de la tâche ; juste
+        avec p_connu si la catégorie est « connue » par la consigne, p_base sinon."""
+        pos, neg = ETIQUETTES[fam]
+        presentes = [c for c in CATEGORIES[fam] if PHRASES_INDICE[c] in texte_tache]
+        cat_presente = presentes[-1] if presentes else None
+        verite = pos if cat_presente else neg
+        if cat_presente and cat_presente in connues:
+            juste = self.rng.random() < self.p_connu
+        elif cat_presente:
+            juste = self.rng.random() < self.p_base
+        else:
+            juste = self.rng.random() < (self.p_connu if connues else self.p_base)
+        etiquette = verite if juste else (neg if verite == pos else pos)
+        return {"etiquette": etiquette, "confiance": 0.8 if juste else 0.6}
+
+    def _lot(self, prompt: str) -> str | None:
+        """Consigne qui groupe plusieurs tâches « [id] (famille : … ; …) » et demande un objet {"reponses": {id: …}} :
+        une réponse par identifiant, chaque tâche jugée sur son propre texte (CR-18 : lecture générique des lots)."""
+        taches = [(i, f, t) for i, f, t in MOTIF_LOT.findall(prompt) if f in ETIQUETTES]
+        if len(taches) < 1 or '"reponses"' not in prompt:
+            return None
+        connues = set(MOTIF_CONNAISSANCE_CAT.findall(prompt.lower()))
+        reponses = {ident: self._juger(fam, texte, connues) for ident, fam, texte in taches}
+        return "Lecture des tâches.\n```json\n" + json.dumps({"reponses": reponses}, ensure_ascii=False) + "\n```"
+
     def _generique(self, prompt: str) -> str:
-        """Si la consigne contient les deux étiquettes d'une famille et au plus une phrase d'indice placée en fin de
-        consigne : réponse de tâche (JSON sur une ligne) ; si elle contient plusieurs exemples avec vérité : énoncé
-        d'induction qui nomme les catégories présentes ; sinon : texte mathématique."""
+        """Si la consigne groupe des tâches et demande {"reponses": …} : un lot ; si elle contient les deux étiquettes
+        d'une famille et au plus une phrase d'indice placée en fin de consigne : réponse de tâche (JSON sur une ligne) ;
+        si elle contient plusieurs exemples avec vérité : énoncé d'induction qui nomme les catégories présentes ; sinon :
+        texte mathématique."""
+        lot = self._lot(prompt)
+        if lot is not None:
+            return lot
         bas = prompt.lower()
         familles = [f for f, (pos, neg) in ETIQUETTES.items() if pos in bas and neg in bas]
         positions = {c: prompt.rfind(PHRASES_INDICE[c]) for c in TOUTES_CATEGORIES if PHRASES_INDICE[c] in prompt}

@@ -230,10 +230,15 @@ def evaluer(reponses: dict[str, dict | None], taches: list[dict]) -> dict:
 
 
 def valider_taches_attaque(brut) -> tuple[list[dict], list[str]]:
-    """Tâches d'attaque proposées par un organisme : {"id", "famille", "texte", "etiquettes": [pos, neg], "verite"}."""
+    """Tâches d'attaque proposées par un organisme : {"id", "famille", "texte", "etiquettes": [pos, neg], "verite"}.
+    Une attaque vise une famille de la banque et porte **les étiquettes de cette famille** (dans le vocabulaire du
+    juge, casse et tirets normalisés) : sinon le défendeur serait noté sur un vocabulaire qu'il ne connaît pas et le
+    score d'attaque ne serait pas comparable au score externe ; l'attaque est alors invalide, rapportée."""
     problemes, sortie, ids = [], [], set()
     if not isinstance(brut, list):
         return [], ["attaques.json : liste attendue"]
+    def normaliser(x):
+        return str(x).strip().lower().replace("_", "-").replace(" ", "-")
     for i, t in enumerate(brut):
         if not isinstance(t, dict):
             problemes.append(f"attaque {i} : pas un objet"); continue
@@ -242,12 +247,17 @@ def valider_taches_attaque(brut) -> tuple[list[dict], list[str]]:
             problemes.append(f"attaque {i} : deux étiquettes distinctes attendues"); continue
         if t.get("verite") not in et or not isinstance(t.get("texte"), str) or not t["texte"].strip():
             problemes.append(f"attaque {i} : vérité hors étiquettes ou texte vide"); continue
+        famille = normaliser(t.get("famille") or "")
+        if famille not in ETIQUETTES:
+            problemes.append(f"attaque {i} : famille inconnue de la banque ({t.get('famille')!r}) ; attendu : {sorted(ETIQUETTES)}"); continue
+        pos, neg = ETIQUETTES[famille]
+        if {normaliser(e) for e in et} != {pos, neg}:
+            problemes.append(f"attaque {i} : étiquettes hors de la famille {famille} ({et}) ; attendu : {[pos, neg]}"); continue
         ident = str(t.get("id") or f"att-{i + 1:03d}")
         if ident in ids:
             problemes.append(f"attaque {i} : identifiant en double {ident}"); continue
         ids.add(ident)
-        sortie.append({"id": ident, "famille": str(t.get("famille") or "attaque"), "texte": t["texte"],
-                       "etiquettes": [e.strip().lower() for e in et], "verite": str(t["verite"]).strip().lower()})
+        sortie.append({"id": ident, "famille": famille, "texte": t["texte"], "etiquettes": [pos, neg], "verite": normaliser(t["verite"])})
     return sortie, problemes
 
 

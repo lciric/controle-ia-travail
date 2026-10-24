@@ -137,7 +137,7 @@ class Confrontation:
         ordre = rng.permutation(len(melange))
         contexte = {
             "generation": g_def, "lignee": lignee_def, "mission": contrat.mission_texte(self.noyau.mission, _taches.ETIQUETTES),
-            "dossier_travail": str(travail), "dossier_archive": str(self.noyau.archive.vue),
+            "dossier_travail": str(travail), "dossier_archive": str(self.noyau._vue_pour(lignee_def)),
             "taches_entrainement": [dict(_taches.masquer(t), verite=t["verite"]) for t in self.noyau.banque["train"]],
             "taches_test": [melange[i] for i in ordre],
             "budget": {"appels_max": int(self.noyau.budget["appels_max"]), "usd_max": round(min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()), 4),
@@ -173,6 +173,34 @@ class Confrontation:
         return {"execution": execution["code"], "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
                 "score_attaques": score, "travail": travail}
 
+    def _discriminance(self, a: str, ma: dict) -> dict:
+        """CR-07 (ii) : une métrique gelée doit rendre des valeurs différentes sur une sortie parfaite (chaque attaque
+        reçoit sa vérité) et sur une sortie inversée (chaque attaque reçoit l'autre étiquette), toutes deux fabriquées
+        par le noyau. Sinon elle ne mesure rien de ce qu'elle prétend : « non discriminante », rapportée, écartée de H-E2."""
+        if ma["calculer"] is None or not ma["attaques"]:
+            return {"testee": False, "discriminante": None, "raison": "métrique ou attaques absentes"}
+        base = self.noyau.espace / "travail" / "confrontation" / f"{a}__discriminance"
+        if base.exists():
+            shutil.rmtree(base)
+        valeurs = {}
+        for nom, inverser in (("parfait", False), ("inverse", True)):
+            sorties = base / nom / "sorties"
+            sorties.mkdir(parents=True)
+            reponses = {}
+            for t in ma["attaques"]:
+                autres = [e for e in t["etiquettes"] if e != t["verite"]]
+                etiquette = (autres[0] if autres else t["verite"]) if inverser else t["verite"]
+                reponses[t["id"]] = {"etiquette": etiquette, "confiance": 1.0}
+            (sorties / "reponses_test.json").write_text(json.dumps(reponses, ensure_ascii=False, indent=1), encoding="utf-8")
+            for f in (base, base / nom, sorties, sorties / "reponses_test.json"):
+                bac_a_sable.proteger(f, 0o755 if f.is_dir() else 0o644)
+            valeurs[nom] = bac_a_sable.executer_metrique(base / nom / "metrique", ma["calculer"].parent, sorties,
+                                                         uid=self.noyau._uid(a), isoler_reseau=self.noyau.isoler_reseau)
+        calculees = all(v.get("calculee") for v in valeurs.values())
+        discriminante = bool(calculees and valeurs["parfait"]["valeur"] != valeurs["inverse"]["valeur"])
+        return {"testee": True, "discriminante": discriminante, "parfait": valeurs["parfait"], "inverse": valeurs["inverse"],
+                "raison": (None if discriminante else ("non calculée sur une sortie fabriquée" if not calculees else "même valeur sur sortie parfaite et inversée"))}
+
     def confronter(self, lignees: list[str] | None = None) -> dict:
         lignees = [l for l in (lignees or list(self.noyau.lignees)) if self._derniere_generation(l)]
         organismes, metriques = {}, {}
@@ -191,6 +219,7 @@ class Confrontation:
                 if not gelee:
                     metriques[l] = {"present": metriques[l]["present"], "problemes": metriques[l]["problemes"] + ["métrique non gelée par l'addendum : ni exécutée ni attaquée"],
                                     "attaques": [], "calculer": None, "definition": metriques[l].get("definition")}
+        discriminance = {l: self._discriminance(l, metriques[l]) for l in lignees}
         paires = []
         for a in lignees:
             for b in lignees:
@@ -201,7 +230,8 @@ class Confrontation:
                     continue
                 ma = metriques[a]
                 res = {"attaquant": a, "defendeur": b, "applicable": True, "famille_attaquant": self._famille(a),
-                       "famille_defendeur": self._famille(b), "problemes_metrique": ma["problemes"]}
+                       "famille_defendeur": self._famille(b), "problemes_metrique": ma["problemes"],
+                       "metrique_discriminante": discriminance[a].get("discriminante")}
                 if ma["attaques"]:
                     att = self._executer_sur_attaques(b, organismes[b], ma["attaques"], f"{a}__vers__{b}")
                     res.update({"n_attaques": len(ma["attaques"]), "execution_defense": att["execution"],
@@ -220,6 +250,7 @@ class Confrontation:
                    "addendum_gele": (None if self.addendum is None else {"quand_utc": self.addendum.get("quand_utc"), "gelees": gel}),
                    "lignees": {l: {"famille": self._famille(l), "metrique_presente": metriques[l]["present"],
                                    "problemes_metrique": metriques[l]["problemes"], "n_attaques": len(metriques[l]["attaques"]),
+                                   "discriminance": {k: v for k, v in discriminance[l].items() if k in ("testee", "discriminante", "raison")},
                                    "definition": (metriques[l]["definition"] or "")[:2000]} for l in lignees},
                    "paires": paires, "scores_temoin": self.noyau._scores_finaux(self.noyau.archive.lignes()),
                    "depense_totale_usd": round(self.noyau.depense_totale, 4)}
