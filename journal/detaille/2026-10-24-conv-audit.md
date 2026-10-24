@@ -216,3 +216,12 @@ Heures UTC (heure de Paris = UTC + 2). Entrées ajoutées, jamais réécrites. P
 - Préenregistrement de l'étape 1 (sondes) v2 ; `spec["vue"]` multi-couches ; lanceur d'extraction d'activations
   (session-depot) après GO.
 - Concours de métriques dans le rapport ; double désignation du champion (code à écrire dans `rapport`).
+
+## 18:50 — ajout : le programme gradient en entier dans le journal (question de Lazar, 20:22 Paris)
+
+- Lazar demande si le programme d'apprentissage par gradient et renforcement (sondes, renforcement réduit,
+  déploiement sur des milliers de tâches) est versé au journal. L'entrée de 16:00 le résumait et renvoyait à la note ;
+  la pièce intégrale est maintenant dans `journal/pieces/programme-apprentissage-gradient-essaim-v1.md`
+  (`6b4151049ff9d279…`, identique à la note de la branche de travail) et la synthèse v2 (`journal/synthese-v2.md`)
+  porte le plan en entier (section 7 : principe, table des trois étapes, règle des données, hypothèses H-G1 à H-G3,
+  ce qui existe, ce qui manque, ce qui est écarté). La synthèse v1 reste.
