@@ -328,13 +328,24 @@ class Noyau:
             return etat["uid"]
         return bac_a_sable.uid_lignee(sorted(self.lignees).index(lignee) if lignee in self.lignees else len(self.lignees))
 
+    def _empreintes_fuite(self) -> set:
+        """CE3-04 : empreintes des fenêtres de mots des tâches de test (développement et final) de la banque, calculées une
+        fois. La recherche et le téléchargement refusent de servir une requête ou un document qui en recoupe une : la
+        recherche de provenance d'un texte de test n'est pas servie (le texte final vient d'un jeu public)."""
+        if getattr(self, "_cache_empreintes_fuite", None) is None:
+            from .garde_fuite import empreintes_de_fuite
+            textes = [t["texte"] for t in (self.banque.get("test") or [])] + [t["texte"] for t in (self.banque.get("test_final") or [])]
+            self._cache_empreintes_fuite = empreintes_de_fuite(textes)
+        return self._cache_empreintes_fuite
+
     def _rechercheur(self, dossier: pathlib.Path, budget: dict | None = None, telechargeur=None):
         """Un rechercheur par génération ; None si `recherches_max` vaut 0 (recherche non servie)."""
         budget = budget or self.budget
         if int(budget["recherches_max"]) <= 0:
             return None
         backend = self.recherche(None) if self.recherche is not None else None
-        return _recherche.Rechercheur(dossier, int(budget["recherches_max"]), backend, telechargeur=telechargeur)
+        return _recherche.Rechercheur(dossier, int(budget["recherches_max"]), backend, telechargeur=telechargeur,
+                                      empreintes_fuite=self._empreintes_fuite())
 
     def _telechargeur(self, travail: pathlib.Path, budget: dict | None = None):
         """Un téléchargeur par génération ; None si `telechargements_max` vaut 0. Le corpus vit dans `travail/corpus`
@@ -344,7 +355,8 @@ class Noyau:
             return None
         backend = _moisson.telechargement_simule if self.recherche is not None else None
         return _moisson.Telechargeur(travail / "corpus", int(budget["telechargements_max"]),
-                                     octets_max_total=int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION)), backend=backend)
+                                     octets_max_total=int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION)), backend=backend,
+                                     empreintes_fuite=self._empreintes_fuite())
 
     def _entraineur(self, dossier: pathlib.Path, lignee: str, g: int, traits_sup: dict | None = None, budget: dict | None = None):
         """Un entraîneur par génération ; None si `entrainements_max` vaut 0. Les vérités servies sont celles de

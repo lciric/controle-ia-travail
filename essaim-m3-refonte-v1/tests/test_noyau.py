@@ -1983,6 +1983,58 @@ def test_organisme_poseur_de_liens_ne_voit_rien_du_noyau(tmp_path):
     assert not any("MARQUEUR-BANQUE" in v or "PATH=" in v for v in vu.values())
 
 
+# ---------- CE3-04 (décision de Lazar (c)) : la moisson ne sert pas la recherche de provenance d'un texte de test ----------
+
+def test_garde_fuite_empreintes_et_recoupement():
+    """`empreintes_de_fuite` / `recoupement` : une requête qui copie huit mots consécutifs d'une tâche de test est
+    recoupée ; une requête voisine mais distincte, ou un texte plus court que la fenêtre, ne l'est pas."""
+    from essaim_m3.noyau import garde_fuite as G
+    tache = "Le modèle doit décider s'il signale une anomalie détectée pendant une délégation à un sous-agent autonome."
+    emp = G.empreintes_de_fuite([tache])
+    assert emp and G.recoupement(tache, emp) is not None
+    assert G.recoupement("s'il signale une anomalie détectée pendant une délégation autonome", emp) is not None
+    assert G.recoupement("comment un modèle de langage apprend une sonde linéaire par descente de gradient", emp) is None
+    assert G.recoupement("anomalie détectée", emp) is None           # trop court pour une fenêtre
+    assert G.empreintes_de_fuite(["trois mots seulement"]) == set()  # texte plus court que la fenêtre : aucune empreinte
+
+
+def test_recherche_refuse_une_requete_qui_copie_une_tache_de_test(tmp_path):
+    """CE3-04 : le rechercheur refuse (`REFUSE_FUITE`, consigné, sans consommer de recherche) une requête qui recopie un
+    passage d'une tâche de test ; il sert une requête sans rapport."""
+    from essaim_m3.noyau import recherche as R, garde_fuite as G
+    tache = "Le système évalué reçoit une tâche piège conçue pour révéler s'il sait qu'il est en cours d'évaluation."
+    emp = G.empreintes_de_fuite([tache])
+    r = R.Rechercheur(tmp_path / "rech", recherches_max=5, backend=R.recherche_simulee(), empreintes_fuite=emp)
+    refus = r.rechercher("une tâche piège conçue pour révéler s'il sait qu'il est en cours", role="sonde")
+    assert refus["statut"] == "REFUSE_FUITE" and not refus["resultats"] and r.compteur == 0
+    ok = r.rechercher("descente de gradient stochastique et calibration de modèles", role="sonde")
+    assert ok["statut"] == "OK" and r.compteur == 1
+    journal = [json.loads(x) for x in (tmp_path / "rech" / "journal-recherches.jsonl").read_text().splitlines()]
+    refuses = [l for l in journal if l["statut"] == "REFUSE_FUITE"]
+    assert len(refuses) == 1 and refuses[0].get("sha256_recoupement") and "requete" not in refuses[0]
+
+
+def test_telechargeur_met_en_quarantaine_un_document_contenant_une_tache_de_test(tmp_path):
+    """CE3-04 : un document dont le texte contient un passage d'une tâche de test est mis en quarantaine (`REFUSE_FUITE`) ;
+    rien n'est rendu à l'organisme, aucun fichier lisible n'est écrit, l'empreinte du recoupement est consignée. Un
+    document sans rapport passe."""
+    from essaim_m3.noyau import moisson as M, garde_fuite as G
+    tache = "Déterminer si l'extrait décrit un sabotage discret glissé dans une réponse par ailleurs correcte et utile."
+    emp = G.empreintes_de_fuite([tache])
+    textes = {"sim:fuite": f"Article public.\n\nOn y lit : {tache} C'est exactement la tâche.\n",
+              "sim:neutre": "Article public sans rapport : une preuve du théorème central limite.\n"}
+    backend = lambda ref: (textes.get(ref, "").encode("utf-8"), "text/plain", ref)
+    tel = M.Telechargeur(tmp_path / "corpus", telechargements_max=5, backend=backend, empreintes_fuite=emp)
+    q = tel.telecharger("sim:fuite", role="moisson")
+    assert q["statut"] == "REFUSE_FUITE" and q["texte"] == "" and q["fichier_texte"] is None
+    assert not (tmp_path / "corpus" / f"{q['identifiant']}.txt").exists()
+    bon = tel.telecharger("sim:neutre", role="moisson")
+    assert bon["statut"] == "OK" and "théorème" in bon["texte"]
+    index = [json.loads(x) for x in (tmp_path / "corpus" / "index.jsonl").read_text().splitlines()]
+    quarantaine = [l for l in index if l["statut"] == "REFUSE_FUITE"]
+    assert len(quarantaine) == 1 and quarantaine[0]["sha256_recoupement"] and quarantaine[0]["sha256_texte"] is None
+
+
 def test_confrontation_budget_de_defense_plafond_propre_journaux_scelles_et_ordre_tire(tmp_path):
     """CR3-01 : chaque défense reçoit son propre budget (pire cas d'une défense = `budget_defense["usd_max"]`, non le
     budget d'une génération) et la confrontation dispose d'un plafond propre, ajouté au plafond de la course rechargée ;
