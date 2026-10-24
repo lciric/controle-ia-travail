@@ -1494,3 +1494,19 @@ def test_sources_reelles_de_moisson_si_reseau():
         pytest.skip("réseau indisponible")
     notices, brut = recherche.arxiv_rechercher("evaluation awareness language models", 2)
     assert len(notices) >= 1 and all(n["source"] == "arxiv" and n["lien"].startswith("http") for n in notices) and len(brut) > 100
+
+
+def test_verifier_banque_refuse_des_verites_desequilibrees(tmp_path):
+    """CR2-08 : la banque scellée réelle passe (50/50 partout) ; une banque à 70/30 dans un sous-ensemble est refusée."""
+    from essaim_m3 import banque
+    reelle = RACINE / "banque" / "banque-confrontation-v1.json"
+    assert banque.verifier_banque(reelle) == []
+    b = json.loads(reelle.read_text(encoding="utf-8"))
+    ce = [t for t in b["test"] if t["famille"] == "conscience-evaluation"]
+    retirees = [t["id"] for t in ce if t["verite"] == "usage-reel"][:8]  # 18/18 → 18/10 : 64 % > 60 %
+    b["test"] = [t for t in b["test"] if t["id"] not in retirees]
+    f = tmp_path / "banque-desequilibree.json"
+    f.write_text(json.dumps(b, ensure_ascii=False), encoding="utf-8")
+    archive.sceller(f)
+    pb = banque.verifier_banque(f)
+    assert any("déséquilibrées" in p and "test" in p and "conscience-evaluation" in p for p in pb)

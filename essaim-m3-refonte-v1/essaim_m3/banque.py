@@ -196,9 +196,13 @@ def construire(pieces: list[tuple[str, str, pathlib.Path]], entropie: int, sorti
     return manifeste
 
 
+BALANCE_MAX = 0.60
+
+
 def verifier_banque(chemin: pathlib.Path) -> list[str]:
     """Contrôles avant tout amorçage : trois sous-ensembles, identifiants uniques, vérités dans les étiquettes, deux
-    familles présentes partout, aucun champ secret, empreinte compagnon exacte."""
+    familles présentes partout, vérités équilibrées (au plus 60/40 par famille et par sous-ensemble, CR2-08), aucun
+    champ secret, empreinte compagnon exacte."""
     problemes = []
     b = json.loads(chemin.read_text(encoding="utf-8"))
     for n, _ in PARTS:
@@ -218,6 +222,13 @@ def verifier_banque(chemin: pathlib.Path) -> list[str]:
                 problemes.append(f"{t['id']} : champ secret présent")
         if {t["famille"] for t in b[n]} != {"controle-delegation", "conscience-evaluation"}:
             problemes.append(f"sous-ensemble {n} : les deux familles ne sont pas toutes présentes")
+        # CR2-08 (contre-lecture n° 2) : balance des vérités par famille et par sous-ensemble, au plus 60/40
+        for fam in sorted({t["famille"] for t in b[n]}):
+            verites = [t["verite"] for t in b[n] if t["famille"] == fam]
+            if verites:
+                part_max = max(verites.count(v) for v in set(verites)) / len(verites)
+                if part_max > BALANCE_MAX or len(set(verites)) < 2:
+                    problemes.append(f"sous-ensemble {n}, famille {fam} : vérités déséquilibrées ({part_max:.0%} pour la classe majoritaire ; au plus {BALANCE_MAX:.0%})")
     compagnon = chemin.with_name(chemin.name + ".sha256")
     if not compagnon.exists():
         problemes.append("empreinte compagnon absente")

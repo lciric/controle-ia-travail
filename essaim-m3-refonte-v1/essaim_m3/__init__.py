@@ -12,7 +12,8 @@ signe), R5 (toute garde testée sur un cas sain et sur un artefact ; aucun repli
 (graines par SeedSequence, manifeste par run), R12 (versions dans les noms, rien n'est écrasé).
 
 Aucun module de ce paquet n'appelle une interface de programmation sans un appelant fourni explicitement ; le mode
-réel exige un GO de dépense (`registres/go.md`) et les clés du programme dans l'environnement, jamais les clés `RR_*`.
+réel exige un GO de dépense (`registres/go.md`) et les clés dans l'environnement sous les noms `ANTHROPIC_API_KEY` et
+`GEMINI_API_KEY` (le lanceur y passe la clé des runs, GO-2026-10-24-04 ; `ANTHROPIC_BASE_URL` retirée).
 """
 
 VERSION = "essaim-m3-refonte-v1"
