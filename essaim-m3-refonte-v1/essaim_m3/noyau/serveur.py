@@ -30,6 +30,8 @@ class ServeurAppels:
         self.appels_max = int(appels_max)
         self.parallele_max = max(1, int(parallele_max))
         self.n_appels = 0
+        self.non_conformes = 0   # appels dont le modèle servi n'est pas le modèle demandé (CR-02) : la génération est invalidée
+        self.arret = None        # raison d'arrêt posée par le noyau : plus aucun appel servi
         self.en_vol_max = 0  # plus grand nombre d'appels simultanés observé (rapporté, pour l'audit)
         self._en_vol = 0
         self.refus: list[dict] = []
@@ -45,7 +47,7 @@ class ServeurAppels:
             os.unlink(self.chemin)
         self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._sock.bind(self.chemin)
-        os.chmod(self.chemin, 0o600)
+        os.chmod(self.chemin, 0o666)  # l'organisme tourne sous un autre utilisateur (CR-01) ; le socket est local au conteneur
         self._sock.listen(16)
         self._sock.settimeout(0.5)
         self._fil = threading.Thread(target=self._boucle, daemon=True)
@@ -128,6 +130,9 @@ class ServeurAppels:
         if espece not in ESPECES or not isinstance(prompt, str) or not prompt.strip():
             return {"statut": "ANOMALIE", "texte": "", "echec": "espèce inconnue ou consigne vide"}
         with self._verrou:
+            if self.arret is not None:
+                self.refus.append({"raison": "arret_noyau", "espece": espece, "detail": self.arret})
+                return {"statut": "ARRET_NOYAU", "texte": "", "echec": self.arret}
             if self.n_appels >= self.appels_max:
                 self.refus.append({"raison": "appels_max", "espece": espece})
                 return {"statut": "PLAFOND", "texte": "", "echec": "nombre maximal d'appels atteint"}
@@ -148,6 +153,10 @@ class ServeurAppels:
             finally:
                 with self._verrou:
                     self._en_vol -= 1
+        if res.statut == "MODELE_NON_CONFORME":
+            with self._verrou:
+                self.non_conformes += 1
+                self.arret = f"modèle servi non conforme ({res.modele_servi!r} pour {res.modele_demande!r}) : génération invalidée, plus aucun appel servi"
         return {"statut": res.statut, "texte": res.texte, "modele_servi": res.modele_servi, "fin": res.fin,
                 "usage": res.usage, "cout_usd": res.cout_usd, "identifiant": res.identifiant,
                 "echec": (str(res.echec)[:200] if res.echec else None)}
