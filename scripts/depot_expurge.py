@@ -48,6 +48,7 @@ RETRAITS = [
     ("livrables/candidature-ea-funds-v1.zip", "candidature à un autre fonds, confidentielle"),
     ("livrables/candidature-ea-funds-v1.zip.sha256", "candidature à un autre fonds, confidentielle"),
     ("registres/**", "registres de travail : messages de Lazar cités mot pour mot, montants, instances (R-116)"),
+    ("gemini/**", "travaux de la relève de Gemini, non audités ; un fichier y porte une clé en clair (R-333, N-038, R-348)"),
     ("livrables/reponse-amitie-v1/**", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),
     ("livrables/reponse-amitie-v1.zip", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),
     ("livrables/reponse-amitie-v1.zip.sha256", "textes d'une candidature (séminaire AFFINE), privés (R-116)"),

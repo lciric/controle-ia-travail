@@ -31,6 +31,16 @@ def test_appariement_par_segment():
     assert not de.correspond("donnees-bis/x", "donnees/**")
 
 
+def test_releve_de_gemini_jamais_dans_la_copie():
+    """R-348 : la clé Vast.ai gardée par Lazar (N-038 (c)) est écrite en clair sous `gemini/` ; ce dossier ne passe
+    jamais dans la copie expurgée. Cas sain : un fichier du programme reste."""
+    porteur = "gemini/11_EDIFICE_CERTIFIE_54_CORRECTIFS_L_STAR_V2_TAIF/run_campagne_gpu_72h_5_volets_llama3.py"
+    assert de.motif_de(porteur) is not None
+    assert de.motif_de("gemini/README.md") is not None
+    assert de.motif_de("src/controle_ia/scellement.py") is None
+    assert de.motif_de("gemini-bis/x.py") is None
+
+
 def test_fichiers_charges_par_le_code_jamais_retires():
     suivis = subprocess.run(["git", "-C", str(RACINE), "ls-files"], capture_output=True, text=True,
                             check=True).stdout.split("\n")
