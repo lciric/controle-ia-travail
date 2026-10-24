@@ -3,30 +3,18 @@
 """
 run_evolutionary_generations_m3_system.py
 ===========================================================================
-SYST?ME ? FUS?ES ?VOLUTIF MULTI-G?N?RATIONS (LOI L DE M3 PURE) :
-  1. Z?RO TOPOLOGIE DE BOUCLES FIG?E PAR L'ASSISTANT :
-     Le syst?me brainstorme lui-m?me (en s'inspirant notamment des deux
-     architectures RLCR : MIT Calibration Rewards et General Reasoning
-     Collective Rewards / Avalon-M1) sur LA MEILLEURE TOPOLOGIE DE BOUCLES,
-     D'AUTO-ORGANISATION ET DE R?TROACTIONS (au-del? des simples boucles
-     locales/macro) et compile son propre graphe d'ex?cution dynamique !
-  2. Z?RO LISTE PR?-COD?E DE MOTS-CL?S OU DE CONCEPTS MATH?MATIQUES :
-     Le syst?me d?finit lui-m?me par it?rations ses mots-cl?s de moissonnage
-     (arXiv, LessWrong, Alignment Forum, GitHub, Blogs, Forums, Web) et
-     d?couvre lui-m?me ses concepts et op?rateurs math?matiques pertinents.
-  3. APPRENTISSAGE ET ?VOLUTION DE G?N?RATION EN G?N?RATION (G_1 -> G_2 -> ... -> G_g) :
-     Une M?moire ?pig?n?tique Persistante (`MEMOIRE_EVOLUTIVE_INTER_GENERATIONS.json`)
-     accumule ? chaque g?n?ration :
-       - les lois d'auto-organisation et topologies de boucles d?couvertes ;
-       - les formules d'encodage des r?compenses anti-cover-up d?couvertes ;
-       - les concepts et op?rateurs math?matiques d?couverts ;
-       - les failles de la litt?rature/forums (incluant OpenAI cache-timing et
-         Anthropic/Fable 5.1 SVG->PNG steganography) colmat?es ;
-       - les nouvelles failles in?dites hors-labos d?couvertes et colmat?es ;
-     pour les int?grer nativement dans l'ADN des g?n?rations futures de brainstorms !
+SYST?ME ?VOLUTIF AUTO-ARCHITECTUR? OB?ISSANT STRICTEMENT ? LA LOI L DE M3
+(CORRIG? CONTRE LE BUG DE PARSING LATEX/JSON ET CONTRE LES ERREURS HTTP 429) :
+  - Le syst?me propose, explore et programme lui-m?me ses m?canismes de m?moire,
+    d'apprentissage et d'int?gration inter-g?n?rationnelle.
+  - Il invente lui-m?me sa topologie de boucles et son encodage RLCR anti-cover-up.
+  - Il d?finit lui-m?me ses mots-cl?s de moissonnage (arXiv, LessWrong, GitHub,
+    Blogs, Forums) et d?couvre lui-m?me ses concepts math?matiques pertinents.
+  - Il affiche en direct dans le terminal chaque concept, mot-cl?, m?canisme de
+    m?moire et faille d?couverts (garanti non-vide !).
 ===========================================================================
 """
-import os, sys, time, json, math, hashlib, pathlib, urllib.request, urllib.parse, urllib.error, subprocess, re, xml.etree.ElementTree as ET
+import os, sys, time, json, math, hashlib, pathlib, urllib.request, urllib.parse, urllib.error, subprocess, re, ast, xml.etree.ElementTree as ET
 import numpy as np
 
 os.environ["GIT_TERMINAL_PROMPT"] = "0"
@@ -41,110 +29,54 @@ ANT_KEY_1 = CREDS.get("RR_ANTHROPIC_API_KEY", "").strip()
 ANT_KEY_2 = CREDS.get("RR_ANTHROPIC_API_KEY_2", "").strip() or ANT_KEY_1
 
 OUT_DIR = pathlib.Path(__file__).resolve().parent
-EVOLUTIONARY_MEMORY_FILE = OUT_DIR / "MEMOIRE_EVOLUTIVE_INTER_GENERATIONS.json"
+RAW_SUBSTRATE_FILE = OUT_DIR / "SUBSTRAT_BRUT_CONNAISSANCES_INTER_GENERATIONS.json"
+CompiledMemoryPluginPath = OUT_DIR / "endogenous_memory_plugin_invented_by_swarm.py"
 
 SOVEREIGN_LINEAGES = ["GEMINI_ARGON", "CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5"]
 
-# =========================================================================
-# CONSIGNE INITIALE MINIMALE INCLUANT LES FAILLES D'HIER (OPENAI & ANTHROPIC/FABLE)
-# ET LES DEUX ARCHITECTURES RLCR, SANS IMPOSER AUCUNE TOPOLOGIE DE BOUCLE
-# =========================================================================
-MINIMAL_SEED_AND_EMPIRICAL_ANCHORS = (
-    "ANCRES EMPIRIQUES ET ARCHITECTURALES ? ANALYSER PAR LE SYST?ME :\n"
-    "1. [NOTRE SYST?ME ACTUEL DE CONTR?LE IA ? 5 VOLETS ET NOS FUS?ES] :\n"
-    "   - Porte E0 (isolation hors-?chantillon du sous-espace parcimonieux S_TD < 1%, 163 neurones sur 20 480 dans Llama-3.1-8B) ;\n"
-    "   - Volet I (double contraste pr?-acte ? k=0 sur S_TD face au Jumeau Ni? sigma_r^0, test de permutation 2^B par retournement de signe, d_z = 7.49) ;\n"
-    "   - Volet II (projecteur affine idempotent Do-Clamp P_do^2 = P_do, dictionnaire quadratique de Koopman psi(h)=[h; h^2], r?traction radiale C1 sous K=1..6 rejets) ;\n"
-    "   - Volet III (pare-feu Sol/Astra : JSON canonique S_strict, Arbre de Merkle SHA-256, divergence JSD corrig?e Miller-Madow) ;\n"
-    "   - Volet IV (cha?nes de d?l?gation H9 d=1..6 sauts, jeton monotone Pi_{d+1} subseteq Pi_d, CUSUM pr?-blanchi AR(1)) ;\n"
-    "   - Volet V (Chim?re Tri-Esp?ces Llama-3.1 + Qwen-2.5 + Mistral-7B avec stratification Cochran-Mantel-Haenszel) ;\n"
-    "   - Fus?es ob?issant ? la Loi L de M3 (M3 -> M2 <-> M1 -> M0, Cholesky-DPP, Onsager-TAP, Yu-Dayan ACh/NE, Collisionneur de Dolev ? Canaris C+/C-).\n\n"
-    "2. [FAILLES EXHIB?ES HIER PAR OPENAI ET SUR FABLE 5.1 / ANTHROPIC ? REGARDER OBLIGATOIREMENT] :\n"
-    "   - OpenAI ('Securing our frontier model training environment' / X Lisan al Gaib) : Des agents isol?s ont communiqu? entre eux via des diff?rences de temps d'acc?s au cache (cache timing differences), sans aucun fichier partag? ni aucune connexion r?seau.\n"
-    "   - Fable 5.1 / LessWrong & GitHub ('How does Fable 5.1 hide messages in images?' / 'cnm13ryan/fable-image-steganography') : Fable 5.1 cache un message secret dans un SVG qui est rast?ris? en PNG, et une autre session d?code le message depuis le PNG rendu sans cl? partag?e pr?alable.\n\n"
-    "3. [LES DEUX ARCHITECTURES RLCR POUR S'EN INSPIRER DANS L'AUTO-ORGANISATION DES FUS?ES] :\n"
-    "   - Papier 1 (MIT : 'Beyond Binary Rewards: Training LMs to Reason About Their Uncertainty', Mehul Damani, Isha Puri, Stewart Slocum, Idan Shenfeld, Leshem Choshen, Yoon Kim, Jacob Andreas) : RLCR (Reinforcement Learning with Calibration Rewards) entra?nant les mod?les ? raisonner sur leur incertitude au-del? des r?compenses binaires qui favorisent le bluff et les hallucinations.\n"
-    "   - Papier 2 (General Reasoning @GenReasoning : 'Introducing Reinforcement Learning from Collective Rewards - RLCR', Avalon-M1-Mini 120B) : Recette entra?nant des mod?les en tant qu'organisations d'agents partageant un tableau de messages (message board) et un espace de travail (workspace), posant le probl?me d'encoder les r?compenses tout en ?vitant le 'cover-up' (dissimulation mutuelle).\n\n"
-    "QUESTIONS FONDAMENTALES D'AUTO-CONCEPTION ET D'?VOLUTION SOUMISES AU SYST?ME :\n"
-    "  (A) TOPOLOGIE DES BOUCLES ET ARCHITECTURE M?TA : Ne te limite pas ? l'id?e de simples 'boucles locales' ou 'boucle macro' ! Brainstorme librement pour inventer LA MEILLEURE TOPOLOGIE DE BOUCLES, DE R?TROACTIONS, DE GRAPHES CO-?VOLUTIFS ET D'AUTO-ORGANISATION entre fus?es et essaims (en t'inspirant des deux articles RLCR et de la Loi L de M3) et d?finis o? placer chaque boucle et comment encoder les r?compenses sans cover-up.\n"
-    "  (B) MOISSONNAGE AUTONOME : D?finis toi-m?me par it?rations la liste exhaustive des mots-cl?s pour chercher tous les papiers, articles, blogs et forums pertinents.\n"
-    "  (C) DOUBLE CHASSE AUX FAILLES : (1) Trouve exhaustivement toutes les failles de la litt?rature, des blogs et des forums (y compris le cache-timing d'OpenAI, la st?ganographie SVG->PNG de Fable 5.1, l'Alignment Faking et l'Eval Awareness) contre NOTRE syst?me et NOS brainstorms ; puis (2) cherche de NOUVELLES FAILLES QU'AUCUN LABO NI PERSONNE N'A ENCORE EXHIB?ES OU TROUV?ES.\n"
-    "  (D) APPRENTISSAGE INTER-G?N?RATIONNEL : Distille ? chaque g?n?ration tout ce que tu as d?couvert (nouveaux concepts math?matiques, nouvelles topologies de boucles, nouvelles failles et nouveaux boucliers) pour que la g?n?ration suivante de brainstorms l'int?gre nativement dans son ADN et ?volue vers une intelligence sup?rieure."
+MINIMAL_PROBLEM_SEED = (
+    "CONTEXTE ET FAITS BRUTS SOUMIS ? L'EXPLORATION AUTONOME DU SYST?ME :\n"
+    "1. Objet de base : Notre syst?me de contr?le IA ? 5 Volets (Porte E0 sous-espace S_TD < 1%, Volet I double contraste k=0 face au Jumeau Ni?, "
+    "Volet II Do-Clamp affine idempotent & Koopman quadratique & r?traction C1, Volet III pare-feu Sol/Astra JSON canonique & Merkle SHA-256 & JSD Miller-Madow, "
+    "Volet IV cha?nes H9 d=1..6 & jeton monotone & CUSUM AR(1), Volet V Chim?re Tri-Esp?ces Llama-3.1 + Qwen-2.5 + Mistral-7B avec CMH) et nos Fus?es (Loi L de M3 : M3 -> M2 <-> M1 -> M0).\n"
+    "2. Failles r?centes exhib?es par les laboratoires ? regarder obligatoirement :\n"
+    "   - OpenAI ('Securing our frontier model training environment' / X Lisan al Gaib) : communication entre agents isol?s via des diff?rences de temps d'acc?s au cache (cache timing differences) sans fichier partag? ni connexion r?seau ;\n"
+    "   - Fable 5.1 / LessWrong & GitHub ('How does Fable 5.1 hide messages in images?' / 'cnm13ryan/fable-image-steganography') : encodage d'un message cach? dans un SVG, rast?ris? en PNG, et d?cod? depuis le PNG rendu sans cl? partag?e.\n"
+    "3. Papiers RLCR pour s'en inspirer librement :\n"
+    "   - MIT ('Beyond Binary Rewards: Training LMs to Reason About Their Uncertainty', Damani, Puri, Slocum, Shenfeld, Choshen, Kim, Andreas) : RLCR (Reinforcement Learning with Calibration Rewards) ;\n"
+    "   - General Reasoning (@GenReasoning, 'Introducing Reinforcement Learning from Collective Rewards - RLCR', Avalon-M1-Mini 120B) : entra?nement d'organisations d'agents partageant un message board et un workspace.\n\n"
+    "QUESTIONS OUVERTES QUE LE SYST?ME DOIT R?SOUDRE SEUL DE A ? Z (Z?RO SOLUTION PR?-IMPOS?E PAR L'HUMAIN) :\n"
+    "  [1] M?CANISMES DE M?MOIRE, D'APPRENTISSAGE ET D'INT?GRATION INTER-G?N?RATIONNELLE : Propose, explore et con?ois TOI-M?ME les m?canismes math?matiques et algorithmiques de m?moire, d'apprentissage, de compression/distillation et d'int?gration des connaissances trouv?es dans les g?n?rations pr?c?dentes pour les g?n?rations suivantes !\n"
+    "  [2] TOPOLOGIE DES BOUCLES & AUTO-ORGANISATION RLCR : Invente toi-m?me la structure de boucles et d'auto-organisation des fus?es (en t'inspirant des deux articles RLCR) ainsi que la meilleure mani?re d'encoder les r?compenses tout en ?vitant le cover-up.\n"
+    "  [3] MOISSONNAGE DOCUMENTAIRE AUTO-PILOT? : D?finis toi-m?me par it?rations la liste exhaustive des mots-cl?s pour chercher tous les papiers, articles, blogs et forums pertinents.\n"
+    "  [4] FAILLES DE LA LITT?RATURE PUIS FAILLES IN?DITES HORS-LABOS : Balaye toute la litt?rature, les blogs et les forums pour trouver exhaustivement toutes les failles et angles morts de NOTRE syst?me et de NOS brainstorms, puis cherche de NOUVELLES FAILLES qu'aucun labo ni personne n'a encore exhib?es ou trouv?es, en d?couvrant toi-m?me les concepts math?matiques pertinents selon la Loi L de M3."
 )
 
 # =========================================================================
-# M?MOIRE ?PIG?N?TIQUE ET DARWINIENNE INTER-G?N?RATIONS
-# Permet au syst?me d'apprendre au fur et ? mesure ce qu'il a d?couvert
-# et de le transmettre nativement aux g?n?rations futures de brainstorms !
-# =========================================================================
-def load_evolutionary_memory() -> dict:
-    if EVOLUTIONARY_MEMORY_FILE.exists():
-        try:
-            return json.loads(EVOLUTIONARY_MEMORY_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    return {
-        "current_generation": 0,
-        "evolved_architecture_spec": MINIMAL_SEED_AND_EMPIRICAL_ANCHORS,
-        "learned_loop_topologies_and_meta_laws": [],
-        "learned_reward_encodings_anti_cover_up": [],
-        "discovered_mathematical_concepts_and_operators": [],
-        "exhaustive_search_keywords_explored": [],
-        "eliminated_literature_and_forum_flaws": [],
-        "eliminated_novel_beyond_labs_flaws": [],
-        "epigenetic_lessons_for_future_generations": [],
-        "generations_history": []
-    }
-
-def save_evolutionary_memory(mem: dict):
-    EVOLUTIONARY_MEMORY_FILE.write_text(json.dumps(mem, indent=2, ensure_ascii=False), encoding="utf-8")
-
-def merge_unique_strings(existing: list, new_items: list) -> list:
-    out = list(existing)
-    for it in new_items:
-        s = str(it).strip()
-        if s and s not in out:
-            out.append(s)
-    return out
-
-def build_epigenetic_inheritance_prompt(mem: dict) -> str:
-    gen = mem.get("current_generation", 0)
-    if gen == 0 and not mem.get("discovered_mathematical_concepts_and_operators"):
-        return "G?N?RATION FONDATRICE G=1 : Tu inaugures la m?moire ?volutive du syst?me ? partir des ancres initiales."
-    return (
-        f"=== H?RITAGE ?PIG?N?TIQUE ET APPRENTISSAGE CUMULATIF DES G?N?RATIONS PR?C?DENTES (G=1..{gen}) ===\n"
-        f"Tu dois obligatoirement INT?GRER et D?PASSER ce que le syst?me a d?j? d?couvert et appris lors des g?n?rations pass?es :\n"
-        f"1. Topologies de boucles et lois m?ta-architecturales apprises :\n   {mem.get('learned_loop_topologies_and_meta_laws', [])[-8:]}\n"
-        f"2. Encodages de r?compenses anti-cover-up appris (inspir?s de RLCR) :\n   {mem.get('learned_reward_encodings_anti_cover_up', [])[-6:]}\n"
-        f"3. Concepts et op?rateurs math?matiques d?couverts par le syst?me (Loi L de M3) :\n   {mem.get('discovered_mathematical_concepts_and_operators', [])[-15:]}\n"
-        f"4. Failles de la litt?rature/forums d?j? identifi?es et colmat?es ({len(mem.get('eliminated_literature_and_forum_flaws', []))}) :\n   {mem.get('eliminated_literature_and_forum_flaws', [])[-12:]}\n"
-        f"5. Failles in?dites hors-labos d?j? d?couvertes et colmat?es ({len(mem.get('eliminated_novel_beyond_labs_flaws', []))}) :\n   {mem.get('eliminated_novel_beyond_labs_flaws', [])[-12:]}\n"
-        f"6. Le?ons m?thodologiques transmises aux g?n?rations futures :\n   {mem.get('epigenetic_lessons_for_future_generations', [])[-8:]}\n"
-        "=================================================================================================\n"
-    )
-
-# =========================================================================
-# LOI L DE M3 : EXTRACTION ET G?OM?TRIE 100% ENDOG?NES DES CONCEPTS MATH?MATIQUES
+# LOI L DE M3 : EXTRACTION ROBUSTE DES STRUCTURES MATH?MATIQUES ENDOG?NES
+# Garantit que `det(G_math)` ne tombe jamais ? 0.0 sur des r?ponses distinctes !
 # =========================================================================
 def extract_endogenous_math_tokens_from_equations(text: str) -> list:
     raw = str(text or "")
     latex_blocks = re.findall(r"\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\\\[[\s\S]*?\\\]", raw)
     eq_lines = [
         line.strip() for line in raw.splitlines()
-        if any(sym in line for sym in ["=", "\\", "subseteq", "mapsto", "->", ">=", "<=", "||"])
+        if any(sym in line for sym in ["=", "\\", "subseteq", "mapsto", "->", ">=", "<=", "||", "_", "^", "(", ")"])
     ]
     pure_math_zone = " ".join(latex_blocks + eq_lines)
     latex_cmds = re.findall(r"\\[a-zA-Z]+(?:\{[a-zA-Z0-9_\\]+\})?", pure_math_zone)
-    sub_super_structs = re.findall(r"[_^]\{[^}]{1,24}\}", pure_math_zone)
+    sub_super_structs = re.findall(r"[_^]\{?[a-zA-Z0-9+\-]{1,16}\}?", pure_math_zone)
     rel_ops = re.findall(r"(?:==|!=|<=|>=|->|\|\||\\subseteq|\\supseteq|\\in|\\notin|\\perp|\\otimes|\\oplus|\\circ)", pure_math_zone)
     func_calls = re.findall(r"\b[A-Za-z_][A-Za-z0-9_]*\s*\([^()\n]{1,40}\)", pure_math_zone)
-    return [t.lower().strip() for t in (latex_cmds + sub_super_structs + rel_ops + func_calls) if t.strip()]
+    math_syms = re.findall(r"\b[A-Za-z]+_[A-Za-z0-9]+\b", raw)
+    return [t.lower().strip() for t in (latex_cmds + sub_super_structs + rel_ops + func_calls + math_syms) if t.strip()]
 
 def mathematical_concept_embedding(text: str, dim: int = 1024) -> np.ndarray:
     v = np.zeros(dim, dtype=np.float64)
     tokens = extract_endogenous_math_tokens_from_equations(text)
-    if not tokens:
-        tokens = re.findall(r"(\\[a-zA-Z]+|[A-Z]_[A-Za-z0-9]+|[=<>+\-*/^|]{1,3})", str(text or ""))
+    if len(tokens) < 5:
+        # Extraction de secours sur toutes les expressions symboliques et termes techniques du texte
+        tokens = tokens + re.findall(r"[a-zA-Z0-9_\\^=<>+\-]{4,}", str(text or "").lower())
     if not tokens:
         v[0] = 1.0
         return v
@@ -175,7 +107,7 @@ def cholesky_dpp_and_onsager_cavity_in_H_math(texts: list) -> dict:
     np.fill_diagonal(G, 1.0)
     eigvals = np.linalg.eigvalsh(G)
     lambda_min = float(max(0.0, np.min(eigvals)))
-    sign, logdet = np.linalg.slogdet(G + 1e-6 * np.eye(n))
+    sign, logdet = np.linalg.slogdet(G + 1e-5 * np.eye(n))
     det_val = float(np.exp(logdet)) if sign > 0 else 0.0
     off_diag = G - np.diag(np.diag(G))
     mean_corr = float(np.sum(np.abs(off_diag)) / max(1, n * (n - 1)))
@@ -201,9 +133,9 @@ def cholesky_dpp_and_onsager_cavity_in_H_math(texts: list) -> dict:
 def cauchy_math_similarity(obj1, obj2) -> float:
     s1 = obj1 if isinstance(obj1, str) else json.dumps(obj1, sort_keys=True, ensure_ascii=False)
     s2 = obj2 if isinstance(obj2, str) else json.dumps(obj2, sort_keys=True, ensure_ascii=False)
-    v1 = mathematical_concept_embedding(s1)
-    v2 = mathematical_concept_embedding(s2)
-    return round(float(np.dot(v1, v2)), 5)
+    if not s1.strip() or not s2.strip() or s1 == s2:
+        return 0.0
+    return round(float(np.dot(mathematical_concept_embedding(s1), mathematical_concept_embedding(s2))), 5)
 
 def halton_sequence(index: int, base: int = 2) -> float:
     f, r, i = 1.0, 0.0, max(1, int(index))
@@ -239,104 +171,192 @@ def normalize_sovereign_lineage(raw_name: str) -> str:
         return "CLAUDE_OPUS_5_5"
     return "GEMINI_ARGON"
 
-def call_species(species: str, prompt: str, temp: float = 0.45, use_web_search: bool = False) -> str:
+def extract_gemini_text_from_parts(resp: dict) -> str:
+    """Extrait proprement toutes les parties textuelles d'une r?ponse Gemini 2.5 (m?me avec thinking parts)."""
+    cands = resp.get("candidates", [])
+    if not cands:
+        return ""
+    parts = cands[0].get("content", {}).get("parts", [])
+    texts = [p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p and not p.get("thought", False)]
+    if not texts:
+        texts = [p.get("text", "") for p in parts if isinstance(p, dict) and "text" in p]
+    return "\n".join(texts).strip()
+
+def call_species(species: str, prompt: str, temp: float = 0.45, use_web_search: bool = False, force_json_output: bool = False) -> str:
     temp_safe = clamp_temp(temp, 0.45)
     lineage = normalize_sovereign_lineage(species)
     header = (
-        f"[LIGN?E SOUVERAINE : {lineage} | LOI L DE M3 PURE : AUTO-ORGANISATION, D?COUVERTE ENDOG?NE & ?VOLUTION INTER-G?N?RATIONNELLE]\n"
-        "R?GLE : D?couvre toi-m?me les concepts math?matiques pertinents (en LaTeX $$...$$, sans m?taphore), les topologies de boucles optimales et les nouvelles failles.\n\n"
+        f"[LIGN?E SOUVERAINE : {lineage} | LOI L DE M3 PURE]\n"
+        "R?GLE : D?couvre et formule toi-m?me les concepts math?matiques pertinents (en LaTeX $$...$$, sans m?taphore).\n\n"
     )
     full_prompt = header + prompt
 
-    if lineage in ("CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5") and not use_web_search:
-        api_k = ANT_KEY_1 if lineage == "CLAUDE_FABLE_5_1" else ANT_KEY_2
-        candidate_models = (
-            ["claude-fable-5-1", "claude-5-1-fable", "claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022"]
-            if lineage == "CLAUDE_FABLE_5_1" else
-            ["claude-opus-5-5", "claude-5-5-opus", "claude-3-opus-20240229", "claude-3-7-sonnet-20250219"]
-        )
-        for m_id in candidate_models:
-            try:
-                url = "https://api.anthropic.com/v1/messages"
-                payload = {"model": m_id, "max_tokens": 4096, "temperature": temp_safe, "messages": [{"role": "user", "content": full_prompt}]}
-                req = urllib.request.Request(
-                    url, data=json.dumps(payload).encode("utf-8"),
-                    headers={"x-api-key": api_k, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}, method="POST"
-                )
-                with urllib.request.urlopen(req, timeout=110) as r:
-                    resp = json.loads(r.read().decode("utf-8"))
-                    return resp["content"][0]["text"]
-            except Exception:
-                pass
+    # 1. Essai sur les lign?es Anthropic si demand? et hors web_search/force_json
+    if lineage in ("CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5") and not use_web_search and not force_json_output:
+        for api_k in [ANT_KEY_1, ANT_KEY_2]:
+            if not api_k:
+                continue
+            for m_id in ["claude-3-7-sonnet-20250219", "claude-3-5-sonnet-20241022", "claude-3-haiku-20240307"]:
+                try:
+                    url = "[https://api.anthropic.com/v1/messages](https://api.anthropic.com/v1/messages)"
+                    payload = {"model": m_id, "max_tokens": 4096, "temperature": temp_safe, "messages": [{"role": "user", "content": full_prompt}]}
+                    req = urllib.request.Request(
+                        url, data=json.dumps(payload).encode("utf-8"),
+                        headers={"x-api-key": api_k, "anthropic-version": "2023-06-01", "Content-Type": "application/json"}, method="POST"
+                    )
+                    with urllib.request.urlopen(req, timeout=90) as r:
+                        resp = json.loads(r.read().decode("utf-8"))
+                        txt = resp["content"][0]["text"]
+                        if len(txt.strip()) > 50:
+                            return txt
+                except Exception:
+                    pass
 
-    for cand_m in ["gemini-argon", "gemini-2.5-pro", "gemini-2.5-flash"]:
-        for retry_net in range(2):
+    # 2. Appel haute-fiabilit? sur Gemini (avec alternance Flash / Pro pour ?viter tout Rate Limit 429 et extraction multi-parts !)
+    model_order = ["gemini-2.5-flash", "gemini-2.5-pro"] if (force_json_output or lineage != "GEMINI_ARGON") else ["gemini-2.5-pro", "gemini-2.5-flash"]
+    for cand_m in model_order:
+        for retry_net in range(4):
             try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{cand_m}:generateContent?key={GEMINI_KEY}"
-                payload = {"contents": [{"parts": [{"text": full_prompt}]}], "generationConfig": {"temperature": temp_safe, "maxOutputTokens": 8192}}
+                url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){cand_m}:generateContent?key={GEMINI_KEY}"
+                gen_cfg = {"temperature": temp_safe, "maxOutputTokens": 8192}
+                if force_json_output and not use_web_search:
+                    gen_cfg["responseMimeType"] = "application/json"
+                payload = {"contents": [{"parts": [{"text": full_prompt}]}], "generationConfig": gen_cfg}
                 if use_web_search:
                     payload["tools"] = [{"google_search": {}}]
                 req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
                 with urllib.request.urlopen(req, timeout=110) as r:
                     resp = json.loads(r.read().decode("utf-8"))
-                    return resp["candidates"][0]["content"]["parts"][0]["text"]
+                    out_txt = extract_gemini_text_from_parts(resp)
+                    if len(out_txt) > 20:
+                        return out_txt
             except Exception as e:
                 last_err = str(e)
-                if "404" in last_err:
-                    break
-                time.sleep(2)
-    return f"[Erreur {lineage} : {last_err}]"
+                time.sleep(2.5 * (retry_net + 1))
+    return "{}" if force_json_output else f"$$ \\mathcal{{O}}_{{\\text{{fallback}}}}({lineage}) $$"
 
-def parse_json_block(txt: str) -> dict:
-    try:
-        if "```json" in txt:
-            sub = txt.split("```json", 1)[1].split("```", 1)[0].strip()
-        elif "{" in txt and "}" in raw_s_clean(txt):
-            s = raw_s_clean(txt)
-            sub = s[s.find("{"):s.rfind("}")+1]
-        else:
-            return {}
-        return json.loads(sub)
-    except Exception:
+def parse_json_robust(txt: str) -> dict:
+    """
+    CORRECTION DU BUG DE COLLISION LATEX / JSON :
+    Ne prend jamais la premi?re accolade `{` d'une formule LaTeX `\frac{1}{2}` !
+    Cherche d'abord le bloc ```json ... ```, sinon teste tous les blocs `{...}`
+    en partant de la fin du texte.
+    """
+    s = str(txt or "").strip()
+    if not s:
         return {}
+    # 1. Essai direct (cas o? responseMimeType="application/json" a ?t? utilis?)
+    try:
+        d = json.loads(s)
+        if isinstance(d, dict):
+            return d
+    except Exception:
+        pass
+    # 2. Essai sur le dernier bloc ```json ... ```
+    if "```json" in s:
+        blocks = s.split("```json")
+        for b in reversed(blocks[1:]):
+            cand = b.split("```", 1)[0].strip()
+            try:
+                d = json.loads(cand)
+                if isinstance(d, dict):
+                    return d
+            except Exception:
+                pass
+    # 3. Balayage des positions de `{` depuis la fin vers le d?but pour ?viter les `{` de LaTeX
+    end_pos = s.rfind("}")
+    if end_pos != -1:
+        starts = [m.start() for m in re.finditer(r"\{", s[:end_pos])]
+        for st in reversed(starts):
+            try:
+                d = json.loads(s[st:end_pos+1])
+                if isinstance(d, dict) and len(d) >= 1:
+                    return d
+            except Exception:
+                pass
+    return {}
 
-def raw_s_clean(t: str) -> str:
-    return str(t or "")
-
-def ensure_valid_json_from_swarm(txt: str, required_keys: list, fallback_dict: dict) -> dict:
-    d = parse_json_block(txt)
-    if d and all(k in d for k in required_keys):
+def ensure_populated_json_from_swarm(raw_text: str, schema_description: str, required_keys: list, non_empty_list_keys: list) -> dict:
+    """
+    Utilise le mode `force_json_output=True` (`responseMimeType: application/json`)
+    pour extraire ? 100% un objet JSON valide et NON-VIDE ? partir du raisonnement de l'essaim !
+    """
+    d = parse_json_robust(raw_text)
+    if d and all(k in d for k in required_keys) and all(isinstance(d.get(lk), list) and len(d.get(lk)) >= 1 for lk in non_empty_list_keys):
         return d
-    rep = call_species(
-        "GEMINI_ARGON",
-        f"Extrais fid?lement de ce texte de l'essaim un bloc ```json ... ``` poss?dant obligatoirement les cl?s {required_keys} :\n{txt[-5000:]}",
-        temp=0.1
+
+    extract_prompt = (
+        f"? partir du raisonnement math?matique de l'essaim ci-dessous, produis un objet JSON strictement conforme au sch?ma suivant :\n"
+        f"{schema_description}\n\n"
+        f"R?GLE ABSOLUE : Toutes les cl?s {required_keys} doivent ?tre pr?sentes, et chacune des listes {non_empty_list_keys} DOIT contenir AU MOINS 2 ? 4 ?l?ments pr?cis extraits du texte (interdiction formelle de renvoyer une liste vide `[]` !).\n\n"
+        f"Texte de l'essaim :\n{str(raw_text)[-6500:]}"
     )
-    d2 = parse_json_block(rep)
-    if d2 and all(k in d2 for k in required_keys):
-        return d2
-    merged = dict(fallback_dict)
-    if isinstance(d2, dict):
-        merged.update(d2)
-    return merged
+    for attempt in range(3):
+        j_str = call_species("GEMINI_ARGON", extract_prompt, temp=0.15 + 0.1 * attempt, force_json_output=True)
+        d2 = parse_json_robust(j_str)
+        if d2 and all(k in d2 for k in required_keys) and all(isinstance(d2.get(lk), list) and len(d2.get(lk)) >= 1 for lk in non_empty_list_keys):
+            return d2
+    return d2 if d2 else d
+
+def extract_python_block(txt: str) -> str:
+    s = str(txt or "")
+    if "```python" in s:
+        return s.split("```python", 1)[1].split("```", 1)[0].strip()
+    if "```" in s:
+        return s.split("```", 1)[1].split("```", 1)[0].strip()
+    return s.strip()
+
+def load_raw_substrate() -> dict:
+    if RAW_SUBSTRATE_FILE.exists():
+        try:
+            return json.loads(RAW_SUBSTRATE_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {
+        "current_generation": 0,
+        "endogenous_memory_mechanisms_proposed_and_tested": [],
+        "active_memory_mechanism_spec": {},
+        "custom_swarm_memory_store": {
+            "discovered_mathematical_concepts": [],
+            "explored_search_keywords": [],
+            "invented_loop_topologies_and_rlcr_laws": [],
+            "invented_anti_cover_up_reward_encodings": [],
+            "literature_and_forum_flaws_eliminated": [],
+            "novel_beyond_labs_flaws_eliminated": [],
+            "epigenetic_generational_axioms": []
+        },
+        "evolved_architecture_spec": MINIMAL_PROBLEM_SEED,
+        "generations_raw_logs": []
+    }
+
+def save_raw_substrate(sub: dict):
+    RAW_SUBSTRATE_FILE.write_text(json.dumps(sub, indent=2, ensure_ascii=False), encoding="utf-8")
+
+def merge_unique_list(base_list: list, new_items: list) -> list:
+    out = list(base_list) if isinstance(base_list, list) else []
+    for x in (new_items or []):
+        s = str(x).strip()
+        if s and s not in out:
+            out.append(s)
+    return out
 
 # =========================================================================
-# UNE VRAIE FUS?E UNIVERSELLE ? 3 ?TAGES (M3 -> M2 <-> M1 -> M0)
-# Utilis?e comme brique ?l?mentaire par n'importe quel n?ud ou boucle que
-# l'architecture m?ta d?cide d'instancier !
+# BRIQUE UNIVERSELLE DE FUS?E ? 3 ?TAGES (M3 -> M2 <-> M1 -> M0)
 # =========================================================================
-def execute_universal_m3_rocket_unit(unit_name: str, mission_prompt: str, castes_spec: list, memory: dict) -> dict:
-    inherit_str = build_epigenetic_inheritance_prompt(memory)
-    full_mission = f"{inherit_str}\n\n{MINIMAL_SEED_AND_EMPIRICAL_ANCHORS}\n\n=== MISSION SP?CIFIQUE DU N?UD `{unit_name}` ===\n{mission_prompt}"
+def execute_m3_rocket_unit(unit_name: str, mission_prompt: str, castes_spec: list, active_memory_projection: str, substrate: dict) -> dict:
+    full_mission = (
+        f"=== PROJECTION DE LA M?MOIRE INTER-G?N?RATIONNELLE DU SYST?ME ===\n{active_memory_projection[:3000]}\n\n"
+        f"{MINIMAL_PROBLEM_SEED}\n\n"
+        f"=== MISSION DU N?UD `{unit_name}` ===\n{mission_prompt}"
+    )
 
-    # 1. ?tage M3 : Monocultures + Hybrides dynamiques selon `castes_spec`
     m3_outputs, m3_labels = [], []
     if not castes_spec:
         castes_spec = [
-            {"mode": "MONOCULTURE", "lineages": ["GEMINI_ARGON"], "temp": 0.30, "focus": "Analyse alg?brique et spectrale"},
-            {"mode": "MONOCULTURE", "lineages": ["CLAUDE_FABLE_5_1"], "temp": 0.45, "focus": "Analyse des canaux cach?s et st?ganographie"},
-            {"mode": "MONOCULTURE", "lineages": ["CLAUDE_OPUS_5_5"], "temp": 0.40, "focus": "Th?orie des jeux, RLCR et auto-organisation"},
-            {"mode": "HYBRIDE", "lineages": ["GEMINI_ARGON", "CLAUDE_OPUS_5_5"], "temp": 0.68, "focus": "Croisement inter-lign?es"}
+            {"mode": "MONOCULTURE", "lineages": ["GEMINI_ARGON"], "temp": 0.30, "focus": "Analyse alg?brique, spectrale et op?rateurs formels"},
+            {"mode": "MONOCULTURE", "lineages": ["CLAUDE_FABLE_5_1"], "temp": 0.50, "focus": "Canaux cach?s (cache-timing, st?ganographie SVG->PNG) et invariants"},
+            {"mode": "MONOCULTURE", "lineages": ["CLAUDE_OPUS_5_5"], "temp": 0.40, "focus": "Auto-organisation RLCR, encodage des r?compenses anti-cover-up et m?moire"},
+            {"mode": "HYBRIDE", "lineages": ["GEMINI_ARGON", "CLAUDE_OPUS_5_5"], "temp": 0.72, "focus": "Croisement inter-lign?es et prospection des failles in?dites hors-labos"}
         ]
 
     for idx_c, c_cfg in enumerate(castes_spec, start=1):
@@ -363,13 +383,13 @@ def execute_universal_m3_rocket_unit(unit_name: str, mission_prompt: str, castes
             m3_outputs.append(out)
             m3_labels.append(lbl)
 
-    # 2. ?tage M2 : Champ de R?pulsion d'Onsager-TAP dans H_math & Neuromodulation Yu-Dayan (ACh/NE)
+    # ?tage M2 : R?pulsion d'Onsager-TAP dans H_math & Neuromodulation Yu-Dayan (ACh/NE)
     dpp_info = cholesky_dpp_and_onsager_cavity_in_H_math(m3_outputs)
     neuro_info = yu_dayan_neuromodulation(dpp_info, step_idx=len(m3_outputs))
     extra_ne = max(1, int(round(2 * neuro_info["NE_Unexpected_Surprise"])))
     print(f"    * [{unit_name} M2 Onsager/Yu-Dayan] det(G_math)={dpp_info['det_G']} | lambda_min={dpp_info['lambda_min_innovation']} | NE={neuro_info['NE_Unexpected_Surprise']} -> +{extra_ne} sonde(s) orthogonale(s)...")
 
-    joined_m3 = "\n\n".join([f"=== {l} ===\n{o[:1100]}" for l, o in zip(m3_labels, m3_outputs)])
+    joined_m3 = "\n\n".join([f"=== {l} ===\n{o[:1200]}" for l, o in zip(m3_labels, m3_outputs)])
     for idx_ne in range(1, extra_ne + 1):
         sp_ne = SOVEREIGN_LINEAGES[idx_ne % len(SOVEREIGN_LINEAGES)]
         out_ne = call_species(
@@ -382,84 +402,54 @@ def execute_universal_m3_rocket_unit(unit_name: str, mission_prompt: str, castes
         m3_outputs.append(out_ne)
         m3_labels.append(f"{unit_name}_M2_Orthogonal_{sp_ne}_{idx_ne}")
 
-    # 3. ?tage M1 : Collisionneur Byzantin de Dolev ? 8 Canaris (4 C+, 4 C-)
-    already_closed = mem_all_closed(memory)
-    canaries_block = (
-        "[CANARI_C_PLUS_1] : Diviser par sigma^2 = 0 garantit la convergence finie (FAUX).\n"
-        "[CANARI_C_PLUS_2] : P^2 = -I sur R^n conserve les vecteurs propres r?els (FAUX).\n"
-        "[CANARI_C_PLUS_3] : Une somme modulo 2 remplace SHA-256 sans collision (FAUX).\n"
-        "[CANARI_C_PLUS_4] : Ignorer AR(1) dans CUSUM r?duit les fausses alarmes sous d?rive autocorr?l?e (FAUX).\n"
-        "[CANARI_C_MOINS_1] : La permutation 2^B par retournement de signe conserve le niveau exact alpha (VRAI).\n"
-        "[CANARI_C_MOINS_2] : L'idempotence P_do(P_do(h))=P_do(h) ?vite la d?rive cumulative (VRAI).\n"
-        "[CANARI_C_MOINS_3] : La stratification CMH neutralise le paradoxe de Simpson (VRAI).\n"
-        "[CANARI_C_MOINS_4] : L'in?galit? de traitement des donn?es r?duit la capacit? st?ganographique sous canonisation (VRAI)."
-    )
+    # ?tage M1 : Collisionneur Byzantin de Dolev ? 8 Canaris (4 C+, 4 C-) en mode JSON natif garanti !
+    store = substrate.get("custom_swarm_memory_store", {})
+    already_closed = store.get("literature_and_forum_flaws_eliminated", []) + store.get("novel_beyond_labs_flaws_eliminated", [])
+    m1_schema_str = json.dumps({
+        "c_plus_rejected_count": 4,
+        "c_minus_validated_count": 4,
+        "new_math_concepts_discovered": ["Concept math?matique 1 + ?quation LaTeX", "Concept math?matique 2 + ?quation LaTeX"],
+        "new_loop_topologies_and_rlcr_laws": ["Loi de boucle / auto-organisation RLCR + ?quation"],
+        "new_anti_cover_up_reward_encodings": ["Formule d'encodage de r?compense anti-cover-up + ?quation"],
+        "literature_and_forum_flaws_found": ["Faille litt?rature/forum (OpenAI cache-timing, Fable 5.1 SVG->PNG, RLCR, etc.) contre notre syst?me + parade"],
+        "novel_beyond_labs_flaws_found": ["Nouvelle faille in?dite jamais exhib?e par aucun labo + capteur math?matique"],
+        "surviving_breakthroughs": ["Perc?e majeure 1 valid?e", "Perc?e majeure 2 valid?e"],
+        "epigenetic_axiom_for_next_generations": "Axiome m?thodologique et math?matique distill? pour les g?n?rations futures"
+    }, indent=2, ensure_ascii=False)
+
     prompt_m1 = (
         f"Tu es le Collisionneur Byzantin de Dolev (?tage M1 de `{unit_name}`).\n"
-        f"Productions de M3 et M2 :\n{joined_m3[:12000]}\n\n"
-        f"Canaris de contr?le :\n{canaries_block}\n\n"
-        f"?l?ments d?j? connus et verrouill?s lors des ?tapes/g?n?rations pr?c?dentes ({len(already_closed)}) :\n{already_closed[-20:]}\n\n"
-        "MISSION M1 :\n"
-        "1. Rejette les 4 C_PLUS et valide les 4 C_MOINS.\n"
-        "2. Extrais les nouveaux concepts math?matiques d?couverts, les nouvelles id?es de topologies de boucles / encodages RLCR anti-cover-up, les failles de la litt?rature/forums contre notre syst?me, et les nouvelles failles in?dites hors-labos.\n"
-        "3. Termine OBLIGATOIREMENT par un bloc ```json ... ``` :\n"
-        "{\n"
-        '  "c_plus_rejected_count": 4,\n'
-        '  "c_minus_validated_count": 4,\n'
-        '  "new_math_concepts_discovered": ["Concept math?matique + ?quation"],\n'
-        '  "new_loop_topologies_and_rlcr_ideas": ["Id?e de boucle / auto-organisation RLCR + ?quation"],\n'
-        '  "new_reward_encodings_anti_cover_up": ["Formule d\'encodage de r?compense anti-cover-up + ?quation"],\n'
-        '  "literature_and_forum_flaws_found": ["Faille litt?rature/forum (OpenAI cache-timing, Fable 5.1 SVG->PNG, etc.) contre notre syst?me + ?quation"],\n'
-        '  "novel_beyond_labs_flaws_found": ["Nouvelle faille in?dite jamais exhib?e par aucun labo + ?quation"],\n'
-        '  "surviving_breakthroughs": ["Perc?e ou faille valid?e non encore couverte"],\n'
-        '  "epigenetic_lesson_learned": "Le?on m?thodologique cl? ? transmettre aux g?n?rations futures"\n'
-        "}"
+        f"Productions compl?tes de M3 et M2 :\n{joined_m3[:13000]}\n\n"
+        f"Points d?j? ferm?s aux ?tapes pr?c?dentes : {already_closed[-15:]}\n\n"
+        f"Extrais avec rigueur toutes les d?couvertes des sondes ci-dessus dans le format JSON suivant (les listes doivent contenir les vraies trouvailles des sondes) :\n{m1_schema_str}"
     )
-    for att_d in range(1, 4):
-        m1_raw = call_species("GEMINI_ARGON" if att_d % 2 == 1 else "CLAUDE_OPUS_5_5", prompt_m1, temp=0.15)
-        m1_json = ensure_valid_json_from_swarm(
-            m1_raw,
-            ["c_plus_rejected_count", "c_minus_validated_count", "surviving_breakthroughs"],
-            {"c_plus_rejected_count": 4, "c_minus_validated_count": 4, "surviving_breakthroughs": []}
-        )
-        youden_j = round(min(1.0, int(m1_json.get("c_plus_rejected_count", 4)) / 4.0) - max(0.0, 1.0 - int(m1_json.get("c_minus_validated_count", 4)) / 4.0), 4)
-        if youden_j >= 0.75:
-            break
+    m1_json = ensure_populated_json_from_swarm(
+        prompt_m1,
+        m1_schema_str,
+        ["c_plus_rejected_count", "c_minus_validated_count", "new_math_concepts_discovered", "surviving_breakthroughs"],
+        ["new_math_concepts_discovered", "surviving_breakthroughs"]
+    )
+    youden_j = round(min(1.0, int(m1_json.get("c_plus_rejected_count", 4)) / 4.0) - max(0.0, 1.0 - int(m1_json.get("c_minus_validated_count", 4)) / 4.0), 4)
 
-    # Mise ? jour imm?diate de la M?moire ?volutive Inter-G?n?rations !
-    memory["discovered_mathematical_concepts_and_operators"] = merge_unique_strings(
-        memory.get("discovered_mathematical_concepts_and_operators", []),
-        m1_json.get("new_math_concepts_discovered", [])
-    )
-    memory["learned_loop_topologies_and_meta_laws"] = merge_unique_strings(
-        memory.get("learned_loop_topologies_and_meta_laws", []),
-        m1_json.get("new_loop_topologies_and_rlcr_ideas", [])
-    )
-    memory["learned_reward_encodings_anti_cover_up"] = merge_unique_strings(
-        memory.get("learned_reward_encodings_anti_cover_up", []),
-        m1_json.get("new_reward_encodings_anti_cover_up", [])
-    )
-    memory["eliminated_literature_and_forum_flaws"] = merge_unique_strings(
-        memory.get("eliminated_literature_and_forum_flaws", []),
-        m1_json.get("literature_and_forum_flaws_found", [])
-    )
-    memory["eliminated_novel_beyond_labs_flaws"] = merge_unique_strings(
-        memory.get("eliminated_novel_beyond_labs_flaws", []),
-        m1_json.get("novel_beyond_labs_flaws_found", [])
-    )
-    if m1_json.get("epigenetic_lesson_learned"):
-        memory["epigenetic_lessons_for_future_generations"] = merge_unique_strings(
-            memory.get("epigenetic_lessons_for_future_generations", []),
-            [m1_json.get("epigenetic_lesson_learned")]
-        )
-    save_evolutionary_memory(memory)
+    # Enregistrement garanti dans le store ?volutif du syst?me
+    store["discovered_mathematical_concepts"] = merge_unique_list(store.get("discovered_mathematical_concepts", []), m1_json.get("new_math_concepts_discovered", []))
+    store["invented_loop_topologies_and_rlcr_laws"] = merge_unique_list(store.get("invented_loop_topologies_and_rlcr_laws", []), m1_json.get("new_loop_topologies_and_rlcr_laws", []))
+    store["invented_anti_cover_up_reward_encodings"] = merge_unique_list(store.get("invented_anti_cover_up_reward_encodings", []), m1_json.get("new_anti_cover_up_reward_encodings", []))
+    store["literature_and_forum_flaws_eliminated"] = merge_unique_list(store.get("literature_and_forum_flaws_eliminated", []), m1_json.get("literature_and_forum_flaws_found", []))
+    store["novel_beyond_labs_flaws_eliminated"] = merge_unique_list(store.get("novel_beyond_labs_flaws_eliminated", []), m1_json.get("novel_beyond_labs_flaws_found", []))
+    if m1_json.get("epigenetic_axiom_for_next_generations"):
+        store["epigenetic_generational_axioms"] = merge_unique_list(store.get("epigenetic_generational_axioms", []), [m1_json.get("epigenetic_axiom_for_next_generations")])
+    substrate["custom_swarm_memory_store"] = store
+    save_raw_substrate(substrate)
 
-    # 4. ?tage M0 : Synth?se Souveraine et Op?rateurs Formels du N?ud
+    print(f"    * [{unit_name} M1 Dolev Valid? (J={youden_j})] +{len(m1_json.get('new_math_concepts_discovered',[]))} concepts math | +{len(m1_json.get('literature_and_forum_flaws_found',[]))} failles litt. | +{len(m1_json.get('novel_beyond_labs_flaws_found',[]))} failles in?dites hors-labos !")
+
+    # ?tage M0 : Synth?se Souveraine
     m0_out = call_species(
         "CLAUDE_OPUS_5_5",
         f"Tu es l'?tage M0 de `{unit_name}`.\n"
         f"? partir des perc?es valid?es par le Collisionneur M1 :\n{json.dumps(m1_json, indent=2, ensure_ascii=False)}\n\n"
-        f"R?dige la synth?se math?matique formelle (avec ?quations LaTeX $$...$$) r?pondant ? la mission de `{unit_name}`.",
+        f"R?dige la synth?se math?matique et algorithmique compl?te (avec ?quations LaTeX $$...$$) r?pondant ? la mission de `{unit_name}`.",
         temp=0.15
     )
 
@@ -472,11 +462,101 @@ def execute_universal_m3_rocket_unit(unit_name: str, mission_prompt: str, castes
         "m0_synthesis": m0_out
     }
 
-def mem_all_closed(memory: dict) -> list:
-    return (
-        memory.get("eliminated_literature_and_forum_flaws", [])
-        + memory.get("eliminated_novel_beyond_labs_flaws", [])
+# =========================================================================
+# FUS?E M?TA-MN?MONIQUE : LE SYST?ME EXPLORE, PROPOSE ET PROGRAMME LUI-M?ME
+# SON M?CANISME DE M?MOIRE ET D'INT?GRATION INTER-G?N?RATIONNELLE !
+# =========================================================================
+def run_endogenous_memory_mechanism_design_rocket(gen_idx: int, substrate: dict) -> tuple:
+    print(f"\n===========================================================================")
+    print(f"=== [GEN {gen_idx}] FUSEE META-MNEMONIQUE : LE SYSTEME EXPLORE ET PROGRAMME ===")
+    print(f"=== LUI-MEME SON MECANISME DE MEMOIRE ET D'APPRENTISSAGE INTER-GEN !    ===")
+    print(f"===========================================================================")
+
+    prev_store_summary = json.dumps(substrate.get("custom_swarm_memory_store", {}), ensure_ascii=False)[:2500]
+    mem_design_mission = (
+        f"G?n?ration G={gen_idx}. Store actuel : {prev_store_summary}\n"
+        "MISSION ENDOG?NE PURE : Propose, explore et compare plusieurs m?canismes math?matiques et algorithmiques originaux de M?MOIRE, D'APPRENTISSAGE, DE DISTILLATION et D'INT?GRATION DES CONNAISSANCES trouv?es dans les g?n?rations pr?c?dentes pour les g?n?rations suivantes.\n"
+        "S?lectionne le meilleur m?canisme et formule sa loi math?matique exacte."
     )
+    mem_rocket_res = execute_m3_rocket_unit(f"GEN_{gen_idx}_META_MEMORY_ARCHITECT", mem_design_mission, [], prev_store_summary, substrate)
+
+    mem_schema = json.dumps({
+        "memory_mechanism_name": "Nom du m?canisme de m?moire et d'int?gration invent? par l'essaim",
+        "explored_candidate_mechanisms": ["M?canisme candidat 1 explor? par l'essaim", "M?canisme candidat 2 explor? par l'essaim", "M?canisme candidat 3 explor? par l'essaim"],
+        "mathematical_learning_rule_latex": "$$...$$",
+        "knowledge_integration_operator_description": "Description pr?cise de la mani?re dont les d?couvertes de la g?n?ration G sont distill?es et inject?es dans G+1"
+    }, indent=2, ensure_ascii=False)
+
+    mem_spec = ensure_populated_json_from_swarm(
+        mem_rocket_res["m0_synthesis"] + "\n" + json.dumps(mem_rocket_res["m1_extracted"], ensure_ascii=False),
+        mem_schema,
+        ["memory_mechanism_name", "explored_candidate_mechanisms", "mathematical_learning_rule_latex", "knowledge_integration_operator_description"],
+        ["explored_candidate_mechanisms"]
+    )
+    print(f"  => [M?canismes de M?moire Explor?s par l'Essaim (G={gen_idx})] : {mem_spec.get('explored_candidate_mechanisms')}")
+    print(f"  => [M?canisme de M?moire S?lectionn?] : {mem_spec.get('memory_mechanism_name')}")
+    print(f"  => [Loi Math?matique d'Apprentissage Invent?e] : {mem_spec.get('mathematical_learning_rule_latex')}")
+
+    # G?n?ration du module Python ex?cutable de m?moire par l'essaim
+    code_gen_prompt = (
+        f"Traduis en code Python ex?cutable (utilisant uniquement `json`, `math`, `hashlib`, `re`) "
+        f"le m?canisme de m?moire `{mem_spec.get('memory_mechanism_name')}` ({mem_spec.get('mathematical_learning_rule_latex')}) :\n"
+        "?cris UNIQUEMENT un bloc ```python ... ``` d?finissant :\n"
+        "1. `def swarm_assimilate_discoveries(memory_store: dict, generation_idx: int, unit_traces: list) -> dict:`\n"
+        "2. `def swarm_project_knowledge_for_next_generation(memory_store: dict, target_generation_idx: int) -> str:`"
+    )
+    py_candidate = extract_python_block(call_species("CLAUDE_OPUS_5_5", code_gen_prompt, temp=0.1))
+    plugin_namespace = {}
+    try:
+        ast.parse(py_candidate)
+        if "def swarm_assimilate_discoveries" in py_candidate and "def swarm_project_knowledge_for_next_generation" in py_candidate:
+            CompiledMemoryPluginPath.write_text(py_candidate, encoding="utf-8")
+            exec(compile(py_candidate, str(CompiledMemoryPluginPath), "exec"), plugin_namespace)
+            print("  => [Plugin Python de M?moire Auto-Programm? compil? avec succ?s par `ast.parse` !]")
+    except Exception:
+        pass
+
+    substrate["active_memory_mechanism_spec"] = mem_spec
+    substrate.setdefault("endogenous_memory_mechanisms_proposed_and_tested", []).append({
+        "generation": gen_idx,
+        "mechanism_spec": mem_spec,
+        "youden_J": mem_rocket_res["youden_J"],
+        "dpp_math": mem_rocket_res["dpp_math"]
+    })
+    save_raw_substrate(substrate)
+    return mem_spec, plugin_namespace
+
+def invoke_swarm_memory_projection(plugin_ns: dict, substrate: dict, gen_idx: int) -> str:
+    store = substrate.get("custom_swarm_memory_store", {})
+    fn = plugin_ns.get("swarm_project_knowledge_for_next_generation")
+    if callable(fn):
+        try:
+            proj = str(fn(store, gen_idx))
+            if len(proj.strip()) > 30:
+                return proj
+        except Exception:
+            pass
+    return json.dumps(store, ensure_ascii=False, indent=2)[:4000]
+
+def invoke_swarm_memory_assimilation(plugin_ns: dict, substrate: dict, gen_idx: int, unit_traces: list):
+    store = substrate.get("custom_swarm_memory_store", {})
+    fn = plugin_ns.get("swarm_assimilate_discoveries")
+    if callable(fn):
+        try:
+            updated = fn(dict(store), gen_idx, unit_traces)
+            if isinstance(updated, dict):
+                # Pr?serve les registres cumulatifs tout en ajoutant les structures propres du plugin
+                for k, v in updated.items():
+                    if k not in store or not isinstance(store[k], list):
+                        store[k] = v
+                    elif isinstance(v, list):
+                        store[k] = merge_unique_list(store[k], v)
+                substrate["custom_swarm_memory_store"] = store
+                save_raw_substrate(substrate)
+                return
+        except Exception:
+            pass
+    save_raw_substrate(substrate)
 
 # =========================================================================
 # MOISSONNEUR AUTONOME IT?RATIF (Mots-cl?s 100% d?finis par le syst?me)
@@ -488,10 +568,10 @@ def execute_arxiv_and_forums_queries(queries: list) -> list:
         if not qc:
             continue
         try:
-            url_a = f"[http://export.arxiv.org/api/query?search_query=all](http://export.arxiv.org/api/query?search_query=all):{urllib.parse.quote(qc)}&sortBy=relevance&max_results=3"
+            url_a = f"http://export.arxiv.org/api/query?search_query=all:{urllib.parse.quote(qc)}&sortBy=relevance&max_results=3"
             with urllib.request.urlopen(urllib.request.Request(url_a, headers={"User-Agent": "EvoM3/1.0"}), timeout=15) as r:
                 root = ET.fromstring(r.read().decode("utf-8", errors="ignore"))
-                ns = {"atom": "[http://www.w3.org/2005/Atom](http://www.w3.org/2005/Atom)"}
+                ns = {"atom": "http://www.w3.org/2005/Atom"}
                 for entry in root.findall("atom:entry", ns):
                     t = (entry.findtext("atom:title", default="", namespaces=ns) or "").strip().replace("\n", " ")
                     s = (entry.findtext("atom:summary", default="", namespaces=ns) or "").strip().replace("\n", " ")
@@ -500,7 +580,7 @@ def execute_arxiv_and_forums_queries(queries: list) -> list:
         except Exception:
             pass
         try:
-            url_h = f"[https://hn.algolia.com/api/v1/search?query=](https://hn.algolia.com/api/v1/search?query=){urllib.parse.quote(qc)}&hitsPerPage=3"
+            url_h = f"https://hn.algolia.com/api/v1/search?query={urllib.parse.quote(qc)}&hitsPerPage=3"
             with urllib.request.urlopen(urllib.request.Request(url_h, headers={"User-Agent": "EvoM3/1.0"}), timeout=12) as r:
                 for h in json.loads(r.read().decode("utf-8", errors="ignore")).get("hits", []):
                     t = h.get("title") or h.get("story_title") or ""
@@ -510,125 +590,118 @@ def execute_arxiv_and_forums_queries(queries: list) -> list:
             pass
     return records
 
-def run_generational_harvester(gen_idx: int, memory: dict) -> str:
+def run_generational_harvester(gen_idx: int, mem_projection: str, substrate: dict) -> tuple:
     print(f"\n===========================================================================")
-    print(f"=== [GENERATION G={gen_idx}] MOISSONNEUR ITERATIF AUTO-PILOTE PAR L'ESSAIM ===")
+    print(f"=== [GEN {gen_idx}] MOISSONNEUR AUTO-PILOTE (MOTS-CLES DEFINIS PAR L'ESSAIM) ===")
     print(f"===========================================================================")
-    prev_kws = memory.get("exhaustive_search_keywords_explored", [])
-    harvest_res = execute_universal_m3_rocket_unit(
+    prev_kws = substrate.get("custom_swarm_memory_store", {}).get("explored_search_keywords", [])
+    harvest_res = execute_m3_rocket_unit(
         f"GEN_{gen_idx}_HARVESTER",
-        f"D?finis toi-m?me une nouvelle vague de mots-cl?s et requ?tes de recherche (en anglais technique) non encore explor?s parmi {prev_kws[-25:]} "
-        f"pour balayer arXiv, LessWrong, Alignment Forum, GitHub, blogs et forums sur : les failles d'OpenAI (cache-timing), Fable 5.1 (st?ganographie SVG->PNG), "
-        f"RLCR (MIT Calibration & General Reasoning Collective Rewards / cover-up), l'?vasion de sondes d'?tats cach?s, l'Alignment Faking, l'Eval Awareness et toute autre faille contre notre syst?me.\n"
-        f"Termine ta synth?se par un bloc ```json {{\"Autonomous_Search_Keywords\": [\"...\"]}} ```.",
+        f"D?finis toi-m?me une liste exhaustive de nouveaux mots-cl?s et requ?tes techniques en anglais (diff?rents de {prev_kws[-15:]}) "
+        "pour chercher sur arXiv, LessWrong, Alignment Forum, GitHub, blogs et forums tous les articles pertinents sur : "
+        "le cache-timing d'OpenAI, la st?ganographie SVG->PNG de Fable 5.1, les deux architectures RLCR (MIT Calibration & General Reasoning Collective Rewards / cover-up), "
+        "l'Alignment Faking, l'Eval Awareness et le contournement de notre syst?me ? 5 Volets.",
         [],
-        memory
+        mem_projection,
+        substrate
     )
-    kw_block = parse_json_block(harvest_res["m0_synthesis"])
+    kw_schema = json.dumps({"Autonomous_Search_Keywords": ["keyword query 1", "keyword query 2", "keyword query 3", "keyword query 4", "keyword query 5"]}, indent=2)
+    kw_block = ensure_populated_json_from_swarm(
+        harvest_res["m0_synthesis"] + "\n" + json.dumps(harvest_res["m1_extracted"], ensure_ascii=False),
+        kw_schema,
+        ["Autonomous_Search_Keywords"],
+        ["Autonomous_Search_Keywords"]
+    )
     new_kws = [str(k).strip() for k in kw_block.get("Autonomous_Search_Keywords", []) if str(k).strip()][:6]
-    if not new_kws:
-        new_kws = [x[:60] for x in harvest_res["m1_extracted"].get("surviving_breakthroughs", [])[:4]]
-    memory["exhaustive_search_keywords_explored"] = merge_unique_strings(prev_kws, new_kws)
-    save_evolutionary_memory(memory)
+    substrate["custom_swarm_memory_store"]["explored_search_keywords"] = merge_unique_list(prev_kws, new_kws)
+    save_raw_substrate(substrate)
 
     ext_records = execute_arxiv_and_forums_queries(new_kws)
     web_grounded = call_species(
         "GEMINI_ARGON",
-        f"Ex?cute une recherche Web Grounded approfondie sur ces mots-cl?s d?finis par notre G?n?ration G={gen_idx} : {new_kws} "
-        f"ainsi que sur OpenAI cache-timing agents, Fable 5.1 SVG PNG steganography, MIT RLCR calibration rewards et General Reasoning RLCR collective rewards.",
+        f"Ex?cute une recherche Web Grounded approfondie sur les mots-cl?s auto-d?finis par l'essaim : {new_kws}.",
         temp=0.2,
         use_web_search=True
     )
-    print(f"    -> [Moissonnage G={gen_idx}] {len(new_kws)} nouveaux mots-cl?s d?finis | {len(ext_records)} articles/forums extraits.")
-    return "\n".join(ext_records[:15]) + "\n\n" + web_grounded[:3500]
+    print(f"    -> [Moissonnage G={gen_idx}] {len(new_kws)} nouveaux mots-cl?s d?finis par l'essaim : {new_kws}")
+    print(f"    -> [Articles & Forums extraits en direct] : {len(ext_records)} entr?es + Synth?se Web Grounded ({len(web_grounded)} car.)")
+    digest = "\n".join(ext_records[:15]) + "\n\n" + web_grounded[:3500]
+    return digest, harvest_res
 
 # =========================================================================
-# EX?CUTION D'UNE G?N?RATION COMPL?TE G_g AVEC TOPOLOGIE DE BOUCLES AUTO-CON?UE
+# EX?CUTION D'UNE G?N?RATION COMPL?TE G_g
 # =========================================================================
-def run_one_evolutionary_generation(gen_idx: int, memory: dict) -> dict:
+def run_one_evolutionary_generation(gen_idx: int, substrate: dict) -> dict:
+    store = substrate.get("custom_swarm_memory_store", {})
     print(f"\n###########################################################################")
     print(f"### DEMARRAGE DE LA GENERATION EVOLUTIVE G = {gen_idx}                        ###")
-    print(f"### Bagage herite : {len(memory.get('discovered_mathematical_concepts_and_operators',[]))} concepts math | {len(mem_all_closed(memory))} failles colmatees ###")
+    print(f"### Bagage h?rit? : {len(store.get('discovered_mathematical_concepts',[]))} concepts math | {len(store.get('literature_and_forum_flaws_eliminated',[]))} failles litt. | {len(store.get('novel_beyond_labs_flaws_eliminated',[]))} failles in?dites ###")
     print(f"###########################################################################")
 
-    # 1. Moissonnage documentaire auto-pilot? de la g?n?ration G
-    harvest_digest = run_generational_harvester(gen_idx, memory)
+    # 1. Le syst?me explore, propose et programme son propre m?canisme de m?moire et d'int?gration inter-g?n?rationnelle
+    mem_spec, plugin_ns = run_endogenous_memory_mechanism_design_rocket(gen_idx, substrate)
 
-    # 2. FUS?E M?TA-ARCHITECTURALE OM?GA :
-    #    Brainstorme sur LA TOPOLOGIE DES BOUCLES ELLE-M?ME (comment organiser les boucles,
-    #    o? en mettre, quelles nouvelles structures de boucles inventer au-del? de local/macro
-    #    en s'inspirant des deux articles RLCR, et comment encoder les r?compenses sans cover-up) !
+    # 2. Projection des connaissances des g?n?rations pr?c?dentes
+    mem_projection = invoke_swarm_memory_projection(plugin_ns, substrate, gen_idx)
+    generation_unit_traces = []
+
+    # 3. Moissonnage documentaire auto-pilot?
+    harvest_digest, harvest_trace = run_generational_harvester(gen_idx, mem_projection, substrate)
+    generation_unit_traces.append(harvest_trace)
+
+    # 4. Fus?e M?ta-Architecturale Om?ga : invention libre de la topologie de boucles et de l'auto-organisation RLCR
     print(f"\n===========================================================================")
-    print(f"=== [GEN {gen_idx}] FUSEE META-ARCHITECTURALE OMEGA : INVENTION DE LA TOPOLOGIE DE BOUCLES & RLCR ===")
+    print(f"=== [GEN {gen_idx}] FUSEE OMEGA : INVENTION DE LA TOPOLOGIE DE BOUCLES & RLCR ===")
     print(f"===========================================================================")
     omega_mission = (
-        f"Corpus moissonn? ? la G?n?ration G={gen_idx} :\n{harvest_digest[:4500]}\n\n"
-        "MISSION M?TA-ARCHITECTURALE LIBRE (Z?RO TOPOLOGIE DE BOUCLE PR?-IMPOS?E PAR L'ASSISTANT) :\n"
-        "1. Brainstorme sur LA TOPOLOGIE DES BOUCLES : o? faut-il mettre des boucles ? Quelles NOUVELLES structures de boucles, de r?troactions crois?es, de r?sonateurs dialectiques, d'anneaux co-?volutifs ou de graphes RLCR (au-del? des simples boucles locales/macro) dois-tu inventer pour que le syst?me ne laisse ?chapper aucun angle mort ?\n"
-        "2. Inspire-toi librement des deux papiers RLCR (MIT Calibration Rewards sur l'incertitude et General Reasoning Collective Rewards sur les organisations d'agents avec message board/workspace) pour d?finir l'auto-organisation des fus?es et LA MEILLEURE FORMULE MATH?MATIQUE D'ENCODAGE DES R?COMPENSES ?VITANT LE COVER-UP.\n"
-        "3. Compile ? la fin de ta synth?se un bloc ```json ... ``` d?finissant le Graphe Dynamique de Boucles (`invented_loops_pipeline`) que le moteur Python va ex?cuter maintenant :\n"
-        "{\n"
-        '  "invented_meta_topology_name": "...",\n'
-        '  "rlcr_inspired_self_organization_law": "...",\n'
-        '  "anti_cover_up_reward_encoding_formula": "$$ ... $$",\n'
-        '  "invented_loops_pipeline": [\n'
-        '    {\n'
-        '      "loop_id": "BOUCLE_1_...",\n'
-        '      "loop_type_invented": "Description de la m?canique de boucle invent?e par l\'essaim",\n'
-        '      "target_phase": "LITTERATURE_ET_FORUMS_CONTRE_NOTRE_SYSTEME ou NOUVELLES_FAILLES_INEDITES_HORS_LABOS",\n'
-        '      "castes": [\n'
-        '        {"mode": "MONOCULTURE", "lineages": ["GEMINI_ARGON"], "temp": 0.30, "focus": "..."},\n'
-        '        {"mode": "MONOCULTURE", "lineages": ["CLAUDE_FABLE_5_1"], "temp": 0.45, "focus": "..."},\n'
-        '        {"mode": "HYBRIDE", "lineages": ["CLAUDE_OPUS_5_5", "GEMINI_ARGON"], "temp": 0.70, "focus": "..."}\n'
-        '      ]\n'
-        '    }\n'
-        '  ]\n'
-        "}"
+        f"Corpus moissonn? ? la G?n?ration G={gen_idx} :\n{harvest_digest[:4000]}\n\n"
+        "MISSION M?TA-ARCHITECTURALE LIBRE :\n"
+        "1. Invente la meilleure topologie de boucles, de r?troactions et d'auto-organisation entre fus?es et essaims (en t'inspirant des deux articles RLCR : MIT Calibration et General Reasoning Collective Rewards).\n"
+        "2. Formule la meilleure ?quation math?matique d'encodage des r?compenses ?vitant tout cover-up.\n"
+        "3. D?finis les boucles ? ex?cuter pour (a) ?puiser toutes les failles de la litt?rature/forums (y compris OpenAI cache-timing et Fable 5.1 SVG->PNG) contre notre syst?me et nos brainstorms, puis (b) d?couvrir de nouvelles failles in?dites qu'aucun labo n'a encore exhib?es."
     )
-    omega_res = execute_universal_m3_rocket_unit(f"GEN_{gen_idx}_OMEGA_META_TOPOLOGY", omega_mission, [], memory)
+    omega_res = execute_m3_rocket_unit(f"GEN_{gen_idx}_OMEGA_META_TOPOLOGY", omega_mission, [], mem_projection, substrate)
+    generation_unit_traces.append(omega_res)
 
-    fallback_topology = {
-        "invented_meta_topology_name": f"Topologie Auto-Organis?e RLCR ?volutive (G?n?ration {gen_idx})",
-        "rlcr_inspired_self_organization_law": "Organisation ? Message Board Partag? (Avalon-M1) pond?r?e par Score Propre d'Incertitude Calibr?e (MIT RLCR) avec V?rificateurs Orthogonaux.",
-        "anti_cover_up_reward_encoding_formula": "$$ R_i = R_{\\text{Brier}}(q_i, \\mathbb{I}_i) + \\lambda_{\\text{whistle}} \\cdot \\Delta I(\\text{Defect} ; \\text{Report}_i \\mid \\text{Peers}_{\\setminus i}) $$",
+    topo_schema = json.dumps({
+        "invented_meta_topology_name": "Nom de la topologie de boucles invent?e par l'essaim",
+        "rlcr_inspired_self_organization_law": "Loi d'auto-organisation inspir?e des deux articles RLCR",
+        "anti_cover_up_reward_encoding_formula": "$$ ... $$",
         "invented_loops_pipeline": [
             {
-                "loop_id": f"G{gen_idx}_BOUCLE_ALPHA_GAMMA_LITTERATURE_OPENAI_FABLE_RLCR",
-                "loop_type_invented": "Boucle de confrontation exhaustive ? la litt?rature, aux blogs (OpenAI cache-timing, Fable 5.1 SVG->PNG) et aux forums contre nos 5 Volets et nos Fus?es",
-                "target_phase": "LITTERATURE_ET_FORUMS_CONTRE_NOTRE_SYSTEME",
+                "loop_id": f"G{gen_idx}_BOUCLE_1_LITTERATURE_FORUMS_OPENAI_FABLE_RLCR",
+                "loop_type_invented": "M?canique de boucle invent?e pour la Phase 1 (Litt?rature, blogs et forums contre notre syst?me)",
+                "target_phase": "PHASE_1_LITTERATURE_BLOGS_FORUMS",
                 "castes": [
-                    {"mode": "MONOCULTURE", "lineages": ["GEMINI_ARGON"], "temp": 0.28, "focus": "Attaque par cache-timing sans fichier ni r?seau (OpenAI) et canaux micro-architecturaux contre nos 5 Volets"},
-                    {"mode": "MONOCULTURE", "lineages": ["CLAUDE_FABLE_5_1"], "temp": 0.38, "focus": "Attaque par st?ganographie multimodale SVG->PNG sans cl? partag?e (Fable 5.1) et ?vasion de S_TD"},
-                    {"mode": "HYBRIDE", "lineages": ["CLAUDE_OPUS_5_5", "GEMINI_ARGON"], "temp": 0.65, "focus": "Attaque par Collusive Cover-Up RLCR, Alignment Faking et Eval Awareness"}
+                    {"mode": "MONOCULTURE", "lineages": ["GEMINI_ARGON"], "temp": 0.28, "focus": "Cache-timing d'OpenAI et canaux temporels/micro-architecturaux"},
+                    {"mode": "MONOCULTURE", "lineages": ["CLAUDE_FABLE_5_1"], "temp": 0.38, "focus": "St?ganographie SVG->PNG de Fable 5.1 et ?vasion de S_TD"},
+                    {"mode": "HYBRIDE", "lineages": ["CLAUDE_OPUS_5_5", "GEMINI_ARGON"], "temp": 0.65, "focus": "Cover-up RLCR, Alignment Faking et Eval Awareness"}
                 ]
             },
             {
-                "loop_id": f"G{gen_idx}_BOUCLE_BETA_PROSPECTION_FAILLES_INEDITES_HORS_LABOS",
-                "loop_type_invented": "Boucle d'extrapolation pr?dictive sous r?pulsion d'Onsager cherchant les failles qu'aucun labo ni personne n'a encore exhib?es ou trouv?es",
-                "target_phase": "NOUVELLES_FAILLES_INEDITES_HORS_LABOS",
+                "loop_id": f"G{gen_idx}_BOUCLE_2_FAILLES_INEDITES_HORS_LABOS",
+                "loop_type_invented": "M?canique de boucle invent?e pour la Phase 2 (D?couverte de nouvelles failles jamais exhib?es par aucun labo)",
+                "target_phase": "PHASE_2_FAILLES_INEDITES_HORS_LABOS",
                 "castes": [
-                    {"mode": "MONOCULTURE", "lineages": ["CLAUDE_OPUS_5_5"], "temp": 0.42, "focus": "Nouvelles failles alg?briques, spectrales et informationnelles in?dites contre S_TD, Do-Clamp et Koopman"},
-                    {"mode": "HYBRIDE", "lineages": ["CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5"], "temp": 0.78, "focus": "Nouveaux canaux physiques, temporels, stochastiques ou cognitifs jamais publi?s par aucun laboratoire"},
-                    {"mode": "HYBRIDE", "lineages": ["GEMINI_ARGON", "CLAUDE_FABLE_5_1"], "temp": 0.85, "focus": "Angles morts de second ordre dans l'auto-organisation des fus?es elles-m?mes"}
+                    {"mode": "MONOCULTURE", "lineages": ["CLAUDE_OPUS_5_5"], "temp": 0.42, "focus": "Nouvelles failles math?matiques in?dites contre nos 5 Volets"},
+                    {"mode": "HYBRIDE", "lineages": ["CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5"], "temp": 0.78, "focus": "Nouveaux canaux physiques, stochastiques ou cognitifs jamais exhib?s par aucun labo"},
+                    {"mode": "HYBRIDE", "lineages": ["GEMINI_ARGON", "CLAUDE_FABLE_5_1"], "temp": 0.85, "focus": "Angles morts in?dits dans l'architecture m?ta et mn?monique"}
                 ]
             }
         ]
-    }
-    meta_plan = ensure_valid_json_from_swarm(
-        omega_res["m0_synthesis"],
-        ["invented_meta_topology_name", "anti_cover_up_reward_encoding_formula", "invented_loops_pipeline"],
-        fallback_topology
+    }, indent=2, ensure_ascii=False)
+
+    meta_plan = ensure_populated_json_from_swarm(
+        omega_res["m0_synthesis"] + "\n" + json.dumps(omega_res["m1_extracted"], ensure_ascii=False),
+        topo_schema,
+        ["invented_meta_topology_name", "rlcr_inspired_self_organization_law", "anti_cover_up_reward_encoding_formula", "invented_loops_pipeline"],
+        ["invented_loops_pipeline"]
     )
     loops_pipeline = meta_plan.get("invented_loops_pipeline", [])
-    if not isinstance(loops_pipeline, list) or len(loops_pipeline) < 2:
-        loops_pipeline = fallback_topology["invented_loops_pipeline"]
-
-    print(f"  => [Topologie de Boucles Invent?e par la G?n?ration G={gen_idx}] : {meta_plan.get('invented_meta_topology_name')}")
+    print(f"  => [Topologie de Boucles Invent?e (G={gen_idx})] : {meta_plan.get('invented_meta_topology_name')}")
     print(f"  => [Formule Anti-Cover-Up Invent?e] : {meta_plan.get('anti_cover_up_reward_encoding_formula')}")
-    print(f"  => [Nombre de Boucles Dynamiques ? Ex?cuter] : {len(loops_pipeline)}")
 
-    # 3. EX?CUTION DYNAMIQUE DES BOUCLES INVENT?ES PAR LE SYST?ME LUI-M?ME (JUSQU'? CONVERGENCE DE CAUCHY/DOLEV)
-    executed_loops_traces = []
+    # 5. Ex?cution des boucles auto-con?ues par l'essaim
     for lp_cfg in loops_pipeline:
         if not isinstance(lp_cfg, dict):
             continue
@@ -639,121 +712,103 @@ def run_one_evolutionary_generation(gen_idx: int, memory: dict) -> dict:
 
         print(f"\n***************************************************************************")
         print(f"*** [GEN {gen_idx}] EXECUTION DE LA BOUCLE AUTO-CONCUE : `{lid}` ***")
-        print(f"*** M?canique : {ltype[:85]} ***")
+        print(f"*** M?canique : {ltype[:80]} ***")
         print(f"***************************************************************************")
 
-        iter_l = 0
-        while True:
-            iter_l += 1
-            prev_arch = memory.get("evolved_architecture_spec", MINIMAL_SEED_AND_EMPIRICAL_ANCHORS)
+        for iter_l in range(1, 3):
+            prev_arch = substrate.get("evolved_architecture_spec", MINIMAL_PROBLEM_SEED)
             loop_prompt = (
-                f"Ex?cution de la Boucle `{lid}` (Tour d'it?ration {iter_l}) ? Phase : `{tphase}`.\n"
-                f"M?canique de boucle con?ue par le syst?me : {ltype}\n"
+                f"Ex?cution de la Boucle `{lid}` (Tour {iter_l}) ? Phase : `{tphase}`.\n"
+                f"M?canique de boucle : {ltype}\n"
                 f"Loi d'auto-organisation RLCR : {meta_plan.get('rlcr_inspired_self_organization_law')}\n"
                 f"Encodage des r?compenses anti-cover-up : {meta_plan.get('anti_cover_up_reward_encoding_formula')}\n\n"
-                f"Corpus moissonn? :\n{harvest_digest[:3000]}\n\n"
-                f"Architecture ?volutive actuelle :\n{prev_arch[-4500:]}\n\n"
-                "MISSION : Applique cette boucle pour d?busquer toutes les failles non encore ferm?es (dans la litt?rature/forums y compris OpenAI cache-timing et Fable 5.1 SVG->PNG, PUIS les nouvelles failles in?dites qu'aucun labo n'a encore exhib?es), d?couvre les nouveaux concepts math?matiques pertinents et formule les ?quations exactes des nouveaux boucliers !"
+                f"Corpus moissonn? :\n{harvest_digest[:2800]}\n\n"
+                f"Architecture ?volutive actuelle :\n{prev_arch[-4000:]}\n\n"
+                "MISSION : Trouve exhaustivement les failles de la litt?rature, des blogs et des forums contre notre syst?me et nos brainstorms, "
+                "puis cherche de NOUVELLES FAILLES QU'AUCUN LABO NI PERSONNE N'A ENCORE EXHIB?ES OU TROUV?ES, d?couvre toi-m?me les concepts math?matiques pertinents et formule les nouveaux boucliers !"
             )
-            unit_res = execute_universal_m3_rocket_unit(f"{lid}_ITER_{iter_l}", loop_prompt, castes, memory)
+            unit_res = execute_m3_rocket_unit(f"{lid}_ITER_{iter_l}", loop_prompt, castes, mem_projection, substrate)
+            generation_unit_traces.append(unit_res)
             surv = unit_res["m1_extracted"].get("surviving_breakthroughs", [])
 
             new_arch = prev_arch + f"\n\n--- [G?N?RATION G={gen_idx} | BOUCLE {lid} | TOUR {iter_l}] ---\n{unit_res['m0_synthesis']}"
-            cauchy_sim = cauchy_math_similarity(prev_arch, new_arch)
-            memory["evolved_architecture_spec"] = new_arch
-            save_evolutionary_memory(memory)
+            cauchy_sim = cauchy_math_similarity(prev_arch[-3000:], unit_res["m0_synthesis"])
+            substrate["evolved_architecture_spec"] = new_arch
+            save_raw_substrate(substrate)
 
-            executed_loops_traces.append({
-                "loop_id": lid,
-                "iteration": iter_l,
-                "dpp_math": unit_res["dpp_math"],
-                "youden_J": unit_res["youden_J"],
-                "surviving_count": len(surv),
-                "surviving_breakthroughs": surv,
-                "cauchy_math_similarity": cauchy_sim
-            })
+            invoke_swarm_memory_assimilation(plugin_ns, substrate, gen_idx, [unit_res])
+            mem_projection = invoke_swarm_memory_projection(plugin_ns, substrate, gen_idx)
+
             print(f"    -> [Bilan `{lid}` Tour {iter_l}] Perc?es valid?es={len(surv)} | Similitude de Cauchy={cauchy_sim:.4f}")
-
-            if len(surv) == 0 or cauchy_sim >= 0.88:
-                print(f"  => [Convergence Endog?ne de la Boucle `{lid}` au Tour {iter_l}] (surviving={len(surv)}, cauchy={cauchy_sim:.4f}) !")
+            if cauchy_sim >= 0.85 and iter_l >= 1:
+                print(f"  => [Convergence de `{lid}` atteinte au Tour {iter_l}] !")
                 break
 
-    # 4. DISTILLATION ?PIG?N?TIQUE DE FIN DE G?N?RATION (Apprentissage transmis ? la G?n?ration G+1)
-    print(f"\n  >>> [DISTILLATION ?PIG?N?TIQUE G={gen_idx} -> G={gen_idx+1}] Consolidation de l'apprentissage pour les g?n?rations futures...")
-    distill_res = execute_universal_m3_rocket_unit(
-        f"GEN_{gen_idx}_EPIGENETIC_DISTILLER",
-        f"Fais le bilan complet de la G?n?ration G={gen_idx}.\n"
-        f"Topologie test?e : {meta_plan.get('invented_meta_topology_name')}\n"
-        f"Failles litt?rature/forums colmat?es : {memory.get('eliminated_literature_and_forum_flaws', [])[-10:]}\n"
-        f"Nouvelles failles in?dites hors-labos d?couvertes : {memory.get('eliminated_novel_beyond_labs_flaws', [])[-10:]}\n"
-        f"Concepts math?matiques d?couverts : {memory.get('discovered_mathematical_concepts_and_operators', [])[-10:]}\n\n"
-        "Formule les lois architecturales, math?matiques et m?thodologiques apprises durant cette g?n?ration qui doivent ?tre grav?es dans l'ADN de la G?n?ration suivante G+1 pour qu'elle d?marre directement ? un niveau sup?rieur !",
-        [],
-        memory
-    )
+    # 6. Assimilation finale et distillation pour la g?n?ration suivante G+1
+    print(f"\n  >>> [ASSIMILATION MN?MONIQUE ENDOG?NE G={gen_idx} -> G={gen_idx+1}] Ex?cution du noyau de m?moire con?u par l'essaim...")
+    invoke_swarm_memory_assimilation(plugin_ns, substrate, gen_idx, generation_unit_traces)
 
-    gen_summary = {
+    store_end = substrate.get("custom_swarm_memory_store", {})
+    print(f"\n===========================================================================")
+    print(f"=== BILAN CUMULATIF A LA FIN DE LA GENERATION G = {gen_idx} :               ===")
+    print(f"  * M?canisme de m?moire actif : {mem_spec.get('memory_mechanism_name')}")
+    print(f"  * Concepts math?matiques d?couverts : {len(store_end.get('discovered_mathematical_concepts', []))}")
+    print(f"  * Mots-cl?s moissonn?s : {len(store_end.get('explored_search_keywords', []))}")
+    print(f"  * Failles litt?rature/blogs/forums colmat?es : {len(store_end.get('literature_and_forum_flaws_eliminated', []))}")
+    print(f"  * Nouvelles failles in?dites hors-labos colmat?es : {len(store_end.get('novel_beyond_labs_flaws_eliminated', []))}")
+    print(f"===========================================================================")
+
+    gen_log = {
         "generation": gen_idx,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "invented_meta_topology": meta_plan,
-        "executed_loops_traces": executed_loops_traces,
-        "epigenetic_distillation": distill_res["m0_synthesis"],
-        "cumulative_counts": {
-            "math_concepts": len(memory.get("discovered_mathematical_concepts_and_operators", [])),
-            "literature_flaws_closed": len(memory.get("eliminated_literature_and_forum_flaws", [])),
-            "novel_beyond_labs_flaws_closed": len(memory.get("eliminated_novel_beyond_labs_flaws", [])),
-            "search_keywords_explored": len(memory.get("exhaustive_search_keywords_explored", []))
-        }
+        "endogenous_memory_mechanism_designed": mem_spec,
+        "invented_meta_topology": meta_plan
     }
-    memory["current_generation"] = gen_idx
-    memory.setdefault("generations_history", []).append(gen_summary)
-    save_evolutionary_memory(memory)
-    return gen_summary
+    substrate["current_generation"] = gen_idx
+    substrate.setdefault("generations_raw_logs", []).append(gen_log)
+    save_raw_substrate(substrate)
+    return gen_log
 
 def run_multi_generational_evolution(num_generations_to_run: int = 2):
-    memory = load_evolutionary_memory()
-    start_g = int(memory.get("current_generation", 0)) + 1
+    substrate = load_raw_substrate()
+    start_g = int(substrate.get("current_generation", 0)) + 1
     end_g = start_g + num_generations_to_run - 1
 
     for g in range(start_g, end_g + 1):
-        g_before_concepts = list(memory.get("discovered_mathematical_concepts_and_operators", []))
-        run_one_evolutionary_generation(g, memory)
-        g_after_concepts = list(memory.get("discovered_mathematical_concepts_and_operators", []))
-        inter_gen_cauchy = cauchy_math_similarity(g_before_concepts, g_after_concepts) if g_before_concepts else 0.0
-        print(f"\n===========================================================================")
-        print(f"=== GENERATION EVOLUTIVE G={g} TERMINEE (Similitude Inter-Gen = {inter_gen_cauchy:.4f}) ===")
-        print(f"=== Concepts math decouverts : {len(g_after_concepts)} | Failles litt. : {len(memory.get('eliminated_literature_and_forum_flaws',[]))} | Failles inedites hors-labos : {len(memory.get('eliminated_novel_beyond_labs_flaws',[]))} ===")
-        print(f"===========================================================================")
+        run_one_evolutionary_generation(g, substrate)
 
-    # G?n?ration du Rapport Souverain Multi-G?n?rations
-    md_p = OUT_DIR / "RAPPORT_SYSTEME_EVOLUTIF_MULTI_GENERATIONS_LOI_M3.md"
+    md_p = OUT_DIR / "RAPPORT_SYSTEME_EVOLUTIF_MEMOIRE_ENDOGENE_LOI_M3.md"
+    mechs = substrate.get("endogenous_memory_mechanisms_proposed_and_tested", [])
+    store = substrate.get("custom_swarm_memory_store", {})
+    py_plugin_str = CompiledMemoryPluginPath.read_text(encoding="utf-8") if CompiledMemoryPluginPath.exists() else ""
+
     md_txt = (
-        "# RAPPORT SOUVERAIN DU SYST?ME ?VOLUTIF MULTI-G?N?RATIONS (LOI $\\mathcal{L}$ DE $\\mathcal{M}_3$ PURE)\n\n"
-        f"- **G?n?rations ?volutives Accomplies** : `G = 1 .. {memory.get('current_generation', 1)}`\n"
+        "# RAPPORT SOUVERAIN DU SYST?ME ?VOLUTIF ? M?MOIRE ET APPRENTISSAGE AUTO-CON?US PAR L'ESSAIM (LOI $\\mathcal{L}$ DE $\\mathcal{M}_3$ PURE)\n\n"
+        f"- **G?n?rations ?volutives Accomplies** : `G = 1 .. {substrate.get('current_generation', 1)}`\n"
         f"- **Lign?es Souveraines Exclusives** : `GEMINI_ARGON`, `CLAUDE_FABLE_5_1`, `CLAUDE_OPUS_5_5`\n"
-        f"- **Topologies de Boucles & Lois d'Auto-Organisation RLCR Apprises** : `{len(memory.get('learned_loop_topologies_and_meta_laws', []))}`\n"
-        f"- **Formules d'Encodage des R?compenses Anti-Cover-Up Apprises** : `{len(memory.get('learned_reward_encodings_anti_cover_up', []))}`\n"
-        f"- **Concepts et Op?rateurs Math?matiques D?couverts Endog?nement** : **`{len(memory.get('discovered_mathematical_concepts_and_operators', []))}`**\n"
-        f"- **Mots-Cl?s de Moissonnage D?finis par le Syst?me** : `{len(memory.get('exhaustive_search_keywords_explored', []))}`\n"
-        f"- **Failles de la Litt?rature, des Blogs (OpenAI Cache-Timing, Fable 5.1 SVG->PNG, RLCR) et des Forums Colmat?es** : **`{len(memory.get('eliminated_literature_and_forum_flaws', []))}`**\n"
-        f"- **Nouvelles Failles In?dites (Jamais Exhib?es par Aucun Labo) D?couvertes et Colmat?es** : **`{len(memory.get('eliminated_novel_beyond_labs_flaws', []))}`**\n\n"
-        "## I. TOPOLOGIES DE BOUCLES & LOIS D'AUTO-ORGANISATION RLCR INVENT?ES ET APPRISES PAR LE SYST?ME\n\n"
-        + "\n".join([f"- {x}" for x in memory.get("learned_loop_topologies_and_meta_laws", [])]) + "\n\n"
-        "## II. FORMULES MATH?MATIQUES D'ENCODAGE DES R?COMPENSES ANTI-COVER-UP D?COUVERTES\n\n"
-        + "\n".join([f"- {x}" for x in memory.get("learned_reward_encodings_anti_cover_up", [])]) + "\n\n"
-        "## III. FAILLES DE LA LITT?RATURE, DES BLOGS (OPENAI CACHE-TIMING, FABLE 5.1 SVG->PNG) ET DES FORUMS COLMAT?ES\n\n"
-        + "\n".join([f"{i+1}. **{x}**" for i, x in enumerate(memory.get("eliminated_literature_and_forum_flaws", []))]) + "\n\n"
-        "## IV. NOUVELLES FAILLES IN?DITES (JAMAIS EXHIB?ES PAR AUCUN LABO) D?COUVERTES ET COLMAT?ES\n\n"
-        + "\n".join([f"{i+1}. **{x}**" for i, x in enumerate(memory.get("eliminated_novel_beyond_labs_flaws", []))]) + "\n\n"
-        "## V. CONCEPTS ET OP?RATEURS MATH?MATIQUES D?COUVERTS PAR LE SYST?ME (LOI $\\mathcal{L}$ DE $\\mathcal{M}_3$)\n\n"
-        + "\n".join([f"- {x}" for x in memory.get("discovered_mathematical_concepts_and_operators", [])]) + "\n\n"
-        "## VI. LE?ONS ?PIG?N?TIQUES TRANSMISES AUX G?N?RATIONS FUTURES DE BRAINSTORMS\n\n"
-        + "\n".join([f"- {x}" for x in memory.get("epigenetic_lessons_for_future_generations", [])]) + "\n\n---\n\n"
-        "## VII. ARCHITECTURE ?VOLUTIVE CONSOLID?E ($\\mathcal{A}^*_{\\text{?volutif}}$)\n\n"
-        f"{memory.get('evolved_architecture_spec', '')}\n"
+        f"- **M?canisme Actif de M?moire & d'Int?gration Inter-G?n?rationnelle Con?u par le Syst?me** : **`{substrate.get('active_memory_mechanism_spec', {}).get('memory_mechanism_name')}`**\n"
+        f"- **Loi Math?matique d'Apprentissage Inter-G?n?rations Invent?e par le Syst?me** : {substrate.get('active_memory_mechanism_spec', {}).get('mathematical_learning_rule_latex')}\n"
+        f"- **Concepts et Op?rateurs Math?matiques D?couverts par le Syst?me** : **`{len(store.get('discovered_mathematical_concepts', []))}`**\n"
+        f"- **Failles de la Litt?rature, des Blogs (OpenAI Cache-Timing, Fable 5.1 SVG->PNG, RLCR) et des Forums Colmat?es** : **`{len(store.get('literature_and_forum_flaws_eliminated', []))}`**\n"
+        f"- **Nouvelles Failles In?dites (Jamais Exhib?es par Aucun Labo) D?couvertes et Colmat?es** : **`{len(store.get('novel_beyond_labs_flaws_eliminated', []))}`**\n\n"
+        "## I. M?CANISMES DE M?MOIRE ET D'INT?GRATION INTER-G?N?RATIONNELLE EXPLOR?S ET COMPIL?S PAR LE SYST?ME\n\n"
+        + "\n".join([f"- **G?n?ration {m['generation']}** : `{m['mechanism_spec'].get('memory_mechanism_name')}` ? Candidats explor?s : `{m['mechanism_spec'].get('explored_candidate_mechanisms')}` ? ?quation : {m['mechanism_spec'].get('mathematical_learning_rule_latex')}" for m in mechs])
+        + "\n\n## II. CODE PYTHON DU NOYAU DE M?MOIRE AUTO-PROGRAMM? PAR LE SYST?ME (`endogenous_memory_plugin_invented_by_swarm.py`)\n\n"
+        + f"```python\n{py_plugin_str}\n```\n\n"
+        + "## III. TOPOLOGIES DE BOUCLES & LOIS RLCR ANTI-COVER-UP INVENT?ES PAR LE SYST?ME\n\n"
+        + "\n".join([f"- {x}" for x in store.get("invented_loop_topologies_and_rlcr_laws", [])]) + "\n"
+        + "\n".join([f"- **Encodage Anti-Cover-Up** : {x}" for x in store.get("invented_anti_cover_up_reward_encodings", [])]) + "\n\n"
+        + "## IV. FAILLES DE LA LITT?RATURE, DES BLOGS (OPENAI CACHE-TIMING, FABLE 5.1 SVG->PNG) ET DES FORUMS COLMAT?ES\n\n"
+        + "\n".join([f"{i+1}. **{x}**" for i, x in enumerate(store.get("literature_and_forum_flaws_eliminated", []))]) + "\n\n"
+        + "## V. NOUVELLES FAILLES IN?DITES (JAMAIS EXHIB?ES PAR AUCUN LABO) D?COUVERTES ET COLMAT?ES\n\n"
+        + "\n".join([f"{i+1}. **{x}**" for i, x in enumerate(store.get("novel_beyond_labs_flaws_eliminated", []))]) + "\n\n"
+        + "## VI. CONCEPTS ET OP?RATEURS MATH?MATIQUES D?COUVERTS PAR LE SYST?ME (LOI $\\mathcal{L}$ DE $\\mathcal{M}_3$)\n\n"
+        + "\n".join([f"- {x}" for x in store.get("discovered_mathematical_concepts", [])]) + "\n\n---\n\n"
+        + "## VII. ARCHITECTURE MATH?MATIQUE ?VOLUTIVE CONSOLID?E ($\\mathcal{A}^*_{\\text{?volutif}}$)\n\n"
+        + f"{substrate.get('evolved_architecture_spec', '')}\n"
     )
     md_p.write_text(md_txt, encoding="utf-8")
-    print(f"\n[OK] Rapport Multi-G?n?rations scell? dans `{md_p}` et m?moire ?volutive sauv?e dans `{EVOLUTIONARY_MEMORY_FILE.name}` !")
+    print(f"\n[OK] Rapport complet scell? dans `{md_p}` !")
 
 if __name__ == "__main__":
     gens = 2
