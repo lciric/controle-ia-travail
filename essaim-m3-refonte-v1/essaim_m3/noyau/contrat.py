@@ -51,8 +51,14 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 1)
      lignée s'arrête ;
    - `metrique_proposee.json` (facultatif) : {"nom": "…", "definition": "…", "valeur": nombre, "justification": "…"} —
      la métrique que l'organisme propose pour juger un essaim, calculée par lui sur sa propre génération ; le noyau
-     l'archive et la rapporte sans l'utiliser : c'est l'humain qui décide, avant toute confrontation, par un
-     préenregistrement, de la métrique de choix d'un champion ;
+     l'archive et la rapporte sans l'utiliser ;
+   - `metrique/` (facultatif, pour la confrontation entre organismes) : `definition.md` (en français simple),
+     `calculer.py` définissant `calculer(dossier_sorties) -> float` (du code objectif appliqué aux sorties d'un autre
+     organisme, exécuté par le noyau dans un bac à sable, sans réseau ; jamais une auto-note), et `attaques.json`
+     (tâches d'attaque : {"id", "famille", "texte", "etiquettes", "verite"}) que le noyau soumet à l'autre organisme
+     en les faisant porter par des espèces d'une autre famille de fournisseur que la lignée du défendeur. Le noyau
+     applique la métrique de A aux sorties de B et celle de B aux sorties de A ; l'humain gèle ces métriques par un
+     préenregistrement avant la confrontation, et le score sur tâches cachées reste la mesure témoin ;
    - tout le reste (`CONCEPTION.md`, journaux, connaissances, tests…) est libre et archivé tel quel.
 
 5. Jugement. Le noyau calcule le score externe sur les tâches de test (exactitude équilibrée par famille, puis
@@ -77,7 +83,9 @@ def prompt_amorcage(mission: str, familles: dict[str, tuple[str, str]], budget: 
         "du contrat ci-dessous : ni rôles, ni règles d'apprentissage, ni signal de récompense, ni mémoire, ni boucles, "
         "ni concepts. Tu identifies toi-même les concepts mathématiques et les méthodes qui se rattachent à la "
         "question, et tu écris le code qui les met en œuvre, les teste, et réécrit le successeur. Le nombre d'agents "
-        "à recruter (cellules, appels, mitose, castes) est à toi, dans la seule limite du budget.\n\n"
+        "à recruter (cellules, appels, mitose, castes) est à toi, dans la seule limite du budget ; de même le nombre "
+        "d'essaims et leur composition — monocultures par famille de fournisseur, hybrides entre familles, ou les deux — "
+        "et la façon dont ils se parlent.\n\n"
         f"MISSION (mots de l'humain) :\n{mission_texte(mission, familles)}\n\n"
         f"BUDGET PAR GÉNÉRATION : {budget['appels_max']} appels, {budget['usd_max']} USD, {budget['temps_max_s']} s.\n\n"
         f"ESPÈCES DISPONIBLES : {ESPECES_DISPONIBLES}.\n\n"
