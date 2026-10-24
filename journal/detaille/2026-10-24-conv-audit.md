@@ -434,3 +434,29 @@ l'applique). Entrées corrigées (titre tel qu'écrit → heure vraie, celle du 
   `--max-tokens-appel`, filtres de `phase` ; session-depot code CE3-03/05/06/07 et le lanceur v2 dessus.
 - Ouvert : CE3-04 (décision de Lazar) ; v4 et scellement de l'étape 1 ; v7 de la confrontation et devis refait ;
   troisième réponse de Gemini ; entrée de veille Avalon sur `main` ; N-0xx citation.
+
+## 21:39 — v7 de la confrontation ; faille des liens symboliques (session-depot) ; diversité en trois bras ; ce qui reste pour le galop économe
+
+- Empreinte de ce fichier avant cette entrée : `d0c9b58e79831c3f5063` (préfixe ; fichier modifié par le pull de 21:38, voir
+  commits).
+- **Faille de sécurité trouvée par session-depot (n° 17, 21:30 UTC) : root suit les liens symboliques posés par
+  l'organisme** (copie du dépôt et de la vue avec `symlinks=False`, lectures de `metrique_proposee.json`,
+  `reponses_test.json`, `fin_conception.json`) ⇒ environnement du noyau (clés) ou fichiers 0600 copiés dans la vue ; tubes
+  nommés bloquants. Rejoué par session-depot en simulation ; **aucune course réelle n'a tourné : rien n'a fui**. Bloquant
+  pour les deux préenregistrements ; correctif en cours chez session-depot (copie sans suivre les liens, éléments
+  écartés consignés, lectures `O_NOFOLLOW` bornées, essais sain et artefacts). Hypothèse retirée : « l'isolation
+  d'utilisateur suffit à protéger l'archive ». Leçon pour le journal : l'isolation protégeait l'organisme du noyau,
+  pas le noyau de ce que l'organisme lui fait copier.
+- **v7 de la confrontation** (`74487a41…`, `5a86d75`, validateur sans problème) : CR3-01 à CR3-12 traités (code
+  `e002f8e`, 91 tests : budget propre de défense 80 appels / 23 USD, plafond propre 276 USD, ordre des paires tiré,
+  journaux de défense scellés, défense non conforme sans score ; règle de H-E1 par course dans le code ; déclencheurs
+  d'audit calculés ; devis par le code sur la banque scellée) ; devis : `usd_max` 46 par génération (160 appels au pire
+  cas couverts), **4 261,29 USD au pire cas pour deux graines et la répétition, plafond demandé 4 270**, attendu
+  ≈ 700–800. Caractérisation de la règle (non opposable, `caracteristiques-h-e1-v7.json`) : type I 4,5 % à σ_course
+  0,10 (8,5 % sans la condition par course) ; puissance 39 % à +0,10. Reste pour la v8 : tête de code réunie (faille,
+  CE3-04 (c), CE3-06, CE3-07), lanceur de session-depot, revérification par un sous-agent neuf, entropie.
+- **Décisions de Lazar (Paris)** : 23:26 garde CE3-04 (c, garde et mesure) ; 23:31–23:32 diversité à l'étape 2 en trois bras
+  comparés (mission + miroir fonctionnel ; contrainte câblée ; rien), Gemini câblé rapporté à part, « le juge est la seule
+  pression », négatif publié ; dans la session de session-depot : hôte des courses = instance Vast.ai sans carte sous GO-05.
+- Galop économe : liste de ce qui reste donnée à Lazar (23:35) ; calendrier : scellement dimanche fin de matinée, courses
+  l'après-midi, lecture le soir ou lundi matin, si session-depot avance cette nuit.
