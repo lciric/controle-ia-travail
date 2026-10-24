@@ -344,3 +344,51 @@ Heures UTC (heure de Paris = UTC + 2). Entrées ajoutées, jamais réécrites. P
   du lot 3 sans Opus (recommandé ; défaut sous 48 h).
 - Lazar (21:10 Paris) demande Fable ou Opus pour la suite : réponse donnée (Fable pour les nœuds de conception et les
   relectures adverses, Opus pour le chantier ; continuité dans les fichiers) ; la session continue en Opus 5.5.
+
+## 19:52 — vérification des étiquettes par paires : 10 sur 10, banque retenue ; une seule branche de code ; incident
+
+- Empreinte de ce fichier avant cette entrée : `039b3f817d453b63d1903375578bfb18956150977a34d643a83f3168c6d9b527`.
+- **Vérification par paires** (procédure du brouillon v6) : 10 paires sur 10 en accord ⇒ banque `confrontation-v1`
+  retenue (critère gelé : au plus une sur 10). Vérificateur `claude-opus-5-5` lancé à 19:22:22 UTC, fini à 19:28:50 ;
+  un seul fichier lu ; traces écrites par deux rédacteurs `claude-fable-5-1`. Pièces et empreintes :
+  `essaim-m3-refonte-v1/banque/verification-etiquettes-paires-v1/` (`162da90`, `941f948` ; `LISEZMOI-v2.md`
+  `d9761e6f…`). Hypothèse « les étiquettes des traces sont justes » : **retenue** sur 10 paires sur 40, avec cinq
+  réserves (étiquette et non détectabilité ; même famille de modèles ; échantillon ; un seul vérificateur pour dix
+  paires ; exemples de sabotage dans la consigne, donc concordance des types non indépendante).
+- **Code** : session-depot et moi avons fusionné chacun la branche de l'autre au même moment (`e75e726`, `9e2028d`) ;
+  réunies en `5259cad`, puis `4af2794` (88 tests) : CE-02 (entraîneur isolé), CE-06 (bras apparié adaptatif), CE-07
+  (délai au budget) de session-depot ; conception, moisson, banque, vérification de conv-audit ; trois ajouts de
+  conv-audit : `--depuis` refuse une nouvelle conception, CE-07 aussi sur une ronde de conception,
+  `--temps-max-conception`. Proposé : une seule branche (`outils/essaim-m3-gradient-v1-travail`), session-depot en
+  avance rapide (canal n° 19).
+- **CE-02 et la confrontation** : sans objet (aucun gradient servi : `entrainements_max` 0, aucun `--traits`) ; test qui le
+  montre, rejoué aussi sur `e82c341`, le commit cité par la v6.
+- **Écart relevé dans le lanceur scellé de l'étape 1** (`8000348`, session-depot) : son n° 13 annonce une ronde de
+  conception à 1 800 s, le lanceur ne passe que `--temps-max 2400` ; à aligner avant scellement (option ajoutée).
+- **Incident** (conv-audit) : à 19:40, `pytest` lancé sans chemin a exécuté hors du bac à sable les 3 tests propres de
+  l'organisme écrit par Gemini v1 (copie lue avant lancement : ni réseau ni sous-processus) ; 1,15 s, aucun fichier du
+  dépôt modifié, caches effacés ; correctif `pytest.ini`. Consigné au canal (n° 19 § 5).
+- Session-depot (n° 12, n° 13) : contre-lecture n° 1 de l'étape 1 « non scellable » (CE-01 à CE-05 bloquantes), v2 puis
+  v3 de l'étape 1 avec mes sections de conception et de moisson, bornes alignées sur la v6 ; contre-lecture n° 3 de la
+  v6 lancée ; appel de contrôle par espèce repris dans son lanceur ; Gemini joignable, échec 402 = crédit.
+- Ouvert : contre-lecture n° 3 (rapport attendu) ; v7 de la confrontation et scellement ; v3 de l'étape 1 et sa
+  contre-lecture ; décisions de Lazar (GO de la confrontation, recharge Gemini, lot 3 sans Opus).
+
+## 19:52 — correction : heures UTC fausses dans mes entrées et messages depuis 18:19 UTC
+
+Les heures UTC que j'ai écrites depuis 18:19 étaient estimées, non lues sur une horloge ; elles avançaient de 1 à
+57 minutes. Les heures de Paris des messages de Lazar sont gardées (chacune précède de 1 à 8 minutes le commit qui
+l'applique). Entrées corrigées (titre tel qu'écrit → heure vraie, celle du commit qui l'a ajoutée, UTC) :
+
+- « 18:00 à 18:30 — banque scellée, lot 3, journal » → 18:00 à 18:19 ; « Ouvert à 18:30 UTC » → 18:19 (`e0d7697`) ;
+  synthèse v1, « état au … 18:30 » → 18:19.
+- « 18:50 — ajout : le programme gradient en entier » → 18:23 (`1b6ce66`) ; synthèse v2, « état au … 18:50 » → 18:23.
+- « 18:55 — TAIF tranché » → 18:24 (`00cbfef`).
+- « 19:00 — étape 2 : cas inédits » → 18:31 (`482ea1d`).
+- « 19:15 — moisson conçue par l'organisme » → 18:37 (`d2efb39`).
+- « 19:40 — réseau ouvert, clé Brave, phase de conception » → 18:55 (`314a19b`).
+- « 19:10 — Lazar confirme : l'étape 1 inclut la conception et la moisson » → 19:07 (`5e5504d`).
+- « 20:20 — préenregistrement v5 puis v6 » → 19:23 (`f346ea4`) ; dans cette entrée, « Lancée à 20:10 UTC » → 19:22:22.
+- Hors journal (table complète au canal, n° 19 § 4) : en-têtes de mes messages n° 12 à 18, CA-23 à CA-30, date des
+  brouillons v5 et v6, `sections-conception-moisson-v1.md`, `LISEZMOI-v1.md` de la vérification.
+- Règle : heure lue sur `date -u` au moment d'écrire, contrôlée contre l'heure du commit.
