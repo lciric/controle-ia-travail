@@ -113,10 +113,11 @@ def elements_non_ordinaires(dossier: str | pathlib.Path) -> list[str]:
     return sorted(sortie)
 
 
-def copier_sans_liens(source: str | pathlib.Path, destination: str | pathlib.Path, ignorer: tuple[str, ...] = ()) -> list[str]:
+def copier_sans_liens(source: str | pathlib.Path, destination: str | pathlib.Path, ignorer: tuple[str, ...] = (),
+                      ignorer_racine: tuple[str, ...] = ()) -> list[str]:
     """Copie l'arbre `source` dans `destination` (qui ne doit pas exister), sans suivre aucun lien. `ignorer` : motifs de noms
-    (comme `shutil.ignore_patterns`), à toute profondeur, omis sans être comptés comme écartés. Rend les éléments écartés
-    (« chemin relatif : raison »), triés."""
+    (comme `shutil.ignore_patterns`), à toute profondeur, omis sans être comptés comme écartés ; `ignorer_racine` : noms
+    omis au premier niveau seulement. Rend les éléments écartés (« chemin relatif : raison »), triés."""
     source, destination = pathlib.Path(source), pathlib.Path(destination)
     if not vrai_dossier(source):
         raise ValueError(f"copie refusée : la source n'est pas un vrai dossier : {source}")
@@ -131,7 +132,7 @@ def copier_sans_liens(source: str | pathlib.Path, destination: str | pathlib.Pat
             ecartes.append(f"{rel or '.'} : dossier illisible ({type(e).__name__})")
             return
         for nom in noms:
-            if any(fnmatch.fnmatch(nom, m) for m in ignorer):
+            if any(fnmatch.fnmatch(nom, m) for m in ignorer) or (rel is None and nom in ignorer_racine):
                 continue
             r = (rel / nom) if rel else pathlib.PurePosixPath(nom)
             p = source / r

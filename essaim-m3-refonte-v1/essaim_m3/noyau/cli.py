@@ -100,6 +100,7 @@ def simuler(args) -> int:
                          especes_amorcage=especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
                          organismes_imposes=imposes, parallele_max=args.parallele_max,
                          recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee,
+                         decalage_uid=args.decalage_uid,
                          rondes_conception_max=args.rondes_conception_max, budget_conception=_budget_conception(args))
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
@@ -177,6 +178,21 @@ def charger_traits(chemin, chemin_banque, banque: dict, vues_servies: list[str] 
                   f"≤ {m.get('max_jetons')} jetons, {m.get('n_tronquees')} tâche(s) tronquée(s) ; manifeste {empreinte(fm)[:12]}…")
 
 
+def conditions_moisson_differentes(course_origine: pathlib.Path, recherches_max: int) -> str | None:
+    """CE3-05 : le bras apparié doit avoir les mêmes sources de moisson et la même présence de la clé Brave que sa course
+    d'origine (consignées au manifeste) ; rend la différence, ou None."""
+    m = json.loads((course_origine / "manifeste-run.json").read_text(encoding="utf-8"))
+    brave = bool(os.environ.get("BRAVE_API_KEY"))
+    if "cle_brave_presente" in m and bool(m["cle_brave_presente"]) != brave:
+        return f"clé Brave {'présente' if brave else 'absente'} ici, {'présente' if m['cle_brave_presente'] else 'absente'} dans la course d'origine"
+    if recherches_max > 0 and "sources_moisson" in m:
+        from . import moisson as _moisson
+        ici = sorted(n for n in _moisson.sources_disponibles() if n != "web" or brave)
+        if sorted(m["sources_moisson"]) != ici:
+            return f"sources de moisson {ici} ici, {sorted(m['sources_moisson'])} dans la course d'origine"
+    return None
+
+
 def lancer(args) -> int:
     if not args.reel:
         print("mode réel non demandé : utilise `simuler`, ou `lancer --reel --go …`", file=sys.stderr)
@@ -210,6 +226,10 @@ def lancer(args) -> int:
         if not origine.is_file() or json.loads(origine.read_text(encoding="utf-8")) != banque:
             print("refus : --depuis : la banque de la course d'origine n'est pas celle de --taches", file=sys.stderr)
             return 6
+        refus_conditions = conditions_moisson_differentes(pathlib.Path(args.depuis), int(args.recherches_max))
+        if refus_conditions:  # CE3-05 : conditions extérieures appariées entre les bras
+            print(f"refus : --depuis : {refus_conditions}", file=sys.stderr)
+            return 6
     traits, description = None, ""
     if args.traits:
         try:
@@ -224,7 +244,7 @@ def lancer(args) -> int:
                              entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=imposes, parallele_max=args.parallele_max,
                              recherche=None, relances_max=args.relances_max, traits=traits, description_traits=description,
-                             registre_go=args.registre_go, memoire_partagee=args.memoire_partagee,
+                             registre_go=args.registre_go, memoire_partagee=args.memoire_partagee, decalage_uid=args.decalage_uid,
                              rondes_conception_max=args.rondes_conception_max, budget_conception=_budget_conception(args))
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
@@ -320,6 +340,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--appels-max-conception", type=int, default=None, help="appels par ronde de conception (défaut : --appels-max)")
         q.add_argument("--temps-max-conception", type=int, default=None, help="secondes par ronde de conception (défaut : --temps-max)")
         q.add_argument("--autoriser-base-url", action="store_true", help="réel : accepte une ANTHROPIC_BASE_URL définie (sinon refus)")
+        q.add_argument("--decalage-uid", type=int, default=0, help="décalage des utilisateurs des organismes (multiple de 100, 0 à 900) : distinct pour chaque course qui tourne en même temps qu'une autre (CE3-06)")
         q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)

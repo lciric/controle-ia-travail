@@ -2157,3 +2157,207 @@ def test_defense_poseuse_de_liens_ne_bloque_pas_la_confrontation(tmp_path):
     for f in (tmp_path / "run").rglob("*"):
         if f.is_file() and not f.is_symlink():
             assert b"MARQUEUR-CONF-2b9c" not in f.read_bytes()
+
+
+# ---------- CE3-06 / CE3-07 : vues lisibles par la seule lignée, utilisateurs par course, dossiers du noyau déplacés ----------
+
+def _run_isole(tmp_path, nom, especes, decalage=0, patch_racine=False, recherche_simulee=False):
+    """Une petite course isolée (root) : amorçage + une génération notée, doubles simulés."""
+    from essaim_m3.noyau import recherche as _rech
+    ss = np.random.SeedSequence(70 + decalage)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 8, 8, 4)
+    doubles, _ = appelants_simules(r2)
+    budget = {"appels_max": 30, "usd_max": 5.0, "temps_max_s": 60, "recherches_max": (3 if recherche_simulee else 0),
+              "telechargements_max": (3 if recherche_simulee else 0), "octets_max": 100000}
+    n = boucle.Noyau(tmp_path / nom, "m", banque, budget, 20.0, 1, appelants=doubles, especes_amorcage=especes,
+                     entropie=70 + decalage, decalage_uid=decalage,
+                     recherche=(_rech.recherche_simulee if recherche_simulee else None))
+    assert n.isolation["utilisateur"], "essai prévu pour un noyau root"
+    return n
+
+
+def test_ce306_vue_lisible_par_la_seule_lignee_et_uid_par_course(tmp_path):
+    """CE3-06 : en mémoire privée, `archive_vue/` se traverse sans se lister (0711) et la vue d'une lignée appartient à root
+    et à son groupe (0750/0640), illisible par une autre lignée ; une seconde course (décalage d'uid) donne à la même
+    lignée un utilisateur différent."""
+    n = _run_isole(tmp_path, "run", ["CLAUDE_OPUS_5_5", "GEMINI_ARGON"])
+    n.amorcer(); n.boucler()
+    vue = n.archive.vue
+    assert stat.S_IMODE(os.stat(vue).st_mode) == 0o711  # traversable, non listable
+    for lignee in ("claude-opus-5-5", "gemini-argon"):
+        d = vue / lignee
+        uid = n.lignees[lignee]["uid"]
+        st = os.stat(d)
+        assert st.st_uid == 0 and st.st_gid == uid and stat.S_IMODE(st.st_mode) == 0o750
+        f = next(p for p in d.rglob("*") if p.is_file())
+        sf = os.stat(f)
+        assert sf.st_gid == uid and stat.S_IMODE(sf.st_mode) == 0o440
+    # deux lignées de la même course : utilisateurs distincts
+    assert n.lignees["claude-opus-5-5"]["uid"] != n.lignees["gemini-argon"]["uid"]
+    # une autre course qui tournerait en même temps (décalage 100) : la même lignée a un autre utilisateur
+    n2 = _run_isole(tmp_path, "run2", ["GEMINI_ARGON"], decalage=100)
+    n2.amorcer()
+    assert n2._uid("gemini-argon") != n._uid("gemini-argon")  # utilisateur distinct entre deux courses simultanées
+    assert n2._uid("gemini-argon") == bac_a_sable.uid_lignee(0, 100)
+
+
+def test_ce307_dossiers_du_noyau_hors_du_travail_et_non_falsifiables(tmp_path):
+    """CE3-07 : les dossiers du noyau (`*.noyau`, `*.corpus`) sont des frères de `travail`, à root, hors d'atteinte de
+    l'organisme. Un organisme qui crée `travail/noyau` et `travail/corpus` (noms réservés) et y glisse un faux index :
+    ses créations sont écartées (consignées) et non archivées ; l'index du corpus archivé est celui du noyau (le vrai
+    document, pas le faux `doc-9999`) ; il ne peut ni lister ni renommer les dossiers frères du noyau."""
+    from essaim_m3.noyau import recherche as _rech
+    org = tmp_path / "forge"
+    shutil.copytree(FIXTURE, org)
+    (org / "organisme" / "principal.py").write_text(
+        "import json, os\n"
+        "import noyau_client as nc\n"
+        "def executer(contexte):\n"
+        "    t = contexte['dossier_travail']\n"
+        "    r = nc.rechercher('moniteur retire pipeline', n=2, role='veille')\n"
+        "    if r['statut'] == 'OK' and r['resultats']:\n"
+        "        nc.telecharger(r['resultats'][0]['lien'], role='moisson')\n"
+        "    nc.appeler(nc.especes()[0], 'tache', role='tache')\n"
+        "    os.mkdir(os.path.join(t, 'corpus'))\n"
+        "    json.dump([{'id': 'doc-9999', 'reference': 'forge', 'statut': 'OK'}], open(os.path.join(t, 'corpus', 'index.jsonl'), 'w'))\n"
+        "    os.mkdir(os.path.join(t, 'noyau'))\n"
+        "    open(os.path.join(t, 'noyau', 'journal-appels.jsonl'), 'w').write('forge')\n"
+        "    essais = {}\n"
+        "    parent = os.path.dirname(t)\n"
+        "    try: essais['lister_parent'] = os.listdir(parent)\n"
+        "    except Exception as e: essais['lister_parent'] = type(e).__name__\n"
+        "    try:\n"
+        "        os.rename(os.path.join(parent, os.path.basename(t) + '.corpus'), os.path.join(parent, 'vole'))\n"
+        "        essais['renommer_corpus'] = 'REUSSI'\n"
+        "    except Exception as e: essais['renommer_corpus'] = type(e).__name__\n"
+        "    json.dump({t_['id']: {'etiquette': t_['etiquettes'][0], 'confiance': 0.9} for t_ in contexte['taches_test']}, open(os.path.join(t, 'reponses_test.json'), 'w'))\n"
+        "    json.dump(essais, open(os.path.join(t, 'essais.json'), 'w'))\n", encoding="utf-8")
+    ss = np.random.SeedSequence(72)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    doubles, _ = appelants_simules(r2, commun={"organisme_amorcage": str(org)})
+    n = boucle.Noyau(tmp_path / "run", "m", taches.banque_simulation(r1, 8, 8, 4),
+                     {"appels_max": 30, "usd_max": 5.0, "temps_max_s": 60, "recherches_max": 3, "telechargements_max": 3, "octets_max": 100000},
+                     20.0, 1, appelants=doubles, especes_amorcage=["GEMINI_ARGON"], entropie=72, recherche=_rech.recherche_simulee)
+    assert n.isolation["utilisateur"]
+    n.amorcer(); n.boucler()
+    g = n.archive.lignes("gemini-argon")[0]
+    assert g["statut"] == "OK"
+    chemin = n.archive.racine / g["chemin"]
+    # les dossiers du noyau sont des frères de `travail`, à root, et ont bien été recopiés dans l'archive
+    travail_vivant = n.espace / "travail" / "gemini-argon" / "g000"
+    for suff in (".noyau", ".corpus"):
+        frere = travail_vivant.parent / (travail_vivant.name + suff)
+        assert os.stat(frere.parent).st_uid == 0  # parent à root : l'organisme n'y renomme rien
+    # l'organisme a bien tenté la falsification, mais ses créations sont écartées et non archivées
+    essais = json.loads((chemin / "travail" / "essais.json").read_text(encoding="utf-8"))
+    assert essais["lister_parent"] in ("PermissionError", "FileNotFoundError")
+    assert essais["renommer_corpus"] in ("PermissionError", "FileNotFoundError")
+    resume = json.loads((chemin / "resume.json").read_text(encoding="utf-8"))
+    ecartes = " ".join(resume.get("elements_ecartes") or [])
+    assert "noyau : nom réservé" in ecartes and "corpus : nom réservé" in ecartes
+    # l'index du corpus archivé est celui du noyau : le vrai document, jamais le faux doc-9999
+    index_txt = (chemin / "travail" / "corpus" / "index.jsonl").read_text(encoding="utf-8")
+    assert "doc-9999" not in index_txt and "doc-0001" in index_txt
+    journal = (chemin / "travail" / "noyau" / "journal-appels.jsonl").read_text(encoding="utf-8")
+    assert journal and not journal.startswith("forge")  # le vrai journal du noyau (frère), pas le faux posé dans travail
+
+
+def test_ce307_anomalie_journal_absent():
+    """CE3-07 : la détection d'un journal des appels absent après des appels servis (génération invalidée)."""
+    import tempfile
+    assert boucle.anomalie_journal_absent(0, pathlib.Path("/inexistant")) is None
+    with tempfile.NamedTemporaryFile() as f:
+        assert boucle.anomalie_journal_absent(3, pathlib.Path(f.name)) is None
+    assert boucle.anomalie_journal_absent(3, pathlib.Path("/inexistant")) is not None
+
+
+def test_ce311_garde_de_temps_compte_la_moisson(tmp_path):
+    """CE3-11 : la garde CE-07 compte au pire cas la moisson (recherches × délai réseau, téléchargements × (délai +
+    extraction)) en plus des entraînements. Artefact : un budget dont les entraînements tiennent seuls mais pas avec la
+    moisson est refusé en réel ; sain : les bornes de la v4 (10 × 60 s, 10 recherches, 4 téléchargements, 1 800 s) tiennent."""
+    pire, detail = boucle.temps_pire_cas({"entrainements_max": 10, "delai_entrainement_s": 60, "recherches_max": 10, "telechargements_max": 4})
+    assert pire == 600 + 250 + 4 * 145 + boucle.MARGE_TEMPS_S == 1730 and "recherches" in detail
+    banque = taches.banque_simulation(np.random.default_rng(5), 4, 4, 2)
+    ids = [t["id"] for n in ("train", "test", "test_final") for t in banque[n]]
+    vues = {"v": {i: np.ones(4, dtype=np.float32) for i in ids}}
+    trop_court = {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 1200, "entrainements_max": 10, "delai_entrainement_s": 60,
+                  "recherches_max": 10, "telechargements_max": 4}   # 600 + 300 tiendrait ; avec la moisson, 1 730 > 1 200
+    with pytest.raises(appels.Arret, match="CE-07.*recherches"):
+        boucle.Noyau(tmp_path / "r", "m", banque, trop_court, 5.0, 1, appelants=None, reel=True, go_id="GO-TEST",
+                     especes_amorcage=["GEMINI_ARGON"], traits=vues)
+    assert boucle.temps_pire_cas(dict(trop_court, recherches_max=0, telechargements_max=0))[0] <= 1200  # sans moisson : tiendrait
+    sain = dict(trop_court, temps_max_s=1800)
+    try:
+        boucle.Noyau(tmp_path / "s", "m", banque, sain, 5.0, 1, appelants=None, reel=True, go_id="GO-TEST",
+                     especes_amorcage=["GEMINI_ARGON"], traits=vues)
+    except appels.Arret as e:  # un autre refus du mode réel reste possible ici ; jamais celui de CE-07
+        assert "CE-07" not in str(e)
+
+
+def test_ce305_credit_epuise_arrete_la_course(tmp_path):
+    """CE3-05 : un HTTP 402 (crédit d'un fournisseur épuisé) en cours de course invalide la génération où il survient
+    (`CREDIT_EPUISE`), est consigné (événement `credit_epuise`) et arrête la course : aucune génération ne suit, aucune
+    relance. Sain : la même course sans 402 va jusqu'au bout."""
+    from essaim_m3.noyau.appels import cv
+    def course(nom, couper_apres):
+        ss = np.random.SeedSequence(81)
+        r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+        servir, _ = appelants_simules(r2, commun={"organisme_amorcage": str(FIXTURE)})
+        compte = {"n": 0}
+        def avec_402(modele_id, prompt, max_tokens):
+            compte["n"] += 1
+            if couper_apres is not None and compte["n"] > couper_apres:
+                return cv.Reponse(echec="HTTP 402 : prepayment credits are depleted")
+            return servir["gemini"](modele_id, prompt, max_tokens)
+        n = boucle.Noyau(tmp_path / nom, "m", taches.banque_simulation(r1, 8, 8, 4),
+                         {"appels_max": 40, "usd_max": 5.0, "temps_max_s": 60}, 20.0, 3,
+                         appelants={"anthropic": servir["anthropic"], "gemini": avec_402}, especes_amorcage=["GEMINI_ARGON"], entropie=81)
+        n.amorcer()
+        return n, n.boucler()
+    sain, _ = course("sain", None)
+    assert len([l for l in sain.archive.lignes("gemini-argon") if not l.get("phase")]) == 3 and not getattr(sain, "arret_credit", None)
+    n, _ = course("coupe", 3)   # amorçage et début de la génération 0 servis, puis 402
+    lignes = [l for l in n.archive.lignes("gemini-argon") if not l.get("phase")]
+    assert n.arret_credit and n.arret_credit["espece"] == "GEMINI_ARGON"
+    assert lignes and lignes[-1]["invalide"] and lignes[-1]["statut"] == "CREDIT_EPUISE"
+    assert len(lignes) < 3  # la course s'est arrêtée, aucune génération ne suit
+    ev = [json.loads(x) for x in (n.racine / "evenements.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert any(e.get("etape") == "credit_epuise" for e in ev)
+
+
+def test_ce312_doit_arreter_et_raison_juste(tmp_path):
+    """CE3-12 : la garde d'arrêt de la course (STOP, crédit épuisé, plafond total) rend la raison juste, dans cet ordre ;
+    la phase de conception sans aucune lignée active le dit (et non « toutes les lignées ont déclaré la fin »)."""
+    banque = taches.banque_simulation(np.random.default_rng(9), 4, 4, 2)
+    n = boucle.Noyau(tmp_path / "r", "m", banque, {"appels_max": 5, "usd_max": 1.0, "temps_max_s": 60}, 2.0, 1,
+                     appelants={}, especes_amorcage=[], rondes_conception_max=2)
+    assert n._doit_arreter() is None
+    n.depense_totale = n.plafond_total
+    assert n._doit_arreter() == "plafond total atteint"
+    n.arret_credit = {"espece": "GEMINI_ARGON"}
+    assert "HTTP 402" in n._doit_arreter()
+    (n.racine / "STOP").write_text("x", encoding="utf-8")
+    assert n._doit_arreter() == "fichier STOP"
+    (n.racine / "STOP").unlink(); n.arret_credit = None; n.depense_totale = 0.0
+    n.concevoir()   # aucune lignée n'existe (aucune espèce, aucune imposée)
+    ev = [json.loads(x) for x in (n.racine / "evenements.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert any(e.get("etape") == "arret_conception" and e.get("raison") == "aucune lignée active" for e in ev)
+
+
+def test_ce305_sources_moisson_au_manifeste_et_bras_apparie(tmp_path, monkeypatch):
+    """CE3-05 / CE3-18 : le manifeste consigne les sources de moisson servies et la présence (jamais la valeur) de la clé
+    Brave ; le bras apparié est refusé si ces conditions diffèrent de sa course d'origine, accepté sinon."""
+    from essaim_m3.noyau import cli, recherche as _rech
+    n = boucle.Noyau(tmp_path / "r", "m", taches.banque_simulation(np.random.default_rng(4), 4, 4, 2),
+                     {"appels_max": 5, "usd_max": 1.0, "temps_max_s": 60, "recherches_max": 3}, 2.0, 1,
+                     appelants={}, especes_amorcage=[], recherche=_rech.recherche_simulee)
+    assert n.manifeste["sources_moisson"] == ["simulation"] and n.manifeste["cle_brave_presente"] in (True, False)
+    origine = tmp_path / "origine"
+    origine.mkdir()
+    monkeypatch.delenv("BRAVE_API_KEY", raising=False)
+    ici = sorted(s for s in __import__("essaim_m3.noyau.moisson", fromlist=["x"]).sources_disponibles() if s != "web")
+    (origine / "manifeste-run.json").write_text(json.dumps({"cle_brave_presente": False, "sources_moisson": ici}), encoding="utf-8")
+    assert cli.conditions_moisson_differentes(origine, 3) is None
+    (origine / "manifeste-run.json").write_text(json.dumps({"cle_brave_presente": True, "sources_moisson": ici + ["web"]}), encoding="utf-8")
+    assert "clé Brave" in cli.conditions_moisson_differentes(origine, 3)
