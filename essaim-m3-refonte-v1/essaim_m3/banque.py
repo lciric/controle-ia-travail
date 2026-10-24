@@ -23,6 +23,7 @@ import argparse
 import datetime as _dt
 import hashlib
 import json
+import math
 import pathlib
 import sys
 
@@ -199,6 +200,59 @@ def verifier_banque(chemin: pathlib.Path) -> list[str]:
     return problemes
 
 
+def _traits_texte(texte: str, dim: int = 2048) -> np.ndarray:
+    """Traits de surface : sacs de mots et de bigrammes hachés (signe par hachage), longueur, ponctuation, chiffres."""
+    import hashlib, re
+    v = np.zeros(dim + 6, dtype=np.float64)
+    mots = re.findall(r"[a-zà-ÿ0-9_]{2,}", texte.lower())
+    for g in mots + [f"{x}_{y}" for x, y in zip(mots, mots[1:])]:
+        h = hashlib.md5(g.encode("utf-8")).digest()
+        v[int.from_bytes(h[:4], "little") % dim] += 1.0 if h[4] % 2 == 0 else -1.0
+    n = np.linalg.norm(v[:dim])
+    if n > 0:
+        v[:dim] /= n
+    v[dim] = math.log1p(len(texte)); v[dim + 1] = math.log1p(len(mots)); v[dim + 2] = texte.count("\n") / max(1, len(texte)) * 100
+    v[dim + 3] = sum(c.isdigit() for c in texte) / max(1, len(texte)); v[dim + 4] = texte.count("=") / max(1, len(mots)); v[dim + 5] = len(set(mots)) / max(1, len(mots))
+    return v
+
+
+def _regression_logistique(X: np.ndarray, y: np.ndarray, pas: int = 400, taux: float = 0.5, l2: float = 1e-3) -> tuple[np.ndarray, float, np.ndarray, np.ndarray]:
+    mu, sd = X.mean(0), X.std(0) + 1e-8
+    Xn = (X - mu) / sd
+    w, b = np.zeros(X.shape[1]), 0.0
+    for _ in range(pas):
+        p = 1 / (1 + np.exp(-np.clip(Xn @ w + b, -30, 30)))
+        g = p - y
+        w -= taux * (Xn.T @ g / len(y) + l2 * w)
+        b -= taux * g.mean()
+    return w, b, mu, sd
+
+
+def reference_traits_texte(chemin_banque: pathlib.Path, graine: int = 0) -> dict:
+    """Référence obligatoire (N-029, CR-17) : un classifieur sur les seuls traits de surface du texte, appris sur
+    `train`, noté sur `test_final` et `test`, par famille (exactitude équilibrée). S'il est haut, la famille est trop
+    facile (indices de surface ou de provenance) : le préenregistrement fixe le seuil et la conséquence."""
+    b = json.loads(pathlib.Path(chemin_banque).read_text(encoding="utf-8"))
+    sortie = {"banque": str(chemin_banque), "sha256": empreinte_fichier(pathlib.Path(chemin_banque)), "par_famille": {}}
+    for fam in sorted({t["famille"] for t in b["train"]}):
+        pos = next(t["etiquettes"][0] for t in b["train"] if t["famille"] == fam)
+        tr = [t for t in b["train"] if t["famille"] == fam]
+        X = np.stack([_traits_texte(t["texte"]) for t in tr]); y = np.array([1.0 if t["verite"] == pos else 0.0 for t in tr])
+        w, b0, mu, sd = _regression_logistique(X, y)
+        res = {"n_train": len(tr)}
+        for part in ("test", "test_final"):
+            te = [t for t in b[part] if t["famille"] == fam]
+            if not te:
+                res[part] = None; continue
+            Xt = (np.stack([_traits_texte(t["texte"]) for t in te]) - mu) / sd
+            pred = (Xt @ w + b0) >= 0
+            yt = np.array([t["verite"] == pos for t in te])
+            sens = float((pred & yt).sum() / max(1, yt.sum())); spec = float((~pred & ~yt).sum() / max(1, (~yt).sum()))
+            res[part] = {"n": len(te), "exactitude_equilibree": round((sens + spec) / 2, 4), "sensibilite": round(sens, 4), "specificite": round(spec, 4)}
+        sortie["par_famille"][fam] = res
+    return sortie
+
+
 def principal(argv=None) -> int:
     p = argparse.ArgumentParser(prog="essaim_m3.banque", description="Construit et scelle la banque de tâches réelles")
     sp = p.add_subparsers(dest="commande", required=True)
@@ -210,7 +264,12 @@ def principal(argv=None) -> int:
     c.add_argument("--nom", required=True, help="nom versionné, par exemple confrontation-v1")
     v = sp.add_parser("verifier")
     v.add_argument("chemin")
+    r = sp.add_parser("reference", help="classifieur de référence sur les traits de surface du texte (N-029, CR-17)")
+    r.add_argument("chemin")
     args = p.parse_args(argv)
+    if args.commande == "reference":
+        print(json.dumps(reference_traits_texte(pathlib.Path(args.chemin)), ensure_ascii=False, indent=1))
+        return 0
     if args.commande == "verifier":
         pb = verifier_banque(pathlib.Path(args.chemin))
         print("\n".join(pb) if pb else "banque conforme")
