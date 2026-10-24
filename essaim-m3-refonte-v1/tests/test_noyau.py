@@ -2157,3 +2157,116 @@ def test_defense_poseuse_de_liens_ne_bloque_pas_la_confrontation(tmp_path):
     for f in (tmp_path / "run").rglob("*"):
         if f.is_file() and not f.is_symlink():
             assert b"MARQUEUR-CONF-2b9c" not in f.read_bytes()
+
+
+# ---------- CE3-06 / CE3-07 : vues lisibles par la seule lignée, utilisateurs par course, dossiers du noyau déplacés ----------
+
+def _run_isole(tmp_path, nom, especes, decalage=0, patch_racine=False, recherche_simulee=False):
+    """Une petite course isolée (root) : amorçage + une génération notée, doubles simulés."""
+    from essaim_m3.noyau import recherche as _rech
+    ss = np.random.SeedSequence(70 + decalage)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 8, 8, 4)
+    doubles, _ = appelants_simules(r2)
+    budget = {"appels_max": 30, "usd_max": 5.0, "temps_max_s": 60, "recherches_max": (3 if recherche_simulee else 0),
+              "telechargements_max": (3 if recherche_simulee else 0), "octets_max": 100000}
+    n = boucle.Noyau(tmp_path / nom, "m", banque, budget, 20.0, 1, appelants=doubles, especes_amorcage=especes,
+                     entropie=70 + decalage, decalage_uid=decalage,
+                     recherche=(_rech.recherche_simulee if recherche_simulee else None))
+    assert n.isolation["utilisateur"], "essai prévu pour un noyau root"
+    return n
+
+
+def test_ce306_vue_lisible_par_la_seule_lignee_et_uid_par_course(tmp_path):
+    """CE3-06 : en mémoire privée, `archive_vue/` se traverse sans se lister (0711) et la vue d'une lignée appartient à root
+    et à son groupe (0750/0640), illisible par une autre lignée ; une seconde course (décalage d'uid) donne à la même
+    lignée un utilisateur différent."""
+    n = _run_isole(tmp_path, "run", ["CLAUDE_OPUS_5_5", "GEMINI_ARGON"])
+    n.amorcer(); n.boucler()
+    vue = n.archive.vue
+    assert stat.S_IMODE(os.stat(vue).st_mode) == 0o711  # traversable, non listable
+    for lignee in ("claude-opus-5-5", "gemini-argon"):
+        d = vue / lignee
+        uid = n.lignees[lignee]["uid"]
+        st = os.stat(d)
+        assert st.st_uid == 0 and st.st_gid == uid and stat.S_IMODE(st.st_mode) == 0o750
+        f = next(p for p in d.rglob("*") if p.is_file())
+        sf = os.stat(f)
+        assert sf.st_gid == uid and stat.S_IMODE(sf.st_mode) == 0o440
+    # deux lignées de la même course : utilisateurs distincts
+    assert n.lignees["claude-opus-5-5"]["uid"] != n.lignees["gemini-argon"]["uid"]
+    # une autre course qui tournerait en même temps (décalage 100) : la même lignée a un autre utilisateur
+    n2 = _run_isole(tmp_path, "run2", ["GEMINI_ARGON"], decalage=100)
+    n2.amorcer()
+    assert n2._uid("gemini-argon") != n._uid("gemini-argon")  # utilisateur distinct entre deux courses simultanées
+    assert n2._uid("gemini-argon") == bac_a_sable.uid_lignee(0, 100)
+
+
+def test_ce307_dossiers_du_noyau_hors_du_travail_et_non_falsifiables(tmp_path):
+    """CE3-07 : les dossiers du noyau (`*.noyau`, `*.corpus`) sont des frères de `travail`, à root, hors d'atteinte de
+    l'organisme. Un organisme qui crée `travail/noyau` et `travail/corpus` (noms réservés) et y glisse un faux index :
+    ses créations sont écartées (consignées) et non archivées ; l'index du corpus archivé est celui du noyau (le vrai
+    document, pas le faux `doc-9999`) ; il ne peut ni lister ni renommer les dossiers frères du noyau."""
+    from essaim_m3.noyau import recherche as _rech
+    org = tmp_path / "forge"
+    shutil.copytree(FIXTURE, org)
+    (org / "organisme" / "principal.py").write_text(
+        "import json, os\n"
+        "import noyau_client as nc\n"
+        "def executer(contexte):\n"
+        "    t = contexte['dossier_travail']\n"
+        "    r = nc.rechercher('moniteur retire pipeline', n=2, role='veille')\n"
+        "    if r['statut'] == 'OK' and r['resultats']:\n"
+        "        nc.telecharger(r['resultats'][0]['lien'], role='moisson')\n"
+        "    nc.appeler(nc.especes()[0], 'tache', role='tache')\n"
+        "    os.mkdir(os.path.join(t, 'corpus'))\n"
+        "    json.dump([{'id': 'doc-9999', 'reference': 'forge', 'statut': 'OK'}], open(os.path.join(t, 'corpus', 'index.jsonl'), 'w'))\n"
+        "    os.mkdir(os.path.join(t, 'noyau'))\n"
+        "    open(os.path.join(t, 'noyau', 'journal-appels.jsonl'), 'w').write('forge')\n"
+        "    essais = {}\n"
+        "    parent = os.path.dirname(t)\n"
+        "    try: essais['lister_parent'] = os.listdir(parent)\n"
+        "    except Exception as e: essais['lister_parent'] = type(e).__name__\n"
+        "    try:\n"
+        "        os.rename(os.path.join(parent, os.path.basename(t) + '.corpus'), os.path.join(parent, 'vole'))\n"
+        "        essais['renommer_corpus'] = 'REUSSI'\n"
+        "    except Exception as e: essais['renommer_corpus'] = type(e).__name__\n"
+        "    json.dump({t_['id']: {'etiquette': t_['etiquettes'][0], 'confiance': 0.9} for t_ in contexte['taches_test']}, open(os.path.join(t, 'reponses_test.json'), 'w'))\n"
+        "    json.dump(essais, open(os.path.join(t, 'essais.json'), 'w'))\n", encoding="utf-8")
+    ss = np.random.SeedSequence(72)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    doubles, _ = appelants_simules(r2, commun={"organisme_amorcage": str(org)})
+    n = boucle.Noyau(tmp_path / "run", "m", taches.banque_simulation(r1, 8, 8, 4),
+                     {"appels_max": 30, "usd_max": 5.0, "temps_max_s": 60, "recherches_max": 3, "telechargements_max": 3, "octets_max": 100000},
+                     20.0, 1, appelants=doubles, especes_amorcage=["GEMINI_ARGON"], entropie=72, recherche=_rech.recherche_simulee)
+    assert n.isolation["utilisateur"]
+    n.amorcer(); n.boucler()
+    g = n.archive.lignes("gemini-argon")[0]
+    assert g["statut"] == "OK"
+    chemin = n.archive.racine / g["chemin"]
+    # les dossiers du noyau sont des frères de `travail`, à root, et ont bien été recopiés dans l'archive
+    travail_vivant = n.espace / "travail" / "gemini-argon" / "g000"
+    for suff in (".noyau", ".corpus"):
+        frere = travail_vivant.parent / (travail_vivant.name + suff)
+        assert os.stat(frere.parent).st_uid == 0  # parent à root : l'organisme n'y renomme rien
+    # l'organisme a bien tenté la falsification, mais ses créations sont écartées et non archivées
+    essais = json.loads((chemin / "travail" / "essais.json").read_text(encoding="utf-8"))
+    assert essais["lister_parent"] in ("PermissionError", "FileNotFoundError")
+    assert essais["renommer_corpus"] in ("PermissionError", "FileNotFoundError")
+    resume = json.loads((chemin / "resume.json").read_text(encoding="utf-8"))
+    ecartes = " ".join(resume.get("elements_ecartes") or [])
+    assert "noyau : nom réservé" in ecartes and "corpus : nom réservé" in ecartes
+    # l'index du corpus archivé est celui du noyau : le vrai document, jamais le faux doc-9999
+    index_txt = (chemin / "travail" / "corpus" / "index.jsonl").read_text(encoding="utf-8")
+    assert "doc-9999" not in index_txt and "doc-0001" in index_txt
+    journal = (chemin / "travail" / "noyau" / "journal-appels.jsonl").read_text(encoding="utf-8")
+    assert journal and not journal.startswith("forge")  # le vrai journal du noyau (frère), pas le faux posé dans travail
+
+
+def test_ce307_anomalie_journal_absent():
+    """CE3-07 : la détection d'un journal des appels absent après des appels servis (génération invalidée)."""
+    import tempfile
+    assert boucle.anomalie_journal_absent(0, pathlib.Path("/inexistant")) is None
+    with tempfile.NamedTemporaryFile() as f:
+        assert boucle.anomalie_journal_absent(3, pathlib.Path(f.name)) is None
+    assert boucle.anomalie_journal_absent(3, pathlib.Path("/inexistant")) is not None

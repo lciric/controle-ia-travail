@@ -85,12 +85,26 @@ class Archive:
 
     def deposer(self, lignee: str, generation: int, organisme: pathlib.Path, dossier_travail: pathlib.Path,
                 journal_appels: pathlib.Path | None, score: dict, resume: dict, score_final: dict | None = None,
-                phase: str | None = None) -> dict:
+                phase: str | None = None, dossier_noyau: pathlib.Path | None = None, dossier_corpus: pathlib.Path | None = None,
+                gid: int | None = None) -> dict:
+        """`dossier_noyau`, `dossier_corpus` (CE3-07) : dossiers du noyau tenus hors du dossier de travail de l'organisme,
+        recopiés dans l'archive sous `travail/noyau` et `travail/corpus` (même disposition qu'avant). Les mêmes noms créés par
+        l'organisme dans son dossier sont réservés : écartés et consignés. `gid` (CE3-06) : groupe de la lignée ; la vue est
+        alors lisible par elle seule (dossiers 0550, fichiers 0440, à root) ; None : lisible par tous (simulation hors root,
+        mémoire partagée)."""
         d = self.dossier(lignee, generation, phase)
         empreinte = archiver_organisme(organisme, d / "organisme.tar.gz")
         travail = d / "travail"
         # R-372 : root ne suit aucun lien de l'organisme ; liens, tubes, sockets, fichiers à plusieurs liens durs écartés et consignés
-        ecartes = _fichiers.copier_sans_liens(dossier_travail, travail, ignorer=("noyau_client.py", "lanceur.py", "__pycache__"))
+        reserves = [n for n in ("noyau", "corpus") if os.path.lexists(pathlib.Path(dossier_travail) / n)]
+        ecartes = _fichiers.copier_sans_liens(dossier_travail, travail, ignorer=("noyau_client.py", "lanceur.py", "__pycache__"),
+                                              ignorer_racine=("noyau", "corpus"))
+        ecartes = sorted(ecartes + [f"{n} : nom réservé au noyau (CE3-07), non archivé" for n in reserves])
+        for nom, source in (("noyau", dossier_noyau), ("corpus", dossier_corpus)):
+            if source is not None and _fichiers.vrai_dossier(source):
+                restes_noyau = _fichiers.copier_sans_liens(source, travail / nom)
+                if restes_noyau:  # dossiers écrits par le seul noyau : rien d'autre que des fichiers ordinaires
+                    raise RuntimeError(f"dépôt de {lignee} g{generation} : éléments non ordinaires dans {nom} : {restes_noyau[:5]}")
         juge = d / "juge"
         juge.mkdir()
         if journal_appels and journal_appels.exists():
@@ -126,10 +140,14 @@ class Archive:
         restes = _fichiers.copier_sans_liens(travail, v / "travail", ignorer=("noyau", "juge", "reponses_test.json", "attaques.json"))
         if restes:  # impossible après la première copie : l'archive ne contient que des fichiers ordinaires
             raise RuntimeError(f"vue de {lignee} g{generation} : éléments non ordinaires dans l'archive : {restes[:5]}")
-        # la vue est en lecture seule pour tous (dossiers 0555, fichiers 0444) : les organismes, sous un autre utilisateur, lisent sans écrire
+        # vue en lecture seule : lisible par la seule lignée (groupe `gid`, CE3-06) ou par tous sans isolation d'utilisateur
         for f in [v] + list(v.rglob("*")):
             try:
-                os.chmod(f, 0o555 if f.is_dir() else 0o444)
+                if gid is not None:
+                    os.chown(f, 0, gid, follow_symlinks=False)
+                    os.chmod(f, 0o550 if f.is_dir() else 0o440)
+                else:
+                    os.chmod(f, 0o555 if f.is_dir() else 0o444)
             except OSError:
                 pass
         # lecture seule pour tout ce qui vient d'être déposé (efficace hors root ; consigné sinon)

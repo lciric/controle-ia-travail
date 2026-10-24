@@ -43,6 +43,14 @@ INDICE_RONDE = 1_000_000  # indice de lignée réservé aux tirages de ronde (or
 MARGE_TEMPS_S = 300  # CE-07 : temps de génération laissé aux appels et à l'écriture, au-delà des entraînements permis
 
 
+def anomalie_journal_absent(n_appels: int, journal: pathlib.Path) -> str | None:
+    """CE3-07 : le journal des appels vit hors du dossier de l'organisme (à root) ; s'il manque alors que des appels ont
+    été servis, c'est une anomalie du noyau, jamais un silence — la génération est invalidée. Rend la raison, ou None."""
+    if int(n_appels) > 0 and not pathlib.Path(journal).exists():
+        return "journal des appels absent alors que des appels ont été servis (CE3-07)"
+    return None
+
+
 def empreinte_arbre(dossier: pathlib.Path) -> str:
     """Empreinte d'un dossier : chemins relatifs triés et contenu de chaque fichier (indépendante des dates)."""
     h = hashlib.sha256()
@@ -100,7 +108,7 @@ class Noyau:
                 reel=reel, go_id=go_id or m.get("go_id"), isoler_reseau=(m.get("isolation_reseau", False) if isoler_reseau is None else isoler_reseau),
                 entropie=m["entropie_seed_sequence"], especes_amorcage=m.get("especes_amorcage"), etiquette_run=m.get("run", ""),
                 gel=m.get("gel", False), parallele_max=m.get("parallele_max", PARALLELE_MAX_DEFAUT), registre_go=registre_go,
-                memoire_partagee=m.get("memoire_partagee", False), rondes_conception_max=0)
+                memoire_partagee=m.get("memoire_partagee", False), rondes_conception_max=0, decalage_uid=int(m.get("decalage_uid", 0)))
         lignes = n.archive.lignes()
         depense = 0.0
         for l in lignes:
@@ -113,7 +121,7 @@ class Noyau:
             espece = next((e for e in m.get("especes_amorcage", []) if e.lower().replace("_", "-") == nom), None)
             n.lignees[nom] = {"espece_amorcage": espece, "famille": l.get("famille") or (contrat.FAMILLES[espece] if espece else None),
                               "generation": l["generation"], "organisme": None, "active": False, "impose": bool(l.get("impose")),
-                              "uid": (bac_a_sable.uid_lignee(len(n.lignees)) if n.isolation["utilisateur"] and nom not in n.lignees else n.lignees.get(nom, {}).get("uid"))}
+                              "uid": (bac_a_sable.uid_lignee(len(n.lignees), n.decalage_uid) if n.isolation["utilisateur"] and nom not in n.lignees else n.lignees.get(nom, {}).get("uid"))}
         n.depense_totale = depense
         n._evenement(etape="rechargement", lignees=sorted(n.lignees), depense_relue_usd=round(depense, 4))
         return n
@@ -125,12 +133,16 @@ class Noyau:
                  organismes_imposes: dict[str, dict] | None = None, parallele_max: int = PARALLELE_MAX_DEFAUT,
                  recherche=None, relances_max: int = 1, traits: dict | None = None, description_traits: str = "",
                  registre_go: str | pathlib.Path | None = None,
-                 memoire_partagee: bool = False, rondes_conception_max: int = 0, budget_conception: dict | None = None):
+                 memoire_partagee: bool = False, rondes_conception_max: int = 0, budget_conception: dict | None = None,
+                 decalage_uid: int = 0):
         """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
         — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
         corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
         lignées auto-écrites. La famille déclarée sert à la confrontation entre familles."""
         self.racine = pathlib.Path(racine)
+        if not isinstance(decalage_uid, int) or decalage_uid < 0 or decalage_uid > 900 or decalage_uid % 100:
+            raise Arret(f"decalage_uid {decalage_uid!r} : multiple de 100 entre 0 et 900 attendu (CE3-06)")
+        self.decalage_uid = decalage_uid  # CE3-06 : utilisateurs distincts entre courses qui tournent ensemble
         self.racine.mkdir(parents=True, exist_ok=True)
         # CR-01 : isolation d'utilisateur quand le noyau est root ; la racine est traversable (0711) mais ses dossiers
         # sensibles (banque, archive, lignées, journaux) restent à root en 0700 ; chaque lignée a son propre utilisateur
@@ -227,7 +239,7 @@ class Noyau:
             "n_taches_test_dev": len(banque["test"]), "n_taches_test_final": len(banque.get("test_final", [])),
             "mission_sha256": hashlib.sha256(mission.encode("utf-8")).hexdigest(),
             "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage, "relances_max": self.relances_max,
-            "memoire_partagee": self.memoire_partagee, "rondes_conception_max": self.rondes_conception,
+            "memoire_partagee": self.memoire_partagee, "rondes_conception_max": self.rondes_conception, "decalage_uid": self.decalage_uid,
             "budget_conception": (self.budget_conception if self.rondes_conception else None),
             "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
@@ -306,8 +318,31 @@ class Noyau:
         else:
             vue = self.archive.vue / lignee
         vue.mkdir(parents=True, exist_ok=True)
-        bac_a_sable.proteger(vue, 0o755)
+        if not self.gel and not self.memoire_partagee and self.isolation["utilisateur"]:
+            # CE3-06 : en mémoire privée, `archive_vue/` se traverse sans se lister (0711) et la vue d'une lignée n'est
+            # lisible que par elle (à root, groupe de la lignée, 0750)
+            bac_a_sable.proteger(self.archive.vue, 0o711)
+            self._proteger_lecture_lignee(vue, self._uid(lignee), recursif=False)
+        else:
+            bac_a_sable.proteger(vue, 0o755)
         return vue
+
+    def _proteger_lecture_lignee(self, dossier: pathlib.Path, uid: int | None, recursif: bool = True) -> None:
+        """CE3-06 : un dossier du noyau que la lignée lit (son corpus moissonné, sa vue) appartient à root et au groupe de la
+        lignée (son gid est son uid), lisible par elle seule (dossiers 0750, fichiers 0640) ; sans isolation d'utilisateur
+        (simulation hors root) ou en mémoire partagée, lisible par tous (0755, 0644). Aucun lien n'est suivi."""
+        prive = uid is not None and not self.memoire_partagee
+        for f in [dossier] + (sorted(dossier.rglob("*")) if recursif else []):
+            if f.is_symlink():
+                continue
+            try:
+                if prive:
+                    os.chown(f, 0, uid, follow_symlinks=False)
+                    os.chmod(f, 0o750 if f.is_dir() else 0o640)
+                else:
+                    os.chmod(f, 0o755 if f.is_dir() else 0o644)
+            except OSError:
+                pass
 
     def _figer_vue(self, ronde: int) -> pathlib.Path:
         """Copie en lecture seule de la vue de toutes les lignées, prise au début de la ronde (CR-15 b)."""
@@ -326,7 +361,7 @@ class Noyau:
         etat = self.lignees.get(lignee)
         if etat is not None and etat.get("uid") is not None:
             return etat["uid"]
-        return bac_a_sable.uid_lignee(sorted(self.lignees).index(lignee) if lignee in self.lignees else len(self.lignees))
+        return bac_a_sable.uid_lignee(sorted(self.lignees).index(lignee) if lignee in self.lignees else len(self.lignees), self.decalage_uid)
 
     def _empreintes_fuite(self) -> set:
         """CE3-04 : empreintes des fenêtres de mots des tâches de test (développement et final) de la banque, calculées une
@@ -347,14 +382,15 @@ class Noyau:
         return _recherche.Rechercheur(dossier, int(budget["recherches_max"]), backend, telechargeur=telechargeur,
                                       empreintes_fuite=self._empreintes_fuite())
 
-    def _telechargeur(self, travail: pathlib.Path, budget: dict | None = None):
-        """Un téléchargeur par génération ; None si `telechargements_max` vaut 0. Le corpus vit dans `travail/corpus`
-        (lisible par la lignée dans sa vue d'archive) ; double sans réseau en simulation."""
+    def _telechargeur(self, dossier_corpus: pathlib.Path, budget: dict | None = None):
+        """Un téléchargeur par génération ; None si `telechargements_max` vaut 0. Le corpus vit dans `dossier_corpus`,
+        frère du dossier de travail, à root (CE3-07) ; recopié dans l'archive et la vue sous `travail/corpus` au dépôt ;
+        double sans réseau en simulation."""
         budget = budget or self.budget
         if int(budget.get("telechargements_max", 0)) <= 0:
             return None
         backend = _moisson.telechargement_simule if self.recherche is not None else None
-        return _moisson.Telechargeur(travail / "corpus", int(budget["telechargements_max"]),
+        return _moisson.Telechargeur(dossier_corpus, int(budget["telechargements_max"]),
                                      octets_max_total=int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION)), backend=backend,
                                      empreintes_fuite=self._empreintes_fuite())
 
@@ -375,7 +411,7 @@ class Noyau:
         uid_ent, isole = None, False
         if self.isolation["utilisateur"]:
             idx = sorted(self.lignees).index(lignee) if lignee in self.lignees else len(self.lignees)
-            uid_ent, isole = bac_a_sable.uid_entraineur(idx), bool(self.isolation["reseau"])
+            uid_ent, isole = bac_a_sable.uid_entraineur(idx, self.decalage_uid), bool(self.isolation["reseau"])
         elif self.reel:
             raise Arret("entraîneur sans isolation d'utilisateur en réel : refusé (CE-02)")
         return _entrainement.Entraineur(dossier, vues, verites, int(budget["entrainements_max"]), pas_max=int(budget.get("pas_max", _entrainement.PAS_MAX_DEFAUT)),
@@ -433,7 +469,7 @@ class Noyau:
             if statut == "ORGANISME_VALIDE":
                 self.lignees[lignee] = {"espece_amorcage": espece, "famille": contrat.FAMILLES[espece], "generation": 0,
                                         "organisme": dossier / "organisme", "active": True, "impose": False,
-                                        "uid": (bac_a_sable.uid_lignee(len(self.lignees)) if self.isolation["utilisateur"] else None)}
+                                        "uid": (bac_a_sable.uid_lignee(len(self.lignees), self.decalage_uid) if self.isolation["utilisateur"] else None)}
             self._evenement(etape="amorcage", lignee=lignee, **resultats[lignee])
         # lignées imposées : génération 0 fournie (aucun appel), validée par le même contrat que les auto-écrites
         for nom, spec in self.organismes_imposes.items():
@@ -453,7 +489,7 @@ class Noyau:
             if statut == "ORGANISME_IMPOSE_VALIDE":
                 self.lignees[nom] = {"espece_amorcage": None, "famille": spec["famille"], "generation": 0,
                                      "organisme": dossier / "organisme", "active": True, "impose": True,
-                                     "uid": (bac_a_sable.uid_lignee(len(self.lignees)) if self.isolation["utilisateur"] else None)}
+                                     "uid": (bac_a_sable.uid_lignee(len(self.lignees), self.decalage_uid) if self.isolation["utilisateur"] else None)}
                 # bras apparié adaptatif (`--depuis` sans `--gel`, CE-06) : la génération 0 relancée doit voir ce que la
                 # génération 0 d'origine voyait — ses rondes de conception (historique et vue) ; le bras gelé reste sans archive
                 if spec.get("course_origine") and not self.gel:
@@ -476,10 +512,17 @@ class Noyau:
         budget = self.budget if conception is None else self.budget_conception
         organisme = etat["organisme"]
         travail = self.espace / "travail" / lignee / _archive.Archive.nom_generation(g, phase)
-        if travail.exists():
-            shutil.rmtree(travail)
+        # CE3-07 : les dossiers du noyau (journaux, bac de l'entraîneur ; corpus moissonné) sont des frères de `travail`, sous
+        # un parent à root (0711) : l'organisme, propriétaire de `travail`, ne peut ni les renommer ni les remplacer
+        dossier_noyau = travail.parent / f"{travail.name}.noyau"
+        dossier_corpus = travail.parent / f"{travail.name}.corpus"
+        for dd in (travail, dossier_noyau, dossier_corpus):
+            if dd.exists():
+                shutil.rmtree(dd)
         travail.mkdir(parents=True)
         bac_a_sable.proteger(travail.parent, 0o711)
+        dossier_noyau.mkdir()
+        bac_a_sable.proteger(dossier_noyau, 0o700)
         ordre_train = np.random.default_rng(self.graine(lignee, g, "ordre_train")).permutation(len(self.banque["train"]))
         # test de développement (score rendu) et test final (jamais rendu), mêlés sans distinction pour l'organisme
         tous_tests = [] if phase else list(self.banque["test"]) + list(self.banque["test_final"])
@@ -503,19 +546,18 @@ class Noyau:
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
             "graine": graine_organisme,
         }
-        appelant = self._appelant(travail / "noyau", budget)
+        appelant = self._appelant(dossier_noyau, budget)
         chemin_socket = str(travail / "noyau.sock")
         if len(chemin_socket) > 100:  # limite des sockets Unix ; nom unique par course (CR-12)
             chemin_socket = f"/tmp/essaim-{hashlib.sha256(str(self.racine).encode()).hexdigest()[:10]}-{lignee[:10]}-g{g}.sock"
         uid = self._uid(lignee)
         bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
-        bac_a_sable.proteger(travail / "noyau", 0o700) if (travail / "noyau").exists() else None
-        telechargeur = self._telechargeur(travail, budget)
+        telechargeur = self._telechargeur(dossier_corpus, budget)
         if telechargeur is not None:
-            bac_a_sable.proteger(travail / "corpus", 0o755)
-        rechercheur = self._rechercheur(travail / "noyau", budget, telechargeur)
-        bac_a_sable.proteger(travail / "noyau", 0o700)
-        entraineur = self._entraineur(travail / "noyau", lignee, g, budget=budget)
+            self._proteger_lecture_lignee(dossier_corpus, uid)
+        rechercheur = self._rechercheur(dossier_noyau, budget, telechargeur)
+        bac_a_sable.proteger(dossier_noyau, 0o700)
+        entraineur = self._entraineur(dossier_noyau, lignee, g, budget=budget)
         with ServeurAppels(appelant, chemin_socket, int(budget["appels_max"]), self.parallele_max, rechercheur, entraineur, telechargeur,
                            max_tokens_appel=budget.get("max_tokens_appel")) as serveur:
             execution = bac_a_sable.executer(travail, chemin_socket, int(budget["temps_max_s"]), isoler_reseau=self.isoler_reseau, uid=uid)
@@ -525,12 +567,16 @@ class Noyau:
             non_conformes = serveur.non_conformes
         if non_conformes:  # CR-02 (1) : génération invalidée, exclue des hypothèses, lignée arrêtée
             execution = dict(execution, code="INVALIDE_MODELE", code_origine=execution.get("code"), non_conformes=non_conformes)
+        # CE3-07 : le journal des appels vit hors d'atteinte de l'organisme ; son absence alors que des appels ont été servis
+        # est une anomalie du noyau, jamais un silence : génération invalidée, consignée
+        anomalie_noyau = anomalie_journal_absent(n_appels, appelant.journal)
+        if anomalie_noyau:
+            execution = dict(execution, code="ANOMALIE_NOYAU", code_origine=execution.get("code"), anomalie=anomalie_noyau)
         n_recherches = rechercheur.compteur if rechercheur is not None else 0
         n_entrainements = entraineur.compteur if entraineur is not None else 0
         n_telechargements = telechargeur.compteur if telechargeur is not None else 0
         if telechargeur is not None:
-            for f in [travail / "corpus"] + list((travail / "corpus").rglob("*")):
-                bac_a_sable.proteger(f, 0o755 if f.is_dir() else 0o644)
+            self._proteger_lecture_lignee(dossier_corpus, uid)
             if telechargeur.index.exists():
                 _archive.sceller(telechargeur.index)  # corpus moissonné scellé en fin de génération
         self.depense_totale += appelant.depense_usd
@@ -592,14 +638,18 @@ class Noyau:
                   "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
                   "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel,
                   "impose": bool(etat.get("impose")), "famille": etat.get("famille"), "relance": bool(etat.get("relance_en_cours")),
-                  "n_recherches": n_recherches, "n_entrainements": n_entrainements, "n_telechargements": n_telechargements, "invalide": bool(non_conformes), "non_conformes": non_conformes, "phase": phase}
-        self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final, phase=phase)
+                  "n_recherches": n_recherches, "n_entrainements": n_entrainements, "n_telechargements": n_telechargements, "invalide": bool(non_conformes) or bool(anomalie_noyau), "non_conformes": non_conformes,
+                  "anomalie_noyau": anomalie_noyau, "phase": phase}
+        self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final, phase=phase,
+                             dossier_noyau=dossier_noyau, dossier_corpus=dossier_corpus,
+                             gid=(uid if (uid is not None and not self.memoire_partagee) else None))
         self._evenement(etape=("conception" if phase else "generation"), lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))
         etat["relance_en_cours"] = False
-        if non_conformes:
+        if non_conformes or anomalie_noyau:
             etat["active"] = False
-            etat["fin"] = "appel à modèle non conforme : génération invalidée (CR-02)"
+            etat["fin"] = ("appel à modèle non conforme : génération invalidée (CR-02)" if non_conformes
+                           else f"anomalie du noyau : génération invalidée ({anomalie_noyau})")
             return resume
         if phase:  # phase de conception : le successeur valide devient l'organisme de la ronde suivante ou de la génération 0
             fin = travail / "fin_conception.json"  # l'organisme déclare lui-même la fin de sa conception (son critère, ses valeurs)

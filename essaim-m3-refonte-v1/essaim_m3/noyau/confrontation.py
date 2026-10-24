@@ -186,11 +186,17 @@ class Confrontation:
 
     def _executer_sur_attaques(self, lignee_def: str, organisme: pathlib.Path, attaques: list[dict], etiquette: str) -> dict:
         travail = self.noyau.espace / "travail" / "confrontation" / etiquette / "defense"
-        if travail.exists():
-            shutil.rmtree(travail)
+        # CE3-07 : le dossier du noyau de la défense (journal des appels, bac de l'entraîneur) est un frère de `travail`, sous
+        # un parent à root (0711) : le défendeur, propriétaire de `travail`, ne peut ni le renommer ni le remplacer
+        dossier_noyau = travail.parent / f"{travail.name}.noyau"
+        for dd in (travail, dossier_noyau):
+            if dd.exists():
+                shutil.rmtree(dd)
         travail.mkdir(parents=True)
         for p in (travail.parent, travail.parent.parent):
             bac_a_sable.proteger(p, 0o711)
+        dossier_noyau.mkdir()
+        bac_a_sable.proteger(dossier_noyau, 0o700)
         g_def = (self._derniere_generation(lignee_def) or {}).get("generation", 0) + 1
         rng = np.random.default_rng(self.noyau.graine(lignee_def, g_def, "defense"))
         # CR-06 : les attaques sont mêlées aux tâches du test de développement, sans marque ; seules les attaques sont notées
@@ -212,7 +218,7 @@ class Confrontation:
             "traits": self.noyau._contexte_traits(bool(self.noyau.vues) and int(self.noyau.budget["entrainements_max"]) > 0 and traits_att is not None),
             "historique": self.noyau.archive.historique(lignee_def), "relance": False, "graine": self.noyau.graine(lignee_def, g_def, "organisme"),
         }
-        appelant = Appelant(travail / "noyau", min(float(self.budget_defense["usd_max"]), self.noyau._plafond_restant()),
+        appelant = Appelant(dossier_noyau, min(float(self.budget_defense["usd_max"]), self.noyau._plafond_restant()),
                             self.noyau.appelants, self.noyau.reel, self.noyau.go_id)
         socket = str(travail / "n.sock")
         if len(socket) > 100:
@@ -220,8 +226,8 @@ class Confrontation:
             socket = f"/tmp/essaim-conf-{_h.sha256(str(self.dossier).encode()).hexdigest()[:10]}-{etiquette[:14]}.sock"
         uid = self.noyau._uid(lignee_def)
         bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
-        entraineur = self.noyau._entraineur(travail / "noyau", lignee_def, g_def, traits_att) if traits_att is not None else None
-        bac_a_sable.proteger(travail / "noyau", 0o700)
+        entraineur = self.noyau._entraineur(dossier_noyau, lignee_def, g_def, traits_att) if traits_att is not None else None
+        bac_a_sable.proteger(dossier_noyau, 0o700)
         with ServeurAppels(appelant, socket, int(self.budget_defense["appels_max"]), self.noyau.parallele_max, None, entraineur) as serveur:
             execution = bac_a_sable.executer(travail, socket, int(self.budget_defense["temps_max_s"]), isoler_reseau=self.noyau.isoler_reseau, uid=uid)
             n_appels = serveur.n_appels

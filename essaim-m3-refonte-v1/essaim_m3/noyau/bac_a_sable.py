@@ -82,13 +82,16 @@ def isolation_reseau_disponible() -> bool:
     return bool(capacites_isolation()["reseau"])
 
 
-def uid_lignee(indice: int) -> int:
-    return UID_BASE + int(indice)
+def uid_lignee(indice: int, decalage: int = 0) -> int:
+    """Utilisateur non privilégié d'une lignée ; `decalage` (multiple de 100, CE3-06) distingue les courses qui tournent
+    ensemble : la même lignée de deux courses n'a jamais le même utilisateur."""
+    return UID_BASE + int(decalage) + int(indice)
 
 
-def uid_entraineur(indice: int) -> int:
-    """Utilisateur non privilégié de l'entraîneur d'une lignée (CE-02) : distinct de celui de toute lignée."""
-    return UID_BASE + 1000 + int(indice)
+def uid_entraineur(indice: int, decalage: int = 0) -> int:
+    """Utilisateur non privilégié de l'entraîneur d'une lignée (CE-02) : distinct de celui de toute lignée (le décalage de
+    course, au plus 900, reste sous 1000)."""
+    return UID_BASE + 1000 + int(decalage) + int(indice)
 
 
 def traversable_par_tous(chemin: pathlib.Path) -> bool:

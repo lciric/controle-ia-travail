@@ -100,6 +100,7 @@ def simuler(args) -> int:
                          especes_amorcage=especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
                          organismes_imposes=imposes, parallele_max=args.parallele_max,
                          recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee,
+                         decalage_uid=args.decalage_uid,
                          rondes_conception_max=args.rondes_conception_max, budget_conception=_budget_conception(args))
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
@@ -224,7 +225,7 @@ def lancer(args) -> int:
                              entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=imposes, parallele_max=args.parallele_max,
                              recherche=None, relances_max=args.relances_max, traits=traits, description_traits=description,
-                             registre_go=args.registre_go, memoire_partagee=args.memoire_partagee,
+                             registre_go=args.registre_go, memoire_partagee=args.memoire_partagee, decalage_uid=args.decalage_uid,
                              rondes_conception_max=args.rondes_conception_max, budget_conception=_budget_conception(args))
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
@@ -320,6 +321,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--appels-max-conception", type=int, default=None, help="appels par ronde de conception (défaut : --appels-max)")
         q.add_argument("--temps-max-conception", type=int, default=None, help="secondes par ronde de conception (défaut : --temps-max)")
         q.add_argument("--autoriser-base-url", action="store_true", help="réel : accepte une ANTHROPIC_BASE_URL définie (sinon refus)")
+        q.add_argument("--decalage-uid", type=int, default=0, help="décalage des utilisateurs des organismes (multiple de 100, 0 à 900) : distinct pour chaque course qui tourne en même temps qu'une autre (CE3-06)")
         q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
