@@ -1,4 +1,5 @@
 """Tests du noyau, sans réseau : chaque garde sur un cas sain et sur un artefact (R5)."""
+import hashlib
 import json
 import os
 import pathlib
@@ -1175,3 +1176,110 @@ def test_mode_reel_refuse_anthropic_base_url(tmp_path, monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "x"); monkeypatch.setenv("GEMINI_API_KEY", "y"); monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://exemple.invalide")
     taches = tmp_path / "t.json"; taches.write_text("{}", encoding="utf-8")
     assert cli.principal(["lancer", "--reel", "--go", "GO-X", "--taches", str(taches), "--sortie", str(tmp_path / "r")]) == 4
+
+
+# ---------- moisson : primitives servies par le noyau (Lazar, 24 octobre, 20:32 à 20:35 Paris) ----------
+
+def test_telechargeur_provenance_plafonds_et_extraction(tmp_path):
+    """Cas sain : un lien rendu par une recherche de la génération se télécharge, le texte est extrait (HTML, PDF,
+    texte), empreinté, rangé dans corpus/ avec un index ; artefacts : adresse hors provenance refusée, http refusé,
+    plafond de documents et d'octets tenus, document trop gros refusé, jamais un texte d'erreur en guise de document."""
+    from essaim_m3.noyau import moisson, recherche
+    pdf = None
+    if shutil.which("pdftotext"):
+        # un PDF minimal engendré par LibreOffice n'est pas disponible ici : on vérifie seulement le chemin « sans texte » sur un faux PDF
+        pdf = b"%PDF-1.4\n%%EOF\n"
+    documents = {
+        "https://exemple.invalide/page": (b"<html><head><title>Titre de page</title><style>x{}</style></head><body><p>Bonjour le <b>monde</b>.</p><script>alert(1)</script><p>Fin.</p></body></html>", "text/html"),
+        "https://exemple.invalide/brut.txt": (b"texte brut sans balise", "text/plain"),
+        "https://exemple.invalide/gros": (b"x" * 5000, "text/plain"),
+        "https://exemple.invalide/faux.pdf": (pdf or b"%PDF-1.4\n", "application/pdf"),
+    }
+    def double(adresse):
+        if adresse not in documents:
+            raise RuntimeError("introuvable")
+        brut, t = documents[adresse]
+        return brut, t, adresse
+    tel = moisson.Telechargeur(tmp_path / "corpus", telechargements_max=5, octets_max_doc=4000, octets_max_total=6000, backend=double)
+    # hors provenance : refusé avant tout réseau
+    r = tel.telecharger("https://exemple.invalide/page")
+    assert r["statut"] == "ECHEC_TELECHARGEMENT" and "provenance" in r["echec"] and r["texte"] == ""
+    assert tel.telecharger("http://arxiv.org/abs/1234.56789")["statut"] == "ECHEC_TELECHARGEMENT"  # http : refusé
+    # la recherche (double) note ses liens ; ensuite le téléchargement passe
+    def moteur(requete, n):
+        return [{"source": "simulation", "id": "x", "titre": "t", "auteurs": [], "date": "", "resume": "", "lien": "https://exemple.invalide/page"},
+                {"source": "simulation", "id": "y", "titre": "t2", "auteurs": [], "date": "", "resume": "", "lien": "https://exemple.invalide/brut.txt"},
+                {"source": "simulation", "id": "z", "titre": "t3", "auteurs": [], "date": "", "resume": "", "lien": "https://exemple.invalide/gros"},
+                {"source": "simulation", "id": "w", "titre": "t4", "auteurs": [], "date": "", "resume": "", "lien": "https://exemple.invalide/faux.pdf"}], b"{}"
+    moteur.source = "simulation"
+    rech = recherche.Rechercheur(tmp_path / "noyau", 3, backend=moteur, telechargeur=tel)
+    assert rech.rechercher("test", 4, source="simulation")["statut"] == "OK"
+    assert rech.rechercher("test", 4, source="inconnue")["statut"] == "SOURCE_INCONNUE"
+    page = tel.telecharger("https://exemple.invalide/page")
+    assert page["statut"] == "OK" and page["genre"] == "html" and page["titre"] == "Titre de page"
+    assert "Bonjour le monde" in page["texte"].replace("\n", " ") and "alert" not in page["texte"] and "x{}" not in page["texte"]
+    assert page["sha256_brut"] == hashlib.sha256(documents["https://exemple.invalide/page"][0]).hexdigest()
+    brut = tel.telecharger("https://exemple.invalide/brut.txt")
+    assert brut["statut"] == "OK" and brut["genre"] == "texte" and brut["texte"] == "texte brut sans balise"
+    gros = tel.telecharger("https://exemple.invalide/gros")  # 5000 > plafond par document 4000
+    assert gros["statut"] == "ECHEC_TELECHARGEMENT" and "plafond" in gros["echec"]
+    assert tel.telecharger("https://exemple.invalide/faux.pdf")["statut"] == "PLAFOND"  # 5 tentatives consommées (les échecs comptent : pas de sondage gratuit)
+    index = tel.lire_index()
+    assert [l["statut"] for l in index] == ["ECHEC_TELECHARGEMENT", "ECHEC_TELECHARGEMENT", "OK", "OK", "ECHEC_TELECHARGEMENT", "PLAFOND"]
+    assert (tmp_path / "corpus" / "doc-0003.txt").exists() and (tmp_path / "corpus" / "doc-0003.bin").exists() and (tmp_path / "corpus" / "doc-0003.json").exists()
+    # identifiant arXiv : résolu vers le PDF d'arxiv.org (hôte toujours permis), sans passer par une recherche
+    tel2 = moisson.Telechargeur(tmp_path / "corpus2", telechargements_max=1, backend=lambda a: (b"%PDF-1.4\n", "application/pdf", a))
+    r2 = tel2.telecharger("arxiv:2505.23836")
+    assert r2["adresse"] == "https://arxiv.org/pdf/2505.23836" and r2["statut"] in ("OK", "SANS_TEXTE")
+
+
+def test_moisson_de_bout_en_bout_en_simulation(tmp_path):
+    """Un organisme qui moissonne par les primitives du noyau (recherche simulée → liens sim:<catégorie> →
+    téléchargement simulé) reçoit la phrase d'indice d'une catégorie comme donnée ; le corpus est dans sa vue
+    d'archive, l'index scellé ; le budget rendu compte les téléchargements."""
+    from essaim_m3.noyau import cli
+    org = tmp_path / "moissonneur" / "organisme"
+    shutil.copytree(FIXTURE / "organisme", org)
+    (org / "principal.py").write_text(
+        "import json, os, shutil\n"
+        "import noyau_client as nc\n"
+        "ICI = os.path.dirname(os.path.abspath(__file__))\n"
+        "def executer(contexte):\n"
+        "    travail = contexte['dossier_travail']\n"
+        "    b = nc.budget()\n"
+        "    r = nc.rechercher('horodatage artificiel', 3, source='simulation')\n"
+        "    docs = [nc.telecharger(x['lien']) for x in r['resultats'][:2]]\n"
+        "    hors = nc.telecharger('https://pirate.invalide/x')\n"
+        "    b2 = nc.budget()\n"
+        "    json.dump({'budget_avant': b, 'recherche': r['statut'], 'docs': [{k: d.get(k) for k in ('statut', 'genre', 'sha256_texte', 'texte')} for d in docs],\n"
+        "               'hors': hors['statut'], 'budget_apres': b2}, open(os.path.join(travail, 'moisson.json'), 'w', encoding='utf-8'), ensure_ascii=False)\n"
+        "    json.dump({t['id']: {'etiquette': t['etiquettes'][0], 'confiance': 0.5} for t in contexte['taches_test']}, open(os.path.join(travail, 'reponses_test.json'), 'w'))\n"
+        "    shutil.copytree(ICI, os.path.join(travail, 'successeur', 'organisme'), ignore=shutil.ignore_patterns('__pycache__'))\n"
+        "    return 'ok'\n", encoding="utf-8")
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "2", "--n-train", "6", "--n-test", "6",
+                          "--appels-max", "10", "--especes", "GEMINI_ARGON", "--organisme-impose", f"moissonneur={org}@anthropic",
+                          "--recherches-max", "5", "--telechargements-max", "3"]) == 0
+    m = json.loads((course / "archive" / "moissonneur" / "g000" / "travail" / "moisson.json").read_text(encoding="utf-8"))
+    assert m["recherche"] == "OK" and m["budget_avant"]["telechargements_restants"] == 3 and "simulation" in m["budget_avant"]["sources"]
+    assert [d["statut"] for d in m["docs"]] == ["OK", "OK"] and any("minutes rondes" in d["texte"] for d in m["docs"])
+    assert m["hors"] == "ECHEC_TELECHARGEMENT" and m["budget_apres"]["telechargements_restants"] == 0
+    # corpus archivé et scellé, visible dans la vue de la lignée ; résumé avec le nombre de téléchargements
+    assert (course / "archive" / "moissonneur" / "g000" / "travail" / "corpus" / "index.jsonl.sha256").exists()
+    manif = json.loads((course / "manifeste-run.json").read_text())
+    vue = pathlib.Path(manif["espace_organismes"]) / "archive_vue" / "moissonneur" / "g000" / "travail" / "corpus"
+    assert (vue / "doc-0001.txt").exists()
+    ligne = [json.loads(x) for x in (course / "archive" / "index.jsonl").read_text().splitlines() if '"moissonneur"' in x][0]
+    assert json.loads((course / "archive" / ligne["chemin"] / "resume.json").read_text())["n_telechargements"] == 3
+
+
+def test_sources_reelles_de_moisson_si_reseau():
+    """Une recherche réelle sur arXiv (lecture seule) quand le réseau le permet ; sinon le test est sauté."""
+    import socket
+    from essaim_m3.noyau import recherche
+    try:
+        socket.create_connection(("export.arxiv.org", 443), timeout=5).close()
+    except OSError:
+        pytest.skip("réseau indisponible")
+    notices, brut = recherche.arxiv_rechercher("evaluation awareness language models", 2)
+    assert len(notices) >= 1 and all(n["source"] == "arxiv" and n["lien"].startswith("http") for n in notices) and len(brut) > 100

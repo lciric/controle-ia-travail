@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-from . import archive as _archive, bac_a_sable, contrat, recherche as _recherche, taches as _taches
+from . import archive as _archive, moisson as _moisson, bac_a_sable, contrat, recherche as _recherche, taches as _taches
 from .appels import EMPREINTE_COLLISIONNEUR_V25, Appelant, Arret, cv
 from .serveur import PARALLELE_MAX_DEFAUT, ServeurAppels
 
@@ -287,13 +287,23 @@ class Noyau:
             return etat["uid"]
         return bac_a_sable.uid_lignee(sorted(self.lignees).index(lignee) if lignee in self.lignees else len(self.lignees))
 
-    def _rechercheur(self, dossier: pathlib.Path, budget: dict | None = None):
+    def _rechercheur(self, dossier: pathlib.Path, budget: dict | None = None, telechargeur=None):
         """Un rechercheur par génération ; None si `recherches_max` vaut 0 (recherche non servie)."""
         budget = budget or self.budget
         if int(budget["recherches_max"]) <= 0:
             return None
         backend = self.recherche(None) if self.recherche is not None else None
-        return _recherche.Rechercheur(dossier, int(budget["recherches_max"]), backend)
+        return _recherche.Rechercheur(dossier, int(budget["recherches_max"]), backend, telechargeur=telechargeur)
+
+    def _telechargeur(self, travail: pathlib.Path, budget: dict | None = None):
+        """Un téléchargeur par génération ; None si `telechargements_max` vaut 0. Le corpus vit dans `travail/corpus`
+        (lisible par la lignée dans sa vue d'archive) ; double sans réseau en simulation."""
+        budget = budget or self.budget
+        if int(budget.get("telechargements_max", 0)) <= 0:
+            return None
+        backend = _moisson.telechargement_simule if self.recherche is not None else None
+        return _moisson.Telechargeur(travail / "corpus", int(budget["telechargements_max"]),
+                                     octets_max_total=int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION)), backend=backend)
 
     def _appelant(self, dossier: pathlib.Path, budget: dict | None = None) -> Appelant:
         budget = budget or self.budget
@@ -392,7 +402,8 @@ class Noyau:
             "taches_entrainement": [dict(_taches.masquer(self.banque["train"][i]), verite=self.banque["train"][i]["verite"]) for i in ordre_train],
             "taches_test": [_taches.masquer(tous_tests[i]) for i in ordre_test],
             "budget": {"appels_max": int(budget["appels_max"]), "usd_max": round(min(float(budget["usd_max"]), self._plafond_restant()), 4),
-                       "temps_max_s": int(budget["temps_max_s"]), "recherches_max": int(budget["recherches_max"])},
+                       "temps_max_s": int(budget["temps_max_s"]), "recherches_max": int(budget["recherches_max"]),
+                       "telechargements_max": int(budget.get("telechargements_max", 0)), "octets_max": int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION))},
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
             "graine": graine_organisme,
         }
@@ -403,9 +414,12 @@ class Noyau:
         uid = self._uid(lignee)
         bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
         bac_a_sable.proteger(travail / "noyau", 0o700) if (travail / "noyau").exists() else None
-        rechercheur = self._rechercheur(travail / "noyau", budget)
+        telechargeur = self._telechargeur(travail, budget)
+        if telechargeur is not None:
+            bac_a_sable.proteger(travail / "corpus", 0o755)
+        rechercheur = self._rechercheur(travail / "noyau", budget, telechargeur)
         bac_a_sable.proteger(travail / "noyau", 0o700)
-        with ServeurAppels(appelant, chemin_socket, int(budget["appels_max"]), self.parallele_max, rechercheur) as serveur:
+        with ServeurAppels(appelant, chemin_socket, int(budget["appels_max"]), self.parallele_max, rechercheur, telechargeur) as serveur:
             execution = bac_a_sable.executer(travail, chemin_socket, int(budget["temps_max_s"]), isoler_reseau=self.isoler_reseau, uid=uid)
             n_appels = serveur.n_appels
             refus = list(serveur.refus)
@@ -414,6 +428,12 @@ class Noyau:
         if non_conformes:  # CR-02 (1) : génération invalidée, exclue des hypothèses, lignée arrêtée
             execution = dict(execution, code="INVALIDE_MODELE", code_origine=execution.get("code"), non_conformes=non_conformes)
         n_recherches = rechercheur.compteur if rechercheur is not None else 0
+        n_telechargements = telechargeur.compteur if telechargeur is not None else 0
+        if telechargeur is not None:
+            for f in [travail / "corpus"] + list((travail / "corpus").rglob("*")):
+                bac_a_sable.proteger(f, 0o755 if f.is_dir() else 0o644)
+            if telechargeur.index.exists():
+                _archive.sceller(telechargeur.index)  # corpus moissonné scellé en fin de génération
         self.depense_totale += appelant.depense_usd
         self.n_appels_total += n_appels
         # jugement externe
@@ -460,7 +480,7 @@ class Noyau:
                   "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
                   "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel,
                   "impose": bool(etat.get("impose")), "famille": etat.get("famille"), "relance": bool(etat.get("relance_en_cours")),
-                  "n_recherches": n_recherches, "invalide": bool(non_conformes), "non_conformes": non_conformes, "phase": phase}
+                  "n_recherches": n_recherches, "n_telechargements": n_telechargements, "invalide": bool(non_conformes), "non_conformes": non_conformes, "phase": phase}
         self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final, phase=phase)
         self._evenement(etape=("conception" if phase else "generation"), lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))
