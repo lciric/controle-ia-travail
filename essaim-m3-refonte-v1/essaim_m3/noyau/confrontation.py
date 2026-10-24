@@ -40,7 +40,7 @@ def charger_metrique(organisme: pathlib.Path) -> dict:
     if not d.is_dir():
         return {"present": False, "problemes": ["metrique/ absent"], "attaques": [], "calculer": None, "definition": None}
     problemes = []
-    definition = (d / "definition.md").read_text(encoding="utf-8") if (d / "definition.md").exists() else None
+    definition = (d / "definition.md").read_text(encoding="utf-8-sig") if (d / "definition.md").exists() else None
     if definition is None:
         problemes.append("definition.md absent")
     calculer = d / "calculer.py"
@@ -49,14 +49,14 @@ def charger_metrique(organisme: pathlib.Path) -> dict:
         calculer = None
     else:
         try:
-            compile(calculer.read_text(encoding="utf-8"), str(calculer), "exec")
+            compile(calculer.read_text(encoding="utf-8-sig"), str(calculer), "exec")
         except (SyntaxError, UnicodeDecodeError) as e:
             problemes.append(f"calculer.py : {str(e)[:120]}")
             calculer = None
     attaques, pb = [], []
     if (d / "attaques.json").exists():
         try:
-            attaques, pb = _taches.valider_taches_attaque(json.loads((d / "attaques.json").read_text(encoding="utf-8")))
+            attaques, pb = _taches.valider_taches_attaque(json.loads((d / "attaques.json").read_text(encoding="utf-8-sig")))
         except (json.JSONDecodeError, UnicodeDecodeError) as e:
             pb = [f"attaques.json illisible : {str(e)[:100]}"]
     else:
@@ -75,7 +75,8 @@ class Confrontation:
         return lignes[-1] if lignes else None
 
     def _famille(self, lignee: str) -> str:
-        return contrat.FAMILLES[self.noyau.lignees[lignee]["espece_amorcage"]]
+        etat = self.noyau.lignees[lignee]
+        return etat.get("famille") or contrat.FAMILLES[etat["espece_amorcage"]]
 
     def _executer_sur_attaques(self, lignee_def: str, organisme: pathlib.Path, attaques: list[dict], etiquette: str) -> dict:
         travail = self.dossier / etiquette / "defense"
@@ -109,7 +110,7 @@ class Confrontation:
         f = travail / "reponses_test.json"
         if f.exists():
             try:
-                brut = json.loads(f.read_text(encoding="utf-8"))
+                brut = json.loads(f.read_text(encoding="utf-8-sig"))
                 if isinstance(brut, dict):
                     for t in attaques:
                         r = brut.get(t["id"])

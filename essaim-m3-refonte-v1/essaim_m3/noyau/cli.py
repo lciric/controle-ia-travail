@@ -31,6 +31,24 @@ def _budget(args) -> dict:
     return {"appels_max": args.appels_max, "usd_max": args.usd_par_generation, "temps_max_s": args.temps_max}
 
 
+def _organismes_imposes(args) -> dict:
+    """`--organisme-impose NOM=CHEMIN@FAMILLE` (répétable) : lignées dont la génération 0 est fournie, pas écrite
+    par une espèce (par exemple l'essaim de Gemini corrigé, ou l'organisme écrit par Gemini sous contrat)."""
+    sortie = {}
+    for spec in args.organisme_impose or []:
+        if "=" not in spec or "@" not in spec.split("=", 1)[1]:
+            raise SystemExit(f"--organisme-impose attend NOM=CHEMIN@FAMILLE, reçu : {spec!r}")
+        nom, reste = spec.split("=", 1)
+        chemin, famille = reste.rsplit("@", 1)
+        nom = nom.strip().lower()
+        if not nom or not pathlib.Path(chemin).is_dir():
+            raise SystemExit(f"--organisme-impose : nom vide ou dossier introuvable : {spec!r}")
+        if nom in sortie:
+            raise SystemExit(f"--organisme-impose : nom en double : {nom!r}")
+        sortie[nom] = {"organisme": str(pathlib.Path(chemin).resolve()), "famille": famille.strip().lower()}
+    return sortie
+
+
 def simuler(args) -> int:
     from ..simulateur import appelants_simules
     ss = np.random.SeedSequence(args.graine)
@@ -40,13 +58,15 @@ def simuler(args) -> int:
     appelants, _ = appelants_simules(rng_especes, **options)
     noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                          args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
-                         especes_amorcage=args.especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel)
+                         especes_amorcage=args.especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
+                         organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max)
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
     if args.confronter:
         conf = confrontation.Confrontation(noyau, pathlib.Path(args.sortie) / "confrontation").confronter()
         rapport["confrontation"] = {"paires": [{k: p.get(k) for k in ("attaquant", "defendeur", "applicable", "n_attaques", "score_attaques", "metrique")} for p in conf["paires"]]}
-    print(json.dumps({"amorcage": {k: v["statut"] for k, v in amorcage.items()}, "courbes": rapport["courbes"],
+    print(json.dumps({"amorcage": {k: v["statut"] for k, v in amorcage.items()}, "lignees": {l: {"famille": e.get("famille"), "impose": e.get("impose")} for l, e in noyau.lignees.items()},
+                      "courbes": rapport["courbes"],
                       "scores_finaux": rapport["scores_finaux"], "depense_usd": rapport["depense_totale_usd"],
                       "n_appels": rapport["n_appels_total"]}, ensure_ascii=False, indent=1))
     return 0
@@ -73,7 +93,8 @@ def lancer(args) -> int:
     try:
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                              args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
-                             entropie=args.graine, especes_amorcage=args.especes, etiquette_run="reel", gel=args.gel)
+                             entropie=args.graine, especes_amorcage=args.especes, etiquette_run="reel", gel=args.gel,
+                             organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max)
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
@@ -102,6 +123,9 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--isoler-reseau", action="store_true")
         q.add_argument("--gel", action="store_true", help="bras témoin : relance la génération 0, ignore les successeurs")
         q.add_argument("--confronter", action="store_true", help="après la boucle : métriques croisées et attaques entre lignées de familles différentes")
+        q.add_argument("--organisme-impose", action="append", default=None, metavar="NOM=CHEMIN@FAMILLE",
+                       help="lignée dont la génération 0 est fournie (dossier organisme/) ; famille de fournisseur déclarée (anthropic|gemini) ; répétable")
+        q.add_argument("--parallele-max", type=int, default=8, help="appels aux espèces servis en parallèle au plus (défaut 8)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
             q.add_argument("--n-test", type=int, default=24)

@@ -344,3 +344,147 @@ def test_metrique_en_bac_a_sable_non_calculee_sur_erreur(tmp_path):
     (m / "calculer.py").write_text("def calculer(d):\n    return 0.5\n", encoding="utf-8")
     r3 = bac_a_sable.executer_metrique(tmp_path / "z", m, s)
     assert r3["calculee"] and r3["valeur"] == 0.5
+
+
+# ---------- appels parallèles (le moteur de Gemini lançait 8 à 24 appels à la fois) ----------
+
+def test_appels_paralleles_plafond_tenu_au_pire_cas(tmp_path):
+    """Vingt fils appellent en même temps un appelant dont le plafond n'admet que quelques appels : la dépense ne
+    dépasse jamais le plafond, chaque appel refusé lève `Arret`, les identifiants sont uniques (cas sain : la somme
+    des acceptés et des refusés fait vingt ; artefact : un plafond nul refuse tout)."""
+    import threading
+    import time
+    doubles, especes = appelants_simules(rng(3))
+    lent = doubles["gemini"]
+
+    def servir_lentement(modele_id, prompt, max_tokens):
+        time.sleep(0.02)
+        return lent(modele_id, prompt, max_tokens)
+
+    appelants = {"anthropic": servir_lentement, "gemini": servir_lentement}
+    pire = appels.cv.cout_pire_cas(appels.modele_de("GEMINI_ARGON")["prix"], 20, 200)
+    a = appels.Appelant(tmp_path / "a", pire * 5.5, appelants)
+    acceptes, refuses, verrou = [], [], threading.Lock()
+
+    def travailleur(i):
+        try:
+            r = a.appeler("GEMINI_ARGON", "t", f"Exploration libre {i:02d}", max_tokens=200)
+            with verrou:
+                acceptes.append(r.identifiant)
+        except appels.Arret:
+            with verrou:
+                refuses.append(i)
+
+    fils = [threading.Thread(target=travailleur, args=(i,)) for i in range(20)]
+    for f in fils:
+        f.start()
+    for f in fils:
+        f.join()
+    assert len(acceptes) + len(refuses) == 20 and len(acceptes) == 5 and len(set(acceptes)) == 5
+    assert a.depense_usd <= a.plafond_usd and abs(a.engage_usd) < 1e-12
+    assert len(a.lire_journal()) == 5
+    b = appels.Appelant(tmp_path / "b", 0.0, appelants)
+    with pytest.raises(appels.Arret):
+        b.appeler("GEMINI_ARGON", "t", "Exploration libre", max_tokens=200)
+
+
+def test_serveur_sert_en_parallele_sous_borne(tmp_path):
+    """Seize clients simultanés, dix appels permis, quatre en vol au plus : dix OK, six PLAFOND, et le nombre
+    d'appels simultanés observé est entre deux et quatre."""
+    import threading
+    import time
+    doubles, _ = appelants_simules(rng(4))
+    base = doubles["gemini"]
+
+    def servir_lentement(modele_id, prompt, max_tokens):
+        time.sleep(0.05)
+        return base(modele_id, prompt, max_tokens)
+
+    a = appels.Appelant(tmp_path, 5.0, {"anthropic": servir_lentement, "gemini": servir_lentement})
+    s = serveur.ServeurAppels(a, str(tmp_path / "s.sock"), appels_max=10, parallele_max=4)
+    statuts, verrou = [], threading.Lock()
+
+    def client(i):
+        r = s.traiter({"op": "appeler", "espece": "GEMINI_ARGON", "prompt": f"Exploration libre {i}", "max_tokens": 512})
+        with verrou:
+            statuts.append(r["statut"])
+
+    fils = [threading.Thread(target=client, args=(i,)) for i in range(16)]
+    for f in fils:
+        f.start()
+    for f in fils:
+        f.join()
+    assert statuts.count("OK") == 10 and statuts.count("PLAFOND") == 6
+    assert 2 <= s.en_vol_max <= 4 and s.n_appels == 10
+
+
+# ---------- lignées imposées (organismes fournis, comparés sous le même noyau) ----------
+
+def test_lignee_imposee_valide_invalide_et_famille(tmp_path):
+    """Cas sain : l'essaim de Gemini v2 (fourni) tourne comme lignée imposée à côté d'une lignée auto-écrite, avec sa
+    famille déclarée ; artefact : un dossier sans manifeste donne `ORGANISME_IMPOSE_INVALIDE` et aucune lignée."""
+    from essaim_m3.noyau import confrontation
+    casse = tmp_path / "casse"
+    casse.mkdir()
+    (casse / "principal.py").write_text("def executer(c):\n    return 1\n", encoding="utf-8")
+    ss = np.random.SeedSequence(31)
+    r1, r2 = (np.random.default_rng(x) for x in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 8, 8)
+    doubles, _ = appelants_simules(r2)
+    imposes = {"gemini-v2": {"organisme": str(RACINE / "organismes" / "gemini-v2" / "organisme"), "famille": "gemini"},
+               "casse": {"organisme": str(casse), "famille": "gemini"}}
+    n = boucle.Noyau(tmp_path / "run", "m", banque, {"appels_max": 60, "usd_max": 5.0, "temps_max_s": 90}, 20.0, 2,
+                     appelants=doubles, especes_amorcage=["CLAUDE_OPUS_5_5"], entropie=31, organismes_imposes=imposes)
+    am = n.amorcer()
+    assert am["claude-opus-5-5"]["statut"] == "ORGANISME_VALIDE"
+    assert am["gemini-v2"]["statut"] == "ORGANISME_IMPOSE_VALIDE" and am["gemini-v2"]["cout_usd"] == 0.0
+    assert am["casse"]["statut"] == "ORGANISME_IMPOSE_INVALIDE" and "casse" not in n.lignees
+    assert n.lignees["gemini-v2"]["impose"] and n.lignees["gemini-v2"]["famille"] == "gemini"
+    assert n.manifeste["organismes_imposes"]["gemini-v2"]["empreinte_arbre"]
+    rapport = n.boucler()
+    assert len(rapport["courbes"]["gemini-v2"]) == 2 and len(rapport["courbes"]["claude-opus-5-5"]) == 2
+    gens = [l for l in n.archive.lignes() if l["lignee"] == "gemini-v2"]
+    assert gens and gens[0]["impose"] is True and gens[0]["famille"] == "gemini"
+    assert json.loads((n.archive.racine / gens[0]["chemin"] / "resume.json").read_text(encoding="utf-8"))["impose"] is True
+    conf = confrontation.Confrontation(n, tmp_path / "run" / "confrontation").confronter()
+    paires = {(p["attaquant"], p["defendeur"]): p for p in conf["paires"]}
+    assert paires[("claude-opus-5-5", "gemini-v2")]["applicable"] and paires[("gemini-v2", "claude-opus-5-5")]["applicable"]
+    assert conf["lignees"]["gemini-v2"]["famille"] == "gemini"
+
+
+def test_lignee_imposee_refuse_nom_en_conflit_et_famille_inconnue(tmp_path):
+    ss = np.random.SeedSequence(32)
+    r1, r2 = (np.random.default_rng(x) for x in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 4, 4)
+    doubles, _ = appelants_simules(r2)
+    org = str(RACINE / "organismes" / "gemini-v2" / "organisme")
+    with pytest.raises(appels.Arret):
+        boucle.Noyau(tmp_path / "r1", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 30}, 5.0, 1,
+                     appelants=doubles, especes_amorcage=["GEMINI_ARGON"], organismes_imposes={"gemini-argon": {"organisme": org, "famille": "gemini"}})
+    with pytest.raises(appels.Arret):
+        boucle.Noyau(tmp_path / "r2", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 30}, 5.0, 1,
+                     appelants=doubles, especes_amorcage=["GEMINI_ARGON"], organismes_imposes={"x": {"organisme": org, "famille": "openai"}})
+
+
+def test_organisme_avec_marque_d_ordre_d_octets_accepte(tmp_path):
+    """Un organisme écrit sous Windows (marque d'ordre d'octets en tête de `manifeste.json` et des `.py`) est lu
+    comme les autres : validation, lancement en bac à sable, lecture de `reponses_test.json` avec marque."""
+    src = FIXTURE / "organisme"
+    cible = tmp_path / "bom" / "organisme"
+    shutil.copytree(src, cible)
+    for f in [cible / "manifeste.json"] + list(cible.rglob("*.py")):
+        f.write_bytes(b"\xef\xbb\xbf" + f.read_bytes())
+    assert contrat.valider_organisme(cible) == []
+    ss = np.random.SeedSequence(33)
+    r1, r2 = (np.random.default_rng(x) for x in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 4, 4)
+    doubles, _ = appelants_simules(r2)
+    n = boucle.Noyau(tmp_path / "run", "m", banque, {"appels_max": 30, "usd_max": 5.0, "temps_max_s": 60}, 10.0, 1,
+                     appelants=doubles, especes_amorcage=["GEMINI_ARGON"], entropie=33,
+                     organismes_imposes={"bom": {"organisme": str(cible), "famille": "anthropic"}})
+    am = n.amorcer()
+    assert am["bom"]["statut"] == "ORGANISME_IMPOSE_VALIDE"
+    rapport = n.boucler()
+    g = [l for l in n.archive.lignes() if l["lignee"] == "bom"][0]
+    resume = json.loads((n.archive.racine / g["chemin"] / "resume.json").read_text(encoding="utf-8"))
+    assert g["statut"] == "OK" and resume["n_reponses_test"] > 0 and 0.0 <= rapport["courbes"]["bom"][0] <= 1.0

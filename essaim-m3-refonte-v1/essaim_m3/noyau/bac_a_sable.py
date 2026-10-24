@@ -28,7 +28,7 @@ racine = os.getcwd()
 sys.path.insert(0, os.path.join(racine, "organisme"))
 sys.path.insert(0, racine)
 contexte = json.load(open(os.environ["ESSAIM_CONTEXTE"], encoding="utf-8"))
-manifeste = json.load(open(os.path.join(racine, "organisme", "manifeste.json"), encoding="utf-8"))
+manifeste = json.load(open(os.path.join(racine, "organisme", "manifeste.json"), encoding="utf-8-sig"))
 module, fonction = manifeste["entree"].split(":", 1)
 statut = {"code": "OK", "erreur": None}
 try:

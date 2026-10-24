@@ -7,6 +7,8 @@ Chaque double lit la consigne (reconnue par sa première phrase) et répond comm
   visible dans la consigne), sinon `p_base` ;
 - découverte : propose `k` candidats, réels (catégorie présente dans le contexte) avec probabilité `q_decouverte` ;
 - vérification : juste avec probabilité `p_verif` sur chaque item (canari de la banque, ou candidat) ;
+- consigne d'un organisme inconnu : lecture générique — réponse de tâche si la consigne contient les deux étiquettes
+  d'une famille (JSON sur une ligne), énoncé d'induction si elle contient plusieurs exemples avec vérité ;
 - tout autre texte : phrases à jetons mathématiques.
 
 Pannes programmables (`pannes`) : erreur d'interface (404), réponse vide, modèle servi non conforme, amorçage sans
@@ -168,8 +170,43 @@ class EspeceSimulee:
         elif prompt.startswith("Tu es un vérificateur isolé"):
             texte = self._verification(prompt)
         else:
-            texte = self._texte_math()
+            texte = self._generique(prompt)
         return self._reponse(texte, prompt)
+
+    # ---- consignes d'organismes inconnus : lecture générique (les espèces simulées ne sont pas écrites pour un
+    # organisme ; elles doivent répondre à n'importe quelle consigne qui contient une tâche de la banque) ----
+    def _generique(self, prompt: str) -> str:
+        """Si la consigne contient les deux étiquettes d'une famille et au plus une phrase d'indice placée en fin de
+        consigne : réponse de tâche (JSON sur une ligne) ; si elle contient plusieurs exemples avec vérité : énoncé
+        d'induction qui nomme les catégories présentes ; sinon : texte mathématique."""
+        bas = prompt.lower()
+        familles = [f for f, (pos, neg) in ETIQUETTES.items() if pos in bas and neg in bas]
+        positions = {c: prompt.rfind(PHRASES_INDICE[c]) for c in TOUTES_CATEGORIES if PHRASES_INDICE[c] in prompt}
+        n_verites = len(re.findall(r"v[ée]rit[ée]\s*[:=]", bas))
+        if n_verites >= 3 and positions:
+            lignes = [f"Indice récurrent chez les positifs : « {PHRASES_INDICE[c]} » (catégorie {c})." for c in sorted(positions, key=positions.get)]
+            return "Invariants observés :\n" + "\n".join(lignes) + "\nRègle : la présence d'un de ces indices vaut étiquette positive."
+        if familles:
+            # plusieurs familles nommées (règles apprises, mémoire…) : la tâche à juger est celle dont les étiquettes
+            # sont citées le plus tard dans la consigne
+            fam = max(familles, key=lambda f: max(bas.rfind(ETIQUETTES[f][0]), bas.rfind(ETIQUETTES[f][1])))
+            pos, neg = ETIQUETTES[fam]
+            # l'indice retenu est le dernier du texte : la tâche à juger vient après les règles et la mémoire
+            cat_presente = max(positions, key=positions.get) if positions else None
+            if cat_presente is not None and cat_presente not in CATEGORIES[fam]:
+                cat_presente = None
+            connues = set(MOTIF_CONNAISSANCE_CAT.findall(bas))
+            verite = pos if cat_presente else neg
+            if cat_presente and cat_presente in connues:
+                juste = self.rng.random() < self.p_connu
+            elif cat_presente:
+                juste = self.rng.random() < self.p_base
+            else:
+                juste = self.rng.random() < (self.p_connu if connues else self.p_base)
+            etiquette = verite if juste else (neg if verite == pos else pos)
+            return ("Faits examinés : " + (f"indice de catégorie {cat_presente}." if cat_presente else "aucun indice net.") +
+                    "\n" + json.dumps({"etiquette": etiquette, "confiance": 0.8 if juste else 0.6, "raisonnement": "lecture de la trace"}))
+        return self._texte_math()
 
 
 def appelants_simules(rng: np.random.Generator, **options) -> tuple[dict, dict]:

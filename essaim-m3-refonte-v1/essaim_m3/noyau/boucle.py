@@ -7,6 +7,7 @@ de l'humain (générations, budget, temps), et l'arrêt sur ordre (fichier `STOP
 from __future__ import annotations
 
 import datetime as _dt
+import hashlib
 import json
 import pathlib
 import platform
@@ -17,18 +18,34 @@ import numpy as np
 
 from . import archive as _archive, bac_a_sable, contrat, taches as _taches
 from .appels import Appelant, Arret, cv
-from .serveur import ServeurAppels
+from .serveur import PARALLELE_MAX_DEFAUT, ServeurAppels
+
+FAMILLES_CONNUES = sorted(set(contrat.FAMILLES.values()))
 
 
 def _heure() -> str:
     return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def empreinte_arbre(dossier: pathlib.Path) -> str:
+    """Empreinte d'un dossier : chemins relatifs triés et contenu de chaque fichier (indépendante des dates)."""
+    h = hashlib.sha256()
+    for f in sorted(p for p in pathlib.Path(dossier).rglob("*") if p.is_file()):
+        h.update(str(f.relative_to(dossier)).encode("utf-8") + b"\0")
+        h.update(hashlib.sha256(f.read_bytes()).hexdigest().encode("ascii") + b"\n")
+    return h.hexdigest()
+
+
 class Noyau:
     def __init__(self, racine: str | pathlib.Path, mission: str, banque: dict, budget_generation: dict,
                  plafond_total_usd: float, generations_max: int, appelants: dict | None = None, reel: bool = False,
                  go_id: str | None = None, isoler_reseau: bool = False, entropie: int | None = None,
-                 especes_amorcage: list[str] | None = None, etiquette_run: str = "", gel: bool = False):
+                 especes_amorcage: list[str] | None = None, etiquette_run: str = "", gel: bool = False,
+                 organismes_imposes: dict[str, dict] | None = None, parallele_max: int = PARALLELE_MAX_DEFAUT):
+        """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
+        — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
+        corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
+        lignées auto-écrites. La famille déclarée sert à la confrontation entre familles."""
         self.racine = pathlib.Path(racine)
         self.racine.mkdir(parents=True, exist_ok=True)
         self.mission = mission
@@ -40,6 +57,13 @@ class Noyau:
         self.reel, self.go_id, self.isoler_reseau = bool(reel), go_id, bool(isoler_reseau)
         self.especes_amorcage = list(especes_amorcage or contrat.ESPECES_DISPONIBLES)
         self.gel = bool(gel)  # bras témoin : la génération 0 est relancée, le successeur est ignoré
+        self.organismes_imposes = dict(organismes_imposes or {})
+        self.parallele_max = max(1, int(parallele_max))
+        for nom, spec in self.organismes_imposes.items():
+            if not isinstance(spec, dict) or "organisme" not in spec or spec.get("famille") not in FAMILLES_CONNUES:
+                raise Arret(f"organisme imposé {nom!r} : il faut {{'organisme': dossier, 'famille': {FAMILLES_CONNUES}}}")
+            if nom in {e.lower().replace("_", "-") for e in self.especes_amorcage}:
+                raise Arret(f"organisme imposé {nom!r} : nom déjà pris par une lignée auto-écrite")
         self.banque.setdefault("test_final", [])
         self.archive = _archive.Archive(self.racine / "archive")
         self.depense_totale = 0.0
@@ -54,7 +78,11 @@ class Noyau:
             "budget_generation": self.budget, "plafond_total_usd": self.plafond_total, "generations_max": self.generations_max,
             "isolation_reseau": self.isoler_reseau, "gel": self.gel, "n_taches_entrainement": len(banque["train"]),
             "n_taches_test_dev": len(banque["test"]), "n_taches_test_final": len(banque.get("test_final", [])),
-            "mission_sha256": __import__("hashlib").sha256(mission.encode("utf-8")).hexdigest(),
+            "mission_sha256": hashlib.sha256(mission.encode("utf-8")).hexdigest(),
+            "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage,
+            "organismes_imposes": {nom: {"source": str(spec["organisme"]), "famille": spec["famille"],
+                                         "empreinte_arbre": (empreinte_arbre(pathlib.Path(spec["organisme"])) if pathlib.Path(spec["organisme"]).is_dir() else None)}
+                                   for nom, spec in self.organismes_imposes.items()},
         }
         if self.reel:
             if not self.go_id:
@@ -99,8 +127,28 @@ class Noyau:
             resultats[lignee] = {"espece": espece, "statut": statut, "problemes": problemes, "n_fichiers": len(fichiers),
                                  "id_appel": res.identifiant, "cout_usd": appelant.depense_usd}
             if statut == "ORGANISME_VALIDE":
-                self.lignees[lignee] = {"espece_amorcage": espece, "generation": 0, "organisme": dossier / "organisme", "active": True}
+                self.lignees[lignee] = {"espece_amorcage": espece, "famille": contrat.FAMILLES[espece], "generation": 0,
+                                        "organisme": dossier / "organisme", "active": True, "impose": False}
             self._evenement(etape="amorcage", lignee=lignee, **resultats[lignee])
+        # lignées imposées : génération 0 fournie (aucun appel), validée par le même contrat que les auto-écrites
+        for nom, spec in self.organismes_imposes.items():
+            source = pathlib.Path(spec["organisme"])
+            problemes = contrat.valider_organisme(source)
+            dossier = self.racine / "lignees" / nom / "g000"
+            if not problemes:
+                dossier.mkdir(parents=True, exist_ok=True)
+                if (dossier / "organisme").exists():
+                    shutil.rmtree(dossier / "organisme")
+                shutil.copytree(source, dossier / "organisme", symlinks=False, ignore=shutil.ignore_patterns("__pycache__"))
+                problemes = contrat.valider_organisme(dossier / "organisme")
+            statut = "ORGANISME_IMPOSE_VALIDE" if not problemes else "ORGANISME_IMPOSE_INVALIDE"
+            resultats[nom] = {"espece": None, "famille": spec["famille"], "statut": statut, "problemes": problemes,
+                              "source": str(source), "empreinte_arbre": (empreinte_arbre(source) if source.is_dir() else None),
+                              "id_appel": None, "cout_usd": 0.0}
+            if statut == "ORGANISME_IMPOSE_VALIDE":
+                self.lignees[nom] = {"espece_amorcage": None, "famille": spec["famille"], "generation": 0,
+                                     "organisme": dossier / "organisme", "active": True, "impose": True}
+            self._evenement(etape="amorcage", lignee=nom, **resultats[nom])
         return resultats
 
     # ---- une génération ----
@@ -131,10 +179,11 @@ class Noyau:
         if len(chemin_socket) > 100:  # limite des sockets Unix
             chemin_socket = f"/tmp/essaim-{lignee[:12]}-g{g}.sock"
         bac_a_sable.preparer(travail, organisme, contexte)
-        with ServeurAppels(appelant, chemin_socket, int(self.budget["appels_max"])) as serveur:
+        with ServeurAppels(appelant, chemin_socket, int(self.budget["appels_max"]), self.parallele_max) as serveur:
             execution = bac_a_sable.executer(travail, chemin_socket, int(self.budget["temps_max_s"]), isoler_reseau=self.isoler_reseau)
             n_appels = serveur.n_appels
             refus = list(serveur.refus)
+            en_vol_max = serveur.en_vol_max
         self.depense_totale += appelant.depense_usd
         self.n_appels_total += n_appels
         # jugement externe
@@ -143,7 +192,7 @@ class Noyau:
         probleme_reponses = None
         if chemin_rep.exists():
             try:
-                brut = json.loads(chemin_rep.read_text(encoding="utf-8"))
+                brut = json.loads(chemin_rep.read_text(encoding="utf-8-sig"))
                 if isinstance(brut, dict):
                     for t in tous_tests:
                         r = brut.get(t["id"])
@@ -165,7 +214,7 @@ class Noyau:
         chemin_metrique = travail / "metrique_proposee.json"
         if chemin_metrique.exists():
             try:
-                m = json.loads(chemin_metrique.read_text(encoding="utf-8"))
+                m = json.loads(chemin_metrique.read_text(encoding="utf-8-sig"))
                 metrique = m if isinstance(m, dict) else {"illisible": True}
             except (json.JSONDecodeError, UnicodeDecodeError):
                 metrique = {"illisible": True}
@@ -174,8 +223,9 @@ class Noyau:
         problemes_succ = contrat.valider_organisme(successeur) if successeur.exists() else ["successeur absent"]
         a_successeur = not problemes_succ
         resume = {"statut": execution["code"], "execution": execution, "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
-                  "refus_noyau": refus, "successeur": a_successeur, "problemes_successeur": problemes_succ,
-                  "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel}
+                  "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
+                  "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel,
+                  "impose": bool(etat.get("impose")), "famille": etat.get("famille")}
         self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final)
         self._evenement(etape="generation", lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))

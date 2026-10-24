@@ -42,6 +42,10 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 1)
      "cout_usd", "identifiant", "echec"} ; `statut` vaut "OK" quand `texte` est une réponse complète ; sinon
      ("VIDE", "TRONQUE", "REFUS", "ANOMALIE", "ECHEC_API", "MODELE_NON_CONFORME", "PLAFOND") `texte` est vide.
      Le noyau ne remplace jamais une espèce par une autre et ne renvoie jamais une erreur comme un texte.
+     Les appels peuvent être faits en parallèle (fils ou processus) : le noyau en sert au plus `parallele_max`
+     à la fois (8 par défaut) et met les autres en attente. Le plafond en dollars est tenu au pire cas
+     (`max_tokens` demandé) sur les appels en vol : sans `max_tokens`, le noyau prend 4096 ; un `max_tokens`
+     élevé réduit donc le nombre d'appels parallèles possibles sous le plafond.
    - `especes()` → liste des espèces disponibles ; `budget()` → {"appels_restants", "usd_restants"}.
    Chaque appel est journalisé par le noyau (modèle demandé et servi, raison d'arrêt, usage, coût, empreintes).
 
@@ -169,7 +173,7 @@ def valider_organisme(dossier: pathlib.Path) -> list[str]:
     if not manifeste.is_file():
         return p + ["manifeste.json absent"]
     try:
-        m = json.loads(manifeste.read_text(encoding="utf-8"))
+        m = json.loads(manifeste.read_text(encoding="utf-8-sig"))
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         return p + [f"manifeste.json illisible : {e}"]
     if not isinstance(m, dict) or not isinstance(m.get("entree"), str) or ":" not in m["entree"]:
@@ -181,7 +185,7 @@ def valider_organisme(dossier: pathlib.Path) -> list[str]:
         p.append(f"manifeste.json : module d'entrée introuvable : {module}")
     for py in dossier.rglob("*.py"):
         try:
-            compile(py.read_text(encoding="utf-8"), str(py), "exec")
+            compile(py.read_text(encoding="utf-8-sig"), str(py), "exec")
         except (SyntaxError, UnicodeDecodeError) as e:
             p.append(f"syntaxe : {py.relative_to(dossier)} : {str(e)[:120]}")
     return p

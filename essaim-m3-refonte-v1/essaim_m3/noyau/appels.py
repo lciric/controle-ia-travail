@@ -23,6 +23,7 @@ import json
 import os
 import pathlib
 import sys
+import threading
 
 ICI = pathlib.Path(__file__).resolve().parent
 RACINE_OUTILS = ICI.parents[2]  # racine de la branche des outils (…/essaim-m3-refonte-v1/essaim_m3/noyau → …/)
@@ -117,9 +118,11 @@ class Appelant:
         self.journal = self.dossier / "journal-appels.jsonl"
         self.plafond_usd = float(plafond_usd)
         self.depense_usd = 0.0
+        self.engage_usd = 0.0  # pire cas des appels en vol (appels parallèles) : réservé avant, libéré après
         self.compteur = 0
         self.reel = bool(reel)
         self.go_id = go_id
+        self._verrou = threading.Lock()  # protège plafond, engagement, compteur et journal ; jamais l'appel réseau
         if appelants is None:
             if not self.reel:
                 raise Arret("aucun appelant fourni et mode réel non demandé : rien n'est appelé")
@@ -129,25 +132,36 @@ class Appelant:
         self.appelants = appelants
 
     # ---- plafond ----
-    def _verifier_plafond(self, prix, prompt: str, max_tokens: int):
+    def _reserver(self, prix, prompt: str, max_tokens: int) -> float:
+        """Sous verrou : refuse si dépense + engagé + pire cas dépasse le plafond ; sinon engage le pire cas."""
         pire = cv.cout_pire_cas(prix, len(prompt), max_tokens)
-        if self.depense_usd + pire > self.plafond_usd:
-            raise Arret(f"plafond {self.plafond_usd:.2f} USD : dépense {self.depense_usd:.2f} + pire cas {pire:.2f}")
+        if self.depense_usd + self.engage_usd + pire > self.plafond_usd:
+            raise Arret(f"plafond {self.plafond_usd:.2f} USD : dépense {self.depense_usd:.2f} + en vol {self.engage_usd:.2f} + pire cas {pire:.2f}")
+        self.engage_usd += pire
+        return pire
 
     # ---- appel ----
     def appeler(self, espece: str, etape: str, prompt: str, max_tokens: int | None = None,
                 angle: float | None = None, role: str = "") -> Resultat:
+        """Sûr sous appels parallèles : le plafond est tenu au pire cas sur les appels en vol (jamais dépassé par
+        la somme des pires cas), l'appel réseau se fait hors verrou, la comptabilité et le journal sous verrou."""
         m = modele_de(espece)
         max_tokens = int(max_tokens or m["max"])
-        self._verifier_plafond(m["prix"], prompt, max_tokens)
-        self.compteur += 1
-        ident = f"{etape}-{self.compteur:04d}"
-        debut = maintenant()
-        (self.dossier / "appels" / f"{ident}.prompt.txt").write_text(prompt, encoding="utf-8")
         f = self.appelants.get(m["fournisseur"])
         if f is None:
             raise Arret(f"aucun appelant pour le fournisseur {m['fournisseur']!r}")
-        rep = f(m["id"], prompt, max_tokens)
+        with self._verrou:
+            pire = self._reserver(m["prix"], prompt, max_tokens)
+            self.compteur += 1
+            ident = f"{etape}-{self.compteur:04d}"
+            (self.dossier / "appels" / f"{ident}.prompt.txt").write_text(prompt, encoding="utf-8")
+        debut = maintenant()
+        try:
+            rep = f(m["id"], prompt, max_tokens)
+        except BaseException:
+            with self._verrou:
+                self.engage_usd = max(0.0, self.engage_usd - pire)
+            raise
         fin_utc = maintenant()
         if rep.echec:
             statut = "ECHEC_API"
@@ -157,23 +171,26 @@ class Appelant:
             statut = cv.statut_reponse(m["fournisseur"], rep)
         texte = rep.texte if statut == "OK" else ""
         cout = cv.cout(m["prix"], rep.usage) if rep.usage else 0.0
-        self.depense_usd += cout
-        (self.dossier / "appels" / f"{ident}.reponse.txt").write_text(rep.texte or "", encoding="utf-8")
-        res = Resultat(identifiant=ident, espece=espece, statut=statut, texte=texte, modele_demande=m["id"],
-                       modele_servi=rep.modele_servi, fin=rep.fin, categorie=rep.categorie, usage=dict(rep.usage),
-                       cout_usd=round(cout, 6), echec=rep.echec, angle=angle)
-        ligne = {
-            "id": ident, "etape": etape, "role": role, "espece": espece, "famille": m["fournisseur"],
-            "modele_demande": m["id"], "modele_servi": rep.modele_servi, "statut": statut, "fin": rep.fin,
-            "categorie": rep.categorie, "usage": dict(rep.usage), "cout_usd": round(cout, 6),
-            "cumul_usd": round(self.depense_usd, 6), "angle": angle, "max_tokens": max_tokens,
-            "sha256_prompt": empreinte(prompt), "sha256_texte": empreinte(rep.texte or ""),
-            "caracteres": len(rep.texte or ""), "debut_utc": debut, "fin_utc": fin_utc,
-            "echec": (str(rep.echec)[:300] if rep.echec else None), "reel": self.reel, "go_id": self.go_id,
-        }
-        with self.journal.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(ligne, ensure_ascii=False, sort_keys=True) + "\n")
-        if self.depense_usd > self.plafond_usd:
+        with self._verrou:
+            self.engage_usd = max(0.0, self.engage_usd - pire)  # résidu flottant ramené à zéro
+            self.depense_usd += cout
+            (self.dossier / "appels" / f"{ident}.reponse.txt").write_text(rep.texte or "", encoding="utf-8")
+            res = Resultat(identifiant=ident, espece=espece, statut=statut, texte=texte, modele_demande=m["id"],
+                           modele_servi=rep.modele_servi, fin=rep.fin, categorie=rep.categorie, usage=dict(rep.usage),
+                           cout_usd=round(cout, 6), echec=rep.echec, angle=angle)
+            ligne = {
+                "id": ident, "etape": etape, "role": role, "espece": espece, "famille": m["fournisseur"],
+                "modele_demande": m["id"], "modele_servi": rep.modele_servi, "statut": statut, "fin": rep.fin,
+                "categorie": rep.categorie, "usage": dict(rep.usage), "cout_usd": round(cout, 6),
+                "cumul_usd": round(self.depense_usd, 6), "angle": angle, "max_tokens": max_tokens,
+                "sha256_prompt": empreinte(prompt), "sha256_texte": empreinte(rep.texte or ""),
+                "caracteres": len(rep.texte or ""), "debut_utc": debut, "fin_utc": fin_utc,
+                "echec": (str(rep.echec)[:300] if rep.echec else None), "reel": self.reel, "go_id": self.go_id,
+            }
+            with self.journal.open("a", encoding="utf-8") as fh:
+                fh.write(json.dumps(ligne, ensure_ascii=False, sort_keys=True) + "\n")
+            depasse = self.depense_usd > self.plafond_usd
+        if depasse:
             raise Arret(f"plafond {self.plafond_usd:.2f} USD dépassé après l'appel {ident} : {self.depense_usd:.2f}")
         return res
 

@@ -3,6 +3,10 @@
 Il tient les clés, le journal et le plafond (`appels.Appelant`) hors du bac à sable ; l'organisme ne voit qu'un
 socket Unix et le module `noyau_client`. Un plafond atteint rend le statut `PLAFOND` et ne lève rien chez
 l'organisme : c'est à lui de s'arrêter proprement ; le noyau, lui, ne sert plus rien.
+
+Les appels sont servis en parallèle, au plus `parallele_max` à la fois (le moteur de Gemini en lançait 8 à 24 ;
+un essaim qui veut des vagues parallèles doit pouvoir les faire) : le compteur d'appels est tenu sous verrou,
+l'appel lui-même non ; le plafond en dollars est garanti par `Appelant` au pire cas sur les appels en vol.
 """
 from __future__ import annotations
 
@@ -13,15 +17,22 @@ import threading
 
 from .appels import Appelant, Arret, ESPECES
 
+PARALLELE_MAX_DEFAUT = 8
+MAX_TOKENS_DEFAUT_ORGANISME = 4096  # si l'organisme ne fixe pas max_tokens ; il peut demander plus, jusqu'au maximum du modèle
+
 
 class ServeurAppels:
-    def __init__(self, appelant: Appelant, chemin_socket: str, appels_max: int):
+    def __init__(self, appelant: Appelant, chemin_socket: str, appels_max: int, parallele_max: int = PARALLELE_MAX_DEFAUT):
         self.appelant = appelant
         self.chemin = chemin_socket
         self.appels_max = int(appels_max)
+        self.parallele_max = max(1, int(parallele_max))
         self.n_appels = 0
+        self.en_vol_max = 0  # plus grand nombre d'appels simultanés observé (rapporté, pour l'audit)
+        self._en_vol = 0
         self.refus: list[dict] = []
         self._verrou = threading.Lock()
+        self._semaphore = threading.BoundedSemaphore(self.parallele_max)
         self._arret = threading.Event()
         self._fil = None
         self._sock = None
@@ -105,12 +116,22 @@ class ServeurAppels:
                 self.refus.append({"raison": "appels_max", "espece": espece})
                 return {"statut": "PLAFOND", "texte": "", "echec": "nombre maximal d'appels atteint"}
             self.n_appels += 1
+        with self._semaphore:
+            with self._verrou:
+                self._en_vol += 1
+                self.en_vol_max = max(self.en_vol_max, self._en_vol)
             try:
-                res = self.appelant.appeler(espece, f"organisme", prompt, max_tokens=req.get("max_tokens"),
+                mt = req.get("max_tokens")
+                mt = int(mt) if isinstance(mt, (int, float)) and not isinstance(mt, bool) and mt > 0 else MAX_TOKENS_DEFAUT_ORGANISME
+                res = self.appelant.appeler(espece, "organisme", prompt, max_tokens=mt,
                                             role=str(req.get("role", ""))[:40])
             except Arret as e:
-                self.refus.append({"raison": "plafond_usd", "espece": espece, "detail": str(e)[:200]})
+                with self._verrou:
+                    self.refus.append({"raison": "plafond_usd", "espece": espece, "detail": str(e)[:200]})
                 return {"statut": "PLAFOND", "texte": "", "echec": str(e)[:200]}
+            finally:
+                with self._verrou:
+                    self._en_vol -= 1
         return {"statut": res.statut, "texte": res.texte, "modele_servi": res.modele_servi, "fin": res.fin,
                 "usage": res.usage, "cout_usd": res.cout_usd, "identifiant": res.identifiant,
                 "echec": (str(res.echec)[:200] if res.echec else None)}

@@ -94,6 +94,7 @@ class Archive:
         ligne = {"lignee": lignee, "generation": generation, "score": score.get("score"), "statut": resume.get("statut"),
                  "cout_usd": resume.get("cout_usd"), "n_appels": resume.get("n_appels"), "chemin": str(d.relative_to(self.racine)),
                  "empreinte_organisme": empreinte, "successeur": resume.get("successeur"),
+                 "impose": resume.get("impose"), "famille": resume.get("famille"),
                  "quand_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
         complet = {**resume, **ligne}
         (d / "resume.json").write_text(json.dumps(complet, ensure_ascii=False, indent=1), encoding="utf-8")
