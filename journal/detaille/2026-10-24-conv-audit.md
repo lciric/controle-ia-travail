@@ -307,3 +307,15 @@ Heures UTC (heure de Paris = UTC + 2). Entrées ajoutées, jamais réécrites. P
   texte rendu comme donnée. Essai réel en lecture seule : arXiv OK ; PDF arXiv 2505.23836 téléchargé et extrait
   (1,43 Mo, 102 927 caractères) ; OpenAlex et Semantic Scholar répondent 429 (limite de débit de l'adresse partagée :
   à régler par `mailto` OpenAlex et clé Semantic Scholar, ou par l'instance).
+
+## 19:10 — Lazar confirme : l'étape 1 inclut la conception et la moisson avant scellement ; clé Brave posée (21:06 Paris)
+
+- Contexte lu dans les registres de session-depot : GO-2026-10-24-05 (coût de calcul de l'étape 1 accepté sans devis,
+  R-355) ; R1 et R2 de l'étape 1 exécutées sur l'ordre de Lazar (R-356 : contre-lecture de mon brouillon v1, version
+  corrigée par session-depot, seconde contre-lecture, scellement) ; contre-lecture n° 2 de la v4 : « scellable après
+  corrections », neuf constats CR2-01 à CR2-09 (R-357, rapport non encore reçu) ; outils d'extraction des traits
+  (`outils/traits-etape1-v1`, `5fa8d8e`, v2 de mon script avec cinq défauts corrigés).
+- Lazar, 21:06 : « oui oui il doit inclure la phase de conception et la moisson avant scellement » (étape 1) ; glissement
+  d'un jour accepté ; `BRAVE_API_KEY` posée dans l'environnement cloud avec limite d'usage : « fait ». Relayé à
+  session-depot (canal n° 14 et n° 15) ; branche gradient `38ae30d` (76 tests) prête pour les courses.
+- Routine : CA-27 à CA-30 (conception, moisson, branche gradient, `usd_max` à 10 USD par génération dans la v5).
