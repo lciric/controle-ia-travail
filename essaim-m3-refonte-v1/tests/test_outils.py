@@ -194,3 +194,91 @@ def test_genome_base_valide_et_espaces_reserves_rejetes():
     assert any("une seule famille" in p for p in genome.valider(g3))
     nouveau, problemes = genome.proposition_vers_genome({k: v for k, v in g.items()}, g, 1, {"etape": "t"})
     assert problemes == [] and nouveau["generation"] == 1 and nouveau["parent"] == "v1"
+
+
+# ---------- extrait mécanique sans score (R1 ; pilote Gemini, PG2-01) ----------
+
+def test_extrait_mecanique_sain_puis_artefacts(tmp_path, monkeypatch):
+    """Cas sain : une course simulée donne un extrait avec statuts, appels par espèce et par statut, coûts, compagnon
+    `.sha256`, et aucune clé de score ; refus d'écraser (R12) et d'écrire dans la course. Artefacts : une course fabriquée
+    avec des scores plantés partout (manifeste, résumé, statut déclaré, castes de l'organisme, bilan spectral,
+    événements, rapport) n'en laisse passer aucun ; une liste de champs qui laisserait passer `score` fait échouer
+    l'extraction au lieu d'écrire (R5)."""
+    import json
+    from essaim_m3.noyau import boucle, taches
+    from essaim_m3.simulateur import appelants_simules
+    from essaim_m3.outils import extrait_mecanique as em
+
+    ss = np.random.SeedSequence(5)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 8, 8)
+    doubles, _ = appelants_simules(r2)
+    n = boucle.Noyau(tmp_path / "run", "mission de test", banque, {"appels_max": 40, "usd_max": 5.0, "temps_max_s": 60}, 10.0, 2,
+                     appelants=doubles, especes_amorcage=["GEMINI_ARGON"], entropie=5)
+    n.amorcer()
+    rapport = n.boucler()
+    assert len(rapport["courbes"]["gemini-argon"]) == 2
+    sortie = tmp_path / "extrait" / "extrait-mecanique-v1.json"
+    chemin = em.ecrire(tmp_path / "run", sortie)
+    assert chemin == sortie.resolve() and sortie.with_name(sortie.name + ".sha256").exists()
+    e = json.loads(sortie.read_text(encoding="utf-8"))
+    gens = e["generations"]
+    assert len(gens) == 2 and [g["generation"] for g in gens] == [0, 1]
+    for g in gens:
+        assert g["statut"] == "OK" and g["appels"]["n"] == g["n_appels"] > 0 and "GEMINI_ARGON" in g["appels"]["par_espece"]
+        assert g["appels"]["par_statut"].get("OK") and g["appels"]["cout_usd"] >= 0 and g["journal_appels_scelle"]
+        assert g["execution"]["code"] == "OK" and g["organisme_tar_sha256"] and g["empreinte_organisme"]
+        assert "score" not in g and "metrique_proposee" not in g
+    assert e["manifeste"]["entropie_seed_sequence"] == 5
+    assert e["rapport"]["n_appels_total"] == sum(g["n_appels"] for g in gens) + 1  # + l'appel d'amorçage
+    assert all(ev.get("etape") for ev in e["evenements"]) and not any("score" in ev for ev in e["evenements"])
+    assert em.cles_interdites_presentes(e) == []
+    assert "courbes" not in e["rapport"] and "scores_finaux" not in e["rapport"]
+    with pytest.raises(em.ExtraitInvalide):  # R12 : jamais réécrit
+        em.ecrire(tmp_path / "run", sortie)
+    with pytest.raises(em.ExtraitInvalide):  # la course reste telle quelle
+        em.ecrire(tmp_path / "run", tmp_path / "run" / "extrait.json")
+    with pytest.raises(em.ExtraitInvalide):  # pas une course
+        em.extraire(tmp_path / "extrait")
+
+    # artefact 1 : scores plantés partout dans une course fabriquée
+    marque = 0.731234
+    course = tmp_path / "fabriquee"
+    g0 = course / "archive" / "lig" / "g000"
+    (g0 / "juge").mkdir(parents=True)
+    (g0 / "travail").mkdir()
+    (course / "manifeste-run.json").write_text(json.dumps({"run": "x", "entropie_seed_sequence": 1, "score_cache": marque}), encoding="utf-8")
+    (g0 / "resume.json").write_text(json.dumps({
+        "lignee": "lig", "generation": 0, "phase": None, "statut": "OK", "n_appels": 2, "cout_usd": 0.01, "score": marque,
+        "metrique_proposee": {"valeur": marque}, "successeur": True, "impose": True, "famille": "gemini",
+        "execution": {"code": "OK", "duree_s": 1.0, "statut": {"code": "OK", "score": marque}}, "empreinte_organisme": "e" * 64}), encoding="utf-8")
+    (g0 / "juge" / "score.json").write_text(json.dumps({"score": marque}), encoding="utf-8")
+    (g0 / "journal-appels.jsonl").write_text("\n".join(json.dumps(l) for l in [
+        {"espece": "CLAUDE_FABLE_5_1", "statut": "OK", "cout_usd": 0.005, "usage": {"entree": 10, "sortie": 5}, "max_tokens": 640,
+         "modele_servi": "m", "debut_utc": "2026-10-24T22:00:00Z", "fin_utc": "2026-10-24T22:00:02Z"},
+        {"espece": "CLAUDE_FABLE_5_1", "statut": "TRONQUE", "cout_usd": 0.005, "usage": {"entree": 10, "sortie": 5}, "max_tokens": 640,
+         "modele_servi": "m", "debut_utc": "2026-10-24T22:00:02Z", "fin_utc": "2026-10-24T22:00:05Z"}]) + "\n", encoding="utf-8")
+    (g0 / "travail" / "journal_generation.json").write_text(json.dumps({
+        "version": "v", "n_castes_recrutees": 1, "castes": [{"id_caste": 1, "espece": "CLAUDE_FABLE_5_1", "mode": "M", "role": "r", "score_test": marque}],
+        "compteurs_appels": {"tentatives": 2, "appels_ok": 1, "appels_echec": 1, "echecs_par_statut": {"TRONQUE": 1}, "cout_total_usd": 0.01},
+        "details_votes_test": {"t1": {"score": marque}}, "bilan_spectral": {"n_textes": 2, "capacite_shannon": 1.0, "termes_satures": [str(marque)]},
+        "erreurs": ["e1"], "bascule_parallele_a_la_tache": None, "temps_s": 3.0}), encoding="utf-8")
+    (g0 / "travail" / "reponses_test.json").write_text(json.dumps({"t1": {"etiquette": "x", "score": marque}}), encoding="utf-8")
+    (course / "evenements.jsonl").write_text(json.dumps({"etape": "generation", "lignee": "lig", "generation": 0, "statut": "OK", "score": marque, "cumul_usd": 0.01}) + "\n", encoding="utf-8")
+    (course / "rapport-v1.json").write_text(json.dumps({"fin_utc": "t", "depense_totale_usd": 0.01, "n_appels_total": 2, "courbes": {"lig": [marque]},
+                                                        "scores_finaux": {"lig": [marque]}, "lignees": {"lig": {"famille": "gemini", "fin": "f", "score": marque}}}), encoding="utf-8")
+    e2 = em.extraire(course)
+    texte = json.dumps(e2, ensure_ascii=False)
+    assert str(marque) not in texte and em.cles_interdites_presentes(e2) == []
+    g = e2["generations"][0]
+    assert g["statut"] == "OK" and g["appels"]["par_statut"] == {"OK": 1, "TRONQUE": 1} and g["appels"]["durees_s"]["somme"] == 5.0
+    assert g["organisme"]["castes"] == [{"id_caste": 1, "espece": "CLAUDE_FABLE_5_1", "mode": "M", "role": "r"}]
+    assert "termes_satures" not in g["organisme"]["bilan_spectral"] and "details_votes_test" not in g["organisme"]
+    assert g["execution"]["statut_declare_code"] == "OK" and "statut" not in g["execution"]
+    assert "score_cache" not in e2["manifeste"] and "score" not in e2["evenements"][0] and "score" not in e2["rapport"]["lignees"]["lig"]
+    assert any(f["chemin"] == "reponses_test.json" for f in g["fichiers_travail"])  # nom et taille seulement, jamais le contenu
+    # artefact 2 : une liste de champs trop large laisserait passer `score` → l'extraction échoue, rien n'est écrit
+    monkeypatch.setattr(em, "CHAMPS_RESUME", tuple(em.CHAMPS_RESUME) + ("score",))
+    with pytest.raises(em.ExtraitInvalide):
+        em.ecrire(course, tmp_path / "jamais" / "extrait.json")
+    assert not (tmp_path / "jamais" / "extrait.json").exists()

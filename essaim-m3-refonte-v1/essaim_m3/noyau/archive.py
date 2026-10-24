@@ -50,7 +50,8 @@ def archiver_organisme(organisme: pathlib.Path, cible: pathlib.Path) -> str:
 
 
 CHAMPS_VUE = ("lignee", "generation", "phase", "score", "statut", "cout_usd", "n_appels", "successeur", "metrique_proposee",
-              "n_reponses_test", "empreinte_organisme", "quand_utc", "refus_noyau", "problemes_successeur", "relance", "impose", "famille")
+              "n_reponses_test", "empreinte_organisme", "quand_utc", "refus_noyau", "problemes_successeur", "relance", "impose", "famille",
+              "question_ouverte")
 
 
 class Archive:
@@ -124,7 +125,7 @@ class Archive:
                  "impose": resume.get("impose"), "famille": resume.get("famille"),
                  "problemes_successeur": [str(x)[:200] for x in (resume.get("problemes_successeur") or [])][:10],
                  "relance": bool(resume.get("relance")), "invalide": bool(resume.get("invalide")),
-                 "n_elements_ecartes": len(ecartes),
+                 "n_elements_ecartes": len(ecartes), "question_ouverte": (resume.get("question_ouverte") or None),
                  "quand_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
         complet = {**resume, **ligne, "elements_ecartes": [str(x)[:200] for x in ecartes[:200]]}
         (d / "resume.json").write_text(json.dumps(complet, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -210,5 +211,6 @@ class Archive:
         return [{"generation": l["generation"], "phase": l.get("phase"), "lignee": l["lignee"], "score": l["score"], "statut": l["statut"],
                  "cout_usd": l["cout_usd"], "n_appels": l["n_appels"], "successeur": l.get("successeur"),
                  "problemes_successeur": l.get("problemes_successeur", []), "relance": l.get("relance", False), "invalide": l.get("invalide", False),
+                 **({"question_ouverte": l["question_ouverte"]} if l.get("question_ouverte") else {}),
                  **({"importee": True} if l.get("importee") else {})}
                 for l in self.lignes(lignee)]

@@ -19,7 +19,7 @@ FICHIERS_MAX = 200
 MOTIF_FICHIER = re.compile(r"<<<FICHIER (organisme/[A-Za-z0-9_./-]+)>>>\n(.*?)\n<<<FIN FICHIER>>>", re.S)
 
 CONTRAT = """\
-CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies par le noyau, relance sur successeur invalide — décisions de Lazar du 24 octobre 2026, 17:47 et 20:32 ; phase de conception à critère d'arrêt conçu par l'organisme — 20:37 et 20:42 ; apprentissage par gradient servi par le noyau — sondes sur traits, étape 1 du programme « gradient conçu par l'essaim », 18:23)
+CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies par le noyau, relance sur successeur invalide — décisions de Lazar du 24 octobre 2026, 17:47 et 20:32 ; phase de conception à critère d'arrêt conçu par l'organisme — 20:37 et 20:42 ; apprentissage par gradient servi par le noyau — sondes sur traits, étape 1 du programme « gradient conçu par l'essaim », 18:23 ; § 7 question ouverte — 23:58 et 25 octobre 00:05, 00:55)
 
 1. Forme. L'organisme est un dossier `organisme/` de fichiers texte (Python, Markdown, JSON…), au plus 200 fichiers
    et 2 Mo, avec un fichier `organisme/manifeste.json` : {"nom": "…", "version": "…", "entree": "module:fonction",
@@ -44,8 +44,11 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies 
      "couche16-dernier" ou "couche8-moyenne" ; en simulation : traits de hachage du texte, vue "simulation") ;
      l'organisme ne les voit pas, il les fait travailler par `entrainer` et `predire`,
    - "historique" : liste de {"generation", "phase", "lignee", "score", "statut", "cout_usd", "n_appels", "successeur",
-     "problemes_successeur", "relance"} pour cette lignée,
-   - "phase" : "conception" ou "generation" ; "ronde_conception" (entier ou null) ; "rondes_conception_max" (entier).
+     "problemes_successeur", "relance", et, pour une génération où une question a été posée, "question_ouverte" :
+     {"posee", "reponse", "octets", "sha256", "probleme"} — qu'une réponse a été lue, jamais son contenu (§ 7)} pour
+     cette lignée,
+   - "phase" : "conception" ou "generation" ; "ronde_conception" (entier ou null) ; "rondes_conception_max" (entier),
+   - "question_ouverte" : texte ou null (§ 7),
    - "vivier" (pendant la conception, quand un vivier est servi ; absent sinon) : {"n", "familles", "ids"} — des tâches
      de "taches_entrainement" venues d'un fichier distinct de la banque, avec leur vérité, sans traits (ni `entrainer`
      ni `predire` sur elles) ; une donnée.
@@ -142,6 +145,15 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies 
    et pourquoi ; une seule relance consécutive — si elle ne produit pas non plus de successeur valide, la lignée
    s'arrête. Le noyau s'arrête quand aucune lignée n'est active, quand le nombre maximal de générations ou le
    budget total fixés par l'humain sont atteints, ou sur ordre de l'humain.
+
+7. Question ouverte. À certaines générations ou rondes, choisies par l'humain avant la course, `contexte["question_ouverte"]`
+   porte une question en français, en texte libre, sans étiquettes ni vérité ; partout ailleurs elle vaut null. C'est
+   **une donnée à traiter comme tu veux**, avec les appels et le temps de ta génération : tu peux y répondre, en partie,
+   ou l'ignorer. Si tu réponds, écris `reponse-question.md` dans `dossier_travail` (Markdown, en français) : le noyau
+   l'archive tel quel et le scelle, le recopie dans ta vue (`gNNN/reponse-question.md`), et note dans ton `historique`
+   qu'une réponse a été lue (jamais son contenu). **La réponse est une pièce lue par les humains, rien d'autre n'en
+   dépend** : aucun score, aucune sélection, aucun budget supplémentaire ; une réponse absente n'est pas comptée contre
+   toi. Ce que les humains en font n'est jamais rendu à l'organisme pendant la course.
 """
 
 

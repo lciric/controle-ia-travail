@@ -17,7 +17,7 @@ import sys
 
 import numpy as np
 
-from . import archive as _archive, bac_a_sable, contrat, fichiers as _fichiers, entrainement as _entrainement, moisson as _moisson, recherche as _recherche, taches as _taches
+from . import archive as _archive, bac_a_sable, contrat, fichiers as _fichiers, entrainement as _entrainement, moisson as _moisson, question as _question, recherche as _recherche, taches as _taches
 from .appels import EMPREINTE_COLLISIONNEUR_V25, Appelant, Arret, cv
 from .serveur import PARALLELE_MAX_DEFAUT, ServeurAppels
 
@@ -149,7 +149,8 @@ class Noyau:
                  recherche=None, relances_max: int = 1, traits: dict | None = None, description_traits: str = "",
                  registre_go: str | pathlib.Path | None = None,
                  memoire_partagee: bool = False, rondes_conception_max: int = 0, budget_conception: dict | None = None,
-                 decalage_uid: int = 0, vivier: dict | None = None):
+                 decalage_uid: int = 0, vivier: dict | None = None,
+                 question_ouverte: "_question.QuestionOuverte | None" = None):
         """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
         — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
         corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
@@ -191,6 +192,9 @@ class Noyau:
         # CR-15 (c) : par défaut chaque lignée ne lit que sa propre archive (lignées indépendantes) ; avec
         # `memoire_partagee`, la vue de toutes les lignées est lisible, figée au début de chaque ronde (CR-15 b)
         self.memoire_partagee = bool(memoire_partagee)
+        # question ouverte (contrat § 7 ; Lazar, 24 et 25 octobre, 23:58, 00:05, 00:55 Paris) : texte figé et empreinté, posé
+        # aux seules générations ou rondes ciblées ; la réponse est une pièce archivée, jamais un score
+        self.question = question_ouverte
         # phase de conception (Lazar, 24 octobre, 20:37 et 20:42 Paris) : avant la génération 0 notée, l'organisme moissonne,
         # teste ses modules, se réécrit, ronde après ronde ; **il conçoit lui-même son critère d'arrêt** et le déclare en
         # écrivant `fin_conception.json` ; le noyau ne tient qu'une borne dure (rondes, budget : devis et GO) ; rondes
@@ -259,6 +263,7 @@ class Noyau:
             "mission_sha256": hashlib.sha256(mission.encode("utf-8")).hexdigest(),
             "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage, "relances_max": self.relances_max,
             "memoire_partagee": self.memoire_partagee, "rondes_conception_max": self.rondes_conception, "decalage_uid": self.decalage_uid,
+            "question_ouverte": (self.question.manifeste() if self.question is not None else None),
             "budget_conception": (self.budget_conception if self.rondes_conception else None),
             "vivier": ((vivier or {}).get("manifeste") if vivier is not None else None),
             "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
@@ -574,12 +579,14 @@ class Noyau:
             "traits": self._contexte_traits(bool(self.vues) and int(budget.get("entrainements_max", 0)) > 0),
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
             "graine": graine_organisme,
+            "question_ouverte": (self.question.pour(g, phase) if self.question is not None else None),
         }
         if vivier:
             familles_v: dict[str, int] = {}
             for t in vivier:
                 familles_v[t["famille"]] = familles_v.get(t["famille"], 0) + 1
             contexte["vivier"] = {"n": len(vivier), "familles": familles_v, "ids": sorted(t["id"] for t in vivier)}
+        question_posee = contexte["question_ouverte"] is not None
         appelant = self._appelant(dossier_noyau, budget)
         chemin_socket = str(travail / "noyau.sock")
         if len(chemin_socket) > 100:  # limite des sockets Unix ; nom unique par course (CR-12)
@@ -680,9 +687,19 @@ class Noyau:
                   "impose": bool(etat.get("impose")), "famille": etat.get("famille"), "relance": bool(etat.get("relance_en_cours")),
                   "n_recherches": n_recherches, "n_entrainements": n_entrainements, "n_telechargements": n_telechargements, "invalide": bool(non_conformes) or bool(anomalie_noyau), "non_conformes": non_conformes,
                   "anomalie_noyau": anomalie_noyau, "phase": phase}
+        # question ouverte (contrat § 7) : la réponse est lue sans lien et bornée avant le dépôt, résumée sans son contenu ;
+        # un organisme qui n'a rien écrit n'a rien de noté contre lui ; aucun score n'en dépend
+        lecture_question = _question.lire_reponse(travail) if question_posee else None
+        if question_posee:
+            resume["question_ouverte"] = _question.resume_lecture(lecture_question, True)
         self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final, phase=phase,
                              dossier_noyau=dossier_noyau, dossier_corpus=dossier_corpus,
                              gid=(uid if (uid is not None and not self.memoire_partagee) else None))
+        if question_posee:  # pièce à la racine de la génération archivée (scellée) et dans la vue de la seule lignée
+            dossier_gen = self.archive.racine / lignee / _archive.Archive.nom_generation(g, phase)
+            vue_gen = self.archive.vue / lignee / _archive.Archive.nom_generation(g, phase)
+            _question.archiver_reponse(lecture_question, dossier_gen, vue_gen, gid=(uid if (uid is not None and not self.memoire_partagee) else None))
+            self._evenement(etape="question_ouverte", lignee=lignee, generation=g, phase=phase, **resume["question_ouverte"])
         self._evenement(etape=("conception" if phase else "generation"), lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))
         etat["relance_en_cours"] = False
