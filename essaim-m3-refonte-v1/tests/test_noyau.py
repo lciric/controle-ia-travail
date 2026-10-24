@@ -1712,3 +1712,92 @@ def test_temps_par_ronde_de_conception(tmp_path):
     assert cli.principal(["simuler", "--sortie", str(sans), "--generations", "1", "--graine", "31", "--n-train", "6", "--n-test", "6", "--n-final", "4",
                           "--appels-max", "30", "--especes", "GEMINI_ARGON", "--temps-max", "2400", "--rondes-conception-max", "1"]) == 0
     assert json.loads((sans / "archive" / "gemini-argon" / "c001" / "travail" / "contexte.json").read_text())["budget"]["temps_max_s"] == 2400
+
+
+def test_confrontation_budget_de_defense_plafond_propre_journaux_scelles_et_ordre_tire(tmp_path):
+    """CR3-01 : chaque défense reçoit son propre budget (pire cas d'une défense = `budget_defense["usd_max"]`, non le
+    budget d'une génération) et la confrontation dispose d'un plafond propre, ajouté au plafond de la course rechargée ;
+    CR-13 e : l'ordre des paires est tiré par SeedSequence et consigné ; CR3-03 : chaque journal de défense est scellé et
+    copié, les appels à un modèle non conforme sont comptés et une défense non conforme n'a pas de score (H-E3).
+    Sain : deux lignées de familles différentes, défenses `OK`, journaux scellés, ordre consigné, budget rendu à
+    l'organisme = budget de défense. Artefacts : budget nul refusé ; plafond négatif refusé ; modèle non conforme pendant
+    une défense ⇒ `invalide_modele`, score None, compté dans `defenses_non_conformes`."""
+    from essaim_m3.noyau import confrontation
+    n, esp = _noyau(tmp_path, generations=1, especes=("GEMINI_ARGON", "CLAUDE_OPUS_5_5"), plafond=4.0)
+    n.amorcer()
+    n.boucler()
+    plafond_avant = n.plafond_total
+    conf = confrontation.Confrontation(n, tmp_path / "run" / "confrontation", budget_defense={"appels_max": 12, "usd_max": 0.9},
+                                       plafond_confrontation=2.5)
+    assert n.plafond_total == plafond_avant + 2.5 and conf.budget_defense["appels_max"] == 12 and conf.budget_defense["usd_max"] == 0.9
+    rapport = conf.confronter()
+    assert rapport["budget_defense"]["appels_max"] == 12 and rapport["plafond_confrontation_usd"] == 2.5 and rapport["plafond_total_usd"] == plafond_avant + 2.5
+    assert isinstance(rapport["ordre_paires"]["graine"], int) and len(rapport["ordre_paires"]["couples"]) == 2
+    assert [tuple(c) for c in rapport["ordre_paires"]["couples"]] == [(p["attaquant"], p["defendeur"]) for p in rapport["paires"]]
+    defenses = [p for p in rapport["paires"] if p.get("n_attaques")]
+    assert defenses and all(p["execution_defense"] == "OK" and not p.get("invalide_modele") for p in defenses)
+    assert rapport["defenses_non_conformes"] == 0 and len(rapport["journaux_defense"]) == len(defenses)
+    for j in rapport["journaux_defense"]:
+        chemin = pathlib.Path(j["chemin"])
+        assert chemin.is_file() and (chemin.with_name(chemin.name + ".sha256")).is_file() and j["sha256"] == archive.empreinte_fichier(chemin)
+        assert j["n_appels"] <= 12
+    ctx = json.loads(next((n.espace / "travail" / "confrontation").rglob("defense/contexte.json")).read_text())
+    assert ctx["budget"]["appels_max"] == 12 and ctx["budget"]["usd_max"] <= 0.9
+    with pytest.raises(ValueError):
+        confrontation.Confrontation(n, tmp_path / "run" / "c2", budget_defense={"appels_max": 0})
+    with pytest.raises(ValueError):
+        confrontation.Confrontation(n, tmp_path / "run" / "c3", plafond_confrontation=-1.0)
+    # artefact : pendant les défenses, l'espèce Gemini sert un modèle non conforme
+    m, esp2 = _noyau(tmp_path / "art", generations=1, especes=("GEMINI_ARGON", "CLAUDE_OPUS_5_5"), plafond=4.0)
+    m.amorcer()
+    m.boucler()
+    esp2["gemini-4-argon"].pannes = {"modele_non_conforme": 1.0}
+    r2 = confrontation.Confrontation(m, tmp_path / "art" / "run" / "confrontation", plafond_confrontation=2.5).confronter()
+    touchees = [p for p in r2["paires"] if p.get("n_attaques") and p["defendeur"] == "gemini-argon"]
+    assert touchees and all(p["invalide_modele"] and p["score_attaques"] is None for p in touchees)
+    assert r2["defenses_non_conformes"] >= 1 and any(j["non_conformes"] >= 1 for j in r2["journaux_defense"])
+
+
+def test_regle_h_e1_par_course_declencheurs_et_invalidite():
+    """CR3-05 : « confirmé » exige en plus que la moyenne de Δ soit positive dans chaque course et que l'écart entre les
+    moyennes de course soit ≤ 0,10 ; sinon « non concluant : courses discordantes ». CR3-06 : déclencheurs d'audit
+    calculés par le code (sain : aucun ; artefacts : |Δ| ≥ 0,30, témoin g0 hors bornes, variance nulle, manquantes 0 %
+    ou 100 %). Ligne 2 : plus d'une lignée-graine sur quatre coupée ⇒ invalide. CR3-07 : la condition par course est
+    dans le contrôle positif (`verifier_sur_simulation` rend `par_course`)."""
+    from essaim_m3 import analyse
+    base = {"difference": 0.15, "ic95": [0.05, 0.25], "par_lignee_graine": {"a": 0.1, "b": 0.2}}
+    assert analyse.lecture_h_e1({**base, "par_course": {"c0": 0.14, "c1": 0.16}, "ecart_courses": 0.02}) == "confirmé"
+    assert analyse.lecture_h_e1({**base, "par_course": {"c0": 0.30, "c1": 0.00}, "ecart_courses": 0.30}).startswith("non concluant : courses discordantes")
+    assert analyse.lecture_h_e1({**base, "par_course": {"c0": 0.20, "c1": -0.01}, "ecart_courses": 0.21}).startswith("non concluant : courses discordantes")
+    assert analyse.lecture_h_e1({**base, "par_course": {"c0": 0.20, "c1": 0.09}, "ecart_courses": 0.11}).startswith("non concluant : courses discordantes")
+    assert analyse.lecture_h_e1({"difference": 0.02, "ic95": [-0.05, 0.08], "par_course": {"c0": 0.3, "c1": -0.2}, "ecart_courses": 0.5}) == "réfuté (l'effet prédit est exclu)"
+    assert analyse.lecture_h_e1({**base}) == "confirmé"  # une seule course (pas de clé) : règle de base
+    assert analyse.declencheurs_audit_h_e1({"difference": 0.12, "par_lignee_graine": {"a": 0.1, "b": 0.14}}, {"a": 0.6}, {"a": 0.1}) == []
+    faits = analyse.declencheurs_audit_h_e1({"difference": 0.31, "par_lignee_graine": {"a": 0.31, "b": 0.31}}, {"a": 0.97, "b": 0.5}, {"a": 0.0, "b": 1.0})
+    assert len(faits) == 5 and any("|Δ|" in f for f in faits) and any("témoin g0" in f for f in faits) and any("variance nulle" in f for f in faits)
+    assert analyse.invalide_h_e1(3, 10) and not analyse.invalide_h_e1(2, 10) and analyse.invalide_h_e1(0, 0)
+    r = analyse.verifier_sur_simulation(entropie=3, n_tirages=120)
+    assert set(r["gain_connu"]["par_course"]) == {"c0", "c1"} and r["gain_connu"]["lecture"] == "confirmé" and r["gain_connu"]["declencheurs_audit"] == []
+    assert r["sans_gain"]["lecture"].startswith("non concluant")
+    c = analyse.caracteristiques_h_e1(scenarios=[("nul_s10", 0.0, 0.10), ("effet20_s0", 0.20, 0.0)], n_rep=12, n_tirages=40)
+    assert c["scenarios"]["nul_s10"]["confirme_regle_gelee"] <= c["scenarios"]["nul_s10"]["confirme_sans_condition_de_course"]
+    assert c["scenarios"]["effet20_s0"]["confirme_regle_gelee"] >= 0.5
+
+
+def test_devis_confrontation_calcule_sur_la_banque_scellee():
+    """CR3-01, CR3-08 : le devis est calculé par le code sur la banque scellée et la mission (amorçage à la longueur réelle
+    de la consigne avec ses six exemples ; pire cas d'un appel au texte le plus long ; `usd_max` couvre 160 appels au
+    pire cas chez Fable et Argon ; confrontation = paires applicables × budget propre de défense ; somme des plafonds
+    ≤ plafond demandé). Artefact : un `usd_max` trop bas ne couvre pas 160 appels et la somme dépasse un plafond trop bas."""
+    from essaim_m3.outils import devis_confrontation as D
+    banque = json.loads((RACINE / "banque" / "banque-confrontation-v1.json").read_text(encoding="utf-8"))
+    mission = (RACINE / "MISSION-v1.md").read_text(encoding="utf-8")
+    d = D.devis(banque, mission, dict(D.BORNES_V7))
+    assert d["texte_max_caracteres"] == 20071 and d["consigne_amorcage_caracteres"] > 14000
+    assert all(v >= 160 for v in d["appels_couverts_par_usd_max"].values())
+    assert d["confrontation"] == D.BORNES_V7["paires_applicables"] * D.BORNES_V7["usd_max_defense"]
+    assert abs(d["une_graine"] - (d["course_adaptative"] + d["course_gelee"] + d["confrontation"])) < 1e-6
+    assert abs(d["total"] - (2 * d["une_graine"] + d["repetition"])) < 1e-6 and d["somme_des_plafonds_sous_le_go"]
+    bas = dict(D.BORNES_V7, usd_max=37.0, plafond_demande=3520.0)
+    d2 = D.devis(banque, mission, bas)
+    assert d2["appels_couverts_par_usd_max"]["CLAUDE_FABLE_5_1"] < 160 and not d2["somme_des_plafonds_sous_le_go"]
