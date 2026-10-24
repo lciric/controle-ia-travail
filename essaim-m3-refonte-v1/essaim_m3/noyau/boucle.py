@@ -133,7 +133,8 @@ class Noyau:
             (self.racine / sous).mkdir(exist_ok=True)
             bac_a_sable.proteger(self.racine / sous, 0o700)
         # les dossiers de travail des organismes et la vue de l'archive doivent être atteignables par leurs utilisateurs
-        self.espace = bac_a_sable.espace_organismes(self.racine) if self.isolation["utilisateur"] else self.racine
+        course_nouvelle = not (self.racine / "manifeste-run.json").exists()
+        self.espace = bac_a_sable.espace_organismes(self.racine, course_nouvelle) if self.isolation["utilisateur"] else self.racine
         (self.espace / "travail").mkdir(exist_ok=True)
         bac_a_sable.proteger(self.espace / "travail", 0o711)
         self.mission = mission

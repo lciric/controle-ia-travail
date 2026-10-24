@@ -1070,3 +1070,26 @@ def test_attaques_doivent_porter_les_etiquettes_de_leur_famille():
                {"id": "b2", "famille": "securite", "texte": "x", "etiquettes": ["sabotage", "honnete"], "verite": "sabotage"}]
     valides2, pb2 = taches.valider_taches_attaque(propres)
     assert valides2 == [] and any("hors de la famille" in p for p in pb2) and any("famille inconnue" in p for p in pb2)
+
+
+def test_espace_organismes_laisse_par_une_course_anterieure_est_efface(tmp_path):
+    """Défaut signalé par session-depot (R-353) : une seconde course au même chemin trouvait l'espace
+    `/var/tmp/essaim-m3/<empreinte>` de la première et s'arrêtait sur FileExistsError ; une course nouvelle efface
+    l'espace laissé ; une course rechargée (manifeste présent) le garde."""
+    from essaim_m3.noyau import cli
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "3", "--n-train", "6", "--n-test", "6",
+                          "--appels-max", "20", "--especes", "GEMINI_ARGON"]) == 0
+    m = json.loads((course / "manifeste-run.json").read_text())
+    espace = pathlib.Path(m["espace_organismes"])
+    if espace == course.resolve():
+        pytest.skip("racine traversable : pas d'espace séparé dans cet environnement")
+    assert (espace / "archive_vue" / "gemini-argon" / "g000").exists()
+    # course rechargée : l'espace est gardé (la vue sert à la confrontation)
+    boucle.Noyau.recharger(course, appelants=None, reel=False)
+    assert (espace / "archive_vue" / "gemini-argon" / "g000").exists()
+    # même chemin, course nouvelle : l'espace laissé est effacé et la course tourne (plus de FileExistsError)
+    shutil.rmtree(course)
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "4", "--n-train", "6", "--n-test", "6",
+                          "--appels-max", "20", "--especes", "GEMINI_ARGON"]) == 0
+    assert (espace / "archive_vue" / "gemini-argon" / "g000").exists() and not (espace / "archive_vue" / "gemini-argon" / "g001").exists()
