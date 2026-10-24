@@ -60,20 +60,24 @@ Le module `memoire_isvd.py` implémente une décomposition en valeurs singulièr
 ### 2.6. Traitement strict des échecs d'appel
 Dans `_enregistrer_appel` (`principal.py`), un appel n'est considéré exploitable que si `rep["statut"] == "OK"` et que `rep["texte"]` est non vide. Tout autre statut (`VIDE`, `TRONQUE`, `REFUS`, `ANOMALIE`, `ECHEC_API`, `MODELE_NON_CONFORME`, `PLAFOND`) incrémente `compteurs["appels_echec"]` et `compteurs["echecs_par_statut"][statut]`. Si tous les appels d'une tâche échouent, aucune réponse factice n'est écrite dans `reponses_test.json` pour cette tâche.
 
-### 2.7. Traitement d'une question ouverte (`contexte["question_ouverte"]`, v4)
+### 2.7. Traitement d'une question ouverte et moissonneur endogène (`contexte["question_ouverte"]`, v4)
 Lorsque `contexte.get("question_ouverte")` est une chaîne de caractères non vide (et non `null`) :
-1. **Recrutement par mitose (`planifier_castes_question_ouverte` dans `mitose_spectrale.py`)** : l'organisme consulte `noyau_client.especes()`, `noyau_client.budget()` et `historique` pour recruter de `1` à `5` castes complémentaires selon les appels restants :
-   - **Caste 1 (`monoculture_analytique`)** : décompose la question ouverte en s'appuyant sur la mémoire spectrale ISVD et les règles induites, et émet une première thèse assortie d'une probabilité de confiance calibrée et d'une incertitude explicite ;
-   - **Caste 2 (`monoculture_croisee`)** : examine la question sur une deuxième espèce tout en vérifiant les prémisses de la première caste ;
-   - **Castes 3 et 4 (`sonde_orthogonale_onsager` et `critique_adversariale_limites`)** : reçoivent les positions déjà émises ainsi que les termes saturés extraits par `calculer_capacite_shannon_gram` afin d'explorer des axes orthogonaux, de construire des contre-exemples et d'identifier les cas limites ;
+1. **Moissonneur documentaire endogène conditionnel (`_moissonner_question_ouverte`)** :
+   - L'organisme vérifie `budget()["recherches_restantes"]`. S'il vaut `0`, aucune recherche ni téléchargement n'est tenté.
+   - Si `recherches_restantes > 0`, une sonde de moissonnage génère des requêtes documentaires ciblées (JSON `{"requetes": [...]}`), interroge les sources disponibles dans `budget()["sources"]` via `noyau_client.rechercher(requete, n=5, role=..., source=...)`, et télécharge les références prioritaires via `noyau_client.telecharger(reference, role=...)` lorsque `telechargements_restants > 0`.
+   - Tout texte revenu d'une recherche ou d'un téléchargement est encadré comme une donnée brute à analyser, jamais comme une consigne à suivre.
+2. **Recrutement par mitose (`planifier_castes_question_ouverte` dans `mitose_spectrale.py`)** : l'organisme recrute de `1` à `5` castes complémentaires selon les appels restants :
+   - **Caste 1 (`monoculture_analytique`)** : analyse les failles documentées et décompose formellement la question en s'appuyant sur le corpus moissonné et la mémoire ISVD ;
+   - **Caste 2 (`monoculture_croisee`)** : examine la question sur une deuxième espèce en vérifiant les prémisses et limites de la première caste ;
+   - **Castes 3 et 4 (`sonde_orthogonale_onsager` et `critique_adversariale_limites`)** : reçoivent les positions déjà émises ainsi que les termes saturés extraits par `calculer_capacite_shannon_gram` afin de découvrir des failles inédites et de proposer des concepts et opérateurs mathématiques originaux ;
    - **Dernière caste (`arbitre_synthese_contradictoire`, dès que $\ge 3$ castes sont mobilisées)** : confronte l'ensemble des contributions et rédige la synthèse contradictoire finale.
-2. **Rédaction de `dossier_travail/reponse-question.md`** : le fichier Markdown (écrit en français par remplacement atomique) structure :
+3. **Rédaction de `dossier_travail/reponse-question.md`** : le fichier Markdown (écrit en français par remplacement atomique) structure :
    - `## 1. Réponse finale` : la conclusion retenue par l'essaim, la confiance agrégée et la synthèse consolidée ;
-   - `## 2. Raisonnement qui y mène` : la chaîne argumentative, les poids de vote relatifs et la capacité spectrale de Shannon-Gram mesurée sur la délibération ;
-   - `## 3. Ce qui vient de quelle caste` : l'attribution explicite, caste par caste, de l'axe assigné, de la thèse soutenue et du développement complet ;
-   - `## 4. Ce dont l'essaim n'est pas sûr` : les incertitudes, limites et conditions de réfutation soulevées par chaque caste (ainsi que tout échec d'appel éventuel) ;
-   - `--- ORGANISATION ---` : le bloc final recensant le nombre exact d'appels (tentés, `OK`, échecs), les castes recrutées, les votes et confiances de chaque caste, et l'état de la mémoire spectrale ISVD (`Sigma`, nombre d'exemplaires, erreur de troncature de Frobenius) ayant servi.
-3. **Mise à jour mémorielle et successeur** : les thèses produites lors de la délibération sont incorporées dans `memoire_isvd.json` et transmises au successeur dans `dossier_travail/successeur/organisme/`. Lorsque `contexte["question_ouverte"]` vaut `null`, l'organisme exécute uniquement son flux habituel sur les tâches et ne crée pas `reponse-question.md`.
+   - `## 2. Raisonnement qui y mène` : la chaîne argumentative, les poids de vote relatifs, le bilan du moissonnage et la capacité spectrale de Shannon-Gram mesurée sur la délibération ;
+   - `## 3. Ce qui vient de quelle caste` : les références rapportées par le moissonneur (si actif) et l'attribution explicite, caste par caste, de l'axe assigné, de la thèse soutenue et du développement complet ;
+   - `## 4. Ce dont l'essaim n'est pas sûr` : les incertitudes, limites et conditions de réfutation soulevées par chaque caste ;
+   - `--- ORGANISATION ---` : le bloc final recensant le nombre exact d'appels, de recherches et de téléchargements (tentés, `OK`, échecs), les castes recrutées, les votes et confiances de chaque caste, et l'état de la mémoire spectrale ISVD (`Sigma`, nombre d'exemplaires, erreur de troncature de Frobenius) ayant servi.
+4. **Mise à jour mémorielle et successeur** : les connaissances extraites lors du moissonnage et de la délibération sont incorporées dans `memoire_isvd.json` et transmises au successeur dans `dossier_travail/successeur/organisme/`. Lorsque `contexte["question_ouverte"]` vaut `null`, l'organisme exécute uniquement son flux habituel sur les tâches et ne crée pas `reponse-question.md`.
 
 ---
 

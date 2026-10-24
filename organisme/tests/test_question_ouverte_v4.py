@@ -1,4 +1,5 @@
-"""Tests unitaires de la v4 : prise en charge de `contexte["question_ouverte"]` par l'essaim et écriture de
+"""Tests unitaires de la v4 : prise en charge de `contexte["question_ouverte"]` par l'essaim, moissonneur endogène
+conditionnel (`rechercher` / `telecharger` quand `recherches_restantes > 0`) et écriture de
 `dossier_travail/reponse-question.md` avec son bloc final `--- ORGANISATION ---`."""
 import importlib
 import json
@@ -11,20 +12,32 @@ if str(RACINE_ORGANISME) not in sys.path:
     sys.path.insert(0, str(RACINE_ORGANISME))
 
 
-def _faux_client_question(reponses, especes_dispo=None, appels_max=10):
+def _faux_client_question(reponses, especes_dispo=None, appels_max=10, recherches_max=0, telechargements_max=0):
     module = types.ModuleType("noyau_client")
     etat = {
         "idx": 0,
         "appels": [],
+        "recherches": [],
+        "telechargements": [],
         "especes": list(especes_dispo or ["CLAUDE_FABLE_5_1", "GEMINI_ARGON"]),
         "restants": appels_max,
+        "recherches_restantes": recherches_max,
+        "telechargements_restants": telechargements_max,
+        "octets_restants": 500000 if telechargements_max > 0 else 0,
     }
 
     def especes():
         return list(etat["especes"])
 
     def budget():
-        return {"appels_restants": etat["restants"], "usd_restants": 5.0, "recherches_restantes": 0}
+        return {
+            "appels_restants": etat["restants"],
+            "usd_restants": 5.0,
+            "recherches_restantes": etat["recherches_restantes"],
+            "sources": ["arxiv", "openalex"],
+            "telechargements_restants": etat["telechargements_restants"],
+            "octets_restants": etat["octets_restants"],
+        }
 
     def appeler(espece, prompt, max_tokens=None, role=""):
         etat["appels"].append({"espece": espece, "prompt": prompt, "max_tokens": max_tokens, "role": role})
@@ -47,7 +60,58 @@ def _faux_client_question(reponses, especes_dispo=None, appels_max=10):
             "echec": None if statut == "OK" else statut,
         }
 
-    module.especes, module.budget, module.appeler, module._etat = especes, budget, appeler, etat
+    def rechercher(requete, n=5, role="", source="arxiv"):
+        etat["recherches"].append({"requete": requete, "n": n, "role": role, "source": source})
+        if etat["recherches_restantes"] <= 0:
+            return {"statut": "PLAFOND", "source": source, "resultats": [], "identifiant": None, "echec": "plafond"}
+        etat["recherches_restantes"] -= 1
+        return {
+            "statut": "OK",
+            "source": source,
+            "resultats": [
+                {
+                    "source": source,
+                    "id": f"arxiv:2505.000{len(etat['recherches'])}",
+                    "titre": f"Evaluation Awareness Probing under {requete[:25]}",
+                    "auteurs": "Needham et al.",
+                    "date": "2025",
+                    "resume": "Study of linear probes and evaluation awareness in frontier models.",
+                    "lien": f"https://arxiv.org/abs/2505.000{len(etat['recherches'])}",
+                }
+            ],
+            "identifiant": f"rech_{len(etat['recherches'])}",
+            "echec": None,
+        }
+
+    def telecharger(reference, role=""):
+        etat["telechargements"].append({"reference": reference, "role": role})
+        if etat["telechargements_restants"] <= 0:
+            return {"statut": "PLAFOND", "texte": "", "octets": 0, "identifiant": None, "echec": "plafond"}
+        etat["telechargements_restants"] -= 1
+        texte_doc = "Full paper text analyzing evaluation awareness, sandbagging, and probe invariance."
+        etat["octets_restants"] = max(0, etat["octets_restants"] - len(texte_doc))
+        return {
+            "statut": "OK",
+            "identifiant": f"tel_{len(etat['telechargements'])}",
+            "adresse": reference,
+            "genre": "article",
+            "titre": "Evaluation Awareness Full Paper",
+            "octets": len(texte_doc),
+            "sha256_brut": "abc",
+            "sha256_texte": "def",
+            "texte": texte_doc,
+            "tronque": False,
+            "caracteres_texte": len(texte_doc),
+            "fichier_texte": None,
+            "echec": None,
+        }
+
+    module.especes = especes
+    module.budget = budget
+    module.appeler = appeler
+    module.rechercher = rechercher
+    module.telecharger = telecharger
+    module._etat = etat
     return module
 
 
@@ -86,7 +150,7 @@ def test_v4_question_ouverte_nominale_ecrit_reponse_et_organisation(tmp_path, mo
             ),
         },
     ]
-    client = _faux_client_question(reponses, appels_max=4)
+    client = _faux_client_question(reponses, appels_max=4, recherches_max=0)
     monkeypatch.setitem(sys.modules, "noyau_client", client)
     import principal
     importlib.reload(principal)
@@ -120,7 +184,68 @@ def test_v4_question_ouverte_nominale_ecrit_reponse_et_organisation(tmp_path, mo
     assert "Mémoire spectrale ISVD ayant servi" in texte_md
     assert bilan["question_ouverte"]["question_ouverte_traitee"] is True
     assert bilan["question_ouverte"]["appels_question_ok"] == 4
+    assert bilan["question_ouverte"]["moissonnage"]["actif"] is False
+    assert len(client._etat["recherches"]) == 0
     assert (travail / "successeur" / "organisme" / "manifeste.json").exists()
+
+
+def test_v4_moissonneur_endogene_actif_quand_budget_recherche_ouvert(tmp_path, monkeypatch):
+    reponses = [
+        {
+            "statut": "OK",
+            "texte": '{"requetes": ["evaluation awareness linear probes", "sandbagging alignment faking LLM"]}',
+        },
+        {
+            "statut": "OK",
+            "texte": (
+                "Caste 1 : Analyse des failles documentees dans Needham et al. (2025) et limites des sondes.\n"
+                '{"position": "Les sondes lineaires sont vulnerables a la rotation de sous-espace", "confiance": 0.85, "incertitude": "Transfert inter-couches"}'
+            ),
+        },
+        {
+            "statut": "OK",
+            "texte": (
+                "Caste 2 : Decouverte d'une faille inedite de desynchronisation spectrale et resolution par invariant de Koopman.\n"
+                '{"position": "Invariant spectral de Koopman-Bregman contre la dissimulation", "confiance": 0.89, "incertitude": "Calibration a petit echantillon"}'
+            ),
+        },
+        {
+            "statut": "OK",
+            "texte": (
+                "Synthese : Combinaison du corpus moissonne et du nouvel operateur spectral.\n"
+                '{"position": "Synthese failles documentees + faille spectrale inedite + operateur de Koopman", "confiance": 0.92, "incertitude": "Echelle 100B+"}'
+            ),
+        },
+    ]
+    client = _faux_client_question(reponses, appels_max=6, recherches_max=2, telechargements_max=1)
+    monkeypatch.setitem(sys.modules, "noyau_client", client)
+    import principal
+    importlib.reload(principal)
+
+    travail = tmp_path / "travail_moisson"
+    ctx = {
+        "generation": 4,
+        "lignee": "gemini-organisme-v4",
+        "mission": "Surveillance et alignement d'agents.",
+        "dossier_travail": str(travail),
+        "dossier_archive": "",
+        "taches_entrainement": [],
+        "taches_test": [],
+        "question_ouverte": "Recherche les failles d'eval awareness documentées et inédites et propose des solutions mathématiques inédites.",
+        "budget": {"appels_max": 6, "usd_max": 2.0, "temps_max_s": 60, "recherches_max": 2, "telechargements_max": 1, "octets_max": 500000},
+        "historique": [],
+    }
+
+    bilan = principal.executer(ctx)
+    assert bilan["question_ouverte"]["moissonnage"]["actif"] is True
+    assert bilan["question_ouverte"]["moissonnage"]["n_articles"] >= 1
+    assert bilan["question_ouverte"]["moissonnage"]["n_documents_telecharges"] == 1
+    assert bilan["compteurs_appels"]["recherches_ok"] == 2
+    assert bilan["compteurs_appels"]["telechargements_ok"] == 1
+
+    texte_md = (travail / "reponse-question.md").read_text(encoding="utf-8")
+    assert "Moissonneur documentaire endogène" in texte_md
+    assert "Needham et al." in texte_md
 
 
 def test_v4_question_ouverte_nulle_ne_cree_pas_le_fichier(tmp_path, monkeypatch):

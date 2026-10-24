@@ -116,10 +116,10 @@ def planifier_castes_question_ouverte(especes_disponibles: list, budget: dict, h
         cible = 1
 
     catalogue_roles = [
-        ("monoculture_analytique", "MONOCULTURE", "Analyse initiale et decomposition formelle de la question"),
-        ("monoculture_croisee", "MONOCULTURE", "Seconde perspective independante et verification des premisses"),
-        ("sonde_orthogonale_onsager", "HYBRIDE", "Exploration orthogonale hors des termes satures et contre-exemples"),
-        ("critique_adversariale_limites", "HYBRIDE", "Identification des angles morts, cas limites et conditions de refutation"),
+        ("monoculture_analytique", "MONOCULTURE", "Analyse des failles documentees et decomposition formelle de la question"),
+        ("monoculture_croisee", "MONOCULTURE", "Seconde perspective independante, verification des premisses et limites"),
+        ("sonde_orthogonale_onsager", "HYBRIDE", "Decouverte de failles inedites hors des termes satures et contre-exemples"),
+        ("critique_adversariale_limites", "HYBRIDE", "Invention de concepts mathematiques inedits et operateurs de resolution"),
         ("arbitre_synthese_contradictoire", "HYBRIDE", "Arbitrage des votes, synthese contradictoire et redaction finale"),
     ]
 
