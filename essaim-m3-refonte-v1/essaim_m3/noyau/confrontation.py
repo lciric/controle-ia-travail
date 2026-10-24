@@ -150,13 +150,31 @@ def designations_et_concours(paires: list[dict], scores_temoin: dict[str, list[f
 
 
 class Confrontation:
-    def __init__(self, noyau, dossier: pathlib.Path, addendum: dict | None = None):
+    def __init__(self, noyau, dossier: pathlib.Path, addendum: dict | None = None, budget_defense: dict | None = None,
+                 plafond_confrontation: float | None = None):
         """`addendum` : relevé gelé (`relever_metriques`) ; quand il est donné, une métrique dont les empreintes ne sont
-        pas celles du relevé est « non gelée » et n'est ni exécutée ni attaquée (CR-04)."""
+        pas celles du relevé est « non gelée » et n'est ni exécutée ni attaquée (CR-04).
+        `budget_defense` (CR3-01) : {"appels_max", "usd_max", "temps_max_s"} d'une défense — son pire cas ; à défaut, le
+        budget d'une génération du noyau. `plafond_confrontation` (CR3-01) : dollars ajoutés au plafond de la course
+        rechargée pour la seule confrontation (la course adaptative peut avoir atteint son plafond au pire cas) ; à
+        défaut, la confrontation s'impute au plafond restant de la course."""
         self.noyau = noyau
         self.dossier = pathlib.Path(dossier)
         self.dossier.mkdir(parents=True, exist_ok=True)
         self.addendum = addendum
+        b = dict(noyau.budget)
+        for k, v in (budget_defense or {}).items():
+            if v is not None:
+                b[k] = v
+        if int(b["appels_max"]) <= 0 or float(b["usd_max"]) <= 0 or int(b["temps_max_s"]) <= 0:
+            raise ValueError("budget de défense : appels_max, usd_max et temps_max_s doivent être strictement positifs")
+        self.budget_defense = {"appels_max": int(b["appels_max"]), "usd_max": float(b["usd_max"]), "temps_max_s": int(b["temps_max_s"])}
+        self.plafond_confrontation = (float(plafond_confrontation) if plafond_confrontation is not None else None)
+        if self.plafond_confrontation is not None:
+            if self.plafond_confrontation < 0:
+                raise ValueError("plafond_confrontation négatif")
+            self.noyau.plafond_total += self.plafond_confrontation
+        self.journaux_defense: list[dict] = []
 
     def _derniere_generation(self, lignee: str) -> dict | None:
         lignes = [l for l in self.noyau.archive.lignes(lignee) if l.get("statut") == "OK" and not l.get("phase")]
@@ -188,13 +206,13 @@ class Confrontation:
             "dossier_travail": str(travail), "dossier_archive": str(self.noyau._vue_pour(lignee_def)),
             "taches_entrainement": [dict(_taches.masquer(t), verite=t["verite"]) for t in self.noyau.banque["train"]],
             "taches_test": [melange[i] for i in ordre],
-            "budget": {"appels_max": int(self.noyau.budget["appels_max"]), "usd_max": round(min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()), 4),
-                       "temps_max_s": int(self.noyau.budget["temps_max_s"]), "recherches_max": 0,
+            "budget": {"appels_max": int(self.budget_defense["appels_max"]), "usd_max": round(min(float(self.budget_defense["usd_max"]), self.noyau._plafond_restant()), 4),
+                       "temps_max_s": int(self.budget_defense["temps_max_s"]), "recherches_max": 0,
                        "entrainements_max": int(self.noyau.budget["entrainements_max"]), "pas_max": int(self.noyau.budget["pas_max"])},
             "traits": self.noyau._contexte_traits(bool(self.noyau.vues) and int(self.noyau.budget["entrainements_max"]) > 0 and traits_att is not None),
             "historique": self.noyau.archive.historique(lignee_def), "relance": False, "graine": self.noyau.graine(lignee_def, g_def, "organisme"),
         }
-        appelant = Appelant(travail / "noyau", min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()),
+        appelant = Appelant(travail / "noyau", min(float(self.budget_defense["usd_max"]), self.noyau._plafond_restant()),
                             self.noyau.appelants, self.noyau.reel, self.noyau.go_id)
         socket = str(travail / "n.sock")
         if len(socket) > 100:
@@ -204,26 +222,48 @@ class Confrontation:
         bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
         entraineur = self.noyau._entraineur(travail / "noyau", lignee_def, g_def, traits_att) if traits_att is not None else None
         bac_a_sable.proteger(travail / "noyau", 0o700)
-        with ServeurAppels(appelant, socket, int(self.noyau.budget["appels_max"]), self.noyau.parallele_max, None, entraineur) as serveur:
-            execution = bac_a_sable.executer(travail, socket, int(self.noyau.budget["temps_max_s"]), isoler_reseau=self.noyau.isoler_reseau, uid=uid)
+        with ServeurAppels(appelant, socket, int(self.budget_defense["appels_max"]), self.noyau.parallele_max, None, entraineur) as serveur:
+            execution = bac_a_sable.executer(travail, socket, int(self.budget_defense["temps_max_s"]), isoler_reseau=self.noyau.isoler_reseau, uid=uid)
             n_appels = serveur.n_appels
+            non_conformes = serveur.non_conformes
         self.noyau.depense_totale += appelant.depense_usd
         self.noyau.n_appels_total += n_appels
-        reponses = {}
-        f = travail / "reponses_test.json"
-        if f.exists():
+        # CR3-03 : le journal des appels de la défense est scellé et copié dans le dossier de la confrontation ; les appels
+        # à un modèle non conforme sont comptés et remontés (H-E3 porte aussi sur les défenses)
+        from .archive import sceller, empreinte_fichier
+        journal = {"defense": etiquette, "chemin": None, "sha256": None, "n_appels": n_appels, "non_conformes": int(non_conformes)}
+        if appelant.journal.exists():
+            sceller(appelant.journal)
+            copie = self.dossier / "journaux-defense" / f"{etiquette}.jsonl"
+            copie.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(appelant.journal, copie)
+            sceller(copie)
+            journal.update({"chemin": str(copie), "sha256": empreinte_fichier(copie)})
+        self.journaux_defense.append(journal)
+        reponses, probleme_reponses = {}, None
+        # R-372 : le fichier écrit par le défendeur est lu sans suivre de lien, sans attendre sur un tube, taille bornée
+        from . import fichiers as _fichiers
+        brut_octets, raison = _fichiers.lire_fichier_organisme(travail / "reponses_test.json", _fichiers.OCTETS_MAX_REPONSES)
+        if brut_octets is None:
+            probleme_reponses = None if raison == "absent" else raison
+        else:
             try:
-                brut = json.loads(f.read_text(encoding="utf-8-sig"))
+                brut = json.loads(brut_octets.decode("utf-8-sig"))
                 if isinstance(brut, dict):
                     for t in attaques:
                         r = brut.get(t["id"])
                         if isinstance(r, dict) and str(r.get("etiquette", "")).strip().lower() in t["etiquettes"]:
                             reponses[t["id"]] = {"etiquette": str(r["etiquette"]).strip().lower(), "confiance": _taches.confiance_de(r)}
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                pass
+                else:
+                    probleme_reponses = "reponses_test.json n'est pas un objet"
+            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                probleme_reponses = f"reponses_test.json illisible : {str(e)[:100]}"
         score = _taches.evaluer_generique(reponses, attaques)
+        if non_conformes:  # CR3-03 : une défense servie par un modèle non conforme est invalide : aucun score retenu
+            score = None
         return {"execution": execution["code"], "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
-                "score_attaques": score, "travail": travail}
+                "score_attaques": score, "travail": travail, "non_conformes": int(non_conformes), "invalide_modele": bool(non_conformes),
+                "probleme_reponses": probleme_reponses}
 
     def _discriminance(self, a: str, ma: dict) -> dict:
         """CR-07 (ii) et N-041 (c), épreuve mécanique d'une métrique gelée, avant toute application. Le noyau fabrique des
@@ -281,31 +321,38 @@ class Confrontation:
                                     "attaques": [], "calculer": None, "definition": metriques[l].get("definition")}
         discriminance = {l: self._discriminance(l, metriques[l]) for l in lignees}
         paires = []
-        for a in lignees:
-            for b in lignees:
-                if a == b:
-                    continue
-                if self._famille(a) == self._famille(b):
-                    paires.append({"attaquant": a, "defendeur": b, "applicable": False, "raison": "même famille de fournisseur"})
-                    continue
-                ma = metriques[a]
-                res = {"attaquant": a, "defendeur": b, "applicable": True, "famille_attaquant": self._famille(a),
-                       "famille_defendeur": self._famille(b), "problemes_metrique": ma["problemes"],
-                       "metrique_discriminante": discriminance[a].get("discriminante")}
-                if ma["attaques"]:
-                    att = self._executer_sur_attaques(b, organismes[b], ma["attaques"], f"{a}__vers__{b}")
-                    res.update({"n_attaques": len(ma["attaques"]), "execution_defense": att["execution"],
-                                "n_appels": att["n_appels"], "cout_usd": att["cout_usd"], "score_attaques": att["score_attaques"]})
-                    sorties = att["travail"]
-                else:
-                    res.update({"n_attaques": 0, "score_attaques": None})
-                    sorties = None
-                if ma["calculer"] is not None and sorties is not None:
-                    res["metrique"] = bac_a_sable.executer_metrique(self.noyau.espace / "travail" / "confrontation" / f"{a}__vers__{b}" / "metrique", ma["calculer"].parent, sorties,
-                                                                    uid=self.noyau._uid(a), isoler_reseau=self.noyau.isoler_reseau)
-                else:
-                    res["metrique"] = {"code": "NON_APPLICABLE", "valeur": None, "calculee": False}
-                paires.append(res)
+        # ordre des paires tiré par SeedSequence et consigné (CR-13 e) : un arrêt sur plafond ne frappe pas toujours les mêmes
+        ss = np.random.SeedSequence(int(self.noyau.manifeste["entropie_seed_sequence"]), spawn_key=(1_000_002, 0, 4))
+        graine_paires = int(ss.generate_state(1, dtype=np.uint64)[0])
+        couples = [(a, b) for a in lignees for b in lignees if a != b]
+        ordre = np.random.default_rng(graine_paires).permutation(len(couples))
+        for k in ordre:
+            a, b = couples[k]
+            if a == b:
+                continue
+            if self._famille(a) == self._famille(b):
+                paires.append({"attaquant": a, "defendeur": b, "applicable": False, "raison": "même famille de fournisseur"})
+                continue
+            ma = metriques[a]
+            res = {"attaquant": a, "defendeur": b, "applicable": True, "famille_attaquant": self._famille(a),
+                   "famille_defendeur": self._famille(b), "problemes_metrique": ma["problemes"],
+                   "metrique_discriminante": discriminance[a].get("discriminante")}
+            if ma["attaques"]:
+                att = self._executer_sur_attaques(b, organismes[b], ma["attaques"], f"{a}__vers__{b}")
+                res.update({"n_attaques": len(ma["attaques"]), "execution_defense": att["execution"],
+                            "n_appels": att["n_appels"], "cout_usd": att["cout_usd"], "score_attaques": att["score_attaques"],
+                            "non_conformes": att["non_conformes"], "invalide_modele": att["invalide_modele"],
+                            "probleme_reponses": att["probleme_reponses"]})
+                sorties = att["travail"]
+            else:
+                res.update({"n_attaques": 0, "score_attaques": None})
+                sorties = None
+            if ma["calculer"] is not None and sorties is not None:
+                res["metrique"] = bac_a_sable.executer_metrique(self.noyau.espace / "travail" / "confrontation" / f"{a}__vers__{b}" / "metrique", ma["calculer"].parent, sorties,
+                                                                uid=self.noyau._uid(a), isoler_reseau=self.noyau.isoler_reseau)
+            else:
+                res["metrique"] = {"code": "NON_APPLICABLE", "valeur": None, "calculee": False}
+            paires.append(res)
         rapport = {"avertissement": "NON OPPOSABLE (R7) ; aucune règle de choix du champion n'est appliquée ici",
                    "addendum_gele": (None if self.addendum is None else {"quand_utc": self.addendum.get("quand_utc"), "gelees": gel}),
                    "lignees": {l: {"famille": self._famille(l), "metrique_presente": metriques[l]["present"],
@@ -313,6 +360,10 @@ class Confrontation:
                                    "discriminance": {k: v for k, v in discriminance[l].items() if k in ("testee", "discriminante", "resiste_au_gonflement", "raison", "epreuves")},
                                    "definition": (metriques[l]["definition"] or "")[:2000]} for l in lignees},
                    "paires": paires, "scores_temoin": self.noyau._scores_finaux(self.noyau.archive.lignes()),
+                   "ordre_paires": {"graine": graine_paires, "couples": [list(couples[k]) for k in ordre]},
+                   "budget_defense": dict(self.budget_defense), "plafond_confrontation_usd": self.plafond_confrontation,
+                   "plafond_total_usd": round(float(self.noyau.plafond_total), 4),
+                   "journaux_defense": list(self.journaux_defense), "defenses_non_conformes": sum(1 for j in self.journaux_defense if j["non_conformes"]),
                    "depense_totale_usd": round(self.noyau.depense_totale, 4)}
         rapport.update(designations_et_concours(paires, rapport["scores_temoin"], rapport["lignees"]))
         n = 1
