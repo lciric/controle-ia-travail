@@ -13,7 +13,7 @@ import re
 
 ESPECES_DISPONIBLES = ["CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5", "GEMINI_ARGON"]
 FAMILLES = {"CLAUDE_FABLE_5_1": "anthropic", "CLAUDE_OPUS_5_5": "anthropic", "GEMINI_ARGON": "gemini"}
-EXTENSIONS_PERMISES = {".py", ".md", ".txt", ".json", ".jsonl", ".csv", ".yaml", ".yml", ".tex"}
+EXTENSIONS_PERMISES = {".py", ".md", ".txt", ".json", ".jsonl", ".csv", ".yaml", ".yml", ".tex", ".sha256"}
 TAILLE_MAX_OCTETS = 2_000_000
 FICHIERS_MAX = 200
 MOTIF_FICHIER = re.compile(r"<<<FICHIER (organisme/[A-Za-z0-9_./-]+)>>>\n(.*?)\n<<<FIN FICHIER>>>", re.S)
@@ -30,8 +30,9 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : apprentissage par gradient se
    clé, sans accès hors de son dossier de travail, avec une limite de temps, de mémoire et de disque. `contexte`
    est un dictionnaire :
    - "generation" (entier), "lignee" (texte), "mission" (texte),
-   - "dossier_travail" (chemin, le seul en écriture), "dossier_archive" (chemin en lecture seule : toutes les
-     générations passées de toutes les lignées, avec leur code, leurs sorties, leur score),
+   - "dossier_travail" (chemin, le seul en écriture), "dossier_archive" (chemin en lecture seule : les
+     générations passées de ta lignée — `g000/`, `g001/`, … — avec leur code, leurs sorties, leur score ; en
+     course à mémoire partagée, un sous-dossier par lignée, figé au début de la ronde),
    - "taches_entrainement" : liste de {"id", "famille", "texte", "etiquettes", "verite"},
    - "taches_test" : liste de {"id", "famille", "texte", "etiquettes"} (sans vérité),
    - "budget" : {"appels_max", "usd_max", "temps_max_s", "recherches_max", "entrainements_max", "pas_max"} pour cette
@@ -90,7 +91,8 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : apprentissage par gradient se
    `organisme/metrique/` (donc dans le successeur si tu veux qu'elle suive) : `definition.md` (en français simple),
    `calculer.py` définissant `calculer(dossier_sorties) -> float` (du code objectif appliqué aux sorties d'un autre
    organisme, exécuté par le noyau dans un bac à sable, sans réseau, sous un autre utilisateur ; jamais une auto-note),
-   et `attaques.json` (tâches d'attaque : {"id", "famille", "texte", "etiquettes", "verite"}). Le noyau lit
+   et `attaques.json` (tâches d'attaque : {"id", "famille", "texte", "etiquettes", "verite"} ; la famille est
+   une famille de la banque et les étiquettes sont celles de cette famille, sinon l'attaque est invalide). Le noyau lit
    `organisme/metrique/` de la dernière génération valide de chaque lignée, **après** la boucle, sans lire aucun score,
    en fait un relevé d'empreintes que l'humain gèle (addendum scellé, contre-lu), puis soumet les attaques de A à B et
    celles de B à A, mêlées à des tâches ordinaires et sans marque, et applique la métrique de A aux sorties de B et

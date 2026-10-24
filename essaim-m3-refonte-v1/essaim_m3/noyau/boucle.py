@@ -37,7 +37,8 @@ def commit_git(dossier: pathlib.Path) -> str | None:
         return None
 
 
-USAGES_GRAINE = {"ordre_train": 1, "ordre_test": 2, "recherche": 3, "defense": 4, "organisme": 5}
+USAGES_GRAINE = {"ordre_train": 1, "ordre_test": 2, "recherche": 3, "defense": 4, "organisme": 5, "ordre_lignees": 6}
+INDICE_RONDE = 1_000_000  # indice de lignée réservé aux tirages de ronde (ordre des lignées), hors de toute lignée réelle
 
 
 def empreinte_arbre(dossier: pathlib.Path) -> str:
@@ -96,7 +97,8 @@ class Noyau:
         n = cls(course, mission, banque, m["budget_generation"], m["plafond_total_usd"], m["generations_max"], appelants=appelants,
                 reel=reel, go_id=go_id or m.get("go_id"), isoler_reseau=(m.get("isolation_reseau", False) if isoler_reseau is None else isoler_reseau),
                 entropie=m["entropie_seed_sequence"], especes_amorcage=m.get("especes_amorcage"), etiquette_run=m.get("run", ""),
-                gel=m.get("gel", False), parallele_max=m.get("parallele_max", PARALLELE_MAX_DEFAUT), registre_go=registre_go)
+                gel=m.get("gel", False), parallele_max=m.get("parallele_max", PARALLELE_MAX_DEFAUT), registre_go=registre_go,
+                memoire_partagee=m.get("memoire_partagee", False))
         lignes = n.archive.lignes()
         depense = 0.0
         for l in lignes:
@@ -116,7 +118,7 @@ class Noyau:
                  especes_amorcage: list[str] | None = None, etiquette_run: str = "", gel: bool = False,
                  organismes_imposes: dict[str, dict] | None = None, parallele_max: int = PARALLELE_MAX_DEFAUT,
                  recherche=None, relances_max: int = 1, traits: dict | None = None, description_traits: str = "",
-                 registre_go: str | pathlib.Path | None = None):
+                 registre_go: str | pathlib.Path | None = None, memoire_partagee: bool = False):
         """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
         — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
         corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
@@ -131,7 +133,8 @@ class Noyau:
             (self.racine / sous).mkdir(exist_ok=True)
             bac_a_sable.proteger(self.racine / sous, 0o700)
         # les dossiers de travail des organismes et la vue de l'archive doivent être atteignables par leurs utilisateurs
-        self.espace = bac_a_sable.espace_organismes(self.racine) if self.isolation["utilisateur"] else self.racine
+        course_nouvelle = not (self.racine / "manifeste-run.json").exists()
+        self.espace = bac_a_sable.espace_organismes(self.racine, course_nouvelle) if self.isolation["utilisateur"] else self.racine
         (self.espace / "travail").mkdir(exist_ok=True)
         bac_a_sable.proteger(self.espace / "travail", 0o711)
         self.mission = mission
@@ -163,6 +166,11 @@ class Noyau:
             textes = {t["id"]: t["texte"] for n in ("train", "test", "test_final") for t in self.banque.get(n, [])}
             self.traits = _entrainement.traits_simules(textes)
             self.description_traits = f"traits de hachage simulés ({_entrainement.DIM_SIMULATION} dimensions)"
+        # CR-15 (c) : par défaut chaque lignée ne lit que sa propre archive (lignées indépendantes) ; avec
+        # `memoire_partagee`, la vue de toutes les lignées est lisible, figée au début de chaque ronde (CR-15 b)
+        self.memoire_partagee = bool(memoire_partagee)
+        self.ronde = 0
+        self.vue_ronde: pathlib.Path | None = None
         for nom, spec in self.organismes_imposes.items():
             if not isinstance(spec, dict) or "organisme" not in spec or spec.get("famille") not in FAMILLES_CONNUES:
                 raise Arret(f"organisme imposé {nom!r} : il faut {{'organisme': dossier, 'famille': {FAMILLES_CONNUES}}}")
@@ -184,6 +192,7 @@ class Noyau:
             "n_taches_test_dev": len(banque["test"]), "n_taches_test_final": len(banque.get("test_final", [])),
             "mission_sha256": hashlib.sha256(mission.encode("utf-8")).hexdigest(),
             "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage, "relances_max": self.relances_max,
+            "memoire_partagee": self.memoire_partagee,
             "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
             "traits": ({"description": self.description_traits, "n": len(self.traits), "dimension": int(next(iter(self.traits.values())).shape[0])} if self.traits else None),
@@ -241,6 +250,36 @@ class Noyau:
         g = int(ss.generate_state(1, dtype=np.uint64)[0])
         self._evenement(etape="graine", lignee=lignee, generation=generation, usage=usage, graine=g)
         return g
+
+    def graine_ronde(self, ronde: int) -> int:
+        """Graine de l'ordre des lignées d'une ronde : spawn_key=(INDICE_RONDE, ronde, usage « ordre_lignees ») ; consignée."""
+        ss = np.random.SeedSequence(int(self.graines.entropy), spawn_key=(INDICE_RONDE, int(ronde), USAGES_GRAINE["ordre_lignees"]))
+        g = int(ss.generate_state(1, dtype=np.uint64)[0])
+        self._evenement(etape="graine", ronde=ronde, usage="ordre_lignees", graine=g)
+        return g
+
+    def _vue_pour(self, lignee: str) -> pathlib.Path:
+        """Dossier d'archive lisible par la lignée : sa propre vue (défaut) ; la vue figée de la ronde (mémoire partagée) ;
+        une vue vide (bras gelé)."""
+        if self.gel:
+            vue = self.espace / "archive_vue_gel"
+        elif self.memoire_partagee:
+            vue = self.vue_ronde if self.vue_ronde is not None else self.archive.vue
+        else:
+            vue = self.archive.vue / lignee
+        vue.mkdir(parents=True, exist_ok=True)
+        bac_a_sable.proteger(vue, 0o755)
+        return vue
+
+    def _figer_vue(self, ronde: int) -> pathlib.Path:
+        """Copie en lecture seule de la vue de toutes les lignées, prise au début de la ronde (CR-15 b)."""
+        cible = self.espace / f"archive_vue_r{ronde:03d}"
+        if cible.exists():
+            shutil.rmtree(cible)
+        shutil.copytree(self.archive.vue, cible, symlinks=False)
+        for f in [cible] + list(cible.rglob("*")):
+            bac_a_sable.proteger(f, 0o555 if f.is_dir() else 0o444)
+        return cible
 
     def _uid(self, lignee: str) -> int | None:
         """Utilisateur non privilégié de la lignée (None sans isolation d'utilisateur : simulation hors root)."""
@@ -353,11 +392,7 @@ class Noyau:
         graine_organisme = self.graine(lignee, g, "organisme")
         # bras gelé : témoin sans aucune transmission entre générations — archive vide et historique vide, sinon
         # l'organisme relit sa propre mémoire archivée (Gemini le fait : `charger_connaissances_archive`)
-        archive_vue = self.archive.vue
-        if self.gel:
-            archive_vue = self.espace / "archive_vue_gel"
-            archive_vue.mkdir(parents=True, exist_ok=True)
-            bac_a_sable.proteger(archive_vue, 0o755)
+        archive_vue = self._vue_pour(lignee)
         contexte = {
             "generation": g, "lignee": lignee, "mission": contrat.mission_texte(self.mission, _taches.ETIQUETTES),
             "dossier_travail": str(travail), "dossier_archive": str(archive_vue),
@@ -477,7 +512,13 @@ class Noyau:
             if self._plafond_restant() <= 0:
                 self._evenement(etape="arret", raison="plafond total atteint")
                 break
-            for lignee in actives:
+            # CR-15 (b) : ordre des lignées tiré par SeedSequence à chaque ronde et consigné ; vue figée au début de la ronde
+            self.ronde += 1
+            rng = np.random.default_rng(self.graine_ronde(self.ronde))
+            ordre = [actives[i] for i in rng.permutation(len(actives))]
+            self.vue_ronde = self._figer_vue(self.ronde) if (self.memoire_partagee and not self.gel) else None
+            self._evenement(etape="ronde", ronde=self.ronde, ordre=ordre, vue_figee=(str(self.vue_ronde) if self.vue_ronde else None))
+            for lignee in ordre:
                 if (self.racine / "STOP").exists() or self._plafond_restant() <= 0:
                     break
                 self.executer_generation(lignee)

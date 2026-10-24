@@ -98,9 +98,11 @@ def traversable_par_tous(chemin: pathlib.Path) -> bool:
     return True
 
 
-def espace_organismes(racine: pathlib.Path) -> pathlib.Path:
+def espace_organismes(racine: pathlib.Path, course_nouvelle: bool = False) -> pathlib.Path:
     """Où vivent les dossiers de travail et la vue de l'archive : sous la racine si elle est traversable par les
-    utilisateurs des organismes, sinon sous `/var/tmp/essaim-m3/<empreinte de la racine>` (0711, à root)."""
+    utilisateurs des organismes, sinon sous `/var/tmp/essaim-m3/<empreinte de la racine>` (0711, à root).
+    `course_nouvelle` : la course démarre (pas de manifeste) ; un espace laissé par une course antérieure de même
+    chemin est alors effacé (défaut signalé par session-depot, R-353 : `FileExistsError` dans `archive.deposer`)."""
     racine = pathlib.Path(racine).resolve()
     if traversable_par_tous(racine):
         return racine
@@ -109,6 +111,8 @@ def espace_organismes(racine: pathlib.Path) -> pathlib.Path:
     base.mkdir(parents=True, exist_ok=True)
     proteger(base, 0o711)
     esp = base / _h.sha256(str(racine).encode("utf-8")).hexdigest()[:16]
+    if course_nouvelle and esp.exists():
+        shutil.rmtree(esp, ignore_errors=True)
     esp.mkdir(exist_ok=True)
     proteger(esp, 0o711)
     return esp

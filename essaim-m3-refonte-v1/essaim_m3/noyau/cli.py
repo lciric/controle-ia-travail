@@ -79,7 +79,7 @@ def simuler(args) -> int:
                          args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
                          especes_amorcage=especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
                          organismes_imposes=imposes, parallele_max=args.parallele_max,
-                         recherche=recherche.recherche_simulee, relances_max=args.relances_max)
+                         recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee)
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
     if args.confronter:
@@ -130,7 +130,7 @@ def lancer(args) -> int:
                              entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=imposes, parallele_max=args.parallele_max,
                              recherche=None, relances_max=args.relances_max, traits=traits, description_traits=description,
-                             registre_go=args.registre_go)
+                             registre_go=args.registre_go, memoire_partagee=args.memoire_partagee)
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
@@ -215,6 +215,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--entrainements-max", type=int, default=10, help="entraînements par gradient servis par le noyau, par génération (0 : aucun)")
         q.add_argument("--pas-max", type=int, default=5000, help="pas de gradient au plus par entraînement")
         q.add_argument("--traits", default=None, help="réel : fichier .npz des traits par tâche (ids, X) — activations extraites sous GO ; simulation : traits de hachage calculés")
+        q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
             q.add_argument("--n-test", type=int, default=24)
