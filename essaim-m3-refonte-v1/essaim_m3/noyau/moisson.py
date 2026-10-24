@@ -32,6 +32,7 @@ import urllib.request
 RESUME_MAX = 1200
 REPONSE_MAX_OCTETS = 2_000_000
 DELAI_S = 25.0
+EXTRACTION_MAX_S = 120          # extraction d'un PDF (pdftotext) au plus ; compte dans la garde de temps CE-07 (CE3-11)
 TEXTE_MAX_RENDU = 60_000            # caractères de texte rendus à l'organisme par document (le reste est dans corpus/)
 OCTETS_MAX_DOC = 8_000_000
 OCTETS_MAX_GENERATION = 40_000_000
@@ -177,7 +178,7 @@ def extraire_texte(brut: bytes, type_contenu: str, nom: str = "") -> tuple[str, 
             src = pathlib.Path(d) / "doc.pdf"
             src.write_bytes(brut)
             try:
-                res = subprocess.run(["pdftotext", "-layout", "-enc", "UTF-8", str(src), "-"], capture_output=True, timeout=120)
+                res = subprocess.run(["pdftotext", "-layout", "-enc", "UTF-8", str(src), "-"], capture_output=True, timeout=EXTRACTION_MAX_S)
                 texte = res.stdout.decode("utf-8", errors="replace") if res.returncode == 0 else ""
             except (subprocess.TimeoutExpired, OSError):
                 texte = ""

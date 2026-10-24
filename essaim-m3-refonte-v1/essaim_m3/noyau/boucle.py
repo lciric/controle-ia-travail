@@ -51,6 +51,20 @@ def anomalie_journal_absent(n_appels: int, journal: pathlib.Path) -> str | None:
     return None
 
 
+def temps_pire_cas(budget: dict) -> tuple[int, str]:
+    """CE-07 / CE3-11 : durée au pire cas du travail permis par un budget — entraînements × délai, recherches × délai
+    réseau, téléchargements × (délai réseau + extraction), plus la marge. Rend (secondes, détail lisible)."""
+    n_ent = int(budget.get("entrainements_max", 0))
+    delai = int(budget.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT))
+    n_rech = int(budget.get("recherches_max", 0))
+    n_tel = int(budget.get("telechargements_max", 0))
+    t_rech = n_rech * float(_recherche.DELAI_S)
+    t_tel = n_tel * (float(_moisson.DELAI_S) + float(_moisson.EXTRACTION_MAX_S))
+    total = int(round(n_ent * delai + t_rech + t_tel + MARGE_TEMPS_S))
+    return total, (f"{n_ent} entraînements × {delai} s + {n_rech} recherches × {_recherche.DELAI_S:.0f} s + {n_tel} téléchargements × "
+                   f"({_moisson.DELAI_S:.0f} + {_moisson.EXTRACTION_MAX_S}) s + {MARGE_TEMPS_S} s")
+
+
 def empreinte_arbre(dossier: pathlib.Path) -> str:
     """Empreinte d'un dossier : chemins relatifs triés et contenu de chaque fichier (indépendante des dates)."""
     h = hashlib.sha256()
@@ -202,16 +216,15 @@ class Noyau:
         for b in (self.budget, self.budget_conception):
             if b["max_tokens_appel"] is not None and int(b["max_tokens_appel"]) <= 0:
                 raise Arret("max_tokens_appel doit être strictement positif ou absent")
-        # CE-07 : en réel, le temps de la génération doit contenir tous les entraînements permis plus le reste du travail
-        # (et celui d'une ronde de conception, qui sert les mêmes primitives)
+        # CE-07 (étendue par CE3-11) : en réel, le temps d'une génération — et d'une ronde de conception, qui sert les mêmes
+        # primitives — doit contenir au pire cas tous les entraînements permis, toutes les recherches et tous les
+        # téléchargements permis (délai réseau, extraction d'un PDF), plus le reste du travail
         if self.reel:
             budgets = [("génération", self.budget)] + ([("ronde de conception", self.budget_conception)] if self.rondes_conception else [])
             for nom_b, b in budgets:
-                n_ent = int(b.get("entrainements_max", 0))
-                delai = int(b.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT))
-                if n_ent > 0 and int(b["temps_max_s"]) < n_ent * delai + MARGE_TEMPS_S:
-                    raise Arret(f"budget incohérent (CE-07, {nom_b}) : temps_max_s {b['temps_max_s']} < {n_ent} "
-                                f"entraînements × {delai} s + {MARGE_TEMPS_S} s")
+                besoin, detail = temps_pire_cas(b)
+                if besoin > MARGE_TEMPS_S and int(b["temps_max_s"]) < besoin:
+                    raise Arret(f"budget incohérent (CE-07, {nom_b}) : temps_max_s {b['temps_max_s']} < {besoin} s au pire cas ({detail})")
         if int(self.budget["entrainements_max"]) > 0 and not self.vues:
             if self.reel:
                 raise Arret("apprentissage par gradient demandé en réel sans fichier de traits (activations) : refusé")
@@ -242,6 +255,7 @@ class Noyau:
             "memoire_partagee": self.memoire_partagee, "rondes_conception_max": self.rondes_conception, "decalage_uid": self.decalage_uid,
             "budget_conception": (self.budget_conception if self.rondes_conception else None),
             "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
+            "sources_moisson": self._sources_moisson(), "cle_brave_presente": bool(os.environ.get("BRAVE_API_KEY")),
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
             "traits": ({"description": self.description_traits, "n": len(next(iter(self.vues.values()))),
                         "vues": _entrainement.dimensions_vues(self.vues)} if self.vues else None),
@@ -454,6 +468,7 @@ class Noyau:
                 continue
             self.depense_totale += appelant.depense_usd
             self.n_appels_total += 1
+            self._noter_credit(appelant, lignee, 0, "amorcage")  # CE3-05
             if appelant.journal.exists():
                 _archive.sceller(appelant.journal)  # CR-02 (8) : le journal d'amorçage est scellé comme les autres
             fichiers = contrat.extraire_fichiers(res.texte) if res.ok else {}
@@ -572,6 +587,12 @@ class Noyau:
         anomalie_noyau = anomalie_journal_absent(n_appels, appelant.journal)
         if anomalie_noyau:
             execution = dict(execution, code="ANOMALIE_NOYAU", code_origine=execution.get("code"), anomalie=anomalie_noyau)
+        # CE3-05 : un HTTP 402 (crédit d'un fournisseur épuisé) invalide la génération où il survient et arrête la course
+        self._noter_credit(appelant, lignee, g, phase)
+        if getattr(appelant, "credit_epuise", None) and not anomalie_noyau:
+            anomalie_noyau = (f"crédit d'un fournisseur épuisé en cours de génération (HTTP 402, {appelant.credit_epuise.get('espece')}) : "
+                              "génération invalidée, course arrêtée (CE3-05)")
+            execution = dict(execution, code="CREDIT_EPUISE", code_origine=execution.get("code"), anomalie=anomalie_noyau)
         n_recherches = rechercheur.compteur if rechercheur is not None else 0
         n_entrainements = entraineur.compteur if entraineur is not None else 0
         n_telechargements = telechargeur.compteur if telechargeur is not None else 0
@@ -698,12 +719,43 @@ class Noyau:
         return resume
 
     # ---- boucle ----
+    def _sources_moisson(self) -> list[str]:
+        """CE3-05 / CE3-18 : sources de moisson réellement servies à cette course, consignées au manifeste (la source « web »
+        n'existe que si la clé Brave est dans l'environnement du noyau ; sa valeur n'est jamais écrite)."""
+        if int(self.budget.get("recherches_max", 0)) <= 0:
+            return []
+        if self.recherche is not None:
+            return ["simulation"]
+        return sorted(n for n in _moisson.sources_disponibles() if n != "web" or os.environ.get("BRAVE_API_KEY"))
+
+    def _doit_arreter(self) -> str | None:
+        """Raison d'arrêter la course avant la prochaine génération ou ronde, ou None : fichier STOP ; crédit d'un fournisseur
+        épuisé en cours de course (HTTP 402, CE3-05 : course arrêtée, consignée, lue telle quelle, aucune relance) ;
+        plafond total atteint."""
+        if (self.racine / "STOP").exists():
+            return "fichier STOP"
+        if getattr(self, "arret_credit", None):
+            return f"crédit d'un fournisseur épuisé (HTTP 402) : {self.arret_credit.get('espece')} (CE3-05)"
+        if self._plafond_restant() <= 0:
+            return "plafond total atteint"
+        return None
+
+    def _noter_credit(self, appelant, lignee: str, generation: int, phase: str | None) -> None:
+        """CE3-05 : un appelant qui a reçu un HTTP 402 arrête la course (premier constat consigné)."""
+        if getattr(appelant, "credit_epuise", None) and not getattr(self, "arret_credit", None):
+            self.arret_credit = dict(appelant.credit_epuise, lignee=lignee, generation=generation, phase=phase)
+            self._evenement(etape="credit_epuise", **self.arret_credit)
+
     def concevoir(self) -> None:
         """Phase de conception : rondes jusqu'à la borne dure, ordre tiré, aucune note ; une lignée sort de la phase quand elle
         déclare `fin_conception.json` (son critère) ; aucun arrêt de lignée hors modèle non conforme ou STOP."""
         for k in range(1, self.rondes_conception + 1):
-            if (self.racine / "STOP").exists() or self._plafond_restant() <= 0:
-                self._evenement(etape="arret_conception", ronde=k, raison=("fichier STOP" if (self.racine / "STOP").exists() else "plafond total atteint"))
+            raison = self._doit_arreter()
+            if raison:
+                self._evenement(etape="arret_conception", ronde=k, raison=raison)
+                return
+            if not any(e["active"] for e in self.lignees.values()):  # CE3-12 : raison juste quand aucune lignée n'existe
+                self._evenement(etape="arret_conception", ronde=k, raison="aucune lignée active")
                 return
             actives = [l for l, e in self.lignees.items() if e["active"] and not e.get("conception_finie")]
             if not actives:
@@ -713,7 +765,7 @@ class Noyau:
             ordre = [actives[i] for i in rng.permutation(len(actives))]
             self._evenement(etape="ronde_conception", ronde=k, ordre=ordre)
             for lignee in ordre:
-                if (self.racine / "STOP").exists() or self._plafond_restant() <= 0:
+                if self._doit_arreter():
                     break
                 self.executer_generation(lignee, conception=k)
 
@@ -722,8 +774,9 @@ class Noyau:
             self.concevoir()
             self._conception_faite = True
         while True:
-            if (self.racine / "STOP").exists():
-                self._evenement(etape="arret", raison="fichier STOP")
+            raison = self._doit_arreter()
+            if raison and raison != "plafond total atteint":
+                self._evenement(etape="arret", raison=raison)
                 break
             # base triée par nom (CE2-03) : deux courses aux mêmes lignées et à la même graine ont le même ordre de ronde,
             # quel que soit l'ordre d'insertion (bras apparié `--depuis` : toutes les lignées y entrent comme imposées)
@@ -741,7 +794,7 @@ class Noyau:
             self.vue_ronde = self._figer_vue(self.ronde) if (self.memoire_partagee and not self.gel) else None
             self._evenement(etape="ronde", ronde=self.ronde, ordre=ordre, vue_figee=(str(self.vue_ronde) if self.vue_ronde else None))
             for lignee in ordre:
-                if (self.racine / "STOP").exists() or self._plafond_restant() <= 0:
+                if self._doit_arreter():
                     break
                 self.executer_generation(lignee)
         return self.rapport()

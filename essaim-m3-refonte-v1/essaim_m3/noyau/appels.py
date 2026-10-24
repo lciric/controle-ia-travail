@@ -22,6 +22,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import re
 import sys
 import threading
 
@@ -119,6 +120,7 @@ class Appelant:
         self.plafond_usd = float(plafond_usd)
         self.depense_usd = 0.0
         self.engage_usd = 0.0  # pire cas des appels en vol (appels parallèles) : réservé avant, libéré après
+        self.credit_epuise: dict | None = None  # CE3-05 : premier HTTP 402 (crédit d'un fournisseur épuisé) ; la course s'arrête
         self.compteur = 0
         self.reel = bool(reel)
         self.go_id = go_id
@@ -165,6 +167,10 @@ class Appelant:
         fin_utc = maintenant()
         if rep.echec:
             statut = "ECHEC_API"
+            if self.credit_epuise is None and re.match(r"\s*HTTP 402\b", str(rep.echec)):
+                with self._verrou:  # CE3-05 : crédit épuisé en cours de course — consigné, la course sera arrêtée
+                    if self.credit_epuise is None:
+                        self.credit_epuise = {"espece": espece, "modele": m["id"], "echec": str(rep.echec)[:200]}
         elif not cv.modele_conforme(m["id"], rep.modele_servi):
             statut = "MODELE_NON_CONFORME"
         else:

@@ -2270,3 +2270,94 @@ def test_ce307_anomalie_journal_absent():
     with tempfile.NamedTemporaryFile() as f:
         assert boucle.anomalie_journal_absent(3, pathlib.Path(f.name)) is None
     assert boucle.anomalie_journal_absent(3, pathlib.Path("/inexistant")) is not None
+
+
+def test_ce311_garde_de_temps_compte_la_moisson(tmp_path):
+    """CE3-11 : la garde CE-07 compte au pire cas la moisson (recherches × délai réseau, téléchargements × (délai +
+    extraction)) en plus des entraînements. Artefact : un budget dont les entraînements tiennent seuls mais pas avec la
+    moisson est refusé en réel ; sain : les bornes de la v4 (10 × 60 s, 10 recherches, 4 téléchargements, 1 800 s) tiennent."""
+    pire, detail = boucle.temps_pire_cas({"entrainements_max": 10, "delai_entrainement_s": 60, "recherches_max": 10, "telechargements_max": 4})
+    assert pire == 600 + 250 + 4 * 145 + boucle.MARGE_TEMPS_S == 1730 and "recherches" in detail
+    banque = taches.banque_simulation(np.random.default_rng(5), 4, 4, 2)
+    ids = [t["id"] for n in ("train", "test", "test_final") for t in banque[n]]
+    vues = {"v": {i: np.ones(4, dtype=np.float32) for i in ids}}
+    trop_court = {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 1200, "entrainements_max": 10, "delai_entrainement_s": 60,
+                  "recherches_max": 10, "telechargements_max": 4}   # 600 + 300 tiendrait ; avec la moisson, 1 730 > 1 200
+    with pytest.raises(appels.Arret, match="CE-07.*recherches"):
+        boucle.Noyau(tmp_path / "r", "m", banque, trop_court, 5.0, 1, appelants=None, reel=True, go_id="GO-TEST",
+                     especes_amorcage=["GEMINI_ARGON"], traits=vues)
+    assert boucle.temps_pire_cas(dict(trop_court, recherches_max=0, telechargements_max=0))[0] <= 1200  # sans moisson : tiendrait
+    sain = dict(trop_court, temps_max_s=1800)
+    try:
+        boucle.Noyau(tmp_path / "s", "m", banque, sain, 5.0, 1, appelants=None, reel=True, go_id="GO-TEST",
+                     especes_amorcage=["GEMINI_ARGON"], traits=vues)
+    except appels.Arret as e:  # un autre refus du mode réel reste possible ici ; jamais celui de CE-07
+        assert "CE-07" not in str(e)
+
+
+def test_ce305_credit_epuise_arrete_la_course(tmp_path):
+    """CE3-05 : un HTTP 402 (crédit d'un fournisseur épuisé) en cours de course invalide la génération où il survient
+    (`CREDIT_EPUISE`), est consigné (événement `credit_epuise`) et arrête la course : aucune génération ne suit, aucune
+    relance. Sain : la même course sans 402 va jusqu'au bout."""
+    from essaim_m3.noyau.appels import cv
+    def course(nom, couper_apres):
+        ss = np.random.SeedSequence(81)
+        r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+        servir, _ = appelants_simules(r2, commun={"organisme_amorcage": str(FIXTURE)})
+        compte = {"n": 0}
+        def avec_402(modele_id, prompt, max_tokens):
+            compte["n"] += 1
+            if couper_apres is not None and compte["n"] > couper_apres:
+                return cv.Reponse(echec="HTTP 402 : prepayment credits are depleted")
+            return servir["gemini"](modele_id, prompt, max_tokens)
+        n = boucle.Noyau(tmp_path / nom, "m", taches.banque_simulation(r1, 8, 8, 4),
+                         {"appels_max": 40, "usd_max": 5.0, "temps_max_s": 60}, 20.0, 3,
+                         appelants={"anthropic": servir["anthropic"], "gemini": avec_402}, especes_amorcage=["GEMINI_ARGON"], entropie=81)
+        n.amorcer()
+        return n, n.boucler()
+    sain, _ = course("sain", None)
+    assert len([l for l in sain.archive.lignes("gemini-argon") if not l.get("phase")]) == 3 and not getattr(sain, "arret_credit", None)
+    n, _ = course("coupe", 3)   # amorçage et début de la génération 0 servis, puis 402
+    lignes = [l for l in n.archive.lignes("gemini-argon") if not l.get("phase")]
+    assert n.arret_credit and n.arret_credit["espece"] == "GEMINI_ARGON"
+    assert lignes and lignes[-1]["invalide"] and lignes[-1]["statut"] == "CREDIT_EPUISE"
+    assert len(lignes) < 3  # la course s'est arrêtée, aucune génération ne suit
+    ev = [json.loads(x) for x in (n.racine / "evenements.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert any(e.get("etape") == "credit_epuise" for e in ev)
+
+
+def test_ce312_doit_arreter_et_raison_juste(tmp_path):
+    """CE3-12 : la garde d'arrêt de la course (STOP, crédit épuisé, plafond total) rend la raison juste, dans cet ordre ;
+    la phase de conception sans aucune lignée active le dit (et non « toutes les lignées ont déclaré la fin »)."""
+    banque = taches.banque_simulation(np.random.default_rng(9), 4, 4, 2)
+    n = boucle.Noyau(tmp_path / "r", "m", banque, {"appels_max": 5, "usd_max": 1.0, "temps_max_s": 60}, 2.0, 1,
+                     appelants={}, especes_amorcage=[], rondes_conception_max=2)
+    assert n._doit_arreter() is None
+    n.depense_totale = n.plafond_total
+    assert n._doit_arreter() == "plafond total atteint"
+    n.arret_credit = {"espece": "GEMINI_ARGON"}
+    assert "HTTP 402" in n._doit_arreter()
+    (n.racine / "STOP").write_text("x", encoding="utf-8")
+    assert n._doit_arreter() == "fichier STOP"
+    (n.racine / "STOP").unlink(); n.arret_credit = None; n.depense_totale = 0.0
+    n.concevoir()   # aucune lignée n'existe (aucune espèce, aucune imposée)
+    ev = [json.loads(x) for x in (n.racine / "evenements.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert any(e.get("etape") == "arret_conception" and e.get("raison") == "aucune lignée active" for e in ev)
+
+
+def test_ce305_sources_moisson_au_manifeste_et_bras_apparie(tmp_path, monkeypatch):
+    """CE3-05 / CE3-18 : le manifeste consigne les sources de moisson servies et la présence (jamais la valeur) de la clé
+    Brave ; le bras apparié est refusé si ces conditions diffèrent de sa course d'origine, accepté sinon."""
+    from essaim_m3.noyau import cli, recherche as _rech
+    n = boucle.Noyau(tmp_path / "r", "m", taches.banque_simulation(np.random.default_rng(4), 4, 4, 2),
+                     {"appels_max": 5, "usd_max": 1.0, "temps_max_s": 60, "recherches_max": 3}, 2.0, 1,
+                     appelants={}, especes_amorcage=[], recherche=_rech.recherche_simulee)
+    assert n.manifeste["sources_moisson"] == ["simulation"] and n.manifeste["cle_brave_presente"] in (True, False)
+    origine = tmp_path / "origine"
+    origine.mkdir()
+    monkeypatch.delenv("BRAVE_API_KEY", raising=False)
+    ici = sorted(s for s in __import__("essaim_m3.noyau.moisson", fromlist=["x"]).sources_disponibles() if s != "web")
+    (origine / "manifeste-run.json").write_text(json.dumps({"cle_brave_presente": False, "sources_moisson": ici}), encoding="utf-8")
+    assert cli.conditions_moisson_differentes(origine, 3) is None
+    (origine / "manifeste-run.json").write_text(json.dumps({"cle_brave_presente": True, "sources_moisson": ici + ["web"]}), encoding="utf-8")
+    assert "clé Brave" in cli.conditions_moisson_differentes(origine, 3)
