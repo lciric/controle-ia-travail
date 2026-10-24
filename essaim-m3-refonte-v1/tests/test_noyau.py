@@ -1602,7 +1602,16 @@ def test_analyse_h_g1_controle_positif_et_table_de_lecture():
     assert L({"audit": True, "difference": 0.3, "ic95": [0.2, 0.4]}).startswith("audit")
     assert L({"invalide": True, "difference": 0.3, "ic95": [0.2, 0.4]}).startswith("non concluant : plus d'une paire")
     assert L({"difference": None, "ic95": None}) == "non concluant : aucune paire"
-    assert L({"difference": 0.15, "ic95": [0.05, 0.25]}) == "confirmé"
+    deux = {"0": 0.12, "1": 0.18}
+    assert L({"difference": 0.15, "ic95": [0.05, 0.25], "par_replique": deux}) == "confirmé"
+    # artefact : une réplique sous +0,10 (dérive possible d'une seule réplique) → pas « confirmé »
+    assert L({"difference": 0.15, "ic95": [0.05, 0.25], "par_replique": {"0": 0.25, "1": 0.05}}).startswith("non concluant")
+    assert L({"difference": 0.15, "ic95": [0.05, 0.25]}).startswith("non concluant")  # sans répliques connues : jamais confirmé
+    # sortie gelée après l'audit (CE3-03)
+    audit = {"audit": True, "difference": 0.15, "ic95": [0.05, 0.25], "par_replique": deux}
+    assert L(audit).startswith("audit")
+    assert L(audit, apres_audit="sans_defaut") == "confirmé (réserve : audit de symétrie sans défaut trouvé, R4)"
+    assert L(audit, apres_audit="defaut_noyau").startswith("non concluant : défaut du noyau")
     assert L({"difference": 0.04, "ic95": [0.01, 0.07]}) == "réfuté (l'effet prédit est exclu) ; effet positif plus petit que prédit"
     assert L({"difference": -0.02, "ic95": [-0.10, 0.06]}) == "réfuté (l'effet prédit est exclu)"
     assert L({"difference": 0.08, "ic95": [-0.02, 0.18]}).startswith("non concluant")
@@ -1627,7 +1636,8 @@ def test_paires_h_g1_lues_dans_des_courses_appariees(tmp_path):
     r = A.difference_h_g1(paires, taches_final, 5, n_tirages=50)
     assert r["n_paires"] == 1 and r["ic95"] is not None
     _, _, etat2 = A.paires_h_g1([(str(a), str(b))], ["gemini-argon", "lignee-absente"], generations=2)
-    assert etat2["coupees"] == ["lignee-absente@r0"] and etat2["invalide"]
+    assert [c["paire"] for c in etat2["coupees"]] == ["lignee-absente@r0"] and etat2["invalide"]
+    assert etat2["coupees"][0]["raison"] == "aucune génération valide commune"
     c = tmp_path / "c"
     assert cli.principal(["simuler", "--sortie", str(c), "--generations", "1", "--graine", "9", "--n-train", "8", "--n-test", "8", "--n-final", "8",
                           "--appels-max", "30", "--especes", "GEMINI_ARGON"]) == 0
@@ -2361,3 +2371,58 @@ def test_ce305_sources_moisson_au_manifeste_et_bras_apparie(tmp_path, monkeypatc
     assert cli.conditions_moisson_differentes(origine, 3) is None
     (origine / "manifeste-run.json").write_text(json.dumps({"cle_brave_presente": True, "sources_moisson": ici + ["web"]}), encoding="utf-8")
     assert "clé Brave" in cli.conditions_moisson_differentes(origine, 3)
+
+
+def test_h_g1_couverture_pannes_recoupements_et_trois_niveaux(tmp_path):
+    """CE3-02, CE3-03, CE3-04, CE3-05, répliques : réponses absentes d'une génération valide → erreur (aucun repli) ; paire
+    coupée sous 80 % de couverture dans un bras, ou si les taux d'échec extérieurs des deux bras diffèrent de plus de
+    10 points ; recoupements de fuite comptés ; bootstrap à trois niveaux avec Δ par réplique ; déclencheurs d'audit sur
+    les tâches répondues, imposées au seuil haut seulement, recoupements."""
+    from essaim_m3 import analyse_gradient as A
+    taches = A._taches_du_test_final(2, 2)
+    banque = {"test_final": taches}
+
+    def course(nom, reponses, appels=(), recherches=(), refus=0):
+        racine = tmp_path / nom
+        g = racine / "archive" / "claude-opus-5-5" / "g000"
+        (g / "juge").mkdir(parents=True)
+        (g / "travail" / "noyau").mkdir(parents=True)
+        (racine / "banque.json").write_text(json.dumps(banque), encoding="utf-8")
+        if reponses is not None:
+            (g / "juge" / "reponses_test.json").write_text(json.dumps({k: {"etiquette": v} for k, v in reponses.items()}), encoding="utf-8")
+        (g / "journal-appels.jsonl").write_text("".join(json.dumps({"statut": s}) + "\n" for s in appels), encoding="utf-8")
+        lignes = [{"statut": s, "source": "arxiv"} for s in recherches] + [{"statut": "REFUSE_FUITE"}] * refus
+        (g / "travail" / "noyau" / "journal-recherches.jsonl").write_text("".join(json.dumps(l) + "\n" for l in lignes), encoding="utf-8")
+        (racine / "archive" / "index.jsonl").write_text(json.dumps({"lignee": "claude-opus-5-5", "generation": 0, "phase": None}) + "\n", encoding="utf-8")
+        return str(racine)
+
+    justes = {t["id"]: t["verite"] for t in taches}
+    b = course("b", justes, appels=["OK"] * 10, recherches=["OK"] * 4)
+    # sain : couverture pleine, mêmes pannes, un recoupement de fuite consigné
+    a = course("a", justes, appels=["OK"] * 10, recherches=["OK"] * 4, refus=1)
+    paires, tf, etat = A.paires_h_g1([(a, b)], ["claude-opus-5-5"], generations=1)
+    assert len(paires) == 1 and not etat["coupees"] and paires[0]["recoupements_fuite"] == {"avec": 1, "sans": 0}
+    # artefact : un bras sans réponse sur une famille → couverture < 80 % → paire coupée (pas un déclencheur d'audit)
+    partielles = {k: v for k, v in justes.items() if not k.startswith("conscience")}
+    a2 = course("a2", partielles, appels=["OK"] * 10, recherches=["OK"] * 4)
+    _, _, etat2 = A.paires_h_g1([(a2, b)], ["claude-opus-5-5"], generations=1)
+    assert etat2["coupees"] and etat2["coupees"][0]["raison"].startswith("couverture")
+    # artefact : panne d'interface dans un seul bras (5 échecs sur 10 contre 0) → paire coupée « panne extérieure »
+    a3 = course("a3", justes, appels=["ECHEC_API"] * 5 + ["OK"] * 5, recherches=["OK"] * 4)
+    _, _, etat3 = A.paires_h_g1([(a3, b)], ["claude-opus-5-5"], generations=1)
+    assert etat3["coupees"] and etat3["coupees"][0]["raison"].startswith("panne extérieure")
+    # artefact CE3-02 : génération valide sans fichier de réponses → erreur, jamais « toutes fausses »
+    a4 = course("a4", None)
+    with pytest.raises(FileNotFoundError):
+        A.paires_h_g1([(a4, b)], ["claude-opus-5-5"], generations=1)
+    # trois niveaux : Δ par réplique rendus ; une seule réplique → le niveau des répliques est dégénéré mais rendu
+    pr, ts = A.jeu_simule_h_g1(11, 0.2)
+    r = A.difference_h_g1(pr, ts, 12, n_tirages=60)
+    assert r["n_repliques"] == 2 and set(r["par_replique"]) == {"0", "1"}
+    # déclencheurs : seuil bas sur les tâches répondues (None ignoré), imposée au seuil haut seulement, recoupements
+    assert A.declencheurs_audit_h_g1({"x@A@r0": {"f": None}}, {}, {}) == []
+    assert A.declencheurs_audit_h_g1({}, {}, {}, scores_imposes={"imp@A@r0": {"f": 0.10}}) == []
+    assert len(A.declencheurs_audit_h_g1({}, {}, {}, scores_imposes={"imp@A@r0": {"f": 0.97}})) == 1
+    assert len(A.declencheurs_audit_h_g1({}, {}, {}, recoupements={"claude-opus-5-5@A@r0": 2})) == 1
+    rep = A.exactitude_repondue_par_famille(partielles, taches)
+    assert rep["conscience-evaluation"] is None and rep["controle-delegation"] == 1.0
