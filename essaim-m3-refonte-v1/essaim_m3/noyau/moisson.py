@@ -214,13 +214,22 @@ def telechargement_simule(reference: str) -> tuple[bytes, str, str]:
     return texte.encode("utf-8"), "text/plain", reference
 
 
+class _Quarantaine(Exception):
+    """Lève la mise en quarantaine d'un document qui recoupe une tâche de test (CE3-04) ; porte l'empreinte du recoupement."""
+
+    def __init__(self, empreinte: str):
+        super().__init__(empreinte)
+        self.empreinte = empreinte
+
+
 class Telechargeur:
     """Un téléchargeur par génération : plafonds, provenance (adresses vues dans les résultats de recherche de la
     génération, identifiants arXiv, hôtes toujours permis), corpus empreinté, journal. Sûr sous fils."""
 
     def __init__(self, dossier_corpus: str | pathlib.Path, telechargements_max: int = TELECHARGEMENTS_MAX_DEFAUT,
                  octets_max_doc: int = OCTETS_MAX_DOC, octets_max_total: int = OCTETS_MAX_GENERATION, backend=None,
-                 hotes_toujours_permis: set[str] | None = None):
+                 hotes_toujours_permis: set[str] | None = None, empreintes_fuite: set | None = None):
+        self.empreintes_fuite = empreintes_fuite or set()  # CE3-04 : un document qui contient un texte de test est mis en quarantaine
         self.dossier = pathlib.Path(dossier_corpus)
         self.dossier.mkdir(parents=True, exist_ok=True)
         self.index = self.dossier / "index.jsonl"
@@ -272,6 +281,7 @@ class Telechargeur:
             self.compteur += 1
             ident = f"doc-{self.compteur:04d}"
         debut = _heure()
+        recoupe_fuite = None
         try:
             adresse = self._resoudre(reference)
             reste = self.octets_max_total - self.octets
@@ -285,6 +295,14 @@ class Telechargeur:
                 brut, type_contenu, finale = _lire_https(adresse, min(self.octets_max_doc, reste))
             texte, genre, titre = extraire_texte(brut, type_contenu, finale)
             statut, echec = ("OK" if texte.strip() else "SANS_TEXTE"), None
+            from .garde_fuite import recoupement
+            recoupe = recoupement(texte, self.empreintes_fuite)
+            if recoupe is not None:  # CE3-04 : le document contient un passage d'une tâche de test ; quarantaine, rien n'est rendu
+                raise _Quarantaine(recoupe)
+        except _Quarantaine as q:
+            brut, texte, genre, titre, finale, type_contenu = b"", "", "inconnu", "", reference, ""
+            recoupe_fuite = q.empreinte
+            statut, echec = "REFUSE_FUITE", "document en quarantaine : il contient un passage d'une tâche de test (CE3-04) ; rien n'est rendu"
         except Exception as e:  # réseau, provenance, taille, extraction : un statut, jamais un texte d'erreur en guise de document
             brut, texte, genre, titre, finale, type_contenu = b"", "", "inconnu", "", reference, ""
             statut, echec = "ECHEC_TELECHARGEMENT", f"{type(e).__name__}: {str(e)[:200]}"
@@ -298,7 +316,8 @@ class Telechargeur:
                 (self.dossier / f"{ident}.txt").write_text(texte, encoding="utf-8")
             notice = {"id": ident, "reference": reference[:500], "adresse": str(finale)[:1000], "type_contenu": type_contenu, "genre": genre,
                       "titre": titre, "octets": len(brut), "caracteres_texte": len(texte), "sha256_brut": sha_brut, "sha256_texte": sha_texte,
-                      "statut": statut, "echec": echec, "debut_utc": debut, "fin_utc": fin, "role": str(role)[:40]}
+                      "statut": statut, "echec": echec, "debut_utc": debut, "fin_utc": fin, "role": str(role)[:40],
+                      "sha256_recoupement": recoupe_fuite}
             (self.dossier / f"{ident}.json").write_text(json.dumps(notice, ensure_ascii=False, indent=1), encoding="utf-8")
             self._journaliser(notice)
         tronque = len(texte) > TEXTE_MAX_RENDU

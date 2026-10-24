@@ -109,9 +109,13 @@ def recherche_simulee(rng=None):
 class Rechercheur:
     """Un rechercheur par génération : plafond, journal, réponses brutes. Sûr sous fils."""
 
-    def __init__(self, dossier: str | pathlib.Path, recherches_max: int, backend=None, source: str = "arxiv", telechargeur=None):
+    def __init__(self, dossier: str | pathlib.Path, recherches_max: int, backend=None, source: str = "arxiv", telechargeur=None,
+                 empreintes_fuite: set | None = None):
         """`backend` : un double (simulation) qui sert toutes les sources ; sinon les sources réelles de `moisson.sources_disponibles()`
-        (arXiv, OpenAlex, Semantic Scholar, web par clé). `telechargeur` : reçoit les liens rendus (chaîne de provenance)."""
+        (arXiv, OpenAlex, Semantic Scholar, web par clé). `telechargeur` : reçoit les liens rendus (chaîne de provenance).
+        `empreintes_fuite` (CE3-04) : empreintes des fenêtres de mots des tâches de test ; une requête qui en recoupe une est
+        refusée (`REFUSE_FUITE`) et consignée, sans consommer de recherche."""
+        self.empreintes_fuite = empreintes_fuite or set()
         self.dossier = pathlib.Path(dossier)
         (self.dossier / "recherches").mkdir(parents=True, exist_ok=True)
         self.journal = self.dossier / "journal-recherches.jsonl"
@@ -152,6 +156,14 @@ class Rechercheur:
         except (TypeError, ValueError):
             n = 5
         requete = requete.strip()
+        from .garde_fuite import recoupement
+        e = recoupement(requete, self.empreintes_fuite)
+        if e is not None:  # CE3-04 : la requête copie un passage d'une tâche de test ; refus de sûreté, recherche non consommée
+            with self._verrou:
+                self._journaliser({"id": None, "role": str(role)[:40], "sha256_requete": _empreinte(requete), "n_demande": n,
+                                   "statut": "REFUSE_FUITE", "sha256_recoupement": e, "quand_utc": _heure(), "source": source})
+            return {"statut": "REFUSE_FUITE", "source": source, "resultats": [], "identifiant": None,
+                    "echec": "requête refusée : elle recopie un passage d'une tâche de test (CE3-04) ; la recherche de provenance d'un texte de test n'est pas servie"}
         with self._verrou:
             if self.compteur >= self.recherches_max:
                 self._journaliser({"id": None, "role": role, "requete": requete, "sha256_requete": _empreinte(requete), "n_demande": n,
