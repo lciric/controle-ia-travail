@@ -105,6 +105,50 @@ def relever_metriques(noyau, dossier: pathlib.Path) -> dict:
     return releve
 
 
+def designations_et_concours(paires: list[dict], scores_temoin: dict[str, list[float]], lignees_info: dict[str, dict]) -> dict:
+    """Décision de Lazar (24 octobre, 20:06 Paris : « tester les deux ») : les deux désignations du champion sont
+    **rapportées** — (1) règle N-039 b : meilleur score témoin (test final) à la dernière génération lue ; (2)
+    exactitude équilibrée moyenne en défense sur les attaques croisées ; plus (3) la désignation que donne chaque
+    métrique discriminante (meilleur défendeur selon elle) — avec leur concordance. Seule (1) décide ; aucune règle
+    n'est appliquée ici. Le « concours de métriques » met côte à côte chaque métrique : épreuve mécanique, valeurs par
+    défendeur, tau-b avec le score témoin."""
+    from ..analyse import tau_b_kendall
+    temoin = {l: v[-1] for l, v in scores_temoin.items() if v}
+    def meilleurs(d):
+        if not d:
+            return []
+        m = max(d.values())
+        return sorted(k for k, v in d.items() if v == m)
+    defense: dict[str, list[float]] = {}
+    par_metrique: dict[str, dict[str, float]] = {}
+    for p in paires:
+        if not p.get("applicable"):
+            continue
+        sa = (p.get("score_attaques") or {}).get("score")
+        if sa is not None:
+            defense.setdefault(p["defendeur"], []).append(float(sa))
+        m = p.get("metrique") or {}
+        if m.get("calculee") and p.get("metrique_discriminante"):
+            par_metrique.setdefault(p["attaquant"], {})[p["defendeur"]] = float(m["valeur"])
+    defense_moy = {l: round(sum(v) / len(v), 4) for l, v in defense.items()}
+    designations = {"test_final_N039b": {"champion": meilleurs(temoin), "scores": temoin, "regle": "décide (N-039 b)"},
+                    "attaques_croisees": {"champion": meilleurs(defense_moy), "scores": defense_moy, "regle": "rapportée"},
+                    "par_metrique": {a: {"champion_selon_elle": meilleurs(vals), "valeurs": vals, "regle": "rapportée"} for a, vals in par_metrique.items()}}
+    c1, c2 = set(designations["test_final_N039b"]["champion"]), set(designations["attaques_croisees"]["champion"])
+    designations["concordance"] = {"test_final_vs_attaques": (bool(c1 & c2) if c1 and c2 else None),
+                                   "test_final_vs_metriques": {a: (bool(c1 & set(d["champion_selon_elle"])) if c1 and d["champion_selon_elle"] else None)
+                                                               for a, d in designations["par_metrique"].items()}}
+    concours = {}
+    for l, info in lignees_info.items():
+        vals = par_metrique.get(l, {})
+        defs = [d for d in vals if d in temoin]
+        concours[l] = {"metrique_presente": info.get("metrique_presente"), "discriminance": info.get("discriminance"),
+                       "definition": (info.get("definition") or "")[:600], "valeurs_par_defendeur": vals,
+                       "tau_b_avec_temoin": tau_b_kendall([vals[d] for d in defs], [temoin[d] for d in defs]) if len(defs) >= 2 else {"tau_b": None, "n": len(defs)}}
+    return {"designations": designations, "concours_metriques": concours,
+            "avertissement": "désignations rapportées ; seule la règle N-039 b (test final) décide ; H-E2 descriptive"}
+
+
 class Confrontation:
     def __init__(self, noyau, dossier: pathlib.Path, addendum: dict | None = None):
         """`addendum` : relevé gelé (`relever_metriques`) ; quand il est donné, une métrique dont les empreintes ne sont
@@ -262,6 +306,7 @@ class Confrontation:
                                    "definition": (metriques[l]["definition"] or "")[:2000]} for l in lignees},
                    "paires": paires, "scores_temoin": self.noyau._scores_finaux(self.noyau.archive.lignes()),
                    "depense_totale_usd": round(self.noyau.depense_totale, 4)}
+        rapport.update(designations_et_concours(paires, rapport["scores_temoin"], rapport["lignees"]))
         n = 1
         while (self.dossier / f"confrontation-v{n}.json").exists():
             n += 1

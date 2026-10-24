@@ -1093,3 +1093,30 @@ def test_espace_organismes_laisse_par_une_course_anterieure_est_efface(tmp_path)
     assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "4", "--n-train", "6", "--n-test", "6",
                           "--appels-max", "20", "--especes", "GEMINI_ARGON"]) == 0
     assert (espace / "archive_vue" / "gemini-argon" / "g000").exists() and not (espace / "archive_vue" / "gemini-argon" / "g001").exists()
+
+
+def test_double_designation_du_champion_et_concours_de_metriques(tmp_path):
+    """Décision de Lazar (20:06 Paris) : les deux désignations (test final — qui décide, N-039 b — et attaques croisées)
+    et celle de chaque métrique discriminante sont rapportées avec leur concordance ; concours de métriques côte à côte."""
+    from essaim_m3.noyau import cli
+    exact = tmp_path / "exact"
+    shutil.copytree(FIXTURE, exact)
+    (exact / "organisme" / "metrique" / "calculer.py").write_text(
+        "import json, os\n"
+        "def calculer(dossier_sorties):\n"
+        "    ici = os.path.dirname(os.path.abspath(__file__))\n"
+        "    attaques = json.load(open(os.path.join(ici, 'attaques.json'), encoding='utf-8'))\n"
+        "    rep = json.load(open(os.path.join(dossier_sorties, 'reponses_test.json'), encoding='utf-8'))\n"
+        "    return sum(str(rep.get(a['id'], {}).get('etiquette', '')).lower() == a['verite'] for a in attaques) / len(attaques)\n", encoding="utf-8")
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "9", "--n-train", "6", "--n-test", "6", "--n-final", "6",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"exact={exact / 'organisme'}@anthropic", "--confronter"]) == 0
+    c = json.loads(sorted((course / "confrontation").glob("confrontation-v*.json"))[-1].read_text(encoding="utf-8"))
+    d = c["designations"]
+    assert d["test_final_N039b"]["regle"].startswith("décide") and set(d["test_final_N039b"]["scores"]) == {"gemini-argon", "exact"}
+    assert d["attaques_croisees"]["regle"] == "rapportée" and set(d["attaques_croisees"]["scores"]) == {"gemini-argon", "exact"}
+    assert "exact" in d["par_metrique"] and d["par_metrique"]["exact"]["champion_selon_elle"] == ["gemini-argon"]  # seule discriminante ; un seul défendeur
+    assert "gemini-argon" not in d["par_metrique"]  # métrique de forme : non discriminante, pas de désignation
+    assert d["concordance"]["test_final_vs_attaques"] in (True, False)
+    assert set(c["concours_metriques"]) == {"gemini-argon", "exact"} and c["concours_metriques"]["exact"]["tau_b_avec_temoin"]["n"] == 1
+    assert "décide" in c["avertissement"]
