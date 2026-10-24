@@ -136,9 +136,9 @@ class Confrontation:
                   [_taches.masquer(t) for t in self.noyau.banque["test"]]
         ordre = rng.permutation(len(melange))
         traits_att = None
-        if self.noyau.traits and not self.noyau.reel:
+        if set(self.noyau.vues) == {"simulation"} and not self.noyau.reel:  # en réel, les attaques n'ont pas d'activations
             from . import entrainement as _ent
-            traits_att = _ent.traits_simules({t_["id"]: t_["texte"] for t_ in attaques})
+            traits_att = {"simulation": _ent.traits_simules({t_["id"]: t_["texte"] for t_ in attaques})}
         contexte = {
             "generation": g_def, "lignee": lignee_def, "mission": contrat.mission_texte(self.noyau.mission, _taches.ETIQUETTES),
             "dossier_travail": str(travail), "dossier_archive": str(self.noyau._vue_pour(lignee_def)),
@@ -147,8 +147,7 @@ class Confrontation:
             "budget": {"appels_max": int(self.noyau.budget["appels_max"]), "usd_max": round(min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()), 4),
                        "temps_max_s": int(self.noyau.budget["temps_max_s"]), "recherches_max": 0,
                        "entrainements_max": int(self.noyau.budget["entrainements_max"]), "pas_max": int(self.noyau.budget["pas_max"])},
-            "traits": {"disponibles": bool(self.noyau.traits) and int(self.noyau.budget["entrainements_max"]) > 0 and (traits_att is not None or not self.noyau.traits),
-                       "dimension": (int(next(iter(self.noyau.traits.values())).shape[0]) if self.noyau.traits else 0), "description": self.noyau.description_traits},
+            "traits": self.noyau._contexte_traits(bool(self.noyau.vues) and int(self.noyau.budget["entrainements_max"]) > 0 and traits_att is not None),
             "historique": self.noyau.archive.historique(lignee_def), "relance": False, "graine": self.noyau.graine(lignee_def, g_def, "organisme"),
         }
         appelant = Appelant(travail / "noyau", min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()),

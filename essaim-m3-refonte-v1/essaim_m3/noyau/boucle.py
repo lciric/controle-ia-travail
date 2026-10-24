@@ -158,14 +158,18 @@ class Noyau:
         # `budget['entrainements_max']` = 0 le coupe ; en simulation sans traits fournis, ils sont calculés ici
         self.budget.setdefault("entrainements_max", 0)
         self.budget.setdefault("pas_max", _entrainement.PAS_MAX_DEFAUT)
-        self.traits = traits
+        # vues servies (une vue = une couche × une agrégation des activations ; {id: vecteur} seul = la vue « defaut »)
+        try:
+            self.vues = _entrainement.normaliser_vues(traits)
+        except ValueError as e:
+            raise Arret(f"traits : {e}")
         self.description_traits = description_traits
-        if int(self.budget["entrainements_max"]) > 0 and self.traits is None:
+        if int(self.budget["entrainements_max"]) > 0 and not self.vues:
             if self.reel:
                 raise Arret("apprentissage par gradient demandé en réel sans fichier de traits (activations) : refusé")
             textes = {t["id"]: t["texte"] for n in ("train", "test", "test_final") for t in self.banque.get(n, [])}
-            self.traits = _entrainement.traits_simules(textes)
-            self.description_traits = f"traits de hachage simulés ({_entrainement.DIM_SIMULATION} dimensions)"
+            self.vues = {"simulation": _entrainement.traits_simules(textes)}
+            self.description_traits = f"traits de hachage simulés ({_entrainement.DIM_SIMULATION} dimensions), vue « simulation »"
         # CR-15 (c) : par défaut chaque lignée ne lit que sa propre archive (lignées indépendantes) ; avec
         # `memoire_partagee`, la vue de toutes les lignées est lisible, figée au début de chaque ronde (CR-15 b)
         self.memoire_partagee = bool(memoire_partagee)
@@ -195,7 +199,8 @@ class Noyau:
             "memoire_partagee": self.memoire_partagee,
             "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
-            "traits": ({"description": self.description_traits, "n": len(self.traits), "dimension": int(next(iter(self.traits.values())).shape[0])} if self.traits else None),
+            "traits": ({"description": self.description_traits, "n": len(next(iter(self.vues.values()))),
+                        "vues": _entrainement.dimensions_vues(self.vues)} if self.vues else None),
             "organismes_imposes": {nom: {"source": str(spec["organisme"]), "famille": spec["famille"],
                                          "empreinte_arbre": (empreinte_arbre(pathlib.Path(spec["organisme"])) if pathlib.Path(spec["organisme"]).is_dir() else None)}
                                    for nom, spec in self.organismes_imposes.items()},
@@ -300,14 +305,23 @@ class Noyau:
     def _entraineur(self, dossier: pathlib.Path, lignee: str, g: int, traits_sup: dict | None = None):
         """Un entraîneur par génération ; None si `entrainements_max` vaut 0. Les vérités servies sont celles de
         l'entraînement seulement ; `traits_sup` ajoute des traits (tâches d'attaque en confrontation, simulation)."""
-        if int(self.budget["entrainements_max"]) <= 0 or not self.traits:
+        if int(self.budget["entrainements_max"]) <= 0 or not self.vues:
             return None
         verites = {t["id"]: (1.0 if t["verite"] == _taches.ETIQUETTES[t["famille"]][0] else 0.0) for t in self.banque["train"]}
-        traits = dict(self.traits)
-        if traits_sup:
-            traits.update(traits_sup)
-        return _entrainement.Entraineur(dossier, traits, verites, int(self.budget["entrainements_max"]), pas_max=int(self.budget["pas_max"]),
+        vues = {nom: dict(t) for nom, t in self.vues.items()}
+        for nom, t in _entrainement.normaliser_vues(traits_sup).items() if traits_sup else ():
+            if nom not in vues:
+                raise Arret(f"traits supplémentaires pour une vue non servie : {nom!r}")
+            vues[nom].update(t)
+        return _entrainement.Entraineur(dossier, vues, verites, int(self.budget["entrainements_max"]), pas_max=int(self.budget["pas_max"]),
                                         prefixe=f"{lignee[:12]}-g{g:03d}")
+
+    def _contexte_traits(self, disponibles: bool) -> dict:
+        """`contexte["traits"]` : vues servies et leur dimension ; `dimension` (celle de la première vue) reste pour les
+        organismes écrits avant les vues ; `spec["vue"]` désigne la vue d'un entraînement."""
+        dims = _entrainement.dimensions_vues(self.vues) if self.vues else {}
+        return {"disponibles": bool(disponibles), "vues": dims, "dimension": (next(iter(dims.values())) if dims else 0),
+                "description": self.description_traits}
 
     def _appelant(self, dossier: pathlib.Path) -> Appelant:
         plafond = min(float(self.budget["usd_max"]), self._plafond_restant())
@@ -401,8 +415,7 @@ class Noyau:
             "budget": {"appels_max": int(self.budget["appels_max"]), "usd_max": round(min(float(self.budget["usd_max"]), self._plafond_restant()), 4),
                        "temps_max_s": int(self.budget["temps_max_s"]), "recherches_max": int(self.budget["recherches_max"]),
                        "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"])},
-            "traits": {"disponibles": bool(self.traits) and int(self.budget["entrainements_max"]) > 0,
-                       "dimension": (int(next(iter(self.traits.values())).shape[0]) if self.traits else 0), "description": self.description_traits},
+            "traits": self._contexte_traits(bool(self.vues) and int(self.budget["entrainements_max"]) > 0),
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
             "graine": graine_organisme,
         }
