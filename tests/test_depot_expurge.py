@@ -146,6 +146,42 @@ def test_copie_de_bout_en_bout_saine_puis_artefact(tmp_path, monkeypatch, capsys
     assert list((tmp_path / "sortie-artefact").glob("*.bundle")) == []
 
 
+def test_garde_des_secrets_saine_et_artefact():
+    """R-349 : valeurs de clés de l'environnement et formes connues, dans un fichier ou dans une archive gardée ; la
+    valeur n'est jamais dite ; `RR_*`, chemins et valeurs sans chiffre ne sont pas lus comme des clés."""
+    fausse = "0123456789abcdef" * 4
+    env = {"FAUSSE_API_KEY": fausse, "RR_ANTHROPIC_API_KEY": "rr" + "7" * 30, "SESSION_TOKEN_FILE": "/run/jeton/abc123def456ghi789",
+           "GIT_CONFIG_KEY_0": "http.https://example.invalid/.extraheader", "HOME": "/root", "COURT_TOKEN": "a1b2"}
+    valeurs = de.valeurs_secretes(env)
+    assert set(valeurs) == {"FAUSSE_API_KEY"}
+    assert de.secrets_dans("notes.md", b"aucun secret ici", valeurs) == []
+    trouve = de.secrets_dans("src/config.py", ("CLE = '" + fausse + "'").encode(), valeurs)
+    assert trouve == ["src/config.py : valeur de FAUSSE_API_KEY"] and fausse not in " ".join(trouve)
+    assert de.secrets_dans("b.py", b"x = 'sk-ant-" + b"A" * 30 + b"'", {}) == ["b.py : clé Anthropic"]
+    brut = de.secrets_dans("livrables/r.zip", _zip({"d/e.txt": fausse.encode()}), valeurs)
+    assert "livrables/r.zip!d/e.txt : valeur de FAUSSE_API_KEY" in brut  # zip non compressé : aussi l'archive elle-même
+    tampon = io.BytesIO()
+    with zipfile.ZipFile(tampon, "w", compression=zipfile.ZIP_DEFLATED) as z:
+        z.writestr("d/e.txt", ("prefixe " * 50 + fausse).encode())
+    compresse = de.secrets_dans("livrables/c.zip", tampon.getvalue(), valeurs)
+    assert compresse == ["livrables/c.zip!d/e.txt : valeur de FAUSSE_API_KEY"], "compressé : seul le membre la révèle"
+
+
+def test_copie_refusee_si_un_secret_est_garde(tmp_path, monkeypatch, capsys):
+    _depot_factice(tmp_path / "secret", copie_cachee=False)
+    fausse = "fedcba9876543210" * 4
+    (tmp_path / "secret" / "notes-cle.md").write_text(f"cle : {fausse}\n", encoding="utf-8")
+    _git_factice(tmp_path / "secret", "add", "-A")
+    _git_factice(tmp_path / "secret", "commit", "-q", "-m", "secret")
+    monkeypatch.setattr(de, "RACINE", tmp_path / "secret")
+    monkeypatch.setenv("FAUSSE_API_KEY", fausse)
+    capsys.readouterr()
+    assert de.main(["HEAD", str(tmp_path / "sortie-secret")]) == 1
+    err = capsys.readouterr().err
+    assert "notes-cle.md : valeur de FAUSSE_API_KEY" in err and fausse not in err
+    assert list((tmp_path / "sortie-secret").glob("*.bundle")) == []
+
+
 def test_archive_d_un_format_non_examine_arrete(tmp_path, monkeypatch):
     _depot_factice(tmp_path / "gz", copie_cachee=False, compresse=True)
     monkeypatch.setattr(de, "RACINE", tmp_path / "gz")

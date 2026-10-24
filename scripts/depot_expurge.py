@@ -6,7 +6,9 @@ fichiers de travail des relecteurs de l'extraction, sorties de l'extraction), sa
 Les empreintes des fichiers retirés restent, et `EXPURGE.md` les liste. Les invites transcrites ou adaptées que le
 code et ses tests chargent restent, avec leur source : le README de la copie le dit. Avant d'écrire le paquet, le
 script vérifie qu'aucun fichier retiré ne survit dans une archive gardée (zip, tar ou paquet git, à toute profondeur,
-par empreinte et par chemin) ; une archive d'un format qu'il n'examine pas l'arrête.
+par empreinte et par chemin) ; une archive d'un format qu'il n'examine pas l'arrête. Garde des secrets (R-349) : il
+s'arrête aussi si un fichier gardé, ou un membre d'une archive gardée, contient la valeur d'une clé de l'environnement
+ou un jeton d'une forme connue ; il ne dit que le chemin et le nom de la variable ou de la forme, jamais la valeur.
 
 Rien n'est poussé : le paquet git est écrit dans SORTIE. Sa mise en ligne sur un dépôt distant demande un GO de Lazar.
 Le script n'écrit que dans SORTIE, qui ne doit pas exister ; il ne touche pas au dépôt.
@@ -20,6 +22,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 import tarfile
@@ -177,6 +180,43 @@ def survivants(nom: str, data: bytes, empreintes: set[str]) -> list[str]:
     return trouves
 
 
+# Garde des secrets (R-349, demande de Lazar après N-038 (c)). Variables lues : celles dont le nom évoque une clé, sauf
+# `RR_*` (jamais lues, consigne de Lazar) et les noms en `_FILE` (des chemins) ; valeurs retenues : 20 caractères au
+# moins, sans espace, hors chemin, avec des lettres et des chiffres. Formes : jetons des fournisseurs connus.
+NOMS_DE_CLES = re.compile(r"(API_KEY|_KEY$|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|GIT_CONFIG_VALUE)", re.I)
+FORMES_DE_CLES = [
+    ("clé Anthropic", re.compile(rb"sk-ant-[A-Za-z0-9_\-]{20,}")),
+    ("clé Google", re.compile(rb"AIza[0-9A-Za-z_\-]{35}")),
+    ("jeton Hugging Face", re.compile(rb"hf_[A-Za-z0-9]{30,}")),
+    ("jeton GitHub", re.compile(rb"gh[pousr]_[A-Za-z0-9]{36,}")),
+    ("clé dans une adresse", re.compile(rb"api_key=[0-9A-Fa-f]{32,}")),
+]
+
+
+def valeurs_secretes(environ=None) -> dict[str, bytes]:
+    env = os.environ if environ is None else environ
+    sortie = {}
+    for nom, valeur in env.items():
+        v = str(valeur or "").strip()
+        if nom.startswith("RR_") or nom.upper().endswith("_FILE") or not NOMS_DE_CLES.search(nom):
+            continue
+        if len(v) < 20 or v.startswith("/") or any(c.isspace() for c in v) \
+                or not (re.search(r"[A-Za-z]", v) and re.search(r"[0-9]", v)):
+            continue
+        sortie[nom] = v.encode("utf-8")
+    return sortie
+
+
+def secrets_dans(nom: str, contenu: bytes, valeurs: dict[str, bytes]) -> list[str]:
+    """Secrets d'un fichier gardé, et des membres de ses archives à toute profondeur : chemin et nature seulement."""
+    trouves = [f"{nom} : valeur de {var}" for var, v in valeurs.items() if v and v in contenu]
+    trouves += [f"{nom} : {forme}" for forme, motif in FORMES_DE_CLES if motif.search(contenu)]
+    if est_archive(contenu):
+        for membre, c in _membres(nom, contenu):
+            trouves += secrets_dans(f"{nom}!{membre}", c, valeurs)
+    return trouves
+
+
 def main(argv: list[str]) -> int:
     if len(argv) != 2:
         print(__doc__)
@@ -192,6 +232,7 @@ def main(argv: list[str]) -> int:
     arbre = sortie / "controle-ia-expurge"
     arbre.mkdir(parents=True)
     retraits, gardes, archives, empreintes_gardees = [], 0, [], set()
+    valeurs, secrets = valeurs_secretes(), []
     with tarfile.open(fileobj=io.BytesIO(_git("archive", "--format=tar", commit))) as tar:
         for membre in tar.getmembers():
             if not membre.isfile():
@@ -208,8 +249,12 @@ def main(argv: list[str]) -> int:
             os.chmod(cible, membre.mode & 0o777)
             gardes += 1
             empreintes_gardees.add(hashlib.sha256(contenu).hexdigest())
+            secrets += secrets_dans(membre.name, contenu, valeurs)
             if est_archive(contenu) or contenu.startswith(COMPRESSIONS_NON_EXAMINEES):
                 archives.append((membre.name, contenu))
+    if secrets:
+        print("secrets dans des fichiers gardés : arrêt (aucun paquet écrit)\n  " + "\n  ".join(secrets), file=sys.stderr)
+        return 1
     # un contenu retiré qui reste aussi en fichier gardé (la feuille de style commune aux deux propositions) n'est pas
     # caché par une archive : seuls comptent les contenus que la copie n'a plus
     empreintes = {r["sha256"] for r in retraits if r["octets"]} - empreintes_gardees
