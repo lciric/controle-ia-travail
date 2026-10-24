@@ -92,7 +92,8 @@ préenregistrement.
 
 ## 6. Prochaines étapes (ordre)
 
-1. Contre-lecture 2 de la v4 par un sous-agent neuf (lancée par session-depot) → v5 → scellement.
+0. Primitives de moisson dans le noyau (sources sans clé, corpus scellé) et contrat v3 (moissonneur écrit par l'organisme en génération 0, familles = opérateur + signature) — avant le premier run réel.
+1. Contre-lecture 2 de la v4 par un sous-agent neuf (lancée par session-depot) → v5 (avec la phase de moisson) → scellement.
 2. GO du collisionneur (lot 3) → brainstorm → rédaction des traces → banque `confrontation-v2` ; vérification
    d'étiquettes par un sous-agent neuf.
 3. Devis au pire cas confirmé sur `registres/depenses.md` → GO « calcul » → répétition générale (banque de
@@ -157,6 +158,13 @@ des familles généralise (a) aux familles retenues du même générateur, (b) a
 fournisseur, (c) aux items de provenance réelle du jeu public ; signe prédit et scellé avant le run ; négatif publié
 aussi. Écarté : le découpage par cas (mesure la mémoire du générateur). À vérifier avant toute revendication : ce que
 l'état de l'art classe déjà comme indices de conscience d'évaluation (R7, R8).
+
+**Moisson conçue par l'organisme (Lazar, 20:32 à 20:35 Paris)** : le noyau fournit les primitives (recherche dans des
+sources permises — arXiv, OpenAlex, Semantic Scholar, Alignment Forum, LessWrong, web par clé —, téléchargement,
+extraction, empreinte, corpus scellé par course, plafonds, texte rendu comme donnée) ; **l'organisme écrit son
+moissonneur** (requêtes, sources, boule de neige, classement, arrêt, synthèse). Ordre révisé : primitives et contrat v3
+**avant** le premier test réel sur la conscience d'évaluation. **Familles d'indices = opérateur + signature statistique**,
+non des étiquettes sémantiques ; découpage par opérateur ; « inédit » = effet hors de l'espace des familles connues.
 
 ## Divergences (à la main de session-depot)
 

@@ -253,3 +253,30 @@ Heures UTC (heure de Paris = UTC + 2). Entrées ajoutées, jamais réécrites. P
   d'indices découverte par essaim » à vérifier contre l'état de l'art sur PDF (R7, R8 : les papiers de conscience
   d'évaluation ont des catégories d'indices).
 - Hypothèse écartée : « découper par cas suffit » — la mémoire du générateur réussirait le test.
+
+## 19:15 — moisson conçue par l'organisme, familles comme opérateurs, ordre révisé, dossier TAIF (Lazar, 20:32 à 20:35 Paris)
+
+- Lazar : l'importance de l'étape de **moissonnage** « sur toute la littérature y compris forums et blogs » — c'est de là
+  que vient le matériau du brainstorm de l'organisme, « pas juste de ce qu'il a déjà dans ses poids » ; « et bien sûr
+  l'organisme doit lui-même concevoir le moissonneur » ; « il faut ajouter la conception du moissonneur avant de faire
+  le premier test sur eval awareness ».
+- Retenu (contrat v3) : le noyau ne fournit que des **primitives** — `rechercher(source, requête)` étendu à OpenAlex,
+  Semantic Scholar, Alignment Forum, LessWrong (sans clé ; arXiv existe), le web général par un moteur de recherche
+  dès que Lazar fournit une clé ; `telecharger(identifiant ou adresse)` dans une liste de sources permises ; extraction
+  du texte (PDF compris) ; **corpus moissonné** par course, chaque document empreinté, versionné, scellé, rejouable ;
+  plafonds de requêtes et d'octets consignés ; texte rendu comme donnée, jamais comme consigne (injection par le web).
+  **L'organisme écrit son moissonneur** : requêtes, sources, boule de neige sur les citations, classement,
+  dédoublonnage, arrêt, synthèse en taxonomie et connaissances ; réécrit de génération en génération.
+- **Ordre révisé** : (1) primitives de moisson et corpus scellé dans le noyau ; (2) contrat v3 et consigne : moissonneur
+  en génération 0 ; (3) préenregistrement v5 avec la phase de moisson, contre-lecture, GO, run. Le premier run réel
+  glisse d'un à deux jours.
+- Lazar (20:34) : classer les familles d'indices **par concepts mathématiques plutôt que par étiquettes** sémantiques.
+  Retenu : une famille = un **opérateur** T sur le texte (construction exacte, paramètres) + sa **signature
+  statistique** (statistique du texte qui change ; direction ou sous-espace des activations du modèle local qui
+  répond) ; familles aux signatures indiscernables fusionnées ; famille sans généralisation interne > externe : n'existe
+  pas ; découpage entraînement / test **par opérateur** ; « inédit » = effet hors de l'espace engendré par les familles
+  connues (littérature moissonnée recodée en opérateurs) ; l'organisme invente l'opérateur, l'invariant, la statistique.
+  À inscrire dans H-G4 et au contrat v3 (spécification d'une famille vérifiée par le noyau).
+- **Dossier TAIF v1** remis à Lazar (`livrables/dossier-taif-entretien-v1.zip`, `d0ba7121…`) : pitch de 5 minutes
+  minuté (français et anglais), six diapositives, 25 questions-réponses, fiche budget (≈ 11 à 22 k EUR de calcul et
+  données sur six mois au pire cas) et jalons (G0 → G3, papiers A, C, B) ; montant et date à fixer par Lazar.
