@@ -42,6 +42,8 @@ def _budget_conception(args) -> dict | None:
         b["usd_max"] = args.usd_max_conception
     if getattr(args, "appels_max_conception", None) is not None:
         b["appels_max"] = args.appels_max_conception
+    if getattr(args, "temps_max_conception", None) is not None:
+        b["temps_max_s"] = args.temps_max_conception
     return b
 
 
@@ -314,6 +316,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--rondes-conception-max", type=int, default=0, help="phase de conception avant la génération 0 notée : borne dure du nombre de rondes (l'organisme déclare lui-même la fin par fin_conception.json) ; 0 : pas de phase")
         q.add_argument("--usd-max-conception", type=float, default=None, help="dollars par ronde de conception (défaut : --usd-max)")
         q.add_argument("--appels-max-conception", type=int, default=None, help="appels par ronde de conception (défaut : --appels-max)")
+        q.add_argument("--temps-max-conception", type=int, default=None, help="secondes par ronde de conception (défaut : --temps-max)")
         q.add_argument("--autoriser-base-url", action="store_true", help="réel : accepte une ANTHROPIC_BASE_URL définie (sinon refus)")
         q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
         if nom == "simuler":

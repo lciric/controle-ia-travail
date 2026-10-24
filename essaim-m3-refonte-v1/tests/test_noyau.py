@@ -1694,3 +1694,21 @@ def test_confrontation_sans_gradient_entrainer_et_predire_indisponibles(tmp_path
         boucle.Noyau(tmp_path / "r", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 3600, "entrainements_max": 10,
                                                     "delai_entrainement_s": 120}, 5.0, 1,
                      appelants=None, reel=True, go_id="GO-TEST", especes_amorcage=["GEMINI_ARGON"])
+
+
+def test_temps_par_ronde_de_conception(tmp_path):
+    """`--temps-max-conception` (préenregistrement de l'étape 1, v3 de session-depot : ronde de conception à 1 800 s,
+    génération à 2 400 s) : la ronde reçoit son propre temps, la génération garde le sien ; sans l'option, la ronde prend
+    `--temps-max`."""
+    from essaim_m3.noyau import cli
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "31", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--temps-max", "2400",
+                          "--rondes-conception-max", "1", "--temps-max-conception", "1800"]) == 0
+    ctxc = json.loads((course / "archive" / "gemini-argon" / "c001" / "travail" / "contexte.json").read_text())
+    ctx0 = json.loads((course / "archive" / "gemini-argon" / "g000" / "travail" / "contexte.json").read_text())
+    assert ctxc["budget"]["temps_max_s"] == 1800 and ctx0["budget"]["temps_max_s"] == 2400
+    sans = tmp_path / "sans"
+    assert cli.principal(["simuler", "--sortie", str(sans), "--generations", "1", "--graine", "31", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--temps-max", "2400", "--rondes-conception-max", "1"]) == 0
+    assert json.loads((sans / "archive" / "gemini-argon" / "c001" / "travail" / "contexte.json").read_text())["budget"]["temps_max_s"] == 2400
