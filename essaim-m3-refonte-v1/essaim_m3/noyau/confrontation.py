@@ -79,10 +79,12 @@ class Confrontation:
         return etat.get("famille") or contrat.FAMILLES[etat["espece_amorcage"]]
 
     def _executer_sur_attaques(self, lignee_def: str, organisme: pathlib.Path, attaques: list[dict], etiquette: str) -> dict:
-        travail = self.dossier / etiquette / "defense"
+        travail = self.noyau.espace / "travail" / "confrontation" / etiquette / "defense"
         if travail.exists():
             shutil.rmtree(travail)
         travail.mkdir(parents=True)
+        for p in (travail.parent, travail.parent.parent):
+            bac_a_sable.proteger(p, 0o711)
         rng = np.random.default_rng(self.noyau.graines.spawn(1)[0])
         ordre = rng.permutation(len(attaques))
         contexte = {
@@ -99,10 +101,12 @@ class Confrontation:
                             self.noyau.appelants, self.noyau.reel, self.noyau.go_id)
         socket = str(travail / "n.sock")
         if len(socket) > 100:
-            socket = f"/tmp/essaim-conf-{etiquette[:20]}.sock"
-        bac_a_sable.preparer(travail, organisme, contexte)
+            import hashlib as _h
+            socket = f"/tmp/essaim-conf-{_h.sha256(str(self.dossier).encode()).hexdigest()[:10]}-{etiquette[:14]}.sock"
+        uid = self.noyau._uid(lignee_def)
+        bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
         with ServeurAppels(appelant, socket, int(self.noyau.budget["appels_max"])) as serveur:
-            execution = bac_a_sable.executer(travail, socket, int(self.noyau.budget["temps_max_s"]), isoler_reseau=self.noyau.isoler_reseau)
+            execution = bac_a_sable.executer(travail, socket, int(self.noyau.budget["temps_max_s"]), isoler_reseau=self.noyau.isoler_reseau, uid=uid)
             n_appels = serveur.n_appels
         self.noyau.depense_totale += appelant.depense_usd
         self.noyau.n_appels_total += n_appels
@@ -150,7 +154,8 @@ class Confrontation:
                     res.update({"n_attaques": 0, "score_attaques": None})
                     sorties = None
                 if ma["calculer"] is not None and sorties is not None:
-                    res["metrique"] = bac_a_sable.executer_metrique(self.dossier / f"{a}__vers__{b}" / "metrique", ma["calculer"].parent, sorties)
+                    res["metrique"] = bac_a_sable.executer_metrique(self.noyau.espace / "travail" / "confrontation" / f"{a}__vers__{b}" / "metrique", ma["calculer"].parent, sorties,
+                                                                    uid=self.noyau._uid(a), isoler_reseau=self.noyau.isoler_reseau)
                 else:
                     res["metrique"] = {"code": "NON_APPLICABLE", "valeur": None, "calculee": False}
                 paires.append(res)

@@ -85,8 +85,13 @@ def lancer(args) -> int:
     if manquantes:
         print(f"refus : clés absentes de l'environnement : {manquantes} (jamais de clé RR_*)", file=sys.stderr)
         return 4
-    if hasattr(os, "geteuid") and os.geteuid() == 0 and not args.accepter_root:
-        print("refus : exécution en root ; le bac à sable repose sur les permissions (relance avec --accepter-root en connaissance de cause)", file=sys.stderr)
+    if not (hasattr(os, "geteuid") and os.geteuid() == 0):
+        print("refus : le mode réel exige d'être root pour faire tourner chaque organisme sous un utilisateur non privilégié distinct (CR-01)", file=sys.stderr)
+        return 5
+    try:
+        os.chmod(args.taches, 0o600)  # la banque (avec ses vérités) n'est lisible que par le noyau
+    except OSError as e:
+        print(f"refus : impossible de protéger le fichier de tâches : {e}", file=sys.stderr)
         return 5
     from ..banque import verifier_banque
     problemes = verifier_banque(pathlib.Path(args.taches))
@@ -143,7 +148,6 @@ def principal(argv: list[str] | None = None) -> int:
             q.add_argument("--reel", action="store_true")
             q.add_argument("--go", default=None)
             q.add_argument("--taches", required=True, help="fichier JSON préenregistré {train, test}")
-            q.add_argument("--accepter-root", action="store_true")
             q.set_defaults(fonction=lancer)
     args = p.parse_args(argv)
     for e in args.especes or []:

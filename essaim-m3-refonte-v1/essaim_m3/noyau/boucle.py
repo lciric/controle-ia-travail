@@ -49,6 +49,17 @@ class Noyau:
         lignées auto-écrites. La famille déclarée sert à la confrontation entre familles."""
         self.racine = pathlib.Path(racine)
         self.racine.mkdir(parents=True, exist_ok=True)
+        # CR-01 : isolation d'utilisateur quand le noyau est root ; la racine est traversable (0711) mais ses dossiers
+        # sensibles (banque, archive, lignées, journaux) restent à root en 0700 ; chaque lignée a son propre utilisateur
+        self.isolation = bac_a_sable.capacites_isolation()
+        bac_a_sable.proteger(self.racine, 0o711)
+        for sous in ("lignees", "confrontation"):
+            (self.racine / sous).mkdir(exist_ok=True)
+            bac_a_sable.proteger(self.racine / sous, 0o700)
+        # les dossiers de travail des organismes et la vue de l'archive doivent être atteignables par leurs utilisateurs
+        self.espace = bac_a_sable.espace_organismes(self.racine) if self.isolation["utilisateur"] else self.racine
+        (self.espace / "travail").mkdir(exist_ok=True)
+        bac_a_sable.proteger(self.espace / "travail", 0o711)
         self.mission = mission
         self.banque = banque
         self.budget = dict(budget_generation)
@@ -72,7 +83,7 @@ class Noyau:
             if nom in {e.lower().replace("_", "-") for e in self.especes_amorcage}:
                 raise Arret(f"organisme imposé {nom!r} : nom déjà pris par une lignée auto-écrite")
         self.banque.setdefault("test_final", [])
-        self.archive = _archive.Archive(self.racine / "archive")
+        self.archive = _archive.Archive(self.racine / "archive", vue=self.espace / "archive_vue")
         self.depense_totale = 0.0
         self.n_appels_total = 0
         self.lignees: dict[str, dict] = {}
@@ -92,12 +103,22 @@ class Noyau:
                                          "empreinte_arbre": (empreinte_arbre(pathlib.Path(spec["organisme"])) if pathlib.Path(spec["organisme"]).is_dir() else None)}
                                    for nom, spec in self.organismes_imposes.items()},
         }
+        self.manifeste["isolation"] = dict(self.isolation)
+        self.manifeste["espace_organismes"] = str(self.espace)
         if self.reel:
             if not self.go_id:
                 raise Arret("mode réel sans GO : refusé")
-            if self.isoler_reseau and not bac_a_sable.isolation_reseau_disponible():
-                raise Arret("mode réel : isolation réseau demandée mais indisponible (unshare -rn)")
+            if not self.isolation["utilisateur"]:
+                raise Arret("mode réel : isolation d'utilisateur impossible (le noyau n'est pas root) ; refusé (CR-01)")
+            if not self.isoler_reseau:
+                raise Arret("mode réel : --isoler-reseau est obligatoire (CR-02)")
+            if not bac_a_sable.isolation_reseau_disponible():
+                raise Arret("mode réel : isolation réseau demandée mais indisponible (unshare -n)")
         (self.racine / "manifeste-run.json").write_text(json.dumps(self.manifeste, ensure_ascii=False, indent=1), encoding="utf-8")
+        for f in ("manifeste-run.json",):
+            bac_a_sable.proteger(self.racine / f, 0o600)
+        (self.racine / "banque.json").write_text(json.dumps(self.banque, ensure_ascii=False), encoding="utf-8")
+        bac_a_sable.proteger(self.racine / "banque.json", 0o600)
 
     # ---- journal du noyau ----
     def _evenement(self, **d):
@@ -105,9 +126,19 @@ class Noyau:
         self.evenements.append(d)
         with (self.racine / "evenements.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(d, ensure_ascii=False) + "\n")
+        bac_a_sable.proteger(self.racine / "evenements.jsonl", 0o600)
 
     def _plafond_restant(self) -> float:
         return max(0.0, self.plafond_total - self.depense_totale)
+
+    def _uid(self, lignee: str) -> int | None:
+        """Utilisateur non privilégié de la lignée (None sans isolation d'utilisateur : simulation hors root)."""
+        if not self.isolation["utilisateur"]:
+            return None
+        etat = self.lignees.get(lignee)
+        if etat is not None and etat.get("uid") is not None:
+            return etat["uid"]
+        return bac_a_sable.uid_lignee(sorted(self.lignees).index(lignee) if lignee in self.lignees else len(self.lignees))
 
     def _rechercheur(self, dossier: pathlib.Path):
         """Un rechercheur par génération ; None si `recherches_max` vaut 0 (recherche non servie)."""
@@ -125,25 +156,40 @@ class Noyau:
         exemples = self.banque["train"][:6]
         prompt = contrat.prompt_amorcage(self.mission, _taches.ETIQUETTES, self.budget, exemples)
         (self.racine / "amorcage-consigne.txt").write_text(prompt, encoding="utf-8")
+        bac_a_sable.proteger(self.racine / "amorcage-consigne.txt", 0o600)
         resultats = {}
         for espece in self.especes_amorcage:
             lignee = espece.lower().replace("_", "-")
             dossier = self.racine / "lignees" / lignee / "g000"
             dossier.mkdir(parents=True, exist_ok=True)
             appelant = self._appelant(dossier / "noyau-amorcage")
-            res = appelant.appeler(espece, "amorcage", prompt, role="amorcage")
+            bac_a_sable.proteger(dossier / "noyau-amorcage", 0o700)
+            try:
+                res = appelant.appeler(espece, "amorcage", prompt, role="amorcage")
+            except Arret as e:  # CR-02 (6) : un plafond à l'amorçage est un statut archivé, pas une sortie sans rapport
+                self.depense_totale += appelant.depense_usd
+                resultats[lignee] = {"espece": espece, "statut": "AMORCAGE_PLAFOND", "problemes": [str(e)[:200]], "n_fichiers": 0,
+                                     "id_appel": None, "cout_usd": appelant.depense_usd}
+                self._evenement(etape="amorcage", lignee=lignee, **resultats[lignee])
+                continue
             self.depense_totale += appelant.depense_usd
             self.n_appels_total += 1
+            if appelant.journal.exists():
+                _archive.sceller(appelant.journal)  # CR-02 (8) : le journal d'amorçage est scellé comme les autres
             fichiers = contrat.extraire_fichiers(res.texte) if res.ok else {}
             problemes = contrat.ecrire_organisme(fichiers, dossier) if fichiers else ["aucun fichier dans la réponse"]
             if not res.ok:
                 problemes = [f"appel d'amorçage en statut {res.statut}"] + problemes
             statut = "ORGANISME_VALIDE" if not problemes else "AMORCAGE_INVALIDE"
+            if res.statut == "MODELE_NON_CONFORME":
+                statut = "AMORCAGE_INVALIDE_MODELE"
             resultats[lignee] = {"espece": espece, "statut": statut, "problemes": problemes, "n_fichiers": len(fichiers),
-                                 "id_appel": res.identifiant, "cout_usd": appelant.depense_usd}
+                                 "id_appel": res.identifiant, "cout_usd": appelant.depense_usd,
+                                 "journal": str(appelant.journal), "sha256_journal": (_archive.empreinte_fichier(appelant.journal) if appelant.journal.exists() else None)}
             if statut == "ORGANISME_VALIDE":
                 self.lignees[lignee] = {"espece_amorcage": espece, "famille": contrat.FAMILLES[espece], "generation": 0,
-                                        "organisme": dossier / "organisme", "active": True, "impose": False}
+                                        "organisme": dossier / "organisme", "active": True, "impose": False,
+                                        "uid": (bac_a_sable.uid_lignee(len(self.lignees)) if self.isolation["utilisateur"] else None)}
             self._evenement(etape="amorcage", lignee=lignee, **resultats[lignee])
         # lignées imposées : génération 0 fournie (aucun appel), validée par le même contrat que les auto-écrites
         for nom, spec in self.organismes_imposes.items():
@@ -162,7 +208,8 @@ class Noyau:
                               "id_appel": None, "cout_usd": 0.0}
             if statut == "ORGANISME_IMPOSE_VALIDE":
                 self.lignees[nom] = {"espece_amorcage": None, "famille": spec["famille"], "generation": 0,
-                                     "organisme": dossier / "organisme", "active": True, "impose": True}
+                                     "organisme": dossier / "organisme", "active": True, "impose": True,
+                                     "uid": (bac_a_sable.uid_lignee(len(self.lignees)) if self.isolation["utilisateur"] else None)}
             self._evenement(etape="amorcage", lignee=nom, **resultats[nom])
         return resultats
 
@@ -171,10 +218,11 @@ class Noyau:
         etat = self.lignees[lignee]
         g = etat["generation"]
         organisme = etat["organisme"]
-        travail = self.racine / "travail" / lignee / f"g{g:03d}"
+        travail = self.espace / "travail" / lignee / f"g{g:03d}"
         if travail.exists():
             shutil.rmtree(travail)
         travail.mkdir(parents=True)
+        bac_a_sable.proteger(travail.parent, 0o711)
         rng = np.random.default_rng(self.graines.spawn(1)[0])
         ordre_train = rng.permutation(len(self.banque["train"]))
         # test de développement (score rendu) et test final (jamais rendu), mêlés sans distinction pour l'organisme
@@ -184,8 +232,9 @@ class Noyau:
         # l'organisme relit sa propre mémoire archivée (Gemini le fait : `charger_connaissances_archive`)
         archive_vue = self.archive.vue
         if self.gel:
-            archive_vue = self.racine / "archive_vue_gel"
+            archive_vue = self.espace / "archive_vue_gel"
             archive_vue.mkdir(parents=True, exist_ok=True)
+            bac_a_sable.proteger(archive_vue, 0o755)
         contexte = {
             "generation": g, "lignee": lignee, "mission": contrat.mission_texte(self.mission, _taches.ETIQUETTES),
             "dossier_travail": str(travail), "dossier_archive": str(archive_vue),
@@ -197,15 +246,21 @@ class Noyau:
         }
         appelant = self._appelant(travail / "noyau")
         chemin_socket = str(travail / "noyau.sock")
-        if len(chemin_socket) > 100:  # limite des sockets Unix
-            chemin_socket = f"/tmp/essaim-{lignee[:12]}-g{g}.sock"
-        bac_a_sable.preparer(travail, organisme, contexte)
+        if len(chemin_socket) > 100:  # limite des sockets Unix ; nom unique par course (CR-12)
+            chemin_socket = f"/tmp/essaim-{hashlib.sha256(str(self.racine).encode()).hexdigest()[:10]}-{lignee[:10]}-g{g}.sock"
+        uid = self._uid(lignee)
+        bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
+        bac_a_sable.proteger(travail / "noyau", 0o700) if (travail / "noyau").exists() else None
         rechercheur = self._rechercheur(travail / "noyau")
+        bac_a_sable.proteger(travail / "noyau", 0o700)
         with ServeurAppels(appelant, chemin_socket, int(self.budget["appels_max"]), self.parallele_max, rechercheur) as serveur:
-            execution = bac_a_sable.executer(travail, chemin_socket, int(self.budget["temps_max_s"]), isoler_reseau=self.isoler_reseau)
+            execution = bac_a_sable.executer(travail, chemin_socket, int(self.budget["temps_max_s"]), isoler_reseau=self.isoler_reseau, uid=uid)
             n_appels = serveur.n_appels
             refus = list(serveur.refus)
             en_vol_max = serveur.en_vol_max
+            non_conformes = serveur.non_conformes
+        if non_conformes:  # CR-02 (1) : génération invalidée, exclue des hypothèses, lignée arrêtée
+            execution = dict(execution, code="INVALIDE_MODELE", code_origine=execution.get("code"), non_conformes=non_conformes)
         n_recherches = rechercheur.compteur if rechercheur is not None else 0
         self.depense_totale += appelant.depense_usd
         self.n_appels_total += n_appels
@@ -249,11 +304,15 @@ class Noyau:
                   "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
                   "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel,
                   "impose": bool(etat.get("impose")), "famille": etat.get("famille"), "relance": bool(etat.get("relance_en_cours")),
-                  "n_recherches": n_recherches}
+                  "n_recherches": n_recherches, "invalide": bool(non_conformes), "non_conformes": non_conformes}
         self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final)
         self._evenement(etape="generation", lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))
         etat["relance_en_cours"] = False
+        if non_conformes:
+            etat["active"] = False
+            etat["fin"] = "appel à modèle non conforme : génération invalidée (CR-02)"
+            return resume
         if self.gel and g + 1 < self.generations_max:
             etat.update(generation=g + 1)  # même organisme (génération 0), relancé : bras témoin
         elif a_successeur and g + 1 < self.generations_max:
@@ -311,7 +370,8 @@ class Noyau:
             "manifeste": self.manifeste, "fin_utc": _heure(), "depense_totale_usd": round(self.depense_totale, 4),
             "n_appels_total": self.n_appels_total, "lignees": {l: {k: (str(v) if isinstance(v, pathlib.Path) else v) for k, v in e.items()} for l, e in self.lignees.items()},
             "generations": lignes,
-            "courbes": {l: [x["score"] for x in lignes if x["lignee"] == l] for l in {x["lignee"] for x in lignes}},
+            "courbes": {l: [x["score"] for x in lignes if x["lignee"] == l and not x.get("invalide")] for l in {x["lignee"] for x in lignes}},
+            "generations_invalidees": [{"lignee": x["lignee"], "generation": x["generation"], "statut": x["statut"]} for x in lignes if x.get("invalide")],
             "scores_finaux": self._scores_finaux(lignes),
         }
         n = 1

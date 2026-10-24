@@ -57,12 +57,17 @@ class Archive:
     travail sans les réponses de test ni les fichiers du juge ni le journal du noyau (constat de session-depot :
     sinon un organisme apprend le juge ou recopie les réponses d'une autre lignée)."""
 
-    def __init__(self, racine: pathlib.Path):
+    def __init__(self, racine: pathlib.Path, vue: pathlib.Path | None = None):
         self.racine = pathlib.Path(racine)
         self.racine.mkdir(parents=True, exist_ok=True)
         self.index = self.racine / "index.jsonl"
-        self.vue = self.racine.parent / (self.racine.name + "_vue")
+        self.vue = pathlib.Path(vue) if vue is not None else self.racine.parent / (self.racine.name + "_vue")
         self.vue.mkdir(parents=True, exist_ok=True)
+        try:  # CR-01 : l'archive complète (vérités, juge, journaux) est au noyau seul ; la vue est lisible par les organismes
+            os.chmod(self.racine, 0o700)
+            os.chmod(self.vue, 0o755)
+        except OSError:
+            pass
 
     def dossier(self, lignee: str, generation: int) -> pathlib.Path:
         d = self.racine / lignee / f"g{generation:03d}"
@@ -96,7 +101,7 @@ class Archive:
                  "empreinte_organisme": empreinte, "successeur": resume.get("successeur"),
                  "impose": resume.get("impose"), "famille": resume.get("famille"),
                  "problemes_successeur": [str(x)[:200] for x in (resume.get("problemes_successeur") or [])][:10],
-                 "relance": bool(resume.get("relance")),
+                 "relance": bool(resume.get("relance")), "invalide": bool(resume.get("invalide")),
                  "quand_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
         complet = {**resume, **ligne}
         (d / "resume.json").write_text(json.dumps(complet, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -109,7 +114,13 @@ class Archive:
         shutil.copy2(d / "organisme.tar.gz", v / "organisme.tar.gz")
         shutil.copy2(d / "organisme.tar.gz.sha256", v / "organisme.tar.gz.sha256")
         (v / "resume.json").write_text(json.dumps({k: complet.get(k) for k in CHAMPS_VUE}, ensure_ascii=False, indent=1), encoding="utf-8")
-        shutil.copytree(travail, v / "travail", symlinks=False, ignore=shutil.ignore_patterns("noyau", "juge", "reponses_test.json"))
+        shutil.copytree(travail, v / "travail", symlinks=False, ignore=shutil.ignore_patterns("noyau", "juge", "reponses_test.json", "attaques.json"))
+        # la vue est en lecture seule pour tous (dossiers 0555, fichiers 0444) : les organismes, sous un autre utilisateur, lisent sans écrire
+        for f in [v] + list(v.rglob("*")):
+            try:
+                os.chmod(f, 0o555 if f.is_dir() else 0o444)
+            except OSError:
+                pass
         # lecture seule pour tout ce qui vient d'être déposé (efficace hors root ; consigné sinon)
         for f in d.rglob("*"):
             try:
@@ -127,5 +138,5 @@ class Archive:
     def historique(self, lignee: str) -> list[dict]:
         return [{"generation": l["generation"], "lignee": l["lignee"], "score": l["score"], "statut": l["statut"],
                  "cout_usd": l["cout_usd"], "n_appels": l["n_appels"], "successeur": l.get("successeur"),
-                 "problemes_successeur": l.get("problemes_successeur", []), "relance": l.get("relance", False)}
+                 "problemes_successeur": l.get("problemes_successeur", []), "relance": l.get("relance", False), "invalide": l.get("invalide", False)}
                 for l in self.lignes(lignee)]
