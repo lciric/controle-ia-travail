@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-from . import archive as _archive, bac_a_sable, contrat, entrainement as _entrainement, recherche as _recherche, taches as _taches
+from . import archive as _archive, bac_a_sable, contrat, entrainement as _entrainement, moisson as _moisson, recherche as _recherche, taches as _taches
 from .appels import EMPREINTE_COLLISIONNEUR_V25, Appelant, Arret, cv
 from .serveur import PARALLELE_MAX_DEFAUT, ServeurAppels
 
@@ -63,7 +63,7 @@ def organismes_g000(course: str | pathlib.Path, destination: str | pathlib.Path)
     manifeste = json.loads((course / "manifeste-run.json").read_text(encoding="utf-8")) if (course / "manifeste-run.json").exists() else {}
     sortie = {}
     for l in lignes:
-        if l["generation"] != 0 or l["lignee"] in sortie:
+        if l["generation"] != 0 or l.get("phase") or l["lignee"] in sortie:
             continue
         tar = course / "archive" / l["chemin"] / "organisme.tar.gz"
         cible = destination / l["lignee"]
@@ -99,11 +99,13 @@ class Noyau:
                 reel=reel, go_id=go_id or m.get("go_id"), isoler_reseau=(m.get("isolation_reseau", False) if isoler_reseau is None else isoler_reseau),
                 entropie=m["entropie_seed_sequence"], especes_amorcage=m.get("especes_amorcage"), etiquette_run=m.get("run", ""),
                 gel=m.get("gel", False), parallele_max=m.get("parallele_max", PARALLELE_MAX_DEFAUT), registre_go=registre_go,
-                memoire_partagee=m.get("memoire_partagee", False))
+                memoire_partagee=m.get("memoire_partagee", False), rondes_conception_max=0)
         lignes = n.archive.lignes()
         depense = 0.0
         for l in lignes:
             depense += float(l.get("cout_usd") or 0.0)
+            if l.get("phase"):
+                continue
             nom = l["lignee"]
             espece = next((e for e in m.get("especes_amorcage", []) if e.lower().replace("_", "-") == nom), None)
             n.lignees[nom] = {"espece_amorcage": espece, "famille": l.get("famille") or (contrat.FAMILLES[espece] if espece else None),
@@ -119,7 +121,8 @@ class Noyau:
                  especes_amorcage: list[str] | None = None, etiquette_run: str = "", gel: bool = False,
                  organismes_imposes: dict[str, dict] | None = None, parallele_max: int = PARALLELE_MAX_DEFAUT,
                  recherche=None, relances_max: int = 1, traits: dict | None = None, description_traits: str = "",
-                 registre_go: str | pathlib.Path | None = None, memoire_partagee: bool = False):
+                 registre_go: str | pathlib.Path | None = None,
+                 memoire_partagee: bool = False, rondes_conception_max: int = 0, budget_conception: dict | None = None):
         """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
         — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
         corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
@@ -155,6 +158,18 @@ class Noyau:
         self.budget.setdefault("recherches_max", 0)
         # successeur invalide : relance de la dernière génération valide, `relances_max` fois de suite (nœud 2, (b))
         self.relances_max = max(0, int(relances_max))
+        # CR-15 (c) : par défaut chaque lignée ne lit que sa propre archive (lignées indépendantes) ; avec
+        # `memoire_partagee`, la vue de toutes les lignées est lisible, figée au début de chaque ronde (CR-15 b)
+        self.memoire_partagee = bool(memoire_partagee)
+        # phase de conception (Lazar, 24 octobre, 20:37 et 20:42 Paris) : avant la génération 0 notée, l'organisme moissonne,
+        # teste ses modules, se réécrit, ronde après ronde ; **il conçoit lui-même son critère d'arrêt** et le déclare en
+        # écrivant `fin_conception.json` ; le noyau ne tient qu'une borne dure (rondes, budget : devis et GO) ; rondes
+        # archivées (cNNN), jamais notées ; l'organisme de la dernière ronde devient la génération 0
+        self.rondes_conception = max(0, int(rondes_conception_max))
+        self.budget_conception = dict(budget_conception) if budget_conception else dict(budget_generation)
+        self.budget_conception.setdefault("recherches_max", self.budget.get("recherches_max", 0))
+        self.ronde = 0
+        self.vue_ronde: pathlib.Path | None = None
         # apprentissage par gradient (contrat v3) : traits par tâche (activations en réel, hachage en simulation) ;
         # `budget['entrainements_max']` = 0 le coupe ; en simulation sans traits fournis, ils sont calculés ici
         self.budget.setdefault("entrainements_max", 0)
@@ -178,11 +193,6 @@ class Noyau:
             textes = {t["id"]: t["texte"] for n in ("train", "test", "test_final") for t in self.banque.get(n, [])}
             self.vues = {"simulation": _entrainement.traits_simules(textes)}
             self.description_traits = f"traits de hachage simulés ({_entrainement.DIM_SIMULATION} dimensions), vue « simulation »"
-        # CR-15 (c) : par défaut chaque lignée ne lit que sa propre archive (lignées indépendantes) ; avec
-        # `memoire_partagee`, la vue de toutes les lignées est lisible, figée au début de chaque ronde (CR-15 b)
-        self.memoire_partagee = bool(memoire_partagee)
-        self.ronde = 0
-        self.vue_ronde: pathlib.Path | None = None
         for nom, spec in self.organismes_imposes.items():
             if not isinstance(spec, dict) or "organisme" not in spec or spec.get("famille") not in FAMILLES_CONNUES:
                 raise Arret(f"organisme imposé {nom!r} : il faut {{'organisme': dossier, 'famille': {FAMILLES_CONNUES}}}")
@@ -204,7 +214,8 @@ class Noyau:
             "n_taches_test_dev": len(banque["test"]), "n_taches_test_final": len(banque.get("test_final", [])),
             "mission_sha256": hashlib.sha256(mission.encode("utf-8")).hexdigest(),
             "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage, "relances_max": self.relances_max,
-            "memoire_partagee": self.memoire_partagee,
+            "memoire_partagee": self.memoire_partagee, "rondes_conception_max": self.rondes_conception,
+            "budget_conception": (self.budget_conception if self.rondes_conception else None),
             "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
             "traits": ({"description": self.description_traits, "n": len(next(iter(self.vues.values()))),
@@ -264,11 +275,12 @@ class Noyau:
         self._evenement(etape="graine", lignee=lignee, generation=generation, usage=usage, graine=g)
         return g
 
-    def graine_ronde(self, ronde: int) -> int:
-        """Graine de l'ordre des lignées d'une ronde : spawn_key=(INDICE_RONDE, ronde, usage « ordre_lignees ») ; consignée."""
-        ss = np.random.SeedSequence(int(self.graines.entropy), spawn_key=(INDICE_RONDE, int(ronde), USAGES_GRAINE["ordre_lignees"]))
+    def graine_ronde(self, ronde: int, conception: bool = False) -> int:
+        """Graine de l'ordre des lignées d'une ronde : spawn_key=(INDICE_RONDE [+ 1 en conception], ronde, usage
+        « ordre_lignees ») ; consignée."""
+        ss = np.random.SeedSequence(int(self.graines.entropy), spawn_key=(INDICE_RONDE + (1 if conception else 0), int(ronde), USAGES_GRAINE["ordre_lignees"]))
         g = int(ss.generate_state(1, dtype=np.uint64)[0])
-        self._evenement(etape="graine", ronde=ronde, usage="ordre_lignees", graine=g)
+        self._evenement(etape="graine", ronde=ronde, usage=("ordre_lignees_conception" if conception else "ordre_lignees"), graine=g)
         return g
 
     def _vue_pour(self, lignee: str) -> pathlib.Path:
@@ -303,17 +315,29 @@ class Noyau:
             return etat["uid"]
         return bac_a_sable.uid_lignee(sorted(self.lignees).index(lignee) if lignee in self.lignees else len(self.lignees))
 
-    def _rechercheur(self, dossier: pathlib.Path):
+    def _rechercheur(self, dossier: pathlib.Path, budget: dict | None = None, telechargeur=None):
         """Un rechercheur par génération ; None si `recherches_max` vaut 0 (recherche non servie)."""
-        if int(self.budget["recherches_max"]) <= 0:
+        budget = budget or self.budget
+        if int(budget["recherches_max"]) <= 0:
             return None
         backend = self.recherche(None) if self.recherche is not None else None
-        return _recherche.Rechercheur(dossier, int(self.budget["recherches_max"]), backend)
+        return _recherche.Rechercheur(dossier, int(budget["recherches_max"]), backend, telechargeur=telechargeur)
 
-    def _entraineur(self, dossier: pathlib.Path, lignee: str, g: int, traits_sup: dict | None = None):
+    def _telechargeur(self, travail: pathlib.Path, budget: dict | None = None):
+        """Un téléchargeur par génération ; None si `telechargements_max` vaut 0. Le corpus vit dans `travail/corpus`
+        (lisible par la lignée dans sa vue d'archive) ; double sans réseau en simulation."""
+        budget = budget or self.budget
+        if int(budget.get("telechargements_max", 0)) <= 0:
+            return None
+        backend = _moisson.telechargement_simule if self.recherche is not None else None
+        return _moisson.Telechargeur(travail / "corpus", int(budget["telechargements_max"]),
+                                     octets_max_total=int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION)), backend=backend)
+
+    def _entraineur(self, dossier: pathlib.Path, lignee: str, g: int, traits_sup: dict | None = None, budget: dict | None = None):
         """Un entraîneur par génération ; None si `entrainements_max` vaut 0. Les vérités servies sont celles de
         l'entraînement seulement ; `traits_sup` ajoute des traits (tâches d'attaque en confrontation, simulation)."""
-        if int(self.budget["entrainements_max"]) <= 0 or not self.vues:
+        budget = budget or self.budget
+        if int(budget.get("entrainements_max", 0)) <= 0 or not self.vues:
             return None
         verites = {t["id"]: (1.0 if t["verite"] == _taches.ETIQUETTES[t["famille"]][0] else 0.0) for t in self.banque["train"]}
         vues = {nom: dict(t) for nom, t in self.vues.items()}
@@ -329,8 +353,8 @@ class Noyau:
             uid_ent, isole = bac_a_sable.uid_entraineur(idx), bool(self.isolation["reseau"])
         elif self.reel:
             raise Arret("entraîneur sans isolation d'utilisateur en réel : refusé (CE-02)")
-        return _entrainement.Entraineur(dossier, vues, verites, int(self.budget["entrainements_max"]), pas_max=int(self.budget["pas_max"]),
-                                        delai_s=int(self.budget.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT)),
+        return _entrainement.Entraineur(dossier, vues, verites, int(budget["entrainements_max"]), pas_max=int(budget.get("pas_max", _entrainement.PAS_MAX_DEFAUT)),
+                                        delai_s=int(budget.get("delai_entrainement_s", self.budget.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT))),
                                         uid=uid_ent, isoler_reseau=isole, espace=(self.espace if uid_ent is not None else None),
                                         prefixe=f"{lignee[:12]}-g{g:03d}")
 
@@ -341,8 +365,9 @@ class Noyau:
         return {"disponibles": bool(disponibles), "vues": dims, "dimension": (next(iter(dims.values())) if dims else 0),
                 "description": self.description_traits}
 
-    def _appelant(self, dossier: pathlib.Path) -> Appelant:
-        plafond = min(float(self.budget["usd_max"]), self._plafond_restant())
+    def _appelant(self, dossier: pathlib.Path, budget: dict | None = None) -> Appelant:
+        budget = budget or self.budget
+        plafond = min(float(budget["usd_max"]), self._plafond_restant())
         return Appelant(dossier, plafond, self.appelants, self.reel, self.go_id)
 
     # ---- amorçage ----
@@ -408,47 +433,57 @@ class Noyau:
         return resultats
 
     # ---- une génération ----
-    def executer_generation(self, lignee: str) -> dict:
+    def executer_generation(self, lignee: str, conception: int | None = None) -> dict:
+        """Une génération notée (défaut) ou, avec `conception=k`, la k-ième ronde de la phase de conception : même bac à
+        sable, budget de conception, aucune tâche de test, aucun score ; le successeur valide devient l'organisme de la
+        ronde suivante, ou la génération 0 après la dernière ronde ; sans successeur valide, l'organisme reste."""
         etat = self.lignees[lignee]
-        g = etat["generation"]
+        g = etat["generation"] if conception is None else int(conception)
+        phase = None if conception is None else "conception"
+        budget = self.budget if conception is None else self.budget_conception
         organisme = etat["organisme"]
-        travail = self.espace / "travail" / lignee / f"g{g:03d}"
+        travail = self.espace / "travail" / lignee / _archive.Archive.nom_generation(g, phase)
         if travail.exists():
             shutil.rmtree(travail)
         travail.mkdir(parents=True)
         bac_a_sable.proteger(travail.parent, 0o711)
         ordre_train = np.random.default_rng(self.graine(lignee, g, "ordre_train")).permutation(len(self.banque["train"]))
         # test de développement (score rendu) et test final (jamais rendu), mêlés sans distinction pour l'organisme
-        tous_tests = list(self.banque["test"]) + list(self.banque["test_final"])
+        tous_tests = [] if phase else list(self.banque["test"]) + list(self.banque["test_final"])
         ordre_test = np.random.default_rng(self.graine(lignee, g, "ordre_test")).permutation(len(tous_tests))
         graine_organisme = self.graine(lignee, g, "organisme")
         # bras gelé : témoin sans aucune transmission entre générations — archive vide et historique vide, sinon
         # l'organisme relit sa propre mémoire archivée (Gemini le fait : `charger_connaissances_archive`)
         archive_vue = self._vue_pour(lignee)
         contexte = {
-            "generation": g, "lignee": lignee, "mission": contrat.mission_texte(self.mission, _taches.ETIQUETTES),
+            "generation": (0 if phase else g), "lignee": lignee, "mission": contrat.mission_texte(self.mission, _taches.ETIQUETTES),
+            "phase": (phase or "generation"), "ronde_conception": (g if phase else None), "rondes_conception_max": self.rondes_conception,
             "dossier_travail": str(travail), "dossier_archive": str(archive_vue),
             "taches_entrainement": [dict(_taches.masquer(self.banque["train"][i]), verite=self.banque["train"][i]["verite"]) for i in ordre_train],
             "taches_test": [_taches.masquer(tous_tests[i]) for i in ordre_test],
-            "budget": {"appels_max": int(self.budget["appels_max"]), "usd_max": round(min(float(self.budget["usd_max"]), self._plafond_restant()), 4),
-                       "temps_max_s": int(self.budget["temps_max_s"]), "recherches_max": int(self.budget["recherches_max"]),
-                       "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"])},
-            "traits": self._contexte_traits(bool(self.vues) and int(self.budget["entrainements_max"]) > 0),
+            "budget": {"appels_max": int(budget["appels_max"]), "usd_max": round(min(float(budget["usd_max"]), self._plafond_restant()), 4),
+                       "temps_max_s": int(budget["temps_max_s"]), "recherches_max": int(budget["recherches_max"]),
+                       "telechargements_max": int(budget.get("telechargements_max", 0)), "octets_max": int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION)),
+                       "entrainements_max": int(budget.get("entrainements_max", 0)), "pas_max": int(budget.get("pas_max", _entrainement.PAS_MAX_DEFAUT))},
+            "traits": self._contexte_traits(bool(self.vues) and int(budget.get("entrainements_max", 0)) > 0),
             "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
             "graine": graine_organisme,
         }
-        appelant = self._appelant(travail / "noyau")
+        appelant = self._appelant(travail / "noyau", budget)
         chemin_socket = str(travail / "noyau.sock")
         if len(chemin_socket) > 100:  # limite des sockets Unix ; nom unique par course (CR-12)
             chemin_socket = f"/tmp/essaim-{hashlib.sha256(str(self.racine).encode()).hexdigest()[:10]}-{lignee[:10]}-g{g}.sock"
         uid = self._uid(lignee)
         bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
         bac_a_sable.proteger(travail / "noyau", 0o700) if (travail / "noyau").exists() else None
-        rechercheur = self._rechercheur(travail / "noyau")
+        telechargeur = self._telechargeur(travail, budget)
+        if telechargeur is not None:
+            bac_a_sable.proteger(travail / "corpus", 0o755)
+        rechercheur = self._rechercheur(travail / "noyau", budget, telechargeur)
         bac_a_sable.proteger(travail / "noyau", 0o700)
-        entraineur = self._entraineur(travail / "noyau", lignee, g)
-        with ServeurAppels(appelant, chemin_socket, int(self.budget["appels_max"]), self.parallele_max, rechercheur, entraineur) as serveur:
-            execution = bac_a_sable.executer(travail, chemin_socket, int(self.budget["temps_max_s"]), isoler_reseau=self.isoler_reseau, uid=uid)
+        entraineur = self._entraineur(travail / "noyau", lignee, g, budget=budget)
+        with ServeurAppels(appelant, chemin_socket, int(budget["appels_max"]), self.parallele_max, rechercheur, entraineur, telechargeur) as serveur:
+            execution = bac_a_sable.executer(travail, chemin_socket, int(budget["temps_max_s"]), isoler_reseau=self.isoler_reseau, uid=uid)
             n_appels = serveur.n_appels
             refus = list(serveur.refus)
             en_vol_max = serveur.en_vol_max
@@ -457,6 +492,12 @@ class Noyau:
             execution = dict(execution, code="INVALIDE_MODELE", code_origine=execution.get("code"), non_conformes=non_conformes)
         n_recherches = rechercheur.compteur if rechercheur is not None else 0
         n_entrainements = entraineur.compteur if entraineur is not None else 0
+        n_telechargements = telechargeur.compteur if telechargeur is not None else 0
+        if telechargeur is not None:
+            for f in [travail / "corpus"] + list((travail / "corpus").rglob("*")):
+                bac_a_sable.proteger(f, 0o755 if f.is_dir() else 0o644)
+            if telechargeur.index.exists():
+                _archive.sceller(telechargeur.index)  # corpus moissonné scellé en fin de génération
         self.depense_totale += appelant.depense_usd
         self.n_appels_total += n_appels
         # jugement externe
@@ -477,11 +518,15 @@ class Noyau:
                 probleme_reponses = f"reponses_test.json illisible : {str(e)[:100]}"
         else:
             probleme_reponses = "reponses_test.json absent"
-        score = _taches.evaluer({k: v for k, v in reponses.items() if k in {t["id"] for t in self.banque["test"]}}, self.banque["test"])
-        score["probleme_reponses"] = probleme_reponses
-        score_final = None
-        if self.banque["test_final"]:
-            score_final = _taches.evaluer({k: v for k, v in reponses.items() if k in {t["id"] for t in self.banque["test_final"]}}, self.banque["test_final"])
+        if phase:
+            score = {"score": None, "phase": phase, "probleme_reponses": None}  # jamais notée
+            score_final = None
+        else:
+            score = _taches.evaluer({k: v for k, v in reponses.items() if k in {t["id"] for t in self.banque["test"]}}, self.banque["test"])
+            score["probleme_reponses"] = probleme_reponses
+            score_final = None
+            if self.banque["test_final"]:
+                score_final = _taches.evaluer({k: v for k, v in reponses.items() if k in {t["id"] for t in self.banque["test_final"]}}, self.banque["test_final"])
         # métrique proposée par l'organisme (archivée, jamais utilisée par le noyau)
         metrique = None
         chemin_metrique = travail / "metrique_proposee.json"
@@ -499,14 +544,34 @@ class Noyau:
                   "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
                   "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel,
                   "impose": bool(etat.get("impose")), "famille": etat.get("famille"), "relance": bool(etat.get("relance_en_cours")),
-                  "n_recherches": n_recherches, "n_entrainements": n_entrainements, "invalide": bool(non_conformes), "non_conformes": non_conformes}
-        self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final)
-        self._evenement(etape="generation", lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
+                  "n_recherches": n_recherches, "n_entrainements": n_entrainements, "n_telechargements": n_telechargements, "invalide": bool(non_conformes), "non_conformes": non_conformes, "phase": phase}
+        self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final, phase=phase)
+        self._evenement(etape=("conception" if phase else "generation"), lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))
         etat["relance_en_cours"] = False
         if non_conformes:
             etat["active"] = False
             etat["fin"] = "appel à modèle non conforme : génération invalidée (CR-02)"
+            return resume
+        if phase:  # phase de conception : le successeur valide devient l'organisme de la ronde suivante ou de la génération 0
+            fin = travail / "fin_conception.json"  # l'organisme déclare lui-même la fin de sa conception (son critère, ses valeurs)
+            if fin.exists():
+                try:
+                    declaration = json.loads(fin.read_text(encoding="utf-8-sig"))
+                except (json.JSONDecodeError, UnicodeDecodeError):
+                    declaration = {"illisible": True}
+                etat["conception_finie"] = True
+                self._evenement(etape="fin_conception", lignee=lignee, ronde=g, declaration=(declaration if isinstance(declaration, dict) else {"brut": str(declaration)[:500]}))
+            derniere = etat.get("conception_finie") or g >= self.rondes_conception
+            if a_successeur:
+                cible = self.racine / "lignees" / lignee / ("g000-concu" if derniere else f"c{g + 1:03d}") / "organisme"
+                cible.parent.mkdir(parents=True, exist_ok=True)
+                if cible.exists():
+                    shutil.rmtree(cible)
+                shutil.copytree(successeur, cible, symlinks=False)
+                etat["organisme"] = cible
+            else:
+                self._evenement(etape="conception_sans_successeur", lignee=lignee, ronde=g, problemes_successeur=problemes_succ[:10])
             return resume
         if self.gel and g + 1 < self.generations_max:
             etat.update(generation=g + 1)  # même organisme (génération 0), relancé : bras témoin
@@ -531,7 +596,29 @@ class Noyau:
         return resume
 
     # ---- boucle ----
+    def concevoir(self) -> None:
+        """Phase de conception : rondes jusqu'à la borne dure, ordre tiré, aucune note ; une lignée sort de la phase quand elle
+        déclare `fin_conception.json` (son critère) ; aucun arrêt de lignée hors modèle non conforme ou STOP."""
+        for k in range(1, self.rondes_conception + 1):
+            if (self.racine / "STOP").exists() or self._plafond_restant() <= 0:
+                self._evenement(etape="arret_conception", ronde=k, raison=("fichier STOP" if (self.racine / "STOP").exists() else "plafond total atteint"))
+                return
+            actives = [l for l, e in self.lignees.items() if e["active"] and not e.get("conception_finie")]
+            if not actives:
+                self._evenement(etape="arret_conception", ronde=k, raison="toutes les lignées ont déclaré la fin de leur conception")
+                return
+            rng = np.random.default_rng(self.graine_ronde(k, conception=True))
+            ordre = [actives[i] for i in rng.permutation(len(actives))]
+            self._evenement(etape="ronde_conception", ronde=k, ordre=ordre)
+            for lignee in ordre:
+                if (self.racine / "STOP").exists() or self._plafond_restant() <= 0:
+                    break
+                self.executer_generation(lignee, conception=k)
+
     def boucler(self) -> dict:
+        if self.rondes_conception and not self.gel and not getattr(self, "_conception_faite", False):
+            self.concevoir()
+            self._conception_faite = True
         while True:
             if (self.racine / "STOP").exists():
                 self._evenement(etape="arret", raison="fichier STOP")
@@ -571,7 +658,8 @@ class Noyau:
             "manifeste": self.manifeste, "fin_utc": _heure(), "depense_totale_usd": round(self.depense_totale, 4),
             "n_appels_total": self.n_appels_total, "lignees": {l: {k: (str(v) if isinstance(v, pathlib.Path) else v) for k, v in e.items()} for l, e in self.lignees.items()},
             "generations": lignes,
-            "courbes": {l: [x["score"] for x in lignes if x["lignee"] == l and not x.get("invalide")] for l in {x["lignee"] for x in lignes}},
+            "courbes": {l: [x["score"] for x in lignes if x["lignee"] == l and not x.get("invalide") and not x.get("phase")] for l in {x["lignee"] for x in lignes}},
+            "rondes_conception": [{"lignee": x["lignee"], "ronde": x["generation"], "statut": x["statut"], "successeur": x.get("successeur"), "cout_usd": x.get("cout_usd")} for x in lignes if x.get("phase") == "conception"],
             "generations_invalidees": [{"lignee": x["lignee"], "generation": x["generation"], "statut": x["statut"]} for x in lignes if x.get("invalide")],
             "scores_finaux": self._scores_finaux(lignes),
         }

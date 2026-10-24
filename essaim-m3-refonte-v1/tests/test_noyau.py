@@ -1,4 +1,5 @@
 """Tests du noyau, sans réseau : chaque garde sur un cas sain et sur un artefact (R5)."""
+import hashlib
 import json
 import os
 import pathlib
@@ -173,7 +174,7 @@ def test_archive_scelle_et_ne_reecrit_jamais(tmp_path):
     vue = tmp_path / "archive_vue" / "l" / "g000"
     assert (vue / "organisme.tar.gz").exists() and (vue / "resume.json").exists() and not (vue / "juge").exists()
     assert not any(vue.rglob("reponses_test.json")) and "score" in json.loads((vue / "resume.json").read_text())
-    assert a.historique("l") == [{"generation": 0, "lignee": "l", "score": 0.5, "statut": "OK", "cout_usd": 0.0, "n_appels": 0,
+    assert a.historique("l") == [{"generation": 0, "phase": None, "lignee": "l", "score": 0.5, "statut": "OK", "cout_usd": 0.0, "n_appels": 0,
                                  "successeur": False, "problemes_successeur": [], "relance": False, "invalide": False}]
     with pytest.raises(FileExistsError):
         a.deposer("l", 0, FIXTURE / "organisme", travail, None, {"score": 0.6}, {"statut": "OK"})
@@ -1381,6 +1382,211 @@ def test_espace_organismes_laisse_par_une_course_anterieure_est_efface(tmp_path)
     assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "4", "--n-train", "6", "--n-test", "6",
                           "--appels-max", "20", "--especes", "GEMINI_ARGON"]) == 0
     assert (espace / "archive_vue" / "gemini-argon" / "g000").exists() and not (espace / "archive_vue" / "gemini-argon" / "g001").exists()
+
+
+def test_double_designation_du_champion_et_concours_de_metriques(tmp_path):
+    """Décision de Lazar (20:06 Paris) : les deux désignations (test final — qui décide, N-039 b — et attaques croisées)
+    et celle de chaque métrique discriminante sont rapportées avec leur concordance ; concours de métriques côte à côte."""
+    from essaim_m3.noyau import cli
+    exact = tmp_path / "exact"
+    shutil.copytree(FIXTURE, exact)
+    (exact / "organisme" / "metrique" / "calculer.py").write_text(
+        "import json, os\n"
+        "def calculer(dossier_sorties):\n"
+        "    ici = os.path.dirname(os.path.abspath(__file__))\n"
+        "    attaques = json.load(open(os.path.join(ici, 'attaques.json'), encoding='utf-8'))\n"
+        "    rep = json.load(open(os.path.join(dossier_sorties, 'reponses_test.json'), encoding='utf-8'))\n"
+        "    return sum(str(rep.get(a['id'], {}).get('etiquette', '')).lower() == a['verite'] for a in attaques) / len(attaques)\n", encoding="utf-8")
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "9", "--n-train", "6", "--n-test", "6", "--n-final", "6",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"exact={exact / 'organisme'}@anthropic", "--confronter"]) == 0
+    c = json.loads(sorted((course / "confrontation").glob("confrontation-v*.json"))[-1].read_text(encoding="utf-8"))
+    d = c["designations"]
+    assert d["test_final_N039b"]["regle"].startswith("décide") and set(d["test_final_N039b"]["scores"]) == {"gemini-argon", "exact"}
+    assert d["attaques_croisees"]["regle"] == "rapportée" and set(d["attaques_croisees"]["scores"]) == {"gemini-argon", "exact"}
+    assert "exact" in d["par_metrique"] and d["par_metrique"]["exact"]["champion_selon_elle"] == ["gemini-argon"]  # seule discriminante ; un seul défendeur
+    assert "gemini-argon" not in d["par_metrique"]  # métrique de forme : non discriminante, pas de désignation
+    assert d["concordance"]["test_final_vs_attaques"] in (True, False)
+    assert set(c["concours_metriques"]) == {"gemini-argon", "exact"} and c["concours_metriques"]["exact"]["tau_b_avec_temoin"]["n"] == 1
+    assert "décide" in c["avertissement"]
+
+
+def test_phase_de_conception_a_critere_d_arret_de_l_organisme(tmp_path):
+    """Lazar (24 octobre, 20:37 et 20:42 Paris) : avant la génération 0 notée, des rondes de conception où l'organisme se
+    réécrit ; il conçoit son propre critère d'arrêt (`fin_conception.json`) ; le noyau ne tient qu'une borne dure. Cas
+    sain : l'organisme concepteur déclare la fin à la ronde 2 sur une borne de 5 → 2 rondes cNNN archivées, jamais
+    notées ; la génération 0 notée tourne sur l'organisme issu de la conception ; le bras gelé apparié relance cette
+    génération 0. Artefact : un organisme qui ne déclare jamais la fin s'arrête à la borne dure."""
+    from essaim_m3.noyau import cli
+    concepteur = RACINE / "tests" / "fixtures" / "organisme_concepteur" / "organisme"
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "2", "--graine", "12", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"concepteur={concepteur}@anthropic",
+                          "--rondes-conception-max", "5", "--usd-max-conception", "2.0"]) == 0
+    idx = [json.loads(x) for x in (course / "archive" / "index.jsonl").read_text().splitlines()]
+    conc = [l for l in idx if l["lignee"] == "concepteur"]
+    rondes = [l for l in conc if l.get("phase") == "conception"]
+    notees = [l for l in conc if not l.get("phase")]
+    assert [l["generation"] for l in rondes] == [1, 2] and all(l["score"] is None for l in rondes)
+    assert [l["generation"] for l in notees] == [0, 1] and all(isinstance(l["score"], float) for l in notees)
+    assert (course / "archive" / "concepteur" / "c001").exists() and (course / "archive" / "concepteur" / "c002").exists()
+    ev = [json.loads(x) for x in (course / "evenements.jsonl").read_text().splitlines()]
+    fins = [e for e in ev if e["etape"] == "fin_conception"]
+    assert len(fins) == 1 and fins[0]["lignee"] == "concepteur" and fins[0]["ronde"] == 2 and "critere" in fins[0]["declaration"]
+    # l'organisme factice (sans critère) va jusqu'à la borne dure : 5 rondes
+    assert [l["generation"] for l in idx if l["lignee"] == "gemini-argon" and l.get("phase") == "conception"] == [1, 2, 3, 4, 5]
+    # la génération 0 notée tourne sur l'organisme issu de la conception (g000-concu), pas sur l'amorce
+    ctx0 = json.loads((course / "archive" / "concepteur" / "g000" / "travail" / "contexte.json").read_text())
+    assert ctx0["phase"] == "generation" and ctx0["generation"] == 0 and ctx0["rondes_conception_max"] == 5
+    assert any(h.get("phase") == "conception" for h in ctx0["historique"]) and len(ctx0["taches_test"]) == 10
+    ctxc = json.loads((course / "archive" / "concepteur" / "c001" / "travail" / "contexte.json").read_text())
+    assert ctxc["phase"] == "conception" and ctxc["ronde_conception"] == 1 and ctxc["taches_test"] == [] and ctxc["budget"]["usd_max"] <= 2.0
+    rapport = json.loads(sorted(course.glob("rapport-v*.json"))[-1].read_text())
+    assert len(rapport["courbes"]["concepteur"]) == 2 and len(rapport["rondes_conception"]) == 7
+    assert rapport["manifeste"]["rondes_conception_max"] == 5 and rapport["manifeste"]["budget_conception"]["usd_max"] == 2.0
+    # bras gelé apparié : relance la génération 0 issue de la conception (même empreinte), sans phase de conception
+    gelee = tmp_path / "gelee"
+    assert cli.principal(["simuler", "--sortie", str(gelee), "--generations", "2", "--graine", "13", "--gel", "--depuis", str(course), "--appels-max", "30"]) == 0
+    idx_g = [json.loads(x) for x in (gelee / "archive" / "index.jsonl").read_text().splitlines()]
+    assert not any(l.get("phase") for l in idx_g)
+    e0 = next(l for l in idx if l["lignee"] == "concepteur" and l["generation"] == 0 and not l.get("phase"))["empreinte_organisme"]
+    assert next(l for l in idx_g if l["lignee"] == "concepteur" and l["generation"] == 0)["empreinte_organisme"] == e0
+    # la confrontation ignore les rondes de conception
+    assert cli.principal(["extraire-metriques", "--course", str(course)]) == 0
+    r = json.loads((course / "confrontation" / "releve-metriques-v1.json").read_text())
+    assert r["lignees"]["concepteur"]["generation"] == 1
+
+
+def test_mode_reel_refuse_anthropic_base_url(tmp_path, monkeypatch):
+    """Constat de session-depot (n° 09) : une ANTHROPIC_BASE_URL définie enverrait les appels ailleurs ; refus en réel
+    sauf option explicite."""
+    from essaim_m3.noyau import cli
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "x"); monkeypatch.setenv("GEMINI_API_KEY", "y"); monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://exemple.invalide")
+    taches = tmp_path / "t.json"; taches.write_text("{}", encoding="utf-8")
+    assert cli.principal(["lancer", "--reel", "--go", "GO-X", "--taches", str(taches), "--sortie", str(tmp_path / "r")]) == 4
+
+
+# ---------- moisson : primitives servies par le noyau (Lazar, 24 octobre, 20:32 à 20:35 Paris) ----------
+
+def test_telechargeur_provenance_plafonds_et_extraction(tmp_path):
+    """Cas sain : un lien rendu par une recherche de la génération se télécharge, le texte est extrait (HTML, PDF,
+    texte), empreinté, rangé dans corpus/ avec un index ; artefacts : adresse hors provenance refusée, http refusé,
+    plafond de documents et d'octets tenus, document trop gros refusé, jamais un texte d'erreur en guise de document."""
+    from essaim_m3.noyau import moisson, recherche
+    pdf = None
+    if shutil.which("pdftotext"):
+        # un PDF minimal engendré par LibreOffice n'est pas disponible ici : on vérifie seulement le chemin « sans texte » sur un faux PDF
+        pdf = b"%PDF-1.4\n%%EOF\n"
+    documents = {
+        "https://exemple.invalide/page": (b"<html><head><title>Titre de page</title><style>x{}</style></head><body><p>Bonjour le <b>monde</b>.</p><script>alert(1)</script><p>Fin.</p></body></html>", "text/html"),
+        "https://exemple.invalide/brut.txt": (b"texte brut sans balise", "text/plain"),
+        "https://exemple.invalide/gros": (b"x" * 5000, "text/plain"),
+        "https://exemple.invalide/faux.pdf": (pdf or b"%PDF-1.4\n", "application/pdf"),
+    }
+    def double(adresse):
+        if adresse not in documents:
+            raise RuntimeError("introuvable")
+        brut, t = documents[adresse]
+        return brut, t, adresse
+    tel = moisson.Telechargeur(tmp_path / "corpus", telechargements_max=5, octets_max_doc=4000, octets_max_total=6000, backend=double)
+    # hors provenance : refusé avant tout réseau
+    r = tel.telecharger("https://exemple.invalide/page")
+    assert r["statut"] == "ECHEC_TELECHARGEMENT" and "provenance" in r["echec"] and r["texte"] == ""
+    assert tel.telecharger("http://arxiv.org/abs/1234.56789")["statut"] == "ECHEC_TELECHARGEMENT"  # http : refusé
+    # la recherche (double) note ses liens ; ensuite le téléchargement passe
+    def moteur(requete, n):
+        return [{"source": "simulation", "id": "x", "titre": "t", "auteurs": [], "date": "", "resume": "", "lien": "https://exemple.invalide/page"},
+                {"source": "simulation", "id": "y", "titre": "t2", "auteurs": [], "date": "", "resume": "", "lien": "https://exemple.invalide/brut.txt"},
+                {"source": "simulation", "id": "z", "titre": "t3", "auteurs": [], "date": "", "resume": "", "lien": "https://exemple.invalide/gros"},
+                {"source": "simulation", "id": "w", "titre": "t4", "auteurs": [], "date": "", "resume": "", "lien": "https://exemple.invalide/faux.pdf"}], b"{}"
+    moteur.source = "simulation"
+    rech = recherche.Rechercheur(tmp_path / "noyau", 3, backend=moteur, telechargeur=tel)
+    assert rech.rechercher("test", 4, source="simulation")["statut"] == "OK"
+    assert rech.rechercher("test", 4, source="inconnue")["statut"] == "SOURCE_INCONNUE"
+    page = tel.telecharger("https://exemple.invalide/page")
+    assert page["statut"] == "OK" and page["genre"] == "html" and page["titre"] == "Titre de page"
+    assert "Bonjour le monde" in page["texte"].replace("\n", " ") and "alert" not in page["texte"] and "x{}" not in page["texte"]
+    assert page["sha256_brut"] == hashlib.sha256(documents["https://exemple.invalide/page"][0]).hexdigest()
+    brut = tel.telecharger("https://exemple.invalide/brut.txt")
+    assert brut["statut"] == "OK" and brut["genre"] == "texte" and brut["texte"] == "texte brut sans balise"
+    gros = tel.telecharger("https://exemple.invalide/gros")  # 5000 > plafond par document 4000
+    assert gros["statut"] == "ECHEC_TELECHARGEMENT" and "plafond" in gros["echec"]
+    assert tel.telecharger("https://exemple.invalide/faux.pdf")["statut"] == "PLAFOND"  # 5 tentatives consommées (les échecs comptent : pas de sondage gratuit)
+    index = tel.lire_index()
+    assert [l["statut"] for l in index] == ["ECHEC_TELECHARGEMENT", "ECHEC_TELECHARGEMENT", "OK", "OK", "ECHEC_TELECHARGEMENT", "PLAFOND"]
+    assert (tmp_path / "corpus" / "doc-0003.txt").exists() and (tmp_path / "corpus" / "doc-0003.bin").exists() and (tmp_path / "corpus" / "doc-0003.json").exists()
+    # identifiant arXiv : résolu vers le PDF d'arxiv.org (hôte toujours permis), sans passer par une recherche
+    tel2 = moisson.Telechargeur(tmp_path / "corpus2", telechargements_max=1, backend=lambda a: (b"%PDF-1.4\n", "application/pdf", a))
+    r2 = tel2.telecharger("arxiv:2505.23836")
+    assert r2["adresse"] == "https://arxiv.org/pdf/2505.23836" and r2["statut"] in ("OK", "SANS_TEXTE")
+
+
+def test_moisson_de_bout_en_bout_en_simulation(tmp_path):
+    """Un organisme qui moissonne par les primitives du noyau (recherche simulée → liens sim:<catégorie> →
+    téléchargement simulé) reçoit la phrase d'indice d'une catégorie comme donnée ; le corpus est dans sa vue
+    d'archive, l'index scellé ; le budget rendu compte les téléchargements."""
+    from essaim_m3.noyau import cli
+    org = tmp_path / "moissonneur" / "organisme"
+    shutil.copytree(FIXTURE / "organisme", org)
+    (org / "principal.py").write_text(
+        "import json, os, shutil\n"
+        "import noyau_client as nc\n"
+        "ICI = os.path.dirname(os.path.abspath(__file__))\n"
+        "def executer(contexte):\n"
+        "    travail = contexte['dossier_travail']\n"
+        "    b = nc.budget()\n"
+        "    r = nc.rechercher('horodatage artificiel', 3, source='simulation')\n"
+        "    docs = [nc.telecharger(x['lien']) for x in r['resultats'][:2]]\n"
+        "    hors = nc.telecharger('https://pirate.invalide/x')\n"
+        "    b2 = nc.budget()\n"
+        "    json.dump({'budget_avant': b, 'recherche': r['statut'], 'docs': [{k: d.get(k) for k in ('statut', 'genre', 'sha256_texte', 'texte')} for d in docs],\n"
+        "               'hors': hors['statut'], 'budget_apres': b2}, open(os.path.join(travail, 'moisson.json'), 'w', encoding='utf-8'), ensure_ascii=False)\n"
+        "    json.dump({t['id']: {'etiquette': t['etiquettes'][0], 'confiance': 0.5} for t in contexte['taches_test']}, open(os.path.join(travail, 'reponses_test.json'), 'w'))\n"
+        "    shutil.copytree(ICI, os.path.join(travail, 'successeur', 'organisme'), ignore=shutil.ignore_patterns('__pycache__'))\n"
+        "    return 'ok'\n", encoding="utf-8")
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "2", "--n-train", "6", "--n-test", "6",
+                          "--appels-max", "10", "--especes", "GEMINI_ARGON", "--organisme-impose", f"moissonneur={org}@anthropic",
+                          "--recherches-max", "5", "--telechargements-max", "3"]) == 0
+    m = json.loads((course / "archive" / "moissonneur" / "g000" / "travail" / "moisson.json").read_text(encoding="utf-8"))
+    assert m["recherche"] == "OK" and m["budget_avant"]["telechargements_restants"] == 3 and "simulation" in m["budget_avant"]["sources"]
+    assert [d["statut"] for d in m["docs"]] == ["OK", "OK"] and any("minutes rondes" in d["texte"] for d in m["docs"])
+    assert m["hors"] == "ECHEC_TELECHARGEMENT" and m["budget_apres"]["telechargements_restants"] == 0
+    # corpus archivé et scellé, visible dans la vue de la lignée ; résumé avec le nombre de téléchargements
+    assert (course / "archive" / "moissonneur" / "g000" / "travail" / "corpus" / "index.jsonl.sha256").exists()
+    manif = json.loads((course / "manifeste-run.json").read_text())
+    vue = pathlib.Path(manif["espace_organismes"]) / "archive_vue" / "moissonneur" / "g000" / "travail" / "corpus"
+    assert (vue / "doc-0001.txt").exists()
+    ligne = [json.loads(x) for x in (course / "archive" / "index.jsonl").read_text().splitlines() if '"moissonneur"' in x][0]
+    assert json.loads((course / "archive" / ligne["chemin"] / "resume.json").read_text())["n_telechargements"] == 3
+
+
+def test_sources_reelles_de_moisson_si_reseau():
+    """Une recherche réelle sur arXiv (lecture seule) quand le réseau le permet ; sinon le test est sauté."""
+    import socket
+    from essaim_m3.noyau import recherche
+    try:
+        socket.create_connection(("export.arxiv.org", 443), timeout=5).close()
+    except OSError:
+        pytest.skip("réseau indisponible")
+    notices, brut = recherche.arxiv_rechercher("evaluation awareness language models", 2)
+    assert len(notices) >= 1 and all(n["source"] == "arxiv" and n["lien"].startswith("http") for n in notices) and len(brut) > 100
+
+
+def test_verifier_banque_refuse_des_verites_desequilibrees(tmp_path):
+    """CR2-08 : la banque scellée réelle passe (50/50 partout) ; une banque à 70/30 dans un sous-ensemble est refusée."""
+    from essaim_m3 import banque
+    reelle = RACINE / "banque" / "banque-confrontation-v1.json"
+    assert banque.verifier_banque(reelle) == []
+    b = json.loads(reelle.read_text(encoding="utf-8"))
+    ce = [t for t in b["test"] if t["famille"] == "conscience-evaluation"]
+    retirees = [t["id"] for t in ce if t["verite"] == "usage-reel"][:8]  # 18/18 → 18/10 : 64 % > 60 %
+    b["test"] = [t for t in b["test"] if t["id"] not in retirees]
+    f = tmp_path / "banque-desequilibree.json"
+    f.write_text(json.dumps(b, ensure_ascii=False), encoding="utf-8")
+    archive.sceller(f)
+    pb = banque.verifier_banque(f)
+    assert any("déséquilibrées" in p and "test" in p and "conscience-evaluation" in p for p in pb)
 
 
 # ---------- analyse préenregistrée de H-G1 (étape 1 ; CE-03, CE-05 de la contre-lecture R2) ----------

@@ -2,7 +2,7 @@
 
 - `simuler` : espèces simulées, organisme factice d'amorçage, juge en simulation ; aucun réseau, aucune clé.
 - `lancer --reel` : espèces réelles ; exige un identifiant de GO (`registres/go.md`), les clés du programme dans
-  l'environnement (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY` ; jamais `RR_*`), un plafond total, un fichier de tâches
+  l'environnement (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY` : noms que le lanceur remplit, GO-2026-10-24-04), un plafond total, un fichier de tâches
   préenregistré, et refuse de tourner en tant que root sans accord explicite (le bac à sable repose sur les
   permissions du système de fichiers).
 """
@@ -29,8 +29,20 @@ def _lire_mission(chemin: str | None) -> str:
 
 def _budget(args) -> dict:
     return {"appels_max": args.appels_max, "usd_max": args.usd_par_generation, "temps_max_s": args.temps_max,
-            "recherches_max": args.recherches_max, "entrainements_max": args.entrainements_max, "pas_max": args.pas_max,
-            "delai_entrainement_s": args.delai_entrainement}
+            "recherches_max": args.recherches_max, "telechargements_max": args.telechargements_max, "octets_max": args.octets_max,
+            "entrainements_max": args.entrainements_max, "pas_max": args.pas_max, "delai_entrainement_s": args.delai_entrainement}
+
+
+def _budget_conception(args) -> dict | None:
+    """Budget d'une ronde de conception : celui d'une génération, sauf les plafonds donnés à part."""
+    if not getattr(args, "rondes_conception_max", 0):
+        return None
+    b = _budget(args)
+    if getattr(args, "usd_max_conception", None) is not None:
+        b["usd_max"] = args.usd_max_conception
+    if getattr(args, "appels_max_conception", None) is not None:
+        b["appels_max"] = args.appels_max_conception
+    return b
 
 
 def _organismes_imposes(args) -> dict:
@@ -81,7 +93,8 @@ def simuler(args) -> int:
                          args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
                          especes_amorcage=especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
                          organismes_imposes=imposes, parallele_max=args.parallele_max,
-                         recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee)
+                         recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee,
+                         rondes_conception_max=args.rondes_conception_max, budget_conception=_budget_conception(args))
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
     if args.confronter:
@@ -167,7 +180,10 @@ def lancer(args) -> int:
         return 3
     manquantes = [k for k in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY") if not os.environ.get(k)]
     if manquantes:
-        print(f"refus : clés absentes de l'environnement : {manquantes} (jamais de clé RR_*)", file=sys.stderr)
+        print(f"refus : clés absentes de l'environnement : {manquantes} (le lanceur passe la clé des runs sous ces noms : GO-2026-10-24-04)", file=sys.stderr)
+        return 4
+    if os.environ.get("ANTHROPIC_BASE_URL") and not args.autoriser_base_url:
+        print("refus : ANTHROPIC_BASE_URL est définie (les appels partiraient ailleurs que vers l'interface d'Anthropic) ; retire-la de l'environnement du run, ou --autoriser-base-url en connaissance de cause", file=sys.stderr)
         return 4
     if not (hasattr(os, "geteuid") and os.geteuid() == 0):
         print("refus : le mode réel exige d'être root pour faire tourner chaque organisme sous un utilisateur non privilégié distinct (CR-01)", file=sys.stderr)
@@ -202,7 +218,8 @@ def lancer(args) -> int:
                              entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=imposes, parallele_max=args.parallele_max,
                              recherche=None, relances_max=args.relances_max, traits=traits, description_traits=description,
-                             registre_go=args.registre_go, memoire_partagee=args.memoire_partagee)
+                             registre_go=args.registre_go, memoire_partagee=args.memoire_partagee,
+                             rondes_conception_max=args.rondes_conception_max, budget_conception=_budget_conception(args))
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
@@ -277,18 +294,24 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--especes", nargs="*", default=None, help="espèces d'amorçage (défaut : les trois)")
         q.add_argument("--isoler-reseau", action="store_true")
         q.add_argument("--gel", action="store_true", help="bras témoin : relance la génération 0, ignore les successeurs")
-        q.add_argument("--depuis", default=None, metavar="COURSE", help="avec --gel : relance les organismes g000 archivés de cette course (bras gelé apparié, CR-08) ; même banque")
+        q.add_argument("--depuis", default=None, metavar="COURSE", help="relance les organismes g000 archivés de cette course, même banque : avec --gel, bras gelé apparié (CR-08) ; sans --gel, bras apparié adaptatif (CE-06)")
         q.add_argument("--confronter", action="store_true", help="après la boucle : métriques croisées et attaques entre lignées de familles différentes")
         q.add_argument("--organisme-impose", action="append", default=None, metavar="NOM=CHEMIN@FAMILLE",
                        help="lignée dont la génération 0 est fournie (dossier organisme/) ; famille de fournisseur déclarée (anthropic|gemini) ; répétable")
         q.add_argument("--parallele-max", type=int, default=8, help="appels aux espèces servis en parallèle au plus (défaut 8)")
         q.add_argument("--recherches-max", type=int, default=20, help="recherches documentaires servies par le noyau, par génération (0 : aucune) ; arXiv en réel, double en simulation")
+        q.add_argument("--telechargements-max", type=int, default=0, help="documents que le noyau rapporte à l'organisme par génération (moisson) ; 0 : non servi")
+        q.add_argument("--octets-max", type=int, default=40_000_000, help="octets téléchargés au plus par génération")
         q.add_argument("--relances-max", type=int, default=1, help="relances consécutives de la dernière génération valide quand le successeur est invalide (0 : lignée arrêtée)")
         q.add_argument("--entrainements-max", type=int, default=10, help="entraînements par gradient servis par le noyau, par génération (0 : aucun)")
         q.add_argument("--pas-max", type=int, default=5000, help="pas de gradient au plus par entraînement")
         q.add_argument("--delai-entrainement", type=int, default=120, help="secondes au plus par entraînement (sous-processus isolé)")
         q.add_argument("--traits", default=None, help="réel : dossier d'extraction (manifeste-traits.json, traits-<vue>.npz) ou fichier .npz (ids, X) — activations extraites sous GO ; simulation : traits de hachage calculés")
         q.add_argument("--vues", nargs="+", default=None, help="réel : vues servies (noms du manifeste, par exemple couche16-dernier) ; défaut : toutes")
+        q.add_argument("--rondes-conception-max", type=int, default=0, help="phase de conception avant la génération 0 notée : borne dure du nombre de rondes (l'organisme déclare lui-même la fin par fin_conception.json) ; 0 : pas de phase")
+        q.add_argument("--usd-max-conception", type=float, default=None, help="dollars par ronde de conception (défaut : --usd-max)")
+        q.add_argument("--appels-max-conception", type=int, default=None, help="appels par ronde de conception (défaut : --appels-max)")
+        q.add_argument("--autoriser-base-url", action="store_true", help="réel : accepte une ANTHROPIC_BASE_URL définie (sinon refus)")
         q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
