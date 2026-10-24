@@ -22,10 +22,12 @@ MAX_TOKENS_DEFAUT_ORGANISME = 4096  # si l'organisme ne fixe pas max_tokens ; il
 
 
 class ServeurAppels:
-    def __init__(self, appelant: Appelant, chemin_socket: str, appels_max: int, parallele_max: int = PARALLELE_MAX_DEFAUT, rechercheur=None, entraineur=None):
+    def __init__(self, appelant: Appelant, chemin_socket: str, appels_max: int, parallele_max: int = PARALLELE_MAX_DEFAUT, rechercheur=None,
+                 entraineur=None, telechargeur=None):
         self.appelant = appelant
         self.rechercheur = rechercheur  # `recherche.Rechercheur` ou None (recherche non servie dans ce run)
         self.entraineur = entraineur    # `entrainement.Entraineur` ou None (apprentissage par gradient non servi)
+        self.telechargeur = telechargeur  # `moisson.Telechargeur` ou None (téléchargement non servi)
         self.chemin = chemin_socket
         self.appels_max = int(appels_max)
         self.parallele_max = max(1, int(parallele_max))
@@ -110,7 +112,10 @@ class ServeurAppels:
                 return {"appels_restants": max(0, self.appels_max - self.n_appels),
                         "usd_restants": round(max(0.0, self.appelant.plafond_usd - self.appelant.depense_usd), 4),
                         "recherches_restantes": (max(0, self.rechercheur.recherches_max - self.rechercheur.compteur) if self.rechercheur is not None else 0),
-                        "entrainements_restants": (max(0, self.entraineur.entrainements_max - self.entraineur.compteur) if self.entraineur is not None else 0)}
+                        "entrainements_restants": (max(0, self.entraineur.entrainements_max - self.entraineur.compteur) if self.entraineur is not None else 0),
+                        "sources": (self.rechercheur.sources() if self.rechercheur is not None else []),
+                        "telechargements_restants": (max(0, self.telechargeur.telechargements_max - self.telechargeur.compteur) if self.telechargeur is not None else 0),
+                        "octets_restants": (max(0, self.telechargeur.octets_max_total - self.telechargeur.octets) if self.telechargeur is not None else 0)}
         if op == "entrainer":
             if self.entraineur is None:
                 return {"statut": "INDISPONIBLE", "identifiant": None, "problemes": ["apprentissage par gradient non servi dans ce run"]}
@@ -122,7 +127,11 @@ class ServeurAppels:
         if op == "rechercher":
             if self.rechercheur is None:
                 return {"statut": "INDISPONIBLE", "source": None, "resultats": [], "identifiant": None, "echec": "recherche non servie dans ce run"}
-            return self.rechercheur.rechercher(req.get("requete"), req.get("n", 5), role=str(req.get("role", ""))[:40])
+            return self.rechercheur.rechercher(req.get("requete"), req.get("n", 5), role=str(req.get("role", ""))[:40], source=req.get("source"))
+        if op == "telecharger":
+            if self.telechargeur is None:
+                return {"statut": "INDISPONIBLE", "identifiant": None, "texte": "", "echec": "téléchargement non servi dans ce run"}
+            return self.telechargeur.telecharger(req.get("reference"), role=str(req.get("role", ""))[:40])
         if op != "appeler":
             return {"statut": "ANOMALIE", "texte": "", "echec": f"opération inconnue : {op!r}"}
         espece = req.get("espece")

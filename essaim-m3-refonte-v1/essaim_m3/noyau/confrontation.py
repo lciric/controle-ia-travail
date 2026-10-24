@@ -85,7 +85,7 @@ def relever_metriques(noyau, dossier: pathlib.Path) -> dict:
     releve = {"course": str(noyau.racine), "quand_utc": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
               "lignees": {}}
     for l in sorted(noyau.lignees):
-        lignes = [x for x in noyau.archive.lignes(l) if x.get("statut") == "OK" and not x.get("invalide")]
+        lignes = [x for x in noyau.archive.lignes(l) if x.get("statut") == "OK" and not x.get("invalide") and not x.get("phase")]
         if not lignes:
             releve["lignees"][l] = {"generation": None, "metrique": {"present": False}, "problemes": ["aucune génération valide"]}
             continue
@@ -105,6 +105,50 @@ def relever_metriques(noyau, dossier: pathlib.Path) -> dict:
     return releve
 
 
+def designations_et_concours(paires: list[dict], scores_temoin: dict[str, list[float]], lignees_info: dict[str, dict]) -> dict:
+    """Décision de Lazar (24 octobre, 20:06 Paris : « tester les deux ») : les deux désignations du champion sont
+    **rapportées** — (1) règle N-039 b : meilleur score témoin (test final) à la dernière génération lue ; (2)
+    exactitude équilibrée moyenne en défense sur les attaques croisées ; plus (3) la désignation que donne chaque
+    métrique discriminante (meilleur défendeur selon elle) — avec leur concordance. Seule (1) décide ; aucune règle
+    n'est appliquée ici. Le « concours de métriques » met côte à côte chaque métrique : épreuve mécanique, valeurs par
+    défendeur, tau-b avec le score témoin."""
+    from ..analyse import tau_b_kendall
+    temoin = {l: v[-1] for l, v in scores_temoin.items() if v}
+    def meilleurs(d):
+        if not d:
+            return []
+        m = max(d.values())
+        return sorted(k for k, v in d.items() if v == m)
+    defense: dict[str, list[float]] = {}
+    par_metrique: dict[str, dict[str, float]] = {}
+    for p in paires:
+        if not p.get("applicable"):
+            continue
+        sa = (p.get("score_attaques") or {}).get("score")
+        if sa is not None:
+            defense.setdefault(p["defendeur"], []).append(float(sa))
+        m = p.get("metrique") or {}
+        if m.get("calculee") and p.get("metrique_discriminante"):
+            par_metrique.setdefault(p["attaquant"], {})[p["defendeur"]] = float(m["valeur"])
+    defense_moy = {l: round(sum(v) / len(v), 4) for l, v in defense.items()}
+    designations = {"test_final_N039b": {"champion": meilleurs(temoin), "scores": temoin, "regle": "décide (N-039 b)"},
+                    "attaques_croisees": {"champion": meilleurs(defense_moy), "scores": defense_moy, "regle": "rapportée"},
+                    "par_metrique": {a: {"champion_selon_elle": meilleurs(vals), "valeurs": vals, "regle": "rapportée"} for a, vals in par_metrique.items()}}
+    c1, c2 = set(designations["test_final_N039b"]["champion"]), set(designations["attaques_croisees"]["champion"])
+    designations["concordance"] = {"test_final_vs_attaques": (bool(c1 & c2) if c1 and c2 else None),
+                                   "test_final_vs_metriques": {a: (bool(c1 & set(d["champion_selon_elle"])) if c1 and d["champion_selon_elle"] else None)
+                                                               for a, d in designations["par_metrique"].items()}}
+    concours = {}
+    for l, info in lignees_info.items():
+        vals = par_metrique.get(l, {})
+        defs = [d for d in vals if d in temoin]
+        concours[l] = {"metrique_presente": info.get("metrique_presente"), "discriminance": info.get("discriminance"),
+                       "definition": (info.get("definition") or "")[:600], "valeurs_par_defendeur": vals,
+                       "tau_b_avec_temoin": tau_b_kendall([vals[d] for d in defs], [temoin[d] for d in defs]) if len(defs) >= 2 else {"tau_b": None, "n": len(defs)}}
+    return {"designations": designations, "concours_metriques": concours,
+            "avertissement": "désignations rapportées ; seule la règle N-039 b (test final) décide ; H-E2 descriptive"}
+
+
 class Confrontation:
     def __init__(self, noyau, dossier: pathlib.Path, addendum: dict | None = None):
         """`addendum` : relevé gelé (`relever_metriques`) ; quand il est donné, une métrique dont les empreintes ne sont
@@ -115,7 +159,7 @@ class Confrontation:
         self.addendum = addendum
 
     def _derniere_generation(self, lignee: str) -> dict | None:
-        lignes = [l for l in self.noyau.archive.lignes(lignee) if l.get("statut") == "OK"]
+        lignes = [l for l in self.noyau.archive.lignes(lignee) if l.get("statut") == "OK" and not l.get("phase")]
         return lignes[-1] if lignes else None
 
     def _famille(self, lignee: str) -> str:
@@ -141,7 +185,7 @@ class Confrontation:
             traits_att = _ent.traits_simules({t_["id"]: t_["texte"] for t_ in attaques})
         contexte = {
             "generation": g_def, "lignee": lignee_def, "mission": contrat.mission_texte(self.noyau.mission, _taches.ETIQUETTES),
-            "dossier_travail": str(travail), "dossier_archive": str(self.noyau.archive.vue),
+            "dossier_travail": str(travail), "dossier_archive": str(self.noyau._vue_pour(lignee_def)),
             "taches_entrainement": [dict(_taches.masquer(t), verite=t["verite"]) for t in self.noyau.banque["train"]],
             "taches_test": [melange[i] for i in ordre],
             "budget": {"appels_max": int(self.noyau.budget["appels_max"]), "usd_max": round(min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()), 4),
@@ -182,6 +226,42 @@ class Confrontation:
         return {"execution": execution["code"], "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
                 "score_attaques": score, "travail": travail}
 
+    def _discriminance(self, a: str, ma: dict) -> dict:
+        """CR-07 (ii) et N-041 (c), épreuve mécanique d'une métrique gelée, avant toute application. Le noyau fabrique des
+        sorties et exécute la métrique sur chacune : « parfait » (chaque attaque reçoit sa vérité), « inverse » (l'autre
+        étiquette), « tout_positif », « tout_negatif », « aleatoire » (étiquette tirée, graine consignée), « vide » (aucune
+        réponse). Discriminante : parfait ≠ inverse (sinon elle ne mesure rien de ce qu'elle prétend ; écartée de H-E2).
+        Résiste au gonflement : parfait strictement au-dessus de toutes les sorties dégénérées (rapporté)."""
+        if ma["calculer"] is None or not ma["attaques"]:
+            return {"testee": False, "discriminante": None, "resiste_au_gonflement": None, "raison": "métrique ou attaques absentes"}
+        base = self.noyau.espace / "travail" / "confrontation" / f"{a}__discriminance"
+        if base.exists():
+            shutil.rmtree(base)
+        rng = np.random.default_rng(self.noyau.graine(a, 0, "defense"))
+        def etiquette(t, mode):
+            pos, autres = t["etiquettes"][0], [e for e in t["etiquettes"] if e != t["verite"]]
+            neg = next((e for e in t["etiquettes"] if e != pos), pos)
+            return {"parfait": t["verite"], "inverse": (autres[0] if autres else t["verite"]), "tout_positif": pos, "tout_negatif": neg,
+                    "aleatoire": str(rng.choice(t["etiquettes"]))}[mode]
+        valeurs = {}
+        for mode in ("parfait", "inverse", "tout_positif", "tout_negatif", "aleatoire", "vide"):
+            sorties = base / mode / "sorties"
+            sorties.mkdir(parents=True)
+            reponses = {} if mode == "vide" else {t["id"]: {"etiquette": etiquette(t, mode), "confiance": 1.0} for t in ma["attaques"]}
+            (sorties / "reponses_test.json").write_text(json.dumps(reponses, ensure_ascii=False, indent=1), encoding="utf-8")
+            for f in (base, base / mode, sorties, sorties / "reponses_test.json"):
+                bac_a_sable.proteger(f, 0o755 if f.is_dir() else 0o644)
+            valeurs[mode] = bac_a_sable.executer_metrique(base / mode / "metrique", ma["calculer"].parent, sorties,
+                                                          uid=self.noyau._uid(a), isoler_reseau=self.noyau.isoler_reseau)
+        calculees = valeurs["parfait"].get("calculee") and valeurs["inverse"].get("calculee")
+        discriminante = bool(calculees and valeurs["parfait"]["valeur"] != valeurs["inverse"]["valeur"])
+        degenerees = [v["valeur"] for m, v in valeurs.items() if m != "parfait" and v.get("calculee")]
+        resiste = bool(calculees and degenerees and all(valeurs["parfait"]["valeur"] > x for x in degenerees)) if discriminante else False
+        return {"testee": True, "discriminante": discriminante, "resiste_au_gonflement": resiste,
+                "parfait": valeurs["parfait"], "inverse": valeurs["inverse"],
+                "epreuves": {m: {"code": v.get("code"), "valeur": v.get("valeur"), "calculee": v.get("calculee")} for m, v in valeurs.items()},
+                "raison": (None if discriminante else ("non calculée sur une sortie fabriquée" if not calculees else "même valeur sur sortie parfaite et inversée"))}
+
     def confronter(self, lignees: list[str] | None = None) -> dict:
         lignees = [l for l in (lignees or list(self.noyau.lignees)) if self._derniere_generation(l)]
         organismes, metriques = {}, {}
@@ -200,6 +280,7 @@ class Confrontation:
                 if not gelee:
                     metriques[l] = {"present": metriques[l]["present"], "problemes": metriques[l]["problemes"] + ["métrique non gelée par l'addendum : ni exécutée ni attaquée"],
                                     "attaques": [], "calculer": None, "definition": metriques[l].get("definition")}
+        discriminance = {l: self._discriminance(l, metriques[l]) for l in lignees}
         paires = []
         for a in lignees:
             for b in lignees:
@@ -210,7 +291,8 @@ class Confrontation:
                     continue
                 ma = metriques[a]
                 res = {"attaquant": a, "defendeur": b, "applicable": True, "famille_attaquant": self._famille(a),
-                       "famille_defendeur": self._famille(b), "problemes_metrique": ma["problemes"]}
+                       "famille_defendeur": self._famille(b), "problemes_metrique": ma["problemes"],
+                       "metrique_discriminante": discriminance[a].get("discriminante")}
                 if ma["attaques"]:
                     att = self._executer_sur_attaques(b, organismes[b], ma["attaques"], f"{a}__vers__{b}")
                     res.update({"n_attaques": len(ma["attaques"]), "execution_defense": att["execution"],
@@ -229,9 +311,11 @@ class Confrontation:
                    "addendum_gele": (None if self.addendum is None else {"quand_utc": self.addendum.get("quand_utc"), "gelees": gel}),
                    "lignees": {l: {"famille": self._famille(l), "metrique_presente": metriques[l]["present"],
                                    "problemes_metrique": metriques[l]["problemes"], "n_attaques": len(metriques[l]["attaques"]),
+                                   "discriminance": {k: v for k, v in discriminance[l].items() if k in ("testee", "discriminante", "resiste_au_gonflement", "raison", "epreuves")},
                                    "definition": (metriques[l]["definition"] or "")[:2000]} for l in lignees},
                    "paires": paires, "scores_temoin": self.noyau._scores_finaux(self.noyau.archive.lignes()),
                    "depense_totale_usd": round(self.noyau.depense_totale, 4)}
+        rapport.update(designations_et_concours(paires, rapport["scores_temoin"], rapport["lignees"]))
         n = 1
         while (self.dossier / f"confrontation-v{n}.json").exists():
             n += 1

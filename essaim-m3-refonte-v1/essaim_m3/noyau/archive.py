@@ -47,7 +47,7 @@ def archiver_organisme(organisme: pathlib.Path, cible: pathlib.Path) -> str:
     return empreinte_fichier(cible)
 
 
-CHAMPS_VUE = ("lignee", "generation", "score", "statut", "cout_usd", "n_appels", "successeur", "metrique_proposee",
+CHAMPS_VUE = ("lignee", "generation", "phase", "score", "statut", "cout_usd", "n_appels", "successeur", "metrique_proposee",
               "n_reponses_test", "empreinte_organisme", "quand_utc", "refus_noyau", "problemes_successeur", "relance", "impose", "famille")
 
 
@@ -69,16 +69,22 @@ class Archive:
         except OSError:
             pass
 
-    def dossier(self, lignee: str, generation: int) -> pathlib.Path:
-        d = self.racine / lignee / f"g{generation:03d}"
+    @staticmethod
+    def nom_generation(generation: int, phase: str | None = None) -> str:
+        """`gNNN` pour une génération notée ; `cNNN` pour une ronde de la phase de conception (jamais notée)."""
+        return f"{'c' if phase == 'conception' else 'g'}{generation:03d}"
+
+    def dossier(self, lignee: str, generation: int, phase: str | None = None) -> pathlib.Path:
+        d = self.racine / lignee / self.nom_generation(generation, phase)
         if d.exists():
             raise FileExistsError(f"génération déjà archivée : {d} (rien n'est réécrit)")
         d.mkdir(parents=True)
         return d
 
     def deposer(self, lignee: str, generation: int, organisme: pathlib.Path, dossier_travail: pathlib.Path,
-                journal_appels: pathlib.Path | None, score: dict, resume: dict, score_final: dict | None = None) -> dict:
-        d = self.dossier(lignee, generation)
+                journal_appels: pathlib.Path | None, score: dict, resume: dict, score_final: dict | None = None,
+                phase: str | None = None) -> dict:
+        d = self.dossier(lignee, generation, phase)
         empreinte = archiver_organisme(organisme, d / "organisme.tar.gz")
         travail = d / "travail"
         shutil.copytree(dossier_travail, travail, symlinks=False,
@@ -96,7 +102,7 @@ class Archive:
         if (travail / "reponses_test.json").exists():
             shutil.move(str(travail / "reponses_test.json"), str(juge / "reponses_test.json"))
             sceller(juge / "reponses_test.json")
-        ligne = {"lignee": lignee, "generation": generation, "score": score.get("score"), "statut": resume.get("statut"),
+        ligne = {"lignee": lignee, "generation": generation, "phase": phase, "score": score.get("score"), "statut": resume.get("statut"),
                  "cout_usd": resume.get("cout_usd"), "n_appels": resume.get("n_appels"), "chemin": str(d.relative_to(self.racine)),
                  "empreinte_organisme": empreinte, "successeur": resume.get("successeur"),
                  "impose": resume.get("impose"), "famille": resume.get("famille"),
@@ -109,7 +115,7 @@ class Archive:
         with self.index.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(ligne, ensure_ascii=False, sort_keys=True) + "\n")
         # vue pour les organismes : code, résumé public, travail sans le juge ni le journal du noyau
-        v = self.vue / lignee / f"g{generation:03d}"
+        v = self.vue / lignee / self.nom_generation(generation, phase)
         v.mkdir(parents=True, exist_ok=True)
         shutil.copy2(d / "organisme.tar.gz", v / "organisme.tar.gz")
         shutil.copy2(d / "organisme.tar.gz.sha256", v / "organisme.tar.gz.sha256")
@@ -136,7 +142,7 @@ class Archive:
         return [l for l in out if lignee is None or l["lignee"] == lignee]
 
     def historique(self, lignee: str) -> list[dict]:
-        return [{"generation": l["generation"], "lignee": l["lignee"], "score": l["score"], "statut": l["statut"],
+        return [{"generation": l["generation"], "phase": l.get("phase"), "lignee": l["lignee"], "score": l["score"], "statut": l["statut"],
                  "cout_usd": l["cout_usd"], "n_appels": l["n_appels"], "successeur": l.get("successeur"),
                  "problemes_successeur": l.get("problemes_successeur", []), "relance": l.get("relance", False), "invalide": l.get("invalide", False)}
                 for l in self.lignes(lignee)]

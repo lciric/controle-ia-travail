@@ -109,23 +109,43 @@ def recherche_simulee(rng=None):
 class Rechercheur:
     """Un rechercheur par génération : plafond, journal, réponses brutes. Sûr sous fils."""
 
-    def __init__(self, dossier: str | pathlib.Path, recherches_max: int, backend=None, source: str = "arxiv"):
+    def __init__(self, dossier: str | pathlib.Path, recherches_max: int, backend=None, source: str = "arxiv", telechargeur=None):
+        """`backend` : un double (simulation) qui sert toutes les sources ; sinon les sources réelles de `moisson.sources_disponibles()`
+        (arXiv, OpenAlex, Semantic Scholar, web par clé). `telechargeur` : reçoit les liens rendus (chaîne de provenance)."""
         self.dossier = pathlib.Path(dossier)
         (self.dossier / "recherches").mkdir(parents=True, exist_ok=True)
         self.journal = self.dossier / "journal-recherches.jsonl"
         self.recherches_max = max(0, int(recherches_max))
-        self.backend = backend if backend is not None else arxiv_rechercher
+        self.backend = backend
         self.source = source if backend is None else getattr(backend, "source", source)
+        self.telechargeur = telechargeur
         self.compteur = 0
         self._verrou = threading.Lock()
+
+    def sources(self) -> list[str]:
+        if self.backend is not None:
+            return ["arxiv", "openalex", "semanticscholar", "web", "simulation"]
+        from .moisson import sources_disponibles
+        import os
+        return [n for n in sources_disponibles() if n != "web" or os.environ.get("BRAVE_API_KEY")]
+
+    def _moteur(self, source: str):
+        if self.backend is not None:
+            return self.backend
+        from .moisson import sources_disponibles
+        return sources_disponibles()[source]
 
     def _journaliser(self, ligne: dict):
         with self.journal.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(ligne, ensure_ascii=False, sort_keys=True) + "\n")
 
-    def rechercher(self, requete, n=5, role: str = "") -> dict:
+    def rechercher(self, requete, n=5, role: str = "", source: str | None = None) -> dict:
+        source = (source or self.source or "arxiv")
+        if not isinstance(source, str) or source not in self.sources():
+            return {"statut": "SOURCE_INCONNUE", "source": str(source)[:40], "resultats": [], "identifiant": None,
+                    "echec": f"source inconnue ou non configurée ; sources : {self.sources()}"}
         if not isinstance(requete, str) or not requete.strip() or len(requete) > REQUETE_MAX:
-            return {"statut": "ANOMALIE", "source": self.source, "resultats": [], "identifiant": None,
+            return {"statut": "ANOMALIE", "source": source, "resultats": [], "identifiant": None,
                     "echec": f"requête vide, non textuelle ou plus longue que {REQUETE_MAX} caractères"}
         try:
             n = max(1, min(N_MAX, int(n)))
@@ -135,24 +155,26 @@ class Rechercheur:
         with self._verrou:
             if self.compteur >= self.recherches_max:
                 self._journaliser({"id": None, "role": role, "requete": requete, "sha256_requete": _empreinte(requete), "n_demande": n,
-                                   "statut": "PLAFOND", "quand_utc": _heure(), "source": self.source})
-                return {"statut": "PLAFOND", "source": self.source, "resultats": [], "identifiant": None,
+                                   "statut": "PLAFOND", "quand_utc": _heure(), "source": source})
+                return {"statut": "PLAFOND", "source": source, "resultats": [], "identifiant": None,
                         "echec": f"plafond de {self.recherches_max} recherches atteint"}
             self.compteur += 1
             ident = f"recherche-{self.compteur:04d}"
         debut = _heure()
         try:
-            resultats, brut = self.backend(requete, n)
+            resultats, brut = self._moteur(source)(requete, n)
             statut, echec = "OK", None
         except Exception as e:  # réseau, analyse, hôte : jamais un texte d'erreur en guise de résultat
             resultats, brut, statut, echec = [], b"", "ECHEC_RECHERCHE", f"{type(e).__name__}: {str(e)[:200]}"
         fin = _heure()
+        if self.telechargeur is not None and resultats:
+            self.telechargeur.noter_resultats(resultats)
         with self._verrou:
             (self.dossier / "recherches" / f"{ident}.brut").write_bytes(brut)
             self._journaliser({"id": ident, "role": str(role)[:40], "requete": requete, "sha256_requete": _empreinte(requete),
                                "n_demande": n, "n_rendus": len(resultats), "sha256_brut": _empreinte(brut), "octets_brut": len(brut),
-                               "statut": statut, "echec": echec, "debut_utc": debut, "fin_utc": fin, "source": self.source})
-        return {"statut": statut, "source": self.source, "resultats": resultats[:n], "identifiant": ident, "echec": echec}
+                               "statut": statut, "echec": echec, "debut_utc": debut, "fin_utc": fin, "source": source})
+        return {"statut": statut, "source": source, "resultats": resultats[:n], "identifiant": ident, "echec": echec}
 
     def lire_journal(self) -> list[dict]:
         if not self.journal.exists():

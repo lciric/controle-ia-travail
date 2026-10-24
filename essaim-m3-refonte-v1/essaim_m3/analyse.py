@@ -132,10 +132,13 @@ def tau_b_kendall(x: list[float], y: list[float]) -> dict:
 
 def concordance_h_e2(rapport_confrontation: dict, scores_temoin: dict[str, float]) -> dict:
     """Pour chaque attaquant a (métrique gelée), tau-b entre la valeur de sa métrique sur chaque défendeur et le score
-    témoin du défendeur ; les paires non calculées retirent le défendeur pour cette métrique."""
+    témoin du défendeur ; les paires non calculées retirent le défendeur pour cette métrique ; une métrique non
+    discriminante (CR-07 ii) est écartée entière."""
     par_attaquant: dict[str, dict[str, float]] = {}
     for p in rapport_confrontation.get("paires", []):
         if not p.get("applicable") or not (p.get("metrique") or {}).get("calculee"):
+            continue
+        if p.get("metrique_discriminante") is False:  # CR-07 (ii) : même valeur sur sortie parfaite et inversée
             continue
         par_attaquant.setdefault(p["attaquant"], {})[p["defendeur"]] = float(p["metrique"]["valeur"])
     sortie = {}
