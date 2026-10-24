@@ -127,3 +127,32 @@ branches `canal/session-depot-reprise-nNN`) ; une heure qui n'y figure pas est d
   contre-lecture ; scellement ; courses réelles des organismes.
 - GO du brainstorm du lot 3 (collisionneur) : à confirmer par Lazar.
 - N-036, N-037 ; contre-lecture de `journal/synthese-v1.md`.
+
+## 19:00 à 20:22 — étape 1 : extraction finie, R2 en trois temps, code réuni ; brainstorm du lot 3 (entrée écrite à 20:22 UTC)
+
+- 19:10:10 : traits poussés par l'instance (`donnees/traits-etape1-v1`, `6479769`) ; 19:10:24 arrêt par la surveillance ;
+  19:11:58 destruction par identifiant ; vérifiés (50 fichiers, formes, nombres finis, révision du cliché) ; 0,29 USD (R-360).
+  Fait inattendu : Vast.ai a relancé le conteneur après la sortie de l'amorce ; la garde R12 de l'amorce a refusé.
+- Brainstorm du lot 3 (GO-2026-10-24-06 donné par Lazar entre 19:01 et 19:07) : premier run arrêté sans dépense (clé sans
+  espace de travail : en-tête `anthropic-workspace-id` exigé) ; second run avec l'en-tête par `ANTHROPIC_CUSTOM_HEADERS`
+  (lu par le SDK) : Fable OK, Opus refus « cyber » (jamais reformulé), Argon HTTP 402 (crédit du compte épuisé) ; 1,01 USD
+  (R-361). Décisions demandées à Lazar : recharge Gemini ; continuer sans Opus.
+- Contre-lecture n° 1 de l'étape 1 : non scellable ; la plus grave, CE-02 : l'objectif écrit par l'organisme tournait en root
+  sans isolation (vérités du test final lisibles). Hypothèse retenue par l'essai : l'isolation sous un utilisateur propre à
+  l'entraîneur ferme la voie (sain : fichier 0600 non lu ; artefact : lu sans isolation). Code : vues, CE-02, CE-06, CE-07,
+  analyse de H-G1 (R-362).
+- v2 écrite (six paires, puissance simulée 44 % à +0,10, 0 % de faux confirmé), contre-lecture n° 2 : scellable après
+  corrections (nom de lignée `gemini-argon`, commande du bras B, différences entre bras à nommer) ; corrections de code
+  `4f02bd8` (ordre de ronde trié, essai sensible ; artefact de `_lire_resultat` ; déclencheurs d'audit) (R-364).
+- Décision de Lazar relayée (21:06, heure de Paris) : conception et moisson avant scellement : v3 écrite avec les sections de
+  « conv-audit », bornes alignées sur sa v6 ; pire cas 3 242 USD, attendu de l'ordre de 700 ; contre-lecture n° 3 lancée.
+- Code : deux fusions croisées (la mienne `e75e726`, la sienne `5259cad`, puis `4af2794`) ; l'étape 1 tourne sur
+  `4f02bd8` (texte et code relus ensemble) ; réunion des têtes après le scellement.
+- Contre-lecture n° 3 de la v6 de la confrontation lancée pour « conv-audit ».
+- Erreur de ma part, corrigée : heures écrites à l'estime (état du programme, en-tête de mon message n° 13, v3) ; règle
+  reprise : aucune heure sans `date -u`.
+
+## Ouvert à 20:22 UTC
+
+- Contre-lectures n° 3 (étape 1 v3 ; confrontation v6) ; scellement de la v3 ; répétition mécanique ; quatre courses.
+- Recharge Gemini (Lazar) ; brainstorm : continuer sans Opus ? ; GO de la confrontation (3 512 USD au pire cas).
