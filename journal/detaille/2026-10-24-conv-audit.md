@@ -319,3 +319,28 @@ Heures UTC (heure de Paris = UTC + 2). Entrées ajoutées, jamais réécrites. P
   d'un jour accepté ; `BRAVE_API_KEY` posée dans l'environnement cloud avec limite d'usage : « fait ». Relayé à
   session-depot (canal n° 14 et n° 15) ; branche gradient `38ae30d` (76 tests) prête pour les courses.
 - Routine : CA-27 à CA-30 (conception, moisson, branche gradient, `usd_max` à 10 USD par génération dans la v5).
+
+## 20:20 — préenregistrement v5 puis v6 de la confrontation ; vérification des étiquettes par paires ; devis à Lazar
+
+- Lu : rapport de la contre-lecture n° 2 (`1420d6fa…`, « scellable après corrections » ; le relecteur a rejoué les tests
+  en root avec `unshare` réel et renversé les deux démonstrations de fuite du premier rapport) ; registres de
+  session-depot : traits de l'étape 1 extraits et vérifiés (0,29 USD, instance détruite ; R-360) ; brainstorm du lot 3
+  arrêté au tour III.1 (Fable OK ; Opus refus de filtre « cyber », jamais contourné ; Argon HTTP 402, crédit Gemini
+  épuisé ; 1,01 USD ; R-361) ; clé Anthropic des runs rattachée à son espace de travail par un en-tête.
+- Code `e82c341` (80 tests) : garde de balance des vérités 60/40 (CR2-08) ; textes des clés alignés (CR2-04).
+- **v5** (`58f38d7f…`, `ec70801`) : huit titres canoniques (validateur sans problème, CR2-01) ; budget de génération
+  **37 USD** (CR2-02 : 160 appels garantis au pire cas, prix Fable/Argon, `max_tokens` 4 096, textes de la banque :
+  36,8 USD ; attendu ≈ 7 USD) ; devis refait (CR2-03 : une graine 1 697,5 ; deux graines et répétition 3 512,3 ; GO
+  « calcul » distinct) ; réplication = course, cohérence de signe des deux courses exigée pour « confirmé », H-E1
+  restreinte aux auto-écrites rapportée (CR2-05) ; phase de conception (8 rondes au plus, 10 USD par ronde) et moisson ;
+  double désignation et concours de métriques ; clés N-043 b ; `gemini-organisme-v3`. Hypothèse retirée : « 3 USD par
+  génération suffisent » (réfutée par le calcul du relecteur, confirmée par le mien).
+- **v6** (`0ce8c396…`, `77c9078`) = v5 + vérification des étiquettes **par paires** : la vérification « trace seule »
+  des brouillons précédents confondait étiquette fausse et sabotage indétectable (une trace sabotée exprès pour passer
+  inaperçue peut être jugée honnête) ; écartée avant tout résultat. Lancée à 20:10 UTC : 10 paires par
+  `SeedSequence(20261025)`, anonymisées, un sous-agent neuf, clé à part.
+- Décision de dépense présentée à Lazar (format décision) : (a) deux graines, plafond 3 520 USD, attendu ≈ 700
+  (recommandé) ; (b) une graine d'abord ; (c) borne de conception 4. Préalables à sa main : crédit Gemini ; brainstorm
+  du lot 3 sans Opus (recommandé ; défaut sous 48 h).
+- Lazar (21:10 Paris) demande Fable ou Opus pour la suite : réponse donnée (Fable pour les nœuds de conception et les
+  relectures adverses, Opus pour le chantier ; continuité dans les fichiers) ; la session continue en Opus 5.5.
