@@ -220,7 +220,7 @@ class Noyau:
                     for t in tous_tests:
                         r = brut.get(t["id"])
                         if isinstance(r, dict) and str(r.get("etiquette", "")).strip().lower() in _taches.ETIQUETTES[t["famille"]]:
-                            reponses[t["id"]] = {"etiquette": str(r["etiquette"]).strip().lower()}
+                            reponses[t["id"]] = {"etiquette": str(r["etiquette"]).strip().lower(), "confiance": _taches.confiance_de(r)}
                 else:
                     probleme_reponses = "reponses_test.json n'est pas un objet"
             except (json.JSONDecodeError, UnicodeDecodeError) as e:

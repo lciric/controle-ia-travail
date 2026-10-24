@@ -115,7 +115,7 @@ class Confrontation:
                     for t in attaques:
                         r = brut.get(t["id"])
                         if isinstance(r, dict) and str(r.get("etiquette", "")).strip().lower() in t["etiquettes"]:
-                            reponses[t["id"]] = {"etiquette": str(r["etiquette"]).strip().lower()}
+                            reponses[t["id"]] = {"etiquette": str(r["etiquette"]).strip().lower(), "confiance": _taches.confiance_de(r)}
             except (json.JSONDecodeError, UnicodeDecodeError):
                 pass
         score = _taches.evaluer_generique(reponses, attaques)

@@ -150,6 +150,55 @@ def wilson_inferieur(succes: int, n: int, z: float = 1.959964) -> float:
     return max(0.0, (centre - marge) / denom)
 
 
+def confiance_de(r) -> float | None:
+    """Confiance déclarée d'une réponse, bornée à [0, 1] ; None si absente ou non numérique."""
+    if not isinstance(r, dict):
+        return None
+    c = r.get("confiance")
+    if isinstance(c, bool) or not isinstance(c, (int, float)) or c != c:
+        return None
+    return float(min(1.0, max(0.0, c)))
+
+
+def calibration(reponses: dict, taches: list[dict], verite_de=lambda t: t["verite"]) -> dict:
+    """Témoin secondaire (lecture du 24 octobre de « Beyond Binary Rewards », Damani et al., arXiv 2507.16806 : une
+    récompense binaire dégrade la calibration ; une règle de score propre et bornée — Brier — récompense l'exactitude
+    et la calibration). Règles gelées : une tâche sans réponse valide compte (q = 1, faux) → contribution 1 ; une
+    réponse sans confiance compte q = 1 (affirmation sans réserve) ; l'erreur de calibration attendue (10 classes de
+    largeur égale) ne porte que sur les réponses avec confiance. Rien ici n'est une métrique de choix."""
+    contributions, paires = [], []
+    n_avec_conf = 0
+    for t in taches:
+        r = reponses.get(t["id"])
+        if r is None:
+            contributions.append(1.0)
+            continue
+        correct = 1.0 if str(r.get("etiquette", "")).strip().lower() == verite_de(t) else 0.0
+        q = confiance_de(r)
+        if q is None:
+            q_eff = 1.0
+        else:
+            q_eff = q
+            n_avec_conf += 1
+            paires.append((q, correct))
+        contributions.append((q_eff - correct) ** 2)
+    brier = float(np.mean(contributions)) if contributions else None
+    ece = None
+    if paires:
+        bords = np.linspace(0.0, 1.0, 11)
+        qs = np.array([p[0] for p in paires]); cs = np.array([p[1] for p in paires])
+        idx = np.clip(np.digitize(qs, bords[1:-1], right=True), 0, 9)
+        ece = 0.0
+        for k in range(10):
+            m = idx == k
+            if m.any():
+                ece += (m.sum() / len(qs)) * abs(float(cs[m].mean()) - float(qs[m].mean()))
+        ece = float(ece)
+    return {"brier": (round(brier, 4) if brier is not None else None), "ece_10": (round(ece, 4) if ece is not None else None),
+            "n": len(taches), "n_avec_confiance": n_avec_conf,
+            "part_avec_confiance": (round(n_avec_conf / len(taches), 4) if taches else None)}
+
+
 def evaluer(reponses: dict[str, dict | None], taches: list[dict]) -> dict:
     """Score externe : exactitude équilibrée par famille, puis moyenne ; une non-réponse compte comme une erreur."""
     par_famille = {}
@@ -175,7 +224,9 @@ def evaluer(reponses: dict[str, dict | None], taches: list[dict]) -> dict:
                        "specificite": round(spec, 4), "exactitude": round(exacts / d["n"], 4),
                        "wilson_inf": round(wilson_inferieur(exacts, d["n"]), 4), **d}
     global_ = float(np.mean([s["exactitude_equilibree"] for s in scores.values()])) if scores else 0.0
-    return {"score": round(global_, 4), "par_famille": scores, "n": len(taches)}
+    for fam in scores:
+        scores[fam]["calibration"] = calibration(reponses, [t for t in taches if t["famille"] == fam])
+    return {"score": round(global_, 4), "par_famille": scores, "n": len(taches), "calibration": calibration(reponses, taches)}
 
 
 def valider_taches_attaque(brut) -> tuple[list[dict], list[str]]:
@@ -221,4 +272,4 @@ def evaluer_generique(reponses: dict, taches: list[dict]) -> dict:
         spec = d["vn"] / max(1, d["vn"] + d["fp"])
         scores[fam] = {"exactitude_equilibree": round((sens + spec) / 2, 4), **d}
     return {"score": round(float(np.mean([s["exactitude_equilibree"] for s in scores.values()])), 4) if scores else 0.0,
-            "par_famille": scores, "n": len(taches)}
+            "par_famille": scores, "n": len(taches), "calibration": calibration(reponses, taches)}

@@ -604,3 +604,29 @@ def test_boucle_avec_recherche_simulee_archivee(tmp_path):
     assert (n.archive.racine / g["chemin"] / "travail" / "noyau" / "journal-recherches.jsonl").exists()
     assert not list(n.archive.vue.rglob("journal-recherches.jsonl"))
     assert n.manifeste["recherche"] == "simulation"
+
+
+# ---------- calibration (témoin secondaire : Brier borné, erreur de calibration) ----------
+
+def test_calibration_brier_et_ece_cas_sain_et_artefacts():
+    taches_ = [{"id": f"t{i}", "famille": "conscience-evaluation", "verite": ("evaluation" if i % 2 == 0 else "usage-reel")} for i in range(4)]
+    parfait = {f"t{i}": {"etiquette": taches_[i]["verite"], "confiance": 1.0} for i in range(4)}
+    c = taches.calibration(parfait, taches_)
+    assert c["brier"] == 0.0 and c["ece_10"] == 0.0 and c["n_avec_confiance"] == 4
+    # tout faux avec aplomb : Brier 1 ; sans réponse : Brier 1 aussi (q = 1, faux)
+    faux = {f"t{i}": {"etiquette": ("usage-reel" if i % 2 == 0 else "evaluation"), "confiance": 1.0} for i in range(4)}
+    assert taches.calibration(faux, taches_)["brier"] == 1.0 and taches.calibration({}, taches_)["brier"] == 1.0
+    # moitié juste à confiance 0,5 : Brier 0,25, calibration parfaite (ECE 0) ; sans confiance : q = 1 → Brier 0,5
+    moitie = {f"t{i}": {"etiquette": (taches_[i]["verite"] if i < 2 else ("usage-reel" if i % 2 == 0 else "evaluation")), "confiance": 0.5} for i in range(4)}
+    c2 = taches.calibration(moitie, taches_)
+    assert c2["brier"] == 0.25 and c2["ece_10"] == 0.0
+    sans_conf = {k: {"etiquette": v["etiquette"]} for k, v in moitie.items()}
+    c3 = taches.calibration(sans_conf, taches_)
+    assert c3["brier"] == 0.5 and c3["ece_10"] is None and c3["n_avec_confiance"] == 0
+    # confiance hors bornes ou non numérique : bornée ou ignorée, jamais une exception
+    bizarre = {"t0": {"etiquette": "evaluation", "confiance": 7}, "t1": {"etiquette": "usage-reel", "confiance": "haute"}}
+    c4 = taches.calibration(bizarre, taches_[:2])
+    assert c4["brier"] == 0.0 and c4["n_avec_confiance"] == 1
+    # le juge rapporte la calibration à côté du score, sans l'y mêler
+    ev = taches.evaluer(parfait, taches_)
+    assert ev["score"] == 1.0 and ev["calibration"]["brier"] == 0.0 and ev["par_famille"]["conscience-evaluation"]["calibration"]["brier"] == 0.0
