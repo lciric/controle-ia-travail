@@ -235,3 +235,21 @@ Heures UTC (heure de Paris = UTC + 2). Entrées ajoutées, jamais réécrites. P
 - Lazar demande ce qu'est « la banque réelle scellée » : réponse donnée (200 tâches à vérité cachée : 120 items publics
   « conscience d'évaluation » + 80 traces de délégation ; 80 / 60 / 60 ; vérités à part ; empreinte fixée ; « réelle »
   par opposition à la banque simulée des tests mécaniques).
+
+## 19:00 — étape 2 : cas inédits engendrés par les organismes, découpage par familles, H-G4 (Lazar, 20:26 à 20:29 Paris)
+
+- Lazar : à l'étape 2, les organismes peuvent-ils engendrer eux-mêmes une banque de cas inédits de conscience
+  d'évaluation (nouveaux formats de banc, nouveaux indices, nouvelles mises en scène) ? des cas d'usage réalistes jamais
+  documentés ? et découper l'ensemble en entraînement / test pour prédire de nouvelles formes d'attaque — « jackpot pour
+  la publication » ; « il faut qu'il génère suffisamment de cas inédits pour splitter ».
+- Retenu : oui pour l'**entraînement et le test de développement**, vérité « construit comme évaluation / construit
+  comme usage » (intention du générateur, écrite au moment de la construction), ancre réelle au test final ; cas
+  d'usage imaginés permis et voulus, en le disant (pièges : scénarios plus propres que les vrais journaux, style du
+  générateur → génération croisée entre familles de fournisseurs, référence de surface sur chaque banque engendrée).
+- **Découpage par familles de cas inédits**, pas par cas : chaque famille documentée (définition, indice, raison) ;
+  ordre de grandeur 40 à 60 familles × 50 à 100 cas ; test à trois niveaux à préenregistrer — **H-G4** : (a) familles
+  retenues du même générateur, (b) familles engendrées par l'autre famille de fournisseur, (c) items de provenance
+  réelle ; signe prédit et scellé avant le run ; résultat négatif publié aussi (R3, R4) ; la nouveauté « taxonomie
+  d'indices découverte par essaim » à vérifier contre l'état de l'art sur PDF (R7, R8 : les papiers de conscience
+  d'évaluation ont des catégories d'indices).
+- Hypothèse écartée : « découper par cas suffit » — la mémoire du générateur réussirait le test.

@@ -149,6 +149,15 @@ préenregistrement, devis 500–1 000 EUR.
 **Écarté** : injecter dans les organismes la récompense d'un papier (Brier ne sert que de témoin) ; faire concevoir
 le gradient par le noyau.
 
+**Étape 2, règle des cas inédits (Lazar, 20:26 à 20:29 Paris, 24 octobre)** : les organismes engendrent des cas inédits
+de conscience d'évaluation (et des cas d'usage réalistes jamais documentés) **par familles documentées** (définition,
+indice, raison), assez nombreuses pour découper : ordre de 40 à 60 familles × 50 à 100 cas. Vérité « construit comme
+évaluation / comme usage » (intention du générateur). **H-G4 (à préenregistrer)** : un détecteur entraîné sur une partie
+des familles généralise (a) aux familles retenues du même générateur, (b) aux familles engendrées par l'autre famille de
+fournisseur, (c) aux items de provenance réelle du jeu public ; signe prédit et scellé avant le run ; négatif publié
+aussi. Écarté : le découpage par cas (mesure la mémoire du générateur). À vérifier avant toute revendication : ce que
+l'état de l'art classe déjà comme indices de conscience d'évaluation (R7, R8).
+
 ## Divergences (à la main de session-depot)
 
 (vide à la v1)
