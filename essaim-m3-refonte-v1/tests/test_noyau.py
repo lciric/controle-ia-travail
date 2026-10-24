@@ -1671,3 +1671,26 @@ def test_bras_apparie_adaptatif_sur_course_a_conception(tmp_path):
                      especes_amorcage=["GEMINI_ARGON"], traits=vues, rondes_conception_max=2, budget_conception=dict(gen))
     except appels.Arret as e:
         assert "CE-07" not in str(e)
+
+
+def test_confrontation_sans_gradient_entrainer_et_predire_indisponibles(tmp_path):
+    """Confrontation (brouillon v6 : `entrainements_max` 0, aucun `--traits`) : le noyau ne sert pas l'apprentissage par
+    gradient, donc aucun objectif écrit par un organisme n'est exécuté par l'entraîneur (CE-02 sans objet). Sain :
+    `entrainements_max` 0 → pas d'entraîneur, `entrainer` et `predire` rendent INDISPONIBLE, budget à 0. Artefact : en réel,
+    un `entrainements_max` > 0 oublié (défaut de la ligne de commande : 10) sans fichier de traits est refusé (Arret),
+    jamais servi en silence."""
+    banque = taches.banque_simulation(np.random.default_rng(5), 4, 4, 2)
+    n = boucle.Noyau(tmp_path / "c", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 900, "entrainements_max": 0},
+                     5.0, 1, appelants={}, especes_amorcage=[])
+    assert n._entraineur(tmp_path / "e", "x", 0) is None
+    doubles, _ = appelants_simules(rng())
+    a = appels.Appelant(tmp_path, 5.0, doubles)
+    sans = serveur.ServeurAppels(a, str(tmp_path / "s.sock"), appels_max=5)
+    r = sans.traiter({"op": "entrainer", "spec": {"algorithme": {"type": "regression-logistique"}}})
+    assert r["statut"] == "INDISPONIBLE" and r["identifiant"] is None
+    assert sans.traiter({"op": "predire", "identifiant": "m-0001", "ids": ["t1"]})["statut"] == "INDISPONIBLE"
+    assert sans.traiter({"op": "budget"})["entrainements_restants"] == 0
+    with pytest.raises(appels.Arret, match="sans fichier de traits"):
+        boucle.Noyau(tmp_path / "r", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 3600, "entrainements_max": 10,
+                                                    "delai_entrainement_s": 120}, 5.0, 1,
+                     appelants=None, reel=True, go_id="GO-TEST", especes_amorcage=["GEMINI_ARGON"])
