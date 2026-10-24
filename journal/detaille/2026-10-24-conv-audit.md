@@ -437,8 +437,7 @@ l'applique). Entrées corrigées (titre tel qu'écrit → heure vraie, celle du 
 
 ## 21:39 — v7 de la confrontation ; faille des liens symboliques (session-depot) ; diversité en trois bras ; ce qui reste pour le galop économe
 
-- Empreinte de ce fichier avant cette entrée : `d0c9b58e79831c3f5063` (préfixe ; fichier modifié par le pull de 21:38, voir
-  commits).
+- Empreinte de ce fichier avant cette entrée : `d0c9b58e79831c3f506359927f82971534602a20c823c21493523e47f95611dd`.
 - **Faille de sécurité trouvée par session-depot (n° 17, 21:30 UTC) : root suit les liens symboliques posés par
   l'organisme** (copie du dépôt et de la vue avec `symlinks=False`, lectures de `metrique_proposee.json`,
   `reponses_test.json`, `fin_conception.json`) ⇒ environnement du noyau (clés) ou fichiers 0600 copiés dans la vue ; tubes
