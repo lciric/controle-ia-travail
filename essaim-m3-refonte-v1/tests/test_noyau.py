@@ -1726,3 +1726,82 @@ def test_declencheurs_audit_h_g1_et_ordre_de_ronde_apparie(tmp_path):
                           "--appels-max", "30", "--entrainements-max", "0"]) == 0
     ordres = lambda c: [e["ordre"] for e in (json.loads(x) for x in (c / "evenements.jsonl").read_text().splitlines()) if e.get("etape") == "ronde"]
     assert ordres(a) and ordres(a) == ordres(b)
+
+
+def test_bras_apparie_adaptatif_sur_course_a_conception(tmp_path):
+    """Fusion de CE-06 (bras apparié adaptatif, session-depot) et de la phase de conception (conv-audit) : `--depuis` sans
+    `--gel` relance la génération 0 **issue de la conception** de la course d'origine (même empreinte), sans nouvelle
+    phase de conception. Artefact : `--depuis` avec `--rondes-conception-max` > 0 est refusé (sinon le bras apparié
+    repartirait d'un autre organisme). CE-07 s'applique aussi au budget d'une ronde de conception (sain et artefact)."""
+    from essaim_m3.noyau import cli
+    concepteur = RACINE / "tests" / "fixtures" / "organisme_concepteur" / "organisme"
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "21", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"concepteur={concepteur}@anthropic",
+                          "--rondes-conception-max", "3"]) == 0
+    idx = [json.loads(x) for x in (course / "archive" / "index.jsonl").read_text().splitlines()]
+    assert any(l.get("phase") == "conception" for l in idx)
+    with pytest.raises(SystemExit, match="pas de nouvelle conception"):
+        cli.principal(["simuler", "--sortie", str(tmp_path / "refus"), "--generations", "1", "--graine", "22", "--depuis", str(course),
+                       "--appels-max", "30", "--rondes-conception-max", "3"])
+    adaptatif = tmp_path / "adaptatif"
+    assert cli.principal(["simuler", "--sortie", str(adaptatif), "--generations", "1", "--graine", "22", "--depuis", str(course),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    idx_a = [json.loads(x) for x in (adaptatif / "archive" / "index.jsonl").read_text().splitlines()]
+    assert not any(l.get("phase") for l in idx_a)
+    for lignee in ("concepteur", "gemini-argon"):
+        e0 = next(l for l in idx if l["lignee"] == lignee and l["generation"] == 0 and not l.get("phase"))["empreinte_organisme"]
+        assert next(l for l in idx_a if l["lignee"] == lignee and l["generation"] == 0)["empreinte_organisme"] == e0
+    banque = taches.banque_simulation(np.random.default_rng(3), 4, 4, 2)
+    ids = [t["id"] for n in ("train", "test", "test_final") for t in banque[n]]
+    vues = {"v": {i: np.ones(4, dtype=np.float32) for i in ids}}
+    gen = {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 900, "entrainements_max": 2, "delai_entrainement_s": 120}
+    with pytest.raises(appels.Arret, match="CE-07, ronde de conception"):
+        boucle.Noyau(tmp_path / "r", "m", banque, dict(gen), 5.0, 1, appelants=None, reel=True, go_id="GO-TEST",
+                     especes_amorcage=["GEMINI_ARGON"], traits=vues, rondes_conception_max=2, budget_conception=dict(gen, temps_max_s=400))
+    try:  # sain : budgets cohérents → aucun refus CE-07 (un autre refus du mode réel reste possible dans ce test)
+        boucle.Noyau(tmp_path / "s", "m", banque, dict(gen), 5.0, 1, appelants=None, reel=True, go_id="GO-TEST",
+                     especes_amorcage=["GEMINI_ARGON"], traits=vues, rondes_conception_max=2, budget_conception=dict(gen))
+    except appels.Arret as e:
+        assert "CE-07" not in str(e)
+
+
+def test_confrontation_sans_gradient_entrainer_et_predire_indisponibles(tmp_path):
+    """Confrontation (brouillon v6 : `entrainements_max` 0, aucun `--traits`) : le noyau ne sert pas l'apprentissage par
+    gradient, donc aucun objectif écrit par un organisme n'est exécuté par l'entraîneur (CE-02 sans objet). Sain :
+    `entrainements_max` 0 → pas d'entraîneur, `entrainer` et `predire` rendent INDISPONIBLE, budget à 0. Artefact : en réel,
+    un `entrainements_max` > 0 oublié (défaut de la ligne de commande : 10) sans fichier de traits est refusé (Arret),
+    jamais servi en silence."""
+    banque = taches.banque_simulation(np.random.default_rng(5), 4, 4, 2)
+    n = boucle.Noyau(tmp_path / "c", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 900, "entrainements_max": 0},
+                     5.0, 1, appelants={}, especes_amorcage=[])
+    assert n._entraineur(tmp_path / "e", "x", 0) is None
+    doubles, _ = appelants_simules(rng())
+    a = appels.Appelant(tmp_path, 5.0, doubles)
+    sans = serveur.ServeurAppels(a, str(tmp_path / "s.sock"), appels_max=5)
+    r = sans.traiter({"op": "entrainer", "spec": {"algorithme": {"type": "regression-logistique"}}})
+    assert r["statut"] == "INDISPONIBLE" and r["identifiant"] is None
+    assert sans.traiter({"op": "predire", "identifiant": "m-0001", "ids": ["t1"]})["statut"] == "INDISPONIBLE"
+    assert sans.traiter({"op": "budget"})["entrainements_restants"] == 0
+    with pytest.raises(appels.Arret, match="sans fichier de traits"):
+        boucle.Noyau(tmp_path / "r", "m", banque, {"appels_max": 10, "usd_max": 1.0, "temps_max_s": 3600, "entrainements_max": 10,
+                                                    "delai_entrainement_s": 120}, 5.0, 1,
+                     appelants=None, reel=True, go_id="GO-TEST", especes_amorcage=["GEMINI_ARGON"])
+
+
+def test_temps_par_ronde_de_conception(tmp_path):
+    """`--temps-max-conception` (préenregistrement de l'étape 1, v3 de session-depot : ronde de conception à 1 800 s,
+    génération à 2 400 s) : la ronde reçoit son propre temps, la génération garde le sien ; sans l'option, la ronde prend
+    `--temps-max`."""
+    from essaim_m3.noyau import cli
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "31", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--temps-max", "2400",
+                          "--rondes-conception-max", "1", "--temps-max-conception", "1800"]) == 0
+    ctxc = json.loads((course / "archive" / "gemini-argon" / "c001" / "travail" / "contexte.json").read_text())
+    ctx0 = json.loads((course / "archive" / "gemini-argon" / "g000" / "travail" / "contexte.json").read_text())
+    assert ctxc["budget"]["temps_max_s"] == 1800 and ctx0["budget"]["temps_max_s"] == 2400
+    sans = tmp_path / "sans"
+    assert cli.principal(["simuler", "--sortie", str(sans), "--generations", "1", "--graine", "31", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--temps-max", "2400", "--rondes-conception-max", "1"]) == 0
+    assert json.loads((sans / "archive" / "gemini-argon" / "c001" / "travail" / "contexte.json").read_text())["budget"]["temps_max_s"] == 2400

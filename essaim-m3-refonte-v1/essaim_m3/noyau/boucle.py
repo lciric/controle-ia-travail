@@ -182,11 +182,15 @@ class Noyau:
         self.description_traits = description_traits
         self.budget.setdefault("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT)
         # CE-07 : en réel, le temps de la génération doit contenir tous les entraînements permis plus le reste du travail
-        if self.reel and int(self.budget["entrainements_max"]) > 0:
-            besoin = int(self.budget["entrainements_max"]) * int(self.budget["delai_entrainement_s"]) + MARGE_TEMPS_S
-            if int(self.budget["temps_max_s"]) < besoin:
-                raise Arret(f"budget incohérent (CE-07) : temps_max_s {self.budget['temps_max_s']} < {self.budget['entrainements_max']} "
-                            f"entraînements × {self.budget['delai_entrainement_s']} s + {MARGE_TEMPS_S} s")
+        # (et celui d'une ronde de conception, qui sert les mêmes primitives)
+        if self.reel:
+            budgets = [("génération", self.budget)] + ([("ronde de conception", self.budget_conception)] if self.rondes_conception else [])
+            for nom_b, b in budgets:
+                n_ent = int(b.get("entrainements_max", 0))
+                delai = int(b.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT))
+                if n_ent > 0 and int(b["temps_max_s"]) < n_ent * delai + MARGE_TEMPS_S:
+                    raise Arret(f"budget incohérent (CE-07, {nom_b}) : temps_max_s {b['temps_max_s']} < {n_ent} "
+                                f"entraînements × {delai} s + {MARGE_TEMPS_S} s")
         if int(self.budget["entrainements_max"]) > 0 and not self.vues:
             if self.reel:
                 raise Arret("apprentissage par gradient demandé en réel sans fichier de traits (activations) : refusé")
