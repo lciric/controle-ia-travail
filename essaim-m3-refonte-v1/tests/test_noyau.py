@@ -1381,3 +1381,49 @@ def test_espace_organismes_laisse_par_une_course_anterieure_est_efface(tmp_path)
     assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "4", "--n-train", "6", "--n-test", "6",
                           "--appels-max", "20", "--especes", "GEMINI_ARGON"]) == 0
     assert (espace / "archive_vue" / "gemini-argon" / "g000").exists() and not (espace / "archive_vue" / "gemini-argon" / "g001").exists()
+
+
+# ---------- analyse préenregistrée de H-G1 (étape 1 ; CE-03, CE-05 de la contre-lecture R2) ----------
+
+def test_analyse_h_g1_controle_positif_et_table_de_lecture():
+    """Gain connu +0,20 sur six paires → « confirmé », intervalle qui couvre le gain ; gain nul → jamais « confirmé ».
+    Table gelée : audit, invalidité, aucune paire, confirmé, réfuté (dont « plus petit que prédit »), non concluant."""
+    from essaim_m3 import analyse_gradient as A
+    v = A.verifier_sur_simulation_h_g1()
+    assert v["gain_connu"]["lecture"] == "confirmé" and v["gain_connu"]["couvre"]
+    assert v["sans_gain"]["lecture"] != "confirmé" and v["sans_gain"]["couvre"]
+    L = A.lecture_h_g1
+    assert L({"audit": True, "difference": 0.3, "ic95": [0.2, 0.4]}).startswith("audit")
+    assert L({"invalide": True, "difference": 0.3, "ic95": [0.2, 0.4]}).startswith("non concluant : plus d'une paire")
+    assert L({"difference": None, "ic95": None}) == "non concluant : aucune paire"
+    assert L({"difference": 0.15, "ic95": [0.05, 0.25]}) == "confirmé"
+    assert L({"difference": 0.04, "ic95": [0.01, 0.07]}) == "réfuté (l'effet prédit est exclu) ; effet positif plus petit que prédit"
+    assert L({"difference": -0.02, "ic95": [-0.10, 0.06]}) == "réfuté (l'effet prédit est exclu)"
+    assert L({"difference": 0.08, "ic95": [-0.02, 0.18]}).startswith("non concluant")
+    assert L({"difference": 0.12, "ic95": [-0.01, 0.25]}).startswith("non concluant")
+
+
+def test_paires_h_g1_lues_dans_des_courses_appariees(tmp_path):
+    """Courses simulées appariées (à gradient, puis `--depuis` sans gradient) : une paire par lignée et par réplique, à la
+    dernière génération valide commune ; artefacts : banques différentes → refus ; lignée absente → paire coupée, et plus
+    d'une paire sur quatre coupée → invalide."""
+    from essaim_m3 import analyse_gradient as A
+    from essaim_m3.noyau import cli
+    sonde = RACINE / "tests" / "fixtures" / "organisme_sonde"
+    a, b = tmp_path / "a", tmp_path / "b"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", "8", "--n-train", "8", "--n-test", "8", "--n-final", "8",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--entrainements-max", "2", "--organisme-amorcage", str(sonde)]) == 0
+    assert cli.principal(["simuler", "--sortie", str(b), "--generations", "2", "--graine", "8", "--depuis", str(a),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    paires, taches_final, etat = A.paires_h_g1([(str(a), str(b))], ["gemini-argon"], generations=2)
+    assert len(paires) == 1 and paires[0]["generation"] == 1 and len(taches_final) == 8 and not etat["invalide"]
+    assert set(paires[0]["avec"]) == {t["id"] for t in taches_final}
+    r = A.difference_h_g1(paires, taches_final, 5, n_tirages=50)
+    assert r["n_paires"] == 1 and r["ic95"] is not None
+    _, _, etat2 = A.paires_h_g1([(str(a), str(b))], ["gemini-argon", "lignee-absente"], generations=2)
+    assert etat2["coupees"] == ["lignee-absente@r0"] and etat2["invalide"]
+    c = tmp_path / "c"
+    assert cli.principal(["simuler", "--sortie", str(c), "--generations", "1", "--graine", "9", "--n-train", "8", "--n-test", "8", "--n-final", "8",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON"]) == 0
+    with pytest.raises(ValueError):
+        A.paires_h_g1([(str(a), str(c))], ["gemini-argon"], generations=2)
