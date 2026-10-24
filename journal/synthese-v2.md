@@ -92,7 +92,7 @@ préenregistrement.
 
 ## 6. Prochaines étapes (ordre)
 
-0. Primitives de moisson dans le noyau (sources sans clé, corpus scellé) et contrat v3 (moissonneur écrit par l'organisme en génération 0, familles = opérateur + signature) — avant le premier run réel.
+0. Fait le 24 octobre au soir : primitives de moisson (`89ebe82`), phase de conception à critère d'arrêt conçu par l'organisme (`8379bb5`), contrat v3 ; reste : familles = opérateur + signature dans le contrat (spécification vérifiée par le noyau), clé `BRAVE_API_KEY` posée par Lazar dans l'environnement cloud, limites de débit OpenAlex / Semantic Scholar.
 1. Contre-lecture 2 de la v4 par un sous-agent neuf (lancée par session-depot) → v5 (avec la phase de moisson) → scellement.
 2. GO du collisionneur (lot 3) → brainstorm → rédaction des traces → banque `confrontation-v2` ; vérification
    d'étiquettes par un sous-agent neuf.

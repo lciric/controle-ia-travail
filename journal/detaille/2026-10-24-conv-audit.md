@@ -280,3 +280,30 @@ Heures UTC (heure de Paris = UTC + 2). Entrées ajoutées, jamais réécrites. P
 - **Dossier TAIF v1** remis à Lazar (`livrables/dossier-taif-entretien-v1.zip`, `d0ba7121…`) : pitch de 5 minutes
   minuté (français et anglais), six diapositives, 25 questions-réponses, fiche budget (≈ 11 à 22 k EUR de calcul et
   données sur six mois au pire cas) et jalons (G0 → G3, papiers A, C, B) ; montant et date à fixer par Lazar.
+
+## 19:40 — réseau ouvert, clé Brave, phase de conception adaptative, primitives de moisson codées (Lazar, 20:37 à 20:49 Paris)
+
+- Réseau : Lazar a mis « Tous les domaines » dans Paramètres → Capacités → accès réseau sortant ; retest : Gemini,
+  OpenAlex, LessWrong, Brave joignables depuis le conteneur. Conséquence : moisson, collisionneur et confrontation
+  peuvent tourner depuis Claude Code cloud ; l'instance Vast.ai reste nécessaire pour la carte (étapes 1 et 2).
+- Lazar : « Brave ou Tavily ? » → Brave (résultats bruts, l'original est téléchargé et empreinté par le noyau ; Tavily
+  pré-digère). Lazar a créé la clé lui-même (capture : clé masquée, plan à 50 requêtes par seconde sans limite
+  mensuelle) ; à poser dans l'environnement Claude Code cloud sous `BRAVE_API_KEY` ; conseil : limite d'usage côté
+  fournisseur. Claude Code cloud ne crée pas de compte tiers au nom de Lazar (nœud « compte »).
+- Lazar (20:42, 20:46) : **K n'est pas fixé** ; l'organisme conçoit lui-même son critère d'arrêt de la conception, par
+  des arguments mathématiques à lui (« ne lui suggère rien ») ; tous les modules sont itérés avant la génération 0, pas
+  seulement le moissonneur. Code `8379bb5` : phase de conception — rondes `cNNN` archivées, jamais notées, successeur
+  entier à chaque ronde, `fin_conception.json` écrit par l'organisme quand son critère est satisfait, borne dure
+  `--rondes-conception-max` et budget de ronde (devis, GO) ; l'organisme issu de la conception devient la génération 0
+  (relancée par le bras gelé) ; contrat v3 § 5 bis sans aucun critère suggéré ; organisme de test « concepteur »
+  (son critère n'est qu'une fixture) ; refus en réel si `ANTHROPIC_BASE_URL` est définie.
+- Lazar (20:49) : « qu'appelles-tu une génération ? » → réponse : une exécution complète sous budget ; le seul pont
+  entre deux générations est le successeur (mémoire, apprentissage, conception) plus l'historique et la vue ; les
+  rondes de conception sont des générations à blanc ; le bras gelé relance la génération 0 sans pont.
+- Code `89ebe82` (72 tests) : **primitives de moisson** — `rechercher(requete, n, source)` sur arXiv, OpenAlex,
+  Semantic Scholar, web (Brave) ; `telecharger(reference)` sous provenance (liens rendus par une recherche de la
+  génération, identifiants arXiv, hôtes permis), plafonds de documents et d'octets (les tentatives échouées comptent),
+  extraction HTML / PDF (`pdftotext`) / texte, corpus empreinté, index scellé, visible dans la vue de la lignée ;
+  texte rendu comme donnée. Essai réel en lecture seule : arXiv OK ; PDF arXiv 2505.23836 téléchargé et extrait
+  (1,43 Mo, 102 927 caractères) ; OpenAlex et Semantic Scholar répondent 429 (limite de débit de l'adresse partagée :
+  à régler par `mailto` OpenAlex et clé Semantic Scholar, ou par l'instance).
