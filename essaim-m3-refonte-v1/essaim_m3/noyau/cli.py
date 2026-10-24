@@ -88,10 +88,12 @@ def lancer(args) -> int:
     if hasattr(os, "geteuid") and os.geteuid() == 0 and not args.accepter_root:
         print("refus : exécution en root ; le bac à sable repose sur les permissions (relance avec --accepter-root en connaissance de cause)", file=sys.stderr)
         return 5
-    banque = json.loads(pathlib.Path(args.taches).read_text(encoding="utf-8"))
-    if not isinstance(banque, dict) or "train" not in banque or "test" not in banque:
-        print("refus : le fichier de tâches doit contenir `train` et `test`", file=sys.stderr)
+    from ..banque import verifier_banque
+    problemes = verifier_banque(pathlib.Path(args.taches))
+    if problemes:
+        print("refus : banque de tâches non conforme :\n  - " + "\n  - ".join(problemes), file=sys.stderr)
         return 6
+    banque = json.loads(pathlib.Path(args.taches).read_text(encoding="utf-8"))
     try:
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                              args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
