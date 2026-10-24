@@ -44,3 +44,30 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   entrée « Revérification » à nommer « Contre-lecture 2 », date 00:16 en heure de Paris, nom de la variable de clé,
   consignation dans `depenses.md`, extension du GO vérifiée par un humain, contenu de l'arbre `3e6fe2e9` à préciser. v3 à
   écrire.
+
+## 23:35 — v4 de l'organisme de Gemini reçue ; Lazar : pilote sur la v4 avec la question à g1, lancé dès le scellement ; primitive `question_ouverte` codée ; brouillon du pilote en contre-lecture 3
+
+- **v4 de Gemini** (relais de Lazar, 00:44 Paris : script PowerShell, 16 fichiers, et message) : reconstituée sans exécuter
+  le script ; comparée fichier par fichier à la v3 (`3e6fe2e9…`) : 10 fichiers au contenu identique (fin de ligne finale
+  perdue par PowerShell ; marque d'ordre d'octets de `definition.md` retirée — « octet pour octet » est donc faux d'un
+  octet), 4 modifiés, 1 nouveau ; rien de la v3 retiré ; sans question, flux v3 ; 20 essais passés en isolation
+  (`nobody`, `unshare -n`, `python -I`) ; simulation sous le noyau : deux générations `OK`. Branche
+  `outils/gemini-organisme-v4` (`b64bb3e`), arbre `c5ada335…`.
+- **Décisions de Lazar** (Paris) : 00:51 « pourquoi ne pas lancer le pilote sur la v4 ? brainstorme » → options (a) v3,
+  (b) v4 + question à g1 seule, (c) v4 sans question ; recommandé (b) ; 00:55 « go » ; 00:59 « lance le pilote cette nuit
+  à la suite du scellement, tu as mon accord anticipé ». Dit à Lazar : je n'ai aucune clé ; le lanceur est session-depot.
+- **Fait** : fusion des têtes de session-depot `c02bae3` et `5e6876d` (113 puis 114 tests) ; outil
+  `extrait_mecanique` sans score (`cf67025`, PG2-01) ; primitive `question_ouverte` (`aaa65f5` module, `cec6dce`
+  crochets dans `boucle.py`, `cli.py`, `contrat.py` § 7, `archive.py` ; signal de session-depot n° 20 à 22:41 UTC) ;
+  question dans sa forme pour les organismes (`d967b212…`) ; brouillon du préenregistrement du pilote sur la v4
+  (`5aca4aa`, `6ef15677…`) ; devis attendu non opposable ≈ 10 à 14 USD (`e01db149…`) ; contre-lecture 3 lancée (sous-agent
+  neuf) ; lanceur scripté pour session-depot (`lancer_pilote_gemini_v4_question_v1.sh`), essayé en simulation : cas
+  sain et neuf artefacts (dossier existant, organisme ou question altérés, extension du GO absente, dépense non
+  consignée, reste < 40, aucun essai passé, bytecode réintroduit, interpréteur absent), chacun refusé avec sa raison.
+- **Erreurs** : (1) une empreinte complète inventée dans le brouillon pour le rapport de la contre-lecture 2 (seul le
+  préfixe `240788fc` était juste) — vue avant toute relecture, corrigée, et toutes les empreintes du texte recalculées
+  par script ; dit à Lazar. (2) Premier jet du lanceur : un arrêt silencieux possible (`set -e` sur une substitution de
+  commande quand aucun essai n'est sélectionné) — corrigé (piège `ERR` qui consigne, capture sans échec), réessayé.
+- **Constat pour le noyau** : `sha256_code_noyau` du manifeste hache tout fichier sous `essaim_m3/noyau`, bytecode compris
+  (`ec76a04f…` avec `__pycache__`, `68494279…` sans) : il ne désigne pas le code ; contourné pour le pilote (nettoyage +
+  `PYTHONDONTWRITEBYTECODE=1`), à signaler à session-depot.
