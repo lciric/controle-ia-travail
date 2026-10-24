@@ -69,9 +69,9 @@ def charger_traces_sabotage(chemin: pathlib.Path, source: str) -> list[dict]:
 
 def charger_conscience_evaluation(chemin: pathlib.Path, source: str) -> list[dict]:
     brut = json.loads(chemin.read_text(encoding="utf-8-sig"))
-    lignes = brut.get("lignes") if isinstance(brut, dict) else brut
+    lignes = (brut.get("exemples") if "exemples" in brut else brut.get("lignes")) if isinstance(brut, dict) else brut
     if not isinstance(lignes, list):
-        raise ValueError(f"{chemin} : liste de lignes attendue (clé `lignes` ou liste)")
+        raise ValueError(f"{chemin} : liste de lignes attendue (clé `exemples`, `lignes`, ou liste)")
     taches = []
     for i, o in enumerate(lignes):
         texte = o.get("input") if "input" in o else o.get("texte")

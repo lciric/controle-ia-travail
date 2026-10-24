@@ -1012,8 +1012,11 @@ def test_metrique_distingue_parfait_et_inverse(tmp_path):
     c = json.loads(sorted((course / "confrontation").glob("confrontation-v*.json"))[-1].read_text(encoding="utf-8"))
     d_forme = c["lignees"]["gemini-argon"]["discriminance"]
     d_exact = c["lignees"]["exact"]["discriminance"]
-    assert d_forme == {"testee": True, "discriminante": False, "raison": "même valeur sur sortie parfaite et inversée"}
+    assert d_forme["testee"] and d_forme["discriminante"] is False and d_forme["raison"] == "même valeur sur sortie parfaite et inversée"
     assert d_exact["testee"] and d_exact["discriminante"] is True and d_exact["raison"] is None
+    # épreuve mécanique (N-041 c) : l'exactitude résiste au gonflement (parfait > tout_positif, tout_negatif, aleatoire, vide)
+    assert d_exact["resiste_au_gonflement"] is True and set(d_exact["epreuves"]) == {"parfait", "inverse", "tout_positif", "tout_negatif", "aleatoire", "vide"}
+    assert d_exact["epreuves"]["parfait"]["valeur"] == 1.0 and d_exact["epreuves"]["inverse"]["valeur"] == 0.0 and d_forme["resiste_au_gonflement"] is False
     paires = {(p["attaquant"], p["defendeur"]): p for p in c["paires"] if p["applicable"]}
     assert paires[("gemini-argon", "exact")]["metrique_discriminante"] is False and paires[("exact", "gemini-argon")]["metrique_discriminante"] is True
     # H-E2 : la métrique non discriminante est écartée ; la discriminante garde ses défendeurs
