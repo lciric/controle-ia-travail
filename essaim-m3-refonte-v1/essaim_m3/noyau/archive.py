@@ -16,6 +16,8 @@ import pathlib
 import shutil
 import tarfile
 
+from . import fichiers as _fichiers
+
 
 def empreinte_fichier(chemin: pathlib.Path) -> str:
     h = hashlib.sha256()
@@ -87,8 +89,8 @@ class Archive:
         d = self.dossier(lignee, generation, phase)
         empreinte = archiver_organisme(organisme, d / "organisme.tar.gz")
         travail = d / "travail"
-        shutil.copytree(dossier_travail, travail, symlinks=False,
-                        ignore=shutil.ignore_patterns("noyau_client.py", "lanceur.py", "__pycache__"))
+        # R-372 : root ne suit aucun lien de l'organisme ; liens, tubes, sockets, fichiers à plusieurs liens durs écartés et consignés
+        ecartes = _fichiers.copier_sans_liens(dossier_travail, travail, ignorer=("noyau_client.py", "lanceur.py", "__pycache__"))
         juge = d / "juge"
         juge.mkdir()
         if journal_appels and journal_appels.exists():
@@ -108,8 +110,9 @@ class Archive:
                  "impose": resume.get("impose"), "famille": resume.get("famille"),
                  "problemes_successeur": [str(x)[:200] for x in (resume.get("problemes_successeur") or [])][:10],
                  "relance": bool(resume.get("relance")), "invalide": bool(resume.get("invalide")),
+                 "n_elements_ecartes": len(ecartes),
                  "quand_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
-        complet = {**resume, **ligne}
+        complet = {**resume, **ligne, "elements_ecartes": [str(x)[:200] for x in ecartes[:200]]}
         (d / "resume.json").write_text(json.dumps(complet, ensure_ascii=False, indent=1), encoding="utf-8")
         sceller(d / "resume.json")
         with self.index.open("a", encoding="utf-8") as fh:
@@ -120,7 +123,9 @@ class Archive:
         shutil.copy2(d / "organisme.tar.gz", v / "organisme.tar.gz")
         shutil.copy2(d / "organisme.tar.gz.sha256", v / "organisme.tar.gz.sha256")
         (v / "resume.json").write_text(json.dumps({k: complet.get(k) for k in CHAMPS_VUE}, ensure_ascii=False, indent=1), encoding="utf-8")
-        shutil.copytree(travail, v / "travail", symlinks=False, ignore=shutil.ignore_patterns("noyau", "juge", "reponses_test.json", "attaques.json"))
+        restes = _fichiers.copier_sans_liens(travail, v / "travail", ignorer=("noyau", "juge", "reponses_test.json", "attaques.json"))
+        if restes:  # impossible après la première copie : l'archive ne contient que des fichiers ordinaires
+            raise RuntimeError(f"vue de {lignee} g{generation} : éléments non ordinaires dans l'archive : {restes[:5]}")
         # la vue est en lecture seule pour tous (dossiers 0555, fichiers 0444) : les organismes, sous un autre utilisateur, lisent sans écrire
         for f in [v] + list(v.rglob("*")):
             try:
@@ -153,7 +158,9 @@ class Archive:
             source = origine / "archive" / l["chemin"]
             d = self.dossier(lignee, int(l["generation"]), "conception")  # refuse si déjà présente (rien n'est réécrit)
             d.rmdir()
-            shutil.copytree(source, d, symlinks=False)
+            restes = _fichiers.copier_sans_liens(source, d)  # R-372 : aucune copie de root ne suit un lien
+            if restes:
+                raise RuntimeError(f"import de {l['chemin']} : éléments non ordinaires dans l'archive d'origine : {restes[:5]}")
             ligne = {**l, "importee": True, "course_origine": str(origine), "chemin": str(d.relative_to(self.racine)),
                      "quand_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
             with self.index.open("a", encoding="utf-8") as fh:
@@ -166,7 +173,7 @@ class Archive:
             resume = json.loads((d / "resume.json").read_text(encoding="utf-8")) if (d / "resume.json").is_file() else ligne
             (v / "resume.json").write_text(json.dumps({k: resume.get(k) for k in CHAMPS_VUE}, ensure_ascii=False, indent=1), encoding="utf-8")
             if (d / "travail").is_dir():
-                shutil.copytree(d / "travail", v / "travail", symlinks=False, ignore=shutil.ignore_patterns("noyau", "juge", "reponses_test.json", "attaques.json"))
+                _fichiers.copier_sans_liens(d / "travail", v / "travail", ignorer=("noyau", "juge", "reponses_test.json", "attaques.json"))
             for f in [v] + list(v.rglob("*")):
                 try:
                     os.chmod(f, 0o555 if f.is_dir() else 0o444)

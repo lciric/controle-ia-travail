@@ -1879,3 +1879,105 @@ def test_plafond_de_jetons_par_appel(tmp_path):
         ctx = json.loads((course / "archive" / "gemini-argon" / g / "travail" / "contexte.json").read_text())
         assert ctx["budget"]["max_tokens_appel"] == 512
     assert json.loads((course / "manifeste-run.json").read_text())["budget_generation"]["max_tokens_appel"] == 512
+
+
+# ---------- R-372 : root ne suit aucun lien de l'organisme, n'attend sur aucun tube (faille trouvée par session-depot) ----------
+
+def test_fichiers_lecture_et_copie_sans_lien(tmp_path):
+    """`lire_fichier_organisme` : fichier ordinaire lu ; absent, lien, tube nommé (sans attendre), liens durs multiples,
+    taille dépassée : refusés avec leur raison. `copier_sans_liens` : dossiers et fichiers ordinaires copiés, le reste
+    écarté et rendu."""
+    from essaim_m3.noyau import fichiers as F
+    ok = tmp_path / "ok.json"
+    ok.write_text('{"a": 1}', encoding="utf-8")
+    assert F.lire_fichier_organisme(ok, 100) == (b'{"a": 1}', None)
+    assert F.lire_fichier_organisme(tmp_path / "absent", 100) == (None, "absent")
+    os.symlink(ok, tmp_path / "lien")
+    d, r = F.lire_fichier_organisme(tmp_path / "lien", 100)
+    assert d is None and "lien symbolique" in r
+    os.mkfifo(tmp_path / "tube")
+    d, r = F.lire_fichier_organisme(tmp_path / "tube", 100)
+    assert d is None and "fichier spécial" in r
+    gros = tmp_path / "gros.txt"
+    gros.write_bytes(b"x" * 101)
+    d, r = F.lire_fichier_organisme(gros, 100)
+    assert d is None and "101 octets" in r
+    os.link(ok, tmp_path / "dur")
+    d, r = F.lire_fichier_organisme(ok, 100)
+    assert d is None and "liens durs" in r
+    src = tmp_path / "src"
+    (src / "sous").mkdir(parents=True)
+    (src / "a.txt").write_text("a", encoding="utf-8")
+    (src / "sous" / "b.txt").write_text("b", encoding="utf-8")
+    os.symlink("/proc/self/environ", src / "env")
+    os.symlink(tmp_path, src / "dossier-lien")
+    os.mkfifo(src / "sous" / "tube")
+    ecartes = F.copier_sans_liens(src, tmp_path / "dst", ignorer=("ignore*",))
+    assert sorted(p.relative_to(tmp_path / "dst").as_posix() for p in (tmp_path / "dst").rglob("*")) == ["a.txt", "sous", "sous/b.txt"]
+    assert [e.split(" : ")[0] for e in ecartes] == ["dossier-lien", "env", "sous/tube"]
+    assert F.elements_non_ordinaires(src) == ecartes
+    with pytest.raises(ValueError):
+        F.copier_sans_liens(src / "env", tmp_path / "dst2")
+
+
+def test_depot_ne_suit_aucun_lien_de_l_organisme(tmp_path):
+    """Le dépôt d'une génération copie le dossier de travail sans suivre ses liens : un lien vers un fichier 0600 de root,
+    vers `/proc/self/environ` ou vers un dossier, un tube nommé : écartés et consignés (`elements_ecartes`), jamais dans
+    l'archive ni dans la vue. Artefact : avec `shutil.copytree(..., symlinks=False)`, la cible est copiée (essai en échec)."""
+    from essaim_m3.noyau import archive as A
+    travail = tmp_path / "travail"
+    (travail / "sous").mkdir(parents=True)
+    (travail / "note.txt").write_text("sortie ordinaire", encoding="utf-8")
+    (travail / "sous" / "f.txt").write_text("x", encoding="utf-8")
+    secret = tmp_path / "secret.txt"
+    secret.write_text("SECRET-DU-NOYAU-0600", encoding="utf-8")
+    os.chmod(secret, 0o600)
+    os.symlink(secret, travail / "lien-secret")
+    os.symlink("/proc/self/environ", travail / "lien-environ")
+    os.symlink(tmp_path, travail / "lien-dossier")
+    os.mkfifo(travail / "tube")
+    org = tmp_path / "org"
+    org.mkdir()
+    (org / "principal.py").write_text("x = 1\n", encoding="utf-8")
+    arch = A.Archive(tmp_path / "archive", tmp_path / "vue")
+    ligne = arch.deposer("l", 0, org, travail, None, {"score": 0.5}, {"statut": "OK", "n_appels": 0, "cout_usd": 0})
+    vue = tmp_path / "vue" / "l" / "g000" / "travail"
+    assert sorted(p.relative_to(vue).as_posix() for p in vue.rglob("*")) == ["note.txt", "sous", "sous/f.txt"]
+    resume = json.loads((tmp_path / "archive" / "l" / "g000" / "resume.json").read_text(encoding="utf-8"))
+    assert ligne["n_elements_ecartes"] == 4
+    assert [e.split(" : ")[0] for e in resume["elements_ecartes"]] == ["lien-dossier", "lien-environ", "lien-secret", "tube"]
+    for p in list((tmp_path / "archive").rglob("*")) + list((tmp_path / "vue").rglob("*")):
+        if p.is_file() and not p.is_symlink():
+            assert b"SECRET-DU-NOYAU" not in p.read_bytes() and b"PATH=" not in p.read_bytes()
+
+
+def test_organisme_poseur_de_liens_ne_voit_rien_du_noyau(tmp_path):
+    """De bout en bout (simulation) : un organisme pose à chaque génération des liens vers `/proc/self/environ`,
+    `/proc/self/cmdline` et un fichier JSON du noyau illisible pour lui (marqueur), dont `metrique_proposee.json`, et un tube
+    nommé à la place de `reponses_test.json`. La course se termine (aucune attente sur le tube) ; rien n'est lu ni copié à
+    travers un lien ; le résumé et le score disent les refus ; la génération suivante ne voit dans sa vue ni le marqueur,
+    ni l'environnement, ni la ligne de commande du noyau."""
+    from essaim_m3.noyau import bac_a_sable, cli
+    org = tmp_path / "org"
+    shutil.copytree(RACINE / "tests" / "fixtures" / "organisme_liens", org)
+    secret = tmp_path / "secret-noyau.json"
+    secret.write_text(json.dumps({"verites": "MARQUEUR-BANQUE-7f3a"}), encoding="utf-8")
+    os.chmod(secret, 0o600)
+    (org / "organisme" / "cible.txt").write_text(str(secret), encoding="utf-8")
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "2", "--graine", "41", "--n-train", "6", "--n-test", "6",
+                          "--n-final", "4", "--appels-max", "10", "--especes", "GEMINI_ARGON", "--organisme-amorcage", str(org)]) == 0
+    g0 = course / "archive" / "gemini-argon" / "g000"
+    resume = json.loads((g0 / "resume.json").read_text(encoding="utf-8"))
+    noms = [e.split(" : ")[0] for e in resume["elements_ecartes"]]
+    assert {"lien-environ", "lien-cmdline", "lien-cible", "metrique_proposee.json", "reponses_test.json"} <= set(noms)
+    assert resume["metrique_proposee"] == {"refuse": "refusé : lien symbolique"}
+    score = json.loads((g0 / "juge" / "score.json").read_text(encoding="utf-8"))
+    assert "fichier spécial" in (score.get("probleme_reponses") or "")
+    vue = bac_a_sable.espace_organismes(course) / "archive_vue"
+    for p in list((course / "archive").rglob("*")) + list(vue.rglob("*")):
+        if p.is_file() and not p.is_symlink():
+            assert b"MARQUEUR-BANQUE-7f3a" not in p.read_bytes()
+    vu = json.loads((course / "archive" / "gemini-argon" / "g001" / "travail" / "vu.json").read_text(encoding="utf-8"))
+    assert vu and not any(k.split("/")[-1].startswith("lien-") for k in vu)
+    assert not any("MARQUEUR-BANQUE" in v or "PATH=" in v for v in vu.values())

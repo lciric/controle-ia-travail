@@ -309,9 +309,13 @@ def executer_metrique(dossier: pathlib.Path, metrique: pathlib.Path, sorties: pa
         shutil.rmtree(dossier / "metrique")
     if (dossier / "sorties").exists():
         shutil.rmtree(dossier / "sorties")
-    shutil.copytree(metrique, dossier / "metrique", symlinks=False)
-    shutil.copytree(sorties, dossier / "sorties", symlinks=False,
-                    ignore=shutil.ignore_patterns("noyau", "juge", "noyau_client.py", "lanceur.py", "__pycache__", "contexte.json"))
+    from . import fichiers as _fichiers  # R-372 : copies de root sans suivre de lien de l'organisme
+    if _fichiers.elements_non_ordinaires(metrique):
+        return {"code": "METRIQUE_REFUSEE", "valeur": None, "calculee": False,
+                "erreur": "métrique refusée : liens ou fichiers spéciaux (R-372) : " + "; ".join(_fichiers.elements_non_ordinaires(metrique)[:5])}
+    _fichiers.copier_sans_liens(metrique, dossier / "metrique")
+    _fichiers.copier_sans_liens(sorties, dossier / "sorties",
+                                ignorer=("noyau", "juge", "noyau_client.py", "lanceur.py", "__pycache__", "contexte.json"))
     (dossier / "lanceur_metrique.py").write_text(LANCEUR_METRIQUE_SOURCE, encoding="utf-8")
     if uid is not None:
         _changer_proprietaire(dossier / "metrique", uid, uid)
@@ -337,12 +341,16 @@ def executer_metrique(dossier: pathlib.Path, metrique: pathlib.Path, sorties: pa
         erreurs.close()
     if delai:
         return {"code": "DELAI_DEPASSE", "valeur": None, "calculee": False}
-    f = dossier / "resultat_metrique.json"
-    if not f.exists():
-        return {"code": "SANS_RESULTAT", "valeur": None, "calculee": False}
+    from . import fichiers as _fichiers
+    donnees, raison = _fichiers.lire_fichier_organisme(dossier / "resultat_metrique.json", 200_000)
+    if donnees is None:
+        return ({"code": "SANS_RESULTAT", "valeur": None, "calculee": False} if raison == "absent"
+                else {"code": "RESULTAT_REFUSE", "valeur": None, "calculee": False, "erreur": raison})
     try:
-        r = json.loads(f.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
+        r = json.loads(donnees.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return {"code": "RESULTAT_ILLISIBLE", "valeur": None, "calculee": False}
+    if not isinstance(r, dict):
         return {"code": "RESULTAT_ILLISIBLE", "valeur": None, "calculee": False}
     v = r.get("valeur")
     ok = r.get("code") == "OK" and isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and abs(v) != float("inf")

@@ -9,6 +9,7 @@ from __future__ import annotations
 import datetime as _dt
 import hashlib
 import json
+import os
 import pathlib
 import platform
 import shutil
@@ -16,7 +17,7 @@ import sys
 
 import numpy as np
 
-from . import archive as _archive, bac_a_sable, contrat, entrainement as _entrainement, moisson as _moisson, recherche as _recherche, taches as _taches
+from . import archive as _archive, bac_a_sable, contrat, fichiers as _fichiers, entrainement as _entrainement, moisson as _moisson, recherche as _recherche, taches as _taches
 from .appels import EMPREINTE_COLLISIONNEUR_V25, Appelant, Arret, cv
 from .serveur import PARALLELE_MAX_DEFAUT, ServeurAppels
 
@@ -526,9 +527,11 @@ class Noyau:
         reponses = {}
         chemin_rep = travail / "reponses_test.json"
         probleme_reponses = None
-        if chemin_rep.exists():
+        # R-372 : jamais de lecture qui suit un lien ou attend sur un tube (fichier ordinaire, taille bornée, sinon refus consigné)
+        donnees_rep, raison_rep = _fichiers.lire_fichier_organisme(chemin_rep, _fichiers.OCTETS_MAX_REPONSES)
+        if donnees_rep is not None:
             try:
-                brut = json.loads(chemin_rep.read_text(encoding="utf-8-sig"))
+                brut = json.loads(donnees_rep.decode("utf-8-sig"))
                 if isinstance(brut, dict):
                     for t in tous_tests:
                         r = brut.get(t["id"])
@@ -538,8 +541,10 @@ class Noyau:
                     probleme_reponses = "reponses_test.json n'est pas un objet"
             except (json.JSONDecodeError, UnicodeDecodeError) as e:
                 probleme_reponses = f"reponses_test.json illisible : {str(e)[:100]}"
-        else:
+        elif raison_rep == "absent":
             probleme_reponses = "reponses_test.json absent"
+        else:
+            probleme_reponses = f"reponses_test.json {raison_rep}"
         if phase:
             score = {"score": None, "phase": phase, "probleme_reponses": None}  # jamais notée
             score_final = None
@@ -552,15 +557,24 @@ class Noyau:
         # métrique proposée par l'organisme (archivée, jamais utilisée par le noyau)
         metrique = None
         chemin_metrique = travail / "metrique_proposee.json"
-        if chemin_metrique.exists():
+        donnees_m, raison_m = _fichiers.lire_fichier_organisme(chemin_metrique, _fichiers.OCTETS_MAX_METRIQUE)
+        if donnees_m is not None:
             try:
-                m = json.loads(chemin_metrique.read_text(encoding="utf-8-sig"))
+                m = json.loads(donnees_m.decode("utf-8-sig"))
                 metrique = m if isinstance(m, dict) else {"illisible": True}
             except (json.JSONDecodeError, UnicodeDecodeError):
                 metrique = {"illisible": True}
+        elif raison_m != "absent":
+            metrique = {"refuse": raison_m}  # R-372 : un lien (vers la banque, par exemple) n'est jamais lu
         # successeur
         successeur = travail / "successeur" / "organisme"
-        problemes_succ = contrat.valider_organisme(successeur) if successeur.exists() else ["successeur absent"]
+        if _fichiers.vrai_dossier(travail / "successeur") and _fichiers.vrai_dossier(successeur):
+            speciaux = _fichiers.elements_non_ordinaires(successeur)  # R-372 : liens, tubes, liens durs multiples refusés
+            problemes_succ = [f"successeur : {x}" for x in speciaux[:10]] or contrat.valider_organisme(successeur)
+        elif os.path.lexists(travail / "successeur") or os.path.lexists(successeur):
+            problemes_succ = ["successeur refusé : lien symbolique ou fichier spécial à la place d'un dossier (R-372)"]
+        else:
+            problemes_succ = ["successeur absent"]
         a_successeur = not problemes_succ
         resume = {"statut": execution["code"], "execution": execution, "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
                   "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
@@ -577,11 +591,15 @@ class Noyau:
             return resume
         if phase:  # phase de conception : le successeur valide devient l'organisme de la ronde suivante ou de la génération 0
             fin = travail / "fin_conception.json"  # l'organisme déclare lui-même la fin de sa conception (son critère, ses valeurs)
-            if fin.exists():
-                try:
-                    declaration = json.loads(fin.read_text(encoding="utf-8-sig"))
-                except (json.JSONDecodeError, UnicodeDecodeError):
-                    declaration = {"illisible": True}
+            donnees_f, raison_f = _fichiers.lire_fichier_organisme(fin, _fichiers.OCTETS_MAX_FIN_CONCEPTION)
+            if donnees_f is not None or raison_f != "absent":  # présent : déclaration lue, ou refusée et consignée (R-372)
+                if donnees_f is None:
+                    declaration = {"refuse": raison_f}
+                else:
+                    try:
+                        declaration = json.loads(donnees_f.decode("utf-8-sig"))
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        declaration = {"illisible": True}
                 etat["conception_finie"] = True
                 self._evenement(etape="fin_conception", lignee=lignee, ronde=g, declaration=(declaration if isinstance(declaration, dict) else {"brut": str(declaration)[:500]}))
             derniere = etat.get("conception_finie") or g >= self.rondes_conception
@@ -590,7 +608,7 @@ class Noyau:
                 cible.parent.mkdir(parents=True, exist_ok=True)
                 if cible.exists():
                     shutil.rmtree(cible)
-                shutil.copytree(successeur, cible, symlinks=False)
+                _fichiers.copier_sans_liens(successeur, cible)  # validé sans élément non ordinaire : rien n'est écarté
                 etat["organisme"] = cible
             else:
                 self._evenement(etape="conception_sans_successeur", lignee=lignee, ronde=g, problemes_successeur=problemes_succ[:10])
@@ -600,7 +618,7 @@ class Noyau:
         elif a_successeur and g + 1 < self.generations_max:
             prochain = self.racine / "lignees" / lignee / f"g{g + 1:03d}" / "organisme"
             prochain.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(successeur, prochain, symlinks=False)
+            _fichiers.copier_sans_liens(successeur, prochain)  # validé sans élément non ordinaire : rien n'est écarté
             etat.update(generation=g + 1, organisme=prochain, relances_consecutives=0)
         elif not a_successeur and g + 1 < self.generations_max and etat.get("relances_consecutives", 0) < self.relances_max:
             # nœud 2, option (b) : la dernière génération valide (celle qui vient de tourner) est relancée telle quelle ;
