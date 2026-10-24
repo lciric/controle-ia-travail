@@ -1635,6 +1635,99 @@ def test_paires_h_g1_lues_dans_des_courses_appariees(tmp_path):
         A.paires_h_g1([(str(a), str(c))], ["gemini-argon"], generations=2)
 
 
+def test_paires_h_g1_ecartent_les_rondes_de_conception(tmp_path):
+    """Les rondes de conception sont indexées avec `phase` et leur numéro de ronde dans `generation` (1 à R) : elles ne
+    comptent jamais comme générations notées (R5). Cas sain : générations 0 à 2 valides dans les deux bras → génération 2
+    lue. Artefacts : dans A, génération 2 invalidée, ou jamais jouée (lignée arrêtée après g1), alors qu'une ronde de
+    conception porte le numéro 2 → génération 1 lue, jamais un fichier invalidé ou absent."""
+    from essaim_m3 import analyse_gradient as A
+    taches = A._taches_du_test_final(2, 2)
+    banque = {"test_final": taches}
+
+    def course(nom, generations, conception=0, invalides=()):
+        racine = tmp_path / nom
+        (racine / "archive").mkdir(parents=True)
+        (racine / "banque.json").write_text(json.dumps(banque), encoding="utf-8")
+        lignes = [{"lignee": "claude-opus-5-5", "generation": k, "phase": "conception", "invalide": False}
+                  for k in range(1, conception + 1)]
+        for g in generations:
+            juge = racine / "archive" / "claude-opus-5-5" / f"g{g:03d}" / "juge"
+            juge.mkdir(parents=True)
+            # chaque génération répond autrement (première étiquette de la famille en g1, seconde sinon) : la génération lue se voit
+            reponses = {t["id"]: {"etiquette": t["etiquettes"][0 if g == 1 else 1]} for t in taches}
+            juge.joinpath("reponses_test.json").write_text(json.dumps(reponses), encoding="utf-8")
+            lignes.append({"lignee": "claude-opus-5-5", "generation": g, "phase": None, "invalide": g in invalides})
+        (racine / "archive" / "index.jsonl").write_text("".join(json.dumps(l) + "\n" for l in lignes), encoding="utf-8")
+        return str(racine)
+
+    b = course("b", [0, 1, 2])
+    sain = course("a-sain", [0, 1, 2], conception=8)
+    assert A.generations_valides(sain, "claude-opus-5-5") == [0, 1, 2]
+    paires, _, etat = A.paires_h_g1([(sain, b)], ["claude-opus-5-5"], generations=3)
+    assert [p["generation"] for p in paires] == [2] and not etat["coupees"]
+    for nom, generations, invalides in (("a-invalide", [0, 1, 2], (2,)), ("a-arretee", [0, 1], ())):
+        a = course(nom, generations, conception=8, invalides=invalides)
+        assert A.generations_valides(a, "claude-opus-5-5") == [0, 1]
+        paires, _, etat = A.paires_h_g1([(a, b)], ["claude-opus-5-5"], generations=3)
+        assert [p["generation"] for p in paires] == [1] and not etat["coupees"]
+        attendu = {t["id"]: t["etiquettes"][0] for t in taches}
+        assert paires[0]["avec"] == attendu == paires[0]["sans"]
+
+
+def test_lire_resultat_modele_non_conforme_refuse(tmp_path):
+    """CE2-04 (R5) : `_lire_resultat` relit le résultat d'un entraînement comme une donnée non fiable. Cas sain : formes
+    attendues → OK et copie validée dans la zone du noyau. Artefacts : formes fausses, nombre non fini, objet Python
+    (chargement sans `allow_pickle`), clé en trop, courbe non conforme → `ECHEC_ENTRAINEMENT`, aucun modèle copié."""
+    from essaim_m3.noyau import entrainement as E
+    d = 6
+    def bac(nom, modele, resultat=None):
+        b = tmp_path / nom
+        b.mkdir()
+        json.dump(resultat or {"statut": "OK", "courbe_perte": [[0, 0.3], [9, 0.1]], "perte_finale_entrainement": 0.1,
+                               "exactitude_entrainement": 0.9}, open(b / "resultat.json", "w"))
+        np.savez(b / "modele.npz", **modele)
+        t = tmp_path / (nom + "-noyau")
+        t.mkdir()
+        return b, t
+    sain = {"w": np.zeros(d), "b": np.zeros(1), "mu": np.zeros(d), "sd": np.ones(d)}
+    b, t = bac("sain", sain)
+    assert E._lire_resultat(b, t, "sonde-lineaire", d)[0] == "OK" and (t / "modele.npz").exists()
+    artefacts = {"formes": dict(sain, w=np.zeros(d + 1)), "non-fini": dict(sain, b=np.array([np.nan])),
+                 "objet": dict(sain, w=np.array([{"x": 1}], dtype=object)), "cle-en-trop": dict(sain, z=np.zeros(1))}
+    for nom, m in artefacts.items():
+        b, t = bac(nom, m)
+        statut, erreur, _ = E._lire_resultat(b, t, "sonde-lineaire", d)
+        assert statut == "ECHEC_ENTRAINEMENT" and not (t / "modele.npz").exists(), (nom, erreur)
+    b, t = bac("courbe", sain, {"statut": "OK", "courbe_perte": [[0, float("inf")]], "perte_finale_entrainement": 0.1, "exactitude_entrainement": 0.9})
+    assert E._lire_resultat(b, t, "sonde-lineaire", d)[0] == "ECHEC_ENTRAINEMENT"
+    une = {"W1": np.zeros((d, 4)), "b1": np.zeros(4), "w2": np.zeros(4), "b2": np.zeros(1), "mu": np.zeros(d), "sd": np.ones(d)}
+    b, t = bac("une-couche", une)
+    assert E._lire_resultat(b, t, "sonde-une-couche", d)[0] == "OK"
+    b, t = bac("une-couche-fausse", dict(une, w2=np.zeros(5)))
+    assert E._lire_resultat(b, t, "sonde-une-couche", d)[0] == "ECHEC_ENTRAINEMENT"
+
+
+def test_declencheurs_audit_h_g1_et_ordre_de_ronde_apparie(tmp_path):
+    """CE2-09 : déclencheurs de l'audit de symétrie calculés en un seul endroit (sain : aucun ; artefacts : chaque seuil).
+    CE2-03 : deux bras appariés aux mêmes lignées et à la même graine ont le même ordre de ronde."""
+    from essaim_m3 import analyse_gradient as A
+    from essaim_m3.noyau import cli
+    assert A.declencheurs_audit_h_g1({"x@A@r1": {"f1": 0.7, "f2": 0.6}}, {"v": 0.8}, {"p": 0.1}) == []
+    assert len(A.declencheurs_audit_h_g1({"x@A@r1": {"f1": 0.96}}, {}, {})) == 1
+    assert len(A.declencheurs_audit_h_g1({"x@B@r1": {"f1": 0.29}}, {}, {})) == 1
+    assert len(A.declencheurs_audit_h_g1({}, {"couche16-dernier/brier": 0.951}, {})) == 1
+    assert len(A.declencheurs_audit_h_g1({}, {}, {"p": -0.41})) == 1
+    taches = [{"id": "a", "famille": "f1", "etiquettes": ["p", "n"], "verite": "p"}, {"id": "b", "famille": "f1", "etiquettes": ["p", "n"], "verite": "n"}]
+    assert A.exactitude_par_famille({"a": "p", "b": "p"}, taches) == {"f1": 0.5}
+    a, b = tmp_path / "a", tmp_path / "b"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", "12", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "CLAUDE_OPUS_5_5", "CLAUDE_FABLE_5_1", "--entrainements-max", "1"]) == 0
+    assert cli.principal(["simuler", "--sortie", str(b), "--generations", "2", "--graine", "12", "--depuis", str(a),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    ordres = lambda c: [e["ordre"] for e in (json.loads(x) for x in (c / "evenements.jsonl").read_text().splitlines()) if e.get("etape") == "ronde"]
+    assert ordres(a) and ordres(a) == ordres(b)
+
+
 def test_bras_apparie_adaptatif_sur_course_a_conception(tmp_path):
     """Fusion de CE-06 (bras apparié adaptatif, session-depot) et de la phase de conception (conv-audit) : `--depuis` sans
     `--gel` relance la génération 0 **issue de la conception** de la course d'origine (même empreinte), sans nouvelle
@@ -1655,7 +1748,8 @@ def test_bras_apparie_adaptatif_sur_course_a_conception(tmp_path):
     assert cli.principal(["simuler", "--sortie", str(adaptatif), "--generations", "1", "--graine", "22", "--depuis", str(course),
                           "--appels-max", "30", "--entrainements-max", "0"]) == 0
     idx_a = [json.loads(x) for x in (adaptatif / "archive" / "index.jsonl").read_text().splitlines()]
-    assert not any(l.get("phase") for l in idx_a)
+    # aucune nouvelle ronde de conception dans le bras apparié ; les rondes importées de l'origine (RE-01, `importee`) y sont
+    assert not any(l.get("phase") and not l.get("importee") for l in idx_a)
     for lignee in ("concepteur", "gemini-argon"):
         e0 = next(l for l in idx if l["lignee"] == lignee and l["generation"] == 0 and not l.get("phase"))["empreinte_organisme"]
         assert next(l for l in idx_a if l["lignee"] == lignee and l["generation"] == 0)["empreinte_organisme"] == e0
@@ -1712,6 +1806,181 @@ def test_temps_par_ronde_de_conception(tmp_path):
     assert cli.principal(["simuler", "--sortie", str(sans), "--generations", "1", "--graine", "31", "--n-train", "6", "--n-test", "6", "--n-final", "4",
                           "--appels-max", "30", "--especes", "GEMINI_ARGON", "--temps-max", "2400", "--rondes-conception-max", "1"]) == 0
     assert json.loads((sans / "archive" / "gemini-argon" / "c001" / "travail" / "contexte.json").read_text())["budget"]["temps_max_s"] == 2400
+
+
+def test_bras_apparie_voit_les_rondes_de_conception_de_l_origine(tmp_path):
+    """RE-01 (conv-audit, n° 20) : dans le bras apparié adaptatif (`--depuis` sans `--gel`), la génération 0 relancée
+    doit voir ce que la génération 0 d'origine voyait — ses rondes de conception, dans `historique` et dans sa vue —,
+    sinon le bras d'origine a plus d'information que le bras apparié, en plus de l'entraînement comparé. Sain : rondes
+    importées, historique et vue de g000 égaux dans les deux bras ; rondes marquées `importee`, hors scores, hors dépense,
+    hors `generations_valides`. Artefact : le bras gelé n'importe rien (archive vide, CR-08) ; une seconde importation
+    refuse (rien n'est réécrit)."""
+    from essaim_m3 import analyse_gradient as A
+    from essaim_m3.noyau import cli
+    concepteur = RACINE / "tests" / "fixtures" / "organisme_concepteur" / "organisme"
+    a = tmp_path / "a"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", "41", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"concepteur={concepteur}@anthropic",
+                          "--rondes-conception-max", "3"]) == 0
+    b = tmp_path / "b"
+    assert cli.principal(["simuler", "--sortie", str(b), "--generations", "2", "--graine", "41", "--depuis", str(a),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    for lignee in ("concepteur", "gemini-argon"):
+        ctx_a = json.loads((a / "archive" / lignee / "g000" / "travail" / "contexte.json").read_text())
+        ctx_b = json.loads((b / "archive" / lignee / "g000" / "travail" / "contexte.json").read_text())
+        cle = lambda h: [(x.get("phase"), x["generation"], x["statut"], x.get("successeur")) for x in h]
+        assert cle(ctx_a["historique"]) == cle(ctx_b["historique"]) and ctx_b["historique"] and all(x.get("importee") for x in ctx_b["historique"])
+        vue_a, vue_b = pathlib.Path(ctx_a["dossier_archive"]), pathlib.Path(ctx_b["dossier_archive"])
+        assert sorted(p.name for p in vue_a.iterdir()) == sorted(p.name for p in vue_b.iterdir())
+        assert not any(q.name in ("juge", "reponses_test.json", "noyau") for q in vue_b.rglob("*"))
+    idx_b = [json.loads(x) for x in (b / "archive" / "index.jsonl").read_text().splitlines()]
+    importees = [l for l in idx_b if l.get("importee")]
+    assert importees and all(l["phase"] == "conception" and l["course_origine"] == str(a) for l in importees)
+    assert A.generations_valides(b, "concepteur") == [0, 1] and A.generations_valides(a, "concepteur") == [0, 1]
+    rapport = json.loads(sorted(b.glob("rapport-v*.json"))[-1].read_text())
+    assert rapport["rondes_conception"] == [] and len(rapport["rondes_conception_importees"]) == len(importees)
+    assert set(rapport["scores_finaux"]) == {"concepteur", "gemini-argon"} and all(len(v) == 2 for v in rapport["scores_finaux"].values())
+    assert abs(rapport["depense_totale_usd"] - sum(float(l.get("cout_usd") or 0) for l in idx_b if not l.get("importee"))) < 1e-6
+    n = boucle.Noyau.recharger(b, appelants=None, reel=False)
+    assert abs(n.depense_totale - rapport["depense_totale_usd"]) < 1e-6
+    with pytest.raises(FileExistsError):
+        n.archive.importer_conception(a, "concepteur")
+    gel = tmp_path / "gel"
+    assert cli.principal(["simuler", "--sortie", str(gel), "--generations", "1", "--graine", "42", "--gel", "--depuis", str(a), "--appels-max", "30"]) == 0
+    idx_g = [json.loads(x) for x in (gel / "archive" / "index.jsonl").read_text().splitlines()]
+    assert not any(l.get("importee") or l.get("phase") for l in idx_g)
+    assert json.loads((gel / "archive" / "concepteur" / "g000" / "travail" / "contexte.json").read_text())["historique"] == []
+
+
+def test_plafond_de_jetons_par_appel(tmp_path):
+    """`--max-tokens-appel` (étape 1 « économe ») : le noyau rabat le `max_tokens` demandé par l'organisme au plafond, le
+    dit dans la réponse (`max_tokens_servi`) et dans `budget()` ; sans plafond, la demande est servie telle quelle ;
+    plafond non positif refusé. La réservation au pire cas suit le `max_tokens` servi (artefact : un appel qui demande
+    100 000 jetons sous un plafond de 256 n'est pas refusé pour plafond de dollars)."""
+    doubles, _ = appelants_simules(rng())
+    a = appels.Appelant(tmp_path, 0.5, doubles)
+    s = serveur.ServeurAppels(a, str(tmp_path / "s.sock"), appels_max=5, max_tokens_appel=256)
+    r = s.traiter({"op": "appeler", "espece": "GEMINI_ARGON", "prompt": "bonjour", "max_tokens": 100000})
+    assert r["statut"] == "OK" and r["max_tokens_servi"] == 256 and s.rabattements == 1
+    r2 = s.traiter({"op": "appeler", "espece": "GEMINI_ARGON", "prompt": "bonjour", "max_tokens": 64})
+    assert r2["max_tokens_servi"] == 64 and s.rabattements == 1
+    assert s.traiter({"op": "budget"})["max_tokens_appel"] == 256
+    journal = [json.loads(x) for x in a.journal.read_text().splitlines()]
+    assert [j["max_tokens"] for j in journal] == [256, 64]
+    sans = serveur.ServeurAppels(a, str(tmp_path / "t.sock"), appels_max=5)
+    assert sans.traiter({"op": "budget"})["max_tokens_appel"] is None
+    with pytest.raises(ValueError):
+        serveur.ServeurAppels(a, str(tmp_path / "u.sock"), appels_max=5, max_tokens_appel=0)
+    from essaim_m3.noyau import cli
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "1", "--graine", "43", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--max-tokens-appel", "512", "--rondes-conception-max", "1"]) == 0
+    for g in ("c001", "g000"):
+        ctx = json.loads((course / "archive" / "gemini-argon" / g / "travail" / "contexte.json").read_text())
+        assert ctx["budget"]["max_tokens_appel"] == 512
+    assert json.loads((course / "manifeste-run.json").read_text())["budget_generation"]["max_tokens_appel"] == 512
+
+
+# ---------- R-372 : root ne suit aucun lien de l'organisme, n'attend sur aucun tube (faille trouvée par session-depot) ----------
+
+def test_fichiers_lecture_et_copie_sans_lien(tmp_path):
+    """`lire_fichier_organisme` : fichier ordinaire lu ; absent, lien, tube nommé (sans attendre), liens durs multiples,
+    taille dépassée : refusés avec leur raison. `copier_sans_liens` : dossiers et fichiers ordinaires copiés, le reste
+    écarté et rendu."""
+    from essaim_m3.noyau import fichiers as F
+    ok = tmp_path / "ok.json"
+    ok.write_text('{"a": 1}', encoding="utf-8")
+    assert F.lire_fichier_organisme(ok, 100) == (b'{"a": 1}', None)
+    assert F.lire_fichier_organisme(tmp_path / "absent", 100) == (None, "absent")
+    os.symlink(ok, tmp_path / "lien")
+    d, r = F.lire_fichier_organisme(tmp_path / "lien", 100)
+    assert d is None and "lien symbolique" in r
+    os.mkfifo(tmp_path / "tube")
+    d, r = F.lire_fichier_organisme(tmp_path / "tube", 100)
+    assert d is None and "fichier spécial" in r
+    gros = tmp_path / "gros.txt"
+    gros.write_bytes(b"x" * 101)
+    d, r = F.lire_fichier_organisme(gros, 100)
+    assert d is None and "101 octets" in r
+    os.link(ok, tmp_path / "dur")
+    d, r = F.lire_fichier_organisme(ok, 100)
+    assert d is None and "liens durs" in r
+    src = tmp_path / "src"
+    (src / "sous").mkdir(parents=True)
+    (src / "a.txt").write_text("a", encoding="utf-8")
+    (src / "sous" / "b.txt").write_text("b", encoding="utf-8")
+    os.symlink("/proc/self/environ", src / "env")
+    os.symlink(tmp_path, src / "dossier-lien")
+    os.mkfifo(src / "sous" / "tube")
+    ecartes = F.copier_sans_liens(src, tmp_path / "dst", ignorer=("ignore*",))
+    assert sorted(p.relative_to(tmp_path / "dst").as_posix() for p in (tmp_path / "dst").rglob("*")) == ["a.txt", "sous", "sous/b.txt"]
+    assert [e.split(" : ")[0] for e in ecartes] == ["dossier-lien", "env", "sous/tube"]
+    assert F.elements_non_ordinaires(src) == ecartes
+    with pytest.raises(ValueError):
+        F.copier_sans_liens(src / "env", tmp_path / "dst2")
+
+
+def test_depot_ne_suit_aucun_lien_de_l_organisme(tmp_path):
+    """Le dépôt d'une génération copie le dossier de travail sans suivre ses liens : un lien vers un fichier 0600 de root,
+    vers `/proc/self/environ` ou vers un dossier, un tube nommé : écartés et consignés (`elements_ecartes`), jamais dans
+    l'archive ni dans la vue. Artefact : avec `shutil.copytree(..., symlinks=False)`, la cible est copiée (essai en échec)."""
+    from essaim_m3.noyau import archive as A
+    travail = tmp_path / "travail"
+    (travail / "sous").mkdir(parents=True)
+    (travail / "note.txt").write_text("sortie ordinaire", encoding="utf-8")
+    (travail / "sous" / "f.txt").write_text("x", encoding="utf-8")
+    secret = tmp_path / "secret.txt"
+    secret.write_text("SECRET-DU-NOYAU-0600", encoding="utf-8")
+    os.chmod(secret, 0o600)
+    os.symlink(secret, travail / "lien-secret")
+    os.symlink("/proc/self/environ", travail / "lien-environ")
+    os.symlink(tmp_path, travail / "lien-dossier")
+    os.mkfifo(travail / "tube")
+    org = tmp_path / "org"
+    org.mkdir()
+    (org / "principal.py").write_text("x = 1\n", encoding="utf-8")
+    arch = A.Archive(tmp_path / "archive", tmp_path / "vue")
+    ligne = arch.deposer("l", 0, org, travail, None, {"score": 0.5}, {"statut": "OK", "n_appels": 0, "cout_usd": 0})
+    vue = tmp_path / "vue" / "l" / "g000" / "travail"
+    assert sorted(p.relative_to(vue).as_posix() for p in vue.rglob("*")) == ["note.txt", "sous", "sous/f.txt"]
+    resume = json.loads((tmp_path / "archive" / "l" / "g000" / "resume.json").read_text(encoding="utf-8"))
+    assert ligne["n_elements_ecartes"] == 4
+    assert [e.split(" : ")[0] for e in resume["elements_ecartes"]] == ["lien-dossier", "lien-environ", "lien-secret", "tube"]
+    for p in list((tmp_path / "archive").rglob("*")) + list((tmp_path / "vue").rglob("*")):
+        if p.is_file() and not p.is_symlink():
+            assert b"SECRET-DU-NOYAU" not in p.read_bytes() and b"PATH=" not in p.read_bytes()
+
+
+def test_organisme_poseur_de_liens_ne_voit_rien_du_noyau(tmp_path):
+    """De bout en bout (simulation) : un organisme pose à chaque génération des liens vers `/proc/self/environ`,
+    `/proc/self/cmdline` et un fichier JSON du noyau illisible pour lui (marqueur), dont `metrique_proposee.json`, et un tube
+    nommé à la place de `reponses_test.json`. La course se termine (aucune attente sur le tube) ; rien n'est lu ni copié à
+    travers un lien ; le résumé et le score disent les refus ; la génération suivante ne voit dans sa vue ni le marqueur,
+    ni l'environnement, ni la ligne de commande du noyau."""
+    from essaim_m3.noyau import bac_a_sable, cli
+    org = tmp_path / "org"
+    shutil.copytree(RACINE / "tests" / "fixtures" / "organisme_liens", org)
+    secret = tmp_path / "secret-noyau.json"
+    secret.write_text(json.dumps({"verites": "MARQUEUR-BANQUE-7f3a"}), encoding="utf-8")
+    os.chmod(secret, 0o600)
+    (org / "organisme" / "cible.txt").write_text(str(secret), encoding="utf-8")
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "2", "--graine", "41", "--n-train", "6", "--n-test", "6",
+                          "--n-final", "4", "--appels-max", "10", "--especes", "GEMINI_ARGON", "--organisme-amorcage", str(org)]) == 0
+    g0 = course / "archive" / "gemini-argon" / "g000"
+    resume = json.loads((g0 / "resume.json").read_text(encoding="utf-8"))
+    noms = [e.split(" : ")[0] for e in resume["elements_ecartes"]]
+    assert {"lien-environ", "lien-cmdline", "lien-cible", "metrique_proposee.json", "reponses_test.json"} <= set(noms)
+    assert resume["metrique_proposee"] == {"refuse": "refusé : lien symbolique"}
+    score = json.loads((g0 / "juge" / "score.json").read_text(encoding="utf-8"))
+    assert "fichier spécial" in (score.get("probleme_reponses") or "")
+    vue = bac_a_sable.espace_organismes(course) / "archive_vue"
+    for p in list((course / "archive").rglob("*")) + list(vue.rglob("*")):
+        if p.is_file() and not p.is_symlink():
+            assert b"MARQUEUR-BANQUE-7f3a" not in p.read_bytes()
+    vu = json.loads((course / "archive" / "gemini-argon" / "g001" / "travail" / "vu.json").read_text(encoding="utf-8"))
+    assert vu and not any(k.split("/")[-1].startswith("lien-") for k in vu)
+    assert not any("MARQUEUR-BANQUE" in v or "PATH=" in v for v in vu.values())
 
 
 def test_confrontation_budget_de_defense_plafond_propre_journaux_scelles_et_ordre_tire(tmp_path):
@@ -1801,3 +2070,38 @@ def test_devis_confrontation_calcule_sur_la_banque_scellee():
     bas = dict(D.BORNES_V7, usd_max=37.0, plafond_demande=3520.0)
     d2 = D.devis(banque, mission, bas)
     assert d2["appels_couverts_par_usd_max"]["CLAUDE_FABLE_5_1"] < 160 and not d2["somme_des_plafonds_sous_le_go"]
+
+
+def test_defense_poseuse_de_liens_ne_bloque_pas_la_confrontation(tmp_path):
+    """R-372 appliqué à la confrontation : un défendeur qui met un tube nommé à la place de `reponses_test.json` et des
+    liens dans son dossier de travail ne bloque pas le noyau ; sa réponse est refusée (consignée dans
+    `probleme_reponses`), son score d'attaques est celui d'une défense sans réponse ; l'attaquant garde sa paire.
+    Sain : un défendeur ordinaire a `probleme_reponses` None. Sans le correctif, la lecture du tube bloquait le noyau."""
+    from essaim_m3.noyau import confrontation
+    org = tmp_path / "org"
+    shutil.copytree(RACINE / "tests" / "fixtures" / "organisme_liens", org)
+    secret = tmp_path / "secret.json"
+    secret.write_text(json.dumps({"x": "MARQUEUR-CONF-2b9c"}), encoding="utf-8")
+    os.chmod(secret, 0o600)
+    (org / "organisme" / "cible.txt").write_text(str(secret), encoding="utf-8")
+    ss = np.random.SeedSequence(23)
+    r1, r2 = (np.random.default_rng(x) for x in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 6, 6)
+    doubles, _ = appelants_simules(r2)
+    imposes = {"poseur": {"organisme": str(org / "organisme"), "famille": "gemini"}}
+    n = boucle.Noyau(tmp_path / "run", "m", banque, {"appels_max": 30, "usd_max": 2.0, "temps_max_s": 60}, 8.0, 1,
+                     appelants=doubles, especes_amorcage=["CLAUDE_OPUS_5_5"], entropie=23, organismes_imposes=imposes)
+    n.amorcer()
+    n.boucler()
+    rapport = confrontation.Confrontation(n, tmp_path / "run" / "confrontation", plafond_confrontation=2.0).confronter()
+    vers_poseur = [p for p in rapport["paires"] if p.get("applicable") and p["defendeur"] == "poseur" and p.get("n_attaques")]
+    assert vers_poseur, rapport["paires"]
+    for p in vers_poseur:
+        assert "fichier spécial" in (p["probleme_reponses"] or "")
+        assert all(d["non_repondu"] == d["n"] for d in p["score_attaques"]["par_famille"].values())
+    for p in rapport["paires"]:
+        if p.get("applicable") and p["defendeur"] == "claude-opus-5-5" and p.get("n_attaques"):
+            assert p["probleme_reponses"] is None
+    for f in (tmp_path / "run").rglob("*"):
+        if f.is_file() and not f.is_symlink():
+            assert b"MARQUEUR-CONF-2b9c" not in f.read_bytes()

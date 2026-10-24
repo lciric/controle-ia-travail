@@ -23,8 +23,14 @@ MAX_TOKENS_DEFAUT_ORGANISME = 4096  # si l'organisme ne fixe pas max_tokens ; il
 
 class ServeurAppels:
     def __init__(self, appelant: Appelant, chemin_socket: str, appels_max: int, parallele_max: int = PARALLELE_MAX_DEFAUT, rechercheur=None,
-                 entraineur=None, telechargeur=None):
+                 entraineur=None, telechargeur=None, max_tokens_appel: int | None = None):
         self.appelant = appelant
+        # plafond de jetons de sortie par appel (budget `max_tokens_appel`, étape 1 « économe ») : le noyau rabat ce que
+        # l'organisme demande ; None = aucun plafond (jusqu'au maximum du modèle, comme avant)
+        self.max_tokens_appel = (None if max_tokens_appel is None else int(max_tokens_appel))
+        if self.max_tokens_appel is not None and self.max_tokens_appel <= 0:
+            raise ValueError("max_tokens_appel doit être strictement positif")
+        self.rabattements = 0  # appels dont le max_tokens demandé a été rabattu au plafond (rapporté)
         self.rechercheur = rechercheur  # `recherche.Rechercheur` ou None (recherche non servie dans ce run)
         self.entraineur = entraineur    # `entrainement.Entraineur` ou None (apprentissage par gradient non servi)
         self.telechargeur = telechargeur  # `moisson.Telechargeur` ou None (téléchargement non servi)
@@ -109,7 +115,7 @@ class ServeurAppels:
             return {"especes": sorted(ESPECES)}
         if op == "budget":
             with self._verrou:
-                return {"appels_restants": max(0, self.appels_max - self.n_appels),
+                return {"appels_restants": max(0, self.appels_max - self.n_appels), "max_tokens_appel": self.max_tokens_appel,
                         "usd_restants": round(max(0.0, self.appelant.plafond_usd - self.appelant.depense_usd), 4),
                         "recherches_restantes": (max(0, self.rechercheur.recherches_max - self.rechercheur.compteur) if self.rechercheur is not None else 0),
                         "entrainements_restants": (max(0, self.entraineur.entrainements_max - self.entraineur.compteur) if self.entraineur is not None else 0),
@@ -153,6 +159,10 @@ class ServeurAppels:
             try:
                 mt = req.get("max_tokens")
                 mt = int(mt) if isinstance(mt, (int, float)) and not isinstance(mt, bool) and mt > 0 else MAX_TOKENS_DEFAUT_ORGANISME
+                if self.max_tokens_appel is not None and mt > self.max_tokens_appel:
+                    mt = self.max_tokens_appel
+                    with self._verrou:
+                        self.rabattements += 1
                 res = self.appelant.appeler(espece, "organisme", prompt, max_tokens=mt,
                                             role=str(req.get("role", ""))[:40])
             except Arret as e:
@@ -167,5 +177,5 @@ class ServeurAppels:
                 self.non_conformes += 1
                 self.arret = f"modèle servi non conforme ({res.modele_servi!r} pour {res.modele_demande!r}) : génération invalidée, plus aucun appel servi"
         return {"statut": res.statut, "texte": res.texte, "modele_servi": res.modele_servi, "fin": res.fin,
-                "usage": res.usage, "cout_usd": res.cout_usd, "identifiant": res.identifiant,
+                "usage": res.usage, "cout_usd": res.cout_usd, "identifiant": res.identifiant, "max_tokens_servi": mt,
                 "echec": (str(res.echec)[:200] if res.echec else None)}

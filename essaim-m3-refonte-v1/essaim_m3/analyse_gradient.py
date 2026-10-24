@@ -48,9 +48,13 @@ def reponses_finales(course: str | pathlib.Path, lignee: str, generation: int, b
 
 
 def generations_valides(course: str | pathlib.Path, lignee: str) -> list[int]:
+    """Générations notées d'une lignée que le noyau n'a pas invalidées. Les rondes de la phase de conception (`cNNN`) sont
+    écartées : l'index les inscrit avec `phase` et leur numéro de ronde (1 à R) dans `generation`, qui n'est pas une
+    génération notée (constat de « session-depot » après CR3-02 de la contre-lecture n° 3 de la confrontation)."""
     index = pathlib.Path(course) / "archive" / "index.jsonl"
     lignes = [json.loads(x) for x in index.read_text(encoding="utf-8").splitlines() if x.strip()] if index.is_file() else []
-    return sorted(l["generation"] for l in lignes if l["lignee"] == lignee and not l.get("invalide"))
+    # générations notées seulement : ni rondes de conception (`phase`), ni rondes importées d'une course d'origine, ni invalidées
+    return sorted(l["generation"] for l in lignes if l["lignee"] == lignee and not l.get("invalide") and not l.get("phase") and not l.get("importee"))
 
 
 def paires_h_g1(couples: list[tuple[str, str]], lignees: list[str], generations: int) -> tuple[list[dict], list[dict], dict]:
@@ -124,6 +128,35 @@ def lecture_h_g1(resultat: dict, effet_predit: float = EFFET_PREDIT) -> str:
     if haut < effet_predit:
         return "réfuté (l'effet prédit est exclu)" + (" ; effet positif plus petit que prédit" if bas > 0 else "")
     return "non concluant ; aucune relance sans nouveau préenregistrement"
+
+
+# ------------------------------------------------------------- audit de symétrie (R4, CE2-09) ----
+SEUIL_HAUT, SEUIL_BAS, SEUIL_DELTA = 0.95, 0.30, 0.40
+
+
+def exactitude_par_famille(reponses: dict[str, str | None], taches: list[dict]) -> dict[str, float]:
+    """(sensibilité + spécificité) / 2 pour chaque famille, règle du juge (sans réponse = erreur)."""
+    return {f: exactitude_equilibree(reponses, [t for t in taches if t["famille"] == f]) for f in sorted({t["famille"] for t in taches})}
+
+
+def declencheurs_audit_h_g1(scores_familles: dict[str, dict[str, float]], temoins: dict[str, float],
+                            par_paire: dict[str, float]) -> list[str]:
+    """Déclencheurs gelés de l'audit de symétrie, calculés en un seul endroit pour être rejoués (R13) :
+    une lignée (clé libre, par exemple « lignée@bras@réplique ») au-dessus de 0,95 ou au-dessous de 0,30 sur une famille
+    du test final ; une sonde témoin au-dessus de 0,95 ; |Δ| d'une paire au-dessus de 0,40. Rend la liste des faits
+    déclencheurs (vide : pas d'audit)."""
+    faits = []
+    for cle, fams in sorted(scores_familles.items()):
+        for fam, s in sorted(fams.items()):
+            if s > SEUIL_HAUT or s < SEUIL_BAS:
+                faits.append(f"{cle} : {fam} = {s:.3f}")
+    for cle, s in sorted(temoins.items()):
+        if s > SEUIL_HAUT:
+            faits.append(f"témoin {cle} = {s:.3f}")
+    for cle, d in sorted(par_paire.items()):
+        if abs(d) > SEUIL_DELTA:
+            faits.append(f"paire {cle} : Δ = {d:+.3f}")
+    return faits
 
 
 # ---------------------------------------------------------------- contrôle positif (CE-03) ----

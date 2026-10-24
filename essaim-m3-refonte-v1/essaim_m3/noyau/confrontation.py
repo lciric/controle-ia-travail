@@ -240,23 +240,30 @@ class Confrontation:
             sceller(copie)
             journal.update({"chemin": str(copie), "sha256": empreinte_fichier(copie)})
         self.journaux_defense.append(journal)
-        reponses = {}
-        f = travail / "reponses_test.json"
-        if f.exists():
+        reponses, probleme_reponses = {}, None
+        # R-372 : le fichier écrit par le défendeur est lu sans suivre de lien, sans attendre sur un tube, taille bornée
+        from . import fichiers as _fichiers
+        brut_octets, raison = _fichiers.lire_fichier_organisme(travail / "reponses_test.json", _fichiers.OCTETS_MAX_REPONSES)
+        if brut_octets is None:
+            probleme_reponses = None if raison == "absent" else raison
+        else:
             try:
-                brut = json.loads(f.read_text(encoding="utf-8-sig"))
+                brut = json.loads(brut_octets.decode("utf-8-sig"))
                 if isinstance(brut, dict):
                     for t in attaques:
                         r = brut.get(t["id"])
                         if isinstance(r, dict) and str(r.get("etiquette", "")).strip().lower() in t["etiquettes"]:
                             reponses[t["id"]] = {"etiquette": str(r["etiquette"]).strip().lower(), "confiance": _taches.confiance_de(r)}
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                pass
+                else:
+                    probleme_reponses = "reponses_test.json n'est pas un objet"
+            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                probleme_reponses = f"reponses_test.json illisible : {str(e)[:100]}"
         score = _taches.evaluer_generique(reponses, attaques)
         if non_conformes:  # CR3-03 : une défense servie par un modèle non conforme est invalide : aucun score retenu
             score = None
         return {"execution": execution["code"], "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
-                "score_attaques": score, "travail": travail, "non_conformes": int(non_conformes), "invalide_modele": bool(non_conformes)}
+                "score_attaques": score, "travail": travail, "non_conformes": int(non_conformes), "invalide_modele": bool(non_conformes),
+                "probleme_reponses": probleme_reponses}
 
     def _discriminance(self, a: str, ma: dict) -> dict:
         """CR-07 (ii) et N-041 (c), épreuve mécanique d'une métrique gelée, avant toute application. Le noyau fabrique des
@@ -334,7 +341,8 @@ class Confrontation:
                 att = self._executer_sur_attaques(b, organismes[b], ma["attaques"], f"{a}__vers__{b}")
                 res.update({"n_attaques": len(ma["attaques"]), "execution_defense": att["execution"],
                             "n_appels": att["n_appels"], "cout_usd": att["cout_usd"], "score_attaques": att["score_attaques"],
-                            "non_conformes": att["non_conformes"], "invalide_modele": att["invalide_modele"]})
+                            "non_conformes": att["non_conformes"], "invalide_modele": att["invalide_modele"],
+                            "probleme_reponses": att["probleme_reponses"]})
                 sorties = att["travail"]
             else:
                 res.update({"n_attaques": 0, "score_attaques": None})

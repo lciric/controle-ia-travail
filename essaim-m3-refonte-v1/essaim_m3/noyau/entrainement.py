@@ -33,6 +33,8 @@ import threading
 
 import numpy as np
 
+from . import fichiers as _fichiers
+
 PAS_MAX_DEFAUT = 5000
 DELAI_S_DEFAUT = 120
 MEMOIRE_MO_DEFAUT = 1024
@@ -196,11 +198,14 @@ def _lire_resultat(bac: pathlib.Path, travail: pathlib.Path, type_sonde: str, d:
     sans objet Python (allow_pickle=False), aux formes de la sonde demandée, nombres finis ; copié dans `travail` (zone du
     noyau) seulement s'il est conforme. Toute anomalie est un statut, jamais un repli."""
     f = bac / "resultat.json"
-    if not f.is_file():
-        return "ECHEC_ENTRAINEMENT", "aucun résultat écrit (mémoire ou processeur dépassés ?)", None
+    donnees, raison = _fichiers.lire_fichier_organisme(f, _fichiers.OCTETS_MAX_RESULTAT)  # R-372 : ni lien suivi, ni tube attendu
+    if donnees is None:
+        if raison == "absent":
+            return "ECHEC_ENTRAINEMENT", "aucun résultat écrit (mémoire ou processeur dépassés ?)", None
+        return "ECHEC_ENTRAINEMENT", f"résultat {raison}", None
     try:
-        r = json.loads(f.read_text(encoding="utf-8"))
-    except (OSError, ValueError, UnicodeDecodeError):
+        r = json.loads(donnees.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
         return "ECHEC_ENTRAINEMENT", "résultat illisible", None
     if not isinstance(r, dict) or r.get("statut") != "OK":
         return "ECHEC_ENTRAINEMENT", (str(r.get("erreur"))[-600:] if isinstance(r, dict) else "résultat non conforme"), None
@@ -211,7 +216,7 @@ def _lire_resultat(bac: pathlib.Path, travail: pathlib.Path, type_sonde: str, d:
             or not 0.0 <= float(r["exactitude_entrainement"]) <= 1.0):
         return "ECHEC_ENTRAINEMENT", "résultat non conforme (courbe, perte ou exactitude)", None
     try:
-        with np.load(bac / "modele.npz", allow_pickle=False) as m:
+        with _fichiers.ouvrir_fichier_organisme(bac / "modele.npz", _fichiers.OCTETS_MAX_RESULTAT) as fh, np.load(fh, allow_pickle=False) as m:
             tableaux = {k: np.asarray(m[k]) for k in m.files}
     except Exception:
         return "ECHEC_ENTRAINEMENT", "modèle illisible", None
@@ -377,9 +382,10 @@ class Entraineur:
         if statut == "OK":
             statut, erreur, resultat = _lire_resultat(bac, travail, spec["algorithme"]["type"], X.shape[1])
         if self.uid is not None:
-            for nom in ("spec.json", "programme.py"):
-                if (bac / nom).is_file() and not (travail / nom).exists():
-                    shutil.copyfile(bac / nom, travail / nom)
+            for nom in ("spec.json", "programme.py"):  # le bac appartient à l'utilisateur de l'entraîneur : lecture sans lien (R-372)
+                donnees_copie, _ = _fichiers.lire_fichier_organisme(bac / nom, _fichiers.OCTETS_MAX_RESULTAT)
+                if donnees_copie is not None and not (travail / nom).exists():
+                    (travail / nom).write_bytes(donnees_copie)
             shutil.rmtree(bac, ignore_errors=True)
         fin = _heure()
         sortie = {"statut": statut, "identifiant": (ident if statut == "OK" else None), "echec": erreur, "n_donnees": len(ids), "vue": vue,

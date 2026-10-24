@@ -30,7 +30,8 @@ def _lire_mission(chemin: str | None) -> str:
 def _budget(args) -> dict:
     return {"appels_max": args.appels_max, "usd_max": args.usd_par_generation, "temps_max_s": args.temps_max,
             "recherches_max": args.recherches_max, "telechargements_max": args.telechargements_max, "octets_max": args.octets_max,
-            "entrainements_max": args.entrainements_max, "pas_max": args.pas_max, "delai_entrainement_s": args.delai_entrainement}
+            "entrainements_max": args.entrainements_max, "pas_max": args.pas_max, "delai_entrainement_s": args.delai_entrainement,
+            "max_tokens_appel": args.max_tokens_appel}
 
 
 def _budget_conception(args) -> dict | None:
@@ -311,6 +312,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--entrainements-max", type=int, default=10, help="entraînements par gradient servis par le noyau, par génération (0 : aucun)")
         q.add_argument("--pas-max", type=int, default=5000, help="pas de gradient au plus par entraînement")
         q.add_argument("--delai-entrainement", type=int, default=120, help="secondes au plus par entraînement (sous-processus isolé)")
+        q.add_argument("--max-tokens-appel", type=int, default=None, help="plafond de jetons de sortie par appel d'organisme (le noyau rabat ce qui est demandé au-delà ; l'amorçage garde le maximum du modèle) ; défaut : aucun")
         q.add_argument("--traits", default=None, help="réel : dossier d'extraction (manifeste-traits.json, traits-<vue>.npz) ou fichier .npz (ids, X) — activations extraites sous GO ; simulation : traits de hachage calculés")
         q.add_argument("--vues", nargs="+", default=None, help="réel : vues servies (noms du manifeste, par exemple couche16-dernier) ; défaut : toutes")
         q.add_argument("--rondes-conception-max", type=int, default=0, help="phase de conception avant la génération 0 notée : borne dure du nombre de rondes (l'organisme déclare lui-même la fin par fin_conception.json) ; 0 : pas de phase")
