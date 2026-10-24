@@ -48,7 +48,7 @@ def archiver_organisme(organisme: pathlib.Path, cible: pathlib.Path) -> str:
 
 
 CHAMPS_VUE = ("lignee", "generation", "score", "statut", "cout_usd", "n_appels", "successeur", "metrique_proposee",
-              "n_reponses_test", "empreinte_organisme", "quand_utc", "refus_noyau")
+              "n_reponses_test", "empreinte_organisme", "quand_utc", "refus_noyau", "problemes_successeur", "relance", "impose", "famille")
 
 
 class Archive:
@@ -95,6 +95,8 @@ class Archive:
                  "cout_usd": resume.get("cout_usd"), "n_appels": resume.get("n_appels"), "chemin": str(d.relative_to(self.racine)),
                  "empreinte_organisme": empreinte, "successeur": resume.get("successeur"),
                  "impose": resume.get("impose"), "famille": resume.get("famille"),
+                 "problemes_successeur": [str(x)[:200] for x in (resume.get("problemes_successeur") or [])][:10],
+                 "relance": bool(resume.get("relance")),
                  "quand_utc": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
         complet = {**resume, **ligne}
         (d / "resume.json").write_text(json.dumps(complet, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -124,4 +126,6 @@ class Archive:
 
     def historique(self, lignee: str) -> list[dict]:
         return [{"generation": l["generation"], "lignee": l["lignee"], "score": l["score"], "statut": l["statut"],
-                 "cout_usd": l["cout_usd"], "n_appels": l["n_appels"]} for l in self.lignes(lignee)]
+                 "cout_usd": l["cout_usd"], "n_appels": l["n_appels"], "successeur": l.get("successeur"),
+                 "problemes_successeur": l.get("problemes_successeur", []), "relance": l.get("relance", False)}
+                for l in self.lignes(lignee)]

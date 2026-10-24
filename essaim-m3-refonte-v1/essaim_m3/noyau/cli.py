@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-from . import boucle, confrontation, contrat, taches
+from . import boucle, confrontation, contrat, recherche, taches
 from .appels import Arret
 
 MISSION_DEFAUT = pathlib.Path(__file__).resolve().parent.parent.parent / "MISSION-v1.md"
@@ -28,7 +28,8 @@ def _lire_mission(chemin: str | None) -> str:
 
 
 def _budget(args) -> dict:
-    return {"appels_max": args.appels_max, "usd_max": args.usd_par_generation, "temps_max_s": args.temps_max}
+    return {"appels_max": args.appels_max, "usd_max": args.usd_par_generation, "temps_max_s": args.temps_max,
+            "recherches_max": args.recherches_max}
 
 
 def _organismes_imposes(args) -> dict:
@@ -59,7 +60,8 @@ def simuler(args) -> int:
     noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                          args.generations, appelants=appelants, reel=False, entropie=int(ss.entropy),
                          especes_amorcage=args.especes, isoler_reseau=args.isoler_reseau, etiquette_run="simulation", gel=args.gel,
-                         organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max)
+                         organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max,
+                         recherche=recherche.recherche_simulee, relances_max=args.relances_max)
     amorcage = noyau.amorcer()
     rapport = noyau.boucler()
     if args.confronter:
@@ -94,7 +96,8 @@ def lancer(args) -> int:
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                              args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau,
                              entropie=args.graine, especes_amorcage=args.especes, etiquette_run="reel", gel=args.gel,
-                             organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max)
+                             organismes_imposes=_organismes_imposes(args), parallele_max=args.parallele_max,
+                             recherche=None, relances_max=args.relances_max)
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
@@ -126,6 +129,8 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--organisme-impose", action="append", default=None, metavar="NOM=CHEMIN@FAMILLE",
                        help="lignée dont la génération 0 est fournie (dossier organisme/) ; famille de fournisseur déclarée (anthropic|gemini) ; répétable")
         q.add_argument("--parallele-max", type=int, default=8, help="appels aux espèces servis en parallèle au plus (défaut 8)")
+        q.add_argument("--recherches-max", type=int, default=20, help="recherches documentaires servies par le noyau, par génération (0 : aucune) ; arXiv en réel, double en simulation")
+        q.add_argument("--relances-max", type=int, default=1, help="relances consécutives de la dernière génération valide quand le successeur est invalide (0 : lignée arrêtée)")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
             q.add_argument("--n-test", type=int, default=24)

@@ -16,7 +16,7 @@ import sys
 
 import numpy as np
 
-from . import archive as _archive, bac_a_sable, contrat, taches as _taches
+from . import archive as _archive, bac_a_sable, contrat, recherche as _recherche, taches as _taches
 from .appels import Appelant, Arret, cv
 from .serveur import PARALLELE_MAX_DEFAUT, ServeurAppels
 
@@ -41,7 +41,8 @@ class Noyau:
                  plafond_total_usd: float, generations_max: int, appelants: dict | None = None, reel: bool = False,
                  go_id: str | None = None, isoler_reseau: bool = False, entropie: int | None = None,
                  especes_amorcage: list[str] | None = None, etiquette_run: str = "", gel: bool = False,
-                 organismes_imposes: dict[str, dict] | None = None, parallele_max: int = PARALLELE_MAX_DEFAUT):
+                 organismes_imposes: dict[str, dict] | None = None, parallele_max: int = PARALLELE_MAX_DEFAUT,
+                 recherche=None, relances_max: int = 1):
         """`organismes_imposes` : {nom de lignée: {"organisme": dossier `organisme/` déjà écrit, "famille": "anthropic"|"gemini"}}
         — lignées dont la génération 0 n'est pas écrite par une espèce mais fournie (par exemple l'essaim de Gemini
         corrigé, mis sous contrat), pour les comparer sous le même noyau, les mêmes tâches et les mêmes bornes que les
@@ -59,6 +60,12 @@ class Noyau:
         self.gel = bool(gel)  # bras témoin : la génération 0 est relancée, le successeur est ignoré
         self.organismes_imposes = dict(organismes_imposes or {})
         self.parallele_max = max(1, int(parallele_max))
+        # recherche documentaire servie par le noyau (nœud 1, option (b)) : `recherche` est la fabrique du moteur
+        # (double en simulation ; None en réel = arXiv) ; `budget['recherches_max']` = 0 la coupe
+        self.recherche = recherche
+        self.budget.setdefault("recherches_max", 0)
+        # successeur invalide : relance de la dernière génération valide, `relances_max` fois de suite (nœud 2, (b))
+        self.relances_max = max(0, int(relances_max))
         for nom, spec in self.organismes_imposes.items():
             if not isinstance(spec, dict) or "organisme" not in spec or spec.get("famille") not in FAMILLES_CONNUES:
                 raise Arret(f"organisme imposé {nom!r} : il faut {{'organisme': dossier, 'famille': {FAMILLES_CONNUES}}}")
@@ -79,7 +86,8 @@ class Noyau:
             "isolation_reseau": self.isoler_reseau, "gel": self.gel, "n_taches_entrainement": len(banque["train"]),
             "n_taches_test_dev": len(banque["test"]), "n_taches_test_final": len(banque.get("test_final", [])),
             "mission_sha256": hashlib.sha256(mission.encode("utf-8")).hexdigest(),
-            "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage,
+            "parallele_max": self.parallele_max, "especes_amorcage": self.especes_amorcage, "relances_max": self.relances_max,
+            "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
             "organismes_imposes": {nom: {"source": str(spec["organisme"]), "famille": spec["famille"],
                                          "empreinte_arbre": (empreinte_arbre(pathlib.Path(spec["organisme"])) if pathlib.Path(spec["organisme"]).is_dir() else None)}
                                    for nom, spec in self.organismes_imposes.items()},
@@ -100,6 +108,13 @@ class Noyau:
 
     def _plafond_restant(self) -> float:
         return max(0.0, self.plafond_total - self.depense_totale)
+
+    def _rechercheur(self, dossier: pathlib.Path):
+        """Un rechercheur par génération ; None si `recherches_max` vaut 0 (recherche non servie)."""
+        if int(self.budget["recherches_max"]) <= 0:
+            return None
+        backend = self.recherche(self.graines.spawn(1)[0]) if self.recherche is not None else None
+        return _recherche.Rechercheur(dossier, int(self.budget["recherches_max"]), backend)
 
     def _appelant(self, dossier: pathlib.Path) -> Appelant:
         plafond = min(float(self.budget["usd_max"]), self._plafond_restant())
@@ -165,25 +180,33 @@ class Noyau:
         # test de développement (score rendu) et test final (jamais rendu), mêlés sans distinction pour l'organisme
         tous_tests = list(self.banque["test"]) + list(self.banque["test_final"])
         ordre_test = rng.permutation(len(tous_tests))
+        # bras gelé : témoin sans aucune transmission entre générations — archive vide et historique vide, sinon
+        # l'organisme relit sa propre mémoire archivée (Gemini le fait : `charger_connaissances_archive`)
+        archive_vue = self.archive.vue
+        if self.gel:
+            archive_vue = self.racine / "archive_vue_gel"
+            archive_vue.mkdir(parents=True, exist_ok=True)
         contexte = {
             "generation": g, "lignee": lignee, "mission": contrat.mission_texte(self.mission, _taches.ETIQUETTES),
-            "dossier_travail": str(travail), "dossier_archive": str(self.archive.vue),
+            "dossier_travail": str(travail), "dossier_archive": str(archive_vue),
             "taches_entrainement": [dict(_taches.masquer(self.banque["train"][i]), verite=self.banque["train"][i]["verite"]) for i in ordre_train],
             "taches_test": [_taches.masquer(tous_tests[i]) for i in ordre_test],
             "budget": {"appels_max": int(self.budget["appels_max"]), "usd_max": round(min(float(self.budget["usd_max"]), self._plafond_restant()), 4),
-                       "temps_max_s": int(self.budget["temps_max_s"])},
-            "historique": self.archive.historique(lignee),
+                       "temps_max_s": int(self.budget["temps_max_s"]), "recherches_max": int(self.budget["recherches_max"])},
+            "historique": ([] if self.gel else self.archive.historique(lignee)), "relance": bool(etat.get("relance_en_cours")),
         }
         appelant = self._appelant(travail / "noyau")
         chemin_socket = str(travail / "noyau.sock")
         if len(chemin_socket) > 100:  # limite des sockets Unix
             chemin_socket = f"/tmp/essaim-{lignee[:12]}-g{g}.sock"
         bac_a_sable.preparer(travail, organisme, contexte)
-        with ServeurAppels(appelant, chemin_socket, int(self.budget["appels_max"]), self.parallele_max) as serveur:
+        rechercheur = self._rechercheur(travail / "noyau")
+        with ServeurAppels(appelant, chemin_socket, int(self.budget["appels_max"]), self.parallele_max, rechercheur) as serveur:
             execution = bac_a_sable.executer(travail, chemin_socket, int(self.budget["temps_max_s"]), isoler_reseau=self.isoler_reseau)
             n_appels = serveur.n_appels
             refus = list(serveur.refus)
             en_vol_max = serveur.en_vol_max
+        n_recherches = rechercheur.compteur if rechercheur is not None else 0
         self.depense_totale += appelant.depense_usd
         self.n_appels_total += n_appels
         # jugement externe
@@ -225,20 +248,32 @@ class Noyau:
         resume = {"statut": execution["code"], "execution": execution, "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
                   "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
                   "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel,
-                  "impose": bool(etat.get("impose")), "famille": etat.get("famille")}
+                  "impose": bool(etat.get("impose")), "famille": etat.get("famille"), "relance": bool(etat.get("relance_en_cours")),
+                  "n_recherches": n_recherches}
         self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final)
         self._evenement(etape="generation", lignee=lignee, generation=g, statut=execution["code"], score=score["score"],
                         n_appels=n_appels, cout_usd=resume["cout_usd"], successeur=a_successeur, cumul_usd=round(self.depense_totale, 4))
+        etat["relance_en_cours"] = False
         if self.gel and g + 1 < self.generations_max:
             etat.update(generation=g + 1)  # même organisme (génération 0), relancé : bras témoin
         elif a_successeur and g + 1 < self.generations_max:
             prochain = self.racine / "lignees" / lignee / f"g{g + 1:03d}" / "organisme"
             prochain.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(successeur, prochain, symlinks=False)
-            etat.update(generation=g + 1, organisme=prochain)
+            etat.update(generation=g + 1, organisme=prochain, relances_consecutives=0)
+        elif not a_successeur and g + 1 < self.generations_max and etat.get("relances_consecutives", 0) < self.relances_max:
+            # nœud 2, option (b) : la dernière génération valide (celle qui vient de tourner) est relancée telle quelle ;
+            # l'organisme voit le refus de son successeur dans `historique` et `contexte["relance"]`
+            etat.update(generation=g + 1, relances_consecutives=etat.get("relances_consecutives", 0) + 1, relance_en_cours=True)
+            self._evenement(etape="relance", lignee=lignee, generation=g + 1, problemes_successeur=problemes_succ[:10])
         else:
             etat["active"] = False
-            etat["fin"] = "sans successeur valide" if not a_successeur else "générations maximales"
+            if a_successeur:
+                etat["fin"] = "générations maximales"
+            elif etat.get("relances_consecutives", 0) >= self.relances_max and self.relances_max > 0:
+                etat["fin"] = "sans successeur valide après relance"
+            else:
+                etat["fin"] = "sans successeur valide"
         return resume
 
     # ---- boucle ----

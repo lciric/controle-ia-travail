@@ -82,7 +82,7 @@ def executer(dossier_travail: pathlib.Path, chemin_socket: str, temps_max_s: int
     env = {"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "HOME": str(dossier_travail),
            "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8",
            "ESSAIM_SOCKET": chemin_socket, "ESSAIM_CONTEXTE": str(dossier_travail / "contexte.json")}
-    commande = [sys.executable, "-I", "-s", "-u", "lanceur.py"]
+    commande = [sys.executable, "-I", "-B", "-s", "-u", "lanceur.py"]  # -B : aucun bytecode (``-I`` ignore PYTHONDONTWRITEBYTECODE)
     if isoler_reseau:
         if not isolation_reseau_disponible():
             return {"code": "ISOLATION_INDISPONIBLE", "retour": None, "duree_s": 0.0, "delai_depasse": False}
@@ -152,7 +152,7 @@ def executer_metrique(dossier: pathlib.Path, metrique: pathlib.Path, sorties: pa
     sortie = (dossier / "sortie.txt").open("w", encoding="utf-8")
     erreurs = (dossier / "erreurs.txt").open("w", encoding="utf-8")
     try:
-        subprocess.run([sys.executable, "-I", "-s", "-u", "lanceur_metrique.py"], cwd=str(dossier), env=env, stdout=sortie,
+        subprocess.run([sys.executable, "-I", "-B", "-s", "-u", "lanceur_metrique.py"], cwd=str(dossier), env=env, stdout=sortie,
                        stderr=erreurs, timeout=temps_max_s, preexec_fn=_limites(memoire_mo, temps_max_s, 64))
     except subprocess.TimeoutExpired:
         return {"code": "DELAI_DEPASSE", "valeur": None, "calculee": False}

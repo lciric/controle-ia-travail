@@ -92,8 +92,8 @@ class Confrontation:
             "taches_test": [{"id": attaques[i]["id"], "famille": attaques[i]["famille"], "texte": attaques[i]["texte"],
                              "etiquettes": list(attaques[i]["etiquettes"])} for i in ordre],
             "budget": {"appels_max": int(self.noyau.budget["appels_max"]), "usd_max": round(min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()), 4),
-                       "temps_max_s": int(self.noyau.budget["temps_max_s"])},
-            "historique": self.noyau.archive.historique(lignee_def), "confrontation": True,
+                       "temps_max_s": int(self.noyau.budget["temps_max_s"]), "recherches_max": 0},
+            "historique": self.noyau.archive.historique(lignee_def), "confrontation": True, "relance": False,
         }
         appelant = Appelant(travail / "noyau", min(float(self.noyau.budget["usd_max"]), self.noyau._plafond_restant()),
                             self.noyau.appelants, self.noyau.reel, self.noyau.go_id)

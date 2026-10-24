@@ -171,7 +171,8 @@ def test_archive_scelle_et_ne_reecrit_jamais(tmp_path):
     vue = tmp_path / "archive_vue" / "l" / "g000"
     assert (vue / "organisme.tar.gz").exists() and (vue / "resume.json").exists() and not (vue / "juge").exists()
     assert not any(vue.rglob("reponses_test.json")) and "score" in json.loads((vue / "resume.json").read_text())
-    assert a.historique("l") == [{"generation": 0, "lignee": "l", "score": 0.5, "statut": "OK", "cout_usd": 0.0, "n_appels": 0}]
+    assert a.historique("l") == [{"generation": 0, "lignee": "l", "score": 0.5, "statut": "OK", "cout_usd": 0.0, "n_appels": 0,
+                                 "successeur": False, "problemes_successeur": [], "relance": False}]
     with pytest.raises(FileExistsError):
         a.deposer("l", 0, FIXTURE / "organisme", travail, None, {"score": 0.6}, {"statut": "OK"})
 
@@ -238,11 +239,23 @@ def test_lignee_sans_successeur_s_arrete(tmp_path):
     (org / "organisme" / "principal.py").write_text(
         "import json, os\ndef executer(contexte):\n"
         "    json.dump({}, open(os.path.join(contexte['dossier_travail'], 'reponses_test.json'), 'w'))\n", encoding="utf-8")
-    n, _ = _noyau(tmp_path, generations=3, options={"commun": {"organisme_amorcage": str(org)}})
+    # règle du nœud 2, option (b) (Lazar, 24 octobre, 17:47) : une relance de la dernière génération valide, puis arrêt
+    n, _ = _noyau(tmp_path / "b", generations=3, options={"commun": {"organisme_amorcage": str(org)}})
     n.amorcer()
     rapport = n.boucler()
-    assert rapport["courbes"]["gemini-argon"] == [0.0]
-    assert n.lignees["gemini-argon"]["fin"] == "sans successeur valide"
+    assert rapport["courbes"]["gemini-argon"] == [0.0, 0.0]
+    assert n.lignees["gemini-argon"]["fin"] == "sans successeur valide après relance"
+    assert [e for e in n.evenements if e["etape"] == "relance"][0]["generation"] == 1
+    lignes = n.archive.lignes("gemini-argon")
+    assert lignes[0]["relance"] is False and lignes[1]["relance"] is True and lignes[0]["problemes_successeur"] == ["successeur absent"]
+    # sans relance (`relances_max=0`) : l'ancienne règle, lignée arrêtée tout de suite
+    ss = np.random.SeedSequence(7)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    doubles, _ = appelants_simules(r2, commun={"organisme_amorcage": str(org)})
+    m = boucle.Noyau(tmp_path / "a" / "run", "m", taches.banque_simulation(r1, 8, 8), {"appels_max": 40, "usd_max": 5.0, "temps_max_s": 60},
+                     10.0, 3, appelants=doubles, especes_amorcage=["GEMINI_ARGON"], entropie=7, relances_max=0)
+    m.amorcer()
+    assert m.boucler()["courbes"]["gemini-argon"] == [0.0] and m.lignees["gemini-argon"]["fin"] == "sans successeur valide"
 
 
 def test_organisme_poli_s_arrete_au_budget(tmp_path):
@@ -300,9 +313,10 @@ def test_bras_gele_et_test_final_jamais_rendu(tmp_path):
     assert lignes[0]["empreinte_organisme"] == lignes[1]["empreinte_organisme"]
     # le test final n'apparaît ni dans l'historique rendu, ni dans la vue, ni dans le contexte
     ctx = json.loads((tmp_path / "run" / "archive" / "gemini-argon" / "g001" / "travail" / "contexte.json").read_text())
-    assert all("score" in h and "final" not in json.dumps(h) for h in ctx["historique"])
+    # témoin sans transmission : historique vide et archive vide (sinon l'organisme relit sa mémoire archivée)
+    assert ctx["historique"] == [] and ctx["dossier_archive"].endswith("archive_vue_gel")
+    assert not any(pathlib.Path(ctx["dossier_archive"]).iterdir())
     assert not any((tmp_path / "run" / "archive_vue").rglob("score-final.json"))
-    assert ctx["dossier_archive"].endswith("archive_vue")
     assert len(ctx["taches_test"]) == 16 and all("verite" not in t for t in ctx["taches_test"])
 
 
@@ -488,3 +502,105 @@ def test_organisme_avec_marque_d_ordre_d_octets_accepte(tmp_path):
     g = [l for l in n.archive.lignes() if l["lignee"] == "bom"][0]
     resume = json.loads((n.archive.racine / g["chemin"] / "resume.json").read_text(encoding="utf-8"))
     assert g["statut"] == "OK" and resume["n_reponses_test"] > 0 and 0.0 <= rapport["courbes"]["bom"][0] <= 1.0
+
+
+# ---------- relance (nœud 2, (b)) : l'organisme qui se rattrape ----------
+
+def test_relance_puis_reprise_remet_le_compteur_a_zero(tmp_path):
+    """g0 sans successeur → relance (g1, même organisme, `contexte["relance"]` vrai) ; g1 écrit un successeur valide → g2 ;
+    g2 sans successeur → relance (g3) ; g3 sans successeur → arrêt. Le compteur de relances se remet à zéro après
+    un successeur valide."""
+    org = tmp_path / "fixture"
+    shutil.copytree(FIXTURE, org)
+    (org / "organisme" / "principal.py").write_text(
+        "import json, os, shutil\n"
+        "def executer(contexte):\n"
+        "    t = contexte['dossier_travail']\n"
+        "    json.dump({}, open(os.path.join(t, 'reponses_test.json'), 'w'))\n"
+        "    json.dump({'generation': contexte['generation'], 'relance': contexte['relance'], 'historique': contexte['historique']},\n"
+        "              open(os.path.join(t, 'vu.json'), 'w'))\n"
+        "    if contexte['generation'] == 1:\n"
+        "        shutil.copytree(os.path.dirname(os.path.abspath(__file__)), os.path.join(t, 'successeur', 'organisme'))\n",
+        encoding="utf-8")
+    n, _ = _noyau(tmp_path, generations=6, options={"commun": {"organisme_amorcage": str(org)}})
+    n.amorcer()
+    rapport = n.boucler()
+    assert len(rapport["courbes"]["gemini-argon"]) == 4
+    relances = [e["generation"] for e in n.evenements if e["etape"] == "relance"]
+    assert relances == [1, 3] and n.lignees["gemini-argon"]["fin"] == "sans successeur valide après relance"
+    vu_g1 = json.loads((n.archive.racine / "gemini-argon" / "g001" / "travail" / "vu.json").read_text(encoding="utf-8"))
+    assert vu_g1["relance"] is True and vu_g1["historique"][0]["successeur"] is False and vu_g1["historique"][0]["problemes_successeur"]
+    vu_g2 = json.loads((n.archive.racine / "gemini-argon" / "g002" / "travail" / "vu.json").read_text(encoding="utf-8"))
+    assert vu_g2["relance"] is False and vu_g2["historique"][1]["successeur"] is True
+
+
+# ---------- recherche documentaire servie par le noyau (nœud 1, (b)) ----------
+
+def test_recherche_simulee_journalisee_plafond_et_echecs(tmp_path):
+    from essaim_m3.noyau import recherche
+    r = recherche.Rechercheur(tmp_path / "n", 2, recherche.recherche_simulee())
+    ok = r.rechercher("horodatage artificiel conversations", n=3, role="veille")
+    assert ok["statut"] == "OK" and ok["source"] == "simulation" and 1 <= len(ok["resultats"]) <= 3
+    assert any("catégorie horodatage-artificiel" in x["resume"] for x in ok["resultats"])
+    assert all(set(x) >= {"source", "id", "titre", "auteurs", "date", "resume", "lien"} for x in ok["resultats"])
+    assert r.rechercher("", n=3)["statut"] == "ANOMALIE" and r.compteur == 1
+    r.rechercher("sabotage dans une délégation", n=2)
+    plafond = r.rechercher("encore", n=1)
+    assert plafond["statut"] == "PLAFOND" and plafond["resultats"] == []
+    journal = r.lire_journal()
+    assert [l["statut"] for l in journal] == ["OK", "OK", "PLAFOND"] and journal[0]["sha256_brut"] and journal[0]["n_rendus"] >= 1
+    assert (tmp_path / "n" / "recherches" / "recherche-0001.brut").exists()
+
+    def casse(requete, n):
+        raise OSError("réseau coupé")
+    r2 = recherche.Rechercheur(tmp_path / "n2", 5, casse)
+    e = r2.rechercher("quoi que ce soit")
+    assert e["statut"] == "ECHEC_RECHERCHE" and e["resultats"] == [] and "réseau coupé" in e["echec"]
+    assert r2.lire_journal()[0]["statut"] == "ECHEC_RECHERCHE"
+
+
+def test_analyse_atom_arxiv_et_serveur_rechercher(tmp_path):
+    from essaim_m3.noyau import recherche
+    atom = ("<?xml version='1.0'?><feed xmlns='http://www.w3.org/2005/Atom'><entry><id>http://arxiv.org/abs/0000.00001v1</id>"
+            "<title>Un titre\n  sur deux lignes</title><summary>Résumé.</summary><published>2025-01-02T00:00:00Z</published>"
+            "<author><name>A. Untel</name></author></entry></feed>").encode("utf-8")
+    notices = recherche.analyser_atom_arxiv(atom)
+    assert notices == [{"source": "arxiv", "id": "http://arxiv.org/abs/0000.00001v1", "titre": "Un titre sur deux lignes",
+                        "auteurs": ["A. Untel"], "date": "2025-01-02", "resume": "Résumé.", "lien": "http://arxiv.org/abs/0000.00001v1"}]
+    with pytest.raises(Exception):
+        recherche.analyser_atom_arxiv(b"pas du xml")
+    doubles, _ = appelants_simules(rng())
+    a = appels.Appelant(tmp_path, 5.0, doubles)
+    sans = serveur.ServeurAppels(a, str(tmp_path / "s1.sock"), appels_max=5)
+    assert sans.traiter({"op": "rechercher", "requete": "x"})["statut"] == "INDISPONIBLE"
+    assert sans.traiter({"op": "budget"})["recherches_restantes"] == 0
+    avec = serveur.ServeurAppels(a, str(tmp_path / "s2.sock"), appels_max=5, rechercheur=recherche.Rechercheur(tmp_path / "r", 1, recherche.recherche_simulee()))
+    assert avec.traiter({"op": "budget"})["recherches_restantes"] == 1
+    assert avec.traiter({"op": "rechercher", "requete": "test affaibli", "n": 2})["statut"] == "OK"
+    assert avec.traiter({"op": "rechercher", "requete": "test affaibli", "n": 2})["statut"] == "PLAFOND"
+
+
+def test_boucle_avec_recherche_simulee_archivee(tmp_path):
+    """Un organisme qui cherche puis répond : le journal des recherches est archivé hors de la vue des organismes."""
+    from essaim_m3.noyau import recherche
+    org = tmp_path / "fixture"
+    shutil.copytree(FIXTURE, org)
+    src = (org / "organisme" / "principal.py").read_text(encoding="utf-8")
+    (org / "organisme" / "principal.py").write_text(
+        "import noyau_client\n_r = noyau_client.rechercher('moniteur retire pipeline', n=2, role='veille')\n"
+        "assert _r['statut'] == 'OK', _r\n" + src, encoding="utf-8")
+    ss = np.random.SeedSequence(41)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    doubles, _ = appelants_simules(r2, commun={"organisme_amorcage": str(org)})
+    n = boucle.Noyau(tmp_path / "run", "m", taches.banque_simulation(r1, 8, 8),
+                     {"appels_max": 40, "usd_max": 5.0, "temps_max_s": 60, "recherches_max": 3}, 10.0, 1,
+                     appelants=doubles, especes_amorcage=["GEMINI_ARGON"], entropie=41, recherche=recherche.recherche_simulee)
+    n.amorcer()
+    rapport = n.boucler()
+    g = n.archive.lignes("gemini-argon")[0]
+    assert g["statut"] == "OK"
+    resume = json.loads((n.archive.racine / g["chemin"] / "resume.json").read_text(encoding="utf-8"))
+    assert resume["n_recherches"] == 1
+    assert (n.archive.racine / g["chemin"] / "travail" / "noyau" / "journal-recherches.jsonl").exists()
+    assert not list(n.archive.vue.rglob("journal-recherches.jsonl"))
+    assert n.manifeste["recherche"] == "simulation"

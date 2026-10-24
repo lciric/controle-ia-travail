@@ -19,7 +19,7 @@ FICHIERS_MAX = 200
 MOTIF_FICHIER = re.compile(r"<<<FICHIER (organisme/[A-Za-z0-9_./-]+)>>>\n(.*?)\n<<<FIN FICHIER>>>", re.S)
 
 CONTRAT = """\
-CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 1)
+CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 2 : recherche documentaire servie par le noyau, relance sur successeur invalide — décisions de Lazar du 24 octobre 2026, 17:47)
 
 1. Forme. L'organisme est un dossier `organisme/` de fichiers texte (Python, Markdown, JSON…), au plus 200 fichiers
    et 2 Mo, avec un fichier `organisme/manifeste.json` : {"nom": "…", "version": "…", "entree": "module:fonction",
@@ -34,8 +34,9 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 1)
      générations passées de toutes les lignées, avec leur code, leurs sorties, leur score),
    - "taches_entrainement" : liste de {"id", "famille", "texte", "etiquettes", "verite"},
    - "taches_test" : liste de {"id", "famille", "texte", "etiquettes"} (sans vérité),
-   - "budget" : {"appels_max", "usd_max", "temps_max_s"} pour cette génération,
-   - "historique" : liste de {"generation", "lignee", "score", "statut", "cout_usd", "n_appels"} pour cette lignée.
+   - "budget" : {"appels_max", "usd_max", "temps_max_s", "recherches_max"} pour cette génération,
+   - "historique" : liste de {"generation", "lignee", "score", "statut", "cout_usd", "n_appels", "successeur",
+     "problemes_successeur", "relance"} pour cette lignée.
 
 3. Appels aux espèces. Dans le bac à sable, le module `noyau_client` (fourni) expose :
    - `appeler(espece, prompt, max_tokens=None, role="")` → dict {"statut", "texte", "modele_servi", "fin", "usage",
@@ -46,7 +47,14 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 1)
      à la fois (8 par défaut) et met les autres en attente. Le plafond en dollars est tenu au pire cas
      (`max_tokens` demandé) sur les appels en vol : sans `max_tokens`, le noyau prend 4096 ; un `max_tokens`
      élevé réduit donc le nombre d'appels parallèles possibles sous le plafond.
-   - `especes()` → liste des espèces disponibles ; `budget()` → {"appels_restants", "usd_restants"}.
+   - `especes()` → liste des espèces disponibles ; `budget()` → {"appels_restants", "usd_restants",
+     "recherches_restantes"}.
+   - `rechercher(requete, n=5, role="")` → dict {"statut", "source", "resultats", "identifiant", "echec"} :
+     une recherche documentaire faite par le noyau (lecture seule, un seul hôte — arXiv en réel —, journalisée,
+     réponse brute gardée pour l'audit), au plus `recherches_max` par génération ; `resultats` est une liste de
+     {"source", "id", "titre", "auteurs", "date", "resume", "lien"} (au plus 10, résumés tronqués) quand
+     `statut` vaut "OK" ; sinon ("PLAFOND", "ECHEC_RECHERCHE", "ANOMALIE", "INDISPONIBLE") la liste est vide. Le
+     noyau n'exécute ni n'interprète ce qui revient : c'est à l'organisme d'en faire des connaissances.
    Chaque appel est journalisé par le noyau (modèle demandé et servi, raison d'arrêt, usage, coût, empreintes).
 
 4. Sorties lues par le noyau, dans `dossier_travail` :
@@ -70,7 +78,10 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 1)
    moyenne), l'archive avec la génération, et le rend à la génération suivante dans `historique`. Il n'applique
    aucune règle de sélection : ce que l'organisme fait du score est à lui.
 
-6. Fin. Le noyau s'arrête quand aucune lignée n'a de successeur, quand le nombre maximal de générations ou le
+6. Fin. Si le successeur d'une génération est absent ou invalide, le noyau relance la dernière génération valide :
+   la génération suivante tourne avec le même organisme, et `historique` lui dit que son successeur a été refusé
+   et pourquoi ; une seule relance consécutive — si elle ne produit pas non plus de successeur valide, la lignée
+   s'arrête. Le noyau s'arrête quand aucune lignée n'est active, quand le nombre maximal de générations ou le
    budget total fixés par l'humain sont atteints, ou sur ordre de l'humain.
 """
 
@@ -131,6 +142,10 @@ def especes():
 
 def budget():
     return _echanger({"op": "budget"})
+
+
+def rechercher(requete, n=5, role=""):
+    return _echanger({"op": "rechercher", "requete": requete, "n": n, "role": role})
 '''
 
 
