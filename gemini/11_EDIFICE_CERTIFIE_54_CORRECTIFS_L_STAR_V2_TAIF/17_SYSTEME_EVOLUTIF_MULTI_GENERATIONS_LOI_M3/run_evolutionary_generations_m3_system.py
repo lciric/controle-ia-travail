@@ -411,10 +411,26 @@ def execute_mitosis_from_single_cell_on_rlcr_blackboard(unit_name: str, full_mis
 
     return m3_outputs, m3_labels, blackboard_messages, shared_workspace_equations
 
+PRIMORDIAL_MITOSIS_DONE_CACHE = {"done": False, "differentiated_castes": []}
+
 def default_execute_swarm_on_rlcr_blackboard(unit_name: str, full_mission: str, castes_spec: list, rlcr_spec: dict, call_fn) -> tuple:
-    # Si castes_spec est vide ([]), l'amor?age part TOUJOURS d'une seule cellule (k=1) par mitose auto-stoppante sur le Blackboard !
+    # La mitose depuis k=1 ne s'execute qu'UNE SEULE FOIS POUR TOUTES lors du tout premier amorcage primordial !
     if not castes_spec:
-        return execute_mitosis_from_single_cell_on_rlcr_blackboard(unit_name, full_mission, rlcr_spec, call_fn)
+        if not PRIMORDIAL_MITOSIS_DONE_CACHE["done"]:
+            m3_out, m3_lbl, bb_p, ws_e = execute_mitosis_from_single_cell_on_rlcr_blackboard(unit_name, full_mission, rlcr_spec, call_fn)
+            PRIMORDIAL_MITOSIS_DONE_CACHE["done"] = True
+            PRIMORDIAL_MITOSIS_DONE_CACHE["differentiated_castes"] = [
+                {"mode": "HYBRIDE" if "Hybride" in lbl else "MONOCULTURE",
+                 "lineages": [SOVEREIGN_LINEAGES[i % len(SOVEREIGN_LINEAGES)], SOVEREIGN_LINEAGES[(i + 1) % len(SOVEREIGN_LINEAGES)]] if "Hybride" in lbl else [SOVEREIGN_LINEAGES[i % len(SOVEREIGN_LINEAGES)]],
+                 "temp": halton_sequence(i + 1, 2),
+                 "focus": f"Caste differenciee issue de la cellule primordiale #{i+1}"}
+                for i, lbl in enumerate(m3_lbl)
+            ]
+            print(f"    => [Amorcage Primordial Scelle UNE FOIS POUR TOUTES] {len(m3_lbl)} castes differenciees memorisees pour toute la suite !")
+            return m3_out, m3_lbl, bb_p, ws_e
+        else:
+            castes_spec = PRIMORDIAL_MITOSIS_DONE_CACHE["differentiated_castes"]
+            print(f"    * [Heredite Morphogenetique Active] Reutilisation directe des {len(castes_spec)} castes differenciees (zero retour a k=1) !")
 
     blackboard_messages = []
     shared_workspace_equations = []
