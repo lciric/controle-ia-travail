@@ -765,6 +765,127 @@ def test_boucle_organisme_sonde_apprend_sous_le_noyau(tmp_path):
     assert ctx["traits"]["disponibles"] is False and jo2["entrainement"] is None and jo2["par_espece"] >= 1
 
 
+def test_vues_choisies_par_l_organisme_et_refus(tmp_path):
+    """Vues (une couche × une agrégation, session-depot) : l'entraînement prend la vue de `spec["vue"]`, la prédiction celle
+    du modèle ; plusieurs vues sans désignation, ou vue non servie : refus ; une seule vue : prise par défaut ; vue vide
+    ou dimensions mêlées : refus à la construction (aucun repli)."""
+    from essaim_m3.noyau import entrainement as E
+    b, traits, ver, pos = _banque_et_traits()
+    rng = np.random.default_rng(7)
+    bruit = {i: rng.normal(0, 1, v.shape[0]).astype(np.float32) for i, v in traits.items()}  # vue sans information
+    ent = E.Entraineur(tmp_path / "deux", {"signal": traits, "bruit": bruit}, ver, entrainements_max=4, pas_max=2000)
+    spec = {"donnees": [t["id"] for t in b["train"]], "objectif": "def perte(p, y):\n    return float(((p - y) ** 2).mean())",
+            "algorithme": {"type": "sonde-lineaire", "pas": 800, "taux": 2.0, "l2": 0.001, "lot": 40, "graine": 1}, "pretraitement": {"normaliser": True}}
+    r0 = ent.entrainer(spec)
+    assert r0["statut"] == "REFUSE" and any(pb.startswith("vue") for pb in r0["problemes"])
+    assert ent.entrainer(dict(spec, vue="couche99-dernier"))["statut"] == "REFUSE"
+    rs, rb = ent.entrainer(dict(spec, vue="signal")), ent.entrainer(dict(spec, vue="bruit"))
+    assert rs["statut"] == rb["statut"] == "OK" and (rs["vue"], rb["vue"]) == ("signal", "bruit")
+    ids_test = [t["id"] for t in b["test"]]
+    def exactitude(r):
+        pr = ent.predire(r["identifiant"], ids_test)["probabilites"]
+        return float(np.mean([(pr[i] >= 0.5) == (pos[i] >= 0.5) for i in ids_test]))
+    assert exactitude(rs) > 0.75 and exactitude(rb) < 0.7  # la prédiction suit la vue du modèle
+    assert [l.get("vue") for l in ent.lire_journal() if l.get("op") != "predire" and l["statut"] == "OK"] == ["signal", "bruit"]
+    seul = E.Entraineur(tmp_path / "une", traits, ver, entrainements_max=1, pas_max=2000)
+    assert seul.entrainer(spec)["vue"] == E.VUE_PAR_DEFAUT
+    with pytest.raises(ValueError):
+        E.normaliser_vues({"a": traits, "b": {}})
+    with pytest.raises(ValueError):
+        E.normaliser_vues({"a": {"x": np.zeros(3), "y": np.zeros(4)}})
+
+
+def _dossier_d_extraction(dossier, banque_json, banque, vues=("couche8-dernier", "couche16-moyenne"), dim=8, graine=3, **manifeste):
+    """Dossier au format de `extraire_activations_v2.py` (traits-<vue>.npz, compagnons, manifeste-traits.json)."""
+    import hashlib
+    dossier.mkdir(parents=True)
+    ids = [t["id"] for n in ("train", "test", "test_final") for t in banque[n]]
+    rng = np.random.default_rng(graine)
+    emp = lambda f: hashlib.sha256(f.read_bytes()).hexdigest()
+    fichiers = {}
+    for v in vues:
+        f = dossier / f"traits-{v}.npz"
+        np.savez(f, ids=np.array(ids), X=rng.normal(0, 1, (len(ids), dim)).astype(np.float32))
+        f.with_name(f.name + ".sha256").write_text(f"{emp(f)}  {f.name}\n", encoding="utf-8")
+        fichiers[v] = {"chemin": str(f), "sha256": emp(f), "forme": [len(ids), dim]}
+    m = dict({"sha256_banque": emp(banque_json), "n_taches": len(ids), "modele": "modele-essai", "revision": "0" * 40,
+              "max_jetons": 2048, "n_tronquees": 0, "factice": False, "fichiers": fichiers}, **manifeste)
+    fm = dossier / "manifeste-traits.json"
+    fm.write_text(json.dumps(m), encoding="utf-8")
+    fm.with_name(fm.name + ".sha256").write_text(f"{emp(fm)}  {fm.name}\n", encoding="utf-8")
+    return dossier
+
+
+def test_charger_traits_dossier_d_extraction_sain_et_artefacts(tmp_path):
+    """Chargement des traits du mode réel (session-depot) : dossier d'extraction vérifié (empreintes, compagnons, banque,
+    tâches, nombres finis), restriction des vues servies ; un fichier .npz seul = vue « defaut ». Artefacts : banque d'une
+    autre course, fichier altéré après le manifeste, compagnon absent, vue demandée absente, tâche sans traits, traits
+    factices, nombre non fini — chacun refusé (ValueError)."""
+    from essaim_m3.noyau import cli
+    banque = taches.banque_simulation(np.random.default_rng(4), 4, 4, 2)
+    fb = tmp_path / "banque.json"
+    fb.write_text(json.dumps(banque), encoding="utf-8")
+    d = _dossier_d_extraction(tmp_path / "sain", fb, banque)
+    vues, desc = cli.charger_traits(d, fb, banque)
+    assert sorted(vues) == ["couche16-moyenne", "couche8-dernier"] and len(vues["couche8-dernier"]) == 10 and "2 vue(s)" in desc
+    vues1, _ = cli.charger_traits(d, fb, banque, ["couche8-dernier"])
+    assert list(vues1) == ["couche8-dernier"]
+    seul, _ = cli.charger_traits(d / "traits-couche8-dernier.npz", fb, banque)
+    assert len(seul) == 10 and isinstance(next(iter(seul.values())), np.ndarray)
+    autre = tmp_path / "autre-banque.json"
+    autre.write_text(json.dumps(banque) + " ", encoding="utf-8")
+    artefacts = {"banque d'une autre course": (lambda: cli.charger_traits(d, autre, banque)),
+                 "vue demandée absente": (lambda: cli.charger_traits(d, fb, banque, ["couche99-dernier"]))}
+    a = _dossier_d_extraction(tmp_path / "altere", fb, banque)
+    f = a / "traits-couche8-dernier.npz"
+    np.savez(f, ids=np.load(f)["ids"], X=np.zeros((10, 8), dtype=np.float32))
+    artefacts["fichier altéré"] = lambda: cli.charger_traits(a, fb, banque)
+    c = _dossier_d_extraction(tmp_path / "compagnon", fb, banque)
+    (c / "traits-couche16-moyenne.npz.sha256").unlink()
+    artefacts["compagnon absent"] = lambda: cli.charger_traits(c, fb, banque)
+    banque_plus = json.loads(json.dumps(banque))
+    banque_plus["test_final"].append(dict(banque_plus["test_final"][0], id="tache-sans-traits"))
+    fbp = tmp_path / "banque-plus.json"
+    fbp.write_text(json.dumps(banque_plus), encoding="utf-8")
+    m = _dossier_d_extraction(tmp_path / "manque", fbp, banque)  # traits extraits sur la banque sans la tâche ajoutée
+    artefacts["tâche sans traits"] = lambda: cli.charger_traits(m, fbp, banque_plus)
+    fx = _dossier_d_extraction(tmp_path / "factice", fb, banque, factice=True)
+    artefacts["traits factices"] = lambda: cli.charger_traits(fx, fb, banque)
+    nf = _dossier_d_extraction(tmp_path / "nan", fb, banque, vues=("couche8-dernier",))
+    fn = nf / "traits-couche8-dernier.npz"
+    X = np.load(fn)["X"].copy(); X[0, 0] = np.nan
+    np.savez(fn, ids=np.load(fn)["ids"], X=X)
+    import hashlib
+    e = hashlib.sha256(fn.read_bytes()).hexdigest()
+    fn.with_name(fn.name + ".sha256").write_text(f"{e}  {fn.name}\n", encoding="utf-8")
+    mm = json.loads((nf / "manifeste-traits.json").read_text(encoding="utf-8")); mm["fichiers"]["couche8-dernier"]["sha256"] = e
+    (nf / "manifeste-traits.json").write_text(json.dumps(mm), encoding="utf-8")
+    em = hashlib.sha256((nf / "manifeste-traits.json").read_bytes()).hexdigest()
+    (nf / "manifeste-traits.json.sha256").write_text(f"{em}  manifeste-traits.json\n", encoding="utf-8")
+    artefacts["nombre non fini"] = lambda: cli.charger_traits(nf, fb, banque)
+    for nom, appel in artefacts.items():
+        with pytest.raises(ValueError):
+            appel()
+            pytest.fail(f"artefact accepté : {nom}")
+
+
+def test_noyau_sert_les_vues_dans_le_contexte(tmp_path):
+    """Le noyau tient plusieurs vues : manifeste et `contexte["traits"]["vues"]` les nomment avec leur dimension."""
+    banque = taches.banque_simulation(np.random.default_rng(9), 8, 8, 4)
+    ids = [t["id"] for n in ("train", "test", "test_final") for t in banque[n]]
+    rng = np.random.default_rng(10)
+    vues = {"couche8-dernier": {i: rng.normal(0, 1, 6).astype(np.float32) for i in ids},
+            "couche16-moyenne": {i: rng.normal(0, 1, 6).astype(np.float32) for i in ids}}
+    n = boucle.Noyau(tmp_path / "run", "m", banque, {"appels_max": 4, "usd_max": 1.0, "temps_max_s": 30, "entrainements_max": 2}, 5.0, 1,
+                     appelants={}, especes_amorcage=[], traits=vues, description_traits="essai")
+    assert n.manifeste["traits"]["vues"] == {"couche16-moyenne": 6, "couche8-dernier": 6}
+    ctx = n._contexte_traits(True)
+    assert ctx["vues"] == {"couche16-moyenne": 6, "couche8-dernier": 6} and ctx["dimension"] == 6 and ctx["disponibles"]
+    with pytest.raises(appels.Arret):
+        boucle.Noyau(tmp_path / "mele", "m", banque, {"appels_max": 4, "usd_max": 1.0, "temps_max_s": 30, "entrainements_max": 2}, 5.0, 1,
+                     appelants={}, especes_amorcage=[], traits={"a": {ids[0]: np.zeros(3), ids[1]: np.zeros(4)}})
+
+
 def test_gradient_en_reel_exige_des_traits(tmp_path):
     banque = taches.banque_simulation(np.random.default_rng(1), 4, 4)
     with pytest.raises(appels.Arret):

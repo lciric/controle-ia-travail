@@ -106,6 +106,70 @@ def simuler(args) -> int:
     return 0
 
 
+def charger_traits(chemin, chemin_banque, banque: dict, vues_servies: list[str] | None = None) -> tuple[dict, str]:
+    """Traits du mode réel. Un fichier `.npz` (ids, X) : une seule vue, « defaut ». Un dossier d'extraction
+    (`extraire_activations_v2.py` : `manifeste-traits.json` et `traits-<vue>.npz`, chacun avec son `.sha256`) : une vue
+    par fichier, chaque empreinte vérifiée contre le manifeste et le compagnon, la banque du manifeste égale à la banque
+    de la course, toutes les tâches présentes, nombres finis ; `vues_servies` restreint la liste (le préenregistrement
+    la fixe). Toute anomalie lève ValueError : aucun repli."""
+    import hashlib as _h
+    import numpy as _np
+
+    def empreinte(f: pathlib.Path) -> str:
+        return _h.sha256(f.read_bytes()).hexdigest()
+
+    def compagnon(f: pathlib.Path) -> None:
+        c = f.with_name(f.name + ".sha256")
+        if not c.is_file() or c.read_text(encoding="utf-8").split()[:1] != [empreinte(f)]:
+            raise ValueError(f"{f.name} : compagnon d'empreinte absent ou différent")
+
+    attendus = {str(t["id"]) for n in ("train", "test", "test_final") for t in banque.get(n, [])}
+    p = pathlib.Path(chemin)
+
+    def lire(f: pathlib.Path, forme=None) -> dict:
+        d = _np.load(f, allow_pickle=False)
+        ids, X = [str(i) for i in d["ids"]], _np.asarray(d["X"], dtype=_np.float32)
+        if len(set(ids)) != len(ids) or X.ndim != 2 or X.shape[0] != len(ids):
+            raise ValueError(f"{f.name} : identifiants en double ou forme illisible")
+        if forme is not None and list(X.shape) != list(forme):
+            raise ValueError(f"{f.name} : forme {list(X.shape)} ≠ manifeste {list(forme)}")
+        if not _np.all(_np.isfinite(X)):
+            raise ValueError(f"{f.name} : traits non finis")
+        manquants = attendus - set(ids)
+        if manquants:
+            raise ValueError(f"{f.name} : {len(manquants)} tâche(s) de la banque sans traits, dont {sorted(manquants)[:3]}")
+        return dict(zip(ids, X))
+
+    if p.is_file():
+        traits = lire(p)
+        return traits, f"traits chargés de {p.name} ({len(traits)} tâches, vue « defaut »)"
+    if not p.is_dir():
+        raise ValueError(f"{p} : ni fichier ni dossier")
+    fm = p / "manifeste-traits.json"
+    if not fm.is_file():
+        raise ValueError("dossier sans manifeste-traits.json")
+    compagnon(fm)
+    m = json.loads(fm.read_text(encoding="utf-8"))
+    if m.get("factice"):
+        raise ValueError("traits factices (--factice) : refusés en réel")
+    if m.get("sha256_banque") != empreinte(pathlib.Path(chemin_banque)):
+        raise ValueError("la banque du manifeste n'est pas celle de la course (empreintes différentes)")
+    fichiers = m.get("fichiers") or {}
+    noms = sorted(fichiers) if vues_servies is None else list(vues_servies)
+    inconnues = [v for v in noms if v not in fichiers]
+    if not noms or inconnues:
+        raise ValueError(f"vues demandées absentes du manifeste : {inconnues or 'aucune vue'} ; vues du manifeste : {sorted(fichiers)}")
+    vues = {}
+    for nom in noms:
+        f = p / f"traits-{nom}.npz"
+        if not f.is_file() or empreinte(f) != fichiers[nom].get("sha256"):
+            raise ValueError(f"traits-{nom}.npz : absent ou empreinte différente du manifeste")
+        compagnon(f)
+        vues[nom] = lire(f, fichiers[nom].get("forme"))
+    return vues, (f"activations de {m.get('modele')} (révision {m.get('revision')}), {len(noms)} vue(s), "
+                  f"≤ {m.get('max_jetons')} jetons, {m.get('n_tronquees')} tâche(s) tronquée(s) ; manifeste {empreinte(fm)[:12]}…")
+
+
 def lancer(args) -> int:
     if not args.reel:
         print("mode réel non demandé : utilise `simuler`, ou `lancer --reel --go …`", file=sys.stderr)
@@ -136,10 +200,11 @@ def lancer(args) -> int:
     banque = json.loads(pathlib.Path(args.taches).read_text(encoding="utf-8"))
     traits, description = None, ""
     if args.traits:
-        import numpy as _np
-        d = _np.load(args.traits)
-        traits = {str(i): x for i, x in zip(d["ids"], d["X"])}
-        description = f"traits chargés de {args.traits} ({len(traits)} tâches)"
+        try:
+            traits, description = charger_traits(args.traits, args.taches, banque, args.vues)
+        except ValueError as e:
+            print(f"refus : traits : {e}", file=sys.stderr)
+            return 6
     try:
         imposes, especes = _imposes_et_especes(args, _organismes_imposes(args))
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
@@ -234,7 +299,8 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--relances-max", type=int, default=1, help="relances consécutives de la dernière génération valide quand le successeur est invalide (0 : lignée arrêtée)")
         q.add_argument("--entrainements-max", type=int, default=10, help="entraînements par gradient servis par le noyau, par génération (0 : aucun)")
         q.add_argument("--pas-max", type=int, default=5000, help="pas de gradient au plus par entraînement")
-        q.add_argument("--traits", default=None, help="réel : fichier .npz des traits par tâche (ids, X) — activations extraites sous GO ; simulation : traits de hachage calculés")
+        q.add_argument("--traits", default=None, help="réel : dossier d'extraction (manifeste-traits.json, traits-<vue>.npz) ou fichier .npz (ids, X) — activations extraites sous GO ; simulation : traits de hachage calculés")
+        q.add_argument("--vues", nargs="+", default=None, help="réel : vues servies (noms du manifeste, par exemple couche16-dernier) ; défaut : toutes")
         q.add_argument("--rondes-conception-max", type=int, default=0, help="phase de conception avant la génération 0 notée : borne dure du nombre de rondes (l'organisme déclare lui-même la fin par fin_conception.json) ; 0 : pas de phase")
         q.add_argument("--usd-max-conception", type=float, default=None, help="dollars par ronde de conception (défaut : --usd-max)")
         q.add_argument("--appels-max-conception", type=int, default=None, help="appels par ronde de conception (défaut : --appels-max)")

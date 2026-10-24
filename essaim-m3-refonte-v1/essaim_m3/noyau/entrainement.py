@@ -35,6 +35,7 @@ DELAI_S_DEFAUT = 120
 MEMOIRE_MO_DEFAUT = 1024
 ALGORITHMES = ("sonde-lineaire", "sonde-une-couche")
 DIM_SIMULATION = 512
+VUE_PAR_DEFAUT = "defaut"  # nom de la vue quand le noyau ne tient qu'un seul fichier de traits
 
 
 def _heure() -> str:
@@ -65,6 +66,27 @@ def ecrire_traits(chemin: pathlib.Path, traits: dict[str, np.ndarray]) -> str:
     ids = sorted(traits)
     np.savez(chemin, ids=np.array(ids), X=np.stack([traits[i] for i in ids]).astype(np.float32))
     return _empreinte(chemin.read_bytes())
+
+
+def normaliser_vues(traits) -> dict[str, dict[str, np.ndarray]]:
+    """Vues servies par le noyau (une vue = une couche × une agrégation des activations) : {id: vecteur} (une seule
+    vue, `VUE_PAR_DEFAUT`) ou {vue: {id: vecteur}} → {vue: {id: vecteur}}. Une vue vide, ou de dimensions mêlées, est
+    refusée (ValueError) : jamais de repli."""
+    if not traits:
+        return {}
+    premier = next(iter(traits.values()))
+    vues = {VUE_PAR_DEFAUT: traits} if not isinstance(premier, dict) else traits
+    for nom, t in vues.items():
+        if not isinstance(nom, str) or not nom or not isinstance(t, dict) or not t:
+            raise ValueError(f"vue {nom!r} : dictionnaire non vide attendu")
+        dims = {int(np.asarray(x).shape[0]) for x in t.values()}
+        if len(dims) != 1:
+            raise ValueError(f"vue {nom!r} : dimensions mêlées {sorted(dims)}")
+    return vues
+
+
+def dimensions_vues(vues: dict[str, dict[str, np.ndarray]]) -> dict[str, int]:
+    return {nom: int(np.asarray(next(iter(t.values()))).shape[0]) for nom, t in sorted(vues.items())}
 
 
 # ---------------------------------------------------------- programme ----
@@ -169,7 +191,7 @@ class Entraineur:
                  prefixe: str = "m"):
         self.dossier = pathlib.Path(dossier)
         (self.dossier / "modeles").mkdir(parents=True, exist_ok=True)
-        self.traits = traits
+        self.vues = normaliser_vues(traits)  # {vue: {id: vecteur}} ; un {id: vecteur} seul devient la vue « defaut »
         self.verites_train = dict(verites_train)  # identifiant → 1.0 (étiquette positive) / 0.0
         self.entrainements_max = max(0, int(entrainements_max))
         self.pas_max, self.delai_s, self.memoire_mo = int(pas_max), int(delai_s), int(memoire_mo)
@@ -184,10 +206,20 @@ class Entraineur:
             fh.write(json.dumps(ligne, ensure_ascii=False, sort_keys=True) + "\n")
 
     # ---- validation de la spécification ----
+    def vue_de(self, spec) -> str | None:
+        """Vue désignée par `spec["vue"]` ; sans désignation, la seule vue servie ; sinon None (refus)."""
+        vue = spec.get("vue") if isinstance(spec, dict) else None
+        if vue is None and len(self.vues) == 1:
+            return next(iter(self.vues))
+        return vue if isinstance(vue, str) and vue in self.vues else None
+
     def valider(self, spec) -> list[str]:
         p = []
         if not isinstance(spec, dict):
             return ["spec : objet attendu"]
+        vue = self.vue_de(spec)
+        if vue is None:
+            p.append(f"vue : {str(spec.get('vue'))[:60]!r} non servie ; vues servies : {sorted(self.vues)}")
         don = spec.get("donnees")
         if not isinstance(don, list) or not don or not all(isinstance(i, str) for i in don):
             p.append("donnees : liste non vide d'identifiants de tâches d'entraînement attendue")
@@ -195,7 +227,7 @@ class Entraineur:
             hors = [i for i in don if i not in self.verites_train]
             if hors:
                 p.append(f"donnees : {len(hors)} identifiant(s) hors des tâches d'entraînement (les tâches de test ne s'entraînent pas) : {hors[:3]}")
-            manquants = [i for i in don if i in self.verites_train and i not in self.traits]
+            manquants = [i for i in don if i in self.verites_train and vue is not None and i not in self.vues[vue]]
             if manquants:
                 p.append(f"donnees : traits absents pour {len(manquants)} tâche(s) : {manquants[:3]}")
             if len(set(don)) != len(don):
@@ -244,7 +276,8 @@ class Entraineur:
         travail = self.dossier / "modeles" / f"{self.prefixe}-{num:04d}"
         travail.mkdir(parents=True, exist_ok=True)
         ids = list(spec["donnees"])
-        X = np.stack([self.traits[i] for i in ids]).astype(np.float32)
+        vue = self.vue_de(spec)
+        X = np.stack([self.vues[vue][i] for i in ids]).astype(np.float32)
         y = np.array([self.verites_train[i] for i in ids], dtype=np.float32)
         np.savez(travail / "donnees.npz", X=X, y=y)
         (travail / "spec.json").write_text(json.dumps(spec, ensure_ascii=False), encoding="utf-8")
@@ -266,12 +299,12 @@ class Entraineur:
         except subprocess.TimeoutExpired:
             statut, erreur = "DELAI_DEPASSE", f"plus de {self.delai_s} s"
         fin = _heure()
-        sortie = {"statut": statut, "identifiant": (ident if statut == "OK" else None), "echec": erreur, "n_donnees": len(ids),
+        sortie = {"statut": statut, "identifiant": (ident if statut == "OK" else None), "echec": erreur, "n_donnees": len(ids), "vue": vue,
                   "courbe_perte": (resultat or {}).get("courbe_perte"), "perte_finale_entrainement": (resultat or {}).get("perte_finale_entrainement"),
                   "exactitude_entrainement": (resultat or {}).get("exactitude_entrainement"), "cout_usd": 0.0}
         if statut == "OK":
-            self.modeles[ident] = {"chemin": travail / "modele.npz", "type": spec["algorithme"]["type"]}
-        self._journaliser({"id": ident, "role": str(role)[:40], "statut": statut, "echec": erreur, "n_donnees": len(ids),
+            self.modeles[ident] = {"chemin": travail / "modele.npz", "type": spec["algorithme"]["type"], "vue": vue}
+        self._journaliser({"id": ident, "role": str(role)[:40], "statut": statut, "echec": erreur, "n_donnees": len(ids), "vue": vue,
                            "sha256_spec": _empreinte(json.dumps(spec, sort_keys=True, ensure_ascii=False)), "sha256_objectif": _empreinte(spec["objectif"]),
                            "algorithme": spec["algorithme"], "debut_utc": debut, "fin_utc": fin,
                            "exactitude_entrainement": sortie["exactitude_entrainement"]})
@@ -284,12 +317,13 @@ class Entraineur:
         if not isinstance(ids, list) or not ids or not all(isinstance(i, str) for i in ids):
             return {"statut": "ANOMALIE", "probabilites": {}, "echec": "liste d'identifiants attendue"}
         m = np.load(self.modeles[identifiant]["chemin"])
+        traits = self.vues[self.modeles[identifiant]["vue"]]  # la vue sur laquelle le modèle a appris
         probabilites, absents = {}, []
         for i in ids:
-            if i not in self.traits:
+            if i not in traits:
                 absents.append(i)
                 continue
-            x = (self.traits[i].astype(np.float64) - m["mu"]) / m["sd"]
+            x = (traits[i].astype(np.float64) - m["mu"]) / m["sd"]
             if self.modeles[identifiant]["type"] == "sonde-une-couche":
                 z = np.tanh(x @ m["W1"] + m["b1"]) @ m["w2"] + float(m["b2"][0])
             else:
