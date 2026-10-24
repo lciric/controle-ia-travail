@@ -32,7 +32,7 @@ python -m essaim_m3 simuler --sortie <dossier> --generations 2 --graine 21 --n-f
 
 | mesure | valeur |
 |---|---|
-| amorçage | `ORGANISME_IMPOSE_VALIDE` ; empreinte d'arbre calculée par le noyau : `32fc33ac…` |
+| amorçage | `ORGANISME_IMPOSE_VALIDE` ; empreinte d'arbre calculée par le noyau : `3e6fe2e9…` |
 | générations | 2, toutes `OK`, successeur valide, 39 appels sur 60 |
 | attaques | 6, valides ; appliquées aux deux lignées d'une autre famille, défense exécutée (`OK`) |
 | métrique | présente ; non discriminante (même valeur sur une sortie parfaite et sur une sortie inversée) : rapportée, écartée de H-E2 |

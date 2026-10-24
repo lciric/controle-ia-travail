@@ -1,7 +1,7 @@
 # Corrections de l'organisme écrit par Gemini — v2 des corrections, organisme v3
 
 Écrit le 24 octobre 2026 par la lignée « session-depot », sur le GO de Lazar (« go aligne les attaques de l'organisme
-de gemini », message dans la session vers 18:10 UTC). Les corrections C-01 à C-10 (`CORRECTIONS-v1.md`) valent
+de gemini », message dans la session à 18:01 UTC). Les corrections C-01 à C-10 (`CORRECTIONS-v1.md`) valent
 toujours ; celle-ci s'y ajoute. La conception de Gemini ne change pas.
 
 ## C-11 — attaques alignées sur les familles et les étiquettes de la banque
