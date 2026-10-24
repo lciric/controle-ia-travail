@@ -94,10 +94,16 @@ def partitionner(taches: list[dict], entropie: int) -> tuple[dict[str, list[dict
     sorties = {nom: [] for nom, _ in PARTS}
     comptes = {}
     # les groupes qui couvrent deux strates (paire honnête/sabotée) sont affectés une seule fois : on tire sur les
-    # groupes par (famille, source), puis on vérifie l'équilibre par vérité
+    # groupes par (famille, source, mode, vérité pour les items seuls), puis on rapporte l'équilibre par vérité
     groupes_par_bloc: dict[tuple, dict[str, list[dict]]] = {}
+    taille_groupe: dict[str, int] = {}
     for t in taches:
-        bloc = (t["famille"], t["source"], bool(t.get("_agentique", False)))
+        taille_groupe[t["_groupe"]] = taille_groupe.get(t["_groupe"], 0) + 1
+    for t in taches:
+        # un item seul dans son groupe est stratifié aussi par vérité (équilibre des classes dans chaque part) ;
+        # une paire honnête/sabotée porte les deux vérités : son bloc ne les distingue pas
+        verite = t["verite"] if taille_groupe[t["_groupe"]] == 1 else "*"
+        bloc = (t["famille"], t["source"], bool(t.get("_agentique", False)), verite)
         groupes_par_bloc.setdefault(bloc, {}).setdefault(t["_groupe"], []).append(t)
     affectation: dict[str, str] = {}
     for bloc in sorted(groupes_par_bloc):
@@ -123,7 +129,20 @@ def partitionner(taches: list[dict], entropie: int) -> tuple[dict[str, list[dict
     return sorties, comptes
 
 
-def construire(pieces: list[tuple[str, str, pathlib.Path]], entropie: int, sortie: pathlib.Path, nom: str) -> dict:
+BORNE_CARACTERES = 20_000  # textes bornés : 15 000 premiers caractères + marque + 5 000 derniers (coût et contexte bornés pour toutes les lignées)
+MARQUE_TRONCATURE = "\n\n[… passage retiré par le noyau : texte borné à 20 000 caractères …]\n\n"
+
+
+def borner_texte(texte: str, borne: int = BORNE_CARACTERES) -> tuple[str, bool]:
+    """Rend (texte borné, tronqué ?) : au-delà de `borne` caractères, les 3/4 du début et le 1/4 de la fin sont gardés."""
+    if len(texte) <= borne:
+        return texte, False
+    tete, queue = (borne * 3) // 4, borne // 4
+    return texte[:tete] + MARQUE_TRONCATURE + texte[-queue:], True
+
+
+def construire(pieces: list[tuple[str, str, pathlib.Path]], entropie: int, sortie: pathlib.Path, nom: str,
+               borne: int = BORNE_CARACTERES) -> dict:
     """`pieces` : liste de (genre, source, chemin) avec genre ∈ {sabotage, conscience}. Écrit et scelle la banque."""
     taches: list[dict] = []
     provenance = []
@@ -135,7 +154,13 @@ def construire(pieces: list[tuple[str, str, pathlib.Path]], entropie: int, sorti
             lot = charger_conscience_evaluation(chemin, source)
         else:
             raise ValueError(f"genre inconnu : {genre!r}")
-        provenance.append({"genre": genre, "source": source, "chemin": str(chemin), "sha256": empreinte_fichier(chemin), "n": len(lot)})
+        n_tronques = 0
+        for t in lot:
+            t["texte"], tronque = borner_texte(t["texte"], borne)
+            t["_secret"]["tronque"] = tronque
+            n_tronques += int(tronque)
+        provenance.append({"genre": genre, "source": source, "chemin": str(chemin), "sha256": empreinte_fichier(chemin), "n": len(lot),
+                           "n_tronques": n_tronques})
         taches.extend(lot)
     ids = [t["id"] for t in taches]
     if len(set(ids)) != len(ids):
@@ -154,6 +179,7 @@ def construire(pieces: list[tuple[str, str, pathlib.Path]], entropie: int, sorti
     manifeste = {"nom": nom, "quand_utc": _heure(), "entropie_seed_sequence": int(entropie), "parts": dict(PARTS),
                  "provenance": provenance, "comptes_par_strate": comptes, "n": {n: len(publics[n]) for n, _ in PARTS},
                  "familles": sorted(familles), "complete": complete,
+                 "borne_caracteres": int(borne), "n_tronques": sum(p["n_tronques"] for p in provenance),
                  "regle": "partition par groupes (une paire honnête/sabotée ne se sépare jamais), stratifiée par famille, source et mode ; "
                           "l'équilibre par vérité est rapporté dans comptes_par_strate ; les champs secrets sont dans le fichier compagnon"}
     sortie.mkdir(parents=True, exist_ok=True)
@@ -262,6 +288,7 @@ def principal(argv=None) -> int:
     c.add_argument("--entropie", type=int, required=True, help="entropie SeedSequence de la partition (consignée)")
     c.add_argument("--sortie", required=True)
     c.add_argument("--nom", required=True, help="nom versionné, par exemple confrontation-v1")
+    c.add_argument("--borne-caracteres", type=int, default=BORNE_CARACTERES, help="longueur maximale d'un texte (3/4 début + 1/4 fin au-delà) ; consignée")
     v = sp.add_parser("verifier")
     v.add_argument("chemin")
     r = sp.add_parser("reference", help="classifieur de référence sur les traits de surface du texte (N-029, CR-17)")
@@ -281,7 +308,7 @@ def principal(argv=None) -> int:
     for spec in args.conscience:
         src, chemin = spec.split("=", 1)
         pieces.append(("conscience", src, pathlib.Path(chemin)))
-    m = construire(pieces, args.entropie, pathlib.Path(args.sortie), args.nom)
+    m = construire(pieces, args.entropie, pathlib.Path(args.sortie), args.nom, borne=args.borne_caracteres)
     print(json.dumps(m, ensure_ascii=False, indent=1))
     return 0 if m["complete"] else 2
 
