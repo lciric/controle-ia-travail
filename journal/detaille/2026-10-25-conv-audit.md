@@ -45,7 +45,7 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   consignation dans `depenses.md`, extension du GO vérifiée par un humain, contenu de l'arbre `3e6fe2e9` à préciser. v3 à
   écrire.
 
-## 23:35 — v4 de l'organisme de Gemini reçue ; Lazar : pilote sur la v4 avec la question à g1, lancé dès le scellement ; primitive `question_ouverte` codée ; brouillon du pilote en contre-lecture 3
+## 23:32 — v4 de l'organisme de Gemini reçue ; Lazar : pilote sur la v4 avec la question à g1, lancé dès le scellement ; primitive `question_ouverte` codée ; brouillon du pilote en contre-lecture 3
 
 - **v4 de Gemini** (relais de Lazar, 00:44 Paris : script PowerShell, 16 fichiers, et message) : reconstituée sans exécuter
   le script ; comparée fichier par fichier à la v3 (`3e6fe2e9…`) : 10 fichiers au contenu identique (fin de ligne finale
