@@ -85,7 +85,7 @@ def relever_metriques(noyau, dossier: pathlib.Path) -> dict:
     releve = {"course": str(noyau.racine), "quand_utc": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
               "lignees": {}}
     for l in sorted(noyau.lignees):
-        lignes = [x for x in noyau.archive.lignes(l) if x.get("statut") == "OK" and not x.get("invalide")]
+        lignes = [x for x in noyau.archive.lignes(l) if x.get("statut") == "OK" and not x.get("invalide") and not x.get("phase")]
         if not lignes:
             releve["lignees"][l] = {"generation": None, "metrique": {"present": False}, "problemes": ["aucune génération valide"]}
             continue
@@ -159,7 +159,7 @@ class Confrontation:
         self.addendum = addendum
 
     def _derniere_generation(self, lignee: str) -> dict | None:
-        lignes = [l for l in self.noyau.archive.lignes(lignee) if l.get("statut") == "OK"]
+        lignes = [l for l in self.noyau.archive.lignes(lignee) if l.get("statut") == "OK" and not l.get("phase")]
         return lignes[-1] if lignes else None
 
     def _famille(self, lignee: str) -> str:

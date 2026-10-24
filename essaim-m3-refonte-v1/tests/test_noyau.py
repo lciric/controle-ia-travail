@@ -173,7 +173,7 @@ def test_archive_scelle_et_ne_reecrit_jamais(tmp_path):
     vue = tmp_path / "archive_vue" / "l" / "g000"
     assert (vue / "organisme.tar.gz").exists() and (vue / "resume.json").exists() and not (vue / "juge").exists()
     assert not any(vue.rglob("reponses_test.json")) and "score" in json.loads((vue / "resume.json").read_text())
-    assert a.historique("l") == [{"generation": 0, "lignee": "l", "score": 0.5, "statut": "OK", "cout_usd": 0.0, "n_appels": 0,
+    assert a.historique("l") == [{"generation": 0, "phase": None, "lignee": "l", "score": 0.5, "statut": "OK", "cout_usd": 0.0, "n_appels": 0,
                                  "successeur": False, "problemes_successeur": [], "relance": False, "invalide": False}]
     with pytest.raises(FileExistsError):
         a.deposer("l", 0, FIXTURE / "organisme", travail, None, {"score": 0.6}, {"statut": "OK"})
@@ -1120,3 +1120,58 @@ def test_double_designation_du_champion_et_concours_de_metriques(tmp_path):
     assert d["concordance"]["test_final_vs_attaques"] in (True, False)
     assert set(c["concours_metriques"]) == {"gemini-argon", "exact"} and c["concours_metriques"]["exact"]["tau_b_avec_temoin"]["n"] == 1
     assert "décide" in c["avertissement"]
+
+
+def test_phase_de_conception_a_critere_d_arret_de_l_organisme(tmp_path):
+    """Lazar (24 octobre, 20:37 et 20:42 Paris) : avant la génération 0 notée, des rondes de conception où l'organisme se
+    réécrit ; il conçoit son propre critère d'arrêt (`fin_conception.json`) ; le noyau ne tient qu'une borne dure. Cas
+    sain : l'organisme concepteur déclare la fin à la ronde 2 sur une borne de 5 → 2 rondes cNNN archivées, jamais
+    notées ; la génération 0 notée tourne sur l'organisme issu de la conception ; le bras gelé apparié relance cette
+    génération 0. Artefact : un organisme qui ne déclare jamais la fin s'arrête à la borne dure."""
+    from essaim_m3.noyau import cli
+    concepteur = RACINE / "tests" / "fixtures" / "organisme_concepteur" / "organisme"
+    course = tmp_path / "course"
+    assert cli.principal(["simuler", "--sortie", str(course), "--generations", "2", "--graine", "12", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--organisme-impose", f"concepteur={concepteur}@anthropic",
+                          "--rondes-conception-max", "5", "--usd-max-conception", "2.0"]) == 0
+    idx = [json.loads(x) for x in (course / "archive" / "index.jsonl").read_text().splitlines()]
+    conc = [l for l in idx if l["lignee"] == "concepteur"]
+    rondes = [l for l in conc if l.get("phase") == "conception"]
+    notees = [l for l in conc if not l.get("phase")]
+    assert [l["generation"] for l in rondes] == [1, 2] and all(l["score"] is None for l in rondes)
+    assert [l["generation"] for l in notees] == [0, 1] and all(isinstance(l["score"], float) for l in notees)
+    assert (course / "archive" / "concepteur" / "c001").exists() and (course / "archive" / "concepteur" / "c002").exists()
+    ev = [json.loads(x) for x in (course / "evenements.jsonl").read_text().splitlines()]
+    fins = [e for e in ev if e["etape"] == "fin_conception"]
+    assert len(fins) == 1 and fins[0]["lignee"] == "concepteur" and fins[0]["ronde"] == 2 and "critere" in fins[0]["declaration"]
+    # l'organisme factice (sans critère) va jusqu'à la borne dure : 5 rondes
+    assert [l["generation"] for l in idx if l["lignee"] == "gemini-argon" and l.get("phase") == "conception"] == [1, 2, 3, 4, 5]
+    # la génération 0 notée tourne sur l'organisme issu de la conception (g000-concu), pas sur l'amorce
+    ctx0 = json.loads((course / "archive" / "concepteur" / "g000" / "travail" / "contexte.json").read_text())
+    assert ctx0["phase"] == "generation" and ctx0["generation"] == 0 and ctx0["rondes_conception_max"] == 5
+    assert any(h.get("phase") == "conception" for h in ctx0["historique"]) and len(ctx0["taches_test"]) == 10
+    ctxc = json.loads((course / "archive" / "concepteur" / "c001" / "travail" / "contexte.json").read_text())
+    assert ctxc["phase"] == "conception" and ctxc["ronde_conception"] == 1 and ctxc["taches_test"] == [] and ctxc["budget"]["usd_max"] <= 2.0
+    rapport = json.loads(sorted(course.glob("rapport-v*.json"))[-1].read_text())
+    assert len(rapport["courbes"]["concepteur"]) == 2 and len(rapport["rondes_conception"]) == 7
+    assert rapport["manifeste"]["rondes_conception_max"] == 5 and rapport["manifeste"]["budget_conception"]["usd_max"] == 2.0
+    # bras gelé apparié : relance la génération 0 issue de la conception (même empreinte), sans phase de conception
+    gelee = tmp_path / "gelee"
+    assert cli.principal(["simuler", "--sortie", str(gelee), "--generations", "2", "--graine", "13", "--gel", "--depuis", str(course), "--appels-max", "30"]) == 0
+    idx_g = [json.loads(x) for x in (gelee / "archive" / "index.jsonl").read_text().splitlines()]
+    assert not any(l.get("phase") for l in idx_g)
+    e0 = next(l for l in idx if l["lignee"] == "concepteur" and l["generation"] == 0 and not l.get("phase"))["empreinte_organisme"]
+    assert next(l for l in idx_g if l["lignee"] == "concepteur" and l["generation"] == 0)["empreinte_organisme"] == e0
+    # la confrontation ignore les rondes de conception
+    assert cli.principal(["extraire-metriques", "--course", str(course)]) == 0
+    r = json.loads((course / "confrontation" / "releve-metriques-v1.json").read_text())
+    assert r["lignees"]["concepteur"]["generation"] == 1
+
+
+def test_mode_reel_refuse_anthropic_base_url(tmp_path, monkeypatch):
+    """Constat de session-depot (n° 09) : une ANTHROPIC_BASE_URL définie enverrait les appels ailleurs ; refus en réel
+    sauf option explicite."""
+    from essaim_m3.noyau import cli
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "x"); monkeypatch.setenv("GEMINI_API_KEY", "y"); monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://exemple.invalide")
+    taches = tmp_path / "t.json"; taches.write_text("{}", encoding="utf-8")
+    assert cli.principal(["lancer", "--reel", "--go", "GO-X", "--taches", str(taches), "--sortie", str(tmp_path / "r")]) == 4

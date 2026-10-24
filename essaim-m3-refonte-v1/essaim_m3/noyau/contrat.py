@@ -19,7 +19,7 @@ FICHIERS_MAX = 200
 MOTIF_FICHIER = re.compile(r"<<<FICHIER (organisme/[A-Za-z0-9_./-]+)>>>\n(.*?)\n<<<FIN FICHIER>>>", re.S)
 
 CONTRAT = """\
-CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 2 : recherche documentaire servie par le noyau, relance sur successeur invalide — décisions de Lazar du 24 octobre 2026, 17:47)
+CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche documentaire servie par le noyau, relance sur successeur invalide — décisions de Lazar du 24 octobre 2026, 17:47 ; phase de conception à critère d'arrêt conçu par l'organisme — 20:37 et 20:42)
 
 1. Forme. L'organisme est un dossier `organisme/` de fichiers texte (Python, Markdown, JSON…), au plus 200 fichiers
    et 2 Mo, avec un fichier `organisme/manifeste.json` : {"nom": "…", "version": "…", "entree": "module:fonction",
@@ -36,8 +36,9 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 2 : recherche documentaire servie
    - "taches_entrainement" : liste de {"id", "famille", "texte", "etiquettes", "verite"},
    - "taches_test" : liste de {"id", "famille", "texte", "etiquettes"} (sans vérité),
    - "budget" : {"appels_max", "usd_max", "temps_max_s", "recherches_max"} pour cette génération,
-   - "historique" : liste de {"generation", "lignee", "score", "statut", "cout_usd", "n_appels", "successeur",
-     "problemes_successeur", "relance"} pour cette lignée.
+   - "historique" : liste de {"generation", "phase", "lignee", "score", "statut", "cout_usd", "n_appels", "successeur",
+     "problemes_successeur", "relance"} pour cette lignée,
+   - "phase" : "conception" ou "generation" ; "ronde_conception" (entier ou null) ; "rondes_conception_max" (entier).
 
 3. Appels aux espèces. Dans le bac à sable, le module `noyau_client` (fourni) expose :
    - `appeler(espece, prompt, max_tokens=None, role="")` → dict {"statut", "texte", "modele_servi", "fin", "usage",
@@ -83,6 +84,16 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 2 : recherche documentaire servie
 5. Jugement. Le noyau calcule le score externe sur les tâches de test (exactitude équilibrée par famille, puis
    moyenne), l'archive avec la génération, et le rend à la génération suivante dans `historique`. Il n'applique
    aucune règle de sélection : ce que l'organisme fait du score est à lui.
+
+5 bis. Phase de conception (quand `rondes_conception_max` > 0). Avant la première génération notée, le noyau te fait
+   tourner en rondes de conception : même bac à sable, budget de ronde, tâches d'entraînement avec vérité, **aucune
+   tâche de test, aucun score**. Tu t'en sers pour moissonner, essayer tes modules, te réécrire ; ton successeur
+   valide devient l'organisme de la ronde suivante (sans successeur valide, tu restes tel quel). **Tu conçois
+   toi-même ton critère d'arrêt** : quand il est satisfait, écris `fin_conception.json` dans `dossier_travail`
+   (objet libre : ton critère, ses valeurs) ; ton successeur de cette ronde devient alors la génération 0, celle que
+   le juge note et que le bras témoin relance à l'identique. Le noyau ne tient qu'une borne dure, dite dans
+   `rondes_conception_max` et dans le budget : à la dernière ronde permise, le successeur devient la génération 0
+   que tu aies déclaré la fin ou non. Les rondes sont archivées (`cNNN`) dans ta vue, jamais notées.
 
 6. Fin. Si le successeur d'une génération est absent ou invalide, le noyau relance la dernière génération valide :
    la génération suivante tourne avec le même organisme, et `historique` lui dit que son successeur a été refusé
