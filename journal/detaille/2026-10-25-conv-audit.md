@@ -27,3 +27,20 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   « essaims » de la relève n'ont pas de code qui tourne.
 - **Ouvert** : mot de Lazar sur « code figé après la conception » et sur l'arrêt déclaré ; retour de la contre-lecture
   du pilote ; vivier produit par Lazar ; v4 et lanceur v2 (session-depot) ; v8 de la confrontation sur la tête réunie.
+
+## 22:35 — synthèse v4 : la question de l'apprentissage en tête, à la demande de Lazar (00:31 Paris)
+
+- Lazar (00:15 Paris) : « au fond c'est la question de l'apprentissage : appels à des modèles et mémorisation, ou signal
+  de récompense, ou hybride ? ». Réponse donnée et, sur sa demande (00:31 : « écris bien ça en tête du document du journal
+  synthétique destiné à moi et à toi »), mise en section 0 de `synthese-v4.md` : l'opposition exacte est gradient contre
+  recherche (l'écriture est une récompense sans gradient) ; trois niveaux (écriture ; gradient sur des instruments
+  conçus ; hybride) ; seul le modèle local s'entraîne, les modèles d'appel sont des oracles ; lire toujours « quelle
+  partie a appris » ; le programme répond pièce par pièce (étape 1 : écriture seule ; étape 2 : gradient sur
+  instruments ; H-G4 : universalité sur familles inédites) ; ce qui reste inconnu. Reste de la v3 inchangé ; v3 archivée.
+- Commis et poussé : `9c77623` (`journal/commun-v1`), empreintes mises à jour.
+- Deuxième contre-lecture du pilote Gemini v2 rendue (sous-agent neuf) : « scellable après corrections (v3) », neuf
+  constats PG2-01..09 — majeur : `cli.lancer` imprime courbes et scores à la fin de la course, ce qui contredit « scores
+  lus après le scellement de la v4 » → redirection scellée de la sortie et liste close des fichiers lisibles ; forme :
+  entrée « Revérification » à nommer « Contre-lecture 2 », date 00:16 en heure de Paris, nom de la variable de clé,
+  consignation dans `depenses.md`, extension du GO vérifiée par un humain, contenu de l'arbre `3e6fe2e9` à préciser. v3 à
+  écrire.
