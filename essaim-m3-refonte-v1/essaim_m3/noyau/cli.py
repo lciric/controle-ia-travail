@@ -297,7 +297,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--especes", nargs="*", default=None, help="espèces d'amorçage (défaut : les trois)")
         q.add_argument("--isoler-reseau", action="store_true")
         q.add_argument("--gel", action="store_true", help="bras témoin : relance la génération 0, ignore les successeurs")
-        q.add_argument("--depuis", default=None, metavar="COURSE", help="avec --gel : relance les organismes g000 archivés de cette course (bras gelé apparié, CR-08) ; même banque")
+        q.add_argument("--depuis", default=None, metavar="COURSE", help="relance les organismes g000 archivés de cette course, même banque : avec --gel, bras gelé apparié (CR-08) ; sans --gel, bras apparié adaptatif (CE-06)")
         q.add_argument("--confronter", action="store_true", help="après la boucle : métriques croisées et attaques entre lignées de familles différentes")
         q.add_argument("--organisme-impose", action="append", default=None, metavar="NOM=CHEMIN@FAMILLE",
                        help="lignée dont la génération 0 est fournie (dossier organisme/) ; famille de fournisseur déclarée (anthropic|gemini) ; répétable")

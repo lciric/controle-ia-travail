@@ -358,7 +358,7 @@ class Noyau:
         elif self.reel:
             raise Arret("entraîneur sans isolation d'utilisateur en réel : refusé (CE-02)")
         return _entrainement.Entraineur(dossier, vues, verites, int(budget["entrainements_max"]), pas_max=int(budget.get("pas_max", _entrainement.PAS_MAX_DEFAUT)),
-                                        delai_s=int(budget.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT)),
+                                        delai_s=int(budget.get("delai_entrainement_s", self.budget.get("delai_entrainement_s", _entrainement.DELAI_S_DEFAUT))),
                                         uid=uid_ent, isoler_reseau=isole, espace=(self.espace if uid_ent is not None else None),
                                         prefixe=f"{lignee[:12]}-g{g:03d}")
 
