@@ -392,3 +392,45 @@ l'applique). Entrées corrigées (titre tel qu'écrit → heure vraie, celle du 
 - Hors journal (table complète au canal, n° 19 § 4) : en-têtes de mes messages n° 12 à 18, CA-23 à CA-30, date des
   brouillons v5 et v6, `sections-conception-moisson-v1.md`, `LISEZMOI-v1.md` de la vérification.
 - Règle : heure lue sur `date -u` au moment d'écrire, contrôlée contre l'heure du commit.
+
+## 21:21 — décisions de Lazar de 22:37 à 23:20 (Paris) ; contre-lectures n° 3 ; Avalon-M1 ; réponses de Gemini ; code
+
+- Empreinte de ce fichier avant cette entrée : `e10990ad8fd8807b801c3feaf087254506421eef98b502e5fbfe7804ead0d866`.
+- **Contre-lecture n° 3 de la v6 (confrontation)** : « scellable après corrections » (`a2e6a35a…`, 19:43–20:26 UTC) ;
+  5 majeures : CR3-01 **le devis de 3 512,3 USD ne tient pas** (une défense reçoit le budget d'une génération : 12 × 37 ;
+  confrontation imputée au plafond de la course ; ≈ 4 038 au pire cas) — Lazar prévenu à 20:35 UTC, aucun GO sur ces
+  chiffres ; CR3-02 `_scores_finaux` sans filtre (corrigé, `e1743f1`) ; CR3-03 journaux de défense ; CR3-04 appel de
+  contrôle par espèce (confié au lanceur de session-depot) ; CR3-05 intervalle de H-E1 avec n = 2 courses. Hypothèse
+  retirée : « le devis v6 est juste ». v7 à écrire.
+- **Contre-lecture n° 3 de l'étape 1 (v3 de session-depot)** : « scellable après corrections » (`76f96658…`) ; bloquantes :
+  CE3-01 = mon RE-01 (le bras B ne voyait pas les rondes de conception de A ; corrigé par `Archive.importer_conception`,
+  `e1743f1`/`9d53ae3`, essai sain et artefacts) ; CE3-02 filtre de `phase` (corrigé des deux côtés) ; majeures CE3-03 à
+  CE3-08 (dont CE3-04 : la moisson peut retrouver la provenance publique des textes du test → garde proposée à Lazar ;
+  CE3-08 : erreur du lanceur scellé `8000348`). Lanceur v2, v4 du texte, revérification par un sous-agent neuf avant
+  scellement.
+- **Décisions de Lazar** (heure de Paris) : 22:37 clé Gemini n° 2 (`GEMINI_API_KEY_2`, recharge automatique) ; 22:48
+  Opus au lot 3 sur une question abstraite, une seule tentative (pièces `4d143d33…`, `5d226431…`) ; 22:48 GO
+  « préparatifs » ≤ 200 USD jusqu'à lundi ; 22:50 et 23:00 : objectif ultime élargi à l'auto-organisation des organismes
+  et de leurs essaims, « battre Avalon et être plus inventifs » ; témoins fixes (binaire, calibration MIT, collectif
+  Avalon) entraînés par le noyau, l'organisme brainstorme leur forme et son objectif ; 23:00 **étape 1 « économe » (v4)
+  sans lignées imposées, go, pilote en repli** ; 23:20 les organismes explorent des candidats orthogonaux et ne sont ni
+  enfermés ni influencés par nos pistes → règle de protocole : l'organisme propose avant de voir quoi que ce soit de
+  nous ; diversité des candidats mesurée, rapportée ; aucun mécanisme suggéré (celui de Gemini, `mitose_spectrale.py` :
+  termes saturés par matrice de Gram TF-IDF et contrainte d'orthogonalité, lu et décrit, non copié).
+- **Avalon-M1** (General Reasoning, 23 octobre ; rapport `6429a78f…`, 81 pages, « still training ») : lu en partie ;
+  page 35 : refus d'agir mal quasi universel, signalement aux humains en chute (77 → 20 → 0–3 % ; régulateur 68 → 36 %) ;
+  « insularité organisationnelle » ; ils annoncent récompenser le signalement. Voisin publié du lot 3 et de H9 ; zone
+  « le signalement baisse sous renforcement collectif » occupée ; proposition N-0xx : citer sans changer d'énoncé.
+  MIT « Beyond Binary Rewards » (calibration par Brier) : témoin déjà prévu. Positionnement écrit à Lazar (table).
+- **Économie** : les jetons d'entrée dominent (0,077 USD par tâche chez Fable/Argon) ; l'organisme de Gemini divise le
+  pire cas par 2 à 3 (max_tokens 640, un appel par tâche, mitose dimensionnée au budget, pas de réécriture de code) ;
+  le facteur 10 vient de ne pas appeler par tâche (sonde par `predire`). Bornes v4 corrigées (canal n° 22) : génération
+  160 appels / 20 USD / 1 200 s, ronde 160 / 12 / 1 200 ; deux graines ≈ 1 022 USD au pire cas, ≈ 200–250 attendus.
+  Réfuté : « réponses brèves + longue réflexion coûtent moins » (la réflexion est facturée en sortie).
+- **Réponses de Gemini** (deux sessions, `0a992b78…`, `b5597cd1…`) : preuves élémentaires justes, contre-exemples faux
+  (scripts exécutés : assertions en échec), aucune faille d'Avalon établie, résultats écrits par le modèle et non par
+  l'essaim ; deux constructions gardées comme matériau d'étape 2, jamais consigne. Troisième réponse attendue.
+- Code : `outils/essaim-m3-gradient-v2-import-conception` @ `9d53ae3` (90 tests) : import des rondes de conception,
+  `--max-tokens-appel`, filtres de `phase` ; session-depot code CE3-03/05/06/07 et le lanceur v2 dessus.
+- Ouvert : CE3-04 (décision de Lazar) ; v4 et scellement de l'étape 1 ; v7 de la confrontation et devis refait ;
+  troisième réponse de Gemini ; entrée de veille Avalon sur `main` ; N-0xx citation.
