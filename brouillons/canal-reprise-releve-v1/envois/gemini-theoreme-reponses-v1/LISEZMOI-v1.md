@@ -47,3 +47,8 @@ ligne comprises) ; scripts extraits sans autre modification que la première lig
    injectées à vérité connue sont déjà la banque `confrontation-v1`.
 5. Références des deux réponses : non vérifiées (R7) ; celles de la session 2 (Greenblatt et al. 2023/2024 ; Damani et al.
    2025) sont plausibles mais restent « à vérifier » tant qu'un PDF empreinté n'est pas cité page par page.
+
+## Complément (24 octobre 2026, 21:45 UTC)
+
+Lazar (23:41, heure de Paris) : la **troisième** session Gemini a rendu la même réponse que la première (texte non
+transmis, donc non classé ici). Le dossier reste à deux pièces ; le constat ci-dessus ne change pas.
