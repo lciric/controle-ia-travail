@@ -1,0 +1,26 @@
+Essais du contrôle « aucune règle sur l'identifiant ne prédit la vérité » et de la construction de la banque v2 — v1
+Lignée conv-audit, 25 octobre 2026, 15:47–15:51 UTC ; interpréteur /opt/venv-essaim-sim-v1/bin/python (Python 3.13.17,
+numpy 2.4.6), `-I -B` ; code du dépôt à la tête de `outils/pilote3-gemini-v5-3-v6-travail` (75f9de0).
+
+1. Cas sain attendu en échec (artefact réel) : banque v1 `banque-confrontation-v1.json` (f1387a20…)
+   → code de sortie 1 ; règles prédictives : conscience-evaluation 1 (« nombre_seuil 60.5 sens -1 » : 1,0 sur test et
+   sur test_final), controle-delegation 5 (dont « segment_dernier » et « caractere_14 » : 1,0 et 1,0) ;
+   verifier_banque : aucun problème ; sortie complète : controle-identifiants-banque-v1-v1.json.
+2. Construction (15:50:09 UTC) : entropie 14234892761277461467225772596104759309 (secrets.randbits(128)) ;
+   banque-confrontation-v2.json 52beb637823b72f475fd1ddcf446e9b79cafa5d2cd47d16c08b663d2b9388d10 ;
+   banque-confrontation-v2-secret.json 1775a9e09f6620064769bf7c7a46d4f53a69e8cb1f886377dc5fd886d9d629fa.
+3. Cas sain : banque v2, avec équivalence et racine du code
+   → code de sortie 0 ; aucune règle prédictive (50 règles par famille ; maximum 0,6111 sur test et sur test_final en
+   conscience-evaluation, 0,6667 en controle-delegation) ; équivalence avec la v1 conforme (mêmes parts, même ordre,
+   mêmes famille, texte, étiquettes, vérité et source à chaque rang ; id_v1 du secret = identifiant v1 du même rang ;
+   dossiers secrets égaux) ; verifier_banque : aucun problème ; référence de surface identique à celle de la v1 ;
+   sortie complète : controle-identifiants-banque-v2-v1.json.
+4. Reproductibilité : construction refaite dans un dossier neuf avec --entropie 14234892761277461467225772596104759309
+   → banque égale hors du champ quand_utc du manifeste ; secret égal.
+5. R12 : construction relancée vers le dossier de la banque → « REFUS : banque/banque-confrontation-v2.json existe déjà
+   (R12) », rien d'écrit.
+6. Artefacts (copies altérées de la v2, dans un dossier temporaire) :
+   - un texte de test modifié d'un espace → code 2, « test t-0072 : champ texte différent de la v1 (cd-lot1-L1-02-S) » ;
+   - fuite injectée (suffixe -S / -H ajouté aux identifiants de controle-delegation), avec équivalence → code 2
+     (161 erreurs d'équivalence) et 6 règles prédictives ; contrôle des règles seul → code 1 ;
+   - identifiant en double → code 2, « identifiants en double ».
