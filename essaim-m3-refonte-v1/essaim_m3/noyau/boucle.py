@@ -666,10 +666,10 @@ class Noyau:
         anomalie_noyau = anomalie_journal_absent(n_appels, appelant.journal)
         if anomalie_noyau:
             execution = dict(execution, code="ANOMALIE_NOYAU", code_origine=execution.get("code"), anomalie=anomalie_noyau)
-        # CE3-05 : un HTTP 402 (crédit d'un fournisseur épuisé) invalide la génération où il survient et arrête la course
+        # CE3-05 : un crédit de fournisseur épuisé (HTTP 402, ou 400 « credit balance is too low », R-395) invalide la génération où il survient et arrête la course
         self._noter_credit(appelant, lignee, g, phase)
         if getattr(appelant, "credit_epuise", None) and not anomalie_noyau:
-            anomalie_noyau = (f"crédit d'un fournisseur épuisé en cours de génération (HTTP 402, {appelant.credit_epuise.get('espece')}) : "
+            anomalie_noyau = (f"crédit d'un fournisseur épuisé en cours de génération (HTTP 402 ou 400 de crédit, {appelant.credit_epuise.get('espece')}) : "
                               "génération invalidée, course arrêtée (CE3-05)")
             execution = dict(execution, code="CREDIT_EPUISE", code_origine=execution.get("code"), anomalie=anomalie_noyau)
         n_recherches = rechercheur.compteur if rechercheur is not None else 0
@@ -827,18 +827,18 @@ class Noyau:
 
     def _doit_arreter(self) -> str | None:
         """Raison d'arrêter la course avant la prochaine génération ou ronde, ou None : fichier STOP ; crédit d'un fournisseur
-        épuisé en cours de course (HTTP 402, CE3-05 : course arrêtée, consignée, lue telle quelle, aucune relance) ;
+        épuisé en cours de course (HTTP 402 ou 400 de crédit, CE3-05 et R-395 : course arrêtée, consignée, lue telle quelle, aucune relance) ;
         plafond total atteint."""
         if (self.racine / "STOP").exists():
             return "fichier STOP"
         if getattr(self, "arret_credit", None):
-            return f"crédit d'un fournisseur épuisé (HTTP 402) : {self.arret_credit.get('espece')} (CE3-05)"
+            return f"crédit d'un fournisseur épuisé (HTTP 402 ou 400 de crédit) : {self.arret_credit.get('espece')} (CE3-05)"
         if self._plafond_restant() <= 0:
             return "plafond total atteint"
         return None
 
     def _noter_credit(self, appelant, lignee: str, generation: int, phase: str | None) -> None:
-        """CE3-05 : un appelant qui a reçu un HTTP 402 arrête la course (premier constat consigné)."""
+        """CE3-05 : un appelant qui a reçu un crédit épuisé (HTTP 402, ou 400 de crédit, R-395) arrête la course (premier constat consigné)."""
         if getattr(appelant, "credit_epuise", None) and not getattr(self, "arret_credit", None):
             self.arret_credit = dict(appelant.credit_epuise, lignee=lignee, generation=generation, phase=phase)
             self._evenement(etape="credit_epuise", **self.arret_credit)

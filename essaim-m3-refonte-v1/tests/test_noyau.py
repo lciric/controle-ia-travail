@@ -3346,3 +3346,74 @@ def test_cl6_02_dossier_inscriptible_imbrique_sous_un_temporaire(tmp_path):
     finally:
         bac_a_sable.dossiers_inscriptibles_par_tous(rafraichir=True)
         shutil.rmtree(imbrique, ignore_errors=True)
+
+
+def test_r395_credit_epuise_rendu_en_400_arrete_la_course(tmp_path):
+    """R-395 (CE3-05 étendu) : le crédit épuisé d'Anthropic arrive en HTTP 400 — ou en erreur de flux sous HTTP 200 — avec
+    « credit balance is too low » (constaté au pilote du 25 octobre 2026) ; il arrête la course comme un 402. Artefacts :
+    une autre erreur 400 (requête invalide) ou un 429 n'arrêtent rien."""
+    from essaim_m3.noyau.appels import credit_epuise, cv
+    credit400 = ("HTTP 400 BadRequestError : Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', "
+                 "'message': 'Your credit balance is too low to access the Anthropic API.'}}")
+    credit200 = ("HTTP 200 APIStatusError : {'type': 'error', 'error': {'details': None, 'type': 'invalid_request_error', "
+                 "'message': 'Your credit balance is too low to access the Anthropic API.'}}")
+    autre400 = "HTTP 400 BadRequestError : Error code: 400 - max_tokens: 999999 > 64000"
+    assert credit_epuise("HTTP 402 : prepayment credits are depleted") and credit_epuise(credit400) and credit_epuise(credit200)
+    assert not credit_epuise(autre400) and not credit_epuise("HTTP 429 RateLimitError : rate limit")
+    assert not credit_epuise(None) and not credit_epuise("")
+
+    def course(nom, echec):
+        ss = np.random.SeedSequence(83)
+        r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+        servir, _ = appelants_simules(r2, commun={"organisme_amorcage": str(FIXTURE)})
+        compte = {"n": 0}
+        def coupe(modele_id, prompt, max_tokens):
+            compte["n"] += 1
+            if echec is not None and compte["n"] > 3:
+                return cv.Reponse(echec=echec)
+            return servir["gemini"](modele_id, prompt, max_tokens)
+        n = boucle.Noyau(tmp_path / nom, "m", taches.banque_simulation(r1, 8, 8, 4),
+                         {"appels_max": 40, "usd_max": 5.0, "temps_max_s": 60}, 20.0, 3,
+                         appelants={"anthropic": servir["anthropic"], "gemini": coupe}, especes_amorcage=["GEMINI_ARGON"], entropie=83)
+        n.amorcer()
+        n.boucler()
+        return n
+    for i, echec in enumerate((credit400, credit200)):
+        n = course(f"credit{i}", echec)
+        lignes = [l for l in n.archive.lignes("gemini-argon") if not l.get("phase")]
+        assert n.arret_credit and n.arret_credit["espece"] == "GEMINI_ARGON"
+        assert lignes and lignes[-1]["invalide"] and lignes[-1]["statut"] == "CREDIT_EPUISE" and len(lignes) < 3
+    n = course("autre400", autre400)
+    assert not getattr(n, "arret_credit", None)
+    ev = [json.loads(x) for x in (n.racine / "evenements.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert not any(e.get("etape") == "credit_epuise" for e in ev)
+
+
+def test_r396_import_conception_recopie_la_reponse_a_la_question_dans_la_vue(tmp_path):
+    """R-396 : la réponse à la question ouverte d'une ronde de conception, déposée à la racine de `c001` et recopiée dans la
+    vue de l'origine, est recopiée aussi dans la vue du bras apparié à l'import (`importer_conception`) : B la voit au même
+    endroit, aux mêmes octets, en lecture seule. Artefact : une origine sans question n'en importe aucune."""
+    from essaim_m3.noyau import cli, question as q
+    fq = tmp_path / "question.md"
+    fq.write_text("Comment ta structure pourrait-elle être apprise de génération en génération ?\n", encoding="utf-8")
+    org = _organisme_repondeur(tmp_path / "rep")
+    base = ["simuler", "--generations", "1", "--graine", "64", "--especes", "--appels-max", "10", "--usd-par-generation", "2",
+            "--temps-max", "60", "--plafond-total", "10", "--n-train", "6", "--n-test", "4", "--n-final", "4",
+            "--organisme-impose", f"rep={org}@anthropic", "--rondes-conception-max", "2"]
+    a = tmp_path / "a"
+    assert cli.principal(base + ["--sortie", str(a), "--question-ouverte", str(fq), "--question-ouverte-aux", "c001"]) == 0
+    piece = a / "archive" / "rep" / "c001" / q.NOM_REPONSE
+    assert piece.is_file()
+    esp = bac_a_sable.espace_organismes(tmp_path / "b", course_nouvelle=True)
+    arch = archive.Archive(tmp_path / "b" / "archive", vue=esp / "archive_vue")
+    assert arch.importer_conception(a, "rep")
+    copie = arch.vue / "rep" / "c001" / q.NOM_REPONSE
+    assert copie.is_file() and copie.read_bytes() == piece.read_bytes()
+    assert stat.S_IMODE(os.stat(copie).st_mode) in (0o440, 0o444)
+    assert not (arch.vue / "rep" / "c002" / q.NOM_REPONSE).exists()  # question posée à c001 seulement
+    a2 = tmp_path / "a2"
+    assert cli.principal(base + ["--sortie", str(a2)]) == 0
+    esp2 = bac_a_sable.espace_organismes(tmp_path / "b2", course_nouvelle=True)
+    arch2 = archive.Archive(tmp_path / "b2" / "archive", vue=esp2 / "archive_vue")
+    assert arch2.importer_conception(a2, "rep")
+    assert not (arch2.vue / "rep" / "c001" / q.NOM_REPONSE).exists()

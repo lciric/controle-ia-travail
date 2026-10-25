@@ -193,7 +193,9 @@ class Archive:
                 fh.write(json.dumps(ligne, ensure_ascii=False, sort_keys=True) + "\n")
             v = self.vue / lignee / self.nom_generation(int(l["generation"]), "conception")
             v.mkdir(parents=True, exist_ok=True)
-            for nom in ("organisme.tar.gz", "organisme.tar.gz.sha256"):
+            # R-396 : la réponse à la question ouverte de la ronde, recopiée dans la vue de l'origine par `archiver_reponse`
+            # (`cNNN/reponse-question.md`), l'est aussi ici : le bras apparié voit au même endroit ce que voyait l'origine
+            for nom in ("organisme.tar.gz", "organisme.tar.gz.sha256", "reponse-question.md"):
                 if (d / nom).is_file():
                     shutil.copy2(d / nom, v / nom)
             resume = json.loads((d / "resume.json").read_text(encoding="utf-8")) if (d / "resume.json").is_file() else ligne

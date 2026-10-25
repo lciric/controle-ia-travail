@@ -79,6 +79,18 @@ def empreinte(texte: str) -> str:
     return hashlib.sha256(texte.encode("utf-8")).hexdigest()
 
 
+# CE3-05 étendu (R-395) : le crédit épuisé arrive en HTTP 402 (Gemini) ou, chez Anthropic, en HTTP 400 — parfois en
+# erreur de flux sous HTTP 200 — avec « credit balance is too low » (constaté au pilote du 25 octobre 2026) ; une autre
+# erreur 400 n'arrête rien
+_MOTIF_CREDIT_EPUISE = re.compile(r"credit balance is too low", re.IGNORECASE)
+
+
+def credit_epuise(echec) -> bool:
+    """Vrai si l'échec d'un appel dit que le crédit du fournisseur est épuisé (la course s'arrête, CE3-05)."""
+    s = str(echec or "")
+    return bool(re.match(r"\s*HTTP 402\b", s) or _MOTIF_CREDIT_EPUISE.search(s))
+
+
 class Arret(Exception):
     """Arrêt du run (plafond atteint, journal illisible…) : jamais un repli silencieux."""
 
@@ -120,7 +132,7 @@ class Appelant:
         self.plafond_usd = float(plafond_usd)
         self.depense_usd = 0.0
         self.engage_usd = 0.0  # pire cas des appels en vol (appels parallèles) : réservé avant, libéré après
-        self.credit_epuise: dict | None = None  # CE3-05 : premier HTTP 402 (crédit d'un fournisseur épuisé) ; la course s'arrête
+        self.credit_epuise: dict | None = None  # CE3-05 : premier crédit épuisé (HTTP 402, ou 400 de crédit, R-395) ; la course s'arrête
         self.compteur = 0
         self.reel = bool(reel)
         self.go_id = go_id
@@ -167,7 +179,7 @@ class Appelant:
         fin_utc = maintenant()
         if rep.echec:
             statut = "ECHEC_API"
-            if self.credit_epuise is None and re.match(r"\s*HTTP 402\b", str(rep.echec)):
+            if self.credit_epuise is None and credit_epuise(rep.echec):
                 with self._verrou:  # CE3-05 : crédit épuisé en cours de course — consigné, la course sera arrêtée
                     if self.credit_epuise is None:
                         self.credit_epuise = {"espece": espece, "modele": m["id"], "echec": str(rep.echec)[:200]}
