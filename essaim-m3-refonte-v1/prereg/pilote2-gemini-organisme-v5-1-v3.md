@@ -311,11 +311,11 @@ saine (définition close ci-dessus).
    "gemini-organisme-v5-1=$PILOTE/outils/gemini-organisme-v5-1/organisme@gemini" > "$PILOTE/ferme/sortie-standard-lanceur.txt"
    2> "$PILOTE/sortie-erreur-lanceur.txt"`. Un fichier `STOP` dans `$PILOTE/course/` n'est posé que pour un incident
    technique (panne, coût anormal lu dans le journal des appels), consigné ; jamais au vu d'un score.
-2. **Graines (R9)** : entropie E = <<ENTROPIE>> tirée au scellement par `secrets.randbits(128)` ; deux enfants
+2. **Graines (R9)** : entropie E = 288269624679456406396283360440263261965 tirée au scellement par `secrets.randbits(128)` ; deux enfants
    `numpy.random.SeedSequence(E).spawn(2)` ; graine de chaque course = `int(enfant.generate_state(1, dtype=numpy.uint64)[0])`,
    l'enfant 0 pour S, l'enfant 1 pour M (chaque égalité sur une seule ligne, lue et recalculée par le lanceur) :
-   graine de la course structure = <<GRAINE_STRUCTURE>>
-   graine de la course maieutique = <<GRAINE_MAIEUTIQUE>>
+   graine de la course structure = 7262684744293714155
+   graine de la course maieutique = 9276553530262468954
    Le manifeste de chaque run consigne sa graine, la version de numpy, `sha256_code_noyau` et `commit` ; E n'est
    consignée qu'ici.
 3. **Moment de la lecture des scores (R1)** — fichier par fichier. La **sortie standard** (qui porte les scores,
@@ -511,7 +511,7 @@ sont essayées par le lanceur en simulation.
 scellement `sceller_pilote2_v2.py` (`373beddc962ed3b577bd3a935fad8709d152a0381688656cdf2dafc7fe642f4f` ; la v1, gardée, attendait un marqueur de plus) ; les versions
 antérieures (lanceurs v1 à v3, essais v1 à v3, devis v1 et v2) gardées ; chaque pièce a son `.sha256` ; fichier d'empreintes
 `EMPREINTES-pilote2-gemini-v5-1-v3.txt` (+ `.sha256`) sous `pieces-pilote2-gemini-v5-1/`, écrit au scellement par le script de
-scellement : <<EMPREINTE_PIECES>>.
+scellement : `4bb671ca173b75320ca9cf34436efd60a4277705144c1a536a295f7992927965`.
 
 ## Traitement des constats de la contre-lecture 1 (P2C1-01 à P2C1-14)
 
