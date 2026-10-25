@@ -556,3 +556,30 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
 - **Incident** : disque de la session plein vers 16:35 UTC ; un brouillon tronqué (rétabli) ; 12 Go libérés en retirant
   15 arbres de travail anciens et propres et des copies d'essais déjà poussées (dont les extraits de l'audit, refaisables
   depuis les archives fermées).
+
+## 19:10 — Banques v4 et v5 relues (rien à reconstruire) ; référence de provenance ; pilote 4 : contre-lecture 1 traitée en v2, lanceur v4 avec minuteur ; seconde contre-lecture en cours
+
+(Écrit à 19:10 UTC, heure lue sur `date -u`.)
+
+- **Banque v4 puis v5** (branche `outils/banque-confrontation-v2-travail`) : la v4 (une trace par paire en test et test
+  final, N-046) relue « utilisable après corrections » (traits qui servent les jumelles retirées ; séparation d'avec les
+  courses sur la v3) ; la **v5** (`28e3c728…`) reprend sa sélection sous des identifiants neufs et un manifeste juste ;
+  relue (`CONTRE-LECTURE-banque-v5-v1.md`, `0ea27fa1…`) « utilisable après corrections », rien à reconstruire : garde des
+  traits absente du noyau (BC5-01), séparation écrite en phrase seulement (BC5-02), et un constat neuf hérité de la v1
+  (BC5-03) : en conscience d'évaluation, la catégorie d'origine fixe la classe et 28 des 36 tâches du test ont leur
+  catégorie au train ; un plus proche voisin sur les mots du train fait 0,8056 et 0,8333, plus que la référence de surface
+  (0,75 et 0,6944). Référence de provenance figée (`construction-v3/reference_provenance_conscience_v1.py`) ;
+  `LISEZMOI-v9.md` (`cdd64b97…`, commit `ef0770f`) ; canal n° 62 à session-depot (ce que l'étape 1 doit faire avant toute
+  course sur la v5).
+- **Pilote 4** : contre-lecture 1 (`3dd09acb…`) « scellable après corrections », quatre majeurs : ligne de GO qui nommait
+  la banque v2 (erreur de conv-audit) ; borne de deux heures plus garantie ; devis sans la mesure du pilote 3 ; condition
+  de lecture héritée de P3 périmée. Le texte disait aussi la v6 du pilote 3 « retirée » : elle a tourné (erreur de
+  conv-audit). Corrections : lanceur v4 (`f335440c…` : 900 s par ronde de conception ; minuteur qui pose `STOP` à 5 700 s
+  du départ), batterie v5 et série v6 (162 sur 162, fourche), faits mécaniques des pilotes 2 et 3 (générations de 607 à
+  965 s et de 6,5 à 8,6 USD), texte v2 (`8657fcd2…`, `f8bbd89`), script de scellement v2 (9 essais sur 9). Seconde
+  contre-lecture lancée à 19:09 UTC.
+- **Lazar** : trois décisions soumises vers 18:50 UTC — accepter le risque de coupure (défaut : rien ne part) ; garder
+  60 USD par course (défaut : oui) ; partition par catégorie au lot 3 (défaut : lecture contre la provenance maintenant,
+  partition au lot 3). Pas de réponse à 19:10.
+- **R12** : la première sortie de la recherche des clés avant poussée imprimait le code de sortie de `sed` au lieu de
+  celui du script ; gardée, la v2 est juste.
