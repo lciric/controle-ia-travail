@@ -5,8 +5,10 @@
 neuf, 25 octobre 2026, 14:18:44–≈ 14:40 UTC, rapport `prereg/contre-lectures/pilote3-gemini-organisme-v5-3-v6-v1-cl1.md`,
 `25c996efb6d7045f9506f436ecc489e3a70d48abbf6af9dc7232bded82bbae30` ; verdict « scellable après corrections » ; 13 constats
 P3C1-01 à P3C1-13, dont 2 majeurs, traités en fin de texte). Sur sa recommandation, la v2, le lanceur v2 et leurs essais
-sont relus par une **contre-lecture 2** (sous-agent neuf) avant le scellement ; les champs remplis après la contre-lecture
-1 (nombres d'appels en simulation, essais) le sont par elle. Auteur : lignée conv-audit, 25 octobre 2026, v2 écrite à
+ont été relus par une **contre-lecture 2** (sous-agent neuf, 15:00:04–≈ 15:20 UTC, rapport
+`prereg/contre-lectures/pilote3-gemini-organisme-v5-3-v6-v2-cl2.md`,
+`3e451f483fce5f6671a5546f82a97b77d6dd5ad0be38250f3a553acd60b24dc7` ; « scellable après corrections », 0 majeur, 4 mineurs,
+5 remarques, traités en fin de texte sans nouvelle relecture, comme le rapport le permet). Auteur : lignée conv-audit, 25 octobre 2026, v2 écrite à
 partir de 14:44 UTC (heure lue sur `date -u` ; les heures de Paris citées sont celles des messages de Lazar). Lanceur :
 lignée session-depot (clés), dans son conteneur (root, `unshare` disponible ; aucune instance payante).
 
@@ -45,8 +47,8 @@ de hachage aléatoires, puis refait aux graines fixes 0, 1 et 2, mêmes relevés
 - **« La contre-lecture les arrête »** se lit ainsi (P3C1-04) : un verdict « non scellable », ou un constat majeur non
   traité dans le texte scellé, ou des corrections majeures que la contre-lecture 2 n'a pas relues ; dans ces trois cas,
   rien de ce pilote ne part avant le mot de Lazar. **« Prêtes »** : texte scellé, contre-lectures publiées, empreintes
-  (objets, texte, lanceur) publiées par conv-audit sur le canal (message de départ), ligne d'extension du GO et lignes de
-  dépense poussées sur `main`.
+  (objets, texte, lanceur) publiées par conv-audit sur le canal (message de départ), ligne d'extension du GO et ligne de
+  dépense de la v5.3 poussées sur `main` (celle de la v6 après la fin de la v5.3).
 - **GO** (P3C1-02) : la ligne de R-440 existe (`GO-2026-10-25-02`, type calcul, 120 USD, échéance 2026-10-31) **sans
   aucune empreinte** ; elle annonce « une ligne d'extension avant chaque course ». Le lanceur exige, dans `registres/go.md`
   d'`origin/main`, une ligne qui commence par `| GO-2026-10-25-02 |` et porte **sur la même ligne** « calcul »,
@@ -60,7 +62,8 @@ de hachage aléatoires, puis refait aux graines fixes 0, 1 et 2, mêmes relevés
   P52C1-14). **Lignes de dépense**, une par course, dans `registres/depenses.md` d'`origin/main`, écrites après la fin de
   M (et, pour la v6, après la fin de la v5.3), de la forme :
   `| 2026-10-25 | pilote3-gemini-v5-3-maieutique-v1 | GO-2026-10-25-02 | 60 USD au pire cas | après la fin de M ; empreintes de M 5ae4e801423bbef0 |` et
-  `| 2026-10-25 | pilote3-gemini-v6-maieutique-v1 | GO-2026-10-25-02 | 60 USD au pire cas | après la fin de M et de la v5.3 ; empreintes de M 5ae4e801423bbef0 ; empreintes de la v5.3 <16 premiers caractères> |`.
+  `| 2026-10-25 | pilote3-gemini-v6-maieutique-v1 | GO-2026-10-25-02 | 60 USD au pire cas | après la fin de M et de la v5.3 ; empreintes de M 5ae4e801423bbef0 ; empreintes de la v5.3 <16 premiers caractères> |`
+  (au moins une ligne portant les deux empreintes ; le lanceur accepte aussi deux lignes, P3C2-08).
   Les **tests de dépense** (≈ 0,002 USD chacun) sont imputés à `GO-2026-10-25-02` et comptés dans le reste déclaré
   (P3C1-13) ; le reste déclaré au lanceur est celui de ce GO, ≥ 60 USD avant chaque course.
 - **But** : voir ce que donnent, sur les deux familles de tâches réelles, deux conceptions « assistées » de Gemini,
@@ -78,6 +81,7 @@ de hachage aléatoires, puis refait aux graines fixes 0, 1 et 2, mêmes relevés
 | « la course », « M » (en tant que course lancée par ce texte) | chacune des deux courses du pilote 3 |
 | « S ne part que si M est saine », `PRECEDENTE_PILOTE`, étape (0) | **porte « M de référence »** (étape (0), `REFERENCE_M`), pour chaque course ; **et**, pour la v6, **porte « v5.3 précédente »** (étape (0 bis), `PRECEDENTE_V53`) : la même liste close, appliquée à la v5.3 |
 | « S ne part pas » (liste d'arrêt de T2, pour une issue de M) | pour une issue de M : **aucune course du pilote 3 ne part** ; pour une issue de la v5.3 : **la v6 ne part pas** |
+| « les plafonds ne bloquent pas S » (T2, l. 544) | **sans objet** : un arrêt de la v5.3 au plafond total, ou une génération non `OK`, arrête la v6 (liste close ; P3C2-05) |
 | question M ou S | **question M v2 épurée pour les deux courses** (`8b1c7511…`) ; aucune question S |
 | objet `ec8e0b6`, `fec005c6…`, 21 fichiers, lignée `gemini-organisme-v5-2-1` | objet de la course (§ Objets) : v5.3 `4ecba58`, `6251ab21…`, 22 fichiers, lignée `gemini-organisme-v5-3` ; v6 `7cd7508`, `940c59c3…`, 24 fichiers, lignée `gemini-organisme-v6` |
 | `GO-2026-10-25-01`, 120 USD pour M et S | **`GO-2026-10-25-02`** (R-440 et sa ligne d'extension), 120 USD pour les deux courses du pilote 3 |
@@ -107,7 +111,10 @@ de hachage aléatoires, puis refait aux graines fixes 0, 1 et 2, mêmes relevés
   `5ae4e801423bbef0abd8293405139aacf5cef5eaefddf522a72895c86fb41df4`. Ce texte n'étant pas prêt à cette heure, **S est
   partie la première** (R-440 : « sinon S part sans les attendre ») : les deux courses du pilote 3 partent donc **après la
   fin de S** — S est finie à 14:49:09 UTC, code 0, archive fermée, 15,30 USD selon le noyau (appels g000 {OK 114,
-  REFUS 9}, g001 {OK 125, REFUS 4} ; `EMPREINTES-pilote-v1.txt` de S `21f303735a67d936…`), et, par la règle précédente,
+  REFUS 9}, g001 {OK 125, REFUS 4} ; source : `registres/depenses.md`, ligne de 14:50 UTC ; branche
+  `pilotes/pilote2-gemini-v5-2-1-structure-v1`, `0d4361b` ; `EMPREINTES-pilote-v1.txt` de S
+  `21f303735a67d936433aef7651b14c523e7db8152599b40a7eb0ff61505dd05c`, lue sur le compagnon poussé et recalculée sur
+  l'objet de la branche ; P3C2-04), et, par la règle précédente,
   après la répétition et l'épreuve de l'étape 1 engagées à 14:50 UTC. Aucune issue du pilote 3 ne concerne M ni S,
   finies (P3C1-04).
 - **Porte « M de référence »** (étape (0) du lanceur, pour chaque course ; `REFERENCE_M` = un dossier sous `/root` ou
@@ -134,7 +141,12 @@ de hachage aléatoires, puis refait aux graines fixes 0, 1 et 2, mêmes relevés
   v5.3 au manifeste, un entier, égale à la graine v5-3 de ce texte** (étape (2)) ; la ligne de dépense de la v6 porte aussi
   les 16 premiers caractères de l'empreinte de `EMPREINTES-pilote-v1.txt` de la v5.3. Toute autre issue de la v5.3 (dont
   crédit épuisé, modèle non conforme, plus de 20 % d'appels hors `OK`, `STOP`, fin sans successeur valide, archive
-  incomplète, v5.3 non partie) : **la v6 ne part pas** ; Lazar décide.
+  incomplète, v5.3 non partie) : **la v6 ne part pas** ; Lazar décide. **Avant la v6** (P3C2-06) : écrire la ligne de
+  dépense de la v6 (forme ci-dessus ; les 16 premiers caractères viennent de `EMPREINTES-pilote-v1.txt.sha256` de la
+  v5.3), la pousser sur `main`, puis `git fetch origin main` dans la copie du pilote 3 ; laisser le dossier de la v5.3 en
+  place dans le dossier des pilotes de cette copie ; `PRECEDENTE_V53` = ce dossier ; nouveau test de dépense. Une ligne
+  de dépense de la v6 sans l'empreinte des empreintes de la v5.3 arrête la v6 jusqu'au mot de Lazar (liste d'arrêt),
+  comme T2 pour S.
 - **Tentatives** (R-439, pour chacune des deux courses) : un refus **avant le manifeste** permet une seule nouvelle
   tentative sans Lazar, après correction de l'environnement seulement (jamais de ce texte, du lanceur ni de l'objet),
   même commande, dossier `…-tentative2` ; pour tout autre refus, une porte non franchie, un arrêt en cours de course ou un
@@ -237,7 +249,10 @@ d'après la contre-lecture 1 ; v5.3 : même code, non revérifié ligne à ligne
 GO). Ordre de grandeur attendu, **non opposable** : celui de la course M (même configuration ; T2, l. 266–279 : ≈ 21 à
 46 USD la course selon la longueur des sorties), corrigé par le nombre d'appels que la v5.3 et la v6 font par
 génération, lu en simulation : **123 appels à g000 et 129 à g001 pour chacun des deux objets**, tous `OK` en simulation,
-comme la v5.2.1 en simulation ; la dépense réelle de M en donne la mesure la plus proche : **14,92 USD** selon le noyau
+comme la v5.2.1 en simulation (pièces : `simulation-lanceur-v2/LANCEMENT-simulation-v5-3-v2.md` `3b778599…`,
+`LANCEMENT-simulation-v6-v2.md` `9c60de18…`, `extrait-mecanique-v1-simulation-v5-3-v2.json` `a4dd8695…`,
+`extrait-mecanique-v1-simulation-v6-v2.json` `9be21e97…` ; non relues par la contre-lecture 2, pièces hors de sa liste,
+P3C2-01) ; la dépense réelle de M en donne la mesure la plus proche : **14,92 USD** selon le noyau
 (`registres/depenses.md`, ligne de 14:19 UTC ; à rapprocher de la console).
 
 ## Hypothèse
@@ -273,12 +288,12 @@ chaque course.
    dépense consignée avec l'empreinte des empreintes de M (et, pour la v6, de la v5.3) ; (viii) la commande de T2 avec
    `--go GO-2026-10-25-02` et `--organisme-impose "<lignée>=$PILOTE/organisme@gemini"`. Un fichier `STOP` n'est posé que
    pour un incident technique.
-2. **Graines (R9)** : entropie E = <<ENTROPIE>> tirée au scellement par `secrets.randbits(128)` (script
+2. **Graines (R9)** : entropie E = 248762978296804200143735469469566541697 tirée au scellement par `secrets.randbits(128)` (script
    `sceller_pilote3_v2.py`, qui refuse numpy < 1.25) ; deux enfants `numpy.random.SeedSequence(E).spawn(2)` ; graine de
    chaque course = `int(enfant.generate_state(1, dtype=numpy.uint64)[0])`, **l'enfant 0 pour la v5.3** (première course),
    **l'enfant 1 pour la v6** (chaque égalité sur une seule ligne, lue et recalculée par le lanceur) :
-   graine de la course v5-3 = <<GRAINE_V53>>
-   graine de la course v6 = <<GRAINE_V6>>
+   graine de la course v5-3 = 6350728697673680798
+   graine de la course v6 = 18004927746170320113
 3. **Moment de la lecture des scores (R1)** : celui de T2 (plan § 3, l. 412–482), fichier par fichier, avec les deux
    mêmes conditions — (i) le préenregistrement de l'étape 1 qui part scellé (à ce jour sa v9, R-418) ; (ii) inscrit, dans
    une version de numéro 8 ou plus du préenregistrement de la confrontation, **écrite après la fin de la dernière course
@@ -343,7 +358,7 @@ tête du pilote 3 (dépôt distant local) pour les refus du mode réel ; interpr
   Une première série sur la v1, vers 14:12 UTC, avec un interpréteur sous `/home` (caché aux organismes : 36 essais du
   noyau en échec dans la M de référence) et une copie sous `/root` dont le dépôt distant n'était pas joignable sous
   `env -i`, a donné 17 sur 94 ; ces deux causes tiennent à l'installation de l'essai ; son journal a été remplacé par
-  celui de la série refaite (écart à R12, déclaré).
+  celui de la série refaite (écart à R12, déclaré) : ces chiffres sont **sans pièce, non opposables** (P3C2-04).
 - **Course M de référence** produite par le lanceur scellé de T2 lui-même (`83f8b9cf…`), en simulation, avec le texte
   scellé de T2 et la graine M scellée : archive fermée.
 - **Cas sains** (essais v3) : v5.3 complète, essais du noyau exécutés (141 passés, 0 sauté, les 29 cités passés), porte
@@ -353,7 +368,10 @@ tête du pilote 3 (dépôt distant local) pour les refus du mode réel ; interpr
   portant les empreintes de M et de la v5.3), rapport JUnit repris, 24 fichiers `940c59c3…` ; simulation sans
   `REFERENCE_M` ; ligne de GO ne portant que l'objet v5.3, acceptée pour la v5.3. En simulation, chacun des deux objets
   fait **123 appels à g000 et 129 à g001**, tous `OK`, deux générations, fin « générations maximales », arrêt « aucune
-  lignée active » ; **aucun appel de rôle `architecte_mutation_endogene`** dans les journaux de la v6.
+  lignée active » ; **aucun appel de rôle `architecte_mutation_endogene`** dans les journaux de la v6
+  (`simulation-lanceur-v2/journal-appels-g000-simulation-v6-v2.jsonl` `3952963b…` et `…-g001-…` `e2058ae1…`). Ces
+  nombres viennent des pièces de `simulation-lanceur-v2/` (empreintes au § Devis), non relues par la contre-lecture 2
+  (P3C2-01) ; le journal des essais v3 n'en porte que le début des lignes.
 - **Artefacts sur M** (copie altérée, empreintes refaites), chacun refusé avec sa raison : M absente, sans empreintes,
   empreintes altérées, code de retour non nul, archive incomplète, autre lanceur, lanceur du pilote 3 à la place de
   celui de T2, autre course, crédit épuisé à g1, modèle non conforme à g0, anomalie, une seule génération, arrêt sur
@@ -384,8 +402,13 @@ tête du pilote 3 (dépôt distant local) pour les refus du mode réel ; interpr
   fuseau ; dossier traversable, dépôt non caché, banque, mission, arbre modifié, fichier non suivi ou ignoré, bytecode ;
   espace autre, voisines aux décalages 0, 700 et 300, `pytest` en cours : ce sont des lignes du lanceur de T2 reprises
   sans changement (écarts `diff-lanceur-v5-vers-pilote3-v1.txt` et `diff-lanceur-pilote3-v1-vers-v2.txt`), essayées
-  par la batterie de T2 (116 cas sur 116) ; elles valent par identité des lignes. Sans artefact : la règle « un seul
-  lanceur à la fois » (procédure de session-depot) ; ce que T2 dit sans artefact le reste.
+  par la batterie de T2 (116 cas sur 116) ; elles valent par identité des lignes. **Branches des deux portes sans
+  artefact** (P3C2-07), héritées de T2 et valant par identité des lignes (le code de l'étape (0 bis) est celui de
+  l'étape (0) aux paramètres et aux messages près, vérifié par la contre-lecture 2) : empreintes sans `LANCEMENT.md` ou
+  sans extrait ; extrait illisible ; « aucun appel au journal » ; en réel, un en-tête « reel » avec un manifeste `reel`
+  ou `go_id` autre ; le nom `…-tentativeN` de la v5.3 en réel ; l'étape (0) en réel pour la course v6 (l'étape (0 bis)
+  refuse avant elle). Sans artefact : la règle « un seul lanceur à la fois » (procédure de session-depot) ; ce que T2
+  dit sans artefact le reste.
 
 ## Pièces
 
@@ -405,13 +428,13 @@ vérification des objets `verification-objets-v5-3-v6-v1/` ; la recherche de la 
 `recherche-autoriser-mutation-code-noyau-v1.txt` (`8838d9fc…`) ; les scripts de scellement `sceller_pilote3_v1.py`
 (`54861a0f…`, gardé) et **`sceller_pilote3_v2.py`** (`c7fe17ca772270e6b942cb97932473db90541c57644729727e00220b7fc678a3`) ;
 le fichier d'empreintes de toutes les pièces et des contre-lectures de ce texte, `EMPREINTES-pilote3-gemini-v5-3-v6-v1.txt`,
-d'empreinte <<EMPREINTE_PIECES>>.
+d'empreinte `a259bb9b3ffb5f8803e6e5b0a726b5de39083fcf957735cdd2625b2c1db6f4b7`.
 
 ## Traitement des constats de la contre-lecture 1 (P3C1-01 à P3C1-13)
 
 | constat | traitement |
 |---|---|
-| P3C1-01 (majeur) porte entre v5.3 et v6 | voie (a) : lanceur v2, étape (0 bis), même liste close appliquée à la v5.3 ; graine de la v5.3 ; dépense de la v6 avec l'empreinte des empreintes de la v5.3 ; cas sain et artefacts (essais v2) ; table : « S ne part pas » se lit « la v6 ne part pas » pour une issue de la v5.3 |
+| P3C1-01 (majeur) porte entre v5.3 et v6 | voie (a) : lanceur v2, étape (0 bis), même liste close appliquée à la v5.3 ; graine de la v5.3 ; dépense de la v6 avec l'empreinte des empreintes de la v5.3 ; cas sain et artefacts (essais v2, repris en v3 : 122 sur 122) ; table : « S ne part pas » se lit « la v6 ne part pas » pour une issue de la v5.3 |
 | P3C1-02 (majeur) ligne du GO | R-440 cité ; formes exactes de la ligne d'extension et des lignes de dépense ; poussées sur `main` et récupérées avant chaque course ; `registre_go` du manifeste (ligne de R-440) dit au rapport |
 | P3C1-03 fenêtre entre lanceurs | règle « un seul lanceur à la fois », première course après la fin de S |
 | P3C1-04 R-439, S, « arrête », « prêtes » | R-439 cité mot pour mot ; S partie la première, aucune issue du pilote 3 ne la concerne ; « la contre-lecture les arrête » et « prêtes » définis |
@@ -430,6 +453,24 @@ d'empreinte <<EMPREINTE_PIECES>>.
 - **Contre-lecture 1** — sous-agent neuf (`claude-opus-5-5`, lancé par conv-audit, 25 octobre 2026, 14:18:44–≈ 14:40
   UTC), n'ayant écrit ni ce texte ni T2 : `prereg/contre-lectures/pilote3-gemini-organisme-v5-3-v6-v1-cl1.md`
   (`25c996efb6d7045f9506f436ecc489e3a70d48abbf6af9dc7232bded82bbae30`), « scellable après corrections ».
-- **Contre-lecture 2** — sous-agent neuf, sur cette v2, le lanceur v2, son écart à la v1 et le journal des essais v2 :
-  `prereg/contre-lectures/pilote3-gemini-organisme-v5-3-v6-v2-cl2.md` ; son verdict et ses constats sont cités dans le
-  message de départ ; un verdict « non scellable » ou un constat majeur arrête le pilote jusqu'au mot de Lazar.
+- **Contre-lecture 2** — sous-agent neuf (`claude-opus-5-5`, lancé par conv-audit, 25 octobre 2026, 15:00:04–≈ 15:20
+  UTC), n'ayant écrit ni ce texte, ni T2, ni la contre-lecture 1 ; a lu cette v2 (avant les corrections ci-dessous,
+  `184299c2…`), la contre-lecture 1, l'écart du lanceur v1 à la v2 et le lanceur v2, les essais v3 et leur journal, le
+  journal v2 (pour son cas en échec), le script de scellement v2, la pièce de recherche, des lignes de T2 :
+  `prereg/contre-lectures/pilote3-gemini-organisme-v5-3-v6-v2-cl2.md`
+  (`3e451f483fce5f6671a5546f82a97b77d6dd5ad0be38250f3a553acd60b24dc7`), « scellable après corrections », aucun
+  constat majeur.
+
+## Traitement des constats de la contre-lecture 2 (P3C2-01 à P3C2-09), sans nouvelle relecture
+
+| constat | traitement |
+|---|---|
+| P3C2-01 (mineur) nombres d'appels en simulation non relus | pièces citées avec chemin et empreinte (§ Devis, § Essais) ; dit « non relues par la contre-lecture 2 » |
+| P3C2-02 (mineur) description de la contre-lecture 2 ; « essais v2 » | section Contre-lecture réécrite ; table : « essais v2, repris en v3 » |
+| P3C2-03 (mineur) scellement sans exiger les contre-lectures | sans nouvelle pièce : `sha256sum -c` des compagnons des deux contre-lectures avant le scellement, vérification après que le fichier d'empreintes porte les quatre fichiers ; sorties citées dans le message de départ |
+| P3C2-04 (mineur) faits de S sans source ; série remplacée | source des faits de S citée (`registres/depenses.md`, branche, empreintes recalculées) ; « sans pièce, non opposables » pour la série remplacée |
+| P3C2-05 « les plafonds ne bloquent pas S » | ligne ajoutée à la table de correspondance : sans objet |
+| P3C2-06 suite des opérations entre v5.3 et v6 | phrase « Avant la v6 » ajoutée ; « prêtes » précisé |
+| P3C2-07 branches sans artefact | dites au § Essais, valant par identité des lignes |
+| P3C2-08 deux empreintes sur la même ligne | « au moins une ligne portant les deux » ; lanceur inchangé |
+| P3C2-09 citations de lignes | vérifiées sur les fichiers des objets : justes (exemple de format l. 724 en v5.3, l. 725 en v6 ; requêtes de réserve l. 85–96 et 86–97 ; mitose l. 73–75 et 115–117 ; mémoire l. 101–113) |
