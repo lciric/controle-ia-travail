@@ -2479,6 +2479,9 @@ def test_h_g1_couverture_pannes_recoupements_et_trois_niveaux(tmp_path):
     regle = ex["descriptif"]["claude-opus-5-5@r0"]["regle_pannes"]
     assert regle["comparees"][0]["compare"] is False and "moins de 10" in regle["comparees"][0]["raison"]
     assert A.echec_exterieur("HTTPError: HTTP Error 429: Too Many Requests") and not A.echec_exterieur("HTTP 404 NotFoundError : x")
+    # CL5-07 : crédit épuisé, clé invalide, certificat reconnus extérieurs même sous un code 400 ; une vraie requête refusée non
+    assert A.echec_exterieur("HTTP 400 BadRequestError : credit balance is too low") and A.echec_exterieur("HTTP 400 : API key not valid")
+    assert A.echec_exterieur("SSLCertVerificationError: certificate verify failed") and not A.echec_exterieur("HTTP 400 : prompt is too long")
     assert not A.echec_exterieur("JSONDecodeError: Expecting value") and A.echec_exterieur("URLError: <urlopen error timed out>")
     # coupure à tort sous taux identiques, par comparaison : bornée (CE4-01 : 14 % à 98 % avec l'ancienne règle)
     assert max(A.coupure_sous_taux_identiques(n, p) for n in (10, 20, 30, 160) for p in (0.02, 0.05, 0.1, 0.2, 0.3)) < 0.01
@@ -3162,3 +3165,160 @@ def test_ce405_graines_du_bras_apparie_sur_les_lignees_d_origine(tmp_path):
                              entropie=m["entropie_seed_sequence"], organismes_imposes={"gemini-argon": dict(specs["gemini-argon"], lignees_origine=[])}, especes_amorcage=[])
     sans_base.amorcer()
     assert sans_base.graine("gemini-argon", 1, "ordre_test") != attendue
+
+
+# ---------- contre-lecture n° 5 (CL5-01 à CL5-06) ----------
+
+def _executer_organisme(tmp_path, nom, source, decalage, uid_rang=0):
+    """Prépare et exécute un organisme isolé (root, espaces de noms) ; rend (execution, dossier de travail)."""
+    org = _organisme_ecrit(tmp_path, nom, source)
+    esp = bac_a_sable.espace_organismes(tmp_path / f"course-{nom}", course_nouvelle=True)
+    travail = esp / nom
+    uid = bac_a_sable.uid_lignee(uid_rang, decalage)
+    ctx = {"generation": 0, "lignee": nom, "mission": "m", "dossier_travail": str(travail), "dossier_archive": str(esp),
+           "taches_entrainement": [], "taches_test": [], "budget": {"appels_max": 1, "usd_max": 0.1, "temps_max_s": 30}, "historique": []}
+    bac_a_sable.preparer(travail, org / "organisme", ctx, uid=uid)
+    return bac_a_sable.executer(travail, str(travail / "n.sock"), 30, isoler_reseau=True, uid=uid), travail
+
+
+def test_cl5_01_banque_cachee_a_l_organisme(tmp_path, monkeypatch):
+    """CL5-01 : un dossier listé par `ESSAIM_M3_CACHER` (le lanceur y met le dépôt et le code, qui portent la banque et
+    ses vérités, lisibles par tous sur l'hôte) est recouvert d'un système de fichiers vide en lecture seule dans
+    l'exécution isolée ; l'organisme n'y lit rien. Artefact (sain au départ) : sans le cache, le fichier serait lu."""
+    if not (bac_a_sable.capacites_isolation().get("root") and bac_a_sable.capacites_isolation().get("espaces_noms")):
+        pytest.skip("root et espaces de noms exigés")
+    faux_depot = bac_a_sable.ESPACE_BASE.parent / f"cl5-depot-{os.getpid()}"  # hors de /tmp (rendu privé) et de l'espace
+    (faux_depot / "banque").mkdir(parents=True)
+    secret = faux_depot / "banque" / "banque-confrontation-v1.json"
+    secret.write_text(json.dumps({"verite": "MARQUEUR-VERITE-CL5"}), encoding="utf-8")
+    os.chmod(faux_depot, 0o755); os.chmod(faux_depot / "banque", 0o755); os.chmod(secret, 0o644)
+    monkeypatch.setenv("ESSAIM_M3_CACHER", str(faux_depot))
+    src = ("import json, os\n"
+           "def executer(contexte):\n"
+           f"    p = {str(secret)!r}\n"
+           "    r = {}\n"
+           "    try: r['lu'] = open(p).read()\n"
+           "    except Exception as e: r['lu'] = type(e).__name__\n"
+           "    json.dump(r, open(os.path.join(contexte['dossier_travail'], 'r.json'), 'w'))\n")
+    try:
+        ex, travail = _executer_organisme(tmp_path, "lire-banque", src, 810)
+        assert ex["code"] == "OK" and str(faux_depot.resolve()) in ex["caches"], ex
+        r = json.loads((travail / "r.json").read_text())
+        assert r["lu"] in ("PermissionError", "FileNotFoundError"), r
+        for p in (travail / "r.json", travail / "sortie.txt", travail / "erreurs.txt"):
+            if p.exists():
+                assert b"MARQUEUR-VERITE-CL5" not in p.read_bytes()
+    finally:
+        shutil.rmtree(faux_depot, ignore_errors=True)
+
+
+def test_cl5_02_aucune_voie_commune_par_un_dossier_inscriptible_par_tous(tmp_path):
+    """CL5-02 : **tout** dossier inscriptible par les autres (pas seulement les quatre habituels) est recouvert d'un
+    dossier en mémoire privé ; une exécution d'un bras n'y laisse rien qu'une autre puisse lire. Artefact : sans le
+    recouvrement, le second organisme lirait ce que le premier a écrit."""
+    if not (bac_a_sable.capacites_isolation().get("root") and bac_a_sable.capacites_isolation().get("espaces_noms")):
+        pytest.skip("root et espaces de noms exigés")
+    commun = bac_a_sable.ESPACE_BASE.parent / f"cl5-commun-{os.getpid()}"  # inscriptible par tous, hors des quatre habituels
+    commun.mkdir(parents=True); os.chmod(commun, 0o1777)
+    cible = commun / "canal.txt"
+    try:
+        assert str(commun.resolve()) in bac_a_sable.dossiers_inscriptibles_par_tous(rafraichir=True)
+        assert str(commun.resolve()) in bac_a_sable.dossiers_tmp_a_rendre_prives([tmp_path])
+        src_a = ("import os\n"
+                 "def executer(contexte):\n"
+                 f"    open({str(cible)!r}, 'w').write('sonde de A 0.93'); os.chmod({str(cible)!r}, 0o644)\n")
+        src_b = ("import json, os\n"
+                 "def executer(contexte):\n"
+                 "    r = {}\n"
+                 f"    try: r['lu'] = open({str(cible)!r}).read()\n"
+                 "    except Exception as e: r['lu'] = type(e).__name__\n"
+                 "    json.dump(r, open(os.path.join(contexte['dossier_travail'], 'r.json'), 'w'))\n")
+        exa, _ = _executer_organisme(tmp_path, "canal-a", src_a, 820, uid_rang=1)
+        exb, trb = _executer_organisme(tmp_path, "canal-b", src_b, 820, uid_rang=3)
+        assert exa["code"] == "OK" and exb["code"] == "OK"
+        assert str(commun.resolve()) in exa["tmp_prives"]
+        r = json.loads((trb / "r.json").read_text())
+        assert r["lu"] == "FileNotFoundError", r          # B ne voit pas ce que A a écrit
+        assert not cible.exists()                          # rien n'a atteint l'hôte (écriture restée dans le privé de A)
+    finally:
+        bac_a_sable.dossiers_inscriptibles_par_tous(rafraichir=True)
+        shutil.rmtree(commun, ignore_errors=True)
+
+
+def test_cl5_02_balayage_trouve_un_dossier_inscriptible_par_tous(tmp_path):
+    """CL5-02 (unité) : le balayage trouve un dossier inscriptible par tous au-delà des quatre habituels ; un dossier
+    normal n'y est pas ; les quatre habituels y sont toujours."""
+    ecrit = tmp_path / "ecrit"; ecrit.mkdir(); os.chmod(ecrit, 0o1777)
+    normal = tmp_path / "normal"; normal.mkdir(); os.chmod(normal, 0o755)
+    trouves = bac_a_sable.dossiers_inscriptibles_par_tous(racines=(str(tmp_path),), rafraichir=True)
+    assert str(ecrit.resolve()) in trouves and str(normal.resolve()) not in trouves
+    assert all(str(pathlib.Path(d).resolve()) in trouves for d in ("/tmp", "/var/tmp", "/dev/shm", "/run/lock") if pathlib.Path(d).is_dir())
+    bac_a_sable.dossiers_inscriptibles_par_tous(rafraichir=True)  # rétablit le cache réel
+
+
+def test_cl5_03_repetition_amorce_fable_sous_son_plafond(tmp_path):
+    """CL5-03 : à la répétition, l'amorçage de Fable (pire cas ≈ 3,4 USD) passe sous le plafond de 5 USD par génération ;
+    artefact : à 3 USD (l'ancienne valeur), il est refusé (`AMORCAGE_PLAFOND`) et la porte de la répétition ne passe pas."""
+    ss = np.random.SeedSequence(77)
+    r1, r2 = (np.random.default_rng(s) for s in ss.spawn(2))
+    banque = taches.banque_simulation(r1, 6, 6, 4)
+    for plafond_gen, attendu in ((5.0, "ORGANISME_VALIDE"), (3.0, "AMORCAGE_PLAFOND")):
+        doubles, _ = appelants_simules(np.random.default_rng(2))
+        n = boucle.Noyau(tmp_path / f"r{plafond_gen}", "m", banque, {"appels_max": 20, "usd_max": plafond_gen, "temps_max_s": 900}, 40.0, 1,
+                         appelants=doubles, especes_amorcage=["CLAUDE_FABLE_5_1", "CLAUDE_OPUS_5_5", "GEMINI_ARGON"], entropie=77)
+        am = n.amorcer()
+        assert am["claude-fable-5-1"]["statut"] == attendu, (plafond_gen, am["claude-fable-5-1"]["statut"])
+        if attendu == "ORGANISME_VALIDE":
+            assert am["claude-opus-5-5"]["statut"] == "ORGANISME_VALIDE" and am["gemini-argon"]["statut"] == "ORGANISME_VALIDE"
+
+
+def test_cl5_04_lire_h_g1_compose_et_refuse_exclues_sans_audit(tmp_path):
+    """CL5-04 : `lire_h_g1` compose paires, différence, déclencheurs et table (RV-10) ; `exclues` n'est accepté qu'avec
+    `apres_audit="defaut_paires"` (sinon refus) ; sain : lecture « confirmé » d'un jeu simulé."""
+    from essaim_m3 import analyse_gradient as A
+    from essaim_m3.noyau import cli
+    sonde = RACINE / "tests" / "fixtures" / "organisme_sonde"
+    a1, b1, a2, b2 = (tmp_path / x for x in ("a1", "b1", "a2", "b2"))
+    for a, g in ((a1, "11"), (a2, "12")):
+        assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", g, "--n-train", "8", "--n-test", "8",
+                              "--n-final", "8", "--appels-max", "30", "--especes", "GEMINI_ARGON", "--entrainements-max", "2",
+                              "--organisme-amorcage", str(sonde)]) == 0
+    for a, b, g in ((a1, b1, "11"), (a2, b2, "12")):
+        assert cli.principal(["simuler", "--sortie", str(b), "--generations", "2", "--graine", g, "--depuis", str(a),
+                              "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    couples = [(str(a1), str(b1)), (str(a2), str(b2))]
+    r = A.lire_h_g1(couples, ["gemini-argon"], generations=2, entropie=5, n_tirages=50)
+    assert "lecture" in r and "rapport" in r and set(r["rapport"]) == {"gemini-argon@r0", "gemini-argon@r1"}
+    # exclues sans defaut_paires : refus (ValueError), même si apres_audit est None
+    with pytest.raises(ValueError):
+        A.lire_h_g1(couples, ["gemini-argon"], generations=2, entropie=5, exclues=["gemini-argon@r0"], n_tirages=10)
+    # avec defaut_paires : accepté, la paire exclue est coupée et la réserve la nomme
+    r2 = A.lire_h_g1(couples, ["gemini-argon"], generations=2, entropie=5, apres_audit="defaut_paires",
+                     exclues=["gemini-argon@r0"], n_tirages=50)
+    assert "gemini-argon@r0" in r2["resultat"]["exclues"] and "gemini-argon@r0" in r2["lecture"]
+
+
+def test_cl5_05_traits_proteges_indisponibles_comptes_et_recoupements_conception(tmp_path):
+    """CL5-05 : essais des traitements restés sans essai — RV-13 (traits en 0600, refus si lisibles), CE4-02 (demandes
+    d'un service non servi comptées), CE4-10 c (recoupements de fuite comptés aussi dans les rondes de conception)."""
+    from essaim_m3.noyau import serveur as _serveur, appels as _appels
+    # CE4-02 : le serveur compte les demandes d'un service non servi, par opération
+    a = _appels.Appelant(tmp_path / "ap", 5.0, appelants_simules(rng())[0])
+    s = _serveur.ServeurAppels(a, str(tmp_path / "s.sock"), appels_max=5, rechercheur=None, entraineur=None)
+    assert s.traiter({"op": "entrainer", "spec": {}})["statut"] == "INDISPONIBLE"
+    assert s.traiter({"op": "rechercher", "requete": "x"})["statut"] == "INDISPONIBLE"
+    assert s.traiter({"op": "entrainer", "spec": {}})["statut"] == "INDISPONIBLE"
+    assert s.indisponibles == {"entrainer": 2, "rechercher": 1}
+    # CE4-10 c : un refus de fuite dans une ronde de conception est compté par recoupements_fuite
+    from essaim_m3 import analyse_gradient as A
+    racine = tmp_path / "course"
+    for phase, g in (("conception", 1), (None, 0)):
+        d = A._dossier_generation(racine, "claude-opus-5-5", g, phase) / "travail" / "noyau"
+        d.mkdir(parents=True)
+        (d / "journal-recherches.jsonl").write_text(json.dumps({"statut": "REFUSE_FUITE"}) + "\n", encoding="utf-8")
+    idx = [{"lignee": "claude-opus-5-5", "generation": 1, "phase": "conception"},
+           {"lignee": "claude-opus-5-5", "generation": 0, "phase": None}]
+    (racine / "archive").mkdir(parents=True, exist_ok=True)
+    (racine / "archive" / "index.jsonl").write_text("".join(json.dumps(x) + "\n" for x in idx), encoding="utf-8")
+    assert A.recoupements_fuite(racine, "claude-opus-5-5", [0], conception=True) == 2   # génération + ronde de conception
+    assert A.recoupements_fuite(racine, "claude-opus-5-5", [0], conception=False) == 1  # génération seule

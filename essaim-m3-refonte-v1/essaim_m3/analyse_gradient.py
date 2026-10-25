@@ -148,16 +148,25 @@ def exactitude_par_famille(reponses: dict[str, str | None], taches: list[dict]) 
 _CODES_EXTERIEURS = {401, 402, 403, 408, 409, 429}
 _MOTIF_HTTP = re.compile(r"HTTP(?: Error)? (\d{3})\b")
 _MOTIF_RESEAU = re.compile(r"connexion|timed out|timeout|URLError|ConnectionError|ConnectionReset|ConnectionRefused|ConnectionAborted|"
-                           r"RemoteDisconnected|IncompleteRead|SSLError|gaierror|name resolution|APIConnectionError|APITimeoutError|"
-                           r"GEMINI_API_KEY absente|paquet anthropic absent", re.IGNORECASE)
+                           r"RemoteDisconnected|IncompleteRead|SSLError|SSLCertVerificationError|CERTIFICATE_VERIFY_FAILED|certificate verify|"
+                           r"gaierror|name resolution|APIConnectionError|APITimeoutError|GEMINI_API_KEY absente|paquet anthropic absent", re.IGNORECASE)
+# CL5-07 : causes extérieures reconnues même sous un code HTTP 400/403 (l'interface peut rendre un crédit épuisé, un
+# dépassement de quota ou une clé invalide en 400) ; alors l'échec vient du fournisseur ou du compte, pas de la requête.
+_MOTIF_COMPTE = re.compile(r"credit balance is too low|insufficient[_ ]?(?:quota|credit|fund)|quota|billing|"
+                           r"out of credit|prepayment credits are depleted|invalid[_ ]?(?:api[_ ]?key|x-api-key)|"
+                           r"api key not valid|authentication[_ ]?error|permission[_ ]?denied", re.IGNORECASE)
 
 
 def echec_exterieur(echec) -> bool:
-    """RV-11 : un échec dû au fournisseur ou au réseau, pas à la requête de l'organisme. Avec un code HTTP, le code seul
-    décide : 401, 402, 403, 408, 409, 429 et 5xx sont extérieurs ; 400, 404, 413, 422… (requête refusée telle qu'écrite)
-    ne le sont pas. Sans code : connexion, délai, résolution de nom, certificat, clé absente sont extérieurs ; le reste
-    (analyse d'une réponse, exception inattendue) ne l'est pas — compté à part, rapporté."""
+    """RV-11, CL5-07 : un échec dû au fournisseur, au réseau ou au compte, pas à la requête de l'organisme. Un message de
+    crédit épuisé, de quota, de facturation ou de clé invalide est extérieur **quel que soit le code** (l'interface les
+    rend parfois en HTTP 400). Sinon, avec un code HTTP, le code seul décide : 401, 402, 403, 408, 409, 429 et 5xx sont
+    extérieurs ; 400, 404, 413, 422… (requête refusée telle qu'écrite) ne le sont pas. Sans code : connexion, délai,
+    résolution de nom, certificat, clé absente sont extérieurs ; le reste (analyse d'une réponse, exception inattendue)
+    ne l'est pas — compté à part, rapporté."""
     s = str(echec or "")
+    if _MOTIF_COMPTE.search(s):
+        return True
     m = _MOTIF_HTTP.search(s)
     if m:
         code = int(m.group(1))
@@ -470,7 +479,11 @@ def lire_h_g1(couples: list[tuple[str, str]], lignees: list[str], generations: i
     de fuite de **toutes** les paires prévues, lues ou coupées, conception comprise ; `temoins` : scores des sondes
     témoins du script versé en addendum ; `scores_imposes` : vide à l'étape 1), puis `lecture_h_g1`. Rend {"lecture",
     "resultat", "declencheurs", "coupees", "invalide", "rapport"} ; `rapport` est le rapport descriptif gelé, par paire et
-    par bras, sans seuil ni verdict (CE4-02 (2), CE4-10 e)."""
+    par bras, sans seuil ni verdict (CE4-02 (2), CE4-10 e). `exclues` (CL5-04) n'est permis qu'avec
+    `apres_audit="defaut_paires"` : couper une paire « trouvée par l'audit » sans audit (`apres_audit=None`) serait un
+    écart au plan (R1) ; refusé."""
+    if exclues and apres_audit != "defaut_paires":
+        raise ValueError("exclues n'est permis qu'avec apres_audit='defaut_paires' (une paire n'est coupée par l'audit qu'après un rapport d'audit scellé)")
     paires, taches_final, etat = paires_h_g1(couples, lignees, generations, exclues=exclues)
     resultat = difference_h_g1(paires, taches_final, entropie, n_tirages=n_tirages)
     scores = {}

@@ -26,6 +26,7 @@ import pathlib
 import resource
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import time
@@ -56,6 +57,13 @@ with open("statut_execution.json", "w", encoding="utf-8") as fh:
 ESPACE_BASE = pathlib.Path(os.environ.get("ESSAIM_M3_ESPACE") or "/var/lib/essaim-m3")
 DOSSIERS_TMP_PARTAGES = ("/tmp", "/var/tmp", "/dev/shm", "/run/lock")
 TAILLE_TMP_PRIVE = "64m"
+# CL5-01 : dossiers à recouvrir d'un système de fichiers en mémoire **vide et en lecture seule** dans l'exécution isolée,
+# pour qu'un organisme n'y lise ni le dépôt, ni l'arbre du code (qui porte la banque et ses vérités), ni les fichiers d'un
+# compte ; la variable `ESSAIM_M3_CACHER` (le lanceur y met le dépôt et le dossier du code) s'y ajoute. Jamais un ancêtre
+# du dossier de travail ni du socket (vérifié par `dossiers_a_cacher`).
+DOSSIERS_A_CACHER_DEFAUT = ("/home", "/root", "/srv", "/mnt", "/media")
+_INSCRIPTIBLES = None
+MAX_DOSSIERS_BALAYES = 200_000
 UID_BASE = 60000  # identifiants d'utilisateur non privilégiés, un par lignée (60000 + indice), hors de tout compte réel
 _CAPACITES = None
 
@@ -147,7 +155,7 @@ def dossiers_tmp_a_rendre_prives(gardes: list) -> list[str]:
     ceux qui contiennent un chemin qu'elle doit voir (dossier de travail, socket) : ceux-là restent partagés et sont
     consignés par l'appelant."""
     sortie = []
-    for d in DOSSIERS_TMP_PARTAGES:
+    for d in dossiers_inscriptibles_par_tous():
         p = pathlib.Path(d)
         try:
             if p.is_symlink() or not p.is_dir() or not (p.stat().st_mode & 0o002):
@@ -157,6 +165,72 @@ def dossiers_tmp_a_rendre_prives(gardes: list) -> list[str]:
         reel = p.resolve()
         if any(reel == pathlib.Path(g).resolve() or reel in pathlib.Path(g).resolve().parents for g in gardes):
             continue
+        sortie.append(str(reel))
+    return sortie
+
+
+def dossiers_inscriptibles_par_tous(racines: tuple = ("/",), rafraichir: bool = False) -> list[str]:
+    """CL5-02 : **tous** les dossiers inscriptibles par les autres (bit « autres » en écriture, collants compris) que
+    l'exécution isolée doit recouvrir d'un dossier en mémoire privé, pas seulement les quatre dossiers temporaires
+    habituels : un cinquième (par exemple `/var/lib/php/sessions`, 1733) serait sinon une voie commune entre deux bras.
+    Balayage unique des systèmes de fichiers (coûté une fois par processus du noyau), bornes : jamais `/proc`, `/sys`,
+    `/dev` (hors `/dev/shm`, déjà listé), ni l'espace des organismes ; au plus `MAX_DOSSIERS_BALAYES` dossiers visités
+    (au-delà, on garde ce qui est trouvé — jamais moins que les quatre habituels, qui sont toujours inclus)."""
+    global _INSCRIPTIBLES
+    if _INSCRIPTIBLES is not None and not rafraichir and racines == ("/",):
+        return _INSCRIPTIBLES
+    trouves = {str(pathlib.Path(d).resolve()) for d in DOSSIERS_TMP_PARTAGES}
+    exclure = {"/proc", "/sys", "/dev"}
+    esp = str(ESPACE_BASE.resolve())
+    visites = 0
+    pile = [str(pathlib.Path(r).resolve()) for r in racines]
+    while pile and visites < MAX_DOSSIERS_BALAYES:
+        d = pile.pop()
+        if d in exclure or d == esp or d.startswith(esp + "/"):
+            continue
+        try:
+            with os.scandir(d) as it:
+                for e in it:
+                    try:
+                        if e.is_symlink() or not e.is_dir(follow_symlinks=False):
+                            continue
+                        m = e.stat(follow_symlinks=False).st_mode
+                    except OSError:
+                        continue
+                    visites += 1
+                    if m & 0o002:
+                        trouves.add(os.path.realpath(e.path))
+                    pile.append(e.path)
+        except OSError:
+            continue
+    resultat = sorted(trouves)
+    if racines == ("/",):
+        _INSCRIPTIBLES = resultat
+    return resultat
+
+
+def dossiers_a_cacher(gardes: list) -> list[str]:
+    """CL5-01 : dossiers à recouvrir d'un système de fichiers en mémoire **vide et en lecture seule** dans l'exécution
+    isolée (l'organisme n'y lit rien) : `DOSSIERS_A_CACHER_DEFAUT` et les chemins de `ESSAIM_M3_CACHER` (dépôt, code), sauf
+    ceux qui contiennent un chemin que l'exécution doit voir (dossier de travail, socket) : on ne cache jamais un ancêtre
+    d'une garde."""
+    demandes = list(DOSSIERS_A_CACHER_DEFAUT) + [d for d in os.environ.get("ESSAIM_M3_CACHER", "").split(":") if d]
+    gr = [pathlib.Path(g).resolve() for g in gardes]
+    sortie = []
+    vus = set()
+    for d in demandes:
+        p = pathlib.Path(d)
+        try:
+            if p.is_symlink() or not p.is_dir():
+                continue
+        except OSError:
+            continue
+        reel = p.resolve()
+        if str(reel) in vus:
+            continue
+        if any(reel == g or reel in g.parents for g in gr):  # reel est le dossier de travail ou un de ses ancêtres : jamais caché
+            continue
+        vus.add(str(reel))
         sortie.append(str(reel))
     return sortie
 
@@ -254,9 +328,11 @@ def _commande_isolee(commande: list[str], isoler_reseau: bool, uid: int | None, 
     cap = capacites_isolation()
     options = []
     prives: list[str] = []
+    caches: list[str] = []
     if uid is not None and cap["espaces_noms"]:
         options += ["--mount", "--pid", "--ipc", "--fork", "--kill-child", "--mount-proc"]
-        prives = dossiers_tmp_a_rendre_prives([cwd, *gardes])
+        prives = dossiers_tmp_a_rendre_prives([cwd, *gardes])   # CL5-02 : tout dossier inscriptible par tous, privé
+        caches = dossiers_a_cacher([cwd, *gardes])              # CL5-01 : dépôt, code, /home… cachés (vide, lecture seule)
     if isoler_reseau:
         options += ["-n"] if cap["root"] else ["-rn"]
     if uid is not None:
@@ -266,7 +342,8 @@ def _commande_isolee(commande: list[str], isoler_reseau: bool, uid: int | None, 
             os.chmod(cwd / "abaisser.py", 0o644)
         except OSError:
             pass
-        commande = [sys.executable, "-I", "-B", "-s", "abaisser.py", str(uid), str(uid), ":".join(prives)] + commande
+        commande = [sys.executable, "-I", "-B", "-s", "abaisser.py", str(uid), str(uid),
+                    ":".join(prives), ":".join(caches)] + commande
     return (["unshare", *options, "--"] + commande) if options else commande
 
 
@@ -319,6 +396,7 @@ def executer(dossier_travail: pathlib.Path, chemin_socket: str, temps_max_s: int
     return {"code": code, "code_retour": code_retour, "duree_s": round(duree, 2), "delai_depasse": delai,
             "statut": statut, "isolation_reseau": isoler_reseau, "uid": uid, "espaces_noms": bool(uid is not None and capacites_isolation()["espaces_noms"]),
             "tmp_prives": (dossiers_tmp_a_rendre_prives([dossier_travail, chemin_socket]) if (uid is not None and capacites_isolation()["espaces_noms"]) else []),
+            "caches": (dossiers_a_cacher([dossier_travail, chemin_socket]) if (uid is not None and capacites_isolation()["espaces_noms"]) else []),
             "rlimit_as_refuse": rlimit_as_refuse}
 
 
@@ -329,17 +407,27 @@ ABAISSER_SOURCE = """import ctypes, ctypes.util, os, sys
 # ne tourne sans. Puis groupes vidés, gid puis uid non privilégiés, puis exec du programme demandé. Écrit par le noyau.
 uid, gid = int(sys.argv[1]), int(sys.argv[2])
 prives = [d for d in sys.argv[3].split(":") if d]
-if prives:
+caches = [d for d in sys.argv[4].split(":") if d]
+if prives or caches:
     libc = ctypes.CDLL(ctypes.util.find_library("c") or "libc.so.6", use_errno=True)
+    # CL5-02 : dossiers inscriptibles par tous recouverts d'un systeme de fichiers en memoire propre a l'execution
     for d in prives:
         if libc.mount(b"tmpfs", d.encode(), b"tmpfs", 2 | 4, b"mode=1777,size=__TAILLE__") != 0:
             sys.exit("dossier temporaire prive impossible sur " + d + " (errno " + str(ctypes.get_errno()) + ")")
+    # CL5-01 : depot, code et dossiers d'un compte recouverts d'un systeme vide en lecture seule (l'organisme n'y lit rien)
+    MS_RDONLY = 1
+    for d in caches:
+        if libc.mount(b"vide", d.encode(), b"tmpfs", MS_RDONLY, b"mode=0000,size=4k") != 0:
+            # errno 2 (absent) : un parent a deja ete couvert (par un dossier prive ou a cacher) ; le chemin est deja cache
+            if ctypes.get_errno() == 2:
+                continue
+            sys.exit("dossier a cacher impossible sur " + d + " (errno " + str(ctypes.get_errno()) + ")")
 os.setgroups([])
 os.setgid(gid)
 os.setuid(uid)
 if os.getuid() != uid or os.geteuid() != uid:
     sys.exit("abaissement de privileges impossible")
-os.execv(sys.argv[4], sys.argv[4:])
+os.execv(sys.argv[5], sys.argv[5:])
 """.replace("__TAILLE__", TAILLE_TMP_PRIVE)
 
 
