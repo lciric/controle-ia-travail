@@ -339,3 +339,31 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
   configuration exacte du pilote (v5.2.1) ; sinon ils ne mesurent que le bruit (transposition déclarée comme hypothèse).
 - Ouvert : réponse du collisionneur sur δ (matériau, la décision est prise) ; préenregistrement de l'escalier après la
   lecture du pilote.
+
+## 13:37 — second pilote v5.2.1 scellé (v2, `d2944654…`) ; contre-lecture 1 ; lanceur v5 ; essai à blanc ; départ remis à session-depot (n° 48)
+
+- Contre-lecture 1 du brouillon v1 (`c0863993…`) par un sous-agent neuf, 12:55–13:17 UTC :
+  `prereg/contre-lectures/pilote2-gemini-organisme-v5-2-v1-cl1.md` (`e4a7292f…`), « scellable après corrections », 14
+  constats. Majeurs : P52C1-01 (pire cas d'un appel du lanceur ≈ 8 000 s à 3 000 s par génération, à cause de l'attente de
+  900 s des appels en vol ; délai de la commande de fond non prescrit) ; P52C1-02 (« M saine » ne lisait aucun statut
+  d'appel : une M aux appels tous en échec aurait entraîné S). Options vues pour P52C1-01 : `--temps-max 2400` ou garder
+  3 000 s avec une règle de `STOP` à 3 100 s ; **choisi 2 400 s** (pire cas ≈ 6 900 s sous 7 200 s, sans action humaine
+  pendant la course ; risque accru de question coupée par la garde des 75 %, dit). Hypothèse « la passerelle se vérifie à
+  la main par session-depot » : **retirée** (P52C1-04) → garde automatique du lanceur.
+- Lanceur v5 (`83f8b9cf…`) : 2 400 s ; statuts des appels de M (≤ 20 % hors `OK`, ≥ 1 `OK` de Fable, par génération) ;
+  passerelle sous l'environnement du noyau sans clé (`httpx` vers Anthropic, `urllib` vers Gemini : 401 et 403 observés) ;
+  `CLE_ANTHROPIC` et `CLE_GEMINI` exigés parmi les clés des runs ; noms du test de dépense comparés. Essais v5 : 116 sur
+  116 (13:25–13:31 UTC).
+- Texte v2 : les 14 constats traités (table en fin de texte) ; ajout de l'usage déclaré d'avance des générations 0 de M et
+  de S pour l'escalier (décision de Lazar 14:15 Paris). **Scellé à 13:31 UTC** : `pilote2-gemini-organisme-v5-2-v2.md`
+  `d294465429094e5099cb5facdad95e2b806aa8953640b57bcab99998396c066b` ; graines M 3970427751169333427, S
+  6513505138128909954 (recalculées à part) ; pièces `68306821…` (100 fichiers). Essai à blanc du texte scellé (simulation,
+  course M) passé à 13:35 UTC. Branche `outils/pilote2-gemini-v5-2-travail`, tête `e09cc483`.
+- Canal n° 48 (`f2b4e2c`) : marche à suivre (ligne de GO à trois empreintes à écrire, dépenses aux noms `-v5-2-1`, copie
+  propre, test de dépense avec les variables du run, commande de fond au délai maximal, puis S).
+- Autres : comparaison financement (rapport vérifié contre trois réponses du collisionneur) versée et remise à Lazar
+  (`notes/financement-comparaison-collisionneur-v1.md`, `1c478fe7…`) ; v5.3 « assistée » de Gemini reçue (13:19 Paris
+  ... 14:19 Paris), en reconstitution par un sous-agent (aucune exécution du script) ; v6 tronquée signalée à Lazar.
+- **Corrections d'heures** (entrées jamais réécrites) : l'entrée « 13:20 » a été écrite à 13:16 UTC ; l'en-tête du canal
+  n° 46 dit 13:17 UTC pour une écriture vers 13:14 ; celui du n° 48 dit 13:38 pour une écriture vers 13:35. Règle reprise :
+  lire `date -u` avant d'écrire un en-tête.
