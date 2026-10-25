@@ -1,0 +1,32 @@
+# Lancement du pilote pilote2-gemini-v5-2-1-maieutique-v1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-25T14:51:15Z ; hôte : vm ; utilisateur : 0
+- course : maieutique ; dossier du pilote : /var/tmp/essais-pilote3-v1/essais-v3/m-reference/pilote2-gemini-v5-2-1-maieutique-v1 (0700, à root)
+- dépôt : /var/tmp/essais-pilote3-v1/depot-m ; HEAD : b7085caf0d04f8d96374b4be93a61ed000ca2d12 (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote2_gemini_v5_2_v5.sh, sha256 83f8b9cf8f3062dfc5e2c02094c602a2d582adf0cbcef292d5bdccd8f8d61b1b
+- source des registres : /var/tmp/essais-pilote3-v1/essais-v3/entrees/go-m.md ; dépenses : /var/tmp/essais-pilote3-v1/essais-v3/entrees/dep-m.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- code : identique à b1c7f4b6 (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- versions : python 3.13.17 ; numpy 2.4.6 ; anthropic absente
+- isolation : dossier du pilote 0700 à root ; espace attendu /var/lib/essaim-m3/f770a40afeec93cc ; dépôt /var/tmp/essais-pilote3-v1/depot-m caché aux organismes (vérifié par bac_a_sable.dossiers_a_cacher) ; ESSAIM_M3_ESPACE non définie
+- préenregistrement : /var/tmp/essais-pilote3-v1/depot-m/essaim-m3-refonte-v1/prereg/pilote2-gemini-organisme-v5-2-v2.md, sha256 d294465429094e5099cb5facdad95e2b806aa8953640b57bcab99998396c066b (compagnon conforme), graine 3970427751169333427 de la course maieutique écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée
+- organisme : 21 fichiers, empreinte d'arbre fec005c6626b3d1aa960702e4322b44ade3b902157dd84eae8e658b70e4f43f4 ; question (maieutique) : sha256 8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+- registre : une ligne GO-2026-10-25-01 de type calcul portant l'empreinte de la question (maieutique) et celle de l'organisme (fec005c6…) ; dépense consignée avant ; reste déclaré 150 USD ≥ 60 (vérification du lanceur)
+- test de dépense : td-m.json, sha256 f65f0002f53e85741933788330aa5525c40aa1f2e34d2d8bb7de0521a876cd4f — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 1 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05) (réalité des appels attestée par l'outil de session-depot ; le script vérifie la pièce)
+- recharge automatique attestée : « essai »
+- essais : 141 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 29 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 (la fonction écarte le bytecode depuis le constat n° 30 § 5)
+- test de dépense revérifié au départ : trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 172 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05)
+- voisines au départ : aucune
+- environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER .
+- marqueur de départ : /var/tmp/essais-pilote3-v1/essais-v3/m-reference/.partis/pilote2-gemini-v5-2-1-maieutique-v1 (R3 ; jamais retiré)
+- départ de la simulation (UTC) : 2026-10-25T14:54:07Z
+- PID de la course : 6741 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T14:54:11Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 664ec0ad2ec1adb8f5ce6ee9f8267e128873cb90e0991518ba460ee83c009899
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit b7085caf0d04f8d96374b4be93a61ed000ca2d12 ; sha256_code_noyau 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 ; espace /var/lib/essaim-m3/f770a40afeec93cc ; sources de moisson ["simulation"] ; clés présentes au manifeste — web : False, OpenAlex : False, Semantic Scholar : False ; dépense du noyau 2.9344 USD (à rapprocher de la console, P2C1-05)
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 332016fe84fcba150b7541f7ecb5a49af6a294d5e92cd83b297a8a04484d5785
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 368dee93d8b64685439783ef8f0f004a473ac0ca3f5b2a413207c21bf2cdb252
+- réponse à la question : reponse-question-g001.md, sha256 f2ca894d6a798377735c7ee704aeb586eeba2aeb8ab4ba8c8e54c4e7f23c27a6
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 4402a7fef62c55f73d003e124feec18f8a1c5c3e4fda146c112717c5f8645d3b, 1615 entrées = 1615 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T14:54:12Z

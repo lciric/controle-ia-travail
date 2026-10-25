@@ -1,0 +1,106 @@
+3c3,8
+< # course M du second pilote, question M à g001 », une course par appel (COURSE=v5-3, puis COURSE=v6) — v1, dérivé du
+---
+> # course M du second pilote, question M à g001 », une course par appel (COURSE=v5-3, puis COURSE=v6) — v2, dérivée de
+> # la v1 (`5a56d854…`, gardée, jamais à lancer) par `deriver_lanceur_pilote3_v2.py` sur la contre-lecture 1 : P3C1-01 —
+> # la course v6 ne part qu'après une course v5.3 finie, fermée et saine (`PRECEDENTE_V53`, étape (0 bis) : même liste
+> # close que pour M, paramétrée pour la v5.3 et ce lanceur ; graine de v5.3 égale à celle de ce texte ; ligne de dépense
+> # de v6 portant aussi l'empreinte des empreintes de v5.3) ; P3C1-11 — graine de M au manifeste : un entier, égal à la
+> # ligne de T2 (égalité exacte). La v1 était dérivée du
+27,29c32,34
+< #       bash lancer_pilote3_gemini_v5_3_v6_v1.sh
+< #   MODE=reel COURSE=v6 … (même forme)
+< #   MODE=simulation COURSE=… DEPOT=… PYTHON=… GRAINE=… [REFERENCE_M=… PILOTE_RACINE=… REGISTRE_GO_SOURCE=…
+---
+> #       bash lancer_pilote3_gemini_v5_3_v6_v2.sh
+> #   MODE=reel COURSE=v6 … PRECEDENTE_V53=<dossier du pilote de la course v5.3, dans la même copie> (même forme)
+> #   MODE=simulation COURSE=… DEPOT=… PYTHON=… GRAINE=… [REFERENCE_M=… PRECEDENTE_V53=… PILOTE_RACINE=… REGISTRE_GO_SOURCE=…
+192a198,271
+> # 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course v6 : ne part qu'après une course v5.3
+> #        finie, fermée et saine (P3C1-01 : « mêmes règles de refus que pour M et S », R-440) — la liste close de l'étape (0), paramétrée pour la v5.3 et ce lanceur (nom et empreinte de ce
+> #        lanceur, course `v5-3`, nom `pilote3-gemini-v5-3-maieutique-v1`, lignée `gemini-organisme-v5-3`, GO de ce
+> #        pilote) ; la graine de v5.3 au manifeste est comparée, à l'étape (2), à celle de ce texte ; la ligne de dépense
+> #        de v6 porte aussi les 16 premiers caractères de l'empreinte des empreintes de v5.3
+> EMP_V53=""
+> if [ "$COURSE" = v6 ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V53:-}" ]; }; then
+>   [ -n "${PRECEDENTE_V53:-}" ] || refus "PRECEDENTE_V53 non défini : v6 ne part qu'après une course v5.3 saine (dossier du pilote de la course v5.3)"
+>   SV="$PRECEDENTE_V53"
+>   [ -d "$SV" ] || refus "PRECEDENTE_V53 $SV absent : v6 ne part qu'après v5.3"
+>   SV="$(cd "$SV" && pwd -P)"
+>   if [ "$MODE" = reel ]; then
+>     case "$(dirname "$SV")" in "$(cd "$RACINE_PILOTES" && pwd -P)") ;; *) refus "PRECEDENTE_V53 $SV hors du dossier des pilotes $RACINE_PILOTES";; esac
+>     [[ "$(basename "$SV")" =~ ^pilote3-gemini-v5-3-maieutique-v1(-tentative[0-9]+)?$ ]] || refus "PRECEDENTE_V53 $SV : nom autre que pilote3-gemini-v5-3-maieutique-v1[-tentativeN]"
+>   fi
+>   [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v5.3 absentes : v6 ne part qu'après une course v5.3 finie et fermée"
+>   (cd "$SV" && sha256sum -c --quiet EMPREINTES-pilote-v1.txt.sha256 && sha256sum -c --quiet EMPREINTES-pilote-v1.txt) > /dev/null 2>&1 || refus "empreintes de v5.3 non vérifiées (fichiers de v5.3 modifiés ou manquants)"
+>   for f in LANCEMENT.md extrait-mecanique-v1.json; do
+>     grep -Eq "^[0-9a-f]{64}  $f\$" "$SV/EMPREINTES-pilote-v1.txt" || refus "empreintes de v5.3 sans $f"
+>   done
+>   EMP_V53="$(cut -d' ' -f1 < "$SV/EMPREINTES-pilote-v1.txt.sha256")"
+>   issue_v53="$("$PY" -I -c '
+> import json, re, sys
+> sp, sha_lanceur, lignee, mode, go_id, nom_lanceur, course, nom_course = sys.argv[1:9]
+> pb = []
+> lan = open(sp + "/LANCEMENT.md", encoding="utf-8").read()
+> if not re.search(r"^- course : " + re.escape(course) + r" ;", lan, re.M): pb.append("ce n est pas la course v5.3")
+> if mode == "reel" and not re.search(r"^# Lancement du pilote " + re.escape(nom_course) + r" \(reel, tentative [0-9]+\)$", lan, re.M):
+>     pb.append("v5.3 n a pas tourné en réel")
+> if "≠ espace attendu" in lan: pb.append("espace des organismes de v5.3 autre que l espace attendu")
+> if not re.search(r"^- lanceur : " + re.escape(nom_lanceur) + r", sha256 " + sha_lanceur + r"$", lan, re.M): pb.append("v5.3 n a pas tourné sous ce lanceur")
+> if not re.search(r"code de retour : 0 ;", lan): pb.append("code de retour du noyau non nul ou absent")
+> if not re.search(r"^- archive fermée : ferme\.tar\.gz \(", lan, re.M) or "ARCHIVE FERMÉE INCOMPLÈTE" in lan: pb.append("archive fermée absente ou incomplète")
+> try:
+>     x = json.load(open(sp + "/extrait-mecanique-v1.json", encoding="utf-8"))
+> except Exception as e:
+>     print("extrait de v5.3 illisible : " + type(e).__name__); sys.exit(1)
+> gs = sorted((g for g in x.get("generations", []) if g.get("lignee") == lignee and not g.get("phase")), key=lambda g: g.get("generation", -1))
+> if [g.get("generation") for g in gs] != [0, 1]: pb.append("générations de v5.3 : " + str([g.get("generation") for g in gs]) + " au lieu de [0, 1]")
+> statuts_appels = []
+> for g in gs:
+>     if g.get("statut") != "OK" or g.get("invalide") or g.get("anomalie_noyau"):
+>         pb.append("g%03d : statut %r, invalide %r, anomalie %r" % (g.get("generation"), g.get("statut"), g.get("invalide"), g.get("anomalie_noyau")))
+>     a = g.get("appels") or {}
+>     ps = a.get("par_statut") or {}
+>     n = a.get("n") if isinstance(a.get("n"), int) else sum(v for v in ps.values() if isinstance(v, int))
+>     ok = ps.get("OK", 0) if isinstance(ps.get("OK", 0), int) else 0
+>     if not n:
+>         pb.append("g%03d : aucun appel au journal" % g.get("generation"))
+>     elif (n - ok) > 0.20 * n:
+>         pb.append("g%03d : %d appels hors OK sur %d (plus de 20 %%)" % (g.get("generation"), n - ok, n))
+>     fab = (((a.get("par_espece") or {}).get("CLAUDE_FABLE_5_1") or {}).get("par_statut") or {}).get("OK", 0)
+>     if not isinstance(fab, int) or fab < 1:
+>         pb.append("g%03d : aucun appel OK de CLAUDE_FABLE_5_1" % g.get("generation"))
+>     statuts_appels.append("g%03d %s" % (g.get("generation"), json.dumps(ps, ensure_ascii=False, sort_keys=True)))
+> m = x.get("manifeste") or {}
+> if mode == "reel":
+>     if m.get("reel") is not True: pb.append("manifeste de v5.3 : reel = %r" % m.get("reel"))
+>     if m.get("go_id") != go_id: pb.append("manifeste de v5.3 : go_id = %r" % m.get("go_id"))
+> r = x.get("rapport") or {}
+> if r.get("generations_invalidees"): pb.append("générations invalidées : " + str(r.get("generations_invalidees")))
+> fin = ((r.get("lignees") or {}).get(lignee) or {}).get("fin")
+> if fin != "générations maximales": pb.append("fin de la lignée : %r" % fin)
+> arrets = [e.get("raison") for e in x.get("evenements", []) if e.get("etape") == "arret"]
+> if arrets != ["aucune lignée active"]: pb.append("arrêt de la course : %r" % arrets)
+> if pb: print("; ".join(pb)); sys.exit(1)
+> refus_s = [g.get("refus_noyau") for g in gs]
+> print("v5.3 saine : g000 et g001 OK, au plus 20 %% d appels hors OK et au moins un appel OK de Fable à chacune (%s), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de v5.3 %s ; dépense du noyau %s USD ; refus du noyau par génération %s" % ("; ".join(statuts_appels), m.get("entropie_seed_sequence"), r.get("depense_totale_usd"), json.dumps(refus_s, ensure_ascii=False)))
+> ' "$SV" "$SHA_LANCEUR" "gemini-organisme-v5-3" "$MODE" "$GO_ID" "$(basename "$0")" "v5-3" "pilote3-gemini-v5-3-maieutique-v1")" || refus "v6 ne part pas : issue de v5.3 hors de la liste saine ($issue_v53) — décision de Lazar requise"
+>   GRAINE_V53_MANIFESTE="$("$PY" -I -c 'import json, sys; print((json.load(open(sys.argv[1])).get("manifeste") or {}).get("entropie_seed_sequence"))' "$SV/extrait-mecanique-v1.json")"
+>   [[ "$GRAINE_V53_MANIFESTE" =~ ^[0-9]+$ ]] || refus "graine de v5.3 au manifeste illisible ou vide ($GRAINE_V53_MANIFESTE)"
+>   note "- course v5.3 précédente : $SV ; $issue_v53 ; empreintes de v5.3 vérifiées (EMPREINTES-pilote-v1.txt, sha256 $EMP_V53)"
+> fi
+> 
+270c349,350
+<   grep -q "graine de la course maieutique = $GRAINE_S_MANIFESTE\b" "$PREREG_M" || refus "la course M a tourné avec la graine $GRAINE_S_MANIFESTE, qui n'est pas la graine M du texte scellé du second pilote"
+---
+>   [[ "$GRAINE_S_MANIFESTE" =~ ^[0-9]+$ ]] || refus "graine de M au manifeste illisible ou vide ($GRAINE_S_MANIFESTE)"
+>   grep -Eq "^ *graine de la course maieutique = ${GRAINE_S_MANIFESTE}\$" "$PREREG_M" || refus "la course M a tourné avec la graine $GRAINE_S_MANIFESTE, qui n'est pas la graine M du texte scellé du second pilote"
+334a415,418
+>   if [ "$COURSE" = v6 ] && [ -n "${GRAINE_V53_MANIFESTE:-}" ]; then
+>     grep -Eq "^ *graine de la course v5-3 = ${GRAINE_V53_MANIFESTE}\$" "$PREREG" || refus "la course v5.3 a tourné avec la graine $GRAINE_V53_MANIFESTE, qui n'est pas la graine v5-3 du préenregistrement scellé"
+>     note "- course v5.3 précédente : graine $GRAINE_V53_MANIFESTE = graine v5-3 du préenregistrement"
+>   fi
+362a447,449
+>   fi
+>   if [ -n "$EMP_V53" ]; then
+>     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V53:0:16}" || refus "la ligne de dépense de v6 ne porte pas l'empreinte des empreintes de v5.3 (${EMP_V53:0:16}…), écrite après la fin de v5.3"
