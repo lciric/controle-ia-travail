@@ -283,6 +283,7 @@ class Noyau:
             "coeurs": os.cpu_count(),  # RV-15, CE3-11 : contention du processeur rapportée
             "sources_moisson": self._sources_moisson(), "cle_brave_presente": bool(os.environ.get("BRAVE_API_KEY")),
             "cle_openalex_presente": bool(os.environ.get("OPENALEX_API_KEY")),  # R-415 : présence seule, jamais la valeur
+            "cle_semanticscholar_presente": bool(os.environ.get("SEMANTIC_SCHOLAR_API_KEY")),  # R-417
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
             "traits": ({"description": self.description_traits, "n": len(next(iter(self.vues.values()))),
                         "vues": _entrainement.dimensions_vues(self.vues)} if self.vues else None),

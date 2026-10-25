@@ -37,7 +37,7 @@ NS_ATOM = {"a": "http://www.w3.org/2005/Atom"}
 
 # R-415 : clés de moisson que le noyau lit lui-même ; leur valeur est masquée dans tout message d'échec (rendu à
 # l'organisme et journalisé), avant toute troncature — une clé passée en paramètre d'adresse pourrait y figurer
-NOMS_CLES_MOISSON = ("OPENALEX_API_KEY", "BRAVE_API_KEY")
+NOMS_CLES_MOISSON = ("OPENALEX_API_KEY", "SEMANTIC_SCHOLAR_API_KEY", "BRAVE_API_KEY")  # R-415, R-417
 
 
 def masquer_cles(texte: str) -> str:

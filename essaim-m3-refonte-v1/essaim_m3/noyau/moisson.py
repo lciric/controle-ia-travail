@@ -3,7 +3,7 @@ Paris : « l'organisme doit lui-même concevoir le moissonneur » ; le noyau ne 
 
 - `SOURCES` : moteurs de recherche interrogeables par `rechercher(requete, n, source)` — `arxiv` (Atom, dans
   `recherche.py`), `openalex` (clé `OPENALEX_API_KEY` facultative, lue par le noyau seul, R-415), `semanticscholar`
-  (interface ouverte, sans clé), `web` (Brave Search, clé
+  (clé `SEMANTIC_SCHOLAR_API_KEY` facultative, en-tête lu par le noyau seul, R-417), `web` (Brave Search, clé
   `BRAVE_API_KEY` lue par le noyau seul, jamais donnée à l'organisme). Chaque source rend des notices de même forme :
   {"source", "id", "titre", "auteurs", "date", "resume", "lien"} ; le noyau ne les interprète pas.
 - `Telechargeur` : `telecharger(reference)` rapporte un document — une adresse https vue dans un résultat de recherche
@@ -108,7 +108,9 @@ def openalex_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
 def semanticscholar_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
     url = "https://api.semanticscholar.org/graph/v1/paper/search?" + urllib.parse.urlencode(
         {"query": requete, "limit": int(n), "fields": "title,authors,year,abstract,openAccessPdf,externalIds,url,publicationDate"})
-    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, hotes_permis={"api.semanticscholar.org"})
+    cle = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")  # R-417 : en-tête lu par le noyau seul, jamais donné à l'organisme
+    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, entetes=({"x-api-key": cle} if cle else None),
+                             hotes_permis={"api.semanticscholar.org"})
     d = json.loads(brut.decode("utf-8"))
     notices = []
     for p in d.get("data", []) or []:
