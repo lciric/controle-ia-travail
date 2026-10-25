@@ -192,7 +192,7 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   troncatures sont **au `max_tokens` de l'organisme** (640 par tâche, 512, 1 024 ; 1 200 pour la question à g001), pas à
   4 096 (lecture de session-depot corrigée) ; sur 39 appels servis par Fable : 27 `TRONQUE`, 5 `VIDE`, 7 `REFUS`
   (catégories `reasoning_extraction` 4, `cyber` 3), **0 `OK`** ; cause probable : réflexion adaptative à `effort = "high"`
-  de `appeler_anthropic`, qui compte dans le plafon ; `n_reponses_test` = 0 ; réponse = texte d'abstention (5 676 octets).
+  de `appeler_anthropic`, qui compte dans le plafond ; `n_reponses_test` = 0 ; réponse = texte d'abstention (5 676 octets).
   Proposé à Lazar : abandon du pilote v4 (défaut (b)) ; arrêt du noyau sur le 400 ; contrat qui dit le plafond
   « réflexion comprise » (Lazar : (a), go, 09:26) ; Gemini v5.1 sur faits mécaniques (Lazar : (a), go, 09:26) — livrable
   `gemini-organisme-v5-pour-v5-1-v1.zip` (`833332ba…`) envoyé à Lazar pour relais. Canal n° 34 (`7927188`).
