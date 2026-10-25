@@ -142,3 +142,38 @@ def test_revocation_cas_sain_et_artefact(racine):
     code, err = lancer(racine, f"GO_ID={GO_OK} vastai create instance 123 --image pytorch")
     assert code == 2 and "révoqué par GO-2026-10-06-09" in err, err
 
+
+def ligne_ext(ident, accorde, echeance, typ="calcul", par="Lazar", perimetre="extension au pilote p-v1"):
+    return f"| {ident} | {accorde} | {typ} | {perimetre} | 40 USD imputés à cette ligne | {echeance} | {par} | R-389 |\n"
+
+
+def test_sain_ligne_d_extension_au_meme_identifiant(racine):
+    """R-389 : une seconde ligne au même identifiant qui se dit « extension », même type, par Lazar, ni antérieure ni
+    d'échéance plus lointaine, est admise ; le lancement cité passe et la validité reste celle de la première ligne."""
+    import importlib.util
+
+    registre(racine, ligne(GO_OK, AUJ - timedelta(days=2), AUJ + timedelta(days=10))
+             + ligne_ext(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=10)))
+    code, err = lancer(racine, f"GO_ID={GO_OK} vastai create instance 123 --image pytorch")
+    assert code == 0, err
+    spec = importlib.util.spec_from_file_location("garde_calcul", racine / ".claude" / "hooks" / "garde_calcul.py")
+    g = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(g)
+    go = g.lire_go(racine / "registres" / "go.md")
+    assert go[GO_OK]["accorde"] == AUJ - timedelta(days=2) and go[GO_OK]["echeance"] == AUJ + timedelta(days=10)
+    assert go[GO_OK]["extensions"] == ["extension au pilote p-v1"]
+
+
+@pytest.mark.parametrize("extension", [
+    ligne_ext(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=10), typ="publication"),        # autre type
+    ligne_ext(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=10), par="Claude"),             # pas Lazar
+    ligne_ext(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=30)),                           # échéance plus lointaine
+    ligne_ext(GO_OK, AUJ - timedelta(days=5), AUJ + timedelta(days=10)),                           # antérieure à la première
+    ligne_ext(GO_OK, AUJ - timedelta(days=1), AUJ + timedelta(days=10), perimetre="phase 0 bis"),  # ne se dit pas extension
+])
+def test_artefact_doublon_qui_n_est_pas_une_extension_admise(racine, extension):
+    """R-389 : tout doublon qui n'est pas une extension admise bloque, comme avant (aucun repli silencieux, R5)."""
+    registre(racine, ligne(GO_OK, AUJ - timedelta(days=2), AUJ + timedelta(days=10)) + extension)
+    code, err = lancer(racine, f"GO_ID={GO_OK} vastai create instance 1")
+    assert code == 2 and "double" in err, err
+

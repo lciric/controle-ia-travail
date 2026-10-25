@@ -10,6 +10,10 @@
 Sortie 0 : la commande passe. Sortie 2 : la commande est bloquée, le motif est
 écrit sur la sortie d'erreur (Claude Code le transmet à l'agent). Toute entrée
 illisible ou registre mal formé bloque : aucun repli silencieux (R5).
+
+Ligne d'extension (R-389) : une seconde ligne au même identifiant n'est admise que si son périmètre commence par
+« extension », qu'elle est du même type, accordée par Lazar, ni antérieure à la première ni d'échéance plus lointaine ;
+elle ne change ni le type ni la période de validité (ceux de la première ligne). Tout autre doublon bloque.
 """
 from __future__ import annotations
 
@@ -66,9 +70,17 @@ def lire_go(chemin: Path) -> dict[str, dict]:
         except ValueError:
             bloquer(f"registre GO mal formé ligne {n} : dates illisibles")
         if ident in go:
-            bloquer(f"registre GO : identifiant {ident} en double")
+            premier = go[ident]
+            echeance_ok = ((premier["echeance"] is None and echeance_d is None)
+                           or (premier["echeance"] is not None and echeance_d is not None
+                               and echeance_d <= premier["echeance"]))
+            if not (perimetre.lower().startswith("extension") and typ == premier["type"] and par == "Lazar"
+                    and accorde_d >= premier["accorde"] and echeance_ok):
+                bloquer(f"registre GO : identifiant {ident} en double")
+            premier["extensions"].append(perimetre)  # R-389 : la validité reste celle de la première ligne
+            continue
         go[ident] = {"accorde": accorde_d, "type": typ, "echeance": echeance_d, "par": par, "perimetre": perimetre,
-                     "ref": ref}
+                     "ref": ref, "extensions": []}
     return go
 
 
