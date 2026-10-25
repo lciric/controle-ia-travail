@@ -1,0 +1,218 @@
+# Cellule A — Tour III.1 : escalier de coût, δ et plan
+
+**Pièces reçues.** Le bloc FAITS est vide par décision de l'arbitre (une ligne, aucune donnée). Tout le « cadre » provient du bloc QUESTION : je le traite comme **RAPPORTÉ** (par l'arbitre), non VÉRIFIÉ par moi. Tout chiffre que je produis ci-dessous est soit un calcul explicite à partir de ces éléments rapportés, soit marqué *illustratif*.
+
+---
+
+## (a) Ce que la question suppose sans que ce soit établi
+
+| # | Présupposé | Statut | Pourquoi ça compte |
+|---|---|---|---|
+| 1 | Le bruit dominant est la variance entre graines, que l'on peut réduire en ajoutant des graines. | HYPOTHÈSE | Avec 60 items fixes, la variance due au tirage des items ne diminue avec aucune graine. Deux cibles d'inférence coexistent et la question ne dit pas laquelle elle vise (voir b, duel 1). |
+| 2 | Deux répliques « A contre A » suffisent à « fixer le nombre de graines ». | HYPOTHÈSE | Deux graines donnent une estimation de σ_graine à 1 degré de liberté : l'intervalle à 95 % d'un écart-type estimé à 1 ddl va d'environ 0,45σ̂ à 32σ̂ (quantiles du χ² à 1 ddl ; calcul standard). Cela donne un ordre de grandeur, pas un nombre de graines. |
+| 3 | Les rendements par axe de coût sont monotones et décroissants (ce qui justifie un « escalier » et une détection de plateau). | HYPOTHÈSE | Un organisme qui s'auto-adapte peut avoir des rendements non monotones (plus de générations → dérive, surapprentissage de sa propre validation interne). |
+| 4 | Le budget servi définit la configuration. | RAPPORTÉ comme règle, mais la question signale elle-même que servi ≠ dépensé | L'escalier est randomisé sur le servi ; l'effet causal mesurable est celui du servi (analogue « intention de traiter »). |
+| 5 | L'exactitude équilibrée est la grandeur pertinente pour un « moniteur de sécurité ». | HYPOTHÈSE | Un moniteur travaille à taux de fausses alertes contraint ; deux configurations de même BA peuvent différer du tout au tout à FPR ≤ 1/12. |
+| 6 | Le seuil Δ ≥ +0,10 de l'autre préenregistrement repose sur un calcul de puissance. | RAPPORTÉ (la règle), base NON ÉTABLIE | Il peut n'être qu'un seuil de pertinence ; le réutiliser comme δ sans recalcul confond « intéressant » et « détectable ». |
+| 7 | Un même δ convient aux deux familles (36 et 24 items, planchers 0,69 et 0,50). | HYPOTHÈSE | Le pas de la métrique vaut 1/24 ≈ 0,042 en B (si 12/12) et 1/36 ≈ 0,028 en A (si 18/18, ce que je suppose : la stratification « par vérité » n'est pas chiffrée). |
+| 8 | Le test final est non contaminé malgré une moisson « par génération » sur des sources dont les items sont « stratifiés par source ». | RAPPORTÉ (« jamais rendu ») pour l'accès direct ; HYPOTHÈSE pour la contamination indirecte | Si les sources sont publiques, l'organisme peut moissonner les textes d'origine. À auditer (duel 7). |
+| 9 | Le juge du noyau est fiable. | RAPPORTÉ | Pour une tâche binaire, le juge devrait être redondant avec une correspondance mécanique d'étiquette ; mesurer son désaccord (voir c). |
+| 10 | Le même jeu de 60 items peut servir à plusieurs comparaisons sans pénalité. | NON ÉTABLI (la question en doute) | La sélection du vainqueur parmi K bras sur le même jeu produit un biais d'optimisme de l'ordre de l'erreur-type (voir point 0). |
+
+---
+
+## (b) Duels décisifs (B4)
+
+**Duel 1 — structure du bruit (à faire en premier, conditionne tout le reste).**
+- H_A : σ_graine (écart-type de la BA d'une famille entre graines, configuration fixée) ≥ 0,05 → les graines sont le levier.
+- H_B : σ_graine ≤ 0,025 → le bruit est celui des items ; ajouter des graines est de l'argent perdu.
+- Expérience : 4 graines de la configuration la moins chère (les 2 du pilote + 2), notées sur les 60 items. Métrique : écart-type groupé par famille (3 ddl) et taux de discordance item à item entre graines q.
+- Contrôle négatif : la même sortie notée deux fois par le juge (le désaccord juge-juge doit être ≈ 0 ; sinon ce bruit se confond avec σ_graine).
+- Falsification : borne basse de l'IC 90 % de σ̂ > 0,05 → H_B réfutée ; borne haute < 0,025 → H_A réfutée. Entre les deux : zone grise, on planifie sur la borne haute.
+- Coût : 2 graines supplémentaires au tarif du cran le moins cher (*illustratif* : 2 × 50 USD).
+
+**Duel 2 — forme du premier cran.**
+- H_A : doubler le budget servi gagne ≥ δ sur la famille primaire (moyenne sur graines, appariée par item).
+- H_B : le gain est ≤ δ/2 (plateau précoce).
+- Métrique : Δ̂ = moyenne sur graines de la différence de BA appariée par item ; IC par rééchantillonnage à deux niveaux (items, puis graines).
+- Contrôle négatif : la différence A contre A du pilote, passée dans la même chaîne d'analyse, doit donner un IC couvrant 0.
+- Falsification : borne basse IC > δ/2 réfute H_B ; borne haute < δ réfute H_A.
+
+**Duel 3 — servi contre dépensé.**
+- H_A : dépensé/servi est stable (± 20 %) d'un cran au suivant.
+- H_B : dépensé/servi chute de plus de 30 % au cran supérieur (l'organisme sature).
+- Métrique : ratio par cran, lu dans les journaux d'appels du noyau. Contrôle négatif : deux graines du même cran doivent avoir des ratios proches (sinon le ratio est lui-même bruité).
+- Falsification : si H_B, un « cran » défini en dollars servis n'est pas un cran en dollars dépensés : il faut redéfinir l'axe sur le dépensé ou plafonner le servi au dépensé observé.
+
+**Duel 4 — rangement par BA contre rangement « moniteur ».**
+- H_A : le rangement des configurations par BA (famille B) coïncide avec le rangement par sensibilité à spécificité ≥ 11/12.
+- H_B : les rangements s'inversent sur au moins une paire.
+- Métrique : concordance de Kendall entre les deux rangements. Contrôle négatif : deux graines d'une même configuration ne doivent pas s'inverser.
+- Falsification : si H_B, δ sur la BA ne mesure pas ce qui intéresse un moniteur ; la règle de décision doit changer de métrique.
+
+**Duel 5 — l'escalier un axe à la fois est-il légitime ?**
+- H_A : un axe unique explique ≥ 50 % de la variance de BA dans un plan factoriel fractionnaire 2^(5−2) (8 cellules, 1 graine).
+- H_B : aucun axe > 20 % ; les interactions dominent.
+- Métrique : décomposition de variance (ANOVA) ; en résolution III les effets principaux sont confondus avec des interactions d'ordre 2 (Box, Hunter & Hunter, *Statistics for Experimenters*, 1978/2005), ce qu'il faut assumer. Contrôle négatif : une cellule dupliquée (2 graines) donne l'erreur pure.
+- Falsification : si H_B, monter un axe à la fois est trompeur ; il faut un escalier sur le budget total avec allocation interne libre.
+
+**Duel 6 — régression vers la moyenne après sélection.**
+- H_A : le gain du vainqueur, re-mesuré sur une réserve d'items jamais utilisée, reste ≥ δ/2.
+- H_B : il tombe sous δ/4.
+- Faisabilité : dépend d'une réserve d'items dont l'existence n'est pas établie (HYPOTHÈSE). Sans réserve, ce duel est non réalisable et le point 0 le dit.
+
+**Duel 7 — contamination par la moisson.**
+- H_A : aucun texte du test final (ou de sa source directe) n'apparaît dans les téléchargements de l'organisme (recherche de recouvrement de n-grammes longs, seuil : aucune fenêtre de 50 jetons commune).
+- H_B : au moins un item est recouvert.
+- Contrôle négatif : des textes témoins jamais publiés, insérés dans le test, doivent avoir un recouvrement nul.
+- Falsification : si H_B, l'exactitude mesurée sur les items touchés est invalide et ils sortent de l'analyse préenregistrée.
+
+---
+
+## Point 0 — Conception de l'escalier (plusieurs voies)
+
+**Axes.** Cinq sont nommés : rondes de conception (R), castes/espèces par tâche (K), générations (G), longueur de sortie (L), moisson (M). M coûte « presque rien » : ce n'est pas un axe de coût mais une covariable (on la fixe ou on la journalise). L est un multiplicateur du coût de G (10–22 USD/génération selon la longueur) : je propose de ne pas en faire un axe séparé mais de définir le cran sur le **dépensé** (duel 3).
+
+**Trois voies pour l'ordre et le cran.**
+
+- *Voie 1 — escalier sur le budget total, allocation libre.* On double le budget servi (crans : B₀, 2B₀, 4B₀) et on laisse l'organisme répartir. Avantage : respecte le fait que l'organisme adapte sa dépense ; c'est le seul escalier qui a un sens causal si le duel 5 donne H_B. Inconvénient : on apprend « combien », pas « sur quoi ».
+- *Voie 2 — un axe à la fois, du moins cher au plus cher par cran.* Ordre proposé : R (≈ 10 USD/cran, *illustratif*) → K → G. Raison : détecter un plateau coûte le prix d'un cran ; commencer par les crans bon marché minimise la dépense avant la première décision. Validité conditionnée au duel 5 (H_A).
+- *Voie 3 — criblage factoriel fractionnaire puis escalier.* 8 cellules 2^(5−2), 1 graine chacune (*illustratif* : 8 × 60–100 USD), pour choisir l'axe, puis un escalier à deux crans avec graines sur cet axe seul. C'est la voie qui minimise le risque de monter le mauvais axe, au prix d'une phase sans graines (donc sans inférence) — à déclarer exploratoire.
+
+Ce qui les départage : le duel 5 (interactions) et le duel 3 (saturation de la dépense).
+
+**Définition du cran.** Doublement plutôt que pas fixe : avec des rendements inconnus, l'échelle log répartit les crans là où l'incertitude relative est constante et évite 10 crans à 10 USD indiscernables. Un cran = ×2 du **budget dépensé médian observé**, pas du servi.
+
+**Valeur marginale par dollar et plateau.** Par cran : Δ̂ points de BA / Δ dollars dépensés, avec son IC. Plateau déclaré si la borne haute de l'IC du gain au cran suivant est < δ/2 (test d'équivalence unilatéral, logique TOST : Lakens, 2017, « Equivalence Tests: A Practical Primer », *Social Psychological and Personality Science*). Détecter un plateau coûte **autant** que détecter un gain : il n'y a pas de plateau « à peu de frais », seulement un plateau déclaré à faible puissance. Arrêter de monter : au premier plateau déclaré, ou quand le coût par point gagné dépasse un plafond préenregistré (*illustratif* : 10 USD par point de BA).
+
+**Servi ≠ dépensé.** Trois mesures à journaliser par graine : servi, dépensé total, répartition par poste (R/K/G/L). L'analyse principale est sur le servi (c'est ce qui est assigné) ; l'analyse secondaire régresse la BA sur le dépensé en traitant le servi comme instrument — descriptif, préenregistré comme tel.
+
+**Transposition entre versions.** HYPOTHÈSE par défaut : un escalier mesuré sur la version v ne vaut pour v+1 que si le signe et l'ordre de grandeur du premier cran se reproduisent. Test de recalibrage minimal : les deux crans extrêmes, 2 graines chacun, sur v+1 (*illustratif* : 4 runs).
+
+**Surapprentissage du test final.** L'organisme ne voit pas les items, mais l'expérimentateur sélectionne sur eux. Pour K bras comparés avec une erreur-type s, l'espérance du maximum de K estimations nulles vaut environ 0,56s (K=2), 0,85s (K=3), 1,03s (K=4) (espérances des statistiques d'ordre normales). Avec s ≈ 0,07 (calcul ci-dessous), K=4 donne un optimisme ≈ 0,07 : du même ordre que δ. Parades et leur prix :
+- *Réserve intouchée* pour une confirmation unique du vainqueur : pour la même précision il faut ≈ 60 items neufs ; coût en items, pas en dollars de modèle ; l'existence d'une telle réserve n'est pas établie.
+- *Jeu de validation construit à partir de la moisson* (hors sources du test final, duel 7) pour tout l'escalier, test final réservé à la confirmation : c'est la voie que je préférerais si elle est possible ; prix : effort d'étiquetage, et écart de distribution entre validation et test.
+- *Scission 36/24 du jeu actuel* : l'erreur-type sur 24 items monte d'un facteur ≈ 1,6 ; rend δ = 0,10 indétectable même conditionnellement. À écarter sauf pour une confirmation de signe.
+- *Pas de réserve* : déclarer l'escalier exploratoire, appliquer un rétrécissement préenregistré de Δ̂ (par exemple soustraire l'optimisme attendu ci-dessus) avant toute décision. Prix : perte de puissance équivalente à élever δ.
+
+---
+
+## Point 1 — Valeur de δ : calculs et hypothèses
+
+**Hypothèses de calcul** (toutes *illustratives*, à remplacer par les lectures du pilote) : σ_graine = 0,05 (scénario bas) ou 0,08 (scénario haut) par famille ; discordance item à item entre bras d = 0,30 ; coût cran 1 = 3 générations ≈ 50 USD, cran 2 = 6 générations ≈ 100 USD (milieu de la fourchette rapportée 10–22 USD, soit 16 USD/génération) ; α = 0,05 unilatéral, puissance 0,80.
+
+**1. Granularité.** Famille B : un item déplace la BA de 1/24 ≈ 0,042 ; famille A (si 18/18) : 1/36 ≈ 0,028. δ = 0,05 = « plus d'un item » en B ; δ = 0,10 ≈ 2,4 items en B (donc 3 en pratique, 0,125) et 3,6 en A (donc 4, 0,111). Je recommande d'exprimer δ en **items nets discordants** pour ne pas promettre une résolution que la métrique n'a pas.
+
+**2. Cible conditionnelle (ces 60 items, graines comme répliques).** Erreur-type de la différence de moyennes entre bras non appariés par graine : σ_graine·√(2/k). Graines par bras : k = 2σ²(z_α + z_β)²/δ² = 2σ² × 6,18/δ².
+
+| δ | k (σ=0,05) | coût (σ=0,05) | k (σ=0,08) | coût (σ=0,08) |
+|---|---|---|---|---|
+| 0,05 | 12,4 → 13 | 13 × 150 ≈ 1 950 USD | 31,6 → 32 | ≈ 4 800 USD |
+| 0,10 | 3,1 → 4 | 4 × 150 ≈ 600 USD | 7,9 → 8 | ≈ 1 200 USD |
+| 0,15 | 1,4 → 2 | ≈ 300 USD | 3,5 → 4 | ≈ 600 USD |
+
+(coûts *illustratifs*, deux bras, hors graines du duel 1 et hors rondes de conception.)
+
+**3. Cible populationnelle (généraliser à des items semblables).** Erreur-type due au tirage des items pour une différence appariée ≈ √(d/n) : famille B, n=24 : √(0,30/24) ≈ 0,112 ; famille A, n=36 : ≈ 0,091 ; les deux familles combinées (pondération par items) ≈ 0,07. Cette composante ne bouge avec **aucune** graine. À δ = 0,10, on est à ≈ 1,4 erreur-type combinée : puissance unilatérale ≈ 0,4 ; à δ = 0,15, ≈ 2,1 erreur-type, puissance ≈ 0,7 ; à δ = 0,05, on est sous une erreur-type, aucune puissance. (Les BA par famille, à part, ont des erreurs-types plus grandes encore : 0,09–0,11.)
+
+**4. Ce que j'en conclus (trois voies, pas une réponse).**
+- δ = 0,05 : indétectable avec 60 items, quelle que soit la cible. Le proposer serait présenter une hypothèse comme un résultat atteignable.
+- δ = 0,10 : détectable **conditionnellement aux 60 items** avec 4–8 graines par bras (selon σ_graine lue au duel 1), cohérent avec le Δ ≥ +0,10 déjà préenregistré ailleurs, et égal à 3 items nets en B. C'est la voie que je mettrais en primaire, **avec l'énoncé explicite que la conclusion vaut pour ces items**.
+- δ = 0,15 : seule valeur qui approche une puissance acceptable pour une généralisation à 60 items ; 2–4 graines par bras. À réserver à toute phrase de type « la configuration X est meilleure en général ».
+- Pour un moniteur de sécurité : en B, le plancher de surface est 0,50 ; un gain de 0,10 de BA à spécificité tenue vaut 2,4 traces sabotées de plus détectées sur 12. C'est « digne d'intérêt » au sens où cela se voit, mais le duel 4 doit confirmer que la BA suit la sensibilité à FPR contraint.
+
+---
+
+## Point 2 — Le plan
+
+**Bras.** Deux crans d'abord (le moins cher et son double), pas davantage : chaque cran ajouté multiplie le coût par le nombre de graines et introduit une comparaison. Un troisième cran seulement si le premier duel conclut « monter ».
+
+**Graines.** Décidées après le duel 1 : k = ⌈2σ̂²_haut × 6,18/δ²⌉ sur la borne haute de l'IC de σ̂ (pas sur l'estimation ponctuelle), plafonnée à 8 par bras ; au-delà, c'est que la question est mal posée (bruit trop grand pour 60 items).
+
+**Appariement.** Par item, toujours (c'est gratuit et c'est là que se trouve la puissance). Par graine : seulement si la graine fixe l'état initial avant la divergence due au budget (HYPOTHÈSE à vérifier sur le noyau) ; sinon, les graines sont indépendantes entre bras.
+
+**Analyses — avantages et pièges.**
+- *McNemar exact apparié par item* (McNemar, 1947, *Psychometrika*) : simple, exact ; piège : ignore les graines (il faut soit agréger par item à la majorité des graines, ce qui perd de l'information, soit tester par paire de graines, ce qui multiplie les tests). Bien pour un contrôle de robustesse, pas pour la décision.
+- *Rééchantillonnage apparié à deux niveaux* (tirer les items avec remise, puis les graines) : honnête sur les deux sources ; piège : avec 2–4 graines, le niveau graines est dégénéré (peu de rééchantillons distincts) et l'IC est trop étroit ; à compléter par « graine omise une à une ».
+- *Modèle mixte logistique items × graines croisés* (Baayen, Davidson & Bates, 2008, *Journal of Memory and Language* ; Clark, 1973, « The language-as-fixed-effect fallacy » ; Judd, Westfall & Kenny, 2012, *JPSP*) : utilise toute la structure ; piège : variances instables avec si peu de graines, convergence ; en version bayésienne avec a priori faiblement informatifs, c'est la voie la plus propre et elle livre directement P(Δ > δ).
+- *Décision bayésienne avec perte* : traduit naturellement « à égalité, le moins cher gagne » (perte asymétrique : coût du cran versus valeur d'un point) ; piège : le choix de l'a priori et de la perte doit être scellé ; sinon, c'est une consigne déguisée.
+- *Test séquentiel avec arrêt précoce* (Wald, 1945, « Sequential Tests of Statistical Hypotheses », *Annals of Mathematical Statistics*) sur des paires de graines ajoutées : économise des graines ; piège : l'arrêt optionnel non préenregistré gonfle le taux de fausse alerte ; il faut des frontières fixées (groupées, nombre maximal d'extensions) ou des e-valeurs (Vovk & Wang, 2021, « E-values: calibration, combination and applications », *Annals of Statistics* — à vérifier pour l'usage exact).
+
+**Usage des deux répliques gratuites.** Lire : (i) |BA₁ − BA₂| par famille ; (ii) la discordance item à item q entre les deux graines ; (iii) le ratio dépensé/servi des deux. Décision préenregistrée sur ces trois lectures : si |BA₁ − BA₂| > 0,15 sur une famille, σ_graine est probablement grande → aller au duel 1 avec 4 graines avant tout escalier ; si < 0,04 sur les deux, planifier provisoirement 4 graines par bras mais **ne pas** conclure que σ est petite (1 ddl) ; q donne un plancher de discordance entre bras (d ≥ q) qui recale le calcul de l'erreur-type items.
+
+---
+
+## Point 3 — Règle de décision gelée (proposition, à sceller telle quelle ou à amender avant tout run)
+
+1. Famille primaire : B (plancher 0,50, pertinence sécurité) ; A secondaire ; aucune somme de p-valeurs entre familles. *Variante* : composite = moyenne des deux BA, si Lazar préfère une seule grandeur — à choisir avant, pas après.
+2. Estimateur : Δ̂ = moyenne sur graines de la BA appariée par item (cran 2 − cran 1), IC 90 % à deux niveaux, plus P(Δ > δ) du modèle mixte bayésien.
+3. **Monter** si : borne basse IC > 0 **et** Δ̂ ≥ δ = 0,10 (≥ 3 items nets en B) **et** coût par point = (coût₂ − coût₁)/(100 × Δ̂) ≤ plafond scellé (*illustratif* 10 USD/point).
+4. **Rester** si : borne haute IC < δ (plateau, ou le cran le moins cher gagne par la règle d'égalité).
+5. **Zone grise** sinon : ajouter une paire de graines par bras, au plus deux fois (frontières séquentielles scellées) ; après la dernière extension, défaut = **rester**.
+6. Signe négatif (cran 2 pire que cran 1 avec borne haute < 0) : consigné, audit de propreté, pas de reformulation.
+
+**Pièges et parades.**
+- *Comparaisons multiples* : garde-barrière strictement séquentiel (cran 3 n'est testé que si cran 2 a été adopté) : pas de correction nécessaire au niveau global, mais chaque test reste à α.
+- *Régression vers la moyenne* : rétrécir Δ̂ de l'optimisme attendu pour K bras (point 0) avant d'appliquer le plafond de coût.
+- *Plafond à 1* : à BA élevée, δ en points surestime la difficulté ; compter plutôt « items restants corrigés ».
+- *Items faciles en surface* : analyse secondaire préenregistrée sur le sous-ensemble que le classifieur de surface rate (en A, ≈ 31 % des items si 0,69 est son exactitude ; en B, la moitié) ; c'est là que la valeur d'un organisme se voit.
+- *Hasard des 60 items* : publier les deux IC (conditionnel et populationnel) ; ne jamais généraliser sur le seul conditionnel.
+- *Dépendance entre familles* : même organisme, même budget ; ne pas additionner les évidences ; garde-barrière B puis A.
+- *Graine aberrante* : rapporter médiane et moyenne, et « graine omise une à une » ; une graine sans réponses valides compte comme erreurs (règle rapportée) mais déclenche audit si elle inverse la décision.
+
+---
+
+## Point 4 — Alternatives à l'escalier
+
+- *Réduction successive* (Jamieson & Talwalkar, 2016, « Non-stochastic Best Arm Identification and Hyperparameter Optimization », AISTATS ; Li, Jamieson, DeSalvo, Rostamizadeh & Talwalkar, 2018, « Hyperband », *JMLR*) : on lance K configurations à 1 graine, on élimine la moitié, on double les graines des survivantes. Pertinent si K ≥ 6 ; à K ≤ 3, l'escalier séquentiel coûte moins.
+- *Bandit d'identification du meilleur bras sous contrainte de coût* : alloue les graines aux bras dont l'ordre est incertain ; piège : les bras n'ont pas le même coût par tirage (le cran cher coûte deux fois le cran bon marché), ce que les formulations standard ne font pas ; référence précise « à vérifier ».
+- *Valeur d'information bayésienne* : à chaque graine, calculer l'espérance du gain de décision par dollar ; arrêt quand elle passe sous le coût d'une graine.
+
+Ce qui les départage : une simulation préenregistrée, sous σ̂ du duel 1, du nombre de runs nécessaires pour désigner le meilleur bras avec erreur ≤ 10 % — la méthode qui en demande le moins au coût réel des bras gagne. Si la simulation ne sépare pas les méthodes, la plus simple (escalier à deux crans) l'emporte par la règle d'égalité.
+
+---
+
+## (c) Instruments nommés : mesure minimale de bon fonctionnement
+
+| Instrument | Détection à mesurer | Fausse alerte à mesurer | Cas honnêtes appariés | Vérification mécanique à battre |
+|---|---|---|---|---|
+| Règle de décision / escalier | Taux de « monter » quand on injecte une différence connue (par exemple un bras dont on dégrade volontairement 3 items nets en B) | Taux de « monter » sur A contre A (doit être ≤ α) | Mêmes 60 items, mêmes graines, un bras dégradé artificiellement | Décision par simple différence de moyennes sans IC : la règle doit la battre en fausses alertes à détection égale |
+| Test final (60 items) | Sépare-t-il un classifieur de surface (0,69 / 0,50) d'un organisme handicapé (réponses au hasard = 0,50) ? | Deux graines d'une même configuration doivent rester à moins d'une erreur-type | Items appariés par source et vérité | Un tirage aléatoire de 60 items parmi une réserve doit donner le même rangement (si réserve) |
+| Juge du noyau | Accord avec la correspondance mécanique d'étiquette sur réponses bien formées (doit être ≈ 100 %) | Taux de réponses valides déclarées invalides | Sorties identiques notées deux fois | L'extraction mécanique d'étiquette : si le juge ne la bat pas, il est inutile et introduit du bruit |
+| Pilote A contre A | Sert de contrôle négatif global : la chaîne complète doit produire un IC couvrant 0 | Un IC excluant 0 sur A contre A = défaut de la chaîne, pas un résultat | — | Permutation des étiquettes de graine |
+| Audit de propreté (duel 7) | Retrouve des textes témoins insérés dans la moisson (rappel 100 %) | Alerte sur textes témoins non moissonnés (0 %) | Textes jamais publiés insérés exprès | Recouvrement de n-grammes de 50 jetons |
+
+---
+
+## (d) Ancrage matériel
+
+- **Modèles** : la question ne nomme aucun modèle ; les exécutants sont « figés » par le noyau (RAPPORTÉ). Pour un duel 1 ou un criblage sans frais d'API, des modèles ouverts auto-hébergés (familles Llama, Qwen, Mistral — versions à fixer dans le préenregistrement, pas de ma mémoire) permettent de multiplier les graines ; mais changer d'exécutant change l'organisme : à n'utiliser que pour calibrer la méthode, pas pour la décision.
+- **Calcul** : tout le coût est en appels de modèles (RAPPORTÉ). Budget total du plan recommandé, *illustratif* : duel 1 (2 graines) ≈ 100 USD ; duel 2 à δ = 0,10 avec 4–8 graines par bras ≈ 600–1 200 USD ; extensions de zone grise ≤ 600 USD ; criblage factoriel optionnel ≈ 500–800 USD. Fourchette totale ≈ 1 300–2 700 USD, hors étiquetage d'une éventuelle réserve d'items.
+- **Ce qui peut être réfuté** : la valeur δ = 0,10 (par le duel 1 si σ_graine > 0,10, le plan devient hors budget), la légitimité d'un escalier par axe (duel 5), la métrique elle-même (duel 4), et la propreté du test (duel 7). Si trois de ces quatre tiennent, l'escalier à deux crans avec 4–8 graines est défendable ; sinon, il faut d'abord plus d'items, pas plus de dollars.
+
+---
+
+## Point 5 — Références (attribuables ; « à vérifier » quand indiqué)
+
+- Dietterich, T. G. (1998). « Approximate Statistical Tests for Comparing Supervised Classification Learning Algorithms ». *Neural Computation*.
+- Demšar, J. (2006). « Statistical Comparisons of Classifiers over Multiple Data Sets ». *JMLR*.
+- Nadeau, C. & Bengio, Y. (2003). « Inference for the Generalization Error ». *Machine Learning*.
+- McNemar, Q. (1947). « Note on the sampling error of the difference between correlated proportions or percentages ». *Psychometrika*.
+- Brodersen, K. H. et al. (2010). « The balanced accuracy and its posterior distribution ». ICPR.
+- Card, D., Henderson, P., Khandelwal, U., Jia, R., Mahowald, K. & Jurafsky, D. (2020). « With Little Power Comes Great Responsibility ». EMNLP.
+- Dror, R., Baumer, G., Shlomov, S. & Reichart, R. (2018). « The Hitchhiker's Guide to Testing Statistical Significance in Natural Language Processing ». ACL.
+- Reimers, N. & Gurevych, I. (2017). « Reporting Score Distributions Makes a Difference ». EMNLP.
+- Bouthillier, X. et al. (2021). « Accounting for Variance in Machine Learning Benchmarks ». MLSys — liste des coauteurs à vérifier.
+- Miller, E. (2024). « Adding Error Bars to Evals: A Statistical Approach to Language Model Evaluations » — lieu de publication à vérifier.
+- Baayen, R. H., Davidson, D. J. & Bates, D. M. (2008). « Mixed-effects modeling with crossed random effects for subjects and items ». *Journal of Memory and Language*.
+- Clark, H. H. (1973). « The language-as-fixed-effect fallacy ». *Journal of Verbal Learning and Verbal Behavior*.
+- Judd, C. M., Westfall, J. & Kenny, D. A. (2012). « Treating stimuli as a random factor in social psychology ». *JPSP*.
+- Lakens, D. (2017). « Equivalence Tests: A Practical Primer ». *Social Psychological and Personality Science*.
+- Wald, A. (1945). « Sequential Tests of Statistical Hypotheses ». *Annals of Mathematical Statistics*.
+- Vovk, V. & Wang, R. (2021). « E-values: calibration, combination and applications ». *Annals of Statistics* — à vérifier.
+- Jamieson, K. & Talwalkar, A. (2016). « Non-stochastic Best Arm Identification and Hyperparameter Optimization ». AISTATS.
+- Li, L., Jamieson, K., DeSalvo, G., Rostamizadeh, A. & Talwalkar, A. (2018). « Hyperband ». *JMLR*.
+- Box, G. E. P., Hunter, W. G. & Hunter, J. S. *Statistics for Experimenters* (1978 ; 2e éd. 2005).
+- Bandits budgétés sous coûts hétérogènes : référence à vérifier, non citée de mémoire.
+
+FIN-DE-CELLULE
