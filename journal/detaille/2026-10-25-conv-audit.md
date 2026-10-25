@@ -630,3 +630,20 @@ de l'heure d'été, l'heure de Paris est UTC + 1, non UTC + 2.)
 - **Contre-lecture 4** (relecture courte de l'écart) lancée à 21:59 UTC. Les deux décisions soumises à Lazar vers 20:54
   UTC (objet de la seconde course ; lecture si la confrontation change un seuil) restent sans réponse ; note N-047
   (partition par catégorie au lot 3) rédigée sur le canal.
+
+## 22:30 — Pilote 4 : contre-lecture 4 « scellable après corrections mineures », corrections faites ; texte scellé (`de7a5559…`) ; message de départ n° 66
+
+(Écrit à 22:30 UTC, heure lue sur `date -u`.)
+
+- **Contre-lecture 4** (courte, sous-agent neuf, à partir de 21:59 UTC, sur la v3 corrigée `228d266c…`) :
+  `prereg/contre-lectures/pilote4-gemini-organisme-v3-cl4.md` (`e2de1372…`), deux mineurs : la règle du minuteur mort ne
+  garantissait pas la borne (réveil à l'échéance, ligne « STOP posé ») et se serait déclenchée à la fin normale d'une
+  course ; quatre refus d'absence du segment K ≥ 2 non essayés, à dire ; trois remarques (dont la séparation des motifs
+  de refus d'exécution et d'altération). Corrigés dans le texte seul ; relevé de la série v9 versé aux pièces.
+- **Scellé** à 22:27 UTC par `sceller_pilote4_v3.py` : `pilote4-gemini-organisme-v3.md`, `de7a5559…` ; entropie, graines
+  v5.3 et v6.1 recalculées à part ; fichier d'empreintes `EMPREINTES-pilote4-gemini-v1.txt` (`5ed51779…`, 392 fichiers,
+  392 justes) ; les contrôles du lanceur sur le texte et sur la tête `d0d0175` rejoués : justes ; aucune écriture de clé
+  dans ce qui est poussé (archives comprises, décompressées).
+- **Canal n° 66** : message de départ (deux formes exactes de la ligne d'extension de GO selon que Lazar nomme ou non la
+  v6.1 ; commandes par segment ; réveil à l'échéance du minuteur). Rien ne part avant le mot direct de Lazar dans la
+  session de session-depot.
