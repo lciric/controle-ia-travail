@@ -1,0 +1,24 @@
+# Lancement du pilote pilote-gemini-organisme-v4-question-v1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-25T00:40:52Z ; hôte : vm ; utilisateur : 0
+- dossier du pilote : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/essai-lanceur-v3/sain/pilote-gemini-organisme-v4-question-v1
+- dépôt : /home/claude/essaim-gradient ; HEAD : a32eea7dd6ae4138590459f7d88f3161fff4f481 (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote_gemini_v4_question_v3.sh, sha256 322275c06d2ad88e13ffe1d4fbd77d1e610bddeebef447d38c45b7630ffeb680
+- source des registres : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/essai-lanceur/go-sain.md ; dépenses : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/essai-lanceur/depenses-sain.md
+- aucune autre course du noyau dans ce conteneur au départ (détection par pgrep)
+- code : identique à cec6dce (commit et arbre de travail : essaim_m3, tests) ; 4967734 ancêtre ; banque f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e
+- organisme : 16 fichiers, empreinte d'arbre c5ada33581fd7675f2cec5331d9a9a50ff80271b543c22eef80a64882730c1b9 ; question : sha256 d967b212082315c7b4fa1c42ab1b5d551b3bc1d3c4a98cdeb58eccd58b5b9441
+- registre : une ligne GO-2026-10-24-07 de type calcul nommant le pilote ; dépense consignée avant ; reste déclaré 160 USD ≥ 40 (vérification du lanceur)
+- appel de contrôle : appel-controle-factice.txt, sha256 25060ce4efc6d472ac829d4f2e8cc8dfc3273934283ed7b70022dc815bbb505b — présent et non vide ; son statut est vérifié par l'outil de session-depot, non par ce script
+- essais : 113 passés, 0 sautés [], 1 désélectionnés ; arguments : « --deselect tests/test_noyau.py::test_sources_reelles_de_moisson_si_reseau » ; les 19 essais cités ont passé ici
+- noyau sans bytecode : empreinte 68494279ec42fc13366f83cc67c502c67ed6dcf97f0678bb568aaae8010772fb
+- départ de la simulation (UTC) : 2026-10-25T00:42:52Z
+- PID de la course : 15432 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T00:42:54Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 9ab3011c5a675d38e4577025b6b78e361086198309a81bba462a932846750c08
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit a32eea7dd6ae4138590459f7d88f3161fff4f481 ; sha256_code_noyau 68494279ec42fc13366f83cc67c502c67ed6dcf97f0678bb568aaae8010772fb
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 c2ddfdf2185d7bdeb1acf9083e8498bab9971b9b7f9b1f0d1f926b2ff5ed4e00
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 20f84ef8a18417dcd0349e6028af99c7920e70d7fc1dce5a5e5573e97f2d8257
+- réponse à la question : reponse-question-g001.md, sha256 e2dad0abbbff2f3683d2b9c08510b246f82f6eb52fc679c980496ff23a75aa34
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 92cc2ea42e5ea0762f9e9c60826cbdb3c940d5623a0ca692a1336fdf8cf9563b, 1429 entrées = 1429 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T00:42:54Z
