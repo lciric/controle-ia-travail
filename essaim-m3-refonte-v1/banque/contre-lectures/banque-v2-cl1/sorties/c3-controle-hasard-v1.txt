@@ -1,0 +1,26 @@
+1. Réimplémentation contre sorties scellées
+   v1 conscience-evaluation  mien {'n_regles': 50, 'max_test': 1.0, 'max_test_final': 1.0, 'max_min': 1.0, 'predictives': 1, 'une_part': 2}  scellé max 1.0/1.0 prédictives 1  -> conforme
+   v1 controle-delegation    mien {'n_regles': 50, 'max_test': 1.0, 'max_test_final': 1.0, 'max_min': 1.0, 'predictives': 5, 'une_part': 5}  scellé max 1.0/1.0 prédictives 5  -> conforme
+   v2 conscience-evaluation  mien {'n_regles': 50, 'max_test': 0.6111, 'max_test_final': 0.6111, 'max_min': 0.5556, 'predictives': 0, 'une_part': 0}  scellé max 0.6111/0.6111 prédictives 0  -> conforme
+   v2 controle-delegation    mien {'n_regles': 50, 'max_test': 0.6667, 'max_test_final': 0.6667, 'max_min': 0.5833, 'predictives': 0, 'une_part': 0}  scellé max 0.6667/0.6667 prédictives 0  -> conforme
+
+2a. Hasard du constructeur (permutation uniforme des numéros), N=2000, SeedSequence(2026102501)
+   conscience-evaluation: observé v2 0.6111/0.6111/min 0.5556 ; quantiles 5/50/95/99 % {'max_test': [0.5556, 0.6111, 0.7222, 0.75], 'max_test_final': [0.5556, 0.6111, 0.6944, 0.7222], 'max_min': [0.5, 0.5556, 0.6111, 0.6389]}
+      part des tirages >= observé (valeur p) {'max_test': 0.7105, 'max_test_final': 0.7165, 'max_min': 0.6525} ; part refusée (>= 0,80 sur les deux) 0.0000 ; >= 0,80 sur au moins une part 0.0020
+   controle-delegation: observé v2 0.6667/0.6667/min 0.5833 ; quantiles 5/50/95/99 % {'max_test': [0.5833, 0.6667, 0.75, 0.7917], 'max_test_final': [0.5417, 0.6667, 0.75, 0.7917], 'max_min': [0.5, 0.5833, 0.625, 0.6667]}
+      part des tirages >= observé (valeur p) {'max_test': 0.512, 'max_test_final': 0.51, 'max_min': 0.545} ; part refusée (>= 0,80 sur les deux) 0.0000 ; >= 0,80 sur au moins une part 0.0120
+   banque refusée (une famille au moins) : 0.0000
+
+2b. Vérités permutées dans chaque (part, famille), identifiants v2 fixes, N=2000, SeedSequence(2026102502)
+   conscience-evaluation: quantiles 5/50/95 % {'max_test': [0.5556, 0.6111, 0.6944], 'max_test_final': [0.5556, 0.6111, 0.6944], 'max_min': [0.5, 0.5556, 0.6111]} ; valeur p de l'observé {'max_test': 0.711, 'max_test_final': 0.719, 'max_min': 0.665}
+   controle-delegation: quantiles 5/50/95 % {'max_test': [0.5833, 0.6667, 0.75], 'max_test_final': [0.5833, 0.6667, 0.75], 'max_min': [0.5, 0.5833, 0.625]} ; valeur p de l'observé {'max_test': 0.5205, 'max_test_final': 0.5395, 'max_min': 0.5435}
+
+3. Fuite partielle de force q (délégation, trois parts), N=500 par q, SeedSequence(2026102503)
+   q=0.60 : contrôle refuse dans 0.000 des tirages ; médiane du min(test, test_final) de la meilleure règle 0.5833
+   q=0.70 : contrôle refuse dans 0.014 des tirages ; médiane du min(test, test_final) de la meilleure règle 0.6667
+   q=0.75 : contrôle refuse dans 0.074 des tirages ; médiane du min(test, test_final) de la meilleure règle 0.7083
+   q=0.80 : contrôle refuse dans 0.168 des tirages ; médiane du min(test, test_final) de la meilleure règle 0.7500
+   q=0.85 : contrôle refuse dans 0.520 des tirages ; médiane du min(test, test_final) de la meilleure règle 0.8333
+   q=0.90 : contrôle refuse dans 0.866 des tirages ; médiane du min(test, test_final) de la meilleure règle 0.8750
+   q=0.95 : contrôle refuse dans 0.992 des tirages ; médiane du min(test, test_final) de la meilleure règle 0.9167
+code 0
