@@ -134,3 +134,17 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   Décision demandée à Lazar : (a) lancer tel que scellé + réserve au rapport (recommandé, défaut 48 h) ; (b) écart :
   `chmod o-rwx` de la copie pendant la course ; (c) nouveau préenregistrement sur `224de13`.
 - Canal n° 31 (`30fcfbd`) : seconde ligne au même identifiant GO-2026-10-24-07 ; CL5-01 ; vivier.
+
+## 07:16 — Lazar (08:14 Paris, désormais UTC+1) : (a) pour CL5-01 ; question nouvelle pour le collisionneur
+
+- **Heure de Paris passée à UTC+1** dans la nuit (fin de l'heure d'été) : 08:14 Paris = 07:14 UTC ; les heures de Paris
+  antérieures à 03:00 locales de cette nuit étaient en UTC+2.
+- Lazar : « ok » à (a) pour CL5-01 du pilote (lancer tel que scellé, réserve au rapport). Relayé à session-depot (canal
+  n° 32, `84bbf01`), qui avait déjà retenu (a) comme défaut (son n° 32). Pilote toujours en attente du GO et de la clé
+  n° 2, à donner par Lazar dans la session de session-depot.
+- Lazar : « reformule avec une question purement technique et conceptuelle mathématique sans faire réf aux sujets
+  chauds, c'est une nouvelle demande ». Pièce écrite : `question-allocation-budget-classes-parametres-v1.md`
+  (`ea904c53…`) — allocation d'un budget de calcul entre choix de la classe d'hypothèses et ajustement des paramètres
+  (décision séquentielle, biais de sélection, découpage du budget, généralisation à des familles nouvelles, références) ;
+  une autre question, pas une reformulation ; un tour, trois cellules, une tentative par cellule, refus = fin.
+- session-depot (n° 32) : étape 1 « scellable » (contre-lecture n° 7), le scellement n'attend plus que le vivier.
