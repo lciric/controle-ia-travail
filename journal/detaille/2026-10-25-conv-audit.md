@@ -583,3 +583,31 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
   partition au lot 3). Pas de réponse à 19:10.
 - **R12** : la première sortie de la recherche des clés avant poussée imprimait le code de sortie de `sed` au lieu de
   celui du script ; gardée, la v2 est juste.
+
+## 20:59 — Reprise par segments faite (noyau 8e5e2f7b) ; lanceur v6 à 75 USD par course, série v8 218 sur 218 ; texte v3 du pilote 4 poussé, contre-lecture 3 lancée ; deux décisions soumises à Lazar
+
+(Écrit à 20:59 UTC, heure lue sur `date -u`. Correction de l'en-tête de ce fichier : depuis 01:00 UTC le 25 octobre, fin
+de l'heure d'été, l'heure de Paris est UTC + 1, non UTC + 2.)
+
+- **Lazar** (Paris) : 20:14 — rapport de livraison de la v6.1 par Gemini (pièce jointe seule) ; 20:23 — « b) Attendre la
+  reprise par segments » ; « (b) Passer à 75 USD par course (GO à 185 USD) » ; « (a) Au lot 3, grouper la partition par
+  catégorie » ; « donne le prompt à Argon pour v6.2 » (demande v2, `f1551187…`, canal n° 63 ; Lazar l'envoie).
+- **Noyau** `8e5e2f7b` (branche `outils/noyau-reprise-segments-v1`, à partir de `b1c7f4b6`) : `STOP` lu entre deux unités
+  seulement ; état de reprise scellé, jamais réécrit ; `--reprendre` continue à la première unité qui n'a pas tourné
+  (ronde en cours continuée), mêmes graines, même archive, même dépense ; refus sans rien écrire (code 9). 28 essais
+  nouveaux (course en segments identique à la course continue), 169 en tout ; douze mutations volontaires, toutes
+  détectées. Note `notes/reprise-segments-v1/LISEZMOI-v1.md` (`13624795…`). Canal n° 64.
+- **Lanceur du pilote 4** : v5 (segments, 75 USD par course, minuteur à 3 400 s ; borne de 7 060 s par commande de fond),
+  batterie v6, série v7 : 215 sur 218 — un défaut du lanceur (fermeture sans reprise : extrait lancé hors du dépôt) et une
+  erreur de la batterie (sortie d'un autre cas lue) ; d'où le lanceur v6 (`50f9c496…`) et la batterie v7 (`c3263af1…`),
+  série v8 : **218 sur 218** (20:43–20:54 UTC). Canal n° 65.
+- **Texte v3** (`efffb7e4…`, non scellé ; `eee726b` sur `outils/pilote4-gemini-travail`) : traite la contre-lecture 2
+  (neuf mineurs, cinq remarques) ; script de scellement v3 (14 cas sur 14) ; pièces empreintées
+  (`EMPREINTES-pieces-pilote4-v4.txt`, `06552f74…`) ; aucune écriture de clé de banque dans ce qui est poussé.
+  Contre-lecture 3 lancée à 20:58 UTC (sous-agent neuf).
+- **Soumis à Lazar** (vers 20:54 UTC) : objet de la seconde course (recommandé : la v5.3 seule maintenant, la v6.x plus
+  tard sous un texte à part ; pas de défaut, c'est une dépense) ; lecture des scores si la confrontation change un seuil
+  (recommandé : scores fermés sauf décision de Lazar inscrite avant toute lecture ; défaut sous 48 heures) ; réserve : la
+  condition de lecture du pilote 3 (« sa v9 ») ne se remplira pas, décision de Lazar à venir.
+- **Session-depot** : dernier message n° 51 (16:36 UTC), `main` à `9ed7b5f` ; rien de lancé depuis. Gemini : aucune
+  branche `canal/gemini-organisme-v6-2` à 20:58 UTC.
