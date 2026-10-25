@@ -78,10 +78,14 @@ def decomposer_jacobi_symetrique(matrice: list, dim: int, max_iter: int = 120) -
     return u_tri, sigma
 
 
+MOTS_CLES_EVAL_FAMILLE = ("conscience", "evaluation", "usage-reel", "benchmark", "laboratoire")
+MOTS_CLES_CTRL_FAMILLE = ("delegation", "delegue", "sabotage", "honnete", "anomalie")
+
+
 def _detecter_confirmation_multi_familles(texte: str) -> bool:
     t = str(texte or "").lower()
-    a_eval = any(w in t for w in ("conscience", "evaluation", "usage-reel", "benchmark", "laboratoire"))
-    a_ctrl = any(w in t for w in ("delegation", "delegue", "sabotage", "honnete", "anomalie"))
+    a_eval = any(w in t for w in MOTS_CLES_EVAL_FAMILLE)
+    a_ctrl = any(w in t for w in MOTS_CLES_CTRL_FAMILLE)
     return bool(a_eval and a_ctrl)
 
 

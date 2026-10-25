@@ -101,8 +101,8 @@ Lorsque `contexte.get("question_ouverte")` est une chaîne de caractères non vi
    - Les résumés de notices sont gardés jusqu'à 1 100 caractères (jusqu'à 12 notices dans le bloc prompt).
    - Chaque document téléchargé fournit jusqu'à 2 400 caractères combinant l'introduction et les sections analytiques/conclusives denses ; si  ronque=True et  ichier_texte est présent, le texte complet est lu depuis  ichier_texte.
    - Au démarrage d'une génération, _charger_corpus_archive lit également les documents des générations passées sous  ravail/corpus/ dans dossier_archive.
-3. **Séparation de egles_induites et du corpus moissonné à g0** :
-   - Le corpus moissonné à g0 est injecté dans l'induction sur  aches_entrainement et transmis aux tâches de test via un champ dédié extrait_moisson[:650], afin qu'il ne soit jamais tronqué derrière egles_induites.
+3. **Séparation de  egles_induites et du corpus moissonné à g0** :
+   - Le corpus moissonné à g0 est injecté dans l'induction sur  aches_entrainement et transmis aux tâches de test via un champ dédié extrait_moisson[:650], afin qu'il ne soit jamais tronqué derrière  egles_induites.
 
 ---
 
@@ -147,3 +147,9 @@ Conformément à `DEMANDE-v5-3-emprunts-v1.md`, la v5.3 est déclarée « conçu
 3. **Liste blanche AST sans boucles ni récursion et propreté stricte sur grille fine (pas 0.005)** :
    - `verifier_et_valider_code_politique` n'autorise qu'une liste blanche de nœuds AST arithmétiques/conditionnels (`NOEUDS_AUTORISES_BLANCS`, sans `While`, `For`, `Lambda`, `Try` ni compréhension) et interdit tout appel récursif ou inter-fonction, garantissant une terminaison en `O(1)` opérations ;
    - `verifier_proprete_stricte_recompense` ancre le niveau et l'échelle (`R` dans `[0.98, 1.005]` aux bords vrais, `R(y, 0.5)` dans `[0.68, 0.82]`) et vérifie sur 199 points (`q` de `0.005` à `0.995`) que l'optimum empirique `q*(p)` vérifie `|q*(p) - p| <= 0.01`.
+
+### 2.13. Précisions et garanties v6.2 (levée des 13 points de la vérification v6.1)
+1. **Flux sans traits (`traits["disponibles"]` faux)** : la suite des appels au noyau (`appeler`, `budget`, `especes`, `rechercher`, `telecharger`), les consignes de la première génération et `reponses_test.json` sont identiques à la v5.2.1, tandis que `memoire_isvd.json` et `metrique_proposee.json` intègrent les structures v5.3/v6.2 (`journal_ablations`, `archive_genealogique`, `multi_familles` et récompense propre de Bregman-Tsallis).
+2. **Validation hors pli des sondes (`exactitudes_validation`)** : dès qu'une famille compte au moins 4 tâches d'entraînement hors vivier, `_entrainer_et_predire_sondes_traits` (qui accepte `erreurs`) réserve un pli de validation stratifié (25 %, au moins 2 tâches) tenu à l'écart de `entrainer`, calcule `exactitudes_validation` via `predire`, et exige `acc_sonde >= seuil_exactitude_sonde` (`0.65`) et `marge_sonde >= 0.10` pour voter.
+3. **Déclencheur d'arbitrage non redondant** : lorsqu'une sonde est active, `besoin_arbitrage` vaut `(not accord_sonde_c1) and ((conf_c1 < seuil_c1) or sonde_incertaine_ou_discorde)` sans `len(castes) > 1`.
+4. **Condition du 1er ordre de Savage sur `[0.01, 0.99]`, ancrages exacts anti-affines et coût AST borné sans thread ni second `exec()`** : `verifier_proprete_stricte_recompense` vérifie `|g'(p)| <= 1.5e-4` et `g''(p) <= -0.05` sur 99 points `p` de `0.01` à `0.99` et ancre `R` à `1.0 +- 5e-4` aux bords et `0.75 +- 5e-4` en `0.5` ; `_propager_successeur` valide l'assemblage par `ast.parse` sans second `exec()`.
