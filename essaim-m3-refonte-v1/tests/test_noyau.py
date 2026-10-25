@@ -1594,7 +1594,7 @@ def test_moisson_de_bout_en_bout_en_simulation(tmp_path):
 
 
 def test_r410_cles_openalex_et_s2_en_entete_jamais_dans_l_adresse(monkeypatch, tmp_path):
-    """R-410 : les clés OpenAlex (`OPENALEX_API_KEY`) et Semantic Scholar (`S2_API_KEY`) sont lues par le noyau seul et
+    """R-410 : les clés OpenAlex (`OPENALEX_API_KEY`) et Semantic Scholar (`SEMANTIC_SCHOLAR_API_KEY`) sont lues par le noyau seul et
     envoyées en en-tête (`Authorization: Bearer`, `x-api-key`), jamais dans l'adresse ; sans clé, aucune en-tête de clé
     (requête anonyme, comportement inchangé) ; la pièce brute journalisée est la réponse, jamais la requête. Artefacts :
     clé absente ; clé présente."""
@@ -1609,13 +1609,13 @@ def test_r410_cles_openalex_et_s2_en_entete_jamais_dans_l_adresse(monkeypatch, t
         return (json.dumps({"data": [{"paperId": "P1", "title": "T", "authors": [], "year": 2025}]}).encode(), "application/json", url)
     monkeypatch.setattr(moisson, "_lire_https", faux_lire)
     monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
-    monkeypatch.delenv("S2_API_KEY", raising=False)
+    monkeypatch.delenv("SEMANTIC_SCHOLAR_API_KEY", raising=False)
     moisson.openalex_rechercher("evaluation awareness", 2)
     moisson.semanticscholar_rechercher("evaluation awareness", 2)
     assert "Authorization" not in vus[0][1] and "x-api-key" not in vus[1][1]
     assert "api_key" not in vus[0][0] and "MARQUEUR" not in vus[0][0] + vus[1][0]
     monkeypatch.setenv("OPENALEX_API_KEY", "MARQUEUR-CLE-OPENALEX-R410")
-    monkeypatch.setenv("S2_API_KEY", "MARQUEUR-CLE-S2-R410")
+    monkeypatch.setenv("SEMANTIC_SCHOLAR_API_KEY", "MARQUEUR-CLE-S2-R410")
     notices_oa, brut_oa = moisson.openalex_rechercher("evaluation awareness", 2)
     notices_s2, brut_s2 = moisson.semanticscholar_rechercher("evaluation awareness", 2)
     assert vus[2][1] == {"Authorization": "Bearer MARQUEUR-CLE-OPENALEX-R410"} and vus[3][1] == {"x-api-key": "MARQUEUR-CLE-S2-R410"}

@@ -105,11 +105,11 @@ def openalex_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
 
 
 def semanticscholar_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
-    """R-410 : clé Semantic Scholar lue par le noyau seul (`S2_API_KEY`, en-tête `x-api-key`, jamais journalisée) ;
+    """R-410 : clé Semantic Scholar lue par le noyau seul (`SEMANTIC_SCHOLAR_API_KEY`, en-tête `x-api-key`, jamais journalisée) ;
     sans clé, requête anonyme (réserve commune des utilisateurs sans clé)."""
     url = "https://api.semanticscholar.org/graph/v1/paper/search?" + urllib.parse.urlencode(
         {"query": requete, "limit": int(n), "fields": "title,authors,year,abstract,openAccessPdf,externalIds,url,publicationDate"})
-    cle = os.environ.get("S2_API_KEY")
+    cle = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")
     entetes = {"x-api-key": cle} if cle else None
     brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, entetes=entetes, hotes_permis={"api.semanticscholar.org"})
     d = json.loads(brut.decode("utf-8"))
