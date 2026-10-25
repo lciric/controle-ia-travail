@@ -527,3 +527,32 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
   entropie 14234892761277461467225772596104759309 ; mêmes tâches, parts et ordre, identifiants `t-0001`… tirés par
   graine ; contrôle « aucune règle sur l'identifiant ne prédit la vérité » : v1 refusée, v2 acceptée, référence de
   surface identique ; `LISEZMOI-v4.md`. Contre-lecture par un sous-agent neuf en cours.
+
+## 16:46 — Banque v2 relue (trois majeurs) et remplacée par une v3 ; décisions de Lazar (6 rondes, paires, lot 3) ; pilote 3 fini ; disque plein
+
+(Écrit à 16:46 UTC, heure lue sur `date -u`.)
+
+- **Contre-lecture de la banque v2** (sous-agent neuf ; `CONTRE-LECTURE-banque-v2-v1.md`, `5ee8df41…`) : « utilisable après
+  corrections ». Majeurs : BC1-01 — l'entropie de la v2 était publiée (manifeste, LISEZMOI-v4, essais) et l'ordre de la
+  v1, rangé par vérité, gardé : avec elle, l'identifiant rend toutes les vérités (erreur de conv-audit) ; BC1-02 — les deux
+  traces d'une paire, servies ensemble, se contrastent (« la plus courte est sabotée » : 1,0 sur test, 0,75 sur test
+  final) ; BC1-03 — le contrôle des identifiants n'était pas calibré et laissait passer une fuite sur le seul test final
+  (erreur de conv-audit). La v2 n'est jamais servie.
+- **Banque v3** (branche `outils/banque-confrontation-v2-travail`, `8856100`, puis `728f27d` avec la contre-lecture) :
+  `banque-confrontation-v3.json` `157a2b45…` ; clé dans le seul fichier secret `…-v3-cle.json` (le manifeste n'en garde que
+  l'empreinte) ; parts triées par identifiant ; contrôle v2 (refus à une case, seuils calibrés sur 2 000 tirages, règles
+  dans la part, mode clé) : v3 acceptée, 8 cas sur 8 ; référence de surface identique ; référence « contraste de paire »
+  (1,0 et 0,8333). `LISEZMOI-v5.md`. Contre-lecture de la v3 par un sous-agent neuf en cours.
+- **Lazar** (heure de Paris) : 17:15 — 6 rondes de conception pour le pilote 4, puis la reprise par segments pour les
+  courses suivantes : « go » ; 17:43 — (a) les paires gardées pour le pilote 4, (b) une trace par paire en test pour
+  l'étape 1 et la confrontation : « ok mais on met c dans le programme » (lot 3 sans paires, autre famille de modèles).
+  Note N-046 rédigée (canal, `envois/decision-N-046-lot3-traces-sans-paires-v1.md`, `7fa0f544…`), à inscrire par
+  session-depot sur le mot de Lazar.
+- **Pilote 3 fini** : v5.3 (15,12 USD) puis v6 (15,11 USD, 16:35 UTC), session-depot n'ayant appliqué ni le n° 55 ni le
+  n° 57 (retenue de la v6) ; le n° 58 (STOP) est arrivé trop tard. Scores fermés jusqu'au scellement du texte du pilote 4.
+- **Pilote 4** : lanceur dérivé (`deriver_lanceur_pilote4_v1.py`, 25 remplacements) ; batterie confiée à une fourche
+  (branche `outils/pilote4-gemini-travail`) ; brouillon du texte écrit (banque v3, 4 générations, 6 rondes, référence de
+  paire, sondage du test par l'historique dit).
+- **Incident** : disque de la session plein vers 16:35 UTC ; un brouillon tronqué (rétabli) ; 12 Go libérés en retirant
+  15 arbres de travail anciens et propres et des copies d'essais déjà poussées (dont les extraits de l'audit, refaisables
+  depuis les archives fermées).
