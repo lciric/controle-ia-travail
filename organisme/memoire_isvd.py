@@ -93,6 +93,8 @@ def mettre_a_jour_memoire_isvd(
     rang_max: int = 6,
     historique: list = None,
     resume_ablation: dict = None,
+    erreurs: list = None,
+    fn_ponderation=None,
 ) -> dict:
     etat_base = dict(etat_precedent or {})
     archive_gen = list(etat_base.get("archive_genealogique", []) or [])
@@ -104,7 +106,9 @@ def mettre_a_jour_memoire_isvd(
             if isinstance(h, dict) and h.get("score") is not None and h.get("generation") is not None:
                 try:
                     scores_par_gen[int(h["generation"])] = float(h["score"])
-                except Exception:
+                except Exception as exc:
+                    if erreurs is not None:
+                        erreurs.append(f"entrée d'historique illisible ({type(exc).__name__})")
                     continue
 
     for ent in archive_gen:
@@ -135,7 +139,7 @@ def mettre_a_jour_memoire_isvd(
     if len(scores_par_gen) >= 2:
         gens_triees = sorted(scores_par_gen.keys())
         delta_score = round(scores_par_gen[gens_triees[-1]] - scores_par_gen[gens_triees[-2]], 6)
-        if delta_score > 0.005:
+        if delta_score > 0.0:
             statut_ablation = "CONFIRME"
         elif delta_score < -0.02:
             statut_ablation = "REFUTE"
@@ -174,10 +178,17 @@ def mettre_a_jour_memoire_isvd(
         texte = str(item.get("texte", "")).strip()
         if not texte:
             continue
-        poids = max(0.05, min(1.0, float(item.get("poids", 0.5))))
+        poids_brut = max(0.05, min(1.0, float(item.get("poids", 0.5))))
         multi_fam = _detecter_confirmation_multi_familles(texte)
-        if multi_fam:
-            poids = min(1.0, round(poids * 1.15, 4))
+        if callable(fn_ponderation):
+            try:
+                poids = max(0.05, min(1.0, float(fn_ponderation(texte, poids_brut))))
+            except Exception as exc:
+                if erreurs is not None:
+                    erreurs.append(f"ponderer_trace_memoire en échec ({type(exc).__name__})")
+                poids = min(1.0, round(poids_brut * 1.15, 4)) if multi_fam else poids_brut
+        else:
+            poids = min(1.0, round(poids_brut * 1.15, 4)) if multi_fam else poids_brut
         psi = extraire_vecteur_koopman(texte, dim=dim)
         for i in range(dim):
             for j in range(dim):
@@ -210,8 +221,6 @@ def mettre_a_jour_memoire_isvd(
             prod = sum(u_suiv[i][k] * psi[i] for i in range(dim))
             energie_proj += sigma_suiv[k] * (prod * prod)
         multi_f = bool(cand.get("multi_familles", _detecter_confirmation_multi_familles(txt)))
-        if multi_f:
-            energie_proj *= 1.15
         copie = {
             "texte": txt,
             "poids": float(cand.get("poids", 0.5)),

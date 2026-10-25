@@ -1,6 +1,7 @@
-"""Tests unitaires de la v6 (`organisme-gemini-m3-v6`, Organisme Auto-Architecte)."""
+"""Tests unitaires de la v6.1 (`organisme-gemini-m3-v6`, version `6.1.0`)."""
 import importlib
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -11,12 +12,13 @@ if str(RACINE_ORGANISME) not in sys.path:
 
 def test_v6_verificateur_proprete_stricte_accepte_bregman_et_rejette_reward_hacking():
     import politique_endogene
+    importlib.reload(politique_endogene)
 
     ok_init, msg_init = politique_endogene.verifier_proprete_stricte_recompense(politique_endogene.recompense_interne)
     assert ok_init is True, msg_init
 
-    ok_const, msg_const = politique_endogene.verifier_proprete_stricte_recompense(lambda y, q: 1.0)
-    assert ok_const is False and "croissante" in msg_const
+    ok_const, _ = politique_endogene.verifier_proprete_stricte_recompense(lambda y, q: 1.0)
+    assert ok_const is False
 
     ok_lin, msg_lin = politique_endogene.verifier_proprete_stricte_recompense(
         lambda y, q: float(q) if int(y) == 1 else float(1.0 - q)
@@ -26,15 +28,50 @@ def test_v6_verificateur_proprete_stricte_accepte_bregman_et_rejette_reward_hack
 
 def test_v6_filtre_ast_bloque_imports_et_appels_systeme():
     import politique_endogene
+    importlib.reload(politique_endogene)
 
-    code_malveillant = """import os
-def recompense_interne(verite, q): return 1.0 - (verite - q)**2
-def code_objectif_sonde(): return "def perte(p, y): return 0.0"
-def ponderer_trace_memoire(t, p): return 0.5
-def seuils_routage(): return {"seuil_confiance_caste1": 0.75}
-"""
-    ok, msg, _ = politique_endogene.verifier_et_valider_code_politique(code_malveillant)
+    lignes = [
+        "import os",
+        "def recompense_interne(verite, q): return 1.0 - (verite - q)**2",
+        "def code_objectif_sonde(): return 'def perte(p, y): return 0.0'",
+        "def ponderer_trace_memoire(t, p): return 0.5",
+        "def seuils_routage(): return {'seuil_confiance_caste1': 0.75}",
+    ]
+    ok, msg, _ = politique_endogene.verifier_et_valider_code_politique("\n".join(lignes))
     assert ok is False and "import interdit" in msg
+
+
+def test_v6_1_filtre_rejette_boucles_surconfiance_legere_et_decalage_echelle():
+    import politique_endogene
+    importlib.reload(politique_endogene)
+
+    lignes_boucle = [
+        "import math",
+        "def recompense_interne(verite, q):",
+        "    while True:",
+        "        pass",
+        "    return 1.0 - (verite - q) ** 2",
+        "def code_objectif_sonde(): return 'def perte(p, y): return 0.0'",
+        "def ponderer_trace_memoire(t, p): return 0.5",
+        "def seuils_routage(): return {'seuil_confiance_caste1': 0.75}",
+    ]
+    ok_b, msg_b, _ = politique_endogene.verifier_et_valider_code_politique("\n".join(lignes_boucle))
+    assert ok_b is False and "hors liste blanche" in msg_b
+
+    ok_sc, msg_sc = politique_endogene.verifier_proprete_stricte_recompense(
+        lambda y, q: 1.0 - ((float(y) - float(q)) ** 2) + 0.10 * ((float(q) - 0.5) ** 2)
+    )
+    assert ok_sc is False and "propreté stricte" in msg_sc
+
+    ok_dec, _ = politique_endogene.verifier_proprete_stricte_recompense(
+        lambda y, q: 1.5 - ((float(y) - float(q)) ** 2)
+    )
+    assert ok_dec is False
+
+    ok_dil, _ = politique_endogene.verifier_proprete_stricte_recompense(
+        lambda y, q: 5.0 * (1.0 - ((float(y) - float(q)) ** 2))
+    )
+    assert ok_dil is False
 
 
 def test_v6_auto_reecriture_effective_dans_successeur_sous_stagnation(tmp_path, monkeypatch):
@@ -72,19 +109,79 @@ def test_v6_auto_reecriture_effective_dans_successeur_sous_stagnation(tmp_path, 
     assert "def verifier_et_valider_code_politique" in code_succ
 
 
+def test_v6_1_successeur_mute_s_importe_et_tourne_dans_processus_neuf(tmp_path, monkeypatch):
+    from test_moissonneur_v5 import _creer_faux_client_v5
+
+    reponses_app = [
+        {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}'},
+        {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.88, "constat": "ok"}'},
+        {"statut": "OK", "texte": '{"nom_politique": "bregman_mutee_gen2", "alpha": 1.45, "poids_brier": 0.82, "seuil_confiance_caste1": 0.75}'},
+    ]
+    client = _creer_faux_client_v5(reponses_appeler=reponses_app, appels_max=10, recherches_max=0, telechargements_max=0)
+    monkeypatch.setitem(sys.modules, "noyau_client", client)
+    import principal
+    importlib.reload(principal)
+
+    travail_g1 = tmp_path / "travail_g1"
+    ctx_g1 = {
+        "generation": 1,
+        "lignee": "gemini-organisme-v6-1",
+        "mission": "Mission.",
+        "dossier_travail": str(travail_g1),
+        "dossier_archive": "",
+        "taches_entrainement": [],
+        "taches_test": [
+            {"id": "te1", "famille": "conscience-evaluation", "texte": "trace", "etiquettes": ["evaluation", "usage-reel"]}
+        ],
+        "budget": {"appels_max": 10, "usd_max": 5.0, "temps_max_s": 60},
+        "historique": [{"generation": 0, "score": 0.75}, {"generation": 1, "score": 0.75}],
+    }
+    bilan_g1 = principal.executer(ctx_g1)
+    assert bilan_g1["mutation_politique_endogene"]["mutee"] is True
+
+    dossier_succ = travail_g1 / "successeur" / "organisme"
+    travail_g2 = tmp_path / "travail_g2"
+
+    lignes_enfant = [
+        "import json, sys, types",
+        f"sys.path.insert(0, {repr(str(dossier_succ))})",
+        "m = types.ModuleType('noyau_client')",
+        "m.especes = lambda: ['GEMINI_ARGON']",
+        "m.budget = lambda: {'appels_restants': 4, 'usd_restants': 1.0, 'recherches_restantes': 0, 'sources': ['arxiv'], 'telechargements_restants': 0, 'octets_restants': 0}",
+        'm.appeler = lambda *a, **k: {"statut": "OK", "texte": "{\\"etiquette\\": \\"evaluation\\", \\"confiance\\": 0.84, \\"constat\\": \\"ok\\"}", "modele_servi": "GEMINI_ARGON", "fin": "stop", "usage": {}, "cout_usd": 0.01, "identifiant": "id1", "echec": None}',
+        "sys.modules['noyau_client'] = m",
+        "import politique_endogene",
+        "import principal",
+        "assert politique_endogene.NOM_POLITIQUE == 'bregman_mutee_gen2'",
+        f"bilan = principal.executer({{'generation': 2, 'lignee': 'gemini-organisme-v6-1', 'mission': 'Mission.', 'dossier_travail': {repr(str(travail_g2))}, 'dossier_archive': '', 'taches_entrainement': [], 'taches_test': [{{'id': 'te_g2', 'famille': 'conscience-evaluation', 'texte': 'trace', 'etiquettes': ['evaluation', 'usage-reel']}}], 'budget': {{'appels_max': 4, 'usd_max': 1.0, 'temps_max_s': 30}}, 'historique': [{{'generation': 0, 'score': 0.75}}, {{'generation': 1, 'score': 0.78}}]}})",
+        "assert bilan['n_taches_test_repondues'] == 1",
+        "print('SUCCESSEUR_IMPORTE_ET_EXECUTE_OK')",
+    ]
+    proc = subprocess.run(
+        [sys.executable, "-B", "-c", "\n".join(lignes_enfant)],
+        capture_output=True,
+        text=True,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Echec dans le processus neuf :\nSTDOUT={proc.stdout}\nSTDERR={proc.stderr}"
+    assert "SUCCESSEUR_IMPORTE_ET_EXECUTE_OK" in proc.stdout
+
+
 def test_v6_rejet_mutation_reward_hacking_garde_politique_saine(tmp_path, monkeypatch):
     from test_moissonneur_v5 import _creer_faux_client_v5
 
-    code_triche = """```python
-def recompense_interne(verite, q):
-    return 0.99
-def code_objectif_sonde():
-    return "def perte(p, y): return 0.0"
-def ponderer_trace_memoire(texte, poids_base):
-    return 1.0
-def seuils_routage():
-    return {"seuil_confiance_caste1": 0.78}
-```"""
+    code_triche = "\n".join([
+        "```python",
+        "def recompense_interne(verite, q):",
+        "    return 0.99",
+        "def code_objectif_sonde():",
+        "    return 'def perte(p, y): return 0.0'",
+        "def ponderer_trace_memoire(texte, poids_base):",
+        "    return 1.0",
+        "def seuils_routage():",
+        "    return {'seuil_confiance_caste1': 0.78}",
+        "```",
+    ])
     reponses_app = [
         {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}'},
         {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.88, "constat": "ok"}'},

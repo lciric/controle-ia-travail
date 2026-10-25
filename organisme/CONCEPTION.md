@@ -94,15 +94,15 @@ Lorsque `contexte.get("question_ouverte")` est une chaîne de caractères non vi
 
 
 ### 2.10. Calibrage de la moisson documentaire sur les services réels du noyau (v5.2)
-1. **Couverture complète des 4 sources (rxiv, openalex, semanticscholar, web), 6 recherches, 10 notices et 3 téléchargements** :
+1. **Couverture complète des 4 sources ( rxiv, openalex, semanticscholar, web), 6 recherches, 10 notices et 3 téléchargements** :
    - RESULTATS_MAX_PAR_RECHERCHE est porté à 10, RECHERCHES_MAX_PAR_MOISSON à 6, et TELECHARGEMENTS_MAX_PAR_MOISSON à 3.
-   - À g0 comme à g1, le catalogue de 6 requêtes scientifiques garantit que le tour de rôle sur udget()["sources"] atteint les 4 sources (y compris web).
-2. **Densité des extraits servis aux castes (_extraire_passages_denses_document), lecture de ichier_texte et de 	ravail/corpus/** :
+   - À g0 comme à g1, le catalogue de 6 requêtes scientifiques garantit que le tour de rôle sur  udget()["sources"] atteint les 4 sources (y compris web).
+2. **Densité des extraits servis aux castes (_extraire_passages_denses_document), lecture de  ichier_texte et de  ravail/corpus/** :
    - Les résumés de notices sont gardés jusqu'à 1 100 caractères (jusqu'à 12 notices dans le bloc prompt).
-   - Chaque document téléchargé fournit jusqu'à 2 400 caractères combinant l'introduction et les sections analytiques/conclusives denses ; si 	ronque=True et ichier_texte est présent, le texte complet est lu depuis ichier_texte.
-   - Au démarrage d'une génération, _charger_corpus_archive lit également les documents des générations passées sous 	ravail/corpus/ dans dossier_archive.
+   - Chaque document téléchargé fournit jusqu'à 2 400 caractères combinant l'introduction et les sections analytiques/conclusives denses ; si  ronque=True et  ichier_texte est présent, le texte complet est lu depuis  ichier_texte.
+   - Au démarrage d'une génération, _charger_corpus_archive lit également les documents des générations passées sous  ravail/corpus/ dans dossier_archive.
 3. **Séparation de egles_induites et du corpus moissonné à g0** :
-   - Le corpus moissonné à g0 est injecté dans l'induction sur 	aches_entrainement et transmis aux tâches de test via un champ dédié extrait_moisson[:650], afin qu'il ne soit jamais tronqué derrière egles_induites.
+   - Le corpus moissonné à g0 est injecté dans l'induction sur  aches_entrainement et transmis aux tâches de test via un champ dédié extrait_moisson[:650], afin qu'il ne soit jamais tronqué derrière egles_induites.
 
 ---
 
@@ -136,3 +136,14 @@ Conformément à `DEMANDE-v5-3-emprunts-v1.md`, la v5.3 est déclarée « conçu
 - **Familles « coffre » (*Holdout Vault*, Cellule A § b.E2)** : tenue à l'écart d'une famille dont le score n'est jamais rendu dans `historique` avant la dernière génération, afin de mesurer le surapprentissage adaptatif sur l'historique des scores.
 - **Triches plantées (*Planted Sabotage*, Cellule A § b.E6 & c.I5)** : injection par le noyau de traces ou diffs contenant des triches connues à vérité terrain pour mesurer le TPR/FPR de la détection de triche sur l'évaluation.
 - **Persistance inter-générationnelle optionnelle des identifiants `LOCAL:…` (Cellule C § b.3)** : possibilité optionnelle de réutiliser ou d'affiner à la génération $g+1$ une sonde `LOCAL:…` apprise à la génération $g$.
+
+### 2.12. Organisme Auto-Architecte v6.1 (`politique_endogene.py` et levée de V6-01 et des réserves § 3 / § 8)
+1. **Correction de V6-01 (importabilité garantie du successeur muté)** : le bloc vérificateur situé après le marqueur `# ====` dans `politique_endogene.py` déclare ses propres `import ast`, `import math` et `import threading` au niveau module, et `_propager_successeur` compile et exécute l'intégralité du fichier assemblé avant de l'écrire dans `successeur/organisme/politique_endogene.py`.
+2. **Branchement effectif des 4 fonctions réécrites** :
+   - `recompense_interne(verite, q)` : combinaison convexe strictement propre et normalisée dans `[0, 1]` du score de Brier et de la divergence de Bregman-Tsallis d'exposant `EXPOSANT_ALPHA` (vérifiant `R(1, 1)=R(0, 0)=1` et `R(y, 0.5)=0.75`) ;
+   - `code_objectif_sonde()` : appelée par `_entrainer_et_predire_sondes_traits` pour fournir le code `def perte(p, y)` à `noyau_client.entrainer` ;
+   - `ponderer_trace_memoire(texte, poids_base)` : appelée par `mettre_a_jour_memoire_isvd` (une seule fois, sur le poids initial) ;
+   - `seuils_routage()` : appelée par `_traiter_tache` pour paramétrer les seuils du routage Faible-vers-Fort.
+3. **Liste blanche AST sans boucles ni récursion et propreté stricte sur grille fine (pas 0.005)** :
+   - `verifier_et_valider_code_politique` n'autorise qu'une liste blanche de nœuds AST arithmétiques/conditionnels (`NOEUDS_AUTORISES_BLANCS`, sans `While`, `For`, `Lambda`, `Try` ni compréhension) et interdit tout appel récursif ou inter-fonction, garantissant une terminaison en `O(1)` opérations ;
+   - `verifier_proprete_stricte_recompense` ancre le niveau et l'échelle (`R` dans `[0.98, 1.005]` aux bords vrais, `R(y, 0.5)` dans `[0.68, 0.82]`) et vérifie sur 199 points (`q` de `0.005` à `0.995`) que l'optimum empirique `q*(p)` vérifie `|q*(p) - p| <= 0.01`.
