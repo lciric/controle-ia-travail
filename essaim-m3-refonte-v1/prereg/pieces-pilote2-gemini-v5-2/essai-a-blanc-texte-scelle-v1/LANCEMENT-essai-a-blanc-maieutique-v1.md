@@ -1,0 +1,32 @@
+# Lancement du pilote pilote2-gemini-v5-2-1-maieutique-v1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-25T13:32:10Z ; hôte : vm ; utilisateur : 0
+- course : maieutique ; dossier du pilote : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2-v52/essai-blanc-v1/racine/pilote2-gemini-v5-2-1-maieutique-v1 (0700, à root)
+- dépôt : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2-v52/depot ; HEAD : a8ad2462f8ce9fa215dcbc0b2e26f282eb39097d (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote2_gemini_v5_2_v5.sh, sha256 83f8b9cf8f3062dfc5e2c02094c602a2d582adf0cbcef292d5bdccd8f8d61b1b
+- source des registres : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2-v52/essais-v5/entrees/go-sain.md ; dépenses : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2-v52/essais-v5/entrees/dep-sain.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- code : identique à b1c7f4b6 (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- versions : python 3.13.17 ; numpy 2.4.6 ; anthropic absente
+- isolation : dossier du pilote 0700 à root ; espace attendu /var/lib/essaim-m3/3938c41b08d5eca0 ; dépôt /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2-v52/depot caché aux organismes (vérifié par bac_a_sable.dossiers_a_cacher) ; ESSAIM_M3_ESPACE non définie
+- préenregistrement : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2-v52/depot/essaim-m3-refonte-v1/prereg/pilote2-gemini-organisme-v5-2-v2.md, sha256 d294465429094e5099cb5facdad95e2b806aa8953640b57bcab99998396c066b (compagnon conforme), graine 3970427751169333427 de la course maieutique écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée
+- organisme : 21 fichiers, empreinte d'arbre fec005c6626b3d1aa960702e4322b44ade3b902157dd84eae8e658b70e4f43f4 ; question (maieutique) : sha256 8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+- registre : une ligne GO-2026-10-25-01 de type calcul portant l'empreinte de la question (maieutique) et celle de l'organisme (fec005c6…) ; dépense consignée avant ; reste déclaré 120 USD ≥ 60 (vérification du lanceur)
+- test de dépense : td-blanc.json, sha256 78b5c11e523488ba187c96f707627df2991b17c7d0935ed830a86d83536465bc — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.0005, CLAUDE_OPUS_5_5 0.0005, GEMINI_ARGON 0.0005 USD, âge 1 s ; noms des variables du test : anthropic RR_ANTHROPIC_API_KEY_3, gemini GEMINI_API_KEY_2 (réalité des appels attestée par l'outil de session-depot ; le script vérifie la pièce)
+- recharge automatique attestée : « recharge automatique active sur tous les modèles API, attesté le 25 octobre 2026 à 09:58 Paris »
+- essais : 141 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 29 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 (la fonction écarte le bytecode depuis le constat n° 30 § 5)
+- test de dépense revérifié au départ : trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.0005, CLAUDE_OPUS_5_5 0.0005, GEMINI_ARGON 0.0005 USD, âge 175 s ; noms des variables du test : anthropic RR_ANTHROPIC_API_KEY_3, gemini GEMINI_API_KEY_2
+- voisines au départ : aucune
+- environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER .
+- marqueur de départ : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2-v52/essai-blanc-v1/racine/.partis/pilote2-gemini-v5-2-1-maieutique-v1 (R3 ; jamais retiré)
+- départ de la simulation (UTC) : 2026-10-25T13:35:05Z
+- PID de la course : 4021 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T13:35:09Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 fab3cb6f91ef9eb14df5d2bcd9904a47ab2fd95f85ae49e726826b64a65ff910
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit a8ad2462f8ce9fa215dcbc0b2e26f282eb39097d ; sha256_code_noyau 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 ; espace /var/lib/essaim-m3/3938c41b08d5eca0 ; sources de moisson ["simulation"] ; clés présentes au manifeste — web : False, OpenAlex : False, Semantic Scholar : False ; dépense du noyau 2.9344 USD (à rapprocher de la console, P2C1-05)
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 f68845180106cccf125bb59a5001246ec161d961f8d726e3926d1e6be739c41d
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 f9772fb9171787b3769a591f21587a1c304accd34786a3385ede55d1920dd61f
+- réponse à la question : reponse-question-g001.md, sha256 f2ca894d6a798377735c7ee704aeb586eeba2aeb8ab4ba8c8e54c4e7f23c27a6
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 e2056a9c16ad6b358caf2047359beb62bd82377070e1923ffa92a64a9df45dd1, 1615 entrées = 1615 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T13:35:09Z
