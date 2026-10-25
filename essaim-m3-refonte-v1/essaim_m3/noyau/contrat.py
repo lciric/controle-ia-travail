@@ -19,7 +19,7 @@ FICHIERS_MAX = 200
 MOTIF_FICHIER = re.compile(r"<<<FICHIER (organisme/[A-Za-z0-9_./-]+)>>>\n(.*?)\n<<<FIN FICHIER>>>", re.S)
 
 CONTRAT = """\
-CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies par le noyau, relance sur successeur invalide — décisions de Lazar du 24 octobre 2026, 17:47 et 20:32 ; phase de conception à critère d'arrêt conçu par l'organisme — 20:37 et 20:42 ; apprentissage par gradient servi par le noyau — sondes sur traits, étape 1 du programme « gradient conçu par l'essaim », 18:23 ; § 7 question ouverte — 23:58 et 25 octobre 00:05, 00:55)
+CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies par le noyau, relance sur successeur invalide — décisions de Lazar du 24 octobre 2026, 17:47 et 20:32 ; phase de conception à critère d'arrêt conçu par l'organisme — 20:37 et 20:42 ; apprentissage par gradient servi par le noyau — sondes sur traits, étape 1 du programme « gradient conçu par l'essaim », 18:23 ; § 7 question ouverte — 23:58 et 25 octobre 00:05, 00:55 ; § 3 réflexion comprise dans `max_tokens` — 25 octobre, 09:26)
 
 1. Forme. L'organisme est un dossier `organisme/` de fichiers texte (Python, Markdown, JSON…), au plus 200 fichiers
    et 2 Mo, avec un fichier `organisme/manifeste.json` : {"nom": "…", "version": "…", "entree": "module:fonction",
@@ -65,6 +65,12 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies 
      élevé réduit donc le nombre d'appels parallèles possibles sous le plafond. Quand `budget["max_tokens_appel"]`
      n'est pas null, le noyau rabat tout `max_tokens` demandé au-delà de ce plafond (la réponse rendue dit le
      `max_tokens` servi dans "max_tokens_servi") : ce qui est demandé en plus n'est pas servi.
+     Réflexion comprise : les espèces Anthropic (CLAUDE_FABLE_5_1, CLAUDE_OPUS_5_5) sont servies avec une réflexion
+     adaptative à effort élevé, et le `max_tokens` demandé couvre à la fois cette réflexion et la réponse ; si la
+     réflexion consomme le plafond, la réponse rendue est coupée ou vide (statut "TRONQUE" ou "VIDE"), et l'appel est
+     payé. Constaté le 25 octobre 2026 : à 512 et 640 jetons, la plupart des appels servis par claude-fable-5-1 ont été
+     coupés ou vides ; des appels à 64 000 jetons ne l'ont pas été. Le noyau ne dit pas quel plafond choisir ; "usage"
+     donne les jetons de sortie consommés.
    - `especes()` → liste des espèces disponibles ; `budget()` → {"appels_restants", "usd_restants",
      "recherches_restantes", "sources", "telechargements_restants", "octets_restants", "entrainements_restants",
      "max_tokens_appel"}.

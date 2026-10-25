@@ -3417,3 +3417,16 @@ def test_r396_import_conception_recopie_la_reponse_a_la_question_dans_la_vue(tmp
     arch2 = archive.Archive(tmp_path / "b2" / "archive", vue=esp2 / "archive_vue")
     assert arch2.importer_conception(a2, "rep")
     assert not (arch2.vue / "rep" / "c001" / q.NOM_REPONSE).exists()
+
+
+def test_r398_contrat_dit_la_reflexion_comprise_dans_max_tokens():
+    """R-398 (décision (a) de Lazar, 25 octobre 09:26) : le contrat dit aux organismes, comme un fait mécanique et sans
+    valeur conseillée, que pour les espèces Anthropic le `max_tokens` demandé couvre la réflexion et la réponse, et que
+    l'appel coupé ou vide est payé ; le texte servi à l'organisme (`contrat.CONTRAT`) le porte, au § 3."""
+    texte = contrat.CONTRAT
+    s3 = texte[texte.index("3. Appels aux espèces"):]
+    s3 = s3[:s3.index("\n4.")] if "\n4." in s3 else s3
+    s3 = " ".join(s3.split())  # le texte du contrat est coupé en lignes
+    assert "Réflexion comprise" in s3 and "CLAUDE_FABLE_5_1" in s3 and "CLAUDE_OPUS_5_5" in s3
+    assert "couvre à la fois cette réflexion et la réponse" in s3 and "est payé" in s3
+    assert "Le noyau ne dit pas quel plafond choisir" in s3
