@@ -58,10 +58,17 @@ def test_v6_1_filtre_rejette_boucles_surconfiance_legere_et_decalage_echelle():
     ok_b, msg_b, _ = politique_endogene.verifier_et_valider_code_politique("\n".join(lignes_boucle))
     assert ok_b is False and "hors liste blanche" in msg_b
 
+    # Règle sur-confiante légère : 1 - Brier + 0.10*(q - 0.5)^2 normalisée aux bords (ou brute) est bien rejetée
     ok_sc, msg_sc = politique_endogene.verifier_proprete_stricte_recompense(
         lambda y, q: 1.0 - ((float(y) - float(q)) ** 2) + 0.10 * ((float(q) - 0.5) ** 2)
     )
-    assert ok_sc is False and "propreté stricte" in msg_sc
+    assert ok_sc is False
+
+    # Règle sur-confiante légère qui respecte les ancrages aux bords (y=1,q=1 -> 1.0 ; q=0.5 -> 0.75) mais décale q* de +0.025
+    ok_sc2, msg_sc2 = politique_endogene.verifier_proprete_stricte_recompense(
+        lambda y, q: 1.0 - ((float(y) - float(q)) ** 2) + 0.15 * float(q) * (1.0 - float(q)) * ((float(q) - 0.5) ** 2)
+    )
+    assert ok_sc2 is False and "propreté stricte" in msg_sc2
 
     ok_dec, _ = politique_endogene.verifier_proprete_stricte_recompense(
         lambda y, q: 1.5 - ((float(y) - float(q)) ** 2)

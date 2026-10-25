@@ -12,9 +12,10 @@ def recompense_interne(verite: int, q: float) -> float:
     y = 1.0 if int(verite) == 1 else 0.0
     brier = (y - q_c) ** 2
     alpha = EXPOSANT_ALPHA
-    p_vrai = q_c if y > 0.5 else (1.0 - q_c)
-    div_brute = (1.0 - (p_vrai ** alpha) + alpha * (p_vrai ** (alpha - 1.0)) * (p_vrai - 1.0)) / (alpha - 1.0)
-    div_en_demi = (1.0 - (1.0 + alpha) * (0.5 ** alpha)) / (alpha - 1.0)
+    phi_q = ((q_c ** alpha) + ((1.0 - q_c) ** alpha) - 1.0) / (alpha - 1.0)
+    dphi_q = alpha * ((q_c ** (alpha - 1.0)) - ((1.0 - q_c) ** (alpha - 1.0))) / (alpha - 1.0)
+    div_brute = -phi_q - dphi_q * (y - q_c)
+    div_en_demi = (1.0 - 2.0 * (0.5 ** alpha)) / (alpha - 1.0)
     div_norm = 0.25 * (div_brute / max(1e-9, div_en_demi))
     return round(1.0 - (POIDS_BRIER * brier + POIDS_TSALLIS * div_norm), 8)
 
