@@ -1036,7 +1036,7 @@ def recompense_interne(verite: int, q: float) -> float:
     div_brute = -phi_q - dphi_q * (y - q_c)
     div_en_demi = (1.0 - 2.0 * (0.5 ** alpha)) / (alpha - 1.0)
     div_norm = 0.25 * (div_brute / max(1e-9, div_en_demi))
-    return round(1.0 - (POIDS_BRIER * brier + POIDS_TSALLIS * div_norm), 8)
+    return float(1.0 - (POIDS_BRIER * brier + POIDS_TSALLIS * div_norm))
 
 
 def code_objectif_sonde() -> str:

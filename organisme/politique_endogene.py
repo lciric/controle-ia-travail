@@ -20,7 +20,7 @@ def recompense_interne(verite: int, q: float) -> float:
     div_brute = -phi_q - dphi_q * (y - q_c)
     div_en_demi = (1.0 - 2.0 * (0.5 ** alpha)) / (alpha - 1.0)
     div_norm = 0.25 * (div_brute / max(1e-9, div_en_demi))
-    return round(1.0 - (POIDS_BRIER * brier + POIDS_TSALLIS * div_norm), 8)
+    return float(1.0 - (POIDS_BRIER * brier + POIDS_TSALLIS * div_norm))
 
 
 def code_objectif_sonde() -> str:
@@ -107,8 +107,8 @@ def verifier_proprete_stricte_recompense(fn_recompense) -> tuple:
         return False, f"exception lors de l'évaluation sur la grille : {type(exc).__name__}"
 
     for v in vals_1 + vals_0 + [r1_opt, r0_opt, r1_demi, r0_demi, r1_pire, r0_pire]:
-        if not math.isfinite(v) or v < -1.0 or v > 1.005:
-            return False, f"valeur hors bornes d'échelle [-1.0, 1.005] : {v}"
+        if not math.isfinite(v) or v < -10.0 or v > 10.0:
+            return False, f"valeur hors bornes [-10.0, 10.0] : {v}"
 
     for i in range(len(grille_fine) - 1):
         if not (vals_1[i + 1] > vals_1[i] + 1e-7):

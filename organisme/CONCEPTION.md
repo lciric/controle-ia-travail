@@ -94,15 +94,15 @@ Lorsque `contexte.get("question_ouverte")` est une chaîne de caractères non vi
 
 
 ### 2.10. Calibrage de la moisson documentaire sur les services réels du noyau (v5.2)
-1. **Couverture complète des 4 sources ( rxiv, openalex, semanticscholar, web), 6 recherches, 10 notices et 3 téléchargements** :
+1. **Couverture complète des 4 sources ( `arxiv`, openalex, semanticscholar, web), 6 recherches, 10 notices et 3 téléchargements** :
    - RESULTATS_MAX_PAR_RECHERCHE est porté à 10, RECHERCHES_MAX_PAR_MOISSON à 6, et TELECHARGEMENTS_MAX_PAR_MOISSON à 3.
-   - À g0 comme à g1, le catalogue de 6 requêtes scientifiques garantit que le tour de rôle sur  udget()["sources"] atteint les 4 sources (y compris web).
-2. **Densité des extraits servis aux castes (_extraire_passages_denses_document), lecture de  ichier_texte et de  ravail/corpus/** :
+   - À g0 comme à g1, le catalogue de 6 requêtes scientifiques garantit que le tour de rôle sur  `budget()`["sources"] atteint les 4 sources (y compris web).
+2. **Densité des extraits servis aux castes (_extraire_passages_denses_document), lecture de  `fichier_texte` et de  `travail/corpus`/** :
    - Les résumés de notices sont gardés jusqu'à 1 100 caractères (jusqu'à 12 notices dans le bloc prompt).
-   - Chaque document téléchargé fournit jusqu'à 2 400 caractères combinant l'introduction et les sections analytiques/conclusives denses ; si  ronque=True et  ichier_texte est présent, le texte complet est lu depuis  ichier_texte.
-   - Au démarrage d'une génération, _charger_corpus_archive lit également les documents des générations passées sous  ravail/corpus/ dans dossier_archive.
-3. **Séparation de  egles_induites et du corpus moissonné à g0** :
-   - Le corpus moissonné à g0 est injecté dans l'induction sur  aches_entrainement et transmis aux tâches de test via un champ dédié extrait_moisson[:650], afin qu'il ne soit jamais tronqué derrière  egles_induites.
+   - Chaque document téléchargé fournit jusqu'à 2 400 caractères combinant l'introduction et les sections analytiques/conclusives denses ; si  `tronque=True` et  `fichier_texte` est présent, le texte complet est lu depuis  `fichier_texte`.
+   - Au démarrage d'une génération, _charger_corpus_archive lit également les documents des générations passées sous  `travail/corpus`/ dans dossier_archive.
+3. **Séparation de  `regles_induites` et du corpus moissonné à g0** :
+   - Le corpus moissonné à g0 est injecté dans l'induction sur  `taches_entrainement` et transmis aux tâches de test via un champ dédié extrait_moisson[:650], afin qu'il ne soit jamais tronqué derrière  `regles_induites`.
 
 ---
 

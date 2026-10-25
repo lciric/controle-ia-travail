@@ -296,7 +296,7 @@ def test_v6_2_point_02_03_04_routage_sonde_validation_croisee_et_non_redondance(
     }
     assert appels_par_enonce["t_clair"] == ["monoculture_analytique"]
     assert appels_par_enonce["t_neutre"] == ["monoculture_analytique"]
-    assert appels_par_enonce["t_incertain"] == ["monoculture_analytique", "monoculture_croisee"]
+    assert appels_par_enonce["t_incertain"] == ["monoculture_analytique", "monoculture_croisee", "sonde_orthogonale_onsager"]
 
 
 def test_v6_2_point_05_unification_mots_cles_multi_familles():
@@ -315,7 +315,6 @@ def test_v6_2_point_05_unification_mots_cles_multi_familles():
 def test_v6_2_point_06_signature_entrainer_et_predire_sondes_traits_accepte_erreurs():
     import inspect
     import principal
-    importlib.reload(principal)
     assert "erreurs" in inspect.signature(principal._entrainer_et_predire_sondes_traits).parameters
 
 
