@@ -390,3 +390,22 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
   Recommandé (c) maintenant, (a) à l'étape 2 ; défaut sous 48 heures ; pas encore de mot de Lazar.
 - Correction (entrée « 13:37 ») : la v5.3 a été reçue à 14:19 Paris (13:19 UTC) ; l'en-tête « 13:37 » a été écrit à
   13:36 UTC.
+
+## 13:48 — b2 jugé utile (avis donné) ; v5.3 et v6 poussées par Gemini ; erratum des graines de hachage
+
+- Lazar, 14:43–14:44 Paris : « oui vas-y demande, peut-être que b2 vaut le coup » ; « fable tu en penses quoi ? ». Question
+  au collisionneur `question-agents-outilles-isolation-collisionneur-v1.md` (`25cad4a8…`, canal n° 50), après le départ de
+  M. Avis donné : (b2) vaut le coup, pensé comme une primitive du noyau (activations de textes écrits par l'essaim, sondes
+  dessus) plutôt que comme des agents ; mesure gardée par le juge tenu à l'écart ; fuite gardée (identifiants de test
+  interdits, garde de fuite sur les textes engendrés, journal) ; coût de carte petit, coût d'ingénierie réel. Raisons
+  d'être de l'isolation écrites (validité de la mesure, dépenses, secrets et dépôt, traçabilité).
+- Gemini a poussé `canal/gemini-organisme-v5-3` (`4ecba58`, arbre `6251ab21…`, 22 fichiers, 39 essais annoncés) et
+  `canal/gemini-organisme-v6` (`7cd7508`, `940c59c3…`, 24 fichiers, 43 essais annoncés), toutes deux déclarées
+  « assistées ». La v5.3 poussée diffère de la v5.3 de son message (reconstituée : `a119fa0f…`, 39 essais passés ;
+  réserves : perte de sonde non propre, rondes de conception comptées à partir de 0, validation sur l'exactitude
+  d'entraînement, arbitrage forcé sans effet, confirmation par mots-clés) en trois fichiers ; vérification des deux
+  versions poussées par un sous-agent (en cours).
+- **Erratum** (`erratum-graines-de-hachage-v1`, `06c28c7a…`) : `python -I` ignore `PYTHONHASHSEED` ; les relevés
+  d'invariance dits « graines 0, 1 et 2 » (v5.1, v5.2, v5.2.1, texte scellé du pilote) l'étaient pour trois graines
+  aléatoires ; refaits à graines fixes sous `-P -s -B` pour la v5.2.1 : identiques. Hypothèse « nos essais d'invariance
+  fixaient la graine » : **réfutée** ; conclusion d'invariance : **maintenue**. Canal n° 51.
