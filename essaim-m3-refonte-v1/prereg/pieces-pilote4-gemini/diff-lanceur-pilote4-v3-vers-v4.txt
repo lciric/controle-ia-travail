@@ -1,0 +1,115 @@
+--- lancer_pilote4_gemini_v3.sh	2026-10-25 19:03:16.899504274 +0100
++++ lancer_pilote4_gemini_v4.sh	2026-10-25 19:51:34.666938872 +0100
+@@ -1,7 +1,9 @@
+ #!/usr/bin/env bash
+ # Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6.1, chacun seul, sur la banque
+ # `confrontation-v3` (identifiants opaques), quatre générations notées, 6 rondes de conception au plus avant g000 (l'organisme déclare lui-même la fin de sa conception, `fin_conception.json`), 3 USD au plus par ronde, question M à g001 »,
+-# une course par appel (COURSE=v5-3, puis COURSE=v6-1) — v1, dérivée du lanceur v2 du pilote 3
++# une course par appel (COURSE=v5-3, puis COURSE=v6-1) — v4 : le lanceur v3 (73d318b9…) par `deriver_lanceur_pilote4_v4.py`
++# (borne de 900 s par ronde de conception ; minuteur qui pose STOP à 5 700 s du départ ; en-tête ; écart consigné dans
++# `diff-lanceur-pilote4-v3-vers-v4.txt`), le v3 étant lui-même dérivé du lanceur v2 du pilote 3
+ # (`lancer_pilote3_gemini_v5_3_v6_v2.sh`, `add695a9…`) par `deriver_lanceur_pilote4_v3.py` (remplacements exacts ; écart
+ # consigné dans `diff-lanceur-pilote3-v2-vers-pilote4-v3.txt`). Ce qui change : les objets (v6.1 à la place de la v6) et
+ # les noms des courses ; la banque v3 (empreinte, chemin ; les chemins des banques v2 et v3 sont permis après le code) ;
+@@ -13,13 +15,13 @@
+ # v6.1 = branche de Gemini, commit `a9d8eb5`, arbre `ae331d1d…`, 24 fichiers ; lignées « assistées ».
+ # Les commits d'objets portent aussi l'arbre de la relève : seul `organisme/` en est extrait (`git archive <commit>
+ # organisme`) ; ils ne sont jamais extraits en entier ni empruntés comme arbre de travail.
+-# Texte : `essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v1.md` (ou la version qui le remplace et cite ce
++# Texte : `essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v2.md` (ou la version qui le remplace et cite ce
+ # script) ; pièces : `prereg/pieces-pilote4-gemini/`.
+ # Usage :
+ #   MODE=reel COURSE=v5-3 DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
+ #       APPEL_CONTROLE_FICHIER=… RECHARGE_ATTESTEE=… CLE_ANTHROPIC=NOM CLE_GEMINI=NOM \
+ #       [CLE_OPENALEX=NOM] [CLE_S2=NOM] [TENTATIVE=2] REFERENCE_M=<dossier du pilote de la course M> \
+-#       bash lancer_pilote4_gemini_v1.sh
++#       bash lancer_pilote4_gemini_v4.sh
+ #   MODE=reel COURSE=v6-1 … PRECEDENTE_V53=<dossier du pilote de la course v5.3 de ce pilote, dans la même copie> (même forme)
+ #   MODE=simulation : comme le lanceur v2 (variables d'essai inchangées)
+ #
+@@ -28,6 +30,7 @@
+ # une seconde course de même nom (R3).
+ set -euo pipefail
+ set +x
++DEBUT_LANCEUR_S="$(date +%s)"   # départ du lanceur : origine du minuteur (P4C1-02)
+ refus_tot() { echo "REFUS : $*" >&2; exit 2; }   # refus avant que le dossier du pilote existe
+ 
+ MODE="${MODE:?MODE=reel ou MODE=simulation}"
+@@ -60,7 +63,7 @@
+ SOURCE_OPENALEX=""
+ SOURCE_S2=""
+ if [ "$MODE" = reel ]; then
+-  for v in PILOTE_RACINE SUFFIXE_ESSAI REGISTRE_GO_SOURCE DEPENSES_SOURCE ESSAI_ARTEFACT ESSAI_JUNIT_EXISTANT ESSAI_RESUME_EXISTANT ESSAI_EXIGER_HEURE ESSAI_PASSERELLE_PY ESSAIM_M3_ESPACE; do
++  for v in PILOTE_RACINE SUFFIXE_ESSAI REGISTRE_GO_SOURCE DEPENSES_SOURCE ESSAI_ARTEFACT ESSAI_JUNIT_EXISTANT ESSAI_RESUME_EXISTANT ESSAI_EXIGER_HEURE ESSAI_PASSERELLE_PY ESSAIM_M3_ESPACE ESSAI_ECHEANCE_STOP_S; do
+     [ -z "${!v:-}" ] || refus_tot "variable $v définie en mode réel (variable d'essai, ou espace des organismes déplacé)"
+   done
+   [ "$(id -u)" = 0 ] || refus_tot "le mode réel exige root (essais et course)"
+@@ -90,7 +93,14 @@
+ DECALAGES_DES_ESSAIS="0 700 800"   # les essais du noyau font tourner des processus aux décalages 0, 700, 800–830 et 900 (P2C1-06, P2C2-04)
+ GO_ID=GO-2026-10-25-02
+ USD_GEN=30      # par génération (mêmes bornes que la course M ; décision (b) de Lazar, 25 octobre 10:17 Paris)
+-USD_COURSE=60   # par course ; deux courses : 120 USD au plus (GO-2026-10-25-02, mot direct de Lazar dans la session de session-depot)
++USD_COURSE=60   # par course ; deux courses : 120 USD au plus (GO-2026-10-25-02, étendu par un mot direct de Lazar dans la session de session-depot : 155 USD au plus pour l'ensemble du GO)
++# P4C1-02 : minuteur. STOP posé dans course/ à ECHEANCE_STOP_S s du départ du lanceur si la course tourne encore (la
++#   commande de fond de session-depot est bornée à 7 200 s) ; fixe en réel ; réglable en simulation (ESSAI_ECHEANCE_STOP_S)
++ECHEANCE_STOP_S=5700
++if [ "$MODE" = simulation ] && [ -n "${ESSAI_ECHEANCE_STOP_S:-}" ]; then
++  case "$ESSAI_ECHEANCE_STOP_S" in *[!0-9]*) refus_tot "ESSAI_ECHEANCE_STOP_S doit être un entier (secondes)";; esac
++  ECHEANCE_STOP_S="$ESSAI_ECHEANCE_STOP_S"
++fi
+ AGE_MAX_TEST_DEPENSE=900
+ 
+ # Courses voisines : une course au décalage 900 → refus ; aux décalages des essais (0, 800) → réserve consignée ; autres
+@@ -629,7 +639,7 @@
+ FAMILLE=gemini; [ "$ART" = famille ] && FAMILLE=inconnue
+ COMMUNES=(--sortie "$PILOTE/course" --generations 4 --graine "$GRAINE" --especes --appels-max 160 --usd-par-generation "$USD_GEN"
+           --temps-max 2400 --max-tokens-appel 8192 --recherches-max 6 --telechargements-max 3 --octets-max 40000000
+-          --entrainements-max 0 --rondes-conception-max 6 --usd-max-conception 3 --parallele-max 8 --relances-max 1 --isoler-reseau
++          --entrainements-max 0 --rondes-conception-max 6 --usd-max-conception 3 --temps-max-conception 900 --parallele-max 8 --relances-max 1 --isoler-reseau
+           --plafond-total "$USD_COURSE" --decalage-uid "$DECALAGE_UID"
+           --question-ouverte "$PILOTE/question.md" --question-ouverte-aux g001
+           --organisme-impose "$LIGNEE=$ORG@$FAMILLE")
+@@ -650,8 +660,33 @@
+       > "$SORTIE_FERMEE" 2> "$ERREURS" &
+ fi
+ PID=$!
+-note "- PID de la course : $PID (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)"
++note "- PID de la course : $PID (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt avant la ronde ou la génération suivante, celle en cours finit)"
++# P4C1-02 : minuteur, lancé en fond et arrêté par son PID dès la fin du processus de la course (R10). À l'échéance, si la
++#   course tourne encore et que son manifeste est écrit, il pose STOP dans course/ (le noyau le lit avant chaque ronde et
++#   chaque génération, `_doit_arreter`) ; la fermeture qui suit est celle d'une course finie (étape 8a).
++minuteur() {
++  local fin=$(( DEBUT_LANCEUR_S + ECHEANCE_STOP_S )) s
++  trap 'exit 0' TERM
++  while kill -0 "$PID" 2>/dev/null; do
++    if [ -f "$PILOTE/course/manifeste-run.json" ] && [ "$(date +%s)" -ge "$fin" ]; then
++      : > "$PILOTE/course/STOP"
++      note "- minuteur : STOP posé dans course/ à $(date -u +%Y-%m-%dT%H:%M:%SZ) ($ECHEANCE_STOP_S s après le départ du lanceur) : la course s'arrête avant la ronde ou la génération suivante"
++      exit 0
++    fi
++    sleep 1 & s=$!
++    wait "$s" || true
++  done
++}
++minuteur & MINUTEUR=$!
++note "- minuteur : PID $MINUTEUR ; échéance $(date -u -d "@$(( DEBUT_LANCEUR_S + ECHEANCE_STOP_S ))" +%Y-%m-%dT%H:%M:%SZ), $ECHEANCE_STOP_S s après le départ du lanceur ($(date -u -d "@$DEBUT_LANCEUR_S" +%Y-%m-%dT%H:%M:%SZ))"
+ set +e; wait "$PID"; CODE=$?; set -e
++kill "$MINUTEUR" 2>/dev/null || true
++wait "$MINUTEUR" 2>/dev/null || true
++if [ -f "$PILOTE/course/STOP" ]; then
++  note "- minuteur : STOP du minuteur présent dans course/ à la fin de la course (raison d'arrêt : événement « arret » de l'extrait) — liste d'arrêt du texte"
++else
++  note "- minuteur arrêté par son PID ($MINUTEUR) à la fin de la course : STOP non posé"
++fi
+ note "- fin du processus (UTC) : $(date -u +%Y-%m-%dT%H:%M:%SZ) ; code de retour : $CODE ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)"
+ 
+ # 8a. Une course est partie (manifeste écrit) : extrait sans score, réponse et journaux recopiés (avec de vrais
+@@ -666,7 +701,7 @@
+ if [ -f "$PILOTE/course/manifeste-run.json" ]; then
+   if env -u PYTHONPATH "$PY" -B -m essaim_m3.outils.extrait_mecanique --course "$PILOTE/course" --sortie "$PILOTE/extrait-mecanique-v1.json" > /dev/null 2> "$PILOTE/sortie-erreur-extrait.txt"; then
+     note "- extrait mécanique : extrait-mecanique-v1.json, sha256 $(sha256sum "$PILOTE/extrait-mecanique-v1.json" | cut -d' ' -f1)"
+-    "$PY" -I -c 'import json, sys; x = json.load(open(sys.argv[1])); m = x["manifeste"]; r = x.get("rapport") or {}; print("- vérification après départ (extrait) : isolation " + json.dumps(m.get("isolation"), ensure_ascii=False) + " ; collisionneur conforme : " + str(m.get("collisionneur_conforme")) + " ; commit " + str(m.get("commit")) + " ; sha256_code_noyau " + str(m.get("sha256_code_noyau")) + " ; espace " + str(m.get("espace_organismes")) + " ; sources de moisson " + json.dumps(m.get("sources_moisson"), ensure_ascii=False) + " ; clés présentes au manifeste — web : " + str(m.get("cle_brave_presente")) + ", OpenAlex : " + str(m.get("cle_openalex_presente")) + ", Semantic Scholar : " + str(m.get("cle_s2_presente")) + " ; dépense du noyau " + str(r.get("depense_totale_usd")) + " USD (à rapprocher de la console, P2C1-05)")' "$PILOTE/extrait-mecanique-v1.json" >> "$L"
++    "$PY" -I -c 'import json, sys; x = json.load(open(sys.argv[1])); m = x["manifeste"]; r = x.get("rapport") or {}; print("- vérification après départ (extrait) : isolation " + json.dumps(m.get("isolation"), ensure_ascii=False) + " ; collisionneur conforme : " + str(m.get("collisionneur_conforme")) + " ; commit " + str(m.get("commit")) + " ; sha256_code_noyau " + str(m.get("sha256_code_noyau")) + " ; espace " + str(m.get("espace_organismes")) + " ; sources de moisson " + json.dumps(m.get("sources_moisson"), ensure_ascii=False) + " ; clés présentes au manifeste — web : " + str(m.get("cle_brave_presente")) + ", OpenAlex : " + str(m.get("cle_openalex_presente")) + ", Semantic Scholar : " + str(m.get("cle_s2_presente")) + " ; temps par ronde de conception " + str((m.get("budget_conception") or {}).get("temps_max_s")) + " s ; dépense du noyau " + str(r.get("depense_totale_usd")) + " USD (à rapprocher de la console, P2C1-05)")' "$PILOTE/extrait-mecanique-v1.json" >> "$L"
+   else
+     note "- extrait mécanique : REFUSÉ par l'outil (aucune écriture ; sortie-erreur-extrait.txt) — rapporté ; la course n'est pas ouverte"
+   fi
