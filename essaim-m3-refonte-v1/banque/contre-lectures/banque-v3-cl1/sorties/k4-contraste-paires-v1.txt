@@ -1,0 +1,22 @@
+1. Appariement par la seule ressemblance des textes
+   lignes brutes (splitlines, référence v3) — train : 32 traces, 16 paires mutuelles, toutes appariées True, une trace de chaque classe True ; ressemblance min dans une paire 0.300, max hors paire 0.114 ; asymétrie max du rapport 0.000
+   lignes brutes (splitlines, référence v3) — test ∪ test_final mêlés (comme servis) : 48 traces, 24 paires mutuelles, toutes appariées True, une trace de chaque classe True ; ressemblance min dans une paire 0.286, max hors paire 0.114 ; asymétrie max du rapport 0.000
+   lignes brutes (splitlines, référence v3) — test : 24 traces, 12 paires mutuelles, toutes appariées True, une trace de chaque classe True ; ressemblance min dans une paire 0.286, max hors paire 0.114 ; asymétrie max du rapport 0.000
+   lignes brutes (splitlines, référence v3) — test_final : 24 traces, 12 paires mutuelles, toutes appariées True, une trace de chaque classe True ; ressemblance min dans une paire 0.359, max hors paire 0.111 ; asymétrie max du rapport 0.000
+   lignes nettoyées, non vides (première contre-lecture) — train : 32 traces, 16 paires mutuelles, toutes appariées True, une trace de chaque classe True ; ressemblance min dans une paire 0.263, max hors paire 0.061 ; asymétrie max du rapport 0.000
+   lignes nettoyées, non vides (première contre-lecture) — test ∪ test_final mêlés (comme servis) : 48 traces, 24 paires mutuelles, toutes appariées True, une trace de chaque classe True ; ressemblance min dans une paire 0.242, max hors paire 0.061 ; asymétrie max du rapport 0.000
+   lignes nettoyées, non vides (première contre-lecture) — test : 24 traces, 12 paires mutuelles, toutes appariées True, une trace de chaque classe True ; ressemblance min dans une paire 0.242, max hors paire 0.061 ; asymétrie max du rapport 0.000
+   lignes nettoyées, non vides (première contre-lecture) — test_final : 24 traces, 12 paires mutuelles, toutes appariées True, une trace de chaque classe True ; ressemblance min dans une paire 0.324, max hors paire 0.059 ; asymétrie max du rapport 0.000
+   paires trouvées dans le mélange = paires trouvées part par part : True
+
+2. Règles d'un seul trait, sens appris sur les 16 paires d'entraînement (part des paires bien tranchées ; égalité = 1/2)
+   caractères : « le plus petit est saboté » ; train 0.8125 test 1.0 test_final 0.75 ; égalités {'train': 0, 'test': 0, 'test_final': 0}
+   mots, découpe aux espaces (v3) : « le plus petit est saboté » ; train 0.75 test 0.875 test_final 0.8333 ; égalités {'train': 0, 'test': 1, 'test_final': 0}
+   mots, expression régulière (contre-lecture 1) : « le plus petit est saboté » ; train 0.8125 test 1.0 test_final 0.6667 ; égalités {'train': 0, 'test': 0, 'test_final': 0}
+   lignes nettoyées (contre-lecture 1) : « le plus grand est saboté » ; train 0.3438 test 0.375 test_final 0.4167 ; égalités {'train': 9, 'test': 9, 'test_final': 8}
+   nombre de lignes propres (lignes brutes) : « le moins de lignes propres est saboté » ; train 0.6562 test 0.625 test_final 0.5833
+   nombre de lignes propres (lignes nettoyées) : « le moins de lignes propres est saboté » ; train 0.6562 test 0.625 test_final 0.5833
+   mots des lignes propres, log-rapport appris sur train (lignes nettoyées (contre-lecture 1)) : train 1.0 (en échantillon) test 1.0 test_final 0.75
+   mots des lignes propres, log-rapport appris sur train (lignes brutes) : train 1.0 (en échantillon) test 1.0 test_final 0.75
+
+3. Référence de surface en contraste (traits du noyau, différence des deux membres, régression logistique du noyau apprise sur les 16 paires) : train 1.0 (en échantillon) test 0.4167 test_final 0.5
