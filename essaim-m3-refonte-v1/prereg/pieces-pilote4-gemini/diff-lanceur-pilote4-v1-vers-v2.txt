@@ -1,0 +1,52 @@
+--- lancer_pilote4_gemini_v1.sh	2026-10-25 17:06:47.905319132 +0100
++++ lancer_pilote4_gemini_v2.sh	2026-10-25 17:35:40.639825384 +0100
+@@ -1,10 +1,10 @@
+ #!/usr/bin/env bash
+ # Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6.1, chacun seul, sur la banque
+-# `confrontation-v2` (identifiants opaques), quatre générations notées, 6 rondes de conception au plus avant g000 (l'organisme déclare lui-même la fin de sa conception, `fin_conception.json`), 3 USD au plus par ronde, question M à g001 »,
++# `confrontation-v3` (identifiants opaques), quatre générations notées, 6 rondes de conception au plus avant g000 (l'organisme déclare lui-même la fin de sa conception, `fin_conception.json`), 3 USD au plus par ronde, question M à g001 »,
+ # une course par appel (COURSE=v5-3, puis COURSE=v6-1) — v1, dérivée du lanceur v2 du pilote 3
+-# (`lancer_pilote3_gemini_v5_3_v6_v2.sh`, `add695a9…`) par `deriver_lanceur_pilote4_v1.py` (remplacements exacts ; écart
++# (`lancer_pilote3_gemini_v5_3_v6_v2.sh`, `add695a9…`) par `deriver_lanceur_pilote4_v2.py` (remplacements exacts ; écart
+ # consigné dans `diff-lanceur-pilote3-v2-vers-pilote4-v1.txt`). Ce qui change : les objets (v6.1 à la place de la v6) et
+-# les noms des courses ; la banque v2 (empreinte, chemin ; les chemins de la banque v2 sont permis après le code) ;
++# les noms des courses ; la banque v3 (empreinte, chemin ; les chemins des banques v2 et v3 sont permis après le code) ;
+ # `--generations 4` ; les rondes de conception ; la porte « v5.3 précédente » attend les générations 0 à 3 ; la ligne de
+ # GO doit porter aussi les 16 premiers caractères de l'empreinte du texte scellé ; les journaux recopiés et poussés
+ # couvrent g000 à g003 et les rondes. Tout le reste (porte « M de référence » sur la course M du second pilote, gardes,
+@@ -127,7 +127,7 @@
+ COMMIT_LIENS=4967734a62a0b10c3b5cd6360e21924f015053fd
+ COMMIT_CREDIT=90595ffb53b30c65c66be807215a998998b701fc
+ [ "$ART" = commit ] && COMMIT_QUESTION=0123456789abcdef0123456789abcdef01234567
+-SHA_BANQUE=52beb637823b72f475fd1ddcf446e9b79cafa5d2cd47d16c08b663d2b9388d10
++SHA_BANQUE=157a2b45a8d9fd88cc5dca2f483c2dc79457d781d44f9802b2c053f530c0011d
+ SHA_MISSION=bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e
+ SHA_COLLISIONNEUR=213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+ [ "$ART" = banque ] && SHA_BANQUE=0000
+@@ -137,7 +137,7 @@
+ ESSAIS_CITES="test_fichiers_lecture_et_copie_sans_lien test_depot_ne_suit_aucun_lien_de_l_organisme test_organisme_poseur_de_liens_ne_voit_rien_du_noyau test_question_ouverte_cibles_lecture_et_archivage_sain_et_artefacts test_question_ouverte_posee_a_la_generation_ciblee_archivee_et_sans_effet_sur_le_score test_extrait_mecanique_sain_puis_artefacts test_mode_reel_refuse_sans_go test_mode_reel_refuse_anthropic_base_url test_bac_a_sable_isolation_reseau_refusee_si_indisponible test_appels_paralleles_plafond_tenu_au_pire_cas test_organisme_gourmand_recoit_plafond_sans_exception test_ce312_doit_arreter_et_raison_juste test_bac_a_sable_exception_et_delai test_modele_non_conforme_invalide_la_generation_et_arrete_la_lignee test_ce305_credit_epuise_arrete_la_course test_ce307_anomalie_journal_absent test_relance_puis_reprise_remet_le_compteur_a_zero test_fichier_stop_arrete_la_boucle test_organisme_fuite_ne_lit_rien_du_noyau_et_ne_laisse_aucun_processus test_r395_credit_epuise_rendu_en_400_arrete_la_course test_cl5_01_banque_cachee_a_l_organisme test_cl5_02_aucune_voie_commune_par_un_dossier_inscriptible_par_tous test_ce306_vue_lisible_par_la_seule_lignee_et_uid_par_course test_sources_reelles_de_moisson_si_reseau test_moisson_de_bout_en_bout_en_simulation test_ce311_garde_de_temps_compte_la_moisson test_ce305_sources_moisson_au_manifeste_et_bras_apparie test_r402_types_de_blocs_au_journal_et_reflexion_comptee_a_l_extrait test_r410_cles_openalex_et_s2_en_entete_jamais_dans_l_adresse"
+ # Chemins que les commits postérieurs à b1c7f4b6 peuvent toucher : le texte du second pilote, ses pièces et ses
+ # contre-lectures ; ce texte, ses pièces et ses contre-lectures ; dossier des pilotes
+-PERMIS_APRES_CODE='^essaim-m3-refonte-v1/(prereg/(pilote2-gemini-organisme-v5-2-v[0-9]+\.md(\.sha256)?|pieces-pilote2-gemini-v5-2/.+|contre-lectures/pilote2-gemini-organisme-v5-2-v[0-9]+-cl[0-9]+\.md(\.sha256)?|pilote3-gemini-organisme-v5-3-v6-v[0-9]+\.md(\.sha256)?|pieces-pilote3-gemini-v5-3-v6/.+|contre-lectures/pilote3-gemini-organisme-v5-3-v6-v[0-9]+-cl[0-9]+\.md(\.sha256)?|pilote4-gemini-organisme-v[0-9]+\.md(\.sha256)?|pieces-pilote4-gemini/.+|contre-lectures/pilote4-gemini-organisme-v[0-9]+-cl[0-9]+\.md(\.sha256)?)|banque/(banque-confrontation-v2(-secret)?\.json(\.sha256)?|LISEZMOI-v4\.md(\.sha256)?|EMPREINTES-banque-v2-v1\.txt(\.sha256)?|construction-v2/.+))$'
++PERMIS_APRES_CODE='^essaim-m3-refonte-v1/(prereg/(pilote2-gemini-organisme-v5-2-v[0-9]+\.md(\.sha256)?|pieces-pilote2-gemini-v5-2/.+|contre-lectures/pilote2-gemini-organisme-v5-2-v[0-9]+-cl[0-9]+\.md(\.sha256)?|pilote3-gemini-organisme-v5-3-v6-v[0-9]+\.md(\.sha256)?|pieces-pilote3-gemini-v5-3-v6/.+|contre-lectures/pilote3-gemini-organisme-v5-3-v6-v[0-9]+-cl[0-9]+\.md(\.sha256)?|pilote4-gemini-organisme-v[0-9]+\.md(\.sha256)?|pieces-pilote4-gemini/.+|contre-lectures/pilote4-gemini-organisme-v[0-9]+-cl[0-9]+\.md(\.sha256)?)|banque/(banque-confrontation-v2(-secret)?\.json(\.sha256)?|LISEZMOI-v4\.md(\.sha256)?|EMPREINTES-banque-v2-v1\.txt(\.sha256)?|construction-v2/.+|banque-confrontation-v3(-secret|-cle)?\.json(\.sha256)?|LISEZMOI-v5\.md(\.sha256)?|EMPREINTES-banque-v3-v1\.txt(\.sha256)?|construction-v3/.+|contre-lectures/.+))$'
+ 
+ # R3 : une course est partie dès que son manifeste est écrit ; aucune seconde course de ce nom, quel que soit le dossier,
+ #     la copie du dépôt (marqueur de départ du conteneur, branche poussée) ou le moment (verrou ; P2C2-06)
+@@ -359,7 +359,7 @@
+ [ -z "$inattendus" ] || refus "fichiers non suivis ou modifiés sous essaim-m3-refonte-v1 ou le collisionneur : $(echo $inattendus)"
+ git -C "$DEPOT" merge-base --is-ancestor "$COMMIT_LIENS" HEAD || refus "correctif des liens 4967734 non ancêtre de HEAD"
+ git -C "$DEPOT" merge-base --is-ancestor "$COMMIT_CREDIT" HEAD || refus "R-395 (90595ffb, arrêt sur crédit épuisé en 400) non ancêtre de HEAD"
+-[ "$(sha256sum "$R/banque/banque-confrontation-v2.json" | cut -d' ' -f1)" = "$SHA_BANQUE" ] || refus "empreinte de la banque ≠ 52beb637…"
++[ "$(sha256sum "$R/banque/banque-confrontation-v3.json" | cut -d' ' -f1)" = "$SHA_BANQUE" ] || refus "empreinte de la banque ≠ 157a2b45…"
+ [ "$(sha256sum "$R/MISSION-v1.md" | cut -d' ' -f1)" = "$SHA_MISSION" ] || refus "empreinte de la mission ≠ bd2c6a15…"
+ [ "$(sha256sum "$DEPOT/collisionneur-v2.5-banc-jev-travail/collisionneur_v2.py" | cut -d' ' -f1)" = "$SHA_COLLISIONNEUR" ] || refus "empreinte du collisionneur ≠ 213b52ef…"
+ note "- code : identique à b1c7f4b6 (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque $SHA_BANQUE ; mission $SHA_MISSION ; collisionneur $SHA_COLLISIONNEUR"
+@@ -641,7 +641,7 @@
+   note "- départ (UTC) : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+   env -i "${ENV_NOYAU[@]}" \
+     "$PY" -m essaim_m3 lancer --reel --go "$GO_ID" --registre-go "$PILOTE/registre-go.md" \
+-      --taches banque/banque-confrontation-v2.json --mission MISSION-v1.md "${COMMUNES[@]}" \
++      --taches banque/banque-confrontation-v3.json --mission MISSION-v1.md "${COMMUNES[@]}" \
+       > "$SORTIE_FERMEE" 2> "$ERREURS" &
+ else
+   note "- départ de la simulation (UTC) : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
