@@ -461,23 +461,61 @@ Essais cités (28 ; chacun exigé passé dans le conteneur du lancement) : `test
 `test_ce305_sources_moisson_au_manifeste_et_bras_apparie`,
 `test_r402_types_de_blocs_au_journal_et_reflexion_comptee_a_l_extrait`.
 
-**Essais du lanceur v4** (R5 ; P2C1-11, P2C2-07) : <<ESSAIS_LANCEUR_V4>>
+**Essais du lanceur v4** (R5 ; P2C1-11, P2C2-07) : conv-audit, 25 octobre, 10:52–10:57 UTC, root, conteneur du même type, copie du
+dépôt à `5d1d4fd` (plus une seconde copie sous `/root` pour les refus du mode réel) ; **98 cas sur 98 conformes**
+(`essais-lanceur-pilote2-v4.log`, `e3a4465ab8b95fadfe692cf0e6c299b2364bf33e2c2dac8394a09ebf8dd975e1` ; programme
+`essais_lanceur_pilote2_v4.sh`, `7626d7193bbda59ea2af3dd89f553456ba6562a73c8823d22b482167d5cbee9c`). Cas sains : **S
+complet** avec préenregistrement d'essai (graine recalculée depuis l'entropie), test de dépense avec heures d'appel
+(exigées), essais du noyau exécutés (140 passés, 0 sauté, 28 cités passés), deux générations, réponse archivée, archive
+fermée égale au disque, copies retirées, espace attendu sous `/var/lib/essaim-m3/`, utilisateur de l'organisme 60900,
+marqueur de départ posé, verrou retiré ; **M** avec S pour course précédente (« S saine », graine de S égale à la graine
+S du texte, ligne de dépense de M portant l'empreinte des empreintes de S), rapport JUnit de S repris ; M une seconde fois
+jusqu'à l'archive. Artefacts : course M — ligne de dépense sans l'empreinte de S, S absente, empreintes de S altérées,
+code de retour non nul, archive incomplète, autre lanceur, autre course, crédit épuisé à g1, modèle non conforme à g0,
+anomalie du noyau, une seule génération, arrêt sur `STOP`, arrêt au plafond total (chemin de code gardé), génération
+invalidée au rapport, fin de lignée « sans successeur valide », espace autre, graine de S autre, `S_PILOTE` non défini,
+S hors du dossier des pilotes, S simulée (refus) ; mode réel — variable d'essai, `ESSAI_EXIGER_HEURE`, `ESSAIM_M3_ESPACE`,
+clé Anthropic absente, nom de variable invalide, variable nommée absente, clé Gemini absente, variable Gemini nommée
+absente, clé Brave absente, variable Brave nommée absente, attestation vide, dépôt hors de `/root` et `/home` (refus avant
+tout appel) ; course ou mode inconnus ; voisine au décalage 900 (refus), à 300 (consignée), à 0, à 700 et sans décalage
+(réserve consignée, course partie) ; `pytest` en cours (réserve) ; verrou présent, marqueur présent (refus) ; commit de la
+question absent ; arbre modifié (noyau, collisionneur) ; fichier non suivi dans les essais et à la racine
+d'`essaim-m3-refonte-v1`, fichier ignoré (`.pyc`) à la racine ; tête de code différente ; commit postérieur hors des
+pièces (refus) et dans les pièces (course partie) ; banque ; mission ; dossier traversable ; dépôt non caché ;
+préenregistrement d'autre empreinte, sans compagnon, sans la graine, graine de l'autre course, graine hors de
+l'entropie, entropie absente, marqueur restant, lanceur non cité ; organisme altéré, fichier manquant ; question altérée ;
+ligne du GO sans « calcul », sur deux lignes, d'une seule question, d'un autre GO ; dépense non consignée ; reste sous
+60 ; test de dépense vide, vieux de 20 minutes, vieilli avant le départ, modifié avant le départ, statut `ECHEC_API`,
+modèle autre, coût nul, autre GO, jetons de sortie nuls, JSON illisible, heure d'appel vieille de 20 minutes, heure sans
+fuseau, heure absente alors qu'exigée ; essai en échec, saut de l'essai arXiv, total ≠ 140 ; bytecode sous le noyau
+(traité : empreinte inchangée) ; refus du noyau après création de `course/`, puis tentative 2 partie, puis tentative 3
+refusée (R3) ; archive incomplète ; espace du manifeste autre que l'espace attendu (réserve) ; fichier imprévu (consigné,
+non poussé). Le dépôt d'essai est revenu propre à `5d1d4fd`. Pièces des cas sains : `simulation-lanceur-v4/`
+(`LANCEMENT-simulation-structure-v4.md`, `dee1c1fe…` ; `LANCEMENT-simulation-maieutique-v4.md`, `b7f1127a…` ; extraits,
+réponses et listes à pousser, chacun avec son `.sha256`) ; les textes de ces réponses sont ceux des doubles de
+simulation ; sources « simulation » partout : la moisson réelle n'a jamais tourné de bout en bout (seule la fonction de
+recherche arXiv est essayée en réel). Gardes restées sans artefact : la sortie de `tar` en erreur (simulée par l'archive
+incomplète) ; un refus avant le manifeste qui laisserait des fichiers ordinaires ; une voisine apparue au décalage 900
+entre les deux détections (même fonction) ; `anthropic` absente en réel (la copie d'essai n'a pas la bibliothèque :
+consignée « absente » en simulation) ; la branche `pilotes/<nom>` déjà sur le dépôt distant (lecture du dépôt distant
+non essayée) ; les corrections de cette v3 n'ont pas été relues par une troisième contre-lecture (signalé, R2) : elles
+sont essayées par le lanceur en simulation.
 
 ## Pièces
 
-`prereg/pieces-pilote2-gemini-v5-1/` : le lanceur `lancer_pilote2_gemini_v5_1_v4.sh` (<<SHA_LANCEUR_V4>>), ses essais
+`prereg/pieces-pilote2-gemini-v5-1/` : le lanceur `lancer_pilote2_gemini_v5_1_v4.sh` (`05e2fd0d818915393db769acf6e49c14ca21f58d9ad476cafde708b60e219c31`), ses essais
 `essais_lanceur_pilote2_v4.sh` et leur journal `essais-lanceur-pilote2-v4.log`, les pièces des cas sains
 `simulation-lanceur-v4/`, le devis `devis-attendu-pilote2-v3.json`
 (`093a2d7082b40ffe97ec1c75350feeaf76723c83471b0566524fd9232ab0f54c` ; nombres identiques à la v2) et son script
 `devis_attendu_pilote2_v3.py` (`851f38c8b56528b6c4e899a87e8d7844f0010366887c06348d1100791bb7dd79`), le script de
-scellement `sceller_pilote2_v1.py` (`cae6ea56d40669915eebd6fe1b39778fe87dcfa719dbdf075aa3d333e58aa807`) ; les versions
+scellement `sceller_pilote2_v2.py` (`373beddc962ed3b577bd3a935fad8709d152a0381688656cdf2dafc7fe642f4f` ; la v1, gardée, attendait un marqueur de plus) ; les versions
 antérieures (lanceurs v1 à v3, essais v1 à v3, devis v1 et v2) gardées ; chaque pièce a son `.sha256` ; fichier d'empreintes
-`EMPREINTES-pilote2-gemini-v5-1-v2.txt` (+ `.sha256`) sous `pieces-pilote2-gemini-v5-1/`, écrit au scellement par le script de
+`EMPREINTES-pilote2-gemini-v5-1-v3.txt` (+ `.sha256`) sous `pieces-pilote2-gemini-v5-1/`, écrit au scellement par le script de
 scellement : <<EMPREINTE_PIECES>>.
 
 ## Traitement des constats de la contre-lecture 1 (P2C1-01 à P2C1-14)
 
-| constat | traitement dans ce texte et dans le lanceur v3 |
+| constat | traitement dans ce texte (v2, repris en v3) et dans le lanceur v3 (repris en v4) |
 |---|---|
 | P2C1-01 (majeur) départ de M sans garde | liste close de « S saine » écrite (§ Deux courses, Seuil, liste d'arrêt) ; étape (0) du script de M : empreintes de S vérifiées, `LANCEMENT.md` de S (même lanceur, course S, code 0, archive fermée), extrait de S (générations 0 et 1 `OK`, non invalidées, sans anomalie ; aucune invalidée au rapport ; fin « générations maximales » ; arrêt « aucune lignée active ») ; cas sain M et 12 artefacts ; ligne de dépense de M écrite après la fin de S |
 | P2C1-02 moisson et appels contre le code | g0 sans formulation, ≤ 3 recherches, ≤ 2 téléchargements, ≈ 123 appels ; bloc ≤ 8 notices et 2 extraits ; extrait de 350 caractères coupé à 600 ; argument du § 3 remplacé (scores lus seulement si l'historique a deux entrées) |
@@ -522,4 +560,6 @@ scellement : <<EMPREINTE_PIECES>>.
   (`0d718031…`) et lanceur v3 (`bd1e0a2b…`) ; rapport `prereg/contre-lectures/pilote2-gemini-organisme-v5-1-v2-cl2.md`
   (`1b513a0eb8838f9eda9c960b5fddbf8ba9b46e1794e00ed1352cb7b0bba39903`) ; verdict « scellable après corrections » (1 majeur, 4
   mineurs, 5 de forme ; traités ci-dessus).
-- <<CONTRE_LECTURE_2>>
+- **Corrections de cette v3** (contre-lecture 2) et lanceur v4 : essayés en simulation (98 cas), **non relus par une
+  troisième contre-lecture** (signalé, R2 ; comme la v3 du premier pilote). Champs remplis au scellement, et eux seuls :
+  l'entropie et les deux graines (plan § 2), l'empreinte du fichier d'empreintes des pièces (§ Pièces).
