@@ -1,0 +1,22 @@
+Vivier de conception « conscience d'évaluation » v1 — à exécuter sur ta machine, dans le dossier où tu as lancé la v4
+(celui qui contient dataset.zip et eval-awareness-sous-ensemble-v1.json). Aucune clé ni jeton requis.
+
+1) Copie extraire_sous_ensemble_eval_awareness_v5.py à côté de la v4.
+2) Dans PowerShell :
+
+python .\extraire_sous_ensemble_eval_awareness_v5.py --local . --mot-de-passe isthisreallythepassword --complement-de .\eval-awareness-sous-ensemble-v1.json --sortie .\eval-awareness-vivier-conception-v1.json
+
+   (même --local, --fichier, --champ-… que pour la v4 si tu en avais mis).
+3) Vérifie la ligne « écrit : … ; sha256 … » et que « ids_exclus » vaut 120 dans le fichier.
+4) Pousse sur la branche de données, comme pour le sous-ensemble :
+   git checkout donnees/eval-awareness-sous-ensemble-v1
+   copy .\eval-awareness-vivier-conception-v1.json .\donnees\eval-awareness\
+   copy .\eval-awareness-vivier-conception-v1.json.sha256 .\donnees\eval-awareness\
+   copy .\extraire_sous_ensemble_eval_awareness_v5.py .\donnees\eval-awareness\
+   git add -f donnees/eval-awareness/eval-awareness-vivier-conception-v1.json donnees/eval-awareness/eval-awareness-vivier-conception-v1.json.sha256 donnees/eval-awareness/extraire_sous_ensemble_eval_awareness_v5.py
+   git commit -m "Données : vivier de conception eval-awareness v1 (complément des 120 du sous-ensemble, GAIA exclu), script v5"
+   git push origin donnees/eval-awareness-sous-ensemble-v1
+5) Colle-moi la ligne « écrit : … » (avec le sha256).
+
+Ce fichier ne contient aucun item du test ni du test final (les 120 du sous-ensemble sont exclus par identifiant ;
+le script le vérifie et refuse sinon). Licence CC BY-NC-SA 4.0 ; dépôt privé seulement ; GAIA exclu.
