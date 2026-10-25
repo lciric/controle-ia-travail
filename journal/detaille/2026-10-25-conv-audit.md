@@ -409,3 +409,24 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
   d'invariance dits « graines 0, 1 et 2 » (v5.1, v5.2, v5.2.1, texte scellé du pilote) l'étaient pour trois graines
   aléatoires ; refaits à graines fixes sous `-P -s -B` pour la v5.2.1 : identiques. Hypothèse « nos essais d'invariance
   fixaient la graine » : **réfutée** ; conclusion d'invariance : **maintenue**. Canal n° 51.
+
+## 13:55 — Lazar coupe sa connexion : la chaîne sans lui ; texte scellé non réécrit
+
+- M est partie chez session-depot à 13:47 UTC (R-438 ; `main` `d7fd74b`) : Anthropic `RR_ANTHROPIC_API_KEY_3`, Gemini
+  `GEMINI_API_KEY_2`, Python `/opt/essaim-m3-venv-pilote2-v1` (copie de l'environnement de l'étape 1 + `httpx`, `certifi`),
+  reste déclaré 119,9 USD (dépenses, ligne de 13:47).
+- Lazar, 14:49–14:50 Paris : « tu transmets tout ça à depot et il lance les runs sur le cloud pendant que je sors … ?
+  claude code sur cloud peut-il faire ces vérifications et corrections à ta place ? » ; « à la chaîne sans me demander car
+  il n'y aura pas internet ». Réponse : oui pour les courses (M tourne, S suit si M est saine) ; les deux sessions sont
+  dans le nuage. Une ligne à coller dans la session de session-depot (mot direct exigé chez lui) : M puis S ; tours
+  « escalier » v2 et « agents outillés » v1 ; **point 3, recommandé, confiance moyenne-haute** : une seule nouvelle
+  tentative sans lui si un lanceur refuse avant le manifeste, après correction de l'environnement seulement (le texte
+  scellé prévoit la « décision contraire de sa part consignée », l. 365-366). Sans ligne collée : règle scellée (arrêt à
+  tout refus). Canal n° 52 (`9b00826d…`).
+- Lazar, 14:51 : « réécris-le si l'erreur est rédhibitoire !!! ». Jugé **non rédhibitoire** : l'erreur porte sur la
+  description de la preuve, non sur le fait (refait à graines fixes : identique) ; une v3 bloquerait S (empreinte
+  `d2944654…` dans la ligne de GO et le lanceur) et changerait le plan d'une course partie (R1). Texte non réécrit ;
+  l'erratum sera cité au rapport.
+- Pendant son absence, chez conv-audit (réveils programmés) : vérification de v5.3 et v6, essais en isolation et
+  simulation gratuite ; v8 de la confrontation ; étude de la reprise par génération ; réponses du collisionneur ; lecture
+  mécanique du pilote au moment fixé. Rien par Gemini, aucune course réelle de v5.3 ou v6, aucune dépense hors GO.
