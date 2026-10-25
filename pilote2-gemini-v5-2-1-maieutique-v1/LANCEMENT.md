@@ -1,0 +1,34 @@
+# Lancement du pilote pilote2-gemini-v5-2-1-maieutique-v1 (reel, tentative 1)
+
+- début (UTC) : 2026-10-25T13:47:42Z ; hôte : vm ; utilisateur : 0
+- course : maieutique ; dossier du pilote : /root/pilote2-v5-2-1-depot-v1/essaim-m3-refonte-v1/pilotes/pilote2-gemini-v5-2-1-maieutique-v1 (0700, à root)
+- dépôt : /root/pilote2-v5-2-1-depot-v1 ; HEAD : e09cc4839f41b66852e856ebeb277bfd7e1f3ee5 (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote2_gemini_v5_2_v5.sh, sha256 83f8b9cf8f3062dfc5e2c02094c602a2d582adf0cbcef292d5bdccd8f8d61b1b
+- source des registres : origin/main
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- code : identique à b1c7f4b6 (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- versions : python 3.13.17 ; numpy 2.4.6 ; anthropic 2.3.0
+- isolation : dossier du pilote 0700 à root ; espace attendu /var/lib/essaim-m3/3f66a72bc4d0dd7a ; dépôt /root/pilote2-v5-2-1-depot-v1 caché aux organismes (vérifié par bac_a_sable.dossiers_a_cacher) ; ESSAIM_M3_ESPACE non définie
+- préenregistrement : /root/pilote2-v5-2-1-depot-v1/essaim-m3-refonte-v1/prereg/pilote2-gemini-organisme-v5-2-v2.md, sha256 d294465429094e5099cb5facdad95e2b806aa8953640b57bcab99998396c066b (compagnon conforme), graine 3970427751169333427 de la course maieutique écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée
+- organisme : 21 fichiers, empreinte d'arbre fec005c6626b3d1aa960702e4322b44ade3b902157dd84eae8e658b70e4f43f4 ; question (maieutique) : sha256 8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+- registre : une ligne GO-2026-10-25-01 de type calcul portant l'empreinte de la question (maieutique) et celle de l'organisme (fec005c6…) ; dépense consignée avant ; reste déclaré 119.9 USD ≥ 60 (vérification du lanceur)
+- test de dépense : test-depense-pilote2-v5-2-1-maieutique-v1.json, sha256 763f0ec27c6b06dc1478196271fc0bc4e1ccfe24775d504002ac7aaea09b1b47 — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.0005300000000000001, CLAUDE_OPUS_5_5 0.000192, GEMINI_ARGON 0.00071 USD, âge 12 s ; noms des variables du test : anthropic RR_ANTHROPIC_API_KEY_3, gemini GEMINI_API_KEY_2 (réalité des appels attestée par l'outil de session-depot ; le script vérifie la pièce)
+- recharge automatique attestée : « recharge automatique active sur tous les modèles API, attesté le 25 octobre 2026 à 09:58 Paris »
+- essais : 141 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 29 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 (la fonction écarte le bytecode depuis le constat n° 30 § 5)
+- test de dépense revérifié au départ : trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.0005300000000000001, CLAUDE_OPUS_5_5 0.000192, GEMINI_ARGON 0.00071 USD, âge 263 s ; noms des variables du test : anthropic RR_ANTHROPIC_API_KEY_3, gemini GEMINI_API_KEY_2
+- voisines au départ : aucune
+- passerelle de sortie, sous l'environnement du noyau sans clé : httpx 0.28.1, api.anthropic.com : statut 401 ; urllib, generativelanguage.googleapis.com : statut 403
+- environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER HTTPS_PROXY https_proxy NO_PROXY no_proxy SSL_CERT_FILE REQUESTS_CA_BUNDLE CURL_CA_BUNDLE GRPC_DEFAULT_SSL_ROOTS_FILE_PATH ANTHROPIC_API_KEY GEMINI_API_KEY BRAVE_API_KEY OPENALEX_API_KEY SEMANTIC_SCHOLAR_API_KEY .
+- marqueur de départ : /var/lib/essaim-m3/pilotes-partis/pilote2-gemini-v5-2-1-maieutique-v1 (R3 ; jamais retiré)
+- clés : présentes (valeurs jamais lues ni écrites) ; Anthropic : variable RR_ANTHROPIC_API_KEY_3 → ANTHROPIC_API_KEY ; Gemini : GEMINI_API_KEY_2 → GEMINI_API_KEY ; Brave : BRAVE_API_KEY → BRAVE_API_KEY (source « web ») ; OpenAlex : OPENALEX_API_KEY → OPENALEX_API_KEY ; Semantic Scholar : SEMANTIC_SCHOLAR_API_KEY → SEMANTIC_SCHOLAR_API_KEY ; rien d'autre de l'environnement du lanceur (ni jeton Hugging Face, Vast, OSF, GitHub, ni ANTHROPIC_BASE_URL, PYTHONPATH, ESSAIM_M3_ESPACE, ESSAIM_M3_COLLISIONNEUR)
+- départ (UTC) : 2026-10-25T13:51:55Z
+- PID de la course : 5282 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T14:18:24Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 24cd458a568018afa00185e87018953c953fd79608ef15f056521cc07c8d7b4d
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit e09cc4839f41b66852e856ebeb277bfd7e1f3ee5 ; sha256_code_noyau 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 ; espace /var/lib/essaim-m3/3f66a72bc4d0dd7a ; sources de moisson ["arxiv", "openalex", "semanticscholar", "web"] ; clés présentes au manifeste — web : True, OpenAlex : True, Semantic Scholar : True ; dépense du noyau 14.9169 USD (à rapprocher de la console, P2C1-05)
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 28ca2aaf61101f45304a2d8a07c70aae93d4026ac5d10c64f9efb62daa6cadba
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 8c9c47a5cb1930fcf36fac8d38bdec6f8873c90cf2935b8f7c99b3d1d2fd3a59
+- réponse à la question : reponse-question-g001.md, sha256 6b1c9ac2c118ea00125e3a3199cba55c4a8b7ff7ad074f6f632bdafcfc442d60
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 a7bd419eb7e7d15c2edaf3985328b4847851c6f334f79369f29d84cb37dbe368, 1615 entrées = 1615 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T14:18:26Z
