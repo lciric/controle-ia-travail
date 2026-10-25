@@ -1593,6 +1593,45 @@ def test_moisson_de_bout_en_bout_en_simulation(tmp_path):
     assert json.loads((course / "archive" / ligne["chemin"] / "resume.json").read_text())["n_telechargements"] == 3
 
 
+def test_r410_cles_openalex_et_s2_en_entete_jamais_dans_l_adresse(monkeypatch, tmp_path):
+    """R-410 : les clés OpenAlex (`OPENALEX_API_KEY`) et Semantic Scholar (`S2_API_KEY`) sont lues par le noyau seul et
+    envoyées en en-tête (`Authorization: Bearer`, `x-api-key`), jamais dans l'adresse ; sans clé, aucune en-tête de clé
+    (requête anonyme, comportement inchangé) ; la pièce brute journalisée est la réponse, jamais la requête. Artefacts :
+    clé absente ; clé présente."""
+    from essaim_m3.noyau import moisson
+    vus = []
+
+    def faux_lire(url, octets_max, delai_s=25.0, entetes=None, hotes_permis=None):
+        vus.append((url, dict(entetes or {})))
+        if "openalex" in url:
+            return (json.dumps({"results": [{"id": "W1", "display_name": "T", "authorships": [], "publication_year": 2025,
+                                              "abstract_inverted_index": None, "primary_location": {}}]}).encode(), "application/json", url)
+        return (json.dumps({"data": [{"paperId": "P1", "title": "T", "authors": [], "year": 2025}]}).encode(), "application/json", url)
+    monkeypatch.setattr(moisson, "_lire_https", faux_lire)
+    monkeypatch.delenv("OPENALEX_API_KEY", raising=False)
+    monkeypatch.delenv("S2_API_KEY", raising=False)
+    moisson.openalex_rechercher("evaluation awareness", 2)
+    moisson.semanticscholar_rechercher("evaluation awareness", 2)
+    assert "Authorization" not in vus[0][1] and "x-api-key" not in vus[1][1]
+    assert "api_key" not in vus[0][0] and "MARQUEUR" not in vus[0][0] + vus[1][0]
+    monkeypatch.setenv("OPENALEX_API_KEY", "MARQUEUR-CLE-OPENALEX-R410")
+    monkeypatch.setenv("S2_API_KEY", "MARQUEUR-CLE-S2-R410")
+    notices_oa, brut_oa = moisson.openalex_rechercher("evaluation awareness", 2)
+    notices_s2, brut_s2 = moisson.semanticscholar_rechercher("evaluation awareness", 2)
+    assert vus[2][1] == {"Authorization": "Bearer MARQUEUR-CLE-OPENALEX-R410"} and vus[3][1] == {"x-api-key": "MARQUEUR-CLE-S2-R410"}
+    assert "MARQUEUR" not in vus[2][0] + vus[3][0]  # jamais dans l'adresse (journalisable)
+    assert len(notices_oa) == 1 and len(notices_s2) == 1
+    assert b"MARQUEUR" not in brut_oa + brut_s2  # la pièce brute est la réponse, pas la requête
+    # le manifeste dit la présence des clés, jamais leur valeur
+    from essaim_m3.noyau import recherche as _rech
+    n = boucle.Noyau(tmp_path / "r", "m", taches.banque_simulation(np.random.default_rng(4), 4, 4, 2),
+                     {"appels_max": 5, "usd_max": 1.0, "temps_max_s": 60, "recherches_max": 3}, 2.0, 1,
+                     appelants={}, especes_amorcage=[], recherche=_rech.recherche_simulee)
+    m = json.dumps(n.manifeste)
+    assert n.manifeste["cle_openalex_presente"] is True and n.manifeste["cle_s2_presente"] is True
+    assert "MARQUEUR" not in m
+
+
 def test_sources_reelles_de_moisson_si_reseau():
     """Une recherche réelle sur arXiv (lecture seule) quand le réseau le permet ; sinon le test est sauté."""
     import socket

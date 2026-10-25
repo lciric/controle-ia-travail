@@ -85,8 +85,12 @@ def _abstract_openalex(inv: dict | None) -> str:
 
 
 def openalex_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
+    """R-410 : clé OpenAlex lue par le noyau seul (`OPENALEX_API_KEY`, en-tête `Authorization: Bearer`, jamais dans
+    l'adresse, jamais journalisée) ; sans clé, requête anonyme (budget quotidien partagé par l'adresse réseau)."""
     url = "https://api.openalex.org/works?" + urllib.parse.urlencode({"search": requete, "per-page": int(n)})
-    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, hotes_permis={"api.openalex.org"})
+    cle = os.environ.get("OPENALEX_API_KEY")
+    entetes = {"Authorization": "Bearer " + cle} if cle else None
+    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, entetes=entetes, hotes_permis={"api.openalex.org"})
     d = json.loads(brut.decode("utf-8"))
     notices = []
     for w in d.get("results", []) or []:
@@ -101,9 +105,13 @@ def openalex_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
 
 
 def semanticscholar_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
+    """R-410 : clé Semantic Scholar lue par le noyau seul (`S2_API_KEY`, en-tête `x-api-key`, jamais journalisée) ;
+    sans clé, requête anonyme (réserve commune des utilisateurs sans clé)."""
     url = "https://api.semanticscholar.org/graph/v1/paper/search?" + urllib.parse.urlencode(
         {"query": requete, "limit": int(n), "fields": "title,authors,year,abstract,openAccessPdf,externalIds,url,publicationDate"})
-    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, hotes_permis={"api.semanticscholar.org"})
+    cle = os.environ.get("S2_API_KEY")
+    entetes = {"x-api-key": cle} if cle else None
+    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, entetes=entetes, hotes_permis={"api.semanticscholar.org"})
     d = json.loads(brut.decode("utf-8"))
     notices = []
     for p in d.get("data", []) or []:
