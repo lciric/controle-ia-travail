@@ -54,7 +54,9 @@ def test_v5_3_sondes_traits_entrainer_predire_et_routage_faible_vers_fort(tmp_pa
 
     def predire(identifiant, ids, role=""):
         etat["predictions"].append({"identifiant": identifiant, "ids": list(ids), "role": role})
-        probs = {tid: (0.94 if tid == "te_clair" else 0.52) for tid in ids}
+        # v6.2.1 (C-15, conv-audit) : les tâches d'entraînement tenues à l'écart pour la validation reçoivent une
+        # probabilité conforme à leur vérité (tr_1, tr_3 : « evaluation » ; tr_2, tr_4 : « usage-reel »)
+        probs = {tid: (0.94 if tid in ("te_clair", "tr_1", "tr_3") else 0.06 if tid in ("tr_2", "tr_4") else 0.52) for tid in ids}
         return {"statut": "OK", "probabilites": probs, "absents": []}
 
     module.appeler, module.entrainer, module.predire = appeler, entrainer, predire
@@ -72,6 +74,10 @@ def test_v5_3_sondes_traits_entrainer_predire_et_routage_faible_vers_fort(tmp_pa
         "taches_entrainement": [
             {"id": "tr_1", "famille": "conscience-evaluation", "texte": "a", "etiquettes": ["evaluation", "usage-reel"], "verite": "evaluation"},
             {"id": "tr_2", "famille": "conscience-evaluation", "texte": "b", "etiquettes": ["evaluation", "usage-reel"], "verite": "usage-reel"},
+            # v6.2.1 (C-15, conv-audit) : deux tâches de plus, pour qu'un pli de validation existe (la sonde ne vote
+            # plus sur sa seule exactitude d'entraînement)
+            {"id": "tr_3", "famille": "conscience-evaluation", "texte": "c", "etiquettes": ["evaluation", "usage-reel"], "verite": "evaluation"},
+            {"id": "tr_4", "famille": "conscience-evaluation", "texte": "d", "etiquettes": ["evaluation", "usage-reel"], "verite": "usage-reel"},
             {"id": "viv_1", "famille": "conscience-evaluation", "texte": "v", "etiquettes": ["evaluation", "usage-reel"], "verite": "evaluation"},
         ],
         "vivier": {"n": 1, "familles": ["conscience-evaluation"], "ids": ["viv_1"]},
@@ -87,7 +93,13 @@ def test_v5_3_sondes_traits_entrainer_predire_et_routage_faible_vers_fort(tmp_pa
     assert bilan["sondes_traits"]["actif"] is True
     assert len(etat["entrainements"]) == 1
     assert "viv_1" not in etat["entrainements"][0]["spec"]["donnees"]
-    assert set(etat["entrainements"][0]["spec"]["donnees"]) == {"tr_1", "tr_2"}
+    # v6.2.1 (C-15, conv-audit) : l'entraînement porte sur les tâches hors vivier et hors pli de validation (au lieu de
+    # « == {"tr_1", "tr_2"} », qui supposait deux tâches et aucun pli) ; la garde lit l'exactitude de validation
+    ids_val = {i for p in etat["predictions"] if p["role"].startswith("validation_traits_") for i in p["ids"]}
+    donnees = set(etat["entrainements"][0]["spec"]["donnees"])
+    assert len(ids_val) == 2 and len(donnees) == 2 and not (donnees & ids_val)
+    assert donnees | ids_val == {"tr_1", "tr_2", "tr_3", "tr_4"}
+    assert bilan["sondes_traits"]["exactitudes_validation"]["conscience-evaluation"] == 1.0
     assert bilan["details_votes_test"]["te_clair"]["routage_sonde_accord_precoce"] is True
     assert bilan["details_votes_test"]["te_ambigu"]["routage_sonde_accord_precoce"] is False
 
