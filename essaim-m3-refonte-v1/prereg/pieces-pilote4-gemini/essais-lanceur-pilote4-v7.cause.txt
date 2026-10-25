@@ -1,0 +1,16 @@
+Série v7 (batterie v6 `b4857c51…` sur le lanceur v5 `565f5205…`), 25 octobre 2026, 20:30:08–20:40:38 UTC : 215 cas sur 218.
+
+Trois écarts, deux causes (lues dans le journal et dans les LANCEMENT.md des cas ; écrit par conv-audit à 20:45 UTC) :
+
+1. Défaut du lanceur v5 (cas `seg-clore-extrait` et `seg-clore-v53-refusee`) : avec CLORE=1, les étapes 4 à 7 sont
+   sautées, donc aussi le `cd "$R"` de l'étape 7 ; l'extrait mécanique de l'étape 8a (`python -m
+   essaim_m3.outils.extrait_mecanique`, lancé depuis le dossier courant) échoue (« No module named 'essaim_m3' ») : la
+   course fermée sans reprise n'a pas d'extrait (l'archive fermée, elle, est complète). La porte « v5.3 précédente »
+   refuse alors cette v5.3 pour « empreintes de v5.3 sans extrait-mecanique-v1.json », non pour la raison attendue
+   (« fermée sans reprise »). Correction : lanceur v6 (`deriver_lanceur_pilote4_v6.py` : `cd "$R"` dans la branche
+   CLORE=1, seul changement de code).
+2. Erreur de la batterie v6 (cas `seg-noyau-refuse-code`) : la vérification lisait la sortie standard du cas du
+   segment 1 (`$RS/sortie.txt`) au lieu de celle du cas de la reprise refusée ; le cas `seg-noyau-refuse` lui-même est
+   conforme (« reprise refusée par le noyau (code 9 », code 3). Correction : batterie v7 (`deriver_essais_pilote4_v7.py`).
+
+Série suivante : v8, batterie v7 sur le lanceur v6.

@@ -1,0 +1,30 @@
+--- /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/lanceur-v5/lancer_pilote4_gemini_v5.sh	2026-10-25 21:28:47.898204471 +0100
++++ lancer_pilote4_gemini_v6.sh	2026-10-25 21:41:47.314729177 +0100
+@@ -1,7 +1,9 @@
+ #!/usr/bin/env bash
+ # Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6.1, chacun seul, sur la banque
+ # `confrontation-v3` (identifiants opaques), quatre générations notées, 6 rondes de conception au plus avant g000 (l'organisme déclare lui-même la fin de sa conception, `fin_conception.json`), 3 USD au plus par ronde, question M à g001 »,
+-# une course en un ou plusieurs segments (COURSE=v5-3, puis COURSE=v6-1 ; SEGMENT=1, 2, …) — v5 : le lanceur v4
++# une course en un ou plusieurs segments (COURSE=v5-3, puis COURSE=v6-1 ; SEGMENT=1, 2, …) — v6 : le lanceur v5
++# (565f5205…) par `deriver_lanceur_pilote4_v6.py` (avec CLORE=1, l'extrait mécanique est lancé depuis le dépôt ; écart
++# consigné dans `diff-lanceur-pilote4-v5-vers-v6.txt`), la v5 dérivée du lanceur v4
+ # (f335440c…) par `deriver_lanceur_pilote4_v5.py` (reprise par segments du noyau 8e5e2f7b : une course arrêtée par le STOP
+ # du minuteur continue dans l'appel suivant ; archive fermée à la fin de la course ou sur CLORE=1 ; 75 USD par course ;
+ # minuteur à 3 400 s ; écart consigné dans `diff-lanceur-pilote4-v4-vers-v5.txt`), le v4 dérivé du v3 (73d318b9…) par
+@@ -23,7 +25,7 @@
+ #   MODE=reel COURSE=v5-3 DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
+ #       APPEL_CONTROLE_FICHIER=… RECHARGE_ATTESTEE=… CLE_ANTHROPIC=NOM CLE_GEMINI=NOM \
+ #       [CLE_OPENALEX=NOM] [CLE_S2=NOM] [TENTATIVE=2] REFERENCE_M=<dossier du pilote de la course M> [SEGMENT=1] \
+-#       bash lancer_pilote4_gemini_v5.sh
++#       bash lancer_pilote4_gemini_v6.sh
+ #   MODE=reel COURSE=v6-1 … PRECEDENTE_V53=<dossier du pilote de la course v5.3 de ce pilote, dans la même copie> (même forme)
+ #   Reprise : la même commande (même COURSE, TENTATIVE, GRAINE, texte et références) avec SEGMENT=K, quand le LANCEMENT.md
+ #     dit « segment K−1 arrêté par STOP ; reprise attendue : SEGMENT=K » ; à chaque segment, un test de dépense frais
+@@ -793,6 +795,7 @@
+ note "- fin du processus (UTC) : $(date -u +%Y-%m-%dT%H:%M:%SZ) ; code de retour : $CODE ; sortie standard fermée (non lue) ; sortie d'erreur : ${ERREURS#"$PILOTE"/} (lisible)"
+ else
+   CODE=""
++  cd "$R"   # v6 : l'étape 8a lance l'extrait mécanique depuis le dépôt (`python -m essaim_m3.outils.extrait_mecanique`)
+   note "- CLORE=1 : aucune reprise, aucun appel ; la course arrêtée au segment $((SEGMENT - 1)) est fermée comme à sa fin (décision de Lazar)"
+ fi
+ # Fin de segment : le noyau a rendu 0 et écrit un état de reprise de plus (arrêt sur le STOP du minuteur) — la course reste
