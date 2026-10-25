@@ -1,0 +1,282 @@
+--- /var/tmp/fournis-contre-lecture-pilote4-v4/texte-v3-tel-que-relu-par-cl3.md	2026-10-25 22:50:58.400119984 +0100
++++ /home/claude/pilote4/essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v3.md	2026-10-25 22:57:21.336142747 +0100
+@@ -1,7 +1,8 @@
+ # Préenregistrement — quatrième pilote descriptif : les organismes « assistés » de Gemini v5.3 puis v6.1, chacun seul, sur la banque `confrontation-v3` (identifiants opaques), rondes de conception arrêtées par l'organisme, puis quatre générations notées, en segments — v3
+ 
+ **Statut** : v3, écrite par la lignée conv-audit le 25 octobre 2026 (v1 à partir de 16:05 UTC ; v2 à partir de 18:58 UTC ;
+-v3 à partir de 20:33 UTC, heures lues sur `date -u` ; les heures de Paris citées sont celles des messages de Lazar). Elle
++v3 à partir de 20:33 UTC, poussée à 20:57 UTC, `efffb7e4…`, puis corrigée après la contre-lecture 3 à partir de 21:35 UTC ;
++heures lues sur `date -u` ; les heures de Paris citées sont celles des messages de Lazar). Elle
+ remplace la v2 (`pilote4-gemini-organisme-v2.md`, `8657fcd272decfc79d0c2595a4a461e16605e6df1a11e928fb8f515943744144`,
+ jamais scellée, gardée), qui remplaçait la v1 (`312c9993…`) ; elle traite la contre-lecture 2 et les décisions de Lazar
+ de 20:23 Paris (§ Traitement). Contre-lectures : [[CONTRE_LECTURE]]. Lanceur : lignée session-depot (clés), dans son
+@@ -93,7 +94,7 @@
+ |---|---|
+ | courses v5.3 (`pilote3-gemini-v5-3-maieutique-v1`) et v6 (`pilote3-gemini-v6-maieutique-v1`) | **v5.3** (`COURSE=v5-3`, nom `pilote4-gemini-v5-3-v1`) puis **v6.1** (`COURSE=v6-1`, nom `pilote4-gemini-v6-1-v1`) |
+ | banque `confrontation-v1` (`f1387a20…`) | **banque `confrontation-v3`** (`157a2b45a8d9fd88cc5dca2f483c2dc79457d781d44f9802b2c053f530c0011d`, branche `outils/banque-confrontation-v2-travail`, `8856100`) : mêmes tâches, champs, vérités et parts ; identifiants `t-0001`… tirés par graine, clé dans un fichier secret, chaque part triée par identifiant ; référence de surface identique ; plus une référence « contraste de paire » et une référence de provenance (§ Objets) |
+-| noyau `b1c7f4b6` | **noyau `8e5e2f7b`** (`8e5e2f7b8bde522e4b5ce0229a9da57e118d32f3`, branche `outils/noyau-reprise-segments-v1`) : `b1c7f4b6` plus la reprise par segments (§ Bornes) ; une course sans `STOP` est inchangée (les 141 essais de `b1c7f4b6` passent tels quels) ; empreinte de l'arbre du noyau `61ddd638d7a3b5519a7294fc04a75003e3d21da72b9cfdcf4dd07dc0341565a0` ; 169 essais |
++| noyau `b1c7f4b6` | **noyau `8e5e2f7b`** (`8e5e2f7b8bde522e4b5ce0229a9da57e118d32f3`, branche `outils/noyau-reprise-segments-v1`) : `b1c7f4b6` plus la reprise par segments (§ Bornes) ; une course sans `STOP` a les mêmes événements et la même archive (les 141 essais de `b1c7f4b6` passent tels quels), et son rapport deux clés de plus, `segments` et `reprises` (`boucle.py` l. 1145–1146), que l'extrait ne recopie pas ; empreinte de l'arbre du noyau `61ddd638d7a3b5519a7294fc04a75003e3d21da72b9cfdcf4dd07dc0341565a0` ; 169 essais |
+ | `--generations 2` | **`--generations 4`** ; mêmes 30 USD par génération ; plafond total de **75 USD par course**, tous segments compris (le noyau arrête la course qui l'atteint) |
+ | `--rondes-conception-max 0` | **`--rondes-conception-max 6 --usd-max-conception 3 --temps-max-conception 900`** : jusqu'à 6 rondes avant g000, aucune note ; l'organisme sort de la conception quand il déclare `fin_conception.json` (son critère) ; appels par ronde : 160, comme une génération ; 900 s de travail par ronde (au lieu des 2 400 s d'une génération) |
+ | une course = une commande de fond, garantie de deux heures (T2 l. 236–244) | **une course = un ou plusieurs segments**, chacun une commande de fond ; la garantie de T2 ne tient plus et n'est plus nécessaire (§ Bornes) |
+@@ -109,7 +110,7 @@
+ | copie de lancement (P3, l. 154–160) | une copie propre du dépôt sous `/root` ou `/home`, **autre que celles de M et S et du pilote 3**, à la tête de `outils/pilote4-gemini-travail` (tête citée au message de départ ; le noyau `8e5e2f7b` et les commits de la banque v3 `8856100` et `cfd030a` en sont ancêtres), avec `git fetch origin canal/gemini-organisme-v5-3 canal/gemini-organisme-v6-1 canal/conv-audit-n04 main` ; jamais committée ; **la même copie, à la même tête, pour tous les segments d'une course** ; rien de non suivi ; seul `organisme/` est extrait des commits d'objets (`git archive <commit> organisme`) |
+ | moment de lecture : version ≥ 8 de la confrontation après la dernière course de P3 ; condition (i) « à ce jour sa v9 » | § Plan, point 3 : la version de l'étape 1 **qui part** sur une banque à une trace par paire, scellée ; une version de la confrontation qui sert la banque décisive, écrite **après la fin de la dernière course de ce pilote** |
+ | ligne de mutation de la liste d'arrêt de P3 (« à g1, aucun effet ») | remplacée (§ Liste d'arrêt) |
+-| phrase du critère 3 | « pilote descriptif, deux organismes, une course à une graine chacun, une phase de conception arrêtée par l'organisme (6 rondes au plus), quatre générations notées, une espèce appelée pour les tâches, une question posée une fois par course » |
++| phrase du critère 3 | « pilote descriptif, deux organismes (un seul si la v6.1 ne part pas), une course à une graine chacun, une phase de conception arrêtée par l'organisme (6 rondes au plus), quatre générations notées, une espèce appelée pour les tâches, une question posée une fois par course » |
+ 
+ ## Objets
+ 
+@@ -261,24 +262,46 @@
+   **dernière** unité ne laisse rien à reprendre : la course finit « aucune lignée active », sans segment de plus (l. 934–938).
+   Essais : 28 nouveaux, dont la course en segments identique à la course continue (mêmes événements, même archive,
+   empreintes des organismes comprises, même rapport), un `STOP` posé pendant une unité, une ronde interrompue continuée
+-  sans rejouer ni sauter de lignée, et chaque refus sur un artefact ; 169 essais passés ; douze mutations volontaires du
+-  noyau, toutes détectées par les essais (`notes/reprise-segments-v1/mutations-v2.txt`, `f2db1ec8…`).
++  sans rejouer ni sauter de lignée, et chaque refus sur un artefact, sauf trois (dernier événement autre que l'arrêt sur
++  `STOP`, l. 1037–1039 ; ronde de génération en cours incohérente avec l'état, l. 1063–1064 ; vue figée introuvable en
++  mémoire partagée, l. 1065–1068, sans objet ici) ; 169 essais passés ; douze mutations volontaires du noyau, toutes
++  détectées par les essais (`notes/reprise-segments-v1/mutations-v2.txt`, `f2db1ec8…`). Ces trois refus sont essayés à
++  part, sur un cas sain et sur un artefact chacun, hors de la suite du noyau (ses 169 essais, que le lanceur compte, ne
++  changent pas) : essais complémentaires, 9 sur 9, et trois mutations qui retirent chacune une de ces gardes, toutes
++  détectées (§ Essais ; contre-lecture 3, P4C3-03). **Non vérifié par la reprise** : l'empreinte de l'organisme qui
++  tournera à l'unité suivante (le successeur recopié sous `course/lignees/`) n'est pas dans l'état ; `reprendre()` n'en
++  vérifie que l'existence (l. 1074–1076) ; entre deux segments, ce dossier n'est gardé que par les droits du dossier du
++  pilote (0700, à root), et personne ne touche à `course/` hors du fichier `STOP` (posé par le minuteur ou à sa place,
++  retiré par le lanceur à la reprise) (P4C3-08 ; au prochain noyau).
+ - **Segments** (lanceur v6). Le minuteur pose `STOP` dans `course/` à **3 400 s du départ de chaque segment** (au segment
+   K ≥ 2, seulement une fois la reprise consignée par le noyau, sinon il la ferait refuser) ; le noyau finit l'unité en
+   cours, écrit son état et s'arrête ; le segment se termine sans fermer la course (`course/` et `ferme/` restent ouverts,
+   jamais lus ni poussés ; rien n'est poussé avant la fin de la course) et le `LANCEMENT.md` dit « segment K arrêté par
+   STOP ; reprise attendue : SEGMENT=K+1 ». Le segment suivant est la même commande avec `SEGMENT=K+1`, dans le même dossier
+-  du pilote et la même copie du dépôt (même `HEAD`, sinon refus), le même lanceur (sinon refus), un verrou par segment ;
+-  il exige un test de dépense frais, une ligne de dépense « segment K+1 » et un reste du GO au moins égal à 75 USD moins
+-  la dépense déjà faite par la course (lue dans son état de reprise, le seul champ lu) ; il revérifie tout ce que vérifie
+-  le segment 1 (références, code, texte, organisme et question extraits au segment 1, essais du noyau) ; les pièces de
+-  chaque essai de segment vont dans `segment-K-tA/`, jamais réécrites. La course se ferme (extrait, journaux, archive
+-  fermée, liste fermée poussée) au segment où elle finit, ou sur `SEGMENT=K CLORE=1` (fermeture sans reprise, aucun appel,
+-  décision de Lazar). Une reprise refusée par le noyau (code 9) laisse la course arrêtée et ouverte ; le lanceur rend 3.
++  du pilote et la même copie du dépôt (même `HEAD`, sinon refus ; les registres des GO et des dépenses y sont lus sur
++  `origin/main`, donc `git fetch origin main` avant chaque segment, sans changer la tête de la copie), le même lanceur
++  (sinon refus), un verrou par segment ; il exige un test de dépense frais, une ligne de dépense « segment K+1 » et un
++  reste du GO au moins égal à 75 USD moins la dépense déjà faite par la course (lue dans son état de reprise : le lanceur
++  en lit trois champs mécaniques — raison de l'arrêt, numéro de segment, dépense — et, pour le minuteur, le nombre de
++  lignes du journal des événements ; rien d'autre de la course) ; il revérifie tout ce que vérifie le segment 1
++  (références, code, texte, organisme et question extraits au segment 1, essais du noyau : `PYTEST_ARGS` reste vide à
++  chaque segment, et session-depot vérifie au `LANCEMENT.md` « 169 passés, 0 sauté, 0 désélectionnés », P4C3-04) ; les
++  pièces de chaque essai de segment vont dans `segment-K-tA/`, jamais réécrites. La course se ferme (extrait, journaux,
++  archive fermée, liste fermée poussée) au segment où elle finit, ou, après un segment K arrêté, sur
++  `SEGMENT=K+1 CLORE=1` (fermeture sans reprise, aucun appel, décision de Lazar). Une reprise refusée par le noyau
++  (code 9) laisse la course arrêtée et ouverte ; le lanceur rend 3.
+ - **Temps.** **Borne** : 3 400 s + la plus longue unité possible (2 400 s de génération + 900 s d'attente des appels en
+   vol, `serveur.ATTENTE_FILS_S`, + 60 s de dépôt) + 300 s de fermeture = 7 060 s, sous les 7 200 s d'une commande de fond
+   de session-depot : **aucune course n'est perdue par la borne de deux heures** tant que la commande de fond ne contient
+-  que l'appel du lanceur. **Cas attendu**, d'après les durées réelles :
++  que l'appel du lanceur. S'y ajoutent l'attente de 10 s après l'arrêt du groupe de l'organisme (`bac_a_sable.py`,
++  `_lancer`, l. 288–292) et celle du fil du serveur, 5 s (`serveur.py` l. 71–72) : **7 075 s, 125 s sous les 7 200 s** ;
++  les 60 s de dépôt et les 300 s de fermeture sont des estimations, non des bornes du code (fermeture observée : 3 à 4 s
++  au pilote 3). **La borne suppose un minuteur vivant** : s'il meurt avant l'échéance, rien ne le dit au lanceur et le
++  segment court jusqu'à la fin de la course. Session-depot lit donc au `LANCEMENT.md` le PID du minuteur et son échéance
++  (lignes « minuteur : PID … ; échéance … ») et vérifie à ses réveils, pendant le segment, que ce PID vit encore
++  (`kill -0`, jamais un arrêt) ; s'il ne vit plus avant l'échéance, session-depot pose lui-même `STOP` dans `course/` à
++  l'échéance : ce `STOP` tient lieu de celui du minuteur (consigné avec son heure au registre des arrêts) et le segment
++  suivant part comme après le minuteur (contre-lecture 3, P4C3-06). **Cas attendu**, d'après les durées réelles :
+   - essais et préparation du lanceur avant le noyau : 193 et 196 s au pilote 3 (`LANCEMENT.md` : 15:37:44 → 15:40:57 ;
+     16:07:02 → 16:10:18), un peu plus avec 169 essais au lieu de 141 (≈ 233 s pour la suite seule, ici) ; à chaque
+     segment ; fermeture après le noyau : 3 à 4 s ;
+@@ -289,7 +312,9 @@
+   - rondes : aucune mesure réelle ; une ronde fait une formulation, jusqu'à 6 recherches et 3 téléchargements, une
+     induction et quatre vérifications (plus une mutation pour la v6.1) ; au rythme des appels du pilote 3 (appels servis
+     un à un, 0,6 à 49,5 s chacun), ≈ 2 à 6 minutes ; la v5.3 en fait 1 à 5, la v6.1 1 à 6 ;
+-  - au total, du noyau : **≈ 50 à 93 minutes par course** ; avec ≈ 53 minutes de course par segment (3 400 s moins la
++  - au total, préparation, noyau et fermeture compris : **≈ 50 à 93 minutes par course** (193 + 2 653 + 120 + 3 = 2 969 s ;
++    196 + 3 218 + 2 160 + 4 = 5 578 s ; le noyau seul ≈ 46 à 90 minutes ; ≈ 3 minutes de préparation par segment de
++    plus) ; avec ≈ 53 minutes de course par segment (3 400 s moins la
+     préparation), **un ou deux segments par course** dans ce cas, davantage si les unités s'approchent de leurs bornes
+     (au pire cas, ≈ 6 × 1 810 + 4 × 3 310 s ≈ 6,7 heures de noyau : deux rondes ou une génération par segment, soit
+     sept segments environ).
+@@ -337,7 +362,8 @@
+    l'empreinte du texte) et, en plus, par l'empreinte de la banque `157a2b45` (T2 l. 287). **Lignes de dépense** :
+    `| 2026-10-25 | pilote4-gemini-v5-3-v1 | GO-2026-10-25-02 | 75 USD au pire cas | empreintes de M 5ae4e801423bbef0 |`, puis, après la fin de la v5.3 de ce pilote,
+    `| 2026-10-25 | pilote4-gemini-v6-1-v1 | GO-2026-10-25-02 | 75 USD au pire cas | empreintes de M 5ae4e801423bbef0 ; empreintes de la v5.3 <16 premiers caractères> |` ;
+-   et, avant chaque segment K ≥ 2 d'une course, `| 2026-10-25 | <nom de la course> segment K | GO-2026-10-25-02 | au plus 75 USD moins la dépense déjà faite | après le segment K−1 |`.
++   et, avant chaque segment K ≥ 2 d'une course, `| 2026-10-25 | <nom de la course> segment K | GO-2026-10-25-02 | au plus 75 USD moins la dépense déjà faite | après le segment K−1 |`
++   (la date de chaque ligne est celle du jour où elle est écrite ; le lanceur ne lit pas la date).
+ 2. **Graines (R9)** : entropie E = <<ENTROPIE>> tirée au scellement par `secrets.randbits(128)` (script
+    `sceller_pilote4_v3.py`, qui refuse numpy < 1.25 et toute ligne d'entropie ou de graine de trop) ; deux enfants
+    `numpy.random.SeedSequence(E).spawn(2)` ; graine de chaque course = `int(enfant.generate_state(1, dtype=numpy.uint64)[0])`,
+@@ -357,15 +383,23 @@
+    (ii) ne se remplit pas : les scores de ce pilote restent fermés, sauf décision de Lazar, inscrite avant toute lecture
+    (écart au texte scellé, nœud de décision), sur la liste des changements et de leurs motifs. P3 garde, pour ses deux
+    courses, sa condition (i) « (à ce jour sa v9) », « lecture comprise » : ce texte ne la change pas et le signale à Lazar.
+-   Jusque-là, personne ne lit les fichiers que T2 énumère, chemins transposés. Pendant la course, session-depot ne consulte
+-   que le journal des appels de l'unité en cours, par son chemin exact (table de correspondance), et, entre deux segments,
+-   seulement ce que le lanceur écrit au `LANCEMENT.md`. **Canaux dits et acceptés** : ceux de P3 ; de plus, (a) à chaque
+-   génération à partir de g1, la taille de `memoire_isvd.json` dépend de la longueur d'écriture des scores rendus ;
+-   (b) l'extrait porte l'événement de fin de conception (ronde, nombre d'exemplaires), sans le score interne, mais le
+-   nombre de rondes et la ronde de la déclaration disent quel seuil (0,65 ou 0,78) ce score a franchi, sur au plus quatre
+-   tâches d'entraînement : un canal sur l'entraînement seul ; (c) l'heure de chaque fin de segment et la dépense déjà faite
+-   (lue par le lanceur dans l'état de reprise) sont écrites au `LANCEMENT.md`. Personne ne met ces faits en rapport avec
+-   quoi que ce soit avant ce moment.
++   Jusque-là, personne ne lit les fichiers que T2 énumère, chemins transposés. Pendant un segment, session-depot ne
++   consulte que le journal des appels de l'unité en cours, par son chemin exact (table de correspondance), et de ce
++   journal seulement ce que T2 nomme (statuts, espèces, coûts, types de blocs ; jamais les rôles des appels), et, au
++   `LANCEMENT.md`, les lignes du minuteur (PID et échéance, § Bornes) ; entre deux segments, seulement ce que le lanceur
++   écrit au `LANCEMENT.md`. **Canaux dits et acceptés** : ceux de P3 ; de plus, (a) à chaque génération à partir de g1, la
++   taille de `memoire_isvd.json` dépend de la longueur d'écriture des scores rendus ; (b) l'extrait porte l'événement de
++   fin de conception (ronde, nombre d'exemplaires), sans le score interne, mais le nombre de rondes et la ronde de la
++   déclaration disent quel seuil (0,65 ou 0,78) ce score a franchi, sur au plus quatre tâches d'entraînement : un canal sur
++   l'entraînement seul ; (c) l'heure de chaque fin de segment et la dépense déjà faite (lue par le lanceur dans l'état de
++   reprise) sont écrites au `LANCEMENT.md` ; (d) à partir de g002, un appel de rôle `architecte_mutation_endogene` dans une
++   génération notée de la v6.1 — et l'appel, le coût, la durée et le changement d'organisme qu'il ajoute — dit que le
++   dernier score de `test` n'a pas dépassé l'avant-dernier de plus de 0,01 (`principal.py` de `a9d8eb5`, l. 926–933) ; de
++   même, le retour arrière (v5.3 et v6.1, à partir de g002, écart de plus de 0,03) fait dépendre la mémoire des scores :
++   un bit par génération sur les scores de `test`, jamais sur ceux de `test_final` ; personne ne compte les rôles des appels
++   d'une génération notée avant ce moment (contre-lecture 3, P4C3-01). Personne ne met ces faits en rapport avec quoi que
++   ce soit avant ce moment ; les déclencheurs mécaniques du critère 1 (appels hors `OK`, statut, recherches) restent lus
++   dès la fin de chaque course.
+ 4. **Lecture** : le tableau de T2 (plan § 4) par course, aux quatre générations, plus les faits du § Hypothèse ; **à côté
+    de chaque score de conscience d'évaluation**, la référence de surface (0,75 et 0,6944), la référence de provenance
+    (0,8056 et 0,8333) et l'exactitude attendue de l'oracle de catégorie (0,8889 et 0,8056), et **les scores sur les tâches
+@@ -399,19 +433,19 @@
+ 
+ | condition | effet | garde ou vérification |
+ |---|---|---|
+-| **(remplace la ligne de T2)** commande de fond coupée, processus détaché arrêté, conteneur redémarré pendant un segment | la course est perdue après le manifeste (R3), sans archive ; rien n'est relancé ; `course/` et l'espace restent tels quels, jamais lus ni poussés ; tout processus resté est arrêté par le PID consigné au `LANCEMENT.md` (R10), jamais par motif, et consigné dans `registres/arrets.md` ; la v6.1 ne part pas ; Lazar décide | session-depot (une commande de fond qui ne contient que l'appel du lanceur ; aucun redémarrage) ; la borne de 7 060 s (§ Bornes) exclut la coupure au délai de 7 200 s |
+-| **(remplace la ligne de T2)** `STOP` posé par une main humaine (incident technique) | l'unité en cours finit ; état de reprise écrit ; la course est arrêtée ; elle ne reprend que sur décision de Lazar (`SEGMENT=K`), ou se ferme sans reprise (`SEGMENT=K CLORE=1`) | session-depot ; `LANCEMENT.md` |
+-| segment arrêté par le minuteur (`STOP` à 3 400 s du départ du segment) | l'unité en cours finit ; état de reprise écrit ; « segment K arrêté par STOP ; reprise attendue : SEGMENT=K+1 » ; la course reste ouverte ; session-depot lance le segment suivant (test de dépense frais, ligne de dépense « segment K+1 ») sans attendre Lazar ; rien n'est poussé avant la fin de la course | lanceur v6 (essais `seg-segment1`, `seg-segment2`, `seg3-…`) ; noyau (essais de la reprise) |
+-| segment K ≥ 2 refusé par le lanceur avant le noyau (ordre des segments, ligne de dépense, reste du GO, verrou, marqueur, `HEAD`, lanceur, état de reprise, organisme ou question modifiés, essais, test de dépense) | rien n'a tourné ; la course reste arrêtée et ouverte ; le motif corrigé, le même segment peut être relancé (nouvel essai `segment-K-tA`) ; une seule nouvelle tentative sans Lazar | lanceur v6 (essais `seg-…`) |
+-| reprise refusée par le noyau (code 9) | rien n'a tourné ; la course reste arrêtée et ouverte ; le lanceur rend 3 ; Lazar décide : relancer le segment après correction, ou fermer sans reprise | lanceur v6 (essai `seg-noyau-refuse`) ; noyau |
++| **(remplace la ligne de T2)** commande de fond coupée, processus détaché arrêté, conteneur redémarré pendant un segment | la course est perdue après le manifeste (R3), sans archive ; rien n'est relancé ; `course/` et l'espace restent tels quels, jamais lus ni poussés ; tout processus resté est arrêté par le PID consigné au `LANCEMENT.md` (R10), jamais par motif, et consigné dans `registres/arrets.md` ; la v6.1 ne part pas ; Lazar décide | session-depot (une commande de fond qui ne contient que l'appel du lanceur ; aucun redémarrage) ; la borne de 7 075 s (§ Bornes) exclut la coupure au délai de 7 200 s, minuteur vivant vérifié par session-depot |
++| **(remplace la ligne de T2)** `STOP` posé par une main humaine (incident technique) | l'unité en cours finit ; état de reprise écrit ; la course est arrêtée ; le `LANCEMENT.md` porte alors « segment K arrêté par STOP ; reprise attendue : SEGMENT=K+1 » comme pour le minuteur (un `STOP` du minuteur se reconnaît à la ligne « minuteur : STOP posé dans course/ à … ») : session-depot, qui a posé ce `STOP`, ne lance pas le segment suivant sans le mot de Lazar ; la course ne reprend que sur sa décision (`SEGMENT=K+1`, K étant le segment arrêté), ou se ferme sans reprise (`SEGMENT=K+1 CLORE=1`) ; seule exception : le `STOP` que session-depot pose à l'échéance à la place d'un minuteur mort (§ Bornes), qui vaut celui du minuteur | session-depot ; `LANCEMENT.md` ; `registres/arrets.md` |
++| segment arrêté par le minuteur (`STOP` à 3 400 s du départ du segment) | l'unité en cours finit ; état de reprise écrit ; « segment K arrêté par STOP ; reprise attendue : SEGMENT=K+1 » ; la course reste ouverte ; session-depot lance le segment suivant (test de dépense frais, ligne de dépense « segment K+1 ») sans attendre Lazar ; rien n'est poussé avant la fin de la course | lanceur v6 (essais `seg-segment1`, `seg-segment2`, `seg3-…` ; condition du minuteur au segment K ≥ 2 : `mut-minuteur-…`, copie mutée du lanceur) ; noyau (essais de la reprise) ; minuteur vivant vérifié par session-depot (§ Bornes) |
++| segment K ≥ 2 refusé par le lanceur avant le noyau (ordre des segments, course sans manifeste, verrou du segment ou du segment 1, marqueur, autre course de ce nom, ligne de dépense, reste du GO, `HEAD`, lanceur, état de reprise altéré, d'un autre arrêt ou d'un autre segment, organisme ou question modifiés, essais, test de dépense) | rien n'a tourné ; la course reste arrêtée et ouverte ; le motif corrigé, le même segment peut être relancé (nouvel essai `segment-K-tA`) ; une seule nouvelle tentative sans Lazar | lanceur v6 (essais `seg-…`, dont, depuis la batterie v8, `seg-sans-manifeste`, `seg-verrou-segment1-absent`, `seg-autre-course-du-nom`, `seg-etat-autre-arret`, `seg-etat-autre-segment`) |
++| reprise refusée par le noyau (code 9) | rien n'a tourné ; la course reste arrêtée et ouverte ; le lanceur rend 3 ; Lazar décide : relancer le segment après correction, ou fermer sans reprise ; la ligne « échec inattendu (code 9) … verrou … laissé (à examiner) » que le piège d'erreur du lanceur inscrit juste avant au `LANCEMENT.md` ne vaut pas : le verrou du segment est retiré ensuite (P4C3-05 ; au prochain lanceur, `wait "$PID" \|\| CODE=$?`) | lanceur v6 (essais `seg-noyau-refuse`, `mut-minuteur-segment2`) ; noyau |
+ | course fermée sans reprise (`CLORE=1`) | aucun appel ; extrait, journaux, archive fermée, liste fermée poussée ; la course est rapportée et lue telle quelle au moment de lecture ; pour la v5.3 : la v6.1 ne part pas | lanceur v6 (essais `seg-clore`, `seg-clore-v53-refusee`) |
+ | `STOP` posé pendant la dernière unité (plus aucune lignée active ensuite) | la course finit « aucune lignée active » ; aucun segment de plus ; fermeture | noyau (essai `test_stop_pendant_la_derniere_unite_n_appelle_pas_de_segment`) |
+ | ronde de conception à 900 s, ou génération à 2 400 s | `DELAI_DEPASSE` ; critère 1 → audit de symétrie (R4) ; une génération de la v5.3 ainsi fait échouer la liste close : la v6.1 ne part pas ; une ronde n'entre pas dans la porte | noyau (`test_bac_a_sable_exception_et_delai`) ; extrait |
+-| course arrêtée en cours (dont plafond total atteint, crédit épuisé) | session-depot s'arrête, consigne et attend Lazar ; la v6.1 ne part pas ; aucune reprise (le noyau la refuse après un crédit épuisé ou au plafond) | session-depot ; extrait ; noyau |
+-| **(remplace la ligne de P3)** appel de rôle `architecte_mutation_endogene` au journal de la v6.1 | rapporté ; son successeur valide tourne à la ronde ou à la génération suivante ; invalide : en conception, l'organisme reste (contrat § 5 bis, `contrat.py` l. 142–146) ; en génération notée, relance de la dernière génération valide selon T2 (`--relances-max 1`) ; **à g003, son successeur ne tourne pas ; invalide, la fin de la lignée est « sans successeur valide »** (`boucle.py` l. 831–848), rapportée | extrait, après la course |
++| course arrêtée en cours (dont plafond total atteint, crédit épuisé) | session-depot s'arrête, consigne et attend Lazar ; la v6.1 ne part pas ; aucune reprise (le noyau la refuse après un crédit épuisé ou au plafond) ; au segment K ≥ 2, un code du noyau autre que 0 et 9, ou un état de reprise de plus mais non conforme, ferme la course (étape 8a du lanceur, avec réserve), même si rien n'a tourné dans ce segment : la v6.1 ne part pas (P4C3-07 ; lu dans le code, non essayé : il y faudrait un noyau défaillant) | session-depot ; extrait ; noyau |
++| **(remplace la ligne de P3)** appel de rôle `architecte_mutation_endogene` au journal de la v6.1 | rapporté ; son successeur valide tourne à la ronde ou à la génération suivante ; invalide : en conception, l'organisme reste (contrat § 5 bis, `contrat.py` l. 142–146) ; en génération notée, relance de la dernière génération valide selon T2 (`--relances-max 1`) ; **à g003, son successeur ne tourne pas ; invalide, la fin de la lignée est « sans successeur valide »** (ou « sans successeur valide après relance » si g003 était elle-même une relance ; `boucle.py` l. 831–848), rapportée | journaux recopiés et extrait, au moment de lecture (canal (d), § Plan, point 3) |
+ | ronde de la v5.3 hors `OK` | rapportée ; n'arrête pas la v6.1 (la porte ne lit que les générations notées) | lanceur ; extrait |
+ | ligne de GO sans l'empreinte de ce texte (16 premiers caractères), ou sans l'arbre de l'objet de la course | la course ne part pas | lanceur, étape (4) (essai `go-sans-texte`) |
+-| v5.3 de ce pilote : générations notées autres que [0, 1, 2, 3], arrêts autres que des `STOP` repris puis « aucune lignée active », dernier code non nul, fermeture sans reprise, ou une des autres conditions de la liste close | v6.1 ne part pas ; Lazar décide | lanceur, étape (0 bis) (essais `v53-…`, `seg-v53-…`) |
++| v5.3 de ce pilote : générations notées autres que [0, 1, 2, 3], arrêts autres que des `STOP` repris (reprises numérotées 2, 3, …) puis « aucune lignée active », dernier code non nul, fermeture sans reprise, ou une des autres conditions de la liste close | v6.1 ne part pas ; Lazar décide ; un `STOP` humain repris sur décision de Lazar compte comme un `STOP` repris (la porte ne les distingue pas, à dessein) | lanceur, étape (0 bis) (essais `v53-…`, `seg-v53-…`, dont `seg-v53-reprises-mal-numerotees`) |
+ | empreinte de la banque autre que celle de la v3 (`157a2b45…`) | la course ne part pas | lanceur (essais `banque-crochet`, `banque-v2-au-chemin-v3`) |
+ | défaut d'instrument établi par un audit avant le départ d'une course | elle ne part pas ; Lazar décide | conv-audit, session-depot |
+ | import, dans une course sur une autre banque, d'une pièce issue d'une course de ce pilote ou du pilote 3 (organisme imposé tiré d'une archive, archive, mémoire, connaissances, historique, rondes de conception importées, vivier) | **refusé** : c'est une condition à inscrire dans les préenregistrements de l'étape 1 et de la confrontation et dans leurs listes d'arrêt, et à faire respecter **en code** par leurs lanceurs ; la v3 sert les deux traces de chaque paire, aux mêmes textes que la banque décisive (contre-lecture de la banque v4, BC4-02, `banque/contre-lectures/banque-v4-cl1/CONTRE-LECTURE-banque-v4-v1.md`, `ea2916afd40a3987ae70ca38b868cde00db13f609fe7106766d610203a773225`, `0817134` ; de la v5, BC5-02, `0ea27fa1…`, `ef0770f`) ; le noyau garde déjà la banque d'une course d'origine (`--depuis` : en simulation `cli.py` l. 153–154, en réel l. 309–312) : les voies à garder sont `--organisme-impose` et l'import de rondes | lanceurs de l'étape 1 et de la confrontation ; session-depot |
+@@ -425,11 +459,35 @@
+ (simulation, texte et graine scellés) ; interpréteur `/opt/venv-essaim-sim-v1/bin/python` (Python 3.13.17, numpy 2.4.6 ;
+ hors de `/root` et `/home`) ; la passerelle essayée avec un interpréteur qui porte `httpx` 0.28.1.
+ 
+-- **Lanceur v6, batterie v7, série v8** (25 octobre 2026, 20:43:13–20:54:02 UTC) : **218 cas sur 218 conformes**
+-  (`essais-lanceur-pilote4-v8.log`, `b5673d1768b4cdffaf62e20d2ec642b22060b7a92daecd28815a0f3ee304944a` ; heures
+-  `essais-lanceur-pilote4-v8.heures.txt` ; batterie `essais_lanceur_pilote4_v7.sh`,
+-  `c3263af100e53c439bbf7a89a7c7e7597f0e911f150cfa57a30929cb40b0cdea`, dérivée de la batterie v6 par
+-  `deriver_essais_pilote4_v7.py`, `553eeb4cfe1a972c1007d601d2262dca1e33c8f5ab2c821aecdea8e96b5ca426`).
++- **Lanceur v6, batterie v8, série v9** (25 octobre 2026, 21:45:51–21:56:41 UTC) : **228 cas sur 228 conformes** (les 218 cas de la série v8, dans le
++  même ordre, et 10 nouveaux ; `essais-lanceur-pilote4-v9.log`, `51abe3e2e3474caa1a69d5af3310220e36a1fe5c9b372e9a653bcabbe7315a1c` ; heures `essais-lanceur-pilote4-v9.heures.txt` ; batterie
++  `essais_lanceur_pilote4_v8.sh`, `a5f4b9447f9f2944012fdd54a92cc3926315f592924602694eac47ec19e3ed03`, dérivée de la batterie
++  v7 par `deriver_essais_pilote4_v8.py`, `29c48401ba10165b5b2acac22f990ead893a88d7e85f0cbda4b6dc01c0cf8a12` ; le lanceur ne change pas). La batterie v8
++  (contre-lecture 3, P4C3-03) essaie sur un artefact les gardes nouvelles du segment K ≥ 2 que la v7 n'essayait que sur le
++  cas sain : course sans manifeste, verrou du segment 1 absent, autre course de ce nom partie dans un autre dossier, état
++  de reprise d'un autre arrêt puis d'un autre segment (rescellé ; l'état restauré ensuite à l'octet près, vérifié) ; la
++  porte « v5.3 précédente » sur des reprises mal numérotées à arrêts justes ; et la condition du minuteur au segment
++  K ≥ 2 sur une **copie mutée du lanceur** qui pose `STOP` sans attendre l'événement de reprise : sa reprise est refusée
++  par le noyau (code 9, « le fichier STOP est encore dans la course »), quand le cas sain `seg3-segment2`, à la même
++  échéance nulle, reprend.
++- **Série v8, la précédente** : batterie v7 (`c3263af100e53c439bbf7a89a7c7e7597f0e911f150cfa57a30929cb40b0cdea`, dérivée
++  de la v6 par `deriver_essais_pilote4_v7.py`, `553eeb4cfe1a972c1007d601d2262dca1e33c8f5ab2c821aecdea8e96b5ca426`) sur le
++  lanceur v6, 20:43:13–20:54:02 UTC : **218 cas sur 218** (`essais-lanceur-pilote4-v8.log`,
++  `b5673d1768b4cdffaf62e20d2ec642b22060b7a92daecd28815a0f3ee304944a`) ; ses cas sont tous dans la v8, dans le même ordre.
++- **Essais complémentaires du noyau** (contre-lecture 3, P4C3-03 ; pièces `essais-noyau-complementaires-v1/`) : les trois
++  refus de `reprendre()` que `tests/test_reprise_segments.py` n'essaie pas sur un artefact (dernier événement autre que
++  l'arrêt sur `STOP` ; ronde de génération en cours incohérente avec l'état, deux variantes ; vue figée introuvable en
++  mémoire partagée, trois variantes), chacun sur un cas sain : `test_reprise_refus_complementaires_v1.py`
++  (`3594c401dd8a350b0d269692d8b2cba619be7b5bfeaec1dbf70bc5c82d4d530c`), lancé sur la copie du pilote 4 (noyau `8e5e2f7b`,
++  `boucle.py` `8b594096…`) : **9 sur 9** (`essais-complementaires-noyau-v1.txt`, `8d865a25de33cf7bb0de13cb894e106e2e28739c49a676d8423ff79d19583d80`) ; trois mutations qui
++  retirent chacune une de ces gardes dans une copie du noyau (`mutations_complementaires_v2.py`, `fbc9e3ff25581d03693d8e30c8f02fff71acd2071a87e2327eb8ba59d893e3f1`) : **toutes
++  détectées**, la copie saine 9 sur 9 (`mutations-complementaires-v2.txt`, `723ab372012f69466ac132712dbff08d40e73b286abe8a6a3a50d9cc80931710`) ; la v1 du script de mutations
++  (`mutations_complementaires_v1.py`) oubliait le dossier du collisionneur que le noyau charge à l'import : son essai
++  d'installation (« 1 error » partout, aucune garde essayée) est gardé avec sa cause. Ces essais sont hors de la suite
++  du noyau : ses 169 essais, que le lanceur compte, ne changent pas.
++- **Gardes lues dans le code, non essayées sur un artefact** (R5, dit) : au segment K ≥ 2, un code de retour du noyau
++  autre que 0 et 9, et un état de reprise de plus mais non conforme à la fin d'un segment (lanceur v6 l. 804–823 : la
++  course est alors fermée, avec réserve) ; l'un et l'autre demandent un noyau défaillant. Au prochain lanceur.
+ - **Série v7, gardée avec ses causes** (R12) : batterie v6 (`b4857c51…`, dérivée de la v5 par
+   `deriver_essais_pilote4_v6.py`, `a9d74961aeb92aea92a94badc0bfe45c31b8d53279492d1024950a46198bd232`) sur le lanceur v5 (`565f5205…`), 20:30:08–20:40:38 UTC :
+   **215 cas sur 218** (`essais-lanceur-pilote4-v7.log`, `e049220be4a77d703a3c96987456650db605b9597be0acb6a6df17efc75121e2`). Deux causes : (a) **défaut du lanceur v5** —
+@@ -440,7 +498,7 @@
+   `CLORE=1`, seul changement) ; (b) **erreur de la batterie v6** — la vérification `seg-noyau-refuse-code` lisait la sortie
+   du cas du segment 1 au lieu de celle du cas de la reprise refusée (le cas lui-même était conforme) ; corrigée par la
+   batterie v7.
+-- **Ce que la batterie v6 ajoute** (et que la v7 garde) : le cas « minuteur à échéance 0 » de la v5 devient la reprise par segments —
++- **Ce que la batterie v6 ajoute** (et que les v7 et v8 gardent) : le cas « minuteur à échéance 0 » de la v5 devient la reprise par segments —
+   segment 1 arrêté par le minuteur (état de reprise, course ouverte, rien à pousser) ; refus du segment 2 sur artefacts
+   (ordre des segments, ligne de dépense « segment 2 » absente, reste insuffisant, verrou du segment, marqueur d'un autre
+   dossier, `HEAD` déplacé, autre lanceur, état de reprise altéré, reprise refusée par le noyau — code 9 —, organisme et
+@@ -468,7 +526,8 @@
+   trois segments, un second `STOP` est lu après g000
+   (état `etat-v2.json` : 129 appels, 1,896 USD relus) et le segment 3 fait g001 à g003. Dans les deux cas, les appels par
+   unité sont ceux de la course continue (6, 123, 129, 123, 123) et la course finit « aucune lignée active ». Ce que la
+-  mutation a produit n'est pas lu (archive fermée).
++  mutation a produit n'est pas lu (archive fermée). Dans la série v9, ces quatre cas donnent les mêmes nombres d'appels
++  par unité (relevé à la machine dans les journaux d'appels de la simulation).
+ - **Gardes communes non rejouées ici** : celles de P3 et de T2, reprises sans changement ; elles valent par identité des
+   lignes (écarts : `diff-lanceur-pilote3-v2-vers-pilote4-v3.txt`, `diff-lanceur-pilote4-v3-vers-v4.txt`,
+   `diff-lanceur-pilote4-v4-vers-v5.txt`, `diff-lanceur-pilote4-v5-vers-v6.txt`).
+@@ -488,13 +547,17 @@
+ (`e376d769…`) avec la configuration `config-pilote4-v6-1-r6-banque-v3-final.json` (`2f425291…`), ses écarts
+ `diff-lanceur-pilote3-v2-vers-pilote4-v3.txt` (`67950a3b…`) et `diff-lanceur-pilote4-v2-vers-v3.txt` (`3326198e…`) ; les
+ lanceurs v1 (`ce8ffadb…`), v2 (`4be47da9…`), v3, v4 et v5, gardés, **jamais à lancer**, et leurs scripts de dérivation ; la
+-batterie v7 `essais_lanceur_pilote4_v7.sh` (`c3263af1…`) et sa dérivation `deriver_essais_pilote4_v7.py`, la série v8
+-(journal et fichier d'heures) ; la batterie v6 et sa dérivation, la série v7 (journal, heures), les batteries v1 à v5 et
+-les journaux v1 à v6, avec leurs causes ; les pièces des cas sains
++batterie v8 `essais_lanceur_pilote4_v8.sh` (`a5f4b944…`) et sa dérivation `deriver_essais_pilote4_v8.py`, la série v9
++(journal et fichier d'heures) ; la batterie v7 et sa dérivation, la série v8 ; la batterie v6 et sa dérivation, la série
++v7 (journal, heures, fichier de cause `essais-lanceur-pilote4-v7.cause.txt`) ; les batteries v1 à v5 et les journaux v1 à
++v6, avec leurs causes ; les essais complémentaires du noyau (`essais-noyau-complementaires-v1/` : essais, journal,
++scripts de mutations v1 et v2, journaux, cause de l'essai d'installation) ; les pièces des cas sains
+ `simulation-lanceur-v2/` à `simulation-lanceur-v4/` et `simulation-lanceur-v6/` (série v8 : v5.3 et v6.1 continues, et la
+ v5.3 en deux et en trois segments) ; les fichiers d'empreintes de travail `EMPREINTES-pieces-pilote4-v1.txt` à
+-`-v3.txt` et `EMPREINTES-pieces-pilote4-v4.txt` (après la série v8 ; toutes les pièces du dossier sauf lui-même) ; les faits mécaniques du pilote 3 et du second pilote (`faits-pilote3-v1/`) ;
+-les pièces des contre-lectures 1 et 2 (`contre-lecture-1-v1/`, `contre-lecture-2-v1/`) ; les scripts de scellement
++`-v4.txt` et `EMPREINTES-pieces-pilote4-v5.txt` (après la série v9 ; toutes les pièces du dossier sauf lui-même) ; les
++faits mécaniques du pilote 3 et du second pilote (`faits-pilote3-v1/`) ; les pièces des contre-lectures 1, 2 et 3
++(`contre-lecture-1-v1/`, `contre-lecture-2-v1/`, `contre-lecture-3-v1/`) ; et toutes les autres pièces du dossier, au
++fichier d'empreintes ; les scripts de scellement
+ `sceller_pilote4_v1.py` et `sceller_pilote4_v2.py` (gardés, jamais utilisés) et **`sceller_pilote4_v3.py`**
+ (`aee63b20b45e1bd1e5c109699b2e3ba36a1ef216d7f051d54c2fcd0340033de9`), avec ses essais `essais_scellement_pilote4_v3.sh` et
+ leur journal `essais-scellement-pilote4-v3.log` (14 cas sur 14 : deux cas sains, graines recalculées depuis l'entropie
+@@ -534,6 +597,29 @@
+ | P4C2-14 (remarque) textes insérés | le détail de contre-lecture ne porte ni marqueur, ni ligne d'entropie ou de graine (le script v3 le vérifie) ; le texte scellé garde le nom `pilote4-gemini-organisme-v3.md` |
+ | P4C2-15 (conforme) | rien à faire |
+ 
++## Traitement des constats de la contre-lecture 3 (P4C3-01 à P4C3-10)
++
++Contre-lecture 3 : sous-agent neuf, 25 octobre 2026, 20:58–21:34 UTC, sur la v3 telle que poussée (`efffb7e4…`,
++`eee726b`) ; rapport `prereg/contre-lectures/pilote4-gemini-organisme-v3-cl3.md`
++(`0d95ea8cd2fd079259be1d598ed37c59402794aa47bd8ed579c92ceeee2f8149`) ; verdict « scellable après corrections mineures »,
++trois mineurs, six remarques, une conformité ; les quatorze constats de la contre-lecture 2 levés, sauf un point de
++P4C2-12 (minuteur mort). Le texte garde son nom ; ses corrections sont ci-dessous. Elles ne changent ni le noyau ni le
++lanceur ; la batterie passe en v8 (cas ajoutés seulement) et des essais complémentaires du noyau s'ajoutent aux pièces :
++une relecture courte de ces ajouts suit (§ Contre-lecture).
++
++| constat | traitement |
++|---|---|
++| P4C3-01 (mineur) canal des appels de mutation | canal (d) déclaré au § Plan, point 3 ; pendant un segment, session-depot ne lit du journal de l'unité en cours que ce que T2 nomme, jamais les rôles ; personne ne compte les rôles d'une génération notée avant le moment de lecture ; ligne de mutation de la liste d'arrêt : lue au moment de lecture |
++| P4C3-02 (mineur) `STOP` humain, `SEGMENT=K` | liste d'arrêt : `SEGMENT=K+1` (K, le segment arrêté), `SEGMENT=K+1 CLORE=1` ; le `LANCEMENT.md` porte « reprise attendue » comme pour le minuteur, session-depot ne lance pas le segment suivant sans le mot de Lazar ; le `STOP` du minuteur se reconnaît à sa ligne ; la porte accepte un `STOP` humain repris, à dessein ; § Bornes : `SEGMENT=K+1 CLORE=1` |
++| P4C3-03 (mineur) refus essayés sur un artefact | les trois refus du noyau essayés à part (9 sur 9, trois mutations détectées) ; batterie v8 : cinq gardes du segment K ≥ 2, la numérotation des reprises de la porte et la condition du minuteur (lanceur muté) sur un artefact ; restent deux gardes, dites (§ Essais) |
++| P4C3-04 (remarque) essais centraux de la reprise non cités, `PYTEST_ARGS` | § Bornes : `PYTEST_ARGS` vide à chaque segment, session-depot vérifie « 169 passés, 0 sauté, 0 désélectionnés » au `LANCEMENT.md` ; les douze cas cités au prochain lanceur |
++| P4C3-05 (remarque) ligne fausse du piège d'erreur au code 9 | dite à la ligne « reprise refusée » de la liste d'arrêt ; correction au prochain lanceur |
++| P4C3-06 (remarque) borne, minuteur mort, « du noyau » | borne 7 075 s (10 s et 5 s d'attentes ajoutées), estimations dites ; minuteur : session-depot vérifie son PID à ses réveils et pose `STOP` à l'échéance s'il est mort (§ Bornes, liste d'arrêt, § Plan, point 3) ; « préparation, noyau et fermeture compris », le noyau seul ≈ 46 à 90 minutes |
++| P4C3-07 (remarque) code autre que 0 et 9 au segment K ≥ 2 | dit à la ligne « course arrêtée en cours » de la liste d'arrêt, et au § Essais (non essayé) |
++| P4C3-08 (remarque) organisme de l'unité suivante non empreinté | dit au § Bornes (« non vérifié par la reprise ») ; au prochain noyau |
++| P4C3-09 (remarque) petits faits | trois champs de l'état lus et le nombre de lignes du journal ; fin « sans successeur valide après relance » ; critère 3 « (un seul si la v6.1 ne part pas) » ; course sans `STOP` : deux clés de plus au rapport ; § Pièces : cause de la série v7 et « toutes les autres pièces du dossier » ; `git fetch origin main` avant chaque segment ; date des lignes de dépense ; les deux marqueurs de rédaction remplis à la main par conv-audit avant le script, le détail citant l'empreinte relue par chaque contre-lecture (§ Contre-lecture) ; l'en-tête de l'écart v5 → v6 et la vérification `seg-segment2-stop-retire` : sans effet, laissés |
++| P4C3-10 (conforme) | rien à faire |
++
+ ## Contre-lecture
+ 
+ [[CONTRE_LECTURE_DETAIL]]
