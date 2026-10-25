@@ -1,0 +1,36 @@
+# Lancement du pilote pilote3-gemini-v6-maieutique-v1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-25T15:22:25Z ; hôte : vm ; utilisateur : 0
+- course : v6 ; dossier du pilote : /var/tmp/essais-pilote3-v1/essai-a-blanc-texte-scelle-v1/pilotes/pilote3-gemini-v6-maieutique-v1 (0700, à root)
+- dépôt : /var/tmp/essais-pilote3-v1/depot ; HEAD : 67026f0665126ef4337462c294586a5874acff83 (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote3_gemini_v5_3_v6_v2.sh, sha256 add695a90683b59fe9c3a06f0fb7ff70ae46c4067c490c9850988852c814ec76
+- source des registres : /var/tmp/essais-pilote3-v1/essais-v3/entrees/go-sain.md ; dépenses : /var/tmp/essais-pilote3-v1/essai-a-blanc-texte-scelle-v1/dep-v6.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- course v5.3 précédente : /var/tmp/essais-pilote3-v1/essai-a-blanc-texte-scelle-v1/pilotes/pilote3-gemini-v5-3-maieutique-v1 ; v5.3 saine : g000 et g001 OK, au plus 20 % d appels hors OK et au moins un appel OK de Fable à chacune (g000 {"OK": 123}; g001 {"OK": 129}), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de v5.3 6350728697673680798 ; dépense du noyau 2.9728 USD ; refus du noyau par génération [[], []] ; empreintes de v5.3 vérifiées (EMPREINTES-pilote-v1.txt, sha256 5f4cf71261d3f8d33fcd0bde8fd7fa4596e39ba154c2d97f9ac57abea93b60c8)
+- course M de référence : /var/tmp/essais-pilote3-v1/essais-v3/m-reference/pilote2-gemini-v5-2-1-maieutique-v1 ; M saine : g000 et g001 OK, au plus 20 % d appels hors OK et au moins un appel OK de Fable à chacune (g000 {"OK": 123}; g001 {"OK": 129}), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de M 3970427751169333427 ; dépense du noyau 2.9344 USD ; refus du noyau par génération [[], []] ; empreintes de M vérifiées (EMPREINTES-pilote-v1.txt, sha256 1c79b456f5e07abcc3cbfa62f2cb753d1197c03f0adfcdecd44d704a6aa552d5) ; graine 3970427751169333427 = graine M du texte scellé du second pilote (d2944654…)
+- code : identique à b1c7f4b6 (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- versions : python 3.13.17 ; numpy 2.4.6 ; anthropic absente
+- isolation : dossier du pilote 0700 à root ; espace attendu /var/lib/essaim-m3/f9b18ce42f6dd7d3 ; dépôt /var/tmp/essais-pilote3-v1/depot caché aux organismes (vérifié par bac_a_sable.dossiers_a_cacher) ; ESSAIM_M3_ESPACE non définie
+- course v5.3 précédente : graine 6350728697673680798 = graine v5-3 du préenregistrement
+- préenregistrement : /var/tmp/essais-pilote3-v1/depot/essaim-m3-refonte-v1/prereg/pilote3-gemini-organisme-v5-3-v6-v2.md, sha256 57c8535a6f68fad32e725af9e0faf774cb4ccb09008e3c969259622c44a63d9f (compagnon conforme), graine 18004927746170320113 de la course v6 écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée
+- organisme : 24 fichiers, empreinte d'arbre 940c59c3dd58fdd5355244768faa1e9da02620fa455cd8ead15f8271145da64a ; question (v6) : sha256 8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+- registre : une ligne GO-2026-10-25-02 de type calcul portant l'empreinte de la question (v6) et celle de l'organisme (940c59c3…) ; dépense consignée avant ; reste déclaré 100 USD ≥ 60 (vérification du lanceur)
+- test de dépense : test-depense-factice-essai-a-blanc-v6-v1.json, sha256 d90b46ebfaaaf23d14de0ac773c6fd9653c6880e3d940c158c2f7592a3350df4 — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.0005, CLAUDE_OPUS_5_5 0.0005, GEMINI_ARGON 0.0005 USD, âge 1 s ; noms des variables du test : anthropic RR_ANTHROPIC_API_KEY_3, gemini GEMINI_API_KEY_2 (réalité des appels attestée par l'outil de session-depot ; le script vérifie la pièce)
+- recharge automatique attestée : « essai à blanc »
+- ESSAI : rapport JUnit repris de /var/tmp/essais-pilote3-v1/essais-v3/junit-sain-v1.xml (simulation)
+- essais : 141 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 29 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 (la fonction écarte le bytecode depuis le constat n° 30 § 5)
+- test de dépense revérifié au départ : trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.0005, CLAUDE_OPUS_5_5 0.0005, GEMINI_ARGON 0.0005 USD, âge 1 s ; noms des variables du test : anthropic RR_ANTHROPIC_API_KEY_3, gemini GEMINI_API_KEY_2
+- voisines au départ : aucune
+- environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER .
+- marqueur de départ : /var/tmp/essais-pilote3-v1/essai-a-blanc-texte-scelle-v1/pilotes/.partis/pilote3-gemini-v6-maieutique-v1 (R3 ; jamais retiré)
+- départ de la simulation (UTC) : 2026-10-25T15:22:26Z
+- PID de la course : 32142 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T15:22:31Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 1299b9d0f8c575e670edc2b0478fcb3c9d7d8a13a2dc98154f6c70e9c4303c8e
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit 67026f0665126ef4337462c294586a5874acff83 ; sha256_code_noyau 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 ; espace /var/lib/essaim-m3/f9b18ce42f6dd7d3 ; sources de moisson ["simulation"] ; clés présentes au manifeste — web : False, OpenAlex : False, Semantic Scholar : False ; dépense du noyau 2.9473 USD (à rapprocher de la console, P2C1-05)
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 66bdfd5c02da7c3ead597287142ee3477722f3acc4c441356e42d1f7438ef443
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 2135a9f20e8d6e9269dff4264ab11fc6d050fbb9b735ca242b285960e448be97
+- réponse à la question : reponse-question-g001.md, sha256 7524afd9ee36e0336ecf9fa05903e360b8dbdd3cacbf83bf44a01b95efcbde6b
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 e19c839c406389ba5b16ca0c1b2aeda9e610a91d7a96135cf32acb5860a7ebe4, 1657 entrées = 1657 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T15:22:31Z
