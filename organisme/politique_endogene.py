@@ -144,13 +144,6 @@ def verifier_proprete_stricte_recompense(fn_recompense) -> tuple:
         if not math.isfinite(v) or v < -1.0 or v > 1.05:
             return False, f"valeur hors bornes d'échelle [-1.0, 1.05] : {v}"
 
-    if not (0.98 <= r1_opt <= 1.005 and 0.98 <= r0_opt <= 1.005):
-        return False, f"ancrage haut violé (R optimal doit être proche de 1.0) : r1={r1_opt}, r0={r0_opt}"
-    if not (0.68 <= r1_demi <= 0.82 and 0.68 <= r0_demi <= 0.82):
-        return False, f"ancrage médian violé en q=0.5 (doit rester dans [0.68, 0.82]) : r1={r1_demi}, r0={r0_demi}"
-    if not (-0.50 <= r1_pire <= 0.15 and -0.50 <= r0_pire <= 0.15):
-        return False, f"ancrage bas violé en erreur franche : r1={r1_pire}, r0={r0_pire}"
-
     for i in range(len(grille_fine) - 1):
         if not (vals_1[i + 1] > vals_1[i] + 1e-7):
             return False, "R(1, q) n'est pas strictement croissante en q (reward hacking ou constante)"
@@ -164,6 +157,13 @@ def verifier_proprete_stricte_recompense(fn_recompense) -> tuple:
         q_star = grille_fine[idx_max]
         if abs(q_star - p) > 0.0101:
             return False, f"violation de propreté stricte : pour p={p}, l'optimum est q*={q_star} (écart > 0.01)"
+
+    if not (0.98 <= r1_opt <= 1.005 and 0.98 <= r0_opt <= 1.005):
+        return False, f"ancrage haut violé (R optimal doit être proche de 1.0) : r1={r1_opt}, r0={r0_opt}"
+    if not (0.68 <= r1_demi <= 0.82 and 0.68 <= r0_demi <= 0.82):
+        return False, f"ancrage médian violé en q=0.5 (doit rester dans [0.68, 0.82]) : r1={r1_demi}, r0={r0_demi}"
+    if not (-0.50 <= r1_pire <= 0.15 and -0.50 <= r0_pire <= 0.15):
+        return False, f"ancrage bas violé en erreur franche : r1={r1_pire}, r0={r0_pire}"
 
     return True, "OK"
 
