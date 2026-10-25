@@ -492,3 +492,38 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
   segments = 4 en un appel, en simulation.
 - Corrections d'heure : l'entrée « 14:22 » a été écrite à 14:21 UTC ; le n° 53 porte « 14:54 (lue 14:53) », l'heure lue
   était 14:52.
+
+## 15:53 — Pilote 3 scellé et confié ; lecture du second pilote : audit de symétrie, défaut établi dans la banque ; banque v2 construite
+
+(Écrit à 15:53 UTC, heure lue sur `date -u`.)
+
+- **Pilote 3 scellé** (v2, `57c8535a…`, après la contre-lecture 2 : 0 majeur) et confié à session-depot (canal n° 54,
+  `faf6c72d…`). Session-depot a poussé sur `main` la ligne d'extension de GO-2026-10-25-02 et engagé la v5.3 à 15:36:52
+  UTC (`0e2a989`, R-442), après la fin de la répétition de l'étape 1 (15:30 UTC, porte fermée selon lui : amorçages de
+  Fable et d'Opus vides, réflexion à 64 000 jetons ; R-441).
+- **Moment de lecture du second pilote** ouvert par l'inscription de la v8 de la confrontation (`59172f3`, 15:26 UTC).
+  Tableaux de M et S écrits par le lecteur `lire_pilote_tableaux_v1.py` ; le critère gelé n° 1 de T2 se déclenche dans
+  les deux courses (famille contrôle de délégation à g001). **Audit de symétrie** (sous-agent neuf) : **défaut établi
+  dans l'instrument** — les identifiants de la banque `confrontation-v1` donnent la vérité (suffixes `-H` / `-S` ;
+  numéros 1–60 / 61–120), recoupé par conv-audit sur les 200 items ; le noyau les sert ; **aucun effet trouvé sur M ni
+  S** (aucun identifiant de test dans les 504 consignes). Rapport `f732bfd8…`. Pièces poussées sur
+  `lectures/pilote2-gemini-v5-2-1-v1` (`37047a1`).
+- **Étape 1 touchée** : son texte scellé v9 lit H-G1 sur le test final caché de cette banque ; une lignée auto-écrite
+  peut apprendre la règle des identifiants sur l'entraînement. Dit à session-depot (n° 56) et à Lazar.
+- **Canal** : n° 55 (le pilote 3 ne part pas : défaut établi ; 15:39 UTC), n° 56 (étape 1 touchée), n° 57 (la v5.3 était
+  partie à 15:36:52, avant le n° 55 : la laisser finir — l'identifiant n'entre dans aucune consigne de tâche notée de la
+  v5.3, lu dans `principal.py` de `4ecba58`, l. 930 et 949 ; la v6 ne part pas avant le mot de Lazar).
+- **Vérification de la v6.1** (sous-agent neuf, `a9d8eb5`) : aucun défaut bloquant, V6-01 corrigé ; arbre `ae331d1d…`,
+  24 fichiers ; réserves non toutes levées contrairement à la livraison ; filtre de propreté encore perméable à
+  certaines transformations ; borne d'une seconde = attente. Poussée sur le canal (`envois/verification-v61-poussee-v1/`,
+  `5240d10`).
+- **Lazar** (heure de Paris) : 16:27 — « je veux mesurer la v6 1 et v5 3 si pas chère » (réponse : ≈ 15 USD la course,
+  dans GO-2026-10-25-02) ; 16:35 — « 2 générations […] : pourquoi pas plus de générations ??? » (réponse : copie de M ;
+  avec deux générations, l'auto-réécriture de la v6.1 ne peut pas se déclencher — g2 au plus tôt, successeur à g3).
+  Deux décisions demandées : (1) banque v2 aux identifiants opaques, recommandée, confiance haute ; (2) pilote 3 après
+  la banque v2, 4 générations pour les deux objets, recommandée, confiance moyenne.
+- **Banque v2 construite** (travail sur processeur, aucune utilisation décidée) : branche
+  `outils/banque-confrontation-v2-travail` (`893856e`) ; `banque-confrontation-v2.json` `52beb637…`, secret `1775a9e0…`,
+  entropie 14234892761277461467225772596104759309 ; mêmes tâches, parts et ordre, identifiants `t-0001`… tirés par
+  graine ; contrôle « aucune règle sur l'identifiant ne prédit la vérité » : v1 refusée, v2 acceptée, référence de
+  surface identique ; `LISEZMOI-v4.md`. Contre-lecture par un sous-agent neuf en cours.
