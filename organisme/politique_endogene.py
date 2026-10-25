@@ -128,8 +128,8 @@ def verifier_et_valider_code_politique(code_source: str) -> tuple:
 
     try:
         code_compile = compile(arbre, "<politique_endogene_candidate>", "exec")
-        ns = {}
-        exec(code_compile, env_exec, ns)
+        ns = dict(env_exec)
+        exec(code_compile, ns)
     except Exception as exc:
         return False, f"exécution en bac à sable interne échouée : {type(exc).__name__}", None
 
