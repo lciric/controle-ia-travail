@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_c12_un_statut_non_ok_ne_bloque_pas_et_reste_consigne ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f972fd3f820>
+
+    def test_c12_un_statut_non_ok_ne_bloque_pas_et_reste_consigne(monkeypatch):
+        for op, statuts in (("rechercher", STATUTS_RECHERCHE), ("telecharger", STATUTS_TELECHARGEMENT)):
+            for statut in statuts:
+                monkeypatch.setitem(sys.modules, "noyau_client", _client(statut))
+                import principal
+                importlib.reload(principal)
+                principal._ETAT["erreurs"] = []
+                compteurs, journal = {}, []
+                if op == "rechercher":
+                    appel = lambda: principal._enregistrer_recherche("requete d'essai", 5, "essai", "arxiv", journal, compteurs)
+                else:
+                    appel = lambda: principal._enregistrer_telechargement("2501.00001", "essai", journal, compteurs)
+>               assert _rend_la_main(appel), f"{op} {statut} : l'organisme reste bloqué (verrou repris)"
+E               AssertionError: rechercher PLAFOND : l'organisme reste bloqué (verrou repris)
+E               assert False
+E                +  where False = _rend_la_main(<function test_c12_un_statut_non_ok_ne_bloque_pas_et_reste_consigne.<locals>.<lambda> at 0x7f972fc2ad40>)
+
+organisme/tests/test_corrections_v3.py:57: AssertionError
+=========================== short test summary info ============================
+FAILED organisme/tests/test_corrections_v3.py::test_c12_un_statut_non_ok_ne_bloque_pas_et_reste_consigne
+1 failed in 5.05s
