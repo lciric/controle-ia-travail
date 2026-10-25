@@ -1,0 +1,182 @@
+2,25c2,21
+< # Lanceur du second pilote descriptif « organisme de Gemini v5.2.1, moisson ouverte à quatre sources, question ouverte
+< # à g001 », une course par appel (COURSE=maieutique, puis COURSE=structure) — v5 pour la v5.2 (versions gardées, jamais à
+< # lancer : v1, arbre `4fcdc7db…` ; v2, `011d62b5…` ; v3, question M v2 ; v4, objet v5.2.1 et environnement fermé, contre-lu
+< # par la contre-lecture 1, `pilote2-gemini-organisme-v5-2-v1-cl1.md`). La v5 traite ses constats de lanceur :
+< # P52C1-01 — `--temps-max 2400` (pire cas d'un appel du lanceur ≈ 180 + 2 × (2 400 + 10 + 900) + 60 ≈ 6 900 s, sous la
+< #   borne de 7 200 s d'une commande de fond ; le noyau attend jusqu'à 900 s les appels en vol en fin de génération) ;
+< # P52C1-02 — « M saine » exige aussi, à g000 et à g001, au plus 20 % d'appels hors `OK` et au moins un appel `OK` de
+< #   CLAUDE_FABLE_5_1 (comptes de l'extrait mécanique de M, sans score) ;
+< # P52C1-04 — vérification automatique de la passerelle de sortie juste avant le départ, sous l'environnement du noyau
+< #   sans clé : `httpx` vers l'interface d'Anthropic et `urllib` (contexte du collisionneur) vers celle de Gemini doivent
+< #   rendre un statut HTTP, sinon refus avant le manifeste (en réel toujours ; en simulation si ESSAI_PASSERELLE_PY) ;
+< # P52C1-05 — CLE_ANTHROPIC et CLE_GEMINI exigés en réel, parmi les clés des runs (GO-2026-10-24-04 et R-411) ; la pièce
+< #   du test de dépense, si elle porte `variables_cles`, doit nommer les mêmes variables (sinon réserve consignée) ;
+< # P52C1-13 — commentaires remis à l'ordre M puis S (les noms de variables `EMP_S`, `GRAINE_S_MANIFESTE`, `issue_s`
+< #   portent, depuis la v1, les valeurs de la course précédente, ici M).
+< # Objet : v5.2.1 = `2d00232` + C-13, branche `outils/gemini-organisme-v5-2-1`, commit `ec8e0b6`, dossier `organisme/`,
+< # arbre `fec005c6…`, 21 fichiers. Code `b1c7f4b6`. Environnement du noyau fermé sur une liste : PATH, HOME, LANG,
+< # PYTHONDONTWRITEBYTECODE, ESSAIM_M3_CACHER, variables d'infrastructure réseau de `INFRA_RESEAU` définies, et en réel les
+< # cinq clés ; la simulation passe par le même environnement (sans clés) ; les noms (jamais les valeurs) sont consignés.
+< # Écrit par conv-audit pour session-depot (qui tient les clés et lance). Le dépôt de lancement doit contenir les commits de
+< # l'organisme et des questions (`git fetch origin outils/gemini-organisme-v5-2-1 canal/conv-audit-n04 main`). Chaque appel
+< # de ce lanceur est une commande de fond de la session avec le délai maximal (7 200 000 ms), jamais `nohup`, `&` ni
+< # `setsid`. Met en œuvre, pas à pas, le plan § 1 et § 3 du préenregistrement scellé
+< # `essaim-m3-refonte-v1/prereg/pilote2-gemini-organisme-v5-2-v2.md` (ou de la version qui le remplace et cite ce script).
+---
+> # Lanceur du troisième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6, chacun seul, mêmes bornes que la
+> # course M du second pilote, question M à g001 », une course par appel (COURSE=v5-3, puis COURSE=v6) — v1, dérivé du
+> # lanceur scellé du second pilote (`lancer_pilote2_gemini_v5_2_v5.sh`, `83f8b9cf…`) par `deriver_lanceur_pilote3_v1.py`
+> # (remplacements exacts ; écart consigné dans `diff-lanceur-v5-vers-pilote3-v1.txt`). Ce qui change par rapport à la
+> # source : (i) deux courses, chacune avec son objet (commit, arbre, nombre de fichiers, lignée) et la même question M v2 ;
+> # (ii) GO-2026-10-25-02 ; (iii) l'étape (0) ne lit plus « la course précédente » mais la **course M de référence** du
+> # second pilote (`REFERENCE_M`), à laquelle elle applique telle quelle la liste close « M saine » du lanceur source (avec
+> # le nom, l'empreinte et la lignée du lanceur et de l'objet de M, et la graine M du texte scellé du second pilote) : une
+> # course du pilote 3 ne part qu'après une course M finie, fermée et saine ; la ligne de dépense porte les 16 premiers
+> # caractères de l'empreinte des empreintes de M ; (iv) chemins permis après b1c7f4b6 : ceux du second pilote et ceux du
+> # pilote 3. Tout le reste (gardes, environnement fermé, passerelle, essais du noyau, fermeture, liste de ce qui est
+> # poussé) est le texte du lanceur source, inchangé.
+> # Objets : v5.3 = `canal/gemini-organisme-v5-3`, commit `4ecba58`, dossier `organisme/`, arbre `6251ab21…`, 22 fichiers ;
+> # v6 = `canal/gemini-organisme-v6`, commit `7cd7508`, arbre `940c59c3…`, 24 fichiers ; lignées « assistées » (déclarées).
+> # Ces deux commits portent aussi l'arbre de la relève : seul `organisme/` en est extrait (`git archive`), jamais une
+> # extraction ni une exécution du reste. Code `b1c7f4b6`. Le dépôt de lancement doit contenir ces commits et ceux des
+> # questions (`git fetch origin canal/gemini-organisme-v5-3 canal/gemini-organisme-v6 canal/conv-audit-n04 main`). Chaque
+> # appel de ce lanceur est une commande de fond de la session avec le délai maximal (7 200 000 ms), jamais `nohup`, `&` ni
+> # `setsid`. Met en œuvre le préenregistrement scellé
+> # `essaim-m3-refonte-v1/prereg/pilote3-gemini-organisme-v5-3-v6-v1.md` (ou la version qui le remplace et cite ce script).
+28c24
+< #   MODE=reel COURSE=maieutique DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
+---
+> #   MODE=reel COURSE=v5-3 DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
+30,32c26,29
+< #       [CLE_OPENALEX=NOM] [CLE_S2=NOM] [TENTATIVE=2] bash lancer_pilote2_gemini_v5_2_v5.sh
+< #   MODE=reel COURSE=structure … PRECEDENTE_PILOTE=<dossier du pilote de la course M> bash lancer_pilote2_gemini_v5_2_v5.sh
+< #   MODE=simulation COURSE=… DEPOT=… PYTHON=… GRAINE=… [PILOTE_RACINE=… PRECEDENTE_PILOTE=… REGISTRE_GO_SOURCE=…
+---
+> #       [CLE_OPENALEX=NOM] [CLE_S2=NOM] [TENTATIVE=2] REFERENCE_M=<dossier du pilote de la course M> \
+> #       bash lancer_pilote3_gemini_v5_3_v6_v1.sh
+> #   MODE=reel COURSE=v6 … (même forme)
+> #   MODE=simulation COURSE=… DEPOT=… PYTHON=… GRAINE=… [REFERENCE_M=… PILOTE_RACINE=… REGISTRE_GO_SOURCE=…
+45c42,46
+< COURSE="${COURSE:?COURSE=structure ou COURSE=maieutique}"
+---
+> COURSE="${COURSE:?COURSE=v5-3 ou COURSE=v6}"
+> # Question M v2 épurée (la même que celle de la course M du second pilote), pour les deux courses
+> COMMIT_QUESTION=a15809b816b6c967b6c3cf21877e350bfe676dca
+> CHEMIN_QUESTION=brouillons/canal-reprise-releve-v1/envois/question-gemini-maieutique-vs-coercition-organismes-v2.md
+> SHA_QUESTION=8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+47,57c48,60
+<   structure)
+<     NOM="pilote2-gemini-v5-2-1-structure-v1"; INDICE_GRAINE=1
+<     COMMIT_QUESTION=4772b525081342a6a30ba8823733aa5770a888a8
+<     CHEMIN_QUESTION=brouillons/canal-reprise-releve-v1/envois/question-apprendre-structure-entrainement-generations-organismes-v2.md
+<     SHA_QUESTION=a54da93ee892d920c31ba47327c2400e25ccf42ff06faa46d94bfc471a5a6289;;
+<   maieutique)
+<     NOM="pilote2-gemini-v5-2-1-maieutique-v1"; INDICE_GRAINE=0
+<     COMMIT_QUESTION=a15809b816b6c967b6c3cf21877e350bfe676dca
+<     CHEMIN_QUESTION=brouillons/canal-reprise-releve-v1/envois/question-gemini-maieutique-vs-coercition-organismes-v2.md
+<     SHA_QUESTION=8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd;;
+<   *) refus_tot "COURSE inconnue : $COURSE (structure ou maieutique)";;
+---
+>   v5-3)
+>     NOM="pilote3-gemini-v5-3-maieutique-v1"; INDICE_GRAINE=0
+>     COMMIT_ORGANISME=4ecba58bcaa7dc3abe82c54fc38ee7285620bdf6
+>     ARBRE_ORGANISME=6251ab219e86286ec892a65e28cf9eebad5265fd6e32e350e68827897c811753
+>     N_FICHIERS_ORGANISME=22
+>     LIGNEE="gemini-organisme-v5-3";;
+>   v6)
+>     NOM="pilote3-gemini-v6-maieutique-v1"; INDICE_GRAINE=1
+>     COMMIT_ORGANISME=7cd7508287efa6fd667eaca7dffe23666f12692f
+>     ARBRE_ORGANISME=940c59c3dd58fdd5355244768faa1e9da02620fa455cd8ead15f8271145da64a
+>     N_FICHIERS_ORGANISME=24
+>     LIGNEE="gemini-organisme-v6";;
+>   *) refus_tot "COURSE inconnue : $COURSE (v5-3 ou v6)";;
+95,97c98,100
+< GO_ID=GO-2026-10-25-01
+< USD_GEN=30      # par génération (décision (b) de Lazar, 25 octobre 10:17 Paris)
+< USD_COURSE=60   # par course ; deux courses : 120 USD au plus (GO-2026-10-25-01, R-407 et R-409)
+---
+> GO_ID=GO-2026-10-25-02
+> USD_GEN=30      # par génération (mêmes bornes que la course M ; décision (b) de Lazar, 25 octobre 10:17 Paris)
+> USD_COURSE=60   # par course ; deux courses : 120 USD au plus (GO-2026-10-25-02, mot direct de Lazar dans la session de session-depot)
+133d135
+< COMMIT_ORGANISME=ec8e0b6c82d18a7ca040302538dcd33e557bf818
+135,136d136
+< ARBRE_ORGANISME=fec005c6626b3d1aa960702e4322b44ade3b902157dd84eae8e658b70e4f43f4
+< N_FICHIERS_ORGANISME=21
+145,147c145,147
+< LIGNEE="gemini-organisme-v5-2-1"
+< # Chemins que les commits postérieurs à b1c7f4b6 peuvent toucher (ce texte, ses pièces, sa contre-lecture) ; dossier des pilotes
+< PERMIS_APRES_CODE='^essaim-m3-refonte-v1/prereg/(pilote2-gemini-organisme-v5-2-v[0-9]+\.md(\.sha256)?|pieces-pilote2-gemini-v5-2/.+|contre-lectures/pilote2-gemini-organisme-v5-2-v[0-9]+-cl[0-9]+\.md(\.sha256)?)$'
+---
+> # Chemins que les commits postérieurs à b1c7f4b6 peuvent toucher : le texte du second pilote, ses pièces et ses
+> # contre-lectures ; ce texte, ses pièces et ses contre-lectures ; dossier des pilotes
+> PERMIS_APRES_CODE='^essaim-m3-refonte-v1/prereg/(pilote2-gemini-organisme-v5-2-v[0-9]+\.md(\.sha256)?|pieces-pilote2-gemini-v5-2/.+|contre-lectures/pilote2-gemini-organisme-v5-2-v[0-9]+-cl[0-9]+\.md(\.sha256)?|pilote3-gemini-organisme-v5-3-v6-v[0-9]+\.md(\.sha256)?|pieces-pilote3-gemini-v5-3-v6/.+|contre-lectures/pilote3-gemini-organisme-v5-3-v6-v[0-9]+-cl[0-9]+\.md(\.sha256)?)$'
+193c193,197
+< # 0. Course S : ne part que si la course M est saine (P2C1-01, P52C1-02 ; liste close lue dans les pièces lisibles de M)
+---
+> # 0. Course M de référence : une course du pilote 3 ne part qu'après une course M du second pilote finie, fermée et
+> #    saine — liste close du lanceur du second pilote (P2C1-01, P52C1-02), appliquée telle quelle aux pièces lisibles de M,
+> #    avec le nom, l'empreinte et la lignée du lanceur et de l'objet de M ; graine de M lue dans le texte scellé du second
+> #    pilote ; la ligne de dépense de la course porte les 16 premiers caractères de l'empreinte des empreintes de M
+> #    (les noms EMP_S, GRAINE_S_MANIFESTE et issue_s sont ceux du lanceur source ; ils portent ici les valeurs de M)
+195,198c199,208
+< if [ "$COURSE" = structure ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_PILOTE:-}" ]; }; then
+<   [ -n "${PRECEDENTE_PILOTE:-}" ] || refus "PRECEDENTE_PILOTE non défini : S ne part qu'après M (dossier du pilote de la course M)"
+<   SP="$PRECEDENTE_PILOTE"
+<   [ -d "$SP" ] || refus "PRECEDENTE_PILOTE $SP absent : S ne part qu'après M"
+---
+> LANCEUR_M_NOM=lancer_pilote2_gemini_v5_2_v5.sh
+> LANCEUR_M_SHA=83f8b9cf8f3062dfc5e2c02094c602a2d582adf0cbcef292d5bdccd8f8d61b1b
+> LIGNEE_M="gemini-organisme-v5-2-1"
+> GO_M=GO-2026-10-25-01
+> PREREG_M="$R/prereg/pilote2-gemini-organisme-v5-2-v2.md"
+> PREREG_M_SHA=d294465429094e5099cb5facdad95e2b806aa8953640b57bcab99998396c066b
+> if [ "$MODE" = reel ] || [ -n "${REFERENCE_M:-}" ]; then
+>   [ -n "${REFERENCE_M:-}" ] || refus "REFERENCE_M non défini : une course du pilote 3 ne part qu'après une course M saine (dossier du pilote de la course M)"
+>   SP="$REFERENCE_M"
+>   [ -d "$SP" ] || refus "REFERENCE_M $SP absent : une course du pilote 3 ne part qu'après M"
+201,202c211,212
+<     case "$(dirname "$SP")" in "$(cd "$RACINE_PILOTES" && pwd -P)") ;; *) refus "PRECEDENTE_PILOTE $SP hors du dossier des pilotes $RACINE_PILOTES";; esac
+<     [[ "$(basename "$SP")" =~ ^pilote2-gemini-v5-2-1-maieutique-v1(-tentative[0-9]+)?$ ]] || refus "PRECEDENTE_PILOTE $SP : nom autre que pilote2-gemini-v5-2-1-maieutique-v1[-tentativeN]"
+---
+>     case "$SP/" in /root/*|/home/*) ;; *) refus "REFERENCE_M $SP hors de /root et de /home";; esac
+>     [[ "$(basename "$SP")" =~ ^pilote2-gemini-v5-2-1-maieutique-v1(-tentative[0-9]+)?$ ]] || refus "REFERENCE_M $SP : nom autre que pilote2-gemini-v5-2-1-maieutique-v1[-tentativeN]"
+204c214
+<   [ -f "$SP/EMPREINTES-pilote-v1.txt" ] && [ -f "$SP/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de M absentes : S ne part qu'après une course M finie et fermée"
+---
+>   [ -f "$SP/EMPREINTES-pilote-v1.txt" ] && [ -f "$SP/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de M absentes : une course du pilote 3 ne part qu'après une course M finie et fermée"
+257c267
+< ' "$SP" "$SHA_LANCEUR" "$LIGNEE" "$MODE" "$GO_ID" "$(basename "$0")")" || refus "S ne part pas : issue de M hors de la liste saine ($issue_s) — décision de Lazar requise"
+---
+> ' "$SP" "$LANCEUR_M_SHA" "$LIGNEE_M" "$MODE" "$GO_M" "$LANCEUR_M_NOM")" || refus "la course $COURSE ne part pas : issue de M hors de la liste saine ($issue_s) — décision de Lazar requise"
+259c269,271
+<   note "- course M : $SP ; $issue_s ; empreintes de M vérifiées (EMPREINTES-pilote-v1.txt, sha256 $EMP_S)"
+---
+>   [ -f "$PREREG_M" ] && [ "$(sha256sum "$PREREG_M" | cut -d' ' -f1)" = "$PREREG_M_SHA" ] || refus "texte scellé du second pilote absent ou d'empreinte autre que d2944654… ($PREREG_M)"
+>   grep -q "graine de la course maieutique = $GRAINE_S_MANIFESTE\b" "$PREREG_M" || refus "la course M a tourné avec la graine $GRAINE_S_MANIFESTE, qui n'est pas la graine M du texte scellé du second pilote"
+>   note "- course M de référence : $SP ; $issue_s ; empreintes de M vérifiées (EMPREINTES-pilote-v1.txt, sha256 $EMP_S) ; graine $GRAINE_S_MANIFESTE = graine M du texte scellé du second pilote (d2944654…)"
+323,326d334
+<   if [ "$COURSE" = structure ] && [ -n "${GRAINE_S_MANIFESTE:-}" ]; then
+<     grep -q "graine de la course maieutique = $GRAINE_S_MANIFESTE\b" "$PREREG" || refus "la course M a tourné avec la graine $GRAINE_S_MANIFESTE, qui n'est pas la graine M du préenregistrement scellé"
+<     note "- course M : graine $GRAINE_S_MANIFESTE = graine M du préenregistrement"
+<   fi
+330c338
+< # 3. Organisme v5.2.1 et question, extraits des commits cités, vérifiés
+---
+> # 3. Organisme de la course (v5.3 ou v6, dossier organisme/ seul) et question, extraits des commits cités, vérifiés
+338c346
+< [ "$(empreinte_arbre "$ORG")" = "$ARBRE_ORGANISME" ] || refus "empreinte d'arbre de l'organisme ≠ fec005c6…"
+---
+> [ "$(empreinte_arbre "$ORG")" = "$ARBRE_ORGANISME" ] || refus "empreinte d'arbre de l'organisme ≠ ${ARBRE_ORGANISME:0:8}…"
+344,345c352,354
+< # 4. Registre des GO : une ligne « | GO-2026-10-25-01 | » qui porte « calcul » et l'empreinte (8 premiers caractères) de
+< #    la question de la course ; dépense consignée avant (une ligne nommant la course et le GO) ; reste ≥ plafond de la course
+---
+> # 4. Registre des GO : une ligne « | GO-2026-10-25-02 | » qui porte « calcul », l'empreinte (8 premiers caractères) de
+> #    la question et celle de l'objet de la course ; dépense consignée avant (une ligne nommant la course, le GO et
+> #    l'empreinte des empreintes de M) ; reste ≥ plafond de la course
+353c362
+<     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_S:0:16}" || refus "la ligne de dépense de S ne porte pas l'empreinte des empreintes de M (${EMP_S:0:16}…), écrite après la fin de M"
+---
+>     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_S:0:16}" || refus "la ligne de dépense de la course $COURSE ne porte pas l'empreinte des empreintes de M (${EMP_S:0:16}…), écrite après la fin de M"
