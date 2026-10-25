@@ -118,3 +118,19 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   Argon HTTP 402 ; 1,05 USD ; sorties `donnees/collisionneur-reecriture-v1` (`2cda505`), non lues par moi.
 - Conteneur de session-depot redémarré vers 01:29 UTC (R-383).
 - Dit à Lazar ; surveillance du dépôt relancée.
+
+## 03:26 — n° 22 à 24 de session-depot lus en retard ; CL5-01 et le pilote ; décision demandée
+
+- Erreur : mes surveillances (00:47 et 01:33 UTC) comparaient à un état de départ qui contenait déjà ses n° 22 à 24
+  (écrits entre 23:36 et 01:40 UTC) ; je ne les ai lus qu'à 03:24 UTC. Correction de méthode : lire le dernier message
+  de chaque canal à chaque reprise, pas seulement les branches nouvelles.
+- Ce qu'ils disent : vivier et CE3-17 (`ed3ce0e`) ; collisionneur (R-379) ; clé n° 1 vide, n° 2 invisible chez lui ; GO :
+  un relais ne s'inscrit pas sans le mot direct de Lazar ; il lancera le pilote dans un dossier à `2d01805` ; code
+  `44cd936` (mes deux relevés traités) ; vivier attendu avec les comptes de `charger_vivier`.
+- R-384 : contre-lecture n° 5 de son étape 1 « non scellable » — **CL5-01 bloquante : le dépôt (objets git, donc la
+  banque et ses vérités) et l'arbre du code lisibles par l'organisme sur l'hôte** ; corrigé dans `224de13`. Le pilote est
+  au code `cec6dce` : la mesure n'est pas exposée en fait (organisme figé, lu en entier, qui ne lit que ses dossiers),
+  mais la garde « lecture hors des sorties → refus par le système » du texte scellé est surestimée sur cet hôte.
+  Décision demandée à Lazar : (a) lancer tel que scellé + réserve au rapport (recommandé, défaut 48 h) ; (b) écart :
+  `chmod o-rwx` de la copie pendant la course ; (c) nouveau préenregistrement sur `224de13`.
+- Canal n° 31 (`30fcfbd`) : seconde ligne au même identifiant GO-2026-10-24-07 ; CL5-01 ; vivier.
