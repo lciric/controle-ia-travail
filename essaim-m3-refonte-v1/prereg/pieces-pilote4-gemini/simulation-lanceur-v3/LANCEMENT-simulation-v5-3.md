@@ -1,0 +1,41 @@
+# Lancement du pilote pilote4-gemini-v5-3-v1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-25T18:07:45Z ; hôte : vm ; utilisateur : 0
+- course : v5-3 ; dossier du pilote : /var/tmp/essais-pilote4-v1/essais-v5/cas-sain-v5-3/pilote4-gemini-v5-3-v1 (0700, à root)
+- dépôt : /var/tmp/essais-pilote4-v1/depot ; HEAD : 6c2ab0ffacfb94f174964bb6b2e5300ede7ab958 (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote4_gemini_v3.sh, sha256 73d318b929ca03b98a5d9469271afd4348c4e448fcec1f5ed8aa2edd7c2c72fa
+- source des registres : /var/tmp/essais-pilote4-v1/essais-v5/entrees/go-sain.md ; dépenses : /var/tmp/essais-pilote4-v1/essais-v5/entrees/dep-sain.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- course M de référence : /var/tmp/essais-pilote4-v1/essais-v5/m-reference/pilote2-gemini-v5-2-1-maieutique-v1 ; M saine : g000 et g001 OK, au plus 20 % d appels hors OK et au moins un appel OK de Fable à chacune (g000 {"OK": 123}; g001 {"OK": 129}), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de M 3970427751169333427 ; dépense du noyau 2.9344 USD ; refus du noyau par génération [[], []] ; empreintes de M vérifiées (EMPREINTES-pilote-v1.txt, sha256 1f0fcda02ab065942e194c8f438a61a2b839c806d9cfddb96d2d0667588fdb39) ; graine 3970427751169333427 = graine M du texte scellé du second pilote (d2944654…)
+- code : identique à b1c7f4b6 (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque 157a2b45a8d9fd88cc5dca2f483c2dc79457d781d44f9802b2c053f530c0011d ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- versions : python 3.13.17 ; numpy 2.4.6 ; anthropic absente
+- isolation : dossier du pilote 0700 à root ; espace attendu /var/lib/essaim-m3/5f37e2e72d6d8b02 ; dépôt /var/tmp/essais-pilote4-v1/depot caché aux organismes (vérifié par bac_a_sable.dossiers_a_cacher) ; ESSAIM_M3_ESPACE non définie
+- préenregistrement : /var/tmp/essais-pilote4-v1/essais-v5/entrees/prereg-sain.md, sha256 9b74c2fb210f2b8e1a731ded77d6626da2beae513a3fd5ee5cada8380a9f117e (compagnon conforme), graine 13729193726644583001 de la course v5-3 écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée
+- organisme : 22 fichiers, empreinte d'arbre 6251ab219e86286ec892a65e28cf9eebad5265fd6e32e350e68827897c811753 ; question (v5-3) : sha256 8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+- registre : une ligne GO-2026-10-25-02 de type calcul portant l'empreinte de la question (v5-3), celle de l'organisme (6251ab21…) et celle du texte scellé (9b74c2fb210f2b8e) ; dépense consignée avant ; reste déclaré 150 USD ≥ 60 (vérification du lanceur)
+- test de dépense : td-heure-fraiche-v53.json, sha256 5b39ef574f1997caea41a37e8d0e4c6d785d9968bff6119acfcd3f45c8123fe9 — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 1 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05) (réalité des appels attestée par l'outil de session-depot ; le script vérifie la pièce)
+- recharge automatique attestée : « essai »
+- essais : 141 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 29 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 (la fonction écarte le bytecode depuis le constat n° 30 § 5)
+- test de dépense revérifié au départ : trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 172 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05)
+- voisines au départ : aucune
+- environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER .
+- marqueur de départ : /var/tmp/essais-pilote4-v1/essais-v5/cas-sain-v5-3/.partis/pilote4-gemini-v5-3-v1 (R3 ; jamais retiré)
+- départ de la simulation (UTC) : 2026-10-25T18:10:37Z
+- PID de la course : 16880 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T18:10:44Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 845ce173150d822d36c61229c01976d8785e25e45fdd086c895dd46505285362
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit 6c2ab0ffacfb94f174964bb6b2e5300ede7ab958 ; sha256_code_noyau 37acdcaaaded746b7f7599f17e8149bdd773e372f3a3b0782db7b73882acf8a3 ; espace /var/lib/essaim-m3/5f37e2e72d6d8b02 ; sources de moisson ["simulation"] ; clés présentes au manifeste — web : False, OpenAlex : False, Semantic Scholar : False ; dépense du noyau 6.8932 USD (à rapprocher de la console, P2C1-05)
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 7c28dca729363be159fb0fb9f8a64ecb9300bc9b15a1b70560cb71618eabace7
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 bfda0f56ba95673a241437b4eebb7e383d2c22b4e9c5285161e733a8ffe6f21e
+- journal des appels g002 : journal-appels-g002.jsonl, sha256 e5339c507f797262464108d0bbbde4ba744b52af0a0b2e335981450f3f816743
+- journal des appels g003 : journal-appels-g003.jsonl, sha256 9a11105754a3c002999eeda35c20d3c39b00ebe0c176e457f5f2c9ed437033cd
+- journal des appels c001 : journal-appels-c001.jsonl, sha256 d55050958705a364b60b6c4ec6059a2613cc3c8253113f56f0ad4891ea9d1e23
+- journal des appels c002 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- journal des appels c003 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- journal des appels c004 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- journal des appels c005 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- journal des appels c006 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- réponse à la question : reponse-question-g001.md, sha256 969bacab09d1174bbb0dab0d5194431a71be53c8a0c886463f76a1c0a4e70bf6
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 c066db0a51adbfc3c098184753aaa08128737ab5a7fb72c385577190b5d31e1c, 3539 entrées = 3539 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T18:10:45Z
