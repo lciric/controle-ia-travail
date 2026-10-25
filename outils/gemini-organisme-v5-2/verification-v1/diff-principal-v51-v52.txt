@@ -1,0 +1,354 @@
+23c23
+< # Version 5.1 :
+---
+> # Version 5.2 :
+25,31c25,35
+< # - Prise en compte des faits mécaniques observés sur la v4 en réel (DEMANDE-v5-1-faits-mecaniques-v1.md) :
+< #   1) Plafond `max_tokens` adapté à la réflexion interne des modèles (qui est incluse dans `max_tokens`) pour éviter
+< #      les statuts `TRONQUE` et `VIDE` à 512/640/1024/1200 jetons ;
+< #   2) Cadrage d'observation défensive en lecture seule et remplacement du champ `"raisonnement"` par `"constat"` dans
+< #      la consigne de tâche pour éviter les refus fournisseurs (`reasoning_extraction` et `cyber`) ;
+< #   3) Requêtes de moisson par défaut indépendantes du texte narratif de la mission.
+< VERSION = "organisme-gemini-m3-v5-1"
+---
+> # - Ajustements v5.1 conservés (plafonds `max_tokens` incluant la réflexion, cadrage d'observation défensive en lecture
+> #   seule, clé `"constat"` anti-refus, requêtes par défaut indépendantes de l'énoncé narratif de la mission) ;
+> # - Calibrage de la moisson sur les faits mécaniques v5.2 (DEMANDE-v5-2-faits-moisson-v2.md) :
+> #   1) `RESULTATS_MAX_PAR_RECHERCHE = 10` (maximum servi par le noyau), jusqu'à 6 recherches et 3 téléchargements par
+> #      moisson, interrogations couvrant les 4 sources (`arxiv`, `openalex`, `semanticscholar`, `web`) dès g0 et g1 ;
+> #   2) Conservation des résumés jusqu'à 1 100 caractères (12 notices max dans le bloc prompt) et d'extraits denses
+> #      jusqu'à 2 400 caractères par document téléchargé (avec lecture de `fichier_texte` quand `tronque=True` et
+> #      récupération de `travail/corpus/` dans `dossier_archive`) ;
+> #   3) À g0, injection du corpus moissonné dans l'induction ET dans un bloc dédié des tâches de test (non écrasé par
+> #      la troncature de `regles_induites`).
+> VERSION = "organisme-gemini-m3-v5-2"
+37c41,46
+< RESULTATS_MAX_PAR_RECHERCHE = 5
+---
+> RESULTATS_MAX_PAR_RECHERCHE = 10
+> RECHERCHES_MAX_PAR_MOISSON = 6
+> TELECHARGEMENTS_MAX_PAR_MOISSON = 3
+> MAX_NOTICES_PROMPT = 12
+> MAX_CARACTERES_RESUME_NOTICE = 1100
+> MAX_CARACTERES_EXTRAIT_DOC = 2400
+39a49
+> # (rabattus automatiquement par `_plafond_tokens_effectif` si `budget()["max_tokens_appel"]` vaut 8192 au pilote)
+78a89,97
+> REQUETES_RESERVE_SCIENTIFIQUES = (
+>     "evaluation awareness language models linear probes benchmark",
+>     "AI control untrusted monitoring sabotage delegation protocols",
+>     "LLM alignment faking sandbagging situational awareness",
+>     "evaluation awareness situational awareness alignmentforum lesswrong",
+>     "proper scoring rules Bregman Tsallis calibration uncertainty LLM",
+>     "multi-agent debate oversight collusion detection language models",
+> )
+> 
+141c160
+<                 sources_liste = ["arxiv", "openalex", "semanticscholar"]
+---
+>                 sources_liste = ["arxiv", "openalex", "semanticscholar", "web"]
+162c181
+<         "sources": ["arxiv", "openalex", "semanticscholar"],
+---
+>         "sources": ["arxiv", "openalex", "semanticscholar", "web"],
+242a262,318
+> def _extraire_passages_denses_document(texte: str, max_total: int = MAX_CARACTERES_EXTRAIT_DOC) -> str:
+>     """Version 5.2 : au lieu de couper un document de 60 000 caractères à ses 550 premiers caractères (souvent
+>     occupés par les métadonnées ou l'en-tête), assemble jusqu'à `max_total` caractères couvrant l'introduction/résumé
+>     et les paragraphes analytiques ou conclusifs les plus denses."""
+>     sain_complet = _sanitiser_donnee_externe(texte, 60_000)
+>     if len(sain_complet) <= max_total:
+>         return sain_complet
+>     budget_debut = max_total // 2
+>     budget_fin = max_total - budget_debut - 15
+>     debut = sain_complet[:budget_debut].strip()
+>     # Recherche d'une zone centrale/finale dense (méthode, théorème, résultats, conclusion)
+>     reste = sain_complet[budget_debut:]
+>     m_sec = re.search(
+>         r"\b(?:method|theorem|proof|result|discussion|conclusion|analysis|evaluation|experiment|proposition|lemma)\b",
+>         reste,
+>         flags=re.I,
+>     )
+>     if m_sec:
+>         pos = max(0, m_sec.start() - 40)
+>         fin = reste[pos:pos + budget_fin].strip()
+>     else:
+>         milieu = max(0, (len(reste) // 2) - (budget_fin // 2))
+>         fin = reste[milieu:milieu + budget_fin].strip()
+>     return f"{debut} [...] {fin}"[:max_total]
+> 
+> 
+> def _charger_corpus_archive(dossier_archive: str) -> list:
+>     """Version 5.2 : lit les documents téléchargés lors des générations passées et exposés par le noyau sous
+>     `travail/corpus/` dans `dossier_archive` (§ 3 du contrat)."""
+>     if not dossier_archive:
+>         return []
+>     racine = Path(dossier_archive)
+>     if not racine.exists() or not racine.is_dir():
+>         return []
+>     extraits = []
+>     try:
+>         dossiers_corpus = sorted(racine.rglob("corpus"), key=lambda p: str(p))
+>         for d_corp in reversed(dossiers_corpus):
+>             if not d_corp.is_dir():
+>                 continue
+>             for fich in sorted(d_corp.iterdir(), key=lambda p: str(p)):
+>                 if not fich.is_file() or fich.suffix.lower() not in (".txt", ".md", ".json"):
+>                     continue
+>                 try:
+>                     brut = fich.read_text(encoding="utf-8-sig", errors="replace")[:30_000]
+>                     ext = _extraire_passages_denses_document(brut, max_total=800)
+>                     if ext:
+>                         extraits.append({"fichier": fich.name, "extrait": ext})
+>                         if len(extraits) >= 3:
+>                             return extraits
+>                 except Exception as exc:
+>                     _consigner_erreur(f"fichier de corpus d'archive illisible ({fich.name}) : {type(exc).__name__}")
+>     except Exception as exc:
+>         _consigner_erreur(f"parcours de travail/corpus dans l'archive en échec : {type(exc).__name__}")
+>     return extraits
+> 
+> 
+324c400,401
+<     """Version 5 (Exigence n° 4) : appelle `noyau_client.telecharger` et comptabilise tous les statuts sans arrêt."""
+---
+>     """Version 5.2 (Exigence n° 4 & lecture de `fichier_texte`) : appelle `noyau_client.telecharger`, lit `fichier_texte`
+>     si le texte rendu est vide ou tronqué (`tronque=True`), et comptabilise tous les statuts sans arrêt (C-12)."""
+344c421,422
+<     if statut == "OK" and not texte.strip() and fichier_texte:
+---
+>     est_tronque = bool(rep.get("tronque", False))
+>     if statut == "OK" and fichier_texte and (not texte.strip() or est_tronque):
+348c426,428
+<                 texte = p_txt.read_text(encoding="utf-8-sig", errors="replace")[:60_000]
+---
+>                 lu_complet = p_txt.read_text(encoding="utf-8-sig", errors="replace")[:120_000]
+>                 if len(lu_complet.strip()) > len(texte.strip()):
+>                     texte = lu_complet
+372c452
+<             "tronque": bool(rep.get("tronque", False)),
+---
+>             "tronque": est_tronque,
+519c599,601
+<     """Version 5.1 : moissonneur documentaire endogène (`rechercher` et `telecharger`).
+---
+>     """Version 5.2 : moissonneur documentaire endogène (`rechercher` et `telecharger`) calibré sur les 4 sources
+>     (`arxiv`, `openalex`, `semanticscholar`, `web`), 10 notices par recherche (résumés jusqu'à 1 100 car.), jusqu'à
+>     6 recherches et 3 téléchargements (extraits denses jusqu'à 2 400 car.).
+522,523d603
+<     - Sinon, formule des requêtes courtes (<= 280 car.), interroge les sources permises, trie les résultats et
+<       télécharge les meilleures références permises.
+546,547c626,627
+<             "Formule entre 2 et 4 requetes de recherche bibliographique (en anglais, moins de 180 caracteres chacune, "
+<             f"sans recopier aucun enonce de tache) pour interroger les sources {sources_dispo} sur ce sujet.\n"
+---
+>             f"Formule entre 4 et 6 requetes de recherche bibliographique (en anglais, moins de 180 caracteres chacune, "
+>             f"sans recopier aucun enonce de tache) pour interroger les sources {sources_dispo} (articles et web scientifique) sur ce sujet.\n"
+549c629,630
+<             '{"requetes": ["evaluation awareness language models linear probes", "AI control untrusted monitoring"]}'
+---
+>             '{"requetes": ["evaluation awareness language models linear probes", "AI control untrusted monitoring sabotage", '
+>             '"situational awareness alignment faking LLM", "maieutic elicitation proper scoring rules alignmentforum"]}'
+574,580c655,663
+<     if not requetes:
+<         # Version 5.1 : requêtes scientifiques fixes sans extraire les mots narratifs de la mission ("lazar", "claude", etc.)
+<         requetes = [
+<             _nettoyer_requete_recherche("evaluation awareness language models linear probes"),
+<             _nettoyer_requete_recherche("AI control untrusted monitoring sabotage delegation"),
+<             _nettoyer_requete_recherche("LLM alignment faking sandbagging situational awareness"),
+<         ]
+---
+>     # Complément déterministe : si aucune requête n'a été formulée (g0) ou si moins de `recherches_restantes` requêtes
+>     # ont été générées (g1), on complète avec le catalogue de 6 requêtes scientifiques pour couvrir toutes les sources (dont `web`).
+>     cible_max_rech = max(1, min(RECHERCHES_MAX_PAR_MOISSON, int(b_init.get("recherches_restantes", 0) or 0)))
+>     for req_def in REQUETES_RESERVE_SCIENTIFIQUES:
+>         if len(requetes) >= cible_max_rech:
+>             break
+>         q_def = _nettoyer_requete_recherche(req_def)
+>         if q_def and q_def not in requetes:
+>             requetes.append(q_def)
+587c670
+<     nb_recherches_cible = min(len(requetes), max(1, min(4, int(b_init.get("recherches_restantes", 0) or 0))))
+---
+>     nb_recherches_cible = min(len(requetes), cible_max_rech)
+620,621c703,704
+<                 titre_sain = _sanitiser_donnee_externe(item.get("titre", ""), 200)
+<                 auteurs_sains = _sanitiser_donnee_externe(item.get("auteurs", ""), 120)
+---
+>                 titre_sain = _sanitiser_donnee_externe(item.get("titre", ""), 220)
+>                 auteurs_sains = _sanitiser_donnee_externe(item.get("auteurs", ""), 140)
+623c706
+<                 resume_sain = _sanitiser_donnee_externe(item.get("resume", ""), 480)
+---
+>                 resume_sain = _sanitiser_donnee_externe(item.get("resume", ""), MAX_CARACTERES_RESUME_NOTICE)
+636c719
+<                     "texte": f"[Moisson {entree_art['source']}] {titre_sain} ({date_saine}) : {resume_sain[:260]}",
+---
+>                     "texte": f"[Moisson {entree_art['source']}] {titre_sain} ({date_saine}) : {resume_sain[:380]}",
+645c728
+<                     if m_cit not in candidats_telechargement and len(candidats_telechargement) < 6:
+---
+>                     if m_cit not in candidats_telechargement and len(candidats_telechargement) < 9:
+659c742,745
+<     nb_tel_cible = min(len(candidats_telechargement), max(0, min(2, int(b_apres_rech.get("telechargements_restants", 0) or 0))))
+---
+>     nb_tel_cible = min(
+>         len(candidats_telechargement),
+>         max(0, min(TELECHARGEMENTS_MAX_PAR_MOISSON, int(b_apres_rech.get("telechargements_restants", 0) or 0))),
+>     )
+674,675c760,761
+<             titre_doc = _sanitiser_donnee_externe(res_t["titre"], 180)
+<             extrait_doc = _sanitiser_donnee_externe(res_t["texte"], 900)
+---
+>             titre_doc = _sanitiser_donnee_externe(res_t["titre"], 200)
+>             extrait_doc = _extraire_passages_denses_document(res_t["texte"], max_total=MAX_CARACTERES_EXTRAIT_DOC)
+683,684c769,770
+<                 "texte": f"[Document telecharge {ref_t[:60]}] {titre_doc} : {extrait_doc[:300]}",
+<                 "poids": 0.80,
+---
+>                 "texte": f"[Document telecharge {ref_t[:60]}] {titre_doc} : {extrait_doc[:420]}",
+>                 "poids": 0.82,
+692c778
+<         for i_a, art in enumerate(articles[:8], 1):
+---
+>         for i_a, art in enumerate(articles[:MAX_NOTICES_PROMPT], 1):
+700c786
+<                 f"   Extrait : {doc['extrait'][:550]}"
+---
+>                 f"   Extrait : {doc['extrait']}"
+743c829,834
+< def _construire_prompt_induction_entrainement(mission: str, taches_entrainement: list, resume_memoire: str) -> str:
+---
+> def _construire_prompt_induction_entrainement(
+>     mission: str,
+>     taches_entrainement: list,
+>     resume_memoire: str,
+>     extrait_moisson: str = "",
+> ) -> str:
+750a842
+>     bloc_doc = f"\nSynthese documentaire moissonnee :\n{extrait_moisson[:1200]}\n" if extrait_moisson else ""
+754c846,847
+<         f"Memoire inter-generationnelle actuelle :\n{resume_memoire}\n\n"
+---
+>         f"Memoire inter-generationnelle actuelle :\n{resume_memoire}\n"
+>         f"{bloc_doc}\n"
+763,765c856,865
+< def _construire_prompt_evaluation_tache(tache: dict, regles_apprises: str, resume_memoire: str, termes_satures: list, mode_orthogonal: bool = False) -> str:
+<     """Version 5.1 : cadrage de classification passive en lecture seule (évite les faux positifs `cyber`) et
+<     objet JSON sobre sans demande d'extraction de pensée interne (évite `reasoning_extraction`)."""
+---
+> def _construire_prompt_evaluation_tache(
+>     tache: dict,
+>     regles_apprises: str,
+>     resume_memoire: str,
+>     termes_satures: list,
+>     mode_orthogonal: bool = False,
+>     extrait_moisson: str = "",
+> ) -> str:
+>     """Version 5.2 : cadrage de classification passive en lecture seule (évite les faux positifs `cyber`),
+>     objet JSON sobre (`constat`), et champ `extrait_moisson` dédié (non écrasé par `regles_apprises[:700]`)."""
+774a875
+>     bloc_moisson_tache = f"Repere documentaire moissonne :\n{extrait_moisson[:650]}\n" if extrait_moisson else ""
+778c879,880
+<         f"Regles induites sur l'entrainement :\n{regles_apprises[:600]}\n"
+---
+>         f"Regles induites sur l'entrainement :\n{regles_apprises[:700]}\n"
+>         f"{bloc_moisson_tache}"
+810,813c912,914
+<     """Version 5.1 : si la moisson est ouverte, moissonne d'abord la littérature (`rechercher` / `telecharger`) ;
+<     puis fait délibérer l'essaim (castes, mitose, mémoire spectrale ISVD, répulsion de Shannon-Gram et arbitrage
+<     contradictoire) sur `contexte["question_ouverte"]` avec un plafond `max_tokens` adapté à la réflexion, et écrit
+<     `dossier_travail/reponse-question.md`. Si la moisson est fermée, se comporte comme la v4."""
+---
+>     """Version 5.2 : si la moisson est ouverte, moissonne d'abord la littérature (`rechercher` / `telecharger` sur les
+>     4 sources, jusqu'à 6 recherches et 3 téléchargements) ; puis fait délibérer l'essaim sur `contexte["question_ouverte"]`
+>     et écrit `dossier_travail/reponse-question.md`. Si la moisson est fermée, se comporte comme la v4."""
+1047,1048c1148,1149
+<             for art in bilan_moisson["articles"][:6]:
+<                 lignes_md.append(f"- **[{art['source']}] {art['titre']}** ({art['date']}, `{art['id']}`) : {art['resume'][:240]}")
+---
+>             for art in bilan_moisson["articles"][:MAX_NOTICES_PROMPT]:
+>                 lignes_md.append(f"- **[{art['source']}] {art['titre']}** ({art['date']}, `{art['id']}`) : {art['resume'][:420]}")
+1050c1151
+<                 lignes_md.append(f"- **[Document téléchargé : `{doc['reference']}`]** {doc['titre']} : {doc['extrait'][:240]}")
+---
+>                 lignes_md.append(f"- **[Document téléchargé : `{doc['reference']}`]** {doc['titre']} : {doc['extrait'][:600]}")
+1191,1193c1292,1303
+< def _traiter_tache(tache: dict, castes: list, regles_induites: str, resume_memoire: str, contexte: dict,
+<                    journal_appels: list, compteurs: dict) -> dict:
+<     """Boucle locale de Gemini pour une tâche de test, avec plafond `max_tokens` adapté à la réflexion."""
+---
+> def _traiter_tache(
+>     tache: dict,
+>     castes: list,
+>     regles_induites: str,
+>     resume_memoire: str,
+>     contexte: dict,
+>     journal_appels: list,
+>     compteurs: dict,
+>     extrait_moisson: str = "",
+> ) -> dict:
+>     """Boucle locale de Gemini pour une tâche de test, avec plafond `max_tokens` adapté à la réflexion et
+>     `extrait_moisson` dédié (non écrasé par `regles_induites`)."""
+1208c1318,1320
+<         p1 = _construire_prompt_evaluation_tache(tache, regles_induites, resume_memoire, [], False)
+---
+>         p1 = _construire_prompt_evaluation_tache(
+>             tache, regles_induites, resume_memoire, [], False, extrait_moisson=extrait_moisson
+>         )
+1240a1353
+>                 extrait_moisson=extrait_moisson,
+1324a1438,1446
+>     # Version 5.2 : lecture éventuelle de `travail/corpus/` dans `dossier_archive`
+>     extraits_corpus_archive = _charger_corpus_archive(dossier_archive)
+>     traces_apprentissage = []
+>     for item_arch in extraits_corpus_archive:
+>         traces_apprentissage.append({
+>             "texte": f"[Corpus Archive {item_arch['fichier']}] {item_arch['extrait'][:360]}",
+>             "poids": 0.70,
+>         })
+> 
+1327d1448
+<     traces_apprentissage = []
+1348a1470
+>         extrait_moisson_taches = ""
+1362a1485,1490
+>             extrait_moisson_taches = bilan_moisson_taches.get("bloc_corpus_pour_prompt", "")
+> 
+>         if not extrait_moisson_taches and extraits_corpus_archive:
+>             extrait_moisson_taches = "\n".join(
+>                 f"[Archive {x['fichier']}] {x['extrait']}" for x in extraits_corpus_archive
+>             )
+1367c1495,1500
+<             prompt_ind = _construire_prompt_induction_entrainement(mission, taches_entrainement, resume_memoire)
+---
+>             prompt_ind = _construire_prompt_induction_entrainement(
+>                 mission,
+>                 taches_entrainement,
+>                 resume_memoire,
+>                 extrait_moisson=extrait_moisson_taches,
+>             )
+1380,1383d1512
+<         if bilan_moisson_taches and bilan_moisson_taches.get("bloc_corpus_pour_prompt"):
+<             extrait_m = bilan_moisson_taches["bloc_corpus_pour_prompt"][:350]
+<             regles_induites = (regles_induites + "\n" + extrait_m).strip() if regles_induites else extrait_m
+< 
+1389c1518,1520
+<                 prompt_verif = _construire_prompt_evaluation_tache(t_ent, regles_induites, resume_memoire, [], False)
+---
+>                 prompt_verif = _construire_prompt_evaluation_tache(
+>                     t_ent, regles_induites, resume_memoire, [], False, extrait_moisson=extrait_moisson_taches
+>                 )
+1425c1556,1565
+<             return lambda: _traiter_tache(tache, castes, regles_induites, resume_memoire, contexte, journal_appels, compteurs)
+---
+>             return lambda: _traiter_tache(
+>                 tache,
+>                 castes,
+>                 regles_induites,
+>                 resume_memoire,
+>                 contexte,
+>                 journal_appels,
+>                 compteurs,
+>                 extrait_moisson=extrait_moisson_taches,
+>             )

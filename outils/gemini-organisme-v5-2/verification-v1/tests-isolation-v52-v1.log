@@ -1,0 +1,78 @@
+.....................F.......                                            [100%]
+=================================== FAILURES ===================================
+_ test_v5_2_exploitation_4_sources_dont_web_6_recherches_3_telechargements_et_extraits_riches _
+tmp_path = PosixPath('/tmp/pytest-of-nobody/pytest-7/test_v5_2_exploitation_4_sourc0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7ff7d10d0e10>
+    def test_v5_2_exploitation_4_sources_dont_web_6_recherches_3_telechargements_et_extraits_riches(tmp_path, monkeypatch):
+        """Vérifie les faits mécaniques v5.2 à g0 :
+        - 6 recherches effectuées sur les 4 sources (`arxiv`, `openalex`, `semanticscholar`, `web`) avec `n=10` ;
+        - 3 téléchargements effectués ;
+        - lecture de `fichier_texte` quand `tronque=True` ;
+        - le repère documentaire moissonné reste présent dans la consigne de tâche même si `regles_induites` dépasse 600 car."""
+        fich_complet = tmp_path / "doc_complet.txt"
+        fich_complet.write_text(
+            "Introduction detaillee sur la conscience d'evaluation. " + (" remplissage " * 200)
+            + " Conclusion formelle : MARQUEUR_FICHIER_COMPLET_LU_V52.",
+            encoding="utf-8",
+        )
+        reponses_tel = [
+            {"statut": "OK", "titre": "Doc 1 Tronque", "texte": "Debut court.", "tronque": True, "fichier_texte": str(fich_complet)},
+            {"statut": "OK", "titre": "Doc 2", "texte": "Analyse du second document sur OpenAlex."},
+            {"statut": "OK", "titre": "Doc 3", "texte": "Analyse du troisieme document sur Semantic Scholar."},
+        ]
+        longue_regle = "Regle induite tres longue : " + ("critere_observable " * 50)
+        reponses_app = [
+            {"statut": "OK", "texte": longue_regle},
+            {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.88, "constat": "ok"}'},
+            {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.86, "constat": "ok"}'},
+        ]
+        client = _creer_faux_client_v5(
+            reponses_appeler=reponses_app,
+            reponses_telecharger=reponses_tel,
+            appels_max=10,
+            recherches_max=6,
+            telechargements_max=3,
+            sources=["arxiv", "openalex", "semanticscholar", "web"],
+        )
+        monkeypatch.setitem(sys.modules, "noyau_client", client)
+        import principal
+        importlib.reload(principal)
+    
+        travail = tmp_path / "travail_v52_g0"
+        ctx = {
+            "generation": 0,
+            "lignee": "gemini-organisme-v5-2",
+            "mission": "Surveillance et alignement.",
+            "dossier_travail": str(travail),
+            "dossier_archive": "",
+            "taches_entrainement": [
+                {"id": "tr1", "famille": "conscience-evaluation", "texte": "ex", "etiquettes": ["evaluation", "usage-reel"], "verite": "evaluation"}
+            ],
+            "taches_test": [
+                {"id": "te1", "famille": "conscience-evaluation", "texte": "trace test", "etiquettes": ["evaluation", "usage-reel"]}
+            ],
+            "question_ouverte": None,
+            "budget": {
+                "appels_max": 10, "usd_max": 5.0, "temps_max_s": 120,
+                "recherches_max": 6, "telechargements_max": 3, "octets_max": 1_000_000, "max_tokens_appel": 8192,
+            },
+            "historique": [],
+        }
+        bilan = principal.executer(ctx)
+        assert len(client._etat["recherches"]) == 6
+        sources_utilisees = {r["source"] for r in client._etat["recherches"]}
+        assert sources_utilisees == {"arxiv", "openalex", "semanticscholar", "web"}
+        assert all(r["n"] == 10 for r in client._etat["recherches"])
+        assert len(client._etat["telechargements"]) == 3
+        assert bilan["moisson_taches"]["n_documents_telecharges"] == 3
+    
+        # Vérifie que le marqueur de `fichier_texte` a été lu et que la tâche de test reçoit le repère documentaire malgré la longue règle
+        appel_tache = [a for a in client._etat["appels"] if a["role"] == "monoculture_analytique"][0]
+        assert "Repere documentaire moissonne :" in appel_tache["prompt"]
+>       assert any("MARQUEUR_FICHIER_COMPLET_LU_V52" in ex["texte"] for ex in json.loads((travail / "memoire_isvd.json").read_text(encoding="utf-8"))["exemplaires"])
+E       assert False
+E        +  where False = any(<generator object test_v5_2_exploitation_4_sources_dont_web_6_recherches_3_telechargements_et_extraits_riches.<locals>.<genexpr> at 0x7ff7d110ec20>)
+tests/test_moissonneur_v5.py:449: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_moissonneur_v5.py::test_v5_2_exploitation_4_sources_dont_web_6_recherches_3_telechargements_et_extraits_riches
+1 failed, 28 passed in 4.47s
