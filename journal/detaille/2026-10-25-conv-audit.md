@@ -72,7 +72,7 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   (`ec76a04f…` avec `__pycache__`, `68494279…` sans) : il ne désigne pas le code ; contourné pour le pilote (nettoyage +
   `PYTHONDONTWRITEBYTECODE=1`), à signaler à session-depot.
 
-## 00:16 — moissonneur : v5 demandée à Gemini ; contre-lecture 3 rendue, v2 du pilote et lanceur v2 ; contre-lecture 4 ciblée
+## 00:11 — moissonneur : v5 demandée à Gemini ; contre-lecture 3 rendue, v2 du pilote et lanceur v2 ; contre-lecture 4 ciblée
 
 - Lazar (01:40 Paris) : « et le moissonneur de recherche biblio dans l'organisme pilote ? » → vérifié : la v4 n'appelle que
   `appeler`, `especes`, `budget` ; options (a) pilote tel quel, (b) tel quel + v5 de Gemini avec son propre moissonneur
