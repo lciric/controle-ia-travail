@@ -1,0 +1,250 @@
+--- essais_lanceur_pilote4_v5.sh	2026-10-25 19:52:45.253484128 +0100
++++ essais_lanceur_pilote4_v6.sh	2026-10-25 21:48:26.354738749 +0100
+@@ -1,7 +1,8 @@
+ #!/usr/bin/env bash
+ # Essais du lanceur du pilote 4 (v5.3 puis v6.1, banque v3, quatre générations notées, 6 rondes de conception au
+-# plus), v5 : la v4 (8e82d9ca…) par `deriver_essais_pilote4_v5.py` pour le lanceur v4 (borne des rondes, minuteur ; banque
+-# autre que la v3 refusée) ; la v4 était dérivée de la batterie v3 du pilote 3 (`essais_lanceur_pilote3_v5_3_v6_v3.sh`, 14bc0535…, 122 cas sur 122
++# plus), v6 : la v5 (e216c39e…) par `deriver_essais_pilote4_v6.py` pour le lanceur v5 (reprise par segments, 75 USD par
++# course, minuteur à 3 400 s) ; la v5 était dérivée de la v4 (8e82d9ca…) pour le lanceur v4 (borne des rondes,
++# minuteur ; banque autre que la v3 refusée) ; la v4 était dérivée de la batterie v3 du pilote 3 (`essais_lanceur_pilote3_v5_3_v6_v3.sh`, 14bc0535…, 122 cas sur 122
+ # sur le lanceur v2) par `deriver_essais_pilote4_v4.py` (remplacements exacts, configuration du lanceur ; la v1 laissait le chemin du
+ # cas sain de la v6.x à l’ancienne étiquette). Cette série
+ # essaie (i) les deux courses saines de bout en bout en simulation (v5.3, essais du noyau exécutés ; puis v6.1 après la
+@@ -10,7 +11,7 @@
+ # liste close ; (iii) la porte « v5.3 précédente » (générations 0 à 3) et ses artefacts ; (iv) ce qui change (objets,
+ # graines, banque v3 et les chemins permis des banques v2 et v3, ligne de GO liée au texte scellé, journaux recopiés et poussés) ; (v) un
+ # échantillon des gardes communes, en simulation et en mode réel (refus avant tout appel). Aucun appel réel.
+-# Usage : bash essais_lanceur_pilote4_v5.sh LANCEUR LANCEUR_M DEPOT DEPOT_M PYTHON DOSSIER_ESSAIS DEPOT_SOUS_ROOT PYTHON_AVEC_HTTPX
++# Usage : bash essais_lanceur_pilote4_v6.sh LANCEUR LANCEUR_M DEPOT DEPOT_M PYTHON DOSSIER_ESSAIS DEPOT_SOUS_ROOT PYTHON_AVEC_HTTPX
+ # (DEPOT : copie à la tête du pilote 4 ; DEPOT_M : copie à la tête du second pilote, d'où part la M de référence ;
+ # DEPOT_SOUS_ROOT : copie à la tête du pilote 4 sous /root, pour les refus du mode réel)
+ set -uo pipefail
+@@ -133,12 +134,12 @@
+ verifier sain-v5-3-reference-m "; M saine : g000 et g001 OK" "$V53/LANCEMENT.md"
+ verifier sain-v5-3-graine-m "graine $GRAINE_M_SCELLEE = graine M du texte scellé du second pilote (d2944654…)" "$V53/LANCEMENT.md"
+ verifier sain-v5-3-organisme "organisme : 22 fichiers, empreinte d'arbre 6251ab219e86286ec892a65e28cf9eebad5265fd6e32e350e68827897c811753" "$V53/LANCEMENT.md"
+-verifier sain-v5-3-essais "essais : 141 passés, 0 sauté, 0 désélectionnés" "$V53/LANCEMENT.md"
++verifier sain-v5-3-essais "essais : 169 passés, 0 sauté, 0 désélectionnés" "$V53/LANCEMENT.md"
+ verifier sain-v5-3-registre "registre : une ligne GO-2026-10-25-02 de type calcul" "$V53/LANCEMENT.md"
+ verifier sain-v5-3-temps-conception "temps par ronde de conception 900 s" "$V53/LANCEMENT.md"
+ verifier sain-v5-3-minuteur "STOP non posé" "$V53/LANCEMENT.md"
+ JUNIT="$E/junit-sain-v1.xml"; cp "$V53/essais-v1.xml" "$JUNIT"
+-SAIN+=(ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="141 passed")
++SAIN+=(ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="169 passed")
+ EMP_V53="$(cut -d' ' -f1 < "$V53/EMPREINTES-pilote-v1.txt.sha256")"
+ printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n| 2026-10-25 | pilote4-gemini-v6-1-v1 | GO-2026-10-25-02 | 60 | après M et v5.3, empreintes de M %s, de v5.3 %s |\n' "$EMP_M" "$EMP_M" "$EMP_V53" > "$E/entrees/dep-sain.md"
+ printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n| 2026-10-25 | pilote4-gemini-v6-1-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n' "$EMP_M" "$EMP_M" > "$E/entrees/dep-v6-sans-empreinte-v53.md"
+@@ -179,7 +180,7 @@
+     print("RELEVÉ " + d.name + " : " + j.name + " : " + str(sum(roles.values())) + " appels ; rôle architecte_mutation_endogene : " + str(roles.get("architecte_mutation_endogene", 0)) + " ; rôles " + json.dumps(roles, ensure_ascii=False, sort_keys=True)[:300])
+ ' "$d"
+ done
+-cas sain-simulation-sans-reference "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=v6-1 REGISTRE_GO_SOURCE="$E/entrees/go-sain.md" DEPENSES_SOURCE="$E/entrees/dep-sans-empreinte-m.md" RESTE_GO_USD=150 APPEL_CONTROLE_FICHIER="$E/entrees/td-sain.json" RECHARGE_ATTESTEE=essai ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="141 passed"
++cas sain-simulation-sans-reference "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=v6-1 REGISTRE_GO_SOURCE="$E/entrees/go-sain.md" DEPENSES_SOURCE="$E/entrees/dep-sans-empreinte-m.md" RESTE_GO_USD=150 APPEL_CONTROLE_FICHIER="$E/entrees/td-sain.json" RECHARGE_ATTESTEE=essai ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="169 passed"
+ cas go-v53-seulement-autorise-v53 "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=v5-3 "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-v53-seulement.md"
+ 
+ echo "== course M de référence : issues hors de la liste saine (copie de M altérée, empreintes refaites) =="
+@@ -210,7 +211,7 @@
+ cas m-archive-incomplete "archive fermée absente ou incomplète" -- MODE=simulation "${SAIN[@]}" REFERENCE_M="$d"
+ d="$(copie_m lanceur)"; sed -i "s/sha256 $H_M\$/sha256 0000/" "$d/LANCEMENT.md"; refaire_empreintes "$d"
+ cas m-autre-lanceur "M n a pas tourné sous ce lanceur" -- MODE=simulation "${SAIN[@]}" REFERENCE_M="$d"
+-d="$(copie_m lanceur-pilote3)"; sed -i "s/lanceur : lancer_pilote2_gemini_v5_2_v5.sh, sha256 $H_M\$/lanceur : lancer_pilote4_gemini_v4.sh, sha256 $H/" "$d/LANCEMENT.md"; refaire_empreintes "$d"
++d="$(copie_m lanceur-pilote3)"; sed -i "s/lanceur : lancer_pilote2_gemini_v5_2_v5.sh, sha256 $H_M\$/lanceur : lancer_pilote4_gemini_v5.sh, sha256 $H/" "$d/LANCEMENT.md"; refaire_empreintes "$d"
+ cas m-sous-lanceur-pilote4 "M n a pas tourné sous ce lanceur" -- MODE=simulation "${SAIN[@]}" REFERENCE_M="$d"
+ d="$(copie_m pas-m)"; sed -i 's/^- course : maieutique ;/- course : structure ;/' "$d/LANCEMENT.md"; refaire_empreintes "$d"
+ cas m-pas-course-m "ce n est pas la course M" -- MODE=simulation "${SAIN[@]}" REFERENCE_M="$d"
+@@ -345,11 +346,11 @@
+ mkdir -p "$E/racine-marqueur/.partis"; printf 'ailleurs\n' > "$E/racine-marqueur/.partis/pilote4-gemini-v5-3-v1"
+ cas marqueur-present "marqueur de départ $E/racine-marqueur/.partis/pilote4-gemini-v5-3-v1 présent" -- MODE=simulation PILOTE_RACINE="$E/racine-marqueur" "${SAIN[@]}"
+ 
+-echo "== code et commits : chemins permis après b1c7f4b6 =="
++echo "== code et commits : chemins permis après 8e5e2f7b =="
+ cas commit-question "absent du dépôt" -- MODE=simulation ESSAI_ARTEFACT=commit "${SAIN[@]}"
+ printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/hors-pieces.txt"
+ git -C "$DEPOT" add essaim-m3-refonte-v1/hors-pieces.txt; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : fichier hors des pièces"
+-cas commit-hors-pieces "commits postérieurs à b1c7f4b6 hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
++cas commit-hors-pieces "commits postérieurs à 8e5e2f7b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
+ git -C "$DEPOT" reset -q --hard HEAD~1
+ printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai.txt"
+ git -C "$DEPOT" add essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai.txt; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : pièce du pilote 4"
+@@ -377,15 +378,15 @@
+ git -C "$DEPOT" reset -q --hard HEAD~1
+ printf '{}\n' > "$DEPOT/essaim-m3-refonte-v1/banque/banque-confrontation-v4.json"
+ git -C "$DEPOT" add essaim-m3-refonte-v1/banque/banque-confrontation-v4.json; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : banque v4 (hors du pilote 4)"
+-cas commit-banque-v4 "commits postérieurs à b1c7f4b6 hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
++cas commit-banque-v4 "commits postérieurs à 8e5e2f7b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
+ git -C "$DEPOT" reset -q --hard HEAD~1
+ printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/banque/banque-autre-v1.json"
+ git -C "$DEPOT" add essaim-m3-refonte-v1/banque/banque-autre-v1.json; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : autre fichier de la banque"
+-cas commit-banque-autre "commits postérieurs à b1c7f4b6 hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
++cas commit-banque-autre "commits postérieurs à 8e5e2f7b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
+ git -C "$DEPOT" reset -q --hard HEAD~1
+ printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/prereg/pilote4-autre-texte-v1.md"
+ git -C "$DEPOT" add essaim-m3-refonte-v1/prereg/pilote4-autre-texte-v1.md; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : texte non permis"
+-cas commit-texte-non-permis "commits postérieurs à b1c7f4b6 hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
++cas commit-texte-non-permis "commits postérieurs à 8e5e2f7b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
+ git -C "$DEPOT" reset -q --hard HEAD~1
+ 
+ echo "== préenregistrement (graines par course, lanceur cité, marqueurs) =="
+@@ -425,7 +426,7 @@
+ 
+ echo "== essais du noyau =="
+ cas junit-echec "échecs" -- MODE=simulation ESSAI_ARTEFACT=junit-echec "${SAIN[@]}"
+-cas junit-total "essais au lieu de 141" -- MODE=simulation ESSAI_ARTEFACT=junit-total "${SAIN[@]}"
++cas junit-total "essais au lieu de 169" -- MODE=simulation ESSAI_ARTEFACT=junit-total "${SAIN[@]}"
+ 
+ echo "== environnement du noyau et passerelle =="
+ cas env-noyau-nu "environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER ." -- MODE=simulation "${SAIN[@]}" HF_TOKEN=factice VAST_API_KEY=factice ANTHROPIC_API_KEY=factice
+@@ -445,17 +446,142 @@
+ git -C "$DEPOT" add essaim-m3-refonte-v1/banque/banque-confrontation-v3.json; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : banque v2 copiée au chemin de la v3"
+ cas banque-v2-au-chemin-v3 "empreinte de la banque ≠ 157a2b45…" -- MODE=simulation "${SAIN[@]}"
+ git -C "$DEPOT" reset -q --hard HEAD~1
+-cas minuteur-echeance "minuteur : STOP posé dans course/" -- MODE=simulation ESSAI_ECHEANCE_STOP_S=0 "${SAIN[@]}"
+-verifier minuteur-echeance-present "STOP du minuteur présent dans course/ à la fin de la course" "$E/cas-minuteur-echeance"/*/LANCEMENT.md
+-verifier minuteur-echeance-archive "archive fermée : ferme.tar.gz" "$E/cas-minuteur-echeance"/*/LANCEMENT.md
+-verifier minuteur-echeance-pousse "ferme.tar.gz" "$E/cas-minuteur-echeance"/*/A-POUSSER-v1.txt
+-"$PY" -I -c '
++echo "== lanceur v5 : reprise par segments (décision de Lazar, 25 octobre 2026, 20:23 Paris) =="
++verifier_absent() {  # verifier_absent NOM CHEMIN : le chemin ne doit pas exister
++  n=$((n + 1))
++  if [ ! -e "$2" ]; then ok=$((ok + 1)); echo "OK     $1 : $2 absent"; else echo "ÉCHEC  $1 : $2 présent"; fi
++}
++verifier_re() {  # verifier_re NOM REGEX FICHIER… : expression régulière étendue cherchée dans l'un des fichiers
++  local nom="$1" motif="$2"; shift 2
++  n=$((n + 1))
++  if cat "$@" 2>/dev/null | grep -qE -- "$motif"; then ok=$((ok + 1)); echo "OK     $nom : /$motif/"
++  else echo "ÉCHEC  $nom : attendu /$motif/"; fi
++}
++releve_segments() {  # releve_segments DOSSIER_DU_PILOTE → « arrêts […] reprises […] générations […] » (extrait mécanique)
++  "$PY" -I -c '
+ import json, sys
+-x = json.load(open(sys.argv[1], encoding="utf-8"))
+-arret = [e for e in x.get("evenements", []) if e.get("etape") in ("arret", "arret_conception")]
+-gens = [g.get("generation") for g in x.get("generations", []) if not g.get("phase")]
+-print("relevé (non compté) : événements d arrêt", [e.get("etape") for e in arret], "; générations notées", gens)
+-' "$(ls -d "$E/cas-minuteur-echeance"/*/ | head -1)extrait-mecanique-v1.json" || echo "relevé (non compté) : extrait illisible"
++x = json.load(open(sys.argv[1] + "/extrait-mecanique-v1.json", encoding="utf-8"))
++ev = x.get("evenements", [])
++print("arrêts", [e.get("raison") for e in ev if e.get("etape") == "arret"], "reprises", [e.get("segment") for e in ev if e.get("etape") == "reprise"],
++      "générations", sorted(g.get("generation") for g in x.get("generations", []) if not g.get("phase")))' "$1"
++}
++copie_ps() {  # copie_ps NOM → chemin d'une copie de la v5.3 en segments
++  local d="$E/ps-alteree-$1/pilote4-gemini-v5-3-v1"; rm -rf "$E/ps-alteree-$1"; mkdir -p "$E/ps-alteree-$1"; cp -a "$PS" "$d"; echo "$d"
++}
++td_heure "$E/entrees/td-seg-1.json" 0 GO-2026-10-25-02
++SEG=(MODE=simulation COURSE=v5-3 GRAINE="$G_53" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-1.json" ESSAI_EXIGER_HEURE=1)
++{ cat "$E/entrees/dep-sain.md"
++  printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 segment 2 | GO-2026-10-25-02 | au plus 75 USD moins la dépense déjà faite | après le segment 1 |\n'
++  printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 segment 3 | GO-2026-10-25-02 | au plus 75 USD moins la dépense déjà faite | après le segment 2 |\n'; } > "$E/entrees/dep-segments.md"
++
++echo "-- valeurs de SEGMENT et de CLORE ; course absente ou fermée --"
++cas seg-non-entier "SEGMENT doit être un entier ≥ 1, sans zéro en tête : « deux »" -- MODE=simulation SEGMENT=deux
++cas seg-zero "sans zéro en tête : « 0 »" -- MODE=simulation SEGMENT=0
++cas seg-zero-en-tete "sans zéro en tête : « 02 »" -- MODE=simulation SEGMENT=02
++cas clore-au-segment-1 "CLORE=1 ferme une course arrêtée entre deux segments : SEGMENT ≥ 2 exigé" -- MODE=simulation CLORE=1
++cas clore-valeur "CLORE vaut 1 ou rien : « oui »" -- MODE=simulation SEGMENT=2 CLORE=oui
++cas seg-sans-course "absent (aucune course à reprendre" -- "${SEG[@]}" SEGMENT=2
++cas seg-course-fermee "est déjà fermée" -- MODE=simulation COURSE=v5-3 "${SAIN[@]}" SEGMENT=2 PILOTE_RACINE="$E/cas-sain-v5-3"
++
++echo "-- segment 1 arrêté par le minuteur (échéance 0 : STOP dès le manifeste) --"
++cas seg-segment1 "segment 1 arrêté par STOP ; reprise attendue : SEGMENT=2" -- "${SEG[@]}" ESSAI_ECHEANCE_STOP_S=0
++RS="$E/cas-seg-segment1"; PS="$RS/pilote4-gemini-v5-3-v1"
++verifier seg-segment1-minuteur "état de reprise attendu" "$PS/LANCEMENT.md"
++verifier seg-segment1-etat "état de reprise écrit par le noyau : etat-v1.json" "$PS/LANCEMENT.md"
++verifier seg-segment1-sortie "rien à pousser avant la fin de la course" "$RS/sortie.txt"
++verifier_absent seg-segment1-ouverte "$PS/ferme.tar.gz"
++verifier_absent seg-segment1-rien-pousse "$PS/A-POUSSER-v1.txt"
++
++echo "-- segment 2 refusé sur artefacts (la course reste arrêtée, ouverte) --"
++cas seg-hors-ordre "le LANCEMENT.md n'attend pas ce segment" -- "${SEG[@]}" SEGMENT=3 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
++cas seg-sans-ligne-de-depense "segment 2 non consigné avant dans registres/depenses.md" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS"
++cas seg-reste-insuffisant "reste sur GO-2026-10-25-02 = 0.01 USD <" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" RESTE_GO_USD=0.01
++mkdir "$RS/.verrou-pilote4-gemini-v5-3-v1-segment2"
++cas seg-verrou-du-segment "verrou $RS/.verrou-pilote4-gemini-v5-3-v1-segment2 présent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
++rmdir "$RS/.verrou-pilote4-gemini-v5-3-v1-segment2"
++cp -p "$RS/.partis/pilote4-gemini-v5-3-v1" "$E/marqueur-sauve"; printf 'ailleurs 2026-10-25T00:00:00Z\n' > "$RS/.partis/pilote4-gemini-v5-3-v1"
++cas seg-marqueur-autre "absent ou d'un autre dossier (R3)" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
++cp -p "$E/marqueur-sauve" "$RS/.partis/pilote4-gemini-v5-3-v1"
++printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai-entre-segments.txt"
++git -C "$DEPOT" add essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai-entre-segments.txt; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : commit entre deux segments"
++cas seg-head-deplace "HEAD du dépôt ≠ celui du segment 1" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
++git -C "$DEPOT" reset -q --hard HEAD~1
++cp "$LANCEUR" "$E/lanceur-modifie.sh"; printf '\n# copie modifiée (essai)\n' >> "$E/lanceur-modifie.sh"
++LANCEUR_SAIN="$LANCEUR"; LANCEUR="$E/lanceur-modifie.sh"
++cas seg-autre-lanceur "n'est pas celui du segment 1" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
++LANCEUR="$LANCEUR_SAIN"
++c="$PS/course/reprise/etat-v1.json.sha256"; cp -p "$c" "$E/etat-v1-sauve.sha256"; printf '%064d  etat-v1.json\n' 0 > "$c"
++cas seg-etat-altere "état de reprise du segment 1 non conforme (etat-v1.json : compagnon absent ou différent)" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
++cp -p "$E/etat-v1-sauve.sha256" "$c"
++cp -p "$PS/organisme/principal.py" "$E/principal-sauve.py"
++cas seg-organisme-modifie "empreinte d'arbre de l'organisme ≠ 6251ab21…" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ARTEFACT=organisme
++cp -p "$E/principal-sauve.py" "$PS/organisme/principal.py"
++cp -p "$PS/question.md" "$E/question-sauve.md"
++cas seg-question-modifiee "empreinte de la question ≠ 8b1c7511…" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ARTEFACT=question
++cp -p "$E/question-sauve.md" "$PS/question.md"
++j="$PS/course/evenements.jsonl"; cp -p "$j" "$E/journal-sauve.jsonl"; printf '{"etape": "intrus"}\n' >> "$j"
++td_heure "$E/entrees/td-seg-2a.json" 0 GO-2026-10-25-02
++cas seg-noyau-refuse "reprise refusée par le noyau (code 9" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-2a.json"
++verifier seg-noyau-refuse-motif "la course a bougé depuis l'état" "$PS"/segment-2-t*/sortie-erreur-lanceur.txt
++verifier seg-noyau-refuse-code "reprise refusée par le noyau" "$RS/sortie.txt"
++verifier_absent seg-noyau-refuse-ouverte "$PS/ferme.tar.gz"
++cp -p "$E/journal-sauve.jsonl" "$j"
++
++echo "-- segment 2 sain : la course va au bout et se ferme --"
++td_heure "$E/entrees/td-seg-2.json" 0 GO-2026-10-25-02
++cas seg-segment2 "archive fermée : ferme.tar.gz" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-2.json"
++verifier_re seg-segment2-entete "^## Segment 2, essai [0-9]+ \(simulation, tentative 1\)$" "$PS/LANCEMENT.md"
++verifier seg-segment2-etat-relu "état de reprise : etat-v1.json, sha256" "$PS/LANCEMENT.md"
++verifier seg-segment2-stop-retire "STOP du segment 1 retiré de course/ (reprise)" "$PS/LANCEMENT.md"
++verifier seg-segment2-depart "; segment 2, reprise de la course" "$PS/LANCEMENT.md"
++verifier seg-segment2-depense "dépense consignée avant (segment 2)" "$PS/LANCEMENT.md"
++verifier seg-segment2-essais "essais : 169 passés, 0 sauté, 0 désélectionnés" "$PS/LANCEMENT.md"
++verifier_re seg-segment2-pousse-registre "^segment-2-t[0-9]+/registre-go\.md$" "$PS/A-POUSSER-v1.txt"
++verifier_re seg-segment2-pousse-essais "^segment-2-t[0-9]+/essais-v1\.txt$" "$PS/A-POUSSER-v1.txt"
++verifier_re seg-segment2-pousse-erreur "^segment-2-t[0-9]+/sortie-erreur-lanceur\.txt\.sha256$" "$PS/A-POUSSER-v1.txt"
++verifier_re seg-segment2-pousse-td "^segment-2-t[0-9]+/test-depense-td-seg-2\.json$" "$PS/A-POUSSER-v1.txt"
++verifier seg-segment2-pousse-archive "ferme.tar.gz" "$PS/A-POUSSER-v1.txt"
++releve_segments "$PS" > "$E/releve-segments-ps.txt" 2>&1
++verifier seg-segment2-extrait "arrêts ['fichier STOP', 'aucune lignée active'] reprises [2] générations [0, 1, 2, 3]" "$E/releve-segments-ps.txt"
++cas seg-apres-fermeture "est déjà fermée" -- "${SEG[@]}" SEGMENT=3 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
++
++echo "-- porte « v5.3 précédente » de la v6.1 sur la v5.3 en segments --"
++EMP_PS="$(cut -d' ' -f1 < "$PS/EMPREINTES-pilote-v1.txt.sha256")"
++printf '| 2026-10-25 | pilote4-gemini-v6-1-v1 | GO-2026-10-25-02 | 75 | après M et v5.3, empreintes de M %s, de v5.3 %s |\n' "$EMP_M" "$EMP_PS" > "$E/entrees/dep-v6-apres-segments.md"
++cas seg-v6-1-porte-saine "en 2 segment(s) (1 arrêt(s) sur le STOP du minuteur, chacun repris), dernier code 0" -- MODE=simulation COURSE=v6-1 "${SAIN[@]}" PRECEDENTE_V53="$PS" DEPENSES_SOURCE="$E/entrees/dep-v6-apres-segments.md" ESSAI_ARTEFACT=famille
++verifier seg-v6-1-porte-saine-v53 "; v5.3 saine : g000 à g003 OK" "$E/cas-seg-v6-1-porte-saine"/*/LANCEMENT.md
++d="$(copie_ps sans-reprise)"; extrait_altere "$d" 'x["evenements"] = [e for e in x["evenements"] if e.get("etape") != "reprise"]'; refaire_empreintes "$d"
++cas seg-v53-stop-sans-reprise "arrêt de la course : ['fichier STOP', 'aucune lignée active'] ; reprises : []" -- "${V6C[@]}" PRECEDENTE_V53="$d"
++d="$(copie_ps deux-stops)"; extrait_altere "$d" 'i = [k for k, e in enumerate(x["evenements"]) if e.get("etape") == "arret"][0]; x["evenements"].insert(i, dict(x["evenements"][i]))'; refaire_empreintes "$d"
++cas seg-v53-deux-stops-une-reprise "arrêt de la course : ['fichier STOP', 'fichier STOP', 'aucune lignée active'] ; reprises : [2]" -- "${V6C[@]}" PRECEDENTE_V53="$d"
++d="$(copie_ps dernier-code)"; printf -- '- fin du processus (UTC) : 2026-10-25T00:00:00Z ; code de retour : 1 ; essai\n' >> "$d/LANCEMENT.md"; refaire_empreintes "$d"
++cas seg-v53-dernier-code-non-nul "code de retour du noyau non nul ou absent" -- "${V6C[@]}" PRECEDENTE_V53="$d"
++
++echo "-- trois segments (états de reprise v1 et v2) --"
++td_heure "$E/entrees/td-seg3-1.json" 0 GO-2026-10-25-02
++cas seg3-segment1 "segment 1 arrêté par STOP ; reprise attendue : SEGMENT=2" -- "${SEG[@]}" ESSAI_ECHEANCE_STOP_S=0 APPEL_CONTROLE_FICHIER="$E/entrees/td-seg3-1.json"
++R3S="$E/cas-seg3-segment1"; P3S="$R3S/pilote4-gemini-v5-3-v1"
++td_heure "$E/entrees/td-seg3-2.json" 0 GO-2026-10-25-02
++cas seg3-segment2 "segment 2 arrêté par STOP ; reprise attendue : SEGMENT=3" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$R3S" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ECHEANCE_STOP_S=0 APPEL_CONTROLE_FICHIER="$E/entrees/td-seg3-2.json"
++verifier seg3-etat-v2 "état de reprise écrit par le noyau : etat-v2.json" "$P3S/LANCEMENT.md"
++td_heure "$E/entrees/td-seg3-3.json" 0 GO-2026-10-25-02
++cas seg3-segment3 "archive fermée : ferme.tar.gz" -- "${SEG[@]}" SEGMENT=3 PILOTE_RACINE="$R3S" DEPENSES_SOURCE="$E/entrees/dep-segments.md" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg3-3.json"
++verifier seg3-etat-relu "état de reprise : etat-v2.json, sha256" "$P3S/LANCEMENT.md"
++releve_segments "$P3S" > "$E/releve-segments-p3s.txt" 2>&1
++verifier seg3-extrait "arrêts ['fichier STOP', 'fichier STOP', 'aucune lignée active'] reprises [2, 3] générations [0, 1, 2, 3]" "$E/releve-segments-p3s.txt"
++
++echo "-- fermeture sans reprise (CLORE=1) --"
++td_heure "$E/entrees/td-clore-1.json" 0 GO-2026-10-25-02
++cas seg-clore-segment1 "segment 1 arrêté par STOP ; reprise attendue : SEGMENT=2" -- "${SEG[@]}" ESSAI_ECHEANCE_STOP_S=0 APPEL_CONTROLE_FICHIER="$E/entrees/td-clore-1.json"
++RC="$E/cas-seg-clore-segment1"; PC="$RC/pilote4-gemini-v5-3-v1"
++cas seg-clore "CLORE=1 : aucune reprise, aucun appel" -- MODE=simulation COURSE=v5-3 GRAINE="$G_53" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" REFERENCE_M="$M_REF" SEGMENT=2 CLORE=1 PILOTE_RACINE="$RC"
++verifier seg-clore-entete "fermeture sans reprise (CLORE=1)" "$PC/LANCEMENT.md"
++verifier seg-clore-archive "archive fermée : ferme.tar.gz" "$PC/LANCEMENT.md"
++verifier seg-clore-pousse "ferme.tar.gz" "$PC/A-POUSSER-v1.txt"
++verifier_absent seg-clore-sans-essais "$PC/segment-2-t1/essais-v1.txt"
++releve_segments "$PC" > "$E/releve-segments-pc.txt" 2>&1
++verifier seg-clore-extrait "arrêts ['fichier STOP'] reprises []" "$E/releve-segments-pc.txt"
++cas seg-clore-v53-refusee "course v5.3 fermée sans reprise (CLORE=1)" -- "${V6C[@]}" PRECEDENTE_V53="$PC"
+ cas minuteur-echeance-non-entiere "ESSAI_ECHEANCE_STOP_S doit être un entier (secondes)" -- MODE=simulation ESSAI_ECHEANCE_STOP_S=abc "${SAIN[@]}"
+ cas reel-echeance-minuteur "variable ESSAI_ECHEANCE_STOP_S définie en mode réel" -- MODE=reel PILOTE_RACINE=- ESSAI_ECHEANCE_STOP_S=5
+ echo "== état des dépôts d'essai après la série =="
