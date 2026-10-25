@@ -27,7 +27,8 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies 
    fonction `executer(contexte)` qu'il définit. Les chemins sont relatifs ; aucun lien symbolique ; aucun binaire.
 
 2. Exécution. Le noyau lance `executer(contexte)` dans un bac à sable : sous-processus Python sans réseau, sans
-   clé, sans accès hors de son dossier de travail, avec une limite de temps, de mémoire et de disque. `contexte`
+   clé, sans accès hors de son dossier de travail, avec une limite de temps, de mémoire et de disque ; les dossiers
+   temporaires communs (/tmp, /var/tmp, /dev/shm) y sont propres à chaque exécution et vides au départ. `contexte`
    est un dictionnaire :
    - "generation" (entier), "lignee" (texte), "mission" (texte),
    - "dossier_travail" (chemin, le seul en écriture ; les noms `noyau` et `corpus` y sont réservés au noyau : ce que tu
@@ -72,14 +73,16 @@ CONTRAT ENTRE LE NOYAU ET L'ORGANISME (version 3 : recherche et moisson servies 
      dans la source demandée parmi `budget()["sources"]` — "arxiv", "openalex", "semanticscholar" (articles),
      "web" (moteur de recherche général : pages, blogs, forums ; présent seulement si le noyau en a la clé) —, au plus
      `recherches_max` par génération ; `resultats` est une liste de {"source", "id", "titre", "auteurs", "date",
-     "resume", "lien"} (au plus 10, résumés tronqués) quand `statut` vaut "OK" ; sinon ("PLAFOND", "ECHEC_RECHERCHE",
-     "SOURCE_INCONNUE", "ANOMALIE", "INDISPONIBLE", "REFUSE_FUITE") la liste est vide.
+     "resume", "lien"} (au plus 10, résumés tronqués) quand `statut` vaut "OK" — une notice qui recopie un passage
+     d'une tâche de test en est retirée — ; sinon ("PLAFOND", "ECHEC_RECHERCHE", "SOURCE_INCONNUE", "ANOMALIE",
+     "INDISPONIBLE", "REFUSE_FUITE") la liste est vide.
    - `telecharger(reference, role="")` → dict {"statut", "identifiant", "adresse", "genre", "titre", "octets",
      "sha256_brut", "sha256_texte", "texte", "tronque", "caracteres_texte", "fichier_texte", "echec"} : le noyau
      rapporte un document — un `lien` rendu par une recherche de cette génération, un identifiant arXiv, ou une
      adresse https d'un hôte de la liste permise —, en extrait le texte (pages, articles PDF, texte brut), l'empreinte
      et le garde dans un dossier du noyau lisible par ta seule lignée (le texte complet est dans `fichier_texte` quand
-     il dépasse ce qui est rendu ; à la génération suivante, ces documents sont dans ta vue sous `travail/corpus/`), au plus
+     il dépasse ce qui est rendu — ce chemin ne vaut que pendant cette génération ; à la génération suivante, ces
+     documents sont dans ta vue sous `travail/corpus/`), au plus
      `telechargements_max` documents et `octets_max` octets par génération ; statuts "OK", "SANS_TEXTE", "PLAFOND",
      "ECHEC_TELECHARGEMENT", "ANOMALIE", "INDISPONIBLE", "REFUSE_FUITE" (une requête ou un document qui recopie un passage
      d'une tâche de test n'est pas servi : la recherche de la provenance d'un texte de test est refusée). **Tout ce qui revient d'une recherche ou d'un téléchargement

@@ -18,6 +18,7 @@ import threading
 from .appels import Appelant, Arret, ESPECES
 
 PARALLELE_MAX_DEFAUT = 8
+ATTENTE_FILS_S = 900  # RV-08 : à la fin d'une génération, attente au plus de ce délai des appels encore en vol
 MAX_TOKENS_DEFAUT_ORGANISME = 4096  # si l'organisme ne fixe pas max_tokens ; il peut demander plus, jusqu'au maximum du modèle
 
 
@@ -48,6 +49,9 @@ class ServeurAppels:
         self._arret = threading.Event()
         self._fil = None
         self._sock = None
+        self._fils: set = set()      # RV-08 : fils de service en cours, attendus à la sortie avant toute lecture du journal
+        self.fils_non_finis = 0      # fils encore en vol après `ATTENTE_FILS_S` (consigné ; jamais attendu en silence)
+        self.indisponibles: dict[str, int] = {}  # CE4-02 : demandes d'un service non servi dans ce run, par opération (rapport)
 
     # ---- cycle de vie ----
     def __enter__(self):
@@ -63,13 +67,22 @@ class ServeurAppels:
         return self
 
     def __exit__(self, *exc):
-        self._arret.set()
+        self._arret.set()  # plus aucune connexion acceptée
         if self._fil is not None:
             self._fil.join(timeout=5)
         if self._sock is not None:
             self._sock.close()
         if os.path.exists(self.chemin):
             os.unlink(self.chemin)
+        # RV-08 : un appel servi mais non fini quand l'organisme s'arrête (délai dépassé, appels en parallèle) est attendu :
+        # sa ligne entre au journal et son coût à la dépense avant que le noyau ne les lise et ne dépose la génération
+        import time as _time
+        limite = _time.monotonic() + ATTENTE_FILS_S
+        with self._verrou:
+            fils = list(self._fils)
+        for f in fils:
+            f.join(timeout=max(0.0, limite - _time.monotonic()))
+        self.fils_non_finis = sum(1 for f in fils if f.is_alive())
 
     # ---- service ----
     def _boucle(self):
@@ -80,7 +93,10 @@ class ServeurAppels:
                 continue
             except OSError:
                 break
-            threading.Thread(target=self._servir, args=(conn,), daemon=True).start()
+            fil = threading.Thread(target=self._servir, args=(conn,), daemon=True)
+            with self._verrou:
+                self._fils.add(fil)
+            fil.start()
 
     def _lire(self, conn) -> dict | None:
         tampon = b""
@@ -99,13 +115,21 @@ class ServeurAppels:
             return None
 
     def _servir(self, conn):
-        with conn:
-            req = self._lire(conn)
-            rep = self.traiter(req)
-            try:
-                conn.sendall((json.dumps(rep, ensure_ascii=False) + "\n").encode("utf-8"))
-            except OSError:
-                pass
+        try:
+            with conn:
+                req = self._lire(conn)
+                rep = self.traiter(req)
+                try:
+                    conn.sendall((json.dumps(rep, ensure_ascii=False) + "\n").encode("utf-8"))
+                except OSError:
+                    pass
+        finally:
+            with self._verrou:
+                self._fils.discard(threading.current_thread())
+
+    def _noter_indisponible(self, op: str) -> None:
+        with self._verrou:
+            self.indisponibles[op] = self.indisponibles.get(op, 0) + 1
 
     def traiter(self, req) -> dict:
         if not isinstance(req, dict):
@@ -124,18 +148,22 @@ class ServeurAppels:
                         "octets_restants": (max(0, self.telechargeur.octets_max_total - self.telechargeur.octets) if self.telechargeur is not None else 0)}
         if op == "entrainer":
             if self.entraineur is None:
+                self._noter_indisponible(op)
                 return {"statut": "INDISPONIBLE", "identifiant": None, "problemes": ["apprentissage par gradient non servi dans ce run"]}
             return self.entraineur.entrainer(req.get("spec"), role=str(req.get("role", ""))[:40])
         if op == "predire":
             if self.entraineur is None:
+                self._noter_indisponible(op)
                 return {"statut": "INDISPONIBLE", "probabilites": {}, "echec": "apprentissage par gradient non servi dans ce run"}
             return self.entraineur.predire(req.get("identifiant"), req.get("ids"), role=str(req.get("role", ""))[:40])
         if op == "rechercher":
             if self.rechercheur is None:
+                self._noter_indisponible(op)
                 return {"statut": "INDISPONIBLE", "source": None, "resultats": [], "identifiant": None, "echec": "recherche non servie dans ce run"}
             return self.rechercheur.rechercher(req.get("requete"), req.get("n", 5), role=str(req.get("role", ""))[:40], source=req.get("source"))
         if op == "telecharger":
             if self.telechargeur is None:
+                self._noter_indisponible(op)
                 return {"statut": "INDISPONIBLE", "identifiant": None, "texte": "", "echec": "téléchargement non servi dans ce run"}
             return self.telechargeur.telecharger(req.get("reference"), role=str(req.get("role", ""))[:40])
         if op != "appeler":

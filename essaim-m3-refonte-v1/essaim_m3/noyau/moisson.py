@@ -229,8 +229,15 @@ class Telechargeur:
 
     def __init__(self, dossier_corpus: str | pathlib.Path, telechargements_max: int = TELECHARGEMENTS_MAX_DEFAUT,
                  octets_max_doc: int = OCTETS_MAX_DOC, octets_max_total: int = OCTETS_MAX_GENERATION, backend=None,
-                 hotes_toujours_permis: set[str] | None = None, empreintes_fuite: set | None = None):
-        self.empreintes_fuite = empreintes_fuite or set()  # CE3-04 : un document qui contient un texte de test est mis en quarantaine
+                 hotes_toujours_permis: set[str] | None = None, empreintes_fuite: set | None = None,
+                 empreintes_courtes: set | None = None, journal_noyau: str | pathlib.Path | None = None):
+        """`empreintes_fuite` (CE3-04) : un document qui contient un passage d'une tâche de test est mis en quarantaine ;
+        `empreintes_courtes` (RV-07 ii) : recoupements courts comptés, jamais refusés ; `journal_noyau` (RV-07 iii) : journal
+        du noyau, hors de la vue de la lignée, seul à recevoir les empreintes recoupées et les comptes courts (l'index du
+        corpus, lisible par la lignée, ne porte que le statut)."""
+        self.empreintes_fuite = empreintes_fuite or set()
+        self.empreintes_courtes = empreintes_courtes or set()
+        self.journal_noyau = pathlib.Path(journal_noyau) if journal_noyau is not None else None
         self.dossier = pathlib.Path(dossier_corpus)
         self.dossier.mkdir(parents=True, exist_ok=True)
         self.index = self.dossier / "index.jsonl"
@@ -317,10 +324,15 @@ class Telechargeur:
                 (self.dossier / f"{ident}.txt").write_text(texte, encoding="utf-8")
             notice = {"id": ident, "reference": reference[:500], "adresse": str(finale)[:1000], "type_contenu": type_contenu, "genre": genre,
                       "titre": titre, "octets": len(brut), "caracteres_texte": len(texte), "sha256_brut": sha_brut, "sha256_texte": sha_texte,
-                      "statut": statut, "echec": echec, "debut_utc": debut, "fin_utc": fin, "role": str(role)[:40],
-                      "sha256_recoupement": recoupe_fuite}
+                      "statut": statut, "echec": echec, "debut_utc": debut, "fin_utc": fin, "role": str(role)[:40]}
             (self.dossier / f"{ident}.json").write_text(json.dumps(notice, ensure_ascii=False, indent=1), encoding="utf-8")
             self._journaliser(notice)
+            if self.journal_noyau is not None:
+                from .garde_fuite import compte_recoupements
+                with self.journal_noyau.open("a", encoding="utf-8") as fh:
+                    fh.write(json.dumps({"id": ident, "statut": statut, "sha256_recoupement": recoupe_fuite,
+                                         "recoupements_courts": compte_recoupements(texte, self.empreintes_courtes),
+                                         "quand_utc": fin}, ensure_ascii=False, sort_keys=True) + "\n")
         tronque = len(texte) > TEXTE_MAX_RENDU
         return {"statut": statut, "identifiant": ident, "adresse": str(finale)[:1000], "genre": genre, "titre": titre, "octets": len(brut),
                 "sha256_brut": sha_brut, "sha256_texte": sha_texte, "texte": texte[:TEXTE_MAX_RENDU], "tronque": tronque,

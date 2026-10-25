@@ -110,12 +110,16 @@ class Rechercheur:
     """Un rechercheur par génération : plafond, journal, réponses brutes. Sûr sous fils."""
 
     def __init__(self, dossier: str | pathlib.Path, recherches_max: int, backend=None, source: str = "arxiv", telechargeur=None,
-                 empreintes_fuite: set | None = None):
+                 empreintes_fuite: set | None = None, empreintes_courtes: set | None = None):
         """`backend` : un double (simulation) qui sert toutes les sources ; sinon les sources réelles de `moisson.sources_disponibles()`
         (arXiv, OpenAlex, Semantic Scholar, web par clé). `telechargeur` : reçoit les liens rendus (chaîne de provenance).
         `empreintes_fuite` (CE3-04) : empreintes des fenêtres de mots des tâches de test ; une requête qui en recoupe une est
-        refusée (`REFUSE_FUITE`) et consignée, sans consommer de recherche."""
+        refusée (`REFUSE_FUITE`) et consignée, sans consommer de recherche ; une notice rendue (titre, auteurs, résumé) qui en
+        recoupe une est retirée des résultats et comptée (RV-07 i). `empreintes_courtes` (RV-07 ii) : fenêtres courtes des
+        mêmes textes ; leurs recoupements sont comptés au journal du noyau, jamais refusés. Les empreintes recoupées ne
+        sont écrites que dans ce journal, qui vit dans le dossier du noyau, hors de la vue de la lignée (RV-07 iii)."""
         self.empreintes_fuite = empreintes_fuite or set()
+        self.empreintes_courtes = empreintes_courtes or set()
         self.dossier = pathlib.Path(dossier)
         (self.dossier / "recherches").mkdir(parents=True, exist_ok=True)
         self.journal = self.dossier / "journal-recherches.jsonl"
@@ -179,13 +183,25 @@ class Rechercheur:
         except Exception as e:  # réseau, analyse, hôte : jamais un texte d'erreur en guise de résultat
             resultats, brut, statut, echec = [], b"", "ECHEC_RECHERCHE", f"{type(e).__name__}: {str(e)[:200]}"
         fin = _heure()
+        from .garde_fuite import compte_recoupements
+        retires = []  # RV-07 (i) : notices qui recoupent une tâche de test, retirées avant d'être rendues
+        gardes = []
+        for r in resultats:
+            texte_notice = " ".join(str(r.get(k) or "") for k in ("titre", "auteurs", "resume"))
+            e_notice = recoupement(texte_notice, self.empreintes_fuite)
+            (retires if e_notice is not None else gardes).append(e_notice if e_notice is not None else r)
+        resultats = gardes
+        courts = compte_recoupements(requete, self.empreintes_courtes) + sum(
+            compte_recoupements(" ".join(str(r.get(k) or "") for k in ("titre", "auteurs", "resume")), self.empreintes_courtes) for r in resultats)
         if self.telechargeur is not None and resultats:
             self.telechargeur.noter_resultats(resultats)
         with self._verrou:
             (self.dossier / "recherches" / f"{ident}.brut").write_bytes(brut)
             self._journaliser({"id": ident, "role": str(role)[:40], "requete": requete, "sha256_requete": _empreinte(requete),
                                "n_demande": n, "n_rendus": len(resultats), "sha256_brut": _empreinte(brut), "octets_brut": len(brut),
-                               "statut": statut, "echec": echec, "debut_utc": debut, "fin_utc": fin, "source": source})
+                               "statut": statut, "echec": echec, "debut_utc": debut, "fin_utc": fin, "source": source,
+                               "n_retires_fuite": len(retires), "sha256_recoupements_notices": retires[:10],
+                               "recoupements_courts": courts})
         return {"statut": statut, "source": source, "resultats": resultats[:n], "identifiant": ident, "echec": echec}
 
     def lire_journal(self) -> list[dict]:

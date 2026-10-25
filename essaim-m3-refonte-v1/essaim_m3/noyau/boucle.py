@@ -12,6 +12,7 @@ import json
 import os
 import pathlib
 import platform
+import secrets
 import shutil
 import sys
 
@@ -67,9 +68,11 @@ def temps_pire_cas(budget: dict) -> tuple[int, str]:
 
 
 def empreinte_arbre(dossier: pathlib.Path) -> str:
-    """Empreinte d'un dossier : chemins relatifs triés et contenu de chaque fichier (indépendante des dates)."""
+    """Empreinte d'un dossier : chemins relatifs triés et contenu de chaque fichier (indépendante des dates). Le bytecode
+    (`__pycache__/`, `*.pyc`) est écarté : il dépend de l'exécution, pas du code (constat de « conv-audit », n° 30 § 5)."""
     h = hashlib.sha256()
-    for f in sorted(p for p in pathlib.Path(dossier).rglob("*") if p.is_file()):
+    for f in sorted(p for p in pathlib.Path(dossier).rglob("*")
+                    if p.is_file() and p.suffix != ".pyc" and "__pycache__" not in p.relative_to(dossier).parts):
         h.update(str(f.relative_to(dossier)).encode("utf-8") + b"\0")
         h.update(hashlib.sha256(f.read_bytes()).hexdigest().encode("ascii") + b"\n")
     return h.hexdigest()
@@ -103,7 +106,8 @@ def organismes_g000(course: str | pathlib.Path, destination: str | pathlib.Path)
                 if e.lower().replace("_", "-") == l["lignee"]:
                     famille = contrat.FAMILLES[e]
         sortie[l["lignee"]] = {"organisme": str(cible / "organisme"), "famille": famille or "gemini",
-                               "empreinte_organisme": l.get("empreinte_organisme"), "course_origine": str(course)}
+                               "empreinte_organisme": l.get("empreinte_organisme"), "course_origine": str(course),
+                               "impose": bool(l.get("impose")), "rondes_conception_max_origine": int(manifeste.get("rondes_conception_max") or 0)}
     if not sortie:
         raise Arret(f"aucune génération 0 archivée dans {course}")
     return sortie
@@ -266,7 +270,7 @@ class Noyau:
             "question_ouverte": (self.question.manifeste() if self.question is not None else None),
             "budget_conception": (self.budget_conception if self.rondes_conception else None),
             "vivier": ((vivier or {}).get("manifeste") if vivier is not None else None),
-            "recherche": ("simulation" if self.recherche is not None else ("arxiv" if self.budget["recherches_max"] > 0 else "aucune")),
+            "coeurs": os.cpu_count(),  # RV-15, CE3-11 : contention du processeur rapportée
             "sources_moisson": self._sources_moisson(), "cle_brave_presente": bool(os.environ.get("BRAVE_API_KEY")),
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
             "traits": ({"description": self.description_traits, "n": len(next(iter(self.vues.values()))),
@@ -300,6 +304,8 @@ class Noyau:
                 raise Arret("mode réel : --isoler-reseau est obligatoire (CR-02)")
             if not bac_a_sable.isolation_reseau_disponible():
                 raise Arret("mode réel : isolation réseau demandée mais indisponible (unshare -n)")
+            if not self.isolation.get("espaces_noms"):  # RV-06 : sans espace de processus, un descendant détaché survivrait
+                raise Arret("mode réel : espaces de noms de montage, de processus et de communication indisponibles ; refusé (RV-06)")
         if not (self.racine / "manifeste-run.json").exists():  # une course existante n'est jamais réécrite (rechargement)
             (self.racine / "manifeste-run.json").write_text(json.dumps(self.manifeste, ensure_ascii=False, indent=1), encoding="utf-8")
             (self.racine / "banque.json").write_text(json.dumps(self.banque, ensure_ascii=False), encoding="utf-8")
@@ -355,6 +361,22 @@ class Noyau:
             bac_a_sable.proteger(vue, 0o755)
         return vue
 
+    def _verrouiller_vivants(self, dossiers: list) -> None:
+        """RV-02 : après le dépôt d'une génération ou d'une ronde, ses dossiers vivants (travail de l'organisme, journaux du
+        noyau, corpus moissonné) passent à root en 0700 : les générations suivantes n'en lisent plus rien, et la mémoire ne
+        passe que par la vue de l'archive, la même dans les deux bras d'une paire (le bras B n'a que la vue importée).
+        Sans isolation d'utilisateur (simulation hors root), rien n'est changé : l'organisme tourne alors sous le même
+        utilisateur que le noyau."""
+        if not self.isolation["utilisateur"]:
+            return
+        for d in dossiers:
+            if d is not None and _fichiers.vrai_dossier(d):
+                try:
+                    os.chown(d, 0, 0, follow_symlinks=False)
+                    os.chmod(d, 0o700)
+                except OSError as e:
+                    raise Arret(f"dossier vivant {d} : verrouillage impossible ({type(e).__name__}) : la génération suivante pourrait le lire (RV-02)")
+
     def _proteger_lecture_lignee(self, dossier: pathlib.Path, uid: int | None, recursif: bool = True) -> None:
         """CE3-06 : un dossier du noyau que la lignée lit (son corpus moissonné, sa vue) appartient à root et au groupe de la
         lignée (son gid est son uid), lisible par elle seule (dossiers 0750, fichiers 0640) ; sans isolation d'utilisateur
@@ -396,10 +418,18 @@ class Noyau:
         fois. La recherche et le téléchargement refusent de servir une requête ou un document qui en recoupe une : la
         recherche de provenance d'un texte de test n'est pas servie (le texte final vient d'un jeu public)."""
         if getattr(self, "_cache_empreintes_fuite", None) is None:
-            from .garde_fuite import empreintes_de_fuite
+            from .garde_fuite import MOTS, MOTS_COURTS, empreintes_de_fuite
             textes = [t["texte"] for t in (self.banque.get("test") or [])] + [t["texte"] for t in (self.banque.get("test_final") or [])]
-            self._cache_empreintes_fuite = empreintes_de_fuite(textes)
+            train = [t["texte"] for t in (self.banque.get("train") or [])]
+            # RV-12 : une fenêtre présente aussi dans l'entraînement (que l'organisme a) est un gabarit commun, pas une fuite
+            self._cache_empreintes_fuite = empreintes_de_fuite(textes, MOTS, exclure=train)
+            self._cache_empreintes_courtes = empreintes_de_fuite(textes, MOTS_COURTS, exclure=train)
         return self._cache_empreintes_fuite
+
+    def _empreintes_courtes(self) -> set:
+        """RV-07 (ii) : fenêtres courtes des textes de test (moins celles de l'entraînement), pour la mesure sans refus."""
+        self._empreintes_fuite()
+        return self._cache_empreintes_courtes
 
     def _rechercheur(self, dossier: pathlib.Path, budget: dict | None = None, telechargeur=None):
         """Un rechercheur par génération ; None si `recherches_max` vaut 0 (recherche non servie)."""
@@ -408,9 +438,9 @@ class Noyau:
             return None
         backend = self.recherche(None) if self.recherche is not None else None
         return _recherche.Rechercheur(dossier, int(budget["recherches_max"]), backend, telechargeur=telechargeur,
-                                      empreintes_fuite=self._empreintes_fuite())
+                                      empreintes_fuite=self._empreintes_fuite(), empreintes_courtes=self._empreintes_courtes())
 
-    def _telechargeur(self, dossier_corpus: pathlib.Path, budget: dict | None = None):
+    def _telechargeur(self, dossier_corpus: pathlib.Path, budget: dict | None = None, dossier_noyau: pathlib.Path | None = None):
         """Un téléchargeur par génération ; None si `telechargements_max` vaut 0. Le corpus vit dans `dossier_corpus`,
         frère du dossier de travail, à root (CE3-07) ; recopié dans l'archive et la vue sous `travail/corpus` au dépôt ;
         double sans réseau en simulation."""
@@ -420,7 +450,8 @@ class Noyau:
         backend = _moisson.telechargement_simule if self.recherche is not None else None
         return _moisson.Telechargeur(dossier_corpus, int(budget["telechargements_max"]),
                                      octets_max_total=int(budget.get("octets_max", _moisson.OCTETS_MAX_GENERATION)), backend=backend,
-                                     empreintes_fuite=self._empreintes_fuite())
+                                     empreintes_fuite=self._empreintes_fuite(), empreintes_courtes=self._empreintes_courtes(),
+                                     journal_noyau=(pathlib.Path(dossier_noyau) / "journal-fuite.jsonl" if dossier_noyau is not None else None))
 
     def _entraineur(self, dossier: pathlib.Path, lignee: str, g: int, traits_sup: dict | None = None, budget: dict | None = None):
         """Un entraîneur par génération ; None si `entrainements_max` vaut 0. Les vérités servies sont celles de
@@ -517,12 +548,19 @@ class Noyau:
                               "id_appel": None, "cout_usd": 0.0}
             if statut == "ORGANISME_IMPOSE_VALIDE":
                 self.lignees[nom] = {"espece_amorcage": None, "famille": spec["famille"], "generation": 0,
-                                     "organisme": dossier / "organisme", "active": True, "impose": True,
+                                     "organisme": dossier / "organisme", "active": True,
+                                     # CE4-05 : une lignée auto-écrite relancée par `--depuis` garde sa marque d'origine
+                                     "impose": bool(spec.get("impose", True)),
                                      "uid": (bac_a_sable.uid_lignee(len(self.lignees), self.decalage_uid) if self.isolation["utilisateur"] else None)}
                 # bras apparié adaptatif (`--depuis` sans `--gel`, CE-06) : la génération 0 relancée doit voir ce que la
                 # génération 0 d'origine voyait — ses rondes de conception (historique et vue) ; le bras gelé reste sans archive
                 if spec.get("course_origine") and not self.gel:
-                    importees = self.archive.importer_conception(pathlib.Path(spec["course_origine"]), nom)
+                    uid_l = self.lignees[nom]["uid"]
+                    importees = self.archive.importer_conception(pathlib.Path(spec["course_origine"]), nom,
+                                                                 gid=(uid_l if (uid_l is not None and not self.memoire_partagee) else None))
+                    # CE4-05 / RV-09 : le contexte de B dit la même borne de conception que celui de A (sans nouvelle ronde)
+                    self.rondes_conception_contexte = max(int(getattr(self, "rondes_conception_contexte", 0)),
+                                                          int(spec.get("rondes_conception_max_origine") or 0))
                     resultats[nom]["rondes_conception_importees"] = [int(l["generation"]) for l in importees]
                     if importees:
                         self._evenement(etape="conception_importee", lignee=nom, course_origine=spec["course_origine"],
@@ -566,7 +604,7 @@ class Noyau:
         archive_vue = self._vue_pour(lignee)
         contexte = {
             "generation": (0 if phase else g), "lignee": lignee, "mission": contrat.mission_texte(self.mission, _taches.ETIQUETTES),
-            "phase": (phase or "generation"), "ronde_conception": (g if phase else None), "rondes_conception_max": self.rondes_conception,
+            "phase": (phase or "generation"), "ronde_conception": (g if phase else None), "rondes_conception_max": max(self.rondes_conception, int(getattr(self, "rondes_conception_contexte", 0))),
             "dossier_travail": str(travail), "dossier_archive": str(archive_vue),
             "taches_entrainement": ([dict(_taches.masquer(self.banque["train"][i]), verite=self.banque["train"][i]["verite"]) for i in ordre_train]
                                     + [dict(_taches.masquer(vivier[i]), verite=vivier[i]["verite"]) for i in ordre_vivier]),
@@ -589,11 +627,11 @@ class Noyau:
         question_posee = contexte["question_ouverte"] is not None
         appelant = self._appelant(dossier_noyau, budget)
         chemin_socket = str(travail / "noyau.sock")
-        if len(chemin_socket) > 100:  # limite des sockets Unix ; nom unique par course (CR-12)
-            chemin_socket = f"/tmp/essaim-{hashlib.sha256(str(self.racine).encode()).hexdigest()[:10]}-{lignee[:10]}-g{g}.sock"
+        if len(chemin_socket) > 100:  # limite des sockets Unix ; nom unique par course (CR-12), hors de /tmp et imprévisible (RV-04)
+            chemin_socket = str(bac_a_sable.dossier_sockets() / f"essaim-{hashlib.sha256(str(self.racine).encode()).hexdigest()[:10]}-{lignee[:10]}-g{g}-{secrets.token_hex(8)}.sock")
         uid = self._uid(lignee)
         bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
-        telechargeur = self._telechargeur(dossier_corpus, budget)
+        telechargeur = self._telechargeur(dossier_corpus, budget, dossier_noyau)
         if telechargeur is not None:
             self._proteger_lecture_lignee(dossier_corpus, uid)
         rechercheur = self._rechercheur(dossier_noyau, budget, telechargeur)
@@ -602,10 +640,14 @@ class Noyau:
         with ServeurAppels(appelant, chemin_socket, int(budget["appels_max"]), self.parallele_max, rechercheur, entraineur, telechargeur,
                            max_tokens_appel=budget.get("max_tokens_appel")) as serveur:
             execution = bac_a_sable.executer(travail, chemin_socket, int(budget["temps_max_s"]), isoler_reseau=self.isoler_reseau, uid=uid)
-            n_appels = serveur.n_appels
-            refus = list(serveur.refus)
-            en_vol_max = serveur.en_vol_max
-            non_conformes = serveur.non_conformes
+        # RV-08 : lus après la sortie du serveur, qui attend les appels encore en vol (journal et dépense complets)
+        n_appels = serveur.n_appels
+        refus = list(serveur.refus)
+        en_vol_max = serveur.en_vol_max
+        non_conformes = serveur.non_conformes
+        indisponibles = dict(serveur.indisponibles)
+        if serveur.fils_non_finis:
+            execution = dict(execution, appels_en_vol_non_finis=serveur.fils_non_finis)
         if non_conformes:  # CR-02 (1) : génération invalidée, exclue des hypothèses, lignée arrêtée
             execution = dict(execution, code="INVALIDE_MODELE", code_origine=execution.get("code"), non_conformes=non_conformes)
         # CE3-07 : le journal des appels vit hors d'atteinte de l'organisme ; son absence alors que des appels ont été servis
@@ -682,7 +724,7 @@ class Noyau:
             problemes_succ = ["successeur absent"]
         a_successeur = not problemes_succ
         resume = {"statut": execution["code"], "execution": execution, "n_appels": n_appels, "cout_usd": round(appelant.depense_usd, 4),
-                  "refus_noyau": refus, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
+                  "refus_noyau": refus, "indisponibles": indisponibles, "appels_simultanes_max": en_vol_max, "successeur": a_successeur, "problemes_successeur": problemes_succ,
                   "n_reponses_test": len(reponses), "score": score["score"], "metrique_proposee": metrique, "gel": self.gel,
                   "impose": bool(etat.get("impose")), "famille": etat.get("famille"), "relance": bool(etat.get("relance_en_cours")),
                   "n_recherches": n_recherches, "n_entrainements": n_entrainements, "n_telechargements": n_telechargements, "invalide": bool(non_conformes) or bool(anomalie_noyau), "non_conformes": non_conformes,
@@ -694,7 +736,12 @@ class Noyau:
             resume["question_ouverte"] = _question.resume_lecture(lecture_question, True)
         self.archive.deposer(lignee, g, organisme, travail, appelant.journal, score, resume, score_final, phase=phase,
                              dossier_noyau=dossier_noyau, dossier_corpus=dossier_corpus,
-                             gid=(uid if (uid is not None and not self.memoire_partagee) else None))
+                             gid=(uid if (uid is not None and not self.memoire_partagee) else None),
+                             reponses_lues=(None if phase else {"reponses": {k: v["etiquette"] for k, v in reponses.items()},
+                                                                "probleme_reponses": probleme_reponses}))
+        # RV-02 : la mémoire d'une génération ne passe que par sa vue (dans les deux bras) : les dossiers vivants (travail,
+        # journaux du noyau, corpus) sont rendus au seul root après le dépôt et la lecture du successeur (ci-dessous)
+        vivants = [travail, dossier_noyau, dossier_corpus]
         if question_posee:  # pièce à la racine de la génération archivée (scellée) et dans la vue de la seule lignée
             dossier_gen = self.archive.racine / lignee / _archive.Archive.nom_generation(g, phase)
             vue_gen = self.archive.vue / lignee / _archive.Archive.nom_generation(g, phase)
@@ -707,6 +754,7 @@ class Noyau:
             etat["active"] = False
             etat["fin"] = ("appel à modèle non conforme : génération invalidée (CR-02)" if non_conformes
                            else f"anomalie du noyau : génération invalidée ({anomalie_noyau})")
+            self._verrouiller_vivants(vivants)
             return resume
         if phase:  # phase de conception : le successeur valide devient l'organisme de la ronde suivante ou de la génération 0
             fin = travail / "fin_conception.json"  # l'organisme déclare lui-même la fin de sa conception (son critère, ses valeurs)
@@ -731,6 +779,7 @@ class Noyau:
                 etat["organisme"] = cible
             else:
                 self._evenement(etape="conception_sans_successeur", lignee=lignee, ronde=g, problemes_successeur=problemes_succ[:10])
+            self._verrouiller_vivants(vivants)
             return resume
         if self.gel and g + 1 < self.generations_max:
             etat.update(generation=g + 1)  # même organisme (génération 0), relancé : bras témoin
@@ -752,6 +801,7 @@ class Noyau:
                 etat["fin"] = "sans successeur valide après relance"
             else:
                 etat["fin"] = "sans successeur valide"
+        self._verrouiller_vivants(vivants)
         return resume
 
     # ---- boucle ----

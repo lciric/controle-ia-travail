@@ -282,3 +282,35 @@ def test_extrait_mecanique_sain_puis_artefacts(tmp_path, monkeypatch):
     with pytest.raises(em.ExtraitInvalide):
         em.ecrire(course, tmp_path / "jamais" / "extrait.json")
     assert not (tmp_path / "jamais" / "extrait.json").exists()
+
+
+def test_extrait_mecanique_v2_statuts_des_services_et_rondes_importees(tmp_path):
+    """CE4-04 : l'extrait porte, par génération, les comptes par statut des entraînements, des recherches (par source) et
+    des téléchargements, lus aux journaux du noyau archivés ; CE4-06 : dans un bras B (`--depuis`), les rondes importées
+    sont marquées `importee` et sorties des totaux, qui égalent alors la dépense des seules générations de B ; aucune clé
+    de score."""
+    import json
+    from essaim_m3.noyau import cli
+    from essaim_m3.outils import extrait_mecanique as em
+    racine = pathlib.Path(__file__).resolve().parent.parent
+    sonde = racine / "tests" / "fixtures" / "organisme_sonde"
+    concepteur = racine / "tests" / "fixtures" / "organisme_concepteur" / "organisme"
+    a = tmp_path / "a"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "1", "--graine", "63", "--n-train", "8", "--n-test", "8", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "GEMINI_ARGON", "--entrainements-max", "2", "--organisme-amorcage", str(sonde),
+                          "--organisme-impose", f"concepteur={concepteur}@anthropic", "--rondes-conception-max", "2"]) == 0
+    b = tmp_path / "b"
+    assert cli.principal(["simuler", "--sortie", str(b), "--generations", "1", "--graine", "63", "--depuis", str(a),
+                          "--appels-max", "30", "--entrainements-max", "0"]) == 0
+    ea = em.extraire(a)
+    sonde_g0 = next(g for g in ea["generations"] if g["lignee"] == "gemini-argon" and g["generation"] == 0 and not g.get("phase"))
+    assert sonde_g0["services"]["entrainements"].get("OK", 0) >= 1 and ea["extrait_version"] == 2
+    eb = em.extraire(b)
+    rondes = [g for g in eb["generations"] if g.get("phase") == "conception"]
+    assert rondes and all(g["importee"] for g in rondes)
+    assert not any(g["importee"] for g in eb["generations"] if not g.get("phase"))
+    t = eb["totaux_hors_importees"]
+    assert t["n_importees"] == len(rondes)
+    assert abs(t["cout_usd"] - sum(g["appels"]["cout_usd"] for g in eb["generations"] if not g["importee"])) < 1e-9
+    assert abs(t["cout_usd"] - eb["rapport"]["depense_totale_usd"]) < 1e-4
+    assert em.cles_interdites_presentes(eb) == [] and em.cles_interdites_presentes(ea) == []

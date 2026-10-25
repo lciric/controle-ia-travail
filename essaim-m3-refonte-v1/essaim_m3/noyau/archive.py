@@ -87,12 +87,14 @@ class Archive:
     def deposer(self, lignee: str, generation: int, organisme: pathlib.Path, dossier_travail: pathlib.Path,
                 journal_appels: pathlib.Path | None, score: dict, resume: dict, score_final: dict | None = None,
                 phase: str | None = None, dossier_noyau: pathlib.Path | None = None, dossier_corpus: pathlib.Path | None = None,
-                gid: int | None = None) -> dict:
+                gid: int | None = None, reponses_lues: dict | None = None) -> dict:
         """`dossier_noyau`, `dossier_corpus` (CE3-07) : dossiers du noyau tenus hors du dossier de travail de l'organisme,
         recopiés dans l'archive sous `travail/noyau` et `travail/corpus` (même disposition qu'avant). Les mêmes noms créés par
         l'organisme dans son dossier sont réservés : écartés et consignés. `gid` (CE3-06) : groupe de la lignée ; la vue est
         alors lisible par elle seule (dossiers 0550, fichiers 0440, à root) ; None : lisible par tous (simulation hors root,
-        mémoire partagée)."""
+        mémoire partagée). `reponses_lues` (RV-01) : pour une génération notée, les réponses que le juge a retenues
+        ({identifiant: étiquette}, `{}` s'il n'en a retenu aucune) et le problème éventuel, écrits et scellés sous
+        `juge/reponses-lues.json` : la lecture de H-G1 ne lit que ce fichier, avec la règle du juge."""
         d = self.dossier(lignee, generation, phase)
         empreinte = archiver_organisme(organisme, d / "organisme.tar.gz")
         travail = d / "travail"
@@ -119,6 +121,9 @@ class Archive:
         if (travail / "reponses_test.json").exists():
             shutil.move(str(travail / "reponses_test.json"), str(juge / "reponses_test.json"))
             sceller(juge / "reponses_test.json")
+        if reponses_lues is not None:
+            (juge / "reponses-lues.json").write_text(json.dumps(reponses_lues, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
+            sceller(juge / "reponses-lues.json")
         ligne = {"lignee": lignee, "generation": generation, "phase": phase, "score": score.get("score"), "statut": resume.get("statut"),
                  "cout_usd": resume.get("cout_usd"), "n_appels": resume.get("n_appels"), "chemin": str(d.relative_to(self.racine)),
                  "empreinte_organisme": empreinte, "successeur": resume.get("successeur"),
@@ -159,13 +164,15 @@ class Archive:
                 pass
         return ligne
 
-    def importer_conception(self, origine: pathlib.Path, lignee: str) -> list[dict]:
+    def importer_conception(self, origine: pathlib.Path, lignee: str, gid: int | None = None) -> list[dict]:
         """Bras apparié adaptatif (`--depuis` sans `--gel`) : recopie dans cette archive les rondes de conception (`cNNN`)
         de `lignee` archivées dans la course d'origine, pour que la génération 0 relancée voie dans `historique` et dans
         sa vue ce que la même génération 0 voyait dans la course d'origine (sinon le bras apparié a moins d'information que
         le bras d'origine, en plus de ce que l'on compare). Dossiers copiés tels quels (scellés par l'origine), lignes
         d'index marquées `importee` (jamais notées, jamais comptées dans la dépense ni dans les scores), vue reconstruite
-        avec le même filtre que `deposer`. Rend les lignes importées. Rien n'est réécrit : une ronde déjà présente refuse."""
+        avec le même filtre que `deposer`. Rend les lignes importées. Rien n'est réécrit : une ronde déjà présente refuse.
+        `gid` (RV-03, CE3-06) : groupe de la lignée ; la vue importée et `archive_vue/<lignée>` sont alors lisibles par elle
+        seule dès l'import (mêmes droits que `deposer`), avant même son premier passage."""
         origine = pathlib.Path(origine)
         index = origine / "archive" / "index.jsonl"
         if not index.is_file():
@@ -195,10 +202,20 @@ class Archive:
                 _fichiers.copier_sans_liens(d / "travail", v / "travail", ignorer=("noyau", "juge", "reponses_test.json", "attaques.json"))
             for f in [v] + list(v.rglob("*")):
                 try:
-                    os.chmod(f, 0o555 if f.is_dir() else 0o444)
+                    if gid is not None:
+                        os.chown(f, 0, gid, follow_symlinks=False)
+                        os.chmod(f, 0o550 if f.is_dir() else 0o440)
+                    else:
+                        os.chmod(f, 0o555 if f.is_dir() else 0o444)
                 except OSError:
                     pass
             importees.append(ligne)
+        if gid is not None and (self.vue / lignee).is_dir():
+            try:
+                os.chown(self.vue / lignee, 0, gid, follow_symlinks=False)
+                os.chmod(self.vue / lignee, 0o750)
+            except OSError:
+                pass
         return importees
 
     def lignes(self, lignee: str | None = None) -> list[dict]:
@@ -211,6 +228,5 @@ class Archive:
         return [{"generation": l["generation"], "phase": l.get("phase"), "lignee": l["lignee"], "score": l["score"], "statut": l["statut"],
                  "cout_usd": l["cout_usd"], "n_appels": l["n_appels"], "successeur": l.get("successeur"),
                  "problemes_successeur": l.get("problemes_successeur", []), "relance": l.get("relance", False), "invalide": l.get("invalide", False),
-                 **({"question_ouverte": l["question_ouverte"]} if l.get("question_ouverte") else {}),
-                 **({"importee": True} if l.get("importee") else {})}
+                 **({"question_ouverte": l["question_ouverte"]} if l.get("question_ouverte") else {})}
                 for l in self.lignes(lignee)]

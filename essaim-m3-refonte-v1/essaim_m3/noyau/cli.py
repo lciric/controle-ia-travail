@@ -272,6 +272,10 @@ def lancer(args) -> int:
         if refus_conditions:  # CE3-05 : conditions extérieures appariées entre les bras
             print(f"refus : --depuis : {refus_conditions}", file=sys.stderr)
             return 6
+        man_origine = json.loads((pathlib.Path(args.depuis) / "manifeste-run.json").read_text(encoding="utf-8"))
+        if int(man_origine.get("decalage_uid", 0)) == int(args.decalage_uid):  # RV-02 : B n'atteint jamais les dossiers de A
+            print(f"refus : --depuis : même décalage d'utilisateurs ({args.decalage_uid}) que la course d'origine (RV-02)", file=sys.stderr)
+            return 6
     traits, description = None, ""
     if args.traits:
         try:
@@ -279,6 +283,14 @@ def lancer(args) -> int:
         except ValueError as e:
             print(f"refus : traits : {e}", file=sys.stderr)
             return 6
+        try:  # RV-13 : les traits (activations de toutes les tâches) ne sont lisibles que par le noyau, comme la banque
+            racine_traits = pathlib.Path(args.traits)
+            for f in ([racine_traits] + (list(racine_traits.rglob("*")) if racine_traits.is_dir() else [])):
+                if not f.is_symlink():
+                    os.chmod(f, 0o700 if f.is_dir() else 0o600)
+        except OSError as e:
+            print(f"refus : impossible de protéger les traits : {e}", file=sys.stderr)
+            return 5
     try:
         question = _question_ouverte(args)
     except ValueError as e:
@@ -389,7 +401,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--appels-max-conception", type=int, default=None, help="appels par ronde de conception (défaut : --appels-max)")
         q.add_argument("--temps-max-conception", type=int, default=None, help="secondes par ronde de conception (défaut : --temps-max)")
         q.add_argument("--autoriser-base-url", action="store_true", help="réel : accepte une ANTHROPIC_BASE_URL définie (sinon refus)")
-        q.add_argument("--decalage-uid", type=int, default=0, help="décalage des utilisateurs des organismes (multiple de 100, 0 à 900) : distinct pour chaque course qui tourne en même temps qu'une autre (CE3-06)")
+        q.add_argument("--decalage-uid", type=int, default=0, help="décalage des utilisateurs des organismes (multiple de 100, 0 à 900) : distinct pour chaque course qui tourne en même temps qu'une autre (CE3-06), et toujours distinct de celui de la course d'origine d'un bras apparié (RV-02 : refus en réel sinon)")
         q.add_argument("--pool-conception", default=None, metavar="FICHIER", help="vivier de conception : tâches à vérité connue (JSON du sous-ensemble, avec compagnon .sha256) servies en plus des tâches d'entraînement pendant la phase de conception seulement, jamais en génération notée ; identifiants opaques, textes bornés, items qui recoupent un texte de la banque écartés et comptés")
         q.add_argument("--question-ouverte", default=None, metavar="FICHIER", help="question ouverte posée aux organismes (texte UTF-8, figé et empreinté au manifeste ; contrat § 7) ; exige --question-ouverte-aux")
         q.add_argument("--question-ouverte-aux", nargs="+", default=None, metavar="CIBLE", help="générations ou rondes qui reçoivent la question : g001, c002, conception, generations, toutes (répétable ou séparées par des virgules)")

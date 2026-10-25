@@ -222,8 +222,8 @@ class Confrontation:
                             self.noyau.appelants, self.noyau.reel, self.noyau.go_id)
         socket = str(travail / "n.sock")
         if len(socket) > 100:
-            import hashlib as _h
-            socket = f"/tmp/essaim-conf-{_h.sha256(str(self.dossier).encode()).hexdigest()[:10]}-{etiquette[:14]}.sock"
+            import secrets as _s
+            socket = str(bac_a_sable.dossier_sockets() / f"essaim-conf-{hashlib.sha256(str(self.dossier).encode()).hexdigest()[:10]}-{etiquette[:14]}-{_s.token_hex(8)}.sock")
         uid = self.noyau._uid(lignee_def)
         bac_a_sable.preparer(travail, organisme, contexte, uid=uid)
         entraineur = self.noyau._entraineur(dossier_noyau, lignee_def, g_def, traits_att) if traits_att is not None else None

@@ -51,6 +51,11 @@ with open("statut_execution.json", "w", encoding="utf-8") as fh:
 '''
 
 
+# RV-04 : l'espace des organismes et les sockets du noyau vivent hors des dossiers inscriptibles par tous (/tmp, /var/tmp,
+# /dev/shm, /run/lock), que chaque exécution isolée recouvre d'un système de fichiers en mémoire qui lui est propre
+ESPACE_BASE = pathlib.Path(os.environ.get("ESSAIM_M3_ESPACE") or "/var/lib/essaim-m3")
+DOSSIERS_TMP_PARTAGES = ("/tmp", "/var/tmp", "/dev/shm", "/run/lock")
+TAILLE_TMP_PRIVE = "64m"
 UID_BASE = 60000  # identifiants d'utilisateur non privilégiés, un par lignée (60000 + indice), hors de tout compte réel
 _CAPACITES = None
 
@@ -73,7 +78,7 @@ def capacites_isolation(rafraichir: bool = False) -> dict:
     root = hasattr(os, "geteuid") and os.geteuid() == 0
     cap = {"root": root, "utilisateur": root,  # setuid possible seulement en root
            "reseau": _unshare_marche(["-n"]) if root else _unshare_marche(["-rn"]),
-           "espaces_noms": root and _unshare_marche(["--mount", "--pid", "--fork", "--kill-child", "--mount-proc"])}
+           "espaces_noms": root and _unshare_marche(["--mount", "--pid", "--ipc", "--fork", "--kill-child", "--mount-proc"])}
     _CAPACITES = cap
     return cap
 
@@ -108,14 +113,15 @@ def traversable_par_tous(chemin: pathlib.Path) -> bool:
 
 def espace_organismes(racine: pathlib.Path, course_nouvelle: bool = False) -> pathlib.Path:
     """Où vivent les dossiers de travail et la vue de l'archive : sous la racine si elle est traversable par les
-    utilisateurs des organismes, sinon sous `/var/tmp/essaim-m3/<empreinte de la racine>` (0711, à root).
+    utilisateurs des organismes, sinon sous `ESPACE_BASE/<empreinte de la racine>` (0711, à root ; RV-04 : hors de
+    /var/tmp, que chaque exécution isolée recouvre d'un dossier en mémoire privé).
     `course_nouvelle` : la course démarre (pas de manifeste) ; un espace laissé par une course antérieure de même
     chemin est alors effacé (défaut signalé par session-depot, R-353 : `FileExistsError` dans `archive.deposer`)."""
     racine = pathlib.Path(racine).resolve()
     if traversable_par_tous(racine):
         return racine
     import hashlib as _h
-    base = pathlib.Path("/var/tmp/essaim-m3")
+    base = ESPACE_BASE
     base.mkdir(parents=True, exist_ok=True)
     proteger(base, 0o711)
     esp = base / _h.sha256(str(racine).encode("utf-8")).hexdigest()[:16]
@@ -124,6 +130,35 @@ def espace_organismes(racine: pathlib.Path, course_nouvelle: bool = False) -> pa
     esp.mkdir(exist_ok=True)
     proteger(esp, 0o711)
     return esp
+
+
+def dossier_sockets() -> pathlib.Path:
+    """Dossier court des sockets du noyau quand le dossier de travail donnerait un chemin trop long (limite des sockets
+    Unix) : hors de /tmp (RV-04 : /tmp est privé dans l'exécution isolée), traversable sans se lister (0711)."""
+    d = ESPACE_BASE / "s"
+    d.mkdir(parents=True, exist_ok=True)
+    proteger(ESPACE_BASE, 0o711)
+    proteger(d, 0o711)
+    return d
+
+
+def dossiers_tmp_a_rendre_prives(gardes: list) -> list[str]:
+    """RV-04 : dossiers inscriptibles par tous à recouvrir d'un système de fichiers en mémoire propre à l'exécution, sauf
+    ceux qui contiennent un chemin qu'elle doit voir (dossier de travail, socket) : ceux-là restent partagés et sont
+    consignés par l'appelant."""
+    sortie = []
+    for d in DOSSIERS_TMP_PARTAGES:
+        p = pathlib.Path(d)
+        try:
+            if p.is_symlink() or not p.is_dir() or not (p.stat().st_mode & 0o002):
+                continue
+        except OSError:
+            continue
+        reel = p.resolve()
+        if any(reel == pathlib.Path(g).resolve() or reel in pathlib.Path(g).resolve().parents for g in gardes):
+            continue
+        sortie.append(str(reel))
+    return sortie
 
 
 def proteger(chemin: pathlib.Path, mode: int = 0o700) -> None:
@@ -211,13 +246,17 @@ def preparer(dossier_travail: pathlib.Path, organisme: pathlib.Path, contexte: d
     return chemin_ctx
 
 
-def _commande_isolee(commande: list[str], isoler_reseau: bool, uid: int | None, cwd: pathlib.Path) -> list[str]:
-    """`unshare` (en root : espaces de noms de montage, de processus, de réseau), puis abaissement de privilèges vers
-    `uid` par `abaisser.py` (écrit dans `cwd`, à root), puis la commande. Sans uid : seulement l'isolation réseau."""
+def _commande_isolee(commande: list[str], isoler_reseau: bool, uid: int | None, cwd: pathlib.Path, gardes: tuple = ()) -> list[str]:
+    """`unshare` (en root : espaces de noms de montage, de processus, de communication entre processus, de réseau), puis
+    abaissement de privilèges vers `uid` par `abaisser.py` (écrit dans `cwd`, à root), qui recouvre d'abord /tmp, /var/tmp,
+    /dev/shm et /run/lock d'un dossier en mémoire propre à cette exécution (RV-04 ; seulement dans l'espace de noms de
+    montage neuf, jamais dans celui de l'hôte), puis la commande. Sans uid : seulement l'isolation réseau."""
     cap = capacites_isolation()
     options = []
+    prives: list[str] = []
     if uid is not None and cap["espaces_noms"]:
-        options += ["--mount", "--pid", "--fork", "--kill-child", "--mount-proc"]
+        options += ["--mount", "--pid", "--ipc", "--fork", "--kill-child", "--mount-proc"]
+        prives = dossiers_tmp_a_rendre_prives([cwd, *gardes])
     if isoler_reseau:
         options += ["-n"] if cap["root"] else ["-rn"]
     if uid is not None:
@@ -227,7 +266,7 @@ def _commande_isolee(commande: list[str], isoler_reseau: bool, uid: int | None, 
             os.chmod(cwd / "abaisser.py", 0o644)
         except OSError:
             pass
-        commande = [sys.executable, "-I", "-B", "-s", "abaisser.py", str(uid), str(uid)] + commande
+        commande = [sys.executable, "-I", "-B", "-s", "abaisser.py", str(uid), str(uid), ":".join(prives)] + commande
     return (["unshare", *options, "--"] + commande) if options else commande
 
 
@@ -241,50 +280,67 @@ def executer(dossier_travail: pathlib.Path, chemin_socket: str, temps_max_s: int
     commande = [sys.executable, "-I", "-B", "-s", "-u", "lanceur.py"]  # -B : aucun bytecode (``-I`` ignore PYTHONDONTWRITEBYTECODE)
     if isoler_reseau and not isolation_reseau_disponible():
         return {"code": "ISOLATION_INDISPONIBLE", "retour": None, "duree_s": 0.0, "delai_depasse": False, "uid": uid}
-    commande = _commande_isolee(commande, isoler_reseau, uid, dossier_travail)
+    commande = _commande_isolee(commande, isoler_reseau, uid, dossier_travail, gardes=(chemin_socket,))
     debut = time.time()
-    sortie = (dossier_travail / "sortie.txt").open("w", encoding="utf-8")
-    erreurs = (dossier_travail / "erreurs.txt").open("w", encoding="utf-8")
+    # RV-05 : sortie et erreurs ouvertes par le noyau à neuf (jamais un lien), relues par ce même descripteur, jamais par leur nom
+    sortie = open(dossier_travail / "sortie.txt", "x", encoding="utf-8")
+    erreurs = open(dossier_travail / "erreurs.txt", "x+", encoding="utf-8")
     try:
         code_retour, delai = _lancer(commande, dossier_travail, env, temps_max_s, sortie, erreurs,
                                      _limites(memoire_mo, cpu_s or temps_max_s, fichier_mo, uid, uid))
+        erreurs.flush()
+        erreurs.seek(0)
+        texte_erreurs = erreurs.read(1_000_000)
     finally:
         sortie.close()
         erreurs.close()
     duree = time.time() - debut
-    statut_fichier = dossier_travail / "statut_execution.json"
+    # RV-05 : le statut écrit par le lanceur (dans le dossier de l'organisme) est lu sans suivre de lien, sans attendre sur un
+    # tube, borné ; un refus est consigné, jamais lu
+    from .fichiers import lire_fichier_organisme
+    donnees_statut, raison_statut = lire_fichier_organisme(dossier_travail / "statut_execution.json", 200_000)
     statut = None
-    if statut_fichier.exists():
+    if donnees_statut is not None:
         try:
-            statut = json.loads(statut_fichier.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
+            statut = json.loads(donnees_statut.decode("utf-8"))
+            if not isinstance(statut, dict):
+                statut = {"code": "STATUT_ILLISIBLE"}
+        except (json.JSONDecodeError, UnicodeDecodeError):
             statut = {"code": "STATUT_ILLISIBLE"}
+    elif raison_statut != "absent":
+        statut = {"code": "STATUT_REFUSE", "raison": raison_statut}
     if delai:
         code = "DELAI_DEPASSE"
     elif statut is None:
         code = "SANS_STATUT"
     else:
         code = statut.get("code", "SANS_STATUT")
-    try:
-        rlimit_as_refuse = "RLIMIT_AS non applique" in (dossier_travail / "erreurs.txt").read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        rlimit_as_refuse = None
+    rlimit_as_refuse = "RLIMIT_AS non applique" in texte_erreurs
     return {"code": code, "code_retour": code_retour, "duree_s": round(duree, 2), "delai_depasse": delai,
             "statut": statut, "isolation_reseau": isoler_reseau, "uid": uid, "espaces_noms": bool(uid is not None and capacites_isolation()["espaces_noms"]),
+            "tmp_prives": (dossiers_tmp_a_rendre_prives([dossier_travail, chemin_socket]) if (uid is not None and capacites_isolation()["espaces_noms"]) else []),
             "rlimit_as_refuse": rlimit_as_refuse}
 
 
-ABAISSER_SOURCE = """import os, sys
-# Abandon des privilèges après `unshare` (qui exige root pour les espaces de noms) et juste avant l'organisme :
-# groupes vidés, gid puis uid non privilégiés, puis exec du programme demandé. Écrit par le noyau, lecture seule.
+ABAISSER_SOURCE = """import ctypes, ctypes.util, os, sys
+# Abandon des privilèges après `unshare` (qui exige root pour les espaces de noms) et juste avant l'organisme. D'abord
+# (RV-04), dans l'espace de noms de montage neuf seulement : /tmp, /var/tmp, /dev/shm, /run/lock recouverts d'un système
+# de fichiers en mémoire propre à cette exécution (rien n'y passe d'une exécution à l'autre) ; un échec arrête tout, rien
+# ne tourne sans. Puis groupes vidés, gid puis uid non privilégiés, puis exec du programme demandé. Écrit par le noyau.
 uid, gid = int(sys.argv[1]), int(sys.argv[2])
+prives = [d for d in sys.argv[3].split(":") if d]
+if prives:
+    libc = ctypes.CDLL(ctypes.util.find_library("c") or "libc.so.6", use_errno=True)
+    for d in prives:
+        if libc.mount(b"tmpfs", d.encode(), b"tmpfs", 2 | 4, b"mode=1777,size=__TAILLE__") != 0:
+            sys.exit("dossier temporaire prive impossible sur " + d + " (errno " + str(ctypes.get_errno()) + ")")
 os.setgroups([])
 os.setgid(gid)
 os.setuid(uid)
 if os.getuid() != uid or os.geteuid() != uid:
     sys.exit("abaissement de privileges impossible")
-os.execv(sys.argv[3], sys.argv[3:])
-"""
+os.execv(sys.argv[4], sys.argv[4:])
+""".replace("__TAILLE__", TAILLE_TMP_PRIVE)
 
 
 LANCEUR_METRIQUE_SOURCE = '''import importlib, json, os, sys, traceback

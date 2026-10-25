@@ -11,6 +11,12 @@ toute clé de score est exclue deux fois : par les listes de champs copiés (all
 noms de clés (regex). Une clé interdite qui subsisterait fait échouer l'extraction (R5 : aucun repli silencieux).
 L'extrait est écrit hors du dossier de la course, jamais réécrit (R12), avec son compagnon `.sha256` (R6).
 
+v2 (CE4-04, CE4-06) : par génération et par ronde, les comptes par statut des entraînements, des recherches (par source)
+et des téléchargements ; les rondes importées d'une course d'origine (bras B) marquées `importee` d'après l'index et
+sorties des totaux (`totaux_hors_importees`). « Sans clé de score » : les valeurs que l'organisme écrit lui-même (noms
+de fichiers, `erreurs` de son journal, déclaration de fin de conception) ne sont pas filtrées par leur contenu et peuvent
+porter un score de développement qu'il a reçu ; elles sont bornées en nombre et en longueur.
+
 Ce que l'extrait ne contient jamais : les scores du juge (`juge/`), les champs `score`, les métriques proposées par
 l'organisme, ses réponses aux tâches (`reponses_test.json`, `details_votes_test`), les textes des appels (`appels/`),
 les termes saturés de son bilan spectral (mots de ses propres sorties), le `historique` qu'il a reçu.
@@ -28,7 +34,7 @@ import sys
 
 from ..noyau import archive as _archive
 
-VERSION_EXTRAIT = 1
+VERSION_EXTRAIT = 2  # v2 (CE4-04, CE4-06) : statuts des services par génération ; rondes importées marquées et hors des totaux
 
 # Garde finale : aucune clé de l'extrait ne doit contenir l'un de ces motifs (noms de clés, insensible à la casse).
 CLES_INTERDITES = re.compile(r"score|courbe|metrique|vote|terme|verite|etiquette|historique", re.IGNORECASE)
@@ -38,10 +44,11 @@ CHAMPS_RESUME = ("lignee", "generation", "phase", "statut", "n_appels", "cout_us
                  "successeur", "problemes_successeur", "n_reponses_test", "gel", "impose", "famille", "relance",
                  "n_recherches", "n_entrainements", "n_telechargements", "invalide", "non_conformes", "anomalie_noyau",
                  "empreinte_organisme", "n_elements_ecartes", "elements_ecartes", "quand_utc", "chemin", "importee", "course_origine",
-                 "question_ouverte")  # {posee, reponse, octets, sha256, probleme} : jamais le contenu de la réponse
+                 "question_ouverte",  # {posee, reponse, octets, sha256, probleme} : jamais le contenu de la réponse
+                 "indisponibles")     # CE4-02 : demandes d'un service non servi, par opération
 # Clés copiées du dictionnaire `execution` du résumé (le `statut` déclaré par l'organisme n'est copié que par son code).
 CHAMPS_EXECUTION = ("code", "code_retour", "duree_s", "delai_depasse", "isolation_reseau", "uid", "espaces_noms",
-                    "rlimit_as_refuse", "code_origine", "anomalie", "non_conformes")
+                    "rlimit_as_refuse", "code_origine", "anomalie", "non_conformes", "tmp_prives", "appels_en_vol_non_finis")
 # Clés copiées de `journal_generation.json` écrit par l'organisme de Gemini (v3) dans son dossier de travail, s'il existe.
 CHAMPS_ORGANISME = ("version", "generation", "lignee", "n_castes_recrutees", "n_taches_test", "n_taches_test_repondues",
                     "bascule_parallele_a_la_tache", "temps_s")
@@ -155,6 +162,32 @@ def extrait_organisme(journal: dict) -> dict:
     return e
 
 
+def _mot(x, n: int = 40) -> str:
+    return str(x)[:n]
+
+
+def statuts_services(d: pathlib.Path) -> dict:
+    """CE4-04 : comptes **par statut** des services du noyau d'une génération ou d'une ronde archivée, lus dans les journaux
+    écrits par le noyau — entraînements (`travail/noyau/journal-entrainements.jsonl`), recherches par source
+    (`travail/noyau/journal-recherches.jsonl`), téléchargements (`travail/corpus/index.jsonl`). Seuls le statut et la
+    source sont lus (liste close) : ni requête, ni texte, ni courbe, ni probabilité."""
+    entr: dict[str, int] = {}
+    for l in _lire_jsonl(d / "travail" / "noyau" / "journal-entrainements.jsonl"):
+        st = _mot(l.get("statut"))
+        entr[st] = entr.get(st, 0) + 1
+    rech: dict[str, dict[str, int]] = {}
+    for l in _lire_jsonl(d / "travail" / "noyau" / "journal-recherches.jsonl"):
+        s = rech.setdefault(_mot(l.get("source")), {})
+        st = _mot(l.get("statut"))
+        s[st] = s.get(st, 0) + 1
+    tele: dict[str, int] = {}
+    for l in _lire_jsonl(d / "travail" / "corpus" / "index.jsonl"):
+        st = _mot(l.get("statut"))
+        tele[st] = tele.get(st, 0) + 1
+    return {"entrainements": dict(sorted(entr.items())), "recherches": {k: dict(sorted(v.items())) for k, v in sorted(rech.items())},
+            "telechargements": dict(sorted(tele.items()))}
+
+
 def fichiers_travail(travail: pathlib.Path) -> list[dict]:
     """Noms et tailles des fichiers ordinaires du dossier de travail archivé, hors `noyau/` et `corpus/` ; aucun contenu."""
     if not travail.is_dir():
@@ -181,9 +214,13 @@ def extraire(course: pathlib.Path) -> dict:
                "manifeste": filtrer_cles(_lire_json(manifeste_chemin)), "generations": []}
     racine_archive = course / "archive"
     dossiers = sorted(d for d in racine_archive.glob("*/*") if d.is_dir() and (d / "resume.json").is_file()) if racine_archive.is_dir() else []
+    # CE4-06 : une ronde importée d'une course d'origine (bras B) garde le `resume.json` de l'origine ; l'index la marque
+    importees = {str(l.get("chemin")) for l in _lire_jsonl(racine_archive / "index.jsonl") if l.get("importee")}
+    totaux = {"cout_usd": 0.0, "n_appels": 0, "n_generations": 0, "n_importees": 0}
     for d in dossiers:
         resume = _lire_json(d / "resume.json")
         g = _sous_dict(resume, CHAMPS_RESUME)
+        g["importee"] = str(d.relative_to(racine_archive)) in importees
         if isinstance(resume.get("execution"), dict):
             ex = _sous_dict(resume["execution"], CHAMPS_EXECUTION)
             st = resume["execution"].get("statut")
@@ -200,7 +237,15 @@ def extraire(course: pathlib.Path) -> dict:
             except (json.JSONDecodeError, UnicodeDecodeError):
                 g["organisme"] = {"journal_illisible": True}
         g["fichiers_travail"] = fichiers_travail(d / "travail")
+        g["services"] = statuts_services(d)
+        if g["importee"]:
+            totaux["n_importees"] += 1
+        else:  # sommes de cette course seulement : une ronde importée a été payée par la course d'origine
+            totaux["n_generations"] += 1
+            totaux["cout_usd"] = round(totaux["cout_usd"] + g["appels"]["cout_usd"], 6)
+            totaux["n_appels"] += g["appels"]["n"]
         extrait["generations"].append(g)
+    extrait["totaux_hors_importees"] = totaux
     extrait["evenements"] = [filtrer_cles(e) for e in _lire_jsonl(course / "evenements.jsonl")]
     rapports = sorted(course.glob("rapport-v*.json"), key=lambda p: int(re.sub(r"\D", "", p.stem) or 0))
     if rapports:
