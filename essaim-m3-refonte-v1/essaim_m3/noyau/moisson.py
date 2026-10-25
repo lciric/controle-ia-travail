@@ -2,7 +2,7 @@
 Paris : « l'organisme doit lui-même concevoir le moissonneur » ; le noyau ne fournit que des tuyaux à portes).
 
 - `SOURCES` : moteurs de recherche interrogeables par `rechercher(requete, n, source)` — `arxiv` (Atom, dans
-  `recherche.py`), `openalex` (clé `OPENALEX_API_KEY` facultative, lue par le noyau seul, R-415), `semanticscholar`
+  `recherche.py`), `openalex` (clé `OPENALEX_API_KEY` facultative, en-tête lu par le noyau seul, R-415), `semanticscholar`
   (clé `SEMANTIC_SCHOLAR_API_KEY` facultative, en-tête lu par le noyau seul, R-417), `web` (Brave Search, clé
   `BRAVE_API_KEY` lue par le noyau seul, jamais donnée à l'organisme). Chaque source rend des notices de même forme :
   {"source", "id", "titre", "auteurs", "date", "resume", "lien"} ; le noyau ne les interprète pas.
@@ -86,12 +86,13 @@ def _abstract_openalex(inv: dict | None) -> str:
 
 
 def openalex_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
-    params = {"search": requete, "per-page": int(n)}
+    """R-415, fusion de `b1c7f4b6` (« conv-audit ») : clé OpenAlex lue par le noyau seul (`OPENALEX_API_KEY`, en-tête
+    `Authorization: Bearer`, jamais dans l'adresse ; valeur masquée dans tout message d'échec, `recherche.masquer_cles`) ;
+    sans clé, requête anonyme (budget quotidien partagé par l'adresse réseau)."""
+    url = "https://api.openalex.org/works?" + urllib.parse.urlencode({"search": requete, "per-page": int(n)})
     cle = os.environ.get("OPENALEX_API_KEY")
-    if cle:  # R-415 : clé lue par le noyau seul (paramètre de la requête), jamais donnée à l'organisme ni écrite
-        params["api_key"] = cle
-    url = "https://api.openalex.org/works?" + urllib.parse.urlencode(params)
-    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, hotes_permis={"api.openalex.org"})
+    entetes = {"Authorization": "Bearer " + cle} if cle else None
+    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, entetes=entetes, hotes_permis={"api.openalex.org"})
     d = json.loads(brut.decode("utf-8"))
     notices = []
     for w in d.get("results", []) or []:
@@ -106,11 +107,13 @@ def openalex_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
 
 
 def semanticscholar_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
+    """R-410 : clé Semantic Scholar lue par le noyau seul (`SEMANTIC_SCHOLAR_API_KEY`, en-tête `x-api-key`, jamais journalisée) ;
+    sans clé, requête anonyme (réserve commune des utilisateurs sans clé)."""
     url = "https://api.semanticscholar.org/graph/v1/paper/search?" + urllib.parse.urlencode(
         {"query": requete, "limit": int(n), "fields": "title,authors,year,abstract,openAccessPdf,externalIds,url,publicationDate"})
     cle = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")  # R-417 : en-tête lu par le noyau seul, jamais donné à l'organisme
-    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, entetes=({"x-api-key": cle} if cle else None),
-                             hotes_permis={"api.semanticscholar.org"})
+    entetes = {"x-api-key": cle} if cle else None
+    brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, entetes=entetes, hotes_permis={"api.semanticscholar.org"})
     d = json.loads(brut.decode("utf-8"))
     notices = []
     for p in d.get("data", []) or []:
