@@ -3134,3 +3134,31 @@ def test_empreinte_arbre_ignore_le_bytecode(tmp_path):
     assert boucle.empreinte_arbre(d) == avant
     (d / "sous" / "b.py").write_text("y = 3\n", encoding="utf-8")
     assert boucle.empreinte_arbre(d) != avant
+
+
+def test_ce405_graines_du_bras_apparie_sur_les_lignees_d_origine(tmp_path):
+    """CE4-05 : dans le bras relancé (`--depuis`), l'indice de lignée qui entre dans les graines est pris sur les lignées
+    de la course d'origine. Sain : une lignée d'origine sans génération 0 à relancer (retirée des organismes relancés)
+    ne change pas les graines des autres. Artefact : sans cette base, l'indice glisse et la graine diffère."""
+    from essaim_m3.noyau import cli
+    a = tmp_path / "a"
+    assert cli.principal(["simuler", "--sortie", str(a), "--generations", "2", "--graine", "64", "--n-train", "6", "--n-test", "6", "--n-final", "4",
+                          "--appels-max", "30", "--especes", "CLAUDE_OPUS_5_5", "GEMINI_ARGON"]) == 0
+    ev = [json.loads(x) for x in (a / "evenements.jsonl").read_text().splitlines()]
+    attendue = next(e["graine"] for e in ev if e.get("etape") == "graine" and e.get("lignee") == "gemini-argon"
+                    and e.get("generation") == 1 and e.get("usage") == "ordre_test" and not e.get("phase"))
+    specs = boucle.organismes_g000(a, tmp_path / "g000")
+    assert specs["gemini-argon"]["lignees_origine"] == ["claude-opus-5-5", "gemini-argon"]
+    seule = {"gemini-argon": specs["gemini-argon"]}  # la lignée d'Opus « sans génération 0 »
+    m = json.loads((a / "manifeste-run.json").read_text())
+    banque = json.loads((a / "banque.json").read_text())
+    doubles, _ = appelants_simules(rng(64))
+    b = boucle.Noyau(tmp_path / "b", "m", banque, {"appels_max": 30, "usd_max": 5.0, "temps_max_s": 60}, 10.0, 2, appelants=doubles,
+                     entropie=m["entropie_seed_sequence"], organismes_imposes=seule, especes_amorcage=[])
+    b.amorcer()
+    assert b.graine("gemini-argon", 1, "ordre_test") == attendue
+    assert json.loads((tmp_path / "b" / "manifeste-run.json").read_text())["lignees_base_graines"] == ["claude-opus-5-5", "gemini-argon"]
+    sans_base = boucle.Noyau(tmp_path / "c", "m", banque, {"appels_max": 30, "usd_max": 5.0, "temps_max_s": 60}, 10.0, 2, appelants=doubles,
+                             entropie=m["entropie_seed_sequence"], organismes_imposes={"gemini-argon": dict(specs["gemini-argon"], lignees_origine=[])}, especes_amorcage=[])
+    sans_base.amorcer()
+    assert sans_base.graine("gemini-argon", 1, "ordre_test") != attendue

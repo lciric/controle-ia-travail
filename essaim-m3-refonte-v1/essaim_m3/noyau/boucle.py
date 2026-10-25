@@ -88,6 +88,12 @@ def organismes_g000(course: str | pathlib.Path, destination: str | pathlib.Path)
         raise Arret(f"course sans archive : {index}")
     lignes = [json.loads(l) for l in index.read_text(encoding="utf-8").splitlines() if l.strip()]
     manifeste = json.loads((course / "manifeste-run.json").read_text(encoding="utf-8")) if (course / "manifeste-run.json").exists() else {}
+    # CE4-05 : lignées de la course d'origine (index et dernier rapport), pour que l'indice de lignée qui entre dans les
+    # graines soit le même dans le bras relancé, même si une lignée d'origine n'a pas de génération 0 à relancer
+    origine = {l["lignee"] for l in lignes}
+    rapports = sorted(course.glob("rapport-v*.json"), key=lambda r: int("".join(ch for ch in r.stem if ch.isdigit()) or 0))
+    if rapports:
+        origine |= set((json.loads(rapports[-1].read_text(encoding="utf-8")).get("lignees") or {}))
     sortie = {}
     for l in lignes:
         if l["generation"] != 0 or l.get("phase") or l["lignee"] in sortie:
@@ -107,7 +113,8 @@ def organismes_g000(course: str | pathlib.Path, destination: str | pathlib.Path)
                     famille = contrat.FAMILLES[e]
         sortie[l["lignee"]] = {"organisme": str(cible / "organisme"), "famille": famille or "gemini",
                                "empreinte_organisme": l.get("empreinte_organisme"), "course_origine": str(course),
-                               "impose": bool(l.get("impose")), "rondes_conception_max_origine": int(manifeste.get("rondes_conception_max") or 0)}
+                               "impose": bool(l.get("impose")), "rondes_conception_max_origine": int(manifeste.get("rondes_conception_max") or 0),
+                               "lignees_origine": sorted(origine)}
     if not sortie:
         raise Arret(f"aucune génération 0 archivée dans {course}")
     return sortie
@@ -128,6 +135,7 @@ class Noyau:
                 entropie=m["entropie_seed_sequence"], especes_amorcage=m.get("especes_amorcage"), etiquette_run=m.get("run", ""),
                 gel=m.get("gel", False), parallele_max=m.get("parallele_max", PARALLELE_MAX_DEFAUT), registre_go=registre_go,
                 memoire_partagee=m.get("memoire_partagee", False), rondes_conception_max=0, decalage_uid=int(m.get("decalage_uid", 0)))
+        n.lignees_base = set(m.get("lignees_base_graines") or [])  # CE4-05 : mêmes graines qu'à la course
         lignes = n.archive.lignes()
         depense = 0.0
         for l in lignes:
@@ -255,6 +263,8 @@ class Noyau:
         self.depense_totale = 0.0
         self.n_appels_total = 0
         self.lignees: dict[str, dict] = {}
+        # CE4-05 : base de l'indice de lignée des graines ; dans un bras relancé, les lignées de la course d'origine
+        self.lignees_base: set[str] = {n for s in self.organismes_imposes.values() for n in (s.get("lignees_origine") or [])}
         self.evenements: list[dict] = []
         self.graines = np.random.SeedSequence(entropie)
         self.manifeste = {
@@ -275,6 +285,7 @@ class Noyau:
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
             "traits": ({"description": self.description_traits, "n": len(next(iter(self.vues.values()))),
                         "vues": _entrainement.dimensions_vues(self.vues)} if self.vues else None),
+            "lignees_base_graines": sorted(self.lignees_base),  # CE4-05 : base de l'indice de lignée des graines
             "organismes_imposes": {nom: {"source": str(spec["organisme"]), "famille": spec["famille"],
                                          "empreinte_arbre": (empreinte_arbre(pathlib.Path(spec["organisme"])) if pathlib.Path(spec["organisme"]).is_dir() else None)}
                                    for nom, spec in self.organismes_imposes.items()},
@@ -327,7 +338,7 @@ class Noyau:
     def graine(self, lignee: str, generation: int, usage: str, phase: str | None = None) -> int:
         """Graine déterministe et consignée : SeedSequence(entropie, spawn_key=(indice de lignée, génération [+ DECALAGE_CONCEPTION
         pour une ronde de conception, CE3-17], usage)) (CR-19)."""
-        idx = sorted(set(self.lignees) | {lignee}).index(lignee)
+        idx = sorted(set(self.lignees) | {lignee} | self.lignees_base).index(lignee)
         cle = int(generation) + (DECALAGE_CONCEPTION if phase == "conception" else 0)
         ss = np.random.SeedSequence(int(self.graines.entropy), spawn_key=(idx, cle, USAGES_GRAINE[usage]))
         g = int(ss.generate_state(1, dtype=np.uint64)[0])
