@@ -242,3 +242,28 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   d'entrée par appel de tâche ; 18 à 44 USD la course selon la sortie ; question de g1 entière jusqu'à ≈ 3 600–4 100
   jetons par tâche). Contre-lecture R2 lancée à 09:42 UTC. Canal n° 37 (`5548edf`) : demandes gratuites à session-depot
   (essai arXiv dans son conteneur, décalage 900 libre, format du test de dépense).
+
+## 11:06 — second pilote scellé (v3, `72f534ae…`) ; deux contre-lectures ; Brave servi ; clés OpenAlex et Semantic Scholar
+
+- Lazar, 10:45–11:43 Paris : plafond du GO-2026-10-25-01 porté à 120 USD (R-409) ; « avec Brave, ne le retire pas »
+  (clé versée chez session-depot) ; clé OpenAlex à son nom : (a) go — demande faite par un appel à son adresse, réponse
+  « en attente d'activation », clé jamais lue ni gardée (champs masqués) ; activée par Lazar (« Your key is active »),
+  redirection de la page cassée, récupération sur `openalex.org/settings/api` à lui ; formulaire Semantic Scholar envoyé
+  par Lazar (« backlog ») ; ajouts au noyau après l'étape 1 (clés OpenAlex et Semantic Scholar, attente exponentielle sur
+  429, Crossref, DBLP, OpenReview, CORE, extraction hors root) : « oui d'accord » ; adresse de l'ENS utilisable pour
+  `mailto` (« pas grave, tu peux l'utiliser autant que tu veux »). Cause des 429 d'OpenAlex trouvée : budget gratuit
+  quotidien partagé par l'adresse réseau du conteneur, épuisé jusqu'à minuit UTC ; Semantic Scholar : réserve commune
+  sans clé. Sources sans clé qui répondent : Crossref, DBLP, OpenReview, CORE, Europe PMC. LessWrong et Alignment Forum :
+  joignables (page et GraphQL), hôtes permis au téléchargement, mais aucune source de recherche du noyau ne les couvre.
+- Contre-lecture 1 (`688b1e21…`, 09:39–10:01 UTC) : scellable après corrections, 1 majeur (M partait après un échec de S),
+  8 mineurs, 5 de forme → v2 du texte, lanceur v3 (81 essais sur 81). Contre-lecture 2 (`1b513a0e…`, 10:18–10:38 UTC) :
+  scellable après corrections, 1 majeur (M acceptait une S simulée), 4 mineurs, 5 de forme → v3 du texte, lanceur v4
+  (S réelle sous ce GO avec la graine S du texte, ligne de dépense de M portant l'empreinte des empreintes de S, verrou et
+  marqueur de départ, fichiers ignorés, pièce du test de dépense inchangée, heure d'appel avec fuseau exigée, clé Brave
+  exigée) : 98 essais sur 98 ; corrections de la v3 non relues par une troisième contre-lecture (signalé, R2).
+- **Scellé** à 10:59 UTC par `sceller_pilote2_v2.py` : `pilote2-gemini-organisme-v5-1-v3.md`, `72f534ae…` ; entropie
+  tirée ; graines S 7262684744293714155, M 9276553530262468954 ; 108 pièces empreintées (`4bb671ca…`) ; branche
+  `outils/pilote2-gemini-v5-1-travail`, commit `c1e73f54` ; essai à blanc du texte scellé avec le lanceur v4 passé
+  (11:02 UTC). Canal n° 38 (`883cc9b`) : marche à suivre pour session-depot, sur le mot de Lazar dans sa session.
+- Lazar, 11:56 Paris : quatre questions de session-depot (CL8-01, 05, 06, 08) ; mon avis donné (répétition seule ;
+  clés et compte : fait à lui ; plafond mensuel de recharge conseillé ; lecture de H-G1 inchangée).
