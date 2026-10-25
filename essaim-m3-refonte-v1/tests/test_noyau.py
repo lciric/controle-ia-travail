@@ -3322,3 +3322,27 @@ def test_cl5_05_traits_proteges_indisponibles_comptes_et_recoupements_conception
     (racine / "archive" / "index.jsonl").write_text("".join(json.dumps(x) + "\n" for x in idx), encoding="utf-8")
     assert A.recoupements_fuite(racine, "claude-opus-5-5", [0], conception=True) == 2   # génération + ronde de conception
     assert A.recoupements_fuite(racine, "claude-opus-5-5", [0], conception=False) == 1  # génération seule
+
+
+def test_cl6_02_dossier_inscriptible_imbrique_sous_un_temporaire(tmp_path):
+    """CL6-02 : un dossier inscriptible par tous **imbriqué** sous un temporaire déjà rendu privé (/tmp…) ne doit pas
+    faire échouer l'exécution : le parent est monté en premier, le chemin imbriqué disparaît (déjà privé), et le montage
+    du chemin imbriqué, en échec « absent », est sauté. Sain : l'organisme tourne (code OK) malgré un tel dossier."""
+    import secrets as _secrets
+    if not (bac_a_sable.capacites_isolation().get("root") and bac_a_sable.capacites_isolation().get("espaces_noms")):
+        pytest.skip("root et espaces de noms exigés")
+    jeton = _secrets.token_hex(6)
+    imbrique = pathlib.Path("/tmp") / f"cl6-imbrique-{jeton}"   # sous /tmp, qui est rendu privé
+    imbrique.mkdir(); os.chmod(imbrique, 0o1777)
+    try:
+        prives = bac_a_sable.dossiers_inscriptibles_par_tous(rafraichir=True)
+        assert str(imbrique.resolve()) in prives  # le balayage le trouve (imbriqué sous /tmp)
+        src = ("import json, os\n"
+               "def executer(contexte):\n"
+               "    json.dump({'ok': True}, open(os.path.join(contexte['dossier_travail'], 'r.json'), 'w'))\n")
+        ex, travail = _executer_organisme(tmp_path, "imbrique", src, 830)
+        assert ex["code"] == "OK", ex                      # pas SANS_STATUT : le montage absent est sauté
+        assert json.loads((travail / "r.json").read_text()) == {"ok": True}
+    finally:
+        bac_a_sable.dossiers_inscriptibles_par_tous(rafraichir=True)
+        shutil.rmtree(imbrique, ignore_errors=True)

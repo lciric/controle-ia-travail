@@ -413,6 +413,9 @@ if prives or caches:
     # CL5-02 : dossiers inscriptibles par tous recouverts d'un systeme de fichiers en memoire propre a l'execution
     for d in prives:
         if libc.mount(b"tmpfs", d.encode(), b"tmpfs", 2 | 4, b"mode=1777,size=__TAILLE__") != 0:
+            # errno 2 (absent) : un parent inscriptible a deja ete couvert (dossier imbrique, CL6-02) ; le chemin est deja prive
+            if ctypes.get_errno() == 2:
+                continue
             sys.exit("dossier temporaire prive impossible sur " + d + " (errno " + str(ctypes.get_errno()) + ")")
     # CL5-01 : depot, code et dossiers d'un compte recouverts d'un systeme vide en lecture seule (l'organisme n'y lit rien)
     MS_RDONLY = 1
