@@ -430,3 +430,35 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
 - Pendant son absence, chez conv-audit (réveils programmés) : vérification de v5.3 et v6, essais en isolation et
   simulation gratuite ; v8 de la confrontation ; étude de la reprise par génération ; réponses du collisionneur ; lecture
   mécanique du pilote au moment fixé. Rien par Gemini, aucune course réelle de v5.3 ou v6, aucune dépense hors GO.
+
+## 14:22 — Pilote 3 décidé (v5.3 puis v6) ; M partie ; vérification de v5.3 et v6 ; demande de v6.1 à Gemini
+
+- **M partie à 13:51:55 UTC** (PID 5282, tête `e09cc48`, canal de session-depot n° 48) ; passerelle : `httpx` 401,
+  `urllib` 403 ; test de dépense à 13:47 UTC (trois `OK`, 0,0014 USD).
+- Lazar a collé les deux lignes dans la session de session-depot : **R-439** (vers 13:57 UTC : enchaîner sans lui ; une
+  seule tentative 2 sur refus avant le manifeste, après correction de l'environnement seulement) et **R-440** (vers
+  14:05 UTC : `GO-2026-10-25-02`, deux courses de plus, v5.3 puis v6, 120 USD ; ligne de GO sans empreintes, « à
+  rapprocher dans une ligne d'extension avant chaque course »).
+- Lazar, 14:56 Paris : « lance-les sur le cloud après M et avant S » (sur ma ligne disant que je ne lançais ni v5.3 ni
+  v6). 15:10 : « on aurait peut-être dû lancer le pilote 3 seulement pour économiser des sous ? » → réponse : non à la
+  place de M (seule lignée non assistée, déjà partie) ni de S (bruit A contre A) ; options (a) tout garder, (b) retirer
+  le pilote 3, (c) retirer S (déconseillée) ; recommandation (a). **15:18 : « (a) … : ok »**.
+- Tours du collisionneur faits par session-depot : « escalier de coût » v2 (13:53–14:01 UTC ; Fable OK, Opus refus,
+  Argon OK ; 1,87 USD ; `donnees/collisionneur-escalier-v1`) et « agents outillés » v1 (14:01–14:07 UTC ; même issue ;
+  1,28 USD ; `donnees/collisionneur-agents-outilles-v1`). Réponses à traiter après le scellement du pilote 3.
+- **Vérification de v5.3 et v6 poussées** (sous-agent, `LISEZMOI-v1.md` `acb2c3ae…`) : v5.3 = la reconstitution au code
+  près (arbres syntaxiques identiques), 39 essais, relevés identiques à graines de hachage fixes 0, 1, 2 (28 et 29
+  appels), neuf réserves non levées ; v6 : 43 essais, récompense interne changée sans annonce, C-05 affaiblie, deux
+  replis silencieux, **défaut bloquant V6-01** (un successeur muté perd `import ast` : `NameError` à l'import). Lu dans le
+  code : V6-01 est **inerte sous les bornes du pilote** (aucune ronde de conception ; la mutation en génération exige deux
+  scores à l'historique, soit g2, non servie ; clé `autoriser_mutation_code` jamais posée par le noyau).
+- Lazar, 15:18 : « dis-le à Argon pour qu'il corrige » → demande `envois/demande-gemini-v6-1-correction-v1.md`
+  (`8c5087d8…`, faits seuls, critère d'acceptation : un essai qui importe le successeur muté), rapport de vérification
+  joint sur le canal ; texte à coller donné à Lazar.
+- **Pilote 3** : branche `outils/pilote3-gemini-v5-3-v6-travail` ; lanceur v1 dérivé du lanceur scellé du second pilote
+  par remplacements exacts (`5a56d854…`, écart `0121d1e9…`) : objets par course, `GO-2026-10-25-02`, porte « M de
+  référence » (liste close « M saine » de T2 appliquée à M, graine de M lue dans T2), dépense portant l'empreinte des
+  empreintes de M ; préenregistrement différentiel v1 (renvoi à T2, table de correspondance) ; contre-lecture 1 (sous-agent
+  neuf) et batterie d'essais en cours. Première batterie invalide (interpréteur sous `/home`, caché aux organismes ; dépôt
+  sous `/root` sans dépôt distant joignable sous `env -i`) : refaite avec l'interpréteur de simulation `/opt/…` et un
+  dépôt distant local.
