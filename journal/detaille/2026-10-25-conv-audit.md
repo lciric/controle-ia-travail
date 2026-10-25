@@ -315,3 +315,27 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
   sur la v5.2 sans C-13 ; à reconstituer après le scellement ; conçue sur les questions de Lazar, avant les emprunts.
 - Ouvert : contre-lecture, scellement, départ de M au réveil de session-depot (13:51 UTC visé) ; synthèse v5 des journaux
   après le scellement ; fichier détaillé du 25 de session-depot absent (rappelé au n° 45).
+
+## 13:20 — bornes des courses suivantes : tester avant de dépenser ; δ = 0,10 et règle gelée de l'escalier (décisions de Lazar)
+
+- Lazar, 14:01 Paris : « les bornes se décident en fonction du budget, et il faut faire des tests d'abord pour vérifier
+  qu'une conception moins chère fait moins bien pour ne pas gaspiller de l'argent ». Faits dits : la moisson ne coûte
+  presque rien en dollars (sources gratuites ; blocs bornés par l'organisme) ; les dollars viennent des appels (rondes de
+  conception, castes, générations). Options : (a) escalier préenregistré, (b) configuration chère directe, (c) indices
+  gratuits du pilote d'abord. Lazar, 14:12 : **« (c) puis (a) : go »**.
+- Lazar, 14:12 : « quel δ pour qu'il soit distinguable du bruit et significativement intéressant ? » ; avis donné
+  (calcul explicite, hypothèses illustratives : test final de 36 + 24 items, comparaison appariée par item ; erreur type
+  d'une différence ≈ 0,066 / √k si un quart des items discordent ; δ = 0,05 → 12 à 20 graines par bras ; δ = 0,10 → 3 à
+  5 ; δ = 0,15 → 2) ; 14:14 : « demande au collisionneur aussi » → question `question-seuil-escalier-cout-collisionneur-v1.md`
+  (`634032bc…`), canal n° 46 (`9a9ddf9`), à faire tourner après le départ de M.
+- Lazar, 14:15 : **« excellent go »** sur : δ = 0,10 d'exactitude équilibrée sur le test final, moyenne des deux familles ;
+  règle gelée — on monte d'un cran seulement si le gain moyen ≥ 0,10 et la borne basse de l'intervalle à 90 % (bootstrap
+  apparié à deux niveaux, items et graines) > 0 ; on reste au moins cher si le gain < 0,05 ou si l'intervalle contient 0 ;
+  entre 0,05 et 0,10, on reste au moins cher sauf décision de Lazar ; familles une à une rapportées, non décisives ; coût
+  par point rapporté ; bruit mesuré gratuitement par la comparaison des générations 0 de M et de S (même configuration,
+  deux graines) au moment de lecture du pilote, qui fixe k. Précisions dites à Lazar : (i) le texte du pilote, encore non
+  scellé, déclarera d'avance ce seul calcul (part d'items discordants), fait par le préenregistrement de l'escalier et non
+  par le rapport du pilote ; (ii) les deux runs ne sont des répliques du bras le moins cher que si l'escalier porte sur la
+  configuration exacte du pilote (v5.2.1) ; sinon ils ne mesurent que le bruit (transposition déclarée comme hypothèse).
+- Ouvert : réponse du collisionneur sur δ (matériau, la décision est prise) ; préenregistrement de l'escalier après la
+  lecture du pilote.
