@@ -1,10 +1,4 @@
-"""Tests unitaires de la v5 (`DEMANDE-v5-moissonneur-v1.md`) :
-- sans moisson permise (`recherches_restantes=0`, `telechargements_restants=0`), comportement identique à la v4 sans appel de plus ;
-- moisson nominale (`OK`) sur question ouverte et sur tâches ;
-- gestion sans arrêt et comptabilisation de tous les statuts de `rechercher` et `telecharger` (`OK`, `PLAFOND`,
-  `REFUSE_FUITE`, `ECHEC_RECHERCHE`, `SOURCE_INCONNUE`, `ANOMALIE`, `INDISPONIBLE`, `SANS_TEXTE`, `ECHEC_TELECHARGEMENT`) ;
-- neutralisation anti-injection des données externes (jamais interprétées comme consignes) ;
-- respect des gardes de temps."""
+"""Tests unitaires de la v5 et de la v5.2 (`DEMANDE-v5-moissonneur-v1.md` et `DEMANDE-v5-2-faits-moisson-v2.md`)."""
 import importlib
 import json
 import sys
@@ -60,7 +54,7 @@ def _creer_faux_client_v5(
             "telechargements_restants": etat["telechargements_restants"],
             "octets_restants": etat["octets_restants"],
             "entrainements_restants": 0,
-            "max_tokens_appel": 4096,
+            "max_tokens_appel": 8192,
         }
 
     def appeler(espece, prompt, max_tokens=None, role=""):
@@ -93,7 +87,6 @@ def _creer_faux_client_v5(
         if i < len(liste_rech):
             item = dict(liste_rech[i])
             statut = item.get("statut", "OK")
-            # REFUSE_FUITE ne décompte pas le quota (LIMITES-de-la-moisson-du-noyau-v1.md)
             if statut != "REFUSE_FUITE" and etat["recherches_restantes"] > 0:
                 etat["recherches_restantes"] -= 1
             return {
@@ -113,10 +106,10 @@ def _creer_faux_client_v5(
                 {
                     "source": source,
                     "id": f"2505.000{i + 1}",
-                    "titre": f"Article sur {requete[:30]}",
-                    "auteurs": "Needham et al.",
+                    "titre": f"Article {i + 1} sur {requete[:25]}",
+                    "auteurs": f"Auteur_{i + 1}",
                     "date": "2025",
-                    "resume": "Analyse des sondes lineaires et reference a 2412.09999.",
+                    "resume": f"Analyse specifique numero {i + 1} des sondes lineaires et reference a 2412.0999{i + 1}.",
                     "lien": f"https://arxiv.org/abs/2505.000{i + 1}",
                 }
             ],
@@ -144,7 +137,7 @@ def _creer_faux_client_v5(
                 "sha256_brut": "h_brut",
                 "sha256_texte": "h_txt",
                 "texte": texte,
-                "tronque": bool(item.get("tronque", False)) if "item" in locals() and isinstance(item, dict) else False,
+                "tronque": bool(item.get("tronque", False)),
                 "caracteres_texte": len(texte),
                 "fichier_texte": item.get("fichier_texte"),
                 "echec": None if statut == "OK" else statut,
@@ -163,7 +156,7 @@ def _creer_faux_client_v5(
             "sha256_brut": "h_brut",
             "sha256_texte": "h_txt",
             "texte": texte,
-            "tronque": bool(item.get("tronque", False)) if "item" in locals() and isinstance(item, dict) else False,
+            "tronque": False,
             "caracteres_texte": len(texte),
             "fichier_texte": None,
             "echec": None,
@@ -287,7 +280,6 @@ def test_v5_tous_les_statuts_de_moisson_traites_et_comptes(tmp_path, monkeypatch
     import principal
     importlib.reload(principal)
 
-    # Test direct des enregistreurs sur toute la gamme des statuts du contrat
     j_rech, j_tel = [], []
     compteurs = {
         "recherches_tentees": 0, "recherches_ok": 0, "recherches_echec": 0, "recherches_par_statut": {},
@@ -378,11 +370,13 @@ def test_v5_garde_de_temps_bloque_la_moisson_tardive(tmp_path, monkeypatch):
     assert (travail / "successeur" / "organisme" / "manifeste.json").exists()
     assert bilan["compteurs_appels"]["recherches_tentees"] < 5
 
+
 def test_v5_2_exploitation_4_sources_dont_web_6_recherches_3_telechargements_et_extraits_riches(tmp_path, monkeypatch):
     fich_complet = tmp_path / "doc_complet.txt"
     fich_complet.write_text(
-        "Introduction detaillee sur la conscience d'evaluation. " + (" remplissage " * 200)
-        + " Conclusion formelle : MARQUEUR_FICHIER_COMPLET_LU_V52.",
+        "Introduction detaillee sur la conscience d'evaluation et MARQUEUR_FICHIER_COMPLET_LU_V52. "
+        + (" theorie spectrale de koopman et bregman " * 40)
+        + " Conclusion formelle : MARQUEUR_FIN_DOCUMENT_V52.",
         encoding="utf-8",
     )
     reponses_tel = [
@@ -436,9 +430,12 @@ def test_v5_2_exploitation_4_sources_dont_web_6_recherches_3_telechargements_et_
     assert len(client._etat["telechargements"]) == 3
     assert bilan["moisson_taches"]["n_documents_telecharges"] == 3
 
+    appel_ind = [a for a in client._etat["appels"] if a["role"] == "inducteur_entrainement"][0]
+    assert "MARQUEUR_FICHIER_COMPLET_LU_V52" in appel_ind["prompt"]
+    assert "MARQUEUR_FIN_DOCUMENT_V52" in appel_ind["prompt"]
+
     appel_tache = [a for a in client._etat["appels"] if a["role"] == "monoculture_analytique"][0]
     assert "Repere documentaire moissonne :" in appel_tache["prompt"]
-    assert any("MARQUEUR_FICHIER_COMPLET_LU_V52" in ex["texte"] for ex in json.loads((travail / "memoire_isvd.json").read_text(encoding="utf-8"))["exemplaires"])
 
 
 def test_v5_2_lecture_corpus_archive_generations_precedentes(tmp_path, monkeypatch):
