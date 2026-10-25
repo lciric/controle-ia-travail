@@ -1,0 +1,283 @@
+--- ../pieces-pilote3-gemini-v5-3-v6/lancer_pilote3_gemini_v5_3_v6_v2.sh	2026-10-25 17:06:20.179435756 +0100
++++ lancer_pilote4_gemini_v1.sh	2026-10-25 17:06:47.905319132 +0100
+@@ -1,39 +1,27 @@
+ #!/usr/bin/env bash
+-# Lanceur du troisième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6, chacun seul, mêmes bornes que la
+-# course M du second pilote, question M à g001 », une course par appel (COURSE=v5-3, puis COURSE=v6) — v2, dérivée de
+-# la v1 (`5a56d854…`, gardée, jamais à lancer) par `deriver_lanceur_pilote3_v2.py` sur la contre-lecture 1 : P3C1-01 —
+-# la course v6 ne part qu'après une course v5.3 finie, fermée et saine (`PRECEDENTE_V53`, étape (0 bis) : même liste
+-# close que pour M, paramétrée pour la v5.3 et ce lanceur ; graine de v5.3 égale à celle de ce texte ; ligne de dépense
+-# de v6 portant aussi l'empreinte des empreintes de v5.3) ; P3C1-11 — graine de M au manifeste : un entier, égal à la
+-# ligne de T2 (égalité exacte). La v1 était dérivée du
+-# lanceur scellé du second pilote (`lancer_pilote2_gemini_v5_2_v5.sh`, `83f8b9cf…`) par `deriver_lanceur_pilote3_v1.py`
+-# (remplacements exacts ; écart consigné dans `diff-lanceur-v5-vers-pilote3-v1.txt`). Ce qui change par rapport à la
+-# source : (i) deux courses, chacune avec son objet (commit, arbre, nombre de fichiers, lignée) et la même question M v2 ;
+-# (ii) GO-2026-10-25-02 ; (iii) l'étape (0) ne lit plus « la course précédente » mais la **course M de référence** du
+-# second pilote (`REFERENCE_M`), à laquelle elle applique telle quelle la liste close « M saine » du lanceur source (avec
+-# le nom, l'empreinte et la lignée du lanceur et de l'objet de M, et la graine M du texte scellé du second pilote) : une
+-# course du pilote 3 ne part qu'après une course M finie, fermée et saine ; la ligne de dépense porte les 16 premiers
+-# caractères de l'empreinte des empreintes de M ; (iv) chemins permis après b1c7f4b6 : ceux du second pilote et ceux du
+-# pilote 3. Tout le reste (gardes, environnement fermé, passerelle, essais du noyau, fermeture, liste de ce qui est
+-# poussé) est le texte du lanceur source, inchangé.
++# Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6.1, chacun seul, sur la banque
++# `confrontation-v2` (identifiants opaques), quatre générations notées, 6 rondes de conception au plus avant g000 (l'organisme déclare lui-même la fin de sa conception, `fin_conception.json`), 3 USD au plus par ronde, question M à g001 »,
++# une course par appel (COURSE=v5-3, puis COURSE=v6-1) — v1, dérivée du lanceur v2 du pilote 3
++# (`lancer_pilote3_gemini_v5_3_v6_v2.sh`, `add695a9…`) par `deriver_lanceur_pilote4_v1.py` (remplacements exacts ; écart
++# consigné dans `diff-lanceur-pilote3-v2-vers-pilote4-v1.txt`). Ce qui change : les objets (v6.1 à la place de la v6) et
++# les noms des courses ; la banque v2 (empreinte, chemin ; les chemins de la banque v2 sont permis après le code) ;
++# `--generations 4` ; les rondes de conception ; la porte « v5.3 précédente » attend les générations 0 à 3 ; la ligne de
++# GO doit porter aussi les 16 premiers caractères de l'empreinte du texte scellé ; les journaux recopiés et poussés
++# couvrent g000 à g003 et les rondes. Tout le reste (porte « M de référence » sur la course M du second pilote, gardes,
++# environnement fermé, passerelle, essais du noyau, fermeture, liste fermée) est la ligne du lanceur v2.
+ # Objets : v5.3 = `canal/gemini-organisme-v5-3`, commit `4ecba58`, dossier `organisme/`, arbre `6251ab21…`, 22 fichiers ;
+-# v6 = `canal/gemini-organisme-v6`, commit `7cd7508`, arbre `940c59c3…`, 24 fichiers ; lignées « assistées » (déclarées).
+-# Ces deux commits portent aussi l'arbre de la relève : seul `organisme/` en est extrait (`git archive`), jamais une
+-# extraction ni une exécution du reste. Code `b1c7f4b6`. Le dépôt de lancement doit contenir ces commits et ceux des
+-# questions (`git fetch origin canal/gemini-organisme-v5-3 canal/gemini-organisme-v6 canal/conv-audit-n04 main`). Chaque
+-# appel de ce lanceur est une commande de fond de la session avec le délai maximal (7 200 000 ms), jamais `nohup`, `&` ni
+-# `setsid`. Met en œuvre le préenregistrement scellé
+-# `essaim-m3-refonte-v1/prereg/pilote3-gemini-organisme-v5-3-v6-v1.md` (ou la version qui le remplace et cite ce script).
+-#
++# v6.1 = branche de Gemini, commit `a9d8eb5`, arbre `ae331d1d…`, 24 fichiers ; lignées « assistées ».
++# Les commits d'objets portent aussi l'arbre de la relève : seul `organisme/` en est extrait (`git archive <commit>
++# organisme`) ; ils ne sont jamais extraits en entier ni empruntés comme arbre de travail.
++# Texte : `essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v1.md` (ou la version qui le remplace et cite ce
++# script) ; pièces : `prereg/pieces-pilote4-gemini/`.
+ # Usage :
+ #   MODE=reel COURSE=v5-3 DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
+-#       APPEL_CONTROLE_FICHIER=… RECHARGE_ATTESTEE="…" CLE_ANTHROPIC=NOM CLE_GEMINI=NOM [CLE_BRAVE=NOM] \
++#       APPEL_CONTROLE_FICHIER=… RECHARGE_ATTESTEE=… CLE_ANTHROPIC=NOM CLE_GEMINI=NOM \
+ #       [CLE_OPENALEX=NOM] [CLE_S2=NOM] [TENTATIVE=2] REFERENCE_M=<dossier du pilote de la course M> \
+-#       bash lancer_pilote3_gemini_v5_3_v6_v2.sh
+-#   MODE=reel COURSE=v6 … PRECEDENTE_V53=<dossier du pilote de la course v5.3, dans la même copie> (même forme)
+-#   MODE=simulation COURSE=… DEPOT=… PYTHON=… GRAINE=… [REFERENCE_M=… PRECEDENTE_V53=… PILOTE_RACINE=… REGISTRE_GO_SOURCE=…
+-#       DEPENSES_SOURCE=… RESTE_GO_USD=… PREREG=… PREREG_SHA256=… APPEL_CONTROLE_FICHIER=… RECHARGE_ATTESTEE=…
+-#       ESSAI_ARTEFACT=… ESSAI_JUNIT_EXISTANT=… ESSAI_RESUME_EXISTANT=… ESSAI_EXIGER_HEURE=1 ESSAI_PASSERELLE_PY=…]
++#       bash lancer_pilote4_gemini_v1.sh
++#   MODE=reel COURSE=v6-1 … PRECEDENTE_V53=<dossier du pilote de la course v5.3 de ce pilote, dans la même copie> (même forme)
++#   MODE=simulation : comme le lanceur v2 (variables d'essai inchangées)
+ #
+ # Jamais : afficher, écrire ou journaliser une clé ; lire un score ; ouvrir la course ou la sortie standard ; arrêter un
+ # processus (R10 : PID consigné ; une course voisine est détectée, jamais arrêtée) ; écraser un dossier (R12) ; lancer
+@@ -44,25 +32,25 @@
+ 
+ MODE="${MODE:?MODE=reel ou MODE=simulation}"
+ [ "$MODE" = reel ] || [ "$MODE" = simulation ] || refus_tot "MODE inconnu : $MODE"
+-COURSE="${COURSE:?COURSE=v5-3 ou COURSE=v6}"
++COURSE="${COURSE:?COURSE=v5-3 ou COURSE=v6-1}"
+ # Question M v2 épurée (la même que celle de la course M du second pilote), pour les deux courses
+ COMMIT_QUESTION=a15809b816b6c967b6c3cf21877e350bfe676dca
+ CHEMIN_QUESTION=brouillons/canal-reprise-releve-v1/envois/question-gemini-maieutique-vs-coercition-organismes-v2.md
+ SHA_QUESTION=8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+ case "$COURSE" in
+   v5-3)
+-    NOM="pilote3-gemini-v5-3-maieutique-v1"; INDICE_GRAINE=0
++    NOM="pilote4-gemini-v5-3-v1"; INDICE_GRAINE=0
+     COMMIT_ORGANISME=4ecba58bcaa7dc3abe82c54fc38ee7285620bdf6
+     ARBRE_ORGANISME=6251ab219e86286ec892a65e28cf9eebad5265fd6e32e350e68827897c811753
+     N_FICHIERS_ORGANISME=22
+     LIGNEE="gemini-organisme-v5-3";;
+-  v6)
+-    NOM="pilote3-gemini-v6-maieutique-v1"; INDICE_GRAINE=1
+-    COMMIT_ORGANISME=7cd7508287efa6fd667eaca7dffe23666f12692f
+-    ARBRE_ORGANISME=940c59c3dd58fdd5355244768faa1e9da02620fa455cd8ead15f8271145da64a
++  v6-1)
++    NOM="pilote4-gemini-v6-1-v1"; INDICE_GRAINE=1
++    COMMIT_ORGANISME=a9d8eb50c02c8f5ea31b060b3c0e86f23c2d1dbc
++    ARBRE_ORGANISME=ae331d1deb660a20da919edbdcdecba28e49b9b143a6b7a061262101a79798d4
+     N_FICHIERS_ORGANISME=24
+-    LIGNEE="gemini-organisme-v6";;
+-  *) refus_tot "COURSE inconnue : $COURSE (v5-3 ou v6)";;
++    LIGNEE="gemini-organisme-v6-1";;
++  *) refus_tot "COURSE inconnue : $COURSE (v5-3 ou v6-1)";;
+ esac
+ PY="${PYTHON:-python3}"
+ ART="${ESSAI_ARTEFACT:-}"
+@@ -139,7 +127,7 @@
+ COMMIT_LIENS=4967734a62a0b10c3b5cd6360e21924f015053fd
+ COMMIT_CREDIT=90595ffb53b30c65c66be807215a998998b701fc
+ [ "$ART" = commit ] && COMMIT_QUESTION=0123456789abcdef0123456789abcdef01234567
+-SHA_BANQUE=f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc
++SHA_BANQUE=52beb637823b72f475fd1ddcf446e9b79cafa5d2cd47d16c08b663d2b9388d10
+ SHA_MISSION=bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e
+ SHA_COLLISIONNEUR=213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+ [ "$ART" = banque ] && SHA_BANQUE=0000
+@@ -149,7 +137,7 @@
+ ESSAIS_CITES="test_fichiers_lecture_et_copie_sans_lien test_depot_ne_suit_aucun_lien_de_l_organisme test_organisme_poseur_de_liens_ne_voit_rien_du_noyau test_question_ouverte_cibles_lecture_et_archivage_sain_et_artefacts test_question_ouverte_posee_a_la_generation_ciblee_archivee_et_sans_effet_sur_le_score test_extrait_mecanique_sain_puis_artefacts test_mode_reel_refuse_sans_go test_mode_reel_refuse_anthropic_base_url test_bac_a_sable_isolation_reseau_refusee_si_indisponible test_appels_paralleles_plafond_tenu_au_pire_cas test_organisme_gourmand_recoit_plafond_sans_exception test_ce312_doit_arreter_et_raison_juste test_bac_a_sable_exception_et_delai test_modele_non_conforme_invalide_la_generation_et_arrete_la_lignee test_ce305_credit_epuise_arrete_la_course test_ce307_anomalie_journal_absent test_relance_puis_reprise_remet_le_compteur_a_zero test_fichier_stop_arrete_la_boucle test_organisme_fuite_ne_lit_rien_du_noyau_et_ne_laisse_aucun_processus test_r395_credit_epuise_rendu_en_400_arrete_la_course test_cl5_01_banque_cachee_a_l_organisme test_cl5_02_aucune_voie_commune_par_un_dossier_inscriptible_par_tous test_ce306_vue_lisible_par_la_seule_lignee_et_uid_par_course test_sources_reelles_de_moisson_si_reseau test_moisson_de_bout_en_bout_en_simulation test_ce311_garde_de_temps_compte_la_moisson test_ce305_sources_moisson_au_manifeste_et_bras_apparie test_r402_types_de_blocs_au_journal_et_reflexion_comptee_a_l_extrait test_r410_cles_openalex_et_s2_en_entete_jamais_dans_l_adresse"
+ # Chemins que les commits postérieurs à b1c7f4b6 peuvent toucher : le texte du second pilote, ses pièces et ses
+ # contre-lectures ; ce texte, ses pièces et ses contre-lectures ; dossier des pilotes
+-PERMIS_APRES_CODE='^essaim-m3-refonte-v1/prereg/(pilote2-gemini-organisme-v5-2-v[0-9]+\.md(\.sha256)?|pieces-pilote2-gemini-v5-2/.+|contre-lectures/pilote2-gemini-organisme-v5-2-v[0-9]+-cl[0-9]+\.md(\.sha256)?|pilote3-gemini-organisme-v5-3-v6-v[0-9]+\.md(\.sha256)?|pieces-pilote3-gemini-v5-3-v6/.+|contre-lectures/pilote3-gemini-organisme-v5-3-v6-v[0-9]+-cl[0-9]+\.md(\.sha256)?)$'
++PERMIS_APRES_CODE='^essaim-m3-refonte-v1/(prereg/(pilote2-gemini-organisme-v5-2-v[0-9]+\.md(\.sha256)?|pieces-pilote2-gemini-v5-2/.+|contre-lectures/pilote2-gemini-organisme-v5-2-v[0-9]+-cl[0-9]+\.md(\.sha256)?|pilote3-gemini-organisme-v5-3-v6-v[0-9]+\.md(\.sha256)?|pieces-pilote3-gemini-v5-3-v6/.+|contre-lectures/pilote3-gemini-organisme-v5-3-v6-v[0-9]+-cl[0-9]+\.md(\.sha256)?|pilote4-gemini-organisme-v[0-9]+\.md(\.sha256)?|pieces-pilote4-gemini/.+|contre-lectures/pilote4-gemini-organisme-v[0-9]+-cl[0-9]+\.md(\.sha256)?)|banque/(banque-confrontation-v2(-secret)?\.json(\.sha256)?|LISEZMOI-v4\.md(\.sha256)?|EMPREINTES-banque-v2-v1\.txt(\.sha256)?|construction-v2/.+))$'
+ 
+ # R3 : une course est partie dès que son manifeste est écrit ; aucune seconde course de ce nom, quel que soit le dossier,
+ #     la copie du dépôt (marqueur de départ du conteneur, branche poussée) ou le moment (verrou ; P2C2-06)
+@@ -195,22 +183,22 @@
+ } > "$L"
+ [ "$MODE" = simulation ] && [ -n "$ART" ] && note "- ESSAI : artefact « $ART » (simulation)"
+ 
+-# 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course v6 : ne part qu'après une course v5.3
++# 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course v6.1 : ne part qu'après une course v5.3
+ #        finie, fermée et saine (P3C1-01 : « mêmes règles de refus que pour M et S », R-440) — la liste close de l'étape (0), paramétrée pour la v5.3 et ce lanceur (nom et empreinte de ce
+-#        lanceur, course `v5-3`, nom `pilote3-gemini-v5-3-maieutique-v1`, lignée `gemini-organisme-v5-3`, GO de ce
++#        lanceur, course `v5-3`, nom `pilote4-gemini-v5-3-v1`, lignée `gemini-organisme-v5-3`, GO de ce
+ #        pilote) ; la graine de v5.3 au manifeste est comparée, à l'étape (2), à celle de ce texte ; la ligne de dépense
+-#        de v6 porte aussi les 16 premiers caractères de l'empreinte des empreintes de v5.3
++#        de v6.1 porte aussi les 16 premiers caractères de l'empreinte des empreintes de v5.3
+ EMP_V53=""
+-if [ "$COURSE" = v6 ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V53:-}" ]; }; then
+-  [ -n "${PRECEDENTE_V53:-}" ] || refus "PRECEDENTE_V53 non défini : v6 ne part qu'après une course v5.3 saine (dossier du pilote de la course v5.3)"
++if [ "$COURSE" = v6-1 ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V53:-}" ]; }; then
++  [ -n "${PRECEDENTE_V53:-}" ] || refus "PRECEDENTE_V53 non défini : v6.1 ne part qu'après une course v5.3 saine (dossier du pilote de la course v5.3)"
+   SV="$PRECEDENTE_V53"
+-  [ -d "$SV" ] || refus "PRECEDENTE_V53 $SV absent : v6 ne part qu'après v5.3"
++  [ -d "$SV" ] || refus "PRECEDENTE_V53 $SV absent : v6.1 ne part qu'après v5.3"
+   SV="$(cd "$SV" && pwd -P)"
+   if [ "$MODE" = reel ]; then
+     case "$(dirname "$SV")" in "$(cd "$RACINE_PILOTES" && pwd -P)") ;; *) refus "PRECEDENTE_V53 $SV hors du dossier des pilotes $RACINE_PILOTES";; esac
+-    [[ "$(basename "$SV")" =~ ^pilote3-gemini-v5-3-maieutique-v1(-tentative[0-9]+)?$ ]] || refus "PRECEDENTE_V53 $SV : nom autre que pilote3-gemini-v5-3-maieutique-v1[-tentativeN]"
++    [[ "$(basename "$SV")" =~ ^pilote4-gemini-v5-3-v1(-tentative[0-9]+)?$ ]] || refus "PRECEDENTE_V53 $SV : nom autre que pilote4-gemini-v5-3-v1[-tentativeN]"
+   fi
+-  [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v5.3 absentes : v6 ne part qu'après une course v5.3 finie et fermée"
++  [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v5.3 absentes : v6.1 ne part qu'après une course v5.3 finie et fermée"
+   (cd "$SV" && sha256sum -c --quiet EMPREINTES-pilote-v1.txt.sha256 && sha256sum -c --quiet EMPREINTES-pilote-v1.txt) > /dev/null 2>&1 || refus "empreintes de v5.3 non vérifiées (fichiers de v5.3 modifiés ou manquants)"
+   for f in LANCEMENT.md extrait-mecanique-v1.json; do
+     grep -Eq "^[0-9a-f]{64}  $f\$" "$SV/EMPREINTES-pilote-v1.txt" || refus "empreintes de v5.3 sans $f"
+@@ -233,7 +221,7 @@
+ except Exception as e:
+     print("extrait de v5.3 illisible : " + type(e).__name__); sys.exit(1)
+ gs = sorted((g for g in x.get("generations", []) if g.get("lignee") == lignee and not g.get("phase")), key=lambda g: g.get("generation", -1))
+-if [g.get("generation") for g in gs] != [0, 1]: pb.append("générations de v5.3 : " + str([g.get("generation") for g in gs]) + " au lieu de [0, 1]")
++if [g.get("generation") for g in gs] != [0, 1, 2, 3]: pb.append("générations de v5.3 : " + str([g.get("generation") for g in gs]) + " au lieu de [0, 1, 2, 3]")
+ statuts_appels = []
+ for g in gs:
+     if g.get("statut") != "OK" or g.get("invalide") or g.get("anomalie_noyau"):
+@@ -262,14 +250,14 @@
+ if arrets != ["aucune lignée active"]: pb.append("arrêt de la course : %r" % arrets)
+ if pb: print("; ".join(pb)); sys.exit(1)
+ refus_s = [g.get("refus_noyau") for g in gs]
+-print("v5.3 saine : g000 et g001 OK, au plus 20 %% d appels hors OK et au moins un appel OK de Fable à chacune (%s), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de v5.3 %s ; dépense du noyau %s USD ; refus du noyau par génération %s" % ("; ".join(statuts_appels), m.get("entropie_seed_sequence"), r.get("depense_totale_usd"), json.dumps(refus_s, ensure_ascii=False)))
+-' "$SV" "$SHA_LANCEUR" "gemini-organisme-v5-3" "$MODE" "$GO_ID" "$(basename "$0")" "v5-3" "pilote3-gemini-v5-3-maieutique-v1")" || refus "v6 ne part pas : issue de v5.3 hors de la liste saine ($issue_v53) — décision de Lazar requise"
++print("v5.3 saine : g000 à g003 OK, au plus 20 %% d appels hors OK et au moins un appel OK de Fable à chacune (%s), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de v5.3 %s ; dépense du noyau %s USD ; refus du noyau par génération %s" % ("; ".join(statuts_appels), m.get("entropie_seed_sequence"), r.get("depense_totale_usd"), json.dumps(refus_s, ensure_ascii=False)))
++' "$SV" "$SHA_LANCEUR" "gemini-organisme-v5-3" "$MODE" "$GO_ID" "$(basename "$0")" "v5-3" "pilote4-gemini-v5-3-v1")" || refus "v6.1 ne part pas : issue de v5.3 hors de la liste saine ($issue_v53) — décision de Lazar requise"
+   GRAINE_V53_MANIFESTE="$("$PY" -I -c 'import json, sys; print((json.load(open(sys.argv[1])).get("manifeste") or {}).get("entropie_seed_sequence"))' "$SV/extrait-mecanique-v1.json")"
+   [[ "$GRAINE_V53_MANIFESTE" =~ ^[0-9]+$ ]] || refus "graine de v5.3 au manifeste illisible ou vide ($GRAINE_V53_MANIFESTE)"
+   note "- course v5.3 précédente : $SV ; $issue_v53 ; empreintes de v5.3 vérifiées (EMPREINTES-pilote-v1.txt, sha256 $EMP_V53)"
+ fi
+ 
+-# 0. Course M de référence : une course du pilote 3 ne part qu'après une course M du second pilote finie, fermée et
++# 0. Course M de référence : une course du pilote 4 ne part qu'après une course M du second pilote finie, fermée et
+ #    saine — liste close du lanceur du second pilote (P2C1-01, P52C1-02), appliquée telle quelle aux pièces lisibles de M,
+ #    avec le nom, l'empreinte et la lignée du lanceur et de l'objet de M ; graine de M lue dans le texte scellé du second
+ #    pilote ; la ligne de dépense de la course porte les 16 premiers caractères de l'empreinte des empreintes de M
+@@ -282,15 +270,15 @@
+ PREREG_M="$R/prereg/pilote2-gemini-organisme-v5-2-v2.md"
+ PREREG_M_SHA=d294465429094e5099cb5facdad95e2b806aa8953640b57bcab99998396c066b
+ if [ "$MODE" = reel ] || [ -n "${REFERENCE_M:-}" ]; then
+-  [ -n "${REFERENCE_M:-}" ] || refus "REFERENCE_M non défini : une course du pilote 3 ne part qu'après une course M saine (dossier du pilote de la course M)"
++  [ -n "${REFERENCE_M:-}" ] || refus "REFERENCE_M non défini : une course du pilote 4 ne part qu'après une course M saine (dossier du pilote de la course M)"
+   SP="$REFERENCE_M"
+-  [ -d "$SP" ] || refus "REFERENCE_M $SP absent : une course du pilote 3 ne part qu'après M"
++  [ -d "$SP" ] || refus "REFERENCE_M $SP absent : une course du pilote 4 ne part qu'après M"
+   SP="$(cd "$SP" && pwd -P)"
+   if [ "$MODE" = reel ]; then
+     case "$SP/" in /root/*|/home/*) ;; *) refus "REFERENCE_M $SP hors de /root et de /home";; esac
+     [[ "$(basename "$SP")" =~ ^pilote2-gemini-v5-2-1-maieutique-v1(-tentative[0-9]+)?$ ]] || refus "REFERENCE_M $SP : nom autre que pilote2-gemini-v5-2-1-maieutique-v1[-tentativeN]"
+   fi
+-  [ -f "$SP/EMPREINTES-pilote-v1.txt" ] && [ -f "$SP/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de M absentes : une course du pilote 3 ne part qu'après une course M finie et fermée"
++  [ -f "$SP/EMPREINTES-pilote-v1.txt" ] && [ -f "$SP/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de M absentes : une course du pilote 4 ne part qu'après une course M finie et fermée"
+   (cd "$SP" && sha256sum -c --quiet EMPREINTES-pilote-v1.txt.sha256 && sha256sum -c --quiet EMPREINTES-pilote-v1.txt) > /dev/null 2>&1 || refus "empreintes de M non vérifiées (fichiers de M modifiés ou manquants)"
+   for f in LANCEMENT.md extrait-mecanique-v1.json; do
+     grep -Eq "^[0-9a-f]{64}  $f\$" "$SP/EMPREINTES-pilote-v1.txt" || refus "empreintes de M sans $f"
+@@ -371,7 +359,7 @@
+ [ -z "$inattendus" ] || refus "fichiers non suivis ou modifiés sous essaim-m3-refonte-v1 ou le collisionneur : $(echo $inattendus)"
+ git -C "$DEPOT" merge-base --is-ancestor "$COMMIT_LIENS" HEAD || refus "correctif des liens 4967734 non ancêtre de HEAD"
+ git -C "$DEPOT" merge-base --is-ancestor "$COMMIT_CREDIT" HEAD || refus "R-395 (90595ffb, arrêt sur crédit épuisé en 400) non ancêtre de HEAD"
+-[ "$(sha256sum "$R/banque/banque-confrontation-v1.json" | cut -d' ' -f1)" = "$SHA_BANQUE" ] || refus "empreinte de la banque ≠ f1387a20…"
++[ "$(sha256sum "$R/banque/banque-confrontation-v2.json" | cut -d' ' -f1)" = "$SHA_BANQUE" ] || refus "empreinte de la banque ≠ 52beb637…"
+ [ "$(sha256sum "$R/MISSION-v1.md" | cut -d' ' -f1)" = "$SHA_MISSION" ] || refus "empreinte de la mission ≠ bd2c6a15…"
+ [ "$(sha256sum "$DEPOT/collisionneur-v2.5-banc-jev-travail/collisionneur_v2.py" | cut -d' ' -f1)" = "$SHA_COLLISIONNEUR" ] || refus "empreinte du collisionneur ≠ 213b52ef…"
+ note "- code : identique à b1c7f4b6 (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque $SHA_BANQUE ; mission $SHA_MISSION ; collisionneur $SHA_COLLISIONNEUR"
+@@ -412,14 +400,14 @@
+   [ -n "$E_TEXTE" ] || refus "entropie E absente du préenregistrement"
+   g_calc="$("$PY" -I -c 'import sys, numpy; e, i = int(sys.argv[1]), int(sys.argv[2]); print(int(numpy.random.SeedSequence(e).spawn(2)[i].generate_state(1, dtype=numpy.uint64)[0]))' "$E_TEXTE" "$INDICE_GRAINE")"
+   [ "$g_calc" = "$GRAINE" ] || refus "graine $GRAINE ≠ celle de SeedSequence(E).spawn(2)[$INDICE_GRAINE] = $g_calc"
+-  if [ "$COURSE" = v6 ] && [ -n "${GRAINE_V53_MANIFESTE:-}" ]; then
++  if [ "$COURSE" = v6-1 ] && [ -n "${GRAINE_V53_MANIFESTE:-}" ]; then
+     grep -Eq "^ *graine de la course v5-3 = ${GRAINE_V53_MANIFESTE}\$" "$PREREG" || refus "la course v5.3 a tourné avec la graine $GRAINE_V53_MANIFESTE, qui n'est pas la graine v5-3 du préenregistrement scellé"
+     note "- course v5.3 précédente : graine $GRAINE_V53_MANIFESTE = graine v5-3 du préenregistrement"
+   fi
+   note "- préenregistrement : $PREREG, sha256 $PREREG_SHA256 (compagnon conforme), graine $GRAINE de la course $COURSE écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée"
+ fi
+ 
+-# 3. Organisme de la course (v5.3 ou v6, dossier organisme/ seul) et question, extraits des commits cités, vérifiés
++# 3. Organisme de la course (v5.3 ou v6.1, dossier organisme/ seul) et question, extraits des commits cités, vérifiés
+ git -C "$DEPOT" archive "$COMMIT_ORGANISME" organisme | tar -x -C "$PILOTE"
+ ORG="$PILOTE/organisme"
+ [ "$ART" = organisme ] && printf ' ' >> "$ORG/principal.py"
+@@ -438,19 +426,23 @@
+ #    l'empreinte des empreintes de M) ; reste ≥ plafond de la course
+ if [ "$MODE" = reel ] || [ -n "${REGISTRE_GO_SOURCE:-}" ]; then
+   if [ "$MODE" = reel ]; then git -C "$DEPOT" show origin/main:registres/go.md > "$PILOTE/registre-go.md"; else cp "$REGISTRE_GO_SOURCE" "$PILOTE/registre-go.md"; fi
+-  grep "^| $GO_ID |" "$PILOTE/registre-go.md" | grep 'calcul' | grep "${SHA_QUESTION:0:8}" | grep -q "${ARBRE_ORGANISME:0:8}" \
+-    || refus "aucune ligne « | $GO_ID | » qui porte à la fois le type calcul, l'empreinte de la question ${SHA_QUESTION:0:8}… et l'empreinte de l'organisme ${ARBRE_ORGANISME:0:8}… (GO non inscrit pour cette course sur cet objet)"
++  # pilote 4 : la ligne porte aussi les 16 premiers caractères de l'empreinte du texte scellé (toujours donné en réel)
++  t16="${PREREG_SHA256:-}"; t16="${t16:0:16}"
++  ligne_go="$(grep "^| $GO_ID |" "$PILOTE/registre-go.md" | grep 'calcul' | grep "${SHA_QUESTION:0:8}" | grep "${ARBRE_ORGANISME:0:8}" || true)"
++  if [ -n "$t16" ]; then ligne_go="$(echo "$ligne_go" | grep "$t16" || true)"; fi
++  [ -n "$ligne_go" ] \
++    || refus "aucune ligne « | $GO_ID | » qui porte à la fois le type calcul, l'empreinte de la question ${SHA_QUESTION:0:8}…, l'empreinte de l'organisme ${ARBRE_ORGANISME:0:8}… et celle du texte scellé (${t16:-aucun texte donné en simulation}) (GO non inscrit pour cette course, cet objet et ce texte)"
+   if [ "$MODE" = reel ]; then dep="$(git -C "$DEPOT" show origin/main:registres/depenses.md)"; else dep="$(cat "${DEPENSES_SOURCE:?DEPENSES_SOURCE en simulation avec REGISTRE_GO_SOURCE}")"; fi
+   echo "$dep" | grep "$NOM" | grep -q "$GO_ID" || refus "lancement non consigné avant dans registres/depenses.md (une ligne nommant $NOM et $GO_ID)"
+   if [ -n "$EMP_S" ]; then
+     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_S:0:16}" || refus "la ligne de dépense de la course $COURSE ne porte pas l'empreinte des empreintes de M (${EMP_S:0:16}…), écrite après la fin de M"
+   fi
+   if [ -n "$EMP_V53" ]; then
+-    echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V53:0:16}" || refus "la ligne de dépense de v6 ne porte pas l'empreinte des empreintes de v5.3 (${EMP_V53:0:16}…), écrite après la fin de v5.3"
++    echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V53:0:16}" || refus "la ligne de dépense de v6.1 ne porte pas l'empreinte des empreintes de v5.3 (${EMP_V53:0:16}…), écrite après la fin de v5.3"
+   fi
+   reste="${RESTE_GO_USD:?RESTE_GO_USD=reste disponible sur $GO_ID avant cette course, en USD}"
+   "$PY" -I -c 'import sys; sys.exit(0 if float(sys.argv[1]) >= float(sys.argv[2]) else 1)' "$reste" "$USD_COURSE" || refus "reste sur $GO_ID = $reste USD < $USD_COURSE"
+-  note "- registre : une ligne $GO_ID de type calcul portant l'empreinte de la question ($COURSE) et celle de l'organisme (${ARBRE_ORGANISME:0:8}…) ; dépense consignée avant ; reste déclaré $reste USD ≥ $USD_COURSE (vérification du lanceur)"
++  note "- registre : une ligne $GO_ID de type calcul portant l'empreinte de la question ($COURSE), celle de l'organisme (${ARBRE_ORGANISME:0:8}…) et celle du texte scellé (${t16:-aucun texte donné en simulation}) ; dépense consignée avant ; reste déclaré $reste USD ≥ $USD_COURSE (vérification du lanceur)"
+ fi
+ 
+ # 5. Test de dépense (réel ; en simulation si le fichier est donné) : la pièce de l'outil de session-depot (un appel
+@@ -635,9 +627,9 @@
+ 
+ # 7. La course : sortie standard fermée (elle porte les scores), sortie d'erreur lisible ; PID consigné
+ FAMILLE=gemini; [ "$ART" = famille ] && FAMILLE=inconnue
+-COMMUNES=(--sortie "$PILOTE/course" --generations 2 --graine "$GRAINE" --especes --appels-max 160 --usd-par-generation "$USD_GEN"
++COMMUNES=(--sortie "$PILOTE/course" --generations 4 --graine "$GRAINE" --especes --appels-max 160 --usd-par-generation "$USD_GEN"
+           --temps-max 2400 --max-tokens-appel 8192 --recherches-max 6 --telechargements-max 3 --octets-max 40000000
+-          --entrainements-max 0 --rondes-conception-max 0 --parallele-max 8 --relances-max 1 --isoler-reseau
++          --entrainements-max 0 --rondes-conception-max 6 --usd-max-conception 3 --parallele-max 8 --relances-max 1 --isoler-reseau
+           --plafond-total "$USD_COURSE" --decalage-uid "$DECALAGE_UID"
+           --question-ouverte "$PILOTE/question.md" --question-ouverte-aux g001
+           --organisme-impose "$LIGNEE=$ORG@$FAMILLE")
+@@ -649,7 +641,7 @@
+   note "- départ (UTC) : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+   env -i "${ENV_NOYAU[@]}" \
+     "$PY" -m essaim_m3 lancer --reel --go "$GO_ID" --registre-go "$PILOTE/registre-go.md" \
+-      --taches banque/banque-confrontation-v1.json --mission MISSION-v1.md "${COMMUNES[@]}" \
++      --taches banque/banque-confrontation-v2.json --mission MISSION-v1.md "${COMMUNES[@]}" \
+       > "$SORTIE_FERMEE" 2> "$ERREURS" &
+ else
+   note "- départ de la simulation (UTC) : $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+@@ -680,7 +672,7 @@
+   fi
+   ESPACE="$("$PY" -I -c 'import json, sys; print(json.load(open(sys.argv[1])).get("espace_organismes") or "")' "$PILOTE/course/manifeste-run.json")"
+   [ "$ART" = espace ] && ESPACE="$(mktemp -d)"
+-  for g in g000 g001; do
++  for g in g000 g001 g002 g003 c001 c002 c003 c004 c005 c006; do
+     a="$PILOTE/course/archive/$LIGNEE/$g/journal-appels.jsonl"
+     if [ -f "$a" ] && [ ! -L "$a" ]; then
+       copier "$a" "journal-appels-$g.jsonl"
+@@ -735,7 +727,7 @@
+ # 9. Ce qui est poussé : une liste fermée de noms ; tout autre fichier est consigné et n'est pas poussé
+ (cd "$PILOTE" && sha256sum sortie-erreur-lanceur.txt > sortie-erreur-lanceur.txt.sha256)
+ for f in sortie-erreur-extrait.txt sortie-erreur-tar.txt; do [ -f "$PILOTE/$f" ] && (cd "$PILOTE" && sha256sum "$f" > "$f.sha256"); done
+-permis_re='^(\.gitignore|LANCEMENT\.md|LANCEMENT\.md\.sha256|sortie-erreur-(lanceur|extrait|tar)\.txt(\.sha256)?|essais-v1\.(xml|txt)|extrait-mecanique-v1\.json(\.sha256)?|reponse-question-g001\.md(\.sha256|\.sha256-archive)?|journal-appels-g00[01]\.jsonl(\.sha256|\.sha256-archive)?|question\.md|registre-go\.md|test-depense-[^/]+|organisme/.+|ferme\.tar\.gz(\.sha256)?|refus-avant-manifeste-v1\.tar\.gz(\.sha256)?)$'
++permis_re='^(\.gitignore|LANCEMENT\.md|LANCEMENT\.md\.sha256|sortie-erreur-(lanceur|extrait|tar)\.txt(\.sha256)?|essais-v1\.(xml|txt)|extrait-mecanique-v1\.json(\.sha256)?|reponse-question-g001\.md(\.sha256|\.sha256-archive)?|journal-appels-(g00[0-3]|c0[0-9][0-9])\.jsonl(\.sha256|\.sha256-archive)?|question\.md|registre-go\.md|test-depense-[^/]+|organisme/.+|ferme\.tar\.gz(\.sha256)?|refus-avant-manifeste-v1\.tar\.gz(\.sha256)?)$'
+ imprevus="$(cd "$PILOTE" && find . \( -path ./course -o -path ./ferme \) -prune -o -type f -print | sed 's#^\./##' | grep -Ev "$permis_re" | grep -Ev '^(A-POUSSER-v1\.txt(\.sha256)?|EMPREINTES-pilote-v1\.txt(\.sha256)?)$' || true)"
+ [ -z "$imprevus" ] || note "- fichiers imprévus, NON poussés (consignés) : $(echo $imprevus)"
+ (cd "$PILOTE" && sha256sum LANCEMENT.md > LANCEMENT.md.sha256)
