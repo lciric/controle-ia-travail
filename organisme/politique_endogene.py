@@ -114,7 +114,13 @@ def verifier_et_valider_code_politique(code_source: str) -> tuple:
         if isinstance(noeud, ast.Attribute) and str(noeud.attr).startswith("__"):
             return False, f"attribut dunder interdit : {noeud.attr}", None
 
+    def _import_math_seul(name, *args, **kwargs):
+        if name == "math":
+            return math
+        raise ImportError(f"import interdit : {name}")
+
     env_exec = {"__builtins__": {
+        "__import__": _import_math_seul,
         "abs": abs, "min": min, "max": max, "round": round, "float": float, "int": int,
         "str": str, "bool": bool, "dict": dict, "list": list, "tuple": tuple, "set": set,
         "len": len, "sum": sum, "any": any, "all": all, "range": range, "enumerate": enumerate,
