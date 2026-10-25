@@ -71,3 +71,20 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
 - **Constat pour le noyau** : `sha256_code_noyau` du manifeste hache tout fichier sous `essaim_m3/noyau`, bytecode compris
   (`ec76a04f…` avec `__pycache__`, `68494279…` sans) : il ne désigne pas le code ; contourné pour le pilote (nettoyage +
   `PYTHONDONTWRITEBYTECODE=1`), à signaler à session-depot.
+
+## 00:16 — moissonneur : v5 demandée à Gemini ; contre-lecture 3 rendue, v2 du pilote et lanceur v2 ; contre-lecture 4 ciblée
+
+- Lazar (01:40 Paris) : « et le moissonneur de recherche biblio dans l'organisme pilote ? » → vérifié : la v4 n'appelle que
+  `appeler`, `especes`, `budget` ; options (a) pilote tel quel, (b) tel quel + v5 de Gemini avec son propre moissonneur
+  et second pilote, (c) attendre la v5 ; recommandé (b) ; Lazar 01:45 : « (b) … goooo ». Livré :
+  `gemini-organisme-v4-pour-v5-moisson-v1.zip` (`bfa9113f…` : demande sans aucune suggestion de stratégie ni la
+  question du pilote ; contrat au commit `cec6dce` ; `noyau_client.py` ; limites de la moisson lues dans le code ; sa v4
+  telle qu'elle tourne).
+- Contre-lecture 3 (sous-agent neuf, 23:26–23:53 UTC) : « scellable après corrections », 16 constats ; **PG3-01 majeur,
+  réel** : la sortie standard du lanceur (scores `test` et `test_final`) restait hors de l'archive fermée et aurait été
+  poussée en clair — mon erreur de conception du plan § 3 et du lanceur v1. Traité : v2 du préenregistrement
+  (`4b89795c…`, `a32eea7`) et lanceur v2 (`d0293ad4…`) : sortie standard fermée, course + sortie standard + espace des
+  organismes dans `ferme.tar.gz`, copies ouvertes retirées après vérification du nombre d'entrées, sortie d'erreur lisible
+  (aucun `print` de score du noyau sur elle), liste close de ce qui est poussé ; et les 15 autres. Lanceur v2 essayé en
+  simulation : cas sain + 13 artefacts (dont course déjà partie, tentative après refus puis refus d'une troisième).
+- Contre-lecture 4 lancée (sous-agent neuf, ciblée sur le traitement des 16 constats et le lanceur v2).
