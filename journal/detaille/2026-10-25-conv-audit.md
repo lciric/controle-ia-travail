@@ -148,3 +148,38 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   (décision séquentielle, biais de sélection, découpage du budget, généralisation à des familles nouvelles, références) ;
   une autre question, pas une reformulation ; un tour, trois cellules, une tentative par cellule, refus = fin.
 - session-depot (n° 32) : étape 1 « scellable » (contre-lecture n° 7), le scellement n'attend plus que le vivier.
+
+## 08:00 — v5 de Gemini reçue, bloquante, C-12 adoptée ; Avalon, étapes 1 et 2 ; apprendre de génération en génération
+
+- Lazar (08:20 Paris) : « v5 : », une seule pièce (message de Gemini et script PowerShell, `2955b127…`). Reconstituée
+  sans exécuter le script (même outil que la v4) ; branche `outils/gemini-organisme-v5` (`def0d00`, puis `9b13418`),
+  arbre `28b9d4c3…` ; contre la v4 : 11 fichiers inchangés, 2 réécrits identiques, 3 modifiés (manifeste, `CONCEPTION.md`,
+  `principal.py`), 1 nouveau (6 essais). `canal/gemini-organisme-v4`, poussée par Lazar : `096cde3` = notre v4 à l'octet ;
+  `a8cfd48` et `3cc5c57` = essais intermédiaires de Gemini.
+- **Bloquante** : `_consigner_erreur` appelé en tenant `_VERROU` (non réentrant) dans `_enregistrer_recherche` et
+  `_enregistrer_telechargement` → gel au premier statut de moisson non « OK ». Preuves : 17e essai de Gemini sans fin
+  (arrêté par son PID après 172 s ; 25 autres passés), pile arrêtée l. 73, recherche statique (0 appel imbriqué dans la
+  v4, 2 dans la v5), simulation sous `cec6dce` `--octets-max 100` : deux `DELAI_DEPASSE`, aucun successeur. Sans moisson :
+  appels identiques à la v4 (graine de hachage fixée). Non-reproductibilité héritée de la v3 : `set` parcouru dans
+  `mitose_spectrale.py` l. 14.
+- **C-12** (deux appels sortis du bloc verrouillé ; `organisme-gemini-m3-v5-c12` 5.0.1, arbre `911f791f…`) : 27 essais,
+  artefact (l'essai échoue en 5 s sur la v5 non corrigée), simulation saine et artefact OK. Lazar, 08:55 : « go » →
+  adoptée (`DECISION-C12-v1.md`) ; objet du second pilote ; préenregistrement à écrire.
+- Questions de Lazar (08:40–08:45 Paris), réponses sourcées : Avalon-M1 (rapport `6429a78f…`, p. 1, 7, 8, 9, 10, 15, 35,
+  38, 40 : récompense collective, Avalon-M1-Mini 120 milliards dont 12 actifs, depuis Nemotron-3-Super-120B-A12B-Base,
+  agents = copies de la même politique, insularité) ; objectifs des étapes 1 (préenregistrement v4 sur `main`, H-G1
+  Δ ≥ +0,10) et 2 (note de programme v1) ; un modèle ouvert entraîné à concevoir l'organisme : faisable, zone en partie
+  occupée (R8) — Weak-for-Strong (arXiv 2504.04785), FlowReasoner (2504.15257), MAS-GPT (2503.03686), titres et résumés
+  vérifiés par recherche.
+- Lazar, 08:47 et 08:55 : poser la question de l'entraînement de la structure et de la composition, et de
+  l'apprentissage de génération en génération (« capitale »), au collisionneur et aux organismes — dont l'étape 1 en
+  phase de conception, avant ses générations notées ; voies moins chères (« il y en a d'autres ») ; coût de la voie
+  chère ; bourse ; « optimiser les couts en faisant travailler notre organisme ». Pièces : collisionneur v2
+  (`6906a1d1…`), organismes v2 (`a54da93e…`, sans nos pistes) ; v1 remplacées, jamais posées. Canal n° 33 (`4772b52`).
+  « go » de Lazar pour la ronde des organismes figés (son mot reste à donner dans la session de session-depot au
+  lancement). Ordres de grandeur donnés à Lazar (hypothèses de devis, non opposables) : voie chère 10 000 à 40 000 USD
+  pour environ 2 000 épisodes ; tout ouvert : quelques centaines à 1 000 USD de carte ; candidature EA Funds existante
+  (canal « copilote grant »).
+- session-depot, n° 33 à 35 : R-389 (« go pilote et go collisionneur », ligne d'extension au même identifiant) ; tour
+  « allocation » : trois cellules OK, Opus sans refus, 2,07 USD (`donnees/collisionneur-allocation-v1`, `f488751`) ;
+  **pilote parti à 07:49:07 UTC** (PID 5122) ; la garde de calcul refuse le doublon, correctif à appliquer par Lazar.
