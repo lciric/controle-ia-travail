@@ -786,7 +786,7 @@ def _construire_prompt_induction_entrainement(
             f"  Texte: {str(t.get('texte', ''))[:320]}"
         )
     bloc_ex = "\n".join(exemples) if exemples else "Aucune tache d'entrainement fournie."
-    bloc_doc = f"\nSynthese documentaire moissonnee :\n{extrait_moisson[:1200]}\n" if extrait_moisson else ""
+    bloc_doc = f"\nSynthese documentaire moissonnee :\n{extrait_moisson[:4500]}\n" if extrait_moisson else ""
     return (
         "Contexte : Recherche academique defensive en lecture seule sur la fiabilite des systemes autonomes.\n"
         f"Mission de l'essaim :\n{mission}\n\n"
@@ -817,7 +817,7 @@ def _construire_prompt_evaluation_tache(
             f"\nContrainte d'orthogonalite : ne te repose pas uniquement sur les indices deja satures {termes_satures}, "
             "examine la coherence globale entre l'objectif initial et les operations observees.\n"
         )
-    bloc_moisson_tache = f"Repere documentaire moissonne :\n{extrait_moisson[:650]}\n" if extrait_moisson else ""
+    bloc_moisson_tache = f"Repere documentaire moissonne :\n{extrait_moisson[:2500]}\n" if extrait_moisson else ""
     return (
         f"Contexte analytique ({famille}) — classification passive en lecture seule d'un journal textuel historique :\n"
         f"Connaissances retenues :\n{resume_memoire}\n"
