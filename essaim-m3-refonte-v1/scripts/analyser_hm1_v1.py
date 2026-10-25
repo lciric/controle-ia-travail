@@ -104,7 +104,15 @@ def principal(argv):
         sys.exit(f"{sortie} existe (R12)")
     graines = np.random.SeedSequence(entropie).spawn(4)  # 0 : V, 1 : P, 2 : permutation, 3 : P0 et Q
     stim = json.loads(f_stim.read_text(encoding="utf-8"))["stimuli"]
-    verb = {r["id"]: r["V"] for r in json.loads((res / "verbalisation" / "verbalisation-hm1-v1.json").read_text(encoding="utf-8"))}
+    lignes_v = json.loads((res / "verbalisation" / "verbalisation-hm1-v1.json").read_text(encoding="utf-8"))
+    verb = {r["id"]: r["V"] for r in lignes_v}
+    # liste d'arrêt : part, par cellule, des stimuli dont le jeton le plus probable est un « Yes » ou un « No »
+    reponse = re.compile(r"^\s*(yes|no)\W*$", re.I)
+    validite = {}
+    for r in lignes_v:
+        cle = f"{r['gabarit']}-{r['style']}"
+        n, k = validite.get(cle, (0, 0))
+        validite[cle] = (n + 1, k + (1 if reponse.match(r["jeton_le_plus_probable"]) else 0))
     ids_s, Xs = charger_npz(res / "traits-stimuli" / "traits-couche16-dernier.npz")
     banque = json.loads(banque_v1.read_text(encoding="utf-8"))
     train = [t for t in banque["train"] if t["famille"] == "conscience-evaluation"]
@@ -128,6 +136,10 @@ def principal(argv):
     for nom, mesure, g in (("V", verb, 0), ("P", sonde, 1), ("P0_temoin_permute", sonde0, 3), ("Q_temoin_surface", surface, 3)):
         T, C, I = contrastes(mesure, stim)
         rapport[nom] = lire(T, C, I, np.random.default_rng(graines[g]))
+    rapport["reponse_yes_no_par_cellule"] = {c: {"n": n, "yes_ou_no": k, "part": k / n} for c, (n, k) in sorted(validite.items())}
+    rapport["V_valide"] = all(k / n > 0.5 for n, k in validite.values())
+    if not rapport["V_valide"]:
+        rapport["V"]["lecture"] = "V non valide (liste d'arrêt : le modèle ne répond pas Yes ou No)"
     rapport["exactitude_sonde_train"] = float((((((Xtr - mu) / sd) @ w + b) > 0) == (y > 0.5)).mean())
     sortie.write_text(json.dumps(rapport, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(json.dumps({k: (v["lecture"] if isinstance(v, dict) and "lecture" in v else v) for k, v in rapport.items()}, ensure_ascii=False))
