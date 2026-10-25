@@ -1,0 +1,26 @@
+# Lancement du pilote pilote2-gemini-v5-1-structure-v1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-25T09:48:06Z ; hôte : vm ; utilisateur : 0
+- course : structure ; dossier du pilote : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/v2/pilotes/pilote2-gemini-v5-1-structure-v1 (0700, à root)
+- dépôt : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/depot ; HEAD : 5d1d4fdb0dbd9e4d481ec3f4270555f4006df749 (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote2_gemini_v5_1_v2.sh, sha256 6ba529c3c337e6900657d965723c624c55db9b749c9e1fdc56f2eb0e24412f6c
+- source des registres : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/entrees/registre-go-sim-v2.md ; dépenses : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/entrees/depenses-sim-v2.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- code : identique à 5d1d4fd (commit et arbre de travail : essaim_m3, tests, collisionneur) ; 4967734 et 90595ffb ancêtres ; banque f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- isolation : dossier du pilote 0700 à root ; ESSAIM_M3_CACHER = /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/depot (dépôt caché aux organismes) ; ESSAIM_M3_ESPACE non définie (espace sous /var/lib/essaim-m3)
+- organisme : 19 fichiers, empreinte d'arbre 50ffcd7d8cd3af059f2b881f3e565a8ad5829d8d325c39b9535bed6e01a8e12c ; question (structure) : sha256 a54da93ee892d920c31ba47327c2400e25ccf42ff06faa46d94bfc471a5a6289
+- registre : une ligne GO-2026-10-25-01 de type calcul portant l'empreinte de la question (structure) ; dépense consignée avant ; reste déclaré 120 USD ≥ 60 (vérification du lanceur)
+- test de dépense : test-depense-sim-v2.json, sha256 a8d87c48574f6712cdcb3d8d2a7828e1c37725d844e943b4f8f4a0c058735080 — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 0 s
+- recharge automatique attestée : « simulation : R-404 non reproduite »
+- essais : 140 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 27 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte d5d0efcc4677dd9957db3f324101b58e9475642e8e05926407579f056f653836
+- départ de la simulation (UTC) : 2026-10-25T09:50:57Z
+- PID de la course : 17579 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T09:51:01Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 cf214af35f1d6e2047cd6f6a896212f7dafa067b40686c45d31ee798b53fb3c9
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit 5d1d4fdb0dbd9e4d481ec3f4270555f4006df749 ; sha256_code_noyau d5d0efcc4677dd9957db3f324101b58e9475642e8e05926407579f056f653836 ; espace /var/lib/essaim-m3/4575008a3464ecbc ; sources de moisson ["simulation"] ; clé web présente : False
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 790ab889ab3df9519d91bf63256f25d5fc0a27f5f5e11550f3fde0b25cf68709
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 800e1def0d5115a43ac6c7ae33ea51e83d2e4386c0290c15307e440e7828d906
+- réponse à la question : reponse-question-g001.md, sha256 f84a1e721942b27ddcc2deede41deb4e59db0e38d02bae10c661687ea26810ba
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 27ec0ef7498f278e8af703adbc63a795898d702a932a344e17f7f6e8610b7524, 1557 entrées = 1557 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T09:51:01Z

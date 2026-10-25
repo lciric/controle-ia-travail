@@ -1,0 +1,28 @@
+# Lancement du pilote pilote2-gemini-v5-1-maieutique-v1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-25T09:51:02Z ; hôte : vm ; utilisateur : 0
+- course : maieutique ; dossier du pilote : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/v2/essais/cas-sain-M/pilote2-gemini-v5-1-maieutique-v1 (0700, à root)
+- dépôt : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/depot ; HEAD : 5d1d4fdb0dbd9e4d481ec3f4270555f4006df749 (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote2_gemini_v5_1_v2.sh, sha256 6ba529c3c337e6900657d965723c624c55db9b749c9e1fdc56f2eb0e24412f6c
+- source des registres : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/v2/essais/entrees/go-sain.md ; dépenses : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/v2/essais/entrees/dep-sain.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- code : identique à 5d1d4fd (commit et arbre de travail : essaim_m3, tests, collisionneur) ; 4967734 et 90595ffb ancêtres ; banque f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- isolation : dossier du pilote 0700 à root ; ESSAIM_M3_CACHER = /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/depot (dépôt caché aux organismes) ; ESSAIM_M3_ESPACE non définie (espace sous /var/lib/essaim-m3)
+- préenregistrement : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/v2/essais/entrees/prereg-sain.md, sha256 5d00739f2a37ba10ea589b3a0ff0d74fc14653c78479d2fce158647db1f180d3 (compagnon conforme), graine 17 de la course maieutique écrite, empreinte du lanceur citée
+- organisme : 19 fichiers, empreinte d'arbre 50ffcd7d8cd3af059f2b881f3e565a8ad5829d8d325c39b9535bed6e01a8e12c ; question (maieutique) : sha256 9e1da26de7c7951e0c9a319b12b99faaad7252f86dc14b0d85479696b4cc6595
+- registre : une ligne GO-2026-10-25-01 de type calcul portant l'empreinte de la question (maieutique) ; dépense consignée avant ; reste déclaré 150 USD ≥ 60 (vérification du lanceur)
+- test de dépense : td-sain.json, sha256 116bc32851a20517a42f747ae7f73311db0860060f9f5ffbb183fa5f77051b47 — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 0 s
+- recharge automatique attestée : « essai »
+- ESSAI : rapport JUnit repris de /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/sim-pilote2/v2/junit-sain-v2.xml (simulation)
+- essais : 140 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 27 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte d5d0efcc4677dd9957db3f324101b58e9475642e8e05926407579f056f653836
+- départ de la simulation (UTC) : 2026-10-25T09:51:02Z
+- PID de la course : 18575 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T09:51:06Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 504632f765264e2c1bee08ce170364aedc169ab04a44e77fbdada4c752e84edf
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit 5d1d4fdb0dbd9e4d481ec3f4270555f4006df749 ; sha256_code_noyau d5d0efcc4677dd9957db3f324101b58e9475642e8e05926407579f056f653836 ; espace /var/lib/essaim-m3/2df2ed7f7b52b9bc ; sources de moisson ["simulation"] ; clé web présente : False
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 b312c00101faabae3a07a4f9c5ceaa4dd90556193dcdd0fdf87da0067a3dedb3
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 8dc93374ec4ef8d5a6927e382c3ec72aa8bbdbd4a691e9f0a44ad87b38e038e4
+- réponse à la question : reponse-question-g001.md, sha256 c66eb6e0ce79ac8532a8608ed87b496dc578a847837796b5c8e039974e5e7333
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 2d366f9d0fb7ff4ca6686a8ea3a0fd63a466cbe29c73017bac648af4b1400675, 1557 entrées = 1557 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T09:51:07Z
