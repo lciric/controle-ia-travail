@@ -64,7 +64,8 @@ if [ "$MODE" = reel ]; then
 fi
 DECALAGE_UID=900
 GO_ID=GO-2026-10-25-01
-__PLAFONDS__
+USD_GEN=30      # par génération (décision (b) de Lazar, 25 octobre 10:17 Paris)
+USD_COURSE=60   # par course ; deux courses : 120 USD au plus (GO-2026-10-25-01, R-407 et R-409)
 # Course voisine : permise à un autre décalage d'utilisateurs (détection seulement, aucun arrêt) ; même décalage : refus
 voisines=""
 for pid in $(pgrep -f 'essaim_m3 (lancer|simuler)' || true); do
