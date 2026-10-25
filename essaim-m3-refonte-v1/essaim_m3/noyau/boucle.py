@@ -282,6 +282,7 @@ class Noyau:
             "vivier": ((vivier or {}).get("manifeste") if vivier is not None else None),
             "coeurs": os.cpu_count(),  # RV-15, CE3-11 : contention du processeur rapportée
             "sources_moisson": self._sources_moisson(), "cle_brave_presente": bool(os.environ.get("BRAVE_API_KEY")),
+            "cle_openalex_presente": bool(os.environ.get("OPENALEX_API_KEY")),  # R-415 : présence seule, jamais la valeur
             "entrainements_max": int(self.budget["entrainements_max"]), "pas_max": int(self.budget["pas_max"]),
             "traits": ({"description": self.description_traits, "n": len(next(iter(self.vues.values()))),
                         "vues": _entrainement.dimensions_vues(self.vues)} if self.vues else None),

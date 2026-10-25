@@ -2,7 +2,8 @@
 Paris : « l'organisme doit lui-même concevoir le moissonneur » ; le noyau ne fournit que des tuyaux à portes).
 
 - `SOURCES` : moteurs de recherche interrogeables par `rechercher(requete, n, source)` — `arxiv` (Atom, dans
-  `recherche.py`), `openalex`, `semanticscholar` (interfaces ouvertes, sans clé), `web` (Brave Search, clé
+  `recherche.py`), `openalex` (clé `OPENALEX_API_KEY` facultative, lue par le noyau seul, R-415), `semanticscholar`
+  (interface ouverte, sans clé), `web` (Brave Search, clé
   `BRAVE_API_KEY` lue par le noyau seul, jamais donnée à l'organisme). Chaque source rend des notices de même forme :
   {"source", "id", "titre", "auteurs", "date", "resume", "lien"} ; le noyau ne les interprète pas.
 - `Telechargeur` : `telecharger(reference)` rapporte un document — une adresse https vue dans un résultat de recherche
@@ -85,7 +86,11 @@ def _abstract_openalex(inv: dict | None) -> str:
 
 
 def openalex_rechercher(requete: str, n: int) -> tuple[list[dict], bytes]:
-    url = "https://api.openalex.org/works?" + urllib.parse.urlencode({"search": requete, "per-page": int(n)})
+    params = {"search": requete, "per-page": int(n)}
+    cle = os.environ.get("OPENALEX_API_KEY")
+    if cle:  # R-415 : clé lue par le noyau seul (paramètre de la requête), jamais donnée à l'organisme ni écrite
+        params["api_key"] = cle
+    url = "https://api.openalex.org/works?" + urllib.parse.urlencode(params)
     brut, _, _ = _lire_https(url, REPONSE_MAX_OCTETS, hotes_permis={"api.openalex.org"})
     d = json.loads(brut.decode("utf-8"))
     notices = []

@@ -3457,3 +3457,44 @@ def test_r402_types_de_blocs_au_journal_et_reflexion_comptee_a_l_extrait(tmp_pat
     e = em.resume_appels(lignes)["par_espece"]["CLAUDE_FABLE_5_1"]
     assert e["par_statut"] == {"TRONQUE": 1, "OK": 2} and e["reflexion_par_statut"] == {"TRONQUE": 1}
     assert "reflexion_par_statut" not in em.resume_appels(lignes[1:])["par_espece"]["CLAUDE_FABLE_5_1"]
+
+
+def test_r415_cle_openalex_lue_par_le_noyau_masquee_et_appariee(tmp_path, monkeypatch):
+    """R-415 : la clé OpenAlex, si elle est dans l'environnement du noyau, part en paramètre de la requête OpenAlex (sain) ;
+    sans elle, aucune (artefact) ; sa valeur est masquée dans tout message d'échec rendu et journalisé (artefact : un
+    échec qui la recopie) ; sa présence est au manifeste et un bras apparié à la présence différente est refusé."""
+    from essaim_m3.noyau import moisson, recherche as _rech, cli
+    vues = []
+
+    def lire(url, octets_max, **k):
+        vues.append(url)
+        return json.dumps({"results": []}).encode(), "application/json", url
+
+    monkeypatch.setattr(moisson, "_lire_https", lire)
+    factice = "cle-openalex-factice-0123456789"
+    monkeypatch.setenv("OPENALEX_API_KEY", factice)
+    moisson.openalex_rechercher("sondes lineaires", 3)
+    monkeypatch.delenv("OPENALEX_API_KEY")
+    moisson.openalex_rechercher("sondes lineaires", 3)
+    assert f"api_key={factice}" in vues[0] and "api_key" not in vues[1]
+
+    monkeypatch.setenv("OPENALEX_API_KEY", factice)
+    def panne(requete, n):
+        raise RuntimeError(f"échec sur https://api.openalex.org/works?search=x&api_key={factice}")
+    r = _rech.Rechercheur(tmp_path / "rech", 3, backend=panne, source="openalex")
+    sortie = r.rechercher("sondes lineaires", 3)
+    assert sortie["statut"] == "ECHEC_RECHERCHE" and factice not in sortie["echec"] and "<clé masquée>" in sortie["echec"]
+    assert factice not in (tmp_path / "rech" / "journal-recherches.jsonl").read_text(encoding="utf-8")
+
+    n = boucle.Noyau(tmp_path / "r", "m", taches.banque_simulation(np.random.default_rng(4), 4, 4, 2),
+                     {"appels_max": 5, "usd_max": 1.0, "temps_max_s": 60, "recherches_max": 3}, 2.0, 1,
+                     appelants={}, especes_amorcage=[], recherche=_rech.recherche_simulee)
+    assert n.manifeste["cle_openalex_presente"] is True
+    assert factice not in (tmp_path / "r" / "manifeste-run.json").read_text(encoding="utf-8") if (tmp_path / "r" / "manifeste-run.json").exists() else True
+    origine = tmp_path / "origine"
+    origine.mkdir()
+    (origine / "manifeste-run.json").write_text(json.dumps({"cle_brave_presente": bool(os.environ.get("BRAVE_API_KEY")),
+                                                            "cle_openalex_presente": True}), encoding="utf-8")
+    assert cli.conditions_moisson_differentes(origine, 0) is None
+    monkeypatch.delenv("OPENALEX_API_KEY")
+    assert "clé OpenAlex" in cli.conditions_moisson_differentes(origine, 0)

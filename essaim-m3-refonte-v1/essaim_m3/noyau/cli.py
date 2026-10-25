@@ -221,12 +221,15 @@ def charger_traits(chemin, chemin_banque, banque: dict, vues_servies: list[str] 
 
 
 def conditions_moisson_differentes(course_origine: pathlib.Path, recherches_max: int) -> str | None:
-    """CE3-05 : le bras apparié doit avoir les mêmes sources de moisson et la même présence de la clé Brave que sa course
-    d'origine (consignées au manifeste) ; rend la différence, ou None."""
+    """CE3-05 : le bras apparié doit avoir les mêmes sources de moisson et la même présence des clés Brave et OpenAlex
+    (R-415) que sa course d'origine (consignées au manifeste) ; rend la différence, ou None."""
     m = json.loads((course_origine / "manifeste-run.json").read_text(encoding="utf-8"))
     brave = bool(os.environ.get("BRAVE_API_KEY"))
     if "cle_brave_presente" in m and bool(m["cle_brave_presente"]) != brave:
         return f"clé Brave {'présente' if brave else 'absente'} ici, {'présente' if m['cle_brave_presente'] else 'absente'} dans la course d'origine"
+    openalex = bool(os.environ.get("OPENALEX_API_KEY"))  # R-415
+    if "cle_openalex_presente" in m and bool(m["cle_openalex_presente"]) != openalex:
+        return f"clé OpenAlex {'présente' if openalex else 'absente'} ici, {'présente' if m['cle_openalex_presente'] else 'absente'} dans la course d'origine"
     if recherches_max > 0 and "sources_moisson" in m:
         from . import moisson as _moisson
         ici = sorted(n for n in _moisson.sources_disponibles() if n != "web" or brave)

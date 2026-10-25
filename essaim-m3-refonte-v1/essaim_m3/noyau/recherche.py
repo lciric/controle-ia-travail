@@ -19,6 +19,7 @@ from __future__ import annotations
 import datetime as _dt
 import hashlib
 import json
+import os
 import pathlib
 import threading
 import urllib.parse
@@ -32,6 +33,19 @@ RESUME_MAX = 1200
 REPONSE_MAX_OCTETS = 2_000_000
 DELAI_S = 25.0
 NS_ATOM = {"a": "http://www.w3.org/2005/Atom"}
+
+
+# R-415 : clés de moisson que le noyau lit lui-même ; leur valeur est masquée dans tout message d'échec (rendu à
+# l'organisme et journalisé), avant toute troncature — une clé passée en paramètre d'adresse pourrait y figurer
+NOMS_CLES_MOISSON = ("OPENALEX_API_KEY", "BRAVE_API_KEY")
+
+
+def masquer_cles(texte: str) -> str:
+    for nom in NOMS_CLES_MOISSON:
+        v = os.environ.get(nom)
+        if v:
+            texte = texte.replace(v, "<clé masquée>")
+    return texte
 
 
 def _heure() -> str:
@@ -181,7 +195,7 @@ class Rechercheur:
             resultats, brut = self._moteur(source)(requete, n)
             statut, echec = "OK", None
         except Exception as e:  # réseau, analyse, hôte : jamais un texte d'erreur en guise de résultat
-            resultats, brut, statut, echec = [], b"", "ECHEC_RECHERCHE", f"{type(e).__name__}: {str(e)[:200]}"
+            resultats, brut, statut, echec = [], b"", "ECHEC_RECHERCHE", masquer_cles(f"{type(e).__name__}: {e}")[:200]
         fin = _heure()
         from .garde_fuite import compte_recoupements
         retires = []  # RV-07 (i) : notices qui recoupent une tâche de test, retirées avant d'être rendues
