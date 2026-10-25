@@ -183,3 +183,36 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
 - session-depot, n° 33 à 35 : R-389 (« go pilote et go collisionneur », ligne d'extension au même identifiant) ; tour
   « allocation » : trois cellules OK, Opus sans refus, 2,07 USD (`donnees/collisionneur-allocation-v1`, `f488751`) ;
   **pilote parti à 07:49:07 UTC** (PID 5122) ; la garde de calcul refuse le doublon, correctif à appliquer par Lazar.
+
+## 08:50 — pilote v4 raté (crédit et plafonds) ; questions v3 ; vivier à session-depot ; bourse ; tour « structure » lu
+
+- session-depot n° 36 et 37 : **pilote v4 parti à 07:49:07 UTC, fini 07:55:48, mécaniquement raté** — crédit Anthropic
+  (`RR_*`) épuisé tôt dans g000 (HTTP 400 « credit balance is too low » ; le noyau `cec6dce` ne s'y arrête pas, CL5-07) ;
+  2,05 USD. Ma lecture des pièces lisibles (`84b880a` : extrait, journaux d'appels, réponse ; aucun score) : les 27
+  troncatures sont **au `max_tokens` de l'organisme** (640 par tâche, 512, 1 024 ; 1 200 pour la question à g001), pas à
+  4 096 (lecture de session-depot corrigée) ; sur 39 appels servis par Fable : 27 `TRONQUE`, 5 `VIDE`, 7 `REFUS`
+  (catégories `reasoning_extraction` 4, `cyber` 3), **0 `OK`** ; cause probable : réflexion adaptative à `effort = "high"`
+  de `appeler_anthropic`, qui compte dans le plafon ; `n_reponses_test` = 0 ; réponse = texte d'abstention (5 676 octets).
+  Proposé à Lazar : abandon du pilote v4 (défaut (b)) ; arrêt du noyau sur le 400 ; contrat qui dit le plafond
+  « réflexion comprise » (Lazar : (a), go, 09:26) ; Gemini v5.1 sur faits mécaniques (Lazar : (a), go, 09:26) — livrable
+  `gemini-organisme-v5-pour-v5-1-v1.zip` (`833332ba…`) envoyé à Lazar pour relais. Canal n° 34 (`7927188`).
+- Collisionneur : tour « structure » v2 parti à 08:04 UTC (avant la demande d'ajout de Lazar, 09:07 Paris) ; pièce v3
+  « comparaison » (`3f150ea8…`) écrite pour un tour distinct, sur le mot de Lazar dans la session de session-depot.
+- Vivier : Lazar (09:19 Paris) : « demande à claude depot de le lancer » → script v5 (`689cf292…`) et consigne joints au
+  canal (n° 34 § 2) ; marche à suivre dans son conteneur ; `HF_TOKEN` si le dépôt l'exige, jamais collé.
+- Lazar, 09:05–09:07 : adaptateur (rôle dans l'organisme), vivier (explication), bourse (« go » : brouillon v1
+  `DEMANDE-calcul-et-bourse-concepteur-entraine-v1.md`, `3ff6dcb8…`, programmes lus le 25 octobre : Coefficient Giving,
+  Anthropic AI for Science, GENCI accès dynamique, OpenAI, TPU Research Cloud, AISI fermé ; rien d'envoyé), question du
+  second pilote : (b) go (question v2 à g1) ; « le concepteur utiliserait-il toujours les cerveaux de frontière ? » →
+  réponse par voie ; Lazar « oui !!! » (09:29) au principe « la composition, modèle par rôle compris, est apprise ; le coût
+  entre dans le signal ; la nécessité de la frontière est une sortie » — note de programme à proposer (changement
+  d'hypothèse : coût dans le score rendu).
+- Tour « structure » (`donnees/collisionneur-structure-v1`, `6f485f3` ; A `3fb45fc1…`, B `2725ffc5…`, C `821745fb…`) lu
+  pour notre dessin seulement : convergences — plancher de bruit test–retest ; témoin « un modèle, vote à k, coût
+  apparié » ; contrôles « meilleur de N » et « score permuté » ; conflit d'intérêts récompense/juge, corrélation
+  récompense–vérité comme détecteur de Goodhart, témoins SFT par rejet et récompense aléatoire ; sondes : tâches de
+  contrôle, poids réinitialisés, témoins de sortie ; canaris « à signaler » et « à ne pas signaler » ; holdout
+  réutilisable. Voie chère : 0,5–5 M$ (B), 1–10 M$ nue puis 10⁴–10⁵ réduite (A), ≈ 290 k$ puis < 50 k$ (C) ; poste
+  dominant = évaluation par la frontière. Propositions à formuler (nœuds) : témoin vote à k ; bras score permuté (v8) ;
+  plancher de bruit dans les lectures ; témoins de sortie (étape 1) ; canaris « ne pas signaler » (banque v2). Synthèse
+  envoyée à Lazar ; références (≈ 40, « à vérifier ») pour la veille.
