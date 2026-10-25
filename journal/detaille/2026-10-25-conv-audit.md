@@ -88,3 +88,22 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   (aucun `print` de score du noyau sur elle), liste close de ce qui est poussé ; et les 15 autres. Lanceur v2 essayé en
   simulation : cas sain + 13 artefacts (dont course déjà partie, tentative après refus puis refus d'une troisième).
 - Contre-lecture 4 lancée (sous-agent neuf, ciblée sur le traitement des 16 constats et le lanceur v2).
+
+## 00:45 — pilote Gemini v4 + question : préenregistrement scellé ; ordre de lancement à session-depot
+
+- Contre-lecture 4 (sous-agent neuf, 00:10–00:29 UTC, ciblée) : « scellable après corrections » ; PG3-01 (majeur) traité ;
+  15 sur 16 traités, PG3-07 en partie ; 8 constats nouveaux (4 mineurs, 4 de forme) — dont PG4-01 : un refus du noyau au
+  code 7 aurait fermé une archive et bloqué la tentative suivante (mon lanceur v2) ; PG4-02 : variables d'essai actives
+  en mode réel (contournement de R3 possible) ; PG4-03 : canal latéral par la taille de `contexte.json`.
+- Traité : lanceur v3 (`322275c0…`), essayé en simulation — cas sain avec désélection de l'essai réseau, 34 artefacts ;
+  deux défauts trouvés par ces essais et corrigés avant le scellement (programme d'essai mal écrit ; dans le lanceur, un
+  comptage qui aurait arrêté le script après la course quand l'espace n'est pas sous `/var/tmp`) ; v3 du texte (8
+  constats, canal latéral déclaré). **Scellé** : `prereg/pilote-gemini-organisme-v4-question-v3.md`, `1c5b6f7d…`, commit
+  `2d01805`, graine 10826196869519811464 (entropie au texte). Signalé (R2) : les corrections de la v3 n'ont pas été
+  relues par un cinquième sous-agent ; elles sont essayées.
+- Erreur : une commande enchaînée sans arrêt sur échec — la correction de forme du paragraphe « Simulation avec la
+  question réelle » a échoué (texte non trouvé) et le scellement est parti quand même ; le texte scellé garde « le script
+  de lancement » pour la simulation du lanceur v2 (imprécision de forme, vraie sur le fond, pièces exactes) ; non réécrit
+  (R12), dit au canal. Règle pour moi : `set -e` dans toute chaîne qui scelle.
+- Canal n° 30 (`f667c7f`) : ordre de lancement (copie au commit scellé, pas la tête de session-depot ; deux écritures de
+  registre et une vérification ; une commande ; ce qui se pousse). Lancement par session-depot (les clés sont chez lui).
