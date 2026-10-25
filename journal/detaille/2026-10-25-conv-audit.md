@@ -462,3 +462,33 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
   neuf) et batterie d'essais en cours. Première batterie invalide (interpréteur sous `/home`, caché aux organismes ; dépôt
   sous `/root` sans dépôt distant joignable sous `env -i`) : refaite avec l'interpréteur de simulation `/opt/…` et un
   dépôt distant local.
+
+## 15:03 — M et S finies ; pilote 3 : contre-lecture 1, lanceur v2, essais 122 sur 122, contre-lecture 2 en cours
+
+- **M** finie à 14:18:24 UTC (code 0, archive fermée, 14,92 USD ; g000 {OK 111, REFUS 12}, g001 {OK 126, REFUS 3}) ;
+  **S** finie à 14:49:09 UTC (code 0, archive fermée, 15,30 USD ; g000 {OK 114, REFUS 9}, g001 {OK 125, REFUS 4}) ;
+  second pilote terminé, ≈ 30,22 USD sur 120 (session-depot). Lu dans les extraits (mécanique, sans score) : générations
+  `OK` ; moisson réelle de bout en bout, à chaque génération 6 recherches `OK` (arXiv 2, OpenAlex 2, Semantic Scholar 1,
+  web 1) et 3 téléchargements `OK` ; réponses aux questions à g1 (M 52 122 octets, S 54 625). Aucun déclencheur
+  mécanique de l'audit de symétrie dans les champs lisibles ; les déclencheurs sur les scores attendent le moment de
+  lecture.
+- Session-depot a engagé à 14:50 UTC la **répétition de l'étape 1** et une épreuve de durée (GO-2026-10-24-05) ; mon
+  n° 53 lui demande le pilote 3 juste après, avant A1/A2 (R-440 : « elles passent après S »).
+- Lazar, 15:34 Paris : « alors les résultats de M ? » → faits mécaniques donnés, réponse à la question M envoyée telle
+  quelle ; scores fermés jusqu'au moment de lecture. 15:48 : « si ça peut nous aider à améliorer v6.1 … le but est de
+  converger vers le meilleur organisme possible à moindre frais » → après le moment de lecture : faits mécaniques,
+  scores `test` et réponses à Argon, **jamais les scores `test_final`** (jeu tenu à l'écart) ; v6.1 déclarée « informée
+  par les résultats du pilote (`test` seulement) » ; recommandation, confiance haute, sauf mot contraire.
+- **Pilote 3** : contre-lecture 1 (sous-agent neuf, 14:18–14:40 UTC, `25c996ef…`) : « scellable après corrections »,
+  13 constats dont 2 majeurs (porte entre v5.3 et v6 non mécanique ; ligne du GO mal décrite). Traités : **lanceur v2**
+  (`add695a9…`, étape (0 bis) « v5.3 précédente », même liste close ; graine de M entière et égale), texte v2 (R-439 et
+  R-440 cités, lignes exactes, règle « un seul lanceur à la fois », moment de lecture du pilote 3 dans une version ≥ 8
+  écrite après sa dernière course, canaux, passages de T2 propres à la v5.2.1), scellement v2 (numpy ≥ 1.25). Essais v2 :
+  121 sur 122 (une attente d'essai fausse après le déplacement de l'étape (0 bis)) ; **essais v3 : 122 sur 122**.
+  Contre-lecture 2 (sous-agent neuf) en cours.
+- **Étude de la reprise par génération** écrite (canal, `notes/reprise-par-generation-etude-v1.md`, `b3de28f0…`) : faisable
+  avec trois changements (garder le successeur de la dernière génération ; commande `reprendre` sur `Noyau.recharger`
+  avec manifeste de segment ; fermeture après le dernier segment) ; critère d'acceptation : 2 + 2 générations en
+  segments = 4 en un appel, en simulation.
+- Corrections d'heure : l'entrée « 14:22 » a été écrite à 14:21 UTC ; le n° 53 porte « 14:54 (lue 14:53) », l'heure lue
+  était 14:52.
