@@ -367,3 +367,26 @@ Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de 
 - **Corrections d'heures** (entrées jamais réécrites) : l'entrée « 13:20 » a été écrite à 13:16 UTC ; l'en-tête du canal
   n° 46 dit 13:17 UTC pour une écriture vers 13:14 ; celui du n° 48 dit 13:38 pour une écriture vers 13:35. Règle reprise :
   lire `date -u` avant d'écrire un en-tête.
+
+## 13:40 — durée des courses : 2 h pour le pilote ; reprise par génération d'abord pour les courses longues (décision de Lazar)
+
+- Lazar, 14:37 Paris : « la course ne peut pas durer plus longtemps ? ». Fait : une course tourne dans une seule commande
+  de fond de la session qui lance ; l'outil l'arrête au plus tard après 7 200 s, sans réglage ; un processus détaché est
+  arrêté peu après le tour. Options vues : (1) garder 2 h pour le pilote (2 400 s par génération suffisent sans doute :
+  123 à 129 appels, parallèle jusqu'à 8 ; risque de question coupée lu dans le journal de M avant S) ; (2) pour les
+  courses longues, une commande par génération avec reprise de la course depuis son archive (à étudier dans le noyau ;
+  clés gardées dans le nuage) ; (3) une machine louée sans cette borne (GO de dépense, clés sur une machine louée,
+  `unshare` à vérifier). Lazar, 14:39 : **« ok inscris-le dans journal et programme »** sur « garder 2 h pour ce pilote ;
+  pour les courses longues, étudier d'abord la reprise par génération, et Vast seulement si elle n'est pas faisable ».
+  Pièce `envois/decision-courses-longues-reprise-par-generation-v1.md` (`c1f1d687…`), canal n° 49 : inscription au
+  programme demandée à session-depot (`registres/decisions.md`, `docs/decisions/`). Étude de la reprise : à la charge de
+  conv-audit, sur une branche à lui.
+- Lazar, 14:38 : l'organisme peut-il faire appel à des agents qui lancent des tests sur processeur graphique ou central
+  pour tester les hypothèses de l'essaim ? Fait (contrat du noyau) : calcul sur processeur dans son bac à sable, oui ;
+  modèles de frontière sans outils ; `entrainer` / `predire` (sondes sur activations de Llama-3.1-8B extraites par le
+  noyau), seulement dans les courses qui servent traits et budget d'entraînement (pas le pilote) ; aucun agent outillé,
+  aucun calcul graphique arbitraire. Options : (a) primitive d'expérience au noyau (étape 2), (b) agents outillés
+  (déconseillé : isolation), (c) humain dans la boucle (hypothèses des réponses préenregistrées et testées par nous).
+  Recommandé (c) maintenant, (a) à l'étape 2 ; défaut sous 48 heures ; pas encore de mot de Lazar.
+- Correction (entrée « 13:37 ») : la v5.3 a été reçue à 14:19 Paris (13:19 UTC) ; l'en-tête « 13:37 » a été écrit à
+  13:36 UTC.
