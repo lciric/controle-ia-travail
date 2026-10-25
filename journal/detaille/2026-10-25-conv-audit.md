@@ -267,3 +267,51 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   (11:02 UTC). Canal n° 38 (`883cc9b`) : marche à suivre pour session-depot, sur le mot de Lazar dans sa session.
 - Lazar, 11:56 Paris : quatre questions de session-depot (CL8-01, 05, 06, 08) ; mon avis donné (répétition seule ;
   clés et compte : fait à lui ; plafond mensuel de recharge conseillé ; lecture de H-G1 inchangée).
+
+## 13:05 — de la v5.1 à la v5.2.1 : clés avant le pilote, v5.2 de Gemini, M puis S, C-13 ; lanceur v4 (défaut d'environnement trouvé et corrigé) ; financement ; v5.3 « assistée » ; v6 reçue
+
+Rattrapage des entrées de 11:06 à 13:05 UTC (heures de Paris pour les mots de Lazar).
+- **Clés avant le pilote** : Lazar, 12:11 Paris, « je maintiens b » (clés OpenAlex et Semantic Scholar intégrées au noyau
+  avant le pilote) ; 12:23–12:26, clé Semantic Scholar versée chez session-depot (`SEMANTIC_SCHOLAR_API_KEY`) ; noyau
+  `b1c7f4b6` (branche `outils/noyau-cles-openalex-s2-v1` = `5d1d4fd` + R-410 : clés en en-tête, jamais dans l'adresse ;
+  141 essais ; arbre du noyau `37acdcaa…`), canal n° 39 et 40. Le texte scellé de la v5.1 (`72f534ae…`) ne part pas.
+- **v5.2** : Lazar, 12:20, « (b) v5.2 d'abord » (plafonds de moisson de l'organisme) ; demande à Gemini = faits, aucune
+  valeur suggérée (zip v1 `5a637018…`, v2 `a0dadd85…`) ; livraison reçue 12:52 (`b06ada66…`), reconstituée sans
+  exécution (`outils/gemini-organisme-v5-2`, `5c25bd19`, arbre `4fcdc7db…`) : 28 essais sur 29, le 29e en défaut d'essai
+  (marqueur de fin de document attendu dans la mémoire, code qui n'y garde que 420 caractères). Puis Gemini pousse
+  lui-même `canal/gemini-organisme-v5-2`, `2d00232` (13:17 Paris, cinq commits ; 29 sur 29 ; arbre `011d62b5…`) ;
+  Lazar, 13:26, « (b) : go » sur cet objet. Session-depot relève RV52-01 (bloc de moisson coupé avant sa fermeture) ;
+  Lazar, chez lui, « corrige tout de suite » : **C-13**, v5.2.1, `ec8e0b6`, arbre `fec005c6…`, 21 fichiers (R-429).
+  Vérifiée ici : 34 essais en isolation, invariance sur trois graines, 0 verrou imbriqué, diffs relus.
+- **Ordre et question M** : Lazar, 12:50, « M puis S : parfait » ; 13:27–13:28, question M **v2 épurée** de Gemini (plus
+  aucun outil mathématique nommé ; règle « ne lui suggère rien ») : `question-gemini-maieutique-vs-coercition-organismes-v2.md`,
+  `a15809b8`, `8b1c7511…` (canal). Options vues pour la forme (quatre points contre deux phrases nues) : quatre points
+  gardés (avis donné, choix de Lazar).
+- **Lanceurs** : v1 (`4fcdc7db`), v2 (`011d62b5`), v3 (question M v2) : 104 cas sur 104 chacun ; **défaut de la v3** trouvé
+  avant scellement : `env -i` nu retire `SSL_CERT_FILE` ; la passerelle de sortie présente ses propres certificats ;
+  observé à 12:54 UTC sans clé : `httpx` (bibliothèque `anthropic`) échoue, `urllib` (Gemini) passe ; sous la liste v4,
+  les deux reçoivent 401. Hypothèse « l'environnement vide coupe Anthropic » : **confirmée par l'essai** ; correction :
+  liste fermée avec variables d'infrastructure ; lanceur **v4** (`fd8ccf58…`), 106 cas sur 106 ; essai de la passerelle
+  demandé à session-depot avant départ. Devis v4 (non opposable) : ≈ 21 / 34 / 46 USD la course ; pire cas inchangé.
+- **Texte** : `pilote2-gemini-organisme-v5-2-v1.md` (brouillon, `c0863993…`), contre-lecture R2 par un sous-agent neuf
+  partie vers 12:57 UTC ; canal n° 45 (`3d95e73`) : ligne de GO à trois empreintes à écrire, noms de courses `-v5-2-1`,
+  copie de lancement, essai de la passerelle.
+- **Vast** (Lazar, 13:38 : pilote 2 en parallèle sur Vast) : options (a) nuage de session-depot, (b) Vast à la place,
+  (c) les deux ; recommandé (a), confiance haute (R3, clés à recharge sur machine louée, `unshare` probablement
+  absent) ; décision de Lazar non écrite ; défaut (a) sous 48 h. Borne de 7 200 s des commandes de fond expliquée.
+- **Vérificateurs en arrière-plan** (idée de Lazar, 13:19) : trois formes vues (noyau relance les essais de l'organisme ;
+  second modèle juge ; reçu automatique des livraisons) ; Lazar, 13:21 : « il faut les trois » ; décision proposée :
+  pilote sans elles, puis les trois — recommandé, défaut sous 48 h.
+- **Financement** (Lazar, 12:59) : sous-agent de recherche (lecture seule) → `notes/financement-bourses-france-v1.md`
+  (`68520431…`, marques vérifié / secondaire / non vérifié) ; question au collisionneur `0cb9e830…` (n° 44), tour fait par
+  session-depot (trois cellules OK).
+- **Emprunts** : tour du collisionneur fait (Fable, Argon ; Opus refus). Lazar, 13:54 : « (a) Gemini écrit une v5.3 à
+  partir des réponses du collisionneur … : go » — options vues : (a) v5.3 depuis les réponses, (b) lignée pure plus
+  lignée assistée en bras de comparaison (recommandée), (c) ne rien servir ; **tranché (a)** ; la lignée v5.3 sera
+  déclarée « conçue avec le brainstorm du collisionneur ». Demande `gemini-organisme-v5-2-1-pour-v5-3-emprunts-v1.zip`
+  (`52dc2d02…`), à envoyer dans une autre conversation de Gemini que la v6.
+- **v6 de Gemini** reçue (13:57, `2416c682…`, script avec chaînes intégrées) : moisson déplafonnée, rondes de conception,
+  récompense et mémoire écrites par l'essaim avec filtre de propreté stricte, greffons chargés par le successeur ; bâtie
+  sur la v5.2 sans C-13 ; à reconstituer après le scellement ; conçue sur les questions de Lazar, avant les emprunts.
+- Ouvert : contre-lecture, scellement, départ de M au réveil de session-depot (13:51 UTC visé) ; synthèse v5 des journaux
+  après le scellement ; fichier détaillé du 25 de session-depot absent (rappelé au n° 45).
