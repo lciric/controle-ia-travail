@@ -216,3 +216,29 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   dominant = évaluation par la frontière. Propositions à formuler (nœuds) : témoin vote à k ; bras score permuté (v8) ;
   plancher de bruit dans les lectures ; témoins de sortie (étape 1) ; canaris « ne pas signaler » (banque v2). Synthèse
   envoyée à Lazar ; références (≈ 40, « à vérifier ») pour la veille.
+
+## 09:46 — v5.1 de Gemini vérifiée ; décisions 09:50–10:17 Paris ; second pilote : brouillon, lanceur, contre-lecture
+
+- **v5.1** reçue à 09:44 Paris, reconstituée sans exécuter le script ; branche `outils/gemini-organisme-v5-1`
+  (`7f9cd2e5…`, arbre `50ffcd7d…`, 19 fichiers) : C-12 reprise, plafonds de sortie de Gemini (16 384 / 24 576 / 8 192)
+  rabattus au `max_tokens_appel` du noyau, consignes « lecture seule », ordre déterministe ; 27 essais passés ; simulée
+  sous `90595ffb` (saine à 4 096 et sans plafond, artefact octets) ; reproductible entre graines de hachage. Canal n° 36
+  (`7d1feec`), avec la question de Gemini figée octet pour octet (`9e1da26d…`, bloc `12a21131…`), la note v2
+  (`47cd5a6b…`), la question v4 du collisionneur « espaces inégaux » (`79a43f64…`), la veille, le rapport mécanique v2 du
+  pilote v4 et l'audit de symétrie.
+- Lazar, 09:50–09:51 : témoin vote à k (a) go ; biblio 2025–2026 go (sous-agent lancé) ; « récompenser ce qu'une
+  génération lègue aux suivantes » ; « poids contre archive » ; espaces inégaux → « demande à Fable et au collisionneur » ;
+  phasage d'Opus accepté ; bras « score permuté » (b) go ; second pilote : « les deux » (deux courses). 09:58 : garde avant
+  départ = **test de dépense**, la recharge automatique étant activée sur tous les modèles API. 10:17 : plafonds (b) go
+  (30 USD par génération, 60 par course, 120 au pire, 8 192 jetons).
+- Session-depot (relayé à 10:22 Paris) : étape 1 — scellement ≈ 1 h 30, essai d'endurance ≈ 2 h 45, bras A jusqu'à
+  10 h 30, bras B jusqu'à 4 h 30 ; second pilote placé dans l'essai d'endurance, hors des bras A ; sa tête `5d1d4fd`
+  (R-402 : types de blocs journalisés, appels qui ont réfléchi comptés).
+- Noyau `c66f529` puis `5d1d4fd` : 139 puis 140 essais passés ici (root). Sonde de moisson, une requête chacune par les
+  fonctions du noyau : arXiv rend des notices ; OpenAlex et Semantic Scholar rendent 429.
+- **Second pilote** : branche `outils/pilote2-gemini-v5-1-travail` (`0901261`) — brouillon v1 du préenregistrement
+  (`51d1b224…`), lanceur v1 (`a26d508f…`, une course par appel, dossier 0700, dépôt caché, décalage 900, test de dépense
+  lu et vérifié, `BRAVE_API_KEY` retirée), essais du lanceur 49 sur 49, devis attendu non opposable (2 195 jetons
+  d'entrée par appel de tâche ; 18 à 44 USD la course selon la sortie ; question de g1 entière jusqu'à ≈ 3 600–4 100
+  jetons par tâche). Contre-lecture R2 lancée à 09:42 UTC. Canal n° 37 (`5548edf`) : demandes gratuites à session-depot
+  (essai arXiv dans son conteneur, décalage 900 libre, format du test de dépense).
