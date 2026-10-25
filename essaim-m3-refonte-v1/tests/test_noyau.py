@@ -3430,3 +3430,30 @@ def test_r398_contrat_dit_la_reflexion_comprise_dans_max_tokens():
     assert "Réflexion comprise" in s3 and "CLAUDE_FABLE_5_1" in s3 and "CLAUDE_OPUS_5_5" in s3
     assert "couvre à la fois cette réflexion et la réponse" in s3 and "est payé" in s3
     assert "Le noyau ne dit pas quel plafond choisir" in s3
+
+
+def test_r402_types_de_blocs_au_journal_et_reflexion_comptee_a_l_extrait(tmp_path):
+    """R-402 (« conv-audit », n° 36 § 4) : le journal des appels garde les types de blocs de chaque réponse (jamais leur
+    contenu), et l'extrait mécanique compte, par espèce et par statut, les appels qui ont réfléchi. Cas sain : une réponse
+    coupée avec un bloc de réflexion est comptée ; artefacts : une réponse sans bloc de réflexion, ou sans types de blocs
+    (appelant d'avant), ne l'est pas."""
+    from essaim_m3.noyau.appels import cv, modele_de
+    from essaim_m3.outils import extrait_mecanique as em
+    ident = modele_de("CLAUDE_FABLE_5_1")["id"]
+    suite = [cv.Reponse(texte="début de répon", modele_servi=ident, fin="max_tokens", usage={"entree": 5, "sortie": 64},
+                        types_blocs=["thinking", "text"]),
+             cv.Reponse(texte="prêt", modele_servi=ident, fin="end_turn", usage={"entree": 5, "sortie": 2}, types_blocs=["text"]),
+             cv.Reponse(texte="prêt", modele_servi=ident, fin="end_turn", usage={"entree": 5, "sortie": 2})]
+
+    def servir(modele_id, prompt, max_tokens):
+        return suite.pop(0)
+
+    a = appels.Appelant(tmp_path / "a", 5.0, {"anthropic": servir, "gemini": servir})
+    statuts = [a.appeler("CLAUDE_FABLE_5_1", "t", "Réponds par le seul mot : prêt.", max_tokens=64).statut for _ in range(3)]
+    assert statuts == ["TRONQUE", "OK", "OK"]
+    lignes = a.lire_journal()
+    assert [l["types_blocs"] for l in lignes] == [["thinking", "text"], ["text"], []]
+    assert all("début de répon" not in json.dumps(l, ensure_ascii=False) for l in lignes)  # aucun texte au journal
+    e = em.resume_appels(lignes)["par_espece"]["CLAUDE_FABLE_5_1"]
+    assert e["par_statut"] == {"TRONQUE": 1, "OK": 2} and e["reflexion_par_statut"] == {"TRONQUE": 1}
+    assert "reflexion_par_statut" not in em.resume_appels(lignes[1:])["par_espece"]["CLAUDE_FABLE_5_1"]

@@ -60,6 +60,8 @@ CHAMPS_RAPPORT = ("fin_utc", "depense_totale_usd", "n_appels_total", "generation
                   "rondes_conception_importees")
 CHAMPS_LIGNEE_RAPPORT = ("famille", "generation", "active", "impose", "fin", "uid", "conception_finie")
 ERREURS_MAX, ERREUR_CARACTERES_MAX = 20, 200
+# R-402 : types de blocs qui disent qu'un appel a réfléchi (Anthropic : « thinking », « redacted_thinking » ; Gemini : « thought »)
+BLOCS_REFLEXION = ("thinking", "redacted_thinking", "thought")
 
 
 class ExtraitInvalide(RuntimeError):
@@ -118,6 +120,9 @@ def resume_appels(lignes: list[dict]) -> dict:
         e = par_espece.setdefault(esp, {"n": 0, "par_statut": {}, "modeles_servis": []})
         e["n"] += 1
         e["par_statut"][st] = e["par_statut"].get(st, 0) + 1
+        if any(str(b) in BLOCS_REFLEXION for b in (l.get("types_blocs") or [])):  # R-402
+            r = e.setdefault("reflexion_par_statut", {})
+            r[st] = r.get(st, 0) + 1
         if l.get("modele_servi") and l["modele_servi"] not in e["modeles_servis"]:
             e["modeles_servis"].append(l["modele_servi"])
         par_statut[st] = par_statut.get(st, 0) + 1

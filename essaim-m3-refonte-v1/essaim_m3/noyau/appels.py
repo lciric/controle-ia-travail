@@ -7,7 +7,8 @@ Corrige, par rapport à `run_quadruple_fusee_omega_alpha_gamma_beta.py` :
 - B-02 : la bascule silencieuse de modèle (Fable → Sonnet 3.5 → Gemini) est supprimée : une espèce = un identifiant
   de modèle ; un modèle servi non conforme est un échec consigné, jamais une réponse ;
 - B-03 : une erreur n'est jamais renvoyée comme texte de réponse : chaque appel rend un `Resultat` avec un statut ;
-- B-04 : chaque appel est journalisé (modèle demandé, modèle servi, raison d'arrêt, usage, coût, empreintes, heures) ;
+- B-04 : chaque appel est journalisé (modèle demandé, modèle servi, raison d'arrêt, usage, coût, empreintes, heures,
+  types des blocs de la réponse — R-402) ;
 - B-25 : aucune clé dans une adresse ni dans un journal ;
 - B-27 : plafond de dépense en dollars, vérifié avant (pire cas) et après (coût réel) chaque appel ;
 - température : les appelants v2.5 n'en prennent pas (choix de Lazar) ; la valeur de Halton de Gemini devient un
@@ -204,6 +205,9 @@ class Appelant:
                 "sha256_prompt": empreinte(prompt), "sha256_texte": empreinte(rep.texte or ""),
                 "caracteres": len(rep.texte or ""), "debut_utc": debut, "fin_utc": fin_utc,
                 "echec": (str(rep.echec)[:300] if rep.echec else None), "reel": self.reel, "go_id": self.go_id,
+                # R-402 : types des blocs de la réponse (« thinking », « text », « thought »…), bornés ; jamais leur contenu ;
+                # disent si la réflexion a eu lieu (contrat, § 3 : elle compte dans `max_tokens`)
+                "types_blocs": [str(x)[:40] for x in (getattr(rep, "types_blocs", None) or [])][:20],
             }
             with self.journal.open("a", encoding="utf-8") as fh:
                 fh.write(json.dumps(ligne, ensure_ascii=False, sort_keys=True) + "\n")
