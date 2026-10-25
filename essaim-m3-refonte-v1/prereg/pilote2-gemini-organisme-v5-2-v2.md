@@ -401,12 +401,12 @@ saine (définition close ci-dessus, statuts des appels compris) et si le reste d
    > "$PILOTE/ferme/sortie-standard-lanceur.txt" 2> "$PILOTE/sortie-erreur-lanceur.txt"`. Un fichier `STOP` dans
    `$PILOTE/course/` n'est posé que pour un incident technique (panne, coût anormal lu dans le journal des appels),
    consigné ; jamais au vu d'un score.
-2. **Graines (R9)** : entropie E = <<ENTROPIE>> tirée au scellement par `secrets.randbits(128)` ; deux enfants
+2. **Graines (R9)** : entropie E = 281492785413739127675848242651983213289 tirée au scellement par `secrets.randbits(128)` ; deux enfants
    `numpy.random.SeedSequence(E).spawn(2)` ; graine de chaque course = `int(enfant.generate_state(1, dtype=numpy.uint64)[0])`,
    **l'enfant 0 pour M** (première course), **l'enfant 1 pour S** (chaque égalité sur une seule ligne, lue et recalculée
    par le lanceur) :
-   graine de la course maieutique = <<GRAINE_MAIEUTIQUE>>
-   graine de la course structure = <<GRAINE_STRUCTURE>>
+   graine de la course maieutique = 3970427751169333427
+   graine de la course structure = 6513505138128909954
    Le manifeste de chaque run consigne sa graine, la version de numpy, `sha256_code_noyau` et `commit` ; E n'est
    consignée qu'ici.
 3. **Moment de la lecture des scores (R1)** — fichier par fichier. La **sortie standard** (qui porte les scores,
@@ -642,7 +642,7 @@ antérieures gardées, jamais à lancer : lanceurs v1 (`08b8c8ff…`, objet `4fc
 (`12834da5…`, question M v2, environnement vide sans infrastructure réseau : défaut), v4 (`fd8ccf58…`, relu par la
 contre-lecture 1 : temps, « M saine » et clés à corriger), leurs essais et journaux, les pièces de simulation de la v4, le
 devis v3 ; chaque pièce a son `.sha256` ; fichier d'empreintes `EMPREINTES-pilote2-gemini-v5-2-v2.txt` (+ `.sha256`) sous
-`pieces-pilote2-gemini-v5-2/`, écrit au scellement par le script de scellement : <<EMPREINTE_PIECES>>.
+`pieces-pilote2-gemini-v5-2/`, écrit au scellement par le script de scellement : `68306821c9addcf638018a9adff7652b1beb7d451489e055b536ebe145115f0c`.
 
 ## Changements depuis le texte remplacé (v3 de la v5.1)
 
