@@ -1,0 +1,34 @@
+1. Empreintes
+   EMPREINTES-banque-v3-v1.txt : 26/26 lignes conformes (fichier = ligne = compagnon) ; compagnon de la liste conforme : True
+   tous les fichiers du dossier banque/ : 72 ; sans compagnon ['contre-lectures/banque-v2-cl1/scripts/c1_equivalence_v1.py', 'contre-lectures/banque-v2-cl1/scripts/c2_decodeurs_v1.py', 'contre-lectures/banque-v2-cl1/scripts/c3_controle_hasard_v1.py', 'contre-lectures/banque-v2-cl1/scripts/c4_paires_textes_v1.py', 'contre-lectures/banque-v2-cl1/scripts/c5_artefacts_v1.py', 'contre-lectures/banque-v2-cl1/scripts/c6_reference_ordre_v1.py', 'contre-lectures/banque-v2-cl1/scripts/c7_verifier_banque_v1.py', 'contre-lectures/banque-v2-cl1/sorties/c1-equivalence-v1.txt', 'contre-lectures/banque-v2-cl1/sorties/c2-decodeurs-v1.txt', 'contre-lectures/banque-v2-cl1/sorties/c3-controle-hasard-v1.txt', 'contre-lectures/banque-v2-cl1/sorties/c4-paires-textes-v1.txt', 'contre-lectures/banque-v2-cl1/sorties/c5-artefacts-v1.txt', 'contre-lectures/banque-v2-cl1/sorties/c5-verificateur-A1-fuite-train-et-test-final-v1.json', 'contre-lectures/banque-v2-cl1/sorties/c5-verificateur-A2-fuite-partielle-0.80-v1.json', 'contre-lectures/banque-v2-cl1/sorties/c5-verificateur-A3-numerotation-ordre-fichier-v1.json', 'contre-lectures/banque-v2-cl1/sorties/c6-reference-ordre-v1.txt', 'contre-lectures/banque-v2-cl1/sorties/c7-verifier-banque-v1.txt'] ; compagnon faux []
+   fichiers de construction-v3/ absents de EMPREINTES-banque-v3-v1.txt : []
+   banque-confrontation-v3.json : empreinte citée au LISEZMOI-v5 / constructeur = fichier = compagnon : True
+   banque-confrontation-v3-secret.json : empreinte citée au LISEZMOI-v5 / constructeur = fichier = compagnon : True
+   banque-confrontation-v3-cle.json : empreinte citée au LISEZMOI-v5 / constructeur = fichier = compagnon : True
+   banque-confrontation-v1.json : empreinte citée au LISEZMOI-v5 / constructeur = fichier = compagnon : True
+   banque-confrontation-v1-secret.json : empreinte citée au LISEZMOI-v5 / constructeur = fichier = compagnon : True
+   banque-confrontation-v2.json : empreinte citée au LISEZMOI-v5 / constructeur = fichier = compagnon : True
+   contre-lectures/banque-v2-cl1/CONTRE-LECTURE-banque-v2-v1.md : empreinte citée au LISEZMOI-v5 / constructeur = fichier = compagnon : True
+
+2. Équivalence v1 -> v3 (code à moi, règle du manifeste et de la clé)
+   clé : 128 bits (compatible avec secrets.randbits(128) : True) ; écriture décimale canonique : True
+   sha256(écriture décimale) = manifeste = fichier de clé = 9cb96341… : True
+   clé différente de l'entropie de la v2 et de l'entropie de partition de la v1 : True (entropie v2 lue au manifeste v2 : True)
+   clés du fichier de clé : ['banque', 'entropie_seed_sequence', 'entropie_sha256', 'regle'] ; « banque » : banque-confrontation-v3.json ; règle = règle du manifeste : True
+   train : 80 tâches (v1 : 80) ; égales à la reconstruction : True ; ordre des champs égal : True ; triée par identifiant : True ; mêmes tâches que la v1 (contenu, multiensemble) : True
+   test : 60 tâches (v1 : 60) ; égales à la reconstruction : True ; ordre des champs égal : True ; triée par identifiant : True ; mêmes tâches que la v1 (contenu, multiensemble) : True
+   test_final : 60 tâches (v1 : 60) ; égales à la reconstruction : True ; ordre des champs égal : True ; triée par identifiant : True ; mêmes tâches que la v1 (contenu, multiensemble) : True
+   octets reconstruits (manifeste repris) = 157a2b45… : True
+   secret v3 = secret v1 + id_v1 (valeurs et ordre des clés) : True
+   octets du secret reconstruits = a13217b8… : True
+   identifiants : 200 distincts sur 200 ; = t-0001…t-0200 : True ; communs avec la v1 : 0
+   manifeste : clés qui diffèrent de la v1 ['identifiants_opaques', 'nom', 'quand_utc'] ; ordre des clés = v1 + identifiants_opaques : True
+   manifeste : quand_utc 2026-10-25T16:17:23Z ; numpy de construction 2.4.6 ; dérivée de f1387a20… / c68d7d4b… ; clés de identifiants_opaques ['derivee_de', 'entropie_sha256', 'numpy', 'regle', 'script']
+   permutations v2 et v3 : 0 rangs communs sur 200 (hasard : ~1)
+
+3. Recherche de la clé (écriture décimale entière, fenêtres de 12 chiffres, hexadécimal, fenêtres de 12 caractères hexadécimaux)
+   dossier banque/ (récursif, clé exclue) : 126 fichiers lus ; fichiers touchés : 0
+   racine de l'essaim (un niveau) : 34 fichiers lus ; fichiers touchés : 0
+   code essaim_m3/*.py et essaim_m3/noyau/*.py : 23 fichiers lus ; fichiers touchés : 0
+   mes propres fichiers (/var/tmp/contre-lecture-banque-v3-v1) : 4 fichiers lus ; fichiers touchés : 0
+   A8 (clé fausse) : clé différente de la vraie : True ; reprend l'empreinte vraie : True
