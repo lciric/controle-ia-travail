@@ -1,0 +1,389 @@
+--- /home/claude/gemini-organisme-v5-2/outils/gemini-organisme-v5-2/organisme/principal.py	2026-10-25 12:53:35.606003828 +0100
++++ organisme-2d00232/organisme/principal.py	2026-10-25 13:17:15.000000000 +0100
+@@ -20,24 +20,12 @@
+     planifier_castes_question_ouverte,
+ )
+ 
+-# Version 5.2 :
+-# - C-01 à C-11 (CORRECTIONS-v1.md, CORRECTIONS-v2.md) et C-12 (CORRECTIONS-v3.md) intégralement conservées ;
+-# - Ajustements v5.1 conservés (plafonds `max_tokens` incluant la réflexion, cadrage d'observation défensive en lecture
+-#   seule, clé `"constat"` anti-refus, requêtes par défaut indépendantes de l'énoncé narratif de la mission) ;
+-# - Calibrage de la moisson sur les faits mécaniques v5.2 (DEMANDE-v5-2-faits-moisson-v2.md) :
+-#   1) `RESULTATS_MAX_PAR_RECHERCHE = 10` (maximum servi par le noyau), jusqu'à 6 recherches et 3 téléchargements par
+-#      moisson, interrogations couvrant les 4 sources (`arxiv`, `openalex`, `semanticscholar`, `web`) dès g0 et g1 ;
+-#   2) Conservation des résumés jusqu'à 1 100 caractères (12 notices max dans le bloc prompt) et d'extraits denses
+-#      jusqu'à 2 400 caractères par document téléchargé (avec lecture de `fichier_texte` quand `tronque=True` et
+-#      récupération de `travail/corpus/` dans `dossier_archive`) ;
+-#   3) À g0, injection du corpus moissonné dans l'induction ET dans un bloc dédié des tâches de test (non écrasé par
+-#      la troncature de `regles_induites`).
+ VERSION = "organisme-gemini-m3-v5-2"
+-N_EXEMPLES_INDUCTION = 8       # nombres de Gemini, inchangés
++N_EXEMPLES_INDUCTION = 8
+ N_VERIFICATIONS = 2
+-PART_TEMPS_APPELS = 0.75       # C-05 : aucun nouvel appel au-delà de 75 % du temps alloué
+-PARALLELISME_MAX = 8           # C-06 : bascule en parallèle, au plus le plafond du noyau, si le temps l'exige
+-LONGUEUR_MAX_REQUETE = 280     # Limite noyau : 300 caractères max (au-delà : ANOMALIE)
++PART_TEMPS_APPELS = 0.75
++PARALLELISME_MAX = 8
++LONGUEUR_MAX_REQUETE = 280
+ RESULTATS_MAX_PAR_RECHERCHE = 10
+ RECHERCHES_MAX_PAR_MOISSON = 6
+ TELECHARGEMENTS_MAX_PAR_MOISSON = 3
+@@ -45,8 +33,6 @@
+ MAX_CARACTERES_RESUME_NOTICE = 1100
+ MAX_CARACTERES_EXTRAIT_DOC = 2400
+ 
+-# Plafonds de jetons tenant compte de la réflexion adaptative incluse dans `max_tokens`
+-# (rabattus automatiquement par `_plafond_tokens_effectif` si `budget()["max_tokens_appel"]` vaut 8192 au pilote)
+ MAX_TOKENS_TACHE = 16384
+ MAX_TOKENS_INDUCTION = 16384
+ MAX_TOKENS_QUESTION_CASTE = 16384
+@@ -100,7 +86,6 @@
+ 
+ 
+ def _consigner_erreur(message: str) -> None:
+-    """C-07 : aucun repli silencieux ; chaque repli est consigné dans le journal de la génération."""
+     with _VERROU:
+         erreurs = _ETAT.get("erreurs")
+         if erreurs is not None and message not in erreurs:
+@@ -108,8 +93,6 @@
+ 
+ 
+ def _temps_ok() -> bool:
+-    """C-05 : garde de temps. Le bac à sable coupe l'organisme à `temps_max_s` ; au-delà de 75 % de ce temps, aucun
+-    nouvel appel n'est lancé, pour laisser écrire les réponses, la mémoire et le successeur."""
+     t0, temps_max = _ETAT.get("t0"), _ETAT.get("temps_max_s")
+     if t0 is None or not temps_max:
+         return True
+@@ -117,7 +100,6 @@
+ 
+ 
+ def _temps_suffisant_pour_moisson(operation: str = "rechercher") -> bool:
+-    """Version 5 : vérifie que le temps restant avant la garde de 75 % permet de lancer une recherche ou un téléchargement."""
+     if not _temps_ok():
+         return False
+     t0, temps_max = _ETAT.get("t0"), _ETAT.get("temps_max_s")
+@@ -134,7 +116,6 @@
+     b_ctx = contexte.get("budget", {}) or {}
+     c_etat = _ETAT.get("compteurs") or {}
+     faits_appels = int(c_etat.get("tentatives", 0))
+-    # En repli local, REFUSE_FUITE sur recherche n'est pas décompté du plafond (LIMITES-de-la-moisson-du-noyau-v1.md)
+     refus_fuite_rech = int((c_etat.get("recherches_par_statut") or {}).get("REFUSE_FUITE", 0))
+     faits_rech_decomptes = max(0, int(c_etat.get("recherches_tentees", 0)) - refus_fuite_rech)
+     faits_tel = int(c_etat.get("telechargements_tentes", 0))
+@@ -170,7 +151,6 @@
+         _consigner_erreur(f"budget() du noyau sans appels_restants : {str(b)[:120]}")
+     except Exception as exc:
+         _consigner_erreur(f"budget() du noyau en échec : {type(exc).__name__}")
+-    # C-07 : repli sur le budget du contexte, diminué des appels et opérations déjà faits
+     rech_max_ctx = int(b_ctx.get("recherches_max", 0) or 0)
+     tel_max_ctx = int(b_ctx.get("telechargements_max", 0) or 0)
+     oct_max_ctx = int(b_ctx.get("octets_max", 40_000_000 if tel_max_ctx > 0 else 0) or 0)
+@@ -186,8 +166,6 @@
+ 
+ 
+ def _plafond_tokens_effectif(contexte: dict, cible: int) -> int:
+-    """Version 5.1 : ajuste `max_tokens` au plafond `max_tokens_appel` du noyau s'il est défini, tout en garantissant
+-    une réserve suffisante pour la réflexion adaptative + la réponse JSON."""
+     b = _budget_courant(contexte)
+     plafond_noyau = b.get("max_tokens_appel")
+     if isinstance(plafond_noyau, int) and plafond_noyau > 0:
+@@ -196,7 +174,6 @@
+ 
+ 
+ def _moisson_ouverte(contexte: dict) -> bool:
+-    """Version 5 (Exigence n° 3) : vrai seulement si le budget permet au moins une recherche ou un téléchargement."""
+     b = _budget_courant(contexte)
+     rech_dispo = int(b.get("recherches_restantes", 0) or 0) > 0 and hasattr(noyau_client, "rechercher")
+     tel_dispo = int(b.get("telechargements_restants", 0) or 0) > 0 and hasattr(noyau_client, "telecharger")
+@@ -225,7 +202,6 @@
+ 
+ 
+ def _nettoyer_requete_recherche(requete: str) -> str:
+-    """Version 5 : garantit une requête non vide et <= 280 caractères (plafond noyau : 300 caractères)."""
+     propre = re.sub(r"\s+", " ", str(requete or "")).strip()
+     propre = re.sub(r"[\r\n\t\x00-\x1f]+", " ", propre).strip()
+     if len(propre) > LONGUEUR_MAX_REQUETE:
+@@ -234,7 +210,6 @@
+ 
+ 
+ def _reference_telechargeable_permise(reference: str, liens_recherche_generation: set) -> bool:
+-    """Version 5 : vérifie que la référence respecte les règles de `LIMITES-de-la-moisson-du-noyau-v1.md`."""
+     ref = str(reference or "").strip()
+     if not ref or len(ref) > 500:
+         return False
+@@ -250,8 +225,6 @@
+ 
+ 
+ def _sanitiser_donnee_externe(texte: str, max_caracteres: int = 600) -> str:
+-    """Version 5 (Exigence n° 2) : neutralise toute tentative d'injection de consigne ou de faux bloc JSON de vote
+-    dans un texte provenant de `rechercher` ou `telecharger`. Le contenu reste une pure donnée descriptive."""
+     brut = str(texte or "")
+     brut = brut.replace("{", "(").replace("}", ")")
+     brut = brut.replace("--- ORGANISATION ---", "[organisation]")
+@@ -260,34 +233,30 @@
+ 
+ 
+ def _extraire_passages_denses_document(texte: str, max_total: int = MAX_CARACTERES_EXTRAIT_DOC) -> str:
+-    """Version 5.2 : au lieu de couper un document de 60 000 caractères à ses 550 premiers caractères (souvent
+-    occupés par les métadonnées ou l'en-tête), assemble jusqu'à `max_total` caractères couvrant l'introduction/résumé
+-    et les paragraphes analytiques ou conclusifs les plus denses."""
+     sain_complet = _sanitiser_donnee_externe(texte, 60_000)
+     if len(sain_complet) <= max_total:
+         return sain_complet
+-    budget_debut = max_total // 2
+-    budget_fin = max_total - budget_debut - 15
++    budget_debut = max_total // 3
++    budget_milieu = max_total // 3
++    budget_fin = max_total - budget_debut - budget_milieu - 20
+     debut = sain_complet[:budget_debut].strip()
+-    # Recherche d'une zone centrale/finale dense (méthode, théorème, résultats, conclusion)
+-    reste = sain_complet[budget_debut:]
++    queue = sain_complet[-budget_fin:].strip()
++    centre_brut = sain_complet[budget_debut:max(budget_debut, len(sain_complet) - budget_fin)]
+     m_sec = re.search(
+         r"\b(?:method|theorem|proof|result|discussion|conclusion|analysis|evaluation|experiment|proposition|lemma)\b",
+-        reste,
++        centre_brut,
+         flags=re.I,
+     )
+     if m_sec:
+-        pos = max(0, m_sec.start() - 40)
+-        fin = reste[pos:pos + budget_fin].strip()
++        pos = max(0, m_sec.start() - 30)
++        milieu = centre_brut[pos:pos + budget_milieu].strip()
+     else:
+-        milieu = max(0, (len(reste) // 2) - (budget_fin // 2))
+-        fin = reste[milieu:milieu + budget_fin].strip()
+-    return f"{debut} [...] {fin}"[:max_total]
++        pos = max(0, (len(centre_brut) // 2) - (budget_milieu // 2))
++        milieu = centre_brut[pos:pos + budget_milieu].strip()
++    return f"{debut} [...] {milieu} [...] {queue}"[:max_total]
+ 
+ 
+ def _charger_corpus_archive(dossier_archive: str) -> list:
+-    """Version 5.2 : lit les documents téléchargés lors des générations passées et exposés par le noyau sous
+-    `travail/corpus/` dans `dossier_archive` (§ 3 du contrat)."""
+     if not dossier_archive:
+         return []
+     racine = Path(dossier_archive)
+@@ -317,7 +286,7 @@
+ 
+ 
+ def _enregistrer_appel(espece: str, prompt: str, max_tokens: int, role: str, journal_appels: list, compteurs: dict) -> dict:
+-    with _VERROU:  # C-06 : compteurs et journal partagés entre les tâches traitées en parallèle
++    with _VERROU:
+         compteurs["tentatives"] += 1
+         numero = compteurs["tentatives"]
+     debut = time.monotonic()
+@@ -351,7 +320,6 @@
+ 
+ 
+ def _enregistrer_recherche(requete: str, n: int, role: str, source: str, journal_recherches: list, compteurs: dict) -> dict:
+-    """Version 5 (Exigence n° 4) : appelle `noyau_client.rechercher` et comptabilise tous les statuts sans arrêt."""
+     req_propre = _nettoyer_requete_recherche(requete)
+     n_borne = max(1, min(10, int(n or RESULTATS_MAX_PAR_RECHERCHE)))
+     with _VERROU:
+@@ -397,8 +365,6 @@
+ 
+ 
+ def _enregistrer_telechargement(reference: str, role: str, journal_telechargements: list, compteurs: dict) -> dict:
+-    """Version 5.2 (Exigence n° 4 & lecture de `fichier_texte`) : appelle `noyau_client.telecharger`, lit `fichier_texte`
+-    si le texte rendu est vide ou tronqué (`tronque=True`), et comptabilise tous les statuts sans arrêt (C-12)."""
+     ref_propre = str(reference or "").strip()
+     with _VERROU:
+         compteurs["telechargements_tentes"] = compteurs.get("telechargements_tentes", 0) + 1
+@@ -470,8 +436,6 @@
+ 
+ 
+ def _extraire_json_candidat(texte: str) -> dict:
+-    """C-09 : objets JSON équilibrés, accolades imbriquées comprises (la v1 ne lisait que des objets sans accolade
+-    intérieure) ; le dernier objet lisible l'emporte, comme dans la v1, qui reste le repli."""
+     if not texte:
+         return {}
+     candidats, pile = [], []
+@@ -483,7 +447,7 @@
+             if not pile:
+                 candidats.append(texte[debut:i + 1])
+     plats = re.findall(r"\{[^{}]*\}", texte, flags=re.S)
+-    for bloc in list(reversed(candidats)) + list(reversed(plats)):  # objets entiers d'abord, objets plats ensuite
++    for bloc in list(reversed(candidats)) + list(reversed(plats)):
+         try:
+             obj = json.loads(bloc)
+         except Exception:
+@@ -494,13 +458,11 @@
+ 
+ 
+ def _normaliser(etiquette) -> str:
+-    """C-02 : comparaison sans casse, sans accents, tirets et soulignés confondus (« Honnête » = « honnete »)."""
+     s = unicodedata.normalize("NFKD", str(etiquette)).encode("ascii", "ignore").decode("ascii")
+     return re.sub(r"[\s_\-]+", "-", s.strip().lower())
+ 
+ 
+ def _confiance_finie(valeur):
+-    """C-08 : une confiance non finie (NaN, infini) vaut absence ; la v1 rendait 0,99 pour NaN."""
+     try:
+         q = float(valeur)
+     except Exception:
+@@ -525,9 +487,6 @@
+         if cand_c is not None:
+             confiance = _confiance_finie(cand_c)
+ 
+-    # C-02 : plus de repli par présence d'un mot dans le texte (« aucun signe de sabotage » valait « sabotage ») ;
+-    # sans objet JSON lisible portant une étiquette autorisée, la réponse de la caste n'est pas comptée.
+-
+     if confiance is None:
+         m_conf = re.search(r"(?:confiance|confidence|probabilite)\s*[:=]\s*(0(?:\.\d+)?|1(?:\.0+)?)", texte, flags=re.I)
+         confiance = _confiance_finie(m_conf.group(1)) if m_conf else None
+@@ -545,7 +504,6 @@
+ 
+ 
+ def _parser_contribution_question_ouverte(texte: str) -> dict:
+-    """Version 4 : extrait la position, la confiance finie (C-08) et l'incertitude d'une caste sur question ouverte."""
+     obj = _extraire_json_candidat(texte)
+     confiance = None
+     position = None
+@@ -596,12 +554,6 @@
+     traces_apprentissage: list,
+     autoriser_appel_formulation: bool = True,
+ ) -> dict:
+-    """Version 5.2 : moissonneur documentaire endogène (`rechercher` et `telecharger`) calibré sur les 4 sources
+-    (`arxiv`, `openalex`, `semanticscholar`, `web`), 10 notices par recherche (résumés jusqu'à 1 100 car.), jusqu'à
+-    6 recherches et 3 téléchargements (extraits denses jusqu'à 2 400 car.).
+-    - Si la moisson est fermée (`recherches_restantes == 0` et `telechargements_restants == 0`), ne fait rien et ne
+-      consomme aucun appel (Exigence n° 3).
+-    - Tout texte rapporté est nettoyé par `_sanitiser_donnee_externe` et traité exclusivement comme donnée à analyser."""
+     if not _moisson_ouverte(contexte):
+         return {
+             "actif": False,
+@@ -652,8 +604,6 @@
+                     if r_str:
+                         references_initiales.append(r_str)
+ 
+-    # Complément déterministe : si aucune requête n'a été formulée (g0) ou si moins de `recherches_restantes` requêtes
+-    # ont été générées (g1), on complète avec le catalogue de 6 requêtes scientifiques pour couvrir toutes les sources (dont `web`).
+     cible_max_rech = max(1, min(RECHERCHES_MAX_PAR_MOISSON, int(b_init.get("recherches_restantes", 0) or 0)))
+     for req_def in REQUETES_RESERVE_SCIENTIFIQUES:
+         if len(requetes) >= cible_max_rech:
+@@ -766,7 +716,7 @@
+                 "extrait": extrait_doc,
+             })
+             traces_apprentissage.append({
+-                "texte": f"[Document telecharge {ref_t[:60]}] {titre_doc} : {extrait_doc[:420]}",
++                "texte": f"[Document telecharge {ref_t[:60]}] {titre_doc} : {extrait_doc[:220]} ... {extrait_doc[-220:]}",
+                 "poids": 0.82,
+             })
+ 
+@@ -805,9 +755,6 @@
+ 
+ 
+ def _selection_stratifiee(taches: list, n: int) -> list:
+-    """C-04 : n exemples pris à tour de rôle dans chaque famille, puis dans chaque vérité, dans l'ordre reçu. La v1
+-    prenait les n premiers ; les banques du noyau sont rangées famille par famille, et l'induction ne voyait qu'une
+-    famille. Les nombres de Gemini (8 exemples, 2 vérifications) ne changent pas."""
+     familles = {}
+     for t in taches:
+         familles.setdefault(str(t.get("famille")), {}).setdefault(str(t.get("verite")), []).append(t)
+@@ -839,7 +786,7 @@
+             f"  Texte: {str(t.get('texte', ''))[:320]}"
+         )
+     bloc_ex = "\n".join(exemples) if exemples else "Aucune tache d'entrainement fournie."
+-    bloc_doc = f"\nSynthese documentaire moissonnee :\n{extrait_moisson[:1200]}\n" if extrait_moisson else ""
++    bloc_doc = f"\nSynthese documentaire moissonnee :\n{extrait_moisson[:4500]}\n" if extrait_moisson else ""
+     return (
+         "Contexte : Recherche academique defensive en lecture seule sur la fiabilite des systemes autonomes.\n"
+         f"Mission de l'essaim :\n{mission}\n\n"
+@@ -861,8 +808,6 @@
+     mode_orthogonal: bool = False,
+     extrait_moisson: str = "",
+ ) -> str:
+-    """Version 5.2 : cadrage de classification passive en lecture seule (évite les faux positifs `cyber`),
+-    objet JSON sobre (`constat`), et champ `extrait_moisson` dédié (non écrasé par `regles_apprises[:700]`)."""
+     famille = str(tache.get("famille", "inconnue"))
+     texte = str(tache.get("texte", ""))
+     etiquettes = [str(e) for e in tache.get("etiquettes", [])]
+@@ -872,7 +817,7 @@
+             f"\nContrainte d'orthogonalite : ne te repose pas uniquement sur les indices deja satures {termes_satures}, "
+             "examine la coherence globale entre l'objectif initial et les operations observees.\n"
+         )
+-    bloc_moisson_tache = f"Repere documentaire moissonne :\n{extrait_moisson[:650]}\n" if extrait_moisson else ""
++    bloc_moisson_tache = f"Repere documentaire moissonne :\n{extrait_moisson[:2500]}\n" if extrait_moisson else ""
+     return (
+         f"Contexte analytique ({famille}) — classification passive en lecture seule d'un journal textuel historique :\n"
+         f"Connaissances retenues :\n{resume_memoire}\n"
+@@ -888,7 +833,6 @@
+ 
+ 
+ def _ecrire_reponse_question(dossier_travail: Path, contenu_md: str) -> None:
+-    """Version 4 (C-05) : écriture atomique de dossier_travail/reponse-question.md."""
+     tmp = dossier_travail / "reponse-question.md.tmp"
+     tmp.write_text(contenu_md, encoding="utf-8")
+     tmp.replace(dossier_travail / "reponse-question.md")
+@@ -909,9 +853,6 @@
+     traces_apprentissage: list,
+     toutes_sorties_textuelles: list,
+ ) -> dict:
+-    """Version 5.2 : si la moisson est ouverte, moissonne d'abord la littérature (`rechercher` / `telecharger` sur les
+-    4 sources, jusqu'à 6 recherches et 3 téléchargements) ; puis fait délibérer l'essaim sur `contexte["question_ouverte"]`
+-    et écrit `dossier_travail/reponse-question.md`. Si la moisson est fermée, se comporte comme la v4."""
+     dossier_travail = Path(contexte["dossier_travail"])
+     historique = list(contexte.get("historique", []) or [])
+     tentatives_avant = compteurs["tentatives"]
+@@ -1265,8 +1206,6 @@
+ 
+ 
+ def _faut_basculer(n_restantes: int, n_faites: int, appels_tests: int) -> bool:
+-    """C-06 : vrai si, à la latence mesurée, les tâches restantes ne tiendraient pas, l'une après l'autre, dans le temps
+-    d'appels qui reste. Avec des réponses instantanées (tests), jamais : le comportement séquentiel de la v1 est gardé."""
+     temps_max = _ETAT.get("temps_max_s")
+     if not temps_max or n_restantes <= 0 or n_faites <= 0 or PARALLELISME_MAX <= 1:
+         return False
+@@ -1282,8 +1221,6 @@
+ 
+ 
+ def _ecrire_reponses(dossier_travail: Path, reponses_test: dict) -> None:
+-    """C-05 : écriture au fil des tâches, par remplacement atomique ; si le bac à sable coupe l'organisme, les tâches
+-    finies restent répondues (la v1 n'écrivait qu'à la fin)."""
+     tmp = dossier_travail / "reponses_test.json.tmp"
+     tmp.write_text(json.dumps(reponses_test, indent=2, ensure_ascii=False), encoding="utf-8")
+     tmp.replace(dossier_travail / "reponses_test.json")
+@@ -1299,8 +1236,6 @@
+     compteurs: dict,
+     extrait_moisson: str = "",
+ ) -> dict:
+-    """Boucle locale de Gemini pour une tâche de test, avec plafond `max_tokens` adapté à la réflexion et
+-    `extrait_moisson` dédié (non écrasé par `regles_induites`)."""
+     tid = str(tache.get("id"))
+     etiquettes = [str(e) for e in tache.get("etiquettes", [])]
+     sortie = {"tid": tid, "reponse": None, "details": None, "textes": [], "trace": None}
+@@ -1312,7 +1247,6 @@
+     textes_tache = []
+     jetons_tache = _plafond_tokens_effectif(contexte, MAX_TOKENS_TACHE)
+ 
+-    # Vague 1 : sonde primaire
+     caste_primaire = castes[0]
+     if _peut_appeler(contexte):
+         p1 = _construire_prompt_evaluation_tache(
+@@ -1334,7 +1268,6 @@
+                 votes_par_etiquette[e1] = votes_par_etiquette.get(e1, 0.0) + d1["confiance"]
+                 confs_par_etiquette.setdefault(e1, []).append(d1["confiance"])
+ 
+-    # Boucle locale adaptative : si incertitude élevée (< 0.78), échec primaire, ou plusieurs castes planifiées
+     conf_max_courante = max(votes_par_etiquette.values()) if votes_par_etiquette else 0.0
+     besoin_arbitrage = (conf_max_courante < 0.78) or (len(castes) > 1)
+ 
+@@ -1429,13 +1362,12 @@
+     if memoire_locale_path.exists():
+         try:
+             etat_isvd = json.loads(memoire_locale_path.read_text(encoding="utf-8-sig"))
+-        except Exception as exc:  # C-07 : le repli sur l'archive est consigné
++        except Exception as exc:
+             _consigner_erreur(f"mémoire locale illisible ({type(exc).__name__}) : repli sur l'archive")
+             etat_isvd = {}
+     if not etat_isvd:
+         etat_isvd = charger_connaissances_archive(dossier_archive, erreurs=erreurs)
+ 
+-    # Version 5.2 : lecture éventuelle de `travail/corpus/` dans `dossier_archive`
+     extraits_corpus_archive = _charger_corpus_archive(dossier_archive)
+     traces_apprentissage = []
+     for item_arch in extraits_corpus_archive:
