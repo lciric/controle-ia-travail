@@ -3,6 +3,10 @@
 Le noyau n'impose aucune organisation ni aucune règle de sélection ; il tient ce que l'essaim ne peut pas tenir
 lui-même : les clés et le journal (couche d'appel), le juge (tâches cachées), le bac à sable, l'archive, les bornes
 de l'humain (générations, budget, temps), et l'arrêt sur ordre (fichier `STOP` dans le dossier du run).
+
+Reprise par segments (décision de Lazar, 25 octobre 2026, 20:23 Paris) : une course arrêtée par `STOP` entre deux unités
+(rondes de conception ou générations) écrit son état dans `reprise/etat-vN.json`, scellé ; `reprendre()` la continue dans
+une autre commande, à la première unité qui n'a pas tourné, avec les mêmes graines, la même archive et la même dépense.
 """
 from __future__ import annotations
 
@@ -43,6 +47,30 @@ USAGES_GRAINE = {"ordre_train": 1, "ordre_test": 2, "recherche": 3, "defense": 4
 DECALAGE_CONCEPTION = 100_000  # CE3-17 : la ronde de conception k ne tire pas les graines de la génération notée k
 INDICE_RONDE = 1_000_000  # indice de lignée réservé aux tirages de ronde (ordre des lignées), hors de toute lignée réelle
 MARGE_TEMPS_S = 300  # CE-07 : temps de génération laissé aux appels et à l'écriture, au-delà des entraînements permis
+ETAT_REPRISE_VERSION = 1  # reprise par segments : format de `reprise/etat-vN.json`
+# Reprise par segments : champs du manifeste qu'un lancement de reprise doit retrouver à l'identique (même course, mêmes
+# bornes, mêmes conditions extérieures, même code) ; les organismes imposés sont comparés par famille et empreinte d'arbre
+CHAMPS_REPRISE = ("reel", "go_id", "entropie_seed_sequence", "python", "numpy", "collisionneur_v25_empreinte",
+                  "collisionneur_conforme", "budget_generation", "plafond_total_usd", "generations_max", "isolation_reseau", "gel",
+                  "n_taches_entrainement", "n_taches_test_dev", "n_taches_test_final", "mission_sha256", "parallele_max",
+                  "especes_amorcage", "relances_max", "memoire_partagee", "rondes_conception_max", "decalage_uid",
+                  "question_ouverte", "budget_conception", "vivier", "sources_moisson", "cle_brave_presente",
+                  "cle_openalex_presente", "cle_s2_presente", "entrainements_max", "pas_max", "traits", "lignees_base_graines",
+                  "isolation", "espace_organismes", "commit", "sha256_code_noyau", "sha256_banque")
+
+
+def _projection_reprise(manifeste: dict) -> dict:
+    """Ce qu'un lancement de reprise doit retrouver d'un manifeste, après un aller-retour JSON (le manifeste de la course
+    est relu d'un fichier) : les champs de `CHAMPS_REPRISE`, sans les chemins des fichiers servis (question ouverte,
+    vivier : leurs empreintes restent comparées), et les organismes imposés par famille et empreinte d'arbre."""
+    m = json.loads(json.dumps(manifeste, ensure_ascii=False))
+    p = {k: m.get(k) for k in CHAMPS_REPRISE}
+    if isinstance(p.get("question_ouverte"), dict):
+        p["question_ouverte"] = {k: v for k, v in p["question_ouverte"].items() if k != "source"}
+    if isinstance(p.get("vivier"), dict):
+        p["vivier"] = {k: v for k, v in p["vivier"].items() if k != "chemin"}
+    p["organismes_imposes"] = {nom: [v.get("famille"), v.get("empreinte_arbre")] for nom, v in (m.get("organismes_imposes") or {}).items()}
+    return p
 
 
 def anomalie_journal_absent(n_appels: int, journal: pathlib.Path) -> str | None:
@@ -216,6 +244,11 @@ class Noyau:
         self.budget_conception.setdefault("recherches_max", self.budget.get("recherches_max", 0))
         self.ronde = 0
         self.vue_ronde: pathlib.Path | None = None
+        # reprise par segments : numéro du segment (1 au départ, n + 1 à la n-ième reprise), première ronde de conception
+        # qui n'a pas tourné, ronde en cours (lignées faites ; None une fois toutes faites)
+        self.segment = 1
+        self._prochaine_ronde_conception = 1
+        self._ronde_en_cours: dict | None = None
         # vivier de conception (Lazar, 25 octobre, 00:05 Paris, « GO now ») : tâches à vérité connue d'un fichier distinct de
         # la banque (`vivier.charger_vivier`), servies pendant la conception seulement, jamais en génération notée
         self.vivier = vivier if (vivier and vivier.get("taches")) else None
@@ -844,58 +877,246 @@ class Noyau:
             self.arret_credit = dict(appelant.credit_epuise, lignee=lignee, generation=generation, phase=phase)
             self._evenement(etape="credit_epuise", **self.arret_credit)
 
-    def concevoir(self) -> None:
+    def _tourner_ronde(self, conception: int | None = None) -> str | None:
+        """Fait tourner les lignées de la ronde en cours qui n'ont pas encore tourné, dans l'ordre tiré, la garde d'arrêt lue
+        avant chacune ; rend la raison qui l'interrompt (la ronde reste alors en cours, ses lignées faites consignées), ou
+        None quand toutes ont tourné. Reprise par segments : une ronde interrompue par `STOP` est continuée là, jamais tirée
+        de nouveau (aucune lignée rejouée, aucune sautée)."""
+        r = self._ronde_en_cours
+        for lignee in r["ordre"][len(r["faites"]):]:
+            raison = self._doit_arreter()
+            if raison:
+                return raison
+            self.executer_generation(lignee, conception=conception)
+            r["faites"].append(lignee)
+        self._ronde_en_cours = None
+        return None
+
+    def concevoir(self) -> str | None:
         """Phase de conception : rondes jusqu'à la borne dure, ordre tiré, aucune note ; une lignée sort de la phase quand elle
-        déclare `fin_conception.json` (son critère) ; aucun arrêt de lignée hors modèle non conforme ou STOP."""
-        for k in range(1, self.rondes_conception + 1):
+        déclare `fin_conception.json` (son critère) ; aucun arrêt de lignée hors modèle non conforme ou STOP. Rend la raison
+        qui arrête la phase avant la borne (None : borne atteinte). Reprise par segments : elle repart de la première ronde
+        qui n'est pas achevée (`_prochaine_ronde_conception`), en continuant la ronde en cours s'il y en a une."""
+        while self._prochaine_ronde_conception <= self.rondes_conception:
+            k = self._prochaine_ronde_conception
             raison = self._doit_arreter()
             if raison:
                 self._evenement(etape="arret_conception", ronde=k, raison=raison)
-                return
-            if not any(e["active"] for e in self.lignees.values()):  # CE3-12 : raison juste quand aucune lignée n'existe
-                self._evenement(etape="arret_conception", ronde=k, raison="aucune lignée active")
-                return
-            actives = [l for l, e in self.lignees.items() if e["active"] and not e.get("conception_finie")]
-            if not actives:
-                self._evenement(etape="arret_conception", ronde=k, raison="toutes les lignées ont déclaré la fin de leur conception")
-                return
-            rng = np.random.default_rng(self.graine_ronde(k, conception=True))
-            ordre = [actives[i] for i in rng.permutation(len(actives))]
-            self._evenement(etape="ronde_conception", ronde=k, ordre=ordre)
-            for lignee in ordre:
-                if self._doit_arreter():
-                    break
-                self.executer_generation(lignee, conception=k)
+                return raison
+            if self._ronde_en_cours is None:
+                if not any(e["active"] for e in self.lignees.values()):  # CE3-12 : raison juste quand aucune lignée n'existe
+                    self._evenement(etape="arret_conception", ronde=k, raison="aucune lignée active")
+                    return "aucune lignée active"
+                actives = [l for l, e in self.lignees.items() if e["active"] and not e.get("conception_finie")]
+                if not actives:
+                    self._evenement(etape="arret_conception", ronde=k, raison="toutes les lignées ont déclaré la fin de leur conception")
+                    return "toutes les lignées ont déclaré la fin de leur conception"
+                rng = np.random.default_rng(self.graine_ronde(k, conception=True))
+                ordre = [actives[i] for i in rng.permutation(len(actives))]
+                self._evenement(etape="ronde_conception", ronde=k, ordre=ordre)
+                self._ronde_en_cours = {"phase": "conception", "ronde": k, "ordre": list(ordre), "faites": []}
+            if self._tourner_ronde(conception=k) is None:
+                self._prochaine_ronde_conception = k + 1
+        return None
 
     def boucler(self) -> dict:
         if self.rondes_conception and not self.gel and not getattr(self, "_conception_faite", False):
-            self.concevoir()
-            self._conception_faite = True
+            raison_conception = self.concevoir()
+            # reprise par segments : une conception arrêtée par STOP n'est pas faite ; la course s'arrête là (aucune génération
+            # notée ne part avant la fin de la conception) et la reprise la continue
+            self._conception_faite = raison_conception != "fichier STOP"
+            if not self._conception_faite and any(e["active"] for e in self.lignees.values()):
+                self._evenement(etape="arret", raison="fichier STOP")
+                self._ecrire_etat_reprise("fichier STOP")
+                return self.rapport()
         while True:
             raison = self._doit_arreter()
+            if (raison == "fichier STOP" and not (self._ronde_en_cours and self._ronde_en_cours.get("phase") == "generation")
+                    and not any(e["active"] for e in self.lignees.values())):
+                # plus aucune unité à faire : la course finit ci-dessous (« aucune lignée active ») ; un STOP posé pendant la
+                # dernière unité n'appelle pas de segment de plus
+                raison = None
             if raison and raison != "plafond total atteint":
                 self._evenement(etape="arret", raison=raison)
+                if raison == "fichier STOP":  # reprise par segments : l'état qu'il faut pour continuer est écrit et scellé
+                    self._ecrire_etat_reprise(raison)
                 break
-            # base triée par nom (CE2-03) : deux courses aux mêmes lignées et à la même graine ont le même ordre de ronde,
-            # quel que soit l'ordre d'insertion (bras apparié `--depuis` : toutes les lignées y entrent comme imposées)
-            actives = sorted(l for l, e in self.lignees.items() if e["active"])
-            if not actives:
-                self._evenement(etape="arret", raison="aucune lignée active")
-                break
-            if self._plafond_restant() <= 0:
+            if self._ronde_en_cours is None or self._ronde_en_cours.get("phase") != "generation":
+                # base triée par nom (CE2-03) : deux courses aux mêmes lignées et à la même graine ont le même ordre de ronde,
+                # quel que soit l'ordre d'insertion (bras apparié `--depuis` : toutes les lignées y entrent comme imposées)
+                actives = sorted(l for l, e in self.lignees.items() if e["active"])
+                if not actives:
+                    self._evenement(etape="arret", raison="aucune lignée active")
+                    break
+                if self._plafond_restant() <= 0:
+                    self._evenement(etape="arret", raison="plafond total atteint")
+                    break
+                # CR-15 (b) : ordre des lignées tiré par SeedSequence à chaque ronde et consigné ; vue figée au début de la ronde
+                self.ronde += 1
+                rng = np.random.default_rng(self.graine_ronde(self.ronde))
+                ordre = [actives[i] for i in rng.permutation(len(actives))]
+                self.vue_ronde = self._figer_vue(self.ronde) if (self.memoire_partagee and not self.gel) else None
+                self._evenement(etape="ronde", ronde=self.ronde, ordre=ordre, vue_figee=(str(self.vue_ronde) if self.vue_ronde else None))
+                self._ronde_en_cours = {"phase": "generation", "ronde": self.ronde, "ordre": list(ordre), "faites": [],
+                                        "vue_figee": (str(self.vue_ronde) if self.vue_ronde else None)}
+            elif self._plafond_restant() <= 0:  # ronde en cours (reprise ou interruption) et plafond atteint
                 self._evenement(etape="arret", raison="plafond total atteint")
                 break
-            # CR-15 (b) : ordre des lignées tiré par SeedSequence à chaque ronde et consigné ; vue figée au début de la ronde
-            self.ronde += 1
-            rng = np.random.default_rng(self.graine_ronde(self.ronde))
-            ordre = [actives[i] for i in rng.permutation(len(actives))]
-            self.vue_ronde = self._figer_vue(self.ronde) if (self.memoire_partagee and not self.gel) else None
-            self._evenement(etape="ronde", ronde=self.ronde, ordre=ordre, vue_figee=(str(self.vue_ronde) if self.vue_ronde else None))
-            for lignee in ordre:
-                if self._doit_arreter():
-                    break
-                self.executer_generation(lignee)
+            self._tourner_ronde()
         return self.rapport()
+
+    # ---- reprise par segments (décision de Lazar, 25 octobre 2026, 20:23 Paris) ----
+    def _ecrire_etat_reprise(self, raison: str) -> pathlib.Path:
+        """À un arrêt sur `STOP` (lu entre deux unités, jamais pendant), écrit dans `reprise/etat-vN.json` l'état du noyau
+        qu'il faut pour continuer la course dans une autre commande, et le scelle (compagnon `.sha256`) ; jamais réécrit
+        (R12). Aucun événement n'est ajouté : l'état compte les événements de la course, dont l'arrêt."""
+        dossier = self.racine / "reprise"
+        dossier.mkdir(exist_ok=True)
+        bac_a_sable.proteger(dossier, 0o700)
+        n = 1
+        while (dossier / f"etat-v{n}.json").exists():
+            n += 1
+        index = self.archive.index
+        journal = self.racine / "evenements.jsonl"
+        etat = {
+            "version": ETAT_REPRISE_VERSION, "segment": int(self.segment), "quand_utc": _heure(), "raison_arret": raison,
+            "manifeste_sha256": _archive.empreinte_fichier(self.racine / "manifeste-run.json"),
+            "sha256_code_noyau": self.manifeste.get("sha256_code_noyau"),
+            "conception_faite": bool(getattr(self, "_conception_faite", False)) or not self.rondes_conception or self.gel,
+            "prochaine_ronde_conception": int(self._prochaine_ronde_conception),
+            "ronde": int(self.ronde), "ronde_inachevee": self._ronde_en_cours,
+            "lignees": {l: {k: (str(v) if isinstance(v, pathlib.Path) else v) for k, v in e.items()} for l, e in self.lignees.items()},
+            "depense_totale_usd": self.depense_totale, "n_appels_total": int(self.n_appels_total),
+            "rondes_conception_contexte": int(getattr(self, "rondes_conception_contexte", 0)),
+            "arret_credit": getattr(self, "arret_credit", None),
+            "archive_index_sha256": (_archive.empreinte_fichier(index) if index.exists() else None),
+            "n_lignes_archive": len(self.archive.lignes()),
+            "n_evenements": (sum(1 for l in journal.read_text(encoding="utf-8").splitlines() if l.strip()) if journal.exists() else 0),
+        }
+        chemin = dossier / f"etat-v{n}.json"
+        chemin.write_text(json.dumps(etat, ensure_ascii=False, indent=1), encoding="utf-8")
+        _archive.sceller(chemin)
+        for f in (chemin, chemin.with_name(chemin.name + ".sha256")):
+            bac_a_sable.proteger(f, 0o600)
+        return chemin
+
+    def reprendre(self) -> dict:
+        """Continue, dans une nouvelle commande, une course arrêtée par `STOP` entre deux unités : à appeler à la place
+        d'`amorcer()`, sur un noyau neuf construit avec les mêmes paramètres que la course, puis `boucler()`. Refusée
+        (`Arret`, rien d'écrit) sur un noyau déjà amorcé ; sans état de reprise ; si l'état ne correspond pas à son
+        compagnon, n'est pas d'un arrêt sur STOP ou d'une autre version ; si `STOP` est encore là ; si la course a bougé
+        depuis l'état (événements, archive, manifeste) — donc jamais deux reprises du même état ; si un paramètre de ce
+        lancement diffère de la course (`_projection_reprise`) ; si la ronde en cours est illisible ou incohérente, ou
+        l'organisme d'une lignée active introuvable ; après un crédit épuisé ou au plafond total. Rien n'est rejoué ni
+        sauté : la reprise part de la première unité qui n'a pas tourné (la ronde en cours est continuée dans son ordre
+        tiré, avec sa vue figée), avec les graines de la course (même entropie, mêmes lignées), sa dépense et son archive.
+        Le manifeste du rapport reste celui de la course ; ce qui est propre à ce lancement (heure, machine, extrait du
+        registre des GO, chemins des pièces) est consigné dans l'événement `reprise`. Rend l'état relu."""
+        if self.lignees or self.evenements:
+            raise Arret("reprise : à appeler à la place d'amorcer(), sur un noyau neuf")
+        dossier = self.racine / "reprise"
+        etats = (sorted(dossier.glob("etat-v*.json"), key=lambda p: int("".join(ch for ch in p.stem if ch.isdigit()) or 0))
+                 if dossier.is_dir() else [])
+        if not etats:
+            raise Arret("reprise : aucun état de reprise (reprise/etat-vN.json) dans la course")
+        chemin = etats[-1]
+        compagnon = chemin.with_name(chemin.name + ".sha256")
+        if not compagnon.is_file() or compagnon.read_text(encoding="utf-8").split()[0] != _archive.empreinte_fichier(chemin):
+            raise Arret(f"reprise : {chemin.name} ne correspond pas à son compagnon .sha256")
+        etat = json.loads(chemin.read_text(encoding="utf-8"))
+        if etat.get("version") != ETAT_REPRISE_VERSION:
+            raise Arret(f"reprise : état de version {etat.get('version')!r}, attendue {ETAT_REPRISE_VERSION}")
+        if etat.get("raison_arret") != "fichier STOP":
+            raise Arret(f"reprise : l'état n'est pas celui d'un arrêt sur STOP ({etat.get('raison_arret')!r})")
+        if (self.racine / "STOP").exists():
+            raise Arret("reprise : le fichier STOP est encore dans la course (le lanceur le retire avant la reprise)")
+        journal = self.racine / "evenements.jsonl"
+        lignes_ev = [l for l in journal.read_text(encoding="utf-8").splitlines() if l.strip()] if journal.exists() else []
+        if len(lignes_ev) != int(etat.get("n_evenements", -1)):
+            raise Arret("reprise : la course a bougé depuis l'état (journal des événements) : une seule reprise par état")
+        dernier = json.loads(lignes_ev[-1]) if lignes_ev else {}
+        if dernier.get("etape") != "arret" or dernier.get("raison") != "fichier STOP":
+            raise Arret("reprise : le dernier événement de la course n'est pas l'arrêt sur STOP de l'état")
+        if _archive.empreinte_fichier(self.racine / "manifeste-run.json") != etat.get("manifeste_sha256"):
+            raise Arret("reprise : le manifeste de la course n'est pas celui de l'état")
+        index = self.archive.index
+        if (_archive.empreinte_fichier(index) if index.exists() else None) != etat.get("archive_index_sha256"):
+            raise Arret("reprise : l'archive de la course a changé depuis l'état")
+        manifeste_course = json.loads((self.racine / "manifeste-run.json").read_text(encoding="utf-8"))
+        a, b = _projection_reprise(manifeste_course), _projection_reprise(self.manifeste)
+        ecarts = sorted(k for k in a if a[k] != b.get(k))
+        if ecarts:
+            raise Arret(f"reprise : ce lancement diffère de la course sur {ecarts}")
+        if etat.get("arret_credit"):
+            raise Arret("reprise : crédit d'un fournisseur épuisé pendant la course (CE3-05) : aucune reprise")
+        if float(self.plafond_total) - float(etat["depense_totale_usd"]) <= 0:
+            raise Arret("reprise : plafond total atteint")
+        lignees = etat.get("lignees") or {}
+        r = etat.get("ronde_inachevee")
+        if r is not None:
+            ordre, faites = list(r.get("ordre") or []), list(r.get("faites") or [])
+            if (r.get("phase") not in ("conception", "generation") or not isinstance(r.get("ronde"), int) or not ordre
+                    or len(faites) >= len(ordre) or faites != ordre[:len(faites)] or any(l not in lignees for l in ordre)):
+                raise Arret(f"reprise : ronde en cours illisible dans {chemin.name}")
+            if r["phase"] == "conception" and (etat.get("conception_faite") or r["ronde"] != int(etat.get("prochaine_ronde_conception", -1))):
+                raise Arret("reprise : ronde de conception en cours incohérente avec l'état")
+            if r["phase"] == "generation" and (not etat.get("conception_faite") or r["ronde"] != int(etat.get("ronde", -1))):
+                raise Arret("reprise : ronde de génération en cours incohérente avec l'état")
+            if r["phase"] == "generation" and self.memoire_partagee and not self.gel:
+                vue = pathlib.Path(r.get("vue_figee") or "")
+                if not (r.get("vue_figee") and vue.is_dir() and vue.resolve().is_relative_to(self.espace.resolve())):
+                    raise Arret("reprise : vue figée de la ronde en cours introuvable dans l'espace de la course (mémoire partagée)")
+        # les organismes d'une course vivent sous sa racine (`lignees/`) : un chemin dehors dit une course déplacée ou un état altéré
+        racine_r = self.racine.resolve()
+        hors = sorted(l for l, e in lignees.items() if e.get("organisme") and not pathlib.Path(e["organisme"]).resolve().is_relative_to(racine_r))
+        if hors:
+            raise Arret(f"reprise : organisme hors de la course pour les lignées {hors} (course déplacée ou état altéré)")
+        absents = sorted(l for l, e in lignees.items() if e.get("active") and not (e.get("organisme") and pathlib.Path(e["organisme"]).is_dir()))
+        if absents:
+            raise Arret(f"reprise : organisme introuvable pour les lignées actives {absents}")
+        nouveau = self.manifeste
+        self.lignees = {}
+        for l, e in lignees.items():
+            e = dict(e)
+            if e.get("organisme") is not None:
+                e["organisme"] = pathlib.Path(e["organisme"])
+            self.lignees[l] = e
+        self.depense_totale = float(etat["depense_totale_usd"])
+        self.n_appels_total = int(etat["n_appels_total"])
+        self.ronde = int(etat["ronde"])
+        self._conception_faite = bool(etat["conception_faite"])
+        self._prochaine_ronde_conception = int(etat["prochaine_ronde_conception"])
+        if r is not None:
+            self._ronde_en_cours = {"phase": r["phase"], "ronde": int(r["ronde"]), "ordre": list(r["ordre"]), "faites": list(r["faites"])}
+            if r["phase"] == "generation":
+                self._ronde_en_cours["vue_figee"] = r.get("vue_figee")
+                self.vue_ronde = pathlib.Path(r["vue_figee"]) if r.get("vue_figee") else None
+        if int(etat.get("rondes_conception_contexte", 0)):
+            self.rondes_conception_contexte = int(etat["rondes_conception_contexte"])
+        self.segment = int(etat["segment"]) + 1
+        self.manifeste = manifeste_course  # le rapport garde le manifeste de la course
+        self._evenement(etape="reprise", segment=self.segment, etat=chemin.name, sha256_etat=_archive.empreinte_fichier(chemin),
+                        conception_faite=self._conception_faite, prochaine_ronde_conception=self._prochaine_ronde_conception,
+                        ronde=self.ronde, ronde_en_cours=({k: r[k] for k in ("phase", "ronde", "ordre", "faites")} if r is not None else None),
+                        depense_relue_usd=round(self.depense_totale, 4), n_appels_relus=self.n_appels_total,
+                        lancement={k: nouveau.get(k) for k in ("debut_utc", "plateforme", "coeurs", "registre_go")},
+                        sources={"organismes_imposes": {nom: v.get("source") for nom, v in (nouveau.get("organismes_imposes") or {}).items()},
+                                 "question_ouverte": (nouveau.get("question_ouverte") or {}).get("source"),
+                                 "vivier": (nouveau.get("vivier") or {}).get("chemin")})
+        return etat
+
+    def _reprises(self) -> list[dict]:
+        """Événements `reprise` de la course (un par segment au-delà du premier), relus du journal."""
+        journal = self.racine / "evenements.jsonl"
+        if not journal.exists():
+            return []
+        sortie = []
+        for ligne in journal.read_text(encoding="utf-8").splitlines():
+            if '"reprise"' in ligne:
+                e = json.loads(ligne)
+                if e.get("etape") == "reprise":
+                    sortie.append(e)
+        return sortie
 
     def _scores_finaux(self, lignes: list[dict]) -> dict:
         """Score sur le test final, lu une seule fois, à la fin, jamais rendu aux organismes. Générations notées et valides
@@ -921,6 +1142,8 @@ class Noyau:
             "rondes_conception_importees": [{"lignee": x["lignee"], "ronde": x["generation"], "course_origine": x.get("course_origine")} for x in lignes if x.get("importee")],
             "generations_invalidees": [{"lignee": x["lignee"], "generation": x["generation"], "statut": x["statut"]} for x in lignes if x.get("invalide")],
             "scores_finaux": self._scores_finaux(lignes),
+            # reprise par segments : numéro de ce segment, et les reprises de la course (vide sans reprise)
+            "segments": int(self.segment), "reprises": self._reprises(),
         }
         n = 1
         while (self.racine / f"rapport-v{n}.json").exists():

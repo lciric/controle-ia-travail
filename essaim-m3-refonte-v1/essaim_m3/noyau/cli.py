@@ -115,8 +115,39 @@ def _vivier(args, banque: dict):
         raise Arret(f"vivier de conception : {e}")
 
 
+def _refus_reprise(args) -> str | None:
+    """Reprise par segments (Lazar, 25 octobre 2026, 20:23 Paris) : `--reprendre` exige une course existante et exclut
+    `--depuis` (un bras apparié est une course neuve) ; sans `--reprendre`, une course existante n'est jamais relancée
+    (l'amorçage écrirait dans sa course). Rend la raison du refus, ou None."""
+    existe = (pathlib.Path(args.sortie) / "manifeste-run.json").exists()
+    if getattr(args, "reprendre", False):
+        if args.depuis:
+            return "--reprendre avec --depuis : refusé (un bras apparié est une course neuve)"
+        if not existe:
+            return f"--reprendre : aucune course dans {args.sortie} (manifeste-run.json absent)"
+        return None
+    if existe:
+        return (f"la course {args.sortie} existe déjà (manifeste-run.json) : --reprendre pour la continuer après un arrêt sur "
+                "STOP, sinon une sortie neuve")
+    return None
+
+
+def _entropie_de_la_course(args) -> int | None:
+    """`--reprendre` sans `--graine` : l'entropie consignée au manifeste de la course (une graine donnée qui en diffère
+    est refusée par la reprise)."""
+    if getattr(args, "reprendre", False) and args.graine is None:
+        m = json.loads((pathlib.Path(args.sortie) / "manifeste-run.json").read_text(encoding="utf-8"))
+        return int(m["entropie_seed_sequence"])
+    return args.graine
+
+
 def simuler(args) -> int:
     from ..simulateur import appelants_simules
+    refus = _refus_reprise(args)
+    if refus:
+        print(f"refus : {refus}", file=sys.stderr)
+        return 8
+    args.graine = _entropie_de_la_course(args)
     ss = np.random.SeedSequence(args.graine)
     rng_banque, rng_especes = (np.random.default_rng(s) for s in ss.spawn(2))
     if args.depuis:
@@ -144,7 +175,15 @@ def simuler(args) -> int:
                          recherche=recherche.recherche_simulee, relances_max=args.relances_max, memoire_partagee=args.memoire_partagee,
                          decalage_uid=args.decalage_uid,
                          rondes_conception_max=args.rondes_conception_max, budget_conception=_budget_conception(args))
-    amorcage = noyau.amorcer()
+    if args.reprendre:
+        try:
+            noyau.reprendre()
+        except Arret as e:
+            print(f"refus : {e}", file=sys.stderr)
+            return 9
+        amorcage = {}
+    else:
+        amorcage = noyau.amorcer()
     rapport = noyau.boucler()
     if args.confronter:
         conf = confrontation.Confrontation(noyau, pathlib.Path(args.sortie) / "confrontation").confronter()
@@ -252,6 +291,10 @@ def lancer(args) -> int:
     if not (hasattr(os, "geteuid") and os.geteuid() == 0):
         print("refus : le mode réel exige d'être root pour faire tourner chaque organisme sous un utilisateur non privilégié distinct (CR-01)", file=sys.stderr)
         return 5
+    refus = _refus_reprise(args)
+    if refus:
+        print(f"refus : {refus}", file=sys.stderr)
+        return 8
     try:
         os.chmod(args.taches, 0o600)  # la banque (avec ses vérités) n'est lisible que par le noyau
     except OSError as e:
@@ -302,7 +345,7 @@ def lancer(args) -> int:
         noyau = boucle.Noyau(args.sortie, _lire_mission(args.mission), banque, _budget(args), args.plafond_total,
                              args.generations, appelants=None, reel=True, go_id=args.go, isoler_reseau=args.isoler_reseau, vivier=vivier,
                              question_ouverte=question,
-                             entropie=args.graine, especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
+                             entropie=_entropie_de_la_course(args), especes_amorcage=especes, etiquette_run="reel", gel=args.gel,
                              organismes_imposes=imposes, parallele_max=args.parallele_max,
                              recherche=None, relances_max=args.relances_max, traits=traits, description_traits=description,
                              registre_go=args.registre_go, memoire_partagee=args.memoire_partagee, decalage_uid=args.decalage_uid,
@@ -310,7 +353,14 @@ def lancer(args) -> int:
     except Arret as e:
         print(f"refus : {e}", file=sys.stderr)
         return 7
-    noyau.amorcer()
+    if args.reprendre:
+        try:
+            noyau.reprendre()
+        except Arret as e:
+            print(f"refus : {e}", file=sys.stderr)
+            return 9
+    else:
+        noyau.amorcer()
     rapport = noyau.boucler()
     if args.confronter:
         confrontation.Confrontation(noyau, pathlib.Path(args.sortie) / "confrontation").confronter()
@@ -406,6 +456,7 @@ def principal(argv: list[str] | None = None) -> int:
         q.add_argument("--question-ouverte", default=None, metavar="FICHIER", help="question ouverte posée aux organismes (texte UTF-8, figé et empreinté au manifeste ; contrat § 7) ; exige --question-ouverte-aux")
         q.add_argument("--question-ouverte-aux", nargs="+", default=None, metavar="CIBLE", help="générations ou rondes qui reçoivent la question : g001, c002, conception, generations, toutes (répétable ou séparées par des virgules)")
         q.add_argument("--memoire-partagee", action="store_true", help="les lignées lisent la vue de toutes les lignées, figée au début de chaque ronde (défaut : chaque lignée ne lit que la sienne, CR-15)")
+        q.add_argument("--reprendre", action="store_true", help="reprise par segments : continue la course de --sortie, arrêtée par STOP entre deux unités, à la première unité qui n'a pas tourné (état scellé reprise/etat-vN.json) ; mêmes paramètres que la course (refus sinon), STOP retiré ; jamais avec --depuis ; sans --graine, l'entropie de la course")
         if nom == "simuler":
             q.add_argument("--n-train", type=int, default=24)
             q.add_argument("--n-test", type=int, default=24)
