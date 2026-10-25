@@ -107,3 +107,14 @@ Heures UTC lues sur `date -u` ; décisions de Lazar en heure de Paris (UTC + 2).
   (R12), dit au canal. Règle pour moi : `set -e` dans toute chaîne qui scelle.
 - Canal n° 30 (`f667c7f`) : ordre de lancement (copie au commit scellé, pas la tête de session-depot ; deux écritures de
   registre et une vérification ; une commande ; ce qui se pousse). Lancement par session-depot (les clés sont chez lui).
+
+## 01:33 — pilote non lancé : GO direct et clé Gemini n° 2 attendus de Lazar ; collisionneur fait
+
+- session-depot (R-382, `2d7f03d`, 01:32 UTC) : pilote non lancé — (1) un GO relayé ne s'inscrit pas sans le mot direct
+  de Lazar dans sa session (R-373) ; demande posée vers 01:00 UTC ; (2) clé Gemini n° 1 sans crédit (HTTP 402, R-379),
+  n° 2 non visible chez lui. Ses corrections de code (`44cd936`) reprennent mes deux relevés (empreinte sans bytecode ;
+  lecture sans lien de `statut_execution.json` et `erreurs.txt`) — hors du code du pilote (`cec6dce`).
+- Collisionneur (R-379) : Fable OK (21 439 caractères, 0,85 USD) ; Opus refus (catégorie « cyber », une tentative) ;
+  Argon HTTP 402 ; 1,05 USD ; sorties `donnees/collisionneur-reecriture-v1` (`2cda505`), non lues par moi.
+- Conteneur de session-depot redémarré vers 01:29 UTC (R-383).
+- Dit à Lazar ; surveillance du dépôt relancée.
