@@ -611,3 +611,22 @@ de l'heure d'été, l'heure de Paris est UTC + 1, non UTC + 2.)
   condition de lecture du pilote 3 (« sa v9 ») ne se remplira pas, décision de Lazar à venir.
 - **Session-depot** : dernier message n° 51 (16:36 UTC), `main` à `9ed7b5f` ; rien de lancé depuis. Gemini : aucune
   branche `canal/gemini-organisme-v6-2` à 20:58 UTC.
+
+## 21:59 — Pilote 4 : contre-lecture 3 « scellable après corrections mineures » ; corrections, batterie v8 (série v9 : 228 sur 228), essais complémentaires du noyau ; contre-lecture 4, courte, lancée
+
+(Écrit à 21:59 UTC, heure lue sur `date -u`.)
+
+- **Contre-lecture 3** (sous-agent neuf, 20:58–21:34 UTC, sur la v3 `efffb7e4…`) : `prereg/contre-lectures/pilote4-gemini-organisme-v3-cl3.md`
+  (`0d95ea8c…`), « scellable après corrections mineures » : trois mineurs (un canal sur les scores de `test` non déclaré —
+  les appels de mutation de la v6.1 en génération notée disent la stagnation ; le `STOP` humain indistinct au
+  `LANCEMENT.md` et `SEGMENT=K` au lieu de `K+1` ; « chaque refus sur un artefact » inexact), six remarques (dont la
+  borne : 7 075 s, et un minuteur mort non détecté). Noyau, lanceurs v5 et v6, batteries v6 et v7 redérivés et justes.
+- **Corrections** (texte v3, même nom, `228d266c…`, non scellé ; `92a8727` sur `outils/pilote4-gemini-travail`) : canal
+  (d) déclaré ; règle du `STOP` humain ; session-depot vérifie le PID du minuteur et pose `STOP` à l'échéance s'il est
+  mort ; batterie v8 (cinq gardes du segment K ≥ 2, la porte et le minuteur sur une copie mutée du lanceur) : série v9,
+  **228 sur 228** (21:45–21:56 UTC) ; essais complémentaires du noyau pour trois refus de la reprise : 9 sur 9, trois
+  mutations détectées (le premier essai des mutations avait oublié le dossier du collisionneur : gardé avec sa cause) ;
+  deux gardes restent lues dans le code, non essayées (noyau défaillant), dites. Lanceur et noyau inchangés.
+- **Contre-lecture 4** (relecture courte de l'écart) lancée à 21:59 UTC. Les deux décisions soumises à Lazar vers 20:54
+  UTC (objet de la seconde course ; lecture si la confrontation change un seuil) restent sans réponse ; note N-047
+  (partition par catégorie au lot 3) rédigée sur le canal.
