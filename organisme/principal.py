@@ -714,7 +714,7 @@ def _executer_moisson(
                 "extrait": extrait_doc,
             })
             traces_apprentissage.append({
-                "texte": f"[Document telecharge {ref_t[:60]}] {titre_doc} : {extrait_doc[:420]}",
+                "texte": f"[Document telecharge {ref_t[:60]}] {titre_doc} : {extrait_doc[:220]} ... {extrait_doc[-220:]}",
                 "poids": 0.82,
             })
 
