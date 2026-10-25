@@ -236,22 +236,24 @@ def _extraire_passages_denses_document(texte: str, max_total: int = MAX_CARACTER
     sain_complet = _sanitiser_donnee_externe(texte, 60_000)
     if len(sain_complet) <= max_total:
         return sain_complet
-    budget_debut = max_total // 2
-    budget_fin = max_total - budget_debut - 15
+    budget_debut = max_total // 3
+    budget_milieu = max_total // 3
+    budget_fin = max_total - budget_debut - budget_milieu - 20
     debut = sain_complet[:budget_debut].strip()
-    reste = sain_complet[budget_debut:]
+    queue = sain_complet[-budget_fin:].strip()
+    centre_brut = sain_complet[budget_debut:max(budget_debut, len(sain_complet) - budget_fin)]
     m_sec = re.search(
         r"\b(?:method|theorem|proof|result|discussion|conclusion|analysis|evaluation|experiment|proposition|lemma)\b",
-        reste,
+        centre_brut,
         flags=re.I,
     )
     if m_sec:
-        pos = max(0, m_sec.start() - 40)
-        fin = reste[pos:pos + budget_fin].strip()
+        pos = max(0, m_sec.start() - 30)
+        milieu = centre_brut[pos:pos + budget_milieu].strip()
     else:
-        milieu = max(0, (len(reste) // 2) - (budget_fin // 2))
-        fin = reste[milieu:milieu + budget_fin].strip()
-    return f"{debut} [...] {fin}"[:max_total]
+        pos = max(0, (len(centre_brut) // 2) - (budget_milieu // 2))
+        milieu = centre_brut[pos:pos + budget_milieu].strip()
+    return f"{debut} [...] {milieu} [...] {queue}"[:max_total]
 
 
 def _charger_corpus_archive(dossier_archive: str) -> list:
