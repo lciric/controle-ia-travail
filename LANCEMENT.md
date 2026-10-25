@@ -1,0 +1,26 @@
+# Lancement du pilote pilote-gemini-organisme-v4-question-v1 (reel, tentative 1)
+
+- début (UTC) : 2026-10-25T07:47:04Z ; hôte : vm ; utilisateur : 0
+- dossier du pilote : /tmp/pilote-gemini-v1/essaim-m3-refonte-v1/pilotes/pilote-gemini-organisme-v4-question-v1
+- dépôt : /tmp/pilote-gemini-v1 ; HEAD : 2d01805a7c314ffd4ab72b46ea359dad483c298b (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote_gemini_v4_question_v3.sh, sha256 322275c06d2ad88e13ffe1d4fbd77d1e610bddeebef447d38c45b7630ffeb680
+- source des registres : origin/main
+- aucune autre course du noyau dans ce conteneur au départ (détection par pgrep)
+- code : identique à cec6dce (commit et arbre de travail : essaim_m3, tests) ; 4967734 ancêtre ; banque f1387a20cb272d2e8c205102147dfee71cd1d372f7f5d2ad4ff8233783cc83cc ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e
+- préenregistrement : /tmp/pilote-gemini-v1/essaim-m3-refonte-v1/prereg/pilote-gemini-organisme-v4-question-v3.md, sha256 1c5b6f7db90caa1c5527f207fcc034163257459104f4d2b9a01d33df25eed79a (compagnon conforme), graine 10826196869519811464 écrite
+- organisme : 16 fichiers, empreinte d'arbre c5ada33581fd7675f2cec5331d9a9a50ff80271b543c22eef80a64882730c1b9 ; question : sha256 d967b212082315c7b4fa1c42ab1b5d551b3bc1d3c4a98cdeb58eccd58b5b9441
+- registre : une ligne GO-2026-10-24-07 de type calcul nommant le pilote ; dépense consignée avant ; reste déclaré 196.8 USD ≥ 40 (vérification du lanceur)
+- appel de contrôle : controle-especes-pilote-v1.json, sha256 84eb04f888eec520f4350599c18a3f6d7889545e3a550af6b2dc474ee05fbac5 — présent et non vide ; son statut est vérifié par l'outil de session-depot, non par ce script
+- essais : 113 passés, 0 sautés [], 1 désélectionnés ; arguments : « --deselect tests/test_noyau.py::test_sources_reelles_de_moisson_si_reseau » ; les 19 essais cités ont passé ici
+- noyau sans bytecode : empreinte 68494279ec42fc13366f83cc67c502c67ed6dcf97f0678bb568aaae8010772fb
+- clés : présentes (valeurs jamais lues ni écrites) ; clé Gemini prise dans la variable GEMINI_API_KEY_2 et passée sous GEMINI_API_KEY ; ANTHROPIC_BASE_URL retirée
+- départ (UTC) : 2026-10-25T07:49:07Z
+- PID de la course : 5122 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt à la fin de la génération)
+- fin du processus (UTC) : 2026-10-25T07:55:48Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 3da08dd8110a0b3e4b835d137ff208b50d3a154d703ad31a1b12152da0d667b5
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit 2d01805a7c314ffd4ab72b46ea359dad483c298b ; sha256_code_noyau 68494279ec42fc13366f83cc67c502c67ed6dcf97f0678bb568aaae8010772fb
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 c24d0e55edbc77b3740c04718adccccf1d3d51ae1045260349a867b52ba1ca90
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 855bb06ac33e7a589940dc81239b05ce482d1eb5dd67705554ec68f0c6f4f8d9
+- réponse à la question : reponse-question-g001.md, sha256 af091e785d141cc072c1cf24df70bf2a06cd6507d4208eb8a4aeee882bd31898
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 2122765b4a7b219ca8baf08e14e07518876602698b3288428c6a65c343e3c253, 1428 entrées = 1428 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-25T07:55:49Z
