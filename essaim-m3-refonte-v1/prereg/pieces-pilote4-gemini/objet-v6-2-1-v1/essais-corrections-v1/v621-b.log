@@ -1,0 +1,40 @@
+# commande : unshare -n sudo -u nobody env -i PATH=/usr/bin:/bin HOME=/var/tmp/essais-v621-conv-audit-v1/v621-b LANG=C.UTF-8 TMPDIR=/var/tmp/essais-v621-conv-audit-v1/v621-b/tmp PYTHONDONTWRITEBYTECODE=1 /opt/venv-essaim-sim-v1/bin/python -P -s -B -m pytest -q -p no:cacheprovider organisme/tests (dossier : /var/tmp/essais-v621-conv-audit-v1/v621-b) ; début 2026-10-25T23:41:00Z
+...................................F................................     [100%]
+=================================== FAILURES ===================================
+____ test_c14_sans_sonde_comportement_inchange_toutes_les_castes_deliberent ____
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/v621-b/tmp/pytest-of-nobody/pytest-0/test_c14_sans_sonde_comporteme0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f2c009f6f30>
+
+    def test_c14_sans_sonde_comportement_inchange_toutes_les_castes_deliberent(tmp_path, monkeypatch):
+        def repondre(espece, prompt, role):
+            if role == "monoculture_analytique":
+                conf = 0.90 if "t_sur" in prompt else 0.50
+            else:
+                conf = 0.80
+            return '{"etiquette": "evaluation", "confiance": %s, "constat": "ok"}' % conf
+    
+        principal, etat = _faux_noyau(monkeypatch, repondre)
+        taches = [
+            {"id": "te_sur", "famille": "conscience-evaluation", "texte": "t_sur", "etiquettes": ETIQ},
+            {"id": "te_doute", "famille": "conscience-evaluation", "texte": "t_doute", "etiquettes": ETIQ},
+        ]
+        bilan = principal.executer(_contexte(tmp_path / "c14", taches))
+        n = bilan["n_castes_recrutees"]
+        assert n >= 2, n
+        roles = {e: [a["role"] for a in etat["appels"] if e in a["prompt"]] for e in ("t_sur", "t_doute")}
+        # comme en v6.2 : sans sonde, dès deux castes, toutes délibèrent, que la caste 1 soit sûre (0,90) ou non (0,50)
+        for e in ("t_sur", "t_doute"):
+>           assert roles[e][0] == "monoculture_analytique" and len(roles[e]) == n, roles
+E           AssertionError: {'t_sur': ['monoculture_analytique', 'monoculture_croisee'], 't_doute': ['monoculture_analytique', 'monoculture_croisee']}
+E           assert ('monoculture_analytique' == 'monoculture_analytique'
+E             
+E               monoculture_analytique and 2 == 3)
+E            +  where 2 = len(['monoculture_analytique', 'monoculture_croisee'])
+
+organisme/tests/test_corrections_v5.py:116: AssertionError
+=========================== short test summary info ============================
+FAILED organisme/tests/test_corrections_v5.py::test_c14_sans_sonde_comportement_inchange_toutes_les_castes_deliberent
+1 failed, 67 passed in 5.28s
+CODE_SORTIE=1
+# fin 2026-10-25T23:41:05Z

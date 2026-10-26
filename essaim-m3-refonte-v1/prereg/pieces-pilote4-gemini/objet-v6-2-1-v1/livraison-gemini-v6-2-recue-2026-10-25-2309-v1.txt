@@ -1,0 +1,128 @@
+Voici le rapport de livraison final de la **v6.2 (`6.2.0`)**, prêt à être copié-collé tel quel :
+
+```markdown
+# LIVRAISON DE L'ORGANISME GEMINI V6.2 (`organisme-gemini-m3-v6`, `6.2.0`) — LEVÉE INTÉGRALE DES 13 POINTS (§ 2)
+
+En réponse à `demande-gemini-v6-2-correction-v2.md` et au rapport `verification-v61-poussee-v1/LISEZMOI-v1.md`, la **v6.2** est poussée sur la branche `canal/gemini-organisme-v6-2` (manifeste `organisme-gemini-m3-v6`, version `6.2.0`, lignée déclarée « assistée »).
+
+---
+
+## 1. Référence Git distante et sortie brute de `git ls-remote`
+- **Dépôt** : `https://github.com/lciric/controle-ia-travail.git`
+- **Branche** : `canal/gemini-organisme-v6-2`
+- **Sortie brute de `git ls-remote --heads origin canal/gemini-organisme-v6-2`** :
+```text
+3bbb78c1991baf17feb421529fa1957be7edec59        refs/heads/canal/gemini-organisme-v6-2
+
+```
+
+---
+
+## 2. Sortie brute de `python -m pytest -q -p no:cacheprovider organisme/tests` (53 essais)
+
+```text
+.....................................................                    [100%]
+53 passed in 17.55s
+PYTEST_V62_EXIT_CODE=0
+
+```
+
+* **34 essais hérités de la v5.2.1** (`test_corrections_v1.py` à `test_corrections_v4.py`, `test_moissonneur_v5.py`, `test_organisme.py`, `test_question_ouverte_v4.py`) : inchangés octet pour octet, tous passés.
+* **5 essais de la v5.3** (`test_emprunts_v5_3.py`) : inchangés octet pour octet, tous passés.
+* **14 essais dans `test_auto_architecte_v6.py**` (les 6 de la v6.1 avec l'assertion du Point 12 rétablie + les nouveaux essais dédiés aux Points 1 à 13) : tous passés.
+
+---
+
+## 3. Levée des 13 points du § 2 (fichier, lignes et essai associé)
+
+1. **Point 1 (Réserve 1 — Affirmation sur le flux sans traits par rapport à la v5.2.1)** — **LEVÉ** :
+* **Modification** : Dans `organisme/CONCEPTION.md` (§ 2.11 et § 2.13.1), l'affirmation « sans traits, flux identique à la v5.2.1 » est retirée et remplacée par le fait exact : sans traits (`traits["disponibles"]` faux), la suite des appels au noyau (`appeler`, `budget`, `especes`, `rechercher`, `telecharger`), les consignes de la génération 0 et `reponses_test.json` sont identiques à la v5.2.1, tandis que `memoire_isvd.json` (`journal_ablations`, `archive_genealogique`, `multi_familles`) et `metrique_proposee.json` (score de Bregman-Tsallis propre) diffèrent conformément aux mécanismes v5.3/v6.2.
+* **Essai** : `test_v6_2_point_01_et_11_conception_md_propre_et_exacte` (`test_auto_architecte_v6.py`).
+
+
+2. **Point 2 (Réserve 3 — Seuil d'exactitude de la sonde à `0.60` codé en dur et marge minimale)** — **LEVÉ** :
+* **Modification** : Dans `organisme/politique_endogene.py` (`seuils_routage`, l. 44–53) et `organisme/principal.py` (`_traiter_tache`, l. 1637 et 1656), le seuil d'exactitude requis pour qu'une sonde vote est paramétré par `seuils_routage()["seuil_exactitude_sonde"]` (porté à `0.65` par défaut) et exige simultanément `marge_sonde >= marge_sonde_minimale_vote` (`0.10`).
+* **Essai** : `test_v6_2_point_02_03_04_routage_sonde_validation_croisee_et_non_redondance` (`test_auto_architecte_v6.py`).
+
+
+3. **Point 3 (Réserve 4 — Déclencheur d'arbitrage `besoin_arbitrage` redondant dès deux castes `len(castes) > 1`)** — **LEVÉ** :
+* **Modification** : Dans `organisme/principal.py` (`_traiter_tache`, l. 1697–1700), lorsque la sonde est active (`etiq_sonde is not None`), `len(castes) > 1` est retiré de `besoin_arbitrage` :
+`besoin_arbitrage = (not accord_sonde_c1) and ((conf_c1 < seuil_c1) or sonde_incertaine_ou_discorde)`
+Ainsi, une tâche à marge intermédiaire (`te_neutre`, marge `0.22` dans `[0.18, 0.32[`) où la Caste 1 est confiante (`0.85 >= 0.78`) n'appelle pas les castes supplémentaires (1 seul appel LLM), tandis qu'une tâche où la sonde est incertaine (`te_incertain`, marge `0.04 < 0.18`) force réellement l'arbitrage de toutes les castes supplémentaires (`monoculture_analytique`, `monoculture_croisee`, `sonde_orthogonale_onsager`).
+* **Essai** : `test_v6_2_point_02_03_04_routage_sonde_validation_croisee_et_non_redondance` (`test_auto_architecte_v6.py`).
+
+
+4. **Point 4 (Réserve 5 — Garde d'exactitude portant sur `exactitude_entrainement` et documentation absente de `CONCEPTION.md`)** — **LEVÉ** :
+* **Modification** : Dans `organisme/principal.py` (`_entrainer_et_predire_sondes_traits`, l. 512–522 et 569–589, et `executer`, l. 1882), dès qu'une famille compte au moins 4 tâches d'entraînement hors vivier, l'organisme réserve un pli de validation stratifié (25 %, au moins 2 tâches) qui n'est pas passé à `entrainer`, évalue la sonde via `predire` sur ce pli tenu à l'écart, et enregistre `exactitudes_validation[fam]`, utilisée par `_traiter_tache` pour la garde d'exactitude. Documenté dans `organisme/CONCEPTION.md` (§ 2.13.2).
+* **Essai** : `test_v6_2_point_02_03_04_routage_sonde_validation_croisee_et_non_redondance` et `test_v6_2_point_01_et_11_conception_md_propre_et_exacte`.
+
+
+5. **Point 5 (Réserve 7 — Trois jeux différents de mots-clés pour détecter `multi_familles`)** — **LEVÉ** :
+* **Modification** : Unification des mots-clés sur les deux tuples canoniques `MOTS_CLES_EVAL_FAMILLE = ("conscience", "evaluation", "usage-reel", "benchmark", "laboratoire")` et `MOTS_CLES_CTRL_FAMILLE = ("delegation", "delegue", "sabotage", "honnete", "anomalie")` dans `organisme/memoire_isvd.py` (l. 7–8 et 83–88), `organisme/politique_endogene.py` (l. 9–10 et 36–41) et le gabarit de mutation de `organisme/principal.py` (l. 1054–1059).
+* **Essai** : `test_v6_2_point_05_unification_mots_cles_multi_familles` (`test_auto_architecte_v6.py`).
+
+
+6. **Point 6 (Réserve 9 — Paramètre `erreurs` absent de la signature de `_entrainer_et_predire_sondes_traits`)** — **LEVÉ** :
+* **Modification** : Dans `organisme/principal.py` (l. 461–467 et 1829), la signature est désormais `def _entrainer_et_predire_sondes_traits(contexte: dict, taches_entrainement: list, taches_test: list, compteurs: dict, erreurs: list = None) -> dict:` et `executer` lui transmet `erreurs=erreurs`.
+* **Essai** : `test_v6_2_point_06_signature_entrainer_et_predire_sondes_traits_accepte_erreurs` (`test_auto_architecte_v6.py`).
+
+
+7. **Point 7 (Point 2 v6.1 — Fil `threading` non stoppable et seconde exécution sans borne dans `_propager_successeur`)** — **LEVÉ** :
+* **Modification** :
+1. Dans `organisme/politique_endogene.py`, retrait complet de `threading.Thread` et bornage strict du coût unitaire de chaque nœud AST ($\le 800$ nœuds, constantes numériques dans $[-10\,000, 10\,000]$, chaînes $\le 450$ caractères, exposants de `ast.Pow` bornés dans $[-4, 4]$) ;
+2. Dans `organisme/principal.py` (`_propager_successeur`, l. 1528–1545), suppression du second `exec()` : le fichier assemblé `code_complet` est validé statiquement par `ast.parse(code_complet)` et vérification des nœuds racines `ast.Import` (`{"ast", "math"}`) et `ast.FunctionDef`.
+
+
+* **Essai** : `test_v6_2_point_07_10_cout_unitaire_borne_sans_thread_ni_second_exec` (`test_auto_architecte_v6.py`).
+
+
+8. **Point 8 (Point 3 v6.1 — Objet JSON sans les clés attendues accepté par défaut, et `or 0.78` silencieux sur `seuils_routage()`)** — **LEVÉ** :
+* **Modification** :
+1. Dans `organisme/principal.py` (`_synthetiser_mutation_politique_endogene`, l. 1007–1011), tout objet JSON ne possédant pas les 3 clés numériques finies `"alpha"`, `"poids_brier"` et `"seuil_confiance_caste1"` est refusé (`mutee: False`, erreur consignée) ;
+2. Dans `organisme/principal.py` (`_lire_seuil_verifie`, l. 1572–1580, appelée l. 1636–1641), suppression des `or 0.78` silencieux : toute clé absente, nulle ou hors $[0.05, 0.95]$ dans `seuils_routage()` consigne une erreur via `_consigner_erreur`.
+
+
+* **Essai** : `test_v6_2_point_08_json_incomplet_refuse_et_seuils_routage_verifies` (`test_auto_architecte_v6.py`).
+
+
+9. **Point 9 (Point 5 v6.1 — Sur-confiance légère `1 - Brier + 0.02*(q - 0.5)^2` en `p = 0.97` et 44 transformations affines `a*R + b` acceptées)** — **LEVÉ** :
+* **Modification** : Dans `organisme/politique_endogene.py` (`verifier_proprete_stricte_recompense`, l. 114–169, et `recompense_interne`, l. 22, rendue en `float` exact sans `round(..., 8)`), le vérificateur contrôle par différences finies centrées ($h = 10^{-5}$) sur **99 probabilités $p \in \{0.01, 0.02, \dots, 0.99\}$ (incluant $p = 0.97 > 0.95$)** la condition du premier et du second ordre de Savage ($|g'(p)| \le 1.5 \times 10^{-4}$ et $g''(p) \le -0.05$), et ancre $R(1, 0.9999), R(0, 0.0001) \in [0.9995, 1.0005]$ et $R(1, 0.5), R(0, 0.5) \in [0.7495, 0.7505]$, ce qui rejette `1 - Brier + 0.02*(q - 0.5)^2` ainsi que les transformations affines (`0.87*Brier + 0.13`, `1.2*Brier - 0.2`, `0.82*R + 0.18`).
+* **Essai** : `test_v6_2_point_09_rejet_surconfiance_0_02_et_transformations_affines` (`test_auto_architecte_v6.py`).
+
+
+10. **Point 10 (Point 6 v6.1 — Garanties de la liste blanche syntaxique sur le coût unitaire, les types de `seuils_routage()`, le découpage du vérificateur et `ast.parse`)** — **LEVÉ** :
+* **Modification** : Dans `organisme/politique_endogene.py` (`verifier_et_valider_code_politique`, l. 172–275), `ast.parse` rattrape `Exception`, le nombre de nœuds AST est borné à `800`, les constantes numériques à $[-10\,000, 10\,000]$, les exposants `ast.Pow` à $[-4, 4]$, et les 6 clés de `CLES_SEUILS_ROUTAGE_REQUISES` sont vérifiées numériques finies dans $[0.05, 0.95]$. Dans `organisme/principal.py` (l. 1522–1525), le découpage du vérificateur s'appuie sur `"\nimport ast\nimport math\n"`.
+* **Essai** : `test_v6_2_point_07_10_cout_unitaire_borne_sans_thread_ni_second_exec` (`test_auto_architecte_v6.py`).
+
+
+11. **Point 11 (`CONCEPTION.md` — 2 retours chariot restants et mots amputés de leur première lettre)** — **LEVÉ** :
+* **Modification** : Dans `organisme/CONCEPTION.md`, suppression de tous les `\r` et restauration de tous les mots amputés (`arxiv`, `budget()`, `fichier_texte`, `travail/corpus`, `tronque=True`, `regles_induites`, `taches_entrainement`).
+* **Essai** : `test_v6_2_point_01_et_11_conception_md_propre_et_exacte` (`test_auto_architecte_v6.py`).
+
+
+12. **Point 12 (Assertion `"croissante" in msg_const` retirée dans `test_v6_verificateur_proprete_stricte_accepte_bregman_et_rejette_reward_hacking`)** — **LEVÉ** :
+* **Modification** : Rétablissement de `ok_const, msg_const = ...` et `assert ok_const is False and "croissante" in msg_const` dans `organisme/tests/test_auto_architecte_v6.py` (l. 20–21).
+* **Essai** : `test_v6_verificateur_proprete_stricte_accepte_bregman_et_rejette_reward_hacking` (`test_auto_architecte_v6.py`).
+
+
+13. **Point 13 (Définition de `metrique_proposee.json` mentionnant toujours `alpha=4/3` même après mutation)** — **LEVÉ** :
+* **Modification** : Dans `organisme/principal.py` (`executer`, l. 2033–2040), la définition de `metrique_proposee.json` interpolle dynamiquement `politique={nom_pol_active}, alpha={alpha_actif}` depuis `politique_endogene`.
+* **Essai** : `test_v6_2_point_13_metrique_proposee_reflete_alpha_actif` (`test_auto_architecte_v6.py`).
+
+
+
+---
+
+## 4. Récapitulatif des fichiers modifiés par rapport à la v6.1 (`a9d8eb50`)
+
+* `organisme/manifeste.json` : `"nom": "organisme-gemini-m3-v6"`, `"version": "6.2.0"`.
+* `organisme/politique_endogene.py` : `recompense_interne` en `float` exact, mots-clés multi-familles unifiés, `seuil_exactitude_sonde: 0.65`, contrôle de Savage du 1er/2nd ordre sur `p in [0.01, 0.99]`, ancrages exacts `+- 5e-4`, bornes AST sur constantes/exposants et validation des 6 clés de `seuils_routage()` sans `threading.Thread`.
+* `organisme/memoire_isvd.py` : constantes canoniques `MOTS_CLES_EVAL_FAMILLE` et `MOTS_CLES_CTRL_FAMILLE`.
+* `organisme/principal.py` : `VERSION = "organisme-gemini-m3-v6-2"`, paramètre `erreurs` et validation hors pli (`exactitudes_validation`) dans `_entrainer_et_predire_sondes_traits`, refus des JSON incomplets, validation statique AST dans `_propager_successeur` sans second `exec()`, `_lire_seuil_verifie`, déclencheur `besoin_arbitrage` non redondant et `alpha` dynamique dans `metrique_proposee.json`.
+* `organisme/CONCEPTION.md` : suppression des `\r`, restauration des mots amputés et ajout du § 2.13.
+* `organisme/tests/test_auto_architecte_v6.py` : rétablissement de l'assertion du Point 12 et ajout des essais dédiés aux Points 1 à 13 (53 essais au total).
+* Les 18 autres fichiers de `organisme/` sont inchangés octet pour octet.
+
+```
+
+```

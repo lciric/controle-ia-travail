@@ -1,0 +1,129 @@
+2c2
+< # Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6.2, chacun seul, sur la banque
+---
+> # Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v6.2 puis v5.3, chacun seul, sur la banque
+4,5c4,8
+< # une course en un ou plusieurs segments (COURSE=v5-3, puis COURSE=v6-2 ; SEGMENT=1, 2, …) — v8 : le lanceur v7
+< # (cda96923…) par `deriver_lanceur_pilote4_v8.py` (objet de la seconde course : la v6.2 livrée par Gemini, commit
+---
+> # une course en un ou plusieurs segments (COURSE=v6-2, puis COURSE=v5-3 ; SEGMENT=1, 2, …) — v9 : le lanceur v8
+> # (40685089…) par `deriver_lanceur_pilote4_v9.py` (ordre des courses inversé, décision de Lazar du 26 octobre 2026,
+> # 00:18 Paris, « je veux la v6.2 en premier » : la v6.2 d'abord, puis la v5.3 après une v6.2 saine — porte « v6.2
+> # précédente », variable PRECEDENTE_V62 ; écart consigné dans `diff-lanceur-pilote4-v8-vers-v9.txt`), la v8 dérivée
+> # du lanceur v7 (cda96923…) par `deriver_lanceur_pilote4_v8.py` (objet de la seconde course : la v6.2 livrée par Gemini, commit
+18c21,22
+< # `--generations 4` ; les rondes de conception ; la porte « v5.3 précédente » attend les générations 0 à 3 ; la ligne de
+---
+> # `--generations 4` ; les rondes de conception ; la porte « v6.2 précédente » (v9 ; « v5.3 précédente » jusqu'au v8)
+> # attend les générations 0 à 3 ; la ligne de
+29c33
+< #   MODE=reel COURSE=v5-3 DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
+---
+> #   MODE=reel COURSE=v6-2 DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
+32,33c36,37
+< #       bash lancer_pilote4_gemini_v8.sh
+< #   MODE=reel COURSE=v6-2 … PRECEDENTE_V53=<dossier du pilote de la course v5.3 de ce pilote, dans la même copie> (même forme)
+---
+> #       bash lancer_pilote4_gemini_v9.sh
+> #   MODE=reel COURSE=v5-3 … PRECEDENTE_V62=<dossier du pilote de la course v6.2 de ce pilote, dans la même copie> (même forme)
+277,286c281,291
+< # 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course v6.2 : ne part qu'après une course v5.3
+< #        finie, fermée et saine (P3C1-01 : « mêmes règles de refus que pour M et S », R-440) — la liste close de l'étape (0), paramétrée pour la v5.3 et ce lanceur (nom et empreinte de ce
+< #        lanceur, course `v5-3`, nom `pilote4-gemini-v5-3-v1`, lignée `gemini-organisme-v5-3`, GO de ce
+< #        pilote) ; la graine de v5.3 au manifeste est comparée, à l'étape (2), à celle de ce texte ; la ligne de dépense
+< #        de v6.2 porte aussi les 16 premiers caractères de l'empreinte des empreintes de v5.3
+< EMP_V53=""
+< if [ "$COURSE" = v6-2 ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V53:-}" ]; }; then
+<   [ -n "${PRECEDENTE_V53:-}" ] || refus "PRECEDENTE_V53 non défini : v6.2 ne part qu'après une course v5.3 saine (dossier du pilote de la course v5.3)"
+<   SV="$PRECEDENTE_V53"
+<   [ -d "$SV" ] || refus "PRECEDENTE_V53 $SV absent : v6.2 ne part qu'après v5.3"
+---
+> # 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course v5.3 : ne part qu'après une course v6.2
+> #        finie, fermée et saine (v9 : ordre des courses inversé, décision de Lazar du 26 octobre 2026, 00:18 Paris,
+> #        « je veux la v6.2 en premier » ; P3C1-01 : « mêmes règles de refus que pour M et S », R-440) — la liste close de l'étape (0), paramétrée pour la v6.2 et ce lanceur (nom et empreinte de ce
+> #        lanceur, course `v6-2`, nom `pilote4-gemini-v6-2-v1`, lignée `gemini-organisme-v6-2`, GO de ce
+> #        pilote) ; la graine de v6.2 au manifeste est comparée, à l'étape (2), à celle de ce texte ; la ligne de dépense
+> #        de v5.3 porte aussi les 16 premiers caractères de l'empreinte des empreintes de v6.2
+> EMP_V62=""
+> if [ "$COURSE" = v5-3 ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V62:-}" ]; }; then
+>   [ -n "${PRECEDENTE_V62:-}" ] || refus "PRECEDENTE_V62 non défini : v5.3 ne part qu'après une course v6.2 saine (dossier du pilote de la course v6.2)"
+>   SV="$PRECEDENTE_V62"
+>   [ -d "$SV" ] || refus "PRECEDENTE_V62 $SV absent : v5.3 ne part qu'après v6.2"
+289,290c294,295
+<     case "$(dirname "$SV")" in "$(cd "$RACINE_PILOTES" && pwd -P)") ;; *) refus "PRECEDENTE_V53 $SV hors du dossier des pilotes $RACINE_PILOTES";; esac
+<     [[ "$(basename "$SV")" =~ ^pilote4-gemini-v5-3-v1(-tentative[0-9]+)?$ ]] || refus "PRECEDENTE_V53 $SV : nom autre que pilote4-gemini-v5-3-v1[-tentativeN]"
+---
+>     case "$(dirname "$SV")" in "$(cd "$RACINE_PILOTES" && pwd -P)") ;; *) refus "PRECEDENTE_V62 $SV hors du dossier des pilotes $RACINE_PILOTES";; esac
+>     [[ "$(basename "$SV")" =~ ^pilote4-gemini-v6-2-v1(-tentative[0-9]+)?$ ]] || refus "PRECEDENTE_V62 $SV : nom autre que pilote4-gemini-v6-2-v1[-tentativeN]"
+292,293c297,298
+<   [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v5.3 absentes : v6.2 ne part qu'après une course v5.3 finie et fermée"
+<   (cd "$SV" && sha256sum -c --quiet EMPREINTES-pilote-v1.txt.sha256 && sha256sum -c --quiet EMPREINTES-pilote-v1.txt) > /dev/null 2>&1 || refus "empreintes de v5.3 non vérifiées (fichiers de v5.3 modifiés ou manquants)"
+---
+>   [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v6.2 absentes : v5.3 ne part qu'après une course v6.2 finie et fermée"
+>   (cd "$SV" && sha256sum -c --quiet EMPREINTES-pilote-v1.txt.sha256 && sha256sum -c --quiet EMPREINTES-pilote-v1.txt) > /dev/null 2>&1 || refus "empreintes de v6.2 non vérifiées (fichiers de v6.2 modifiés ou manquants)"
+295c300
+<     grep -Eq "^[0-9a-f]{64}  $f\$" "$SV/EMPREINTES-pilote-v1.txt" || refus "empreintes de v5.3 sans $f"
+---
+>     grep -Eq "^[0-9a-f]{64}  $f\$" "$SV/EMPREINTES-pilote-v1.txt" || refus "empreintes de v6.2 sans $f"
+297,298c302,303
+<   EMP_V53="$(cut -d' ' -f1 < "$SV/EMPREINTES-pilote-v1.txt.sha256")"
+<   issue_v53="$("$PY" -I -c '
+---
+>   EMP_V62="$(cut -d' ' -f1 < "$SV/EMPREINTES-pilote-v1.txt.sha256")"
+>   issue_v62="$("$PY" -I -c '
+303c308
+< if not re.search(r"^- course : " + re.escape(course) + r" ;", lan, re.M): pb.append("ce n est pas la course v5.3")
+---
+> if not re.search(r"^- course : " + re.escape(course) + r" ;", lan, re.M): pb.append("ce n est pas la course v6.2")
+305,307c310,312
+<     pb.append("v5.3 n a pas tourné en réel")
+< if "≠ espace attendu" in lan: pb.append("espace des organismes de v5.3 autre que l espace attendu")
+< if not re.search(r"^- lanceur : " + re.escape(nom_lanceur) + r", sha256 " + sha_lanceur + r"$", lan, re.M): pb.append("v5.3 n a pas tourné sous ce lanceur")
+---
+>     pb.append("v6.2 n a pas tourné en réel")
+> if "≠ espace attendu" in lan: pb.append("espace des organismes de v6.2 autre que l espace attendu")
+> if not re.search(r"^- lanceur : " + re.escape(nom_lanceur) + r", sha256 " + sha_lanceur + r"$", lan, re.M): pb.append("v6.2 n a pas tourné sous ce lanceur")
+310c315
+< if re.search(r"^- CLORE=1 : aucune reprise", lan, re.M): pb.append("course v5.3 fermée sans reprise (CLORE=1)")
+---
+> if re.search(r"^- CLORE=1 : aucune reprise", lan, re.M): pb.append("course v6.2 fermée sans reprise (CLORE=1)")
+315c320
+<     print("extrait de v5.3 illisible : " + type(e).__name__); sys.exit(1)
+---
+>     print("extrait de v6.2 illisible : " + type(e).__name__); sys.exit(1)
+317c322
+< if [g.get("generation") for g in gs] != [0, 1, 2, 3]: pb.append("générations de v5.3 : " + str([g.get("generation") for g in gs]) + " au lieu de [0, 1, 2, 3]")
+---
+> if [g.get("generation") for g in gs] != [0, 1, 2, 3]: pb.append("générations de v6.2 : " + str([g.get("generation") for g in gs]) + " au lieu de [0, 1, 2, 3]")
+336,337c341,342
+<     if m.get("reel") is not True: pb.append("manifeste de v5.3 : reel = %r" % m.get("reel"))
+<     if m.get("go_id") != go_id: pb.append("manifeste de v5.3 : go_id = %r" % m.get("go_id"))
+---
+>     if m.get("reel") is not True: pb.append("manifeste de v6.2 : reel = %r" % m.get("reel"))
+>     if m.get("go_id") != go_id: pb.append("manifeste de v6.2 : go_id = %r" % m.get("go_id"))
+349,353c354,358
+< print("v5.3 saine : g000 à g003 OK, au plus 20 %% d appels hors OK et au moins un appel OK de Fable à chacune (%s), fin « générations maximales », arrêt « aucune lignée active » en %d segment(s) (%d arrêt(s) sur le STOP du minuteur, chacun repris), dernier code 0, archive fermée ; graine de v5.3 %s ; dépense du noyau %s USD ; refus du noyau par génération %s" % ("; ".join(statuts_appels), k + 1, k, m.get("entropie_seed_sequence"), r.get("depense_totale_usd"), json.dumps(refus_s, ensure_ascii=False)))
+< ' "$SV" "$SHA_LANCEUR" "gemini-organisme-v5-3" "$MODE" "$GO_ID" "$(basename "$0")" "v5-3" "pilote4-gemini-v5-3-v1")" || refus "v6.2 ne part pas : issue de v5.3 hors de la liste saine ($issue_v53) — décision de Lazar requise"
+<   GRAINE_V53_MANIFESTE="$("$PY" -I -c 'import json, sys; print((json.load(open(sys.argv[1])).get("manifeste") or {}).get("entropie_seed_sequence"))' "$SV/extrait-mecanique-v1.json")"
+<   [[ "$GRAINE_V53_MANIFESTE" =~ ^[0-9]+$ ]] || refus "graine de v5.3 au manifeste illisible ou vide ($GRAINE_V53_MANIFESTE)"
+<   note "- course v5.3 précédente : $SV ; $issue_v53 ; empreintes de v5.3 vérifiées (EMPREINTES-pilote-v1.txt, sha256 $EMP_V53)"
+---
+> print("v6.2 saine : g000 à g003 OK, au plus 20 %% d appels hors OK et au moins un appel OK de Fable à chacune (%s), fin « générations maximales », arrêt « aucune lignée active » en %d segment(s) (%d arrêt(s) sur le STOP du minuteur, chacun repris), dernier code 0, archive fermée ; graine de v6.2 %s ; dépense du noyau %s USD ; refus du noyau par génération %s" % ("; ".join(statuts_appels), k + 1, k, m.get("entropie_seed_sequence"), r.get("depense_totale_usd"), json.dumps(refus_s, ensure_ascii=False)))
+> ' "$SV" "$SHA_LANCEUR" "gemini-organisme-v6-2" "$MODE" "$GO_ID" "$(basename "$0")" "v6-2" "pilote4-gemini-v6-2-v1")" || refus "v5.3 ne part pas : issue de v6.2 hors de la liste saine ($issue_v62) — décision de Lazar requise"
+>   GRAINE_V62_MANIFESTE="$("$PY" -I -c 'import json, sys; print((json.load(open(sys.argv[1])).get("manifeste") or {}).get("entropie_seed_sequence"))' "$SV/extrait-mecanique-v1.json")"
+>   [[ "$GRAINE_V62_MANIFESTE" =~ ^[0-9]+$ ]] || refus "graine de v6.2 au manifeste illisible ou vide ($GRAINE_V62_MANIFESTE)"
+>   note "- course v6.2 précédente : $SV ; $issue_v62 ; empreintes de v6.2 vérifiées (EMPREINTES-pilote-v1.txt, sha256 $EMP_V62)"
+499,501c504,506
+<   if [ "$COURSE" = v6-2 ] && [ -n "${GRAINE_V53_MANIFESTE:-}" ]; then
+<     grep -Eq "^ *graine de la course v5-3 = ${GRAINE_V53_MANIFESTE}\$" "$PREREG" || refus "la course v5.3 a tourné avec la graine $GRAINE_V53_MANIFESTE, qui n'est pas la graine v5-3 du préenregistrement scellé"
+<     note "- course v5.3 précédente : graine $GRAINE_V53_MANIFESTE = graine v5-3 du préenregistrement"
+---
+>   if [ "$COURSE" = v5-3 ] && [ -n "${GRAINE_V62_MANIFESTE:-}" ]; then
+>     grep -Eq "^ *graine de la course v6-2 = ${GRAINE_V62_MANIFESTE}\$" "$PREREG" || refus "la course v6.2 a tourné avec la graine $GRAINE_V62_MANIFESTE, qui n'est pas la graine v6-2 du préenregistrement scellé"
+>     note "- course v6.2 précédente : graine $GRAINE_V62_MANIFESTE = graine v6-2 du préenregistrement"
+542,543c547,548
+<   if [ -n "$EMP_V53" ]; then
+<     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V53:0:16}" || refus "la ligne de dépense de v6.2 ne porte pas l'empreinte des empreintes de v5.3 (${EMP_V53:0:16}…), écrite après la fin de v5.3"
+---
+>   if [ -n "$EMP_V62" ]; then
+>     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V62:0:16}" || refus "la ligne de dépense de v5.3 ne porte pas l'empreinte des empreintes de v6.2 (${EMP_V62:0:16}…), écrite après la fin de v6.2"

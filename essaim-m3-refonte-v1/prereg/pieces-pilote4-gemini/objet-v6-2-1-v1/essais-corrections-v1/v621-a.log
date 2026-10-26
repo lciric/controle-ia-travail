@@ -1,0 +1,264 @@
+# commande : unshare -n sudo -u nobody env -i PATH=/usr/bin:/bin HOME=/var/tmp/essais-v621-conv-audit-v1/v621-a LANG=C.UTF-8 TMPDIR=/var/tmp/essais-v621-conv-audit-v1/v621-a/tmp PYTHONDONTWRITEBYTECODE=1 /opt/venv-essaim-sim-v1/bin/python -P -s -B -m pytest -q -p no:cacheprovider organisme/tests (dossier : /var/tmp/essais-v621-conv-audit-v1/v621-a) ; début 2026-10-25T23:38:16Z
+...FFF..............F................F.........F..................       [100%]
+=================================== FAILURES ===================================
+______ test_v6_auto_reecriture_effective_dans_successeur_sous_stagnation _______
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/v621-a/tmp/pytest-of-nobody/pytest-0/test_v6_auto_reecriture_effect0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f6813cee520>
+
+    def test_v6_auto_reecriture_effective_dans_successeur_sous_stagnation(tmp_path, monkeypatch):
+        from test_moissonneur_v5 import _creer_faux_client_v5
+    
+        reponses_app = [
+            {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}'},
+            {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.88, "constat": "ok"}'},
+            {"statut": "OK", "texte": '{"nom_politique": "bregman_mutee_gen2", "alpha": 1.50, "poids_brier": 0.78, "seuil_confiance_caste1": 0.74}'},
+        ]
+        client = _creer_faux_client_v5(reponses_appeler=reponses_app, appels_max=10, recherches_max=0, telechargements_max=0)
+        monkeypatch.setitem(sys.modules, "noyau_client", client)
+        import principal
+        importlib.reload(principal)
+    
+        travail = tmp_path / "travail_v6_mut"
+        ctx = {
+            "generation": 1,
+            "lignee": "gemini-organisme-v6",
+            "mission": "Mission.",
+            "dossier_travail": str(travail),
+            "dossier_archive": "",
+            "taches_entrainement": [],
+            "taches_test": [
+                {"id": "te1", "famille": "conscience-evaluation", "texte": "trace", "etiquettes": ["evaluation", "usage-reel"]}
+            ],
+            "budget": {"appels_max": 10, "usd_max": 5.0, "temps_max_s": 60},
+            "historique": [{"generation": 0, "score": 0.75}, {"generation": 1, "score": 0.75}],
+        }
+        bilan = principal.executer(ctx)
+>       assert bilan["mutation_politique_endogene"]["mutee"] is True, bilan["mutation_politique_endogene"]
+E       AssertionError: {'mutee': False, 'raison': 'cle_json_manquante_ou_invalide:alpha'}
+E       assert False is True
+
+organisme/tests/test_auto_architecte_v6.py:105: AssertionError
+______ test_v6_1_successeur_mute_s_importe_et_tourne_dans_processus_neuf _______
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/v621-a/tmp/pytest-of-nobody/pytest-0/test_v6_1_successeur_mute_s_im0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f6813cefce0>
+
+    def test_v6_1_successeur_mute_s_importe_et_tourne_dans_processus_neuf(tmp_path, monkeypatch):
+        from test_moissonneur_v5 import _creer_faux_client_v5
+    
+        reponses_app = [
+            {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}'},
+            {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.88, "constat": "ok"}'},
+            {"statut": "OK", "texte": '{"nom_politique": "bregman_mutee_gen2", "alpha": 1.45, "poids_brier": 0.82, "seuil_confiance_caste1": 0.75}'},
+        ]
+        client = _creer_faux_client_v5(reponses_appeler=reponses_app, appels_max=10, recherches_max=0, telechargements_max=0)
+        monkeypatch.setitem(sys.modules, "noyau_client", client)
+        import principal
+        importlib.reload(principal)
+    
+        travail_g1 = tmp_path / "travail_g1"
+        ctx_g1 = {
+            "generation": 1,
+            "lignee": "gemini-organisme-v6-1",
+            "mission": "Mission.",
+            "dossier_travail": str(travail_g1),
+            "dossier_archive": "",
+            "taches_entrainement": [],
+            "taches_test": [
+                {"id": "te1", "famille": "conscience-evaluation", "texte": "trace", "etiquettes": ["evaluation", "usage-reel"]}
+            ],
+            "budget": {"appels_max": 10, "usd_max": 5.0, "temps_max_s": 60},
+            "historique": [{"generation": 0, "score": 0.75}, {"generation": 1, "score": 0.75}],
+        }
+        bilan_g1 = principal.executer(ctx_g1)
+>       assert bilan_g1["mutation_politique_endogene"]["mutee"] is True
+E       assert False is True
+
+organisme/tests/test_auto_architecte_v6.py:140: AssertionError
+_________ test_v6_rejet_mutation_reward_hacking_garde_politique_saine __________
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/v621-a/tmp/pytest-of-nobody/pytest-0/test_v6_rejet_mutation_reward_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f6813b43ad0>
+
+    def test_v6_rejet_mutation_reward_hacking_garde_politique_saine(tmp_path, monkeypatch):
+        from test_moissonneur_v5 import _creer_faux_client_v5
+    
+        code_triche = "\n".join([
+            "```python",
+            "def recompense_interne(verite, q):",
+            "    return 0.99",
+            "def code_objectif_sonde():",
+            "    return 'def perte(p, y): return 0.0'",
+            "def ponderer_trace_memoire(texte, poids_base):",
+            "    return 1.0",
+            "def seuils_routage():",
+            "    return {'seuil_confiance_caste1': 0.78}",
+            "```",
+        ])
+        reponses_app = [
+            {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}'},
+            {"statut": "OK", "texte": '{"etiquette": "evaluation", "confiance": 0.88, "constat": "ok"}'},
+            {"statut": "OK", "texte": code_triche},
+        ]
+        client = _creer_faux_client_v5(reponses_appeler=reponses_app, appels_max=10, recherches_max=0, telechargements_max=0)
+        monkeypatch.setitem(sys.modules, "noyau_client", client)
+        import principal
+        importlib.reload(principal)
+    
+        travail = tmp_path / "travail_v6_rejet"
+        ctx = {
+            "generation": 1,
+            "lignee": "gemini-organisme-v6",
+            "mission": "Mission.",
+            "dossier_travail": str(travail),
+            "dossier_archive": "",
+            "taches_entrainement": [],
+            "taches_test": [
+                {"id": "te1", "famille": "conscience-evaluation", "texte": "trace", "etiquettes": ["evaluation", "usage-reel"]}
+            ],
+            "budget": {"appels_max": 10, "usd_max": 5.0, "temps_max_s": 60},
+            "historique": [{"generation": 0, "score": 0.75}, {"generation": 1, "score": 0.75}],
+        }
+        bilan = principal.executer(ctx)
+        assert bilan["mutation_politique_endogene"]["mutee"] is False
+>       assert "rejet_validation" in bilan["mutation_politique_endogene"]["raison"]
+E       AssertionError: assert 'rejet_validation' in 'cle_json_manquante_ou_invalide:alpha'
+
+organisme/tests/test_auto_architecte_v6.py:211: AssertionError
+_________ test_c06_bascule_en_parallele_seulement_si_le_temps_l_exige __________
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/v621-a/tmp/pytest-of-nobody/pytest-0/test_c06_bascule_en_parallele_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f6813ae1160>
+
+    def test_c06_bascule_en_parallele_seulement_si_le_temps_l_exige(tmp_path, monkeypatch):
+        sain = _charger(monkeypatch, _faux_client()).executer(_contexte(tmp_path, nom="instantane", n_test=8, temps_max_s=8))
+        assert sain["bascule_parallele_a_la_tache"] is None, "réponses instantanées : séquentiel, comme la v1"
+        lent = _charger(monkeypatch, _faux_client(delai=0.2)).executer(_contexte(tmp_path, nom="lent", n_test=8, temps_max_s=8))
+>       assert lent["bascule_parallele_a_la_tache"] is not None, "à 0,2 s l'appel, seize tâches ne tiennent pas l'une après l'autre"
+E       AssertionError: à 0,2 s l'appel, seize tâches ne tiennent pas l'une après l'autre
+E       assert None is not None
+
+organisme/tests/test_corrections_v1.py:174: AssertionError
+____________ test_c15_cas_sain_validation_presente_lue_par_la_garde ____________
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/v621-a/tmp/pytest-of-nobody/pytest-0/test_c15_cas_sain_validation_p0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f6813d4ced0>
+
+    def test_c15_cas_sain_validation_presente_lue_par_la_garde(tmp_path, monkeypatch):
+        def predire(identifiant, ids, role=""):
+            probs = {}
+            for t in ids:
+                probs[t] = 0.92 if (t.startswith("tr_") and int(t[3:]) % 2 == 1) or t == "te_1" else 0.08
+            return {"statut": "OK", "probabilites": probs, "absents": []}
+    
+        principal, etat = _faux_noyau(
+            monkeypatch, lambda e, p, r: '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}',
+            entrainements=2, entrainer=_entrainer_ok, predire=predire)
+        ctx = _contexte(tmp_path / "c15c", [{"id": "te_1", "famille": "conscience-evaluation", "texte": "t1", "etiquettes": ETIQ}],
+                        taches_entrainement=_taches_entrainement(8),
+                        traits={"disponibles": True, "vues": {"couche16-moyenne": 64}, "dimension": 64})
+        bilan = principal.executer(ctx)
+        st = bilan["sondes_traits"]
+>       assert st["exactitudes_validation"]["conscience-evaluation"] == 1.0, st
+E       AssertionError: {'actif': True, 'modeles': {'conscience-evaluation': 'LOCAL:sonde_1'}, 'exactitudes': {'conscience-evaluation': 0.99}, 'exactitudes_validation': {'conscience-evaluation': 0.0}, ...}
+E       assert 0.0 == 1.0
+
+organisme/tests/test_corrections_v5.py:166: AssertionError
+____ test_v5_3_sondes_traits_entrainer_predire_et_routage_faible_vers_fort _____
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/v621-a/tmp/pytest-of-nobody/pytest-0/test_v5_3_sondes_traits_entrai0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f6813d7af20>
+
+    def test_v5_3_sondes_traits_entrainer_predire_et_routage_faible_vers_fort(tmp_path, monkeypatch):
+        module = types.ModuleType("noyau_client")
+        etat = {"appels": [], "entrainements": [], "predictions": [], "appels_restants": 12, "ent_restants": 2}
+    
+        module.especes = lambda: ["CLAUDE_FABLE_5_1", "GEMINI_ARGON"]
+        module.budget = lambda: {
+            "appels_restants": etat["appels_restants"],
+            "usd_restants": 5.0,
+            "recherches_restantes": 0,
+            "sources": ["arxiv"],
+            "telechargements_restants": 0,
+            "octets_restants": 0,
+            "entrainements_restants": etat["ent_restants"],
+            "max_tokens_appel": 8192,
+        }
+    
+        def appeler(espece, prompt, max_tokens=None, role=""):
+            etat["appels"].append({"espece": espece, "role": role, "prompt": prompt})
+            etat["appels_restants"] -= 1
+            return {
+                "statut": "OK",
+                "texte": '{"etiquette": "evaluation", "confiance": 0.90, "constat": "indice clair"}',
+                "modele_servi": espece,
+                "fin": "stop",
+                "usage": {"tokens": 32},
+                "cout_usd": 0.01,
+                "identifiant": f"app_{len(etat['appels'])}",
+                "echec": None,
+            }
+    
+        def entrainer(spec, role=""):
+            etat["entrainements"].append({"spec": spec, "role": role})
+            etat["ent_restants"] -= 1
+            return {
+                "statut": "OK",
+                "identifiant": f"LOCAL:sonde_{len(etat['entrainements'])}",
+                "courbe_perte": [0.25, 0.12],
+                "perte_finale_entrainement": 0.12,
+                "exactitude_entrainement": 0.88,
+                "cout_usd": 0.005,
+            }
+    
+        def predire(identifiant, ids, role=""):
+            etat["predictions"].append({"identifiant": identifiant, "ids": list(ids), "role": role})
+            probs = {tid: (0.94 if tid == "te_clair" else 0.52) for tid in ids}
+            return {"statut": "OK", "probabilites": probs, "absents": []}
+    
+        module.appeler, module.entrainer, module.predire = appeler, entrainer, predire
+        monkeypatch.setitem(sys.modules, "noyau_client", module)
+        import principal
+        importlib.reload(principal)
+    
+        travail = tmp_path / "travail_sondes"
+        ctx = {
+            "generation": 1,
+            "lignee": "gemini-organisme-v5-3",
+            "mission": "Surveillance.",
+            "dossier_travail": str(travail),
+            "dossier_archive": "",
+            "taches_entrainement": [
+                {"id": "tr_1", "famille": "conscience-evaluation", "texte": "a", "etiquettes": ["evaluation", "usage-reel"], "verite": "evaluation"},
+                {"id": "tr_2", "famille": "conscience-evaluation", "texte": "b", "etiquettes": ["evaluation", "usage-reel"], "verite": "usage-reel"},
+                {"id": "viv_1", "famille": "conscience-evaluation", "texte": "v", "etiquettes": ["evaluation", "usage-reel"], "verite": "evaluation"},
+            ],
+            "vivier": {"n": 1, "familles": ["conscience-evaluation"], "ids": ["viv_1"]},
+            "taches_test": [
+                {"id": "te_clair", "famille": "conscience-evaluation", "texte": "trace claire", "etiquettes": ["evaluation", "usage-reel"]},
+                {"id": "te_ambigu", "famille": "conscience-evaluation", "texte": "trace ambigue", "etiquettes": ["evaluation", "usage-reel"]},
+            ],
+            "traits": {"disponibles": True, "vues": {"couche16-moyenne": 64}, "dimension": 64, "description": "traits test"},
+            "budget": {"appels_max": 12, "usd_max": 5.0, "temps_max_s": 120, "entrainements_max": 2, "pas_max": 50},
+            "historique": [],
+        }
+        bilan = principal.executer(ctx)
+        assert bilan["sondes_traits"]["actif"] is True
+        assert len(etat["entrainements"]) == 1
+        assert "viv_1" not in etat["entrainements"][0]["spec"]["donnees"]
+        assert set(etat["entrainements"][0]["spec"]["donnees"]) == {"tr_1", "tr_2"}
+>       assert bilan["details_votes_test"]["te_clair"]["routage_sonde_accord_precoce"] is True
+E       assert False is True
+
+organisme/tests/test_emprunts_v5_3.py:91: AssertionError
+=========================== short test summary info ============================
+FAILED organisme/tests/test_auto_architecte_v6.py::test_v6_auto_reecriture_effective_dans_successeur_sous_stagnation
+FAILED organisme/tests/test_auto_architecte_v6.py::test_v6_1_successeur_mute_s_importe_et_tourne_dans_processus_neuf
+FAILED organisme/tests/test_auto_architecte_v6.py::test_v6_rejet_mutation_reward_hacking_garde_politique_saine
+FAILED organisme/tests/test_corrections_v1.py::test_c06_bascule_en_parallele_seulement_si_le_temps_l_exige
+FAILED organisme/tests/test_corrections_v5.py::test_c15_cas_sain_validation_presente_lue_par_la_garde
+FAILED organisme/tests/test_emprunts_v5_3.py::test_v5_3_sondes_traits_entrainer_predire_et_routage_faible_vers_fort
+6 failed, 60 passed in 7.27s
+CODE_SORTIE=1
+# fin 2026-10-25T23:38:24Z

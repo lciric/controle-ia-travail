@@ -1,0 +1,168 @@
+# commande : unshare -n sudo -u nobody env -i PATH=/usr/bin:/bin HOME=/var/tmp/essais-v621-conv-audit-v1/temoin-c5-sur-3bbb78c LANG=C.UTF-8 TMPDIR=/var/tmp/essais-v621-conv-audit-v1/temoin-c5-sur-3bbb78c/tmp PYTHONDONTWRITEBYTECODE=1 /opt/venv-essaim-sim-v1/bin/python -P -s -B -m pytest -q -p no:cacheprovider organisme/tests/test_corrections_v5.py (dossier : /var/tmp/essais-v621-conv-audit-v1/temoin-c5-sur-3bbb78c) ; début 2026-10-25T23:41:28Z
+F..FF.FFF.....F                                                          [100%]
+=================================== FAILURES ===================================
+_____________ test_c14_sans_sonde_declencheur_sans_terme_redondant _____________
+
+    def test_c14_sans_sonde_declencheur_sans_terme_redondant():
+        expr = _branche_sans_sonde()
+        # le déclencheur sans sonde ne porte plus le terme de confiance, que « plus d'une caste » rendait sans effet
+>       assert ast.unparse(expr) == "len(castes) > 1"
+E       AssertionError: assert 'conf_c1 < se...n(castes) > 1' == 'len(castes) > 1'
+E         
+E         - len(castes) > 1
+E         + conf_c1 < seuil_c1 or len(castes) > 1
+
+organisme/tests/test_corrections_v5.py:94: AssertionError
+_ test_c15_moins_de_4_taches_aucune_exactitude_de_validation_et_raison_consignee _
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/temoin-c5-sur-3bbb78c/tmp/pytest-of-nobody/pytest-0/test_c15_moins_de_4_taches_auc0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fc56fcda570>
+
+    def test_c15_moins_de_4_taches_aucune_exactitude_de_validation_et_raison_consignee(tmp_path, monkeypatch):
+        def predire(identifiant, ids, role=""):
+            return {"statut": "OK", "probabilites": {t: 0.92 for t in ids}, "absents": []}
+    
+        principal, etat = _faux_noyau(
+            monkeypatch, lambda e, p, r: '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}',
+            entrainements=2, entrainer=_entrainer_ok, predire=predire)
+        ctx = _contexte(tmp_path / "c15a", [{"id": "te_1", "famille": "conscience-evaluation", "texte": "t1", "etiquettes": ETIQ}],
+                        taches_entrainement=_taches_entrainement(3),
+                        traits={"disponibles": True, "vues": {"couche16-moyenne": 64}, "dimension": 64})
+        bilan = principal.executer(ctx)
+        st = bilan["sondes_traits"]
+        assert st["actif"] is True and "conscience-evaluation" in st["modeles"], st
+        # artefact visé : 3 tâches, aucun pli de validation — plus de repli sur l'exactitude d'entraînement (0,99)
+>       assert "conscience-evaluation" not in (st.get("exactitudes_validation") or {}), st
+E       AssertionError: {'actif': True, 'modeles': {'conscience-evaluation': 'LOCAL:sonde_1'}, 'exactitudes': {'conscience-evaluation': 0.99}, 'exactitudes_validation': {'conscience-evaluation': 0.99}, ...}
+E       assert 'conscience-evaluation' not in (({'conscience-evaluation': 0.99}))
+E        +  where {'conscience-evaluation': 0.99} = <built-in method get of dict object at 0x7fc56f975080>('exactitudes_validation')
+E        +    where <built-in method get of dict object at 0x7fc56f975080> = {'actif': True, 'modeles': {'conscience-evaluation': 'LOCAL:sonde_1'}, 'exactitudes': {'conscience-evaluation': 0.99}, 'exactitudes_validation': {'conscience-evaluation': 0.99}, ...}.get
+
+organisme/tests/test_corrections_v5.py:159: AssertionError
+_ test_c15_prediction_de_validation_non_ok_aucune_exactitude_et_raison_consignee _
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/temoin-c5-sur-3bbb78c/tmp/pytest-of-nobody/pytest-0/test_c15_prediction_de_validat0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fc56f84a580>
+
+    def test_c15_prediction_de_validation_non_ok_aucune_exactitude_et_raison_consignee(tmp_path, monkeypatch):
+        def predire(identifiant, ids, role=""):
+            if role.startswith("validation_traits_"):
+                return {"statut": "ECHEC_PREDICTION", "probabilites": {}, "absents": list(ids)}
+            return {"statut": "OK", "probabilites": {t: 0.92 for t in ids}, "absents": []}
+    
+        principal, etat = _faux_noyau(
+            monkeypatch, lambda e, p, r: '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}',
+            entrainements=2, entrainer=_entrainer_ok, predire=predire)
+        ctx = _contexte(tmp_path / "c15b", [{"id": "te_1", "famille": "conscience-evaluation", "texte": "t1", "etiquettes": ETIQ}],
+                        taches_entrainement=_taches_entrainement(8),
+                        traits={"disponibles": True, "vues": {"couche16-moyenne": 64}, "dimension": 64})
+        bilan = principal.executer(ctx)
+        st = bilan["sondes_traits"]
+>       assert "conscience-evaluation" not in (st.get("exactitudes_validation") or {}), st
+E       AssertionError: {'actif': True, 'modeles': {'conscience-evaluation': 'LOCAL:sonde_1'}, 'exactitudes': {'conscience-evaluation': 0.99}, 'exactitudes_validation': {'conscience-evaluation': 0.99}, ...}
+E       assert 'conscience-evaluation' not in (({'conscience-evaluation': 0.99}))
+E        +  where {'conscience-evaluation': 0.99} = <built-in method get of dict object at 0x7fc56fa8a300>('exactitudes_validation')
+E        +    where <built-in method get of dict object at 0x7fc56fa8a300> = {'actif': True, 'modeles': {'conscience-evaluation': 'LOCAL:sonde_1'}, 'exactitudes': {'conscience-evaluation': 0.99}, 'exactitudes_validation': {'conscience-evaluation': 0.99}, ...}.get
+
+organisme/tests/test_corrections_v5.py:177: AssertionError
+________ test_c16_mots_cles_une_seule_source_module_initial_et_gabarit _________
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/temoin-c5-sur-3bbb78c/tmp/pytest-of-nobody/pytest-0/test_c16_mots_cles_une_seule_s0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fc56f84f150>
+
+    def test_c16_mots_cles_une_seule_source_module_initial_et_gabarit(tmp_path, monkeypatch):
+        import memoire_isvd
+        attendus = {"a_eval": tuple(memoire_isvd.MOTS_CLES_EVAL_FAMILLE), "a_ctrl": tuple(memoire_isvd.MOTS_CLES_CTRL_FAMILLE)}
+        # module initial (copie écrite en toutes lettres, la liste blanche n'admettant que `import math`) : égal à la source
+        src_init = (RACINE_ORGANISME / "politique_endogene.py").read_text(encoding="utf-8")
+        assert _mots_des_affectations(src_init) == attendus
+        # gabarit : produit depuis la source ; le module qu'il écrit porte les mêmes mots, dans le même ordre
+        reponses = iter(['{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}'] * 3)
+    
+        def repondre(espece, prompt, role):
+            if role == "architecte_mutation_endogene":
+                return '{"nom_politique": "essai_c16", "alpha": 1.45, "poids_brier": 0.80, "seuil_confiance_caste1": 0.76}'
+            return next(reponses, '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}')
+    
+        principal, _ = _faux_noyau(monkeypatch, repondre)
+        ctx = _contexte(tmp_path / "c16", [{"id": "te_1", "famille": "conscience-evaluation", "texte": "t1", "etiquettes": ETIQ}],
+                        historique=[{"generation": 0, "score": 0.75}, {"generation": 1, "score": 0.75}])
+        bilan = principal.executer(ctx)
+        assert bilan["mutation_politique_endogene"]["mutee"] is True, bilan["mutation_politique_endogene"]
+        code_succ = (tmp_path / "c16" / "successeur" / "organisme" / "politique_endogene.py").read_text(encoding="utf-8")
+        assert _mots_des_affectations(code_succ) == attendus
+        # l'expression du gabarit est celle, mot pour mot, de la v6.2
+>       assert principal._expression_mots_cles(memoire_isvd.MOTS_CLES_EVAL_FAMILLE) == (
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            '("conscience" in t) or ("evaluation" in t) or ("usage-reel" in t) or ("benchmark" in t) or ("laboratoire" in t)')
+E       AttributeError: module 'principal' has no attribute '_expression_mots_cles'
+
+organisme/tests/test_corrections_v5.py:240: AttributeError
+_______________ test_c16_mot_cle_invalide_refuse_par_le_gabarit ________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fc56f84f450>
+
+    def test_c16_mot_cle_invalide_refuse_par_le_gabarit(monkeypatch):
+        principal, _ = _faux_noyau(monkeypatch, lambda e, p, r: "{}")
+        for mauvais in (("eval\" in t) or (\"x",), (), ("Majuscule",), ("deux mots",)):
+            with pytest.raises(ValueError):
+>               principal._expression_mots_cles(mauvais)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AttributeError: module 'principal' has no attribute '_expression_mots_cles'
+
+organisme/tests/test_corrections_v5.py:250: AttributeError
+____________ test_c17_code_brut_refuse_sans_validation_ni_execution ____________
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/temoin-c5-sur-3bbb78c/tmp/pytest-of-nobody/pytest-0/test_c17_code_brut_refuse_sans0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fc56fb097c0>
+
+    def test_c17_code_brut_refuse_sans_validation_ni_execution(tmp_path, monkeypatch):
+        def repondre(espece, prompt, role):
+            if role == "architecte_mutation_endogene":
+                return "Voici ma proposition :\n" + CODE_BRUT_LOURD
+            return '{"etiquette": "evaluation", "confiance": 0.85, "constat": "ok"}'
+    
+        principal, _ = _faux_noyau(monkeypatch, repondre)
+        validations = _espionner_validation(monkeypatch, principal)
+        travail = tmp_path / "c17a"
+        ctx = _contexte(travail, [{"id": "te_1", "famille": "conscience-evaluation", "texte": "t1", "etiquettes": ETIQ}],
+                        historique=[{"generation": 0, "score": 0.75}, {"generation": 1, "score": 0.75}])
+        bilan = principal.executer(ctx)
+        mut = bilan["mutation_politique_endogene"]
+        # artefact visé : du code (ici d'un coût sans borne) dans la réponse — refusé avant toute validation
+>       assert mut["mutee"] is False and "code brut refusé" in mut["raison"], mut
+E       AssertionError: {'mutee': False, 'raison': "rejet_validation: espion de l'essai : validation appelée"}
+E       assert (False is False and 'code brut refusé' in "rejet_validation: espion de l'essai : validation appelée")
+
+organisme/tests/test_corrections_v5.py:295: AssertionError
+___________ test_c17_assemblage_refuse_un_code_mute_qui_importe_ast ____________
+
+tmp_path = PosixPath('/var/tmp/essais-v621-conv-audit-v1/temoin-c5-sur-3bbb78c/tmp/pytest-of-nobody/pytest-0/test_c17_assemblage_refuse_un_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fc56fa26bd0>
+
+    def test_c17_assemblage_refuse_un_code_mute_qui_importe_ast(tmp_path, monkeypatch):
+        principal, _ = _faux_noyau(monkeypatch, lambda e, p, r: "{}")
+        principal._ETAT.update({"erreurs": []})
+        erreurs = []
+        monkeypatch.setattr(principal, "_consigner_erreur", lambda m: erreurs.append(m))
+        code = "import ast\nimport math\n\ndef recompense_interne(verite, q):\n    return 0.5\n"
+        principal._propager_successeur(tmp_path / "c17d", {}, {}, code_politique_mute=code)
+        succ = tmp_path / "c17d" / "successeur" / "organisme" / "politique_endogene.py"
+        assert succ.read_text(encoding="utf-8") == (RACINE_ORGANISME / "politique_endogene.py").read_text(encoding="utf-8")
+>       assert any("import ast" in e and "C-17" in e for e in erreurs), erreurs
+E       AssertionError: ['assemblage de politique_endogene.py invalide (RuntimeError) : copie originale conservée']
+E       assert False
+E        +  where False = any(<generator object test_c17_assemblage_refuse_un_code_mute_qui_importe_ast.<locals>.<genexpr> at 0x7fc56f827850>)
+
+organisme/tests/test_corrections_v5.py:354: AssertionError
+=========================== short test summary info ============================
+FAILED organisme/tests/test_corrections_v5.py::test_c14_sans_sonde_declencheur_sans_terme_redondant
+FAILED organisme/tests/test_corrections_v5.py::test_c15_moins_de_4_taches_aucune_exactitude_de_validation_et_raison_consignee
+FAILED organisme/tests/test_corrections_v5.py::test_c15_prediction_de_validation_non_ok_aucune_exactitude_et_raison_consignee
+FAILED organisme/tests/test_corrections_v5.py::test_c16_mots_cles_une_seule_source_module_initial_et_gabarit
+FAILED organisme/tests/test_corrections_v5.py::test_c16_mot_cle_invalide_refuse_par_le_gabarit
+FAILED organisme/tests/test_corrections_v5.py::test_c17_code_brut_refuse_sans_validation_ni_execution
+FAILED organisme/tests/test_corrections_v5.py::test_c17_assemblage_refuse_un_code_mute_qui_importe_ast
+7 failed, 8 passed in 0.55s
+CODE_SORTIE=1
+# fin 2026-10-25T23:41:29Z
