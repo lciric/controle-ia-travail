@@ -38,6 +38,7 @@ Relevé verbatim en R-509 (session de session-depot, vers 11:13 UTC, en réponse
 - Dans la session de conv-audit, 11:26 heure de Paris : ordre « (b) puis (a) puis (c) » ; « je veux que l'organisme
   cherche mes failles après moissonnage de la littérature la plus récente et grise, et ensuite qu'il imagine de nouvelles
   failles non couvertes par notre système de contrôle, et comment les contrecarrer ». La course « audit » est ce (c).
+- **26 octobre, 17:46 heure de Paris (session de conv-audit)** : « reprends en sautant le scellement prereg etc, on est dans une phase ultra dynamique d'exploration, il faut itérer super vite, élague tout ce que tu peux » → la contre-lecture 9 est sautée (§ Contre-lecture) ; le texte part à ses graines sans autre relecture.
 - **R-519 (session-depot, 14:04 UTC ; n° 75)** : le second tour du collisionneur, sur la transcription v2 (partie 3 du
   rapport), a essuyé un refus d'Opus au III.1 ; la condition « aucun refus au collisionneur » n'est pas remplie pour la
   question v3 et la pièce v2 : **la course « audit » ne part pas** ; sa suite attend une décision de Lazar (relancer sur la
@@ -81,13 +82,13 @@ Relevé verbatim en R-509 (session de session-depot, vers 11:13 UTC, en réponse
    puis `| <date du jour> | course-audit-gemini-v6-2-v1 | GO-2026-10-26-04 | 75 USD au pire cas | empreintes de M 5ae4e801423bbef0 |` ;
    segments K ≥ 2 : forme de la v4, mot pour mot, au nom de la course. Le message de départ recopie mot pour mot ces lignes,
    l'empreinte du texte remplie ; s'il en diffère, rien ne part.
-2. **Graines (R9)** : entropie E = <<ENTROPIE>> tirée par `sceller_courses_question_v6.py` (`secrets.randbits(128)` ; refuse
+2. **Graines (R9)** : entropie E = 16907078603177414062709033105680915282 tirée par `sceller_courses_question_v6.py` (`secrets.randbits(128)` ; refuse
    numpy < 1.25 et toute ligne d'entropie ou de graine de trop) ; deux enfants `numpy.random.SeedSequence(E).spawn(2)` ; la
    graine de chaque course vaut `int(enfant.generate_state(1, dtype=numpy.uint64)[0])`, enfant 0 pour « maieutique »,
    enfant 1 pour « audit » (chaque égalité sur une seule ligne, lue par le lanceur à chaque segment et recalculée depuis
    l'entropie de ce texte ; le lanceur lit la ligne de sa clé et vérifie que l'autre existe sans l'utiliser) :
-   graine de la course maieutique = <<GRAINE_MAIEUTIQUE>>
-   graine de la course audit = <<GRAINE_AUDIT>>
+   graine de la course maieutique = 7363220476676400430
+   graine de la course audit = 6031783231316117764
 3. **Lecture et livrable** : table ci-dessus. À la fermeture de chaque course, session-depot pousse la liste fermée sur
    `pilotes/<nom>`, puis **copie `reponse-question-g001.md` et son compagnon** dans son message de retour (sans aucun autre
    fichier de la course) : c'est le livrable, pour Lazar. Rien d'autre n'est lu.
@@ -128,14 +129,14 @@ fichier d'empreintes et aux deux lignes de graine près ; essais `essais_scellem
 qui a dérivé le lanceur et la batterie et son LISEZMOI (`lanceur-v12-v1/`) ; les pièces de la contre-lecture 9
 (`contre-lecture-9-v1/`) ; chacun avec son compagnon `.sha256`. Fichier d'empreintes de ce texte :
 `EMPREINTES-courses-question-v1.txt` (toutes les pièces sous `pieces-pilote4-gemini/` et les contre-lectures
-`courses-question-gemini-v6-2-v1-*`), empreinte <<EMPREINTE_PIECES>>, écrite par `sceller_courses_question_v6.py` avec
+`courses-question-gemini-v6-2-v1-*`), empreinte `80fbe664d2e7b7ed7a3299ff6ffd26a34ffbc70cf5b5f66b0934285cdd9d36cf`, écrite par `sceller_courses_question_v6.py` avec
 l'entropie et les graines ; vérifiée par `verifier_scellement_question_v4.py` (le v3 adapté aux deux graines et au nom du fichier d'empreintes, `5015e94ed805a634…` ; essayé sur le cas sain de la batterie v6, code 0, et sur une graine altérée, refus), que session-depot rejoue avant le départ.
 
 ## Contre-lecture
 
 - **Contre-lecture 9** (sous-agent neuf, sur ce texte avant ses graines ; avec le lanceur v12, son écart, la batterie v14,
   le journal de la série v15, le script des graines, les deux questions à leurs commits et la transcription expurgée) :
-  [[CL9]].
+  **sautée** sur décision de Lazar (26 octobre, 17:46 heure de Paris, dans la session de conv-audit : « reprends en sautant le scellement prereg etc, on est dans une phase ultra dynamique d'exploration, il faut itérer super vite, élague tout ce que tu peux ») ; une contre-lecture lancée à 14:20 UTC a été interrompue par une limite d'usage avant son rapport et n'est pas reprise. Les graines sont écrites par `sceller_courses_question_v7.py` (le v6 sans l'exigence d'une contre-lecture), parce que le lanceur v12 les lit.
 - **Ce texte, à ses graines** garde le nom de la v1 ; de la version relue à lui, il porte en plus : la ligne de la
   contre-lecture 9 ci-dessus, le traitement de ses constats aux passages qu'il nomme, puis l'entropie, les deux graines et
   l'empreinte du fichier d'empreintes des pièces, écrites par `sceller_courses_question_v6.py` ; rien d'autre.
