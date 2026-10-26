@@ -148,3 +148,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-26 00:41 UTC — test H-M1 v3 sous GO-2026-10-25-03 : instance 57742711 (A100 SXM4, 1,093 USD/h), 00:34–00:41 UTC ; **≈ 0,13 USD** (≈ 7 min de carte et disque) ; cumul du GO ≈ 0,23 USD sur 10.
 - 2026-10-26 00:51 UTC — **engagement : collisionneur v2.5, tour « suite de H-M1 »** (`2136516d…`), III.1 à III.3, trois modèles, sous GO-2026-10-24-07 (R-460) ; aucun fait joint ; plafond 10 USD ; clé Anthropic n° 3, Gemini n° 2.
 - 2026-10-26 00:51 UTC — **engagement : Argon seul, même question** (R-460), une cellule, sous GO-2026-10-24-07 ; plafond 3 USD ; clé Gemini n° 2.
+- 2026-10-26 00:53 UTC — collisionneur « test des hypothèses de M » (R-447, R-455), trois tours sous GO-2026-10-24-07 : neuf cellules valides, **5,62 USD** (III.1 1,43 ; III.2 et III.3 4,19) ; branche `donnees/collisionneur-test-M-v1` (`1ff500db`, empreintes `6ab45cc2…`). Plafond du tour « suite de H-M1 » : 30 USD (R-463).
