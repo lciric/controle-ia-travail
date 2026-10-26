@@ -215,3 +215,41 @@ Paris (UTC + 1 depuis le 25 octobre). Rien d'opposable (R7) ; tout est sur `cana
   batterie v14, série v15 (agent du lanceur v11, relancé) ; texte `courses-question-gemini-v6-2-v1.md` écrit par moi
   (marqueurs `[[…]]` à remplir), `sceller_courses_question_v6.py` (deux graines) ; contre-lecture 9 à suivre. Aucune
   lecture de `test_final` pour ces courses ; livrable : `reponse-question-g001.md`.
+
+## 13:49 — après-midi : rapport consolidé de Lazar (v1 puis v2), audit du contrôle synthétisé et contre-lu, livraison à Gemini, courses à question, décisions de Lazar sur les systèmes de recherche autonomes
+
+- **Rapport consolidé de Lazar** (confidentiel : montants, financeur, page de titre ; hors dépôt, empreinte seule) : v1 de 7 pages
+  à 13:26 heure de Paris (`e066f298…`), v2 de 10 pages à 14:00 (`14a79c55…`) qui ajoute une troisième partie (failles E à I
+  « contre nos propres parades », expériences H1 à H5). Mots de Lazar : chercher les failles documentées (littérature grise
+  comprise) et inédites, et des hypothèses testables falsifiables par associations inédites de méthodes et de concepts
+  mathématiques. Session-depot a versé la transcription expurgée de la **v1** (R-517, `d9e1be59…`) ; j'ai transcrit la partie 3
+  depuis la v2 (pages 7 à 10 relues en image, même convention de retraits, 11 montants) : `6205c68a…`, canal `28d1f07`, à
+  vérifier par session-depot contre le PDF v2 (que Lazar doit lui attacher). **Décision de Lazar (14:44 Paris) : l'annexe de
+  la course « audit » = v1 + partie 3 vérifiée** (n° 86, n° 87). Lazar a aussi choisi chez session-depot une version allégée
+  de l'audit du rapport (limite d'usage ; R-517) : je ne lance aucun sous-agent de plus que nécessaire.
+- **Audit des failles de notre contrôle** : lots A (moisson, 47 modes) et B (44 failles internes) rendus ; audit de littérature
+  de session-depot (R-508, cinq propositions acceptées, N-053) ; tour du collisionneur (9 cellules, aucun refus) ; synthèse v1
+  (`1e43b69c…`, Opus) contre-lue sur Fable (`7b8a17c3…`) : « transmissible après corrections », CLS-01 à 07 (gravité des
+  « sept formulations » regradée ; « chiffres sans source » → « non sourcés dans le rapport » ; FC-04 repliée sur FI-04 ;
+  D-02 = retour au texte accepté de N-053, clause née à la transcription ; faille de tête (a) candidate, P3 ambigu ; D-08 :
+  statistique non créditable contre un adversaire à mémoire ; format des options) ; lacune : règle de combinaison entre modes
+  après N-054 (≈ 14 % de franchissements à tort pour trois lectures à 5 % laissées libres) → D-07. Retours transmis à
+  Lazar (14:30 Paris) et à l'auteur de la v2, qui intègre aussi la partie 3 du rapport. Quatre PDF de plus trouvés par moi
+  et servis à l'auteur (`pdf-complement-v1/`) : 2601.21112 (accès à l'information des moniteurs, « extraire puis évaluer » :
+  voisin direct de FI-06 et de D-02), 2609.03026 (ObserverBench), 2607.08349 (suites de confiance valables à tout
+  instant en interprétabilité), 2608.19338 (tomographie mécaniste) — à vérifier sur page.
+- **Livraison à Gemini** (mot de Lazar, 13:29 Paris) : paquet v6.2.1 (26 fichiers, arbre `4f13647a…`), LISEZMOI, EMPREINTES,
+  et le texte PowerShell que Lazar lui envoie (canal `ca5857e`, `fe72f27`) ; je n'ai aucun canal vers Gemini.
+- **Courses à question** : borne du noyau `CARACTERES_MAX_QUESTION` 20 000 → 100 000 (`9beee10b`, essais passés) pour servir
+  l'annexe (v1 seule : 23 295 octets ; v1 + partie 3 : 38 822) ; lanceur v12, batterie, série v16 et texte en cours ; annexe
+  en attente de la ligne de session-depot.
+- **Systèmes de recherche autonomes** (question de Lazar, 14:31 Paris) : note en réponse (AI Scientist v3 de Sakana, Kosmos,
+  Co-Scientist et AlphaEvolve, ControlArena, Petri, résultat d'Anthropic sur le sabotage des chercheurs automatiques) ;
+  décision en trois options. **Mots de Lazar (14:39)** : « pas besoin de prereg, c'est une phase exploratoire, il faut seulement
+  qu'il puisse tester ces hypotheses » ; « GOOOO » sur la recommandation ((a) course « audit », déjà sous GO ; (b) ControlArena
+  et Petri comme banc d'essai, portage à chiffrer ; (c) essai unique d'AI Scientist v3 sur devis). Écrits et poussés : note de
+  portage ControlArena v1 (`700e0804…` : étape 0 sur processeur, étape 1 sur devis 40 $ au pire cas ; le pont boîte blanche
+  est le fournisseur `hf/` d'Inspect avec `hidden_states` ; le mode non chiffré de N-054 existe tel quel dans les tâches
+  cachées de `IAC`/`Infra`) et devis AI Scientist v3 (`bba566de…` : c0 10 $, c1 60 $, c2 conditionnel 60 $, faille plantée
+  témoin). Aucune dépense ne part sans le mot direct de Lazar chez session-depot.
+- Erreurs ou réserves : aucune nouvelle ; la partie 3 n'est pas vérifiée par une seconde lecture.
