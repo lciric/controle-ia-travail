@@ -1,0 +1,186 @@
+--- ../fournis/lancer_pilote4_gemini_v10.sh	2026-10-26 03:02:54.768152202 +0100
++++ lancer_pilote4_gemini_v11.sh	2026-10-26 05:35:12.568001855 +0100
+@@ -1,12 +1,17 @@
+ #!/usr/bin/env bash
+-# Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v6.2 puis v5.3, chacun seul, sur la banque
+-# `confrontation-v3` (identifiants opaques), quatre générations notées, 6 rondes de conception au plus avant g000 (l'organisme déclare lui-même la fin de sa conception, `fin_conception.json`), 3 USD au plus par ronde, question M à g001 »,
+-# une course en un ou plusieurs segments (COURSE=v6-2, puis COURSE=v5-3 ; SEGMENT=1, 2, …) — v10 : le lanceur v9
++# Lanceur du quatrième pilote descriptif « organisme assisté de Gemini, la v6.2.1, seule, sur la question M puis sur la question S, sur la banque
++# `confrontation-v3` (identifiants opaques), quatre générations notées, 6 rondes de conception au plus avant g000 (l'organisme déclare lui-même la fin de sa conception, `fin_conception.json`), 3 USD au plus par ronde, question de la course (M, puis S) à g001 »,
++# une course en un ou plusieurs segments (COURSE=v6-2 sous le lanceur v10, puis COURSE=v6-2-s sous celui-ci ; SEGMENT=1, 2, …) — v11 : le lanceur v10
++# (0203f546…) par `deriver_lanceur_pilote4_v11.py` (seconde course : le même organisme, la v6.2.1, sur la question S, clé
++# `v6-2-s`, nom `pilote4-gemini-v6-2-s-v1`, lignée `gemini-organisme-v6-2-s`, graine enfant 0 ; la question devient une
++# constante par course ; en réel, ce lanceur refuse `v6-2` (la course M a tourné sous le lanceur v10, R-490) et la porte
++# « course précédente » attend le lanceur v10 ; décision de Lazar du 26 octobre 2026, 04:13 UTC, R-492 ; écart consigné
++# dans `diff-lanceur-pilote4-v10-vers-v11.txt`), la v10 dérivée du lanceur v9
+ # (6491c940…) par `deriver_lanceur_pilote4_v10.py` (objet de la course v6-2 : la v6.2.1, commit `7ea3270`, arbre
+ # `4f13647a…`, 26 fichiers — la v6.2 de Gemini corrigée par conv-audit, mot de Lazar du 26 octobre 2026, 00:27 Paris ;
+ # écart consigné dans `diff-lanceur-pilote4-v9-vers-v10.txt`), la v9 dérivée du lanceur v8
+ # (40685089…) par `deriver_lanceur_pilote4_v9.py` (ordre des courses inversé, décision de Lazar du 26 octobre 2026,
+-# 00:18 Paris, « je veux la v6.2 en premier » : la v6.2 d'abord, puis la v5.3 après une v6.2 saine — porte « v6.2
++# 00:18 Paris, « je veux la v6.2 en premier » : la v6.2 d'abord, puis la seconde course après une v6.2 saine — porte « v6.2
+ # précédente », variable PRECEDENTE_V62 ; écart consigné dans `diff-lanceur-pilote4-v8-vers-v9.txt`), la v8 dérivée
+ # du lanceur v7 (cda96923…) par `deriver_lanceur_pilote4_v8.py` (objet de la seconde course : la v6.2 livrée par Gemini, commit
+ # `3bbb78c`, à la place de son premier commit `fedb065`, que le second, commité le 25 octobre 2026 à 22:57 UTC, remplace ;
+@@ -21,12 +26,13 @@
+ # (`lancer_pilote3_gemini_v5_3_v6_v2.sh`, `add695a9…`) par `deriver_lanceur_pilote4_v3.py` (remplacements exacts ; écart
+ # consigné dans `diff-lanceur-pilote3-v2-vers-pilote4-v3.txt`). Ce qui change : les objets (v6.2 à la place de la v6) et
+ # les noms des courses ; la banque v3 (empreinte, chemin ; les chemins des banques v2 et v3 sont permis après le code) ;
+-# `--generations 4` ; les rondes de conception ; la porte « v6.2 précédente » (v9 ; « v5.3 précédente » jusqu'au v8)
++# `--generations 4` ; les rondes de conception ; la porte « v6.2 précédente » (v9 ; dans l'ordre inverse jusqu'au v8)
+ # attend les générations 0 à 3 ; la ligne de
+ # GO doit porter aussi les 16 premiers caractères de l'empreinte du texte scellé ; les journaux recopiés et poussés
+ # couvrent g000 à g003 et les rondes. Tout le reste (porte « M de référence » sur la course M du second pilote, gardes,
+ # environnement fermé, passerelle, essais du noyau, fermeture, liste fermée) est la ligne du lanceur v2.
+-# Objets : v5.3 = `canal/gemini-organisme-v5-3`, commit `4ecba58`, dossier `organisme/`, arbre `6251ab21…`, 22 fichiers ;
++# Objet des deux courses (M, puis S) : la v6.2.1, dossier `organisme/` — la v5.3 ne court pas (décision de Lazar, R-492), et la clé
++# `v6-2` ne sert plus qu'en simulation (la course M de ce pilote a tourné sous `lancer_pilote4_gemini_v10.sh`, R-490).
+ # v6.2 = la v6.2.1 : branche `canal/conv-audit-organisme-v6-2-1`, commit `7ea3270`, arbre `4f13647a…`, 26 fichiers (la v6.2
+ # de Gemini, `3bbb78c`, corrigée par conv-audit : C-14 à C-17, `organisme/CORRECTIONS-v5.md`) ; lignées « assistées ».
+ # Les commits d'objets portent aussi l'arbre de la relève : seul `organisme/` en est extrait (`git archive <commit>
+@@ -34,11 +40,12 @@
+ # Texte : `essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v4.md` (ou la version qui le remplace et cite ce
+ # script) ; pièces : `prereg/pieces-pilote4-gemini/`.
+ # Usage :
+-#   MODE=reel COURSE=v6-2 DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
++#   MODE=reel COURSE=v6-2-s DEPOT=… PYTHON=… PREREG=… PREREG_SHA256=… GRAINE=… RESTE_GO_USD=… \
+ #       APPEL_CONTROLE_FICHIER=… RECHARGE_ATTESTEE=… CLE_ANTHROPIC=NOM CLE_GEMINI=NOM \
+-#       [CLE_OPENALEX=NOM] [CLE_S2=NOM] [TENTATIVE=2] REFERENCE_M=<dossier du pilote de la course M> [SEGMENT=1] \
+-#       bash lancer_pilote4_gemini_v10.sh
+-#   MODE=reel COURSE=v5-3 … PRECEDENTE_V62=<dossier du pilote de la course v6.2 de ce pilote, dans la même copie> (même forme)
++#       [CLE_OPENALEX=NOM] [CLE_S2=NOM] [TENTATIVE=2] REFERENCE_M=<dossier du pilote de la course M> \
++#       PRECEDENTE_V62=<dossier de la course M de ce pilote, pilote4-gemini-v6-2-v1[-tentativeN], dans la même copie> [SEGMENT=1] \
++#       bash lancer_pilote4_gemini_v11.sh
++#   MODE=reel COURSE=v6-2 : refusée par ce lanceur (la course M de ce pilote a tourné sous le lanceur v10, R-490) ; MODE=simulation COURSE=v6-2 : permise
+ #   Reprise : la même commande (même COURSE, TENTATIVE, GRAINE, texte et références) avec SEGMENT=K, quand le LANCEMENT.md
+ #     dit « segment K−1 arrêté par STOP ; reprise attendue : SEGMENT=K » ; à chaque segment, un test de dépense frais
+ #     (APPEL_CONTROLE_FICHIER), une ligne de dépense nommant la course, le GO et « segment K », RESTE_GO_USD ≥ 75 USD moins
+@@ -58,7 +65,7 @@
+ 
+ MODE="${MODE:?MODE=reel ou MODE=simulation}"
+ [ "$MODE" = reel ] || [ "$MODE" = simulation ] || refus_tot "MODE inconnu : $MODE"
+-COURSE="${COURSE:?COURSE=v5-3 ou COURSE=v6-2}"
++COURSE="${COURSE:?COURSE=v6-2-s ou COURSE=v6-2}"
+ # Reprise par segments (décision de Lazar, 25 octobre 2026, 20:23 Paris) : SEGMENT=1 fait partir la course ; SEGMENT=K ≥ 2
+ #   continue la course arrêtée au segment K − 1 par le STOP du minuteur ; CLORE=1 (avec SEGMENT ≥ 2) la ferme sans reprise
+ SEGMENT="${SEGMENT:-1}"
+@@ -66,25 +73,32 @@
+ CLORE="${CLORE:-}"
+ case "$CLORE" in ''|1) ;; *) refus_tot "CLORE vaut 1 ou rien : « $CLORE »";; esac
+ if [ -n "$CLORE" ] && [ "$SEGMENT" = 1 ]; then refus_tot "CLORE=1 ferme une course arrêtée entre deux segments : SEGMENT ≥ 2 exigé"; fi
+-# Question M v2 épurée (la même que celle de la course M du second pilote), pour les deux courses
+-COMMIT_QUESTION=a15809b816b6c967b6c3cf21877e350bfe676dca
+-CHEMIN_QUESTION=brouillons/canal-reprise-releve-v1/envois/question-gemini-maieutique-vs-coercition-organismes-v2.md
+-SHA_QUESTION=8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
++# Question par course (v11, R-492) : M v2 épurée (la même que celle de la course M du second pilote) pour `v6-2` ; S v2 (la
++#   question de la course S du second pilote) pour `v6-2-s` ; même organisme, la v6.2.1, pour les deux courses
+ case "$COURSE" in
+-  v5-3)
+-    NOM="pilote4-gemini-v5-3-v1"; INDICE_GRAINE=0
+-    COMMIT_ORGANISME=4ecba58bcaa7dc3abe82c54fc38ee7285620bdf6
+-    ARBRE_ORGANISME=6251ab219e86286ec892a65e28cf9eebad5265fd6e32e350e68827897c811753
+-    N_FICHIERS_ORGANISME=22
+-    LIGNEE="gemini-organisme-v5-3";;
++  v6-2-s)
++    NOM="pilote4-gemini-v6-2-s-v1"; INDICE_GRAINE=0
++    COMMIT_ORGANISME=7ea32705c5437d91ed071dd95fb3209bb0b0035e
++    ARBRE_ORGANISME=4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d
++    N_FICHIERS_ORGANISME=26
++    LIGNEE="gemini-organisme-v6-2-s"
++    COMMIT_QUESTION=4772b525081342a6a30ba8823733aa5770a888a8
++    CHEMIN_QUESTION=brouillons/canal-reprise-releve-v1/envois/question-apprendre-structure-entrainement-generations-organismes-v2.md
++    SHA_QUESTION=a54da93ee892d920c31ba47327c2400e25ccf42ff06faa46d94bfc471a5a6289;;
+   v6-2)
+     NOM="pilote4-gemini-v6-2-v1"; INDICE_GRAINE=1
+     COMMIT_ORGANISME=7ea32705c5437d91ed071dd95fb3209bb0b0035e
+     ARBRE_ORGANISME=4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d
+     N_FICHIERS_ORGANISME=26
+-    LIGNEE="gemini-organisme-v6-2";;
+-  *) refus_tot "COURSE inconnue : $COURSE (v5-3 ou v6-2)";;
++    LIGNEE="gemini-organisme-v6-2"
++    COMMIT_QUESTION=a15809b816b6c967b6c3cf21877e350bfe676dca
++    CHEMIN_QUESTION=brouillons/canal-reprise-releve-v1/envois/question-gemini-maieutique-vs-coercition-organismes-v2.md
++    SHA_QUESTION=8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd;;
++  *) refus_tot "COURSE inconnue : $COURSE (v6-2-s ou v6-2)";;
+ esac
++# v11 (R-492) : en réel, ce lanceur ne lance que la course S ; la course M de ce pilote (`v6-2`) a tourné sous le lanceur v10
++#   (R-490) ; en simulation, `v6-2` reste permise (la batterie en a besoin pour produire la course précédente)
++if [ "$MODE" = reel ] && [ "$COURSE" = v6-2 ]; then refus_tot "COURSE=v6-2 en mode réel : la course M a tourné sous le lanceur v10 (R-490) ; ce lanceur v11 ne lance en réel que v6-2-s (R-492)"; fi
+ PY="${PYTHON:-python3}"
+ ART="${ESSAI_ARTEFACT:-}"
+ SOURCE_GEMINI=""
+@@ -282,23 +296,26 @@
+   note "- état de reprise : $ETAT_NOM, sha256 $ETAT_SHA (compagnon conforme), arrêt sur STOP du segment $((SEGMENT - 1)) ; dépense de la course jusqu'ici $DEJA_USD USD ; reste au plus $DU_SEGMENT USD pour la course (plafond $USD_COURSE USD)"
+ fi
+ 
+-# 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course v5.3 : ne part qu'après une course v6.2
+-#        finie, fermée et saine (v9 : ordre des courses inversé, décision de Lazar du 26 octobre 2026, 00:18 Paris,
+-#        « je veux la v6.2 en premier » ; P3C1-01 : « mêmes règles de refus que pour M et S », R-440) — la liste close de l'étape (0), paramétrée pour la v6.2 et ce lanceur (nom et empreinte de ce
+-#        lanceur, course `v6-2`, nom `pilote4-gemini-v6-2-v1`, lignée `gemini-organisme-v6-2`, GO de ce
++# 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course S (`v6-2-s`) : ne part qu'après une course v6.2
++#        (la course M de ce pilote, `v6-2`) finie, fermée et saine (v9 : ordre des courses inversé, décision de Lazar du 26 octobre 2026, 00:18 Paris,
++#        « je veux la v6.2 en premier » ; P3C1-01 : « mêmes règles de refus que pour M et S », R-440) — la liste close de l'étape (0), paramétrée pour la v6.2 et le lanceur attendu (v11 : en réel, le
++#        lanceur v10, sous lequel la course M a tourné, R-490 ; en simulation, ce lanceur-ci, pour que la batterie produise la course
++#        précédente avec le lanceur sous essai), course `v6-2`, nom `pilote4-gemini-v6-2-v1`, lignée `gemini-organisme-v6-2`, GO de ce
+ #        pilote) ; la graine de v6.2 au manifeste est comparée, à l'étape (2), à celle de ce texte ; la ligne de dépense
+-#        de v5.3 porte aussi les 16 premiers caractères de l'empreinte des empreintes de v6.2
++#        de la course S porte aussi les 16 premiers caractères de l'empreinte des empreintes de v6.2
+ EMP_V62=""
+-if [ "$COURSE" = v5-3 ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V62:-}" ]; }; then
+-  [ -n "${PRECEDENTE_V62:-}" ] || refus "PRECEDENTE_V62 non défini : v5.3 ne part qu'après une course v6.2 saine (dossier du pilote de la course v6.2)"
++if [ "$MODE" = reel ]; then LANCEUR_V62_NOM=lancer_pilote4_gemini_v10.sh; LANCEUR_V62_SHA=0203f5461d1ee7770850ee1b91cb6b379e9f8931b02626d22de56a655eb2c952
++else LANCEUR_V62_NOM="$(basename "$0")"; LANCEUR_V62_SHA="$SHA_LANCEUR"; fi
++if [ "$COURSE" = v6-2-s ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V62:-}" ]; }; then
++  [ -n "${PRECEDENTE_V62:-}" ] || refus "PRECEDENTE_V62 non défini : la course S ne part qu'après une course v6.2 saine (dossier du pilote de la course v6.2)"
+   SV="$PRECEDENTE_V62"
+-  [ -d "$SV" ] || refus "PRECEDENTE_V62 $SV absent : v5.3 ne part qu'après v6.2"
++  [ -d "$SV" ] || refus "PRECEDENTE_V62 $SV absent : la course S ne part qu'après v6.2"
+   SV="$(cd "$SV" && pwd -P)"
+   if [ "$MODE" = reel ]; then
+     case "$(dirname "$SV")" in "$(cd "$RACINE_PILOTES" && pwd -P)") ;; *) refus "PRECEDENTE_V62 $SV hors du dossier des pilotes $RACINE_PILOTES";; esac
+     [[ "$(basename "$SV")" =~ ^pilote4-gemini-v6-2-v1(-tentative[0-9]+)?$ ]] || refus "PRECEDENTE_V62 $SV : nom autre que pilote4-gemini-v6-2-v1[-tentativeN]"
+   fi
+-  [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v6.2 absentes : v5.3 ne part qu'après une course v6.2 finie et fermée"
++  [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v6.2 absentes : la course S ne part qu'après une course v6.2 finie et fermée"
+   (cd "$SV" && sha256sum -c --quiet EMPREINTES-pilote-v1.txt.sha256 && sha256sum -c --quiet EMPREINTES-pilote-v1.txt) > /dev/null 2>&1 || refus "empreintes de v6.2 non vérifiées (fichiers de v6.2 modifiés ou manquants)"
+   for f in LANCEMENT.md extrait-mecanique-v1.json; do
+     grep -Eq "^[0-9a-f]{64}  $f\$" "$SV/EMPREINTES-pilote-v1.txt" || refus "empreintes de v6.2 sans $f"
+@@ -356,10 +373,10 @@
+ if pb: print("; ".join(pb)); sys.exit(1)
+ refus_s = [g.get("refus_noyau") for g in gs]
+ print("v6.2 saine : g000 à g003 OK, au plus 20 %% d appels hors OK et au moins un appel OK de Fable à chacune (%s), fin « générations maximales », arrêt « aucune lignée active » en %d segment(s) (%d arrêt(s) sur le STOP du minuteur, chacun repris), dernier code 0, archive fermée ; graine de v6.2 %s ; dépense du noyau %s USD ; refus du noyau par génération %s" % ("; ".join(statuts_appels), k + 1, k, m.get("entropie_seed_sequence"), r.get("depense_totale_usd"), json.dumps(refus_s, ensure_ascii=False)))
+-' "$SV" "$SHA_LANCEUR" "gemini-organisme-v6-2" "$MODE" "$GO_ID" "$(basename "$0")" "v6-2" "pilote4-gemini-v6-2-v1")" || refus "v5.3 ne part pas : issue de v6.2 hors de la liste saine ($issue_v62) — décision de Lazar requise"
++' "$SV" "$LANCEUR_V62_SHA" "gemini-organisme-v6-2" "$MODE" "$GO_ID" "$LANCEUR_V62_NOM" "v6-2" "pilote4-gemini-v6-2-v1")" || refus "la course S ne part pas : issue de v6.2 hors de la liste saine ($issue_v62) — décision de Lazar requise"
+   GRAINE_V62_MANIFESTE="$("$PY" -I -c 'import json, sys; print((json.load(open(sys.argv[1])).get("manifeste") or {}).get("entropie_seed_sequence"))' "$SV/extrait-mecanique-v1.json")"
+   [[ "$GRAINE_V62_MANIFESTE" =~ ^[0-9]+$ ]] || refus "graine de v6.2 au manifeste illisible ou vide ($GRAINE_V62_MANIFESTE)"
+-  note "- course v6.2 précédente : $SV ; $issue_v62 ; empreintes de v6.2 vérifiées (EMPREINTES-pilote-v1.txt, sha256 $EMP_V62)"
++  note "- course v6.2 précédente : $SV ; $issue_v62 ; lanceur attendu $LANCEUR_V62_NOM (${LANCEUR_V62_SHA:0:8}…) ; empreintes de v6.2 vérifiées (EMPREINTES-pilote-v1.txt, sha256 $EMP_V62)"
+ fi
+ 
+ # 0. Course M de référence : une course du pilote 4 ne part qu'après une course M du second pilote finie, fermée et
+@@ -505,14 +522,14 @@
+   [ -n "$E_TEXTE" ] || refus "entropie E absente du préenregistrement"
+   g_calc="$("$PY" -I -c 'import sys, numpy; e, i = int(sys.argv[1]), int(sys.argv[2]); print(int(numpy.random.SeedSequence(e).spawn(2)[i].generate_state(1, dtype=numpy.uint64)[0]))' "$E_TEXTE" "$INDICE_GRAINE")"
+   [ "$g_calc" = "$GRAINE" ] || refus "graine $GRAINE ≠ celle de SeedSequence(E).spawn(2)[$INDICE_GRAINE] = $g_calc"
+-  if [ "$COURSE" = v5-3 ] && [ -n "${GRAINE_V62_MANIFESTE:-}" ]; then
++  if [ "$COURSE" = v6-2-s ] && [ -n "${GRAINE_V62_MANIFESTE:-}" ]; then
+     grep -Eq "^ *graine de la course v6-2 = ${GRAINE_V62_MANIFESTE}\$" "$PREREG" || refus "la course v6.2 a tourné avec la graine $GRAINE_V62_MANIFESTE, qui n'est pas la graine v6-2 du préenregistrement scellé"
+     note "- course v6.2 précédente : graine $GRAINE_V62_MANIFESTE = graine v6-2 du préenregistrement"
+   fi
+   note "- préenregistrement : $PREREG, sha256 $PREREG_SHA256 (compagnon conforme), graine $GRAINE de la course $COURSE écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée"
+ fi
+ 
+-# 3. Organisme de la course (v5.3 ou v6.2, dossier organisme/ seul) et question, extraits des commits cités, vérifiés
++# 3. Organisme de la course (la v6.2.1 pour les deux courses, dossier organisme/ seul) et question (par course), extraits des commits cités, vérifiés
+ # reprise : l'organisme et la question extraits au segment 1, revérifiés ci-dessous, jamais réécrits
+ if [ "$SEGMENT" = 1 ]; then git -C "$DEPOT" archive "$COMMIT_ORGANISME" organisme | tar -x -C "$PILOTE"; else [ -d "$PILOTE/organisme" ] || refus "SEGMENT=$SEGMENT : organisme du segment 1 absent de $PILOTE"; fi
+ ORG="$PILOTE/organisme"
+@@ -549,7 +566,7 @@
+     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_S:0:16}" || refus "la ligne de dépense de la course $COURSE ne porte pas l'empreinte des empreintes de M (${EMP_S:0:16}…), écrite après la fin de M"
+   fi
+   if [ -n "$EMP_V62" ]; then
+-    echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V62:0:16}" || refus "la ligne de dépense de v5.3 ne porte pas l'empreinte des empreintes de v6.2 (${EMP_V62:0:16}…), écrite après la fin de v6.2"
++    echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V62:0:16}" || refus "la ligne de dépense de la course S ne porte pas l'empreinte des empreintes de v6.2 (${EMP_V62:0:16}…), écrite après la fin de v6.2"
+   fi
+   reste="${RESTE_GO_USD:?RESTE_GO_USD=reste disponible sur $GO_ID avant cette course, en USD}"
+   besoin="$USD_COURSE"; if [ "$SEGMENT" != 1 ]; then besoin="$DU_SEGMENT"; fi   # reprise : 75 USD moins la dépense déjà faite (état de reprise)
