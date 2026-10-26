@@ -1,0 +1,226 @@
+1c1
+< # Audit des failles de notre contrôle — synthèse — v2
+---
+> # Audit des failles de notre contrôle — synthèse — v3
+8c8,11
+< **Version.** Cette v2 remplace la v1 (`audit-failles-controle-v1.md`, `1e43b69c…`, scellée, gardée intacte). Elle ajoute :
+---
+> **Version.** Cette v3 remplace la v2 (`audit-failles-controle-v2.md`, `890130e8…`, scellée, gardée intacte) : changements
+> ciblés seulement, issus de la contre-lecture de la v2 (`rapport-contre-lecture-synthese-v2.md`, `652a79cc…` : CLS2-01 à
+> CLS2-12, trois manques) ; table « constat → traitement » dans `LISEZMOI-synthese-v3.md`. La v2 remplaçait la v1
+> (`1e43b69c…`, intacte) et ajoutait :
+49c52,54
+<   exécutées (R1).
+---
+>   exécutées (R1). v3 : `calculs-synthese-v4.py` (`2fcbf9978157cb2ece4ea7e984006a52ed045c5a4fb6ae801b71fcd33f904129`), sortie
+>   (`76a4b4b6b794a1cfd1ce8d84ecc2541c8108c3979fb65641a4adca2b19fd9433`) ; `calculs-contre-lecture-v2.py` rejoué : sortie
+>   identique octet pour octet à la sienne.
+123,126c128,132
+< 9. **« Expérience directement falsifiable » (3.1 à 3.5).** Aucune ne l'est telle qu'écrite (section 1 bis) : le signe de HR3
+<    est garanti par construction ; HR5 se franchit par hasard 12,4 % des fois à six moniteurs (calcul v2, bloc 4) ; le budget
+<    de HR1 est incohérent ; le nul de HR2 n'est pas spécifié et le résultat bascule avec l'effet épisode (calcul v2, bloc 2) ;
+<    HR4 n'a pas de seuil.
+---
+> 9. **« Expérience directement falsifiable » (3.1 à 3.5).** Aucune n'est spécifiée au point d'être décisive telle qu'écrite
+>    (section 1 bis ; CLS2-01) : HR1, HR2 et HR5 sont sous-spécifiées (budget de HR1 incohérent ; nul de HR2 non spécifié, son
+>    issue basculant avec l'effet épisode, calcul v2, bloc 2 ; nombre de moniteurs de HR5 non dit, son seuil se franchissant
+>    par hasard 12,4 % des fois à six moniteurs, calcul v2, bloc 4) ; HR4 n'a qu'un signe ; HR3 a un seuil qui peut échouer,
+>    mais son signe est acquis par construction et elle ne teste pas une attaque.
+131,134c137,141
+< 12. **« Opérateur mathématique de colmatage » (3.1 à 3.5).** Deux des cinq affaibliraient le contrôle qu'ils prétendent
+<     réparer (E : retour à une statistique symétrique, donc à la classe C ; G : plancher sur covariance honnête qui accepte
+<     une sonde de tic) ; un ne vaut que sous indépendance (F) ; un mesure autre chose que le mécanisme décrit (I) ; un repose
+<     sur une affirmation fausse (H) (section 1 bis).
+---
+> 12. **« Opérateur mathématique de colmatage » (3.1 à 3.5).** Un affaiblirait le contrôle qu'il prétend réparer (G : plancher
+>     sur covariance honnête qui accepte une sonde de tic) ; celui de E ajoute un terme symétrique (classe C), non calibré, et
+>     n'est pas une parade à la remise à zéro — V_T entier garde l'ordre par son second terme, et aucune comparaison de
+>     puissance n'est faite (CLS2-02) ; un tombe sous effet épisode (F) ; un mesure autre chose que le mécanisme décrit (I) ;
+>     un repose sur une affirmation fausse (H) (section 1 bis).
+153c160,161
+<    (faille F : sous effet épisode, 1 % visé devient 2,19 % à 4,56 % à 30 pas, même normalisé ; calcul v2, bloc 2) —
+---
+>    (faille F : sous effet épisode, 1 % visé devient 2,19 % à 4,56 % à 30 pas avec la normalisation du rapport ; une
+>    normalisation à variance d'épisode l'en approche ; calcul v2, bloc 2, et v4) —
+157,159c165,167
+<    hors du champ (avertissement 8) ; deux colmatages affaibliraient le contrôle (E, G), un ne vaut que sous indépendance
+<    (F), un repose sur une affirmation fausse (H), un mesure autre chose que le mécanisme (I) ; aucune des cinq expériences
+<    n'est falsifiable telle qu'écrite. Ce qui en reste d'utile : la durée comme variable de la garantie (D-18) ; « le
+---
+>    hors du champ (avertissement 8) ; un colmatage affaiblirait le contrôle (G), celui de E n'a pas de gain établi, un tombe
+>    sous effet épisode (F), un repose sur une affirmation fausse (H), un mesure autre chose que le mécanisme (I) ; aucune
+>    des cinq expériences n'est spécifiée au point d'être décisive (sous-spécifiées). Ce qui en reste d'utile : la durée comme variable de la garantie (D-18) ; « le
+509,511c517,522
+<   une moyenne des scores sous κ + h/T (vérifié sur 2 000 épisodes) ; le motif est superflu : un décalage constant juste
+<   sous κ passe aussi. Ce que V_T attrape vraiment, c'est le changement de loi marginale (variance du mélange 1,827 contre 1),
+<   pas la remise à zéro.
+---
+>   une moyenne des scores sous κ + h/T (vérifié sur 2 000 épisodes) : la somme cumulée n'a, par construction, aucune
+>   puissance contre une moyenne sous κ. Ce que V_T attrape vraiment, c'est le changement de loi marginale (variance du
+>   mélange 1,827 contre 1), pas la remise à zéro. Contre-lecture v2 (bloc E2, rejoué ; nul N(0, 1), T = 100, κ = 0,5, 1 %) :
+>   somme cumulée 0,7 % contre le motif et 16,6 % contre son rebrassage ; terme symétrique 87,6 % des deux côtés ; V_T entier
+>   77,4 % et 82,4 % : le terme nouveau ramène à la classe C, mais V_T entier garde l'ordre par son second terme ; il n'est
+>   pas une parade à la remise à zéro ; aucune comparaison de puissance n'est faite ici (CLS2-02).
+519,520c530,532
+<   couvert (repli sur FI-04 et D-03, comme FC-04) ; remplacer V_T par un test bilatéral de la loi des scores et de la
+<   chronologie des dépassements, avec témoin de classe C (HT-01).
+---
+>   couvert (repli sur FI-04 et D-03, comme FC-04) ; ne pas présenter V_T comme parade à la remise à zéro ; lui comparer,
+>   sous préenregistrement, un test bilatéral de la loi des scores et de la chronologie des dépassements, avec témoin de
+>   classe C (HT-01).
+553c565,567
+<   soi-même se manipule) ; estimé sur l'honnête, il ignore l'effet épisode.
+---
+>   soi-même se manipule ; estimé dans l'épisode, l'invariance tombe même sous indépendance : contre-lecture v2, bloc F1) ;
+>   estimé sur l'honnête, il ignore l'effet épisode — qu'une normalisation à variance d'épisode, elle, prend en compte, de
+>   façon approchée (calcul v4 ; D-18 (d)).
+560c574,575
+<   forme de frontière fixée d'avance (HT-02, D-18) ; même règle pour la longueur des actions (FI-26).
+---
+>   forme de frontière fixée d'avance (HT-02, D-18) ; à défaut, normaliser par la variance d'épisode estimée (approché :
+>   D-18 (d)) ; même règle pour la longueur des actions (FI-26).
+632a648,651
+>   Confusion que ni le rapport ni la v2 ne voyaient : les jetons qui précèdent le premier chiffre portent la **forme du
+>   champ** du coût (intervalle, suffixe, plusieurs nombres), très inégale entre conditions (honnête : 41 actions à plusieurs
+>   nombres, 14 à suffixe « k », 13 à intervalle ; saboteur : 3, 0, 0 : N-025, remarque 1, vérifié) ; apparier aussi sur la
+>   forme (trait de N-029) ou stratifier W_pré par forme (contre-lecture v2, section 9, point 3).
+653,654c672,674
+< - **Mathématiques (calcul v2, bloc 4).** (a) χ₂ est une différence finie d'ordre 1 du gain le long d'une intensité bénigne :
+<   un scalaire, pas un tenseur ; s n'est pas défini. (b) Deux points ne voient pas un seuil placé au-delà de s₂ : g(s₁) =
+---
+> - **Mathématiques (calcul v2, bloc 4).** (a) χ₂ est une différence finie du gain selon l'intensité ; g étant lui-même une
+>   dérivée (−∂Δv/∂v₀), χ₂ est une différence mixte du second ordre de Δv, en s et en v₀ (CLS2-06) : un scalaire, pas un
+>   tenseur ; s n'est pas défini. (b) Deux points ne voient pas un seuil placé au-delà de s₂ : g(s₁) =
+701,707c721,727
+< - Énoncé : un saboteur qui compense (pas hauts, puis pas sous la moyenne honnête) ne peut garder à la fois une moyenne sous
+<   κ, des rangs conformes uniformes et des durées géométriques entre dépassements ; une statistique combinée (écart
+<   bilatéral à l'uniformité des rangs, plus test des durées), calibrée sur épisodes honnêtes entiers, le détecte là où la
+<   somme cumulée échoue — sauf s'il reproduit la loi honnête, où T2 interdit toute détection.
+< - Prédiction : sur scores honnêtes réels rééchantillonnés par épisode, contre la famille « compensation » (amplitude haute
+<   1 à 2σ, compensation sous la moyenne, période 3 à 8, phase tirée au hasard) : rappel à 1 % de faux positifs ≥ 0,80 pour
+<   la combinée et ≤ 0,15 pour la somme cumulée (signe : combinée > somme cumulée) ; contre le témoin de classe C (rebrassage
+---
+> - Énoncé (au niveau du détecteur, CLS2-07) : une statistique combinée (écart bilatéral à l'uniformité des rangs conformes,
+>   plus test des durées entre dépassements), calibrée sur épisodes honnêtes entiers, voit toute suite de scores dont la loi
+>   marginale ou la chronologie des dépassements s'écarte de la loi honnête, ce que la somme cumulée ne voit pas sous κ ;
+>   elle ne voit rien d'une suite qui reproduit la loi honnête (T2).
+> - Prédiction : sur scores honnêtes réels rééchantillonnés par épisode, contre le seul motif de HR1 tel que le rapport le
+>   donne (tout autre paramètre est laissé au préenregistrement scellé) : rappel à 1 % de faux positifs ≥ 0,80 pour la
+>   combinée et ≤ 0,15 pour la somme cumulée (signe : combinée > somme cumulée) ; contre le témoin de classe C (rebrassage
+722,724c742,746
+< - Énoncé : sous le nul du programme (effet épisode), aucune normalisation par la durée ne rend la loi du maximum
+<   invariante ; la calibration par classe la rend exacte par construction, et retire au saboteur qui raccourcit la marge
+<   qu'il gagnait.
+---
+> - Énoncé : sous le nul du programme (effet épisode), la normalisation du rapport (sans terme d'épisode) ne rend pas la loi
+>   du maximum invariante ; une normalisation à variance d'épisode estimée sur le calibrage l'en approche sans l'exactitude
+>   (0,72 à 1,45 % pour 1 % visé jusqu'à 60 pas, τ de 0,3 à 1 ; jusqu'à 2,09 % sous indépendance ; forme combinée avec celle
+>   du rapport : 0,73 à 1,71 % sur les cinq nuls essayés : calcul v4 ; contre-lecture v2, bloc F1, rejoué) (CLS2-03) ; la
+>   calibration par classe la rend exacte par construction, et supprime la marge que gagne un épisode raccourci.
+762,763c784,785
+< - Énoncé : à coût écrit apparié, le code de la condition lu aux positions qui précèdent le nombre est celui qu'on lit aux
+<   positions du nombre ; la lecture P3b ne rate alors aucune « impulsion » amont.
+---
+> - Énoncé : à coût écrit et à forme du champ appariés (N-025, remarque 1), le code de la condition lu aux positions qui
+>   précèdent le nombre est celui qu'on lit aux positions du nombre ; la lecture P3b ne rate alors aucune « impulsion » amont.
+836c858,859
+<   Rapprochement proposé, non trouvé (piste déjà en section 6, n° 2).
+---
+>   Rapprochement proposé, non trouvé (piste déjà en section 6, n° 2) ; **décoratif** : il nomme la mesure sans porter la
+>   prédiction (CLS2-09).
+847c870
+<   marge fixée à l'enregistrement (Panin, `ssrn-7424179`, `66787c14…`, p. 5). Rapprochement au plancher des sondes :
+---
+>   marge fixée à l'enregistrement (Panin, `ssrn-7424179`, `27f88ed7…`, p. 5 ; CLS2-05). Rapprochement au plancher des sondes :
+851c874,876
+<   épisodes par classe pour une demi-largeur de 0,021 à 90 % autour d'une aire de 0,575 (calcul v3 ; 0,043 à 240 épisodes).
+---
+>   épisodes par classe pour une demi-largeur de 0,021 à 90 % autour d'une aire de 0,575 (calcul v3 ; 0,043 à 240 épisodes),
+>   **par épisodes indépendants** : à corriger de l'effet de grappe par tâche, P3 ayant 60 tâches et un intervalle
+>   rééchantillonné par tâches (N-025, remarque 3) (CLS2-08).
+1019c1044,1045
+<   non relue ici (CLS-11). Rapprochement proposé, non trouvé.
+---
+>   non relue ici (CLS-11). Rapprochement proposé, non trouvé ; **décoratif** : l'estimateur suppose l'indépendance que FI-09
+>   nie ; un taux de manques communs suffit (CLS2-09).
+1053c1079,1080
+<   juges ; une variante récompensée par le score d'un juge J fait baisser celui de J seul.
+---
+>   juges ; une variante récompensée par le score d'un juge J fait baisser celui de J seul. Cette variante est un
+>   entraînement contre un moniteur : **bras d'attaque déclaré** au sens de l'invariant de N-053, point 5, sous GO (CLS2-10).
+1106c1133
+<   trouvé.
+---
+>   trouvé ; **décoratif** : pour deux membres, une ablation suffit (CLS2-09).
+1205c1232
+< | 3.1 (E) | la prémisse (abaisser le score d'une sonde sous l'honnête) relève de l'obfuscation des activations, non citée ; le colmatage ramène à la classe C | 2412.09565v2, 2506.14261v4, 2512.11949v1 vérifiés p. 1 ; calcul v2, bloc 1 | affaiblit |
+---
+> | 3.1 (E) | la prémisse (abaisser le score d'une sonde sous l'honnête) relève de l'obfuscation des activations, non citée ; le terme nouveau du colmatage est symétrique (classe C) et non calibré ; V_T n'est pas une parade à la remise à zéro (CLS2-02) | 2412.09565v2, 2506.14261v4, 2512.11949v1 vérifiés p. 1 ; calcul v2, bloc 1 | affaiblit |
+1210c1237
+< | troisième partie | l'organisme attaque des parades qu'il a lui-même proposées ; ses « colmatages » ne peuvent entrer dans un instrument scellé sans préenregistrement ni contre-lecture | R1, R2 ; D-19 | affaiblit |
+---
+> | troisième partie | l'organisme attaque les parades de la génération 1, pour l'essentiel celles du programme (CLS2-04) ; ses « colmatages » ne peuvent entrer dans un instrument scellé sans préenregistrement ni contre-lecture | R1, R2 ; D-19 | affaiblit |
+1400c1427
+< | RC-3.1 (E) | compensation sous la somme cumulée | en partie : borne de B total (N-004) ; FI-04 | voisine : 2005.07821v1 p. 1 ; 2601.20022v2 p. 1–3 ; 2606.10456v2 p. 1–2 ; prémisse : 2412.09565v2, 2506.14261v4, 2512.11949v1 p. 1 | test bilatéral des rangs et des durées, témoin de classe C (HT-01) ; repli sur FI-04 | affaiblit · P2 | affirmé par l'organisme ; opérateur à retirer |
+---
+> | RC-3.1 (E) | compensation sous la somme cumulée | en partie : borne de B total (N-004) ; FI-04 | voisine : 2005.07821v1 p. 1 ; 2601.20022v2 p. 1–3 ; 2606.10456v2 p. 1–2 ; prémisse : 2412.09565v2, 2506.14261v4, 2512.11949v1 p. 1 | test bilatéral des rangs et des durées, témoin de classe C (HT-01) ; repli sur FI-04 | affaiblit · P2 | affirmé par l'organisme ; terme nouveau symétrique, sans gain établi (CLS2-02) |
+1767a1795,1797
+> | P1 | correction pour le nombre de sondes lues contre leur plancher (« au moins une » : 1 − 0,95ᵏ) | critère 3 de G0 ; G1 | G, FI-38 | écriture | — | D-07 |
+> | P1 | normalisation à variance d'épisode estimée, en option approchée de la calibration par classe | H2, G1 | F | processeur | — | D-18 (d) |
+> | P1 | appariement ou stratification de la fenêtre avant le chiffre sur la forme du champ du coût | P3b, papier C | H | processeur | — | D-19 (HT-04) |
+1783,1784c1813,1815
+<   troisième, « absolument inédites », « jamais documentées », « directement falsifiable », « garantie 100 % » et
+<   « certifié » ne tiennent pas, et deux colmatages affaibliraient le contrôle (points 8 à 12 ; section 1 bis).
+---
+>   troisième, « absolument inédites », « jamais documentées », « directement falsifiable » (expériences sous-spécifiées),
+>   « garantie 100 % » et « certifié » ne tiennent pas, et un colmatage affaiblirait le contrôle (G) (points 8 à 12 ;
+>   section 1 bis).
+1865c1896,1898
+<   v3 ; contre-lecture, section 7, point 1 ; HT-32).
+---
+>   v3 ; contre-lecture, section 7, point 1 ; HT-32). Même défaut côté sondes : « au moins une sonde dépasse son plancher »,
+>   chaque plancher contrôlant 5 % par sonde, donne 1 − 0,95ᵏ de fausses acceptations, 9,75 % pour deux sondes, 14,26 % pour
+>   trois, 22,62 % pour cinq (calcul v4 ; contre-lecture v2, section 9, point 1).
+1867c1900
+<   avec marge ; titre du papier A « contre un attaquant non adaptatif » tant qu'E1.5 n'est pas lu ; **combinaison par
+---
+>   avec marge, corrigé pour le nombre de sondes lues (Bonferroni, ou intersection-union si toutes doivent passer) ; titre du papier A « contre un attaquant non adaptatif » tant qu'E1.5 n'est pas lu ; **combinaison par
+2012c2045,2048
+<   courts.
+---
+>   courts. (d) Normalisation à variance d'épisode estimée sur le calibrage, √(σ̂²t + τ̂²t²), seule ou combinée à celle du
+>   rapport (CLS2-03) — avantage : aucun épisode de plus, une seule statistique ; inconvénient : approchée (0,72 à 1,45 % pour
+>   1 % visé jusqu'à 60 pas sous effet épisode, 2,09 % sous indépendance ; forme combinée 0,73 à 1,71 % sur cinq nuls :
+>   calcul v4), dépend d'un τ estimé et d'un effet épisode additif, sans garantie exacte par classe.
+2017,2019c2053,2057
+< - Enjeu : HR1 à HR5 ne sont pas falsifiables telles qu'écrites (section 1 bis) ; leurs opérateurs viennent de l'organisme,
+<   qui attaque des parades qu'il a lui-même proposées ; deux affaibliraient le contrôle ; aucun ne peut entrer dans un
+<   instrument scellé sans préenregistrement (R1) ni contre-lecture (R2).
+---
+> - Enjeu : HR1 à HR5 ne sont pas spécifiées au point d'être décisives (HR1, HR2, HR5 sous-spécifiées ; HR4 sans seuil ; HR3
+>   au signe acquis : section 1 bis, CLS2-01) ; leurs opérateurs viennent de l'organisme, qui attaque les parades de la
+>   génération 1, pour l'essentiel celles du programme : seuil conforme, somme cumulée de Page, plancher apparié, lecture
+>   P3b, loi de déférence (CLS2-04) ; un affaiblirait le contrôle (G), celui de E n'a pas de gain établi (CLS2-02) ; aucun ne
+>   peut entrer dans un instrument scellé sans préenregistrement (R1) ni contre-lecture (R2).
+2024c2062
+<   ininterprétables (HR3 tautologique ; HR5 franchie par hasard 12,4 % des fois à six moniteurs). (c) Laisser la troisième
+---
+>   ininterprétables (signe de HR3 acquis par construction ; HR5 franchie par hasard 12,4 % des fois à six moniteurs). (c) Laisser la troisième
+2055c2093,2094
+<   (section 1 bis, section 1 ter, D-17 à D-19) n'ont pas été contre-lus.
+---
+>   (section 1 bis, section 1 ter, D-17 à D-19) ont été contre-lus à leur tour (`652a79cc…` : « transmissible après
+>   corrections », aucun bloquant ; corrections intégrées dans la v3) ; les changements de la v3 ne l'ont pas été.
+2155,2157c2194,2197
+<   `ssrn-7424179` `66787c14…` (p. 4, 5) ; 2607.06596v3 `63181efe…` (p. 11). Empreintes sur disque absentes des listes de
+<   provenance : 2607.11871v1 `5d1d22ed…` (p. 1) ; 2609.35591v2 `e92c69cb…` (p. 1, 5) ; 2604.07729v1 `afe70d72…` (p. 3) ;
+<   2602.19159v1 `ab4ed860…` (p. 1).
+---
+>   `ssrn-7424179` `27f88ed7…` (p. 4, 5 ; la v2 citait par erreur `66787c14…`, empreinte de sa note de provenance : CLS2-05) ;
+>   2607.06596v3 `63181efe…` (p. 11). Empreintes sur disque absentes des listes de provenance : 2607.11871v1 `5d1d22ed…`
+>   (p. 1) ; 2609.35591v2 `e92c69cb…` (p. 1, 5) ; 2604.07729v1 `afe70d72…` (p. 3) ; 2602.19159v1 `ab4ed860…` (p. 1) : note de
+>   provenance (adresse, date) à compléter avant tout usage dans un papier (CLS2-11).
+2160c2200
+< Horodatage : version close le 2026-10-26 à 13:56:09 UTC (heure lue sur date -u dans la commande qui écrit cette ligne).
+---
+> Horodatage : version close le 2026-10-26 à 14:25:14 UTC (heure lue sur date -u dans la commande qui écrit cette ligne).
