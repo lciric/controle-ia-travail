@@ -152,3 +152,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-26 00:55 UTC — Argon seul, question « suite de H-M1 » (R-460) : une cellule valide, **0,62 USD** ; branche `donnees/argon-suite-HM1-v1` (`277de539`, empreintes `bbfd4662…`).
 - 2026-10-26 01:02 UTC — **engagement : Opus seul, question distincte « escalier, plan statistique »** (R-465), une cellule, sous GO-2026-10-24-07 ; plafond 3 USD ; clé Anthropic n° 3.
 - 2026-10-26 01:03 UTC — **engagement : collisionneur v2.5, tour « agents sur le noyau »** (`6de36af7…`), III.1 à III.3, trois modèles, sous GO-2026-10-24-07 (R-466) ; aucun fait joint ; plafond 10 USD ; clé Anthropic n° 3, Gemini n° 2.
+- 2026-10-26 01:05 UTC — **engagement : collisionneur, question « escalier, plan statistique »**, III.1 à III.3, trois modèles, même dossier que R-465 (R-467), sous GO-2026-10-24-07 ; plafond 10 USD sur le dossier.
