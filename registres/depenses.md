@@ -146,3 +146,5 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-26 00:37 UTC — collisionneur « lecture du pilote » (R-451, R-452), trois tours sous GO-2026-10-24-07 : neuf cellules valides, **7,37 USD** (III.1 2,06 ; III.2 et III.3 5,31) ; branche `donnees/collisionneur-lecture-pilote-v1` (`7ac475b9`, empreintes `0b385ef8…`).
 - 2026-10-26 00:36 UTC — correction : la ligne précédente, datée 00:37, a été écrite à 00:35 (heure écrite d'avance, non réécrite).
 - 2026-10-26 00:41 UTC — test H-M1 v3 sous GO-2026-10-25-03 : instance 57742711 (A100 SXM4, 1,093 USD/h), 00:34–00:41 UTC ; **≈ 0,13 USD** (≈ 7 min de carte et disque) ; cumul du GO ≈ 0,23 USD sur 10.
+- 2026-10-26 00:51 UTC — **engagement : collisionneur v2.5, tour « suite de H-M1 »** (`2136516d…`), III.1 à III.3, trois modèles, sous GO-2026-10-24-07 (R-460) ; aucun fait joint ; plafond 10 USD ; clé Anthropic n° 3, Gemini n° 2.
+- 2026-10-26 00:51 UTC — **engagement : Argon seul, même question** (R-460), une cellule, sous GO-2026-10-24-07 ; plafond 3 USD ; clé Gemini n° 2.
