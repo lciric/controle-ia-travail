@@ -27,8 +27,8 @@ COMMUN=(GH_TOKEN=jeton-factice-gh DEPOT_URL="$E/depot.git" VENV_EXISTANT="$VENV"
 
 # 1. cas sain : deux mesures (modèle minuscule), deux poussées
 cas sain 0 "${COMMUN[@]}" COMMIT="$C" BRANCHE=donnees/essai-sain RACINE_AMORCE="$E/sain" MODELE_LOCAL="$MIN" bash "$A"
-n=$(git -C "$E/depot.git" rev-list --count donnees/essai-sain 2>/dev/null || echo 0)
-resume "sain : commits poussés" "3" "$n" "$([ "$n" = 3 ] && echo conforme || echo ÉCART)"
+n=$(git -C "$E/depot.git" rev-list --count "$C..donnees/essai-sain" 2>/dev/null || echo 0)
+resume "sain : commits de résultats" "2" "$n" "$([ "$n" = 2 ] && echo conforme || echo ÉCART)"
 # 2. mauvais commit
 cas mauvais-commit 1 "${COMMUN[@]}" COMMIT=0000000000000000000000000000000000000000 BRANCHE=donnees/essai-a2 \
     RACINE_AMORCE="$E/mauvais-commit" MODELE_LOCAL="$MIN" bash "$A"
