@@ -5,8 +5,8 @@
 # (21854b79…) par `deriver_lanceur_question_v12.py` (deux courses à question du même organisme, hors du pilote 4 : clés
 # `maieutique` et `audit`, noms `course-maieutique-gemini-v6-2-v1` et `course-audit-gemini-v6-2-v1`, lignées
 # `gemini-organisme-v6-2-maieutique` et `gemini-organisme-v6-2-audit`, graines enfants 0 et 1 d'un même texte ; questions
-# de `main` (« maieutique » à `eb03bad5`, « audit » v2 à `9417652a`), la course « audit » servie avec ses annexes (bloc de
-# paramètres en tête : une à remplir, la transcription expurgée d'un rapport) dans `question.md` ; GO par course, donné
+# de `main` (« maieutique » à `eb03bad5`, « audit » v3 à `ad23e9ae`), la course « audit » servie avec son annexe (bloc de
+# paramètres en tête : la transcription expurgée v2 du rapport consolidé, même commit) dans `question.md` ; GO par course, donné
 # par session-depot (GO_ID) ; porte « course v6.2 précédente » retirée (rien n'est exigé des courses du pilote 4) ; les
 # clés `v6-2` et `v6-2-s` refusées ; garde « refus-question » (veilleur de fond sur le journal d'appels vivant de g001 : au
 # premier appel refusé d'un rôle propre à la question, ou de `monoculture_analytique` après le premier appel `moissonneur_*`
@@ -80,20 +80,20 @@ refus_tot() { echo "REFUS : $*" >&2; exit 2; }   # refus avant que le dossier du
 # ---- Paramètres des questions et des annexes (texte v1 ; R-509, R-510, R-515, R-516) : une ligne par champ, changer un
 #      champ est le remplacement d'une ligne, vérifié par l'empreinte de ce lanceur. Annexes de la course « audit » : jusqu'à
 #      quatre emplacements (ANNEXE_k_COMMIT, ANNEXE_k_CHEMIN, ANNEXE_k_SHA) ; un emplacement aux trois champs vides n'est pas
-#      servi (les annexes servies sont numérotées dans l'ordre), un emplacement à moitié rempli est un refus ; l'annexe 1 — la
-#      transcription expurgée d'un rapport, chemin, commit et empreinte donnés par session-depot — est à remplir avant le
-#      départ. La question servie (question, puis annexes) doit tenir dans la borne du noyau (QUESTION_CARACTERES_MAX ci-dessous,
+#      servi (les annexes servies sont numérotées dans l'ordre), un emplacement à moitié rempli est un refus ; l'annexe 1 est la
+#      transcription expurgée v2 du rapport consolidé (session-depot, R-518 : `main` à ad23e9ae, même commit que la question v3).
+#      La question servie (question, puis annexes) doit tenir dans la borne du noyau (QUESTION_CARACTERES_MAX ci-dessous,
 #      égale à CARACTERES_MAX_QUESTION de essaim_m3/noyau/question.py au noyau attendu), vérifiée à l'étape (3). En simulation, ESSAI_ANNEXE_1_COMMIT,
 #      ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA (ensemble) remplacent l'annexe 1 (annexe synthétique de la batterie). ----
 QUESTION_MAIEUTIQUE_COMMIT=eb03bad56ece1e755afa5e264948d0c44416f6cc
 QUESTION_MAIEUTIQUE_CHEMIN=brouillons/questions-organismes-20261026-v1/question-hypotheses-maieutique-organismes-v1.md
 QUESTION_MAIEUTIQUE_SHA=1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3
-QUESTION_AUDIT_COMMIT=9417652a45cae723ffe6199fbf3dbf4080d8e54f
-QUESTION_AUDIT_CHEMIN=brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v2.md
-QUESTION_AUDIT_SHA=ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4
-ANNEXE_1_COMMIT=
-ANNEXE_1_CHEMIN=
-ANNEXE_1_SHA=
+QUESTION_AUDIT_COMMIT=ad23e9ae07588ed701a70b9b5f4bf379ca079953
+QUESTION_AUDIT_CHEMIN=brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v3.md
+QUESTION_AUDIT_SHA=998960b8d101d5013c498d6fcf225277ba17d20741825ad136381892c05cfd0e
+ANNEXE_1_COMMIT=ad23e9ae07588ed701a70b9b5f4bf379ca079953
+ANNEXE_1_CHEMIN=docs/sources/rapport-consolide-20261026/transcription-expurgee-v2.md
+ANNEXE_1_SHA=c1237687e98db14475336af690986bc08800a85e259d249de4940130245b1a64
 ANNEXE_2_COMMIT=
 ANNEXE_2_CHEMIN=
 ANNEXE_2_SHA=
@@ -240,8 +240,10 @@ COMMIT_CREDIT=90595ffb53b30c65c66be807215a998998b701fc
 [ "$ART" = commit ] && COMMIT_QUESTION=0123456789abcdef0123456789abcdef01234567
 [ "$ART" = question-base ] && SHA_QUESTION=0000000000000000000000000000000000000000000000000000000000000000
 [ "$ART" = question-v1 ] && CHEMIN_QUESTION=brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v1.md   # la v1 (dd2c1016…) ne sert plus : empreinte autre
+[ "$ART" = question-v2 ] && CHEMIN_QUESTION=brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v2.md   # la v2 (ec3abf28…) ne sert plus : empreinte autre
 [ "$ART" = annexe ] && ANNEXE_1_SHA=0000000000000000000000000000000000000000000000000000000000000000
 [ "$ART" = annexe-absente ] && ANNEXE_1_CHEMIN=docs/nulle-part-v1.md
+[ "$ART" = annexe-vide ] && ANNEXE_1_COMMIT= && ANNEXE_1_CHEMIN= && ANNEXE_1_SHA=   # emplacement 1 vidé : course « audit » sans annexe (RÉSERVE)
 SHA_BANQUE=157a2b45a8d9fd88cc5dca2f483c2dc79457d781d44f9802b2c053f530c0011d
 SHA_MISSION=bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e
 SHA_COLLISIONNEUR=213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd

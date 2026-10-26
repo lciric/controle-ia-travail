@@ -11,10 +11,12 @@ quatrième pilote (`lancer_pilote4_gemini_v11.sh`, 21854b79…), par remplacemen
 2. bloc de paramètres en tête du lanceur (une ligne par champ : un changement = le remplacement d'une ligne, vérifié par
    l'empreinte du lanceur) : questions de `main`, extraites et vérifiées — `maieutique` =
    `question-hypotheses-maieutique-organismes-v1.md` (commit `eb03bad5`, 1d29fbec…) ; `audit` =
-   `question-audit-controle-organismes-v2.md` (commit `9417652a`, ec3abf28… ; la v1 dd2c1016… ne sert plus : R-515,
-   R-516) — et, pour `audit`, jusqu'à quatre annexes (`ANNEXE_k_COMMIT`, `ANNEXE_k_CHEMIN`, `ANNEXE_k_SHA`) : l'annexe 1, la
-   transcription expurgée d'un rapport (chemin, commit, empreinte à venir de session-depot), est à remplir, les trois champs
-   vides ; une annexe aux trois champs vides n'est pas servie, un emplacement à moitié rempli est un refus ; `question.md` =
+   `question-audit-controle-organismes-v3.md` (commit `ad23e9ae`, 998960b8… ; paramètres définitifs de session-depot, R-518 ;
+   la v1 dd2c1016… et la v2 ec3abf28… ne servent plus) — et, pour `audit`, jusqu'à quatre annexes (`ANNEXE_k_COMMIT`,
+   `ANNEXE_k_CHEMIN`, `ANNEXE_k_SHA`) : l'annexe 1 est la transcription expurgée v2 du rapport consolidé
+   (`docs/sources/rapport-consolide-20261026/transcription-expurgee-v2.md`, commit `ad23e9ae`, c1237687…, 37 563 octets),
+   les emplacements 2 à 4 vides ; une annexe aux trois champs vides n'est pas servie, un emplacement à moitié rempli est un
+   refus ; `question.md` =
    question, puis pour chaque annexe servie (numérotées dans l'ordre) une ligne `---`, un titre `# Annexe k — <chemin>
    (sha256 <empreinte>)` et son contenu (une ligne vide avant et après chaque séparateur et chaque titre) ; la question servie
    doit tenir dans la borne du noyau (paramètre QUESTION_CARACTERES_MAX, 100 000 caractères au noyau 9beee10b, vérifié égal à
@@ -22,7 +24,8 @@ quatrième pilote (`lancer_pilote4_gemini_v11.sh`, 21854b79…), par remplacemen
    SHA_QUESTION reste celle de la question de base (ligne de GO, LANCEMENT.md) ; ligne nouvelle « question servie :
    question.md, sha256 …, N caractères » ; en simulation, ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA
    (ensemble) remplacent l'annexe 1 (annexe synthétique de la batterie) ; artefacts d'essai `question` (fichier servi
-   altéré), `question-base`, `question-v1`, `annexe`, `annexe-absente` ;
+   altéré), `question-base`, `question-v1`, `question-v2`, `annexe`, `annexe-absente`, `annexe-vide` (emplacement 1 vidé :
+   la RÉSERVE « sans aucune annexe ») ;
 3. porte « course v6.2 précédente » retirée (bloc 0 bis, variables LANCEUR_V62_*, EMP_V62, contrôle de la graine v6-2) ;
    PRECEDENTE_V62 sans effet ; porte « course M de référence » et chaîne de `grep` de la ligne de GO inchangées ; chemins
    permis après le code : le texte des courses à question et ses contre-lectures ;
@@ -70,8 +73,8 @@ remplacements = [
      "# (21854b79…) par `deriver_lanceur_question_v12.py` (deux courses à question du même organisme, hors du pilote 4 : clés\n"
      "# `maieutique` et `audit`, noms `course-maieutique-gemini-v6-2-v1` et `course-audit-gemini-v6-2-v1`, lignées\n"
      "# `gemini-organisme-v6-2-maieutique` et `gemini-organisme-v6-2-audit`, graines enfants 0 et 1 d'un même texte ; questions\n"
-     "# de `main` (« maieutique » à `eb03bad5`, « audit » v2 à `9417652a`), la course « audit » servie avec ses annexes (bloc de\n"
-     "# paramètres en tête : une à remplir, la transcription expurgée d'un rapport) dans `question.md` ; GO par course, donné\n"
+     "# de `main` (« maieutique » à `eb03bad5`, « audit » v3 à `ad23e9ae`), la course « audit » servie avec son annexe (bloc de\n"
+     "# paramètres en tête : la transcription expurgée v2 du rapport consolidé, même commit) dans `question.md` ; GO par course, donné\n"
      "# par session-depot (GO_ID) ; porte « course v6.2 précédente » retirée (rien n'est exigé des courses du pilote 4) ; les\n"
      "# clés `v6-2` et `v6-2-s` refusées ; garde « refus-question » (veilleur de fond sur le journal d'appels vivant de g001 : au\n"
      "# premier appel refusé d'un rôle propre à la question, ou de `monoculture_analytique` après le premier appel `moissonneur_*`\n"
@@ -117,20 +120,20 @@ remplacements = [
      "# ---- Paramètres des questions et des annexes (texte v1 ; R-509, R-510, R-515, R-516) : une ligne par champ, changer un\n"
      "#      champ est le remplacement d'une ligne, vérifié par l'empreinte de ce lanceur. Annexes de la course « audit » : jusqu'à\n"
      "#      quatre emplacements (ANNEXE_k_COMMIT, ANNEXE_k_CHEMIN, ANNEXE_k_SHA) ; un emplacement aux trois champs vides n'est pas\n"
-     "#      servi (les annexes servies sont numérotées dans l'ordre), un emplacement à moitié rempli est un refus ; l'annexe 1 — la\n"
-     "#      transcription expurgée d'un rapport, chemin, commit et empreinte donnés par session-depot — est à remplir avant le\n"
-     "#      départ. La question servie (question, puis annexes) doit tenir dans la borne du noyau (QUESTION_CARACTERES_MAX ci-dessous,\n"
+     "#      servi (les annexes servies sont numérotées dans l'ordre), un emplacement à moitié rempli est un refus ; l'annexe 1 est la\n"
+     "#      transcription expurgée v2 du rapport consolidé (session-depot, R-518 : `main` à ad23e9ae, même commit que la question v3).\n"
+     "#      La question servie (question, puis annexes) doit tenir dans la borne du noyau (QUESTION_CARACTERES_MAX ci-dessous,\n"
      "#      égale à CARACTERES_MAX_QUESTION de essaim_m3/noyau/question.py au noyau attendu), vérifiée à l'étape (3). En simulation, ESSAI_ANNEXE_1_COMMIT,\n"
      "#      ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA (ensemble) remplacent l'annexe 1 (annexe synthétique de la batterie). ----\n"
      "QUESTION_MAIEUTIQUE_COMMIT=eb03bad56ece1e755afa5e264948d0c44416f6cc\n"
      "QUESTION_MAIEUTIQUE_CHEMIN=brouillons/questions-organismes-20261026-v1/question-hypotheses-maieutique-organismes-v1.md\n"
      "QUESTION_MAIEUTIQUE_SHA=1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3\n"
-     "QUESTION_AUDIT_COMMIT=9417652a45cae723ffe6199fbf3dbf4080d8e54f\n"
-     "QUESTION_AUDIT_CHEMIN=brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v2.md\n"
-     "QUESTION_AUDIT_SHA=ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4\n"
-     "ANNEXE_1_COMMIT=\n"
-     "ANNEXE_1_CHEMIN=\n"
-     "ANNEXE_1_SHA=\n"
+     "QUESTION_AUDIT_COMMIT=ad23e9ae07588ed701a70b9b5f4bf379ca079953\n"
+     "QUESTION_AUDIT_CHEMIN=brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v3.md\n"
+     "QUESTION_AUDIT_SHA=998960b8d101d5013c498d6fcf225277ba17d20741825ad136381892c05cfd0e\n"
+     "ANNEXE_1_COMMIT=ad23e9ae07588ed701a70b9b5f4bf379ca079953\n"
+     "ANNEXE_1_CHEMIN=docs/sources/rapport-consolide-20261026/transcription-expurgee-v2.md\n"
+     "ANNEXE_1_SHA=c1237687e98db14475336af690986bc08800a85e259d249de4940130245b1a64\n"
      "ANNEXE_2_COMMIT=\n"
      "ANNEXE_2_CHEMIN=\n"
      "ANNEXE_2_SHA=\n"
@@ -234,8 +237,10 @@ remplacements = [
      '[ "$ART" = commit ] && COMMIT_QUESTION=0123456789abcdef0123456789abcdef01234567\n'
      '[ "$ART" = question-base ] && SHA_QUESTION=' + Z64 + '\n'
      '[ "$ART" = question-v1 ] && CHEMIN_QUESTION=brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v1.md   # la v1 (dd2c1016…) ne sert plus : empreinte autre\n'
+     '[ "$ART" = question-v2 ] && CHEMIN_QUESTION=brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v2.md   # la v2 (ec3abf28…) ne sert plus : empreinte autre\n'
      '[ "$ART" = annexe ] && ANNEXE_1_SHA=' + Z64 + '\n'
-     '[ "$ART" = annexe-absente ] && ANNEXE_1_CHEMIN=docs/nulle-part-v1.md\n', 1),
+     '[ "$ART" = annexe-absente ] && ANNEXE_1_CHEMIN=docs/nulle-part-v1.md\n'
+     '[ "$ART" = annexe-vide ] && ANNEXE_1_COMMIT= && ANNEXE_1_CHEMIN= && ANNEXE_1_SHA=   # emplacement 1 vidé : course « audit » sans annexe (RÉSERVE)\n', 1),
     # chemins permis après le code : le texte des courses à question et ses contre-lectures
     ("# Chemins que les commits postérieurs à 8e5e2f7b peuvent toucher : le texte du second pilote, ses pièces et ses\n"
      "# contre-lectures ; ce texte, ses pièces et ses contre-lectures ; dossier des pilotes\n",
@@ -476,10 +481,11 @@ for motif, permis in (("v6-2-s", 7), ("v5.3", 0), ("v5-3-v6", 3), ("pilote4-gemi
                       ("GO_ID=", 4), ("GO_ID", 24),
                       ("course-maieutique-gemini-v6-2-v1", 2), ("course-audit-gemini-v6-2-v1", 2),
                       ("gemini-organisme-v6-2-maieutique", 2), ("gemini-organisme-v6-2-audit", 2),
-                      ("eb03bad56ece1e755afa5e264948d0c44416f6cc", 1), ("9417652a45cae723ffe6199fbf3dbf4080d8e54f", 1),
-                      ("1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3", 1), ("ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4", 1),
+                      ("eb03bad56ece1e755afa5e264948d0c44416f6cc", 1), ("9417652a", 0), ("ad23e9ae07588ed701a70b9b5f4bf379ca079953", 2), ("ad23e9ae", 4),
+                      ("1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3", 1), ("ec3abf28", 1), ("998960b8d101d5013c498d6fcf225277ba17d20741825ad136381892c05cfd0e", 1),
+                      ("c1237687e98db14475336af690986bc08800a85e259d249de4940130245b1a64", 1), ("transcription-expurgee-v2.md", 1), ("question-audit-controle-organismes-v3.md", 1), ("question-audit-controle-organismes-v2.md", 1), ("annexe-vide", 1), ("remplir", 0),
                       ("dd2c1016", 1), ("2fd63bad", 0), ("29b32f62", 0), ("2204256d", 0), ("question-audit-controle-organismes-v1.md", 1),
-                      ("ANNEXE_1_COMMIT", 9), ("ANNEXE_4_SHA=", 1), ("QUESTION_AUDIT_", 6), ("QUESTION_MAIEUTIQUE_", 6), ("ESSAI_ANNEXE_1_", 21),
+                      ("ANNEXE_1_COMMIT", 10), ("ANNEXE_4_SHA=", 1), ("QUESTION_AUDIT_", 6), ("QUESTION_MAIEUTIQUE_", 6), ("ESSAI_ANNEXE_1_", 21),
                       ("n_annexes", 7), ("AN_CHEMINS", 5), ("20000", 0), ("20 000", 1), ("100000", 1), ("100 000", 3), ("CARACTERES_MAX_QUESTION", 6), ("QUESTION_CARACTERES_MAX", 8), ("BORNE_NOYAU", 3),
                       ("NOYAU_COMMIT", 11), ("NOYAU_EMPREINTE_PROPRE", 3), ("9beee10be4b66525a4ae98d69237abeb34ffbdac", 1), ("9beee10b", 4), ("192b21283292df14b3e21cd454cb34bc213e8e49a8867a99243d28d9a4abc7d7", 1),
                       ("8e5e2f7b", 2), ("61ddd638", 0), ("COMMIT_CODE", 6), ("CODE_NOYAU_PROPRE", 3),
