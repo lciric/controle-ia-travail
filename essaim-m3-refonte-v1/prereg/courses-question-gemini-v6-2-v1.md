@@ -38,6 +38,12 @@ Relevé verbatim en R-509 (session de session-depot, vers 11:13 UTC, en réponse
 - Dans la session de conv-audit, 11:26 heure de Paris : ordre « (b) puis (a) puis (c) » ; « je veux que l'organisme
   cherche mes failles après moissonnage de la littérature la plus récente et grise, et ensuite qu'il imagine de nouvelles
   failles non couvertes par notre système de contrôle, et comment les contrecarrer ». La course « audit » est ce (c).
+- **R-519 (session-depot, 14:04 UTC ; n° 75)** : le second tour du collisionneur, sur la transcription v2 (partie 3 du
+  rapport), a essuyé un refus d'Opus au III.1 ; la condition « aucun refus au collisionneur » n'est pas remplie pour la
+  question v3 et la pièce v2 : **la course « audit » ne part pas** ; sa suite attend une décision de Lazar (relancer sur la
+  question v2 et la transcription v1 si le premier tour sur les parties 1 et 2 finit sans refus ; ne pas la lancer ;
+  attendre). Dans ce texte, tout ce qui concerne la clé `audit` reste écrit pour cette décision et **n'est pas en
+  vigueur** ; seule la course « maieutique » part. Le lanceur v12 porte les deux clés ; la clé `audit` reste inutilisée.
 
 ## Table de correspondance avec la v5
 

@@ -1,12 +1,12 @@
 --- essais_lanceur_pilote4_v13.sh	2026-10-26 05:38:01.502388947 +0100
-+++ essais_lanceur_question_v14.sh	2026-10-26 14:42:41.541643050 +0100
-@@ -1,6 +1,29 @@
++++ essais_lanceur_question_v14.sh	2026-10-26 15:00:39.396637996 +0100
+@@ -1,6 +1,31 @@
  #!/usr/bin/env bash
 -# Essais du lanceur du pilote 4 (la v6.2.1 sur la question M, clé `v6-2`, puis sur la question S, clé `v6-2-s`, banque v3, quatre générations notées, 6 rondes de conception au
 -# plus), v13 : la v12 (27ef4524…) par `deriver_essais_pilote4_v13.py` pour le lanceur v11 (seconde course `v6-2-s` : le même
-+# Essais du lanceur des deux courses à question de la v6.2.1 (« maieutique », clé `maieutique`, GO-2026-10-26-05 ; « audit », clé `audit`, GO-2026-10-26-04, question v2 servie avec son annexe ; banque v3, quatre générations notées, 6 rondes de conception au
++# Essais du lanceur des deux courses à question de la v6.2.1 (« maieutique », clé `maieutique`, GO-2026-10-26-05 ; « audit », clé `audit`, GO-2026-10-26-04, question v3 servie avec son annexe définitive, la transcription expurgée v2 du rapport consolidé (commit ad23e9ae, R-518) ; banque v3, quatre générations notées, 6 rondes de conception au
 +# plus), v14 : la v13 (7b0a9bb0…) par `deriver_essais_question_v14.py` pour le lanceur v12 (texte v1, table de correspondance ;
-+# brief de conv-audit et ses précisions : bloc de paramètres, question « audit » v2 à `9417652a`, une annexe à remplir) : cas
++# brief de conv-audit et ses précisions : bloc de paramètres, question « audit » v3 à `ad23e9ae` et son annexe, paramètres définitifs) : cas
 +# et artefacts adaptés aux deux clés (les clés `v6-2-s` et `v6-2` d'hier deviennent `maieutique`, enfant 0, course par défaut
 +# des cas, des segments, de la fermeture et du mutant ; `audit`, enfant 1, tourne avec une annexe synthétique committée dans la
 +# copie puis retirée de sa tête, donnée au lanceur par ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN, ESSAI_ANNEXE_1_SHA ; noms
@@ -17,9 +17,11 @@
 +# (v62-*, seg-v62-*, seg-v6-2-s-porte-saine, seg-clore-v62-refusee, reel-v6-2-s-*, copies « réelles ») ; cas ajoutés ou
 +# renommés : cle-ancienne-refusee (et -v6-2, reel-cle-ancienne-*), go-id-forme, reel-sans-go-id, reel-journal-garde-essai,
 +# texte-* (dont texte-sans-ligne-de-l-autre-course), question-empreinte-autre (artefact question-base), question-servie-alteree,
-+# question-v1-refusee et go-question-v1-refuse-audit (la question « audit » v1, dd2c1016…, ne sert plus), annexe-absente,
++# question-v1-refusee, question-v2-refusee, go-question-v1-refuse-audit et go-question-v2-refuse-audit (les questions « audit » v1,
++# dd2c1016…, et v2, ec3abf28…, ne servent plus), sain-audit sur les paramètres définitifs (question v3 et annexe réelle, sans variable
++# d'essai ; taille servie vérifiée ≤ 100 000), annexe-empreinte-fausse (annexe réelle, empreinte fausse : refus avant tout appel), annexe-absente,
 +# annexe-alteree, annexe-champs-incomplets, annexe-commit-absent, question-servie-trop-longue (borne du noyau 9beee10b :
-+# 100 000 caractères, question.py ; noyau attendu NOYAU_COMMIT, les copies d'essai à sa tête), audit-sans-annexe-reserve, reel-annexe-essai, annexe-artefacts-sans-effet-maieutique,
++# 100 000 caractères, question.py ; noyau attendu NOYAU_COMMIT, les copies d'essai à sa tête), audit-sans-annexe-reserve (artefact annexe-vide), reel-annexe-essai, annexe-artefacts-sans-effet-maieutique,
 +# go-maieutique-seulement-* et go-audit-seulement-*, go-questions-croisees, depense-ancienne-forme,
 +# sain-audit-question-servie (composé recalculé ici, avec l'annexe synthétique), sain-*-garde, porte
 +# « précédente » absente (sain-maieutique avec PRECEDENTE_V62 ignorée, reel-sans-reference sans elle), garde-refus-question-sain,
@@ -32,7 +34,7 @@
  # organisme, la v6.2.1, sur la question S `a54da93e…`, à la place de la clé `v5-3` — la v5.3 ne court pas, décision de Lazar du
  # 26 octobre 2026, 04:13 UTC, R-492 ; question par course ; chaque cas de la v12 garde un équivalent : clé, noms, lignée,
  # messages « la course S ne part qu'après… », graine enfant 0 ; une ligne de GO saine porte `8b1c7511…`, `a54da93e…` et
-@@ -36,7 +59,7 @@
+@@ -36,7 +61,7 @@
  # liste close ; (iii) la porte « v6.2 précédente » (générations 0 à 3) et ses artefacts ; (iv) ce qui change (objets,
  # graines, banque v3 et les chemins permis des banques v2 et v3, ligne de GO liée au texte scellé, journaux recopiés et poussés) ; (v) un
  # échantillon des gardes communes, en simulation et en mode réel (refus avant tout appel). Aucun appel réel.
@@ -41,7 +43,7 @@
  # (DEPOT : copie à la tête du pilote 4 ; DEPOT_M : copie à la tête du second pilote, d'où part la M de référence ;
  # DEPOT_SOUS_ROOT : copie à la tête du pilote 4 sous /root, pour les refus du mode réel)
  set -uo pipefail
-@@ -50,8 +73,8 @@
+@@ -50,8 +75,8 @@
  USD_COURSE="$(grep -E '^USD_COURSE=' "$LANCEUR" | head -1 | sed -E 's/^USD_COURSE=([0-9.]+).*/\1/')"
  SOUS_PLAFOND="$(awk -v x="$USD_COURSE" 'BEGIN { printf "%.2f", x - 0.01 }')"
  ENTROPIE=12345
@@ -52,7 +54,7 @@
  GRAINE_M_SCELLEE=3970427751169333427
  SHA_PREREG_M=d294465429094e5099cb5facdad95e2b806aa8953640b57bcab99998396c066b
  TEXTE_M_REL=essaim-m3-refonte-v1/prereg/pilote2-gemini-organisme-v5-2-v2.md
-@@ -63,10 +86,12 @@
+@@ -63,10 +88,12 @@
  td() {  # td FICHIER STATUT_FABLE MODELE_FABLE COUT_FABLE GO
    printf '{"especes": {"CLAUDE_FABLE_5_1": {"statut": "%s", "modele_servi": "%s", "cout_usd": %s}, "CLAUDE_OPUS_5_5": {"statut": "OK", "modele_servi": "claude-opus-5-5", "cout_usd": 0.000232}, "GEMINI_ARGON": {"statut": "OK", "modele_servi": "gemini-4-argon", "cout_usd": 0.00076}}, "go": "%s"}\n' "$2" "$3" "$4" "$5" > "$1"
  }
@@ -68,7 +70,7 @@
  td_heure() {  # td_heure FICHIER MINUTES GO : pièce avec une heure d'appel par espèce, vieille de MINUTES
    "$PY" -I -c '
  import datetime, json, sys
-@@ -76,41 +101,51 @@
+@@ -76,41 +103,54 @@
                   "GEMINI_ARGON": {"statut": "OK", "modele_servi": "gemini-4-argon", "cout_usd": 0.00076, "jetons_sortie": 8, "heure_utc": h}}, "go": sys.argv[3]}
  json.dump(d, open(sys.argv[1], "w"))' "$@"
  }
@@ -121,8 +123,10 @@
 -printf '| GO-2026-10-25-02 | 2026-10-25 | calcul | pilote 4 (essai) : question `00000000…` (ni M ni S), organisme `4f13647a…` ; texte %s |\n' "$T16" > "$E/entrees/go-autre-question.md"
 -printf '| GO-2026-10-25-02 | 2026-10-25 | calcul | pilote 4 (essai) : questions M `8b1c7511…` et S `a54da93e…`, organisme v6.2.1 `4f13647a…` (sans le texte) |\n' > "$E/entrees/go-sans-texte.md"
 +T16="${SHA_PR:0:16}"   # la ligne de GO porte les 16 premiers caractères de l'empreinte du texte (le même texte pour les deux GO)
-+Q_M=1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3; Q_A=ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4   # empreintes des questions « maieutique » (commit eb03bad5) et « audit » v2 (commit 9417652a)
++Q_M=1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3; Q_A=998960b8d101d5013c498d6fcf225277ba17d20741825ad136381892c05cfd0e   # empreintes des questions « maieutique » (commit eb03bad5) et « audit » v3 (commit ad23e9ae, R-518)
 +Q_A_V1=dd2c1016e20a4823dcb2ce4c1e94d2c6be7a6962cb52a10ee7ac3b1f7d1203aa   # question « audit » v1 : ne sert plus (R-515, R-516), refusée comme empreinte autre
++Q_A_V2=ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4   # question « audit » v2 (commit 9417652a) : ne sert plus (R-518), refusée comme empreinte autre
++COMMIT_DEF=ad23e9ae07588ed701a70b9b5f4bf379ca079953; ANNEXE_DEF_CHEMIN=docs/sources/rapport-consolide-20261026/transcription-expurgee-v2.md; ANNEXE_DEF_SHA=c1237687e98db14475336af690986bc08800a85e259d249de4940130245b1a64   # paramètres définitifs de l'annexe (R-518), les mêmes que dans le lanceur
 +ligne_go() {  # ligne_go GO COURSE QUESTION_SHA TEXTE16 [TYPE] : une ligne du registre des GO, à la forme de la ligne d'extension (texte v1, § Plan)
 +  printf '| %s | 2026-10-26 | %s | extension : course « %s » (essai) — la v6.2.1 7ea3270, arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d, sur la question %s (commit eb03bad5) ; banque confrontation-v3 157a2b45… ; texte courses-question-gemini-v6-2-v1.md %s ; lanceur lancer_courses_question_v12.sh %s, noyau 9beee10b | 75 USD au plus | 2026-10-31 | Lazar | R-509 |\n' "$1" "${5:-calcul}" "$2" "$3" "$4" "$H"
 +}
@@ -134,11 +138,12 @@
 +{ ligne_go GO-2026-10-26-05 maieutique 0000000000000000000000000000000000000000000000000000000000000000 "$T16"; ligne_go GO-2026-10-26-04 audit 0000000000000000000000000000000000000000000000000000000000000000 "$T16"; } > "$E/entrees/go-autre-question.md"
 +{ ligne_go GO-2026-10-26-05 maieutique "$Q_A" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_M" "$T16"; } > "$E/entrees/go-questions-croisees.md"
 +{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_A_V1" "$T16"; } > "$E/entrees/go-question-v1.md"   # la ligne du GO 04 porte la question audit v1
++{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_A_V2" "$T16"; } > "$E/entrees/go-question-v2.md"   # la ligne du GO 04 porte la question audit v2
 +{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "(sans le texte)"; ligne_go GO-2026-10-26-04 audit "$Q_A" "(sans le texte)"; } > "$E/entrees/go-sans-texte.md"
  n=0; ok=0
  verifier() {  # verifier NOM ATTENDU FICHIER… : le motif doit se trouver dans l'un des fichiers
    local nom="$1" attendu="$2"; shift 2
-@@ -118,17 +153,27 @@
+@@ -118,17 +158,27 @@
    if cat "$@" 2>/dev/null | grep -qF -- "$attendu"; then ok=$((ok + 1)); echo "OK     $nom : « $attendu »"
    else echo "ÉCHEC  $nom : attendu « $attendu »"; fi
  }
@@ -169,7 +174,7 @@
    for a in "$@"; do case "$a" in PILOTE_RACINE=-) ;; PILOTE_RACINE=*) autre_racine="${a#PILOTE_RACINE=}";; esac; done
    local journal; journal="$(cat "$racine"/*/LANCEMENT.md 2>/dev/null; [ -n "$autre_racine" ] && cat "$autre_racine"/*/LANCEMENT.md 2>/dev/null; cat "$racine/erreur.txt")"
    if echo "$journal" | grep -qF -- "$attendu"; then ok=$((ok + 1)); echo "OK     $nom (code $code) : « $attendu »"
-@@ -147,50 +192,84 @@
+@@ -147,50 +197,87 @@
  verifier m-reference-lanceur-scelle "lanceur : lancer_pilote2_gemini_v5_2_v5.sh, sha256 $H_M" "$M_REF/LANCEMENT.md"
  verifier m-reference-graine-scellee "graine $GRAINE_M_SCELLEE de la course maieutique écrite et recalculée" "$M_REF/LANCEMENT.md"
  EMP_M="$(cut -d' ' -f1 < "$M_REF/EMPREINTES-pilote-v1.txt.sha256")"
@@ -211,7 +216,7 @@
 +ANNEXE_LONGUE_COMMIT="$(annexe_commit "$ANNEXE_LONGUE_CHEMIN" "$E/entrees/annexe-longue-v1.md")"
 +echo "annexes synthétiques : $ANNEXE_ESSAI_CHEMIN au commit $ANNEXE_ESSAI_COMMIT ($ANNEXE_ESSAI_SHA) ; $ANNEXE_LONGUE_CHEMIN au commit $ANNEXE_LONGUE_COMMIT"
 +
-+echo "== cas sains : course « maieutique » complète (essais du noyau exécutés), puis course « audit » (question v2 servie avec l'annexe synthétique) ; rondes de conception et quatre générations =="
++echo "== cas sains : course « maieutique » complète (essais du noyau exécutés), puis course « audit » (paramètres définitifs : question v3 et son annexe réelle, commit ad23e9ae) ; rondes de conception et quatre générations =="
 +td_heure "$E/entrees/td-heure-fraiche-maieutique.json" 0 GO-2026-10-26-05
 +cas sain-maieutique "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-maieutique.json" ESSAI_EXIGER_HEURE=1 PRECEDENTE_V62="$E/nulle-part"
 +VM="$E/cas-sain-maieutique/course-maieutique-gemini-v6-2-v1"
@@ -251,7 +256,7 @@
 -verifier sain-v6-2-s-lanceur-attendu "lanceur attendu $(basename "$LANCEUR") (${H:0:8}…)" "$VS/LANCEMENT.md"
 -for d in "$VS" "$V6"; do
 +td_heure "$E/entrees/td-heure-fraiche-audit.json" 0 GO-2026-10-26-04
-+cas sain-audit "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit GRAINE="$G_A" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-audit.json" ESSAI_EXIGER_HEURE=1
++cas sain-audit "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit GRAINE="$G_A" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-audit.json" ESSAI_EXIGER_HEURE=1 ESSAI_ANNEXE_1_COMMIT= ESSAI_ANNEXE_1_CHEMIN= ESSAI_ANNEXE_1_SHA=   # paramètres définitifs du lanceur : question v3 et annexe réelle, aucune variable d'essai d'annexe
 +VA="$E/cas-sain-audit/course-audit-gemini-v6-2-v1"
 +verifier sain-audit-reference-m "; M saine : g000 et g001 OK" "$VA/LANCEMENT.md"
 +verifier sain-audit-organisme "organisme : 26 fichiers, empreinte d'arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d" "$VA/LANCEMENT.md"
@@ -259,21 +264,24 @@
 +verifier sain-audit-graine "graine $G_A de la course audit écrite et recalculée depuis l'entropie du texte (enfant 1), ligne de la course maieutique présente (non utilisée)" "$VA/LANCEMENT.md"
 +verifier sain-audit-temps-conception "temps par ronde de conception 900 s" "$VA/LANCEMENT.md"
 +verifier sain-audit-minuteur "STOP non posé" "$VA/LANCEMENT.md"
-+verifier sain-audit-question "question (audit) : sha256 $Q_A (question-audit-controle-organismes-v2.md, commit 9417652a…) ; annexes servies : 1 ; annexe 1 : $ANNEXE_ESSAI_CHEMIN $ANNEXE_ESSAI_COMMIT $ANNEXE_ESSAI_SHA" "$VA/LANCEMENT.md"
-+# la question servie de la course « audit », recomposée ici sans le lanceur, depuis le dépôt : la question v2, puis, pour chaque annexe servie,
++verifier sain-audit-question "question (audit) : sha256 $Q_A (question-audit-controle-organismes-v3.md, commit ad23e9ae…) ; annexes servies : 1 ; annexe 1 : $ANNEXE_DEF_CHEMIN $COMMIT_DEF $ANNEXE_DEF_SHA" "$VA/LANCEMENT.md"
++# la question servie de la course « audit », recomposée ici sans le lanceur, depuis le dépôt : la question v3, puis, pour chaque annexe servie,
 +# une ligne ---, un titre « # Annexe k — chemin (sha256 …) » et son contenu (une ligne vide avant et après chaque séparateur et chaque titre)
 +"$PY" -I -c '
 +import hashlib, subprocess, sys
 +depot = sys.argv[1]
 +def lire(c, p): return subprocess.run(["git", "-C", depot, "show", c + ":" + p], check=True, capture_output=True).stdout
-+b = lire("9417652a45cae723ffe6199fbf3dbf4080d8e54f", "brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v2.md")
++b = lire("ad23e9ae07588ed701a70b9b5f4bf379ca079953", "brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v3.md")
 +for k, (c, p, h) in enumerate([(sys.argv[2], sys.argv[3], sys.argv[4])], 1):
 +    b += ("\n---\n\n# Annexe %d — %s (sha256 %s)\n\n" % (k, p, h)).encode("utf-8") + lire(c, p)
-+print(hashlib.sha256(b).hexdigest(), len(b.decode("utf-8")))' "$DEPOT" "$ANNEXE_ESSAI_COMMIT" "$ANNEXE_ESSAI_CHEMIN" "$ANNEXE_ESSAI_SHA" > "$E/question-servie-audit.txt"
++print(hashlib.sha256(b).hexdigest(), len(b.decode("utf-8")))' "$DEPOT" "$COMMIT_DEF" "$ANNEXE_DEF_CHEMIN" "$ANNEXE_DEF_SHA" > "$E/question-servie-audit.txt"
 +read -r SHA_SERVIE_A N_SERVIE_A < "$E/question-servie-audit.txt"
 +verifier sain-audit-question-servie "question servie : question.md, sha256 $SHA_SERVIE_A, $N_SERVIE_A caractères" "$VA/LANCEMENT.md"
 +verifier sain-audit-question-servie-fichier "$SHA_SERVIE_A  question.md" "$VA/EMPREINTES-pilote-v1.txt"
-+verifier sain-audit-question-fichier-annexe "# Annexe 1 — $ANNEXE_ESSAI_CHEMIN (sha256 $ANNEXE_ESSAI_SHA)" "$VA/question.md"
++verifier sain-audit-question-fichier-annexe "# Annexe 1 — $ANNEXE_DEF_CHEMIN (sha256 $ANNEXE_DEF_SHA)" "$VA/question.md"
++"$PY" -I -c 'import sys; n = int(sys.argv[1]); b = int(sys.argv[2]); print("taille servie %d caractères %s %d (CARACTERES_MAX_QUESTION du noyau 9beee10b)" % (n, "≤" if n <= b else ">", b))' "$N_SERVIE_A" 100000 > "$E/taille-servie-audit.txt"
++verifier sain-audit-taille-servie-sous-la-borne "caractères ≤ 100000 (CARACTERES_MAX_QUESTION du noyau 9beee10b)" "$E/taille-servie-audit.txt"   # assertion demandée : question v3 + annexe < 100 000
++verifier sain-audit-taille-servie-relevee "taille servie 39617 caractères" "$E/taille-servie-audit.txt"   # 3 430 (question v3) + 163 (titre) + 36 024 (annexe)
 +verifier sain-audit-garde "garde refus-question : aucun arrêt" "$VA/LANCEMENT.md"
 +verifier_absent_texte sain-audit-sans-reserve-annexe "sans aucune annexe servie" "$VA/LANCEMENT.md"
 +for d in "$VM" "$VA"; do
@@ -289,7 +297,7 @@
    "$PY" -I -c '
  import json, pathlib, sys
  d = pathlib.Path(sys.argv[1]); x = json.load(open(d / "extrait-mecanique-v1.json", encoding="utf-8"))
-@@ -210,9 +289,9 @@
+@@ -210,9 +297,9 @@
      print("RELEVÉ " + d.name + " : " + j.name + " : " + str(sum(roles.values())) + " appels ; rôle architecte_mutation_endogene : " + str(roles.get("architecte_mutation_endogene", 0)) + " ; rôles " + json.dumps(roles, ensure_ascii=False, sort_keys=True)[:300])
  ' "$d"
  done
@@ -302,7 +310,7 @@
  
  echo "== course M de référence : issues hors de la liste saine (copie de M altérée, empreintes refaites) =="
  copie_m() {  # copie_m NOM → chemin d'une copie de M
-@@ -242,7 +321,7 @@
+@@ -242,7 +329,7 @@
  cas m-archive-incomplete "archive fermée absente ou incomplète" -- MODE=simulation "${SAIN[@]}" REFERENCE_M="$d"
  d="$(copie_m lanceur)"; sed -i "s/sha256 $H_M\$/sha256 0000/" "$d/LANCEMENT.md"; refaire_empreintes "$d"
  cas m-autre-lanceur "M n a pas tourné sous ce lanceur" -- MODE=simulation "${SAIN[@]}" REFERENCE_M="$d"
@@ -311,7 +319,7 @@
  cas m-sous-lanceur-pilote4 "M n a pas tourné sous ce lanceur" -- MODE=simulation "${SAIN[@]}" REFERENCE_M="$d"
  d="$(copie_m pas-m)"; sed -i 's/^- course : maieutique ;/- course : structure ;/' "$d/LANCEMENT.md"; refaire_empreintes "$d"
  cas m-pas-course-m "ce n est pas la course M" -- MODE=simulation "${SAIN[@]}" REFERENCE_M="$d"
-@@ -275,107 +354,34 @@
+@@ -275,107 +362,34 @@
  git -C "$DEPOT" checkout -q -- "$TEXTE_M_REL"
  cas m-depense-sans-empreinte "ne porte pas l'empreinte des empreintes de M" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-sans-empreinte-m.md"
  
@@ -435,7 +443,7 @@
  
  echo "== mode réel : gardes communes (échantillon), avant tout appel =="
  cas reel-variable-essai "variable PILOTE_RACINE définie en mode réel" -- MODE=reel
-@@ -388,24 +394,27 @@
+@@ -388,24 +402,27 @@
  cas reel-depot-hors "hors de /root et de /home : il ne serait pas caché" -- MODE=reel PILOTE_RACINE=- "${CLES_REEL[@]}" BRAVE_API_KEY=factice OPENALEX_API_KEY=factice SEMANTIC_SCHOLAR_API_KEY=factice RECHARGE_ATTESTEE=essai
  
  echo "== refus avant le dossier ; course voisine =="
@@ -472,7 +480,7 @@
  git -C "$DEPOT" reset -q --hard HEAD~1
  printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai.txt"
  git -C "$DEPOT" add essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai.txt; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : pièce du pilote 4"
-@@ -433,52 +442,73 @@
+@@ -433,52 +450,78 @@
  git -C "$DEPOT" reset -q --hard HEAD~1
  printf '{}\n' > "$DEPOT/essaim-m3-refonte-v1/banque/banque-confrontation-v4.json"
  git -C "$DEPOT" add essaim-m3-refonte-v1/banque/banque-confrontation-v4.json; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : banque v4 (hors du pilote 4)"
@@ -525,15 +533,19 @@
 +cas question-empreinte-autre-audit "empreinte de la question ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-base "${SAIN[@]}"
 +cas question-servie-alteree "empreinte de la question servie ≠" -- MODE=simulation ESSAI_ARTEFACT=question "${SAIN[@]}"
 +cas question-servie-alteree-audit "empreinte de la question servie ≠" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question "${SAIN[@]}"
-+cas question-v1-refusee "empreinte de la question ≠ ec3abf28…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-v1 "${SAIN[@]}"
++cas question-v1-refusee "empreinte de la question ≠ 998960b8…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-v1 "${SAIN[@]}"
++cas question-v2-refusee "empreinte de la question ≠ 998960b8…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-v2 "${SAIN[@]}"
++cas annexe-empreinte-fausse "empreinte de l'annexe 1 ($ANNEXE_DEF_CHEMIN) ≠ 01234567…" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT="$COMMIT_DEF" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_DEF_CHEMIN" ESSAI_ANNEXE_1_SHA=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef   # l'annexe réelle, une empreinte fausse : refus avant tout appel
++verifier_absent annexe-empreinte-fausse-sans-course "$E/cas-annexe-empreinte-fausse/course-audit-gemini-v6-2-v1/course"   # aucun appel : le noyau n'est jamais parti
++verifier_absent annexe-empreinte-fausse-sans-manifeste "$E/cas-annexe-empreinte-fausse/course-audit-gemini-v6-2-v1/course/manifeste-run.json"
 +cas annexe-absente "annexe 1 (docs/nulle-part-v1.md) absente du commit" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe-absente "${SAIN[@]}"
 +cas annexe-alteree "empreinte de l'annexe 1 ($ANNEXE_ESSAI_CHEMIN) ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe "${SAIN[@]}"
 +cas annexe-champs-incomplets "ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA vont ensemble" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_SHA=
 +cas annexe-commit-absent "annexe 1 : commit 0123456789abcdef0123456789abcdef01234567 absent du dépôt" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT=0123456789abcdef0123456789abcdef01234567
 +cas question-servie-trop-longue "caractères > 100000 (borne du noyau 9beee10b, essaim_m3/noyau/question.py, CARACTERES_MAX_QUESTION)" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT="$ANNEXE_LONGUE_COMMIT" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_LONGUE_CHEMIN" ESSAI_ANNEXE_1_SHA="$ANNEXE_LONGUE_SHA"
-+cas audit-sans-annexe-reserve "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT= ESSAI_ANNEXE_1_CHEMIN= ESSAI_ANNEXE_1_SHA=
++cas audit-sans-annexe-reserve "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe-vide "${SAIN[@]}"   # emplacement 1 vidé par l'artefact : la course part, RÉSERVE consignée
 +verifier audit-sans-annexe-reserve-ligne "RÉSERVE : course « audit » sans aucune annexe servie" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md
-+verifier audit-sans-annexe-question-servie "question servie : question.md, sha256 $Q_A, 3196 caractères" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md
++verifier audit-sans-annexe-question-servie "question servie : question.md, sha256 $Q_A, 3430 caractères" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md
 +cas annexe-artefacts-sans-effet-maieutique "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique ESSAI_ARTEFACT=annexe "${SAIN[@]}"
 +cas reel-annexe-essai "variable ESSAI_ANNEXE_1_COMMIT définie en mode réel" -- MODE=reel PILOTE_RACINE=- COURSE=audit ESSAI_ANNEXE_1_COMMIT=x ESSAI_ANNEXE_1_CHEMIN=x ESSAI_ANNEXE_1_SHA=x
  
@@ -550,10 +562,11 @@
 +cas go-maieutique-seulement-refuse-audit "aucune ligne « | GO-2026-10-26-04 | »" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-maieutique-seulement.md"
 +cas go-audit-seulement-refuse-maieutique "aucune ligne « | GO-2026-10-26-05 | »" -- MODE=simulation COURSE=maieutique "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-audit-seulement.md"
 +cas go-autre-question "l'empreinte de la question 1d29fbec…" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"
-+cas go-autre-question-audit "l'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"
++cas go-autre-question-audit "l'empreinte de la question 998960b8…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"
 +cas go-questions-croisees "l'empreinte de la question 1d29fbec…" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"
-+cas go-questions-croisees-audit "l'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"
-+cas go-question-v1-refuse-audit "l'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-question-v1.md"
++cas go-questions-croisees-audit "l'empreinte de la question 998960b8…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"
++cas go-question-v1-refuse-audit "l'empreinte de la question 998960b8…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-question-v1.md"
++cas go-question-v2-refuse-audit "l'empreinte de la question 998960b8…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-question-v2.md"
 +cas go-sans-texte "celle du texte scellé ($T16)" -- MODE=simulation GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-sans-texte.md"
 +cas depense-absente "lancement non consigné avant dans registres/depenses.md (une ligne nommant course-maieutique-gemini-v6-2-v1 et GO-2026-10-26-05)" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-absente.md"
 +cas depense-ancienne-forme "lancement non consigné avant dans registres/depenses.md (une ligne nommant course-maieutique-gemini-v6-2-v1 et GO-2026-10-26-05)" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-ancienne-forme.md"
@@ -577,7 +590,7 @@
  cas td-noms-autres "noms des variables du test : anthropic = 'RR_ANTHROPIC_API_KEY' (attendu RR_ANTHROPIC_API_KEY_3)" -- MODE=simulation "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-noms-autres.json" CLE_ANTHROPIC=RR_ANTHROPIC_API_KEY_3 CLE_GEMINI=GEMINI_API_KEY_2
  
  echo "== essais du noyau =="
-@@ -491,10 +521,10 @@
+@@ -491,10 +534,10 @@
  cas passerelle-sans-certificat "passerelle de sortie injoignable sous l'environnement du noyau : httpx, api.anthropic.com : ConnectError" -- MODE=simulation "${SAIN[@]}" ESSAI_PASSERELLE_PY="$PY_HTTPX"
  
  echo "== après le départ =="
@@ -591,7 +604,7 @@
  cas archive-incomplete "ARCHIVE FERMÉE INCOMPLÈTE" -- MODE=simulation ESSAI_ARTEFACT=archive "${SAIN[@]}"
  cas imprevu "fichiers imprévus, NON poussés" -- MODE=simulation ESSAI_ARTEFACT=imprevu "${SAIN[@]}"
  echo "== lanceur v4 (contre-lecture 1 du pilote 4) : banque autre que la v3 (P4C1-06) ; minuteur (P4C1-02) =="
-@@ -523,13 +553,13 @@
+@@ -523,13 +566,13 @@
        "générations", sorted(g.get("generation") for g in x.get("generations", []) if not g.get("phase")))' "$1"
  }
  copie_ps() {  # copie_ps NOM → chemin d'une copie de la v6.2 en segments
@@ -610,7 +623,7 @@
  
  echo "-- valeurs de SEGMENT et de CLORE ; course absente ou fermée --"
  cas seg-non-entier "SEGMENT doit être un entier ≥ 1, sans zéro en tête : « deux »" -- MODE=simulation SEGMENT=deux
-@@ -538,11 +568,11 @@
+@@ -538,11 +581,11 @@
  cas clore-au-segment-1 "CLORE=1 ferme une course arrêtée entre deux segments : SEGMENT ≥ 2 exigé" -- MODE=simulation CLORE=1
  cas clore-valeur "CLORE vaut 1 ou rien : « oui »" -- MODE=simulation SEGMENT=2 CLORE=oui
  cas seg-sans-course "absent (aucune course à reprendre" -- "${SEG[@]}" SEGMENT=2
@@ -624,7 +637,7 @@
  verifier seg-segment1-minuteur "état de reprise attendu" "$PS/LANCEMENT.md"
  verifier seg-segment1-etat "état de reprise écrit par le noyau : etat-v1.json" "$PS/LANCEMENT.md"
  verifier seg-segment1-sortie "rien à pousser avant la fin de la course" "$RS/sortie.txt"
-@@ -552,13 +582,13 @@
+@@ -552,13 +595,13 @@
  echo "-- segment 2 refusé sur artefacts (la course reste arrêtée, ouverte) --"
  cas seg-hors-ordre "le LANCEMENT.md n'attend pas ce segment" -- "${SEG[@]}" SEGMENT=3 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
  cas seg-sans-ligne-de-depense "segment 2 non consigné avant dans registres/depenses.md" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS"
@@ -644,7 +657,7 @@
  printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai-entre-segments.txt"
  git -C "$DEPOT" add essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai-entre-segments.txt; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : commit entre deux segments"
  cas seg-head-deplace "HEAD du dépôt ≠ celui du segment 1" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
-@@ -576,12 +606,12 @@
+@@ -576,12 +619,12 @@
  mv "$PS/course/manifeste-run.json" "$E/manifeste-ps-sauve.json"
  cas seg-sans-manifeste "SEGMENT=2 : aucune course partie dans $PS" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
  mv "$E/manifeste-ps-sauve.json" "$PS/course/manifeste-run.json"
@@ -663,7 +676,7 @@
  e1="$PS/course/reprise/etat-v1.json"; cp -p "$e1" "$E/etat-v1-sauve.json"; cp -p "$e1.sha256" "$E/etat-v1-sauve-b.sha256"
  etat_altere() {  # etat_altere CODE_PYTHON (x = l'état v1) : l'état modifié, puis rescellé (compagnon juste)
    "$PY" -I -c 'import json, sys
-@@ -603,10 +633,10 @@
+@@ -603,10 +646,10 @@
  cas seg-organisme-modifie "empreinte d'arbre de l'organisme ≠ 4f13647a…" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ARTEFACT=organisme
  cp -p "$E/principal-sauve.py" "$PS/organisme/principal.py"
  cp -p "$PS/question.md" "$E/question-sauve.md"
@@ -676,7 +689,7 @@
  cas seg-noyau-refuse "reprise refusée par le noyau (code 9" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-2a.json"
  verifier seg-noyau-refuse-motif "la course a bougé depuis l'état" "$PS"/segment-2-t*/sortie-erreur-lanceur.txt
  verifier seg-noyau-refuse-code "reprise refusée par le noyau" "$E/cas-seg-noyau-refuse/sortie.txt"
-@@ -614,7 +644,7 @@
+@@ -614,7 +657,7 @@
  cp -p "$E/journal-sauve.jsonl" "$j"
  
  echo "-- segment 2 sain : la course va au bout et se ferme --"
@@ -685,7 +698,7 @@
  cas seg-segment2 "archive fermée : ferme.tar.gz" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-2.json"
  verifier_re seg-segment2-entete "^## Segment 2, essai [0-9]+ \(simulation, tentative 1\)$" "$PS/LANCEMENT.md"
  verifier seg-segment2-etat-relu "état de reprise : etat-v1.json, sha256" "$PS/LANCEMENT.md"
-@@ -631,45 +661,32 @@
+@@ -631,45 +674,32 @@
  verifier seg-segment2-extrait "arrêts ['fichier STOP', 'aucune lignée active'] reprises [2] générations [0, 1, 2, 3]" "$E/releve-segments-ps.txt"
  cas seg-apres-fermeture "est déjà fermée" -- "${SEG[@]}" SEGMENT=3 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
  
@@ -739,7 +752,7 @@
  cas minuteur-echeance-non-entiere "ESSAI_ECHEANCE_STOP_S doit être un entier (secondes)" -- MODE=simulation ESSAI_ECHEANCE_STOP_S=abc "${SAIN[@]}"
  cas reel-echeance-minuteur "variable ESSAI_ECHEANCE_STOP_S définie en mode réel" -- MODE=reel PILOTE_RACINE=- ESSAI_ECHEANCE_STOP_S=5
  echo "-- minuteur au segment K ≥ 2 : copie mutée du lanceur (STOP posé sans attendre la reprise consignée) — la reprise est refusée (P4C3-03) --"
-@@ -680,20 +697,111 @@
+@@ -680,20 +710,111 @@
  open(sys.argv[2], "w", encoding="utf-8").write(t.replace(a, "else true; fi  # MUTATION (essai) : STOP posé sans attendre la reprise"))' "$LANCEUR" "$E/lanceur-mutant-minuteur.sh"
  H_MUT="$(sha256sum "$E/lanceur-mutant-minuteur.sh" | cut -d' ' -f1)"
  pr "$E/entrees/prereg-mutant.md" "entropie E = $ENTROPIE tirée au scellement

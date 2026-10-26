@@ -34,10 +34,11 @@ if hashlib.sha256(b).hexdigest() != SHA_V13:
 t = b.decode("utf-8")
 Z64 = "0" * 64
 Q_M = "1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3"
-Q_A = "ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4"   # question « audit » v2 (commit 9417652a) ; la v1 dd2c1016… ne sert plus
-ANN = (("docs/programme-controle-ia-v2.md", "2fd63badb5afea48f48d3ca501ae3b027c4094a8b176508488a41a22e45aa18c"),
-       ("docs/notes/audit-controle-v1/audit-litterature-v1.md", "29b32f620cb2310fad83166fd4f2957b3ce43b1c3dea090834d8c28f86e4823b"),
-       ("docs/decisions/decision-N-053-v1.md", "2204256d744288be2708578c0fdc8c44c62a29b70b2727ed7e31ec142d1cdeae"))
+Q_A = "998960b8d101d5013c498d6fcf225277ba17d20741825ad136381892c05cfd0e"   # question « audit » v3 (commit ad23e9ae, R-518) ; la v1 dd2c1016… et la v2 ec3abf28… ne servent plus
+Q_A_V2 = "ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4"   # question « audit » v2 (commit 9417652a) : ne sert plus
+COMMIT_DEF = "ad23e9ae07588ed701a70b9b5f4bf379ca079953"   # `main` des paramètres définitifs (question v3 et annexe, R-518)
+ANNEXE_DEF_CHEMIN = "docs/sources/rapport-consolide-20261026/transcription-expurgee-v2.md"
+ANNEXE_DEF_SHA = "c1237687e98db14475336af690986bc08800a85e259d249de4940130245b1a64"   # 37 563 octets, 36 024 caractères
 
 
 def bloc(nom, debut, fin, sha, nouveau):
@@ -64,9 +65,9 @@ def remplacer(ancien, nouveau, n):
 # ---- en-tête ----
 bloc("en-tête", "# Essais du lanceur du pilote 4 (la v6.2.1 sur la question M", "pour le lanceur v11 (seconde course `v6-2-s` : le même",
      "bd451adfc188627e9c43c93f23165b7261cb275ae4da77a1f1460619851a3215",
-     "# Essais du lanceur des deux courses à question de la v6.2.1 (« maieutique », clé `maieutique`, GO-2026-10-26-05 ; « audit », clé `audit`, GO-2026-10-26-04, question v2 servie avec son annexe ; banque v3, quatre générations notées, 6 rondes de conception au\n"
+     "# Essais du lanceur des deux courses à question de la v6.2.1 (« maieutique », clé `maieutique`, GO-2026-10-26-05 ; « audit », clé `audit`, GO-2026-10-26-04, question v3 servie avec son annexe définitive, la transcription expurgée v2 du rapport consolidé (commit ad23e9ae, R-518) ; banque v3, quatre générations notées, 6 rondes de conception au\n"
      "# plus), v14 : la v13 (7b0a9bb0…) par `deriver_essais_question_v14.py` pour le lanceur v12 (texte v1, table de correspondance ;\n"
-     "# brief de conv-audit et ses précisions : bloc de paramètres, question « audit » v2 à `9417652a`, une annexe à remplir) : cas\n"
+     "# brief de conv-audit et ses précisions : bloc de paramètres, question « audit » v3 à `ad23e9ae` et son annexe, paramètres définitifs) : cas\n"
      "# et artefacts adaptés aux deux clés (les clés `v6-2-s` et `v6-2` d'hier deviennent `maieutique`, enfant 0, course par défaut\n"
      "# des cas, des segments, de la fermeture et du mutant ; `audit`, enfant 1, tourne avec une annexe synthétique committée dans la\n"
      "# copie puis retirée de sa tête, donnée au lanceur par ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN, ESSAI_ANNEXE_1_SHA ; noms\n"
@@ -77,9 +78,11 @@ bloc("en-tête", "# Essais du lanceur du pilote 4 (la v6.2.1 sur la question M",
      "# (v62-*, seg-v62-*, seg-v6-2-s-porte-saine, seg-clore-v62-refusee, reel-v6-2-s-*, copies « réelles ») ; cas ajoutés ou\n"
      "# renommés : cle-ancienne-refusee (et -v6-2, reel-cle-ancienne-*), go-id-forme, reel-sans-go-id, reel-journal-garde-essai,\n"
      "# texte-* (dont texte-sans-ligne-de-l-autre-course), question-empreinte-autre (artefact question-base), question-servie-alteree,\n"
-     "# question-v1-refusee et go-question-v1-refuse-audit (la question « audit » v1, dd2c1016…, ne sert plus), annexe-absente,\n"
+     "# question-v1-refusee, question-v2-refusee, go-question-v1-refuse-audit et go-question-v2-refuse-audit (les questions « audit » v1,\n"
+     "# dd2c1016…, et v2, ec3abf28…, ne servent plus), sain-audit sur les paramètres définitifs (question v3 et annexe réelle, sans variable\n"
+     "# d'essai ; taille servie vérifiée ≤ 100 000), annexe-empreinte-fausse (annexe réelle, empreinte fausse : refus avant tout appel), annexe-absente,\n"
      "# annexe-alteree, annexe-champs-incomplets, annexe-commit-absent, question-servie-trop-longue (borne du noyau 9beee10b :\n"
-     "# 100 000 caractères, question.py ; noyau attendu NOYAU_COMMIT, les copies d'essai à sa tête), audit-sans-annexe-reserve, reel-annexe-essai, annexe-artefacts-sans-effet-maieutique,\n"
+     "# 100 000 caractères, question.py ; noyau attendu NOYAU_COMMIT, les copies d'essai à sa tête), audit-sans-annexe-reserve (artefact annexe-vide), reel-annexe-essai, annexe-artefacts-sans-effet-maieutique,\n"
      "# go-maieutique-seulement-* et go-audit-seulement-*, go-questions-croisees, depense-ancienne-forme,\n"
      "# sain-audit-question-servie (composé recalculé ici, avec l'annexe synthétique), sain-*-garde, porte\n"
      "# « précédente » absente (sain-maieutique avec PRECEDENTE_V62 ignorée, reel-sans-reference sans elle), garde-refus-question-sain,\n"
@@ -135,8 +138,10 @@ bloc("fixtures", 'pr "$E/entrees/prereg-sain.md" "entropie E = $ENTROPIE tirée 
      'lanceur $H"\n'
      'SHA_PR="$(cut -d\' \' -f1 < "$E/entrees/prereg-sain.md.sha256")"\n'
      'T16="${SHA_PR:0:16}"   # la ligne de GO porte les 16 premiers caractères de l\'empreinte du texte (le même texte pour les deux GO)\n'
-     f"Q_M={Q_M}; Q_A={Q_A}   # empreintes des questions « maieutique » (commit eb03bad5) et « audit » v2 (commit 9417652a)\n"
+     f"Q_M={Q_M}; Q_A={Q_A}   # empreintes des questions « maieutique » (commit eb03bad5) et « audit » v3 (commit ad23e9ae, R-518)\n"
      "Q_A_V1=dd2c1016e20a4823dcb2ce4c1e94d2c6be7a6962cb52a10ee7ac3b1f7d1203aa   # question « audit » v1 : ne sert plus (R-515, R-516), refusée comme empreinte autre\n"
+     f"Q_A_V2={Q_A_V2}   # question « audit » v2 (commit 9417652a) : ne sert plus (R-518), refusée comme empreinte autre\n"
+     f"COMMIT_DEF={COMMIT_DEF}; ANNEXE_DEF_CHEMIN={ANNEXE_DEF_CHEMIN}; ANNEXE_DEF_SHA={ANNEXE_DEF_SHA}   # paramètres définitifs de l'annexe (R-518), les mêmes que dans le lanceur\n"
      "ligne_go() {  # ligne_go GO COURSE QUESTION_SHA TEXTE16 [TYPE] : une ligne du registre des GO, à la forme de la ligne d'extension (texte v1, § Plan)\n"
      "  printf '| %s | 2026-10-26 | %s | extension : course « %s » (essai) — la v6.2.1 7ea3270, arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d, sur la question %s (commit eb03bad5) ; banque confrontation-v3 157a2b45… ; texte courses-question-gemini-v6-2-v1.md %s ; lanceur lancer_courses_question_v12.sh %s, noyau 9beee10b | 75 USD au plus | 2026-10-31 | Lazar | R-509 |\\n' \"$1\" \"${5:-calcul}\" \"$2\" \"$3\" \"$4\" \"$H\"\n"
      "}\n"
@@ -148,6 +153,7 @@ bloc("fixtures", 'pr "$E/entrees/prereg-sain.md" "entropie E = $ENTROPIE tirée 
      f'{{ ligne_go GO-2026-10-26-05 maieutique {Z64} "$T16"; ligne_go GO-2026-10-26-04 audit {Z64} "$T16"; }} > "$E/entrees/go-autre-question.md"\n'
      '{ ligne_go GO-2026-10-26-05 maieutique "$Q_A" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_M" "$T16"; } > "$E/entrees/go-questions-croisees.md"\n'
      '{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_A_V1" "$T16"; } > "$E/entrees/go-question-v1.md"   # la ligne du GO 04 porte la question audit v1\n'
+     '{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_A_V2" "$T16"; } > "$E/entrees/go-question-v2.md"   # la ligne du GO 04 porte la question audit v2\n'
      '{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "(sans le texte)"; ligne_go GO-2026-10-26-04 audit "$Q_A" "(sans le texte)"; } > "$E/entrees/go-sans-texte.md"\n')
 # ---- vérificateurs : motif absent ----
 remplacer('  else echo "ÉCHEC  $nom : attendu « $attendu »"; fi\n}\n',
@@ -207,7 +213,7 @@ bloc("dépenses et SAIN", "printf '| 2026-10-25 | pilote4-gemini-v6-2-s-v1 | GO-
 # ---- cas sains : « audit » (essais du noyau exécutés, annexes), puis « maieutique » ----
 bloc("cas sains", 'echo "== cas sains : v6.2 complète', 'verifier sain-v6-2-s-lanceur-attendu "lanceur attendu $(basename "$LANCEUR") (${H:0:8}…)" "$VS/LANCEMENT.md"',
      "1a69f08aae9e7161d48f59f2b0649e659237da04bf065e8cf94804062c70902a",
-     'echo "== cas sains : course « maieutique » complète (essais du noyau exécutés), puis course « audit » (question v2 servie avec l\'annexe synthétique) ; rondes de conception et quatre générations =="\n'
+     'echo "== cas sains : course « maieutique » complète (essais du noyau exécutés), puis course « audit » (paramètres définitifs : question v3 et son annexe réelle, commit ad23e9ae) ; rondes de conception et quatre générations =="\n'
      'td_heure "$E/entrees/td-heure-fraiche-maieutique.json" 0 GO-2026-10-26-05\n'
      'cas sain-maieutique "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-maieutique.json" ESSAI_EXIGER_HEURE=1 PRECEDENTE_V62="$E/nulle-part"\n'
      'VM="$E/cas-sain-maieutique/course-maieutique-gemini-v6-2-v1"\n'
@@ -230,7 +236,7 @@ bloc("cas sains", 'echo "== cas sains : v6.2 complète', 'verifier sain-v6-2-s-l
      'JUNIT="$E/junit-sain-v1.xml"; cp "$VM/essais-v1.xml" "$JUNIT"\n'
      'SAIN+=(ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="169 passed")\n'
      'td_heure "$E/entrees/td-heure-fraiche-audit.json" 0 GO-2026-10-26-04\n'
-     'cas sain-audit "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit GRAINE="$G_A" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-audit.json" ESSAI_EXIGER_HEURE=1\n'
+     'cas sain-audit "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit GRAINE="$G_A" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-audit.json" ESSAI_EXIGER_HEURE=1 ESSAI_ANNEXE_1_COMMIT= ESSAI_ANNEXE_1_CHEMIN= ESSAI_ANNEXE_1_SHA=   # paramètres définitifs du lanceur : question v3 et annexe réelle, aucune variable d\'essai d\'annexe\n'
      'VA="$E/cas-sain-audit/course-audit-gemini-v6-2-v1"\n'
      'verifier sain-audit-reference-m "; M saine : g000 et g001 OK" "$VA/LANCEMENT.md"\n'
      'verifier sain-audit-organisme "organisme : 26 fichiers, empreinte d\'arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d" "$VA/LANCEMENT.md"\n'
@@ -238,21 +244,24 @@ bloc("cas sains", 'echo "== cas sains : v6.2 complète', 'verifier sain-v6-2-s-l
      'verifier sain-audit-graine "graine $G_A de la course audit écrite et recalculée depuis l\'entropie du texte (enfant 1), ligne de la course maieutique présente (non utilisée)" "$VA/LANCEMENT.md"\n'
      'verifier sain-audit-temps-conception "temps par ronde de conception 900 s" "$VA/LANCEMENT.md"\n'
      'verifier sain-audit-minuteur "STOP non posé" "$VA/LANCEMENT.md"\n'
-     'verifier sain-audit-question "question (audit) : sha256 $Q_A (question-audit-controle-organismes-v2.md, commit 9417652a…) ; annexes servies : 1 ; annexe 1 : $ANNEXE_ESSAI_CHEMIN $ANNEXE_ESSAI_COMMIT $ANNEXE_ESSAI_SHA" "$VA/LANCEMENT.md"\n'
-     "# la question servie de la course « audit », recomposée ici sans le lanceur, depuis le dépôt : la question v2, puis, pour chaque annexe servie,\n"
+     'verifier sain-audit-question "question (audit) : sha256 $Q_A (question-audit-controle-organismes-v3.md, commit ad23e9ae…) ; annexes servies : 1 ; annexe 1 : $ANNEXE_DEF_CHEMIN $COMMIT_DEF $ANNEXE_DEF_SHA" "$VA/LANCEMENT.md"\n'
+     "# la question servie de la course « audit », recomposée ici sans le lanceur, depuis le dépôt : la question v3, puis, pour chaque annexe servie,\n"
      "# une ligne ---, un titre « # Annexe k — chemin (sha256 …) » et son contenu (une ligne vide avant et après chaque séparateur et chaque titre)\n"
      '"$PY" -I -c \'\n'
      "import hashlib, subprocess, sys\n"
      "depot = sys.argv[1]\n"
      'def lire(c, p): return subprocess.run(["git", "-C", depot, "show", c + ":" + p], check=True, capture_output=True).stdout\n'
-     'b = lire("9417652a45cae723ffe6199fbf3dbf4080d8e54f", "brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v2.md")\n'
+     'b = lire("ad23e9ae07588ed701a70b9b5f4bf379ca079953", "brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v3.md")\n'
      "for k, (c, p, h) in enumerate([(sys.argv[2], sys.argv[3], sys.argv[4])], 1):\n"
      '    b += ("\\n---\\n\\n# Annexe %d — %s (sha256 %s)\\n\\n" % (k, p, h)).encode("utf-8") + lire(c, p)\n'
-     'print(hashlib.sha256(b).hexdigest(), len(b.decode("utf-8")))\' "$DEPOT" "$ANNEXE_ESSAI_COMMIT" "$ANNEXE_ESSAI_CHEMIN" "$ANNEXE_ESSAI_SHA" > "$E/question-servie-audit.txt"\n'
+     'print(hashlib.sha256(b).hexdigest(), len(b.decode("utf-8")))\' "$DEPOT" "$COMMIT_DEF" "$ANNEXE_DEF_CHEMIN" "$ANNEXE_DEF_SHA" > "$E/question-servie-audit.txt"\n'
      'read -r SHA_SERVIE_A N_SERVIE_A < "$E/question-servie-audit.txt"\n'
      'verifier sain-audit-question-servie "question servie : question.md, sha256 $SHA_SERVIE_A, $N_SERVIE_A caractères" "$VA/LANCEMENT.md"\n'
      'verifier sain-audit-question-servie-fichier "$SHA_SERVIE_A  question.md" "$VA/EMPREINTES-pilote-v1.txt"\n'
-     'verifier sain-audit-question-fichier-annexe "# Annexe 1 — $ANNEXE_ESSAI_CHEMIN (sha256 $ANNEXE_ESSAI_SHA)" "$VA/question.md"\n'
+     'verifier sain-audit-question-fichier-annexe "# Annexe 1 — $ANNEXE_DEF_CHEMIN (sha256 $ANNEXE_DEF_SHA)" "$VA/question.md"\n'
+     '"$PY" -I -c \'import sys; n = int(sys.argv[1]); b = int(sys.argv[2]); print("taille servie %d caractères %s %d (CARACTERES_MAX_QUESTION du noyau 9beee10b)" % (n, "≤" if n <= b else ">", b))\' "$N_SERVIE_A" 100000 > "$E/taille-servie-audit.txt"\n'
+     'verifier sain-audit-taille-servie-sous-la-borne "caractères ≤ 100000 (CARACTERES_MAX_QUESTION du noyau 9beee10b)" "$E/taille-servie-audit.txt"   # assertion demandée : question v3 + annexe < 100 000\n'
+     'verifier sain-audit-taille-servie-relevee "taille servie 39617 caractères" "$E/taille-servie-audit.txt"   # 3 430 (question v3) + 163 (titre) + 36 024 (annexe)\n'
      'verifier sain-audit-garde "garde refus-question : aucun arrêt" "$VA/LANCEMENT.md"\n'
      'verifier_absent_texte sain-audit-sans-reserve-annexe "sans aucune annexe servie" "$VA/LANCEMENT.md"\n')
 remplacer('for d in "$VS" "$V6"; do\n', 'for d in "$VM" "$VA"; do\n', 2)
@@ -328,15 +337,19 @@ bloc("objets", 'echo "== objets et question =="', 'cas question-v6-2 "empreinte 
      'cas question-empreinte-autre-audit "empreinte de la question ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-base "${SAIN[@]}"\n'
      'cas question-servie-alteree "empreinte de la question servie ≠" -- MODE=simulation ESSAI_ARTEFACT=question "${SAIN[@]}"\n'
      'cas question-servie-alteree-audit "empreinte de la question servie ≠" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question "${SAIN[@]}"\n'
-     'cas question-v1-refusee "empreinte de la question ≠ ec3abf28…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-v1 "${SAIN[@]}"\n'
+     'cas question-v1-refusee "empreinte de la question ≠ 998960b8…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-v1 "${SAIN[@]}"\n'
+     'cas question-v2-refusee "empreinte de la question ≠ 998960b8…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-v2 "${SAIN[@]}"\n'
+     'cas annexe-empreinte-fausse "empreinte de l\'annexe 1 ($ANNEXE_DEF_CHEMIN) ≠ 01234567…" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT="$COMMIT_DEF" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_DEF_CHEMIN" ESSAI_ANNEXE_1_SHA=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef   # l\'annexe réelle, une empreinte fausse : refus avant tout appel\n'
+     'verifier_absent annexe-empreinte-fausse-sans-course "$E/cas-annexe-empreinte-fausse/course-audit-gemini-v6-2-v1/course"   # aucun appel : le noyau n\'est jamais parti\n'
+     'verifier_absent annexe-empreinte-fausse-sans-manifeste "$E/cas-annexe-empreinte-fausse/course-audit-gemini-v6-2-v1/course/manifeste-run.json"\n'
      'cas annexe-absente "annexe 1 (docs/nulle-part-v1.md) absente du commit" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe-absente "${SAIN[@]}"\n'
      'cas annexe-alteree "empreinte de l\'annexe 1 ($ANNEXE_ESSAI_CHEMIN) ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe "${SAIN[@]}"\n'
      'cas annexe-champs-incomplets "ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA vont ensemble" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_SHA=\n'
      'cas annexe-commit-absent "annexe 1 : commit 0123456789abcdef0123456789abcdef01234567 absent du dépôt" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT=0123456789abcdef0123456789abcdef01234567\n'
      'cas question-servie-trop-longue "caractères > 100000 (borne du noyau 9beee10b, essaim_m3/noyau/question.py, CARACTERES_MAX_QUESTION)" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT="$ANNEXE_LONGUE_COMMIT" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_LONGUE_CHEMIN" ESSAI_ANNEXE_1_SHA="$ANNEXE_LONGUE_SHA"\n'
-     'cas audit-sans-annexe-reserve "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT= ESSAI_ANNEXE_1_CHEMIN= ESSAI_ANNEXE_1_SHA=\n'
+     'cas audit-sans-annexe-reserve "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe-vide "${SAIN[@]}"   # emplacement 1 vidé par l\'artefact : la course part, RÉSERVE consignée\n'
      'verifier audit-sans-annexe-reserve-ligne "RÉSERVE : course « audit » sans aucune annexe servie" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md\n'
-     'verifier audit-sans-annexe-question-servie "question servie : question.md, sha256 $Q_A, 3196 caractères" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md\n'
+     'verifier audit-sans-annexe-question-servie "question servie : question.md, sha256 $Q_A, 3430 caractères" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md\n'
      'cas annexe-artefacts-sans-effet-maieutique "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique ESSAI_ARTEFACT=annexe "${SAIN[@]}"\n'
      'cas reel-annexe-essai "variable ESSAI_ANNEXE_1_COMMIT définie en mode réel" -- MODE=reel PILOTE_RACINE=- COURSE=audit ESSAI_ANNEXE_1_COMMIT=x ESSAI_ANNEXE_1_CHEMIN=x ESSAI_ANNEXE_1_SHA=x\n')
 # ---- registres ----
@@ -348,10 +361,11 @@ bloc("registres", 'echo "== registres (GO-2026-10-25-02 ; dépense) =="', 'cas r
      'cas go-maieutique-seulement-refuse-audit "aucune ligne « | GO-2026-10-26-04 | »" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-maieutique-seulement.md"\n'
      'cas go-audit-seulement-refuse-maieutique "aucune ligne « | GO-2026-10-26-05 | »" -- MODE=simulation COURSE=maieutique "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-audit-seulement.md"\n'
      'cas go-autre-question "l\'empreinte de la question 1d29fbec…" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"\n'
-     'cas go-autre-question-audit "l\'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"\n'
+     'cas go-autre-question-audit "l\'empreinte de la question 998960b8…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"\n'
      'cas go-questions-croisees "l\'empreinte de la question 1d29fbec…" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"\n'
-     'cas go-questions-croisees-audit "l\'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"\n'
-     'cas go-question-v1-refuse-audit "l\'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-question-v1.md"\n'
+     'cas go-questions-croisees-audit "l\'empreinte de la question 998960b8…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"\n'
+     'cas go-question-v1-refuse-audit "l\'empreinte de la question 998960b8…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-question-v1.md"\n'
+     'cas go-question-v2-refuse-audit "l\'empreinte de la question 998960b8…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-question-v2.md"\n'
      'cas go-sans-texte "celle du texte scellé ($T16)" -- MODE=simulation GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-sans-texte.md"\n'
      'cas depense-absente "lancement non consigné avant dans registres/depenses.md (une ligne nommant course-maieutique-gemini-v6-2-v1 et GO-2026-10-26-05)" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-absente.md"\n'
      'cas depense-ancienne-forme "lancement non consigné avant dans registres/depenses.md (une ligne nommant course-maieutique-gemini-v6-2-v1 et GO-2026-10-26-05)" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-ancienne-forme.md"\n'
@@ -492,11 +506,13 @@ for ancien, nouveau, n in [
     remplacer(ancien, nouveau, n)
 for motif, permis in (("v6-2-s", 17), ("v5.3", 2), ("6251ab21", 1), ("8b1c7511", 3), ("a54da93e", 4), ('PREREG="$E/', 0), ('PREREG_SHA256="$SHA_PR"', 0), ("$G_S\n", 0), ("$G_6", 0), ("G_S=", 0), ("G_6=", 0),
                       ("V6=", 0), (" V62=", 0), ("VSC=", 0), ("VS=", 0), ('"$VS', 0), ("P_REEL", 0), ("REEL_S", 0), ("LANCEUR_V62", 0), ("EMP_V62", 0), ("copie_v62", 0),
-                      ("pilote4-gemini-v6-2-v1", 1), ("pilote4-gemini-v6-2-s-v1", 1), ("GO-2026-10-25-02", 5), ("GO-2026-10-26-05", 38), ("GO-2026-10-26-04", 20),
-                      ("course-maieutique-gemini-v6-2-v1", 34), ("course-audit-gemini-v6-2-v1", 5), ("COURSE=audit", 27), ("COURSE=maieutique", 18),
-                      ("TEXTE=", 14), ("TEXTE_SHA256=", 14), ("ESSAI_JOURNAL_GARDE", 8), ("garde_artefact", 9), ("garde_sans_arret", 6), ("journal_garde ", 13), ("ligne_go ", 19),
+                      ("pilote4-gemini-v6-2-v1", 1), ("pilote4-gemini-v6-2-s-v1", 1), ("GO-2026-10-25-02", 5), ("GO-2026-10-26-05", 39), ("GO-2026-10-26-04", 21),
+                      ("course-maieutique-gemini-v6-2-v1", 34), ("course-audit-gemini-v6-2-v1", 7), ("COURSE=audit", 30), ("COURSE=maieutique", 18),
+                      ("TEXTE=", 14), ("TEXTE_SHA256=", 14), ("ESSAI_JOURNAL_GARDE", 8), ("garde_artefact", 9), ("garde_sans_arret", 6), ("journal_garde ", 13), ("ligne_go ", 21),
                       ("verifier_absent_texte", 7), ("essais_lanceur_question_v14.sh", 1), ("deriver_essais_question_v14.py", 1), ("lancer_courses_question_v12.sh", 2),
-                      ("8e5e2f7b", 0), ("9beee10b", 9), ("61ddd638", 0), ("20000", 0), ("100000", 1), ("journal-garde-monoculture.jsonl", 0), ("MOTIF_REEL_M", 4), ("suite_journal", 4),
+                      ("8e5e2f7b", 0), ("9beee10b", 11), ("61ddd638", 0), ("20000", 0), ("100000", 3),
+                      ("ec3abf28", 2), ("9417652a", 1), ("998960b8", 7), (COMMIT_DEF, 2), ("ad23e9ae", 7), (ANNEXE_DEF_SHA, 1), (ANNEXE_DEF_CHEMIN, 1), ("ANNEXE_DEF_", 10), ("COMMIT_DEF", 4),
+                      ("Q_A_V2", 2), ("question-v2", 7), ("annexe-vide", 2), ("annexe-empreinte-fausse", 6), ("3196", 0), ("3430", 1), ("39617", 1), ("ANNEXE_ESSAI_", 11), ("2fd63bad", 0), ("29b32f62", 0), ("2204256d", 0), ("journal-garde-monoculture.jsonl", 0), ("MOTIF_REEL_M", 4), ("suite_journal", 4),
                       ("6d2ad200d3c45833933bd6f20bfc80cf6b7e0afabe0bf32f8c50ff6950173294", 1), ("7f79273db464bbbb00e83372d970e93553acf1b306e60708aa95ab6d9b3b6050", 1), ("fec0cb82", 2),
                       ("monoculture_analytique*", 11), ("règle", 5),
                       (Q_M, 1), (Q_A, 1), ("eb03bad5", 3), ("@@", 0)):

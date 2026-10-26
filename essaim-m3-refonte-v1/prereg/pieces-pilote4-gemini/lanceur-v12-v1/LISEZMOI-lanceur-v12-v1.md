@@ -1,20 +1,22 @@
-# LISEZMOI — lanceur v12 des deux courses à question de la v6.2.1, batterie v14, séries v15 et v16 — v1
+# LISEZMOI — lanceur v12 des deux courses à question de la v6.2.1, batterie v14, séries v15, v16 et v17 — v1
 
 Écrit par le sous-agent qui a dérivé le lanceur v11 et la batterie v13 (brief `lanceur-v11-v1/`), sur le brief de conv-audit du
 26 octobre 2026 (message de coordination, trois précisions : un seul texte pour les deux courses ; les annexes en bloc de
 paramètres ; la question « audit » v2 à `9417652a` avec une seule annexe à remplir ; puis deux décisions : la règle de la garde
-« refus-question », le noyau attendu `9beee10b` à la borne de 100 000 caractères), le @@HEURE@@ (heure lue sur `date -u` dans la
+« refus-question », le noyau attendu `9beee10b` à la borne de 100 000 caractères ; enfin les paramètres définitifs de la course
+« audit », R-518 : question v3 et annexe réelle au commit `ad23e9ae` de `main`), le @@HEURE@@ (heure lue sur `date -u` dans la
 commande qui a écrit ce fichier). Sources lues : le lanceur v11 (`21854b79…`), la batterie v13 (`7b0a9bb0…`), le texte
 `prereg/courses-question-gemini-v6-2-v1.md` (brouillon de conv-audit, non scellé), `sceller_courses_question_v6.py`, le code du
 noyau (`essaim_m3/noyau/appels.py`, `boucle.py`, `bac_a_sable.py`, `serveur.py`, `question.py` aux commits `8e5e2f7b` et
 `9beee10b`, `archive.py`) et les conventions du collisionneur v2.5 (`collisionneur_v2.py`, `213b52ef…`, `statut_reponse` et
 `REFUS_GEMINI`), le code de la v6.2.1 au commit `7ea32705…` (`mitose_spectrale.py`, `principal.py`, `CONCEPTION.md` : rôles des
-castes), les questions aux commits `eb03bad5` et `9417652a` et les trois annexes initiales (empreintes et tailles seulement,
-contenu non lu), le journal d'appels poussé de g001 de la course M du pilote 4 (branche `pilotes/pilote4-gemini-v6-2-v1`,
+castes), les questions aux commits `eb03bad5`, `9417652a` et `ad23e9ae` (v3 : 3 430 caractères) et l'annexe définitive
+(`docs/sources/rapport-consolide-20261026/transcription-expurgee-v2.md` à `ad23e9ae` : empreinte et taille seulement, 37 563
+octets, 36 024 caractères, contenu non lu ; les trois annexes initiales de même), le journal d'appels poussé de g001 de la course M du pilote 4 (branche `pilotes/pilote4-gemini-v6-2-v1`,
 `pilote4-gemini-v6-2-v1-tentative2/journal-appels-g001.jsonl`, `fec0cb82…`, 129 appels : rôles, statuts et raisons d'arrêt
 seulement, aucun score ni texte), les copies d'essai d'hier et `lancer-serie-v14.sh`. Ni clé lue, ni script de la relève exécuté,
-ni poussée ; `python3 -I` partout ; `git` : `fetch` des commits des questions puis de la branche `outils/pilote4-gemini-travail`
-dans les deux copies d'essai, `checkout --detach 9beee10b` dans ces copies, `show`/`cat-file`/`log`/`grep`/`merge-base`/`archive`
+ni poussée ; `python3 -I` partout ; `git` : `fetch` des commits des questions, de la branche `outils/pilote4-gemini-travail`
+puis de `main` à `ad23e9ae` dans les deux copies d'essai, `checkout --detach 9beee10b` dans ces copies, `show`/`cat-file`/`log`/`grep`/`merge-base`/`archive`
 en lecture ; commit des pièces finales sur la branche (permis par conv-audit après la série v16), aucune poussée.
 
 ## Réserve levée : la règle de la garde « refus-question »
@@ -43,15 +45,17 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
 
 ## Fait
 
-1. `deriver_lanceur_question_v12.py` : dérive `lancer_courses_question_v12.sh` (1045 lignes) de `lancer_pilote4_gemini_v11.sh`
+1. `deriver_lanceur_question_v12.py` : dérive `lancer_courses_question_v12.sh` (1047 lignes) de `lancer_pilote4_gemini_v11.sh`
    (938 lignes, `21854b79…`) par 41 remplacements exacts comptés (40 à 1 occurrence, `setsid env -i` à 2) et le retrait du bloc de
-   la porte « course v6.2 précédente » (83 lignes, ancre vérifiée par son empreinte `2ff1cfec…`), puis 92 contrôles de présence
-   ou d'absence comptés. Écart : `diff-lanceur-v11-vers-v12.txt` (`diff -u`, 651 lignes). `bash -n` : conforme. Changements :
+   la porte « course v6.2 précédente » (83 lignes, ancre vérifiée par son empreinte `2ff1cfec…`), puis 101 contrôles de présence
+   ou d'absence comptés. Écart : `diff-lanceur-v11-vers-v12.txt` (`diff -u`, 653 lignes). `bash -n` : conforme. Changements :
    - bloc de paramètres en tête (après `refus_tot`) : `QUESTION_MAIEUTIQUE_COMMIT|CHEMIN|SHA` (`eb03bad5`, `1d29fbec…`),
-     `QUESTION_AUDIT_COMMIT|CHEMIN|SHA` (`9417652a…`, `question-audit-controle-organismes-v2.md`, `ec3abf28…`), quatre
-     emplacements d'annexe `ANNEXE_k_COMMIT|CHEMIN|SHA`, tous vides (l'annexe 1, transcription expurgée d'un rapport, est à remplir
-     par session-depot : trois lignes à remplacer, l'empreinte du lanceur change) ; un emplacement vide n'est pas servi, un
-     emplacement à moitié rempli est un refus ; les annexes servies sont numérotées dans l'ordre ; puis le **noyau attendu** :
+     `QUESTION_AUDIT_COMMIT|CHEMIN|SHA` (**définitifs, R-518** : `ad23e9ae…`, `question-audit-controle-organismes-v3.md`,
+     `998960b8…` ; la v1 `dd2c1016…` et la v2 `ec3abf28…` ne servent plus), quatre emplacements d'annexe
+     `ANNEXE_k_COMMIT|CHEMIN|SHA` : l'annexe 1 remplie (`ad23e9ae…`,
+     `docs/sources/rapport-consolide-20261026/transcription-expurgee-v2.md`, `c1237687…`), les emplacements 2 à 4 vides ; un
+     emplacement vide n'est pas servi, un emplacement à moitié rempli est un refus ; les annexes servies sont numérotées dans
+     l'ordre ; changer une question ou une annexe = trois lignes, l'empreinte du lanceur change ; puis le **noyau attendu** :
      `NOYAU_COMMIT=9beee10b…` (le code de la copie — essaim_m3, tests, collisionneur — doit lui être identique, lui-même ancêtre
      de HEAD, commits postérieurs limités aux chemins permis ; `COMMIT_CODE` le reprend), `NOYAU_EMPREINTE_PROPRE=192b2128…`
      (empreinte de l'arbre `essaim_m3/noyau` sans bytecode à ce commit, recalculée ici par `git archive` et la fonction du noyau ;
@@ -76,8 +80,8 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
      caractères` (N = caractères UTF-8, comme le manifeste du noyau) ; RÉSERVE consignée si la course « audit » part sans aucune
      annexe ; en simulation, `ESSAI_ANNEXE_1_COMMIT`, `ESSAI_ANNEXE_1_CHEMIN`, `ESSAI_ANNEXE_1_SHA` (ensemble, interdites en réel)
      remplacent l'annexe 1 ; artefacts d'essai `question` (fichier servi altéré), `question-base` (empreinte attendue à 0),
-     `question-v1` (chemin de la v1 de la question « audit » : empreinte autre), `annexe` (empreinte de l'annexe 1 à 0),
-     `annexe-absente` (chemin de l'annexe 1 inexistant) ;
+     `question-v1` et `question-v2` (chemins des v1 et v2 de la question « audit » : empreinte autre), `annexe` (empreinte de
+     l'annexe 1 à 0), `annexe-absente` (chemin de l'annexe 1 inexistant), `annexe-vide` (emplacement 1 vidé : la RÉSERVE) ;
    - porte « course v6.2 précédente » retirée (`PRECEDENTE_V62` sans effet, `LANCEUR_V62_*`, `EMP_V62`, contrôle de la graine v6-2 et
      part « empreintes de la v6.2 » de la ligne de dépense retirés) ; porte « course M de référence » et chaîne de `grep` de la
      ligne de GO inchangées ; `PERMIS_APRES_CODE` permet `prereg/courses-question-gemini-v6-2-v[0-9]+.md(.sha256)?` et ses
@@ -94,15 +98,22 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
      raisons de sûreté : `refusal SAFETY PROHIBITED_CONTENT BLOCKLIST SPII RECITATION IMAGE_SAFETY BLOCAGE_PROMPT` (toutes les
      raisons qui valent REFUS dans `statut_reponse`) ; sans arrêt, note « garde refus-question : aucun arrêt ; veilleur arrêté par
      son PID » ; `ESSAI_JOURNAL_GARDE` interdite en réel.
-2. `deriver_essais_question_v14.py` : dérive `essais_lanceur_question_v14.sh` (809 lignes) de `essais_lanceur_pilote4_v13.sh`
+2. `deriver_essais_question_v14.py` : dérive `essais_lanceur_question_v14.sh` (822 lignes) de `essais_lanceur_pilote4_v13.sh`
    (701 lignes, `7b0a9bb0…`) : 18 blocs réécrits ou retirés par ancre vérifiée par empreinte, 9 remplacements exacts ciblés, 19
    remplacements globaux comptés sur le texte restant (noms, clés, graines, texte, GO, noyau attendu ; les noms et le GO d'hier
-   gardés dans `go-autre-id`, `dep-absente` et `dep-ancienne-forme` sont protégés par des jetons), 58 contrôles. Écart (non
-   demandé) : `diff-essais-v13-vers-v14.txt` (860 lignes). `bash -n` : conforme. Cas : v13 = 240 ; v14 = @@N_V14@@ (voir la
+   gardés dans `go-autre-id`, `dep-absente` et `dep-ancienne-forme` sont protégés par des jetons), 78 contrôles. Écart (non
+   demandé) : `diff-essais-v13-vers-v14.txt` (873 lignes). `bash -n` : conforme. Cas : v13 = 240 ; v14 = @@N_V14@@ (voir la
    série v16). Deux annexes synthétiques sont committées dans la copie `depot` au début de la série, puis retirées de sa tête
    (`reset --hard HEAD~1`, objets lisibles par `git show`) : `annexe-essai-v1.md` (l'annexe de la course « audit » saine) et
    `annexe-longue-v1.md` (100 029 caractères : le refus « question servie > 100000 »), toutes deux sous
-   `essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/`. Les lignes de GO d'essai (`ligne_go`) citent `noyau 9beee10b`. Garde :
+   `essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/`. Les lignes de GO d'essai (`ligne_go`) citent `noyau 9beee10b`.
+   Paramètres définitifs : la course « audit » saine (`sain-audit`) tourne **sans variable d'essai d'annexe**, sur la question v3
+   et l'annexe réelle du commit `ad23e9ae` (récupéré dans les copies par `git fetch origin main`) ; la batterie recompose la
+   question servie depuis le dépôt (v3, séparateur, titre, annexe) et la compare au fichier et au journal, et **vérifie la taille
+   servie : 39 617 caractères ≤ 100 000** (3 430 + 163 + 36 024 ; `sain-audit-taille-servie-sous-la-borne`, `-relevee`) ;
+   `annexe-empreinte-fausse` (annexe réelle, empreinte `01234567…` : refus « empreinte de l'annexe 1 … ≠ », aucun dossier
+   `course/`, aucun manifeste : refus avant tout appel) ; `question-v2-refusee`, `go-question-v2-refuse-audit` ;
+   `audit-sans-annexe-reserve` par l'artefact `annexe-vide` (question servie = la v3 seule, 3 430 caractères). Garde :
    journaux synthétiques par `journal_garde FICHIER MOTIF…` (`ROLE[:STATUT[:FIN]][*N]`) ; cas sans arrêt
    `garde-refus-question-sain` (REFUS sur `inducteur_entrainement`), `-ligne-incomplete`, `-tache-refusee` (REFUS
    `monoculture_analytique` au rang 3, sans moissonneur), `-rang-120` (120e appel en REFUS, sans moissonneur), `-moissonneur-refuse`,
@@ -123,8 +134,11 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
    (journal `…-essai-rate-annexe-reel.log` ; `cas` corrigé : annexe synthétique hors du mode réel seulement) ; (4) 12:52:28 à
    13:04:06, 287 sur 287 (journal `essais-lanceur-question-v15.log`, heures `essais-lanceur-question-v15.heures.txt`). Le lanceur
    et la batterie de cette série ont été remplacés par les versions finales (mêmes noms) après les deux décisions.
-4. Série v16 (lanceur v12 et batterie v14 finaux ; `lancer-serie-v16.sh`, copie de `lancer-serie-v15.sh` ; copies d'essai portées
-   à la tête `9beee10b` par `git fetch origin outils/pilote4-gemini-travail` puis `checkout --detach`) : @@SERIE16@@
+4. Série v16 (lanceur v12 et batterie v14 après les deux décisions, encore sur la question « audit » v2 et l'annexe synthétique ;
+   `lancer-serie-v16.sh`, copie de `lancer-serie-v15.sh` ; copies d'essai portées à la tête `9beee10b` par `git fetch origin
+   outils/pilote4-gemini-travail` puis `checkout --detach`) : @@SERIE16@@
+5. Série v17 (lanceur v12 et batterie v14 finaux, paramètres définitifs de la course « audit » ; `lancer-serie-v17.sh`, copie de
+   `lancer-serie-v16.sh` ; le commit `ad23e9ae` de `main` récupéré dans les copies, leur tête inchangée à `9beee10b`) : @@SERIE17@@
 
 ## Choix faits seul (une ligne chacun)
 
@@ -168,12 +182,11 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
 
 ## Ce qui reste, ou n'a pas été vérifié
 
-- L'annexe 1 de la course « audit » (transcription expurgée d'un rapport) : trois lignes à remplir par session-depot
-  (`ANNEXE_1_COMMIT`, `ANNEXE_1_CHEMIN`, `ANNEXE_1_SHA`), le commit poussé sur `main` avant la course ; **taille** : la question v2
-  fait 3 196 caractères et le titre de l'annexe 95 + longueur du chemin, donc l'annexe tient au plus 96 709 − longueur du chemin
-  caractères (UTF-8) sous la borne de 100 000, sinon le lanceur refuse avant tout appel. Après remplissage, l'empreinte du lanceur
-  change : `lancer-serie-v16.sh` rejoue la batterie v14 sans dérivation (la batterie lit le lanceur qu'on lui donne) ; attendu :
-  @@N_V14@@ sur @@N_V14@@, et un relevé des empreintes à refaire.
+- Les paramètres de la course « audit » sont définitifs (R-518) ; la copie de lancement doit porter le commit `ad23e9ae` de
+  `main` (`git fetch origin main` avant la course : le lanceur refuse « commit … absent du dépôt (git fetch) » sinon). Si une
+  question ou l'annexe change encore : trois lignes du bloc de paramètres, l'empreinte du lanceur change, `lancer-serie-v17.sh`
+  rejoue la batterie v14 sans dérivation (attendu : @@N_V14@@ sur @@N_V14@@ ; `sain-audit-taille-servie-relevee` attend 39 617
+  caractères et est à ajuster) ; la taille servie doit rester ≤ 100 000 caractères (titre d'annexe : 95 + longueur du chemin).
 - Le texte v1 des courses cite encore `noyau 8e5e2f7b` dans ses lignes d'extension de GO et sa table (à mettre à `9beee10b` par
   conv-audit) ; le lanceur ne lit pas le commit du noyau dans la ligne de GO (il exige `calcul`, l'empreinte de la question,
   celle de l'organisme et celle du texte).
