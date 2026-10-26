@@ -161,3 +161,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-26 01:13 UTC — **engagements** (R-472) : suite III.2-III.3 du tour « agents sur le noyau » (plafond du dossier 10 USD inchangé) ; Opus seul, question « conception itérative », plafond 3 USD ; GO-2026-10-24-07.
 - 2026-10-26 01:18 UTC — Opus seul, question « conception itérative » (R-472) : **0,48 USD**, réponse valide ; branche `donnees/collisionneur-agents-noyau-methodo-v1` (`1a26f499`, empreintes `46eb0e08…`).
 - 2026-10-26 01:20 UTC — collisionneur « suite de H-M1 » (R-460 à R-463), trois tours : neuf cellules valides, **6,33 USD** ; branche `donnees/collisionneur-suite-HM1-v1`.
+- 2026-10-26 01:28 UTC — collisionneur « agents sur le noyau » (R-466, R-472), trois tours : sept cellules valides sur neuf (refus d'Opus au III.1 et au III.3), **5,39 USD** ; branche `donnees/collisionneur-agents-noyau-v1`.
