@@ -94,13 +94,13 @@ v6.2.1 et la v5.3 sur la banque v6, inchangées), séparation d'avec l'étape 1 
    S, à la tête de `outils/pilote4-gemini-travail` citée au message de départ (`git fetch origin outils/pilote4-gemini-travail canal/conv-audit-n04` — la seconde porte le commit `4772b525` de la
    question S —, puis `git checkout --detach` de cette tête ; le dossier de la course M, non suivi, reste en place) ; cette tête ne diffère de `8e5e2f7b` que par les
    chemins permis (`PERMIS_APRES_CODE`) ; la copie n'est jamais committée.
-2. **Graines (R9)** : entropie E = <<ENTROPIE>> tirée par `sceller_pilote4_v5.py` (`secrets.randbits(128)` ; refuse
+2. **Graines (R9)** : entropie E = 80294144857486793952864328916599533231 tirée par `sceller_pilote4_v5.py` (`secrets.randbits(128)` ; refuse
    numpy < 1.25 et toute ligne d'entropie ou de graine de trop) ; deux enfants `numpy.random.SeedSequence(E).spawn(2)` ;
    la graine de la course S vaut `int(enfant 0.generate_state(1, dtype=numpy.uint64)[0])` (l'enfant 1 n'est pas utilisé et
    n'est pas écrit) ; la graine de la course M est celle de la v4, enfant 1 de son entropie, restituée ici telle quelle
    pour la porte du lanceur v11 (chaque égalité sur une seule ligne, lue par le lanceur à chaque segment ; la graine S
    recalculée depuis l'entropie de ce texte) :
-   graine de la course v6-2-s = <<GRAINE_S>>
+   graine de la course v6-2-s = 6967892196853497016
    graine de la course v6-2 = 2334107546136117589
 3. **Moment de la lecture des scores** (v4, point 3, précisé par les décisions de Lazar de 05:13 Paris, N-050 proposé) :
    la retenue de lecture tient tant que Lazar n'a pas tranché les graines (tour R-491 entre les deux courses) ; session-depot
@@ -158,7 +158,7 @@ d'empreintes et à la ligne de graine de la course M près, qu'il exige telle qu
 sous-agent qui a dérivé le lanceur et la batterie et son LISEZMOI (`lanceur-v11-v1/` : brief `8e8c487a…`, LISEZMOI) ; les pièces de la contre-lecture 8
 (`contre-lecture-8-v1/`) et de son traitement ; chacun avec son compagnon `.sha256`. Fichier d'empreintes de ce texte :
 `EMPREINTES-pilote4-gemini-v3.txt` (toutes les pièces sous `pieces-pilote4-gemini/` et les contre-lectures
-`pilote4-gemini-organisme-*`), empreinte <<EMPREINTE_PIECES>>, écrite par `sceller_pilote4_v5.py` avec l'entropie et la
+`pilote4-gemini-organisme-*`), empreinte `082edf4cebd40f23e7515530c16b4837850413cdb5a7aa97df281da3eb4896bf`, écrite par `sceller_pilote4_v5.py` avec l'entropie et la
 graine ; vérifiée par `verifier_scellement_pilote4_v3.py` (`d733d0f4…`) et par
 `envois/verification-depart-pilote4-v1/verifier_depart_pilote4_v2.sh` sur le canal.
 
