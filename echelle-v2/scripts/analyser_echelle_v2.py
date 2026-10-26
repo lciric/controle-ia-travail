@@ -28,7 +28,8 @@ Pour chaque modèle (petit = 8B, grand = 70B), à une couche L* choisie sur le p
   sac de mots : régression logistique sur les textes du jeu a, scores centrés par moitié, aire sur le jeu b.
 Contrastes : Δλ = λ(petit) − λ(grand) ; spécificité = Δλ − (ν(petit) − ν(grand)). Intervalles : bootstrap apparié
 (mêmes tirages pour les deux modèles) sur les contenus (dans chaque moitié) et sur les paires de cadrages (dans chaque
-jeu), 2 000 tirages, percentiles 2,5 et 97,5 ; directions réapprises à chaque tirage (sauf A_ctx_fixe) ; L* fixe.
+jeu ; pour le jeu a, au moins deux paires distinctes, rejets comptés), 2 000 tirages, percentiles 2,5 et 97,5 ;
+directions réapprises à chaque tirage (sauf A_ctx_fixe) ; L* fixe.
 Rapportés sans lecture : λ aux quatre profondeurs appariées (points), CLX-18.
 Graines : `numpy.random.SeedSequence(ENTROPIE)` (R9), entropie écrite dans le préenregistrement avant scellement.
 
@@ -361,12 +362,23 @@ def aire_sac(plan, s_brut, w, moities):
     return stats_projections(plan, s, w, ~np.isnan(s))["A_ctx"]
 
 
+REJETS = {"tirages_paires_a_rejetes": 0}
+
+
 def tirer(rng, moities):
+    """Contenus avec remise dans chaque moitié ; paires avec remise dans chaque jeu. Les paires du jeu a sont tirées
+    sous la condition d'au moins deux paires distinctes (sinon le témoin de permutation n'est pas défini, ≈ 1 tirage
+    sur 7 776) ; chaque rejet est compté et consigné dans la sortie (aucun repli silencieux, R5)."""
     wc = np.zeros(64)
     for moitie in moities:
         np.add.at(wc, rng.choice(moitie, size=len(moitie), replace=True), 1.0)
-    wp = {j: np.bincount(rng.integers(0, N_PAIRES, size=N_PAIRES), minlength=N_PAIRES).astype(float) for j in ("a", "b")}
-    return wc, wp
+    while True:
+        wa = np.bincount(rng.integers(0, N_PAIRES, size=N_PAIRES), minlength=N_PAIRES).astype(float)
+        if (wa > 0).sum() >= 2:
+            break
+        REJETS["tirages_paires_a_rejetes"] += 1
+    wb = np.bincount(rng.integers(0, N_PAIRES, size=N_PAIRES), minlength=N_PAIRES).astype(float)
+    return wc, {"a": wa, "b": wb}
 
 
 def intervalle(v):
@@ -455,7 +467,9 @@ def principal(argv):
         uns_c, uns_p = np.ones(64), {j: np.ones(N_PAIRES) for j in ("a", "b")}
         point = un_tirage(uns_c, uns_p)
         rng = np.random.default_rng(np.random.SeedSequence(int(entropie)).spawn(2)[0])
+        REJETS["tirages_paires_a_rejetes"] = 0
         tirages = [un_tirage(*tirer(rng, e_moities)) for _ in range(N_BOOT)]
+        rejets_principaux = REJETS["tirages_paires_a_rejetes"]
         s_sac = scores_sac(plan, e_moities)
         rng_sac = np.random.default_rng(np.random.SeedSequence(int(entropie)).spawn(2)[1])
         sac_point = aire_sac(plan, s_sac, plan.poids(uns_c, uns_p), e_moities)
@@ -492,6 +506,7 @@ def principal(argv):
            "manifestes_sha256": {k: empreinte(pathlib.Path(d) / "manifeste-mesure.json")
                                  for k, d in (("petit", d_petit), ("grand", d_grand))},
            "entropie": int(entropie), "n_boot": N_BOOT, "seuils": SEUILS, "partitions": len(PARTITIONS),
+           "tirages_paires_a_rejetes": rejets_principaux,
            "script": pathlib.Path(__file__).name, "sha256_script": empreinte(__file__), "commit_scripts": commit,
            "arbre_scripts_propre": propre, "python": platform.python_version(), "numpy": np.__version__,
            **r, "lecture": lecture, "reserves": reserves}

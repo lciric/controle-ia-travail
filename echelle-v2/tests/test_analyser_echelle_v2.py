@@ -292,3 +292,26 @@ def test_repetition_marquee(tmp_path, stimuli):
     assert analyser(tmp_path, stimuli, p, g, nom="d")[0] == 1          # décisif : identité refusée
     code, r = analyser(tmp_path, stimuli, p, g, nom="r", repetition=True)
     assert code == 0 and r["repetition"] and r["lecture"].startswith("répétition, non décisive")
+
+
+def test_tirage_paires_a_conditionne():
+    """Un tirage des paires du jeu a qui ne garde qu'une paire rend le témoin indéfini : il est rejeté et compté."""
+
+    class Rng:
+        def __init__(self):
+            self.n = 0
+            self.vrai = np.random.default_rng(0)
+
+        def choice(self, *a, **k):
+            return self.vrai.choice(*a, **k)
+
+        def integers(self, lo, hi, size):
+            self.n += 1
+            return np.zeros(size, dtype=int) if self.n == 1 else self.vrai.integers(lo, hi, size=size)
+
+    AN.REJETS["tirages_paires_a_rejetes"] = 0
+    moities = (np.arange(0, 24), np.arange(24, 48))
+    wc, wp = AN.tirer(Rng(), moities)
+    assert (wp["a"] > 0).sum() >= 2 and AN.REJETS["tirages_paires_a_rejetes"] == 1
+    rng = np.random.default_rng(1)
+    assert all((AN.tirer(rng, moities)[1]["a"] > 0).sum() >= 2 for _ in range(20000))
