@@ -31,7 +31,9 @@ from . import fichiers as _fichiers
 
 NOM_REPONSE = "reponse-question.md"
 OCTETS_MAX_REPONSE = 2_000_000   # une réponse en Markdown ; au-delà, refus consigné (la copie de `travail/` la garde)
-CARACTERES_MAX_QUESTION = 20_000
+CARACTERES_MAX_QUESTION = 100_000   # 20 000 jusqu'au noyau 8e5e2f7b ; porté à 100 000 le 26 octobre 2026 (conv-audit, courses à
+                                    # question : une question servie avec une annexe de rapport de plusieurs dizaines de milliers
+                                    # de caractères ; le contrôle reste celui de la ligne 66, le texte servi est empreinté au manifeste)
 MOTS_CIBLES = ("conception", "generations", "toutes")
 MOTIF_CIBLE = re.compile(r"^[gc]\d{3}$")
 
