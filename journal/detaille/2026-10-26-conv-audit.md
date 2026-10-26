@@ -159,3 +159,26 @@ Paris (UTC + 1 depuis le 25 octobre). Rien d'opposable (R7) ; tout est sur `cana
   un segment, coût). Je les ai lus après l'écriture du brief v4 de la boucle (05:43:40 UTC) et des autres briefs ; je ne
   les transmets à aucun auteur de pièce de la boucle, et aucune règle de lecture n'est écrite par moi après eux.
 - Fin de mon engagement « aucune requête vers arXiv tant qu'une course du pilote 4 tourne » : plus aucune course ne tourne.
+
+## 08:51 — lecture du pilote 4 calculée et figée, sans être lue ; boucle extérieure v5 ; carte des facteurs à refaire
+
+(Heure du titre lue sur `date -u` dans la commande qui écrit cette entrée.)
+
+- **Script de lecture** : v3 (relue : RSL3-01, fausse alerte de la garde de séparation) puis v4 `a2d09ef6…` (vérifiée :
+  « utilisable tel quel », `ce01ce6d…`). Mes erreurs, corrigées avant usage : un libellé (iii) inventé dans le brief v3
+  (CLB4-02) ; deux paires de seuils mêlées dans le brief v4 de la boucle (corrigé par message à l'auteur). Décision : la
+  valeur p brute reste dans chaque fichier « holm-quatre » malgré O1 (son verdict peut dire ceux de l'autre course) ; la
+  lecture finale ne motive aucune décision.
+- **Exécution par session-depot** (n° 80) : `donnees/lecture-pilote4-v1` (`fcd6c51`, 08:50 UTC), codes 0, 0, 0, sorties
+  poussées sans être lues. Empreintes vérifiées contre leurs compagnons par conv-audit (hachage seul, aucun contenu
+  ouvert) : test de M `b72e744a…` (json) et `f63bff34…` (md) ; test de S `04d09468…` et `c55fccbd…` ; test_final
+  holm-quatre de M `4a856055…` et `ee34b3c8…` ; de S `193aadea…` et `73b1cc54…`. Fichiers `etat-` et `erreurs-` non
+  ouverts.
+- **Boucle extérieure** : v4 (vérifiée : CLB4-01 nom et lignée sans source au relevé, CLB4-02 libellés) puis v5
+  (`231a84b`, vérifiée : CLB5-01, le cas « v5.3 » du relevé devient un artefact ; cinq mineurs pour une v6).
+- **Carte des facteurs v1** (16 facteurs, 11 zones) : contre-lue « pas en l'état » (trois bloquants : textes servis aux
+  tâches et lecture de la sonde hors zone ; G5 contournable par une réaffectation insérée ailleurs) ; v2 en écriture avec
+  une règle des noms gelés et un essai d'invariance obligatoire sous l'exception du chemin des réponses.
+- **Lecture des papiers sur les boucles** : complète (24 fiches, synthèse v2 `f13a6d68…`).
+- **En cours** : relevé (B) (script et essais), gardes et assemblage, carte v2. Ouvert chez Lazar : graines (retenue),
+  point 1 (famille du contre-lecteur, défaut (a) au plus tôt le 28 octobre à 05:43:40 UTC).
