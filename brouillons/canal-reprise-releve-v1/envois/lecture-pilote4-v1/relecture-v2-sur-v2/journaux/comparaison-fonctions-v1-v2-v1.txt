@@ -1,0 +1,55 @@
+wilson                       identique
+borne_basse_maximale         identique
+compter                      identique
+mcnemar_exact                identique
+holm                         DIFFÉRENTE
+taches_categorie_absente     identique
+comptes_absentes             identique
+garde_absentes               identique
+charger_banque               identique
+empreintes_attendues         identique
+verifier_liste               DIFFÉRENTE
+depuis_reponses_lues         identique
+depuis_reponses_brutes       DIFFÉRENTE
+lire_score_noyau             identique
+bloc_noyau                   identique
+categorie_probleme           identique
+tests_mcnemar                DIFFÉRENTE
+lire_membres                 identique
+nom_sur                      identique
+etat_fichier                 identique
+Z                            identique
+REFERENCES                   identique
+A_COTE_SANS_COMPARAISON      identique
+SEUIL_ECART_NOYAU            identique
+ALPHA                        identique
+SEUIL_PROVISOIRE             identique
+ATTENDU_ABSENTES             identique
+ETIQUETTES                   identique
+MEMBRE_NECESSAIRE            identique
+OCTETS_MAX_REPONSES          identique
+OCTETS_MAX_MEMBRE            identique
+EMPREINTE_PUBLIQUE           identique
+EMPREINTE_SECRET             identique
+PHRASE_IV                    identique
+===== holm
+@@ -3 +3,2 @@
+-    rejeté et ne réduit pas le nombre de tests. Rend aussi le seuil de chaque test à son rang."""
++    rejeté et ne réduit pas le nombre de tests (RSL-06 : lecture du brief, gardée). Rend aussi le seuil de chaque test
++    à son rang."""
+===== verifier_liste
+@@ -25 +25 @@
+-        etat_fichier(dossier / nom, f"{nom_liste}, ligne {k} ({nom})", liens_permis=False)
++        etat_fichier(dossier / nom, f"{nom_liste}, ligne {k} ({affichable(nom)})", liens_permis=False)
+@@ -27 +27 @@
+-            raise Refus(f"{nom_liste}, ligne {k} ({nom}) : empreinte différente sur disque")
++            raise Refus(f"{nom_liste}, ligne {k} ({affichable(nom)}) : empreinte différente sur disque")
+===== depuis_reponses_brutes
+@@ -1 +1 @@
+-def depuis_reponses_brutes(contenu: bytes | None, taille: int, taches_test: list[dict]) -> dict:
++def depuis_reponses_brutes(contenu: bytes | None, taches_test: list[dict]) -> dict:
+===== tests_mcnemar
+@@ -18,2 +18 @@
+-        sortie.append({**base, "paires": len(taches), "juste_en_g0_seulement": b, "juste_en_g3_seulement": c,
+-                       "p": mcnemar_exact(b, c)})
++        sortie.append({**base, "paires": len(taches), "juste_en_g0_seulement": b, "juste_en_g3_seulement": c, "p": mcnemar_exact(b, c)})

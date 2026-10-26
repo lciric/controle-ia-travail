@@ -1,0 +1,152 @@
+# vérification des renvois du rapport (lignes, empreintes, citations) — début 2026-10-26T05:43:34Z
+## empreintes
+a23613207175b1dbd89784215ececc2a8458332e3e11f1346179c254e099ae2a  /var/tmp/relecture-script-lecture-pilote4-v2/copie/lire_pilote4_v2.py
+dee7e0fec8951c4abbbc0a30100f4b0962854946beea6b0708b600985cee6308  /var/tmp/relecture-script-lecture-pilote4-v2/copie/essais_lire_pilote4_v2.py
+4aa9de04d77a201981fa46c21c59c3ca2acb8bfa8dc835aab50f3ddf7b4c2555  /var/tmp/relecture-script-lecture-pilote4-v2/copie/essais-lire-pilote4-v2.log
+2f328fee182a4f2522fc771d236dd1c636dcad6ce72caa3d91fb7a9d9d646b33  /var/tmp/relecture-script-lecture-pilote4-v2/copie/LISEZMOI-script-lecture-v2.md
+4b23e00fda02cef897f9d73b4274a0bed59bdab8a8f156f37a7966fb80d7a034  /var/tmp/relecture-script-lecture-pilote4-v2/copie/fournis/decision-N-taches-fraiches-et-lecture-test-final-v1.md
+9c15930dc242b2885557d81c6560f8b1aee54ebf03314699c353ced8f2959e3e  /var/tmp/relecture-script-lecture-pilote4-v2/copie/fournis/rapport-relecture-script-lecture-v2.md
+1943f39ada61db7d21e53b7e0c02c6e826b86e1467687eedbe56617877ab7f87  /home/claude/pilote4/essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v5.md
+782b858c537222245fd757c23ea6d75abae142df029eed3e53af36d8c78cfa95  /home/claude/pilote4/essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v4.md
+0203f5461d1ee7770850ee1b91cb6b379e9f8931b02626d22de56a655eb2c952  /home/claude/pilote4/essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/lancer_pilote4_gemini_v10.sh
+21854b794de90d874b23def1685e306ceba80b32cd471de1dd8cf750ad01d0d7  /home/claude/pilote4/essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/lancer_pilote4_gemini_v11.sh
+8b59409679c0cb5e921ec6344b9984c7ebcdfd4a8f0f43abe7fef08ba19ed025  /home/claude/pilote4/essaim-m3-refonte-v1/essaim_m3/noyau/boucle.py
+d8fe59c1a8c05b5761d94a36e380e06fa23cddc75fff16152b0c0e28c82a3eaa  /var/tmp/relecture-script-lecture-pilote4-v2/rapport-relecture-script-lecture-v2-sur-v2.md
+## script : l. 45-49, 100-101, 109-110, 118-124, 129-131, 309, 436-445, 474, 641-648, 668-669, 913, 933, 966-975, 1010, 1018, 1030, 1050-1052, 1086-1090, 1126-1129
+   45| from __future__ import annotations
+   46| 
+   47| import sys
+   48| 
+   49| sys.dont_write_bytecode = True  # RSL-02 : aucun fichier compilé écrit, même sans l'option -B
+  100| LIGNEE_DE = {"pilote4-gemini-v6-2-v1": "gemini-organisme-v6-2", "pilote4-gemini-v6-2-s-v1": "gemini-organisme-v6-2-s"}
+  101| NOM_DOSSIER = re.compile(r"^(pilote4-gemini-v6-2(?:-s)?-v1)(?:-tentative[1-9][0-9]*)?$")
+  109| FICHIERS_DE_LA_PART = {"test": ("reponses-lues.json", "reponses_test.json", "score.json"),
+  110|                        "test_final": ("reponses-lues.json", "reponses_test.json", "score-final.json")}
+  118| PHRASE_IV = ("tout le reste est « dans le bruit » : à une course par objet, le bruit entre graines n'est pas mesuré, "
+  119|              "aucune comparaison entre les deux objets n'est faite, et un changement au-delà du bruit des tâches dans "
+  120|              "une course peut tenir à sa graine.")
+  121| NOTE_II = ("Ces comparaisons, jusqu'à 32 (deux courses, deux familles, deux parts, quatre générations), sont faites sans "
+  122|            "correction de multiplicité et sont exploratoires ; la borne basse maximale atteignable à un score parfait, "
+  123|            "calculée sans score, est rapportée à côté de chaque référence ; seul (iii) peut séparer un changement du "
+  124|            "bruit des tâches.")
+  129| REGLE_II = ("« au-dessus de la référence, au-delà du bruit des tâches » si la borne basse combinée (non arrondie) dépasse "
+  130|             "la référence de la famille et de la part, sinon « non distinct de la référence » ; une référence égale à 1 rend "
+  131|             "(ii) impossible par construction. " + NOTE_II)
+  309|                     "(le dossier est-il bien celui que le lanceur a fermé, suffixe -tentativeN compris ?)")
+  436|     retenues, ecartees = {}, 0
+  437|     for k, v in d["reponses"].items():
+  438|         t = taches.get(k)
+  439|         et = v.strip().lower() if isinstance(v, str) else None
+  440|         if t is None or et not in ETIQUETTES[t["famille"]]:
+  441|             ecartees += 1
+  442|             continue
+  443|         retenues[k] = et
+  444|     return {"etat": "lues", "source": "juge/reponses-lues.json", "reponses": retenues, "ecartees": ecartees,
+  445|             "probleme": categorie_probleme(d.get("probleme_reponses"))}
+  474|         d = json.loads(contenu.decode("utf-8"))
+  641| def membres_de_la_part(course: dict, part: str) -> dict:
+  642|     fichiers = FICHIERS_DE_LA_PART[part]
+  643|     lus = [{"membre": f"course/archive/{c[0]}/g{c[1]:03d}/juge/{c[2]}", "sha256": e}
+  644|            for c, e in sorted(course["membres_lus"].items()) if c[2] in fichiers]
+  645|     non_lus = [f"g{c[1]:03d}/juge/{c[2]}" for c in course["membres_non_lus_trop_grands"] if c[2] in fichiers]
+  646|     return {"nom": course["nom"], "lignee": course["lignee"], "empreinte_liste": course["empreinte_liste"],
+  647|             "empreinte_archive": course["empreinte_archive"], "n_membres_archive": course["n_membres_archive"],
+  648|             "membres_lus": lus, "membres_non_lus_trop_grands": non_lus}
+  668|         if utilisables(gen) and gen["reponses"].get("ecartees"):
+  669|             s.append(f"g{g:03d} : {gen['reponses']['ecartees']} entrée(s) de reponses-lues.json écartée(s) par la règle du juge")
+  913|     L = ["## (iv)", "", PHRASE_IV[0].upper() + PHRASE_IV[1:], "", "## Signalements", ""]
+  933|     L = md_entete(doc, part) + ["## Règles (point 4 bis du texte v4)", ""]
+  966|             try:
+  967|                 os.link(p, sortie / n)
+  968|             except OSError as e:
+  969|                 if e.errno == errno.EEXIST:
+  970|                     raise Refus(f"{n} est apparu dans SORTIE pendant l'écriture : rien n'est écrasé (R12)")
+  971|                 if e.errno not in LIENS_DURS_REFUSES:
+  972|                     raise
+  973|                 with open(sortie / n, "xb") as f:  # liens durs refusés par le système de fichiers : création exclusive directe
+  974|                     f.write(contenus[n])
+  975|             definitifs.append(sortie / n)
+ 1010|         "titre": f"Lecture contre le bruit des tâches du quatrième pilote, part {part} (point 4 de P4v3, point 4 bis du texte v4) — v2",
+ 1018|         "regles": {"i": REGLE_I, "ii": REGLE_II, "iv": PHRASE_IV},
+ 1030|         "phrase_iv": PHRASE_IV,
+ 1050|         if (autre["dossier"] == course["dossier"] or autre["nom"] == course["nom"] or autre["lignee"] == course["lignee"]
+ 1051|                 or autre["empreinte_liste"] == course["empreinte_liste"] or autre["empreinte_archive"] == course["empreinte_archive"]):
+ 1052|             raise Refus("les deux dossiers de course sont la même course (dossier, nom, lignée ou empreintes identiques)")
+ 1086|     ecrits = ecrire_sorties(sortie, docs)
+ 1087|     marque = " [essai : empreintes de banque surchargées]" if banque["surchargees"] else ""
+ 1088|     n_lues = sum(1 for g in GENERATIONS_ATTENDUES if utilisables(course["generations"].get(g)))
+ 1089|     print("lecture écrite : " + " ; ".join(f"{n} {e}" for n, e in ecrits)
+ 1090|           + f" ; générations notées lues : {n_lues} sur {len(GENERATIONS_ATTENDUES)} ; signalements : {len(communs + sig_t + sig_f)}{marque}")
+ 1126|     except KeyboardInterrupt:  # RSL-12
+ 1127|         print("lecture non écrite : interrompue" if args.mode == "lecture" else "essai-banque : interrompu")
+ 1128|         print("INTERROMPU : signal d'interruption reçu ; rien n'est laissé à moitié écrit", file=sys.stderr)
+ 1129|         return 130
+## essais : l. 384-392, 462-463, 469-470, 1228
+  384|     if ev == "open":
+  385|         m = args[1] or ""
+  386|         if any(c in m for c in "wax+") and not dedans(args[0]):
+  387|             sys.stderr.write(f"ECRITURE HORS SORTIE : {ev} {args[0]}\n"); raise RuntimeError("écriture hors de SORTIE")
+  388|     elif ev in ("os.mkdir", "os.link", "os.rename", "os.remove", "os.unlink", "os.rmdir", "os.symlink", "os.chmod",
+  389|                 "os.truncate", "os.utime", "shutil.copyfile", "shutil.move", "shutil.rmtree"):
+  390|         for a in args:
+  391|             if not dedans(a):
+  392|                 sys.stderr.write(f"ECRITURE HORS SORTIE : {ev} {a}\n"); raise RuntimeError("écriture hors de SORTIE")
+  462| def sorties_ecrites(r, sortie: pathlib.Path, nom: str, regle: str) -> tuple[dict, dict]:
+  463|     """Huit fichiers, compagnons justes, ligne d'état exacte, aucun identifiant, texte ou catégorie de tâche ;
+  469|     for n in (bt + ".json", bt + ".md", bf + ".json", bf + ".md"):
+  470|         verifier((sortie / (n + ".sha256")).read_text(encoding="utf-8") == f"{sha(sortie / n)}  {n}\n", f"compagnon faux : {n}")
+ 1228|         verifier("signalements : 2" in r.stdout, r.stdout)
+## LISEZMOI : l. 29-32, 75, 82, 93-94, 106, 113, 121, 132, 140, 143, 163-164
+   29|    RSL-05). Le fichier `test` ne porte ni le mot `test_final`, ni (iii), ni la seconde course, ni aucune valeur de
+   30|    `test_final` ; l'inverse aussi (l'essai « séparation » le vérifie sur chaque lecture écrite : aucune exactitude, borne
+   31|    combinée, valeur de sous-ensemble ou valeur p d'une part dans les fichiers de l'autre, en JSON comme en Markdown, sur
+   32|    des données synthétiques dont les valeurs des deux parts sont disjointes par construction). Le Markdown de
+   75| | RSL-16 (jeu partiel) | **fait** : écriture sous des noms provisoires (`.…en-cours-<pid>`, création exclusive) puis liens durs vers les noms définitifs, sans écras
+   82| - Structure de l'archive réelle, version du noyau (`8e5e2f7b`), `python3` et GNU tar du conteneur de session-depot :
+   93| - La phrase (iv) du texte (« aucune comparaison entre les deux objets ») est reprise telle quelle bien que les deux
+   94|   courses portent désormais le même objet ; Holm ordonne les valeurs p des deux courses sans en tirer de comparaison.
+  106| unset LECTURE_PILOTE4_ESSAI_SEULEMENT_EMPREINTES_BANQUE
+  113| python3 -I -B lire_pilote4_v2.py essai-banque <BANQUE_DIR>
+  121| python3 -I -B lire_pilote4_v2.py lecture <R>/pilotes/pilote4-gemini-v6-2-v1-tentative2 <BANQUE_DIR> <SORTIE_M>
+  132| python3 -I -B lire_pilote4_v2.py lecture <R>/pilotes/pilote4-gemini-v6-2-s-v1[-tentativeN] <BANQUE_DIR> <SORTIE_S> <R>/pilotes/pilote4-gemini-v6-2-v1-tentative2
+  140| python3 -I -B lire_pilote4_v2.py lecture <R>/pilotes/pilote4-gemini-v6-2-v1-tentative2 <BANQUE_DIR> <SORTIE_M2> --sans-seconde-course
+  143| (une autre SORTIE : le fichier `test` porterait le même nom que celui de la première lecture ; le script refuse d'écraser).
+  163| (instantanés ; trace d'audit Python sur le cas sain à deux courses), aucun fichier provisoire laissé, séparation des deux
+  164| lectures vérifiée sur chaque lecture écrite.
+## texte v5 : l. 44-45, 65, 108-113
+   44|   d'avance et lue une seule fois (dépense, sur devis) : « go » ; (b) **`test` dès la fin de chaque course, `test_final`
+   45|   une fois en fin de boucle** : « ok » (note `envois/decision-N-taches-fraiches-et-lecture-test-final-v1.md`,
+   65| | « aucune comparaison entre les deux objets » (point 4 bis, P4C7-02) | **aucune comparaison entre les deux courses** : mêmes tâches, même objet, questions différentes, une graine chacune ; un écart entre elles tient à la question, à la graine ou au bruit, sans moyen de les séparer ; les verdicts des agents de la boucl
+  108|    sa sortie **sans l'afficher**. Quand la lecture s'ouvre : **les scores de `test` et les faits mécaniques d'une course
+  109|    dès sa fin** ; **les scores de `test_final`** (intervalles, test génération 0 contre génération 3, Holm sur les quatre
+  110|    tests des deux courses) **une seule fois, à la fin du compteur de rondes de la boucle extérieure** ; la sortie du
+  111|    script v1 est unique ; sa v2, en écriture et relue avant usage, la sépare en deux fichiers par course (`test` ;
+  112|    `test_final`) ; jusque-là la sortie entière est poussée avec son empreinte et n'est pas affichée ; `test_final` se lit
+  113|    une seule fois, après la fin des deux courses et à la fin du compteur de rondes. Le point 3 de la v4 **permet** la
+## texte v4 : l. 96, 402, 405-406
+   96|   différence calculée), ne peut pas trancher cette question — à une course par objet, sur des parts de 36 et 24 tâches,
+  402|    `test`, (ii) y est impossible par construction ; si une référence ne peut être rendue (script de référence ou secret
+  405|    0,7818 en conscience d'évaluation (36 tâches par part, au mieux 18 et 18 par classe : 18 / (18 + 2,2414²)), sous
+  406|    0,8056 et 0,8333, et au plus 0,7049 en délégation (24 tâches, 12 et 12), sous 0,75 et 1,0 ; ce fait est calculé sans
+## lanceur v11 : l. 79-80, 84, 181, 183, 763, 889, 895
+   79|   v6-2-s)
+   80|     NOM="pilote4-gemini-v6-2-s-v1"; INDICE_GRAINE=0
+   84|     LIGNEE="gemini-organisme-v6-2-s"
+  181| if [ "$TENTATIVE" = 1 ]; then PILOTE="$RACINE_PILOTES/$NOM${SUFFIXE_ESSAI:-}"; else PILOTE="$RACINE_PILOTES/$NOM-tentative$TENTATIVE${SUFFIXE_ESSAI:-}"; fi
+  183| COMMIT_CODE=8e5e2f7b8bde522e4b5ce0229a9da57e118d32f3
+  763| COMMUNES=(--sortie "$PILOTE/course" --generations 4 --graine "$GRAINE" --especes --appels-max 160 --usd-par-generation "$USD_GEN"
+  889|   args=(-C "$PILOTE" course ferme)
+  895|   set +e; tar --warning=no-file-ignored -czf "$PILOTE/ferme.tar.gz" "${args[@]}" 2> "$PILOTE/sortie-erreur-tar.txt"; code_tar=$?; set -e
+## lanceur v10 contre v11 : de « # 9. Ce qui est poussé » à la fin (liste fermée, permis_re)
+identiques à l'octet (14 lignes)
+## noyau boucle.py : l. 728-731, 785-786
+  728|                     for t in tous_tests:
+  729|                         r = brut.get(t["id"])
+  730|                         if isinstance(r, dict) and str(r.get("etiquette", "")).strip().lower() in _taches.ETIQUETTES[t["famille"]]:
+  731|                             reponses[t["id"]] = {"etiquette": str(r["etiquette"]).strip().lower(), "confiance": _taches.confiance_de(r)}
+  785|                              reponses_lues=(None if phase else {"reponses": {k: v["etiquette"] for k, v in reponses.items()},
+  786|                                                                 "probleme_reponses": probleme_reponses}))
+## caches du noyau
+ls: cannot access '/home/claude/pilote4/essaim-m3-refonte-v1/essaim_m3/__pycache__': No such file or directory
+ls: cannot access '/home/claude/pilote4/essaim-m3-refonte-v1/essaim_m3/noyau/__pycache__': No such file or directory
+# fin 2026-10-26T05:43:34Z
