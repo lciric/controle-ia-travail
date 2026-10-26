@@ -112,3 +112,37 @@ Paris (UTC + 1 depuis le 25 octobre). Rien d'opposable (R7) ; tout est sur `cana
 - **Ouvert** : graines (tour en attente de la fin de la course M) ; décisions « neuron explorer » (1 à 4) et « already
   clean » (1 à 7) ; famille de modèle du contre-lecteur, plafond des relances ; vivier de la famille délégation ;
   constructeur et devis de la v3-bis ; la batterie v13 avant ou après la fin de la course M.
+
+## 05:44 — course M finie et saine, course S partie ; tour « graines » synthétisé et décision posée ; boucle extérieure v3 vérifiée ; point 1 posé à Lazar
+
+(Heure du titre lue sur `date -u` dans la commande qui écrit cette entrée.)
+
+- **Course M** (la v6.2.1 sur la question M) : finie et saine à 04:44:47 UTC (R-494 ; 31,57 USD ; branche
+  `pilotes/pilote4-gemini-v6-2-v1`, compagnon de `EMPREINTES-pilote-v1.txt` `36c0acf3…`). Aucun score lu (retenue).
+- **Course S** (la même v6.2.1 sur la question S, R-492) : texte v5 à sa graine (`1943f39a…`, graine
+  6967892196853497016), lanceur v11 (`21854b79…` ; contre-lecture 8 ; batterie v13, série v14 : 240 sur 240),
+  vérification de départ « TOUT EST JUSTE » ; message de départ n° 78 ; lignes de GO et de dépense vérifiées mot pour mot
+  (R-496) ; partie à 05:17:56 UTC (R-497, PID 1278, échéance du premier segment 06:10:26 UTC).
+- **Tour « graines »** (R-491 ; deux tours, 4,16 USD, cinq cellules valides sur six) : synthèse `b8cdeb5c…` (canal
+  `a7b7eff`). Décision posée à Lazar : (a) trois graines par course ; (b) contrôle bon marché d'abord ; (c) aucune graine
+  sur la v3. Ma recommandation : (c), confiance moyenne, changée depuis (a) de 02:05 (depuis que la v5.3 ne court plus,
+  des graines sur la v3 n'achètent aucune comparaison d'objets). Aucun défaut (dépense). La retenue de lecture tient.
+- **Boucle extérieure v3 vérifiée** (`1a7873e2…`) : utilisable après corrections. CLB3-01 : le script v2 ne rend pas
+  les fichiers de lecture finale attendus (un fichier « provisoire » pour M ; le fichier « holm-quatre » de S porte M).
+  CLB3-02 : verdicts de M et de S mis en regard pour décider. CLB3-03 : HC-P4-01, voie de lecture écrite après des faits
+  mécaniques de M. CLB3-04 : points pour Lazar mal posés. CLB3-05 : relevé (B) sans cas sain pour S.
+- **Erreur de conv-audit** : le brouillon du texte v5 que j'ai fourni à l'auteur de la v3 portait des faits mécaniques de
+  la course M (conception close après une ronde, g000 faite, appels, statuts, coût ; aucun score), et mon brief ne le
+  signalait pas ; une voie de lecture de HC-P4-01 a été écrite après. Correction : elle ne s'appliquera ni à M ni à S
+  (brief v4, D3).
+- **Décisions de conv-audit** (brief v4 `dc5b823b…`) : règle de préséance pour la ronde 1 (M motive ; S seulement si
+  aucune fiche de M ne motive ; verdicts de S à part) ; script de lecture v3 (fichier `test` par course ; fichier
+  « test-final-holm-quatre » par course à la fin de S, sans valeur de l'autre ; plus de fichier « provisoire » ; sens du
+  rejet, jugé couvert par le point 4 bis ; « aucune tâche sans réponse ») ; relevé (B) exécuté par session-depot.
+- **Points pour Lazar** au format de décision (`ac105262…`, canal `8fce3f3`). **Point 1 posé** (famille du
+  contre-lecteur ; recommandation et défaut : (a), même famille) entre 05:41:11 et 05:43:40 UTC (bornes lues sur
+  `date -u` : fin de la poussée du n° 79 ; estampille du brief v4). Défaut applicable au plus tôt le 28 octobre à
+  05:43:40 UTC.
+- **Message n° 79** à session-depot : n'exécute pas le script de lecture v2 ; la v3 arrive.
+- **En cours** : v4 de la boucle (l'auteur de la v3, relancé) ; relecture du script de lecture v2 ; puis script v3,
+  relevé (B), gardes.
