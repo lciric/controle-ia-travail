@@ -162,3 +162,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-26 01:18 UTC — Opus seul, question « conception itérative » (R-472) : **0,48 USD**, réponse valide ; branche `donnees/collisionneur-agents-noyau-methodo-v1` (`1a26f499`, empreintes `46eb0e08…`).
 - 2026-10-26 01:20 UTC — collisionneur « suite de H-M1 » (R-460 à R-463), trois tours : neuf cellules valides, **6,33 USD** ; branche `donnees/collisionneur-suite-HM1-v1`.
 - 2026-10-26 01:28 UTC — collisionneur « agents sur le noyau » (R-466, R-472), trois tours : sept cellules valides sur neuf (refus d'Opus au III.1 et au III.3), **5,39 USD** ; branche `donnees/collisionneur-agents-noyau-v1`.
+- 2026-10-26 01:32 UTC — **engagement : collisionneur v2.5, tour « littérature des boucles »** (`962130b7…`), III.1 à III.3, trois modèles, sous GO-2026-10-24-07 (R-475) ; aucun fait joint ; plafond 10 USD ; clé Anthropic n° 3, Gemini n° 2.
