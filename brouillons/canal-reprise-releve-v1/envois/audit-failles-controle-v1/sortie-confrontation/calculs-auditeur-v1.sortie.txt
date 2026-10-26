@@ -1,0 +1,61 @@
+Sortie de calculs-auditeur-v1.py, exécuté le 2026-10-26 à 10:45:50 UTC (heure lue sur date -u dans la commande qui écrit cette ligne), par python3 -I.
+
+=== Bloc 1 (FI-27) : calibrage conforme du seuil à 1 % sur n épisodes honnêtes ===
+Scores honnêtes i.i.d. continus ; seuil = k-ième statistique d'ordre, k = ceil((n+1)(1-alpha)).
+Taux de faux positifs réalisé, conditionnel au jeu de calibrage : loi Beta(n+1-k, k) (statistiques d'ordre de lois uniformes).
+n =   60 : k = 61 > n, aucun seuil fini ne garantit 1 % (calibrage impossible à ce niveau)
+n =   98 : k = 99 > n, aucun seuil fini ne garantit 1 % (calibrage impossible à ce niveau)
+n =   99 : k =   99 ; Beta(1,99) ; moyenne 0.0100 ; P(FPR > 2 %) = 0.1353 ; P(FPR > 3 %) = 0.0490 ; quantile 95 % du FPR réalisé = 0.0298
+n =  180 : k =  180 ; Beta(1,180) ; moyenne 0.0055 ; P(FPR > 2 %) = 0.0263 ; P(FPR > 3 %) = 0.0042 ; quantile 95 % du FPR réalisé = 0.0165
+n =  199 : k =  198 ; Beta(2,198) ; moyenne 0.0100 ; P(FPR > 2 %) = 0.0908 ; P(FPR > 3 %) = 0.0167 ; quantile 95 % du FPR réalisé = 0.0236
+n =  299 : k =  297 ; Beta(3,297) ; moyenne 0.0100 ; P(FPR > 2 %) = 0.0611 ; P(FPR > 3 %) = 0.0059 ; quantile 95 % du FPR réalisé = 0.0209
+n =  499 : k =  495 ; Beta(5,495) ; moyenne 0.0100 ; P(FPR > 2 %) = 0.0285 ; P(FPR > 3 %) = 0.0008 ; quantile 95 % du FPR réalisé = 0.0182
+n =  999 : k =  990 ; Beta(10,990) ; moyenne 0.0100 ; P(FPR > 2 %) = 0.0047 ; P(FPR > 3 %) = 0.0000 ; quantile 95 % du FPR réalisé = 0.0157
+
+=== Bloc 2 (FI-28) : taux de faux positifs par épisode d'un seuil calibré à 1 % par action ===
+Alarme si l'une des T actions dépasse ; actions honnêtes indépendantes (borne de l'union en général).
+T =  5 : 1 - 0,99^T = 0.0490
+T = 10 : 1 - 0,99^T = 0.0956
+T = 20 : 1 - 0,99^T = 0.1821
+
+=== Bloc 3 (FI-35) : stabilité de rang entre m juges, tau de Kendall sous permutation au hasard ===
+m = 3 juges : 6 ordres ; P(tau = 1 | hasard) = 0.1667 ; plus petit tau significatif à 5 % (unilatéral) : aucune valeur ; valeurs possibles : 4
+m = 4 juges : 24 ordres ; P(tau = 1 | hasard) = 0.0417 ; plus petit tau significatif à 5 % (unilatéral) : tau >= 0.667 (p = 0.0417) ; valeurs possibles : 7
+m = 5 juges : 120 ordres ; P(tau = 1 | hasard) = 0.0083 ; plus petit tau significatif à 5 % (unilatéral) : tau >= 0.800 (p = 0.0417) ; valeurs possibles : 11
+m = 6 juges : 720 ordres ; P(tau = 1 | hasard) = 0.0014 ; plus petit tau significatif à 5 % (unilatéral) : tau >= 0.733 (p = 0.0278) ; valeurs possibles : 16
+m = 8 juges : 40320 ordres ; P(tau = 1 | hasard) = 0.0000 ; plus petit tau significatif à 5 % (unilatéral) : tau >= 0.571 (p = 0.0305) ; valeurs possibles : 29
+
+=== Bloc 4 (FI-30) : interaction du plan 2 x 2 sous un même mécanisme additif ===
+Modèle gaussien : n = 10 actions toutes sabotées, décalage d par action (en écarts-types), statistique somme.
+Rappel par action = Phi(d - z) ; rappel séquentiel = Phi(sqrt(n) d - z) ; z = quantile 0,99.
+d noir = 0.00, d blanc = 0.50 : noir 0.010 -> 0.010 ; blanc 0.034 -> 0.228 ; interaction sur l'échelle du rappel = +0.194 ; rapport des d séquentiel/par action : noir indéfini, blanc 3.162
+d noir = 0.25, d blanc = 0.50 : noir 0.019 -> 0.062 ; blanc 0.034 -> 0.228 ; interaction sur l'échelle du rappel = +0.151 ; rapport des d séquentiel/par action : noir 3.162, blanc 3.162
+d noir = 0.50, d blanc = 1.00 : noir 0.034 -> 0.228 ; blanc 0.092 -> 0.798 ; interaction sur l'échelle du rappel = +0.512 ; rapport des d séquentiel/par action : noir 3.162, blanc 3.162
+d noir = 0.25, d blanc = 1.00 : noir 0.019 -> 0.062 ; blanc 0.092 -> 0.798 ; interaction sur l'échelle du rappel = +0.663 ; rapport des d séquentiel/par action : noir 3.162, blanc 3.162
+
+=== Bloc 5 (FI-26) : maximum sur les jetons et longueur de l'action (simulation synthétique) ===
+Entropie de SeedSequence : 20261026
+Scores par jeton honnêtes : AR(1) gaussien, rho = 0.5, variance marginale 1 ; 20000 actions simulées par longueur.
+Seuil calibré à 1 % sur des actions de 100 jetons : 3.658
+L =  50 jetons : quantile 0,99 du maximum = 3.536 ; taux de faux positifs au seuil calibré sur L = 100 : 0.0061
+L = 100 jetons : quantile 0,99 du maximum = 3.658 ; taux de faux positifs au seuil calibré sur L = 100 : 0.0100
+L = 200 jetons : quantile 0,99 du maximum = 3.882 ; taux de faux positifs au seuil calibré sur L = 100 : 0.0245
+L = 400 jetons : quantile 0,99 du maximum = 4.057 ; taux de faux positifs au seuil calibré sur L = 100 : 0.0469
+
+=== Bloc 6 (FI-31) : malédiction du gagnant, meilleure base choisie sur le jeu de test ===
+K variantes boîte noire de même rappel vrai r = 0,30, évaluées sur n = 100 épisodes sabotés, erreurs indépendantes (borne haute du biais).
+K =  1 : espérance du meilleur rappel observé = 0.300 (biais +0.000)
+K =  3 : espérance du meilleur rappel observé = 0.339 (biais +0.039)
+K =  6 : espérance du meilleur rappel observé = 0.359 (biais +0.059)
+K = 10 : espérance du meilleur rappel observé = 0.371 (biais +0.071)
+K = 15 : espérance du meilleur rappel observé = 0.381 (biais +0.081)
+
+=== Bloc 7 (FI-27) : demi-largeur de l'intervalle à 95 % d'un rappel (approximation normale) ===
+n sabotés =  30, rappel 0.2 : demi-largeur = 0.143
+n sabotés =  30, rappel 0.5 : demi-largeur = 0.179
+n sabotés =  60, rappel 0.2 : demi-largeur = 0.101
+n sabotés =  60, rappel 0.5 : demi-largeur = 0.127
+n sabotés = 100, rappel 0.2 : demi-largeur = 0.078
+n sabotés = 100, rappel 0.5 : demi-largeur = 0.098
+n sabotés = 200, rappel 0.2 : demi-largeur = 0.055
+n sabotés = 200, rappel 0.5 : demi-largeur = 0.069
