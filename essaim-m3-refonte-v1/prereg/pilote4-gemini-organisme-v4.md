@@ -5,16 +5,20 @@ heures lues sur `date -u`), sur les décisions de Lazar de 23:54 à 02:17 Paris 
 23:20 UTC pour le second commit de la v6.2, puis à partir de 23:52 UTC pour l'objet corrigé (v6.2.1) et l'ordre inversé
 des courses ; complétée à partir de 00:21 UTC le 26 octobre (objet, essais, décisions, après la vérification de la
 v6.2.1 et la série v13) ; corrigée à partir de 01:03 UTC, après la contre-lecture 5 et les décisions de 01:48 à 01:56 ; complétée à partir de
-01:16 UTC pour les décisions de 02:05 à 02:17 (boucle extérieure, graines, littérature).
-**Pilote de conception** (décision de Lazar, 01:56) : le préenregistrement et le scellement ne sont plus exigés pour lui, la
+01:16 UTC pour les décisions de 02:05 à 02:17 (boucle extérieure, graines, littérature) ; corrigée à partir de 02:08 UTC
+par l'instance nouvelle de conv-audit (passation de la lignée, `passation-conv-audit-2026-10-26-v1.md`, `e4f47910…`, sur le
+canal), après la contre-lecture 6 (P4C6-01 à P4C6-08, § Contre-lecture).
+**Pilote de conception** (décision de Lazar, 01:56 ; confirmée dans la session de session-depot vers 01:19 UTC, R-473) : le
+préenregistrement et le scellement ne sont plus exigés pour lui, la
 relecture l'est ; ce texte garde sa forme, ses contre-lectures et son script de scellement, dont le lanceur lit les
 graines et les empreintes. Elle remplace la v3 **scellée** (`essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v3.md`,
 `de7a555932d8e8825a68bd1bd54baff55d08166f84f94d5deb9217312e78c656`, branche `outils/pilote4-gemini-travail`, `d0d0175`),
 **jamais lancée** : aucune de ses courses n'est partie, aucune ligne de GO ni de dépense n'a été écrite pour elle (canal
 `canal/conv-audit-n04`, message n° 67 ; session-depot, message n° 52, § 4) ; elle reste scellée et gardée, ses graines ne
 servent à rien. Contre-lectures : 1 à 4 sur P4v3 (son § Contre-lecture : `3dd09acb…`, `7c625fa6…`, `0d95ea8c…`,
-`e2de1372…`), 5 sur ce texte (`914ac3fb…`, « scellable après corrections mineures », traitée) et 6, courte, sur l'écart
-depuis la 5 (§ Contre-lecture). Lanceur : lignée session-depot (clés), dans son conteneur.
+`e2de1372…`), 5 sur ce texte (`914ac3fb…`, « scellable après corrections mineures », traitée), 6, courte, sur l'écart
+depuis la 5 (`35fe0067…`, « scellable après corrections mineures », traitée) et 7, courte, sur l'écart depuis la 6
+(§ Contre-lecture). Lanceur : lignée session-depot (clés), dans son conteneur.
 
 **Texte différentiel.** Ce texte incorpore par renvoi la v3 scellée, appelée ci-dessous « P4v3 », qui incorpore elle-même
 P3 (`pilote3-gemini-organisme-v5-3-v6-v2.md`, `57c8535a…`) et T2 (`pilote2-gemini-organisme-v5-2-v2.md`, `d2944654…`).
@@ -40,7 +44,12 @@ score d'un pilote) et le brouillon de dessin de cette primitive (`docs/notes/des
 à Lazar que celui-ci a collé dans la session de conv-audit à 02:10 Paris (coûts et états des tours du collisionneur ;
 aucun score) ; les rapports finaux des sous-agents des étapes 1 et 2 et le
 brouillon du préenregistrement de l'étape 2 (aucun score) ; les neuf réponses du collisionneur « lecture du pilote »
-(branche `donnees/collisionneur-lecture-pilote-v1`, `7ac475b` ; aucun score). Depuis le scellement de P4v3, aucun score du pilote 3, du premier pilote ni d'aucune course réelle n'a été lu, et
+(branche `donnees/collisionneur-lecture-pilote-v1`, `7ac475b` ; aucun score) ; et, par l'instance nouvelle de conv-audit
+(26 octobre, à partir de 02:02 UTC) : la passation de la lignée conv-audit (`e4f47910…`), la passation n° 12 de
+session-depot (`registres/passations/2026-10-26-0145.md`) et son complément (`2026-10-26-0200-complement.md`), les lignes
+R-473 à R-478 du registre des décisions et la ligne GO-2026-10-26-01 (`main` `681af80`), les messages n° 57 à 60 de
+session-depot, `registres/etat.md`, le rapport de la contre-lecture 6 et sa note de correction (aucun score dans tout
+cela). Depuis le scellement de P4v3, aucun score du pilote 3, du premier pilote ni d'aucune course réelle n'a été lu, et
 du second pilote rien d'autre que ce que P4v3 déclare ; **ce texte est scellé avant toute lecture des scores du
 pilote 3**. Aucun score n'a été servi à Gemini.
 
@@ -48,7 +57,8 @@ pilote 3**. Aucun score n'a été servi à Gemini.
 
 Toutes dans la session de conv-audit (heure de Paris ; fautes de frappe corrigées dans les citations), sauf les mots
 écrits dans la session de session-depot, cités d'après son registre. Relevé verbatim, fautes comprises :
-`objet-v6-2-1-v1/mots-de-lazar-2026-10-25-26-v5.md` (§ Pièces ; la v5 reprend les v1 à v4 mot pour mot).
+`objet-v6-2-1-v1/mots-de-lazar-2026-10-25-26-v6.md` (§ Pièces ; la v6 reprend les v1 à v5 mot pour mot et ajoute les
+messages de 02:32 à 02:42 et les lignes R-473 à R-478 du registre de session-depot).
 
 - **25 octobre, 23:54** (= 22:54 UTC), sur l'objet de la seconde course (options : (a) la v6.1, ses points ouverts
   acceptés ; (b) la v5.3 seule, la v6.x plus tard ; (c) tout attendre la v6.2) : « **c) tout attendre la v6.2.** Avantage :
@@ -80,9 +90,10 @@ Toutes dans la session de conv-audit (heure de Paris ; fautes de frappe corrigé
   soumis la décision : (a) garder ce pilote descriptif, le plan qui tranche (plusieurs graines par objet) venant du travail
   sur l'étape 2 ; (b) le rendre décisif maintenant (3 graines par objet, texte nouveau, nouveau GO). Recommandé : (a).
 - **00:54–00:55** : « (b) […] go », puis « mais a d'abord pour produire des hypothèses testables », puis « puis b » :
-  **(a) d'abord — ce texte, descriptif —, pour produire des hypothèses testables, puis (b)**, sous un texte nouveau (trois
-  graines par objet, hypothèse et seuil scellés, nouveau GO sur devis, sur le mot direct de Lazar dans la session de
-  session-depot ; à 01:48 et 01:52, deux paliers, δ = 0,10, banque v6) ; ce texte ne contient rien de (b). Le moment où les scores de ce pilote pourraient être lus pour écrire les
+  **(a) d'abord — ce texte, descriptif —, pour produire des hypothèses testables, puis (b)**, sous un texte nouveau
+  (hypothèse et seuil scellés ; taille fixée par le texte de (b) : deux paliers, 01:48, sans les courses de ce pilote,
+  01:52 ; δ = 0,10 ; banque v6 ; nouveau GO sur devis, sur le mot direct de Lazar dans la session de session-depot) ; ce
+  texte ne contient rien de (b). Le moment où les scores de ce pilote pourraient être lus pour écrire les
   hypothèses de (b) a été soumis à Lazar le 25 octobre à 23:56 UTC (options : (1) garder la règle de P4v3 ; (2) et (2')
   un agent neuf lit les scores dès la fin de ce pilote ; (3) écrire (b) sans eux), puis au collisionneur (00:59, « demande
   au collisionneur » ; trois tours sur son mot dans la session de session-depot, R-451, R-452 ; synthèse
@@ -92,9 +103,9 @@ Toutes dans la session de conv-audit (heure de Paris ; fautes de frappe corrigé
   graines) ; plan de (b) en deux paliers et δ = 0,10 : « go » ; leviers (une seule mesure principale, courses
   entrelacées, plus de tâches) : « go a tout ». Puis, **01:52**, sur la banque de (b) : « Banque v6 (lot 3) : deux fois
   plus de tâches, mais il faut attendre qu’elle soit construite, et le pilote 4 ne peut plus compter. : go ». **Les
-  hypothèses de (b) sont écrites sans aucun score de ce pilote, et (b) court sur la banque v6 : aucune course de ce pilote
-  n'y est versée ; les options (2) et (2') n'existent plus. La fermeture des scores de ce pilote « pour tout usage »
-  est remplacée à 01:56, ci-dessous.**
+  hypothèses de (b) sont écrites et poussées, avec leur empreinte, avant que leurs auteurs lisent un score de ce pilote
+  (§ Plan, point 3), et (b) court sur la banque v6 : aucune course de ce pilote n'y est versée ; les options (2) et (2')
+  n'existent plus. La fermeture des scores de ce pilote « pour tout usage » est remplacée à 01:56, ci-dessous.**
 - **01:54 à 01:56** : « il faut s'assurer que le pilote 4 puisse séparer du bruit aussi » ; « et il faut que le pilote 4
   puisse aussi faire ses tests avec des agents sur le noyau » ; puis, à la question de conv-audit sur cette phrase, « je
   lève la règle de prereg et de scellement tant qu'on est dans la phase de conception par essais erreurs, on garde la
@@ -105,8 +116,12 @@ Toutes dans la session de conv-audit (heure de Paris ; fautes de frappe corrigé
   **relecture puis départ**. Ce texte en suit les conséquences : moment et règles de lecture (§ Plan, point 3, qui
   remplace celui de P4v3 et la fermeture « pour tout usage » de 01:48) ; lecture contre le bruit des tâches (§ Plan,
   point 4 bis : l'option (a) soumise à 01:54, sans course de plus, faute d'un autre mot de Lazar). Les hypothèses de (b)
-  restent fixées sans aucun score de ce pilote (01:48). Sur les « agents sur le noyau », Lazar a demandé la
-  recommandation de conv-audit et l'avis du collisionneur (01:56) ; ce texte n'en dépend pas.
+  sont écrites sans aucun score de ce pilote (01:48 ; § Plan, point 3). Sur les « agents sur le noyau », Lazar a demandé la
+  recommandation de conv-audit et l'avis du collisionneur (01:56) ; ce texte n'en dépend pas. **La levée a été dite à
+  session-depot** : d'abord relayée par la question de conv-audit et notée par lui « sans effet sur mes textes tant qu'il
+  ne me l'a pas dit » (R-472), elle lui a été confirmée par Lazar dans sa session vers 01:19 UTC (« je te donne
+  l'autorisation, la règle est levée », R-473, `main` `681af80` ; message n° 58 de session-depot) : ce que le § Plan,
+  point 3, dit de l'étape 1 vaut pour ses textes dès ce mot ; ce texte ne règle que la lecture de ce pilote.
 - **02:05 à 02:17** : « je veux un pilote qui sépare du bruit, pilote 4 le fait-il ? » (02:05) — réponse de conv-audit :
   non, à une course par objet (point 4 bis : dans une course, seuls des changements au-delà du bruit des tâches sont
   lisibles ; aucune comparaison entre objets) ; décision soumise, dépense sans défaut : (a) trois graines par objet
@@ -132,6 +147,13 @@ Toutes dans la session de conv-audit (heure de Paris ; fautes de frappe corrigé
   poussées sur le canal avec leurs empreintes avant la fin de la première course, qui ne modifient ni ce texte ni ses
   règles de lecture ; aucune hypothèse du registre ne porte sur la manière de classer une tâche, et rien du registre ni
   des verdicts des agents n'est servi à un organisme.
+- **02:32 à 02:42** (relevé v6) : compte rendu de session-depot collé par Lazar (le tour « agents sur le noyau » est
+  versé, sept cellules valides sur neuf ; information, aucun score) ; demande de lire le dépôt public « neuron-explorer »,
+  d'en tirer un remue-méninges sur son intégration au programme et de poser la question au collisionneur (lecture et
+  remue-méninges faits par conv-audit sur le canal ; tour parti sur le mot direct de Lazar dans la session de
+  session-depot, R-478, GO-2026-10-26-01, jamais servi à un organisme) ; demande de passation de la lignée conv-audit à une
+  instance nouvelle, sur un autre compte (faite : `passation-conv-audit-2026-10-26-v1.md`, `e4f47910…`). **Ce texte n'en
+  dépend pas** ; la décision « graines de plus » (02:05) reste sans réponse à sa correction.
 - **Lecture si la confrontation change un seuil** (soumise le 25 octobre vers 20:54 UTC ; sans réponse à l'écriture de ce
   texte ; défaut sous 48 heures, l'option (a)) : la règle de P4v3 (§ Plan, point 3 : les scores restent fermés, sauf
   décision de Lazar inscrite avant toute lecture) est cette option (a) ; pour ce pilote, elle est remplacée par la règle
@@ -165,7 +187,7 @@ Toutes dans la session de conv-audit (heure de Paris ; fautes de frappe corrigé
 | ligne d'extension de GO, lignes de dépense | § Plan, point 1 |
 | script de scellement `sceller_pilote4_v3.py`, `EMPREINTES-pilote4-gemini-v1.txt` | **`sceller_pilote4_v4.py`** (le v3, au nom du fichier d'empreintes près), **`EMPREINTES-pilote4-gemini-v2.txt`** (§ Pièces) |
 | phrase du critère 3 | « pilote descriptif, deux organismes (un seul si la v5.3 ne part pas), une course à une graine chacun, une phase de conception arrêtée par l'organisme (6 rondes au plus), quatre générations notées, une espèce appelée pour les tâches, une question posée une fois par course » |
-| moment de lecture : après la fin de la dernière course de ce pilote (ou de la v5.3 si la v6.1 ne part pas), sous les conditions (i) et (ii) de P4v3 | **dès la fin de chaque course** (pilote de conception, décision de Lazar de 01:56), selon le § Plan, point 3, qui remplace le point 3 de P4v3 |
+| moment de lecture : après la fin de la dernière course de ce pilote (ou de la v5.3 si la v6.1 ne part pas), sous les conditions (i) et (ii) de P4v3 | **dès la fin de chaque course** (pilote de conception, décision de Lazar de 01:56, R-473), selon le § Plan, point 3, qui remplace le moment de lecture et les conditions (i) et (ii) du point 3 de P4v3 et en garde ce que session-depot consulte pendant et entre les segments (P4v3 l. 391–397) et les canaux dits et acceptés (l. 397–409) |
 | liste d'arrêt : « la v6.1 ne part pas » après une issue de la v5.3 hors de la liste close (dont une génération de la v5.3 à son délai, une course v5.3 arrêtée en cours, au plafond ou fermée sans reprise ; essais `v53-…`, `seg-v53-…`, `seg-clore-v53-refusee`) | « **la v5.3 ne part pas** » après la même issue de la **v6.2** (essais `v62-…`, `seg-v62-…`, `seg-clore-v62-refusee`) ; une issue de la v5.3, seconde course, n'arrête plus rien d'autre qu'elle-même |
 | devis (P4v3, § Bornes, devis) : « la course s'arrête au plafond total ; pour la v5.3, la v6.1 ne part pas (porte « v5.3 précédente » ; essai `v53-plafond-total`) » | « la course s'arrête au plafond total ; pour la v6.2, la v5.3 ne part pas (porte « v6.2 précédente » ; essai `v62-plafond-total`) » |
 | liste d'arrêt : « ronde de la v5.3 hors `OK` : rapportée ; n'arrête pas la v6.1 (la porte ne lit que les générations notées) » | « ronde de la **v6.2** hors `OK` : rapportée ; n'arrête pas la v5.3 (la porte ne lit que les générations notées) » (liste d'arrêt de ce texte) ; une ronde de la v5.3 hors `OK` est rapportée |
@@ -177,9 +199,9 @@ Tout le reste de P4v3 vaut tel quel : noyau `8e5e2f7b` et reprise par segments, 
 4 générations à 30 USD et 2 400 s, 75 USD par course tous segments compris, minuteur à 3 400 s, borne de 7 075 s, réveil
 de session-depot à l'échéance), devis (75 USD par course, 150 pour les deux ; ordre de grandeur attendu ≈ 30 à 55 USD par
 course, non opposable ; marge du GO 185 − 30,23 − 150 ≈ 4,77 USD), banque v3 et ses références (surface, contraste de
-paire, provenance), objet v5.3 et ce que P4v3 en dit, canaux dits et acceptés pendant les courses, règles de lecture (tableau, références,
-lecture à part du `test_final`), séparation d'avec l'étape 1 et la confrontation ; le moment de lecture est celui du
-§ Plan, point 3.
+paire, provenance), objet v5.3 et ce que P4v3 en dit, canaux dits et acceptés pendant les courses, critères gelés (sauf ce
+que lève le point 4 bis), règles de lecture (tableau, références, lecture à part du `test_final`), séparation d'avec
+l'étape 1 et la confrontation ; le moment de lecture est celui du § Plan, point 3.
 
 ## Objet de la première course : la v6.2.1
 
@@ -280,8 +302,8 @@ conception », « En générations notées », « Correction de P3 » et la phra
   T2 ; à g003, fin « sans successeur valide », hors de la liste close de la porte.
 - **Canal (d)** de P4v3 (§ Plan, point 3) : pour la v6.2.1, aux l. 991–998 de `principal.py` de `7ea3270` ; il paraît aussi
   dans la ligne « course v6.2 précédente » du `LANCEMENT.md` de la v5.3 (appels par génération : un 124 est la mutation) ;
-  personne ne compte les rôles des appels d'une génération notée pendant qu'une course tourne ; la lecture est ouverte dès
-  la fin de chaque course (§ Plan, point 3).
+  personne ne compte les rôles des appels d'une génération notée d'une course pendant qu'elle tourne ; la lecture d'une
+  course est ouverte dès sa fin, pendant la course suivante s'il y en a une (§ Plan, point 3).
 - **Ce qui n'est pas dit** : aucun effet des corrections sur un score, ni de comparaison entre la v6.2.1 et la v6.2 de
   Gemini (§ Plan, point 5).
 
@@ -311,34 +333,65 @@ conception », « En générations notées », « Correction de P3 » et la phra
    chaque segment) :
    graine de la course v5-3 = <<GRAINE_V53>>
    graine de la course v6-2 = <<GRAINE_V6X>>
-3. **Moment de la lecture des scores** (pilote de conception, décision de Lazar de 01:56 ; remplace le point 3 de P4v3) :
+3. **Moment de la lecture des scores** (pilote de conception, décision de Lazar de 01:56, confirmée dans la session de
+   session-depot, R-473 ; remplace le moment de lecture et les conditions (i) et (ii) du point 3 de P4v3 ; en garde ce que
+   session-depot consulte pendant et entre les segments (P4v3 l. 391–397) et les canaux dits et acceptés (l. 397–409)) :
    **dès la fin de chaque course** (liste fermée poussée, recherche des clés faite), ses scores peuvent être lus pour
-   corriger les organismes, par le script de lecture du point 4, essayé avant sur une course simulée. Pendant une course
-   et entre ses segments, les interdits de lecture de P4v3 restent : aucun score n'est lu tant qu'une course tourne.
+   corriger les organismes, par le script de lecture du point 4, qui calcule aussi le point 4 bis, essayé avant sur une
+   course simulée. Aucun score d'une course n'est lu tant qu'elle tourne, entre ses segments compris ; ceux de la v6.2
+   peuvent être lus dès sa fin, pendant la v5.3, qui part et tourne telle quelle (aucune de ses gardes ne lit un score).
    Lisent : conv-audit et Lazar ; session-depot, qui écrit l'étape 1, et toute lignée qui écrit la confrontation, s'ils
-   lisent, l'écrivent en réserve dans leurs textes. **Les expériences de confirmation** (l'étape 1 décisive, la
-   confrontation, le pilote décisif (b)) se font sur des tâches neuves (la banque v6, lot 3), jamais sur la v3 ni sur la
-   v5, qui partage ses textes avec la v3, et déclarent que leurs auteurs ont lu les scores des pilotes de conception. Les
-   hypothèses de (b) sont déjà fixées sans aucun score de ce pilote (direction donnée par la question de 00:49, δ = 0,10,
-   deux paliers ; § Décisions, 01:48). Les scores de `test_final` ne sont servis ni à Gemini ni à aucun organisme ; ceux
-   de `test` et les faits mécaniques peuvent l'être après la fin d'une course, pour corriger un organisme. La lecture de fin
-   de course peut être exécutée par des agents neufs de conv-audit (boucle extérieure, § Décisions, 02:05 à 02:17) ;
-   ils n'ouvrent rien avant la fin de la course, ne lisent ni textes de tâches, ni vérités, ni fichiers de clé, et ne
-   changent ni ce texte ni ses règles ; ce qu'ils concluent sur la banque v3 est exploratoire.
+   lisent, l'écrivent en réserve dans leurs textes (ce que ce point dit de l'étape 1 vaut pour les textes de session-depot
+   depuis le mot de Lazar dans sa session, vers 01:19 UTC, R-473 ; ce texte ne règle que la lecture de ce pilote). **Les
+   expériences de confirmation** (l'étape 1 décisive, la confrontation, le pilote décisif (b)) se font sur des tâches
+   neuves (la banque v6, lot 3), jamais sur la v3 ni sur la v5, qui partage ses textes avec la v3, et déclarent que leurs
+   auteurs ont lu les scores des pilotes de conception. **Les hypothèses de (b)** sont écrites et poussées, avec leur
+   empreinte, avant que leurs auteurs lisent un score de ce pilote, au plus tard à la fin de sa première course (comme le
+   registre d'hypothèses de 02:17) ; elles reprennent de 01:48 la direction (question de 00:49), δ = 0,10 et les deux
+   paliers, et de 01:52 la banque v6 ; ce que la synthèse du collisionneur laisse ouvert (hypothèse à un sens ou
+   symétrique ; course nulle) y est tranché sans score de ce pilote, ou par Lazar. Les scores de `test_final` ne sont
+   servis ni à Gemini ni à aucun organisme ; ceux de `test` et les faits mécaniques peuvent l'être après la fin d'une
+   course, sur décision de Lazar (lecture, par conv-audit, de « pour corriger l'organisme », 01:56) ; les autres pièces
+   fermées (P4v3, liste d'arrêt, dernière ligne : archive, mémoire, réponses aux tâches, réponse à la question) ne sont
+   servies que sur décision de Lazar ; jamais `test_final`. La lecture de fin de course peut être exécutée par des agents
+   neufs de conv-audit (boucle extérieure, § Décisions, 02:05 à 02:17) ; ils n'ouvrent rien avant la fin de la course, ne
+   lisent ni textes de tâches, ni vérités, ni fichiers de clé — du script de lecture, ils ne voient que la sortie (point
+   4 bis) —, et ne changent ni ce texte ni ses règles ; leurs verdicts par hypothèse (éliminée, tenue, indécidable dans le
+   bruit) sont des pièces à part, exploratoires, poussées sur le canal, hors du rapport de lecture et hors des critères
+   gelés (point 4 bis) ; ce qu'ils concluent sur la banque v3 est exploratoire.
 4 bis. **Lecture contre le bruit** (Lazar, 01:54 : « il faut s'assurer que le pilote 4 puisse séparer du bruit
    aussi » ; option (a), sans course de plus ; la décision de 02:05 sur des graines de plus, § Décisions, ne change pas ce
    texte) : (i) chaque score (exactitude équilibrée par famille et par part, à chaque
-   génération) est donné avec son intervalle à 95 % sur les tâches (intervalle de Wilson de chaque classe, combinés pour
-   l'exactitude équilibrée ; calcul déterministe, sans graine) ; (ii) « au-dessus de la référence, au-delà du bruit des
-   tâches » seulement si la borne basse de cet intervalle dépasse la référence de la famille et de la part (surface,
-   provenance, contraste de paire : P4v3, § Plan, point 4) ; sinon « non distinct de la référence » ; (iii) dans chaque
-   course et chaque famille, la génération 0 contre la génération 3 sur `test_final`, par un test exact apparié sur les
-   mêmes tâches (McNemar exact, bilatéral, sur l'exactitude simple, égale à l'exactitude équilibrée quand les classes de
-   la part sont égales), quatre tests en tout, corrigés par Holm au niveau 0,05 : « changement au-delà du bruit des
-   tâches » ou non ; si les réponses par tâche ne sont pas dans la liste fermée, ce test est rapporté impossible ; (iv)
-   tout le reste est « dans le bruit » : à une course par objet, le bruit entre graines n'est pas mesuré, aucune
-   comparaison entre les deux objets n'est faite, et un changement au-delà du bruit des tâches dans une course peut tenir
-   à sa graine.
+   génération) est donné avec son intervalle à 95 % sur les tâches : intervalle de Wilson de chaque classe, au niveau
+   97,5 % bilatéral, bornes combinées par leur moyenne (borne basse de l'exactitude équilibrée = moyenne des deux bornes
+   basses ; de même pour la haute), ce qui couvre la valeur vraie à au moins 95 % nominal par la borne de l'union ; calcul
+   déterministe, sans graine ; (ii) « au-dessus de la référence, au-delà du bruit des tâches » seulement si la borne basse
+   de cet intervalle dépasse la référence de la famille et de la part — pour la conscience d'évaluation, le maximum des
+   références de surface et de provenance (règle de la banque, `LISEZMOI-v9.md` § 4, point 3 : 0,8056 sur `test`, 0,8333
+   sur `test_final`), l'exactitude attendue de l'oracle de catégorie étant rapportée à côté, sans comparaison ; pour la
+   délégation, la référence « contraste de paire » (P4v3, § Plan, point 4), et si elle est un refus, (ii) est rapporté
+   impossible pour cette famille — ; sinon « non distinct de la référence » ; ces comparaisons, jusqu'à 32 (deux courses,
+   deux familles, deux parts, quatre générations), sont faites sans correction de multiplicité et sont exploratoires ;
+   (iii) dans chaque course et chaque famille, la génération 0 contre la génération 3 sur `test_final`, par un test exact
+   apparié sur les mêmes tâches (McNemar exact, bilatéral, sur l'exactitude simple, égale à l'exactitude équilibrée quand
+   les classes de la part sont égales), au plus quatre tests (deux si la v5.3 ne part pas), corrigés par Holm au niveau
+   0,05 : « changement au-delà du bruit des tâches » ou non ; (iv) tout le reste est « dans le bruit » : à une course par
+   objet, le bruit entre graines n'est pas mesuré, aucune comparaison entre les deux objets n'est faite, et un changement
+   au-delà du bruit des tâches dans une course peut tenir à sa graine. **Comptes et exécution** : les comptes par classe
+   de (i) et (ii) et les paires de (iii) viennent des réponses par tâche de la liste fermée (archive `ferme.tar.gz`,
+   réponses de chaque génération) et du secret de la banque v3, recalculés par le script de lecture du point 4 (P4v3 :
+   écrit, empreinté, essayé avant le moment de lecture, sur un cas sain et sur un artefact), qui calcule aussi ce point ;
+   si les réponses par tâche ne sont pas dans la liste fermée, les intervalles de (i), les verdicts de (ii) et les tests
+   de (iii) sont rapportés impossibles et les scores sont rapportés sans intervalle. Le script lit le fichier secret de la
+   banque v3, jamais affiché ; il est exécuté par session-depot, dans son conteneur, à la fin de chaque course, et sa
+   sortie (scores, intervalles, comptes par classe, verdicts (ii) à (iv) ; aucun texte de tâche, aucune vérité par tâche,
+   aucune clé) est poussée avec son empreinte ; conv-audit, Lazar et les agents de la boucle extérieure n'en voient que
+   cette sortie ; session-depot, qui l'exécute, lit donc ces scores et l'écrit en réserve dans ses textes (point 3,
+   R-473). **Levée, pour ce pilote** (décisions de Lazar de 01:54 et 01:56) : ces libellés, et eux seuls, lèvent,
+   pour les comparaisons qu'ils nomment (un score et la référence de sa famille et de sa part ; les générations 0 et 3
+   d'une même course), l'interdit des critères gelés de T2 (l. 518–520), la lecture « à côté, sans comparaison » de P4v3
+   (§ Plan, point 4) et « aucun seuil de lecture » (§ Hypothèse) ; le reste de ces critères vaut : aucune comparaison
+   entre objets, ni avec l'autre course, 0,5 ou le premier pilote, aucun adjectif, aucune autre différence calculée.
 4. **Lecture** et 5. **ce que ce pilote ne dit pas** : ceux de P4v3, la v6.2.1 à la place de la v6.1. Aucune différence
    entre objets n'est calculée (ni v6.2.1 − v5.3, ni avec la v6.1, la v6.2 de Gemini, la v6 du pilote 3, M, S ou le premier
    pilote) ; ce pilote ne dit rien de la valeur d'un ajout de complexité (§ Décisions, 00:49), ni de ce que les corrections
@@ -406,9 +459,12 @@ recopié ; vérification de la v6.2 (`verification-v6-2-3bbb78c-v1/`) ; correcti
 `CORRECTIONS-v5.md`, écart de l'organisme, journaux des essais en isolation et des témoins (`essais-corrections-v1/`),
 recherche de clés avant la poussée du commit ; vérification de la v6.2.1 (`verification-v6-2-1-7ea3270-v1/`) ; les
 briefs des deux vérifications ; la comparaison des lignes citées entre la v6.1 et la v6.2.1
-(`comparaison-lignes-v61-v621-v1/`) ; le relevé verbatim des mots de Lazar, v1 à v5) ; les fichiers d'empreintes des
-pièces donnés aux contre-lectures (`EMPREINTES-pieces-pilote4-v1.txt` à `-v7.txt` ; la v7, donnée à la contre-lecture 6, couvre toutes les pièces avant elle) ; les pièces des contre-lectures 5 et 6 de ce texte (`contre-lecture-5-v1/`,
-`contre-lecture-6-v1/`, briefs compris) ; les pièces des cas sains de la série v13 (`simulation-lanceur-v10/`) et le
+(`comparaison-lignes-v61-v621-v1/`) ; le relevé verbatim des mots de Lazar, v1 à v6) ; les fichiers d'empreintes des
+pièces donnés aux contre-lectures (`EMPREINTES-pieces-pilote4-v1.txt` à `-v8.txt` ; la v7, donnée à la contre-lecture 6,
+couvre toutes les pièces avant elle ; la v8, donnée à la contre-lecture 7, couvre toutes les pièces avant elle, dont
+`contre-lecture-6-v1/`, le relevé v6 et le traitement des constats de la contre-lecture 6, `traitement-cl6-v1/`) ; les
+pièces des contre-lectures 5, 6 et 7 de ce texte (`contre-lecture-5-v1/`, `contre-lecture-6-v1/`, `contre-lecture-7-v1/`,
+briefs compris) ; les pièces des cas sains de la série v13 (`simulation-lanceur-v10/`) et le
 relevé v2 jamais servi (`releves-serie-v11-v1/`) ; et le fichier d'empreintes de toutes les pièces et des contre-lectures, `EMPREINTES-pilote4-gemini-v2.txt`, d'empreinte <<EMPREINTE_PIECES>>. L'organisme lui-même est
 dans son commit (`7ea3270`, branche `canal/conv-audit-organisme-v6-2-1`), que le lanceur extrait.
 
@@ -441,29 +497,80 @@ dans son commit (`7ea3270`, branche `canal/conv-audit-organisme-v6-2-1`), que le
     règle des options (2) et (2') ayant disparu, la question de l'échéance est sans objet.
   - P4C5-04 (remarque : (a) défaut de la décision du 25 octobre 23:56 UTC — sans objet, tranchée à 01:48 ; (b) forme de la
     ligne de GO — **écrit** au § Plan, point 1 : le message de départ recopie mot pour mot les lignes, l'empreinte remplie,
-    sinon rien ne part ; (c) choix laissés à Lazar sur C-14 et C-16 — **écrits** comme points ouverts dans la table).
+    sinon rien ne part ; (c) choix laissés à Lazar sur C-14 et C-16 — **écrits** dans la table comme choix restant à Lazar,
+    sans effet sur le départ).
   - P4C5-05 (remarque, § Essais : (a) réseau sans clé pour `passerelle-saine` et pour l'essai de moisson réelle sur arXiv —
     **corrigé** ; (b) décalage des numéros de lignes du lanceur v6 au v10 (+12 avant l'étape (0 bis), +13 après) — **écrit**
     dans la table ; (c) gardes de la ligne « course v6.2 hors de la liste close » aux étapes (0 bis), (2) et (4) — **corrigé** ;
-    (d) aucune seconde course en segments essayée — **déclaré** comme lacune au § Essais, à combler par le prochain lanceur).
+    (d) aucune seconde course en segments essayée — **dite** au § Essais, même lacune que P4v3 pour la v6.1).
   - P4C5-06 (remarque, traçabilité : (a) pièces des cas sains de la série v13 — **versées** (`simulation-lanceur-v10/`) ;
     (b) relevé v2 jamais servi — **versé** (`releves-serie-v11-v1/`) ; (c) versions de code des essais `v621-a` et `v621-b`
     non gardées — **dit** au § Objet, avec leurs causes et les témoins).
   - P4C5-07 (remarque, petits faits : (a) C-14 « dès deux castes, la délibération s'ouvre » — **corrigé** ; (b) le refus
-    d'une clé JSON absente est le point 8 de P4v3, gardé, non C-17 — **corrigé** ; (c) commentaire d'en-tête de
+    d'une clé JSON absente est le point 8 de la demande de v6.2, gardé, non C-17 — **corrigé** ; (c) commentaire d'en-tête de
     `sceller_pilote4_v4.py` (l. 17–18 : « v5-3 (première course) ») inexact depuis l'inversion de l'ordre — **laissé tel
     quel** : sans effet sur le code (l'enfant 0 reste la graine de la v5.3, l'enfant 1 celle de la v6.2, comme le § Plan,
     point 2, le dit et comme le lanceur le recalcule), et le script, ses essais (16 sur 16) et son empreinte sont ceux que
-    la contre-lecture 5 a redérivés ; (d) tête de la copie de lancement — **écrit** au § Plan, point 1 : elle ne diffère de
+    la contre-lecture 5 a redérivés ; la première ligne de sa docstring (« v5.3 puis v6.x ») porte la même inexactitude,
+    sans plus d'effet ; (d) tête de la copie de lancement — **écrit** au § Plan, point 1 : elle ne diffère de
     `8e5e2f7b` que par les chemins que `PERMIS_APRES_CODE` permet).
   - P4C5-08 (conforme) : rien à traiter.
-- **Contre-lecture 6** — sous-agent neuf, relecture courte de l'écart depuis la version relue par la contre-lecture 5
-  (traitement ci-dessus, décisions de Lazar de 01:48 à 02:17 inscrites, § Plan points 3 et 4 bis, liste d'arrêt, § Essais,
-  § Pièces), sur la version de ce texte qui porte ce paragraphe sans la ligne qui suit ; sa ligne — empreinte de la version
-  relue, rapport `prereg/contre-lectures/pilote4-gemini-organisme-v4-cl6.md` et son empreinte, verdict, constats et leur
-  traitement — est inscrite ici avant le script de scellement, avec ses pièces (`contre-lecture-6-v1/`).
+- **Contre-lecture 6** — sous-agent neuf (`claude-opus-5-5`, lancé par conv-audit, 26 octobre 2026, de 01:29:47 UTC à
+  01:53 UTC ; rapport écrit à partir de 01:51:09 UTC), relecture courte de l'écart depuis la version relue par la
+  contre-lecture 5, sur la version de ce texte après le traitement ci-dessus
+  (`51752266ba21b72fe2ee4c8b8e4157581bcfeed82bd2790e1632482a7746fc34`, 469 lignes ; copie gardée dans
+  `contre-lecture-6-v1/`), avec la liste v7 (`EMPREINTES-pieces-pilote4-v7.txt`, `22076845…`, 621 entrées) :
+  `prereg/contre-lectures/pilote4-gemini-organisme-v4-cl6.md`
+  (`35fe0067ec7477c2e6e82500321bbe23a0683e20f2bbb6de36c55d4103dc7559`), **« scellable après corrections mineures »** :
+  écart de 23 passages conforme à ce que le statut et ce paragraphe annoncent, à un retrait près ; constats de la
+  contre-lecture 5 traités comme dit ; liste v7 juste (621 sur 621, aucune entrée interdite, les 502 entrées de la v6
+  gardées) ; relevé v5 conforme ; décisions de Lazar de 01:48 à 02:17 rendues fidèlement ; script de scellement et lanceur
+  satisfaits (une ligne d'entropie, deux lignes de graine, quatre marqueurs ; ligne de GO et lignes de dépense passant la
+  chaîne de `grep`) ; trois constats mineurs, cinq remarques, une conformité ; pièces `contre-lecture-6-v1/` (brief,
+  rapport et compagnon, outils, relevés, essais de lignes, copie du texte relu, sortie de `sha256sum -c` de la liste v7,
+  note d'interruption écrite à tort pendant la relecture et note qui la corrige). **Traitement, par l'instance nouvelle de
+  conv-audit, à partir de 02:08 UTC** (écart complet : `traitement-cl6-v1/`) :
+  - P4C6-01 (mineur : le point 4 bis compare un score à une référence et deux générations entre elles contre les règles
+    de lecture gardées par renvoi, sans levée écrite ; « critères gelés » retiré de « Tout le reste » sans mention) —
+    **corrigé** : levée écrite au point 4 bis, pour ces comparaisons seules, le reste des critères gardé ; « critères
+    gelés (sauf ce que lève le point 4 bis) » rétabli dans « Tout le reste » ; les verdicts des agents par hypothèse sont
+    dits pièces à part, exploratoires, hors du rapport de lecture (point 3).
+  - P4C6-02 (mineur : « aucun score n'est lu tant qu'une course tourne » à deux lectures ; le point 3 « remplace » celui
+    de P4v3 tout en en gardant une partie) — **corrigé** : « aucun score d'une course n'est lu tant qu'elle tourne … la
+    v5.3 part et tourne telle quelle » au point 3 et au canal (d) ; ce que le point 3 remplace et ce qu'il garde de P4v3
+    (l. 391–397, 397–409) écrit au point 3 et dans la table.
+  - P4C6-03 (mineur : « les hypothèses de (b) sont déjà fixées » sans pièce qui l'ancre) — **corrigé** : au point 3, les
+    hypothèses de (b) sont écrites et poussées avec leur empreinte avant que leurs auteurs lisent un score de ce pilote, au
+    plus tard à la fin de sa première course, ce qui reste ouvert tranché sans score ou par Lazar ; au § Décisions, « taille
+    fixée par le texte de (b) » à la place de « trois graines par objet ».
+  - P4C6-04 (remarque : R-472 lu mais non rendu) — **corrigé** : R-473 (mot de Lazar dans la session de session-depot vers
+    01:19 UTC) écrit au statut, au § Décisions (01:56) et au point 3 ; le relevé v6 cite `4a4d9ca` et `3c94802` et ajoute
+    R-473 à R-478 (`681af80`) et les messages de 02:32 à 02:42.
+  - P4C6-05 (remarque : cinq choix du point 4 bis à fixer avant toute lecture) — **fixés** au point 4 bis : (a) bornes de
+    Wilson de chaque classe au niveau 97,5 %, combinées par leur moyenne (couverture d'au moins 95 % nominal) ; (b) la
+    référence de la conscience d'évaluation est le maximum de surface et de provenance (règle de la banque), l'oracle de
+    catégorie rapporté à côté ; celle de la délégation est le contraste de paire ; (c) les comptes par classe viennent des
+    réponses par tâche de la liste fermée et du secret, même repli « rapporté impossible » ; (d) (ii) « sans correction de
+    multiplicité, exploratoire », (iii) « au plus quatre tests » ; (e) le script de lecture est exécuté par session-depot,
+    seule sa sortie est vue par les autres. Le choix (a) est de conv-audit, non du rapport : la contre-lecture 7 le relit.
+  - P4C6-06 (remarque : « servis » va au-delà du « lus » de Lazar) — **corrigé** au point 3 : sur décision de Lazar,
+    lecture par conv-audit de « pour corriger l'organisme » attribuée ; autres pièces fermées sur décision de Lazar ; jamais
+    `test_final`.
+  - P4C6-07 (remarque : trois descriptions du traitement de la contre-lecture 5 inexactes) — **corrigé** : « le point 8 de
+    la demande de v6.2 » ; P4C5-05 (d) aligné sur le § Essais ; P4C5-04 (c) « choix restant à Lazar, sans effet sur le
+    départ » ; la docstring du script dite (P4C5-07 (c)).
+  - P4C6-08 (remarque : après la relecture) — (a) note de correction versée à côté de la note d'interruption, gardée (fait
+    par l'instance sortante, `LISEZMOI-contre-lecture-6-v1.md`) ; (b) « Ce texte scellé » corrigé ci-dessous ; (c) aucune
+    ligne d'entropie ni de graine, aucun marqueur, dans ce qui est ajouté ; (d) la liste v8 couvre `contre-lecture-6-v1/`.
+  - P4C6-09 (conforme) : rien à traiter.
+- **Contre-lecture 7** — sous-agent neuf, relecture courte de l'écart depuis la version relue par la contre-lecture 6
+  (traitement ci-dessus : points 3 et 4 bis, § Décisions, table, canal (d), § Pièces, ce paragraphe ; relevé v6 ; liste
+  v8), sur la version de ce texte qui porte ce paragraphe sans la ligne qui suit ; sa ligne — empreinte de la version
+  relue, rapport `prereg/contre-lectures/pilote4-gemini-organisme-v4-cl7.md` et son empreinte, verdict, constats et leur
+  traitement — est inscrite ici avant le script de scellement, avec ses pièces (`contre-lecture-7-v1/`).
 - **Ce texte scellé** garde le nom de la v4 ; son empreinte n'est aucune de celles que les contre-lectures ont relues. De la
-  version relue par la contre-lecture 6 à lui, il porte en plus : la ligne de la contre-lecture 6 ci-dessus, le traitement
-  de ses constats s'il y en a (écrits à la main par conv-audit avant le script), puis l'entropie, les deux graines et
-  l'empreinte du fichier d'empreintes des pièces, écrites par `sceller_pilote4_v4.py` ; rien d'autre. Les pièces nouvelles
-  depuis la contre-lecture 6 sont ses propres pièces, toutes au fichier d'empreintes.
+  version relue par la contre-lecture 7 à lui, il porte en plus : la ligne de la contre-lecture 7 ci-dessus, le traitement
+  de ses constats s'il y en a et les corrections qu'il demande, aux passages qu'il nomme (écrits à la main par conv-audit
+  avant le script), puis l'entropie, les deux graines et l'empreinte du fichier d'empreintes des pièces, écrites par
+  `sceller_pilote4_v4.py` ; rien d'autre. Les pièces nouvelles depuis la contre-lecture 7 sont ses propres pièces, toutes
+  au fichier d'empreintes.
