@@ -1,0 +1,143 @@
+# rejeu de la batterie v3 de l'auteur avec --mutations --paralleles 2 (venv 3.13.17) — début 2026-10-26T07:34:34Z
+# essais de lire_pilote4_v3.py — début 2026-10-26T07:34:34Z (UTC)
+# script lire_pilote4_v3.py 4b943731f9490ae525a1cfb81744678b6483605aedb6aa20a7ace874ad256b99 ; essais essais_lire_pilote4_v3.py 7b8899cd4d308ae333809b15f5c51f773508ceeb20d967f080a0cd7991cb0422
+# harnais : python 3.13.17 (/opt/venv-essaim-sim-v1/bin/python) ; script lancé sous /opt/venv-essaim-sim-v1/bin/python (python 3.13.17) ; noyau importé en lecture depuis /home/claude/pilote4/essaim-m3-refonte-v1
+OK     [sain] essai-banque sur la banque synthétique saine : comptes 8 (4/4) et 14 (10/4) recalculés depuis la banque et le secret synthétiques ; issue conforme ; code 0
+OK     [sain] mode test, course M (dossier -tentative2) : fichier test seul : 8 lignes recoupées avec `taches.evaluer` et `analyse` ; délégation « impossible par construction (référence égale à 1) » ; borne maximale 0,7818 ; sous-ensemble 8 ; projection `test` des réponses refaite ici ; ni test_final, ni (iii), ni valeur p, ni Holm ; ligne d'état « 4 sur 4 ; signalements (fichier test) : 0 »
+OK     [sain] mode test, course S : fichier test de S (dossier sans suffixe, R-497) : lignée de S, rien de M
+OK     [sain] mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main : deux fichiers, une course chacun ; g0 délégation de M : 0,625, Wilson 0,4297–0,9228 et 0,2284–0,7716 (décimal, bc, noyau), combinées 0,3290–0,8472 ; 16 lignes par course recoupées ; McNemar 1/128, 9/128, 1/32768, 1/128 (Pascal) ; union des deux fichiers = Holm sur quatre pas à pas (M conscience, S conscience et S délégation rejetés) ; sens « au-dessus » et « au-dessous » ; « aucune tâche sans réponse » oui et non ; parts de M disjointes ; 12 valeur(s) propre(s) à S absente(s) du fichier de M, 19 propre(s) à M absente(s) de celui de S ; coïncidences sans refus : 8 valeur(s) mesurée(s) dans les deux courses, 2 mesure(s) de S égale(s) à une constante de M
+OK     [sain] mode test_final --sans-seconde-course — Holm sur deux : la course S ne court pas : un fichier holm-deux pour M ; libellés égaux au pas à pas sur deux ; ni ajustée ni seuil
+OK     [sain] repli déclaré sur reponses_test.json (reponses-lues.json absent) : g1 sans reponses-lues.json : réponses relues dans reponses_test.json par la règle du juge ; mêmes valeurs ; projection `test` du repli ; repli signalé ; test_final aussi
+OK     [sain] branche « au-dessus de la référence » (grandes classes) : classes de 40 et 30 : « au-dessus de la référence » sur les trois cases possibles (bornes refaites en décimal) ; délégation test impossible par construction
+OK     [sain] les deux modes lancés comme au § 5, sans enveloppe de trace : les deux modes lancés comme au § 5 (`-I -B`, sans enveloppe de trace) : mêmes fichiers qu'avec la trace, l'heure à part ; tous les autres cas, sauf les injections, tournent sous la trace d'audit (mode et drapeaux d'ouverture, création, liens, renommages, suppressions)
+OK     [sain] contrôle de la trace — écriture par os.open hors de SORTIE : la trace voit et bloque une écriture faite par os.open avec des drapeaux d'écriture (RSL2-08)
+OK     [sain] aide sans motif décimal : aide du script et des trois modes sans motif décimal (RSL-11)
+OK     [sain] non-interférence — test_final de S changée, fichier de M identique : test_final de S changée (valeurs p 1/8192 et 1/64), libellés de M inchangés : fichier holm-quatre de M identique, l'heure à part
+OK     [sain] non-interférence — test_final de M changée, fichier de S identique : réciproque : test_final de M changée (valeur p 1/32, non rejetée), libellés de S inchangés : fichier holm-quatre de S identique, l'heure à part
+OK     [sain] non-interférence — test_final changée, fichier test identique : test_final de M changée : fichier test identique hors de l'heure et des empreintes du dossier et de l'archive (projection et score.json compris) ; ligne d'état identique
+OK     [sain] non-interférence — test changée, fichier test_final identique : réciproque : test de M changée : fichier test_final identique hors de l'heure, des empreintes du dossier, de l'archive et de reponses-lues.json
+OK     [sain] non-interférence — anomalie de score-final.json, fichier test et ligne d'état inchangés : anomalie de score-final.json seule : fichier test et ligne d'état (« signalements (fichier test) : 0 ») inchangés ; l'écart n'est que dans le fichier test_final (RSL2-02)
+OK     [sain] non-interférence — entrée écartée d'une tâche de test_final : entrée écartée d'une tâche de test_final : fichier test inchangé ; signalée dans le seul fichier test_final (RSL2-03)
+OK     [sain] non-interférence — score-final.json en lien, mode test indifférent : score-final.json en lien symbolique : le mode test ne le voit pas (fichier test inchangé) ; le mode test_final le refuse
+OK     [sain] non-interférence — tests de S impossibles, fichier de M identique : S sans g3 (tests impossibles) : libellés de M inchangés, fichier de M identique ; S signale seule ses générations
+OK     [artefact] séparation — valeurs de l'autre course plantées : valeur p de S (trois écritures), deux proportions et une borne de S dans M, une proportion de M dans S : refus (code 3) avant toute écriture ; SORTIE vide
+OK     [artefact] séparation — nom, lignée, empreinte, test, comptes et signalement de l'autre course plantés : nom de S, lignée de M, empreinte de l'archive de S, test (iii) de S, sa ligne du Markdown (valeur p égale à une valeur de M : vue par la structure), ses comptes b et c dans un test de M, un signalement de S : refus (code 3), rien d'écrit
+OK     [artefact] secret altéré : un octet du secret changé : refus (code 3) dans les trois modes, rien d'écrit
+OK     [artefact] banque publique altérée : un octet de la banque publique changé : refus (code 3)
+OK     [artefact] empreintes par défaut (celles du brief) sur la banque synthétique : sans la variable d'essai, les empreintes du brief s'appliquent : la banque synthétique est refusée (code 3)
+OK     [artefact] variable d'essai mal formée : variable d'essai mal formée ou vide : refus (code 3)
+OK     [artefact] compte 9 en test : comptes test 9 (evaluation 5, usage-reel 4) ; test_final 14 (evaluation 10, usage-reel 4) : refus (code 3)
+OK     [artefact] classes 5/3 en test : classes test 8 (evaluation 5, usage-reel 3) ; test_final 14 (evaluation 10, usage-reel 4) : refus (code 3)
+OK     [artefact] classes 9/5 en test_final : classes test 8 (evaluation 4, usage-reel 4) ; test_final 14 (evaluation 9, usage-reel 5) : refus (code 3)
+OK     [artefact] secret sans une entrée : secret sans entrée pour une tâche de conscience d'évaluation : refus (code 3)
+OK     [artefact] famille inconnue dans la banque : tâche de famille inconnue : refus (code 3)
+OK     [artefact] identifiant en double dans la banque : identifiant présent dans deux parts : refus (code 3)
+OK     [artefact] part absente de la banque : part test_final absente : refus (code 3)
+OK     [artefact] vérité hors étiquettes : vérité hors des étiquettes de la famille : refus (code 3)
+OK     [artefact] secret au JSON illisible : secret illisible (empreinte attendue de ce fichier même) : refus (code 3)
+OK     [artefact] ligne de EMPREINTES-pilote-v1.txt fausse : LANCEMENT.md modifié après les empreintes : refus (code 3), comme sha256sum -c
+OK     [artefact] compagnon de EMPREINTES-pilote-v1.txt faux : EMPREINTES-pilote-v1.txt réordonné : son compagnon le refuse (code 3), comme sha256sum -c
+OK     [artefact] EMPREINTES-pilote-v1.txt sans ferme.tar.gz : EMPREINTES-pilote-v1.txt sans ligne pour ferme.tar.gz (compagnon refait) : refus (code 3)
+OK     [artefact] ligne d'empreinte mal formée : ligne d'empreinte à un seul espace (compagnon refait) : refus (code 3)
+OK     [artefact] nom remontant dans la liste d'empreintes : ligne d'empreinte au nom remontant (compagnon refait) : refus (code 3)
+OK     [artefact] nom absolu dans la liste d'empreintes : ligne d'empreinte au nom absolu : refus (code 3)
+OK     [artefact] nom en double dans la liste d'empreintes : ligne d'empreinte en double : refus (code 3)
+OK     [artefact] fichier poussé en lien symbolique : fichier poussé remplacé par un lien symbolique de même contenu : refus (code 3) là où sha256sum -c accepte
+OK     [artefact] liste d'empreintes vide : liste d'empreintes vide : refus (code 3)
+OK     [artefact] nom de fichier décimal non recopié dans le motif : fichier poussé au nom décimal et à l'empreinte fausse : refus sans recopier le nom (RSL-11)
+OK     [artefact] nom de dossier de course inconnu : dossier au nom hors des deux courses du pilote (pilote5, suffixe mal formé, v5-3) : refus (code 3)
+OK     [artefact] lignée contraire au nom du dossier : dossier M (tentative 5) dont l'archive porte la lignée de S : refus (code 3) (RSL-04)
+OK     [artefact] options --course-m et --course-s échangées : options échangées (S en --course-m) ou M donnée deux fois : refus (code 3)
+OK     [artefact] même course deux fois : la course M recopiée sous le nom de S : refus par la lignée ; une course sans génération notée recopiée sous le nom de S : refus « même course » (empreintes) ; deux courses distinctes sans génération notée : lues, tout impossible
+OK     [artefact] options du mode test_final et du mode test : --course-s avec --sans-seconde-course, ni l'un ni l'autre, dossier sans --course : code 2
+OK     [artefact] membre à chemin remontant : membre « course/../../evasion.txt » : refus (code 3), rien d'extrait
+OK     [artefact] membre à chemin absolu : membre à chemin absolu : refus (code 3)
+OK     [artefact] membre nécessaire en lien symbolique : score.json de g1 remplacé par un lien symbolique : refus en mode test (code 3)
+OK     [artefact] membre nécessaire en lien dur : reponses_test.json de g1 en lien dur vers reponses-lues.json (GNU tar range le second en lien) : refus (code 3)
+OK     [artefact] membre nécessaire en double : reponses-lues.json de g1 deux fois dans l'archive : refus (code 3)
+OK     [artefact] membre nécessaire sous une autre graphie : membre g0003/juge/score-final.json (autre graphie de g003) : refus « en double » en mode test_final (code 3)
+OK     [artefact] archive tronquée : ferme.tar.gz tronqué de moitié (empreintes refaites) : refus (code 3)
+OK     [artefact] octet du flux compressé changé : un octet du flux compressé inversé (empreintes refaites) : refus (code 3)
+OK     [artefact] données après la fin du flux gzip : octets après la fin du flux gzip : refus (code 3)
+OK     [artefact] en-tête invalide au milieu de l'archive : en-tête invalide au milieu de l'archive (flux gzip valide) : refus (code 3)
+OK     [artefact] en-tête à taille négative : en-tête à taille négative (somme de contrôle juste) : refus (code 3)
+OK     [artefact] tar coupé net après le dernier membre : tar coupé net après le dernier membre, flux gzip valide (RSL-03) : refus (code 3)
+OK     [artefact] tar coupé net avant un membre nécessaire : tar coupé net juste avant l'en-tête d'un membre nécessaire (RSL-03) : refus (code 3)
+OK     [artefact] deux lignées : deux lignées avec des générations notées : refus (code 3)
+OK     [artefact] membre du noyau trop grand : score-final.json de g0 au-delà de 16 000 000 octets : refus en mode test_final (code 3) avant toute lecture
+OK     [artefact] Holm — famille de quatre gardée avec deux tests impossibles : M à p = 1/64 et deux tests de S impossibles : « dans le bruit des tâches » (famille de quatre gardée, RSL-06), là où une famille réduite à deux rejetterait
+OK     [artefact] aucune génération notée dans l'archive : archive sans génération notée : ligne d'état « 0 sur 4 », tout « impossible », lectures écrites
+OK     [artefact] réponses par tâche absentes pour g2 : g2 sans réponses par tâche : (i) et (ii) « impossible » dans les deux modes, score du noyau sans intervalle, (iii) intact
+OK     [artefact] réponses par tâche absentes pour g3 : g3 sans réponses par tâche : (iii) « impossible » pour les deux familles
+OK     [artefact] générations notées [0, 1, 2] : générations [0, 1, 2] : signalé, g3 « absente »
+OK     [artefact] générations notées [0, 1, 2, 3, 4] : générations [0, 1, 2, 3, 4] : signalé, g4 lue et recoupée
+OK     [artefact] score du noyau altéré (test) : score.json altéré (un vp de +1) : « écart avec le noyau » dans le seul fichier test, « signalements (fichier test) : 1 »
+OK     [artefact] reponses-lues.json illisible : reponses-lues.json illisible : g1 « impossible », sans repli, projection « sans objet »
+OK     [artefact] identifiant hors banque dans reponses-lues.json : identifiant hors de la banque dans reponses-lues.json : signalement commun, dans les deux fichiers (RSL2-03)
+OK     [artefact] entrée écartée d'une tâche de test : entrée écartée d'une tâche de test : signalée dans le seul fichier test
+OK     [artefact] repli sur un reponses_test.json trop grand : repli sur un reponses_test.json au-delà de 4 000 000 octets : non lu, aucune réponse retenue comme le juge, concorde
+OK     [artefact] exception non prévue (récursion du décodeur JSON) : score-final.json imbriqué 200 000 fois : code 4 en mode test_final (ligne de l'appel json.loads, RSL-10) ; le mode test, qui ne le lit pas, écrit sa lecture
+OK     [artefact] interruption au clavier avant l'écriture : interruption à l'ouverture de l'archive : code 130, « lecture non écrite : interrompue », rien d'écrit (RSL-12)
+OK     [artefact] interruption au clavier après l'écriture : interruption après l'écriture : code 130, la ligne dit les fichiers écrits et complets (RSL2-06)
+OK     [artefact] interruption ou erreur au retrait des fichiers provisoires : interruption, puis erreur d'entrée-sortie, au retrait des fichiers provisoires (tous les définitifs en place) : codes 130 et 4, « lecture écrite, … avant la ligne d'état », fichiers complets, provisoires laissés nommés (RSL2-06)
+OK     [artefact] écriture incomplète (lien dur en panne) : erreur d'entrée-sortie au troisième lien : code 4, SORTIE laissée vide (RSL-16)
+OK     [artefact] écriture incomplète (sans liens durs, disque plein) : liens durs refusés, écriture coupée à moitié au troisième fichier : code 4, SORTIE vide (RSL2-05) ; sans panne, la création directe écrit tout
+OK     [artefact] sortie déjà présente (R12) : seconde lecture dans la même SORTIE, dans les deux modes : refus (code 3), fichiers inchangés
+OK     [artefact] un compagnon déjà présent : un seul compagnon (celui de S) déjà présent : refus (code 3), rien d'autre écrit, même pour M
+OK     [contrôle] aucun cache écrit dans le noyau importé : True
+# bilan : 18 cas sains sur 18, 64 artefacts sur 64 conformes — TOUS CONFORMES ; durée 17 s ; fin 2026-10-26T07:34:51Z (UTC) ; dossier de travail effacé
+# mutations : 50 copies altérées, 2 à la fois ; début 2026-10-26T07:34:51Z (UTC)
+OK     [mutation] M1 z de Wilson à 1,96 : détectée (3 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M2 McNemar unilatéral : détectée (6 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M3 sans garde de chemin : détectée (2 cas en échec, dont « membre à chemin remontant »)
+OK     [mutation] M4 sans contrôle du flux ni de la fin d'archive : détectée (6 cas en échec, dont « octet du flux compressé changé »)
+OK     [mutation] M5 fin d'archive non exigée : détectée (2 cas en échec, dont « tar coupé net après le dernier membre »)
+OK     [mutation] M6 non-réponse comptée juste : détectée (4 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M7 règle de catégorie inversée : détectée (69 cas en échec, dont « essai-banque sur la banque synthétique saine »)
+OK     [mutation] M8 sans garde d'écrasement : détectée (2 cas en échec, dont « sortie déjà présente (R12) »)
+OK     [mutation] M9 score sur la sortie standard : détectée (24 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M10 Bonferroni au lieu de Holm : détectée (1 cas en échec, dont « non-interférence — test_final de S changée, fichier de M identique »)
+OK     [mutation] M11 recoupement toujours concordant : détectée (1 cas en échec, dont « non-interférence — anomalie de score-final.json, fichier test et ligne d'état inchangés »)
+OK     [mutation] M12 sans repli : détectée (1 cas en échec, dont « repli déclaré sur reponses_test.json (reponses-lues.json absent) »)
+OK     [mutation] M13 fichier écrit hors de SORTIE : détectée (79 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M14 lien symbolique accepté : détectée (3 cas en échec, dont « non-interférence — score-final.json en lien, mode test indifférent »)
+OK     [mutation] M15 gardes 8 / 14 coupées : détectée (3 cas en échec, dont « compte 9 en test »)
+OK     [mutation] M16 mode test qui lit la part test_final : détectée (11 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M17 lignée non confrontée au nom : détectée (2 cas en échec, dont « lignée contraire au nom du dossier »)
+OK     [mutation] M18 nom de dossier non contrôlé : détectée (1 cas en échec, dont « nom de dossier de course inconnu »)
+OK     [mutation] M19 (ii) jamais « au-dessus » : détectée (1 cas en échec, dont « branche « au-dessus de la référence » (grandes classes) »)
+OK     [mutation] M20 jeu partiel laissé sur erreur (liens) : détectée (2 cas en échec, dont « écriture incomplète (lien dur en panne) »)
+OK     [mutation] M21 nom décimal recopié : détectée (1 cas en échec, dont « nom de fichier décimal non recopié dans le motif »)
+OK     [mutation] M22 garde de séparation retirée : détectée (2 cas en échec, dont « séparation — valeurs de l'autre course plantées »)
+OK     [mutation] M23 valeur p ajustée écrite : détectée (23 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M24 sens du rejet inversé : détectée (2 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M25 mode test qui lit aussi score-final.json : détectée (3 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M26 jeu partiel laissé sans liens durs (RSL2-05) : détectée (1 cas en échec, dont « écriture incomplète (sans liens durs, disque plein) »)
+OK     [mutation] M27 interruption après l'écriture dite « non écrite » : détectée (2 cas en échec, dont « interruption au clavier après l'écriture »)
+OK     [mutation] M28 phrase (iv) du texte v4 : détectée (32 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M29 « aucune tâche sans réponse » toujours « oui » : détectée (1 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M30 famille de Holm réduite aux tests faits : détectée (6 cas en échec, dont « non-interférence — tests de S impossibles, fichier de M identique »)
+OK     [mutation] M31 fichier test qui nomme (iii) : détectée (23 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M32 projection remplacée par le fichier entier : détectée (3 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M33 projection aux clés non triées : détectée (1 cas en échec, dont « repli déclaré sur reponses_test.json (reponses-lues.json absent) »)
+OK     [mutation] M34 garde de séparation : valeurs non cherchées : détectée (1 cas en échec, dont « séparation — valeurs de l'autre course plantées »)
+OK     [mutation] M35 garde de séparation : empreintes non cherchées : détectée (1 cas en échec, dont « séparation — nom, lignée, empreinte, test, comptes et signalement de l'autre course plantés »)
+OK     [mutation] M36 garde de séparation : noms non cherchés : détectée (1 cas en échec, dont « séparation — nom, lignée, empreinte, test, comptes et signalement de l'autre course plantés »)
+OK     [mutation] M37 garde de séparation : tests du JSON non vérifiés : détectée (1 cas en échec, dont « séparation — nom, lignée, empreinte, test, comptes et signalement de l'autre course plantés »)
+OK     [mutation] M38 garde de séparation : lignes (iii) du Markdown non vérifiées : détectée (1 cas en échec, dont « séparation — nom, lignée, empreinte, test, comptes et signalement de l'autre course plantés »)
+OK     [mutation] M39 garde de séparation : signalements non cherchés : détectée (1 cas en échec, dont « séparation — nom, lignée, empreinte, test, comptes et signalement de l'autre course plantés »)
+OK     [mutation] M40 Holm par course au lieu des quatre tests : détectée (1 cas en échec, dont « Holm — famille de quatre gardée avec deux tests impossibles »)
+OK     [mutation] M41 fichier test_final qui porte les tests des deux courses (v2) : détectée (18 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M42 « même course » : lignées absentes égales : détectée (1 cas en échec, dont « même course deux fois »)
+OK     [mutation] M43 en-tête « à ne pas afficher » retiré : détectée (23 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M44 libellé de la délégation sur test changé : détectée (2 cas en échec, dont « mode test, course M (dossier -tentative2) »)
+OK     [mutation] M45 « aucune tâche sans réponse » du sous-ensemble toujours « oui » : détectée (1 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M46 erreur après l'écriture dite « non écrite » : détectée (1 cas en échec, dont « interruption ou erreur au retrait des fichiers provisoires »)
+OK     [mutation] M47 écriture faite jamais retenue : détectée (2 cas en échec, dont « interruption au clavier après l'écriture »)
+OK     [mutation] M48 verdict (iii) autre que celui du texte : détectée (19 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M49 champ de la correction propre à la course : détectée (23 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+OK     [mutation] M50 sens écrit pour un test non rejeté : détectée (20 cas en échec, dont « mode test_final, M et S — un fichier par course, Holm sur quatre, valeurs refaites à la main »)
+# mutations : 50 sur 50 détectées
+# fin des mutations 2026-10-26T07:49:17Z (UTC)
+# code de sortie 0
+# fin 2026-10-26T07:49:17Z

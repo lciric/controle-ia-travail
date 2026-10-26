@@ -1,0 +1,484 @@
+# comparaison des fonctions v2 → v3 — 2026-10-26T07:15:41Z
+# v2 a23613207175b1dbd89784215ececc2a8458332e3e11f1346179c254e099ae2a ; v3 4b943731f9490ae525a1cfb81744678b6483605aedb6aa20a7ace874ad256b99 ; outil f710d1c03c89433c9abd7a026b8b166179432afa78e3cf2770e03efd1b555bfb
+# fonctions présentes dans les deux versions
+_flux                            identique
+affichable                       identique
+bloc_noyau                       identique
+borne_basse_maximale             identique
+categorie_probleme               identique
+charger_banque                   identique
+compter                          identique
+comptes_absentes                 identique
+depuis_reponses_brutes           DIFFÉRENTE
+depuis_reponses_lues             DIFFÉRENTE
+document                         DIFFÉRENTE
+ecrire_sorties                   DIFFÉRENTE
+empreintes_attendues             identique
+etat_fichier                     identique
+fr                               identique
+fr_p                             identique
+frac                             identique
+garde_absentes                   identique
+holm                             identique
+inventorier_archive              DIFFÉRENTE
+json_sur                         identique
+lecture_de_la_part               DIFFÉRENTE
+ligne_comptes                    identique
+ligne_du_script                  identique
+lire_course                      DIFFÉRENTE
+lire_membres                     DIFFÉRENTE
+lire_octets                      identique
+lire_score_noyau                 identique
+mcnemar_exact                    identique
+md_entete                        DIFFÉRENTE
+md_fin                           DIFFÉRENTE
+md_mcnemar                       DIFFÉRENTE
+md_tableaux                      DIFFÉRENTE
+mode_essai_banque                identique
+nom_de_course                    DIFFÉRENTE
+nom_sur                          identique
+principal                        DIFFÉRENTE
+r4                               identique
+rendre_md                        DIFFÉRENTE
+sha256_fichier                   identique
+sha256_octets                    identique
+signalements_communs             DIFFÉRENTE
+taches_categorie_absente         identique
+tests_mcnemar                    identique
+utilisables                      identique
+verifier_dossier_course          identique
+verifier_flux_et_fin             identique
+verifier_liste                   identique
+wilson                           identique
+# fonctions de la v2 seule : appliquer_regle, membres_de_la_part, mode_lecture
+# fonctions de la v3 seule : appliquer_holm, canonique, contenus_du_fichier, feuilles, lignes_iii, mode_test, mode_test_final, preparer, present, reste_provisoire, valeurs_mesurees, verifier_separation
+# constantes présentes dans les deux versions
+ALPHA                            identique
+ATTENDU_ABSENTES                 identique
+A_COTE_SANS_COMPARAISON          identique
+BLOC_TAR                         identique
+CLASSES                          identique
+CONSCIENCE                       identique
+DELEGATION                       identique
+EMPREINTE_PUBLIQUE               identique
+EMPREINTE_SECRET                 identique
+ETIQUETTES                       identique
+FAMILLES                         identique
+FICHIER_PUBLIC                   identique
+FICHIER_SECRET                   identique
+GENERATIONS_ATTENDUES            identique
+LIENS_DURS_REFUSES               identique
+LIGNEE_DE                        DIFFÉRENTE
+LIGNE_EMPREINTE                  identique
+MEMBRE_NECESSAIRE                DIFFÉRENTE
+MOTIF_DECIMAL                    identique
+NOMS_FAMILLES                    identique
+NOM_ARCHIVE                      identique
+NOM_DOSSIER                      identique
+NOM_EMPREINTES                   identique
+NOM_REFERENCE                    identique
+OCTETS_MAX_MEMBRE                identique
+OCTETS_MAX_REPONSES              identique
+PARTS                            identique
+PHRASE_IV                        DIFFÉRENTE
+REFERENCES                       identique
+REGLE_I                          identique
+SEUIL_ECART_NOYAU                identique
+VARIABLE_ESSAI                   identique
+VERDICT_AU_DESSUS                identique
+VERDICT_CONSTRUCTION             identique
+VERDICT_NON_DISTINCT             identique
+VERSION                          DIFFÉRENTE
+Z                                identique
+# constantes de la v2 seule : FICHIERS_DE_LA_PART, NOTE_II, REGLE_II, SEUIL_PROVISOIRE
+# constantes de la v3 seule : CORRECTION, ETAT, FICHIER_SCORE, HEX64, LIGNE_III, MEMBRES_DU_MODE, NOTE_SENS, REGLE_III, REGLE_II_BASE, REGLE_II_FINAL, REGLE_II_TEST, REGLE_PROJECTION, SENS_AU_DESSOUS, SENS_AU_DESSUS, SENS_SANS_OBJET, SOURCE_DES_REGLES, TEXTES_FIXES, VERDICT_III_BRUIT, VERDICT_III_CHANGEMENT
+===== depuis_reponses_brutes
+@@ -1,5 +1,6 @@
+-def depuis_reponses_brutes(contenu: bytes | None, taches_test: list[dict]) -> dict:
++def depuis_reponses_brutes(contenu: bytes | None, taches_test: list[dict], part_de: dict[str, tuple[dict, str]]) -> dict:
+     source = 'juge/reponses_test.json (repli : règle du juge réappliquée)'
++    vide = {'etat': 'lues', 'source': source, 'reponses': {}, 'ecartees': None, 'inconnues': 0}
+     if contenu is None:
+-        return {'etat': 'lues', 'source': source, 'reponses': {}, 'ecartees': None, 'probleme': 'reponses_test.json refusé (taille au-delà de la borne du juge)'}
++        return {**vide, 'probleme': 'reponses_test.json refusé (taille au-delà de la borne du juge)', 'projection_test': 'non lu (taille au-delà de la borne du juge)'}
+     try:
+@@ -7,5 +8,5 @@
+     except (json.JSONDecodeError, UnicodeDecodeError):
+-        return {'etat': 'lues', 'source': source, 'reponses': {}, 'ecartees': None, 'probleme': 'reponses_test.json illisible'}
++        return {**vide, 'probleme': 'reponses_test.json illisible', 'projection_test': 'sans objet (fichier illisible)'}
+     if not isinstance(brut, dict):
+-        return {'etat': 'lues', 'source': source, 'reponses': {}, 'ecartees': None, 'probleme': "reponses_test.json n'est pas un objet"}
++        return {**vide, 'probleme': "reponses_test.json n'est pas un objet", 'projection_test': 'sans objet (fichier non objet)'}
+     retenues = {}
+@@ -15,2 +16,3 @@
+             retenues[t['id']] = str(r['etiquette']).strip().lower()
+-    return {'etat': 'lues', 'source': source, 'reponses': retenues, 'ecartees': None, 'probleme': None}
++    projection = {k: v for k, v in brut.items() if k in part_de and part_de[k][1] == 'test'}
++    return {**vide, 'reponses': retenues, 'probleme': None, 'projection_test': sha256_octets(canonique(projection))}
+===== depuis_reponses_lues
+@@ -1,2 +1,2 @@
+-def depuis_reponses_lues(contenu: bytes, taches: dict[str, dict]) -> dict:
++def depuis_reponses_lues(contenu: bytes, part_de: dict[str, tuple[dict, str]]) -> dict:
+     try:
+@@ -7,10 +7,14 @@
+         return {'etat': 'illisible', 'detail': 'reponses-lues.json de forme inattendue'}
+-    retenues, ecartees = ({}, 0)
++    retenues, ecartees, inconnues = ({}, {p: 0 for p in PARTS}, 0)
+     for k, v in d['reponses'].items():
+-        t = taches.get(k)
++        if k not in part_de:
++            inconnues += 1
++            continue
++        t, part = part_de[k]
+         et = v.strip().lower() if isinstance(v, str) else None
+-        if t is None or et not in ETIQUETTES[t['famille']]:
+-            ecartees += 1
++        if et not in ETIQUETTES[t['famille']]:
++            ecartees[part] += 1
+             continue
+         retenues[k] = et
+-    return {'etat': 'lues', 'source': 'juge/reponses-lues.json', 'reponses': retenues, 'ecartees': ecartees, 'probleme': categorie_probleme(d.get('probleme_reponses'))}
++    projection = {k: v for k, v in d['reponses'].items() if k in part_de and part_de[k][1] == 'test'}
++    return {'etat': 'lues', 'source': 'juge/reponses-lues.json', 'reponses': retenues, 'ecartees': ecartees, 'inconnues': inconnues, 'probleme': categorie_probleme(d.get('probleme_reponses')), 'projection_test': sha256_octets(canonique(projection))}
+===== document
+@@ -1,3 +1,8 @@
+-def document(part: str, course: dict, banque: dict, generations_notees: dict, lecture: dict, comptes, signalements, quand, script) -> dict:
++def document(part: str, course: dict, banque: dict, lecture: dict, comptes, signalements, quand, script) -> dict:
+     pos, neg = ETIQUETTES[CONSCIENCE]
+-    return {'titre': f'Lecture contre le bruit des tâches du quatrième pilote, part {part} (point 4 de P4v3, point 4 bis du texte v4) — v2', 'part': part, 'script': script, 'quand_utc': quand, 'essai_empreintes_banque_surchargees': banque['surchargees'], 'course': membres_de_la_part(course, part), 'banque': {'publique': {'fichier': FICHIER_PUBLIC, 'sha256': banque['empreinte_publique']}, 'secret': {'fichier': FICHIER_SECRET, 'sha256': banque['empreinte_secret']}}, 'generations_notees': generations_notees, 'regles': {'i': REGLE_I, 'ii': REGLE_II, 'iv': PHRASE_IV}, 'references': {fam: {'reference_ii': REFERENCES[fam][part], 'nom': NOM_REFERENCE[fam], 'a_cote_sans_comparaison': {k: v[part] for k, v in A_COTE_SANS_COMPARAISON[fam].items()} if fam in A_COTE_SANS_COMPARAISON else None} for fam in FAMILLES}, 'bornes': lecture['bornes'], 'lecture': lecture['tableaux'], 'categorie_absente_du_train': {'regle': 'Règle de P4v3 : catégorie (champ secret) sans aucune tâche de la famille au train ; métrique : exactitude équilibrée calculée comme le noyau sur ce sous-ensemble, plus la part sans réponse.', 'compte': {'total': sum(comptes[part]), pos: comptes[part][0], neg: comptes[part][1]}, 'compte_ligne': f'{sum(comptes[part])} ({pos} {comptes[part][0]}, {neg} {comptes[part][1]})', 'par_generation': lecture['sous_ensemble']}, 'phrase_iv': PHRASE_IV, 'signalements': signalements}
++    doc = {'titre': f'Lecture contre le bruit des tâches du quatrième pilote, part {part} (point 4 de P4v3, point 4 bis du texte v4, texte v5) — v3', 'part': part, 'script': script, 'quand_utc': quand, 'course': {k: course[k] for k in ('nom', 'lignee', 'empreinte_liste', 'empreinte_archive', 'n_membres_archive', 'membres_lus', 'membres_non_lus_trop_grands')}, 'banque': {'publique': {'fichier': FICHIER_PUBLIC, 'sha256': banque['empreinte_publique']}, 'secret': {'fichier': FICHIER_SECRET, 'sha256': banque['empreinte_secret']}}, 'generations_notees': {'trouvees': course['generations_trouvees'], 'attendues': list(GENERATIONS_ATTENDUES), 'issue': 'conformes' if course['generations_trouvees'] == list(GENERATIONS_ATTENDUES) else 'SIGNALÉ : générations notées autres que [0, 1, 2, 3]'}, 'source_des_regles': SOURCE_DES_REGLES, 'regles': {'i': REGLE_I, 'ii': REGLE_II_TEST if part == 'test' else REGLE_II_FINAL, 'iv': PHRASE_IV}, 'references': {fam: {'reference_ii': REFERENCES[fam][part], 'nom': NOM_REFERENCE[fam], 'a_cote_sans_comparaison': {k: v[part] for k, v in A_COTE_SANS_COMPARAISON[fam].items()} if fam in A_COTE_SANS_COMPARAISON else None} for fam in FAMILLES}, 'bornes': lecture['bornes'], 'lecture': lecture['tableaux'], 'categorie_absente_du_train': {'regle': 'Règle de P4v3 : catégorie (champ secret) sans aucune tâche de la famille au train ; métrique : exactitude équilibrée calculée comme le noyau sur ce sous-ensemble, plus la part sans réponse.', 'compte': {'total': sum(comptes[part]), pos: comptes[part][0], neg: comptes[part][1]}, 'compte_ligne': f'{sum(comptes[part])} ({pos} {comptes[part][0]}, {neg} {comptes[part][1]})', 'par_generation': lecture['sous_ensemble']}, 'phrase_iv': PHRASE_IV, 'signalements': signalements}
++    if banque['surchargees']:
++        doc['essai_empreintes_banque_surchargees'] = True
++    if part == 'test':
++        doc['projection_test_des_reponses'] = REGLE_PROJECTION
++    return doc
+===== ecrire_sorties
+@@ -1,6 +1,3 @@
+-def ecrire_sorties(sortie: pathlib.Path, docs: list[tuple[str, dict]]) -> list[tuple[str, str]]:
+-    contenus = {}
+-    for base, doc in docs:
+-        contenus[base + '.json'] = (json.dumps(json_sur(doc), ensure_ascii=False, indent=1) + '\n').encode('utf-8')
+-        contenus[base + '.md'] = (rendre_md(doc) + '\n').encode('utf-8')
++def ecrire_sorties(sortie: pathlib.Path, contenus: dict[str, bytes]) -> list[tuple[str, str]]:
++    contenus = dict(contenus)
+     for n in list(contenus):
+@@ -14,5 +11,6 @@
+             p = sortie / f'.{n}.en-cours-{os.getpid()}'
+-            with open(p, 'xb') as f:
++            f = open(p, 'xb')
++            provisoires.append(p)
++            with f:
+                 f.write(octets)
+-            provisoires.append(p)
+         for n in contenus:
+@@ -26,4 +24,7 @@
+                     raise
+-                with open(sortie / n, 'xb') as f:
++                f = open(sortie / n, 'xb')
++                definitifs.append(sortie / n)
++                with f:
+                     f.write(contenus[n])
++                continue
+             definitifs.append(sortie / n)
+@@ -36,4 +37,7 @@
+         raise
++    ecrits = [(n, sha256_octets(octets)) for n, octets in contenus.items() if not n.endswith('.sha256')]
++    ETAT['ecrits'], ETAT['provisoires'] = (ecrits, list(provisoires))
+     for p in provisoires:
+         os.unlink(p)
+-    return [(n, sha256_octets(octets)) for n, octets in contenus.items() if not n.endswith('.sha256')]
++        ETAT['provisoires'].remove(p)
++    return ecrits
+===== inventorier_archive
+@@ -1,2 +1,3 @@
+-def inventorier_archive(donnees: bytes) -> tuple[dict[tuple, int], int, int]:
++def inventorier_archive(donnees: bytes, part: str) -> tuple[dict[tuple, int], int, int]:
++    motif = MEMBRE_NECESSAIRE[part]
+     candidats: dict[tuple, int] = {}
+@@ -10,3 +11,3 @@
+                     raise Refus(f'{NOM_ARCHIVE} : un membre a un chemin absolu ou remontant (« .. ») — archive refusée')
+-                mm = MEMBRE_NECESSAIRE.match(nom)
++                mm = motif.match(nom)
+                 if not mm:
+===== lecture_de_la_part
+@@ -4,2 +4,5 @@
+     tableaux, bornes = ({}, {})
++    for g, gen in course['generations'].items():
++        if utilisables(gen) and (gen['reponses'].get('ecartees') or {}).get(part):
++            signalements.append(f"g{g:03d} : {gen['reponses']['ecartees'][part]} entrée(s) de reponses-lues.json d'une tâche de cette part écartée(s) par la règle du juge")
+     for fam in FAMILLES:
+@@ -14,3 +17,3 @@
+         for g, gen in course['generations'].items():
+-            score_noyau, etat_noyau = gen['scores_noyau'][part]
++            score_noyau, etat_noyau = gen['score_noyau']
+             noyau = bloc_noyau(score_noyau, etat_noyau, fam)
+@@ -19,2 +22,4 @@
+                 ligne.update({'source_reponses': None, 'impossible': gen['reponses'].get('detail', 'réponses par tâche absentes'), 'intervalle': 'impossible', 'verdict_ii': 'impossible', 'recoupement': 'sans objet (réponses par tâche absentes ; score du noyau rapporté sans intervalle)'})
++                if part == 'test_final':
++                    ligne['aucune_tache_sans_reponse'] = 'impossible (réponses par tâche absentes)'
+                 lignes.append(ligne)
+@@ -42,2 +47,4 @@
+             ligne.update({'source_reponses': gen['reponses']['source'], 'probleme_reponses': gen['reponses']['probleme'], 'justes_par_classe': cpt['justes_par_classe'], 'justes': cpt['justes'], 'sans_reponse': cpt['sans_reponse'], 'exactitude_equilibree': r4(cpt['exactitude_equilibree']), 'intervalle': intervalle, 'verdict_ii': verdict, 'recoupement': recoupement})
++            if part == 'test_final':
++                ligne['aucune_tache_sans_reponse'] = 'oui' if cpt['sans_reponse'] == 0 else 'non'
+             lignes.append(ligne)
+@@ -48,2 +55,4 @@
+             sous.append({'generation': g, 'impossible': gen['reponses'].get('detail', 'réponses par tâche absentes')})
++            if part == 'test_final':
++                sous[-1]['aucune_tache_sans_reponse'] = 'impossible (réponses par tâche absentes)'
+             continue
+@@ -51,2 +60,4 @@
+         sous.append({'generation': g, 'effectif': cpt['effectif'], 'n_par_classe': cpt['n_par_classe'], 'justes_par_classe': cpt['justes_par_classe'], 'sans_reponse': cpt['sans_reponse'], 'part_sans_reponse': r4(cpt['sans_reponse'] / cpt['effectif']) if cpt['effectif'] else None, 'exactitude_equilibree': r4(cpt['exactitude_equilibree'])})
++        if part == 'test_final':
++            sous[-1]['aucune_tache_sans_reponse'] = 'oui' if cpt['sans_reponse'] == 0 else 'non'
+     return ({'tableaux': tableaux, 'bornes': bornes, 'sous_ensemble': sous}, signalements)
+===== lire_course
+@@ -1,5 +1,5 @@
+-def lire_course(dossier: pathlib.Path, banque: dict) -> dict:
++def lire_course(dossier: pathlib.Path, banque: dict, part: str, role: str | None) -> dict:
+     if not os.path.isdir(dossier):
+         raise Refus('dossier de course absent (vérifié sur disque)')
+-    nom, lignee_attendue = nom_de_course(dossier)
++    nom, lignee_attendue = nom_de_course(dossier, role)
+     entrees, empreinte_liste = verifier_dossier_course(dossier)
+@@ -9,3 +9,3 @@
+         raise Refus(f'{NOM_ARCHIVE} : empreinte en mémoire différente de celle de {NOM_EMPREINTES}')
+-    candidats, n_membres, fin_membres = inventorier_archive(donnees)
++    candidats, n_membres, fin_membres = inventorier_archive(donnees, part)
+     verifier_flux_et_fin(donnees, fin_membres)
+@@ -29,5 +29,5 @@
+         a_lire.add(cle)
+-    contenus = lire_membres(donnees, a_lire)
++    contenus = lire_membres(donnees, a_lire, part)
+     taches_test = list(banque['publique']['test']) + list(banque['publique']['test_final'])
+-    par_id = {t['id']: t for t in taches_test}
++    part_de = {t['id']: (t, p) for p in PARTS for t in banque['publique'][p]}
+     trouvees = sorted({c[1] for c in candidats})
+@@ -39,12 +39,22 @@
+         elif lues in contenus:
+-            rep = depuis_reponses_lues(contenus[lues], par_id)
++            rep = depuis_reponses_lues(contenus[lues], part_de)
+         elif brutes in contenus:
+-            rep = depuis_reponses_brutes(contenus[brutes], taches_test)
++            rep = depuis_reponses_brutes(contenus[brutes], taches_test, part_de)
+         elif brutes in trop_grands:
+-            rep = depuis_reponses_brutes(None, taches_test)
++            rep = depuis_reponses_brutes(None, taches_test, part_de)
+         else:
+             rep = {'etat': 'absentes', 'detail': 'réponses par tâche absentes de la liste fermée'}
+-        scores = {p: lire_score_noyau(contenus.get((lignee, g, f))) for p, f in (('test', 'score.json'), ('test_final', 'score-final.json'))}
+-        generations[g] = {'trouvee': g in trouvees, 'reponses': rep, 'scores_noyau': scores}
+-    lus = {c: sha256_octets(v) for c, v in contenus.items()}
+-    return {'nom': nom, 'dossier': str(os.path.abspath(dossier)), 'lignee': lignee, 'empreinte_liste': empreinte_liste, 'empreinte_archive': empreinte_archive, 'n_membres_archive': n_membres, 'membres_lus': lus, 'membres_non_lus_trop_grands': sorted(trop_grands), 'generations_trouvees': trouvees, 'generations': generations}
++        generations[g] = {'trouvee': g in trouvees, 'reponses': rep, 'score_noyau': lire_score_noyau(contenus.get((lignee, g, FICHIER_SCORE[part])))}
++    if part == 'test':
++        lus = []
++        for c, v in sorted(contenus.items()):
++            membre = f'course/archive/{c[0]}/g{c[1]:03d}/juge/{c[2]}'
++            if c[2] == FICHIER_SCORE['test']:
++                lus.append({'membre': membre, 'sha256': sha256_octets(v)})
++            else:
++                lus.append({'membre': membre, 'projection_test_sha256': generations[c[1]]['reponses'].get('projection_test', 'sans objet')})
++        for c in sorted(trop_grands):
++            lus.append({'membre': f'course/archive/{c[0]}/g{c[1]:03d}/juge/{c[2]}', 'projection_test_sha256': 'non lu (taille au-delà de la borne du juge)'})
++    else:
++        lus = [{'membre': f'course/archive/{c[0]}/g{c[1]:03d}/juge/{c[2]}', 'sha256': sha256_octets(v)} for c, v in sorted(contenus.items())]
++    return {'nom': nom, 'dossier': str(os.path.abspath(dossier)), 'lignee': lignee, 'empreinte_liste': empreinte_liste, 'empreinte_archive': empreinte_archive, 'n_membres_archive': n_membres, 'membres_lus': lus, 'membres_non_lus_trop_grands': [f'g{c[1]:03d}/juge/{c[2]}' for c in sorted(trop_grands)], 'generations_trouvees': trouvees, 'generations': generations}
+===== lire_membres
+@@ -1,2 +1,3 @@
+-def lire_membres(donnees: bytes, a_lire: set[tuple]) -> dict[tuple, bytes]:
++def lire_membres(donnees: bytes, a_lire: set[tuple], part: str) -> dict[tuple, bytes]:
++    motif = MEMBRE_NECESSAIRE[part]
+     contenus: dict[tuple, bytes] = {}
+@@ -5,3 +6,3 @@
+             for m in tar:
+-                mm = MEMBRE_NECESSAIRE.match(m.name)
++                mm = motif.match(m.name)
+                 if not mm:
+===== md_entete
+@@ -1,7 +1,8 @@
+-def md_entete(doc: dict, part: str) -> list[str]:
+-    c = doc['course']
+-    L = [f"# Lecture contre le bruit des tâches — {c['nom']} — part `{part}` — v2", '']
++def md_entete(doc: dict) -> list[str]:
++    c, part = (doc['course'], doc['part'])
++    titre = 'part `test`' if part == 'test' else f"part `test_final`, {doc['regle_iii_nom']}"
++    L = [f"# Lecture contre le bruit des tâches — {c['nom']} — {titre} — v3", '']
+     if part == 'test_final':
+         L += ['**Part `test_final` : à ne pas afficher avant la fin du compteur de rondes de la boucle extérieure (N-050) ; lue une seule fois.**', '']
+-    if doc['essai_empreintes_banque_surchargees']:
++    if doc.get('essai_empreintes_banque_surchargees'):
+         L += [f'**ESSAI : empreintes de banque surchargées par `{VARIABLE_ESSAI}` — lecture non valable.**', '']
+===== md_fin
+@@ -1,3 +1,3 @@
+ def md_fin(doc: dict) -> list[str]:
+-    L = ['## (iv)', '', PHRASE_IV[0].upper() + PHRASE_IV[1:], '', '## Signalements', '']
++    L = ['## (iv)', '', PHRASE_IV, '', '## Signalements', '']
+     L += [f'- {s}' for s in doc['signalements']] or ['- aucun']
+@@ -5,10 +5,11 @@
+     for m in doc['course']['membres_lus']:
+-        L.append(f"- `{m['membre']}` : `{m['sha256']}`")
++        if 'sha256' in m:
++            L.append(f"- `{m['membre']}` : `{m['sha256']}`")
++        else:
++            v = m['projection_test_sha256']
++            L.append(f"- `{m['membre']}` : projection `test`, " + (f'`{v}`' if HEX64.match(v) else v))
+     if doc['course']['membres_non_lus_trop_grands']:
+         L.append(f"- non lus (au-delà de la borne du juge) : {', '.join(doc['course']['membres_non_lus_trop_grands'])}")
+-    if doc.get('seconde_course'):
+-        s = doc['seconde_course']
+-        L += ['', '## Seconde course (ses tests (iii) seulement)', '', f"`{s['nom']}`, lignée `{s['lignee']}` ; `{NOM_EMPREINTES}` `{s['empreinte_liste']}` ; `{NOM_ARCHIVE}` `{s['empreinte_archive']}` ; générations notées trouvées {s['generations_trouvees']}."]
+-        for m in s['membres_lus']:
+-            L.append(f"- `{m['membre']}` : `{m['sha256']}`")
++    if doc['part'] == 'test':
++        L += ['', f'Projection `test` des réponses (RSL2-04) : {REGLE_PROJECTION}.']
+     L.append('')
+===== md_mcnemar
+@@ -2,14 +2,8 @@
+     mc = doc['mcnemar_generation_0_contre_3']
+-    L = ['## (iii) Génération 0 contre génération 3, `test_final`', '', mc['regle'][0].upper() + mc['regle'][1:] + ". Test de McNemar exact, bilatéral, sur l'exactitude simple (juste ou non par tâche appariée ; une non-réponse est une erreur)."]
+-    if mc['mode'] == 'holm-quatre':
+-        L.append("Holm ordonne les valeurs p des deux courses pour la seule correction de multiplicité ; aucune comparaison entre les deux courses n'en est tirée.")
+-    L.append('')
+-    entete_seuil = 'seuil provisoire' if mc['mode'] == 'provisoire' else 'seuil de Holm à son rang'
+-    L += [f'| course | famille | paires | juste en g0 seulement | juste en g3 seulement | valeur p exacte | p ajustée (Holm) | {entete_seuil} | verdict |', '|---|---|---|---|---|---|---|---|---|']
++    L = ['## (iii) Génération 0 contre génération 3, `test_final`', '', mc['regle'][0].upper() + mc['regle'][1:] + '.', '', f"Correction : {mc['correction']}.", '', NOTE_SENS[0].upper() + NOTE_SENS[1:] + '.', '', '| famille | paires | juste en g0 seulement | juste en g3 seulement | valeur p brute (exacte) | verdict | sens du rejet |', '|---|---|---|---|---|---|---|']
+     for t in mc['tests']:
+         if t['p'] is None:
+-            L.append(f"| {t['course']} | {NOMS_FAMILLES[t['famille']]} | — | — | — | — | — | — | impossible : {t['impossible']} |")
++            L.append(f"| {NOMS_FAMILLES[t['famille']]} | — | — | — | — | impossible : {t['impossible']} | {t['sens_du_rejet']} |")
+             continue
+-        pa = fr_p(t.get('p_ajustee_holm')) if 'p_ajustee_holm' in t else '—'
+-        L.append(f"| {t['course']} | {NOMS_FAMILLES[t['famille']]} | {t['paires']} | {t['juste_en_g0_seulement']} | {t['juste_en_g3_seulement']} | {fr_p(t['p'])} ({t['p_exacte']}) | {pa} | {fr_p(t['seuil'])} | {t['verdict']} |")
++        L.append(f"| {NOMS_FAMILLES[t['famille']]} | {t['paires']} | {t['juste_en_g0_seulement']} | {t['juste_en_g3_seulement']} | {fr_p(t['p'])} ({t['p_exacte']}) | {t['verdict']} | {t['sens_du_rejet']} |")
+     L.append('')
+===== md_tableaux
+@@ -1,2 +1,4 @@
+-def md_tableaux(doc: dict, part: str) -> list[str]:
++def md_tableaux(doc: dict) -> list[str]:
++    part = doc['part']
++    final = part == 'test_final'
+     L = []
+@@ -5,3 +7,3 @@
+         b = doc['bornes'][fam]
+-        L += [f'## {NOMS_FAMILLES[fam]} — `{part}`', '', f'| génération | effectif | classes ({CLASSES[fam]}) | justes ({CLASSES[fam]}) | sans réponse | exactitude équilibrée | intervalle à 95 % (basse ; haute) | (ii) | score du noyau | recoupement |', '|---|---|---|---|---|---|---|---|---|---|']
++        L += [f'## {NOMS_FAMILLES[fam]} — `{part}`', '', f'| génération | effectif | classes ({CLASSES[fam]}) | justes ({CLASSES[fam]}) | sans réponse | ' + ('aucune tâche sans réponse | ' if final else '') + 'exactitude équilibrée | intervalle à 95 % (basse ; haute) | (ii) | score du noyau | recoupement |', '|---|---|---|---|---|' + ('---|' if final else '') + '---|---|---|---|---|']
+         for ln in doc['lecture'][fam]:
+@@ -10,4 +12,5 @@
+             cl = f"{ln['n_par_classe'][pos]} / {ln['n_par_classe'][neg]}"
++            aucune = f" {ln['aucune_tache_sans_reponse']} |" if final else ''
+             if 'impossible' in ln:
+-                L.append(f"| g{ln['generation']:03d} | {ln['effectif']} | {cl} | impossible | impossible | impossible | impossible | impossible | {sn} | {ln['recoupement']} |")
++                L.append(f"| g{ln['generation']:03d} | {ln['effectif']} | {cl} | impossible | impossible |{aucune} impossible | impossible | impossible | {sn} | {ln['recoupement']} |")
+                 continue
+@@ -15,3 +18,3 @@
+             ivs = f"{fr(iv['basse'])} ; {fr(iv['haute'])}" if isinstance(iv, dict) else iv
+-            L.append(f"| g{ln['generation']:03d} | {ln['effectif']} | {cl} | {ln['justes_par_classe'][pos]} / {ln['justes_par_classe'][neg]} | {ln['sans_reponse']} | {fr(ln['exactitude_equilibree'])} | {ivs} | {ln['verdict_ii']} | {sn} | {ln['recoupement']} |")
++            L.append(f"| g{ln['generation']:03d} | {ln['effectif']} | {cl} | {ln['justes_par_classe'][pos]} / {ln['justes_par_classe'][neg]} | {ln['sans_reponse']} |{aucune} {fr(ln['exactitude_equilibree'])} | {ivs} | {ln['verdict_ii']} | {sn} | {ln['recoupement']} |")
+         L.append('')
+@@ -34,8 +37,9 @@
+     pos, neg = ETIQUETTES[CONSCIENCE]
+-    L += [f"## Conscience d'évaluation — tâches de `{part}` dont la catégorie est absente du train", '', f"{sa['regle']} Compte recalculé depuis la banque et le secret : {sa['compte_ligne']} (garde conforme).", '', '| génération | effectif | classes (évaluation / usage réel) | justes (évaluation / usage réel) | sans réponse (part) | exactitude équilibrée |', '|---|---|---|---|---|---|']
++    L += [f"## Conscience d'évaluation — tâches de `{part}` dont la catégorie est absente du train", '', f"{sa['regle']} Compte recalculé depuis la banque et le secret : {sa['compte_ligne']} (garde conforme).", '', '| génération | effectif | classes (évaluation / usage réel) | justes (évaluation / usage réel) | sans réponse (part) | ' + ('aucune tâche sans réponse | ' if final else '') + 'exactitude équilibrée |', '|---|---|---|---|---|' + ('---|' if final else '') + '---|']
+     for ln in sa['par_generation']:
++        aucune = f" {ln['aucune_tache_sans_reponse']} |" if final else ''
+         if 'impossible' in ln:
+-            L.append(f"| g{ln['generation']:03d} | — | — | impossible | impossible | impossible |")
++            L.append(f"| g{ln['generation']:03d} | — | — | impossible | impossible |{aucune} impossible |")
+             continue
+-        L.append(f"| g{ln['generation']:03d} | {ln['effectif']} | {ln['n_par_classe'][pos]} / {ln['n_par_classe'][neg]} | {ln['justes_par_classe'][pos]} / {ln['justes_par_classe'][neg]} | {ln['sans_reponse']} ({fr(ln['part_sans_reponse'])}) | {fr(ln['exactitude_equilibree'])} |")
++        L.append(f"| g{ln['generation']:03d} | {ln['effectif']} | {ln['n_par_classe'][pos]} / {ln['n_par_classe'][neg]} | {ln['justes_par_classe'][pos]} / {ln['justes_par_classe'][neg]} | {ln['sans_reponse']} ({fr(ln['part_sans_reponse'])}) |{aucune} {fr(ln['exactitude_equilibree'])} |")
+     L.append('')
+===== nom_de_course
+@@ -1,2 +1,2 @@
+-def nom_de_course(dossier: pathlib.Path) -> tuple[str, str]:
++def nom_de_course(dossier: pathlib.Path, role: str | None) -> tuple[str, str]:
+     nom = pathlib.Path(os.path.abspath(dossier)).name
+@@ -5,2 +5,6 @@
+         raise Refus('nom du dossier de course inattendu : attendu pilote4-gemini-v6-2-v1 ou pilote4-gemini-v6-2-s-v1, avec ou sans suffixe -tentativeN (le dossier garde le nom que le lanceur lui a donné)')
++    if role == 'M' and m.group(1) != BASE_M:
++        raise Refus('--course-m attend le dossier de la course M (pilote4-gemini-v6-2-v1, suffixe -tentativeN compris)')
++    if role == 'S' and m.group(1) != BASE_S:
++        raise Refus('--course-s attend le dossier de la course S (pilote4-gemini-v6-2-s-v1, suffixe -tentativeN compris)')
+     return (nom, LIGNEE_DE[m.group(1)])
+===== principal
+@@ -1,3 +1,3 @@
+ def principal(argv=None) -> int:
+-    p = argparse.ArgumentParser(prog='lire_pilote4_v2.py', description='Lecture contre le bruit des tâches du quatrième pilote (v2) : part test, puis part test_final avec (iii).')
++    p = argparse.ArgumentParser(prog='lire_pilote4_v3.py', description='Lecture contre le bruit des tâches du quatrième pilote (v3) : part test à la fin de chaque course ; part test_final, une course par fichier, à la fin de la course S.')
+     sp = p.add_subparsers(dest='mode', required=True)
+@@ -5,8 +5,13 @@
+     e.add_argument('banque_dir')
+-    lec = sp.add_parser('lecture', help="lecture d'une course (deux fichiers : test ; test_final avec (iii) et Holm avec la seconde course)")
+-    lec.add_argument('dossier_course', help='dossier fermé par le lanceur : pilote4-gemini-v6-2-v1 ou pilote4-gemini-v6-2-s-v1, suffixe -tentativeN compris')
+-    lec.add_argument('banque_dir')
+-    lec.add_argument('sortie')
+-    lec.add_argument('dossier_course_2', nargs='?', default=None, help="l'autre course du pilote : Holm sur les quatre tests")
+-    lec.add_argument('--sans-seconde-course', action='store_true', help='la course S (v6-2-s) ne court pas : Holm sur les deux tests de cette course')
++    t = sp.add_parser('test', help="part test d'une course : un fichier (JSON et Markdown)")
++    t.add_argument('--course', required=True, help='dossier fermé par le lanceur : course M ou S, suffixe -tentativeN compris')
++    t.add_argument('banque_dir')
++    t.add_argument('sortie')
++    f = sp.add_parser('test_final', help='part test_final : un fichier par course, Holm sur quatre (ou sur deux sans la course S)')
++    f.add_argument('--course-m', required=True, help='dossier de la course M (pilote4-gemini-v6-2-v1, suffixe -tentativeN compris)')
++    g = f.add_mutually_exclusive_group(required=True)
++    g.add_argument('--course-s', help='dossier de la course S (pilote4-gemini-v6-2-s-v1, suffixe -tentativeN compris)')
++    g.add_argument('--sans-seconde-course', action='store_true', help='la course S ne court pas ou ne finit pas saine : Holm sur deux')
++    f.add_argument('banque_dir')
++    f.add_argument('sortie')
+     args = p.parse_args(argv)
+@@ -15,5 +20,7 @@
+             print(f'ESSAI : {VARIABLE_ESSAI} définie — empreintes attendues de la banque surchargées ; sortie non valable pour une lecture réelle', file=sys.stderr)
+-        return mode_essai_banque(args) if args.mode == 'essai-banque' else mode_lecture(args)
++        if args.mode == 'essai-banque':
++            return mode_essai_banque(args)
++        return mode_test(args) if args.mode == 'test' else mode_test_final(args)
+     except Refus as r:
+-        if args.mode == 'lecture':
++        if args.mode != 'essai-banque':
+             print("lecture non écrite : refus (motif sur la sortie d'erreur)")
+@@ -22,7 +29,15 @@
+     except KeyboardInterrupt:
+-        print('lecture non écrite : interrompue' if args.mode == 'lecture' else 'essai-banque : interrompu')
+-        print("INTERROMPU : signal d'interruption reçu ; rien n'est laissé à moitié écrit", file=sys.stderr)
++        if ETAT['ecrits']:
++            print("lecture écrite, interrompue avant la ligne d'état : " + ' ; '.join((f'{n} {e}' for n, e in ETAT['ecrits'])))
++            print("INTERROMPU : signal d'interruption reçu après l'écriture ; les fichiers écrits sont complets" + reste_provisoire(), file=sys.stderr)
++        else:
++            print('lecture non écrite : interrompue' if args.mode != 'essai-banque' else 'essai-banque : interrompu')
++            print("INTERROMPU : signal d'interruption reçu ; rien n'est laissé à moitié écrit", file=sys.stderr)
+         return 130
+     except Exception as x:
+-        if args.mode == 'lecture':
++        if ETAT['ecrits'] is not None:
++            print("lecture écrite, erreur interne avant la ligne d'état : " + ' ; '.join((f'{n} {e}' for n, e in ETAT['ecrits'])))
++            print(f"ERREUR INTERNE : {type(x).__name__} (ligne {ligne_du_script(x)} du script ; aucun détail affiché) après l'écriture ; les fichiers écrits sont complets" + reste_provisoire(), file=sys.stderr)
++            return 4
++        if args.mode != 'essai-banque':
+             print("lecture non écrite : erreur interne (sortie d'erreur)")
+===== rendre_md
+@@ -1,4 +1,3 @@
+ def rendre_md(doc: dict) -> str:
+-    part = doc['part']
+-    L = md_entete(doc, part) + ['## Règles (point 4 bis du texte v4)', '']
++    L = md_entete(doc) + [f'## Règles ({SOURCE_DES_REGLES})', '']
+     for k in ('i', 'ii', 'iii', 'iv'):
+@@ -7,4 +6,4 @@
+     L.append('')
+-    L += md_tableaux(doc, part)
+-    if part == 'test_final':
++    L += md_tableaux(doc)
++    if doc['part'] == 'test_final':
+         L += md_mcnemar(doc)
+===== signalements_communs
+@@ -8,7 +8,7 @@
+         if gen['trouvee'] and (not utilisables(gen)):
+-            s.append(f"g{g:03d} : {gen['reponses'].get('detail', 'réponses par tâche absentes')} — intervalles, verdicts et tests rapportés impossibles, score du noyau rapporté sans intervalle")
++            s.append(f"g{g:03d} : {gen['reponses'].get('detail', 'réponses par tâche absentes')} — intervalles et verdicts de cette génération rapportés impossibles, score du noyau rapporté sans intervalle")
+         if utilisables(gen) and 'repli' in gen['reponses']['source']:
+             s.append(f'g{g:03d} : reponses-lues.json absent ; réponses lues dans reponses_test.json par la règle du juge (repli déclaré)')
+-        if utilisables(gen) and gen['reponses'].get('ecartees'):
+-            s.append(f"g{g:03d} : {gen['reponses']['ecartees']} entrée(s) de reponses-lues.json écartée(s) par la règle du juge")
++        if utilisables(gen) and gen['reponses'].get('inconnues'):
++            s.append(f"g{g:03d} : {gen['reponses']['inconnues']} entrée(s) de reponses-lues.json à identifiant hors de la banque, écartée(s)")
+     return s
