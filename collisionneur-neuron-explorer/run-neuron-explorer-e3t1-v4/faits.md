@@ -1,0 +1,1 @@
+Aucun fait n’est joint : la question se suffit à elle-même (ordre de Lazar du 26 octobre 2026, vers 01:58 UTC, transmis par le complément de passation `registres/passations/2026-10-26-0200-complement.md`, § A ; GO-2026-10-26-01).
