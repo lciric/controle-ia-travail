@@ -1,0 +1,1 @@
+Aucun fait n’est joint : les faits sur l’essai et le cadre du programme sont dans la question elle-même (ordre de Lazar du 26 octobre 2026, vers 02:41 UTC, mot direct dans la session ; GO-2026-10-24-07).
