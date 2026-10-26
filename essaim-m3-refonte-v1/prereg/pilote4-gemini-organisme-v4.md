@@ -352,13 +352,13 @@ conception », « En générations notées », « Correction de P3 » et la phra
    recopie mot pour mot ces lignes, l'empreinte du texte remplie ; s'il en diffère, rien ne part. La tête de la branche
    citée au message de départ ne diffère de `8e5e2f7b` que par les chemins que le lanceur permet (`PERMIS_APRES_CODE`) :
    rien d'autre (par exemple le travail sur les étapes 1 et 2) n'y est committé avant le départ.
-2. **Graines (R9)** : entropie E = <<ENTROPIE>> tirée au scellement par `secrets.randbits(128)` (script
+2. **Graines (R9)** : entropie E = 302624837687062370070997219949106435183 tirée au scellement par `secrets.randbits(128)` (script
    `sceller_pilote4_v4.py`, qui refuse numpy < 1.25 et toute ligne d'entropie ou de graine de trop) ; deux enfants
    `numpy.random.SeedSequence(E).spawn(2)` ; graine de chaque course = `int(enfant.generate_state(1, dtype=numpy.uint64)[0])`,
    l'enfant 0 pour la v5.3, l'enfant 1 pour la v6.2 (chaque égalité sur une seule ligne, lue et recalculée par le lanceur à
    chaque segment) :
-   graine de la course v5-3 = <<GRAINE_V53>>
-   graine de la course v6-2 = <<GRAINE_V6X>>
+   graine de la course v5-3 = 755578208180416146
+   graine de la course v6-2 = 2334107546136117589
 3. **Moment de la lecture des scores** (pilote de conception, décision de Lazar de 01:56, confirmée dans la session de
    session-depot, R-473 ; remplace le moment de lecture et les conditions (i) et (ii) du point 3 de P4v3 ; en garde ce que
    session-depot consulte pendant et entre les segments (P4v3 l. 391–397) et les canaux dits et acceptés (l. 397–409)) :
@@ -502,7 +502,7 @@ couvre toutes les pièces avant elle ; la v8, donnée à la contre-lecture 7, co
 pièces des contre-lectures 5, 6 et 7 de ce texte (`contre-lecture-5-v1/`, `contre-lecture-6-v1/`, `contre-lecture-7-v1/`,
 briefs compris) et du traitement des constats des contre-lectures 6 et 7 (`traitement-cl6-v1/`, `traitement-cl7-v1/`) ;
 les pièces des cas sains de la série v13 (`simulation-lanceur-v10/`) et le
-relevé v2 jamais servi (`releves-serie-v11-v1/`) ; et le fichier d'empreintes de toutes les pièces et des contre-lectures, `EMPREINTES-pilote4-gemini-v2.txt`, d'empreinte <<EMPREINTE_PIECES>>. L'organisme lui-même est
+relevé v2 jamais servi (`releves-serie-v11-v1/`) ; et le fichier d'empreintes de toutes les pièces et des contre-lectures, `EMPREINTES-pilote4-gemini-v2.txt`, d'empreinte `dbc5928d1645ebaa53cc3a3d35f87bc8f813c473b93de27cceb08f154567d9f3`. L'organisme lui-même est
 dans son commit (`7ea3270`, branche `canal/conv-audit-organisme-v6-2-1`), que le lanceur extrait.
 
 ## Contre-lecture
