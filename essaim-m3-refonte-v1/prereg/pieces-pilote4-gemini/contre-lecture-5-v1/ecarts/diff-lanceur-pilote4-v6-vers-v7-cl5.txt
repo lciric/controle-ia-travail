@@ -1,0 +1,90 @@
+2c2
+< # Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6.1, chacun seul, sur la banque
+---
+> # Lanceur du quatrième pilote descriptif « organismes assistés de Gemini, v5.3 puis v6.2, chacun seul, sur la banque
+4,6c4,8
+< # une course en un ou plusieurs segments (COURSE=v5-3, puis COURSE=v6-1 ; SEGMENT=1, 2, …) — v6 : le lanceur v5
+< # (565f5205…) par `deriver_lanceur_pilote4_v6.py` (avec CLORE=1, l'extrait mécanique est lancé depuis le dépôt ; écart
+< # consigné dans `diff-lanceur-pilote4-v5-vers-v6.txt`), la v5 dérivée du lanceur v4
+---
+> # une course en un ou plusieurs segments (COURSE=v5-3, puis COURSE=v6-2 ; SEGMENT=1, 2, …) — v7 : le lanceur v6
+> # (50f9c496…) par `deriver_lanceur_pilote4_v7.py` (objet de la seconde course : la v6.2 à la place de la v6.1, décision
+> # de Lazar du 25 octobre 2026, 23:54 Paris, « tout attendre la v6.2 » ; écart consigné dans
+> # `diff-lanceur-pilote4-v6-vers-v7.txt`), la v6 dérivée du lanceur v5 (565f5205…) par `deriver_lanceur_pilote4_v6.py`
+> # (avec CLORE=1, l'extrait mécanique est lancé depuis le dépôt), la v5 dérivée du lanceur v4
+12c14
+< # consigné dans `diff-lanceur-pilote3-v2-vers-pilote4-v3.txt`). Ce qui change : les objets (v6.1 à la place de la v6) et
+---
+> # consigné dans `diff-lanceur-pilote3-v2-vers-pilote4-v3.txt`). Ce qui change : les objets (v6.2 à la place de la v6) et
+19c21
+< # v6.1 = branche de Gemini, commit `a9d8eb5`, arbre `ae331d1d…`, 24 fichiers ; lignées « assistées ».
+---
+> # v6.2 = branche `canal/gemini-organisme-v6-2`, commit `fedb065`, arbre `d02c2907…`, 24 fichiers ; lignées « assistées ».
+22c24
+< # Texte : `essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v3.md` (ou la version qui le remplace et cite ce
+---
+> # Texte : `essaim-m3-refonte-v1/prereg/pilote4-gemini-organisme-v4.md` (ou la version qui le remplace et cite ce
+28,29c30,31
+< #       bash lancer_pilote4_gemini_v6.sh
+< #   MODE=reel COURSE=v6-1 … PRECEDENTE_V53=<dossier du pilote de la course v5.3 de ce pilote, dans la même copie> (même forme)
+---
+> #       bash lancer_pilote4_gemini_v7.sh
+> #   MODE=reel COURSE=v6-2 … PRECEDENTE_V53=<dossier du pilote de la course v5.3 de ce pilote, dans la même copie> (même forme)
+49c51
+< COURSE="${COURSE:?COURSE=v5-3 ou COURSE=v6-1}"
+---
+> COURSE="${COURSE:?COURSE=v5-3 ou COURSE=v6-2}"
+68,71c70,73
+<   v6-1)
+<     NOM="pilote4-gemini-v6-1-v1"; INDICE_GRAINE=1
+<     COMMIT_ORGANISME=a9d8eb50c02c8f5ea31b060b3c0e86f23c2d1dbc
+<     ARBRE_ORGANISME=ae331d1deb660a20da919edbdcdecba28e49b9b143a6b7a061262101a79798d4
+---
+>   v6-2)
+>     NOM="pilote4-gemini-v6-2-v1"; INDICE_GRAINE=1
+>     COMMIT_ORGANISME=fedb06525610c05945f8496c2058c21a15256fca
+>     ARBRE_ORGANISME=d02c2907c8eaafb5c9c6768d739b415bfe3d9733a4342b8a16ad77eb19fdb252
+73,74c75,76
+<     LIGNEE="gemini-organisme-v6-1";;
+<   *) refus_tot "COURSE inconnue : $COURSE (v5-3 ou v6-1)";;
+---
+>     LIGNEE="gemini-organisme-v6-2";;
+>   *) refus_tot "COURSE inconnue : $COURSE (v5-3 ou v6-2)";;
+273c275
+< # 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course v6.1 : ne part qu'après une course v5.3
+---
+> # 0 bis (avant l'étape 0, pour que ses refus en réel soient essayables). Course v6.2 : ne part qu'après une course v5.3
+277c279
+< #        de v6.1 porte aussi les 16 premiers caractères de l'empreinte des empreintes de v5.3
+---
+> #        de v6.2 porte aussi les 16 premiers caractères de l'empreinte des empreintes de v5.3
+279,280c281,282
+< if [ "$COURSE" = v6-1 ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V53:-}" ]; }; then
+<   [ -n "${PRECEDENTE_V53:-}" ] || refus "PRECEDENTE_V53 non défini : v6.1 ne part qu'après une course v5.3 saine (dossier du pilote de la course v5.3)"
+---
+> if [ "$COURSE" = v6-2 ] && { [ "$MODE" = reel ] || [ -n "${PRECEDENTE_V53:-}" ]; }; then
+>   [ -n "${PRECEDENTE_V53:-}" ] || refus "PRECEDENTE_V53 non défini : v6.2 ne part qu'après une course v5.3 saine (dossier du pilote de la course v5.3)"
+282c284
+<   [ -d "$SV" ] || refus "PRECEDENTE_V53 $SV absent : v6.1 ne part qu'après v5.3"
+---
+>   [ -d "$SV" ] || refus "PRECEDENTE_V53 $SV absent : v6.2 ne part qu'après v5.3"
+288c290
+<   [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v5.3 absentes : v6.1 ne part qu'après une course v5.3 finie et fermée"
+---
+>   [ -f "$SV/EMPREINTES-pilote-v1.txt" ] && [ -f "$SV/EMPREINTES-pilote-v1.txt.sha256" ] || refus "empreintes de v5.3 absentes : v6.2 ne part qu'après une course v5.3 finie et fermée"
+346c348
+< ' "$SV" "$SHA_LANCEUR" "gemini-organisme-v5-3" "$MODE" "$GO_ID" "$(basename "$0")" "v5-3" "pilote4-gemini-v5-3-v1")" || refus "v6.1 ne part pas : issue de v5.3 hors de la liste saine ($issue_v53) — décision de Lazar requise"
+---
+> ' "$SV" "$SHA_LANCEUR" "gemini-organisme-v5-3" "$MODE" "$GO_ID" "$(basename "$0")" "v5-3" "pilote4-gemini-v5-3-v1")" || refus "v6.2 ne part pas : issue de v5.3 hors de la liste saine ($issue_v53) — décision de Lazar requise"
+495c497
+<   if [ "$COURSE" = v6-1 ] && [ -n "${GRAINE_V53_MANIFESTE:-}" ]; then
+---
+>   if [ "$COURSE" = v6-2 ] && [ -n "${GRAINE_V53_MANIFESTE:-}" ]; then
+502c504
+< # 3. Organisme de la course (v5.3 ou v6.1, dossier organisme/ seul) et question, extraits des commits cités, vérifiés
+---
+> # 3. Organisme de la course (v5.3 ou v6.2, dossier organisme/ seul) et question, extraits des commits cités, vérifiés
+539c541
+<     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V53:0:16}" || refus "la ligne de dépense de v6.1 ne porte pas l'empreinte des empreintes de v5.3 (${EMP_V53:0:16}…), écrite après la fin de v5.3"
+---
+>     echo "$dep" | grep "$NOM" | grep "$GO_ID" | grep -q "${EMP_V53:0:16}" || refus "la ligne de dépense de v6.2 ne porte pas l'empreinte des empreintes de v5.3 (${EMP_V53:0:16}…), écrite après la fin de v5.3"

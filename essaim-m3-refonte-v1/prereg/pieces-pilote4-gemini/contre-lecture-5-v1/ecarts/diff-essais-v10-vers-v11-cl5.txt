@@ -1,0 +1,297 @@
+2,3c2,6
+< # Essais du lanceur du pilote 4 (v5.3 puis v6.2, banque v3, quatre générations notées, 6 rondes de conception au
+< # plus), v10 : la v9 (edb6b12b…) par `deriver_essais_pilote4_v10.py` pour le lanceur v8 (la v6.2 livrée, commit `3bbb78c`,
+---
+> # Essais du lanceur du pilote 4 (v6.2 puis v5.3, banque v3, quatre générations notées, 6 rondes de conception au
+> # plus), v11 : la v10 (b7906684…) par `deriver_essais_pilote4_v11.py` pour le lanceur v9 (ordre des courses inversé, décision
+> # de Lazar du 26 octobre 2026, 00:18 Paris : la v6.2 d'abord, puis la v5.3 après une v6.2 saine ; porte « v6.2 précédente »
+> # sur un cas sain et sur ses artefacts ; segments essayés sur la v6.2 ; un cas ajouté, sain-v5-3-graine) ; la v10 était
+> # dérivée de la v9 (edb6b12b…) par `deriver_essais_pilote4_v10.py` pour le lanceur v8 (la v6.2 livrée, commit `3bbb78c`,
+15,16c18,19
+< # essaie (i) les deux courses saines de bout en bout en simulation (v5.3, essais du noyau exécutés ; puis v6.2 après la
+< # v5.3 saine), avec les rondes de conception et les quatre générations, et relève ce que montrent les rondes ; (ii) la
+---
+> # essaie (i) les deux courses saines de bout en bout en simulation (v6.2, essais du noyau exécutés ; puis v5.3 après la
+> # v6.2 saine), avec les rondes de conception et les quatre générations, et relève ce que montrent les rondes ; (ii) la
+18c21
+< # liste close ; (iii) la porte « v5.3 précédente » (générations 0 à 3) et ses artefacts ; (iv) ce qui change (objets,
+---
+> # liste close ; (iii) la porte « v6.2 précédente » (générations 0 à 3) et ses artefacts ; (iv) ce qui change (objets,
+21c24
+< # Usage : bash essais_lanceur_pilote4_v10.sh LANCEUR LANCEUR_M DEPOT DEPOT_M PYTHON DOSSIER_ESSAIS DEPOT_SOUS_ROOT PYTHON_AVEC_HTTPX
+---
+> # Usage : bash essais_lanceur_pilote4_v11.sh LANCEUR LANCEUR_M DEPOT DEPOT_M PYTHON DOSSIER_ESSAIS DEPOT_SOUS_ROOT PYTHON_AVEC_HTTPX
+137,152c140
+< echo "== cas sains : v5.3 complète (essais du noyau exécutés), puis v6.2 ; rondes de conception et quatre générations =="
+< td_heure "$E/entrees/td-heure-fraiche-v53.json" 0 GO-2026-10-25-02
+< cas sain-v5-3 "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=v5-3 GRAINE="$G_53" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-v53.json" ESSAI_EXIGER_HEURE=1
+< V53="$E/cas-sain-v5-3/pilote4-gemini-v5-3-v1"
+< verifier sain-v5-3-reference-m "; M saine : g000 et g001 OK" "$V53/LANCEMENT.md"
+< verifier sain-v5-3-graine-m "graine $GRAINE_M_SCELLEE = graine M du texte scellé du second pilote (d2944654…)" "$V53/LANCEMENT.md"
+< verifier sain-v5-3-organisme "organisme : 22 fichiers, empreinte d'arbre 6251ab219e86286ec892a65e28cf9eebad5265fd6e32e350e68827897c811753" "$V53/LANCEMENT.md"
+< verifier sain-v5-3-essais "essais : 169 passés, 0 sauté, 0 désélectionnés" "$V53/LANCEMENT.md"
+< verifier sain-v5-3-registre "registre : une ligne GO-2026-10-25-02 de type calcul" "$V53/LANCEMENT.md"
+< verifier sain-v5-3-temps-conception "temps par ronde de conception 900 s" "$V53/LANCEMENT.md"
+< verifier sain-v5-3-minuteur "STOP non posé" "$V53/LANCEMENT.md"
+< JUNIT="$E/junit-sain-v1.xml"; cp "$V53/essais-v1.xml" "$JUNIT"
+< SAIN+=(ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="169 passed")
+< EMP_V53="$(cut -d' ' -f1 < "$V53/EMPREINTES-pilote-v1.txt.sha256")"
+< printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n| 2026-10-25 | pilote4-gemini-v6-2-v1 | GO-2026-10-25-02 | 60 | après M et v5.3, empreintes de M %s, de v5.3 %s |\n' "$EMP_M" "$EMP_M" "$EMP_V53" > "$E/entrees/dep-sain.md"
+< printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n| 2026-10-25 | pilote4-gemini-v6-2-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n' "$EMP_M" "$EMP_M" > "$E/entrees/dep-v6-sans-empreinte-v53.md"
+---
+> echo "== cas sains : v6.2 complète (essais du noyau exécutés), puis v5.3 après la v6.2 saine ; rondes de conception et quatre générations =="
+154,157c142,143
+< cas sain-v6-2 "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=v6-2 GRAINE="$G_6" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-v6.json" ESSAI_EXIGER_HEURE=1 PRECEDENTE_V53="$V53"
+< V6="$E/cas-sain-v6-2/pilote4-gemini-v6-2-v1"
+< verifier sain-v6-2-precedente-v53 "; v5.3 saine : g000 à g003 OK" "$V6/LANCEMENT.md"
+< verifier sain-v6-2-graine-v53 "graine $G_53 = graine v5-3 du préenregistrement" "$V6/LANCEMENT.md"
+---
+> cas sain-v6-2 "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=v6-2 GRAINE="$G_6" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-v6.json" ESSAI_EXIGER_HEURE=1
+> V6="$E/cas-sain-v6-2/pilote4-gemini-v6-2-v1"; V62="$V6"
+158a145
+> verifier sain-v6-2-graine-m "graine $GRAINE_M_SCELLEE = graine M du texte scellé du second pilote (d2944654…)" "$V6/LANCEMENT.md"
+159a147,148
+> verifier sain-v6-2-essais "essais : 169 passés, 0 sauté, 0 désélectionnés" "$V6/LANCEMENT.md"
+> verifier sain-v6-2-registre "registre : une ligne GO-2026-10-25-02 de type calcul" "$V6/LANCEMENT.md"
+162a152,166
+> JUNIT="$E/junit-sain-v1.xml"; cp "$V6/essais-v1.xml" "$JUNIT"
+> SAIN+=(ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="169 passed")
+> EMP_V62="$(cut -d' ' -f1 < "$V62/EMPREINTES-pilote-v1.txt.sha256")"
+> printf '| 2026-10-25 | pilote4-gemini-v6-2-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n| 2026-10-25 | pilote4-gemini-v5-3-v1 | GO-2026-10-25-02 | 60 | après M et v6.2, empreintes de M %s, de v6.2 %s |\n' "$EMP_M" "$EMP_M" "$EMP_V62" > "$E/entrees/dep-sain.md"
+> printf '| 2026-10-25 | pilote4-gemini-v6-2-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n| 2026-10-25 | pilote4-gemini-v5-3-v1 | GO-2026-10-25-02 | 60 | après M, empreintes de M %s |\n' "$EMP_M" "$EMP_M" > "$E/entrees/dep-v53-sans-empreinte-v62.md"
+> td_heure "$E/entrees/td-heure-fraiche-v53.json" 0 GO-2026-10-25-02
+> cas sain-v5-3 "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=v5-3 GRAINE="$G_53" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-v53.json" ESSAI_EXIGER_HEURE=1 PRECEDENTE_V62="$V62"
+> V53="$E/cas-sain-v5-3/pilote4-gemini-v5-3-v1"
+> verifier sain-v5-3-precedente-v62 "; v6.2 saine : g000 à g003 OK" "$V53/LANCEMENT.md"
+> verifier sain-v5-3-graine-v62 "graine $G_6 = graine v6-2 du préenregistrement" "$V53/LANCEMENT.md"
+> verifier sain-v5-3-reference-m "; M saine : g000 et g001 OK" "$V53/LANCEMENT.md"
+> verifier sain-v5-3-organisme "organisme : 22 fichiers, empreinte d'arbre 6251ab219e86286ec892a65e28cf9eebad5265fd6e32e350e68827897c811753" "$V53/LANCEMENT.md"
+> verifier sain-v5-3-graine "graine $G_53 de la course v5-3 écrite et recalculée" "$V53/LANCEMENT.md"
+> verifier sain-v5-3-temps-conception "temps par ronde de conception 900 s" "$V53/LANCEMENT.md"
+> verifier sain-v5-3-minuteur "STOP non posé" "$V53/LANCEMENT.md"
+254,300c258,304
+< echo "== course v6.2 : issues de v5.3 hors de la liste saine (copie de v5.3 altérée, empreintes refaites) =="
+< copie_v53() {  # copie_v53 NOM → chemin d'une copie de v5.3
+<   local d="$E/v53-alteree-$1/pilote4-gemini-v5-3-v1"; rm -rf "$E/v53-alteree-$1"; mkdir -p "$E/v53-alteree-$1"; cp -a "$V53" "$d"; echo "$d"
+< }
+< V6C=(MODE=simulation COURSE=v6-2 "${SAIN[@]}")
+< cas v53-absente "PRECEDENTE_V53 $E/nulle-part absent : v6.2 ne part qu'après v5.3" -- "${V6C[@]}" PRECEDENTE_V53="$E/nulle-part"
+< d="$(copie_v53 sans-empreintes)"; rm -f "$d/EMPREINTES-pilote-v1.txt.sha256"
+< cas v53-sans-empreintes "empreintes de v5.3 absentes" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 empreintes)"; extrait_altere "$d" 'x["quand_utc"] = "autre"'
+< cas v53-empreintes-alterees "empreintes de v5.3 non vérifiées" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 code)"; sed -i 's/code de retour : 0 ;/code de retour : 1 ;/' "$d/LANCEMENT.md"; refaire_empreintes "$d"
+< cas v53-code-retour "code de retour du noyau non nul" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 archive)"; sed -i 's/^- archive fermée : ferme\.tar\.gz (/- ARCHIVE FERMÉE INCOMPLÈTE : (/' "$d/LANCEMENT.md"; refaire_empreintes "$d"
+< cas v53-archive-incomplete "archive fermée absente ou incomplète" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 lanceur)"; sed -i "s/sha256 $H\$/sha256 0000/" "$d/LANCEMENT.md"; refaire_empreintes "$d"
+< cas v53-autre-lanceur "v5.3 n a pas tourné sous ce lanceur" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 pas-v53)"; sed -i 's/^- course : v5-3 ;/- course : v6-2 ;/' "$d/LANCEMENT.md"; refaire_empreintes "$d"
+< cas v53-pas-course-v53 "ce n est pas la course v5.3" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 credit)"; extrait_altere "$d" '[g.update(statut="CREDIT_EPUISE", invalide=True) for g in x["generations"] if g.get("generation") == 1 and not g.get("phase")]'; refaire_empreintes "$d"
+< cas v53-credit "g001 : statut 'CREDIT_EPUISE'" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 modele)"; extrait_altere "$d" '[g.update(statut="INVALIDE_MODELE", invalide=True) for g in x["generations"] if g.get("generation") == 0 and not g.get("phase")]'; refaire_empreintes "$d"
+< cas v53-invalide-modele "g000 : statut 'INVALIDE_MODELE'" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 anomalie)"; extrait_altere "$d" '[g.update(anomalie_noyau="journal des appels absent") for g in x["generations"] if g.get("generation") == 1 and not g.get("phase")]'; refaire_empreintes "$d"
+< cas v53-anomalie "anomalie 'journal des appels absent'" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 une)"; extrait_altere "$d" 'x["generations"] = [g for g in x["generations"] if g.get("generation") != 1 or g.get("phase")]'; refaire_empreintes "$d"
+< cas v53-une-generation "générations de v5.3 : [0, 2, 3] au lieu de [0, 1, 2, 3]" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 deux)"; extrait_altere "$d" 'x["generations"] = [g for g in x["generations"] if g.get("phase") or g.get("generation") in (0, 1)]'; refaire_empreintes "$d"
+< cas v53-deux-generations "générations de v5.3 : [0, 1] au lieu de [0, 1, 2, 3]" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 stop)"; extrait_altere "$d" '[e.update(raison="fichier STOP") for e in x["evenements"] if e.get("etape") == "arret"]'; refaire_empreintes "$d"
+< cas v53-stop "arrêt de la course : ['fichier STOP']" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 plafond)"; extrait_altere "$d" '[e.update(raison="plafond total atteint") for e in x["evenements"] if e.get("etape") == "arret"]'; refaire_empreintes "$d"
+< cas v53-plafond-total "arrêt de la course : ['plafond total atteint']" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 invalidees)"; extrait_altere "$d" 'x["rapport"]["generations_invalidees"] = [{"lignee": "gemini-organisme-v5-3", "generation": 1}]'; refaire_empreintes "$d"
+< cas v53-invalidees "générations invalidées" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 fin)"; extrait_altere "$d" 'x["rapport"]["lignees"]["gemini-organisme-v5-3"]["fin"] = "sans successeur valide"'; refaire_empreintes "$d"
+< cas v53-fin-lignee "fin de la lignée : 'sans successeur valide'" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 espace)"; printf -- '- espace des organismes du manifeste (/x) ≠ espace attendu (/y) : ni archivé ni retiré, jamais lu — réserve\n' >> "$d/LANCEMENT.md"; refaire_empreintes "$d"
+< cas v53-espace-autre "espace des organismes de v5.3 autre que l espace attendu" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 echec-api)"; extrait_altere "$d" '[g["appels"].update(par_statut={"OK": 10, "ECHEC_API": 113}, n=123) for g in x["generations"] if g.get("generation") == 0 and not g.get("phase")]'; refaire_empreintes "$d"
+< cas v53-echec-api "g000 : 113 appels hors OK sur 123 (plus de 20 %)" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 fable-sans-ok)"; extrait_altere "$d" '[g["appels"]["par_espece"]["CLAUDE_FABLE_5_1"].update(par_statut={"ECHEC_API": g["appels"]["par_espece"]["CLAUDE_FABLE_5_1"]["n"]}) for g in x["generations"] if g.get("generation") == 1 and not g.get("phase")]'; refaire_empreintes "$d"
+< cas v53-fable-sans-ok "g001 : aucun appel OK de CLAUDE_FABLE_5_1" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< d="$(copie_v53 graine)"; extrait_altere "$d" 'x["manifeste"]["entropie_seed_sequence"] = 13'; refaire_empreintes "$d"
+< cas v53-graine-autre "qui n'est pas la graine v5-3 du préenregistrement scellé" -- "${V6C[@]}" GRAINE="$G_6" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" PRECEDENTE_V53="$d"
+< d="$(copie_v53 graine-vide)"; extrait_altere "$d" 'x["manifeste"]["entropie_seed_sequence"] = None'; refaire_empreintes "$d"
+< cas v53-graine-vide "graine de v5.3 au manifeste illisible ou vide (None)" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+< cas v6-2-depense-sans-empreinte-v53 "la ligne de dépense de v6.2 ne porte pas l'empreinte des empreintes de v5.3" -- "${V6C[@]}" PRECEDENTE_V53="$V53" DEPENSES_SOURCE="$E/entrees/dep-v6-sans-empreinte-v53.md"
+---
+> echo "== course v5.3 : issues de v6.2 hors de la liste saine (copie de v6.2 altérée, empreintes refaites) =="
+> copie_v62() {  # copie_v62 NOM → chemin d'une copie de v6.2
+>   local d="$E/v62-alteree-$1/pilote4-gemini-v6-2-v1"; rm -rf "$E/v62-alteree-$1"; mkdir -p "$E/v62-alteree-$1"; cp -a "$V62" "$d"; echo "$d"
+> }
+> V5C=(MODE=simulation COURSE=v5-3 "${SAIN[@]}")
+> cas v62-absente "PRECEDENTE_V62 $E/nulle-part absent : v5.3 ne part qu'après v6.2" -- "${V5C[@]}" PRECEDENTE_V62="$E/nulle-part"
+> d="$(copie_v62 sans-empreintes)"; rm -f "$d/EMPREINTES-pilote-v1.txt.sha256"
+> cas v62-sans-empreintes "empreintes de v6.2 absentes" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 empreintes)"; extrait_altere "$d" 'x["quand_utc"] = "autre"'
+> cas v62-empreintes-alterees "empreintes de v6.2 non vérifiées" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 code)"; sed -i 's/code de retour : 0 ;/code de retour : 1 ;/' "$d/LANCEMENT.md"; refaire_empreintes "$d"
+> cas v62-code-retour "code de retour du noyau non nul" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 archive)"; sed -i 's/^- archive fermée : ferme\.tar\.gz (/- ARCHIVE FERMÉE INCOMPLÈTE : (/' "$d/LANCEMENT.md"; refaire_empreintes "$d"
+> cas v62-archive-incomplete "archive fermée absente ou incomplète" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 lanceur)"; sed -i "s/sha256 $H\$/sha256 0000/" "$d/LANCEMENT.md"; refaire_empreintes "$d"
+> cas v62-autre-lanceur "v6.2 n a pas tourné sous ce lanceur" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 pas-v62)"; sed -i 's/^- course : v6-2 ;/- course : v5-3 ;/' "$d/LANCEMENT.md"; refaire_empreintes "$d"
+> cas v62-pas-course-v62 "ce n est pas la course v6.2" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 credit)"; extrait_altere "$d" '[g.update(statut="CREDIT_EPUISE", invalide=True) for g in x["generations"] if g.get("generation") == 1 and not g.get("phase")]'; refaire_empreintes "$d"
+> cas v62-credit "g001 : statut 'CREDIT_EPUISE'" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 modele)"; extrait_altere "$d" '[g.update(statut="INVALIDE_MODELE", invalide=True) for g in x["generations"] if g.get("generation") == 0 and not g.get("phase")]'; refaire_empreintes "$d"
+> cas v62-invalide-modele "g000 : statut 'INVALIDE_MODELE'" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 anomalie)"; extrait_altere "$d" '[g.update(anomalie_noyau="journal des appels absent") for g in x["generations"] if g.get("generation") == 1 and not g.get("phase")]'; refaire_empreintes "$d"
+> cas v62-anomalie "anomalie 'journal des appels absent'" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 une)"; extrait_altere "$d" 'x["generations"] = [g for g in x["generations"] if g.get("generation") != 1 or g.get("phase")]'; refaire_empreintes "$d"
+> cas v62-une-generation "générations de v6.2 : [0, 2, 3] au lieu de [0, 1, 2, 3]" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 deux)"; extrait_altere "$d" 'x["generations"] = [g for g in x["generations"] if g.get("phase") or g.get("generation") in (0, 1)]'; refaire_empreintes "$d"
+> cas v62-deux-generations "générations de v6.2 : [0, 1] au lieu de [0, 1, 2, 3]" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 stop)"; extrait_altere "$d" '[e.update(raison="fichier STOP") for e in x["evenements"] if e.get("etape") == "arret"]'; refaire_empreintes "$d"
+> cas v62-stop "arrêt de la course : ['fichier STOP']" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 plafond)"; extrait_altere "$d" '[e.update(raison="plafond total atteint") for e in x["evenements"] if e.get("etape") == "arret"]'; refaire_empreintes "$d"
+> cas v62-plafond-total "arrêt de la course : ['plafond total atteint']" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 invalidees)"; extrait_altere "$d" 'x["rapport"]["generations_invalidees"] = [{"lignee": "gemini-organisme-v6-2", "generation": 1}]'; refaire_empreintes "$d"
+> cas v62-invalidees "générations invalidées" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 fin)"; extrait_altere "$d" 'x["rapport"]["lignees"]["gemini-organisme-v6-2"]["fin"] = "sans successeur valide"'; refaire_empreintes "$d"
+> cas v62-fin-lignee "fin de la lignée : 'sans successeur valide'" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 espace)"; printf -- '- espace des organismes du manifeste (/x) ≠ espace attendu (/y) : ni archivé ni retiré, jamais lu — réserve\n' >> "$d/LANCEMENT.md"; refaire_empreintes "$d"
+> cas v62-espace-autre "espace des organismes de v6.2 autre que l espace attendu" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 echec-api)"; extrait_altere "$d" '[g["appels"].update(par_statut={"OK": 10, "ECHEC_API": 113}, n=123) for g in x["generations"] if g.get("generation") == 0 and not g.get("phase")]'; refaire_empreintes "$d"
+> cas v62-echec-api "g000 : 113 appels hors OK sur 123 (plus de 20 %)" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 fable-sans-ok)"; extrait_altere "$d" '[g["appels"]["par_espece"]["CLAUDE_FABLE_5_1"].update(par_statut={"ECHEC_API": g["appels"]["par_espece"]["CLAUDE_FABLE_5_1"]["n"]}) for g in x["generations"] if g.get("generation") == 1 and not g.get("phase")]'; refaire_empreintes "$d"
+> cas v62-fable-sans-ok "g001 : aucun appel OK de CLAUDE_FABLE_5_1" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> d="$(copie_v62 graine)"; extrait_altere "$d" 'x["manifeste"]["entropie_seed_sequence"] = 13'; refaire_empreintes "$d"
+> cas v62-graine-autre "qui n'est pas la graine v6-2 du préenregistrement scellé" -- "${V5C[@]}" GRAINE="$G_53" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" PRECEDENTE_V62="$d"
+> d="$(copie_v62 graine-vide)"; extrait_altere "$d" 'x["manifeste"]["entropie_seed_sequence"] = None'; refaire_empreintes "$d"
+> cas v62-graine-vide "graine de v6.2 au manifeste illisible ou vide (None)" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+> cas v5-3-depense-sans-empreinte-v62 "la ligne de dépense de v5.3 ne porte pas l'empreinte des empreintes de v6.2" -- "${V5C[@]}" PRECEDENTE_V62="$V62" DEPENSES_SOURCE="$E/entrees/dep-v53-sans-empreinte-v62.md"
+305c309
+< REEL=(MODE=reel COURSE=v5-3 PILOTE_RACINE=- DEPOT="$DEPOT_ROOT" "${CLES_REEL[@]}" BRAVE_API_KEY=factice OPENALEX_API_KEY=factice SEMANTIC_SCHOLAR_API_KEY=factice RECHARGE_ATTESTEE=essai)
+---
+> REEL=(MODE=reel COURSE=v6-2 PILOTE_RACINE=- DEPOT="$DEPOT_ROOT" "${CLES_REEL[@]}" BRAVE_API_KEY=factice OPENALEX_API_KEY=factice SEMANTIC_SCHOLAR_API_KEY=factice RECHARGE_ATTESTEE=essai)
+317c321
+< cas reel-reference-tentative-simulee "M n a pas tourné en réel" -- "${REEL[@]}" COURSE=v5-3 REFERENCE_M="$RR/pilote2-gemini-v5-2-1-maieutique-v1-tentative2"
+---
+> cas reel-reference-tentative-simulee "M n a pas tourné en réel" -- "${REEL[@]}" COURSE=v6-2 REFERENCE_M="$RR/pilote2-gemini-v5-2-1-maieutique-v1-tentative2"
+319,321c323,325
+< echo "== mode réel, course v6.2 (copie du dépôt sous /root) : refus à l'étape (0 bis), avant tout appel =="
+< REEL_V6=(MODE=reel COURSE=v6-2 PILOTE_RACINE=- DEPOT="$DEPOT_ROOT" "${CLES_REEL[@]}" BRAVE_API_KEY=factice OPENALEX_API_KEY=factice SEMANTIC_SCHOLAR_API_KEY=factice RECHARGE_ATTESTEE=essai)
+< cas reel-v6-2-sans-precedente "PRECEDENTE_V53 non défini" -- "${REEL_V6[@]}"
+---
+> echo "== mode réel, course v5.3 (copie du dépôt sous /root) : refus à l'étape (0 bis), avant tout appel =="
+> REEL_V53=(MODE=reel COURSE=v5-3 PILOTE_RACINE=- DEPOT="$DEPOT_ROOT" "${CLES_REEL[@]}" BRAVE_API_KEY=factice OPENALEX_API_KEY=factice SEMANTIC_SCHOLAR_API_KEY=factice RECHARGE_ATTESTEE=essai)
+> cas reel-v5-3-sans-precedente "PRECEDENTE_V62 non défini" -- "${REEL_V53[@]}"
+323c327
+< cas reel-v6-2-precedente-hors-dossier "hors du dossier des pilotes" -- "${REEL_V6[@]}" PRECEDENTE_V53="$V53"
+---
+> cas reel-v5-3-precedente-hors-dossier "hors du dossier des pilotes" -- "${REEL_V53[@]}" PRECEDENTE_V62="$V62"
+325,326c329,330
+< mkdir -p "$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes"; cp -a "$V53" "$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes/autre-nom-v1"
+< cas reel-v6-2-precedente-nom "nom autre que pilote4-gemini-v5-3-v1[-tentativeN]" -- "${REEL_V6[@]}" PRECEDENTE_V53="$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes/autre-nom-v1"
+---
+> mkdir -p "$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes"; cp -a "$V62" "$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes/autre-nom-v1"
+> cas reel-v5-3-precedente-nom "nom autre que pilote4-gemini-v6-2-v1[-tentativeN]" -- "${REEL_V53[@]}" PRECEDENTE_V62="$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes/autre-nom-v1"
+328,329c332,333
+< mkdir -p "$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes"; cp -a "$V53" "$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes/pilote4-gemini-v5-3-v1"
+< cas reel-v6-2-precedente-simulee "v5.3 n a pas tourné en réel" -- "${REEL_V6[@]}" PRECEDENTE_V53="$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes/pilote4-gemini-v5-3-v1"
+---
+> mkdir -p "$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes"; cp -a "$V62" "$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes/pilote4-gemini-v6-2-v1"
+> cas reel-v5-3-precedente-simulee "v6.2 n a pas tourné en réel" -- "${REEL_V53[@]}" PRECEDENTE_V62="$DEPOT_ROOT/essaim-m3-refonte-v1/pilotes/pilote4-gemini-v6-2-v1"
+475,476c479,480
+< copie_ps() {  # copie_ps NOM → chemin d'une copie de la v5.3 en segments
+<   local d="$E/ps-alteree-$1/pilote4-gemini-v5-3-v1"; rm -rf "$E/ps-alteree-$1"; mkdir -p "$E/ps-alteree-$1"; cp -a "$PS" "$d"; echo "$d"
+---
+> copie_ps() {  # copie_ps NOM → chemin d'une copie de la v6.2 en segments
+>   local d="$E/ps-alteree-$1/pilote4-gemini-v6-2-v1"; rm -rf "$E/ps-alteree-$1"; mkdir -p "$E/ps-alteree-$1"; cp -a "$PS" "$d"; echo "$d"
+479c483
+< SEG=(MODE=simulation COURSE=v5-3 GRAINE="$G_53" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-1.json" ESSAI_EXIGER_HEURE=1)
+---
+> SEG=(MODE=simulation COURSE=v6-2 GRAINE="$G_6" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-1.json" ESSAI_EXIGER_HEURE=1)
+481,482c485,486
+<   printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 segment 2 | GO-2026-10-25-02 | au plus 75 USD moins la dépense déjà faite | après le segment 1 |\n'
+<   printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 segment 3 | GO-2026-10-25-02 | au plus 75 USD moins la dépense déjà faite | après le segment 2 |\n'; } > "$E/entrees/dep-segments.md"
+---
+>   printf '| 2026-10-25 | pilote4-gemini-v6-2-v1 segment 2 | GO-2026-10-25-02 | au plus 75 USD moins la dépense déjà faite | après le segment 1 |\n'
+>   printf '| 2026-10-25 | pilote4-gemini-v6-2-v1 segment 3 | GO-2026-10-25-02 | au plus 75 USD moins la dépense déjà faite | après le segment 2 |\n'; } > "$E/entrees/dep-segments.md"
+495c499
+< RS="$E/cas-seg-segment1"; PS="$RS/pilote4-gemini-v5-3-v1"
+---
+> RS="$E/cas-seg-segment1"; PS="$RS/pilote4-gemini-v6-2-v1"
+506,509c510,513
+< mkdir "$RS/.verrou-pilote4-gemini-v5-3-v1-segment2"
+< cas seg-verrou-du-segment "verrou $RS/.verrou-pilote4-gemini-v5-3-v1-segment2 présent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+< rmdir "$RS/.verrou-pilote4-gemini-v5-3-v1-segment2"
+< cp -p "$RS/.partis/pilote4-gemini-v5-3-v1" "$E/marqueur-sauve"; printf 'ailleurs 2026-10-25T00:00:00Z\n' > "$RS/.partis/pilote4-gemini-v5-3-v1"
+---
+> mkdir "$RS/.verrou-pilote4-gemini-v6-2-v1-segment2"
+> cas seg-verrou-du-segment "verrou $RS/.verrou-pilote4-gemini-v6-2-v1-segment2 présent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+> rmdir "$RS/.verrou-pilote4-gemini-v6-2-v1-segment2"
+> cp -p "$RS/.partis/pilote4-gemini-v6-2-v1" "$E/marqueur-sauve"; printf 'ailleurs 2026-10-25T00:00:00Z\n' > "$RS/.partis/pilote4-gemini-v6-2-v1"
+511c515
+< cp -p "$E/marqueur-sauve" "$RS/.partis/pilote4-gemini-v5-3-v1"
+---
+> cp -p "$E/marqueur-sauve" "$RS/.partis/pilote4-gemini-v6-2-v1"
+529,534c533,538
+< mv "$RS/.verrou-pilote4-gemini-v5-3-v1" "$E/verrou-segment1-sauve"
+< cas seg-verrou-segment1-absent "verrou $RS/.verrou-pilote4-gemini-v5-3-v1 du segment 1 absent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+< mv "$E/verrou-segment1-sauve" "$RS/.verrou-pilote4-gemini-v5-3-v1"
+< mkdir -p "$RS/pilote4-gemini-v5-3-v1-essai-autre/course"; printf '{}\n' > "$RS/pilote4-gemini-v5-3-v1-essai-autre/course/manifeste-run.json"
+< cas seg-autre-course-du-nom "une autre course de ce nom est partie dans $RS/pilote4-gemini-v5-3-v1-essai-autre (R3)" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+< rm -rf "$RS/pilote4-gemini-v5-3-v1-essai-autre"
+---
+> mv "$RS/.verrou-pilote4-gemini-v6-2-v1" "$E/verrou-segment1-sauve"
+> cas seg-verrou-segment1-absent "verrou $RS/.verrou-pilote4-gemini-v6-2-v1 du segment 1 absent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+> mv "$E/verrou-segment1-sauve" "$RS/.verrou-pilote4-gemini-v6-2-v1"
+> mkdir -p "$RS/pilote4-gemini-v6-2-v1-essai-autre/course"; printf '{}\n' > "$RS/pilote4-gemini-v6-2-v1-essai-autre/course/manifeste-run.json"
+> cas seg-autre-course-du-nom "une autre course de ce nom est partie dans $RS/pilote4-gemini-v6-2-v1-essai-autre (R3)" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+> rm -rf "$RS/pilote4-gemini-v6-2-v1-essai-autre"
+553c557
+< cas seg-organisme-modifie "empreinte d'arbre de l'organisme ≠ 6251ab21…" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ARTEFACT=organisme
+---
+> cas seg-organisme-modifie "empreinte d'arbre de l'organisme ≠ 3b2d8d5a…" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ARTEFACT=organisme
+584c588
+< echo "-- porte « v5.3 précédente » de la v6.2 sur la v5.3 en segments --"
+---
+> echo "-- porte « v6.2 précédente » de la v5.3 sur la v6.2 en segments --"
+586,588c590,592
+< printf '| 2026-10-25 | pilote4-gemini-v6-2-v1 | GO-2026-10-25-02 | 75 | après M et v5.3, empreintes de M %s, de v5.3 %s |\n' "$EMP_M" "$EMP_PS" > "$E/entrees/dep-v6-apres-segments.md"
+< cas seg-v6-2-porte-saine "en 2 segment(s) (1 arrêt(s) sur le STOP du minuteur, chacun repris), dernier code 0" -- MODE=simulation COURSE=v6-2 "${SAIN[@]}" PRECEDENTE_V53="$PS" DEPENSES_SOURCE="$E/entrees/dep-v6-apres-segments.md" ESSAI_ARTEFACT=famille
+< verifier seg-v6-2-porte-saine-v53 "; v5.3 saine : g000 à g003 OK" "$E/cas-seg-v6-2-porte-saine"/*/LANCEMENT.md
+---
+> printf '| 2026-10-25 | pilote4-gemini-v5-3-v1 | GO-2026-10-25-02 | 75 | après M et v6.2, empreintes de M %s, de v6.2 %s |\n' "$EMP_M" "$EMP_PS" > "$E/entrees/dep-v53-apres-segments.md"
+> cas seg-v5-3-porte-saine "en 2 segment(s) (1 arrêt(s) sur le STOP du minuteur, chacun repris), dernier code 0" -- MODE=simulation COURSE=v5-3 "${SAIN[@]}" PRECEDENTE_V62="$PS" DEPENSES_SOURCE="$E/entrees/dep-v53-apres-segments.md" ESSAI_ARTEFACT=famille
+> verifier seg-v5-3-porte-saine-v62 "; v6.2 saine : g000 à g003 OK" "$E/cas-seg-v5-3-porte-saine"/*/LANCEMENT.md
+590c594
+< cas seg-v53-stop-sans-reprise "arrêt de la course : ['fichier STOP', 'aucune lignée active'] ; reprises : []" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+---
+> cas seg-v62-stop-sans-reprise "arrêt de la course : ['fichier STOP', 'aucune lignée active'] ; reprises : []" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+592c596
+< cas seg-v53-deux-stops-une-reprise "arrêt de la course : ['fichier STOP', 'fichier STOP', 'aucune lignée active'] ; reprises : [2]" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+---
+> cas seg-v62-deux-stops-une-reprise "arrêt de la course : ['fichier STOP', 'fichier STOP', 'aucune lignée active'] ; reprises : [2]" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+594c598
+< cas seg-v53-dernier-code-non-nul "code de retour du noyau non nul ou absent" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+---
+> cas seg-v62-dernier-code-non-nul "code de retour du noyau non nul ou absent" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+596c600
+< cas seg-v53-reprises-mal-numerotees "arrêt de la course : ['fichier STOP', 'aucune lignée active'] ; reprises : [3]" -- "${V6C[@]}" PRECEDENTE_V53="$d"
+---
+> cas seg-v62-reprises-mal-numerotees "arrêt de la course : ['fichier STOP', 'aucune lignée active'] ; reprises : [3]" -- "${V5C[@]}" PRECEDENTE_V62="$d"
+601c605
+< R3S="$E/cas-seg3-segment1"; P3S="$R3S/pilote4-gemini-v5-3-v1"
+---
+> R3S="$E/cas-seg3-segment1"; P3S="$R3S/pilote4-gemini-v6-2-v1"
+614,615c618,619
+< RC="$E/cas-seg-clore-segment1"; PC="$RC/pilote4-gemini-v5-3-v1"
+< cas seg-clore "CLORE=1 : aucune reprise, aucun appel" -- MODE=simulation COURSE=v5-3 GRAINE="$G_53" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" REFERENCE_M="$M_REF" SEGMENT=2 CLORE=1 PILOTE_RACINE="$RC"
+---
+> RC="$E/cas-seg-clore-segment1"; PC="$RC/pilote4-gemini-v6-2-v1"
+> cas seg-clore "CLORE=1 : aucune reprise, aucun appel" -- MODE=simulation COURSE=v6-2 GRAINE="$G_6" PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR" REFERENCE_M="$M_REF" SEGMENT=2 CLORE=1 PILOTE_RACINE="$RC"
+622c626
+< cas seg-clore-v53-refusee "course v5.3 fermée sans reprise (CLORE=1)" -- "${V6C[@]}" PRECEDENTE_V53="$PC"
+---
+> cas seg-clore-v62-refusee "course v6.2 fermée sans reprise (CLORE=1)" -- "${V5C[@]}" PRECEDENTE_V62="$PC"
+642c646
+< RMU="$E/cas-mut-minuteur-segment1"; PMU="$RMU/pilote4-gemini-v5-3-v1"
+---
+> RMU="$E/cas-mut-minuteur-segment1"; PMU="$RMU/pilote4-gemini-v6-2-v1"

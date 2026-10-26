@@ -1,0 +1,119 @@
+# Lancement du pilote pilote4-gemini-v6-2-v1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-26T00:03:13Z ; hôte : vm ; utilisateur : 0
+- course : v6-2 ; dossier du pilote : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/cas-seg3-segment1/pilote4-gemini-v6-2-v1 (0700, à root)
+- dépôt : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v7/depot ; HEAD : da3ca3382b25c1e61a4cdcc1f8051d33ab056b77 (c'est le « commit » que le manifeste consignera)
+- lanceur : lancer_pilote4_gemini_v10.sh, sha256 0203f5461d1ee7770850ee1b91cb6b379e9f8931b02626d22de56a655eb2c952
+- source des registres : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/go-sain.md ; dépenses : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/dep-sain.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- course M de référence : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/m-reference/pilote2-gemini-v5-2-1-maieutique-v1 ; M saine : g000 et g001 OK, au plus 20 % d appels hors OK et au moins un appel OK de Fable à chacune (g000 {"OK": 123}; g001 {"OK": 129}), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de M 3970427751169333427 ; dépense du noyau 2.9344 USD ; refus du noyau par génération [[], []] ; empreintes de M vérifiées (EMPREINTES-pilote-v1.txt, sha256 d0185263641e21f8d3be97f2fa704cc79dbfb37c3e2e48e916a1abb854b3cf6d) ; graine 3970427751169333427 = graine M du texte scellé du second pilote (d2944654…)
+- code : identique à 8e5e2f7b (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque 157a2b45a8d9fd88cc5dca2f483c2dc79457d781d44f9802b2c053f530c0011d ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- versions : python 3.13.17 ; numpy 2.4.6 ; anthropic absente
+- isolation : dossier du pilote 0700 à root ; espace attendu /var/lib/essaim-m3/e5b4cfc871ddc91f ; dépôt /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v7/depot caché aux organismes (vérifié par bac_a_sable.dossiers_a_cacher) ; ESSAIM_M3_ESPACE non définie
+- préenregistrement : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/prereg-sain.md, sha256 f21fade08c6800c73034d4cabb28bd25c70a92d398f13509876fc2d4e5543362 (compagnon conforme), graine 1541481317522987174 de la course v6-2 écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée
+- organisme : 26 fichiers, empreinte d'arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d ; question (v6-2) : sha256 8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+- registre : une ligne GO-2026-10-25-02 de type calcul portant l'empreinte de la question (v6-2), celle de l'organisme (4f13647a…) et celle du texte scellé (f21fade08c6800c7) ; dépense consignée avant ; reste déclaré 150 USD ≥ 75 (vérification du lanceur)
+- test de dépense : td-seg3-1.json, sha256 815a097383e0e1426c85d51a8c00028cdb2677ce14acd4b36557800a8a0ce2a8 — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 1 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05) (réalité des appels attestée par l'outil de session-depot ; le script vérifie la pièce)
+- recharge automatique attestée : « essai »
+- ESSAI : rapport JUnit repris de /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/junit-sain-v1.xml (simulation)
+- essais : 169 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 45 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte 61ddd638d7a3b5519a7294fc04a75003e3d21da72b9cfdcf4dd07dc0341565a0 (la fonction écarte le bytecode depuis le constat n° 30 § 5)
+- test de dépense revérifié au départ : trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 1 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05)
+- voisines au départ : aucune
+- RÉSERVE : des essais (pytest) tournent dans le conteneur au départ (PID 21948 21949 21951 ) : ceux du noyau font tourner des processus sous l'utilisateur 60900 de ce pilote
+- environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER .
+- marqueur de départ : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/cas-seg3-segment1/.partis/pilote4-gemini-v6-2-v1 (R3 ; jamais retiré)
+- départ de la simulation (UTC) : 2026-10-26T00:03:14Z
+- PID de la course : 26556 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt avant la ronde ou la génération suivante, celle en cours finit)
+- minuteur : PID 26557 ; échéance 2026-10-26T00:03:13Z, 0 s après le départ du lanceur (2026-10-26T00:03:13Z)
+- minuteur : STOP posé dans course/ à 2026-10-26T00:03:16Z (0 s après le départ du lanceur) : la course s'arrête avant la ronde ou la génération suivante ; état de reprise attendu
+- minuteur : STOP présent dans course/ à la fin du processus (fin de segment si le noyau a écrit un état de reprise ; sinon la course a fini sur sa dernière unité)
+- fin du processus (UTC) : 2026-10-26T00:03:17Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : sortie-erreur-lanceur.txt (lisible)
+- état de reprise écrit par le noyau : etat-v1.json 6004bc17d7cca60ef1c75d7ddd6392f006e81385cd09269bd76cb9c8bb92095b 0.0947 74.9053
+- segment 1 arrêté par STOP ; reprise attendue : SEGMENT=2
+- fin du lanceur (UTC) : 2026-10-26T00:03:17Z
+
+## Segment 2, essai 1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-26T00:03:17Z ; hôte : vm ; utilisateur : 0
+- course : v6-2 ; dossier du pilote : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/cas-seg3-segment1/pilote4-gemini-v6-2-v1 (0700, à root) ; pièces de ce segment : segment-2-t1/
+- dépôt : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v7/depot ; HEAD : da3ca3382b25c1e61a4cdcc1f8051d33ab056b77 (celui du segment 1, que le manifeste consigne)
+- lanceur : lancer_pilote4_gemini_v10.sh, sha256 0203f5461d1ee7770850ee1b91cb6b379e9f8931b02626d22de56a655eb2c952
+- source des registres : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/go-sain.md ; dépenses : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/dep-segments.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- état de reprise : etat-v1.json, sha256 6004bc17d7cca60ef1c75d7ddd6392f006e81385cd09269bd76cb9c8bb92095b (compagnon conforme), arrêt sur STOP du segment 1 ; dépense de la course jusqu'ici 0.0947 USD ; reste au plus 74.9053 USD pour la course (plafond 75 USD)
+- course M de référence : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/m-reference/pilote2-gemini-v5-2-1-maieutique-v1 ; M saine : g000 et g001 OK, au plus 20 % d appels hors OK et au moins un appel OK de Fable à chacune (g000 {"OK": 123}; g001 {"OK": 129}), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de M 3970427751169333427 ; dépense du noyau 2.9344 USD ; refus du noyau par génération [[], []] ; empreintes de M vérifiées (EMPREINTES-pilote-v1.txt, sha256 d0185263641e21f8d3be97f2fa704cc79dbfb37c3e2e48e916a1abb854b3cf6d) ; graine 3970427751169333427 = graine M du texte scellé du second pilote (d2944654…)
+- code : identique à 8e5e2f7b (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque 157a2b45a8d9fd88cc5dca2f483c2dc79457d781d44f9802b2c053f530c0011d ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- versions : python 3.13.17 ; numpy 2.4.6 ; anthropic absente
+- isolation : dossier du pilote 0700 à root ; espace attendu /var/lib/essaim-m3/e5b4cfc871ddc91f ; dépôt /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v7/depot caché aux organismes (vérifié par bac_a_sable.dossiers_a_cacher) ; ESSAIM_M3_ESPACE non définie
+- préenregistrement : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/prereg-sain.md, sha256 f21fade08c6800c73034d4cabb28bd25c70a92d398f13509876fc2d4e5543362 (compagnon conforme), graine 1541481317522987174 de la course v6-2 écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée
+- organisme : 26 fichiers, empreinte d'arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d ; question (v6-2) : sha256 8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+- registre : une ligne GO-2026-10-25-02 de type calcul portant l'empreinte de la question (v6-2), celle de l'organisme (4f13647a…) et celle du texte scellé (f21fade08c6800c7) ; dépense consignée avant (segment 2) ; reste déclaré 150 USD ≥ 74.9053 (vérification du lanceur)
+- test de dépense : td-seg3-2.json, sha256 16ff77089c092fc08de708c828dae424d67ef10fbe103993dcb56319341b1ddd — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 1 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05) (réalité des appels attestée par l'outil de session-depot ; le script vérifie la pièce)
+- recharge automatique attestée : « essai »
+- ESSAI : rapport JUnit repris de /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/junit-sain-v1.xml (simulation)
+- essais : 169 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 45 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte 61ddd638d7a3b5519a7294fc04a75003e3d21da72b9cfdcf4dd07dc0341565a0 (la fonction écarte le bytecode depuis le constat n° 30 § 5)
+- test de dépense revérifié au départ : trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 1 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05)
+- voisines au départ : aucune
+- RÉSERVE : des essais (pytest) tournent dans le conteneur au départ (PID 21948 21949 21951 26762 26766 ) : ceux du noyau font tourner des processus sous l'utilisateur 60900 de ce pilote
+- environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER .
+- marqueur de départ : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/cas-seg3-segment1/.partis/pilote4-gemini-v6-2-v1, posé au segment 1 pour ce dossier (R3 ; jamais retiré)
+- STOP du segment 1 retiré de course/ (reprise)
+- départ de la simulation (UTC) : 2026-10-26T00:03:19Z ; segment 2, reprise de la course
+- PID de la course : 26835 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt avant la ronde ou la génération suivante, celle en cours finit)
+- minuteur : PID 26836 ; échéance 2026-10-26T00:03:17Z, 0 s après le départ du lanceur (2026-10-26T00:03:17Z)
+- minuteur : STOP posé dans course/ à 2026-10-26T00:03:20Z (0 s après le départ du lanceur) : la course s'arrête avant la ronde ou la génération suivante ; état de reprise attendu
+- minuteur : STOP présent dans course/ à la fin du processus (fin de segment si le noyau a écrit un état de reprise ; sinon la course a fini sur sa dernière unité)
+- fin du processus (UTC) : 2026-10-26T00:03:22Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : segment-2-t1/sortie-erreur-lanceur.txt (lisible)
+- état de reprise écrit par le noyau : etat-v2.json 8600a1f8413f16c3f6f731031b6524b53cefa9dac61067e0e7606678caa93a39 1.9544 73.0456
+- segment 2 arrêté par STOP ; reprise attendue : SEGMENT=3
+- fin du lanceur (UTC) : 2026-10-26T00:03:22Z
+
+## Segment 3, essai 1 (simulation, tentative 1)
+
+- début (UTC) : 2026-10-26T00:03:22Z ; hôte : vm ; utilisateur : 0
+- course : v6-2 ; dossier du pilote : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/cas-seg3-segment1/pilote4-gemini-v6-2-v1 (0700, à root) ; pièces de ce segment : segment-3-t1/
+- dépôt : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v7/depot ; HEAD : da3ca3382b25c1e61a4cdcc1f8051d33ab056b77 (celui du segment 1, que le manifeste consigne)
+- lanceur : lancer_pilote4_gemini_v10.sh, sha256 0203f5461d1ee7770850ee1b91cb6b379e9f8931b02626d22de56a655eb2c952
+- source des registres : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/go-sain.md ; dépenses : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/dep-segments.md
+- aucune course voisine du noyau dans ce conteneur au départ (détection par pgrep)
+- état de reprise : etat-v2.json, sha256 8600a1f8413f16c3f6f731031b6524b53cefa9dac61067e0e7606678caa93a39 (compagnon conforme), arrêt sur STOP du segment 2 ; dépense de la course jusqu'ici 1.9544 USD ; reste au plus 73.0456 USD pour la course (plafond 75 USD)
+- course M de référence : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/m-reference/pilote2-gemini-v5-2-1-maieutique-v1 ; M saine : g000 et g001 OK, au plus 20 % d appels hors OK et au moins un appel OK de Fable à chacune (g000 {"OK": 123}; g001 {"OK": 129}), fin « générations maximales », arrêt « aucune lignée active », code 0, archive fermée ; graine de M 3970427751169333427 ; dépense du noyau 2.9344 USD ; refus du noyau par génération [[], []] ; empreintes de M vérifiées (EMPREINTES-pilote-v1.txt, sha256 d0185263641e21f8d3be97f2fa704cc79dbfb37c3e2e48e916a1abb854b3cf6d) ; graine 3970427751169333427 = graine M du texte scellé du second pilote (d2944654…)
+- code : identique à 8e5e2f7b (commit et arbre de travail : essaim_m3, tests, collisionneur) ; commits postérieurs limités aux pièces du pilote ; rien de non suivi hors des dossiers de pilotes ; 4967734 et 90595ffb ancêtres ; banque 157a2b45a8d9fd88cc5dca2f483c2dc79457d781d44f9802b2c053f530c0011d ; mission bd2c6a152f0b2c495dd1ed11362aade43fd1b03c245009f7479ecee43a357b7e ; collisionneur 213b52ef81eb4c9adfc2ac559cd68de9d706257063c7c6e137cb6264adee55fd
+- versions : python 3.13.17 ; numpy 2.4.6 ; anthropic absente
+- isolation : dossier du pilote 0700 à root ; espace attendu /var/lib/essaim-m3/e5b4cfc871ddc91f ; dépôt /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v7/depot caché aux organismes (vérifié par bac_a_sable.dossiers_a_cacher) ; ESSAIM_M3_ESPACE non définie
+- préenregistrement : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/entrees/prereg-sain.md, sha256 f21fade08c6800c73034d4cabb28bd25c70a92d398f13509876fc2d4e5543362 (compagnon conforme), graine 1541481317522987174 de la course v6-2 écrite et recalculée depuis l'entropie du texte, empreinte du lanceur citée
+- organisme : 26 fichiers, empreinte d'arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d ; question (v6-2) : sha256 8b1c751174b3d24dc0d861873a2758d3b780ab9a878e83e591835849db1a7acd
+- registre : une ligne GO-2026-10-25-02 de type calcul portant l'empreinte de la question (v6-2), celle de l'organisme (4f13647a…) et celle du texte scellé (f21fade08c6800c7) ; dépense consignée avant (segment 3) ; reste déclaré 150 USD ≥ 73.0456 (vérification du lanceur)
+- test de dépense : td-seg3-3.json, sha256 da1143b10183c4e5f59aa9f8ea97774b66e35457e3dc8745561835cee2015171 — trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 1 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05) (réalité des appels attestée par l'outil de session-depot ; le script vérifie la pièce)
+- recharge automatique attestée : « essai »
+- ESSAI : rapport JUnit repris de /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/junit-sain-v1.xml (simulation)
+- essais : 169 passés, 0 sauté, 0 désélectionnés ; arguments : « aucun » ; les 45 essais cités ont passé ici (dont la recherche réelle sur arXiv)
+- noyau sans bytecode : empreinte 61ddd638d7a3b5519a7294fc04a75003e3d21da72b9cfdcf4dd07dc0341565a0 (la fonction écarte le bytecode depuis le constat n° 30 § 5)
+- test de dépense revérifié au départ : trois espèces OK, modèles servis conformes, coûts CLAUDE_FABLE_5_1 0.00058, CLAUDE_OPUS_5_5 0.000232, GEMINI_ARGON 0.00076 USD, âge 1 s ; noms des variables du test : absents de la pièce (réserve, P52C1-05)
+- voisines au départ : aucune
+- RÉSERVE : des essais (pytest) tournent dans le conteneur au départ (PID 21948 21949 21951 ) : ceux du noyau font tourner des processus sous l'utilisateur 60900 de ce pilote
+- environnement du noyau (noms seulement, valeurs jamais écrites) : PATH HOME LANG PYTHONDONTWRITEBYTECODE ESSAIM_M3_CACHER .
+- marqueur de départ : /tmp/claude-0/-home-claude/3a0c40e9-6f33-50d1-9582-1a2bbc0655c7/scratchpad/pilote4/serie-v13/essais/cas-seg3-segment1/.partis/pilote4-gemini-v6-2-v1, posé au segment 1 pour ce dossier (R3 ; jamais retiré)
+- STOP du segment 2 retiré de course/ (reprise)
+- départ de la simulation (UTC) : 2026-10-26T00:03:23Z ; segment 3, reprise de la course
+- PID de la course : 27614 (arrêt humain par ce PID seulement, R10 ; STOP dans course/ : arrêt avant la ronde ou la génération suivante, celle en cours finit)
+- minuteur : PID 27615 ; échéance 2026-10-26T01:00:02Z, 3400 s après le départ du lanceur (2026-10-26T00:03:22Z)
+- minuteur arrêté par son PID (27615) à la fin de la course : STOP non posé
+- fin du processus (UTC) : 2026-10-26T00:03:29Z ; code de retour : 0 ; sortie standard fermée (non lue) ; sortie d'erreur : segment-3-t1/sortie-erreur-lanceur.txt (lisible)
+- extrait mécanique : extrait-mecanique-v1.json, sha256 743bb8407025ffddb6835c186caf4f4cb830ec350ea9b1737b97ca59d714c505
+- vérification après départ (extrait) : isolation {"espaces_noms": true, "reseau": true, "root": true, "utilisateur": true} ; collisionneur conforme : True ; commit da3ca3382b25c1e61a4cdcc1f8051d33ab056b77 ; sha256_code_noyau 61ddd638d7a3b5519a7294fc04a75003e3d21da72b9cfdcf4dd07dc0341565a0 ; espace /var/lib/essaim-m3/e5b4cfc871ddc91f ; sources de moisson ["simulation"] ; clés présentes au manifeste — web : False, OpenAlex : False, Semantic Scholar : False ; temps par ronde de conception 900 s ; dépense du noyau 7.0096 USD (à rapprocher de la console, P2C1-05)
+- journal des appels g000 : journal-appels-g000.jsonl, sha256 89e1cad5cd835f254786c4e70892bee85d67c7479e0b951fd881d465a0e9057e
+- journal des appels g001 : journal-appels-g001.jsonl, sha256 1ec4c1b1b64231166b628951331276d9f4de1e16272decd49c6c9818b038259e
+- journal des appels g002 : journal-appels-g002.jsonl, sha256 42071891d4f7b8eb35d0a393cdb06ee927337dcccf3eb0f8dbb1496718c64aaf
+- journal des appels g003 : journal-appels-g003.jsonl, sha256 76b3a549dbac03a84c92d19b3cc12b8d157d465e3d058bcf495cb5a2f4471548
+- journal des appels c001 : journal-appels-c001.jsonl, sha256 044fe30a79fbad1e47c9e47082290f9e6bccf140bc293c45496456a920d790f4
+- journal des appels c002 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- journal des appels c003 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- journal des appels c004 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- journal des appels c005 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- journal des appels c006 : absent ou non ordinaire dans l'archive (génération non tournée, ou anomalie) — rapporté
+- réponse à la question : reponse-question-g001.md, sha256 ee8b23d7ddcd16954f78eb9042a38f98803555f18cafb258d5a99d17b47fddbf
+- archive fermée : ferme.tar.gz (course, sortie standard, espace des organismes), sha256 45b2e30c559de02987775b4e046d969e93fe6ead9f156f09b3637476823e00f3, 3698 entrées = 3698 sur disque ; copies ouvertes retirées
+- fin du lanceur (UTC) : 2026-10-26T00:03:30Z
