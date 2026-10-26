@@ -272,3 +272,27 @@ Paris (UTC + 1 depuis le 25 octobre). Rien d'opposable (R7) ; tout est sur `cana
 - ControlArena : étape 0 faite sur le code installé (note v2 `2b32988c…`) ; étape 1 sur instance avec Docker, devis 40 $.
 - Une de mes réponses arrêtée par un filtre de sûreté vers 16:47 UTC ; rien n'en est reproduit.
 - Passation v3 poussée (canal).
+
+## 21:12 — soirée : pôle « scientifique automatique » (génération 0, deux tours du collisionneur, recombinaison tranchée, rétrodiction sur arXiv, orchestrateur), rapport pour Gemini
+
+- Relais de Gemini (18 générations, méta-conception v6.3, commit `5512513`) : aucun code nouveau ; sigle du financeur 287 fois
+  dans sa branche (signalé). Relecture critique (`9a791017…`), puis **génération 0** du pôle : 18 affirmations testées sur
+  processeur par deux agents — 5 survivent, 10 éliminées, 3 indécises (synthèse `51a32aec…`) ; le rapport de Gemini décrit
+  des fonctions absentes de la v6.2.1 ; mon correctif de recentrage est éliminé.
+- Mots de Lazar (18:29 à 19:19 Paris) : priorité au pôle « AI scientist » (agents qui expérimentent, sélection par
+  réfutation, recombinaison bisociative, mémoire, réécriture de soi) ; brainstorm du collisionneur ; « trancher avant toute
+  chose la recombinaison ». Course « maieutique » mise en pause (18:38).
+- Collisionneur : GO-06 « pôle » (R-525, 7,82 $ : voie hybride ancrée sur le noyau ; première expérience = valider le
+  critère de sélection) ; GO-07 « recombinaison » (R-527, 8,86 $ : tirage d'origine mort ; version 0 = stratification +
+  opérateur après tirage + filtre + abstention ; critère « prédit plus » franchissable par des tricheurs).
+- Test « ponts plantés » (`72cff8a0…`) : forme corrigée **réfutée** (−4,8 et −2,2 points contre le stratifié) ; marche « à
+  la Swanson » meilleure (+3,5 à +3,8 ; +17 sous moyeux), sous le seuil. **Rétrodiction sur arXiv 2003-2016**
+  (`057ef8a5…`, préenregistrement `7a4868aa…`) : D1 réfutée (+9,61 sous 12) ; D2 : l'allocation de ressources bat la marche
+  (−0,82) — adoptée sous son nom, pas de contribution ; seuil absolu mal posé pour un taux de base de 0,275 % (mon erreur).
+- Orchestrateur du pôle v0 (`/var/tmp/orchestrateur-pole-v1/sortie/`, LISEZMOI `39101ffb…`, 83 essais) : sélection par pari
+  à nul composite, contrôles fatals (T1a ≤ 1,8 %, T6 0 %, sept tricheurs 0/1000) ; T1b : dérive non modélisée promue à
+  65 % → bibliothèque nulle à étendre ; mémoire, témoins, recombinaison corrigée. **Incident** : un essai a lancé une fois le
+  vrai Claude Code (bibliothèque installée, contrairement à mon brief) vers un relais inexistant : 31 erreurs, aucune
+  réponse de modèle, aucune clé lue, arrêté par son identifiant ; verrou ajouté.
+- Rapport pour Gemini sur la branche `canal/conv-audit-pour-gemini-meta-conception-v1` (`ce22a89`, avec l'addendum de
+  rétrodiction) ; texte PowerShell v2 pour Lazar.
