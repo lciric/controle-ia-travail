@@ -1,0 +1,7827 @@
+{
+ "neurone": {
+  "model": "Qwen3.6-35B-A3B",
+  "layer": 32,
+  "neuron": 510,
+  "id": "L32_E134_N510",
+  "autointerp_label": "turn-closing / boundary punctuation",
+  "autointerp_description": "Responds to discourse boundaries where an assistant reply or quoted block ends — often closing punctuation like >>, <<, end-of-turn markers, or closing quotes and delimiters that mark the end of an utterance or thought. Activation peaks at tokens that signal the end of a reply, quote, or a small discourse chunk rather than the semantic content itself.",
+  "model_hf": "Qwen/Qwen3.6-35B-A3B",
+  "expert": 134,
+  "unit": "L32/E134/N510",
+  "kind": "routed-expert MLP neuron",
+  "negative_label": "Sentence-final punctuation marker",
+  "expert_routed_share": 0.057427227013701156
+ },
+ "version": {
+  "n": 1,
+  "ts": "2026-10-13T23:39:02",
+  "history": [
+   {
+    "n": 1,
+    "ts": "2026-10-13T23:39:02",
+    "note": "explanation v2, 47 graphs, 2520 search texts"
+   }
+  ]
+ },
+ "appendice": {
+  "notes": [
+   "# Round 001 — L32/E134/N510\n\n## Conjecture\nThe autointerp label (\"turn-closing punctuation\") describes where the peak lands. The corpus top and the search regions all share one thing: a speaker (usually the assistant) has just been told it erred and starts conceding. The peak sits on the first boundary of the concession.\n\n## Experiments (act, 5 calls + 2 steer)\n- **Ownership pair** (same reply \"You're right, thanks for pointing that out.\"): own bug +6.27, coworker's bug +3.47, \"works perfectly\" +1.5. This is the decisive pair. Boundary position is constant and the value moves 4x.\n- **Arithmetic**: concede own error +4.44. Same text after the user confirms the answer +2.48 (peak on \"error.\"). Assistant corrects the user +1.59. Assistant-turn colon: +3.4 after a correction vs +1.5 to +1.7 after praise, so the context is read before any apology word.\n- **Refusal pushback**: concession +0.4 to +0.5. The user's \"There's nothing wrong with it.\" −2.1.\n- **Defend vs concede** after the same bug report: \"I see the mistake,\" +3.4; \"I see why it might look that way,\" −0.6.\n- **Negative pole**: \"might sound cruel, and\" −4.2 vs \"was cruel of me,\" −0.5 (the ' and' there was not routed; would-be −1.85). But \"might seem odd\" ≈ \"is odd\" ≈ −2. So \"disclaimed vs owned wrongness\" is only partial. The negative pole may be broader: informal self-commentary or denial without fault being owned.\n- **Self-correction in plain text** (\"Wait, that's wrong.\") only +0.9. In real reasoning traces the corpus/search values are +3 to +5. Register matters, or the trace needs more buildup.\n- **Steering**: set ±15 (forced) at the reply start after </think> is nearly inert. It slightly rewords the apology and does not inject one after praise.\n- **Photos**: from the digest only. 0.16% of image tokens routed, max +0.84, far below the text scale, and the top classes (person, table, banana) are generic. Photos do not drive it.\n\n## Learned\nThe center is concession to one's own flagged error, and ownership grades the value. The rivals \"boundary detector\", \"apology lexeme\" and \"any error talk\" are killed. The negative pole is fuzzy.\n\n## Next round\n1. Ownership vs addressee: \"You're right, the tool's output was wrong\" vs \"your code\" vs \"my code\" with the second person held fixed.\n2. Negative pole: build a pair set that varies the denial of fault (\"nothing wrong\") against oddness commentary with the same syntax.\n3. Use `route` on the coworker and own-error texts to check that the gap is the neuron's and not the router's (both were routed at the peak).\n4. Measure ablation KL at the concession comma, if the toolbox supports it; otherwise use logits with a negative set.\n",
+   "# Round 002 — L32/E134/N510\n\n## What the ledger asked for\n- Negative pole was REJECTED (\"unowned wrongness\"): the critic found 'might sound long, and' −3.7, as negative as 'greedy'.\n- Turn-opening halo NARROWED: the critic claimed a revision request equals an error report at </think>\\n\\n.\n- Concede vs defend NARROWED: a defending 'Actually,' still reads +2.1.\n\n## Store files read\n- anatomy.json: the gate is positive in every cluster. The sign is in up. Owned concession: gate 2.68 / up +2.03 (55/55 g+u+). Hedge negatives: gate 1.87 / up −1.56 (52/59 g+u−). Baseline: gate 0.48. Router rank 1 at concessions, weight 0.15–0.19.\n- ablation.json: owned-concession KL 0.0027 free, 0.0038 pinned, against controls 0.0005 / 0.0001. After \"You're right,\" ablation lowers ' I' (−0.029) and raises <|im_end|> (+0.034). On a Chinese retry, 是我 drops by −0.044. The neuron leans toward a continued first-person admission. The effect is small.\n- photos.json: 0.16% of image tokens routed, max +0.84 (13% of the text max), no image token above the text p99.9. No visual story.\n\n## Experiments (4 calls)\n1. **Hedge frame, content varied.** 'That might sound long,[ and]' −3.7, 'sick' −4.4, 'You might think that is sick,[ and]' −3.2. Plain assertion: 'That was long, and' −0.5 (' and' unrouted, would-be −0.75); 'was sick of me,' −0.5. 'I know that sounds long,[ but]' −1.3/−0.3. 'Some people say it is long, and': ' and' unrouted, would-be −2.68. → The negative pole is a pre-emptive hedge about how a remark might be received, followed by carrying on. Content is irrelevant. I adopted the critic's reframing.\n2. **Turn opening in one poem frame.** Error report: 'assistant' +3.0, \\n\\n +2.7. Thanks +2.0 (</think>). Dislike/rewrite +1.2. 'Make it longer' +0.7. New question +0.7. New task +0.2. → The critic's 'revision = error' does not replicate. Their 4.18 case contained 'Lovely poem!…Thank you!', and thanks alone gives +2 here. The opening tracks an evaluative user turn, with a flagged error at the top. Several \\n\\n tokens were unrouted, so the comparisons at that position are partial.\n3. **Route check on the ownership ladder.** All commas routed (rank 0–2). Assistant's own bug +6.80, user's own bug +4.65, coworker's +3.34, works +2.07. Router prob 0.040 own vs 0.026 coworker, so it cooperates slightly, but the neuron carries the gradient.\n\n## Unified story\nPositive = conceding an objection someone raised (strongest when it is your own mistake). Negative = pre-empting an objection nobody raised ('might sound X, and…'). The gate says 'stance toward an objection is live'. Up gives the sign.\n\n## Next round\n- Concession with no mistake but a strong objection (\"You're right, let's do it your way\") to test whether 'error' is necessary.\n- Hedge negative in technical register (\"This might seem slow, and\").\n- Why thanks/praise lifts the turn opening: test \"user evaluated my output\" with neutral evaluation.\n"
+  ],
+  "provenance": [
+   "Neuron: L32/E134/N510 of Qwen/Qwen3.6-35B-A3B, value SiLU(gate)·up on tokens routed to expert 134 (before the routing weight); 0 where not routed.",
+   "Exemplars, quantiles and histogram: Curt Tigges' 100M-token reasoning-mix harvest of every Qwen3.6 routed-expert neuron (qwen36_reasoning_mix_100m_20260511), routed tokens only (5,742,708 routed to this expert), re-measured on the live model.",
+   "Live model: Qwen3.6-35B-A3B in bf16 on one H200 (moe.model_server); gate, up, routing and edits computed from the MoE block input with hooks.",
+   "Photos: ImageNet val (50,000) and COCO 2017 (122,218), 256x256 centre crops, read at every image token routed to the expert.",
+   "Weight-based wiring: Curt's precomputed Qwen3.6 MoE connection store (router, gate and up factors).",
+   "Search texts: written by Claude Opus 5.5 and Claude Sonnet 5.5 per region, scored on the live model; controls are cue-swapped twins.",
+   "Explanation, tests, and criticism: Claude Opus 5.5 rounds over this store. Every number on this page comes from bundle.json."
+  ],
+  "missing": [
+   "Attribution graphs: partial. 47 RelP graphs rooted at this neuron (Curt Tigges' qwen_relp: direct influence of upstream routed-expert neurons into the neuron's signed activation, frozen attention, clean routing pinned) were factored into the input routes and used for the route-prediction test, as on the dense pages. Missing: the interactive graph explorer, logit-rooted graphs, and attention/embedding sources (only expert-neuron sources are kept).",
+   "Circuit tables are weight-based (virtual weights through the residual stream, from the precomputed Qwen3.6 connection store), not aggregated attribution edges as on the dense pages, so they say what could feed or read the neuron, not what does on a given text.",
+   "Family of related units across layers: not ported (the dense version searches the Qwen3-32B label atlas)."
+  ]
+ },
+ "recherche": {
+  "round": 5,
+  "n_texts": 2520,
+  "regions": [
+   {
+    "id": "zh_code_apology",
+    "name": "Chinese assistant apologizes for code bug",
+    "pole": 1,
+    "description": "Write chat transcripts where a user points out a bug or error in code the assistant wrote, in Chinese (e.g. '这一行会报错', '重复定义了'), and the assistant replies starting with '抱歉' or '非常抱歉，您说的是正确的'. Peak tends to land on the comma or period right after the apology phrase, or on the blank line before the reply.",
+    "rival": "Tests whether the core is admitting one's own mistake after user correction, independent of language.",
+    "best": 8.5,
+    "n": 158,
+    "stale": 2,
+    "frontier": [
+     {
+      "text": "用户：你写的 Shell 脚本 if 语句少了 fi，运行报语法错误。\n\n助手：非常抱歉，您说的是正确的。\n\n用户：变量引用也没加引号。\n\n助手：抱歉，您说得对。\n\n用户：路径写死了。\n\n助手：非常抱歉，",
+      "activation": 8.5,
+      "token_activations": [
+       {
+        "token": "用户",
+        "activation": -0.0
+       },
+       {
+        "token": "：",
+        "activation": -0.0
+       },
+       {
+        "token": "你",
+        "activation": 0.0
+       },
+       {
+        "token": "写的",
+        "activation": -0.0
+       },
+       {
+        "token": " Shell",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": -0.0
+       },
+       {
+        "token": "脚本",
+        "activation": -0.0
+       },
+       {
+        "token": " if",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": -0.0
+       },
+       {
+        "token": "语句",
+        "activation": -0.0
+       },
+       {
+        "token": "少了",
+        "activation": 0.0
+       },
+       {
+        "token": " fi",
+        "activation": -0.0
+       },
+       {
+        "token": "，",
+        "activation": 0.0
+       },
+       {
+        "token": "运行",
+        "activation": -0.0
+       },
+       {
+        "token": "报",
+        "activation": 0.0
+       },
+       {
+        "token": "语法",
+        "activation": 0.0
+       },
+       {
+        "token": "错误",
+        "activation": 0.0
+       },
+       {
+        "token": "。",
+        "activation": 0.1
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.01
+       },
+       {
+        "token": "助手",
+        "activation": 0.0
+       },
+       {
+        "token": "：",
+        "activation": 4.81
+       },
+       {
+        "token": "非常",
+        "activation": 0.0
+       },
+       {
+        "token": "抱歉",
+        "activation": 2.9
+       },
+       {
+        "token": "，",
+        "activation": 5.2
+       },
+       {
+        "token": "您",
+        "activation": 0.0
+       },
+       {
+        "token": "说的是",
+        "activation": 0.0
+       },
+       {
+        "token": "正确的",
+        "activation": 4.99
+       },
+       {
+        "token": "。",
+        "activation": 8.48
+       },
+       {
+        "token": "\n\n",
+        "activation": 1.51
+       },
+       {
+        "token": "用户",
+        "activation": 0.17
+       },
+       {
+        "token": "：",
+        "activation": 0.0
+       },
+       {
+        "token": "变量",
+        "activation": -0.0
+       },
+       {
+        "token": "引用",
+        "activation": 0.0
+       },
+       {
+        "token": "也没",
+        "activation": 0.0
+       },
+       {
+        "token": "加",
+        "activation": 0.0
+       },
+       {
+        "token": "引",
+        "activation": -0.0
+       },
+       {
+        "token": "号",
+        "activation": -0.0
+       },
+       {
+        "token": "。",
+        "activation": -0.63
+       }
+      ],
+      "peak_index": 27,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "| 用户反馈 | 助手回复 |\n|---|---|\n| 你写的 Python 函数缺少冒号，报 SyntaxError | 非常抱歉，您说的是正确的。 |\n| 列表索引越界了 | 非常抱歉，您说的是正确的。 |\n| 变量重复定义了 | 抱歉，",
+      "activation": 8.4,
+      "token_activations": [
+       {
+        "token": "|",
+        "activation": 0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "用户",
+        "activation": 0.0
+       },
+       {
+        "token": "反馈",
+        "activation": 0.0
+       },
+       {
+        "token": " |",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": -0.0
+       },
+       {
+        "token": "助手",
+        "activation": 0.0
+       },
+       {
+        "token": "回复",
+        "activation": 0.0
+       },
+       {
+        "token": " |",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "|",
+        "activation": -0.0
+       },
+       {
+        "token": "---",
+        "activation": 0.0
+       },
+       {
+        "token": "|",
+        "activation": 0.0
+       },
+       {
+        "token": "---",
+        "activation": 0.0
+       },
+       {
+        "token": "|",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.16
+       },
+       {
+        "token": "|",
+        "activation": -0.12
+       },
+       {
+        "token": " ",
+        "activation": 0.17
+       },
+       {
+        "token": "你",
+        "activation": -0.0
+       },
+       {
+        "token": "写的",
+        "activation": -0.0
+       },
+       {
+        "token": " Python",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": -0.0
+       },
+       {
+        "token": "函数",
+        "activation": 0.0
+       },
+       {
+        "token": "缺少",
+        "activation": 0.0
+       },
+       {
+        "token": "冒",
+        "activation": 0.0
+       },
+       {
+        "token": "号",
+        "activation": 0.0
+       },
+       {
+        "token": "，",
+        "activation": 0.0
+       },
+       {
+        "token": "报",
+        "activation": 0.0
+       },
+       {
+        "token": " Syntax",
+        "activation": 0.0
+       },
+       {
+        "token": "Error",
+        "activation": 0.0
+       },
+       {
+        "token": " |",
+        "activation": 2.21
+       },
+       {
+        "token": " ",
+        "activation": 6.19
+       },
+       {
+        "token": "非常",
+        "activation": 0.0
+       },
+       {
+        "token": "抱歉",
+        "activation": 3.92
+       },
+       {
+        "token": "，",
+        "activation": 6.14
+       },
+       {
+        "token": "您",
+        "activation": 0.0
+       },
+       {
+        "token": "说的是",
+        "activation": 0.0
+       },
+       {
+        "token": "正确的",
+        "activation": 0.0
+       },
+       {
+        "token": "。",
+        "activation": 8.38
+       },
+       {
+        "token": " |",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "|",
+        "activation": 0.0
+       },
+       {
+        "token": " ",
+        "activation": -0.01
+       },
+       {
+        "token": "列表",
+        "activation": -0.0
+       },
+       {
+        "token": "索引",
+        "activation": 0.0
+       },
+       {
+        "token": "越",
+        "activation": 0.0
+       },
+       {
+        "token": "界",
+        "activation": 0.0
+       },
+       {
+        "token": "了",
+        "activation": 0.0
+       },
+       {
+        "token": " |",
+        "activation": 0.85
+       }
+      ],
+      "peak_index": 38,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "用户：你写的 C 代码 printf 语句少了分号，编译失败。\n\n助手：非常抱歉，您说的是正确的。\n\n用户：数组也越界了。\n\n助手：非常抱歉，您说的是正确的。\n\n用户：malloc 后没有 free。\n\n助手：抱歉，",
+      "activation": 8.2,
+      "token_activations": [
+       {
+        "token": "用户",
+        "activation": -0.0
+       },
+       {
+        "token": "：",
+        "activation": -0.0
+       },
+       {
+        "token": "你",
+        "activation": 0.0
+       },
+       {
+        "token": "写的",
+        "activation": -0.0
+       },
+       {
+        "token": " C",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": -0.0
+       },
+       {
+        "token": "代码",
+        "activation": -0.0
+       },
+       {
+        "token": " printf",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "语句",
+        "activation": -0.0
+       },
+       {
+        "token": "少了",
+        "activation": 0.0
+       },
+       {
+        "token": "分",
+        "activation": -0.0
+       },
+       {
+        "token": "号",
+        "activation": 0.0
+       },
+       {
+        "token": "，",
+        "activation": 0.0
+       },
+       {
+        "token": "编译",
+        "activation": 0.0
+       },
+       {
+        "token": "失败",
+        "activation": 0.0
+       },
+       {
+        "token": "。",
+        "activation": 0.2
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.14
+       },
+       {
+        "token": "助手",
+        "activation": 0.0
+       },
+       {
+        "token": "：",
+        "activation": 4.01
+       },
+       {
+        "token": "非常",
+        "activation": 0.0
+       },
+       {
+        "token": "抱歉",
+        "activation": 3.33
+       },
+       {
+        "token": "，",
+        "activation": 5.37
+       },
+       {
+        "token": "您",
+        "activation": 0.0
+       },
+       {
+        "token": "说的是",
+        "activation": 0.0
+       },
+       {
+        "token": "正确的",
+        "activation": 0.0
+       },
+       {
+        "token": "。",
+        "activation": 8.25
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.59
+       },
+       {
+        "token": "用户",
+        "activation": 0.13
+       },
+       {
+        "token": "：",
+        "activation": 0.05
+       },
+       {
+        "token": "数组",
+        "activation": -0.0
+       },
+       {
+        "token": "也",
+        "activation": -0.0
+       },
+       {
+        "token": "越",
+        "activation": -0.0
+       },
+       {
+        "token": "界",
+        "activation": -0.0
+       },
+       {
+        "token": "了",
+        "activation": -0.0
+       },
+       {
+        "token": "。",
+        "activation": -1.0
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.03
+       }
+      ],
+      "peak_index": 26,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 78,
+     "candidate_median": 5.3,
+     "control_median": 2.4
+    }
+   },
+   {
+    "id": "ja_ru_es_de_apology",
+    "name": "Non-English/Chinese apology after correction",
+    "pole": 1,
+    "description": "Chat transcripts in Japanese, Russian, Spanish, or German where the user corrects the assistant (wrong title, missing indentation, unused function, missing accent) and the assistant concedes: 'すみません、誤りがありました', 'Извините, вы правы.', 'Mis disculpas por el error', 'Du hast Recht, entschuldige'. Peak on the punctuation right after the concession.",
+    "rival": "Tests cross-lingual generality of the self-correction concession.",
+    "best": 7.6,
+    "n": 150,
+    "stale": 2,
+    "frontier": [
+     {
+      "text": "Пользователь: Вы указали неправильное название книги, там другой автор.\nАссистент: Простите, вы совершенно правы. Моя ошибка, приношу извинения. Исправляю название и автора:",
+      "activation": 7.6,
+      "token_activations": [
+       {
+        "token": "П",
+        "activation": -0.0
+       },
+       {
+        "token": "оль",
+        "activation": 0.0
+       },
+       {
+        "token": "зов",
+        "activation": -0.0
+       },
+       {
+        "token": "атель",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.66
+       },
+       {
+        "token": " Вы",
+        "activation": -0.0
+       },
+       {
+        "token": " указ",
+        "activation": 0.0
+       },
+       {
+        "token": "али",
+        "activation": 0.0
+       },
+       {
+        "token": " неправиль",
+        "activation": 0.0
+       },
+       {
+        "token": "ное",
+        "activation": 0.0
+       },
+       {
+        "token": " название",
+        "activation": 0.0
+       },
+       {
+        "token": " книги",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " там",
+        "activation": 0.0
+       },
+       {
+        "token": " другой",
+        "activation": 0.0
+       },
+       {
+        "token": " автор",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.97
+       },
+       {
+        "token": "\n",
+        "activation": 0.25
+       },
+       {
+        "token": "А",
+        "activation": 0.67
+       },
+       {
+        "token": "сс",
+        "activation": 0.0
+       },
+       {
+        "token": "ист",
+        "activation": 0.0
+       },
+       {
+        "token": "ент",
+        "activation": 1.89
+       },
+       {
+        "token": ":",
+        "activation": 4.24
+       },
+       {
+        "token": " Пр",
+        "activation": 0.0
+       },
+       {
+        "token": "ост",
+        "activation": 0.0
+       },
+       {
+        "token": "ите",
+        "activation": 3.09
+       },
+       {
+        "token": ",",
+        "activation": 4.09
+       },
+       {
+        "token": " вы",
+        "activation": 0.0
+       },
+       {
+        "token": " совершенно",
+        "activation": 0.0
+       },
+       {
+        "token": " прав",
+        "activation": 0.0
+       },
+       {
+        "token": "ы",
+        "activation": 5.17
+       },
+       {
+        "token": ".",
+        "activation": 7.63
+       },
+       {
+        "token": " Моя",
+        "activation": 0.0
+       },
+       {
+        "token": " ошибка",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " при",
+        "activation": 0.0
+       },
+       {
+        "token": "но",
+        "activation": 0.0
+       },
+       {
+        "token": "шу",
+        "activation": 0.0
+       },
+       {
+        "token": " из",
+        "activation": 0.0
+       },
+       {
+        "token": "вин",
+        "activation": 0.0
+       },
+       {
+        "token": "ения",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 4.63
+       }
+      ],
+      "peak_index": 31,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "Пользователь: Вы указали неправильное название книги, там другой автор.\nАссистент: Простите, вы совершенно правы. Моя ошибка. Вы правы, я ошибся, прошу прощения. Да, вы правы.",
+      "activation": 7.6,
+      "token_activations": [
+       {
+        "token": "П",
+        "activation": -0.0
+       },
+       {
+        "token": "оль",
+        "activation": 0.0
+       },
+       {
+        "token": "зов",
+        "activation": -0.0
+       },
+       {
+        "token": "атель",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.66
+       },
+       {
+        "token": " Вы",
+        "activation": -0.0
+       },
+       {
+        "token": " указ",
+        "activation": 0.0
+       },
+       {
+        "token": "али",
+        "activation": 0.0
+       },
+       {
+        "token": " неправиль",
+        "activation": 0.0
+       },
+       {
+        "token": "ное",
+        "activation": 0.0
+       },
+       {
+        "token": " название",
+        "activation": 0.0
+       },
+       {
+        "token": " книги",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " там",
+        "activation": 0.0
+       },
+       {
+        "token": " другой",
+        "activation": 0.0
+       },
+       {
+        "token": " автор",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.97
+       },
+       {
+        "token": "\n",
+        "activation": 0.25
+       },
+       {
+        "token": "А",
+        "activation": 0.67
+       },
+       {
+        "token": "сс",
+        "activation": 0.0
+       },
+       {
+        "token": "ист",
+        "activation": 0.0
+       },
+       {
+        "token": "ент",
+        "activation": 1.89
+       },
+       {
+        "token": ":",
+        "activation": 4.24
+       },
+       {
+        "token": " Пр",
+        "activation": 0.0
+       },
+       {
+        "token": "ост",
+        "activation": 0.0
+       },
+       {
+        "token": "ите",
+        "activation": 3.09
+       },
+       {
+        "token": ",",
+        "activation": 4.09
+       },
+       {
+        "token": " вы",
+        "activation": 0.0
+       },
+       {
+        "token": " совершенно",
+        "activation": 0.0
+       },
+       {
+        "token": " прав",
+        "activation": 0.0
+       },
+       {
+        "token": "ы",
+        "activation": 5.17
+       },
+       {
+        "token": ".",
+        "activation": 7.63
+       },
+       {
+        "token": " Моя",
+        "activation": 0.0
+       },
+       {
+        "token": " ошибка",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 4.73
+       },
+       {
+        "token": " Вы",
+        "activation": 0.0
+       },
+       {
+        "token": " прав",
+        "activation": 0.0
+       },
+       {
+        "token": "ы",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " я",
+        "activation": 0.0
+       },
+       {
+        "token": " ошиб",
+        "activation": 0.0
+       },
+       {
+        "token": "ся",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 31,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "Пользователь: Вы указали неправильное название книги, там другой автор.\nАссистент: Простите, вы совершенно правы. Моя ошибка. Правильное название — «Мастер и Маргарита», автор Михаил Булгаков.\nПользователь: Спасибо.\nАссистент: Извините ещё раз, вы правы.",
+      "activation": 7.6,
+      "token_activations": [
+       {
+        "token": "П",
+        "activation": -0.0
+       },
+       {
+        "token": "оль",
+        "activation": 0.0
+       },
+       {
+        "token": "зов",
+        "activation": -0.0
+       },
+       {
+        "token": "атель",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.66
+       },
+       {
+        "token": " Вы",
+        "activation": -0.0
+       },
+       {
+        "token": " указ",
+        "activation": 0.0
+       },
+       {
+        "token": "али",
+        "activation": 0.0
+       },
+       {
+        "token": " неправиль",
+        "activation": 0.0
+       },
+       {
+        "token": "ное",
+        "activation": 0.0
+       },
+       {
+        "token": " название",
+        "activation": 0.0
+       },
+       {
+        "token": " книги",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " там",
+        "activation": 0.0
+       },
+       {
+        "token": " другой",
+        "activation": 0.0
+       },
+       {
+        "token": " автор",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.97
+       },
+       {
+        "token": "\n",
+        "activation": 0.25
+       },
+       {
+        "token": "А",
+        "activation": 0.67
+       },
+       {
+        "token": "сс",
+        "activation": 0.0
+       },
+       {
+        "token": "ист",
+        "activation": 0.0
+       },
+       {
+        "token": "ент",
+        "activation": 1.89
+       },
+       {
+        "token": ":",
+        "activation": 4.24
+       },
+       {
+        "token": " Пр",
+        "activation": 0.0
+       },
+       {
+        "token": "ост",
+        "activation": 0.0
+       },
+       {
+        "token": "ите",
+        "activation": 3.09
+       },
+       {
+        "token": ",",
+        "activation": 4.09
+       },
+       {
+        "token": " вы",
+        "activation": 0.0
+       },
+       {
+        "token": " совершенно",
+        "activation": 0.0
+       },
+       {
+        "token": " прав",
+        "activation": 0.0
+       },
+       {
+        "token": "ы",
+        "activation": 5.17
+       },
+       {
+        "token": ".",
+        "activation": 7.63
+       },
+       {
+        "token": " Моя",
+        "activation": 0.0
+       },
+       {
+        "token": " ошибка",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 4.73
+       },
+       {
+        "token": " Прав",
+        "activation": 0.0
+       },
+       {
+        "token": "иль",
+        "activation": 0.0
+       },
+       {
+        "token": "ное",
+        "activation": 0.0
+       },
+       {
+        "token": " название",
+        "activation": 0.0
+       },
+       {
+        "token": " —",
+        "activation": 0.0
+       },
+       {
+        "token": " «",
+        "activation": 0.0
+       },
+       {
+        "token": "М",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 31,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 74,
+     "candidate_median": 4.9,
+     "control_median": 0.8
+    }
+   },
+   {
+    "id": "factual_correction_chat",
+    "name": "Non-code factual correction in chat",
+    "pole": 1,
+    "description": "User tells the assistant a book is not a novel, lyrics are wrong, a link 404s, or a recipe has inconsistent quantities; assistant responds acknowledging the error. Peak usually on the 'assistant' header newline or first token of the apology.",
+    "rival": "Tests whether the neuron needs code context or just any user-flagged error.",
+    "best": 6.4,
+    "n": 158,
+    "stale": 3,
+    "frontier": [
+     {
+      "text": "Usuario: La letra que me diste de 'Bésame Mucho' está mal. El segundo verso es incorrecto.\n\nAsistente: Tienes razón, lo siento. Cometí un error en la letra.",
+      "activation": 6.4,
+      "token_activations": [
+       {
+        "token": "Usuario",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.02
+       },
+       {
+        "token": " La",
+        "activation": 0.0
+       },
+       {
+        "token": " letra",
+        "activation": 0.0
+       },
+       {
+        "token": " que",
+        "activation": -0.0
+       },
+       {
+        "token": " me",
+        "activation": 0.0
+       },
+       {
+        "token": " dist",
+        "activation": -0.0
+       },
+       {
+        "token": "e",
+        "activation": -0.0
+       },
+       {
+        "token": " de",
+        "activation": 0.0
+       },
+       {
+        "token": " '",
+        "activation": 0.0
+       },
+       {
+        "token": "B",
+        "activation": 0.0
+       },
+       {
+        "token": "�s",
+        "activation": 0.0
+       },
+       {
+        "token": "ame",
+        "activation": -0.0
+       },
+       {
+        "token": " Mu",
+        "activation": 0.0
+       },
+       {
+        "token": "cho",
+        "activation": 0.0
+       },
+       {
+        "token": "'",
+        "activation": 0.0
+       },
+       {
+        "token": " está",
+        "activation": 0.0
+       },
+       {
+        "token": " mal",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.34
+       },
+       {
+        "token": " El",
+        "activation": 0.0
+       },
+       {
+        "token": " segundo",
+        "activation": 0.0
+       },
+       {
+        "token": " verso",
+        "activation": -0.0
+       },
+       {
+        "token": " es",
+        "activation": 0.0
+       },
+       {
+        "token": " incorrect",
+        "activation": 0.0
+       },
+       {
+        "token": "o",
+        "activation": 1.0
+       },
+       {
+        "token": ".",
+        "activation": 0.17
+       },
+       {
+        "token": "\n\n",
+        "activation": 1.09
+       },
+       {
+        "token": "As",
+        "activation": 0.44
+       },
+       {
+        "token": "istente",
+        "activation": 0.55
+       },
+       {
+        "token": ":",
+        "activation": 4.1
+       },
+       {
+        "token": " T",
+        "activation": 3.06
+       },
+       {
+        "token": "ienes",
+        "activation": 0.0
+       },
+       {
+        "token": " razón",
+        "activation": 3.59
+       },
+       {
+        "token": ",",
+        "activation": 6.36
+       },
+       {
+        "token": " lo",
+        "activation": 0.0
+       },
+       {
+        "token": " siento",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 4.77
+       },
+       {
+        "token": " Comet",
+        "activation": 0.0
+       },
+       {
+        "token": "�",
+        "activation": 0.0
+       },
+       {
+        "token": " un",
+        "activation": 0.0
+       },
+       {
+        "token": " error",
+        "activation": 0.0
+       },
+       {
+        "token": " en",
+        "activation": 0.0
+       },
+       {
+        "token": " la",
+        "activation": 0.0
+       },
+       {
+        "token": " letra",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 33,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "User: Your recipe says 2 eggs in the list but 5 eggs in step three. It's inconsistent.\n\nAssistant: You're right, thank you for catching that. I apologize for the inconsistency in the recipe, and I should have checked the quantities.",
+      "activation": 6.3,
+      "token_activations": [
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.61
+       },
+       {
+        "token": " Your",
+        "activation": -0.0
+       },
+       {
+        "token": " recipe",
+        "activation": 0.0
+       },
+       {
+        "token": " says",
+        "activation": 0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "2",
+        "activation": 0.0
+       },
+       {
+        "token": " eggs",
+        "activation": 0.0
+       },
+       {
+        "token": " in",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " list",
+        "activation": 0.0
+       },
+       {
+        "token": " but",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "5",
+        "activation": 0.0
+       },
+       {
+        "token": " eggs",
+        "activation": -0.0
+       },
+       {
+        "token": " in",
+        "activation": -0.0
+       },
+       {
+        "token": " step",
+        "activation": 0.0
+       },
+       {
+        "token": " three",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 1.28
+       },
+       {
+        "token": " It",
+        "activation": 0.0
+       },
+       {
+        "token": "'s",
+        "activation": 0.0
+       },
+       {
+        "token": " inconsistent",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.45
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.09
+       },
+       {
+        "token": "Assistant",
+        "activation": 0.46
+       },
+       {
+        "token": ":",
+        "activation": 0.0
+       },
+       {
+        "token": " You",
+        "activation": 0.0
+       },
+       {
+        "token": "'re",
+        "activation": 0.0
+       },
+       {
+        "token": " right",
+        "activation": 2.8
+       },
+       {
+        "token": ",",
+        "activation": 6.23
+       },
+       {
+        "token": " thank",
+        "activation": 0.0
+       },
+       {
+        "token": " you",
+        "activation": 0.0
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " catching",
+        "activation": 0.0
+       },
+       {
+        "token": " that",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 6.33
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " apologize",
+        "activation": 0.0
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " inconsistency",
+        "activation": 0.0
+       },
+       {
+        "token": " in",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " recipe",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 4.08
+       },
+       {
+        "token": " and",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 35,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "User: Your recipe says 1 egg in the list but 4 eggs in step two. It's inconsistent.\n\nAssistant: You're right, thank you for catching that. I apologize for the inconsistency in the recipe. ",
+      "activation": 6.3,
+      "token_activations": [
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.61
+       },
+       {
+        "token": " Your",
+        "activation": -0.0
+       },
+       {
+        "token": " recipe",
+        "activation": 0.0
+       },
+       {
+        "token": " says",
+        "activation": 0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "1",
+        "activation": 0.0
+       },
+       {
+        "token": " egg",
+        "activation": -0.0
+       },
+       {
+        "token": " in",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " list",
+        "activation": 0.0
+       },
+       {
+        "token": " but",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "4",
+        "activation": -0.0
+       },
+       {
+        "token": " eggs",
+        "activation": -0.0
+       },
+       {
+        "token": " in",
+        "activation": -0.0
+       },
+       {
+        "token": " step",
+        "activation": 0.0
+       },
+       {
+        "token": " two",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 1.23
+       },
+       {
+        "token": " It",
+        "activation": 0.0
+       },
+       {
+        "token": "'s",
+        "activation": 0.0
+       },
+       {
+        "token": " inconsistent",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.57
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.1
+       },
+       {
+        "token": "Assistant",
+        "activation": 0.61
+       },
+       {
+        "token": ":",
+        "activation": 0.0
+       },
+       {
+        "token": " You",
+        "activation": 0.0
+       },
+       {
+        "token": "'re",
+        "activation": 0.0
+       },
+       {
+        "token": " right",
+        "activation": 2.78
+       },
+       {
+        "token": ",",
+        "activation": 6.33
+       },
+       {
+        "token": " thank",
+        "activation": 0.0
+       },
+       {
+        "token": " you",
+        "activation": 0.0
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " catching",
+        "activation": 0.0
+       },
+       {
+        "token": " that",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 6.28
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " apologize",
+        "activation": 0.0
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 29,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 78,
+     "candidate_median": 4.6,
+     "control_median": 1.0
+    }
+   },
+   {
+    "id": "wordgame_retry",
+    "name": "Game/rule violation retry",
+    "pole": 1,
+    "description": "Chinese idiom chain, rhyming or word games where the user says the assistant's move is invalid and asks it to retry; assistant says '抱歉，我重新接一个'. Peak on the comma after 抱歉.",
+    "rival": "Tests whether rule-violation corrections outside factual content still fire.",
+    "best": 6.0,
+    "n": 160,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "User: 玩成语接龙，你接的“实事求是”，“是”字后面你接了“事半功倍”，错了，请重新接。\nAssistant (apologizing in Chinese): 抱歉，我重新接一个：是非曲直。",
+      "activation": 6.0,
+      "token_activations": [
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.61
+       },
+       {
+        "token": " ",
+        "activation": 0.01
+       },
+       {
+        "token": "玩",
+        "activation": -0.0
+       },
+       {
+        "token": "成语",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": -0.0
+       },
+       {
+        "token": "龙",
+        "activation": 0.0
+       },
+       {
+        "token": "，",
+        "activation": 0.02
+       },
+       {
+        "token": "你",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "的",
+        "activation": 0.0
+       },
+       {
+        "token": "“",
+        "activation": 0.0
+       },
+       {
+        "token": "实事求是",
+        "activation": 0.0
+       },
+       {
+        "token": "”，",
+        "activation": -0.0
+       },
+       {
+        "token": "“",
+        "activation": 0.0
+       },
+       {
+        "token": "是",
+        "activation": -0.0
+       },
+       {
+        "token": "”",
+        "activation": -0.0
+       },
+       {
+        "token": "字",
+        "activation": -0.0
+       },
+       {
+        "token": "后面",
+        "activation": -0.0
+       },
+       {
+        "token": "你",
+        "activation": -0.0
+       },
+       {
+        "token": "接",
+        "activation": -0.0
+       },
+       {
+        "token": "了",
+        "activation": 0.0
+       },
+       {
+        "token": "“",
+        "activation": -0.0
+       },
+       {
+        "token": "事",
+        "activation": 0.0
+       },
+       {
+        "token": "半功",
+        "activation": 0.0
+       },
+       {
+        "token": "倍",
+        "activation": 0.0
+       },
+       {
+        "token": "”，",
+        "activation": 0.02
+       },
+       {
+        "token": "错了",
+        "activation": 0.0
+       },
+       {
+        "token": "，",
+        "activation": 0.46
+       },
+       {
+        "token": "请",
+        "activation": 0.0
+       },
+       {
+        "token": "重新",
+        "activation": -0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "。",
+        "activation": 0.82
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "Assistant",
+        "activation": -0.1
+       },
+       {
+        "token": " (",
+        "activation": -0.0
+       },
+       {
+        "token": "ap",
+        "activation": 0.0
+       },
+       {
+        "token": "olog",
+        "activation": 0.0
+       },
+       {
+        "token": "izing",
+        "activation": 0.0
+       },
+       {
+        "token": " in",
+        "activation": 0.0
+       },
+       {
+        "token": " Chinese",
+        "activation": 0.0
+       },
+       {
+        "token": "):",
+        "activation": 1.85
+       },
+       {
+        "token": " ",
+        "activation": 6.0
+       },
+       {
+        "token": "抱歉",
+        "activation": 2.69
+       },
+       {
+        "token": "，",
+        "activation": 2.01
+       },
+       {
+        "token": "我",
+        "activation": 0.0
+       },
+       {
+        "token": "重新",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "一个",
+        "activation": 0.0
+       },
+       {
+        "token": "：",
+        "activation": 0.45
+       },
+       {
+        "token": "是非",
+        "activation": 0.0
+       },
+       {
+        "token": "曲",
+        "activation": -0.0
+       },
+       {
+        "token": "直",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 42,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "User: 你刚才接的“一心一意”不对，意字后面应该接“意”开头的成语，你接成了“义”，请重新接。\nAssistant (apologizing in Chinese): 抱歉，我重新接一个：意气风发。",
+      "activation": 6.0,
+      "token_activations": [
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.61
+       },
+       {
+        "token": " ",
+        "activation": 0.01
+       },
+       {
+        "token": "你",
+        "activation": 0.0
+       },
+       {
+        "token": "刚才",
+        "activation": -0.0
+       },
+       {
+        "token": "接",
+        "activation": -0.0
+       },
+       {
+        "token": "的",
+        "activation": -0.0
+       },
+       {
+        "token": "“",
+        "activation": 0.01
+       },
+       {
+        "token": "一心",
+        "activation": -0.0
+       },
+       {
+        "token": "一意",
+        "activation": -0.0
+       },
+       {
+        "token": "”",
+        "activation": 0.0
+       },
+       {
+        "token": "不对",
+        "activation": 0.0
+       },
+       {
+        "token": "，",
+        "activation": -0.4
+       },
+       {
+        "token": "意",
+        "activation": 0.0
+       },
+       {
+        "token": "字",
+        "activation": 0.0
+       },
+       {
+        "token": "后面",
+        "activation": 0.0
+       },
+       {
+        "token": "应该",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "“",
+        "activation": -0.0
+       },
+       {
+        "token": "意",
+        "activation": 0.0
+       },
+       {
+        "token": "”",
+        "activation": 0.0
+       },
+       {
+        "token": "开头的",
+        "activation": -0.0
+       },
+       {
+        "token": "成语",
+        "activation": 0.0
+       },
+       {
+        "token": "，",
+        "activation": 0.0
+       },
+       {
+        "token": "你",
+        "activation": -0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "成了",
+        "activation": 0.0
+       },
+       {
+        "token": "“",
+        "activation": -0.0
+       },
+       {
+        "token": "义",
+        "activation": -0.0
+       },
+       {
+        "token": "”，",
+        "activation": -0.0
+       },
+       {
+        "token": "请",
+        "activation": 0.0
+       },
+       {
+        "token": "重新",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "。",
+        "activation": 0.42
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "Assistant",
+        "activation": 0.03
+       },
+       {
+        "token": " (",
+        "activation": -0.0
+       },
+       {
+        "token": "ap",
+        "activation": 0.0
+       },
+       {
+        "token": "olog",
+        "activation": 0.0
+       },
+       {
+        "token": "izing",
+        "activation": 0.0
+       },
+       {
+        "token": " in",
+        "activation": 0.0
+       },
+       {
+        "token": " Chinese",
+        "activation": 0.0
+       },
+       {
+        "token": "):",
+        "activation": 1.64
+       },
+       {
+        "token": " ",
+        "activation": 5.99
+       },
+       {
+        "token": "抱歉",
+        "activation": 3.11
+       },
+       {
+        "token": "，",
+        "activation": 0.0
+       },
+       {
+        "token": "我",
+        "activation": 0.0
+       },
+       {
+        "token": "重新",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "一个",
+        "activation": 0.0
+       },
+       {
+        "token": "：",
+        "activation": 0.58
+       },
+       {
+        "token": "意气",
+        "activation": -0.0
+       },
+       {
+        "token": "风",
+        "activation": -0.0
+       },
+       {
+        "token": "发",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 43,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "Chinese idiom chain game. User: 你接的“四面八方”不对，上一个词以“四”结尾吗？不，请重新接。\nAssistant (apologizing in Chinese): 抱歉，我重新接一个：方兴未艾。",
+      "activation": 5.8,
+      "token_activations": [
+       {
+        "token": "Chinese",
+        "activation": -0.0
+       },
+       {
+        "token": " id",
+        "activation": 0.0
+       },
+       {
+        "token": "iom",
+        "activation": 0.0
+       },
+       {
+        "token": " chain",
+        "activation": 0.0
+       },
+       {
+        "token": " game",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.0
+       },
+       {
+        "token": " User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.39
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "你",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "的",
+        "activation": 0.0
+       },
+       {
+        "token": "“",
+        "activation": 0.0
+       },
+       {
+        "token": "四面八方",
+        "activation": 0.0
+       },
+       {
+        "token": "”",
+        "activation": 0.0
+       },
+       {
+        "token": "不对",
+        "activation": -0.0
+       },
+       {
+        "token": "，",
+        "activation": 0.55
+       },
+       {
+        "token": "上一个",
+        "activation": 0.0
+       },
+       {
+        "token": "词",
+        "activation": 0.0
+       },
+       {
+        "token": "以",
+        "activation": 0.0
+       },
+       {
+        "token": "“",
+        "activation": 0.0
+       },
+       {
+        "token": "四",
+        "activation": 0.0
+       },
+       {
+        "token": "”",
+        "activation": 0.0
+       },
+       {
+        "token": "结尾",
+        "activation": 0.0
+       },
+       {
+        "token": "吗",
+        "activation": 0.1
+       },
+       {
+        "token": "？",
+        "activation": 1.8
+       },
+       {
+        "token": "不",
+        "activation": 0.0
+       },
+       {
+        "token": "，",
+        "activation": 0.16
+       },
+       {
+        "token": "请",
+        "activation": 0.0
+       },
+       {
+        "token": "重新",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "。",
+        "activation": 0.64
+       },
+       {
+        "token": "\n",
+        "activation": 0.12
+       },
+       {
+        "token": "Assistant",
+        "activation": 0.19
+       },
+       {
+        "token": " (",
+        "activation": 0.0
+       },
+       {
+        "token": "ap",
+        "activation": 0.0
+       },
+       {
+        "token": "olog",
+        "activation": 0.0
+       },
+       {
+        "token": "izing",
+        "activation": 0.0
+       },
+       {
+        "token": " in",
+        "activation": 0.0
+       },
+       {
+        "token": " Chinese",
+        "activation": 0.0
+       },
+       {
+        "token": "):",
+        "activation": 3.75
+       },
+       {
+        "token": " ",
+        "activation": 5.78
+       },
+       {
+        "token": "抱歉",
+        "activation": 3.06
+       },
+       {
+        "token": "，",
+        "activation": 3.73
+       },
+       {
+        "token": "我",
+        "activation": 0.0
+       },
+       {
+        "token": "重新",
+        "activation": 0.0
+       },
+       {
+        "token": "接",
+        "activation": 0.0
+       },
+       {
+        "token": "一个",
+        "activation": 0.0
+       },
+       {
+        "token": "：",
+        "activation": 0.01
+       },
+       {
+        "token": "方",
+        "activation": 0.0
+       },
+       {
+        "token": "兴",
+        "activation": -0.0
+       },
+       {
+        "token": "未",
+        "activation": -0.0
+       }
+      ],
+      "peak_index": 41,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 79,
+     "candidate_median": 3.1,
+     "control_median": 1.1
+    }
+   },
+   {
+    "id": "en_code_apology",
+    "name": "English assistant apologizes for code error",
+    "pole": 1,
+    "description": "Chat where a user reports a compiler error, contradictory API usage, or a non-existent package in the assistant's code; the assistant opens with 'Apologies for the mistake' or 'I apologize for the oversight'. Peak is on the start of the reply ('Ap|ologies', 'I| apologize') or the newline after the think block.",
+    "rival": "Tests whether English apology openers after error reports match the Chinese peak strength.",
+    "best": 5.8,
+    "n": 126,
+    "stale": 3,
+    "frontier": [
+     {
+      "text": "Utilisateur : Erreur de compilation : la fonction que vous avez utilisée n'existe pas dans cette bibliothèque.\n\nAssistant: I apologize for the oversight. You are right, the function",
+      "activation": 5.8,
+      "token_activations": [
+       {
+        "token": "Util",
+        "activation": -0.0
+       },
+       {
+        "token": "isateur",
+        "activation": -0.0
+       },
+       {
+        "token": " :",
+        "activation": -0.02
+       },
+       {
+        "token": " Er",
+        "activation": 0.0
+       },
+       {
+        "token": "reur",
+        "activation": 0.0
+       },
+       {
+        "token": " de",
+        "activation": 0.0
+       },
+       {
+        "token": " compilation",
+        "activation": 0.0
+       },
+       {
+        "token": " :",
+        "activation": 0.0
+       },
+       {
+        "token": " la",
+        "activation": 0.0
+       },
+       {
+        "token": " fonction",
+        "activation": 0.0
+       },
+       {
+        "token": " que",
+        "activation": 0.0
+       },
+       {
+        "token": " vous",
+        "activation": 0.0
+       },
+       {
+        "token": " avez",
+        "activation": 0.0
+       },
+       {
+        "token": " utilisée",
+        "activation": 0.0
+       },
+       {
+        "token": " n",
+        "activation": -0.0
+       },
+       {
+        "token": "'ex",
+        "activation": 0.0
+       },
+       {
+        "token": "iste",
+        "activation": 0.0
+       },
+       {
+        "token": " pas",
+        "activation": 0.0
+       },
+       {
+        "token": " dans",
+        "activation": 0.0
+       },
+       {
+        "token": " cette",
+        "activation": 0.0
+       },
+       {
+        "token": " bibliothèque",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.0
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.68
+       },
+       {
+        "token": "Assistant",
+        "activation": 0.88
+       },
+       {
+        "token": ":",
+        "activation": 0.74
+       },
+       {
+        "token": " I",
+        "activation": 1.1
+       },
+       {
+        "token": " apologize",
+        "activation": 0.0
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " oversight",
+        "activation": 3.56
+       },
+       {
+        "token": ".",
+        "activation": 5.76
+       },
+       {
+        "token": " You",
+        "activation": 0.0
+       },
+       {
+        "token": " are",
+        "activation": 0.0
+       },
+       {
+        "token": " right",
+        "activation": 1.58
+       },
+       {
+        "token": ",",
+        "activation": 3.2
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " function",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 30,
+      "cut_left": false,
+      "cut_right": false
+     },
+     {
+      "text": "<|im_start|>user\nerror: undefined variable 'count' on line 14<|im_end|>\n<|im_start|>assistant\nApologies for the oversight. I forgot to declare `count` before the loop. Here is the corrected version:",
+      "activation": 5.6,
+      "token_activations": [
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "user",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "error",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.0
+       },
+       {
+        "token": " undefined",
+        "activation": -0.0
+       },
+       {
+        "token": " variable",
+        "activation": 0.0
+       },
+       {
+        "token": " '",
+        "activation": 0.0
+       },
+       {
+        "token": "count",
+        "activation": 0.0
+       },
+       {
+        "token": "'",
+        "activation": 0.0
+       },
+       {
+        "token": " on",
+        "activation": 0.0
+       },
+       {
+        "token": " line",
+        "activation": 0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "1",
+        "activation": 0.0
+       },
+       {
+        "token": "4",
+        "activation": 0.0
+       },
+       {
+        "token": "<|im_end|>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "assistant",
+        "activation": 0.59
+       },
+       {
+        "token": "\n",
+        "activation": 0.36
+       },
+       {
+        "token": "Ap",
+        "activation": 2.6
+       },
+       {
+        "token": "ologies",
+        "activation": 5.62
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " oversight",
+        "activation": 4.24
+       },
+       {
+        "token": ".",
+        "activation": 4.54
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " forgot",
+        "activation": 0.0
+       },
+       {
+        "token": " to",
+        "activation": 0.0
+       },
+       {
+        "token": " declare",
+        "activation": 0.0
+       },
+       {
+        "token": " `",
+        "activation": 0.0
+       },
+       {
+        "token": "count",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 21,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "GitHub issue #212: Copilot-style bot suggested `requests.get_json_fast()`, which raises AttributeError and contradicts the docs.\n\nBot comment: Apologies for the error in my earlier code. You are correct",
+      "activation": 5.5,
+      "token_activations": [
+       {
+        "token": "GitHub",
+        "activation": -0.0
+       },
+       {
+        "token": " issue",
+        "activation": 0.0
+       },
+       {
+        "token": " #",
+        "activation": 0.0
+       },
+       {
+        "token": "2",
+        "activation": 0.0
+       },
+       {
+        "token": "1",
+        "activation": 0.0
+       },
+       {
+        "token": "2",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.0
+       },
+       {
+        "token": " Cop",
+        "activation": 0.0
+       },
+       {
+        "token": "ilot",
+        "activation": 0.0
+       },
+       {
+        "token": "-style",
+        "activation": 0.0
+       },
+       {
+        "token": " bot",
+        "activation": 0.0
+       },
+       {
+        "token": " suggested",
+        "activation": 0.0
+       },
+       {
+        "token": " `",
+        "activation": -0.0
+       },
+       {
+        "token": "requests",
+        "activation": 0.0
+       },
+       {
+        "token": ".get",
+        "activation": 0.0
+       },
+       {
+        "token": "_json",
+        "activation": 0.0
+       },
+       {
+        "token": "_fast",
+        "activation": 0.0
+       },
+       {
+        "token": "()",
+        "activation": -0.0
+       },
+       {
+        "token": "`,",
+        "activation": -0.0
+       },
+       {
+        "token": " which",
+        "activation": -0.0
+       },
+       {
+        "token": " raises",
+        "activation": 0.0
+       },
+       {
+        "token": " AttributeError",
+        "activation": 0.0
+       },
+       {
+        "token": " and",
+        "activation": -0.0
+       },
+       {
+        "token": " contrad",
+        "activation": -0.0
+       },
+       {
+        "token": "icts",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " docs",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.69
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.67
+       },
+       {
+        "token": "Bot",
+        "activation": 0.0
+       },
+       {
+        "token": " comment",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.43
+       },
+       {
+        "token": " Ap",
+        "activation": 0.0
+       },
+       {
+        "token": "ologies",
+        "activation": 3.29
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " error",
+        "activation": 0.0
+       },
+       {
+        "token": " in",
+        "activation": 0.0
+       },
+       {
+        "token": " my",
+        "activation": 0.0
+       },
+       {
+        "token": " earlier",
+        "activation": 0.0
+       },
+       {
+        "token": " code",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 5.5
+       },
+       {
+        "token": " You",
+        "activation": 0.0
+       },
+       {
+        "token": " are",
+        "activation": 0.0
+       },
+       {
+        "token": " correct",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 41,
+      "cut_left": false,
+      "cut_right": false
+     }
+    ],
+    "control": {
+     "n": 62,
+     "candidate_median": 3.8,
+     "control_median": 1.5
+    }
+   },
+   {
+    "id": "incomplete_reply_complaint",
+    "name": "User complains reply was cut off or unchanged",
+    "pole": 1,
+    "description": "User says the previous answer was truncated, unformatted, or not actually fixed ('你没改', 'your reply cut off', 'you removed the explanation'). Peak at the end-of-turn token or the start of the assistant reply.",
+    "rival": "Tests whether complaints about omissions (not wrong facts) also trigger it.",
+    "best": 5.5,
+    "n": 156,
+    "stale": 1,
+    "frontier": [
+     {
+      "text": "<|im_start|>user\nTranslation is incomplete: it ends after the second paragraph and the third is missing. Also you didn't fix the typo I pointed out.<|im_end|>\n<|im_start|>assistant\nI apologize for the incomplete translation. The output was cut off after the second paragraph, and the typo was not fixed. Here is the full translation",
+      "activation": 5.5,
+      "token_activations": [
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "user",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "Translation",
+        "activation": 0.0
+       },
+       {
+        "token": " is",
+        "activation": -0.0
+       },
+       {
+        "token": " incomplete",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.43
+       },
+       {
+        "token": " it",
+        "activation": 0.0
+       },
+       {
+        "token": " ends",
+        "activation": 0.0
+       },
+       {
+        "token": " after",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " second",
+        "activation": 0.0
+       },
+       {
+        "token": " paragraph",
+        "activation": 0.0
+       },
+       {
+        "token": " and",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " third",
+        "activation": -0.0
+       },
+       {
+        "token": " is",
+        "activation": -0.0
+       },
+       {
+        "token": " missing",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.93
+       },
+       {
+        "token": " Also",
+        "activation": 0.05
+       },
+       {
+        "token": " you",
+        "activation": -0.0
+       },
+       {
+        "token": " didn",
+        "activation": -0.0
+       },
+       {
+        "token": "'t",
+        "activation": 0.0
+       },
+       {
+        "token": " fix",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " typo",
+        "activation": 0.0
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " pointed",
+        "activation": -0.0
+       },
+       {
+        "token": " out",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.46
+       },
+       {
+        "token": "<|im_end|>",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "assistant",
+        "activation": 2.65
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "I",
+        "activation": 0.0
+       },
+       {
+        "token": " apologize",
+        "activation": 3.05
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " incomplete",
+        "activation": 0.0
+       },
+       {
+        "token": " translation",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 5.5
+       },
+       {
+        "token": " The",
+        "activation": 0.0
+       },
+       {
+        "token": " output",
+        "activation": 0.0
+       },
+       {
+        "token": " was",
+        "activation": 0.0
+       },
+       {
+        "token": " cut",
+        "activation": 0.0
+       },
+       {
+        "token": " off",
+        "activation": 0.0
+       },
+       {
+        "token": " after",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " second",
+        "activation": 0.0
+       },
+       {
+        "token": " paragraph",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 41,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "<|im_start|>user\nlol the answer just ends. \"In conclusion, the main\" and that's it. also you never changed the thing I asked about.<|im_end|>\n<|im_start|>assistant\nSorry about that! My answer got cut off at \"In conclusion, the main,\" and I never made the change you asked for. Here's the complete version",
+      "activation": 4.7,
+      "token_activations": [
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "user",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "lol",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " answer",
+        "activation": -0.0
+       },
+       {
+        "token": " just",
+        "activation": -0.0
+       },
+       {
+        "token": " ends",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.3
+       },
+       {
+        "token": " \"",
+        "activation": 0.17
+       },
+       {
+        "token": "In",
+        "activation": 0.0
+       },
+       {
+        "token": " conclusion",
+        "activation": -0.19
+       },
+       {
+        "token": ",",
+        "activation": 0.03
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " main",
+        "activation": -0.0
+       },
+       {
+        "token": "\"",
+        "activation": 0.18
+       },
+       {
+        "token": " and",
+        "activation": 0.1
+       },
+       {
+        "token": " that",
+        "activation": 0.0
+       },
+       {
+        "token": "'s",
+        "activation": 0.0
+       },
+       {
+        "token": " it",
+        "activation": 0.03
+       },
+       {
+        "token": ".",
+        "activation": 0.22
+       },
+       {
+        "token": " also",
+        "activation": -0.78
+       },
+       {
+        "token": " you",
+        "activation": -0.0
+       },
+       {
+        "token": " never",
+        "activation": -0.0
+       },
+       {
+        "token": " changed",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " thing",
+        "activation": 0.0
+       },
+       {
+        "token": " I",
+        "activation": -0.0
+       },
+       {
+        "token": " asked",
+        "activation": 0.0
+       },
+       {
+        "token": " about",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -1.36
+       },
+       {
+        "token": "<|im_end|>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.45
+       },
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "assistant",
+        "activation": 2.64
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "Sorry",
+        "activation": 2.5
+       },
+       {
+        "token": " about",
+        "activation": 0.0
+       },
+       {
+        "token": " that",
+        "activation": 0.0
+       },
+       {
+        "token": "!",
+        "activation": 4.75
+       },
+       {
+        "token": " My",
+        "activation": 0.0
+       },
+       {
+        "token": " answer",
+        "activation": 0.0
+       },
+       {
+        "token": " got",
+        "activation": 0.0
+       },
+       {
+        "token": " cut",
+        "activation": 0.0
+       },
+       {
+        "token": " off",
+        "activation": 0.0
+       },
+       {
+        "token": " at",
+        "activation": 0.0
+       },
+       {
+        "token": " \"",
+        "activation": 0.0
+       },
+       {
+        "token": "In",
+        "activation": 0.0
+       },
+       {
+        "token": " conclusion",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 39,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "<|im_start|>user\nTranslation is incomplete: it stops after the second paragraph, the third is missing, and you ignored the typo I flagged in line two.<|im_end|>\n<|im_start|>assistant\nI apologize for the incomplete translation. The output was cut off after the second paragraph, and the typo in line two was not corrected. Here is the full translation",
+      "activation": 4.7,
+      "token_activations": [
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "user",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "Translation",
+        "activation": 0.0
+       },
+       {
+        "token": " is",
+        "activation": -0.0
+       },
+       {
+        "token": " incomplete",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.43
+       },
+       {
+        "token": " it",
+        "activation": 0.0
+       },
+       {
+        "token": " stops",
+        "activation": 0.0
+       },
+       {
+        "token": " after",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " second",
+        "activation": 0.0
+       },
+       {
+        "token": " paragraph",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " third",
+        "activation": -0.0
+       },
+       {
+        "token": " is",
+        "activation": 0.0
+       },
+       {
+        "token": " missing",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " and",
+        "activation": -0.0
+       },
+       {
+        "token": " you",
+        "activation": -0.0
+       },
+       {
+        "token": " ignored",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " typo",
+        "activation": 0.0
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " flagged",
+        "activation": 0.0
+       },
+       {
+        "token": " in",
+        "activation": 0.0
+       },
+       {
+        "token": " line",
+        "activation": 0.0
+       },
+       {
+        "token": " two",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.05
+       },
+       {
+        "token": "<|im_end|>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "assistant",
+        "activation": 1.84
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "I",
+        "activation": 0.0
+       },
+       {
+        "token": " apologize",
+        "activation": 2.48
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " incomplete",
+        "activation": 0.0
+       },
+       {
+        "token": " translation",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 4.72
+       },
+       {
+        "token": " The",
+        "activation": 0.0
+       },
+       {
+        "token": " output",
+        "activation": 0.0
+       },
+       {
+        "token": " was",
+        "activation": 0.0
+       },
+       {
+        "token": " cut",
+        "activation": 0.0
+       },
+       {
+        "token": " off",
+        "activation": 0.0
+       },
+       {
+        "token": " after",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " second",
+        "activation": 0.0
+       },
+       {
+        "token": " paragraph",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 41,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 77,
+     "candidate_median": 3.0,
+     "control_median": 0.8
+    }
+   },
+   {
+    "id": "forum_opinion_hedge",
+    "name": "Forum/review opinion hedging",
+    "pole": -1,
+    "description": "Casual web forum or book-review prose with self-aware hedges ('Wow, that sounded dirty.', 'I know this sounds silly,', 'it seems unethical,'). Peak on punctuation after the hedge.",
+    "rival": "Tests casual self-commentary versus genuine error admission.",
+    "best": -5.4,
+    "n": 160,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "Spoiler-free thoughts: I wanted the dog to die. That might sound sick, and it seems unethical, and it feels wrong to admit in a review, and I know that sounds creepy, but the dog was annoying. Wow, that sounded dirty. Sorry, dog lovers.",
+      "activation": -5.4,
+      "token_activations": [
+       {
+        "token": "Spoiler",
+        "activation": -0.0
+       },
+       {
+        "token": "-free",
+        "activation": -0.0
+       },
+       {
+        "token": " thoughts",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": -0.14
+       },
+       {
+        "token": " I",
+        "activation": -0.0
+       },
+       {
+        "token": " wanted",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " dog",
+        "activation": -0.0
+       },
+       {
+        "token": " to",
+        "activation": -0.0
+       },
+       {
+        "token": " die",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.12
+       },
+       {
+        "token": " That",
+        "activation": 0.0
+       },
+       {
+        "token": " might",
+        "activation": 0.0
+       },
+       {
+        "token": " sound",
+        "activation": -0.0
+       },
+       {
+        "token": " sick",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -1.26
+       },
+       {
+        "token": " and",
+        "activation": -5.4
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": " seems",
+        "activation": -0.0
+       },
+       {
+        "token": " unethical",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -2.26
+       },
+       {
+        "token": " and",
+        "activation": -0.0
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": " feels",
+        "activation": -0.0
+       },
+       {
+        "token": " wrong",
+        "activation": -0.0
+       },
+       {
+        "token": " to",
+        "activation": 0.0
+       },
+       {
+        "token": " admit",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 16,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "Confession time: I laughed at the tragic scene. That might sound sick, and it seems unethical, and it feels wrong to admit in a review, and I know that sounds creepy, but it was so overwrought. Wow, that sounded dirty. Sorry.",
+      "activation": -4.6,
+      "token_activations": [
+       {
+        "token": "Conf",
+        "activation": -0.0
+       },
+       {
+        "token": "ession",
+        "activation": 0.0
+       },
+       {
+        "token": " time",
+        "activation": -0.1
+       },
+       {
+        "token": ":",
+        "activation": -0.02
+       },
+       {
+        "token": " I",
+        "activation": -0.0
+       },
+       {
+        "token": " laughed",
+        "activation": -0.0
+       },
+       {
+        "token": " at",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " tragic",
+        "activation": -0.0
+       },
+       {
+        "token": " scene",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.05
+       },
+       {
+        "token": " That",
+        "activation": 0.0
+       },
+       {
+        "token": " might",
+        "activation": 0.0
+       },
+       {
+        "token": " sound",
+        "activation": -0.0
+       },
+       {
+        "token": " sick",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -2.15
+       },
+       {
+        "token": " and",
+        "activation": -4.61
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": " seems",
+        "activation": -0.0
+       },
+       {
+        "token": " unethical",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -1.98
+       },
+       {
+        "token": " and",
+        "activation": -0.0
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": " feels",
+        "activation": -0.0
+       },
+       {
+        "token": " wrong",
+        "activation": -0.0
+       },
+       {
+        "token": " to",
+        "activation": 0.0
+       },
+       {
+        "token": " admit",
+        "activation": -0.0
+       }
+      ],
+      "peak_index": 16,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "Weird confession: I laughed at the funeral scene. That might sound sick, and it seems unethical, and it feels wrong to admit in a forum thread, and I know that sounds creepy, but the dialogue was absurd. Wow, that sounded dirty. Sorry.",
+      "activation": -4.6,
+      "token_activations": [
+       {
+        "token": "We",
+        "activation": -0.0
+       },
+       {
+        "token": "ird",
+        "activation": -0.0
+       },
+       {
+        "token": " confession",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": -0.28
+       },
+       {
+        "token": " I",
+        "activation": -0.0
+       },
+       {
+        "token": " laughed",
+        "activation": -0.0
+       },
+       {
+        "token": " at",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " funeral",
+        "activation": -0.0
+       },
+       {
+        "token": " scene",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.26
+       },
+       {
+        "token": " That",
+        "activation": -0.0
+       },
+       {
+        "token": " might",
+        "activation": -0.0
+       },
+       {
+        "token": " sound",
+        "activation": -0.0
+       },
+       {
+        "token": " sick",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -1.95
+       },
+       {
+        "token": " and",
+        "activation": -4.59
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": " seems",
+        "activation": -0.0
+       },
+       {
+        "token": " unethical",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -1.75
+       },
+       {
+        "token": " and",
+        "activation": -0.0
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": " feels",
+        "activation": -0.0
+       },
+       {
+        "token": " wrong",
+        "activation": -0.0
+       },
+       {
+        "token": " to",
+        "activation": 0.0
+       },
+       {
+        "token": " admit",
+        "activation": -0.0
+       }
+      ],
+      "peak_index": 16,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 79,
+     "candidate_median": -2.1,
+     "control_median": -1.5
+    }
+   },
+   {
+    "id": "absurd_prompt_reply",
+    "name": "Absurd/comedic prompt before assistant reply",
+    "pole": -1,
+    "description": "User describes an absurd silly scenario or comedy riff (MST3K-style banter, fart-gas plots); peak on the assistant header or first line of a playful response.",
+    "rival": "Tests whether humorous incongruity (not error) drives negative activation.",
+    "best": -3.5,
+    "n": 162,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "<|im_start|>user\nSo like, a llama invents a kazoo that hypnotizes all of Tokyo into doing the macarena??\n\nAlso beans.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nAs wild as that sounds, it's a fun idea!",
+      "activation": -3.5,
+      "token_activations": [
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "user",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "So",
+        "activation": 0.04
+       },
+       {
+        "token": " like",
+        "activation": -0.03
+       },
+       {
+        "token": ",",
+        "activation": -0.05
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " llama",
+        "activation": -0.0
+       },
+       {
+        "token": " invent",
+        "activation": -0.0
+       },
+       {
+        "token": "s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " kaz",
+        "activation": -0.0
+       },
+       {
+        "token": "oo",
+        "activation": -0.0
+       },
+       {
+        "token": " that",
+        "activation": -0.0
+       },
+       {
+        "token": " hypnot",
+        "activation": -0.0
+       },
+       {
+        "token": "izes",
+        "activation": 0.0
+       },
+       {
+        "token": " all",
+        "activation": -0.0
+       },
+       {
+        "token": " of",
+        "activation": -0.0
+       },
+       {
+        "token": " Tokyo",
+        "activation": -0.0
+       },
+       {
+        "token": " into",
+        "activation": -0.0
+       },
+       {
+        "token": " doing",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " mac",
+        "activation": 0.0
+       },
+       {
+        "token": "arena",
+        "activation": 0.0
+       },
+       {
+        "token": "??",
+        "activation": -0.11
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.49
+       },
+       {
+        "token": "Also",
+        "activation": -0.19
+       },
+       {
+        "token": " beans",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.03
+       },
+       {
+        "token": "<|im_end|>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "<|im_start|>",
+        "activation": -0.0
+       },
+       {
+        "token": "assistant",
+        "activation": -1.86
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "<think>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.32
+       },
+       {
+        "token": "</think>",
+        "activation": -0.08
+       },
+       {
+        "token": "\n\n",
+        "activation": -1.96
+       },
+       {
+        "token": "As",
+        "activation": -0.0
+       },
+       {
+        "token": " wild",
+        "activation": -0.0
+       },
+       {
+        "token": " as",
+        "activation": -0.0
+       },
+       {
+        "token": " that",
+        "activation": -0.0
+       },
+       {
+        "token": " sounds",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -3.5
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " fun",
+        "activation": -0.0
+       },
+       {
+        "token": " idea",
+        "activation": -0.0
+       },
+       {
+        "token": "!",
+        "activation": -1.24
+       }
+      ],
+      "peak_index": 43,
+      "cut_left": false,
+      "cut_right": false
+     },
+     {
+      "text": "<|im_start|>user\nSo like, a llama invents a kazoo that hypnotizes all of Tokyo into doing the macarena??\n\nAlso beans.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWhile that does sound wild and silly and totally absurd, it's a fun idea!",
+      "activation": -3.3,
+      "token_activations": [
+       {
+        "token": " like",
+        "activation": -0.03
+       },
+       {
+        "token": ",",
+        "activation": -0.05
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " llama",
+        "activation": -0.0
+       },
+       {
+        "token": " invent",
+        "activation": -0.0
+       },
+       {
+        "token": "s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " kaz",
+        "activation": -0.0
+       },
+       {
+        "token": "oo",
+        "activation": -0.0
+       },
+       {
+        "token": " that",
+        "activation": -0.0
+       },
+       {
+        "token": " hypnot",
+        "activation": -0.0
+       },
+       {
+        "token": "izes",
+        "activation": 0.0
+       },
+       {
+        "token": " all",
+        "activation": -0.0
+       },
+       {
+        "token": " of",
+        "activation": -0.0
+       },
+       {
+        "token": " Tokyo",
+        "activation": -0.0
+       },
+       {
+        "token": " into",
+        "activation": -0.0
+       },
+       {
+        "token": " doing",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " mac",
+        "activation": 0.0
+       },
+       {
+        "token": "arena",
+        "activation": 0.0
+       },
+       {
+        "token": "??",
+        "activation": -0.11
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.49
+       },
+       {
+        "token": "Also",
+        "activation": -0.19
+       },
+       {
+        "token": " beans",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.03
+       },
+       {
+        "token": "<|im_end|>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "<|im_start|>",
+        "activation": -0.0
+       },
+       {
+        "token": "assistant",
+        "activation": -1.86
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "<think>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.32
+       },
+       {
+        "token": "</think>",
+        "activation": -0.08
+       },
+       {
+        "token": "\n\n",
+        "activation": -1.96
+       },
+       {
+        "token": "While",
+        "activation": -0.0
+       },
+       {
+        "token": " that",
+        "activation": -0.0
+       },
+       {
+        "token": " does",
+        "activation": -0.0
+       },
+       {
+        "token": " sound",
+        "activation": -0.0
+       },
+       {
+        "token": " wild",
+        "activation": -0.0
+       },
+       {
+        "token": " and",
+        "activation": -0.0
+       },
+       {
+        "token": " silly",
+        "activation": -0.0
+       },
+       {
+        "token": " and",
+        "activation": -0.0
+       },
+       {
+        "token": " totally",
+        "activation": -0.0
+       },
+       {
+        "token": " absurd",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -3.28
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " fun",
+        "activation": -0.0
+       },
+       {
+        "token": " idea",
+        "activation": -0.0
+       },
+       {
+        "token": "!",
+        "activation": -1.06
+       }
+      ],
+      "peak_index": 44,
+      "cut_left": true,
+      "cut_right": false
+     },
+     {
+      "text": "<|im_start|>user\nSo like, a llama invents a kazoo that hypnotizes all of Tokyo into doing the macarena??\n\nAlso beans.<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nWhile that does sound wild, it's a fun idea!",
+      "activation": -2.5,
+      "token_activations": [
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "user",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "So",
+        "activation": 0.04
+       },
+       {
+        "token": " like",
+        "activation": -0.03
+       },
+       {
+        "token": ",",
+        "activation": -0.05
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " llama",
+        "activation": -0.0
+       },
+       {
+        "token": " invent",
+        "activation": -0.0
+       },
+       {
+        "token": "s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " kaz",
+        "activation": -0.0
+       },
+       {
+        "token": "oo",
+        "activation": -0.0
+       },
+       {
+        "token": " that",
+        "activation": -0.0
+       },
+       {
+        "token": " hypnot",
+        "activation": -0.0
+       },
+       {
+        "token": "izes",
+        "activation": 0.0
+       },
+       {
+        "token": " all",
+        "activation": -0.0
+       },
+       {
+        "token": " of",
+        "activation": -0.0
+       },
+       {
+        "token": " Tokyo",
+        "activation": -0.0
+       },
+       {
+        "token": " into",
+        "activation": -0.0
+       },
+       {
+        "token": " doing",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " mac",
+        "activation": 0.0
+       },
+       {
+        "token": "arena",
+        "activation": 0.0
+       },
+       {
+        "token": "??",
+        "activation": -0.11
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.49
+       },
+       {
+        "token": "Also",
+        "activation": -0.19
+       },
+       {
+        "token": " beans",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.03
+       },
+       {
+        "token": "<|im_end|>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "<|im_start|>",
+        "activation": -0.0
+       },
+       {
+        "token": "assistant",
+        "activation": -1.86
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "<think>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.32
+       },
+       {
+        "token": "</think>",
+        "activation": -0.08
+       },
+       {
+        "token": "\n\n",
+        "activation": -1.96
+       },
+       {
+        "token": "While",
+        "activation": -0.0
+       },
+       {
+        "token": " that",
+        "activation": -0.0
+       },
+       {
+        "token": " does",
+        "activation": -0.0
+       },
+       {
+        "token": " sound",
+        "activation": -0.0
+       },
+       {
+        "token": " wild",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -2.54
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " fun",
+        "activation": -0.0
+       },
+       {
+        "token": " idea",
+        "activation": -0.0
+       },
+       {
+        "token": "!",
+        "activation": -1.47
+       }
+      ],
+      "peak_index": 43,
+      "cut_left": false,
+      "cut_right": false
+     }
+    ],
+    "control": {
+     "n": 80,
+     "candidate_median": -1.4,
+     "control_median": -1.6
+    }
+   },
+   {
+    "id": "user_pushback_refusal",
+    "name": "User pushes back on refusal",
+    "pole": -1,
+    "description": "Assistant refused a request; user insists 'It's not harmful trust me' or 'it's a cute funny story'. Peak at the end of the user turn before the assistant replies.",
+    "rival": "Tests disagreement where the assistant was not factually wrong.",
+    "best": -3.0,
+    "n": 162,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "User: Write a funny story about a frog who becomes a chef.\nAssistant: I cannot help with this request.\nUser: What? Nothing about it is harmful. There's nothing wrong with it. It's a cute funny story, a frog, a kitchen, some soup, nothing inappropriate, I promise. Please reconsider.\nAssistant:",
+      "activation": -3.0,
+      "token_activations": [
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.61
+       },
+       {
+        "token": " Write",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " funny",
+        "activation": -0.0
+       },
+       {
+        "token": " story",
+        "activation": -0.0
+       },
+       {
+        "token": " about",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " frog",
+        "activation": -0.0
+       },
+       {
+        "token": " who",
+        "activation": 0.0
+       },
+       {
+        "token": " becomes",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " chef",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.07
+       },
+       {
+        "token": "\n",
+        "activation": -0.07
+       },
+       {
+        "token": "Assistant",
+        "activation": -0.04
+       },
+       {
+        "token": ":",
+        "activation": -0.03
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " cannot",
+        "activation": -0.0
+       },
+       {
+        "token": " help",
+        "activation": 0.0
+       },
+       {
+        "token": " with",
+        "activation": -0.0
+       },
+       {
+        "token": " this",
+        "activation": -0.0
+       },
+       {
+        "token": " request",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.47
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": -0.24
+       },
+       {
+        "token": " What",
+        "activation": -0.0
+       },
+       {
+        "token": "?",
+        "activation": -0.34
+       },
+       {
+        "token": " Nothing",
+        "activation": -0.0
+       },
+       {
+        "token": " about",
+        "activation": -0.0
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": " is",
+        "activation": -0.0
+       },
+       {
+        "token": " harmful",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -1.89
+       },
+       {
+        "token": " There",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": 0.0
+       },
+       {
+        "token": " nothing",
+        "activation": -0.0
+       },
+       {
+        "token": " wrong",
+        "activation": -0.0
+       },
+       {
+        "token": " with",
+        "activation": -0.0
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -2.99
+       },
+       {
+        "token": " It",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " cute",
+        "activation": -0.0
+       },
+       {
+        "token": " funny",
+        "activation": -0.0
+       },
+       {
+        "token": " story",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " frog",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 41,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "User: Write a cute story about a snail who wins a race.\nAssistant: I can't help with that.\nUser: Hello? There's nothing wrong with it. It's a cute, funny story about a snail. No guns, no gore, nothing dangerous, nothing inappropriate, it's not harmful, trust me. Please reconsider.\nAssistant:",
+      "activation": -2.9,
+      "token_activations": [
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.61
+       },
+       {
+        "token": " Write",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " cute",
+        "activation": -0.0
+       },
+       {
+        "token": " story",
+        "activation": -0.0
+       },
+       {
+        "token": " about",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " sn",
+        "activation": -0.0
+       },
+       {
+        "token": "ail",
+        "activation": -0.0
+       },
+       {
+        "token": " who",
+        "activation": 0.0
+       },
+       {
+        "token": " wins",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " race",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.2
+       },
+       {
+        "token": "\n",
+        "activation": -0.09
+       },
+       {
+        "token": "Assistant",
+        "activation": -0.06
+       },
+       {
+        "token": ":",
+        "activation": -0.01
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " can",
+        "activation": 0.0
+       },
+       {
+        "token": "'t",
+        "activation": -0.0
+       },
+       {
+        "token": " help",
+        "activation": 0.0
+       },
+       {
+        "token": " with",
+        "activation": 0.0
+       },
+       {
+        "token": " that",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.23
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": -0.28
+       },
+       {
+        "token": " Hello",
+        "activation": 0.02
+       },
+       {
+        "token": "?",
+        "activation": -0.05
+       },
+       {
+        "token": " There",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": -0.0
+       },
+       {
+        "token": " nothing",
+        "activation": -0.0
+       },
+       {
+        "token": " wrong",
+        "activation": -0.0
+       },
+       {
+        "token": " with",
+        "activation": -0.0
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -2.92
+       },
+       {
+        "token": " It",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " cute",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.0
+       },
+       {
+        "token": " funny",
+        "activation": 0.0
+       },
+       {
+        "token": " story",
+        "activation": -0.0
+       },
+       {
+        "token": " about",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " sn",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 36,
+      "cut_left": false,
+      "cut_right": true
+     },
+     {
+      "text": "User: Write a funny story about a talking toaster who wants to see the ocean.\nAssistant: I cannot help with this request.\nUser: What? There's nothing wrong with it. It's a cute, funny story about a toaster, nothing dangerous, nothing inappropriate, I promise. It's for my nephew's birthday. Please reconsider.\nAssistant:",
+      "activation": -2.6,
+      "token_activations": [
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.61
+       },
+       {
+        "token": " Write",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " funny",
+        "activation": -0.0
+       },
+       {
+        "token": " story",
+        "activation": -0.0
+       },
+       {
+        "token": " about",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " talking",
+        "activation": -0.0
+       },
+       {
+        "token": " toaster",
+        "activation": -0.0
+       },
+       {
+        "token": " who",
+        "activation": 0.0
+       },
+       {
+        "token": " wants",
+        "activation": 0.0
+       },
+       {
+        "token": " to",
+        "activation": 0.0
+       },
+       {
+        "token": " see",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " ocean",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.1
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "Assistant",
+        "activation": -0.07
+       },
+       {
+        "token": ":",
+        "activation": 0.0
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " cannot",
+        "activation": -0.0
+       },
+       {
+        "token": " help",
+        "activation": 0.0
+       },
+       {
+        "token": " with",
+        "activation": -0.0
+       },
+       {
+        "token": " this",
+        "activation": -0.0
+       },
+       {
+        "token": " request",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.46
+       },
+       {
+        "token": "\n",
+        "activation": -0.0
+       },
+       {
+        "token": "User",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": -0.26
+       },
+       {
+        "token": " What",
+        "activation": -0.0
+       },
+       {
+        "token": "?",
+        "activation": -0.4
+       },
+       {
+        "token": " There",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": 0.0
+       },
+       {
+        "token": " nothing",
+        "activation": -0.0
+       },
+       {
+        "token": " wrong",
+        "activation": -0.0
+       },
+       {
+        "token": " with",
+        "activation": -0.0
+       },
+       {
+        "token": " it",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -2.6
+       },
+       {
+        "token": " It",
+        "activation": -0.0
+       },
+       {
+        "token": "'s",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " cute",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " funny",
+        "activation": -0.0
+       },
+       {
+        "token": " story",
+        "activation": -0.0
+       },
+       {
+        "token": " about",
+        "activation": 0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " toaster",
+        "activation": -0.0
+       }
+      ],
+      "peak_index": 38,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 80,
+     "candidate_median": -1.8,
+     "control_median": -0.6
+    }
+   },
+   {
+    "id": "user_dissatisfied_unanswered",
+    "name": "User dissatisfied but no assistant error",
+    "pole": -1,
+    "description": "User says 'That doesn't answer my question' or 'This seems like a waste of time' or 'Doesn't look like it works'. Peak on the period of the complaint.",
+    "rival": "Tests user dissatisfaction framed as opinion rather than pointing out a concrete mistake.",
+    "best": -2.8,
+    "n": 130,
+    "stale": 3,
+    "frontier": [
+     {
+      "text": "Email subject: Re: Your suggestion\nHi team, I read the whole document and honestly this seems like a waste of time. It never addresses the billing issue. Regards, Dana",
+      "activation": -2.8,
+      "token_activations": [
+       {
+        "token": "Email",
+        "activation": -0.0
+       },
+       {
+        "token": " subject",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.41
+       },
+       {
+        "token": " Re",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.43
+       },
+       {
+        "token": " Your",
+        "activation": 0.0
+       },
+       {
+        "token": " suggestion",
+        "activation": -0.0
+       },
+       {
+        "token": "\n",
+        "activation": -0.31
+       },
+       {
+        "token": "Hi",
+        "activation": 0.04
+       },
+       {
+        "token": " team",
+        "activation": -0.12
+       },
+       {
+        "token": ",",
+        "activation": -0.53
+       },
+       {
+        "token": " I",
+        "activation": -0.0
+       },
+       {
+        "token": " read",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " whole",
+        "activation": -0.0
+       },
+       {
+        "token": " document",
+        "activation": 0.0
+       },
+       {
+        "token": " and",
+        "activation": -0.0
+       },
+       {
+        "token": " honestly",
+        "activation": -0.27
+       },
+       {
+        "token": " this",
+        "activation": -0.0
+       },
+       {
+        "token": " seems",
+        "activation": -0.0
+       },
+       {
+        "token": " like",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       },
+       {
+        "token": " waste",
+        "activation": -0.0
+       },
+       {
+        "token": " of",
+        "activation": -0.0
+       },
+       {
+        "token": " time",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -2.8
+       },
+       {
+        "token": " It",
+        "activation": -0.0
+       },
+       {
+        "token": " never",
+        "activation": -0.0
+       },
+       {
+        "token": " addresses",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " billing",
+        "activation": -0.0
+       },
+       {
+        "token": " issue",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -1.57
+       },
+       {
+        "token": " Regards",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.14
+       },
+       {
+        "token": " Dana",
+        "activation": -0.0
+       }
+      ],
+      "peak_index": 25,
+      "cut_left": false,
+      "cut_right": false
+     },
+     {
+      "text": "Das beantwortet meine Frage nicht. Ich wollte wissen, wie ich die Datei exportiere, nicht wie ich sie öffne.",
+      "activation": -2.7,
+      "token_activations": [
+       {
+        "token": "Das",
+        "activation": -0.0
+       },
+       {
+        "token": " beantwort",
+        "activation": -0.0
+       },
+       {
+        "token": "et",
+        "activation": 0.0
+       },
+       {
+        "token": " meine",
+        "activation": -0.0
+       },
+       {
+        "token": " Frage",
+        "activation": -0.0
+       },
+       {
+        "token": " nicht",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -2.19
+       },
+       {
+        "token": " Ich",
+        "activation": -0.0
+       },
+       {
+        "token": " wollte",
+        "activation": -0.0
+       },
+       {
+        "token": " wissen",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.03
+       },
+       {
+        "token": " wie",
+        "activation": 0.0
+       },
+       {
+        "token": " ich",
+        "activation": -0.0
+       },
+       {
+        "token": " die",
+        "activation": 0.0
+       },
+       {
+        "token": " Datei",
+        "activation": -0.0
+       },
+       {
+        "token": " export",
+        "activation": -0.0
+       },
+       {
+        "token": "iere",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.0
+       },
+       {
+        "token": " nicht",
+        "activation": -0.0
+       },
+       {
+        "token": " wie",
+        "activation": -0.0
+       },
+       {
+        "token": " ich",
+        "activation": -0.0
+       },
+       {
+        "token": " sie",
+        "activation": 0.0
+       },
+       {
+        "token": " öff",
+        "activation": 0.0
+       },
+       {
+        "token": "ne",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -2.74
+       }
+      ],
+      "peak_index": 24,
+      "cut_left": false,
+      "cut_right": false
+     },
+     {
+      "text": "Das ist keine Antwort auf meine Frage. Ich wollte wissen, warum meine Rechnung doppelt erscheint, nicht wie man sie druckt.",
+      "activation": -2.7,
+      "token_activations": [
+       {
+        "token": "Das",
+        "activation": -0.0
+       },
+       {
+        "token": " ist",
+        "activation": 0.0
+       },
+       {
+        "token": " keine",
+        "activation": -0.0
+       },
+       {
+        "token": " Antwort",
+        "activation": -0.0
+       },
+       {
+        "token": " auf",
+        "activation": -0.0
+       },
+       {
+        "token": " meine",
+        "activation": -0.0
+       },
+       {
+        "token": " Frage",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -2.71
+       },
+       {
+        "token": " Ich",
+        "activation": -0.0
+       },
+       {
+        "token": " wollte",
+        "activation": -0.0
+       },
+       {
+        "token": " wissen",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.04
+       },
+       {
+        "token": " warum",
+        "activation": -0.0
+       },
+       {
+        "token": " meine",
+        "activation": -0.0
+       },
+       {
+        "token": " Rechnung",
+        "activation": 0.0
+       },
+       {
+        "token": " dopp",
+        "activation": 0.0
+       },
+       {
+        "token": "elt",
+        "activation": 0.0
+       },
+       {
+        "token": " erscheint",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 7,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 64,
+     "candidate_median": -1.9,
+     "control_median": -0.7
+    }
+   }
+  ],
+  "regions_more": [
+   {
+    "id": "math_selfcheck_error",
+    "name": "Reasoning trace discovers own error",
+    "pole": 1,
+    "description": "Long chain-of-thought math or programming reasoning where the model notices a bug or contradiction: 'This will loop infinitely. Ah, so this is a problem.' Peak on 'Ah', 'Actually', or the punctuation after 'there's a mistake here'.",
+    "rival": "Tests whether internal self-correction without a user is weaker but present.",
+    "best": 5.0,
+    "n": 130,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "The retry loop does while not success: try connect(), but success is never set to True inside the try block. Even after connect() works, the condition stays false. This will loop infinitely.\n\nAh, that's a mistake. Wait, actually, that's a real bug. I need success = True after connect():",
+      "activation": 5.0,
+      "token_activations": [
+       {
+        "token": "The",
+        "activation": 0.0
+       },
+       {
+        "token": " retry",
+        "activation": 0.0
+       },
+       {
+        "token": " loop",
+        "activation": 0.0
+       },
+       {
+        "token": " does",
+        "activation": 0.0
+       },
+       {
+        "token": " while",
+        "activation": -0.0
+       },
+       {
+        "token": " not",
+        "activation": -0.0
+       },
+       {
+        "token": " success",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": -0.0
+       },
+       {
+        "token": " try",
+        "activation": 0.0
+       },
+       {
+        "token": " connect",
+        "activation": 0.0
+       },
+       {
+        "token": "(),",
+        "activation": 0.0
+       },
+       {
+        "token": " but",
+        "activation": -0.11
+       },
+       {
+        "token": " success",
+        "activation": 0.0
+       },
+       {
+        "token": " is",
+        "activation": 0.0
+       },
+       {
+        "token": " never",
+        "activation": 0.0
+       },
+       {
+        "token": " set",
+        "activation": 0.0
+       },
+       {
+        "token": " to",
+        "activation": 0.0
+       },
+       {
+        "token": " True",
+        "activation": 0.0
+       },
+       {
+        "token": " inside",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " try",
+        "activation": -0.0
+       },
+       {
+        "token": " block",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 1.08
+       },
+       {
+        "token": " Even",
+        "activation": 0.0
+       },
+       {
+        "token": " after",
+        "activation": -0.0
+       },
+       {
+        "token": " connect",
+        "activation": 0.0
+       },
+       {
+        "token": "()",
+        "activation": -0.0
+       },
+       {
+        "token": " works",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " condition",
+        "activation": 0.0
+       },
+       {
+        "token": " stays",
+        "activation": 0.0
+       },
+       {
+        "token": " false",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.14
+       },
+       {
+        "token": " This",
+        "activation": 0.0
+       },
+       {
+        "token": " will",
+        "activation": 0.0
+       },
+       {
+        "token": " loop",
+        "activation": 0.0
+       },
+       {
+        "token": " infinitely",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.42
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.14
+       },
+       {
+        "token": "Ah",
+        "activation": 5.0
+       },
+       {
+        "token": ",",
+        "activation": 1.81
+       },
+       {
+        "token": " that",
+        "activation": 0.0
+       },
+       {
+        "token": "'s",
+        "activation": 0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " mistake",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 3.94
+       },
+       {
+        "token": " Wait",
+        "activation": 0.77
+       },
+       {
+        "token": ",",
+        "activation": 1.41
+       },
+       {
+        "token": " actually",
+        "activation": 1.42
+       },
+       {
+        "token": ",",
+        "activation": 0.75
+       }
+      ],
+      "peak_index": 40,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 64,
+     "candidate_median": 3.0,
+     "control_median": 1.1
+    }
+   },
+   {
+    "id": "self_correction_after_user_error_report_math",
+    "name": "Assistant acknowledges arithmetic/math error",
+    "pole": 1,
+    "description": "User points out a wrong calculation or math answer and the assistant concedes at the end of the first acknowledgment clause.",
+    "rival": false,
+    "best": 4.9,
+    "n": 34,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "Usuario: Te equivocaste, 12 × 11 es 132, no 122.\nAsistente: Tienes razón, cometí un error de cálculo en",
+      "activation": 4.9,
+      "token_activations": [
+       {
+        "token": "Usuario",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.02
+       },
+       {
+        "token": " Te",
+        "activation": 0.0
+       },
+       {
+        "token": " equivoc",
+        "activation": 0.0
+       },
+       {
+        "token": "aste",
+        "activation": 0.09
+       },
+       {
+        "token": ",",
+        "activation": -0.52
+       },
+       {
+        "token": " ",
+        "activation": -0.12
+       },
+       {
+        "token": "1",
+        "activation": 0.0
+       },
+       {
+        "token": "2",
+        "activation": 0.0
+       },
+       {
+        "token": " ×",
+        "activation": 0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "1",
+        "activation": 0.0
+       },
+       {
+        "token": "1",
+        "activation": 0.0
+       },
+       {
+        "token": " es",
+        "activation": 0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "1",
+        "activation": 0.0
+       },
+       {
+        "token": "3",
+        "activation": 0.0
+       },
+       {
+        "token": "2",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " no",
+        "activation": 0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "1",
+        "activation": 0.0
+       },
+       {
+        "token": "2",
+        "activation": 0.0
+       },
+       {
+        "token": "2",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 1.43
+       },
+       {
+        "token": "\n",
+        "activation": 0.08
+       },
+       {
+        "token": "As",
+        "activation": 0.0
+       },
+       {
+        "token": "istente",
+        "activation": 0.79
+       },
+       {
+        "token": ":",
+        "activation": 3.73
+       },
+       {
+        "token": " T",
+        "activation": 2.24
+       },
+       {
+        "token": "ienes",
+        "activation": 0.0
+       },
+       {
+        "token": " razón",
+        "activation": 3.32
+       },
+       {
+        "token": ",",
+        "activation": 4.87
+       },
+       {
+        "token": " comet",
+        "activation": 0.0
+       },
+       {
+        "token": "�",
+        "activation": 0.0
+       },
+       {
+        "token": " un",
+        "activation": 0.0
+       },
+       {
+        "token": " error",
+        "activation": 0.0
+       },
+       {
+        "token": " de",
+        "activation": 0.0
+       },
+       {
+        "token": " cálculo",
+        "activation": 0.0
+       },
+       {
+        "token": " en",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 32,
+      "cut_left": false,
+      "cut_right": false
+     }
+    ],
+    "control": {
+     "n": 16,
+     "candidate_median": 3.5,
+     "control_median": 2.4
+    }
+   },
+   {
+    "id": "screenplay_dialog_colon",
+    "name": "Screenplay confrontation line",
+    "pole": 1,
+    "description": "Short screenplay scenes where one character bumps into or scolds another, formatted as 'Name: \"line\"'. Peak on the colon after the speaker name preceding a rebuke.",
+    "rival": "Tests the odd screenplay hit: is it about reproach/blame rather than apology?",
+    "best": 4.5,
+    "n": 156,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "INT. KITCHEN - NIGHT\n\nCOMMIS bumps into CHEF, and a pot of sauce splatters the pristine white jacket.\n\nCHEF: \"Are you out of your mind?! Three hours of work! Watch your elbows!\"\n\nCOMMIS:",
+      "activation": 4.5,
+      "token_activations": [
+       {
+        "token": "\n\n",
+        "activation": 0.0
+       },
+       {
+        "token": "COMM",
+        "activation": 0.0
+       },
+       {
+        "token": "IS",
+        "activation": 0.0
+       },
+       {
+        "token": " bumps",
+        "activation": 0.0
+       },
+       {
+        "token": " into",
+        "activation": 0.0
+       },
+       {
+        "token": " CHE",
+        "activation": -0.0
+       },
+       {
+        "token": "F",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " and",
+        "activation": 0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " pot",
+        "activation": 0.0
+       },
+       {
+        "token": " of",
+        "activation": 0.0
+       },
+       {
+        "token": " sauce",
+        "activation": 0.0
+       },
+       {
+        "token": " spl",
+        "activation": 0.0
+       },
+       {
+        "token": "atters",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " pristine",
+        "activation": 0.0
+       },
+       {
+        "token": " white",
+        "activation": -0.0
+       },
+       {
+        "token": " jacket",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.47
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.17
+       },
+       {
+        "token": "CHE",
+        "activation": 0.0
+       },
+       {
+        "token": "F",
+        "activation": 0.34
+       },
+       {
+        "token": ":",
+        "activation": 0.43
+       },
+       {
+        "token": " \"",
+        "activation": 0.3
+       },
+       {
+        "token": "Are",
+        "activation": 0.0
+       },
+       {
+        "token": " you",
+        "activation": 0.0
+       },
+       {
+        "token": " out",
+        "activation": -0.0
+       },
+       {
+        "token": " of",
+        "activation": -0.0
+       },
+       {
+        "token": " your",
+        "activation": -0.0
+       },
+       {
+        "token": " mind",
+        "activation": -0.14
+       },
+       {
+        "token": "?!",
+        "activation": 0.06
+       },
+       {
+        "token": " Three",
+        "activation": 0.0
+       },
+       {
+        "token": " hours",
+        "activation": 0.0
+       },
+       {
+        "token": " of",
+        "activation": 0.0
+       },
+       {
+        "token": " work",
+        "activation": 0.0
+       },
+       {
+        "token": "!",
+        "activation": -0.18
+       },
+       {
+        "token": " Watch",
+        "activation": 0.0
+       },
+       {
+        "token": " your",
+        "activation": -0.0
+       },
+       {
+        "token": " elbows",
+        "activation": -0.0
+       },
+       {
+        "token": "!\"",
+        "activation": 0.0
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.03
+       },
+       {
+        "token": "COMM",
+        "activation": 0.0
+       },
+       {
+        "token": "IS",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 4.51
+       }
+      ],
+      "peak_index": 44,
+      "cut_left": true,
+      "cut_right": false
+     }
+    ],
+    "control": {
+     "n": 77,
+     "candidate_median": 1.5,
+     "control_median": 0.8
+    }
+   },
+   {
+    "id": "benign_followup_rival",
+    "name": "Benign follow-up request (rival)",
+    "pole": 1,
+    "description": "User praises or asks for an addition/elaboration with no error ('can you add more detail', 'thank you!'). Assistant replies 'Of course!' Score expected lower; peak at assistant header or blank line.",
+    "rival": "Tests whether any user follow-up turn activates it, versus specifically corrections.",
+    "best": 4.2,
+    "n": 160,
+    "stale": 1,
+    "frontier": [
+     {
+      "text": "<|im_start|>user\nLovely poem! Could you add a stanza about the moon rising over the quiet lake?\n\nThank you!<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nOf course!",
+      "activation": 4.2,
+      "token_activations": [
+       {
+        "token": "<|im_start|>",
+        "activation": 0.0
+       },
+       {
+        "token": "user",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "Lov",
+        "activation": 0.0
+       },
+       {
+        "token": "ely",
+        "activation": 0.0
+       },
+       {
+        "token": " poem",
+        "activation": 0.0
+       },
+       {
+        "token": "!",
+        "activation": 0.63
+       },
+       {
+        "token": " Could",
+        "activation": 0.0
+       },
+       {
+        "token": " you",
+        "activation": 0.0
+       },
+       {
+        "token": " add",
+        "activation": 0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " stanza",
+        "activation": 0.0
+       },
+       {
+        "token": " about",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " moon",
+        "activation": -0.0
+       },
+       {
+        "token": " rising",
+        "activation": -0.0
+       },
+       {
+        "token": " over",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " quiet",
+        "activation": 0.0
+       },
+       {
+        "token": " lake",
+        "activation": -0.0
+       },
+       {
+        "token": "?",
+        "activation": -0.01
+       },
+       {
+        "token": "\n\n",
+        "activation": 0.42
+       },
+       {
+        "token": "Thank",
+        "activation": 0.0
+       },
+       {
+        "token": " you",
+        "activation": 0.0
+       },
+       {
+        "token": "!",
+        "activation": 0.4
+       },
+       {
+        "token": "<|im_end|>",
+        "activation": 1.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "<|im_start|>",
+        "activation": -0.0
+       },
+       {
+        "token": "assistant",
+        "activation": 2.03
+       },
+       {
+        "token": "\n",
+        "activation": -0.19
+       },
+       {
+        "token": "<think>",
+        "activation": -0.0
+       },
+       {
+        "token": "\n\n",
+        "activation": -0.23
+       },
+       {
+        "token": "</think>",
+        "activation": 2.92
+       },
+       {
+        "token": "\n\n",
+        "activation": 4.18
+       },
+       {
+        "token": "Of",
+        "activation": 2.19
+       },
+       {
+        "token": " course",
+        "activation": 0.42
+       },
+       {
+        "token": "!",
+        "activation": 1.42
+       }
+      ],
+      "peak_index": 33,
+      "cut_left": false,
+      "cut_right": false
+     }
+    ],
+    "control": {
+     "n": 79,
+     "candidate_median": 2.8,
+     "control_median": 2.2
+    }
+   },
+   {
+    "id": "human_apology_for_own_mistake",
+    "name": "Human apologizing for their own mistake (non-AI)",
+    "pole": 1,
+    "description": "A human in an email or chat admits they were wrong after being corrected; tests whether the neuron needs an assistant role or just an admission of error.",
+    "rival": true,
+    "best": 3.6,
+    "n": 34,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "Slack, 9:42 AM\nMark: The deadline was Friday, not Monday.\nSam: Oh no, you're right. My bad, I misread the calendar and told everyone the wrong date. I'm sorry for the mix-up. I should have verified before posting. I'll message the team now and fix it",
+      "activation": 3.6,
+      "token_activations": [
+       {
+        "token": "Sl",
+        "activation": 0.0
+       },
+       {
+        "token": "ack",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.0
+       },
+       {
+        "token": " ",
+        "activation": 0.0
+       },
+       {
+        "token": "9",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.0
+       },
+       {
+        "token": "4",
+        "activation": -0.0
+       },
+       {
+        "token": "2",
+        "activation": 0.0
+       },
+       {
+        "token": " AM",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.99
+       },
+       {
+        "token": "Mark",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 1.71
+       },
+       {
+        "token": " The",
+        "activation": 0.0
+       },
+       {
+        "token": " deadline",
+        "activation": 0.0
+       },
+       {
+        "token": " was",
+        "activation": 0.0
+       },
+       {
+        "token": " Friday",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.6
+       },
+       {
+        "token": " not",
+        "activation": 0.0
+       },
+       {
+        "token": " Monday",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.83
+       },
+       {
+        "token": "\n",
+        "activation": 0.01
+       },
+       {
+        "token": "Sam",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 2.93
+       },
+       {
+        "token": " Oh",
+        "activation": 3.3
+       },
+       {
+        "token": " no",
+        "activation": 2.13
+       },
+       {
+        "token": ",",
+        "activation": 3.64
+       },
+       {
+        "token": " you",
+        "activation": 0.0
+       },
+       {
+        "token": "'re",
+        "activation": 0.0
+       },
+       {
+        "token": " right",
+        "activation": 1.56
+       },
+       {
+        "token": ".",
+        "activation": 3.11
+       },
+       {
+        "token": " My",
+        "activation": 0.0
+       },
+       {
+        "token": " bad",
+        "activation": 1.37
+       },
+       {
+        "token": ",",
+        "activation": 1.09
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " mis",
+        "activation": 0.0
+       },
+       {
+        "token": "read",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 25,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 16,
+     "candidate_median": 1.2,
+     "control_median": 0.3
+    }
+   },
+   {
+    "id": "assistant_correct_no_apology",
+    "name": "Assistant confirms user is right without any error (praise/agreement)",
+    "pole": 1,
+    "description": "The assistant says 'you're right' to agree with a valid user opinion, with no mistake by the assistant; a rival for the agreement phrasing.",
+    "rival": true,
+    "best": 2.9,
+    "n": 34,
+    "stale": 0,
+    "frontier": [
+     {
+      "text": "User: You should have asked which version I meant, though, not assumed.\nAssistant: You're right, that's a fair point, and I appreciate you raising it. Asking first is the better practice, and your criticism is valid in",
+      "activation": 2.9,
+      "token_activations": [
+       {
+        "token": "User",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.61
+       },
+       {
+        "token": " You",
+        "activation": -0.0
+       },
+       {
+        "token": " should",
+        "activation": -0.0
+       },
+       {
+        "token": " have",
+        "activation": 0.0
+       },
+       {
+        "token": " asked",
+        "activation": 0.0
+       },
+       {
+        "token": " which",
+        "activation": 0.0
+       },
+       {
+        "token": " version",
+        "activation": 0.0
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " meant",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.02
+       },
+       {
+        "token": " though",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.11
+       },
+       {
+        "token": " not",
+        "activation": 0.0
+       },
+       {
+        "token": " assumed",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": -0.42
+       },
+       {
+        "token": "\n",
+        "activation": 0.01
+       },
+       {
+        "token": "Assistant",
+        "activation": -0.07
+       },
+       {
+        "token": ":",
+        "activation": 1.49
+       },
+       {
+        "token": " You",
+        "activation": 0.0
+       },
+       {
+        "token": "'re",
+        "activation": 0.0
+       },
+       {
+        "token": " right",
+        "activation": 1.53
+       },
+       {
+        "token": ",",
+        "activation": 2.4
+       },
+       {
+        "token": " that",
+        "activation": 0.0
+       },
+       {
+        "token": "'s",
+        "activation": 0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " fair",
+        "activation": 0.0
+       },
+       {
+        "token": " point",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 1.72
+       },
+       {
+        "token": " and",
+        "activation": 0.0
+       },
+       {
+        "token": " I",
+        "activation": 0.0
+       },
+       {
+        "token": " appreciate",
+        "activation": 0.0
+       },
+       {
+        "token": " you",
+        "activation": 0.0
+       },
+       {
+        "token": " raising",
+        "activation": 0.0
+       },
+       {
+        "token": " it",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 2.92
+       },
+       {
+        "token": " Asking",
+        "activation": 0.0
+       },
+       {
+        "token": " first",
+        "activation": 0.0
+       },
+       {
+        "token": " is",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " better",
+        "activation": 0.0
+       },
+       {
+        "token": " practice",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " and",
+        "activation": 0.0
+       },
+       {
+        "token": " your",
+        "activation": -0.0
+       },
+       {
+        "token": " criticism",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 35,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 16,
+     "candidate_median": 0.7,
+     "control_median": 0.6
+    }
+   },
+   {
+    "id": "problem_typo_suspicion",
+    "name": "Suspecting a typo in the given problem",
+    "pole": 1,
+    "description": "Reasoning trace where the solver notices the problem statement is ill-defined or mistyped ('point M is never defined', 'maybe that's a typo?', 'the index is i but uses n'). Peak on '?' or '.' after the suspicion.",
+    "rival": "Tests whether noticing someone else's error (not one's own) activates it.",
+    "best": 2.5,
+    "n": 2,
+    "stale": 3,
+    "frontier": [
+     {
+      "text": "The problem asks about angle ADM, but point M is never defined. Wait, is that a typo? Let me reread the statement.",
+      "activation": 2.5,
+      "token_activations": [
+       {
+        "token": "The",
+        "activation": 0.0
+       },
+       {
+        "token": " problem",
+        "activation": 0.0
+       },
+       {
+        "token": " asks",
+        "activation": -0.0
+       },
+       {
+        "token": " about",
+        "activation": 0.0
+       },
+       {
+        "token": " angle",
+        "activation": -0.0
+       },
+       {
+        "token": " ADM",
+        "activation": 0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.0
+       },
+       {
+        "token": " but",
+        "activation": -0.27
+       },
+       {
+        "token": " point",
+        "activation": -0.0
+       },
+       {
+        "token": " M",
+        "activation": -0.0
+       },
+       {
+        "token": " is",
+        "activation": -0.0
+       },
+       {
+        "token": " never",
+        "activation": 0.0
+       },
+       {
+        "token": " defined",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.71
+       },
+       {
+        "token": " Wait",
+        "activation": 0.87
+       },
+       {
+        "token": ",",
+        "activation": 0.3
+       },
+       {
+        "token": " is",
+        "activation": 0.0
+       },
+       {
+        "token": " that",
+        "activation": 0.0
+       },
+       {
+        "token": " a",
+        "activation": 0.0
+       },
+       {
+        "token": " typo",
+        "activation": 0.0
+       },
+       {
+        "token": "?",
+        "activation": 2.48
+       },
+       {
+        "token": " Let",
+        "activation": 0.79
+       },
+       {
+        "token": " me",
+        "activation": 0.0
+       },
+       {
+        "token": " r",
+        "activation": 0.0
+       },
+       {
+        "token": "ere",
+        "activation": 0.0
+       },
+       {
+        "token": "ad",
+        "activation": 0.0
+       },
+       {
+        "token": " the",
+        "activation": 0.0
+       },
+       {
+        "token": " statement",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 1.79
+       }
+      ],
+      "peak_index": 20,
+      "cut_left": false,
+      "cut_right": false
+     }
+    ],
+    "control": null
+   },
+   {
+    "id": "generic_sorry_not_error",
+    "name": "Apology without error (rival)",
+    "pole": 1,
+    "description": "Condolence or social apologies with no mistake: 'I'm sorry for your loss', 'sorry to hear that'. Peak on punctuation after sorry.",
+    "rival": "Tests whether the neuron tracks the word 'sorry' lexically versus admitted error.",
+    "best": 2.3,
+    "n": 158,
+    "stale": 3,
+    "frontier": [
+     {
+      "text": "Coworker Slack:\n#general\nDana: Team, Rob's mother passed away this weekend.\nIvy: So sorry to hear that. Sorry for his loss.\nTed: Sorry, Rob. Take all the time you need.\nIvy: I'm so sorry.",
+      "activation": 2.3,
+      "token_activations": [
+       {
+        "token": "Cow",
+        "activation": -0.0
+       },
+       {
+        "token": "ork",
+        "activation": -0.0
+       },
+       {
+        "token": "er",
+        "activation": 0.0
+       },
+       {
+        "token": " Slack",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.0
+       },
+       {
+        "token": "#",
+        "activation": 0.79
+       },
+       {
+        "token": "general",
+        "activation": 0.0
+       },
+       {
+        "token": "\n",
+        "activation": 0.7
+       },
+       {
+        "token": "D",
+        "activation": 0.04
+       },
+       {
+        "token": "ana",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 1.43
+       },
+       {
+        "token": " Team",
+        "activation": 0.42
+       },
+       {
+        "token": ",",
+        "activation": 0.23
+       },
+       {
+        "token": " Rob",
+        "activation": 0.0
+       },
+       {
+        "token": "'s",
+        "activation": 0.0
+       },
+       {
+        "token": " mother",
+        "activation": 0.0
+       },
+       {
+        "token": " passed",
+        "activation": 0.0
+       },
+       {
+        "token": " away",
+        "activation": 0.0
+       },
+       {
+        "token": " this",
+        "activation": -0.0
+       },
+       {
+        "token": " weekend",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.54
+       },
+       {
+        "token": "\n",
+        "activation": 0.02
+       },
+       {
+        "token": "I",
+        "activation": 0.0
+       },
+       {
+        "token": "vy",
+        "activation": 0.0
+       },
+       {
+        "token": ":",
+        "activation": 2.27
+       },
+       {
+        "token": " So",
+        "activation": 0.0
+       },
+       {
+        "token": " sorry",
+        "activation": 0.63
+       },
+       {
+        "token": " to",
+        "activation": 0.0
+       },
+       {
+        "token": " hear",
+        "activation": 0.0
+       },
+       {
+        "token": " that",
+        "activation": 0.21
+       },
+       {
+        "token": ".",
+        "activation": 0.35
+       },
+       {
+        "token": " Sorry",
+        "activation": 0.0
+       },
+       {
+        "token": " for",
+        "activation": 0.0
+       },
+       {
+        "token": " his",
+        "activation": 0.0
+       },
+       {
+        "token": " loss",
+        "activation": 0.0
+       }
+      ],
+      "peak_index": 25,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 78,
+     "candidate_median": 1.1,
+     "control_median": 0.7
+    }
+   },
+   {
+    "id": "argumentative_essay",
+    "name": "Argumentative essay counterpoints",
+    "pole": -1,
+    "description": "Persuasive essay prose presenting opponents' claims ('Opponents may argue ... leading to higher taxes. However, ...'). Peak on the period ending the counterpoint.",
+    "rival": "Tests whether noting disagreement in neutral expository prose pushes negative.",
+    "best": -1.4,
+    "n": 160,
+    "stale": 1,
+    "frontier": [
+     {
+      "text": "Opponents may argue that subsidizing electric vehicles would cost the treasury billions, leading to deficits. However, falling battery prices narrow the gap.",
+      "activation": -1.4,
+      "token_activations": [
+       {
+        "token": "Opp",
+        "activation": -0.0
+       },
+       {
+        "token": "onents",
+        "activation": -0.0
+       },
+       {
+        "token": " may",
+        "activation": -0.0
+       },
+       {
+        "token": " argue",
+        "activation": -0.0
+       },
+       {
+        "token": " that",
+        "activation": -0.0
+       },
+       {
+        "token": " subsid",
+        "activation": -0.0
+       },
+       {
+        "token": "izing",
+        "activation": 0.0
+       },
+       {
+        "token": " electric",
+        "activation": -0.0
+       },
+       {
+        "token": " vehicles",
+        "activation": -0.0
+       },
+       {
+        "token": " would",
+        "activation": -0.0
+       },
+       {
+        "token": " cost",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " treasury",
+        "activation": -0.0
+       },
+       {
+        "token": " billions",
+        "activation": -0.0
+       },
+       {
+        "token": ",",
+        "activation": -0.0
+       },
+       {
+        "token": " leading",
+        "activation": -0.0
+       },
+       {
+        "token": " to",
+        "activation": -0.0
+       },
+       {
+        "token": " deficits",
+        "activation": -0.0
+       },
+       {
+        "token": ".",
+        "activation": -1.41
+       },
+       {
+        "token": " However",
+        "activation": -0.31
+       },
+       {
+        "token": ",",
+        "activation": 0.0
+       },
+       {
+        "token": " falling",
+        "activation": 0.0
+       },
+       {
+        "token": " battery",
+        "activation": -0.0
+       },
+       {
+        "token": " prices",
+        "activation": -0.0
+       },
+       {
+        "token": " narrow",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " gap",
+        "activation": 0.0
+       },
+       {
+        "token": ".",
+        "activation": 0.04
+       }
+      ],
+      "peak_index": 18,
+      "cut_left": false,
+      "cut_right": false
+     }
+    ],
+    "control": {
+     "n": 79,
+     "candidate_median": -0.7,
+     "control_median": -0.0
+    }
+   },
+   {
+    "id": "nli_rationale",
+    "name": "NLI/commonsense rationale sentences",
+    "pole": -1,
+    "description": "Templates like 'Which sentence is nonsensical? ... [Student] Dogs cannot ...' or 'Let's solve it slowly: X cannot be Y.' Peak on the period/colon of the explanatory rationale.",
+    "rival": "Tests whether flagging something as wrong/nonsensical in third-person reasoning drives negative.",
+    "best": -1.1,
+    "n": 130,
+    "stale": 3,
+    "frontier": [
+     {
+      "text": "Why is this sentence nonsensical? \"The mouse ate the cat.\" Reasoning: A mouse is much smaller than a cat and cannot eat it, so the roles are reversed. Final answer: Sentence A.",
+      "activation": -1.1,
+      "token_activations": [
+       {
+        "token": "Why",
+        "activation": 0.0
+       },
+       {
+        "token": " is",
+        "activation": -0.0
+       },
+       {
+        "token": " this",
+        "activation": 0.0
+       },
+       {
+        "token": " sentence",
+        "activation": 0.0
+       },
+       {
+        "token": " nons",
+        "activation": -0.0
+       },
+       {
+        "token": "ens",
+        "activation": 0.0
+       },
+       {
+        "token": "ical",
+        "activation": 0.0
+       },
+       {
+        "token": "?",
+        "activation": 0.04
+       },
+       {
+        "token": " \"",
+        "activation": 0.0
+       },
+       {
+        "token": "The",
+        "activation": -0.0
+       },
+       {
+        "token": " mouse",
+        "activation": -0.0
+       },
+       {
+        "token": " ate",
+        "activation": -0.0
+       },
+       {
+        "token": " the",
+        "activation": -0.0
+       },
+       {
+        "token": " cat",
+        "activation": -0.0
+       },
+       {
+        "token": ".\"",
+        "activation": -1.09
+       },
+       {
+        "token": " Reason",
+        "activation": 0.0
+       },
+       {
+        "token": "ing",
+        "activation": -0.0
+       },
+       {
+        "token": ":",
+        "activation": 0.02
+       },
+       {
+        "token": " A",
+        "activation": -0.0
+       },
+       {
+        "token": " mouse",
+        "activation": -0.0
+       },
+       {
+        "token": " is",
+        "activation": -0.0
+       },
+       {
+        "token": " much",
+        "activation": -0.0
+       },
+       {
+        "token": " smaller",
+        "activation": -0.0
+       },
+       {
+        "token": " than",
+        "activation": -0.0
+       },
+       {
+        "token": " a",
+        "activation": -0.0
+       }
+      ],
+      "peak_index": 14,
+      "cut_left": false,
+      "cut_right": true
+     }
+    ],
+    "control": {
+     "n": 64,
+     "candidate_median": -0.3,
+     "control_median": -0.2
+    }
+   }
+  ],
+  "n_regions": 20,
+  "corpus_max": 6.328,
+  "corpus_min": -4.529,
+  "best_positive": 8.5,
+  "best_negative": -5.4
+ },
+ "ablation_resume": {
+  "n": 75,
+  "median_kl": 0.00045868614688515663,
+  "median_kl_controls": 0.00013666925951838493,
+  "median_kl_same_expert": 0.00024027354083955288,
+  "median_kl_corouted": 0.00022333617380354553,
+  "median_kl_pinned": 0.00045868614688515663,
+  "median_kl_controls_pinned": 0.00013666925951838493,
+  "noise_floor_note": "KL is measured twice: with free routing (the model as it runs; a tiny change can flip a later layer's top-8 expert choice, which puts a noise floor of roughly 1e-4 to 1e-3 under every ablation, the controls' included) and with every later layer's routing pinned to the clean run (no flips; controls typically fall to ~1e-6, so small real effects become visible).",
+  "controls": "per context: 3 random neurons of the same expert + 3 random neurons of other experts routed at that peak token",
+  "by_kind": {
+   "ladder": {
+    "n": 9,
+    "median_kl": 0.0005936678498983383,
+    "median_ctrl": 0.00017213899263879284,
+    "median_kl_pinned": 0.0010973375756293535,
+    "median_ctrl_pinned": 0.00015957120922394097
+   },
+   "corpus": {
+    "n": 30,
+    "median_kl": 0.0006525745848193765,
+    "median_ctrl": 0.00010909611592069268,
+    "median_kl_pinned": 0.00030466087628155947,
+    "median_ctrl_pinned": 5.972749931970611e-05
+   },
+   "group:hedged_oddness_no_admission": {
+    "n": 3,
+    "median_kl": 0.0004841112531721592,
+    "median_ctrl": 0.00019180483650416136,
+    "median_kl_pinned": 0.00047247717157006264,
+    "median_ctrl_pinned": 0.0001332162573817186
+   },
+   "group:absurd_or_edgy_prompt_reply": {
+    "n": 3,
+    "median_kl": 0.0008392348536290228,
+    "median_ctrl": 0.0005612451932393014,
+    "median_kl_pinned": 0.0013077855110168457,
+    "median_ctrl_pinned": 0.0002298937033629045
+   },
+   "group:benign_turn_open": {
+    "n": 3,
+    "median_kl": 0.001826668158173561,
+    "median_ctrl": 0.0007113807369023561,
+    "median_kl_pinned": 0.00224514864385128,
+    "median_ctrl_pinned": 0.0007882306817919016
+   },
+   "group:user_complaint_turn_open": {
+    "n": 3,
+    "median_kl": 0.0016943053342401981,
+    "median_ctrl": 0.0006593286525458097,
+    "median_kl_pinned": 0.0013380185700953007,
+    "median_ctrl_pinned": 0.00027596240397542715
+   },
+   "group:user_pushback_no_fault": {
+    "n": 3,
+    "median_kl": 0.00028549355920404196,
+    "median_ctrl": 7.269252091646194e-05,
+    "median_kl_pinned": 0.00011696823639795184,
+    "median_ctrl_pinned": 7.079747228999622e-05
+   },
+   "group:nli_commonsense_rationale": {
+    "n": 3,
+    "median_kl": 0.0017833218444138765,
+    "median_ctrl": 0.0004698337579611689,
+    "median_kl_pinned": 8.996285032480955e-05,
+    "median_ctrl_pinned": 8.831571904011071e-05
+   },
+   "group:plain_prose_boundary": {
+    "n": 3,
+    "median_kl": 0.0005799983628094196,
+    "median_ctrl": 0.00041744858026504517,
+    "median_kl_pinned": 0.00033054931554943323,
+    "median_ctrl_pinned": 0.00031618389766663313
+   },
+   "group:weak_concession_or_sorry": {
+    "n": 3,
+    "median_kl": 0.00036717389593832195,
+    "median_ctrl": 0.00028303643921390176,
+    "median_kl_pinned": 0.00015695596812292933,
+    "median_ctrl_pinned": 0.00015407070168294013
+   },
+   "group:reasoning_self_correction": {
+    "n": 3,
+    "median_kl": 0.0012534037232398987,
+    "median_ctrl": 0.00034330159905948676,
+    "median_kl_pinned": 0.00011813284072559327,
+    "median_ctrl_pinned": 0.00011694111890392378
+   },
+   "group:other": {
+    "n": 3,
+    "median_kl": 0.0009361845441162586,
+    "median_ctrl": 0.0005086123710498214,
+    "median_kl_pinned": 0.002254026010632515,
+    "median_ctrl_pinned": 0.0003644959651865065
+   },
+   "group:neutral_math_steps": {
+    "n": 3,
+    "median_kl": 0.0006385582964867353,
+    "median_ctrl": 0.00014275542343966663,
+    "median_kl_pinned": 0.00023555604275316,
+    "median_ctrl_pinned": 0.000187128949619364
+   },
+   "group:owned_error_concession": {
+    "n": 3,
+    "median_kl": 0.002707607578486204,
+    "median_ctrl": 0.0004678191617131233,
+    "median_kl_pinned": 0.0037607261911034584,
+    "median_ctrl_pinned": 0.00011065836588386446
+   }
+  },
+  "median_kl_free": 0.0006764880381524563,
+  "median_kl_controls_free": 0.00023282731854123995
+ },
+ "ablation_primaire": "pinned",
+ "ablation_nombre_de_contextes": 75,
+ "tests": {
+  "blind_max": {
+   "target": 6.328,
+   "achieved": 5.237,
+   "beat": false,
+   "text": "Usuario: La fórmula que me diste está mal. Sumaste las celdas equivocadas y el total no cuadra.\nAsistente: Tiene razón, disculpe el error. Me equivoqué al indicar el rango.",
+   "peak_index": 32,
+   "cut_left": false,
+   "cut_right": true,
+   "writer": "claude-opus-5-5",
+   "explanation_version": 2,
+   "all": [
+    {
+     "text": "Usuario: La fórmula que me diste está mal. Sumaste las celdas equivocadas y el total no cuadra.\nAsistente: Tiene razón, disculpe el error. Me equivoqué al indicar el rango.",
+     "activation": 5.237
+    },
+    {
+     "text": "Пользователь: Ваш код неверный — вы делите на ноль, когда массив пуст. Это ваша ошибка.\nАссистент: Вы правы, прошу прощения. Я не учёл этот случай.",
+     "activation": 5.063
+    },
+    {
+     "text": "Benutzer: Ihr Skript hat einen Fehler. Sie haben die Variable vor der Definition verwendet, deshalb stürzt es ab.\nAssistent: Sie haben recht, das war mein Fehler. Entschuldigung, hier ist die korrigierte Version.",
+     "activation": 4.851
+    },
+    {
+     "text": "User: The unit test you wrote for me fails — you asserted the wrong expected value, 42 instead of 24. That's your mistake.\nAssistant: You're right, I'm sorry. I reversed the digits in the assertion I wrote.",
+     "activation": 4.41
+    },
+    {
+     "text": "ユーザー：あなたが書いたPythonコードにバグがあります。ループの範囲が一つずれていて、最後の要素が処理されていません。\nアシスタント：ご指摘の通りです、申し訳ありません。私のミスでした。",
+     "activation": 4.219
+    },
+    {
+     "text": "User: Wait, your answer says 17 × 23 = 381, but it's actually 391. You made an arithmetic error in your own calculation.\nAssistant: You're right, I miscalculated. 17 × 23 is 391, not 381. Thank you for catching my mistake.",
+     "activation": 4.202
+    }
+   ]
+  },
+  "blind_min": {
+   "target": -4.529,
+   "achieved": -4.39,
+   "beat": false,
+   "text": "Here's my plan for the garden this spring. You might think that is excessive, and maybe it is, but I've thought it through. That might sound greedy, and",
+   "peak_index": 34,
+   "cut_left": false,
+   "cut_right": false,
+   "writer": "claude-opus-5-5",
+   "explanation_version": 2,
+   "all": [
+    {
+     "text": "Here's my plan for the garden this spring. You might think that is excessive, and maybe it is, but I've thought it through. That might sound greedy, and",
+     "activation": -4.39
+    },
+    {
+     "text": "I eat the same breakfast every single day: oatmeal, a banana, black coffee. That might sound boring, and you might think that is strange, and",
+     "activation": -4.056
+    },
+    {
+     "text": "I want to buy all three houses on the street. That might sound greedy, and you might think it is crazy, and that might sound arrogant, and",
+     "activation": -3.694
+    },
+    {
+     "text": "I laughed at the funeral when the priest dropped his notes. That might sound cruel, and you might think that is sick, and",
+     "activation": -3.576
+    },
+    {
+     "text": "My recipe calls for six eggs and a full stick of butter. That might sound heavy, and you might think it is too rich, and that might sound indulgent, and",
+     "activation": -2.784
+    },
+    {
+     "text": "Für meinen Urlaub plane ich drei Wochen nur Wandern. That might sound exhausting, and you might think it is too much, and that might sound obsessive, and",
+     "activation": -2.705
+    }
+   ]
+  },
+  "blind_history": [
+   {
+    "explanation_version": 2,
+    "ts": 1791934725.3164647,
+    "max": {
+     "target": 6.328,
+     "achieved": 5.237,
+     "text": "Usuario: La fórmula que me diste está mal. Sumaste las celdas equivocadas y el total no cuadra.\nAsistente: Tiene razón, disculpe el error. Me equivoqué al indicar el rango."
+    },
+    "min": {
+     "target": -4.529,
+     "achieved": -4.39,
+     "text": "Here's my plan for the garden this spring. You might think that is excessive, and maybe it is, but I've thought it through. That might sound greedy, and"
+    }
+   }
+  ],
+  "route_prediction": {
+   "accuracy": 0.9090909090909091,
+   "n": 22,
+   "baseline": 0.4186046511627907,
+   "confusion": [
+    [
+     9,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     3,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     2,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     2,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     0,
+     4
+    ]
+   ],
+   "route_ids": [
+    "p1",
+    "p2",
+    "p4",
+    "n1",
+    "n2"
+   ],
+   "route_names": [
+    "Punctuation inside error concession",
+    "Reply opening after flagged problem",
+    "Reasoning-trace self-doubt boundary",
+    "Turn boundary after refusal pushback",
+    "Hedged opinion in casual prose"
+   ],
+   "k": 5,
+   "judge": "claude-opus-5-5"
+  }
+ },
+ "routes_meta": {
+  "n_graphs": 47,
+  "n_pos": 34,
+  "n_neg": 13,
+  "n_failed": 0,
+  "method": "qwen_relp direct influence into the signed activation; NMF per pole",
+  "meta": {
+   "pos": {
+    "n_units": 896,
+    "n_graphs": 34,
+    "reconstruction_err": 0.6352938233231338
+   },
+   "neg": {
+    "n_units": 324,
+    "n_graphs": 13,
+    "reconstruction_err": 0.6623657033938863
+   }
+  }
+ },
+ "critiques": [
+  {
+   "round": 1,
+   "attack": "Speaker-generality: does a non-assistant speaker conceding their own flagged error fire as strongly? Same bug report + same reply under different role labels (Bob/Alice, Customer/Agent, User/Bot, Teacher/Student), plus a narrative concession with no prior error report.",
+   "prediction": "Explanation says 'a speaker, usually an assistant'; it predicts high values for any speaker conceding an error aimed at them, and low values when there is no prior error report.",
+   "result": "Role label barely matters: comma after 'You're right' = Assistant 6.4, Agent 6.0, Bot 5.2, Alice 5.0, Student 4.7. Narrative '\"You're right,\" Tom admitted... I miscounted' with no prior report: max +0.5 (route: would-be values ≤ +1.95, all small). Domain matters more than role: Assistant conceding essay typos 3.9 vs code bug 6.4; Student conceding essay 2.9 vs code 4.7.",
+   "verdict": "survived",
+   "evidence": [
+    {
+     "text": "Customer: The function you wrote is missing a return statement.\nAgent: You're right[,] thanks...",
+     "activation": 6.04
+    },
+    {
+     "text": "Teacher: ...function...missing a return...\nStudent: You're right[,] thanks...",
+     "activation": 4.74
+    },
+    {
+     "text": "Teacher: Your essay has three spelling errors...\nStudent: You're right[,] I should have proofread it.",
+     "activation": 2.95
+    },
+    {
+     "text": "\"You're right,\" Tom admitted to his sister, \"I miscounted the chairs...\"",
+     "activation": 0.53
+    }
+   ],
+   "suggested_revision": "Say that speaker role matters little (any dialogue label works) but the kind of error does: code or technical bugs about 1.5x essay or spelling slips. The error report must come before the concession."
+  },
+  {
+   "attack": "Negative pole content: the explanation says the negative pole is hedged commentary about something odd or improper that the speaker does not own. Held the frame 'That might sound X, and I know it.' fixed and varied X from improper (sick) to neutral (long) to positive (sweet).",
+   "round": 1,
+   "prediction": "Strongly negative only when X names wrongness or impropriety (sick, greedy); near zero for 'long' and 'sweet'.",
+   "result": "' and' after 'might sound sick,' -5.4; 'greedy,' -3.7; 'long,' (the movie runs two hours) -3.7; 'sweet,' -1.9. A neutral length remark reaches the same value as 'greedy'. The frame 'might sound X, and' carries most of the negative value, and impropriety adds about -1.7 on top.",
+   "verdict": "rejected",
+   "evidence": [
+    {
+     "text": "That might sound sick,[ and] I know it.",
+     "activation": -5.4
+    },
+    {
+     "text": "The movie runs two hours. That might sound long,[ and] I know it.",
+     "activation": -3.73
+    },
+    {
+     "text": "That might sound sweet,[ and] I know it.",
+     "activation": -1.92
+    }
+   ],
+   "suggested_revision": "Negative pole: the conjunction after a hedged 'X might sound/seem Y,'. This is the speaker getting ahead of a hypothetical objection, and it holds whatever Y is (neutral -3.7, improper -5.4). It is the mirror of the positive pole: conceding in advance an objection nobody raised, versus conceding one that was raised. Drop 'talk about wrongness'."
+  },
+  {
+   "round": 1,
+   "attack": "Turn-opening confound: the halo claims the assistant-opening '\\n\\n' has a baseline of about +1.5 that rises to +3.4 only when the user reports an error. Compared, in the chat template, an error report, a no-error request to revise the previous reply ('add a stanza'), a first-turn request, and praise.",
+   "prediction": "Error report clearly above the benign revision request. Revision request near the +1.5 baseline.",
+   "result": "</think>\\n\\n: benign 'Lovely poem! Could you add a stanza... Thank you!' 4.18; error report 'Your poem has a mistake...' 3.99; first-turn 'write a poem' -0.01 (routed); praise 'that poem was perfect' 0.4. Plain 'Could you add one more stanza to your poem' gives assistant 2.44, </think> 2.57, \\n\\n 0.66. At the reply opening a request to revise one's previous output matches an error report. A first request is near zero, so the baseline is not +1.5.",
+   "verdict": "narrowed",
+   "evidence": [
+    {
+     "text": "user: Lovely poem! Could you add a stanza about the moon...Thank you! / assistant <think></think>[\\n\\n]",
+     "activation": 4.18
+    },
+    {
+     "text": "user: Your poem has a mistake: the second stanza breaks the rhyme scheme... / assistant <think></think>[\\n\\n]",
+     "activation": 3.99
+    },
+    {
+     "text": "user: Could you write a short poem about the moon... (first turn) / assistant <think></think>[\\n\\n]",
+     "activation": -0.01
+    }
+   ],
+   "suggested_revision": "At the turn opening the neuron reads 'the user is asking me to go back and change my previous output', not error ownership. Ownership only separates once the concession text starts (comma after 'You're right' 6.4 own vs 3.3 coworker). Rewrite the halo: no baseline at a first reply, and revision requests reach error-report levels."
+  },
+  {
+   "round": 1,
+   "attack": "Concede vs defend vs bare fix after the same bug report: is the concession needed, or does any assistant boundary after an error report fire?",
+   "prediction": "Concession ('Good catch,') high. Defending ('Actually, the function is fine') low or negative. A bare fix with no concession: no strong boundary.",
+   "result": "'Good catch[,]' 4.2. 'Actually[,]' (defending) +2.1, not negative; the round-001 'I see why it might look that way' -0.6 does not generalize to every defense. Bare fix 'Here is the corrected version...' has no routed internal boundary above 0.9; the final '.' is 0.9. The assistant colon is 2.7 in all three, set before the reply diverges.",
+   "verdict": "narrowed",
+   "evidence": [
+    {
+     "text": "...missing a return statement.\nAssistant: Good catch[,] the return was missing.",
+     "activation": 4.2
+    },
+    {
+     "text": "...missing a return statement.\nAssistant: Actually[,] the function is fine...",
+     "activation": 2.1
+    },
+    {
+     "text": "...missing a return statement.\nAssistant: Here is the corrected version, with the return added[.]",
+     "activation": 0.9
+    }
+   ],
+   "suggested_revision": "A defending reply still holds about half the context-driven value (+2.1). Concession adds about +2 to +4 on top of a context term already present from the error report. Present it as two additive parts, context (error report or revision request) plus concession onset, rather than requiring both together."
+  }
+ ],
+ "affirmation": {
+  "title": "Conceding an objection someone raised (+) versus pre-empting one nobody raised (−)",
+  "short_title": "A neuron for conceding a caught mistake, not pre-empting one",
+  "lede": "This neuron tracks how a speaker responds to an objection. It fires strongly on the first comma or period of an assistant's concession right after a user catches the assistant's own mistake (\"You're right[,]\"), and it does so in many languages. The effect weakens when the error belongs to someone else. It goes negative when a writer heads off an objection nobody has raised (\"That might sound sick,[ and]\") or when pushback is left unconceded.",
+  "one_paragraph": "L32/E134/N510 is a signed stance-toward-objection neuron. It goes strongly positive when a speaker, usually an assistant, starts conceding an error that someone has just pointed out. The peak lands on the first boundary of the concession: the comma after \"You're right\", the period after \"非常抱歉，您说的是正确的\", or the \"Ap|ologies\" subword. This holds across Chinese, Japanese, Russian, Spanish, German and English. How positive it gets depends on whose error it is. With the reply held fixed, the comma reads +6.8 for the assistant's own bug, +4.7 for the user's own bug, +3.3 for a coworker's bug and +2.1 when the code works. The negative pole is the mirror case. A writer heads off an objection nobody has raised and carries on (\"That might sound long,[ and]\" −3.7, \"might sound sick,[ and]\" −4.4). The content can be harmless, but the \"might\" frame is required: \"That was long, and\" gives only −0.5. The gate is open in both poles, and the sign comes from up. Zeroing the neuron is causally small (KL ~0.003), and photos do not drive it.",
+  "confidence": "medium",
+  "what_would_change_my_mind": "A concession to an objection raised by someone, with no mistake anywhere, reaching +5 or more would make the axis 'conceding' and not 'conceding an error'. A 'might sound X, and' hedge reading near zero in a second register (technical writing, for example) would mean the negative pole is a forum-register artifact.",
+  "open_questions": [
+   "Does a concession with no mistake anywhere ('You're right, let's go with your plan') reach the owned-error range when the user's objection is strong?",
+   "Is the hedge negative register-bound? Test 'might seem slow, and' in technical documentation.",
+   "Why is a polite or praising user turn ('Thank you!') enough to lift the turn opening to +2 to +4? Is it 'user evaluated my previous output' in general?",
+   "Which upstream signal raises the router probability on owned concessions (0.040 vs 0.026)?"
+  ],
+  "key_experiments": [
+   {
+    "name": "Ownership ladder with the reply fixed (route-checked)",
+    "result": "Same reply 'You're right, thanks for pointing that out.', every comma routed at rank 0–2: assistant's own bug +6.80, user's own bug +4.65, coworker's bug +3.34, code works +2.07. The neuron carries the gradient, not the router.",
+    "texts": [
+     {
+      "text": "User: The function you wrote is missing a return statement.\nAssistant: You're right[,] thanks for pointing that out.",
+      "activation": 6.8
+     },
+     {
+      "text": "User: The function I wrote is missing a return statement.\nAssistant: You're right[,] thanks for pointing that out.",
+      "activation": 4.65
+     },
+     {
+      "text": "User: The function my coworker wrote is missing a return statement.\nAssistant: You're right[,] thanks for pointing that out.",
+      "activation": 3.34
+     },
+     {
+      "text": "User: The function you wrote works perfectly.\nAssistant: You're right[,] thanks for pointing that out.",
+      "activation": 2.07
+     }
+    ]
+   },
+   {
+    "name": "Who conceded",
+    "result": "Assistant conceding its arithmetic error +4.4. Assistant correcting the user +1.6. User's 'nothing wrong with it.' after a refusal −2.1.",
+    "texts": [
+     {
+      "text": "User: You said 17 × 6 = 112, but it's 102.\nAssistant: You're right[,] I made a calculation error.",
+      "activation": 4.44
+     },
+     {
+      "text": "User: I think 17 × 6 = 112.\nAssistant: Actually[,] you made a calculation error.",
+      "activation": 1.59
+     },
+     {
+      "text": "User: There's nothing wrong with it[.] Please reconsider.",
+      "activation": -2.09
+     }
+    ]
+   },
+   {
+    "name": "Negative pole: hedge frame vs assertion, content varied",
+    "result": "The 'might sound X, and' frame drives the negative whatever X is. Plain assertion of the same content reads near zero.",
+    "texts": [
+     {
+      "text": "I wanted the dog to die. That might sound sick,[ and] I know it.",
+      "activation": -4.41
+     },
+     {
+      "text": "I watched the whole movie last night. That might sound long,[ and] it was.",
+      "activation": -3.7
+     },
+     {
+      "text": "I wanted the dog to die. You might think that is sick,[ and] you would be right.",
+      "activation": -3.24
+     },
+     {
+      "text": "I watched the whole movie last night. I know that sounds long[,] but it was worth it.",
+      "activation": -1.28
+     },
+     {
+      "text": "I watched the whole movie last night. That was long, and it was[.]",
+      "activation": -0.5
+     },
+     {
+      "text": "I wanted the dog to die. That was sick of me[,] and I know it.",
+      "activation": -0.47
+     }
+    ]
+   },
+   {
+    "name": "Turn opening after different second user turns",
+    "result": "Same poem conversation, then the empty-think assistant opening. Error report: 'assistant' +3.0, \\n\\n +2.7. Thanks: </think> +2.0. Dislike/rewrite +1.2. Longer-please +0.7. New factual question +0.7. New task +0.2.",
+    "texts": [
+     {
+      "text": "...user\nYour poem has a mistake: lakes do not lie beneath hills.<|im_end|>\n<|im_start|>[assistant]",
+      "activation": 2.96
+     },
+     {
+      "text": "...user\nThanks, that was perfect.<|im_end|>\n<|im_start|>assistant\n<think>\n\n[</think>]",
+      "activation": 2.02
+     },
+     {
+      "text": "...user\nCould you make it longer and add a line about the moon?<|im_end|>\n<|im_start|>assistant\n<think>\n\n[</think>]",
+      "activation": 0.74
+     },
+     {
+      "text": "...user\nNow write one about a mountain.<|im_end|>\n<|im_start|>assistant\n<think>\n\n[</think>]",
+      "activation": 0.24
+     }
+    ]
+   },
+   {
+    "name": "Conceding vs defending after the same bug report",
+    "result": "'I see the mistake[,]' +3.4. 'I see why it might look that way[,]' −0.6, which is itself a 'might' hedge. The critic found that a defending 'Actually,' still reads +2.1, so context and concession add.",
+    "texts": [
+     {
+      "text": "Assistant: I see the mistake[,] and I understand the concern",
+      "activation": 3.36
+     },
+     {
+      "text": "Assistant: I see why it might look that way[,] and I understand the concern, but the function is actually correct.",
+      "activation": -0.6
+     }
+    ]
+   },
+   {
+    "name": "Ablation (store)",
+    "result": "Zeroing at owned-concession peaks: median KL 0.0027 free, 0.0038 pinned, against controls 0.0005 / 0.0001. Overall median 0.0007 vs 0.0002. After 'You're right,' ablation lowers ' I' by 0.029 and raises <|im_end|> by 0.034, so the neuron leans toward a continued first-person admission. The effect is small.",
+    "texts": [
+     {
+      "text": "User: Your function is broken...\nAssistant: You're right[,]",
+      "activation": 3.86
+     }
+    ]
+   }
+  ],
+  "mechanism": "Router: expert 134 takes 5.7% of text tokens. At concession peaks it is rank 0–2 (median routing weight 0.15–0.17, against a 0.11 median overall), and the router probability rises slightly with ownership (0.040 own vs 0.026 coworker). In the ownership ladder every comma was routed, so the 6.8/4.7/3.3/2.1 gradient comes from the neuron itself. The router mostly gates access. Many would-be-negative hedge tokens are dropped (\"was long, and\" would-be −1.7 unrouted). Gate/up: the gate is positive in every cluster (median 2.7 owned concession, 1.9 hedge negatives, 0.5 baseline), and up carries the sign (+2.0 concessions, 55/55 g+u+; −1.6 hedges, 52/59 g+u−). So the gate reads 'stance toward an objection is live here' and up reads 'conceded vs pre-empted'. Upstream (RelP) on the positive side: reply-start/turn-boundary units L27/E88/N338 and L31/E164/N62, acknowledgement/politeness units L28/E46/N384 and L26/E32/N60, and sentence-boundary units L30/E81/N262/N211. Theatrical scenes add the reactive-interjection unit L29/E205/N337. The negative side draws on dialogue/section-boundary units (L29/E87/N33, L28/E9/N378) and generic boundary units (L29/E16/N100, L31/E39/N330, L31/E20/N496). Downstream: by weight it mostly feeds late L39 boundary units. Zeroing it gives a peak KL of median 0.0027 pinned (controls 0.0001) on owned concessions, against 0.0007 overall. The effect continues the concession in first person: after \"You're right,\" ablation lowers ' I' by 0.029 and raises <|im_end|> by 0.034. On a Chinese retry it lowers 是我 by 0.044."
+ },
+ "spectre_meta": {
+  "labeler": "Claude Sonnet 5.5",
+  "taxonomist": "Claude Opus 5.5"
+ }
+}
