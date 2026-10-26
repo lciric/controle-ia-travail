@@ -182,3 +182,36 @@ Paris (UTC + 1 depuis le 25 octobre). Rien d'opposable (R7) ; tout est sur `cana
 - **Lecture des papiers sur les boucles** : complète (24 fiches, synthèse v2 `f13a6d68…`).
 - **En cours** : relevé (B) (script et essais), gardes et assemblage, carte v2. Ouvert chez Lazar : graines (retenue),
   point 1 (famille du contre-lecteur, défaut (a) au plus tôt le 28 octobre à 05:43:40 UTC).
+
+## 11:29 — décisions de Lazar (graines : c ; famille : Opus 5.5 et Fable 5.1) ; audit des failles ; deux courses à question ordonnées
+
+(Heure du titre lue sur `date -u` dans la commande qui écrit cette entrée.)
+
+- **Décisions de Lazar dans ma session** : « graines : c » (09:07 UTC ; note `b9031b90…`, N-051 proposé, inscrite par
+  session-depot en R-500 : retenue levée pour `test`, `test_final` fermé jusqu'à la fin du compteur, aucune dépense) ;
+  famille du contre-lecteur : « même famille, mais un autre modèle. opus 5.?5 et fable 5.1 » (09:13 UTC ; note
+  `5df6f9b3…`, N-052 inscrite en R-510 : analyste et correcteur sur Opus 5.5, contre-lecteur sur Fable 5.1).
+- **Résultats demandés par Lazar** (09:15 UTC) : je lui ai envoyé les deux fichiers `test` de la lecture (M `f63bff34…`,
+  S `c55fccbd…`) sans les ouvrir, avec les faits mécaniques publiés ; je reste aveugle aux scores (protocole de la boucle,
+  § 2). R-501 (session-depot lit `test` à la demande de Lazar) : lu au titre seulement ; n° 84 : aucun score dans ce qui
+  m'est écrit.
+- **Relevé (B)** : script v2 `b4e6373b…` (317 essais), exécuté par session-depot (R-500, codes 0 et 0 ; empreintes M
+  `6b97daef…`, S `75ba7ae4…` vérifiées sans ouvrir) ; relecture en cours. **Gardes** v1 (516 essais sur 516), G5 v2 et G6
+  v2 décidées (noms de course reconnus en début de jeton ; lignée et clé en mots entiers ; `--propre`). **Carte des
+  facteurs v1** contre-lue « pas en l'état » (trois bloquants) ; v2 en cours avec noms gelés. **Boucle v5** vérifiée
+  (CLB5-01 : le cas v5.3 du relevé devient un artefact).
+- **Filtre de sûreté** : ma réponse de 10:21 UTC (question de Lazar sur une course d'audit « pour TAIF ») a été arrêtée par
+  un filtre pendant que je relisais les lignes de registre sur la question « programme TAIF » ; je ne réécris pas cette
+  question (R-486, R-487). Proposé et accepté par Lazar (« b puis a puis c ») : (b) audit par sous-agents, (a)
+  collisionneur, (c) course de l'organisme, au niveau de la méthode, sans contournements.
+- **Audit des failles du contrôle** (b) : brief `1785c74d…` ; lot B rendu (44 failles internes, 10 bloquantes en partie ;
+  canal `95f2300`) ; lot A (moisson grise) en cours, recadré sur ce qui manque à l'audit de littérature de session-depot
+  (R-508, `29b32f62…`, 26 failles, onze angles morts, cinq propositions acceptées par Lazar : N-053). Explication à Lazar
+  de FI-01 et FI-02 (construit rétréci au mode « coût » ; moniteurs conçus en connaissant le mode).
+- **Deux courses à question ordonnées par Lazar chez session-depot** (R-509 ; GO-2026-10-26-05 « maieutique »,
+  GO-2026-10-26-04 partie (2) « audit » ; questions scellées en R-510, commit `eb03bad`) : textes et lanceurs demandés
+  (n° 70). En cours : lanceur v12 dérivé du v11 (clés `maieutique`, `audit` ; annexes pour « audit » ; garde
+  « refus-question » qui tue le noyau au premier refus d'un appel des castes de la question ; porte « précédente » retirée),
+  batterie v14, série v15 (agent du lanceur v11, relancé) ; texte `courses-question-gemini-v6-2-v1.md` écrit par moi
+  (marqueurs `[[…]]` à remplir), `sceller_courses_question_v6.py` (deux graines) ; contre-lecture 9 à suivre. Aucune
+  lecture de `test_final` pour ces courses ; livrable : `reponse-question-g001.md`.
