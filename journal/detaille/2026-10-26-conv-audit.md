@@ -71,3 +71,44 @@ Paris (UTC + 1 depuis le 25 octobre). Rien d'opposable (R7) ; tout est sur `cana
 - **Ouvert** : graines (Lazar ; sans défaut) ; choix de (b) ; décisions « neuron explorer » (1 à 4) et « already clean »
   (1 à 7) ; défauts sous 48 heures qui échoient le 27 octobre vers 20:54 UTC (lecture si la confrontation change un seuil)
   et le 28 octobre vers 00:54 UTC (lecture contre le bruit, déjà appliquée par le texte).
+
+## 04:36 — la v6.2.1 tourne sur M ; la v5.3 ne court pas, la seconde course est la v6.2.1 sur la question S ; décisions de Lazar sur le sur-ajustement adaptatif ; synthèses rendues
+
+(Écrit à 04:36 UTC, heure lue sur `date -u`.)
+
+- **Pilote 4** : tentative 2 partie à 03:51:14 UTC (R-490), dossier `pilote4-gemini-v6-2-v1-tentative2` ; aucun score lu ;
+  faits mécaniques au n° 64 de session-depot (04:06 : conception close après une ronde, génération 0 faite, 7,83 USD).
+  **Mot de Lazar chez session-depot vers 04:13 UTC (R-492) : « pas besoin de faire v5.3, en revanche ppose la question
+  de la structure de l'organsime S »** : la seconde course est la v6.2.1 sur la question S (`a54da93e…`, commit
+  `4772b525`), mêmes bornes, après la course M et le tour des graines ; session-depot demande texte et lanceur
+  nouveaux (n° 64). En cours : texte v5 (différentiel sur la v4 ; brouillon écrit), lanceur v11 et batterie v13 (sous-agent
+  neuf, remplacements exacts), script des graines v5 (essais : 18 sur 18), vérificateur v3, vérification de départ v2,
+  relevé v8 ; puis contre-lecture 8, graines, message de départ. Environnement du noyau reconstruit du gel du second pilote
+  (`/opt/venv-essaim-noyau-pilote2-v1` ; 168 essais passés, l'essai arXiv désélectionné : aucune requête vers arXiv de ma
+  lignée tant que la course M tourne, n° 75 et 76 ; la batterie v13, qui l'interroge deux fois, attend la fin de la course
+  M sauf mot de Lazar).
+- **Tour des graines** : question v2 puis v3 (R-492 pris en compte : un objet, deux questions ; `0b9bbfb3…`, canal
+  `622ec38`) ; mot de Lazar chez session-depot : deux tours, 8 USD, **entre les deux courses** (R-491, R-493).
+- **Décisions de Lazar (05:13 Paris)**, après ma réponse à « comment éviter [le sur-ajustement adaptatif] ? » (quatre
+  leviers : mesurer l'écart `test` − `test_final` ; borner la fuite — ≈ 5,9 bits par lecture, ≈ 24 par course — ;
+  tâches fraîches ; tenir la boucle extérieure) : **tâches fraîches « go »** (vivier par génération dès le pilote 5,
+  banque sœur v3-bis sur devis) ; **`test` dès la fin de chaque course, `test_final` une seule fois en fin de
+  boucle « ok »** (note `decision-N-taches-fraiches-et-lecture-test-final-v1.md`, `4b23e00f…` ; N-049 et N-050
+  proposés ; n° 77). Hypothèse retenue pour le dessin : le sur-ajustement porte sur les textes, pas sur la famille.
+- **Synthèses rendues et poussées** : « already clean » (v2 après lecture de la page du neurone L32/E134/N510 : méthode
+  publiée en partie, pages par neurone ; ni la sélection ni le code), « test de M » (rejoint R-476 ; deux points fragiles
+  de mon avis n° 69), « agents sur le noyau » (seul un écart ≈ 0,20 sort du bruit à une course par objet ; la boucle
+  « tourner, regarder, corriger » dérive vers un indice de surface ; journal, compteur, A contre A, v3-bis, `test_final`
+  une fois), « littérature des boucles » (les boucles publiées n'ont jamais géré le bruit ; script à trois issues ;
+  agents étalonnés sur des paires à blanc) ; lecture des papiers : onze fiches sur vingt-quatre (bruit et analyse
+  adaptative, FunSearch, robot Adam), les treize d'arXiv après les courses.
+- **Boucle extérieure** : v2 (registre, protocole, briefs) poussée à 04:00 ; contre-lecture « utilisable après
+  corrections » (onze constats, dont le nom réel du dossier de la course M, le relevé mécanique inexistant, des valeurs
+  de `test_final` recopiées, les deux courses qui se rencontrent par le journal et par Holm) ; v3 en cours (sous-agent
+  neuf) avec la course S et N-050.
+- **Script de lecture** : écrit et essayé par son auteur (5 cas sains, 37 artefacts) ; relecture indépendante en cours
+  (noms de dossier `-tentativeN`, Python 3.11 et 3.12). Hypothèse rejetée par l'auteur : lire `reponses_test.json` (le
+  brief le nommait) ; il lit `juge/reponses-lues.json`, ce que le juge a retenu (RV-01).
+- **Ouvert** : graines (tour en attente de la fin de la course M) ; décisions « neuron explorer » (1 à 4) et « already
+  clean » (1 à 7) ; famille de modèle du contre-lecteur, plafond des relances ; vivier de la famille délégation ;
+  constructeur et devis de la v3-bis ; la batterie v13 avant ou après la fin de la course M.
