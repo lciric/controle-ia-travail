@@ -1,0 +1,162 @@
+# Inventaire du bloc-notes de la session « session-depot » (26 octobre 2026, 01:43 UTC)
+
+Taille, nom, et présence d'un LISEZMOI ; les dossiers de tours versés sont sur leurs branches donnees/… ; les caches, venvs et modèles ne sont pas versés.
+
+- 248K argon-suite-HM1-v1 (LISEZMOI)
+- 128K bloc-notes-a-verser
+- 660K canal-n03 (LISEZMOI)
+- 869M canal-n50
+- 869M canal-n51
+- 869M canal-n52
+- 869M canal-n53
+- 869M canal-n54
+- 148K cl3-hm1
+- 264K cl8-travail
+- 152K cl9-travail
+- 212K collisionneur-agents-noyau-methodo-v1 (LISEZMOI)
+- 1.1M collisionneur-agents-noyau-v1 (LISEZMOI)
+- 1.1M collisionneur-agents-outilles-methodo-v1 (LISEZMOI)
+- 864K collisionneur-agents-outilles-v1 (LISEZMOI)
+- 404K collisionneur-allocation-v1 (LISEZMOI)
+- 396K collisionneur-comparaison-v1 (LISEZMOI)
+- 320K collisionneur-emprunts-v1 (LISEZMOI)
+- 1.3M collisionneur-escalier-methodo-v1 (LISEZMOI)
+- 976K collisionneur-escalier-v1 (LISEZMOI)
+- 416K collisionneur-financement-v1 (LISEZMOI)
+- 280K collisionneur-format-methodo-v1 (LISEZMOI)
+- 244K collisionneur-format-v1 (LISEZMOI)
+- 1.3M collisionneur-lecture-pilote-v1 (LISEZMOI)
+- 296K collisionneur-litterature-boucles-v1
+- 328K collisionneur-lot3
+- 216K collisionneur-publication-methodo-v1 (LISEZMOI)
+- 340K collisionneur-publication-v1 (LISEZMOI)
+- 472K collisionneur-reecriture-v1
+- 404K collisionneur-structure-v1 (LISEZMOI)
+- 1.3M collisionneur-suite-HM1-v1 (LISEZMOI)
+- 1.2M collisionneur-test-M-v1 (LISEZMOI)
+- 144K d17
+- 2.0M demo-import
+- 280K depot-v8-en-attente
+- 92K depot-v9-en-attente
+- 7.4M devis-etape1
+- 176K donnees-collisionneur-reecriture
+- 248K donnees-collisionneur
+- 48K essai-an-e0
+- 13M essai-an2
+- 3.1M essai-analyse
+- 7.4M essai-e0
+- 83M essai-extraction
+- 12K essai-lanceur-courses
+- 132K essai-liens-v1
+- 3.8M essai-mes-e0-complet
+- 76K essai-mes-e0
+- 140K essai-poseur
+- 88K essai-traits
+- 344K essai-traits2
+- 68K essai-verb
+- 268K essai-verb2
+- 4.0K essai-verb3-artefact
+- 4.0K essai-verb3-artefact2
+- 268K essai-verb3-sain
+- 268K essai-verb3-sain2
+- 300K essaim-m3-debogage-v2
+- 176K essais-lanceur-traits
+- 72K essais-surveillance-traits
+- 92K gemini-organisme-v1-nobom
+- 100K gemini-organisme-v1-source
+- 2.3M gemini-organisme-v2-tmp
+- 212K gemini-organisme-v2 (LISEZMOI)
+- 188K gemini-organisme-v3 (LISEZMOI)
+- 2.3M gov2-tmp
+- 2.4M gov3-tmp
+- 2.4M gov3-tmp2
+- 6.0M gradient-v2
+- 6.4M hf-essai-v3
+- 4.0K home-isole
+- 868M journal-commun
+- 80K juge-suite-HM1
+- 20K lancement-hm1-v2
+- 20K lancement-hm1-v3
+- 24K lancement-traits-etape1-v1
+- 36K lanceur-etape1-v2
+- 104K lanceur-etape1-v3
+- 60K lanceur-etape1-v4
+- 292K lignees-imposees-etape1
+- 12K mutations-cl5-v1
+- 16K mutations-r395-r396
+- 5.8M mutations-rv-v1
+- 436K noyau-sim-5a6abd5
+- 516K noyau-sim-e37adb1
+- 668K noyau-sim-v3
+- 15M noyau-sim
+- 124K org-gemini-v2-sim
+- 132K org-gemini-v3-sim
+- 124K org-v2-44bebdd
+- 128K org-v3
+- 16K pannes-v5
+- 12K paquet-eval-awareness-v2
+- 28K pieces-v7
+- 48K pieces-v8
+- 52K pieces-v9
+- 36K pilote-lecture-v3
+- 152K pilote
+- 76K prereg-etape1-v2
+- 128K prereg-etape1-v4
+- 252K prereg-etape1-v5
+- 296K prereg-etape1-v6
+- 716K prereg-etape1-v8
+- 1.5M prereg-etape1-v9
+- 16K puissance-h-g1
+- 20K puissance-rejouee-v5
+- 23M r2-code-etape1-v1
+- 133M r2-confrontation-v6
+- 52M r2-confrontation
+- 1.7M r2-etape1-v1
+- 40M r2-etape1-v2
+- 21M r2-etape1-v3
+- 2.9M r2-etape1-v4
+- 3.1M r2-etape1-v5
+- 3.0M r2-etape1-v6
+- 604K r2-etape1-v7
+- 3.1M r2-etape1-v8
+- 3.2M r2-etape1-v9
+- 59M r2b-confrontation-v4
+- 196K relecture-v5-2
+- 30M repetition-traits
+- 36K scripts
+- 22M sim-gemini-v2
+- 1.1M sim-gemini-v3
+- 6.1M sim-gemini-v3b
+- 28K sim-repliques-h-g1
+- 23M sim-v3-sortie
+- 28M sim-v3b-sortie
+- 28M sim-v3c-sortie
+- 212K sonde-hote-v1
+- 16K stub-surv
+- 20K stub-vastai
+- 16K surveillance-hm1-v2
+- 20K surveillance-hm1-v3
+- 16K surveillance-traits-etape1-v1
+- 6.4M test-hm1
+- 5.1M traits-etape1-v1
+- 870M v5-2-1
+- 224K v52-gemini-2d00232
+- 73M venv-collisionneur
+- 192M venv-vastai
+- 3.2M verif-hm1-v2
+- 13M verif-hm1-v3
+- 260K verif-hm1
+- 63M verif-traits-etape1-v1
+- 872K verse-agents-outilles-e3
+- 256K verse-argon-suite-HM1
+- 220K verse-collisionneur-agents-noyau-methodo
+- 1.1M verse-collisionneur-agents-noyau
+- 1.2M verse-collisionneur-agents-outilles-methodo
+- 1.3M verse-collisionneur-escalier-methodo
+- 1.3M verse-collisionneur-suite-HM1
+- 984K verse-escalier-e3
+- 1.3M verse-lecture-pilote
+- 37M verse-pilote3-gemini-v5-3-maieutique-v1
+- 20M verse-pilote3-gemini-v6-maieutique-v1
+- 1.2M verse-test-M
+- 433M vivier-v5
