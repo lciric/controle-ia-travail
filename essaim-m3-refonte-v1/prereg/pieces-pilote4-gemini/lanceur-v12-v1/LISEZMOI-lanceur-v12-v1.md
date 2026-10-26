@@ -4,7 +4,10 @@
 26 octobre 2026 (message de coordination, trois précisions : un seul texte pour les deux courses ; les annexes en bloc de
 paramètres ; la question « audit » v2 à `9417652a` avec une seule annexe à remplir ; puis deux décisions : la règle de la garde
 « refus-question », le noyau attendu `9beee10b` à la borne de 100 000 caractères ; enfin les paramètres définitifs de la course
-« audit », R-518 : question v3 et annexe réelle au commit `ad23e9ae` de `main`), le @@HEURE@@ (heure lue sur `date -u` dans la
+« audit », R-518 : question v3 et annexe réelle au commit `ad23e9ae` de `main` ; puis R-519 : la course « audit » ne part pas —
+refus d'un modèle au collisionneur sur la partie 3 du rapport, condition de GO-04 non remplie — sa clé et ses paramètres restent
+dans le lanceur et la batterie, inutilisés jusqu'à une décision de Lazar ; ce qui fait partir la course « maieutique » est
+fini), le 26 octobre 2026 à 14:13 UTC (heure lue sur `date -u` dans la
 commande qui a écrit ce fichier). Sources lues : le lanceur v11 (`21854b79…`), la batterie v13 (`7b0a9bb0…`), le texte
 `prereg/courses-question-gemini-v6-2-v1.md` (brouillon de conv-audit, non scellé), `sceller_courses_question_v6.py`, le code du
 noyau (`essaim_m3/noyau/appels.py`, `boucle.py`, `bac_a_sable.py`, `serveur.py`, `question.py` aux commits `8e5e2f7b` et
@@ -102,7 +105,7 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
    (701 lignes, `7b0a9bb0…`) : 18 blocs réécrits ou retirés par ancre vérifiée par empreinte, 9 remplacements exacts ciblés, 19
    remplacements globaux comptés sur le texte restant (noms, clés, graines, texte, GO, noyau attendu ; les noms et le GO d'hier
    gardés dans `go-autre-id`, `dep-absente` et `dep-ancienne-forme` sont protégés par des jetons), 78 contrôles. Écart (non
-   demandé) : `diff-essais-v13-vers-v14.txt` (873 lignes). `bash -n` : conforme. Cas : v13 = 240 ; v14 = @@N_V14@@ (voir la
+   demandé) : `diff-essais-v13-vers-v14.txt` (873 lignes). `bash -n` : conforme. Cas : v13 = 240 ; v14 = 372 (voir la
    série v16). Deux annexes synthétiques sont committées dans la copie `depot` au début de la série, puis retirées de sa tête
    (`reset --hard HEAD~1`, objets lisibles par `git show`) : `annexe-essai-v1.md` (l'annexe de la course « audit » saine) et
    `annexe-longue-v1.md` (100 029 caractères : le refus « question servie > 100000 »), toutes deux sous
@@ -136,9 +139,15 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
    et la batterie de cette série ont été remplacés par les versions finales (mêmes noms) après les deux décisions.
 4. Série v16 (lanceur v12 et batterie v14 après les deux décisions, encore sur la question « audit » v2 et l'annexe synthétique ;
    `lancer-serie-v16.sh`, copie de `lancer-serie-v15.sh` ; copies d'essai portées à la tête `9beee10b` par `git fetch origin
-   outils/pilote4-gemini-travail` puis `checkout --detach`) : @@SERIE16@@
+   outils/pilote4-gemini-travail` puis `checkout --detach`) : deux lancements le 26 octobre 2026 (heures UTC, `date -u`) : (1) 13:29:52 à 13:42:26, 360 sur 367 — les sept échecs
+   sont le vérificateur `-noyau-tue` des sept cas d'arrêt, qui attendait l'ancienne ligne « garde refus-question : noyau … »
+   (la ligne porte désormais la règle avant le noyau tué) ; tout le reste conforme, dont les quatorze cas de la règle
+   (journal `essais-lanceur-question-v16-essai-rate-attendu-noyau-tue.log` ; vérificateur corrigé dans le dériveur) ;
+   (2) 13:42:46 à 13:55:29, 367 sur 367 (journal `essais-lanceur-question-v16.log`, heures `essais-lanceur-question-v16.heures.txt`).
+   Le lanceur et la batterie de cette série ont ensuite reçu les paramètres définitifs de la course « audit » (mêmes noms).
 5. Série v17 (lanceur v12 et batterie v14 finaux, paramètres définitifs de la course « audit » ; `lancer-serie-v17.sh`, copie de
-   `lancer-serie-v16.sh` ; le commit `ad23e9ae` de `main` récupéré dans les copies, leur tête inchangée à `9beee10b`) : @@SERIE17@@
+   `lancer-serie-v16.sh` ; le commit `ad23e9ae` de `main` récupéré dans les copies, leur tête inchangée à `9beee10b`) : un lancement le 26 octobre 2026, 14:00:55 à 14:13:42 UTC (`date -u`), **372 sur 372 cas conformes** (« tout
+   conforme »). Journal : `essais-lanceur-question-v17.log`, heures `essais-lanceur-question-v17.heures.txt`.
 
 ## Choix faits seul (une ligne chacun)
 
@@ -182,10 +191,15 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
 
 ## Ce qui reste, ou n'a pas été vérifié
 
+- **La course « audit » ne part pas (R-519)** : rien n'est lancé ; sa clé, ses paramètres (question v3, annexe) et ses cas d'essai
+  restent en place, inutilisés, jusqu'à une décision de Lazar. La course « maieutique » ne dépend d'aucun d'eux : clé
+  `maieutique`, GO-2026-10-26-05, question `1d29fbec…` à `eb03bad5`, sans annexe (les artefacts d'annexe sont sans effet sur
+  elle : `annexe-artefacts-sans-effet-maieutique`) ; sa copie de lancement doit porter `eb03bad5` (et `ad23e9ae` n'est exigé
+  que de la course « audit » : le lanceur ne vérifie que les commits de la course lancée).
 - Les paramètres de la course « audit » sont définitifs (R-518) ; la copie de lancement doit porter le commit `ad23e9ae` de
   `main` (`git fetch origin main` avant la course : le lanceur refuse « commit … absent du dépôt (git fetch) » sinon). Si une
   question ou l'annexe change encore : trois lignes du bloc de paramètres, l'empreinte du lanceur change, `lancer-serie-v17.sh`
-  rejoue la batterie v14 sans dérivation (attendu : @@N_V14@@ sur @@N_V14@@ ; `sain-audit-taille-servie-relevee` attend 39 617
+  rejoue la batterie v14 sans dérivation (attendu : 372 sur 372 ; `sain-audit-taille-servie-relevee` attend 39 617
   caractères et est à ajuster) ; la taille servie doit rester ≤ 100 000 caractères (titre d'annexe : 95 + longueur du chemin).
 - Le texte v1 des courses cite encore `noyau 8e5e2f7b` dans ses lignes d'extension de GO et sa table (à mettre à `9beee10b` par
   conv-audit) ; le lanceur ne lit pas le commit du noyau dans la ligne de GO (il exige `calcul`, l'empreinte de la question,
@@ -204,4 +218,21 @@ suites « rôle statut fin » vérifiées par empreinte, `6d2ad200…` pour les 
 
 ## Empreintes
 
-@@EMPREINTES@@
+- `lancer_courses_question_v12.sh` : `ee6ceb5cf39b3334d8d93fb3ab2c81de1c5247882562c28587c679d29b5f1687`
+- `deriver_lanceur_question_v12.py` : `b08b85193619d021fd57e14e88852488ebab4c74bd73b3ea97586e513169592a`
+- `diff-lanceur-v11-vers-v12.txt` : `e42423c7efb3cfce70f46d4d6bfa7f9168828e7a202e69762527b95ebaac91cd`
+- `essais_lanceur_question_v14.sh` : `59944102f4473ff9a11ccd4001266fea0f51bcf20a1a86a99b64f28f3b0ce42f`
+- `deriver_essais_question_v14.py` : `a8b6eff54c1e105452e171152a5ebf80724076b59b66739035b7a010f0a9262e`
+- `diff-essais-v13-vers-v14.txt` : `66490079c9496fae02e41ac773e1bc3879fb440f6e0a131dcd67ae761477a59b`
+- `essais-lanceur-question-v17.log` : `eb2739f1c186ba85471fba34ec71db559bab49572ffbee0c20a6e02cace7f1a0`
+- `essais-lanceur-question-v17.heures.txt` : `a1bc52eee15ee3f6d23ff9d9d7ec6fccbbabfd43eac9f381713c904d03d3f0ae`
+- `essais-lanceur-question-v16.log` : `e469db547ed577c0fe17d426f433bee23666e61729a88d642c2a3e6dd4f102ad`
+- `essais-lanceur-question-v16.heures.txt` : `981b44ed89b3e7e66bc54b5a844d08bb5ad4387c5f9b36849b6a1161d59d1568`
+- `essais-lanceur-question-v16-essai-rate-attendu-noyau-tue.log` : `1436d85be5597bf872c35f0bcb4a036709329620a380f806029520ab8cf6e3fb`
+- `essais-lanceur-question-v15.log` : `913043447d7d9ea06c325d9f38d348598391bccc6efdc18c4cd58bc2b79f3087`
+- `essais-lanceur-question-v15.heures.txt` : `83ddd3c38aa0514b3aa1cf257d6c3ffbae46e05f4b8998b2590e16133d353641`
+- `essais-lanceur-question-v15-essai-rate-arxiv-429.log` : `273268037cb60ea8569d0fbf49ec9ab439646be4c42761bc2bdf4ac733610799`
+- `essais-lanceur-question-v15-essai-rate-annexes-93075-caracteres.log` : `1b386eb6852692a3b76815e6f5bc8f35d53a03c885923def8fc2d26676216321`
+- `essais-lanceur-question-v15-essai-rate-annexe-reel.log` : `771fb23440099ca5c8e0bbd2ec506704d15e1d2246f90bdd04df4bc1f8516a33`
+- scripts des séries, hors dépôt (copie d'essai) : `/var/tmp/batterie-v13-v1/lancer-serie-v17.sh` `897349570b6aa8ab…` ; `/var/tmp/batterie-v13-v1/lancer-serie-v16.sh` `45bafb78220ee350…` ; `/var/tmp/batterie-v13-v1/lancer-serie-v15.sh` `8ab81ae9943aa9d6…`
+- `lanceur-v12-v1/LISEZMOI-lanceur-v12-v1.md` : voir son compagnon `.sha256` (écrit après ce fichier).
