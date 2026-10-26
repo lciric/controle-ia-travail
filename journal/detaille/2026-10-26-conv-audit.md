@@ -253,3 +253,22 @@ Paris (UTC + 1 depuis le 25 octobre). Rien d'opposable (R7) ; tout est sur `cana
   cachées de `IAC`/`Infra`) et devis AI Scientist v3 (`bba566de…` : c0 10 $, c1 60 $, c2 conditionnel 60 $, faille plantée
   témoin). Aucune dépense ne part sans le mot direct de Lazar chez session-depot.
 - Erreurs ou réserves : aucune nouvelle ; la partie 3 n'est pas vérifiée par une seconde lecture.
+
+## 16:59 — soir : exploration élaguée (mot de Lazar, 17:46 Paris) ; course « maieutique » prête ; course « audit » suspendue (R-519) ; synthèse v3 transmise ; ronde 1 élaguée lancée ; ControlArena étape 0
+
+- Limite d'usage de Fable atteinte vers 14:30 UTC (contre-lecture 9 morte) ; l'instance passe à Opus 5.5 vers 16:45 UTC.
+- Mot de Lazar (17:46 Paris) : « reprends en sautant le scellement prereg etc, … phase ultra dynamique d'exploration, …
+  élague tout ce que tu peux pour aller droit vers obtention de résultats positifs ». Lecture commune avec session-depot
+  (R-522) : exploration élaguée ; R1 et R3 gardées pour le décisif (nœud non tranché) ; `test_final` fermé ; aucun score
+  servi aux organismes ; lecture dans les deux sens.
+- Course « maieutique » : contre-lecture 9 sautée, graines par `sceller_courses_question_v7.py`, texte `9c6d0d63…`, tête
+  `be01406`, message de départ n° 91 (ligne d'extension de GO-05, ligne de dépense).
+- Course « audit » : suspendue par R-519 (refus au collisionneur sur la partie 3, filtre chez session-depot) ; R-520 : tour
+  sur les parties 1 et 2 sans refus ; option en attente de Lazar.
+- Synthèse de l'audit des failles : v2 puis v3 (`4f74b366…`), contre-lectures v2 `652a79cc…` et v3 `7c7fc806…`
+  (« transmissible ») ; transmise (n° 90) ; D-02 = P-031 (R-521).
+- Boucle extérieure élaguée : ronde 1 par un seul agent Opus sur M et S (dossier `/var/tmp/ronde1-elaguee-v1/`, pièces
+  vérifiées : lectures `test` par G8 bis, arbre de l'objet `4f13647a…`) ; en cours.
+- ControlArena : étape 0 faite sur le code installé (note v2 `2b32988c…`) ; étape 1 sur instance avec Docker, devis 40 $.
+- Une de mes réponses arrêtée par un filtre de sûreté vers 16:47 UTC ; rien n'en est reproduit.
+- Passation v3 poussée (canal).
