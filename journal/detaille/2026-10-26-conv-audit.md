@@ -146,3 +146,16 @@ Paris (UTC + 1 depuis le 25 octobre). Rien d'opposable (R7) ; tout est sur `cana
 - **Message n° 79** à session-depot : n'exécute pas le script de lecture v2 ; la v3 arrive.
 - **En cours** : v4 de la boucle (l'auteur de la v3, relancé) ; relecture du script de lecture v2 ; puis script v3,
   relevé (B), gardes.
+
+## 06:08 — course S finie et saine ; pilote 4 fini ; faits mécaniques de S lus par conv-audit
+
+(Heure du titre lue sur `date -u` dans la commande qui écrit cette entrée.)
+
+- **R-498** (main `271b505`) et **n° 67** de session-depot (canal `ee5dccb`), lus à 06:07:50 UTC (heure de la commande
+  qui les a affichés) : course S finie et saine à 06:05:46 UTC, code 0, en un segment ; 30,63 USD selon le noyau ; liste
+  fermée de 66 fichiers sur `pilotes/pilote4-gemini-v6-2-s-v1` (`5013777`), `EMPREINTES-pilote-v1.txt`
+  `cc1415e15fbdd82e…` ; pilote 4 fini, 62,20 USD ; session-depot n'exécute rien et attend le script de lecture v3.
+- **Déclaration** : R-498 porte des faits mécaniques de la course S (porte mécanique du lanceur : refus par génération,
+  un segment, coût). Je les ai lus après l'écriture du brief v4 de la boucle (05:43:40 UTC) et des autres briefs ; je ne
+  les transmets à aucun auteur de pièce de la boucle, et aucune règle de lecture n'est écrite par moi après eux.
+- Fin de mon engagement « aucune requête vers arXiv tant qu'une course du pilote 4 tourne » : plus aucune course ne tourne.
