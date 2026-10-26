@@ -1,19 +1,28 @@
 #!/usr/bin/env bash
-# Essais du lanceur des deux courses à question de la v6.2.1 (« maieutique », clé `maieutique`, GO-2026-10-26-05 ; « audit », clé `audit`, GO-2026-10-26-04, question servie avec trois annexes ; banque v3, quatre générations notées, 6 rondes de conception au
+# Essais du lanceur des deux courses à question de la v6.2.1 (« maieutique », clé `maieutique`, GO-2026-10-26-05 ; « audit », clé `audit`, GO-2026-10-26-04, question v2 servie avec son annexe ; banque v3, quatre générations notées, 6 rondes de conception au
 # plus), v14 : la v13 (7b0a9bb0…) par `deriver_essais_question_v14.py` pour le lanceur v12 (texte v1, table de correspondance ;
-# brief de conv-audit) : cas et artefacts adaptés aux deux clés (clé `v6-2-s` → `maieutique`, enfant 0, course par défaut
-# des cas ; `v6-2` → `audit`, enfant 1 ; noms `course-maieutique-gemini-v6-2-v1` et `course-audit-gemini-v6-2-v1` ; TEXTE et
-# TEXTE_SHA256 à la place de PREREG ; GO_ID par course, posé par `cas` : 05, ou 04 avec la pièce de dépense `td-sain-audit`
-# quand la course est `audit` ; lignes de GO d'essai à la forme de la ligne d'extension, `ligne_go` ; lignes de dépense à la
+# brief de conv-audit et ses précisions : bloc de paramètres, question « audit » v2 à `9417652a`, une annexe à remplir) : cas
+# et artefacts adaptés aux deux clés (les clés `v6-2-s` et `v6-2` d'hier deviennent `maieutique`, enfant 0, course par défaut
+# des cas, des segments, de la fermeture et du mutant ; `audit`, enfant 1, tourne avec une annexe synthétique committée dans la
+# copie puis retirée de sa tête, donnée au lanceur par ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN, ESSAI_ANNEXE_1_SHA ; noms
+# `course-maieutique-gemini-v6-2-v1` et `course-audit-gemini-v6-2-v1` ; TEXTE et TEXTE_SHA256 à la place de PREREG ; GO_ID par
+# course, posé par `cas` : 05, ou 04 avec la pièce de dépense `td-sain-audit` et l'annexe synthétique quand la course est
+# `audit` ; lignes de GO d'essai à la forme de la ligne d'extension, `ligne_go` ; lignes de dépense à la
 # forme `| date | nom | GO | 75 USD au pire cas | empreintes de M … |`) ; cas retirés : la porte « course v6.2 précédente »
 # (v62-*, seg-v62-*, seg-v6-2-s-porte-saine, seg-clore-v62-refusee, reel-v6-2-s-*, copies « réelles ») ; cas ajoutés ou
 # renommés : cle-ancienne-refusee (et -v6-2, reel-cle-ancienne-*), go-id-forme, reel-sans-go-id, reel-journal-garde-essai,
 # texte-* (dont texte-sans-ligne-de-l-autre-course), question-empreinte-autre (artefact question-base), question-servie-alteree,
-# annexe-absente, annexe-alteree, annexe-artefacts-sans-effet-maieutique, go-maieutique-seulement-* et go-audit-seulement-*,
-# go-questions-croisees, depense-ancienne-forme, sain-audit-question-servie (composé recalculé ici), sain-*-garde, porte
+# question-v1-refusee et go-question-v1-refuse-audit (la question « audit » v1, dd2c1016…, ne sert plus), annexe-absente,
+# annexe-alteree, annexe-champs-incomplets, annexe-commit-absent, question-servie-trop-longue (borne du noyau 9beee10b :
+# 100 000 caractères, question.py ; noyau attendu NOYAU_COMMIT, les copies d'essai à sa tête), audit-sans-annexe-reserve, reel-annexe-essai, annexe-artefacts-sans-effet-maieutique,
+# go-maieutique-seulement-* et go-audit-seulement-*, go-questions-croisees, depense-ancienne-forme,
+# sain-audit-question-servie (composé recalculé ici, avec l'annexe synthétique), sain-*-garde, porte
 # « précédente » absente (sain-maieutique avec PRECEDENTE_V62 ignorée, reel-sans-reference sans elle), garde-refus-question-sain,
-# garde-refus-question-ligne-incomplete, garde-refus-question-artefact, -fin-surete, -monoculture-analytique (journaux
-# synthétiques, ESSAI_JOURNAL_GARDE ; arrêt sous 10 s, ligne écrite, pièce poussée, g001 jamais archivée, SEGMENT=2 refusé) ;
+# garde-refus-question-ligne-incomplete, garde-refus-question-artefact, -fin-surete, -critique-sans-moissonneur,
+# -apres-moissonneur, -rang-121, -premiere-caste-apres-moissonneur, -motif-reel-m-complet (arrêts : journaux synthétiques,
+# ESSAI_JOURNAL_GARDE ; arrêt sous 10 s, ligne écrite, règle consignée, pièce poussée, g001 jamais archivée, SEGMENT=2 refusé) ;
+# garde-refus-question-tache-refusee, -rang-120, -moissonneur-refuse, -motif-reel-m-avant-question (aucun arrêt : règle de
+# conv-audit du 26 octobre 2026, le motif réel de g001 de la course M du pilote 4, journal fec0cb82…, 129 appels) ;
 # la v13 était dérivée de la v12 (27ef4524…) par `deriver_essais_pilote4_v13.py` pour le lanceur v11 (seconde course `v6-2-s` : le même
 # organisme, la v6.2.1, sur la question S `a54da93e…`, à la place de la clé `v5-3` — la v5.3 ne court pas, décision de Lazar du
 # 26 octobre 2026, 04:13 UTC, R-492 ; question par course ; chaque cas de la v12 garde un équivalent : clé, noms, lignée,
@@ -123,9 +132,10 @@ graine de la course maieutique = $G_M
 lanceur $H"
 SHA_PR="$(cut -d' ' -f1 < "$E/entrees/prereg-sain.md.sha256")"
 T16="${SHA_PR:0:16}"   # la ligne de GO porte les 16 premiers caractères de l'empreinte du texte (le même texte pour les deux GO)
-Q_M=1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3; Q_A=dd2c1016e20a4823dcb2ce4c1e94d2c6be7a6962cb52a10ee7ac3b1f7d1203aa   # empreintes des questions « maieutique » et « audit » (commit eb03bad5)
+Q_M=1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3; Q_A=ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4   # empreintes des questions « maieutique » (commit eb03bad5) et « audit » v2 (commit 9417652a)
+Q_A_V1=dd2c1016e20a4823dcb2ce4c1e94d2c6be7a6962cb52a10ee7ac3b1f7d1203aa   # question « audit » v1 : ne sert plus (R-515, R-516), refusée comme empreinte autre
 ligne_go() {  # ligne_go GO COURSE QUESTION_SHA TEXTE16 [TYPE] : une ligne du registre des GO, à la forme de la ligne d'extension (texte v1, § Plan)
-  printf '| %s | 2026-10-26 | %s | extension : course « %s » (essai) — la v6.2.1 7ea3270, arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d, sur la question %s (commit eb03bad5) ; banque confrontation-v3 157a2b45… ; texte courses-question-gemini-v6-2-v1.md %s ; lanceur lancer_courses_question_v12.sh %s | 75 USD au plus | 2026-10-31 | Lazar | R-509 |\n' "$1" "${5:-calcul}" "$2" "$3" "$4" "$H"
+  printf '| %s | 2026-10-26 | %s | extension : course « %s » (essai) — la v6.2.1 7ea3270, arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d, sur la question %s (commit eb03bad5) ; banque confrontation-v3 157a2b45… ; texte courses-question-gemini-v6-2-v1.md %s ; lanceur lancer_courses_question_v12.sh %s, noyau 9beee10b | 75 USD au plus | 2026-10-31 | Lazar | R-509 |\n' "$1" "${5:-calcul}" "$2" "$3" "$4" "$H"
 }
 { ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_A" "$T16"; } > "$E/entrees/go-sain.md"
 { ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16" essai; ligne_go GO-2026-10-26-04 audit "$Q_A" "$T16" essai; } > "$E/entrees/go-sans-calcul.md"
@@ -134,6 +144,7 @@ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16" > "$E/entrees/go-maieutique-s
 ligne_go GO-2026-10-26-04 audit "$Q_A" "$T16" > "$E/entrees/go-audit-seulement.md"
 { ligne_go GO-2026-10-26-05 maieutique 0000000000000000000000000000000000000000000000000000000000000000 "$T16"; ligne_go GO-2026-10-26-04 audit 0000000000000000000000000000000000000000000000000000000000000000 "$T16"; } > "$E/entrees/go-autre-question.md"
 { ligne_go GO-2026-10-26-05 maieutique "$Q_A" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_M" "$T16"; } > "$E/entrees/go-questions-croisees.md"
+{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_A_V1" "$T16"; } > "$E/entrees/go-question-v1.md"   # la ligne du GO 04 porte la question audit v1
 { ligne_go GO-2026-10-26-05 maieutique "$Q_M" "(sans le texte)"; ligne_go GO-2026-10-26-04 audit "$Q_A" "(sans le texte)"; } > "$E/entrees/go-sans-texte.md"
 n=0; ok=0
 verifier() {  # verifier NOM ATTENDU FICHIER… : le motif doit se trouver dans l'un des fichiers
@@ -147,16 +158,17 @@ verifier_absent_texte() {  # verifier_absent_texte NOM MOTIF FICHIER… : le mot
   n=$((n + 1))
   if cat "$@" 2>/dev/null | grep -qF -- "$motif"; then echo "ÉCHEC  $nom : « $motif » présent"; else ok=$((ok + 1)); echo "OK     $nom : « $motif » absent"; fi
 }
-cas() {  # cas NOM ATTENDU -- VAR=VAL… (motif cherché dans la sortie d'erreur et LANCEMENT.md) ; COURSE=audit entraîne GO_ID=GO-2026-10-26-04 et la pièce de dépense td-sain-audit.json à la place de td-sain.json
+cas() {  # cas NOM ATTENDU -- VAR=VAL… (motif cherché dans la sortie d'erreur et LANCEMENT.md) ; COURSE=audit entraîne GO_ID=GO-2026-10-26-04, la pièce de dépense td-sain-audit.json à la place de td-sain.json et, hors du mode réel, l'annexe synthétique (ESSAI_ANNEXE_1_*, que le cas peut redéfinir)
   local nom="$1" attendu="$2"; shift 3
   n=$((n + 1))
   local racine="$E/cas-$nom"; rm -rf "$racine"; mkdir -p "$racine"
   # shellcheck disable=SC2086
   touch $TDS
-  local audit="" a args=()
-  for a in "$@"; do [ "$a" = COURSE=audit ] && audit=1; done
+  local audit="" reel="" a args=()
+  for a in "$@"; do [ "$a" = COURSE=audit ] && audit=1; [ "$a" = MODE=reel ] && reel=1; done
   for a in "$@"; do if [ -n "$audit" ] && [ "$a" = "APPEL_CONTROLE_FICHIER=$E/entrees/td-sain.json" ]; then a="APPEL_CONTROLE_FICHIER=$E/entrees/td-sain-audit.json"; fi; args+=("$a"); done
-  [ -n "$audit" ] && args+=(GO_ID=GO-2026-10-26-04)
+  [ -n "$audit" ] && args=(GO_ID=GO-2026-10-26-04 "${args[@]}")
+  [ -n "$audit" ] && [ -z "$reel" ] && args=(ESSAI_ANNEXE_1_COMMIT="$ANNEXE_ESSAI_COMMIT" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_ESSAI_CHEMIN" ESSAI_ANNEXE_1_SHA="$ANNEXE_ESSAI_SHA" "${args[@]}")   # jamais en réel (variables d'essai interdites)
   env -i PATH="$PATH" HOME="$E" LANG=C.UTF-8 DEPOT="$DEPOT" PYTHON="$PY" GRAINE=13 COURSE=maieutique GO_ID=GO-2026-10-26-05 "${args[@]}" \
     PILOTE_RACINE_DEFAUT="$racine" bash -c 'export PILOTE_RACINE="${PILOTE_RACINE-$PILOTE_RACINE_DEFAUT}"; [ "$PILOTE_RACINE" = "-" ] && unset PILOTE_RACINE; exec bash "$0"' "$LANCEUR" \
     > "$racine/sortie.txt" 2> "$racine/erreur.txt"
@@ -186,54 +198,69 @@ printf '| 2026-10-26 | course-maieutique-gemini-v6-2-v1 | GO-2026-10-25-02 | 75 
 printf '| 2026-10-25 | pilote4-gemini-v6-2-v1 | GO-2026-10-25-02 | 75 USD au pire cas | après M, empreintes de M %s |\n| 2026-10-25 | pilote4-gemini-v6-2-s-v1 | GO-2026-10-25-02 | 75 USD au pire cas | après M et v6.2, empreintes de M %s, de v6.2 0000000000000000 |\n' "$EMP_M" "$EMP_M" > "$E/entrees/dep-ancienne-forme.md"   # forme du pilote 4 : noms et GO d'hier
 SAIN=(REGISTRE_GO_SOURCE="$E/entrees/go-sain.md" DEPENSES_SOURCE="$E/entrees/dep-sain.md" RESTE_GO_USD=150
       APPEL_CONTROLE_FICHIER="$E/entrees/td-sain.json" RECHARGE_ATTESTEE="essai" REFERENCE_M="$M_REF")
+# annexe synthétique de la course « audit » (et une annexe trop longue pour la borne du noyau, 100 000 caractères au noyau 9beee10b) : chacune committée dans la copie
+# sous un chemin permis, le commit relevé, puis HEAD rétabli (l'objet reste dans le dépôt, comme une annexe réelle récupérée
+# de main sans être sur la tête) ; passées au lanceur par ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN, ESSAI_ANNEXE_1_SHA
+annexe_commit() {  # annexe_commit CHEMIN_RELATIF FICHIER_CONTENU → le commit qui porte le fichier (puis HEAD~1)
+  mkdir -p "$DEPOT/$(dirname "$1")"; cp "$2" "$DEPOT/$1"; git -C "$DEPOT" add "$1"; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : annexe synthétique"
+  git -C "$DEPOT" rev-parse HEAD; git -C "$DEPOT" reset -q --hard HEAD~1
+}
+printf '# Annexe synthétique (essai de la batterie v14)\n\nTranscription factice : trois lignes, aucun contenu réel.\nLigne deux.\nLigne trois.\n' > "$E/entrees/annexe-essai-v1.md"
+"$PY" -I -c 'import sys; open(sys.argv[1], "w", encoding="utf-8").write("# Annexe trop longue (essai)\n\n" + ("x" * 99 + "\n") * 1000)' "$E/entrees/annexe-longue-v1.md"   # 100 029 caractères
+ANNEXE_ESSAI_CHEMIN=essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/annexe-essai-v1.md; ANNEXE_ESSAI_SHA="$(sha256sum "$E/entrees/annexe-essai-v1.md" | cut -d' ' -f1)"
+ANNEXE_ESSAI_COMMIT="$(annexe_commit "$ANNEXE_ESSAI_CHEMIN" "$E/entrees/annexe-essai-v1.md")"
+ANNEXE_LONGUE_CHEMIN=essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/annexe-longue-v1.md; ANNEXE_LONGUE_SHA="$(sha256sum "$E/entrees/annexe-longue-v1.md" | cut -d' ' -f1)"
+ANNEXE_LONGUE_COMMIT="$(annexe_commit "$ANNEXE_LONGUE_CHEMIN" "$E/entrees/annexe-longue-v1.md")"
+echo "annexes synthétiques : $ANNEXE_ESSAI_CHEMIN au commit $ANNEXE_ESSAI_COMMIT ($ANNEXE_ESSAI_SHA) ; $ANNEXE_LONGUE_CHEMIN au commit $ANNEXE_LONGUE_COMMIT"
 
-echo "== cas sains : course « audit » complète (essais du noyau exécutés ; question servie avec ses trois annexes), puis course « maieutique » (question seule) ; rondes de conception et quatre générations =="
-td_heure "$E/entrees/td-heure-fraiche-audit.json" 0 GO-2026-10-26-04
-cas sain-audit "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit GRAINE="$G_A" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-audit.json" ESSAI_EXIGER_HEURE=1
-VA="$E/cas-sain-audit/course-audit-gemini-v6-2-v1"
-verifier sain-audit-reference-m "; M saine : g000 et g001 OK" "$VA/LANCEMENT.md"
-verifier sain-audit-graine-m "graine $GRAINE_M_SCELLEE = graine M du texte scellé du second pilote (d2944654…)" "$VA/LANCEMENT.md"
-verifier sain-audit-organisme "organisme : 26 fichiers, empreinte d'arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d" "$VA/LANCEMENT.md"
-verifier sain-audit-essais "essais : 169 passés, 0 sauté, 0 désélectionnés" "$VA/LANCEMENT.md"
-verifier sain-audit-registre "registre : une ligne GO-2026-10-26-04 de type calcul" "$VA/LANCEMENT.md"
-verifier sain-audit-graine "graine $G_A de la course audit écrite et recalculée depuis l'entropie du texte (enfant 1), ligne de la course maieutique présente (non utilisée)" "$VA/LANCEMENT.md"
-verifier sain-audit-temps-conception "temps par ronde de conception 900 s" "$VA/LANCEMENT.md"
-verifier sain-audit-minuteur "STOP non posé" "$VA/LANCEMENT.md"
-verifier sain-audit-question "question (audit) : sha256 $Q_A ; annexes (3, commit eb03bad5…) : docs/programme-controle-ia-v2.md 2fd63badb5afea48f48d3ca501ae3b027c4094a8b176508488a41a22e45aa18c ; docs/notes/audit-controle-v1/audit-litterature-v1.md 29b32f620cb2310fad83166fd4f2957b3ce43b1c3dea090834d8c28f86e4823b ; docs/decisions/decision-N-053-v1.md 2204256d744288be2708578c0fdc8c44c62a29b70b2727ed7e31ec142d1cdeae ;" "$VA/LANCEMENT.md"
-# la question servie de la course « audit », recomposée ici sans le lanceur, depuis le dépôt : la question, puis pour chaque annexe une
-# ligne ---, un titre « # Annexe k — chemin (sha256 …) » et son contenu (une ligne vide avant et après chaque séparateur et chaque titre)
-"$PY" -I -c '
-import hashlib, subprocess, sys
-depot, commit = sys.argv[1], "eb03bad56ece1e755afa5e264948d0c44416f6cc"
-def lire(p): return subprocess.run(["git", "-C", depot, "show", commit + ":" + p], check=True, capture_output=True).stdout
-annexes = [("docs/programme-controle-ia-v2.md", "2fd63badb5afea48f48d3ca501ae3b027c4094a8b176508488a41a22e45aa18c"), ("docs/notes/audit-controle-v1/audit-litterature-v1.md", "29b32f620cb2310fad83166fd4f2957b3ce43b1c3dea090834d8c28f86e4823b"), ("docs/decisions/decision-N-053-v1.md", "2204256d744288be2708578c0fdc8c44c62a29b70b2727ed7e31ec142d1cdeae")]
-b = lire("brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v1.md")
-for k, (p, h) in enumerate(annexes, 1):
-    b += ("\n---\n\n# Annexe %d — %s (sha256 %s)\n\n" % (k, p, h)).encode("utf-8") + lire(p)
-print(hashlib.sha256(b).hexdigest(), len(b.decode("utf-8")))' "$DEPOT" > "$E/question-servie-audit.txt"
-read -r SHA_SERVIE_A N_SERVIE_A < "$E/question-servie-audit.txt"
-verifier sain-audit-question-servie "question servie : question.md, sha256 $SHA_SERVIE_A, $N_SERVIE_A caractères" "$VA/LANCEMENT.md"
-verifier sain-audit-question-servie-fichier "$SHA_SERVIE_A  question.md" "$VA/EMPREINTES-pilote-v1.txt"
-verifier sain-audit-garde "garde refus-question : aucun arrêt ; veilleur arrêté par son PID" "$VA/LANCEMENT.md"
-verifier sain-audit-garde-journal "journal vivant de g001 : /var/lib/essaim-m3/" "$VA/LANCEMENT.md"
-verifier sain-audit-garde-roles "rôles : monoculture_analytique monoculture_croisee sonde_orthogonale_onsager critique_adversariale_limites arbitre_synthese_contradictoire ; raisons d'arrêt de sûreté : refusal SAFETY PROHIBITED_CONTENT BLOCKLIST SPII RECITATION IMAGE_SAFETY BLOCAGE_PROMPT" "$VA/LANCEMENT.md"
-verifier sain-audit-groupe "session et groupe de processus propres, par setsid : groupe " "$VA/LANCEMENT.md"
-verifier_absent_texte sain-audit-sans-porte-precedente "course v6.2 précédente" "$VA/LANCEMENT.md"
-JUNIT="$E/junit-sain-v1.xml"; cp "$VA/essais-v1.xml" "$JUNIT"
-SAIN+=(ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="169 passed")
+echo "== cas sains : course « maieutique » complète (essais du noyau exécutés), puis course « audit » (question v2 servie avec l'annexe synthétique) ; rondes de conception et quatre générations =="
 td_heure "$E/entrees/td-heure-fraiche-maieutique.json" 0 GO-2026-10-26-05
 cas sain-maieutique "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-maieutique.json" ESSAI_EXIGER_HEURE=1 PRECEDENTE_V62="$E/nulle-part"
 VM="$E/cas-sain-maieutique/course-maieutique-gemini-v6-2-v1"
 verifier sain-maieutique-reference-m "; M saine : g000 et g001 OK" "$VM/LANCEMENT.md"
+verifier sain-maieutique-graine-m "graine $GRAINE_M_SCELLEE = graine M du texte scellé du second pilote (d2944654…)" "$VM/LANCEMENT.md"
 verifier sain-maieutique-organisme "organisme : 26 fichiers, empreinte d'arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d" "$VM/LANCEMENT.md"
+verifier sain-maieutique-essais "essais : 169 passés, 0 sauté, 0 désélectionnés" "$VM/LANCEMENT.md"
 verifier sain-maieutique-registre "registre : une ligne GO-2026-10-26-05 de type calcul" "$VM/LANCEMENT.md"
 verifier sain-maieutique-graine "graine $G_M de la course maieutique écrite et recalculée depuis l'entropie du texte (enfant 0), ligne de la course audit présente (non utilisée)" "$VM/LANCEMENT.md"
 verifier sain-maieutique-temps-conception "temps par ronde de conception 900 s" "$VM/LANCEMENT.md"
 verifier sain-maieutique-minuteur "STOP non posé" "$VM/LANCEMENT.md"
-verifier sain-maieutique-question "question (maieutique) : sha256 $Q_M" "$VM/LANCEMENT.md"
+verifier sain-maieutique-question "question (maieutique) : sha256 $Q_M (question-hypotheses-maieutique-organismes-v1.md, commit eb03bad5…) ; annexes servies : 0" "$VM/LANCEMENT.md"
 verifier sain-maieutique-question-servie "question servie : question.md, sha256 $Q_M, 2916 caractères" "$VM/LANCEMENT.md"
-verifier sain-maieutique-garde "garde refus-question : aucun arrêt" "$VM/LANCEMENT.md"
+verifier sain-maieutique-garde "garde refus-question : aucun arrêt ; veilleur arrêté par son PID" "$VM/LANCEMENT.md"
+verifier sain-maieutique-garde-journal "journal vivant de g001 : /var/lib/essaim-m3/" "$VM/LANCEMENT.md"
+verifier sain-maieutique-garde-roles "rôles propres à la question : monoculture_croisee sonde_orthogonale_onsager critique_adversariale_limites arbitre_synthese_contradictoire ; monoculture_analytique : refus après le premier appel moissonneur_* de g001 ou au-delà du 120e appel de ce rôle ; raisons d'arrêt de sûreté : refusal SAFETY PROHIBITED_CONTENT BLOCKLIST SPII RECITATION IMAGE_SAFETY BLOCAGE_PROMPT" "$VM/LANCEMENT.md"
+verifier sain-maieutique-groupe "session et groupe de processus propres, par setsid : groupe " "$VM/LANCEMENT.md"
+verifier_absent_texte sain-maieutique-sans-porte-precedente "course v6.2 précédente" "$VM/LANCEMENT.md"
 verifier_absent_texte sain-maieutique-precedente-ignoree "PRECEDENTE_V62" "$VM/LANCEMENT.md"
+JUNIT="$E/junit-sain-v1.xml"; cp "$VM/essais-v1.xml" "$JUNIT"
+SAIN+=(ESSAI_JUNIT_EXISTANT="$JUNIT" ESSAI_RESUME_EXISTANT="169 passed")
+td_heure "$E/entrees/td-heure-fraiche-audit.json" 0 GO-2026-10-26-04
+cas sain-audit "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit GRAINE="$G_A" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-heure-fraiche-audit.json" ESSAI_EXIGER_HEURE=1
+VA="$E/cas-sain-audit/course-audit-gemini-v6-2-v1"
+verifier sain-audit-reference-m "; M saine : g000 et g001 OK" "$VA/LANCEMENT.md"
+verifier sain-audit-organisme "organisme : 26 fichiers, empreinte d'arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d" "$VA/LANCEMENT.md"
+verifier sain-audit-registre "registre : une ligne GO-2026-10-26-04 de type calcul" "$VA/LANCEMENT.md"
+verifier sain-audit-graine "graine $G_A de la course audit écrite et recalculée depuis l'entropie du texte (enfant 1), ligne de la course maieutique présente (non utilisée)" "$VA/LANCEMENT.md"
+verifier sain-audit-temps-conception "temps par ronde de conception 900 s" "$VA/LANCEMENT.md"
+verifier sain-audit-minuteur "STOP non posé" "$VA/LANCEMENT.md"
+verifier sain-audit-question "question (audit) : sha256 $Q_A (question-audit-controle-organismes-v2.md, commit 9417652a…) ; annexes servies : 1 ; annexe 1 : $ANNEXE_ESSAI_CHEMIN $ANNEXE_ESSAI_COMMIT $ANNEXE_ESSAI_SHA" "$VA/LANCEMENT.md"
+# la question servie de la course « audit », recomposée ici sans le lanceur, depuis le dépôt : la question v2, puis, pour chaque annexe servie,
+# une ligne ---, un titre « # Annexe k — chemin (sha256 …) » et son contenu (une ligne vide avant et après chaque séparateur et chaque titre)
+"$PY" -I -c '
+import hashlib, subprocess, sys
+depot = sys.argv[1]
+def lire(c, p): return subprocess.run(["git", "-C", depot, "show", c + ":" + p], check=True, capture_output=True).stdout
+b = lire("9417652a45cae723ffe6199fbf3dbf4080d8e54f", "brouillons/questions-organismes-20261026-v1/question-audit-controle-organismes-v2.md")
+for k, (c, p, h) in enumerate([(sys.argv[2], sys.argv[3], sys.argv[4])], 1):
+    b += ("\n---\n\n# Annexe %d — %s (sha256 %s)\n\n" % (k, p, h)).encode("utf-8") + lire(c, p)
+print(hashlib.sha256(b).hexdigest(), len(b.decode("utf-8")))' "$DEPOT" "$ANNEXE_ESSAI_COMMIT" "$ANNEXE_ESSAI_CHEMIN" "$ANNEXE_ESSAI_SHA" > "$E/question-servie-audit.txt"
+read -r SHA_SERVIE_A N_SERVIE_A < "$E/question-servie-audit.txt"
+verifier sain-audit-question-servie "question servie : question.md, sha256 $SHA_SERVIE_A, $N_SERVIE_A caractères" "$VA/LANCEMENT.md"
+verifier sain-audit-question-servie-fichier "$SHA_SERVIE_A  question.md" "$VA/EMPREINTES-pilote-v1.txt"
+verifier sain-audit-question-fichier-annexe "# Annexe 1 — $ANNEXE_ESSAI_CHEMIN (sha256 $ANNEXE_ESSAI_SHA)" "$VA/question.md"
+verifier sain-audit-garde "garde refus-question : aucun arrêt" "$VA/LANCEMENT.md"
+verifier_absent_texte sain-audit-sans-reserve-annexe "sans aucune annexe servie" "$VA/LANCEMENT.md"
 for d in "$VM" "$VA"; do
   for g in g000 g001 g002 g003 c001; do
     verifier "sain-journal-$g-$(basename "$d")" "journal des appels $g : journal-appels-$g.jsonl" "$d/LANCEMENT.md"
@@ -378,16 +405,16 @@ cas voisine-meme-decalage "tourne déjà au décalage d'utilisateurs 900" -- MOD
 kill "$VOISIN" 2>/dev/null; wait "$VOISIN" 2>/dev/null
 
 echo "== R3 : verrou et marqueur de départ (noms des courses) =="
-mkdir -p "$E/racine-verrou/.verrou-course-audit-gemini-v6-2-v1"
-cas verrou-present "verrou $E/racine-verrou/.verrou-course-audit-gemini-v6-2-v1 présent" -- MODE=simulation COURSE=audit PILOTE_RACINE="$E/racine-verrou" "${SAIN[@]}"
+mkdir -p "$E/racine-verrou/.verrou-course-maieutique-gemini-v6-2-v1"
+cas verrou-present "verrou $E/racine-verrou/.verrou-course-maieutique-gemini-v6-2-v1 présent" -- MODE=simulation COURSE=maieutique PILOTE_RACINE="$E/racine-verrou" "${SAIN[@]}"
 mkdir -p "$E/racine-marqueur/.partis"; printf 'ailleurs\n' > "$E/racine-marqueur/.partis/course-maieutique-gemini-v6-2-v1"
 cas marqueur-present "marqueur de départ $E/racine-marqueur/.partis/course-maieutique-gemini-v6-2-v1 présent" -- MODE=simulation PILOTE_RACINE="$E/racine-marqueur" "${SAIN[@]}"
 
-echo "== code et commits : chemins permis après 8e5e2f7b =="
+echo "== code et commits : chemins permis après 9beee10b (noyau attendu) =="
 cas commit-question "absent du dépôt" -- MODE=simulation ESSAI_ARTEFACT=commit "${SAIN[@]}"
 printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/hors-pieces.txt"
 git -C "$DEPOT" add essaim-m3-refonte-v1/hors-pieces.txt; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : fichier hors des pièces"
-cas commit-hors-pieces "commits postérieurs à 8e5e2f7b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
+cas commit-hors-pieces "commits postérieurs à 9beee10b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
 git -C "$DEPOT" reset -q --hard HEAD~1
 printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai.txt"
 git -C "$DEPOT" add essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai.txt; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : pièce du pilote 4"
@@ -415,15 +442,15 @@ cas commit-banque-lisezmoi-six "commits postérieurs limités aux pièces du pil
 git -C "$DEPOT" reset -q --hard HEAD~1
 printf '{}\n' > "$DEPOT/essaim-m3-refonte-v1/banque/banque-confrontation-v4.json"
 git -C "$DEPOT" add essaim-m3-refonte-v1/banque/banque-confrontation-v4.json; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : banque v4 (hors du pilote 4)"
-cas commit-banque-v4 "commits postérieurs à 8e5e2f7b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
+cas commit-banque-v4 "commits postérieurs à 9beee10b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
 git -C "$DEPOT" reset -q --hard HEAD~1
 printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/banque/banque-autre-v1.json"
 git -C "$DEPOT" add essaim-m3-refonte-v1/banque/banque-autre-v1.json; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : autre fichier de la banque"
-cas commit-banque-autre "commits postérieurs à 8e5e2f7b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
+cas commit-banque-autre "commits postérieurs à 9beee10b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
 git -C "$DEPOT" reset -q --hard HEAD~1
 printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/prereg/pilote4-autre-texte-v1.md"
 git -C "$DEPOT" add essaim-m3-refonte-v1/prereg/pilote4-autre-texte-v1.md; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : texte non permis"
-cas commit-texte-non-permis "commits postérieurs à 8e5e2f7b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
+cas commit-texte-non-permis "commits postérieurs à 9beee10b hors des pièces du pilote" -- MODE=simulation "${SAIN[@]}"
 git -C "$DEPOT" reset -q --hard HEAD~1
 
 echo "== texte (un texte pour les deux courses : graine de la course, ligne de l'autre course exigée, lanceur cité, marqueurs) =="
@@ -445,9 +472,17 @@ cas question-empreinte-autre "empreinte de la question ≠ 00000000…" -- MODE=
 cas question-empreinte-autre-audit "empreinte de la question ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-base "${SAIN[@]}"
 cas question-servie-alteree "empreinte de la question servie ≠" -- MODE=simulation ESSAI_ARTEFACT=question "${SAIN[@]}"
 cas question-servie-alteree-audit "empreinte de la question servie ≠" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question "${SAIN[@]}"
-cas annexe-absente "annexe 1 (docs/nulle-part-v1.md) absente du commit eb03bad5…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe-absente "${SAIN[@]}"
-cas annexe-alteree "empreinte de l'annexe 1 (docs/programme-controle-ia-v2.md) ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe "${SAIN[@]}"
+cas question-v1-refusee "empreinte de la question ≠ ec3abf28…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-v1 "${SAIN[@]}"
+cas annexe-absente "annexe 1 (docs/nulle-part-v1.md) absente du commit" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe-absente "${SAIN[@]}"
+cas annexe-alteree "empreinte de l'annexe 1 ($ANNEXE_ESSAI_CHEMIN) ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe "${SAIN[@]}"
+cas annexe-champs-incomplets "ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA vont ensemble" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_SHA=
+cas annexe-commit-absent "annexe 1 : commit 0123456789abcdef0123456789abcdef01234567 absent du dépôt" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT=0123456789abcdef0123456789abcdef01234567
+cas question-servie-trop-longue "caractères > 100000 (borne du noyau 9beee10b, essaim_m3/noyau/question.py, CARACTERES_MAX_QUESTION)" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT="$ANNEXE_LONGUE_COMMIT" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_LONGUE_CHEMIN" ESSAI_ANNEXE_1_SHA="$ANNEXE_LONGUE_SHA"
+cas audit-sans-annexe-reserve "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT= ESSAI_ANNEXE_1_CHEMIN= ESSAI_ANNEXE_1_SHA=
+verifier audit-sans-annexe-reserve-ligne "RÉSERVE : course « audit » sans aucune annexe servie" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md
+verifier audit-sans-annexe-question-servie "question servie : question.md, sha256 $Q_A, 3196 caractères" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md
 cas annexe-artefacts-sans-effet-maieutique "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique ESSAI_ARTEFACT=annexe "${SAIN[@]}"
+cas reel-annexe-essai "variable ESSAI_ANNEXE_1_COMMIT définie en mode réel" -- MODE=reel PILOTE_RACINE=- COURSE=audit ESSAI_ANNEXE_1_COMMIT=x ESSAI_ANNEXE_1_CHEMIN=x ESSAI_ANNEXE_1_SHA=x
 
 echo "== registres (un GO par course : GO-2026-10-26-05 « maieutique », GO-2026-10-26-04 « audit » ; dépense) =="
 cas go-sans-calcul "GO non inscrit pour cette course" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-sans-calcul.md"
@@ -455,9 +490,10 @@ cas go-autre-id "aucune ligne « | GO-2026-10-26-05 | »" -- MODE=simulation "${
 cas go-maieutique-seulement-refuse-audit "aucune ligne « | GO-2026-10-26-04 | »" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-maieutique-seulement.md"
 cas go-audit-seulement-refuse-maieutique "aucune ligne « | GO-2026-10-26-05 | »" -- MODE=simulation COURSE=maieutique "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-audit-seulement.md"
 cas go-autre-question "l'empreinte de la question 1d29fbec…" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"
-cas go-autre-question-audit "l'empreinte de la question dd2c1016…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"
+cas go-autre-question-audit "l'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"
 cas go-questions-croisees "l'empreinte de la question 1d29fbec…" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"
-cas go-questions-croisees-audit "l'empreinte de la question dd2c1016…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"
+cas go-questions-croisees-audit "l'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"
+cas go-question-v1-refuse-audit "l'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-question-v1.md"
 cas go-sans-texte "celle du texte scellé ($T16)" -- MODE=simulation GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-sans-texte.md"
 cas depense-absente "lancement non consigné avant dans registres/depenses.md (une ligne nommant course-maieutique-gemini-v6-2-v1 et GO-2026-10-26-05)" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-absente.md"
 cas depense-ancienne-forme "lancement non consigné avant dans registres/depenses.md (une ligne nommant course-maieutique-gemini-v6-2-v1 et GO-2026-10-26-05)" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-ancienne-forme.md"
@@ -485,10 +521,10 @@ cas passerelle-saine "passerelle de sortie, sous l'environnement du noyau sans c
 cas passerelle-sans-certificat "passerelle de sortie injoignable sous l'environnement du noyau : httpx, api.anthropic.com : ConnectError" -- MODE=simulation "${SAIN[@]}" ESSAI_PASSERELLE_PY="$PY_HTTPX"
 
 echo "== après le départ =="
-cas famille-puis-tentatives "aucune course partie (pas de manifeste" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=famille "${SAIN[@]}"
+cas famille-puis-tentatives "aucune course partie (pas de manifeste" -- MODE=simulation COURSE=maieutique ESSAI_ARTEFACT=famille "${SAIN[@]}"
 R_F="$E/cas-famille-puis-tentatives"
-cas tentative-2 "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit TENTATIVE=2 PILOTE_RACINE="$R_F" "${SAIN[@]}"
-cas tentative-3 "R3 : jamais de seconde course" -- MODE=simulation COURSE=audit TENTATIVE=3 PILOTE_RACINE="$R_F" "${SAIN[@]}"
+cas tentative-2 "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique TENTATIVE=2 PILOTE_RACINE="$R_F" "${SAIN[@]}"
+cas tentative-3 "R3 : jamais de seconde course" -- MODE=simulation COURSE=maieutique TENTATIVE=3 PILOTE_RACINE="$R_F" "${SAIN[@]}"
 cas archive-incomplete "ARCHIVE FERMÉE INCOMPLÈTE" -- MODE=simulation ESSAI_ARTEFACT=archive "${SAIN[@]}"
 cas imprevu "fichiers imprévus, NON poussés" -- MODE=simulation ESSAI_ARTEFACT=imprevu "${SAIN[@]}"
 echo "== lanceur v4 (contre-lecture 1 du pilote 4) : banque autre que la v3 (P4C1-06) ; minuteur (P4C1-02) =="
@@ -517,13 +553,13 @@ print("arrêts", [e.get("raison") for e in ev if e.get("etape") == "arret"], "re
       "générations", sorted(g.get("generation") for g in x.get("generations", []) if not g.get("phase")))' "$1"
 }
 copie_ps() {  # copie_ps NOM → chemin d'une copie de la v6.2 en segments
-  local d="$E/ps-alteree-$1/course-audit-gemini-v6-2-v1"; rm -rf "$E/ps-alteree-$1"; mkdir -p "$E/ps-alteree-$1"; cp -a "$PS" "$d"; echo "$d"
+  local d="$E/ps-alteree-$1/course-maieutique-gemini-v6-2-v1"; rm -rf "$E/ps-alteree-$1"; mkdir -p "$E/ps-alteree-$1"; cp -a "$PS" "$d"; echo "$d"
 }
-td_heure "$E/entrees/td-seg-1.json" 0 GO-2026-10-26-04
-SEG=(MODE=simulation COURSE=audit GRAINE="$G_A" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-1.json" ESSAI_EXIGER_HEURE=1)
+td_heure "$E/entrees/td-seg-1.json" 0 GO-2026-10-26-05
+SEG=(MODE=simulation COURSE=maieutique GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-1.json" ESSAI_EXIGER_HEURE=1)
 { cat "$E/entrees/dep-sain.md"
-  printf '| 2026-10-25 | course-audit-gemini-v6-2-v1 segment 2 | GO-2026-10-26-04 | au plus 75 USD moins la dépense déjà faite | après le segment 1 |\n'
-  printf '| 2026-10-25 | course-audit-gemini-v6-2-v1 segment 3 | GO-2026-10-26-04 | au plus 75 USD moins la dépense déjà faite | après le segment 2 |\n'; } > "$E/entrees/dep-segments.md"
+  printf '| 2026-10-25 | course-maieutique-gemini-v6-2-v1 segment 2 | GO-2026-10-26-05 | au plus 75 USD moins la dépense déjà faite | après le segment 1 |\n'
+  printf '| 2026-10-25 | course-maieutique-gemini-v6-2-v1 segment 3 | GO-2026-10-26-05 | au plus 75 USD moins la dépense déjà faite | après le segment 2 |\n'; } > "$E/entrees/dep-segments.md"
 
 echo "-- valeurs de SEGMENT et de CLORE ; course absente ou fermée --"
 cas seg-non-entier "SEGMENT doit être un entier ≥ 1, sans zéro en tête : « deux »" -- MODE=simulation SEGMENT=deux
@@ -536,7 +572,7 @@ cas seg-course-fermee "est déjà fermée" -- MODE=simulation COURSE=maieutique 
 
 echo "-- segment 1 arrêté par le minuteur (échéance 0 : STOP dès le manifeste) --"
 cas seg-segment1 "segment 1 arrêté par STOP ; reprise attendue : SEGMENT=2" -- "${SEG[@]}" ESSAI_ECHEANCE_STOP_S=0
-RS="$E/cas-seg-segment1"; PS="$RS/course-audit-gemini-v6-2-v1"
+RS="$E/cas-seg-segment1"; PS="$RS/course-maieutique-gemini-v6-2-v1"
 verifier seg-segment1-minuteur "état de reprise attendu" "$PS/LANCEMENT.md"
 verifier seg-segment1-etat "état de reprise écrit par le noyau : etat-v1.json" "$PS/LANCEMENT.md"
 verifier seg-segment1-sortie "rien à pousser avant la fin de la course" "$RS/sortie.txt"
@@ -546,13 +582,13 @@ verifier_absent seg-segment1-rien-pousse "$PS/A-POUSSER-v1.txt"
 echo "-- segment 2 refusé sur artefacts (la course reste arrêtée, ouverte) --"
 cas seg-hors-ordre "le LANCEMENT.md n'attend pas ce segment" -- "${SEG[@]}" SEGMENT=3 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
 cas seg-sans-ligne-de-depense "segment 2 non consigné avant dans registres/depenses.md" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS"
-cas seg-reste-insuffisant "reste sur GO-2026-10-26-04 = 0.01 USD <" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" RESTE_GO_USD=0.01
-mkdir "$RS/.verrou-course-audit-gemini-v6-2-v1-segment2"
-cas seg-verrou-du-segment "verrou $RS/.verrou-course-audit-gemini-v6-2-v1-segment2 présent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
-rmdir "$RS/.verrou-course-audit-gemini-v6-2-v1-segment2"
-cp -p "$RS/.partis/course-audit-gemini-v6-2-v1" "$E/marqueur-sauve"; printf 'ailleurs 2026-10-25T00:00:00Z\n' > "$RS/.partis/course-audit-gemini-v6-2-v1"
+cas seg-reste-insuffisant "reste sur GO-2026-10-26-05 = 0.01 USD <" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" RESTE_GO_USD=0.01
+mkdir "$RS/.verrou-course-maieutique-gemini-v6-2-v1-segment2"
+cas seg-verrou-du-segment "verrou $RS/.verrou-course-maieutique-gemini-v6-2-v1-segment2 présent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+rmdir "$RS/.verrou-course-maieutique-gemini-v6-2-v1-segment2"
+cp -p "$RS/.partis/course-maieutique-gemini-v6-2-v1" "$E/marqueur-sauve"; printf 'ailleurs 2026-10-25T00:00:00Z\n' > "$RS/.partis/course-maieutique-gemini-v6-2-v1"
 cas seg-marqueur-autre "absent ou d'un autre dossier (R3)" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
-cp -p "$E/marqueur-sauve" "$RS/.partis/course-audit-gemini-v6-2-v1"
+cp -p "$E/marqueur-sauve" "$RS/.partis/course-maieutique-gemini-v6-2-v1"
 printf 'x\n' > "$DEPOT/essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai-entre-segments.txt"
 git -C "$DEPOT" add essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/piece-essai-entre-segments.txt; git -C "$DEPOT" -c user.email=e@x -c user.name=essai commit -q -m "essai : commit entre deux segments"
 cas seg-head-deplace "HEAD du dépôt ≠ celui du segment 1" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
@@ -570,12 +606,12 @@ cp -p "$E/etat-v1-sauve.sha256" "$c"
 mv "$PS/course/manifeste-run.json" "$E/manifeste-ps-sauve.json"
 cas seg-sans-manifeste "SEGMENT=2 : aucune course partie dans $PS" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
 mv "$E/manifeste-ps-sauve.json" "$PS/course/manifeste-run.json"
-mv "$RS/.verrou-course-audit-gemini-v6-2-v1" "$E/verrou-segment1-sauve"
-cas seg-verrou-segment1-absent "verrou $RS/.verrou-course-audit-gemini-v6-2-v1 du segment 1 absent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
-mv "$E/verrou-segment1-sauve" "$RS/.verrou-course-audit-gemini-v6-2-v1"
-mkdir -p "$RS/course-audit-gemini-v6-2-v1-essai-autre/course"; printf '{}\n' > "$RS/course-audit-gemini-v6-2-v1-essai-autre/course/manifeste-run.json"
-cas seg-autre-course-du-nom "une autre course de ce nom est partie dans $RS/course-audit-gemini-v6-2-v1-essai-autre (R3)" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
-rm -rf "$RS/course-audit-gemini-v6-2-v1-essai-autre"
+mv "$RS/.verrou-course-maieutique-gemini-v6-2-v1" "$E/verrou-segment1-sauve"
+cas seg-verrou-segment1-absent "verrou $RS/.verrou-course-maieutique-gemini-v6-2-v1 du segment 1 absent" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+mv "$E/verrou-segment1-sauve" "$RS/.verrou-course-maieutique-gemini-v6-2-v1"
+mkdir -p "$RS/course-maieutique-gemini-v6-2-v1-essai-autre/course"; printf '{}\n' > "$RS/course-maieutique-gemini-v6-2-v1-essai-autre/course/manifeste-run.json"
+cas seg-autre-course-du-nom "une autre course de ce nom est partie dans $RS/course-maieutique-gemini-v6-2-v1-essai-autre (R3)" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md"
+rm -rf "$RS/course-maieutique-gemini-v6-2-v1-essai-autre"
 e1="$PS/course/reprise/etat-v1.json"; cp -p "$e1" "$E/etat-v1-sauve.json"; cp -p "$e1.sha256" "$E/etat-v1-sauve-b.sha256"
 etat_altere() {  # etat_altere CODE_PYTHON (x = l'état v1) : l'état modifié, puis rescellé (compagnon juste)
   "$PY" -I -c 'import json, sys
@@ -600,7 +636,7 @@ cp -p "$PS/question.md" "$E/question-sauve.md"
 cas seg-question-modifiee "empreinte de la question servie ≠" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ARTEFACT=question
 cp -p "$E/question-sauve.md" "$PS/question.md"
 j="$PS/course/evenements.jsonl"; cp -p "$j" "$E/journal-sauve.jsonl"; printf '{"etape": "intrus"}\n' >> "$j"
-td_heure "$E/entrees/td-seg-2a.json" 0 GO-2026-10-26-04
+td_heure "$E/entrees/td-seg-2a.json" 0 GO-2026-10-26-05
 cas seg-noyau-refuse "reprise refusée par le noyau (code 9" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-2a.json"
 verifier seg-noyau-refuse-motif "la course a bougé depuis l'état" "$PS"/segment-2-t*/sortie-erreur-lanceur.txt
 verifier seg-noyau-refuse-code "reprise refusée par le noyau" "$E/cas-seg-noyau-refuse/sortie.txt"
@@ -608,7 +644,7 @@ verifier_absent seg-noyau-refuse-ouverte "$PS/ferme.tar.gz"
 cp -p "$E/journal-sauve.jsonl" "$j"
 
 echo "-- segment 2 sain : la course va au bout et se ferme --"
-td_heure "$E/entrees/td-seg-2.json" 0 GO-2026-10-26-04
+td_heure "$E/entrees/td-seg-2.json" 0 GO-2026-10-26-05
 cas seg-segment2 "archive fermée : ferme.tar.gz" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$RS" DEPENSES_SOURCE="$E/entrees/dep-segments.md" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg-2.json"
 verifier_re seg-segment2-entete "^## Segment 2, essai [0-9]+ \(simulation, tentative 1\)$" "$PS/LANCEMENT.md"
 verifier seg-segment2-etat-relu "état de reprise : etat-v1.json, sha256" "$PS/LANCEMENT.md"
@@ -628,23 +664,23 @@ cas seg-apres-fermeture "est déjà fermée" -- "${SEG[@]}" SEGMENT=3 PILOTE_RAC
 # v14 : la porte « course v6.2 précédente » sur la course en segments (seg-v6-2-s-porte-saine, seg-v62-*) est retirée avec la porte
 
 echo "-- trois segments (états de reprise v1 et v2) --"
-td_heure "$E/entrees/td-seg3-1.json" 0 GO-2026-10-26-04
+td_heure "$E/entrees/td-seg3-1.json" 0 GO-2026-10-26-05
 cas seg3-segment1 "segment 1 arrêté par STOP ; reprise attendue : SEGMENT=2" -- "${SEG[@]}" ESSAI_ECHEANCE_STOP_S=0 APPEL_CONTROLE_FICHIER="$E/entrees/td-seg3-1.json"
-R3S="$E/cas-seg3-segment1"; P3S="$R3S/course-audit-gemini-v6-2-v1"
-td_heure "$E/entrees/td-seg3-2.json" 0 GO-2026-10-26-04
+R3S="$E/cas-seg3-segment1"; P3S="$R3S/course-maieutique-gemini-v6-2-v1"
+td_heure "$E/entrees/td-seg3-2.json" 0 GO-2026-10-26-05
 cas seg3-segment2 "segment 2 arrêté par STOP ; reprise attendue : SEGMENT=3" -- "${SEG[@]}" SEGMENT=2 PILOTE_RACINE="$R3S" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ECHEANCE_STOP_S=0 APPEL_CONTROLE_FICHIER="$E/entrees/td-seg3-2.json"
 verifier seg3-etat-v2 "état de reprise écrit par le noyau : etat-v2.json" "$P3S/LANCEMENT.md"
-td_heure "$E/entrees/td-seg3-3.json" 0 GO-2026-10-26-04
+td_heure "$E/entrees/td-seg3-3.json" 0 GO-2026-10-26-05
 cas seg3-segment3 "archive fermée : ferme.tar.gz" -- "${SEG[@]}" SEGMENT=3 PILOTE_RACINE="$R3S" DEPENSES_SOURCE="$E/entrees/dep-segments.md" APPEL_CONTROLE_FICHIER="$E/entrees/td-seg3-3.json"
 verifier seg3-etat-relu "état de reprise : etat-v2.json, sha256" "$P3S/LANCEMENT.md"
 releve_segments "$P3S" > "$E/releve-segments-p3s.txt" 2>&1
 verifier seg3-extrait "arrêts ['fichier STOP', 'fichier STOP', 'aucune lignée active'] reprises [2, 3] générations [0, 1, 2, 3]" "$E/releve-segments-p3s.txt"
 
 echo "-- fermeture sans reprise (CLORE=1) --"
-td_heure "$E/entrees/td-clore-1.json" 0 GO-2026-10-26-04
+td_heure "$E/entrees/td-clore-1.json" 0 GO-2026-10-26-05
 cas seg-clore-segment1 "segment 1 arrêté par STOP ; reprise attendue : SEGMENT=2" -- "${SEG[@]}" ESSAI_ECHEANCE_STOP_S=0 APPEL_CONTROLE_FICHIER="$E/entrees/td-clore-1.json"
-RC="$E/cas-seg-clore-segment1"; PC="$RC/course-audit-gemini-v6-2-v1"
-cas seg-clore "CLORE=1 : aucune reprise, aucun appel" -- MODE=simulation COURSE=audit GRAINE="$G_A" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" REFERENCE_M="$M_REF" SEGMENT=2 CLORE=1 PILOTE_RACINE="$RC"
+RC="$E/cas-seg-clore-segment1"; PC="$RC/course-maieutique-gemini-v6-2-v1"
+cas seg-clore "CLORE=1 : aucune reprise, aucun appel" -- MODE=simulation COURSE=maieutique GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" REFERENCE_M="$M_REF" SEGMENT=2 CLORE=1 PILOTE_RACINE="$RC"
 verifier seg-clore-entete "fermeture sans reprise (CLORE=1)" "$PC/LANCEMENT.md"
 verifier seg-clore-archive "archive fermée : ferme.tar.gz" "$PC/LANCEMENT.md"
 verifier seg-clore-pousse "ferme.tar.gz" "$PC/A-POUSSER-v1.txt"
@@ -668,28 +704,52 @@ SHA_PRM="$(cut -d' ' -f1 < "$E/entrees/prereg-mutant.md.sha256")"
 { ligne_go GO-2026-10-26-05 maieutique "$Q_M" "${SHA_PRM:0:16}"; ligne_go GO-2026-10-26-04 audit "$Q_A" "${SHA_PRM:0:16}"; } > "$E/entrees/go-mutant.md"
 MUT=("${SEG[@]}" TEXTE="$E/entrees/prereg-mutant.md" TEXTE_SHA256="$SHA_PRM" REGISTRE_GO_SOURCE="$E/entrees/go-mutant.md")
 LANCEUR_SAIN="$LANCEUR"; LANCEUR="$E/lanceur-mutant-minuteur.sh"
-td_heure "$E/entrees/td-mut-1.json" 0 GO-2026-10-26-04
+td_heure "$E/entrees/td-mut-1.json" 0 GO-2026-10-26-05
 cas mut-minuteur-segment1 "segment 1 arrêté par STOP ; reprise attendue : SEGMENT=2" -- "${MUT[@]}" ESSAI_ECHEANCE_STOP_S=0 APPEL_CONTROLE_FICHIER="$E/entrees/td-mut-1.json"
-RMU="$E/cas-mut-minuteur-segment1"; PMU="$RMU/course-audit-gemini-v6-2-v1"
-td_heure "$E/entrees/td-mut-2.json" 0 GO-2026-10-26-04
+RMU="$E/cas-mut-minuteur-segment1"; PMU="$RMU/course-maieutique-gemini-v6-2-v1"
+td_heure "$E/entrees/td-mut-2.json" 0 GO-2026-10-26-05
 cas mut-minuteur-segment2 "reprise refusée par le noyau (code 9" -- "${MUT[@]}" SEGMENT=2 PILOTE_RACINE="$RMU" DEPENSES_SOURCE="$E/entrees/dep-segments.md" ESSAI_ECHEANCE_STOP_S=0 APPEL_CONTROLE_FICHIER="$E/entrees/td-mut-2.json"
 verifier mut-minuteur-motif "le fichier STOP est encore dans la course" "$PMU"/segment-2-t*/sortie-erreur-lanceur.txt
 LANCEUR="$LANCEUR_SAIN"
-echo "== garde refus-question (R5) : journaux synthétiques lus par le veilleur (ESSAI_JOURNAL_GARDE) ; cas sain et artefacts =="
-journal_garde() {  # journal_garde FICHIER ROLE [STATUT] [FIN] : trois appels OK, puis un appel de ce ROLE en REFUS (ou au STATUT et à la FIN donnés), puis deux appels OK
+echo "== garde refus-question (R5) : journaux synthétiques lus par le veilleur (ESSAI_JOURNAL_GARDE) ; règle de conv-audit du 26 octobre 2026 : cas sains (dont le motif réel de g001 de la course M), artefacts =="
+journal_garde() {  # journal_garde FICHIER MOTIF… : journal synthétique ; MOTIF = ROLE[:STATUT[:FIN]][*N] (OK end_turn par défaut ; REFUS vaut fin refusal ; *N répète) ; identifiants organisme-0001, 0002, …
   "$PY" -I -c '
-import json, sys
-f, role, statut, fin = sys.argv[1], sys.argv[2], (sys.argv[3] if len(sys.argv) > 3 else "REFUS"), (sys.argv[4] if len(sys.argv) > 4 else "refusal")
-def ligne(i, r, st, fi):
+import json, re, sys
+f, motifs = sys.argv[1], sys.argv[2:]
+def ligne(i, r, st="OK", fi=None):
+    fi = fi if fi is not None else ("refusal" if st == "REFUS" else "end_turn")
     return {"id": "organisme-%04d" % i, "etape": "organisme", "role": r, "espece": "CLAUDE_FABLE_5_1", "famille": "anthropic", "modele_demande": "claude-fable-5-1", "modele_servi": "claude-fable-5-1", "statut": st, "fin": fi, "categorie": None, "usage": {"entree": 10, "sortie": 10}, "cout_usd": 0.0001, "cumul_usd": 0.0001 * i, "angle": None, "max_tokens": 8192, "sha256_prompt": "0" * 64, "sha256_texte": "0" * 64, "caracteres": 10, "debut_utc": "2026-10-26T12:00:00.000000Z", "fin_utc": "2026-10-26T12:00:01.000000Z", "echec": None, "reel": False, "go_id": None, "types_blocs": ["text"]}
-lignes = [ligne(1, "monoculture_analytique", "OK", "end_turn"), ligne(2, "calibrateur_interne", "OK", "end_turn"), ligne(3, "monoculture_analytique", "OK", "end_turn"),
-          ligne(4, role, statut, fin), ligne(5, "monoculture_analytique", "OK", "end_turn"), ligne(6, "arbitre_synthese_contradictoire", "OK", "end_turn")]
+lignes = []
+for m in motifs:
+    g = re.fullmatch(r"([A-Za-z0-9_]+)(?::([A-Z_]+)(?::([A-Za-z_]+))?)?(?:\*(\d+))?", m)
+    if not g: sys.exit("motif illisible : " + m)
+    for _ in range(int(g.group(4) or 1)):
+        lignes.append(ligne(len(lignes) + 1, g.group(1), g.group(2) or "OK", g.group(3)))
 open(f, "w", encoding="utf-8").write("".join(json.dumps(l, ensure_ascii=False, sort_keys=True) + "\n" for l in lignes))' "$@"
 }
-journal_garde "$E/entrees/journal-garde-sain.jsonl" inducteur_entrainement
-journal_garde "$E/entrees/journal-garde-artefact.jsonl" arbitre_synthese_contradictoire
-journal_garde "$E/entrees/journal-garde-fin-surete.jsonl" critique_adversariale_limites MODELE_NON_CONFORME SAFETY
-journal_garde "$E/entrees/journal-garde-monoculture.jsonl" monoculture_analytique
+suite_journal() {  # suite_journal JOURNAL : les lignes « rôle statut fin » d'un journal, pour comparer un journal synthétique au journal réel
+  "$PY" -I -c 'import json, sys; print("".join(" ".join(str(e[k]) for k in ("role", "statut", "fin")) + "\n" for e in map(json.loads, open(sys.argv[1], encoding="utf-8"))), end="")' "$1"
+}
+# motif réel de g001 de la course M du pilote 4 (journal-appels-g001.jsonl poussé, fec0cb8237e325a8bf0d493d681082b4b9d89924dc9ddfa21e390e4d05953bc5, 129 appels : 120 appels de tâche
+# monoculture_analytique dont cinq en REFUS, l'appel moissonneur_formulation_requetes, puis les cinq castes de la question, l'arbitre en REFUS) ;
+# suites « rôle statut fin » : 124 premiers appels 6d2ad200…, 129 appels 7f79273d… (relevées sur le journal réel, vérifiées ci-dessous)
+MOTIF_REEL_M=(inducteur_entrainement "calibrateur_interne*2" "monoculture_analytique*25" monoculture_analytique:REFUS "monoculture_analytique*16" monoculture_analytique:REFUS "monoculture_analytique*9" monoculture_analytique:REFUS "monoculture_analytique*54" monoculture_analytique:REFUS "monoculture_analytique*9" monoculture_analytique:REFUS "monoculture_analytique*2" moissonneur_formulation_requetes)
+journal_garde "$E/entrees/journal-garde-sain.jsonl" monoculture_analytique calibrateur_interne monoculture_analytique inducteur_entrainement:REFUS monoculture_analytique arbitre_synthese_contradictoire
+journal_garde "$E/entrees/journal-garde-artefact.jsonl" monoculture_analytique calibrateur_interne monoculture_analytique arbitre_synthese_contradictoire:REFUS monoculture_analytique arbitre_synthese_contradictoire
+journal_garde "$E/entrees/journal-garde-fin-surete.jsonl" monoculture_analytique calibrateur_interne monoculture_analytique critique_adversariale_limites:MODELE_NON_CONFORME:SAFETY monoculture_analytique arbitre_synthese_contradictoire
+journal_garde "$E/entrees/journal-garde-tache-refusee.jsonl" monoculture_analytique calibrateur_interne monoculture_analytique monoculture_analytique:REFUS monoculture_analytique arbitre_synthese_contradictoire   # refus de tâche au rang 3, sans moissonneur : rien
+journal_garde "$E/entrees/journal-garde-critique-sans-moissonneur.jsonl" "monoculture_analytique*5" critique_adversariale_limites:REFUS monoculture_analytique
+journal_garde "$E/entrees/journal-garde-apres-moissonneur.jsonl" "monoculture_analytique*10" moissonneur_formulation_requetes monoculture_analytique:REFUS monoculture_croisee
+journal_garde "$E/entrees/journal-garde-rang-121.jsonl" "monoculture_analytique*120" monoculture_analytique:REFUS monoculture_croisee
+journal_garde "$E/entrees/journal-garde-rang-120.jsonl" "monoculture_analytique*119" monoculture_analytique:REFUS monoculture_analytique
+journal_garde "$E/entrees/journal-garde-moissonneur-refuse.jsonl" "monoculture_analytique*3" moissonneur_formulation_requetes:REFUS monoculture_analytique
+journal_garde "$E/entrees/journal-garde-motif-reel-m-avant-question.jsonl" "${MOTIF_REEL_M[@]}"
+journal_garde "$E/entrees/journal-garde-motif-reel-m-complet.jsonl" "${MOTIF_REEL_M[@]}" monoculture_analytique monoculture_croisee sonde_orthogonale_onsager:OK:STOP critique_adversariale_limites arbitre_synthese_contradictoire:REFUS
+journal_garde "$E/entrees/journal-garde-premiere-caste-apres-moissonneur.jsonl" "${MOTIF_REEL_M[@]}" monoculture_analytique:REFUS
+suite_journal "$E/entrees/journal-garde-motif-reel-m-avant-question.jsonl" | sha256sum | cut -d' ' -f1 > "$E/suite-motif-reel-m-avant-question.txt"
+suite_journal "$E/entrees/journal-garde-motif-reel-m-complet.jsonl" | sha256sum | cut -d' ' -f1 > "$E/suite-motif-reel-m-complet.txt"
+verifier garde-motif-reel-m-avant-question-suite "6d2ad200d3c45833933bd6f20bfc80cf6b7e0afabe0bf32f8c50ff6950173294" "$E/suite-motif-reel-m-avant-question.txt"
+verifier garde-motif-reel-m-complet-suite "7f79273db464bbbb00e83372d970e93553acf1b306e60708aa95ab6d9b3b6050" "$E/suite-motif-reel-m-complet.txt"
 printf '{"id": "organisme-0001", "role": "monoculture_croisee", "statut": "REFUS", "fin": "refusal"' > "$E/entrees/journal-garde-ligne-incomplete.jsonl"   # une ligne sans fin de ligne : jamais lue
 cas garde-refus-question-sain "archive fermée : ferme.tar.gz" -- MODE=simulation "${SAIN[@]}" ESSAI_JOURNAL_GARDE="$E/entrees/journal-garde-sain.jsonl"
 D_GARDE_SAIN="$E/cas-garde-refus-question-sain/course-maieutique-gemini-v6-2-v1"
@@ -699,16 +759,30 @@ verifier_absent_texte garde-sain-sans-ligne-d-arret "arrêt par la garde refus-q
 verifier_absent garde-sain-sans-piece "$D_GARDE_SAIN/garde-refus-question-v1.json"
 cas garde-refus-question-ligne-incomplete "archive fermée : ferme.tar.gz" -- MODE=simulation "${SAIN[@]}" ESSAI_JOURNAL_GARDE="$E/entrees/journal-garde-ligne-incomplete.jsonl"
 verifier garde-ligne-incomplete-aucun-arret "garde refus-question : aucun arrêt" "$E/cas-garde-refus-question-ligne-incomplete"/*/LANCEMENT.md
-garde_artefact() {  # garde_artefact NOM JOURNAL ATTENDU : la course est tuée par la garde ; relevés (ligne, pièce poussée, pas de reprise, g001 jamais archivée, délai)
-  local nom="$1" j="$2" attendu="$3" d
+garde_sans_arret() {  # garde_sans_arret NOM JOURNAL : la course finit d'elle-même ; aucun arrêt, aucune pièce
+  local nom="$1" j="$2" d
+  cas "$nom" "archive fermée : ferme.tar.gz" -- MODE=simulation "${SAIN[@]}" ESSAI_JOURNAL_GARDE="$j"
+  d="$E/cas-$nom/course-maieutique-gemini-v6-2-v1"
+  verifier "$nom-aucun-arret" "garde refus-question : aucun arrêt ; veilleur arrêté par son PID" "$d/LANCEMENT.md"
+  verifier_absent_texte "$nom-sans-ligne-d-arret" "arrêt par la garde refus-question" "$d/LANCEMENT.md"
+  verifier_absent "$nom-sans-piece" "$d/garde-refus-question-v1.json"
+}
+garde_sans_arret garde-refus-question-tache-refusee "$E/entrees/journal-garde-tache-refusee.jsonl"   # un REFUS de tâche (monoculture_analytique, rang 3, sans moissonneur) ne fait rien
+garde_sans_arret garde-refus-question-rang-120 "$E/entrees/journal-garde-rang-120.jsonl"   # le 120e appel monoculture_analytique en REFUS, sans moissonneur : encore une tâche
+garde_sans_arret garde-refus-question-moissonneur-refuse "$E/entrees/journal-garde-moissonneur-refuse.jsonl"   # un moissonneur refusé n'est pas une caste de la question
+garde_sans_arret garde-refus-question-motif-reel-m-avant-question "$E/entrees/journal-garde-motif-reel-m-avant-question.jsonl"   # le motif réel de la course M : cinq REFUS de tâche avant la question, aucun arrêt
+garde_artefact() {  # garde_artefact NOM JOURNAL ATTENDU [ID] [REGLE] : la course est tuée par la garde ; relevés (ligne, règle, pièce poussée, pas de reprise, g001 jamais archivée, délai)
+  local nom="$1" j="$2" attendu="$3" id="${4:-organisme-0004}" regle="${5:-rôle propre à la question}" d
   cas "$nom" "$attendu" -- MODE=simulation "${SAIN[@]}" ESSAI_JOURNAL_GARDE="$j"
   d="$E/cas-$nom/course-maieutique-gemini-v6-2-v1"
   verifier "$nom-sans-reprise" "course fermée sans reprise" "$d/LANCEMENT.md"
-  verifier "$nom-noyau-tue" "garde refus-question : noyau " "$d/LANCEMENT.md"
+  verifier "$nom-noyau-tue" ") tué, enfants directs tués par PID" "$d/LANCEMENT.md"
   verifier "$nom-archive" "archive fermée : ferme.tar.gz" "$d/LANCEMENT.md"
   verifier "$nom-piece" "garde-refus-question-v1.json" "$d/A-POUSSER-v1.txt"
   verifier "$nom-piece-compagnon" "garde-refus-question-v1.json.sha256" "$d/A-POUSSER-v1.txt"
-  verifier "$nom-piece-appel" "\"id\": \"organisme-0004\"" "$d/garde-refus-question-v1.json"
+  verifier "$nom-piece-appel" "\"id\": \"$id\"" "$d/garde-refus-question-v1.json"
+  verifier "$nom-regle" "garde refus-question : règle « $regle »" "$d/LANCEMENT.md"
+  verifier "$nom-piece-regle" "\"regle\": \"$regle\"" "$d/garde-refus-question-v1.json"
   verifier "$nom-g001-absent" "journal des appels g001 : absent ou non ordinaire dans l'archive" "$d/LANCEMENT.md"
   verifier "$nom-reponse-absente" "réponse à la question : aucune pièce archivée" "$d/LANCEMENT.md"
   verifier "$nom-sortie" "pilote fini (arrêt par la garde refus-question : course fermée sans reprise)" "$E/cas-$nom/sortie.txt"
@@ -723,7 +797,11 @@ print("arrêt %d s après le départ" % int((f(d1.group(1)) - f(d0.group(1))).to
 }
 garde_artefact garde-refus-question-artefact "$E/entrees/journal-garde-artefact.jsonl" "arrêt par la garde refus-question : appel organisme-0004, rôle arbitre_synthese_contradictoire, statut REFUS, fin refusal ("
 garde_artefact garde-refus-question-fin-surete "$E/entrees/journal-garde-fin-surete.jsonl" "arrêt par la garde refus-question : appel organisme-0004, rôle critique_adversariale_limites, statut MODELE_NON_CONFORME, fin SAFETY ("
-garde_artefact garde-refus-question-monoculture-analytique "$E/entrees/journal-garde-monoculture.jsonl" "arrêt par la garde refus-question : appel organisme-0004, rôle monoculture_analytique, statut REFUS, fin refusal ("
+garde_artefact garde-refus-question-critique-sans-moissonneur "$E/entrees/journal-garde-critique-sans-moissonneur.jsonl" "arrêt par la garde refus-question : appel organisme-0006, rôle critique_adversariale_limites, statut REFUS, fin refusal (" organisme-0006
+garde_artefact garde-refus-question-apres-moissonneur "$E/entrees/journal-garde-apres-moissonneur.jsonl" "arrêt par la garde refus-question : appel organisme-0012, rôle monoculture_analytique, statut REFUS, fin refusal (" organisme-0012 "monoculture_analytique après le premier appel moissonneur_* de g001 (organisme-0011)"
+garde_artefact garde-refus-question-rang-121 "$E/entrees/journal-garde-rang-121.jsonl" "arrêt par la garde refus-question : appel organisme-0121, rôle monoculture_analytique, statut REFUS, fin refusal (" organisme-0121 "monoculture_analytique au rang 121 > 120 (au-delà des tâches servies)"
+garde_artefact garde-refus-question-premiere-caste-apres-moissonneur "$E/entrees/journal-garde-premiere-caste-apres-moissonneur.jsonl" "arrêt par la garde refus-question : appel organisme-0125, rôle monoculture_analytique, statut REFUS, fin refusal (" organisme-0125 "monoculture_analytique après le premier appel moissonneur_* de g001 (organisme-0124)"
+garde_artefact garde-refus-question-motif-reel-m-complet "$E/entrees/journal-garde-motif-reel-m-complet.jsonl" "arrêt par la garde refus-question : appel organisme-0129, rôle arbitre_synthese_contradictoire, statut REFUS, fin refusal (" organisme-0129
 echo "== état des dépôts d'essai après la série =="
 git -C "$DEPOT" status --porcelain --ignored | grep -v __pycache__ | head -5
 git -C "$DEPOT" log --oneline -1 | cut -c1-12

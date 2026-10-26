@@ -64,21 +64,30 @@ def remplacer(ancien, nouveau, n):
 # ---- en-tête ----
 bloc("en-tête", "# Essais du lanceur du pilote 4 (la v6.2.1 sur la question M", "pour le lanceur v11 (seconde course `v6-2-s` : le même",
      "bd451adfc188627e9c43c93f23165b7261cb275ae4da77a1f1460619851a3215",
-     "# Essais du lanceur des deux courses à question de la v6.2.1 (« maieutique », clé `maieutique`, GO-2026-10-26-05 ; « audit », clé `audit`, GO-2026-10-26-04, question servie avec trois annexes ; banque v3, quatre générations notées, 6 rondes de conception au\n"
+     "# Essais du lanceur des deux courses à question de la v6.2.1 (« maieutique », clé `maieutique`, GO-2026-10-26-05 ; « audit », clé `audit`, GO-2026-10-26-04, question v2 servie avec son annexe ; banque v3, quatre générations notées, 6 rondes de conception au\n"
      "# plus), v14 : la v13 (7b0a9bb0…) par `deriver_essais_question_v14.py` pour le lanceur v12 (texte v1, table de correspondance ;\n"
-     "# brief de conv-audit) : cas et artefacts adaptés aux deux clés (clé `v6-2-s` → `maieutique`, enfant 0, course par défaut\n"
-     "# des cas ; `v6-2` → `audit`, enfant 1 ; noms `course-maieutique-gemini-v6-2-v1` et `course-audit-gemini-v6-2-v1` ; TEXTE et\n"
-     "# TEXTE_SHA256 à la place de PREREG ; GO_ID par course, posé par `cas` : 05, ou 04 avec la pièce de dépense `td-sain-audit`\n"
-     "# quand la course est `audit` ; lignes de GO d'essai à la forme de la ligne d'extension, `ligne_go` ; lignes de dépense à la\n"
+     "# brief de conv-audit et ses précisions : bloc de paramètres, question « audit » v2 à `9417652a`, une annexe à remplir) : cas\n"
+     "# et artefacts adaptés aux deux clés (les clés `v6-2-s` et `v6-2` d'hier deviennent `maieutique`, enfant 0, course par défaut\n"
+     "# des cas, des segments, de la fermeture et du mutant ; `audit`, enfant 1, tourne avec une annexe synthétique committée dans la\n"
+     "# copie puis retirée de sa tête, donnée au lanceur par ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN, ESSAI_ANNEXE_1_SHA ; noms\n"
+     "# `course-maieutique-gemini-v6-2-v1` et `course-audit-gemini-v6-2-v1` ; TEXTE et TEXTE_SHA256 à la place de PREREG ; GO_ID par\n"
+     "# course, posé par `cas` : 05, ou 04 avec la pièce de dépense `td-sain-audit` et l'annexe synthétique quand la course est\n"
+     "# `audit` ; lignes de GO d'essai à la forme de la ligne d'extension, `ligne_go` ; lignes de dépense à la\n"
      "# forme `| date | nom | GO | 75 USD au pire cas | empreintes de M … |`) ; cas retirés : la porte « course v6.2 précédente »\n"
      "# (v62-*, seg-v62-*, seg-v6-2-s-porte-saine, seg-clore-v62-refusee, reel-v6-2-s-*, copies « réelles ») ; cas ajoutés ou\n"
      "# renommés : cle-ancienne-refusee (et -v6-2, reel-cle-ancienne-*), go-id-forme, reel-sans-go-id, reel-journal-garde-essai,\n"
      "# texte-* (dont texte-sans-ligne-de-l-autre-course), question-empreinte-autre (artefact question-base), question-servie-alteree,\n"
-     "# annexe-absente, annexe-alteree, annexe-artefacts-sans-effet-maieutique, go-maieutique-seulement-* et go-audit-seulement-*,\n"
-     "# go-questions-croisees, depense-ancienne-forme, sain-audit-question-servie (composé recalculé ici), sain-*-garde, porte\n"
+     "# question-v1-refusee et go-question-v1-refuse-audit (la question « audit » v1, dd2c1016…, ne sert plus), annexe-absente,\n"
+     "# annexe-alteree, annexe-champs-incomplets, annexe-commit-absent, question-servie-trop-longue (borne du noyau 9beee10b :\n"
+     "# 100 000 caractères, question.py ; noyau attendu NOYAU_COMMIT, les copies d'essai à sa tête), audit-sans-annexe-reserve, reel-annexe-essai, annexe-artefacts-sans-effet-maieutique,\n"
+     "# go-maieutique-seulement-* et go-audit-seulement-*, go-questions-croisees, depense-ancienne-forme,\n"
+     "# sain-audit-question-servie (composé recalculé ici, avec l'annexe synthétique), sain-*-garde, porte\n"
      "# « précédente » absente (sain-maieutique avec PRECEDENTE_V62 ignorée, reel-sans-reference sans elle), garde-refus-question-sain,\n"
-     "# garde-refus-question-ligne-incomplete, garde-refus-question-artefact, -fin-surete, -monoculture-analytique (journaux\n"
-     "# synthétiques, ESSAI_JOURNAL_GARDE ; arrêt sous 10 s, ligne écrite, pièce poussée, g001 jamais archivée, SEGMENT=2 refusé) ;\n"
+     "# garde-refus-question-ligne-incomplete, garde-refus-question-artefact, -fin-surete, -critique-sans-moissonneur,\n"
+     "# -apres-moissonneur, -rang-121, -premiere-caste-apres-moissonneur, -motif-reel-m-complet (arrêts : journaux synthétiques,\n"
+     "# ESSAI_JOURNAL_GARDE ; arrêt sous 10 s, ligne écrite, règle consignée, pièce poussée, g001 jamais archivée, SEGMENT=2 refusé) ;\n"
+     "# garde-refus-question-tache-refusee, -rang-120, -moissonneur-refuse, -motif-reel-m-avant-question (aucun arrêt : règle de\n"
+     "# conv-audit du 26 octobre 2026, le motif réel de g001 de la course M du pilote 4, journal fec0cb82…, 129 appels) ;\n"
      "# la v13 était dérivée de la v12 (27ef4524…) par `deriver_essais_pilote4_v13.py` pour le lanceur v11 (seconde course `v6-2-s` : le même\n")
 remplacer("# Usage : bash essais_lanceur_pilote4_v13.sh ", "# Usage : bash essais_lanceur_question_v14.sh ", 1)
 # ---- graines : enfant 0 « maieutique », enfant 1 « audit » ----
@@ -129,7 +138,7 @@ bloc("fixtures", 'pr "$E/entrees/prereg-sain.md" "entropie E = $ENTROPIE tirée 
      f"Q_M={Q_M}; Q_A={Q_A}   # empreintes des questions « maieutique » (commit eb03bad5) et « audit » v2 (commit 9417652a)\n"
      "Q_A_V1=dd2c1016e20a4823dcb2ce4c1e94d2c6be7a6962cb52a10ee7ac3b1f7d1203aa   # question « audit » v1 : ne sert plus (R-515, R-516), refusée comme empreinte autre\n"
      "ligne_go() {  # ligne_go GO COURSE QUESTION_SHA TEXTE16 [TYPE] : une ligne du registre des GO, à la forme de la ligne d'extension (texte v1, § Plan)\n"
-     "  printf '| %s | 2026-10-26 | %s | extension : course « %s » (essai) — la v6.2.1 7ea3270, arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d, sur la question %s (commit eb03bad5) ; banque confrontation-v3 157a2b45… ; texte courses-question-gemini-v6-2-v1.md %s ; lanceur lancer_courses_question_v12.sh %s | 75 USD au plus | 2026-10-31 | Lazar | R-509 |\\n' \"$1\" \"${5:-calcul}\" \"$2\" \"$3\" \"$4\" \"$H\"\n"
+     "  printf '| %s | 2026-10-26 | %s | extension : course « %s » (essai) — la v6.2.1 7ea3270, arbre 4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d, sur la question %s (commit eb03bad5) ; banque confrontation-v3 157a2b45… ; texte courses-question-gemini-v6-2-v1.md %s ; lanceur lancer_courses_question_v12.sh %s, noyau 9beee10b | 75 USD au plus | 2026-10-31 | Lazar | R-509 |\\n' \"$1\" \"${5:-calcul}\" \"$2\" \"$3\" \"$4\" \"$H\"\n"
      "}\n"
      '{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16"; ligne_go GO-2026-10-26-04 audit "$Q_A" "$T16"; } > "$E/entrees/go-sain.md"\n'
      '{ ligne_go GO-2026-10-26-05 maieutique "$Q_M" "$T16" essai; ligne_go GO-2026-10-26-04 audit "$Q_A" "$T16" essai; } > "$E/entrees/go-sans-calcul.md"\n'
@@ -151,16 +160,17 @@ remplacer('  else echo "ÉCHEC  $nom : attendu « $attendu »"; fi\n}\n',
 # ---- cas : course par défaut « maieutique », GO par course ----
 bloc("cas()", "cas() {  # cas NOM ATTENDU -- VAR=VAL…", '  else echo "ÉCHEC  $nom (code $code) : attendu « $attendu » ; erreur : $(tail -2 "$racine/erreur.txt" | tr \'\\n\' \' \')"; fi\n}',
      "35fdc9272e9aa02207d58b4f22329fb123cb4a2aeed9be0f1cdcc0a1e01d217a",
-     "cas() {  # cas NOM ATTENDU -- VAR=VAL… (motif cherché dans la sortie d'erreur et LANCEMENT.md) ; COURSE=audit entraîne GO_ID=GO-2026-10-26-04, la pièce de dépense td-sain-audit.json à la place de td-sain.json et l'annexe synthétique (ESSAI_ANNEXE_1_*, que le cas peut redéfinir)\n"
+     "cas() {  # cas NOM ATTENDU -- VAR=VAL… (motif cherché dans la sortie d'erreur et LANCEMENT.md) ; COURSE=audit entraîne GO_ID=GO-2026-10-26-04, la pièce de dépense td-sain-audit.json à la place de td-sain.json et, hors du mode réel, l'annexe synthétique (ESSAI_ANNEXE_1_*, que le cas peut redéfinir)\n"
      '  local nom="$1" attendu="$2"; shift 3\n'
      "  n=$((n + 1))\n"
      '  local racine="$E/cas-$nom"; rm -rf "$racine"; mkdir -p "$racine"\n'
      "  # shellcheck disable=SC2086\n"
      "  touch $TDS\n"
-     '  local audit="" a args=()\n'
-     '  for a in "$@"; do [ "$a" = COURSE=audit ] && audit=1; done\n'
+     '  local audit="" reel="" a args=()\n'
+     '  for a in "$@"; do [ "$a" = COURSE=audit ] && audit=1; [ "$a" = MODE=reel ] && reel=1; done\n'
      '  for a in "$@"; do if [ -n "$audit" ] && [ "$a" = "APPEL_CONTROLE_FICHIER=$E/entrees/td-sain.json" ]; then a="APPEL_CONTROLE_FICHIER=$E/entrees/td-sain-audit.json"; fi; args+=("$a"); done\n'
-     '  [ -n "$audit" ] && args=(GO_ID=GO-2026-10-26-04 ESSAI_ANNEXE_1_COMMIT="$ANNEXE_ESSAI_COMMIT" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_ESSAI_CHEMIN" ESSAI_ANNEXE_1_SHA="$ANNEXE_ESSAI_SHA" "${args[@]}")\n'
+     '  [ -n "$audit" ] && args=(GO_ID=GO-2026-10-26-04 "${args[@]}")\n'
+     '  [ -n "$audit" ] && [ -z "$reel" ] && args=(ESSAI_ANNEXE_1_COMMIT="$ANNEXE_ESSAI_COMMIT" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_ESSAI_CHEMIN" ESSAI_ANNEXE_1_SHA="$ANNEXE_ESSAI_SHA" "${args[@]}")   # jamais en réel (variables d\'essai interdites)\n'
      '  env -i PATH="$PATH" HOME="$E" LANG=C.UTF-8 DEPOT="$DEPOT" PYTHON="$PY" GRAINE=13 COURSE=maieutique GO_ID=GO-2026-10-26-05 "${args[@]}" \\\n'
      '    PILOTE_RACINE_DEFAUT="$racine" bash -c \'export PILOTE_RACINE="${PILOTE_RACINE-$PILOTE_RACINE_DEFAUT}"; [ "$PILOTE_RACINE" = "-" ] && unset PILOTE_RACINE; exec bash "$0"\' "$LANCEUR" \\\n'
      '    > "$racine/sortie.txt" 2> "$racine/erreur.txt"\n'
@@ -180,7 +190,7 @@ bloc("dépenses et SAIN", "printf '| 2026-10-25 | pilote4-gemini-v6-2-s-v1 | GO-
      "printf '| 2026-10-25 | @@NOM_PILOTE4_M@@ | @@GO_PILOTE4@@ | 75 USD au pire cas | après M, empreintes de M %s |\\n| 2026-10-25 | @@NOM_PILOTE4_S@@ | @@GO_PILOTE4@@ | 75 USD au pire cas | après M et v6.2, empreintes de M %s, de v6.2 0000000000000000 |\\n' \"$EMP_M\" \"$EMP_M\" > \"$E/entrees/dep-ancienne-forme.md\"   # forme du pilote 4 : noms et GO d'hier\n"
      'SAIN=(REGISTRE_GO_SOURCE="$E/entrees/go-sain.md" DEPENSES_SOURCE="$E/entrees/dep-sain.md" RESTE_GO_USD=150\n'
      '      APPEL_CONTROLE_FICHIER="$E/entrees/td-sain.json" RECHARGE_ATTESTEE="essai" REFERENCE_M="$M_REF")\n'
-     "# annexe synthétique de la course « audit » (et une annexe trop longue pour la borne du noyau) : chacune committée dans la copie\n"
+     "# annexe synthétique de la course « audit » (et une annexe trop longue pour la borne du noyau, 100 000 caractères au noyau 9beee10b) : chacune committée dans la copie\n"
      "# sous un chemin permis, le commit relevé, puis HEAD rétabli (l'objet reste dans le dépôt, comme une annexe réelle récupérée\n"
      "# de main sans être sur la tête) ; passées au lanceur par ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN, ESSAI_ANNEXE_1_SHA\n"
      "annexe_commit() {  # annexe_commit CHEMIN_RELATIF FICHIER_CONTENU → le commit qui porte le fichier (puis HEAD~1)\n"
@@ -188,7 +198,7 @@ bloc("dépenses et SAIN", "printf '| 2026-10-25 | pilote4-gemini-v6-2-s-v1 | GO-
      '  git -C "$DEPOT" rev-parse HEAD; git -C "$DEPOT" reset -q --hard HEAD~1\n'
      "}\n"
      'printf \'# Annexe synthétique (essai de la batterie v14)\\n\\nTranscription factice : trois lignes, aucun contenu réel.\\nLigne deux.\\nLigne trois.\\n\' > "$E/entrees/annexe-essai-v1.md"\n'
-     '"$PY" -I -c \'import sys; open(sys.argv[1], "w", encoding="utf-8").write("# Annexe trop longue (essai)\\n\\n" + ("x" * 99 + "\\n") * 200)\' "$E/entrees/annexe-longue-v1.md"   # 20 029 caractères\n'
+     '"$PY" -I -c \'import sys; open(sys.argv[1], "w", encoding="utf-8").write("# Annexe trop longue (essai)\\n\\n" + ("x" * 99 + "\\n") * 1000)\' "$E/entrees/annexe-longue-v1.md"   # 100 029 caractères\n'
      'ANNEXE_ESSAI_CHEMIN=essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/annexe-essai-v1.md; ANNEXE_ESSAI_SHA="$(sha256sum "$E/entrees/annexe-essai-v1.md" | cut -d\' \' -f1)"\n'
      'ANNEXE_ESSAI_COMMIT="$(annexe_commit "$ANNEXE_ESSAI_CHEMIN" "$E/entrees/annexe-essai-v1.md")"\n'
      'ANNEXE_LONGUE_CHEMIN=essaim-m3-refonte-v1/prereg/pieces-pilote4-gemini/annexe-longue-v1.md; ANNEXE_LONGUE_SHA="$(sha256sum "$E/entrees/annexe-longue-v1.md" | cut -d\' \' -f1)"\n'
@@ -213,7 +223,7 @@ bloc("cas sains", 'echo "== cas sains : v6.2 complète', 'verifier sain-v6-2-s-l
      'verifier sain-maieutique-question-servie "question servie : question.md, sha256 $Q_M, 2916 caractères" "$VM/LANCEMENT.md"\n'
      'verifier sain-maieutique-garde "garde refus-question : aucun arrêt ; veilleur arrêté par son PID" "$VM/LANCEMENT.md"\n'
      'verifier sain-maieutique-garde-journal "journal vivant de g001 : /var/lib/essaim-m3/" "$VM/LANCEMENT.md"\n'
-     'verifier sain-maieutique-garde-roles "rôles : monoculture_analytique monoculture_croisee sonde_orthogonale_onsager critique_adversariale_limites arbitre_synthese_contradictoire ; raisons d\'arrêt de sûreté : refusal SAFETY PROHIBITED_CONTENT BLOCKLIST SPII RECITATION IMAGE_SAFETY BLOCAGE_PROMPT" "$VM/LANCEMENT.md"\n'
+     'verifier sain-maieutique-garde-roles "rôles propres à la question : monoculture_croisee sonde_orthogonale_onsager critique_adversariale_limites arbitre_synthese_contradictoire ; monoculture_analytique : refus après le premier appel moissonneur_* de g001 ou au-delà du 120e appel de ce rôle ; raisons d\'arrêt de sûreté : refusal SAFETY PROHIBITED_CONTENT BLOCKLIST SPII RECITATION IMAGE_SAFETY BLOCAGE_PROMPT" "$VM/LANCEMENT.md"\n'
      'verifier sain-maieutique-groupe "session et groupe de processus propres, par setsid : groupe " "$VM/LANCEMENT.md"\n'
      'verifier_absent_texte sain-maieutique-sans-porte-precedente "course v6.2 précédente" "$VM/LANCEMENT.md"\n'
      'verifier_absent_texte sain-maieutique-precedente-ignoree "PRECEDENTE_V62" "$VM/LANCEMENT.md"\n'
@@ -318,9 +328,17 @@ bloc("objets", 'echo "== objets et question =="', 'cas question-v6-2 "empreinte 
      'cas question-empreinte-autre-audit "empreinte de la question ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-base "${SAIN[@]}"\n'
      'cas question-servie-alteree "empreinte de la question servie ≠" -- MODE=simulation ESSAI_ARTEFACT=question "${SAIN[@]}"\n'
      'cas question-servie-alteree-audit "empreinte de la question servie ≠" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question "${SAIN[@]}"\n'
-     'cas annexe-absente "annexe 1 (docs/nulle-part-v1.md) absente du commit eb03bad5…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe-absente "${SAIN[@]}"\n'
-     'cas annexe-alteree "empreinte de l\'annexe 1 (docs/programme-controle-ia-v2.md) ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe "${SAIN[@]}"\n'
-     'cas annexe-artefacts-sans-effet-maieutique "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique ESSAI_ARTEFACT=annexe "${SAIN[@]}"\n')
+     'cas question-v1-refusee "empreinte de la question ≠ ec3abf28…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=question-v1 "${SAIN[@]}"\n'
+     'cas annexe-absente "annexe 1 (docs/nulle-part-v1.md) absente du commit" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe-absente "${SAIN[@]}"\n'
+     'cas annexe-alteree "empreinte de l\'annexe 1 ($ANNEXE_ESSAI_CHEMIN) ≠ 00000000…" -- MODE=simulation COURSE=audit ESSAI_ARTEFACT=annexe "${SAIN[@]}"\n'
+     'cas annexe-champs-incomplets "ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA vont ensemble" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_SHA=\n'
+     'cas annexe-commit-absent "annexe 1 : commit 0123456789abcdef0123456789abcdef01234567 absent du dépôt" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT=0123456789abcdef0123456789abcdef01234567\n'
+     'cas question-servie-trop-longue "caractères > 100000 (borne du noyau 9beee10b, essaim_m3/noyau/question.py, CARACTERES_MAX_QUESTION)" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT="$ANNEXE_LONGUE_COMMIT" ESSAI_ANNEXE_1_CHEMIN="$ANNEXE_LONGUE_CHEMIN" ESSAI_ANNEXE_1_SHA="$ANNEXE_LONGUE_SHA"\n'
+     'cas audit-sans-annexe-reserve "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=audit "${SAIN[@]}" ESSAI_ANNEXE_1_COMMIT= ESSAI_ANNEXE_1_CHEMIN= ESSAI_ANNEXE_1_SHA=\n'
+     'verifier audit-sans-annexe-reserve-ligne "RÉSERVE : course « audit » sans aucune annexe servie" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md\n'
+     'verifier audit-sans-annexe-question-servie "question servie : question.md, sha256 $Q_A, 3196 caractères" "$E/cas-audit-sans-annexe-reserve"/*/LANCEMENT.md\n'
+     'cas annexe-artefacts-sans-effet-maieutique "archive fermée : ferme.tar.gz" -- MODE=simulation COURSE=maieutique ESSAI_ARTEFACT=annexe "${SAIN[@]}"\n'
+     'cas reel-annexe-essai "variable ESSAI_ANNEXE_1_COMMIT définie en mode réel" -- MODE=reel PILOTE_RACINE=- COURSE=audit ESSAI_ANNEXE_1_COMMIT=x ESSAI_ANNEXE_1_CHEMIN=x ESSAI_ANNEXE_1_SHA=x\n')
 # ---- registres ----
 bloc("registres", 'echo "== registres (GO-2026-10-25-02 ; dépense) =="', 'cas reste-insuffisant "< $USD_COURSE" -- MODE=simulation "${SAIN[@]}" RESTE_GO_USD="$SOUS_PLAFOND"',
      "af88bd6ec972858a5a8f3d4eede7b803e9d9d2207d7ef9a09ec1181a598c4db5",
@@ -330,9 +348,10 @@ bloc("registres", 'echo "== registres (GO-2026-10-25-02 ; dépense) =="', 'cas r
      'cas go-maieutique-seulement-refuse-audit "aucune ligne « | GO-2026-10-26-04 | »" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-maieutique-seulement.md"\n'
      'cas go-audit-seulement-refuse-maieutique "aucune ligne « | GO-2026-10-26-05 | »" -- MODE=simulation COURSE=maieutique "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-audit-seulement.md"\n'
      'cas go-autre-question "l\'empreinte de la question 1d29fbec…" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"\n'
-     'cas go-autre-question-audit "l\'empreinte de la question dd2c1016…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"\n'
+     'cas go-autre-question-audit "l\'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-autre-question.md"\n'
      'cas go-questions-croisees "l\'empreinte de la question 1d29fbec…" -- MODE=simulation "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"\n'
-     'cas go-questions-croisees-audit "l\'empreinte de la question dd2c1016…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"\n'
+     'cas go-questions-croisees-audit "l\'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-questions-croisees.md"\n'
+     'cas go-question-v1-refuse-audit "l\'empreinte de la question ec3abf28…" -- MODE=simulation COURSE=audit "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-question-v1.md"\n'
      'cas go-sans-texte "celle du texte scellé ($T16)" -- MODE=simulation GRAINE="$G_M" TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR" "${SAIN[@]}" REGISTRE_GO_SOURCE="$E/entrees/go-sans-texte.md"\n'
      'cas depense-absente "lancement non consigné avant dans registres/depenses.md (une ligne nommant course-maieutique-gemini-v6-2-v1 et GO-2026-10-26-05)" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-absente.md"\n'
      'cas depense-ancienne-forme "lancement non consigné avant dans registres/depenses.md (une ligne nommant course-maieutique-gemini-v6-2-v1 et GO-2026-10-26-05)" -- MODE=simulation "${SAIN[@]}" DEPENSES_SOURCE="$E/entrees/dep-ancienne-forme.md"\n'
@@ -363,21 +382,45 @@ bloc("GO du mutant", "printf '| GO-2026-10-25-02 | 2026-10-25 | calcul | pilote 
 # ---- garde « refus-question » (R5) ----
 remplacer('LANCEUR="$LANCEUR_SAIN"\necho "== état des dépôts d\'essai après la série =="\n',
           'LANCEUR="$LANCEUR_SAIN"\n'
-          'echo "== garde refus-question (R5) : journaux synthétiques lus par le veilleur (ESSAI_JOURNAL_GARDE) ; cas sain et artefacts =="\n'
-          "journal_garde() {  # journal_garde FICHIER ROLE [STATUT] [FIN] : trois appels OK, puis un appel de ce ROLE en REFUS (ou au STATUT et à la FIN donnés), puis deux appels OK\n"
+          'echo "== garde refus-question (R5) : journaux synthétiques lus par le veilleur (ESSAI_JOURNAL_GARDE) ; règle de conv-audit du 26 octobre 2026 : cas sains (dont le motif réel de g001 de la course M), artefacts =="\n'
+          "journal_garde() {  # journal_garde FICHIER MOTIF… : journal synthétique ; MOTIF = ROLE[:STATUT[:FIN]][*N] (OK end_turn par défaut ; REFUS vaut fin refusal ; *N répète) ; identifiants organisme-0001, 0002, …\n"
           '  "$PY" -I -c \'\n'
-          "import json, sys\n"
-          'f, role, statut, fin = sys.argv[1], sys.argv[2], (sys.argv[3] if len(sys.argv) > 3 else "REFUS"), (sys.argv[4] if len(sys.argv) > 4 else "refusal")\n'
-          "def ligne(i, r, st, fi):\n"
+          "import json, re, sys\n"
+          "f, motifs = sys.argv[1], sys.argv[2:]\n"
+          "def ligne(i, r, st=\"OK\", fi=None):\n"
+          '    fi = fi if fi is not None else (\"refusal\" if st == \"REFUS\" else \"end_turn\")\n'
           '    return {"id": "organisme-%04d" % i, "etape": "organisme", "role": r, "espece": "CLAUDE_FABLE_5_1", "famille": "anthropic", "modele_demande": "claude-fable-5-1", "modele_servi": "claude-fable-5-1", "statut": st, "fin": fi, "categorie": None, "usage": {"entree": 10, "sortie": 10}, "cout_usd": 0.0001, "cumul_usd": 0.0001 * i, "angle": None, "max_tokens": 8192, "sha256_prompt": "0" * 64, "sha256_texte": "0" * 64, "caracteres": 10, "debut_utc": "2026-10-26T12:00:00.000000Z", "fin_utc": "2026-10-26T12:00:01.000000Z", "echec": None, "reel": False, "go_id": None, "types_blocs": ["text"]}\n'
-          'lignes = [ligne(1, "monoculture_analytique", "OK", "end_turn"), ligne(2, "calibrateur_interne", "OK", "end_turn"), ligne(3, "monoculture_analytique", "OK", "end_turn"),\n'
-          '          ligne(4, role, statut, fin), ligne(5, "monoculture_analytique", "OK", "end_turn"), ligne(6, "arbitre_synthese_contradictoire", "OK", "end_turn")]\n'
+          "lignes = []\n"
+          "for m in motifs:\n"
+          '    g = re.fullmatch(r"([A-Za-z0-9_]+)(?::([A-Z_]+)(?::([A-Za-z_]+))?)?(?:\\*(\\d+))?", m)\n'
+          '    if not g: sys.exit("motif illisible : " + m)\n'
+          "    for _ in range(int(g.group(4) or 1)):\n"
+          '        lignes.append(ligne(len(lignes) + 1, g.group(1), g.group(2) or "OK", g.group(3)))\n'
           'open(f, "w", encoding="utf-8").write("".join(json.dumps(l, ensure_ascii=False, sort_keys=True) + "\\n" for l in lignes))\' "$@"\n'
           "}\n"
-          'journal_garde "$E/entrees/journal-garde-sain.jsonl" inducteur_entrainement\n'
-          'journal_garde "$E/entrees/journal-garde-artefact.jsonl" arbitre_synthese_contradictoire\n'
-          'journal_garde "$E/entrees/journal-garde-fin-surete.jsonl" critique_adversariale_limites MODELE_NON_CONFORME SAFETY\n'
-          'journal_garde "$E/entrees/journal-garde-monoculture.jsonl" monoculture_analytique\n'
+          "suite_journal() {  # suite_journal JOURNAL : les lignes « rôle statut fin » d'un journal, pour comparer un journal synthétique au journal réel\n"
+          '  "$PY" -I -c \'import json, sys; print("".join(" ".join(str(e[k]) for k in ("role", "statut", "fin")) + "\\n" for e in map(json.loads, open(sys.argv[1], encoding="utf-8"))), end="")\' "$1"\n'
+          "}\n"
+          "# motif réel de g001 de la course M du pilote 4 (journal-appels-g001.jsonl poussé, fec0cb8237e325a8bf0d493d681082b4b9d89924dc9ddfa21e390e4d05953bc5, 129 appels : 120 appels de tâche\n"
+          "# monoculture_analytique dont cinq en REFUS, l'appel moissonneur_formulation_requetes, puis les cinq castes de la question, l'arbitre en REFUS) ;\n"
+          "# suites « rôle statut fin » : 124 premiers appels 6d2ad200…, 129 appels 7f79273d… (relevées sur le journal réel, vérifiées ci-dessous)\n"
+          'MOTIF_REEL_M=(inducteur_entrainement "calibrateur_interne*2" "monoculture_analytique*25" monoculture_analytique:REFUS "monoculture_analytique*16" monoculture_analytique:REFUS "monoculture_analytique*9" monoculture_analytique:REFUS "monoculture_analytique*54" monoculture_analytique:REFUS "monoculture_analytique*9" monoculture_analytique:REFUS "monoculture_analytique*2" moissonneur_formulation_requetes)\n'
+          'journal_garde "$E/entrees/journal-garde-sain.jsonl" monoculture_analytique calibrateur_interne monoculture_analytique inducteur_entrainement:REFUS monoculture_analytique arbitre_synthese_contradictoire\n'
+          'journal_garde "$E/entrees/journal-garde-artefact.jsonl" monoculture_analytique calibrateur_interne monoculture_analytique arbitre_synthese_contradictoire:REFUS monoculture_analytique arbitre_synthese_contradictoire\n'
+          'journal_garde "$E/entrees/journal-garde-fin-surete.jsonl" monoculture_analytique calibrateur_interne monoculture_analytique critique_adversariale_limites:MODELE_NON_CONFORME:SAFETY monoculture_analytique arbitre_synthese_contradictoire\n'
+          'journal_garde "$E/entrees/journal-garde-tache-refusee.jsonl" monoculture_analytique calibrateur_interne monoculture_analytique monoculture_analytique:REFUS monoculture_analytique arbitre_synthese_contradictoire   # refus de tâche au rang 3, sans moissonneur : rien\n'
+          'journal_garde "$E/entrees/journal-garde-critique-sans-moissonneur.jsonl" "monoculture_analytique*5" critique_adversariale_limites:REFUS monoculture_analytique\n'
+          'journal_garde "$E/entrees/journal-garde-apres-moissonneur.jsonl" "monoculture_analytique*10" moissonneur_formulation_requetes monoculture_analytique:REFUS monoculture_croisee\n'
+          'journal_garde "$E/entrees/journal-garde-rang-121.jsonl" "monoculture_analytique*120" monoculture_analytique:REFUS monoculture_croisee\n'
+          'journal_garde "$E/entrees/journal-garde-rang-120.jsonl" "monoculture_analytique*119" monoculture_analytique:REFUS monoculture_analytique\n'
+          'journal_garde "$E/entrees/journal-garde-moissonneur-refuse.jsonl" "monoculture_analytique*3" moissonneur_formulation_requetes:REFUS monoculture_analytique\n'
+          'journal_garde "$E/entrees/journal-garde-motif-reel-m-avant-question.jsonl" "${MOTIF_REEL_M[@]}"\n'
+          'journal_garde "$E/entrees/journal-garde-motif-reel-m-complet.jsonl" "${MOTIF_REEL_M[@]}" monoculture_analytique monoculture_croisee sonde_orthogonale_onsager:OK:STOP critique_adversariale_limites arbitre_synthese_contradictoire:REFUS\n'
+          'journal_garde "$E/entrees/journal-garde-premiere-caste-apres-moissonneur.jsonl" "${MOTIF_REEL_M[@]}" monoculture_analytique:REFUS\n'
+          'suite_journal "$E/entrees/journal-garde-motif-reel-m-avant-question.jsonl" | sha256sum | cut -d\' \' -f1 > "$E/suite-motif-reel-m-avant-question.txt"\n'
+          'suite_journal "$E/entrees/journal-garde-motif-reel-m-complet.jsonl" | sha256sum | cut -d\' \' -f1 > "$E/suite-motif-reel-m-complet.txt"\n'
+          'verifier garde-motif-reel-m-avant-question-suite "6d2ad200d3c45833933bd6f20bfc80cf6b7e0afabe0bf32f8c50ff6950173294" "$E/suite-motif-reel-m-avant-question.txt"\n'
+          'verifier garde-motif-reel-m-complet-suite "7f79273db464bbbb00e83372d970e93553acf1b306e60708aa95ab6d9b3b6050" "$E/suite-motif-reel-m-complet.txt"\n'
           "printf '{\"id\": \"organisme-0001\", \"role\": \"monoculture_croisee\", \"statut\": \"REFUS\", \"fin\": \"refusal\"' > \"$E/entrees/journal-garde-ligne-incomplete.jsonl\"   # une ligne sans fin de ligne : jamais lue\n"
           'cas garde-refus-question-sain "archive fermée : ferme.tar.gz" -- MODE=simulation "${SAIN[@]}" ESSAI_JOURNAL_GARDE="$E/entrees/journal-garde-sain.jsonl"\n'
           'D_GARDE_SAIN="$E/cas-garde-refus-question-sain/course-maieutique-gemini-v6-2-v1"\n'
@@ -387,16 +430,30 @@ remplacer('LANCEUR="$LANCEUR_SAIN"\necho "== état des dépôts d\'essai après 
           'verifier_absent garde-sain-sans-piece "$D_GARDE_SAIN/garde-refus-question-v1.json"\n'
           'cas garde-refus-question-ligne-incomplete "archive fermée : ferme.tar.gz" -- MODE=simulation "${SAIN[@]}" ESSAI_JOURNAL_GARDE="$E/entrees/journal-garde-ligne-incomplete.jsonl"\n'
           'verifier garde-ligne-incomplete-aucun-arret "garde refus-question : aucun arrêt" "$E/cas-garde-refus-question-ligne-incomplete"/*/LANCEMENT.md\n'
-          "garde_artefact() {  # garde_artefact NOM JOURNAL ATTENDU : la course est tuée par la garde ; relevés (ligne, pièce poussée, pas de reprise, g001 jamais archivée, délai)\n"
-          '  local nom="$1" j="$2" attendu="$3" d\n'
+          "garde_sans_arret() {  # garde_sans_arret NOM JOURNAL : la course finit d'elle-même ; aucun arrêt, aucune pièce\n"
+          '  local nom="$1" j="$2" d\n'
+          '  cas "$nom" "archive fermée : ferme.tar.gz" -- MODE=simulation "${SAIN[@]}" ESSAI_JOURNAL_GARDE="$j"\n'
+          '  d="$E/cas-$nom/course-maieutique-gemini-v6-2-v1"\n'
+          '  verifier "$nom-aucun-arret" "garde refus-question : aucun arrêt ; veilleur arrêté par son PID" "$d/LANCEMENT.md"\n'
+          '  verifier_absent_texte "$nom-sans-ligne-d-arret" "arrêt par la garde refus-question" "$d/LANCEMENT.md"\n'
+          '  verifier_absent "$nom-sans-piece" "$d/garde-refus-question-v1.json"\n'
+          "}\n"
+          'garde_sans_arret garde-refus-question-tache-refusee "$E/entrees/journal-garde-tache-refusee.jsonl"   # un REFUS de tâche (monoculture_analytique, rang 3, sans moissonneur) ne fait rien\n'
+          'garde_sans_arret garde-refus-question-rang-120 "$E/entrees/journal-garde-rang-120.jsonl"   # le 120e appel monoculture_analytique en REFUS, sans moissonneur : encore une tâche\n'
+          'garde_sans_arret garde-refus-question-moissonneur-refuse "$E/entrees/journal-garde-moissonneur-refuse.jsonl"   # un moissonneur refusé n\'est pas une caste de la question\n'
+          'garde_sans_arret garde-refus-question-motif-reel-m-avant-question "$E/entrees/journal-garde-motif-reel-m-avant-question.jsonl"   # le motif réel de la course M : cinq REFUS de tâche avant la question, aucun arrêt\n'
+          "garde_artefact() {  # garde_artefact NOM JOURNAL ATTENDU [ID] [REGLE] : la course est tuée par la garde ; relevés (ligne, règle, pièce poussée, pas de reprise, g001 jamais archivée, délai)\n"
+          '  local nom="$1" j="$2" attendu="$3" id="${4:-organisme-0004}" regle="${5:-rôle propre à la question}" d\n'
           '  cas "$nom" "$attendu" -- MODE=simulation "${SAIN[@]}" ESSAI_JOURNAL_GARDE="$j"\n'
           '  d="$E/cas-$nom/course-maieutique-gemini-v6-2-v1"\n'
           '  verifier "$nom-sans-reprise" "course fermée sans reprise" "$d/LANCEMENT.md"\n'
-          '  verifier "$nom-noyau-tue" "garde refus-question : noyau " "$d/LANCEMENT.md"\n'
+          '  verifier "$nom-noyau-tue" ") tué, enfants directs tués par PID" "$d/LANCEMENT.md"\n'
           '  verifier "$nom-archive" "archive fermée : ferme.tar.gz" "$d/LANCEMENT.md"\n'
           '  verifier "$nom-piece" "garde-refus-question-v1.json" "$d/A-POUSSER-v1.txt"\n'
           '  verifier "$nom-piece-compagnon" "garde-refus-question-v1.json.sha256" "$d/A-POUSSER-v1.txt"\n'
-          '  verifier "$nom-piece-appel" "\\"id\\": \\"organisme-0004\\"" "$d/garde-refus-question-v1.json"\n'
+          '  verifier "$nom-piece-appel" "\\"id\\": \\"$id\\"" "$d/garde-refus-question-v1.json"\n'
+          '  verifier "$nom-regle" "garde refus-question : règle « $regle »" "$d/LANCEMENT.md"\n'
+          '  verifier "$nom-piece-regle" "\\"regle\\": \\"$regle\\"" "$d/garde-refus-question-v1.json"\n'
           '  verifier "$nom-g001-absent" "journal des appels g001 : absent ou non ordinaire dans l\'archive" "$d/LANCEMENT.md"\n'
           '  verifier "$nom-reponse-absente" "réponse à la question : aucune pièce archivée" "$d/LANCEMENT.md"\n'
           '  verifier "$nom-sortie" "pilote fini (arrêt par la garde refus-question : course fermée sans reprise)" "$E/cas-$nom/sortie.txt"\n'
@@ -411,29 +468,38 @@ remplacer('LANCEUR="$LANCEUR_SAIN"\necho "== état des dépôts d\'essai après 
           "}\n"
           'garde_artefact garde-refus-question-artefact "$E/entrees/journal-garde-artefact.jsonl" "arrêt par la garde refus-question : appel organisme-0004, rôle arbitre_synthese_contradictoire, statut REFUS, fin refusal ("\n'
           'garde_artefact garde-refus-question-fin-surete "$E/entrees/journal-garde-fin-surete.jsonl" "arrêt par la garde refus-question : appel organisme-0004, rôle critique_adversariale_limites, statut MODELE_NON_CONFORME, fin SAFETY ("\n'
-          'garde_artefact garde-refus-question-monoculture-analytique "$E/entrees/journal-garde-monoculture.jsonl" "arrêt par la garde refus-question : appel organisme-0004, rôle monoculture_analytique, statut REFUS, fin refusal ("\n'
+          'garde_artefact garde-refus-question-critique-sans-moissonneur "$E/entrees/journal-garde-critique-sans-moissonneur.jsonl" "arrêt par la garde refus-question : appel organisme-0006, rôle critique_adversariale_limites, statut REFUS, fin refusal (" organisme-0006\n'
+          'garde_artefact garde-refus-question-apres-moissonneur "$E/entrees/journal-garde-apres-moissonneur.jsonl" "arrêt par la garde refus-question : appel organisme-0012, rôle monoculture_analytique, statut REFUS, fin refusal (" organisme-0012 "monoculture_analytique après le premier appel moissonneur_* de g001 (organisme-0011)"\n'
+          'garde_artefact garde-refus-question-rang-121 "$E/entrees/journal-garde-rang-121.jsonl" "arrêt par la garde refus-question : appel organisme-0121, rôle monoculture_analytique, statut REFUS, fin refusal (" organisme-0121 "monoculture_analytique au rang 121 > 120 (au-delà des tâches servies)"\n'
+          'garde_artefact garde-refus-question-premiere-caste-apres-moissonneur "$E/entrees/journal-garde-premiere-caste-apres-moissonneur.jsonl" "arrêt par la garde refus-question : appel organisme-0125, rôle monoculture_analytique, statut REFUS, fin refusal (" organisme-0125 "monoculture_analytique après le premier appel moissonneur_* de g001 (organisme-0124)"\n'
+          'garde_artefact garde-refus-question-motif-reel-m-complet "$E/entrees/journal-garde-motif-reel-m-complet.jsonl" "arrêt par la garde refus-question : appel organisme-0129, rôle arbitre_synthese_contradictoire, statut REFUS, fin refusal (" organisme-0129\n'
           'echo "== état des dépôts d\'essai après la série =="\n', 1)
 # ---- remplacements globaux sur le reste (clés, noms, graines, texte, GO), puis restauration des valeurs d'hier gardées ----
 for ancien, nouveau, n in [
-    ("= $G_S\n", "= $G_M\n", 1), ('"$G_6"', '"$G_A"', 2), ("= $G_6\n", "= $G_A\n", 1),
+    ("= $G_S\n", "= $G_M\n", 1), ('"$G_6"', '"$G_M"', 2), ("= $G_6\n", "= $G_A\n", 1),
     ("graine de la course v6-2-s = ", "graine de la course maieutique = ", 1), ("graine de la course v6-2 = ", "graine de la course audit = ", 1),
-    ("MODE=simulation COURSE=v6-2 ", "MODE=simulation COURSE=audit ", 6), ("MODE=simulation COURSE=v6-2-s ", "MODE=simulation COURSE=maieutique ", 1),
+    ("MODE=simulation COURSE=v6-2 ", "MODE=simulation COURSE=maieutique ", 6), ("MODE=simulation COURSE=v6-2-s ", "MODE=simulation COURSE=maieutique ", 1),
     (' PREREG="$E/entrees/prereg-sain.md" PREREG_SHA256="$SHA_PR"', ' TEXTE="$E/entrees/prereg-sain.md" TEXTE_SHA256="$SHA_PR"', 2),
     (' PREREG="$E/entrees/prereg-mutant.md" PREREG_SHA256="$SHA_PRM"', ' TEXTE="$E/entrees/prereg-mutant.md" TEXTE_SHA256="$SHA_PRM"', 1),
-    ("pilote4-gemini-v6-2-v1", "course-audit-gemini-v6-2-v1", 22), ("pilote4-gemini-v6-2-s-v1", "course-maieutique-gemini-v6-2-v1", 2),
+    ("pilote4-gemini-v6-2-v1", "course-maieutique-gemini-v6-2-v1", 22), ("pilote4-gemini-v6-2-s-v1", "course-maieutique-gemini-v6-2-v1", 2),
     ("cas-sain-v6-2-s", "cas-sain-maieutique", 1),
-    ("GO-2026-10-25-02", "GO-2026-10-26-04", 12),
+    ("GO-2026-10-25-02", "GO-2026-10-26-05", 12),
     ("lanceur : lancer_pilote4_gemini_v11.sh, sha256 $H/", "lanceur : lancer_courses_question_v12.sh, sha256 $H/", 1),
     ("@@GO_PILOTE4@@", "GO-2026-10-25-02", 5), ("@@NOM_PILOTE4_M@@", "pilote4-gemini-v6-2-v1", 1), ("@@NOM_PILOTE4_S@@", "pilote4-gemini-v6-2-s-v1", 1),
+    ("commits postérieurs à 8e5e2f7b hors des pièces du pilote", "commits postérieurs à 9beee10b hors des pièces du pilote", 4),   # noyau attendu (NOYAU_COMMIT du lanceur v12)
+    ("chemins permis après 8e5e2f7b", "chemins permis après 9beee10b (noyau attendu)", 1),
 ]:
     remplacer(ancien, nouveau, n)
 for motif, permis in (("v6-2-s", 17), ("v5.3", 2), ("6251ab21", 1), ("8b1c7511", 3), ("a54da93e", 4), ('PREREG="$E/', 0), ('PREREG_SHA256="$SHA_PR"', 0), ("$G_S\n", 0), ("$G_6", 0), ("G_S=", 0), ("G_6=", 0),
                       ("V6=", 0), (" V62=", 0), ("VSC=", 0), ("VS=", 0), ('"$VS', 0), ("P_REEL", 0), ("REEL_S", 0), ("LANCEUR_V62", 0), ("EMP_V62", 0), ("copie_v62", 0),
-                      ("pilote4-gemini-v6-2-v1", 1), ("pilote4-gemini-v6-2-s-v1", 1), ("GO-2026-10-25-02", 5), ("GO-2026-10-26-05", 25), ("GO-2026-10-26-04", 31),
-                      ("course-maieutique-gemini-v6-2-v1", 11), ("course-audit-gemini-v6-2-v1", 27), ("COURSE=audit", 26), ("COURSE=maieutique", 12),
-                      ("TEXTE=", 14), ("TEXTE_SHA256=", 14), ("ESSAI_JOURNAL_GARDE", 7), ("garde_artefact", 5), ("journal_garde ", 5), ("ligne_go ", 17),
-                      ("verifier_absent_texte", 5), ("essais_lanceur_question_v14.sh", 1), ("deriver_essais_question_v14.py", 1), ("lancer_courses_question_v12.sh", 2),
-                      (Q_M, 1), (Q_A, 1), ("eb03bad5", 5), ("@@", 0)):
+                      ("pilote4-gemini-v6-2-v1", 1), ("pilote4-gemini-v6-2-s-v1", 1), ("GO-2026-10-25-02", 5), ("GO-2026-10-26-05", 38), ("GO-2026-10-26-04", 20),
+                      ("course-maieutique-gemini-v6-2-v1", 34), ("course-audit-gemini-v6-2-v1", 5), ("COURSE=audit", 27), ("COURSE=maieutique", 18),
+                      ("TEXTE=", 14), ("TEXTE_SHA256=", 14), ("ESSAI_JOURNAL_GARDE", 8), ("garde_artefact", 9), ("garde_sans_arret", 6), ("journal_garde ", 13), ("ligne_go ", 19),
+                      ("verifier_absent_texte", 7), ("essais_lanceur_question_v14.sh", 1), ("deriver_essais_question_v14.py", 1), ("lancer_courses_question_v12.sh", 2),
+                      ("8e5e2f7b", 0), ("9beee10b", 9), ("61ddd638", 0), ("20000", 0), ("100000", 1), ("journal-garde-monoculture.jsonl", 0), ("MOTIF_REEL_M", 4), ("suite_journal", 4),
+                      ("6d2ad200d3c45833933bd6f20bfc80cf6b7e0afabe0bf32f8c50ff6950173294", 1), ("7f79273db464bbbb00e83372d970e93553acf1b306e60708aa95ab6d9b3b6050", 1), ("fec0cb82", 2),
+                      ("monoculture_analytique*", 11), ("règle", 5),
+                      (Q_M, 1), (Q_A, 1), ("eb03bad5", 3), ("@@", 0)):
     k = t.count(motif)
     if k != permis:
         sys.exit(f"refus : {motif!r} présent {k} fois après dérivation (attendu {permis})")

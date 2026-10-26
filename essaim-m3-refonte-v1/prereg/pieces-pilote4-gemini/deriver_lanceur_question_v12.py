@@ -17,7 +17,8 @@ quatrième pilote (`lancer_pilote4_gemini_v11.sh`, 21854b79…), par remplacemen
    vides ; une annexe aux trois champs vides n'est pas servie, un emplacement à moitié rempli est un refus ; `question.md` =
    question, puis pour chaque annexe servie (numérotées dans l'ordre) une ligne `---`, un titre `# Annexe k — <chemin>
    (sha256 <empreinte>)` et son contenu (une ligne vide avant et après chaque séparateur et chaque titre) ; la question servie
-   doit tenir dans la borne du noyau 8e5e2f7b, 20 000 caractères (`question.py`, CARACTERES_MAX_QUESTION) : refus sinon ;
+   doit tenir dans la borne du noyau (paramètre QUESTION_CARACTERES_MAX, 100 000 caractères au noyau 9beee10b, vérifié égal à
+   CARACTERES_MAX_QUESTION de `question.py` du code attendu) : refus sinon ;
    SHA_QUESTION reste celle de la question de base (ligne de GO, LANCEMENT.md) ; ligne nouvelle « question servie :
    question.md, sha256 …, N caractères » ; en simulation, ESSAI_ANNEXE_1_COMMIT, ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA
    (ensemble) remplacent l'annexe 1 (annexe synthétique de la batterie) ; artefacts d'essai `question` (fichier servi
@@ -30,7 +31,17 @@ quatrième pilote (`lancer_pilote4_gemini_v11.sh`, 21854b79…), par remplacemen
    question en REFUS ou dont `fin` porte une raison d'arrêt de sûreté (liste close de `statut_reponse` et REFUS_GEMINI du
    collisionneur v2.5, chargé par le noyau), tue le noyau et ses enfants par PID, écrit la ligne « arrêt par la garde
    refus-question » et la pièce `garde-refus-question-v1.json` (poussée) : la course est fermée sans reprise ;
-   ESSAI_JOURNAL_GARDE (simulation seulement) remplace le journal lu.
+   ESSAI_JOURNAL_GARDE (simulation seulement) remplace le journal lu. Règle de conv-audit (26 octobre 2026, après le journal
+   réel de g001 de la course M du pilote 4 : 120 appels de tâche `monoculture_analytique`, cinq en REFUS, avant la question) :
+   (a) un appel refusé de l'un des quatre rôles propres à la question (`monoculture_croisee`, `sonde_orthogonale_onsager`,
+   `critique_adversariale_limites`, `arbitre_synthese_contradictoire`) arrête toujours ; (b) un appel refusé de
+   `monoculture_analytique` (qui sert aussi les tâches) arrête seulement s'il vient après le premier appel de rôle
+   `moissonneur_*` de g001, ou s'il est au-delà du 120e appel de ce rôle en g001 (120 tâches servies, une caste par tâche :
+   le 121e est une caste de la question) ; sinon rien ;
+5. noyau attendu en paramètre (NOYAU_COMMIT = `9beee10b`, seul changement depuis `8e5e2f7b` : la borne de la question
+   portée de 20 000 à 100 000 caractères, `question.py` ; NOYAU_EMPREINTE_PROPRE = empreinte de l'arbre essaim_m3/noyau sans
+   bytecode à ce commit, 192b2128… ; QUESTION_CARACTERES_MAX = 100000) : le code de la copie (essaim_m3, tests, collisionneur)
+   doit être identique à ce commit, lui-même ancêtre de HEAD, les commits postérieurs limités aux chemins permis.
 
 Usage : python3 -I deriver_lanceur_question_v12.py LANCEUR_V11 SORTIE
 Refuse si l'empreinte du lanceur v11 n'est pas 21854b79…, si une occurrence n'est pas au nombre attendu, si le bloc de la
@@ -63,8 +74,9 @@ remplacements = [
      "# paramètres en tête : une à remplir, la transcription expurgée d'un rapport) dans `question.md` ; GO par course, donné\n"
      "# par session-depot (GO_ID) ; porte « course v6.2 précédente » retirée (rien n'est exigé des courses du pilote 4) ; les\n"
      "# clés `v6-2` et `v6-2-s` refusées ; garde « refus-question » (veilleur de fond sur le journal d'appels vivant de g001 : au\n"
-     "# premier appel d'un rôle des castes de la question en REFUS ou arrêté pour sûreté, le noyau est tué et la course fermée\n"
-     "# sans reprise) ; écart consigné dans `diff-lanceur-v11-vers-v12.txt`), la v11 dérivée du lanceur v10\n", 1),
+     "# premier appel refusé d'un rôle propre à la question, ou de `monoculture_analytique` après le premier appel `moissonneur_*`\n"
+     "# de g001 ou au-delà de son 120e appel, le noyau est tué et la course fermée sans reprise) ; noyau attendu en paramètre\n"
+     "# (NOYAU_COMMIT 9beee10b : borne de la question 100 000 caractères) ; écart consigné dans `diff-lanceur-v11-vers-v12.txt`), la v11 dérivée du lanceur v10\n", 1),
     ("la porte « v6.2 précédente » (v9 ; dans l'ordre inverse jusqu'au v8)\n",
      "la porte « v6.2 précédente » (v9 ; dans l'ordre inverse jusqu'au v8 ; retirée en v12)\n", 1),
     ("# Objet des deux courses (M, puis S) : la v6.2.1, dossier `organisme/` — la v5.3 ne court pas (décision de Lazar, R-492), et la clé\n"
@@ -107,8 +119,8 @@ remplacements = [
      "#      quatre emplacements (ANNEXE_k_COMMIT, ANNEXE_k_CHEMIN, ANNEXE_k_SHA) ; un emplacement aux trois champs vides n'est pas\n"
      "#      servi (les annexes servies sont numérotées dans l'ordre), un emplacement à moitié rempli est un refus ; l'annexe 1 — la\n"
      "#      transcription expurgée d'un rapport, chemin, commit et empreinte donnés par session-depot — est à remplir avant le\n"
-     "#      départ. La question servie (question, puis annexes) doit tenir dans la borne du noyau 8e5e2f7b : 20 000 caractères\n"
-     "#      (essaim_m3/noyau/question.py, CARACTERES_MAX_QUESTION), vérifiée à l'étape (3). En simulation, ESSAI_ANNEXE_1_COMMIT,\n"
+     "#      départ. La question servie (question, puis annexes) doit tenir dans la borne du noyau (QUESTION_CARACTERES_MAX ci-dessous,\n"
+     "#      égale à CARACTERES_MAX_QUESTION de essaim_m3/noyau/question.py au noyau attendu), vérifiée à l'étape (3). En simulation, ESSAI_ANNEXE_1_COMMIT,\n"
      "#      ESSAI_ANNEXE_1_CHEMIN et ESSAI_ANNEXE_1_SHA (ensemble) remplacent l'annexe 1 (annexe synthétique de la batterie). ----\n"
      "QUESTION_MAIEUTIQUE_COMMIT=eb03bad56ece1e755afa5e264948d0c44416f6cc\n"
      "QUESTION_MAIEUTIQUE_CHEMIN=brouillons/questions-organismes-20261026-v1/question-hypotheses-maieutique-organismes-v1.md\n"
@@ -128,7 +140,26 @@ remplacements = [
      "ANNEXE_4_COMMIT=\n"
      "ANNEXE_4_CHEMIN=\n"
      "ANNEXE_4_SHA=\n"
+     "# ---- Noyau attendu (décision de conv-audit du 26 octobre 2026) : le commit du code (essaim_m3, tests, collisionneur) auquel\n"
+     "#      HEAD de la copie doit être identique (lui-même ancêtre de HEAD, commits postérieurs limités aux chemins permis),\n"
+     "#      l'empreinte de l'arbre essaim_m3/noyau sans bytecode à ce commit, et la borne de la question servie à ce commit\n"
+     "#      (question.py, CARACTERES_MAX_QUESTION, vérifiée égale) : les trois lignes vont ensemble. 9beee10b = 8e5e2f7b plus la borne\n"
+     "#      portée de 20 000 à 100 000 caractères (seul changement du noyau ; tests du noyau passés chez conv-audit). ----\n"
+     "NOYAU_COMMIT=9beee10be4b66525a4ae98d69237abeb34ffbdac\n"
+     "NOYAU_EMPREINTE_PROPRE=192b21283292df14b3e21cd454cb34bc213e8e49a8867a99243d28d9a4abc7d7\n"
+     "QUESTION_CARACTERES_MAX=100000\n"
      "# ---- fin des paramètres ----\n\n", 1),
+    # commit du code et empreinte du noyau : les paramètres
+    ("COMMIT_CODE=8e5e2f7b8bde522e4b5ce0229a9da57e118d32f3\n", 'COMMIT_CODE="$NOYAU_COMMIT"   # paramètre en tête (noyau attendu)\n', 1),
+    ("CODE_NOYAU_PROPRE=61ddd638d7a3b5519a7294fc04a75003e3d21da72b9cfdcf4dd07dc0341565a0\n", 'CODE_NOYAU_PROPRE="$NOYAU_EMPREINTE_PROPRE"   # paramètre en tête (noyau attendu)\n', 1),
+    ("# 1. Code identique à 8e5e2f7b (commit et arbre de travail, collisionneur compris) ; commits postérieurs limités aux pièces\n",
+     "# 1. Code identique au noyau attendu, NOYAU_COMMIT (commit et arbre de travail, collisionneur compris) ; commits postérieurs limités aux pièces\n", 1),
+    ('refus "code de HEAD différent de 8e5e2f7b (essaim_m3, tests ou collisionneur)"', 'refus "code de HEAD différent de ${NOYAU_COMMIT:0:8} (essaim_m3, tests ou collisionneur)"', 1),
+    ('refus "arbre de travail différent de 8e5e2f7b (essaim_m3, tests ou collisionneur)"', 'refus "arbre de travail différent de ${NOYAU_COMMIT:0:8} (essaim_m3, tests ou collisionneur)"', 1),
+    ('refus "8e5e2f7b non ancêtre de HEAD"', 'refus "${NOYAU_COMMIT:0:8} non ancêtre de HEAD"', 1),
+    ('refus "commits postérieurs à 8e5e2f7b hors des pièces du pilote : $(echo $hors_pieces)"', 'refus "commits postérieurs à ${NOYAU_COMMIT:0:8} hors des pièces du pilote : $(echo $hors_pieces)"', 1),
+    ('note "- code : identique à 8e5e2f7b (commit et arbre de travail : essaim_m3, tests, collisionneur) ;', 'note "- code : identique à ${NOYAU_COMMIT:0:8} (noyau attendu ; commit et arbre de travail : essaim_m3, tests, collisionneur) ;', 1),
+    ('refus "empreinte du noyau nettoyé $code_noyau ≠ 61ddd638…"', 'refus "empreinte du noyau nettoyé $code_noyau ≠ ${CODE_NOYAU_PROPRE:0:8}… (NOYAU_EMPREINTE_PROPRE)"', 1),
     # clé de course, GO
     ('COURSE="${COURSE:?COURSE=v6-2-s ou COURSE=v6-2}"\n',
      'COURSE="${COURSE:?COURSE=maieutique ou COURSE=audit}"\n'
@@ -208,7 +239,7 @@ remplacements = [
     # chemins permis après le code : le texte des courses à question et ses contre-lectures
     ("# Chemins que les commits postérieurs à 8e5e2f7b peuvent toucher : le texte du second pilote, ses pièces et ses\n"
      "# contre-lectures ; ce texte, ses pièces et ses contre-lectures ; dossier des pilotes\n",
-     "# Chemins que les commits postérieurs à 8e5e2f7b peuvent toucher : le texte du second pilote, ses pièces et ses\n"
+     "# Chemins que les commits postérieurs au noyau attendu (NOYAU_COMMIT) peuvent toucher : le texte du second pilote, ses pièces et ses\n"
      "# contre-lectures ; les textes du pilote 4, leurs pièces et leurs contre-lectures ; le texte des courses à question et ses\n"
      "# contre-lectures (ses pièces sont sous pieces-pilote4-gemini/) ; dossier des pilotes\n", 1),
     ("|pilote4-gemini-organisme-v[0-9]+\\.md(\\.sha256)?|pieces-pilote4-gemini/.+|contre-lectures/pilote4-gemini-organisme-v[0-9]+-cl[0-9]+\\.md(\\.sha256)?)|banque/",
@@ -253,7 +284,8 @@ remplacements = [
      "# question de base présente au commit cité et d'empreinte juste ; annexes servies : les emplacements de la course dont les trois\n"
      "# champs sont remplis, dans l'ordre (un emplacement à moitié rempli est un refus), chacune présente à son commit et d'empreinte\n"
      "# juste ; la question servie (question.md) est leur composé, écrit au segment 1 et revérifié à chaque segment (empreinte du\n"
-     "# composé recalculée depuis le dépôt) ; elle doit tenir dans la borne du noyau (20 000 caractères, question.py)\n"
+     "# composé recalculée depuis le dépôt) ; elle doit tenir dans la borne du noyau (QUESTION_CARACTERES_MAX, vérifiée égale à\n"
+     "# CARACTERES_MAX_QUESTION de question.py du code attendu : 100 000 caractères au noyau 9beee10b)\n"
      'git -C "$DEPOT" cat-file -e "$COMMIT_QUESTION:$CHEMIN_QUESTION" 2>/dev/null || refus "question ($CHEMIN_QUESTION) absente du commit ${COMMIT_QUESTION:0:8}…"\n'
      '[ "$(git -C "$DEPOT" show "$COMMIT_QUESTION:$CHEMIN_QUESTION" | sha256sum | cut -d\' \' -f1)" = "$SHA_QUESTION" ] || refus "empreinte de la question ≠ ${SHA_QUESTION:0:8}…"\n'
      "AN_COMMITS=(); AN_CHEMINS=(); AN_SHAS=(); n_annexes=0\n"
@@ -276,7 +308,9 @@ remplacements = [
      '[ "$ART" = question ] && printf \'\\n\' >> "$PILOTE/question.md"\n'
      '[ "$(sha256sum "$PILOTE/question.md" | cut -d\' \' -f1)" = "$SHA_QUESTION_SERVIE" ] || refus "empreinte de la question servie ≠ ${SHA_QUESTION_SERVIE:0:8}… (question.md altéré, ou composé autrement qu\'au segment 1)"\n'
      'N_CARACTERES_QUESTION="$("$PY" -I -c \'import sys; print(len(open(sys.argv[1], encoding="utf-8").read()))\' "$PILOTE/question.md")"\n'
-     '[ "$N_CARACTERES_QUESTION" -le 20000 ] || refus "question servie de $N_CARACTERES_QUESTION caractères > 20000 (borne du noyau 8e5e2f7b, essaim_m3/noyau/question.py, CARACTERES_MAX_QUESTION) : le noyau la refuserait avant tout appel"\n'
+     'BORNE_NOYAU="$(cd "$R" && env -u PYTHONPATH "$PY" -B -I -c \'import sys; sys.path.insert(0, "."); from essaim_m3.noyau import question; print(question.CARACTERES_MAX_QUESTION)\' 2>/dev/null || echo illisible)"\n'
+     '[ "$BORNE_NOYAU" = "$QUESTION_CARACTERES_MAX" ] || refus "QUESTION_CARACTERES_MAX=$QUESTION_CARACTERES_MAX ≠ CARACTERES_MAX_QUESTION du noyau ($BORNE_NOYAU, essaim_m3/noyau/question.py) : paramètre et noyau attendu vont ensemble"\n'
+     '[ "$N_CARACTERES_QUESTION" -le "$QUESTION_CARACTERES_MAX" ] || refus "question servie de $N_CARACTERES_QUESTION caractères > $QUESTION_CARACTERES_MAX (borne du noyau ${NOYAU_COMMIT:0:8}, essaim_m3/noyau/question.py, CARACTERES_MAX_QUESTION) : le noyau la refuserait avant tout appel"\n'
      'note "- organisme : $N_FICHIERS_ORGANISME fichiers, empreinte d\'arbre $ARBRE_ORGANISME ; question ($COURSE) : sha256 $SHA_QUESTION (${CHEMIN_QUESTION##*/}, commit ${COMMIT_QUESTION:0:8}…) ; annexes servies : $n_annexes$(for ((i = 0; i < n_annexes; i++)); do printf \' ; annexe %d : %s %s %s\' "$((i + 1))" "${AN_CHEMINS[i]}" "${AN_COMMITS[i]}" "${AN_SHAS[i]}"; done)"\n'
      'note "- question servie : question.md, sha256 $SHA_QUESTION_SERVIE, $N_CARACTERES_QUESTION caractères"\n'
      '[ "$COURSE" = audit ] && [ "$n_annexes" = 0 ] && note "- RÉSERVE : course « audit » sans aucune annexe servie (l\'annexe 1, transcription expurgée du rapport, est-elle remplie ?)"\n', 1),
@@ -305,17 +339,27 @@ remplacements = [
      "#   reposée sous d'autres rôles) : veilleur de fond, lancé avec le noyau et arrêté par son PID à la fin de la course. Dès que la\n"
      "#   course est en cours (même critère que le minuteur), il lit toutes les 2 s le journal d'appels vivant de l'unité g001 (dossier\n"
      "#   du noyau de la génération, dans l'espace des organismes : <espace>/travail/<lignée>/g001.noyau/journal-appels.jsonl ;\n"
-     "#   lignes complètes seulement ; champs rôle, statut, fin — jamais un texte). Au premier appel dont le rôle est l'un des rôles\n"
-     "#   des castes de la question ouverte de la v6.2.1 et dont le statut est REFUS, ou dont le champ `fin` porte une raison\n"
-     "#   d'arrêt de sûreté (liste close des conventions du noyau : `statut_reponse` et REFUS_GEMINI de collisionneur_v2.py,\n"
-     "#   213b52ef…, chargé par essaim_m3/noyau/appels.py — les raisons qui valent REFUS), il écrit le marqueur\n"
+     "#   lignes complètes seulement ; champs id, rôle, statut, fin — jamais un texte). Un appel est « refusé » si son statut est REFUS\n"
+     "#   ou si son champ `fin` porte une raison d'arrêt de sûreté (liste close des conventions du noyau : `statut_reponse` et\n"
+     "#   REFUS_GEMINI de collisionneur_v2.py, 213b52ef…, chargé par essaim_m3/noyau/appels.py — les raisons qui valent REFUS).\n"
+     "#   Règle (conv-audit, 26 octobre 2026, après le journal réel de g001 de la course M du pilote 4 : 120 appels de tâche\n"
+     "#   `monoculture_analytique`, cinq en REFUS, avant la question, qui vient après l'appel `moissonneur_formulation_requetes`) :\n"
+     "#   (a) un appel refusé de l'un des quatre rôles propres à la question ouverte de la v6.2.1 (ROLES_QUESTION_PROPRES) arrête\n"
+     "#   toujours ; (b) un appel refusé du rôle qui sert aussi les tâches de la banque (ROLE_TACHES_ET_QUESTION) arrête seulement\n"
+     "#   s'il vient après le premier appel de rôle PREFIXE_MOISSONNEUR* de g001, ou s'il est au-delà du APPELS_TACHES_MAX-ième appel\n"
+     "#   de ce rôle en g001 (120 tâches servies, une caste par tâche sous les bornes du pilote 4 : le 121e est une caste de la\n"
+     "#   question) ; sinon rien (refus de tâche) ; un refus sur un autre rôle ne fait rien. Alors il écrit le marqueur\n"
      "#   garde-refus-question-v1.json, tue le noyau (son groupe de processus, puis les sessions de ses enfants directs : organisme\n"
-     "#   en bac à sable, entraîneur — par PID, R10), écrit la ligne « arrêt par la garde refus-question » au LANCEMENT.md : la course\n"
-     "#   est fermée sans reprise (étape 8a : liste fermée poussée avec ce qui existe ; le noyau tué n'écrit pas l'archive de g001,\n"
-     "#   son journal vivant reste dans l'espace, archivé dans ferme.tar.gz, jamais lu ; si ferme.tar.gz n'est pas écrite, les\n"
-     "#   copies ouvertes restent dans ce conteneur, non poussées, et la réserve « ARCHIVE FERMÉE INCOMPLÈTE » est consignée). Un\n"
-     "#   refus sur un autre rôle ne fait rien. En simulation, ESSAI_JOURNAL_GARDE remplace le journal lu (R5 : cas sain, artefacts).\n"
-     'ROLES_QUESTION="monoculture_analytique monoculture_croisee sonde_orthogonale_onsager critique_adversariale_limites arbitre_synthese_contradictoire"\n'
+     "#   en bac à sable, entraîneur — par PID, R10), écrit la ligne « arrêt par la garde refus-question » au LANCEMENT.md (la règle\n"
+     "#   qui a joué à la ligne suivante et dans la pièce) : la course est fermée sans reprise (étape 8a : liste fermée poussée avec\n"
+     "#   ce qui existe ; le noyau tué n'écrit pas l'archive de g001, son journal vivant reste dans l'espace, archivé dans\n"
+     "#   ferme.tar.gz, jamais lu ; si ferme.tar.gz n'est pas écrite, les copies ouvertes restent dans ce conteneur, non poussées,\n"
+     "#   et la réserve « ARCHIVE FERMÉE INCOMPLÈTE » est consignée). En simulation, ESSAI_JOURNAL_GARDE remplace le journal lu\n"
+     "#   (R5 : cas sain, motif réel de la course M, artefacts).\n"
+     'ROLES_QUESTION_PROPRES="monoculture_croisee sonde_orthogonale_onsager critique_adversariale_limites arbitre_synthese_contradictoire"\n'
+     'ROLE_TACHES_ET_QUESTION=monoculture_analytique\n'
+     'PREFIXE_MOISSONNEUR=moissonneur_\n'
+     'APPELS_TACHES_MAX=120\n'
      'FINS_SURETE="refusal SAFETY PROHIBITED_CONTENT BLOCKLIST SPII RECITATION IMAGE_SAFETY BLOCAGE_PROMPT"\n'
      'JOURNAL_GARDE="$ESPACE_ATTENDU/travail/$LIGNEE/g001.noyau/journal-appels.jsonl"; JOURNAL_GARDE_ESSAI=""\n'
      'if [ "$MODE" = simulation ] && [ -n "${ESSAI_JOURNAL_GARDE:-}" ]; then JOURNAL_GARDE="$ESSAI_JOURNAL_GARDE"; JOURNAL_GARDE_ESSAI=" (ESSAI : journal synthétique)"; fi\n'
@@ -330,35 +374,55 @@ remplacements = [
      '  echo "$enfants"\n'
      "}\n"
      "garde_refus_question() {\n"
-     "  local verdict s heure enfants ID ROLE STATUT FIN\n"
+     "  local verdict s heure enfants ID ROLE STATUT FIN REGLE\n"
      "  trap 'exit 0' TERM\n"
      '  while kill -0 "$PID" 2>/dev/null; do\n'
      '    if course_en_cours && [ -f "$JOURNAL_GARDE" ]; then\n'
      '      verdict="$("$PY" -I -c \'\n'
      "import json, sys\n"
-     "chemin, roles, fins = sys.argv[1], set(sys.argv[2].split()), set(sys.argv[3].split())\n"
+     "chemin, propres, role_taches, prefixe, taches_max, fins = sys.argv[1], set(sys.argv[2].split()), sys.argv[3], sys.argv[4], int(sys.argv[5]), set(sys.argv[6].split())\n"
      "try:\n"
      '    lignes = open(chemin, encoding="utf-8", errors="replace").read().split("\\n")[:-1]\n'
      "except OSError:\n"
      "    sys.exit(0)\n"
+     "rang, moissonneur = 0, None   # rang de l appel parmi ceux du rôle des tâches ; id du premier appel moissonneur_*\n"
      "for l in lignes:\n"
      "    try:\n"
      "        e = json.loads(l)\n"
      "    except Exception:\n"
      "        continue\n"
-     '    if isinstance(e, dict) and e.get("role") in roles and (e.get("statut") == "REFUS" or e.get("fin") in fins):\n'
-     '        print(json.dumps({k: e.get(k) for k in ("id", "role", "statut", "fin", "espece", "etape", "categorie", "debut_utc", "fin_utc", "sha256_prompt")}, ensure_ascii=False, sort_keys=True))\n'
-     "        break\n"
-     '\' "$JOURNAL_GARDE" "$ROLES_QUESTION" "$FINS_SURETE" 2>/dev/null || true)"\n'
+     "    if not isinstance(e, dict):\n"
+     "        continue\n"
+     '    role = e.get("role") if isinstance(e.get("role"), str) else ""\n'
+     "    if moissonneur is None and role.startswith(prefixe):\n"
+     '        moissonneur = e.get("id")\n'
+     "    if role == role_taches:\n"
+     "        rang += 1\n"
+     '    if not (e.get("statut") == "REFUS" or e.get("fin") in fins):\n'
+     "        continue\n"
+     "    if role in propres:\n"
+     '        regle = "rôle propre à la question"\n'
+     "    elif role == role_taches and moissonneur is not None:\n"
+     '        regle = f"{role_taches} après le premier appel {prefixe}* de g001 ({moissonneur})"\n'
+     "    elif role == role_taches and rang > taches_max:\n"
+     '        regle = f"{role_taches} au rang {rang} > {taches_max} (au-delà des tâches servies)"\n'
+     "    else:\n"
+     "        continue\n"
+     '    v = {k: e.get(k) for k in ("id", "role", "statut", "fin", "espece", "etape", "categorie", "debut_utc", "fin_utc", "sha256_prompt")}\n'
+     '    v.update({"regle": regle, "rang_role_taches": rang if role == role_taches else None, "premier_moissonneur": moissonneur})\n'
+     "    print(json.dumps(v, ensure_ascii=False, sort_keys=True))\n"
+     "    break\n"
+     '\' "$JOURNAL_GARDE" "$ROLES_QUESTION_PROPRES" "$ROLE_TACHES_ET_QUESTION" "$PREFIXE_MOISSONNEUR" "$APPELS_TACHES_MAX" "$FINS_SURETE" 2>/dev/null || true)"\n'
      '      if [ -n "$verdict" ]; then\n'
      "        trap '' TERM\n"
      '        heure="$(date -u +%Y-%m-%dT%H:%M:%SZ)"\n'
      '        { printf \'%s\\n\' "$verdict" > "$MARQUEUR_GARDE.tmp" && mv "$MARQUEUR_GARDE.tmp" "$MARQUEUR_GARDE"; } || true\n'
      '        enfants="$(tuer_noyau)"\n'
      '        read -r ID ROLE STATUT FIN <<< "$("$PY" -I -c \'import json, sys; e = json.loads(sys.argv[1]); print(e.get("id"), e.get("role"), e.get("statut"), e.get("fin"))\' "$verdict" 2>/dev/null || echo "? ? ? ?")"\n'
-     '        "$PY" -I -c \'import json, sys; json.dump({"appel": json.loads(sys.argv[1]), "heure_utc": sys.argv[2], "journal": sys.argv[3], "pid_noyau": int(sys.argv[4]), "groupe_noyau": sys.argv[5], "pid_enfants_tues": [int(p) for p in sys.argv[6].split()], "roles_question": sys.argv[7].split(), "fins_surete": sys.argv[8].split()}, open(sys.argv[9], "w", encoding="utf-8"), ensure_ascii=False, indent=1)\' "$verdict" "$heure" "$JOURNAL_GARDE" "$PID" "$PGID_NOYAU" "$enfants" "$ROLES_QUESTION" "$FINS_SURETE" "$MARQUEUR_GARDE" 2>/dev/null || true\n'
+     '        REGLE="$("$PY" -I -c \'import json, sys; print(json.loads(sys.argv[1]).get("regle", "?"))\' "$verdict" 2>/dev/null || echo "?")"\n'
+     '        "$PY" -I -c \'import json, sys; json.dump({"appel": json.loads(sys.argv[1]), "heure_utc": sys.argv[2], "journal": sys.argv[3], "pid_noyau": int(sys.argv[4]), "groupe_noyau": sys.argv[5], "pid_enfants_tues": [int(p) for p in sys.argv[6].split()], "regle": json.loads(sys.argv[1]).get("regle"), "roles_question_propres": sys.argv[7].split(), "role_taches_et_question": sys.argv[8], "prefixe_moissonneur": sys.argv[9], "appels_taches_max": int(sys.argv[10]), "fins_surete": sys.argv[11].split()}, open(sys.argv[12], "w", encoding="utf-8"), ensure_ascii=False, indent=1)\' "$verdict" "$heure" "$JOURNAL_GARDE" "$PID" "$PGID_NOYAU" "$enfants" "$ROLES_QUESTION_PROPRES" "$ROLE_TACHES_ET_QUESTION" "$PREFIXE_MOISSONNEUR" "$APPELS_TACHES_MAX" "$FINS_SURETE" "$MARQUEUR_GARDE" 2>/dev/null || true\n'
      '        note "- arrêt par la garde refus-question : appel $ID, rôle $ROLE, statut $STATUT, fin $FIN ($heure) ; course fermée sans reprise"\n'
-     '        note "- garde refus-question : noyau $PID (groupe ${PGID_NOYAU:-illisible}) tué, enfants directs tués par PID :${enfants:+ $enfants}${enfants:- aucun} ; pièce $(basename "$MARQUEUR_GARDE") (appel, heure, PID)"\n'
+     '        note "- garde refus-question : règle « $REGLE » ; noyau $PID (groupe ${PGID_NOYAU:-illisible}) tué, enfants directs tués par PID :${enfants:+ $enfants}${enfants:- aucun} ; pièce $(basename "$MARQUEUR_GARDE") (appel, règle, heure, PID)"\n'
      "        exit 0\n"
      "      fi\n"
      "    fi\n"
@@ -367,7 +431,7 @@ remplacements = [
      "  done\n"
      "}\n"
      "garde_refus_question & GARDE=$!\n"
-     'note "- garde refus-question : veilleur PID $GARDE ; journal vivant de g001 : $JOURNAL_GARDE$JOURNAL_GARDE_ESSAI, lu toutes les 2 s dès que la course est en cours ; rôles : $ROLES_QUESTION ; raisons d\'arrêt de sûreté : $FINS_SURETE"\n'
+     'note "- garde refus-question : veilleur PID $GARDE ; journal vivant de g001 : $JOURNAL_GARDE$JOURNAL_GARDE_ESSAI, lu toutes les 2 s dès que la course est en cours ; rôles propres à la question : $ROLES_QUESTION_PROPRES ; $ROLE_TACHES_ET_QUESTION : refus après le premier appel ${PREFIXE_MOISSONNEUR}* de g001 ou au-delà du ${APPELS_TACHES_MAX}e appel de ce rôle ; raisons d\'arrêt de sûreté : $FINS_SURETE"\n'
      'set +e; wait "$PID"; CODE=$?; set -e\n'
      'kill "$MINUTEUR" 2>/dev/null || true\n'
      'wait "$MINUTEUR" 2>/dev/null || true\n'
@@ -416,11 +480,14 @@ for motif, permis in (("v6-2-s", 7), ("v5.3", 0), ("v5-3-v6", 3), ("pilote4-gemi
                       ("1d29fbecd52b1dfc94410e117f786811067f86f3cce24c4c54bbe424e480e3a3", 1), ("ec3abf2880bdb52fd6193a1994893a0c380c3557a70c94b8f20749220447c4a4", 1),
                       ("dd2c1016", 1), ("2fd63bad", 0), ("29b32f62", 0), ("2204256d", 0), ("question-audit-controle-organismes-v1.md", 1),
                       ("ANNEXE_1_COMMIT", 9), ("ANNEXE_4_SHA=", 1), ("QUESTION_AUDIT_", 6), ("QUESTION_MAIEUTIQUE_", 6), ("ESSAI_ANNEXE_1_", 21),
-                      ("n_annexes", 7), ("AN_CHEMINS", 5), ("20000", 2), ("CARACTERES_MAX_QUESTION", 2),
+                      ("n_annexes", 7), ("AN_CHEMINS", 5), ("20000", 0), ("20 000", 1), ("100000", 1), ("100 000", 3), ("CARACTERES_MAX_QUESTION", 6), ("QUESTION_CARACTERES_MAX", 8), ("BORNE_NOYAU", 3),
+                      ("NOYAU_COMMIT", 11), ("NOYAU_EMPREINTE_PROPRE", 3), ("9beee10be4b66525a4ae98d69237abeb34ffbdac", 1), ("9beee10b", 4), ("192b21283292df14b3e21cd454cb34bc213e8e49a8867a99243d28d9a4abc7d7", 1),
+                      ("8e5e2f7b", 2), ("61ddd638", 0), ("COMMIT_CODE", 6), ("CODE_NOYAU_PROPRE", 3),
                       ("a54da93e", 0), ("8b1c7511", 0), ("4772b525", 0), ("a15809b8", 0),
                       ("7ea32705c5437d91ed071dd95fb3209bb0b0035e", 2), ("4f13647a7070b3941b660d60c428620df6b4e0e31cea1d2c63d71b8606e6214d", 2),
                       ("ANNEXES", 3), ("SHA_QUESTION_SERVIE", 4), ("composer_question", 3), ("N_CARACTERES_QUESTION", 4),
-                      ("ROLES_QUESTION", 4), ("FINS_SURETE", 4), ("JOURNAL_GARDE", 14), ("MARQUEUR_GARDE", 7), ("GARDE_ARRET", 6), ("garde_refus_question", 2),
+                      ("ROLES_QUESTION", 5), ("ROLES_QUESTION_PROPRES", 5), ("ROLE_TACHES_ET_QUESTION", 5), ("PREFIXE_MOISSONNEUR", 5), ("APPELS_TACHES_MAX", 5), ("FINS_SURETE", 4),
+                      ("regle", 8), ("REGLE", 3), ("rang_role_taches", 1), ("premier_moissonneur", 1), ("moissonneur", 12), ("JOURNAL_GARDE", 14), ("MARQUEUR_GARDE", 7), ("GARDE_ARRET", 6), ("garde_refus_question", 2),
                       ("tuer_noyau", 2), ("PGID_NOYAU", 5), ("groupe_de", 3), ("setsid", 4), ("ESSAI_JOURNAL_GARDE", 5), ("garde-refus-question-v1", 8),
                       ("lancer_courses_question_v12.sh", 1), ("deriver_lanceur_question_v12.py", 1), ("diff-lanceur-v11-vers-v12.txt", 1),
                       ("courses-question-gemini-v6-2-v", 4), ("sceller_courses_question_v6.py", 1), ("lancer_pilote4_gemini_v11.sh", 0)):
