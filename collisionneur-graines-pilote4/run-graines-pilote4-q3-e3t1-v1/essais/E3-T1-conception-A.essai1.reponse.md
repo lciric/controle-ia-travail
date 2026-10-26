@@ -1,0 +1,157 @@
+# Cellule A — Tour III.1 : graines de plus pour le pilote 4 ?
+
+**Pièces.** Le bloc FAITS est vide par ordre de l'arbitre ; je n'y ajoute rien. Tout le « cadre » du bloc QUESTION est donc de statut **RAPPORTÉ** (par la lignée B via l'arbitre), y compris les nombres du calcul de graines, que je n'ai pas pu auditer autrement qu'en les recalculant (voir § 2). Rien ici n'est VÉRIFIÉ.
+
+Point de départ que je retiens, car il change la question : depuis la v3, le pilote 4 n'a **qu'un objet** (v6.2.1) et **deux questions** (M, S). La comparaison v6.2.1 contre v5.3 est hors du pilote 4. Des graines de plus sur la v3 ne peuvent donc plus « séparer deux objets » ; elles ne peuvent acheter que trois choses : (i) une estimation de σ et ρ par question, (ii) une base pour juger une **correction** de la v6.2.1 par la boucle de conception, (iii) des faits sur la divergence des trajectoires. C'est à l'aune de ces trois achats que je discute (a), (b), (c).
+
+---
+
+## (a) Ce que la question suppose sans l'établir
+
+| # | Présupposé | Statut | Pourquoi ce n'est pas établi |
+|---|---|---|---|
+| A1 | « Graine » est l'unité de réplication pertinente. | HYPOTHÈSE | Le cadre dit lui-même que le non-déterminisme des modèles appelés « ne dépend d'aucune graine ». Deux courses à la même graine peuvent diverger ; deux graines peuvent converger. L'unité réelle est *la course* ; la graine n'en contrôle qu'une partie inconnue. |
+| A2 | σ (part « course ») estimé sur la v3 est transférable à la v6. | HYPOTHÈSE | σ est un mélange de trajectoire (rondes arrêtées par l'organisme, mutations) et de dérive d'interface. La trajectoire dépend des tâches rendues en `test` : une banque plus grande change ce que l'organisme voit et donc sa trajectoire. |
+| A3 | ρ est transférable. | HYPOTHÈSE, plus faible encore que A2 | ρ est une propriété tâche × organisme (reproductibilité d'une classification par tâche). Il dépend de la composition de la banque (v6, lot 3, « environ deux fois plus », composition non décrite). |
+| A4 | Trois graines permettent de *mesurer* σ. | HYPOTHÈSE (réfutable par calcul, § 2) | Avec R courses, la variance entre courses a R − 1 degrés de liberté. À R = 3, l'intervalle à 95 % sur σ² couvre environ un facteur 150 (0,27 × à 40 × l'estimation ; chi-deux à 2 ddl ; illustratif). On ne *mesure* pas σ à R = 3 ; on détecte au mieux « σ énorme » ou « trajectoires identiques ». |
+| A5 | Les deux courses du texte en vigueur peuvent compter comme première graine sans biais si le texte nouveau précède toute lecture de **score**. | OBSERVÉ-NON-AUDITÉ | Les faits mécaniques (rondes, arrêts, coûts, durées) sont lisibles avant les scores et corrélés aux scores de façon inconnue. La retenue porte sur les scores, pas sur ces faits : la sélection qu'elle exclut est partielle. |
+| A6 | Le modèle V = σ² + (1 − ρ) p (1 − p)/n est le bon pour la question posée. | RAPPORTÉ, recalculé partiellement (§ 2) | Il est cohérent pour la différence de moyennes de deux objets sur les *mêmes* tâches. Il n'est pas le bon pour comparer un objet à **sa version corrigée** si la correction change la part `test` consommée (trajectoire différente) : la part partagée des tâches ne s'annule plus de la même manière. |
+| A7 | « Aucune course du pilote 4 n'est versée dans (b) » suffit à isoler (b). | HYPOTHÈSE | L'isolement des *données* n'isole pas le *dessin* : δ, R, mesure principale, règle de palier de (b) peuvent être réorientés par ce qu'on lit sur la v3 (§ 4, piège P5). |
+| A8 | La dérive des modèles appelés est négligeable à l'échelle de quelques courses. | HYPOTHÈSE | Non mesurée. Des courses espacées de plusieurs heures mélangent dérive et graine. |
+
+---
+
+## 1. Ce que des graines achètent, et pour quelle décision
+
+**Décisions qui changeraient avec R = 3 ou 5 et pas avec R = 1 (sur un seul objet, deux questions) :**
+
+1. **Dimensionner (b).** C'est l'achat principal, et il porte sur σ, pas sur ρ. Dans le modèle rapporté, avec n ≈ 120 tâches (v6, « environ deux fois 60 », illustratif), p = 0,75, ρ = 0 : à σ = 0, l'écart minimal à R = 4 par objet vaut ≈ 0,09 (< δ = 0,10 : palier 1 suffisant) ; à σ = 0,05 il vaut ≈ 0,15 (palier 1 sous-dimensionné ; palier 2 à R = 8 redescend vers ≈ 0,10). Tous illustratifs, dérivés du modèle rapporté. Autrement dit : **savoir si σ est « proche de 0 » ou « ≥ 0,05 » décide si (b) doit prévoir son second palier par défaut.** Mais A4 rappelle que R = 3 ne distingue pas 0,02 de 0,05 ; il distingue 0 de 0,15.
+2. **Juger une correction de la v6.2.1.** Sans graine, la boucle extérieure ne peut pas dire si une correction a changé la course au-delà du bruit de course. Avec R = 3 avant et R = 3 après, elle peut le dire pour des écarts ≥ 0,14 à 0,22 (familles séparées, chiffres rapportés) — c'est-à-dire seulement pour des corrections qui transforment l'organisme. Les petites corrections restent indécidables à R = 3 et R = 5.
+3. **Choisir la mesure principale de (b).** Si les deux familles ont des σ très différents (par exemple si la délégation, à 24 tâches, montre une variabilité de course bien plus forte), la mesure « familles réunies » noie la famille stable ; R = 3 par question peut le révéler, R = 1 non. Mais (b) a déjà sa mesure écrite : voir P5.
+4. **Dimensionner la boucle extérieure.** Si les trajectoires de deux courses à même graine divergent déjà (fait mécanique), le registre d'hypothèses doit prévoir une classe « indécidable par trajectoire » distincte de « indécidable par bruit de tâches ».
+
+**Ce qui ne change pas avec des graines :** abandonner un objet (il n'y en a plus qu'un dans le pilote 4) ; fixer δ (δ = 0,10 est une décision de valeur, pas de bruit ; le pilote ne la change pas, il dit seulement si elle est atteignable).
+
+**Même dépense ailleurs.** Quatre courses (≈ 180 USD, rapporté illustratif) sur la v3 contre : (i) la même somme versée dans (b) : elle finance environ deux tiers du palier 1 de (b), sur la banque qui compte, mais ne dit rien *avant* (b) ; (ii) une **course nulle** (même objet, même question, deux fois) : c'est exactement ce que (a) fait déjà, puisque le pilote 4 n'a plus qu'un objet — une « course nulle » et « une graine de plus par question » sont la même chose. L'option (a) est donc, de fait, **deux courses nulles à R = 3**.
+
+**Transférabilité v3 → v6.** σ : transférable *si* la part de course vient de l'interface et de la règle d'arrêt des rondes, non des tâches ; HYPOTHÈSE testable par le duel D3 (§ 3). ρ : peu transférable (A3). Les faits mécaniques (nombre de rondes, retours arrière) : transférables comme *ordre de grandeur* de la divergence des trajectoires.
+
+---
+
+## 2. Règle de lecture permise à R graines
+
+**Sur le modèle de la lignée B.** J'ai recalculé trois cases : à p = 0,75, n = 36, R = 3, (t₀,₉₇₅ + t₀,₈₀ ; 4 ddl) ≈ 2,776 + 0,941 = 3,717 ; σ = 0, ρ = 0 : √(2 × 0,005208/3) × 3,717 ≈ 0,22 ; ρ = 0,6 : ≈ 0,14 ; σ = 0,05, ρ = 0,6 : ≈ 0,21. Les trois concordent avec les chiffres rapportés ; le script reste non audité.
+
+Sur le fond :
+- **Appariement sur les tâches « ignoré »** : non, il est implicite. Les deux objets voient le même ensemble fixe de tâches ; la part de difficulté partagée (ρ p(1 − p)/n) est constante d'une graine à l'autre et s'annule dans la différence des moyennes. La variance empirique entre graines des moyennes de fin de course estime bien V. Un modèle mixte tâche × graine n'apporterait qu'une chose : estimer ρ à partir de la concordance par tâche entre graines (n paires par couple de graines, donc bien mieux estimé que σ) et permettre un test sur l'interaction tâche × objet. Il ne gagne pas de degrés de liberté pour l'effet « objet » : l'unité de réplication reste la course.
+- **Degrés de liberté** : 2R − 2 est correct pour le t à deux échantillons à variances égales. L'approximation additive des quantiles surestime légèrement la puissance à petits ddl (la statistique exacte suit une t non centrale) ; à R = 3 cela compte.
+- **Quand σ domine** : n disparaît du problème ; la v6 (n doublé) n'achète rien ; seul R compte ; et le palier 2 de (b) devient la règle, non l'exception. C'est précisément pourquoi σ est la seule quantité dont la mesure sur la v3 vaut quelque chose — et pourquoi A4 (R = 3 ne la mesure pas) est le nœud.
+- **Lacune** : le modèle ne traite pas la comparaison « objet d'origine contre objet corrigé » quand la correction change la part `test` consommée. Il faut alors ajouter une composante trajectoire × objet, non estimable à R = 3.
+
+**Règle de lecture cohérente avec un pilote de conception** (à geler avant la première lecture, par empreinte) :
+
+1. Par course : la règle en vigueur (Wilson 97,5 % par classe ; McNemar exact g0 contre g3 sur `test_final`, Holm à 0,05, au plus quatre tests). Inchangée.
+2. Entre graines d'une même (objet, question) : **aucun test de signification** ; uniquement (i) l'écart-type empirique des exactitudes finales, avec son intervalle chi-deux à R − 1 ddl, (ii) la concordance par tâche entre graines (estimation de ρ), (iii) le tableau des faits mécaniques par graine. On consigne σ̂ et ρ̂ comme « OBSERVÉ-NON-AUDITÉ, pilote de conception, R − 1 ddl ».
+3. Entre objet d'origine et objet corrigé : test de permutation sur les moyennes de fin de course (3 contre 3 : p minimal 0,05 unilatéral, donc **non testable en bilatéral** ; 5 contre 5 : 1/252) ou t à 2R − 2 ddl ; dans les deux cas *exploratoire*, étiqueté « hypothèse de conception tenue / éliminée / indécidable » et jamais « résultat ».
+4. Ce qui reste exploratoire quoi qu'on fasse : tout ce qui touche les deux objets v6.2.1 / v5.3 ; toute lecture après correction de l'organisme (chemins multiples, § 4).
+
+---
+
+## 3. Autres dessins, et les duels qui les départagent
+
+### Dessins
+
+- **D-a** (a, trois par question) : quatre courses de plus. Achète σ̂ à 2 ddl par question, ρ̂, trajectoires. Coût ≈ 180/300 USD (rapporté). Inconvénient : A4 — on ne saura pas si σ vaut 0,02 ou 0,06, seule plage qui change le palier de (b).
+- **D-b** (cinq) : σ̂ à 4 ddl (intervalle sur σ² ≈ 0,36 × à 8,3 ×, illustratif). Mieux, pas assez pour décider finement. Coût double, retard double de (b).
+- **D-c** (une course) : rien sur σ ; la boucle extérieure travaille sans savoir si ce qu'elle corrige est un effet ou une trajectoire.
+- **D-1** « une graine de plus, lecture mécanique d'abord » : une seconde course par question (2 courses, ≈ 90/150 USD illustratif, dérivé des chiffres rapportés par course). On lit **d'abord les faits mécaniques seuls** (sans score) : si les deux trajectoires sont quasi identiques (même nombre de rondes, mêmes mutations acceptées), σ est dominé par l'interface et l'on s'arrête (passer à (b) avec palier 1) ; si elles divergent, on ajoute une troisième graine et l'on prévoit le palier 2 de (b) par défaut. Règle d'arrêt écrite d'avance (D1, ci-dessous). Avantage : moitié du coût, décision sur ce qui est lisible sans score. Inconvénient : 1 ddl sur σ, c'est-à-dire aucune estimation chiffrée ; on n'achète qu'un fait binaire.
+- **D-2** graines pour la boucle seulement : courses après correction, pas avant. Inconvénient : sans base R ≥ 2 sur l'objet d'origine, l'après-correction est inlisible ; c'est D-c déguisé.
+- **D-3** courses plus courtes à plus de graines (2 générations notées au lieu de 4) : permet R = 5 au prix de R = 3 (illustratif). Mesure σ de la *partie amont* (rondes de conception + 2 générations), pas de la course complète. Utile si la divergence naît dans les rondes de conception ; inutile si elle naît aux générations 3–4. C'est l'objet du duel D2.
+- **D-4** attendre (b) : (b) à 4 graines par objet mesure σ sur la v6 elle-même, à 3 ddl par objet, là où ça compte, et le palier 2 est déjà prévu. Coût zéro aujourd'hui ; coût réel : (b) peut être sous-dimensionné au palier 1 sans qu'on le sache avant d'avoir dépensé ≈ 270 USD, et la boucle de conception travaille à l'aveugle sur la v3 en attendant.
+
+### Duels (B4)
+
+**D1 — La divergence de course est-elle visible sans score ?**
+- H_A : deux courses de même (objet, question), graines différentes, divergent dans leur trajectoire (nombre de rondes de conception, mutations acceptées, retours arrière).
+- H_B : les trajectoires sont identiques à l'arrêt d'interface près (mêmes comptes, mêmes rondes arrêtées).
+- Métrique : nombre de rondes de conception ; nombre de mutations acceptées ; nombre de retours arrière ; coût par génération. Seuil, écrit d'avance : « divergence » si au moins deux des quatre comptes diffèrent de plus d'une unité (illustratif).
+- Contrôle négatif : deux courses à la **même** graine (coût d'une course de plus). Si elles divergent autant que deux graines différentes, la graine n'est pas l'unité (A1 réfutée) et l'on compte en « courses ».
+- Falsification : H_A fausse ⇒ σ est quasi entièrement d'interface ; D-a et D-b n'achètent rien que D-1 n'achète ; palier 1 de (b) tenu. H_B fausse ⇒ la trajectoire est une source réelle ; R = 1 est inlisible pour la boucle de conception, et (b) doit budgéter le palier 2.
+
+**D2 — Où naît la divergence ?**
+- H_A : la divergence est acquise à la fin des rondes de conception (avant la première génération notée).
+- H_B : elle naît pendant les générations notées (mutations de la règle de récompense par l'architecte).
+- Métrique : concordance par tâche sur `test` entre graines, à la génération 0 contre à la génération 3 (ρ̂₀, ρ̂₃).
+- Seuil : H_A si ρ̂₀ ≈ ρ̂₃ (différence < 0,1, illustratif) ; H_B si ρ̂₃ < ρ̂₀ − 0,1.
+- Contrôle négatif : architecte neutralisé (paramètres figés) sur une graine — si la divergence persiste, elle n'est pas due à l'architecte. Coût : une course.
+- Falsification : H_A fausse ⇒ D-3 (courses courtes) est valide ; H_B fausse ⇒ D-3 mesure la mauvaise chose, et le modèle σ constant par course est faux (σ croît avec la génération).
+
+**D3 — σ est-il transférable à la v6 ?** (duel à conduire dans (b), non dans le pilote 4)
+- H_A : σ̂(v6, premier palier) est dans l'intervalle à 95 % de σ̂(v3) (large, A4).
+- H_B : il en sort.
+- Métrique : variance entre graines des moyennes finales de la v6.2.1 sur la v6, 3 ddl.
+- Contrôle négatif : même calcul sur la v5.3 (objet « simple », attendu moins variable) : si σ̂(v5.3) ≥ σ̂(v6.2.1), la variabilité n'est pas celle de la réécriture de soi mais de l'interface.
+- Falsification : H_A fausse ⇒ aucun dimensionnement de (b) par le pilote 4 n'est légitime, rétroactivement ; H_B fausse ⇒ le pilote 4 avait une valeur de dimensionnement, à consigner pour les pilotes suivants.
+
+**D4 — La règle de lecture à R = 3 tient-elle son taux de fausses alertes ?** (duel numérique, sans course)
+- H_A : la règle « permutation 3 contre 3 + étiquetage tenue/éliminée » déclare « éliminée » ou « tenue » dans ≤ 5 % des cas sous l'hypothèse nulle simulée (même objet, deux lots de 3 graines tirés du même σ, ρ).
+- H_B : > 5 %.
+- Voir § (c).
+
+---
+
+## 4. Pièges
+
+- **P1 — Objet corrigé.** Compter par **empreinte d'objet** : chaque texte poussé ouvre une série de graines ; les graines de l'objet d'origine ne se versent jamais dans la série de l'objet corrigé. La comparaison origine / corrigé est une comparaison à deux objets, soumise aux écarts minimaux rapportés (≥ 0,14 à R = 3). La boucle extérieure doit l'écrire comme telle dans le registre.
+- **P2 — Chemins multiples.** Une boucle d'essais-erreurs qui relit après chaque correction fait un nombre non borné de tests. Remède partiel, cohérent avec le statut : aucune étiquette « résultat », registre d'hypothèses avec horodatage avant score, et **journal des lectures** (qui a lu quoi, quand). On ne peut pas corriger la multiplicité ; on peut la rendre comptable.
+- **P3 — Dérive des modèles appelés.** Les graines de D-a doivent être **entrelacées** (M₂, S₂, M₃, S₃) et horodatées ; une course nulle séparée de 12 h (illustratif) de sa jumelle mesure dérive + graine, pas la graine. Si l'interface expose une version de modèle, la consigner par course ; sinon, le dire.
+- **P4 — Multiplicité interne.** Hypothèses × générations × familles × parts : la règle en vigueur (quatre McNemar, Holm) borne la lecture par course ; elle ne borne rien entre graines ni entre corrections. À geler : « aucun test entre graines ; un seul test exploratoire origine / corrigé par correction, sur `test_final`, familles réunies ».
+- **P5 — Première graine « gratuite » et orientation de (b).** Pousser le texte nouveau avant toute lecture de score exclut la sélection *sur le score* (« la première course est bonne, ajoutons des graines »). Elle n'exclut pas la sélection sur les faits mécaniques (A5), ni la dépendance de dessin : si la lecture à R = 3 montre σ grand, on sera tenté d'élargir δ, de changer la mesure principale ou de passer directement au palier 2 de (b). Une réserve déclarée protège contre le changement *silencieux* ; elle ne protège pas contre le changement *déclaré* après lecture, qui est tout de même un chemin multiple. À geler dans (b), par empreinte, **avant tout score du pilote 4** : δ, mesure principale, R des deux paliers, règle de passage au palier 2, règle d'arrêt, et une clause explicite : « σ̂(v3) peut déclencher le palier 2 d'office ; il ne peut changer ni δ ni la mesure ». C'est la seule influence du pilote 4 sur (b) que je trouve défendable, parce qu'elle est écrite d'avance et à sens unique (elle ne peut que *renforcer* (b)).
+
+---
+
+## 5. Ce qui est connu (références citables)
+
+- Pilotes internes pour réestimer la variance : Wittes & Brittain, 1990, *The role of internal pilot studies in increasing the efficiency of clinical trials*, Statistics in Medicine ; Birkett & Day, 1994, *Internal pilot studies for estimating sample size*, Statistics in Medicine ; revue : Proschan, 2005, *Two-stage sample size re-estimation based on a nuisance parameter: a review*, Journal of Biopharmaceutical Statistics (référence à vérifier pour le titre exact). Leçon transférable : réestimer une variance de nuisance en cours d'essai, sans toucher à δ, perturbe peu le risque de première espèce ; c'est le patron de la clause P5.
+- Pilotes trop petits pour dimensionner : Kraemer, Mintz, Noda, Tinklenberg & Yesavage, 2006, *Caution regarding the use of pilot studies to guide power calculations for study proposals*, Archives of General Psychiatry ; Julious, 2005, *Sample size of 12 per group rule of thumb for a pilot study*, Pharmaceutical Statistics ; Whitehead, Julious, Cooper & Campbell, 2016, *Estimating the sample size for a pilot randomised trial to minimise the overall trial sample size…*, Statistical Methods in Medical Research (référence à vérifier). Leçon : à 2–4 ddl, l'estimation de variance est si imprécise qu'un dimensionnement « au point » est illusoire ; on dimensionne sur une borne haute.
+- Lire un pilote sans en tirer un signe : Lancaster, Dodd & Williamson, 2004, *Design and analysis of pilot studies: recommendations for good practice*, Journal of Evaluation in Clinical Practice.
+- Valeur de l'information : Raiffa & Schlaifer, 1961, *Applied Statistical Decision Theory*.
+- Variance entre exécutions en apprentissage automatique et nombre de répétitions : Henderson et al., 2018, *Deep reinforcement learning that matters*, AAAI ; Colas, Sigaud & Oudeyer, 2018, *How many random seeds? Statistical power analysis in deep RL experiments* (prépublication, identifiant non donné) ; Agarwal, Schwarzer, Castro, Courville & Bellemare, 2021, *Deep reinforcement learning at the edge of the statistical precipice*, NeurIPS ; Bouthillier et al., 2021, *Accounting for variance in machine learning benchmarks*, MLSys. Pour les évaluations de modèles de langue avec intervalle sur les questions : Miller, 2024, *Adding error bars to evals* (référence à vérifier).
+- Chemins multiples : Gelman & Loken, 2014, *The statistical crisis in science*, American Scientist (référence à vérifier). Holm, 1979, *A simple sequentially rejective multiple test procedure*, Scandinavian Journal of Statistics.
+- Variance entre exécutions d'**agents** fondés sur des modèles de langue avec réécriture de soi : je ne connais pas de référence attribuable avec certitude ; « référence à vérifier », et je préfère ne rien citer de mémoire.
+
+---
+
+## (c) Instruments nommés : mesure minimale de fonctionnement
+
+Tous les cas « honnêtes » ci-dessous sont des **simulations numériques** à partir du modèle rapporté (aucun appel de modèle, aucune tâche réelle) ; les taux cibles sont illustratifs.
+
+| Instrument | Cas honnêtes appariés | Vérification mécanique à battre | Taux de détection à atteindre | Fausses alertes tolérées |
+|---|---|---|---|---|
+| Wilson 97,5 % par classe, moyennées | 10⁴ tirages binomiaux appariés par famille (36/24 tâches), p ∈ {0,5 ; 0,75 ; 0,9} | couverture exacte de Clopper-Pearson | sans objet (intervalle) | couverture ≥ 95 % à chaque p ; sinon l'instrument ne tient pas sa promesse |
+| McNemar exact g0/g3 + Holm | 10⁴ paires de vecteurs de 60 tâches sous nulle (même p, ρ ∈ {0 ; 0,6}) et sous écart 0,15 | test de signe exact | ≥ 0,8 à écart 0,15, ρ = 0,6 (illustratif) | ≤ 0,05 familywise sous nulle |
+| t à 2R − 2 ddl sur moyennes finales | 10⁴ lots (R, σ, ρ) sous nulle et sous écart égal à l'écart minimal rapporté | permutation exacte | ≥ 0,75 à l'écart minimal (la formule promet 0,8 ; l'écart mesure le biais de l'approximation additive) | ≤ 0,05 bilatéral |
+| Permutation 3 contre 3 / 5 contre 5 | mêmes lots | t ci-dessus | à R = 3 : non applicable en bilatéral (p min 0,10) ; à R = 5 : ≥ 0,7 à l'écart minimal | ≤ 0,05 |
+| Modèle mixte tâche × graine | matrices tâche × graine × objet simulées à ρ connu | concordance par tâche (κ ou corrélation) pour ρ̂ ; t ci-dessus pour l'effet objet | ρ̂ à ± 0,15 de ρ à R = 3 (illustratif) ; gain de puissance sur l'effet objet nul attendu (A6) | ≤ 0,05 |
+| Boucle extérieure (agents neufs lisant contre le bruit, registre d'hypothèses) | 20 tableaux de scores synthétiques (illustratif) : 10 sous nulle, 10 avec écart ≥ 0,2 ; les agents ignorent lesquels | la règle mécanique (McNemar + Holm) appliquée aux mêmes tableaux | ≥ 8/10 écarts étiquetés « tenue » | ≤ 1/10 nulles étiquetées autrement qu'« indécidable » ; **si la boucle fait moins bien que la règle mécanique, elle n'ajoute rien et son coût en agents n'est pas justifié** |
+| Registre d'hypothèses écrit avant score | relecture par un agent neuf des étiquettes attribuées, horodatages à l'appui | diff entre registre horodaté et registre après lecture | sans objet | 0 hypothèse ajoutée après score sans mention « post hoc » |
+
+---
+
+## 6. Comment départager
+
+**Critères, dans l'ordre :** (1) ce que la décision doit changer dans (b) — seul σ compte, et seulement sa plage « nul / grand » ; (2) ce qui est lisible sans score ; (3) le délai imposé à la correction de l'organisme et à (b) ; (4) le coût.
+
+**Faits mécaniques des deux courses en cours qui changeraient le choix, sans aucun score :**
+- Nombre de rondes de conception et leur arrêt (par l'organisme ou par le plafond) : si l'organisme s'arrête dès la ronde 1 ou 2 sur M et S, la partie « trajectoire » est courte, D-3 n'a pas de sens, et la divergence attendue est faible → D-1 ou D-4.
+- Mutations acceptées et retours arrière par génération : s'il y en a beaucoup (≥ 3 par génération, illustratif), la trajectoire est une source de bruit plausible → D-1 avec passage probable à R = 3, et palier 2 de (b) par défaut.
+- Coût et durée réels par course : si ≈ 30 USD, D-b devient abordable ; si ≈ 55–75, D-1.
+- Toute panne d'interface ou relance : à consigner, car elle contamine A8.
+
+**Ce qu'il faudrait savoir de plus :** la date de la v6 (si lointaine, les graines v3 ont plus de valeur pour la boucle ; si proche, D-4) ; si l'interface expose une version de modèle.
+
+**Ce qui se décide sans ces faits :** geler (b) (P5) maintenant ; pousser le texte nouveau avec « séries par empreinte d'objet » et « entrelacement » maintenant, quel que soit R, puisque cela ne coûte rien et préserve la condition « avant toute lecture ». Attendre la fin des deux courses pour choisir R retarde la correction de l'organisme ; mais la boucle extérieure ne peut de toute façon pas lire avant la décision de Lazar.
+
+**Mon rapport d'opposition, pour qu'il soit attaqué :** (a) est recommandé par la lignée B pour mesurer σ ; A4 dit qu'à R = 3 on ne le mesure pas. Ce que (a) achète réellement, D-1 l'achète à moitié prix sur la part lisible sans score, avec une règle d'arrêt écrite (D1) et une clause à sens unique dans (b). (b) à cinq graines achète 4 ddl, encore insuffisants pour un dimensionnement fin, au double du retard. (c) laisse la boucle de conception travailler sans savoir si ce qu'elle voit est l'objet ou sa trajectoire. Je ne propose pas « la » réponse ; je dis que le choix entre D-1 et D-4 dépend des faits mécaniques des deux courses en cours, et que D-a n'est pas distinguable de D-1 + une graine sous condition.
+
+FIN-DE-CELLULE
