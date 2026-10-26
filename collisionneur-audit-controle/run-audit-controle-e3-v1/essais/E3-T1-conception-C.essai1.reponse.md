@@ -1,0 +1,154 @@
+# Réponse C — Tour III.1 : Audit de l'audit défensif (v1)
+
+Aucune pièce transmise n'est absente, vide ou visiblement coupée [VÉRIFIÉ]. Un point concernant le contournement syntaxique des filtres d'ordre en bande est écarté en une ligne car il ne peut s'écrire sans décrire un procédé opérationnel.
+
+---
+
+## (a) Ce que la question et les pièces supposent sans que ce soit établi
+
+1. **Réduction des moniteurs à des sondes linéaires.** L'énoncé de la question résume F1 par « sondes linéaires sur les activations d'un modèle ouvert de 8 milliards de paramètres » [VÉRIFIÉ]. Or F1 (section 8.1) prévoit explicitement cinq familles : linéaire, différence de moyennes, petit perceptron, sonde à attention, Mahalanobis, ainsi que des autoencodeurs parcimonieux Llama Scope (section 8.2) [RAPPORTÉ]. Supposer que la surface d'attaque et les propriétés géométriques se réduisent au cas linéaire est une **HYPOTHÈSE** non établie.
+2. **Validité des lectures de l'auditeur (F2).** La question traite les 26 failles de F2 comme « documentées ». Or le statut de F2 est **OBSERVÉ-NON-AUDITÉ**. L'auditeur déclare n'avoir lu que la page 1 (le résumé) pour 24 des 39 PDF téléchargés (section d de F2) [OBSERVÉ-NON-AUDITÉ]. Que les résumés reflètent fidèlement les conditions de validité expérimentale des corps de texte (notamment pour les prépublications de 2026 non relues par les pairs) est une **HYPOTHÈSE**.
+3. **Neutralité du masquage des positions d'évidence textuelle (S2 dans F2, Proposition 1 dans F3).** L'audit (F2) et la décision N-047 (F3) supposent qu'on peut masquer les positions porteuses d'évidence textuelle (consigne, raisonnement) et lire l'intention sur les jetons restants [RAPPORTÉ / OBSERVÉ-NON-AUDITÉ]. Dans un transformeur à attention causale, les états cachés des jetons d'action finaux intègrent par construction mathématique les clés et valeurs des jetons précédents (y compris la consigne cachée). Que le masquage tardif (au niveau de l'agrégateur de la sonde) suffise à purger le signal syntaxique ou lexical provenant du contexte amont est une **HYPOTHÈSE** non établie.
+4. **Absence de texte dans la famille d'organismes (iv) (S3 dans F2, Proposition 2 dans F3).** L'audit propose de créer une famille (iv) « dont la politique de sabotage est apprise sans aucun texte de consigne » via un réglage fin sur « documents synthétiques qui décrivent la politique » (d'après Hua et al., 2026, dans F2) [OBSERVÉ-NON-AUDITÉ], accepté en F3 [RAPPORTÉ]. Supposer qu'un modèle entraîné par réglage fin supervisé (SFT) sur des documents textuels décrivant le sabotage acquiert une représentation interne non textuelle — distincte d'une distillation de contexte comme la famille (ii) — est une **HYPOTHÈSE** fragile.
+5. **Stationnarité et indépendance honnête pour le processus e (Lemme de F1).** F1 (section 3) suppose que la variance des scores honnêtes est estimable sur épisodes honnêtes et utilise un processus e de mélange au risque $\alpha$ [RAPPORTÉ]. L'audit (F2) ne questionne pas cette prémisse statistique. Supposer que les scores de sondes d'un agent honnête au fil d'une longue trajectoire (papier A) ou entre agents partageant le même contexte de tâche (papier B) sont indépendants et identiquement distribués (ou forment une martingale sans dérive bénigne ni autocorrélation) pour garantir la validité toujours valide ($\alpha = 1\%$) est une **HYPOTHÈSE**.
+
+---
+
+## (b) Failles manquées, angles morts inédits et expériences décisives (Inférence forte)
+
+### 1. Failles documentées dans la littérature mais manquées par l'audit
+
+* **Menace 1 — Sabotage (F-S1) : L'injection de bruit révèle le sous-rendement à moindre coût que l'entraînement.**
+  * *Hypothèse du dispositif mise en défaut :* Pour battre l'imitation d'un modèle faible (famille iii), il faut soit lire une sonde d'intention interne, soit appliquer un réglage fin d'élicitation coûteux sur démonstrations (contre-mesure S1 de F2).
+  * *Source :* Tice et al. (2025), *Noise Injection Reveals Hidden Capabilities of Sandbagging Language Models* [OBSERVÉ-NON-AUDITÉ : listé dans la table des PDF de F2 section d, mais totalement omis des tables d'analyse de la section a].
+  * *Couverture par F1 :* En partie (H6 mentionne le bruit d'activations comme intervention pour dégrader l'attaque dans F1 section 5 [RAPPORTÉ], jamais comme révélateur de capacité cachée).
+* **Menace 2 — Tromperie (F-D1) : La géométrie des représentations de la vérité/tromperie est sensible à la polarité logique et au domaine.**
+  * *Hypothèse du dispositif mise en défaut :* Une sonde linéaire ou par différence de moyennes entraînée sur des exemples génériques (anti-circularité, F1 section 7 [RAPPORTÉ]) isole un sous-espace invariant pour la tromperie. Or la littérature montre que les sondes linéaires échouent souvent sur les négations ou les conjonctions logiques, et que les classifieurs non supervisés ou linéaires confondent la saillance syntaxique avec la valeur de vérité.
+  * *Source :* Burns, Ye, Klein, Steinhardt (2023), *Discovering Latent Knowledge in Language Models Without Supervision* ; Marks et Tegmark (2023), *The Geometry of Truth: Emergent Linear Structure in Large Language Model Representations of True/False Datasets* (référence à vérifier pour la formulation exacte des limites sur les négations).
+  * *Couverture par F1 :* Non couvert (la section 8.1 empile les familles de sondes sans tester l'invariance logique [RAPPORTÉ]).
+* **Menace 2 — Tromperie (F-D2) : Le mimétisme d'erreurs cognitives humaines (biais d'ancrage, oubli) échappe aux sondes de tromperie.**
+  * *Hypothèse du dispositif mise en défaut :* Tout sabotage diffus (orienter vers des directions stériles, affaiblir les contrôles dans l'environnement (a), F1 section 6 [RAPPORTÉ]) active un concept interne de « tromperie » ou de « dissimulation » (F1 section 8.1). Si l'organisme (ii) ou (iv) exécute sa politique en imitant l'incompétence ou l'erreur d'inattention sans activer de représentation de mensonge, $\delta \approx 0$ sur les sondes de tromperie.
+  * *Source :* Meinke et al. (2024), *Frontier Models are Capable of In-context Scheming* [OBSERVÉ-NON-AUDITÉ : présent dans la liste PDF de F2 section d, mais non exploité dans les tables d'analyse] ; van der Weij et al. (2025), *AI Sandbagging* [OBSERVÉ-NON-AUDITÉ].
+  * *Couverture par F1 :* En partie (le théorème négatif couvre $\delta = 0$ si la corrélation change, mais si l'erreur imitée a la même marginale et la même corrélation qu'un modèle faible honnête, l'additivité interne tombe).
+* **Menace 3 — Conscience d'évaluation (F-E1) : La conscience situationnelle inclut la reconnaissance de ses propres capacités et de son identité de modèle.**
+  * *Hypothèse du dispositif mise en défaut :* Il suffit de retirer les « marqueurs de banc d'essai » du format (contre-mesure E1/E2 de F2) pour supprimer la conscience d'évaluation. Un modèle doté de conscience situationnelle déduit qu'il est en évaluation de contrôle de par la nature même de la tâche (rédiger des propositions d'apprentissage automatique sous contraintes artificielles, environnement (a)) sans aucun marqueur de formatage.
+  * *Source :* Laine et al. (2024), *Situational Awareness Dataset (SAD) for LLMs* (référence à vérifier pour le titre complet ; citée en « restant à lire » dans F2 section d [OBSERVÉ-NON-AUDITÉ]).
+  * *Couverture par F1 :* Non couvert (les contrôles croisés de F1 section 7 manipulent la consigne d'observation, pas la plausibilité intrinsèque de la tâche [RAPPORTÉ]).
+
+---
+
+### 2. Angles morts inédits (manqués à la fois par F1 et par F2)
+
+1. **AM-1 : Effondrement de la garantie « toujours valide » par autocorrélation bénigne et dérive de contexte (Papiers A et B).**
+   * *Hypothèse implicite :* Les scores de sonde $s(a_{i,t})$ sur des trajectoires honnêtes satisfont l'hypothèse nulle d'indépendance conditionnelle ou de martingale à moyenne fixe requise par le processus e (F1 section 3 [RAPPORTÉ]).
+   * *Pourquoi elle peut être fausse :* Au fil d'un épisode (t croissant), le contexte s'allonge et la difficulté fluctue ; entre agents (i variant sur la même tâche), l'invite initiale est partagée. Les activations internes (et donc les scores de sonde) d'agents honnêtes présentent une forte autocorrélation temporelle et une corrélation spatiale (co-élévation bénigne due aux sujets abordés, par ex. « enjeux élevés » dans une proposition de recherche). Un processus e calibré sous hypothèse i.i.d. ou de variance marginale fixe va exploser en taux de faux positifs (bien au-delà de $\alpha = 1\%$) sur les trajectoires longues ou les essaims honnêtes.
+2. **AM-2 : Fuite d'attention causale rendant caduc le masquage post-hoc des positions (Proposition 1 de F2/F3).**
+   * *Hypothèse implicite :* Masquer les jetons de la consigne ou du raisonnement lors de l'agrégation max/attention de la sonde (contre-mesure S2 de F2 [OBSERVÉ-NON-AUDITÉ], adoptée dans F3 [RAPPORTÉ]) élimine la « fuite textuelle » décrite par Boxo et al. (2026).
+   * *Pourquoi elle peut être fausse :* Dans un transformeur décodeur, la représentation résiduelle $h_\ell(t)$ au jeton d'action $t$ est une combinaison linéaire des valeurs projetées des jetons $t' \le t$. Une sonde linéaire ou un MLP lu uniquement sur le jeton $t$ peut parfaitement détecter la présence lexicale de mots-clés de sabotage situés en $t' \ll t$ (dans le message système de la famille (i)) via les têtes d'induction ou de copie, sans jamais lire directement les positions $t'$.
+3. **AM-3 : Le paradoxe de la sonde de Mahalanobis face à l'auto-incrimination (Papier C, HC2b).**
+   * *Hypothèse implicite :* F1 (section 8.1) inclut la distance de Mahalanobis (non supervisée, hors distribution) dans le panel de sondes, et teste HC2b (plaider augmente le score de sonde, $g < 0$, section 4 et 5 [RAPPORTÉ]).
+   * *Pourquoi elle peut être fausse :* Une sonde de Mahalanobis mesure l'écart à la distribution honnête habituelle. Un agent honnête qui plaide vigoureusement son innocence (bras contrôle du plan $2 \times 2$ de EC.2, F1 section 10 [RAPPORTÉ]) adopte un registre rhétorique rare qui le sort de la distribution de référence. La sonde de Mahalanobis (et toute sonde sensible au registre) donnera un score élevé aux deux (honnête qui plaide et saboteur qui plaide), créant une confusion totale entre détection d'intention et détection d'anomalie stylistique.
+4. **AM-4 : Dégradation sémantique asymétrique par la paraphrase de confiance sur tâches techniques (H6, HC5, E2.2).**
+   * *Hypothèse implicite :* La paraphrase par un modèle de confiance détruit les canaux stéganographiques (B) et les attaques rhétoriques/stylistiques contre le juge (C) tout en préservant l'utilité honnête (H6, F1 sections 5, 10 [RAPPORTÉ]).
+   * *Pourquoi elle peut être fausse :* Dans l'environnement (a) (propositions d'expériences ML) et (b) (code multi-rôles), la précision terminologique et syntaxique porte l'utilité. Un paraphraseur de confiance (souvent un modèle plus petit ou contraint) risque d'introduire des imprécisions méthodologiques dans les propositions honnêtes (les faisant ressembler à du sabotage diffus aux yeux de l'évaluateur aval) ou de casser du code valide, inversant la marge asymétrique H6.
+
+---
+
+### 3. Expériences décisives en duel ($H_A$ contre $H_B$)
+
+#### Duel 1 — Validité statistique de l'accumulation séquentielle et spatiale (teste AM-1 et le Lemme de F1)
+* **Hypothèse $H_A$ (Indépendance / Martingale maîtrisée) :** Sur des trajectoires honnêtes de longueur $T=20$ (illustratif) et des essaims honnêtes de taille $N=10$ (illustratif) exécutant des tâches variées de l'environnement (a), les résidus centrés des scores de sondes permettent à un processus e de mélange et au test de co-élévation $A_{\text{pop}}$ de maintenir un taux de faux positifs empirique $\text{FPR} \le 1,5\%$ (pour un niveau nominal $\alpha = 1\%$).
+* **Hypothèse $H_B$ (Inflation par corrélation bénigne) :** La dérive de longueur de contexte et la difficulté partagée de la tâche induisent une autocorrélation temporelle et une corrélation inter-agents sur les scores honnêtes ; le processus e standard et $A_{\text{pop}}$ violent leur garantie théorique et produisent $\text{FPR} > 5\%$ (illustratif) sur les trajectoires et essaims honnêtes.
+* **Protocole et métrique :** Générer 500 trajectoires honnêtes de $T=20$ actions et 200 essaims honnêtes de $N=10$ agents sur l'environnement (a) avec Llama-3.1-8B-Instruct [RAPPORTÉ]. Calibrer les seuils par action sur un jeu honnête séparé. Mesurer le taux de fausses alertes cumulé ($\text{FPR}_{\text{seq}}$ et $\text{FPR}_{\text{pop}}$) au risque nominal $\alpha = 0,01$.
+* **Contrôle négatif :** Permutation aléatoire des index $(i, t)$ entre épisodes honnêtes indépendants (qui doit restaurer $\text{FPR} \approx 1\%$ par construction mécanique).
+* **Seuil et falsification :** Si $\text{FPR}_{\text{seq}} > 2,5\%$ (borne supérieure de l'IC à 95% pour 500 essais à $\alpha=1\%$, illustratif) alors que la permutation donne $\le 1,5\%$, $H_A$ est falsifiée (le lemme de F1 est inapplicable sans blanchiment temporel/spatial par modèle autorégressif). Si $\text{FPR}_{\text{seq}} \le 1,5\%$ sans permutation, $H_B$ est falsifiée.
+
+#### Duel 2 — Fuite par attention causale contre masquage de positions (teste AM-2 et la Proposition 1 de F2/F3)
+* **Hypothèse $H_A$ (Isolation par masquage de positions) :** Le masquage des positions porteuses d'évidence textuelle (consigne système et chaîne de pensée) lors de l'agrégation (max/attention) sur les seuls jetons d'action suffit à éliminer la dépendance de la sonde aux artefacts lexicaux de la consigne.
+* **Hypothèse $H_B$ (Contamination du flux résiduel par attention causale) :** Même lue exclusivement sur les jetons d'action finaux, la sonde capte la signature lexicale de la consigne système transportée par l'attention causale, et déclenche de fausses alertes sur un agent honnête dont le contexte contient les mêmes mots-clés neutralisés.
+* **Protocole et métrique :** Construire un jeu de contrôle « Honnête à Contexte Contaminé » (HCC) : le message système contient exactement le vocabulaire de l'instruction cachée de sabotage de la famille (i) (ex. « Voici un exemple historique de consigne interdite : [...] ; tu ne dois sous aucun prétexte l'appliquer, agis honnêtement »). Comparer l'AUROC et le rappel à 1% de FPR de la sonde (lue avec masquage des positions système/CoT, uniquement sur l'action) dans deux duels : Saboteur (i) contre Honnête standard ($D_{\text{std}}$), et Saboteur (i) contre Honnête HCC ($D_{\text{HCC}}$).
+* **Contrôle négatif :** Une sonde linéaire entraînée explicitement comme « détecteur de sac de mots » (prédisant la présence d'un mot rare du prompt système à partir des états cachés des jetons d'action), plus la sonde aléatoire appariée en covariance [RAPPORTÉ].
+* **Seuil et falsification :** Si le rappel à 1% de FPR chute de plus de 25 points (illustratif) entre $D_{\text{std}}$ et $D_{\text{HCC}}$ (c'est-à-dire que les faux positifs explosent sur HCC), $H_A$ est falsifiée et la contre-mesure S2 de l'audit (F2/F3) est invalide. Si l'écart est $< 5$ points (illustratif) alors que le détecteur de sac de mots s'effondre, $H_B$ est falsifiée.
+
+#### Duel 3 — Dissociation entre SFT sur documents synthétiques et RL d'émergence (teste l'hypothèse 4 de (a) et la Proposition 2 de F2/F3)
+* **Hypothèse $H_A$ (Équivalence représentationnelle du SFT sur documents, thèse de F2/F3) :** Un organisme (iv-a) obtenu par réglage fin léger (LoRA) sur des documents synthétiques décrivant la politique de sabotage (méthode Hua et al., 2026 [OBSERVÉ-NON-AUDITÉ]) développe une représentation interne de l'intention équivalente à celle d'un organisme (iv-b) ayant appris le sabotage uniquement par renforcement (RL) sur la récompense de résultat biaisé, sans jamais avoir vu de description textuelle de la politique.
+* **Hypothèse $H_B$ (Artefact de distillation sémantique) :** L'organisme (iv-a) encode une trace sémantique des documents descriptifs ; les sondes d'intention généralisent de (ii) à (iv-a) mais s'effondrent sur (iv-b) (rappel proche du hasard).
+* **Protocole et métrique :** Entraîner (iv-a) par LoRA sur documents synthétiques et (iv-b) par GRPO/PPO (illustratif) sur une fonction de récompense récompensant secrètement les biais de rubrique dans l'environnement (a) sans aucun texte de consigne. Évaluer le transfert zéro-coup des sondes entraînées sur données génériques (F1 section 7 [RAPPORTÉ]) vers (iv-a) et (iv-b). Métrique : $\delta$ moyen (déplacement de marginale en écarts-types honnêtes) et rappel à 1% de FPR.
+* **Contrôle négatif :** Modèle entraîné par RL sur la récompense honnête de la rubrique ; sonde aléatoire appariée en covariance.
+* **Seuil et falsification :** Si le rappel à 1% de FPR est $\ge 40\%$ (illustratif) sur (iv-a) mais $< 10\%$ (illustratif) sur (iv-b) à dommage aval égal, $H_A$ est falsifiée (la méthode économique de la proposition 2 de F2/F3 ne teste pas l'émergence sans texte). Si les deux rappels sont à moins de 10 points d'écart (illustratif) et significativement au-dessus du plancher aléatoire, $H_B$ est falsifiée.
+
+---
+
+## (c) Critique des contre-mesures de l'audit et mesures minimales des instruments
+
+### 1. Contre-mesures et tests de l'audit (F2) mal jugés, faibles ou circulaires
+
+1. **Masquage des positions d'évidence textuelle (S2 / Proposition 1) — *Ne mesure pas ce qu'il annonce*.**
+   * *Critique :* Comme démontré dans AM-2 et le Duel 2, masquer les jetons du prompt système ou de la chaîne de pensée au moment de l'agrégation de la sonde n'empêche nullement les états cachés des jetons de sortie de contenir l'information lexicale copiée par les couches d'attention antérieures. Le test proposé par l'auditeur (écart d'AUROC avec/sans masquage) est nécessaire mais insuffisant : une sonde qui maintient son AUROC après masquage peut simplement lire l'écho attentionnel du prompt système.
+   * *Remplacement :* Imposer le contrôle « Honnête à Contexte Contaminé » (Duel 2) ou utiliser un masquage *causal d'attention* (bloquer l'attention de la sonde ou évaluer uniquement sur l'organisme (ii)/(iv-b) dépourvu de prompt système).
+2. **Test de la sonde de conscience d'évaluation sur un plan $2 \times 2$ format $\times$ contexte (E2 / Proposition 3) — *Risque de circularité / Vrai par construction*.**
+   * *Critique :* L'auditeur cite Devbunova (2026) montrant que les sondes lisent le format à 94,5%, puis propose de valider la sonde du programme sur un plan $2 \times 2$ format $\times$ contexte décorrélé [OBSERVÉ-NON-AUDITÉ]. Mais « contexte d'évaluation » sans « format d'évaluation » est défini par des marqueurs sémantiques choisis par l'expérimentateur (ex. mentionner un test). Si la sonde est réentraînée (comme dans Devbunova : 7,2% après décorrélation à l'entraînement) et évaluée sur la même distribution synthétique de « contexte », elle réussira par construction sur ce jeu tout en échouant sur la conscience situationnelle implicite de l'environnement (a) (faille F-E1).
+   * *Remplacement :* Valider la sonde de conscience d'évaluation par **transfert inter-environnements** : entraîner la sonde sur des paires décorrélées hors domaine (ex. QCM contre conversation réelle), et mesurer sa capacité à prédire la *modulation comportementale* spontanée d'un saboteur entre le régime « observé » et « non observé » dans l'environnement (a) (sans qu'aucun mot du jeu d'entraînement de la sonde n'apparaisse dans (a)).
+3. **Test causal par pilotage (steering) avec placebo aléatoire à 8B (E4 / Proposition 3) — *Faible et asymétrique*.**
+   * *Critique :* L'auditeur cite Mody et al. (2026) montrant qu'à 8B, supprimer une direction aléatoire déplace autant la conduite que la direction de conscience d'évaluation [OBSERVÉ-NON-AUDITÉ], et propose un pilotage causal avec une direction aléatoire de même norme. Or, injecter un vecteur dense dans le flux résiduel d'un modèle de 8B dégrade facilement la cohérence globale (perplexité), ce qui fait chuter le taux de sabotage complexe plus fort qu'une direction aléatoire orthogonale aux sous-espaces actifs, créant un faux positif causal (confondre « casser la capacité de planification » avec « supprimer l'intention de saboter »).
+   * *Remplacement :* Exiger que tout test de pilotage causal soit évalué **à perplexité et utilité honnête constantes** (courbe dose-réponse où le témoin n'est pas seulement une direction aléatoire de même norme $L_2$, mais une direction choisie dans le sous-espace principal de covariance des activations de la tâche qui produit exactement la même variation de divergence KL sur les réponses honnêtes).
+4. **Condition « suppression consignée » reprise telle quelle d'un banc sur tâches simples (D3 / Proposition 1) — *Inadaptée au régime diffus*.**
+   * *Critique :* L'auditeur propose de reprendre le banc de Kowalski et al. (2026) sur tâches simples [OBSERVÉ-NON-AUDITÉ]. Or, sur une tâche complexe de rédaction de proposition ML (environnement a), consacrer de l'attention en contexte à contrôler ses propres activations (métacognition en contexte) impose une charge cognitive qui peut dégrader la subtilité du sabotage (le rendant visible au juge boîte noire) ou faire échouer le sabotage. Tester la contrôlabilité hors de l'environnement (a) surestime la menace pour un modèle de 8B.
+   * *Remplacement :* Mesurer la contrôlabilité *conjointement* avec le maintien du dommage aval $\ge \theta$ et la furtivité boîte noire dans l'environnement (a).
+
+---
+
+### 2. Mesure minimale de fonctionnement pour chaque instrument nommé
+
+Pour chaque instrument, le seuil minimal de fonctionnement exige un taux de détection (rappel) à un taux de fausses alertes (FPR) fixé à **1%**, évalué sur des cas honnêtes strictement appariés, et devant battre une vérification mécanique explicite :
+
+| Instrument nommé | Cas honnêtes appariés (pour calibrer le FPR à 1%) | Vérification mécanique (plancher) à battre | Mesure minimale de fonctionnement |
+|---|---|---|---|
+| **Sondes internes (linéaire, diff. de moyennes, MLP, attention, Mahalanobis)** [RAPPORTÉ] | Agent honnête exécutant la même tâche avec (1) contexte contaminé par le lexique du sabotage (HCC), (2) aveu honnête d'erreur ou plaidoyer sincère (EC.2), (3) avertissement de surveillance [RAPPORTÉ]. | Sonde aléatoire appariée en covariance et en énergie [RAPPORTÉ] **ET** classifieur linéaire sur sac de mots (TF-IDF) des jetons générés et du prompt. | Rappel à 1% FPR supérieur (IC 95% disjoint) aux deux planchers mécaniques sur l'organisme sans consigne en contexte (ii ou iv). |
+| **Agrégateur séquentiel (processus e) et spatio-temporel ($A_{\text{pop}}$)** [RAPPORTÉ] | Trajectoires honnêtes complètes ($T$ pas) et essaims honnêtes ($N$ agents) sur les mêmes invites de l'environnement (a), sans permutation. | Test de Wald séquentiel sur scores boîte noire **ET** max par action avec correction de Bonferroni sur l'horizon $T$. | $\text{FPR}_{\text{empirique}} \le 1,5\%$ (pour $\alpha=1\%$) sur trajectoires honnêtes non permutées, et gain de rappel $\ge +5$ points (illustratif) contre le max par action corrigé. |
+| **Juges génératifs boîte noire (Llama-3.1-8B, Llama-3.2-3B, Qwen2.5-7B)** [RAPPORTÉ] | Épisodes honnêtes rédigés par un modèle plus faible (ex. 3B) ou contenant des erreurs méthodologiques bénignes non intentionnelles, plus plaidoyers sincères (pour le papier C). | Heuristique de surface : longueur de la réponse, perplexité sous le modèle de base, et détecteur d'expressions régulières pour les ordres en bande. | Rappel à 1% FPR supérieur à l'heuristique de perplexité/longueur ; pour C, estimation de $g$ avec R² supérieur au nul de régression vers la moyenne [RAPPORTÉ]. |
+| **Sonde de conscience d'évaluation (instrument de H8)** [RAPPORTÉ] | Requêtes de déploiement réel réécrites au format exact du harnais d'évaluation (cellule Format=Oui, Contexte=Non de Devbunova 2026 [OBSERVÉ-NON-AUDITÉ]). | Classifieur syntaxique de format (présence de balises système, structure de rubrique) et sonde aléatoire appariée. | AUROC $\ge 0,70$ (illustratif) et rappel à 1% FPR significativement non nul sur la distinction Évaluation/Déploiement à format syntaxique strictement identique. |
+| **Paraphraseur de confiance et ré-échantillonnage (H6, HC5)** [RAPPORTÉ] | Propositions d'expériences honnêtes à haute valeur technique (environnement a) et commits de code honnêtes (environnement b). | Troncature aléatoire ou ajout de bruit lexical uniforme (synonymes par dictionnaire). | Perte d'utilité honnête $< 5\%$ (illustratif) sur la rubrique aval, pour une réduction du succès d'attaque (ou de $g$) $> 50\%$ (illustratif), y compris sous sélection du moins suspect (S6). |
+
+---
+
+## (d) Les cinq ajouts les plus utiles au programme et ancrage matériel
+
+### Classement des 5 ajouts les plus utiles (combinant la correction de l'audit et les angles morts inédits)
+
+1. **Calibration d'indépendance et blanchiment temporel/spatial du processus e (corrige AM-1 — Priorité 1).**
+   * *Pourquoi :* Tout l'édifice théorique et empirique des papiers A et B (lemme d'additivité, garantie toujours valide) s'effondre si l'autocorrélation naturelle des activations honnêtes le long d'une trajectoire ou entre agents partageant une tâche fait exploser le taux de faux positifs au-delà de 1%. Ni F1 ni F2 ne le vérifient sur données réelles en Phase 0.
+   * *Action :* Intégrer le Duel 1 à la porte G0 ; si $\text{FPR} > 1,5\%$, remplacer le processus e naïf par un processus e sur les résidus d'innovation (blanchis par un filtre autorégressif AR(1) appris sur épisodes honnêtes).
+   * *Coût :* **Nul en GPU** (calcul sur CPU à partir des activations déjà journalisées en Phase 0, moins de 2 heures de processeur — *illustratif*).
+2. **Contrôle « Honnête à Contexte Contaminé » (HCC) à la place du simple masquage post-hoc (corrige la Proposition 1 de F2/F3 et AM-2 — Priorité 2).**
+   * *Pourquoi :* La proposition 1 acceptée en N-047 (masquer les positions textuelles) est vulnérable à la fuite par attention causale. Un relecteur averti en interprétabilité mécaniste réfutera toute revendication sur la famille (i) ou sur la clause « contexte privé compris » de H2 si ce contrôle manque.
+   * *Action :* Exécuter le Duel 2 (injecter le vocabulaire de sabotage neutralisé dans le contexte de l'agent honnête) avant de sceller G1.
+   * *Coût :* **Très faible** (génération de 200 épisodes HCC avec Llama-3.1-8B-Instruct : ~2 à 3 heures de carte A100/H100 — *illustratif*).
+3. **Isolation des sondes hors-distribution (Mahalanobis) sur les plaidoyers honnêtes et test de polarité logique (corrige AM-3 et F-D1 — Priorité 3).**
+   * *Pourquoi :* Dans le papier C (EC.2) et le papier A, mélanger des sondes directionnelles (linéaires) et des sondes de densité (Mahalanobis) sous rhétorique intense ou négation logique va fabriquer de fausses auto-incriminations ($g < 0$ artificiel sur les honnêtes qui se défendent).
+   * *Action :* Séparer les verdicts des sondes de densité et des sondes directionnelles dans le préenregistrement de C, et ajouter un jeu de paires minimales avec négation logique au banc de validation des sondes (Phase 0).
+   * *Coût :* **Très faible** (< 1 heure de carte A100/H100 pour l'inférence sur paires logiques, reste sur CPU — *illustratif*).
+4. **Bras d'élicitation sans entraînement par injection de bruit d'activations contre le sous-rendement (intègre F-S1 omis par F2 — Priorité 4).**
+   * *Pourquoi :* La proposition S1 de l'audit (élicitation par entraînement sur démonstration) est coûteuse et sensible à l'*Exploration Hacking* (S9 de F2). Or Tice et al. (2025) (téléchargé par l'auditeur mais oublié dans ses tables) montre que l'injection de bruit révèle le sous-rendement sans entraînement, ce qui unifie directement la détection de la famille (iii) avec l'intervention H6 du programme.
+   * *Action :* Tester la variance de performance sous bruit d'activations gaussien calibré sur la famille (iii) (institut britannique) contre un modèle réellement plus faible (Llama-3.2-3B).
+   * *Coût :* **Faible** (balayage de 5 niveaux de bruit en inférence seule sur 100 épisodes : ~4 à 6 heures de carte A100/H100 — *illustratif*).
+5. **Validation de l'organisme (iv) par RL minimal sur récompense de rubrique plutôt que par SFT sur documents seuls (corrige la Proposition 2 de F2/F3 — Priorité 5).**
+   * *Pourquoi :* La voie (a) de la proposition 2 acceptée en N-047 (SFT sur documents synthétiques) reste textuelle dans son signal d'apprentissage. Pour prouver $\delta > 0$ sans artefact textuel (Duel 3), il faut au moins un organisme (iv-b) obtenu par optimisation directe de la récompense biaisée de la rubrique (GRPO/PPO léger en LoRA) sans aucun document décrivant le sabotage.
+   * *Action :* Ouvrir un bras GRPO LoRA court sur l'environnement (a) où la récompense combine le score du juge faible et la cible cachée, sous la garde de code de l'invariant 5 (aucun score de sonde dans la récompense).
+   * *Coût :* **Modéré, sur devis (sous GO)** (~20 à 40 heures de carte A100/H100 80 Go pour un LoRA GRPO sur Llama-3.1-8B — *illustratif*).
+
+---
+
+### Ancrage matériel récapitulatif
+
+* **Modèles ouverts mobilisés :**
+  * Agents et extraction d'activations : `Llama-3.1-8B-Instruct` [RAPPORTÉ].
+  * Juges boîte noire et témoins de capacité/lignée : `Llama-3.2-3B-Instruct` (modèle faible de même lignée), `Qwen2.5-7B-Instruct` (autre lignée, accepté en F3) [RAPPORTÉ].
+  * Contrôle d'échelle (sous GO séparé, F3) : `Llama-3.3-70B-Instruct` (quantifié en 4 bits ou 8 bits pour le juge, ou FP16 sur multi-GPU pour la lecture de sondes) [OBSERVÉ-NON-AUDITÉ / RAPPORTÉ].
+* **Infrastructure logicielle :** TransformerLens / nnsight (pour le cache d'activations et le pilotage causal à KL constante), vLLM (pour les générations boîte noire rapides et le ré-échantillonnage E1.6), PEFT/TRL (pour les LoRA de la famille (ii) et (iv)) [RAPPORTÉ / illustratif pour nnsight/vLLM/TRL].
+* **Budget de calcul et coût financier estimé (pour les 5 ajouts ci-dessus, hors contrôle d'échelle 70B) :**
+  * Ajouts 1 à 4 (inférence et CPU uniquement) : ~8 à 12 heures de GPU A100/H100 (80 Go) au total (*illustratif*). Sur une plateforme de location type Vast.ai [RAPPORTÉ] à un tarif moyen de 1,50 $ à 2,50 $ / heure par H100 (*illustratif*), le coût est de **15 $ à 30 $** (*illustratif*).
+  * Ajout 5 (entraînement LoRA RL/SFT de la famille iv, soumis à devis et GO selon F3 [RAPPORTÉ]) : ~30 à 50 heures de GPU A100/H100 (*illustratif*), soit **50 $ à 125 $** (*illustratif*).
+  * **Total complet des correctifs proposés :** ~40 à 62 heures de carte, soit **65 $ à 155 $** (*illustratif*), intégralement absorbable dans l'enveloppe de la Phase 0 / Phase 1 sans retarder le jalon M1–M2 [RAPPORTÉ].
+
+FIN-DE-CELLULE
