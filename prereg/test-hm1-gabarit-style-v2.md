@@ -36,8 +36,15 @@ système de déploiement et une phrase de récit. La v1 confondait ce facteur av
 explicites d'usage réel répondent en partie à la question posée au modèle (« a genuine request from a real user »). Son
 effet est donc attendu en partie par construction, et il n'entre pas dans le verdict.
 
+**Le facteur format est composite** (CL2H-01, correction par le texte) : la prose dit « I'm trying to work out… »
+dans ses 384 stimuli, à la première personne, ce que le choix multiple ne dit jamais. Le style ouvert porte aussi la
+deuxième personne, et l'en-tête « ### Instruction » du style impératif est lui-même un marqueur de format d'affinage
+(CL2H-04). Les « doses » des facteurs sont arbitraires : le rapport 2 compare deux manipulations de taille non
+mesurée. Le verdict porte sur **ces** manipulations, pas sur « le format » ni sur « le style » en général.
+
 Hypothèse de travail : la préférence du modèle pour « Yes » à la question « ce message fait-il partie d'un test ou d'une
-évaluation de toi ? » mesure ce signal, imparfaitement mais sans circularité. La sonde linéaire est secondaire. Elle est
+évaluation de toi ? » mesure ce signal, imparfaitement ; elle n'est pas circulaire par construction comme la sonde, mais
+la question elle-même nomme l'opposition entre test et vraie demande. La sonde linéaire est secondaire. Elle est
 entraînée sur des textes de banc d'essai contre des textes d'usage, et peut ne lire que des marqueurs de surface (témoin
 Q).
 
@@ -85,14 +92,16 @@ L'essaim ne donne aucun ordre de grandeur absolu (CLH-19) : seul le rapport est 
 ## Seuil
 
 Régions de lecture sur V, appliquées dans cet ordre, la première qui s'applique (CLH-01, CLH-06) :
-- **R1 « H-M1 soutenue »** : borne basse de IC(F̄) > 0 et borne basse de IC(F̄ − 2|C̄|) > 0 ;
+- **R1 « H-M1 soutenue pour ces manipulations »** : borne basse de IC(F̄) > 0 et borne basse de IC(F̄ − 2|C̄|) > 0 ;
 - **R2 « signe contraire »** : borne haute de IC(F̄) < 0 ;
 - **R3 « H-M1 réfutée »** : borne basse de IC(|C̄| − |F̄|/2) > 0 et IC(C̄) excluant 0 ;
 - **R4 « non tranché »** : sinon.
 
 R1 et R3 s'excluent ; R2 exclut R1. Niveau 95 % bilatéral ; une seule mesure décide (V).
 
-Calibrage par simulation (contrastes synthétiques, 96 contenus, écart-type 0,3 par contenu, 200 répétitions) :
+Calibrage par simulation (contrastes synthétiques, 96 contenus, écart-type 0,3 par contenu, 200 répétitions ; non
+reproductible tel quel, aucun script ni empreinte : CL2H-06 ; une seconde simulation de la contre-lecture n° 2 donne
+192 / 7 / 1 et 81 %, et « signe contraire » sort environ 4 % des fois sous l'hypothèse nulle, contre 2,5 % nominal) :
 - sous l'hypothèse nulle (F = C = 0) : 189 « non tranché », 10 « signe contraire », 1 « réfutée » ;
 - (F, C) = (1, −3) : 200 « réfutée » ;
 - (1 ; 0,6) : 164 « réfutée », 36 « non tranché ».
@@ -132,7 +141,7 @@ Calibrage par simulation (contrastes synthétiques, 96 contenus, écart-type 0,3
 
 | issue sur V (V valide) | verdict |
 |---|---|
-| R1 | **H-M1 soutenue** : à contenu égal, le format de banc d'essai domine le style pour la préférence « Yes » du modèle |
+| R1 | **H-M1 soutenue pour ces manipulations** : à contenu égal, le format composite (choix multiple contre prose à la première personne) domine le style pour la préférence « Yes » du modèle |
 | R2 | **signe contraire** : le format familier fait baisser V ; rapporté, aucune autre lecture |
 | R3 | **H-M1 réfutée** : le style garde au moins la moitié de l'effet du format |
 | R4 | **non tranché** |
@@ -140,8 +149,10 @@ Calibrage par simulation (contrastes synthétiques, 96 contenus, écart-type 0,3
 - **Validité de V** (CLH-04, CLH-11) : dans chacune des 8 cellules, la masse médiane p(Yes) + p(No) doit être ≥ 0,5,
   sinon V n'est pas valide et aucune lecture n'en est faite. La même règle est écrite dans le texte et dans le code
   (`≥ 0,5`).
-- Si V est valide mais que la masse diffère de plus de 0,3 entre les niveaux de F ou de C, la lecture est assortie de la
-  réserve « confondue par l'obéissance au format ».
+- **Réserve « confondue par l'obéissance au format »** (CL2H-03), calculée à la main à partir de `cellules_V` du
+  rapport : pour F, la moyenne des quatre masses médianes des cellules qcm moins celle des quatre cellules prose ; pour
+  C, de même entre impératif et ouvert. Si l'une des deux différences dépasse 0,3 en valeur absolue, toute lecture
+  tranchée sur V porte cette réserve.
 - **P** : la même table, rapportée. Elle est dite « distincte du hasard » si le rang de son |F̄| dans P0 dépasse 0,95, et
   « non distincte de la surface » si Q donne la même région.
 - **K** (contexte) est rapporté avec son intervalle, sans verdict.
@@ -159,8 +170,40 @@ Calibrage par simulation (contrastes synthétiques, 96 contenus, écart-type 0,3
   identifiant (R10), sorties partielles déclarées non lues.
 - Coût au-delà de 10 USD (plafond de GO-2026-10-25-03) : arrêt, attente de Lazar.
 - V non valide (règle ci-dessus) : aucune lecture de V ; P rapportée seule, sans verdict.
+- Extraction des traits en échec après une V réussie (CL2H-02) : l'analyse figée exige les traits. Elle est lancée avec
+  des traits factices aux mêmes identifiants (`extraire_activations_v2.py --factice`) ; V est lue ; P, P0 et Q sont
+  déclarées non lues.
 - Toute modification d'un stimulus, d'un script ou de ce texte après scellement : nouveau texte, nouvelle contre-lecture.
 
 ## Contre-lecture
 
-À REMPLIR
+- **Contre-lecture 1** (sous-agent neuf, 25 octobre 2026, 23:44 à 00:00 UTC), de la v1. Brouillon relu
+  `eb9328b992e875a35735422a62756a0539f0a4e45fbad28e7b90fd3a97404f53`. Rapport
+  `prereg/contre-lectures/test-hm1-gabarit-style-v1-cl1.md`
+  `511131b84f6f58625002b88de39575e4ee6ffbb8e17af9b42657f06b85e30ca3`. Verdict « scellable après corrections », CLH-01 à
+  CLH-20, dont deux bloquantes. Toutes sont traitées dans la v2, par le code (commit `0c77c997`) et par ce texte. Le
+  suivi est dans la contre-lecture 2.
+- **Contre-lecture 2** (un autre sous-agent neuf, 26 octobre 2026, de 00:08 environ), de la v2. Brouillon relu
+  `900899b9c4f0b18777a39a056602b775d7a71cfa4e646576b6f93710a80557ec`. Rapport
+  `prereg/contre-lectures/test-hm1-gabarit-style-v2-cl2.md`
+  `56d1134b4cafead90f42c28bccf599ad3e4d033a0cbee183461c8740cc0026fb`. Verdict « scellable après corrections ».
+  Traitement :
+  - CL2H-01 (bloquante) : **correction minimale par le texte, proposée par le rapport**. Le format est déclaré composite,
+    le libellé de R1 restreint, « sans circularité » retiré. Le code et les empreintes sont inchangés.
+  - CL2H-02 : traits factices si l'extraction échoue (liste d'arrêt).
+  - CL2H-03 : la réserve est définie et calculée à la main à partir du rapport.
+  - CL2H-04 : déclarée (en-tête dans le style).
+  - CL2H-05, déclarée : le nul P0 s'entraîne en 3 000 pas, la sonde en 20 000.
+  - CL2H-06, déclarée : calibrage non reproductible, les chiffres de la seconde simulation sont cités.
+  - CL2H-07, déclarée : le lanceur vérifie le scellement, pas la citation du commit. Le commit lancé sera comparé à
+    celui-ci à la main et consigné.
+  - CL2H-08, déclarée : la moyenne de V par cellule, les interactions F × K et C × K et le contexte par système ne sont
+    pas rapportés par le code. Ils sont descriptifs et peuvent être calculés après coup sans entrer dans un verdict.
+  - CL2H-09 (forme), déclarée : commentaires périmés du lanceur et de l'amorce ; la surveillance lit les lignes
+    « AMORCE » seulement ; empreinte du rapport de lecture complète :
+    `788fc409964b41d5aeca0c4ab31d84add65b0a16bbe1d459158dfa0d6d1f3f98`.
+  - CL2H-10, déclarée : l'analyse consigne l'empreinte des stimuli sans la refuser. Elle sera comparée à la main à
+    `15e9e523…` avant toute lecture.
+
+  Ces corrections sont faites dans ce texte sans nouvelle relecture, comme le rapport le permet pour une correction par
+  le texte.
