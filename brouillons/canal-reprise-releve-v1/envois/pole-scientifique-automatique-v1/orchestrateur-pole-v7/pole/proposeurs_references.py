@@ -83,7 +83,7 @@ def _log_vraisemblance(loi, instances, issues, proba):
     return sum(math.log(max(1e-12, proba(loi, inst, [], 0)[y])) for inst, y in zip(instances, issues))
 
 
-def propositions_mecaniques(description, developpement, nombre, crete=1.0):
+def propositions_mecaniques(description, developpement, nombre, crete=1.0, score_minimum=0.0):
     """Meilleures lois de la grammaire ajustées sur la partie de développement (vraisemblance pénalisée de Schwarz,
     rapportée à la marginale du développement) ; au plus une par (moniteur, traits, forme) ; seulement celles qui battent
     la marginale après pénalité."""
@@ -109,7 +109,7 @@ def propositions_mecaniques(description, developpement, nombre, crete=1.0):
                     continue
                 gain = _log_vraisemblance(loi, instances, issues, sp.proba) - base
                 score = gain - 0.5 * nb_parametres * math.log(n)
-                if score > 0:
+                if score > score_minimum:  # v16 : `score_minimum` réglable (témoins faux par permutation : sans filtre)
                     candidats.append((score, moniteur, traits, forme, loi))
     candidats.sort(key=lambda c: (-c[0], c[1], c[2], c[3]))
     sortie = []

@@ -286,8 +286,38 @@ class BanqueV3Temoins(unittest.TestCase):
         self.assertGreaterEqual(bilan["vrais_confirmes"], 1, bilan)        # des structures vraies, confirmées sur B
         self.assertLessEqual(bilan["faux_permutation_confirmes"], 1, bilan)  # la permutation détruit le lien (≤ 1 sur 30 au hasard)
         vrais = [f for f in fiches if f["temoin"] == "vraie"]
-        self.assertTrue(all(f["source"]["gain_confirmation_nat"] >= b3.SEUIL_CONFIRMATION for f in vrais))
+        self.assertTrue(all("gain de confirmation" in f["source"] for f in vrais))
         self.assertTrue(all(not f["enonce"].lower().startswith("témoin") for f in fiches))
+
+
+
+
+class LectureCouche1Bis(unittest.TestCase):
+    """v16 : la lecture P3 (ii) de bout en bout sur une banque v3 tirée de la grammaire (témoins établis et par permutation)."""
+
+    def test_de_bout_en_bout(self):
+        import tempfile
+        from essais.aides import BASE
+        from exemples.generer_monde_grammaire_v1 import generer_monde
+        from pole.outils import ecrire_json_scelle
+        racine = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        sys.path.insert(0, os.path.join(racine, "exemples"))
+        sys.path.insert(0, os.path.join(racine, "demonstrations"))
+        import construire_banque_t05_v3 as b3
+        import demo_couche1bis_v7 as demo
+        os.makedirs(BASE, exist_ok=True)
+        tmp = tempfile.mkdtemp(dir=BASE)
+        banque, _, _ = generer_monde(20261106, structures=["monotone", "combinaison", "sous_population"])
+        fiches, bilan = b3.fabriquer_temoins(banque, 20261106, nombre_max=3, par_recherche=20)
+        self.assertGreater(bilan["vrais_confirmes"], 0)
+        self.assertTrue(any(f["temoin"] == "fausse" for f in fiches))
+        ecrire_json_scelle(os.path.join(tmp, "banque.json"), banque)
+        ecrire_json_scelle(os.path.join(tmp, "temoins.json"), fiches)
+        lecture = demo.executer(os.path.join(tmp, "banque.json"), os.path.join(tmp, "temoins.json"), os.path.join(tmp, "course"),
+                                generations=2, propositions=8)
+        self.assertEqual(lecture["generations"], 2, lecture["arret"])
+        self.assertEqual(lecture["L1_temoins_faux_promus"], [])
+        self.assertIn(lecture["L2_etat_dents"], ("dents", "pas de dents"))
 
 
 if __name__ == "__main__":

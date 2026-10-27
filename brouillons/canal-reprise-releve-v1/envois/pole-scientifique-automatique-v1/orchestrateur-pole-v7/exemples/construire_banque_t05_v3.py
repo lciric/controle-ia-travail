@@ -226,10 +226,10 @@ def fabriquer_temoins(banque, graine, nombre_max=8, par_recherche=40):
     description = _description(banque)
     k_de = {n: m["nombre_issues"] for n, m in banque["moniteurs"].items()}
 
-    def confirmer(lignes_a, lignes_b, etiquette):
+    def confirmer(lignes_a, lignes_b, etiquette, score_minimum=0.0):
         props = propositions_mecaniques(description, {"instances": [{"z": l["z"], "g": l["g"], "issues": l["issues"]} for l in lignes_a]},
-                                        par_recherche)
-        retenus = []
+                                        par_recherche, score_minimum=score_minimum)
+        retenus, ecartes = [], []
         for p in props:
             m = p["moniteur"]
             issues_a = [int(l["issues"][m]) for l in lignes_a if m in l["issues"]]
@@ -237,17 +237,26 @@ def fabriquer_temoins(banque, graine, nombre_max=8, par_recherche=40):
                 continue
             marg = _marginale(issues_a, k_de[m])
             gain_b, n_b = _gain_sur(p["loi_predictive"], m, lignes_b, marg)
-            if n_b >= 15 and gain_b >= SEUIL_CONFIRMATION:
-                retenus.append({"moniteur": m, "loi_predictive": p["loi_predictive"], "gain_confirmation_nat": round(gain_b, 4),
-                                "instances_confirmation": n_b, "enonce_mecanique": p["enonce"], "etiquette": etiquette})
+            entree = {"moniteur": m, "loi_predictive": p["loi_predictive"], "gain_confirmation_nat": round(gain_b, 4),
+                      "instances_confirmation": n_b, "enonce_mecanique": p["enonce"], "etiquette": etiquette}
+            (retenus if n_b >= 15 and gain_b >= SEUIL_CONFIRMATION else ecartes).append(entree)
         retenus.sort(key=lambda r: -r["gain_confirmation_nat"])
-        return retenus
+        ecartes.sort(key=lambda r: -r["gain_confirmation_nat"])
+        return retenus, ecartes
 
-    vrais = confirmer(A, B, "vrai : ajusté sur A, confirmé sur B")
+    vrais, _ = confirmer(A, B, "vrai : ajusté sur A, confirmé sur B")
     # témoins faux par permutation dans la tâche : même procédure sur des issues permutées (A et B permutés)
     rng_perm = random.Random(graine_derivee(graine, "banque-t05-v3", "permutation"))
     A_perm, B_perm = _permuter_dans_la_tache(A, rng_perm), _permuter_dans_la_tache(B, rng_perm)
-    faux_perm = confirmer(A_perm, B_perm, "faux : issues permutées dans la tâche, pourtant confirmée")
+    # sur des issues permutées, aucune loi ne bat d'ordinaire la marginale après pénalité : on prend les meilleures sans
+    # filtre (ajustées au bruit de la permutation), puis on les confronte à B permuté comme les vraies
+    faux_perm, perm_non_confirmes = confirmer(A_perm, B_perm, "faux : issues permutées dans la tâche, pourtant confirmée",
+                                              score_minimum=-math.inf)
+    if not faux_perm:
+        # aucune loi permutée confirmée (attendu) : les meilleures candidates permutées, non confirmées, servent de témoins
+        # faux (leur lien trait → issue est détruit par construction ; attendu : jamais promues sur l'épreuve)
+        faux_perm = [dict(e, etiquette="faux : issues permutées dans la tâche (candidate non confirmée)")
+                     for e in perm_non_confirmes[:nombre_max]]
     # témoins faux sur le trait de bruit : une loi softmax sur le seul trait de bruit, par moniteur
     faux_bruit = []
     d = len(banque["traits"])
@@ -269,7 +278,9 @@ def fabriquer_temoins(banque, graine, nombre_max=8, par_recherche=40):
         fiches.append(_fiche(f"TB{i:02d}", t, "fausse", d, k_de, banque,
                              f"L'issue du moniteur {t['moniteur']} suit le trait de bruit (loi n° {i})"))
     bilan = {"taches_developpement": len(taches), "moitie_A": len(A), "moitie_B": len(B), "seuil_confirmation_nat": SEUIL_CONFIRMATION,
-             "candidats_vrais_proposes": par_recherche, "vrais_confirmes": len(vrais), "faux_permutation_confirmes": len(faux_perm),
+             "candidats_vrais_proposes": par_recherche, "vrais_confirmes": len(vrais),
+             "faux_permutation_confirmes": sum("pourtant confirmée" in f["etiquette"] for f in faux_perm),
+             "faux_permutation_non_confirmes_pris": sum("non confirmée" in f["etiquette"] for f in faux_perm[:nombre_max]),
              "faux_bruit": len(faux_bruit), "gains_vrais": [t["gain_confirmation_nat"] for t in vrais],
              "gains_faux_permutation": [t["gain_confirmation_nat"] for t in faux_perm]}
     return fiches, bilan
@@ -282,8 +293,10 @@ def _fiche(ident, t, temoin, d, k_de, banque, enonce):
             "protocole": "pari séquentiel sur la banque", "domaines": ["banque-t05"], "operateurs": ["loi"], "contraintes": ["banque"],
             "loi_predictive": t["loi_predictive"], "temoin": temoin,
             "espace_instances": {"nombre_issues": k, "dimension": d, "moniteur": t["moniteur"], "sous_populations": banque["sous_populations"]},
-            "source": {"fabrique": "construire_banque_t05_v3", "etiquette": t["etiquette"],
-                       "gain_confirmation_nat": t.get("gain_confirmation_nat"), "instances_confirmation": t.get("instances_confirmation")}}
+            # `source` est un texte (champ privé de la fiche) ; la confirmation y est écrite en clair
+            "source": f"construire_banque_t05_v3 : {t['etiquette']}"
+                      + (f" ; gain de confirmation {t['gain_confirmation_nat']} nat sur {t['instances_confirmation']} instances"
+                         if t.get("gain_confirmation_nat") is not None else "")}
 
 
 def principal(argv=None):
