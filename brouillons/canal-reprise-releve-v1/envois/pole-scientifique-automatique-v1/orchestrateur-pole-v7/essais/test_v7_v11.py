@@ -197,5 +197,38 @@ class VuePubliqueSansTemoin(unittest.TestCase):
         self.assertEqual(f.vue_complete_gelee()["enonce"], "Témoin vrai : la loi exacte du moniteur M0 (monotone)")
 
 
+
+
+class CleDuRelaisHorsDeProc(unittest.TestCase):
+    """F-C7 : la clé lue dans un fichier à lecture unique n'entre jamais dans l'environnement du relais."""
+
+    def test_lecture_unique_et_mode(self):
+        import stat
+        import tempfile
+        from pole.relais_reel import RelaisInvalide, lire_cle_fichier
+        from essais.aides import BASE
+        os.makedirs(BASE, exist_ok=True)
+        d = tempfile.mkdtemp(dir=BASE)
+        chemin = os.path.join(d, "cle")
+        with open(chemin, "w", encoding="utf-8") as f:
+            f.write("FACTICE-sans-valeur\n")
+        os.chmod(chemin, 0o644)
+        with self.assertRaises(RelaisInvalide):  # lisible par d'autres : refusé
+            lire_cle_fichier(chemin)
+        os.chmod(chemin, stat.S_IRUSR | stat.S_IWUSR)
+        self.assertEqual(lire_cle_fichier(chemin), "FACTICE-sans-valeur")
+        self.assertFalse(os.path.exists(chemin))  # supprimé après lecture
+        with self.assertRaises(RelaisInvalide):
+            lire_cle_fichier(chemin)
+
+    def test_demonstration_proc(self):
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "demonstrations"))
+        import verification_cle_proc_v7 as v
+        resultats, code = v.demonstration()
+        self.assertEqual(code, 0, resultats)
+        self.assertEqual(resultats["par_fichier"]["noms_dans_proc"], [])
+        self.assertEqual(resultats["par_environnement"]["noms_dans_proc"], ["ANTHROPIC_API_KEY"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -290,11 +290,33 @@ def fabriquer_gestionnaire(cle, amont, compteur, journal, verrou_journal):
 
 
 def lire_cle(environnement, variable):
-    """Lit la clé dans l'environnement donné et l'en efface ; ne la rend qu'à l'appelant (jamais journalisée)."""
+    """Lit la clé dans l'environnement donné et l'en efface ; ne la rend qu'à l'appelant (jamais journalisée).
+
+    **Limite (v7, version 11, contre-lecture F-C7)** : `pop` n'efface pas le bloc initial que `/proc/<pid>/environ` expose ;
+    tout processus du même utilisateur (ou root) peut l'y lire tant que le relais vit. Préférer `lire_cle_fichier`
+    (`--fichier-cle`) : la clé ne passe jamais par l'environnement du relais."""
     cle = environnement.get(variable)
     if not cle:
         raise RelaisInvalide(f"aucune clé dans la variable {variable} de l'environnement du relais")
     environnement.pop(variable, None)
+    return cle
+
+
+def lire_cle_fichier(chemin, supprimer=True):
+    """v7, version 11 (F-C7) : lit la clé dans un fichier **à lecture unique** — fichier ordinaire, lisible par son seul
+    propriétaire (mode sans droits de groupe ni d'autrui), une ligne non vide — puis le supprime. La clé n'entre jamais
+    dans l'environnement du relais : `/proc/<pid>/environ` ne la porte pas, même pour root."""
+    if not os.path.isfile(chemin) or os.path.islink(chemin):
+        raise RelaisInvalide(f"fichier de clé absent ou non ordinaire : {chemin}")
+    mode = os.stat(chemin).st_mode & 0o777
+    if mode & 0o077:
+        raise RelaisInvalide(f"fichier de clé lisible par d'autres que son propriétaire (mode {mode:o}) : refusé")
+    with open(chemin, encoding="utf-8") as f:
+        cle = f.read().strip()
+    if not cle or "\n" in cle:
+        raise RelaisInvalide("fichier de clé vide ou sur plusieurs lignes")
+    if supprimer:
+        os.remove(chemin)
     return cle
 
 
@@ -324,7 +346,10 @@ def analyseur():
     a.add_argument("--port", type=int, default=8787, help="0 : port libre choisi par le système")
     a.add_argument("--amont", default="https://api.anthropic.com")
     a.add_argument("--variable-cle", default="ANTHROPIC_API_KEY",
-                   help="variable de l'environnement du relais qui porte la clé (effacée après lecture)")
+                   help="variable de l'environnement du relais qui porte la clé (effacée après lecture ; reste lisible "
+                        "dans /proc/<pid>/environ : préférer --fichier-cle)")
+    a.add_argument("--fichier-cle", help="v11 : fichier à lecture unique (mode 600) qui porte la clé, supprimé après "
+                                         "lecture ; la clé ne passe pas par l'environnement du relais")
     a.add_argument("--plafond-usd", type=float, required=True, help="plafond de dépense tenu par le relais")
     a.add_argument("--journal", help="journal des appels (JSON par ligne, sans clé ni corps)")
     a.add_argument("--reserve-par-appel", type=float, default=RESERVE_PAR_APPEL_DEFAUT,
@@ -335,7 +360,13 @@ def analyseur():
 def principal(argv=None):
     args = analyseur().parse_args(argv)
     try:
-        cle = lire_cle(os.environ, args.variable_cle)
+        if args.fichier_cle:
+            if os.environ.get(args.variable_cle):
+                raise RelaisInvalide(f"--fichier-cle donné ET variable {args.variable_cle} présente dans l'environnement : "
+                                     "la clé ne doit être qu'à un seul endroit (retire la variable)")
+            cle = lire_cle_fichier(args.fichier_cle)
+        else:
+            cle = lire_cle(os.environ, args.variable_cle)
         if not (args.plafond_usd > 0):
             raise RelaisInvalide("plafond strictement positif requis")
         if not (args.reserve_par_appel >= 0):
