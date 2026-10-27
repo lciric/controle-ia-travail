@@ -1,0 +1,9 @@
+Essais R5 du choix d'offre du lanceur v4 (étape 8, extraite telle quelle), 27 octobre 2026 vers 15:21 UTC, sur la liste
+« gpu_name=A100_SXM4 num_gpus=1 --storage 80 » relue au même moment par vastai 1.8.3 (80 Go : 21050980 Suède CUDA 12,2 ;
+49067608 Texas CUDA 13,0 fiabilité 0,998 1,366 USD/h ; 57189285 Autriche CUDA 13,2 fiabilité 0,963 1,156 USD/h) :
+- plafond 1,40, EXCLURE vide : choisit 49067608 (Texas, machine 146917), code 0 — cas sain (l'Autriche, moins chère, est
+  écartée par la fiabilité)
+- EXCLURE=146917 : « aucune offre conforme », code 1 — artefact machine exclue
+- plafond 1,20 : « aucune offre conforme », code 1 — artefact prix
+- EXCLURE=abc : erreur de lecture, code 1 (le lanceur rend 3, rien créé) — artefact argument
+- toutes les offres portées sur la machine 142924 : « aucune offre conforme », code 1 — exclusion permanente de 142924
