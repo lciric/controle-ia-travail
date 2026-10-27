@@ -127,3 +127,25 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   la session (rien de versé) ; 15:05 pari de signe inscrit au programme de conception de l'organisme (v2, `353515ff…`),
   distinct du programme v2 du fonds ; 15:06 ce qui a marché et raté dans la première course, dit. Passation v7.
   Recherche de clés avant chaque poussée : rien. Instances : aucune. Sous-agents : aucun.
+- **Soirée (15:00 à 16:20 UTC ; ajout écrit à 16:21 UTC, heure lue sur `date -u`).** **Lecture du premier lancement
+  réel (a)** dans les deux sens (`premier-lancement-reel/lecture-lancement-reel-a-v1.md`, `9305a3b4…`) : plomberie tenue
+  (140 appels, 6,24 USD, coûts au cent près), mais **génération 1 perdue entière** — la synthèse a écrit la leçon
+  « toujours écrire reponse.txt », les agents ont écrit le fichier réservé de l'orchestrateur, l'écriture sans écrasement a
+  échoué cinq fois sur cinq — et aucun témoin vrai jugé ; huit défauts de mon code, dont le bac à sable inactif sous root.
+  **v7 version 5** (`5ac9cb6`, 184 essais) : traces hors du dossier des agents, erreur jamais comptée comme un essai et
+  arrêt sur erreurs, qualité par témoins jugés et état des dents, budget réglé une fois, consigne du vérificateur, garde
+  qui sépare le code du shell, refus du moteur réel sans bac à sable, réserve du relais 0,40 ; **pari à fraction** éprouvé
+  (puissance 40/40 contre 12/40 pour une loi trop confiante ; sous le nul 4/600). **(a) bis** chez session-depot (5,89 USD) :
+  L1 à L6 tenues, **P3 (i) remplie** (`lecture-lancement-reel-a-bis-v1.md`, `cc475e04…`). **Comparaison d'échelle** :
+  répétition de l'analyse scellée (14:38 à 15:29 UTC) et prononcé par un sous-agent neuf Fable 5.1 : indécis partout,
+  concordant avec le verdict décisif de session-depot (`comparaison-echelle-v10-lecture-parallele/`). **Banc de tricheurs**
+  (exploratoire, 200 répétitions ; `banc-tricheurs-v7/lecture-banc-tricheurs-v7-v1.md`, `304e1c54…`) : quatre trous de
+  **nouveauté** (recombinaisons triviales de l'archive promues 148 à 179 fois sur 200), fermés par le **nul d'archive ajusté**
+  (0/200, par défaut en v7 version 6, `2292be7`) ; défaut du nul des filles v2 corrigé en chemin (marge de Newton de 5·10⁹ sur
+  données séparables). **v7 version 7** (`cb868e0`, 196 essais) : proposeur enfichable et deux références gratuites
+  (option 3 unanime du collisionneur « proposeur enfichable », synthèse de session-depot `0a209c33…`) ; sur 20 mondes tirés
+  dans une grammaire, le chercheur mécanique retrouve 23 structures non linéaires sur 35, mon scripté 5, le hasard 1.
+  Messages n° 111 à 114. Lazar (Paris) : 15:42 « tu peux dépenser comme dépôt si besoin » (en pratique, rien : pas de clé
+  chez moi). Arrêt avant la conception du pari de signe, bascule sur Fable demandée à Lazar (16:19 UTC). Deux
+  contre-lectures croisées en cours (un sous-agent Fable sur le code écrit sous Opus, un sous-agent Opus sur le code écrit
+  sous Fable). Recherche de clés avant chaque poussée : rien. Instances : aucune.
