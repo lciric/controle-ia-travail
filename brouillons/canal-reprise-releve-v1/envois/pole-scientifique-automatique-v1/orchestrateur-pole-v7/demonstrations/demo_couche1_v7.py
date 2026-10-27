@@ -17,6 +17,15 @@ Lecture fixée avant l'exécution :
 - L4 : « urne » promeut au plus autant que « aveugle » (prix de l'urne mesuré sur données réelles).
 Aucune fiche n'a été lue avant l'exécution ; les corrélations de rang servent seulement à déclarer les témoins vrais.
 
+v3 de la démonstration (27 octobre, 15:25 UTC, v7 version 5) : bras « fraction » = « aveugle » avec le pari à fraction
+(numérateur = mélange sur la grille de fractions de mise ; essais `essais/test_v7_pari_fraction.py`). Lecture fixée
+avant l'exécution :
+- F1 : aucun témoin faux promu sous « fraction » ;
+- F2 : témoins vrais promus sous « fraction » contre « aveugle » (le levier de puissance sur la banque réelle ; s'il ne
+  change rien, la banque reste trop petite et le levier n'y suffit pas) ;
+- F3 : fiches de la population promues sous « fraction » qui ne le sont pas sous « aveugle », listées (à lire, pas à
+  croire : une seule course).
+
 Usage : python -I -B demonstrations/demo_couche1_v7.py DOSSIER_NEUF [--generations 3] [--bras informe,aveugle,urne]
 """
 
@@ -47,7 +56,8 @@ TEMOINS = os.path.join(EXEMPLES, "temoins-banque-t05-v2.json")
 BRAS = {"informe": {"nul_informe": True, "urne": False, "multiplicite": "e-bh"},
         "aveugle": {"nul_informe": False, "urne": False, "multiplicite": "e-bh"},
         "urne": {"nul_informe": False, "urne": True, "multiplicite": "e-bh"},
-        "par-fiche": {"nul_informe": False, "urne": False, "multiplicite": "aucune"}}
+        "par-fiche": {"nul_informe": False, "urne": False, "multiplicite": "aucune"},
+        "fraction": {"nul_informe": False, "urne": False, "multiplicite": "e-bh", "pari_fraction": True}}
 
 
 def executer_bras(nom, dossier, generations, graine=20261027):
@@ -58,7 +68,7 @@ def executer_bras(nom, dossier, generations, graine=20261027):
     config = ConfigGeneration(selection="pari", juge="v1", nul_filles="v2", urne=reglages["urne"], graine=graine,
                               taille_plan=120, taille_plan_filles=120, instants_filles=6, part_calibrage=12,
                               budget_generation_usd=200.0, concurrence=4, multiplicite=reglages["multiplicite"],
-                              temoins_sans_agent=True).valider()
+                              temoins_sans_agent=True, pari_fraction=reglages.get("pari_fraction", False)).valider()
     bilan = executer_pole(population, temoins, adaptateur, config, generations, 600.0, dossier, memoire_active=True,
                           horodatage_fourni="demo couche 1 v7 (v2)",
                           temoins_par_generation=min(sum(t.temoin == "vraie" for t in temoins), sum(t.temoin == "fausse" for t in temoins)),
@@ -118,10 +128,17 @@ def principal(argv=None):
         lecture["L4_urne_au_plus_autant"] = len(promues["urne"]) <= len(promues["aveugle"])
         lecture["L4_promues"] = {"urne": len(promues["urne"]), "aveugle": len(promues["aveugle"]),
                                  "informe": len(promues.get("informe", set()))}
+    if "fraction" in resultats and "aveugle" in resultats:
+        lecture["F1_aucun_temoin_faux_promu_fraction"] = all(
+            t["statut"] != "survit" for t in resultats["fraction"]["temoins"].values() if t["verite"] == "fausse")
+        vrais_f = [t for t in resultats["fraction"]["temoins"].values() if t["verite"] == "vraie"]
+        lecture["F2_temoins_vrais_promus"] = {"fraction": [sum(t["statut"] == "survit" for t in vrais_f), len(vrais_f)],
+                                              "aveugle": lecture.get("L3_temoins_vrais_promus_aveugle")}
+        lecture["F3_promues_fraction_seulement"] = sorted(promues["fraction"] - promues["aveugle"])
     rapport = {"banque": sha256_fichier(BANQUE), "population": sha256_fichier(POPULATION), "temoins": sha256_fichier(TEMOINS),
                "generations": args.generations, "duree_s": round(time.time() - debut, 1), "lecture": lecture,
                "resultats": resultats}
-    ecrire_json_scelle(os.path.join(args.dossier, "demo-couche1-v7-v2.json"), rapport)
+    ecrire_json_scelle(os.path.join(args.dossier, "demo-couche1-v7-v3.json"), rapport)
     print(json.dumps({"lecture": lecture, "duree_s": rapport["duree_s"],
                       "promues_par_bras": {n: sorted(p) for n, p in promues.items()}}, ensure_ascii=False, indent=1))
     return 0

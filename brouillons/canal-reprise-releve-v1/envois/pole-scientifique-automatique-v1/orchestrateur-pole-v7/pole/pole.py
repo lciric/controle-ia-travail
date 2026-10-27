@@ -9,11 +9,12 @@ import os
 import random
 import sys
 
-from .caviardage import caviarder_objet
+from .caviardage import caviarder, caviarder_objet
 from .cycle import Budget, ConfigGeneration, Generation, cumuler_qualite
 from .fiche import RegistreGel, charger_fiches
 from .memoire import Memoire
-from .outils import EcrasementInterdit, ecrire_json_scelle, extraire_bloc_json, graine_derivee, horodatage, manifeste
+from .outils import (EcrasementInterdit, dossier_traces, ecrire_json_scelle, ecrire_scelle, extraire_bloc_json,
+                     graine_derivee, horodatage, manifeste)
 from .recombinaison import recombiner
 
 
@@ -44,16 +45,20 @@ def _synthese(adaptateur, config, memoire, budget, dossier, generation):
     if not budget.reserver(config.plafond_synthese_usd):
         return None, "budget insuffisant pour la synthèse"
     os.makedirs(dossier, exist_ok=False)
+    traces = dossier_traces(dossier)  # v7, version 5 : produits de l'orchestrateur hors du dossier de l'agent
     ecrire_json_scelle(os.path.join(dossier, "resume-index.json"), memoire.resume_pour_synthese(generation))
     consigne = ("Écris les leçons de cette génération (au plus 1 500 caractères) à partir du seul fichier "
-                "`resume-index.json` : causes d'élimination fréquentes, protocoles qui ont fonctionné. Réponds par un "
-                "bloc ```json {\"lecons\": \"...\"}```.")
+                "`resume-index.json` : causes d'élimination fréquentes, protocoles qui ont fonctionné. Les leçons portent "
+                "sur la science (hypothèses, protocoles), jamais sur les fichiers ni la plomberie de l'orchestrateur. "
+                "Réponds par un bloc ```json {\"lecons\": \"...\"}``` dans ton dernier message, sans écrire de fichier.")
+    ecrire_scelle(os.path.join(traces, "consigne.txt"), consigne)
     res = adaptateur.lancer("synthese", consigne, dossier, config.plafond_synthese_usd, config.max_tours_synthese,
                             modele=config.modele_synthese)
     budget.regler(config.plafond_synthese_usd, res.cout_declare_usd)
+    ecrire_scelle(os.path.join(traces, "reponse.txt"), caviarder(res.texte_final)[0])
     bloc = extraire_bloc_json(res.texte_final, "lecons") or {}
     texte = memoire.ajouter_lecon(generation, bloc.get("lecons") or res.texte_final)
-    ecrire_json_scelle(os.path.join(dossier, "lecons.json"), {"generation": generation, "lecons": texte})
+    ecrire_json_scelle(os.path.join(traces, "lecons.json"), {"generation": generation, "lecons": texte})
     return texte, None
 
 
@@ -70,6 +75,7 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
         config=asdict(config), generations=generations, budget_total_usd=budget_total_usd, memoire_active=memoire_active,
         temoins_par_generation=temoins_par_generation, k_recombinaison=k_recombinaison, max_paires=max_paires,
         adaptateur=getattr(adaptateur, "nom", type(adaptateur).__name__), horodatage=quand,
+        bac_a_sable=getattr(adaptateur, "bac_a_sable", None),
         monde_noyau=None if monde_noyau is None else getattr(monde_noyau, "nom", type(monde_noyau).__name__),
         population=[f.identifiant for f in population], temoins=[t.identifiant for t in temoins]))
     memoire = Memoire(active=memoire_active, graine=config.graine, politique_redite=getattr(config, "politique_redite", "heritage"))
@@ -148,7 +154,13 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
         restant = budget_total_usd - depense
         cout_minimal = config.plafond_verificateur_usd + min(
             [config.plafond_experimentateur_usd] + [f.cout_borne for f in nouvelles + a_reessayer])
-        if g + 1 >= generations:
+        erreurs = rapport.get("erreurs_orchestrateur") or {"fiches": [], "lancees": 0}
+        if len(erreurs["fiches"]) >= 2 and 2 * len(erreurs["fiches"]) >= max(1, erreurs["lancees"]):
+            # v7, version 5 : la moitié au moins des fiches lancées en erreur de l'orchestrateur : la plomberie est en
+            # cause ; on n'en relance aucune (en (a), cinq sur cinq en génération 1).
+            arret = (f"erreurs de l'orchestrateur ({len(erreurs['fiches'])} fiches sur {erreurs['lancees']} lancées) : "
+                     "la plomberie est en cause, rien n'est relancé")
+        elif g + 1 >= generations:
             arret = "nombre de générations atteint"
         elif restant < cout_minimal:
             arret = "budget épuisé"
@@ -171,6 +183,7 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
             "recombinaison": dict(reco["rapport"], filles=[f.identifiant for f in reco["filles"]],
                                   refusees=reco["refusees"]),
             "proposeur": rapport_proposeur,
+            "erreurs_orchestrateur": erreurs,
             "arret": arret,
         }
         journal = caviarder_objet(journal)[0]
@@ -191,7 +204,7 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
              "budget_total": budget_total_usd, "qualite_cumulee": cumuler_qualite(qualites),
              "comptes_par_statut": _comptes(toutes), "selection": config.selection, "memoire_active": memoire.active,
              "survivantes": {i: index[i]["aptitude"] for i in index if index[i]["statut"] == "survit"},
-             "registre_gel": registre.etat()}
+             "registre_gel": registre.etat(), "bac_a_sable": getattr(adaptateur, "bac_a_sable", None)}
     ecrire_json_scelle(os.path.join(racine, "bilan.json"), bilan)
     return bilan
 
@@ -227,6 +240,9 @@ def analyseur():
     a.add_argument("--url-relais", help="moteur réel : relais local du noyau qui ajoute la clé (http://127.0.0.1:PORT)")
     a.add_argument("--confirmer-moteur-reel", action="store_true",
                    help="arme le moteur réel (sans ce drapeau, aucun agent réel n'est jamais lancé)")
+    a.add_argument("--accepter-sans-bac-a-sable", action="store_true",
+                   help="v7 : moteur réel sans bac à sable actif (exception, motif écrit exigé, jamais sous root)")
+    a.add_argument("--motif-sans-bac-a-sable", default="", help="raison écrite de l'exception (consignée au manifeste)")
     a.add_argument("--delta0", type=float, default=0.01, help="marge des filles en sélection par pari (nat par tirage)")
     p = a.add_argument_group("sélection par pari (v3 à v6)")
     p.add_argument("--juge", choices=("v0", "v1"), default="v1")
@@ -258,6 +274,8 @@ def analyseur():
     p.add_argument("--modele-proposeur", default="simule-e")
     p.add_argument("--sans-nul-archive", action="store_true",
                    help="v7 : ne pas mettre les survivantes de l'archive au nul des nouvelles fiches (défaut : les y mettre)")
+    p.add_argument("--pari-fraction", action="store_true",
+                   help="v7 : numérateur de la richesse = mélange sur une grille de fractions de mise (puissance)")
     p.add_argument("--exploration-developpement", action="store_true",
                    help="v7 : phase exploratoire — partie de développement (traits et issues) servie au proposeur")
     p.add_argument("--tranches", type=int, default=1,
@@ -288,14 +306,17 @@ def analyseur():
 
 def construire_adaptateur(args, population, temoins):
     if args.moteur == "claude-sdk":
-        from .adaptateurs import AdaptateurClaudeSDK, MoteurNonArme, importer_sdk, verifier_modele_reel
+        from .adaptateurs import (AdaptateurClaudeSDK, MoteurNonArme, exiger_bac_a_sable, importer_sdk,
+                                  verifier_modele_reel)
         if not args.confirmer_moteur_reel:
             raise MoteurNonArme("--moteur claude-sdk exige --confirmer-moteur-reel (dépense réelle, relais local requis)")
         for modele in (args.modele_experimentateur, args.modele_verificateur, args.modele_recombinaison,
                        args.modele_synthese) + ((args.modele_proposeur,) if args.propositions_par_generation else ()):
             verifier_modele_reel(modele)
         adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True)
-        importer_sdk()
+        sdk = importer_sdk()
+        # v7, version 5 (défaut 7 du premier lancement réel) : aucun agent réel sans bac à sable actif.
+        adaptateur.bac_a_sable = exiger_bac_a_sable(sdk, args.accepter_sans_bac_a_sable, args.motif_sans_bac_a_sable)
         return adaptateur
     from .simulation import AdaptateurSimule, MondeSimule
     verites = {t.enonce: t.temoin == "vraie" for t in temoins}
@@ -361,6 +382,7 @@ def principal(argv=None):
             multiplicite=args.multiplicite, temoins_sans_agent=args.temoins_sans_agent,
             propositions_par_generation=args.propositions_par_generation, modele_proposeur=args.modele_proposeur,
             nul_archive=not args.sans_nul_archive, exploration_developpement=args.exploration_developpement,
+            pari_fraction=args.pari_fraction,
             budget_generation_usd=args.budget_generation_usd or args.budget_usd / max(1, args.generations)).valider()
         if args.ablation_memoire:
             from .ablation import executer_ablation
@@ -374,11 +396,10 @@ def principal(argv=None):
                          ensure_ascii=False))
         return 0
     except Exception as e:  # noqa: BLE001 — sortie lisible, code non nul
-        from .adaptateurs import MoteurIndisponible
+        from .adaptateurs import BacASableInactif, MoteurIndisponible, MoteurNonArme
         from .relais import CleDansEnvironnement, RelaisInvalide
-        from .adaptateurs import MoteurNonArme
-        connues = (MoteurIndisponible, MoteurNonArme, CleDansEnvironnement, RelaisInvalide, SortieNonVide, ValueError,
-                   OSError)
+        connues = (MoteurIndisponible, MoteurNonArme, BacASableInactif, CleDansEnvironnement, RelaisInvalide,
+                   SortieNonVide, ValueError, OSError)
         if isinstance(e, connues):
             print(f"erreur : {type(e).__name__} : {e}", file=sys.stderr)
             return 2

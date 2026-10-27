@@ -313,6 +313,33 @@ def trajectoire_loi(loi, issues, instances, cache=None):
     return _traj_cumulee([math.log(p[x]) for p, x in zip(cache.probas(loi), issues)])
 
 
+GRILLE_FRACTIONS = (0.25, 0.5, 0.75, 1.0)
+
+
+def trajectoire_numerateur(engagement, issues, instances, cache=None):
+    """Numérateur de la richesse. Sans `fractions` : la vraisemblance de la loi engagée (pari plein, v0 à v6). Avec
+    `fractions` (v7, pari à fraction) : la vraisemblance du **mélange bayésien** sur la grille des fractions λ (a priori
+    uniforme) des lois prédictives λ·p_h + (1 − λ)·m_t, où m_t est la marginale en ligne (Laplace 0,5) des issues
+    précédentes du plan — une suite prévisible : le rapport à tout membre du nul reste une martingale de test sous ce
+    membre (inférence universelle), donc la garantie de Ville tient. Gain : une loi juste mais trop confiante ne se ruine
+    plus sur les issues qu'elle croyait improbables ; prix : au plus log(nombre de fractions) contre la meilleure fraction."""
+    cache = cache or Cache(issues, instances)
+    fractions = engagement.get("fractions")
+    if not fractions:
+        return trajectoire_loi(engagement["loi"], issues, instances, cache)
+    k = engagement["nombre_issues"]
+    p = cache.probas(engagement["loi"])
+    compte, cumuls, traj = [0] * k, [0.0] * len(fractions), []
+    for t, x in enumerate(issues):
+        m = (compte[x] + 0.5) / (t + 0.5 * k)
+        for i, lam in enumerate(fractions):
+            cumuls[i] += math.log(max(PLANCHER, lam * p[t][x] + (1.0 - lam) * m))
+        compte[x] += 1
+        haut = max(cumuls)
+        traj.append(haut + math.log(sum(math.exp(c - haut) for c in cumuls) / len(fractions)))
+    return traj
+
+
 def _traj_melange(membre, issues, cache):
     pa, pb = (cache.probas(l) for l in membre["lois"])
     meilleure = None
@@ -543,7 +570,7 @@ def evaluer(gele, tirages, graine_noyau=None):
     bibliotheque = calibrer(e["bibliotheque"], issues[:c], instances[:c])
     issues, instances = issues[c:], instances[c:]
     cache = Cache(issues, instances)
-    numerateur = trajectoire_loi(e["loi"], issues, instances, cache)
+    numerateur = trajectoire_numerateur(e, issues, instances, cache)
     par_membre = trajectoires(bibliotheque, issues, instances, k, cache)
     denominateur, dominant = trajectoire_denominateur(bibliotheque, issues, instances, k, deja=par_membre)
     log_w = [a - b for a, b in zip(numerateur, denominateur)]

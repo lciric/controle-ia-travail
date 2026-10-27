@@ -123,13 +123,21 @@ def valider_hote(hote):
     return hote
 
 
+RESERVE_PAR_APPEL_DEFAUT = 0.40  # v7, version 5 : au-dessus du coût maximal d'un appel vu en (a), 0,266 USD (défaut 8)
+
+
 class Compteur:
     """Plafond de dépense du relais. Chaque appel **réserve** `reserve_par_appel` avant de partir (des appels simultanés ne
-    peuvent pas franchir le plafond ensemble : défaut vu par la répétition générale, corrigé ici), puis règle au coût lu."""
+    peuvent pas franchir le plafond ensemble : défaut vu par la répétition générale, corrigé ici), puis règle au coût lu.
 
-    def __init__(self, plafond_usd, reserve_par_appel=0.25):
+    Garantie : la dépense ne dépasse le plafond que d'au plus (coût maximal d'un appel − réserve) × appels simultanés.
+    v7, version 5 (défaut 8 du premier lancement réel : un appel à 0,266 USD pour une réserve de 0,25) : réserve par défaut
+    0,40 USD, et tout dépassement de la réserve par un appel est compté et journalisé (`depassement_max_usd`)."""
+
+    def __init__(self, plafond_usd, reserve_par_appel=RESERVE_PAR_APPEL_DEFAUT):
         self.plafond, self.reserve, self.depense = float(plafond_usd), float(reserve_par_appel), 0.0
         self.engage, self.appels, self.refus = 0.0, 0, 0
+        self.depassements, self.depassement_max = 0, 0.0
         self._verrou = threading.Lock()
 
     def reserver(self):
@@ -144,13 +152,18 @@ class Compteur:
             self.engage -= self.reserve
             self.depense += cout
             self.appels += 1
+            if cout > self.reserve:
+                self.depassements += 1
+                self.depassement_max = max(self.depassement_max, cout - self.reserve)
             return self.depense
 
     def etat(self):
         with self._verrou:
             return {"plafond_usd": self.plafond, "reserve_par_appel_usd": self.reserve, "depense_usd": round(self.depense, 6),
                     "engage_usd": round(self.engage, 6), "appels": self.appels, "refus": self.refus,
-                    "restant_usd": round(self.plafond - self.depense, 6)}
+                    "restant_usd": round(self.plafond - self.depense, 6),
+                    "appels_au_dessus_de_la_reserve": self.depassements,
+                    "depassement_max_usd": round(self.depassement_max, 6)}
 
 
 def fabriquer_gestionnaire(cle, amont, compteur, journal, verrou_journal):
@@ -266,7 +279,8 @@ def fabriquer_gestionnaire(cle, amont, compteur, journal, verrou_journal):
             cumul = compteur.regler(cout)
             ecrire_journal({"quand": debut, "duree_s": round(time.time() - debut, 3), "methode": methode, "chemin": chemin,
                             "statut": reponse.status, "en_flux": en_flux, "octets": octets, "modele": modele,
-                            "usage": usage or {}, "cout_usd": round(cout, 6), "depense_cumulee_usd": round(cumul, 6)})
+                            "usage": usage or {}, "cout_usd": round(cout, 6), "depense_cumulee_usd": round(cumul, 6),
+                            "depassement_de_reserve_usd": round(max(0.0, cout - compteur.reserve), 6)})
             self.close_connection = True
 
     return Gestionnaire
@@ -281,7 +295,7 @@ def lire_cle(environnement, variable):
     return cle
 
 
-def servir(hote, port, cle, amont, plafond_usd, journal=None, pret=None, reserve_par_appel=0.25):
+def servir(hote, port, cle, amont, plafond_usd, journal=None, pret=None, reserve_par_appel=RESERVE_PAR_APPEL_DEFAUT):
     """Sert jusqu'à l'arrêt du processus ; `pret` (événement) est levé avec l'adresse effective dans `pret.url`."""
     valider_hote(hote)
     compteur = Compteur(plafond_usd, reserve_par_appel)
@@ -310,7 +324,7 @@ def analyseur():
                    help="variable de l'environnement du relais qui porte la clé (effacée après lecture)")
     a.add_argument("--plafond-usd", type=float, required=True, help="plafond de dépense tenu par le relais")
     a.add_argument("--journal", help="journal des appels (JSON par ligne, sans clé ni corps)")
-    a.add_argument("--reserve-par-appel", type=float, default=0.25,
+    a.add_argument("--reserve-par-appel", type=float, default=RESERVE_PAR_APPEL_DEFAUT,
                    help="montant réservé avant chaque appel, réglé au coût lu après (borne les appels simultanés)")
     return a
 

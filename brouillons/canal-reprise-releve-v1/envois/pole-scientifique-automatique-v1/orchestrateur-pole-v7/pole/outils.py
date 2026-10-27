@@ -53,6 +53,17 @@ def ecrire_scelle(chemin, contenu, ecraser=False):
     return empreinte
 
 
+def dossier_traces(dossier_agent):
+    """Dossier **voisin** de celui d'un agent, où l'orchestrateur écrit ses propres traces (consigne, réponse, produits).
+
+    v7, version 5 (défaut 1 du premier lancement réel) : l'orchestrateur ne partage plus aucun nom de fichier avec un
+    agent. En génération 1 de (a), une leçon de la mémoire (« toujours écrire reponse.txt ») a fait écrire aux agents le
+    fichier que l'orchestrateur se réservait ; son écriture sans écrasement a échoué cinq fois sur cinq. Le dossier voisin
+    est hors du dossier de l'agent : la garde des outils et le bac à sable lui en refusent l'écriture."""
+    dossier_agent = os.path.normpath(os.path.abspath(dossier_agent))
+    return os.path.join(os.path.dirname(dossier_agent), "traces-" + os.path.basename(dossier_agent))
+
+
 def ecrire_json_scelle(chemin, objet, ecraser=False):
     texte = json.dumps(objet, ensure_ascii=False, indent=2, sort_keys=True, allow_nan=False) + "\n"
     return ecrire_scelle(chemin, texte, ecraser=ecraser)

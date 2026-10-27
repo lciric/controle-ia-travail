@@ -70,6 +70,53 @@ class ModeleNonPermis(ValueError):
     """Un modèle réel hors de la liste permise (Opus 5.5, Fable 5.1) : refusé avant tout appel."""
 
 
+class BacASableInactif(RuntimeError):
+    """Moteur réel sans bac à sable actif : refusé avant tout appel (v7, version 5, défaut 7 du premier lancement réel :
+    en (a), les agents tournaient sans bac à sable, sous root ; un agent pouvait en principe lire l'environnement d'un
+    autre processus du même utilisateur, donc la clé du relais)."""
+
+
+def etat_bac_a_sable(chercher=None, executer=None):
+    """(actif, motif) : `bwrap` et `socat` présents, et `bwrap` s'exécute avec le réseau isolé (espaces de noms permis).
+    `chercher` et `executer` sont injectables pour les essais (défaut : shutil.which, subprocess.run)."""
+    import shutil
+    import subprocess
+    chercher = chercher or shutil.which
+    executer = executer or subprocess.run
+    manquants = [nom for nom in ("bwrap", "socat") if chercher(nom) is None]
+    if manquants:
+        return False, ("dépendances du bac à sable absentes : " + ", ".join(manquants)
+                       + " (par exemple `apt install bubblewrap socat`)")
+    try:
+        r = executer([chercher("bwrap"), "--ro-bind", "/", "/", "--dev", "/dev", "--unshare-net", "true"],
+                     capture_output=True, timeout=30)
+    except (OSError, subprocess.SubprocessError) as erreur:
+        return False, f"bwrap ne s'exécute pas ({type(erreur).__name__})"
+    if r.returncode != 0:
+        return False, (f"bwrap ne s'exécute pas dans ce conteneur (code {r.returncode}) : espaces de noms interdits ? "
+                       "(essai : bwrap --ro-bind / / --dev /dev --unshare-net true)")
+    return True, "bwrap et socat présents ; bwrap s'exécute, réseau isolé"
+
+
+def exiger_bac_a_sable(sdk=None, accepter_sans=False, motif_sans="", etat=None, euid=None):
+    """État du bac à sable consigné au manifeste ; lève BacASableInactif s'il est inactif, sauf (i) faux moteur de la
+    répétition générale (aucun agent réel, aucune clé), ou (ii) acceptation explicite, motif écrit, **hors de root**."""
+    if sdk is not None and getattr(sdk, "EST_FAUX_SDK", False):
+        return {"actif": False, "motif": "faux moteur de la répétition générale : aucun agent réel, aucune clé"}
+    actif, motif = (etat or etat_bac_a_sable)()
+    if actif:
+        return {"actif": True, "motif": motif}
+    if not accepter_sans:
+        raise BacASableInactif("moteur réel refusé : bac à sable inactif — " + motif + " ; sans bac à sable, un agent "
+                               "peut lire l'environnement d'un autre processus du même utilisateur (la clé du relais)")
+    if not (motif_sans or "").strip():
+        raise BacASableInactif("--accepter-sans-bac-a-sable exige --motif-sans-bac-a-sable (une raison écrite)")
+    if (euid or os.geteuid)() == 0:
+        raise BacASableInactif("sans bac à sable, l'orchestrateur et ses agents ne tournent jamais sous root "
+                               "(utilisateur 0) : lancer sous un autre utilisateur que celui du relais")
+    return {"actif": False, "motif": motif, "accepte_sans_bac_a_sable": motif_sans.strip()}
+
+
 def verifier_modele_reel(modele):
     if not isinstance(modele, str) or not modele.startswith(MODELES_REELS_PERMIS):
         raise ModeleNonPermis(f"modèle réel non permis : {modele!r} (permis : {', '.join(MODELES_REELS_PERMIS)}, "

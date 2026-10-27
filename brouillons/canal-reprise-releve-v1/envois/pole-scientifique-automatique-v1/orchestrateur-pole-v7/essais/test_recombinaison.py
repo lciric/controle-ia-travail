@@ -97,7 +97,7 @@ class Fusion(CasAvecDossier):
         for fille in r["filles"]:
             self.assertEqual(len(fille.parents), 2)
             self.assertTrue(fille.ce_que_la_fille_predit_de_plus.strip())
-        with open(f"{self.tmp}/paire-01/consigne.txt", encoding="utf-8") as f:
+        with open(f"{self.tmp}/traces-paire-01/consigne.txt", encoding="utf-8") as f:
             self.assertIn("ce_que_la_fille_predit_de_plus", f.read())
 
     def test_fille_sans_prediction_nouvelle_refusee(self):

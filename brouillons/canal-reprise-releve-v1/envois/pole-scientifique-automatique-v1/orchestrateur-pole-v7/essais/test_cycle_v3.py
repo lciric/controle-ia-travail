@@ -65,7 +65,7 @@ class JugeV1DansLeCycle(CasGeneration):
         self.assertEqual(fichier["ordre"], sp.ordre_execution(g.graine_noyau, gele.empreinte, 80))
         self.assertEqual(r["issues"]["V1"]["pari"]["plan_execution"], "ordre_secret")
         self.assertIn("urne", [m["nom"] for m in gele.engagement["bibliotheque"]])
-        with open(os.path.join(dossier, "consigne.txt"), encoding="utf-8") as fc:
+        with open(os.path.join(os.path.dirname(dossier), "traces-experience", "consigne.txt"), encoding="utf-8") as fc:
             self.assertIn("ordre-execution.json", fc.read())
         for nom in os.listdir(dossier):  # la graine du noyau n'est écrite nulle part dans le dossier de l'agent
             with open(os.path.join(dossier, nom), "rb") as fb:

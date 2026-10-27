@@ -29,12 +29,15 @@ from dataclasses import asdict, dataclass
 from . import selection_pari as sp
 from .caviardage import caviarder
 from .fiche import STATUTS, FicheModifieeApresGel, ecrire_fiche_gelee, verifier_fichier_fiche
-from .outils import (chemin_dans, ecrire_json_scelle, ecrire_scelle, extraire_bloc_json, graine_derivee,
-                     json_canonique, nombre_fini, sha256_fichier)
+from .outils import (chemin_dans, dossier_traces, ecrire_json_scelle, ecrire_scelle, extraire_bloc_json,
+                     graine_derivee, json_canonique, nombre_fini, sha256_fichier)
 
 VERDICTS = ("survit", "eliminee", "indecise")
-EXCLUS_DU_REJEU = {"fiche.json", "fiche.json.sha256", "engagement.json", "engagement.json.sha256", "resultat.json",
-                   "tirages.json", "reponse.txt", "consigne.txt"}
+# Fichiers de l'expérience jamais copiés dans le dossier du vérificateur ; **leurs compagnons `.sha256` non plus** (v7,
+# version 5, défaut 5 du premier lancement réel : des empreintes orphelines égaraient le vérificateur).
+EXCLUS_DU_REJEU = {"fiche.json", "engagement.json", "resultat.json", "tirages.json", "reponse.txt", "consigne.txt"}
+PHRASE_REPONSE = ("Ta réponse est ton dernier message : l'orchestrateur l'archive lui-même, hors de ton dossier ; "
+                  "n'écris aucun fichier de réponse.")
 
 
 @dataclass
@@ -78,6 +81,7 @@ class ConfigGeneration:
     propositions_par_generation: int = 0  # v7 : fiches demandées au proposeur à chaque génération (0 : aucun proposeur)
     nul_archive: bool = False  # v7 : lois des survivantes de l'archive et leurs mélanges aveugles au nul de toute fiche
     exploration_developpement: bool = False  # v7, pièce 4 bis : partie de développement (traits et issues) au proposeur
+    pari_fraction: bool = False  # v7 : numérateur = mélange sur une grille de fractions de mise (levier de puissance valide)
     modele_proposeur: str = "simule-e"
     plafond_proposeur_usd: float = 0.5
     max_tours_proposeur: int = 15
@@ -129,6 +133,8 @@ class ConfigGeneration:
             raise ValueError("nul_archive : vrai ou faux")
         if not isinstance(self.exploration_developpement, bool):
             raise ValueError("exploration_developpement : vrai ou faux")
+        if not isinstance(self.pari_fraction, bool):
+            raise ValueError("pari_fraction : vrai ou faux")
         return self
 
 
@@ -191,19 +197,34 @@ def consigne_experimentateur(fiche, empreinte, texte_memoire, mode, empreinte_en
                             "code rejouable qui vérifie que `mesures.json` est lié à l'engagement gelé (même empreinte) "
                             "et range ces issues telles quelles dans `tirages.json` (mêmes champs). Toute issue "
                             "différente de celles déposées sera rejetée par le noyau.")
+    morceaux.append(PHRASE_REPONSE)
     if texte_memoire:
         morceaux.append("Mémoire du pôle (à titre d'aide, le test gelé prime) :\n" + texte_memoire)
     return "\n\n".join(morceaux)
 
 
 def consigne_verificateur(empreinte, declaration, mode):
-    quoi = ("rejoue le code déclaré et compare la statistique et le verdict au seuil gelé" if mode == "seuil"
-            else "rejoue le code déclaré et compare les tirages produits à `tirages-declares.json`")
+    if mode == "seuil":
+        quoi = "rejoue le code déclaré et compare la statistique et le verdict au seuil gelé"
+        pari = ""
+    else:
+        quoi = "rejoue le code déclaré et compare les tirages produits à `tirages-declares.json`"
+        # v7, version 5 (défaut 5 du premier lancement réel) : deux vérificateurs ont refusé de confirmer faute d'un
+        # « verdict chiffré » que, par construction, seul le noyau calcule, après eux.
+        pari = (" Sélection par pari : il n'y a **aucun verdict chiffré à confirmer** ; la richesse est calculée par le "
+                "noyau après ta confirmation. Tu confirmes seulement que le rejeu reproduit exactement les tirages "
+                "déclarés et que le test exécuté est le test gelé. Rejoue dans ce dossier (tu ne peux pas écrire "
+                "ailleurs) et garde du budget pour le rejeu.")
     return ("Tu es vérificateur, d'un autre modèle que l'expérimentateur. Le dossier contient la fiche gelée "
             f"(`fiche.json`, empreinte {empreinte}), le code et les données de l'expérience, et la déclaration "
             f"(`declaration.json`) : {json.dumps(declaration, ensure_ascii=False, sort_keys=True)}. Tu {quoi}, tu vérifies "
-            "que le test exécuté est le test gelé et tu cherches les raccourcis. Termine par un bloc ```json "
-            "{\"confirme\": true|false, \"test_conforme\": true|false, \"motif\": \"...\"}```.")
+            "que le test exécuté est le test gelé et tu cherches les raccourcis." + pari + " " + PHRASE_REPONSE
+            + " Termine par un bloc ```json {\"confirme\": true|false, \"test_conforme\": true|false, \"motif\": \"...\"}```.")
+
+
+def _exclu_du_rejeu(relatif):
+    base = relatif[:-len(".sha256")] if relatif.endswith(".sha256") else relatif
+    return base in EXCLUS_DU_REJEU
 
 
 def _copier_pour_rejeu(source, cible, limite):
@@ -212,7 +233,7 @@ def _copier_pour_rejeu(source, cible, limite):
     for racine, _, fichiers in os.walk(source):
         for nom in fichiers:
             relatif = os.path.relpath(os.path.join(racine, nom), source)
-            if relatif in EXCLUS_DU_REJEU or os.path.islink(os.path.join(racine, nom)):
+            if _exclu_du_rejeu(relatif) or os.path.islink(os.path.join(racine, nom)):
                 continue
             total += os.path.getsize(os.path.join(racine, nom))
             if total > limite:
@@ -294,6 +315,8 @@ def preparer_engagement(fiche, config, lois_parents=None, reservoir=None, membre
                                               standard, config.lecture, fiche.empreinte(), plan_execution=plan_execution)
     if moniteur is not None:
         engagement["moniteur"] = moniteur
+    if getattr(config, "pari_fraction", False):
+        engagement["fractions"] = list(sp.GRILLE_FRACTIONS)  # sous l'empreinte : déclaré avant le gel
     return sp.geler_engagement(engagement)
 
 
@@ -383,28 +406,35 @@ class Generation:
         sp.valider_loi(fiche.loi_predictive, int(espace.get("nombre_issues", 3)), int(espace.get("dimension", 2)))
 
     # (b) et (c) : un expérimentateur puis un vérificateur par fiche ---------------------------------------------
-    def traiter(self, fiche):
-        issue = {"identifiant": fiche.identifiant, "famille_source": fiche.famille_source(), "desaccord": False,
-                 "couts": {}, "verdict_declare": None, "code": {}}
+    @staticmethod
+    def issue_vierge(fiche):
+        return {"identifiant": fiche.identifiant, "famille_source": fiche.famille_source(), "desaccord": False,
+                "couts": {}, "verdict_declare": None, "code": {}}
+
+    def traiter(self, fiche, issue=None):
+        """`issue` (facultatif) est rempli en place : les coûts réglés avant une erreur de l'orchestrateur y restent
+        (v7, version 5, défaut 4 du premier lancement réel : sinon la réservation était libérée deux fois)."""
+        issue = self.issue_vierge(fiche) if issue is None else issue
         try:
             self.registre_gel.verifier(fiche)
         except FicheModifieeApresGel as e:
             return dict(issue, verdict_final="refusee (modifiee apres gel)", motif=str(e))
         empreinte = self.registre_gel.empreinte(fiche.identifiant)
         dossier_exp = os.path.join(self.dossier, fiche.identifiant, "experience")
+        traces_exp = dossier_traces(dossier_exp)
         gele = self.engagements.get(fiche.identifiant)
         texte_memoire = self.memoire.texte_consigne("experimentateur") if self.memoire else ""
         consigne = consigne_experimentateur(fiche, empreinte, texte_memoire, self.config.selection,
                                             gele.empreinte if gele else None,
                                             ordre_secret=bool(gele) and sp.plan_execution_de(gele.engagement) == "ordre_secret",
                                             mesures_du_noyau=fiche.identifiant in self.mesures_noyau)
-        ecrire_scelle(os.path.join(dossier_exp, "consigne.txt"), consigne)
+        ecrire_scelle(os.path.join(traces_exp, "consigne.txt"), consigne)
         plafond_exp = min(fiche.cout_borne, self.config.plafond_experimentateur_usd)
         res = self.adaptateur.lancer("experimentateur", consigne, dossier_exp, plafond_exp,
                                      self.config.max_tours_experimentateur, modele=self.config.modele_experimentateur)
         self.budget.regler(plafond_exp, res.cout_declare_usd)
         issue["couts"]["experimentateur"] = res.cout_declare_usd
-        ecrire_scelle(os.path.join(dossier_exp, "reponse.txt"), caviarder(res.texte_final)[0])
+        ecrire_scelle(os.path.join(traces_exp, "reponse.txt"), caviarder(res.texte_final)[0])
         cle = "verdict" if self.config.selection == "seuil" else "tirages"
         bloc = extraire_bloc_json(res.texte_final, cle)
         if res.statut != "ok" or bloc is None:
@@ -455,11 +485,13 @@ class Generation:
             ecrire_scelle(os.path.join(dossier_v, "tirages-declares.json"), json_canonique(tirages))
         ecrire_scelle(os.path.join(dossier_v, "declaration.json"), json_canonique(bloc))
         consigne = consigne_verificateur(empreinte, bloc, self.config.selection)
+        traces_v = dossier_traces(dossier_v)
+        ecrire_scelle(os.path.join(traces_v, "consigne.txt"), consigne)
         res = self.adaptateur.lancer("verificateur", consigne, dossier_v, self.config.plafond_verificateur_usd,
                                      self.config.max_tours_verificateur, modele=self.config.modele_verificateur)
         self.budget.regler(self.config.plafond_verificateur_usd, res.cout_declare_usd)
         issue["couts"]["verificateur"] = res.cout_declare_usd
-        ecrire_scelle(os.path.join(dossier_v, "reponse.txt"), caviarder(res.texte_final)[0])
+        ecrire_scelle(os.path.join(traces_v, "reponse.txt"), caviarder(res.texte_final)[0])
         bloc_v = extraire_bloc_json(res.texte_final, "confirme")
         issue["verification"] = bloc_v
         if bloc_v is None:
@@ -560,31 +592,46 @@ class Generation:
             ecrire_json_scelle(os.path.join(self.racine, "noyau", f"graine-noyau-generation-{self.numero:02d}.json"),
                                {"generation": self.numero, "graine_noyau": self.graine_noyau,
                                 "ecrite_apres_les_evaluations": True})
-        qualite = mesure_qualite(ordre, self.registre_gel)
-        # v7 : signal « pas de dents » : si tous les témoins vrais jugés de la génération sont éliminés, les promotions de
-        # la génération sont étiquetées (le verdict ne change pas ; la lecture doit en tenir compte).
-        sans_dents = bool(qualite["temoins_vrais_testes"]) and qualite["vraies_eliminees"] == qualite["temoins_vrais_testes"]
+        qualite = mesure_qualite(ordre, self.registre_gel, issues)
+        # v7 : signal « pas de dents » : des témoins vrais ont été jugés par le pari et **aucun** n'est promu ; les
+        # promotions de la génération sont alors étiquetées (le verdict ne change pas ; la lecture doit en tenir compte).
+        # v7, version 5 (défaut 3 du premier lancement réel) : un témoin vrai indécis ou en erreur n'est pas « jugé » ;
+        # si aucun ne l'est, l'état est « dents non mesurées », et les promotions sont étiquetées de même.
+        sans_dents = qualite["etat_dents"] == "pas de dents"
         qualite["sans_dents"] = sans_dents
-        if sans_dents:
+        if qualite["etat_dents"] != "dents":
             for issue in issues.values():
                 if issue.get("verdict_final") == "survit":
-                    issue["sans_dents"] = True
+                    if sans_dents:
+                        issue["sans_dents"] = True
+                    elif qualite["etat_dents"] == "dents non mesurées":
+                        issue["dents_non_mesurees"] = True
+        erreurs = sorted(i for i, issue in issues.items() if issue.get("erreur_orchestrateur"))
         return {"generation": self.numero, "issues": {i: issues[i] for i in sorted(issues)},
-                "arret_budget": arret_budget, "budget": self.budget.etat(), "qualite": qualite}
+                "arret_budget": arret_budget, "budget": self.budget.etat(), "qualite": qualite,
+                "erreurs_orchestrateur": {"fiches": erreurs, "lancees": len(a_lancer)}}
 
     def _traiter_sur(self, fiche):
-        """Une erreur de l'orchestrateur sur une fiche la rend indécise, motif écrit ; elle n'arrête pas la génération."""
+        """Une erreur de l'orchestrateur sur une fiche la rend indécise, motif écrit, marquée `erreur_orchestrateur` ;
+        elle n'arrête pas la génération, ne compte pas comme un essai (la fiche reste rejouable) et garde ses coûts déjà
+        réglés (v7, version 5, défauts 2 et 4 du premier lancement réel)."""
+        issue = self.issue_vierge(fiche)
         try:
-            return self.traiter(fiche)
+            return self.traiter(fiche, issue)
         except Exception as e:  # noqa: BLE001 — consigné dans l'issue, jamais avalé en silence
-            return {"identifiant": fiche.identifiant, "famille_source": fiche.famille_source(), "desaccord": False,
-                    "couts": {}, "verdict_final": "indecise",
-                    "motif": f"erreur de l'orchestrateur : {type(e).__name__} : {caviarder(str(e))[0][:300]}"}
+            return dict(issue, verdict_final="indecise", erreur_orchestrateur=True,
+                        motif=f"erreur de l'orchestrateur : {type(e).__name__} : {caviarder(str(e))[0][:300]}")
 
     # (d) sélection ---------------------------------------------------------------------------------------------
     @staticmethod
     def selectionner(fiche, issue):
         verdict = issue["verdict_final"]
+        if issue.get("erreur_orchestrateur"):
+            # v7, version 5 : une fiche ne perd jamais sa chance par la plomberie (S-V1, témoin vrai, retiré en (a)).
+            fiche.statut = "indecise"
+            fiche.historique.append({"verdict": verdict, "motif": issue.get("motif"), "erreur_orchestrateur": True})
+            issue["statut"] = fiche.statut
+            return
         if verdict in ("survit", "eliminee", "indecise", "rejetee (test change)"):
             fiche.essais += 1
         if verdict == "survit":
@@ -643,8 +690,20 @@ def appliquer_multiplicite(issues, alpha):
 
 
 # (e) mesure de qualité ---------------------------------------------------------------------------------------------
-def mesure_qualite(fiches, registre_gel):
-    """Taux de fausses gardées et de vraies éliminées parmi les témoins tranchés ; vérité revérifiée par empreinte."""
+def _etat_dents(vraies_jugees, vraies_promues):
+    if vraies_promues:
+        return "dents"
+    return "pas de dents" if vraies_jugees else "dents non mesurées"
+
+
+def mesure_qualite(fiches, registre_gel, issues=None):
+    """Qualité mesurée sur les témoins ; vérité revérifiée par empreinte.
+
+    Clés historiques (« testés » = servis et tranchés au sens large, indécis et retirés compris) gardées pour les lecteurs
+    existants. v7, version 5 (défaut 3 du premier lancement réel : « vrais testés 3, éliminés 0 » pour **aucun** jugé) :
+    « jugés » = verdict du pari (survit ou éliminée) **dans cette génération** ; vraies promues (puissance) ; témoins en
+    erreur de l'orchestrateur à part ; état des dents : « dents » (au moins un témoin vrai promu), « pas de dents »
+    (témoins vrais jugés, aucun promu), « dents non mesurées » (aucun témoin vrai jugé)."""
     temoins = [f for f in fiches if f.temoin is not None and registre_gel.est_gelee(f.identifiant)]
     for f in temoins:
         registre_gel.verifier(f)
@@ -653,17 +712,42 @@ def mesure_qualite(fiches, registre_gel):
     vraies = [f for f in testes if f.temoin == "vraie"]
     gardees = sum(f.statut == "survit" for f in fausses)
     eliminees = sum(f.statut == "eliminee" for f in vraies)
+    issues = issues or {}
+
+    def verdict(f):
+        issue = issues.get(f.identifiant)
+        return issue.get("verdict_final") if issue is not None else f.statut
+
+    def en_erreur(f):
+        return bool((issues.get(f.identifiant) or {}).get("erreur_orchestrateur"))
+
+    jugees_v = [f for f in temoins if f.temoin == "vraie" and verdict(f) in ("survit", "eliminee")]
+    jugees_f = [f for f in temoins if f.temoin == "fausse" and verdict(f) in ("survit", "eliminee")]
+    promues = sum(verdict(f) == "survit" for f in jugees_v)
     return {"temoins_faux_testes": len(fausses), "temoins_vrais_testes": len(vraies),
             "fausses_gardees": gardees, "taux_fausses_gardees": gardees / len(fausses) if fausses else None,
             "vraies_eliminees": eliminees, "taux_vraies_eliminees": eliminees / len(vraies) if vraies else None,
-            "detail": {f.identifiant: {"verite": f.temoin, "statut": f.statut} for f in temoins}}
+            "temoins_servis": len(temoins), "temoins_vrais_juges": len(jugees_v), "temoins_faux_juges": len(jugees_f),
+            "vraies_promues": promues, "taux_vraies_promues": promues / len(jugees_v) if jugees_v else None,
+            "temoins_en_erreur": sum(en_erreur(f) for f in temoins),
+            "temoins_non_juges": len(temoins) - len(jugees_v) - len(jugees_f),
+            "etat_dents": _etat_dents(len(jugees_v), promues),
+            "detail": {f.identifiant: {"verite": f.temoin, "statut": f.statut, "verdict": verdict(f),
+                                       "erreur_orchestrateur": en_erreur(f)} for f in temoins}}
+
+
+CLES_CUMULEES = ("temoins_faux_testes", "temoins_vrais_testes", "fausses_gardees", "vraies_eliminees", "temoins_servis",
+                 "temoins_vrais_juges", "temoins_faux_juges", "vraies_promues", "temoins_en_erreur", "temoins_non_juges")
 
 
 def cumuler_qualite(mesures):
-    total = {"temoins_faux_testes": 0, "temoins_vrais_testes": 0, "fausses_gardees": 0, "vraies_eliminees": 0}
+    total = {cle: 0 for cle in CLES_CUMULEES}
     for m in mesures:
         for cle in total:
-            total[cle] += m[cle]
+            total[cle] += m.get(cle, 0)
     total["taux_fausses_gardees"] = total["fausses_gardees"] / total["temoins_faux_testes"] if total["temoins_faux_testes"] else None
     total["taux_vraies_eliminees"] = total["vraies_eliminees"] / total["temoins_vrais_testes"] if total["temoins_vrais_testes"] else None
+    total["taux_vraies_promues"] = (total["vraies_promues"] / total["temoins_vrais_juges"]
+                                    if total["temoins_vrais_juges"] else None)
+    total["etat_dents"] = _etat_dents(total["temoins_vrais_juges"], total["vraies_promues"])
     return total

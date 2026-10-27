@@ -131,7 +131,7 @@ class SelectionParPari(CasGeneration):
         r = self.generation([v, f], self.adaptateur(), selection="pari", taille_plan=80)
         self.assertEqual((v.statut, f.statut), ("survit", "eliminee"))
         self.assertTrue(r["issues"]["V1"]["pari"]["promue"])
-        with open(os.path.join(self.tmp, "archive", "generations", "generation-00", "V1", "experience", "consigne.txt"),
+        with open(os.path.join(self.tmp, "archive", "generations", "generation-00", "V1", "traces-experience", "consigne.txt"),
                   encoding="utf-8") as f_consigne:
             consigne = f_consigne.read()
         self.assertIn("Tu ne calcules aucune richesse", consigne)

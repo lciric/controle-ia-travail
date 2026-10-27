@@ -29,7 +29,7 @@ import re
 from .caviardage import caviarder
 from .fiche import Fiche, FicheInvalide
 from .memoire import signature_prediction
-from .outils import ecrire_scelle, extraire_bloc_json, graine_derivee, json_canonique, normaliser_texte
+from .outils import dossier_traces, ecrire_scelle, extraire_bloc_json, graine_derivee, json_canonique, normaliser_texte
 
 MARQUEURS = {
     "lineaire": r"(?<!non )\blineaires?\b",
@@ -308,17 +308,18 @@ def _fusionner(paires, adaptateur, config, dossier, budget, generation, memoire,
             {"a": a.vue_publique(), "b": b.vue_publique(), "ponts": pont, "generation": generation,
              "selection": config.selection, "alpha": config.alpha}))
         consigne = consigne_fusion(a, b, pont, texte_memoire, config.selection, config.alpha)
-        ecrire_scelle(os.path.join(sous, "consigne.txt"), consigne)
+        traces = dossier_traces(sous)  # v7, version 5 : traces de l'orchestrateur hors du dossier de l'agent
+        ecrire_scelle(os.path.join(traces, "consigne.txt"), consigne)
         res = adaptateur.lancer("recombinaison", consigne, sous, config.plafond_recombinaison_usd,
                                 config.max_tours_recombinaison, modele=config.modele_recombinaison)
         budget.regler(config.plafond_recombinaison_usd, res.cout_declare_usd)
-        ecrire_scelle(os.path.join(sous, "reponse.txt"), caviarder(res.texte_final)[0])
+        ecrire_scelle(os.path.join(traces, "reponse.txt"), caviarder(res.texte_final)[0])
         deja.add(cle)
         bloc = extraire_bloc_json(res.texte_final, "fille") or {}
         fille, motif = valider_fille(bloc.get("fille"), a, b, f"fille-g{generation:02d}-{numero:02d}",
                                      f"recombinaison:{config.modele_recombinaison}")
         entree = {"paire": cle, "pont": pont, "similarite_domaine": round(sij, 6), "consigne": os.path.relpath(
-            os.path.join(sous, "consigne.txt"), dossier), "cout": res.cout_declare_usd}
+            os.path.join(traces, "consigne.txt"), os.path.abspath(dossier)), "cout": res.cout_declare_usd}
         if fille is None:
             refusees.append(dict(entree, motif=motif, proposition=bloc.get("fille")))
         else:

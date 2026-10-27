@@ -19,6 +19,10 @@ import os
 import re
 import urllib.parse
 
+# v7, version 5 : marque du faux moteur ; l'orchestrateur n'exige pas le bac à sable quand il n'y a aucun agent réel (le
+# vrai paquet `claude_agent_sdk` ne porte jamais cette marque).
+EST_FAUX_SDK = True
+
 JOURNAL = os.environ.get("FAUX_SDK_JOURNAL")
 GRAINE = int(os.environ.get("FAUX_SDK_GRAINE", "20261027"))
 ROLE_PAR_CONSIGNE = (("expérimentateur du pôle", "experimentateur"), ("vérificateur du pôle", "verificateur"),

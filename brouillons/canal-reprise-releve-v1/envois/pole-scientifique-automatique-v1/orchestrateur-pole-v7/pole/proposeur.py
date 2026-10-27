@@ -29,7 +29,7 @@ import os
 from . import selection_pari as sp
 from .caviardage import caviarder
 from .fiche import Fiche, FicheInvalide
-from .outils import ecrire_json_scelle, ecrire_scelle, extraire_bloc_json
+from .outils import dossier_traces, ecrire_json_scelle, ecrire_scelle, extraire_bloc_json
 
 CATALOGUE = {
     "monotone_un_trait": "l'issue croît (ou décroît) avec un seul trait (loi softmax ordinale sur ce trait)",
@@ -180,11 +180,12 @@ def proposer(adaptateur, config, monde, memoire, generation, dossier, budget, no
                                              "visible ; une loi ajustée ici est jugée sur l'épreuve, après le gel"}
     ecrire_json_scelle(os.path.join(dossier, "contexte-proposeur.json"), contexte)
     consigne = consigne_proposeur(nombre)
-    ecrire_scelle(os.path.join(dossier, "consigne.txt"), consigne)
+    traces = dossier_traces(dossier)  # v7, version 5 : traces de l'orchestrateur hors du dossier de l'agent
+    ecrire_scelle(os.path.join(traces, "consigne.txt"), consigne)
     res = adaptateur.lancer("proposeur", consigne, dossier, config.plafond_proposeur_usd, config.max_tours_proposeur,
                             modele=config.modele_proposeur)
     budget.regler(config.plafond_proposeur_usd, res.cout_declare_usd)
-    ecrire_scelle(os.path.join(dossier, "reponse.txt"), caviarder(res.texte_final)[0])
+    ecrire_scelle(os.path.join(traces, "reponse.txt"), caviarder(res.texte_final)[0])
     bloc = extraire_bloc_json(res.texte_final, "fiches") or {}
     propositions = bloc.get("fiches") if isinstance(bloc.get("fiches"), list) else []
     rapport["proposees"] = len(propositions)
