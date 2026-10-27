@@ -269,5 +269,26 @@ class SeuilDeFusionAuGabarit(unittest.TestCase):
         self.assertLessEqual(taux["gabarit"], taux["defaut"], taux)
 
 
+
+
+class BanqueV3Temoins(unittest.TestCase):
+    """Banque v3 (v14) : témoins vrais établis par confirmation croisée sur le développement, témoins faux par permutation."""
+
+    def test_sur_un_monde_de_la_grammaire(self):
+        import tempfile
+        from essais.aides import BASE
+        from exemples.generer_monde_grammaire_v1 import generer_monde
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "exemples"))
+        import construire_banque_t05_v3 as b3
+        os.makedirs(BASE, exist_ok=True)
+        banque, _, _ = generer_monde(20261105, structures=["monotone", "combinaison", "sous_population"])
+        fiches, bilan = b3.fabriquer_temoins(banque, 20261105, nombre_max=6, par_recherche=30)
+        self.assertGreaterEqual(bilan["vrais_confirmes"], 1, bilan)        # des structures vraies, confirmées sur B
+        self.assertLessEqual(bilan["faux_permutation_confirmes"], 1, bilan)  # la permutation détruit le lien (≤ 1 sur 30 au hasard)
+        vrais = [f for f in fiches if f["temoin"] == "vraie"]
+        self.assertTrue(all(f["source"]["gain_confirmation_nat"] >= b3.SEUIL_CONFIRMATION for f in vrais))
+        self.assertTrue(all(not f["enonce"].lower().startswith("témoin") for f in fiches))
+
+
 if __name__ == "__main__":
     unittest.main()
