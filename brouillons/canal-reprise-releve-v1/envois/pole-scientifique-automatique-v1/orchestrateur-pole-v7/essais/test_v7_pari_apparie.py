@@ -151,7 +151,7 @@ class HeritageDS25bis(unittest.TestCase):
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a", "b", "c", "d"], 0.04)
         for f in "bcd":
-            c.abandonner(f)
+            c.abandonner(f, avant_partie=True)  # abandonnées avant toute partie : la décision n'a vu aucune issue
         self.assertAlmostEqual(c.seuil_log("a"), math.log(4 / 0.04))  # 100, jamais 1/0,04 = 25
         c.ajouter_trajectoire("a", [math.log(30)])
         self.assertEqual(c.lire(), set())  # 30 < 100 : la lecture « seule » l'aurait promue (30 ≥ 25)
@@ -203,12 +203,73 @@ class HeritageDS25bis(unittest.TestCase):
                 c.lire()
                 if g > 0:
                     for j in range(3):
-                        c.abandonner(f"n{g}-{j}")
+                        c.abandonner(f"n{g}-{j}", avant_partie=True)  # après la lecture, avant la génération suivante
             fausses_valides += bool(c.promues)
             fausses_seules += seule_promue
         self.assertLessEqual(fausses_valides / rep, alpha + 0.01)
+        self.assertGreaterEqual(fausses_valides, 3)  # K6-6 : la lecture promeut bien quelque chose (attendu ≈ 11)
         self.assertGreater(fausses_seules, fausses_valides)
         self.assertGreater(fausses_seules / rep, 0.04)
+
+
+class CorrectionsV7(unittest.TestCase):
+    """Conception v7 du pari (contre-lecture de la v6) : contrat d'abandon (K6-2), retrait (K6-1), budgets (K6-5),
+    ex æquo et abandonnée promue plus tard (K6-6)."""
+
+    def test_contrat_d_abandon(self):
+        c = pa.Course(alpha=0.05)
+        c.entrer("g1", ["a", "b", "c", "d"], 0.04)
+        c.ajouter_trajectoire("a", [math.log(2)])
+        c.abandonner("a")  # cas sain : la partie de la génération est ajoutée, puis la fiche gelée
+        with self.assertRaises(ValueError):
+            c.abandonner("b")  # artefact : abandon sans la partie de la génération courante → refus
+        c.abandonner("b", trajectoire_log=[math.log(0.5)])  # la partie passée avec la décision
+        self.assertAlmostEqual(c.log_e["b"], math.log(0.5))
+        c.abandonner("c", avant_partie=True)
+        with self.assertRaises(ValueError):
+            c.ajouter_trajectoire("c", [math.log(3)])  # partie pour une gelée : refus, jamais ignorée
+        c.ajouter_trajectoire("d", [math.log(2)])
+        with self.assertRaises(ValueError):
+            c.ajouter_trajectoire("d", [math.log(2)])  # une seule partie par génération
+        c.lire()
+        c.ajouter_trajectoire("d", [math.log(2)])  # génération 2 : permis
+        self.assertAlmostEqual(c.log_e["d"], math.log(4))
+
+    def test_retrait(self):
+        c = pa.Course(alpha=0.05)
+        c.entrer("g1", ["a", "b", "c"], 0.03)
+        for f, e in (("a", 200.0), ("b", 200.0), ("c", 60.0)):
+            c.ajouter_trajectoire(f, [math.log(e)])
+        self.assertEqual(c.lire(), {"a", "b", "c"})  # k* = 3 : c (b·E = 0,6 ≥ 1/3) promue avec ses sœurs
+        c.retirer("a", "panne confirmée de la strate")
+        self.assertEqual(c.promues, {"a", "b", "c"})  # l'union garantie est celle d'avant les retraits
+        self.assertEqual(c.promues_rapportees(), {"b", "c"})
+        self.assertNotIn("a", c.bonferroni())
+        c.entrer("g2", ["d"], 0.01)
+        c.ajouter_trajectoire("d", [math.log(26)])  # b·E = 0,26 : promue à k = 4 si « a » comptait, pas à k = 3
+        self.assertEqual(c.lire(), set())  # « a », retirée, est exclue de la lecture : k* = 2, « d » non promue
+        with self.assertRaises(ValueError):
+            c.retirer("b", "")
+
+    def test_budgets_au_dessus_de_alpha(self):
+        self.assertEqual(pa.ebh_pondere({"a": 0.0, "b": 0.0}, {"a": 0.3, "b": 0.2}), set())  # somme 0,5 ≤ 1 acceptée
+        with self.assertRaises(ValueError):
+            pa.ebh_pondere({"a": 0.0, "b": 0.0}, {"a": 0.3, "b": 0.2}, alpha=0.05)
+
+    def test_ex_aequo_au_bord_et_abandonnee_promue_plus_tard(self):
+        b = 0.05 / 3
+        trois = {f: math.log(1 / (3 * b)) for f in "xyz"}  # b·E = 1/3 exactement pour les trois
+        self.assertEqual(pa.ebh_pondere(trois, {f: b for f in "xyz"}), {"x", "y", "z"})
+        c = pa.Course(alpha=0.05)
+        c.entrer("g1", ["a", "b", "c", "d"], 0.05)  # b = 0,0125
+        c.ajouter_trajectoire("d", [math.log(32)])  # b·E = 0,4
+        for f in "abc":
+            c.ajouter_trajectoire(f, [0.0])
+        self.assertEqual(c.lire(), set())
+        c.abandonner("d", avant_partie=True)
+        for f in "abc":
+            c.ajouter_trajectoire(f, [math.log(80)])  # b·E = 1 : arrêtées au seuil
+        self.assertEqual(c.lire(), {"a", "b", "c", "d"})  # k* = 4 : la gelée à 0,4 ≥ 1/4 est promue (voulu, valide)
 
 
 if __name__ == "__main__":

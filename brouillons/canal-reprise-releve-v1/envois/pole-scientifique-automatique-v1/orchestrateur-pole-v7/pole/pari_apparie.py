@@ -185,33 +185,42 @@ def contraste_plafonne(parts, coefficients, constante, m_t, m_max):
 
 # --- Version 21 (conception v6) : règle de l'héritage D-S25 bis ---------------------------------------------------------
 
-def ebh_pondere(log_e, budgets):
+def ebh_pondere(log_e, budgets, alpha=None):
     """Règle e-BH pondérée : `log_e` et `budgets` indexés par fiche ; tri par b_i·E_i décroissant, k* le plus grand k
-    tel que la k-ième valeur atteigne 1/k ; renvoie l'ensemble des k* premières. Avec b_i = α/m pour toutes, c'est la
-    règle e-BH ordinaire. Refuse des budgets dont la somme dépasse 1 (la somme ≤ α se contrôle à l'entrée, `Course`)."""
+    tel que la k-ième valeur atteigne 1/k ; renvoie l'ensemble des k* premières (les ex æquo au bord y sont tous). Avec
+    b_i = α/m pour toutes, c'est la règle e-BH ordinaire. Refuse des budgets dont la somme dépasse α si `alpha` est
+    donné, 1 sinon (version 24, K6-5 : la somme ≤ α se contrôle aussi à l'entrée, `Course.entrer`)."""
     if set(log_e) != set(budgets):
         raise ValueError("mêmes fiches pour les e-valeurs et les budgets")
-    if any(not (b > 0) for b in budgets.values()) or sum(budgets.values()) > 1 + 1e-12:
-        raise ValueError("budgets positifs, de somme ≤ 1")
+    plafond = 1.0 if alpha is None else alpha
+    if any(not (b > 0) for b in budgets.values()) or sum(budgets.values()) > plafond + 1e-12:
+        raise ValueError(f"budgets positifs, de somme ≤ {plafond}")
     scores = sorted(((math.log(budgets[i]) + log_e[i], i) for i in log_e), key=lambda x: (-x[0], str(x[1])))
     k_etoile = 0
-    for k, (s, _) in enumerate(scores, 1):
-        if s >= -math.log(k) - 1e-12:
+    for k, (s_, _) in enumerate(scores, 1):
+        if s_ >= -math.log(k) - 1e-12:
             k_etoile = k
     return {i for _, i in scores[:k_etoile]}
 
 
 class Course:
-    """Une course de l'organisme sous D-S25 bis.
+    """Une course de l'organisme sous D-S25 bis (conception v6), avec les corrections de la conception v7 (K6-1, K6-2).
 
     - `entrer(famille, fiches, alpha_c)` : chaque fiche reçoit le budget α_c/m_c (m_c = taille de la famille, fixée
-      à l'entrée), **gardé à vie** ; la somme des α_c sur les familles entrées ne doit pas dépasser α (refus sinon).
-    - `ajouter_trajectoire(fiche, trajectoire_log)` : la trajectoire (log, unité par unité) de la génération est
-      multipliée à la valeur héritée et **arrêtée** au premier instant où le produit atteint 1/b_i = m_c/α_c.
-    - `abandonner(fiche)` : la valeur est **gelée** (elle reste lue, jamais relancée).
-    - `lire()` : **une** lecture e-BH pondérée sur **toutes** les fiches entrées ; les promues le restent (promotion une
-      seule fois) ; renvoie les nouvelles promotions.
-    - `promues` : l'union des promotions de la course — la quantité garantie (taux de fausses découvertes ≤ Σ α_c).
+      à l'entrée), **gardé à vie** ; plusieurs familles d'une même génération se partagent α_g ; la somme des α_c sur
+      les familles entrées ne doit pas dépasser α (refus sinon).
+    - `ajouter_trajectoire(fiche, trajectoire_log)` : **une** partie par fiche et par génération ; la trajectoire (log,
+      unité par unité) est multipliée à la valeur héritée et **arrêtée** au premier instant où le produit atteint
+      1/b_i = m_c/α_c ; une partie pour une fiche **gelée** est refusée (erreur, jamais ignorée en silence).
+    - `abandonner(fiche, trajectoire_log=None, avant_partie=False)` : **contrat de D-S25 bis (2)** — la valeur gelée est
+      celle d'après la dernière partie observée avant la décision : on passe la partie de la génération courante (elle
+      est ajoutée puis la fiche gelée), ou elle a déjà été ajoutée, ou l'on déclare `avant_partie=True` (la décision n'a
+      vu aucune issue de la génération courante) ; sinon refus.
+    - `lire()` : **une** lecture e-BH pondérée par génération sur toutes les fiches entrées non exclues ; les promues le
+      restent (promotion une seule fois) ; ferme la génération ; renvoie les nouvelles promotions.
+    - `retirer(fiche, motif)` (D-S26 bis, panne confirmée) : la fiche est marquée, gelée et **exclue** des lectures
+      suivantes ; si elle était promue, elle reste dans `promues` — **l'union garantie est celle d'avant les retraits** —
+      et sort de `promues_rapportees()`, qui porte la réserve de D-S26 bis.
     - `bonferroni()` : pour ce qui sort du pôle, les fiches dont l'e-processus atteint 1/b_i (seuil jamais abaissé).
     """
 
@@ -226,7 +235,11 @@ class Course:
         self.gelees = set()
         self.arretees = set()
         self.promues = set()
+        self.retirees = {}
+        self.exclues = set()
         self.lectures = []
+        self.generation = 1
+        self.derniere_partie = {}
 
     def entrer(self, famille, fiches, alpha_c):
         fiches = list(fiches)
@@ -249,8 +262,13 @@ class Course:
     def ajouter_trajectoire(self, fiche, trajectoire_log):
         if fiche not in self.budgets:
             raise KeyError(f"fiche non entrée : {fiche!r}")
-        if fiche in self.gelees or fiche in self.promues or fiche in self.arretees:
-            return self.log_e[fiche]
+        if fiche in self.gelees:
+            raise ValueError(f"fiche gelée {fiche!r} : partie refusée (contrat de D-S25 bis (2))")
+        if self.derniere_partie.get(fiche) == self.generation:
+            raise ValueError(f"fiche {fiche!r} : une seule partie par génération")
+        self.derniere_partie[fiche] = self.generation
+        if fiche in self.promues or fiche in self.arretees:
+            return self.log_e[fiche]  # processus arrêté : la suite est ignorée (temps d'arrêt, valide)
         base, seuil = self.log_e[fiche], self.seuil_log(fiche)
         valeur = base
         for lw in trajectoire_log:
@@ -261,17 +279,39 @@ class Course:
         self.log_e[fiche] = valeur
         return valeur
 
-    def abandonner(self, fiche):
+    def abandonner(self, fiche, trajectoire_log=None, avant_partie=False):
         if fiche not in self.budgets:
             raise KeyError(f"fiche non entrée : {fiche!r}")
+        if fiche in self.gelees:
+            return
+        if trajectoire_log is not None:
+            self.ajouter_trajectoire(fiche, trajectoire_log)
+        elif not avant_partie and fiche not in self.promues and fiche not in self.arretees \
+                and self.derniere_partie.get(fiche) != self.generation:
+            raise ValueError(f"abandon de {fiche!r} sans la partie de la génération {self.generation} : passer la partie, "
+                             f"ou déclarer avant_partie=True si la décision n'a vu aucune issue de cette génération")
         self.gelees.add(fiche)
 
     def lire(self):
-        retenues = ebh_pondere(self.log_e, self.budgets)
+        pool = [f for f in self.budgets if f not in self.exclues]
+        retenues = ebh_pondere({f: self.log_e[f] for f in pool}, {f: self.budgets[f] for f in pool}, self.alpha)
         nouvelles = retenues - self.promues
         self.promues |= nouvelles
         self.lectures.append(sorted(map(str, nouvelles)))
+        self.generation += 1
         return nouvelles
 
+    def retirer(self, fiche, motif):
+        if fiche not in self.budgets:
+            raise KeyError(f"fiche non entrée : {fiche!r}")
+        if not motif:
+            raise ValueError("un retrait porte son motif")
+        self.retirees[fiche] = motif
+        self.gelees.add(fiche)
+        self.exclues.add(fiche)
+
+    def promues_rapportees(self):
+        return self.promues - set(self.retirees)
+
     def bonferroni(self):
-        return {f for f in self.budgets if self.log_e[f] >= self.seuil_log(f) - 1e-12}
+        return {f for f in self.budgets if f not in self.exclues and self.log_e[f] >= self.seuil_log(f) - 1e-12}
