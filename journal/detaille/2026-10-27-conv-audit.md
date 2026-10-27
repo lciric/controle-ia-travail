@@ -210,3 +210,20 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   « cyber ») — leçon : pas de tour d'équipe rouge croisée sur ce sujet sans décision de Lazar. **Passation v8**
   (`228b176`). Erreurs d'heure d'en-tête encore (n° 120, LISEZMOI v17, nœuds) : dites dans la passation. Messages n° 119 à
   122. Recherche de clés avant chaque poussée : rien. Instances : aucune chez moi.
+- **Nuit, fin du programme des huit heures (20:46 à 22:05 UTC ; ajout écrit à 22:04 UTC, heure lue sur `date -u` :
+  22:04:27).** **Pari apparié borné v5 → v8**, chaque version contre-lue par un sous-agent neuf Fable 5.1 (rapports
+  versés dans `pari-de-signe/contre-lecture-v5/` à `-v8/` ; la sortie du script de la v5 reproduite à l'identique hors
+  durée et versée). v5 : la règle d'héritage se lisait de deux façons qui cassaient la garantie (0,074 et 0,105 d'au moins
+  une fausse promotion pour α = 0,05) → v6 : budget d'entrée α_c/m_c gardé à vie, lu par une règle e-BH pondérée sur toutes
+  les fiches entrées (« opératoire et valide » selon la contre-lecture suivante), plafond des unités longues, clé complétée,
+  deux nœuds de porte sur H1 (règle entre modes ; strate de lecture) et un poste de devis (mode tenu à l'écart dimensionné)
+  → v7 : relecture d'une strate dans la famille de sa génération, retraits, contrat d'abandon → v8 : une partie calculée
+  et sautée ne passe plus en silence (sans la règle : 0,379 puis 0,982 de fausse promotion sur 10 puis 30 générations),
+  unités identifiées, partie et Λ dans la clé. Contre-lecture de la v8 : deux chemins restants (déclaration « sans partie »
+  mensongère, à la charge de l'orchestrateur ; fraîcheur des unités vérifiée seulement pour une répétition exacte) — v9 à
+  la reprise. **Code v7 versions 19 à 25** (262 essais) : notations `e2` sans épisodes ; cœur du pari apparié ; règle de
+  l'héritage (`Course`) ; monde sur banque de scores ; engagement « apparié » de bout en bout hors du cycle. **Programme de
+  conception de l'organisme v5** (`194b4cc`). Synthèse « mesures fortes » et n° 96 lus : la mesure unanime est faisable
+  sans dépense sur les vecteurs de T0.5, non lancée (données à garder vierges ; décision de Lazar). **Passation v9**
+  (`9e80d91`), message n° 123. Recherche de clés avant chaque poussée : rien. Instances : aucune chez moi ; sous-agents :
+  aucun en cours.
