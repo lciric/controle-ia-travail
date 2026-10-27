@@ -67,10 +67,17 @@ class MondeBanque:
                 "tranches": self.tranches}
 
     def donnees_developpement(self):
-        """Partie de développement servie aux agents (v7, pièce 4 bis, phase exploratoire) : la partie de calibrage, traits
-        **et issues** ; l'épreuve n'y figure jamais. Explorer ici ne coûte rien à la garantie : l'épreuve reste fraîche."""
-        lignes = [l for l in self.banque["instances"] if l.get("partie", "epreuve") == "calibrage"]
+        """Partie de développement servie aux agents (v7, pièce 4 bis, phase exploratoire), traits **et issues** ;
+        l'épreuve n'y figure jamais. Explorer ici ne coûte rien à la garantie : l'épreuve reste fraîche.
+
+        v7, version 7 (synthèse du collisionneur « proposeur enfichable ») : une banque qui porte une partie
+        « developpement » la sert, **distincte** de la partie de calibrage où le prédicteur connu est ajusté ; à défaut, la
+        partie de calibrage (comportement des versions 4 à 6), et le drapeau `meme_partie_que_le_connu` le dit."""
+        distincte = any(l.get("partie") == "developpement" for l in self.banque["instances"])
+        partie = "developpement" if distincte else "calibrage"
+        lignes = [l for l in self.banque["instances"] if l.get("partie", "epreuve") == partie]
         return {"traits": list(self.banque["traits"]), "moniteurs": {n: m["nombre_issues"] for n, m in self.banque["moniteurs"].items()},
+                "partie": partie, "meme_partie_que_le_connu": not distincte,
                 "instances": [{"identifiant": l["identifiant"], "z": list(l["z"]), "g": l["g"], "issues": dict(l["issues"])}
                               for l in lignes]}
 

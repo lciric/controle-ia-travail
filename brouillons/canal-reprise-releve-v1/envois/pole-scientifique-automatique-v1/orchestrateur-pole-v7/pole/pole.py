@@ -272,6 +272,9 @@ def analyseur():
     p.add_argument("--propositions-par-generation", type=int, default=0,
                    help="v7 : fiches demandées au proposeur à chaque génération (monde sur banque ; 0 : aucun)")
     p.add_argument("--modele-proposeur", default="simule-e")
+    p.add_argument("--proposeur", choices=("agent", "aleatoire", "mecanique"), default="agent",
+                   help="v7 : proposeur enfichable — un agent (modèle), ou une référence gratuite sans modèle : lois tirées "
+                        "au hasard au gabarit, ou chercheur mécanique sur la partie de développement")
     p.add_argument("--sans-nul-archive", action="store_true",
                    help="v7 : ne pas mettre les survivantes de l'archive au nul des nouvelles fiches (défaut : les y mettre)")
     p.add_argument("--sans-nul-archive-ajuste", action="store_true",
@@ -315,7 +318,8 @@ def construire_adaptateur(args, population, temoins):
         if not args.confirmer_moteur_reel:
             raise MoteurNonArme("--moteur claude-sdk exige --confirmer-moteur-reel (dépense réelle, relais local requis)")
         for modele in (args.modele_experimentateur, args.modele_verificateur, args.modele_recombinaison,
-                       args.modele_synthese) + ((args.modele_proposeur,) if args.propositions_par_generation else ()):
+                       args.modele_synthese) + ((args.modele_proposeur,) if (args.propositions_par_generation
+                                                                        and args.proposeur == "agent") else ()):
             verifier_modele_reel(modele)
         adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True)
         sdk = importer_sdk()
@@ -386,7 +390,7 @@ def principal(argv=None):
             multiplicite=args.multiplicite, temoins_sans_agent=args.temoins_sans_agent,
             propositions_par_generation=args.propositions_par_generation, modele_proposeur=args.modele_proposeur,
             nul_archive=not args.sans_nul_archive, exploration_developpement=args.exploration_developpement,
-            pari_fraction=args.pari_fraction,
+            pari_fraction=args.pari_fraction, proposeur=args.proposeur,
             nul_archive_ajuste=(not args.sans_nul_archive and not args.sans_nul_archive_ajuste and args.selection == "pari"
                                 and args.nul_filles != "v0"),
             budget_generation_usd=args.budget_generation_usd or args.budget_usd / max(1, args.generations)).valider()

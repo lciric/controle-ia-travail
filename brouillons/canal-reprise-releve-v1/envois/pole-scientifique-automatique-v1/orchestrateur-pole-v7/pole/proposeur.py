@@ -108,15 +108,17 @@ def _strategie_de(source):
     return None
 
 
-def valider_proposition(p, monde, alpha, identifiant, modele):
-    """Fiche complète à partir d'une proposition au gabarit ; lève PropositionRefusee avec le motif."""
+def valider_proposition(p, monde, alpha, identifiant, modele, references=False):
+    """Fiche complète à partir d'une proposition au gabarit ; lève PropositionRefusee avec le motif. Les stratégies des
+    proposeurs de référence (`proposeurs_references.REFERENCES`) ne sont acceptées que si `references` (v7, version 7)."""
+    from .proposeurs_references import REFERENCES
     if not isinstance(p, dict):
         raise PropositionRefusee("proposition non conforme (objet attendu)")
     inconnus = set(p) - {"enonce", "strategie", "moniteur", "loi_predictive", "domaines", "operateurs"}
     if inconnus:
         raise PropositionRefusee("champs hors gabarit : " + ", ".join(sorted(inconnus)))
     strategie = p.get("strategie")
-    if strategie not in CATALOGUE:
+    if strategie not in CATALOGUE and not (references and strategie in REFERENCES):
         raise PropositionRefusee(f"stratégie non déclarée ou hors catalogue : {strategie!r}")
     description = monde.description_publique()
     moniteur = p.get("moniteur")
@@ -166,6 +168,9 @@ def proposer(adaptateur, config, monde, memoire, generation, dossier, budget, no
     rapport = {"demandees": nombre, "proposees": 0, "acceptees": 0, "par_strategie": {}, "refus": []}
     if nombre <= 0:
         return {"fiches": [], "refusees": [], "rapport": rapport}
+    genre = getattr(config, "proposeur", "agent")
+    if genre != "agent":
+        return _proposer_reference(genre, config, monde, generation, dossier, nombre, rapport)
     if not budget.reserver(config.plafond_proposeur_usd):
         return {"fiches": [], "refusees": [], "rapport": dict(rapport, motif="budget insuffisant pour le proposeur")}
     os.makedirs(dossier, exist_ok=True)
@@ -204,6 +209,39 @@ def proposer(adaptateur, config, monde, memoire, generation, dossier, budget, no
     if len(propositions) > nombre:
         refusees.append({"rang": None, "strategie": None, "motif": f"{len(propositions) - nombre} fiches au-delà du nombre demandé"})
     rapport.update(acceptees=len(fiches), refus=refusees, cout=res.cout_declare_usd, statut=res.statut)
+    return {"fiches": fiches, "refusees": refusees, "rapport": rapport}
+
+
+def _proposer_reference(genre, config, monde, generation, dossier, nombre, rapport):
+    """v7, version 7 : proposeur de référence, sans modèle ni dépense (aléatoire au gabarit, ou mécanique sur la partie
+    de développement) ; ses propositions passent par la même porte que celles d'un agent."""
+    from . import proposeurs_references as pr
+    description = monde.description_publique()
+    if genre == "aleatoire":
+        propositions = pr.propositions_aleatoires(description, nombre, config.graine, generation)
+    elif genre == "mecanique":
+        if not (getattr(config, "exploration_developpement", False) and hasattr(monde, "donnees_developpement")):
+            raise ValueError("proposeur mécanique : la phase exploratoire (partie de développement) est requise")
+        propositions = pr.propositions_mecaniques(description, monde.donnees_developpement(), nombre)
+    else:
+        raise ValueError(f"proposeur inconnu : {genre!r}")
+    traces = dossier_traces(dossier)
+    ecrire_json_scelle(os.path.join(traces, "propositions-reference.json"), {"genre": genre, "generation": generation,
+                                                                              "propositions": propositions})
+    rapport["proposees"] = len(propositions)
+    fiches, refusees = [], []
+    for i, p in enumerate(propositions[:min(nombre, MAX_FICHES)], 1):
+        compte = rapport["par_strategie"].setdefault(str(p.get("strategie")), {"proposees": 0, "acceptees": 0})
+        compte["proposees"] += 1
+        try:
+            fiche = valider_proposition(p, monde, config.alpha, f"prop-g{generation:02d}-{i:02d}", f"reference-{genre}",
+                                        references=True)
+        except PropositionRefusee as e:
+            refusees.append({"rang": i, "strategie": p.get("strategie"), "motif": str(e)})
+            continue
+        compte["acceptees"] += 1
+        fiches.append(fiche)
+    rapport.update(acceptees=len(fiches), refus=refusees, cout=0.0, statut="ok", genre=genre)
     return {"fiches": fiches, "refusees": refusees, "rapport": rapport}
 
 

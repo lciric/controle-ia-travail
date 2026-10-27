@@ -84,6 +84,9 @@ class ConfigGeneration:
     # des survivantes (et des parents d'une fille) avec toute loi aveugle fixe, et chaque survivante tempérée et inclinée,
     # au maximum de vraisemblance aux instants de lecture (nul des filles v2 étendu). Lecture aux instants pour toute fiche.
     nul_archive_ajuste: bool = False
+    # v7, version 7 : proposeur enfichable — « agent » (un modèle, par l'adaptateur), « aleatoire » ou « mecanique »
+    # (références gratuites, sans modèle ; synthèse du collisionneur « proposeur enfichable », option 3).
+    proposeur: str = "agent"
     exploration_developpement: bool = False  # v7, pièce 4 bis : partie de développement (traits et issues) au proposeur
     pari_fraction: bool = False  # v7 : numérateur = mélange sur une grille de fractions de mise (levier de puissance valide)
     modele_proposeur: str = "simule-e"
@@ -135,6 +138,10 @@ class ConfigGeneration:
             raise ValueError("le proposeur suppose la sélection par pari")
         if not isinstance(self.nul_archive, bool):
             raise ValueError("nul_archive : vrai ou faux")
+        if self.proposeur not in ("agent", "aleatoire", "mecanique"):
+            raise ValueError("proposeur : « agent », « aleatoire » ou « mecanique »")
+        if self.proposeur == "mecanique" and not self.exploration_developpement:
+            raise ValueError("proposeur mécanique : exploration_developpement requise (il lit la partie de développement)")
         if not isinstance(self.nul_archive_ajuste, bool) or (self.nul_archive_ajuste and (
                 not self.nul_archive or self.nul_filles == "v0" or self.selection != "pari")):
             raise ValueError("nul_archive_ajuste : vrai ou faux, et seulement avec nul_archive, la sélection par pari et "
