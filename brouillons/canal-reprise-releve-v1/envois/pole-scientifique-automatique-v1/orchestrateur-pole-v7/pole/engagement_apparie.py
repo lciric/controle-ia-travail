@@ -1,4 +1,4 @@
-"""Engagement « apparié » (v7, version 23) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
+"""Engagement « apparié » (v7, versions 23 et 25) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
 et scellée avant toute issue d'épreuve, puis jugée sur la banque de scores (conception v2 § 7 point 1 ; v3 à v6).
 
 `construire(monde, ...)` fixe, **avant** toute lecture de l'épreuve : les contrastes nommés (coefficients vérifiés par la
@@ -9,6 +9,13 @@ vivier déclaré ; plus la garde). L'empreinte de l'engagement fixe l'ordre secr
 
 `evaluer(monde, engagement)` lit la partie d'épreuve : parts, contrastes dans l'ordre secret, garde, e-valeur du minimum
 des processus arrêtée au seuil m_c/α_c (`pari_apparie.evaluer`), bornes basses rapportées (jamais une condition).
+
+Version 25 (contre-lecture de la conception v7) : la **partie lue** et la grille **Λ** entrent dans la clé de l'héritage
+(K7-3) ; `evaluer` rend l'**empreinte des unités lues** (banque, partie, identifiants), à passer à
+`Course.ajouter_trajectoire` qui refuse une répétition (K7-2). Restent à la charge de l'orchestrateur : consigner
+l'empreinte de l'engagement **hors de l'objet** (journal, mémoire) avant l'épreuve — le scellement détecte une altération,
+il ne l'empêche pas (K7-4) ; et, tant que la garde et les contrastes ne portent pas sur les mêmes unités, les processus
+sont alignés par rang et non par unité (K7-6 : niveau tenu, espérance au franchissement joint non garantie ≤ 1).
 """
 
 from . import pari_apparie as pa
@@ -54,6 +61,7 @@ def construire(monde, contrastes, tau, alpha_c=0.05, m_c=1, strate=None, partie=
     if insuffisants:
         raise EngagementInvalide(f"calibrage insuffisant pour τ = {tau} : {insuffisants}")
     cle = {"contrastes": propres, "ponderation": ("plafond" if m_max is not None else "par_unite"), "m_max": m_max,
+           "partie": partie, "lambdas": list(pa.LAMBDAS),
            "tau": tau, "strate": dict(sorted((strate or {}).items())), "comparateurs": sorted(propres),
            "seuils": {c: s["seuil"] for c, s in seuils.items()}, "population": population or monde.empreinte,
            "garde": garde}
@@ -84,4 +92,6 @@ def evaluer(monde, engagement):
     r["bornes_basses"] = {nom: pa.borne_basse(v) for nom, v in valeurs.items() if v}
     r["empreinte_cle"] = engagement["empreinte_cle"]
     r["unites_lues"] = len(ordre)
+    r["empreinte_unites"] = empreinte_objet({"banque": monde.empreinte, "partie": engagement["partie"],
+                                             "unites": sorted(ordre)})
     return r

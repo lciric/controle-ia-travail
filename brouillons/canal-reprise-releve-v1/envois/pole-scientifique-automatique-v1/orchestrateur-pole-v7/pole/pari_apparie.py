@@ -1,4 +1,4 @@
-"""Pari apparié borné (v7, version 20) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
+"""Pari apparié borné (v7, versions 20 à 25) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
 G1), selon la conception v5 (`../../pari-de-signe/conception-pari-de-signe-v5.md` et les versions qu'elle amende).
 
 Ce module ne contient que le **cœur statistique**, sans lien encore avec le cycle des générations (à faire : monde sur
@@ -208,7 +208,8 @@ class Course:
 
     - `entrer(famille, fiches, alpha_c)` : chaque fiche reçoit le budget α_c/m_c (m_c = taille de la famille, fixée
       à l'entrée), **gardé à vie** ; plusieurs familles d'une même génération se partagent α_g ; la somme des α_c sur
-      les familles entrées ne doit pas dépasser α (refus sinon).
+      les familles entrées ne doit pas dépasser α (refus sinon) — **tenue par le code au total, par l'orchestrateur
+      génération par génération** (la suite de dépense D-S24, K7-9).
     - `ajouter_trajectoire(fiche, trajectoire_log)` : **une** partie par fiche et par génération ; la trajectoire (log,
       unité par unité) est multipliée à la valeur héritée et **arrêtée** au premier instant où le produit atteint
       1/b_i = m_c/α_c ; une partie pour une fiche **gelée** est refusée (erreur, jamais ignorée en silence).
@@ -216,8 +217,14 @@ class Course:
       celle d'après la dernière partie observée avant la décision : on passe la partie de la génération courante (elle
       est ajoutée puis la fiche gelée), ou elle a déjà été ajoutée, ou l'on déclare `avant_partie=True` (la décision n'a
       vu aucune issue de la génération courante) ; sinon refus.
-    - `lire()` : **une** lecture e-BH pondérée par génération sur toutes les fiches entrées non exclues ; les promues le
-      restent (promotion une seule fois) ; ferme la génération ; renvoie les nouvelles promotions.
+    - `lire(sans_partie=None)` : **une** lecture e-BH pondérée par génération sur toutes les fiches entrées non exclues ;
+      les promues le restent (promotion une seule fois) ; ferme la génération ; renvoie les nouvelles promotions.
+      Version 25 (K7-1) : **refus** tant qu'une fiche active (ni gelée, ni arrêtée, ni promue, ni exclue) n'a ni partie
+      dans la génération ni déclaration `sans_partie[fiche] = motif` (tracée) — une partie calculée et sautée ne passe
+      plus en silence ; ce que le code ne voit pas reste à l'orchestrateur : **toute partie calculée par le monde est
+      ajoutée avant toute lecture ou décision**.
+    - `ajouter_trajectoire(..., empreinte_unites=None)` (K7-2) : une partie déjà ajoutée pour la fiche (même empreinte
+      d'unités) est refusée.
     - `retirer(fiche, motif)` (D-S26 bis, panne confirmée) : la fiche est marquée, gelée et **exclue** des lectures
       suivantes ; si elle était promue, elle reste dans `promues` — **l'union garantie est celle d'avant les retraits** —
       et sort de `promues_rapportees()`, qui porte la réserve de D-S26 bis.
@@ -240,6 +247,9 @@ class Course:
         self.lectures = []
         self.generation = 1
         self.derniere_partie = {}
+        self.unites_lues = {}
+        self.abandons = {}
+        self.sans_partie = {}
 
     def entrer(self, famille, fiches, alpha_c):
         fiches = list(fiches)
@@ -259,13 +269,17 @@ class Course:
     def seuil_log(self, fiche):
         return -math.log(self.budgets[fiche])
 
-    def ajouter_trajectoire(self, fiche, trajectoire_log):
+    def ajouter_trajectoire(self, fiche, trajectoire_log, empreinte_unites=None):
         if fiche not in self.budgets:
             raise KeyError(f"fiche non entrée : {fiche!r}")
         if fiche in self.gelees:
             raise ValueError(f"fiche gelée {fiche!r} : partie refusée (contrat de D-S25 bis (2))")
         if self.derniere_partie.get(fiche) == self.generation:
             raise ValueError(f"fiche {fiche!r} : une seule partie par génération")
+        if empreinte_unites is not None:
+            if empreinte_unites in self.unites_lues.setdefault(fiche, set()):
+                raise ValueError(f"fiche {fiche!r} : ces unités ont déjà été lues (unités fraîches, D-S25 bis (5))")
+            self.unites_lues[fiche].add(empreinte_unites)
         self.derniere_partie[fiche] = self.generation
         if fiche in self.promues or fiche in self.arretees:
             return self.log_e[fiche]  # processus arrêté : la suite est ignorée (temps d'arrêt, valide)
@@ -279,20 +293,37 @@ class Course:
         self.log_e[fiche] = valeur
         return valeur
 
-    def abandonner(self, fiche, trajectoire_log=None, avant_partie=False):
+    def abandonner(self, fiche, trajectoire_log=None, avant_partie=False, motif="", empreinte_unites=None):
         if fiche not in self.budgets:
             raise KeyError(f"fiche non entrée : {fiche!r}")
         if fiche in self.gelees:
+            if trajectoire_log is not None:
+                raise ValueError(f"fiche {fiche!r} déjà gelée : partie refusée (K7-5)")
             return
         if trajectoire_log is not None:
-            self.ajouter_trajectoire(fiche, trajectoire_log)
-        elif not avant_partie and fiche not in self.promues and fiche not in self.arretees \
-                and self.derniere_partie.get(fiche) != self.generation:
+            self.ajouter_trajectoire(fiche, trajectoire_log, empreinte_unites)
+            mode = "partie_passee"
+        elif avant_partie:
+            mode = "avant_partie"
+        elif fiche in self.promues or fiche in self.arretees or self.derniere_partie.get(fiche) == self.generation:
+            mode = "apres_partie"
+        else:
             raise ValueError(f"abandon de {fiche!r} sans la partie de la génération {self.generation} : passer la partie, "
                              f"ou déclarer avant_partie=True si la décision n'a vu aucune issue de cette génération")
+        self.abandons[fiche] = (self.generation, mode, motif)
         self.gelees.add(fiche)
 
-    def lire(self):
+    def lire(self, sans_partie=None):
+        sans_partie = dict(sans_partie or {})
+        actives = [f for f in self.budgets if f not in self.gelees and f not in self.arretees and f not in self.promues
+                   and f not in self.exclues]
+        manquantes = sorted(str(f) for f in actives
+                            if self.derniere_partie.get(f) != self.generation and not sans_partie.get(f))
+        if manquantes:
+            raise ValueError(f"génération {self.generation} : fiches actives sans partie ni déclaration : {manquantes[:5]} "
+                             f"(K7-1 : toute partie calculée est ajoutée ; sinon déclarer sans_partie[fiche] = motif)")
+        for f, m in sans_partie.items():
+            self.sans_partie[(self.generation, f)] = m
         pool = [f for f in self.budgets if f not in self.exclues]
         retenues = ebh_pondere({f: self.log_e[f] for f in pool}, {f: self.budgets[f] for f in pool}, self.alpha)
         nouvelles = retenues - self.promues
@@ -306,7 +337,7 @@ class Course:
             raise KeyError(f"fiche non entrée : {fiche!r}")
         if not motif:
             raise ValueError("un retrait porte son motif")
-        self.retirees[fiche] = motif
+        self.retirees.setdefault(fiche, []).append((self.generation, motif))  # K7-5 : motifs gardés, jamais écrasés
         self.gelees.add(fiche)
         self.exclues.add(fiche)
 

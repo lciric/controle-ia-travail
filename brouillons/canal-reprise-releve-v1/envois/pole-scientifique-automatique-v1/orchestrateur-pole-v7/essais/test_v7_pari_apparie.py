@@ -165,12 +165,12 @@ class HeritageDS25bis(unittest.TestCase):
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a", "b"], 0.03)
         c.ajouter_trajectoire("a", [math.log(80)])
-        self.assertEqual(c.lire(), {"a"})
+        self.assertEqual(c.lire(sans_partie={"b": "non lancée"}), {"a"})
         avant = c.log_e["a"]
         c.ajouter_trajectoire("a", [math.log(0.01)])  # gelée : rien ne change
         self.assertEqual(c.log_e["a"], avant)
         c.entrer("g2", ["e"], 0.01)
-        self.assertEqual(c.lire(), set())  # « a » reste promue, sans être promue à nouveau
+        self.assertEqual(c.lire(sans_partie={"b": "non lancée", "e": "non lancée"}), set())  # « a » reste promue
         self.assertEqual(c.promues, {"a"})
 
     def test_nul_complet_lecture_valide_contre_lecture_seule(self):
@@ -270,6 +270,44 @@ class CorrectionsV7(unittest.TestCase):
         for f in "abc":
             c.ajouter_trajectoire(f, [math.log(80)])  # b·E = 1 : arrêtées au seuil
         self.assertEqual(c.lire(), {"a", "b", "c", "d"})  # k* = 4 : la gelée à 0,4 ≥ 1/4 est promue (voulu, valide)
+
+
+class CorrectionsV8(unittest.TestCase):
+    """Conception v8 du pari (contre-lecture de la v7) : partie sautée (K7-1), unités relues (K7-2), abandon d'une gelée
+    et traces (K7-5)."""
+
+    def test_partie_sautee_refusee_a_la_lecture(self):
+        c = pa.Course(alpha=0.05)
+        c.entrer("g1", ["a", "b"], 0.04)
+        c.ajouter_trajectoire("a", [math.log(3)])
+        with self.assertRaises(ValueError):
+            c.lire()  # « b » active sans partie ni déclaration : l'artefact « j'ajoute si ça monte » est refusé
+        self.assertEqual(c.lire(sans_partie={"b": "monde indisponible"}), set())  # cas sain : déclaré et tracé
+        self.assertEqual(c.sans_partie[(1, "b")], "monde indisponible")
+
+    def test_unites_deja_lues_refusees(self):
+        c = pa.Course(alpha=0.05)
+        c.entrer("g1", ["a"], 0.04)
+        c.ajouter_trajectoire("a", [math.log(2)], empreinte_unites="u-1")
+        c.lire()
+        with self.assertRaises(ValueError):
+            c.ajouter_trajectoire("a", [math.log(2)], empreinte_unites="u-1")  # même partie, deux fois : refus
+        c.ajouter_trajectoire("a", [math.log(2)], empreinte_unites="u-2")
+
+    def test_abandon_d_une_gelee_et_traces(self):
+        c = pa.Course(alpha=0.05)
+        c.entrer("g1", ["a", "b"], 0.04)
+        c.abandonner("a", avant_partie=True, motif="hors sujet")
+        with self.assertRaises(ValueError):
+            c.abandonner("a", trajectoire_log=[math.log(5)])  # partie pour une gelée : refus, plus jamais en silence
+        c.abandonner("a")  # sans partie : sans effet
+        self.assertEqual(c.abandons["a"], (1, "avant_partie", "hors sujet"))
+        c.ajouter_trajectoire("b", [math.log(2)])
+        c.abandonner("b")
+        self.assertEqual(c.abandons["b"][1], "apres_partie")
+        c.retirer("b", "panne")
+        c.retirer("b", "panne confirmée")
+        self.assertEqual([m for _, m in c.retirees["b"]], ["panne", "panne confirmée"])
 
 
 if __name__ == "__main__":

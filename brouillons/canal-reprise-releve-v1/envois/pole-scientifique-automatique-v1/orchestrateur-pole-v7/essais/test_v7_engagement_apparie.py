@@ -44,6 +44,7 @@ class Construction(unittest.TestCase):
         base = ea.construire(self.m, BLANC_CONTRE_NOIR, tau=0.05)
         self.assertEqual(base["empreinte_cle"], ea.construire(self.m, BLANC_CONTRE_NOIR, tau=0.05)["empreinte_cle"])
         variantes = [dict(tau=0.10), dict(tau=0.05, m_max=10), dict(tau=0.05, strate={"mode": "cout"}),
+                     dict(tau=0.05, partie="developpement"),
                      dict(tau=0.05, population="vivier-2"), dict(tau=0.05, garde={"a": "blanc", "b": "noir", "delta": 0.1})]
         cles = {ea.construire(self.m, BLANC_CONTRE_NOIR, **kw)["empreinte_cle"] for kw in variantes}
         self.assertEqual(len(cles | {base["empreinte_cle"]}), len(variantes) + 1)
@@ -62,6 +63,13 @@ class Jugement(unittest.TestCase):
         self.assertEqual(r["unites_lues"], 100)
         self.assertGreater(r["bornes_basses"]["noir"], 0.0)
         self.assertEqual(r["empreinte_cle"], e["empreinte_cle"])
+        from pole import pari_apparie as pa
+        c = pa.Course(alpha=0.05)
+        c.entrer("g1", ["f"], 0.05)
+        c.ajouter_trajectoire("f", [0.0], empreinte_unites=r["empreinte_unites"])
+        c.lire()
+        with self.assertRaises(ValueError):  # K7-2 : la même lecture ne compte pas deux fois
+            c.ajouter_trajectoire("f", [0.0], empreinte_unites=ea.evaluer(m, e)["empreinte_unites"])
         nul = mbs.MondeBanqueScores(banque_synthetique(random.Random(53), unites_par_partie=(100, 0, 100), mu=(1.0, 1.0)), 19)
         e0 = ea.construire(nul, {"blanc": {"coefficients": {"blanc": 1}, "constante": -0.9}}, tau=0.05)  # rappel ≥ 0,9 : faux
         self.assertFalse(ea.evaluer(nul, e0)["promue"])
