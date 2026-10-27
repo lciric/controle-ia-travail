@@ -151,4 +151,4 @@ def manifeste(**reglages):
     code = {nom: sha256_fichier(os.path.join(ici, nom)) for nom in sorted(os.listdir(ici)) if nom.endswith(".py")}
     return {"version_pole": __version__, "python": sys.version.split()[0], "plateforme": sys.platform,
             "code_sha256": code, "regle_des_graines": "graine_derivee(graine maîtresse, étiquettes…) : 8 premiers octets "
-            "de SHA-256 (bibliothèque standard ; numpy.random.SeedSequence non disponible ici)", "reglages": reglages}
+            "de SHA-256 (bibliothèque standard imposée ; numpy.random.SeedSequence non utilisée)", "reglages": reglages}

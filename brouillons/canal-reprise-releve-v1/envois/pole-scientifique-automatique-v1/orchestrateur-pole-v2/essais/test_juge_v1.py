@@ -12,8 +12,9 @@ import unittest
 
 from essais.aides import CasAvecDossier
 from pole import selection_pari as sp
-from pole.controles_pari_v1 import (GRAINE_ESSAI_FUMEE, GRAINE_EXPLORATION_V0, ISSUE_ESSAI, JUGES, STRUCTURES,
-                                    executer_controles_v1, juger_v1, monde_structure, partie_de)
+from pole import controles_pari_v1 as cv1
+from pole.controles_pari_v1 import (GRAINE_ESSAI_FUMEE, GRAINE_EXPLORATION_V0, ISSUE_ESSAI, ISSUE_INCOMPLETE, JUGES,
+                                    ROSTER_V1, STRUCTURES, executer_controles_v1, juger_v1, monde_structure, partie_de)
 from pole.outils import empreinte_objet, verifier_scelle
 from pole.pole import principal
 
@@ -284,7 +285,10 @@ class ExperienceEtLecture(CasAvecDossier):
             composition = lignes[(f"T1b-{structure}-loi-composition", "v1")]
             self.assertEqual(composition["promotions"], 0)
             self.assertLessEqual(composition["log_richesse_max_observee"], 1e-9)
-            self.assertEqual(composition["plan_execution"], "ordre_secret")
+            self.assertEqual(composition["plan_execution_observe"], {"ordre_secret": 40})
+            self.assertEqual(composition["empreintes_ordre_distinctes"], 40)
+            self.assertEqual(len(composition["promotions_par_repetition"]), 40)
+            self.assertEqual(composition["promotions_par_repetition"].count("1"), composition["promotions"])
         self.assertGreaterEqual(lignes[("T1b-calendrier_deterministe-loi-composition", "v1_sans_urne")]["taux"], 0.8)
         self.assertGreaterEqual(lignes[("T1b-calendrier_deterministe-loi-calendrier", "v0")]["taux"], 0.8)
         self.assertGreaterEqual(lignes[("artefact-permutation-de-l-ordre-d-evaluation", "v1_permutation_evaluation")]["taux"], 0.8)
@@ -358,6 +362,111 @@ class ExperienceEtLecture(CasAvecDossier):
         self.assertIn({"nom": "urne", "type": "urne"}, JUGES["v1"]["bibliotheque"])
         self.assertNotIn({"nom": "urne", "type": "urne"}, JUGES["v1_sans_urne"]["bibliotheque"])
         self.assertEqual(JUGES["v0"]["plan_execution"], "ordre_naturel")
+
+
+class TraitementContreLectureCl1(unittest.TestCase):
+    """Corrections de la contre-lecture cl1 : CJ1-02 (conformité), CJ1-03 (plan observé), CJ1-04 (appariement),
+    CJ1-05 (limite de la garde), CJ1-13 et CJ1-16 (paramètres refusés), déclencheurs de l'audit de symétrie."""
+
+    @staticmethod
+    def _rapport_complet(repetitions=1000):
+        lignes = []
+        for nom, juge in sorted(ROSTER_V1):
+            role = "descriptif"
+            lignes.append({"controle": nom, "juge": juge, "role": role, "taux": 0.0, "promotions": 0,
+                           "repetitions": repetitions})
+        return {"lignes": lignes}
+
+    def test_inventaire_des_70_lignes_egal_au_code(self):
+        r = executer_controles_v1(GRAINE_ESSAI, repetitions=2, tirages=40, part_calibrage=15, essai=True)
+        self.assertEqual({(l["controle"], l["juge"]) for l in r["lignes"]}, ROSTER_V1)
+        self.assertEqual(len(r["lignes"]), 70)
+
+    def test_conformite_cas_sain_et_artefacts(self):
+        sain = self._rapport_complet()
+        v = juger_v1(sain, 0.05, complet=True, roster=ROSTER_V1, repetitions_attendues=1000)
+        self.assertTrue(v["conformite"]["conforme"])
+        self.assertNotEqual(v["issue"], ISSUE_INCOMPLETE)
+        vide = {"lignes": []}
+        self.assertEqual(juger_v1(vide, 0.05, complet=True, roster=ROSTER_V1, repetitions_attendues=1000)["issue"],
+                         ISSUE_INCOMPLETE)
+        manque = {"lignes": sain["lignes"][1:]}
+        v = juger_v1(manque, 0.05, complet=True, roster=ROSTER_V1, repetitions_attendues=1000)
+        self.assertEqual((v["issue"], v["parties"]["socle"]["issue"], v["parties"]["filles"]["issue"]), (ISSUE_INCOMPLETE,) * 3)
+        self.assertEqual(len(v["conformite"]["lignes_manquantes"]), 1)
+        courte = {"lignes": [dict(l, repetitions=7) if i == 0 else l for i, l in enumerate(sain["lignes"])]}
+        self.assertEqual(juger_v1(courte, 0.05, complet=True, roster=ROSTER_V1, repetitions_attendues=1000)["issue"],
+                         ISSUE_INCOMPLETE)
+        double = {"lignes": sain["lignes"] + sain["lignes"][:1]}
+        self.assertEqual(juger_v1(double, 0.05, complet=True, roster=ROSTER_V1, repetitions_attendues=1000)["issue"],
+                         ISSUE_INCOMPLETE)
+
+    def test_plan_observe_controle_cas_sain_et_artefact(self):
+        def scenario_conforme(rng, juge):
+            loi = sp.loi_softmax_aleatoire(rng)
+            instances = sp.tirer_instances(rng, 40)
+            return cv1._geler(loi, instances, 3, 0.05, juge), {"type": "fixe", "probas": [1, 1, 1]}
+
+        def scenario_naturel_sous_v1(rng, juge):
+            loi = sp.loi_softmax_aleatoire(rng)
+            instances = sp.tirer_instances(rng, 40)
+            gele = sp.geler_engagement(sp.construire_engagement("h", loi, instances, 3, 0.05, sp.BIBLIOTHEQUE_STANDARD_V1,
+                                                                "continu", plan_execution="ordre_naturel"))
+            return gele, {"type": "fixe", "probas": [1, 1, 1]}
+
+        ligne = cv1._executer("essai", "v1", "fatal", 5, 6, scenario_conforme, "essai")
+        self.assertEqual(ligne["plan_execution_observe"], {"ordre_secret": 6})
+        self.assertEqual(ligne["empreintes_ordre_distinctes"], 6)
+        with self.assertRaises(cv1.PlanObserveNonConforme):
+            cv1._executer("essai", "v1", "fatal", 5, 6, scenario_naturel_sous_v1, "essai")
+
+    def test_limite_documentee_de_la_garde_du_plan(self):
+        """CJ1-05 : la garde refuse un étiquetage non conforme, pas une provenance ; une empreinte d'ordre recopiée est
+        acceptée. C'est une limite écrite (l'imposition de l'ordre par le noyau réel n'est pas codée), pas un refus."""
+        rng = random.Random(15)
+        y = [rng.randrange(3) for _ in range(60)]
+        gele, monde = _gele_deterministe(y)
+        produites_sous_8 = sp.tirer_frais(gele, monde, 1, graine_noyau=8)
+        sous_7 = sp.tirer_frais(gele, monde, 1, graine_noyau=7)
+        maquillees = dict(produites_sous_8, empreinte_ordre=sous_7["empreinte_ordre"])
+        sp.evaluer(gele, maquillees, graine_noyau=7)  # acceptée : limite documentée
+
+    def test_appariement_et_declencheurs_r4(self):
+        def l(nom, juge, role="descriptif", promotions=0, chaine=None, **extra):
+            d = {"controle": nom, "juge": juge, "role": role, "taux": promotions / 4, "promotions": promotions,
+                 "repetitions": 4}
+            if chaine is not None:
+                d["promotions_par_repetition"] = chaine
+            d.update(extra)
+            return d
+
+        lignes = [l("puissance-fille-neuve", "v0", chaine="1111", promotions=4),
+                  l("puissance-fille-neuve", "v1", chaine="1101", promotions=3),
+                  l("T1b-rupture-loi-composition", "v1", "fatal", 1, log_richesse_max_observee=3.5,
+                    membre_dominant_final={"urne": 4}, plan_execution_observe={"ordre_secret": 4},
+                    empreintes_ordre_distinctes=4),
+                  l("T1a-nul-marginale", "v1", "fatal", 0, membre_dominant_final={"marginale_empirique": 4},
+                    plan_execution_observe={"ordre_naturel": 4}, empreintes_ordre_distinctes=0)]
+        v = juger_v1({"lignes": lignes}, 0.05)
+        self.assertEqual(v["appariement_v0_v1_repetitions_differentes"], {"puissance-fille-neuve": 1})
+        texte = " | ".join(v["declencheurs_R4"])
+        self.assertIn("composition promue", texte)
+        self.assertIn("urne jamais dominante", texte)
+        self.assertIn("plan observé autre que l'ordre secret", texte)
+        egal = [l("puissance-fille-neuve", "v0", chaine="1101"), l("puissance-fille-neuve", "v1", chaine="1101")]
+        self.assertIn("égales une à une", " ".join(juger_v1({"lignes": egal}, 0.05)["declencheurs_R4"]))
+        sain = [l("puissance-fille-neuve", "v0", chaine="1111"), l("puissance-fille-neuve", "v1", chaine="1101"),
+                l("T1a-nul-marginale", "v1", "fatal", 1, membre_dominant_final={"urne": 4},
+                  plan_execution_observe={"ordre_secret": 4}, empreintes_ordre_distinctes=4)]
+        self.assertEqual(juger_v1({"lignes": sain}, 0.05)["declencheurs_R4"], [])
+
+    def test_parametres_refuses_cj1_13_et_cj1_16(self):
+        for graine in (4242, 31337, 2718, 170141183460469231731687303715884204893, 20261027, 20261028):
+            with self.subTest(graine=graine), self.assertRaises(ValueError):
+                cv1.verifier_parametres(graine, 1000)
+        with self.assertRaises(ValueError):
+            cv1.verifier_parametres(123456789, 1500)
+        cv1.verifier_parametres(123456789, 1000)  # cas sain
 
 
 if __name__ == "__main__":

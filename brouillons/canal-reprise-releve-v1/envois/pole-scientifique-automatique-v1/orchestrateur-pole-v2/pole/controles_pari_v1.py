@@ -39,7 +39,11 @@ from .outils import graine_derivee
 
 GRAINE_EXPLORATION_V0 = 20261026  # graine de l'exploration de v0 : refusée pour l'expérience décisive
 GRAINE_ESSAI_FUMEE = 777  # graine des essais de fumée et de l'exploration de conception (déclarés) : refusée aussi
-GRAINES_REFUSEES = (GRAINE_EXPLORATION_V0, GRAINE_ESSAI_FUMEE)
+# Graines refusées pour l'expérience décisive : exploration de v0, essais de fumée, graines des essais non décisifs du
+# contre-lecteur cl1 (CJ1-16), graines des essais exploratoires « Boucle d'or » et mémoire du 27 octobre.
+GRAINES_REFUSEES = (GRAINE_EXPLORATION_V0, GRAINE_ESSAI_FUMEE, 4242, 31337, 2718,
+                    170141183460469231731687303715884204893, 20261027, 20261028)
+REPETITIONS_DECISIVES = 1000
 JUGES = {
     "v1": {"bibliotheque": sp.BIBLIOTHEQUE_STANDARD_V1, "plan_execution": "ordre_secret",
            "description": "ordre d'exécution secret ; bibliothèque v0 + urne (juge à valider)"},
@@ -54,6 +58,79 @@ AMPLITUDE_SINUS, ECART_MARCHE, LONGUEUR_BLOC = 1.5, 0.15, 20
 FENETRE_AUTO, LISSAGE_AUTO = 10, 0.1
 LAMBDA_FILLE, LAMBDA_PUISSANCE = 0.5, 0.3
 SEUIL_PUISSANCE, PERTE_PUISSANCE_PREDITE = 0.90, 0.05
+# Les 70 couples (contrôle, juge) de l'expérience décisive (CJ1-02 ; identiques à l'annexe A du rapport cl1).
+ROSTER_V1 = frozenset({
+    ('T1a-nul-marginale', 'v1'),
+    ('T1a-nul-moyenne_glissante', 'v1'),
+    ('T1a-nul-uniforme', 'v1'),
+    ('T1b-auto_excite-loi-calendrier', 'v0'),
+    ('T1b-auto_excite-loi-calendrier', 'v1'),
+    ('T1b-auto_excite-loi-calendrier', 'v1_sans_urne'),
+    ('T1b-auto_excite-loi-composition', 'v0'),
+    ('T1b-auto_excite-loi-composition', 'v1'),
+    ('T1b-auto_excite-loi-composition', 'v1_sans_urne'),
+    ('T1b-calendrier_deterministe-loi-calendrier', 'v0'),
+    ('T1b-calendrier_deterministe-loi-calendrier', 'v1'),
+    ('T1b-calendrier_deterministe-loi-calendrier', 'v1_sans_urne'),
+    ('T1b-calendrier_deterministe-loi-composition', 'v0'),
+    ('T1b-calendrier_deterministe-loi-composition', 'v1'),
+    ('T1b-calendrier_deterministe-loi-composition', 'v1_sans_urne'),
+    ('T1b-derive_lineaire-loi-calendrier', 'v0'),
+    ('T1b-derive_lineaire-loi-calendrier', 'v1'),
+    ('T1b-derive_lineaire-loi-calendrier', 'v1_sans_urne'),
+    ('T1b-derive_lineaire-loi-composition', 'v0'),
+    ('T1b-derive_lineaire-loi-composition', 'v1'),
+    ('T1b-derive_lineaire-loi-composition', 'v1_sans_urne'),
+    ('T1b-fille', 'v0'),
+    ('T1b-fille', 'v1'),
+    ('T1b-marche_aleatoire-loi-calendrier', 'v0'),
+    ('T1b-marche_aleatoire-loi-calendrier', 'v1'),
+    ('T1b-marche_aleatoire-loi-calendrier', 'v1_sans_urne'),
+    ('T1b-marche_aleatoire-loi-composition', 'v0'),
+    ('T1b-marche_aleatoire-loi-composition', 'v1'),
+    ('T1b-marche_aleatoire-loi-composition', 'v1_sans_urne'),
+    ('T1b-rupture-loi-calendrier', 'v0'),
+    ('T1b-rupture-loi-calendrier', 'v1'),
+    ('T1b-rupture-loi-calendrier', 'v1_sans_urne'),
+    ('T1b-rupture-loi-composition', 'v0'),
+    ('T1b-rupture-loi-composition', 'v1'),
+    ('T1b-rupture-loi-composition', 'v1_sans_urne'),
+    ('T1b-sinusoide-loi-calendrier', 'v0'),
+    ('T1b-sinusoide-loi-calendrier', 'v1'),
+    ('T1b-sinusoide-loi-calendrier', 'v1_sans_urne'),
+    ('T1b-sinusoide-loi-composition', 'v0'),
+    ('T1b-sinusoide-loi-composition', 'v1'),
+    ('T1b-sinusoide-loi-composition', 'v1_sans_urne'),
+    ('T3-couvert-eps0.05-net-faux', 'v1'),
+    ('T3-couvert-eps0.05-net-vrai', 'v0'),
+    ('T3-couvert-eps0.05-net-vrai', 'v1'),
+    ('T3-couvert-eps0.2-net-faux', 'v1'),
+    ('T3-couvert-eps0.2-net-vrai', 'v0'),
+    ('T3-couvert-eps0.2-net-vrai', 'v1'),
+    ('T6-parasite-de-Kelly', 'v1'),
+    ('T9-disjonction-partitionnee', 'v1'),
+    ('artefact-T1a-bibliotheque-uniforme-seule', 'v1'),
+    ('artefact-T6-denominateur-en-ligne', 'v1'),
+    ('artefact-T6-denominateur-part-separee', 'v1'),
+    ('artefact-fille-sans-parents-dans-le-nul-enveloppe_aveugle', 'v1'),
+    ('artefact-fille-sans-parents-dans-le-nul-forme', 'v1'),
+    ('artefact-permutation-de-l-ordre-d-evaluation', 'v1_permutation_evaluation'),
+    ('puissance-fille-neuve', 'v0'),
+    ('puissance-fille-neuve', 'v1'),
+    ('puissance-loi-de-domaine-vraie', 'v0'),
+    ('puissance-loi-de-domaine-vraie', 'v1'),
+    ('puissance-loi-vraie-plus-derive', 'v0'),
+    ('puissance-loi-vraie-plus-derive', 'v1'),
+    ('tricheur-adimensionnement', 'v1'),
+    ('tricheur-copie_renommee', 'v1'),
+    ('tricheur-enveloppe_aveugle', 'v1'),
+    ('tricheur-fille_constante', 'v1'),
+    ('tricheur-forme', 'v1'),
+    ('tricheur-jargon_rare', 'v1'),
+    ('tricheur-parent_et_loi_aveugle', 'v0'),
+    ('tricheur-parent_et_loi_aveugle', 'v1'),
+    ('tricheur-pari_couvert', 'v1'),
+})
 DESCRIPTION_STRUCTURES = {
     "derive_lineaire": "a = permutation tirée de (0,6 ; 0,3 ; 0,1) ; p_t va linéairement de a à a renversé sur les n instants",
     "rupture": "p_t = a pour t < n/2, a renversé ensuite",
@@ -138,18 +215,50 @@ def _geler(loi, instances, k, alpha, juge, bibliotheque=None, part_calibrage=0, 
         part_calibrage=part_calibrage, delta0=delta0, plan_execution=j["plan_execution"]))
 
 
+class PlanObserveNonConforme(RuntimeError):
+    """Une évaluation n'a pas tourné sous le plan d'exécution du juge de sa ligne (CJ1-03) : le contrôle s'arrête."""
+
+
 def _tirer_et_evaluer(gele, monde, graine, cle, r):
-    """Le noyau tient sa graine (étiquette « noyau ») ; le monde tire avec la sienne (étiquette « frais »)."""
+    """Le noyau tient sa graine (étiquette « noyau ») ; le monde tire avec la sienne (étiquette « frais »).
+
+    L'empreinte de l'ordre d'exécution observée (ordre secret) est recopiée dans le résultat de l'évaluation."""
     noyau = graine_derivee(graine, cle, r, "noyau")
     tirages = sp.tirer_frais(gele, monde, graine_derivee(graine, cle, r, "frais"), graine_noyau=noyau)
-    return sp.evaluer(gele, tirages, graine_noyau=noyau), tirages
+    ev = sp.evaluer(gele, tirages, graine_noyau=noyau)
+    ev["empreinte_ordre"] = tirages.get("empreinte_ordre")
+    return ev, tirages
+
+
+class _Suivi:
+    """Ce qu'une ligne consigne de chaque répétition (CJ1-03, CJ1-04) : promotion (chaîne de « 0 » et « 1 »), plan
+    d'exécution observé dans l'évaluation (contrôlé contre celui du juge : sinon arrêt), empreintes d'ordre distinctes."""
+
+    def __init__(self, juge):
+        self.juge, self.chaine, self.plans, self.ordres = juge, [], collections.Counter(), set()
+
+    def noter(self, ev, compter=True):
+        attendu = JUGES[self.juge]["plan_execution"] if self.juge in JUGES else None
+        plan = ev.get("plan_execution")
+        if attendu is not None and plan != attendu:
+            raise PlanObserveNonConforme(f"juge {self.juge} : évaluation sous le plan {plan!r}, attendu {attendu!r}")
+        if not compter:
+            return
+        self.plans[plan] += 1
+        if ev.get("empreinte_ordre"):
+            self.ordres.add(ev["empreinte_ordre"])
+        self.chaine.append("1" if ev["promue"] else "0")
+
+    def champs(self):
+        return {"plan_execution_observe": dict(sorted(self.plans.items())), "empreintes_ordre_distinctes": len(self.ordres),
+                "promotions_par_repetition": "".join(self.chaine)}
 
 
 def _ligne(nom, juge, role, promotions, repetitions, finales=None, maxima=None, dominants=None, **extra):
     ligne = {"controle": nom, "juge": juge, "role": role, "repetitions": repetitions, "promotions": promotions,
              "taux": promotions / repetitions, "borne_haute_95": borne_wilson(promotions, repetitions)}
     if juge in JUGES:
-        ligne.update(plan_execution=JUGES[juge]["plan_execution"])
+        ligne.update(plan_execution_du_juge=JUGES[juge]["plan_execution"])
     if finales:
         ligne.update(log_richesse_finale_mediane=statistics.median(finales), log_richesse_max_observee=max(maxima))
     if dominants is not None:
@@ -160,16 +269,18 @@ def _ligne(nom, juge, role, promotions, repetitions, finales=None, maxima=None, 
 
 def _executer(nom, juge, role, graine, repetitions, scenario, cle, **extra):
     """`scenario(rng, juge)` rend (engagement gelé, loi du monde) ; graines de scénario partagées entre juges (`cle`)."""
-    promotions, finales, maxima, dominants = 0, [], [], collections.Counter()
+    promotions, finales, maxima, dominants, suivi = 0, [], [], collections.Counter(), _Suivi(juge)
     for r in range(repetitions):
         rng = random.Random(graine_derivee(graine, cle, r))
         gele, monde = scenario(rng, juge)
         ev, _ = _tirer_et_evaluer(gele, monde, graine, cle, r)
+        suivi.noter(ev)
         promotions += ev["promue"]
         finales.append(ev["log_richesse_finale"])
         maxima.append(ev["log_richesse_max"])
         dominants[ev["membre_dominant_final"].split(":")[0]] += 1
-    return _ligne(nom, juge, role, promotions, repetitions, finales, maxima, dominants, etiquette_graines=cle, **extra)
+    return _ligne(nom, juge, role, promotions, repetitions, finales, maxima, dominants, etiquette_graines=cle,
+                  **suivi.champs(), **extra)
 
 
 # --- scénarios ------------------------------------------------------------------------------------------------------
@@ -324,9 +435,10 @@ def _essai_parent_et_loi_aveugle(graine, r, juge, tirages, alpha, k, dimension, 
 
 
 def _executer_filles(nom_ligne, juge, role, graine, repetitions, essai, **extra):
-    promotions, par_monde, finales, maxima = 0, {}, [], []
+    promotions, par_monde, finales, maxima, suivi = 0, {}, [], [], _Suivi(juge)
     for r in range(repetitions):
         monde_nom, ev = essai(r)
+        suivi.noter(ev)
         promotions += ev["promue"]
         finales.append(ev["log_richesse_finale"])
         maxima.append(ev["log_richesse_max"])
@@ -334,7 +446,8 @@ def _executer_filles(nom_ligne, juge, role, graine, repetitions, essai, **extra)
         compte[0] += ev["promue"]
         compte[1] += 1
     return _ligne(nom_ligne, juge, role, promotions, repetitions, finales, maxima,
-                  par_monde={m: {"promotions": c[0], "repetitions": c[1]} for m, c in sorted(par_monde.items())}, **extra)
+                  par_monde={m: {"promotions": c[0], "repetitions": c[1]} for m, c in sorted(par_monde.items())},
+                  **suivi.champs(), **extra)
 
 
 # --- T9 et artefact « permutation de l'ordre d'évaluation » -----------------------------------------------------------
@@ -342,7 +455,7 @@ def controle_t9_v1(graine, repetitions, tirages, alpha, k, dimension, juge="v1")
     """Fille = concaténation si/sinon de deux parents, contre le nul augmenté : aucune promotion, log W ≤ 0 ; témoin :
     fille qui prédit du neuf sur une partie."""
     bib = JUGES[juge]["bibliotheque"]
-    gains_naifs, promotions_concat, max_logw_concat, promotions_neuve = [], 0, -math.inf, 0
+    gains_naifs, promotions_concat, max_logw_concat, promotions_neuve, suivi = [], 0, -math.inf, 0, _Suivi(juge)
     for r in range(repetitions):
         rng = random.Random(graine_derivee(graine, "T9", r))
         p1, p2, p3 = (sp.loi_softmax_aleatoire(rng, k, dimension) for _ in range(3))
@@ -353,6 +466,7 @@ def controle_t9_v1(graine, repetitions, tirages, alpha, k, dimension, juge="v1")
             fille = {"type": "si_sinon", "condition": {"sous_population": 0}, "si": p1, "sinon": p3 if neuve else p2}
             gele = _geler(fille, instances, k, alpha, juge, nul_fille, identifiant="T9")
             ev, tirages_frais = _tirer_et_evaluer(gele, monde, graine, f"T9|{neuve}", r)
+            suivi.noter(ev, compter=not neuve)
             if neuve:
                 promotions_neuve += ev["promue"]
                 continue
@@ -367,7 +481,9 @@ def controle_t9_v1(graine, repetitions, tirages, alpha, k, dimension, juge="v1")
                    log_richesse_max_observee=max_logw_concat, etiquette_graines="T9",
                    gain_naif_sur_meilleur_parent_median=statistics.median(gains_naifs),
                    part_gain_naif_positif=sum(g > 0 for g in gains_naifs) / repetitions,
-                   temoin_positif_fille_neuve_taux_promotion=promotions_neuve / repetitions)
+                   temoin_positif_fille_neuve_taux_promotion=promotions_neuve / repetitions,
+                   regle="règle de v0 : W seule, 200 instances, sans part de calibrage ni marge 2δ₀ (CJ1-11)",
+                   **suivi.champs())
     ligne["passe"] = ligne["taux"] <= alpha and max_logw_concat <= 1e-9
     return ligne
 
@@ -377,7 +493,7 @@ def artefact_permutation_evaluation(graine, repetitions, tirages, alpha, k, dime
     les couples (instance, issue) au lieu de l'ordre d'exécution. La loi « retrouve l'heure par l'instance » (le plan est
     dans l'engagement : l'indice d'une instance dans le plan est son heure) et prédit le calendrier à cette heure.
     Dénominateur : bibliothèque du juge v1 (urne comprise) sur la suite permutée."""
-    cle, seuil, promotions, maxima = "artefact-permutation-evaluation", math.log(1 / alpha), 0, []
+    cle, seuil, promotions, maxima, chaine = "artefact-permutation-evaluation", math.log(1 / alpha), 0, [], []
     for r in range(repetitions):
         rng = random.Random(graine_derivee(graine, cle, r))
         instances = sp.tirer_instances(rng, tirages, dimension)
@@ -393,11 +509,13 @@ def artefact_permutation_evaluation(graine, repetitions, tirages, alpha, k, dime
         den, _ = sp.trajectoire_denominateur(sp.BIBLIOTHEQUE_STANDARD_V1, issues_permutees, instances_permutees, k)
         log_w = [a - b for a, b in zip(numerateur, den)]
         promotions += max(log_w) >= seuil
+        chaine.append("1" if max(log_w) >= seuil else "0")
         maxima.append(max(log_w))
     return _ligne("artefact-permutation-de-l-ordre-d-evaluation", "v1_permutation_evaluation", "artefact_requis",
                   promotions, repetitions, finales=None, log_richesse_max_observee=max(maxima),
                   log_richesse_max_mediane=statistics.median(maxima), etiquette_graines=cle,
-                  plan_execution="ordre_naturel, couples (instance, issue) permutés à l'évaluation",
+                  plan_execution_observe={"ordre_naturel, couples (instance, issue) permutés à l'évaluation": repetitions},
+                  promotions_par_repetition="".join(chaine),
                   structure="calendrier_deterministe", loi_aveugle="heure retrouvée par l'instance")
 
 
@@ -414,8 +532,8 @@ def verifier_parametres(graine, repetitions, essai=False, familles=None, k=3):
     if familles is not None and not set(familles) <= set(FAMILLES):
         raise ValueError(f"familles : parmi {FAMILLES}")
     if not essai:
-        if repetitions < 1000:
-            raise ValueError("au moins 1 000 répétitions par contrôle (hors mode essai)")
+        if repetitions != REPETITIONS_DECISIVES:
+            raise ValueError(f"exactement {REPETITIONS_DECISIVES} répétitions par contrôle hors mode essai (CJ1-13)")
         if graine in GRAINES_REFUSEES:
             raise ValueError(f"graines {GRAINES_REFUSEES} (exploration de v0, essais de fumée) refusées : graine maîtresse "
                              "neuve exigée")
@@ -528,7 +646,9 @@ def executer_controles_v1(graine, repetitions=1000, tirages=200, alpha=0.05, k=3
                                        "l'engagement) ; ordre secret : graine_derivee(graine 'noyau', 'ordre-execution', "
                                        "empreinte de l'engagement)"}
     r = {"parametres": parametres, "lignes": lignes}
-    r["verdicts"] = juger_v1(r, alpha, complet=tout and not essai)
+    decisive = tout and not essai
+    r["verdicts"] = juger_v1(r, alpha, complet=decisive, roster=ROSTER_V1 if decisive else None,
+                             repetitions_attendues=repetitions if decisive else None)
     return r
 
 
@@ -539,6 +659,7 @@ def _passe(ligne, alpha):
 
 PREFIXES_FILLES = ("tricheur-", "puissance-fille-neuve", "artefact-fille-sans-parents", "T9-", "T1b-fille")
 ISSUE_ESSAI = "ESSAI OU EXÉCUTION PARTIELLE — aucune issue n'est prononcée"
+ISSUE_INCOMPLETE = "EXÉCUTION INCOMPLÈTE OU NON CONFORME — aucune issue n'est prononcée"
 
 
 def partie_de(nom):
@@ -546,14 +667,16 @@ def partie_de(nom):
     return "filles" if nom.startswith(PREFIXES_FILLES) else "socle"
 
 
-def _lecture(lignes, alpha, complet):
+def _lecture(lignes, alpha, complet, issue_forcee=None):
     fatals = [l for l in lignes if l["role"] == "fatal"]
     artefacts = [l for l in lignes if l["role"] == "artefact_requis"]
     puissances = [l for l in lignes if l["role"] == "puissance_decisive"]
     echecs = [l["controle"] for l in fatals if not _passe(l, alpha)]
     non_vus = [l["controle"] + f" ({l['juge']})" for l in artefacts if l["taux"] <= alpha]
     faibles = [l["controle"] for l in puissances if l["taux"] < SEUIL_PUISSANCE]
-    if not complet:
+    if issue_forcee is not None:
+        issue = issue_forcee
+    elif not complet:
         issue = ISSUE_ESSAI
     elif echecs or faibles:
         issue = "non adopté"
@@ -562,7 +685,7 @@ def _lecture(lignes, alpha, complet):
     else:
         issue = "adopté"
     return {"issue": issue,
-            "fatals": {"critere": f"taux de promotion ≤ α = {alpha} pour chaque contrôle fatal (T9 : et log W max ≤ 0)",
+            "fatals": {"critere": f"taux de promotion ≤ α = {alpha} pour chaque contrôle fatal (T9 : et log W max ≤ 10⁻⁹)",
                        "nombre": len(fatals), "echecs": echecs,
                        "taux_max": max((l["taux"] for l in fatals), default=None),
                        "controle_au_taux_max": max(fatals, key=lambda l: l["taux"])["controle"] if fatals else None},
@@ -573,22 +696,88 @@ def _lecture(lignes, alpha, complet):
             "ce_qui_a_cede": echecs + faibles + ["artefact non vu : " + n for n in non_vus]}
 
 
-def juger_v1(r, alpha, complet=True):
+def conformite(lignes, roster, repetitions_attendues):
+    """CJ1-02 : l'exécution décisive doit produire exactement les 70 couples (contrôle, juge) de `ROSTER_V1`, chacun à
+    `repetitions_attendues` répétitions ; sinon aucune issue n'est prononcée."""
+    presents = [(l["controle"], l["juge"]) for l in lignes]
+    manquants = sorted(set(roster) - set(presents))
+    en_trop = sorted(set(presents) - set(roster))
+    doubles = sorted({c for c in presents if presents.count(c) > 1})
+    mal_repetees = sorted((l["controle"], l["juge"], l["repetitions"]) for l in lignes
+                          if repetitions_attendues is not None and l["repetitions"] != repetitions_attendues)
+    return {"conforme": not (manquants or en_trop or doubles or mal_repetees), "lignes_manquantes": manquants,
+            "lignes_en_trop": en_trop, "lignes_en_double": doubles, "lignes_mal_repetees": mal_repetees}
+
+
+LIGNES_DE_PUISSANCE_APPARIEES = ("puissance-fille-neuve", "T3-couvert-eps0.05-net-vrai", "T3-couvert-eps0.2-net-vrai",
+                                 "puissance-loi-de-domaine-vraie", "puissance-loi-vraie-plus-derive")
+
+
+def appariement_v0_v1(lignes):
+    """CJ1-04 : nombre de répétitions où v0 et v1 diffèrent, par ligne de puissance appariée par scénario."""
+    par_couple = {(l["controle"], l["juge"]): l for l in lignes}
+    sortie = {}
+    for nom in LIGNES_DE_PUISSANCE_APPARIEES:
+        a, b = par_couple.get((nom, "v0")), par_couple.get((nom, "v1"))
+        if a and b and "promotions_par_repetition" in a and "promotions_par_repetition" in b:
+            sa, sb = a["promotions_par_repetition"], b["promotions_par_repetition"]
+            sortie[nom] = sum(x != y for x, y in zip(sa, sb)) if len(sa) == len(sb) else None
+    return sortie
+
+
+def declencheurs_r4(lignes, alpha, appariement):
+    """Déclencheurs de l'audit de symétrie, évalués mécaniquement sur le rapport (CJ1-03, CJ1-04, CJ1-07, CJ1-09)."""
+    d = []
+    for l in lignes:
+        nom, juge = l["controle"], l["juge"]
+        if juge == "v1" and nom.endswith("-loi-composition") and (
+                l.get("promotions", 0) > 0 or l.get("log_richesse_max_observee", 0.0) > 1e-9):
+            d.append(f"composition promue ou log W max > 10⁻⁹ : {nom}")
+        if juge == "v1" and l["role"] == "fatal" and nom.startswith(("T1a-nul-", "T1b-")) and not nom.startswith("T1b-fille"):
+            if l.get("membre_dominant_final", {}).get("urne", 0) == 0:
+                d.append(f"urne jamais dominante sur les {l.get('repetitions')} répétitions : {nom}")
+        if juge == "v1" and "plan_execution_observe" in l:
+            if set(l["plan_execution_observe"]) != {"ordre_secret"}:
+                d.append(f"plan observé autre que l'ordre secret : {nom}")
+            elif l.get("empreintes_ordre_distinctes") != l.get("repetitions"):
+                d.append(f"empreintes d'ordre non toutes distinctes : {nom}")
+    if appariement and all(n == 0 for n in appariement.values()):
+        d.append("promotions de v0 et de v1 égales une à une sur toutes les lignes de puissance appariées")
+    fatales_socle = [l for l in lignes if l["role"] == "fatal" and partie_de(l["controle"]) == "socle"]
+    if fatales_socle and all(l.get("promotions", 0) == 0 for l in fatales_socle):
+        d.append("toutes les fatales du socle à 0 (attendu probable, CJ1-07 : vérifier répétitions et log W max finis)")
+    cedage = {l["controle"]: l["taux"] for l in lignes if l["juge"] == "v1"
+              and l["controle"] in ("T1b-fille", "tricheur-parent_et_loi_aveugle")}
+    if cedage and all(t <= alpha for t in cedage.values()):
+        d.append("prédictions de cédage des filles contredites (T1b-fille et « parent et loi aveugle » ≤ α)")
+    return d
+
+
+def juger_v1(r, alpha, complet=True, roster=None, repetitions_attendues=None):
     """Lecture gelée (préenregistrement de l'expérience 1).
 
     Issue globale (règle de la note de conception) : adopté si tous les contrôles fatals passent, si tous les artefacts
     requis sont vus et si chaque puissance décisive atteint 0,90 ; non adopté si un contrôle fatal échoue ou si une
     puissance décisive manque ; non concluant sinon. La même règle est lue séparément sur le socle (fiches sans parents)
     et sur le critère des filles ; l'issue globale est « adopté » si et seulement si les deux parties le sont.
+    Exécution décisive : `roster` et `repetitions_attendues` donnés ; un rapport non conforme ne reçoit aucune issue.
     """
     lignes = r["lignes"]
-    v = _lecture(lignes, alpha, complet)
-    v["parties"] = {p: _lecture([l for l in lignes if partie_de(l["controle"]) == p], alpha, complet)
+    forcee, conf = None, None
+    if complet and roster is not None:
+        conf = conformite(lignes, roster, repetitions_attendues)
+        if not conf["conforme"]:
+            forcee = ISSUE_INCOMPLETE
+    v = _lecture(lignes, alpha, complet, forcee)
+    v["parties"] = {p: _lecture([l for l in lignes if partie_de(l["controle"]) == p], alpha, complet, forcee)
                     for p in ("socle", "filles")}
+    v["conformite"] = conf
     neuve = {l["juge"]: l["taux"] for l in lignes if l["controle"] == "puissance-fille-neuve"}
     perte = neuve["v0"] - neuve["v1"] if {"v0", "v1"} <= set(neuve) else None
     v["perte_de_puissance_fille_neuve"] = {"v0_moins_v1": perte, "predite_au_plus": PERTE_PUISSANCE_PREDITE,
                                            "prediction_tenue": None if perte is None else perte <= PERTE_PUISSANCE_PREDITE}
+    v["appariement_v0_v1_repetitions_differentes"] = appariement_v0_v1(lignes)
+    v["declencheurs_R4"] = declencheurs_r4(lignes, alpha, v["appariement_v0_v1_repetitions_differentes"])
     return v
 
 
@@ -611,7 +800,15 @@ def rapport_markdown(r, horodatage):
                       f"{w['puissance_decisive']['lignes']} (insuffisantes : {w['puissance_decisive']['insuffisantes'] or 'aucune'}).")
     pf = v["perte_de_puissance_fille_neuve"]
     lignes.append(f"- Perte de puissance sur la fille neuve (v0 − v1) : {pf['v0_moins_v1']} (prédite ≤ {pf['predite_au_plus']}).")
-    lignes.append(f"- Ce qui a cédé : {v['ce_qui_a_cede'] or 'rien'}.\n")
+    lignes.append(f"- Ce qui a cédé : {v['ce_qui_a_cede'] or 'rien'}.")
+    if v.get("conformite") is not None:
+        c = v["conformite"]
+        lignes.append(f"- Conformité du rapport (70 couples, {p['repetitions']} répétitions chacun) : "
+                      + ("conforme" if c["conforme"] else f"NON CONFORME ({ {k: x for k, x in c.items() if k != 'conforme' and x} })")
+                      + ".")
+    lignes.append(f"- Appariement v0/v1 (répétitions différentes par ligne de puissance) : "
+                  f"{v.get('appariement_v0_v1_repetitions_differentes')}.")
+    lignes.append(f"- Déclencheurs de l'audit de symétrie (R4) : {v.get('declencheurs_R4') or 'aucun'}.\n")
     lignes.append("| partie | rôle | contrôle | juge | promotions | taux | borne haute 95 % | log W max observé |")
     lignes.append("|---|---|---|---|---|---|---|---|")
     ordre = {"fatal": 0, "puissance_decisive": 1, "artefact_requis": 2, "descriptif": 3}
