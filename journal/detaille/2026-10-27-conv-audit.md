@@ -69,3 +69,45 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   en cloche qu'elle suppose (+ 0,23 découverte vraie par dollar sur le meilleur allocateur appris) ; elle perd quand la
   valeur dépend autrement de la distance (« bords » − 0,34, « croissant » − 0,24) ; un tri par espérance de découvertes,
   appris en ligne, est le défaut sûr (`essais-boucle-d-or-v1/lecture-essai-boucle-d-or-v1.md`).
+
+## Après-midi (12:20 à 13:47 UTC ; entrée écrite à 13:47 UTC, heure lue sur `date -u` ; servi par Opus 5.5 jusque vers 13:05 UTC, puis par Fable 5.1 après la bascule de Lazar)
+
+- **Orchestrateur v3, v4, v5** (commits `3851b0f`, `b357564`, `0f4f297`) : juge v1 et nul des filles v2 dans le cycle ;
+  mémoire prédictive, héritage de la preuve, marchepieds, filles à 300 tirages ; seuil de signature à 5 % de fausses fusions
+  **par fiche**, graine du noyau tirée par `secrets` pour l'exécution réelle, vivier de 60 fiches. Démonstrations v3, v4
+  (`dded695`, `62927d1`) et **v5** (lancées 12:58 UTC, lues à 13:36 : `demonstration-cycle-v5/`, `60345b90…`) : seuil par
+  fiche → fausses fusions 4 et 5 (31 et 39 en v4) ; marchepieds sur le vivier : 282 vraies filles contre 212 dans le monde
+  fécond (+33 %), 236 contre 245 dans le monde plat ; mémoire : 0 double contre 11 sans mémoire ; aucune fausse découverte.
+  Mécanismes construits pour cela : vérifiés, pas découverts.
+- **Erratum** (`6fb4f05`) : quatre heures d'en-tête écrites sans lecture de `date -u`, bornées par leurs commits ; mon
+  erreur, dite à Lazar.
+- **Devis du premier lancement réel** (`060cde0`, `aabfc2e6…`) : plafond 20 USD, trois pièces à coder avant, options (a)
+  monde caché tenu par le noyau, (b) données réelles, (c) domaine du programme. Lazar (14:02 Paris) : (a) puis (b) puis
+  (c), « c coûterait combien ? » : chiffré avec les prix officiels lus le jour même (Opus 5.5 4 / 20, Fable 5.1 10 / 50 USD
+  par million de jetons ; différé −50 %) : ≈ 60 USD la course avec Opus, ≈ 120 avec Fable, si la banque d'épisodes
+  existe ; + ≈ 270 USD si 2 220 épisodes à générer.
+- **Coupure de contexte vers 13:02 UTC** : ma réponse de 13:13 Paris (organisme propre ou hybride) n'était dans aucun
+  fichier ; Lazar l'a recollée à 14:26 Paris, versée telle quelle (pièce M, `c16b53ae…`). Leçon : toute position de fond
+  donnée à Lazar est versée en pièce le jour même.
+- **Lazar, 14:06 Paris : « fable vérifie si l'org est prêt… »** : contre-lecteur neuf (Fable 5.1, 13:11 à 13:25 UTC,
+  rapport `d4c6ef64…`) : **pas prêt** pour le domaine du programme ni comme chercheur d'angles morts (manquent un monde qui
+  rend des issues réelles, un rôle qui formule, un nul informé ; le juge ne juge que des lois par instance ; aptitude
+  constante en mode pari ; deux canaux de texte ; lignée du vérificateur par deux noms). Failles : 10 documentées, 5
+  grises, 9 construites ; les plus graves : délégation à un agent honnête, empoisonnement de la calibration (Kloft et
+  Laskov 2012), censure stratégique des épisodes — cette dernière visait aussi le pôle (un agent qui plante pour un second
+  tirage) : **corrigée en v6** (dépôt unique par engagement). Chiffres non opposables (R7).
+- **Orchestrateur v6** (`fa59066`, empreintes `1720f165…`, 154 essais) : monde tenu par le noyau (`mesures.json` déposé
+  après le gel, issues déclarées comparées avant le vérificateur), dépôt unique par engagement, **relais de clé réel**
+  (boucle locale, clé lue dans son seul environnement et effacée, jeton factice exigé, flux relayé, usage lu, plafond
+  indépendant **avec réservation par appel** — défaut « appels simultanés » vu par la répétition générale, corrigé),
+  **répétition générale** (adaptateur réel + relais réel + amont factice + faux moteur, sept vérifications tenues, 1,3 s),
+  seuls Opus 5.5 et Fable 5.1 permis (Lazar, 14:17 Paris), ligne de commande complète.
+- Décisions de Lazar (Paris) : 12:02 préenregistrement levé pour l'exploratoire ; 14:17 modèles permis, moissonneur
+  comme outil, collisionneur avant toute décision sur le proposeur (question écrite, `b45c0578…`) ; 14:32 « go » après
+  (a) : bras d'attaque sur banque en cache, pôle théorie avec Lean ; 14:41 ordre de conception inscrit
+  (`programme-conception-organisme-v1.md`, `72fa0e60…` : v7 proposeur à liberté bornée, v8 réécriture des rôles jugée
+  comme une fiche, jamais le noyau ; couches d'essai sur le monde réel, budgets par couche) ; **« go » sur (a), plafond à
+  relever** (50 USD proposé) — relayé à session-depot (message n° 106, `87304ac5…`) ; passation intermédiaire v6
+  (`a384cdc2…`, `248b43b`).
+- Recherche de clés avant chaque poussée : seules les fausses clés plantées des essais. Instances de calcul : aucune.
+  Sous-agents en cours : aucun.
