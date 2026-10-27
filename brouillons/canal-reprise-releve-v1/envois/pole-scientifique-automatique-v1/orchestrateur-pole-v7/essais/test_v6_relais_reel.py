@@ -135,11 +135,13 @@ class RelaisEnProcessus(unittest.TestCase):
 
     def test_artefact_plafond_atteint(self):
         # 0,05 USD de plafond ; un appel Fable à 1 000 / 200 jetons coûte 0,02 USD : le troisième est refusé
-        for _ in range(2):
+        for i in range(2):
             statut, _, _ = appeler(self.url, "/v1/messages", {"model": "claude-fable-5-1"})
             self.assertEqual(statut, 200)
+            self._journal(au_moins=i + 1)  # v14 : attendre le règlement de l'appel avant le suivant (essai intermittent sous charge)
         statut, _, _ = appeler(self.url, "/v1/messages", {"model": "claude-fable-5-1"})
         self.assertEqual(statut, 200, "le plafond n'est pas encore atteint (0,04 < 0,05)")
+        self._journal(au_moins=3)
         statut, _, octets = appeler(self.url, "/v1/messages", {"model": "claude-fable-5-1"})
         self.assertEqual(statut, 402, octets)
         self.assertEqual(len(self.amont.requetes), 3, "l'amont n'est plus appelé une fois le plafond atteint")
