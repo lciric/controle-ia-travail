@@ -299,3 +299,52 @@ def test_go_ligne_mal_formee_et_codes(tmp_path):
     assert code() == 1
     f.write_text(ENTETE + "| GO-2026-10-27-01 | 2026-10-27 | calcul | sept colonnes | 8 USD | Lazar | mot |\n")
     assert code() == 2
+
+
+# ---------- gardes nouvelles du lanceur, extraites telles quelles (R5 ; CLW-03, CLW-04, CLW-10) ----------
+
+def bloc_du_lanceur(debut, n_lignes):
+    """Les n lignes du lanceur qui commencent par `debut` (la garde et sa suite), telles qu'elles sont dans le script."""
+    lignes = (SCRIPTS / "lancer_echelle_v5.sh").read_text(encoding="utf-8").splitlines()
+    i = [k for k, l in enumerate(lignes) if l.startswith(debut)]
+    assert len(i) == 1, debut
+    return "\n".join(lignes[i[0]:i[0] + n_lignes])
+
+
+def jouer(tmp_path, prelude, bloc):
+    script = tmp_path / "essai.sh"
+    script.write_text("set -uo pipefail\n" + prelude + "\n" + bloc + "\necho passe\n")
+    r = subprocess.run(["bash", str(script)], capture_output=True, text=True, timeout=60)
+    return r.returncode, "passe" in r.stdout
+
+
+@pytest.mark.parametrize("cite, attendu", [(True, (0, True)), (False, (2, False))])
+def test_lanceur_texte_scelle_cite_le_commit(tmp_path, cite, attendu):
+    """CLW-04 : un texte scellé qui ne cite pas le commit lancé arrête avant toute création."""
+    commit = "f" * 40
+    (tmp_path / "prereg").mkdir()
+    (tmp_path / "prereg" / "texte.md").write_text(f"commit `{commit if cite else '0' * 40}`\n")
+    bloc = bloc_du_lanceur('grep -qF "$COMMIT" "$DEPOT/$PREREG"', 2)
+    prelude = f'COMMIT={commit}; DEPOT={tmp_path}; PREREG=prereg/texte.md; T={tmp_path}'
+    assert jouer(tmp_path, prelude, bloc) == attendu
+
+
+@pytest.mark.parametrize("version, attendu", [("1.8.3", (0, True)), ("1.8.2", (2, False)), ("", (2, False))])
+def test_lanceur_version_de_vastai(tmp_path, version, attendu):
+    """CLW-10 : une autre version de vastai que 1.8.3 arrête avant tout appel."""
+    faux = faux_vastai(tmp_path, f'#!/usr/bin/env bash\n[ "$1" = --version ] && echo "{version}"\n')
+    bloc = bloc_du_lanceur('[ "$("$V" --version', 1)
+    assert jouer(tmp_path, f"V={faux}", bloc) == attendu
+
+
+@pytest.mark.parametrize("plafond, attendu", [("8 USD", (0, True)), ("2 USD", (2, False))])
+def test_lanceur_go_relu(tmp_path, plafond, attendu):
+    """CLW-03 : la ligne du lanceur qui relit le GO arrête si le GO n'est pas propre à l'expérience."""
+    (tmp_path / "registres").mkdir()
+    (tmp_path / "registres" / "go.md").write_text(ENTETE + ligne(plafond=plafond))
+    (tmp_path / "verifier_go_v5.py").write_text((SCRIPTS / "verifier_go_v5.py").read_text(encoding="utf-8"))
+    (tmp_path / "lancement.txt").write_text("")
+    bloc = bloc_du_lanceur('python3 -I -B "$T/verifier_go_v5.py"', 2)
+    prelude = (f"T={tmp_path}; DEPOT={tmp_path}; GO=GO-2026-10-27-01; PREREG=prereg/{NOM}; "
+               f"EMPREINTE_PREREG={EMPREINTE}; PLAFOND_GO=8.00")
+    assert jouer(tmp_path, prelude, bloc) == attendu
