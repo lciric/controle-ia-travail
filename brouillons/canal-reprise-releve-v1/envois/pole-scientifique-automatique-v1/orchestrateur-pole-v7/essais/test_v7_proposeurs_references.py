@@ -145,6 +145,26 @@ class Mixte(unittest.TestCase):
             with self.subTest(roles=roles), self.assertRaises(ValueError):
                 AdaptateurMixte(reel, simule, roles)
 
+    def test_cout_simule_jamais_compte_dans_le_compte_reel(self):
+        """v10 : un rôle simulé dans un adaptateur mixte déclare 0 USD au pôle ; son coût simulé est gardé à part."""
+        from pole.adaptateurs import AdaptateurMixte, Resultat
+
+        class Fixe:
+            def __init__(self, cout):
+                self.cout = cout
+
+            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+                return Resultat("fini", [], self.cout)
+
+        reel, simule = Fixe(0.77), Fixe(0.40)
+        m = AdaptateurMixte(reel, simule, ["proposeur"])
+        r_sim = m.lancer("experimentateur", "c", "/tmp", 1.0, 3)
+        self.assertEqual(r_sim.cout_declare_usd, 0.0)
+        self.assertEqual(r_sim.cout_simule_usd, 0.40)
+        r_reel = m.lancer("proposeur", "c", "/tmp", 1.0, 3)
+        self.assertEqual(r_reel.cout_declare_usd, 0.77)
+        self.assertEqual(r_reel.cout_simule_usd, 0.0)
+
 
 
 class RepetitionDuel(CasGeneration):

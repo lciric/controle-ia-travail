@@ -7,7 +7,7 @@ Le paquet `claude_agent_sdk` n'est importé que paresseusement, au premier lance
 import asyncio
 import math
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from .caviardage import caviarder
 from .garde_outils import fabriquer_crochet
@@ -47,6 +47,7 @@ class Resultat:
     cout_declare_usd: float = 0.0
     statut: str = "ok"
     erreur: object = None
+    cout_simule_usd: float = 0.0  # v10 : coût déclaré par un rôle simulé dans un adaptateur mixte (information, jamais compté)
 
 
 class Adaptateur:
@@ -233,8 +234,15 @@ class AdaptateurMixte(Adaptateur):
         self.bac_a_sable = getattr(reel, "bac_a_sable", None)
 
     def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
-        cible = self.reel if role in self.roles_reels else self.simule
-        return cible.lancer(role, consigne, dossier, budget_usd, max_tours, modele=modele)
+        if role in self.roles_reels:
+            return self.reel.lancer(role, consigne, dossier, budget_usd, max_tours, modele=modele)
+        res = self.simule.lancer(role, consigne, dossier, budget_usd, max_tours, modele=modele)
+        # v10 : un rôle simulé ne dépense rien ; son coût simulé (COUTS_SIMULES, utile aux essais de budget) ne doit pas
+        # entrer dans le compte réel du pôle (sinon le budget d'un duel payé s'épuise sur des dollars fictifs et le coût
+        # par structure retrouvée est faux). Le chiffre simulé est gardé à part, pour information.
+        if isinstance(res, Resultat) and res.cout_declare_usd:
+            return replace(res, cout_declare_usd=0.0, cout_simule_usd=float(res.cout_declare_usd))
+        return res
 
 
 def __getattr__(nom):
