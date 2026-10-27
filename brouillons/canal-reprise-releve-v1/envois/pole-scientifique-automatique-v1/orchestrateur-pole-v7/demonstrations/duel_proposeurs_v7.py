@@ -61,16 +61,12 @@ def pari_apparie(valeurs):
     la forme « signe » teste un autre nul et son mélange n'est pas une surmartingale sous E[v] ≤ 0) : mélange sur Λ de
     Π(1 + λ·v) sur une suite de contrastes v ∈ [−1 ; 1] ; promotion au seuil 1/α."""
     import math
-    wv = [1.0] * len(LAMBDAS)
-    traj, promu_a = [], None
-    for t, v in enumerate(valeurs, 1):
+    from pole import pari_apparie as pa  # v20 : le cœur du pari apparié du pôle (même calcul, un seul code)
+    for v in valeurs:
         if not -1.0 <= v <= 1.0:
             raise ValueError(f"contraste hors de [-1 ; 1] : {v}")
-        wv = [w * (1 + lam * v) for w, lam in zip(wv, LAMBDAS)]
-        richesse = sum(wv) / len(LAMBDAS)
-        traj.append(round(math.log(richesse), 6))
-        if promu_a is None and richesse >= 1 / ALPHA:
-            promu_a = t
+    traj = [round(x, 6) for x in pa.trajectoire_log_richesse(list(valeurs), LAMBDAS)]
+    promu_a = next((t for t, x in enumerate(traj, 1) if x >= math.log(1 / ALPHA) - 1e-12), None)
     return {"trajectoire_log_w": traj, "log_w_max": max(traj) if traj else 0.0, "seuil_log": math.log(1 / ALPHA),
             "promu": promu_a is not None, "instant_de_promotion": promu_a, "n": len(valeurs)}
 
