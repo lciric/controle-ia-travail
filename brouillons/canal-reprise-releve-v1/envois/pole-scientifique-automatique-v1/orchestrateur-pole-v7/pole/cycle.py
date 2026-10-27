@@ -75,6 +75,12 @@ class ConfigGeneration:
     # Lazar du 27 octobre, 15:11 heure de Paris).
     multiplicite: str = "aucune"
     temoins_sans_agent: bool = False  # v7 : sur un monde qui dépose les issues, les témoins sont jugés par le noyau seul
+    propositions_par_generation: int = 0  # v7 : fiches demandées au proposeur à chaque génération (0 : aucun proposeur)
+    nul_archive: bool = False  # v7 : lois des survivantes de l'archive et leurs mélanges aveugles au nul de toute fiche
+    exploration_developpement: bool = False  # v7, pièce 4 bis : partie de développement (traits et issues) au proposeur
+    modele_proposeur: str = "simule-e"
+    plafond_proposeur_usd: float = 0.5
+    max_tours_proposeur: int = 15
 
     def valider(self):
         if self.modele_verificateur == self.modele_experimentateur:
@@ -84,7 +90,7 @@ class ConfigGeneration:
         if not (isinstance(self.concurrence, int) and self.concurrence >= 1):
             raise ValueError("concurrence : entier ≥ 1")
         for nom in ("budget_generation_usd", "plafond_experimentateur_usd", "plafond_verificateur_usd",
-                    "plafond_recombinaison_usd", "plafond_synthese_usd"):
+                    "plafond_recombinaison_usd", "plafond_synthese_usd", "plafond_proposeur_usd"):
             if not (nombre_fini(getattr(self, nom)) and getattr(self, nom) > 0):
                 raise ValueError(f"{nom} : nombre fini strictement positif")
         if not (0 < self.alpha < 1):
@@ -115,6 +121,14 @@ class ConfigGeneration:
             raise ValueError("multiplicite : « aucune » ou « e-bh »")
         if not isinstance(self.temoins_sans_agent, bool):
             raise ValueError("temoins_sans_agent : vrai ou faux")
+        if not (isinstance(self.propositions_par_generation, int) and 0 <= self.propositions_par_generation <= 40):
+            raise ValueError("propositions_par_generation : entier dans [0 ; 40]")
+        if self.propositions_par_generation and self.selection != "pari":
+            raise ValueError("le proposeur suppose la sélection par pari")
+        if not isinstance(self.nul_archive, bool):
+            raise ValueError("nul_archive : vrai ou faux")
+        if not isinstance(self.exploration_developpement, bool):
+            raise ValueError("exploration_developpement : vrai ou faux")
         return self
 
 
@@ -205,6 +219,28 @@ def _copier_pour_rejeu(source, cible, limite):
                 raise OverflowError("artefacts trop volumineux pour le rejeu")
             os.makedirs(os.path.dirname(os.path.join(cible, relatif)), exist_ok=True)
             shutil.copyfile(os.path.join(racine, nom), os.path.join(cible, relatif))
+
+
+def membres_de_l_archive(fiche, memoire):
+    """v7 (« go » de Lazar du 27 octobre, 15:27) : le nul des filles étendu à la mémoire. Pour une fiche non témoin, chaque
+    survivante de l'archive de même espace (moniteur, nombre d'issues, dimension), hors elle-même et ses parents, entre au
+    nul avec sa loi seule et ses mélanges à la loi uniforme (grille) : une fiche nouvelle doit prédire plus que ce que le
+    pôle a déjà trouvé. Agrandir le nul ne fait que diminuer la richesse : la garantie reste valide."""
+    if memoire is None or not getattr(memoire, "active", False):
+        return []
+    espace = fiche.espace_instances or {}
+    k, d, moniteur = int(espace.get("nombre_issues", 3)), int(espace.get("dimension", 2)), espace.get("moniteur")
+    membres = []
+    for ident, e in sorted(memoire.index.items()):
+        if e.get("statut") != "survit" or e.get("temoin") or ident == fiche.identifiant or ident in (fiche.parents or []):
+            continue
+        loi, esp = e.get("loi_predictive"), e.get("espace_instances") or {}
+        if not loi or int(esp.get("nombre_issues", 3)) != k or int(esp.get("dimension", 2)) != d or esp.get("moniteur") != moniteur:
+            continue
+        membres.append({"nom": f"archive:{ident}", "type": "loi", "loi": loi})
+        membres.append({"nom": f"archive_couvert:{ident}", "type": "melange_lois",
+                        "lois": [loi, {"type": "fixe", "probas": [1.0] * k}], "grille": list(sp.GRILLE_MELANGE)})
+    return membres
 
 
 def instants_reguliers(n, nombre):
@@ -300,10 +336,13 @@ class Generation:
                 # sans qu'aucun dossier ne soit créé.
                 parents = {p: self.lois_connues[p] for p in fiche.parents if p in self.lois_connues}
                 monde = self.monde_noyau
+                supplementaires = list(monde.membres_informes(fiche)) if hasattr(monde, "membres_informes") else []
+                if self.config.nul_archive and fiche.temoin is None:
+                    supplementaires += membres_de_l_archive(fiche, self.memoire)
                 gele = preparer_engagement(
                     fiche, self.config, parents if len(parents) == 2 else None,
-                    reservoir=monde.reservoir(fiche) if hasattr(monde, "reservoir") else None,
-                    membres_supplementaires=monde.membres_informes(fiche) if hasattr(monde, "membres_informes") else None,
+                    reservoir=monde.reservoir(fiche, self.numero) if hasattr(monde, "reservoir") else None,
+                    membres_supplementaires=supplementaires or None,
                     moniteur=monde.moniteur_de(fiche) if hasattr(monde, "moniteur_de") else None)
             empreinte = self.registre_gel.geler(fiche)
         except FicheModifieeApresGel as e:
@@ -560,28 +599,42 @@ class Generation:
 
 
 def appliquer_multiplicite(issues, alpha):
-    """Règle e-BH (Wang et Ramdas, 2022) sur les fiches jugées de la génération : e-valeur d'une fiche = sa richesse
-    **arrêtée** (au premier franchissement du seuil 1/α, sinon la richesse finale : une e-variable par arrêt optionnel
-    d'une surmartingale ; le maximum sur le temps n'en est pas une) ; les e-valeurs triées par
-    ordre décroissant, k* = le plus grand k tel que e_(k) ≥ m / (α · k) ; les k* premières sont retenues, les autres
-    survivantes sont éliminées (motif écrit). Contrôle du taux de fausses découvertes à α sur la génération, quelle que
-    soit la dépendance entre fiches. Les témoins comptent dans m (ils sont jugés comme les autres)."""
-    def log_e(issue):  # e-valeur arrêtée : richesse au premier franchissement du seuil, sinon richesse finale
-        ev = issue["pari"]
-        return ev.get("log_richesse_arretee", ev.get("log_richesse_finale"))
+    """Règle e-BH (Wang et Ramdas, 2022) sur les fiches jugées de la génération.
 
-    jugees = [(i, issue) for i, issue in issues.items() if isinstance(issue.get("pari"), dict) and nombre_fini(log_e(issue))]
+    e-valeur d'une fiche : sa richesse **arrêtée au premier instant de lecture où elle atteint m/α** (m = nombre de fiches
+    jugées de la génération, fixé avant toute issue), sinon sa richesse au dernier instant ; c'est un temps d'arrêt du
+    processus de la fiche, donc une e-valeur valide (arrêt optionnel d'une surmartingale positive) ; la preuve héritée de
+    la classe (log W cumulé) s'y ajoute (produit d'e-valeurs). Les e-valeurs triées par ordre décroissant, k* = le plus
+    grand k tel que e_(k) ≥ m / (α · k) ; les k* premières sont retenues, les autres survivantes sont éliminées (motif
+    écrit). Taux de fausses découvertes ≤ α sur la génération, quelle que soit la dépendance entre fiches. Les témoins
+    comptent dans m.
+
+    **Correction du 27 octobre (14:47 UTC)** : la version précédente arrêtait la richesse au seuil **par fiche** 1/α ;
+    l'e-valeur était alors plafonnée vers 1/α, et e-BH ne pouvait rien retenir dès que m > 1 (erreur relevée par la course
+    du monde planté : deux témoins vrais à log W 34 et 28 éliminés). Erratum : `../erratum-multiplicite-e-bh-v1.md`."""
+    jugees = [(i, issue) for i, issue in issues.items() if isinstance(issue.get("pari"), dict)
+              and issue["pari"].get("trajectoire_log_w")]
     m = len(jugees)
     if m == 0:
         return {"m": 0, "retenues": []}
-    ordre = sorted(jugees, key=lambda x: -log_e(x[1]))
+    seuil_arret = math.log(m / alpha)
+
+    def log_e(issue):
+        ev = issue["pari"]
+        traj = ev["trajectoire_log_w"]
+        arretee = next((v for v in traj if v >= seuil_arret), traj[-1])
+        return arretee + float((ev.get("heritage") or {}).get("cumul", 0.0))
+
+    valeurs = {i: log_e(issue) for i, issue in jugees}
+    ordre = sorted(jugees, key=lambda x: -valeurs[x[0]])
     k_etoile = 0
-    for k, (_, issue) in enumerate(ordre, 1):
-        if log_e(issue) >= math.log(m / (alpha * k)):
+    for k, (i, _) in enumerate(ordre, 1):
+        if valeurs[i] >= math.log(m / (alpha * k)):
             k_etoile = k
     retenues = [i for i, _ in ordre[:k_etoile]]
     for i, issue in jugees:
-        issue["pari"]["multiplicite"] = {"regle": "e-bh", "m": m, "retenue": i in retenues,
+        issue["pari"]["multiplicite"] = {"regle": "e-bh", "m": m, "retenue": i in retenues, "log_e": round(valeurs[i], 6),
+                                         "seuil_log_arret": round(seuil_arret, 6),
                                          "seuil_log_retenue": math.log(m / (alpha * max(1, k_etoile))) if k_etoile else None}
         if issue["verdict_final"] == "survit" and i not in retenues:
             issue["verdict_final"] = "eliminee"

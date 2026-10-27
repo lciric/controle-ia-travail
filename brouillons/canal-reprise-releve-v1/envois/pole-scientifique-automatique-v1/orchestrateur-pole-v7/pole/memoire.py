@@ -186,7 +186,7 @@ class Memoire:
             "severite_attendue": fiche.severite_attendue,
             "aptitude": fiche.aptitude() if fiche.statut == "survit" else None,
             "prediction": fiche.prediction, "metrique": fiche.metrique, "seuil": fiche.seuil,
-            "loi_predictive": fiche.loi_predictive,
+            "loi_predictive": fiche.loi_predictive, "espace_instances": fiche.espace_instances,
             "protocole": fiche.protocole, "domaines": list(fiche.domaines), "operateurs": list(fiche.operateurs),
             "code": {"chemin": code.get("chemin"), "sha256": code.get("sha256")},
             "generation": generation, "source": issue.get("famille_source", fiche.famille_source()),

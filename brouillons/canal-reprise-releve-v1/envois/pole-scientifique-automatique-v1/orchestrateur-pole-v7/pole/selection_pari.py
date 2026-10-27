@@ -552,6 +552,7 @@ def evaluer(gele, tirages, graine_noyau=None):
     promue = t_promotion is not None if e["mode"] == "continu" else log_w[-1] >= seuil
     resultat = {"log_richesse_finale": log_w[-1], "log_richesse_max": max(log_w), "seuil_log": seuil,
                 "log_richesse_arretee": log_w[t_promotion - 1] if t_promotion else log_w[-1],
+                "trajectoire_log_w": [round(v, 6) for v in log_w],  # v7 : pour la règle e-BH (arrêt au seuil m/α)
                 "t_promotion": t_promotion, "nombre_tirages": len(issues), "part_calibrage": c,
                 "membre_dominant_final": dominant[-1], "mode": e["mode"], "empreinte_engagement": gele.empreinte,
                 "plan_execution": plan_execution_de(e)}

@@ -14,7 +14,7 @@ from .garde_outils import fabriquer_crochet
 from .outils import lister_fichiers
 from .relais import CleDansEnvironnement, noms_de_cle_presents, valider_url_relais, variables_agent
 
-ROLES = ("experimentateur", "verificateur", "recombinaison", "synthese")
+ROLES = ("experimentateur", "verificateur", "recombinaison", "synthese", "proposeur")
 # Décision de Lazar du 27 octobre 2026 (14:17, heure de Paris) : dans l'organisme, côté Claude, seulement Opus 5.5 et
 # Fable 5.1. Tout autre nom de modèle est refusé avant tout appel réel (préfixes des identifiants de modèle).
 MODELES_REELS_PERMIS = ("claude-opus-5-5", "claude-fable-5-1")
@@ -34,6 +34,9 @@ CONSIGNES_SYSTEME = {
                       "qui prédit plus que ses parents. Tu réponds par un bloc JSON de fiche."),
     "synthese": ("Tu es l'agent de synthèse du pôle. À partir du résumé de l'index fourni, tu écris des leçons courtes "
                  "(causes d'élimination fréquentes, protocoles qui ont fonctionné). Aucune donnée hors du résumé."),
+    "proposeur": ("Tu es le proposeur du pôle. À partir du seul contexte public fourni (monde, prédicteurs connus, "
+                  "archive, catalogue), tu formules des fiches au gabarit, chacune avec une stratégie déclarée du "
+                  "catalogue. Tu réponds par un bloc JSON {fiches}."),
 }
 
 

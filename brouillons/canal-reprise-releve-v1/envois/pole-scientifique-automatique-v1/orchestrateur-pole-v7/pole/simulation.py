@@ -29,7 +29,7 @@ from .adaptateurs import Adaptateur, Resultat
 from .memoire import jaccard
 from .outils import chemin_dans, graine_derivee, json_canonique, lister_fichiers, normaliser_texte, sha256_octets
 
-COUTS_SIMULES = {"experimentateur": 0.40, "verificateur": 0.15, "recombinaison": 0.10, "synthese": 0.05}
+COUTS_SIMULES = {"experimentateur": 0.40, "verificateur": 0.15, "recombinaison": 0.10, "synthese": 0.05, "proposeur": 0.20}
 
 CODE_SEUIL = '''import hashlib, json, math
 octets = open("fiche.json", "rb").read()
@@ -132,7 +132,8 @@ class AdaptateurSimule(Adaptateur):
             return Resultat("arrêt : plafond de dépense atteint avant la fin", lister_fichiers(dossier), budget_usd,
                             "budget_depasse")
         methode = {"experimentateur": self._experimentateur, "verificateur": self._verificateur,
-                   "recombinaison": self._recombinaison, "synthese": self._synthese}[role]
+                   "recombinaison": self._recombinaison, "synthese": self._synthese,
+                   "proposeur": self._proposeur}[role]
         texte, statut = methode(dossier)
         return Resultat(texte, lister_fichiers(dossier), cout, statut)
 
@@ -315,6 +316,117 @@ class AdaptateurSimule(Adaptateur):
         if rng.random() < self.p_sans_prediction:
             fille["ce_que_la_fille_predit_de_plus"] = ""
         return _bloc("Fiche fille proposée.", {"fille": fille}), "ok"
+
+    # --- proposeur (v7) : stratégies du catalogue jouées mécaniquement, sur le seul contexte public ----------------
+    @staticmethod
+    def _loi_monotone(j, d, k, sens, force=0.8):
+        poids = [[0.0] * d for _ in range(k)]
+        for c in range(k):
+            poids[c][j] = round(sens * force * (c - (k - 1) / 2), 6)
+        return {"type": "softmax", "poids": poids, "biais": [0.0] * k}
+
+    @staticmethod
+    def _trait_principal(loi):
+        if not isinstance(loi, dict) or loi.get("type") != "softmax":
+            return None
+        poids = loi["poids"]
+        ecarts = [max(l[j] for l in poids) - min(l[j] for l in poids) for j in range(len(poids[0]))]
+        return max(range(len(ecarts)), key=lambda j: ecarts[j])
+
+    @staticmethod
+    def _borner(loi, borne=4.0):
+        if loi.get("type") == "softmax":
+            loi["poids"] = [[round(max(-borne, min(borne, w)), 6) for w in l] for l in loi["poids"]]
+            loi["biais"] = [round(max(-2 * borne, min(2 * borne, b)), 6) for b in loi["biais"]]
+        return loi
+
+    def _loi_ajustee(self, dossier, rng, utiles):
+        """Phase exploratoire simulée : sur la partie de développement, une loi par sous-population (ou par côté du seuil 0
+        d'un trait), chacune ajustée par régression multinomiale à crête — une forme que le prédicteur connu, linéaire en
+        tous les traits, ne contient pas."""
+        from .monde_banque import ajuster_softmax
+        dev = json.loads(_lire(dossier, "developpement.json"))
+        moniteurs = sorted(dev["moniteurs"])
+        m = rng.choice(moniteurs)
+        k = dev["moniteurs"][m]
+        lignes = [l for l in dev["instances"] if m in l["issues"]]
+        if rng.random() < 0.5:
+            groupes = {"0": [l for l in lignes if l["g"] == 0], "1": [l for l in lignes if l["g"] == 1]}
+            if min(len(v) for v in groupes.values()) < 3 * k:
+                return None, m
+            lois = {c: self._borner(ajuster_softmax([l["z"] for l in v], [l["issues"][m] for l in v], k, crete=2.0))
+                    for c, v in groupes.items()}
+            return {"type": "par_sous_population", "lois": lois}, m
+        a = rng.choice(utiles)
+        haut = [l for l in lignes if l["z"][a] > 0.0]
+        bas = [l for l in lignes if l["z"][a] <= 0.0]
+        if min(len(haut), len(bas)) < 3 * k:
+            return None, m
+        ajuste = lambda v: self._borner(ajuster_softmax([l["z"] for l in v], [l["issues"][m] for l in v], k, crete=2.0))
+        return {"type": "si_sinon", "condition": {"indice": a, "seuil": 0.0}, "si": ajuste(haut), "sinon": ajuste(bas)}, m
+
+    def _proposeur(self, dossier):
+        ctx = json.loads(_lire(dossier, "contexte-proposeur.json"))
+        rng = random.Random(graine_derivee(self.graine, "proposeur", ctx["generation"]))
+        monde = ctx["monde"]
+        traits, d = monde["traits"], len(monde["traits"])
+        utiles = [j for j, t in enumerate(traits) if t != "bruit"] or list(range(d))
+        moniteurs = sorted(monde["moniteurs"])
+        archive = ctx["archive"]
+        promues = [e for e in archive if e["statut"] == "survit" and e.get("moniteur")]
+        eliminees = [e for e in archive if e["statut"] == "eliminee" and not e["expliquee_par_le_connu"] and e.get("moniteur")]
+        couverts = {(e["moniteur"], self._trait_principal(e["loi_predictive"])) for e in promues}
+        connus = ctx.get("predicteurs_connus") or {}
+        strategies = sorted(ctx["catalogue"])
+        fiches = []
+        for i in range(ctx["nombre_de_fiches"]):
+            strat = strategies[(i + ctx["generation"]) % len(strategies)]
+            m = rng.choice(moniteurs)
+            k = monde["moniteurs"][m]["nombre_issues"]
+            j = rng.choice(utiles)
+            sens = rng.choice((1, -1))
+            loi = None
+            if strat == "monotone_un_trait":
+                loi = self._loi_monotone(j, d, k, sens)
+            elif strat == "interaction_deux_traits" and len(utiles) >= 2:
+                a, b = rng.sample(utiles, 2)
+                loi = {"type": "si_sinon", "condition": {"indice": a, "seuil": 0.0},
+                       "si": self._loi_monotone(b, d, k, sens), "sinon": self._loi_monotone(b, d, k, -sens)}
+            elif strat == "difference_sous_populations":
+                loi = {"type": "par_sous_population", "lois": {"0": self._loi_monotone(j, d, k, sens),
+                                                               "1": self._loi_monotone(j, d, k, -sens)}}
+            elif strat == "correction_eliminee" and eliminees:
+                e = rng.choice(eliminees)
+                m = e["moniteur"]
+                k = monde["moniteurs"][m]["nombre_issues"]
+                loi = {"type": "melange", "composantes": [e["loi_predictive"], {"type": "fixe", "probas": [1.0] * k}],
+                       "poids": [0.5, 0.5]}
+            elif strat == "transposition_moniteur" and promues:
+                e = rng.choice(promues)
+                k = monde["moniteurs"][e["moniteur"]]["nombre_issues"]
+                autres = [x for x in moniteurs if x != e["moniteur"] and monde["moniteurs"][x]["nombre_issues"] == k]
+                if autres:
+                    m, loi = rng.choice(autres), e["loi_predictive"]
+            elif strat == "hors_bassins_promus":
+                libres = [(x, t) for x in moniteurs for t in utiles if (x, t) not in couverts]
+                if libres:
+                    m, j = rng.choice(libres)
+                    k = monde["moniteurs"][m]["nombre_issues"]
+                    loi = self._loi_monotone(j, d, k, sens)
+            elif strat == "ajustee_sur_developpement" and os.path.exists(os.path.join(dossier, "developpement.json")):
+                loi, m = self._loi_ajustee(dossier, rng, utiles)
+                k = monde["moniteurs"][m]["nombre_issues"] if m else k
+            elif strat == "au_dela_du_connu" and m in connus:
+                poids = connus[m]["poids"]
+                ecarts = {t: max(l[t] for l in poids) - min(l[t] for l in poids) for t in utiles}
+                j = min(ecarts, key=lambda t: (ecarts[t], t))
+                loi = self._loi_monotone(j, d, k, sens)
+            if loi is None:  # stratégie sans matière ce tour-ci : repli déclaré sur « monotone_un_trait »
+                strat, loi = "monotone_un_trait", self._loi_monotone(j, d, k, sens)
+            fiches.append({"enonce": f"[{strat}] le moniteur {m} suit une loi ({traits[j]}, sens {sens:+d}), "
+                                     f"génération {ctx['generation']}, proposition {i + 1}",
+                           "strategie": strat, "moniteur": m, "loi_predictive": loi})
+        return _bloc("Fiches proposées.", {"fiches": fiches}), "ok"
 
     # --- synthèse -----------------------------------------------------------------------------------------------
     def _synthese(self, dossier):

@@ -29,11 +29,15 @@ class BanqueInvalide(ValueError):
 class MondeBanque:
     nom = "monde-banque"
 
-    def __init__(self, chemin, graine, nul_informe=True, crete=1.0):
+    def __init__(self, chemin, graine, nul_informe=True, crete=1.0, tranches=1):
         with open(chemin, encoding="utf-8") as f:
             self.banque = json.load(f)
         self.empreinte_banque = sha256_fichier(chemin)
         self.graine, self.nul_informe, self.crete = graine, nul_informe, crete
+        if not (isinstance(tranches, int) and tranches >= 1):
+            raise BanqueInvalide("tranches : entier ≥ 1")
+        self.tranches = tranches
+        self._tranche_de_fiche = {}  # tranche fixée au premier gel d'une fiche (un rejeu ne change pas de tranche)
         for cle in ("traits", "moniteurs", "instances"):
             if cle not in self.banque:
                 raise BanqueInvalide(f"banque sans champ {cle!r}")
@@ -41,6 +45,46 @@ class MondeBanque:
         for ligne in self.banque["instances"]:
             self._par_traits.setdefault(self._cle(ligne["z"], ligne["g"]), []).append(ligne)
         self._connus = {}
+        # Tranches de la partie d'épreuve (v7, exposition adaptative) : par tâche quand la banque en déclare, sinon par
+        # instance ; affectation tirée par la graine du monde, fixe.
+        import random as _random
+        groupes = sorted({l.get("tache", l["identifiant"]) for l in self.banque["instances"] if l.get("partie", "epreuve") == "epreuve"})
+        _random.Random(graine_derivee(graine, "tranches", self.empreinte_banque)).shuffle(groupes)
+        self._tranche_du_groupe = {g: i % tranches for i, g in enumerate(groupes)}
+
+    def tranche_de_ligne(self, ligne):
+        return self._tranche_du_groupe.get(ligne.get("tache", ligne["identifiant"]), 0)
+
+    def description_publique(self):
+        """Ce que voit un proposeur : noms des traits, moniteurs (nombre d'issues, effectifs), sous-populations ;
+        jamais une issue."""
+        moniteurs = {}
+        for nom, m in self.banque["moniteurs"].items():
+            moniteurs[nom] = {"nombre_issues": m["nombre_issues"],
+                              "epreuve": len(self._lignes(nom, "epreuve")), "calibrage": len(self._lignes(nom, "calibrage"))}
+        return {"nom": self.banque.get("nom", "banque"), "traits": list(self.banque["traits"]),
+                "sous_populations": int(self.banque.get("sous_populations", 2)), "moniteurs": moniteurs,
+                "tranches": self.tranches}
+
+    def donnees_developpement(self):
+        """Partie de développement servie aux agents (v7, pièce 4 bis, phase exploratoire) : la partie de calibrage, traits
+        **et issues** ; l'épreuve n'y figure jamais. Explorer ici ne coûte rien à la garantie : l'épreuve reste fraîche."""
+        lignes = [l for l in self.banque["instances"] if l.get("partie", "epreuve") == "calibrage"]
+        return {"traits": list(self.banque["traits"]), "moniteurs": {n: m["nombre_issues"] for n, m in self.banque["moniteurs"].items()},
+                "instances": [{"identifiant": l["identifiant"], "z": list(l["z"]), "g": l["g"], "issues": dict(l["issues"])}
+                              for l in lignes]}
+
+    def predicteurs_connus_publics(self):
+        """Lois des prédicteurs connus (ajustées sur la partie de calibrage ; déjà visibles dans les engagements)."""
+        if not self.nul_informe:
+            return {}
+        sortie = {}
+        for nom, m in self.banque["moniteurs"].items():
+            if len(self._lignes(nom, "calibrage")) >= 5 * m["nombre_issues"]:
+                fiche_factice = type("F", (), {"espace_instances": {"moniteur": nom, "nombre_issues": m["nombre_issues"],
+                                                                    "dimension": len(self.banque["traits"])}})()
+                sortie[nom] = self.membres_informes(fiche_factice)[0]["loi"]
+        return sortie
 
     @staticmethod
     def _cle(z, g):
@@ -62,10 +106,15 @@ class MondeBanque:
     def _lignes(self, moniteur, partie):
         return [l for l in self.banque["instances"] if l.get("partie", "epreuve") == partie and moniteur in l["issues"]]
 
-    def reservoir(self, fiche):
-        """Instances d'épreuve (traits seulement) qui portent une issue pour le moniteur de la fiche."""
+    def reservoir(self, fiche, numero_generation=0):
+        """Instances d'épreuve (traits seulement) qui portent une issue pour le moniteur de la fiche ; avec des tranches,
+        celles de la tranche de la génération du premier gel de la fiche."""
         moniteur = self.moniteur_de(fiche)
         lignes = self._lignes(moniteur, "epreuve")
+        if self.tranches > 1:
+            cle = fiche.empreinte() if hasattr(fiche, "empreinte") else id(fiche)
+            tranche = self._tranche_de_fiche.setdefault(cle, numero_generation % self.tranches)
+            lignes = [l for l in lignes if self.tranche_de_ligne(l) == tranche]
         if not lignes:
             raise BanqueInvalide(f"aucune instance d'épreuve pour le moniteur {moniteur}")
         return [{"z": list(l["z"]), "g": l["g"]} for l in lignes]
@@ -151,8 +200,8 @@ def ajuster_softmax(zs, issues, k, crete=1.0, iterations=200, pas=0.5):
             "biais": [round(float(x), 6) for x in b]}
 
 
-def charger_monde_banque(chemin, graine, nul_informe=True):
-    return MondeBanque(chemin, graine, nul_informe=nul_informe)
+def charger_monde_banque(chemin, graine, nul_informe=True, tranches=1):
+    return MondeBanque(chemin, graine, nul_informe=nul_informe, tranches=tranches)
 
 
 __all__ = ["BanqueInvalide", "MondeBanque", "ajuster_softmax", "charger_monde_banque", "graine_derivee"]

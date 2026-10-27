@@ -170,7 +170,7 @@ class Fiche:
     def famille_source(self):
         """Source pour la calibration : la recombinaison garde son modèle (« recombinaison:<modèle> »)."""
         tete = self.source.split(":", 1)[0]
-        return self.source if tete in ("recombinaison", "agent") else tete
+        return self.source if tete in ("recombinaison", "agent", "proposeur") else tete
 
 
 class RegistreGel:

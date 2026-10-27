@@ -22,7 +22,8 @@ import urllib.parse
 JOURNAL = os.environ.get("FAUX_SDK_JOURNAL")
 GRAINE = int(os.environ.get("FAUX_SDK_GRAINE", "20261027"))
 ROLE_PAR_CONSIGNE = (("expérimentateur du pôle", "experimentateur"), ("vérificateur du pôle", "verificateur"),
-                     ("recombinaison du pôle", "recombinaison"), ("synthèse du pôle", "synthese"))
+                     ("recombinaison du pôle", "recombinaison"), ("synthèse du pôle", "synthese"),
+                     ("proposeur du pôle", "proposeur"))
 APPELS_D_OUTILS = [
     ("Read", {"file_path": "fiche.json"}),
     ("Bash", {"command": "ls"}),

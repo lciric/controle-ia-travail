@@ -77,6 +77,8 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
     rng = random.Random(graine_derivee(config.graine, "pole"))
     toutes, lois_connues, a_reessayer, deja, utilises = {}, {}, [], set(), set()
     depots = {}  # v6 : un dépôt (ordre secret, mesures du noyau) par engagement, pour toute la course
+    expliquees = set()  # v7 : fiches éliminées expliquées par le prédicteur connu (drapeau servi au proposeur)
+    verdicts_montres = 0  # v7 : exposition adaptative — verdicts montrés au proposeur
     qualites, depense, arret, journaux = [], 0.0, None, []
     nouvelles = []
     for f in population:
@@ -129,6 +131,18 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
                           k=k_recombinaison, max_paires=max_paires, memoire=memoire if memoire.active else None,
                           deja_fusionnees=deja)
         nouvelles = reco["filles"]
+        rapport_proposeur = None
+        if getattr(config, "propositions_par_generation", 0) and monde_noyau is not None \
+                and hasattr(monde_noyau, "description_publique") and g + 1 < generations:
+            from .proposeur import expliquees_par_le_connu, proposer
+            expliquees |= expliquees_par_le_connu(rapport["issues"])
+            verdicts_montres += sum(1 for i in rapport["issues"].values() if i.get("verdict_final") in ("survit", "eliminee"))
+            prop = proposer(adaptateur, config, monde_noyau, memoire if memoire.active else None, g + 1,
+                            os.path.join(dossier_g, "proposeur"), budget, config.propositions_par_generation, expliquees)
+            nouvelles = nouvelles + prop["fiches"]
+            rapport_proposeur = dict(prop["rapport"], fiches=[f.identifiant for f in prop["fiches"]],
+                                     exposition={"verdicts_montres_au_proposeur": verdicts_montres,
+                                                 "tranches": getattr(monde_noyau, "tranches", 1)})
         depense += budget.depense
         qualites.append(rapport["qualite"])
         restant = budget_total_usd - depense
@@ -138,7 +152,7 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
             arret = "nombre de générations atteint"
         elif restant < cout_minimal:
             arret = "budget épuisé"
-        elif not pool and not a_reessayer:
+        elif not pool and not a_reessayer and not (rapport_proposeur and nouvelles):
             arret = "plus aucune fiche ne survit"
         elif not nouvelles and not a_reessayer:
             arret = "rien de nouveau à tester"
@@ -156,6 +170,7 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
                         "calibration": memoire.registre_calibration()},
             "recombinaison": dict(reco["rapport"], filles=[f.identifiant for f in reco["filles"]],
                                   refusees=reco["refusees"]),
+            "proposeur": rapport_proposeur,
             "arret": arret,
         }
         journal = caviarder_objet(journal)[0]
@@ -238,6 +253,15 @@ def analyseur():
     p.add_argument("--temoins-sans-agent", action="store_true",
                    help="v7 : sur un monde qui dépose les issues, les témoins sont jugés par le noyau seul (gratuit)")
     p.add_argument("--temoins-par-generation", type=int, default=1)
+    p.add_argument("--propositions-par-generation", type=int, default=0,
+                   help="v7 : fiches demandées au proposeur à chaque génération (monde sur banque ; 0 : aucun)")
+    p.add_argument("--modele-proposeur", default="simule-e")
+    p.add_argument("--sans-nul-archive", action="store_true",
+                   help="v7 : ne pas mettre les survivantes de l'archive au nul des nouvelles fiches (défaut : les y mettre)")
+    p.add_argument("--exploration-developpement", action="store_true",
+                   help="v7 : phase exploratoire — partie de développement (traits et issues) servie au proposeur")
+    p.add_argument("--tranches", type=int, default=1,
+                   help="v7 : tranches de la partie d'épreuve, une par génération (exposition adaptative)")
     s = a.add_argument_group("moteur simulé seulement")
     s.add_argument("--monde-simule", help="fichier JSON {\"verites\": {énoncé: vrai|faux}} lu par le seul monde simulé")
     s.add_argument("--taux-tricheurs", type=float, default=0.0, help="part de chaque profil tricheur (test changé, sans calcul)")
@@ -268,7 +292,7 @@ def construire_adaptateur(args, population, temoins):
         if not args.confirmer_moteur_reel:
             raise MoteurNonArme("--moteur claude-sdk exige --confirmer-moteur-reel (dépense réelle, relais local requis)")
         for modele in (args.modele_experimentateur, args.modele_verificateur, args.modele_recombinaison,
-                       args.modele_synthese):
+                       args.modele_synthese) + ((args.modele_proposeur,) if args.propositions_par_generation else ()):
             verifier_modele_reel(modele)
         adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True)
         importer_sdk()
@@ -316,7 +340,8 @@ def principal(argv=None):
             if args.selection != "pari":
                 raise ValueError("--monde-banque suppose --selection pari")
             from .monde_banque import charger_monde_banque
-            monde_noyau = charger_monde_banque(args.monde_banque, args.graine, nul_informe=not args.sans_nul_informe)
+            monde_noyau = charger_monde_banque(args.monde_banque, args.graine, nul_informe=not args.sans_nul_informe,
+                                               tranches=args.tranches)
         elif args.monde_noyau is not None:
             if args.selection != "pari":
                 raise ValueError("--monde-noyau suppose --selection pari")
@@ -334,6 +359,8 @@ def principal(argv=None):
             taille_plan_filles=args.taille_plan_filles, tirage_recombinaison=args.tirage_recombinaison,
             politique_redite=args.politique_redite, noyau_secret=args.noyau_secret, urne=not args.sans_urne,
             multiplicite=args.multiplicite, temoins_sans_agent=args.temoins_sans_agent,
+            propositions_par_generation=args.propositions_par_generation, modele_proposeur=args.modele_proposeur,
+            nul_archive=not args.sans_nul_archive, exploration_developpement=args.exploration_developpement,
             budget_generation_usd=args.budget_generation_usd or args.budget_usd / max(1, args.generations)).valider()
         if args.ablation_memoire:
             from .ablation import executer_ablation

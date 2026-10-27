@@ -133,7 +133,8 @@ class Multiplicite(unittest.TestCase):
         for i in range(m):
             log_w = {0: math.log(500.0), 1: math.log(250.0), 2: math.log(25.0)}.get(i, -1.0)
             issues[f"F{i}"] = {"verdict_final": "survit" if log_w >= math.log(20) else "eliminee", "motif": "x",
-                               "pari": {"log_richesse_finale": log_w, "log_richesse_max": log_w}}
+                               "pari": {"log_richesse_finale": log_w, "log_richesse_max": log_w,
+                                        "trajectoire_log_w": [0.0, log_w / 2, log_w]}}
         r = appliquer_multiplicite(issues, alpha)
         # seuils : k=1 → 200 ; k=2 → 100 ; k=3 → 66,7 : F0 (500) et F1 (250) retenues, F2 (25, promue par fiche) éliminée
         self.assertEqual(sorted(r["retenues"]), ["F0", "F1"])
@@ -141,6 +142,21 @@ class Multiplicite(unittest.TestCase):
         self.assertIn("multiplicité e-BH", issues["F2"]["motif"])
         self.assertEqual(issues["F0"]["verdict_final"], "survit")
         self.assertEqual(appliquer_multiplicite({"A": {"verdict_final": "indecise"}}, alpha)["m"], 0)
+        # Artefact de la première version (R5) : une richesse qui franchit 1/α tôt puis monte très haut doit être retenue ;
+        # arrêter l'e-valeur au seuil par fiche (1/α) la plafonnait et e-BH ne retenait rien.
+        monte = {f"G{i}": {"verdict_final": "eliminee", "motif": "x",
+                           "pari": {"trajectoire_log_w": [-0.5, -1.0, -0.2]}} for i in range(9)}
+        monte["H"] = {"verdict_final": "survit", "motif": "x",
+                      "pari": {"trajectoire_log_w": [1.0, 3.1, 8.0, 20.0, 34.0]}}
+        r2 = appliquer_multiplicite(monte, alpha)
+        self.assertEqual(r2["retenues"], ["H"])
+        self.assertEqual(monte["H"]["verdict_final"], "survit")
+        self.assertAlmostEqual(monte["H"]["pari"]["multiplicite"]["log_e"], 8.0, "arrêtée au premier instant ≥ log(m/α)")
+        # Preuve héritée : elle s'ajoute à l'e-valeur arrêtée
+        herite = {"A": {"verdict_final": "survit", "motif": "x", "pari": {"trajectoire_log_w": [3.2],
+                                                                          "heritage": {"cumul": 2.0}}},
+                  "B": {"verdict_final": "eliminee", "motif": "x", "pari": {"trajectoire_log_w": [-1.0]}}}
+        self.assertEqual(appliquer_multiplicite(herite, alpha)["retenues"], ["A"], "3,2 + 2,0 ≥ log(2/0,05) = 3,69")
         with self.assertRaises(ValueError):
             ConfigGeneration(multiplicite="bonferroni").valider()
 
