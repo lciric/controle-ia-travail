@@ -86,8 +86,10 @@ CC=$(git -C "$E/clone-compagnon" rev-parse HEAD)
 cas compagnon-faux 1 "${COMMUN[@]}" COMMIT="$CC" BRANCHE=donnees/essai-a13 BRANCHE_CODE=outils/essai-compagnon \
     RACINE_AMORCE="$E/compagnon-faux" MODELE_LOCAL="$MIN" bash "$A"
 absente "compagnon faux" donnees/essai-a13
-# 14. délai de l'amorce atteint pendant la mesure du petit modèle : code 124, rien n'est poussé (CLZ-04)
-cas delai-atteint 124 "${COMMUN[@]}" DELAI_ESSAI_S=20 COMMIT="$C" BRANCHE=donnees/essai-a14 \
+# 14. délai de l'amorce atteint pendant la mesure du petit modèle : code 124, rien n'est poussé (CLZ-04). La mesure du
+#     modèle minuscule et sa poussée prennent de 12 à 80 s selon la charge de la machine : un délai de 5 s tombe pendant
+#     la mesure du petit (un délai de 20 s, essayé d'abord, tombait après sa poussée, pendant celle du grand)
+cas delai-atteint 124 "${COMMUN[@]}" DELAI_ESSAI_S=5 COMMIT="$C" BRANCHE=donnees/essai-a14 \
     RACINE_AMORCE="$E/delai-atteint" MODELE_LOCAL="$MIN" bash "$A"
 absente "délai atteint" donnees/essai-a14
 sleep 3
