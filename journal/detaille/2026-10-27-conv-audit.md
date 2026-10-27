@@ -149,3 +149,28 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   chez moi). Arrêt avant la conception du pari de signe, bascule sur Fable demandée à Lazar (16:19 UTC). Deux
   contre-lectures croisées en cours (un sous-agent Fable sur le code écrit sous Opus, un sous-agent Opus sur le code écrit
   sous Fable). Recherche de clés avant chaque poussée : rien. Instances : aucune.
+- **Soirée, suite (16:20 à 18:15 UTC ; ajout écrit à 18:15 UTC, heure lue sur `date -u` : 18:14:39).** Bascule sur **Fable 5.1**
+  (Lazar, 17:51 Paris : « je prends la conception du pari de signe : go » ; 17:54 : « demande aussi l'avis du
+  collisionneur sur ta conception »). **v7 versions 8 et 9** (`ed47efa`, `d81deef`, 202 essais) : grammaire v2 (formes hors de
+  l'espace du chercheur mécanique : trois traits 0/14), adaptateur mixte et `--roles-reels`, répétition du duel (seul le
+  proposeur passe par le relais). **Devis du duel des proposeurs** (`devis-duel-proposeurs-v1.md`, `7687bcc6…` : 80
+  sessions, attendu 30 à 60 USD, plafond 100 ; lecture L1 à L5 fixée). **Pari de signe, conception v1** (`50ce6842…`) et
+  question au collisionneur (`8e22c765…`) ; question « mesures fortes » (`8c80e82b…`, autre question que « questions
+  fortes », avec le brainstorm du double refus). **Contre-lecture de la v1** par un sous-agent neuf Opus 5.5 (17:13 à
+  17:42 UTC ; rapport `022e96d4…`) : « amender, pas refaire », douze constats dont quatre touchent la garantie (forme
+  « signe » invalide pour un nul d'espérance ; bruit des seuils de calibrage ; dépendance par agent surveillé ; sélection
+  de H2a sur les scores du comparateur), plus l'héritage sur une banque relue. **Conception v2** (`b3c8242`,
+  `9c39a73d…`, simulation v2 `d07e43f9…`, calcul binormal `1782e8cd…`) : forme « parts » seule, portée conditionnelle au
+  banc (consigne comme unité), e-valeur du minimum, héritage entre parties disjointes, comparateur par intersection-union,
+  H2a réécrite, H1b en nœud, dix-sept contrôles, D-S1 à D-S12 ; chiffre nouveau pour la couche 2 : **calibrage honnête de
+  10 à 16 fois les unités sabotées à 1 %** (deux jumeaux calibrés sur 45 tâches : « A meilleur » dans 9 à 32 % des cas).
+  Une erreur de signe dans ma simulation v2 (quantile normal) repérée parce que la cellule des jumeaux rendait 0 partout :
+  corrigée avant toute lecture. Le **tour du collisionneur** sur la v1 (session-depot, GO-2026-10-27-11, neuf cellules,
+  10,83 USD, `donnees/collisionneur-pari-de-signe-v1`) est lu contre la v2 par un sous-agent neuf Opus. **v7 version 10**
+  (`219c028`, 208 essais) : script d'enchaînement du duel, pari en forme « parts » seule, et un défaut trouvé en chemin :
+  dans l'adaptateur mixte, les rôles simulés déclaraient leur coût simulé au compte réel (un duel payé aurait épuisé son
+  budget sur des dollars fictifs) — corrigé. Les deux contre-lectures croisées du code, **interrompues à 16:49 UTC** par
+  la bascule de modèle (constaté à 17:59 dans leurs transcriptions), relancées neuves à 18:00 UTC. Programme de
+  conception v4 (`30bb257`). Messages n° 115 et 116. Trois erreurs d'heure d'en-tête (estimées au lieu de lues) corrigées
+  depuis les heures de fichier et dites dans les textes. Recherche de clés avant chaque poussée : rien. Instances :
+  aucune chez moi. Sous-agents en cours : trois (lecture du collisionneur, deux contre-lectures du code).
