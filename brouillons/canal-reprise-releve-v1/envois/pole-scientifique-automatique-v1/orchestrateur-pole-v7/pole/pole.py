@@ -233,8 +233,11 @@ def analyseur():
                         "exclut --monde-noyau")
     p.add_argument("--sans-nul-informe", action="store_true", help="monde sur banque sans le membre « connu »")
     p.add_argument("--sans-urne", action="store_true", help="juge v1 sans le membre « urne » (banque figée)")
-    p.add_argument("--multiplicite", choices=("aucune", "e-bh"), default="aucune",
-                   help="v7 : « e-bh » = taux de fausses découvertes à α par génération (e-valeurs finales)")
+    p.add_argument("--multiplicite", choices=("aucune", "e-bh"), default="e-bh",
+                   help="v7 : « e-bh » (défaut) = taux de fausses découvertes à α par génération (e-valeurs finales)")
+    p.add_argument("--temoins-sans-agent", action="store_true",
+                   help="v7 : sur un monde qui dépose les issues, les témoins sont jugés par le noyau seul (gratuit)")
+    p.add_argument("--temoins-par-generation", type=int, default=1)
     s = a.add_argument_group("moteur simulé seulement")
     s.add_argument("--monde-simule", help="fichier JSON {\"verites\": {énoncé: vrai|faux}} lu par le seul monde simulé")
     s.add_argument("--taux-tricheurs", type=float, default=0.0, help="part de chaque profil tricheur (test changé, sans calcul)")
@@ -330,7 +333,7 @@ def principal(argv=None):
             juge=args.juge, nul_filles=args.nul_filles, taille_plan=args.taille_plan,
             taille_plan_filles=args.taille_plan_filles, tirage_recombinaison=args.tirage_recombinaison,
             politique_redite=args.politique_redite, noyau_secret=args.noyau_secret, urne=not args.sans_urne,
-            multiplicite=args.multiplicite,
+            multiplicite=args.multiplicite, temoins_sans_agent=args.temoins_sans_agent,
             budget_generation_usd=args.budget_generation_usd or args.budget_usd / max(1, args.generations)).valider()
         if args.ablation_memoire:
             from .ablation import executer_ablation
@@ -338,7 +341,7 @@ def principal(argv=None):
             return 0
         bilan = executer_pole(population, temoins, adaptateur, config, args.generations, args.budget_usd, args.sortie,
                               memoire_active=not args.sans_memoire, horodatage_fourni=args.horodatage,
-                              monde_noyau=monde_noyau)
+                              monde_noyau=monde_noyau, temoins_par_generation=args.temoins_par_generation)
         print(json.dumps({"generations": bilan["generations_executees"], "arret": bilan["arret"],
                           "depense_totale": bilan["depense_totale"], "qualite": bilan["qualite_cumulee"]},
                          ensure_ascii=False))

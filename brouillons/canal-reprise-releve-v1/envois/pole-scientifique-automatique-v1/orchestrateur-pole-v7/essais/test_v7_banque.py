@@ -143,3 +143,34 @@ class Multiplicite(unittest.TestCase):
         self.assertEqual(appliquer_multiplicite({"A": {"verdict_final": "indecise"}}, alpha)["m"], 0)
         with self.assertRaises(ValueError):
             ConfigGeneration(multiplicite="bonferroni").valider()
+
+
+class TemoinsSansAgentEtSansDents(CasGeneration):
+    def test_temoins_juges_par_le_noyau_seul_et_signal_sans_dents(self):
+        chemin = os.path.join(self.tmp, "banque.json")
+        banque_jouet(chemin)
+        adaptateur = AdaptateurSimule(graine=3, monde=MondeSimule(3))
+        cfg = ConfigGeneration(selection="pari", taille_plan=120, taille_plan_filles=120, urne=False, part_calibrage=12,
+                               temoins_sans_agent=True)
+        monde = MondeBanque(chemin, 7, nul_informe=False)
+        vrai = fiche_banque("TV", loi_trait(0), temoin="vraie")
+        faux = fiche_banque("TF", loi_trait(1), enonce="Témoin faux sur le bruit", temoin="fausse")
+        ordinaire = fiche_banque("O1", loi_trait(0), enonce="Fiche ordinaire sur le trait utile")
+        g = Generation(0, adaptateur, cfg, self.tmp, RegistreGel(), Budget(10), monde_noyau=monde)
+        r = g.executer([vrai, faux, ordinaire])
+        self.assertEqual(vrai.statut, "survit", r["issues"]["TV"].get("motif"))
+        self.assertEqual(faux.statut, "eliminee")
+        self.assertTrue(r["issues"]["TV"]["sans_agent"] and r["issues"]["TF"]["sans_agent"])
+        roles = [(a["role"], os.path.basename(os.path.dirname(a["dossier"]))) for a in adaptateur.appels]
+        self.assertEqual(sorted({d for _, d in roles}), ["O1"], "aucun agent lancé pour les témoins")
+        self.assertFalse(r["qualite"]["sans_dents"])
+        self.assertNotIn("sans_dents", r["issues"]["O1"])
+        # artefact : un témoin vrai construit pour être éliminé (loi inversée) → signal « pas de dents » sur la génération
+        inverse = fiche_banque("TV2", loi_trait(0, force=-1.2), enonce="Témoin vrai mal déclaré", temoin="vraie")
+        o2 = fiche_banque("O2", loi_trait(0), enonce="Fiche ordinaire bis")
+        g2 = Generation(1, adaptateur, cfg, self.sous_dossier("g2"), RegistreGel(), Budget(10), monde_noyau=monde)
+        r2 = g2.executer([inverse, o2])
+        self.assertEqual(inverse.statut, "eliminee")
+        self.assertTrue(r2["qualite"]["sans_dents"])
+        if o2.statut == "survit":
+            self.assertTrue(r2["issues"]["O2"].get("sans_dents"))

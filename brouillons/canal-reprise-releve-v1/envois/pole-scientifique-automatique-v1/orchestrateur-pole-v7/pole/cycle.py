@@ -70,7 +70,11 @@ class ConfigGeneration:
     politique_redite: str = "heritage"
     noyau_secret: bool = False
     urne: bool = True  # v7 : juge v1 sans le membre « urne » (banque figée : pas de dérive dans le temps)
-    multiplicite: str = "aucune"  # v7 : « aucune » (garantie par fiche) ou « e-bh » (taux de fausses découvertes par génération)
+    # v7 : règle de multiplicité, « aucune » (garantie par fiche : la sémantique des essais du juge) ou « e-bh » (taux de
+    # fausses découvertes à α par génération ; **défaut de la ligne de commande et des démonstrations**, décision de
+    # Lazar du 27 octobre, 15:11 heure de Paris).
+    multiplicite: str = "aucune"
+    temoins_sans_agent: bool = False  # v7 : sur un monde qui dépose les issues, les témoins sont jugés par le noyau seul
 
     def valider(self):
         if self.modele_verificateur == self.modele_experimentateur:
@@ -109,6 +113,8 @@ class ConfigGeneration:
             raise ValueError("urne=False : seulement avec le juge v1 (l'ordre secret reste, l'urne seule est retirée)")
         if self.multiplicite not in ("aucune", "e-bh"):
             raise ValueError("multiplicite : « aucune » ou « e-bh »")
+        if not isinstance(self.temoins_sans_agent, bool):
+            raise ValueError("temoins_sans_agent : vrai ou faux")
         return self
 
 
@@ -426,33 +432,48 @@ class Generation:
             return dict(issue, verdict_final="indecise", desaccord=True,
                         motif="verdict non confirmé par le vérificateur : " + str(bloc_v.get("motif", "")))
         if gele:
-            graine_noyau = self.depots.get(gele.empreinte, {}).get("graine_noyau", self.graine_noyau)
-            try:
-                if gele.engagement.get("instants_lecture"):
-                    from . import nul_filles_v2 as nf
-                    ev = nf.evaluer_v2(gele, tirages, graine_noyau=graine_noyau)
-                else:
-                    ev = sp.evaluer(gele, tirages, graine_noyau=graine_noyau)
-            except (sp.EngagementModifie, sp.TiragesNonLies, ValueError) as e:  # plan d'exécution non conforme compris
-                return dict(issue, verdict_final="rejetee (test change)", motif=f"{type(e).__name__} : {e}")
-            heritage = self.memoire.heritage(fiche.identifiant) if self.memoire is not None and self.memoire.active else None
-            if heritage is not None:
-                # Héritage de la preuve (v4) : la classe repart de son log W cumulé ; promue si cumul + log W ≥ log 1/α
-                # à un instant de lecture (et, pour une fille, si la marge est atteinte). Valide : produit d'e-valeurs.
-                promue = (heritage["cumul"] + ev["log_richesse_max"] >= ev["seuil_log"]) and ev.get("marge_atteinte", True)
-                ev = dict(ev, heritage=dict(heritage, promue_sans_heritage=ev["promue"]), promue=promue)
-            issue["pari"] = ev
-            issue["statistique"], issue["seuil"] = ev["log_richesse_max" if ev.get("mode", "continu") == "continu"
-                                                     else "log_richesse_finale"], ev["seuil_log"]
-            verdict = "survit" if ev["promue"] else "eliminee"
-            motif = "richesse au seuil 1/α" if ev["promue"] else "richesse sous le seuil 1/α (réfutée par le pari)"
-            if heritage is not None:
-                motif += f" ; preuve héritée de la classe {heritage['classe']} (log W cumulé {round(heritage['cumul'], 4)})"
-            return dict(issue, verdict_final=verdict, motif=motif)
+            return self._juger_pari(fiche, issue, gele, tirages)
         issue["statistique"], issue["seuil"] = bloc["statistique"], bloc["seuil"]
         motifs = {"survit": "seuil franchi, verdict confirmé", "eliminee": "statistique sous le seuil (réfutée)",
                   "indecise": "l'expérimentateur déclare l'expérience indécise"}
         return dict(issue, verdict_final=bloc["verdict"], motif=motifs[bloc["verdict"]])
+
+    def _juger_pari(self, fiche, issue, gele, tirages):
+        """Le noyau juge : richesse contre le nul, héritage de la preuve, verdict (commun aux fiches avec agents et aux
+        témoins jugés sans agents)."""
+        graine_noyau = self.depots.get(gele.empreinte, {}).get("graine_noyau", self.graine_noyau)
+        try:
+            if gele.engagement.get("instants_lecture"):
+                from . import nul_filles_v2 as nf
+                ev = nf.evaluer_v2(gele, tirages, graine_noyau=graine_noyau)
+            else:
+                ev = sp.evaluer(gele, tirages, graine_noyau=graine_noyau)
+        except (sp.EngagementModifie, sp.TiragesNonLies, ValueError) as e:  # plan d'exécution non conforme compris
+            return dict(issue, verdict_final="rejetee (test change)", motif=f"{type(e).__name__} : {e}")
+        heritage = self.memoire.heritage(fiche.identifiant) if self.memoire is not None and self.memoire.active else None
+        if heritage is not None:
+            # Héritage de la preuve (v4) : la classe repart de son log W cumulé ; promue si cumul + log W ≥ log 1/α
+            # à un instant de lecture (et, pour une fille, si la marge est atteinte). Valide : produit d'e-valeurs.
+            promue = (heritage["cumul"] + ev["log_richesse_max"] >= ev["seuil_log"]) and ev.get("marge_atteinte", True)
+            ev = dict(ev, heritage=dict(heritage, promue_sans_heritage=ev["promue"]), promue=promue)
+        issue["pari"] = ev
+        issue["statistique"], issue["seuil"] = ev["log_richesse_max" if ev.get("mode", "continu") == "continu"
+                                                 else "log_richesse_finale"], ev["seuil_log"]
+        verdict = "survit" if ev["promue"] else "eliminee"
+        motif = "richesse au seuil 1/α" if ev["promue"] else "richesse sous le seuil 1/α (réfutée par le pari)"
+        if heritage is not None:
+            motif += f" ; preuve héritée de la classe {heritage['classe']} (log W cumulé {round(heritage['cumul'], 4)})"
+        return dict(issue, verdict_final=verdict, motif=motif)
+
+    def _juger_temoin_sans_agent(self, fiche):
+        """v7 : témoin jugé par le noyau seul, sur les issues qu'il a déposées (aucun agent, aucune dépense)."""
+        issue = {"identifiant": fiche.identifiant, "famille_source": fiche.famille_source(), "desaccord": False,
+                 "couts": {}, "verdict_declare": "tirages", "code": {}, "sans_agent": True}
+        gele = self.engagements.get(fiche.identifiant)
+        mesures = self.mesures_noyau.get(fiche.identifiant)
+        if gele is None or mesures is None:
+            return dict(issue, verdict_final="indecise", motif="témoin sans agent : aucune mesure déposée par le noyau")
+        return self._juger_pari(fiche, issue, gele, mesures)
 
     # ordonnancement : vagues bornées par la concurrence, budget réservé avant chaque lancement ------------------
     def executer(self, fiches):
@@ -465,6 +486,10 @@ class Generation:
                                              "famille_source": fiche.famille_source(), "couts": {}, "desaccord": False}
             else:
                 a_lancer.append(fiche)
+        if self.config.temoins_sans_agent and self.monde_noyau is not None:  # v7 : témoins jugés par le noyau seul
+            for fiche in [f for f in a_lancer if f.temoin is not None]:
+                issues[fiche.identifiant] = self._juger_temoin_sans_agent(fiche)
+            a_lancer = [f for f in a_lancer if f.temoin is None]
         arret_budget = False
         for debut in range(0, len(a_lancer), self.config.concurrence):
             vague = []
@@ -496,8 +521,17 @@ class Generation:
             ecrire_json_scelle(os.path.join(self.racine, "noyau", f"graine-noyau-generation-{self.numero:02d}.json"),
                                {"generation": self.numero, "graine_noyau": self.graine_noyau,
                                 "ecrite_apres_les_evaluations": True})
+        qualite = mesure_qualite(ordre, self.registre_gel)
+        # v7 : signal « pas de dents » : si tous les témoins vrais jugés de la génération sont éliminés, les promotions de
+        # la génération sont étiquetées (le verdict ne change pas ; la lecture doit en tenir compte).
+        sans_dents = bool(qualite["temoins_vrais_testes"]) and qualite["vraies_eliminees"] == qualite["temoins_vrais_testes"]
+        qualite["sans_dents"] = sans_dents
+        if sans_dents:
+            for issue in issues.values():
+                if issue.get("verdict_final") == "survit":
+                    issue["sans_dents"] = True
         return {"generation": self.numero, "issues": {i: issues[i] for i in sorted(issues)},
-                "arret_budget": arret_budget, "budget": self.budget.etat(), "qualite": mesure_qualite(ordre, self.registre_gel)}
+                "arret_budget": arret_budget, "budget": self.budget.etat(), "qualite": qualite}
 
     def _traiter_sur(self, fiche):
         """Une erreur de l'orchestrateur sur une fiche la rend indécise, motif écrit ; elle n'arrête pas la génération."""
@@ -527,19 +561,23 @@ class Generation:
 
 def appliquer_multiplicite(issues, alpha):
     """Règle e-BH (Wang et Ramdas, 2022) sur les fiches jugées de la génération : e-valeur d'une fiche = sa richesse
-    **finale** W_T (une e-variable à horizon fixé ; le maximum sur le temps n'en est pas une) ; les e-valeurs triées par
+    **arrêtée** (au premier franchissement du seuil 1/α, sinon la richesse finale : une e-variable par arrêt optionnel
+    d'une surmartingale ; le maximum sur le temps n'en est pas une) ; les e-valeurs triées par
     ordre décroissant, k* = le plus grand k tel que e_(k) ≥ m / (α · k) ; les k* premières sont retenues, les autres
     survivantes sont éliminées (motif écrit). Contrôle du taux de fausses découvertes à α sur la génération, quelle que
     soit la dépendance entre fiches. Les témoins comptent dans m (ils sont jugés comme les autres)."""
-    jugees = [(i, issue) for i, issue in issues.items() if isinstance(issue.get("pari"), dict)
-              and nombre_fini(issue["pari"].get("log_richesse_finale"))]
+    def log_e(issue):  # e-valeur arrêtée : richesse au premier franchissement du seuil, sinon richesse finale
+        ev = issue["pari"]
+        return ev.get("log_richesse_arretee", ev.get("log_richesse_finale"))
+
+    jugees = [(i, issue) for i, issue in issues.items() if isinstance(issue.get("pari"), dict) and nombre_fini(log_e(issue))]
     m = len(jugees)
     if m == 0:
         return {"m": 0, "retenues": []}
-    ordre = sorted(jugees, key=lambda x: -x[1]["pari"]["log_richesse_finale"])
+    ordre = sorted(jugees, key=lambda x: -log_e(x[1]))
     k_etoile = 0
     for k, (_, issue) in enumerate(ordre, 1):
-        if issue["pari"]["log_richesse_finale"] >= math.log(m / (alpha * k)):
+        if log_e(issue) >= math.log(m / (alpha * k)):
             k_etoile = k
     retenues = [i for i, _ in ordre[:k_etoile]]
     for i, issue in jugees:

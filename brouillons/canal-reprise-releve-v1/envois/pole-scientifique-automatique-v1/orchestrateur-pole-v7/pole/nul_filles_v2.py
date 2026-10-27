@@ -210,6 +210,7 @@ def evaluer_v2(gele, tirages, graine_noyau=None):
     i_promotion = next((i for i, v in enumerate(log_w) if v >= seuil), None)
     promue = i_promotion is not None
     resultat = {"log_richesse_finale": log_w[-1], "log_richesse_max": max(log_w), "seuil_log": seuil,
+                "log_richesse_arretee": log_w[i_promotion] if promue else log_w[-1],
                 "t_promotion": instants[i_promotion] if promue else None, "instants_lecture": list(instants),
                 "nombre_tirages": n, "part_calibrage": c, "membre_dominant_final": dominants[-1],
                 "plan_execution": sp.plan_execution_de(e), "empreinte_engagement": gele.empreinte}

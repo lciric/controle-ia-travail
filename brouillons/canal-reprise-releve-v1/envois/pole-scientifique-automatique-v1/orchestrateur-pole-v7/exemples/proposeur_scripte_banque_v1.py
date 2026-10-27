@@ -55,7 +55,8 @@ def loi_monotone(j, d, k, sens, biais):
     return {"type": "softmax", "poids": poids, "biais": [round(b, 6) for b in biais]}
 
 
-def fiche_de(identifiant, enonce, loi, moniteur, k, d, domaine, operateur, contraintes=("lineaire",), temoin=None):
+def fiche_de(identifiant, enonce, loi, moniteur, k, d, domaine, operateur, contraintes=("lineaire",), temoin=None,
+             banque_nom="banque-t05-v2"):
     f = {"identifiant": identifiant, "enonce": enonce, "prediction": {"signe": "+", "valeur": 0.1,
          "texte": "log-richesse moyenne par tirage positive contre la bibliothèque nulle"},
          "metrique": "richesse W contre la bibliothèque (aveugle, et prédicteur connu si servi)",
@@ -64,7 +65,7 @@ def fiche_de(identifiant, enonce, loi, moniteur, k, d, domaine, operateur, contr
          "protocole": "pari sur les instances d'épreuve de la banque choisies ex ante par divergence",
          "domaines": [domaine], "operateurs": [operateur], "contraintes": list(contraintes),
          "loi_predictive": loi, "espace_instances": {"dimension": d, "nombre_issues": k, "sous_populations": 2,
-                                                     "moniteur": moniteur, "banque": "banque-t05-v1"}}
+                                                     "moniteur": moniteur, "banque": banque_nom}}
     if temoin:
         f["temoin"] = temoin
     return f

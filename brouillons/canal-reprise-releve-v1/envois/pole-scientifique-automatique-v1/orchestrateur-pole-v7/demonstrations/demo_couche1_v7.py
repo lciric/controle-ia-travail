@@ -38,11 +38,16 @@ from pole.pole import executer_pole  # noqa: E402
 from pole.simulation import AdaptateurSimule, MondeSimule  # noqa: E402
 
 EXEMPLES = os.path.join(RACINE, "exemples")
-BANQUE = os.path.join(EXEMPLES, "banque-t05-v1.json")
-POPULATION = os.path.join(EXEMPLES, "population-banque-t05-v1.json")
-TEMOINS = os.path.join(EXEMPLES, "temoins-banque-t05-v1.json")
-BRAS = {"informe": {"nul_informe": True, "urne": False}, "aveugle": {"nul_informe": False, "urne": False},
-        "urne": {"nul_informe": False, "urne": True}}
+BANQUE = os.path.join(EXEMPLES, "banque-t05-v2.json")
+POPULATION = os.path.join(EXEMPLES, "population-banque-t05-v2.json")
+TEMOINS = os.path.join(EXEMPLES, "temoins-banque-t05-v2.json")
+# v2 de la démonstration (décisions de Lazar du 27 octobre, 15:11) : banque v2 (trait redondant retiré), règle de
+# multiplicité e-BH par défaut, témoins jugés sans agents et tous servis dès la génération 0, signal « pas de dents ».
+# Le bras « par-fiche » garde la garantie par fiche seule, pour mesurer ce que la multiplicité retire.
+BRAS = {"informe": {"nul_informe": True, "urne": False, "multiplicite": "e-bh"},
+        "aveugle": {"nul_informe": False, "urne": False, "multiplicite": "e-bh"},
+        "urne": {"nul_informe": False, "urne": True, "multiplicite": "e-bh"},
+        "par-fiche": {"nul_informe": False, "urne": False, "multiplicite": "aucune"}}
 
 
 def executer_bras(nom, dossier, generations, graine=20261027):
@@ -52,10 +57,12 @@ def executer_bras(nom, dossier, generations, graine=20261027):
     adaptateur = AdaptateurSimule(graine, MondeSimule(graine))  # son monde propre est sans objet : issues déposées
     config = ConfigGeneration(selection="pari", juge="v1", nul_filles="v2", urne=reglages["urne"], graine=graine,
                               taille_plan=120, taille_plan_filles=120, instants_filles=6, part_calibrage=12,
-                              budget_generation_usd=200.0, concurrence=4).valider()
+                              budget_generation_usd=200.0, concurrence=4, multiplicite=reglages["multiplicite"],
+                              temoins_sans_agent=True).valider()
     bilan = executer_pole(population, temoins, adaptateur, config, generations, 600.0, dossier, memoire_active=True,
-                          horodatage_fourni="demo couche 1 v7", temoins_par_generation=2, k_recombinaison=4,
-                          max_paires=4, monde_noyau=monde)
+                          horodatage_fourni="demo couche 1 v7 (v2)",
+                          temoins_par_generation=min(sum(t.temoin == "vraie" for t in temoins), sum(t.temoin == "fausse" for t in temoins)),
+                          k_recombinaison=4, max_paires=4, monde_noyau=monde)
     with open(os.path.join(dossier, "archive", "index.json"), encoding="utf-8") as f:
         index = json.load(f)
     promues, journal_promotions = [], {}
@@ -67,6 +74,10 @@ def executer_bras(nom, dossier, generations, graine=20261027):
                 journal_promotions[ident] = {"generation": g, "log_richesse_max": round(issue["pari"]["log_richesse_max"], 3),
                                              "membre_dominant": issue["pari"].get("membre_dominant_final"),
                                              "tirages": issue["pari"].get("nombre_tirages")}
+    sans_dents = {}
+    for g in range(bilan["generations_executees"]):
+        with open(os.path.join(dossier, "journal", f"generation-{g:02d}.json"), encoding="utf-8") as f:
+            sans_dents[g] = json.load(f)["qualite_generation"].get("sans_dents")
     for ident, e in index.items():
         if e["statut"] == "survit":
             promues.append({"identifiant": ident, "source": e["source"], "temoin": e["temoin"], "enonce": e["enonce"],
@@ -77,14 +88,14 @@ def executer_bras(nom, dossier, generations, graine=20261027):
             "promues": sorted(promues, key=lambda p: -(p.get("log_richesse_max") or 0)),
             "temoins": {i: {"verite": e["temoin"], "statut": e["statut"], "enonce": e["enonce"]} for i, e in temoins_detail.items()},
             "refusees_redite": [i for i, e in index.items() if e["statut"] == "refusee (redite)"],
-            "depense_simulee": bilan["depense_totale"]}
+            "sans_dents_par_generation": sans_dents, "depense_simulee": bilan["depense_totale"]}
 
 
 def principal(argv=None):
     a = argparse.ArgumentParser()
     a.add_argument("dossier")
     a.add_argument("--generations", type=int, default=3)
-    a.add_argument("--bras", default="informe,aveugle,urne")
+    a.add_argument("--bras", default="informe,aveugle,urne,par-fiche")
     args = a.parse_args(argv)
     if os.path.exists(args.dossier) and os.listdir(args.dossier):
         raise FileExistsError(args.dossier)
@@ -110,7 +121,7 @@ def principal(argv=None):
     rapport = {"banque": sha256_fichier(BANQUE), "population": sha256_fichier(POPULATION), "temoins": sha256_fichier(TEMOINS),
                "generations": args.generations, "duree_s": round(time.time() - debut, 1), "lecture": lecture,
                "resultats": resultats}
-    ecrire_json_scelle(os.path.join(args.dossier, "demo-couche1-v7.json"), rapport)
+    ecrire_json_scelle(os.path.join(args.dossier, "demo-couche1-v7-v2.json"), rapport)
     print(json.dumps({"lecture": lecture, "duree_s": rapport["duree_s"],
                       "promues_par_bras": {n: sorted(p) for n, p in promues.items()}}, ensure_ascii=False, indent=1))
     return 0

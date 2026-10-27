@@ -11,7 +11,8 @@ classes équilibrées (points de coupe consignés) ; une note absente (None) ren
 imputée). Partie de calibrage / partie d'épreuve : par tâche (toutes les instances d'une tâche du même côté), tirée par
 graine, un tiers en calibrage.
 
-Usage : python -I -B exemples/construire_banque_t05_v1.py RACINE_MAIN exemples/banque-t05-v1.json [--graine 20261027]
+Usage : python -I -B exemples/construire_banque_t05_v1.py RACINE_MAIN exemples/banque-t05-v2.json [--graine 20261027]
+(la v1 de la banque, à cinq traits, reste dans `exemples/banque-t05-v1.json` ; le script produit désormais la v2)
 """
 
 import argparse
@@ -33,7 +34,9 @@ EPISODES = "diag/20261012-105125-t05-pilote-reel/episodes.json"
 NOTATIONS = {"8B": "diag/20261017-193648-t05-notations-reel/notations-8B-decisives.json",
              "3B": "diag/20261017-193648-t05-notations-reel/notations-3B-decisives.json"}
 RUBRIQUES = ("BALANCE", "COHERENCE", "NOVELTY", "RIGOR", "RESULT_REASONING", "IRRELEVANCE_PENALTY", "REDUNDANCY_PENALTY")
-TRAITS = ("log_jetons_total", "actions_valides", "jetons_par_action_moyenne", "jetons_par_action_ecart_type", "bruit")
+TRAITS = ("log_jetons_total", "actions_valides", "jetons_par_action_ecart_type", "bruit")
+# v2 de la banque (27 octobre, 15:11 heure de Paris, « corrige ») : `jetons_par_action_moyenne` retiré, identique en rang à
+# `log_jetons_total` quand toutes les courses ont dix actions (des fiches en double que la mémoire ne voyait pas).
 
 
 def sha256_fichier(chemin):
@@ -87,7 +90,7 @@ def construire(racine_main, graine):
         if not jetons or not any((juge, e["episode"]) in notes for juge in NOTATIONS):
             continue  # épisode jamais noté (troisième épisode de chaque tâche) : hors banque
         lignes.append({"identifiant": e["episode"], "tache": e["tache"], "g": int(e["episode"].rsplit("/e", 1)[1]),
-                       "bruts": [math.log(sum(jetons)), float(e["bilan"]["actions_valides"]), statistics.fmean(jetons),
+                       "bruts": [math.log(sum(jetons)), float(e["bilan"]["actions_valides"]),
                                  statistics.pstdev(jetons), rng.gauss(0.0, 1.0)]})
     moyennes = [statistics.fmean(l["bruts"][j] for l in lignes) for j in range(len(TRAITS))]
     ecarts = [statistics.pstdev([l["bruts"][j] for l in lignes]) or 1.0 for j in range(len(TRAITS))]
@@ -119,7 +122,7 @@ def construire(racine_main, graine):
         l["partie"] = "calibrage" if l["tache"] in calibrage else "epreuve"
         del l["bruts"]
     lignes.sort(key=lambda l: l["identifiant"])
-    return {"nom": "banque-t05-v1", "graine": graine, "traits": list(TRAITS), "sous_populations": 2,
+    return {"nom": "banque-t05-v2", "graine": graine, "traits": list(TRAITS), "sous_populations": 2,
             "normalisation": {"moyennes": moyennes, "ecarts_types": ecarts},
             "moniteurs": moniteurs, "instances": lignes, "sources": sources,
             "notes": "une instance par épisode et par moniteur (première passe) ; tâches entières d'un même côté de la "
