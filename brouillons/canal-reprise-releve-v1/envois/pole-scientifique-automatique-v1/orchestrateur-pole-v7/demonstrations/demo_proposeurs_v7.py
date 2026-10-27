@@ -23,7 +23,14 @@ Lecture fixée avant l'exécution (taux sur les graines) :
   vérité) : rapportées par bras (fausses découvertes au sens du monde ; attendues rares).
 Ce n'est pas le duel : aucun modèle ici. C'est la batterie qui le rendra lisible.
 
-Usage : python -I -B demonstrations/demo_proposeurs_v7.py DOSSIER_NEUF [--graines 10] [--bras b1,b2]
+v2 de la démonstration (16:25 UTC) : `--grammaire v2` tire les mondes de `generer_monde_grammaire_v2.py` (formes hors de
+l'espace de recherche du mécanique : seuil décalé, trois traits, quadratique, produit) ; le lien d'une promue à la structure
+devient précis (les seuls traits que la structure emploie : i ; i et j ; i, j et k) pour les deux grammaires — la course v1
+employait le critère large (i ou j). Lecture fixée avant la course v2 : P1 et P2 comme en v1 (P2 : les témoins approchés
+au gabarit, quadratique et produit, peuvent manquer : rapporté par forme) ; P3 : le mécanique ne devrait plus dominer
+(attendu : moins de la moitié de ses 23 sur 35 de la v1, en proportion) ; c'est la barre gratuite d'un duel juste.
+
+Usage : python -I -B demonstrations/demo_proposeurs_v7.py DOSSIER_NEUF [--graines 10] [--bras b1,b2] [--grammaire v1|v2]
 """
 
 import argparse
@@ -37,7 +44,9 @@ RACINE = os.path.dirname(ICI)
 sys.path.insert(0, RACINE)
 sys.path.insert(0, os.path.join(RACINE, "exemples"))
 
-from generer_monde_grammaire_v1 import fiches_de_temoins, generer_monde  # noqa: E402
+import generer_monde_grammaire_v1 as grammaire_v1  # noqa: E402
+import generer_monde_grammaire_v2 as grammaire_v2  # noqa: E402
+from generer_monde_grammaire_v1 import fiches_de_temoins  # noqa: E402
 from pole.cycle import ConfigGeneration  # noqa: E402
 from pole.monde_banque import MondeBanque  # noqa: E402
 from pole.outils import ecrire_json_scelle, graine_derivee  # noqa: E402
@@ -67,6 +76,15 @@ def _traits_de(loi, d=D):
     return set()
 
 
+TRAITS_DE_LA_STRUCTURE = {"monotone": ("i",), "sous_population": ("i",), "quadratique": ("i",),
+                          "combinaison": ("i", "j"), "interaction": ("i", "j"), "seuil": ("i", "j"),
+                          "seuil_decale": ("i", "j"), "produit": ("i", "j"), "trois_traits": ("i", "j", "k")}
+
+
+def traits_de_la_structure(v):
+    return {v[c] for c in TRAITS_DE_LA_STRUCTURE[v["structure"]]}
+
+
 def executer_bras(nom, graine, dossier, chemin_banque, temoins, verite):
     reglages = BRAS[nom]
     monde = MondeBanque(chemin_banque, graine, nul_informe=True)
@@ -92,7 +110,7 @@ def executer_bras(nom, graine, dossier, chemin_banque, temoins, verite):
             etat = json.load(f)
         moniteur = (etat.get("espace_instances") or {}).get("moniteur")
         v = verite.get(moniteur, {})
-        lien = bool(_traits_de(etat["loi_predictive"]) & {v.get("i"), v.get("j")})
+        lien = bool(_traits_de(etat["loi_predictive"]) & traits_de_la_structure(v)) if v else False
         promues.append({"identifiant": ident, "moniteur": moniteur, "source": e["source"], "lien_a_la_structure": lien})
     # Un témoin est resservi à chaque génération (tous le sont dès la génération 0) : on lit son premier jugement.
     temoins_statut = {}
@@ -114,6 +132,7 @@ def principal(argv=None):
     a.add_argument("dossier")
     a.add_argument("--graines", type=int, default=10)
     a.add_argument("--bras", default=",".join(BRAS))
+    a.add_argument("--grammaire", choices=("v1", "v2"), default="v1")
     args = a.parse_args(argv)
     if os.path.exists(args.dossier) and os.listdir(args.dossier):
         raise FileExistsError(args.dossier)
@@ -122,20 +141,36 @@ def principal(argv=None):
     resultats = []
     for s in range(1, args.graines + 1):
         graine = 20261100 + s
-        banque, temoins, verite = generer_monde(graine)
+        generer = (grammaire_v1 if args.grammaire == "v1" else grammaire_v2).generer_monde
+        banque, temoins, verite = generer(graine)
         dossier_monde = os.path.join(args.dossier, f"monde-{s:02d}")
         chemin = os.path.join(dossier_monde, "banque.json")
         ecrire_json_scelle(chemin, banque)
         par_bras = {}
         for nom in args.bras.split(","):
             par_bras[nom] = executer_bras(nom, graine, os.path.join(dossier_monde, nom), chemin, temoins, verite)
-        resultats.append({"graine": graine, "structures": {m: v["structure"] for m, v in verite.items()},
+        resultats.append({"graine": graine, "grammaire": args.grammaire,
+                          "structures": {m: v["structure"] for m, v in verite.items()},
                           "non_lineaires": [m for m, v in verite.items() if not v["lineaire"]], "bras": par_bras})
     lecture = lire(resultats, args.bras.split(","))
-    rapport = {"graines": args.graines, "duree_s": round(time.time() - debut, 1), "lecture": lecture, "resultats": resultats}
+    rapport = {"graines": args.graines, "grammaire": args.grammaire, "duree_s": round(time.time() - debut, 1),
+               "lecture": lecture, "par_forme": par_forme(resultats, args.bras.split(",")), "resultats": resultats}
     ecrire_json_scelle(os.path.join(args.dossier, "demo-proposeurs-v7.json"), rapport)
     print(json.dumps({"lecture": lecture, "duree_s": rapport["duree_s"]}, ensure_ascii=False, indent=1))
     return 0
+
+
+def par_forme(resultats, bras):
+    """Par forme de structure : témoins vrais promus, et moniteurs couverts par bras."""
+    sortie = {}
+    for r in resultats:
+        for moniteur, forme in r["structures"].items():
+            f = sortie.setdefault(forme, {"moniteurs": 0, "temoin_vrai_promu": 0, "couverts": {b: 0 for b in bras}})
+            f["moniteurs"] += 1
+            f["temoin_vrai_promu"] += r["bras"][bras[0]]["temoins"].get(f"V-{moniteur}") == "survit"
+            for b in bras:
+                f["couverts"][b] += moniteur in r["bras"][b]["moniteurs_couverts"]
+    return sortie
 
 
 def lire(resultats, bras):

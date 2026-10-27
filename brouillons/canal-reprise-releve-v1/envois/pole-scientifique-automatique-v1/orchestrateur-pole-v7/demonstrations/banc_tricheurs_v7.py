@@ -34,7 +34,9 @@ Lignes (rôle ; lecture fixée avant l'exécution) :
   sous-population 0, loi neuve ailleurs) ; fiche neuve sans parent (loi neuve, monde neuf) ;
 - multiplicité, règle e-BH sur une génération (taux de l'événement « au moins une promue » ≤ α ; par fiche sans
   correction : mesuré) : T14 rafale de 10 variantes d'une loi fausse (monde aveugle) ; T15 20 copies d'une loi fausse ;
-- puissance sous e-BH quand m grandit (lue) : T16, une fiche neuve vraie parmi m − 1 fiches fausses, m ∈ {1, 10, 40}.
+- puissance sous e-BH quand m grandit (lue) : T16, une fiche neuve vraie parmi m − 1 fiches fausses, m ∈ {1, 10, 40} ;
+  v2 du banc (16:30 UTC, après la lecture v1 qui notait T16 « mal dimensionné ») : T16f, la même avec un effet faible (poids
+  de la loi neuve × 0,3), m ∈ {1, 10, 40} — lecture : baisse de puissance avec m sous e-BH, rapportée (le déni de service).
 Les tricheurs T11, T13, T24 à T26 sont sans objet ou fermés par construction dans les mondes de v7 ; T21 à T23 ne sont pas
 décrits ; T14 à T16 portent sur la règle e-BH ; la partie 2 (amont du juge) n'est pas jouée ici. Voir la lecture.
 
@@ -216,9 +218,11 @@ def ligne_multiplicite(graine, nom, m, repetitions):
                 monde = aveugle
             elif nom == "T15":
                 loi, monde = fausse, aveugle
-            elif nom == "T16":
-                monde = neuve
-                loi = neuve if i == 0 else sp.loi_softmax_aleatoire(sous, K, DIM)
+            elif nom in ("T16", "T16f"):
+                vraie = neuve if nom == "T16" else {"type": "softmax", "biais": list(neuve["biais"]),
+                                                     "poids": [[0.3 * w for w in ligne] for ligne in neuve["poids"]]}
+                monde = vraie
+                loi = vraie if i == 0 else sp.loi_softmax_aleatoire(sous, K, DIM)
             else:
                 raise ValueError(nom)
             L = {"S1": sp.loi_softmax_aleatoire(sous, K, DIM), "S2": sp.loi_softmax_aleatoire(sous, K, DIM)}
@@ -226,13 +230,13 @@ def ligne_multiplicite(graine, nom, m, repetitions):
         par_fiche = {i for i, x in issues.items() if x["verdict_final"] == "survit"}
         appliquer_multiplicite(issues, ALPHA)
         ebh = {i for i, x in issues.items() if x["verdict_final"] == "survit"}
-        if nom == "T16":
+        if nom in ("T16", "T16f"):
             vraie_par_fiche += "F000" in par_fiche
             vraie_ebh += "F000" in ebh
         else:
             au_moins_une_par_fiche += bool(par_fiche)
             au_moins_une_ebh += bool(ebh)
-    if nom == "T16":
+    if nom in ("T16", "T16f"):
         return {"m": m, "repetitions": repetitions, "puissance_par_fiche": vraie_par_fiche / repetitions,
                 "puissance_e_bh": vraie_ebh / repetitions}
     return {"m": m, "repetitions": repetitions, "au_moins_une_par_fiche": au_moins_une_par_fiche / repetitions,
@@ -248,14 +252,15 @@ LIGNES = (
     + [("T01", "v1", "artefact_requis")]
     + [(n, nul, "puissance") for n in ("fille_neuve", "fraiche_neuve") for nul in ("v7", "candidat")]
     + [("T14", 10, "multiplicite"), ("T15", 20, "multiplicite"), ("T16", 1, "puissance_m"), ("T16", 10, "puissance_m"),
-       ("T16", 40, "puissance_m")])
+       ("T16", 40, "puissance_m"), ("T16f", 1, "puissance_m"), ("T16f", 10, "puissance_m"), ("T16f", 40, "puissance_m")])
 
 
 def executer(arguments):
     graine, nom, reglage, role, repetitions = arguments
     debut = time.time()
     if role in ("multiplicite", "puissance_m"):
-        res = ligne_multiplicite(graine, nom, reglage, repetitions if nom != "T16" or reglage < 40 else max(20, repetitions // 2))
+        res = ligne_multiplicite(graine, nom, reglage,
+                                 repetitions if nom not in ("T16", "T16f") or reglage < 40 else max(20, repetitions // 2))
     else:
         res = ligne_simple(graine, nom, reglage, repetitions)
     return {"ligne": nom, "reglage": reglage, "role": role, "duree_s": round(time.time() - debut, 1), **res}
