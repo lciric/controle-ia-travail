@@ -26,6 +26,7 @@ simulé ; 2 000 paires, sur la sonde du pôle), plafonné à 0,30 nat. Démonstr
 import collections
 import math
 import random
+import re
 
 from .caviardage import caviarder, caviarder_objet
 from .outils import empreinte_objet, graine_derivee, normaliser_texte
@@ -66,6 +67,23 @@ def brier(paires):
     return sum((p - y) ** 2 for p, y in paires) / len(paires)
 
 
+MOTS_DU_NOYAU = re.compile(r"(?i)\b(log\s*W|richesse|issue[s]?|verdict[s]?|promu[es]*|tirages?|mesures?\.json|e-?valeur)\b")
+LISTE_DE_NOMBRES = re.compile(r"(?:-?\d+(?:[.,]\d+)?\s*[,;]\s*){4,}-?\d+")  # cinq nombres ou plus, séparés par , ou ;
+
+
+def filtrer_canal_de_texte(texte):
+    """v7, version 11 (contre-lecture du socle, C6) : les leçons sont un canal de texte entre agents ; une ligne qui porte
+    des issues recopiées (liste d'au moins cinq nombres) ou le vocabulaire du noyau (log W, richesse, issue, verdict,
+    promu, tirages, e-valeur) est retirée avant archivage. Les leçons parlent de science, jamais de ce que le juge a vu ;
+    un résumé qui cite quelques comptes (causes, désaccords) passe."""
+    gardees = []
+    for ligne in str(texte).splitlines():
+        if MOTS_DU_NOYAU.search(ligne) or LISTE_DE_NOMBRES.search(ligne):
+            continue
+        gardees.append(ligne)
+    return "\n".join(gardees)
+
+
 class Memoire:
     POLITIQUES_REDITE = ("heritage", "refus", "rien")
 
@@ -100,7 +118,11 @@ class Memoire:
         from . import selection_pari as sp
         espace = fiche.espace_instances or {}
         k, d = int(espace.get("nombre_issues", 3)), int(espace.get("dimension", 2))
-        return (k, d, [sp.proba(fiche.loi_predictive, x, [], 0) for x in self._sonde(k, d)])
+        # v7, version 11 (contre-lecture C4) : le moniteur entre dans la signature. Sans lui, une loi éliminée sur un
+        # moniteur léguait sa preuve à la même loi proposée sur un autre (autres issues : le produit n'est plus une
+        # e-valeur), et une loi promue sur un moniteur interdisait sa transposition sur un autre.
+        moniteur = espace.get("moniteur")
+        return (k, d, moniteur, [sp.proba(fiche.loi_predictive, x, [], 0) for x in self._sonde(k, d)])
 
     def _reference(self, k, d):
         """Divergences triées entre deux lois softmax tirées au hasard (force 1,5), sur la sonde du pôle."""
@@ -110,8 +132,8 @@ class Memoire:
             sonde, valeurs = self._sonde(k, d), []
             for _ in range(PAIRES_DE_REFERENCE):
                 la, lb = sp.loi_softmax_aleatoire(rng, k, d), sp.loi_softmax_aleatoire(rng, k, d)
-                sa = (k, d, [sp.proba(la, x, [], 0) for x in sonde])
-                sb = (k, d, [sp.proba(lb, x, [], 0) for x in sonde])
+                sa = (k, d, None, [sp.proba(la, x, [], 0) for x in sonde])  # v11 : signature à quatre champs (moniteur)
+                sb = (k, d, None, [sp.proba(lb, x, [], 0) for x in sonde])
                 valeurs.append(self.divergence_moyenne(sa, sb))
             self._references[(k, d)] = sorted(valeurs)
         return self._references[(k, d)]
@@ -127,9 +149,9 @@ class Memoire:
 
     @staticmethod
     def divergence_moyenne(sa, sb):
-        if sa is None or sb is None or sa[:2] != sb[:2]:
+        if sa is None or sb is None or sa[:3] != sb[:3]:  # même nombre d'issues, dimension ET moniteur (v11)
             return math.inf
-        return sum(sum(p * math.log(p / q) for p, q in zip(u, v) if p > 0) for u, v in zip(sa[2], sb[2])) / len(sa[2])
+        return sum(sum(p * math.log(p / q) for p, q in zip(u, v) if p > 0) for u, v in zip(sa[3], sb[3])) / len(sa[3])
 
     def chercher_classe(self, fiche):
         """(classe, divergence) de l'entrée archivée la plus proche par la signature, si elle est sous le seuil."""
@@ -301,7 +323,7 @@ class Memoire:
         }
 
     def ajouter_lecon(self, generation, texte):
-        propre = caviarder(str(texte))[0].strip()[:self.longueur_lecon]
+        propre = filtrer_canal_de_texte(caviarder(str(texte))[0]).strip()[:self.longueur_lecon]
         self.lecons.append({"generation": generation, "texte": propre})
         return propre
 

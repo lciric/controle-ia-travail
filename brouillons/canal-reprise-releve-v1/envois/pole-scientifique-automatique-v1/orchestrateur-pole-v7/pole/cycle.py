@@ -316,6 +316,15 @@ def preparer_engagement(fiche, config, lois_parents=None, reservoir=None, membre
         reservoir = [dict(i) for i in reservoir]
         rng.shuffle(reservoir)
     v1 = config.juge == "v1"
+    if v1 and not config.urne:
+        # v7, version 11 (contre-lecture du socle, C4) : sans le membre « urne », une loi qui lit l'historique des
+        # issues (« sans_remise » avec la composition exacte de l'épreuve : log W de 3,8 à 4,2 sans aucun trait ;
+        # « moyenne_glissante ») n'est plus bornée par la bibliothèque : refusée au gel.
+        lisant = sp.types_de_la_loi(fiche.loi_predictive) & set(sp.TYPES_LISANT_L_HISTORIQUE)
+        if lisant:
+            raise sp.LoiInvalide("sans le membre « urne » (banque figée), une loi qui lit l'historique des issues "
+                                 f"({', '.join(sorted(lisant))}) n'est pas jugeable : la composition de l'épreuve "
+                                 "la ferait promouvoir sans aucun trait")
     standard = sp.BIBLIOTHEQUE_STANDARD_V1 if (v1 and config.urne) else sp.BIBLIOTHEQUE_STANDARD
     standard = tuple(standard) + tuple(membres_supplementaires or ())
     plan_execution = "ordre_secret" if v1 else "ordre_naturel"
@@ -470,7 +479,7 @@ class Generation:
         plafond_exp = min(fiche.cout_borne, self.config.plafond_experimentateur_usd)
         res = self.adaptateur.lancer("experimentateur", consigne, dossier_exp, plafond_exp,
                                      self.config.max_tours_experimentateur, modele=self.config.modele_experimentateur)
-        self.budget.regler(plafond_exp, res.cout_declare_usd)
+        self.budget.regler(self._reserve_role("experimentateur", plafond_exp), res.cout_declare_usd)
         issue["couts"]["experimentateur"] = res.cout_declare_usd
         ecrire_scelle(os.path.join(traces_exp, "reponse.txt"), caviarder(res.texte_final)[0])
         cle = "verdict" if self.config.selection == "seuil" else "tirages"
@@ -527,7 +536,7 @@ class Generation:
         ecrire_scelle(os.path.join(traces_v, "consigne.txt"), consigne)
         res = self.adaptateur.lancer("verificateur", consigne, dossier_v, self.config.plafond_verificateur_usd,
                                      self.config.max_tours_verificateur, modele=self.config.modele_verificateur)
-        self.budget.regler(self.config.plafond_verificateur_usd, res.cout_declare_usd)
+        self.budget.regler(self._reserve_role("verificateur", self.config.plafond_verificateur_usd), res.cout_declare_usd)
         issue["couts"]["verificateur"] = res.cout_declare_usd
         ecrire_scelle(os.path.join(traces_v, "reponse.txt"), caviarder(res.texte_final)[0])
         bloc_v = extraire_bloc_json(res.texte_final, "confirme")
@@ -574,6 +583,14 @@ class Generation:
             motif += f" ; preuve héritée de la classe {heritage['classe']} (log W cumulé {round(heritage['cumul'], 4)})"
         return dict(issue, verdict_final=verdict, motif=motif)
 
+    def _reserve_role(self, role, plafond):
+        """v11 (C1) : montant réservé (et réglé) pour un rôle ; 0 pour un rôle simulé d'un adaptateur mixte (il ne dépense
+        rien, v10) ; le plafond sinon (simulation pure comprise : ses coûts simulés comptent dans son propre budget)."""
+        roles_reels = getattr(self.adaptateur, "roles_reels", None)
+        if roles_reels is not None and role not in roles_reels:
+            return 0.0
+        return plafond
+
     def _juger_temoin_sans_agent(self, fiche):
         """v7 : témoin jugé par le noyau seul, sur les issues qu'il a déposées (aucun agent, aucune dépense)."""
         issue = {"identifiant": fiche.identifiant, "famille_source": fiche.famille_source(), "desaccord": False,
@@ -595,17 +612,26 @@ class Generation:
                                              "famille_source": fiche.famille_source(), "couts": {}, "desaccord": False}
             else:
                 a_lancer.append(fiche)
+        temoins_faux_sans_agent = 0
         if self.config.temoins_sans_agent and self.monde_noyau is not None:  # v7 : témoins jugés par le noyau seul
             for fiche in [f for f in a_lancer if f.temoin is not None]:
                 issues[fiche.identifiant] = self._juger_temoin_sans_agent(fiche)
+                temoins_faux_sans_agent += fiche.temoin == "fausse"
             a_lancer = [f for f in a_lancer if f.temoin is None]
-        arret_budget = False
+        # v11 (contre-lectures C5 et C2 du socle) : m de la règle e-BH fixé AVANT toute issue : fiches à lancer (hors
+        # budget comprises, e = 0 si non jugées) plus témoins faux jugés sans agent. Les témoins VRAIS sont hors de la
+        # famille : découvertes sûres, ils abaissaient le seuil m/(α·k) des fiches réelles (16 % de fausses découvertes
+        # réelles avec 3 témoins vrais parmi 24, contre 5 %) ; ils sont lus à part, au même seuil m/α.
+        m_fixe = sum(1 for f in a_lancer if f.temoin != "vraie") + temoins_faux_sans_agent
         for debut in range(0, len(a_lancer), self.config.concurrence):
             vague = []
             for fiche in a_lancer[debut:debut + self.config.concurrence]:
-                reserve = min(fiche.cout_borne, self.config.plafond_experimentateur_usd) + self.config.plafond_verificateur_usd
-                if arret_budget or not self.budget.reserver(reserve):
-                    arret_budget = True
+                # v11 (contre-lecture C1) : la réservation suit le rôle effectif (0 pour un rôle simulé de l'adaptateur
+                # mixte, comme son règlement en v10) ; et un refus ne condamne plus toute la suite de la génération :
+                # chaque fiche tente sa réservation (une réservation libérée par la vague précédente peut revenir).
+                reserve = (self._reserve_role("experimentateur", min(fiche.cout_borne, self.config.plafond_experimentateur_usd))
+                           + self._reserve_role("verificateur", self.config.plafond_verificateur_usd))
+                if not self.budget.reserver(reserve):
                     fiche.statut = "hors budget"
                     issues[fiche.identifiant] = {"identifiant": fiche.identifiant, "verdict_final": "hors budget",
                                                  "motif": "plafond de la génération atteint", "couts": {},
@@ -618,12 +644,16 @@ class Generation:
                     fiche = futurs[futur]
                     issue = futur.result()
                     if "experimentateur" not in issue["couts"]:
-                        self.budget.regler(min(fiche.cout_borne, self.config.plafond_experimentateur_usd), 0.0)
+                        self.budget.regler(self._reserve_role("experimentateur",
+                                                              min(fiche.cout_borne, self.config.plafond_experimentateur_usd)), 0.0)
                     if "verificateur" not in issue["couts"]:
-                        self.budget.regler(self.config.plafond_verificateur_usd, 0.0)
+                        self.budget.regler(self._reserve_role("verificateur", self.config.plafond_verificateur_usd), 0.0)
                     issues[fiche.identifiant] = issue
+        for fiche in ordre:  # v11 : la nature de témoin accompagne l'issue (la règle e-BH exclut les témoins vrais)
+            if fiche.identifiant in issues and isinstance(issues[fiche.identifiant], dict):
+                issues[fiche.identifiant]["temoin"] = fiche.temoin
         if self.config.multiplicite == "e-bh":  # v7 : règle de multiplicité sur la génération entière
-            appliquer_multiplicite(issues, self.config.alpha)
+            appliquer_multiplicite(issues, self.config.alpha, m_fixe=m_fixe)
         for fiche in ordre:
             self.selectionner(fiche, issues[fiche.identifiant])
         if self.config.noyau_secret:  # v5 : la graine ne quitte le noyau qu'après toutes les évaluations
@@ -645,6 +675,7 @@ class Generation:
                     elif qualite["etat_dents"] == "dents non mesurées":
                         issue["dents_non_mesurees"] = True
         erreurs = sorted(i for i, issue in issues.items() if issue.get("erreur_orchestrateur"))
+        arret_budget = any(f.statut == "hors budget" for f in a_lancer)  # v11 : au moins une fiche sans réservation
         return {"generation": self.numero, "issues": {i: issues[i] for i in sorted(issues)},
                 "arret_budget": arret_budget, "budget": self.budget.etat(), "qualite": qualite,
                 "erreurs_orchestrateur": {"fiches": erreurs, "lancees": len(a_lancer)}}
@@ -683,7 +714,7 @@ class Generation:
         issue["statut"] = fiche.statut
 
 
-def appliquer_multiplicite(issues, alpha):
+def appliquer_multiplicite(issues, alpha, m_fixe=None):
     """Règle e-BH (Wang et Ramdas, 2022) sur les fiches jugées de la génération.
 
     e-valeur d'une fiche : sa richesse **arrêtée au premier instant de lecture où elle atteint m/α** (m = nombre de fiches
@@ -696,21 +727,41 @@ def appliquer_multiplicite(issues, alpha):
 
     **Correction du 27 octobre (14:47 UTC)** : la version précédente arrêtait la richesse au seuil **par fiche** 1/α ;
     l'e-valeur était alors plafonnée vers 1/α, et e-BH ne pouvait rien retenir dès que m > 1 (erreur relevée par la course
-    du monde planté : deux témoins vrais à log W 34 et 28 éliminés). Erratum : `../erratum-multiplicite-e-bh-v1.md`."""
+    du monde planté : deux témoins vrais à log W 34 et 28 éliminés). Erratum : `../erratum-multiplicite-e-bh-v1.md`.
+
+    **v11 (contre-lecture du code, C5)** : (i) `m_fixe`, fixé par l'appelant avant toute issue (fiches lancées, hors
+    budget comprises, plus témoins jugés sans agent), remplace `len(jugees)` compté après coup ; une fiche non jugée
+    vaut e = 0 ; (ii) une fille dont la marge `delta0` n'est pas atteinte (`marge_atteinte` faux) reçoit e = 0 AVANT le
+    tri — e' = e·1{marge} reste une e-valeur — au lieu d'entrer dans k* puis d'être rétrogradée après la règle (ce qui
+    rétrécissait le dénominateur après coup ; enjeu mesuré nul sur 2 000 générations, preuve rompue tout de même)."""
     jugees = [(i, issue) for i, issue in issues.items() if isinstance(issue.get("pari"), dict)
-              and issue["pari"].get("trajectoire_log_w")]
-    m = len(jugees)
+              and issue["pari"].get("trajectoire_log_w") and issue.get("temoin") != "vraie"]
+    temoins_vrais = [(i, issue) for i, issue in issues.items() if isinstance(issue.get("pari"), dict)
+                     and issue["pari"].get("trajectoire_log_w") and issue.get("temoin") == "vraie"]
+    m = len(jugees) if m_fixe is None else int(m_fixe)
+    if m < len(jugees):
+        raise ValueError(f"m_fixe ({m}) < fiches jugées ({len(jugees)}) : m doit compter toutes les fiches lancées")
     if m == 0:
         return {"m": 0, "retenues": []}
     seuil_arret = math.log(m / alpha)
 
     def log_e(issue):
         ev = issue["pari"]
+        if ev.get("marge_atteinte") is False:
+            return -math.inf
         traj = ev["trajectoire_log_w"]
         arretee = next((v for v in traj if v >= seuil_arret), traj[-1])
         return arretee + float((ev.get("heritage") or {}).get("cumul", 0.0))
 
     valeurs = {i: log_e(issue) for i, issue in jugees}
+    for i, issue in temoins_vrais:  # hors famille : lus au seuil m/α de la génération, sans peser sur k*
+        v = log_e(issue)
+        retenu = v >= seuil_arret
+        issue["pari"]["multiplicite"] = {"regle": "hors famille (témoin vrai), seuil m/α", "m": m, "retenue": retenu,
+                                         "log_e": None if math.isinf(v) else round(v, 6), "seuil_log_arret": round(seuil_arret, 6)}
+        if issue["verdict_final"] == "survit" and not retenu:
+            issue["verdict_final"] = "eliminee"
+            issue["motif"] = (issue.get("motif") or "") + f" ; témoin vrai sous le seuil m/α de la génération (m = {m})"
     ordre = sorted(jugees, key=lambda x: -valeurs[x[0]])
     k_etoile = 0
     for k, (i, _) in enumerate(ordre, 1):
@@ -718,7 +769,8 @@ def appliquer_multiplicite(issues, alpha):
             k_etoile = k
     retenues = [i for i, _ in ordre[:k_etoile]]
     for i, issue in jugees:
-        issue["pari"]["multiplicite"] = {"regle": "e-bh", "m": m, "retenue": i in retenues, "log_e": round(valeurs[i], 6),
+        issue["pari"]["multiplicite"] = {"regle": "e-bh", "m": m, "retenue": i in retenues,
+                                         "log_e": None if math.isinf(valeurs[i]) else round(valeurs[i], 6),
                                          "seuil_log_arret": round(seuil_arret, 6),
                                          "seuil_log_retenue": math.log(m / (alpha * max(1, k_etoile))) if k_etoile else None}
         if issue["verdict_final"] == "survit" and i not in retenues:

@@ -125,10 +125,34 @@ def verifier_modele_reel(modele):
     return modele
 
 
-def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=None, role="experimentateur"):
-    """Options d'un agent du pôle (fonction pure, sans import du SDK) ; lève ValueError si un réglage est incohérent."""
+def lectures_interdites_par_defaut(dossier):
+    """v7, version 11 (contre-lecture C6) : par défaut, l'agent ne lit rien au-dessus de son dossier de fiche — le dossier
+    de la course (fiches sœurs et leurs `mesures.json`, journal, traces) est interdit en lecture ; seul son dossier est
+    rouvert. Le dossier d'un agent est `<course>/<fiche>/<rôle>` : on interdit `<course>`."""
+    d = os.path.normpath(dossier)
+    return [os.path.dirname(os.path.dirname(d))]
+
+
+def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=None, role="experimentateur",
+                       interdire_lecture=None):
+    """Options d'un agent du pôle (fonction pure, sans import du SDK) ; lève ValueError si un réglage est incohérent.
+
+    v7, version 11 : le bac à sable du kit d'agent ne borne, par défaut, que les écritures (« read access to the entire
+    computer ») et, s'il ne peut pas démarrer, le kit lance les commandes sans bac à sable (sauf `failIfUnavailable`).
+    Désormais : lectures interdites sur `interdire_lecture` (défaut : le dossier de la course, voir
+    `lectures_interdites_par_defaut`) et rouvertes sur le seul dossier de l'agent ; échec dur si le bac à sable est
+    indisponible. La garde par motifs (`garde_outils`) n'est pas une barrière de lecture : un chemin bâti à l'exécution
+    la traverse ; la barrière, c'est ceci.
+    """
     if not isinstance(dossier, str) or not os.path.isabs(dossier):
         raise ValueError("le dossier de l'agent doit être un chemin absolu")
+    interdits = lectures_interdites_par_defaut(dossier) if interdire_lecture is None else list(interdire_lecture)
+    if not interdits or any(not isinstance(c, str) or not os.path.isabs(c) for c in interdits):
+        raise ValueError("interdire_lecture : liste non vide de chemins absolus")
+    dossier_norme = os.path.normpath(dossier)
+    if not any(dossier_norme == c or dossier_norme.startswith(os.path.normpath(c) + os.sep) for c in interdits):
+        raise ValueError("le dossier de l'agent doit être sous un chemin interdit en lecture (sinon la fiche voisine "
+                         "reste lisible) : " + dossier_norme + " hors de " + ", ".join(interdits))
     if not isinstance(budget_usd, (int, float)) or isinstance(budget_usd, bool) or not math.isfinite(budget_usd) \
             or budget_usd <= 0:
         raise ValueError("budget_usd : nombre fini strictement positif")
@@ -148,7 +172,10 @@ def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=Non
         "verbatim_prompts": True,
         "system_prompt": CONSIGNES_SYSTEME[role],
         "sandbox": {"enabled": True, "autoAllowBashIfSandboxed": True, "allowUnsandboxedCommands": False,
-                    "excludedCommands": [], "network": {"allowedDomains": [], "allowLocalBinding": False}},
+                    "excludedCommands": [], "failIfUnavailable": True,
+                    "filesystem": {"denyRead": [os.path.normpath(c) for c in interdits], "allowRead": [dossier_norme],
+                                   "denyWrite": [os.path.normpath(c) for c in interdits], "allowWrite": [dossier_norme]},
+                    "network": {"allowedDomains": [], "allowLocalBinding": False}},
         "env": variables_agent(url_relais),
         "crochets": {"PreToolUse": [{"matcher": None, "crochet": fabriquer_crochet(dossier)}]},
     }
@@ -171,8 +198,9 @@ class AdaptateurClaudeSDK(Adaptateur):
 
     nom = "claude-sdk"
 
-    def __init__(self, url_relais, environnement=None, arme=False):
+    def __init__(self, url_relais, environnement=None, arme=False, interdire_lecture=None):
         self.url_relais = valider_url_relais(url_relais)
+        self.interdire_lecture = None if interdire_lecture is None else list(interdire_lecture)
         self._environnement = environnement
         self.arme = arme
 
@@ -187,7 +215,7 @@ class AdaptateurClaudeSDK(Adaptateur):
         verifier_modele_reel(modele)
         sdk = importer_sdk()
         o = construire_options(os.path.abspath(dossier), budget_usd, max_tours, url_relais=self.url_relais,
-                               modele=modele, role=role)
+                               modele=modele, role=role, interdire_lecture=self.interdire_lecture)
         options = sdk.ClaudeAgentOptions(
             cwd=o["cwd"], allowed_tools=o["allowed_tools"], disallowed_tools=o["disallowed_tools"],
             permission_mode=o["permission_mode"], max_turns=o["max_turns"], max_budget_usd=o["max_budget_usd"],

@@ -67,6 +67,19 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
     config.valider()
     if monde_noyau is not None and config.selection != "pari":
         raise ValueError("le monde tenu par le noyau suppose la sélection par pari")
+    # v11 (contre-lectures C3 et C1 du socle) : sur une banque figée, l'héritage de la preuve entre générations exige une
+    # tranche d'épreuve fraîche par génération (sinon produit d'e-valeurs sur les mêmes issues) — vérifié ici, donc aussi
+    # pour les bras lancés en mémoire (duel), pas seulement par la ligne de commande.
+    tranches = getattr(monde_noyau, "tranches", None)
+    if (monde_noyau is not None and tranches is not None and memoire_active and config.politique_redite == "heritage"
+            and generations > 1 and tranches < generations):
+        raise ValueError(f"banque à {tranches} tranche(s) pour {generations} générations avec héritage de la preuve : "
+                         "il faut une tranche par génération (tranches ≥ générations), ou politique_redite refus|rien, "
+                         "ou la mémoire inactive")
+    # v11 (contre-lecture C10 du socle) : « témoins sans agents » sans monde qui dépose les issues était accepté sans signal
+    if config.temoins_sans_agent and monde_noyau is None:
+        raise ValueError("temoins_sans_agent exige un monde tenu par le noyau (banque ou monde caché) : ailleurs, "
+                         "personne ne dépose d'issue pour les témoins")
     if os.path.exists(racine) and os.listdir(racine):
         raise SortieNonVide(f"le dossier de sortie existe et n'est pas vide : {racine} (on n'écrase jamais)")
     os.makedirs(racine, exist_ok=True)
@@ -77,6 +90,9 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
         adaptateur=getattr(adaptateur, "nom", type(adaptateur).__name__), horodatage=quand,
         bac_a_sable=getattr(adaptateur, "bac_a_sable", None),
         monde_noyau=None if monde_noyau is None else getattr(monde_noyau, "nom", type(monde_noyau).__name__),
+        banque=None if monde_noyau is None else {"chemin": getattr(monde_noyau, "chemin", None),
+                                                 "empreinte": getattr(monde_noyau, "empreinte_banque", None),
+                                                 "tranches": tranches},  # v11 (C11 du socle) : la banque au manifeste
         population=[f.identifiant for f in population], temoins=[t.identifiant for t in temoins]))
     memoire = Memoire(active=memoire_active, graine=config.graine, politique_redite=getattr(config, "politique_redite", "heritage"))
     registre = RegistreGel()
@@ -252,6 +268,12 @@ def analyseur():
     p.add_argument("--nul-filles", choices=("v0", "v2", "v2_souple"), default="v2")
     p.add_argument("--taille-plan", type=int, default=120, help="instances du plan d'une fiche sans parents")
     p.add_argument("--taille-plan-filles", type=int, default=300, help="instances du plan d'une fille (v4)")
+    # v11 (contre-lecture C2) : les réglages du juge que le script du duel fixait en interne pour les bras de référence
+    # n'étaient pas accessibles aux bras à modèle lancés par cette ligne de commande (8 contre 6, 40 contre 12, 3 contre 2).
+    p.add_argument("--instants-filles", type=int, default=8, help="instants de lecture d'une fille (défaut 8)")
+    p.add_argument("--part-calibrage", type=int, default=40, help="instances de calibrage des membres ajustés (défaut 40)")
+    p.add_argument("--k-recombinaison", type=int, default=4, help="filles par recombinaison (défaut 4)")
+    p.add_argument("--max-paires", type=int, default=3, help="paires de parents par recombinaison (défaut 3)")
     p.add_argument("--tirage-recombinaison", choices=("stratifie", "stratifie_marchepieds", "noyau_corrige"),
                    default="stratifie")
     p.add_argument("--politique-redite", choices=("heritage", "refus", "rien"), default="heritage")
@@ -328,7 +350,12 @@ def construire_adaptateur(args, population, temoins):
         for role, modele in modeles.items():
             if not roles_reels or role in roles_reels:
                 verifier_modele_reel(modele)
-        adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True)
+        # v11 (contre-lectures C6 et C7) : lectures interdites à l'agent sur le dossier de la course ET sur le dossier de
+        # la banque (ses issues d'épreuve, et la vérité d'un monde de démonstration rangée à côté)
+        interdits = [os.path.abspath(args.sortie)]
+        if args.monde_banque:
+            interdits.append(os.path.dirname(os.path.abspath(args.monde_banque)))
+        adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True, interdire_lecture=interdits)
         sdk = importer_sdk()
         # v7, version 5 (défaut 7 du premier lancement réel) : aucun agent réel sans bac à sable actif.
         adaptateur.bac_a_sable = exiger_bac_a_sable(sdk, args.accepter_sans_bac_a_sable, args.motif_sans_bac_a_sable)
@@ -380,6 +407,15 @@ def principal(argv=None):
             if args.selection != "pari":
                 raise ValueError("--monde-banque suppose --selection pari")
             from .monde_banque import charger_monde_banque
+            # v11 (contre-lecture C3) : sur une banque figée, l'héritage de la preuve multiplie des e-valeurs calculées
+            # sur les MÊMES issues si deux générations lisent la même partie d'épreuve (classe nulle promue 9,5 % en trois
+            # générations contre 4,25 % avec des tranches fraîches). Avec la mémoire et l'héritage, une tranche par
+            # génération est exigée.
+            if (not args.sans_memoire and args.politique_redite == "heritage" and args.generations > 1
+                    and args.tranches < args.generations):
+                raise ValueError(f"--tranches {args.tranches} < --generations {args.generations} sur une banque avec "
+                                 "héritage de la preuve : chaque génération doit lire une tranche fraîche (donner "
+                                 "--tranches ≥ générations, ou --politique-redite refus|rien, ou --sans-memoire)")
             monde_noyau = charger_monde_banque(args.monde_banque, args.graine, nul_informe=not args.sans_nul_informe,
                                                tranches=args.tranches)
         elif args.monde_noyau is not None:
@@ -403,6 +439,7 @@ def principal(argv=None):
             selection=args.selection, concurrence=args.concurrence, alpha=args.alpha, graine=args.graine, delta0=args.delta0,
             juge=args.juge, nul_filles=args.nul_filles, taille_plan=args.taille_plan,
             taille_plan_filles=args.taille_plan_filles, tirage_recombinaison=args.tirage_recombinaison,
+            instants_filles=args.instants_filles, part_calibrage=args.part_calibrage,
             politique_redite=args.politique_redite, noyau_secret=args.noyau_secret, urne=not args.sans_urne,
             multiplicite=args.multiplicite, temoins_sans_agent=args.temoins_sans_agent,
             propositions_par_generation=args.propositions_par_generation, modele_proposeur=args.modele_proposeur,
@@ -417,7 +454,8 @@ def principal(argv=None):
             return 0
         bilan = executer_pole(population, temoins, adaptateur, config, args.generations, args.budget_usd, args.sortie,
                               memoire_active=not args.sans_memoire, horodatage_fourni=args.horodatage,
-                              monde_noyau=monde_noyau, temoins_par_generation=args.temoins_par_generation)
+                              monde_noyau=monde_noyau, temoins_par_generation=args.temoins_par_generation,
+                              k_recombinaison=args.k_recombinaison, max_paires=args.max_paires)
         print(json.dumps({"generations": bilan["generations_executees"], "arret": bilan["arret"],
                           "depense_totale": bilan["depense_totale"], "qualite": bilan["qualite_cumulee"]},
                          ensure_ascii=False))

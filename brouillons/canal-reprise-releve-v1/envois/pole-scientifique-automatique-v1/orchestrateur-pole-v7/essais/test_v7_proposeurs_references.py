@@ -97,7 +97,7 @@ class MondeGrammaire(CasGeneration):
 
     def test_boucle_avec_proposeur_de_reference_sans_agent(self):
         chemin, banque, temoins, _ = self._monde()
-        monde = MondeBanque(chemin, 3)
+        monde = MondeBanque(chemin, 3, tranches=2)  # v11 : une tranche par génération (héritage de la preuve)
         population = [valider_proposition(p, monde, 0.05, f"P{i}", "reference-aleatoire", references=True)
                       for i, p in enumerate(propositions_aleatoires(monde.description_publique(), 4, 11, 0), 1)]
         adaptateur = AdaptateurSimule(graine=3, monde=MondeSimule(3))

@@ -83,7 +83,7 @@ class ProposeurDansLaBoucle(CasGeneration):
                    fiche_banque("TF", loi_trait(1, force=1.0), enonce="Témoin faux", temoin="fausse")]
         config = ConfigGeneration(selection="pari", taille_plan=100, taille_plan_filles=100, urne=False, part_calibrage=12,
                                   multiplicite="e-bh", temoins_sans_agent=True, propositions_par_generation=6,
-                                  budget_generation_usd=50.0).valider()
+                                  budget_generation_usd=50.0, politique_redite="refus").valider()  # v11 : une tranche
         bilan = executer_pole(population, temoins, AdaptateurSimule(graine=3, monde=MondeSimule(3)), config, 3, 200.0,
                               os.path.join(self.tmp, "course"), monde_noyau=monde)
         self.assertEqual(bilan["generations_executees"], 3, bilan["arret"])
@@ -121,8 +121,6 @@ class ProposeurDansLaBoucle(CasGeneration):
             self.assertNotEqual((p["moniteur"], AdaptateurSimule._trait_principal(p["loi_predictive"])), ("A", 0))
 
 
-if __name__ == "__main__":
-    unittest.main()
 
 
 class PhaseExploratoire(CasGeneration):
@@ -168,3 +166,7 @@ class PhaseExploratoire(CasGeneration):
                         {f.identifiant: r["issues"][f.identifiant].get("motif") for f in par_sous_pop})
         # Le même énoncé « à l'aveugle » (stratégie difference_sous_populations, sans données) n'a pas cette garantie :
         # la lecture comparée est dans la démonstration, pas dans l'essai.
+
+
+if __name__ == "__main__":
+    unittest.main()

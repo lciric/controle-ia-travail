@@ -87,7 +87,7 @@ def traits_de_la_structure(v):
 
 def executer_bras(nom, graine, dossier, chemin_banque, temoins, verite):
     reglages = BRAS[nom]
-    monde = MondeBanque(chemin_banque, graine, nul_informe=True)
+    monde = MondeBanque(chemin_banque, graine, nul_informe=True, tranches=3)  # v11 : une tranche par génération
     description = monde.description_publique()
     population = [valider_proposition(p, monde, 0.05, f"P{i:02d}", "reference-aleatoire", references=True)
                   for i, p in enumerate(propositions_aleatoires(description, 6, graine_derivee(graine, "population"), 0), 1)]

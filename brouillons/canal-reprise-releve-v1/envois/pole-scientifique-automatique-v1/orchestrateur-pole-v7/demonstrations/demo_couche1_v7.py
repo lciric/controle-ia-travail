@@ -68,7 +68,8 @@ def executer_bras(nom, dossier, generations, graine=20261027):
     config = ConfigGeneration(selection="pari", juge="v1", nul_filles="v2", urne=reglages["urne"], graine=graine,
                               taille_plan=120, taille_plan_filles=120, instants_filles=6, part_calibrage=12,
                               budget_generation_usd=200.0, concurrence=4, multiplicite=reglages["multiplicite"],
-                              temoins_sans_agent=True, pari_fraction=reglages.get("pari_fraction", False)).valider()
+                              temoins_sans_agent=True, pari_fraction=reglages.get("pari_fraction", False),
+                              politique_redite="refus").valider()  # v11 : banque trop petite pour des tranches : héritage coupé
     bilan = executer_pole(population, temoins, adaptateur, config, generations, 600.0, dossier, memoire_active=True,
                           horodatage_fourni="demo couche 1 v7 (v2)",
                           temoins_par_generation=min(sum(t.temoin == "vraie" for t in temoins), sum(t.temoin == "fausse" for t in temoins)),

@@ -128,7 +128,12 @@ def _ajuster_forme(forme, traits, instances, issues, k, d, crete, ajuster_softma
             if l is None:
                 return None, 0
             lois[str(g)] = l
-        return ({"type": "par_sous_population", "lois": lois}, p * len(lois)) if len(lois) >= 2 else (None, 0)
+        if len(lois) < 2:
+            return None, 0
+        # v11 (contre-lecture C10) : loi par défaut (la marginale ajustée sur tout le développement) pour une
+        # sous-population absente du développement mais présente à l'épreuve ; sans elle, l'évaluation levait TypeError.
+        defaut = ajuste(instances, issues)
+        return {"type": "par_sous_population", "lois": lois, "defaut": defaut}, p * len(lois)
     if forme == "si_sinon":
         if len(traits) != 2:
             return None, 0

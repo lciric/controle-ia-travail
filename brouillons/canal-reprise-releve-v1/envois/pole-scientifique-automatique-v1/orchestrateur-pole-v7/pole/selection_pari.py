@@ -55,6 +55,27 @@ PLANS_EXECUTION = ("ordre_naturel", "ordre_secret")
 CLES_INSTANCE_ORDRE_SECRET = frozenset({"z", "g"})
 
 
+TYPES_LISANT_L_HISTORIQUE = ("sans_remise", "moyenne_glissante")
+
+
+def types_de_la_loi(loi):
+    """Ensemble des types présents dans une loi composée (parcours des sous-lois : lois, composantes, si, sinon, loi, base)."""
+    if not isinstance(loi, dict):
+        return set()
+    types = {loi.get("type")} if loi.get("type") else set()
+    for cle in ("si", "sinon", "loi", "base", "defaut"):
+        types |= types_de_la_loi(loi.get(cle))
+    for cle in ("lois", "composantes"):
+        sous = loi.get(cle)
+        if isinstance(sous, dict):
+            for s in sous.values():
+                types |= types_de_la_loi(s)
+        elif isinstance(sous, (list, tuple)):
+            for s in sous:
+                types |= types_de_la_loi(s)
+    return types
+
+
 class LoiInvalide(ValueError):
     pass
 

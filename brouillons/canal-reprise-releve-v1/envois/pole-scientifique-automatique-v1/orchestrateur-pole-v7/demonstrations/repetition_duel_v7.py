@@ -62,7 +62,7 @@ def commande(url, sortie, generations, chemins):
             "--temoins-par-generation", "3", "--population", pop, "--temoins", tem, "--generations", str(generations),
             "--budget-usd", "50", "--propositions-par-generation", "6", "--proposeur", "agent",
             "--modele-proposeur", "claude-opus-5-5", "--exploration-developpement", "--sortie", sortie,
-            "--horodatage", "répétition du duel"]
+            "--horodatage", "répétition du duel", "--tranches", str(generations)]  # v11 : une tranche par génération
 
 
 def executer(dossier, generations=3):

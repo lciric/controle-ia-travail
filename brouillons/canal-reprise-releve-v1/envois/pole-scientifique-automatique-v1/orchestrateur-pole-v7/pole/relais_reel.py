@@ -49,7 +49,10 @@ BAREME_USD_PAR_MILLION = {
     "claude-mythos-5-1": (10.0, 50.0, 12.5, 0.25),
 }
 BAREME_INCONNU = (10.0, 50.0, 12.5, 0.25)  # modèle inconnu : le plus cher du barème (borne haute, jamais basse)
-CHEMINS_PERMIS = ("/v1/",)
+# v11 (contre-lecture C10) : seuls les messages ; `/v1/messages/batches` (dont la création ne porte pas d'usage, donc
+# une dépense que le plafond ne verrait pas) et tout autre point d'entrée sont refusés.
+CHEMINS_PERMIS = ("/v1/messages",)
+CHEMINS_REFUSES = ("/v1/messages/batches",)
 EN_TETES_NON_RELAYES = {"host", "connection", "content-length", "transfer-encoding", "keep-alive", "proxy-authorization",
                         "te", "trailer", "upgrade", "accept-encoding", "x-api-key", "authorization"}
 TAILLE_MAX_CORPS = 20_000_000
@@ -205,7 +208,7 @@ def fabriquer_gestionnaire(cle, amont, compteur, journal, verrou_journal):
         def _relayer(self, methode):
             debut = time.time()
             chemin = self.path
-            if not chemin.startswith(CHEMINS_PERMIS):
+            if not chemin.startswith(CHEMINS_PERMIS) or chemin.startswith(CHEMINS_REFUSES):
                 compteur.refus += 1
                 return self._repondre_json(404, {"erreur": "chemin non relayé"})
             recu = self.headers.get("x-api-key") or ""

@@ -63,7 +63,8 @@ class AgentEnPanne(AdaptateurSimule):
 
 def config_banque(**modifs):
     reglages = dict(selection="pari", taille_plan=100, taille_plan_filles=100, urne=False, part_calibrage=12,
-                    multiplicite="e-bh", budget_generation_usd=50.0)
+                    multiplicite="e-bh", budget_generation_usd=50.0,
+                    politique_redite="refus")  # v11 : banque jouet à une tranche, héritage coupé (contre-lecture C3)
     reglages.update(modifs)
     return ConfigGeneration(**reglages).valider()
 

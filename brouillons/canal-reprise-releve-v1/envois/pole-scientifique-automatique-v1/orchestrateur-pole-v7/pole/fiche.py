@@ -24,6 +24,7 @@ STATUTS = {
 }
 CHAMPS_MUTABLES = ("statut", "essais", "historique")
 CHAMPS_PRIVES = ("temoin", "source", "parents")
+MOTIF_TEMOIN = re.compile(r"^\s*t[ée]moin\s+(vrai|faux|vraie|fausse)\s*:?\s*", re.IGNORECASE)
 MOTIF_IDENTIFIANT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\-]{0,63}$")
 
 
@@ -146,6 +147,10 @@ class Fiche:
         d = self.vers_dict()
         for nom in CHAMPS_MUTABLES + CHAMPS_PRIVES:
             d.pop(nom, None)
+        # v7, version 11 (contre-lecture du socle, C5) : un témoin était reconnaissable à son énoncé (« Témoin vrai : … »)
+        # dès qu'il passait par un agent ; la vue publique neutralise ce préfixe, quel que soit le générateur.
+        if isinstance(d.get("enonce"), str):
+            d["enonce"] = MOTIF_TEMOIN.sub("", d["enonce"]).strip() or d["enonce"]
         return d
 
     def vue_complete_gelee(self):

@@ -93,7 +93,10 @@ def executer_bras(monde_nom, banque, population, temoins, nom, dossier, generati
     config = ConfigGeneration(selection="pari", juge="v1", nul_filles="v2", urne=False, graine=graine, taille_plan=120,
                               taille_plan_filles=120, instants_filles=6, part_calibrage=12, budget_generation_usd=200.0,
                               concurrence=4, multiplicite="e-bh", temoins_sans_agent=True, nul_archive=True,
-                              propositions_par_generation=r["propositions"], exploration_developpement=r["exploration"]).valider()
+                              propositions_par_generation=r["propositions"], exploration_developpement=r["exploration"],
+                              # v11 (contre-lecture du socle, C1) : la banque T0.5 est trop petite pour une tranche par
+                              # génération ; sans tranches fraîches, l'héritage de la preuve est coupé (redite refusée).
+                              politique_redite="refus").valider()
     n_temoins = min(sum(t.temoin == "vraie" for t in temoins), sum(t.temoin == "fausse" for t in temoins))
     bilan = executer_pole(population, temoins, adaptateur, config, generations, 2000.0, dossier, memoire_active=True,
                           horodatage_fourni="demo couche 1 proposeur v7", temoins_par_generation=n_temoins,

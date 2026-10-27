@@ -16,6 +16,7 @@ plus `reservoir(fiche)` et `membres_informes(fiche)`.
 """
 
 import json
+import os
 import math
 
 from . import selection_pari as sp
@@ -33,6 +34,7 @@ class MondeBanque:
         with open(chemin, encoding="utf-8") as f:
             self.banque = json.load(f)
         self.empreinte_banque = sha256_fichier(chemin)
+        self.chemin = os.path.abspath(chemin)  # v11 : au manifeste (C11 du socle)
         self.graine, self.nul_informe, self.crete = graine, nul_informe, crete
         if not (isinstance(tranches, int) and tranches >= 1):
             raise BanqueInvalide("tranches : entier ≥ 1")
