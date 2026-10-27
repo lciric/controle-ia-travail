@@ -1,0 +1,8 @@
+Essais R5 de la relecture d'offre du lanceur v2 (étape 6, extraite telle quelle), 27 octobre 2026 vers 15:20 UTC,
+sur la liste « gpu_name=A100_SXM4 num_gpus=1 --storage 80 » relue au même moment par vastai 1.8.3 :
+- 57189288 (A100 SXM4, 81920 Mo, CUDA 13.2, 1,156 USD/h) : passe, rend 1.1555555555555554 (code 0) — cas sain
+- 21050973 (81920 Mo, CUDA 12.2) : « offre non conforme » (code 1) — artefact CUDA
+- 57428404 (40960 Mo, CUDA 13.0) : « offre non conforme » (code 1) — artefact mémoire de carte
+- 999 (absente) : « offre introuvable » (code 1) — artefact identifiant
+Défaut de la v1 constaté le même jour à 15:08 UTC : `search offers "id=57189285"` rend une liste vide (0) pour toute offre,
+même listée par le filtre ; refus en code 3, rien créé (traces : lancement-v1 de la session).
