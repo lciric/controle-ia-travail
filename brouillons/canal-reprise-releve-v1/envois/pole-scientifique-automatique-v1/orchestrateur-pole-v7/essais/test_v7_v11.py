@@ -343,5 +343,44 @@ class MoniteursPlantes(unittest.TestCase):
         self.assertEqual(len(bilan["plantes"]), 2)
 
 
+
+
+class TraitsInternes(unittest.TestCase):
+    """v18 : traits internes = composantes principales ajustées sur le seul calibrage."""
+
+    def test_projection_ajustee_sur_le_calibrage_seul(self):
+        import tempfile
+        import numpy as np
+        from essais.aides import BASE
+        racine = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        sys.path.insert(0, os.path.join(racine, "exemples"))
+        import construire_banque_t05_v3 as b3
+        os.makedirs(BASE, exist_ok=True)
+        tmp = tempfile.mkdtemp(dir=BASE)
+        rng = np.random.default_rng(np.random.SeedSequence(20261027))
+        parties = ["calibrage"] * 6 + ["developpement"] * 3 + ["epreuve"] * 3
+
+        def banque():
+            return {"traits": ["a", "bruit"], "instances": [{"identifiant": f"t{i}/e0", "partie": p, "z": [0.0, 0.0], "g": 0, "issues": {}}
+                                                           for i, p in enumerate(parties)]}
+
+        tableaux = {f"t{i}__e0|15": rng.normal(size=(1, 10, 16)).astype(np.float16) for i in range(12)}
+        chemin = os.path.join(tmp, "v.npz")
+        np.savez(chemin, **tableaux)
+        b = banque()
+        b3.ajouter_traits_internes(b, [chemin], 15, 2)
+        self.assertEqual(b["traits"], ["a", "bruit", "interne_c15_pc1", "interne_c15_pc2"])
+        self.assertEqual(len(b["instances"][0]["z"]), 4)
+        # changer un vecteur d'épreuve ne change pas la projection des instances de calibrage (ajustée sur le calibrage seul)
+        tableaux["t11__e0|15"] = (tableaux["t11__e0|15"] * 50).astype(np.float16)
+        chemin2 = os.path.join(tmp, "v2.npz")
+        np.savez(chemin2, **tableaux)
+        b2 = banque()
+        b3.ajouter_traits_internes(b2, [chemin2], 15, 2)
+        self.assertEqual([l["z"] for l in b["instances"][:9]], [l["z"] for l in b2["instances"][:9]])
+        with self.assertRaises(ValueError):  # une instance sans vecteur est refusée
+            b3.ajouter_traits_internes(banque(), [chemin], 7, 2)
+
+
 if __name__ == "__main__":
     unittest.main()

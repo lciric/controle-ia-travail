@@ -180,6 +180,43 @@ def construire(racine_main, graine, notations=None, toutes_les_passes=False, run
                      "les épisodes d'une même tâche restent dépendants (une tâche = une unité : tranches par tâche)"}
 
 
+# --- traits internes (v18, proposition du n° 122 ; défaut sous 48 heures) --------------------------------------------
+def ajouter_traits_internes(banque, chemins_npz, couche, composantes=3):
+    """Ajoute `composantes` traits internes à chaque instance : projection de la moyenne sur les actions du vecteur
+    d'activation de la couche `couche` sur les premières composantes principales, **ajustées sur la seule partie de
+    calibrage** (jamais le développement ni l'épreuve), centrées et réduites par le calibrage. Les vecteurs viennent des
+    fichiers `vecteurs-par-action.npz` des runs (clé « tâche__eK|couche », tableau (1, actions, dimension)). Une instance
+    sans vecteur est refusée (pas d'imputation silencieuse). Rend les empreintes des fichiers lus."""
+    import numpy as np
+    vecteurs, sources = {}, {}
+    for chemin in chemins_npz:
+        sources[chemin] = sha256_fichier(chemin)
+        with np.load(chemin, allow_pickle=False) as z:
+            for cle in z.files:
+                episode, c = cle.rsplit("|", 1)
+                if int(c) == int(couche):
+                    vecteurs[episode.replace("__", "/")] = z[cle].astype(np.float64).reshape(-1, z[cle].shape[-1]).mean(axis=0)
+    manquants = [l["identifiant"] for l in banque["instances"] if l["identifiant"] not in vecteurs]
+    if manquants:
+        raise ValueError(f"instances sans vecteur à la couche {couche} : {manquants[:5]} (… {len(manquants)} en tout)")
+    cal = np.array([vecteurs[l["identifiant"]] for l in banque["instances"] if l["partie"] == "calibrage"])
+    moyenne = cal.mean(axis=0)
+    _, _, vt = np.linalg.svd(cal - moyenne, full_matrices=False)
+    axes = vt[:composantes]
+    proj_cal = (cal - moyenne) @ axes.T
+    ecarts = proj_cal.std(axis=0)
+    ecarts[ecarts == 0] = 1.0
+    for l in banque["instances"]:
+        pc = ((vecteurs[l["identifiant"]] - moyenne) @ axes.T) / ecarts
+        l["z"] = list(l["z"]) + [round(float(x), 6) for x in pc]
+    noms = [f"interne_c{couche}_pc{i + 1}" for i in range(composantes)]
+    banque["traits"] = list(banque["traits"]) + noms
+    banque.setdefault("sources", {}).update(sources)
+    banque["traits_internes"] = {"couche": int(couche), "composantes": composantes, "ajustees_sur": "calibrage",
+                                 "instances_de_calibrage": int(cal.shape[0]), "dimension": int(cal.shape[1])}
+    return sources
+
+
 # --- moniteurs plantés (v17) ------------------------------------------------------------------------------------------
 def planter(banque, nombre, graine, forces=(2.0, 1.0)):
     """Moniteurs plantés sur les **traits réels** (hors bruit), pour mesurer les dents du pôle au régime de la banque réelle
@@ -372,6 +409,9 @@ def principal(argv=None):
     a.add_argument("--graine", type=int, default=20261027)
     a.add_argument("--notations", action="append", default=[], help="JUGE=CHEMIN (répétable ; défaut : les décisives de la v2)")
     a.add_argument("--toutes-les-passes", action="store_true")
+    a.add_argument("--activations", action="append", default=[], help="fichier vecteurs-par-action.npz d'un run (répétable)")
+    a.add_argument("--couche", type=int, default=15, help="couche des vecteurs d'activation (7, 15 ou 23)")
+    a.add_argument("--composantes", type=int, default=3, help="composantes principales ajustées sur le calibrage")
     a.add_argument("--planter", type=int, default=0, help="moniteurs plantés sur les traits réels")
     a.add_argument("--forces", default="2,1", help="forces des moniteurs plantés, en cycle (ex. 2,1.5,1,0.5)")
     a.add_argument("--run", action="append", default=[], help="dossier d'un run supplémentaire (episodes.json et notations "
@@ -380,6 +420,8 @@ def principal(argv=None):
     args = a.parse_args(argv)
     notations = dict(n.split("=", 1) for n in args.notations) or None
     banque = construire(args.racine_main, args.graine, notations, args.toutes_les_passes, args.run)
+    if args.activations:
+        ajouter_traits_internes(banque, args.activations, args.couche, args.composantes)
     plantes = planter(banque, args.planter, args.graine, tuple(float(x) for x in args.forces.split(","))) if args.planter else []
     temoins, bilan = fabriquer_temoins(banque, args.graine, plantes=plantes)
     banque["temoins"] = bilan
