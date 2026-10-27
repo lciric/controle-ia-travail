@@ -1,0 +1,10 @@
+Essais R5 du choix d'offre du lanceur v3 (étape 8, extraite telle quelle), 27 octobre 2026 vers 15:25 UTC, sur la liste
+« gpu_name=A100_SXM4 num_gpus=1 --storage 80 » relue au même moment par vastai 1.8.3 :
+- liste du moment, plafond 1,40 : choisit 57189277 (1,1556 USD/h, machine 152044, CUDA 13,2, 81920 Mo, fiabilité 0,962,
+  Autriche), code 0 — cas sain
+- même liste, plafond 0,50 : « aucune offre conforme », code 1 — artefact prix
+- liste privée des offres conformes (40 Go et CUDA 12,2 seulement) : « aucune offre conforme », code 1 — artefact carte
+- liste vide : « aucune offre conforme », code 1 — artefact liste
+Défaut de la v2 (R-577) constaté à 15:11 UTC : l'identifiant d'une même offre change d'une requête à l'autre (57189277,
+57189285, 57189288 pour la machine 152044 ; 57340519 à 57340529 pour une autre) ; les tentatives v3 et v4 de l'attente
+(29019284, 57189277) ont rendu « offre introuvable » à la relecture, code 3, rien créé.
