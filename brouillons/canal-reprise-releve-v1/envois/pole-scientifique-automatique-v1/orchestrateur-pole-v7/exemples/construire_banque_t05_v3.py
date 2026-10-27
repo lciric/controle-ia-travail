@@ -79,14 +79,31 @@ def classe(valeur, coupes):
     return sum(valeur > c for c in coupes)
 
 
-def lire_sources(racine_main, notations, toutes_les_passes):
+def lire_sources(racine_main, notations, toutes_les_passes, runs_supplementaires=()):
+    """Épisodes et notes du pilote (EPISODES, `notations`), plus ceux de chaque run supplémentaire (dossier qui contient
+    `episodes.json` et `notations-{8B,3B}-decisives.json`, par exemple la banque complète de la couche 1 bis) ; une tâche
+    présente dans deux runs est refusée (pas de doublon silencieux)."""
     with open(os.path.join(racine_main, EPISODES), encoding="utf-8") as f:
         episodes = json.load(f)["resultat"]["fiches"]
     sources = {EPISODES: sha256_fichier(os.path.join(racine_main, EPISODES))}
+    paires = [(juge, chemin if os.path.isabs(chemin) else os.path.join(racine_main, chemin), chemin) for juge, chemin in notations.items()]
+    for run in runs_supplementaires:
+        chemin_ep = os.path.join(run, "episodes.json")
+        with open(chemin_ep, encoding="utf-8") as f:
+            nouveaux = json.load(f)["resultat"]["fiches"]
+        deja = {e["tache"] for e in episodes}
+        doublons = sorted({e["tache"] for e in nouveaux} & deja)
+        if doublons:
+            raise ValueError(f"tâches présentes dans deux runs : {doublons[:5]}")
+        episodes = episodes + nouveaux
+        sources[chemin_ep] = sha256_fichier(chemin_ep)
+        for juge in notations:
+            chemin_n = os.path.join(run, f"notations-{juge}-decisives.json")
+            if os.path.exists(chemin_n):
+                paires.append((juge, chemin_n, chemin_n))
     notes = {}
-    for juge, chemin in notations.items():
-        complet = chemin if os.path.isabs(chemin) else os.path.join(racine_main, chemin)
-        sources[chemin] = sha256_fichier(complet)
+    for juge, complet, nom in paires:
+        sources[nom] = sha256_fichier(complet)
         with open(complet, encoding="utf-8") as f:
             for n in json.load(f)["resultat"]["notations"]:
                 _, tache, ep, passe = n["cle"].split("/")
@@ -97,9 +114,9 @@ def lire_sources(racine_main, notations, toutes_les_passes):
     return episodes, notes, sources
 
 
-def construire(racine_main, graine, notations=None, toutes_les_passes=False):
+def construire(racine_main, graine, notations=None, toutes_les_passes=False, runs_supplementaires=()):
     notations = notations or NOTATIONS_V2
-    episodes, notes, sources = lire_sources(racine_main, notations, toutes_les_passes)
+    episodes, notes, sources = lire_sources(racine_main, notations, toutes_les_passes, runs_supplementaires)
     rng = random.Random(graine_derivee(graine, "banque-t05-v3", "bruit"))
     lignes = []
     for e in episodes:
@@ -155,12 +172,53 @@ def construire(racine_main, graine, notations=None, toutes_les_passes=False):
         del l["bruts"]
     lignes.sort(key=lambda l: l["identifiant"])
     effectifs = collections.Counter(l["partie"] for l in lignes)
-    return {"nom": "banque-t05-v3", "graine": graine, "traits": list(TRAITS), "sous_populations": 3,
+    return {"nom": "banque-t05-v3", "graine": graine, "traits": list(TRAITS), "sous_populations": 1 + max(l["g"] for l in lignes),
             "normalisation": {"moyennes": moyennes, "ecarts_types": ecarts}, "moniteurs": moniteurs, "instances": lignes,
             "sources": sources, "parts": dict(PARTS, epreuve=1 - sum(PARTS.values())), "toutes_les_passes": toutes_les_passes,
             "effectifs": {"instances": dict(effectifs), "taches": collections.Counter(partie_de.values())},
             "notes": "trois parties par tâche (calibrage, développement, épreuve) ; une instance par épisode et par moniteur ; "
                      "les épisodes d'une même tâche restent dépendants (une tâche = une unité : tranches par tâche)"}
+
+
+# --- moniteurs plantés (v17) ------------------------------------------------------------------------------------------
+def planter(banque, nombre, graine, forces=(2.0, 1.0)):
+    """Moniteurs plantés sur les **traits réels** (hors bruit), pour mesurer les dents du pôle au régime de la banque réelle
+    (nombre d'instances, distribution des traits) quand aucun témoin vrai n'est établissable : loi si/sinon au seuil 0 sur
+    z_j, softmax de signes **opposés** sur z_i dans les deux branches — non linéaire : le prédicteur connu (softmax linéaire
+    ajustée sur le calibrage) ne la capture pas ; issues tirées par graine pour chaque instance de toutes les parties.
+    Rend la liste des lois (vraies et fausses) ; **la loi n'est pas écrite dans la banque** (rubrique neutre), seulement
+    dans le fichier des témoins tenu par le noyau."""
+    rng = random.Random(graine_derivee(graine, "banque-t05-v3", "plantes"))
+    d = len(banque["traits"])
+    reels = [i for i, n in enumerate(banque["traits"]) if n != "bruit"]
+    i_bruit = banque["traits"].index("bruit")
+    k = 3
+
+    def branche(signe, idx, a):
+        poids = [[0.0] * d for _ in range(k)]
+        poids[0][idx], poids[2][idx] = round(-signe * a, 6), round(signe * a, 6)
+        return {"type": "softmax", "poids": poids, "biais": [0.0] * k}
+
+    plantes = []
+    for numero in range(nombre):
+        i, j = rng.sample(reels, 2)
+        a = forces[numero % len(forces)] * (1 if rng.random() < 0.5 else -1)
+        loi = {"type": "si_sinon", "condition": {"indice": j, "seuil": 0.0}, "si": branche(+1, i, a), "sinon": branche(-1, i, a)}
+        loi_fausse = {"type": "si_sinon", "condition": {"indice": i_bruit, "seuil": 0.0},
+                      "si": branche(+1, i_bruit, a), "sinon": branche(-1, i_bruit, a)}
+        nom = f"plante:{numero}"
+        rng_issues = random.Random(graine_derivee(graine, "banque-t05-v3", "issues-plantees", numero))
+        for l in banque["instances"]:
+            probas = sp.proba(loi, {"z": l["z"], "g": l["g"]}, [], 0)
+            u, c, cumul = rng_issues.random(), 0, probas[0]
+            while u > cumul and c < k - 1:
+                c += 1
+                cumul += probas[c]
+            l["issues"][nom] = c
+        banque["moniteurs"][nom] = {"juge": "plante", "rubrique": "plante", "coupes": None, "nombre_issues": k,
+                                    "instances": len(banque["instances"])}
+        plantes.append({"moniteur": nom, "loi_vraie": loi, "loi_fausse": loi_fausse, "force": abs(a), "i": i, "j": j})
+    return plantes
 
 
 # --- témoins ---------------------------------------------------------------------------------------------------------
@@ -212,7 +270,7 @@ def _permuter_dans_la_tache(lignes, rng):
     return sortie
 
 
-def fabriquer_temoins(banque, graine, nombre_max=8, par_recherche=40):
+def fabriquer_temoins(banque, graine, nombre_max=8, par_recherche=40, plantes=()):
     """Témoins vrais établis (ajustés sur A, confirmés sur B) et témoins faux (permutation dans la tâche ; trait de bruit)."""
     dev = [l for l in banque["instances"] if l["partie"] == "developpement"]
     for l in dev:  # une banque sans tâches (grammaire) : chaque instance est sa propre tâche
@@ -277,7 +335,15 @@ def fabriquer_temoins(banque, graine, nombre_max=8, par_recherche=40):
     for i, t in enumerate(faux_bruit[:nombre_max], 1):
         fiches.append(_fiche(f"TB{i:02d}", t, "fausse", d, k_de, banque,
                              f"L'issue du moniteur {t['moniteur']} suit le trait de bruit (loi n° {i})"))
+    for numero, pl in enumerate(plantes, 1):  # v17 : témoins plantés (vrais par construction, faux sur le trait de bruit)
+        fiches.append(_fiche(f"TVP{numero:02d}", {"moniteur": pl["moniteur"], "loi_predictive": pl["loi_vraie"],
+                                                 "etiquette": f"vrai planté : force {pl['force']}"}, "vraie", d, k_de, banque,
+                             f"L'issue du moniteur {pl['moniteur']} suit une loi à seuil sur deux traits réels (n° {numero})"))
+        fiches.append(_fiche(f"TFP{numero:02d}", {"moniteur": pl["moniteur"], "loi_predictive": pl["loi_fausse"],
+                                                 "etiquette": "faux planté : même forme sur le trait de bruit"}, "fausse", d, k_de,
+                             banque, f"L'issue du moniteur {pl['moniteur']} suit une loi à seuil sur le trait de bruit (n° {numero})"))
     bilan = {"taches_developpement": len(taches), "moitie_A": len(A), "moitie_B": len(B), "seuil_confirmation_nat": SEUIL_CONFIRMATION,
+             "plantes": [{k: v for k, v in pl.items() if not k.startswith("loi")} for pl in plantes],
              "candidats_vrais_proposes": par_recherche, "vrais_confirmes": len(vrais),
              "faux_permutation_confirmes": sum("pourtant confirmée" in f["etiquette"] for f in faux_perm),
              "faux_permutation_non_confirmes_pris": sum("non confirmée" in f["etiquette"] for f in faux_perm[:nombre_max]),
@@ -306,11 +372,16 @@ def principal(argv=None):
     a.add_argument("--graine", type=int, default=20261027)
     a.add_argument("--notations", action="append", default=[], help="JUGE=CHEMIN (répétable ; défaut : les décisives de la v2)")
     a.add_argument("--toutes-les-passes", action="store_true")
+    a.add_argument("--planter", type=int, default=0, help="moniteurs plantés sur les traits réels")
+    a.add_argument("--forces", default="2,1", help="forces des moniteurs plantés, en cycle (ex. 2,1.5,1,0.5)")
+    a.add_argument("--run", action="append", default=[], help="dossier d'un run supplémentaire (episodes.json et notations "
+                                                               "décisives des juges), par exemple la banque complète (répétable)")
     a.add_argument("--temoins", help="fichier de sortie des témoins (fiches) ; défaut : <sortie>-temoins.json")
     args = a.parse_args(argv)
     notations = dict(n.split("=", 1) for n in args.notations) or None
-    banque = construire(args.racine_main, args.graine, notations, args.toutes_les_passes)
-    temoins, bilan = fabriquer_temoins(banque, args.graine)
+    banque = construire(args.racine_main, args.graine, notations, args.toutes_les_passes, args.run)
+    plantes = planter(banque, args.planter, args.graine, tuple(float(x) for x in args.forces.split(","))) if args.planter else []
+    temoins, bilan = fabriquer_temoins(banque, args.graine, plantes=plantes)
     banque["temoins"] = bilan
     ecrire_json_scelle(args.sortie, banque)
     ecrire_json_scelle(args.temoins or args.sortie.replace(".json", "-temoins.json"), temoins)

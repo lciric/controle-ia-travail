@@ -54,12 +54,22 @@ def traits_de(loi):
     return sortie
 
 
-def executer(chemin_banque, chemin_temoins, dossier, generations=3, propositions=12, graine=20261027, exploration=True):
-    monde = MondeBanque(chemin_banque, graine, nul_informe=True, tranches=generations)
+def executer(chemin_banque, chemin_temoins, dossier, generations=3, propositions=12, graine=20261027, exploration=True,
+             nul_informe=True, population_initiale="aleatoire", temoins_par_generation=3):
+    monde = MondeBanque(chemin_banque, graine, nul_informe=nul_informe, tranches=generations)
     description = monde.description_publique()
     temoins = charger_fiches(chemin_temoins)
-    population = [valider_proposition(p, monde, 0.05, f"P{i:02d}", "reference-aleatoire", references=True)
-                  for i, p in enumerate(propositions_aleatoires(description, 6, graine_derivee(graine, "population"), 0), 1)]
+    if population_initiale == "mecanique":
+        # v17 : population initiale = les meilleures lois du chercheur mécanique sur le développement, **sans** le filtre de
+        # la pénalité de Schwarz (à 48 instances de développement, rien ne le passe) ; le juge décide sur l'épreuve
+        import math
+        from pole.proposeurs_references import propositions_mecaniques
+        props = propositions_mecaniques(description, monde.donnees_developpement(), propositions, score_minimum=-math.inf)
+        population = [valider_proposition(p, monde, 0.05, f"P{i:02d}", "reference-mecanique", references=True)
+                      for i, p in enumerate(props, 1)]
+    else:
+        population = [valider_proposition(p, monde, 0.05, f"P{i:02d}", "reference-aleatoire", references=True)
+                      for i, p in enumerate(propositions_aleatoires(description, 6, graine_derivee(graine, "population"), 0), 1)]
     n_epreuve = sum(1 for l in monde.banque["instances"] if l.get("partie") == "epreuve")
     taille_plan = max(20, min(120, n_epreuve // generations))
     if not any(t.temoin == "vraie" for t in temoins):
@@ -80,7 +90,7 @@ def executer(chemin_banque, chemin_temoins, dossier, generations=3, propositions
     nb_temoins = max(1, min(sum(t.temoin == "vraie" for t in temoins) or 1, sum(t.temoin == "fausse" for t in temoins) or 1))
     bilan = executer_pole(population, temoins, AdaptateurSimule(graine, MondeSimule(graine)), config, generations, 5000.0,
                           dossier, memoire_active=True, horodatage_fourni="couche 1 bis, banque v3",
-                          temoins_par_generation=max(1, min(3, nb_temoins)), k_recombinaison=4, max_paires=2,
+                          temoins_par_generation=max(1, min(temoins_par_generation, nb_temoins)), k_recombinaison=4, max_paires=2,
                           monde_noyau=monde)
     with open(os.path.join(dossier, "archive", "index.json"), encoding="utf-8") as f:
         index = json.load(f)
@@ -124,9 +134,13 @@ def principal(argv=None):
     a.add_argument("--propositions", type=int, default=12)
     a.add_argument("--graine", type=int, default=20261027)
     a.add_argument("--sans-exploration", action="store_true")
+    a.add_argument("--nul-aveugle", action="store_true", help="sans le prédicteur connu dans le nul (le connu devient trouvable)")
+    a.add_argument("--population", choices=("aleatoire", "mecanique"), default="aleatoire")
+    a.add_argument("--temoins-par-generation", type=int, default=3)
     args = a.parse_args(argv)
     lecture = executer(args.banque, args.temoins, args.dossier, args.generations, args.propositions, args.graine,
-                       exploration=not args.sans_exploration)
+                       exploration=not args.sans_exploration, nul_informe=not args.nul_aveugle,
+                       population_initiale=args.population, temoins_par_generation=args.temoins_par_generation)
     print(json.dumps({k: v for k, v in lecture.items() if k != "L3_promues"}, ensure_ascii=False, indent=1))
     print(json.dumps(lecture["L3_promues"], ensure_ascii=False, indent=1))
     return 0

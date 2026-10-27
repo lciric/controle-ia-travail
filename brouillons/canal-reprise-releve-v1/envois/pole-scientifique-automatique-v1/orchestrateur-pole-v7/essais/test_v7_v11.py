@@ -1,5 +1,6 @@
 """Essais de la version 11 de v7 : corrections de la contre-lecture du code écrit sous Opus (C1 à C6, C9, C10)."""
 
+import json
 import math
 import os
 import random
@@ -318,6 +319,28 @@ class LectureCouche1Bis(unittest.TestCase):
         self.assertEqual(lecture["generations"], 2, lecture["arret"])
         self.assertEqual(lecture["L1_temoins_faux_promus"], [])
         self.assertIn(lecture["L2_etat_dents"], ("dents", "pas de dents"))
+
+
+
+
+class MoniteursPlantes(unittest.TestCase):
+    """v17 : moniteurs plantés sur les traits réels (lois à seuil non linéaires), témoins vrais et faux plantés."""
+
+    def test_planter_et_temoins(self):
+        from exemples.generer_monde_grammaire_v1 import generer_monde
+        racine = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        sys.path.insert(0, os.path.join(racine, "exemples"))
+        import construire_banque_t05_v3 as b3
+        banque, _, _ = generer_monde(20261107, structures=["monotone", "monotone", "monotone"])
+        banque["traits"] = list(banque["traits"][:-1]) + ["bruit"]  # le dernier trait joue le bruit
+        plantes = b3.planter(banque, 2, 20261107)
+        self.assertEqual([p["moniteur"] for p in plantes], ["plante:0", "plante:1"])
+        self.assertTrue(all(l["issues"]["plante:0"] in (0, 1, 2) for l in banque["instances"]))
+        self.assertNotIn("loi", json.dumps(banque["moniteurs"]["plante:0"]))  # la loi n'est pas dans la banque
+        fiches, bilan = b3.fabriquer_temoins(banque, 20261107, nombre_max=2, par_recherche=10, plantes=plantes)
+        ids = {f["identifiant"]: f["temoin"] for f in fiches}
+        self.assertEqual((ids.get("TVP01"), ids.get("TFP01")), ("vraie", "fausse"))
+        self.assertEqual(len(bilan["plantes"]), 2)
 
 
 if __name__ == "__main__":
