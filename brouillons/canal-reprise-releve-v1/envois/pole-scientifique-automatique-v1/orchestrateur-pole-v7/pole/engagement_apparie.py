@@ -1,4 +1,4 @@
-"""Engagement « apparié » (v7, versions 23 et 25) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
+"""Engagement « apparié » (v7, versions 23, 25 et 26) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
 et scellée avant toute issue d'épreuve, puis jugée sur la banque de scores (conception v2 § 7 point 1 ; v3 à v6).
 
 `construire(monde, ...)` fixe, **avant** toute lecture de l'épreuve : les contrastes nommés (coefficients vérifiés par la
@@ -11,8 +11,8 @@ vivier déclaré ; plus la garde). L'empreinte de l'engagement fixe l'ordre secr
 des processus arrêtée au seuil m_c/α_c (`pari_apparie.evaluer`), bornes basses rapportées (jamais une condition).
 
 Version 25 (contre-lecture de la conception v7) : la **partie lue** et la grille **Λ** entrent dans la clé de l'héritage
-(K7-3) ; `evaluer` rend l'**empreinte des unités lues** (banque, partie, identifiants), à passer à
-`Course.ajouter_trajectoire` qui refuse une répétition (K7-2). Restent à la charge de l'orchestrateur : consigner
+(K7-3) ; `evaluer` rend les **identifiants des unités lues** (banque, partie, unité) et leur empreinte, à passer à
+`Course.ajouter_trajectoire(unites=…)` qui refuse toute intersection (K7-2, K8-1 : fraîcheur, pas seulement répétition). Restent à la charge de l'orchestrateur : consigner
 l'empreinte de l'engagement **hors de l'objet** (journal, mémoire) avant l'épreuve — le scellement détecte une altération,
 il ne l'empêche pas (K7-4) ; et, tant que la garde et les contrastes ne portent pas sur les mêmes unités, les processus
 sont alignés par rang et non par unité (K7-6 : niveau tenu, espérance au franchissement joint non garantie ≤ 1).
@@ -92,6 +92,9 @@ def evaluer(monde, engagement):
     r["bornes_basses"] = {nom: pa.borne_basse(v) for nom, v in valeurs.items() if v}
     r["empreinte_cle"] = engagement["empreinte_cle"]
     r["unites_lues"] = len(ordre)
+    # version 26 (K8-1) : les identifiants des unités (banque, partie, unité), à passer à `Course.ajouter_trajectoire(unites=…)`,
+    # qui refuse toute intersection avec les unités déjà lues par la fiche ; l'empreinte reste pour le manifeste
+    r["identifiants_unites"] = [(monde.empreinte, engagement["partie"], u) for u in sorted(ordre)]
     r["empreinte_unites"] = empreinte_objet({"banque": monde.empreinte, "partie": engagement["partie"],
                                              "unites": sorted(ordre)})
     return r

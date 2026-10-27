@@ -66,10 +66,12 @@ class Jugement(unittest.TestCase):
         from pole import pari_apparie as pa
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["f"], 0.05)
-        c.ajouter_trajectoire("f", [0.0], empreinte_unites=r["empreinte_unites"])
+        c.ajouter_trajectoire("f", [0.0], unites=r["identifiants_unites"])
         c.lire()
-        with self.assertRaises(ValueError):  # K7-2 : la même lecture ne compte pas deux fois
-            c.ajouter_trajectoire("f", [0.0], empreinte_unites=ea.evaluer(m, e)["empreinte_unites"])
+        with self.assertRaises(ValueError):  # K7-2, K8-1 : la même lecture ne compte pas deux fois
+            c.ajouter_trajectoire("f", [0.0], unites=ea.evaluer(m, e)["identifiants_unites"])
+        self.assertEqual(len(r["identifiants_unites"]), 100)
+        self.assertEqual(r["identifiants_unites"][0][1], "epreuve")
         nul = mbs.MondeBanqueScores(banque_synthetique(random.Random(53), unites_par_partie=(100, 0, 100), mu=(1.0, 1.0)), 19)
         e0 = ea.construire(nul, {"blanc": {"coefficients": {"blanc": 1}, "constante": -0.9}}, tau=0.05)  # rappel ≥ 0,9 : faux
         self.assertFalse(ea.evaluer(nul, e0)["promue"])

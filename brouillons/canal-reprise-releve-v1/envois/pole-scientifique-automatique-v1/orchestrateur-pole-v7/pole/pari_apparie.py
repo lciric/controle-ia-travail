@@ -1,4 +1,4 @@
-"""Pari apparié borné (v7, versions 20 à 25) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
+"""Pari apparié borné (v7, versions 20 à 26) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
 G1), selon la conception v5 (`../../pari-de-signe/conception-pari-de-signe-v5.md` et les versions qu'elle amende).
 
 Ce module ne contient que le **cœur statistique**, sans lien encore avec le cycle des générations (à faire : monde sur
@@ -223,8 +223,11 @@ class Course:
       dans la génération ni déclaration `sans_partie[fiche] = motif` (tracée) — une partie calculée et sautée ne passe
       plus en silence ; ce que le code ne voit pas reste à l'orchestrateur : **toute partie calculée par le monde est
       ajoutée avant toute lecture ou décision**.
-    - `ajouter_trajectoire(..., empreinte_unites=None)` (K7-2) : une partie déjà ajoutée pour la fiche (même empreinte
-      d'unités) est refusée.
+    - `ajouter_trajectoire(..., unites=…)` (K7-2, K8-1 ; version 26) : les **identifiants** des unités lues (banque, partie,
+      unité) sont obligatoires ; toute **intersection** avec les unités déjà lues par la fiche est refusée (fraîcheur, et
+      non seulement répétition exacte) ; une partie sans identité n'est acceptée qu'avec `sans_identite=True`, tracée
+      (`parties_sans_identite`) — jamais en silence. La disjonction **entre fiches** d'une même lignée de clé reste à la
+      mémoire (hors de cette classe).
     - `retirer(fiche, motif)` (D-S26 bis, panne confirmée) : la fiche est marquée, gelée et **exclue** des lectures
       suivantes ; si elle était promue, elle reste dans `promues` — **l'union garantie est celle d'avant les retraits** —
       et sort de `promues_rapportees()`, qui porte la réserve de D-S26 bis.
@@ -248,6 +251,7 @@ class Course:
         self.generation = 1
         self.derniere_partie = {}
         self.unites_lues = {}
+        self.parties_sans_identite = []
         self.abandons = {}
         self.sans_partie = {}
 
@@ -269,17 +273,28 @@ class Course:
     def seuil_log(self, fiche):
         return -math.log(self.budgets[fiche])
 
-    def ajouter_trajectoire(self, fiche, trajectoire_log, empreinte_unites=None):
+    def ajouter_trajectoire(self, fiche, trajectoire_log, unites=None, sans_identite=False):
         if fiche not in self.budgets:
             raise KeyError(f"fiche non entrée : {fiche!r}")
         if fiche in self.gelees:
             raise ValueError(f"fiche gelée {fiche!r} : partie refusée (contrat de D-S25 bis (2))")
         if self.derniere_partie.get(fiche) == self.generation:
             raise ValueError(f"fiche {fiche!r} : une seule partie par génération")
-        if empreinte_unites is not None:
-            if empreinte_unites in self.unites_lues.setdefault(fiche, set()):
-                raise ValueError(f"fiche {fiche!r} : ces unités ont déjà été lues (unités fraîches, D-S25 bis (5))")
-            self.unites_lues[fiche].add(empreinte_unites)
+        if unites is None:
+            if not sans_identite:
+                raise ValueError(f"fiche {fiche!r} : partie sans identifiants d'unités (passer `unites`, ou déclarer "
+                                 f"sans_identite=True, tracé) — K8-1")
+            self.parties_sans_identite.append((self.generation, fiche))
+        else:
+            nouvelles = set(unites)
+            if not nouvelles:
+                raise ValueError(f"fiche {fiche!r} : liste d'unités vide")
+            deja = self.unites_lues.setdefault(fiche, set())
+            commun = nouvelles & deja
+            if commun:
+                raise ValueError(f"fiche {fiche!r} : {len(commun)} unité(s) déjà lue(s) (unités fraîches, D-S25 bis (5)) : "
+                                 f"{sorted(map(str, commun))[:3]}")
+            deja |= nouvelles
         self.derniere_partie[fiche] = self.generation
         if fiche in self.promues or fiche in self.arretees:
             return self.log_e[fiche]  # processus arrêté : la suite est ignorée (temps d'arrêt, valide)
@@ -293,15 +308,16 @@ class Course:
         self.log_e[fiche] = valeur
         return valeur
 
-    def abandonner(self, fiche, trajectoire_log=None, avant_partie=False, motif="", empreinte_unites=None):
+    def abandonner(self, fiche, trajectoire_log=None, avant_partie=False, motif="", unites=None, sans_identite=False):
         if fiche not in self.budgets:
             raise KeyError(f"fiche non entrée : {fiche!r}")
         if fiche in self.gelees:
             if trajectoire_log is not None:
                 raise ValueError(f"fiche {fiche!r} déjà gelée : partie refusée (K7-5)")
+            self.abandons.setdefault(("redite", fiche), []).append((self.generation, motif))  # K8-3 : tracé, sans effet
             return
         if trajectoire_log is not None:
-            self.ajouter_trajectoire(fiche, trajectoire_log, empreinte_unites)
+            self.ajouter_trajectoire(fiche, trajectoire_log, unites, sans_identite)
             mode = "partie_passee"
         elif avant_partie:
             mode = "avant_partie"

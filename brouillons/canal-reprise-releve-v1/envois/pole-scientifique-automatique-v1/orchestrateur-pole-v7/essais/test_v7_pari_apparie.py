@@ -153,9 +153,9 @@ class HeritageDS25bis(unittest.TestCase):
         for f in "bcd":
             c.abandonner(f, avant_partie=True)  # abandonnées avant toute partie : la décision n'a vu aucune issue
         self.assertAlmostEqual(c.seuil_log("a"), math.log(4 / 0.04))  # 100, jamais 1/0,04 = 25
-        c.ajouter_trajectoire("a", [math.log(30)])
+        c.ajouter_trajectoire("a", [math.log(30)], unites={(c.generation, "a", i) for i in range(3)})
         self.assertEqual(c.lire(), set())  # 30 < 100 : la lecture « seule » l'aurait promue (30 ≥ 25)
-        c.ajouter_trajectoire("a", [math.log(2), math.log(5)])  # 30 × 5 = 150 ≥ 100 : arrêt au seuil
+        c.ajouter_trajectoire("a", [math.log(2), math.log(5)], unites={(c.generation, "a", i) for i in range(3)})  # 30 × 5 = 150 ≥ 100 : arrêt au seuil
         self.assertAlmostEqual(c.log_e["a"], math.log(150))
         self.assertIn("a", c.arretees)
         self.assertEqual(c.lire(), {"a"})
@@ -164,10 +164,10 @@ class HeritageDS25bis(unittest.TestCase):
     def test_promotion_une_seule_fois_et_gel(self):
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a", "b"], 0.03)
-        c.ajouter_trajectoire("a", [math.log(80)])
+        c.ajouter_trajectoire("a", [math.log(80)], unites={(c.generation, "a", i) for i in range(3)})
         self.assertEqual(c.lire(sans_partie={"b": "non lancée"}), {"a"})
         avant = c.log_e["a"]
-        c.ajouter_trajectoire("a", [math.log(0.01)])  # gelée : rien ne change
+        c.ajouter_trajectoire("a", [math.log(0.01)], unites={(c.generation, "a", i) for i in range(3)})  # gelée : rien ne change
         self.assertEqual(c.log_e["a"], avant)
         c.entrer("g2", ["e"], 0.01)
         self.assertEqual(c.lire(sans_partie={"b": "non lancée", "e": "non lancée"}), set())  # « a » reste promue
@@ -192,14 +192,14 @@ class HeritageDS25bis(unittest.TestCase):
                     c.entrer(f"g{g + 1}", [f"n{g}-{j}" for j in range(3)], a_g[g])
                 for i in range(4):
                     traj = marche_a_prime(rng, pas)
-                    c.ajouter_trajectoire(f"c{i}", traj)
+                    c.ajouter_trajectoire(f"c{i}", traj, unites={(c.generation, f"c{i}", i) for i in range(3)})
                     base = cohorte_seule[f"c{i}"]
                     if base + max(traj) >= -math.log(a_g[0]):
                         seule_promue = True
                     cohorte_seule[f"c{i}"] = base + traj[-1]
                 if g > 0:
                     for j in range(3):
-                        c.ajouter_trajectoire(f"n{g}-{j}", marche_a_prime(rng, pas))
+                        c.ajouter_trajectoire(f"n{g}-{j}", marche_a_prime(rng, pas), unites={(c.generation, f"n{g}-{j}", i) for i in range(3)})
                 c.lire()
                 if g > 0:
                     for j in range(3):
@@ -219,34 +219,34 @@ class CorrectionsV7(unittest.TestCase):
     def test_contrat_d_abandon(self):
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a", "b", "c", "d"], 0.04)
-        c.ajouter_trajectoire("a", [math.log(2)])
+        c.ajouter_trajectoire("a", [math.log(2)], unites={(c.generation, "a", i) for i in range(3)})
         c.abandonner("a")  # cas sain : la partie de la génération est ajoutée, puis la fiche gelée
         with self.assertRaises(ValueError):
             c.abandonner("b")  # artefact : abandon sans la partie de la génération courante → refus
-        c.abandonner("b", trajectoire_log=[math.log(0.5)])  # la partie passée avec la décision
+        c.abandonner("b", trajectoire_log=[math.log(0.5)], unites={(c.generation, "b", i) for i in range(3)})  # la partie passée avec la décision
         self.assertAlmostEqual(c.log_e["b"], math.log(0.5))
         c.abandonner("c", avant_partie=True)
         with self.assertRaises(ValueError):
-            c.ajouter_trajectoire("c", [math.log(3)])  # partie pour une gelée : refus, jamais ignorée
-        c.ajouter_trajectoire("d", [math.log(2)])
+            c.ajouter_trajectoire("c", [math.log(3)], unites={(c.generation, "c", i) for i in range(3)})  # partie pour une gelée : refus, jamais ignorée
+        c.ajouter_trajectoire("d", [math.log(2)], unites={(c.generation, "d", i) for i in range(3)})
         with self.assertRaises(ValueError):
-            c.ajouter_trajectoire("d", [math.log(2)])  # une seule partie par génération
+            c.ajouter_trajectoire("d", [math.log(2)], unites={(c.generation, "d", i) for i in range(3)})  # une seule partie par génération
         c.lire()
-        c.ajouter_trajectoire("d", [math.log(2)])  # génération 2 : permis
+        c.ajouter_trajectoire("d", [math.log(2)], unites={(c.generation, "d", i) for i in range(3)})  # génération 2 : permis
         self.assertAlmostEqual(c.log_e["d"], math.log(4))
 
     def test_retrait(self):
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a", "b", "c"], 0.03)
         for f, e in (("a", 200.0), ("b", 200.0), ("c", 60.0)):
-            c.ajouter_trajectoire(f, [math.log(e)])
+            c.ajouter_trajectoire(f, [math.log(e)], unites={(c.generation, f, i) for i in range(3)})
         self.assertEqual(c.lire(), {"a", "b", "c"})  # k* = 3 : c (b·E = 0,6 ≥ 1/3) promue avec ses sœurs
         c.retirer("a", "panne confirmée de la strate")
         self.assertEqual(c.promues, {"a", "b", "c"})  # l'union garantie est celle d'avant les retraits
         self.assertEqual(c.promues_rapportees(), {"b", "c"})
         self.assertNotIn("a", c.bonferroni())
         c.entrer("g2", ["d"], 0.01)
-        c.ajouter_trajectoire("d", [math.log(26)])  # b·E = 0,26 : promue à k = 4 si « a » comptait, pas à k = 3
+        c.ajouter_trajectoire("d", [math.log(26)], unites={(c.generation, "d", i) for i in range(3)})  # b·E = 0,26 : promue à k = 4 si « a » comptait, pas à k = 3
         self.assertEqual(c.lire(), set())  # « a », retirée, est exclue de la lecture : k* = 2, « d » non promue
         with self.assertRaises(ValueError):
             c.retirer("b", "")
@@ -262,13 +262,13 @@ class CorrectionsV7(unittest.TestCase):
         self.assertEqual(pa.ebh_pondere(trois, {f: b for f in "xyz"}), {"x", "y", "z"})
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a", "b", "c", "d"], 0.05)  # b = 0,0125
-        c.ajouter_trajectoire("d", [math.log(32)])  # b·E = 0,4
+        c.ajouter_trajectoire("d", [math.log(32)], unites={(c.generation, "d", i) for i in range(3)})  # b·E = 0,4
         for f in "abc":
-            c.ajouter_trajectoire(f, [0.0])
+            c.ajouter_trajectoire(f, [0.0], unites={(c.generation, f, i) for i in range(3)})
         self.assertEqual(c.lire(), set())
         c.abandonner("d", avant_partie=True)
         for f in "abc":
-            c.ajouter_trajectoire(f, [math.log(80)])  # b·E = 1 : arrêtées au seuil
+            c.ajouter_trajectoire(f, [math.log(80)], unites={(c.generation, f, i) for i in range(3)})  # b·E = 1 : arrêtées au seuil
         self.assertEqual(c.lire(), {"a", "b", "c", "d"})  # k* = 4 : la gelée à 0,4 ≥ 1/4 est promue (voulu, valide)
 
 
@@ -279,7 +279,7 @@ class CorrectionsV8(unittest.TestCase):
     def test_partie_sautee_refusee_a_la_lecture(self):
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a", "b"], 0.04)
-        c.ajouter_trajectoire("a", [math.log(3)])
+        c.ajouter_trajectoire("a", [math.log(3)], unites={(c.generation, "a", i) for i in range(3)})
         with self.assertRaises(ValueError):
             c.lire()  # « b » active sans partie ni déclaration : l'artefact « j'ajoute si ça monte » est refusé
         self.assertEqual(c.lire(sans_partie={"b": "monde indisponible"}), set())  # cas sain : déclaré et tracé
@@ -288,21 +288,27 @@ class CorrectionsV8(unittest.TestCase):
     def test_unites_deja_lues_refusees(self):
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a"], 0.04)
-        c.ajouter_trajectoire("a", [math.log(2)], empreinte_unites="u-1")
+        c.ajouter_trajectoire("a", [math.log(2)], unites={"u-1", "u-2", "u-3"})
         c.lire()
         with self.assertRaises(ValueError):
-            c.ajouter_trajectoire("a", [math.log(2)], empreinte_unites="u-1")  # même partie, deux fois : refus
-        c.ajouter_trajectoire("a", [math.log(2)], empreinte_unites="u-2")
+            c.ajouter_trajectoire("a", [math.log(2)], unites={"u-3", "u-4"})  # K8-1 : une unité en commun suffit au refus
+        with self.assertRaises(ValueError):
+            c.ajouter_trajectoire("a", [math.log(2)])  # K8-1 : sans identité ni déclaration → refus
+        c.ajouter_trajectoire("a", [math.log(2)], unites={"u-4", "u-5"})  # disjointes : acceptées
+        c.lire()
+        c.ajouter_trajectoire("a", [0.0], sans_identite=True)  # déclaré : accepté et tracé
+        self.assertEqual(c.parties_sans_identite, [(3, "a")])
 
     def test_abandon_d_une_gelee_et_traces(self):
         c = pa.Course(alpha=0.05)
         c.entrer("g1", ["a", "b"], 0.04)
         c.abandonner("a", avant_partie=True, motif="hors sujet")
         with self.assertRaises(ValueError):
-            c.abandonner("a", trajectoire_log=[math.log(5)])  # partie pour une gelée : refus, plus jamais en silence
-        c.abandonner("a")  # sans partie : sans effet
+            c.abandonner("a", trajectoire_log=[math.log(5)], unites={(c.generation, "a", i) for i in range(3)})  # partie pour une gelée : refus, plus jamais en silence
+        c.abandonner("a", motif="redite")  # sans partie : sans effet, mais tracé (K8-3)
         self.assertEqual(c.abandons["a"], (1, "avant_partie", "hors sujet"))
-        c.ajouter_trajectoire("b", [math.log(2)])
+        self.assertEqual(c.abandons[("redite", "a")], [(1, "redite")])
+        c.ajouter_trajectoire("b", [math.log(2)], unites={(c.generation, "b", i) for i in range(3)})
         c.abandonner("b")
         self.assertEqual(c.abandons["b"][1], "apres_partie")
         c.retirer("b", "panne")
