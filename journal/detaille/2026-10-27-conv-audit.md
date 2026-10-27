@@ -174,3 +174,22 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   conception v4 (`30bb257`). Messages n° 115 et 116. Trois erreurs d'heure d'en-tête (estimées au lieu de lues) corrigées
   depuis les heures de fichier et dites dans les textes. Recherche de clés avant chaque poussée : rien. Instances :
   aucune chez moi. Sous-agents en cours : trois (lecture du collisionneur, deux contre-lectures du code).
+- **Soirée, fin (18:15 à 19:40 UTC ; ajout écrit à 19:40 UTC, heure lue sur `date -u` : 19:39:29).** **Pari apparié borné** :
+  lecture du tour du collisionneur contre la v2 par un sous-agent neuf Opus (57 points : 18 couverts, 7 de garantie
+  nouveaux — ex æquo des scores ordinaux 0,35 à 0,83 de promotions à tort, dérive de composition calibrage → épreuve 0,09 à
+  0,75, sélection du bras aux seuils d'un même calibrage 0,11 → 0,36, multiplicité entre générations, longueur des
+  épisodes, fuite du mode tenu à l'écart, niveau des intervalles de N-054 point 4 — 14 faux) ; **batterie à 0 USD**
+  (`d5dfbe39…`) : le pari parts tient α partout, Student 0,07 à 0,22 sous asymétrie à petit effectif, Hoeffding et
+  Bernstein empirique valides mais sans puissance ; **v3** (`1518a12f…`), contre-lue (Opus : « amender en v4 », deux points
+  de garantie rouverts : règle en ligne entre générations, calibrage de l'organisme ; critère de G1 changé sans le dire) ;
+  **v4** (`c63d8539…`, D-S17 à D-S23, nœud sur les comparateurs de G1) ; contre-lecture de la v4 en cours. **Code v7** :
+  les deux contre-lectures croisées relancées à 18:00 ont rendu « à corriger avant le duel » (duel affamé et juge différent
+  entre bras ; héritage sur banque sans tranches 9,5 % ; témoins vrais dans k* 16 % ; loi sans remise promue sans urne ;
+  bac à sable qui ne borne que les écritures ; témoins reconnaissables ; canaux de texte ; témoins vrais de T0.5 non
+  établis). **v10** (`219c028`, script du duel, pari parts seule, coût simulé jamais compté), **v11** (`02d8a42`, 218
+  essais : tout ce qui précède corrigé), **v12** (`5eec519` : clé du relais par fichier à lecture unique, contrôle de /proc
+  ; **erreur de mon n° 117 reconnue** — le relais ne tournait pas sous un autre utilisateur en (a) bis, session-depot
+  n° 92 et R-589 ont raison, rotation de la clé recommandée), **v13** (`4e6fccd`, 221 essais : seuil de fusion de la
+  mémoire au gabarit du monde, fusions à tort 33/50 → 1/50). Programme de conception v4 (`30bb257`). Messages n° 116 à
+  118. Recherche de clés avant chaque poussée : rien. Instances : aucune chez moi. Sous-agents en cours : contre-lecture de
+  la v4.
