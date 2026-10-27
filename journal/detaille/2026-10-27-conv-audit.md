@@ -111,3 +111,19 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   (`a384cdc2…`, `248b43b`).
 - Recherche de clés avant chaque poussée : seules les fausses clés plantées des essais. Instances de calcul : aucune.
   Sous-agents en cours : aucun.
+- **Fin d'après-midi (13:47 à 14:11 UTC ; ajout écrit à 14:11 UTC, heure lue sur `date -u`).** Conception v7
+  (`orchestrateur-pole-v7/conception-v7-v1.md`, `31fc8c4b…`, `e2067cb`) puis **pièces 1 à 3 codées** (`7c1806c`, `e288711` :
+  monde sur banque figée, nul informé ajusté par le noyau sur la partie de calibrage, juge v1 sans urne, option de
+  multiplicité e-BH ; 159 essais). **Banque réelle de la couche 1** construite depuis `main` (pilote T0.5 : 120 épisodes
+  du modèle de 8 milliards, 13 moniteurs juge × rubrique, 40 en calibrage) et proposeur scripté (104 fiches monotones,
+  13 témoins faux, 6 témoins vrais). **Première course du pôle sur données réelles** (agents simulés, 14:01 UTC, 21 s,
+  zéro dépense ; `demonstration-couche1-v7/`, lecture `e21f8611…`) : une promue sur 104 en nul aveugle (« la note de
+  raisonnement du juge 8B croît avec la dispersion des longueurs d'actions », richesse 21 sur 53), zéro avec le nul
+  informé (que du connu), zéro avec l'urne ; aucun témoin faux promu ; témoins vrais éliminés : **pas de dents** (41 à 62
+  épisodes d'épreuve par moniteur) ; leçon : avec 104 fiches, jusqu'à cinq fausses promotions attendues par hasard —
+  règle de multiplicité codée en option, défaut à décider (recommandé e-bh). Lazar (heure de Paris) : 14:48 et 14:57
+  « parfait » (tour du collisionneur sur les questions fortes ; proposeur qui génère des questions) ; 14:57 scénarios de
+  date limite du fonds donnés (deux à trois semaines recommandées) ; 14:58 courriel au responsable du fonds rédigé dans
+  la session (rien de versé) ; 15:05 pari de signe inscrit au programme de conception de l'organisme (v2, `353515ff…`),
+  distinct du programme v2 du fonds ; 15:06 ce qui a marché et raté dans la première course, dit. Passation v7.
+  Recherche de clés avant chaque poussée : rien. Instances : aucune. Sous-agents : aucun.
