@@ -65,3 +65,7 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   données réelles (commit `4ccaa83`). Message n° 104 à session-depot : expérience faite sans scellement, décision de
   Lazar à consigner.
 - Recherche de clés avant chaque poussée : 0 écriture de clé. Instances de calcul : aucune. Sous-agents en cours : aucun.
+- Précision à la ligne « Boucle d'or » ci-dessus (écrite trop vite) : la fenêtre ne gagne que si la valeur suit la forme
+  en cloche qu'elle suppose (+ 0,23 découverte vraie par dollar sur le meilleur allocateur appris) ; elle perd quand la
+  valeur dépend autrement de la distance (« bords » − 0,34, « croissant » − 0,24) ; un tri par espérance de découvertes,
+  appris en ligne, est le défaut sûr (`essais-boucle-d-or-v1/lecture-essai-boucle-d-or-v1.md`).
