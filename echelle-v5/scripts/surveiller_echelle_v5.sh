@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Surveillance de l'instance de la comparaison d'échelle 8B contre 70B, v5 (GO cité au lancement), lignée
+# « session-depot », 27 octobre 2026 ; déclinée de `surveiller_echelle_v4.sh` sous un nom nouveau (R12) après la
+# contre-lecture n° 4 (CLW-08) : chaque appel à vastai est borné à 60 s, pour qu'un appel bloqué ne retarde pas la relève
+# du plafond ; l'amorce v5 écrit sa ligne de fin aussi sur ses refus précoces (sortie 7 ici). Depuis la v4 (CLZ-11) :
+#   - DUREE_MAX_S exigée, dans [4 500 ; 7 200] s, et égale à celle que le lanceur a écrite dans lancement.txt
+#     (« duree_max_s N »), avec la même création (« creation C ») et le même identifiant ; aucun repli silencieux ;
+#   - le code de fin de l'amorce est relu, consigné dans arret.txt et rendu : une amorce finie en échec ne rend plus 0.
+# Toutes les PAS_S (60) secondes : état de l'instance (champs filtrés : jamais la réponse brute, qui porte
+# l'environnement de l'instance) et dernières lignes « AMORCE » / « ECHELLE » du journal du conteneur. Arrêt de
+# l'instance par son identifiant (R10) dès la fin de l'amorce, dès que le conteneur est sorti, ou au plafond
+# (création + DUREE_MAX_S), consigné ; jamais de destruction ici (elle suit la vérification des résultats poussés).
+# PAS_S et ATTENTE_ARRET_S ne servent qu'aux essais (R5).
+# Usage : VASTAI=<chemin de vastai 1.8.3> DUREE_MAX_S=<plafond du lanceur> \
+#             surveiller_echelle_v5.sh ID CREATION DOSSIER_DU_LANCEMENT DOSSIER_NEUF
+# Codes : 0 arrêt après la fin de l'amorce, code 0 ; 7 arrêt après la fin de l'amorce, code ≠ 0 (consigné) ; 5 arrêt au
+# plafond ou conteneur sorti sans ligne de fin ; 6 arrêt non relu ; 2 usage ou refus de partir.
+set -uo pipefail
+[ $# -eq 4 ] || { echo "usage : surveiller_echelle_v5.sh ID CREATION DOSSIER_DU_LANCEMENT DOSSIER_NEUF"; exit 2; }
+ID=$1; CREATION=$2; L=$(realpath -m "$3"); D=$(realpath -m "$4")
+V=${VASTAI:?VASTAI : chemin de l outil vastai 1.8.3}
+DUREE_MAX_S=${DUREE_MAX_S:-}
+PAS_S=${PAS_S:-60}
+ATTENTE_ARRET_S=${ATTENTE_ARRET_S:-20}
+[[ "$DUREE_MAX_S" =~ ^[0-9]+$ ]] && [ "$DUREE_MAX_S" -ge 4500 ] && [ "$DUREE_MAX_S" -le 7200 ] \
+    || { echo "DUREE_MAX_S absente, illisible ou hors de [4 500 ; 7 200] s"; exit 2; }
+[[ "$ID" =~ ^[0-9]{6,10}$ ]] && [[ "$CREATION" =~ ^[0-9]{10}$ ]] || { echo "ID ou CREATION illisible"; exit 2; }
+[ -f "$L/lancement.txt" ] || { echo "$L/lancement.txt absent"; exit 2; }
+grep -qx "duree_max_s $DUREE_MAX_S" "$L/lancement.txt" \
+    || { echo "DUREE_MAX_S=$DUREE_MAX_S ≠ celle du lanceur ($(grep '^duree_max_s ' "$L/lancement.txt" || echo absente))"; exit 2; }
+grep -qx "creation $CREATION" "$L/lancement.txt" || { echo "création $CREATION ≠ celle du lanceur"; exit 2; }
+grep -q "identifiant $ID " "$L/lancement.txt" || { echo "instance $ID absente de lancement.txt"; exit 2; }
+[ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
+mkdir -p "$D"
+etat() {
+    timeout 60 "$V" show instance "$ID" --raw 2>/dev/null | python3 -I -B -c '
+import json, sys
+try:
+    i = json.load(sys.stdin)
+    assert isinstance(i, dict)
+except Exception:
+    print("illisible"); sys.exit(0)
+msg = str(i.get("status_msg") or "").replace("\n", " ")[:100]
+print(i.get("actual_status"), i.get("cur_state"), i.get("dph_total"), msg)'
+}
+motif=""; code_amorce=""
+while :; do
+    maintenant=$(date -u +%s)
+    e=$(etat)
+    printf '%s %s\n' "$(date -u +%FT%TZ)" "$e" >> "$D/etats.txt"
+    timeout 60 "$V" logs "$ID" --tail 40 2>/dev/null | grep -E '^(AMORCE|ECHELLE) ' > "$D/journal-instance.txt.nouveau" || true
+    [ -s "$D/journal-instance.txt.nouveau" ] && mv "$D/journal-instance.txt.nouveau" "$D/journal-instance.txt"
+    rm -f "$D/journal-instance.txt.nouveau"
+    if [ -s "$D/journal-instance.txt" ] && grep -q '^AMORCE .* fin, code' "$D/journal-instance.txt"; then
+        code_amorce=$(grep '^AMORCE .* fin, code' "$D/journal-instance.txt" | tail -1 | sed 's/.*fin, code //')
+        motif="fin de l'amorce, code $code_amorce"; break
+    fi
+    case "$e" in exited*|stopped*) motif="conteneur sorti"; break ;; esac
+    if [ $((maintenant - CREATION)) -ge "$DUREE_MAX_S" ]; then motif="plafond de durée ($DUREE_MAX_S s)"; break; fi
+    sleep "$PAS_S"
+done
+echo "$(date -u +%FT%TZ) : arrêt demandé, motif : $motif" | tee -a "$D/arret.txt"
+timeout 60 "$V" stop instance "$ID" >> "$D/arret.txt" 2>&1
+sleep "$ATTENTE_ARRET_S"
+e=$(etat)
+echo "$(date -u +%FT%TZ) : état relu : $e" | tee -a "$D/arret.txt"
+case "$e" in
+    *stopped*|*exited*) ;;
+    *) echo "arrêt non relu : vérifier l'instance $ID (champs filtrés)" | tee -a "$D/arret.txt"; exit 6 ;;
+esac
+if [ -n "$code_amorce" ]; then
+    [ "$code_amorce" = 0 ] && exit 0
+    echo "l'amorce a fini en échec (code $code_amorce) : voir journal-instance.txt" | tee -a "$D/arret.txt"; exit 7
+fi
+exit 5
