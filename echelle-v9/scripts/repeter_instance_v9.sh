@@ -71,13 +71,13 @@ cas ls-remote-en-echec 1 "${COMMUN[@]}" COMMIT="$C" BRANCHE=donnees/essai-a6 TRA
 # 7. téléchargement refusé (jeton factice sur un modèle à licence ; aucune carte : PERMETTRE_SANS_CARTE)
 cas telechargement-refuse 1 "${COMMUN[@]}" COMMIT="$C" BRANCHE=donnees/essai-a7 RACINE_AMORCE="$E/telechargement-refuse" \
     HF_TOKEN=hf_jeton_factice_essai PERMETTRE_SANS_CARTE=1 HF_HOME="$E/telechargement-refuse/cache-hf" bash "$A"
-# 8 à 10. DUREE_MAX_S absente, 4 499 ou 10 801 s : l'amorce refuse avant tout clonage et tout calcul (CLY-03, CLZ-04)
+# 8 à 10. DUREE_MAX_S absente, 4 499 ou 21 601 s : l'amorce refuse avant tout clonage et tout calcul (CLY-03, CLZ-04)
 cas duree-absente 1 "${SANS_TEMPS[@]}" CREATION_S="$MAINTENANT" COMMIT="$C" BRANCHE=donnees/essai-a8 \
     RACINE_AMORCE="$E/duree-absente" MODELE_LOCAL="$MIN" bash "$A"
 cas duree-4499 1 "${SANS_TEMPS[@]}" DUREE_MAX_S=4499 CREATION_S="$MAINTENANT" COMMIT="$C" BRANCHE=donnees/essai-a9 \
     RACINE_AMORCE="$E/duree-4499" MODELE_LOCAL="$MIN" bash "$A"
-cas duree-10801 1 "${SANS_TEMPS[@]}" DUREE_MAX_S=10801 CREATION_S="$MAINTENANT" COMMIT="$C" BRANCHE=donnees/essai-a10 \
-    RACINE_AMORCE="$E/duree-10801" MODELE_LOCAL="$MIN" bash "$A"
+cas duree-21601 1 "${SANS_TEMPS[@]}" DUREE_MAX_S=21601 CREATION_S="$MAINTENANT" COMMIT="$C" BRANCHE=donnees/essai-a10 \
+    RACINE_AMORCE="$E/duree-21601" MODELE_LOCAL="$MIN" bash "$A"
 # 11. CREATION_S absente : refus (CLZ-05)
 cas creation-absente 1 "${SANS_TEMPS[@]}" DUREE_MAX_S=4500 COMMIT="$C" BRANCHE=donnees/essai-a11 \
     RACINE_AMORCE="$E/creation-absente" MODELE_LOCAL="$MIN" bash "$A"
@@ -135,7 +135,7 @@ n=$(grep -c "s restants avant le plafond après le clonage" "$E/clonage-lent/sor
 resume "clonage lent : refus après le clonage" "1" "$n" "$([ "$n" = 1 ] && echo conforme || echo ÉCART)"
 absente "clonage lent" donnees/essai-a17
 # 16. chaque refus précoce de l'amorce écrit sa ligne de fin, que la surveillance relit (CLW-08, CLU-04)
-for c in duree-absente duree-4499 duree-10801 creation-absente creation-trop-ancienne mauvais-commit clonage-bloque \
+for c in duree-absente duree-4499 duree-21601 creation-absente creation-trop-ancienne mauvais-commit clonage-bloque \
          clonage-lent; do
     f=$(grep -c '^AMORCE .* : fin, code 1$' "$E/$c/sortie.log")
     resume "$c : ligne de fin" "1" "$f" "$([ "$f" = 1 ] && echo conforme || echo ÉCART)"

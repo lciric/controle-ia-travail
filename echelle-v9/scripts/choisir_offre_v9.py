@@ -13,7 +13,7 @@ Unités de Vast : gpu_ram en Mo ; inet_down en Mb/s ; dph_total = location + sto
 = stockage seul, en USD/h, qui court encore entre l'arrêt et la destruction ; inet_down_cost et inet_up_cost en USD/Go.
 
   T = TOLERANCE_PRIX ; fixe = T × (DESCENTE_GO × descente + MONTEE_GO × remontée + STOCKAGE_APRES_H × stockage) + MARGE
-  durée plafonnée = min(10 800 s, (plafond − fixe) / (T × dph_total)), au moins DUREE_MIN_S
+  durée plafonnée = min(21 600 s, (plafond − fixe) / (T × dph_total)), au moins DUREE_MIN_S
   pire = durée plafonnée × T × dph_total + fixe ≤ plafond
 
     python -I -B choisir_offre_v9.py OFFRES_BRUT OFFRE_SORTIE PRIX_MAX DESCENTE_MAX PLAFOND_GO JOURNAL OFFRES_RELUES
@@ -31,7 +31,7 @@ STOCKAGE_APRES_H = 24.0    # heures de stockage entre l'arrêt et la destruction
 MARGE = 0.20               # USD : latence de la surveillance ; couvre 195,9 s au prix le plus haut admis (1,05 × 3,5 USD/h),
                            # la surveillance demande l'arrêt au plus 60 s après le plafond, puis 30 s d'appel : 90 s (CLU-03)
 TOLERANCE_PRIX = 1.05      # prix relu admis jusqu'à 5 % au-dessus de l'offre ; tout le pire est compté à ce prix (CLZ-03)
-DUREE_PLAFOND_S = 10800      # v9 : 3 h (mot de Lazar, R-555 : laisser au 70B le temps de finir)
+DUREE_PLAFOND_S = 21600      # v9 : 6 h, garde-fou contre une machine bloquée (mots de Lazar, R-555)
 DUREE_MIN_S = 4500         # en dessous, le run (≈ 1 h attendue) n'a pas la marge voulue
 DEBIT_MIN_MBPS = 2000      # descente (CLZ-05)
 CARTES_MIN, CARTES_MAX, RAM_CARTE_MIN_MO, RAM_TOTALE_MIN_MO = 2, 4, 46000, 160000

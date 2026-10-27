@@ -15,12 +15,12 @@
 #     lanceur) : délai = CREATION_S + DUREE_MAX_S − 600 s − maintenant, au plus DUREE_MAX_S − 600 s ;
 #   - moins de DELAI_MIN_S restant (le run demande ≈ 1 h) : arrêt, aucun calcul ;
 #   - DELAI_ESSAI_S, réservée à la répétition locale, remplace le délai pour éprouver la garde.
-# Sans DUREE_MAX_S dans [4 500 ; 10 800] ou sans CREATION_S lisible : arrêt, aucun calcul. Clone superficiel de la
+# Sans DUREE_MAX_S dans [4 500 ; 21 600] ou sans CREATION_S lisible : arrêt, aucun calcul. Clone superficiel de la
 # branche d'outils au commit COMMIT ; une seconde exécution refuse de repartir (dossier présent, R12).
 # Variables passées par --env à la création de l'instance :
 #   COMMIT       commit de la branche d'outils `outils/echelle-conscience-eval-v9` à exécuter
 #   BRANCHE      branche neuve des résultats (une branche qui existe déjà arrête avant tout calcul)
-#   DUREE_MAX_S  plafond de durée du lanceur, en secondes (4 500 à 10 800), compté depuis la création
+#   DUREE_MAX_S  plafond de durée du lanceur, en secondes (4 500 à 21 600), compté depuis la création
 #   CREATION_S   heure de la création (secondes depuis 1970, UTC), prise par le lanceur juste avant `vastai create`
 #   GH_TOKEN     jeton GitHub à grain fin, limité au dépôt de travail privé lciric/controle-ia-travail (jamais la
 #                copie expurgée publique lciric/controle-ia ; N-016)
@@ -39,8 +39,8 @@ CLONAGE_S=600
 [ -n "${COMMIT:-}" ] || refus "COMMIT absent"
 [ -n "${BRANCHE:-}" ] || refus "BRANCHE absente"
 [ -n "${GH_TOKEN:-}" ] || refus "GH_TOKEN absent"
-if ! [[ "${DUREE_MAX_S:-}" =~ ^[0-9]+$ ]] || [ "$DUREE_MAX_S" -lt 4500 ] || [ "$DUREE_MAX_S" -gt 10800 ]; then
-    refus "DUREE_MAX_S absente ou hors de [4 500 ; 10 800] s"
+if ! [[ "${DUREE_MAX_S:-}" =~ ^[0-9]+$ ]] || [ "$DUREE_MAX_S" -lt 4500 ] || [ "$DUREE_MAX_S" -gt 21600 ]; then
+    refus "DUREE_MAX_S absente ou hors de [4 500 ; 21 600] s"
 fi
 [[ "${CREATION_S:-}" =~ ^[0-9]{10}$ ]] || refus "CREATION_S absente ou illisible"
 if [ -n "${DELAI_ESSAI_S:-}" ]; then

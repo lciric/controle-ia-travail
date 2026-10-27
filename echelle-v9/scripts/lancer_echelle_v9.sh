@@ -26,7 +26,7 @@
 # 7 création douteuse (vérifier les instances à la main, champs filtrés, jamais --raw sans filtre) ; 2 tout autre arrêt
 # avant la création.
 # v9 (27 octobre 2026, après la levée du préenregistrement par Lazar, R-552 ; mots de Lazar, R-555) : texte scellé
-# `prereg/test-echelle-conscience-eval-v10.md` ; plafond de durée porté à 3 h et plafond de dépense à 14 USD ; RECHARGE_AUTO=1
+# `prereg/test-echelle-conscience-eval-v10.md` ; plafond de durée porté à 6 h (garde-fou : l'instance s'arrête à la fin du calcul) et plafond de dépense à 24 USD ; RECHARGE_AUTO=1
 # (recharge automatique du compte déclarée) : le crédit est relu et consigné, le minimum n'est plus exigé.
 # Usage : [RECHARGE_AUTO=1] VASTAI=<chemin de vastai 1.8.3> lancer_echelle_v9.sh DOSSIER_TRACES COMMIT GO_ID
 set -euo pipefail
@@ -44,8 +44,8 @@ BRANCHE_CODE=outils/echelle-conscience-eval-v9
 BRANCHE=donnees/echelle-conscience-eval-v9
 ETIQUETTE=echelle-v9
 PREREG=prereg/test-echelle-conscience-eval-v10.md
-PLAFOND_GO=14.00       # USD : plafond demandé à Lazar (dépense au pire, au prix majoré de la tolérance, stockage après l'arrêt compris) ;
-                       # v9 : 14 au lieu de 8, pour laisser jusqu'à 3 h au calcul (mot de Lazar, R-555)
+PLAFOND_GO=24.00       # USD : plafond demandé à Lazar (dépense au pire, au prix majoré de la tolérance, stockage après l'arrêt compris) ;
+                       # v9 : 24 au lieu de 8 : le calcul n'est coupé qu'à sa fin ; garde-fou de 6 h contre une machine bloquée (mots de Lazar, R-555)
 RECHARGE_AUTO=${RECHARGE_AUTO:-0}   # v9 : 1 si la recharge automatique du compte est déclarée (mot de Lazar, R-555)
 [[ "$RECHARGE_AUTO" =~ ^[01]$ ]] || { echo "RECHARGE_AUTO : 0 ou 1"; exit 2; }
 PRIX_MAX=3.50          # USD de l'heure, toutes cartes, stockage compris

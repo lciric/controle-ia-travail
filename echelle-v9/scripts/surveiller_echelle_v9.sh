@@ -19,7 +19,7 @@
 #     lancé (« surveillance attendue H » dans lancement.txt).
 # Depuis la v5 (CLW-08) : l'amorce écrit sa ligne de fin aussi sur ses refus précoces (sortie 7 ici). Depuis la v4
 # (CLZ-11) :
-#   - DUREE_MAX_S exigée, dans [4 500 ; 10 800] s, et égale à celle que le lanceur a écrite dans lancement.txt
+#   - DUREE_MAX_S exigée, dans [4 500 ; 21 600] s, et égale à celle que le lanceur a écrite dans lancement.txt
 #     (« duree_max_s N »), avec la même création (« creation C ») et le même identifiant ; aucun repli silencieux ;
 #   - le code de fin de l'amorce est relu, consigné dans arret.txt et rendu : une amorce finie en échec ne rend plus 0.
 # Toutes les PAS_S (60) secondes : état de l'instance (champs filtrés : jamais la réponse brute, qui porte
@@ -40,8 +40,8 @@ PAS_S=${PAS_S-60}                   # défauts si absents ; une valeur vide est 
 ATTENTE_ARRET_S=${ATTENTE_ARRET_S-20}
 APPEL_S=${APPEL_S-30}
 KILL_APRES_S=5                      # KILL après TERM, pour un outil qui ignore le signal d'arrêt (CLT-04)
-[[ "$DUREE_MAX_S" =~ ^[0-9]+$ ]] && [ "$DUREE_MAX_S" -ge 4500 ] && [ "$DUREE_MAX_S" -le 10800 ] \
-    || { echo "DUREE_MAX_S absente, illisible ou hors de [4 500 ; 10 800] s"; exit 2; }
+[[ "$DUREE_MAX_S" =~ ^[0-9]+$ ]] && [ "$DUREE_MAX_S" -ge 4500 ] && [ "$DUREE_MAX_S" -le 21600 ] \
+    || { echo "DUREE_MAX_S absente, illisible ou hors de [4 500 ; 21 600] s"; exit 2; }
 borne() {        # NOM VALEUR MIN MAX : entier décimal sans zéro de tête, dans [MIN ; MAX], sinon refus (CLU-02)
     [[ "$2" =~ ^(0|[1-9][0-9]{0,3})$ ]] && [ "$2" -ge "$3" ] && [ "$2" -le "$4" ] \
         || { echo "$1=$2 illisible ou hors de [$3 ; $4] s (CLU-02)"; exit 2; }

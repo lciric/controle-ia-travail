@@ -51,7 +51,7 @@ def test_offre_saine_moins_chere_et_plafonnee(tmp_path):
     code, sortie = choisir(tmp_path, [offre(1, dph_total=3.0), offre(2, dph_total=2.4), offre(3, num_gpus=1)])
     assert code == 0 and sortie[0] == "2"
     duree, pire = int(sortie[3]), float(sortie[4])
-    assert duree <= 10800 and pire <= 8.0
+    assert duree <= 21600 and pire <= 8.0
     o = json.loads((tmp_path / "offre.json").read_text())
     assert o["tolerance_prix"] == 1.05 and o["attendu_destruction_rapide"] < o["estime"]
 
@@ -278,7 +278,7 @@ def test_surveillance_conteneur_sorti_sans_ligne_de_fin(tmp_path):
     assert code == 5 and arrets == ["12345678"] and "conteneur sorti" in txt
 
 
-@pytest.mark.parametrize("kw", [dict(sans_duree=True), dict(duree="12000"), dict(duree="10801"), dict(duree="4499"),
+@pytest.mark.parametrize("kw", [dict(sans_duree=True), dict(duree="22000"), dict(duree="21601"), dict(duree="4499"),
                                 dict(duree="abc"), dict(duree="5000", duree_lancement="4500"),
                                 dict(ident="87654321"), dict(creation_lancement="1700000000"),
                                 dict(attendue="0" * 64), dict(attendue="")])          # CLV-06
@@ -507,13 +507,13 @@ def test_lanceur_et_surveillance_du_commit(tmp_path, lanceur_modifie, attendu):
     assert (f"surveillance attendue {sha_fichier(SURVEILLANCE)}" in ecrit) is (attendu == 0)
 
 
-# ---------- v9 (R-555) : plafond de durée de 3 h ; crédit et recharge automatique déclarée ----------
+# ---------- v9 (R-555) : plafond de durée de 6 h ; crédit et recharge automatique déclarée ----------
 
-def test_offre_trois_heures_sous_quatorze_usd(tmp_path):
-    """v9 : à 3,37 USD/h, un plafond de 14 USD laisse les 3 h entières ; 8 USD les raccourcit."""
+def test_offre_six_heures_sous_vingt_quatre_usd(tmp_path):
+    """v9 : à 3,37 USD/h, un plafond de 24 USD laisse les 6 h entières ; 8 USD les raccourcissent."""
     o = [offre(1, dph_total=3.3694, inet_down_cost=0.004, storage_total_cost=0.0694)]
-    code, sortie = choisir(tmp_path, o, plafond="14")
-    assert code == 0 and int(sortie[3]) == 10800 and float(sortie[4]) <= 14.0
+    code, sortie = choisir(tmp_path, o, plafond="24")
+    assert code == 0 and int(sortie[3]) == 21600 and float(sortie[4]) <= 24.0
     (tmp_path / "huit").mkdir()
     code, sortie = choisir(tmp_path / "huit", o, plafond="8")
     assert code == 0 and int(sortie[3]) < 7200 and float(sortie[4]) <= 8.0
