@@ -94,7 +94,12 @@ def executer_pole(population, temoins, adaptateur, config, generations, budget_t
                                                  "empreinte": getattr(monde_noyau, "empreinte_banque", None),
                                                  "tranches": tranches},  # v11 (C11 du socle) : la banque au manifeste
         population=[f.identifiant for f in population], temoins=[t.identifiant for t in temoins]))
-    memoire = Memoire(active=memoire_active, graine=config.graine, politique_redite=getattr(config, "politique_redite", "heritage"))
+    generateur = None
+    if monde_noyau is not None and hasattr(monde_noyau, "description_publique"):
+        from .proposeurs_references import generateur_reference_au_gabarit  # v12 : référence au gabarit du monde
+        generateur = generateur_reference_au_gabarit(monde_noyau.description_publique())
+    memoire = Memoire(active=memoire_active, graine=config.graine, politique_redite=getattr(config, "politique_redite", "heritage"),
+                      generateur_reference=generateur)
     registre = RegistreGel()
     rng = random.Random(graine_derivee(config.graine, "pole"))
     toutes, lois_connues, a_reessayer, deja, utilises = {}, {}, [], set(), set()

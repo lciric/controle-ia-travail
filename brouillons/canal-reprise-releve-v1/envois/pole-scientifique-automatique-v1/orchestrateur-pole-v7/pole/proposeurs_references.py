@@ -65,6 +65,20 @@ def propositions_aleatoires(description, nombre, graine, generation):
     return sortie
 
 
+def generateur_reference_au_gabarit(description):
+    """v7, version 12 (F-C4 iii) : lois de référence pour le seuil de fusion de la mémoire, tirées au même gabarit que les
+    propositions aléatoires (softmax sur un ou deux traits, poids gaussiens d'écart-type 1,2) ; `(rng, k, d) -> loi`."""
+    d_monde = len(description["traits"])
+
+    def tirer(rng, k, d):
+        dd = min(d, d_monde) if d_monde else d
+        traits = sorted(rng.sample(range(dd), rng.choice([1, 2]) if dd >= 2 else 1))
+        poids = [[rng.gauss(0.0, 1.2) for _ in traits] for _ in range(k)]
+        return _softmax_sur(traits, poids, k, d)
+
+    return tirer
+
+
 def _log_vraisemblance(loi, instances, issues, proba):
     return sum(math.log(max(1e-12, proba(loi, inst, [], 0)[y])) for inst, y in zip(instances, issues))
 

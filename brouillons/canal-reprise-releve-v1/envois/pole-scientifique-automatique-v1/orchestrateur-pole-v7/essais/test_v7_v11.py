@@ -230,5 +230,44 @@ class CleDuRelaisHorsDeProc(unittest.TestCase):
         self.assertEqual(resultats["par_environnement"]["noms_dans_proc"], ["ANTHROPIC_API_KEY"])
 
 
+
+
+class SeuilDeFusionAuGabarit(unittest.TestCase):
+    """F-C4 (iii), v12 : avec une référence tirée au gabarit du monde, les lois du gabarit ne fusionnent plus par dizaines."""
+
+    def test_fausses_fusions_au_gabarit(self):
+        from exemples.generer_monde_grammaire_v2 import generer_monde
+        from pole.memoire import Memoire
+        from pole.proposeurs_references import generateur_reference_au_gabarit, propositions_aleatoires
+        from pole.monde_banque import MondeBanque
+        import tempfile
+        from essais.aides import BASE
+        os.makedirs(BASE, exist_ok=True)
+        tmp = tempfile.mkdtemp(dir=BASE)
+        banque, _, _ = generer_monde(20261104)
+        chemin = os.path.join(tmp, "banque.json")
+        from pole.outils import ecrire_json_scelle
+        ecrire_json_scelle(chemin, banque)
+        description = MondeBanque(chemin, 3).description_publique()
+        lois = [p["loi_predictive"] for p in propositions_aleatoires(description, 60, 5, 0)]
+        monit = [p["moniteur"] for p in propositions_aleatoires(description, 60, 5, 0)]
+
+        def fp(ident, loi, moniteur):
+            return fiche(ident, enonce=VRAIE, loi_predictive=loi, severite_attendue=0.05, seuil=20.0,
+                         espace_instances={"nombre_issues": 3, "dimension": 4, "moniteur": moniteur})
+
+        taux = {}
+        for nom, gen in (("defaut", None), ("gabarit", generateur_reference_au_gabarit(description))):
+            m = Memoire(graine=1, generateur_reference=gen)
+            for i in range(30):  # archive : 30 lois du gabarit, éliminées
+                f = fp(f"A{i}", lois[i], monit[i])
+                f.statut = "eliminee"
+                m.indexer(f, issue_testee(-1.0), 0)
+            fusions = sum(m.chercher_classe(fp(f"N{i}", lois[i], monit[i]))[0] is not None for i in range(30, 60))
+            taux[nom] = fusions / 30
+        self.assertLessEqual(taux["gabarit"], 0.15, taux)  # 5 % par fiche visé ; borne large
+        self.assertLessEqual(taux["gabarit"], taux["defaut"], taux)
+
+
 if __name__ == "__main__":
     unittest.main()

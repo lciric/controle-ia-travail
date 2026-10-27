@@ -88,8 +88,13 @@ class Memoire:
     POLITIQUES_REDITE = ("heritage", "refus", "rien")
 
     def __init__(self, active=True, seuil_redite=0.5, seuil_severe=0.05, nb_gabarits=3, longueur_lecon=1500, graine=0,
-                 seuil_signature=SEUIL_SIGNATURE, politique_redite="heritage"):
+                 seuil_signature=SEUIL_SIGNATURE, politique_redite="heritage", generateur_reference=None):
         self.active = active
+        # v7, version 12 (contre-lecture F-C4 iii) : la référence des divergences (qui calibre le seuil de fusion à 5 % de
+        # fausses fusions par fiche) se tire au gabarit du monde quand il en a un (lois plus douces, dimension 4 : avec la
+        # référence de force 1,5 en dimension 2, 116 paires sur 780 de lois du gabarit fusionnaient, et 21 propositions sur
+        # 26 étaient refusées « classe déjà éprouvée »). `generateur_reference(rng, k, d) -> loi` ; défaut : softmax de force 1,5.
+        self.generateur_reference = generateur_reference
         self.seuil_redite = seuil_redite
         self.seuil_severe = seuil_severe
         self.nb_gabarits = nb_gabarits
@@ -130,8 +135,9 @@ class Memoire:
             from . import selection_pari as sp
             rng = random.Random(graine_derivee(self.graine, "reference-signature", k, d))
             sonde, valeurs = self._sonde(k, d), []
+            tirer = self.generateur_reference or (lambda r, kk, dd: sp.loi_softmax_aleatoire(r, kk, dd))
             for _ in range(PAIRES_DE_REFERENCE):
-                la, lb = sp.loi_softmax_aleatoire(rng, k, d), sp.loi_softmax_aleatoire(rng, k, d)
+                la, lb = tirer(rng, k, d), tirer(rng, k, d)
                 sa = (k, d, None, [sp.proba(la, x, [], 0) for x in sonde])  # v11 : signature à quatre champs (moniteur)
                 sb = (k, d, None, [sp.proba(lb, x, [], 0) for x in sonde])
                 valeurs.append(self.divergence_moyenne(sa, sb))
