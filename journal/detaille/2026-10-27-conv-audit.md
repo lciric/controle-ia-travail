@@ -193,3 +193,20 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   mémoire au gabarit du monde, fusions à tort 33/50 → 1/50). Programme de conception v4 (`30bb257`). Messages n° 116 à
   118. Recherche de clés avant chaque poussée : rien. Instances : aucune chez moi. Sous-agents en cours : contre-lecture de
   la v4.
+- **Nuit (19:40 à 20:46 UTC ; ajout écrit à 20:46 UTC, heure lue sur `date -u` : 20:46:28).** Lazar (20:47 Paris) : « je suis
+  tes recommandations » sur D-S1 à D-S12 du pari, et H1a porte la revendication de H1 (explication en clair donnée, sans
+  sigles) → **N-055** inscrite par session-depot. Bascule sur **Opus 5.5** vers 21:00 Paris ; **redémarrage du conteneur**
+  vers 20:00 UTC (rien de versé perdu ; la contre-lecture de la v4 était finie, son rapport intact). **Pari** : contre-lecture
+  de la v4 (« corrections locales ») → **v5** (`95af46e4…` : arrêt à m_g/α_g, héritage pour les fiches relancées et règle en
+  ligne pour les nouvelles, garantie dite exactement, clé de l'héritage en entier, coûts de la règle en ligne ; D-S24 à
+  D-S28) ; contre-lecture de la v5 par Fable lancée. **Deux nœuds présentés à Lazar** au format de décision (comparateurs
+  de G1 ; intervalle de N-054 point 4). **v7 versions 14 à 18** (225 essais) : banque v3 (trois parties par tâche, témoins
+  établis par confirmation croisée, témoins faux par permutation dans la tâche), lecture de la couche 1 bis, plusieurs
+  runs, moniteurs plantés sur les traits réels, traits internes (composantes principales des vecteurs d'activation,
+  ajustées sur le calibrage ; proposition avec défaut sous 48 heures, lecture non lancée). **Couche 1 bis lue** sur la
+  banque complète versée par session-depot (`93d5d5c8`, sans `e2`) : validité tenue, dents sur témoins plantés jusqu'à la
+  force 0,5 à 96 épisodes par fiche, **rien sur les 13 moniteurs réels** (aucune relation trait du texte → note). **Devis du
+  duel v2** (trois conditions avant le GO). Session-depot : « mesures fortes » refusé au tour 2 par Fable et Opus (catégorie
+  « cyber ») — leçon : pas de tour d'équipe rouge croisée sur ce sujet sans décision de Lazar. **Passation v8**
+  (`228b176`). Erreurs d'heure d'en-tête encore (n° 120, LISEZMOI v17, nœuds) : dites dans la passation. Messages n° 119 à
+  122. Recherche de clés avant chaque poussée : rien. Instances : aucune chez moi.
