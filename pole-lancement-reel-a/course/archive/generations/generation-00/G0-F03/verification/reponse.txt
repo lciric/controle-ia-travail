@@ -1,0 +1,17 @@
+Je commence par inspecter le dossier.
+Les empreintes `fiche.json` et `engagement.json` correspondent à la déclaration. Je lis maintenant tous les fichiers.
+Le garde-fou impose de rester dans le dossier de l'expérience ; je rejoue dans un sous-dossier `rejeu/` du dossier de vérification.
+Mon budget est épuisé avant d'avoir pu exécuter le rejeu : le garde-fou a bloqué deux fois mes commandes sur des faux positifs (tokens `/len`, `/120`, `~` interprétés comme chemins hors dossier). Je ne peux donc pas confirmer par exécution.
+
+**Ce que j'ai vérifié par lecture :**
+- `sha256(fiche.json)` = `6fae74c9…` et `sha256(engagement.json)` = `4a8de271…` : conformes à la déclaration et aux constantes codées dans `ranger_tirages.py`.
+- Tous les sidecars `.sha256` correspondent aux fichiers présents.
+- `engagement.json` reprend exactement la loi softmax de la fiche, `seuil_richesse` = 20.0 = `seuil` fiche, 120 instances en dimension 4, 3 issues, 2 sous-populations, `part_calibrage` = 0, bibliothèque nulle conforme à l'énoncé du nul (marginale, uniforme, moyennes glissantes + urne), `plan_execution` = `ordre_secret`.
+- `ranger_tirages.py` ne fait aucun calcul : il vérifie les liaisons d'empreintes (fiche, engagement, ordre, mesures), que l'ordre est une permutation de 0..119, que les issues sont des entiers dans [0,3), puis recopie `mesures.issues` tel quel. Par lecture, `tirages-declares.json` correspond champ à champ à ce qu'il produirait (`empreinte_engagement`, `empreinte_ordre`, 120 issues identiques à `mesures.json`, `plan_execution`).
+- Aucun raccourci visible dans le code (pas de lecture de la loi, pas de modification des issues).
+
+**Ce que je n'ai pas pu faire :** exécuter réellement le script, recalculer `empreinte_ordre` (`c9e5f821…`) à partir de `ordre-execution.json`, et tester la plausibilité statistique des issues contre la loi (taux d'argmax, log-richesse indicative). Le verdict final (W ≥ 20) n'est pas dans le dossier ; je ne peux donc attester que de la conformité du test, pas du franchissement du seuil.
+
+```json
+{"confirme": false, "test_conforme": true, "motif": "Test conforme par lecture : empreintes fiche/engagement vérifiées, loi, seuil 20.0, n=120, bibliothèque nulle et plan identiques à la fiche gelée ; le code recopie mesures.json sans calcul et tirages-declares.json y correspond champ à champ. Mais le rejeu effectif a été bloqué deux fois par le garde-fou de chemins (faux positifs sur '/len', '/120', '~') et mon budget est épuisé : empreinte_ordre non recalculée, issues non testées contre la loi, verdict de richesse absent du dossier. Confirmation à rejouer par un vérificateur disposant de budget."}
+```

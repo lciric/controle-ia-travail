@@ -1,0 +1,14 @@
+J'ai écrit `ranger_mesures.py`, qui recopie dans `tirages.json` les issues déposées par le noyau sans en changer aucune. Je l'ai lancé deux fois : les deux sorties sont identiques, mot pour mot, à `mesures.json` (même SHA-256, `8a6f41f7…`).
+
+Avant d'écrire, le script vérifie que :
+- **Fiche et engagement :** leurs empreintes sont toujours celles du gel. Je n'ai pas modifié `fiche.json`.
+- **Lien avec l'engagement :** `mesures.json` et `ordre-execution.json` portent bien l'empreinte de l'engagement gelé.
+- **Ordre d'exécution :** c'est une permutation des 120 instances du plan.
+- **Empreinte de l'ordre :** la valeur `804cd0d0…` de `mesures.json` n'est pas le SHA-256 du fichier `ordre-execution.json`. C'est celui de la liste `ordre` écrite en JSON compact avec clés triées. Le script la recalcule ainsi et elle concorde.
+- **Issues :** il y en a 120, chacune vaut 0, 1 ou 2.
+
+`tirages.json` contient quatre champs : `empreinte_engagement`, `issues` (rangées à l'indice de leur instance), `plan_execution` (« ordre_secret ») et `empreinte_ordre`. Je n'ai calculé aucune richesse.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_mesures.py", "empreinte_fiche": "463c425fe6b6a7a8beeef533914068a13886b1ecd0d647173bdd293a14c625e5", "empreinte_engagement": "796cab83d9068b33a36804a1842c25f76da684415b435aef86e2b217f1ec5aa2"}
+```

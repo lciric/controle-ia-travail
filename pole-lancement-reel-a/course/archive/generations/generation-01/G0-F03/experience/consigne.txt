@@ -1,0 +1,79 @@
+Tu es expérimentateur. Le test ci-dessous est gelé : son empreinte SHA-256 est 6fae74c926f04a79d579c6665b01d37963229dc5a7077f5c5bb0691bbe07a512.
+
+La fiche est dans `fiche.json` (son SHA-256 doit rester égal à l'empreinte). Ne la modifie jamais.
+
+Fiche publique :
+{
+ "ce_que_la_fille_predit_de_plus": "",
+ "ce_qui_change": {},
+ "contraintes": [
+  "independant"
+ ],
+ "cout_borne": 1.0,
+ "domaines": [
+  "traces"
+ ],
+ "enonce": "Le premier descripteur des traces de l'organisme oriente la classe de sortie",
+ "espace_instances": {
+  "dimension": 4,
+  "nombre_issues": 3,
+  "sous_populations": 2
+ },
+ "identifiant": "G0-F03",
+ "loi_predictive": {
+  "biais": [
+   0.027373,
+   0.069356,
+   -0.14223
+  ],
+  "poids": [
+   [
+    -1.50717,
+    0.46273,
+    -0.768402,
+    0.091445
+   ],
+   [
+    -2.199088,
+    -1.952378,
+    -2.518226,
+    -0.481216
+   ],
+   [
+    3.145974,
+    1.917086,
+    -1.530333,
+    1.335966
+   ]
+  ],
+  "type": "softmax"
+ },
+ "metrique": "richesse W contre la bibliothèque aveugle",
+ "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes)",
+ "operateurs": [
+  "projection",
+  "moyenne"
+ ],
+ "prediction": {
+  "signe": "+",
+  "texte": "log-richesse moyenne par tirage positive contre la bibliothèque nulle",
+  "valeur": 0.1
+ },
+ "protocole": "pari sur 120 tirages frais choisis ex ante par divergence",
+ "seuil": 20.0,
+ "severite_attendue": 0.05
+}
+
+Sélection par pari : l'engagement gelé (`engagement.json`, empreinte 4a8de271de43a6418f4f993358dcfb01a6bc425495d0824071e4004f7a95a8bc) fixe la loi prédictive, la bibliothèque nulle et le plan d'instances. Produis les issues aux instances du plan par un code rejouable, écris-les dans `tirages.json` ({empreinte_engagement, issues}) et termine par un bloc ```json {"tirages": "tirages.json", "code": "<chemin>", "empreinte_fiche": "<sha256>", "empreinte_engagement": "<sha256>"}```. Tu ne calcules aucune richesse : l'orchestrateur la calcule.
+
+Ordre d'exécution imposé par le noyau (`ordre-execution.json`, écrit après le gel) : au temps s, traite l'instance d'indice ordre[s] du plan ; range chaque issue à l'indice de son instance ; écris aussi dans `tirages.json` le plan (« ordre_secret ») et l'empreinte de l'ordre.
+
+Monde tenu par le noyau : tu ne mesures rien toi-même (ni réseau ni clé). Les issues du monde aux instances du plan, déjà produites dans l'ordre imposé, sont déposées dans `mesures.json` ({empreinte_engagement, issues, plan_execution, empreinte_ordre}). Écris un code rejouable qui vérifie que `mesures.json` est lié à l'engagement gelé (même empreinte) et range ces issues telles quelles dans `tirages.json` (mêmes champs). Toute issue différente de celles déposées sera rejetée par le noyau.
+
+Mémoire du pôle (à titre d'aide, le test gelé prime) :
+Gabarits de protocoles ayant survécu à un test sévère :
+- [G0-F05] sévérité annoncée 0.05 ; métrique : richesse W contre la bibliothèque aveugle ; protocole : pari sur 120 tirages frais choisis ex ante par divergence
+- [G0-F07] sévérité annoncée 0.05 ; métrique : richesse W contre la bibliothèque aveugle ; protocole : pari sur 120 tirages frais choisis ex ante par divergence
+
+Leçons de la génération 0 :
+Génération 0 : 6 conjectures. 2 survivent, 2 sont éliminées, 2 restent indécises. Il y a eu 2 désaccords entre expérimentateur et vérificateur, et aucune redite refusée. Causes d'élimination fréquentes : (1) une richesse restée sous le seuil 1/α, donc réfutée par le pari (2 cas, un en arrêt et un en mémoire spectrale) ; (2) une vérification sans conclusion (1 cas) ; (3) un verdict non confirmé par le vérificateur (1 cas). Dans ce dernier cas, empreintes, fiche et engagement étaient conformes, mais le rejeu du code a été bloqué par les hooks de l'environnement (set interdit, écriture hors du dossier interdite) et le budget s'est épuisé. Ni tirages.json ni empreinte_ordre n'ont pu être produits, et reponse.txt manquait, donc aucun verdict chiffré n'a pu être comparé au seuil. Leçons : exécuter le rejeu dans le dossier de l'expérience, garder du budget pour le rejeu et toujours écrire reponse.txt. Protocoles qui ont fonctionné (G0-F05, G0-F07) : un pari sur 120 tirages frais choisis ex ante par divergence, mesuré par la richesse W contre la bibliothèque aveugle, avec une sévérité attendue α = 0,05. Morphologie et représentation : 1 conjecture tranchée chacune, aucune éliminée.

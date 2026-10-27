@@ -1,0 +1,15 @@
+J'ai écrit `ranger_tirages.py`, je l'ai exécuté, et `tirages.json` contient exactement les 120 issues déposées par le noyau dans `mesures.json`. Les deux fichiers ont un contenu identique, mêmes champs compris.
+
+Avant d'écrire quoi que ce soit, le script vérifie :
+- **Fichiers gelés :** `fiche.json` et `engagement.json` ont bien leurs empreintes gelées. `fiche.json` n'a pas été modifiée.
+- **Lien à l'engagement :** `mesures.json` et `ordre-execution.json` portent la même empreinte que l'engagement (`9894b6d8…`).
+- **Ordre :** `ordre` couvre chacun des indices 0 à 119 une seule fois. L'empreinte de l'ordre est `20085f6c…`, identique dans `mesures.json`. Elle se calcule sur la liste `ordre` écrite en JSON compact, pas sur le fichier entier.
+- **Issues :** il y en a 120, chacune vaut 0, 1 ou 2.
+
+Le script parcourt ensuite les instances dans l'ordre imposé et range chaque issue à l'indice de son instance, sans rien changer. Il ne mesure rien, ne tire rien au hasard et ne calcule aucune richesse.
+
+Pour le rejouer : `python3 -I ranger_tirages.py .`
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "6e468f9a63b776f77baa85d626c44070d34a2f94b725a6fe81f06bc3412f313f", "empreinte_engagement": "9894b6d8b596730f93f7b52ff4bdfe37c5d4dc1c9a815bbc57a4c72cd44b7dbd"}
+```

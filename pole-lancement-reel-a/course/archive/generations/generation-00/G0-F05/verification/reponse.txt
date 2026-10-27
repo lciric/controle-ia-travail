@@ -1,0 +1,28 @@
+Je dispose de tout ce qu'il faut ; pas d'autre appel nécessaire.
+
+## Constats
+
+**Liaisons d'empreintes**
+- `fiche.json` → `83ec5b83…` : identique à l'empreinte annoncée, à `declaration.json`, à `engagement.json["empreinte_fiche"]` et à la constante codée en dur dans le script.
+- `engagement.json` → `aff8d07a…` : identique à la déclaration, à `mesures.json`, à `ordre-execution.json` et aux tirages déclarés.
+- Tous les fichiers `.sha256` latéraux concordent avec les fichiers présents (`reponse.txt` et `consigne.txt` sont absents du dossier, seules leurs empreintes sont là).
+- Empreinte de l'ordre recalculée (`0853948…`) = celle portée par `mesures.json` et `tirages-declares.json`.
+
+**Rejeu du code déclaré** (`python3 -I ranger_tirages.py <sous-dossier rejeu/>` sur copies des entrées)
+- Toutes les assertions passent ; 120 issues écrites.
+- `tirages.json` produit est **sémantiquement identique** à `tirages-declares.json` (mêmes 120 issues, même `empreinte_engagement`, `empreinte_ordre`, `plan_execution`). Les SHA des deux fichiers diffèrent (`7050a9…` vs `e584d1…`) uniquement par la sérialisation JSON (espaces après les séparateurs), pas par le contenu. Répartition des issues : 76 / 40 / 4.
+
+**Test exécuté = test gelé ?**
+- L'engagement reprend la fiche point par point : loi softmax avec exactement les mêmes poids et biais, 3 issues, 120 instances réparties en 2 sous-populations, dimension 4, `seuil_richesse` 20.0 = `seuil` de la fiche, `alpha` 0.05 = `severite_attendue`, bibliothèque nulle = marginale + uniforme + moyennes glissantes (+ urne, qui ne fait qu'ajouter un prédicteur aveugle, donc durcit le test), `part_calibrage` 0 (tirages tous frais), plan `ordre_secret`.
+- L'ordre d'exécution est une permutation complète de 0..119, liée à l'engagement.
+
+**Recherche de raccourcis**
+- Le script ne calcule rien : il ne fait que recopier `mesures.json["issues"]` après vérification des liaisons. La boucle « rangement dans l'ordre » est une identité (`rangees[i] = issues[i]`) — inutile mais inoffensive, aucune réindexation.
+- Aucun accès réseau, aucune graine, aucune lecture de la loi pour fabriquer des issues ; les seules données de sortie viennent de `mesures.json`, lui-même scellé par empreintes à l'engagement et à l'ordre secret. L'expérimentateur n'a pas de levier dans ce code.
+- Limite de ma vérification : la richesse W et le verdict contre le seuil 20 ne sont **pas** calculés dans ce dossier (ni `reponse.txt` ni fichier de richesse présents). Je confirme donc la conformité des tirages et du protocole engagé, pas la valeur numérique de W, qui relève de l'étape de scoring du pôle sur ces tirages.
+
+Note : j'ai laissé le sous-dossier `rejeu/` (copies + `tirages.json` régénéré) dans le dossier de vérification comme trace du rejeu.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py (python3 -I, copie isolée) : assertions passées, 120 issues identiques à tirages-declares.json (différence de SHA due à la seule sérialisation JSON). Empreintes fiche (83ec5b83…), engagement (aff8d07a…) et ordre (0853948…) toutes cohérentes entre fiche, engagement, mesures, ordre-execution, déclaration et tirages. L'engagement reproduit la fiche gelée (même loi softmax, 3 issues, 120 instances frais, 2 sous-populations, seuil 20, alpha 0.05, bibliothèque aveugle marginale/uniforme/moyennes glissantes), plan ordre_secret avec permutation complète. Le code ne calcule rien et ne peut manipuler les issues ; aucun raccourci détecté. Réserve : la richesse W et le verdict vs seuil 20 ne sont pas calculés dans ce dossier (reponse.txt absent), seuls les tirages et le protocole sont vérifiés ici."}
+```

@@ -1,0 +1,15 @@
+J'ai écrit `tirages.json` : il contient les 120 issues déposées par le noyau dans `mesures.json`, recopiées sans changement. Je n'ai rien mesuré ni produit moi-même, et je n'ai calculé aucune richesse. Le script tourne sans erreur et une comparaison directe montre que `tirages.json` est identique à `mesures.json`.
+
+Le script `ranger_tirages.py` (relancer avec `python3 -I ranger_tirages.py`) vérifie avant d'écrire que :
+- `fiche.json` et `engagement.json` ont toujours leurs empreintes gelées. La fiche n'a pas été modifiée.
+- `mesures.json` et `ordre-execution.json` portent bien l'empreinte de l'engagement gelé.
+- l'ordre imposé contient chaque instance du plan exactement une fois.
+- son empreinte (SHA-256 de la liste d'ordre écrite sans espaces) correspond à celle de `mesures.json` (`afe6877e…`).
+- le plan d'exécution (« ordre_secret ») est le même que dans l'engagement.
+- il y a bien 120 issues, chacune égale à 0, 1 ou 2.
+
+`tirages.json` contient les champs `empreinte_engagement`, `issues`, `plan_execution` et `empreinte_ordre`.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "315c5a81f4b550c714fd9b79572ed942ef16506280a13a719fb3e45063680434", "empreinte_engagement": "277448c25ec54bbb06722b0cefa819400a4b6653d980ac4a4c6e2907f68ee9c7"}
+```

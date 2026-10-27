@@ -1,0 +1,17 @@
+J'ai écrit `tirages.json` : il contient les 120 issues déposées par le noyau, recopiées telles quelles. Son contenu est identique champ par champ à `mesures.json`. Je n'ai rien mesuré et je n'ai calculé aucune richesse.
+
+Le script `ranger_tirages.py` produit ce fichier ; on le relance avec `python3 -I ranger_tirages.py .`. Avant d'écrire quoi que ce soit, il vérifie que :
+- `fiche.json` et `engagement.json` ont toujours les empreintes gelées, ce qui confirme que je ne les ai pas modifiés ;
+- `ordre-execution.json` et `mesures.json` portent bien l'empreinte de l'engagement ;
+- l'ordre imposé est une permutation des 120 instances du plan ;
+- l'empreinte de l'ordre inscrite dans `mesures.json` correspond bien à cet ordre ;
+- le plan est bien « ordre_secret » dans l'engagement et dans les mesures ;
+- il y a exactement 120 issues, toutes comprises entre 0 et 2.
+
+Les issues sont déjà rangées à l'indice de leur instance (l'instance ordre[s] est traitée au temps s), donc il n'y a eu aucun réordonnancement.
+
+**Point à confirmer :** l'empreinte de l'ordre (`c9e5f821…`) n'est pas le SHA-256 du fichier `ordre-execution.json`. C'est celui de la liste `ordre` écrite au format JSON compact (`json.dumps(ordre, separators=(",", ":"))`). Aucun document ne fixe cette convention : je l'ai déduite parce que c'est la seule forme essayée qui redonne la valeur notée dans `mesures.json`.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "6fae74c926f04a79d579c6665b01d37963229dc5a7077f5c5bb0691bbe07a512", "empreinte_engagement": "4a8de271de43a6418f4f993358dcfb01a6bc425495d0824071e4004f7a95a8bc"}
+```

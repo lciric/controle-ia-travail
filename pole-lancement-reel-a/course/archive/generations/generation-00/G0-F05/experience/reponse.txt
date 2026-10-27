@@ -1,0 +1,16 @@
+J'ai écrit `tirages.json` : il contient les 120 issues déposées par le noyau dans `mesures.json`, recopiées telles quelles, sans rien mesurer ni calculer de richesse.
+
+Le script `ranger_tirages.py` vérifie d'abord les liens, puis écrit le fichier. Je l'ai lancé deux fois : les deux sorties sont identiques au bit près (SHA-256 `7050a943…`), et `tirages.json` reprend exactement le contenu de `mesures.json`.
+
+Les vérifications faites par le script :
+- **Fichiers gelés :** `fiche.json` et `engagement.json` ont toujours leurs empreintes d'origine. Je n'ai pas touché à la fiche.
+- **Liens à l'engagement :** `mesures.json` et `ordre-execution.json` portent bien l'empreinte de l'engagement `aff8d07a…`.
+- **Ordre d'exécution :** `ordre` est une permutation des 120 instances du plan. Chaque issue est rangée à l'indice de son instance, en parcourant `ordre[s]` dans l'ordre imposé.
+- **Empreinte de l'ordre :** la valeur `0853948…` déposée dans `mesures.json` est l'empreinte de la liste `ordre` écrite en JSON compact, et non celle du fichier `ordre-execution.json` (`df9df22…`). Le script recalcule cette empreinte et vérifie qu'elle concorde.
+- **Issues :** il y en a 120, toutes entières et comprises entre 0 et 2.
+
+`tirages.json` contient les champs `empreinte_engagement`, `issues`, `plan_execution` (« ordre_secret ») et `empreinte_ordre`.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "83ec5b83b2a4c178b6e5f515a2dd000560c92929c5c35eaa275dd433cd2e45c6", "empreinte_engagement": "aff8d07a128f287b3ee72c7ead255f01042e34dbaf696b4bb6eb496ae5909f52"}
+```

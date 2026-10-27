@@ -1,0 +1,21 @@
+Je commence par inventorier le dossier et vérifier les empreintes.
+L'empreinte de `fiche.json` correspond. `tirages.json` est absent : c'est la sortie que je dois produire en rejouant le code. Je lis maintenant l'ensemble des pièces en parallèle.
+Mon budget est épuisé avant que le rejeu ait pu s'exécuter (les hooks de l'environnement ont bloqué mes deux tentatives : interdiction de `set`, puis interdiction d'écrire hors du dossier de l'expérience). Je rends donc un verdict fondé uniquement sur ce que j'ai pu établir.
+
+**Ce que j'ai vérifié (par lecture et empreintes)**
+- `fiche.json` → empreinte `463c425f…` : **conforme** à la déclaration et au code.
+- `engagement.json` → empreinte `796cab83…` : **conforme** à la déclaration et au code ; son `empreinte_fiche` renvoie bien à la fiche gelée.
+- `mesures.json`, `ordre-execution.json`, `declaration.json`, `tirages-declares.json` : toutes les empreintes `.sha256` jointes concordent.
+- Test gelé : fiche et engagement sont cohérents (loi softmax identique dans les deux, 3 issues, dimension 4, 2 sous-populations, seuil 20.0 = `seuil_richesse`, sévérité 0.05 = `alpha`, `part_calibrage` 0, 120 instances dans le plan = protocole « 120 tirages frais »).
+- Code `ranger_mesures.py` lu intégralement : aucun calcul, aucune mesure, aucune richesse ; il contrôle les empreintes fiche/engagement, la liaison de `mesures.json` et `ordre-execution.json` à l'engagement, que `ordre` est une permutation de 0..119, que `empreinte_ordre` est cohérente, que les issues sont des entiers dans [0,3), puis recopie telles quelles. Pas de raccourci visible dans le code.
+- Comparaison visuelle : les 120 issues de `mesures.json` et de `tirages-declares.json` sont identiques, avec les mêmes `empreinte_engagement`, `empreinte_ordre` et `plan_execution`.
+
+**Ce que je n'ai PAS pu faire**
+- Exécuter réellement le code et comparer l'empreinte de `tirages.json` produit.
+- Recalculer indépendamment `empreinte_ordre` (`804cd0d0…`).
+- Tester la plausibilité des issues sous la loi gelée (accord argmax, richesse).
+- `consigne.txt` et `reponse.txt` sont absents du dossier (seules leurs empreintes sont fournies) ; je n'ai donc aucun verdict chiffré à confronter au seuil.
+
+```json
+{"confirme": false, "test_conforme": true, "motif": "Fiche gelée, engagement, mesures, ordre et tirages déclarés sont tous conformes à leurs empreintes ; fiche et engagement sont mutuellement cohérents (même loi, 120 instances, seuil 20.0, alpha 0.05) et le code déclaré ne fait que recopier les issues après contrôle des liaisons, sans raccourci visible ; les issues de mesures.json et de tirages-declares.json coïncident à la lecture. Cependant le rejeu effectif du code a été bloqué par les hooks de l'environnement (set interdit, puis écriture hors dossier interdite) et le budget est épuisé : je n'ai pas pu produire tirages.json, recalculer empreinte_ordre ni vérifier la plausibilité des issues sous la loi ; de plus reponse.txt est absent, donc aucun verdict chiffré n'a pu être confronté au seuil. Confirmation refusée faute de rejeu, à reprendre avec un rejeu exécuté dans le dossier de l'expérience."}
+```

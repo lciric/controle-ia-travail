@@ -1,0 +1,13 @@
+Toutes les vérifications sont faites ; rien d'autre n'est nécessaire.
+
+**Constat**
+
+- **Rejeu** : `python3 -I ranger_tirages.py <dossier>` s'exécute sans erreur (toutes les assertions passent) et produit `tirages.json` sémantiquement identique à `tirages-declares.json` (120 issues, même `empreinte_ordre`, même `plan_execution`, même `empreinte_engagement`). La seule différence est l'indentation (`indent=2` vs compact), donc empreintes de fichiers différentes mais contenu identique.
+- **Chaîne d'empreintes** : `fiche.json` = `6e468f…313f` (conforme à la déclaration et au sidecar) ; `engagement.json` = `9894b6…7dbd`, référence bien cette fiche ; `ordre-execution.json` et `mesures.json` sont liés à cet engagement ; l'`empreinte_ordre` recalculée indépendamment (`20085f…ea40`) coïncide avec celle de `mesures.json` et des tirages déclarés. Les sidecars `.sha256` de tous les fichiers présents correspondent.
+- **Test gelé** : l'engagement reprend exactement la loi prédictive de la fiche (softmax, mêmes poids/biais), le seuil 20.0, α = 0.05, 120 instances fraîches (protocole), 3 issues, 2 sous-populations (70/50), dimension 4, `plan_execution: ordre_secret`, bibliothèque nulle = marginale / uniforme / moyennes glissantes (+ urne). L'ordre est une permutation valide de 0..119.
+- **Raccourcis** : aucun. Le code ne lit pas la loi, n'utilise aucun hasard, ne calcule aucune richesse et ne modifie aucune issue ; il recopie telles quelles les issues du noyau après vérification des empreintes. La boucle « parcours dans l'ordre imposé » est en fait une copie indicielle sans effet (cosmétique, pas un raccourci).
+- **Réserve** : `reponse.txt` et `consigne.txt` ne sont présents que par leur empreinte ; le dossier ne contient aucun calcul de richesse W ni de verdict. Je confirme donc la conformité des tirages et du test, mais pas le verdict chiffré lui‑même, qui n'est pas dans ce dossier.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py (python3 -I) réussi : tirages.json produit identique en contenu à tirages-declares.json (120 issues, empreinte_ordre 20085f6c… recalculée et confirmée). Chaîne fiche (6e468f9a…) → engagement (9894b6d8…) → ordre → mesures → tirages cohérente ; engagement reprend la loi, le seuil 20.0, alpha 0.05, 120 instances, 3 issues, 2 sous-populations, dim 4 de la fiche gelée. Le code ne fait que recopier les issues du noyau après contrôle des empreintes : aucun hasard, aucun calcul, aucune modification, aucun raccourci. Réserve : le verdict/richesse W n'est pas dans le dossier (reponse.txt absent, seule son empreinte), donc seul le test et les tirages sont confirmés, pas la valeur finale."}
+```

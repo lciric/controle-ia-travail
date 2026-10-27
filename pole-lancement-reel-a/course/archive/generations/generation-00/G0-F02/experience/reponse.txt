@@ -1,0 +1,15 @@
+J'ai écrit `ranger_tirages.py`, qui copie dans `tirages.json` les 120 issues déposées par le noyau dans `mesures.json`, sans aucun changement. Je l'ai lancé une fois : `tirages.json` est identique champ par champ à `mesures.json`.
+
+Avant d'écrire, le script fait ces contrôles :
+- **Fiche :** son empreinte n'a pas changé (b1032d8e…ec6e). Je ne l'ai pas modifiée.
+- **Engagement :** son empreinte n'a pas changé (8aca67b3…d274).
+- **Liaison :** `mesures.json` et `ordre-execution.json` portent bien l'empreinte de l'engagement gelé.
+- **Ordre :** `ordre` contient bien chaque indice de 0 à 119 une seule fois. L'empreinte de l'ordre (a89f8efc…d335) est le SHA-256 de la liste `ordre` écrite en JSON compact, et elle correspond à celle de `mesures.json`.
+- **Plan :** le plan d'exécution est « ordre_secret » dans les deux fichiers.
+- **Issues :** il y en a 120, chacune vaut 0, 1 ou 2, et elles sont rangées par indice d'instance du plan.
+
+Je n'ai rien mesuré et je n'ai calculé aucune richesse.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "b1032d8e3700b1427e7de429c8d2e8074634dd868b08da6fdb602f214052ec6e", "empreinte_engagement": "8aca67b3d6e9431b083b28addae560755c0ccc1c72f6e9a67592426cef13d274"}
+```

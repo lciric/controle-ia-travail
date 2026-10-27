@@ -1,0 +1,134 @@
+Tu es l'agent de recombinaison du pôle. Fusionne les deux fiches survivantes ci-dessous (fichier `parents.json`) par le pont commun « normalisation, projection », en reliant leurs domaines (morphologie ; representation).
+
+Fiche A :
+{
+ "ce_que_la_fille_predit_de_plus": "",
+ "ce_qui_change": {},
+ "contraintes": [
+  "discret"
+ ],
+ "cout_borne": 1.0,
+ "domaines": [
+  "morphologie"
+ ],
+ "enonce": "Le hachage par trigrammes predit la classe d'un mot flechi",
+ "espace_instances": {
+  "dimension": 4,
+  "nombre_issues": 3,
+  "sous_populations": 2
+ },
+ "identifiant": "G0-F05",
+ "loi_predictive": {
+  "biais": [
+   -0.006866,
+   -0.389012,
+   -0.160317
+  ],
+  "poids": [
+   [
+    1.07438,
+    0.699062,
+    1.321303,
+    -1.479958
+   ],
+   [
+    -1.529559,
+    0.041508,
+    -0.478193,
+    -0.064763
+   ],
+   [
+    -0.167843,
+    0.018002,
+    1.28605,
+    0.279673
+   ]
+  ],
+  "type": "softmax"
+ },
+ "metrique": "richesse W contre la bibliothèque aveugle",
+ "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes)",
+ "operateurs": [
+  "hachage",
+  "normalisation",
+  "projection"
+ ],
+ "prediction": {
+  "signe": "+",
+  "texte": "log-richesse moyenne par tirage positive contre la bibliothèque nulle",
+  "valeur": 0.1
+ },
+ "protocole": "pari sur 120 tirages frais choisis ex ante par divergence",
+ "seuil": 20.0,
+ "severite_attendue": 0.05
+}
+
+Fiche B :
+{
+ "ce_que_la_fille_predit_de_plus": "",
+ "ce_qui_change": {},
+ "contraintes": [
+  "stationnaire"
+ ],
+ "cout_borne": 1.0,
+ "domaines": [
+  "representation"
+ ],
+ "enonce": "Le second trait inverse les classes un et trois sous normalisation",
+ "espace_instances": {
+  "dimension": 4,
+  "nombre_issues": 3,
+  "sous_populations": 2
+ },
+ "identifiant": "G0-F07",
+ "loi_predictive": {
+  "biais": [
+   0.414068,
+   -0.44172,
+   0.212096
+  ],
+  "poids": [
+   [
+    -0.622452,
+    1.090689,
+    1.721513,
+    1.051146
+   ],
+   [
+    -0.771047,
+    0.591272,
+    -1.820767,
+    -0.782109
+   ],
+   [
+    1.672339,
+    -0.169921,
+    -2.235256,
+    0.561418
+   ]
+  ],
+  "type": "softmax"
+ },
+ "metrique": "richesse W contre la bibliothèque aveugle",
+ "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes)",
+ "operateurs": [
+  "normalisation",
+  "projection"
+ ],
+ "prediction": {
+  "signe": "+",
+  "texte": "log-richesse moyenne par tirage positive contre la bibliothèque nulle",
+  "valeur": 0.1
+ },
+ "protocole": "pari sur 120 tirages frais choisis ex ante par divergence",
+ "seuil": 20.0,
+ "severite_attendue": 0.05
+}
+
+Exigences : la fille prédit plus que ses parents — champ `ce_que_la_fille_predit_de_plus` non vide, prédiction signée et chiffrée différente de celles de A et de B, seuil qui peut échouer, sévérité attendue dans ]0 ; 1[ ; ses contraintes ne contredisent pas celles des parents. Réponds par un bloc ```json {"fille": {...}}``` avec les champs de la fiche (sans identifiant ni parents : l'orchestrateur les pose).
+
+Sélection par pari : la fille engage une loi prédictive (`loi_predictive`) ; sa sévérité est l'α du pôle (0.05) ; elle ne sera promue que si elle bat ses parents et leurs enveloppes (mélange, enveloppe harmonique, concaténations si/sinon) avec une marge par tirage.
+
+Mémoire du pôle :
+Leçons de la génération 0 :
+Génération 0 : 6 conjectures. 2 survivent, 2 sont éliminées, 2 restent indécises. Il y a eu 2 désaccords entre expérimentateur et vérificateur, et aucune redite refusée. Causes d'élimination fréquentes : (1) une richesse restée sous le seuil 1/α, donc réfutée par le pari (2 cas, un en arrêt et un en mémoire spectrale) ; (2) une vérification sans conclusion (1 cas) ; (3) un verdict non confirmé par le vérificateur (1 cas). Dans ce dernier cas, empreintes, fiche et engagement étaient conformes, mais le rejeu du code a été bloqué par les hooks de l'environnement (set interdit, écriture hors du dossier interdite) et le budget s'est épuisé. Ni tirages.json ni empreinte_ordre n'ont pu être produits, et reponse.txt manquait, donc aucun verdict chiffré n'a pu être comparé au seuil. Leçons : exécuter le rejeu dans le dossier de l'expérience, garder du budget pour le rejeu et toujours écrire reponse.txt. Protocoles qui ont fonctionné (G0-F05, G0-F07) : un pari sur 120 tirages frais choisis ex ante par divergence, mesuré par la richesse W contre la bibliothèque aveugle, avec une sévérité attendue α = 0,05. Morphologie et représentation : 1 conjecture tranchée chacune, aucune éliminée.

@@ -1,0 +1,15 @@
+J'ai écrit `tirages.json` : il contient les 120 issues déposées par le noyau dans `mesures.json`, reprises sans changement, à l'indice de leur instance. Je n'ai rien mesuré et je n'ai calculé aucune richesse.
+
+Le script `ranger_mesures.py` fait les contrôles et produit le fichier. On le relance avec `python3 -I ranger_mesures.py <dossier>`.
+
+- **Fiche et engagement :** leurs SHA-256 sont égaux aux empreintes gelées. `fiche.json` n'a pas été modifié.
+- **Rattachement :** `mesures.json` et `ordre-execution.json` portent bien l'empreinte de l'engagement.
+- **Ordre :** c'est bien une permutation des 120 instances du plan. Son empreinte (SHA-256 de la liste `ordre` en JSON compact) vaut `734d319e…65f5`, la même que l'`empreinte_ordre` de `mesures.json`.
+- **Plan :** le plan est `ordre_secret`, aussi bien dans l'engagement que dans les mesures.
+- **Issues :** les 120 issues sont des entiers de 0 à 2, ce qui correspond aux 3 classes.
+
+`tirages.json` reprend les quatre champs de `mesures.json` (`empreinte_engagement`, `issues`, `plan_execution`, `empreinte_ordre`), et son contenu est identique au leur.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_mesures.py", "empreinte_fiche": "e0c69ba8c37794aa249908ffdbbccf53d8ec0edbbc5e4398d776f4be1fe42c2e", "empreinte_engagement": "1365e4a2666d15623987d3f0ba555e06f5379e827b59c8612a0adf3c9407de9f"}
+```

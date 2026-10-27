@@ -1,0 +1,13 @@
+Tout est rejoué ; je conclus.
+
+**Constats**
+
+- **Empreintes** : `fiche.json` → `315c5a81…` (= déclaration, = fiche gelée) ; `engagement.json` → `277448c2…` (= déclaration) ; l'engagement référence lui-même l'empreinte de la fiche. Tous les fichiers `.sha256` présents sont cohérents (`sha256sum -c` : OK). `consigne.txt` et `reponse.txt` ne sont pas dans mon dossier (seules leurs empreintes le sont) — hors périmètre de ce rejeu.
+- **Rejeu du code** : `python3 -I ranger_tirages.py` s'exécute (rc=0), toutes ses gardes passent, et le `tirages.json` produit est **identique** à `tirages-declares.json` (120 issues, `empreinte_engagement`, `empreinte_ordre`, `plan_execution`). L'empreinte de la permutation `ordre-execution.json` recalculée = `afe6877e…` = celle de `mesures.json`.
+- **Test gelé** : loi softmax de l'engagement == `loi_predictive` de la fiche ; seuil 20.0 des deux côtés ; 120 instances / 3 issues / dimension 4 / 2 sous-populations comme la fiche ; bibliothèque nulle = marginale, uniforme, moyennes glissantes (+ urne), conforme au `nul` de la fiche ; `part_calibrage: 0`, `delta0: null`, plan `ordre_secret`.
+- **Raccourcis** : le code ne fabrique aucune issue, il recopie `mesures.json` (liées à l'engagement par empreinte) après vérification de forme. Les issues sont plausibles sous la loi gelée : log-vraisemblance −0.95 pour −5.55 attendu (écart-type 4.8, soit < 1 σ) ; comptes {0: 87, 1: 4, 2: 29} contre {86.5, 4.5, 29.0} attendus ; 100 % d'issues à l'argmax contre 99,2 % attendu (loi quasi déterministe, donc non suspect). Aucune trace de sélection a posteriori, de recalcul ou d'altération.
+- **Verdict** : richesse W ≈ 81.8 contre la marginale (≈130.9 contre l'uniforme), bien au-dessus du seuil 20 → verdict positif cohérent avec le seuil gelé.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py (python3 -I) reproduit exactement tirages-declares.json ; empreintes fiche (315c5a81…) et engagement (277448c2…) conformes à la déclaration, engagement lié à la fiche, loi/seuil/instances/bibliothèque identiques à la fiche gelée ; empreinte de l'ordre d'exécution recalculée conforme ; issues recopiées telles quelles de mesures.json, statistiquement cohérentes avec la loi gelée (log-vraisemblance à <1 σ de l'attendu, comptes conformes) ; richesse W ≈ 81.8 > seuil 20, verdict suit le seuil ; aucun raccourci détecté."}
+```

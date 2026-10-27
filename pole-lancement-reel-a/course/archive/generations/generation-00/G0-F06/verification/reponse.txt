@@ -1,0 +1,15 @@
+Je commence par inspecter le dossier.
+Les empreintes de `fiche.json` et `engagement.json` correspondent à la déclaration. Je lis maintenant tous les fichiers.
+Le garde-fou interdit les chemins hors du dossier de l'expérience ; je rejoue donc en place, en un seul appel, avec les contrôles essentiels.
+**Résultat du rejeu**
+
+- Empreintes : `fiche.json` = c7a4f6…, `engagement.json` = 7488bb…, conformes à la déclaration et aux fichiers `.sha256`.
+- Rejeu de `ranger_tirages.py` (`python3 -I`) : toutes les assertions passent ; `tirages.json` produit est **sémantiquement identique** à `tirages-declares.json` (les octets diffèrent seulement par l'indentation, `indent=1` vs compact).
+- `empreinte_ordre` recalculée indépendamment = 2f81a1…, égale à celle de `mesures.json` et des tirages déclarés ; l'ordre est une vraie permutation de 0..119.
+- Test gelé : loi prédictive de la fiche == loi de l'engagement ; seuil 20.0 == `seuil_richesse` ; 120 instances (protocole « 120 tirages frais »), 3 issues, dimension 4, mode continu, `part_calibrage` 0, `alpha` 0.05 == sévérité attendue ; bibliothèque nulle (marginale, uniforme, moyennes glissantes, urne) conforme au `nul` de la fiche.
+- Raccourcis : le code ne génère pas les issues, il recopie celles déposées par le noyau dans `mesures.json` après vérification des liaisons — c'est son rôle déclaré ; aucune lecture de la loi ni des `z` dans le code, donc pas de fuite possible vers les issues. Issues toutes dans [0,3) ; distribution {0:61, 2:51, 1:8}.
+- Limite : le dossier ne contient pas `reponse.txt` ni `consigne.txt` (seulement leurs empreintes) ; je n'ai donc pas pu recalculer la richesse W officielle ni confronter le verdict chiffré au seuil 20 — je confirme la conformité du test et des tirages, pas la valeur finale de W.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py sous python3 -I réussi : tirages produits identiques (JSON) à tirages-declares.json ; empreintes fiche/engagement conformes à la déclaration ; empreinte_ordre recalculée égale et ordre permutation valide de 120 ; loi, seuil 20.0, n=120, k=3, alpha 0.05 et bibliothèque nulle de l'engagement coïncident avec la fiche gelée ; le code ne lit ni la loi ni les instances, aucun raccourci détecté. Réserve : reponse.txt absent du dossier, la valeur de richesse W n'a pas pu être recalculée contre le seuil."}
+```

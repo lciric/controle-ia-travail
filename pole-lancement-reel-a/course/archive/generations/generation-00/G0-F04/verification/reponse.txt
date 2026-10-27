@@ -1,0 +1,22 @@
+Vérification terminée. Synthèse :
+
+**Intégrité**
+- `fiche.json` : empreinte `e0c69ba8…42c2e` conforme à la déclaration et au script.
+- `engagement.json` : empreinte `1365e4a2…de9f` conforme ; il référence la fiche gelée, et sa `loi` est strictement égale à la `loi_predictive` de la fiche (vérifié par égalité structurelle).
+- `mesures.json`, `ordre-execution.json`, `tirages-declares.json`, `declaration.json` : toutes les empreintes `.sha256` du dossier recalculées et concordantes.
+
+**Rejeu du code déclaré** (`python3 -I ranger_mesures.py .`)
+- Toutes les assertions passent (fiche, engagement, liaison mesures↔engagement, ordre = permutation de 0..119, empreinte de l'ordre `734d319e…65f5` recalculée indépendamment et identique à celle inscrite dans `mesures.json`, plan `ordre_secret`, 120 issues dans {0,1,2}).
+- `tirages.json` produit est **identique** à `tirages-declares.json` (comparaison JSON canonique).
+
+**Conformité au test gelé**
+- 120 tirages (fiche : « pari sur 120 tirages frais »), 3 issues, dimension 4, 2 sous-populations, seuil 20.0 = `seuil_richesse`, α = 0.05 = `severite_attendue`, bibliothèque nulle = marginale / uniforme / moyennes glissantes (+ urne), plan d'exécution en ordre secret. Tout correspond à la fiche.
+
+**Raccourcis recherchés**
+- Le script ne calcule aucune richesse et ne touche pas aux issues : il les recopie telles quelles, sans filtrage, réordonnancement ni sélection. Aucune voie pour influencer le verdict.
+- J'ai testé si les issues pouvaient avoir été rangées en ordre d'exécution plutôt que par indice d'instance : aucun alignement alternatif ne rend la loi meilleure que l'uniforme (tel quel −1.56, alternatives −1.37 / −1.76, uniforme −1.10). Rien n'indique un désalignement ; la loi gelée est simplement défavorisée par le monde (106/120 issues en classe 2, signe de z₂ ↔ classe 2 concordant à 57 % seulement). C'est un résultat, pas une anomalie de procédure.
+- Limite : `reponse.txt` et `consigne.txt` ne sont pas dans le dossier (seules leurs empreintes y figurent), donc je ne peux pas relire le verdict chiffré lui-même ; je certifie la chaîne fiche → engagement → ordre → mesures → tirages, sur laquelle le verdict du pôle doit être calculé contre le seuil 20.0.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_mesures.py identique à tirages-declares.json ; toutes les empreintes (fiche, engagement, ordre, mesures) recalculées et concordantes ; loi de l'engagement égale à la loi gelée de la fiche ; 120 instances, seuil 20.0, alpha 0.05, bibliothèque nulle et plan ordre_secret conformes à la fiche. Le code recopie les issues sans aucun traitement ni calcul de richesse : pas de raccourci possible sur le verdict. Les issues sont très majoritairement en classe 2 et la loi fait moins bien que l'uniforme, ce qui annonce un verdict défavorable à la fiche, mais c'est un résultat du monde et non une irrégularité. reponse.txt absent du dossier (empreinte seule) : le verdict chiffré n'a pu être relu directement."}
+```

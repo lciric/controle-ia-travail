@@ -1,0 +1,80 @@
+{
+  "aptitude": null,
+  "ce_que_la_fille_predit_de_plus": "Sur les tirages où A et B divergent, en particulier ceux où B inverse les classes un et trois, la fille donne une probabilité plus haute à la bonne issue que A, que B, que leur mélange, que leur enveloppe harmonique et que les concaténations si/sinon. Elle gagne au moins 0,05 nat par tirage sur la meilleure de ces enveloppes et au moins 0,15 nat par tirage contre la bibliothèque aveugle, contre 0,1 pour chaque parent.",
+  "ce_qui_change": {
+    "contraintes": "union discret + stationnaire, sans contradiction avec les parents",
+    "domaines": "on relie morphologie et representation",
+    "loi": "logits de A et de B additionnés (produit d'experts géométrique non normalisé, et non moyenne), puis multipliés par 0,75 pour éviter l'excès de confiance",
+    "pont": "normalisation puis projection, opérateurs communs aux deux parents ; le hachage de A sert d'entrée et l'inversion 1↔3 de B sert de correction",
+    "prediction": "seuil de gain par tirage relevé à 0,15, avec une marge exigée contre les parents et leurs enveloppes"
+  },
+  "contraintes": [
+    "discret",
+    "stationnaire"
+  ],
+  "cout_borne": 1.0,
+  "domaines": [
+    "morphologie",
+    "representation"
+  ],
+  "empreinte": null,
+  "enonce": "Après normalisation, la projection commune somme les preuves du hachage par trigrammes (morphologie) et du second trait qui inverse les classes un et trois (representation) ; ce produit d'experts tempéré prédit la classe d'un mot fléchi mieux que chaque parent seul et que leurs enveloppes",
+  "espace_instances": {
+    "dimension": 4,
+    "nombre_issues": 3,
+    "sous_populations": 2
+  },
+  "essais": 0,
+  "historique": [],
+  "identifiant": "G1-F03",
+  "loi_predictive": {
+    "biais": [
+      0.305402,
+      -0.623049,
+      0.038834
+    ],
+    "poids": [
+      [
+        0.338946,
+        1.342313,
+        2.282112,
+        -0.321609
+      ],
+      [
+        -1.725455,
+        0.474585,
+        -1.72422,
+        -0.635154
+      ],
+      [
+        1.128372,
+        -0.113939,
+        -0.711905,
+        0.630818
+      ]
+    ],
+    "type": "softmax"
+  },
+  "metrique": "richesse W contre la bibliothèque aveugle, augmentée des parents et de leurs enveloppes",
+  "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes), plus A, B, leur mélange, leur enveloppe harmonique et les concaténations si/sinon",
+  "operateurs": [
+    "hachage",
+    "normalisation",
+    "projection"
+  ],
+  "parents": [
+    "G0-F05",
+    "G0-F07"
+  ],
+  "prediction": {
+    "signe": "+",
+    "texte": "log-richesse moyenne par tirage ≥ 0,15 contre la bibliothèque nulle, et gain par tirage ≥ 0,05 contre la meilleure enveloppe des parents (mélange, harmonique, si/sinon)",
+    "valeur": 0.15
+  },
+  "protocole": "pari sur 120 tirages frais choisis ex ante par divergence entre A et B ; rejeu dans le dossier de l'expérience ; écriture de tirages.json, empreinte_ordre et reponse.txt",
+  "seuil": 20.0,
+  "severite_attendue": 0.05,
+  "source": "recombinaison:claude-opus-5-5",
+  "statut": "refusee (redite)",
+  "temoin": null
+}
