@@ -127,7 +127,7 @@ Suite de `2026-10-26-conv-audit.md` (empreinte à l'ouverture de ce fichier, vé
   la session (rien de versé) ; 15:05 pari de signe inscrit au programme de conception de l'organisme (v2, `353515ff…`),
   distinct du programme v2 du fonds ; 15:06 ce qui a marché et raté dans la première course, dit. Passation v7.
   Recherche de clés avant chaque poussée : rien. Instances : aucune. Sous-agents : aucun.
-- **Soirée (15:00 à 16:20 UTC ; ajout écrit à 16:21 UTC, heure lue sur `date -u`).** **Lecture du premier lancement
+- **Soirée (15:00 à 16:20 UTC ; ajout écrit à 16:20 UTC, heure lue sur `date -u` : 16:20:10).** **Lecture du premier lancement
   réel (a)** dans les deux sens (`premier-lancement-reel/lecture-lancement-reel-a-v1.md`, `9305a3b4…`) : plomberie tenue
   (140 appels, 6,24 USD, coûts au cent près), mais **génération 1 perdue entière** — la synthèse a écrit la leçon
   « toujours écrire reponse.txt », les agents ont écrit le fichier réservé de l'orchestrateur, l'écriture sans écrasement a
