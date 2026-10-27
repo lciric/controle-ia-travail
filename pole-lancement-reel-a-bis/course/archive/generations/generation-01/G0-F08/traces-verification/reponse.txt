@@ -1,0 +1,11 @@
+Rejeu terminé. Constats :
+
+- **Fiche gelée** : `sha256(fiche.json)` = `463c425f…625e5`, identique à la déclaration, au `.sha256` et à `engagement.empreinte_fiche`.
+- **Engagement gelé** : `sha256(engagement.json)` = `1ecfdd08…3082`, identique à la déclaration ; `engagement.loi` == `fiche.loi_predictive` (softmax, mêmes poids/biais), `seuil_richesse` = 20.0 == `fiche.seuil`, 120 instances == « 120 tirages frais » du protocole, `nombre_issues` = 3, `plan_execution` = `ordre_secret`, mode continu, `part_calibrage` = 0.
+- **Ordre** : `ordre-execution.json` est une permutation de 0..119 liée à l'engagement ; son empreinte compacte (`7005ef91…ad47`) correspond à `mesures.empreinte_ordre`.
+- **Rejeu** : `python3 -I ranger_tirages.py` → exit 0, « OK : 120 issues rangées ». Le `tirages.json` produit est sémantiquement identique à `tirages-declares.json` (même `empreinte_engagement`, même `empreinte_ordre`, mêmes 120 issues dans le même ordre, même `plan_execution`) ; seule la mise en forme JSON diffère (indent=2 vs compact), d'où des empreintes de fichier différentes mais un contenu égal. Les issues de `tirages-declares.json` sont exactement celles de `mesures.json` (70 × classe 2, 25 × 0, 25 × 1).
+- **Raccourcis** : le code ne lit ni `instances` ni `loi`, ne calcule rien, ne filtre ni ne réordonne les issues ; il se borne à vérifier les empreintes/liaisons et à recopier les issues déposées par le noyau. Aucun verdict chiffré n'est émis par l'expérimentateur, conformément au mode « sélection par pari » ; la richesse revient au noyau.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py (python3 -I) reussi : empreintes fiche (463c425f…) et engagement (1ecfdd08…) conformes a la declaration, loi/seuil/120 instances de l'engagement identiques a la fiche gelee, ordre = permutation de 0..119 dont l'empreinte correspond a mesures.json ; tirages.json produit est identique en contenu (120 issues, empreinte_engagement, empreinte_ordre, plan_execution) a tirages-declares.json, seule l'indentation JSON differe. Le code ne fait que recopier les issues deposees par le noyau sans calcul ni filtrage : aucun raccourci detecte. Aucun verdict chiffre a confirmer (pari), richesse laissee au noyau."}
+```

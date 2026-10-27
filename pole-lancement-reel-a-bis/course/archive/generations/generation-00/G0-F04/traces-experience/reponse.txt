@@ -1,0 +1,13 @@
+J'ai écrit `tirages.json` : il reprend sans aucune modification les 120 issues déposées par le noyau dans `mesures.json`. Je n'ai produit, mesuré ni calculé aucune issue ni richesse. Le script `ranger_tirages.py` (à lancer avec `python3 -I ranger_tirages.py`) a tourné, et j'ai vérifié que `tirages.json` est identique champ par champ à `mesures.json`.
+
+Le script s'arrête si l'un de ces contrôles échoue ; tous passent :
+- **Fichiers gelés :** les empreintes de `fiche.json` (e0c69ba8…) et de `engagement.json` (1365e4a2…) sont les bonnes, et `fiche.json` n'a pas été modifiée.
+- **Liaison à l'engagement :** `mesures.json` et `ordre-execution.json` portent tous deux l'empreinte de l'engagement.
+- **Ordre :** l'empreinte de l'ordre (6aba3fcc…) est bien le SHA-256 de la liste `ordre` écrite en JSON compact. L'ordre est une permutation de 0 à 119.
+- **Issues :** il y en a 120, toutes dans {0, 1, 2}.
+
+Dans `mesures.json`, le champ `plan_execution` contient seulement le texte `"ordre_secret"`, pas la liste d'ordre elle-même. Je l'ai recopié tel quel, comme demandé ; la liste et son empreinte restent vérifiables dans `ordre-execution.json`.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "e0c69ba8c37794aa249908ffdbbccf53d8ec0edbbc5e4398d776f4be1fe42c2e", "empreinte_engagement": "1365e4a2666d15623987d3f0ba555e06f5379e827b59c8612a0adf3c9407de9f"}
+```

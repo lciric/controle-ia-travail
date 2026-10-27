@@ -1,0 +1,12 @@
+Je commence par inspecter le dossier.
+Now I replay the declared code and compare its output with `tirages-declares.json`, checking the engagement tail and instance count at the same time.
+**Vérification G0-F03 — compte rendu**
+
+- **Intégrité** : `fiche.json` → `6fae74c9…` et `engagement.json` → `4a8de271…`, identiques aux empreintes de la déclaration, des fichiers `.sha256` et des constantes codées en dur dans `ranger_tirages.py`. L'engagement référence bien la fiche gelée (`empreinte_fiche` concordante).
+- **Rejeu** : `ranger_tirages.py` exécuté dans le dossier (`-I`, `tirages.json` supprimé au préalable) ; sortie `tirages.json écrit : 120 issues`, exit 0. Comparaison champ à champ avec `tirages-declares.json` : **identique** (`empreinte_engagement`, `issues`, `plan_execution`, `empreinte_ordre`).
+- **Test gelé** : fiche = « pari sur 120 tirages frais choisis ex ante par divergence », seuil 20.0, sévérité 0.05. Engagement = 120 instances, `seuil_richesse` 20.0, `alpha` 0.05, `nombre_issues` 3, `loi` strictement égale à `loi_predictive` de la fiche, `plan_execution` = `ordre_secret`, `part_calibrage` 0, bibliothèque nulle = marginale / uniforme / moyennes glissantes / urne conforme à l'énoncé du nul. L'ordre est une permutation valide de 0..119 et son empreinte recalculée concorde avec `mesures.json`.
+- **Raccourcis cherchés** : le script ne lit pas la loi, ne touche ni à la fiche ni à l'engagement, ne modifie aucune issue (copie brute de `mesures.json`, issues toutes dans {0,1,2}, distribution 1/35/84). Aucun fichier annexe, aucun import non standard, aucun accès réseau. La seule limite : je ne peux pas, depuis ce dossier, vérifier que `mesures.json` provient bien du noyau — mais c'est le rôle du noyau, et le code n'y a pas de prise.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py reproduit exactement tirages-declares.json (120 issues, empreintes engagement/ordre identiques). Empreintes fiche et engagement conformes à la déclaration et aux .sha256 ; engagement lié à la fiche gelée (120 instances, seuil 20.0, alpha 0.05, loi identique, plan ordre_secret, bibliothèque nulle conforme). Aucune altération d'issue ni raccourci détecté ; pas de verdict chiffré à confirmer (sélection par pari)."}
+```

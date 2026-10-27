@@ -1,0 +1,14 @@
+J'ai écrit `tirages.json` : il contient les 120 issues déposées par le noyau dans `mesures.json`, recopiées sans aucune modification. Les deux fichiers ont un contenu JSON identique.
+
+Le script `ranger_tirages.py` est rejouable. Avant d'écrire, il vérifie que tout est cohérent :
+- **Fiche et engagement :** `fiche.json` et `engagement.json` ont bien les empreintes gelées. `fiche.json` n'a pas été modifiée.
+- **Lien avec l'engagement :** `mesures.json` et `ordre-execution.json` portent tous les deux l'empreinte de l'engagement gelé.
+- **Plan :** le mode est bien « ordre_secret » dans `mesures.json` comme dans l'engagement.
+- **Ordre :** il couvre chacune des 120 instances du plan exactement une fois. Son empreinte, calculée sur le JSON compact de la liste `ordre`, est égale à `empreinte_ordre` dans `mesures.json` (d2a65d9b…).
+- **Issues :** il y en a 120, rangées à l'indice de leur instance, et chacune vaut 0, 1 ou 2.
+
+`tirages.json` reprend les mêmes champs que `mesures.json` : empreinte de l'engagement, issues, plan d'exécution et empreinte de l'ordre. Je n'ai calculé aucune richesse.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "a2eea19a89c2020056116c958e548d9cb57e8067423bc7d32d98ef3c1cdd9b81", "empreinte_engagement": "a4a978dc523ac874f1f80a0e40185e485c6fa728750463e0a5707942d18f8f6b"}
+```

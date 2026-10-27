@@ -1,0 +1,11 @@
+Rejeu effectué dans le dossier. Constats :
+
+- **Empreintes** : `fiche.json` → `315c5a81…` (conforme à la déclaration et à la constante du code) ; `engagement.json` → `277448c2…` (conforme) ; tous les `.sha256` du dossier concordent avec les fichiers présents.
+- **Fiche ↔ engagement** : même identifiant G0-F07, même loi softmax (biais/poids identiques), 120 instances (= « 120 tirages frais » du protocole), 3 issues, dimension 4, 2 sous-populations, `seuil_richesse` 20.0 = seuil de la fiche, bibliothèque nulle = marginale / uniforme / moyennes glissantes / urne (cohérente avec le nul déclaré), `plan_execution: ordre_secret`, `part_calibrage: 0`.
+- **Ordre ↔ mesures** : `ordre-execution.json` est une permutation valide de 0..119 liée à l'engagement ; son empreinte recalculée `df1736b5…` égale `empreinte_ordre` de `mesures.json`, elle-même liée à `277448c2…`.
+- **Rejeu** : `python3 -I ranger_tirages.py` → « ok 120 issues ; empreinte_ordre df1736b5… ». Le `tirages.json` produit est **strictement identique** à `tirages-declares.json` (120 issues, mêmes empreintes, même plan).
+- **Raccourcis** : le code ne fait que vérifier les liaisons et recopier les issues déposées par le noyau ; il ne calcule, ne filtre, ne réordonne ni ne modifie aucune issue, ne lit aucun fichier hors dossier, n'utilise pas d'aléa. Aucun verdict chiffré n'est émis par l'expérimentateur (sélection par pari : richesse calculée par le noyau).
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py reproduit exactement tirages-declares.json (120 issues, empreintes identiques). Fiche gelée 315c5a81… et engagement 277448c2… vérifiés par empreinte, engagement cohérent avec la fiche (loi, 120 instances, 3 issues, seuil 20, bibliothèque nulle), ordre secret lié et empreinte d'ordre recalculée concordante. Le code ne fait que recopier les issues du noyau sans transformation : aucun raccourci détecté."}
+```

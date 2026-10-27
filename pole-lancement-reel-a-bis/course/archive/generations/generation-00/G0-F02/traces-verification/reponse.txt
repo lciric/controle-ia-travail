@@ -1,0 +1,13 @@
+Rejeu effectué dans le dossier avec `python3 -I ranger_mesures.py`.
+
+**Vérifications**
+- `fiche.json` : empreinte `b1032d8e…ec6e` = déclaration = constante du code = `empreinte_fiche` de l'engagement ✔
+- `engagement.json` : empreinte `8aca67b3…3274` = déclaration = constante du code = `empreinte_engagement` de `mesures.json`, `ordre-execution.json` et `tirages-declares.json` ✔
+- Fichiers `.sha256` tous cohérents avec les contenus ✔
+- Engagement conforme à la fiche gelée : 120 instances (protocole « 120 tirages frais »), loi softmax identique (biais/poids), 3 issues, seuil 20.0, `plan_execution: ordre_secret`, bibliothèque aveugle (marginale, uniforme, moyennes glissantes, urne) ✔
+- Le code ne fait que ranger les issues de `mesures.json` après contrôle des liens (empreintes, taille 120, permutation de l'ordre, hash de l'ordre `f7808110…1c03` recalculé = déclaré, issues ∈ {0,1,2}) ; aucun calcul de richesse, aucun accès à la loi ou aux `z`, pas de modification des issues, pas d'aléa non gelé — aucun raccourci détecté ✔
+- Sortie `tirages.json` produite au rejeu == `tirages-declares.json` (égalité JSON stricte, 120 issues, distribution 2:59 / 0:56 / 1:5) ✔
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_mesures.py reproduit exactement tirages-declares.json (120 issues, empreinte d'ordre f7808110… recalculée identique). Toutes les empreintes (fiche b1032d8e…, engagement 8aca67b3…, mesures, ordre, tirages) sont cohérentes entre elles et avec la déclaration ; l'engagement reprend la loi, les 3 issues, le seuil 20.0, les 120 tirages et la bibliothèque aveugle de la fiche gelée. Le code se limite à ranger les issues du noyau après contrôle des liens, sans toucher aux issues ni calculer la richesse : pas de raccourci. Aucun verdict chiffré à confirmer (sélection par pari)."}
+```

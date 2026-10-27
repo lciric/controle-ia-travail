@@ -1,0 +1,14 @@
+**Rapport de vérification — G1-F01**
+
+Contrôles effectués dans le dossier :
+
+1. **Empreintes** : `fiche.json` → `a2eea19a…9b81` (= empreinte gelée attendue, = `empreinte_fiche` de la déclaration et de l'engagement) ; `engagement.json` → `a4a978dc…8f6b` (= `empreinte_engagement` déclarée) ; tous les sidecars `.sha256` (déclaration, mesures, ordre-exécution, tirages-déclarés) recalculés identiques.
+2. **Test gelé** : l'engagement référence la fiche gelée, la loi (`softmax`, poids/biais) est identique entre fiche et engagement, 120 instances, 3 issues, `seuil_richesse` 20.0, `plan_execution: ordre_secret` ; `ordre-execution.json` est bien une permutation de 0..119 et son sha256 compact égale l'`empreinte_ordre` portée par `mesures.json` et par les tirages déclarés.
+3. **Rejeu** : `python3 -I ranger_tirages.py` s'exécute sans erreur (toutes les assertions passent) et produit `tirages.json` **égal, champ par champ, à `tirages-declares.json`** (120 issues, 0 position divergente, mêmes empreintes et plan). La seule différence est la mise en forme (`indent=1` vs compact), sans effet sémantique.
+4. **Raccourcis** : le code ne génère, ne filtre, ne réordonne ni ne modifie aucune issue ; il recopie telles quelles les issues déposées par le noyau dans `mesures.json` après contrôle des liens d'empreintes. Aucune évaluation de richesse, aucun seuil, aucune graine ou source externe n'est introduit. Le fichier `tirages.json` nommé par la déclaration était absent du dossier (archivé sous `tirages-declares.json`) — le rejeu l'a régénéré à l'identique.
+
+Observation annexe (hors mandat, pour le noyau) : les issues sont très déséquilibrées (4/99/17) et leur log-vraisemblance sous la loi gelée (−257 par instance, −244 si on les lit en ordre d'exécution) est inférieure à celle de l'uniforme (−132). Cela ne concerne pas la conformité du rejeu — les issues sont celles déposées par le noyau — mais le calcul de richesse devra lever l'ambiguïté de convention (issues indexées par instance vs en ordre d'exécution ; le code suppose la première, conformément à son commentaire).
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Fiche et engagement aux empreintes gelées attendues ; rejeu de ranger_tirages.py sans erreur, tirages.json produit identique (JSON) à tirages-declares.json sur les 120 issues, empreintes et plan ; empreinte d'ordre recalculée conforme ; le code recopie les issues du noyau sans génération, filtrage ni réordonnancement — aucun raccourci. Aucun verdict chiffré à confirmer (sélection par pari)."}
+```

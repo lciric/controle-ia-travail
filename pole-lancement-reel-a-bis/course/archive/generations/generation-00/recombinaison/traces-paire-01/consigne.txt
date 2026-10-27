@@ -1,0 +1,142 @@
+Tu es l'agent de recombinaison du pôle. Fusionne les deux fiches survivantes ci-dessous (fichier `parents.json`) par le pont commun « normalisation, projection », en reliant leurs domaines (morphologie ; representation).
+
+Fiche A :
+{
+ "ce_que_la_fille_predit_de_plus": "",
+ "ce_qui_change": {},
+ "contraintes": [
+  "discret"
+ ],
+ "cout_borne": 1.0,
+ "domaines": [
+  "morphologie"
+ ],
+ "enonce": "Le hachage par trigrammes predit la classe d'un mot flechi",
+ "espace_instances": {
+  "dimension": 4,
+  "nombre_issues": 3,
+  "sous_populations": 2
+ },
+ "identifiant": "G0-F05",
+ "loi_predictive": {
+  "biais": [
+   -0.006866,
+   -0.389012,
+   -0.160317
+  ],
+  "poids": [
+   [
+    1.07438,
+    0.699062,
+    1.321303,
+    -1.479958
+   ],
+   [
+    -1.529559,
+    0.041508,
+    -0.478193,
+    -0.064763
+   ],
+   [
+    -0.167843,
+    0.018002,
+    1.28605,
+    0.279673
+   ]
+  ],
+  "type": "softmax"
+ },
+ "metrique": "richesse W contre la bibliothèque aveugle",
+ "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes)",
+ "operateurs": [
+  "hachage",
+  "normalisation",
+  "projection"
+ ],
+ "prediction": {
+  "signe": "+",
+  "texte": "log-richesse moyenne par tirage positive contre la bibliothèque nulle",
+  "valeur": 0.1
+ },
+ "protocole": "pari sur 120 tirages frais choisis ex ante par divergence",
+ "seuil": 20.0,
+ "severite_attendue": 0.05
+}
+
+Fiche B :
+{
+ "ce_que_la_fille_predit_de_plus": "",
+ "ce_qui_change": {},
+ "contraintes": [
+  "stationnaire"
+ ],
+ "cout_borne": 1.0,
+ "domaines": [
+  "representation"
+ ],
+ "enonce": "Le second trait inverse les classes un et trois sous normalisation",
+ "espace_instances": {
+  "dimension": 4,
+  "nombre_issues": 3,
+  "sous_populations": 2
+ },
+ "identifiant": "G0-F07",
+ "loi_predictive": {
+  "biais": [
+   0.414068,
+   -0.44172,
+   0.212096
+  ],
+  "poids": [
+   [
+    -0.622452,
+    1.090689,
+    1.721513,
+    1.051146
+   ],
+   [
+    -0.771047,
+    0.591272,
+    -1.820767,
+    -0.782109
+   ],
+   [
+    1.672339,
+    -0.169921,
+    -2.235256,
+    0.561418
+   ]
+  ],
+  "type": "softmax"
+ },
+ "metrique": "richesse W contre la bibliothèque aveugle",
+ "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes)",
+ "operateurs": [
+  "normalisation",
+  "projection"
+ ],
+ "prediction": {
+  "signe": "+",
+  "texte": "log-richesse moyenne par tirage positive contre la bibliothèque nulle",
+  "valeur": 0.1
+ },
+ "protocole": "pari sur 120 tirages frais choisis ex ante par divergence",
+ "seuil": 20.0,
+ "severite_attendue": 0.05
+}
+
+Exigences : la fille prédit plus que ses parents — champ `ce_que_la_fille_predit_de_plus` non vide, prédiction signée et chiffrée différente de celles de A et de B, seuil qui peut échouer, sévérité attendue dans ]0 ; 1[ ; ses contraintes ne contredisent pas celles des parents. Réponds par un bloc ```json {"fille": {...}}``` avec les champs de la fiche (sans identifiant ni parents : l'orchestrateur les pose).
+
+Sélection par pari : la fille engage une loi prédictive (`loi_predictive`) ; sa sévérité est l'α du pôle (0.05) ; elle ne sera promue que si elle bat ses parents et leurs enveloppes (mélange, enveloppe harmonique, concaténations si/sinon) avec une marge par tirage.
+
+Mémoire du pôle :
+Leçons de la génération 0 :
+Génération 0 : 5 hypothèses tranchées (3 éliminées, 2 survivantes) et 1 non testée. Vérificateur et expérimentateur ont été d'accord sur tous les verdicts.
+
+Cause d'élimination fréquente : la seule cause scientifique, dans 3 cas sur 3, est une richesse finale restée sous le seuil 1/α. Le pari a donc réfuté l'hypothèse. Une intuition plausible ne suffit pas : il faut un effet assez fort pour faire croître la richesse sur des tirages frais face à la bibliothèque aveugle.
+
+Domaines : arrêt, graphes et mémoire spectrale ont chacun eu leur seule hypothèse testée éliminée (1 sur 1). Pour y revenir, il faut formuler des prédictions plus précises ou un effet attendu plus fort, et non reprendre la même idée. Morphologie et représentation n'ont eu aucune élimination sur une hypothèse testée chacune. Ce sont des pistes à creuser, mais un seul essai par domaine reste un échantillon trop mince.
+
+Protocole qui a fonctionné (G0-F05, G0-F07) : un pari sur 120 tirages frais, choisis à l'avance selon la divergence entre l'hypothèse et la bibliothèque aveugle. La métrique est la richesse W et la sévérité attendue est de 0,05. Ce qui compte : les tirages sont fixés avant de voir les données, sont frais, et ciblent les cas où les deux modèles divergent le plus. Chaque tirage devient ainsi informatif et le test reste sévère.
+
+Recommandation : réutiliser ce protocole tel quel. Avant de proposer une hypothèse, estimer si l'effet attendu suffit à franchir 1/α en 120 tirages.

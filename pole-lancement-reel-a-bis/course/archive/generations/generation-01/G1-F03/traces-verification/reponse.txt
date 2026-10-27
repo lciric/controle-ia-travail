@@ -1,0 +1,13 @@
+Tout est en main ; rien d'autre à demander.
+
+**Constat du rejeu**
+
+- `fiche.json` : empreinte `5b679414…` conforme à la déclaration et à celle figée dans le code ; `engagement.json` : empreinte `1f2439cb…` conforme ; tous les fichiers `.sha256` concordent avec les fichiers présents.
+- Test gelé vs test exécuté : `engagement.json` pointe sur la bonne empreinte de fiche, sa `loi` est identique à `loi_predictive` de la fiche (poids et biais), `nombre_issues` = 3, `seuil_richesse` = 20,0 = seuil de la fiche, `plan_execution` = `ordre_secret`. La bibliothèque nulle contient bien ce que la fiche annonce : prédicteurs aveugles (marginale, uniforme, moyennes glissantes, urne), les deux parents G0-F05 et G0-F07, leur mélange, l'enveloppe harmonique et les concaténations si/sinon.
+- Rejeu de `ranger_tirages.py` (sous `python3 -I`, aucun module parasite dans le dossier) : rc = 0, 340 issues écrites, empreinte d'ordre `d432de9b…` identique à celle de `mesures.json`. `tirages.json` produit est **strictement égal** à `tirages-declares.json` (comparaison structurelle complète).
+- Raccourcis : le code ne calcule ni ne modifie aucune issue ; il se borne à vérifier les empreintes (fiche, engagement, liaison de `mesures.json` et `ordre-execution.json` à l'engagement, permutation complète 0..339, issues dans {0,1,2}) et à recopier les issues déposées par le noyau. Aucune lecture de la loi, aucun filtrage ni réordonnancement.
+- Remarque sans incidence sur la conformité : le texte du protocole de la fiche parle de « 120 tirages frais », alors que l'engagement gelé par le noyau plante 340 instances en mode continu (calibrage 40, instants de lecture 38…300). C'est le plan du noyau, scellé par l'empreinte d'engagement que le code vérifie, et non un choix de l'expérimentateur.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Empreintes fiche/engagement conformes ; loi, seuil, nombre d'issues et bibliothèque nulle de l'engagement identiques à la fiche gelée ; rejeu de ranger_tirages.py reproduit exactement tirages-declares.json (340 issues, ordre d432de9b…) ; le code ne fait que recopier les issues du noyau après vérification des empreintes, aucun raccourci. Seule note : le protocole de la fiche mentionne 120 tirages là où l'engagement du noyau en fixe 340 en mode continu."}
+```

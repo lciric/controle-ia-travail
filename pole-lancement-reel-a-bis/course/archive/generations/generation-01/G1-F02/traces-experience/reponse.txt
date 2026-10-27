@@ -1,0 +1,12 @@
+J'ai écrit `tirages.json` : il contient les 120 issues de `mesures.json` sans aucune modification. J'ai relu les deux fichiers après coup : ils sont identiques. Je n'ai calculé aucune richesse.
+
+Le script `ranger_tirages.py` peut être relancé. Il refuse d'écrire si l'un de ces contrôles échoue :
+- **Fichiers gelés :** `fiche.json` et `engagement.json` ont toujours leurs empreintes gelées (da8c7dbb… et 65d93354…). Je n'ai pas touché à `fiche.json`.
+- **Lien à l'engagement :** `mesures.json` et `ordre-execution.json` portent tous deux l'empreinte de l'engagement gelé.
+- **Ordre imposé :** l'empreinte d'ordre déposée dans `mesures.json` (af0361c8…) correspond à l'ordre de `ordre-execution.json`, hors espaces. L'ordre est bien une permutation des 120 indices du plan, et il y a autant d'issues que d'instances.
+
+`tirages.json` reprend les champs de `mesures.json` : l'empreinte d'engagement, les issues, le plan (`"ordre_secret"`) et l'empreinte de l'ordre.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "da8c7dbb58df05c7f757b4833ca3f908da3beaa03412068fbc5cfdea086029f3", "empreinte_engagement": "65d933545265ab5ac13a572267b52761457d4747aa7a0c12b073ed075fc84a52"}
+```

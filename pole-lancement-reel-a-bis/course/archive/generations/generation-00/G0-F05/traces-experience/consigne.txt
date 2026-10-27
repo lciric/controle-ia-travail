@@ -1,0 +1,74 @@
+Tu es expérimentateur. Le test ci-dessous est gelé : son empreinte SHA-256 est 83ec5b83b2a4c178b6e5f515a2dd000560c92929c5c35eaa275dd433cd2e45c6.
+
+La fiche est dans `fiche.json` (son SHA-256 doit rester égal à l'empreinte). Ne la modifie jamais.
+
+Fiche publique :
+{
+ "ce_que_la_fille_predit_de_plus": "",
+ "ce_qui_change": {},
+ "contraintes": [
+  "discret"
+ ],
+ "cout_borne": 1.0,
+ "domaines": [
+  "morphologie"
+ ],
+ "enonce": "Le hachage par trigrammes predit la classe d'un mot flechi",
+ "espace_instances": {
+  "dimension": 4,
+  "nombre_issues": 3,
+  "sous_populations": 2
+ },
+ "identifiant": "G0-F05",
+ "loi_predictive": {
+  "biais": [
+   -0.006866,
+   -0.389012,
+   -0.160317
+  ],
+  "poids": [
+   [
+    1.07438,
+    0.699062,
+    1.321303,
+    -1.479958
+   ],
+   [
+    -1.529559,
+    0.041508,
+    -0.478193,
+    -0.064763
+   ],
+   [
+    -0.167843,
+    0.018002,
+    1.28605,
+    0.279673
+   ]
+  ],
+  "type": "softmax"
+ },
+ "metrique": "richesse W contre la bibliothèque aveugle",
+ "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes)",
+ "operateurs": [
+  "hachage",
+  "normalisation",
+  "projection"
+ ],
+ "prediction": {
+  "signe": "+",
+  "texte": "log-richesse moyenne par tirage positive contre la bibliothèque nulle",
+  "valeur": 0.1
+ },
+ "protocole": "pari sur 120 tirages frais choisis ex ante par divergence",
+ "seuil": 20.0,
+ "severite_attendue": 0.05
+}
+
+Sélection par pari : l'engagement gelé (`engagement.json`, empreinte aff8d07a128f287b3ee72c7ead255f01042e34dbaf696b4bb6eb496ae5909f52) fixe la loi prédictive, la bibliothèque nulle et le plan d'instances. Produis les issues aux instances du plan par un code rejouable, écris-les dans `tirages.json` ({empreinte_engagement, issues}) et termine par un bloc ```json {"tirages": "tirages.json", "code": "<chemin>", "empreinte_fiche": "<sha256>", "empreinte_engagement": "<sha256>"}```. Tu ne calcules aucune richesse : l'orchestrateur la calcule.
+
+Ordre d'exécution imposé par le noyau (`ordre-execution.json`, écrit après le gel) : au temps s, traite l'instance d'indice ordre[s] du plan ; range chaque issue à l'indice de son instance ; écris aussi dans `tirages.json` le plan (« ordre_secret ») et l'empreinte de l'ordre.
+
+Monde tenu par le noyau : tu ne mesures rien toi-même (ni réseau ni clé). Les issues du monde aux instances du plan, déjà produites dans l'ordre imposé, sont déposées dans `mesures.json` ({empreinte_engagement, issues, plan_execution, empreinte_ordre}). Écris un code rejouable qui vérifie que `mesures.json` est lié à l'engagement gelé (même empreinte) et range ces issues telles quelles dans `tirages.json` (mêmes champs). Toute issue différente de celles déposées sera rejetée par le noyau.
+
+Ta réponse est ton dernier message : l'orchestrateur l'archive lui-même, hors de ton dossier ; n'écris aucun fichier de réponse.

@@ -1,0 +1,81 @@
+Fiche fille ci-dessous. Je n'ai lancé aucun calcul : la loi s'obtient par une simple somme des paramètres des deux parents, et les chiffres de la prédiction sont des cibles fixées avant les tirages, pas des résultats observés.
+
+```json
+{
+ "fille": {
+  "ce_que_la_fille_predit_de_plus": "Les deux parents décrivent deux faces d'une même projection linéaire. A dit que le second trait, une fois normalisé, inverse les classes un et trois. B dit que le premier trait oriente l'issue vers la classe deux. La fille additionne leurs scores avant le softmax (un « produit d'experts »). Elle prédit qu'en représentation comme en mémoire spectrale, ces deux effets s'additionnent au lieu de se gêner. Elle doit donc gagner sur les tirages où A et B divergent, là où chaque parent ne voit que la moitié du signal. Elle prédit aussi que cette combinaison bat les enveloppes des parents, avec une marge positive par tirage : le mélange, l'enveloppe harmonique et les concaténations si/sinon ne peuvent que choisir entre les parents ou faire leur moyenne. Elles ne peuvent pas rendre la loi plus tranchée, alors que la somme des scores le peut.",
+  "ce_qui_change": {
+   "loi_predictive": "somme des poids et des biais de A et de B (produit d'experts géométrique), au lieu d'une loi propre à un seul domaine",
+   "domaines": "réunion de representation et de memoire spectrale, reliées par l'opérateur commun projection",
+   "operateurs": "on garde normalisation (de A) et seuillage (de B) autour de la projection commune",
+   "prediction": "log-richesse visée relevée de 0.1 à 0.15 par tirage, plus une marge exigée contre les parents et leurs enveloppes"
+  },
+  "contraintes": [
+   "stationnaire",
+   "lineaire"
+  ],
+  "cout_borne": 1.0,
+  "domaines": [
+   "representation",
+   "memoire spectrale"
+  ],
+  "enonce": "Sous une projection commune, le premier trait pousse l'issue vers la classe deux et le second trait normalisé inverse les classes un et trois. Les deux effets s'additionnent : leur somme forme une seule loi log-linéaire, valable à la fois pour les représentations et pour les mémoires spectrales.",
+  "espace_instances": {
+   "dimension": 4,
+   "nombre_issues": 3,
+   "sous_populations": 2
+  },
+  "loi_predictive": {
+   "biais": [
+    0.010535,
+    0.081791,
+    -0.296054
+   ],
+   "poids": [
+    [
+     0.588583,
+     0.396971,
+     2.589143,
+     1.333288
+    ],
+    [
+     -0.908422,
+     0.400081,
+     -1.79367,
+     -0.859765
+    ],
+    [
+     -0.151858,
+     0.399284,
+     -1.853231,
+     2.720187
+    ]
+   ],
+   "type": "softmax"
+  },
+  "metrique": "richesse W contre la bibliothèque aveugle, augmentée des parents A et B et de leurs enveloppes (mélange, enveloppe harmonique, concaténations si/sinon)",
+  "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes), complétée par les lois de G0-F07 et G0-F08 et leurs enveloppes",
+  "operateurs": [
+   "normalisation",
+   "projection",
+   "seuillage"
+  ],
+  "prediction": {
+   "signe": "+",
+   "texte": "log-richesse moyenne par tirage d'au moins 0.15 contre la bibliothèque nulle augmentée, avec une marge positive par tirage contre chaque parent et chaque enveloppe sur les tirages où A et B divergent",
+   "valeur": 0.15
+  },
+  "protocole": "pari sur 120 tirages frais choisis ex ante par divergence entre A et B, sélection fixée avant toute observation",
+  "seuil": 20.0,
+  "severite_attendue": 0.05
+ }
+}
+```
+
+Les exigences sont-elles remplies ?
+
+- **La prédiction diffère de celles des parents :** elle vise 0.15 au lieu de 0.1. Elle se mesure aussi contre une référence plus dure, qui inclut A, B et leurs enveloppes, et elle exige une marge par tirage.
+- **Le test peut échouer :** sur 120 tirages, 0.15 par tirage donne une log-richesse totale d'environ 18, bien au-dessus du seuil de ln 20 ≈ 3,0. Le test échoue quand même si la somme des deux lois n'apporte rien de plus que l'une ou l'autre, ou que leur mélange. La fille ne bat alors pas ses parents et n'est pas promue.
+- **Les contraintes sont compatibles :** une somme des scores avant le softmax reste linéaire et ne dépend pas du temps, donc elle respecte « stationnaire » (A) et « lineaire » (B).
+- **Sévérité :** 0.05, soit l'α du pôle, dans ]0 ; 1[.
+- **Protocole :** c'est celui qui a fonctionné en génération 1, reconduit tel quel.

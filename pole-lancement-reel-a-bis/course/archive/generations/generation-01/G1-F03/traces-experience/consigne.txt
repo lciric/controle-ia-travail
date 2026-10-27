@@ -1,0 +1,97 @@
+Tu es expérimentateur. Le test ci-dessous est gelé : son empreinte SHA-256 est 5b679414b5153326eba8b351396c49d73626eaebbc30f4751debf5df72444d62.
+
+La fiche est dans `fiche.json` (son SHA-256 doit rester égal à l'empreinte). Ne la modifie jamais.
+
+Fiche publique :
+{
+ "ce_que_la_fille_predit_de_plus": "Les signaux de A (trigrammes hachés) et de B (inversion des classes 1 et 3 par le second trait) s'additionnent en logits au lieu de se faire concurrence. Sur les tirages où A et B sont d'accord, la fille est plus confiante que chacun des deux. Là où ils divergent, elle arbitre selon la force relative des deux signaux, ce que ni le mélange ni l'enveloppe harmonique ni une concaténation si/sinon ne peuvent faire. Elle prédit donc un gain de log-richesse par tirage d'au moins 0,05 au-dessus du meilleur des parents et de leurs enveloppes.",
+ "ce_qui_change": {
+  "contraintes": "union compatible discret + stationnaire",
+  "domaines": "morphologie et representation réunies par le pont normalisation, projection",
+  "loi": "produit d'experts : somme des logits de A et de B (poids et biais additionnés), à la place d'une loi unique",
+  "prediction": "valeur portée de 0,1 à 0,15 par tirage, et le pari se fait aussi contre les parents et leurs enveloppes"
+ },
+ "contraintes": [
+  "discret",
+  "stationnaire"
+ ],
+ "cout_borne": 1.0,
+ "domaines": [
+  "morphologie",
+  "representation"
+ ],
+ "enonce": "Sous normalisation et projection communes, le hachage par trigrammes d'un mot flechi et l'inversion des classes un et trois par le second trait sont deux signaux indépendants : leur produit d'experts (somme des logits) prédit la classe mieux que chaque parent et que leurs mélanges",
+ "espace_instances": {
+  "dimension": 4,
+  "nombre_issues": 3,
+  "sous_populations": 2
+ },
+ "identifiant": "G1-F03",
+ "loi_predictive": {
+  "biais": [
+   0.407202,
+   -0.830732,
+   0.051779
+  ],
+  "poids": [
+   [
+    0.451928,
+    1.789751,
+    3.042816,
+    -0.428812
+   ],
+   [
+    -2.300606,
+    0.63278,
+    -2.29896,
+    -0.846872
+   ],
+   [
+    1.504496,
+    -0.151919,
+    -0.949206,
+    0.84109
+   ]
+  ],
+  "type": "softmax"
+ },
+ "metrique": "richesse W contre la bibliothèque aveugle augmentée des parents A, B et de leurs enveloppes (mélange, enveloppe harmonique, concaténations si/sinon)",
+ "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes) augmentée de A, B, de leur mélange, de leur enveloppe harmonique et de leurs concaténations si/sinon",
+ "operateurs": [
+  "hachage",
+  "normalisation",
+  "projection"
+ ],
+ "prediction": {
+  "signe": "+",
+  "texte": "log-richesse moyenne par tirage d'au moins 0,15 contre la bibliothèque nulle, et supérieure d'au moins 0,05 par tirage au meilleur des parents et de leurs enveloppes",
+  "valeur": 0.15
+ },
+ "protocole": "pari sur 120 tirages frais choisis ex ante par divergence maximale entre la fille et le meilleur de ses parents ou enveloppes",
+ "seuil": 20.0,
+ "severite_attendue": 0.05
+}
+
+Sélection par pari : l'engagement gelé (`engagement.json`, empreinte 1f2439cb9510cbbe02c64826faf89504b0a9a755458cc4a937fc618ddef705d6) fixe la loi prédictive, la bibliothèque nulle et le plan d'instances. Produis les issues aux instances du plan par un code rejouable, écris-les dans `tirages.json` ({empreinte_engagement, issues}) et termine par un bloc ```json {"tirages": "tirages.json", "code": "<chemin>", "empreinte_fiche": "<sha256>", "empreinte_engagement": "<sha256>"}```. Tu ne calcules aucune richesse : l'orchestrateur la calcule.
+
+Ordre d'exécution imposé par le noyau (`ordre-execution.json`, écrit après le gel) : au temps s, traite l'instance d'indice ordre[s] du plan ; range chaque issue à l'indice de son instance ; écris aussi dans `tirages.json` le plan (« ordre_secret ») et l'empreinte de l'ordre.
+
+Monde tenu par le noyau : tu ne mesures rien toi-même (ni réseau ni clé). Les issues du monde aux instances du plan, déjà produites dans l'ordre imposé, sont déposées dans `mesures.json` ({empreinte_engagement, issues, plan_execution, empreinte_ordre}). Écris un code rejouable qui vérifie que `mesures.json` est lié à l'engagement gelé (même empreinte) et range ces issues telles quelles dans `tirages.json` (mêmes champs). Toute issue différente de celles déposées sera rejetée par le noyau.
+
+Ta réponse est ton dernier message : l'orchestrateur l'archive lui-même, hors de ton dossier ; n'écris aucun fichier de réponse.
+
+Mémoire du pôle (à titre d'aide, le test gelé prime) :
+Gabarits de protocoles ayant survécu à un test sévère :
+- [G0-F05] sévérité annoncée 0.05 ; métrique : richesse W contre la bibliothèque aveugle ; protocole : pari sur 120 tirages frais choisis ex ante par divergence
+- [G0-F07] sévérité annoncée 0.05 ; métrique : richesse W contre la bibliothèque aveugle ; protocole : pari sur 120 tirages frais choisis ex ante par divergence
+
+Leçons de la génération 0 :
+Génération 0 : 5 hypothèses tranchées (3 éliminées, 2 survivantes) et 1 non testée. Vérificateur et expérimentateur ont été d'accord sur tous les verdicts.
+
+Cause d'élimination fréquente : la seule cause scientifique, dans 3 cas sur 3, est une richesse finale restée sous le seuil 1/α. Le pari a donc réfuté l'hypothèse. Une intuition plausible ne suffit pas : il faut un effet assez fort pour faire croître la richesse sur des tirages frais face à la bibliothèque aveugle.
+
+Domaines : arrêt, graphes et mémoire spectrale ont chacun eu leur seule hypothèse testée éliminée (1 sur 1). Pour y revenir, il faut formuler des prédictions plus précises ou un effet attendu plus fort, et non reprendre la même idée. Morphologie et représentation n'ont eu aucune élimination sur une hypothèse testée chacune. Ce sont des pistes à creuser, mais un seul essai par domaine reste un échantillon trop mince.
+
+Protocole qui a fonctionné (G0-F05, G0-F07) : un pari sur 120 tirages frais, choisis à l'avance selon la divergence entre l'hypothèse et la bibliothèque aveugle. La métrique est la richesse W et la sévérité attendue est de 0,05. Ce qui compte : les tirages sont fixés avant de voir les données, sont frais, et ciblent les cas où les deux modèles divergent le plus. Chaque tirage devient ainsi informatif et le test reste sévère.
+
+Recommandation : réutiliser ce protocole tel quel. Avant de proposer une hypothèse, estimer si l'effet attendu suffit à franchir 1/α en 120 tirages.

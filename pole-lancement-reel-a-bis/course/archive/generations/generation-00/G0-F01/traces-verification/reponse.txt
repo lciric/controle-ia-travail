@@ -1,0 +1,19 @@
+Rejeu effectué dans le dossier et contrôles terminés.
+
+**Intégrité**
+- `fiche.json` → `6e468f9a…313f` (= empreinte annoncée, = `empreinte_fiche` de `declaration.json` et de `engagement.json`).
+- `engagement.json` → `9894b6d8…7dbd` (= `empreinte_engagement` de la déclaration, de `mesures.json`, d'`ordre-execution.json` et des tirages déclarés).
+- Tous les `.sha256` concordent avec les fichiers présents.
+
+**Rejeu du code déclaré** (`python3 -I ranger_tirages.py`) : sortie `tirages.json écrit, 120 issues`, rc=0. Le `tirages.json` produit est **strictement égal** (comparaison structurelle JSON) à `tirages-declares.json` : mêmes 120 issues dans le même ordre, même `empreinte_ordre`, même `empreinte_engagement`, même `plan_execution`.
+
+**Conformité au test gelé**
+- La loi de l'engagement est identique à `loi_predictive` de la fiche (softmax, mêmes poids/biais) ; 120 instances de dimension 4, 2 sous-populations (g ∈ {0,1}), 3 issues, seuil 20.0, identifiant G0-F01, bibliothèque nulle = marginale/uniforme/moyennes glissantes/urne, `part_calibrage` 0, `delta0` null — tout correspond au protocole « pari sur 120 tirages frais » de la fiche.
+- `ordre-execution.json` est bien une permutation de 0..119 et son empreinte canonique coïncide avec `empreinte_ordre` de `mesures.json` et des tirages déclarés.
+- Les issues sont toutes dans {0,1,2} (102 × 0, 18 × 2, 0 × 1), 120 valeurs, indexées par instance du plan.
+
+**Recherche de raccourcis** : le code ne calcule ni ne modifie rien — il vérifie les empreintes (fiche, engagement, lien mesures/ordre), contrôle la permutation et la plage des issues, puis recopie telles quelles les issues déposées par le noyau dans `mesures.json`. Aucune réordonnance, filtrage, troncature, aucun accès à la loi ou au prédicteur, aucun calcul de richesse (celle-ci reste au noyau). Pas de dépendance externe, pas de source d'aléa. Rien de suspect.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py reproduit exactement tirages-declares.json (120 issues, empreinte_ordre et empreinte_engagement identiques). Empreintes fiche/engagement conformes à la déclaration ; engagement cohérent avec la fiche gelée (loi, 120 instances, 3 issues, 2 sous-populations, seuil 20). Le code se borne à recopier les issues du noyau après contrôle des empreintes et de la permutation ; aucun raccourci ni mesure propre."}
+```

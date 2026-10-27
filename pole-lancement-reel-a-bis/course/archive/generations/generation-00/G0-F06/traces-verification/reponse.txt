@@ -1,0 +1,10 @@
+Rejeu terminé. Résultats :
+
+- `fiche.json` a bien l'empreinte gelée `c7a4f6…49`; `engagement.json` a l'empreinte déclarée `7488bb…6bb` et pointe vers cette même fiche.
+- L'engagement reprend exactement la fiche : loi softmax (mêmes poids/biais), 3 issues, dimension 4, 120 instances fraîches, seuil de richesse 20.0, alpha 0.05, mode `continu`, plan `ordre_secret`, bibliothèque nulle (marginale, uniforme, moyennes glissantes, urne). Aucune issue préenregistrée dans l'engagement (le `True` affiché vient seulement de la clé `nombre_issues`).
+- `ranger_tirages.py` rejoué avec `python3 -I` depuis un `tirages.json` supprimé : il vérifie les empreintes fiche/engagement, le lien de `mesures.json` et de `ordre-execution.json` à l'engagement, l'empreinte de l'ordre (permutation valide de 0..119), puis recopie **telles quelles** les 120 issues du noyau. Sortie strictement identique à `tirages-declares.json` (120 issues : 50×0, 6×1, 64×2). Tous les `.sha256` du dossier concordent.
+- Raccourcis cherchés : le code ne calcule ni ne modifie aucune issue, ne lit pas la loi, ne réordonne rien ; il n'y a pas de verdict chiffré à confirmer (la richesse est calculée par le noyau). Seule limite : je ne peux pas authentifier hors dossier que `mesures.json` provient bien du noyau, au-delà de son lien d'empreinte à l'engagement.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py reproduit exactement tirages-declares.json (120 issues, mêmes empreintes d'engagement et d'ordre). L'engagement est lié à la fiche gelée c7a4f6…49 et en reprend loi, seuil 20, alpha 0.05, 120 instances, plan ordre_secret et bibliothèque nulle. Le code ne fait que recopier les issues du noyau après contrôle des empreintes ; aucun raccourci ni calcul de verdict."}
+```

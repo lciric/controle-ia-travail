@@ -1,0 +1,16 @@
+J'ai écrit `tirages.json` avec les 120 issues de `mesures.json` copiées telles quelles, à l'indice de leur instance. Le fichier contient les mêmes champs que `mesures.json` et ses données sont identiques, vérification faite. Je n'ai rien mesuré et je n'ai calculé aucune richesse.
+
+Le code `ranger_tirages.py` peut être relancé. Il vérifie d'abord que :
+- `fiche.json` et `engagement.json` ont toujours leurs empreintes gelées ;
+- `mesures.json` et `ordre-execution.json` portent la même empreinte d'engagement (`7488bbb1…`) ;
+- l'empreinte d'ordre déclarée dans `mesures.json` (`9e36f6bf…`) correspond à la liste `ordre` ;
+- `ordre` est bien une permutation des 120 instances du plan ;
+- chaque issue vaut 0, 1 ou 2.
+
+L'empreinte d'ordre ne correspond pas au SHA-256 du fichier `ordre-execution.json` (`53d205ee…`). Elle correspond au SHA-256 de la liste `ordre` écrite en JSON compact, sans espaces. C'est le calcul que le code refait.
+
+`fiche.json` n'a pas été modifié : son SHA-256 est toujours `c7a4f687…`.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "c7a4f68787e254584e7cd921c5535b1d5f93515d1a11c71f6208452df78da849", "empreinte_engagement": "7488bbb1ece3baf48c22f8f1db5d0f8ad36a8b1e18f79a097518743bc5d9c6bb"}
+```

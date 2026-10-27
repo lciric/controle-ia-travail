@@ -1,0 +1,12 @@
+Rejeu effectué dans le dossier.
+
+**Constats**
+- Empreintes : `fiche.json` = `e0c69ba8…42c2e` (conforme à la fiche gelée et à `declaration.json`) ; `engagement.json` = `1365e4a2…de9f` (conforme à la déclaration et à la constante du code) ; tous les `.sha256` du dossier vérifiés OK.
+- `python3 -I ranger_tirages.py` s'exécute sans échec d'assertion : il contrôle les empreintes de fiche et d'engagement, la liaison de `mesures.json` et `ordre-execution.json` à l'engagement, l'empreinte de l'ordre (recalculée `6aba3fcc…f438`, égale à celle déclarée), que l'ordre est une permutation de 120, et que les 120 issues sont dans {0,1,2}.
+- `tirages.json` produit est sémantiquement identique à `tirages-declares.json` (mêmes `empreinte_engagement`, `empreinte_ordre`, `plan_execution: ordre_secret`, 120 issues identiques, elles-mêmes identiques à `mesures.json`).
+- Test gelé : `engagement.json` porte l'identifiant G0-F04, l'empreinte de la fiche, la loi softmax identique à `loi_predictive` de la fiche, 120 instances de dimension 4 avec 2 sous-populations, seuil de richesse 20.0 = seuil de la fiche, bibliothèque nulle (marginale, uniforme, moyennes glissantes, urne) cohérente avec le nul déclaré.
+- Raccourcis : le code ne génère ni ne modifie aucune issue ; il se contente de recopier les issues déposées par le noyau après vérifications de liaison. Aucun accès aux instances pour fabriquer des issues, aucun chemin d'écriture hors du dossier, aucune dépendance externe. Pas de verdict chiffré dans le code (conforme au mode pari : la richesse est calculée par le noyau).
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py reproduit exactement tirages-declares.json (120 issues, empreinte_engagement 1365e4a2…, empreinte_ordre 6aba3fcc… recalculée et identique). fiche.json a l'empreinte gelée e0c69ba8…, engagement.json lié à cette fiche avec la même loi, le même seuil 20.0 et 120 instances ; mesures et ordre liés à l'engagement. Le code ne produit ni ne modifie aucune issue, aucun raccourci détecté."}
+```

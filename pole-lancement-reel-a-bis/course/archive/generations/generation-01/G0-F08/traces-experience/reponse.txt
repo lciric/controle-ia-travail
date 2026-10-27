@@ -1,0 +1,14 @@
+J'ai écrit `tirages.json` : il contient les 120 issues déposées par le noyau, inchangées. Le script `ranger_tirages.py` les produit et peut être relancé.
+
+Avant d'écrire, le script vérifie que :
+- `fiche.json` et `engagement.json` ont toujours leurs empreintes gelées. `fiche.json` n'a pas été modifiée.
+- `mesures.json` et `ordre-execution.json` sont liés à l'engagement gelé (même empreinte).
+- `mesures.json` contient une issue par instance du plan, soit 120, et chaque issue vaut 0, 1 ou 2.
+- L'ordre imposé contient chaque instance du plan exactement une fois.
+- L'empreinte de l'ordre déclarée dans `mesures.json` (`7005ef91…`) est bien le SHA-256 de la liste de l'ordre écrite en JSON compact.
+
+Les issues sont copiées une à une, chacune à l'indice de son instance. Les champs repris sont `empreinte_engagement`, `issues`, `plan_execution` (« ordre_secret ») et `empreinte_ordre`. J'ai relu `tirages.json` après écriture : son contenu est identique à `mesures.json`. Je n'ai calculé aucune richesse.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "463c425fe6b6a7a8beeef533914068a13886b1ecd0d647173bdd293a14c625e5", "empreinte_engagement": "1ecfdd088611b70c4b466d51488993328e6b66a45f191e576de909e7f3953082"}
+```

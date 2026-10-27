@@ -1,0 +1,13 @@
+Rejeu terminé, résultats concordants.
+
+**Vérifications effectuées**
+
+- **Empreintes** : `fiche.json` → `83ec5b83…45c6` et `engagement.json` → `aff8d07a…9f52`, identiques à la déclaration et aux constantes codées en dur dans `ranger_tirages.py`. Tous les fichiers `.sha256` du dossier concordent avec les empreintes recalculées.
+- **Rejeu** : `python3 -I ranger_tirages.py` s'exécute sans erreur (toutes les assertions passent) et produit `tirages.json` dont le contenu est **structurellement identique** à `tirages-declares.json` (120 issues, même `empreinte_engagement`, même `empreinte_ordre`, même `plan_execution`). Deux rejeux consécutifs donnent le même sha256 (`f3c8002a…213c`) : déterministe.
+- **Test gelé** : l'engagement référence l'empreinte de la fiche gelée ; la loi prédictive (softmax, poids/biais), le seuil de richesse (20.0), le nombre d'issues (3), la dimension (4), les deux sous-populations et les 120 instances de l'engagement correspondent à la fiche (`protocole: pari sur 120 tirages frais`). Plan `ordre_secret`, `part_calibrage = 0`, `mode continu` : pas de calibrage sur les tirages.
+- **Chaîne de liaison** : `mesures.json` et `ordre-execution.json` sont liés à l'empreinte d'engagement ; l'empreinte de l'ordre recalculée (`c1215e41…2179`) coïncide avec celle de `mesures.json` et des tirages déclarés ; l'ordre est une permutation complète de 0..119.
+- **Raccourcis cherchés** : le code ne lit pas `fiche.json` ni la loi pour calculer quoi que ce soit, ne modifie, ne filtre, ne réordonne ni ne sélectionne aucune issue — il copie telles quelles les issues déposées par le noyau après contrôle des liaisons. Pas d'import exotique, pas de dépendance à l'environnement, pas d'écriture hors dossier. Toutes les issues sont des entiers dans [0, 3). Aucun verdict chiffré n'est produit par le code (conforme au protocole : richesse calculée par le noyau).
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py (python -I) reproduit exactement tirages-declares.json (120 issues, mêmes empreintes d'engagement et d'ordre, sortie déterministe sur deux rejeux). Empreintes fiche/engagement conformes à la déclaration ; engagement lié à la fiche gelée (loi softmax, seuil 20.0, 3 issues, 120 instances, part_calibrage 0, plan ordre_secret) ; ordre = permutation complète et empreinte d'ordre cohérente. Le code copie telles quelles les issues du noyau sans mesure, sélection ni modification : aucun raccourci détecté. Aucun verdict chiffré à confirmer, la richesse étant calculée par le noyau."}
+```

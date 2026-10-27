@@ -1,0 +1,15 @@
+`tirages.json` contains the 120 issues from `mesures.json` exactly as the kernel deposited them. I produced or measured nothing myself, and I did not compute any richesse.
+
+The script `ranger_tirages.py` (`python3 -I ranger_tirages.py`) checks the links before copying anything:
+- **Fichiers gelés :** `fiche.json` and `engagement.json` still have their frozen fingerprints. `fiche.json` was not modified.
+- **Liaison à l'engagement :** `ordre-execution.json` and `mesures.json` both carry the same `empreinte_engagement` (277448c2…).
+- **Ordre :** `ordre` contains each of the plan's 120 instance indices exactly once.
+- **Empreinte de l'ordre :** the order's fingerprint, computed as the SHA-256 of `ordre` in compact JSON, is `df1736b5…`. That matches the `empreinte_ordre` field in `mesures.json`. It is not the file hash of `ordre-execution.json` (4530e538…).
+- **Plan d'exécution :** it is `ordre_secret` in both the engagement and the measures.
+- **Issues :** there are 120, each in {0, 1, 2}.
+
+The issues were already filed under their instance index by the kernel, so the script copies them unchanged. `tirages.json` holds the same four fields as `mesures.json` (`empreinte_engagement`, `issues`, `plan_execution`, `empreinte_ordre`), and I checked that the two files are identical.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "315c5a81f4b550c714fd9b79572ed942ef16506280a13a719fb3e45063680434", "empreinte_engagement": "277448c25ec54bbb06722b0cefa819400a4b6653d980ac4a4c6e2907f68ee9c7"}
+```

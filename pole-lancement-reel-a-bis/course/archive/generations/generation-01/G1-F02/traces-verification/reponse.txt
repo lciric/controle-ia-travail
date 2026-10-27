@@ -1,0 +1,12 @@
+Rejeu effectué dans le dossier de vérification.
+
+**Constats**
+- `fiche.json` : empreinte `da8c7dbb…29f3`, identique à celle du prompt, de `declaration.json`, de `engagement.json` et de la constante gelée dans le code.
+- `engagement.json` : empreinte `65d93354…4a52` = déclaration = constante du code = champ `empreinte_engagement` de `mesures.json`, `ordre-execution.json` et `tirages-declares.json`. Il contient 120 instances, `loi` identique à `loi_predictive` de la fiche (softmax 3 classes), `seuil_richesse` 20.0 = `seuil` de la fiche, `plan_execution` `ordre_secret`, bibliothèque nulle (marginale, uniforme, moyennes glissantes, urne) conforme au `nul` de la fiche.
+- Rejeu de `ranger_tirages.py` (après suppression de tout `tirages.json` préexistant) : les assertions passent (empreintes, liaison mesures↔engagement, empreinte d'ordre recalculée = `af0361c8…845d`, ordre = permutation de 0..119, 120 issues). Le `tirages.json` produit est **strictement identique** à `tirages-declares.json` (clé par clé et globalement).
+- Raccourcis cherchés : le code ne calcule rien lui-même — il recopie sans modification les issues déposées par le noyau dans `mesures.json`, ne touche ni à la loi, ni aux instances, ni à l'ordre ; aucune lecture de données extérieures, aucun aléa, aucune fuite de l'ordre secret dans les issues (issues en ordre d'exécution, l'ordre reste dans `ordre-execution.json` lié par empreinte). Les 120 issues sont dans {0,1,2} = `nombre_issues` 3.
+- Conformément au protocole de sélection par pari, aucun verdict chiffré n'est déclaré ni confirmé ; la richesse reste à calculer par le noyau.
+
+```json
+{"confirme": true, "test_conforme": true, "motif": "Rejeu de ranger_tirages.py dans le dossier : toutes les assertions d'empreintes passent (fiche da8c7dbb…, engagement 65d93354…, ordre af0361c8… recalculée), et le tirages.json produit est strictement identique à tirages-declares.json (120 issues dans {0,1,2}, plan ordre_secret). L'engagement reprend exactement la loi_predictive, le seuil 20.0 et la bibliothèque nulle de la fiche gelée ; le code se borne à recopier les issues du noyau sans calcul ni source externe, aucun raccourci détecté. Aucun verdict chiffré à confirmer (sélection par pari)."}
+```

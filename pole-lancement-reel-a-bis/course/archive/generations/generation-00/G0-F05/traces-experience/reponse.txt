@@ -1,0 +1,16 @@
+J'ai écrit `tirages.json` à partir des issues de `mesures.json`, copiées telles quelles. Je n'ai rien mesuré et je n'ai calculé aucune richesse.
+
+Le script `ranger_tirages.py` se rejoue et fait d'abord ces vérifications :
+- **Fiche et engagement :** `fiche.json` et `engagement.json` ont bien les empreintes gelées. `fiche.json` n'a pas été modifiée.
+- **Liaison à l'engagement :** `mesures.json` et `ordre-execution.json` portent tous deux l'empreinte `aff8d07a…`.
+- **Empreinte de l'ordre :** `empreinte_ordre` (`c1215e41…`) est le SHA-256 de la liste `ordre` écrite en JSON compact. Ce n'est pas l'empreinte du fichier `ordre-execution.json` (`8876b94e…`).
+- **Ordre :** c'est une permutation complète des 120 instances du plan.
+- **Issues :** il y en a 120, toutes dans {0, 1, 2}, déjà rangées à l'indice de leur instance.
+
+`tirages.json` reprend exactement les mêmes valeurs que `mesures.json` pour les quatre champs : `empreinte_engagement`, `issues`, `plan_execution` (« ordre_secret ») et `empreinte_ordre`. J'ai vérifié la correspondance après exécution.
+
+Un point à signaler : l'engagement indique `"mode": "continu"`, alors que la fiche a la contrainte « discret ». Cela ne change rien à ce que j'ai produit, mais l'orchestrateur voudra peut-être le vérifier.
+
+```json
+{"tirages": "tirages.json", "code": "ranger_tirages.py", "empreinte_fiche": "83ec5b83b2a4c178b6e5f515a2dd000560c92929c5c35eaa275dd433cd2e45c6", "empreinte_engagement": "aff8d07a128f287b3ee72c7ead255f01042e34dbaf696b4bb6eb496ae5909f52"}
+```

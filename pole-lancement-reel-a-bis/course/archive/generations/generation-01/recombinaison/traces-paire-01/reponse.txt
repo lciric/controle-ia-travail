@@ -1,0 +1,77 @@
+```json
+{
+  "fille": {
+    "ce_que_la_fille_predit_de_plus": "Les deux parents partagent l'opérateur « projection » sur le même espace (dimension 4, 3 issues). La fille les combine par produit d'experts : elle additionne leurs scores avant le softmax. Elle prédit donc que le classement par trigrammes hachés (morphologie) et l'orientation linéaire du premier trait (mémoire spectrale) sont deux indices indépendants, et que leur combinaison est plus tranchée que chacun pris seul. Deux conséquences testables. (1) Un gain de log-richesse par tirage d'au moins 0,03 sur la meilleure enveloppe des parents (mélange, enveloppe harmonique, concaténations si/sinon). Un mélange par moyenne ou une enveloppe harmonique ne peut pas produire cette confiance accrue quand les deux parents s'accordent. (2) Le basculement vers la classe 2 vient de deux traits : le premier trait selon B, le quatrième trait renforcé par la contribution de B. Ce basculement doit être net sur les tirages où le quatrième trait est fortement positif, sans s'effacer quand le contexte est morphologique.",
+    "ce_qui_change": {
+      "loi_predictive": "produit d'experts : W_fille = W_A + W_B, b_fille = b_A + b_B (somme des scores, pas des probabilités)",
+      "domaines": "union : morphologie et mémoire spectrale, reliées par la projection",
+      "operateurs": "union des opérateurs des parents (hachage, normalisation, projection, seuillage), sans en ajouter",
+      "prediction": "valeur relevée de 0,1 à 0,15 contre la bibliothèque nulle, plus une marge de 0,03 par tirage contre les enveloppes des parents"
+    },
+    "contraintes": [
+      "discret",
+      "lineaire"
+    ],
+    "cout_borne": 1.0,
+    "domaines": [
+      "morphologie",
+      "memoire spectrale"
+    ],
+    "enonce": "La projection commune des trigrammes hachés et des traits spectraux se combine par addition des scores : la classe d'un mot fléchi est mieux prédite par le produit des deux experts que par l'un ou l'autre, ou par leur mélange.",
+    "espace_instances": {
+      "dimension": 4,
+      "nombre_issues": 3,
+      "sous_populations": 2
+    },
+    "loi_predictive": {
+      "biais": [
+        -0.410399,
+        0.134499,
+        -0.668467
+      ],
+      "poids": [
+        [
+          2.285415,
+          0.005344,
+          2.188933,
+          -1.197816
+        ],
+        [
+          -1.666934,
+          -0.149683,
+          -0.451096,
+          -0.142419
+        ],
+        [
+          -1.99204,
+          0.587207,
+          1.668075,
+          2.438442
+        ]
+      ],
+      "type": "softmax"
+    },
+    "metrique": "richesse W contre la bibliothèque aveugle, augmentée des parents et de leurs enveloppes (mélange, enveloppe harmonique, concaténations si/sinon)",
+    "nul": "bibliothèque de prédicteurs aveugles au domaine (marginale, uniforme, moyennes glissantes), augmentée de G0-F05, G0-F08 et de leurs enveloppes",
+    "operateurs": [
+      "hachage",
+      "normalisation",
+      "projection",
+      "seuillage"
+    ],
+    "prediction": {
+      "signe": "+",
+      "texte": "log-richesse moyenne par tirage d'au moins 0,15 contre la bibliothèque nulle, et marge par tirage d'au moins 0,03 contre la meilleure enveloppe des parents",
+      "valeur": 0.15
+    },
+    "protocole": "pari sur 120 tirages frais choisis ex ante par divergence entre la fille et la meilleure enveloppe des parents ; sélection fixée avant toute observation",
+    "seuil": 20.0,
+    "severite_attendue": 0.05
+  }
+}
+```
+
+La loi de la fille n'a été testée sur aucun tirage : sa performance réelle reste à mesurer par le pari.
+
+- **Construction de la loi :** j'ai additionné les poids de A et de B, puis leurs biais, sans réglage sur des données. Cette combinaison n'est pas un mélange des probabilités, donc elle diffère des enveloppes testées contre elle.
+- **Risque principal :** si les deux parents se contredisent souvent ou se trompent ensemble, la fille sera trop confiante. Elle perdra alors contre le mélange, et le pari peut échouer au seuil de 20 (1/α).
