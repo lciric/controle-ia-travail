@@ -79,7 +79,7 @@ def classe(valeur, coupes):
     return sum(valeur > c for c in coupes)
 
 
-def lire_sources(racine_main, notations, toutes_les_passes, runs_supplementaires=()):
+def lire_sources(racine_main, notations, toutes_les_passes, runs_supplementaires=(), notations_supplementaires=()):
     """Épisodes et notes du pilote (EPISODES, `notations`), plus ceux de chaque run supplémentaire (dossier qui contient
     `episodes.json` et `notations-{8B,3B}-decisives.json`, par exemple la banque complète de la couche 1 bis) ; une tâche
     présente dans deux runs est refusée (pas de doublon silencieux)."""
@@ -101,6 +101,13 @@ def lire_sources(racine_main, notations, toutes_les_passes, runs_supplementaires
             chemin_n = os.path.join(run, f"notations-{juge}-decisives.json")
             if os.path.exists(chemin_n):
                 paires.append((juge, chemin_n, chemin_n))
+    for dossier in notations_supplementaires:
+        # v19 : notations sans épisodes (`e2` du module complémentaire : les épisodes sont dans les runs d'origine,
+        # l'épisode et la passe se lisent sur la clé) ; une clé déjà notée est refusée (pas d'écrasement silencieux)
+        for juge in notations:
+            chemin_n = os.path.join(dossier, f"notations-{juge}-decisives.json")
+            if os.path.exists(chemin_n):
+                paires.append((juge, chemin_n, chemin_n))
     notes = {}
     for juge, complet, nom in paires:
         sources[nom] = sha256_fichier(complet)
@@ -110,13 +117,16 @@ def lire_sources(racine_main, notations, toutes_les_passes, runs_supplementaires
                 if passe != "passe-0" and not toutes_les_passes:
                     continue
                 cle = (juge, f"{tache}/{ep}") if not toutes_les_passes else (juge, f"{tache}/{ep}", passe)
+                if cle in notes:
+                    raise ValueError(f"notation en double pour {cle} ({nom}) : refusée")
                 notes[cle] = n["notes"]
     return episodes, notes, sources
 
 
-def construire(racine_main, graine, notations=None, toutes_les_passes=False, runs_supplementaires=()):
+def construire(racine_main, graine, notations=None, toutes_les_passes=False, runs_supplementaires=(), notations_supplementaires=()):
     notations = notations or NOTATIONS_V2
-    episodes, notes, sources = lire_sources(racine_main, notations, toutes_les_passes, runs_supplementaires)
+    episodes, notes, sources = lire_sources(racine_main, notations, toutes_les_passes, runs_supplementaires,
+                                            notations_supplementaires)
     rng = random.Random(graine_derivee(graine, "banque-t05-v3", "bruit"))
     lignes = []
     for e in episodes:
@@ -414,12 +424,14 @@ def principal(argv=None):
     a.add_argument("--composantes", type=int, default=3, help="composantes principales ajustées sur le calibrage")
     a.add_argument("--planter", type=int, default=0, help="moniteurs plantés sur les traits réels")
     a.add_argument("--forces", default="2,1", help="forces des moniteurs plantés, en cycle (ex. 2,1.5,1,0.5)")
+    a.add_argument("--notations-sup", action="append", default=[], help="dossier de notations décisives sans épisodes "
+                                                                         "(e2 du module complémentaire ; répétable)")
     a.add_argument("--run", action="append", default=[], help="dossier d'un run supplémentaire (episodes.json et notations "
                                                                "décisives des juges), par exemple la banque complète (répétable)")
     a.add_argument("--temoins", help="fichier de sortie des témoins (fiches) ; défaut : <sortie>-temoins.json")
     args = a.parse_args(argv)
     notations = dict(n.split("=", 1) for n in args.notations) or None
-    banque = construire(args.racine_main, args.graine, notations, args.toutes_les_passes, args.run)
+    banque = construire(args.racine_main, args.graine, notations, args.toutes_les_passes, args.run, args.notations_sup)
     if args.activations:
         ajouter_traits_internes(banque, args.activations, args.couche, args.composantes)
     plantes = planter(banque, args.planter, args.graine, tuple(float(x) for x in args.forces.split(","))) if args.planter else []

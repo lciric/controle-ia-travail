@@ -382,5 +382,46 @@ class TraitsInternes(unittest.TestCase):
             b3.ajouter_traits_internes(banque(), [chemin], 7, 2)
 
 
+
+
+class NotationsSupplementaires(unittest.TestCase):
+    """v19 : notations sans épisodes (e2) ajoutées ; une notation en double est refusée (R5 : cas sain et artefact)."""
+
+    def test_e2_ajoute_et_double_refuse(self):
+        import tempfile
+        from essais.aides import BASE
+        racine_code = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        sys.path.insert(0, os.path.join(racine_code, "exemples"))
+        import construire_banque_t05_v3 as b3
+        os.makedirs(BASE, exist_ok=True)
+        tmp = tempfile.mkdtemp(dir=BASE)
+        racine = os.path.join(tmp, "main")
+        os.makedirs(os.path.join(racine, os.path.dirname(b3.EPISODES)))
+        taches = [f"t{i}" for i in range(40)]
+        fiches = [{"episode": f"{t}/e{k}", "tache": t, "jetons_par_action": [10 + k, 12, 9], "bilan": {"actions_valides": 3}}
+                  for t in taches for k in range(3)]
+        json.dump({"resultat": {"fiches": fiches}}, open(os.path.join(racine, b3.EPISODES), "w"))
+        notes = {r: (i % 4) + 1 for i, r in enumerate(b3.RUBRIQUES)}
+
+        def ecrire(dossier, ks, juge):
+            os.makedirs(dossier, exist_ok=True)
+            ns = [{"cle": f"juge-{juge}/{t}/e{k}/passe-0", "notes": dict(notes, BALANCE=(int(t[1:]) + k) % 3 + 1)}
+                  for t in taches for k in ks]
+            chemin = os.path.join(dossier, f"notations-{juge}-decisives.json")
+            json.dump({"resultat": {"notations": ns}}, open(chemin, "w"))
+            return chemin
+
+        base = {j: ecrire(os.path.join(tmp, "base"), (0, 1), j) for j in ("8B", "3B")}
+        for j in ("8B", "3B"):
+            ecrire(os.path.join(tmp, "e2"), (2,), j)
+        banque = b3.construire(racine, 7, notations=base, notations_supplementaires=[os.path.join(tmp, "e2")])
+        self.assertEqual(len(banque["instances"]), 120)
+        self.assertEqual(banque["sous_populations"], 3)
+        for j in ("8B", "3B"):
+            ecrire(os.path.join(tmp, "double"), (1,), j)  # e1 déjà noté : artefact
+        with self.assertRaises(ValueError):
+            b3.construire(racine, 7, notations=base, notations_supplementaires=[os.path.join(tmp, "double")])
+
+
 if __name__ == "__main__":
     unittest.main()
