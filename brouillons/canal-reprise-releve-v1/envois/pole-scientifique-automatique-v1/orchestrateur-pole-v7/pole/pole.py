@@ -274,6 +274,10 @@ def analyseur():
     p.add_argument("--modele-proposeur", default="simule-e")
     p.add_argument("--sans-nul-archive", action="store_true",
                    help="v7 : ne pas mettre les survivantes de l'archive au nul des nouvelles fiches (défaut : les y mettre)")
+    p.add_argument("--sans-nul-archive-ajuste", action="store_true",
+                   help="v7 : sans les membres ajustés sur l'archive (par défaut, en sélection par pari avec le nul "
+                        "d'archive : mise en commun linéaire des survivantes et des parents avec toute loi aveugle, et chaque "
+                        "survivante tempérée et inclinée, ajustées aux instants de lecture ; banc de tricheurs, lignes T02 à T05)")
     p.add_argument("--pari-fraction", action="store_true",
                    help="v7 : numérateur de la richesse = mélange sur une grille de fractions de mise (puissance)")
     p.add_argument("--exploration-developpement", action="store_true",
@@ -383,6 +387,8 @@ def principal(argv=None):
             propositions_par_generation=args.propositions_par_generation, modele_proposeur=args.modele_proposeur,
             nul_archive=not args.sans_nul_archive, exploration_developpement=args.exploration_developpement,
             pari_fraction=args.pari_fraction,
+            nul_archive_ajuste=(not args.sans_nul_archive and not args.sans_nul_archive_ajuste and args.selection == "pari"
+                                and args.nul_filles != "v0"),
             budget_generation_usd=args.budget_generation_usd or args.budget_usd / max(1, args.generations)).valider()
         if args.ablation_memoire:
             from .ablation import executer_ablation

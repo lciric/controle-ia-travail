@@ -34,6 +34,12 @@ TYPES_AJUSTES = ("ajuste_lineaire", "ajuste_log")
 INSTANTS_PAR_DEFAUT = (25, 50, 75, 100, 125, 150, 175, 200)
 TOLERANCE_EM, ITERATIONS_EM = 1e-5, 20000
 ITERATIONS_NEWTON, BORNE_PARAMETRES = 60, 60.0
+# v7, version 6 : marge de Newton admise seulement près de l'optimum (décrément² ≤ 0,25, où il borne l'écart à l'optimum
+# d'une fonction autoconcordante) ; au-delà — données séparables en début de lecture, maximum à l'infini — on prend la
+# borne triviale 0 (une log-vraisemblance est toujours ≤ 0), et l'instant suivant repart du point de départ par défaut.
+# Défaut trouvé par un essai sur banque (instances choisies par divergence) : une valeur de 5·10⁹ au premier instant de
+# lecture, propagée aux suivants par le départ à chaud, éliminait la loi exacte du monde.
+DECREMENT_ADMIS = 0.25
 VARIANTES = {
     "v2": {"lineaire": True, "logarithmique": True, "strict": True},
     "v2_souple": {"lineaire": True, "logarithmique": True, "strict": False},
@@ -98,7 +104,8 @@ def _lineaire(G, w0=None):
     m = G @ w
     grad = G.T @ (1.0 / m)
     ecart = max(0.0, float(grad.max() - t))
-    return float(np.log(m).sum()) + ecart, w, ecart
+    # L'écart de Frank-Wolfe borne l'écart à l'optimum (problème concave) ; une log-vraisemblance reste ≤ 0 (v7, version 6).
+    return min(0.0, float(np.log(m).sum()) + ecart), w, ecart
 
 
 def _logit(X, y, theta0):
@@ -139,7 +146,9 @@ def _logit(X, y, theta0):
         if u <= 1e-8:
             break
         theta, f, sc, mx = essai, f2, sc2, mx2
-    return f + decrement, theta
+    if decrement <= DECREMENT_ADMIS:
+        return min(0.0, f + decrement), theta, True
+    return 0.0, theta, False
 
 
 def valeurs_ajustees(membre, cache, issues, nombre_issues, instants):
@@ -167,9 +176,12 @@ def valeurs_ajustees(membre, cache, issues, nombre_issues, instants):
         X_tout = np.concatenate([logs, indic], axis=2)
         # Problème concave : un seul départ suffit (le parent lui-même, ou la moyenne des parents ; puis l'ajustement
         # de l'instant de lecture précédent).
-        theta = np.concatenate([np.full(J, 1.0 / J), np.zeros(K - 1)])
+        depart = np.concatenate([np.full(J, 1.0 / J), np.zeros(K - 1)])
+        theta = depart
         for t in instants:
-            sortie[t], theta = _logit(X_tout[:t], y[:t], theta)
+            sortie[t], theta, converge = _logit(X_tout[:t], y[:t], theta)
+            if not converge:
+                theta = depart  # jamais de départ à chaud depuis un ajustement qui n'a pas convergé
         return sortie
     raise sp.LoiInvalide(f"membre ajusté inconnu : {membre['type']!r}")
 

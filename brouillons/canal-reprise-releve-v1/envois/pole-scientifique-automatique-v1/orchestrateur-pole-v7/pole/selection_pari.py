@@ -43,7 +43,11 @@ BIBLIOTHEQUE_STANDARD = (
 # Juge v1 : les membres de v0, inchangés, plus l'urne (maximum sur les lois échangeables).
 BIBLIOTHEQUE_STANDARD_V1 = BIBLIOTHEQUE_STANDARD + ({"nom": "urne", "type": "urne"},)
 TYPES_LOI = ("fixe", "softmax", "par_sous_population", "melange", "si_sinon", "moyenne_glissante", "derive_lineaire",
-             "echelle", "enveloppe", "calendrier", "deterministe", "sans_remise")
+             "echelle", "enveloppe", "calendrier", "deterministe", "sans_remise", "transformee")
+# v7, version 6 (banc de tricheurs) : « transformee » = transformation aveugle d'une loi de base, étapes facultatives dans
+# cet ordre : mélange à une loi aveugle fixe (λ, b) ; puissance γ (température) ; inclinaison par issue (β_k) ; oscillation
+# non monotone p_k ← p_k·exp(η·cos(ω·z_j + φ)) sur une issue k. Elle sert à écrire les tricheurs T05 à T09 et T12 ; le
+# gabarit du proposeur ne la permet pas.
 # Plans d'exécution : « ordre_naturel » (v0 : l'instance d'indice t du plan est traitée au temps t) ; « ordre_secret »
 # (v1 : permutation tirée par le noyau après le gel). Sous l'ordre secret, une instance ne porte que ses traits « z » et
 # sa sous-population « g » : l'heure d'exécution n'est jamais un trait d'instance.
@@ -132,6 +136,20 @@ def proba(loi, instance, historique, t):
         # Composition déclarée c ; prédiction « sans remise » : p_k ∝ c_k − (issues k déjà vues), plancher.
         vus = collections.Counter(historique[:t])
         return _normaliser([max(0, c - vus[k]) for k, c in enumerate(loi["composition"])])
+    if genre == "transformee":
+        p = proba(loi["base"], instance, historique, t)
+        if loi.get("melange_aveugle"):
+            lam, b = loi["melange_aveugle"]["lambda"], _normaliser(loi["melange_aveugle"]["probas"])
+            p = [(1 - lam) * x + lam * y for x, y in zip(p, b)]
+        if loi.get("puissance") is not None:
+            p = _normaliser([max(x, PLANCHER) ** loi["puissance"] for x in p])
+        if loi.get("inclinaison"):
+            p = _normaliser([x * math.exp(beta) for x, beta in zip(p, loi["inclinaison"])])
+        if loi.get("oscillation"):
+            o = loi["oscillation"]
+            facteur = math.exp(o["amplitude"] * math.cos(o["frequence"] * instance["z"][o["trait"]] + o.get("phase", 0.0)))
+            p = _normaliser([x * facteur if k == o["issue"] else x for k, x in enumerate(p)])
+        return _normaliser(p)
     raise LoiInvalide(f"type de loi inconnu : {genre!r}")
 
 
@@ -205,6 +223,25 @@ def valider_loi(loi, nombre_issues, dimension=None):
         if not isinstance(c, list) or len(c) != nombre_issues or not all(
                 isinstance(x, int) and not isinstance(x, bool) and x >= 0 for x in c) or sum(c) < 1:
             raise LoiInvalide("sans_remise : composition, un effectif entier ≥ 0 par issue, de somme ≥ 1")
+    elif genre == "transformee":
+        valider_loi(loi.get("base"), nombre_issues, dimension)
+        m = loi.get("melange_aveugle")
+        if m is not None and not (isinstance(m, dict) and nombre_fini(m.get("lambda")) and 0 <= m["lambda"] <= 1
+                                  and isinstance(m.get("probas"), list) and len(m["probas"]) == nombre_issues
+                                  and all(nombre_fini(x) and x >= 0 for x in m["probas"]) and sum(m["probas"]) > 0):
+            raise LoiInvalide("transformee : melange_aveugle = {lambda dans [0 ; 1], probas, une par issue}")
+        g = loi.get("puissance")
+        if g is not None and not (nombre_fini(g) and g > 0):
+            raise LoiInvalide("transformee : puissance finie strictement positive")
+        b = loi.get("inclinaison")
+        if b is not None and not (isinstance(b, list) and len(b) == nombre_issues and all(nombre_fini(x) for x in b)):
+            raise LoiInvalide("transformee : inclinaison, un réel fini par issue")
+        o = loi.get("oscillation")
+        if o is not None and not (isinstance(o, dict) and all(nombre_fini(o.get(c)) for c in ("amplitude", "frequence"))
+                                  and isinstance(o.get("trait"), int) and isinstance(o.get("issue"), int)
+                                  and 0 <= o["issue"] < nombre_issues and nombre_fini(o.get("phase", 0.0))
+                                  and (dimension is None or 0 <= o["trait"] < dimension)):
+            raise LoiInvalide("transformee : oscillation = {amplitude, frequence, trait, issue, phase facultative}")
     return loi
 
 

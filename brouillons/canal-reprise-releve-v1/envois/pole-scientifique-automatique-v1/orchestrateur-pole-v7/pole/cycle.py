@@ -80,6 +80,10 @@ class ConfigGeneration:
     temoins_sans_agent: bool = False  # v7 : sur un monde qui dépose les issues, les témoins sont jugés par le noyau seul
     propositions_par_generation: int = 0  # v7 : fiches demandées au proposeur à chaque génération (0 : aucun proposeur)
     nul_archive: bool = False  # v7 : lois des survivantes de l'archive et leurs mélanges aveugles au nul de toute fiche
+    # v7, version 6 (banc de tricheurs, lignes T02 à T05) : membres **ajustés** sur l'archive — mise en commun linéaire
+    # des survivantes (et des parents d'une fille) avec toute loi aveugle fixe, et chaque survivante tempérée et inclinée,
+    # au maximum de vraisemblance aux instants de lecture (nul des filles v2 étendu). Lecture aux instants pour toute fiche.
+    nul_archive_ajuste: bool = False
     exploration_developpement: bool = False  # v7, pièce 4 bis : partie de développement (traits et issues) au proposeur
     pari_fraction: bool = False  # v7 : numérateur = mélange sur une grille de fractions de mise (levier de puissance valide)
     modele_proposeur: str = "simule-e"
@@ -131,6 +135,10 @@ class ConfigGeneration:
             raise ValueError("le proposeur suppose la sélection par pari")
         if not isinstance(self.nul_archive, bool):
             raise ValueError("nul_archive : vrai ou faux")
+        if not isinstance(self.nul_archive_ajuste, bool) or (self.nul_archive_ajuste and (
+                not self.nul_archive or self.nul_filles == "v0" or self.selection != "pari")):
+            raise ValueError("nul_archive_ajuste : vrai ou faux, et seulement avec nul_archive, la sélection par pari et "
+                             "un nul des filles ajusté (pas v0)")
         if not isinstance(self.exploration_developpement, bool):
             raise ValueError("exploration_developpement : vrai ou faux")
         if not isinstance(self.pari_fraction, bool):
@@ -242,7 +250,7 @@ def _copier_pour_rejeu(source, cible, limite):
             shutil.copyfile(os.path.join(racine, nom), os.path.join(cible, relatif))
 
 
-def membres_de_l_archive(fiche, memoire):
+def membres_de_l_archive(fiche, memoire, ajuste=False, lois_parents=None):
     """v7 (« go » de Lazar du 27 octobre, 15:27) : le nul des filles étendu à la mémoire. Pour une fiche non témoin, chaque
     survivante de l'archive de même espace (moniteur, nombre d'issues, dimension), hors elle-même et ses parents, entre au
     nul avec sa loi seule et ses mélanges à la loi uniforme (grille) : une fiche nouvelle doit prédire plus que ce que le
@@ -261,7 +269,20 @@ def membres_de_l_archive(fiche, memoire):
         membres.append({"nom": f"archive:{ident}", "type": "loi", "loi": loi})
         membres.append({"nom": f"archive_couvert:{ident}", "type": "melange_lois",
                         "lois": [loi, {"type": "fixe", "probas": [1.0] * k}], "grille": list(sp.GRILLE_MELANGE)})
+        if ajuste:
+            membres.append({"nom": f"ajuste_log:archive:{ident}", "type": "ajuste_log", "lois": [loi]})
+    if ajuste:
+        lois = [membre["loi"] for membre in membres if membre["type"] == "loi"]
+        lois = [lois_parents[n] for n in sorted(lois_parents or {})] + lois
+        if lois:
+            # Mise en commun linéaire de toutes les lois connues (parents et survivantes) avec toute loi aveugle fixe :
+            # ferme la copie cachée (T02), la survivante plus une loi aveugle (T03), le mélange de survivantes (T04).
+            membres.append({"nom": "ajuste_lineaire:archive", "type": "ajuste_lineaire", "lois": lois})
     return membres
+
+
+def a_des_membres_ajustes(membres):
+    return any(m.get("type") in ("ajuste_lineaire", "ajuste_log") for m in membres or ())
 
 
 def instants_reguliers(n, nombre):
@@ -311,8 +332,17 @@ def preparer_engagement(fiche, config, lois_parents=None, reservoir=None, membre
                                                   delta0=config.delta0, plan_execution=plan_execution)
     else:
         plan = sp.selection_divergence(fiche.loi_predictive, reservoir, [1.0 / k] * k, min(config.taille_plan, len(reservoir)))
-        engagement = sp.construire_engagement(fiche.identifiant, fiche.loi_predictive, plan, k, config.alpha,
-                                              standard, config.lecture, fiche.empreinte(), plan_execution=plan_execution)
+        if a_des_membres_ajustes(membres_supplementaires):
+            # v7, version 6 : membres ajustés sur l'archive → lecture aux instants fixés (évaluateur du nul v2)
+            from . import nul_filles_v2 as nf
+            n = len(plan)
+            engagement = nf.construire_engagement_v2(fiche.identifiant, fiche.loi_predictive, plan, k, config.alpha,
+                                                     standard, 0, None, instants_reguliers(n, min(config.instants_filles, n)),
+                                                     plan_execution)
+            engagement["empreinte_fiche"] = fiche.empreinte()
+        else:
+            engagement = sp.construire_engagement(fiche.identifiant, fiche.loi_predictive, plan, k, config.alpha,
+                                                  standard, config.lecture, fiche.empreinte(), plan_execution=plan_execution)
     if moniteur is not None:
         engagement["moniteur"] = moniteur
     if getattr(config, "pari_fraction", False):
@@ -361,7 +391,8 @@ class Generation:
                 monde = self.monde_noyau
                 supplementaires = list(monde.membres_informes(fiche)) if hasattr(monde, "membres_informes") else []
                 if self.config.nul_archive and fiche.temoin is None:
-                    supplementaires += membres_de_l_archive(fiche, self.memoire)
+                    supplementaires += membres_de_l_archive(fiche, self.memoire, self.config.nul_archive_ajuste,
+                                                            parents if len(parents) == 2 else None)
                 gele = preparer_engagement(
                     fiche, self.config, parents if len(parents) == 2 else None,
                     reservoir=monde.reservoir(fiche, self.numero) if hasattr(monde, "reservoir") else None,
