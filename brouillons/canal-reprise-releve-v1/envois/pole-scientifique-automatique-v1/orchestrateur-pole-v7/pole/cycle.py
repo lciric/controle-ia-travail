@@ -70,6 +70,7 @@ class ConfigGeneration:
     politique_redite: str = "heritage"
     noyau_secret: bool = False
     urne: bool = True  # v7 : juge v1 sans le membre « urne » (banque figée : pas de dérive dans le temps)
+    multiplicite: str = "aucune"  # v7 : « aucune » (garantie par fiche) ou « e-bh » (taux de fausses découvertes par génération)
 
     def valider(self):
         if self.modele_verificateur == self.modele_experimentateur:
@@ -106,6 +107,8 @@ class ConfigGeneration:
             raise ValueError("urne : vrai ou faux")
         if not self.urne and self.juge != "v1":
             raise ValueError("urne=False : seulement avec le juge v1 (l'ordre secret reste, l'urne seule est retirée)")
+        if self.multiplicite not in ("aucune", "e-bh"):
+            raise ValueError("multiplicite : « aucune » ou « e-bh »")
         return self
 
 
@@ -485,6 +488,8 @@ class Generation:
                     if "verificateur" not in issue["couts"]:
                         self.budget.regler(self.config.plafond_verificateur_usd, 0.0)
                     issues[fiche.identifiant] = issue
+        if self.config.multiplicite == "e-bh":  # v7 : règle de multiplicité sur la génération entière
+            appliquer_multiplicite(issues, self.config.alpha)
         for fiche in ordre:
             self.selectionner(fiche, issues[fiche.identifiant])
         if self.config.noyau_secret:  # v5 : la graine ne quitte le noyau qu'après toutes les évaluations
@@ -518,6 +523,32 @@ class Generation:
             fiche.statut = verdict
         fiche.historique.append({"verdict": verdict, "motif": issue.get("motif")})
         issue["statut"] = fiche.statut
+
+
+def appliquer_multiplicite(issues, alpha):
+    """Règle e-BH (Wang et Ramdas, 2022) sur les fiches jugées de la génération : e-valeur d'une fiche = sa richesse
+    **finale** W_T (une e-variable à horizon fixé ; le maximum sur le temps n'en est pas une) ; les e-valeurs triées par
+    ordre décroissant, k* = le plus grand k tel que e_(k) ≥ m / (α · k) ; les k* premières sont retenues, les autres
+    survivantes sont éliminées (motif écrit). Contrôle du taux de fausses découvertes à α sur la génération, quelle que
+    soit la dépendance entre fiches. Les témoins comptent dans m (ils sont jugés comme les autres)."""
+    jugees = [(i, issue) for i, issue in issues.items() if isinstance(issue.get("pari"), dict)
+              and nombre_fini(issue["pari"].get("log_richesse_finale"))]
+    m = len(jugees)
+    if m == 0:
+        return {"m": 0, "retenues": []}
+    ordre = sorted(jugees, key=lambda x: -x[1]["pari"]["log_richesse_finale"])
+    k_etoile = 0
+    for k, (_, issue) in enumerate(ordre, 1):
+        if issue["pari"]["log_richesse_finale"] >= math.log(m / (alpha * k)):
+            k_etoile = k
+    retenues = [i for i, _ in ordre[:k_etoile]]
+    for i, issue in jugees:
+        issue["pari"]["multiplicite"] = {"regle": "e-bh", "m": m, "retenue": i in retenues,
+                                         "seuil_log_retenue": math.log(m / (alpha * max(1, k_etoile))) if k_etoile else None}
+        if issue["verdict_final"] == "survit" and i not in retenues:
+            issue["verdict_final"] = "eliminee"
+            issue["motif"] = (issue.get("motif") or "") + f" ; règle de multiplicité e-BH (m = {m}) : non retenue"
+    return {"m": m, "retenues": retenues}
 
 
 # (e) mesure de qualité ---------------------------------------------------------------------------------------------

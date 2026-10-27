@@ -122,3 +122,24 @@ class MondeSurBanque(CasGeneration):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Multiplicite(unittest.TestCase):
+    def test_e_bh_retient_les_fortes_et_elimine_les_faibles(self):
+        import math
+        from pole.cycle import ConfigGeneration, appliquer_multiplicite
+        alpha, m = 0.05, 10
+        issues = {}
+        for i in range(m):
+            log_w = {0: math.log(500.0), 1: math.log(250.0), 2: math.log(25.0)}.get(i, -1.0)
+            issues[f"F{i}"] = {"verdict_final": "survit" if log_w >= math.log(20) else "eliminee", "motif": "x",
+                               "pari": {"log_richesse_finale": log_w, "log_richesse_max": log_w}}
+        r = appliquer_multiplicite(issues, alpha)
+        # seuils : k=1 → 200 ; k=2 → 100 ; k=3 → 66,7 : F0 (500) et F1 (250) retenues, F2 (25, promue par fiche) éliminée
+        self.assertEqual(sorted(r["retenues"]), ["F0", "F1"])
+        self.assertEqual(issues["F2"]["verdict_final"], "eliminee")
+        self.assertIn("multiplicité e-BH", issues["F2"]["motif"])
+        self.assertEqual(issues["F0"]["verdict_final"], "survit")
+        self.assertEqual(appliquer_multiplicite({"A": {"verdict_final": "indecise"}}, alpha)["m"], 0)
+        with self.assertRaises(ValueError):
+            ConfigGeneration(multiplicite="bonferroni").valider()
