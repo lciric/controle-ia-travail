@@ -217,6 +217,26 @@ class AdaptateurClaudeSDK(Adaptateur):
         return (final if final else "\n".join(morceaux)), cout, statut, erreur
 
 
+class AdaptateurMixte(Adaptateur):
+    """v7, version 9 : de vrais agents pour certains rôles seulement (le proposeur d'un duel, par exemple), la simulation
+    pour les autres. Sur un monde tenu par le noyau (banque, monde caché), l'expérimentateur et le vérificateur ne font que
+    ranger des issues déposées : les simuler ne change pas le verdict du juge, seulement le coût (environ 0,55 USD par fiche
+    en (a) et (a) bis). Le bac à sable reste exigé pour la partie réelle."""
+
+    nom = "mixte"
+
+    def __init__(self, reel, simule, roles_reels):
+        roles = frozenset(roles_reels or ())
+        if not roles or not roles <= set(ROLES):
+            raise ValueError(f"rôles réels : une partie non vide de {ROLES} (reçu {sorted(roles)})")
+        self.reel, self.simule, self.roles_reels = reel, simule, roles
+        self.bac_a_sable = getattr(reel, "bac_a_sable", None)
+
+    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+        cible = self.reel if role in self.roles_reels else self.simule
+        return cible.lancer(role, consigne, dossier, budget_usd, max_tours, modele=modele)
+
+
 def __getattr__(nom):
     if nom in ("AdaptateurSimule", "MondeSimule"):
         from . import simulation

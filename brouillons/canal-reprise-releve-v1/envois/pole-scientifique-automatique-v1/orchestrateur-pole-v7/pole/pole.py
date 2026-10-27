@@ -240,6 +240,9 @@ def analyseur():
     a.add_argument("--url-relais", help="moteur réel : relais local du noyau qui ajoute la clé (http://127.0.0.1:PORT)")
     a.add_argument("--confirmer-moteur-reel", action="store_true",
                    help="arme le moteur réel (sans ce drapeau, aucun agent réel n'est jamais lancé)")
+    a.add_argument("--roles-reels", default="",
+                   help="v7 : avec --moteur claude-sdk, rôles joués par de vrais agents (par exemple « proposeur ») ; "
+                        "les autres sont simulés (monde tenu par le noyau : verdict inchangé, coût réduit)")
     a.add_argument("--accepter-sans-bac-a-sable", action="store_true",
                    help="v7 : moteur réel sans bac à sable actif (exception, motif écrit exigé, jamais sous root)")
     a.add_argument("--motif-sans-bac-a-sable", default="", help="raison écrite de l'exception (consignée au manifeste)")
@@ -313,18 +316,26 @@ def analyseur():
 
 def construire_adaptateur(args, population, temoins):
     if args.moteur == "claude-sdk":
-        from .adaptateurs import (AdaptateurClaudeSDK, MoteurNonArme, exiger_bac_a_sable, importer_sdk,
-                                  verifier_modele_reel)
+        from .adaptateurs import (AdaptateurClaudeSDK, AdaptateurMixte, MoteurNonArme, exiger_bac_a_sable,
+                                  importer_sdk, verifier_modele_reel)
         if not args.confirmer_moteur_reel:
             raise MoteurNonArme("--moteur claude-sdk exige --confirmer-moteur-reel (dépense réelle, relais local requis)")
-        for modele in (args.modele_experimentateur, args.modele_verificateur, args.modele_recombinaison,
-                       args.modele_synthese) + ((args.modele_proposeur,) if (args.propositions_par_generation
-                                                                        and args.proposeur == "agent") else ()):
-            verifier_modele_reel(modele)
+        roles_reels = [r for r in (args.roles_reels or "").split(",") if r]
+        modeles = {"experimentateur": args.modele_experimentateur, "verificateur": args.modele_verificateur,
+                   "recombinaison": args.modele_recombinaison, "synthese": args.modele_synthese}
+        if args.propositions_par_generation and args.proposeur == "agent":
+            modeles["proposeur"] = args.modele_proposeur
+        for role, modele in modeles.items():
+            if not roles_reels or role in roles_reels:
+                verifier_modele_reel(modele)
         adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True)
         sdk = importer_sdk()
         # v7, version 5 (défaut 7 du premier lancement réel) : aucun agent réel sans bac à sable actif.
         adaptateur.bac_a_sable = exiger_bac_a_sable(sdk, args.accepter_sans_bac_a_sable, args.motif_sans_bac_a_sable)
+        if roles_reels:
+            # v7, version 9 : vrais agents pour ces rôles seulement, simulation pour les autres (duel des proposeurs).
+            from .simulation import AdaptateurSimule, MondeSimule
+            return AdaptateurMixte(adaptateur, AdaptateurSimule(args.graine, MondeSimule(args.graine)), roles_reels)
         return adaptateur
     from .simulation import AdaptateurSimule, MondeSimule
     verites = {t.enonce: t.temoin == "vraie" for t in temoins}
@@ -379,6 +390,12 @@ def principal(argv=None):
         elif args.moteur == "claude-sdk" and args.selection == "pari":
             raise ValueError("moteur réel en sélection par pari : --monde-noyau est requis (les agents réels ne "
                              "mesurent rien seuls ; option (a) du premier lancement réel)")
+        roles_reels = [r for r in (args.roles_reels or "").split(",") if r]
+        if roles_reels and args.moteur != "claude-sdk":
+            raise ValueError("--roles-reels n'a de sens qu'avec --moteur claude-sdk")
+        if roles_reels and "experimentateur" not in roles_reels and monde_noyau is None:
+            raise ValueError("--roles-reels sans l'expérimentateur suppose un monde tenu par le noyau (--monde-banque ou "
+                             "--monde-noyau) : ailleurs, simuler l'expérimentateur changerait les issues")
         adaptateur = construire_adaptateur(args, population, temoins)
         config = ConfigGeneration(
             modele_experimentateur=args.modele_experimentateur, modele_verificateur=args.modele_verificateur,

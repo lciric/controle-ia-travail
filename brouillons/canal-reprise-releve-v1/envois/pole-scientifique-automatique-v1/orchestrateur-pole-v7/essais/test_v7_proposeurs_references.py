@@ -118,5 +118,57 @@ class MondeGrammaire(CasGeneration):
                                                     "propositions-reference.json")))
 
 
+
+class Mixte(unittest.TestCase):
+    """v7, version 9 : vrais agents pour certains rôles seulement."""
+
+    def test_routage_par_role_et_roles_invalides(self):
+        from pole.adaptateurs import AdaptateurMixte
+
+        class Enregistreur:
+            def __init__(self, nom):
+                self.nom, self.appels = nom, []
+
+            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+                self.appels.append(role)
+                return self.nom
+
+        reel, simule = Enregistreur("reel"), Enregistreur("simule")
+        reel.bac_a_sable = {"actif": True}
+        m = AdaptateurMixte(reel, simule, ["proposeur"])
+        for role in ("experimentateur", "verificateur", "proposeur", "synthese", "recombinaison"):
+            m.lancer(role, "c", "/tmp", 1.0, 3)
+        self.assertEqual(reel.appels, ["proposeur"])
+        self.assertEqual(simule.appels, ["experimentateur", "verificateur", "synthese", "recombinaison"])
+        self.assertEqual(m.bac_a_sable, {"actif": True})
+        for roles in ([], ["inconnu"], ["proposeur", "pirate"]):
+            with self.subTest(roles=roles), self.assertRaises(ValueError):
+                AdaptateurMixte(reel, simule, roles)
+
+
+
+class RepetitionDuel(CasGeneration):
+    def test_seul_le_proposeur_passe_par_le_relais(self):
+        """Chemin d'un duel payé (proposeur réel, autres rôles simulés), avec le faux moteur et le relais réel."""
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "demonstrations"))
+        import repetition_duel_v7
+        rapport = repetition_duel_v7.executer(os.path.join(self.tmp, "repetition"), 3)
+        self.assertTrue(rapport["tout_tenu"], {k: v for k, v in rapport["verifications"].items() if not v["tenu"]})
+
+
+    def test_roles_reels_refuses_hors_monde_tenu_par_le_noyau(self):
+        from pole.pole import principal
+        from essais.aides import fiche_dict
+        chemin = os.path.join(self.tmp, "population.json")
+        ecrire_json_scelle(chemin, [fiche_dict("F1"), fiche_dict("F2", temoin="vraie"), fiche_dict("F3", temoin="fausse")])
+        code = principal(["--population", chemin, "--temoins", chemin, "--sortie", os.path.join(self.tmp, "s"),
+                          "--roles-reels", "proposeur"])
+        self.assertEqual(code, 2, "sans moteur réel")
+        code = principal(["--population", chemin, "--temoins", chemin, "--sortie", os.path.join(self.tmp, "s2"),
+                          "--moteur", "claude-sdk", "--confirmer-moteur-reel", "--roles-reels", "proposeur",
+                          "--url-relais", "http://127.0.0.1:9"])
+        self.assertEqual(code, 2, "sans monde tenu par le noyau")
+
+
 if __name__ == "__main__":
     unittest.main()
