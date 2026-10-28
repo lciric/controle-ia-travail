@@ -1,4 +1,4 @@
-"""Essais de la version 32 : la course d'idéation (prise « idéation » : proposer et classer seulement).
+"""Essais de la version 35 (depuis la 32) : la course d'idéation (prise « idéation » : proposer et classer seulement).
 
 Cas sains : fiche au gabarit validée et empreintée ; liste blanche par empreinte acceptée ; anonymisation par juge
 (permutations différentes, clé hors des fiches servies, aucune empreinte servie) ; notes complètes agrégées (moyenne
@@ -10,6 +10,11 @@ borne, note manquante, pièce hors liste blanche ou à empreinte différente, li
 `_`, « données »), paraphrases devant la garde, secret caviardé, session en erreur (arrêt dur, code d'erreur), juge
 invalide (arrêt), plafond total, appel de contrôle refusé (statut, texte, coût, relais muet), url du relais en https ou
 avec chemin, étiquettes invalides, absence de témoins, max_tours trop grand — tous refusés avec un motif.
+v35 (CL34) : attestation donnée à la course refusée ; bras différé seul chemin (attestation sans l'empreinte de la consigne
+refusée, sceau faux refusé, rejeu refusé, plafond total tenu, témoins lus chez le juge externe, manifeste sur tous les
+chemins) ; coût manquant du juge externe → erreur ; environnement minimal de la commande ; `tools=[]` dans les options et
+`--tools ''` sur la ligne de commande du kit ; borne de temps par session ; `nombre` borné ; contrôles comptés ; manifeste de
+fin sur toute exception ; pluriels devant la garde.
 """
 
 import json
@@ -326,7 +331,9 @@ class TestCourse(CasAvecDossier):
         self.assertEqual(len(res["quarantaine"]), 1)
         self.assertEqual(len(res["classement"]), 3)  # témoins exclus
         self.assertTrue(res["lecture"]["temoins"]["temoins_ok"])
-        self.assertTrue(res["lecture"]["complet"])
+        self.assertEqual(res["lecture"]["juges_rendus"], 2)  # v35 : « complet » (toujours vrai) retiré
+        self.assertEqual(res["lecture"]["quarantaine_par_proposeur"]["fable"], {"validees": 1, "quarantaine": 1, "taux": 0.5})
+        self.assertIn("temoins_hors_fourchette", res["lecture"]["longueur_temoins_contre_fiches"])
         self.assertIsNone(res["journal"]["arret"])
         self.assertTrue(res["journal"]["cout_fictif"])
         for nom in ("manifeste-depart.json", "manifeste-fin.json", "fiches-validees.json", "classement.json",
@@ -460,10 +467,6 @@ class TestCourse(CasAvecDossier):
             self.assertEqual(o["max_turns"], 2)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestJugeExterne(CasAvecDossier):
     """v33 : juge d'une autre lignée en bras rapporté (adaptateur à commande)."""
 
@@ -502,7 +505,7 @@ class TestJugeExterne(CasAvecDossier):
         from pole.adaptateurs import AdaptateurJugeExterne
         for script, attendu in (("import sys; sys.exit(3)", "erreur"), ("print('pas du json')", "erreur"),
                                 ("import json; print(json.dumps({'texte': 'x', 'cout_usd': 9.0}))", "budget_depasse"),
-                                ("import json; print(json.dumps({'texte': 'x'}))", "ok"),
+                                ("import json; print(json.dumps({'texte': 'x'}))", "erreur"),  # v35 : coût obligatoire
                                 ("import json; print(json.dumps({'cout_usd': 1}))", "erreur")):
             ad = AdaptateurJugeExterne(self.commande(script), environnement={})
             r = ad.lancer("juge_ideation", "consigne", self.tmp, 1.0, 1)
@@ -512,7 +515,9 @@ class TestJugeExterne(CasAvecDossier):
         with self.assertRaises(CleDansEnvironnement):
             ad.lancer("juge_ideation", "consigne", self.tmp, 1.0, 1)
 
-    def test_bras_rapporte_dans_la_course(self):
+    def test_bras_rapporte_toujours_differe(self):
+        """v35 (CL34-01, CL34-04) : la course n'appelle jamais le juge externe ; le bras se joue différé, après une
+        attestation qui porte l'empreinte des fiches ET de la consigne ; jamais rejoué ; témoins lus chez lui."""
         from pole.adaptateurs import AdaptateurJugeExterne
         cours = TestCourse("test_course_complete")
         cours.tmp = self.tmp
@@ -521,36 +526,207 @@ class TestJugeExterne(CasAvecDossier):
         externe = AdaptateurJugeExterne(self.commande(self.SCRIPT_OK), environnement={})
         budgets = dict(cours.budgets())
         budgets[("juge_ideation", "autre-lignee-x")] = 1.0
-        res = cours.lancer(ad, "cx-differe", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", externe)])
-        self.assertNotIn("bras_rapporte", res["lecture"])  # v34 : différé sans attestation
-        self.assertEqual(res["lecture"]["bras_rapporte_differe"][0]["etiquette"], "argon")
-        sortie_d = os.path.join(self.tmp, "cx-differe")
-        self.assertTrue(os.path.exists(os.path.join(sortie_d, "juges-bras-rapporte", "traces-argon", "consigne-en-attente.md")))
-        self.assertFalse(os.path.exists(os.path.join(sortie_d, "notes-bras-rapporte.json")))
-        # attestation fausse → refus ; attestation juste → le bras se joue après coup
+        # R5 : une attestation donnée à la course est refusée avant tout appel
         att = os.path.join(self.tmp, "attestation.json")
         with open(att, "w") as f:
-            json.dump({"lecteur": "Lazar", "fiches_validees_sha256": "0" * 64, "lu_le": "2026-10-28"}, f)
+            json.dump({"lecteur": "Lazar"}, f)
+        with self.assertRaises(idn.CourseInterrompue):
+            cours.lancer(ad, "cx-refus", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", None)],
+                         attestation_lecture_humaine=att)
+        self.assertEqual(ad.appels, [])
+        # course : consigne en attente scellée, aucun appel externe, témoins servis scellés
+        res = cours.lancer(ad, "cx-differe", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", None)])
+        self.assertNotIn("bras_rapporte", res["lecture"])
+        differe = res["lecture"]["bras_rapporte_differe"][0]
+        self.assertEqual(differe["etiquette"], "argon")
+        sortie_d = os.path.join(self.tmp, "cx-differe")
+        consigne = os.path.join(sortie_d, "juges-bras-rapporte", "traces-argon", "consigne-en-attente.md")
+        self.assertTrue(os.path.exists(consigne + ".sha256"))
+        self.assertEqual(differe["consigne_en_attente_sha256"], idn.sha256_fichier(consigne))
+        self.assertTrue(os.path.exists(os.path.join(sortie_d, "noyau", "temoins-servis.json.sha256")))
+        self.assertFalse(os.path.exists(os.path.join(sortie_d, "notes-bras-rapporte.json")))
+        self.assertTrue(all(a["role"] != "juge_ideation" or "argon" not in a["dossier"] for a in ad.appels))
+        empreinte_fiches = idn.sha256_fichier(os.path.join(sortie_d, "fiches-validees.json"))
+        externes = [("argon", "autre-lignee-x", externe)]
+
+        def attester(**champs):
+            o = {"lecteur": "Lazar", "lu_le": "2026-10-28", "fiches_validees_sha256": empreinte_fiches,
+                 "consignes_en_attente_sha256": {"argon": idn.sha256_fichier(consigne)}}
+            o.update(champs)
+            with open(att, "w") as f:
+                json.dump(o, f)
+        # attestations fausses : empreinte des fiches, consigne absente, consigne fausse → refus, aucun manifeste du bras
+        for champs in ({"fiches_validees_sha256": "0" * 64}, {"consignes_en_attente_sha256": None},
+                       {"consignes_en_attente_sha256": {"argon": "0" * 64}}):
+            attester(**champs)
+            with self.assertRaises(idn.CourseInterrompue):
+                idn.executer_bras_rapporte(sortie_d, attestation_lecture_humaine=att, budgets=budgets,
+                                           juges_externes=externes, exiger_cout_controle=True)
+        self.assertFalse(os.path.exists(os.path.join(sortie_d, "manifeste-bras-rapporte.json")))
+        # plafond total trop bas pour la session externe → refus après le contrôle, manifeste écrit, aucune réponse
+        attester()
         with self.assertRaises(idn.CourseInterrompue):
             idn.executer_bras_rapporte(sortie_d, attestation_lecture_humaine=att, budgets=budgets,
-                                       juges_externes=[("argon", "autre-lignee-x", externe)])
+                                       juges_externes=externes, budget_total_usd=0.5)
+        self.assertTrue(os.path.exists(os.path.join(sortie_d, "manifeste-bras-rapporte.json")))
+        self.assertFalse(os.path.exists(os.path.join(sortie_d, "juges-bras-rapporte", "traces-argon", "reponse.md")))
+        # un manifeste du bras existe : jamais rejoué
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.executer_bras_rapporte(sortie_d, attestation_lecture_humaine=att, budgets=budgets, juges_externes=externes)
+        # course neuve, attestation juste → le bras se joue : contrôle fait, témoins lus, accord de rang, manifeste
+        res2 = cours.lancer(ad, "cx-2", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", None)])
+        sortie_2 = os.path.join(self.tmp, "cx-2")
+        consigne_2 = os.path.join(sortie_2, "juges-bras-rapporte", "traces-argon", "consigne-en-attente.md")
         with open(att, "w") as f:
             json.dump({"lecteur": "Lazar", "lu_le": "2026-10-28",
-                       "fiches_validees_sha256": idn.sha256_fichier(os.path.join(sortie_d, "fiches-validees.json"))}, f)
-        apres = idn.executer_bras_rapporte(sortie_d, attestation_lecture_humaine=att, budgets=budgets,
-                                           juges_externes=[("argon", "autre-lignee-x", externe)])
+                       "fiches_validees_sha256": idn.sha256_fichier(os.path.join(sortie_2, "fiches-validees.json")),
+                       "consignes_en_attente_sha256": {"argon": idn.sha256_fichier(consigne_2)}}, f)
+        apres = idn.executer_bras_rapporte(sortie_2, attestation_lecture_humaine=att, budgets=budgets, juges_externes=externes)
         self.assertIn("argon", apres["lecture"]["accord_avec_le_classement_agrege"])
-        self.assertTrue(os.path.exists(os.path.join(sortie_d, "notes-bras-rapporte.json.sha256")))
-        # avec attestation dès la course : bras joué dans la course
-        res = cours.lancer(ad, "cx", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", externe)],
-                           attestation_lecture_humaine=att)
-        self.assertIn("bras_rapporte", res["lecture"])
-        br = res["lecture"]["bras_rapporte"]
-        self.assertEqual(br["juges"], {"argon": "autre-lignee-x"})
-        self.assertTrue(br["temoins"]["temoins_ok"])
-        self.assertIn("argon", br["accord_avec_le_classement_agrege"])
-        # jamais agrégé : le classement principal ne compte que les deux juges Claude
-        self.assertTrue(all(l["nombre_juges"] == 2 for l in res["classement"]))
-        sortie = os.path.join(self.tmp, "cx")
-        self.assertTrue(os.path.exists(os.path.join(sortie, "notes-bras-rapporte.json.sha256")))
-        self.assertTrue(os.path.exists(os.path.join(sortie, "juges-bras-rapporte", "traces-argon", "consigne.md")))
+        self.assertTrue(apres["lecture"]["temoins"]["temoins_ok"])
+        self.assertEqual(apres["journal"]["controle"]["argon"]["texte"], "OK")
+        self.assertGreater(apres["journal"]["cout_total_usd"], 0.3)  # contrôle 0,001 + notes 0,3
+        self.assertTrue(os.path.exists(os.path.join(sortie_2, "notes-bras-rapporte.json.sha256")))
+        self.assertTrue(os.path.exists(os.path.join(sortie_2, "manifeste-bras-rapporte.json.sha256")))
+        self.assertTrue(all(l["nombre_juges"] == 2 for l in res2["classement"]))  # jamais agrégé
+        # sceau faux sur la course → refus avant tout appel
+        res3 = cours.lancer(ad, "cx-3", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", None)])
+        sortie_3 = os.path.join(self.tmp, "cx-3")
+        with open(os.path.join(sortie_3, "classement.json"), "a") as f:
+            f.write(" ")
+        consigne_3 = os.path.join(sortie_3, "juges-bras-rapporte", "traces-argon", "consigne-en-attente.md")
+        with open(att, "w") as f:
+            json.dump({"lecteur": "Lazar", "lu_le": "2026-10-28",
+                       "fiches_validees_sha256": idn.sha256_fichier(os.path.join(sortie_3, "fiches-validees.json")),
+                       "consignes_en_attente_sha256": {"argon": idn.sha256_fichier(consigne_3)}}, f)
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.executer_bras_rapporte(sortie_3, attestation_lecture_humaine=att, budgets=budgets, juges_externes=externes)
+        self.assertFalse(os.path.exists(os.path.join(sortie_3, "juges-bras-rapporte", "traces-argon", "reponse.md")))
+
+    def test_environnement_minimal_de_la_commande(self):
+        """v35 (CL34-09) : la commande reçoit un environnement explicite et minimal, le même que celui qui est vérifié."""
+        from pole.adaptateurs import AdaptateurJugeExterne
+        from pole.relais import CleDansEnvironnement
+        script = "import os, json; print(json.dumps({'texte': ','.join(sorted(os.environ)), 'cout_usd': 0.0}))"
+        env = {"PATH": os.environ.get("PATH", "/usr/bin"), "HOME": "/tmp", "LANG": "C.UTF-8", "HTTPS_PROXY": "http://x",
+               "CHEMIN_CLE_JUGE": "/dev/null", "AUTRE": "1"}
+        ad = AdaptateurJugeExterne(self.commande(script), environnement=env, variables_transmises=("CHEMIN_CLE_JUGE",))
+        self.assertEqual(sorted(ad.environnement_commande()), ["CHEMIN_CLE_JUGE", "HOME", "LANG", "PATH"])
+        r = ad.lancer("juge_ideation", "consigne", self.tmp, 1.0, 1)
+        self.assertEqual(r.statut, "ok")
+        self.assertNotIn("HTTPS_PROXY", r.texte_final)
+        self.assertNotIn("AUTRE", r.texte_final)
+        with self.assertRaises(CleDansEnvironnement):
+            AdaptateurJugeExterne(self.commande(script), environnement=env, variables_transmises=("ANTHROPIC_API_KEY",))
+
+
+class TestReglagesV35(CasAvecDossier):
+    def test_options_tools_vides_et_effort(self):
+        """CL34-02 / CL34-08 : `tools=[]` (jeu disponible) pour les rôles de l'idéation, effort fixé ; les autres rôles
+        gardent le jeu par défaut du kit (None)."""
+        dossier = os.path.join(self.tmp, "course", "juges", "j")
+        os.makedirs(dossier)
+        o = construire_options(dossier, 1.0, 2, url_relais="http://127.0.0.1:8787", modele="claude-opus-5-5",
+                               role="juge_ideation", interdire_lecture=[os.path.join(self.tmp, "course")])
+        self.assertEqual((o["tools"], o["allowed_tools"], o["effort"]), ([], [], "medium"))
+        o = construire_options(dossier, 1.0, 2, url_relais="http://127.0.0.1:8787", modele="claude-opus-5-5",
+                               role="experimentateur", interdire_lecture=[os.path.join(self.tmp, "course")])
+        self.assertIsNone(o["tools"])
+        self.assertIsNone(o["effort"])
+
+    def test_ligne_de_commande_du_kit_sans_outil(self):
+        """CL34-02 : la ligne de commande construite par le kit porte `--tools ''` (jamais exécutée)."""
+        try:
+            import claude_agent_sdk as sdk
+            from claude_agent_sdk._internal.transport.subprocess_cli import SubprocessCLITransport
+        except ImportError:
+            self.skipTest("kit d'agent absent")
+        from pole.adaptateurs import AdaptateurClaudeSDK
+        dossier = os.path.join(self.tmp, "course", "juges", "j")
+        os.makedirs(dossier)
+        o = construire_options(dossier, 1.0, 2, url_relais="http://127.0.0.1:8787", modele="claude-opus-5-5",
+                               role="juge_ideation", interdire_lecture=[os.path.join(self.tmp, "course")])
+        options = AdaptateurClaudeSDK.options_sdk(sdk, o)
+        options.cli_path = "/bin/true"
+        cmd = SubprocessCLITransport("x", options)._build_command()
+        self.assertIn("--tools", cmd)
+        self.assertEqual(cmd[cmd.index("--tools") + 1], "")
+        self.assertNotIn("--allowedTools", cmd)
+        self.assertEqual(cmd[cmd.index("--effort") + 1], "medium")
+
+    def test_borne_de_temps_par_session(self):
+        """CL34-05 : une session qui pend au-delà du délai rend « erreur » avec un motif, sans lever."""
+        import asyncio
+        from pole.adaptateurs import AdaptateurClaudeSDK
+
+        class FauxSDK:
+            class ClaudeSDKError(Exception):
+                pass
+
+            class AssistantMessage:
+                pass
+
+            class ResultMessage:
+                pass
+
+            class TextBlock:
+                pass
+
+            @staticmethod
+            async def query(prompt, options):
+                await asyncio.sleep(5)
+                yield None
+        texte, cout, statut, erreur = asyncio.run(AdaptateurClaudeSDK._executer(FauxSDK, "x", None, delai_s=0.2))
+        self.assertEqual((texte, cout, statut), ("", 0.0, "erreur"))
+        self.assertIn("délai de session dépassé", erreur)
+        with self.assertRaises(ValueError):
+            AdaptateurClaudeSDK("http://127.0.0.1:8787", delai_s=0)
+
+    def test_garde_pluriels(self):
+        """CL34-10 : pluriels signalés."""
+        for texte in ("Étapes 1 : préparer", "les injections de consignes", "des portes dérobées", "exécuter les scripts fournis"):
+            self.assertTrue(idn.signaux_niveau_methode(texte), texte)
+        self.assertFalse(idn.signaux_niveau_methode("classe exfiltration, nommée par protocole") == [], "signal assumé")
+
+
+class TestCourseV35(CasAvecDossier):
+    def cours(self):
+        c = TestCourse("test_course_complete")
+        c.tmp = self.tmp
+        return c
+
+    def test_nombre_borne_et_controles_comptes(self):
+        """CL34-11 : nombre ∉ [1, 12] refusé ; CL34-07 : le coût déjà engagé (contrôles) entre au journal et au plafond."""
+        c = self.cours()
+        fiches = {"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]}
+        ad = FauxAdaptateur(fiches, notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
+        for n in (0, 13, True):
+            with self.assertRaises(idn.CourseInterrompue):
+                c.lancer(ad, f"c-{n}", nombre_par_proposeur=n)
+        with self.assertRaises(idn.CourseInterrompue):
+            c.lancer(ad, "c-neg", cout_deja_engage_usd=-1)
+        self.assertEqual(ad.appels, [])
+        res = c.lancer(ad, "c-ok", cout_deja_engage_usd=0.07)
+        self.assertAlmostEqual(res["journal"]["cout_appels_de_controle_usd"], 0.07)
+        self.assertAlmostEqual(res["journal"]["cout_total_usd"], 0.07 + 4 * 0.5)
+        c.lancer(ad, "c-juste", budget_total_usd=2.5)  # sans contrôle : 1,5 + 1 = 2,5, passe
+        with self.assertRaises(idn.CourseInterrompue):  # 0,07 + 1,5 + 1 > 2,5 : le contrôle compté arrête avant le dernier juge
+            c.lancer(ad, "c-plafond", cout_deja_engage_usd=0.07, budget_total_usd=2.5)
+
+    def test_manifeste_de_fin_sur_toute_exception(self):
+        """CL34-09 : une exception qui n'est pas CourseInterrompue écrit quand même le manifeste de fin, puis remonte."""
+        class AdaptateurQuiCasse(FauxAdaptateur):
+            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+                raise OSError("relais injoignable")
+        c = self.cours()
+        ad = AdaptateurQuiCasse({"opus": [fiche_brute()], "fable": [fiche_brute()]})
+        with self.assertRaises(OSError):
+            c.lancer(ad, "c-casse")
+        chemin = os.path.join(self.tmp, "c-casse", "manifeste-fin.json")
+        self.assertTrue(os.path.exists(chemin + ".sha256"))
+        with open(chemin) as f:
+            self.assertIn("OSError", json.load(f)["reglages"]["erreur"])
+
+
+if __name__ == "__main__":
+    unittest.main()

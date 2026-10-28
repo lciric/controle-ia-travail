@@ -21,9 +21,15 @@ ROLES = ("experimentateur", "verificateur", "recombinaison", "synthese", "propos
 MODELES_REELS_PERMIS = ("claude-opus-5-5", "claude-fable-5-1")
 STATUTS_RESULTAT = ("ok", "erreur", "budget_depasse", "tours_epuises", "refuse")
 OUTILS_AUTORISES = ("Read", "Write", "Edit", "Bash")
-# v32 (CL31-08) : les rôles de l'idéation n'ont besoin d'aucun outil — tout est dans la consigne ; aucun terminal, aucune
-# écriture, aucune lecture : la réponse finale seule compte.
+# v32 (CL31-08) : les rôles de l'idéation n'ont besoin d'aucun outil — tout est dans la consigne. v35 (CL34-02) : dans le
+# kit d'agent 0.2.x, `allowed_tools` ne fait qu'auto-permettre ; c'est `tools` qui fixe le jeu d'outils DISPONIBLES
+# (`tools=[]` → `--tools ''`, aucun outil intégré). Les rôles listés ici reçoivent donc `tools=[]` ; les autres gardent le jeu
+# par défaut du kit, borné par `allowed_tools` et `disallowed_tools`.
 OUTILS_PAR_ROLE = {"proposeur_ideation": (), "juge_ideation": ()}
+# v35 (CL34-08) : effort de réflexion fixé par rôle, consigné au manifeste de départ (valeurs permises par le kit : low,
+# medium, high, xhigh, max). Les rôles absents gardent le défaut du kit (None).
+EFFORT_PAR_ROLE = {"proposeur_ideation": "high", "juge_ideation": "medium"}
+DELAI_SESSION_S = 1800  # v35 (CL34-05) : borne de temps par session réelle ; dépassée → statut « erreur »
 OUTILS_INTERDITS = ("WebFetch", "WebSearch", "Agent", "Task", "NotebookEdit", "Skill", "TodoWrite", "KillShell",
                     "BashOutput", "SlashCommand")
 MODE_PERMISSION = "dontAsk"
@@ -200,6 +206,9 @@ def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=Non
     return {
         "cwd": os.path.normpath(dossier),
         "allowed_tools": list(OUTILS_PAR_ROLE.get(role, OUTILS_AUTORISES)),
+        # v35 (CL34-02) : `tools` fixe le jeu disponible ; [] = aucun outil intégré ; None = défaut du kit
+        "tools": list(OUTILS_PAR_ROLE[role]) if role in OUTILS_PAR_ROLE else None,
+        "effort": EFFORT_PAR_ROLE.get(role),
         "disallowed_tools": list(OUTILS_INTERDITS),
         "permission_mode": MODE_PERMISSION,
         "max_turns": max_tours,
@@ -235,11 +244,27 @@ class AdaptateurClaudeSDK(Adaptateur):
 
     nom = "claude-sdk"
 
-    def __init__(self, url_relais, environnement=None, arme=False, interdire_lecture=None):
+    def __init__(self, url_relais, environnement=None, arme=False, interdire_lecture=None, delai_s=DELAI_SESSION_S):
         self.url_relais = valider_url_relais(url_relais)
         self.interdire_lecture = None if interdire_lecture is None else list(interdire_lecture)
         self._environnement = environnement
         self.arme = arme
+        if isinstance(delai_s, bool) or not isinstance(delai_s, (int, float)) or not delai_s > 0:
+            raise ValueError("delai_s : nombre strictement positif (secondes)")
+        self.delai_s = float(delai_s)
+
+    @staticmethod
+    def options_sdk(sdk, o):
+        """v35 : les options du kit construites depuis `construire_options` (fonction séparée pour être testée sans appel) ;
+        `tools` est transmis tel quel (CL34-02), `effort` aussi (CL34-08)."""
+        return sdk.ClaudeAgentOptions(
+            cwd=o["cwd"], allowed_tools=o["allowed_tools"], disallowed_tools=o["disallowed_tools"], tools=o["tools"],
+            effort=o["effort"], permission_mode=o["permission_mode"], max_turns=o["max_turns"],
+            max_budget_usd=o["max_budget_usd"], model=o["model"], setting_sources=o["setting_sources"],
+            verbatim_prompts=o["verbatim_prompts"], system_prompt=o["system_prompt"], sandbox=o["sandbox"], env=o["env"],
+            hooks={"PreToolUse": [sdk.HookMatcher(matcher=c["matcher"], hooks=[c["crochet"]])
+                                  for c in o["crochets"]["PreToolUse"]]},
+        )
 
     def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
         environnement = os.environ if self._environnement is None else self._environnement
@@ -253,33 +278,37 @@ class AdaptateurClaudeSDK(Adaptateur):
         sdk = importer_sdk()
         o = construire_options(os.path.abspath(dossier), budget_usd, max_tours, url_relais=self.url_relais,
                                modele=modele, role=role, interdire_lecture=self.interdire_lecture)
-        options = sdk.ClaudeAgentOptions(
-            cwd=o["cwd"], allowed_tools=o["allowed_tools"], disallowed_tools=o["disallowed_tools"],
-            permission_mode=o["permission_mode"], max_turns=o["max_turns"], max_budget_usd=o["max_budget_usd"],
-            model=o["model"], setting_sources=o["setting_sources"], verbatim_prompts=o["verbatim_prompts"],
-            system_prompt=o["system_prompt"], sandbox=o["sandbox"], env=o["env"],
-            hooks={"PreToolUse": [sdk.HookMatcher(matcher=c["matcher"], hooks=[c["crochet"]])
-                                  for c in o["crochets"]["PreToolUse"]]},
-        )
-        texte, cout, statut, erreur = asyncio.run(self._executer(sdk, consigne, options))
+        options = self.options_sdk(sdk, o)
+        texte, cout, statut, erreur = asyncio.run(self._executer(sdk, consigne, options, self.delai_s))
         return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur)
 
     @staticmethod
-    async def _executer(sdk, consigne, options):
+    async def _executer(sdk, consigne, options, delai_s=DELAI_SESSION_S):
+        """v35 (CL34-05) : la session entière est bornée par `delai_s` (`asyncio.wait_for`) ; dépassée → statut « erreur »,
+        erreur « délai de session dépassé », ce que la course traite comme tout autre arrêt dur. Le coût déjà engagé
+        n'est pas connu dans ce cas (le message de résultat n'est pas arrivé) : la course lit l'écart au relais."""
         morceaux, cout, statut, erreur, final = [], 0.0, "erreur", None, None
         sous_types = {"success": "ok", "error_max_budget_usd": "budget_depasse", "error_max_turns": "tours_epuises"}
+
+        async def boucle():
+            nonlocal cout, statut, erreur, final
+            try:
+                async for message in sdk.query(prompt=consigne, options=options):
+                    if isinstance(message, sdk.AssistantMessage):
+                        morceaux.extend(b.text for b in message.content if isinstance(b, sdk.TextBlock))
+                    elif isinstance(message, sdk.ResultMessage):
+                        cout = float(message.total_cost_usd or 0.0)
+                        final = message.result
+                        statut = sous_types.get(message.subtype, "erreur")
+                        if message.is_error and statut == "ok":
+                            statut = "erreur"
+            except sdk.ClaudeSDKError as exc:
+                erreur = type(exc).__name__ + " : " + caviarder(str(exc))[0][:500]
+
         try:
-            async for message in sdk.query(prompt=consigne, options=options):
-                if isinstance(message, sdk.AssistantMessage):
-                    morceaux.extend(b.text for b in message.content if isinstance(b, sdk.TextBlock))
-                elif isinstance(message, sdk.ResultMessage):
-                    cout = float(message.total_cost_usd or 0.0)
-                    final = message.result
-                    statut = sous_types.get(message.subtype, "erreur")
-                    if message.is_error and statut == "ok":
-                        statut = "erreur"
-        except sdk.ClaudeSDKError as exc:
-            erreur = type(exc).__name__ + " : " + caviarder(str(exc))[0][:500]
+            await asyncio.wait_for(boucle(), timeout=delai_s)
+        except asyncio.TimeoutError:
+            statut, erreur = "erreur", f"délai de session dépassé ({delai_s:g} s) : session interrompue (CL34-05)"
         return (final if final else "\n".join(morceaux)), cout, statut, erreur
 
 
@@ -327,27 +356,41 @@ class AdaptateurJugeExterne(Adaptateur):
     rapportées à part, jamais agrégées avec celles des juges Claude (voir `ideation.executer_ideation`)."""
 
     nom = "juge-externe"
+    # v35 (CL34-09) : le sous-processus reçoit un environnement explicite et minimal, le même que celui qui est vérifié :
+    # ces variables seulement, copiées depuis l'environnement de l'orchestrateur, plus `variables_transmises` (par exemple
+    # le chemin du fichier de clé de la commande — jamais une clé).
+    VARIABLES_MINIMALES = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")
 
-    def __init__(self, commande, environnement=None, delai_s=900):
+    def __init__(self, commande, environnement=None, delai_s=900, variables_transmises=()):
         if not isinstance(commande, (list, tuple)) or not commande or not all(isinstance(c, str) for c in commande):
             raise ValueError("commande du juge externe : liste non vide de chaînes")
         self.commande = list(commande)
         self._environnement = environnement
         self.delai_s = delai_s
+        self.variables_transmises = tuple(variables_transmises)
+        if noms_de_cle_presents({v: "x" for v in self.variables_transmises}):
+            raise CleDansEnvironnement("variables_transmises : un nom de variable de clé ne se transmet jamais")
+
+    def environnement_commande(self):
+        """L'environnement effectivement passé à la commande (fonction séparée pour être testée)."""
+        source = os.environ if self._environnement is None else self._environnement
+        presents = noms_de_cle_presents(source)
+        if presents:
+            raise CleDansEnvironnement("variables de clé présentes dans l'environnement de l'orchestrateur ("
+                                       + ", ".join(presents) + ") : la commande du juge externe tient sa clé elle-même")
+        env = {v: source[v] for v in self.VARIABLES_MINIMALES + self.variables_transmises if v in source}
+        env.setdefault("PATH", os.defpath)
+        return env
 
     def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
         import json
         import subprocess
         if role != "juge_ideation":
             raise ValueError(f"le juge externe ne joue que juge_ideation, pas {role!r}")
-        environnement = os.environ if self._environnement is None else self._environnement
-        presents = noms_de_cle_presents(environnement)
-        if presents:
-            raise CleDansEnvironnement("variables de clé présentes dans l'environnement de l'orchestrateur ("
-                                       + ", ".join(presents) + ") : la commande du juge externe tient sa clé elle-même")
+        env = self.environnement_commande()
         try:
             r = subprocess.run(self.commande, input=consigne.encode("utf-8"), capture_output=True, timeout=self.delai_s,
-                               cwd=dossier)
+                               cwd=dossier, env=env)
         except (OSError, subprocess.SubprocessError) as erreur:
             return Resultat("", [], 0.0, "erreur", type(erreur).__name__ + " : " + caviarder(str(erreur))[0][:300])
         if r.returncode != 0:
@@ -360,9 +403,11 @@ class AdaptateurJugeExterne(Adaptateur):
             objet = None
         if not isinstance(objet, dict) or not isinstance(objet.get("texte"), str):
             return Resultat("", [], 0.0, "erreur", "commande du juge externe : dernière ligne non JSON {texte, cout_usd}")
-        cout = objet.get("cout_usd", 0.0)
+        if "cout_usd" not in objet:  # v35 (CL34-03) : un coût manquant n'est jamais lu comme 0
+            return Resultat("", [], 0.0, "erreur", "commande du juge externe : cout_usd manquant (obligatoire)")
+        cout = objet["cout_usd"]
         if isinstance(cout, bool) or not isinstance(cout, (int, float)) or cout < 0:
-            return Resultat("", [], 0.0, "erreur", "commande du juge externe : cout_usd manquant ou négatif")
+            return Resultat("", [], 0.0, "erreur", "commande du juge externe : cout_usd non numérique ou négatif")
         if budget_usd + 1e-12 < float(cout):
             return Resultat(caviarder(objet["texte"])[0], [], float(cout), "budget_depasse",
                             "coût déclaré au-dessus du plafond de session")
