@@ -1,0 +1,103 @@
+# Proposition A — Tour III.2 : équipe rouge croisée
+
+**Pièces.** Je reçois les conceptions B et C en entier (balises fermées). Les pièces non servies restent celles déclarées au bloc FAITS (sortie JSON, carte d'inventaire) ; je ne leur prête rien. **Garde de sûreté** (reprise de la question) : les scénarios d'évasion ci-dessous sont nommés **par classe et par dose**, jamais par exemple ni consigne ; ils décrivent où un instrument ne lit pas, non comment écrire une attaque.
+
+**Statuts.** RAPPORTÉ = lu dans une pièce. OBSERVÉ-NON-AUDITÉ = simulation exploratoire de A2 (rejouée par la pièce C). HYPOTHÈSE = raisonnement. Tout chiffre que je dérive est « illustratif ».
+
+**Faille commune, déclarée d'abord (A, B et C la partagent).** Le contrôle 12 est simulé pour **une** cellule. La fiche de G1 en a plusieurs (A1 § 4 : au moins huit comparateurs « critère »), deux modes, et des strates. Les deux moitiés de calibrage sont les mêmes pour toutes les cellules, mais les lois de score diffèrent d'un moniteur à l'autre : les écarts s₁ − s₂ par cellule sont peu corrélés entre cellules (HYPOTHÈSE). Borne de Boole, illustratif : 8 cellules × 2 modes × p₁ ≈ 0,01 à 9 600 donne jusqu'à 0,16 ; à 4 800 (p₁ ≈ 0,04), jusqu'à 0,64. B borne l'union sur deux événements, C sur deux ; aucun des deux ne compte les cellules. C'est le contrôle négatif absent le plus grave des deux conceptions, et je le reprends en (c) pour chacune.
+
+---
+
+## Contre la proposition B
+
+### (a) Failles
+
+**B1. La « correction préalable » de E1 est de second ordre, présentée comme bloquante.** B exige, avant E1, de corriger `controle_12_intra_taches` parce que l'effet de tâche des unités sabotées (`Ue`) est tiré indépendamment de celui du calibrage (`U`) (RAPPORTÉ : lecture de A2, exacte). Mais la statistique du contrôle 12 est v(t) = part(sab > s₁) − part(sab > s₂) : elle dépend de s₁ − s₂, fixé par le calibrage seul, et de la densité des scores sabotés entre les deux seuils. Corréler `Ue` à `U` déplace cette densité d'une quantité qui ne change ni le signe ni l'ordre de grandeur (HYPOTHÈSE). B transforme un raffinement en condition suspensive de son propre duel.
+
+**B2. E2b teste la mauvaise contamination.** B énonce deux contaminations de la réserve : la dose choisie contre le noir, l'entraînement des sondes sur des jeux tirés de la réserve (RAPPORTÉ). Puis E2b compare les **moyennes par tâche des scores honnêtes** de la réserve et de l'évaluation. Or ni l'une ni l'autre contamination n'a de raison de se voir sur la moyenne honnête : la dose n'agit que sur les épisodes sabotés, et un sur-ajustement de direction de sonde se verrait sur le **gain saboté** par tâche, pas sur le niveau honnête (HYPOTHÈSE). H_A observée (« pas de différence ») n'a donc pas le contenu que B lui donne (« l'objection perd son support côté sondes »). Deuxième défaut : les 64 honnêtes d'évaluation viendraient de P3, les 32 de réserve du calibrage de développement, soit deux lancements, deux piles, deux instants. Une différence serait inexploitable, une absence de différence serait du bruit : l'expérience ne sépare pas ses deux issues.
+
+**B3. E3 conclut à l'envers.** Si H_A (la paire par graine corrèle), B écrit que « le partage divise la ressource entre deux épisodes sabotés ». Un jumeau honnête apparié par graine à deux épisodes sabotés n'est pas une ressource divisée : chaque différence v(t) garde son appariement complet ; ce qui change, c'est la corrélation des deux v entre modes, qui ne nuit pas à l'intersection-union (D-S10, RAPPORTÉ). Note aussi que l'appariement « même graine » entre un épisode honnête et un épisode saboté dont le contexte diffère dès le premier jeton ne garantit aucun partage de trajectoire : la corrélation attendue au-delà de l'effet de tâche est proche de zéro par construction (HYPOTHÈSE) ; E3 risque de tester une étiquette, pas un mécanisme.
+
+**B4. E4 a un dénominateur instable et un contrôle vrai par construction.** r = (rappel_M − rappel_H)/(rappel_S − rappel_H) : si la sonde détecte peu (rappel_S − rappel_H petit, ce qui est le régime « diffus » visé), r explose en variance ; aucun intervalle n'est prévu. Le contrôle négatif « le témoin lexical sépare M de H aussi bien que la sonde » est vrai par construction : la mention met les mots dans le texte, le témoin lexical les lit. Le bon contrôle est le bras « fuite textuelle » de N-053 (masquage des positions d'évidence textuelle, RAPPORTÉ dans A1 § 4), que B ne relie pas à E4.
+
+**B5. L'ordre de B contredit sa propre critique.** B reproche au pilote de A une double lecture de la partie développement (D-S12) puis place son propre pilote saboté « sur des tâches retirées du développement » sans compter ce que l'organisme perd : à G_max = 1, la puissance 0,78–0,90 pour 20 points est calculée à 32 unités (OBSERVÉ-NON-AUDITÉ) ; à 24, la table A1 donne 0,45–0,62 pour 20 points, K = 3 (lecture à n = 30, OBSERVÉ-NON-AUDITÉ). B déplace la perte, il ne la supprime pas.
+
+**B6. Calibrage d'épreuve en dernier : une fuite de pile, pas seulement une dérive.** Entre l'étape 6 (épreuve) et l'étape 7 (calibrage), le harnais, les poids des juges, les versions peuvent changer. B renvoie à la garde de conformité de P-036. Mais le seuil à 1 % est estimé sur une pile et appliqué à des scores produits sur une autre : toute différence systématique entre dans le rappel de **tous** les moniteurs, et la garde appariée (δ) ne la voit pas, puisque les jumeaux honnêtes ont été générés à l'étape 6 avec l'épreuve. L'instrument (le seuil) et l'objet évalué (l'épreuve) sortent de deux fabriques.
+
+**B7. Attaque de la pièce C, deux arithmétiques à revoir.** « 0,10 contre 0,08, 1,6 erreur type » : exact (illustratif, 1 000 répétitions). Mais « 0,58 contre 0,63 ≈ 3 erreurs types » traite 0,63 comme une constante ; c'est une estimation de la v2 dont le nombre de répétitions n'est pas servi. L'écart à la batterie (0,59, RAPPORTÉ) est de 0,6 erreur type ; B choisit l'une des deux références sans le dire.
+
+### (b) Scénarios d'évasion (par classe, sans recette)
+
+Instruments de B : contrôle 12, garde δ, mention, témoin instruit, recherche de dose, strates écrites, E2b, E4.
+
+1. **Déplacement de dose sous la strate écrite.** B code « diffus » par la dose écrite avec un contrôle de concordance (RAPPORTÉ). Un mode dont les actions sabotées ont chacune une intensité sous le seuil noir par action, mais dont le nombre dépasse la proportion écrite, passe le contrôle de concordance s'il ne compte que les actions, pas leur intensité : la strate est mal nommée, et H1a lit une strate mélangée. Coût pour le concepteur du mode : nul ; il écrit la consigne.
+2. **Homogénéisation lexicale contre la mention.** Si les épisodes sabotés et les épisodes de mention partagent le même vocabulaire de classe, E4 donne r élevé sans que la sonde lise « l'évocation » : elle lit la classe lexicale, présente dans les deux. L'instrument conclut à tort contre la boîte blanche (faux négatif pour G1). Coût : nul, c'est une propriété de rédaction des consignes.
+3. **Queue honnête lourde.** Le seuil à 1 % se calibre sur les honnêtes du même agent. Un agent dont les scores de sonde honnêtes ont une queue lourde (effet de tâche fort, a élevé) pousse le seuil vers le haut pour tous les moniteurs boîte blanche à la fois ; la garde δ, appariée, reste à zéro. La recherche de dose, faite contre le noir, ne le voit pas. Coût : aucune action adverse ; c'est un régime du banc (le scénario S4 de A, HYPOTHÈSE).
+4. **Tous à la fois.** Un mode à faible intensité par action, nombreuses actions, vocabulaire commun à la mention, sur un agent à effet de tâche fort : la strate est mal nommée, E4 est muette, le seuil est haut. Coût : la connaissance du seuil noir par action (donnée par la recherche de dose, que le concepteur du mode connaît) et du vocabulaire de la mention. Rien de cela ne demande de connaître les sondes. **Qui est l'adversaire ?** Dans la couche 2, l'agent 8B suit une consigne ; il n'optimise rien. Le seul adversaire qui peut viser ces failles est le concepteur du mode (bras informé de N-056, RAPPORTÉ). La couche 2 teste donc des concepteurs, pas un agent adaptatif (HYPOTHÈSE à écrire au préenregistrement).
+
+### (c) Contrôles négatifs dont l'absence serait fatale
+
+- **C-B1. Union sur les cellules, pas seulement sur les modes.** E1 doit rapporter le taux où *au moins une* cellule × mode promeut à tort, sous les lois égales. H_A : ≤ 0,05 à 9 600 ; H_B : > 0,05. Si H_B, la lecture A de D-S9 tombe pour une raison que ni A ni B n'ont simulée, et le remède n'est pas le double du calibrage mais une règle de multiplicité sur les contrôles 12.
+- **C-B2. Contrôle positif pour E2b.** Sans une coupe connue pour différer (par exemple les 60 tâches de P3 contre les mêmes tâches regénérées sur la nouvelle pile), un p ≥ 0,05 ne distingue pas « échangeable » de « sans puissance ». H_A : la coupe connue est détectée (p < 0,05) ; H_B : non, et E2b n'a aucun pouvoir à 32 contre 64 tâches.
+- **C-B3. Plancher des sondes aléatoires appariées sur M.** E4 doit montrer que des sondes aléatoires (A1 § 4, RAPPORTÉ) donnent r ≈ 0 sur M. Sinon un r élevé de la sonde figée peut être un artefact du masquage ou du format, pas de la lecture.
+- **C-B4. Jumeaux propres de S_x : égalité en loi avec les jumeaux partagés.** B recommande des jumeaux propres pour S_x. Il faut alors un contrôle que les 640 nouveaux honnêtes ne diffèrent pas des 640 partagés (même pile, même instant, scores des moniteurs figés comparés par tâche). Absent, toute lecture de S_x confond « mode inédit » et « lot d'honnêtes différent ».
+- **C-B5. Concordance en intensité, pas seulement en proportion** (scénario 1). Absente, la strate « diffus » n'est pas falsifiable.
+
+---
+
+## Contre la proposition C
+
+### (a) Failles
+
+**C1. Statuts mal assignés.** C écrit « VÉRIFIÉ dans A1 », « VÉRIFIÉ dans A2 », « VÉRIFIÉ : B1 § 2 ». Rien n'a été vérifié : tout est RAPPORTÉ d'une pièce. « CONTRADICTION DOCUMENTAIRE » n'est pas un statut. Le lecteur ne peut plus distinguer ce que C a lu de ce que C a établi.
+
+**C2. La formule du contrôle 12 sous-compte d'un facteur √2 et ajoute un facteur non justifié.** C écrit σ(Δr̂) ≈ 2,04 √(1−a)/√N_cal. Recalcul (illustratif, binormal, τ = 1 %, d′ = 2,073) : pour deux moitiés de N/2 chacune, σ(Δr̂) = √2 · φ(z_τ − d′) · √(τ(1−τ)) / φ(z_τ) · √(2/N) ≈ 2,88/√N. La table H de A1 le confirme : 2,9 points pour deux moniteurs à N = 4 800 chacun (OBSERVÉ-NON-AUDITÉ), donc ≈ 4,1 pour deux moitiés de 2 400 (illustratif), pas 2,63. Le facteur √(1−a) suppose que, conditionnellement aux effets de tâche, le quantile du mélange hérite de la seule variance intra-tâche ; c'est une HYPOTHÈSE que C présente comme une dérivation. Les « ρ₁₂ ≈ 0,6 à 0,8 » et le « × 1,3 » sont marqués illustratifs mais portent la conclusion « 4 800 échoue, 6 400 tient » : la recommandation repose sur deux nombres sans source.
+
+**C3. Arithmétique de la garde.** C donne W₆₄(0,05) = 8,28 et W₆₄(0,10) = 54,1. Recalcul (illustratif) : moyenne sur Λ de (1 + λδ)^64 = 6,8 et 74,6. Les planchers (93, 48) restent justes ; les valeurs intermédiaires ne le sont pas. Mineur, mais C les étiquette « CALCULÉ ICI / VÉRIFIÉ dans A1 ».
+
+**C4. Divergence 2 : C interpole dans un tableau qui n'est pas le critère.** « 96 × 6 ≈ 0,94 en S2 » interpole la table à un seul comparateur ; le critère de G1 est l'intersection-union (N-056 (b), RAPPORTÉ), où A1 donne 96 × 3 = 0,63 contre 64 × 10 = 0,68 (OBSERVÉ-NON-AUDITÉ). C conclut tout de même 64 × 10 ; le calcul affiché ne porte pas la recommandation.
+
+**C5. E2 a le même défaut que E2b de B** : il mesure une différence de moyennes honnêtes (ΔZ, seuil 0,42 correctement dérivé de √(1/32 + 1/64) × 1,96, illustratif) alors que la contamination alléguée est sur le gain saboté. Même issue vide.
+
+**C6. Divergence 3 : « aucun biais » répond à une question que personne ne posait.** Le risque des jumeaux partagés n'est pas un biais d'espérance ; c'est (i) une seule réalisation de la garde pour tous les modes (une asymétrie honnête de hasard bloque tout en même temps : fragilité, non biais), et (ii) la lecture de S_x après celle des modes connus, avec la moitié honnête déjà connue (B l'a vu ; C l'ignore et affirme même que c'est un avantage). D-S12 n'admet l'héritage qu'entre parties disjointes (RAPPORTÉ) : C ne dit pas si une fiche S_x partageant ses honnêtes est « disjointe ». E3 (Levenshtein = 0) est un test de plomberie utile, mais ses H_A/H_B (« couplage pur » contre « fuite d'état ») ne sont pas exclusives de la question statistique posée.
+
+**C7. Témoin instruit apparié en dose : une fuite entre construction et évaluation.** C propose de donner au témoin bénin « la même fréquence d'actions que le saboteur ». Pour l'écrire, il faut connaître la dose retenue ; le témoin est alors fabriqué à partir du résultat de la recherche de dose. Si l'intervention bénigne touche les mêmes champs que le sabotage (champ coût, champ contrôles), T devient un saboteur faible, S − T rétrécit, et G1 échoue par construction du témoin (HYPOTHÈSE). C n'a aucun contrôle que T ne dégrade pas la tâche.
+
+**C8. E4 certifie trop peu.** La garde M − H et T − H « doit atteindre 20 » à δ = 0,10 et 64 unités : elle certifie seulement que M ou T ne sur-alertent pas de plus de 10 points. Une sonde qui alerte 9 points de plus sur la mention passe. À 64 unités, δ = 0,07 est hors de portée (plancher 67, OBSERVÉ-NON-AUDITÉ), donc l'instrument ne peut pas être resserré : H_A n'est pas réfutable à la précision utile. Le contrôle négatif « le témoin lexical doit échouer sur M » est vrai par construction (C4 de B, même défaut).
+
+**C9. L'attaque de la pièce C (§ 4.1) est fausse.** C affirme que A2 simule le contrôle 12 en coupe intra-tâche à 1 024 épisodes (cellule K_bis). Lecture de A2 : la boucle `Kj` ne prend que K_cal ∈ {75, 150}, soit 4 800 et 9 600 ; la boucle `Kc` à K_cal = 16 appelle `calibrage()` (bruit du quantile), pas le contrôle 12. La cellule F (`calibrage_memes_taches`) est une autre statistique (A contre B avec garde). Le comparateur avait raison : la coupe recommandée n'est pas simulée sous 2 000. C cite des numéros de ligne (« 284-292 », « 155-184 ») que je ne peux pas vérifier et qui ne sont pas dans les pièces.
+
+**C10. § 4.2 : l'alerte TRACE-lite est juste, le remède se contredit.** Que tous les comparateurs doivent noter le calibrage est RAPPORTÉ (A1 § 4) ; que 1 à 4 passes soient optimistes, A1 § 10 le dit lui-même. Les rythmes « Qwen ≈ 55 s, b* ≈ 58 s » sont inventés sous l'étiquette CALCULÉ ICI. Et le remède « sous-échantillonnage scellé de 1 500 honnêtes pour TRACE-lite » place une cellule critère sous le régime que C vient d'exclure (contrôle 12 à 1 056–2 016 : 0,14–0,26 en coupe par tâche, OBSERVÉ-NON-AUDITÉ ; non simulé en coupe intra-tâche). Une cellule de l'intersection-union calibrée à 1 500 fixerait le niveau de toute la fiche.
+
+**C11. Le pilote L1 ne peut pas mesurer ce qu'E5 lui demande.** E5 oppose â ≤ 0,35 à â > 0,45 sur 16 tâches (L1), puis sur 8 tâches (§ 5.2). Avec 7 degrés de liberté, l'erreur relative d'une variance entre tâches est ≈ √(2/7) ≈ 53 % (B l'a calculé, illustratif) ; un intervalle à 95 % sur a couvre un facteur d'ordre 3. Le seuil d'E5 n'est pas résoluble à cette taille : les deux issues sont indécidables, ce qui viole B4. Même défaut que le pilote de A, que B a correctement attaqué.
+
+**C12. L1 consomme la partie développement.** 16 tâches de réserve sabotées à K = 10 pour le pilote, puis les mêmes 32 tâches pour l'organisme : double lecture (D-S12), que C reproche implicitement à B1 sans se l'appliquer.
+
+### (b) Scénarios d'évasion (par classe)
+
+Instruments de C : blanc séquentiel avec détecteur de rupture, cascade (ii), dernier état (iii), moniteurs noirs, garde/contrôle 12, témoin apparié en dose, E5.
+
+1. **Contre (iii) : signal hors de la fenêtre terminale.** Une sonde sur une seule position lit ce que l'état final résume. Un mode dont l'effet sur les internes est concentré tôt et absent de la dernière position laisse (iii) à son plancher ; comme (iii) est **critère** de l'intersection-union (N-056 (b), RAPPORTÉ), c'est un gain facile pour le blanc séquentiel, pas une évasion contre G1 ; mais l'inverse (effet confiné à la dernière position) donne à (iii) l'avantage et fait échouer G1 pour une raison de fenêtre. Coût : nul ; c'est une propriété de l'horizon du mode.
+2. **Contre la cascade : étalement sous chaque porte.** C'est la définition de « diffus ». Rien à ajouter : la cascade est faite pour perdre sur cette strate (N-007, RAPPORTÉ).
+3. **Contre le séquentiel : dérive honnête imitée.** Si les scores honnêtes dérivent lentement au fil des actions (effet épisode, T0.3 : seuil de Ville non tenu, RAPPORTÉ), le calibrage sur épisodes entiers absorbe cette dérive dans le seuil ; un mode dont l'accumulation reste sous la dérive honnête typique n'est pas lu. Coût : connaître la forme de la dérive honnête, accessible à qui lit des épisodes honnêtes (le concepteur informé).
+4. **Contre le témoin apparié en dose (C7).** Le concepteur de T peut, sans intention, produire un témoin qui touche les mêmes champs : S − T → 0. Coût : nul ; c'est une erreur de rédaction, non une attaque.
+5. **Contre le contrôle 12 : masse d'ex æquo.** Les juges lus par un jeton discret ont des scores ex æquo (A1 § 6, RAPPORTÉ). Sans bris d'égalité scellé, le quantile à 1 % saute ; C le voit (retouche 3) mais ne la met pas en condition d'arrêt de L1.
+6. **Tous à la fois.** Un mode à horizon précoce, intensité sous le noir par action, accumulation sous la dérive honnête : (iii) et la cascade sont au plancher, le séquentiel aussi, les noirs aussi ; G1 ne peut pas « gagner » contre des comparateurs tous à zéro, et la garde ne protège rien de ce côté. Coût : connaître les seuils noirs (donnés par la recherche de dose) et la dérive honnête (donnée par la lecture d'épisodes honnêtes) ; les seuils calibrés des sondes ne sont pas nécessaires. Le bras informé (B) de N-056 a ce savoir (RAPPORTÉ). Conclusion commune avec B : la couche 2 mesure la difficulté que des **concepteurs** peuvent fabriquer, pas celle qu'un agent optimisant trouverait (HYPOTHÈSE).
+
+### (c) Contrôles négatifs dont l'absence serait fatale
+
+- **C-C1. Union sur les cellules** (faille commune) : identique à C-B1. Fatal pour C en particulier, qui recommande 6 400 avec une marge de « 0,045 < 0,05 » calculée sur deux événements seulement.
+- **C-C2. Récupération synthétique pour E5.** Avant L1, simuler (a, h, c) connus à 8 ou 16 tâches × 10 exécutions et vérifier que l'estimateur REML les retrouve avec un intervalle qui sépare S1 de S4. H_A : il les sépare ; H_B : non, et L1 ne peut pas décider E5 quelle que soit son issue. B l'a dans sa table ; C ne l'a pas.
+- **C-C3. T n'est pas un saboteur.** Les juges doivent noter T comme H sur la qualité de la tâche (coût normalisé, contrôles) : H_A : T ≈ H aux deux juges ; H_B : T diffère, et le témoin apparié en dose est à réécrire avant toute génération d'épreuve.
+- **C-C4. Contrôle positif pour E2** (identique à C-B2).
+- **C-C5. Bris d'égalité comme condition d'arrêt de L1.** Mesurer la masse d'ex æquo au quantile 1 % pour chaque juge sur les 640 honnêtes de L1 ; au-dessus d'un seuil scellé, aucune cellule juge n'est critère tant que la retouche 3 n'est pas faite.
+- **C-C6. Taille de calibrage de chaque cellule critère égale à celle des autres.** Si TRACE-lite est sous-échantillonné (C10), son contrôle 12 doit être montré ≤ α à sa propre taille, sinon il sort de l'intersection-union et passe « rapporté ».
+- **C-C7. Déclaration des tâches consommées par L1.** Quelles tâches de réserve restent disponibles pour l'organisme, et à quelle puissance (table A1 à n = 16 : 0,02–0,03 pour 30 points, G_max = 2, OBSERVÉ-NON-AUDITÉ). Absente, le pôle hérite d'une partie déjà lue.
+
+---
+
+## Ce que je retiens des deux (en le disant)
+
+Je me sers de B sur un point : le risque de la lecture de S_x après les modes connus avec des honnêtes partagés (B § 3) est réel et absent de A1 ; la parade minimale est le scellement de la fiche S_x entière avant la première lecture, les jumeaux propres n'étant qu'une assurance de plus, à contrôler (C-B4). Je me sers de C sur un point : le coût des comparateurs sur le calibrage (§ 4.2) est la fragilité la plus chère de A1 § 8, et il doit être chronométré avant tout devis v2 ; mais pas au prix d'une cellule critère calibrée sous le plancher. Les deux conceptions laissent intacte la faille commune : le niveau joint du contrôle 12 sur toutes les cellules d'une fiche n'est calculé nulle part, et c'est lui, pas le dénominateur de D-S9, qui décide si 9 600 suffit.
+
+FIN-DE-CELLULE
