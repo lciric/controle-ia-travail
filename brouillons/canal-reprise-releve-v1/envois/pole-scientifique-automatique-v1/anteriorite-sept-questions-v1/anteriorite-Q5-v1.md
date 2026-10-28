@@ -1,0 +1,75 @@
+# Antériorité — Q5 : « L'universalité de la boucle, pas du moniteur » (courbe d'apprentissage du générateur de moniteurs)
+
+Avertissement : tout ce qui suit est RAPPORTÉ d'après des pages de résumé, des pages HTML et des synthèses automatiques (WebFetch). Aucun PDF n'a été vérifié ligne à ligne.
+
+## 1. Verdict
+**SEMI-OCCUPÉ, confiance moyenne.** L'objet « coût d'adaptation à la tâche k en fonction de k » est bien établi en apprentissage continu, avec des métriques de transfert avant et l'aire sous la courbe d'apprentissage. En biologie évolutionnaire, Parter, Kashtan et Alon (2008) ont montré qu'une évolution exposée à des buts changeants s'adapte plus vite à un but nouveau. L'évaluation du générateur plutôt que du produit commence aussi à apparaître pour les boucles auto-améliorantes (HyperAgents 2026, avec le score improvement@k). En revanche, aucun travail trouvé en défense d'IA ni en sécurité informatique ne trace le **coût de la boucle de défense (générations, requêtes, calcul) jusqu'à une défense qui généralise, en fonction du rang de la famille d'attaque nouvelle**. Les occupants co-évolutifs rapportent des taux de succès d'attaque par tour, jamais un coût par famille.
+
+## 2. Occupants et voisins (du plus proche au plus lointain)
+
+**a. EvoDefense (arXiv 2605.31140, préimpression 2026).** RAPPORTÉ : co-évolution d'une défense boîte noire. Le papier affirme une convergence « en quelques itérations », donne les taux de succès d'attaque après 1, 2, 5 et 10 tours, et compare dans un tableau une garde entraînée de façon incrémentale sur une famille supplémentaire. Il ne donne **ni coût par famille ni tendance de ce coût d'une famille à l'autre**, et il évalue le système défendu final. L'itération comptée dans le tableau 2 est l'effort de l'attaquant, pas celui du défenseur.
+
+**b. EvoSafety, « Model-Agnostic Lifelong LLM Safety via Externalized Attack-Defense Co-Evolution » (arXiv 2605.13411, mai 2026, préimpression).** RAPPORTÉ : un défenseur léger à mémoire est entraîné en tours alternés. On y trouve un entraînement continué sur des méthodes d'attaque tenues à l'écart (tableau 4), un transfert sans réentraînement, et un contrôle qualitatif de l'oubli. **Pas de courbe de coût selon le nombre de familles vues** ni de métrique formelle de transfert. L'annexe A.4 ne contient qu'une comparaison globale de coût.
+
+**c. Lifelong Safety Alignment (arXiv 2505.20259, NeurIPS 2025, relu par les pairs).** RAPPORTÉ : boucle méta-attaquant contre défenseur avec seulement deux itérations (T=2). Le papier rapporte les taux de succès d'attaque par itération sur des attaques vues, non vues et de généralisation. Il n'y a **aucune mesure du coût d'adaptation par attaque nouvelle**. Les auteurs signalent eux-mêmes l'oubli catastrophique sur des cycles longs comme non mesuré.
+
+**d. MAAG, « Immunity Memory-Based Jailbreak Detection » (arXiv 2512.03356, préimpression).** RAPPORTÉ : un détecteur fondé sur les états cachés, doté d'une mémoire mise à jour, dont la performance augmente après 1, 5 et 10 tours. Les tours ne correspondent pas à des familles introduites séquentiellement, et **aucun coût d'adaptation par famille** n'est rapporté. INFÉRÉ : c'est le voisin boîte blanche le plus proche de « l'immunité qui apprend », mais il mesure le produit.
+
+**e. SafeCoEvo (2609.36580), AgentSafeEvo (2610.19422), RvB, MAGIC.** À VÉRIFIER : les pages n'étaient pas accessibles dans cette session. Le cadre commun indique pour SafeCoEvo une sélection en distribution. INFÉRÉ par cohérence avec a à d : la mesure est probablement le moniteur final, à confirmer.
+
+**f. AutoRedTeamer (arXiv 2503.15754, préimpression 2025, côté attaque, nommé par classe seulement).** RAPPORTÉ : générateur d'attaques à intégration continue. Il donne **un coût d'intégration unique**, mesuré en nombre de requêtes, et des distributions de choix début contre fin. Il n'y a **pas de courbe du coût d'intégration selon le rang**. C'est le symétrique côté attaque, et il est lui aussi non mesuré.
+
+**g. HyperAgents / DGM-H (arXiv 2603.19461, mars 2026, Zhang, Clune, Foerster, Jiang et al., préimpression Meta).** RAPPORTÉ : le papier évalue explicitement **le méta-agent figé** par improvement@k, c'est-à-dire le gain du meilleur agent produit en k itérations. Il montre que la procédure d'auto-amélioration transférée vers un domaine nouveau produit des gains (imp@50 ≈ 0,63 contre ≈ 0 pour les témoins, d'après 2603.19461). C'est le précédent le plus proche de « la machine est la contribution ». **Limites** : le gain est mesuré à budget fixe, pas comme un coût pour atteindre un seuil. Il n'y a qu'un domaine de transfert, pas de série de domaines ordonnés par rang, et rien qui touche la sécurité.
+
+**h. Evolution Fine-Tuning / Finch (arXiv 2606.29082, 2026, préimpression).** RAPPORTÉ : un opérateur de mutation à base de grand modèle de langage, entraîné sur 371 tâches. Sa figure 8 montre que la performance sur des tâches tenues à l'écart croît avec le nombre de tâches d'entraînement : +14,1 % en passant de 15 à 355 tâches, d'après 2606.29082. C'est une **courbe « générateur contre nombre de tâches vues »**, mais exprimée en score à budget fixe (T=100), pas en coût jusqu'à un seuil. Le chevauchement entre entraînement et test n'est pas totalement exclu.
+
+**i. « Evolution or Illusion? » (arXiv 2609.19799, IBM, 2026).** RAPPORTÉ : il faut rapporter la frontière graines × itérations et non un point unique, car les classements s'inversent selon le budget. Le papier ne mesure pas l'apprentissage inter-problèmes. C'est un piège méthodologique directement applicable, voir section 4.
+
+**j. SkillFlow (arXiv 2604.17308, 2026).** RAPPORTÉ : le banc donne des tâches dans un ordre fixe au sein de familles, avec une bibliothèque de compétences héritée, et mesure le coût en dollars, les tours et les jetons. Les **courbes coût par rang ne sont pas publiées**, seulement des moyennes par famille. Le constat que de mauvaises compétences précoces se propagent est pertinent pour l'héritage.
+
+**k. Apprentissage continu, cadre métrique (relu par les pairs).** Lopez-Paz et Ranzato, Gradient Episodic Memory (NeurIPS 2017, arXiv 1706.08840), définissent les transferts avant et arrière. Chaudhry et al., A-GEM (arXiv 1812.00420, ICLR 2019 À VÉRIFIER), définissent l'aire sous la courbe d'apprentissage (LCA), soit la précision moyenne sur les dix premiers mini-lots d'une tâche nouvelle : c'est **exactement une mesure de vitesse d'acquisition de la tâche k**. Ils rapportent que les méthodes diffèrent peu sur cette mesure. Finn et al., Online Meta-Learning (arXiv 1902.08438, ICML 2019), raisonnent en regret ; le coût par tâche selon l'indice n'a pas été confirmé (À VÉRIFIER).
+
+**l. Biologie : Parter, Kashtan et Alon, « Facilitated Variation » (PLoS Computational Biology 2008, relu par les pairs).** RAPPORTÉ : des populations soumises à des buts variant de façon modulaire atteignent des buts **nouveaux** (composés des mêmes sous-buts) en beaucoup moins de générations que des populations à but fixe, environ un ordre de grandeur. C'est la preuve de concept « la boucle évolutive apprend à évoluer », en générations jusqu'au but. Les auteurs ne tracent pas le coût en fonction de la quantité d'exposition passée. Voisin théorique : Kounios, Watson et al., arXiv 1612.05955, sur l'évolvabilité vue comme apprentissage.
+
+**m. Sécurité informatique classique.** Valizadeh et van Dijk (arXiv 1905.00154, vers 2019) : un taux de convergence d'un générateur de signatures en fonction du nombre d'échantillons, avec une condition de confinement α > 1. C'est une courbe d'apprentissage **intra-famille**, pas inter-familles. Botacin et al. (« We Need to Talk About AntiViruses », Computers & Security 2020 À VÉRIFIER) définissent une fenêtre d'opportunité d'attaque, c'est-à-dire le délai de signature, sur une fenêtre unique de 30 jours, sans suivi par famille ni dans le temps. FARM (arXiv 2601.17907) et LFreeDA (2511.14963) traitent l'adaptation à la dérive et aux familles nouvelles de logiciels malveillants (non lus en détail, À VÉRIFIER pour la présence d'un coût par rang).
+
+**n. Co-évolution, mesures de progrès.** Miconi (EuroGP 2009) distingue les progrès local, historique et global, et reproche aux graphiques CIAO, au Master Tournament et au Dominance Tournament de mesurer le progrès historique en prenant l'ensemble d'entraînement pour ensemble de test (RAPPORTÉ d'après le résumé). Enhanced POET (arXiv 2003.08536, ICML 2020) : la mesure ANNECS **compte** les environnements nouveaux résolus, mais ne mesure pas si leur résolution devient moins chère. Le gain de transfert est donné à part, en pas de stratégie évolutionnaire globaux. Chong, Tiňo et Yao (2008) : généralisation, pas coût de réponse.
+
+## 3. Ce qui survit
+La formulation la plus étroite qui reste apparemment ouverte est la suivante. **Pour une boucle de conception de moniteurs (boîte blanche et/ou boîte noire) face à une suite de familles d'attaque introduites une à une, et validées sur des familles tenues à l'écart avec un juge figé, mesurer le coût jusqu'au seuil (générations, appels au proposeur, calcul) en fonction du rang k de la famille, et tester si la pente est négative.** Il faut aussi des témoins appariés : une boucle sans héritage ni mémoire, et une boucle à ordre de familles permuté. Personne, parmi a à j, ne trace cette courbe. Les métriques existent ailleurs (aire sous la courbe d'apprentissage, transfert avant, improvement@k, générations jusqu'au but chez Parter et al.) et doivent être **citées comme fondation** : la nouveauté est le transport vers la défense et la mesure en coût jusqu'au seuil, pas l'idée de « mesurer le générateur ». HyperAgents occupe déjà le slogan « évaluer le méta-niveau ». INFÉRÉ.
+
+## 4. Traitabilité
+- **Sur processeur seul** : une ré-analyse des journaux de boucles publiées, si des traces par itération sont diffusées (SkillFlow publie son code), ou des simulations à la Parter et al. avec des familles synthétiques.
+- **Prérequis** : une suite ordonnée d'au moins 5 à 8 familles de menaces diffuses, avec un juge figé et un critère de « défense qui généralise » fixé à l'avance. Sans cela, le coût jusqu'au seuil n'est pas défini.
+- **Dépense** : chaque point de courbe demande une exécution complète de la boucle. Avec plusieurs graines et plusieurs permutations d'ordre, il faut compter des dizaines à centaines d'exécutions, soit de l'ordre de 10³ à 10⁴ heures-processeur graphique ou un budget d'appels à l'API équivalent (estimation INFÉRÉE).
+- **Pièges connus** : (1) le progrès historique pris pour du progrès global (Miconi 2009). (2) Des classements dépendants du budget et un point unique trompeur (2609.19799) : il faut une frontière, pas un point. (3) La confusion du rang avec la difficulté des familles : il faut permuter l'ordre. (4) La fuite entre familles « nouvelles » et familles déjà vues (cf. Finch, chevauchement non exclu). (5) La propagation de compétences ou d'héritages erronés (SkillFlow). (6) L'exploitation d'un évaluateur défaillant par la boucle (2609.19799) : c'est l'argument pour le juge figé et garanti.
+
+## 5. À vérifier sur PDF avant toute revendication
+- 2609.36580 (SafeCoEvo), 2610.19422 (AgentSafeEvo), RvB 2601.19726, MAGIC 2602.01539 : présence ou absence d'un coût par famille et d'une courbe selon le rang.
+- 2603.19461 (HyperAgents) : définition exacte d'improvement@k, existence d'une analyse du temps jusqu'au seuil, nombre de domaines de transfert.
+- 2606.29082 (Finch), figure 8 : métrique, protocole de rétention, chevauchement.
+- 2605.31140 (EvoDefense), tableau 7, et 2605.13411 (EvoSafety), tableau 4 et annexe A.4 : le coût incrémental est-il chiffré ?
+- 1812.00420 (A-GEM) : définition de l'aire sous la courbe d'apprentissage et lieu de publication.
+- Parter et al. 2008 : chiffres exacts des générations jusqu'au but, à but fixe contre buts variés.
+- FARM 2601.17907 : coût d'étiquetage par famille nouvelle selon le rang ?
+- 1905.00154 : lieu de publication.
+
+## 6. Requêtes effectuées
+1. automated defense generation cost decreases with each new attack family learning curve
+2. Lopez-Paz Ranzato gradient episodic memory forward transfer backward transfer metric
+3. evolutionary multitasking transfer optimization generations to solution decreases with experience across tasks
+4. Enhanced POET ANNECS metric open-endedness progress measure transfer
+5. lifelong defense LLM jailbreak continual adaptation new attack types sample efficiency guard model
+6. AlphaEvolve FunSearch cost per discovery decreases across problems meta-learning the search loop evaluation
+7. continual learning malware detection new families labeling cost per family drift adaptation few-shot
+8. "learning to optimize" evolutionary algorithm meta-learned search efficiency improves with number of tasks seen
+9. self-improving research agent accumulates skills library cost per new task decreases across tasks evaluation 2026
+10. coevolutionary progress measures Master Tournament CIAO plots Stanley Miikkulainen Cliff Miller
+11. automatic signature generation zero-day worm response time evaluation Polygraph Hamsa time to containment new families
+12. evolvability measured as adaptation speed to new environment after prior environmental changes … Kashtan Alon varying goals
+13. A-GEM "learning curve area" LCA metric … Chaudhry
+14. Finn online meta-learning follow the meta leader efficiency … task index
+15. Darwin Gödel Machine OR "AI Scientist" evaluation of the improvement loop itself transfer …
+16. AI control monitor generation automated defense new attack families held-out cost … 2026
+17. SafeCoEvo co-evolving execution guard OR AgentSafeEvo evolution defense agents arXiv 2026
+18. "time to detect" new malware family antivirus vendor response latency signature measurement study
