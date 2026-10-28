@@ -21,6 +21,9 @@ ROLES = ("experimentateur", "verificateur", "recombinaison", "synthese", "propos
 MODELES_REELS_PERMIS = ("claude-opus-5-5", "claude-fable-5-1")
 STATUTS_RESULTAT = ("ok", "erreur", "budget_depasse", "tours_epuises", "refuse")
 OUTILS_AUTORISES = ("Read", "Write", "Edit", "Bash")
+# v32 (CL31-08) : les rôles de l'idéation n'ont besoin d'aucun outil — tout est dans la consigne ; aucun terminal, aucune
+# écriture, aucune lecture : la réponse finale seule compte.
+OUTILS_PAR_ROLE = {"proposeur_ideation": (), "juge_ideation": ()}
 OUTILS_INTERDITS = ("WebFetch", "WebSearch", "Agent", "Task", "NotebookEdit", "Skill", "TodoWrite", "KillShell",
                     "BashOutput", "SlashCommand")
 MODE_PERMISSION = "dontAsk"
@@ -112,8 +115,29 @@ def etat_bac_a_sable(chercher=None, executer=None):
     return True, "bwrap et socat présents ; bwrap s'exécute, réseau isolé"
 
 
+def etat_bac_a_sable_detaille(chercher=None, executer=None):
+    """v32 (CL31-15) : état du bac à sable avec la sonde d'un `/proc` neuf (`--unshare-pid --proc /proc`).
+    Rend {actif, proc_neuf, motif}. `proc_neuf` faux ⇒ l'opérateur doit faire tourner les agents sous un utilisateur non
+    root distinct de celui du relais (vérifié par le lanceur, consigné au manifeste)."""
+    import shutil
+    import subprocess
+    chercher = chercher or shutil.which
+    executer = executer or subprocess.run
+    actif, motif = etat_bac_a_sable(chercher, executer)
+    if not actif:
+        return {"actif": False, "proc_neuf": False, "motif": motif}
+    try:
+        r = executer([chercher("bwrap"), "--ro-bind", "/", "/", "--dev", "/dev", "--unshare-net", "--unshare-pid",
+                      "--proc", "/proc", "true"], capture_output=True, timeout=30)
+        proc_neuf = r.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        proc_neuf = False
+    return {"actif": True, "proc_neuf": proc_neuf,
+            "motif": motif + (" ; /proc neuf monté" if proc_neuf else " ; /proc neuf NON montable (--unshare-pid --proc)")}
+
+
 def exiger_bac_a_sable(sdk=None, accepter_sans=False, motif_sans="", etat=None, euid=None):
-    """État du bac à sable consigné au manifeste ; lève BacASableInactif s'il est inactif, sauf (i) faux moteur de la
+    """État du bac à sable (à consigner au manifeste par l'appelant) ; lève BacASableInactif s'il est inactif, sauf (i) faux moteur de la
     répétition générale (aucun agent réel, aucune clé), ou (ii) acceptation explicite, motif écrit, **hors de root**."""
     if sdk is not None and getattr(sdk, "EST_FAUX_SDK", False):
         return {"actif": False, "motif": "faux moteur de la répétition générale : aucun agent réel, aucune clé"}
@@ -175,7 +199,7 @@ def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=Non
         raise ValueError(f"rôle inconnu : {role!r}")
     return {
         "cwd": os.path.normpath(dossier),
-        "allowed_tools": list(OUTILS_AUTORISES),
+        "allowed_tools": list(OUTILS_PAR_ROLE.get(role, OUTILS_AUTORISES)),
         "disallowed_tools": list(OUTILS_INTERDITS),
         "permission_mode": MODE_PERMISSION,
         "max_turns": max_tours,
