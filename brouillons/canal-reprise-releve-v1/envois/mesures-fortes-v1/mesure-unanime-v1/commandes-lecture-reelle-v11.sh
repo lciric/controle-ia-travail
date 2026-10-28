@@ -33,21 +33,23 @@ EMPREINTE_REELLE=968414fc7ce7db935c2c4a390a13e2eceebe2fd722628cccb52caf27128004c
 TEMOIN=execution-reelle-v11.commencee
 
 sceller() { rm -f "$1.sha256.interdit-ecrasement" 2>/dev/null || true; [ -e "$1.sha256" ] && { echo "déjà scellé, non réécrit (R12) : $1" >&2; return 0; }; $PY -B -m controle_ia.scellement sceller "$1"; }
-compagnons() { sha256sum -c analyse_fausses_alertes_v8.py.sha256 table_m2bis_m4_v8.py.sha256 table-m2bis-m4-v8.json.sha256 lecture_mecanique_v7.py.sha256 rediger_note_lecture_v5.py.sha256 commandes-lecture-reelle-v11.sh.sha256; }
+compagnons() { sha256sum -c analyse_fausses_alertes_v8.py.sha256 table_m2bis_m4_v8.py.sha256 table-m2bis-m4-v8.json.sha256 lecture_mecanique_v7.py.sha256 rediger_note_lecture_v5.py.sha256 commandes-lecture-reelle-v11.sh.sha256 garde-trace-reelle-v11.sh.sha256 test-garde-trace-v11.sh.sha256; }
 
-# étape 0 : scellement du préenregistrement + garde « une seule exécution réelle » (exercée aussi en répétition, R5)
+# étape 0 : garde « une seule exécution réelle » (script isolé, testé par test-garde-trace-v11.sh, R5) + scellement du
+# préenregistrement (modes qui lisent les données, pas la répétition qui se fait avant scellement sur le texte final)
 etape_0() {  # $1 = REEL|REPETITION|LECTURE_SEULE
-  $PY -B -c "from controle_ia import prereg; print('préenregistrement v11 scellé, conforme et intact :', prereg.exiger_prereg_scelle('$PREREG'))"
   if [ "$1" = "REEL" ]; then
-    for f in "$TEMOIN" sortie-reelle-v11.json sortie-reelle-v11.json.partiel; do
-      [ -e "$f" ] && { echo "trace d'exécution réelle ($f) : la relance est une version nouvelle (R12) ; ne rien renommer ni effacer" >&2; exit 3; }
-    done
+    bash garde-trace-reelle-v11.sh  # exit 3 si une trace existe
+    $PY -B -c "from controle_ia import prereg; print('préenregistrement v11 scellé, conforme et intact :', prereg.exiger_prereg_scelle('$PREREG'))"
     ( set -o noclobber; : > "$TEMOIN" ) 2>/dev/null || { echo "témoin déjà posé : exécution réelle déjà commencée (R12)" >&2; exit 3; }
     printf '%s UTC — exécution réelle commencée, commit %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$COMMIT" >> "$TEMOIN"
   elif [ "$1" = "LECTURE_SEULE" ]; then
+    $PY -B -c "from controle_ia import prereg; print('préenregistrement v11 scellé, conforme et intact :', prereg.exiger_prereg_scelle('$PREREG'))"
     [ -s sortie-reelle-v11.json ] && [ -e sortie-reelle-v11.json.sha256 ] || { echo "LECTURE_SEULE : aucune sortie réelle finale scellée" >&2; exit 6; }
     $PY -B -m controle_ia.scellement verifier sortie-reelle-v11.json
-    [ -e note-lecture-mecanique-v11.md.sha256 ] && { echo "LECTURE_SEULE : la note est déjà scellée, la séquence est allée au bout (R12) ; rien à reprendre" >&2; exit 7; }
+    [ -e note-lecture-mecanique-v11.md.sha256 ] && { echo "LECTURE_SEULE : la note est déjà scellée (R12) ; rien à reprendre" >&2; exit 7; }
+  else  # REPETITION : la répétition se fait avant le scellement, sur le texte final ; elle exerce la garde par le test déposé
+    bash test-garde-trace-v11.sh
   fi
 }
 
