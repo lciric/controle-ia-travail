@@ -45,13 +45,34 @@ class Construction(unittest.TestCase):
         self.assertEqual(base["empreinte_cle"], ea.construire(self.m, BLANC_CONTRE_NOIR, tau=0.05)["empreinte_cle"])
         variantes = [dict(tau=0.10), dict(tau=0.05, m_max=10), dict(tau=0.05, strate={"mode": "cout"}),
                      dict(tau=0.05, partie="developpement"),
-                     dict(tau=0.05, population="vivier-2"), dict(tau=0.05, garde={"a": "blanc", "b": "noir", "delta": 0.1})]
+                     dict(tau=0.05, population="vivier-2"), dict(tau=0.05, garde={"a": "blanc", "b": "noir", "delta": 0.1}),
+                     dict(tau=0.05, plan_tranches={1: sorted(self.m.unites("epreuve"))[:50], 2: sorted(self.m.unites("epreuve"))[50:]})]
         cles = {ea.construire(self.m, BLANC_CONTRE_NOIR, **kw)["empreinte_cle"] for kw in variantes}
         self.assertEqual(len(cles | {base["empreinte_cle"]}), len(variantes) + 1)
         # le budget d'entrée n'est pas dans la clé (même affirmation), mais dans l'engagement
         b2 = ea.construire(self.m, BLANC_CONTRE_NOIR, tau=0.05, alpha_c=0.01, m_c=3)
         self.assertEqual(b2["empreinte_cle"], base["empreinte_cle"])
         self.assertNotEqual(b2["empreinte"], base["empreinte"])
+        # version 28 (K9-3) : le nom du contraste n'est pas dans la clé — renommer n'est pas une autre affirmation
+        renomme = ea.construire(self.m, {"autre_nom": {"coefficients": {"blanc": 1, "noir": -1}}}, tau=0.05)
+        self.assertEqual(renomme["empreinte_cle"], base["empreinte_cle"])
+        # K9-3 : deux contrastes de même forme dans une fiche : refusés
+        with self.assertRaises(ea.EngagementInvalide):
+            ea.construire(self.m, {"a": {"coefficients": {"blanc": 1, "noir": -1}}, "b": {"coefficients": {"noir": -1, "blanc": 1}}}, tau=0.05)
+        # K8-4, K9-4 : la version de l'e-processus est dans la clé
+        self.assertEqual(base["cle_heritage"]["e_processus"]["version"], 28)
+        import pole.pari_apparie as pa
+        ancien = pa.E_PROCESSUS
+        try:
+            pa.E_PROCESSUS = dict(ancien, version=99)
+            self.assertNotEqual(ea.construire(self.m, BLANC_CONTRE_NOIR, tau=0.05)["empreinte_cle"], base["empreinte_cle"])
+        finally:
+            pa.E_PROCESSUS = ancien
+        # K9-5 : plan de tranches non disjoint, hors partie, ou vide : refusé
+        u = sorted(self.m.unites("epreuve"))
+        for plan in ({1: u[:10], 2: u[5:20]}, {1: u[:10] + ["cal-0"]}, {1: []}, {0: u[:10]}):
+            with self.subTest(plan=str(plan)[:40]), self.assertRaises(ea.EngagementInvalide):
+                ea.construire(self.m, BLANC_CONTRE_NOIR, tau=0.05, plan_tranches=plan)
 
 
 class Jugement(unittest.TestCase):
@@ -70,6 +91,11 @@ class Jugement(unittest.TestCase):
         c.lire()
         with self.assertRaises(ValueError):  # K7-2, K8-1 : la même lecture ne compte pas deux fois
             c.ajouter_trajectoire("f", [0.0], unites=ea.evaluer(m, e)["identifiants_unites"])
+        # version 28 : plusieurs gardes (K9-9) ; identité stable de la banque dans les identifiants (K9-2)
+        e2 = ea.construire(m, BLANC_CONTRE_NOIR, tau=0.05, garde=[{"a": "blanc", "b": "noir", "delta": 0.10}, {"a": "noir", "b": "blanc", "delta": 0.10}])
+        r2 = ea.evaluer(m, e2)
+        self.assertEqual(sorted(r2["log_gardes_finales"]), ["blanc-noir", "noir-blanc"])
+        self.assertEqual(r["identifiants_unites"][0][0], m.identite)
         self.assertEqual(len(r["identifiants_unites"]), 100)
         self.assertEqual(r["identifiants_unites"][0][1], "epreuve")
         nul = mbs.MondeBanqueScores(banque_synthetique(random.Random(53), unites_par_partie=(100, 0, 100), mu=(1.0, 1.0)), 19)

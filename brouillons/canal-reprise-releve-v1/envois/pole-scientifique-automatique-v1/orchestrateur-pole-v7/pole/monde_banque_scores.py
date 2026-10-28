@@ -70,6 +70,12 @@ class MondeBanqueScores:
                 raise BanqueScoresInvalide(f"épisode {e['id']} : strates ≠ champs déclarés {self.champs_strates}")
         self.partie_de_l_unite = partie_de_l_unite
         self.empreinte = empreinte_objet(banque)
+        # version 28 (K9-2) : identité **stable** de la source des unités, indépendante de la version de la banque (une
+        # banque grandie d'une unité garde ses unités physiques) ; déclarée par la banque (`identite`), sinon l'empreinte
+        identite = banque.get("identite", self.empreinte)
+        if not isinstance(identite, str) or not identite:
+            raise BanqueScoresInvalide("identite : chaîne non vide")
+        self.identite = identite
 
     # -- sélection --------------------------------------------------------------------------------------------------
     def episodes(self, partie, etiquette=None, strate=None, unites=None):

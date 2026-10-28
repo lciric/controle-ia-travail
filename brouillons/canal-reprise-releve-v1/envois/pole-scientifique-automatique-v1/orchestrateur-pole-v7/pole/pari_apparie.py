@@ -1,4 +1,4 @@
-"""Pari apparié borné (v7, versions 20 à 26) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
+"""Pari apparié borné (v7, versions 20 à 28) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
 G1), selon la conception v5 (`../../pari-de-signe/conception-pari-de-signe-v5.md` et les versions qu'elle amende).
 
 Ce module ne contient que le **cœur statistique**, sans lien encore avec le cycle des générations (à faire : monde sur
@@ -16,7 +16,11 @@ banque de scores, engagement, mémoire avec la clé complète de l'héritage) :
 - (version 21, conception v6) la **règle de l'héritage** D-S25 bis : budget d'entrée α_c/m_c gardé à vie, une lecture
   e-BH **pondérée** par fin de génération sur toutes les fiches entrées (valeurs gelées pour les abandonnées et les
   promues), promotion une seule fois, arrêt à m_c/α_c, garantie sur l'union des promotions (`ebh_pondere`, `Course`) ;
-- (version 21) le **plafond** de D-S27 : v′ = (min(m_t, m_max)/m_max)·v (`ponderation_plafonnee`, `contraste_plafonne`).
+- (version 21) le **plafond** de D-S27 : v′ = (min(m_t, m_max)/m_max)·v (`ponderation_plafonnee`, `contraste_plafonne`) ;
+- (version 28, contre-lecture de la conception v9) : fraîcheur des unités **par rapport à toute la course** (K9-1 : une
+  unité n'est lue qu'à la génération de sa première lecture, par quelque fiche que ce soit) ; lien fiche ↔ clé tenu par la
+  course (K9-2) ; journal des parties reçu par la course et confronté à la lecture (K9-6) ; déclaration « sans partie »
+  refusée pour une fiche gelée ou qui a sa partie (K9-10 c) ; plusieurs gardes (une par comparateur, K9-9) dans `evaluer`.
 
 Tout est en Python pur (aucune dépendance) ; les instants de lecture sont les unités (une unité = un instant).
 """
@@ -100,13 +104,19 @@ def trajectoire_log_sans_remise(valeurs, lambdas=LAMBDAS):
     return sortie
 
 
+E_PROCESSUS = {"combinaison": "moyenne sur Λ", "arret": "premier franchissement de log(m/α) ou de −log b_i", "module": "pari_apparie",
+               "version": 28}
+
+
 def evaluer(contrastes_par_comparateur, ecarts_faux_positifs=None, delta=None, alpha=0.05, m=1, lambdas=LAMBDAS):
     """E-valeur d'une fiche appariée.
 
     `contrastes_par_comparateur` : {comparateur: [v(t) par unité]} — l'affirmation « bat chaque comparateur »
     (intersection-union : promotion si **tous** les processus atteignent le seuil ; sous le nul « il existe un comparateur
     k avec E[v_k] ≤ 0 », le minimum est dominé par la surmartingale de ce k : niveau α sans correction de multiplicité).
-    `ecarts_faux_positifs` et `delta` : la garde (facultative) ; elle entre dans le minimum.
+    `ecarts_faux_positifs` et `delta` : la garde (facultative) ; elle entre dans le minimum. Version 28 (K9-9) : plusieurs
+    gardes, une par comparateur, en passant un dictionnaire {nom: [g(t)]} et `delta` (commun) ou {nom: δ} ; le minimum porte
+    sur tous les contrastes et toutes les gardes.
     Les suites sont lues en parallèle, unité par unité (même ordre, même longueur pour les contrastes ; la garde peut avoir
     sa propre longueur : ses unités sont les unités honnêtes, révélées dans le même ordre secret).
     Le processus est **arrêté** au premier instant où le minimum atteint log(m/α) (temps d'arrêt : e-valeur valide sous la
@@ -120,18 +130,24 @@ def evaluer(contrastes_par_comparateur, ecarts_faux_positifs=None, delta=None, a
         raise ValueError("les contrastes des comparateurs doivent porter sur les mêmes unités")
     seuil = math.log(m / alpha)
     trajs = {k: trajectoire_log_richesse(v, lambdas) for k, v in contrastes_par_comparateur.items()}
-    garde = None
+    gardes = {}
     if ecarts_faux_positifs is not None:
         if delta is None:
             raise ValueError("garde sans δ")
-        garde = trajectoire_log_garde(ecarts_faux_positifs, delta, lambdas)
+        if isinstance(ecarts_faux_positifs, dict):
+            for nom, g in ecarts_faux_positifs.items():
+                d = delta[nom] if isinstance(delta, dict) else delta
+                gardes[nom] = trajectoire_log_garde(g, d, lambdas)
+        else:
+            gardes["garde"] = trajectoire_log_garde(ecarts_faux_positifs, delta, lambdas)
+    garde = gardes.get("garde") if len(gardes) == 1 and "garde" in gardes else None
     n = longueurs.pop()
-    n_total = max(n, len(garde) if garde is not None else 0)
+    n_total = max([n] + [len(g) for g in gardes.values()])
     minimum, arret = [], None
     for t in range(n_total):
         valeurs = [traj[min(t, n - 1)] if n else 0.0 for traj in trajs.values()]
-        if garde is not None:
-            valeurs.append(garde[min(t, len(garde) - 1)] if garde else 0.0)
+        for g in gardes.values():
+            valeurs.append(g[min(t, len(g) - 1)] if g else 0.0)
         mt = min(valeurs)
         minimum.append(mt)
         if arret is None and mt >= seuil:
@@ -139,7 +155,8 @@ def evaluer(contrastes_par_comparateur, ecarts_faux_positifs=None, delta=None, a
     log_e = minimum[arret - 1] if arret else (minimum[-1] if minimum else 0.0)
     return {"trajectoire_log_min": minimum, "seuil_log": seuil, "promue": arret is not None, "instant_d_arret": arret,
             "log_e_valeur": log_e, "log_richesse_finale_par_comparateur": {k: (v[-1] if v else 0.0) for k, v in trajs.items()},
-            "log_garde_finale": (garde[-1] if garde else None), "unites": n}
+            "log_garde_finale": (garde[-1] if garde else None),
+            "log_gardes_finales": {nom: (g[-1] if g else None) for nom, g in gardes.items()}, "unites": n}
 
 
 def borne_basse(valeurs, alpha=0.05, lambdas=LAMBDAS, pas=0.01):
@@ -232,12 +249,23 @@ class Course:
       suivantes ; si elle était promue, elle reste dans `promues` — **l'union garantie est celle d'avant les retraits** —
       et sort de `promues_rapportees()`, qui porte la réserve de D-S26 bis.
     - `bonferroni()` : pour ce qui sort du pôle, les fiches dont l'e-processus atteint 1/b_i (seuil jamais abaissé).
+    - Version 28 (contre-lecture de la conception v9) : **fraîcheur par rapport à la course** (K9-1) — `premiere_lecture`
+      : unité → génération de sa première lecture par quelque fiche ; une unité lue à une génération antérieure est refusée
+      à toute fiche (une tranche se partage dans sa génération, jamais ensuite) ; **clés** (K9-2) — `entrer(..., cles=…)`
+      fixe l'empreinte de clé de chaque fiche, `ajouter_trajectoire(..., empreinte_cle=…)` refuse un résultat d'une autre
+      clé ; **journal** (K9-6) — `Course(alpha, journal=…)` reçoit l'objet qui journalise les parties calculées
+      (`engagement_apparie.Lignees`) : `ajouter_trajectoire` refuse une partie absente du journal ou une seconde évaluation
+      de la fiche dans la génération, `lire` refuse une déclaration « sans partie » contredite par le journal ; **« sans
+      partie »** refusée pour une fiche gelée, arrêtée, promue ou qui a sa partie (K9-10 c).
     """
 
-    def __init__(self, alpha=0.05):
+    def __init__(self, alpha=0.05, journal=None):
         if not 0.0 < alpha < 1.0:
             raise ValueError("α dans ]0 ; 1[")
         self.alpha = alpha
+        self.journal = journal
+        self.premiere_lecture = {}
+        self.cle_de = {}
         self.alpha_engage = 0.0
         self.budgets = {}
         self.log_e = {}
@@ -255,8 +283,15 @@ class Course:
         self.abandons = {}
         self.sans_partie = {}
 
-    def entrer(self, famille, fiches, alpha_c):
+    def entrer(self, famille, fiches, alpha_c, cles=None):
         fiches = list(fiches)
+        cles = dict(cles or {})
+        if cles and set(cles) - set(fiches):
+            raise ValueError("clés de fiches non entrées")
+        if len(set(cles.values())) != len(cles):
+            raise ValueError("deux fiches portent la même clé (une affirmation, une fiche, D-S25 bis (5))")
+        if set(cles.values()) & set(self.cle_de.values()):
+            raise ValueError("clé déjà portée par une fiche de la course (relance sous un autre nom refusée)")
         if not fiches or len(set(fiches)) != len(fiches):
             raise ValueError("famille vide ou fiche en double")
         if any(f in self.budgets for f in fiches):
@@ -269,17 +304,29 @@ class Course:
             self.budgets[f] = alpha_c / len(fiches)
             self.log_e[f] = 0.0
             self.famille_de[f] = famille
+            if f in cles:
+                self.cle_de[f] = cles[f]
 
     def seuil_log(self, fiche):
         return -math.log(self.budgets[fiche])
 
-    def ajouter_trajectoire(self, fiche, trajectoire_log, unites=None, sans_identite=False):
+    def ajouter_trajectoire(self, fiche, trajectoire_log, unites=None, sans_identite=False, empreinte_cle=None,
+                            empreinte_unites=None):
         if fiche not in self.budgets:
             raise KeyError(f"fiche non entrée : {fiche!r}")
         if fiche in self.gelees:
             raise ValueError(f"fiche gelée {fiche!r} : partie refusée (contrat de D-S25 bis (2))")
         if self.derniere_partie.get(fiche) == self.generation:
             raise ValueError(f"fiche {fiche!r} : une seule partie par génération")
+        if fiche in self.cle_de and empreinte_cle != self.cle_de[fiche]:
+            raise ValueError(f"fiche {fiche!r} : partie d'une autre clé de l'héritage que celle de la fiche (K9-2)")
+        if self.journal is not None:
+            entrees = [j for j in self.journal.journal if j["generation"] == self.generation and j["fiche"] == fiche]
+            if len(entrees) != 1:
+                raise ValueError(f"fiche {fiche!r} : {len(entrees)} partie(s) au journal pour la génération {self.generation} "
+                                 f"(exactement une évaluation par fiche et par génération, K9-6)")
+            if empreinte_unites is None or entrees[0]["empreinte_unites"] != empreinte_unites:
+                raise ValueError(f"fiche {fiche!r} : la partie ajoutée n'est pas celle du journal (empreinte des unités, K9-6)")
         if unites is None:
             if not sans_identite:
                 raise ValueError(f"fiche {fiche!r} : partie sans identifiants d'unités (passer `unites`, ou déclarer "
@@ -294,6 +341,12 @@ class Course:
             if commun:
                 raise ValueError(f"fiche {fiche!r} : {len(commun)} unité(s) déjà lue(s) (unités fraîches, D-S25 bis (5)) : "
                                  f"{sorted(map(str, commun))[:3]}")
+            anciennes = {u for u in nouvelles if self.premiere_lecture.get(u, self.generation) < self.generation}
+            if anciennes:
+                raise ValueError(f"fiche {fiche!r} : {len(anciennes)} unité(s) lue(s) par la course à une génération antérieure "
+                                 f"(fraîcheur par rapport à la course, K9-1) : {sorted(map(str, anciennes))[:3]}")
+            for u in nouvelles:
+                self.premiere_lecture.setdefault(u, self.generation)
             deja |= nouvelles
         self.derniere_partie[fiche] = self.generation
         if fiche in self.promues or fiche in self.arretees:
@@ -308,7 +361,8 @@ class Course:
         self.log_e[fiche] = valeur
         return valeur
 
-    def abandonner(self, fiche, trajectoire_log=None, avant_partie=False, motif="", unites=None, sans_identite=False):
+    def abandonner(self, fiche, trajectoire_log=None, avant_partie=False, motif="", unites=None, sans_identite=False,
+                   empreinte_cle=None, empreinte_unites=None):
         if fiche not in self.budgets:
             raise KeyError(f"fiche non entrée : {fiche!r}")
         if fiche in self.gelees:
@@ -317,7 +371,7 @@ class Course:
             self.abandons.setdefault(("redite", fiche), []).append((self.generation, motif))  # K8-3 : tracé, sans effet
             return
         if trajectoire_log is not None:
-            self.ajouter_trajectoire(fiche, trajectoire_log, unites, sans_identite)
+            self.ajouter_trajectoire(fiche, trajectoire_log, unites, sans_identite, empreinte_cle, empreinte_unites)
             mode = "partie_passee"
         elif avant_partie:
             mode = "avant_partie"
@@ -338,6 +392,18 @@ class Course:
         if manquantes:
             raise ValueError(f"génération {self.generation} : fiches actives sans partie ni déclaration : {manquantes[:5]} "
                              f"(K7-1 : toute partie calculée est ajoutée ; sinon déclarer sans_partie[fiche] = motif)")
+        for f in sans_partie:
+            if f not in self.budgets:
+                raise KeyError(f"déclaration « sans partie » pour une fiche non entrée : {f!r}")
+            if f not in actives or self.derniere_partie.get(f) == self.generation:
+                raise ValueError(f"déclaration « sans partie » refusée pour {f!r} : fiche gelée, arrêtée, promue, exclue ou qui a sa "
+                                 f"partie dans la génération {self.generation} (K9-10 c)")
+        if self.journal is not None:
+            calculees = {j["fiche"] for j in self.journal.journal if j["generation"] == self.generation}
+            menteuses = sorted(str(f) for f in sans_partie if f in calculees)
+            if menteuses:
+                raise ValueError(f"génération {self.generation} : déclaration « sans partie » contredite par le journal des "
+                                 f"parties pour {menteuses[:5]} (K8-2, K9-6)")
         for f, m in sans_partie.items():
             self.sans_partie[(self.generation, f)] = m
         pool = [f for f in self.budgets if f not in self.exclues]
