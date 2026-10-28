@@ -36,14 +36,14 @@ def reference(depot, tmp_path, monkeypatch):
            "diag": depot / "diag" / RUN_REF / "sondes-figees.json"}
 
 
-def _lancer(ref, tmp_path, run_id, *, legeres=None, diag=None, sceau=None, sortie=None):
+def _lancer(ref, tmp_path, run_id, *, legeres=None, diag=None, sceau=None, sortie=None, manifeste=None):
     cfg = tmp_path / f"config-{run_id}.json"
     cfg.write_text(json.dumps(ref["config"]), encoding="utf-8")
     sortie = sortie or tmp_path / f"verdict-{run_id}.json"
     argv = ["--racine", str(ref["depot"]), "--config", str(cfg), "--taches", str(ref["taches"]), "--run-id", run_id,
             "--reference-legeres", str(legeres or ref["legeres"]), "--reference-diag", str(diag or ref["diag"]),
             "--sceau-attendu", sceau or ref["resume"]["sondes_figees_sha256"], "--sortie", str(sortie),
-            "--autoriser-depot-sale"]
+            "--autoriser-depot-sale", "--fils-blas", "1"] + (["--reference-manifeste", str(manifeste)] if manifeste else [])
     vraie = rp.progres
     try:
         code = rg._main(argv)
@@ -167,3 +167,31 @@ def test_artefact_lanceur_sans_sondes_figees(reference, tmp_path, monkeypatch):
     monkeypatch.setattr(rg, "arreter_apres_sondes", lambda module: {"etapes": [], "arret": False})
     code, v = _lancer(reference, tmp_path, "20261028-130010-p3-jouet")
     assert code == 1 and v is None
+
+
+def test_graines_egales_et_artefact(reference, tmp_path):
+    m = reference["depot"] / "runs" / RUN_REF / "manifeste.json"
+    code, v = _lancer(reference, tmp_path, "20261028-130011-p3-jouet", manifeste=m)
+    assert code == 0 and v["verdict"] == "accepte-identique" and v["comparaison_graines"]["conforme"]
+    assert v["comparaison_graines"]["cles_comparees"] >= 3 + 20
+    faux = json.loads(m.read_text(encoding="utf-8"))
+    k = next(k for k in faux["graines"] if k.startswith("sonde/"))
+    faux["graines"][k] = faux["graines"]["plancher/enjeux"]
+    f = tmp_path / "manifeste-faux.json"
+    f.write_text(json.dumps(faux), encoding="utf-8")
+    sceller(f)
+    code, v = _lancer(reference, tmp_path, "20261028-130012-p3-jouet", manifeste=f)
+    assert code == 0 and v["verdict"] == "refuse" and not v["comparaison_graines"]["conforme"]
+
+
+def test_openblas_regle_et_relu():
+    avant = rg.regler_openblas(1)["fils_avant"]
+    r = rg.regler_openblas(2)
+    assert r["fils"] == 2 and "MAX_THREADS" in r["config"]
+    rg.regler_openblas(avant)
+    with pytest.raises(SystemExit):
+        rg.regler_openblas(10_000)                      # au-delà du plafond compilé : relu différent, arrêt
+
+
+def test_comparer_graines_sans_sonde_refuse():
+    assert not rg.comparer_graines({"tirage-enjeux": [1]}, {"tirage-enjeux": [1]})["conforme"]

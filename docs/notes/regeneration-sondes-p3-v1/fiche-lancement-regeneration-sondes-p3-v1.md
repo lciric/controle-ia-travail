@@ -12,6 +12,17 @@ P3 (1e-6).
   champ `resultat`). La chaîne borne donc le processus à 30 cœurs (`taskset -c 0-29`) sur une machine d'au moins 31 cœurs
   effectifs, de même processeur (AMD EPYC 7513) : `min(32, 30, quota ≥ 31)` = 30.
 
+- **Fils de l'algèbre linéaire de numpy** (contre-lecture R2, CLR-01) : OpenBLAS (livrée avec numpy 2.4.6, compilée avec
+  `MAX_THREADS=64`) prend autant de fils que l'affinité du processus, plafond 64, sans voir le quota. P3 tournait sans
+  borne d'affinité (128) : **64 fils, inféré, non consigné par P3**. `np.linalg.inv` (Mahalanobis) et `cholesky`
+  (planchers) changent au bit près selon ce nombre (mesuré par le contre-lecteur). Le script fixe donc OpenBLAS à **64**
+  par appel explicite (`scipy_openblas_set_num_threads64_`), le relit (arrêt s'il diffère) et consigne la configuration ;
+  `taskset` ne borne que torch. Si l'inférence est fausse, le palier 1 échoue et le palier 2 décide (devis § 3).
+- **Fils de torch gardés avant calcul** (CLR-02) : le script exige `fils_effectifs(32)` = 30 (valeur de P3) avant tout
+  calcul, sinon arrêt ; la chaîne prend les 30 premiers cœurs de l'affinité réelle du conteneur.
+- **Graines confrontées** (CLR-09) : les graines des étapes 1 à 5 du manifeste régénéré doivent égaler celles du manifeste
+  de P3 ; sinon `refuse`.
+
 ## 2. Méthode retenue
 - L'instance clone le dépôt, **extrait le commit de P3** (`97dd82900cb120d5ce7328f8569d514fe987cc3c`, joignable par
   `calcul/p3-reel-v1`), lit le préenregistrement de P3 comme `p3_instance.sh` (tests attendus, configuration, tâches,
@@ -26,7 +37,8 @@ P3 (1e-6).
 
 ## 3. Versement
 Branche `calcul/regeneration-sondes-p3-v1` : manifeste et résultats du run, fichier léger régénéré, sceau du fichier
-complet, verdict scellé, traces (machine, tests, journal). Si le verdict accepte : fichier complet (≈ 820 Mo : six
+complet, verdict scellé, traces (machine, tests, journal). Dès que le fichier complet existe et que son sceau est conforme,
+**quel que soit le verdict** (CLR-04 : un refus doit rester examinable) : fichier complet (≈ 820 Mo : six
 matrices de Mahalanobis 4 096 × 4 096 en double précision) en morceaux de 90 Mio, chacun scellé, liste scellée ; la
 couche 2 le reconstitue par concaténation et vérifie le sceau.
 
@@ -42,4 +54,8 @@ couche 2 le reconstitue par concaténation et vérifie le sceau.
 
 ## 5. Bornes
 Plafond 6 USD (une instance ; une seconde seulement si la première est perdue par l'hôte avant tout calcul). Amorce bornée
-à 240 minutes, run à 150. Surveillance de la session ; arrêt par identifiant (R10) dès le versement lu.
+à 240 minutes, run à 150. Surveillance de la session ; arrêt par identifiant (R10) dès le versement lu ; réveils programmés
+de la session à la création + 3 h et + 4 h (CLR-06 : une instance oubliée dépasserait le plafond vers 4 h). Contre-lecture
+R2 : `contre-lecture-regeneration-sondes-p3-v1.md` (même dossier), « lançable après corrections » ; CLR-01 à 07, 09, 10
+corrigés ; CLR-08 (comparaison au fichier léger, critère du devis), CLR-11 (poids), CLR-12 (banc du mode réel sur
+processeur) notés.

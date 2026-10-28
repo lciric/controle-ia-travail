@@ -9,6 +9,7 @@
 # 28 octobre à 22:10 UTC, 0,983 ; perte de l'hôte avant calcul couverte par une seconde instance au devis), prix ≤ 1,40 ;
 # amorce encodée, jetons passés par --env sans jamais s'afficher. Rien ne se crée si un contrôle échoue.
 # Codes : 0 création ; 3 offre, prix ou heure ; 4 création douteuse ; 2 autre arrêt.
+# v1 après la contre-lecture R2 (CLR-03 garde de calcul dans un « if », éprouvée avec un GO inconnu ; CLR-05 fiche scellée).
 # Usage : VASTAI=<vastai 1.8.3> lancer_regeneration_sondes_p3_v1.sh COMMIT DOSSIER_TRACES
 set -euo pipefail
 trap 'echo "arrêt avant la création (ligne $LINENO)"; exit 2' ERR
@@ -37,13 +38,14 @@ rc=0; git -C "$DEPOT" ls-remote --exit-code --heads origin calcul/p3-reel-v1 >/d
 [ "$rc" = 0 ] || { echo "branche calcul/p3-reel-v1 absente : le commit de P3 ne serait pas cloné"; exit 2; }
 # 2. amorce, chaîne et script du commit ; critère du devis scellé au commit
 git clone -q --no-checkout "$DEPOT" "$T/clone" && git -C "$T/clone" checkout -q "$S"
-for f in scripts/amorce_regeneration_sondes_p3_v1.sh scripts/regeneration_sondes_p3_instance_v1.sh scripts/regenerer_sondes_p3_v1.py \
+for f in docs/notes/regeneration-sondes-p3-v1/fiche-lancement-regeneration-sondes-p3-v1.md scripts/amorce_regeneration_sondes_p3_v1.sh scripts/regeneration_sondes_p3_instance_v1.sh scripts/regenerer_sondes_p3_v1.py \
          docs/notes/regeneration-sondes-p3-v1/devis-regeneration-sondes-p3-v1.md; do
     [ -f "$T/clone/$f" ] || { echo "$f absent du commit $S"; exit 2; }
     echo "$f $(sha256sum "$T/clone/$f" | cut -d' ' -f1)" >> "$T/lancement.txt"
 done
-(cd "$T/clone" && sha256sum -c --quiet docs/notes/regeneration-sondes-p3-v1/devis-regeneration-sondes-p3-v1.md.sha256) \
-    || { echo "devis non scellé ou non conforme au commit"; exit 2; }
+(cd "$T/clone/docs/notes/regeneration-sondes-p3-v1" && sha256sum -c --quiet devis-regeneration-sondes-p3-v1.md.sha256 \
+        fiche-lancement-regeneration-sondes-p3-v1.md.sha256) \
+    || { echo "devis ou fiche de lancement non scellés ou non conformes au commit (CLR-05)"; exit 2; }
 grep -q 'SCEAU_P3 = "91b61c45cdafd0ab979e261171b9661920715fa42c6cbc9751cd2697bfd3177a"' "$T/clone/scripts/regenerer_sondes_p3_v1.py" \
     || { echo "sceau attendu de P3 absent du script"; exit 2; }
 cp "$T/clone/scripts/amorce_regeneration_sondes_p3_v1.sh" "$T/amorce.sh"
@@ -54,8 +56,12 @@ echo "amorce $E" >> "$T/lancement.txt"
 # 3. jetons présents (jamais affichés)
 [ -n "${HF_TOKEN:-}" ] && [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ] || { echo "jeton absent (HF_TOKEN ou CONTROLE_IA_GITHUB_TOKEN) : pas de création"; exit 2; }
 # 4. garde de calcul avec le GO
-printf '{"tool_input":{"command":"GO_ID=%s vastai create instance %s --raw --image python:3.11-bookworm --disk 80"}}' "$GO" 0 \
-    | python3 "$DEPOT/.claude/hooks/garde_calcul.py" && echo "garde de calcul : $GO accepté" | tee -a "$T/lancement.txt"
+# (CLR-03 : la garde est dans un « if », jamais dans une liste « && » que « set -e » ne fait pas sortir)
+if ! printf '{"tool_input":{"command":"GO_ID=%s vastai create instance %s --raw --image python:3.11-bookworm --disk 80"}}' "$GO" 0 \
+        | python3 "$DEPOT/.claude/hooks/garde_calcul.py"; then
+    echo "garde de calcul : $GO refusé : pas de création"; exit 2
+fi
+echo "garde de calcul : $GO accepté" | tee -a "$T/lancement.txt"
 # 5. aucune autre instance
 N=$(timeout 60 "$V" show instances --raw 2>/dev/null | python3 -I -c 'import json, sys; print(len(json.load(sys.stdin)))')
 [ "$N" = 0 ] || { echo "$N instance(s) sur le compte : pas de création"; exit 2; }

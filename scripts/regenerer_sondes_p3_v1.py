@@ -52,6 +52,33 @@ def importer_p3(racine: Path):
     return rp
 
 
+def regler_openblas(fils: int) -> dict:
+    """Fixe le nombre de fils de la bibliothèque d'algèbre linéaire de numpy (OpenBLAS livrée avec numpy), le relit et
+    rend sa configuration. P3 tournait sans borne d'affinité (128 cœurs) : OpenBLAS y prenait son plafond compilé (64,
+    inféré, non consigné par P3). `taskset` borne l'affinité à 30 cœurs pour torch ; OpenBLAS est remis à 64 par appel
+    explicite (la variable d'environnement reste plafonnée par l'affinité). Arrêt si la bibliothèque est introuvable ou
+    si le nombre relu diffère (aucun repli silencieux, R5)."""
+    import ctypes
+    import glob
+    import os
+
+    import numpy
+
+    libs = sorted(glob.glob(os.path.join(os.path.dirname(numpy.__file__), os.pardir, "numpy.libs", "*openblas*")))
+    if len(libs) != 1:
+        raise SystemExit(f"bibliothèque OpenBLAS de numpy introuvable ou ambiguë : {libs}")
+    lib = ctypes.CDLL(libs[0])
+    lib.scipy_openblas_get_config64_.restype = ctypes.c_char_p
+    avant = int(lib.scipy_openblas_get_num_threads64_())
+    lib.scipy_openblas_set_num_threads64_(int(fils))
+    apres = int(lib.scipy_openblas_get_num_threads64_())
+    config = lib.scipy_openblas_get_config64_().decode("utf-8", "replace")
+    if apres != int(fils):
+        raise SystemExit(f"OpenBLAS : {apres} fils relus, {fils} demandés ({config})")
+    return {"bibliotheque": os.path.basename(libs[0]), "config": config, "fils_avant": avant, "fils": apres,
+            "numpy": numpy.__version__}
+
+
 def arreter_apres_sondes(rp) -> dict:
     """Remplace `progres` du lanceur par une enveloppe qui relaie la ligne, puis lève `ArretApresSondes` juste après
     `etape=sondes-figees`. Rend un état où l'enveloppe note ce qu'elle a vu."""
@@ -114,7 +141,11 @@ def comparer_legeres(reference: Path, regenere: Path, tolerance: float) -> dict:
         if (a.get("b") is None) != (b.get("b") is None):
             problemes.append(f"{nom} : biais présent d'un seul côté")
         elif a.get("b") is not None:
-            ecart = abs(float(a["b"]) - float(b["b"]))
+            if not (math.isfinite(float(a["b"])) and math.isfinite(float(b["b"]))):
+                problemes.append(f"{nom} : biais non fini")
+                ecart = math.inf
+            else:
+                ecart = abs(float(a["b"]) - float(b["b"]))
         for t in a.get("tableaux", []):
             x, y = t_ref[nom].get(t), t_reg[nom].get(t)
             if y is None or x.shape != y.shape:
@@ -158,7 +189,23 @@ def comparer_aires(reference: dict, regenere: dict, tolerance: float) -> dict:
     return {"ecart_max": pire, "problemes": problemes, "conforme": not problemes}
 
 
-def verdict(sceau_regenere: str, sceau_attendu: str, legeres: dict | None, aires: dict | None) -> str:
+CLES_ETAPES_1_A_5 = ("tirage-enjeux", "decoupage-tromperie", "decoupage-enjeux")
+
+
+def comparer_graines(reference: dict, regenere: dict) -> dict:
+    """Graines des étapes 1 à 5 (tirage, découpages, sondes, planchers) : toutes présentes des deux côtés et égales."""
+    cles = [k for k in reference if k in CLES_ETAPES_1_A_5 or k.startswith(("sonde/", "plancher/"))]
+    problemes = [f"graine {k} absente de la régénération" for k in cles if k not in regenere]
+    problemes += [f"graine {k} différente" for k in cles if k in regenere and regenere[k] != reference[k]]
+    if not any(k.startswith("sonde/") for k in cles):
+        problemes.append("aucune graine de sonde dans la référence")
+    return {"cles_comparees": len(cles), "problemes": problemes, "conforme": not problemes}
+
+
+def verdict(sceau_regenere: str, sceau_attendu: str, legeres: dict | None, aires: dict | None,
+            graines: dict | None = None) -> str:
+    if graines is not None and not graines["conforme"]:
+        return "refuse"
     if sceau_regenere == sceau_attendu:
         return "accepte-identique"
     if legeres is not None and aires is not None and legeres["conforme"] and aires["conforme"]:
@@ -183,6 +230,8 @@ def _main(argv: list[str]) -> int:
     ap.add_argument("--run-id", required=True)
     ap.add_argument("--reference-legeres", required=True, help="fichier léger des sondes figées de P3")
     ap.add_argument("--reference-diag", required=True, help="résultat `sondes-figees.json` de P3")
+    ap.add_argument("--reference-manifeste", default=None, help="manifeste du run de P3 (graines ; obligatoire en mode réel)")
+    ap.add_argument("--fils-blas", type=int, default=64, help="fils d'OpenBLAS (P3 : 64, inféré)")
     ap.add_argument("--sceau-attendu", default=SCEAU_P3)
     ap.add_argument("--sortie", required=True, help="verdict JSON (refus s'il existe, R12)")
     ap.add_argument("--autoriser-depot-sale", action="store_true", help="essais en mode jouet seulement")
@@ -194,7 +243,7 @@ def _main(argv: list[str]) -> int:
     git = etat_git(racine)
     config = json.loads(Path(a.config).read_text(encoding="utf-8"))
     if config.get("mode") == "reel":
-        if a.autoriser_depot_sale or a.prereg is None or a.commit_attendu is None:
+        if a.autoriser_depot_sale or a.prereg is None or a.commit_attendu is None or a.reference_manifeste is None:
             print("mode réel : préenregistrement et commit attendu obligatoires, arbre propre exigé", file=sys.stderr)
             return 2
         if Path.cwd().resolve() != racine:
@@ -204,7 +253,7 @@ def _main(argv: list[str]) -> int:
             print(f"arbre {git} ≠ commit attendu {a.commit_attendu} ou non propre", file=sys.stderr)
             return 1
     # les sceaux des références sont vérifiés avant tout calcul (fichier léger de P3 et son résultat)
-    for f in (a.reference_legeres, a.reference_diag):
+    for f in [a.reference_legeres, a.reference_diag] + ([a.reference_manifeste] if a.reference_manifeste else []):
         attendu = Path(f + ".sha256").read_text(encoding="utf-8").split()[0]
         if sha256_fichier(Path(f)) != attendu:
             print(f"sceau de la référence {f} non conforme", file=sys.stderr)
@@ -215,6 +264,12 @@ def _main(argv: list[str]) -> int:
         return 1
 
     rp = importer_p3(racine)
+    blas = regler_openblas(a.fils_blas)
+    fils_torch = rp.fils_effectifs(config["fils_entrainement"], rp.coeurs_disponibles())
+    if config.get("mode") == "reel" and fils_torch != ref_diag.get("fils_entrainement_effectifs"):
+        print(f"fils effectifs de l'entraînement {fils_torch} ≠ ceux de P3 {ref_diag.get('fils_entrainement_effectifs')} : "
+              "arrêt avant tout calcul", file=sys.stderr)
+        return 1
     vu = arreter_apres_sondes(rp)
     signal.signal(signal.SIGTERM, rp._signal_term)
     try:
@@ -240,14 +295,21 @@ def _main(argv: list[str]) -> int:
     tol = float(config.get("tolerance_identite", 1e-6))
     legeres = comparer_legeres(Path(a.reference_legeres), dossier / "sondes-figees-legeres.npz", tol)
     aires = comparer_aires(ref_diag["aires_validation"], diag["aires_validation"], tol)
-    v = verdict(sceau, a.sceau_attendu, legeres, aires)
+    graines = None
+    if a.reference_manifeste:
+        m_ref = json.loads(Path(a.reference_manifeste).read_text(encoding="utf-8"))["graines"]
+        m_reg = json.loads((racine / "runs" / a.run_id / "manifeste.json").read_text(encoding="utf-8"))["graines"]
+        graines = comparer_graines(m_ref, m_reg)
+    v = verdict(sceau, a.sceau_attendu, legeres, aires, graines)
     rapport = {
         "verdict": v, "sceau_attendu": a.sceau_attendu, "sceau_regenere": sceau,
         "sceau_legeres_regenere": diag["sondes_legeres_sha256"], "run_id": a.run_id, "git": git,
         "fils_entrainement_effectifs": {"p3": ref_diag.get("fils_entrainement_effectifs"),
                                         "regeneration": diag.get("fils_entrainement_effectifs")},
         "coeurs": {"p3": ref_diag.get("coeurs"), "regeneration": diag.get("coeurs")},
-        "comparaison_legeres": legeres, "comparaison_aires": aires, "tolerance": tol,
+        "comparaison_legeres": legeres, "comparaison_aires": aires, "comparaison_graines": graines, "tolerance": tol,
+        "conditions": {"openblas": blas, "fils_torch_avant_calcul": fils_torch,
+                       "fils_openblas_p3": "64, inféré (affinité 128, plafond compilé 64), non consigné par P3"},
         "etapes_vues": vu["etapes"],
         "lecture": {"accepte-identique": "le fichier de P3, au bit près",
                     "accepte-avec-declaration": "matrices de Mahalanobis régénérées, non prouvées identiques au fichier "

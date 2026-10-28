@@ -23,10 +23,10 @@ git -C amorce-depot checkout -q "$COMMIT" || { echo "AMORCE : commit $COMMIT int
 mkdir -p regen/ref
 cp amorce-depot/scripts/regenerer_sondes_p3_v1.py regen/
 (cd regen && sha256sum regenerer_sondes_p3_v1.py > regenerer_sondes_p3_v1.py.sha256)
-for f in "donnees/$RUN_P3/sondes-figees-legeres.npz" "diag/$RUN_P3/sondes-figees.json"; do
+for f in "donnees/$RUN_P3/sondes-figees-legeres.npz" "diag/$RUN_P3/sondes-figees.json" "runs/$RUN_P3/manifeste.json"; do
     cp "amorce-depot/$f" "amorce-depot/$f.sha256" regen/ref/ || { echo "AMORCE : référence $f absente"; exit 1; }
 done
-(cd regen/ref && sha256sum -c --quiet sondes-figees-legeres.npz.sha256 sondes-figees.json.sha256) \
+(cd regen/ref && sha256sum -c --quiet sondes-figees-legeres.npz.sha256 sondes-figees.json.sha256 manifeste.json.sha256) \
     || { echo "AMORCE : sceau d'une référence non conforme"; exit 1; }
 timeout --signal=TERM --kill-after=5m 240m env COMMIT_P3="$COMMIT_P3" REGEN="$RACINE_AMORCE/regen" \
     TRAVAIL="$RACINE_AMORCE/regeneration" bash amorce-depot/scripts/regeneration_sondes_p3_instance_v1.sh

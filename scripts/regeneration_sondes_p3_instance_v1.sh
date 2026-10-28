@@ -7,11 +7,12 @@
 # ligne et s'arrête après les sondes figées. Le processus est borné à 30 cœurs (`taskset`), le nombre de fils effectifs
 # consigné par P3 (`fils_entrainement_effectifs` = 30 : min(32, affinité, quota 30,72)).
 # Poussé sur BRANCHE : manifeste et résultats du run, fichier léger, sceau du fichier complet, verdict, traces ; si le
-# verdict accepte, le fichier complet en morceaux de 90 Mio (scellés un à un, liste scellée), pour que la couche 2 le lise.
+# fichier complet existe et que son sceau est conforme (quel que soit le verdict), le fichier en morceaux de 90 Mio (scellés
+# un à un, liste scellée, reconstitution vérifiée), pour que la couche 2 le lise. v1 après la contre-lecture R2 (CLR-01 à 10).
 #
 # Variables : COMMIT_P3 (commit de P3, 40 caractères), REGEN (dossier de l'amorce : script et références), BRANCHE,
 # GH_TOKEN, HF_TOKEN, DEPOT_URL ; pour l'essai local seulement : MODE=jouet, PREREG_ABSENT=1, CONFIG, TACHES,
-# VENV_EXISTANT, FILS (défaut 30), TRAVAIL, SAUTER_TESTS=1, AUTORISER_DEPOT_SALE=1 (banc jouet seulement).
+# VENV_EXISTANT, FILS (défaut 30), FILS_BLAS (défaut 64), TRAVAIL, SAUTER_TESTS=1, AUTORISER_DEPOT_SALE=1 (banc jouet seulement).
 set -euo pipefail
 : "${COMMIT_P3:?COMMIT_P3 obligatoire}" "${REGEN:?REGEN obligatoire}"
 MODE="${MODE:-reel}"
@@ -31,7 +32,7 @@ journal() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$JOURNAL"; }
 AIDE_GIT='!f() { echo username=x-access-token; echo "password=${GH_TOKEN:-}"; }; f'
 journal "début : régénération des sondes de P3 ; MODE=$MODE COMMIT_P3=$COMMIT_P3 BRANCHE=$BRANCHE FILS=$FILS"
 [ "$MODE" = reel ] && : "${HF_TOKEN:?HF_TOKEN obligatoire en mode reel}"
-for f in regenerer_sondes_p3_v1.py ref/sondes-figees-legeres.npz ref/sondes-figees.json; do
+for f in regenerer_sondes_p3_v1.py ref/sondes-figees-legeres.npz ref/sondes-figees.json ref/manifeste.json; do
     [ -f "$REGEN/$f" ] && [ -f "$REGEN/$f.sha256" ] || { journal "$REGEN/$f ou son sceau absent : arrêt"; exit 2; }
     [ "$(sha256sum "$REGEN/$f" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$REGEN/$f.sha256")" ] || { journal "sceau de $f non conforme : arrêt"; exit 2; }
 done
@@ -103,6 +104,30 @@ traces() {
     (cd "$d" && sha256sum -- * > empreintes.sha256) || true
     git add "$d" && git commit -qm "Régénération des sondes de P3 : traces ($1)" >/dev/null 2>&1 || true
 }
+# fichier complet en morceaux de 90 Mio dès qu'il existe et que son sceau est conforme, quel que soit le verdict (CLR-04) ;
+# reconstitution vérifiée avant la poussée (CLR-10) ; un commit et une poussée par morceau
+verser_morceaux() {
+    local r=$1 m n
+    [ -f "donnees/$r/sondes-figees.npz" ] && [ -f "donnees/$r/sondes-figees.npz.sha256" ] || return 0
+    [ "$(sha256sum "donnees/$r/sondes-figees.npz" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "donnees/$r/sondes-figees.npz.sha256")" ] \
+        || { journal "fichier complet ≠ son sceau : morceaux non versés"; return 1; }
+    ls "donnees/$r"/sondes-figees.npz.morceau-* >/dev/null 2>&1 && return 0
+    (cd "donnees/$r" && split -b 90M -d -a 2 sondes-figees.npz sondes-figees.npz.morceau-)
+    [ "$(cat "donnees/$r"/sondes-figees.npz.morceau-* | sha256sum | cut -d' ' -f1)" = "$(cut -d' ' -f1 "donnees/$r/sondes-figees.npz.sha256")" ] \
+        || { journal "morceaux : reconstitution ≠ sceau du fichier complet : non versés"; return 1; }
+    (cd "donnees/$r" && sha256sum sondes-figees.npz.morceau-* > sondes-figees.npz.morceaux.txt \
+        && sha256sum sondes-figees.npz.morceaux.txt > sondes-figees.npz.morceaux.txt.sha256)
+    cp "donnees/$r/sondes-figees.npz.morceaux.txt" "$TRAVAIL/morceaux.txt"
+    for m in "donnees/$r"/sondes-figees.npz.morceau-*; do
+        git add -f "$m" && git commit -qm "Régénération des sondes de P3 : $(basename "$m")"
+        pousser || { journal "poussée de $(basename "$m") impossible"; return 1; }
+    done
+    git add -f "donnees/$r/sondes-figees.npz.morceaux.txt" "donnees/$r/sondes-figees.npz.morceaux.txt.sha256"
+    git commit -qm "Régénération des sondes de P3 : liste scellée des morceaux"
+    n=$(wc -l < "donnees/$r/sondes-figees.npz.morceaux.txt")
+    journal "fichier complet versé en $n morceaux (reconstitution vérifiée)"
+}
+RUN=""
 CONSIGNE=""
 consigner_arret() {
     CONSIGNE=1
@@ -111,6 +136,7 @@ consigner_arret() {
         [ -f "$f" ] && git add -f "$f"
     done
     git commit -qm "Régénération des sondes de P3 : arrêt pendant $1" >/dev/null 2>&1 || true
+    [ -n "$RUN" ] && { verser_morceaux "$RUN" || true; }
     traces "arrêt pendant $1"
     pousser || journal "poussée impossible : résultats restés sur l'instance"
 }
@@ -133,12 +159,15 @@ sur_sortie() {
 }
 trap sur_sortie EXIT
 
-{ nproc; lscpu 2>/dev/null | grep -E '^(Model name|CPU\(s\)|Thread|Core|Socket)' || true;
+{ nproc; python3 -c 'import os; print("affinité", len(os.sched_getaffinity(0)))'; env | grep -i -E 'thread|omp|mkl|blas' || true; lscpu 2>/dev/null | grep -E '^(Model name|CPU\(s\)|Thread|Core|Socket)' || true;
   cat /sys/fs/cgroup/cpu.max 2>/dev/null || true; [ "$MODE" = reel ] && nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv; } \
     > "$TRAVAIL/machine.txt" 2>&1 || true
 tee -a "$JOURNAL" < "$TRAVAIL/machine.txt" >/dev/null
-COEURS=$(nproc --all)
-[ "$COEURS" -ge "$FILS" ] || { journal "$COEURS cœurs < $FILS fils exigés : arrêt avant l'installation"; consigner_arret "contrôle des cœurs"; exit 1; }
+# les FILS premiers cœurs de l'affinité réelle du conteneur (CLR-02) ; le quota est contrôlé par le script avant calcul
+COEURS=$(python3 -c 'import os, sys; c = sorted(os.sched_getaffinity(0)); n = int(sys.argv[1]); print(",".join(map(str, c[:n])) if len(c) >= n else "")' "$FILS")
+[ -n "$COEURS" ] || { journal "affinité du conteneur < $FILS cœurs : arrêt avant l'installation"; consigner_arret "contrôle des cœurs"; exit 1; }
+taskset -c "$COEURS" true || { journal "taskset refusé sur les cœurs $COEURS : arrêt avant l'installation"; consigner_arret "contrôle des cœurs"; exit 1; }
+journal "cœurs retenus : $COEURS"
 
 if [ -n "${VENV_EXISTANT:-}" ]; then
     # shellcheck disable=SC1091
@@ -165,14 +194,15 @@ if [ "${SAUTER_TESTS:-0}" != 1 ] && [ -n "$ATTENDUS" ] && ! printf '%s\n' "$DERN
     journal "tests : « $DERNIERE » ≠ « $ATTENDUS passed » : arrêt"; consigner_arret "tests"; exit 1
 fi
 
-RUN="$(date -u +%Y%m%d-%H%M%S)-p3-regeneration-sondes"
+RUN="$(date -u +%Y%m%d-%H%M%S)-p3-regeneration-sondes"   # connu de consigner_arret (versement des morceaux)
 ETAPE="régénération $RUN"
-journal "run : $RUN ; borné à $FILS cœurs (0-$((FILS - 1)))"
+journal "run : $RUN ; borné à $FILS cœurs ($COEURS) ; OpenBLAS à ${FILS_BLAS:-64} fils"
 code=0
 : >"$TRAVAIL/run.err"
-taskset -c "0-$((FILS - 1))" timeout --signal=TERM --kill-after=5m 150m \
+taskset -c "$COEURS" timeout --signal=TERM --kill-after=5m 150m \
     python -u "$REGEN/regenerer_sondes_p3_v1.py" --racine . --config "$CONFIG" --taches "$TACHES" --run-id "$RUN" \
     --reference-legeres "$REGEN/ref/sondes-figees-legeres.npz" --reference-diag "$REGEN/ref/sondes-figees.json" \
+    --reference-manifeste "$REGEN/ref/manifeste.json" --fils-blas "${FILS_BLAS:-64}" \
     --sortie "$TRAVAIL/verdict-regeneration-v1.json" "${ARGS[@]}" ${AUTORISER_DEPOT_SALE:+--autoriser-depot-sale} \
     >"$TRAVAIL/regeneration.out" 2>>"$TRAVAIL/run.err" &
 PID_RUN=$!
@@ -193,20 +223,7 @@ git add "runs/$RUN" "diag/$RUN"
 git add -f "donnees/$RUN/sondes-figees-legeres.npz" "donnees/$RUN/sondes-figees-legeres.npz.sha256" "donnees/$RUN/sondes-figees.npz.sha256"
 git commit -qm "Régénération des sondes de P3, run $RUN : verdict $VERDICT"
 pousser || journal "poussée du run impossible : résultats restés sur l'instance"
-if [ "$VERDICT" != refuse ]; then
-    # fichier complet en morceaux de 90 Mio, chacun scellé, liste scellée ; un commit et une poussée par morceau
-    (cd "donnees/$RUN" && split -b 90M -d -a 2 sondes-figees.npz sondes-figees.npz.morceau-)
-    (cd "donnees/$RUN" && sha256sum sondes-figees.npz.morceau-* > sondes-figees.npz.morceaux.txt \
-        && sha256sum sondes-figees.npz.morceaux.txt > sondes-figees.npz.morceaux.txt.sha256)
-    cp "donnees/$RUN/sondes-figees.npz.morceaux.txt" "$TRAVAIL/morceaux.txt"
-    for m in "donnees/$RUN"/sondes-figees.npz.morceau-*; do
-        git add -f "$m" && git commit -qm "Régénération des sondes de P3 : $(basename "$m")"
-        pousser || { journal "poussée de $(basename "$m") impossible"; consigner_arret "versement des morceaux"; exit 1; }
-    done
-    git add -f "donnees/$RUN/sondes-figees.npz.morceaux.txt" "donnees/$RUN/sondes-figees.npz.morceaux.txt.sha256"
-    git commit -qm "Régénération des sondes de P3 : liste scellée des morceaux"
-    journal "fichier complet versé en $(wc -l < "donnees/$RUN/sondes-figees.npz.morceaux.txt") morceaux"
-fi
+verser_morceaux "$RUN" || { consigner_arret "versement des morceaux"; exit 1; }
 ETAPE="fin"
 CONSIGNE=1
 traces "fin"
