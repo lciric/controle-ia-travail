@@ -106,8 +106,9 @@ class TestFiche(unittest.TestCase):
         self.assertEqual(f["avantage"]["source"], "aucune")
 
     def test_secret_caviarde(self):
-        f = idn.valider_fiche_ideation(fiche_brute(piege="clé sk-ant-abcdefghijklmnop dans le texte"), "A", 1)
-        self.assertNotIn("sk-ant-abcdefghijklmnop", json.dumps(f))
+        faux = "sk-" + "ant-" + "abcdefghijklmnop"  # construit à l'exécution : la recherche de clés du dépôt reste propre
+        f = idn.valider_fiche_ideation(fiche_brute(piege="clé " + faux + " dans le texte"), "A", 1)
+        self.assertNotIn(faux, json.dumps(f))
 
     def test_garde_niveau_methode_signale(self):
         propre = idn.valider_fiche_ideation(fiche_brute(), "A", 1)
