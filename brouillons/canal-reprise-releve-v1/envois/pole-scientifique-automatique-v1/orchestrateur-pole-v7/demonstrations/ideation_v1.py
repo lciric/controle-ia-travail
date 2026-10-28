@@ -1,4 +1,4 @@
-"""Course d'idéation de l'organisme (v7, version 32) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 33) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
@@ -16,6 +16,12 @@ Usage :
       [--juge juge-fable=claude-fable-5-1] [--juge juge-opus=claude-opus-5-5]
       [--budget proposeur_ideation|claude-fable-5-1=5] … [--budget-total-usd 20] [--nombre 8] [--graine 20261028]
       [--moteur simule|claude-sdk] [--url-relais URL] [--confirmer-moteur-reel] [--horodatage "date -u"]
+      [--juge-externe argon=gemini-argon --commande-juge-externe "python appel_argon.py"]   # bras rapporté (v33)
+
+Juge externe (décision de Lazar, 28 octobre, 17:58 heure de Paris : juge d'une autre lignée, extension de N-053 point 4) :
+la commande reçoit la consigne anonymisée sur l'entrée standard et imprime en dernière ligne `{"texte": …, "cout_usd": …}` ;
+elle tient sa clé elle-même ; ses notes sont rapportées à part, jamais agrégées. En moteur simulé, `--commande-juge-externe`
+peut être omise : un juge externe scripté est joué.
 
 La liste blanche (`{chemin réel: sha256}`) est écrite par `--construire-liste-blanche FICHIERS…` puis scellée par le devis ;
 le noyau refuse toute pièce, question, matériau ou témoin hors liste ou à empreinte différente, tout lien symbolique, et
@@ -124,6 +130,8 @@ def principal(argv=None):
     a.add_argument("--seconde-passe", action="store_true")
     a.add_argument("--proposeur", action="append", default=[], help="etiquette=modele (répétable)")
     a.add_argument("--juge", action="append", default=[], help="etiquette=modele (répétable)")
+    a.add_argument("--juge-externe", action="append", default=[], help="etiquette=modele d'une autre lignée (bras rapporté)")
+    a.add_argument("--commande-juge-externe", help="commande (shell, découpée) qui joue le juge externe")
     a.add_argument("--budget", action="append", default=[], help="role|modele=plafond par session en dollars (répétable)")
     a.add_argument("--nombre", type=int, default=8, help="fiches au plus par proposeur et par passe")
     a.add_argument("--max-tours", type=int, default=idn.MAX_TOURS_IDEATION)
@@ -152,7 +160,10 @@ def principal(argv=None):
         [("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1")]
     juges = [paire(j, f"juge-{i + 1}") for i, j in enumerate(args.juge)] or \
         [("juge-fable", "claude-fable-5-1"), ("juge-opus", "claude-opus-5-5")]
+    externes = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.juge_externe)]
     budgets = dict(BUDGETS_PAR_DEFAUT)
+    for _, m in externes:
+        budgets.setdefault(("juge_ideation", m), 3.0)
     for b in args.budget:
         cle, valeur = b.split("=", 1)
         role, modele = cle.split("|", 1)
@@ -188,6 +199,17 @@ def principal(argv=None):
         lire_relais = lecteur_relais(args.url_relais)
     else:
         adaptateur = AdaptateurIdeationSimule(args.graine)
+    juges_externes = []
+    if externes:
+        if args.commande_juge_externe:
+            import shlex
+            from pole.adaptateurs import AdaptateurJugeExterne
+            externe = AdaptateurJugeExterne(shlex.split(args.commande_juge_externe))
+        elif args.moteur == "simule":
+            externe = AdaptateurIdeationSimule(args.graine + 1)
+        else:
+            raise idn.CourseInterrompue("--juge-externe exige --commande-juge-externe avec le moteur réel")
+        juges_externes = [(e, m, externe) for e, m in externes]
 
     sortie = os.path.abspath(args.sortie)
     os.makedirs(os.path.dirname(sortie), exist_ok=True)
@@ -198,6 +220,9 @@ def principal(argv=None):
     try:
         controle = idn.appel_de_controle(adaptateur, modeles, sortie_controle, args.budget_controle_usd, lire_relais,
                                          exiger_cout=(args.moteur == "claude-sdk"))
+        for e, m, a in juges_externes:  # le bras rapporté a son propre appel de contrôle (sans relais)
+            controle[f"externe:{m}"] = idn.appel_de_controle(a, [m], sortie_controle + "-" + e, args.budget_controle_usd,
+                                                              None, exiger_cout=bool(args.commande_juge_externe))[m]
     except idn.CourseInterrompue as e:
         print(json.dumps({"arret": "appel de contrôle : " + str(e)}, ensure_ascii=False), file=sys.stderr)
         return 2
@@ -209,7 +234,7 @@ def principal(argv=None):
                                     seconde_passe=args.seconde_passe, pieces_juge=args.piece_juge,
                                     horodatage=horodatage(args.horodatage), moteur=args.moteur,
                                     lire_etat_relais=lire_relais, etat_bac_a_sable=etat_bac, url_relais=args.url_relais,
-                                    versions=dict(versions, appel_de_controle=controle))
+                                    versions=dict(versions, appel_de_controle=controle), juges_externes=juges_externes)
     except (idn.CourseInterrompue, idn.PieceInterdite, idn.FicheIdeationInvalide) as e:
         print(json.dumps({"arret": type(e).__name__ + " : " + str(e)}, ensure_ascii=False), file=sys.stderr)
         return 2
@@ -217,6 +242,8 @@ def principal(argv=None):
              "temoins_ok": res["lecture"]["temoins"]["temoins_ok"], "classement_lisible_L2_L4":
              res["lecture"]["temoins"]["temoins_ok"] and res["lecture"]["complet"],
              "cout_total_usd": round(res["journal"]["cout_total_usd"], 4), "cout_fictif": res["journal"]["cout_fictif"],
+             "bras_rapporte": {j: res["lecture"]["bras_rapporte"]["accord_avec_le_classement_agrege"][j]
+                               for j in res["lecture"].get("bras_rapporte", {}).get("juges", {})},
              "retenues": [(l["rang"], l["identifiant_auteur"], l["nom"], l["total"]) for l in res["classement"]
                           if l["eligible"]][:5]}
     print(json.dumps(bilan, ensure_ascii=False, indent=1))

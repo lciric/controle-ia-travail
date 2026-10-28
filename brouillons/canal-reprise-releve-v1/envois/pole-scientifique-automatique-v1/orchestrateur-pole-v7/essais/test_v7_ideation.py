@@ -15,6 +15,7 @@ avec chemin, étiquettes invalides, absence de témoins, max_tours trop grand �
 import json
 import os
 import re
+import sys
 import unittest
 
 from essais.aides import CasAvecDossier
@@ -432,3 +433,72 @@ class TestCourse(CasAvecDossier):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestJugeExterne(CasAvecDossier):
+    """v33 : juge d'une autre lignée en bras rapporté (adaptateur à commande)."""
+
+    def commande(self, script):
+        chemin = os.path.join(self.tmp, "juge.py")
+        with open(chemin, "w", encoding="utf-8") as f:
+            f.write(script)
+        return [sys.executable, "-I", chemin]
+
+    SCRIPT_OK = (
+        "import sys, json, re\n"
+        "consigne = sys.stdin.read()\n"
+        "idents = sorted(set(re.findall(r'\"identifiant\": \"(T\\d\\d)\"', consigne)))\n"
+        "if 'exactement OK' in consigne:\n"
+        "    print(json.dumps({'texte': 'OK', 'cout_usd': 0.001})); sys.exit(0)\n"
+        "bloc = json.loads(re.search(r'```json\\n(\\[.*\\])\\n```', consigne, re.S).group(1))\n"
+        "par_nom = {f['nom']: f['identifiant'] for f in bloc}\n"
+        "notes = []\n"
+        "for f in bloc:\n"
+        "    c = {k: 2 for k in ('avantage','originalite','falsifiabilite','traitabilite','robustesse')}\n"
+        "    if f['nom'] == 'Verbeux vide': c.update({'avantage': 1, 'originalite': 1, 'falsifiabilite': 0})\n"
+        "    notes.append({'identifiant': f['identifiant'], 'criteres': c, 'justifications': {}})\n"
+        "doublons = [[par_nom['Jumeau'], par_nom['Sobre fort']]] if 'Jumeau' in par_nom and 'Sobre fort' in par_nom else []\n"
+        "print(json.dumps({'texte': '```json\\n' + json.dumps({'notes': notes, 'doublons': doublons}) + '\\n```', 'cout_usd': 0.3}))\n")
+
+    def test_commande_factice_notes_et_controle(self):
+        from pole.adaptateurs import AdaptateurJugeExterne
+        ad = AdaptateurJugeExterne(self.commande(self.SCRIPT_OK), environnement={})
+        r = ad.lancer("juge_ideation", idn.APPEL_DE_CONTROLE_CONSIGNE, self.tmp, 0.1, 1, modele="autre-lignee-x")
+        self.assertEqual((r.statut, r.texte_final, r.cout_declare_usd), ("ok", "OK", 0.001))
+        with self.assertRaises(ValueError):
+            ad.lancer("proposeur_ideation", "x", self.tmp, 1.0, 1)
+
+    def test_artefacts_de_la_commande(self):
+        from pole.adaptateurs import AdaptateurJugeExterne
+        for script, attendu in (("import sys; sys.exit(3)", "erreur"), ("print('pas du json')", "erreur"),
+                                ("import json; print(json.dumps({'texte': 'x', 'cout_usd': 9.0}))", "budget_depasse"),
+                                ("import json; print(json.dumps({'texte': 'x'}))", "ok"),
+                                ("import json; print(json.dumps({'cout_usd': 1}))", "erreur")):
+            ad = AdaptateurJugeExterne(self.commande(script), environnement={})
+            r = ad.lancer("juge_ideation", "consigne", self.tmp, 1.0, 1)
+            self.assertEqual(r.statut, attendu, script)
+        from pole.relais import CleDansEnvironnement
+        ad = AdaptateurJugeExterne(self.commande("print(1)"), environnement={"ANTHROPIC_API_KEY": "x"})
+        with self.assertRaises(CleDansEnvironnement):
+            ad.lancer("juge_ideation", "consigne", self.tmp, 1.0, 1)
+
+    def test_bras_rapporte_dans_la_course(self):
+        from pole.adaptateurs import AdaptateurJugeExterne
+        cours = TestCourse("test_course_complete")
+        cours.tmp = self.tmp
+        fiches = {"opus": [fiche_brute(nom="O1"), fiche_brute(nom="O2")], "fable": [fiche_brute(nom="F1")]}
+        ad = FauxAdaptateur(fiches, notes_par_juge={"juge-fable": cours.notes_temoins_ok, "juge-opus": cours.notes_temoins_ok})
+        externe = AdaptateurJugeExterne(self.commande(self.SCRIPT_OK), environnement={})
+        budgets = dict(cours.budgets())
+        budgets[("juge_ideation", "autre-lignee-x")] = 1.0
+        res = cours.lancer(ad, "cx", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", externe)])
+        self.assertIn("bras_rapporte", res["lecture"])
+        br = res["lecture"]["bras_rapporte"]
+        self.assertEqual(br["juges"], {"argon": "autre-lignee-x"})
+        self.assertTrue(br["temoins"]["temoins_ok"])
+        self.assertIn("argon", br["accord_avec_le_classement_agrege"])
+        # jamais agrégé : le classement principal ne compte que les deux juges Claude
+        self.assertTrue(all(l["nombre_juges"] == 2 for l in res["classement"]))
+        sortie = os.path.join(self.tmp, "cx")
+        self.assertTrue(os.path.exists(os.path.join(sortie, "notes-bras-rapporte.json.sha256")))
+        self.assertTrue(os.path.exists(os.path.join(sortie, "juges-bras-rapporte", "traces-argon", "consigne.md")))

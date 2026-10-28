@@ -1,4 +1,4 @@
-"""Course d'idéation (v7, version 32) : la prise « idéation » de l'organisme — proposer et classer seulement.
+"""Course d'idéation (v7, version 33) : la prise « idéation » de l'organisme — proposer et classer seulement.
 
 Demande de Lazar du 28 octobre 2026 (15:27, heure de Paris) : « on a besoin de l'organisme pour qu'il réfléchisse et
 propose lui-même des questions bien affûtées ». Pas de banque ni d'épreuve : des **proposeurs** (vrais agents, Opus 5.5 et
@@ -590,10 +590,13 @@ def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=
 def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, proposeurs, juges, temoins, graine,
                       budget_total_usd, budgets, nombre_par_proposeur=8, max_tours=MAX_TOURS_IDEATION, materiau=(),
                       seconde_passe=False, pieces_juge=(), horodatage=None, moteur="simule", lire_etat_relais=None,
-                      etat_bac_a_sable=None, url_relais=None, versions=None):
-    """Course d'idéation v32. `budgets` : {(role, modele): plafond par session en dollars} ; `moteur` : « simule » ou
+                      etat_bac_a_sable=None, url_relais=None, versions=None, juges_externes=()):
+    """Course d'idéation v33. `budgets` : {(role, modele): plafond par session en dollars} ; `moteur` : « simule » ou
     « claude-sdk » (les coûts d'un moteur simulé sont fictifs et marqués tels) ; `lire_etat_relais` : fonction qui rend
-    l'état du relais (`GET /relais/etat`) ou None. Toute session ≠ ok lève CourseInterrompue après écriture des traces.
+    l'état du relais (`GET /relais/etat`) ou None ; `juges_externes` : liste de (étiquette, modèle, adaptateur) — **bras
+    rapporté** (décision de Lazar du 28 octobre, 17:58 heure de Paris : juge d'une autre lignée) : mêmes consignes
+    anonymisées, mêmes témoins, notes validées de même, mais **jamais agrégées** avec celles des juges Claude ; rapportées
+    à part avec leur classement et leur accord avec le classement agrégé. Toute session ≠ ok lève CourseInterrompue.
     """
     if max_tours > MAX_TOURS_IDEATION:
         raise CourseInterrompue(f"max_tours > {MAX_TOURS_IDEATION} : ces rôles n'ont besoin d'aucun outil (CL31-08)")
@@ -605,8 +608,9 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     materiau_lu = lire_pieces(materiau, liste) if materiau else []
     pieces_juge_lues = lire_pieces(pieces_juge, liste) if pieces_juge else []
     temoins_lus = charger_temoins(temoins, liste) if temoins else []
-    valider_etiquettes(proposeurs, juges, bool(temoins_lus))
-    for role_modele in [("proposeur_ideation", m) for _, m in proposeurs] + [("juge_ideation", m) for _, m in juges]:
+    valider_etiquettes(proposeurs, juges + [(e, m) for e, m, _ in juges_externes], bool(temoins_lus))
+    for role_modele in ([("proposeur_ideation", m) for _, m in proposeurs] + [("juge_ideation", m) for _, m in juges]
+                        + [("juge_ideation", m) for _, m, _ in juges_externes]):
         if role_modele not in budgets:
             raise CourseInterrompue(f"aucun plafond par session pour {role_modele} (CL31-09)")
     modele_par_auteur = dict(proposeurs)
@@ -624,6 +628,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                  "nombre": len(temoins_lus)} if temoins else None,
         liste_blanche={"fichier": os.path.basename(liste_blanche), "sha256": sha256_fichier(liste_blanche)},
         proposeurs=[list(p) for p in proposeurs], juges=[list(j) for j in juges],
+        juges_externes_bras_rapporte=[[e, m, getattr(a, "nom", type(a).__name__)] for e, m, a in juges_externes],
         juges_meme_modele_qu_un_proposeur=sorted({m for _, m in juges} & set(modele_par_auteur.values())),
         nombre_par_proposeur=nombre_par_proposeur, max_tours=max_tours, seconde_passe=seconde_passe,
         porte_eligibilite=PORTE_ELIGIBILITE, criteres=list(CRITERES), note_max=NOTE_MAX,
@@ -636,7 +641,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             phase="fin", horodatage=horodatage, graine=graine, moteur=moteur, journal=journal, erreur=erreur,
             lecture=lecture, nombre_lignes_classement=len(classement or [])))
 
-    def lancer(role, etiquette, modele, consigne, dossier):
+    def lancer(role, etiquette, modele, consigne, dossier, adaptateur=adaptateur):
         plafond = budgets[(role, modele)]
         if journal["cout_total_usd"] + plafond > budget_total_usd + 1e-9:
             journal["arret"] = f"plafond total atteint avant {role}/{etiquette}"
@@ -734,6 +739,22 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             notes_par_auteur[etiquette] = {cle[i]: n for i, n in notes.items()}
             doublons_par_juge[etiquette] = doubles
             cles_par_juge[etiquette] = cle
+        # --- bras rapporté : juges externes (autre lignée), jamais agrégés
+        notes_externes, doublons_externes = {}, {}
+        for etiquette, modele, adaptateur_externe in juges_externes:
+            anonymes, cle = anonymiser(servies, graine, etiquette)
+            d = os.path.join(sortie, "juges-bras-rapporte", etiquette)
+            texte = lancer("juge_ideation", etiquette, modele, consigne_juge(anonymes, question_lue[1], pieces_juge_lues),
+                           d, adaptateur=adaptateur_externe)
+            try:
+                notes, doubles = valider_notes(extraire_bloc_json(texte, "notes"), [f["identifiant"] for f in anonymes])
+            except NotesInvalides as e:
+                journal["arret"] = f"juge externe {etiquette} : notes invalides ({e})"
+                raise CourseInterrompue(journal["arret"])
+            notes_externes[etiquette] = {cle[i]: n for i, n in notes.items()}
+            doublons_externes[etiquette] = doubles
+            cles_par_juge[etiquette] = cle
+            modele_par_juge[etiquette] = modele
         os.makedirs(os.path.join(sortie, "noyau"), exist_ok=True)
         ecrire_json_scelle(os.path.join(sortie, "noyau", "cles-anonymisation-par-juge.json"), cles_par_juge)
 
@@ -750,6 +771,17 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                    "auto_preference": lecture_auto_preference(notes_par_auteur, modele_par_juge, modele_par_auteur),
                    "longueur_contre_total": _correlation_longueur(classement, par_ident),
                    "complet": len(notes_par_auteur) == len(juges), "nom_agregat": nom_agregat(len(juges))}
+        if notes_externes:
+            notes_ext_sans_temoins = {j: {i: n for i, n in notes.items() if i not in temoin_ids}
+                                      for j, notes in notes_externes.items()}
+            classements_ext = classements_par_juge(notes_ext_sans_temoins, par_ident)
+            lecture["bras_rapporte"] = {
+                "juges": {e: m for e, m, _ in juges_externes},
+                "temoins": lecture_temoins(notes_externes, temoins_lus, doublons_externes, cles_par_juge),
+                "accord_avec_le_classement_agrege": {j: _accord_de_rang(classement, c) for j, c in classements_ext.items()},
+                "regle": "notes d'une autre lignée, rapportées à part, jamais agrégées (N-053 point 4 étendu, Lazar 28 oct.)"}
+            ecrire_json_scelle(os.path.join(sortie, "notes-bras-rapporte.json"), notes_externes)
+            ecrire_json_scelle(os.path.join(sortie, "classements-bras-rapporte.json"), classements_ext)
         ecrire_json_scelle(os.path.join(sortie, "notes-par-juge.json"), notes_par_auteur)
         ecrire_json_scelle(os.path.join(sortie, "doublons-par-juge.json"), doublons_par_juge)
         ecrire_json_scelle(os.path.join(sortie, "classements-par-juge.json"),
@@ -787,6 +819,17 @@ def _correlation_longueur(classement, par_ident):
     rl, rt = rangs(longueurs), rangs(totaux)
     n = len(rl)
     d2 = sum((a - b) ** 2 for a, b in zip(rl, rt))
+    return round(1 - 6 * d2 / (n * (n * n - 1)), 4)
+
+
+def _accord_de_rang(classement_a, classement_b):
+    """Corrélation de rang (Spearman) entre deux classements sur les mêmes fiches ; None si < 3."""
+    rang_b = {l["identifiant_auteur"]: l["rang"] for l in classement_b}
+    paires = [(l["rang"], rang_b[l["identifiant_auteur"]]) for l in classement_a if l["identifiant_auteur"] in rang_b]
+    n = len(paires)
+    if n < 3:
+        return None
+    d2 = sum((a - b) ** 2 for a, b in paires)
     return round(1 - 6 * d2 / (n * (n * n - 1)), 4)
 
 

@@ -315,3 +315,55 @@ def __getattr__(nom):
         from . import simulation
         return getattr(simulation, nom)
     raise AttributeError(nom)
+
+
+class AdaptateurJugeExterne(Adaptateur):
+    """v33 (décision de Lazar, 28 octobre 17:58 heure de Paris : juge d'une autre lignée en **bras rapporté**, extension
+    de N-053 point 4 au tournoi d'idéation). Le noyau écrit la consigne (déjà anonymisée) ; une **commande fournie par
+    l'opérateur** (session-depot : son appel à Gemini Argon, par exemple) la reçoit sur l'entrée standard et imprime une
+    ligne JSON `{"texte": "...", "cout_usd": 0.0}` ; le noyau lit le texte, le caviarde, compte le coût déclaré. Aucune clé
+    ne transite par le noyau ; la commande est responsable de sa propre clé et de son propre plafond. Rôle `juge_ideation`
+    seulement ; modèle libre (hors de la liste Claude), consigné au manifeste comme **bras rapporté** : ses notes sont
+    rapportées à part, jamais agrégées avec celles des juges Claude (voir `ideation.executer_ideation`)."""
+
+    nom = "juge-externe"
+
+    def __init__(self, commande, environnement=None, delai_s=900):
+        if not isinstance(commande, (list, tuple)) or not commande or not all(isinstance(c, str) for c in commande):
+            raise ValueError("commande du juge externe : liste non vide de chaînes")
+        self.commande = list(commande)
+        self._environnement = environnement
+        self.delai_s = delai_s
+
+    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+        import json
+        import subprocess
+        if role != "juge_ideation":
+            raise ValueError(f"le juge externe ne joue que juge_ideation, pas {role!r}")
+        environnement = os.environ if self._environnement is None else self._environnement
+        presents = noms_de_cle_presents(environnement)
+        if presents:
+            raise CleDansEnvironnement("variables de clé présentes dans l'environnement de l'orchestrateur ("
+                                       + ", ".join(presents) + ") : la commande du juge externe tient sa clé elle-même")
+        try:
+            r = subprocess.run(self.commande, input=consigne.encode("utf-8"), capture_output=True, timeout=self.delai_s,
+                               cwd=dossier)
+        except (OSError, subprocess.SubprocessError) as erreur:
+            return Resultat("", [], 0.0, "erreur", type(erreur).__name__ + " : " + caviarder(str(erreur))[0][:300])
+        if r.returncode != 0:
+            return Resultat("", [], 0.0, "erreur", "commande du juge externe : code " + str(r.returncode) + " : "
+                            + caviarder(r.stderr.decode("utf-8", "replace"))[0][:300])
+        lignes = [l for l in r.stdout.decode("utf-8", "replace").splitlines() if l.strip()]
+        try:
+            objet = json.loads(lignes[-1]) if lignes else None
+        except ValueError:
+            objet = None
+        if not isinstance(objet, dict) or not isinstance(objet.get("texte"), str):
+            return Resultat("", [], 0.0, "erreur", "commande du juge externe : dernière ligne non JSON {texte, cout_usd}")
+        cout = objet.get("cout_usd", 0.0)
+        if isinstance(cout, bool) or not isinstance(cout, (int, float)) or cout < 0:
+            return Resultat("", [], 0.0, "erreur", "commande du juge externe : cout_usd manquant ou négatif")
+        if budget_usd + 1e-12 < float(cout):
+            return Resultat(caviarder(objet["texte"])[0], [], float(cout), "budget_depasse",
+                            "coût déclaré au-dessus du plafond de session")
+        return Resultat(caviarder(objet["texte"])[0], [], float(cout), "ok")
