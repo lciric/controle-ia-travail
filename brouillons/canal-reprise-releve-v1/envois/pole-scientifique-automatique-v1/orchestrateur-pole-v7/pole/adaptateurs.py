@@ -437,9 +437,9 @@ class AdaptateurCommandeExterne(Adaptateur):
         try:
             p = subprocess.Popen(self.commande, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                  cwd=dossier, env=env, start_new_session=True)
-        except OSError as erreur:
-            return Resultat("", [], plafond, "erreur", type(erreur).__name__ + " : " + caviarder(str(erreur))[0][:300],
-                            cout_inconnu=True)
+        except OSError as erreur:  # v37 (CL36-01) : rien n'a été lancé, rien n'a été dépensé
+            return Resultat("", [], 0.0, "erreur", "commande externe non lancée (" + type(erreur).__name__ + " : "
+                            + caviarder(str(erreur))[0][:300] + ")")
         try:
             sortie, err = p.communicate(input=consigne.encode("utf-8"), timeout=self.delai_s)
             delai_depasse = False

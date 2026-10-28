@@ -549,14 +549,22 @@ class TestCommandeExterne(CasAvecDossier):
         self.assertEqual((r.statut, r.cout_declare_usd, r.cout_inconnu), ("erreur", 0.7, True))
         self.assertIn("délai", r.erreur)
         pid = int(open(pid_f).read())
-        for _ in range(20):
+
+        def vivant():
             try:
-                os.kill(pid, 0)
-                time.sleep(0.1)
-            except ProcessLookupError:
+                with open(f"/proc/{pid}/status") as f:
+                    return not any(l.startswith("State:") and "Z" in l for l in f)
+            except OSError:
+                return False
+        for _ in range(30):
+            if not vivant():
                 break
+            time.sleep(0.1)
         else:
-            os.kill(pid, 9)
+            try:
+                os.kill(pid, 9)
+            except ProcessLookupError:
+                pass
             self.fail("le petit-enfant a survécu au délai")
 
     def test_environnement_minimal_de_la_commande(self):
@@ -767,15 +775,22 @@ class TestCommandeExterne(CasAvecDossier):
 
     def test_bras_simule_sur_course_reelle_refuse(self):
         """CL35-04 : course marquée réelle (adaptateur du kit, modèles permis) → un adaptateur qui n'est pas une commande
-        externe est refusé avant tout écrit ; CL35-03 : la commande est consignée."""
+        externe est refusé avant tout écrit ; CL35-03 : la commande est consignée ; CL36-03 : Argon obligatoire."""
+        from pole.adaptateurs import AdaptateurCommandeExterne
         c = self.cours()
         fiches = {"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]}
         ad = FauxAdaptateur(fiches, notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
         ad.nom = "claude-sdk"
         budgets = dict(c.budgets())
         budgets[("juge_ideation", "autre-lignee-x")] = 1.0
-        c.lancer(ad, "cr", budgets=budgets, juges_externes=[("argon", "autre-lignee-x")], budget_externe_usd=2.0,
-                 moteur="claude-sdk")
+        budgets[("proposeur_ideation", "gemini-argon")] = 1.0
+        ext = AdaptateurCommandeExterne(self.commande(self.SCRIPT_OK), environnement={})
+        with self.assertRaises(idn.CourseInterrompue):  # CL36-03 : course réelle sans Argon proposeur ET juge → refus
+            c.lancer(ad, "cr0", budgets=budgets, juges_externes=[("argon", "autre-lignee-x")], budget_externe_usd=2.0,
+                     moteur="claude-sdk")
+        self.assertEqual(ad.appels, [])
+        c.lancer(ad, "cr", budgets=budgets, juges_externes=[("argon", "autre-lignee-x")], budget_externe_usd=4.0,
+                 proposeurs_externes=[("argon-p", "gemini-argon", ext)], moteur="claude-sdk")
         sortie = os.path.join(self.tmp, "cr")
         att = self.attester(os.path.join(self.tmp, "att-r.json"), sortie)
         simule = FauxAdaptateur({}, notes_par_juge={"argon": c.notes_temoins_ok})
@@ -789,6 +804,67 @@ class TestCommandeExterne(CasAvecDossier):
             budgets[("proposeur_ideation", "gemini-argon")] = 1.0
             c.lancer(ad, "cr2", budgets=budgets,
                      proposeurs_externes=[("argon", "gemini-argon", simule)], budget_externe_usd=2.0, moteur="claude-sdk")
+
+
+    def test_bras_non_joue_relancable(self):
+        """CL36-01 : commande introuvable ou clé dans l'environnement → rien envoyé, rien dépensé : manifeste « non joué »
+        numéroté, bras relançable ; puis le bras se joue."""
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        c = self.cours()
+        fiches = {"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]}
+        ad = FauxAdaptateur(fiches, notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
+        budgets = dict(c.budgets())
+        budgets[("juge_ideation", "autre-lignee-x")] = 1.0
+        c.lancer(ad, "cn", budgets=budgets, juges_externes=[("argon", "autre-lignee-x")], budget_externe_usd=2.0)
+        sortie = os.path.join(self.tmp, "cn")
+        att = self.attester(os.path.join(self.tmp, "att-n.json"), sortie)
+        introuvable = AdaptateurCommandeExterne(["/chemin/qui/n/existe/pas"], environnement={})
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", introuvable)])
+        self.assertIn("non joué", str(cm.exception))
+        self.assertTrue(os.path.exists(os.path.join(sortie, "manifeste-bras-non-joue-1.json.sha256")))
+        self.assertFalse(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))
+        cle_env = AdaptateurCommandeExterne(self.commande(self.SCRIPT_OK), environnement={"ANTHROPIC_API_KEY": "x"})
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", cle_env)])
+        self.assertTrue(os.path.exists(os.path.join(sortie, "manifeste-bras-non-joue-2.json")))
+        bon = AdaptateurCommandeExterne(self.commande(self.SCRIPT_OK), environnement={})
+        apres = idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                          juges_externes=[("argon", "autre-lignee-x", bon)])
+        self.assertFalse(apres["sans_bras"])
+        self.assertTrue(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))
+
+
+class TestLanceurV37(CasAvecDossier):
+    """CL35-07, 08, 09, CL36-03 : le lanceur refuse avec un code, jamais une trace."""
+
+    def lanceur(self):
+        import importlib.util
+        chemin = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "demonstrations", "ideation_v1.py")
+        spec = importlib.util.spec_from_file_location("ideation_v1_lanceur", chemin)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_options_refusees(self):
+        import contextlib
+        import io
+        lanceur = self.lanceur()
+        base = [os.path.join(self.tmp, "s"), "--liste-blanche", "l", "--question", "q", "--temoins", "t"]
+        for options in (["--commande-externe", "x"], ["--delai-session-s", "0"], ["--attestation-lecture-humaine", "a"],
+                        ["--nombre", "13"], ["--delai-commande-s", "-1"]):
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as cm:
+                    lanceur.principal(base + options)
+            self.assertEqual(cm.exception.code, 2, options)
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = lanceur.principal(base + ["--moteur", "claude-sdk"])  # CL35-08 : non armé → 2, pas une trace
+        self.assertEqual(code, 2)
+        self.assertIn("MoteurNonArme", err.getvalue())
+        self.assertEqual(lanceur.BUDGETS_PAR_DEFAUT[("proposeur_ideation", "claude-fable-5-1")], 10.0)  # CL36-04
 
 
 class TestReglagesV35(CasAvecDossier):
@@ -883,6 +959,23 @@ class TestCourseV35(CasAvecDossier):
         c.lancer(ad, "c-juste", budget_total_usd=2.5)  # sans contrôle : 1,5 + 1 = 2,5, passe
         with self.assertRaises(idn.CourseInterrompue):  # 0,07 + 1,5 + 1 > 2,5 : le contrôle compté arrête avant le dernier juge
             c.lancer(ad, "c-plafond", cout_deja_engage_usd=0.07, budget_total_usd=2.5)
+
+    def test_taille_max_pieces_bornee(self):
+        """v37 : taille des pièces réglable, plafond dur, consignée au manifeste ; hors borne → refus avant tout appel."""
+        c = self.cours()
+        ad = FauxAdaptateur({"opus": [fiche_brute()], "fable": [fiche_brute()]})
+        for t in (0, idn.TAILLE_MAX_PIECES_ABSOLUE + 1, True, 10.0):
+            with self.assertRaises(idn.CourseInterrompue):
+                c.lancer(ad, f"t-{t}", taille_max_pieces=t)
+        self.assertEqual(ad.appels, [])
+        with self.assertRaises(idn.PieceInterdite):  # pièces plus longues que le réglage
+            c.lancer(ad, "t-court", taille_max_pieces=5)
+        res = c.lancer(ad, "t-ok", taille_max_pieces=650_000)
+        with open(os.path.join(self.tmp, "t-ok", "manifeste-depart.json")) as f:
+            m = json.load(f)["reglages"]
+        self.assertEqual(m["taille_max_pieces"], 650_000)
+        self.assertGreater(m["taille_pieces_servies"]["proposeurs"], 0)
+        self.assertIsNotNone(res["classement"])
 
     def test_manifeste_de_fin_sur_toute_exception(self):
         """CL34-09 : une exception qui n'est pas CourseInterrompue écrit quand même le manifeste de fin, puis remonte."""

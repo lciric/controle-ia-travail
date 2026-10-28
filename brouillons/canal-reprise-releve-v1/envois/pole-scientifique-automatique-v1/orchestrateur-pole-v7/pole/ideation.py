@@ -1,4 +1,4 @@
-"""Course d'idéation (v7, version 36) : la prise « idéation » de l'organisme — proposer et classer seulement.
+"""Course d'idéation (v7, version 37) : la prise « idéation » de l'organisme — proposer et classer seulement.
 
 Demande de Lazar du 28 octobre 2026 (15:27, heure de Paris) : « on a besoin de l'organisme pour qu'il réfléchisse et
 propose lui-même des questions bien affûtées ». Pas de banque ni d'épreuve : des **proposeurs** (vrais agents, Opus 5.5 et
@@ -76,6 +76,8 @@ PORTE_ELIGIBILITE = 2
 MAX_FICHES_ABSOLU = 12
 LONGUEUR_MAX_CHAMP = 3000
 MAX_TOURS_IDEATION = 2
+TAILLE_MAX_PIECES = 400_000  # caractères servis par lot de pièces (défaut)
+TAILLE_MAX_PIECES_ABSOLUE = 800_000  # v37 : plafond dur, quel que soit le réglage (≈ 200 000 jetons)
 ETIQUETTE = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
 AUTEUR_TEMOIN = "temoin"
 # Fragments interdits, comparés après normalisation (minuscules, accents retirés, `_` et espaces → `-`).
@@ -203,7 +205,7 @@ def normaliser_typographie(texte):
     return re.sub(r"[ \t]+", " ", texte)
 
 
-def lire_pieces(chemins, liste_blanche, taille_max=400_000):
+def lire_pieces(chemins, liste_blanche, taille_max=TAILLE_MAX_PIECES):
     """Lit les pièces (texte), caviarde, refuse un total au-dessus de `taille_max` caractères ; rend [(nom, texte, sha256)]."""
     textes, total = [], 0
     for c in verifier_pieces(chemins, liste_blanche):
@@ -679,7 +681,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                       seconde_passe=False, pieces_juge=(), horodatage=None, moteur="simule", lire_etat_relais=None,
                       etat_bac_a_sable=None, url_relais=None, versions=None, juges_externes=(), proposeurs_externes=(),
                       budget_externe_usd=0.0, attestation_lecture_humaine=None, attestation_materiau=None,
-                      cout_deja_engage_usd=0.0, lectures_interdites=(), commande_externe=None, delai_session_s=None):
+                      cout_deja_engage_usd=0.0, lectures_interdites=(), commande_externe=None, delai_session_s=None,
+                      taille_max_pieces=TAILLE_MAX_PIECES, cout_externe_deja_engage_usd=0.0):
     """Course d'idéation v36.
 
     `budgets` : {(role, modele): plafond par session en dollars} ; `budget_total_usd` : plafond des sessions Claude (appels de
@@ -707,12 +710,19 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     if attestation_lecture_humaine:
         raise CourseInterrompue("une attestation de lecture humaine ne se donne pas à la course : le bras se joue seulement "
                                 "différé, par executer_bras_differe (CL34-01, N-053 point 5)")
-    for nom_b, b in (("cout_deja_engage_usd", cout_deja_engage_usd), ("budget_externe_usd", budget_externe_usd)):
+    if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
+            or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
+        raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r} (v37)")
+    for nom_b, b in (("cout_deja_engage_usd", cout_deja_engage_usd), ("budget_externe_usd", budget_externe_usd),
+                     ("cout_externe_deja_engage_usd", cout_externe_deja_engage_usd)):
         if isinstance(b, bool) or not isinstance(b, (int, float)) or b < 0:
             raise CourseInterrompue(f"{nom_b} : nombre ≥ 0")
     _verifier_adaptateur_principal(adaptateur, moteur, proposeurs, juges)
     juges_externes = [(e, m) for e, m, *_ in juges_externes]
     proposeurs_externes = list(proposeurs_externes)
+    if moteur == "claude-sdk" and not (juges_externes and proposeurs_externes):  # v37 (CL36-03)
+        raise CourseInterrompue("course réelle : un juge externe ET un proposeur externe (Argon) sont obligatoires — "
+                                "décision de Lazar du 28 octobre (poids égal, égalité) ; aucun classement à deux juges")
     for e, m, a in proposeurs_externes:
         if a is None or (moteur == "claude-sdk" and getattr(a, "nom", None) != "commande-externe"):
             raise CourseInterrompue(f"proposeur externe {e!r} : avec le moteur réel, seule une commande externe le joue "
@@ -722,9 +732,9 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     reel = moteur == "claude-sdk"
     liste = charger_liste_blanche(liste_blanche)
     question_lue = lire_pieces([question], liste)[0]
-    pieces_lues = lire_pieces(pieces, liste)
-    materiau_lu = lire_pieces(materiau, liste) if materiau else []
-    pieces_juge_lues = lire_pieces(pieces_juge, liste) if pieces_juge else []
+    pieces_lues = lire_pieces(pieces, liste, taille_max_pieces)
+    materiau_lu = lire_pieces(materiau, liste, taille_max_pieces) if materiau else []
+    pieces_juge_lues = lire_pieces(pieces_juge, liste, taille_max_pieces) if pieces_juge else []
     temoins_lus = charger_temoins(temoins, liste) if temoins else []
     tous_proposeurs = list(proposeurs) + [(e, m) for e, m, _ in proposeurs_externes]
     tous_juges = list(juges) + juges_externes
@@ -745,8 +755,9 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                 raise CourseInterrompue(f"attestation_materiau : empreinte absente ou différente pour {nom!r}")
     modele_par_auteur = dict(tous_proposeurs)
     modele_par_juge = dict(juges)
-    journal = {"appels": [], "cout_total_usd": float(cout_deja_engage_usd), "cout_externe_usd": 0.0,
-               "cout_fictif": not reel, "arret": None, "cout_appels_de_controle_usd": float(cout_deja_engage_usd)}
+    journal = {"appels": [], "cout_total_usd": float(cout_deja_engage_usd), "cout_externe_usd": float(cout_externe_deja_engage_usd),
+               "cout_fictif": not reel, "arret": None, "cout_appels_de_controle_usd": float(cout_deja_engage_usd),
+               "cout_appels_de_controle_externes_usd": float(cout_externe_deja_engage_usd)}  # CL36-02
     externes_adapt = {e: a for e, _, a in proposeurs_externes}
 
     from .adaptateurs import reglages_kit_par_role
@@ -771,7 +782,10 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         attestation_materiau=({"fichier": os.path.basename(attestation_materiau), "sha256": sha256_fichier(attestation_materiau)}
                               if attestation_mat else None),
         cout_deja_engage_usd=float(cout_deja_engage_usd), budget_externe_usd=float(budget_externe_usd),
-        reglages_kit=reglages_kit_par_role(), delai_session_s=delai_session_s,
+        cout_externe_deja_engage_usd=float(cout_externe_deja_engage_usd),
+        reglages_kit=reglages_kit_par_role(), delai_session_s=delai_session_s, taille_max_pieces=taille_max_pieces,
+        taille_pieces_servies={"proposeurs": sum(len(t) for _, t, _ in pieces_lues), "juges": sum(len(t) for _, t, _ in pieces_juge_lues),
+                               "materiau": sum(len(t) for _, t, _ in materiau_lu)},
         juges_meme_modele_qu_un_proposeur=sorted({m for _, m in tous_juges} & set(modele_par_auteur.values())),
         nombre_par_proposeur=nombre_par_proposeur, max_tours=max_tours, seconde_passe=seconde_passe,
         porte_eligibilite=PORTE_ELIGIBILITE, criteres=list(CRITERES), note_max=NOTE_MAX,
@@ -1047,6 +1061,9 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     if os.path.exists(chemin_manifeste):
         raise CourseInterrompue("le bras a déjà été joué pour cette course (manifeste-bras-rapporte.json existe) : jamais "
                                 "rejoué après dépense (CL34-04)")
+    # v37 (CL36-01) : un échec AVANT tout envoi et toute dépense (commande introuvable, clé dans l'environnement, contrôle
+    # refusé sans coût) écrit un manifeste « non joué » numéroté et laisse le bras relançable.
+    tentatives_non_jouees = sorted(f for f in os.listdir(sortie) if re.match(r"manifeste-bras-non-joue-\d+\.json$", f))
     attestation = _lire_attestation(attestation_lecture_humaine,
                                     ("lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256"))
     if attestation["fiches_validees_sha256"] != sha256_fichier(os.path.join(sortie, "fiches-validees.json")):
@@ -1143,8 +1160,9 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
                 raise CourseInterrompue(journal["arret"])
             r = adaptateur.lancer("juge_ideation", consignes[etiquette], d, plafond, MAX_TOURS_IDEATION, modele=modele)
             texte = caviarder(r.texte_final or "")[0]
-            ecrire_scelle(os.path.join(dossier_traces(d), "reponse.md"), texte)
             cout = float(r.cout_declare_usd or 0.0)
+            if r.statut == "ok" or cout > 0 or texte:  # CL36-01 : une réponse n'est consignée que si quelque chose a eu lieu
+                ecrire_scelle(os.path.join(dossier_traces(d), "reponse.md"), texte)
             journal["cout_total_usd"] += cout
             journal["appels"].append({"role": "juge_ideation", "etiquette": etiquette, "modele": modele, "statut": r.statut,
                                       "cout_declare_usd": r.cout_declare_usd, "cout_compte_usd": cout,
@@ -1186,6 +1204,16 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     except BaseException as e:
         if not journal["arret"]:
             journal["arret"] = type(e).__name__ + " : " + caviarder(str(e))[0][:500]
+        rien_envoye = (journal["cout_total_usd"] <= 0 and not notes_externes
+                       and not any(os.path.exists(os.path.join(dossier_traces(os.path.join(sortie, "juges-bras-rapporte", e2)),
+                                                               "reponse.md")) for e2, _, _ in juges_externes))
+        if rien_envoye and not os.path.exists(chemin_manifeste):  # CL36-01 : le bras reste relançable
+            n = len(tentatives_non_jouees) + 1
+            ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-non-joue-{n}.json"),
+                               manifeste(phase="bras-non-joue", horodatage=horodatage, journal=journal, erreur=journal["arret"],
+                                         relancable=True))
+            raise CourseInterrompue("bras non joué (rien envoyé, rien dépensé) : " + journal["arret"]
+                                    + " ; relance permise") from e
         if not os.path.exists(chemin_manifeste):
             if isinstance(e, CourseInterrompue):
                 try:

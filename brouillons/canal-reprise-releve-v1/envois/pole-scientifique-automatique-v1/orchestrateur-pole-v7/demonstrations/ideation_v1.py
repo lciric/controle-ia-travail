@@ -1,4 +1,4 @@
-"""Course d'idéation de l'organisme (v7, version 36) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 37) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
@@ -17,9 +17,10 @@ Usage (course) :
       [--juge juge-fable=claude-fable-5-1] [--juge juge-opus=claude-opus-5-5]
       [--proposeur-externe argon=gemini-argon --commande-externe "…" [--variable-transmise NOM] …]
       [--juge-externe argon=gemini-argon] [--attestation-materiau ATT.json]
-      [--budget proposeur_ideation|claude-fable-5-1=5] … [--budget-total-usd 17] [--budget-externe-usd 4]
+      [--budget proposeur_ideation|claude-fable-5-1=10] … [--budget-total-usd 40] [--budget-externe-usd 9]
       [--nombre 8] [--graine 20261028] [--moteur simule|claude-sdk] [--url-relais URL] [--confirmer-moteur-reel]
       [--horodatage "date -u"] [--racine-depot CHEMIN] [--delai-session-s 1800] [--delai-commande-s 900]
+      [--taille-max-pieces 650000]                                                        # v37 : corpus primaire servi
 
 v36 (décisions de Lazar du 28 octobre, 21:05 et 21:20 UTC ; messages n° 117 à 119 de session-depot) :
 - **Argon propose à égalité** (`--proposeur-externe`, joué dans la course par `--commande-externe`, qui reçoit la question
@@ -65,8 +66,11 @@ from pole import ideation as idn  # noqa: E402
 from pole.adaptateurs import Resultat  # noqa: E402
 from pole.outils import graine_derivee, horodatage  # noqa: E402
 
-BUDGETS_PAR_DEFAUT = {("proposeur_ideation", "claude-opus-5-5"): 2.0, ("proposeur_ideation", "claude-fable-5-1"): 5.0,
-                      ("juge_ideation", "claude-opus-5-5"): 1.5, ("juge_ideation", "claude-fable-5-1"): 3.0}
+# v37 (CL36-04) : défauts = devis en vigueur (v7 bis : corpus primaire servi) ; tout est réglable par --budget
+BUDGETS_PAR_DEFAUT = {("proposeur_ideation", "claude-opus-5-5"): 5.0, ("proposeur_ideation", "claude-fable-5-1"): 10.0,
+                      ("juge_ideation", "claude-opus-5-5"): 4.0, ("juge_ideation", "claude-fable-5-1"): 7.0}
+BUDGET_EXTERNE_PROPOSEUR = 2.5
+BUDGET_EXTERNE_JUGE = 3.5
 
 
 class AdaptateurIdeationSimule:
@@ -209,13 +213,15 @@ def principal(argv=None):
     a.add_argument("--budget", action="append", default=[], help="role|modele=plafond par session en dollars (répétable)")
     a.add_argument("--nombre", type=int, default=8, help=f"fiches au plus par proposeur et par passe (1 à {idn.MAX_FICHES_ABSOLU})")
     a.add_argument("--max-tours", type=int, default=idn.MAX_TOURS_IDEATION)
-    a.add_argument("--budget-total-usd", type=float, default=17.0, help="plafond total côté Claude, contrôles compris")
-    a.add_argument("--budget-externe-usd", type=float, default=4.0,
-                   help="plafond total des sessions externes (Argon : deux passes à 1, un jugement à 1,5, contrôle)")
+    a.add_argument("--budget-total-usd", type=float, default=40.0, help="plafond total côté Claude, contrôles compris (devis v7 bis)")
+    a.add_argument("--budget-externe-usd", type=float, default=9.0,
+                   help="plafond total des sessions externes (Argon : deux passes à 2,5, un jugement à 3,5, contrôles ; devis v7 bis)")
     a.add_argument("--budget-controle-usd", type=float, default=0.2)
     a.add_argument("--racine-depot", help="racine du dépôt (lecture interdite aux agents) ; défaut : git rev-parse")
     a.add_argument("--delai-session-s", type=float, default=None, help="borne de temps par session réelle (défaut 1800)")
     a.add_argument("--delai-commande-s", type=float, default=900.0, help="borne de temps de la commande externe")
+    a.add_argument("--taille-max-pieces", type=int, default=idn.TAILLE_MAX_PIECES,
+                   help=f"caractères servis au plus par lot de pièces (v37 ; plafond dur {idn.TAILLE_MAX_PIECES_ABSOLUE})")
     a.add_argument("--graine", type=int, default=20261028)
     a.add_argument("--moteur", choices=("simule", "claude-sdk"), default="simule")
     a.add_argument("--url-relais")
@@ -265,9 +271,9 @@ def _principal(args):
     prop_ext = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.proposeur_externe)]
     budgets = dict(BUDGETS_PAR_DEFAUT)
     for _, m in juges_ext:
-        budgets.setdefault(("juge_ideation", m), 1.5)
+        budgets.setdefault(("juge_ideation", m), BUDGET_EXTERNE_JUGE)
     for _, m in prop_ext:
-        budgets.setdefault(("proposeur_ideation", m), 1.0)
+        budgets.setdefault(("proposeur_ideation", m), BUDGET_EXTERNE_PROPOSEUR)
     for b in args.budget:
         cle, valeur = b.split("=", 1)
         role, modele = cle.split("|", 1)
@@ -350,10 +356,19 @@ def _principal(args):
         return 0 if lisible else 4
     # CL31-01 : appel de contrôle par modèle Claude, avant tout, dans `SORTIE-controle` (interdit en lecture aux agents) ;
     # son coût est compté dans le plafond total (CL34-07). Le juge externe fait le sien sur le chemin différé.
+    if args.moteur == "claude-sdk" and not (prop_ext and juges_ext):  # CL36-03
+        raise idn.CourseInterrompue("course réelle : --proposeur-externe et --juge-externe (Argon) sont obligatoires "
+                                    "(décision de Lazar : poids égal, égalité)")
     modeles = sorted({m for _, m in proposeurs} | {m for _, m in juges})
     controle = idn.appel_de_controle(adaptateur, modeles, sortie_controle, args.budget_controle_usd, lire_relais,
                                      exiger_cout=(args.moteur == "claude-sdk"))
     cout_controle = sum(float(c.get("cout_declare_usd") or 0.0) for c in controle.values())
+    cout_controle_externe = 0.0
+    for e, m in prop_ext:  # CL36-02 : le proposeur externe est contrôlé AVANT la passe 1 des proposeurs Claude
+        lecture_ext = idn.appel_de_controle(externe, [m], sortie_controle + "-externe-" + e, args.budget_controle_usd, None,
+                                            exiger_cout=bool(args.commande_externe))[m]
+        controle[f"externe:{e}"] = lecture_ext
+        cout_controle_externe += float(lecture_ext.get("cout_declare_usd") or 0.0)
     res = idn.executer_ideation(adaptateur, sortie, liste_blanche=args.liste_blanche, question=args.question,
                                 pieces=args.piece, proposeurs=proposeurs, juges=juges, temoins=args.temoins,
                                 graine=args.graine, budget_total_usd=args.budget_total_usd, budgets=budgets,
@@ -366,7 +381,8 @@ def _principal(args):
                                 budget_externe_usd=args.budget_externe_usd if (prop_ext or juges_ext) else 0.0,
                                 attestation_materiau=args.attestation_materiau, cout_deja_engage_usd=cout_controle,
                                 lectures_interdites=interdits, commande_externe=commande_externe,
-                                delai_session_s=delai_session)
+                                delai_session_s=delai_session, taille_max_pieces=args.taille_max_pieces,
+                                cout_externe_deja_engage_usd=cout_controle_externe)
     bilan = {"fiches_validees": len(res["fiches"]), "refusees": len(res["refus"]), "quarantaine": len(res["quarantaine"]),
              "quarantaine_par_proposeur": res["lecture"]["quarantaine_par_proposeur"],
              "temoins_ok": res["lecture"]["temoins"]["temoins_ok"],
