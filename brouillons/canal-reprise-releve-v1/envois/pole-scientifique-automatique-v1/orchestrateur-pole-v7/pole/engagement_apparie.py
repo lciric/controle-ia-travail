@@ -1,4 +1,4 @@
-"""Engagement « apparié » (v7, versions 23, 25 et 26) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
+"""Engagement « apparié » (v7, versions 23, 25, 26 et 27) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
 et scellée avant toute issue d'épreuve, puis jugée sur la banque de scores (conception v2 § 7 point 1 ; v3 à v6).
 
 `construire(monde, ...)` fixe, **avant** toute lecture de l'épreuve : les contrastes nommés (coefficients vérifiés par la
@@ -71,15 +71,23 @@ def construire(monde, contrastes, tau, alpha_c=0.05, m_c=1, strate=None, partie=
     return engagement
 
 
-def evaluer(monde, engagement):
+def evaluer(monde, engagement, unites=None, etiquette_ordre=None):
+    """Version 27 : `unites` restreint la lecture à un sous-ensemble d'unités de la partie (une **tranche** : des unités
+    fraîches par génération, D-S25 bis (5) ; la course refuse toute relecture) ; `etiquette_ordre` (défaut : l'empreinte
+    de l'engagement) entre dans la graine de l'ordre secret — une tranche différente lit dans un ordre différent."""
     if engagement.get("type") != "apparie" or engagement.get("empreinte") != empreinte_objet(
             {k: v for k, v in engagement.items() if k != "empreinte"}):
         raise EngagementInvalide("engagement altéré ou d'un autre type")
     if engagement["monde"] != monde.empreinte:
         raise EngagementInvalide("engagement scellé sur une autre banque")
     cle = engagement["cle_heritage"]
-    parts = monde.parts(cle["seuils"], engagement["partie"], cle["strate"] or None)
-    ordre = monde.ordre_secret(parts, engagement["empreinte"])
+    if unites is not None:
+        absentes = set(unites) - set(monde.unites(engagement["partie"]))
+        if absentes:
+            raise EngagementInvalide(f"tranche : {len(absentes)} unité(s) hors de la partie {engagement['partie']!r} : "
+                                     f"{sorted(map(str, absentes))[:3]}")
+    parts = monde.parts(cle["seuils"], engagement["partie"], cle["strate"] or None, unites)
+    ordre = monde.ordre_secret(parts, etiquette_ordre or engagement["empreinte"])
     valeurs = {nom: monde.contrastes(parts, c["coefficients"], c["constante"], ordre, cle["m_max"])
                for nom, c in cle["contrastes"].items()}
     if len({len(v) for v in valeurs.values()}) != 1:
@@ -98,3 +106,37 @@ def evaluer(monde, engagement):
     r["empreinte_unites"] = empreinte_objet({"banque": monde.empreinte, "partie": engagement["partie"],
                                              "unites": sorted(ordre)})
     return r
+
+
+class Lignees:
+    """Version 27 — la **mémoire des lignées de clé** (D-S25 bis (5), « à coder » dans la conception v9) : une affirmation
+    (clé de l'héritage) n'est portée que par **une** fiche ; une relance sous un autre nom (même clé, autre fiche) est
+    refusée — la fiche d'origine garde son budget d'entrée et ses unités lues. Le **journal des parties** (K8-2 : « le
+    monde journalise toute partie calculée ») vit ici aussi : `journaliser` est appelé par le monde (ou l'orchestrateur,
+    à chaque `evaluer`) avant toute lecture ; `verifier_sans_partie` confronte une déclaration « sans partie » au journal
+    et refuse la déclaration mensongère (0,40 puis 0,98 de fausse promotion sinon, contre-lecture de la v8)."""
+
+    def __init__(self):
+        self.proprietaire = {}
+        self.journal = []
+
+    def entrer(self, fiche, engagement):
+        cle = engagement["empreinte_cle"]
+        if cle in self.proprietaire and self.proprietaire[cle] != fiche:
+            raise EngagementInvalide(f"fiche {fiche!r} : même clé de l'héritage que {self.proprietaire[cle]!r} — relance "
+                                     f"sous un autre nom refusée (D-S25 bis (5) : une affirmation, une fiche, un budget)")
+        self.proprietaire[cle] = fiche
+
+    def journaliser(self, generation, fiche, resultat):
+        self.journal.append({"generation": generation, "fiche": fiche, "empreinte_unites": resultat["empreinte_unites"],
+                             "unites": len(resultat["identifiants_unites"])})
+
+    def parties_calculees(self, generation):
+        return {j["fiche"] for j in self.journal if j["generation"] == generation}
+
+    def verifier_sans_partie(self, generation, sans_partie):
+        calculees = self.parties_calculees(generation)
+        menteuses = sorted(str(f) for f in (sans_partie or {}) if f in calculees)
+        if menteuses:
+            raise EngagementInvalide(f"génération {generation} : déclaration « sans partie » contredite par le journal "
+                                     f"des parties pour {menteuses[:5]} (K8-2 : toute partie calculée est ajoutée)")
