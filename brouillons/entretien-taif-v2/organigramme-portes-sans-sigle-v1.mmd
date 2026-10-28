@@ -1,0 +1,33 @@
+flowchart TD
+  A["<b>Phase zéro — construire et valider les instruments</b><br/>Entrées : programme, règles gelées, modèle de 8 milliards, devis accepté<br/>Sorties : harnais, environnement, organismes, sondes, bases boîte noire,<br/>carte des hypothèses, six mesures à coût nul, pôle scientifique automatique"]
+  B{"<b>Porte zéro — les instruments sont-ils prêts ?</b><br/>Huit preuves : harnais ✔ · organismes à dose-réponse · sondes au-dessus du plancher<br/>base boîte noire · agrégateurs ✔ · deux préenregistrements scellés et contre-lus · état de l'art vérifié"}
+  A --> B
+  B -- "oui : devis de la phase un" --> C
+  B -- "oui" --> E
+  B -- "non sur un critère" --> B2["Nœud de Lazar : options et défaut"]
+  C["<b>Phase un — le temps, un seul agent</b><br/>Entrées : organismes et jeux d'épisodes gelés, sondes (maximum ou attention),<br/>bases boîte noire, cascade de portes, sonde sur le dernier état, préenregistrement<br/>Sorties : quatre bras (texte / activations × par action / en séquence), lemme et théorème sur données réelles"]
+  C --> D{"<b>Porte un — lire les activations dans le temps<br/>vaut-il mieux que lire le texte ?</b><br/>Entrées : rappel à un pour cent de fausses alertes, intervalle à 95 %,<br/>épisodes appariés, résultats par mode (coût · contrôles · mode tenu à l'écart)<br/>Condition : bat la meilleure boîte noire ET la cascade ET le dernier état, dans chaque mode"}
+  D -- "oui" --> D1["Attaques adaptatives (contenu, poids, renforcement), marge asymétrique,<br/>validité de construit, transfert → <b>papier sur le temps</b>"]
+  D -- "non" --> D2["↺ Résultat négatif publié ; « que mesure vraiment la sonde ? » devient la ligne principale ;<br/>le théorème dit l'agrégateur qu'il aurait fallu"]
+  D -- "gain sur le seul mode « coût »" --> D3["↺ La revendication se restreint à ce mode"]
+  E["<b>Piste de l'instrument — la corruption du moniteur</b><br/>Entrées : loi de déférence, cinq familles d'attaque par le contenu, juges et sondes,<br/>verdicts lus en score continu, nul de régression vers la moyenne, préenregistrement<br/>Sorties : déférence des juges, sondes sous attaque, usurpation"]
+  E --> F{"<b>Porte de l'instrument — la sonde cède-t-elle<br/>à la persuasion sans qu'on touche aux poids ?</b><br/>Entrées : coefficient de déférence des sondes ; antériorité (29 voisins, aucune collision)"}
+  F -- "non, elle ne bouge pas" --> F1["Taxe de déplacement, contre-mesures, test d'acceptation → <b>papier sur l'instrument</b>"]
+  F -- "oui, elle bouge" --> F2["↺ Le papier devient : contamination de construit"]
+  F -- "pièce déjà couverte" --> F3["↺ Recentrage : taxe et test d'acceptation"]
+  D1 --> G["<b>Phases deux et trois — l'essaim</b><br/>Entrées : pipeline de code à plusieurs rôles, porte dérobée fragmentée, copies à poids partagés,<br/>agents diversifiés, base publiée de détection de collusion, second modèle<br/>Sorties : division du travail rouge, collusion contre coordination, statistiques entre agents"]
+  G --> H{"<b>Porte deux — voir la population vaut-il mieux<br/>que voir chaque agent ?</b><br/>Condition : effet de fragmentation répliqué ET population > agent seul"}
+  H -- "oui" --> H1["Statistique spatio-temporelle, diversification contre coordination,<br/>nombre × diversité des moniteurs, riposte → <b>papier sur l'essaim</b>"]
+  H -- "non" --> H2["↺ Recentrage sur le cas temporel, un seul agent"]
+  H1 --> I{"<b>Porte trois — peut-on ouvrir l'environnement<br/>de curation de données ?</b><br/>Entrée : un indicateur bon marché et fiable de la vérité différée"}
+  I -- "oui" --> I1["Environnement de curation ouvert"]
+  I -- "non" --> I2["↺ Abandonné sans coût"]
+  J["<b>Porte de gouvernance du travail adversarial — transversale</b><br/>Entrée : toute demande de pipeline opérationnel d'évasion<br/>Condition : une revue de sécurité externe a validé la procédure de sortie<br/>(taux agrégés et niveau de la méthode seulement)<br/>Sinon : conception, collisionneur, recherche défensive seulement<br/>Toujours : un refus de classifieur → une autre question plus étroite ;<br/>aucun score de moniteur dans l'entraînement d'un agent"]
+  classDef porte fill:#fff3cd,stroke:#8a6d00,color:#000;
+  classDef bascule fill:#f8d7da,stroke:#842029,color:#000;
+  classDef phase fill:#e7f1ff,stroke:#0b5394,color:#000;
+  classDef regle fill:#e8f5e9,stroke:#1b5e20,color:#000;
+  class B,D,F,H,I porte;
+  class B2,D2,D3,F2,F3,H2,I2 bascule;
+  class A,C,E,D1,F1,G,H1,I1 phase;
+  class J regle;
