@@ -1,0 +1,301 @@
+# comparaison v3 → v4 du script — 2026-10-26T08:34:24Z ; v3 4b943731f9490ae525a1cfb81744678b6483605aedb6aa20a7ace874ad256b99 ; v4 a2d09ef6706fdf7f2f2b8a081a7a8f35e173c33e73e6da2c32f10af98e05ea9a
+## diff -u (texte)
+--- /var/tmp/relecture-script-lecture-pilote4-v3/copie/lire_pilote4_v3.py	2026-10-26 07:53:31.976425641 +0100
++++ /var/tmp/relecture-script-lecture-pilote4-v3/copie-v4/lire_pilote4_v4.py	2026-10-26 09:17:23.028850034 +0100
+@@ -1,5 +1,11 @@
+ #!/usr/bin/env python3
+-"""Lecture contre le bruit des tâches du quatrième pilote — script v3 (bibliothèque standard seule).
++"""Lecture contre le bruit des tâches du quatrième pilote — script v4 (bibliothèque standard seule).
++
++v4 : écrite le 26 octobre 2026 par l'auteur des v1 à v3 (cette phrase à 08:17:23 UTC, lue sur `date -u` par la commande qui
++l'écrit), à la demande de conv-audit après la relecture de la v3 (`rapport-relecture-script-lecture-v3.md`, `fcd43854…`) :
++elle ne change de la v3 (`/var/tmp/lecture-pilote4-v3/`, `4b943731…`, intacte) que la garde de séparation entre courses
++(RSL3-01 : une écriture égale à celle d'un nombre du document du fichier, score du noyau compris, n'est plus cherchée) et
++le suffixe des noms (« -v4 ») ; calculs inchangés. Historique de la v3 :
+ 
+ Écrit le 26 octobre 2026 par l'auteur des v1 et v2 (cette ligne à 06:34:05 UTC, lue sur `date -u` par la commande qui
+ l'écrit), sur le brief v3 de conv-audit (`LISEZMOI-brief-script-v3.md`,
+@@ -21,18 +27,18 @@
+       `test_final`. N'imprime que ces comptes et l'issue.
+ 
+   test --course DOSSIER BANQUE_DIR SORTIE
+-      à la fin d'une course (M ou S) : écrit SORTIE/lecture-<dossier>-test-v3.{json,md} et leurs compagnons, la part
++      à la fin d'une course (M ou S) : écrit SORTIE/lecture-<dossier>-test-v4.{json,md} et leurs compagnons, la part
+       `test` seule. Ne lit dans l'archive que `juge/reponses-lues.json` (ou son repli) et `juge/score.json` ; jamais
+       `score-final.json` ; des réponses, n'utilise que celles des tâches de `test`.
+ 
+   test_final --course-m DOSSIER_M (--course-s DOSSIER_S | --sans-seconde-course) BANQUE_DIR SORTIE
+-      à la fin de la course S : pour CHACUNE des deux courses, SORTIE/lecture-<dossier>-test-final-holm-quatre-v3.{json,md}
++      à la fin de la course S : pour CHACUNE des deux courses, SORTIE/lecture-<dossier>-test-final-holm-quatre-v4.{json,md}
+       et leurs compagnons : une course par fichier, Holm sur les quatre tests (deux par course) ; chaque test (iii) y porte
+       sa valeur p brute, son verdict (« changement au-delà du bruit des tâches » si Holm le rejette au niveau 0,05, sinon
+       « dans le bruit des tâches ») et le sens du rejet, jamais la valeur p ajustée, le rang ni le seuil appliqué ; la
+       correction est dite dans un champ à part (« Holm, quatre tests, niveau 0,05 », le même dans les deux fichiers) ;
+       aucune valeur de l'autre course (garde vérifiée avant toute écriture). Avec --sans-seconde-course (la
+-      course S ne court pas ou ne finit pas saine) : SORTIE/lecture-<dossier M>-test-final-holm-deux-v3.{json,md}.
++      course S ne court pas ou ne finit pas saine) : SORTIE/lecture-<dossier M>-test-final-holm-deux-v4.{json,md}.
+       Ne lit dans l'archive que `juge/reponses-lues.json` (ou son repli) et `juge/score-final.json`.
+ 
+ Sortie standard : une seule ligne d'état, sans score ni proportion. Mode `test` : noms et empreintes, générations notées
+@@ -71,7 +77,7 @@
+ from fractions import Fraction
+ from math import comb, sqrt
+ 
+-VERSION = "lire_pilote4_v3"
++VERSION = "lire_pilote4_v4"
+ 
+ # Empreintes attendues de la banque v3 (brief v1, § Fichiers, point 6 ; LISEZMOI-v9 de la banque, § 5)
+ EMPREINTE_PUBLIQUE = "157a2b45a8d9fd88cc5dca2f483c2dc79457d781d44f9802b2c053f530c0011d"
+@@ -606,7 +612,7 @@
+ def holm(ps: list[Fraction | None], alpha: Fraction = ALPHA) -> tuple[list[Fraction | None], list[Fraction]]:
+     """Valeurs p ajustées de Holm (pas descendant) ; un test impossible (None) reste dans la famille, n'est jamais
+     rejeté et ne réduit pas le nombre de tests (RSL-06 : lecture du brief, gardée). Rend aussi le seuil de chaque test
+-    à son rang. Ni l'une ni l'autre n'est écrite dans une sortie de la v3 : seul le libellé en est tiré."""
++    à son rang. Ni l'une ni l'autre n'est écrite dans une sortie (v3, v4) : seul le verdict en est tiré."""
+     m = len(ps)
+     ordre = sorted(range(m), key=lambda i: (ps[i] if ps[i] is not None else Fraction(2), i))
+     ajustees: list[Fraction | None] = [None] * m
+@@ -886,7 +892,7 @@
+ def md_entete(doc: dict) -> list[str]:
+     c, part = doc["course"], doc["part"]
+     titre = "part `test`" if part == "test" else f"part `test_final`, {doc['regle_iii_nom']}"
+-    L = [f"# Lecture contre le bruit des tâches — {c['nom']} — {titre} — v3", ""]
++    L = [f"# Lecture contre le bruit des tâches — {c['nom']} — {titre} — v4", ""]
+     if part == "test_final":
+         L += ["**Part `test_final` : à ne pas afficher avant la fin du compteur de rondes de la boucle extérieure (N-050) ; "
+               "lue une seule fois.**", ""]
+@@ -1072,6 +1078,9 @@
+       égale à aucun nombre du document de X (mesures, références, bornes : ce qui écarte toute coïncidence de valeurs),
+       sous chacune des écritures du script (JSON, quatre décimales, valeur p à six chiffres, fraction), hors des textes
+       fixes et hors de 0 et 1, ne paraît nulle part.
++    RSL3-01 (v4) : une écriture de Y égale à l'écriture d'un nombre du document de X (sous l'une des écritures du script,
++    score du noyau compris : le document le garde entier, le Markdown l'écrit à quatre décimales) n'est pas cherchée ; si
++    elle paraît, c'est comme écriture d'un nombre de X, indiscernable d'une valeur de Y.
+     Les autres entiers (effectifs, justes, sans réponse) ne sont pas cherchés comme texte : ils coïncident avec ceux de X ;
+     ils ne s'écrivent que dans les tableaux, rendus du seul document de X."""
+     texte_j, texte_m = (x.decode("utf-8") for x in contenus_x)
+@@ -1098,6 +1107,8 @@
+         if h in texte_j or h in texte_m:
+             raise Refus(refus.format("une empreinte"))
+     nombres_x = {float(f) for f in feuilles(json_sur(doc_x)) if isinstance(f, (int, float)) and not isinstance(f, bool)}
++    ecritures_x = {e for x in nombres_x for e in (json.dumps(x), fr(x), fr_p(x))}  # RSL3-01
++    ecritures_x |= {t.get("p_exacte") for t in (doc_x.get("mcnemar_generation_0_contre_3") or {}).get("tests", [])}
+     props_y, ps_y = valeurs_mesurees(doc_y)
+     jetons = []
+     for v in props_y:
+@@ -1107,7 +1118,9 @@
+         if float(p) not in nombres_x and p not in (0, 1):
+             jetons += [json.dumps(float(p)), fr_p(p), frac(p)]
+     for jt in jetons:
+-        if jt not in TEXTES_FIXES and (present(jt, texte_j) or present(jt, texte_m)):
++        if jt in ecritures_x or jt in TEXTES_FIXES:  # RSL3-01 : écriture d'un nombre de X, ou texte fixe
++            continue
++        if present(jt, texte_j) or present(jt, texte_m):
+             raise Refus(refus.format("une valeur"))
+ 
+ 
+@@ -1198,7 +1211,7 @@
+ def document(part: str, course: dict, banque: dict, lecture: dict, comptes, signalements, quand, script) -> dict:
+     pos, neg = ETIQUETTES[CONSCIENCE]
+     doc = {
+-        "titre": f"Lecture contre le bruit des tâches du quatrième pilote, part {part} (point 4 de P4v3, point 4 bis du texte v4, texte v5) — v3",
++        "titre": f"Lecture contre le bruit des tâches du quatrième pilote, part {part} (point 4 de P4v3, point 4 bis du texte v4, texte v5) — v4",
+         "part": part, "script": script, "quand_utc": quand,
+         "course": {k: course[k] for k in ("nom", "lignee", "empreinte_liste", "empreinte_archive", "n_membres_archive",
+                                           "membres_lus", "membres_non_lus_trop_grands")},
+@@ -1237,7 +1250,7 @@
+     lecture, sig = lecture_de_la_part(course, banque, absentes, "test")
+     doc = document("test", course, banque, lecture, comptes, communs + sig, quand, script)
+     j, m = contenus_du_fichier(doc)
+-    base = f"lecture-{course['nom']}-test-v3"
++    base = f"lecture-{course['nom']}-test-v4"
+     os.makedirs(sortie, exist_ok=True)
+     ecrits = ecrire_sorties(sortie, {base + ".json": j, base + ".md": m})
+     marque = " [essai : empreintes de banque surchargées]" if banque["surchargees"] else ""
+@@ -1272,7 +1285,7 @@
+         doc["mcnemar_generation_0_contre_3"] = {"regle": REGLE_III[regle], "correction": CORRECTION[regle], "note_sens": NOTE_SENS,
+                                                 "nombre_de_tests_de_la_famille": 4 if regle == "holm-quatre" else 2,
+                                                 "tests": [{k: v for k, v in t.items()} for t in tests]}
+-        docs.append((f"lecture-{course['nom']}-test-final-{regle}-v3", doc))
++        docs.append((f"lecture-{course['nom']}-test-final-{regle}-v4", doc))
+     contenus = {base: contenus_du_fichier(doc) for base, doc in docs}
+     if len(docs) == 2:  # brief v3, § 3, point 3 (c) : vérifié sur les octets mêmes qui seront écrits
+         (bx, dx), (by, dy) = docs
+@@ -1303,8 +1316,8 @@
+ 
+ def principal(argv=None) -> int:
+     # RSL-11 : aucun motif décimal dans l'aide (versions écrites avec des tirets)
+-    p = argparse.ArgumentParser(prog="lire_pilote4_v3.py",
+-                                description="Lecture contre le bruit des tâches du quatrième pilote (v3) : part test à la fin de chaque course ; "
++    p = argparse.ArgumentParser(prog="lire_pilote4_v4.py",
++                                description="Lecture contre le bruit des tâches du quatrième pilote (v4) : part test à la fin de chaque course ; "
+                                             "part test_final, une course par fichier, à la fin de la course S.")
+     sp = p.add_subparsers(dest="mode", required=True)
+     e = sp.add_parser("essai-banque", help="empreintes de la banque et comptes des tâches dont la catégorie est absente du train")
+## arbres syntaxiques (outil comparer_fonctions_v2_v3.py, appliqué à v3 → v4)
+# fonctions présentes dans les deux versions
+_flux                            identique
+affichable                       identique
+appliquer_holm                   identique
+bloc_noyau                       identique
+borne_basse_maximale             identique
+canonique                        identique
+categorie_probleme               identique
+charger_banque                   identique
+compter                          identique
+comptes_absentes                 identique
+contenus_du_fichier              identique
+depuis_reponses_brutes           identique
+depuis_reponses_lues             identique
+document                         DIFFÉRENTE
+ecrire_sorties                   identique
+empreintes_attendues             identique
+etat_fichier                     identique
+feuilles                         identique
+fr                               identique
+fr_p                             identique
+frac                             identique
+garde_absentes                   identique
+holm                             identique
+inventorier_archive              identique
+json_sur                         identique
+lecture_de_la_part               identique
+ligne_comptes                    identique
+ligne_du_script                  identique
+lignes_iii                       identique
+lire_course                      identique
+lire_membres                     identique
+lire_octets                      identique
+lire_score_noyau                 identique
+mcnemar_exact                    identique
+md_entete                        DIFFÉRENTE
+md_fin                           identique
+md_mcnemar                       identique
+md_tableaux                      identique
+mode_essai_banque                identique
+mode_test                        DIFFÉRENTE
+mode_test_final                  DIFFÉRENTE
+nom_de_course                    identique
+nom_sur                          identique
+preparer                         identique
+present                          identique
+principal                        DIFFÉRENTE
+r4                               identique
+rendre_md                        identique
+reste_provisoire                 identique
+sha256_fichier                   identique
+sha256_octets                    identique
+signalements_communs             identique
+taches_categorie_absente         identique
+tests_mcnemar                    identique
+utilisables                      identique
+valeurs_mesurees                 identique
+verifier_dossier_course          identique
+verifier_flux_et_fin             identique
+verifier_liste                   identique
+verifier_separation              DIFFÉRENTE
+wilson                           identique
+# fonctions de la v2 seule : aucune
+# fonctions de la v3 seule : aucune
+# constantes présentes dans les deux versions
+ALPHA                            identique
+ATTENDU_ABSENTES                 identique
+A_COTE_SANS_COMPARAISON          identique
+BLOC_TAR                         identique
+CLASSES                          identique
+CONSCIENCE                       identique
+CORRECTION                       identique
+DELEGATION                       identique
+EMPREINTE_PUBLIQUE               identique
+EMPREINTE_SECRET                 identique
+ETAT                             identique
+ETIQUETTES                       identique
+FAMILLES                         identique
+FICHIER_PUBLIC                   identique
+FICHIER_SCORE                    identique
+FICHIER_SECRET                   identique
+GENERATIONS_ATTENDUES            identique
+HEX64                            identique
+LIENS_DURS_REFUSES               identique
+LIGNEE_DE                        identique
+LIGNE_EMPREINTE                  identique
+LIGNE_III                        identique
+MEMBRES_DU_MODE                  identique
+MEMBRE_NECESSAIRE                identique
+MOTIF_DECIMAL                    identique
+NOMS_FAMILLES                    identique
+NOM_ARCHIVE                      identique
+NOM_DOSSIER                      identique
+NOM_EMPREINTES                   identique
+NOM_REFERENCE                    identique
+NOTE_SENS                        identique
+OCTETS_MAX_MEMBRE                identique
+OCTETS_MAX_REPONSES              identique
+PARTS                            identique
+PHRASE_IV                        identique
+REFERENCES                       identique
+REGLE_I                          identique
+REGLE_III                        identique
+REGLE_II_BASE                    identique
+REGLE_II_FINAL                   identique
+REGLE_II_TEST                    identique
+REGLE_PROJECTION                 identique
+SENS_AU_DESSOUS                  identique
+SENS_AU_DESSUS                   identique
+SENS_SANS_OBJET                  identique
+SEUIL_ECART_NOYAU                identique
+SOURCE_DES_REGLES                identique
+TEXTES_FIXES                     identique
+VARIABLE_ESSAI                   identique
+VERDICT_AU_DESSUS                identique
+VERDICT_CONSTRUCTION             identique
+VERDICT_III_BRUIT                identique
+VERDICT_III_CHANGEMENT           identique
+VERDICT_NON_DISTINCT             identique
+VERSION                          DIFFÉRENTE
+Z                                identique
+# constantes de la v2 seule : aucune
+# constantes de la v3 seule : aucune
+===== document
+@@ -2,3 +2,3 @@
+     pos, neg = ETIQUETTES[CONSCIENCE]
+-    doc = {'titre': f'Lecture contre le bruit des tâches du quatrième pilote, part {part} (point 4 de P4v3, point 4 bis du texte v4, texte v5) — v3', 'part': part, 'script': script, 'quand_utc': quand, 'course': {k: course[k] for k in ('nom', 'lignee', 'empreinte_liste', 'empreinte_archive', 'n_membres_archive', 'membres_lus', 'membres_non_lus_trop_grands')}, 'banque': {'publique': {'fichier': FICHIER_PUBLIC, 'sha256': banque['empreinte_publique']}, 'secret': {'fichier': FICHIER_SECRET, 'sha256': banque['empreinte_secret']}}, 'generations_notees': {'trouvees': course['generations_trouvees'], 'attendues': list(GENERATIONS_ATTENDUES), 'issue': 'conformes' if course['generations_trouvees'] == list(GENERATIONS_ATTENDUES) else 'SIGNALÉ : générations notées autres que [0, 1, 2, 3]'}, 'source_des_regles': SOURCE_DES_REGLES, 'regles': {'i': REGLE_I, 'ii': REGLE_II_TEST if part == 'test' else REGLE_II_FINAL, 'iv': PHRASE_IV}, 'references': {fam: {'reference_ii': REFERENCES[fam][part], 'nom': NOM_REFERENCE[fam], 'a_cote_sans_comparaison': {k: v[part] for k, v in A_COTE_SANS_COMPARAISON[fam].items()} if fam in A_COTE_SANS_COMPARAISON else None} for fam in FAMILLES}, 'bornes': lecture['bornes'], 'lecture': lecture['tableaux'], 'categorie_absente_du_train': {'regle': 'Règle de P4v3 : catégorie (champ secret) sans aucune tâche de la famille au train ; métrique : exactitude équilibrée calculée comme le noyau sur ce sous-ensemble, plus la part sans réponse.', 'compte': {'total': sum(comptes[part]), pos: comptes[part][0], neg: comptes[part][1]}, 'compte_ligne': f'{sum(comptes[part])} ({pos} {comptes[part][0]}, {neg} {comptes[part][1]})', 'par_generation': lecture['sous_ensemble']}, 'phrase_iv': PHRASE_IV, 'signalements': signalements}
++    doc = {'titre': f'Lecture contre le bruit des tâches du quatrième pilote, part {part} (point 4 de P4v3, point 4 bis du texte v4, texte v5) — v4', 'part': part, 'script': script, 'quand_utc': quand, 'course': {k: course[k] for k in ('nom', 'lignee', 'empreinte_liste', 'empreinte_archive', 'n_membres_archive', 'membres_lus', 'membres_non_lus_trop_grands')}, 'banque': {'publique': {'fichier': FICHIER_PUBLIC, 'sha256': banque['empreinte_publique']}, 'secret': {'fichier': FICHIER_SECRET, 'sha256': banque['empreinte_secret']}}, 'generations_notees': {'trouvees': course['generations_trouvees'], 'attendues': list(GENERATIONS_ATTENDUES), 'issue': 'conformes' if course['generations_trouvees'] == list(GENERATIONS_ATTENDUES) else 'SIGNALÉ : générations notées autres que [0, 1, 2, 3]'}, 'source_des_regles': SOURCE_DES_REGLES, 'regles': {'i': REGLE_I, 'ii': REGLE_II_TEST if part == 'test' else REGLE_II_FINAL, 'iv': PHRASE_IV}, 'references': {fam: {'reference_ii': REFERENCES[fam][part], 'nom': NOM_REFERENCE[fam], 'a_cote_sans_comparaison': {k: v[part] for k, v in A_COTE_SANS_COMPARAISON[fam].items()} if fam in A_COTE_SANS_COMPARAISON else None} for fam in FAMILLES}, 'bornes': lecture['bornes'], 'lecture': lecture['tableaux'], 'categorie_absente_du_train': {'regle': 'Règle de P4v3 : catégorie (champ secret) sans aucune tâche de la famille au train ; métrique : exactitude équilibrée calculée comme le noyau sur ce sous-ensemble, plus la part sans réponse.', 'compte': {'total': sum(comptes[part]), pos: comptes[part][0], neg: comptes[part][1]}, 'compte_ligne': f'{sum(comptes[part])} ({pos} {comptes[part][0]}, {neg} {comptes[part][1]})', 'par_generation': lecture['sous_ensemble']}, 'phrase_iv': PHRASE_IV, 'signalements': signalements}
+     if banque['surchargees']:
+===== md_entete
+@@ -3,3 +3,3 @@
+     titre = 'part `test`' if part == 'test' else f"part `test_final`, {doc['regle_iii_nom']}"
+-    L = [f"# Lecture contre le bruit des tâches — {c['nom']} — {titre} — v3", '']
++    L = [f"# Lecture contre le bruit des tâches — {c['nom']} — {titre} — v4", '']
+     if part == 'test_final':
+===== mode_test
+@@ -7,3 +7,3 @@
+     j, m = contenus_du_fichier(doc)
+-    base = f"lecture-{course['nom']}-test-v3"
++    base = f"lecture-{course['nom']}-test-v4"
+     os.makedirs(sortie, exist_ok=True)
+===== mode_test_final
+@@ -22,3 +22,3 @@
+         doc['mcnemar_generation_0_contre_3'] = {'regle': REGLE_III[regle], 'correction': CORRECTION[regle], 'note_sens': NOTE_SENS, 'nombre_de_tests_de_la_famille': 4 if regle == 'holm-quatre' else 2, 'tests': [{k: v for k, v in t.items()} for t in tests]}
+-        docs.append((f"lecture-{course['nom']}-test-final-{regle}-v3", doc))
++        docs.append((f"lecture-{course['nom']}-test-final-{regle}-v4", doc))
+     contenus = {base: contenus_du_fichier(doc) for base, doc in docs}
+===== principal
+@@ -1,3 +1,3 @@
+ def principal(argv=None) -> int:
+-    p = argparse.ArgumentParser(prog='lire_pilote4_v3.py', description='Lecture contre le bruit des tâches du quatrième pilote (v3) : part test à la fin de chaque course ; part test_final, une course par fichier, à la fin de la course S.')
++    p = argparse.ArgumentParser(prog='lire_pilote4_v4.py', description='Lecture contre le bruit des tâches du quatrième pilote (v4) : part test à la fin de chaque course ; part test_final, une course par fichier, à la fin de la course S.')
+     sp = p.add_subparsers(dest='mode', required=True)
+===== verifier_separation
+@@ -23,2 +23,4 @@
+     nombres_x = {float(f) for f in feuilles(json_sur(doc_x)) if isinstance(f, (int, float)) and (not isinstance(f, bool))}
++    ecritures_x = {e for x in nombres_x for e in (json.dumps(x), fr(x), fr_p(x))}
++    ecritures_x |= {t.get('p_exacte') for t in (doc_x.get('mcnemar_generation_0_contre_3') or {}).get('tests', [])}
+     props_y, ps_y = valeurs_mesurees(doc_y)
+@@ -32,3 +34,5 @@
+     for jt in jetons:
+-        if jt not in TEXTES_FIXES and (present(jt, texte_j) or present(jt, texte_m)):
++        if jt in ecritures_x or jt in TEXTES_FIXES:
++            continue
++        if present(jt, texte_j) or present(jt, texte_m):
+             raise Refus(refus.format('une valeur'))

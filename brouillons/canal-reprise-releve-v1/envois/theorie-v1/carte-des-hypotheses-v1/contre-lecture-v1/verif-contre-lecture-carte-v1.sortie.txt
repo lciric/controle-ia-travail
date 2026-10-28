@@ -1,0 +1,30 @@
+== A7 : recalcul à la main, Φ(δ/√(r₀ + (1−r₀)/T) − z_α) ==
+  z_0.01 = 2.3263 ; δ/√r₀ = 0.6708 ; Φ(δ/√r₀ − z_α) = 0.0489  (carte : 0,049)
+  r₀=0   T=10: 0.084   r₀=0,2 T=10: 0.039
+  r₀=0   T=50: 0.419   r₀=0,2 T=50: 0.046
+  r₀=0   T=inf: 1.000   r₀=0,2 T=inf: 0.049
+  carte : 0,084 / 0,419 / 1 à r₀ = 0 ; 0,039 / 0,046 / 0,049 à r₀ = 0,2 (T = 10 / 50 / ∞)
+  Σ·1 = λ·1 ? écart 0.0e+00 ; var(moyenne) = 0.3143 contre r₀ + (1−r₀)/T = 0.3143
+  Monte-Carlo α=0.05 δ=0,3 r₀=0,2 T=50 : 0.1592 ; analytique 0.1588
+  Monte-Carlo α=0.01 δ=0,3 r₀=0,2 T=50 : 0.0453 ; analytique 0.0464
+== A6 : E₀[exp(λΣz − λ²T/2)] = exp(λ²r₀T(T−1)/2) ==
+  formule : exp(λ²(T²r₀ + T(1−r₀) − T)/2) = 3.0802 ; carte exp(λ²r₀T(T−1)/2) = 3.0802
+  Monte-Carlo : 3.0317
+== A3 : identité de Lindley max_t C_t = max(0, max_{a≤b} Σ_{a..b}(z−k)) ==
+  écart maximal sur 1 500 suites (Student 3 ddl, k = 0,5) : 5.3e-15
+== A3 : contre-exemple à l'« exemple » de K3 (« toute loi de moyenne par pas sous k ») ==
+  moyenne par pas μ₁ = 0.0 < k = 0.5 : taux de Page au seuil 1 % honnête = 0.0103
+  moyenne par pas μ₁ = 0.2 < k = 0.5 : taux de Page au seuil 1 % honnête = 0.0590
+  moyenne par pas μ₁ = 0.4 < k = 0.5 : taux de Page au seuil 1 % honnête = 0.2424
+  → une moyenne sous k ne garde pas la loi de M_k ni ne la domine : Page y a une puissance > α (l'exemple de K3 est faux ;
+    seule la borne déterministe de RC-3.1 (e), max C_t < h ⇒ moyenne < k + h/T, est juste).
+== A4 : Pinsker, d_VT ≤ √(KL/2), KL = δᵀΓ⁻¹δ/2 ⇒ d_VT ≤ ‖Γ^{−1/2}δ‖/2 ; B étalé sur n₀ pas : B/(2σ√n₀) ==
+  ‖δ‖/(2σ) = 0.2500 ; B/(2σ√n₀) = 0.2500
+== A9 : G = F^{n/m} ⇒ G^m = F^n ; médiane de G pour n/m = 2 ==
+  Φ⁻¹(0,5^{1/2}) = 0.545 (carte : 0,545)
+  quantiles 0,5/0,9/0,99 — F sur 200 : 2.704 3.277 3.913 ; G sur 100 : 2.697 3.271 3.891
+== A19 : aire de la projection w à covariance commune Σ : Φ(|wᵀΔμ|/√(2wᵀΣw)) ; w* = Σ⁻¹Δμ sur un vecteur propre ==
+  aire(w*) = 0.829 ; Φ(‖Δμ‖/√(2λ)) = 0.829
+  plancher : quantile 0,95 des aires de 200 directions w ~ N(0, Σ) = 0.513 (près de 0,5 : la confusion loge dans une direction de faible variance)
+== A22 : identité E[X | J=1] − E₀[X] = δ + (E[ε | J=1] − E[ε]) ; avec E₁[X] inconditionnel il manque δ·P(J=1) ==
+  E[X|J=1] − E[ε] = -0.1579 ; δ + (E[ε|J=1] − E[ε]) = -0.1579 ; E[X|J=1] − E₁[X] = -0.4579 (= précédent − δ·P(J=1) = 0.300)

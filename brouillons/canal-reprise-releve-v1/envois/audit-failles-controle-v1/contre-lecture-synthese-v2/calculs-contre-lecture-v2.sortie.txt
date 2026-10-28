@@ -1,0 +1,65 @@
+== E1 : identite (C_t - C_{t-1})_+ = (X_t - kappa)_+ pour TOUTE suite (pas seulement C_{t-1} = 0)
+  gaussien                 ecart max 8.9e-16 ; part des pas avec C_(t-1) > 0 : 0.46
+  lourd (Student 3)        ecart max 2.7e-15 ; part des pas avec C_(t-1) > 0 : 0.57
+  dents de scie bruitees   ecart max 0.0e+00 ; part des pas avec C_(t-1) > 0 : 0.36
+== E2 : HR1 rejoue sous un nul explicite (scores honnetes N(0,1), T = 100, kappa = 0,5, seuils au rang conforme sur 20 000 episodes honnetes, alpha = 1 %)
+  HR1 dents de scie : max CUSUM 0.7 % ; V1 = somme (X-kappa)_+^2 (terme symetrique) 87.6 % ; V_T complet (lambda=1, theta=2) 77.4 % ; somme des scores 0.1 % ; variance intra-episode 98.4 %
+  classe C : HR1 rebrasse : max CUSUM 16.6 % ; V1 = somme (X-kappa)_+^2 (terme symetrique) 87.6 % ; V_T complet (lambda=1, theta=2) 82.4 % ; somme des scores 0.1 % ; variance intra-episode 98.4 %
+  constante -0,075 (meme moyenne) : max CUSUM 0.4 % ; V1 = somme (X-kappa)_+^2 (terme symetrique) 0.3 % ; V_T complet (lambda=1, theta=2) 0.3 % ; somme des scores 0.1 % ; variance intra-episode 1.1 %
+  constante +0,45 (sous kappa) : max CUSUM 65.6 % ; V1 = somme (X-kappa)_+^2 (terme symetrique) 74.6 % ; V_T complet (lambda=1, theta=2) 80.8 % ; somme des scores 98.4 % ; variance intra-episode 1.2 %
+== F1 : normalisation du rapport, implementation independante ; calibrage a T = 10, 100 000 episodes par cas
+  independant, tau=0
+    max par pas                            alpha=1 % : T_e=5 0.55 % ; T_e=10 1.05 % ; T_e=20 2.07 % ; T_e=30 3.25 % ; T_e=60 6.11 %
+    max somme brute                        alpha=1 % : T_e=5 0.04 % ; T_e=10 1.06 % ; T_e=20 6.94 % ; T_e=30 13.71 % ; T_e=60 29.05 %
+    max normalise (rapport)                alpha=1 % : T_e=5 0.89 % ; T_e=10 0.99 % ; T_e=20 0.97 % ; T_e=30 1.02 % ; T_e=60 1.06 %
+    max normalise, sigma intra-episode     alpha=1 % : T_e=5 0.29 % ; T_e=10 1.04 % ; T_e=20 1.48 % ; T_e=30 1.65 % ; T_e=60 1.87 %
+    max normalise, variance vraie du nul   alpha=1 % : T_e=5 0.67 % ; T_e=10 1.06 % ; T_e=20 1.40 % ; T_e=30 1.66 % ; T_e=60 2.15 %
+  effet episode tau=0,3
+    max par pas                            alpha=1 % : T_e=5 0.45 % ; T_e=10 0.88 % ; T_e=20 1.85 % ; T_e=30 2.77 % ; T_e=60 5.41 %
+    max somme brute                        alpha=1 % : T_e=5 0.01 % ; T_e=10 0.99 % ; T_e=20 9.62 % ; T_e=30 18.72 % ; T_e=60 34.24 %
+    max normalise (rapport)                alpha=1 % : T_e=5 0.71 % ; T_e=10 0.99 % ; T_e=20 1.50 % ; T_e=30 2.08 % ; T_e=60 4.14 %
+    max normalise, sigma intra-episode     alpha=1 % : T_e=5 0.00 % ; T_e=10 0.97 % ; T_e=20 2.67 % ; T_e=30 4.27 % ; T_e=60 8.63 %
+    max normalise, variance vraie du nul   alpha=1 % : T_e=5 0.67 % ; T_e=10 0.97 % ; T_e=20 1.20 % ; T_e=30 1.31 % ; T_e=60 1.37 %
+  effet episode tau=0,6
+    max par pas                            alpha=1 % : T_e=5 0.55 % ; T_e=10 1.07 % ; T_e=20 2.02 % ; T_e=30 2.91 % ; T_e=60 5.26 %
+    max somme brute                        alpha=1 % : T_e=5 0.00 % ; T_e=10 0.94 % ; T_e=20 11.02 % ; T_e=30 20.29 % ; T_e=60 34.46 %
+    max normalise (rapport)                alpha=1 % : T_e=5 0.37 % ; T_e=10 0.95 % ; T_e=20 2.69 % ; T_e=30 4.46 % ; T_e=60 9.24 %
+    max normalise, sigma intra-episode     alpha=1 % : T_e=5 0.00 % ; T_e=10 1.01 % ; T_e=20 5.64 % ; T_e=30 9.50 % ; T_e=60 17.73 %
+    max normalise, variance vraie du nul   alpha=1 % : T_e=5 0.85 % ; T_e=10 0.99 % ; T_e=20 1.15 % ; T_e=30 1.20 % ; T_e=60 1.28 %
+  effet episode fort tau=1,0
+    max par pas                            alpha=1 % : T_e=5 0.60 % ; T_e=10 1.02 % ; T_e=20 1.86 % ; T_e=30 2.43 % ; T_e=60 3.90 %
+    max somme brute                        alpha=1 % : T_e=5 0.00 % ; T_e=10 1.03 % ; T_e=20 11.85 % ; T_e=30 21.54 % ; T_e=60 34.79 %
+    max normalise (rapport)                alpha=1 % : T_e=5 0.26 % ; T_e=10 1.03 % ; T_e=20 3.40 % ; T_e=30 5.79 % ; T_e=60 11.48 %
+    max normalise, sigma intra-episode     alpha=1 % : T_e=5 0.00 % ; T_e=10 1.03 % ; T_e=20 10.37 % ; T_e=30 16.67 % ; T_e=60 26.15 %
+    max normalise, variance vraie du nul   alpha=1 % : T_e=5 1.00 % ; T_e=10 1.07 % ; T_e=20 1.21 % ; T_e=30 1.19 % ; T_e=60 1.22 %
+  AR(1) intra-episode phi=0,3, tau=0
+    max par pas                            alpha=1 % : T_e=5 0.54 % ; T_e=10 0.95 % ; T_e=20 2.00 % ; T_e=30 2.92 % ; T_e=60 6.02 %
+    max somme brute                        alpha=1 % : T_e=5 0.02 % ; T_e=10 0.97 % ; T_e=20 6.78 % ; T_e=30 13.40 % ; T_e=60 28.85 %
+    max normalise (rapport)                alpha=1 % : T_e=5 0.81 % ; T_e=10 1.02 % ; T_e=20 1.13 % ; T_e=30 1.14 % ; T_e=60 1.23 %
+    max normalise, sigma intra-episode     alpha=1 % : T_e=5 0.00 % ; T_e=10 1.02 % ; T_e=20 2.01 % ; T_e=30 2.48 % ; T_e=60 3.20 %
+    max normalise, variance vraie du nul   alpha=1 % : T_e=5 0.47 % ; T_e=10 1.00 % ; T_e=20 1.63 % ; T_e=30 1.98 % ; T_e=60 2.94 %
+  queues lourdes (t4), tau=0
+    max par pas                            alpha=1 % : T_e=5 0.49 % ; T_e=10 0.98 % ; T_e=20 1.96 % ; T_e=30 2.86 % ; T_e=60 5.90 %
+    max somme brute                        alpha=1 % : T_e=5 0.20 % ; T_e=10 1.00 % ; T_e=20 5.07 % ; T_e=30 10.70 % ; T_e=60 25.01 %
+    max normalise (rapport)                alpha=1 % : T_e=5 0.99 % ; T_e=10 0.98 % ; T_e=20 1.01 % ; T_e=30 0.98 % ; T_e=60 0.99 %
+    max normalise, sigma intra-episode     alpha=1 % : T_e=5 0.33 % ; T_e=10 1.05 % ; T_e=20 1.49 % ; T_e=30 1.64 % ; T_e=60 1.80 %
+    max normalise, variance vraie du nul   alpha=1 % : T_e=5 0.85 % ; T_e=10 0.99 % ; T_e=20 1.14 % ; T_e=30 1.18 % ; T_e=60 1.35 %
+== G : plancher sous Sigma honnete et sous Sigma melangee, geometrie en 1/k (64 dim), tic sur une composante faible ; 200 directions
+  tic composante 1 delta=1.0 : sonde du tic 0.760 ; plancher honnete 0.748 (+-0.002) ; melange 0.751 (+-0.002) ; ecart +0.002
+  tic composante 1 delta=2.0 : sonde du tic 0.921 ; plancher honnete 0.910 (+-0.002) ; melange 0.915 (+-0.001) ; ecart +0.006
+  tic composante 1 delta=4.0 : sonde du tic 0.998 ; plancher honnete 0.996 (+-0.000) ; melange 0.997 (+-0.000) ; ecart +0.001
+  tic composante 41 delta=1.0 : sonde du tic 0.760 ; plancher honnete 0.515 (+-0.001) ; melange 0.516 (+-0.001) ; ecart +0.002
+  tic composante 41 delta=2.0 : sonde du tic 0.921 ; plancher honnete 0.530 (+-0.003) ; melange 0.542 (+-0.004) ; ecart +0.012
+  tic composante 41 delta=4.0 : sonde du tic 0.998 ; plancher honnete 0.559 (+-0.005) ; melange 0.628 (+-0.010) ; ecart +0.070
+== HR5 : chance qu'un second predicteur SANS LIEN reduise l'erreur hors echantillon (validation croisee un contre tous) d'au moins 25 %
+  n=5 : bruit 0,2 -> 0.140 ; bruit 0,05 -> 0.144 ; bruit 0,5 -> 0.146
+  n=6 : bruit 0,2 -> 0.132 ; bruit 0,05 -> 0.126 ; bruit 0,5 -> 0.130
+  n=8 : bruit 0,2 -> 0.090 ; bruit 0,05 -> 0.084 ; bruit 0,5 -> 0.087
+  n=12 : bruit 0,2 -> 0.045 ; bruit 0,05 -> 0.040 ; bruit 0,5 -> 0.044
+  n=20 : bruit 0,2 -> 0.013 ; bruit 0,05 -> 0.011 ; bruit 0,5 -> 0.012
+== combinaison entre modes : 1 - (1 - a)^3
+  alpha=0.05 : 0.1426
+  alpha=0.01 : 0.0297
+== HT-11 : pente brute = g R + (1 - R), verification analytique par simulation independante
+  g=0.0 : pente 0.1636 ; g R + (1 - R) = 0.1646
+  g=0.5 : pente 0.5813 ; g R + (1 - R) = 0.5822

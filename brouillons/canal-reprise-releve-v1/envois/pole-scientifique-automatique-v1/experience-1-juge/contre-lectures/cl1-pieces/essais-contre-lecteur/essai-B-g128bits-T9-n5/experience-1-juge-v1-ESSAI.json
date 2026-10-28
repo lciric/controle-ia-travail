@@ -1,0 +1,154 @@
+{
+  "duree_calcul_s": 0.3,
+  "horodatage": {
+    "source": "argument --horodatage (date -u dans la commande de lancement)",
+    "valeur": "2026-10-27T08:26:02Z"
+  },
+  "lignes": [
+    {
+      "borne_haute_95": 0.3511165007651012,
+      "controle": "T9-disjonction-partitionnee",
+      "etiquette_graines": "T9",
+      "gain_naif_sur_meilleur_parent_median": 126.62745122122945,
+      "juge": "v1",
+      "log_richesse_max_observee": 0.0,
+      "part_gain_naif_positif": 1.0,
+      "passe": true,
+      "plan_execution": "ordre_secret",
+      "promotions": 0,
+      "repetitions": 5,
+      "role": "fatal",
+      "taux": 0.0,
+      "temoin_positif_fille_neuve_taux_promotion": 1.0
+    }
+  ],
+  "parametres": {
+    "alpha": 0.05,
+    "delta0_filles": 0.01,
+    "dimension": 2,
+    "essai": true,
+    "familles": [
+      "T9"
+    ],
+    "graine_maitresse": 170141183460469231731687303715884204893,
+    "juges": {
+      "v0": {
+        "bibliotheque": [
+          "marginale_empirique",
+          "uniforme",
+          "moyenne_glissante"
+        ],
+        "description": "ordre naturel ; bibliothèque v0 (artefact de référence)",
+        "plan_execution": "ordre_naturel"
+      },
+      "v1": {
+        "bibliotheque": [
+          "marginale_empirique",
+          "uniforme",
+          "moyenne_glissante",
+          "urne"
+        ],
+        "description": "ordre d'exécution secret ; bibliothèque v0 + urne (juge à valider)",
+        "plan_execution": "ordre_secret"
+      },
+      "v1_sans_urne": {
+        "bibliotheque": [
+          "marginale_empirique",
+          "uniforme",
+          "moyenne_glissante"
+        ],
+        "description": "ordre d'exécution secret ; bibliothèque v0 sans urne (artefact)",
+        "plan_execution": "ordre_secret"
+      }
+    },
+    "lambda_T1b_fille": 0.5,
+    "lambda_puissance_derive": 0.3,
+    "lecture": "continue (promotion dès que W_t ≥ 1/α, inégalité de Ville)",
+    "nombre_issues": 3,
+    "part_calibrage_filles": 50,
+    "perte_puissance_predite_max": 0.05,
+    "regle_des_graines": "graine_derivee(graine_maîtresse, étiquette, répétition[, 'frais' | 'noyau']) ; tirages frais : graine_derivee(graine 'frais', 'tirages-frais', empreinte de l'engagement) ; ordre secret : graine_derivee(graine 'noyau', 'ordre-execution', empreinte de l'engagement)",
+    "repetitions": 5,
+    "seuil_puissance": 0.9,
+    "seuil_richesse": 20.0,
+    "structures_T1b": {
+      "auto_excite": "moyenne glissante de fenêtre 10, lissage 0.1 (𝓛 n'a que le lissage 0,5)",
+      "calendrier_deterministe": "blocs de 20 instants, issues cycliques dans un ordre des catégories tiré",
+      "derive_lineaire": "a = permutation tirée de (0,6 ; 0,3 ; 0,1) ; p_t va linéairement de a à a renversé sur les n instants",
+      "marche_aleatoire": "logits partis de 0, pas gaussiens indépendants d'écart 0.15 par composante et par instant",
+      "rupture": "p_t = a pour t < n/2, a renversé ensuite",
+      "sinusoide": "logits_k(t) = 1.5·sin(2πt/(n/3) + φ + 2πk/K), φ uniforme sur [0 ; 2π["
+    },
+    "tirages_par_repetition": 200
+  },
+  "verdicts": {
+    "artefacts_requis": {
+      "critere": "taux > α = 0.05 (sinon le contrôle n'a pas de dents, R5)",
+      "nombre": 0,
+      "non_vus": []
+    },
+    "ce_qui_a_cede": [],
+    "fatals": {
+      "controle_au_taux_max": "T9-disjonction-partitionnee",
+      "critere": "taux de promotion ≤ α = 0.05 pour chaque contrôle fatal (T9 : et log W max ≤ 0)",
+      "echecs": [],
+      "nombre": 1,
+      "taux_max": 0.0
+    },
+    "issue": "ESSAI OU EXÉCUTION PARTIELLE — aucune issue n'est prononcée",
+    "parties": {
+      "filles": {
+        "artefacts_requis": {
+          "critere": "taux > α = 0.05 (sinon le contrôle n'a pas de dents, R5)",
+          "nombre": 0,
+          "non_vus": []
+        },
+        "ce_qui_a_cede": [],
+        "fatals": {
+          "controle_au_taux_max": "T9-disjonction-partitionnee",
+          "critere": "taux de promotion ≤ α = 0.05 pour chaque contrôle fatal (T9 : et log W max ≤ 0)",
+          "echecs": [],
+          "nombre": 1,
+          "taux_max": 0.0
+        },
+        "issue": "ESSAI OU EXÉCUTION PARTIELLE — aucune issue n'est prononcée",
+        "puissance_decisive": {
+          "critere": "taux ≥ 0.9 (juge v1)",
+          "insuffisantes": [],
+          "lignes": {}
+        }
+      },
+      "socle": {
+        "artefacts_requis": {
+          "critere": "taux > α = 0.05 (sinon le contrôle n'a pas de dents, R5)",
+          "nombre": 0,
+          "non_vus": []
+        },
+        "ce_qui_a_cede": [],
+        "fatals": {
+          "controle_au_taux_max": null,
+          "critere": "taux de promotion ≤ α = 0.05 pour chaque contrôle fatal (T9 : et log W max ≤ 0)",
+          "echecs": [],
+          "nombre": 0,
+          "taux_max": null
+        },
+        "issue": "ESSAI OU EXÉCUTION PARTIELLE — aucune issue n'est prononcée",
+        "puissance_decisive": {
+          "critere": "taux ≥ 0.9 (juge v1)",
+          "insuffisantes": [],
+          "lignes": {}
+        }
+      }
+    },
+    "perte_de_puissance_fille_neuve": {
+      "prediction_tenue": null,
+      "predite_au_plus": 0.05,
+      "v0_moins_v1": null
+    },
+    "puissance_decisive": {
+      "critere": "taux ≥ 0.9 (juge v1)",
+      "insuffisantes": [],
+      "lignes": {}
+    }
+  }
+}

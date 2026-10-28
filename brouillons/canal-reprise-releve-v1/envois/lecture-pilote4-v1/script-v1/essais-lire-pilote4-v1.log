@@ -1,0 +1,64 @@
+# essais de lire_pilote4_v1.py — début 2026-10-26T03:44:10Z (UTC)
+# script lire_pilote4_v1.py 7176f0cd02e5f4f0a8a5dbaa59278780e5c1526b0b5249a36b9aef7d956f5521 ; essais essais_lire_pilote4_v1.py 2d3f2f26c779c2c65f19212aad3a66aa8be9374344712f03c692964f3697e59f
+# python 3.13.17 (/opt/venv-essaim-sim-v1/bin/python) ; noyau importé en lecture depuis /home/claude/pilote4/essaim-m3-refonte-v1
+OK     [sain] essai-banque sur la banque synthétique saine : comptes 8 (4/4) et 14 (10/4) recalculés depuis la banque et le secret synthétiques ; issue conforme ; code 0
+OK     [sain] lecture d'une course (v6.2 synthétique), valeurs refaites à la main : 16 lignes recoupées avec `taches.evaluer` et `analyse.exactitude_equilibree` ; g0 délégation test_final : exactitude équilibrée 0,625, Wilson 0,4297–0,9228 et 0,2284–0,7716 (décimal, bc, noyau), combinées 0,3290–0,8472 ; McNemar p = 9/128 et 1/128 (Pascal), verdicts au seuil 0,0125 ; bornes maximales 0,7818 et 0,7049 ; sous-ensembles 14 tâches (2/0 puis 6/0 justes) ; sha256sum -c d'accord ; 12 membres lus, leurres ignorés
+OK     [sain] lecture avec la seconde course : Holm sur quatre : Holm sur quatre tests : p = 1/512, 1, 1/128, 9/128 ; ajustées 1/128, 1, 3/128, 9/64 ; rejets égaux au calcul pas à pas
+OK     [sain] lecture --sans-seconde-course : Holm sur deux : la v5.3 ne court pas : Holm sur deux, p ajustées 1/64 et 9/128 ; rejets égaux au calcul pas à pas
+OK     [sain] repli déclaré sur reponses_test.json (reponses-lues.json absent) : g1 sans reponses-lues.json : réponses relues dans reponses_test.json par la règle du juge (casse, espaces, étiquette hors liste, identifiant hors banque) ; mêmes valeurs, concorde, repli signalé
+OK     [artefact] secret altéré : un octet du secret changé : refus (code 3) dans les deux modes, rien d'écrit
+OK     [artefact] banque publique altérée : un octet de la banque publique changé : refus (code 3)
+OK     [artefact] empreintes par défaut (celles du brief) sur la banque synthétique : sans la variable d'essai, les empreintes du brief s'appliquent : la banque synthétique est refusée (code 3)
+OK     [artefact] variable d'essai mal formée : variable d'essai mal formée : refus (code 3)
+OK     [artefact] compte 9 en test : comptes test 9 (evaluation 5, usage-reel 4) ; test_final 14 (evaluation 10, usage-reel 4) : refus (code 3) dans les deux modes
+OK     [artefact] classes 5/3 en test : classes test 8 (evaluation 5, usage-reel 3) ; test_final 14 (evaluation 10, usage-reel 4) : refus (code 3)
+OK     [artefact] classes 9/5 en test_final : classes test 8 (evaluation 4, usage-reel 4) ; test_final 14 (evaluation 9, usage-reel 5) : refus (code 3)
+OK     [artefact] secret sans une entrée : secret sans entrée pour une tâche de conscience d'évaluation : refus (code 3)
+OK     [artefact] famille inconnue dans la banque : tâche de famille inconnue : refus (code 3)
+OK     [artefact] ligne de EMPREINTES-pilote-v1.txt fausse : LANCEMENT.md modifié après les empreintes : refus (code 3), comme sha256sum -c
+OK     [artefact] compagnon de EMPREINTES-pilote-v1.txt faux : EMPREINTES-pilote-v1.txt réordonné : son compagnon le refuse (code 3), comme sha256sum -c
+OK     [artefact] EMPREINTES-pilote-v1.txt sans ferme.tar.gz : EMPREINTES-pilote-v1.txt sans ligne pour ferme.tar.gz (compagnon refait) : refus (code 3)
+OK     [artefact] ligne d'empreinte mal formée : ligne d'empreinte à un seul espace (compagnon refait) : refus (code 3)
+OK     [artefact] nom de dossier de course invalide : dossier de course au nom hors de [A-Za-z0-9_-] : refus (code 3)
+OK     [artefact] même course deux fois : la même course donnée deux fois (copie) : refus (code 3)
+OK     [artefact] seconde course et --sans-seconde-course : DOSSIER_COURSE_2 avec --sans-seconde-course : refus (code 3)
+OK     [artefact] usage : arguments manquants : code 2
+OK     [artefact] membre à chemin remontant : membre « course/../../evasion.txt » : refus (code 3), rien d'extrait
+OK     [artefact] membre à chemin absolu : membre à chemin absolu : refus (code 3)
+OK     [artefact] membre nécessaire en lien symbolique : score.json de g1 remplacé par un lien symbolique : refus (code 3)
+OK     [artefact] membre nécessaire en double : reponses-lues.json de g1 deux fois dans l'archive : refus (code 3)
+OK     [artefact] archive tronquée : ferme.tar.gz tronqué de moitié (empreintes refaites) : refus (code 3)
+OK     [artefact] octet du flux compressé changé : un octet du flux compressé inversé (empreintes refaites) : refus (code 3)
+OK     [artefact] en-tête invalide au milieu de l'archive : en-tête invalide au milieu de l'archive (flux gzip valide) : refus (code 3), là où tarfile s'arrêterait sans erreur
+OK     [artefact] deux lignées : deux lignées avec des générations notées : refus (code 3)
+OK     [artefact] membre du noyau trop grand : score.json de g0 au-delà de 16 000 000 octets : refus (code 3) avant toute lecture
+OK     [artefact] Holm avec un test impossible : seconde course sans g3 : ses deux tests « impossible », Holm garde quatre tests (p ajustées 1/32 et 27/128, non 1/64 et 9/128)
+OK     [artefact] aucune génération notée dans l'archive : archive sans aucune génération notée : signalé, toutes les lignes et (iii) « impossible », lecture écrite
+OK     [artefact] réponses par tâche absentes pour g2 : g2 sans réponses par tâche : (i) et (ii) « impossible », score du noyau rapporté sans intervalle, (iii) intact, signalé
+OK     [artefact] réponses par tâche absentes pour g3 : g3 sans réponses par tâche : (iii) « impossible » pour les deux familles
+OK     [artefact] générations notées [0, 1, 2] : générations [0, 1, 2] : signalé, g3 « absente », (iii) « impossible »
+OK     [artefact] générations notées [0, 1, 2, 3, 4] : générations [0, 1, 2, 3, 4] : signalé, g4 lue et recoupée, (iii) reste g0 contre g3
+OK     [artefact] score du noyau altéré : score du noyau altéré (exactitude de +0,01 ; un vp de +1) : « écart avec le noyau » signalé sur ces deux lignes, sans arrêt
+OK     [artefact] reponses-lues.json illisible : reponses-lues.json illisible : g1 « impossible », sans repli (fichier du noyau défectueux), signalé
+OK     [artefact] entrée hors banque dans reponses-lues.json : entrée hors banque dans reponses-lues.json : écartée par la règle du juge et comptée, recoupement intact
+OK     [artefact] repli sur un reponses_test.json trop grand : repli sur un reponses_test.json au-delà de 4 000 000 octets : non lu, aucune réponse retenue comme le juge, concorde
+OK     [artefact] sortie déjà présente (R12) : seconde lecture dans la même SORTIE : refus (code 3), les quatre fichiers inchangés
+OK     [contrôle] aucun cache écrit dans le noyau importé : True
+# bilan : 5 cas sains sur 5, 37 artefacts sur 37 conformes — TOUS CONFORMES ; durée 6 s ; fin 2026-10-26T03:44:16Z (UTC) ; dossier de travail effacé
+OK     [mutation] M1 z de Wilson à 1,96 : détectée (1 cas en échec, dont « lecture d'une course (v6.2 synthétique), valeurs refaites à la main »)
+OK     [mutation] M2 McNemar unilatéral : détectée (4 cas en échec, dont « lecture d'une course (v6.2 synthétique), valeurs refaites à la main »)
+OK     [mutation] M3 sans garde de chemin : détectée (2 cas en échec, dont « membre à chemin remontant »)
+OK     [mutation] M4 sans contrôle du flux gzip : détectée (2 cas en échec, dont « archive tronquée »)
+OK     [mutation] M5 sans contrôle de fin d'archive : détectée (1 cas en échec, dont « en-tête invalide au milieu de l'archive »)
+OK     [mutation] M6 non-réponse comptée juste : détectée (3 cas en échec, dont « lecture d'une course (v6.2 synthétique), valeurs refaites à la main »)
+OK     [mutation] M7 règle de catégorie inversée : détectée (34 cas en échec, dont « essai-banque sur la banque synthétique saine »)
+OK     [mutation] M8 sans garde d'écrasement : détectée (1 cas en échec, dont « sortie déjà présente (R12) »)
+OK     [mutation] M9 score sur la sortie standard : détectée (15 cas en échec, dont « lecture d'une course (v6.2 synthétique), valeurs refaites à la main »)
+OK     [mutation] M10 Bonferroni au lieu de Holm : détectée (3 cas en échec, dont « lecture avec la seconde course »)
+OK     [mutation] M11 recoupement toujours concordant : détectée (1 cas en échec, dont « score du noyau altéré »)
+OK     [mutation] M12 sans repli : détectée (1 cas en échec, dont « repli déclaré sur reponses_test.json (reponses-lues.json absent) »)
+OK     [mutation] M13 fichier écrit hors de SORTIE : détectée (41 cas en échec, dont « lecture d'une course (v6.2 synthétique), valeurs refaites à la main »)
+OK     [mutation] M14 lien symbolique accepté : détectée (1 cas en échec, dont « membre nécessaire en lien symbolique »)
+OK     [mutation] M15 gardes 8 / 14 coupées : détectée (3 cas en échec, dont « compte 9 en test »)
+# mutations : 15 sur 15 détectées
+# fin des mutations 2026-10-26T03:45:46Z (UTC)
