@@ -1,41 +1,49 @@
-"""Course d'idéation de l'organisme (v7, version 35) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 36) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
   juges scriptés notent par une règle fixe qui respecte le critère des témoins — répétition de la plomberie, du scellement et
   de la lecture ; ce n'est pas l'idéation ; les coûts sont **fictifs** (marqués au manifeste, jamais comptés comme réels) ;
 - `--moteur claude-sdk --url-relais http://127.0.0.1:PORT --confirmer-moteur-reel` (dépense, chez session-depot, sous un
-  GO cité) : vrais agents (Opus 5.5 et Fable 5.1 seuls), **aucun outil intégré** (`tools=[]` du kit, soit `--tools ''` ;
-  CL34-02), deux tours au plus, borne de temps par session (CL34-05), bac à sable exigé, clé tenue par le relais du noyau
-  avec son propre plafond ; **appel de contrôle de bout en bout par modèle avant la course** (CL31-01), compté au journal ;
-  toute session en erreur arrête la course et le lanceur rend un code ≠ 0.
+  GO cité) : vrais agents (Opus 5.5 et Fable 5.1 seuls), **aucun outil intégré** (`tools=[]` du kit, soit `--tools ''`),
+  deux tours au plus, borne de temps par session, bac à sable exigé, clé tenue par le relais du noyau avec son propre
+  plafond ; **appel de contrôle de bout en bout par modèle avant la course** (CL31-01), compté au journal ; toute session en
+  erreur arrête la course et le lanceur rend un code ≠ 0.
 
-Usage :
+Usage (course) :
   python -I -B demonstrations/ideation_v1.py SORTIE_NEUVE --liste-blanche LISTE.json --question Q.md --piece P1.md …
       --temoins TEMOINS.json [--piece-juge A1.md …] [--materiau M.md … --seconde-passe]
       [--proposeur opus=claude-opus-5-5] [--proposeur fable=claude-fable-5-1]
       [--juge juge-fable=claude-fable-5-1] [--juge juge-opus=claude-opus-5-5]
-      [--budget proposeur_ideation|claude-fable-5-1=5] … [--budget-total-usd 17] [--nombre 8] [--graine 20261028]
-      [--moteur simule|claude-sdk] [--url-relais URL] [--confirmer-moteur-reel] [--horodatage "date -u"]
-      [--racine-depot CHEMIN] [--juge-externe argon=gemini-argon]                         # bras rapporté, différé
+      [--proposeur-externe argon=gemini-argon --commande-externe "…" [--variable-transmise NOM] …]
+      [--juge-externe argon=gemini-argon] [--attestation-materiau ATT.json]
+      [--budget proposeur_ideation|claude-fable-5-1=5] … [--budget-total-usd 17] [--budget-externe-usd 4]
+      [--nombre 8] [--graine 20261028] [--moteur simule|claude-sdk] [--url-relais URL] [--confirmer-moteur-reel]
+      [--horodatage "date -u"] [--racine-depot CHEMIN] [--delai-session-s 1800] [--delai-commande-s 900]
 
-v35 (CL34-01, N-053 point 5) : le bras rapporté est **toujours différé** — la course n'appelle jamais le juge externe ; elle
-écrit sa consigne en attente, scellée. Après une lecture humaine attestée des fiches validées ET de cette consigne
-(`{"lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256": {etiquette: …}}`), on joue le bras, qui fait
-alors son propre appel de contrôle, tient le plafond total de la course et relit les témoins :
+v36 (décisions de Lazar du 28 octobre, 21:05 et 21:20 UTC ; messages n° 117 à 119 de session-depot) :
+- **Argon propose à égalité** (`--proposeur-externe`, joué dans la course par `--commande-externe`, qui reçoit la question
+  et les pièces sur l'entrée standard) ; sa seconde passe exige `--attestation-materiau` (lecture humaine attestée,
+  scellée, du matériau de seconde passe), sinon la course refuse avant tout appel ;
+- **Argon juge à poids égal** (`--juge-externe`), **toujours différé** : la course n'appelle jamais le juge externe, écrit
+  sa consigne en attente scellée **et n'écrit aucun classement** ; après l'attestation de lecture humaine
+  (`{"lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256": {etiquette: …}}`, scellée), le bras joue
+  Argon (appel de contrôle, plafond externe séparé) puis écrit le classement **à trois juges** (médiane par critère) :
   python -I -B demonstrations/ideation_v1.py SORTIE --bras-rapporte-differe --attestation-lecture-humaine ATTEST.json \
-      --juge-externe argon=gemini-argon --commande-juge-externe "…"
-`--attestation-lecture-humaine` sans `--bras-rapporte-differe` est refusé ; `--commande-juge-externe` n'est lue que sur le
-chemin différé (la clé de la commande n'a pas à exister pendant la course).
-Codes de sortie : 0 course lisible ; 2 arrêt (session en erreur, pièce refusée, appel de contrôle, réglage refusé, toute
-exception) ; 4 témoins échoués (classement écrit mais marqué illisible ; aucune « retenue » imprimée). (Le code 3 « aucun
-classement » de la v34 était inatteignable : une course sans fiche s'arrête en 2.)
+      --juge-externe argon=gemini-argon --commande-externe "…" [--variable-transmise NOM]
+- plafonds : `--budget-total-usd` (Claude, contrôles compris) et `--budget-externe-usd` (Argon, proposeur et juge), séparés.
+`--attestation-lecture-humaine` hors du bras, `--commande-externe` sans proposeur externe ni bras, un bras sans commande sur
+une course réelle, `--delai-session-s` ≤ 0 : refusés.
+Codes de sortie : 0 lisible (ou course écrite, en attente du bras) ; 2 arrêt (session en erreur, pièce refusée, appel de
+contrôle, réglage refusé, toute exception) ; 4 témoins échoués chez un juge (classement écrit, marqué illisible ; aucune
+« retenue » imprimée) ; 5 juge externe sans réponse (classement à deux juges écrit, marqué « sans juge externe, illisible
+au sens du devis »).
 
-Juge externe (décision de Lazar, 28 octobre, 17:58 heure de Paris : juge d'une autre lignée, extension de N-053 point 4) :
-la commande reçoit la consigne anonymisée sur l'entrée standard, dans un environnement minimal explicite, et imprime en
-dernière ligne `{"texte": …, "cout_usd": …}` (coût **obligatoire**) ; elle tient sa clé elle-même ; ses notes sont
-rapportées à part, jamais agrégées. En moteur simulé, `--commande-juge-externe` peut être omise : un juge externe scripté
-est joué.
+La commande externe : consigne sur l'entrée standard, environnement minimal explicite (plus `PLAFOND_SESSION_USD`,
+`ROLE_POLE` et `--variable-transmise`, jamais un nom de clé), dernière ligne `{"texte": …, "cout_usd": …}` — coût
+**obligatoire, fini, strictement positif** ; sur un échec, le coût imprimé est compté, sinon le plafond de session l'est
+(marqué inconnu) ; au délai, tout son groupe de processus est arrêté. En moteur simulé, sans commande, un adaptateur scripté
+joue les rôles externes (jamais sur une course réelle).
 
 La liste blanche (`{chemin réel: sha256}`) est écrite par `--construire-liste-blanche FICHIERS…` puis scellée par le devis ;
 le noyau refuse toute pièce, question, matériau ou témoin hors liste ou à empreinte différente, tout lien symbolique, et
@@ -153,12 +161,13 @@ def version_outil_ligne_de_commande(sdk):
     """v35 (CL34-09) : version de l'outil en ligne de commande que le kit lance (`claude --version`), ou « inconnue »."""
     import shutil
     import subprocess
-    candidats = [shutil.which("claude")]
+    candidats = []  # CL35-10 : l'outil que le kit lance réellement d'abord (embarqué), PATH en repli
     try:
         from claude_agent_sdk._internal.transport.subprocess_cli import SubprocessCLITransport
         candidats.append(SubprocessCLITransport("", sdk.ClaudeAgentOptions())._find_cli())
     except Exception:  # noqa: BLE001 — la version est une information du manifeste, jamais une condition
         pass
+    candidats.append(shutil.which("claude"))
     for c in candidats:
         if c and os.path.exists(c):
             try:
@@ -168,13 +177,6 @@ def version_outil_ligne_de_commande(sdk):
             except (OSError, subprocess.SubprocessError):
                 pass
     return {"chemin": None, "version": "inconnue"}
-
-
-def description_commande_externe(commande):
-    """v35 (CL34-09) : la commande du juge externe et l'empreinte de chacun de ses arguments qui est un fichier."""
-    from pole.outils import sha256_fichier
-    return {"commande": list(commande),
-            "empreintes": {c: sha256_fichier(c) for c in commande if os.path.isfile(c)}}
 
 
 def principal(argv=None):
@@ -191,18 +193,29 @@ def principal(argv=None):
     a.add_argument("--seconde-passe", action="store_true")
     a.add_argument("--proposeur", action="append", default=[], help="etiquette=modele (répétable)")
     a.add_argument("--juge", action="append", default=[], help="etiquette=modele (répétable)")
-    a.add_argument("--juge-externe", action="append", default=[], help="etiquette=modele d'une autre lignée (bras rapporté)")
-    a.add_argument("--commande-juge-externe", help="commande (shell, découpée) qui joue le juge externe")
-    a.add_argument("--attestation-lecture-humaine", help="JSON {lecteur, fiches_validees_sha256, lu_le} : autorise le bras rapporté")
+    a.add_argument("--proposeur-externe", action="append", default=[],
+                   help="etiquette=modele d'une autre lignée, joué dans la course par --commande-externe")
+    a.add_argument("--juge-externe", action="append", default=[], help="etiquette=modele d'une autre lignée, juge différé")
+    a.add_argument("--commande-externe", "--commande-juge-externe", dest="commande_externe",
+                   help="commande (shell, découpée) qui joue les rôles externes (consigne sur l'entrée standard)")
+    a.add_argument("--variable-transmise", action="append", default=[],
+                   help="nom d'une variable d'environnement transmise à la commande externe (jamais un nom de clé)")
+    a.add_argument("--attestation-lecture-humaine",
+                   help="JSON scellé {lecteur, lu_le, fiches_validees_sha256, consignes_en_attente_sha256} : autorise le bras")
+    a.add_argument("--attestation-materiau",
+                   help="JSON scellé {lecteur, lu_le, materiau_sha256: {nom: sha256}} : seconde passe d'un proposeur externe")
     a.add_argument("--bras-rapporte-differe", action="store_true",
                    help="joue seulement les juges externes différés d'une course déjà faite (SORTIE existante)")
     a.add_argument("--budget", action="append", default=[], help="role|modele=plafond par session en dollars (répétable)")
     a.add_argument("--nombre", type=int, default=8, help=f"fiches au plus par proposeur et par passe (1 à {idn.MAX_FICHES_ABSOLU})")
     a.add_argument("--max-tours", type=int, default=idn.MAX_TOURS_IDEATION)
-    a.add_argument("--budget-total-usd", type=float, default=17.0, help="plafond total côté Claude (CL34-07 : 17)")
+    a.add_argument("--budget-total-usd", type=float, default=17.0, help="plafond total côté Claude, contrôles compris")
+    a.add_argument("--budget-externe-usd", type=float, default=4.0,
+                   help="plafond total des sessions externes (Argon : deux passes à 1, un jugement à 1,5, contrôle)")
     a.add_argument("--budget-controle-usd", type=float, default=0.2)
     a.add_argument("--racine-depot", help="racine du dépôt (lecture interdite aux agents) ; défaut : git rev-parse")
-    a.add_argument("--delai-session-s", type=float, default=None, help="borne de temps par session réelle (CL34-05)")
+    a.add_argument("--delai-session-s", type=float, default=None, help="borne de temps par session réelle (défaut 1800)")
+    a.add_argument("--delai-commande-s", type=float, default=900.0, help="borne de temps de la commande externe")
     a.add_argument("--graine", type=int, default=20261028)
     a.add_argument("--moteur", choices=("simule", "claude-sdk"), default="simule")
     a.add_argument("--url-relais")
@@ -225,18 +238,36 @@ def principal(argv=None):
     if args.bras_rapporte_differe and not (args.juge_externe and args.attestation_lecture_humaine):
         a.error("--bras-rapporte-differe exige --juge-externe et --attestation-lecture-humaine")
     if args.attestation_lecture_humaine and not args.bras_rapporte_differe:  # CL34-01
-        a.error("--attestation-lecture-humaine ne se donne qu'avec --bras-rapporte-differe : le bras rapporté est toujours différé")
+        a.error("--attestation-lecture-humaine ne se donne qu'avec --bras-rapporte-differe : le bras est toujours différé")
+    if args.commande_externe and not (args.bras_rapporte_differe or args.proposeur_externe):  # CL35-07a
+        a.error("--commande-externe n'a d'usage qu'avec --proposeur-externe (course) ou --bras-rapporte-differe")
+    if args.bras_rapporte_differe and args.proposeur_externe:
+        a.error("--bras-rapporte-differe ne joue que des juges externes")
     if not 1 <= args.nombre <= idn.MAX_FICHES_ABSOLU:  # CL34-11
         a.error(f"--nombre ∉ [1, {idn.MAX_FICHES_ABSOLU}]")
+    if args.delai_session_s is not None and not args.delai_session_s > 0:  # CL35-09
+        a.error("--delai-session-s doit être strictement positif")
+    if not args.delai_commande_s > 0:
+        a.error("--delai-commande-s doit être strictement positif")
+    try:
+        return _principal(args)
+    except Exception as e:  # noqa: BLE001 — CL35-08 : toute exception après l'analyse des arguments rend 2
+        print(json.dumps({"arret": type(e).__name__ + " : " + str(e)[:1000]}, ensure_ascii=False), file=sys.stderr)
+        return 2
 
+
+def _principal(args):
     proposeurs = [paire(p, f"proposeur-{i + 1}") for i, p in enumerate(args.proposeur)] or \
         [("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1")]
     juges = [paire(j, f"juge-{i + 1}") for i, j in enumerate(args.juge)] or \
         [("juge-fable", "claude-fable-5-1"), ("juge-opus", "claude-opus-5-5")]
-    externes = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.juge_externe)]
+    juges_ext = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.juge_externe)]
+    prop_ext = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.proposeur_externe)]
     budgets = dict(BUDGETS_PAR_DEFAUT)
-    for _, m in externes:
-        budgets.setdefault(("juge_ideation", m), 3.0)
+    for _, m in juges_ext:
+        budgets.setdefault(("juge_ideation", m), 1.5)
+    for _, m in prop_ext:
+        budgets.setdefault(("proposeur_ideation", m), 1.0)
     for b in args.budget:
         cle, valeur = b.split("=", 1)
         role, modele = cle.split("|", 1)
@@ -248,9 +279,10 @@ def principal(argv=None):
     interdits = []
     sortie = os.path.abspath(args.sortie)
     sortie_controle = sortie + "-controle"
-    if args.moteur == "claude-sdk":
-        from pole.adaptateurs import (AdaptateurClaudeSDK, MoteurNonArme, etat_bac_a_sable_detaille, importer_sdk,
-                                      verifier_modele_reel)
+    delai_session = None
+    if args.moteur == "claude-sdk" and not args.bras_rapporte_differe:
+        from pole.adaptateurs import (DELAI_SESSION_S, AdaptateurClaudeSDK, MoteurNonArme, etat_bac_a_sable_detaille,
+                                      importer_sdk, verifier_modele_reel)
         if not args.confirmer_moteur_reel:
             raise MoteurNonArme("--moteur claude-sdk exige --confirmer-moteur-reel (dépense réelle, relais local requis)")
         if not args.url_relais:
@@ -260,89 +292,93 @@ def principal(argv=None):
             verifier_modele_reel(m)
         sdk = importer_sdk()
         versions["claude_agent_sdk"] = getattr(sdk, "__version__", "inconnue")
-        versions["outil_ligne_de_commande"] = version_outil_ligne_de_commande(sdk)  # CL34-09
+        versions["outil_ligne_de_commande"] = version_outil_ligne_de_commande(sdk)  # CL34-09, CL35-10
         etat_bac = etat_bac_a_sable_detaille()
         if not etat_bac["actif"]:
             raise idn.CourseInterrompue("bac à sable inactif : " + etat_bac["motif"])
         if not etat_bac["proc_neuf"] and os.geteuid() == 0:
             raise idn.CourseInterrompue("le bac à sable ne monte pas un /proc neuf et l'orchestrateur tourne sous root : "
                                         "lancer les agents sous un utilisateur non root distinct de celui du relais (CL31-15)")
-        # CL31-08 : lectures interdites sur la sortie, le dossier de contrôle (CL34-06 : il est à côté de la sortie), la
-        # racine du dépôt et le dossier personnel
         racine, origine_racine = racine_depot(args.racine_depot)
         interdits = [sortie, sortie_controle, racine, os.path.expanduser("~")]
         versions["racine_depot"] = {"chemin": racine, "origine": origine_racine}
-        adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True, interdire_lecture=interdits,
-                                         **({"delai_s": args.delai_session_s} if args.delai_session_s else {}))
+        delai_session = args.delai_session_s or DELAI_SESSION_S
+        adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True, interdire_lecture=interdits, delai_s=delai_session)
         adaptateur.bac_a_sable = etat_bac
         lire_relais = lecteur_relais(args.url_relais)
     else:
         adaptateur = AdaptateurIdeationSimule(args.graine)
-    # v35 (CL34-01) : la commande du juge externe n'est lue que sur le chemin différé ; dans la course, le juge externe
-    # n'est qu'une étiquette et un modèle (sa consigne est écrite en attente, jamais jouée).
-    juges_externes, commande_externe = [], None
-    if externes:
-        if args.bras_rapporte_differe and args.commande_juge_externe:
-            import shlex
-            from pole.adaptateurs import AdaptateurJugeExterne
-            commande = shlex.split(args.commande_juge_externe)
-            externe = AdaptateurJugeExterne(commande)
-            commande_externe = description_commande_externe(commande)
-        elif args.bras_rapporte_differe and args.moteur == "simule":
-            externe = AdaptateurIdeationSimule(args.graine + 1)
-        elif args.bras_rapporte_differe:
-            raise idn.CourseInterrompue("--bras-rapporte-differe exige --commande-juge-externe avec le moteur réel")
-        else:
-            externe = None  # jamais appelé par la course
-        juges_externes = [(e, m, externe) for e, m in externes]
+
+    # --- adaptateur des rôles externes (Argon) : la commande, ou un adaptateur scripté en moteur simulé seulement
+    externe, commande_externe = None, None
+    if args.commande_externe:
+        import shlex
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        externe = AdaptateurCommandeExterne(shlex.split(args.commande_externe), delai_s=args.delai_commande_s,
+                                            variables_transmises=tuple(args.variable_transmise))
+        commande_externe = externe.description()
+    elif args.moteur == "simule" and (prop_ext or args.bras_rapporte_differe):
+        externe = AdaptateurIdeationSimule(args.graine + 1)
+    elif prop_ext:
+        raise idn.CourseInterrompue("--proposeur-externe exige --commande-externe avec le moteur réel")
+    elif args.bras_rapporte_differe:
+        raise idn.CourseInterrompue("--bras-rapporte-differe exige --commande-externe avec le moteur réel")
 
     os.makedirs(os.path.dirname(sortie), exist_ok=True)
     if args.bras_rapporte_differe:
         try:
-            res = idn.executer_bras_rapporte(sortie, attestation_lecture_humaine=args.attestation_lecture_humaine,
-                                             juges_externes=juges_externes, budgets=budgets, lire_etat_relais=lire_relais,
-                                             horodatage=horodatage(args.horodatage),
-                                             budget_controle_usd=args.budget_controle_usd,
-                                             exiger_cout_controle=bool(args.commande_juge_externe),
-                                             budget_total_usd=None)
-        except Exception as e:  # noqa: BLE001 — tout arrêt est imprimé et rend 2 ; le manifeste du bras est déjà écrit
-            print(json.dumps({"arret": type(e).__name__ + " : " + str(e)}, ensure_ascii=False), file=sys.stderr)
-            return 2
-        print(json.dumps({"bras_rapporte": res["lecture"]["accord_avec_le_classement_agrege"],
-                          "temoins_ok_bras_rapporte": res["lecture"]["temoins"]["temoins_ok"],
-                          "cout_total_usd": round(res["journal"]["cout_total_usd"], 4)}, ensure_ascii=False, indent=1))
-        return 0
-    # CL31-01 : appel de contrôle par modèle Claude, avant tout, dans `SORTIE-controle` (interdit en lecture aux agents,
-    # CL34-06) ; son coût est compté dans le plafond total (CL34-07). Le juge externe n'a pas d'appel de contrôle ici :
-    # il se fait sur le chemin différé (CL34-04).
+            res = idn.executer_bras_differe(sortie, attestation_lecture_humaine=args.attestation_lecture_humaine,
+                                            juges_externes=[(e, m, externe) for e, m in juges_ext], budgets=budgets,
+                                            horodatage=horodatage(args.horodatage), budget_controle_usd=args.budget_controle_usd,
+                                            exiger_cout_controle=bool(args.commande_externe), budget_externe_usd=None,
+                                            commande_externe=commande_externe)
+        except idn.SansJugeExterne as e:
+            print(json.dumps({"arret": "sans juge externe, illisible au sens du devis : " + str(e),
+                              "classement_sans_bras": "classement-sans-bras.json (deux juges, illisible)",
+                              "cout_total_usd": round(e.resultat["journal"]["cout_total_usd"], 4)}, ensure_ascii=False,
+                             indent=1), file=sys.stderr)
+            return 5
+        lisible = res["lecture"]["lisible_L2_L4"]
+        bilan = {"juges_agreges": res["lecture"]["juges_agreges"], "nom_agregat": res["lecture"]["nom_agregat"],
+                 "temoins_ok": res["lecture"]["temoins"]["temoins_ok"], "classement_lisible_L2_L4": lisible,
+                 "accords_de_rang_par_paire": res["lecture"]["accords_de_rang_par_paire"],
+                 "cout_total_usd": round(res["journal"]["cout_total_usd"], 4), "cout_fictif": res["journal"]["cout_fictif"]}
+        if lisible:
+            bilan["retenues"] = [(l["rang"], l["identifiant_auteur"], l["nom"], l["total"]) for l in res["classement"]
+                                 if l["eligible"]][:5]
+        print(json.dumps(bilan, ensure_ascii=False, indent=1))
+        return 0 if lisible else 4
+    # CL31-01 : appel de contrôle par modèle Claude, avant tout, dans `SORTIE-controle` (interdit en lecture aux agents) ;
+    # son coût est compté dans le plafond total (CL34-07). Le juge externe fait le sien sur le chemin différé.
     modeles = sorted({m for _, m in proposeurs} | {m for _, m in juges})
-    try:
-        controle = idn.appel_de_controle(adaptateur, modeles, sortie_controle, args.budget_controle_usd, lire_relais,
-                                         exiger_cout=(args.moteur == "claude-sdk"))
-    except idn.CourseInterrompue as e:
-        print(json.dumps({"arret": "appel de contrôle : " + str(e)}, ensure_ascii=False), file=sys.stderr)
-        return 2
+    controle = idn.appel_de_controle(adaptateur, modeles, sortie_controle, args.budget_controle_usd, lire_relais,
+                                     exiger_cout=(args.moteur == "claude-sdk"))
     cout_controle = sum(float(c.get("cout_declare_usd") or 0.0) for c in controle.values())
-    try:
-        res = idn.executer_ideation(adaptateur, sortie, liste_blanche=args.liste_blanche, question=args.question,
-                                    pieces=args.piece, proposeurs=proposeurs, juges=juges, temoins=args.temoins,
-                                    graine=args.graine, budget_total_usd=args.budget_total_usd, budgets=budgets,
-                                    nombre_par_proposeur=args.nombre, max_tours=args.max_tours, materiau=args.materiau,
-                                    seconde_passe=args.seconde_passe, pieces_juge=args.piece_juge,
-                                    horodatage=horodatage(args.horodatage), moteur=args.moteur,
-                                    lire_etat_relais=lire_relais, etat_bac_a_sable=etat_bac, url_relais=args.url_relais,
-                                    versions=dict(versions, appel_de_controle=controle), juges_externes=juges_externes,
-                                    cout_deja_engage_usd=cout_controle, lectures_interdites=interdits,
-                                    commande_externe=commande_externe)
-    except Exception as e:  # noqa: BLE001 — CL34-09 : toute exception rend 2 ; le noyau a écrit le manifeste de fin
-        print(json.dumps({"arret": type(e).__name__ + " : " + str(e)}, ensure_ascii=False), file=sys.stderr)
-        return 2
-    lisible = res["lecture"]["temoins"]["temoins_ok"]
+    res = idn.executer_ideation(adaptateur, sortie, liste_blanche=args.liste_blanche, question=args.question,
+                                pieces=args.piece, proposeurs=proposeurs, juges=juges, temoins=args.temoins,
+                                graine=args.graine, budget_total_usd=args.budget_total_usd, budgets=budgets,
+                                nombre_par_proposeur=args.nombre, max_tours=args.max_tours, materiau=args.materiau,
+                                seconde_passe=args.seconde_passe, pieces_juge=args.piece_juge,
+                                horodatage=horodatage(args.horodatage), moteur=args.moteur,
+                                lire_etat_relais=lire_relais, etat_bac_a_sable=etat_bac, url_relais=args.url_relais,
+                                versions=dict(versions, appel_de_controle=controle), juges_externes=juges_ext,
+                                proposeurs_externes=[(e, m, externe) for e, m in prop_ext],
+                                budget_externe_usd=args.budget_externe_usd if (prop_ext or juges_ext) else 0.0,
+                                attestation_materiau=args.attestation_materiau, cout_deja_engage_usd=cout_controle,
+                                lectures_interdites=interdits, commande_externe=commande_externe,
+                                delai_session_s=delai_session)
     bilan = {"fiches_validees": len(res["fiches"]), "refusees": len(res["refus"]), "quarantaine": len(res["quarantaine"]),
              "quarantaine_par_proposeur": res["lecture"]["quarantaine_par_proposeur"],
-             "temoins_ok": lisible, "classement_lisible_L2_L4": lisible,
-             "cout_total_usd": round(res["journal"]["cout_total_usd"], 4), "cout_fictif": res["journal"]["cout_fictif"],
-             "bras_rapporte_differe": res["lecture"].get("bras_rapporte_differe", [])}
+             "temoins_ok": res["lecture"]["temoins"]["temoins_ok"],
+             "cout_total_usd": round(res["journal"]["cout_total_usd"], 4),
+             "cout_externe_usd": round(res["journal"]["cout_externe_usd"], 4), "cout_fictif": res["journal"]["cout_fictif"]}
+    if res["en_attente_bras"]:
+        bilan["en_attente_bras"] = res["lecture"]["bras_rapporte_differe"]
+        bilan["classement"] = "aucun avant le bras (n° 118 point 1)"
+        print(json.dumps(bilan, ensure_ascii=False, indent=1))
+        return 0 if res["lecture"]["temoins"]["temoins_ok"] else 4
+    lisible = res["lecture"]["temoins"]["temoins_ok"]
+    bilan["classement_lisible_L2_L4"] = lisible
     if lisible:  # v34 (P-7) : aucune « retenue » n'est imprimée quand les témoins ont échoué
         bilan["retenues"] = [(l["rang"], l["identifiant_auteur"], l["nom"], l["total"]) for l in res["classement"]
                              if l["eligible"]][:5]

@@ -26,10 +26,17 @@ OUTILS_AUTORISES = ("Read", "Write", "Edit", "Bash")
 # (`tools=[]` → `--tools ''`, aucun outil intégré). Les rôles listés ici reçoivent donc `tools=[]` ; les autres gardent le jeu
 # par défaut du kit, borné par `allowed_tools` et `disallowed_tools`.
 OUTILS_PAR_ROLE = {"proposeur_ideation": (), "juge_ideation": ()}
-# v35 (CL34-08) : effort de réflexion fixé par rôle, consigné au manifeste de départ (valeurs permises par le kit : low,
-# medium, high, xhigh, max). Les rôles absents gardent le défaut du kit (None).
+# v35 (CL34-08) : effort de réflexion fixé par rôle (valeurs permises par le kit : low, medium, high, xhigh, max) ; les
+# rôles absents gardent le défaut du kit (None). v36 (CL35-09) : `reglages_kit_par_role()` est consigné au manifeste de
+# départ par la course.
 EFFORT_PAR_ROLE = {"proposeur_ideation": "high", "juge_ideation": "medium"}
 DELAI_SESSION_S = 1800  # v35 (CL34-05) : borne de temps par session réelle ; dépassée → statut « erreur »
+
+
+def reglages_kit_par_role():
+    """v36 (CL35-09) : ce que le kit reçoit par rôle (jeu d'outils disponible, effort), pour le manifeste de départ."""
+    return {role: {"tools": list(OUTILS_PAR_ROLE[role]) if role in OUTILS_PAR_ROLE else "défaut du kit",
+                   "effort": EFFORT_PAR_ROLE.get(role)} for role in ROLES}
 OUTILS_INTERDITS = ("WebFetch", "WebSearch", "Agent", "Task", "NotebookEdit", "Skill", "TodoWrite", "KillShell",
                     "BashOutput", "SlashCommand")
 MODE_PERMISSION = "dontAsk"
@@ -70,6 +77,7 @@ class Resultat:
     statut: str = "ok"
     erreur: object = None
     cout_simule_usd: float = 0.0  # v10 : coût déclaré par un rôle simulé dans un adaptateur mixte (information, jamais compté)
+    cout_inconnu: bool = False  # v36 (CL35-02) : le coût réel n'a pas pu être lu ; `cout_declare_usd` porte alors le plafond de session
 
 
 class Adaptateur:
@@ -346,69 +354,118 @@ def __getattr__(nom):
     raise AttributeError(nom)
 
 
-class AdaptateurJugeExterne(Adaptateur):
-    """v33 (décision de Lazar, 28 octobre 17:58 heure de Paris : juge d'une autre lignée en **bras rapporté**, extension
-    de N-053 point 4 au tournoi d'idéation). Le noyau écrit la consigne (déjà anonymisée) ; une **commande fournie par
-    l'opérateur** (session-depot : son appel à Gemini Argon, par exemple) la reçoit sur l'entrée standard et imprime une
+class AdaptateurCommandeExterne(Adaptateur):
+    """v33 (décision de Lazar, 28 octobre 17:58 heure de Paris : juge d'une autre lignée) ; v36 (décisions de Lazar du
+    28 octobre, 21:05 et 21:20 UTC, messages n° 118 et 119 de session-depot) : **Argon juge à poids égal et proposeur à
+    égalité**. Le noyau écrit la consigne (anonymisée pour un juge) ; une **commande fournie par l'opérateur** (session-depot :
+    son appel à Gemini Argon) la reçoit sur l'entrée standard, dans un **environnement explicite et minimal** (CL34-09 ; plus
+    `variables_transmises`, jamais un nom de clé ; `PLAFOND_SESSION_USD` et `ROLE_POLE` ajoutés, CL35-05), et imprime une
     ligne JSON `{"texte": "...", "cout_usd": 0.0}` ; le noyau lit le texte, le caviarde, compte le coût déclaré. Aucune clé
-    ne transite par le noyau ; la commande est responsable de sa propre clé et de son propre plafond. Rôle `juge_ideation`
-    seulement ; modèle libre (hors de la liste Claude), consigné au manifeste comme **bras rapporté** : ses notes sont
-    rapportées à part, jamais agrégées avec celles des juges Claude (voir `ideation.executer_ideation`)."""
+    ne transite par le noyau ; la commande est responsable de sa propre clé et de son propre plafond.
 
-    nom = "juge-externe"
-    # v35 (CL34-09) : le sous-processus reçoit un environnement explicite et minimal, le même que celui qui est vérifié :
-    # ces variables seulement, copiées depuis l'environnement de l'orchestrateur, plus `variables_transmises` (par exemple
-    # le chemin du fichier de clé de la commande — jamais une clé).
+    Rôles : `proposeur_ideation` (dans la course : question et pièces seulement) et `juge_ideation` (différé, après
+    attestation). Coût (CL35-01, CL35-02) : **obligatoire, fini, strictement positif** (un appel facturé ne coûte jamais 0 ;
+    un coût absent, NaN, infini, nul ou négatif → `erreur`) ; sur une sortie ≠ 0 ou un délai dépassé, la dernière ligne
+    est lue si elle est conforme et son coût est compté ; sinon le **plafond de session** est compté, marqué
+    `cout_inconnu`. Délai (CL35-13) : la commande tourne dans sa propre session de processus et tout le groupe est arrêté
+    au délai (`os.killpg`)."""
+
+    nom = "commande-externe"
+    ROLES_PERMIS = ("proposeur_ideation", "juge_ideation")
     VARIABLES_MINIMALES = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")
 
     def __init__(self, commande, environnement=None, delai_s=900, variables_transmises=()):
         if not isinstance(commande, (list, tuple)) or not commande or not all(isinstance(c, str) for c in commande):
-            raise ValueError("commande du juge externe : liste non vide de chaînes")
+            raise ValueError("commande externe : liste non vide de chaînes")
+        if isinstance(delai_s, bool) or not isinstance(delai_s, (int, float)) or not delai_s > 0:
+            raise ValueError("delai_s : nombre strictement positif (secondes)")
         self.commande = list(commande)
         self._environnement = environnement
-        self.delai_s = delai_s
+        self.delai_s = float(delai_s)
         self.variables_transmises = tuple(variables_transmises)
         if noms_de_cle_presents({v: "x" for v in self.variables_transmises}):
             raise CleDansEnvironnement("variables_transmises : un nom de variable de clé ne se transmet jamais")
 
-    def environnement_commande(self):
+    def environnement_commande(self, budget_usd=None, role=None):
         """L'environnement effectivement passé à la commande (fonction séparée pour être testée)."""
         source = os.environ if self._environnement is None else self._environnement
         presents = noms_de_cle_presents(source)
         if presents:
             raise CleDansEnvironnement("variables de clé présentes dans l'environnement de l'orchestrateur ("
-                                       + ", ".join(presents) + ") : la commande du juge externe tient sa clé elle-même")
+                                       + ", ".join(presents) + ") : la commande externe tient sa clé elle-même")
         env = {v: source[v] for v in self.VARIABLES_MINIMALES + self.variables_transmises if v in source}
         env.setdefault("PATH", os.defpath)
+        if budget_usd is not None:
+            env["PLAFOND_SESSION_USD"] = repr(float(budget_usd))
+        if role is not None:
+            env["ROLE_POLE"] = str(role)
         return env
 
-    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+    def description(self):
+        """v36 (CL35-03) : la commande, l'empreinte de chacun de ses arguments qui est un fichier, les noms transmis."""
+        from .outils import sha256_fichier
+        return {"commande": list(self.commande),
+                "empreintes": {c: sha256_fichier(c) for c in self.commande if os.path.isfile(c)},
+                "variables_transmises": list(self.variables_transmises), "delai_s": self.delai_s}
+
+    @staticmethod
+    def lire_derniere_ligne(sortie_octets):
+        """Rend (objet, motif) : l'objet JSON de la dernière ligne non vide si elle est conforme `{texte, cout_usd}` avec un
+        coût fini et strictement positif ; sinon (None, motif)."""
         import json
-        import subprocess
-        if role != "juge_ideation":
-            raise ValueError(f"le juge externe ne joue que juge_ideation, pas {role!r}")
-        env = self.environnement_commande()
-        try:
-            r = subprocess.run(self.commande, input=consigne.encode("utf-8"), capture_output=True, timeout=self.delai_s,
-                               cwd=dossier, env=env)
-        except (OSError, subprocess.SubprocessError) as erreur:
-            return Resultat("", [], 0.0, "erreur", type(erreur).__name__ + " : " + caviarder(str(erreur))[0][:300])
-        if r.returncode != 0:
-            return Resultat("", [], 0.0, "erreur", "commande du juge externe : code " + str(r.returncode) + " : "
-                            + caviarder(r.stderr.decode("utf-8", "replace"))[0][:300])
-        lignes = [l for l in r.stdout.decode("utf-8", "replace").splitlines() if l.strip()]
+        lignes = [l for l in sortie_octets.decode("utf-8", "replace").splitlines() if l.strip()]
         try:
             objet = json.loads(lignes[-1]) if lignes else None
         except ValueError:
             objet = None
         if not isinstance(objet, dict) or not isinstance(objet.get("texte"), str):
-            return Resultat("", [], 0.0, "erreur", "commande du juge externe : dernière ligne non JSON {texte, cout_usd}")
-        if "cout_usd" not in objet:  # v35 (CL34-03) : un coût manquant n'est jamais lu comme 0
-            return Resultat("", [], 0.0, "erreur", "commande du juge externe : cout_usd manquant (obligatoire)")
+            return None, "dernière ligne non JSON {texte, cout_usd}"
+        if "cout_usd" not in objet:
+            return None, "cout_usd manquant (obligatoire)"
         cout = objet["cout_usd"]
-        if isinstance(cout, bool) or not isinstance(cout, (int, float)) or cout < 0:
-            return Resultat("", [], 0.0, "erreur", "commande du juge externe : cout_usd non numérique ou négatif")
-        if budget_usd + 1e-12 < float(cout):
-            return Resultat(caviarder(objet["texte"])[0], [], float(cout), "budget_depasse",
+        if isinstance(cout, bool) or not isinstance(cout, (int, float)) or not math.isfinite(cout) or cout <= 0:
+            return None, f"cout_usd non fini ou non strictement positif ({cout!r})"
+        return objet, None
+
+    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+        import signal
+        import subprocess
+        if role not in self.ROLES_PERMIS:
+            raise ValueError(f"la commande externe ne joue que {self.ROLES_PERMIS}, pas {role!r}")
+        env = self.environnement_commande(budget_usd, role)
+        plafond = float(budget_usd)
+        try:
+            p = subprocess.Popen(self.commande, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                 cwd=dossier, env=env, start_new_session=True)
+        except OSError as erreur:
+            return Resultat("", [], plafond, "erreur", type(erreur).__name__ + " : " + caviarder(str(erreur))[0][:300],
+                            cout_inconnu=True)
+        try:
+            sortie, err = p.communicate(input=consigne.encode("utf-8"), timeout=self.delai_s)
+            delai_depasse = False
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(p.pid, signal.SIGKILL)  # CL35-13 : tout le groupe, petits-enfants compris
+            except OSError:
+                pass
+            sortie, err = p.communicate()
+            delai_depasse = True
+        objet, motif = self.lire_derniere_ligne(sortie)
+        if delai_depasse or p.returncode != 0:
+            quoi = (f"délai de {self.delai_s:g} s dépassé, groupe de processus arrêté" if delai_depasse
+                    else "code " + str(p.returncode) + " : " + caviarder(err.decode("utf-8", "replace"))[0][:300])
+            if objet is not None:  # CL35-02 : le coût imprimé avant l'échec est compté
+                return Resultat("", [], float(objet["cout_usd"]), "erreur", "commande externe : " + quoi)
+            return Resultat("", [], plafond, "erreur", "commande externe : " + quoi + " ; coût inconnu, plafond de "
+                            "session compté", cout_inconnu=True)
+        if objet is None:
+            return Resultat("", [], plafond, "erreur", "commande externe : " + motif + " ; coût inconnu, plafond de "
+                            "session compté", cout_inconnu=True)
+        cout = float(objet["cout_usd"])
+        if plafond + 1e-12 < cout:
+            return Resultat(caviarder(objet["texte"])[0], [], cout, "budget_depasse",
                             "coût déclaré au-dessus du plafond de session")
-        return Resultat(caviarder(objet["texte"])[0], [], float(cout), "ok")
+        return Resultat(caviarder(objet["texte"])[0], [], cout, "ok")
+
+
+AdaptateurJugeExterne = AdaptateurCommandeExterne  # nom de la v33 à v35, gardé pour les lecteurs

@@ -1,4 +1,4 @@
-"""Course d'idéation (v7, version 35) : la prise « idéation » de l'organisme — proposer et classer seulement.
+"""Course d'idéation (v7, version 36) : la prise « idéation » de l'organisme — proposer et classer seulement.
 
 Demande de Lazar du 28 octobre 2026 (15:27, heure de Paris) : « on a besoin de l'organisme pour qu'il réfléchisse et
 propose lui-même des questions bien affûtées ». Pas de banque ni d'épreuve : des **proposeurs** (vrais agents, Opus 5.5 et
@@ -110,6 +110,15 @@ class CourseInterrompue(RuntimeError):
 
 class NotesInvalides(ValueError):
     pass
+
+
+class SansJugeExterne(CourseInterrompue):
+    """v36 (n° 118 point 3) : le juge externe n'a pas rendu ; un classement à deux juges a été écrit, marqué illisible au
+    sens du devis ; `resultat` le porte."""
+
+    def __init__(self, motif, resultat):
+        super().__init__(motif)
+        self.resultat = resultat
 
 
 # --- adresse du relais (CL31-01, 3) ------------------------------------------------------------------------------------
@@ -636,21 +645,59 @@ def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=
     return lecture
 
 
+NOMS_ADAPTATEURS_EXTERNES = ("commande-externe", "juge-externe")
+
+
+def _verifier_adaptateur_principal(adaptateur, moteur, proposeurs, juges):
+    """v36 (CL35-06) : l'adaptateur principal ne peut pas être une commande externe (ni par le rôle réel d'un adaptateur
+    mixte) ; avec le moteur réel, il doit être l'adaptateur du kit et chaque modèle Claude doit être permis."""
+    noms = {getattr(adaptateur, "nom", None), getattr(getattr(adaptateur, "reel", None), "nom", None)}
+    if noms & set(NOMS_ADAPTATEURS_EXTERNES):
+        raise CourseInterrompue("l'adaptateur principal de la course ne peut pas être une commande externe : un juge ou un "
+                                "proposeur externe passe par juges_externes / proposeurs_externes (CL35-06)")
+    if moteur == "claude-sdk":
+        from .adaptateurs import verifier_modele_reel
+        if getattr(adaptateur, "nom", None) != "claude-sdk":
+            raise CourseInterrompue("moteur « claude-sdk » déclaré mais l'adaptateur principal n'est pas celui du kit")
+        for _, m in list(proposeurs) + list(juges):
+            verifier_modele_reel(m)
+
+
+def _lire_attestation(chemin, champs):
+    """v36 (CL35-14) : attestation lue une fois, sceau vérifié, champs obligatoires présents."""
+    if not verifier_scelle(chemin):
+        raise CourseInterrompue(f"attestation non scellée ou au sceau faux : {os.path.basename(chemin)}")
+    with open(chemin, "r", encoding="utf-8") as f:
+        attestation = json.load(f)
+    if not isinstance(attestation, dict) or any(not attestation.get(c) for c in champs):
+        raise CourseInterrompue("attestation : champs obligatoires manquants (" + ", ".join(champs) + ")")
+    return attestation
+
+
 def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, proposeurs, juges, temoins, graine,
                       budget_total_usd, budgets, nombre_par_proposeur=8, max_tours=MAX_TOURS_IDEATION, materiau=(),
                       seconde_passe=False, pieces_juge=(), horodatage=None, moteur="simule", lire_etat_relais=None,
-                      etat_bac_a_sable=None, url_relais=None, versions=None, juges_externes=(),
-                      attestation_lecture_humaine=None, cout_deja_engage_usd=0.0, lectures_interdites=(),
-                      commande_externe=None):
-    """Course d'idéation v35. `budgets` : {(role, modele): plafond par session en dollars} ; `moteur` : « simule » ou
-    « claude-sdk » (les coûts d'un moteur simulé sont fictifs et marqués tels) ; `lire_etat_relais` : fonction qui rend
-    l'état du relais (`GET /relais/etat`) ou None ; `juges_externes` : liste de (étiquette, modèle, adaptateur) — **bras
-    rapporté** (décision de Lazar du 28 octobre, 17:58 heure de Paris : juge d'une autre lignée). v35 (CL34-01) : la course
-    **n'appelle jamais** un juge externe ; elle écrit pour chacun une consigne en attente (anonymisée, scellée) et le bras
-    se joue par `executer_bras_rapporte` après une lecture humaine attestée. `attestation_lecture_humaine` est refusé ici
-    (il n'existe que pour le chemin différé). `cout_deja_engage_usd` : coût des appels de contrôle faits avant la course,
-    compté au journal et dans le plafond total (CL34-07). `lectures_interdites` et `commande_externe` : consignés au
-    manifeste de départ (CL34-09). Toute session ≠ ok lève CourseInterrompue ; toute exception écrit le manifeste de fin.
+                      etat_bac_a_sable=None, url_relais=None, versions=None, juges_externes=(), proposeurs_externes=(),
+                      budget_externe_usd=0.0, attestation_lecture_humaine=None, attestation_materiau=None,
+                      cout_deja_engage_usd=0.0, lectures_interdites=(), commande_externe=None, delai_session_s=None):
+    """Course d'idéation v36.
+
+    `budgets` : {(role, modele): plafond par session en dollars} ; `budget_total_usd` : plafond des sessions Claude (appels de
+    contrôle compris, `cout_deja_engage_usd`) ; `budget_externe_usd` : plafond **séparé** des sessions externes (Argon :
+    proposeur dans la course, juge en différé) ; `moteur` : « simule » ou « claude-sdk » (coûts d'un moteur simulé fictifs).
+
+    Décisions de Lazar du 28 octobre (21:05 et 21:20 UTC, n° 118 et 119) : **Argon propose à égalité et juge à poids égal**.
+    - `proposeurs_externes` : liste de (étiquette, modèle, adaptateur « commande-externe ») ; ils tournent **dans la course**
+      avec la même consigne, les mêmes pièces, le même nombre ; leur seconde passe ne reçoit le matériau que si
+      `attestation_materiau` (lecture humaine attestée du matériau, scellée) est donnée — sinon la course refuse avant
+      tout appel ; ils ne voient jamais les fiches des autres proposeurs.
+    - `juges_externes` : liste de (étiquette, modèle[, …]) ; **jamais appelés dans la course** (CL34-01) : consigne en
+      attente scellée, jouée par `executer_bras_differe` après attestation. Tant qu'un juge externe est attendu, la course
+      **n'écrit aucun classement ni aucune lecture agrégée** (n° 118 point 1) : notes des juges Claude, doublons, clés,
+      témoins servis et `lecture-course.json` (lectures par juge seulement) ; le classement à trois juges (médiane) est
+      écrit par le bras.
+    Sans juge externe : classement écrit par la course (comme en v35). `attestation_lecture_humaine` est refusé ici.
+    Toute session ≠ ok lève CourseInterrompue ; toute exception écrit le manifeste de fin.
     """
     if max_tours > MAX_TOURS_IDEATION:
         raise CourseInterrompue(f"max_tours > {MAX_TOURS_IDEATION} : ces rôles n'ont besoin d'aucun outil (CL31-08)")
@@ -658,12 +705,20 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             or not 1 <= nombre_par_proposeur <= MAX_FICHES_ABSOLU:
         raise CourseInterrompue(f"nombre_par_proposeur ∉ [1, {MAX_FICHES_ABSOLU}] : {nombre_par_proposeur!r} (CL34-11)")
     if attestation_lecture_humaine:
-        raise CourseInterrompue("une attestation de lecture humaine ne se donne pas à la course : le bras rapporté se joue "
-                                "seulement différé, par executer_bras_rapporte (CL34-01, N-053 point 5)")
-    if isinstance(cout_deja_engage_usd, bool) or not isinstance(cout_deja_engage_usd, (int, float)) \
-            or cout_deja_engage_usd < 0:
-        raise CourseInterrompue("cout_deja_engage_usd : nombre ≥ 0")
-    os.makedirs(sortie, exist_ok=False)
+        raise CourseInterrompue("une attestation de lecture humaine ne se donne pas à la course : le bras se joue seulement "
+                                "différé, par executer_bras_differe (CL34-01, N-053 point 5)")
+    for nom_b, b in (("cout_deja_engage_usd", cout_deja_engage_usd), ("budget_externe_usd", budget_externe_usd)):
+        if isinstance(b, bool) or not isinstance(b, (int, float)) or b < 0:
+            raise CourseInterrompue(f"{nom_b} : nombre ≥ 0")
+    _verifier_adaptateur_principal(adaptateur, moteur, proposeurs, juges)
+    juges_externes = [(e, m) for e, m, *_ in juges_externes]
+    proposeurs_externes = list(proposeurs_externes)
+    for e, m, a in proposeurs_externes:
+        if a is None or (moteur == "claude-sdk" and getattr(a, "nom", None) != "commande-externe"):
+            raise CourseInterrompue(f"proposeur externe {e!r} : avec le moteur réel, seule une commande externe le joue "
+                                    "(jamais un adaptateur simulé sur une course réelle, CL35-04)")
+    if proposeurs_externes and not budget_externe_usd:
+        raise CourseInterrompue("budget_externe_usd > 0 requis quand un proposeur externe tourne dans la course")
     reel = moteur == "claude-sdk"
     liste = charger_liste_blanche(liste_blanche)
     question_lue = lire_pieces([question], liste)[0]
@@ -671,17 +726,31 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     materiau_lu = lire_pieces(materiau, liste) if materiau else []
     pieces_juge_lues = lire_pieces(pieces_juge, liste) if pieces_juge else []
     temoins_lus = charger_temoins(temoins, liste) if temoins else []
-    valider_etiquettes(proposeurs, juges + [(e, m) for e, m, _ in juges_externes], bool(temoins_lus))
-    for role_modele in ([("proposeur_ideation", m) for _, m in proposeurs] + [("juge_ideation", m) for _, m in juges]
-                        + [("juge_ideation", m) for _, m, _ in juges_externes]):
+    tous_proposeurs = list(proposeurs) + [(e, m) for e, m, _ in proposeurs_externes]
+    tous_juges = list(juges) + juges_externes
+    valider_etiquettes(tous_proposeurs, tous_juges, bool(temoins_lus))
+    for role_modele in ([("proposeur_ideation", m) for _, m in tous_proposeurs]
+                        + [("juge_ideation", m) for _, m in tous_juges]):
         if role_modele not in budgets:
             raise CourseInterrompue(f"aucun plafond par session pour {role_modele} (CL31-09)")
-    modele_par_auteur = dict(proposeurs)
+    attestation_mat = None
+    if seconde_passe and proposeurs_externes and materiau_lu:
+        if not attestation_materiau:
+            raise CourseInterrompue("seconde passe avec un proposeur externe et un matériau : attestation_materiau (lecture "
+                                    "humaine attestée du matériau, scellée) obligatoire — rien n'est servi hors périmètre "
+                                    "sans elle (n° 119)")
+        attestation_mat = _lire_attestation(attestation_materiau, ("lecteur", "lu_le", "materiau_sha256"))
+        for nom, _, h in materiau_lu:
+            if attestation_mat["materiau_sha256"].get(nom) != h:
+                raise CourseInterrompue(f"attestation_materiau : empreinte absente ou différente pour {nom!r}")
+    modele_par_auteur = dict(tous_proposeurs)
     modele_par_juge = dict(juges)
-    journal = {"appels": [], "cout_total_usd": float(cout_deja_engage_usd), "cout_fictif": not reel, "arret": None,
-               "cout_appels_de_controle_usd": float(cout_deja_engage_usd)}  # CL34-07 : contrôles comptés
+    journal = {"appels": [], "cout_total_usd": float(cout_deja_engage_usd), "cout_externe_usd": 0.0,
+               "cout_fictif": not reel, "arret": None, "cout_appels_de_controle_usd": float(cout_deja_engage_usd)}
+    externes_adapt = {e: a for e, _, a in proposeurs_externes}
 
-    # --- manifeste de départ (CL31-10), scellé avant le premier appel
+    from .adaptateurs import reglages_kit_par_role
+    os.makedirs(sortie, exist_ok=False)
     depart = manifeste(
         phase="depart", horodatage=horodatage, graine=graine, moteur=moteur, bac_a_sable=etat_bac_a_sable,
         url_relais=url_relais, versions=versions or {}, question={"nom": question_lue[0], "sha256": question_lue[2]},
@@ -692,13 +761,18 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                  "nombre": len(temoins_lus)} if temoins else None,
         liste_blanche={"fichier": os.path.basename(liste_blanche), "sha256": sha256_fichier(liste_blanche)},
         proposeurs=[list(p) for p in proposeurs], juges=[list(j) for j in juges],
-        juges_externes_bras_rapporte=[[e, m, getattr(a, "nom", type(a).__name__) if a is not None
-                                       else "aucun adaptateur dans la course (différé)"] for e, m, a in juges_externes],
-        bras_rapporte="toujours différé : consignes en attente scellées, jouées par executer_bras_rapporte après "
-                      "attestation de lecture humaine (CL34-01)" if juges_externes else None,
+        proposeurs_externes=[[e, m, getattr(a, "nom", type(a).__name__)] for e, m, a in proposeurs_externes],
+        juges_externes=[list(j) for j in juges_externes],
+        juges_externes_bras_rapporte=[list(j) for j in juges_externes],  # nom gardé pour les lecteurs de la v35
+        bras_differe=("toujours différé : consignes en attente scellées, jouées par executer_bras_differe après attestation "
+                      "de lecture humaine ; classement à trois juges écrit par le bras (CL34-01, n° 118)"
+                      if juges_externes else None),
         commande_externe=commande_externe, lectures_interdites=[str(c) for c in lectures_interdites],
-        cout_deja_engage_usd=float(cout_deja_engage_usd),
-        juges_meme_modele_qu_un_proposeur=sorted({m for _, m in juges} & set(modele_par_auteur.values())),
+        attestation_materiau=({"fichier": os.path.basename(attestation_materiau), "sha256": sha256_fichier(attestation_materiau)}
+                              if attestation_mat else None),
+        cout_deja_engage_usd=float(cout_deja_engage_usd), budget_externe_usd=float(budget_externe_usd),
+        reglages_kit=reglages_kit_par_role(), delai_session_s=delai_session_s,
+        juges_meme_modele_qu_un_proposeur=sorted({m for _, m in tous_juges} & set(modele_par_auteur.values())),
         nombre_par_proposeur=nombre_par_proposeur, max_tours=max_tours, seconde_passe=seconde_passe,
         porte_eligibilite=PORTE_ELIGIBILITE, criteres=list(CRITERES), note_max=NOTE_MAX,
         grille=grille(bool(pieces_juge_lues)), budget_total_usd=budget_total_usd,
@@ -708,29 +782,31 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     def ecrire_fin(classement=None, lecture=None, erreur=None):
         ecrire_json_scelle(os.path.join(sortie, "manifeste-fin.json"), manifeste(
             phase="fin", horodatage=horodatage, graine=graine, moteur=moteur, journal=journal, erreur=erreur,
-            lecture=lecture, nombre_lignes_classement=len(classement or [])))
+            lecture=lecture, nombre_lignes_classement=len(classement or []), en_attente_bras=bool(juges_externes)))
 
-    def lancer(role, etiquette, modele, consigne, dossier, adaptateur=adaptateur):
+    def lancer(role, etiquette, modele, consigne, dossier, adaptateur=adaptateur, externe=False):
         plafond = budgets[(role, modele)]
-        if journal["cout_total_usd"] + plafond > budget_total_usd + 1e-9:
-            journal["arret"] = f"plafond total atteint avant {role}/{etiquette}"
+        cle_total, plafond_total = ("cout_externe_usd", budget_externe_usd) if externe else ("cout_total_usd", budget_total_usd)
+        if journal[cle_total] + plafond > plafond_total + 1e-9:
+            journal["arret"] = f"plafond {'externe' if externe else 'total'} atteint avant {role}/{etiquette}"
             raise CourseInterrompue(journal["arret"])
         os.makedirs(dossier, exist_ok=True)
-        traces = dossier_traces(dossier)  # v5 : l'orchestrateur n'écrit jamais dans le dossier de l'agent
+        traces = dossier_traces(dossier)
         ecrire_scelle(os.path.join(traces, "consigne.md"), consigne)
-        avant = lire_etat_relais() if lire_etat_relais else None
+        avant = lire_etat_relais() if (lire_etat_relais and not externe) else None
         r = adaptateur.lancer(role, consigne, dossier, plafond, max_tours, modele=modele)
-        apres = lire_etat_relais() if lire_etat_relais else None
+        apres = lire_etat_relais() if (lire_etat_relais and not externe) else None
         texte = caviarder(r.texte_final or "")[0]
         ecrire_scelle(os.path.join(traces, "reponse.md"), texte)
         ecart_relais = None
         if avant is not None and apres is not None:
             ecart_relais = round(float(apres.get("depense_usd", 0.0)) - float(avant.get("depense_usd", 0.0)), 6)
-        cout = max(float(r.cout_declare_usd or 0.0), ecart_relais or 0.0)  # CL31-09
-        journal["cout_total_usd"] += cout
+        cout = max(float(r.cout_declare_usd or 0.0), ecart_relais or 0.0)
+        journal[cle_total] += cout
         journal["appels"].append({"role": role, "etiquette": etiquette, "modele": modele, "statut": r.statut,
-                                  "cout_declare_usd": r.cout_declare_usd, "ecart_relais_usd": ecart_relais,
-                                  "cout_compte_usd": cout, "erreur": r.erreur, "fichiers_agent": list(r.fichiers or []),
+                                  "externe": externe, "cout_declare_usd": r.cout_declare_usd, "ecart_relais_usd": ecart_relais,
+                                  "cout_compte_usd": cout, "cout_inconnu": bool(getattr(r, "cout_inconnu", False)),
+                                  "erreur": r.erreur, "fichiers_agent": list(r.fichiers or []),
                                   "signaux_niveau_methode_reponse": signaux_niveau_methode(texte)})
         if r.statut != "ok" or r.erreur:
             journal["arret"] = f"session {role}/{etiquette} ({modele}) : statut {r.statut!r}, erreur {r.erreur!r}"
@@ -744,44 +820,43 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         if len(bruts) > nombre_par_proposeur:
             raise FicheIdeationInvalide(f"{len(bruts)} fiches rendues pour {nombre_par_proposeur} demandées : tout refusé")
         valides = []
-        for i, b in enumerate(bruts[:MAX_FICHES_ABSOLU], 1):
+        for i, b in enumerate(bruts, 1):
             try:
                 valides.append(valider_fiche_ideation(b, etiquette, i, passe=passe))
             except FicheIdeationInvalide as e:
                 refus.append({"auteur": etiquette, "passe": passe, "indice": i, "motif": str(e)})
         return valides
 
+    def passe_de(etiquette, modele, numero, consigne):
+        d = os.path.join(sortie, "proposeurs", etiquette, f"passe-{numero}")
+        ext = etiquette in externes_adapt
+        texte = lancer("proposeur_ideation", etiquette, modele, consigne, d,
+                       adaptateur=externes_adapt[etiquette] if ext else adaptateur, externe=ext)
+        try:
+            return fiches_de(texte, etiquette, numero, refus)
+        except FicheIdeationInvalide as e:
+            journal["arret"] = f"proposeur {etiquette} passe {numero} : {e}"
+            raise CourseInterrompue(journal["arret"])
+
     fiches, refus, quarantaine = [], [], []
     try:
-        # --- passe 1
+        # --- passe 1 (Claude puis externes : même consigne, mêmes pièces)
         passe1 = {}
-        for etiquette, modele in proposeurs:
-            d = os.path.join(sortie, "proposeurs", etiquette, "passe-1")
-            texte = lancer("proposeur_ideation", etiquette, modele,
-                           consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1]), d)
-            try:
-                passe1[etiquette] = fiches_de(texte, etiquette, 1, refus)
-            except FicheIdeationInvalide as e:
-                journal["arret"] = f"proposeur {etiquette} passe 1 : {e}"
-                raise CourseInterrompue(journal["arret"])
-        # --- tri (garde) de la passe 1 avant toute seconde passe (CL31-06)
+        for etiquette, modele in tous_proposeurs:
+            passe1[etiquette] = passe_de(etiquette, modele, 1, consigne_proposeur(pieces_lues, nombre_par_proposeur,
+                                                                                   question_lue[1]))
         for etiquette, valides in passe1.items():
             for f in valides:
                 s = signaux_niveau_methode(vue_servie(f))
                 (quarantaine.append({"fiche": f, "signaux": s}) if s else fiches.append(f))
-        # --- passe 2 (facultative) : revoit les fiches NON mises en quarantaine ; ses fiches s'AJOUTENT (CL31-13)
+        # --- passe 2 : chaque proposeur revoit SES fiches non mises en quarantaine ; le matériau est servi à tous (les
+        # externes seulement sous attestation, vérifiée plus haut) ; les fiches des autres ne sont jamais servies
         if seconde_passe:
-            for etiquette, modele in proposeurs:
+            for etiquette, modele in tous_proposeurs:
                 precedentes = [vue_servie(f) for f in fiches if f["auteur"] == etiquette]
-                d = os.path.join(sortie, "proposeurs", etiquette, "passe-2")
-                texte = lancer("proposeur_ideation", etiquette, modele,
-                               consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1],
-                                                  materiau=materiau_lu, fiches_precedentes=precedentes), d)
-                try:
-                    valides = fiches_de(texte, etiquette, 2, refus)
-                except FicheIdeationInvalide as e:
-                    journal["arret"] = f"proposeur {etiquette} passe 2 : {e}"
-                    raise CourseInterrompue(journal["arret"])
+                valides = passe_de(etiquette, modele, 2, consigne_proposeur(pieces_lues, nombre_par_proposeur,
+                                                                            question_lue[1], materiau=materiau_lu,
+                                                                            fiches_precedentes=precedentes))
                 for f in valides:
                     s = signaux_niveau_methode(vue_servie(f))
                     (quarantaine.append({"fiche": f, "signaux": s}) if s else fiches.append(f))
@@ -792,7 +867,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             journal["arret"] = "aucune fiche validée : rien à juger"
             raise CourseInterrompue(journal["arret"])
 
-        # --- juges : permutation et étiquetage par juge ; la clé n'est écrite qu'après le dernier juge (CL31-17)
+        # --- juges Claude : permutation et étiquetage par juge ; la clé n'est écrite qu'après le dernier juge (CL31-17)
         servies = fiches + temoins_lus
         par_ident = {f["identifiant_auteur"]: f for f in servies}
         notes_par_auteur, doublons_par_juge, cles_par_juge = {}, {}, {}
@@ -808,54 +883,49 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             notes_par_auteur[etiquette] = {cle[i]: n for i, n in notes.items()}
             doublons_par_juge[etiquette] = doubles
             cles_par_juge[etiquette] = cle
-        # --- bras rapporté : juges externes (autre lignée), jamais agrégés. v35 (CL34-01, N-053 point 5) : la course
-        # n'appelle JAMAIS un juge hors du périmètre ; elle écrit sa consigne en attente (scellée) et le bras se joue par
-        # `executer_bras_rapporte` après une lecture humaine attestée des fiches ET de cette consigne.
+        # --- juges externes : consigne en attente scellée, jamais jouée ici (CL34-01, N-053 point 5)
         bras_differe = []
-        for etiquette, modele, _adaptateur_externe in juges_externes:
+        for etiquette, modele in juges_externes:
             anonymes, cle = anonymiser(servies, graine, etiquette)
             d = os.path.join(sortie, "juges-bras-rapporte", etiquette)
             os.makedirs(d, exist_ok=True)
-            chemin_consigne = os.path.join(dossier_traces(d), "consigne-en-attente.md")
-            empreinte = ecrire_scelle(chemin_consigne, consigne_juge(anonymes, question_lue[1], pieces_juge_lues))
+            empreinte = ecrire_scelle(os.path.join(dossier_traces(d), "consigne-en-attente.md"),
+                                      consigne_juge(anonymes, question_lue[1], pieces_juge_lues))
             cles_par_juge[etiquette] = cle
             modele_par_juge[etiquette] = modele
             bras_differe.append({"etiquette": etiquette, "modele": modele, "consigne_en_attente_sha256": empreinte,
-                                 "motif": "différé : se joue après une attestation de lecture humaine portant l'empreinte "
-                                          "des fiches validées et de cette consigne (CL34-01)"})
+                                 "motif": "différé : juge à poids égal, joué après une attestation de lecture humaine "
+                                          "portant l'empreinte des fiches validées et de cette consigne"})
         os.makedirs(os.path.join(sortie, "noyau"), exist_ok=True)
         ecrire_json_scelle(os.path.join(sortie, "noyau", "cles-anonymisation-par-juge.json"), cles_par_juge)
-        # v35 (CL34-04) : les témoins tels que servis (avec leur critère gelé), scellés pour la lecture du bras différé
         ecrire_json_scelle(os.path.join(sortie, "noyau", "temoins-servis.json"), temoins_lus)
-
-        # --- lectures et classement (témoins exclus du classement)
-        temoin_ids = {t["identifiant_auteur"] for t in temoins_lus}
-        notes_sans_temoins = {j: {i: n for i, n in notes.items() if i not in temoin_ids}
-                              for j, notes in notes_par_auteur.items()}
-        classement = agreger(notes_sans_temoins, par_ident)
-        for l in classement:
-            l["nom"] = par_ident[l["identifiant_auteur"]]["nom"]
-            l["passe"] = par_ident[l["identifiant_auteur"]]["passe"]
-            l["auteur"] = par_ident[l["identifiant_auteur"]]["auteur"]
-        lecture = {"temoins": lecture_temoins(notes_par_auteur, temoins_lus, doublons_par_juge, cles_par_juge),
-                   "auto_preference": lecture_auto_preference(notes_par_auteur, modele_par_juge, modele_par_auteur),
-                   "longueur_contre_total": _correlation_longueur(classement, par_ident),
-                   "longueur_temoins_contre_fiches": _longueurs_temoins(fiches, temoins_lus),  # CL34-12
-                   "quarantaine_par_proposeur": _taux_quarantaine(proposeurs, fiches, quarantaine),  # CL34-10 (L1)
-                   # CL34-13 : « complet » était toujours vrai (un juge manquant arrête la course) ; on rapporte le compte
-                   "juges_rendus": len(notes_par_auteur), "nom_agregat": nom_agregat(len(juges))}
-        if bras_differe:
-            lecture["bras_rapporte_differe"] = bras_differe
+        ecrire_json_scelle(os.path.join(sortie, "noyau", "modeles.json"),
+                           {"par_auteur": modele_par_auteur, "par_juge": modele_par_juge})
         ecrire_json_scelle(os.path.join(sortie, "notes-par-juge.json"), notes_par_auteur)
         ecrire_json_scelle(os.path.join(sortie, "doublons-par-juge.json"), doublons_par_juge)
-        ecrire_json_scelle(os.path.join(sortie, "classements-par-juge.json"),
-                           classements_par_juge(notes_sans_temoins, par_ident))
+
+        lecture_course = {"temoins": lecture_temoins(notes_par_auteur, temoins_lus, doublons_par_juge, cles_par_juge),
+                          "auto_preference": lecture_auto_preference(notes_par_auteur, modele_par_juge, modele_par_auteur),
+                          "longueur_temoins_contre_fiches": _longueurs_temoins(fiches, temoins_lus),
+                          "quarantaine_par_proposeur": _taux_quarantaine(tous_proposeurs, fiches, quarantaine),
+                          "juges_rendus": len(notes_par_auteur), "juges_attendus_bras": [e for e, _ in juges_externes]}
+        if juges_externes:
+            # n° 118 point 1 : rien d'agrégé n'est lisible avant le juge externe
+            lecture_course["bras_rapporte_differe"] = bras_differe
+            lecture_course["regle"] = ("aucun classement ni agrégat avant le bras différé ; lectures par juge Claude "
+                                       "seulement (n° 118 point 1)")
+            ecrire_json_scelle(os.path.join(sortie, "lecture-course.json"), lecture_course)
+            ecrire_fin(None, lecture_course)
+            return {"classement": None, "lecture": lecture_course, "journal": journal, "fiches": fiches,
+                    "quarantaine": quarantaine, "refus": refus, "temoins": temoins_lus, "en_attente_bras": True}
+        classement, lecture = _classer(notes_par_auteur, par_ident, temoins_lus, lecture_course)
+        ecrire_json_scelle(os.path.join(sortie, "classements-par-juge.json"), lecture.pop("_classements_par_juge"))
         ecrire_json_scelle(os.path.join(sortie, "classement.json"),
                            {"lisible_L2_L4": lecture["temoins"]["temoins_ok"], "lignes": classement})
         ecrire_json_scelle(os.path.join(sortie, "lecture.json"), lecture)
         ecrire_fin(classement, lecture)
         return {"classement": classement, "lecture": lecture, "journal": journal, "fiches": fiches,
-                "quarantaine": quarantaine, "refus": refus, "temoins": temoins_lus}
+                "quarantaine": quarantaine, "refus": refus, "temoins": temoins_lus, "en_attente_bras": False}
     except BaseException as e:  # CL34-09 : le manifeste de fin est écrit sur toute exception, puis elle remonte
         for nom, objet in (("fiches-validees.json", fiches), ("fiches-refusees.json", refus),
                            ("fiches-en-quarantaine.json", quarantaine)):
@@ -867,6 +937,26 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         if not os.path.exists(os.path.join(sortie, "manifeste-fin.json")):
             ecrire_fin(erreur=journal["arret"])
         raise
+
+
+def _classer(notes_par_auteur, par_ident, temoins, lecture_base):
+    """Classement agrégé (moyenne à deux juges, médiane au-delà), classements par juge, accords de rang par paire ;
+    témoins exclus. Rend (classement, lecture) ; `lecture["_classements_par_juge"]` est à écrire à part."""
+    temoin_ids = {t["identifiant_auteur"] for t in temoins}
+    notes_sans_temoins = {j: {i: n for i, n in notes.items() if i not in temoin_ids} for j, notes in notes_par_auteur.items()}
+    classement = agreger(notes_sans_temoins, par_ident)
+    for l in classement:
+        l["nom"] = par_ident[l["identifiant_auteur"]]["nom"]
+        l["passe"] = par_ident[l["identifiant_auteur"]]["passe"]
+        l["auteur"] = par_ident[l["identifiant_auteur"]]["auteur"]
+    par_juge = classements_par_juge(notes_sans_temoins, par_ident)
+    noms = sorted(par_juge)
+    accords = {f"{a}|{b}": _accord_de_rang(par_juge[a], par_juge[b]) for k, a in enumerate(noms) for b in noms[k + 1:]}
+    lecture = dict(lecture_base)
+    lecture.update({"longueur_contre_total": _correlation_longueur(classement, par_ident),
+                    "nom_agregat": nom_agregat(len(notes_par_auteur)), "juges_agreges": noms,
+                    "accords_de_rang_par_paire": accords, "_classements_par_juge": par_juge})
+    return classement, lecture
 
 
 def _longueurs_temoins(fiches, temoins):
@@ -928,21 +1018,24 @@ def construire_liste_blanche(chemins, sortie):
 
 
 
-def executer_bras_rapporte(sortie, *, attestation_lecture_humaine, juges_externes, budgets, lire_etat_relais=None,
-                           horodatage=None, budget_controle_usd=0.2, exiger_cout_controle=True, budget_total_usd=None):
-    """v35 (CL34-01, CL34-04) : joue les juges externes différés d'une course déjà faite, **après** une lecture humaine
-    attestée — le seul chemin par lequel un juge d'une autre lignée lit les fiches.
 
-    `attestation_lecture_humaine` : fichier JSON `{"lecteur": "…", "lu_le": "…", "fiches_validees_sha256": "…",
-    "consignes_en_attente_sha256": {etiquette: "…"}}` ; l'empreinte des fiches doit être celle de `fiches-validees.json` de
-    la course et celle de chaque consigne en attente (ce qui sort du périmètre : question, pièces des juges, fiches,
-    témoins) celle de `consigne-en-attente.md` du juge. Avant tout appel : sceaux de la course vérifiés (fiches, classement,
-    clés, témoins servis, consignes, manifeste de fin), refus si une réponse ou un manifeste du bras existe déjà (jamais
-    rejoué après dépense), **appel de contrôle** de chaque adaptateur externe, plafond total relu dans
-    `manifeste-depart.json` (`budget_total_usd`, sauf valeur donnée) moins le coût déjà compté dans `manifeste-fin.json`.
-    Les témoins sont relus depuis `noyau/temoins-servis.json` et lus chez chaque juge externe avec le critère gelé
-    (`lecture_temoins`). Notes validées, rapportées à part, jamais agrégées. `manifeste-bras-rapporte.json` est écrit sur
-    tous les chemins (succès, refus après le manifeste de départ du bras, erreur)."""
+def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes, budgets, lire_etat_relais=None,
+                          horodatage=None, budget_controle_usd=0.2, exiger_cout_controle=True, budget_externe_usd=None,
+                          commande_externe=None):
+    """v36 : joue les juges externes différés d'une course déjà faite, **après** une lecture humaine attestée — le seul
+    chemin par lequel un juge d'une autre lignée lit les fiches — puis écrit le **classement à trois juges** (médiane par
+    critère, porte sur l'agrégat, unanimité et accords de rang par paire rapportés ; n° 118).
+
+    Avant tout appel : `manifeste-bras-rapporte.json` ou une réponse déjà rendue → refus (jamais rejoué après dépense) ;
+    attestation **scellée** (CL35-14) `{"lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256":
+    {étiquette: …}}` ; sceaux de la course vérifiés ; étiquettes et modèles identiques à ceux de la course ; sur une
+    course réelle, seule une commande externe joue le bras (CL35-04) ; plafond **externe** relu dans le manifeste de départ
+    (sauf `budget_externe_usd` donné) moins le coût externe déjà compté par la course, vérifié **avant** l'appel de
+    contrôle (CL35-05). Témoins relus depuis `noyau/temoins-servis.json` et lus chez chaque juge externe (critère gelé).
+    Aucun repli silencieux (n° 118 point 3) : juge externe en panne, au-delà du plafond ou notes invalides → classement à
+    deux juges écrit **marqué « sans juge externe, illisible au sens du devis »** (`classement-sans-bras.json`), manifeste
+    avec l'erreur, et `CourseInterrompue` ; témoins échoués chez lui → classement à trois juges écrit mais illisible.
+    Le manifeste du bras est écrit **avant** les fichiers de lecture (CL35-01), sur tous les chemins après le départ."""
     def lire_json_scelle(nom):
         chemin = os.path.join(sortie, nom)
         if not verifier_scelle(chemin):
@@ -952,32 +1045,44 @@ def executer_bras_rapporte(sortie, *, attestation_lecture_humaine, juges_externe
 
     chemin_manifeste = os.path.join(sortie, "manifeste-bras-rapporte.json")
     if os.path.exists(chemin_manifeste):
-        raise CourseInterrompue("le bras rapporté a déjà été joué pour cette course (manifeste-bras-rapporte.json existe) : "
-                                "jamais rejoué après dépense (CL34-04)")
-    with open(attestation_lecture_humaine, "r", encoding="utf-8") as f:
-        attestation = json.load(f)
-    chemin_fiches = os.path.join(sortie, "fiches-validees.json")
-    if not isinstance(attestation, dict) or not attestation.get("lecteur") or not attestation.get("lu_le") \
-            or attestation.get("fiches_validees_sha256") != sha256_fichier(chemin_fiches):
-        raise CourseInterrompue("attestation de lecture humaine absente, sans lecteur ou date, ou qui ne porte pas "
-                                "l'empreinte de fiches-validees.json de cette course")
-    consignes_attestees = attestation.get("consignes_en_attente_sha256")
+        raise CourseInterrompue("le bras a déjà été joué pour cette course (manifeste-bras-rapporte.json existe) : jamais "
+                                "rejoué après dépense (CL34-04)")
+    attestation = _lire_attestation(attestation_lecture_humaine,
+                                    ("lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256"))
+    if attestation["fiches_validees_sha256"] != sha256_fichier(os.path.join(sortie, "fiches-validees.json")):
+        raise CourseInterrompue("l'attestation ne porte pas l'empreinte de fiches-validees.json de cette course")
+    consignes_attestees = attestation["consignes_en_attente_sha256"]
     if not isinstance(consignes_attestees, dict):
-        raise CourseInterrompue("attestation : consignes_en_attente_sha256 {etiquette: sha256} manquant — le lecteur doit "
-                                "avoir lu la consigne qui sort du périmètre (CL34-04)")
+        raise CourseInterrompue("attestation : consignes_en_attente_sha256 doit être {etiquette: sha256}")
     fiches = lire_json_scelle("fiches-validees.json")
-    classement = lire_json_scelle("classement.json")["lignes"]
+    notes_par_auteur = lire_json_scelle("notes-par-juge.json")
+    doublons_par_juge = lire_json_scelle("doublons-par-juge.json")
     cles_par_juge = lire_json_scelle(os.path.join("noyau", "cles-anonymisation-par-juge.json"))
     temoins = lire_json_scelle(os.path.join("noyau", "temoins-servis.json"))
-    depart = lire_json_scelle("manifeste-depart.json")
-    fin = lire_json_scelle("manifeste-fin.json")
-    if fin["reglages"].get("erreur"):
-        raise CourseInterrompue("la course s'est arrêtée en erreur : aucun bras rapporté sur une course incomplète")
-    plafond_total = float(depart["reglages"]["budget_total_usd"] if budget_total_usd is None else budget_total_usd)
-    deja_compte = float(fin["reglages"]["journal"]["cout_total_usd"])
+    modeles = lire_json_scelle(os.path.join("noyau", "modeles.json"))
+    lecture_course = lire_json_scelle("lecture-course.json")
+    depart = lire_json_scelle("manifeste-depart.json")["reglages"]
+    fin = lire_json_scelle("manifeste-fin.json")["reglages"]
+    if fin.get("erreur"):
+        raise CourseInterrompue("la course s'est arrêtée en erreur : aucun bras sur une course incomplète")
+    attendus = {e: m for e, m in depart.get("juges_externes", [])}
+    donnes = {e: m for e, m, _ in juges_externes}
+    if donnes != attendus:
+        raise CourseInterrompue(f"juges externes donnés {donnes} ≠ attendus par la course {attendus} (CL35-04)")
+    moteur_course = depart.get("moteur")
+    cout_fictif = False  # le coût du bras est celui de ses propres adaptateurs : fictif dès qu'un n'est pas une commande
+    for e, _, a in juges_externes:
+        if moteur_course == "claude-sdk" and getattr(a, "nom", None) != "commande-externe":
+            raise CourseInterrompue(f"course réelle : seul une commande externe joue le juge {e!r}, pas "
+                                    f"{getattr(a, 'nom', type(a).__name__)!r} (CL35-04)")
+        if getattr(a, "nom", None) != "commande-externe":
+            cout_fictif = True
+    plafond_externe = float(depart.get("budget_externe_usd", 0.0) if budget_externe_usd is None else budget_externe_usd)
+    deja_externe = float(fin["journal"].get("cout_externe_usd", 0.0))
     par_ident = {x["identifiant_auteur"]: x for x in fiches}
-    temoin_ids = {t["identifiant_auteur"] for t in temoins}
-    # --- vérifications avant tout appel : consignes scellées et attestées, aucune réponse déjà rendue
+    for t in temoins:
+        par_ident[t["identifiant_auteur"]] = t
+    # --- vérifications avant tout appel : consignes scellées et attestées, aucune réponse déjà rendue, plafond (CL35-05)
     consignes = {}
     for etiquette, modele, _ in juges_externes:
         if etiquette not in cles_par_juge:
@@ -986,7 +1091,9 @@ def executer_bras_rapporte(sortie, *, attestation_lecture_humaine, juges_externe
         chemin_consigne = os.path.join(dossier_traces(d), "consigne-en-attente.md")
         if not verifier_scelle(chemin_consigne):
             raise CourseInterrompue(f"consigne en attente absente ou au sceau faux pour {etiquette!r}")
-        empreinte = sha256_fichier(chemin_consigne)
+        with open(chemin_consigne, "rb") as f:
+            octets = f.read()  # CL35-14 : lus une fois ; empreintés et envoyés tels quels
+        empreinte = hashlib.sha256(octets).hexdigest()
         if consignes_attestees.get(etiquette) != empreinte:
             raise CourseInterrompue(f"l'attestation ne porte pas l'empreinte de la consigne en attente de {etiquette!r} "
                                     f"({empreinte[:12]}…) : le lecteur ne l'a pas lue, ou elle a changé")
@@ -994,44 +1101,54 @@ def executer_bras_rapporte(sortie, *, attestation_lecture_humaine, juges_externe
             raise CourseInterrompue(f"une réponse existe déjà pour {etiquette!r} : jamais rejoué après dépense (CL34-04)")
         if ("juge_ideation", modele) not in budgets:
             raise CourseInterrompue(f"aucun plafond par session pour ('juge_ideation', {modele!r})")
-        with open(chemin_consigne, "r", encoding="utf-8") as f:
-            consignes[etiquette] = f.read()
-    journal = {"appels": [], "cout_total_usd": 0.0, "cout_deja_compte_course_usd": deja_compte,
-               "plafond_total_usd": plafond_total, "arret": None, "controle": {}}
-    notes_externes, doublons_externes, lecture = {}, {}, None
+        consignes[etiquette] = octets.decode("utf-8")
+    besoin = sum(budgets[("juge_ideation", m)] for _, m, _ in juges_externes) + budget_controle_usd * len(juges_externes)
+    if deja_externe + besoin > plafond_externe + 1e-9:
+        raise CourseInterrompue(f"plafond externe {plafond_externe} insuffisant avant tout appel : déjà {deja_externe} + "
+                                f"contrôles et sessions {besoin} (CL35-05)")
+    journal = {"appels": [], "cout_total_usd": 0.0, "cout_externe_deja_compte_course_usd": deja_externe,
+               "plafond_externe_usd": plafond_externe, "cout_fictif": cout_fictif, "arret": None, "controle": {}}
+    notes_externes, doublons_externes = {}, {}
+    resultat = {"classement": None, "lecture": None, "journal": journal, "sans_bras": False}
 
     def ecrire_manifeste(erreur=None):
-        ecrire_json_scelle(chemin_manifeste, manifeste(phase="bras-rapporte", horodatage=horodatage, journal=journal,
-                                                       attestation=attestation, erreur=erreur,
-                                                       juges=[[e, m, getattr(a, "nom", type(a).__name__)]
-                                                              for e, m, a in juges_externes]))
+        ecrire_json_scelle(chemin_manifeste, manifeste(
+            phase="bras-rapporte", horodatage=horodatage, journal=journal, attestation=attestation, erreur=erreur,
+            commande_externe=commande_externe or [getattr(a, "description", lambda: None)() for _, _, a in juges_externes],
+            juges=[[e, m, getattr(a, "nom", type(a).__name__)] for e, m, a in juges_externes]))
+
+    def classement_sans_bras(motif):
+        """n° 118 point 3 : classement à deux juges écrit, marqué illisible au sens du devis ; jamais de « retenue »."""
+        classement, lecture = _classer(notes_par_auteur, par_ident, temoins, lecture_course)
+        lecture["sans_juge_externe"] = motif
+        lecture["lisible_L2_L4"] = False
+        ecrire_manifeste(erreur=motif)
+        ecrire_json_scelle(os.path.join(sortie, "classements-par-juge-sans-bras.json"), lecture.pop("_classements_par_juge"))
+        ecrire_json_scelle(os.path.join(sortie, "classement-sans-bras.json"),
+                           {"lisible_L2_L4": False, "sans_juge_externe": motif, "lignes": classement})
+        ecrire_json_scelle(os.path.join(sortie, "lecture-sans-bras.json"), lecture)
+        resultat.update({"classement": classement, "lecture": lecture, "sans_bras": True})
+
     try:
-        # --- appel de contrôle de chaque adaptateur externe (sans relais : la commande tient sa clé et son plafond)
         for etiquette, modele, adaptateur in juges_externes:
-            lecture_controle = appel_de_controle(adaptateur, [modele], os.path.join(sortie, "bras-rapporte-controle",
-                                                                                    etiquette),
+            lecture_controle = appel_de_controle(adaptateur, [modele], os.path.join(sortie, "bras-rapporte-controle", etiquette),
                                                  budget_controle_usd, None, exiger_cout=exiger_cout_controle)[modele]
             journal["controle"][etiquette] = lecture_controle
             journal["cout_total_usd"] += float(lecture_controle.get("cout_declare_usd") or 0.0)
         for etiquette, modele, adaptateur in juges_externes:
             d = os.path.join(sortie, "juges-bras-rapporte", etiquette)
             plafond = budgets[("juge_ideation", modele)]
-            if deja_compte + journal["cout_total_usd"] + plafond > plafond_total + 1e-9:
-                journal["arret"] = (f"plafond total {plafond_total} atteint avant le juge externe {etiquette} "
-                                    f"(course {deja_compte} + bras {journal['cout_total_usd']} + session {plafond})")
+            if deja_externe + journal["cout_total_usd"] + plafond > plafond_externe + 1e-9:
+                journal["arret"] = f"plafond externe {plafond_externe} atteint avant le juge {etiquette}"
                 raise CourseInterrompue(journal["arret"])
-            avant = lire_etat_relais() if lire_etat_relais else None
             r = adaptateur.lancer("juge_ideation", consignes[etiquette], d, plafond, MAX_TOURS_IDEATION, modele=modele)
-            apres = lire_etat_relais() if lire_etat_relais else None
             texte = caviarder(r.texte_final or "")[0]
             ecrire_scelle(os.path.join(dossier_traces(d), "reponse.md"), texte)
-            ecart = (round(float(apres.get("depense_usd", 0.0)) - float(avant.get("depense_usd", 0.0)), 6)
-                     if avant is not None and apres is not None else None)
-            cout = max(float(r.cout_declare_usd or 0.0), ecart or 0.0)
+            cout = float(r.cout_declare_usd or 0.0)
             journal["cout_total_usd"] += cout
-            journal["appels"].append({"role": "juge_ideation", "etiquette": etiquette, "modele": modele,
-                                      "statut": r.statut, "cout_declare_usd": r.cout_declare_usd, "ecart_relais_usd": ecart,
-                                      "cout_compte_usd": cout, "erreur": r.erreur})
+            journal["appels"].append({"role": "juge_ideation", "etiquette": etiquette, "modele": modele, "statut": r.statut,
+                                      "cout_declare_usd": r.cout_declare_usd, "cout_compte_usd": cout,
+                                      "cout_inconnu": bool(getattr(r, "cout_inconnu", False)), "erreur": r.erreur})
             if r.statut != "ok" or r.erreur:
                 journal["arret"] = f"juge externe {etiquette} ({modele}) : statut {r.statut!r}, erreur {r.erreur!r}"
                 raise CourseInterrompue(journal["arret"])
@@ -1043,24 +1160,43 @@ def executer_bras_rapporte(sortie, *, attestation_lecture_humaine, juges_externe
                 raise CourseInterrompue(journal["arret"])
             notes_externes[etiquette] = {cle[i]: n for i, n in notes.items()}
             doublons_externes[etiquette] = doubles
-        notes_sans_temoins = {j: {i: n for i, n in notes.items() if i not in temoin_ids}
-                              for j, notes in notes_externes.items()}
-        classements_ext = classements_par_juge(notes_sans_temoins, par_ident)
-        lecture = {"juges": {e: m for e, m, _ in juges_externes}, "attestation": attestation,
-                   "temoins": lecture_temoins(notes_externes, temoins, doublons_externes, cles_par_juge),  # CL34-04
-                   "accord_avec_le_classement_agrege": {j: _accord_de_rang(classement, c)
-                                                        for j, c in classements_ext.items()},
-                   "regle": "notes d'une autre lignée, rapportées à part, jamais agrégées ; servies après lecture humaine "
-                            "attestée des fiches et de la consigne (N-053 point 5, CL34-01)"}
+        # --- agrégat à trois juges (n° 118 point 2) : mêmes fiches, mêmes témoins, même grille
+        toutes_notes = dict(notes_par_auteur, **notes_externes)
+        tous_doublons = dict(doublons_par_juge, **doublons_externes)
+        modele_par_juge = dict(modeles["par_juge"])
+        lecture_temoins_tous = lecture_temoins(toutes_notes, temoins, tous_doublons, cles_par_juge)
+        base = dict(lecture_course)
+        base.update({"temoins": lecture_temoins_tous,
+                     "temoins_juge_externe": lecture_temoins(notes_externes, temoins, doublons_externes, cles_par_juge),
+                     "auto_preference": lecture_auto_preference(toutes_notes, modele_par_juge, modeles["par_auteur"]),
+                     "juges_rendus": len(toutes_notes), "attestation": attestation,
+                     "regle": "juge d'une autre lignée à poids égal (Lazar, 28 octobre 21:05 UTC), servi après lecture "
+                              "humaine attestée (N-053 point 5) ; médiane par critère à trois juges"})
+        classement, lecture = _classer(toutes_notes, par_ident, temoins, base)
+        lecture["lisible_L2_L4"] = lecture_temoins_tous["temoins_ok"]
+        ecrire_manifeste()  # CL35-01 : avant les fichiers de lecture
         ecrire_json_scelle(os.path.join(sortie, "notes-bras-rapporte.json"), notes_externes)
         ecrire_json_scelle(os.path.join(sortie, "doublons-bras-rapporte.json"), doublons_externes)
-        ecrire_json_scelle(os.path.join(sortie, "classements-bras-rapporte.json"), classements_ext)
-        ecrire_json_scelle(os.path.join(sortie, "lecture-bras-rapporte.json"), lecture)
-        ecrire_manifeste()
-        return {"lecture": lecture, "journal": journal, "classements": classements_ext}
+        ecrire_json_scelle(os.path.join(sortie, "classements-par-juge.json"), lecture.pop("_classements_par_juge"))
+        ecrire_json_scelle(os.path.join(sortie, "classement.json"),
+                           {"lisible_L2_L4": lecture["lisible_L2_L4"], "lignes": classement})
+        ecrire_json_scelle(os.path.join(sortie, "lecture.json"), lecture)
+        resultat.update({"classement": classement, "lecture": lecture})
+        return resultat
     except BaseException as e:
         if not journal["arret"]:
             journal["arret"] = type(e).__name__ + " : " + caviarder(str(e))[0][:500]
         if not os.path.exists(chemin_manifeste):
+            if isinstance(e, CourseInterrompue):
+                try:
+                    classement_sans_bras(journal["arret"])
+                except Exception as e2:  # noqa: BLE001 — le manifeste doit exister même si le classement de repli échoue
+                    if not os.path.exists(chemin_manifeste):
+                        ecrire_manifeste(erreur=journal["arret"] + " ; classement sans bras impossible : " + str(e2)[:200])
+                    raise
+                raise SansJugeExterne(journal["arret"], resultat) from e
             ecrire_manifeste(erreur=journal["arret"])
         raise
+
+
+executer_bras_rapporte = executer_bras_differe  # nom de la v34 et de la v35
