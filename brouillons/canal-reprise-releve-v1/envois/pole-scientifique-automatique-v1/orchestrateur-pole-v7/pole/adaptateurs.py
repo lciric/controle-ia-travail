@@ -14,7 +14,8 @@ from .garde_outils import fabriquer_crochet
 from .outils import lister_fichiers
 from .relais import CleDansEnvironnement, noms_de_cle_presents, valider_url_relais, variables_agent
 
-ROLES = ("experimentateur", "verificateur", "recombinaison", "synthese", "proposeur")
+ROLES = ("experimentateur", "verificateur", "recombinaison", "synthese", "proposeur",
+         "proposeur_ideation", "juge_ideation")  # v31 : prise « idéation » (pole/ideation.py)
 # Décision de Lazar du 27 octobre 2026 (14:17, heure de Paris) : dans l'organisme, côté Claude, seulement Opus 5.5 et
 # Fable 5.1. Tout autre nom de modèle est refusé avant tout appel réel (préfixes des identifiants de modèle).
 MODELES_REELS_PERMIS = ("claude-opus-5-5", "claude-fable-5-1")
@@ -37,6 +38,18 @@ CONSIGNES_SYSTEME = {
     "proposeur": ("Tu es le proposeur du pôle. À partir du seul contexte public fourni (monde, prédicteurs connus, "
                   "archive, catalogue), tu formules des fiches au gabarit, chacune avec une stratégie déclarée du "
                   "catalogue. Tu réponds par un bloc JSON {fiches}."),
+    # v31 : prise « idéation » (proposer et classer seulement ; rien n'est testé par l'agent).
+    "proposeur_ideation": ("Tu es un proposeur du pôle en prise « idéation ». Tu lis les pièces fournies dans la "
+                           "consigne et tu proposes des questions de recherche et des approches, chacune au gabarit "
+                           "d'une fiche d'idéation, au niveau méthode seulement : aucune technique d'attaque, aucune "
+                           "recette, aucune séquence opérationnelle, aucun exemple de mode de sabotage ; les travaux "
+                           "côté attaque sont nommés par classe et protocole d'évaluation. Aucun réseau, aucune clé, "
+                           "aucune recherche ; tu n'inventes aucune référence (marque RAPPORTÉ ou SUPPOSÉ). Tu réponds "
+                           "par un bloc JSON {fiches}."),
+    "juge_ideation": ("Tu es le juge figé du tournoi d'idéation du pôle : aveugle aux auteurs, tu n'as écrit aucune "
+                      "fiche. Tu notes chaque fiche sur la grille fixée dans la consigne, une ligne de justification par "
+                      "critère, sans rien ajouter aux fiches et sans rien proposer toi-même. Aucun réseau, aucune "
+                      "recherche. Tu réponds par un bloc JSON {notes}."),
 }
 
 
