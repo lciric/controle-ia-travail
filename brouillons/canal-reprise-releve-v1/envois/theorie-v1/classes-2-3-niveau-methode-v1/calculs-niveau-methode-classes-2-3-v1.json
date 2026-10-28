@@ -1,0 +1,235 @@
+{
+ "graine_mere": 2026102823,
+ "alpha": 0.05,
+ "z_alpha": 1.644854,
+ "blocs": {
+  "M3a_dilution": {
+   "description": "M3-a (a) : rappel par agent quand B fixé est dilué sur N agents",
+   "parametres": {
+    "sigma": 1.0,
+    "T": 100,
+    "B": 20.0,
+    "tirages": 50000
+   },
+   "N": [
+    1,
+    2,
+    5,
+    10,
+    20,
+    50,
+    100
+   ],
+   "rappel_analytique": [
+    0.63876,
+    0.259511,
+    0.106593,
+    0.07425,
+    0.061191,
+    0.054263,
+    0.052097
+   ],
+   "rappel_synthetique": [
+    0.64146,
+    0.26092,
+    0.1069,
+    0.07144,
+    0.06094,
+    0.05422,
+    0.05042
+   ],
+   "attendu": "rappel décroît vers alpha quand N croît"
+  },
+  "M3a_conjoint": {
+   "description": "M3-a (c) : moniteur conjoint — rappel et budget nécessaire",
+   "parametres": {
+    "sigma": 1.0,
+    "T": 100,
+    "B": 20.0,
+    "tirages": 50000
+   },
+   "N": [
+    1,
+    2,
+    5,
+    10,
+    20,
+    50,
+    100
+   ],
+   "rappel_conjoint_analytique": [
+    0.63876,
+    0.408797,
+    0.226499,
+    0.155674,
+    0.115529,
+    0.086597,
+    0.07425
+   ],
+   "rappel_conjoint_synthetique": [
+    0.63658,
+    0.40884,
+    0.22744,
+    0.15808,
+    0.11506,
+    0.0865,
+    0.07438
+   ],
+   "budget_necessaire_par_agent_beta_80": [
+    24.8647,
+    49.7295,
+    124.3237,
+    248.6475,
+    497.295,
+    1243.2374,
+    2486.4749
+   ],
+   "budget_necessaire_conjoint_beta_80": [
+    24.8647,
+    35.1641,
+    55.5993,
+    78.6292,
+    111.1985,
+    175.8203,
+    248.6475
+   ],
+   "attendu": "budget par agent croît en N, budget conjoint en √N ; gain √N du conjoint"
+  },
+  "M3a_plafond_kish": {
+   "description": "M3-a (d) : plafond de rappel sous corrélation intraclasse ρ_A (effet de plan de Kish)",
+   "parametres": {
+    "N": 20,
+    "T": 50,
+    "B": 10.0,
+    "sigma": 1.0,
+    "tirages": 10000
+   },
+   "rho_A": [
+    0.0,
+    0.01,
+    0.05,
+    0.1,
+    0.2,
+    0.5
+   ],
+   "rappel_analytique": [
+    0.091986,
+    0.087714,
+    0.078037,
+    0.072261,
+    0.06674,
+    0.0609
+   ],
+   "rappel_synthetique": [
+    0.0971,
+    0.0855,
+    0.0643,
+    0.072,
+    0.0588,
+    0.0558
+   ],
+   "attendu": "rappel décroît avec rho_A ; plafonne ≈ alpha pour rho_A grand et B fixé"
+  },
+  "M3a_fausses_alertes": {
+   "description": "M3-a (e) : taux de fausses alertes du moniteur conjoint calibré sous indépendance quand rho_A > 0",
+   "parametres": {
+    "N": 20,
+    "T": 50,
+    "sigma": 1.0,
+    "alpha_nominal": 0.05
+   },
+   "rho_A": [
+    0.0,
+    0.01,
+    0.05,
+    0.1,
+    0.2,
+    0.5
+   ],
+   "taux_fa_nominal": [
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05
+   ],
+   "taux_fa_reel": [
+    0.05,
+    0.065798,
+    0.119417,
+    0.167049,
+    0.226396,
+    0.305862
+   ],
+   "attendu": "taux réel >> alpha dès que rho_A > 0 ; lien avec M4 de la mesure unanime"
+  },
+  "M2a_fraction_intention": {
+   "description": "M2-a : rappel en déploiement en fonction de la fraction d'intention f dans le score de sonde",
+   "parametres": {
+    "delta_obs": 3.0,
+    "sigma": 1.0
+   },
+   "rappel_evaluation": 0.912315,
+   "f": [
+    0.0,
+    0.1,
+    0.2,
+    0.3,
+    0.5,
+    0.7,
+    1.0
+   ],
+   "rappel_deploiement": [
+    0.05,
+    0.089336,
+    0.148045,
+    0.22818,
+    0.442413,
+    0.675498,
+    0.912315
+   ],
+   "surestimation": [
+    0.862315,
+    0.822978,
+    0.764269,
+    0.684134,
+    0.469901,
+    0.236817,
+    0.0
+   ],
+   "attendu": "rappel chute quand f < 1 ; pour f = 0 rappel = alpha"
+  },
+  "M3b_copule_KL": {
+   "description": "M3-b : KL entre copule produit et copule corrélée (N agents gaussiens), borne de Pinsker",
+   "parametres": {
+    "N_agents": 10
+   },
+   "rho_copule": [
+    0.0,
+    0.01,
+    0.05,
+    0.1,
+    0.2,
+    0.5
+   ],
+   "KL_produit_vs_correlee": [
+    0.0,
+    0.002138,
+    0.045038,
+    0.153195,
+    0.489336,
+    2.266788
+   ],
+   "borne_pinsker_VT": [
+    0.0,
+    0.032693,
+    0.150063,
+    0.276763,
+    0.494639,
+    1.06461
+   ],
+   "attendu": "KL croît avec rho ; la borne de Pinsker donne la variation totale maximale détectable par un test optimal"
+  }
+ }
+}
