@@ -1,4 +1,4 @@
-"""Pari apparié borné (v7, versions 20 à 29) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
+"""Pari apparié borné (v7, versions 20 à 30) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
 G1), selon la conception v5 (`../../pari-de-signe/conception-pari-de-signe-v5.md` et les versions qu'elle amende).
 
 Ce module ne contient que le **cœur statistique**, sans lien encore avec le cycle des générations (à faire : monde sur
@@ -25,7 +25,13 @@ banque de scores, engagement, mémoire avec la clé complète de l'héritage) :
   clés, est refusée sauf `essai=True` (K10-7) ; une partie **vide** (journalisée vide par celui qui calcule) vaut déclaration
   « sans partie » acceptée (K10-5) ; la génération courante est fournie par la course à qui calcule (`generation`), jamais
   par l'appelant (K10-4) ; la lecture d'une génération entière se fait par `engagement_apparie.jouer_generation`, qui ne rend
-  aucune trajectoire à l'orchestrateur (K10-1, K10-2).
+  aucune trajectoire à l'orchestrateur (K10-1, K10-2) ;
+- (version 30, contre-lecture de la conception v11, K11-1 à K11-7) : la trajectoire ajoutée doit porter l'**empreinte** que le
+  journal a enregistrée (trajectoire fabriquée refusée) et la **clé** que le journal a enregistrée (clé déclarée par l'appelant
+  ignorée) ; un abandon « avant partie » est refusé si la partie est au journal ; à la lecture, toute unité **journalisée**
+  dans la génération est enregistrée comme lue (une partie calculée et non ajoutée ne laisse pas ses unités « fraîches »), et
+  une entrée du journal pour une fiche inconnue de la course (**fiche fantôme**) ou une génération autre que la courante est
+  refusée ; la génération ne peut être lue qu'une fois toutes les entrées du journal confrontées.
 
 Tout est en Python pur (aucune dépendance) ; les instants de lecture sont les unités (une unité = un instant).
 """
@@ -225,6 +231,12 @@ def ebh_pondere(log_e, budgets, alpha=None):
     return {i for _, i in scores[:k_etoile]}
 
 
+def _empreinte_trajectoire(trajectoire_log):
+    """Empreinte d'une trajectoire (valeurs arrondies à 1e-12), partagée par le journal et la course (K11-3)."""
+    import hashlib
+    return hashlib.sha256(",".join(f"{float(v):.12e}" for v in trajectoire_log).encode()).hexdigest()
+
+
 class Course:
     """Une course de l'organisme sous D-S25 bis (conception v6), avec les corrections de la conception v7 (K6-1, K6-2).
 
@@ -340,6 +352,11 @@ class Course:
                                  f"(exactement une évaluation par fiche et par génération, K9-6)")
             if empreinte_unites is None or entrees[0]["empreinte_unites"] != empreinte_unites:
                 raise ValueError(f"fiche {fiche!r} : la partie ajoutée n'est pas celle du journal (empreinte des unités, K9-6)")
+            # version 30 (K11-3) : la trajectoire et la clé sont celles que le journal a enregistrées, pas celles que déclare l'appelant
+            if entrees[0].get("empreinte_trajectoire") is not None and _empreinte_trajectoire(trajectoire_log) != entrees[0]["empreinte_trajectoire"]:
+                raise ValueError(f"fiche {fiche!r} : trajectoire différente de celle que le journal a enregistrée (K11-3)")
+            if entrees[0].get("empreinte_cle") is not None and entrees[0]["empreinte_cle"] != empreinte_cle:
+                raise ValueError(f"fiche {fiche!r} : clé déclarée différente de celle du journal (K11-3)")
         if unites is None:
             if not sans_identite:
                 raise ValueError(f"fiche {fiche!r} : partie sans identifiants d'unités (passer `unites`, ou déclarer "
@@ -387,6 +404,10 @@ class Course:
             self.ajouter_trajectoire(fiche, trajectoire_log, unites, sans_identite, empreinte_cle, empreinte_unites)
             mode = "partie_passee"
         elif avant_partie:
+            if self.journal is not None and any(j["generation"] == self.generation and j["fiche"] == fiche and not j.get("vide")
+                                                for j in self.journal.journal):
+                raise ValueError(f"abandon « avant partie » de {fiche!r} refusé : sa partie de la génération {self.generation} est au "
+                                 f"journal (K11-3) — passer la partie, ou abandonner après")
             mode = "avant_partie"
         elif fiche in self.promues or fiche in self.arretees or self.derniere_partie.get(fiche) == self.generation:
             mode = "apres_partie"
@@ -412,11 +433,23 @@ class Course:
                 raise ValueError(f"déclaration « sans partie » refusée pour {f!r} : fiche gelée, arrêtée, promue, exclue ou qui a sa "
                                  f"partie dans la génération {self.generation} (K9-10 c)")
         if self.journal is not None:
-            calculees = {j["fiche"] for j in self.journal.journal if j["generation"] == self.generation and not j.get("vide")}
+            entrees_g = [j for j in self.journal.journal if j["generation"] == self.generation]
+            fantomes = sorted(str(j["fiche"]) for j in entrees_g if j["fiche"] not in self.budgets)
+            if fantomes:
+                raise ValueError(f"génération {self.generation} : le journal porte des parties pour des fiches inconnues de la course "
+                                 f"(fiches fantômes, K11-3) : {fantomes[:5]}")
+            futures = [j for j in self.journal.journal if isinstance(j["generation"], int) and j["generation"] > self.generation]
+            if futures:
+                raise ValueError(f"génération {self.generation} : le journal porte des parties d'une génération à venir (K11-3)")
+            calculees = {j["fiche"] for j in entrees_g if not j.get("vide")}
             menteuses = sorted(str(f) for f in sans_partie if f in calculees)
             if menteuses:
                 raise ValueError(f"génération {self.generation} : déclaration « sans partie » contredite par le journal des "
                                  f"parties pour {menteuses[:5]} (K8-2, K9-6)")
+            # K11-3 : toute unité journalisée dans la génération est lue par la course, ajoutée ou non
+            for j in entrees_g:
+                for u in j.get("identifiants_unites", []):
+                    self.premiere_lecture.setdefault(tuple(u) if isinstance(u, list) else u, self.generation)
         for f, m in sans_partie.items():
             self.sans_partie[(self.generation, f)] = m
         pool = [f for f in self.budgets if f not in self.exclues]

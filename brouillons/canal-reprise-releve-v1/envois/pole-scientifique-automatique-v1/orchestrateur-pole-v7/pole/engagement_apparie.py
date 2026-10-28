@@ -1,4 +1,4 @@
-"""Engagement « apparié » (v7, versions 23, 25, 26, 27, 28 et 29) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
+"""Engagement « apparié » (v7, versions 23, 25 à 30) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
 et scellée avant toute issue d'épreuve, puis jugée sur la banque de scores (conception v2 § 7 point 1 ; v3 à v6).
 
 `construire(monde, ...)` fixe, **avant** toute lecture de l'épreuve : les contrastes nommés (coefficients vérifiés par la
@@ -36,6 +36,13 @@ rendre une trajectoire à l'orchestrateur : les décisions « avant toute issue 
 **entrées** de la fonction, prises avant qu'elle ne calcule quoi que ce soit (K10-1, K10-2). **Frontière de confiance (dite)** :
 tant qu'une partie tient les scores d'épreuve, rien ne l'empêche de calculer en privé ; dans le pôle, le monde tient les
 scores et la course les lit — l'orchestrateur reçoit des engagements et des verdicts, jamais la banque d'épreuve.
+
+Version 30 (contre-lecture de la conception v11, K11-1 à K11-7) : `jouer_generation` calcule **toutes** les parties avant
+d'appliquer la règle d'abandon « après partie » (qui ne voit donc aucune issue avant que toutes soient journalisées) et ne
+laisse pas une exception au milieu sans trace : la génération est marquée **interrompue** au journal et la course refuse
+la lecture jusqu'à ce que `jouer_generation` la reprenne (les parties déjà calculées restent au journal, jamais recalculées) ;
+`evaluer` exige un journal hors `essai=True` ; le journal enregistre l'**empreinte de la trajectoire** et la clé (K11-3) ;
+« le côté de confiance » est nommé : banque d'épreuve, monde et sa graine, course et journal, construction des engagements.
 """
 
 from . import pari_apparie as pa
@@ -124,7 +131,7 @@ def construire(monde, contrastes, tau, alpha_c=0.05, m_c=1, strate=None, partie=
     return engagement
 
 
-def evaluer(monde, engagement, generation=None, fiche=None, journal=None, unites=None):
+def evaluer(monde, engagement, generation=None, fiche=None, journal=None, unites=None, essai=False):
     """Version 28 : la lecture d'une génération se fait par `generation=g` — la tranche est celle du **plan scellé** dans
     l'engagement (K9-5), l'ordre secret est dérivé de l'empreinte de l'engagement et de g (plus d'étiquette libre) ; sans
     plan, la partie entière est lue (génération None) ; `unites` n'est accepté que sans plan et avec une génération
@@ -153,6 +160,9 @@ def evaluer(monde, engagement, generation=None, fiche=None, journal=None, unites
                                      f"{sorted(map(str, absentes))[:3]}")
     if (journal is None) != (fiche is None):
         raise EngagementInvalide("journal et fiche vont ensemble (K9-6)")
+    if journal is None and not essai:
+        raise EngagementInvalide("évaluation sans journal : une partie calculée en privé n'est pas une partie du pôle (K10-1, K11-3) ; "
+                                 "passer journal et fiche, ou essai=True pour un essai hors course")
     # K10-3 : l'ordre dérive de l'empreinte de la **clé** (ni nom, ni budget, ni empreinte de l'engagement) et de la génération
     etiquette = engagement["empreinte_cle"] if generation is None else f"{engagement['empreinte_cle']}|g{int(generation)}"
     parts = monde.parts(cle["seuils"], engagement["partie"], cle["strate"] or None, unites)
@@ -207,29 +217,47 @@ def jouer_generation(course, monde, engagements, abandons_avant=None, non_lancee
             raise EngagementInvalide(f"non-lancement de {f!r} : fiche non active")
         sans_partie[f] = motif
         compte["non_lancees"][f] = motif
-    for f in sorted(actives, key=str):
-        if f in sans_partie:
-            continue
-        if f not in engagements:
-            raise EngagementInvalide(f"fiche active sans engagement : {f!r}")
-        r = evaluer(monde, engagements[f], generation=g, fiche=f, journal=journal)
-        if r["unites"] == 0:
-            journal.marquer_vide(g, f)
-            sans_partie[f] = "partie vide : aucune unité de la tranche dans la strate de la fiche (journalisée vide)"
-            compte["vides"][f] = sans_partie[f]
-            continue
-        valeur = course.ajouter_trajectoire(f, r["trajectoire_log_min"], unites=r["identifiants_unites"],
-                                            empreinte_cle=r["empreinte_cle"], empreinte_unites=r["empreinte_unites"])
-        compte["parties"][f] = {"unites": r["unites"], "log_e_valeur": valeur, "arretee": f in course.arretees,
-                                "log_richesse_finale_par_comparateur": r["log_richesse_finale_par_comparateur"],
-                                "log_gardes_finales": r["log_gardes_finales"]}
-        if abandon_apres is not None and f not in course.arretees:
+    a_lire = [f for f in sorted(actives, key=str) if f not in sans_partie]
+    # première passe (K11-1) : **toutes** les parties sont calculées, journalisées et ajoutées avant qu'aucune règle ne voie une
+    # issue ; une partie déjà au journal pour cette génération (reprise après interruption) n'est pas recalculée
+    valeurs = {}
+    try:
+        for f in a_lire:
+            if f not in engagements:
+                raise EngagementInvalide(f"fiche active sans engagement : {f!r}")
+            deja = [j for j in journal.journal if j["generation"] == g and j["fiche"] == f]
+            if deja and course.derniere_partie.get(f) == g:
+                valeurs[f] = course.log_e[f]
+                continue
+            if deja:
+                raise EngagementInvalide(f"fiche {f!r} : partie de la génération {g} au journal mais non ajoutée — génération interrompue "
+                                         f"irrécupérable sans la trajectoire (K11-4) ; la fiche doit être retirée (D-S26 bis)")
+            r = evaluer(monde, engagements[f], generation=g, fiche=f, journal=journal)
+            if r["unites"] == 0:
+                journal.marquer_vide(g, f)
+                sans_partie[f] = "partie vide : aucune unité de la tranche dans la strate de la fiche (journalisée vide)"
+                compte["vides"][f] = sans_partie[f]
+                continue
+            valeurs[f] = course.ajouter_trajectoire(f, r["trajectoire_log_min"], unites=r["identifiants_unites"],
+                                                    empreinte_cle=r["empreinte_cle"], empreinte_unites=r["empreinte_unites"])
+            compte["parties"][f] = {"unites": r["unites"], "log_e_valeur": valeurs[f], "arretee": f in course.arretees,
+                                    "log_richesse_finale_par_comparateur": r["log_richesse_finale_par_comparateur"],
+                                    "log_gardes_finales": r["log_gardes_finales"]}
+    except Exception as e:
+        journal.interrompre(g, f"{type(e).__name__}: {e}"[:200])
+        raise
+    # seconde passe : la règle d'abandon « après partie » ne voit les issues qu'une fois toutes les parties ajoutées
+    if abandon_apres is not None:
+        for f, valeur in valeurs.items():
+            if f in course.arretees or f in course.gelees:
+                continue
             motif = abandon_apres(f, valeur)
             if motif:
                 course.abandonner(f, motif=motif)
                 compte["abandons_apres"][f] = motif
     compte["promues"] = sorted(map(str, course.lire(sans_partie=sans_partie)))
     compte["sans_partie"] = sans_partie
+    compte["interruptions"] = journal.interruptions(g)
     return compte
 
 
@@ -269,7 +297,16 @@ class Lignees:
             raise EngagementInvalide(f"fiche {fiche!r} : seconde évaluation dans la génération {generation} refusée (K9-6)")
         self._journal.append({"generation": generation, "fiche": fiche, "empreinte_unites": resultat["empreinte_unites"],
                               "empreinte_cle": resultat["empreinte_cle"], "unites": len(resultat["identifiants_unites"]),
-                              "identifiants_unites": list(resultat["identifiants_unites"]), "vide": len(resultat["identifiants_unites"]) == 0})
+                              "identifiants_unites": list(resultat["identifiants_unites"]), "vide": len(resultat["identifiants_unites"]) == 0,
+                              "empreinte_trajectoire": pa._empreinte_trajectoire(resultat["trajectoire_log_min"])})
+
+    def interrompre(self, generation, motif):
+        """K11-4 : une génération interrompue (exception au milieu de `jouer_generation`) est tracée, jamais tue."""
+        self._interruptions = getattr(self, "_interruptions", [])
+        self._interruptions.append({"generation": generation, "motif": motif})
+
+    def interruptions(self, generation=None):
+        return [dict(i) for i in getattr(self, "_interruptions", []) if generation is None or i["generation"] == generation]
 
     def marquer_vide(self, generation, fiche):
         for j in self._journal:

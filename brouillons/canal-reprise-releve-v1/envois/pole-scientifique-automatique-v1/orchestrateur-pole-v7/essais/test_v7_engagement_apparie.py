@@ -86,7 +86,7 @@ class Jugement(unittest.TestCase):
     def test_bout_en_bout(self):
         m = mbs.MondeBanqueScores(banque_synthetique(random.Random(47), unites_par_partie=(100, 0, 100)), 19)
         e = ea.construire(m, BLANC_CONTRE_NOIR, tau=0.05, garde={"a": "blanc", "b": "noir", "delta": 0.10})
-        r = ea.evaluer(m, e)
+        r = ea.evaluer(m, e, essai=True)
         self.assertTrue(r["promue"])
         self.assertEqual(r["unites_lues"], 100)
         self.assertGreater(r["bornes_basses"]["noir"], 0.0)
@@ -97,17 +97,17 @@ class Jugement(unittest.TestCase):
         c.ajouter_trajectoire("f", [0.0], unites=r["identifiants_unites"])
         c.lire()
         with self.assertRaises(ValueError):  # K7-2, K8-1 : la même lecture ne compte pas deux fois
-            c.ajouter_trajectoire("f", [0.0], unites=ea.evaluer(m, e)["identifiants_unites"])
+            c.ajouter_trajectoire("f", [0.0], unites=ea.evaluer(m, e, essai=True)["identifiants_unites"])
         # version 28 : plusieurs gardes (K9-9) ; identité stable de la banque dans les identifiants (K9-2)
         e2 = ea.construire(m, BLANC_CONTRE_NOIR, tau=0.05, garde=[{"a": "blanc", "b": "noir", "delta": 0.10}, {"a": "noir", "b": "blanc", "delta": 0.10}])
-        r2 = ea.evaluer(m, e2)
+        r2 = ea.evaluer(m, e2, essai=True)
         self.assertEqual(sorted(r2["log_gardes_finales"]), ["blanc-noir", "noir-blanc"])
         self.assertEqual(r["identifiants_unites"][0][0], m.identite)
         self.assertEqual(len(r["identifiants_unites"]), 100)
         self.assertEqual(r["identifiants_unites"][0][1], "epreuve")
         nul = mbs.MondeBanqueScores(banque_synthetique(random.Random(53), unites_par_partie=(100, 0, 100), mu=(1.0, 1.0)), 19)
         e0 = ea.construire(nul, {"blanc": {"coefficients": {"blanc": 1}, "constante": -0.9}}, tau=0.05)  # rappel ≥ 0,9 : faux
-        self.assertFalse(ea.evaluer(nul, e0)["promue"])
+        self.assertFalse(ea.evaluer(nul, e0, essai=True)["promue"])
 
     def test_scellement(self):
         m = mbs.MondeBanqueScores(banque_synthetique(random.Random(59), unites_par_partie=(100, 0, 30)), 23)
@@ -115,10 +115,10 @@ class Jugement(unittest.TestCase):
         altere = copy.deepcopy(e)
         altere["cle_heritage"]["seuils"]["blanc"] -= 1.0
         with self.assertRaises(ea.EngagementInvalide):
-            ea.evaluer(m, altere)
+            ea.evaluer(m, altere, essai=True)
         autre = mbs.MondeBanqueScores(banque_synthetique(random.Random(61), unites_par_partie=(100, 0, 30)), 23)
         with self.assertRaises(ea.EngagementInvalide):
-            ea.evaluer(autre, e)
+            ea.evaluer(autre, e, essai=True)
 
 
 if __name__ == "__main__":

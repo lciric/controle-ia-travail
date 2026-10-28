@@ -1,4 +1,4 @@
-"""Le pari apparié borné de bout en bout (v7, version 28) — zéro dépense, aucun agent : une **banque de scores**
+"""Le pari apparié borné de bout en bout (v7, version 30) — zéro dépense, aucun agent : une **banque de scores**
 synthétique (unités à effet aléatoire partagé entre sabotés et honnêtes d'une même unité ; sept cellules : `blanc`,
 `blanc_jumeau` (même loi que `blanc`), `cascade` (ii), `dernier_etat` (iii), `noir_action`, `noir_sequentiel`, `juge`),
 un **proposeur mécanique** de contrastes (témoins plantés vrais à quatre forces, faux « nul exact » et « signe inversé »,
@@ -244,7 +244,7 @@ def lecture(etat):
 
 
 def artefacts(monde, alpha, tau, graine):
-    """R5 : chaque garde sur un cas sain et sur un artefact — cinq refus attendus (version 28)."""
+    """R5 : chaque garde sur un cas sain et sur un artefact — sept refus attendus (version 30)."""
     sortie = {}
     plan = plan_des_tranches(monde, 2)
     e = construire_engagement(monde, "x", {"coefficients": {"blanc": 1, "juge": -1}}, tau, alpha / 4, 1, plan)
@@ -252,9 +252,9 @@ def artefacts(monde, alpha, tau, graine):
     # (A) fraîcheur, course sans journal (pour isoler les gardes de fraîcheur)
     c = pa.Course(alpha=alpha, essai=True)  # (A) : course d'essai sans journal, pour isoler les gardes de fraîcheur
     c.entrer("a", ["x", "y"], alpha / 2, cles={"x": e["empreinte_cle"], "y": e_y["empreinte_cle"]})
-    r1 = ea.evaluer(monde, e, generation=1)
+    r1 = ea.evaluer(monde, e, generation=1, essai=True)
     c.ajouter_trajectoire("x", r1["trajectoire_log_min"], unites=r1["identifiants_unites"], empreinte_cle=r1["empreinte_cle"])
-    ry = ea.evaluer(monde, e_y, generation=1)  # cas sain : y lit la même tranche dans la même génération
+    ry = ea.evaluer(monde, e_y, generation=1, essai=True)  # cas sain : y lit la même tranche dans la même génération
     c.ajouter_trajectoire("y", ry["trajectoire_log_min"], unites=ry["identifiants_unites"], empreinte_cle=ry["empreinte_cle"])
     c.lire()
     try:  # artefact 1 : la même fiche relit la tranche 1 en génération 2
@@ -265,7 +265,7 @@ def artefacts(monde, alpha, tau, graine):
     # artefact 2 (K9-1) : une fiche nouvelle lit en génération 2 des unités que la course a lues en génération 1
     e_z = construire_engagement(monde, "z", {"coefficients": {"blanc": 1, "cascade": -1}}, tau, alpha / 4, 1, {1: plan[2], 2: plan[1]})
     c.entrer("b", ["z"], alpha / 4, cles={"z": e_z["empreinte_cle"]})
-    rz = ea.evaluer(monde, e_z, generation=2)  # son plan met les unités physiques de la tranche 1 en génération 2
+    rz = ea.evaluer(monde, e_z, generation=2, essai=True)  # son plan met les unités physiques de la tranche 1 en génération 2
     try:
         c.ajouter_trajectoire("z", rz["trajectoire_log_min"], unites=rz["identifiants_unites"], empreinte_cle=rz["empreinte_cle"])
         sortie["tranche_anterieure_par_autre_fiche"] = "ACCEPTÉE — artefact non détecté"
@@ -291,7 +291,7 @@ def artefacts(monde, alpha, tau, graine):
         sortie["relance_sous_autre_nom"] = f"refusée : {err}"
     try:  # artefact 5 (K9-2) : partie d'une autre clé (τ changé) ajoutée à la fiche x
         e_tau = ea.construire(monde, {"x": {"coefficients": {"blanc": 1, "juge": -1}}}, 0.10, alpha_c=alpha / 4, m_c=1, plan_tranches=plan)
-        rt = ea.evaluer(monde, e_tau, generation=1)
+        rt = ea.evaluer(monde, e_tau, generation=1, essai=True)
         c.ajouter_trajectoire("y", rt["trajectoire_log_min"], unites=rt["identifiants_unites"], empreinte_cle=rt["empreinte_cle"])
         sortie["partie_d_une_autre_cle"] = "ACCEPTÉE — artefact non détecté"
     except ValueError as err:
