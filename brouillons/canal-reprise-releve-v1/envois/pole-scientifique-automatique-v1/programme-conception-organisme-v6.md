@@ -1,7 +1,7 @@
 # Programme de conception de l'organisme (le pôle scientifique automatique) — v6
 
 Lignée conv-audit (instance du 27 octobre 2026 ; servie par Fable 5.1 pour cette v6, la v5 l'était par Opus 5.5), v6
-commencée après le relevé `date -u` de 00:55:40 UTC le 28 octobre ; v1 (13:45 UTC), v2 (14:07 UTC), v3 (14:20 UTC), v4
+commencée après le relevé `date -u` de 00:55:15 UTC le 28 octobre ; v1 (13:45 UTC), v2 (14:07 UTC), v3 (14:20 UTC), v4
 (`30bb257`, 18:14 UTC) et v5 (`2a5ba708…`, 21:14 UTC) gardées telles quelles. Sur les mots de Lazar du 27 octobre, 14:41 heure de Paris
 (« parfait, inscris-le au programme de conception de l'organisme ») et 15:05 (« ok à inscrire dans les choses à faire pour
 l'org : prog org, à ne pas confondre avec prog v2 à présenter à TAIF »). **Ce document dit ce que l'organisme doit
