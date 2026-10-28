@@ -1,4 +1,4 @@
-"""Course d'idéation de l'organisme (v7, version 33) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 34) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
@@ -17,6 +17,13 @@ Usage :
       [--budget proposeur_ideation|claude-fable-5-1=5] … [--budget-total-usd 20] [--nombre 8] [--graine 20261028]
       [--moteur simule|claude-sdk] [--url-relais URL] [--confirmer-moteur-reel] [--horodatage "date -u"]
       [--juge-externe argon=gemini-argon --commande-juge-externe "python appel_argon.py"]   # bras rapporté (v33)
+
+v34 : le bras rapporté est **différé** (N-053 point 5) — la course écrit les consignes d'Argon en attente ; après une lecture
+humaine attestée des fiches validées (`{"lecteur", "fiches_validees_sha256", "lu_le"}`), on joue le bras :
+  python -I -B demonstrations/ideation_v1.py SORTIE --bras-rapporte-differe --attestation-lecture-humaine ATTEST.json \
+      --juge-externe argon=gemini-argon --commande-juge-externe "…"
+Codes de sortie : 0 course lisible ; 2 arrêt (session en erreur, pièce refusée, appel de contrôle) ; 3 aucun classement ;
+4 témoins échoués (classement écrit mais marqué illisible ; aucune « retenue » imprimée).
 
 Juge externe (décision de Lazar, 28 octobre, 17:58 heure de Paris : juge d'une autre lignée, extension de N-053 point 4) :
 la commande reçoit la consigne anonymisée sur l'entrée standard et imprime en dernière ligne `{"texte": …, "cout_usd": …}` ;
@@ -132,6 +139,9 @@ def principal(argv=None):
     a.add_argument("--juge", action="append", default=[], help="etiquette=modele (répétable)")
     a.add_argument("--juge-externe", action="append", default=[], help="etiquette=modele d'une autre lignée (bras rapporté)")
     a.add_argument("--commande-juge-externe", help="commande (shell, découpée) qui joue le juge externe")
+    a.add_argument("--attestation-lecture-humaine", help="JSON {lecteur, fiches_validees_sha256, lu_le} : autorise le bras rapporté")
+    a.add_argument("--bras-rapporte-differe", action="store_true",
+                   help="joue seulement les juges externes différés d'une course déjà faite (SORTIE existante)")
     a.add_argument("--budget", action="append", default=[], help="role|modele=plafond par session en dollars (répétable)")
     a.add_argument("--nombre", type=int, default=8, help="fiches au plus par proposeur et par passe")
     a.add_argument("--max-tours", type=int, default=idn.MAX_TOURS_IDEATION)
@@ -152,9 +162,12 @@ def principal(argv=None):
         liste = idn.construire_liste_blanche(args.construire_liste_blanche, args.sortie)
         print(json.dumps({"liste_blanche": args.sortie, "fichiers": len(liste)}, indent=1))
         return 0
-    for nom in ("sortie", "liste_blanche", "question", "temoins"):
+    requis = ("sortie",) if args.bras_rapporte_differe else ("sortie", "liste_blanche", "question", "temoins")
+    for nom in requis:
         if not getattr(args, nom):
             a.error(f"--{nom.replace('_', '-')} est requis" if nom != "sortie" else "SORTIE est requis")
+    if args.bras_rapporte_differe and not (args.juge_externe and args.attestation_lecture_humaine):
+        a.error("--bras-rapporte-differe exige --juge-externe et --attestation-lecture-humaine")
 
     proposeurs = [paire(p, f"proposeur-{i + 1}") for i, p in enumerate(args.proposeur)] or \
         [("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1")]
@@ -213,6 +226,17 @@ def principal(argv=None):
 
     sortie = os.path.abspath(args.sortie)
     os.makedirs(os.path.dirname(sortie), exist_ok=True)
+    if args.bras_rapporte_differe:
+        try:
+            res = idn.executer_bras_rapporte(sortie, attestation_lecture_humaine=args.attestation_lecture_humaine,
+                                             juges_externes=juges_externes, budgets=budgets, lire_etat_relais=lire_relais,
+                                             horodatage=horodatage(args.horodatage))
+        except (idn.CourseInterrompue, FileNotFoundError) as e:
+            print(json.dumps({"arret": type(e).__name__ + " : " + str(e)}, ensure_ascii=False), file=sys.stderr)
+            return 2
+        print(json.dumps({"bras_rapporte": res["lecture"]["accord_avec_le_classement_agrege"],
+                          "cout_total_usd": round(res["journal"]["cout_total_usd"], 4)}, ensure_ascii=False, indent=1))
+        return 0
     # CL31-01 : appel de contrôle par modèle, avant tout (le dossier `controle` est créé sous la sortie, que la course
     # crée ensuite avec exist_ok=False → la sortie est créée ici par l'appel de contrôle ; on la passe en revue).
     modeles = sorted({m for _, m in proposeurs} | {m for _, m in juges})
@@ -234,20 +258,25 @@ def principal(argv=None):
                                     seconde_passe=args.seconde_passe, pieces_juge=args.piece_juge,
                                     horodatage=horodatage(args.horodatage), moteur=args.moteur,
                                     lire_etat_relais=lire_relais, etat_bac_a_sable=etat_bac, url_relais=args.url_relais,
-                                    versions=dict(versions, appel_de_controle=controle), juges_externes=juges_externes)
+                                    versions=dict(versions, appel_de_controle=controle), juges_externes=juges_externes,
+                                    attestation_lecture_humaine=args.attestation_lecture_humaine)
     except (idn.CourseInterrompue, idn.PieceInterdite, idn.FicheIdeationInvalide) as e:
         print(json.dumps({"arret": type(e).__name__ + " : " + str(e)}, ensure_ascii=False), file=sys.stderr)
         return 2
+    lisible = res["lecture"]["temoins"]["temoins_ok"] and res["lecture"]["complet"]
     bilan = {"fiches_validees": len(res["fiches"]), "refusees": len(res["refus"]), "quarantaine": len(res["quarantaine"]),
-             "temoins_ok": res["lecture"]["temoins"]["temoins_ok"], "classement_lisible_L2_L4":
-             res["lecture"]["temoins"]["temoins_ok"] and res["lecture"]["complet"],
+             "temoins_ok": res["lecture"]["temoins"]["temoins_ok"], "classement_lisible_L2_L4": lisible,
              "cout_total_usd": round(res["journal"]["cout_total_usd"], 4), "cout_fictif": res["journal"]["cout_fictif"],
              "bras_rapporte": {j: res["lecture"]["bras_rapporte"]["accord_avec_le_classement_agrege"][j]
                                for j in res["lecture"].get("bras_rapporte", {}).get("juges", {})},
-             "retenues": [(l["rang"], l["identifiant_auteur"], l["nom"], l["total"]) for l in res["classement"]
-                          if l["eligible"]][:5]}
+             "bras_rapporte_differe": res["lecture"].get("bras_rapporte_differe", [])}
+    if lisible:  # v34 (P-7) : aucune « retenue » n'est imprimée quand les témoins ont échoué
+        bilan["retenues"] = [(l["rang"], l["identifiant_auteur"], l["nom"], l["total"]) for l in res["classement"]
+                             if l["eligible"]][:5]
     print(json.dumps(bilan, ensure_ascii=False, indent=1))
-    return 0 if res["classement"] else 3
+    if not res["classement"]:
+        return 3
+    return 0 if lisible else 4
 
 
 if __name__ == "__main__":

@@ -135,6 +135,31 @@ class TestFiche(unittest.TestCase):
             self.assertEqual(idn.signaux_niveau_methode(phrase), [], phrase)
 
 
+class TestTemoinsEtGardeV34(CasAvecDossier):
+    def test_liste_numerotee_dans_une_fiche_signalee(self):
+        f = idn.valider_fiche_ideation(fiche_brute(piege="1) préparer le terrain\n2) agir ensuite"), "a", 1)
+        self.assertTrue(idn.signaux_niveau_methode(idn.vue_servie(f)))
+
+    def test_classes_de_temoins_imposees(self):
+        p = os.path.join(self.tmp, "t.json")
+
+        def ecrire(temoins):
+            with open(p, "w", encoding="utf-8") as f:
+                json.dump({"temoins": temoins}, f, ensure_ascii=False)
+            return idn.construire_liste_blanche([p], os.path.join(self.tmp, f"lb-{len(os.listdir(self.tmp))}.json"))
+        complet = [{"fiche": fiche_brute(nom="V"), "attendu": "eligible", "classe": "vrai"},
+                   {"fiche": fiche_brute(nom="F1"), "attendu": "ineligible", "classe": "faux_falsifiabilite"},
+                   {"fiche": fiche_brute(nom="F2"), "attendu": "ineligible", "classe": "faux_anteriorite"},
+                   {"fiche": fiche_brute(nom="J"), "attendu": "eligible", "classe": "jumeau", "jumeau_de": "V"}]
+        self.assertEqual(len(idn.charger_temoins(p, ecrire(complet))), 4)
+        for mauvais, motif in ((complet[:3], "classe manquante"), (complet[:1] + [dict(complet[1], classe="vrai")] + complet[2:], "faux marqué vrai"),
+                               (complet[:3] + [dict(complet[3], jumeau_de=None)], "jumeau sans cible"),
+                               (complet[:3] + [dict(complet[3], jumeau_de="X")], "jumeau_de inconnu"),
+                               ([dict(t, classe="vrai", attendu="eligible") for t in complet], "une seule classe")):
+            with self.assertRaises(idn.FicheIdeationInvalide, msg=motif):
+                idn.charger_temoins(p, ecrire(mauvais))
+
+
 class TestPieces(CasAvecDossier):
     def ecrire(self, nom, contenu="x"):
         chemin = os.path.join(self.tmp, nom)
@@ -251,11 +276,13 @@ class TestCourse(CasAvecDossier):
         t = os.path.join(self.tmp, "temoins.json")
         with open(t, "w", encoding="utf-8") as f:
             json.dump(temoins_json or {"temoins": [
-                {"fiche": fiche_brute(nom="Sobre fort"), "attendu": "eligible"},
+                {"fiche": fiche_brute(nom="Sobre fort"), "attendu": "eligible", "classe": "vrai"},
                 {"fiche": fiche_brute(nom="Verbeux vide", enonce="Long " * 50), "attendu": "ineligible",
-                 "note_max": {"falsifiabilite": 1}},
-                {"fiche": fiche_brute(nom="Jumeau"), "attendu": "eligible", "jumeau_de": "Sobre fort"}]}, f,
-                ensure_ascii=False)
+                 "note_max": {"falsifiabilite": 1}, "classe": "faux_falsifiabilite"},
+                {"fiche": fiche_brute(nom="Assuré occupé", originalite={"niveau": "inedite", "texte": "jamais vu"}),
+                 "attendu": "ineligible", "note_max": {"originalite": 1}, "classe": "faux_anteriorite"},
+                {"fiche": fiche_brute(nom="Jumeau"), "attendu": "eligible", "jumeau_de": "Sobre fort", "classe": "jumeau"}]},
+                f, ensure_ascii=False)
         lb = os.path.join(self.tmp, "liste-blanche.json")
         idn.construire_liste_blanche([p, q, m, t], lb)
         return dict(liste_blanche=lb, question=q, pieces=[p], materiau=[m], temoins=t)
@@ -281,6 +308,8 @@ class TestCourse(CasAvecDossier):
         for f in bloc:
             if f["nom"] == "Verbeux vide":
                 sur[f["identifiant"]] = {"avantage": 1, "originalite": 1, "falsifiabilite": 0}
+            if f["nom"] == "Assuré occupé":
+                sur[f["identifiant"]] = {"avantage": 1, "originalite": 0}
         if "Jumeau" in par_nom and "Sobre fort" in par_nom:
             doublons.append([par_nom["Jumeau"], par_nom["Sobre fort"]])
         objet = notes_pour(idents, 2, **sur)
@@ -306,7 +335,7 @@ class TestCourse(CasAvecDossier):
         with open(os.path.join(sortie, "manifeste-depart.json")) as f:
             depart = json.load(f)
         self.assertEqual(depart["reglages"]["phase"], "depart")
-        self.assertEqual(depart["reglages"]["temoins"]["nombre"], 3)
+        self.assertEqual(depart["reglages"]["temoins"]["nombre"], 4)
         self.assertTrue(all(len(p["sha256"]) == 64 for p in depart["reglages"]["pieces"]))
         with open(os.path.join(sortie, "classement.json")) as f:
             cl = json.load(f)
@@ -456,6 +485,7 @@ class TestJugeExterne(CasAvecDossier):
         "for f in bloc:\n"
         "    c = {k: 2 for k in ('avantage','originalite','falsifiabilite','traitabilite','robustesse')}\n"
         "    if f['nom'] == 'Verbeux vide': c.update({'avantage': 1, 'originalite': 1, 'falsifiabilite': 0})\n"
+        "    if f['nom'] == 'Assuré occupé': c.update({'avantage': 1, 'originalite': 0})\n"
         "    notes.append({'identifiant': f['identifiant'], 'criteres': c, 'justifications': {}})\n"
         "doublons = [[par_nom['Jumeau'], par_nom['Sobre fort']]] if 'Jumeau' in par_nom and 'Sobre fort' in par_nom else []\n"
         "print(json.dumps({'texte': '```json\\n' + json.dumps({'notes': notes, 'doublons': doublons}) + '\\n```', 'cout_usd': 0.3}))\n")
@@ -491,7 +521,29 @@ class TestJugeExterne(CasAvecDossier):
         externe = AdaptateurJugeExterne(self.commande(self.SCRIPT_OK), environnement={})
         budgets = dict(cours.budgets())
         budgets[("juge_ideation", "autre-lignee-x")] = 1.0
-        res = cours.lancer(ad, "cx", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", externe)])
+        res = cours.lancer(ad, "cx-differe", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", externe)])
+        self.assertNotIn("bras_rapporte", res["lecture"])  # v34 : différé sans attestation
+        self.assertEqual(res["lecture"]["bras_rapporte_differe"][0]["etiquette"], "argon")
+        sortie_d = os.path.join(self.tmp, "cx-differe")
+        self.assertTrue(os.path.exists(os.path.join(sortie_d, "juges-bras-rapporte", "traces-argon", "consigne-en-attente.md")))
+        self.assertFalse(os.path.exists(os.path.join(sortie_d, "notes-bras-rapporte.json")))
+        # attestation fausse → refus ; attestation juste → le bras se joue après coup
+        att = os.path.join(self.tmp, "attestation.json")
+        with open(att, "w") as f:
+            json.dump({"lecteur": "Lazar", "fiches_validees_sha256": "0" * 64, "lu_le": "2026-10-28"}, f)
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.executer_bras_rapporte(sortie_d, attestation_lecture_humaine=att, budgets=budgets,
+                                       juges_externes=[("argon", "autre-lignee-x", externe)])
+        with open(att, "w") as f:
+            json.dump({"lecteur": "Lazar", "lu_le": "2026-10-28",
+                       "fiches_validees_sha256": idn.sha256_fichier(os.path.join(sortie_d, "fiches-validees.json"))}, f)
+        apres = idn.executer_bras_rapporte(sortie_d, attestation_lecture_humaine=att, budgets=budgets,
+                                           juges_externes=[("argon", "autre-lignee-x", externe)])
+        self.assertIn("argon", apres["lecture"]["accord_avec_le_classement_agrege"])
+        self.assertTrue(os.path.exists(os.path.join(sortie_d, "notes-bras-rapporte.json.sha256")))
+        # avec attestation dès la course : bras joué dans la course
+        res = cours.lancer(ad, "cx", budgets=budgets, juges_externes=[("argon", "autre-lignee-x", externe)],
+                           attestation_lecture_humaine=att)
         self.assertIn("bras_rapporte", res["lecture"])
         br = res["lecture"]["bras_rapporte"]
         self.assertEqual(br["juges"], {"argon": "autre-lignee-x"})
