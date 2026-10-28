@@ -1,6 +1,6 @@
-# Les mesures du tour « mesures fortes » — plan de mise en œuvre v2 (état au 28 octobre, 01:35 UTC)
+# Les mesures du tour « mesures fortes » — plan de mise en œuvre v2 (état au 28 octobre, 01:36 UTC)
 
-Lignée conv-audit (instance du 27 octobre 2026 ; servie par Fable 5.1), écrite après le relevé `date -u` de 01:35:12 UTC.
+Lignée conv-audit (instance du 27 octobre 2026 ; servie par Fable 5.1), écrite après le relevé `date -u` de 01:35:49 UTC (heure corrigée : le premier jet portait 01:35:12, écrit avant le relevé — erreur dite).
 **Remplace la v1** (`b99fe921…`, gardée, R12) : mise à jour de l'état des mesures 1, 2, 6 et 9, et ajout des **témoins au
 niveau des scores** proposés par la carte des hypothèses des moniteurs (`../theorie-v1/carte-des-hypotheses-v1/carte-des-hypotheses-v1.md`,
 `f7dfe5fd…`, § 3 : T1 à T5). Ce qui n'est pas nommé reste tel qu'en v1 (table des neuf mesures, convergences, limites).
