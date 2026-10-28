@@ -138,7 +138,7 @@ class HeritageDS25bis(unittest.TestCase):
                                         {k: 0.0125 for k in "abcd"}), {"a", "b"})
 
     def test_budgets_refuses(self):
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a", "b"], 0.03)
         with self.assertRaises(ValueError):
             c.entrer("g2", ["c"], 0.03)  # 0,06 > α
@@ -148,7 +148,7 @@ class HeritageDS25bis(unittest.TestCase):
             pa.ebh_pondere({"a": 0.0}, {"a": 1.5})
 
     def test_budget_garde_quand_les_soeurs_sont_abandonnees(self):
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a", "b", "c", "d"], 0.04)
         for f in "bcd":
             c.abandonner(f, avant_partie=True)  # abandonnées avant toute partie : la décision n'a vu aucune issue
@@ -162,7 +162,7 @@ class HeritageDS25bis(unittest.TestCase):
         self.assertEqual(c.bonferroni(), {"a"})
 
     def test_promotion_une_seule_fois_et_gel(self):
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a", "b"], 0.03)
         c.ajouter_trajectoire("a", [math.log(80)], unites={(c.generation, "a", i) for i in range(3)})
         self.assertEqual(c.lire(sans_partie={"b": "non lancée"}), {"a"})
@@ -183,7 +183,7 @@ class HeritageDS25bis(unittest.TestCase):
         a_g = [alpha * 6 / (math.pi ** 2 * g * g) for g in range(1, generations + 1)]
         fausses_valides = fausses_seules = 0
         for _ in range(rep):
-            c = pa.Course(alpha=alpha)
+            c = pa.Course(alpha=alpha, essai=True)
             c.entrer("cohorte", [f"c{i}" for i in range(4)], a_g[0])
             cohorte_seule = {f"c{i}": 0.0 for i in range(4)}
             seule_promue = False
@@ -217,7 +217,7 @@ class CorrectionsV7(unittest.TestCase):
     ex æquo et abandonnée promue plus tard (K6-6)."""
 
     def test_contrat_d_abandon(self):
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a", "b", "c", "d"], 0.04)
         c.ajouter_trajectoire("a", [math.log(2)], unites={(c.generation, "a", i) for i in range(3)})
         c.abandonner("a")  # cas sain : la partie de la génération est ajoutée, puis la fiche gelée
@@ -236,7 +236,7 @@ class CorrectionsV7(unittest.TestCase):
         self.assertAlmostEqual(c.log_e["d"], math.log(4))
 
     def test_retrait(self):
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a", "b", "c"], 0.03)
         for f, e in (("a", 200.0), ("b", 200.0), ("c", 60.0)):
             c.ajouter_trajectoire(f, [math.log(e)], unites={(c.generation, f, i) for i in range(3)})
@@ -260,7 +260,7 @@ class CorrectionsV7(unittest.TestCase):
         b = 0.05 / 3
         trois = {f: math.log(1 / (3 * b)) for f in "xyz"}  # b·E = 1/3 exactement pour les trois
         self.assertEqual(pa.ebh_pondere(trois, {f: b for f in "xyz"}), {"x", "y", "z"})
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a", "b", "c", "d"], 0.05)  # b = 0,0125
         c.ajouter_trajectoire("d", [math.log(32)], unites={(c.generation, "d", i) for i in range(3)})  # b·E = 0,4
         for f in "abc":
@@ -277,7 +277,7 @@ class CorrectionsV8(unittest.TestCase):
     et traces (K7-5)."""
 
     def test_partie_sautee_refusee_a_la_lecture(self):
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a", "b"], 0.04)
         c.ajouter_trajectoire("a", [math.log(3)], unites={(c.generation, "a", i) for i in range(3)})
         with self.assertRaises(ValueError):
@@ -286,7 +286,7 @@ class CorrectionsV8(unittest.TestCase):
         self.assertEqual(c.sans_partie[(1, "b")], "monde indisponible")
 
     def test_unites_deja_lues_refusees(self):
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a"], 0.04)
         c.ajouter_trajectoire("a", [math.log(2)], unites={"u-1", "u-2", "u-3"})
         c.lire()
@@ -300,7 +300,7 @@ class CorrectionsV8(unittest.TestCase):
         self.assertEqual(c.parties_sans_identite, [(3, "a")])
 
     def test_abandon_d_une_gelee_et_traces(self):
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["a", "b"], 0.04)
         c.abandonner("a", avant_partie=True, motif="hors sujet")
         with self.assertRaises(ValueError):

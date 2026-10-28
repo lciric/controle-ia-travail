@@ -68,6 +68,13 @@ class Construction(unittest.TestCase):
             self.assertNotEqual(ea.construire(self.m, BLANC_CONTRE_NOIR, tau=0.05)["empreinte_cle"], base["empreinte_cle"])
         finally:
             pa.E_PROCESSUS = ancien
+        # K10-10 : Λ changée ⇒ clé changée
+        ancien_l = pa.LAMBDAS
+        try:
+            pa.LAMBDAS = (0.1, 0.5)
+            self.assertNotEqual(ea.construire(self.m, BLANC_CONTRE_NOIR, tau=0.05)["empreinte_cle"], base["empreinte_cle"])
+        finally:
+            pa.LAMBDAS = ancien_l
         # K9-5 : plan de tranches non disjoint, hors partie, ou vide : refusé
         u = sorted(self.m.unites("epreuve"))
         for plan in ({1: u[:10], 2: u[5:20]}, {1: u[:10] + ["cal-0"]}, {1: []}, {0: u[:10]}):
@@ -85,7 +92,7 @@ class Jugement(unittest.TestCase):
         self.assertGreater(r["bornes_basses"]["noir"], 0.0)
         self.assertEqual(r["empreinte_cle"], e["empreinte_cle"])
         from pole import pari_apparie as pa
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["f"], 0.05)
         c.ajouter_trajectoire("f", [0.0], unites=r["identifiants_unites"])
         c.lire()

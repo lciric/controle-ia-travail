@@ -139,7 +139,9 @@ class MondeBanqueScores:
 
     def ordre_secret(self, unites, etiquette):
         ordre = sorted(unites)
-        random.Random(graine_derivee(self.graine, "ordre-apparie", etiquette, self.empreinte)).shuffle(ordre)
+        # version 29 (K10-3) : dérivé de la graine scellée du monde, de l'étiquette (clé + génération) et de l'identité de la
+        # banque — jamais de son empreinte (une unité factice ajoutée ne change plus l'ordre)
+        random.Random(graine_derivee(self.graine, "ordre-apparie", etiquette, self.identite)).shuffle(ordre)
         return ordre
 
     @staticmethod

@@ -151,7 +151,9 @@ def verite_conditionnelle(nom, fiche, engagement, nul=False):
 
 
 def course(monde, generations, alpha, tau, graine, n_hasard=6, avec_g1=True, seuil_abandon_log=-1.0, nul=False):
-    """La course entière ; renvoie le journal (par génération) et l'état final. D-S24 : α_g = α / G_max."""
+    """La course entière ; renvoie le journal (par génération) et l'état final. D-S24 : α_g = α / G_max. Version 29 : chaque
+    génération est jouée par `engagement_apparie.jouer_generation` — l'orchestrateur (cette fonction) décide **avant** toute
+    issue qui est abandonné ou non lancé, puis ne reçoit qu'un compte rendu, jamais une trajectoire (K10-1, K10-2)."""
     rng = random.Random(graine_derivee(graine, "proposeur"))
     lignees = ea.Lignees()
     c = pa.Course(alpha=alpha, journal=lignees)
@@ -159,17 +161,17 @@ def course(monde, generations, alpha, tau, graine, n_hasard=6, avec_g1=True, seu
     engagements, verites, verites_population, journal = {}, {}, {}, []
     alpha_g = alpha / generations
     for g in range(1, generations + 1):
-        tranche = plan[g]
         nouvelles = propositions(rng, g, n_hasard)
         if g == 1 and avec_g1:
             nouvelles["forme-G1"] = fiche_forme_g1()
-        # la mémoire refuse les redécouvertes (K9-3) : une proposition qui porte la même affirmation (clé canonique) qu'une
-        # fiche entrée n'entre pas ; m_c compte les fiches réellement entrées
+        # la mémoire refuse les redécouvertes (K9-3, K10-6) : une proposition qui porte la même **affirmation** qu'une fiche
+        # entrée n'entre pas ; m_c compte les fiches réellement entrées
         redites = []
         for nom, fiche in list(nouvelles.items()):
             essai = construire_engagement(monde, nom, fiche, tau, alpha_g, 1, plan)
-            if essai["empreinte_cle"] in lignees.proprietaire or any(e["empreinte_cle"] == essai["empreinte_cle"] for n, e in engagements.items() if n in nouvelles):
-                redites.append((nom, lignees.proprietaire.get(essai["empreinte_cle"], "proposition jumelle de la même génération")))
+            aff = essai["empreinte_affirmation"]
+            if aff in lignees.proprietaire or any(e["empreinte_affirmation"] == aff for n, e in engagements.items() if n in nouvelles):
+                redites.append((nom, lignees.proprietaire.get(aff, "proposition jumelle de la même génération")))
                 del nouvelles[nom]
                 continue
             engagements[nom] = essai  # provisoire (m_c = 1) ; reconstruit ci-dessous au vrai m_c
@@ -184,42 +186,26 @@ def course(monde, generations, alpha, tau, graine, n_hasard=6, avec_g1=True, seu
                 verites_population[nom] = esperance_connue(fiche["coefficients"])
         if nouvelles:  # une génération sans fiche nouvelle (toutes redites) n'entre aucune famille : son α_g reste non dépensé
             c.entrer(f"g{g}", list(nouvelles), alpha_g, cles={n: engagements[n]["empreinte_cle"] for n in nouvelles})
-        actives = [nom for nom in c.budgets if nom not in c.gelees and nom not in c.promues and nom not in c.arretees and nom not in c.exclues]
-        # décisions « avant partie » (K9-10 b) : prises **avant toute issue de la génération, d'aucune fiche** — ici, en
-        # génération 2, le proposeur retire le témoin inversé (mode `avant_partie` du contrat de D-S25 bis (2) ; sa valeur
-        # gelée est celle d'après la partie de la génération 1)
-        sans_partie, parties, abandons = {}, {}, []
-        if g == 2 and "temoin-faux-inverse" in actives:
-            c.abandonner("temoin-faux-inverse", avant_partie=True, motif="retrait du proposeur avant toute issue de la génération")
-            abandons.append(("temoin-faux-inverse", "avant_partie"))
-            actives.remove("temoin-faux-inverse")
-        for nom in actives:
-            r = ea.evaluer(monde, engagements[nom], generation=g, fiche=nom, journal=lignees)
-            if r["unites"] == 0:
-                # partie vide (aucune unité de la tranche dans la strate de la fiche) : calculée et journalisée, mais sans
-                # unité ; la course n'accepte pas une liste vide → déclarée « sans partie », ce que le journal confirme (vide)
-                lignees.journal[:] = [j for j in lignees.journal if not (j["generation"] == g and j["fiche"] == nom)]
-                sans_partie[nom] = f"aucune unité de la tranche {g} dans la strate de la fiche (partie vide)"
-                continue
-            parties[nom] = r
-            valeur = c.ajouter_trajectoire(nom, r["trajectoire_log_min"], unites=r["identifiants_unites"],
-                                           empreinte_cle=r["empreinte_cle"], empreinte_unites=r["empreinte_unites"])
-            # la règle d'abandon du proposeur ne porte que sur ses contrastes au hasard : les témoins et la fiche G1
-            # sont lus jusqu'au bout (ce sont eux qu'on lit en L2 et L3)
-            if nom.startswith("hasard-") and valeur < seuil_abandon_log and nom not in c.arretees:
-                c.abandonner(nom, motif=f"log-richesse {valeur:.2f} < {seuil_abandon_log} après la partie")
-                abandons.append((nom, "apres_partie"))
-        promues = c.lire(sans_partie=sans_partie)  # la course confronte elle-même les déclarations au journal (K9-6)
-        journal.append({"generation": g, "tranche_unites": len(tranche), "nouvelles": sorted(nouvelles), "redites_refusees": redites, "alpha_g": alpha_g,
-                        "m_c": m_c, "parties": {n: {"unites": r["unites"], "log_e_valeur": c.log_e[n],
-                                                   "log_richesse_finale_par_comparateur": r["log_richesse_finale_par_comparateur"],
-                                                   "log_garde_finale": r["log_garde_finale"]} for n, r in parties.items()},
-                        "sans_partie": sans_partie, "abandons": abandons, "promues": sorted(promues)})
+        # décisions **avant toute issue de la génération** (K9-10 b, K10-2) : en génération 2, le proposeur retire le témoin
+        # inversé (mode `avant_partie` du contrat de D-S25 bis (2) ; sa valeur gelée est celle d'après la partie de la génération 1)
+        abandons_avant = {}
+        if g == 2 and "temoin-faux-inverse" in c.budgets and "temoin-faux-inverse" not in c.gelees | c.promues | c.arretees:
+            abandons_avant["temoin-faux-inverse"] = "retrait du proposeur avant toute issue de la génération"
+        # règle d'abandon après partie du proposeur : ses contrastes au hasard seulement (les témoins et la forme G1 sont lus
+        # jusqu'au bout : ce sont eux qu'on lit en L2 et L3)
+        def abandon_apres(nom, valeur):
+            return (f"log-richesse {valeur:.2f} < {seuil_abandon_log} après la partie" if nom.startswith("hasard-") and valeur < seuil_abandon_log else None)
+        compte = ea.jouer_generation(c, monde, engagements, abandons_avant=abandons_avant, abandon_apres=abandon_apres)
+        journal.append({"generation": g, "tranche_unites": len(plan[g]), "nouvelles": sorted(nouvelles), "redites_refusees": redites,
+                        "alpha_g": alpha_g, "m_c": m_c, "parties": compte["parties"], "sans_partie": compte["sans_partie"],
+                        "abandons": [(f, "avant_partie") for f in compte["abandons_avant"]] + [(f, "apres_partie") for f in compte["abandons_apres"]],
+                        "promues": compte["promues"]})
     return {"journal": journal, "promues": sorted(c.promues), "bonferroni": sorted(c.bonferroni()), "verites": verites,
             "verites_population": verites_population, "cles": {n: e["empreinte_cle"] for n, e in engagements.items()},
+            "affirmations": {n: e["empreinte_affirmation"] for n, e in engagements.items()},
             "log_e": dict(c.log_e), "seuils_log": {f: c.seuil_log(f) for f in c.budgets}, "gelees": sorted(c.gelees),
             "abandons": {str(k): v for k, v in c.abandons.items()}, "sans_partie": {str(k): v for k, v in c.sans_partie.items()},
-            "journal_parties": lignees.journal, "alpha_engage": c.alpha_engage}
+            "journal_parties": [{k: v for k, v in j.items() if k != "identifiants_unites"} for j in lignees.journal], "alpha_engage": c.alpha_engage}
 
 
 def lecture(etat):
@@ -231,12 +217,19 @@ def lecture(etat):
     g1 = {}
     if "forme-G1" in verites:
         derniere = next((g["parties"]["forme-G1"] for g in reversed(etat["journal"]) if "forme-G1" in g["parties"]), None)
+        parties_g1 = [(g["generation"], g["parties"]["forme-G1"]) for g in etat["journal"] if "forme-G1" in g["parties"]]
+        # K10-8 : par partie, le processus qui fixe le minimum (contraste ou garde) est rapporté
+        minima = []
+        for gen, pg in parties_g1:
+            candidats = dict(pg["log_richesse_finale_par_comparateur"]); candidats.update({f"garde:{k}": v for k, v in (pg.get("log_gardes_finales") or {}).items() if v is not None})
+            minima.append({"generation": gen, "processus_minimal": min(candidats, key=candidats.get), "valeur": min(candidats.values()),
+                           "gardes": pg.get("log_gardes_finales"), "contrastes": pg["log_richesse_finale_par_comparateur"]})
         g1 = {"promue_dans_la_course_eBH": "forme-G1" in promues, "generation": par_generation.get("forme-G1"),
               "sortie_e_bonferroni": "forme-G1" in bonf, "log_e_final": etat["log_e"]["forme-G1"],
-              "seuil_log_fiche_seule": etat["seuils_log"]["forme-G1"], "derniere_partie": derniere,
-              "richesses_par_comparateur_descriptives": (derniere["log_richesse_finale_par_comparateur"] if derniere else None),
+              "seuil_log_fiche_seule": etat["seuils_log"]["forme-G1"], "parties": minima,
               "note": "lecture dans la course du pôle (e-BH pondéré) ; la lecture de G1 se fait une fois, hors de la suite (N-050) ; "
-                      "ce qui sort du pôle se lit par e-Bonferroni ; les richesses par comparateur sont descriptives (K9-8)"}
+                      "ce qui sort du pôle se lit par e-Bonferroni ; richesses des contrastes et des gardes par partie, descriptives ; "
+                      "le processus minimal (souvent une garde, K10-8) fixe l'e-valeur"}
     controle_12 = {f: {"promue": f in promues, "esperance_conditionnelle": verites[f], "esperance_population": pop[f]}
                    for f in verites if f.startswith("temoin-faux-nul")}
     return {"L1_validite": {"tenue": not fausses, "promues_d_esperance_conditionnelle_nulle_ou_negative": fausses,
@@ -247,7 +240,7 @@ def lecture(etat):
                              "sortie_e_bonferroni": f in bonf, "generation": par_generation.get(f),
                              "log_e_final": etat["log_e"][f]} for f, v in sorted(temoins_vrais.items())},
             "L3_forme_G1": g1, "promues": promues, "bonferroni": etat["bonferroni"],
-            "affirmations_distinctes": len(set(etat["cles"].values())), "fiches": len(etat["cles"])}
+            "affirmations_distinctes": len(set(etat["affirmations"].values())), "fiches": len(etat["affirmations"])}
 
 
 def artefacts(monde, alpha, tau, graine):
@@ -257,7 +250,7 @@ def artefacts(monde, alpha, tau, graine):
     e = construire_engagement(monde, "x", {"coefficients": {"blanc": 1, "juge": -1}}, tau, alpha / 4, 1, plan)
     e_y = construire_engagement(monde, "y", {"coefficients": {"blanc": 1, "noir_action": -1}}, tau, alpha / 4, 1, plan)
     # (A) fraîcheur, course sans journal (pour isoler les gardes de fraîcheur)
-    c = pa.Course(alpha=alpha)
+    c = pa.Course(alpha=alpha, essai=True)  # (A) : course d'essai sans journal, pour isoler les gardes de fraîcheur
     c.entrer("a", ["x", "y"], alpha / 2, cles={"x": e["empreinte_cle"], "y": e_y["empreinte_cle"]})
     r1 = ea.evaluer(monde, e, generation=1)
     c.ajouter_trajectoire("x", r1["trajectoire_log_min"], unites=r1["identifiants_unites"], empreinte_cle=r1["empreinte_cle"])
@@ -303,6 +296,16 @@ def artefacts(monde, alpha, tau, graine):
         sortie["partie_d_une_autre_cle"] = "ACCEPTÉE — artefact non détecté"
     except ValueError as err:
         sortie["partie_d_une_autre_cle"] = f"refusée : {err}"
+    try:  # artefact 6 (K10-6, K10-2) : « fiche espionne » = même affirmation sous une autre population → refusée par la mémoire
+        lg.entrer("espion", ea.construire(monde, {"x": {"coefficients": {"blanc": 1, "juge": -1}}}, tau, alpha_c=alpha / 4, m_c=1, plan_tranches=plan, population="autre"))
+        sortie["fiche_espionne_autre_population"] = "ACCEPTÉE — artefact non détecté"
+    except ea.EngagementInvalide as err:
+        sortie["fiche_espionne_autre_population"] = f"refusée : {err}"
+    try:  # artefact 7 (K10-7) : course sans journal en production → refusée
+        pa.Course(alpha=alpha)
+        sortie["course_sans_journal"] = "ACCEPTÉE — artefact non détecté"
+    except ValueError as err:
+        sortie["course_sans_journal"] = f"refusée : {err}"
     sortie["cas_sains"] = {"tranche_partagee": "deux fiches lisent la tranche 1 en génération 1 : accepté",
                            "relecture_tranche": "la première partie est acceptée", "sans_partie": "les déclarations vraies de la course de démonstration sont acceptées",
                            "relance": "la fiche d'origine garde sa clé", "cle": "la partie de la bonne clé est acceptée"}
@@ -367,7 +370,8 @@ def principal():
     if lec["L3_forme_G1"]:
         g = lec["L3_forme_G1"]
         print(f"L3 forme G1 : e-BH dans la course {'promue g' + str(g['generation']) if g['promue_dans_la_course_eBH'] else 'non promue'} ; "
-              f"sortie e-Bonferroni : {'oui' if g['sortie_e_bonferroni'] else 'non'} ; log e {g['log_e_final']:+.2f} / seuil fiche seule {g['seuil_log_fiche_seule']:.2f}")
+              f"sortie e-Bonferroni : {'oui' if g['sortie_e_bonferroni'] else 'non'} ; log e {g['log_e_final']:+.2f} / seuil fiche seule {g['seuil_log_fiche_seule']:.2f} ; "
+              f"processus minimal par partie : {[p['processus_minimal'] for p in g['parties']]}")
     print("promues :", lec["promues"], "; Bonferroni :", lec["bonferroni"], f"; {lec['fiches']} fiches, {lec['affirmations_distinctes']} affirmations")
     for k, v in lec["artefacts_R5"].items():
         if k != "cas_sains":

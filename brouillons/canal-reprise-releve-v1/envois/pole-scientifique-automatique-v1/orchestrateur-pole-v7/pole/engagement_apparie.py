@@ -1,4 +1,4 @@
-"""Engagement « apparié » (v7, versions 23, 25, 26, 27 et 28) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
+"""Engagement « apparié » (v7, versions 23, 25, 26, 27, 28 et 29) — la fiche du pari apparié borné, de bout en bout hors du cycle : construite
 et scellée avant toute issue d'épreuve, puis jugée sur la banque de scores (conception v2 § 7 point 1 ; v3 à v6).
 
 `construire(monde, ...)` fixe, **avant** toute lecture de l'épreuve : les contrastes nommés (coefficients vérifiés par la
@@ -24,6 +24,18 @@ dérivé de la banque et jamais des scores, K9-5) ; `evaluer(monde, engagement, 
 tranche de la génération dans l'ordre dérivé de l'empreinte et de la génération (plus d'étiquette libre), **journalise
 lui-même** la partie (K9-6) ; plusieurs gardes, une par comparateur (K9-9) ; identifiants d'unités par l'**identité** de la
 banque (K9-2) ; `Lignees` refuse aussi une seconde clé pour une fiche.
+
+Version 29 (contre-lecture de la conception v10, K10-1 à K10-10) : la clé est **en deux parties** — `affirmation` (contrastes
+canoniques, τ, strate, seuils, comparateurs, gardes) et `lecture` (partie, plan des tranches, population, m_max, Λ,
+e-processus) ; `Lignees` tient « une affirmation, une fiche » sur l'**empreinte de l'affirmation** (K10-6 : un plan ou une
+population différents ne font pas une autre affirmation) ; l'**ordre secret** dérive de l'empreinte de la clé (jamais du nom,
+du budget ou de l'empreinte de l'engagement), de la génération et de la graine scellée du monde (K10-3) ; le **journal** est
+en lecture seule pour l'appelant (ajout seul, identifiants d'unités gardés, génération fournie par la course) (K10-4) ; une
+partie **vide** est journalisée vide et vaut déclaration (K10-5) ; **`jouer_generation`** joue une génération entière sans
+rendre une trajectoire à l'orchestrateur : les décisions « avant toute issue » (abandons, fiches non lancées) sont des
+**entrées** de la fonction, prises avant qu'elle ne calcule quoi que ce soit (K10-1, K10-2). **Frontière de confiance (dite)** :
+tant qu'une partie tient les scores d'épreuve, rien ne l'empêche de calculer en privé ; dans le pôle, le monde tient les
+scores et la course les lit — l'orchestrateur reçoit des engagements et des verdicts, jamais la banque d'épreuve.
 """
 
 from . import pari_apparie as pa
@@ -95,12 +107,18 @@ def construire(monde, contrastes, tau, alpha_c=0.05, m_c=1, strate=None, partie=
     insuffisants = sorted(c for c, s in seuils.items() if s["calibrage_insuffisant"])
     if insuffisants:
         raise EngagementInvalide(f"calibrage insuffisant pour τ = {tau} : {insuffisants}")
-    cle = {"contrastes": propres, "ponderation": ("plafond" if m_max is not None else "par_unite"), "m_max": m_max,
-           "partie": partie, "lambdas": list(pa.LAMBDAS), "e_processus": dict(pa.E_PROCESSUS),
-           "tau": tau, "strate": dict(sorted((strate or {}).items())), "comparateurs": sorted(propres),
-           "seuils": {c: s["seuil"] for c, s in seuils.items()}, "population": population or monde.identite,
-           "garde": garde, "plan_tranches": plan_tranches}
-    engagement = {"type": "apparie", "cle_heritage": cle, "empreinte_cle": empreinte_objet(cle), "partie": partie,
+    affirmation = {"contrastes": propres, "comparateurs": sorted(propres), "tau": tau, "strate": dict(sorted((strate or {}).items())),
+                   "seuils": {c: s["seuil"] for c, s in seuils.items()}, "garde": garde}
+    lecture = {"partie": partie, "plan_tranches": plan_tranches, "population": population or monde.identite,
+               "ponderation": ("plafond" if m_max is not None else "par_unite"), "m_max": m_max, "lambdas": list(pa.LAMBDAS),
+               "e_processus": dict(pa.E_PROCESSUS)}
+    cle = {"affirmation": affirmation, "lecture": lecture,
+           # champs à plat gardés pour la lecture (mêmes valeurs que ci-dessus)
+           "contrastes": propres, "comparateurs": sorted(propres), "tau": tau, "strate": affirmation["strate"], "seuils": affirmation["seuils"],
+           "garde": garde, "partie": partie, "plan_tranches": plan_tranches, "population": lecture["population"],
+           "ponderation": lecture["ponderation"], "m_max": m_max, "lambdas": lecture["lambdas"], "e_processus": lecture["e_processus"]}
+    engagement = {"type": "apparie", "cle_heritage": cle, "empreinte_cle": empreinte_objet(cle),
+                  "empreinte_affirmation": empreinte_objet(affirmation), "partie": partie,
                   "alpha_c": alpha_c, "m_c": m_c, "seuils_detail": seuils, "monde": monde.empreinte, "noms": noms}
     engagement["empreinte"] = empreinte_objet(engagement)
     return engagement
@@ -135,7 +153,8 @@ def evaluer(monde, engagement, generation=None, fiche=None, journal=None, unites
                                      f"{sorted(map(str, absentes))[:3]}")
     if (journal is None) != (fiche is None):
         raise EngagementInvalide("journal et fiche vont ensemble (K9-6)")
-    etiquette = engagement["empreinte"] if generation is None else f"{engagement['empreinte']}|g{int(generation)}"
+    # K10-3 : l'ordre dérive de l'empreinte de la **clé** (ni nom, ni budget, ni empreinte de l'engagement) et de la génération
+    etiquette = engagement["empreinte_cle"] if generation is None else f"{engagement['empreinte_cle']}|g{int(generation)}"
     parts = monde.parts(cle["seuils"], engagement["partie"], cle["strate"] or None, unites)
     ordre = monde.ordre_secret(parts, etiquette)
     valeurs = {nom: monde.contrastes(parts, c["coefficients"], c["constante"], ordre, cle["m_max"])
@@ -156,10 +175,62 @@ def evaluer(monde, engagement, generation=None, fiche=None, journal=None, unites
     r["identifiants_unites"] = [(monde.identite, engagement["partie"], u) for u in sorted(ordre)]
     r["empreinte_unites"] = empreinte_objet({"banque": monde.identite, "partie": engagement["partie"],
                                              "unites": sorted(ordre)})
+    r["empreinte_affirmation"] = engagement["empreinte_affirmation"]
     r["generation"] = generation
     if journal is not None:
         journal.journaliser(generation, fiche, r)
     return r
+
+
+def jouer_generation(course, monde, engagements, abandons_avant=None, non_lancees=None, abandon_apres=None):
+    """Version 29 (K10-1, K10-2, K10-5) : joue **une génération entière** de la course sans rendre une trajectoire à
+    l'orchestrateur. `engagements` : {fiche: engagement} des fiches entrées. Les décisions « avant toute issue de la
+    génération » sont des **entrées** : `abandons_avant` {fiche: motif} (abandon « avant partie », contrat de D-S25 bis (2)),
+    `non_lancees` {fiche: motif} (déclaration « sans partie » décidée avant). Puis, pour chaque fiche active, la partie est
+    calculée **ici**, journalisée par `evaluer` sous la génération de la course, et ajoutée ; une partie vide est journalisée
+    vide et déclarée. `abandon_apres(fiche, valeur_log)` → motif ou None : abandon après la partie (permis par le contrat : la
+    partie est déjà ajoutée). Enfin la lecture. Renvoie le compte rendu (sans trajectoire)."""
+    g = course.generation
+    journal = course.journal
+    if journal is None:
+        raise EngagementInvalide("jouer_generation demande une course avec journal")
+    abandons_avant, non_lancees = dict(abandons_avant or {}), dict(non_lancees or {})
+    compte = {"generation": g, "abandons_avant": {}, "non_lancees": {}, "parties": {}, "vides": {}, "abandons_apres": {}}
+    for f, motif in abandons_avant.items():
+        course.abandonner(f, avant_partie=True, motif=motif)
+        compte["abandons_avant"][f] = motif
+    actives = [f for f in course.budgets if f not in course.gelees and f not in course.promues and f not in course.arretees
+               and f not in course.exclues]
+    sans_partie = {}
+    for f, motif in non_lancees.items():
+        if f not in actives:
+            raise EngagementInvalide(f"non-lancement de {f!r} : fiche non active")
+        sans_partie[f] = motif
+        compte["non_lancees"][f] = motif
+    for f in sorted(actives, key=str):
+        if f in sans_partie:
+            continue
+        if f not in engagements:
+            raise EngagementInvalide(f"fiche active sans engagement : {f!r}")
+        r = evaluer(monde, engagements[f], generation=g, fiche=f, journal=journal)
+        if r["unites"] == 0:
+            journal.marquer_vide(g, f)
+            sans_partie[f] = "partie vide : aucune unité de la tranche dans la strate de la fiche (journalisée vide)"
+            compte["vides"][f] = sans_partie[f]
+            continue
+        valeur = course.ajouter_trajectoire(f, r["trajectoire_log_min"], unites=r["identifiants_unites"],
+                                            empreinte_cle=r["empreinte_cle"], empreinte_unites=r["empreinte_unites"])
+        compte["parties"][f] = {"unites": r["unites"], "log_e_valeur": valeur, "arretee": f in course.arretees,
+                                "log_richesse_finale_par_comparateur": r["log_richesse_finale_par_comparateur"],
+                                "log_gardes_finales": r["log_gardes_finales"]}
+        if abandon_apres is not None and f not in course.arretees:
+            motif = abandon_apres(f, valeur)
+            if motif:
+                course.abandonner(f, motif=motif)
+                compte["abandons_apres"][f] = motif
+    compte["promues"] = sorted(map(str, course.lire(sans_partie=sans_partie)))
+    compte["sans_partie"] = sans_partie
+    return compte
 
 
 class Lignees:
@@ -170,28 +241,47 @@ class Lignees:
     à chaque `evaluer`) avant toute lecture ; `verifier_sans_partie` confronte une déclaration « sans partie » au journal
     et refuse la déclaration mensongère (0,40 puis 0,98 de fausse promotion sinon, contre-lecture de la v8)."""
 
+    class _Journal(tuple):
+        """Journal en lecture seule pour l'appelant : un tuple, étendu seulement par `Lignees` (K10-4)."""
+
     def __init__(self):
         self.proprietaire = {}
-        self.journal = []
+        self._journal = []
+
+    @property
+    def journal(self):
+        return Lignees._Journal(dict(j) for j in self._journal)
 
     def entrer(self, fiche, engagement):
-        cle = engagement["empreinte_cle"]
-        if cle in self.proprietaire and self.proprietaire[cle] != fiche:
-            raise EngagementInvalide(f"fiche {fiche!r} : même clé de l'héritage que {self.proprietaire[cle]!r} — relance "
-                                     f"sous un autre nom refusée (D-S25 bis (5) : une affirmation, une fiche, un budget)")
-        autres = [c for c, f in self.proprietaire.items() if f == fiche and c != cle]
+        aff = engagement["empreinte_affirmation"]
+        if aff in self.proprietaire and self.proprietaire[aff] != fiche:
+            raise EngagementInvalide(f"fiche {fiche!r} : même affirmation que {self.proprietaire[aff]!r} — relance sous un autre nom "
+                                     f"(ou autre plan, autre population) refusée (D-S25 bis (5), K10-6 : une affirmation, une fiche, un budget)")
+        autres = [c for c, f in self.proprietaire.items() if f == fiche and c != aff]
         if autres:
-            raise EngagementInvalide(f"fiche {fiche!r} : déjà liée à une autre clé de l'héritage — une fiche, une affirmation (K9-2)")
-        self.proprietaire[cle] = fiche
+            raise EngagementInvalide(f"fiche {fiche!r} : déjà liée à une autre affirmation — une fiche, une affirmation (K9-2)")
+        self.proprietaire[aff] = fiche
 
     def journaliser(self, generation, fiche, resultat):
-        if any(j["generation"] == generation and j["fiche"] == fiche for j in self.journal):
+        if generation is not None and not isinstance(generation, int):
+            raise EngagementInvalide("génération : entier (fournie par la course), jamais une chaîne (K10-4)")
+        if any(j["generation"] == generation and j["fiche"] == fiche for j in self._journal):
             raise EngagementInvalide(f"fiche {fiche!r} : seconde évaluation dans la génération {generation} refusée (K9-6)")
-        self.journal.append({"generation": generation, "fiche": fiche, "empreinte_unites": resultat["empreinte_unites"],
-                             "empreinte_cle": resultat["empreinte_cle"], "unites": len(resultat["identifiants_unites"])})
+        self._journal.append({"generation": generation, "fiche": fiche, "empreinte_unites": resultat["empreinte_unites"],
+                              "empreinte_cle": resultat["empreinte_cle"], "unites": len(resultat["identifiants_unites"]),
+                              "identifiants_unites": list(resultat["identifiants_unites"]), "vide": len(resultat["identifiants_unites"]) == 0})
+
+    def marquer_vide(self, generation, fiche):
+        for j in self._journal:
+            if j["generation"] == generation and j["fiche"] == fiche:
+                if j["unites"] != 0:
+                    raise EngagementInvalide(f"fiche {fiche!r} : la partie de la génération {generation} n'est pas vide")
+                j["vide"] = True
+                return
+        raise EngagementInvalide(f"fiche {fiche!r} : aucune partie journalisée en génération {generation}")
 
     def parties_calculees(self, generation):
-        return {j["fiche"] for j in self.journal if j["generation"] == generation}
+        return {j["fiche"] for j in self._journal if j["generation"] == generation and not j.get("vide")}
 
     def verifier_sans_partie(self, generation, sans_partie):
         calculees = self.parties_calculees(generation)

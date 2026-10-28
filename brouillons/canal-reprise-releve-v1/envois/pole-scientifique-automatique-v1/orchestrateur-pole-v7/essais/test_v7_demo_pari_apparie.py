@@ -1,4 +1,4 @@
-"""Essais des versions 27 et 28 : tranches d'épreuve dans `engagement_apparie.evaluer` (plan scellé, ordre dérivé de la
+"""Essais des versions 27, 28 et 29 : tranches d'épreuve dans `engagement_apparie.evaluer` (plan scellé, ordre dérivé de la
 génération), mémoire des lignées de clé et journal des parties (`Lignees`), fraîcheur par rapport à la course, clés tenues par
 la course, et la démonstration de bout en bout du pari apparié (`demonstrations/demo_pari_apparie_v7.py`) : cas sains et
 artefacts (R5), lecture L1 / L2 / L3 à graine fixée, nul répété."""
@@ -40,7 +40,7 @@ class Tranches(unittest.TestCase):
         self.assertEqual({u for _, _, u in r1["identifiants_unites"]}, set(t1))
         self.assertEqual(r1["unites"], 30)
         self.assertNotEqual(r1["empreinte_unites"], r2["empreinte_unites"])
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["f", "g"], 0.05)
         c.ajouter_trajectoire("f", r1["trajectoire_log_min"], unites=r1["identifiants_unites"])
         c.ajouter_trajectoire("g", r1["trajectoire_log_min"], unites=r1["identifiants_unites"])  # même tranche, même génération : accepté
@@ -82,7 +82,7 @@ class Tranches(unittest.TestCase):
 
     def test_cle_tenue_par_la_course(self):
         autre = ea.construire(self.m, CONTRASTE, tau=0.10)
-        c = pa.Course(alpha=0.05)
+        c = pa.Course(alpha=0.05, essai=True)
         c.entrer("g1", ["f"], 0.05, cles={"f": self.e["empreinte_cle"]})
         r = ea.evaluer(self.m, autre)
         with self.assertRaises(ValueError):  # K9-2 : partie d'une autre clé
@@ -115,19 +115,23 @@ class LigneesEtJournal(unittest.TestCase):
             ea.evaluer(self.m, self.e, fiche="f", journal=lg)
         with self.assertRaises(ea.EngagementInvalide):  # journal sans fiche
             ea.evaluer(self.m, self.e, journal=lg)
+        with self.assertRaises(ea.EngagementInvalide):  # K10-5 : marquer vide une partie qui ne l'est pas
+            lg.marquer_vide(None, "f")
         lg.verifier_sans_partie(None, {"g": "aucune unité"})  # vraie : acceptée
         with self.assertRaises(ea.EngagementInvalide):  # artefact : la partie de f est au journal
             lg.verifier_sans_partie(None, {"f": "prétendue absence"})
         # la course confronte elle-même (K9-6) et refuse une partie absente du journal ou d'une autre empreinte
         lg2 = ea.Lignees()
         c = pa.Course(alpha=0.05, journal=lg2)
-        c.entrer("g1", ["f", "g"], 0.05)
+        with self.assertRaises(ValueError):  # K10-7 : entrée sans clés refusée hors essai
+            c.entrer("g1", ["f", "g"], 0.05)
+        c.entrer("g1", ["f", "g"], 0.05, cles={"f": self.e["empreinte_cle"], "g": self.e["empreinte_cle"] + "x"})
         with self.assertRaises(ValueError):  # aucune partie au journal
             c.ajouter_trajectoire("f", r["trajectoire_log_min"], unites=r["identifiants_unites"], empreinte_unites=r["empreinte_unites"])
         r2 = ea.evaluer(self.m, self.e, generation=1, fiche="f", journal=lg2)
         with self.assertRaises(ValueError):  # empreinte des unités ≠ journal
-            c.ajouter_trajectoire("f", r2["trajectoire_log_min"], unites=r2["identifiants_unites"], empreinte_unites="autre")
-        c.ajouter_trajectoire("f", r2["trajectoire_log_min"], unites=r2["identifiants_unites"], empreinte_unites=r2["empreinte_unites"])
+            c.ajouter_trajectoire("f", r2["trajectoire_log_min"], unites=r2["identifiants_unites"], empreinte_unites="autre", empreinte_cle=r2["empreinte_cle"])
+        c.ajouter_trajectoire("f", r2["trajectoire_log_min"], unites=r2["identifiants_unites"], empreinte_unites=r2["empreinte_unites"], empreinte_cle=r2["empreinte_cle"])
         ea.evaluer(self.m, self.e, generation=1, fiche="g", journal=lg2)
         with self.assertRaises(ValueError):  # « sans partie » pour g, dont la partie est au journal
             c.lire(sans_partie={"g": "prétendue absence"})
@@ -137,8 +141,49 @@ class LigneesEtJournal(unittest.TestCase):
     def test_une_fiche_une_cle(self):
         lg = ea.Lignees()
         lg.entrer("f", self.e)
-        with self.assertRaises(ea.EngagementInvalide):  # K9-2 : seconde clé pour la même fiche
+        with self.assertRaises(ea.EngagementInvalide):  # K9-2 : seconde affirmation pour la même fiche
             lg.entrer("f", ea.construire(self.m, CONTRASTE, tau=0.10))
+        # K10-6 : même affirmation sous une autre population ou un autre plan → même affirmation, refusée pour une autre fiche
+        autre_pop = ea.construire(self.m, CONTRASTE, tau=0.05, population="autre")
+        self.assertNotEqual(autre_pop["empreinte_cle"], self.e["empreinte_cle"])
+        self.assertEqual(autre_pop["empreinte_affirmation"], self.e["empreinte_affirmation"])
+        with self.assertRaises(ea.EngagementInvalide):
+            lg.entrer("espion", autre_pop)
+
+    def test_journal_en_lecture_seule_et_generation_entiere(self):
+        lg = ea.Lignees()
+        r = ea.evaluer(self.m, self.e, generation=1, fiche="f", journal=lg)
+        with self.assertRaises(AttributeError):  # K10-4 : le journal est un tuple pour l'appelant
+            lg.journal.append({})
+        self.assertEqual(lg.journal[0]["identifiants_unites"][0][1], "epreuve")
+        with self.assertRaises(ea.EngagementInvalide):  # génération en chaîne refusée
+            ea.evaluer(self.m, self.e, generation="2", fiche="f", journal=lg)
+        # jouer_generation : décisions avant toute issue en entrée, aucune trajectoire rendue
+        lg2 = ea.Lignees()
+        plan = {1: sorted(self.m.unites("epreuve"))[:20], 2: sorted(self.m.unites("epreuve"))[20:]}
+        e1 = ea.construire(self.m, CONTRASTE, tau=0.05, plan_tranches=plan)
+        e2 = ea.construire(self.m, {"x": {"coefficients": {"noir": 1, "blanc": -1}}}, tau=0.05, plan_tranches=plan)
+        lg2.entrer("f", e1); lg2.entrer("g", e2)
+        c = pa.Course(alpha=0.05, journal=lg2)
+        c.entrer("g1", ["f", "g"], 0.05, cles={"f": e1["empreinte_cle"], "g": e2["empreinte_cle"]})
+        compte = ea.jouer_generation(c, self.m, {"f": e1, "g": e2}, non_lancees={"g": "pas cette fois"})
+        self.assertEqual(compte["generation"], 1)
+        self.assertIn("f", compte["parties"]); self.assertNotIn("g", compte["parties"])
+        self.assertNotIn("trajectoire_log_min", str(compte))
+        self.assertEqual(c.generation, 2)
+        compte2 = ea.jouer_generation(c, self.m, {"f": e1, "g": e2}, abandons_avant={"g": "retiré avant toute issue"})
+        self.assertIn("g", compte2["abandons_avant"])
+        with self.assertRaises(ea.EngagementInvalide):  # non-lancement d'une fiche non active
+            ea.jouer_generation(c, self.m, {"f": e1, "g": e2}, non_lancees={"g": "x"})
+
+    def test_ordre_derive_de_la_cle(self):
+        # K10-3 : même clé, autre nom ou autre budget → même ordre secret, même trajectoire
+        t = sorted(self.m.unites("epreuve"))[:30]
+        e_a = ea.construire(self.m, {"a": {"coefficients": {"blanc": 1, "noir": -1}}}, tau=0.05, alpha_c=0.05)
+        e_b = ea.construire(self.m, {"autre": {"coefficients": {"noir": -1, "blanc": 1}}}, tau=0.05, alpha_c=0.01, m_c=3)
+        self.assertNotEqual(e_a["empreinte"], e_b["empreinte"])
+        self.assertEqual(ea.evaluer(self.m, e_a, generation=1, unites=t)["trajectoire_log_min"],
+                         ea.evaluer(self.m, e_b, generation=1, unites=t)["trajectoire_log_min"])
 
 
 class Demonstration(unittest.TestCase):
@@ -182,12 +227,14 @@ class Demonstration(unittest.TestCase):
         # génération 2 : abandon avant partie du témoin inversé, tracé par la course
         self.assertIn(("temoin-faux-inverse", "avant_partie"), [tuple(a) for a in etat["journal"][1]["abandons"]])
         self.assertEqual(etat["abandons"]["temoin-faux-inverse"][1], "avant_partie")
-        # le journal des parties ne contient que des parties calculées non vides, jamais une déclarée
+        # le journal des parties contient les parties calculées ; une partie vide y est marquée vide (K10-5), jamais effacée
         for j in etat["journal_parties"]:
-            self.assertGreater(j["unites"], 0)
+            self.assertEqual(j["unites"] == 0, bool(j.get("vide")))
+        self.assertTrue(any(j.get("vide") for j in etat["journal_parties"]))
         # L3 : la fiche de forme G1 est rapportée avec sa sortie e-Bonferroni et des richesses descriptives
         self.assertIn("sortie_e_bonferroni", lec["L3_forme_G1"])
-        self.assertEqual(sorted(lec["L3_forme_G1"]["richesses_par_comparateur_descriptives"]), sorted(self.demo.COMPARATEURS_G1))
+        self.assertEqual(sorted(lec["L3_forme_G1"]["parties"][0]["contrastes"]), sorted(self.demo.COMPARATEURS_G1))
+        self.assertTrue(all(p["processus_minimal"] for p in lec["L3_forme_G1"]["parties"]))  # K10-8 : le processus qui fixe l'e-valeur est dit
         # K9-3 : autant d'affirmations distinctes que de fiches entrées (les redites sont refusées)
         self.assertEqual(lec["fiches"], lec["affirmations_distinctes"])
         # le journal des parties est tenu par `evaluer` : une entrée par (fiche, génération) ajoutée
@@ -198,7 +245,7 @@ class Demonstration(unittest.TestCase):
     def test_artefacts(self):
         a = self.demo.artefacts(self.monde, 0.05, 0.05, 11)
         for nom in ("relecture_tranche", "tranche_anterieure_par_autre_fiche", "sans_partie_mensonger", "relance_sous_autre_nom",
-                    "partie_d_une_autre_cle"):
+                    "partie_d_une_autre_cle", "fiche_espionne_autre_population", "course_sans_journal"):
             self.assertTrue(a[nom].startswith("refus"), (nom, a[nom]))
 
     def test_nul_repete(self):

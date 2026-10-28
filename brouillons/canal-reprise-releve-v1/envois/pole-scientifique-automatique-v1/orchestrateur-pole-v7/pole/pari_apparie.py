@@ -1,4 +1,4 @@
-"""Pari apparié borné (v7, versions 20 à 28) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
+"""Pari apparié borné (v7, versions 20 à 29) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
 G1), selon la conception v5 (`../../pari-de-signe/conception-pari-de-signe-v5.md` et les versions qu'elle amende).
 
 Ce module ne contient que le **cœur statistique**, sans lien encore avec le cycle des générations (à faire : monde sur
@@ -20,7 +20,12 @@ banque de scores, engagement, mémoire avec la clé complète de l'héritage) :
 - (version 28, contre-lecture de la conception v9) : fraîcheur des unités **par rapport à toute la course** (K9-1 : une
   unité n'est lue qu'à la génération de sa première lecture, par quelque fiche que ce soit) ; lien fiche ↔ clé tenu par la
   course (K9-2) ; journal des parties reçu par la course et confronté à la lecture (K9-6) ; déclaration « sans partie »
-  refusée pour une fiche gelée ou qui a sa partie (K9-10 c) ; plusieurs gardes (une par comparateur, K9-9) dans `evaluer`.
+  refusée pour une fiche gelée ou qui a sa partie (K9-10 c) ; plusieurs gardes (une par comparateur, K9-9) dans `evaluer` ;
+- (version 29, contre-lecture de la conception v10) : **gardes obligatoires** — une `Course` sans journal, ou une entrée sans
+  clés, est refusée sauf `essai=True` (K10-7) ; une partie **vide** (journalisée vide par celui qui calcule) vaut déclaration
+  « sans partie » acceptée (K10-5) ; la génération courante est fournie par la course à qui calcule (`generation`), jamais
+  par l'appelant (K10-4) ; la lecture d'une génération entière se fait par `engagement_apparie.jouer_generation`, qui ne rend
+  aucune trajectoire à l'orchestrateur (K10-1, K10-2).
 
 Tout est en Python pur (aucune dépendance) ; les instants de lecture sont les unités (une unité = un instant).
 """
@@ -259,10 +264,14 @@ class Course:
       partie »** refusée pour une fiche gelée, arrêtée, promue ou qui a sa partie (K9-10 c).
     """
 
-    def __init__(self, alpha=0.05, journal=None):
+    def __init__(self, alpha=0.05, journal=None, essai=False):
         if not 0.0 < alpha < 1.0:
             raise ValueError("α dans ]0 ; 1[")
+        if journal is None and not essai:
+            raise ValueError("course sans journal des parties : les gardes K9-6 ne tiennent pas ; passer essai=True pour un essai "
+                             "sans garde, jamais en production (K10-7)")
         self.alpha = alpha
+        self.essai = essai
         self.journal = journal
         self.premiere_lecture = {}
         self.cle_de = {}
@@ -285,6 +294,10 @@ class Course:
 
     def entrer(self, famille, fiches, alpha_c, cles=None):
         fiches = list(fiches)
+        if cles is None and not self.essai:
+            raise ValueError("entrée sans clés de l'héritage : la garde K9-2 ne tient pas (K10-7) ; passer cles={fiche: empreinte_cle}")
+        if cles is not None and set(fiches) - set(cles):
+            raise ValueError("chaque fiche entrée porte sa clé (K10-7)")
         cles = dict(cles or {})
         if cles and set(cles) - set(fiches):
             raise ValueError("clés de fiches non entrées")
@@ -399,7 +412,7 @@ class Course:
                 raise ValueError(f"déclaration « sans partie » refusée pour {f!r} : fiche gelée, arrêtée, promue, exclue ou qui a sa "
                                  f"partie dans la génération {self.generation} (K9-10 c)")
         if self.journal is not None:
-            calculees = {j["fiche"] for j in self.journal.journal if j["generation"] == self.generation}
+            calculees = {j["fiche"] for j in self.journal.journal if j["generation"] == self.generation and not j.get("vide")}
             menteuses = sorted(str(f) for f in sans_partie if f in calculees)
             if menteuses:
                 raise ValueError(f"génération {self.generation} : déclaration « sans partie » contredite par le journal des "
