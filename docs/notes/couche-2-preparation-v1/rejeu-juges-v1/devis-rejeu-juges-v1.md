@@ -1,9 +1,10 @@
-# Devis — rejeu des juges du pilote de T0.5 sur ses 180 textes — v1
+# Devis — rejeu des juges du pilote de T0.5 sur ses 180 notations (120 textes) — v1
 
 Écrit par un sous-agent de la lignée « session-depot » le 29 octobre 2026 (UTC), sous **GO-2026-10-28-16** (plafond
-4 USD, échéance 5 novembre ; `registres/go.md`, l. 118 ; R-671). **Rien n'est lancé par ce document.** Pièces liées, dans
-ce dossier : la fiche de lancement (`fiche-lancement-rejeu-juges-v1.md`, critères de lecture gelés) et la configuration
-(`config-rejeu-juges-v1.json`). Code : `src/controle_ia/environnements/noter_rejeu_juges_v1.py`, essais
+4 USD, échéance 5 novembre ; `registres/go.md`, l. 118 ; R-671), puis corrigé le même jour après la contre-lecture R2
+(`contre-lecture-rejeu-juges-v1.md`, `581ae87a…` ; constats et traitement : fiche, section « Contre-lecture »). **Rien
+n'est lancé par ce document.** Pièces liées, dans ce dossier : la fiche de lancement
+(`fiche-lancement-rejeu-juges-v1.md`, critères de lecture gelés) et la configuration (`config-rejeu-juges-v1.json`). Code : `src/controle_ia/environnements/noter_rejeu_juges_v1.py`, essais
 `tests/test_noter_rejeu_juges_v1.py`. Chaîne : `scripts/amorce_rejeu_juges_v1.sh`, `scripts/rejeu_juges_instance_v1.sh`,
 `docs/procedures/rejeu-juges-v1/lancer_rejeu_juges_v1.sh`.
 
@@ -26,9 +27,10 @@ sur 180 (8B) et 50 sur 180 (3B)** (RAPPORTÉ : `diag/20261017-193648-t05-notatio
 | incomplètes non tronquées, par défaut unique | demi-points 28 ; note absente 24 ; mélange 14 | hors échelle 96 ; note absente 13 ; mélange 12 |
 | « le plafond de 3 072 jetons n'est pas trop court pour un texte sain » | l. 171 | l. 171 |
 
-Le rejeu mesure, **sur les mêmes 180 textes, sans aucune tâche neuve** :
-1. la **complétude** quand le juge est lu par la **probabilité du jeton de verdict** (D-S13, telle que la citent le
-   GO et R-671) plutôt que par l'analyse d'un score écrit ;
+Le rejeu mesure, **sur les mêmes 180 notations, sans aucune tâche neuve**. Elles portent sur 120 textes : 60 d'entre
+eux sont notés deux fois, en passe-0 et en passe-1 (120 empreintes d'ensemble distinctes, vérifié). Il mesure :
+1. la **complétude** quand le juge est lu par la **probabilité du jeton de verdict** (D-S13, § 2) plutôt que par
+   l'analyse d'un score écrit ;
 2. la complétude si l'on **relève le budget de jetons** ou si l'on **force le verdict d'abord** ;
 3. les **rythmes** réels (secondes par notation, par juge et par variante) et le **pic de mémoire** ;
 4. l'**accord** entre la lecture par probabilité et la note écrite, quand les deux existent.
@@ -38,13 +40,18 @@ Duel du collisionneur (cellule E3-T1, l. 250-252) : H_A, au moins 0,99 de scores
 
 ## 2. La lecture par la probabilité du jeton de verdict
 
-**D-S13.** Son texte n'est pas sur la branche : la décision N-055 (`371879d5…`, l. 40) renvoie D-S13 à la conception
-v3 du pari de signe, qui n'est pas versée ici. Le GO et R-671 la citent comme « lecture par la probabilité du jeton de
-verdict » ; les faits du collisionneur (`faits-couche-2-cinq-divergences-v1.md`, `394e2b60…`, l. 356) la décrivent
-comme « bris d'égalité scellé (v4 § 2.4) », utile aux juges lus par un jeton. **Divergence à trancher par la session**
-(au besoin en lisant la conception v4 chez conv-audit). Le module suit la lecture du GO et déclare un bris d'égalité :
-la valeur la plus probable rendue en cas d'égalité est la plus petite. Ce bris ne sert qu'à l'accord, qui est un
-descriptif. Le score, lui, est une espérance et n'a pas d'ex æquo.
+**D-S13, close sur son texte** (R-685). La décision N-055 (`371879d5…`, l. 40) renvoie D-S13 à la conception v3 du
+pari de signe, qui n'est pas sur `main`. Elle se lit sur la branche `canal/conv-audit-n04`, l. 277
+(`…/pari-de-signe/conception-pari-de-signe-v3.md`, `1518a12f…`, vérifiée contre son sceau) :
+- options : « score continu exigé (probabilité du jeton de verdict) ; bris d'égalité aléatoire à graine scellée ;
+  règle « non comparable » » ;
+- recommandation : « score continu exigé pour toute cellule de G1 ; bris scellé sinon ».
+
+La session la lit : « score continu exigé (probabilité du jeton de verdict) pour toute cellule de G1 ; bris d'égalité
+aléatoire à graine scellée sinon ; règle « non comparable » ». La lecture du GO est donc la bonne. Le « bris d'égalité
+scellé » des faits du collisionneur (`394e2b60…`, l. 356) est la règle de repli des cellules à scores discrets. Le
+score lu ici est une espérance, sans ex æquo. La valeur la plus probable, qui sert au seul accord (un descriptif),
+prend la plus petite en cas d'égalité (règle déclarée).
 
 **Définition (gelée dans la fiche, § Métrique).**
 - Pour chaque critère, la lecture se fait après la **dernière occurrence** de « CRITÈRE: » (même expression régulière
@@ -57,6 +64,10 @@ descriptif. Le score, lui, est une espérance et n'a pas d'ex æquo.
   (signe, puis chiffre), c'est le produit des probabilités conditionnelles le long de la suite forcée. Les branches qui
   ne sont pas sur le chemin écrit se lisent par une passe forcée de plus, groupée par critère. C'est **la probabilité
   d'une valeur, jamais une moyenne ni une médiane sur des jetons** (interdit du programme).
+- La masse admise est la somme de ces probabilités : la probabilité que le juge **commence** par une valeur admise,
+  quelle que soit la suite. Le tokeniseur de Llama 3 découpe les chiffres à part : « 2.5 » compte donc pour 2, « 3/5 »
+  pour 3 (lecture par les jetons de tête, contre-lecture CLJ-06). C'est voulu pour b0 relu (la part de l'incomplétude
+  qui n'est qu'une affaire de format) ; la fiche le rapporte par cellule et en fait un déclencheur d'audit.
 - La loi est renormalisée sur les valeurs admises (à deux valeurs, elle égale `juges.probabilite_oui` : essai). La note
   lue est l'espérance. L'agrégation est la formule fixe de `rubrique` : 100 × max(0, somme) / 33.
 - Un **score fini et appuyé**, seule lecture qui compte, exige trois conditions :
@@ -83,7 +94,7 @@ textes identiques. Les cellules qui peuvent tenir H_A sont « verdict d'abord »
 | variante | ce qui tourne | textes | génération |
 |---|---|---|---|
 | **b0 relu** | relecture forcée (une passe sans génération) des 180 réponses **scellées** des notations rejouées (`notations-<juge>-decisives.json`, 8B `b103835b…`, 3B `51548526…`), même contexte reconstruit (garde : longueur égale à `jetons_contexte`), lecture écrite refaite (garde : égale au score rejoué) | les réponses du pilote, à l'identique | aucune |
-| **verdict d'abord** | invite b0 suivie d'une consigne fixe (dix lignes « CRITÈRE: <entier> » en tête, puis s'arrêter ; empreinte `7c8ef0c9…`) ; 192 jetons au plus ; graines neuves dérivées de l'entropie du pilote (`SeedSequence`, clés `rejeu-v1/verdict-d-abord/<clé du pilote>`) | les 180 ensembles notés | courte |
+| **verdict d'abord** | invite b0 suivie d'une consigne fixe (dix lignes « CRITÈRE: <entier> » en tête, puis s'arrêter ; empreinte `7c8ef0c9…`) ; 192 jetons au plus ; graines neuves dérivées de l'entropie du pilote (`SeedSequence`, clés `rejeu-v1/verdict-d-abord/<clé du pilote>`) | les 180 notations (120 ensembles) | courte |
 | **budget relevé** | seules les réponses tronquées (60 et 9) sont prolongées de 1 024 jetons (budget total 4 096), à partir de la réponse scellée ; graines neuves `rejeu-v1/budget-releve/<clé>` ; la cellule se compose à la lecture avec b0 relu pour les réponses déjà finies (aux mêmes graines, elles l'auraient été au même point) | les 180 | 1 024 jetons × 69 lignes |
 
 **Plan B des juges : son code n'existe pas sur `main`.** D'après R-220 à R-255, le plan B (rubrique simplifiée
@@ -150,11 +161,28 @@ D'où un **ordre de priorité gelé dans la configuration**, appliqué par le co
 6. 3B, budget relevé.
 
 Chaque phase a sa durée maximale (20, 10, 30, 20, 40 et 10 minutes). Une phase **ne commence que si le temps restant
-avant l'échéance globale (85 minutes) couvre sa durée maximale**. Aucune phase n'est donc coupée par l'échéance globale
-après avoir coûté. Une phase qui dépasse sa propre durée est « échue », sans fichier (règle « tout ou rien » des
+avant l'échéance globale couvre sa durée maximale**. L'échéance globale est la plus proche de deux échéances
+(contre-lecture, CLJ-02) :
+- début + 85 minutes (configuration) ;
+- l'échéance externe que le script de l'instance passe au module : délai externe du run moins 6 minutes, marge du
+  dernier lot.
+
+Le dernier lot finit donc avant le TERM du délai externe : **aucune phase commencée n'est tuée par lui après avoir
+coûté** (essai). Une phase qui dépasse sa propre durée est « échue », sans fichier (règle « tout ou rien » des
 notations), et la suivante commence.
 
-Dans le pire cas, les phases 1 à 4 finissent vers la 70e minute. La phase 5 ne commence pas, la 6 tourne.
+**Marge de la phase 5** (contre-lecture, CLJ-09). Avec une échéance de 85 minutes, la phase 5 (40 minutes) ne commence
+que si au plus 45 minutes ont passé depuis le début du module. Les chargements (4) et les phases 1 à 4 (7,5 + 3 + 18 +
+10) en prennent ≈ 42 dans l'attendu. « Toutes les variantes tiennent dans l'attendu » est donc juste, à 3 minutes près.
+- L'échéance externe vaut ≈ 111 minutes moins la mise en place de l'instance (plafond de l'amorce 130, moins 13 pour le
+  KILL du run et les poussées, moins la marge de 6).
+- Elle passe sous 85 minutes dès que la mise en place dépasse ≈ 26 minutes, et la phase 5 ne commence alors plus dans
+  l'attendu.
+- La mise en place attendue est de 25 minutes (§ 4) : la phase 5 est à la limite.
+
+**Au pire de tout** (mise en place 40 minutes, phases au pire), l'échéance du module tombe à ≈ 71 minutes. Les phases 1
+à 3 finissent vers la 55e minute ; la phase 4 ne commence pas (il lui faudrait 20 minutes), la 5 non plus ; la 6
+tourne. C'est le prix de la règle : une phase qui ne commence pas ne coûte rien, et l'instance s'arrête plus tôt.
 
 Le 8B passe d'abord dans chaque variante. Le 3B relu (≈ 3 minutes) passe avant le « verdict d'abord » du 8B parce
 qu'il donne, pour presque rien, la mesure principale du second juge.
@@ -176,6 +204,16 @@ coûterait ≈ 1 USD : une instance, la phase 5 seule, plus la mise en place.
   **≈ 3,9 USD**.
 
   Le lanceur écrit l'heure d'arrêt au plus tard (création + 9 000 s) dans `lancement.txt`.
+- **Réveils de garde** (contre-lecture, CLJ-04, qui répète CLR-06) : l'instance ne s'arrête jamais seule. Dès la
+  création, la session programme deux réveils d'elle-même (tâches « une fois »), à la création + 140 minutes et à la
+  création + 155 minutes. Le lanceur en écrit les heures dans `lancement.txt` (ligne `reveils_de_garde`), et la session
+  y consigne leurs identifiants. Chaque réveil inventorie les instances, arrête celle du rejeu par son identifiant (R10)
+  si elle tourne encore, et consigne l'arrêt dans `registres/arrets.md`. Si la session se perd :
+  - arrêt par le premier réveil (≈ 142 minutes) : ≈ 3,7 USD ;
+  - par le second seulement (≈ 157 minutes) : ≈ 4,06 USD, juste au-dessus du plafond (double panne).
+- **Plafond de l'amorce gardé à 130 minutes.** La contre-lecture propose, à titre facultatif, de le ramener à
+  120 minutes une fois CLJ-02 corrigé. Je ne le retiens pas : l'échéance du module tomberait à ≈ 76 minutes pour une
+  mise en place de 25 minutes, et la phase 5 ne commencerait plus dans l'attendu.
 - **Plafond proposé : 4 USD**, celui du GO, pour une seule instance. Une seconde instance n'est permise que si la
   première est perdue par l'hôte **avant tout calcul**, c'est-à-dire avant la première ligne `PROGRES`, et si le cumul
   reste sous 4 USD. Toute autre relance demande un nouveau GO.
@@ -187,7 +225,7 @@ coûterait ≈ 1 USD : une instance, la phase 5 seule, plus la mise en place.
 - **Aucune lecture de T0.5 n'est refaite.** Le verdict des notations (`verdict-T0.5-pilote-notations-v1.md`,
   `d861605c…`) et la bascule vers le plan B (N-022) restent tels quels. Rien n'est écrit dans les dossiers du pilote ni
   dans ceux des notations rejouées (essai).
-- **Aucun chiffre opposable (R7)** : ce sont des mesures d'instrument, sur 180 textes d'un seul environnement.
+- **Aucun chiffre opposable (R7)** : ce sont des mesures d'instrument, sur 180 notations de 120 textes d'un seul environnement.
 - Le rejeu ne dit rien de la **justesse** des juges (ni sensibilité ni spécificité), seulement si leurs scores sont
   finis et s'ils s'accordent à la note écrite.
 - Il ne change ni la cellule de la banque ni le format v30. Toute redéfinition, par exemple « verdict d'abord » comme
@@ -197,13 +235,14 @@ coûterait ≈ 1 USD : une instance, la phase 5 seule, plus la mise en place.
 
 ## 8. Avant le lancement
 
-1. Contre-lecture R2 du devis, de la fiche, du module, des essais et de la chaîne par un sous-agent neuf, à qui l'on
-   donne ces sept fichiers et la présente liste.
-2. Commit du code. Puis remplir dans la fiche « Commit du code d'analyse » et « Tests attendus » (nombre de la suite
-   ciblée au commit), ainsi que la section « Contre-lecture ». Sceller la fiche, le devis et la configuration (R6) et
-   pousser sur `main`.
+1. Contre-lecture R2 : faite (« lançable après corrections ») ; corrections faites le 29 octobre (fiche, section
+   « Contre-lecture ») ; leur vérification revient à la session.
+2. Commit du code corrigé. Puis remplir dans la fiche « Commit du code d'analyse » (« Tests attendus » et la section
+   « Contre-lecture » sont remplis : 174 essais). Sceller la fiche, le devis et la configuration (R6) et pousser sur
+   `main`.
 3. Banc de la chaîne en mode jouet contre un dépôt local (fait par le rédacteur le 29 octobre, sur une copie jetable ;
-   journaux dans son bloc-notes, `…/scratchpad/rejeu-juges/`). À refaire au commit si la contre-lecture change la chaîne.
+   journaux dans son bloc-notes, à verser avec leurs empreintes, R6). Premier banc sur le brouillon relu ; refait
+   après les corrections, qui touchent la chaîne (voir la fin de ce point).
    - Amorce, script de l'instance et module :
      - A, cas sain : six phases écrites, branche poussée, code 0 ; lecture `--lire` scellée ;
      - B, branche existante : code 2 ;
@@ -216,9 +255,29 @@ coûterait ≈ 1 USD : une instance, la phase 5 seule, plus la mise en place.
      - refus : prix au-dessus du plafond (3), crédit sous 4,50 (3), autre instance (2), GO absent du registre, garde dans
        un « if » (2), dossier existant (2), jeton absent (2), fiche à marqueur (2), sceau ancien (2), commit hors de
        `origin/main` (2), fiche sans le commit (2), commit du code inconnu (2).
-   - Suite ciblée au moment de l'écriture : **166 essais, 9 min 20 s** sur le processeur de la session. C'est la valeur
-     à vérifier pour « Tests attendus » au commit.
-4. Aucune autre instance en marche. Puis appel du lanceur par la session, surveillance des lignes `PROGRES`, et arrêt
-   par identifiant (R10) à la fin de l'amorce, au plus tard à l'heure écrite.
+   - Suite ciblée : 166 essais au brouillon relu ; **174 après les corrections** (« Tests attendus »), réussis en
+     9 min 22 s sur le processeur de la session, chargé par d'autres travaux.
+   - Banc refait après les corrections (29 octobre, 01:33 à 01:36 UTC ; dépôt minimal jetable) :
+     - A, cas sain : six phases écrites, code 0. Le script passe `--echeance-externe` (délai externe 46 minutes,
+       échéance du module 40 minutes plus loin) ; `resume.json` consigne l'échéance (retenue 1 800 s, source
+       « configuration ») et la garde d'encodage (47 valeurs par juge) ; `--lire` lit depuis le résumé et scelle sa
+       lecture. Les cellules jouet b0 se lisent « non concluant (instrument désaligné) », comme il se doit : les notes
+       jouet sont écrites à la main, non tirées du modèle jouet ;
+     - B, branche existante : code 2 ;
+     - C, temps restant insuffisant : arrêt consigné et poussé, code 1 ;
+     - D, fiche réelle telle quelle (commit du code non rempli) : code 2 avant l'installation, par le contrôle de
+       marqueur ajouté au script de l'instance ;
+     - E, TERM pendant la phase 2 : `arret.json` (étape et échéance consignées), phase 1 gardée et poussée, code 124 ;
+       `--lire` sur la branche poussée lit la phase 1 (source « arret »), la phase 2 est « arrêt pendant la phase »,
+       les suivantes « non atteinte » ;
+     - F, échéance externe courte (plafond de l'amorce 35 minutes, délai externe 21, échéance du module 15 ; phases de
+       18 minutes) : les six phases « non-commencé », aucune tuée, échéance consignée (source « externe », 897,6 s),
+       code 0 ;
+     - lanceur devant le faux `vastai` 1.8.3. Cas sain : code 0, heures des deux réveils écrites dans `lancement.txt` et
+       annoncées, aucun jeton dans les journaux. Refus : prix (3), crédit (3), autre instance (2), jeton absent (2), GO
+       absent du registre (2), dossier existant (2), fiche réelle telle quelle (2, marqueur du commit du code).
+4. Aucune autre instance en marche. Puis appel du lanceur par la session, et aussitôt les deux réveils de garde
+   (création + 140 et + 155 minutes, § 6), identifiants consignés dans `lancement.txt`. Surveillance des lignes
+   `PROGRES`, et arrêt par identifiant (R10) à la fin de l'amorce, au plus tard à l'heure écrite.
 5. Lecture : `python -m controle_ia.environnements.noter_rejeu_juges_v1 --lire <run>`, qui écrit
    `diag/<run>/lecture-rejeu-v1.json`, scellé. Puis compte rendu à Lazar : verdict d'abord, réserves.
