@@ -15,7 +15,7 @@ d'abord », 157 sur 180 ; échelles mal tenues, demi-points lus vers le bas par 
 
 ## Citations (une seule occurrence de chaque intitulé ; lues par le module et par le script de l'instance)
 
-- Commit du code d'analyse : `<<COMMIT_CODE>>`
+- Commit du code d'analyse : `5f13293a3d30c3a5b0c6b44274044a79a111a88a`
 - Configuration du rejeu (empreinte canonique) : `186220d4ed000bf21c3a3597a1d5166b48653dbc75dd43aa0ed55cdd73fdcaaa`
 - Chemin de la configuration du rejeu : `docs/notes/couche-2-preparation-v1/rejeu-juges-v2/config-rejeu-juges-v2.json`
 - Run du pilote rejoué : `20261012-105125-t05-pilote-reel`
