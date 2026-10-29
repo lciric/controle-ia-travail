@@ -305,6 +305,18 @@ def normaliser_typographie(texte):
     return re.sub(r"[ \t]+", " ", texte)
 
 
+def normaliser_typographie_objet(objet):
+    """v45 : normalise la typographie **valeur par valeur** (chaînes d'un objet désérialisé, récursivement), jamais sur
+    le texte JSON : un guillemet « » ou “ ” devenu `"` reste une donnée, la structure ne change pas."""
+    if isinstance(objet, str):
+        return normaliser_typographie(objet)
+    if isinstance(objet, list):
+        return [normaliser_typographie_objet(x) for x in objet]
+    if isinstance(objet, dict):
+        return {cle: normaliser_typographie_objet(valeur) for cle, valeur in objet.items()}
+    return objet
+
+
 def lire_pieces(chemins, liste_blanche, taille_max=TAILLE_MAX_PIECES):
     """Lit les pièces (texte), caviarde, refuse un total au-dessus de `taille_max` caractères ; rend [(nom, texte, sha256)]."""
     textes, total = [], 0
@@ -585,7 +597,7 @@ def anonymiser(fiches, graine, etiquette_juge="juge"):
     random.Random(graine_derivee(graine, "anonymisation", etiquette_juge)).shuffle(ordre)
     anonymes, cle = [], {}
     for rang, i in enumerate(ordre, 1):
-        f = json.loads(normaliser_typographie(json.dumps(vue_servie(fiches[i]), ensure_ascii=False)))
+        f = normaliser_typographie_objet(json.loads(json.dumps(vue_servie(fiches[i]), ensure_ascii=False)))
         ident = f"T{rang:02d}"
         cle[ident] = fiches[i]["identifiant_auteur"]
         f["identifiant"] = ident

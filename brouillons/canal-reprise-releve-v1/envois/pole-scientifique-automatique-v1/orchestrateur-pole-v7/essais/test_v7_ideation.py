@@ -3796,3 +3796,129 @@ class TestV44(CasAvecDossier):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestV45(CasAvecDossier):
+    """v45 (bloquant de lancement démontré par session-depot sur la v44, message n° 175) : `anonymiser` normalisait la
+    typographie sur le texte JSON, un guillemet « » ou “ ” y devenait un `"` non échappé (`JSONDecodeError`) après toutes
+    les passes des proposeurs, avant le premier juge. v45 : normalisation valeur par valeur. Chaque essai échoue sur la v44."""
+
+    GUILLEMETS = "Le « moniteur » dit “diffus” — l’écart… "
+
+    def v43(self):
+        t = TestV43("test_cl42_03_mesurer_consignes_sans_appel")
+        t.tmp = self.tmp
+        return t
+
+    def temoins_guillemets(self):
+        g = self.GUILLEMETS
+        return {"temoins": [
+            {"fiche": fiche_brute(nom="Sobre fort", enonce=g + "sobre ?"), "attendu": "eligible", "classe": "vrai"},
+            {"fiche": fiche_brute(nom="Verbeux vide", enonce=g * 10), "attendu": "ineligible",
+             "note_max": {"falsifiabilite": 1}, "classe": "faux_falsifiabilite"},
+            {"fiche": fiche_brute(nom="Assuré occupé", originalite={"niveau": "inedite", "texte": "« jamais vu »"}),
+             "attendu": "ineligible", "note_max": {"originalite": 1}, "classe": "faux_anteriorite"},
+            {"fiche": fiche_brute(nom="Jumeau", piege="“" + g + "”"), "attendu": "eligible", "jumeau_de": "Sobre fort",
+             "classe": "jumeau"}]}
+
+    def prep_guillemets(self):
+        v41 = self.v43().v41()
+        prep = v41.cours().preparer(temoins_json=self.temoins_guillemets())
+        att = os.path.join(self.tmp, "att-materiau-v45.json")
+        idn.ecrire_json_scelle(att, {"lecteur": "Lazar", "lu_le": "2026-10-29", "materiau_sha256": {
+            os.path.basename(prep["materiau"][0]): idn.sha256_fichier(prep["materiau"][0])}})
+        return v41, prep, att
+
+    def argon_guillemets(self, nom):
+        """Le script commun d'Argon (`SCRIPT_OK`), dont les fiches portent des guillemets « » et “ ”."""
+        fiche = json.dumps(fiche_brute(nom="Argon A", enonce=self.GUILLEMETS + "?", piege="« piège » “anglais”"),
+                           ensure_ascii=False)
+        script = TestCommandeExterne.SCRIPT_OK.replace(repr(TestCommandeExterne.FICHE), repr(fiche), 1)
+        self.assertNotEqual(script, TestCommandeExterne.SCRIPT_OK)
+        return self.v43().v41().script(script, nom)
+
+    def test_v45_1_fiche_et_temoin_a_guillemets_servis_aux_juges(self):
+        """Une fiche et un témoin à guillemets « » et “ ” : anonymisés sans erreur (v44 : `JSONDecodeError`), chaque valeur
+        normalisée comme avant (`normaliser_typographie`), structure intacte (mêmes clés, mêmes listes) ; la consigne du
+        juge se relit en JSON."""
+        fiche = idn.valider_fiche_ideation(fiche_brute(nom="Fiche « A »", enonce=self.GUILLEMETS + "?",
+                                                       anteriorite=[{"reference": "“Where” 2601.1", "statut": "RAPPORTE"}]),
+                                           "opus", 1)
+        p = os.path.join(self.tmp, "temoins-v45.json")
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(self.temoins_guillemets(), f, ensure_ascii=False)
+        temoins = idn.charger_temoins(p, idn.construire_liste_blanche([p], os.path.join(self.tmp, "lb-v45.json")))
+        toutes = [fiche] + temoins
+        anonymes, cle = idn.anonymiser(toutes, 7, "juge-v45")
+        self.assertEqual(len(anonymes), 5)
+        par_auteur = {cle[a["identifiant"]]: a for a in anonymes}
+
+        def attendu(o):
+            if isinstance(o, str):
+                return idn.normaliser_typographie(o)
+            if isinstance(o, list):
+                return [attendu(x) for x in o]
+            if isinstance(o, dict):
+                return {k: attendu(v) for k, v in o.items()}
+            return o
+        for f in toutes:
+            a = dict(par_auteur[f["identifiant_auteur"]])
+            ident = a.pop("identifiant")
+            self.assertRegex(ident, r"^T0[1-5]$")
+            self.assertEqual(a, attendu(idn.vue_servie(f)))
+            self.assertEqual(sorted(a), sorted(idn.vue_servie(f)))
+        a = par_auteur[fiche["identifiant_auteur"]]
+        self.assertEqual(a["nom"], 'Fiche " A "')
+        self.assertTrue(a["enonce"].startswith('Le " moniteur " dit "diffus" - l\'écart... '))
+        self.assertEqual(a["anteriorite"], [{"reference": '"Where" 2601.1', "statut": "RAPPORTE"}])
+        texte = json.dumps(anonymes, ensure_ascii=False)
+        for c in "«»“”’—…":
+            self.assertNotIn(c, texte)
+        self.assertEqual(json.loads(texte), anonymes)
+
+    def test_v45_2_mesurer_consignes_temoins_a_guillemets(self):
+        """`--mesurer-consignes` avec des témoins à guillemets → code 0 (v44 : code 2, `JSONDecodeError`), aucun appel."""
+        import unittest.mock
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        v41, prep, att = self.prep_guillemets()
+        argon = self.argon_guillemets("argon-v45-2.py")
+        sortie = os.path.join(self.tmp, "l-v45-2")
+
+        def piege(*a, **k):
+            raise AssertionError("aucun appel ne doit partir")
+        lanceur = v41.lanceur()
+        with unittest.mock.patch.object(lanceur.AdaptateurIdeationSimule, "lancer", piege), \
+                unittest.mock.patch.object(AdaptateurCommandeExterne, "lancer", piege):
+            code, out, err = v41.principal(lanceur, v41.base(sortie, prep, att, "--commande-externe", argon,
+                                                             "--mesurer-consignes"))
+        self.assertEqual(code, 0, err)
+        self.assertGreater(json.loads(out)["consignes"]["consigne_du_juge_maximale"], 0)
+        self.assertFalse(os.path.exists(sortie) or os.path.exists(sortie + "-controle"))
+
+    def test_v45_3_course_simulee_complete_a_guillemets(self):
+        """Course simulée complète (passe 1, passe 2, Argon proposeur ; juges ; classement) avec témoins et fiches d'Argon à
+        guillemets → code 0, classement écrit (v44 : code 2 après les passes, avant le premier juge, sans classement)."""
+        v41, prep, att = self.prep_guillemets()
+        argon = self.argon_guillemets("argon-v45-3.py")
+        sortie = os.path.join(self.tmp, "l-v45-3")
+        code, out, err = v41.principal(v41.lanceur(), v41.base(sortie, prep, att, "--commande-externe", argon))
+        self.assertEqual(code, 0, err)
+        with open(os.path.join(sortie, "manifeste-fin.json"), encoding="utf-8") as f:
+            fin = json.load(f)["reglages"]
+        self.assertIsNone(fin["erreur"])
+        self.assertEqual(fin["lecture"]["juges_rendus"], 2)
+        self.assertTrue(fin["lecture"]["temoins"]["temoins_ok"])
+        with open(os.path.join(sortie, "fiches-validees.json"), encoding="utf-8") as f:
+            self.assertIn("« piège » “anglais”", f.read())  # la fiche d'Argon à guillemets est bien passée aux juges
+        with open(os.path.join(sortie, "notes-par-juge.json"), encoding="utf-8") as f:
+            self.assertTrue(json.load(f))
+        # bras rapporté différé (juge externe) : anonymisation chez le juge externe, puis classement écrit
+        att_lecture = v41.cmd().attester(os.path.join(self.tmp, "att-v45-3.json"), sortie, "argon-j")
+        code, out, err = v41.principal(v41.lanceur(), [sortie, "--bras-rapporte-differe", "--attestation-lecture-humaine",
+                                                       att_lecture, "--juge-externe", "argon-j=gemini-argon",
+                                                       "--commande-externe", argon])
+        self.assertEqual(code, 0, err)
+        with open(os.path.join(sortie, "classement.json"), encoding="utf-8") as f:
+            lignes = json.load(f)["lignes"]
+        self.assertTrue(lignes)
+        self.assertTrue(all(l["nombre_juges"] == 3 for l in lignes))
