@@ -1,0 +1,101 @@
+{
+ "version": "manifeste-puissance-garde-delta-v5",
+ "auteur": "conv-audit (sous-agent de finition v5)",
+ "date_utc": "2026-10-29T07:40Z",
+ "statut": "exploratoire, processeur seul, sans dépense, non préenregistré, non opposable ; lois synthétiques seulement ; remplace la v4 (gardée) ; non relu par une autre main (R2)",
+ "repond_a": {
+  "contre-lecture-garde-delta-v4.md": "6a34e837d5ec422b57cde206da84b9acd125afc290025711ebfc80bea8321911",
+  "parametres-garde-delta-pour-G1-v1.md": "db6037507f23d1ee9c7d8b1ce93d1a670bf22aa3c02b8f476e6a5d964458b3e7",
+  "demande": "R-716 (retenue e-BH simulée, k = 8)"
+ },
+ "base": {
+  "simulation-puissance-garde-delta-v4.py": "5bf015b6df7ab8c813c26b95f11f478ff173e63c44b0862a4a3d6c32bf7b9b9a",
+  "pari_apparie.py (pôle v7, lecture seule)": "ec6c2cf64d0c9a3bcb3484f2bc58ca986c89e97829bd45fdb96cbc42bf094fef"
+ },
+ "graine_maitresse": 20261029,
+ "passages": {
+  "simulation-puissance-garde-delta-v5-sortie-effet-beta-0.17": {
+   "commande": "--repetitions 4000 --sans-n80 --effet-unite-beta 0.17 --biais 0 --comparateurs 1,3,8 --tailles 160,400 --sortie simulation-puissance-garde-delta-v5-sortie-effet-beta-0.17.json",
+   "duree_s": 233.1,
+   "debut_utc": "2026-10-29T07:30:30Z",
+   "manifeste": "manifeste-simulation-puissance-garde-delta-v5-sortie-effet-beta-0.17.json"
+  },
+  "simulation-puissance-garde-delta-v5-sortie-effet-unite-0.5": {
+   "commande": "--repetitions 4000 --sans-n80 --effet-unite-a 0.5 --biais 0 --comparateurs 1,3,8 --tailles 160,400 --lien-coupe --sortie simulation-puissance-garde-delta-v5-sortie-effet-unite-0.5.json",
+   "duree_s": 433.2,
+   "debut_utc": "2026-10-29T07:23:17Z",
+   "manifeste": "manifeste-simulation-puissance-garde-delta-v5-sortie-effet-unite-0.5.json"
+  },
+  "simulation-puissance-garde-delta-v5-sortie-effet-unite-1.0": {
+   "commande": "--repetitions 4000 --sans-n80 --effet-unite-a 1.0 --biais 0 --comparateurs 1,3,8 --tailles 160,400 --lien-coupe --sortie simulation-puissance-garde-delta-v5-sortie-effet-unite-1.0.json",
+   "duree_s": 482.3,
+   "debut_utc": "2026-10-29T07:15:14Z",
+   "manifeste": "manifeste-simulation-puissance-garde-delta-v5-sortie-effet-unite-1.0.json"
+  },
+  "simulation-puissance-garde-delta-v5-sortie-fiches-nulles-2": {
+   "commande": "--repetitions 2000 --comparateurs 8 --tailles 160,400,650 --K 10,3 --taux 0.01 --biais 0 --deltas 0.05,0.075 --lecture-ebh A,B --fiches-nulles 2 --m 8,4,18 --sans-n80 --sortie simulation-puissance-garde-delta-v5-sortie-fiches-nulles-2.json",
+   "duree_s": 185.9,
+   "debut_utc": "2026-10-29T07:32:01Z",
+   "manifeste": "manifeste-simulation-puissance-garde-delta-v5-sortie-fiches-nulles-2.json"
+  },
+  "simulation-puissance-garde-delta-v5-sortie-principale": {
+   "commande": "--repetitions 2000 --comparateurs 1,3,8 --tailles 160,300,400,650 --K 10,3 --taux 0.01 --biais 0,0.0125 --deltas 0.05,0.075 --lecture-ebh A,B --m 8,2,16 --sans-n80 --sortie simulation-puissance-garde-delta-v5-sortie-principale.json",
+   "duree_s": 410.6,
+   "debut_utc": "2026-10-29T07:08:04Z",
+   "manifeste": "manifeste-simulation-puissance-garde-delta-v5-sortie-principale.json"
+  },
+  "simulation-puissance-garde-delta-v5-sortie-rejeu-v4-principale": {
+   "commande": "--repetitions 4000 --sortie simulation-puissance-garde-delta-v5-sortie-rejeu-v4-principale.json",
+   "duree_s": 1261.4,
+   "debut_utc": "2026-10-29T07:08:02Z",
+   "manifeste": "manifeste-simulation-puissance-garde-delta-v5-sortie-rejeu-v4-principale.json"
+  },
+  "simulation-puissance-garde-delta-v5-sortie-taux-0.10": {
+   "commande": "--repetitions 2000 --comparateurs 8 --tailles 160,400,650 --K 10,3 --taux 0.10 --biais 0,0.0125 --deltas 0.05,0.075 --lecture-ebh A,B --m 8,2,16 --sans-n80 --sortie simulation-puissance-garde-delta-v5-sortie-taux-0.10.json",
+   "duree_s": 170.0,
+   "debut_utc": "2026-10-29T07:29:11Z",
+   "manifeste": "manifeste-simulation-puissance-garde-delta-v5-sortie-taux-0.10.json"
+  }
+ },
+ "verifications": {
+  "essais-entrees-v5.py": "python3 -I -B essais-entrees-v5.py simulation-puissance-garde-delta-v5.py <dossier neuf hors dépôt> essais-entrees-v5-sortie.json",
+  "verif-ebh-pole-v5.py": "python3 -I -B verif-ebh-pole-v5.py simulation-puissance-garde-delta-v5.py ../../orchestrateur-pole-v7/pole/pari_apparie.py verif-ebh-pole-v5-sortie.json",
+  "comparer-v4-v5.py": "python3 -I -B comparer-v4-v5.py comparaison-v4-v5-sortie.json <v4 principale> <v5 rejeu> <v4 σ 0,5> <v5 σ 0,5> <v4 σ 1,0> <v5 σ 1,0>"
+ },
+ "fichiers": {
+  "comparaison-v4-v5-sortie.json": "15a08d26967b29d6e0101d944a892af5c45c3d27348d11c25762a65e145f22b6",
+  "comparer-v4-v5.py": "814c65a9268eb3fed96a9455dac5a5c4a46964255450173fc03c7083ec437cd1",
+  "essais-entrees-v5-sortie.json": "da775b9f0ec5e5d263afe42ef2511aac032b10872e0561c3bc914d4974172ae2",
+  "essais-entrees-v5.py": "622fd3448f242c555f73703de369ff46e1046c828545a9a28ccaf4a0b19015f0",
+  "manifeste-simulation-puissance-garde-delta-v5-sortie-effet-beta-0.17.json": "67a42818a0ad0f702aedfec9e76e9eef1dd69902930d1e45c7c0b65a36a20bc8",
+  "manifeste-simulation-puissance-garde-delta-v5-sortie-effet-unite-0.5.json": "8f0e42fd221f75d366fa9e973c3d42804c63b5aa44858b127a47443bc5845c67",
+  "manifeste-simulation-puissance-garde-delta-v5-sortie-effet-unite-1.0.json": "896c81da6cd64718beef7dc198c87e8acf70cdf9c13c370081b35dbf96cb9dc3",
+  "manifeste-simulation-puissance-garde-delta-v5-sortie-fiches-nulles-2.json": "cb8c33e8c9cfca2b0d753993cf79870378e7306404b67161c50a4201fdb8da3d",
+  "manifeste-simulation-puissance-garde-delta-v5-sortie-principale.json": "72c27294c87ee1c59b4edf32c76f0e247b9189c9f60b363d9174e36af3ac9a6a",
+  "manifeste-simulation-puissance-garde-delta-v5-sortie-rejeu-v4-principale.json": "91d744913c6220e2c428069756cc6e2bf0dcb9cf62fee3816117a14dacfc3353",
+  "manifeste-simulation-puissance-garde-delta-v5-sortie-taux-0.10.json": "1790b575c10735fe1fa76b8fb45edb9bd9e985d7e9990b5e24e3845c92e38184",
+  "rapport-puissance-garde-delta-v5.md": "8e31a1e3a8ca772263c8f62fe1207239319c856aca38195ee30ca0e62859fd89",
+  "simulation-puissance-garde-delta-v5-sortie-effet-beta-0.17-journal.txt": "7ae2d2eca2142d5bc7b2657d4c213cacdd323bb305560f69ef76da0d7472502d",
+  "simulation-puissance-garde-delta-v5-sortie-effet-beta-0.17.json": "25a83cc2a35f9cff0dd6383bc040c4825d0690bac17b7765c20e2f4987db1ae8",
+  "simulation-puissance-garde-delta-v5-sortie-effet-unite-0.5-journal.txt": "6f1218c6a906c0fd8a77c4b6453d8f13a3c0bce334922eb85265499082a46f4d",
+  "simulation-puissance-garde-delta-v5-sortie-effet-unite-0.5.json": "9fcfec1cd6422571dbd006131eaf121018a9e948492dd107d8e6b835d3c23039",
+  "simulation-puissance-garde-delta-v5-sortie-effet-unite-1.0-journal.txt": "e34e622263144d2f799fc2d04b8ceed6778c593f6e27b7c190e54c4da754fdfc",
+  "simulation-puissance-garde-delta-v5-sortie-effet-unite-1.0.json": "205ca165a230bc439046e4e285b488bbf0370f88484789ddd5e4d04d01326d36",
+  "simulation-puissance-garde-delta-v5-sortie-fiches-nulles-2-journal.txt": "7d18f4e82c6e9bd218c00a45540b253b9fb1790e57f1f5edf9e82a487c25fcf8",
+  "simulation-puissance-garde-delta-v5-sortie-fiches-nulles-2.json": "69edecf5ba2f5b59fd094ce7f089f9e0bb1478e2ab3409cb996018e81963539f",
+  "simulation-puissance-garde-delta-v5-sortie-principale-journal.txt": "e81fa6ac9d3574f4c4bd7a75a757cd4783d57cf692459cb43cf12da2e21bb971",
+  "simulation-puissance-garde-delta-v5-sortie-principale.json": "56e87d3654374c4f531d84237ba44f5fa7f3593cab7ef318b1afb005804739ab",
+  "simulation-puissance-garde-delta-v5-sortie-rejeu-v4-principale-journal.txt": "3d9482bdb41466e883bd685c70a4dd5458c7f39b10bda0818cd61176d09a0fcf",
+  "simulation-puissance-garde-delta-v5-sortie-rejeu-v4-principale.json": "afccad540c0809b489340c9db686142cbe5b7e103cdb0e0b62860fc28a540995",
+  "simulation-puissance-garde-delta-v5-sortie-taux-0.10-journal.txt": "855981dbc2e6afbe218f1d294355efcb1bdc4b892c0349c77ec5e0a6e05b91e8",
+  "simulation-puissance-garde-delta-v5-sortie-taux-0.10.json": "841e12d2dba98bd7c61b8d13661f76a750842f31310fbc242b7c9c591768741c",
+  "simulation-puissance-garde-delta-v5.py": "7d1239e1375892f711a3382ce7d2f53fe432d3acff22b9708384506fdb028871",
+  "verif-ebh-pole-v5-sortie.json": "7392098be477e382adabb6570bd6b98bc5e3c91e29c27d92a74cc62401c6ed27",
+  "verif-ebh-pole-v5.py": "db34ad621769bd0b440435e0cbec02c8efc04ee9573e4dea391e897c517c9395"
+ },
+ "environnement": {
+  "python": "3.13.18",
+  "numpy": "2.5.3"
+ },
+ "commit_depot_au_lancement": "7ff46b74355b60295656eb60ad69c91e12b5c3c6 (dossier v5 non suivi ; aucun commit fait)"
+}
