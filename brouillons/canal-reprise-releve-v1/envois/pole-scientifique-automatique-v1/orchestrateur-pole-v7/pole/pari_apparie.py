@@ -94,6 +94,11 @@ def trajectoire_log_garde(ecarts_faux_positifs, delta, lambdas=LAMBDAS):
     """Garde appariée : processus de 1 + λ·(δ − g) contre « E[g] ≥ δ » (A tire plus que B d'au moins δ)."""
     if not 0.0 < delta < 1.0:
         raise ValueError("δ dans ]0 ; 1[")
+    # v39 : un écart non fini (NaN, ±∞) devenait +1 par le jeu de min/max, la valeur la plus favorable à la promotion
+    # (défaut relevé par le sous-agent de la porte PACE, 29 octobre) ; refus explicite
+    for g in ecarts_faux_positifs:
+        if isinstance(g, bool) or not isinstance(g, (int, float)) or not math.isfinite(g):
+            raise ContrasteInvalide(f"écart de faux positifs non fini ou non numérique : {g!r}")
     return trajectoire_log_richesse([max(-1.0, min(1.0, delta - g)) for g in ecarts_faux_positifs], lambdas)
 
 

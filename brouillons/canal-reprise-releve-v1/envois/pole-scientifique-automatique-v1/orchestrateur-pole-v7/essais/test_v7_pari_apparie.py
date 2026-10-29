@@ -316,5 +316,16 @@ class CorrectionsV8(unittest.TestCase):
         self.assertEqual([m for _, m in c.retirees["b"]], ["panne", "panne confirmée"])
 
 
+class TestGardeNonFinie(unittest.TestCase):
+    """v39 (R5) : un écart de faux positifs NaN ou infini est refusé ; il valait +1 (favorable) avant."""
+
+    def test_nan_et_infini_refuses(self):
+        from pole.pari_apparie import ContrasteInvalide, trajectoire_log_garde
+        for g in (float("nan"), float("inf"), -float("inf"), None, "0.1", True):
+            with self.assertRaises((ContrasteInvalide, TypeError)):
+                trajectoire_log_garde([0.0, g, 0.0], 0.05)
+        self.assertEqual(len(trajectoire_log_garde([0.0, 0.1, -0.2], 0.05)), 3)
+
+
 if __name__ == "__main__":
     unittest.main()
