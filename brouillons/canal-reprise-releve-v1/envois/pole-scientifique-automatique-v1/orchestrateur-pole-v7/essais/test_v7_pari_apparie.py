@@ -327,5 +327,120 @@ class TestGardeNonFinie(unittest.TestCase):
         self.assertEqual(len(trajectoire_log_garde([0.0, 0.1, -0.2], 0.05)), 3)
 
 
+NAN, INF = float("nan"), float("inf")
+NON_FINIS = (NAN, INF, -INF, True, False, None, "0.1")
+
+
+class TestValeursNonFiniesV40(unittest.TestCase):
+    """v40 (CL39-09, relecture CL6 de session-depot) : chaque entrée du juge apparié refuse NaN, ±∞, booléen (et, pour les
+    valeurs de contraste, le hors-borne) par `ContrasteInvalide` ; chaque refus a son cas sain, et le comportement sur des
+    entrées finies valides ne change pas. Les effets d'avant (v = +1, tri e-BH dérangé, seuil NaN…) sont rappelés."""
+
+    def test_fini(self):
+        for x in (0, 1, -3, 0.5, -1e300, 10 ** 400 // 10 ** 399):
+            self.assertTrue(pa._fini(x), x)
+        for x in NON_FINIS + ([1.0], 10 ** 400):
+            self.assertFalse(pa._fini(x), x)
+        try:
+            import numpy as np
+            self.assertTrue(pa._fini(np.float64(0.3)) and pa._fini(np.int64(2)))
+            self.assertFalse(pa._fini(np.float64("nan")) or pa._fini(np.bool_(True)))
+        except ImportError:
+            pass
+
+    def test_verifier_coefficients_constante(self):
+        for c in NON_FINIS:  # avant : constante NaN acceptée (comparaisons fausses)
+            with self.subTest(constante=c), self.assertRaises(pa.ContrasteInvalide):
+                pa.verifier_coefficients({"A": 1}, constante=c)
+        self.assertTrue(pa.verifier_coefficients({"A": 1}, constante=-0.4))  # sain
+        self.assertTrue(pa.verifier_coefficients({"A": 0.5}, constante=0))  # sain : entier
+
+    def test_contraste_constante_coefficients_et_v(self):
+        parts, coefs = {"A": 0.6, "B": 0.4}, {"A": 1, "B": -1}
+        for c in NON_FINIS:  # avant : constante NaN → v = +1
+            with self.subTest(constante=c), self.assertRaises(pa.ContrasteInvalide):
+                pa.contraste(parts, coefs, c)
+        for a in (NAN, INF, -INF, True):  # avant : coefficient NaN ou ±∞ → v = +1
+            with self.subTest(coefficient=a), self.assertRaises(pa.ContrasteInvalide):
+                pa.contraste(parts, {"A": a, "B": -1})
+        with self.assertRaises(pa.ContrasteInvalide):  # v avant la borne non fini (dépassement), coefficients finis
+            pa.contraste({"A": 1.0}, {"A": 1e308}, 1e308)
+        self.assertAlmostEqual(pa.contraste(parts, coefs), 0.2)  # sain
+        self.assertAlmostEqual(pa.contraste(parts, coefs, -0.1), 0.1)  # sain : constante finie
+        self.assertEqual(pa.contraste({"A": 1.0}, {"A": 2}), 1.0)  # inchangé : v fini hors borne toujours borné
+
+    def test_contraste_plafonne(self):
+        parts, coefs = {"A": 0.2, "B": 0.9}, {"A": 1, "B": -1}
+        for c in (NAN, INF, -INF, True):
+            with self.subTest(constante=c), self.assertRaises(pa.ContrasteInvalide):
+                pa.contraste_plafonne(parts, coefs, c, 10, 20)
+        for a in (NAN, INF, -INF):
+            with self.subTest(coefficient=a), self.assertRaises(pa.ContrasteInvalide):
+                pa.contraste_plafonne(parts, {"A": a, "B": -1}, 0.0, 10, 20)
+        # l'effet d'avant : douze unités à coefficient NaN valaient v = +1 et la fiche était promue ; désormais refusées
+        with self.assertRaises(pa.ContrasteInvalide):
+            pa.evaluer({"B": [pa.contraste_plafonne(parts, {"A": NAN, "B": -1}, 0.0, 20, 20) for _ in range(12)]})
+        self.assertAlmostEqual(pa.contraste_plafonne(parts, coefs, 0.0, 10, 20), 0.5 * (0.2 - 0.9))  # sain
+
+    def test_ebh_pondere_log_e_et_budgets(self):
+        b = {k: 0.05 / 3 for k in "abc"}
+        for x in (NAN, INF, -INF, True, None):  # avant : [0 ; NaN ; 3,0] → trois retenues au lieu d'aucune
+            with self.subTest(log_e=x), self.assertRaises(pa.ContrasteInvalide):
+                pa.ebh_pondere({"a": 0.0, "b": x, "c": 3.0}, b, 0.05)
+        for x in (NAN, INF, True):
+            with self.subTest(budget=x), self.assertRaises(ValueError):
+                pa.ebh_pondere({"a": 0.0, "b": 0.0, "c": 3.0}, {**b, "b": x}, 0.05)
+        self.assertEqual(pa.ebh_pondere({"a": 0.0, "b": 0.0, "c": 3.0}, b, 0.05), set())  # sain : aucune
+        self.assertEqual(pa.ebh_pondere({"a": 0.0, "b": 0.0, "c": 5.0}, b, 0.05), {"c"})  # sain : 148·0,0167 ≥ 1
+
+    def test_course_ajouter_trajectoire(self):
+        for x in (NAN, INF, -INF, True, None):  # avant : +∞ promouvait, NaN était ignoré sans erreur
+            with self.subTest(valeur=x):
+                c = pa.Course(alpha=0.05, essai=True)
+                c.entrer("g1", ["a"], 0.05)
+                u = {(1, "a", i) for i in range(3)}
+                with self.assertRaises(pa.ContrasteInvalide):
+                    c.ajouter_trajectoire("a", [math.log(2), x], unites=u)
+                # refus avant tout changement d'état : ni partie comptée, ni unités lues, ni valeur changée
+                self.assertEqual((c.log_e["a"], c.derniere_partie, c.unites_lues, c.premiere_lecture), (0.0, {}, {}, {}))
+                self.assertAlmostEqual(c.ajouter_trajectoire("a", [math.log(2), math.log(3)], unites=u), math.log(3))  # sain
+                self.assertEqual(c.lire(), set())
+        c = pa.Course(alpha=0.05, essai=True)
+        c.entrer("g1", ["a"], 0.05)
+        with self.assertRaises(pa.ContrasteInvalide):  # aussi par l'abandon qui passe la partie
+            c.abandonner("a", trajectoire_log=[INF], unites={"u"})
+        self.assertNotIn("a", c.gelees)
+
+    def test_sans_remise_valeurs(self):
+        for x in (NAN, INF, -INF, 5.0, -1.5, True, None):  # avant : NaN → −690, +∞ → NaN, 5,0 accepté
+            with self.subTest(valeur=x), self.assertRaises(pa.ContrasteInvalide):
+                pa.trajectoire_log_sans_remise([0.1, x, -0.1])
+        sain = pa.trajectoire_log_sans_remise([0.1, -1.0, 1.0, 0])
+        self.assertEqual(len(sain), 4)
+        self.assertTrue(all(math.isfinite(x) for x in sain))
+
+    def test_borne_basse_valeurs_et_alpha(self):
+        v = [0.4, 0.0] * 100
+        for x in (NAN, INF, -INF, 5.0, -1.5, True, None):  # avant : NaN → −0,98, 5,0 → 0,99 (favorable)
+            with self.subTest(valeur=x), self.assertRaises(pa.ContrasteInvalide):
+                pa.borne_basse(v + [x])
+        for a in (NAN, INF, 0, 1, True):
+            with self.subTest(alpha=a), self.assertRaises(pa.ContrasteInvalide):
+                pa.borne_basse(v, alpha=a)
+        b = pa.borne_basse(v)  # sain : moyenne 0,2
+        self.assertTrue(-1.0 < b <= 0.2, b)
+        self.assertTrue(-1.0 <= pa.borne_basse([1.0, -1.0, 0]) < 1.0)  # sain : bornes de [−1 ; 1] admises
+
+    def test_evaluer_alpha_et_m(self):
+        for a in (NAN, INF, -INF, 0, 1, 1.5, True, None):  # avant : α NaN → seuil NaN, jamais promue, sans erreur
+            with self.subTest(alpha=a), self.assertRaises(pa.ContrasteInvalide):
+                pa.evaluer({"B": [1.0] * 30}, alpha=a)
+        for m in (NAN, INF, -INF, 0, 0.5, True, None):
+            with self.subTest(m=m), self.assertRaises(pa.ContrasteInvalide):
+                pa.evaluer({"B": [1.0] * 30}, m=m)
+        self.assertEqual(pa.evaluer({"B": [1.0] * 30}, alpha=0.05, m=1)["instant_d_arret"], 7)  # sain, inchangé
+        self.assertTrue(pa.evaluer({"B": [1.0] * 30}, m=10.0)["promue"])  # sain : m réel fini ≥ 1
+
+
 if __name__ == "__main__":
     unittest.main()

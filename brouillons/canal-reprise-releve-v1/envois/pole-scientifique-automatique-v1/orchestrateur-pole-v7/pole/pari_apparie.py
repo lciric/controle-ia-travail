@@ -31,12 +31,21 @@ banque de scores, engagement, mémoire avec la clé complète de l'héritage) :
   ignorée) ; un abandon « avant partie » est refusé si la partie est au journal ; à la lecture, toute unité **journalisée**
   dans la génération est enregistrée comme lue (une partie calculée et non ajoutée ne laisse pas ses unités « fraîches »), et
   une entrée du journal pour une fiche inconnue de la course (**fiche fantôme**) ou une génération autre que la courante est
-  refusée ; la génération ne peut être lue qu'une fois toutes les entrées du journal confrontées.
+  refusée ; la génération ne peut être lue qu'une fois toutes les entrées du journal confrontées ;
+- (version 40, relecture CL6 de session-depot, CL39-09) : **valeurs non finies refusées à chaque entrée** — `_fini(x)` (nombre
+  réel fini, ni booléen) et un refus nommé `ContrasteInvalide` (sous-classe de `ValueError`) pour la constante
+  (`verifier_coefficients`, `contraste`), les coefficients et la valeur v avant la borne (`contraste`, `contraste_plafonne`),
+  les log e-valeurs et les budgets (`ebh_pondere`), la trajectoire (`Course.ajouter_trajectoire`, avant tout changement
+  d'état), les valeurs dans [−1 ; 1] (`trajectoire_log_sans_remise`, `borne_basse`, avec α de `borne_basse`) et α, m
+  (`evaluer`). Avant : un NaN ou un ±∞ devenait la valeur la plus favorable (v = +1 par le jeu de min/max), dérangeait le tri
+  de l'e-BH, ou laissait un seuil NaN (jamais promue, sans erreur). La statistique est inchangée sur les entrées finies
+  valides.
 
 Tout est en Python pur (aucune dépendance) ; les instants de lecture sont les unités (une unité = un instant).
 """
 
 import math
+import numbers
 
 LAMBDAS = (0.1, 0.3, 0.6, 0.9)
 
@@ -45,10 +54,36 @@ class ContrasteInvalide(ValueError):
     pass
 
 
+def _fini(x):
+    """Vrai si x est un nombre réel fini qui n'est pas un booléen (version 40, CL39-09). `numbers.Real` admet les flottants
+    et entiers de numpy ; NaN, ±∞, booléens, chaînes, None et entiers trop grands pour un flottant sont refusés."""
+    if not isinstance(x, numbers.Real) or isinstance(x, bool):
+        return False
+    try:
+        return math.isfinite(x)
+    except OverflowError:
+        return False
+
+
+def _exiger_fini(x, quoi):
+    if not _fini(x):
+        raise ContrasteInvalide(f"{quoi} : nombre réel fini attendu (ni NaN, ni ±∞, ni booléen) : {x!r}")
+    return x
+
+
+def _exiger_valeur(v, quoi):
+    """Valeur de contraste : réel fini dans [−1 ; 1] (version 40)."""
+    _exiger_fini(v, quoi)
+    if not -1.0 <= v <= 1.0:
+        raise ContrasteInvalide(f"{quoi} : valeur hors de [−1 ; 1] : {v!r}")
+    return v
+
+
 def verifier_coefficients(coefficients, constante=0.0):
     """Règle double (conception v2, constat C11 de sa contre-lecture) : v ∈ [−1 ; 1] pour toutes parts dans [0 ; 1]."""
     if not coefficients:
         raise ContrasteInvalide("contraste sans cellule")
+    _exiger_fini(constante, "constante du contraste")  # v40 : une constante NaN passait la règle double (comparaisons fausses)
     for cellule, a in coefficients.items():
         if not isinstance(a, (int, float)) or isinstance(a, bool) or not math.isfinite(a):
             raise ContrasteInvalide(f"coefficient non numérique pour {cellule!r}")
@@ -61,13 +96,18 @@ def verifier_coefficients(coefficients, constante=0.0):
 
 
 def contraste(parts, coefficients, constante=0.0):
-    """v = a₀ + Σ a_c·r_c pour une unité ; `parts` : cellule → part dans [0 ; 1]."""
-    v = constante
+    """v = a₀ + Σ a_c·r_c pour une unité ; `parts` : cellule → part dans [0 ; 1].
+
+    Version 40 (CL39-09) : constante, coefficients et v avant la borne doivent être des réels finis ; sinon refus
+    (`ContrasteInvalide`). Avant, min(1, NaN) rendait 1 : un NaN ou un +∞ donnait v = +1, la valeur la plus favorable."""
+    v = _exiger_fini(constante, "constante du contraste")
     for cellule, a in coefficients.items():
+        _exiger_fini(a, f"coefficient de {cellule!r}")
         r = parts[cellule]
         if not 0.0 <= r <= 1.0:
             raise ContrasteInvalide(f"part hors de [0 ; 1] pour {cellule!r} : {r}")
         v += a * r
+    _exiger_fini(v, "contraste avant la borne")
     return max(-1.0, min(1.0, v))
 
 
@@ -104,8 +144,13 @@ def trajectoire_log_garde(ecarts_faux_positifs, delta, lambdas=LAMBDAS):
 
 def trajectoire_log_sans_remise(valeurs, lambdas=LAMBDAS):
     """Variante « banque entière » : facteur 1 + λ_t·(v(t) − μ_t), μ_t = −(Σ passé)/(n − t + 1), λ_t ≤ λ·(n − t + 1)/n ;
-    nul « moyenne des v de la banque ≤ 0 », l'ordre de lecture étant tiré uniformément (ordre secret du noyau)."""
+    nul « moyenne des v de la banque ≤ 0 », l'ordre de lecture étant tiré uniformément (ordre secret du noyau).
+    Version 40 : chaque v est un réel fini dans [−1 ; 1], vérifié avant toute lecture (un NaN donnait −690 par le plancher
+    1e-300 puis empoisonnait la moyenne ; +∞ donnait NaN ; 5,0 était accepté)."""
     _verifier_lambdas(lambdas)
+    valeurs = list(valeurs)
+    for i, v in enumerate(valeurs):
+        _exiger_valeur(v, f"sans remise, unité {i}")
     n = len(valeurs)
     logs = [0.0] * len(lambdas)
     somme, sortie = 0.0, []
@@ -141,6 +186,11 @@ def evaluer(contrastes_par_comparateur, ecarts_faux_positifs=None, delta=None, a
     arrête au seuil d'entrée 1/b_i = m_c/α_c, gardé à vie."""
     if not contrastes_par_comparateur:
         raise ValueError("au moins un comparateur")
+    # v40 (CL39-09) : α ou m NaN donnait un seuil NaN, jamais franchi, sans erreur
+    if not _fini(alpha) or not 0.0 < alpha < 1.0:
+        raise ContrasteInvalide(f"α : réel fini dans ]0 ; 1[ : {alpha!r}")
+    if not _fini(m) or m < 1:
+        raise ContrasteInvalide(f"m : réel fini ≥ 1 : {m!r}")
     longueurs = {len(v) for v in contrastes_par_comparateur.values()}
     if len(longueurs) != 1:
         raise ValueError("les contrastes des comparateurs doivent porter sur les mêmes unités")
@@ -178,8 +228,15 @@ def evaluer(contrastes_par_comparateur, ecarts_faux_positifs=None, delta=None, a
 def borne_basse(valeurs, alpha=0.05, lambdas=LAMBDAS, pas=0.01):
     """Borne basse de confiance, valide à tout instant, pour E[v] (v dans [−1 ; 1]) : le plus grand θ de la grille dont le
     nul « E[v] ≤ θ » est rejeté (richesse de 1 + λ_θ·(v − θ) ≥ 1/α à un instant), avec λ_θ = λ/(1 + θ) pour garder le
-    facteur positif. Rapportée, jamais une condition de promotion à elle seule."""
+    facteur positif. Rapportée, jamais une condition de promotion à elle seule.
+    Version 40 : chaque v est un réel fini dans [−1 ; 1] et α un réel fini dans ]0 ; 1[, sinon refus (un NaN donnait
+    −0,98, une valeur 5,0 donnait 0,99, la borne la plus favorable)."""
     _verifier_lambdas(lambdas)
+    if not _fini(alpha) or not 0.0 < alpha < 1.0:
+        raise ContrasteInvalide(f"borne basse : α réel fini dans ]0 ; 1[ : {alpha!r}")
+    valeurs = list(valeurs)
+    for i, v in enumerate(valeurs):
+        _exiger_valeur(v, f"borne basse, unité {i}")
     seuil = math.log(1 / alpha)
     meilleur = -1.0
     theta = -1.0 + pas
@@ -225,6 +282,11 @@ def ebh_pondere(log_e, budgets, alpha=None):
     donné, 1 sinon (version 24, K6-5 : la somme ≤ α se contrôle aussi à l'entrée, `Course.entrer`)."""
     if set(log_e) != set(budgets):
         raise ValueError("mêmes fiches pour les e-valeurs et les budgets")
+    # v40 (CL39-09) : une log e-valeur NaN dérangeait le tri ([0 ; NaN ; 3,0] → trois retenues au lieu d'aucune)
+    for i, x in log_e.items():
+        _exiger_fini(x, f"e-BH : log e-valeur de {i!r}")
+    for i, b in budgets.items():
+        _exiger_fini(b, f"e-BH : budget de {i!r}")
     plafond = 1.0 if alpha is None else alpha
     if any(not (b > 0) for b in budgets.values()) or sum(budgets.values()) > plafond + 1e-12:
         raise ValueError(f"budgets positifs, de somme ≤ {plafond}")
@@ -348,6 +410,10 @@ class Course:
             raise ValueError(f"fiche gelée {fiche!r} : partie refusée (contrat de D-S25 bis (2))")
         if self.derniere_partie.get(fiche) == self.generation:
             raise ValueError(f"fiche {fiche!r} : une seule partie par génération")
+        # v40 (CL39-09) : +∞ promouvait, NaN était ignoré sans erreur ; refus avant tout changement d'état
+        trajectoire_log = list(trajectoire_log)
+        for t, lw in enumerate(trajectoire_log):
+            _exiger_fini(lw, f"fiche {fiche!r} : trajectoire, instant {t + 1}")
         if fiche in self.cle_de and empreinte_cle != self.cle_de[fiche]:
             raise ValueError(f"fiche {fiche!r} : partie d'une autre clé de l'héritage que celle de la fiche (K9-2)")
         if self.journal is not None:

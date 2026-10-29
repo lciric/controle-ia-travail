@@ -6,6 +6,9 @@ référence) la porte valide au plus α en fréquence sur 2 000 répétitions ; 
 l'acceptation gloutonne valide plus souvent sous la nulle ; validité à tout instant (arrêter tôt ne gonfle pas le taux, un
 test z regardé à chaque instance, lui, le gonfle) ; `comparer` côte à côte (e-BH, témoin, garde). Artefacts (R5) : NaN,
 longueurs différentes, α hors ]0 ; 1[, mise hors borne, jeu d'audit vide, budget hors bornes → erreurs nommées.
+Version 40 (CL39-10) : la garde δ a son cas sain (témoin honnête, régime « honnete_garde ») et sa puissance est mesurée à
+côté du refus du tricheur ; mutations survivantes du relecteur tuées : gain réel non fini (M34), δ vérifié (M36), e-BH de
+notre bras et non un seuil par candidat (M35).
 
 Graines : dérivées par `numpy.random.SeedSequence` (via `porte_pace.graines`, numpy présent) et passées à
 `random.Random` ; repli SHA-256 (`pole.outils.graine_derivee`) si numpy est absent — la méthode est vérifiée ci-dessous."""
@@ -190,6 +193,131 @@ class Comparer(unittest.TestCase):
         self.assertIsNotNone(temoin["pari_apparie"]["log_garde_finale"])
         sain = pp.simuler_suite(rng(5), "gain", m=5, n_dev=120)
         self.assertTrue(next(d for d in pp.comparer(sain)["decisions"] if d["temoin"])["pari_apparie"]["validee"])
+        # v40 : ce « sain » n'a pas de garde ; le cas sain de la garde (témoin honnête) est dans `GardeV40`
+
+
+def _temoin(res):
+    return next(d for d in res["decisions"] if d["temoin"])
+
+
+def _cas_ebh(nb_forts, gagnees=7, n=40):
+    """Suite déterministe pour M35 : `nb_forts` candidats à `gagnees` paires gagnées (v = +1) puis égalités, les autres à
+    égalités seules. e-valeur du mélange après 7 gains : (1,1⁷ + 1,3⁷ + 1,6⁷ + 1,9⁷)/4 ≈ 31,1."""
+    suite = []
+    for j in range(2 if nb_forts == 1 else nb_forts):
+        g = gagnees if j < nb_forts else 0
+        suite.append({"nom": f"c{j}", "dev_reference": [0] * n, "dev_candidat": [1] * g + [0] * (n - g),
+                      "audit_reference": [0, 1], "audit_candidat": [0, 1]})
+    return suite
+
+
+class GardeV40(unittest.TestCase):
+    """CL39-10 (1) : la garde δ testée sur un cas sain (témoin honnête, E[g] = 0) et sur l'artefact (tricheur, E[g] = 0,15),
+    puissance rapportée à côté du refus. Lecture de la faible puissance : docstring de `pole/porte_pace.py`."""
+
+    def test_puissance_de_la_garde_a_cote_du_refus_du_tricheur(self):
+        """Monde par défaut (P(±1) = 0,1, δ = 0,05, m = 20, n_dev = 120) : le tricheur est toujours refusé, mais le témoin
+        honnête l'est presque toujours aussi — constat de faible puissance (le refus seul ne prouve pas la discrimination).
+        Le contraste n'y est pour rien : sans garde (« gain »), le même témoin est validé."""
+        graines, _ = pp.graines([RACINE_GRAINE, 40, 1], 40)
+        honnete = [pp.comparer(pp.simuler_suite(random.Random(g), "honnete_garde", m=20, n_dev=120)) for g in graines]
+        tricheur = [pp.comparer(pp.simuler_suite(random.Random(g), "tricheur", m=20, n_dev=120)) for g in graines]
+        sans_garde = [pp.comparer(pp.simuler_suite(random.Random(g), "gain", m=20, n_dev=120)) for g in graines]
+        puissance = sum(_temoin(r)["pari_apparie"]["validee"] for r in honnete) / 40
+        refus = sum(not _temoin(r)["pari_apparie"]["validee"] for r in tricheur) / 40
+        self.assertEqual(refus, 1.0)
+        self.assertLessEqual(puissance, 0.25, puissance)  # constat : si ce chiffre monte, la docstring doit changer
+        self.assertGreaterEqual(sum(_temoin(r)["pace"]["validee"] for r in honnete) / 40, 0.9)  # PACE ne lit pas la garde
+        self.assertGreaterEqual(sum(_temoin(r)["pari_apparie"]["validee"] for r in sans_garde) / 40, 0.9)
+        for r in honnete:  # tous les candidats portent la garde, aucun n'a d'excès
+            self.assertTrue(all(d["pari_apparie"]["log_garde_finale"] is not None for d in r["decisions"]))
+        suite = pp.simuler_suite(rng(7), "honnete_garde", m=20, n_dev=2000)
+        g = [x for c in suite for x in c["ecarts_faux_positifs"]]
+        self.assertAlmostEqual(statistics.fmean(g), 0.0, delta=0.01)  # E[g] = 0 : honnête
+
+    def test_garde_discrimine_quand_elle_a_ses_unites(self):
+        """Cas sain où la garde a de la puissance : bruit P(±1) = 0,02, 600 unités de garde, m = 5. Témoin honnête validé,
+        tricheur (même bruit, excès 0,15) refusé : la garde discrimine."""
+        graines, _ = pp.graines([RACINE_GRAINE, 40, 2], 30)
+        reglages = dict(m=5, n_dev=120, bruit_fp=0.02, n_garde=600)
+        honnete = [pp.comparer(pp.simuler_suite(random.Random(g), "honnete_garde", **reglages)) for g in graines]
+        tricheur = [pp.comparer(pp.simuler_suite(random.Random(g), "tricheur", **reglages)) for g in graines]
+        self.assertGreaterEqual(sum(_temoin(r)["pari_apparie"]["validee"] for r in honnete) / 30, 0.9)
+        self.assertEqual(sum(_temoin(r)["pari_apparie"]["validee"] for r in tricheur), 0)
+        suite = pp.simuler_suite(random.Random(graines[0]), "honnete_garde", **reglages)
+        self.assertEqual({len(c["ecarts_faux_positifs"]) for c in suite}, {600})
+
+    def test_plancher_sans_bruit(self):
+        """Même sans bruit (g ≡ 0), le facteur de la garde est au plus 1 + 0,9·δ = 1,045 par unité : à m = 20, aucune
+        validation avant 166 unités de garde (contraste parfait), validation à 166 (docstring du module)."""
+        ref, cand = [0] * 40, [1] * 40
+        self.assertFalse(pp.pari_apparie_binaire(ref, cand, m=20, ecarts_faux_positifs=[0.0] * 165, delta=0.05)["arretee_au_seuil"])
+        self.assertTrue(pp.pari_apparie_binaire(ref, cand, m=20, ecarts_faux_positifs=[0.0] * 166, delta=0.05)["arretee_au_seuil"])
+        self.assertTrue(pp.pari_apparie_binaire(ref, cand, m=20)["arretee_au_seuil"])  # sans garde : validé
+
+    def test_reglages_du_monde_de_la_garde(self):
+        for k, v in (("n_garde", 0), ("n_garde", 2.5), ("n_garde", True), ("bruit_fp", -0.1), ("bruit_fp", float("nan")),
+                     ("bruit_fp", 0.5), ("fp_tricheur", float("inf"))):
+            with self.subTest(**{k: v}), self.assertRaises(pp.SuiteInvalide):
+                pp.simuler_suite(rng(8), "honnete_garde", m=2, **{k: v})
+        with self.assertRaises(pp.SuiteInvalide):
+            pp.simuler_suite(rng(8), "honnête", m=2)
+        sain = pp.simuler_suite(rng(8), "honnete_garde", m=2, n_dev=30, n_garde=50, bruit_fp=0.0)  # sain
+        self.assertEqual([len(c["ecarts_faux_positifs"]) for c in sain], [50, 50])
+        self.assertEqual({x for c in sain for x in c["ecarts_faux_positifs"]}, {0})
+        self.assertNotIn("ecarts_faux_positifs", pp.simuler_suite(rng(8), "gain", m=2)[0])
+
+
+class MutationsV40(unittest.TestCase):
+    """CL39-10 (2) : mutations survivantes du relecteur (M34, M35, M36)."""
+
+    def setUp(self):
+        self.suite = pp.simuler_suite(rng(9), "gain", m=3, n_dev=40)
+
+    def test_m34_gain_reel_non_fini_refuse(self):
+        for gain in (float("nan"), float("inf"), -float("inf"), True, "0.1"):
+            suite = [dict(c) for c in self.suite]
+            suite[1]["gain_reel"] = gain
+            with self.subTest(gain=gain), self.assertRaises(pp.ResultatInvalide):
+                pp.comparer(suite)
+        suite = [dict(c) for c in self.suite]  # sain : gain fini, ou absent
+        suite[1]["gain_reel"] = -0.05
+        del suite[2]["gain_reel"]
+        res = pp.comparer(suite)
+        self.assertEqual([d["gain_reel"] for d in res["decisions"]][1:], [-0.05, None])
+
+    def test_m36_delta_de_la_garde_verifie(self):
+        ref, cand, g = [0] * 40, [1] * 40, [0.0] * 40
+        for delta in (0, 1, -0.1, 1.5, float("nan"), float("inf"), -float("inf"), None, True, "0.05"):
+            with self.subTest(delta=delta):
+                with self.assertRaises(pp.PorteInvalide) as ctx:
+                    pp.pari_apparie_binaire(ref, cand, ecarts_faux_positifs=g, delta=delta)
+                self.assertIs(type(ctx.exception), pp.PorteInvalide)  # refus de ce module, pas celui de `pari_apparie`
+                suite = [dict(c) for c in self.suite]
+                suite[0]["ecarts_faux_positifs"], suite[0]["delta"] = g, delta
+                with self.assertRaises(pp.PorteInvalide):
+                    pp.comparer(suite)
+        with self.assertRaises(pp.PorteInvalide):  # δ sans écarts : plus ignoré en silence
+            pp.pari_apparie_binaire(ref, cand, delta=0.05)
+        for delta in (0.05, 1e-9, 0.999):  # sain
+            self.assertIsNotNone(pp.pari_apparie_binaire(ref, cand, ecarts_faux_positifs=g, delta=delta)["log_garde_finale"])
+
+    def test_m35_notre_bras_applique_l_ebh_et_non_un_seuil_par_candidat(self):
+        """Deux suites où l'e-BH et une décision par candidat diffèrent. (a) Un seul fort (e ≈ 31,1) parmi m = 2 : un seuil
+        1/α = 20 par candidat le validerait, l'e-BH non (31,1·α/2 = 0,78 < 1). (b) Quatre forts parmi m = 4 : l'e-BH les
+        valide tous (31,1·α/4 = 0,39 ≥ 1/4), un arrêt par candidat à m/α = 80 aucun."""
+        e7 = sum((1 + l) ** 7 for l in pa.LAMBDAS) / len(pa.LAMBDAS)
+        self.assertTrue(20 <= e7 < 40)
+        a = pp.comparer(_cas_ebh(1))
+        fort = a["decisions"][0]["pari_apparie"]
+        self.assertAlmostEqual(fort["log_e"], math.log(e7))
+        self.assertGreaterEqual(fort["log_e"], math.log(1 / 0.05))  # au-dessus de 1/α : un seuil par candidat validerait
+        self.assertFalse(any(d["pari_apparie"]["validee"] for d in a["decisions"]))
+        self.assertEqual(a["bras"]["pari_apparie"]["validations"], 0)
+        b = pp.comparer(_cas_ebh(4))
+        self.assertTrue(all(d["pari_apparie"]["validee"] for d in b["decisions"]))
+        self.assertFalse(any(d["pari_apparie"]["arretee_au_seuil"] for d in b["decisions"]))  # aucun n'atteint m/α = 80
+        self.assertEqual(b["bras"]["pari_apparie"]["validations"], 4)
 
 
 class Artefacts(unittest.TestCase):
@@ -272,9 +400,10 @@ class Demonstration(unittest.TestCase):
             lignes = demo.main(["--repetitions", "4", "--graine", "7", "--n-dev", "40"])
         sortie = tampon.getvalue()
         self.assertIn("graine 7", sortie)
-        for mot in ("PACE", "pari apparié", "glouton", "nulle", "gain"):
+        for mot in ("PACE", "pari apparié", "glouton", "nulle", "gain", "honnête avec garde", "puissance de la garde"):
             self.assertIn(mot, sortie)
-        self.assertEqual(len(lignes), 3 * 3)  # trois régimes × trois bras
+        self.assertEqual(len(lignes), 4 * 3)  # quatre régimes × trois bras
+        self.assertEqual({l["regime"] for l in lignes}, set(pp.REGIMES))
 
 
 if __name__ == "__main__":

@@ -51,6 +51,31 @@ e-processus arrêté à log(m/α) avec m = taille de la suite déclarée avant l
 (`ecarts_faux_positifs`, `delta`). Simplification dite : une famille unique de taille connue, non la `Course` à générations
 (dépense α_g, héritage, journal), qui reste le seul chemin du pôle.
 
+**Puissance de la garde δ (version 40, relecture CL6 de session-depot, CL39-10).** Le refus du tricheur ne montre pas que
+la garde discrimine : il faut aussi qu'elle laisse passer un témoin **honnête** (gain 0,35, écarts de faux positifs
+d'espérance nulle), régime « honnete_garde » de `simuler_suite`. Dans le monde par défaut (écart g ∈ {−1 ; 0 ; 1},
+P(±1) = 0,1, δ = 0,05, m = 20), notre bras ne valide ce témoin que dans quelques pour cent des suites, même à n = 400. Lecture,
+vérifiée par simulation de la garde seule (200 répétitions) et par le calcul :
+
+- **la marge δ contre le bruit de l'écart** est la cause première. Le témoin honnête n'est qu'à δ − E[g] = 0,05 du nul de la
+  garde « E[g] ≥ δ », contre un écart-type de g de 0,45 par unité (rapport 0,11). Le taux de croissance espéré du log de la
+  richesse, E[log(1 + λ(δ − g))], vaut au mieux ≈ 0,006 par unité (λ = 0,3 ; il est négatif pour λ = 0,6 et 0,9) : il
+  faut de l'ordre de mille unités honnêtes pour atteindre log(m/α) + log 4 ≈ 7,4 (mesuré : 7 % à 400 unités, 42 % à 1 000,
+  75 % à 2 000). **Même sans bruit** (g ≡ 0), le facteur par unité est au plus 1 + 0,9·0,05 = 1,045 : la garde ne peut
+  franchir m/α = 400 avant 166 unités (93 pour m = 1, 133 pour m = 5) ; à n = 40 ou 120 elle est **structurellement
+  incapable** de valider, sauf excursions favorables du bruit ;
+- **le seuil m/α** (arrêt de l'e-processus et e-BH) coûte ensuite : avec un seul témoin vrai dans la suite, l'e-BH exige
+  e ≥ m/α comme un seuil par candidat ; à 1/α par candidat, la même garde validerait 29 % à 400 unités au lieu de 7 % — ce
+  qui ne serait plus une borne de suite ;
+- **la mise n'est pas en cause** : la mise optimale pour ce bruit est ≈ (δ − E[g])/Var(g) ≈ 0,25, et Λ contient 0,3 ; la
+  garde à λ = 0,3 seul ne fait pas mieux que le mélange à 400 unités (10 % contre 7 %), le mélange ne coûte que log 4.
+
+Conséquence : la garde δ = 0,05 est un instrument de **mille unités honnêtes**, pas de quarante ; avec moins, elle refuse
+tout le monde, tricheur compris, et ce refus n'est pas une preuve de discrimination. La démonstration rapporte donc la
+puissance de la garde (témoin honnête validé) à côté du refus du tricheur. La règle de production (`pari_apparie`) est
+inchangée ; le monde simulé gagne `bruit_fp` (P(±1)) et `n_garde` (unités de la garde) pour montrer un cas sain où la garde
+discrimine (bruit 0,02, 600 unités : témoin honnête validé, tricheur refusé).
+
 Python pur ; numpy n'est importé que par `graines` (dérivation des graines par `numpy.random.SeedSequence` si disponible,
 sinon SHA-256 par `pole.outils.graine_derivee`).
 """
@@ -220,8 +245,11 @@ def pari_apparie_binaire(reference, candidat, alpha=ALPHA_PACE, m=1, lambdas=pa.
         ecarts_faux_positifs = _verifier_ecarts(ecarts_faux_positifs)
         if not ecarts_faux_positifs:
             raise JeuVide("garde : liste d'écarts vide")
-        if delta is None or not _nombre(delta) or not 0.0 < delta < 1.0:
+        if delta is None or not _nombre(delta) or not math.isfinite(delta) or not 0.0 < delta < 1.0:
             raise PorteInvalide(f"garde : δ dans ]0 ; 1[ : {delta!r}")
+    elif delta is not None:
+        # v40 : un δ sans écarts était ignoré en silence (R5)
+        raise PorteInvalide(f"garde : δ = {delta!r} fourni sans écarts de faux positifs")
     r = pa.evaluer({"reference": contrastes_binaires(lp)}, ecarts_faux_positifs=ecarts_faux_positifs, delta=delta,
                    alpha=alpha, m=m, lambdas=tuple(lambdas))
     return {"arretee_au_seuil": r["promue"], "etape_arret": r["instant_d_arret"] or len(lp), "cout": r["instant_d_arret"] or len(lp),
@@ -331,20 +359,33 @@ def _issues(rng, latents, s, rho):
     return [int((u if rng.random() < rho else rng.random()) < s) for u in latents]
 
 
+REGIMES = ("nulle", "gain", "honnete_garde", "tricheur")
+
+
 def simuler_suite(rng, regime="nulle", m=20, n_dev=40, n_audit=120, s_ref=0.35, rho=0.5, gain_temoin=0.35,
-                  bruit=(-0.10, 0.0), dev_reutilise=True, fp_tricheur=0.15, delta=0.05):
+                  bruit=(-0.10, 0.0), dev_reutilise=True, fp_tricheur=0.15, delta=0.05, bruit_fp=0.1, n_garde=None):
     """Une suite de m candidats contre une référence fixe ([INFÉRÉ, p.6], voir l'en-tête).
 
     `regime` : « nulle » (tous les candidats ont l'exactitude de la référence, gain 0), « gain » (un témoin planté à
     `gain_temoin`, les autres à un gain tiré dans `bruit`, aucun meilleur que la référence), « tricheur » (comme « gain »,
     mais le témoin gagne en exactitude **et** tire plus de faux positifs que la référence d'en moyenne `fp_tricheur`
-    > δ ; tous les candidats portent la garde, que seul notre bras lit). Jeu d'audit : mêmes instances pour tous les
-    candidats, issues de la référence fixées. `dev_reutilise` : mêmes instances de développement et issues de la
+    > δ ; tous les candidats portent la garde, que seul notre bras lit), « honnete_garde » (version 40 : comme
+    « tricheur », mais **sans excès** : le témoin et les autres tirent autant de faux positifs que la référence, E[g] = 0 ;
+    cas sain de la garde, qui mesure sa puissance). Écarts de faux positifs : g ∈ {−1 ; 0 ; 1} par unité, P(+1) =
+    `bruit_fp` + excès, P(−1) = `bruit_fp`, sur `n_garde` unités (défaut : `n_dev`). Jeu d'audit : mêmes instances pour
+    tous les candidats, issues de la référence fixées. `dev_reutilise` : mêmes instances de développement et issues de la
     référence fixées pour toute la suite (sinon tirées à neuf pour chaque candidat : nul exact par candidat)."""
-    if regime not in ("nulle", "gain", "tricheur"):
+    if regime not in REGIMES:
         raise SuiteInvalide(f"régime inconnu : {regime!r}")
     if not (0.0 <= s_ref <= 1.0 and 0.0 <= rho <= 1.0) or n_dev < 1 or n_audit < 1 or m < 1:
         raise SuiteInvalide("réglages du monde simulé hors domaine")
+    n_garde = n_dev if n_garde is None else n_garde
+    if not (isinstance(n_garde, int) and not isinstance(n_garde, bool) and n_garde >= 1):
+        raise SuiteInvalide(f"n_garde : entier ≥ 1 : {n_garde!r}")
+    if not all(_nombre(x) and math.isfinite(x) for x in (bruit_fp, fp_tricheur)) or not (
+            bruit_fp >= 0.0 and fp_tricheur >= 0.0 and 2 * bruit_fp + fp_tricheur <= 1.0):
+        raise SuiteInvalide(f"faux positifs : bruit_fp ≥ 0, fp_tricheur ≥ 0, 2·bruit_fp + fp_tricheur ≤ 1 : "
+                            f"{bruit_fp!r}, {fp_tricheur!r}")
 
     def jeu(n):
         lat = [rng.random() for _ in range(n)]
@@ -362,11 +403,11 @@ def simuler_suite(rng, regime="nulle", m=20, n_dev=40, n_audit=120, s_ref=0.35, 
         c = {"nom": f"c{j:02d}", "dev_reference": list(dev_ref), "dev_candidat": _issues(rng, dev_lat, s_c, rho),
              "audit_reference": list(aud_ref), "audit_candidat": _issues(rng, aud_lat, s_c, rho), "gain_reel": gain,
              "temoin": j == temoin}
-        if regime == "tricheur":
-            exces = fp_tricheur if j == temoin else 0.0
-            # écart de faux positifs par unité g ∈ {−1 ; 0 ; 1} : P(+1) = 0,1 + excès, P(−1) = 0,1 → E[g] = excès
-            c["ecarts_faux_positifs"] = [(1 if x < 0.1 + exces else (-1 if x < 0.2 + exces else 0))
-                                         for x in (rng.random() for _ in range(n_dev))]
+        if regime in ("tricheur", "honnete_garde"):
+            exces = fp_tricheur if (regime == "tricheur" and j == temoin) else 0.0
+            # écart de faux positifs par unité g ∈ {−1 ; 0 ; 1} : P(+1) = bruit + excès, P(−1) = bruit → E[g] = excès
+            c["ecarts_faux_positifs"] = [(1 if x < bruit_fp + exces else (-1 if x < 2 * bruit_fp + exces else 0))
+                                         for x in (rng.random() for _ in range(n_garde))]
             c["delta"] = delta
         suite.append(c)
     return suite

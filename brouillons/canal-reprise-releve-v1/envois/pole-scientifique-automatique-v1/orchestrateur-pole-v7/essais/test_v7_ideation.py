@@ -549,7 +549,9 @@ class TestCommandeExterne(CasAvecDossier):
                   f"open({pid_f!r}, 'w').write(str(p.pid))\n"
                   "time.sleep(60)\n")
         ad = AdaptateurCommandeExterne(self.commande(script), environnement={}, delai_s=1.5)
+        debut = time.monotonic()
         r = ad.lancer("juge_ideation", "consigne", self.tmp, 0.7, 1)
+        self.assertLess(time.monotonic() - debut, 10.0)  # M26 : avec `kill` au lieu de `killpg`, le tube tenu par le petit-enfant bloque 60 s
         self.assertEqual((r.statut, r.cout_declare_usd, r.cout_inconnu), ("erreur", 0.7, True))
         self.assertIn("délai", r.erreur)
         pid = int(open(pid_f).read())
@@ -847,9 +849,11 @@ class TestCommandeExterne(CasAvecDossier):
         self.attester(att_f, sortie)
         with open(att_f, "a") as f:
             f.write("\n")
-        with self.assertRaises(idn.CourseInterrompue):
+        with self.assertRaises(idn.CourseInterrompue) as cm:
             idn.executer_bras_differe(sortie, attestation_lecture_humaine=att_f, budgets=budgets,
                                       juges_externes=[("argon", "autre-lignee-x", introuvable)])
+        self.assertIn("sceau", str(cm.exception))  # CL39-12 : le motif est bien le sceau
+        self.assertFalse(os.path.exists(os.path.join(sortie, "juges-bras-rapporte", "traces-argon", "reponse.md")))  # M28
         # CL37-02 : contrôle « KO » qui a coûté 0,15 → tentative payée, coût scellé, imputé au plafond externe
         ko = AdaptateurCommandeExterne(self.commande(
             "import sys, json\nc = sys.stdin.read()\nprint(json.dumps({'texte': 'KO', 'cout_usd': 0.15}))\n", "ko.py"),
@@ -907,9 +911,28 @@ class TestLanceurV37(CasAvecDossier):
             self.assertEqual(cm.exception.code, 2, options)
         err = io.StringIO()
         with contextlib.redirect_stderr(err):
-            code = lanceur.principal(base + ["--moteur", "claude-sdk"])  # CL35-08 : non armé → 2, pas une trace
+            code = lanceur.principal(base + ["--moteur", "claude-sdk"])  # M29 : course réelle sans Argon → refus d'abord
+        self.assertEqual(code, 2)
+        self.assertIn("obligatoires", err.getvalue())
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):  # CL35-08 : non armé → 2, pas une trace
+            code = lanceur.principal(base + ["--moteur", "claude-sdk", "--proposeur-externe", "a=x", "--juge-externe", "b=x",
+                                             "--commande-externe", "x"])
         self.assertEqual(code, 2)
         self.assertIn("MoteurNonArme", err.getvalue())
+        # M31 : --commande-externe avec --juge-externe seul, hors bras → refusé
+        with contextlib.redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                lanceur.principal(base + ["--juge-externe", "b=x", "--commande-externe", "x"])
+        # M18, M21, M22, M30 : défauts du devis en vigueur
+        a = lanceur.construire_analyseur()
+        self.assertEqual(a.get_default("taille_max_pieces"), 750_000)
+        self.assertEqual(a.get_default("delai_commande_s"), 1800.0)
+        self.assertEqual(a.get_default("budget_externe_usd"), 11.6)
+        self.assertEqual(lanceur.BUDGETS_PAR_DEFAUT[("juge_ideation", "claude-opus-5-5")], 4.0)
+        from pole.adaptateurs import DELAI_SESSION_S, AdaptateurCommandeExterne
+        self.assertEqual(DELAI_SESSION_S, 3600)
+        self.assertEqual(AdaptateurCommandeExterne.DELAI_COMMANDE_S, 1800)
         self.assertEqual(lanceur.BUDGETS_PAR_DEFAUT[("proposeur_ideation", "claude-fable-5-1")], 9.3)  # CL36-04, CL37-03
 
     def test_controle_argon_avant_toute_passe(self):
@@ -960,6 +983,282 @@ class TestLanceurV37(CasAvecDossier):
         self.assertFalse(os.path.exists(os.path.join(sortie2, "manifeste-depart.json")))
 
 
+class TestV40(CasAvecDossier):
+    """v40 (relecture CL6) : sommes externes avec le contrôle du bras, plafonds finis, tentatives de contrôle scellées,
+    garde du relais avec la dépense, bras interrompu après envoi verrouillé, interruption qui arrête Argon, refus avant
+    les contrôles, contrôle simulé par préfixe."""
+
+    def cours(self):
+        c = TestCourse("test_course_complete")
+        c.tmp = self.tmp
+        return c
+
+    def cmd(self):
+        c = TestCommandeExterne("test_commande_factice_notes_et_controle")
+        c.tmp = self.tmp
+        return c
+
+    def lanceur(self):
+        return TestLanceurV37("test_options_refusees").lanceur()
+
+    def test_sommes_et_plafonds_non_finis(self):
+        """M12 à M14, M17, M19 : somme externe (contrôle du bras compris) refusée au cœur et par verifier_reglages ;
+        totaux et plafonds non finis refusés."""
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        c = self.cours()
+        ad = FauxAdaptateur({"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]})
+        ext = AdaptateurCommandeExterne(self.cmd().commande(self.cmd().SCRIPT_OK), environnement={})
+        budgets = dict(c.budgets())
+        budgets[("proposeur_ideation", "gemini-argon")] = 1.0
+        budgets[("juge_ideation", "autre-lignee-x")] = 1.0
+        ext_args = dict(budgets=budgets, proposeurs_externes=[("argon", "gemini-argon", ext)],
+                        juges_externes=[("argon-j", "autre-lignee-x")], seconde_passe=False)
+        # cœur : 1,0 + 1,0 + 0,2 (contrôle du bras) = 2,2 > 2,1 refusé ; 2,2 accepté
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            c.lancer(ad, "s-ext-refus", budget_externe_usd=2.1, **ext_args)
+        self.assertIn("externes", str(cm.exception))
+        self.assertEqual(ad.appels, [])
+        c.lancer(ad, "s-ext-ok", budget_externe_usd=2.2, **ext_args)
+        # verifier_reglages : mêmes sommes (M13, M14), plafonds non finis (M19)
+        prep = c._prep
+        base = dict(liste_blanche=prep["liste_blanche"], question=prep["question"], pieces=prep["pieces"], temoins=prep["temoins"],
+                    budgets=budgets, proposeurs=[("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1")],
+                    juges=[("juge-fable", "claude-fable-5-1"), ("juge-opus", "claude-opus-5-5")],
+                    proposeurs_externes=[("argon", "gemini-argon")], juges_externes=[("argon-j", "autre-lignee-x")])
+        idn.verifier_reglages(budget_total_usd=4.0, budget_externe_usd=2.2, **base)
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.verifier_reglages(budget_total_usd=3.9, budget_externe_usd=2.2, **base)
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.verifier_reglages(budget_total_usd=4.0, budget_externe_usd=2.1, **base)
+        mauvais = dict(budgets); mauvais[("juge_ideation", "claude-opus-5-5")] = float("nan")
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.verifier_reglages(budget_total_usd=4.0, budget_externe_usd=2.2, **dict(base, budgets=mauvais))
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.verifier_reglages(budget_total_usd=4.0, budget_externe_usd=2.2, max_tours=3, **base)  # CL39-07
+        # cœur : totaux non finis (M17)
+        for champ in ("budget_total_usd", "budget_externe_usd", "cout_deja_engage_usd"):
+            with self.assertRaises(idn.CourseInterrompue):
+                c.lancer(ad, f"nan-{champ}", **{champ: float("nan")})
+        with self.assertRaises(idn.CourseInterrompue):
+            c.lancer(ad, "nan-session", budgets=mauvais)
+
+    def test_garde_du_relais(self):
+        """CL39-03, M15 : plafond − réserve − dépense ≥ total − plus petit juge."""
+        lanceur = self.lanceur()
+        budgets = {("juge_ideation", "claude-opus-5-5"): 4.0, ("juge_ideation", "claude-fable-5-1"): 7.0}
+        juges = [("a", "claude-opus-5-5"), ("b", "claude-fable-5-1")]
+        lu = lanceur.verifier_relais({"plafond_usd": 40, "reserve_par_appel_usd": 4, "depense_usd": 0.0}, 40.0, budgets, juges)
+        self.assertEqual(lu["depense_usd"], 0.0)
+        with self.assertRaises(idn.CourseInterrompue):  # réserve 10 : 30 < 36
+            lanceur.verifier_relais({"plafond_usd": 40, "reserve_par_appel_usd": 10}, 40.0, budgets, juges)
+        with self.assertRaises(idn.CourseInterrompue):  # relance après 0,4 dépensés : 35,6 < 36
+            lanceur.verifier_relais({"plafond_usd": 40, "reserve_par_appel_usd": 4, "depense_usd": 0.4}, 40.0, budgets, juges)
+        lanceur.verifier_relais({}, 40.0, budgets, juges)  # relais muet sur ses plafonds : rien à vérifier
+
+    def test_tentatives_de_controle_scellees(self):
+        """CL39-02, CL39-07, CL39-08, M16 : un contrôle refusé est scellé avec son coût dans SORTIE-controle, imputé à la
+        relance, borné à trois ; un refus de réglage ou une SORTIE existante tombent avant tout contrôle ; la répétition
+        simulée avec un proposeur externe sans commande passe."""
+        import contextlib
+        import io
+        import unittest.mock
+        lanceur = self.lanceur()
+        c = self.cours()
+        prep = c.preparer()
+        cmd = self.cmd()
+        casse = " ".join(cmd.commande("import sys, json\nc = sys.stdin.read()\nprint(json.dumps({'texte': 'KO', 'cout_usd': 0.15}))\n",
+                                      "casse.py"))
+        sortie = os.path.join(self.tmp, "l-tent")
+        env_propre = {k: v for k, v in os.environ.items() if k in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")}
+        base = [sortie, "--liste-blanche", prep["liste_blanche"], "--question", prep["question"], "--piece", prep["pieces"][0],
+                "--temoins", prep["temoins"], "--proposeur-externe", "argon=gemini-argon", "--juge-externe",
+                "argon-j=gemini-argon", "--budget-externe-usd", "11.2"]
+        with unittest.mock.patch.dict(os.environ, env_propre, clear=True), contextlib.redirect_stderr(io.StringIO()):
+            for n in (1, 2, 3):
+                code = lanceur.principal(base + ["--commande-externe", casse])
+                self.assertEqual(code, 2)
+                chemin = os.path.join(sortie + "-controle", f"tentative-{n}.json")
+                self.assertTrue(os.path.exists(chemin + ".sha256"), n)
+                with open(chemin) as f:
+                    r = json.load(f)["reglages"]
+                self.assertAlmostEqual(r["cout_externe_usd"], 0.15)
+                self.assertEqual(r["relancable"], n < 3)
+            self.assertFalse(os.path.exists(sortie))
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                self.assertEqual(lanceur.principal(base + ["--commande-externe", casse]), 2)
+            self.assertIn("tentatives", err.getvalue())
+            self.assertFalse(os.path.exists(os.path.join(sortie + "-controle", "tentative-4.json")))
+        # M16 / CL39-07 : réglage refusé AVANT tout contrôle (aucun dossier de contrôle, commande jamais appelée)
+        sortie2 = os.path.join(self.tmp, "l-regl")
+        with unittest.mock.patch.dict(os.environ, env_propre, clear=True), contextlib.redirect_stderr(io.StringIO()):
+            code = lanceur.principal([sortie2 if x == sortie else x for x in base] + ["--commande-externe", casse,
+                                                                                         "--taille-max-pieces", "5"])
+        self.assertEqual(code, 2)
+        self.assertFalse(os.path.exists(sortie2 + "-controle"))
+        os.makedirs(sortie2)
+        with unittest.mock.patch.dict(os.environ, env_propre, clear=True), contextlib.redirect_stderr(io.StringIO()):
+            code = lanceur.principal([sortie2 if x == sortie else x for x in base] + ["--commande-externe", casse])
+        self.assertEqual(code, 2)
+        self.assertFalse(os.path.exists(sortie2 + "-controle"))
+        # CL39-08 : répétition simulée avec proposeur externe, sans commande
+        sortie3 = os.path.join(self.tmp, "l-sim")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = lanceur.principal([sortie3 if x == sortie else x for x in base])
+        self.assertEqual(code, 0, out.getvalue())
+
+    def test_bras_interrompu_apres_envoi_verrouille(self):
+        """CL39-04 : une exception pendant la session du juge du bras, après envoi, compte le plafond et verrouille."""
+        c = self.cours()
+        fiches = {"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]}
+        ad = FauxAdaptateur(fiches, notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
+        budgets = dict(c.budgets())
+        budgets[("juge_ideation", "autre-lignee-x")] = 1.0
+        c.lancer(ad, "ci", budgets=budgets, juges_externes=[("argon", "autre-lignee-x")], budget_externe_usd=2.0)
+        sortie = os.path.join(self.tmp, "ci")
+        cmd = self.cmd()
+        att = cmd.attester(os.path.join(self.tmp, "att-ci.json"), sortie)
+
+        class Coupe:
+            nom = "commande-externe"
+
+            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+                if consigne.startswith(idn.APPEL_DE_CONTROLE_CONSIGNE):
+                    return Resultat("OK", [], 0.001, "ok")
+                raise RuntimeError("coupé pendant la session")
+
+            def description(self):
+                return {"commande": ["coupe"]}
+        with self.assertRaises(RuntimeError):
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", Coupe())])
+        chemin = os.path.join(sortie, "manifeste-bras-rapporte.json")
+        self.assertTrue(os.path.exists(chemin))
+        with open(chemin) as f:
+            j = json.load(f)["reglages"]["journal"]
+        self.assertAlmostEqual(j["cout_total_usd"], 1.001)  # contrôle 0,001 + plafond 1,0 de la session interrompue
+        self.assertEqual(j["consigne_envoyee"], "argon")
+        self.assertFalse(any(f.startswith("bras-tentative") or f.startswith("manifeste-bras-non-joue") for f in os.listdir(sortie)))
+        bon = self.cmd()
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        with self.assertRaises(idn.CourseInterrompue):  # verrouillé
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x",
+                                                       AdaptateurCommandeExterne(bon.commande(bon.SCRIPT_OK), environnement={}))])
+
+    def test_tentative_payee_imputee_et_non_lance(self):
+        """M07, M09 : « rien envoyé » exige « aucun processus parti » ; le coût d'une tentative payée réduit le plafond."""
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        c = self.cours()
+        fiches = {"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]}
+        ad = FauxAdaptateur(fiches, notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
+        budgets = dict(c.budgets())
+        budgets[("juge_ideation", "autre-lignee-x")] = 1.0
+        c.lancer(ad, "cp9", budgets=budgets, juges_externes=[("argon", "autre-lignee-x")], budget_externe_usd=1.3)
+        sortie = os.path.join(self.tmp, "cp9")
+        cmd = self.cmd()
+        att = cmd.attester(os.path.join(self.tmp, "att-cp9.json"), sortie)
+        ko = AdaptateurCommandeExterne(cmd.commande("import sys, json\nsys.stdin.read()\nprint(json.dumps({'texte': 'KO', 'cout_usd': 0.15}))\n", "ko9.py"),
+                                       environnement={})
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", ko)])
+        self.assertNotIn("non joué", str(cm.exception))  # M07 : un processus est parti → tentative payée, pas « non joué »
+        self.assertTrue(os.path.exists(os.path.join(sortie, "bras-tentative-1.json")))
+        bon = AdaptateurCommandeExterne(cmd.commande(cmd.SCRIPT_OK), environnement={})
+        with self.assertRaises(idn.CourseInterrompue) as cm:  # M09 : 0,15 + 0,2 + 1,0 > 1,3 → plafond externe insuffisant
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", bon)])
+        self.assertIn("plafond externe", str(cm.exception))
+
+    def test_interruption_arrete_le_groupe_et_compte(self):
+        """CL37-07, CL39-05, M20 : une interruption pendant la commande arrête tout son groupe ; la session interrompue
+        est comptée au plafond par la course et le manifeste de fin est écrit."""
+        import subprocess
+        import unittest.mock
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        cmd = self.cmd()
+        ad = AdaptateurCommandeExterne(cmd.commande("import sys, time\nsys.stdin.read()\ntime.sleep(30)\n", "lent.py"), environnement={})
+        tues = []
+        vrai_communicate = subprocess.Popen.communicate
+
+        def communicate_coupe(self_p, *a, **k):
+            if not getattr(self_p, "_deja", False):
+                self_p._deja = True
+                raise KeyboardInterrupt()
+            return vrai_communicate(self_p, *a, **k)
+        with unittest.mock.patch.object(subprocess.Popen, "communicate", communicate_coupe), \
+                unittest.mock.patch("os.killpg", side_effect=lambda pid, sig: tues.append((pid, sig))):
+            with self.assertRaises(KeyboardInterrupt):
+                ad.lancer("juge_ideation", "consigne", self.tmp, 1.0, 1)
+        self.assertEqual(len(tues), 1)  # M20 : le groupe est visé
+        # la course compte la session interrompue au plafond et écrit le manifeste de fin
+        c = self.cours()
+
+        class Interrompt(FauxAdaptateur):
+            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+                raise KeyboardInterrupt()
+        ad2 = Interrompt({"opus": [fiche_brute()], "fable": [fiche_brute()]})
+        with self.assertRaises(KeyboardInterrupt):
+            c.lancer(ad2, "c-int")
+        with open(os.path.join(self.tmp, "c-int", "manifeste-fin.json")) as f:
+            j = json.load(f)["reglages"]["journal"]
+        self.assertEqual(j["appels"][0]["statut"], "interrompue")
+        self.assertAlmostEqual(j["cout_total_usd"], 1.0)  # plafond de la session compté
+        self.assertIn("taille_consigne", j["appels"][0])
+
+
+    def test_sigterm_sur_le_lanceur(self):
+        """CL39-05 : SIGTERM à l'orchestrateur pendant la session d'Argon → code 2, manifeste de fin écrit avec la session
+        comptée au plafond, commande et petit-enfant arrêtés."""
+        import signal
+        import subprocess
+        import time
+        c = self.cours()
+        prep = c.preparer()
+        cmd = self.cmd()
+        pid_f = os.path.join(self.tmp, "pe.pid")
+        lent = " ".join(cmd.commande(
+            "import sys, json, subprocess, time\nc = sys.stdin.read()\n"
+            "if 'exactement OK' in c: print(json.dumps({'texte': 'OK', 'cout_usd': 0.001})); sys.exit(0)\n"
+            f"p = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)']); open({pid_f!r}, 'w').write(str(p.pid))\n"
+            "time.sleep(60)\n", "lent2.py"))
+        sortie = os.path.join(self.tmp, "l-term")
+        lanceur = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "demonstrations", "ideation_v1.py")
+        env = {k: v for k, v in os.environ.items() if k in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")}
+        p = subprocess.Popen([sys.executable, "-I", "-B", lanceur, sortie, "--liste-blanche", prep["liste_blanche"], "--question",
+                              prep["question"], "--piece", prep["pieces"][0], "--temoins", prep["temoins"], "--proposeur-externe",
+                              "argon=gemini-argon", "--juge-externe", "argon-j=gemini-argon", "--commande-externe", lent,
+                              "--budget-externe-usd", "11.2"], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for _ in range(100):
+            if os.path.exists(pid_f):
+                break
+            time.sleep(0.1)
+        else:
+            p.kill()
+            self.fail("la commande lente n'a pas démarré")
+        p.send_signal(signal.SIGTERM)
+        out, err = p.communicate(timeout=30)
+        self.assertEqual(p.returncode, 2, err.decode("utf-8", "replace"))
+        self.assertIn("interruption", err.decode("utf-8", "replace"))
+        with open(os.path.join(sortie, "manifeste-fin.json")) as f:
+            j = json.load(f)["reglages"]["journal"]
+        self.assertEqual(j["appels"][-1]["statut"], "interrompue")
+        pe = int(open(pid_f).read())
+        for _ in range(30):
+            try:
+                with open(f"/proc/{pe}/status") as f:
+                    if any(l.startswith("State:") and "Z" in l for l in f):
+                        break
+            except OSError:
+                break
+            time.sleep(0.1)
+        else:
+            os.kill(pe, 9)
+            self.fail("le petit-enfant d'Argon a survécu au SIGTERM")
+
+
 class TestReglagesV35(CasAvecDossier):
     def test_options_tools_vides_et_effort(self):
         """CL34-02 / CL34-08 : `tools=[]` (jeu disponible) pour les rôles de l'idéation, effort fixé ; les autres rôles
@@ -993,6 +1292,8 @@ class TestReglagesV35(CasAvecDossier):
         self.assertEqual(cmd[cmd.index("--tools") + 1], "")
         self.assertNotIn("--allowedTools", cmd)
         self.assertEqual(cmd[cmd.index("--effort") + 1], "medium")
+        for nom in [n for n in sys.modules if n.startswith("claude_agent_sdk")]:  # CL39-12 : ne pas laisser le kit chargé
+            del sys.modules[nom]
 
     def test_borne_de_temps_par_session(self):
         """CL34-05 : une session qui pend au-delà du délai rend « erreur » avec un motif, sans lever."""
