@@ -738,3 +738,111 @@ def test_fonctions_de_v1_importees_sans_copie():
         assert getattr(nrj2, nom) is getattr(nrj, nom)
     assert nrj2.CITATIONS_V2["tâches"] is nrj.CITATIONS["tâches"]
     assert Path(nrj.__file__).name == "noter_rejeu_juges_v1.py"
+
+
+# ---------------------------------------------------------------- contre-lecture R2 (CLR2-08) : gardes sans artefact
+# Cinq essais du contre-lecteur (`outils/test_gardes_complementaires_v2.py` de la contre-lecture R2), versés tels quels,
+# noms locaux au lieu du module importé.
+
+class CacheMenteur(BigrammeCache):
+    """Rend un cache d'une longueur fausse (un de plus)."""
+
+    def forward(self, *a, **k):
+        s = super().forward(*a, **k)
+        if s.past_key_values is not None:
+            s.past_key_values.n += 1
+        return s
+
+
+class LignesEnMoins(BigrammeCache):
+    """Rend une ligne de logits de moins que demandé."""
+
+    def forward(self, *a, **k):
+        s = super().forward(*a, **k)
+        return SimpleNamespace(logits=s.logits[:, :-1], past_key_values=s.past_key_values)
+
+
+def test_passe_principale_cache_de_longueur_fausse_et_lignes_manquantes():
+    _lire(_table())                                                     # cas sain
+    with pytest.raises(GardeArret, match="longueur ≠ la suite"):
+        _lire(_table(), modele=CacheMenteur)
+    with pytest.raises(GardeArret, match="lignes rendues|demandées"):
+        _lire(_table(), modele=LignesEnMoins)
+
+
+def test_prolongement_longueur_rendue_fausse():
+    nrj2.prolonger(BigrammeCache(_table()), FauxCache(4), [_i("2")], 4)                        # cas sain
+    with pytest.raises(GardeArret, match="prolongement"):
+        nrj2.prolonger(CacheMenteur(_table()), FauxCache(4), [_i("2")], 4)
+
+
+def test_lecture_sans_contexte():
+    with pytest.raises(GardeArret, match="sans contexte"):
+        nrj2.lire_par_probabilite_v2(BigrammeCache(_table()), TOK, [], COMPLET, CRITERES, True, 0.5, TERM)
+
+
+def test_generer_lot_borne_lot_vide_et_graines():
+    m = BigrammeCache(_table())
+    ctx = [TOK.encode("ab", add_special_tokens=False)]
+    nrj2.generer_lot_borne(m, ctx, 2, 1.0, [1], {TOK.eos_token_id}, TOK.pad_token_id, {NL}, lambda j: False)
+    for contextes, graines in (([], []), (ctx, [1, 2]), ([[]], [1])):
+        with pytest.raises(GardeArret, match="lot vide"):
+            nrj2.generer_lot_borne(m, contextes, 2, 1.0, graines, {TOK.eos_token_id}, TOK.pad_token_id,
+                                   {NL}, lambda j: False)
+
+
+def test_encodage_du_3b_recharge_different_arrete_avant_toute_phase(depot, monkeypatch):
+    f = _notations_artisanales(depot, monkeypatch)
+    vrai, appels = nrj2.controler_encodage_v2, []
+
+    def change(tok, mode, terminaux, *a):
+        sortie = dict(vrai(tok, mode, terminaux, *a))
+        appels.append(1)
+        if len(appels) > 2:                     # rechargement hors ligne du 3B : encodage différent (artefact)
+            sortie["valeurs_controlees_v2"] = -1
+        return sortie
+
+    monkeypatch.setattr(nrj2, "controler_encodage_v2", change)
+    run = "20261029-120000-rejeu-v2-jouet"
+    with pytest.raises(GardeArret, match="encodage chargé hors ligne"):
+        nrj2.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)
+    r = verifier_resultat(depot, depot / "diag" / run / "arret.json")["resultat"]
+    assert r["partiel"]["phases"] == []
+
+
+# ---------------------------------------------------------------- corrections de l'auteur après la contre-lecture R2
+
+def test_3b_recharge_avec_les_fins_du_modele_cas_sain(depot, monkeypatch):
+    """Au réel, le format du début du run (tokeniseur seul) ne porte que la fin du tokeniseur, celui du 3B chargé hors
+    ligne porte aussi celles du modèle : ce n'est pas un encodage différent. Le run continue, et la lecture du 3B prend
+    les terminaux du format qui génère (fins du modèle comprises), consignés. Le module relu (`cff3d90a`) arrêtait ici
+    tout le run, phase décisive comprise (défaut trouvé par l'auteur pendant les corrections)."""
+    f = _notations_artisanales(depot, monkeypatch)
+    vrai = nrj2.charger_modele_et_format
+    EN_PLUS = TOK.convert_tokens_to_ids("<s>")
+
+    def charger(spec, mode, graine, hors_ligne=False):
+        m, fmt = vrai(spec, mode, graine, hors_ligne=hors_ligne)
+        if hors_ligne:
+            fmt.fins = set(fmt.fins) | {EN_PLUS}            # fin du modèle en plus, comme `fins_du_modele` au réel
+        return m, fmt
+
+    monkeypatch.setattr(nrj2, "charger_modele_et_format", charger)
+    run = "20261029-120001-rejeu-v2-jouet"
+    resume = nrj2.executer(_config(), depot, run, None, str(f), autoriser_depot_sale=True)
+    assert [p["statut"] for p in resume["phases"]] == ["écrit", "écrit"]
+    t8 = verifier_resultat(depot, depot / "diag" / run / f"rejeu-jouet-8B-{nrj2.VARIANTE}.json")["resultat"]
+    t3 = verifier_resultat(depot, depot / "diag" / run / f"rejeu-jouet-3B-{nrj2.VARIANTE}.json")["resultat"]
+    assert t3["terminaux"]["n"] == t8["terminaux"]["n"] + 1
+    assert resume["encodage"]["jouet-3B"]["terminaux"] == t3["terminaux"]
+
+
+def test_controle_prealable_de_l_encodage_cas_sain_et_artefact(monkeypatch):
+    """Contre-lecture R2, CLR2-06 : garde d'encodage sur les tokeniseurs seuls, avant les tests de l'instance."""
+    sortie = nrj2.controle_prealable_encodage(_config())
+    assert {j: e["valeurs_controlees_v2"] for j, e in sortie.items()} == {"jouet-8B": 94, "jouet-3B": 94}
+    with pytest.raises(GardeArret, match="configuration du rejeu v2 incomplète"):
+        nrj2.controle_prealable_encodage({k: v for k, v in _config().items() if k != "phases"})
+    monkeypatch.setattr(nrj2, "jetons_terminaux", lambda tok, fins: [TOK.eos_token_id])
+    with pytest.raises(GardeArret, match="un seul jeton, terminal"):
+        nrj2.controle_prealable_encodage(_config())

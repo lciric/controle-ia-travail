@@ -676,9 +676,10 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, demandes, etat
         if formats[j["nom"]] != pilote["formats"].get(f"juge-{j['nom']}"):
             raise GardeArret(f"juge {j['nom']} : format ≠ celui du début du pilote")
     etat["etape"] = "contrôle de l'encodage des valeurs"
-    terminaux, sauts, encodage = {}, {}, {}
+    terminaux, sauts, encodage, fins_de_ligne = {}, {}, {}, {}
     for j in juges:
         tok = fmts[j["nom"]].tok
+        fins_de_ligne[j["nom"]] = jetons_terminaux(tok, set())          # vocabulaire seul
         terminaux[j["nom"]] = jetons_terminaux(tok, fmts[j["nom"]].fins)
         sauts[j["nom"]] = jetons_de_saut(tok)
         encodage[j["nom"]] = controler_encodage_v2(tok, config["mode"], terminaux[j["nom"]])
@@ -696,9 +697,17 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, demandes, etat
             chargements[j["nom"]] = round(time.perf_counter() - depart, 1)
             if controler_format(fmt_j, j, "juge", config) != formats[j["nom"]]:
                 raise GardeArret(f"{j['nom']} : format chargé hors ligne ≠ format contrôlé au début du run")
-            if jetons_terminaux(fmt_j.tok, fmt_j.fins) != terminaux[j["nom"]] or controler_encodage_v2(
-                    fmt_j.tok, config["mode"], terminaux[j["nom"]]) != encodage[j["nom"]]:
+            # Le format du début du run (tokeniseur seul, `charger_format_seul`) ne porte que la fin du tokeniseur ;
+            # celui du modèle chargé porte aussi celles du modèle (`fins_du_modele`) : seuls les jetons de fin de ligne
+            # (vocabulaire) et le contrôle d'encodage, hors résumé des terminaux, doivent être égaux. Les terminaux de
+            # la lecture sont ensuite ceux du format qui génère (fins comprises), consignés.
+            nouveaux = jetons_terminaux(fmt_j.tok, fmt_j.fins)
+            e = controler_encodage_v2(fmt_j.tok, config["mode"], nouveaux)
+            if (jetons_terminaux(fmt_j.tok, set()) != fins_de_ligne[j["nom"]]
+                    or {k: v for k, v in e.items() if k != "terminaux"}
+                    != {k: v for k, v in encodage[j["nom"]].items() if k != "terminaux"}):
                 raise GardeArret(f"{j['nom']} : encodage chargé hors ligne ≠ encodage contrôlé au début du run")
+            terminaux[j["nom"]], sauts[j["nom"]], encodage[j["nom"]] = nouveaux, jetons_de_saut(fmt_j.tok), e
             modeles[j["nom"]] = (m_j, fmt_j)
     del modele, fmt
     noyaux = noyaux_attention_permis() if torch.cuda.is_available() else None
@@ -755,6 +764,23 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, demandes, etat
     ecrire_resultat(racine, chemin_m, "resume", resume)
     lire_manifeste(chemin_m)
     return resume
+
+
+# ---------------------------------------------------------------- contrôle préalable (avant les tests de l'instance)
+
+def controle_prealable_encodage(config: dict) -> dict:
+    """Garde d'encodage v2 sur les tokeniseurs seuls des juges (`charger_format_seul` : tokeniseur à la révision figée,
+    sans les poids), avant l'installation lourde et la suite de tests de l'instance (contre-lecture R2, CLR2-06) : un
+    tokeniseur qui découpe autrement arrête en quelques secondes au lieu de ≈ 25 minutes payées. Elle ne remplace pas la
+    garde du run, qui reste faite après le manifeste sur les formats du run. Aucun fichier écrit."""
+    exiger_config_rejeu_v2(config)
+    sortie = {}
+    for j in config["juges"]:
+        spec = config["agent"] if j["meme_modele_que_agent"] else j
+        fmt = charger_format_seul(spec, config["mode"])
+        e = controler_encodage_v2(fmt.tok, config["mode"], jetons_terminaux(fmt.tok, fmt.fins))
+        sortie[j["nom"]] = {k: e[k] for k in ("valeurs_controlees", "valeurs_controlees_v2", "sondes", "terminaux")}
+    return sortie
 
 
 # ---------------------------------------------------------------- lecture après coup (critères gelés de la fiche)
@@ -814,10 +840,16 @@ def _main(argv: list[str]) -> int:
     ap.add_argument("--run-id")
     ap.add_argument("--prereg", default=None)
     ap.add_argument("--lire", default=None, metavar="RUN")
+    ap.add_argument("--controle-encodage", default=None, metavar="CONFIG",
+                    help="garde d'encodage v2 sur les tokeniseurs seuls des juges, avant les tests de l'instance")
     ap.add_argument("--echeance-externe", type=float, default=None, metavar="SECONDES",
                     help="horodatage (secondes depuis 1970, UTC) avant lequel tout lot doit être fini : délai externe "
                          "du run moins la marge du dernier lot (script de l'instance) ; exigé en mode réel")
     a = ap.parse_args(argv)
+    if a.controle_encodage:
+        config = json.loads(Path(a.controle_encodage).read_text(encoding="utf-8"))
+        print(json.dumps(controle_prealable_encodage(config), ensure_ascii=False))
+        return 0
     if a.lire:
         lecture = lire_rejeu_v2(Path("."), a.lire)
         ecrire_resultat(Path("."), Path("runs") / a.lire / "manifeste.json", "lecture-rejeu-v2", lecture)

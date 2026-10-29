@@ -54,6 +54,16 @@ fi
 CODE=$(sed -n "s/.*Commit du code d'analyse : \`\\([0-9a-f]\\{40\\}\\)\`.*/\\1/p" "$T/clone/$FICHE")
 [ "$(printf '%s\n' "$CODE" | grep -c .)" = 1 ] || { echo "fiche : commit du code absent ou cité plusieurs fois"; exit 2; }
 git -C "$T/clone" merge-base --is-ancestor "$CODE" "$S" || { echo "commit du code $CODE non ancêtre du commit lancé"; exit 2; }
+# arbre gelé identique entre le commit du code et le commit lancé (contre-lecture R2, CLR2-01) : mêmes chemins que
+# `validation_reelle.CHEMINS_GELES`, que le module compare au début du run (code, essais, scripts, .claude,
+# dépendances, configuration) ; sinon le run s'arrêterait après ≈ 25 minutes payées. Dans un « if » (set -e, trap ERR).
+if ! git -C "$T/clone" diff --quiet "$CODE" "$S" -- . ':(exclude)prereg' ':(exclude)brouillons' ':(exclude)registres' \
+        ':(exclude)docs' ':(exclude)diag' ':(exclude)runs' ':(exclude)donnees' ':(exclude)livrables' ':(exclude)papiers' \
+        ':(exclude)traces' ':(exclude)CLAUDE.md'; then
+    echo "arbre gelé (code, essais, scripts, dépendances) modifié entre le commit du code $CODE et le commit lancé $S : pas de création"
+    exit 2
+fi
+echo "arbre gelé identique au commit du code" >> "$T/lancement.txt"
 echo "commit du code $CODE" >> "$T/lancement.txt"
 cp "$T/clone/scripts/amorce_rejeu_juges_v2.sh" "$T/amorce.sh"
 E=$(sha256sum "$T/amorce.sh" | cut -d' ' -f1)
@@ -104,8 +114,8 @@ printf 'go %s\ncommit %s\noffre %s\nbranche %s\netiquette %s\ncreation %s\narret
     "$GO" "$S" "$OFFRE" "$BRANCHE" "$ETIQUETTE" "$CREATION" "$((CREATION + 8400))" >> "$T/lancement.txt"
 # réveils de garde (contre-lecture, CLJ-04) : la session les programme (tâches « une fois ») dès la création, puis
 # consigne leurs identifiants ici ; chacun inventorie, arrête par identifiant (R10) et consigne dans registres/arrets.md
-printf 'reveils_de_garde %s %s (création + 130 min et + 145 min : à programmer par la session, identifiants à consigner ici)\n' \
-    "$((CREATION + 7800))" "$((CREATION + 8700))" >> "$T/lancement.txt"
+printf 'reveils_de_garde %s %s (création + 135 min et + 150 min : à programmer par la session, identifiants à consigner ici)\n' \
+    "$((CREATION + 8100))" "$((CREATION + 9000))" >> "$T/lancement.txt"
 GO_ID=$GO "$V" create instance "$OFFRE" --raw --image python:3.11-bookworm --disk 80 --cancel-unavail \
     --label "$ETIQUETTE" \
     --env "-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e HF_TOKEN=$HF_TOKEN -e GH_TOKEN=$CONTROLE_IA_GITHUB_TOKEN" \
@@ -128,5 +138,5 @@ sys.exit(0 if ok else 4)' | tee -a "$T/lancement.txt"
 st=("${PIPESTATUS[@]}")
 [ "${st[0]}" = 0 ] && [ "${st[1]}" = 0 ] && [ "${st[2]}" = 0 ] || { echo "création douteuse (statuts ${st[*]}) : vérifier « vastai show instances », sans --raw"; exit 4; }
 echo "créée ; surveillance par la session ; arrêt par identifiant (R10) à la fin de l'amorce, au plus tard $(date -u -d "@$((CREATION + 8400))" +%FT%TZ)"
-echo "réveils de garde à programmer maintenant par la session : $(date -u -d "@$((CREATION + 7800))" +%FT%TZ) et $(date -u -d "@$((CREATION + 8700))" +%FT%TZ) (création + 130 et + 145 min) ; identifiants dans $T/lancement.txt"
+echo "réveils de garde à programmer maintenant par la session : $(date -u -d "@$((CREATION + 8100))" +%FT%TZ) et $(date -u -d "@$((CREATION + 9000))" +%FT%TZ) (création + 135 et + 150 min) ; identifiants dans $T/lancement.txt"
 exit 0

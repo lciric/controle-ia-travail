@@ -147,7 +147,7 @@ traces() {
     local d
     mkdir -p traces
     d=$(mktemp -d "traces/rejeu-juges-v2-$(date -u +%Y%m%d-%H%M%S)-XXXX")
-    for f in "$JOURNAL" "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" "$TRAVAIL/run.json" "$TRAVAIL/run.err" \
+    for f in "$JOURNAL" "$TRAVAIL/encodage.json" "$TRAVAIL/encodage.err" "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" "$TRAVAIL/run.json" "$TRAVAIL/run.err" \
              "$TRAVAIL/machine.txt" "$TRAVAIL/pip-freeze.txt"; do
         [ -f "$f" ] && cp "$f" "$d/"
     done
@@ -208,6 +208,16 @@ python -c "import torch; print('torch', torch.__version__, 'cuda', torch.version
 if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)"; then
     journal "carte indisponible pour torch : arrêt avant les tests"; consigner_arret "contrôle de la carte"; exit 1
 fi
+
+# garde d'encodage préalable (contre-lecture R2, CLR2-06) : tokeniseurs seuls des juges, avant la suite de tests ; un
+# découpage inattendu arrête ici en quelques secondes, et non après ≈ 25 minutes payées. La garde du run reste faite.
+ETAPE="contrôle préalable de l'encodage"
+if ! PYTHONPATH=src python -m controle_ia.environnements.noter_rejeu_juges_v2 --controle-encodage "$CONFIG" \
+        >"$TRAVAIL/encodage.json" 2>"$TRAVAIL/encodage.err"; then
+    grep -v '^PROGRES ' "$TRAVAIL/encodage.err" | tail -n 3 | tee -a "$JOURNAL" || true
+    journal "garde d'encodage préalable en échec : arrêt avant les tests"; consigner_arret "contrôle préalable de l'encodage"; exit 1
+fi
+journal "garde d'encodage préalable réussie (tokeniseurs seuls des juges)"
 
 ETAPE="tests"
 if [ "${SAUTER_TESTS:-0}" = 1 ]; then
