@@ -125,6 +125,15 @@ arrêt propre du tour** (session close, sortie mise à l'écart dans `A-L-ECART-
 demandé et servi, `statut_course` « refus » au manifeste de fin, jamais « budget dépassé »,
 `depense_modele_non_autorise_usd` à part), et le relais de clé refuse avant envoi tout modèle hors de `--modeles-permis`.
 
+Version 48 (étage de tests de mort, décision de Lazar R-776 (a) ; en préparation, **aucun test réel ici**) : sous
+`etage_tests` (défaut absent : course de la v47, consignes et sorties identiques octet pour octet), les fiches portent un
+champ facultatif `test_de_mort` ({seuil, test, donnees}), la consigne des proposeurs porte l'index d'une **tranche
+exploratoire** (dossier en lecture seule, `index.json` scellé), et, une fois le classement écrit et figé, les N premières
+fiches **éligibles** passent à un expérimentateur (sans outil du kit ; script exécuté par le noyau dans un bac à sable,
+`pole/tests_de_mort.py`) puis à un lecteur neuf ; préenregistrement court scellé avant tout appel ; résultats au manifeste
+de fin, section « tests de mort (exploratoires) » ; jamais servis aux juges de la même course ; matériau (comptes et
+étiquettes) pour la génération suivante. Course à juge externe : l'étage se joue après le bras différé, par le lanceur.
+
 Ce que le noyau ne peut pas faire : garantir le niveau méthode (la garde **signale**, un humain lit **toutes** les fiches
 validées avant tout usage) ; vérifier une antériorité (R7) ; neutraliser le style d'un modèle devant un juge du même
 modèle (il le **mesure**, lectures par juge). Un juge d'une autre lignée est possible depuis la v33, en **bras rapporté**
@@ -158,6 +167,12 @@ from .moisson import (BUDGET_MOISSON_USD_PAR_SESSION_DEFAUT, MAX_REQUETES_PAR_TO
 from .outils import (dossier_traces, ecrire_json_scelle, ecrire_scelle, empreinte_objet, extraire_bloc_json,
                      graine_derivee, manifeste, sha256_fichier, verifier_scelle)
 from .protocole_outils import QuotaRefuse
+from .tests_de_mort import (CHAMP_TEST as CHAMP_TEST_DE_MORT, EtageInterrompu, EtageRefuse, ExecuteurBacASable, ExecuteurFactice,
+                            ChampTestInvalide, ChampTestTropLong, GABARIT_TEST, charger_tranche, consigne_experimentateur_maximale,
+                            executer_tests_de_mort, plafond_etage, valider_champ_test, valider_reglages as valider_reglages_etage,
+                            BUDGET_TEST_USD_DEFAUT, BUDGET_LECTEUR_USD_DEFAUT, EXECUTIONS_PAR_FICHE_DEFAUT, DELAI_EXECUTION_S_DEFAUT,
+                            MEMOIRE_MO_DEFAUT, MAX_DONNEES, TAILLE_MAX_CHEMIN_DONNEE, TAILLE_MAX_SEUIL, TAILLE_MAX_TEST,
+                            extraire_prereg_court)
 from .pari_apparie import _fini  # v41 (CL40-05, CL40-06) : un seul prédicat « nombre réel fini, ni booléen »
 from .relais import HOTES_LOCAUX, CleDansEnvironnement, RelaisInvalide
 from .relais_reel import BAREME_INCONNU
@@ -401,12 +416,17 @@ CHAMPS_INTERNES = ("auteur", "identifiant_auteur", "empreinte", "passe", "temoin
 CHAMP_CITATIONS = "citations_verifiees"  # v46 (L7) : écrit par le noyau après les passes ; servi aux juges seulement
 
 
-def gabarit(moisson=False):
+def gabarit(moisson=False, tests_de_mort=False):
     """v47 : le gabarit servi — avec `moisson`, l'antériorité admet le statut MOISSONNE (notice servie par le noyau, à
-    citer avec son étiquette [moisson:…], non opposable) ; sans, `GABARIT` tel quel (consignes de la v46 inchangées)."""
-    if not moisson:
+    citer avec son étiquette [moisson:…], non opposable) ; sans, `GABARIT` tel quel (consignes de la v46 inchangées).
+    v48 : avec `tests_de_mort`, le champ facultatif `test_de_mort` ({seuil, test, donnees}) est ajouté en dernier."""
+    if not moisson and not tests_de_mort:
         return GABARIT
     g = json.loads(json.dumps(GABARIT, ensure_ascii=False))
+    if tests_de_mort:
+        g[CHAMP_TEST_DE_MORT] = dict(GABARIT_TEST)
+    if not moisson:
+        return g
     g["anteriorite"] = [{"reference": "titre, auteurs, année, identifiant si connu ; pour une notice moissonnée : titre, auteurs, "
                                       "année, identifiant, puis son étiquette [moisson:…] telle quelle",
                          "statut": "RAPPORTE | SUPPOSE | MOISSONNE"}]
@@ -439,13 +459,15 @@ def _enum(d, cle, permis):
     return v
 
 
-def valider_fiche_ideation(brut, auteur, indice, passe=1, moisson=False):
+def valider_fiche_ideation(brut, auteur, indice, passe=1, moisson=False, tests_de_mort=False):
     """Valide une fiche proposée ; rend la fiche canonique (dict) ou lève FicheIdeationInvalide. Aucun repli.
-    v47 : `moisson` admet le statut d'antériorité MOISSONNE, marqué `non_opposable: true` par le noyau."""
+    v47 : `moisson` admet le statut d'antériorité MOISSONNE, marqué `non_opposable: true` par le noyau.
+    v48 : `tests_de_mort` admet le champ facultatif `test_de_mort` ({seuil, test, donnees}) ; absent, il reste facultatif
+    (la fiche est valide ; l'étage la refuse à l'étage s'il manque) ; sans l'option, c'est un champ hors gabarit."""
     if not isinstance(brut, dict):
         raise FicheIdeationInvalide("fiche non dictionnaire")
     statuts = STATUTS_ANTERIORITE_MOISSON if moisson else STATUTS_ANTERIORITE
-    inconnus = set(brut) - set(GABARIT)
+    inconnus = set(brut) - set(GABARIT) - ({CHAMP_TEST_DE_MORT} if tests_de_mort else set())
     if inconnus:
         raise FicheIdeationInvalide("champs hors gabarit : " + ", ".join(sorted(inconnus)))
     f = {"nom": _texte(brut, "nom", maximum=200), "type": _enum(brut, "type", TYPES_FICHE),
@@ -495,6 +517,13 @@ def valider_fiche_ideation(brut, auteur, indice, passe=1, moisson=False):
         if entree["statut"] == STATUT_MOISSONNE:  # v47 : marqué par le noyau, jamais par l'auteur
             entree["non_opposable"] = True
         f["anteriorite"].append(entree)
+    if tests_de_mort and brut.get(CHAMP_TEST_DE_MORT) is not None:  # v48 : facultatif, validé s'il est donné
+        try:
+            f[CHAMP_TEST_DE_MORT] = valider_champ_test(brut[CHAMP_TEST_DE_MORT])
+        except ChampTestTropLong as e:
+            raise FicheTropLongue(str(e)) from e
+        except ChampTestInvalide as e:
+            raise FicheIdeationInvalide(str(e)) from e
     f, _ = caviarder_objet(f)
     if contient_secret("\n".join(feuilles_texte(f))):  # v46 (CL45-02) : un secret à cheval sur deux champs, jamais tu
         raise FicheIdeationInvalide("secret à cheval sur plusieurs champs (le caviardage valeur par valeur ne le retire "
@@ -604,6 +633,17 @@ CITATIONS_CONSIGNE = ("Cite une page du dossier fermé sous la forme [chemin, p.
                       "et que le passage s'y trouve, et les juges voient ce résultat (vrai ou faux par citation).")
 
 
+TRANCHE_CONSIGNE = (
+    "## Tranche exploratoire (index seulement ; données déjà là, en lecture seule)\n"
+    "Les meilleures fiches du classement passeront à un test de mort exécuté par le noyau, sur ces seules données, par un "
+    "agent expérimentateur, avec un lecteur neuf ; le résultat est exploratoire et ne change ni le classement ni les notes. "
+    "Le champ facultatif `test_de_mort` d'une fiche est son test de mort : `seuil` (chiffré, avec son sens : « au moins 0,15 », "
+    "« ≤ 0,05 »), `test` (ce que l'on calcule sur les données nommées, et qui élimine la fiche), `donnees` (chemins exacts "
+    "de l'index ci-dessous, rien d'autre). Une fiche sans ce champ, sans seuil chiffré ou dont les données ne sont pas dans "
+    "l'index est refusée à l'étage : elle n'est pas testée (elle reste jugée et classée). La prédiction (`loi_predictive`) "
+    "doit être chiffrée et son signe donné.\n")
+
+
 def entete_dossier_ferme(mode, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT):
     """v46 : le paragraphe d'ouverture de la consigne d'un proposeur à dossier fermé (« outils » ou « protocole »)."""
     if mode == "outils":
@@ -624,7 +664,7 @@ def entete_dossier_ferme(mode, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT)
 
 def consigne_proposeur(pieces, nombre, question_texte, materiau=None, fiches_precedentes=None, dossier=None, mode=None,
                        historique=None, avertissement=None, version_precedente=None,
-                       max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson=None):
+                       max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson=None, tranche=None):
     """Consigne de la passe de proposition : la question, les pièces, le gabarit, le nombre de fiches attendu.
 
     v46 (tour (c)) : avec `dossier` (dossier fermé) et `mode` (« outils » ou « protocole »), l'ouverture dit l'accès au
@@ -636,7 +676,11 @@ def consigne_proposeur(pieces, nombre, question_texte, materiau=None, fiches_pre
     v47 : `moisson` (liste des tours servis par le noyau, passe 2 d'une course sous `moisson`) ajoute la section « Moisson
     servie par le noyau (données ; résumés non opposables) » entre délimiteurs, après les fiches de première passe, et le
     gabarit admet le statut MOISSONNE ; `moisson=[]` (demandes toutes refusées ou relais indisponible) l'ajoute vide, pour
-    que le proposeur sache qu'aucune notice ne lui est servie. Sans `moisson` (None) : consigne de la v46, octet pour octet."""
+    que le proposeur sache qu'aucune notice ne lui est servie. Sans `moisson` (None) : consigne de la v46, octet pour octet.
+
+    v48 : `tranche` (la tranche exploratoire chargée, étage de tests de mort) ajoute, avant « Ce que tu rends », la section
+    « Tranche exploratoire » (index seulement ; règle du champ facultatif `test_de_mort`) et le champ au gabarit servi.
+    Sans `tranche` (None) : consigne de la v47, octet pour octet."""
     if dossier is not None and mode not in MODES_LECTURE_COURSE:
         raise ValueError(f"mode de lecture du dossier fermé : {MODES_LECTURE_COURSE} (reçu {mode!r})")
     ouverture = (entete_dossier_ferme(mode, max_demandes_lecture) if dossier is not None else
@@ -675,10 +719,12 @@ def consigne_proposeur(pieces, nombre, question_texte, materiau=None, fiches_pre
         parties += ["## Pour lire\nUn bloc ```json {\"demandes\": [ … ]} ``` (et rien d'autre à rendre ce tour, ou une "
                     "version provisoire de tes fiches) : le noyau te sert au tour suivant. Une demande "
                     "{\"moissonner\": …} n'est pas disponible.\n"]
+    if tranche is not None:  # v48 : l'index de la tranche exploratoire (données en lecture seule), jamais le texte
+        parties += [TRANCHE_CONSIGNE, "```json\n" + json.dumps(tranche.vue_index(), ensure_ascii=False, indent=1) + "\n```\n"]
     parties += [f"## Ce que tu rends\nEntre 1 et {nombre} fiches — **jamais plus de {nombre}, sinon tout est refusé** —, "
                 "les plus affûtées d'abord, des QUESTIONS en priorité (énoncé falsifiable), puis des APPROCHES. Chaque "
                 "fiche suit exactement ce gabarit (aucun champ en plus, aucun en moins) :\n```json\n"
-                + json.dumps(gabarit(moisson is not None), ensure_ascii=False, indent=1)
+                + json.dumps(gabarit(moisson is not None, tranche is not None), ensure_ascii=False, indent=1)
                 + f"\n```\nBornes (une fiche qui les dépasse est refusée) : au plus {MAX_QUESTIONS_SERVIES} questions "
                 f"servies, au plus {MAX_ANTERIORITES} antériorités, {LONGUEUR_MAX_CHAMP} caractères au plus par texte.\n"
                 "Réponse finale : un seul bloc ```json {\"fiches\": [ … ]} ```"
@@ -1107,9 +1153,9 @@ NOMBRE_QUESTIONS_COMPTEES = MAX_QUESTIONS_SERVIES  # noms de la v41, gardés pou
 NOMBRE_ANTERIORITES_COMPTEES = MAX_ANTERIORITES
 
 
-def _fiche_textes(k, reste=0):
+def _fiche_textes(k, reste=0, tests_de_mort=False):
     t = "x" * k
-    return {"nom": "x" * 200, "type": "question", "enonce": "x" * (k + reste),
+    f = {"nom": "x" * 200, "type": "question", "enonce": "x" * (k + reste),
             "loi_predictive": {"espace_instances": t, "prediction": t, "signe": "+", "metrique": t},
             "perte_traduction": t, "questions_servies": ["x" * 80] * MAX_QUESTIONS_SERVIES,
             "avantage": {"source": "programme", "texte": t, "incopiable_parce_que": t},
@@ -1117,14 +1163,18 @@ def _fiche_textes(k, reste=0):
             "demande_organisme": {"nature": "modification", "texte": t},
             "cout": {"nature": "processeur", "ordre_de_grandeur": t}, "piege": t, "cosmetique_si": t,
             "anteriorite": [{"reference": "x" * 500, "statut": "RAPPORTE"}] * MAX_ANTERIORITES}
+    if tests_de_mort:  # v48 : le champ facultatif à ses bornes (seuil, test, douze chemins)
+        f[CHAMP_TEST_DE_MORT] = {"seuil": "x" * TAILLE_MAX_SEUIL, "test": "x" * TAILLE_MAX_TEST,
+                                 "donnees": ["x" * TAILLE_MAX_CHEMIN_DONNEE] * MAX_DONNEES}
+    return f
 
 
-def fiche_maximale():
+def fiche_maximale(tests_de_mort=False):
     """La vue servie de la plus grosse fiche que le gabarit accepte — `MAX_QUESTIONS_SERVIES` questions de 80 caractères,
     `MAX_ANTERIORITES` références de 500, nom de 200, énumérations à leur valeur la plus longue, **les douze textes à
     `LONGUEUR_MAX_CHAMP` caractères** (44 259 caractères servis). v43 (CL42-04, décision de Lazar : « retirer ») : retour au
     pire cas aux bornes par champ (v42 : remplie jusqu'à la borne de 12 000 caractères de la fiche, retirée)."""
-    return _fiche_textes(LONGUEUR_MAX_CHAMP)
+    return _fiche_textes(LONGUEUR_MAX_CHAMP, tests_de_mort=tests_de_mort)
 
 
 class TailleConsigneRefusee(CourseInterrompue):
@@ -1382,7 +1432,7 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                       garder_passes_externes=False, dossier_ferme=None, outils_par_protocole=False,
                       max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson="aucune", tours_moisson=TOURS_MOISSON_DEFAUT,
                       budget_moisson_usd_par_session=BUDGET_MOISSON_USD_PAR_SESSION_DEFAUT, url_relais_moisson=None,
-                      cache_moisson=None, registre_bardeaux=None):
+                      cache_moisson=None, registre_bardeaux=None, etage_tests=None):
     """v38 (CL37-04) : tout ce que la course refuserait, vérifié AVANT le premier appel de contrôle, sans rien écrire ni
     dépenser : liste blanche et pièces (empreintes, zones interdites, tailles), témoins, attestation du matériau, plafonds
     finis, étiquettes, somme des plafonds (passes et contrôles prévus compris) contre les totaux. Rend les pièces lues
@@ -1404,7 +1454,10 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     (index, pas le texte) ; rendu dans `dossier_ferme`.
     v47 (moisson) : réglages de la moisson vérifiés (`exiger_reglages_moisson`) ; les tours de moisson entrent dans les
     deux sommes (`tours_moisson` × plafond du tour par proposeur) ; la consigne de contrôle d'un proposeur externe (sa plus
-    grosse consigne, la passe 2) porte la moisson **au pire cas** (`resultats_maximaux`) ; rendu dans `moisson`."""
+    grosse consigne, la passe 2) porte la moisson **au pire cas** (`resultats_maximaux`) ; rendu dans `moisson`.
+    v48 : `etage_tests` (étage de tests de mort) vérifié ici (`exiger_reglages_tests_de_mort`, sonde du bac à sable
+    comprise) ; ses plafonds entrent dans les deux sommes ; les consignes de contrôle portent l'index de la tranche et le
+    champ `test_de_mort` au pire cas ; rendu dans `tests_de_mort` (dont la plus grosse consigne de l'expérimentateur)."""
     budget_passe_2_externe_usd = exiger_budget_passe_2(budget_passe_2_externe_usd)
     exiger_reglages_lecture(dossier_ferme, outils_par_protocole, max_demandes_lecture)
     moisson_active = exiger_reglages_moisson(moisson, seconde_passe, tours_moisson, budget_moisson_usd_par_session,
@@ -1423,6 +1476,9 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     temoins_lus = charger_temoins(temoins, liste, moisson=moisson_active) if temoins else []
     dossier_lu = lire_dossier_ferme(dossier_ferme, liste)  # v46
     lecture_ext = dict(dossier=dossier_lu, mode="protocole", max_demandes_lecture=max_demandes_lecture) if dossier_lu else {}
+    etage = exiger_reglages_tests_de_mort(etage_tests, liste, sonder=True)  # v48
+    if etage is not None:
+        lecture_ext = dict(lecture_ext, tranche=etage["tranche_lue"])
     tous_proposeurs = [(e, m) for e, m, *_ in proposeurs_externes] + list(proposeurs)
     tous_juges = list(juges) + [(e, m) for e, m, *_ in juges_externes]
     valider_etiquettes(tous_proposeurs, tous_juges, bool(temoins_lus))
@@ -1448,8 +1504,9 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                 raise CourseInterrompue(f"attestation_materiau : empreinte absente ou différente pour {nom!r}")
     passes = 2 if seconde_passe else 1
     somme_claude = cout_controles_prevu_usd + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
-        + sum(budgets[("juge_ideation", m)] for _, m in juges) + sessions_moisson * len(list(proposeurs))
-    somme_externe = cout_controles_externes_prevu_usd \
+        + sum(budgets[("juge_ideation", m)] for _, m in juges) + sessions_moisson * len(list(proposeurs)) \
+        + (etage["plafond_claude_usd"] if etage else 0.0)  # v48 : l'étage de tests de mort entre dans la somme
+    somme_externe = cout_controles_externes_prevu_usd + (etage["plafond_externe_usd"] if etage else 0.0) \
         + sum(plafond_passe_externe(budgets, m, n, budget_passe_2_externe_usd)  # v44 (CL43-01) : passe 2 à son plafond
               for _, m, *_ in proposeurs_externes for n in range(1, passes + 1)) \
         + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes) \
@@ -1466,8 +1523,8 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     # du gabarit borné, v42 ; v47 : la moisson au pire cas) ; sinon la consigne de passe 1
     if seconde_passe:
         texte_controle = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu or None,
-                                            fiches_precedentes=[fiche_maximale()] * nombre_par_proposeur, **lecture_ext,
-                                            **moisson_ext)
+                                            fiches_precedentes=[fiche_maximale(etage is not None)] * nombre_par_proposeur,
+                                            **lecture_ext, **moisson_ext)
     else:
         texte_controle = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], **lecture_ext)
     taille_controle = len(consigne_de_controle(texte_controle))
@@ -1486,7 +1543,7 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                                                      origine, prov, prix_caractere_usd)
     return {"texte_pieces": texte_pieces, "garde_passe_1": garde_passe_1, "texte_controle_externe": texte_controle,
             "taille_consigne_controle_externe": taille_controle, "garde_taille": garde,
-            "taille_fiche_maximale": taille_servie(fiche_maximale()), "taille_max_fiche_servie": None,  # v43 : retirée
+            "taille_fiche_maximale": taille_servie(fiche_maximale(etage is not None)), "taille_max_fiche_servie": None,  # v43 : retirée
             "tailles": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
                         "materiau": sum(len(t) for _, t, _ in materiau_lu), "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues)},
             "temoins": len(temoins_lus), "somme_claude": somme_claude, "somme_externe": somme_externe,
@@ -1494,7 +1551,85 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
             "dossier_ferme": dossier_lu.description() if dossier_lu else None,
             "moisson": ({"mode": moisson, "tours": tours_moisson, "budget_usd_par_session": float(budget_moisson_usd_par_session),
                          "sessions_par_proposeur_usd": sessions_moisson,
-                         "pire_cas_caracteres": len(section_moisson(moisson_ext["moisson"]))} if moisson_active else None)}
+                         "pire_cas_caracteres": len(section_moisson(moisson_ext["moisson"]))} if moisson_active else None),
+            **({"tests_de_mort": dict(description_etage(etage), consigne_experimentateur_maximale=len(consigne_experimentateur_maximale(
+                {"fiche": fiche_maximale(True), "donnees": [{"chemin": c, "sha256": f["sha256"]} for c, f in etage["tranche_lue"].fichiers.items()]},
+                "0" * 64, etage["tranche_lue"], dossier_lu, etage["executions_par_fiche"], etage["delai_execution_s"], etage["memoire_mo"],
+                etage["budget_test_usd"])))} if etage is not None else {})}
+
+
+CLES_ETAGE_TESTS = ("nombre", "tranche", "experimentateur", "experimentateur_externe", "lecteur", "budget_test_usd",
+                    "budget_lecteur_usd", "executions_par_fiche", "delai_execution_s", "memoire_mo", "executeur")
+
+
+def exiger_reglages_tests_de_mort(etage_tests, liste, moteur="simule", sonder=False):
+    """v48 (R-776, option a) : les réglages de l'étage de tests de mort, vérifiés **avant tout appel** et avant toute
+    écriture. `etage_tests` : None ou `{nombre: 0}` → étage absent (rend None) ; sinon un dictionnaire de
+    `CLES_ETAGE_TESTS` (`nombre` ≥ 1, `tranche` = dossier de la tranche exploratoire, `experimentateur` = (étiquette,
+    modèle) joué par l'adaptateur de la course, ou `experimentateur_externe` = (étiquette, modèle, adaptateur), `lecteur` =
+    (étiquette, modèle), plafonds, quotas, `executeur`). La tranche est chargée comme un dossier fermé (index scellé et dans
+    la liste blanche, empreintes, jamais `donnees/`). `sonder` : joue la sonde du bac à sable (R5 : sans `bwrap`, ou si la
+    sonde échoue, refus, aucun repli) ; avec le moteur réel, l'exécuteur factice est refusé et les modèles Claude de l'étage
+    doivent être permis. Rend le dictionnaire normalisé (`tranche_lue`, `executeur`, plafonds de l'étage) ou lève
+    `CourseInterrompue`."""
+    if not etage_tests or (isinstance(etage_tests, dict) and etage_tests.get("nombre") == 0 and len(etage_tests) == 1):
+        return None
+    if not isinstance(etage_tests, dict) or set(etage_tests) - set(CLES_ETAGE_TESTS):
+        raise CourseInterrompue("etage_tests : dictionnaire de " + ", ".join(CLES_ETAGE_TESTS))
+    r = {"nombre": 0, "tranche": None, "experimentateur": None, "experimentateur_externe": None, "lecteur": None,
+         "budget_test_usd": BUDGET_TEST_USD_DEFAUT, "budget_lecteur_usd": BUDGET_LECTEUR_USD_DEFAUT,
+         "executions_par_fiche": EXECUTIONS_PAR_FICHE_DEFAUT, "delai_execution_s": DELAI_EXECUTION_S_DEFAUT,
+         "memoire_mo": MEMOIRE_MO_DEFAUT, "executeur": None}
+    r.update(etage_tests)
+    try:
+        if not valider_reglages_etage(r["nombre"], r["tranche"], r["experimentateur"], r["experimentateur_externe"], r["lecteur"],
+                                      r["budget_test_usd"], r["budget_lecteur_usd"], r["executions_par_fiche"],
+                                      r["delai_execution_s"], r["memoire_mo"]):
+            return None
+        r["tranche_lue"] = charger_tranche(r["tranche"], liste)
+        r["executeur"] = r["executeur"] or ExecuteurBacASable(delai_s=r["delai_execution_s"], memoire_mo=r["memoire_mo"])
+        if moteur == "claude-sdk":
+            if getattr(r["executeur"], "factice", False):
+                raise EtageRefuse("exécuteur factice refusé avec le moteur réel : aucune barrière (démonstration seulement)")
+            from .adaptateurs import verifier_modele_reel
+            for role in (r["experimentateur"], r["lecteur"]):
+                if role:
+                    verifier_modele_reel(role[1])
+            if r["experimentateur_externe"] and getattr(r["experimentateur_externe"][2], "nom", None) != "commande-externe":
+                raise EtageRefuse("expérimentateur externe avec le moteur réel : seule une commande externe le joue")
+        if sonder:
+            ok, motif = r["executeur"].disponible()
+            if not ok:
+                raise EtageRefuse("bac à sable : " + motif)
+            r["sonde"] = motif
+    except EtageRefuse as e:
+        raise CourseInterrompue(f"étage de tests de mort refusé avant tout appel : {e}") from e
+    r["plafond_claude_usd"], r["plafond_externe_usd"] = plafonds_etage(r)
+    return r
+
+
+def plafonds_etage(r):
+    """v48 : (plafond Claude, plafond externe) de l'étage — par fiche, le plafond de l'expérimentateur (Claude ou externe)
+    plus celui du lecteur (toujours Claude) ; nombre de fiches × ces plafonds (CL37-03 : tout entre dans les sommes)."""
+    par_fiche_exp = float(r["budget_test_usd"])
+    par_fiche_lec = float(r["budget_lecteur_usd"])
+    if r.get("experimentateur_externe"):
+        return r["nombre"] * par_fiche_lec, r["nombre"] * par_fiche_exp
+    return r["nombre"] * (par_fiche_exp + par_fiche_lec), 0.0
+
+
+def description_etage(r):
+    """v48 : ce que le manifeste de départ écrit de l'étage (jamais l'adaptateur ni l'objet tranche)."""
+    exp = r["experimentateur"] or r["experimentateur_externe"][:2]
+    return {"nombre": r["nombre"], "tranche_index_sha256": r["tranche_lue"].index_sha256, "tranche": r["tranche_lue"].description(),
+            "experimentateur": {"etiquette": exp[0], "modele": exp[1], "externe": bool(r["experimentateur_externe"])},
+            "lecteur": {"etiquette": r["lecteur"][0], "modele": r["lecteur"][1]},
+            "quotas": {"executions_par_fiche": r["executions_par_fiche"], "delai_execution_s": float(r["delai_execution_s"]),
+                       "budget_test_usd": float(r["budget_test_usd"]), "budget_lecteur_usd": float(r["budget_lecteur_usd"]),
+                       "memoire_mo": r["memoire_mo"]},
+            "plafond_etage_claude_usd": r["plafond_claude_usd"], "plafond_etage_externe_usd": r["plafond_externe_usd"],
+            "bac_a_sable": dict(r["executeur"].description(), sonde=r.get("sonde")),
+            "regle": "résultat exploratoire ; préenregistrement court scellé avant toute session ; classement figé (N-053)"}
 
 
 def exiger_reglages_lecture(dossier_ferme, outils_par_protocole, max_demandes_lecture):
@@ -1555,7 +1690,7 @@ def lire_dossier_ferme(dossier_ferme, liste):
 def mesurer_consignes(*, liste_blanche, question, pieces, materiau=(), pieces_juge=(), temoins=None,
                       taille_max_pieces=TAILLE_MAX_PIECES, nombre_par_proposeur=8, seconde_passe=False, nombre_proposeurs=3,
                       graine=0, dossier_ferme=None, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson="aucune",
-                      tours_moisson=TOURS_MOISSON_DEFAUT):
+                      tours_moisson=TOURS_MOISSON_DEFAUT, etage_tests=None):
     """v43 (CL42-03) : tailles réelles (caractères) des consignes que la course et le bras enverraient, pour les fichiers
     donnés (liste blanche, empreintes et zones interdites vérifiées, caviardage appliqué), **sans aucun appel ni aucune
     écriture** : passe 1 ; passe 2 maximale (`nombre` fiches à la taille maximale du gabarit borné, matériau) ; consigne
@@ -1563,7 +1698,10 @@ def mesurer_consignes(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     × passes × `nombre` fiches maximales, plus les témoins donnés, plus les pièces de juge) ; contrôle du bras (court).
     v47 : sous `moisson` (frais ou rejeu, mesure identique), la passe 2 maximale porte la **moisson au pire cas** (quotas
     pleins, chaque champ à sa borne : ≈ 56 000 caractères par tour, `TAILLE_SERVIE_PIRE_CAS_PAR_TOUR`), rapportée à part
-    (`moisson_pire_cas_caracteres`), et la consigne du tour de moisson (fiches maximales) est mesurée."""
+    (`moisson_pire_cas_caracteres`), et la consigne du tour de moisson (fiches maximales) est mesurée.
+    v48 : sous `etage_tests`, les consignes de proposition portent l'index de la tranche et le champ `test_de_mort` au pire
+    cas, et la plus grosse consigne de l'expérimentateur d'un test de mort est mesurée (`tests_de_mort`) ; la sonde du bac à
+    sable n'est pas jouée (mesure sans exécution)."""
     if moisson not in MODES_MOISSON:
         raise CourseInterrompue(f"moisson : {MODES_MOISSON} (reçu {moisson!r})")
     moisson_active = moisson != "aucune"
@@ -1587,20 +1725,24 @@ def mesurer_consignes(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     temoins_lus = charger_temoins(temoins, liste, moisson=moisson_active) if temoins else []
     dossier_lu = lire_dossier_ferme(dossier_ferme, liste)  # v46 : consignes du protocole, premier tour (index seul)
     lecture_ext = dict(dossier=dossier_lu, mode="protocole", max_demandes_lecture=max_demandes_lecture) if dossier_lu else {}
+    etage = exiger_reglages_tests_de_mort(etage_tests, liste)  # v48 : sans sonde
+    if etage is not None:
+        lecture_ext = dict(lecture_ext, tranche=etage["tranche_lue"])
     moisson_max = resultats_maximaux(tours_moisson) if moisson_active else None
     moisson_ext = dict(moisson=moisson_max) if moisson_active else {}
     passe1 = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], **lecture_ext)
     passe2 = (consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu or None,
-                                 fiches_precedentes=[fiche_maximale()] * nombre_par_proposeur, **lecture_ext, **moisson_ext)
+                                 fiches_precedentes=[fiche_maximale(etage is not None)] * nombre_par_proposeur, **lecture_ext,
+                                 **moisson_ext)
               if seconde_passe else None)
     passes = 2 if seconde_passe else 1
-    fiches = [valider_fiche_ideation(fiche_maximale(), f"proposeur{k + 1}", i, passe=p)
+    fiches = [valider_fiche_ideation(fiche_maximale(etage is not None), f"proposeur{k + 1}", i, passe=p, tests_de_mort=etage is not None)
               for k in range(nombre_proposeurs) for p in range(1, passes + 1) for i in range(1, nombre_par_proposeur + 1)]
     anonymes, _ = anonymiser(fiches + temoins_lus, graine, "mesure")
     juge = consigne_juge(anonymes, question_lue[1], pieces_juge_lues, citations=dossier_lu is not None, moisson=moisson_active)
     mesure_moisson = None
     if moisson_active:  # v47 : la moisson au pire cas, et la consigne du tour de moisson (fiches maximales, dernier tour)
-        tour = consigne_moisson(question_lue[1], [fiche_maximale()] * nombre_par_proposeur, tours_moisson, tours_moisson,
+        tour = consigne_moisson(question_lue[1], [fiche_maximale(etage is not None)] * nombre_par_proposeur, tours_moisson, tours_moisson,
                                 servi_precedent=moisson_max[:-1] if tours_moisson > 1 else None)
         mesure_moisson = {"mode": moisson, "tours": tours_moisson, "moisson_pire_cas_caracteres": len(section_moisson(moisson_max)),
                           "pire_cas_par_tour_nominal": TAILLE_SERVIE_PIRE_CAS_PAR_TOUR,
@@ -1608,14 +1750,32 @@ def mesurer_consignes(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                           "consigne_tour_de_moisson_maximale": len(tour),
                           "regle": "quotas pleins, chaque champ à sa borne, servis par la même fonction que la course ; "
                                    "compté dans consigne_passe_2_maximale"}
+    mesure_etage = None
+    if etage is not None:  # v48 : la plus grosse consigne de l'expérimentateur et celle du lecteur, sans appel
+        from .tests_de_mort import consigne_lecteur, vue_lecteur
+        prereg_max = {"fiche": fiche_maximale(True), "donnees": [{"chemin": c, "sha256": f["sha256"]}
+                                                                 for c, f in etage["tranche_lue"].fichiers.items()]}
+        executions_max = [{"numero": k, "statut": "réussie", "code": 0, "delai_depasse": False, "lignes_resultat": ["RESULTAT: 1"],
+                           "stdout": "x" * 20_000, "stderr": "x" * 20_000, "fichiers_produits": []}
+                          for k in range(1, etage["executions_par_fiche"] + 1)]
+        mesure_etage = {"nombre": etage["nombre"], "tranche_index_sha256": etage["tranche_lue"].index_sha256,
+                        "consigne_experimentateur_maximale": len(consigne_experimentateur_maximale(
+                            prereg_max, "0" * 64, etage["tranche_lue"], dossier_lu, etage["executions_par_fiche"],
+                            etage["delai_execution_s"], etage["memoire_mo"], etage["budget_test_usd"])),
+                        "consigne_lecteur_maximale": len(consigne_lecteur(prereg_max, "0" * 64, vue_lecteur(executions_max), "0" * 64)),
+                        "index_tranche": len(json.dumps(etage["tranche_lue"].vue_index(), ensure_ascii=False, indent=1)),
+                        "plafond_etage_claude_usd": etage["plafond_claude_usd"], "plafond_etage_externe_usd": etage["plafond_externe_usd"],
+                        "regle": "plus grosse consigne : historique au quota de lecture servie, trois scripts de 20 000 caractères et "
+                                 "sorties conservées au plus ; mesure sans appel ni exécution"}
     return {"dossier_ferme": dossier_lu.description() if dossier_lu else None, "moisson": mesure_moisson,
+            **({"tests_de_mort": mesure_etage} if mesure_etage is not None else {}),
             "tailles_lues": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
                              "materiau": sum(len(t) for _, t, _ in materiau_lu),
                              "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues), "temoins": len(temoins_lus)},
             "consigne_passe_1": len(passe1), "consigne_passe_2_maximale": len(passe2) if passe2 is not None else None,
             "consigne_de_controle_externe": len(consigne_de_controle(passe2 if seconde_passe else passe1)),
             "consigne_du_juge_maximale": len(juge), "fiches_au_juge_au_maximum": len(fiches) + len(temoins_lus),
-            "taille_fiche_maximale_servie": taille_servie(fiche_maximale()), "controle_du_bras": len(consigne_de_controle()),
+            "taille_fiche_maximale_servie": taille_servie(fiche_maximale(etage is not None)), "controle_du_bras": len(consigne_de_controle()),
             "nombre_par_proposeur": nombre_par_proposeur, "nombre_proposeurs": nombre_proposeurs, "seconde_passe": seconde_passe}
 
 
@@ -1632,8 +1792,18 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                       budget_passe_2_externe_usd=None, motifs_reprise_controles=None, dossier_ferme=None,
                       outils_par_protocole=False, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson="aucune",
                       tours_moisson=TOURS_MOISSON_DEFAUT, budget_moisson_usd_par_session=BUDGET_MOISSON_USD_PAR_SESSION_DEFAUT,
-                      url_relais_moisson=None, cache_moisson=None, registre_bardeaux=None, client_moisson=None):
-    """Course d'idéation v47 (v36 : Argon à poids égal ; v37 à v44 : relectures CL4 à CL10 ; v46 : tour (c) ; v47 : moisson).
+                      url_relais_moisson=None, cache_moisson=None, registre_bardeaux=None, client_moisson=None,
+                      etage_tests=None):
+    """Course d'idéation v48 (v36 : Argon à poids égal ; v37 à v44 : relectures CL4 à CL10 ; v46 : tour (c) ; v47 : moisson ;
+    v48 : étage de tests de mort).
+
+    v48 (étage de tests de mort, R-776 option a ; en préparation, aucun test réel ici) : `etage_tests` (None : étage absent,
+    course de la v47, consignes et sorties identiques octet pour octet ; sinon un dictionnaire de `CLES_ETAGE_TESTS`, voir
+    `exiger_reglages_tests_de_mort`). Vérifié avant tout appel et toute écriture (tranche exploratoire, bac à sable et sa
+    sonde, plafonds dans les sommes). Les fiches admettent le champ facultatif `test_de_mort` ; les proposeurs reçoivent
+    l'index de la tranche ; sans juge externe, l'étage se joue ici, après le classement écrit et figé, et ses résultats
+    sont la section `tests_de_mort_exploratoires` du manifeste de fin (jamais servis aux juges de la même course) ; avec un
+    juge externe, le classement vient du bras et le lanceur joue l'étage après lui (`executer_tests_de_mort`).
 
     v47 (moisson, en préparation ; aucune moisson réelle ici) : `moisson` (« aucune », « frais », « rejeu ») ; `tours_moisson`
     (1, réglage borné à 2) ; `budget_moisson_usd_par_session` (plafond de chaque tour de moisson, 0,5 par défaut) ;
@@ -1742,6 +1912,10 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     temoins_lus = charger_temoins(temoins, liste, moisson=moisson_active) if temoins else []
     dossier_lu = lire_dossier_ferme(dossier_ferme, liste)  # v46 : avant tout appel et avant toute écriture
     mode_claude = None if dossier_lu is None else ("protocole" if outils_par_protocole else "outils")
+    etage = exiger_reglages_tests_de_mort(etage_tests, liste, moteur, sonder=True)  # v48 : avant tout appel et toute écriture
+    tests_actifs = etage is not None
+    tranche_lue = etage["tranche_lue"] if tests_actifs else None
+    ext_tranche = {"tranche": tranche_lue} if tests_actifs else {}
     moissonneur = None
     if moisson_active:  # v47 : garde de fuite sur ce que le noyau détient ; moissonneur (client du relais ou cache passé)
         textes_pieces = [question_lue[1]] + [t for _, t, _ in pieces_lues] + [t for _, t, _ in materiau_lu] \
@@ -1769,8 +1943,9 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     passes = 2 if seconde_passe else 1
     sessions_moisson = tours_moisson * float(budget_moisson_usd_par_session) if moisson_active else 0.0  # v47
     somme_claude = float(cout_deja_engage_usd) + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
-        + sum(budgets[("juge_ideation", m)] for _, m in juges) + sessions_moisson * len(list(proposeurs))
-    somme_externe = float(cout_externe_deja_engage_usd) \
+        + sum(budgets[("juge_ideation", m)] for _, m in juges) + sessions_moisson * len(list(proposeurs)) \
+        + (etage["plafond_claude_usd"] if tests_actifs else 0.0)  # v48 : l'étage de tests de mort entre dans la somme
+    somme_externe = float(cout_externe_deja_engage_usd) + (etage["plafond_externe_usd"] if tests_actifs else 0.0) \
         + sum(plafond_passe_externe(budgets, m, n, budget_passe_2_externe_usd)  # v44 (CL43-01)
               for _, m, _ in proposeurs_externes for n in range(1, passes + 1)) \
         + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes) \
@@ -1782,6 +1957,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
               "budget_passe_2_externe_usd": budget_passe_2_externe_usd,  # v44 (CL43-01) : None = celui de la passe 1
               "toleree_claude": tolere_claude, "toleree_externe": tolere_externe,
               "sessions_moisson_par_proposeur_usd": sessions_moisson}  # v47
+    if tests_actifs:  # v48 : ajouté seulement sous l'option (manifeste de départ identique sans elle)
+        sommes["etage_tests_claude_usd"], sommes["etage_tests_externe_usd"] = etage["plafond_claude_usd"], etage["plafond_externe_usd"]
     if not tolere_claude and somme_claude > budget_total_usd + 1e-9:
         raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} > total {budget_total_usd} : la course "
                                 "s'arrêterait avant le dernier juge au pire cas (CL37-03) ; baisser les plafonds par "
@@ -1805,7 +1982,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                "cout_fictif": not reel, "arret": None, "cout_appels_de_controle_usd": float(cout_deja_engage_usd),
                "cout_appels_de_controle_externes_usd": float(cout_externe_deja_engage_usd),  # CL36-02
                # v42 (CL41-02) : la marge de la passe 2 (fiches à la taille maximale du gabarit borné), écrite au journal
-               "marge_seconde_passe": {"taille_fiche_maximale_servie": taille_servie(fiche_maximale()),
+               "marge_seconde_passe": {"taille_fiche_maximale_servie": taille_servie(fiche_maximale(tests_actifs)),
                                        "taille_max_fiche_servie": None, "nombre": nombre_par_proposeur,  # v43 : retirée
                                        "max_questions_servies": MAX_QUESTIONS_SERVIES, "max_anteriorites": MAX_ANTERIORITES},
                # v43 (CL42-01) : gardes de taille jouées avant chaque session de proposeur externe ; (CL42-07) refus pour
@@ -1820,6 +1997,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         journal.update({"incidents": [], "copies_dossier_ferme": []})
     if moisson_active:  # v47 : tours de moisson par proposeur, refus durs (juges), vérification des MOISSONNE
         journal["moisson"] = {"mode": moisson, "par_proposeur": {}, "refus_durs": [], "verification_moissonnees": None}
+    etage_resume = {"statut": "non joué (course interrompue avant l'étage, ou étage différé)"} if tests_actifs else None  # v48
     lecture_par_proposeur, citations_detail = {}, {}  # v46 : mesures de lecture (manifeste de fin seulement)
     cache = CachePages(dossier_lu) if dossier_lu is not None else None
     externes_adapt = {e: a for e, _, a in proposeurs_externes}
@@ -1855,7 +2033,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                                   if attestation_mat else None),
             cout_deja_engage_usd=float(cout_deja_engage_usd), budget_externe_usd=float(budget_externe_usd),
             cout_externe_deja_engage_usd=float(cout_externe_deja_engage_usd), somme_des_plafonds=sommes,
-            reglages_kit=reglages_kit_par_role(mode_claude), delai_session_s=delai_session_s, taille_max_pieces=taille_max_pieces,
+            reglages_kit=reglages_kit_par_role(mode_claude, etage_tests=tests_actifs), delai_session_s=delai_session_s, taille_max_pieces=taille_max_pieces,
             taille_pieces_servies={"proposeurs": sum(len(t) for _, t, _ in pieces_lues), "juges": sum(len(t) for _, t, _ in pieces_juge_lues),
                                    "materiau": sum(len(t) for _, t, _ in materiau_lu)},
             juges_meme_modele_qu_un_proposeur=sorted({m for _, m in tous_juges} & set(modele_par_auteur.values())),
@@ -1863,7 +2041,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             porte_eligibilite=PORTE_ELIGIBILITE, criteres=list(CRITERES), note_max=NOTE_MAX,
             grille=grille(bool(pieces_juge_lues)), budget_total_usd=budget_total_usd,
             budgets_par_session={f"{r}|{m}": v for (r, m), v in budgets.items()},
-            taille_max_fiche_servie=None, taille_fiche_maximale_servie=taille_servie(fiche_maximale()),  # v43 : borne retirée
+            taille_max_fiche_servie=None, taille_fiche_maximale_servie=taille_servie(fiche_maximale(tests_actifs)),  # v43 : borne retirée
             controles_repris=dict(controles_repris or {}),
             budget_passe_2_externe_usd=budget_passe_2_externe_usd,  # v44 (CL43-01)
             motifs_reprise_controles=dict(motifs_reprise_controles or {}),  # v44 (CL43-03)
@@ -1880,7 +2058,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                                           "bardeaux_au_registre": len(garde_fuite.registre), "regles": 6,
                                           "motif_servi": "générique ; motif exact au journal du noyau seulement"},
                           seconde_passe_obligatoire=True, client="le noyau seul ; aucun agent n'a l'adresse du relais")
-                     if moisson_active else None))
+                     if moisson_active else None),
+            **({"tests_de_mort": description_etage(etage)} if tests_actifs else {}))  # v48 : clé absente sans l'option
         ecrire_json_scelle(os.path.join(provisoire, "manifeste-depart.json"), depart)
         if os.path.exists(sortie):
             raise FileExistsError(errno.EEXIST, "SORTIE existe déjà (jamais écrasée, R12)", sortie)
@@ -1889,6 +2068,51 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         shutil.rmtree(provisoire, ignore_errors=True)  # notre dossier provisoire seulement (vide de toute dépense)
         raise
 
+    def jouer_etage():
+        """v48 : l'étage de tests de mort, après le classement écrit et figé (course sans juge externe). Les coûts et les
+        refus de modèle de l'étage sont fusionnés au journal de la course ; un refus de l'étage avant tout appel (classement
+        illisible, par exemple) est dit au manifeste de fin, rien n'ayant été payé ; tout arrêt dur arrête la course."""
+        deja = {"fusionne": False}
+
+        def fusionner():
+            if deja["fusionne"]:
+                return
+            deja["fusionne"] = True
+            c = etage_resume.get("couts") or {"claude_usd": 0.0, "externe_usd": 0.0}
+            journal["cout_total_usd"] += c["claude_usd"]
+            journal["cout_externe_usd"] += c["externe_usd"]
+            journal["cout_etage_tests_usd"] = dict(c)
+            if etage_resume.get("refus_modele"):
+                journal.setdefault("refus_modele", []).extend(etage_resume["refus_modele"])
+                journal["depense_modele_non_autorise_usd"] = float(journal.get("depense_modele_non_autorise_usd", 0.0)) \
+                    + float(etage_resume.get("depense_modele_non_autorise_usd") or 0.0)
+                journal["statut_course"] = etage_resume.get("statut_course")
+        try:
+            executer_tests_de_mort(
+                adaptateur, sortie, tranche=tranche_lue, nombre=etage["nombre"], experimentateur=etage["experimentateur"],
+                experimentateur_externe=etage["experimentateur_externe"], lecteur=etage["lecteur"],
+                budget_test_usd=etage["budget_test_usd"], budget_lecteur_usd=etage["budget_lecteur_usd"],
+                executions_par_fiche=etage["executions_par_fiche"], delai_execution_s=etage["delai_execution_s"],
+                memoire_mo=etage["memoire_mo"], dossier=dossier_lu, executeur=etage["executeur"], horodatage=horodatage,
+                lire_etat_relais=lire_etat_relais, moteur=moteur, max_tours=max_tours, resume_sortie=etage_resume,
+                plafond_total_usd=budget_total_usd, plafond_externe_usd=budget_externe_usd,
+                cout_deja_usd=journal["cout_total_usd"], cout_externe_deja_usd=journal["cout_externe_usd"],
+                prix_caractere_usd=prix_caractere_usd)
+            etage_resume["statut"] = "joué"
+        except EtageRefuse as e:
+            etage_resume["statut"] = "refusé avant tout appel (rien payé)"
+            etage_resume["motif"] = caviarder(str(e))[0][:500]
+        except EtageInterrompu as e:
+            etage_resume["statut"] = "interrompu"
+            fusionner()
+            journal["arret"] = journal["arret"] or caviarder(str(e))[0][:500]
+            raise CourseInterrompue(journal["arret"]) from e
+        except BaseException:
+            etage_resume["statut"] = "interrompu"
+            fusionner()
+            raise
+        fusionner()
+
     def ecrire_fin(classement=None, lecture=None, erreur=None):
         try:  # v44 (ajout de Lazar) : mesures de convergence, manifeste de fin seulement ; un échec est écrit, jamais tu
             convergence = mesures_convergence(passe1, passe2, servies_passe_2, pieces_lues, tous_proposeurs,
@@ -1896,6 +2120,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         except Exception as e:  # noqa: BLE001 — mesure d'information : elle n'arrête pas la course, son échec est dit
             convergence = {"erreur": type(e).__name__ + " : " + caviarder(str(e))[0][:300]}
         supplement = {}
+        if tests_actifs:  # v48 : section « tests de mort (exploratoires) » ; jamais servie aux juges de la même course
+            supplement["tests_de_mort_exploratoires"] = etage_resume
         if dossier_lu is not None:  # v46 (R-448, R-444, L7) : manifeste de fin seulement, jamais aux juges (N-053)
             try:
                 supplement["mesures_lecture"] = {
@@ -2029,7 +2255,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         valides = []
         for i, b in enumerate(bruts, 1):
             try:  # v47 : MOISSONNE admis dans la passe 2 d'une course sous moisson seulement
-                valides.append(valider_fiche_ideation(b, etiquette, i, passe=passe, moisson=moisson_active and passe == 2))
+                valides.append(valider_fiche_ideation(b, etiquette, i, passe=passe, moisson=moisson_active and passe == 2,
+                                                      tests_de_mort=tests_actifs))
             except FicheIdeationInvalide as e:
                 refus.append({"auteur": etiquette, "passe": passe, "indice": i, "motif": caviarder(str(e))[0]})
                 if isinstance(e, FicheTropLongue):  # v43 (CL42-07) : refus pour taille, par proposeur et par passe
@@ -2152,7 +2379,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             journal["copies_dossier_ferme"].append({"etiquette": etiquette, "passe": numero, "racine": os.path.relpath(racine, sortie),
                                                     "empreintes": copie})
             consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], dossier=dossier_lu,
-                                          mode="outils", max_demandes_lecture=max_demandes_lecture, **champs)
+                                          mode="outils", max_demandes_lecture=max_demandes_lecture, **champs, **ext_tranche)
 
             def apres_session(r):
                 mesures_depuis_journal_outils(getattr(r, "journal_outils", None), dossier_lu, racine, mes)
@@ -2192,7 +2419,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                 consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], dossier=dossier_lu,
                                               mode="protocole", historique=historique, avertissement=avertissement,
                                               version_precedente=version_prec, max_demandes_lecture=max_demandes_lecture,
-                                              **champs)
+                                              **champs, **ext_tranche)
                 if ext:  # v43, v44 : chaque tour d'Argon gardé avant son envoi, contre ce qui reste de son plafond
                     garder_session_externe(etiquette, modele, numero, consigne, restant, taille_fiche, tour=k)
                 texte, r = _lancer("proposeur_ideation", etiquette, modele, consigne, os.path.join(d, f"tour-{k:03d}"),
@@ -2261,7 +2488,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                 (passe1 if numero == 1 else passe2)[etiquette] = passe_dossier(etiquette, modele, numero, champs, taille_fiche)
                 return
             if numero == 1:
-                consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1])
+                consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], **ext_tranche)
             else:
                 admises = [f for f in passe1[etiquette] if not signaux_niveau_methode(vue_servie(f))]
                 precedentes = [vue_servie(f) for f in admises]
@@ -2269,7 +2496,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                 # v44 (CL43-02) : sortie estimée de la passe 2 = `nombre` fiches de la plus grande fiche admise (servie)
                 taille_fiche = max([TAILLE_FICHE_PROVISIONNEE_PASSE] + [taille_servie(f) for f in admises])
                 consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu,
-                                              fiches_precedentes=precedentes, **moisson_servie)
+                                              fiches_precedentes=precedentes, **moisson_servie, **ext_tranche)
             (passe1 if numero == 1 else passe2)[etiquette] = passe_de(etiquette, modele, numero, consigne, taille_fiche)
         for etiquette, modele in tous_proposeurs:
             if etiquette in externes_adapt:
@@ -2359,6 +2586,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             lecture_course["regle"] = ("aucun classement ni agrégat avant le bras différé ; lectures par juge Claude "
                                        "seulement (n° 118 point 1)")
             ecrire_json_scelle(os.path.join(sortie, "lecture-course.json"), lecture_course)
+            if tests_actifs:
+                etage_resume["statut"] = "différé : le classement vient du bras ; le lanceur joue l'étage après lui"
             ecrire_fin(None, lecture_course)
             return {"classement": None, "lecture": lecture_course, "journal": journal, "fiches": fiches,
                     "quarantaine": quarantaine, "refus": refus, "temoins": temoins_lus, "en_attente_bras": True}
@@ -2367,9 +2596,12 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         ecrire_json_scelle(os.path.join(sortie, "classement.json"),
                            {"lisible_L2_L4": lecture["temoins"]["temoins_ok"], "lignes": classement})
         ecrire_json_scelle(os.path.join(sortie, "lecture.json"), lecture)
+        if tests_actifs:  # v48 : après le classement écrit et figé, avant le manifeste de fin
+            jouer_etage()
         ecrire_fin(classement, lecture)
         return {"classement": classement, "lecture": lecture, "journal": journal, "fiches": fiches,
-                "quarantaine": quarantaine, "refus": refus, "temoins": temoins_lus, "en_attente_bras": False}
+                "quarantaine": quarantaine, "refus": refus, "temoins": temoins_lus, "en_attente_bras": False,
+                **({"tests_de_mort": etage_resume} if tests_actifs else {})}
     except BaseException as e:  # CL34-09 : le manifeste de fin est écrit sur toute exception, puis elle remonte
         for nom, objet in (("fiches-validees.json", fiches), ("fiches-refusees.json", refus),
                            ("fiches-en-quarantaine.json", quarantaine)):
@@ -2381,6 +2613,51 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         if not os.path.exists(os.path.join(sortie, "manifeste-fin.json")):
             ecrire_fin(erreur=journal["arret"])
         raise
+
+
+def jouer_etage_apres_bras(adaptateur, sortie, etage_tests, *, liste_blanche, dossier_ferme=None, moteur="simule",
+                           horodatage=None, lire_etat_relais=None, max_tours=MAX_TOURS_IDEATION, budget_total_usd=0.0,
+                           budget_externe_usd=0.0, prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD):
+    """v48 : l'étage de tests de mort d'une course à juge externe — joué par le lanceur **après** le bras différé, quand
+    `classement.json` (écrit par le bras) est scellé. Mêmes réglages que ceux de la course (le manifeste de départ les porte :
+    nombre et empreinte de l'index de la tranche, comparés par l'étage ; la liste blanche redonnée doit avoir l'empreinte de
+    la liste blanche de la course). Les coûts déjà engagés viennent du manifeste de fin de la course et du bras. Un refus
+    avant tout appel est une erreur visible (`CourseInterrompue`, rien payé) ; l'étage écrit `manifeste-tests-de-mort.json`
+    (scellé) et rend son résumé."""
+    liste = charger_liste_blanche(liste_blanche)
+    etage = exiger_reglages_tests_de_mort(etage_tests, liste, moteur, sonder=True)
+    if etage is None:
+        raise CourseInterrompue("jouer_etage_apres_bras : aucun étage demandé (nombre = 0)")
+    chemin_depart = os.path.join(sortie, "manifeste-depart.json")
+    if not verifier_scelle(chemin_depart):
+        raise CourseInterrompue("manifeste-depart.json : sceau absent ou faux (la course n'est pas intacte)")
+    with open(chemin_depart, "r", encoding="utf-8") as f:
+        depart = json.load(f)["reglages"]
+    if (depart.get("liste_blanche") or {}).get("sha256") != sha256_fichier(liste_blanche):
+        raise CourseInterrompue("la liste blanche redonnée n'est pas celle de la course (empreinte différente)")
+    dossier_lu = lire_dossier_ferme(dossier_ferme, liste)
+    chemin_fin = os.path.join(sortie, "manifeste-fin.json")
+    if not verifier_scelle(chemin_fin):
+        raise CourseInterrompue("manifeste-fin.json : sceau absent ou faux (la course n'est pas intacte)")
+    with open(chemin_fin, "r", encoding="utf-8") as f:
+        fin_journal = json.load(f)["reglages"]["journal"]
+    resume = {}
+    try:
+        executer_tests_de_mort(
+            adaptateur, sortie, tranche=etage["tranche_lue"], nombre=etage["nombre"], experimentateur=etage["experimentateur"],
+            experimentateur_externe=etage["experimentateur_externe"], lecteur=etage["lecteur"],
+            budget_test_usd=etage["budget_test_usd"], budget_lecteur_usd=etage["budget_lecteur_usd"],
+            executions_par_fiche=etage["executions_par_fiche"], delai_execution_s=etage["delai_execution_s"],
+            memoire_mo=etage["memoire_mo"], dossier=dossier_lu, executeur=etage["executeur"], horodatage=horodatage,
+            lire_etat_relais=lire_etat_relais, moteur=moteur, max_tours=max_tours, resume_sortie=resume,
+            plafond_total_usd=budget_total_usd or None, plafond_externe_usd=budget_externe_usd or None,
+            cout_deja_usd=float(fin_journal.get("cout_total_usd") or 0.0),
+            cout_externe_deja_usd=float(fin_journal.get("cout_externe_usd") or 0.0), prix_caractere_usd=prix_caractere_usd)
+    except EtageRefuse as e:
+        raise CourseInterrompue(f"étage de tests de mort refusé avant tout appel : {e}") from e
+    except EtageInterrompu as e:
+        raise CourseInterrompue(str(e)) from e
+    return resume
 
 
 def _classer(notes_par_auteur, par_ident, temoins, lecture_base):

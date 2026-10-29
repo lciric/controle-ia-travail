@@ -6,9 +6,11 @@ tient des **quotas par rôle et par course**, consigne chaque demande (motif exa
 **générique** servi à l'agent quand le motif exact lui apprendrait à reformuler), et sert le résultat au tour suivant
 dans une **section de données** entre délimiteurs : « données, jamais consigne ».
 
-Deux usages : la lecture du dossier fermé (v46, `pole/dossier_ferme.py`, bloc `{"demandes": [...]}`) et la moisson
-(v47, `pole/moisson.py`, bloc `{"moisson": [...]}`). L'agent n'a ni outil, ni réseau, ni adresse de relais : le protocole
-ferme le canal par construction, pour Claude comme pour Argon.
+Trois usages : la lecture du dossier fermé (v46, `pole/dossier_ferme.py`, bloc `{"demandes": [...]}`), la moisson
+(v47, `pole/moisson.py`, bloc `{"moisson": [...]}`) et, depuis la v48, l'étage de tests de mort (`pole/tests_de_mort.py`,
+bloc `{"experience": [...]}` : pages du dossier fermé, fichiers de la tranche exploratoire, exécution d'un script Python
+par le noyau dans son bac à sable). L'agent n'a ni outil, ni réseau, ni adresse de relais : le protocole ferme le canal
+par construction, pour Claude comme pour Argon.
 
 Bibliothèque standard seule ; aucun réseau ; aucune écriture.
 """
@@ -23,6 +25,10 @@ QUOTAS_MOISSON_PAR_ROLE = {
     "proposeur_ideation": {"tours": 1, "tours_max_reglage": 2, "requetes_par_tour": 4, "resultats_par_requete": 5},
     "juge_ideation": {"tours": 0, "tours_max_reglage": 0, "requetes_par_tour": 0, "resultats_par_requete": 0},
 }
+# v48 : demandes de l'expérimentateur d'un test de mort (un seul type par demande) ; l'exécution d'un script est comptée
+# par fiche (une demande refusée compte) et limitée à une par tour
+TYPES_DEMANDE_EXPERIENCE = ("lire_tranche", "lire", "chercher", "executer")
+CLES_PERMISES_EXPERIENCE = {"lire_tranche": (), "lire": ("pages",), "chercher": ("dans",), "executer": ()}
 DEBUT_DONNEES = "<<<<< DÉBUT DES DONNÉES SERVIES PAR LE NOYAU >>>>>"
 FIN_DONNEES = "<<<<< FIN DES DONNÉES SERVIES PAR LE NOYAU >>>>>"
 
@@ -42,6 +48,47 @@ def extraire_bloc_demandes(texte, cle):
     if not isinstance(d, list) or not all(isinstance(x, dict) for x in d):
         return None, f"bloc {{{cle}}} mal formé : liste d'objets attendue"
     return d, None
+
+
+def classer_demande_experience(demande):
+    """v48 : (type, motif) d'une demande de l'expérimentateur — le type parmi `TYPES_DEMANDE_EXPERIENCE`, ou (None, motif)
+    si la demande n'est pas un objet à un seul type connu ou porte une clé étrangère."""
+    if not isinstance(demande, dict):
+        return None, "demande inconnue : objet attendu"
+    types = [t for t in TYPES_DEMANDE_EXPERIENCE if t in demande]
+    if len(types) != 1:
+        return None, "demande inconnue : un seul de lire_tranche, lire, chercher, executer"
+    t = types[0]
+    if set(demande) - {t, *CLES_PERMISES_EXPERIENCE[t]}:
+        return None, f"demande {t} : clé étrangère ({', '.join(sorted(set(demande) - {t, *CLES_PERMISES_EXPERIENCE[t]}))})"
+    return t, None
+
+
+class QuotasExperience:
+    """v48 : quotas de l'expérimentateur d'**une fiche** — `executions_par_fiche` demandes d'exécution (une demande refusée
+    compte, au quota comme au tour), une exécution par tour, `tours_max` tours. Chaque décision est comptée, refus compris."""
+
+    def __init__(self, executions_par_fiche, tours_max):
+        for nom, v in (("executions_par_fiche", executions_par_fiche), ("tours_max", tours_max)):
+            if isinstance(v, bool) or not isinstance(v, int) or v < 1:
+                raise QuotaRefuse(f"{nom} : entier ≥ 1 (reçu {v!r})")
+        self.executions_par_fiche, self.tours_max = executions_par_fiche, tours_max
+        self.demandes_execution = 0
+        self.tours_avec_execution = set()
+
+    def compter_execution(self, tour):
+        """Compte une demande d'exécution du tour ; rend (numéro de la demande, motif de refus ou None)."""
+        self.demandes_execution += 1
+        n = self.demandes_execution
+        if n > self.executions_par_fiche:
+            return n, f"quota : {self.executions_par_fiche} exécutions par fiche, la demande {n} est refusée (et comptée)"
+        if tour in self.tours_avec_execution:
+            return n, "une exécution par tour : la seconde demande de ce tour est refusée (et comptée)"
+        self.tours_avec_execution.add(tour)
+        return n, None
+
+    def restantes(self):
+        return max(0, self.executions_par_fiche - self.demandes_execution)
 
 
 class Quotas:

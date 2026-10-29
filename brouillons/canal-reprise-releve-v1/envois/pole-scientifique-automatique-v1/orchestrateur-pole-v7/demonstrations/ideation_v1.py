@@ -105,6 +105,20 @@ est lancé sur la boucle locale (aucun réseau) ; `--cache-moisson DOSSIER` (rej
 jamais le réseau) ; `--registre-bardeaux FICHIER` (registre scellé d'empreintes de bardeaux des textes de test, garde de
 fuite, règle 5). Les juges ne moissonnent jamais ; `--mesurer-consignes --moisson frais` compte la moisson au pire cas.
 
+v48 (étage de tests de mort, décision de Lazar R-776 (a) ; **en préparation : aucun test réel ici, le premier est un GO
+séparé**) : `--tests-de-mort N` (défaut 0 : étage absent, course de la v47, consignes et sorties identiques octet pour
+octet) joue, après le classement figé, les N premières fiches éligibles : préenregistrement court scellé, expérimentateur
+sans outil du kit (`--experimentateur ETIQUETTE=MODELE`, ou `--experimentateur-externe ETIQUETTE=MODELE` pour Argon par
+`--commande-externe`, même consigne) dont le noyau exécute les scripts dans un bac à sable (`bwrap`, réseau isolé,
+système de fichiers en lecture seule hors d'un dossier de travail par fiche ; refus sans `bwrap`, aucun repli), lecteur
+neuf (`--lecteur-test ETIQUETTE=MODELE`) ; la tranche exploratoire (`--tranche-exploratoire DOSSIER`, lecture seule, index
+scellé dans la liste blanche) est obligatoire ; quotas `--executions-par-fiche` (3), `--delai-execution-s` (120),
+`--memoire-test-mo` (1024), plafonds `--budget-test-usd` (0,5 par fiche) et `--budget-lecteur-test-usd` (0,1 par fiche) ;
+`--executeur-tests factice` : démonstration, moteur simulé seulement. Course à juge externe : l'étage se joue après le bras,
+avec `--bras-rapporte-differe --tests-de-mort N …` (mêmes réglages, `--liste-blanche` redonnée). Les modèles Claude de
+l'étage sont ceux de la course. Résultats : section « tests de mort (exploratoires) » du manifeste de fin (course sans
+juge externe) et `manifeste-tests-de-mort.json` ; jamais servis aux juges de la même course.
+
 La commande externe : consigne sur l'entrée standard, environnement minimal explicite (plus `PLAFOND_SESSION_USD`,
 `ROLE_POLE` et `--variable-transmise`, jamais un nom de clé), dernière ligne `{"texte": …, "cout_usd": …}` — coût
 **obligatoire, fini, strictement positif** ; sur un échec, le coût imprimé est compté, sinon le plafond de session l'est
@@ -129,6 +143,7 @@ RACINE = os.path.dirname(ICI)
 sys.path.insert(0, RACINE)
 
 from pole import ideation as idn  # noqa: E402
+from pole import tests_de_mort as idn_tests  # noqa: E402
 from pole.adaptateurs import Resultat  # noqa: E402
 from pole.outils import graine_derivee, horodatage  # noqa: E402
 
@@ -145,7 +160,8 @@ class AdaptateurIdeationSimule:
     v47 : au tour de moisson, rend un bloc de demandes (deux requêtes admises, une refusable par la garde) ; en passe 2,
     cite la première notice servie en antériorité MOISSONNE avec son étiquette."""
     nom = "simule-ideation"
-    COUT = {"proposeur_ideation": 0.40, "juge_ideation": 0.60, "moisson": 0.05}
+    COUT = {"proposeur_ideation": 0.40, "juge_ideation": 0.60, "moisson": 0.05, "experimentateur_test": 0.05,
+            "lecteur_test": 0.02}  # v48
 
     def __init__(self, graine):
         self.graine = graine
@@ -163,14 +179,53 @@ class AdaptateurIdeationSimule:
             return []
         return [r for t in tours for rep in t.get("reponses", []) for r in rep.get("resultats", [])]
 
+    @staticmethod
+    def donnees_apres(consigne, debut_titre):
+        """v48 : l'objet JSON de la section de données (`section_servie`) dont le titre commence par `debut_titre`, ou None."""
+        from pole.protocole_outils import DEBUT_DONNEES, FIN_DONNEES
+        m = re.search(r"## " + re.escape(debut_titre) + r"[^\n]*\n.*?" + re.escape(DEBUT_DONNEES) + r"\s*```json\n(.*?)\n```\s*"
+                      + re.escape(FIN_DONNEES), consigne, re.S)
+        return json.loads(m.group(1)) if m else None
+
+    def tour_experimentateur(self, consigne, rng):
+        """v48 : premier tour, un script qui lit la première donnée demandée et imprime `RESULTAT: <nombre>` ; tour suivant
+        (l'historique est servi), `fin`."""
+        if "Ce que le noyau t'a servi" in consigne:
+            return {"fin": "test exécuté, sortie à lire"}
+        prereg = self.donnees_apres(consigne, idn_tests.TITRE_SECTION_PREREG)
+        chemin = prereg["donnees"][0]["chemin"]
+        valeur = round(rng.uniform(0.0, 0.5), 3)
+        script = (f"lignes = open('tranche/{chemin}', encoding='utf-8').read().splitlines()\n"
+                  f"print('lignes lues :', len(lignes))\nprint('RESULTAT: {valeur}')\n")
+        return {"experience": [{"executer": {"script": script}}]}
+
+    def lecture_lecteur(self, consigne):
+        """v48 : le lecteur simulé applique le seuil gelé à la dernière ligne `RESULTAT:` de la dernière exécution réussie."""
+        prereg = self.donnees_apres(consigne, idn_tests.TITRE_SECTION_PREREG)
+        vue = self.donnees_apres(consigne, "Sortie scellée des exécutions")
+        reussies = [e for e in vue if e["statut"] == "réussie" and e["lignes_resultat"]]
+        if not reussies:
+            return "VERDICT: non concluant ; chiffre: aucun ; ligne: aucune"
+        ligne = reussies[-1]["lignes_resultat"][-1]
+        valeur = float(ligne.split(":", 1)[1].strip().replace(",", "."))
+        survit = idn_tests.comparer(valeur, prereg["seuil"]["comparateur"], prereg["seuil"]["valeur"])
+        return f"VERDICT: {'survit' if survit else 'éliminée'} ; chiffre: {valeur} ; ligne: {ligne}"
+
     def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, racine_lecture=None,
                max_demandes_lecture=None, mode_lecture=None):
         """v46 : les arguments de lecture du dossier fermé sont acceptés et ignorés (aucun outil simulé : le proposeur
-        simulé rend ses fiches au premier tour, sans demande)."""
+        simulé rend ses fiches au premier tour, sans demande). v48 : rôles de l'étage de tests de mort (expérimentateur :
+        un script puis `fin` ; lecteur : le seuil gelé appliqué à la sortie) ; avec une tranche servie, les fiches portent
+        un `test_de_mort` (une sur quatre environ en est privée : refusée à l'étage)."""
         import random
         rng = random.Random(graine_derivee(self.graine, role, dossier))
         if consigne.startswith(idn.APPEL_DE_CONTROLE_CONSIGNE):  # v40 (CL39-08) : contrôle à la taille réelle
             return Resultat("OK", [], 0.0, "ok")
+        if role == "experimentateur_test":
+            return Resultat("```json\n" + json.dumps(self.tour_experimentateur(consigne, rng), ensure_ascii=False) + "\n```", [],
+                            self.COUT[role], "ok")
+        if role == "lecteur_test":
+            return Resultat(self.lecture_lecteur(consigne), [], self.COUT[role], "ok")
         if role == "proposeur_ideation" and consigne.startswith(idn.TITRE_TOUR_MOISSON):  # v47 : tour de moisson
             demandes = [{"source": "arxiv", "requete": "monitor transfer diffuse sabotage probes", "resultats": 3},
                         {"source": "openalex", "requete": "quickest change detection covert adversary", "resultats": 2},
@@ -179,6 +234,8 @@ class AdaptateurIdeationSimule:
         if role == "proposeur_ideation":
             n = rng.randint(2, 4)
             notices = self.notices_servies(consigne)
+            tranche = re.search(r"## Tranche exploratoire[^\n]*\n.*?```json\n(.*?)\n```", consigne, re.S)  # v48
+            chemins_tranche = [e["chemin"] for e in json.loads(tranche.group(1))] if tranche else []
             fiches = [{
                 "nom": f"Idée simulée {i + 1}", "type": rng.choice(idn.TYPES_FICHE),
                 "enonce": "Énoncé simulé, falsifiable par construction.",
@@ -193,6 +250,11 @@ class AdaptateurIdeationSimule:
                 "cout": {"nature": rng.choice(idn.NATURES_COUT), "ordre_de_grandeur": "simulé"},
                 "piege": "piège simulé", "cosmetique_si": "si rien ne bouge",
                 "anteriorite": [{"reference": "référence simulée", "statut": "SUPPOSE"}]} for i in range(n)]
+            if chemins_tranche:  # v48 : un test de mort par fiche, sauf une fiche sur quatre (refusée à l'étage)
+                for f in fiches:
+                    if rng.random() >= 0.25:
+                        f["test_de_mort"] = {"seuil": "au moins 0,25", "test": "part des lignes de la première donnée ; élimine si "
+                                             "elle reste sous le seuil", "donnees": [chemins_tranche[0]]}
             if notices:  # v47 : la première notice servie, citée au statut MOISSONNE avec son étiquette telle quelle
                 r = notices[0]
                 fiches[0]["anteriorite"].append({"reference": f"{r['titre']}, {r['auteurs']}, {r['date'][:4]}, {r['identifiant']} "
@@ -456,6 +518,21 @@ def reglages_moisson(args, url_relais_moisson=None):
             "registre_bardeaux": args.registre_bardeaux}
 
 
+def reglages_tests_de_mort(args, externe=None):
+    """v48 : le dictionnaire `etage_tests` du cœur — None sans `--tests-de-mort` (course de la v47, consignes inchangées)."""
+    if not args.tests_de_mort:
+        return None
+    exp = paire(args.experimentateur, "experimentateur") if args.experimentateur else None
+    exp_ext = (*paire(args.experimentateur_externe, "experimentateur-externe"), externe) if args.experimentateur_externe else None
+    executeur = (idn_tests.ExecuteurFactice(delai_s=args.delai_execution_s, memoire_mo=args.memoire_test_mo)
+                 if args.executeur_tests == "factice" else None)
+    return {"nombre": args.tests_de_mort, "tranche": args.tranche_exploratoire, "experimentateur": exp,
+            "experimentateur_externe": exp_ext, "lecteur": paire(args.lecteur_test, "lecteur-test") if args.lecteur_test else None,
+            "budget_test_usd": args.budget_test_usd, "budget_lecteur_usd": args.budget_lecteur_test_usd,
+            "executions_par_fiche": args.executions_par_fiche, "delai_execution_s": args.delai_execution_s,
+            "memoire_mo": args.memoire_test_mo, "executeur": executeur}
+
+
 def construire_analyseur():
     a = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument("sortie", nargs="?", help="dossier de sortie, absent (jamais écrasé)")
@@ -556,6 +633,34 @@ def construire_analyseur():
                    help="v47 : registre scellé d'empreintes de bardeaux des textes de test (garde de fuite, règle 5)")
     a.add_argument("--confirmer-moisson-reelle", action="store_true",
                    help="v47 : avec --moteur claude-sdk --moisson frais seulement (première moisson réelle : GO séparé)")
+    # v48 : étage de tests de mort (R-776 a) ; défaut 0 = étage absent (course de la v47)
+    a.add_argument("--tests-de-mort", type=int, default=0, metavar="N",
+                   help=f"v48 : après le classement figé, test de mort exploratoire des N premières fiches éligibles (0 à "
+                        f"{idn_tests.NOMBRE_MAX}) ; 0 (défaut) : étage absent, course de la v47. Exige --tranche-exploratoire, "
+                        "--lecteur-test et --experimentateur ou --experimentateur-externe")
+    a.add_argument("--tranche-exploratoire", default=None,
+                   help="v48 : dossier de la tranche exploratoire (lecture seule ; index.json scellé et dans la liste blanche, "
+                        "empreintes vérifiées avant tout appel ; jamais donnees/)")
+    a.add_argument("--experimentateur", default=None, metavar="ETIQUETTE=MODELE",
+                   help="v48 : expérimentateur Claude (sans outil du kit ; ses scripts sont exécutés par le noyau) ; "
+                        "le modèle est celui d'un proposeur ou d'un juge de la course")
+    a.add_argument("--experimentateur-externe", default=None, metavar="ETIQUETTE=MODELE",
+                   help="v48 : expérimentateur d'une autre lignée (Argon), même consigne, par --commande-externe")
+    a.add_argument("--lecteur-test", default=None, metavar="ETIQUETTE=MODELE",
+                   help="v48 : lecteur neuf (session sans outil), d'une autre étiquette que l'expérimentateur ; modèle de la course")
+    a.add_argument("--budget-test-usd", type=float, default=idn_tests.BUDGET_TEST_USD_DEFAUT,
+                   help="v48 : plafond de l'expérimentateur par fiche (défaut 0,5, SUPPOSÉ)")
+    a.add_argument("--budget-lecteur-test-usd", type=float, default=idn_tests.BUDGET_LECTEUR_USD_DEFAUT,
+                   help="v48 : plafond du lecteur par fiche (défaut 0,1, SUPPOSÉ)")
+    a.add_argument("--executions-par-fiche", type=int, default=idn_tests.EXECUTIONS_PAR_FICHE_DEFAUT,
+                   help="v48 : exécutions de script par fiche, une demande refusée comptant (défaut 3)")
+    a.add_argument("--delai-execution-s", type=float, default=idn_tests.DELAI_EXECUTION_S_DEFAUT,
+                   help="v48 : délai d'une exécution, au-delà le groupe de processus est tué (défaut 120)")
+    a.add_argument("--memoire-test-mo", type=int, default=idn_tests.MEMOIRE_MO_DEFAUT,
+                   help="v48 : mémoire d'une exécution en mégaoctets (défaut 1024)")
+    a.add_argument("--executeur-tests", choices=("bwrap", "factice"), default="bwrap",
+                   help="v48 : bac à sable des exécutions — bwrap (défaut) ; factice : démonstration, moteur simulé seulement "
+                        "(aucune barrière)")
     return a
 
 
@@ -597,12 +702,13 @@ def verifier_relais(etat_relais, budget_total_usd, budgets, juges, modeles_atten
 def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
                               cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe, taille_max=None,
                               origine_taille="donnée", provision=0, n_controles_claude=None, n_controles_externes=None,
-                              garder_passes=False, url_relais_moisson=None):
+                              garder_passes=False, url_relais_moisson=None, etage_tests=None):
     """v38 (CL37-04) → v42 : tous les réglages vérifiés AVANT tout appel de contrôle, avec le même contrôle du bras que
     celui que reçoit le cœur (`budget_controle`, CL40-03) et la garde de taille d'Argon (CL41-01).
     v43 (CL40-01, option c) : `n_controles_claude`, `n_controles_externes` — les seuls contrôles à jouer (les réussis d'une
     tentative antérieure sont repris) ; par défaut, tous. Garde au prix `--prix-entree-usd-par-million-jetons`.
-    v47 : réglages de la moisson (`reglages_moisson`), tours de moisson comptés dans les sommes."""
+    v47 : réglages de la moisson (`reglages_moisson`), tours de moisson comptés dans les sommes.
+    v48 : `etage_tests` (`reglages_tests_de_mort`) : étage vérifié ici, sonde du bac à sable comprise, plafonds dans les sommes."""
     if n_controles_claude is None:
         n_controles_claude = len({m for _, m in proposeurs + juges})
     if n_controles_externes is None:
@@ -623,7 +729,16 @@ def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_
         taille_max_consigne_externe=taille_max, origine_taille_max=origine_taille, provision_sortie_caracteres=provision,
         prix_caractere_usd=idn.prix_caractere(args.prix_entree_usd_par_million_jetons),
         budget_passe_2_externe_usd=args.budget_passe_2_externe_usd,  # v44 (CL43-01)
-        garder_passes_externes=garder_passes)  # v44 (CL43-02) : passe 1 gardée avant tout contrôle
+        garder_passes_externes=garder_passes,  # v44 (CL43-02) : passe 1 gardée avant tout contrôle
+        etage_tests=etage_tests)  # v48
+
+
+def bilan_tests_de_mort(r):
+    """v48 : ce que le bilan imprime de l'étage de tests de mort (comptes et étiquettes ; jamais le détail des sorties)."""
+    statut = r.get("statut") or ("joué" if r.get("termine") else "interrompu")
+    return {"statut": statut, "motif": r.get("motif"), "comptes": r.get("comptes"),
+            "refusees_a_l_etage": r.get("refusees_a_l_etage"), "classement_intact": r.get("classement_intact"),
+            "couts": r.get("couts"), "manifeste": "manifeste-tests-de-mort.json", "statut_epistemique": "exploratoire"}
 
 
 def max_demandes_lecture(args):
@@ -679,7 +794,8 @@ def mesurer(args):
                               seconde_passe=args.seconde_passe, nombre_proposeurs=len(proposeurs) + len(prop_ext),
                               graine=args.graine, dossier_ferme=args.dossier_ferme,  # v46
                               max_demandes_lecture=max_demandes_lecture(args),
-                              moisson=args.moisson, tours_moisson=args.tours_moisson)  # v47 : moisson au pire cas
+                              moisson=args.moisson, tours_moisson=args.tours_moisson,  # v47 : moisson au pire cas
+                              etage_tests=reglages_tests_de_mort(args, None))  # v48 : étage au pire cas, sans sonde
     taille, origine, detail, provision = garde_de_la_course(args, budgets, prop_ext)
     prix = idn.prix_caractere(args.prix_entree_usd_par_million_jetons)
     ctrl = m["consigne_de_controle_externe"]
@@ -771,9 +887,29 @@ def principal(argv=None):
             a.error("--max-demandes-lecture ne se donne qu'avec --dossier-ferme")
         if args.max_demandes_lecture < 1:
             a.error("--max-demandes-lecture doit être un entier ≥ 1")
-    if args.dossier_ferme and args.bras_rapporte_differe:
+    if args.dossier_ferme and args.bras_rapporte_differe and not args.tests_de_mort:
         a.error("--dossier-ferme ne vaut que pour la course : le bras (juge) ne lit rien, il reçoit les fiches et leurs "
-                "citations vérifiées")
+                "citations vérifiées (sauf avec --tests-de-mort : l'expérimentateur peut lire les pages)")
+    # v48 : étage de tests de mort
+    if args.tests_de_mort == 0:
+        for nom, valeur in (("--tranche-exploratoire", args.tranche_exploratoire), ("--experimentateur", args.experimentateur),
+                            ("--experimentateur-externe", args.experimentateur_externe), ("--lecteur-test", args.lecteur_test)):
+            if valeur:
+                a.error(f"{nom} ne se donne qu'avec --tests-de-mort N (N ≥ 1)")
+        if args.executeur_tests != "bwrap":
+            a.error("--executeur-tests ne se donne qu'avec --tests-de-mort N (N ≥ 1)")
+    else:
+        if not 1 <= args.tests_de_mort <= idn_tests.NOMBRE_MAX:
+            a.error(f"--tests-de-mort ∉ [0, {idn_tests.NOMBRE_MAX}]")
+        if not args.tranche_exploratoire:
+            a.error("--tests-de-mort exige --tranche-exploratoire (dossier en lecture seule, index scellé)")
+        if bool(args.experimentateur) == bool(args.experimentateur_externe):
+            a.error("--tests-de-mort exige exactement un expérimentateur : --experimentateur (Claude) ou "
+                    "--experimentateur-externe (Argon par --commande-externe)")
+        if not args.lecteur_test:
+            a.error("--tests-de-mort exige --lecteur-test (session neuve, d'une autre étiquette que l'expérimentateur)")
+        if args.executeur_tests == "factice" and args.moteur == "claude-sdk":
+            a.error("--executeur-tests factice : démonstration, moteur simulé seulement (aucune barrière)")
     # v47 : moisson — seconde passe obligatoire ; frais : adresse (moteur réel : obligatoire, plus la confirmation) ; rejeu : cache
     if args.moisson == "aucune":
         for nom, valeur in (("--url-relais-moisson", args.url_relais_moisson), ("--cache-moisson", args.cache_moisson),
@@ -827,7 +963,8 @@ def principal(argv=None):
                 "(la valeur de la course ne s'applique plus au bras)")
     if args.taille_max_consigne_externe_bras is not None and not args.bras_rapporte_differe:
         a.error("--taille-max-consigne-externe-bras ne se donne qu'avec --bras-rapporte-differe")
-    requis = ("sortie",) if args.bras_rapporte_differe else ("sortie", "liste_blanche", "question", "temoins")
+    requis = (("sortie", "liste_blanche") if args.tests_de_mort else ("sortie",)) if args.bras_rapporte_differe \
+        else ("sortie", "liste_blanche", "question", "temoins")
     for nom in requis:
         if not getattr(args, nom):
             a.error(f"--{nom.replace('_', '-')} est requis" if nom != "sortie" else "SORTIE est requis")
@@ -835,8 +972,9 @@ def principal(argv=None):
         a.error("--bras-rapporte-differe exige --juge-externe et --attestation-lecture-humaine")
     if args.attestation_lecture_humaine and not args.bras_rapporte_differe:  # CL34-01
         a.error("--attestation-lecture-humaine ne se donne qu'avec --bras-rapporte-differe : le bras est toujours différé")
-    if args.commande_externe and not (args.bras_rapporte_differe or args.proposeur_externe):  # CL35-07a
-        a.error("--commande-externe n'a d'usage qu'avec --proposeur-externe (course) ou --bras-rapporte-differe")
+    if args.commande_externe and not (args.bras_rapporte_differe or args.proposeur_externe or args.experimentateur_externe):  # CL35-07a
+        a.error("--commande-externe n'a d'usage qu'avec --proposeur-externe (course), --bras-rapporte-differe ou "
+                "--experimentateur-externe (v48)")
     if args.bras_rapporte_differe and args.proposeur_externe:
         a.error("--bras-rapporte-differe ne joue que des juges externes")
     if not 1 <= args.nombre <= idn.MAX_FICHES_ABSOLU:  # CL34-11
@@ -884,10 +1022,17 @@ def _principal(args, pile=None):
     sortie = os.path.abspath(args.sortie)
     sortie_controle = sortie + "-controle"
     delai_session = None
+    if args.tests_de_mort:  # v48 : les modèles Claude de l'étage sont ceux de la course (contrôles, relais, barrière 3)
+        modeles_etage = ([paire(args.experimentateur, "experimentateur")[1]] if args.experimentateur else []) \
+            + ([paire(args.lecteur_test, "lecteur-test")[1]] if args.lecteur_test else [])
+        hors = sorted(set(modeles_etage) - {m for _, m in proposeurs + juges})
+        if hors:
+            raise idn.CourseInterrompue(f"étage de tests de mort : modèle(s) {hors} hors de ceux des proposeurs et des juges de la "
+                                        "course (contrôle de bout en bout et relais : un modèle en plus serait une voie de repli)")
     if args.moteur == "claude-sdk" and not args.bras_rapporte_differe and not (prop_ext and juges_ext):  # CL36-03, M29
         raise idn.CourseInterrompue("course réelle : --proposeur-externe et --juge-externe (Argon) sont obligatoires "
                                     "(décision de Lazar : poids égal, égalité)")
-    if args.moteur == "claude-sdk" and not args.bras_rapporte_differe:
+    if args.moteur == "claude-sdk" and (not args.bras_rapporte_differe or args.tests_de_mort):  # v48 : l'étage joue des sessions Claude
         from pole.adaptateurs import (DELAI_SESSION_S, AdaptateurClaudeSDK, MoteurNonArme, etat_bac_a_sable_detaille,
                                       importer_sdk, verifier_modele_reel)
         if not args.confirmer_moteur_reel:
@@ -925,10 +1070,12 @@ def _principal(args, pile=None):
         externe = AdaptateurCommandeExterne(shlex.split(args.commande_externe), delai_s=args.delai_commande_s,
                                             variables_transmises=tuple(args.variable_transmise))
         commande_externe = externe.description()
-    elif args.moteur == "simule" and (prop_ext or args.bras_rapporte_differe):
+    elif args.moteur == "simule" and (prop_ext or args.bras_rapporte_differe or args.experimentateur_externe):
         externe = AdaptateurIdeationSimule(args.graine + 1)
     elif prop_ext:
         raise idn.CourseInterrompue("--proposeur-externe exige --commande-externe avec le moteur réel")
+    elif args.experimentateur_externe:
+        raise idn.CourseInterrompue("--experimentateur-externe exige --commande-externe avec le moteur réel")
     elif args.bras_rapporte_differe:
         raise idn.CourseInterrompue("--bras-rapporte-differe exige --commande-externe avec le moteur réel")
 
@@ -978,6 +1125,17 @@ def _principal(args, pile=None):
         if lisible:
             bilan["retenues"] = [(l["rang"], l["identifiant_auteur"], l["nom"], l["total"]) for l in res["classement"]
                                  if l["eligible"]][:5]
+        if args.tests_de_mort:  # v48 : l'étage se joue après le bras, classement scellé et figé ; jamais sur un classement illisible
+            if lisible:
+                if lire_relais is not None:  # barrière 3 (R-764) : relais permettant exactement les modèles de la course
+                    verifier_relais(lire_relais(), 0.0, budgets, juges, modeles_attendus=[m for _, m in proposeurs + juges])
+                bilan["tests_de_mort"] = bilan_tests_de_mort(idn.jouer_etage_apres_bras(
+                    adaptateur, sortie, reglages_tests_de_mort(args, externe), liste_blanche=args.liste_blanche,
+                    dossier_ferme=args.dossier_ferme, moteur=args.moteur, horodatage=horodatage(args.horodatage),
+                    lire_etat_relais=lire_relais, budget_total_usd=args.budget_total_usd, budget_externe_usd=args.budget_externe_usd,
+                    prix_caractere_usd=idn.prix_caractere(args.prix_entree_usd_par_million_jetons)))
+            else:
+                bilan["tests_de_mort"] = {"statut": "non joué : classement illisible au sens du devis"}
         print(json.dumps(bilan, ensure_ascii=False, indent=1))
         return 0 if lisible else 4
     # CL31-01 : appel de contrôle par modèle Claude, avant tout, dans `SORTIE-controle` (interdit en lecture aux agents) ;
@@ -1023,7 +1181,8 @@ def _principal(args, pile=None):
     if prop_ext and reussis:
         texte_ext = verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
                                               cout_tentatives_externe, budget_controle, True, True,
-                                              url_relais_moisson=url_moisson)["texte_controle_externe"]
+                                              url_relais_moisson=url_moisson,
+                                              etage_tests=reglages_tests_de_mort(args, externe))["texte_controle_externe"]
         for e, m in prop_ext:
             cles[f"externe:{e}"] = cle_reprise("proposeur_ideation", m, hashlib.sha256(
                 idn.consigne_de_controle(texte_ext).encode("utf-8")).hexdigest(), identite_externe)
@@ -1039,7 +1198,8 @@ def _principal(args, pile=None):
                                           taille_max if prop_ext else None, origine_taille, provision_taille,
                                           n_controles_claude=len(a_jouer_claude), n_controles_externes=len(a_jouer_externe),
                                           garder_passes=True,  # v44 (CL43-02) : passe 1 gardée avant tout contrôle
-                                          url_relais_moisson=url_moisson)  # v47
+                                          url_relais_moisson=url_moisson,  # v47
+                                          etage_tests=reglages_tests_de_mort(args, externe))  # v48
     except idn.TailleConsigneRefusee as e:  # refus scellé, avant tout contrôle, rien payé, aucune tentative comptée
         from pole.outils import ecrire_json_scelle, manifeste
         os.makedirs(sortie_controle, exist_ok=True)
@@ -1111,7 +1271,8 @@ def _principal(args, pile=None):
                                     controles_repris=repris, motifs_reprise_controles=motifs_reprise,  # v44 (CL43-03)
                                     budget_passe_2_externe_usd=args.budget_passe_2_externe_usd,  # v44 (CL43-01)
                                     **reglages_lecture(args, delai_session),  # v46 : vide sans --dossier-ferme
-                                    **reglages_moisson(args, url_moisson))  # v47 : vide sans --moisson
+                                    **reglages_moisson(args, url_moisson),  # v47 : vide sans --moisson
+                                    etage_tests=reglages_tests_de_mort(args, externe))  # v48 : None sans --tests-de-mort
     except BaseException as e:  # v40 (CL39-02), v41 (CL40-02, CL40-03) : contrôle refusé, contrôle interrompu (plafond
         # compté) ou refus du cœur avant son manifeste de départ → tentative scellée avec ses coûts, relance calculée
         if os.path.exists(os.path.join(sortie, "manifeste-depart.json")):
@@ -1183,9 +1344,13 @@ def _principal(args, pile=None):
                             "moissonnees_citees": sum(len(l) for l in verif.values()),
                             "moissonnees_verifiees": sum(1 for l in verif.values() for x in l if x.get("verifiee")),
                             "candidats_corpus": "candidats-corpus.json"}
+    if res.get("tests_de_mort"):  # v48 : course sans juge externe, l'étage a été joué par le cœur
+        bilan["tests_de_mort"] = bilan_tests_de_mort(res["tests_de_mort"])
     if res["en_attente_bras"]:
         bilan["en_attente_bras"] = res["lecture"]["bras_rapporte_differe"]
         bilan["classement"] = "aucun avant le bras (n° 118 point 1)"
+        if args.tests_de_mort:
+            bilan["tests_de_mort"] = {"statut": "différé : après le bras (--bras-rapporte-differe --tests-de-mort, mêmes réglages)"}
         print(json.dumps(bilan, ensure_ascii=False, indent=1))
         return 0 if res["lecture"]["temoins"]["temoins_ok"] else 4
     lisible = res["lecture"]["temoins"]["temoins_ok"]
