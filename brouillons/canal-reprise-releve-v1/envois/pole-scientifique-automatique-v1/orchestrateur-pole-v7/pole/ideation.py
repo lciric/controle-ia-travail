@@ -62,6 +62,19 @@ message n° 151) :
 - CL41-04 : un contrôle du bras qui n'était pas court et n'a pas rendu « OK » verrouille le bras comme un envoi ;
 - CL41-06 : le manifeste de départ est écrit dans un dossier temporaire, renommé en SORTIE ensuite.
 
+Version 43 (contre-lecture CL9 de session-depot sur la v42 ; choix fixés par session-depot, message n° 156) :
+- CL42-01 : la garde de taille de la course se règle sur le **plus petit plafond** des sessions d'Argon qui reçoivent la
+  plus grosse consigne (contrôle, entrée seule ; passe, entrée plus une **provision pour la sortie** : `nombre` fiches de
+  `TAILLE_MAX_FICHE_SERVIE` caractères au rapport sortie/entrée du barème prudent, `provision_sortie_caracteres`) ; chaque
+  session de proposeur externe est aussi gardée contre son propre plafond avant son envoi (`garder_sessions_externes`) ;
+- CL42-05 : le bras a sa propre garde (plafond du juge / prix prudent, moins une provision de sortie par fiche servie,
+  `provision_sortie_juge_caracteres`) ; la valeur de la course ne s'y applique plus ; un refus de taille au bras compte
+  une tentative non relançable et écrit le classement sans bras ;
+- CL42-06 : l'échec du classement de repli est dit dans l'exception levée et scellé
+  (`classement-sans-bras-impossible-N.json`) ; un classement de repli déjà écrit n'est jamais réécrit, et c'est dit ;
+- CL42-07 : refus pour taille comptés par proposeur (journal, manifeste de fin) ;
+- CL42-03 : `mesurer_consignes`, tailles réelles des consignes sans aucun appel.
+
 Ce que le noyau ne peut pas faire : garantir le niveau méthode (la garde **signale**, un humain lit **toutes** les fiches
 validées avant tout usage) ; vérifier une antériorité (R7) ; neutraliser le style d'un modèle devant un juge du même
 modèle (il le **mesure**, lectures par juge). Un juge d'une autre lignée est possible depuis la v33, en **bras rapporté**
@@ -139,10 +152,22 @@ TAILLE_MAX_FICHE_SERVIE = 12_000
 # contrôle rend « OK »). Taille maximale par défaut d'une consigne externe = plafond de la session qui la reçoit / ce prix.
 CARACTERES_PAR_JETON_PRUDENT = 4
 PRIX_CARACTERE_PRUDENT_USD = BAREME_INCONNU[0] / 1e6 / CARACTERES_PAR_JETON_PRUDENT
+# v43 (CL42-01) : rapport sortie/entrée du même barème (50 / 10 = 5) ; la sortie d'une session qui rend des fiches est
+# provisionnée à `nombre` fiches de TAILLE_MAX_FICHE_SERVIE caractères à ce rapport (8 fiches : 480 000 caractères
+# d'entrée équivalents, 1,2 dollar au prix prudent)
+RAPPORT_SORTIE_ENTREE_PRUDENT = BAREME_INCONNU[1] / BAREME_INCONNU[0]
+# v43 (CL42-05) : provision pour la sortie du juge externe, par fiche servie (une note : cinq entiers, cinq lignes de
+# justification, le JSON) — convention, aucun gabarit ne borne les notes ; 52 fiches servies → 104 000 caractères de
+# sortie, 520 000 caractères d'entrée équivalents au rapport 5 (1,3 dollar au prix prudent)
+PROVISION_SORTIE_PAR_NOTE = 2_000
 
 
 class FicheIdeationInvalide(ValueError):
     pass
+
+
+class FicheTropLongue(FicheIdeationInvalide):
+    """v43 (CL42-07) : fiche refusée pour sa seule taille servie (comptée par proposeur au journal)."""
 
 
 class PieceInterdite(ValueError):
@@ -360,7 +385,7 @@ def valider_fiche_ideation(brut, auteur, indice, passe=1):
     f, _ = caviarder_objet(f)
     taille = taille_servie(f)
     if taille > TAILLE_MAX_FICHE_SERVIE:  # v42 (CL41-02) : fiche bornée (taille telle que servie, échappements compris)
-        raise FicheIdeationInvalide(f"fiche trop longue : {taille} caractères servis > {TAILLE_MAX_FICHE_SERVIE}")
+        raise FicheTropLongue(f"fiche trop longue : {taille} caractères servis > {TAILLE_MAX_FICHE_SERVIE}")
     f["auteur"] = auteur
     f["passe"] = passe
     f["identifiant_auteur"] = f"{auteur}-p{passe}-{indice:02d}"
@@ -869,11 +894,53 @@ class TailleConsigneRefusee(CourseInterrompue):
         self.details = details
 
 
-def taille_max_consigne_par_defaut(plafond_usd):
+def provision_sortie_caracteres(nombre):
+    """v43 (CL42-01) : provision pour la sortie d'une session externe, en caractères d'entrée équivalents — `nombre` fiches
+    de `TAILLE_MAX_FICHE_SERVIE` caractères au plus, au rapport sortie/entrée du barème prudent
+    (`RAPPORT_SORTIE_ENTREE_PRUDENT`, 5) : 8 fiches → 480 000 caractères (1,2 dollar au prix prudent)."""
+    if isinstance(nombre, bool) or not isinstance(nombre, int) or nombre < 0:
+        raise CourseInterrompue(f"nombre de fiches de la provision : entier ≥ 0 (reçu {nombre!r})")
+    return int(round(nombre * TAILLE_MAX_FICHE_SERVIE * RAPPORT_SORTIE_ENTREE_PRUDENT))
+
+
+def provision_sortie_juge_caracteres(fiches_servies):
+    """v43 (CL42-05) : provision pour la sortie d'un juge externe, en caractères d'entrée équivalents — une note de
+    `PROVISION_SORTIE_PAR_NOTE` caractères par fiche servie (témoins compris), au rapport sortie/entrée du barème prudent :
+    52 fiches → 520 000 (1,3 dollar). Convention : aucun gabarit ne borne la longueur des notes."""
+    if isinstance(fiches_servies, bool) or not isinstance(fiches_servies, int) or fiches_servies < 0:
+        raise CourseInterrompue(f"fiches servies au juge : entier ≥ 0 (reçu {fiches_servies!r})")
+    return int(round(fiches_servies * PROVISION_SORTIE_PAR_NOTE * RAPPORT_SORTIE_ENTREE_PRUDENT))
+
+
+def taille_max_consigne_par_defaut(plafond_usd, provision_caracteres=0):
     """v42 (CL41-01) : taille maximale par défaut d'une consigne externe — le plafond de la session qui la reçoit divisé
     par le prix prudent d'un caractère (`PRIX_CARACTERE_PRUDENT_USD`) : au-delà, au barème le plus haut du code, cette
-    session dépasserait son plafond sur la seule entrée."""
-    return int(_exiger_somme("plafond de la session", plafond_usd) / PRIX_CARACTERE_PRUDENT_USD + 1e-6)  # 2,5 → 1 000 000
+    session dépasserait son plafond sur la seule entrée. v43 (CL42-01) : moins la provision pour la sortie de cette
+    session (`provision_caracteres`, 0 pour un contrôle qui rend « OK ») ; jamais négative (0 : tout est refusé)."""
+    brut = int(_exiger_somme("plafond de la session", plafond_usd) / PRIX_CARACTERE_PRUDENT_USD + 1e-6)  # 2,5 → 1 000 000
+    return max(0, brut - int(provision_caracteres))
+
+
+def taille_max_consigne_course_par_defaut(plafond_controle_usd, plafonds_passe_usd, nombre):
+    """v43 (CL42-01) : garde de taille par défaut de la course — la plus grosse consigne d'un proposeur externe est reçue
+    par son contrôle (entrée seule, il rend « OK ») et par sa passe la plus grosse (entrée, plus la provision pour sa
+    sortie, `provision_sortie_caracteres(nombre)`) ; la garde est la plus petite des tailles que ces sessions tiennent dans
+    leur plafond au prix prudent. Rend (taille, détail). Réglages du devis : contrôle 2,5 → 1 000 000 ; passe 2,5 →
+    1 000 000 − 480 000 = **520 000** ; contrôle relevé à 3,0 seul : toujours 520 000 (la passe reste à 2,5)."""
+    provision = provision_sortie_caracteres(nombre)
+    sessions = [{"session": "contrôle du proposeur externe", "plafond_usd": float(plafond_controle_usd),
+                 "provision_sortie_caracteres": 0, "taille_max": taille_max_consigne_par_defaut(plafond_controle_usd)}]
+    for p in plafonds_passe_usd:
+        sessions.append({"session": "passe du proposeur externe", "plafond_usd": float(p), "provision_sortie_caracteres": provision,
+                         "taille_max": taille_max_consigne_par_defaut(p, provision)})
+    retenue = min(sessions, key=lambda s: s["taille_max"])
+    detail = (f"défaut : plus petit plafond des sessions d'Argon qui reçoivent la plus grosse consigne — {retenue['session']} "
+              f"{retenue['plafond_usd']} / prix prudent {PRIX_CARACTERE_PRUDENT_USD:.2e} dollar par caractère"
+              + (f" − provision de sortie {retenue['provision_sortie_caracteres']} caractères ({nombre} fiches de "
+                 f"{TAILLE_MAX_FICHE_SERVIE} au rapport {RAPPORT_SORTIE_ENTREE_PRUDENT:g})"
+                 if retenue["provision_sortie_caracteres"] else " (entrée seule)"))
+    return retenue["taille_max"], {"detail": detail, "sessions": sessions, "provision_sortie_caracteres": provision,
+                                   "retenue": retenue["session"]}
 
 
 def exiger_taille_max_consigne(valeur):
@@ -882,17 +949,22 @@ def exiger_taille_max_consigne(valeur):
     return valeur
 
 
-def garde_taille_consigne(quoi, taille, taille_max, origine):
-    """v42 (CL41-01) : refus sans dépense si `taille` (caractères) dépasse `taille_max` ; rend le détail sinon."""
+def garde_taille_consigne(quoi, taille, taille_max, origine, provision_caracteres=0):
+    """v42 (CL41-01) : refus sans dépense si `taille` (caractères) dépasse `taille_max` ; rend le détail sinon.
+    v43 : la provision de sortie retenue est écrite au détail."""
     details = {"quoi": quoi, "taille_caracteres": int(taille), "taille_max_caracteres": int(taille_max),
                "origine_taille_max": origine, "prix_caractere_prudent_usd": PRIX_CARACTERE_PRUDENT_USD,
-               "cout_prudent_entree_usd": round(taille * PRIX_CARACTERE_PRUDENT_USD, 4)}
+               "cout_prudent_entree_usd": round(taille * PRIX_CARACTERE_PRUDENT_USD, 4),
+               "provision_sortie_caracteres": int(provision_caracteres),
+               "cout_prudent_avec_provision_usd": round((taille + provision_caracteres) * PRIX_CARACTERE_PRUDENT_USD, 4)}
     if taille > taille_max:
         raise TailleConsigneRefusee(
             f"garde de taille : {quoi} de {taille} caractères > taille maximale admise {taille_max} ({origine}) ; refus "
             f"avant tout appel, rien payé ; au barème prudent du code ({PRIX_CARACTERE_PRUDENT_USD * 1e6:.2f} dollars par "
-            f"million de caractères d'entrée) elle coûterait {details['cout_prudent_entree_usd']} : relever le plafond de "
-            "cette session ou --taille-max-consigne-externe après confirmation du barème d'Argon (mot de Lazar)", details)
+            f"million de caractères d'entrée) elle coûterait {details['cout_prudent_entree_usd']} en entrée"
+            + (f", {details['cout_prudent_avec_provision_usd']} avec la provision de sortie" if provision_caracteres else "")
+            + " : relever le plafond de cette session, ou --taille-max-consigne-externe (course) ou "
+            "--taille-max-consigne-externe-bras (bras) après confirmation du barème d'Argon (mot de Lazar)", details)
     return details
 
 
@@ -902,7 +974,7 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                       seconde_passe=False, cout_controles_prevu_usd=0.0, cout_controles_externes_prevu_usd=0.0,
                       tolerer_somme_plafonds=False, budget_controle_bras_usd=0.2, max_tours=MAX_TOURS_IDEATION,
                       nombre_par_proposeur=8, tolerer_somme_claude=False, tolerer_somme_externe=False,
-                      taille_max_consigne_externe=None, origine_taille_max="donnée"):
+                      taille_max_consigne_externe=None, origine_taille_max="donnée", provision_sortie_caracteres=0):
     """v38 (CL37-04) : tout ce que la course refuserait, vérifié AVANT le premier appel de contrôle, sans rien écrire ni
     dépenser : liste blanche et pièces (empreintes, zones interdites, tailles), témoins, attestation du matériau, plafonds
     finis, étiquettes, somme des plafonds (passes et contrôles prévus compris) contre les totaux. Rend les pièces lues
@@ -912,7 +984,8 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     `tolerer_somme_externe` ; `tolerer_somme_plafonds` vaut les deux).
     v42 : rend aussi `taille_consigne_controle_externe` (la consigne de contrôle entière d'un proposeur externe) et
     `taille_fiche_maximale` (CL41-02) ; avec `taille_max_consigne_externe`, **garde de taille** (CL41-01) : une consigne de
-    contrôle externe plus grosse lève `TailleConsigneRefusee`, avant tout appel."""
+    contrôle externe plus grosse lève `TailleConsigneRefusee`, avant tout appel.
+    v43 (CL42-01) : `provision_sortie_caracteres` (celle que la garde par défaut a déduite) est écrite au détail."""
     if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
             or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
         raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r}")
@@ -970,7 +1043,8 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     garde = None
     if taille_max_consigne_externe is not None and proposeurs_externes:  # v42 (CL41-01) : avant tout appel
         garde = garde_taille_consigne("consigne de contrôle du proposeur externe (sa plus grosse consigne)", taille_controle,
-                                      exiger_taille_max_consigne(taille_max_consigne_externe), origine_taille_max)
+                                      exiger_taille_max_consigne(taille_max_consigne_externe), origine_taille_max,
+                                      provision_sortie_caracteres)
     return {"texte_pieces": texte_pieces, "texte_controle_externe": texte_controle,
             "taille_consigne_controle_externe": taille_controle, "garde_taille": garde,
             "taille_fiche_maximale": taille_servie(fiche_maximale()), "taille_max_fiche_servie": TAILLE_MAX_FICHE_SERVIE,
@@ -980,6 +1054,46 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
             "tolerances": {"claude": tolere_claude, "externe": tolere_externe}}
 
 
+def mesurer_consignes(*, liste_blanche, question, pieces, materiau=(), pieces_juge=(), temoins=None,
+                      taille_max_pieces=TAILLE_MAX_PIECES, nombre_par_proposeur=8, seconde_passe=False, nombre_proposeurs=3,
+                      graine=0):
+    """v43 (CL42-03) : tailles réelles (caractères) des consignes que la course et le bras enverraient, pour les fichiers
+    donnés (liste blanche, empreintes et zones interdites vérifiées, caviardage appliqué), **sans aucun appel ni aucune
+    écriture** : passe 1 ; passe 2 maximale (`nombre` fiches à la taille maximale du gabarit borné, matériau) ; consigne
+    de contrôle d'un proposeur externe (celle que `verifier_reglages` garde) ; consigne du juge au maximum (`nombre_proposeurs`
+    × passes × `nombre` fiches maximales, plus les témoins donnés, plus les pièces de juge) ; contrôle du bras (court)."""
+    if isinstance(nombre_par_proposeur, bool) or not isinstance(nombre_par_proposeur, int) \
+            or not 1 <= nombre_par_proposeur <= MAX_FICHES_ABSOLU:
+        raise CourseInterrompue(f"nombre_par_proposeur ∉ [1, {MAX_FICHES_ABSOLU}] : {nombre_par_proposeur!r}")
+    if isinstance(nombre_proposeurs, bool) or not isinstance(nombre_proposeurs, int) or nombre_proposeurs < 1:
+        raise CourseInterrompue(f"nombre_proposeurs : entier ≥ 1 (reçu {nombre_proposeurs!r})")
+    if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
+            or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
+        raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r}")
+    liste = charger_liste_blanche(liste_blanche)
+    question_lue = lire_pieces([question], liste)[0]
+    pieces_lues = lire_pieces(pieces, liste, taille_max_pieces)
+    materiau_lu = lire_pieces(materiau, liste, taille_max_pieces) if materiau else []
+    pieces_juge_lues = lire_pieces(pieces_juge, liste, taille_max_pieces) if pieces_juge else []
+    temoins_lus = charger_temoins(temoins, liste) if temoins else []
+    passe1 = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1])
+    passe2 = (consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu or None,
+                                 fiches_precedentes=[fiche_maximale()] * nombre_par_proposeur) if seconde_passe else None)
+    passes = 2 if seconde_passe else 1
+    fiches = [valider_fiche_ideation(fiche_maximale(), f"proposeur{k + 1}", i, passe=p)
+              for k in range(nombre_proposeurs) for p in range(1, passes + 1) for i in range(1, nombre_par_proposeur + 1)]
+    anonymes, _ = anonymiser(fiches + temoins_lus, graine, "mesure")
+    juge = consigne_juge(anonymes, question_lue[1], pieces_juge_lues)
+    return {"tailles_lues": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
+                             "materiau": sum(len(t) for _, t, _ in materiau_lu),
+                             "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues), "temoins": len(temoins_lus)},
+            "consigne_passe_1": len(passe1), "consigne_passe_2_maximale": len(passe2) if passe2 is not None else None,
+            "consigne_de_controle_externe": len(consigne_de_controle(passe2 if seconde_passe else passe1)),
+            "consigne_du_juge_maximale": len(juge), "fiches_au_juge_au_maximum": len(fiches) + len(temoins_lus),
+            "taille_fiche_maximale_servie": taille_servie(fiche_maximale()), "controle_du_bras": len(consigne_de_controle()),
+            "nombre_par_proposeur": nombre_par_proposeur, "nombre_proposeurs": nombre_proposeurs, "seconde_passe": seconde_passe}
+
+
 def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, proposeurs, juges, temoins, graine,
                       budget_total_usd, budgets, nombre_par_proposeur=8, max_tours=MAX_TOURS_IDEATION, materiau=(),
                       seconde_passe=False, pieces_juge=(), horodatage=None, moteur="simule", lire_etat_relais=None,
@@ -987,8 +1101,16 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                       budget_externe_usd=0.0, attestation_lecture_humaine=None, attestation_materiau=None,
                       cout_deja_engage_usd=0.0, lectures_interdites=(), commande_externe=None, delai_session_s=None,
                       taille_max_pieces=TAILLE_MAX_PIECES, cout_externe_deja_engage_usd=0.0, tolerer_somme_plafonds=False,
-                      budget_controle_bras_usd=0.2, tolerer_somme_claude=False, tolerer_somme_externe=False):
-    """Course d'idéation v42 (v36 : Argon à poids égal ; v37 à v42 : relectures CL4 à CL8).
+                      budget_controle_bras_usd=0.2, tolerer_somme_claude=False, tolerer_somme_externe=False,
+                      taille_max_consigne_externe=None, garder_sessions_externes=False, origine_taille_max=None):
+    """Course d'idéation v43 (v36 : Argon à poids égal ; v37 à v43 : relectures CL4 à CL9).
+
+    v43 (CL42-01) : chaque session de proposeur externe (passe 1, passe 2) est **gardée avant son envoi**, sans dépense :
+    contre `taille_max_consigne_externe` s'il est donné (`--taille-max-consigne-externe`), sinon, avec
+    `garder_sessions_externes` (toujours donné par le lanceur), contre son propre plafond / prix prudent moins la provision
+    de sortie ; un refus arrête la course (`TailleConsigneRefusee`, manifeste de fin), la session n'est pas lancée ; les
+    gardes jouées sont au journal (`gardes_taille_sessions`). CL42-07 : les refus pour taille sont comptés par proposeur
+    et par passe (`refus_pour_taille_par_proposeur`, au journal et au manifeste de fin).
 
     v42 : manifeste de départ écrit dans un dossier provisoire puis renommé en SORTIE (CL41-06) ; marge de la passe 2
     au journal et au manifeste (CL41-02).
@@ -1031,6 +1153,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                      ("budget_controle_bras_usd", budget_controle_bras_usd)):  # v41 (CL40-05)
         _exiger_somme(nom_b, b)
     _exiger_plafonds(budgets)
+    if taille_max_consigne_externe is not None:  # v43 (CL42-01)
+        exiger_taille_max_consigne(taille_max_consigne_externe)
     tolere_claude, tolere_externe = tolerances(tolerer_somme_plafonds, tolerer_somme_claude, tolerer_somme_externe)
     _verifier_adaptateur_principal(adaptateur, moteur, proposeurs, juges)
     juges_externes = [(e, m) for e, m, *_ in juges_externes]
@@ -1096,8 +1220,14 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                # v42 (CL41-02) : la marge de la passe 2 (fiches à la taille maximale du gabarit borné), écrite au journal
                "marge_seconde_passe": {"taille_fiche_maximale_servie": taille_servie(fiche_maximale()),
                                        "taille_max_fiche_servie": TAILLE_MAX_FICHE_SERVIE, "nombre": nombre_par_proposeur,
-                                       "max_questions_servies": MAX_QUESTIONS_SERVIES, "max_anteriorites": MAX_ANTERIORITES}}
+                                       "max_questions_servies": MAX_QUESTIONS_SERVIES, "max_anteriorites": MAX_ANTERIORITES},
+               # v43 (CL42-01) : gardes de taille jouées avant chaque session de proposeur externe ; (CL42-07) refus pour
+               # taille, par proposeur et par passe
+               "gardes_taille_sessions": [],
+               "refus_pour_taille_par_proposeur": {e: dict({f"passe-{n}": 0 for n in ((1, 2) if seconde_passe else (1,))},
+                                                           total=0) for e, _ in tous_proposeurs}}
     externes_adapt = {e: a for e, _, a in proposeurs_externes}
+    provision_sessions = provision_sortie_caracteres(nombre_par_proposeur)
 
     from .adaptateurs import reglages_kit_par_role
     # v42 (CL41-06) : le manifeste de départ est écrit dans un dossier provisoire, renommé en SORTIE ensuite — une
@@ -1149,7 +1279,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     def ecrire_fin(classement=None, lecture=None, erreur=None):
         ecrire_json_scelle(os.path.join(sortie, "manifeste-fin.json"), manifeste(
             phase="fin", horodatage=horodatage, graine=graine, moteur=moteur, journal=journal, erreur=erreur,
-            lecture=lecture, nombre_lignes_classement=len(classement or []), en_attente_bras=bool(juges_externes)))
+            lecture=lecture, nombre_lignes_classement=len(classement or []), en_attente_bras=bool(juges_externes),
+            refus_pour_taille_par_proposeur=journal["refus_pour_taille_par_proposeur"]))  # v43 (CL42-07)
 
     def lancer(role, etiquette, modele, consigne, dossier, adaptateur=adaptateur, externe=False):
         plafond = budgets[(role, modele)]
@@ -1202,11 +1333,39 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                 valides.append(valider_fiche_ideation(b, etiquette, i, passe=passe))
             except FicheIdeationInvalide as e:
                 refus.append({"auteur": etiquette, "passe": passe, "indice": i, "motif": str(e)})
+                if isinstance(e, FicheTropLongue):  # v43 (CL42-07) : refus pour taille, par proposeur et par passe
+                    compte = journal["refus_pour_taille_par_proposeur"][etiquette]
+                    compte[f"passe-{passe}"] += 1
+                    compte["total"] += 1
         return valides
+
+    def garder_session_externe(etiquette, modele, numero, consigne):
+        """v43 (CL42-01) : garde de taille d'une session de proposeur externe, avant son envoi, sans dépense."""
+        if taille_max_consigne_externe is not None:
+            tmax, prov = taille_max_consigne_externe, 0
+            origine = origine_taille_max or "donnée (--taille-max-consigne-externe)"
+        elif garder_sessions_externes:
+            plafond = budgets[("proposeur_ideation", modele)]
+            tmax, prov = taille_max_consigne_par_defaut(plafond, provision_sessions), provision_sessions
+            origine = (f"défaut : plafond de cette session {plafond} / prix prudent {PRIX_CARACTERE_PRUDENT_USD:.2e} dollar "
+                       f"par caractère − provision de sortie {provision_sessions} caractères ({nombre_par_proposeur} fiches "
+                       f"de {TAILLE_MAX_FICHE_SERVIE} au rapport {RAPPORT_SORTIE_ENTREE_PRUDENT:g})")
+        else:
+            return
+        quoi = f"consigne de la passe {numero} du proposeur externe {etiquette!r}"
+        try:
+            details = garde_taille_consigne(quoi, len(consigne), tmax, origine, prov)
+        except TailleConsigneRefusee as e:
+            journal["gardes_taille_sessions"].append(dict(e.details, etiquette=etiquette, passe=numero, refusee=True))
+            journal["arret"] = f"proposeur externe {etiquette} passe {numero} non envoyée : {e}"
+            raise
+        journal["gardes_taille_sessions"].append(dict(details, etiquette=etiquette, passe=numero, refusee=False))
 
     def passe_de(etiquette, modele, numero, consigne):
         d = os.path.join(sortie, "proposeurs", etiquette, f"passe-{numero}")
         ext = etiquette in externes_adapt
+        if ext:  # v43 (CL42-01) : avant tout envoi, sans dépense
+            garder_session_externe(etiquette, modele, numero, consigne)
         texte = lancer("proposeur_ideation", etiquette, modele, consigne, d,
                        adaptateur=externes_adapt[etiquette] if ext else adaptateur, externe=ext)
         try:
@@ -1431,7 +1590,15 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     → `manifeste-bras-refus-taille-K.json` scellé, rien payé, aucune tentative comptée ; `budget_externe_usd` donné
     (lanceur, `--budget-externe-usd`) vérifié fini ≥ 0 ; une tentative scellée **non relançable** écrit le classement à
     deux juges marqué « sans juge externe » (sans verrouiller par le manifeste du bras) et lève `SansJugeExterne` ;
-    CL41-04 : un contrôle qui n'était pas court et n'a pas rendu « OK » verrouille le bras comme un envoi."""
+    CL41-04 : un contrôle qui n'était pas court et n'a pas rendu « OK » verrouille le bras comme un envoi.
+    v43 (CL42-05) : garde du bras = `taille_max_consigne_externe` donné au bras (`--taille-max-consigne-externe-bras`),
+    sinon plafond de la session du juge / prix prudent **moins la provision de sortie** (`provision_sortie_juge_caracteres`
+    des fiches servies à ce juge ; 3,5 et 52 fiches → 1 400 000 − 520 000 = 880 000) ; **la valeur donnée à la course ne s'y
+    applique plus** ;
+    un refus de taille **compte une tentative non relançable** (`manifeste-bras-refus-taille-N.json`, N = numéro de
+    tentative) et écrit le classement sans bras (`SansJugeExterne`). CL42-06 : un échec du classement de repli est dit
+    dans l'exception levée et scellé (`classement-sans-bras-impossible-N.json`) ; un classement de repli déjà écrit n'est
+    jamais réécrit, et l'exception le dit."""
     def lire_json_scelle(nom):
         chemin = os.path.join(sortie, nom)
         if not verifier_scelle(chemin):
@@ -1464,7 +1631,9 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
         if not _fini(c) or c < 0:
             raise CourseInterrompue(f"tentative du bras au coût illisible : {f} ({c!r})")
         cout_tentatives += float(c)
-    if len(tentatives_non_jouees) + len(tentatives_payees) >= MAX_TENTATIVES_BRAS:
+    # v43 (CL42-05) : un refus de taille au bras est une tentative (non relançable, rien payé)
+    tentatives_refus_taille = sorted(f for f in os.listdir(sortie) if re.match(r"manifeste-bras-refus-taille-\d+\.json$", f))
+    if len(tentatives_non_jouees) + len(tentatives_payees) + len(tentatives_refus_taille) >= MAX_TENTATIVES_BRAS:
         raise CourseInterrompue(f"{MAX_TENTATIVES_BRAS} tentatives du bras déjà faites : plus de relance sans un mot de "
                                 "Lazar (CL37-02)")
     attestation = _lire_attestation(attestation_lecture_humaine,
@@ -1525,35 +1694,12 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
         if ("juge_ideation", modele) not in budgets:
             raise CourseInterrompue(f"aucun plafond par session pour ('juge_ideation', {modele!r})")
         consignes[etiquette] = octets.decode("utf-8")
-    # v42 (CL41-01) : garde de taille sans dépense, avant tout appel (contrôle compris) ; refus scellé, aucune tentative
-    donnee_course = (depart.get("versions") or {}).get("taille_max_consigne_externe") or {}
-    gardes = {}
-    for etiquette, modele, _ in juges_externes:
-        if taille_max_consigne_externe is not None:
-            tmax, origine = taille_max_consigne_externe, "donnée au bras"
-        elif donnee_course.get("origine") == "option" and _fini(donnee_course.get("valeur")):
-            tmax, origine = int(donnee_course["valeur"]), "donnée à la course (--taille-max-consigne-externe)"
-        else:
-            tmax = taille_max_consigne_par_defaut(budgets[("juge_ideation", modele)])
-            origine = (f"défaut : plafond de la session du juge {budgets[('juge_ideation', modele)]} / prix prudent "
-                       f"{PRIX_CARACTERE_PRUDENT_USD:.2e} dollar par caractère")
-        try:
-            gardes[etiquette] = garde_taille_consigne(f"consigne du juge externe {etiquette!r}", len(consignes[etiquette]),
-                                                      tmax, origine)
-        except TailleConsigneRefusee as e:
-            k = 1 + sum(1 for f in os.listdir(sortie) if re.match(r"manifeste-bras-refus-taille-\d+\.json$", f))
-            ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-refus-taille-{k}.json"), manifeste(
-                phase="bras-refus-taille", horodatage=horodatage, erreur=str(e), garde_taille=e.details,
-                tentative_comptee=False, cout_usd=0.0))
-            raise
     besoin = sum(budgets[("juge_ideation", m)] for _, m, _ in juges_externes) + budget_controle_usd * len(juges_externes)
-    if deja_externe + besoin > plafond_externe + 1e-9:
-        raise CourseInterrompue(f"plafond externe {plafond_externe} insuffisant avant tout appel : déjà {deja_externe} + "
-                                f"contrôles et sessions {besoin} (CL35-05)")
     journal = {"appels": [], "cout_total_usd": 0.0, "cout_externe_deja_compte_course_usd": deja_externe,
-               "cout_tentatives_precedentes_usd": cout_tentatives, "tentative": len(tentatives_non_jouees) + len(tentatives_payees) + 1,
+               "cout_tentatives_precedentes_usd": cout_tentatives,
+               "tentative": len(tentatives_non_jouees) + len(tentatives_payees) + len(tentatives_refus_taille) + 1,
                "plafond_externe_usd": plafond_externe, "cout_fictif": cout_fictif, "arret": None, "controle": {},
-               "non_lance": False, "consigne_envoyee": None, "garde_taille": gardes}
+               "non_lance": False, "consigne_envoyee": None, "garde_taille": {}}
     notes_externes, doublons_externes = {}, {}
     resultat = {"classement": None, "lecture": None, "journal": journal, "sans_bras": False}
 
@@ -1566,12 +1712,13 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     def classement_sans_bras(motif, verrouiller=True):
         """n° 118 point 3 : classement à deux juges écrit, marqué illisible au sens du devis ; jamais de « retenue ».
         v42 (CL41-01) : `verrouiller=False` (tentative non relançable avant envoi) n'écrit pas le manifeste du bras — un
-        mot de Lazar (plafond externe relevé) peut encore relancer ; un classement sans bras déjà écrit n'est pas réécrit."""
+        mot de Lazar (plafond externe relevé) peut encore relancer ; un classement sans bras déjà écrit n'est pas réécrit.
+        v43 (CL42-06) : rend « ecrit » ou « existant » (déjà écrit par une tentative précédente : non réécrit, R12)."""
         if os.path.exists(os.path.join(sortie, "classement-sans-bras.json")):
             if verrouiller:
                 ecrire_manifeste(erreur=motif)
             resultat.update({"sans_bras": True})
-            return
+            return "existant"
         classement, lecture = _classer(notes_par_auteur, par_ident, temoins, lecture_course)
         lecture["sans_juge_externe"] = motif
         lecture["lisible_L2_L4"] = False
@@ -1582,14 +1729,84 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
                            {"lisible_L2_L4": False, "sans_juge_externe": motif, "lignes": classement})
         ecrire_json_scelle(os.path.join(sortie, "lecture-sans-bras.json"), lecture)
         resultat.update({"classement": classement, "lecture": lecture, "sans_bras": True})
+        return "ecrit"
+
+    def repli_impossible(e2, motif):
+        """v43 (CL42-06, R5) : l'échec du classement de repli est scellé (`classement-sans-bras-impossible-N.json`, N =
+        numéro de tentative) et rendu en clair, pour l'exception levée ; jamais silencieux."""
+        echec = type(e2).__name__ + " : " + caviarder(str(e2))[0][:300]
+        journal["classement_sans_bras_impossible"] = echec
+        nom = f"classement-sans-bras-impossible-{journal['tentative']}.json"
+        try:
+            ecrire_json_scelle(os.path.join(sortie, nom), manifeste(
+                phase="bras-classement-sans-bras-impossible", horodatage=horodatage, tentative=journal["tentative"],
+                classement_sans_bras_impossible=echec, motif_du_repli=motif, journal=journal))
+            ou = f"{nom} scellé"
+        except Exception as e3:  # noqa: BLE001 — le motif reste dans l'exception levée
+            ou = f"{nom} non écrit ({type(e3).__name__} : {str(e3)[:120]})"
+        resultat["repli_impossible"] = echec
+        return f" ; classement sans bras impossible : {echec} ({ou})"
 
     def sans_bras_non_relancable(motif):
         """v42 (CL41-01) : tentative scellée non relançable → classement à deux juges écrit tout de suite (sans verrou) ;
-        un échec de ce classement de repli n'efface jamais l'erreur d'origine (il est consigné au journal)."""
+        un échec de ce classement de repli n'efface jamais l'erreur d'origine. v43 (CL42-06) : rend le suffixe à ajouter au
+        message de l'exception levée — vide si le classement est écrit, « déjà écrit … non réécrit » s'il existait, et
+        l'échec (scellé) sinon."""
         try:
-            classement_sans_bras(motif, verrouiller=False)
+            etat = classement_sans_bras(motif, verrouiller=False)
         except Exception as e2:  # noqa: BLE001
-            journal["classement_sans_bras_impossible"] = type(e2).__name__ + " : " + str(e2)[:200]
+            return repli_impossible(e2, motif)
+        if etat == "existant":
+            return (" ; classement-sans-bras.json déjà écrit par une tentative précédente : non réécrit (R12), il fait "
+                    "foi pour cette tentative aussi")
+        return ""
+
+    def lever_non_relancable(motif_classement, message, cause):
+        """v43 : après une tentative non relançable, classement de repli puis `SansJugeExterne` s'il existe, sinon
+        `CourseInterrompue` ; le message dit l'issue du classement de repli (CL42-06)."""
+        suite_repli = sans_bras_non_relancable(motif_classement)
+        if resultat["sans_bras"]:
+            exc = SansJugeExterne(message + (suite_repli or " ; classement-sans-bras.json écrit (deux juges, illisible)"),
+                                  resultat)
+        else:
+            exc = CourseInterrompue(message + suite_repli)
+        exc.repli_impossible = resultat.get("repli_impossible")
+        raise exc from cause
+
+    # v42 (CL41-01) : garde de taille sans dépense, avant tout appel (contrôle compris). v43 (CL42-05) : garde propre au
+    # bras (la valeur de la course ne s'applique plus) ; un refus compte une tentative non relançable, classement sans bras
+    for etiquette, modele, _ in juges_externes:
+        if taille_max_consigne_externe is not None:
+            tmax, origine, prov = taille_max_consigne_externe, "donnée au bras (--taille-max-consigne-externe-bras)", 0
+        else:
+            plafond_juge = budgets[("juge_ideation", modele)]
+            servies = len(cles_par_juge[etiquette])
+            prov = provision_sortie_juge_caracteres(servies)
+            tmax = taille_max_consigne_par_defaut(plafond_juge, prov)
+            origine = (f"défaut : plafond de la session du juge {plafond_juge} / prix prudent "
+                       f"{PRIX_CARACTERE_PRUDENT_USD:.2e} dollar par caractère − provision de sortie {prov} caractères "
+                       f"({servies} fiches servies × {PROVISION_SORTIE_PAR_NOTE} caractères de note au rapport "
+                       f"{RAPPORT_SORTIE_ENTREE_PRUDENT:g})")
+        try:
+            journal["garde_taille"][etiquette] = garde_taille_consigne(
+                f"consigne du juge externe {etiquette!r}", len(consignes[etiquette]), tmax, origine, prov)
+        except TailleConsigneRefusee as e:
+            numero = journal["tentative"]
+            journal["garde_taille"][etiquette] = e.details
+            journal["arret"] = str(e)
+            motifs_t = ["refus de taille : la même consigne et la même garde redonneraient le même refus ; une garde plus "
+                        "haute (--taille-max-consigne-externe-bras) ou un plafond de juge plus haut se donne sur mot de Lazar"]
+            if numero >= MAX_TENTATIVES_BRAS:
+                motifs_t.append(f"{MAX_TENTATIVES_BRAS} tentatives faites")
+            ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-refus-taille-{numero}.json"), manifeste(
+                phase="bras-refus-taille", horodatage=horodatage, erreur=str(e), garde_taille=e.details,
+                tentative_comptee=True, numero_tentative=numero, relancable=False, motifs_relance=motifs_t, cout_usd=0.0))
+            motif_r = (f"tentative {numero} du bras non relançable (refus de taille, rien envoyé, rien payé) : " + str(e)
+                       + " ; plus de relance sans un mot de Lazar (" + " ; ".join(motifs_t) + ")")
+            lever_non_relancable(motif_r, motif_r, e)
+    if deja_externe + besoin > plafond_externe + 1e-9:
+        raise CourseInterrompue(f"plafond externe {plafond_externe} insuffisant avant tout appel : déjà {deja_externe} + "
+                                f"contrôles et sessions {besoin} (CL35-05)")
 
     def relance_possible():
         """v41 : ce que vérifiera la relance — moins de MAX_TENTATIVES_BRAS tentatives et le plafond externe qui couvre
@@ -1698,14 +1915,16 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
             ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-non-joue-{numero}.json"),
                                manifeste(phase="bras-non-joue", horodatage=horodatage, journal=journal, erreur=journal["arret"],
                                          relancable=relancable, motifs_relance=motifs))
-            if not relancable:  # v42 (CL41-01) : plus de course sans classement
-                sans_bras_non_relancable(f"tentative {numero} du bras non relançable : " + journal["arret"] + suite)
+            motif_c = f"tentative {numero} du bras non relançable : " + journal["arret"] + suite
+            message = "bras non joué (rien envoyé, rien dépensé) : " + journal["arret"] + suite
+            if not relancable:  # v42 (CL41-01) : plus de course sans classement ; v43 (CL42-06) : issue du repli dite
+                if not isinstance(e, Exception):  # une interruption reste une interruption (repli scellé s'il échoue)
+                    sans_bras_non_relancable(motif_c)
+                    raise
+                lever_non_relancable(motif_c, message, e)
             if not isinstance(e, Exception):  # une interruption reste une interruption
                 raise
-            if not relancable and resultat["sans_bras"]:
-                raise SansJugeExterne("bras non joué (rien envoyé, rien dépensé) : " + journal["arret"] + suite
-                                      + " ; classement-sans-bras.json écrit (deux juges, illisible)", resultat) from e
-            raise CourseInterrompue("bras non joué (rien envoyé, rien dépensé) : " + journal["arret"] + suite) from e
+            raise CourseInterrompue(message) from e
         if not reponse_rendue and not notes_externes and not os.path.exists(chemin_manifeste):
             # contrôle refusé ou interrompu après dépense : tentative payée, comptée, bornée
             ecrire_json_scelle(os.path.join(sortie, f"bras-tentative-{numero}.json"),
@@ -1713,12 +1932,14 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
                                          relancable=relancable, motifs_relance=motifs))
             motif_t = (f"tentative {numero} du bras échouée avant tout envoi des fiches, {journal['cout_total_usd']:.4f} USD "
                        "comptés : " + journal["arret"] + suite)
-            if not relancable:  # v42 (CL41-01) : plus de course sans classement
-                sans_bras_non_relancable(f"tentative {numero} du bras non relançable : " + motif_t)
+            if not relancable:  # v42 (CL41-01) : plus de course sans classement ; v43 (CL42-06) : issue du repli dite
+                motif_c = f"tentative {numero} du bras non relançable : " + motif_t
+                if not isinstance(e, Exception):  # v41 : une interruption reste une interruption (le lanceur rend 2)
+                    sans_bras_non_relancable(motif_c)
+                    raise
+                lever_non_relancable(motif_c, motif_t, e)
             if not isinstance(e, Exception):  # v41 : une interruption reste une interruption (le lanceur rend 2)
                 raise
-            if not relancable and resultat["sans_bras"]:
-                raise SansJugeExterne(motif_t + " ; classement-sans-bras.json écrit (deux juges, illisible)", resultat) from e
             raise CourseInterrompue(motif_t) from e
         if not os.path.exists(chemin_manifeste):
             # v41 (CL40-08) : après envoi, quel que soit l'échec (interruption comprise), le classement à deux juges est
@@ -1726,10 +1947,17 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
             try:
                 classement_sans_bras(journal["arret"])
             except Exception as e2:  # noqa: BLE001 — le manifeste doit exister même si le classement de repli échoue
+                suite_repli = repli_impossible(e2, journal["arret"])  # v43 (CL42-06) : scellé et dit
                 if not os.path.exists(chemin_manifeste):
-                    ecrire_manifeste(erreur=journal["arret"] + " ; classement sans bras impossible : " + str(e2)[:200])
+                    ecrire_manifeste(erreur=journal["arret"] + suite_repli)
                 if isinstance(e, CourseInterrompue):
-                    raise
+                    exc = CourseInterrompue(str(e) + suite_repli)
+                    exc.repli_impossible, exc.lecture = resultat.get("repli_impossible"), getattr(e, "lecture", None)
+                    raise exc from e
+                try:
+                    e.repli_impossible = resultat.get("repli_impossible")
+                except AttributeError:
+                    pass
             else:
                 if isinstance(e, CourseInterrompue):
                     raise SansJugeExterne(journal["arret"], resultat) from e

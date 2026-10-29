@@ -1,4 +1,4 @@
-"""Course d'idéation de l'organisme (v7, version 42) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 43) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
@@ -53,6 +53,19 @@ caractère, `idn.PRIX_CARACTERE_PRUDENT_USD`, soit 1 000 000 caractères pour 2,
 `SORTIE-controle/refus-taille-K.json`, rien payé ; au bras, même garde sur la consigne du juge (défaut : plafond du juge /
 même prix), contrôle **court**, `--budget-externe-usd` transmis s'il est donné ; `relancable` écrit l'hypothèse « relais
 gardé » et calcule aussi « relais relancé à neuf » ; SORTIE sans manifeste de départ → `relancable` faux.
+v43 (contre-lecture CL9) : garde de la course par défaut = plus petit plafond des sessions d'Argon qui reçoivent sa plus
+grosse consigne — contrôle (`--budget-controle-externe-usd`, entrée seule) et passe (`proposeur_ideation|<Argon>`, 2,5 par
+défaut, moins la provision de sortie : `--nombre` fiches de 12 000 caractères au rapport sortie/entrée 5) : **520 000
+caractères** aux réglages du devis, et toujours 520 000 si seul le contrôle est relevé ; chaque passe d'Argon est aussi
+gardée par le cœur avant son envoi. Au bras : `--taille-max-consigne-externe-bras` (défaut : plafond du juge / prix
+prudent moins une provision de sortie de 2 000 caractères de note par fiche servie au rapport 5 : 880 000 pour 3,5 et 52
+fiches) ; `--taille-max-consigne-externe` ne vaut que pour la course ; un
+refus de taille au bras compte une tentative non relançable et écrit le classement sans bras (code 5). L'échec d'un
+classement de repli est dit (sortie d'erreur, `classement-sans-bras-impossible-N.json`). Sans dépense :
+  python -I -B demonstrations/ideation_v1.py --mesurer-consignes --liste-blanche … --question … --piece … [--materiau …
+      --seconde-passe] [--temoins …] [--piece-juge …] [--proposeur-externe …] [--juge-externe …] [--nombre N]
+écrit (sortie standard) les tailles réelles des consignes de contrôle, de passe 2 maximale et de juge, et les gardes qui
+s'y appliqueraient ; aucun appel, aucun fichier, code 0.
 
 La commande externe : consigne sur l'entrée standard, environnement minimal explicite (plus `PLAFOND_SESSION_USD`,
 `ROLE_POLE` et `--variable-transmise`, jamais un nom de clé), dernière ligne `{"texte": …, "cout_usd": …}` — coût
@@ -325,9 +338,16 @@ def construire_analyseur():
     a.add_argument("--budget-controle-externe-usd", type=float, default=2.5,
                    help="plafond de l'appel de contrôle du proposeur externe à la taille réelle de la consigne (CL37-01)")
     a.add_argument("--taille-max-consigne-externe", type=int, default=None,
-                   help="v42 (CL41-01) : taille maximale (caractères) de la plus grosse consigne externe — course : la consigne "
-                        "de contrôle d'Argon ; bras : la consigne du juge ; au-delà, refus scellé avant tout appel, rien payé "
-                        "(défaut : plafond de la session qui la reçoit / prix prudent d'un caractère)")
+                   help="v42 (CL41-01), v43 : taille maximale (caractères) de la plus grosse consigne d'Argon dans la course (sa "
+                        "consigne de contrôle ; chaque passe aussi) ; au-delà, refus scellé avant tout appel, rien payé (défaut : "
+                        "plus petit plafond des sessions qui la reçoivent / prix prudent d'un caractère, provision de sortie "
+                        "déduite pour la passe) ; course seulement")
+    a.add_argument("--taille-max-consigne-externe-bras", type=int, default=None,
+                   help="v43 (CL42-05) : taille maximale (caractères) de la consigne du juge externe au bras (défaut : plafond "
+                        "du juge / prix prudent − provision de sortie) ; un refus compte une tentative non relançable")
+    a.add_argument("--mesurer-consignes", action="store_true",
+                   help="v43 (CL42-03) : écrit les tailles réelles des consignes (contrôle, passe 2 maximale, juge) et les gardes, "
+                        "sans aucun appel ni fichier, puis sort 0")
     a.add_argument("--tolerer-somme-plafonds", action="store_true",
                    help="ancienne option : vaut les deux suivantes (consigné au manifeste)")
     a.add_argument("--tolerer-somme-plafonds-claude", action="store_true",
@@ -373,7 +393,7 @@ def verifier_relais(etat_relais, budget_total_usd, budgets, juges):
 
 def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
                               cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe, taille_max=None,
-                              origine_taille="donnée"):
+                              origine_taille="donnée", provision=0):
     """v38 (CL37-04) → v42 : tous les réglages vérifiés AVANT tout appel de contrôle, avec le même contrôle du bras que
     celui que reçoit le cœur (`budget_controle`, CL40-03) et la garde de taille d'Argon (CL41-01)."""
     return idn.verifier_reglages(
@@ -387,7 +407,75 @@ def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_
         cout_controles_externes_prevu_usd=cout_tentatives_externe + args.budget_controle_externe_usd * len(prop_ext),
         tolerer_somme_claude=tolere_claude, tolerer_somme_externe=tolere_externe,
         budget_controle_bras_usd=budget_controle, nombre_par_proposeur=args.nombre,
-        taille_max_consigne_externe=taille_max, origine_taille_max=origine_taille)
+        taille_max_consigne_externe=taille_max, origine_taille_max=origine_taille, provision_sortie_caracteres=provision)
+
+
+def roles_et_budgets(args):
+    """Proposeurs, juges, rôles externes et plafonds par session, tels que la course les prend (v43 : partagé avec
+    `--mesurer-consignes`)."""
+    proposeurs = [paire(p, f"proposeur-{i + 1}") for i, p in enumerate(args.proposeur)] or \
+        [("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1")]
+    juges = [paire(j, f"juge-{i + 1}") for i, j in enumerate(args.juge)] or \
+        [("juge-fable", "claude-fable-5-1"), ("juge-opus", "claude-opus-5-5")]
+    juges_ext = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.juge_externe)]
+    prop_ext = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.proposeur_externe)]
+    budgets = dict(BUDGETS_PAR_DEFAUT)
+    for _, m in juges_ext:
+        budgets.setdefault(("juge_ideation", m), BUDGET_EXTERNE_JUGE)
+    for _, m in prop_ext:
+        budgets.setdefault(("proposeur_ideation", m), BUDGET_EXTERNE_PROPOSEUR)
+    for b in args.budget:
+        cle, valeur = b.split("=", 1)
+        role, modele = cle.split("|", 1)
+        budgets[(role.strip(), modele.strip())] = float(valeur)
+    return proposeurs, juges, juges_ext, prop_ext, budgets
+
+
+def garde_de_la_course(args, budgets, prop_ext):
+    """v43 (CL42-01) : (taille, origine « option » | « defaut », détail, provision) de la garde de taille de la course —
+    l'option, ou le plus petit plafond des sessions d'Argon qui reçoivent sa plus grosse consigne (contrôle, entrée seule ;
+    passe, provision de sortie déduite)."""
+    if args.taille_max_consigne_externe is not None:
+        return args.taille_max_consigne_externe, "option", "option --taille-max-consigne-externe", 0
+    taille, d = idn.taille_max_consigne_course_par_defaut(
+        args.budget_controle_externe_usd, [budgets[("proposeur_ideation", m)] for _, m in prop_ext], args.nombre)
+    provision = next((s["provision_sortie_caracteres"] for s in d["sessions"] if s["session"] == d["retenue"]), 0)
+    return taille, "defaut", d["detail"], provision
+
+
+def mesurer(args):
+    """v43 (CL42-03) : tailles réelles des consignes pour les fichiers donnés et gardes qui s'y appliqueraient — aucun
+    appel, aucun adaptateur construit, aucun fichier écrit (SORTIE n'est pas créée) ; imprimé sur la sortie standard."""
+    proposeurs, juges, juges_ext, prop_ext, budgets = roles_et_budgets(args)
+    idn._exiger_plafonds(budgets)
+    m = idn.mesurer_consignes(liste_blanche=args.liste_blanche, question=args.question, pieces=args.piece,
+                              materiau=args.materiau, pieces_juge=args.piece_juge, temoins=args.temoins,
+                              taille_max_pieces=args.taille_max_pieces, nombre_par_proposeur=args.nombre,
+                              seconde_passe=args.seconde_passe, nombre_proposeurs=len(proposeurs) + len(prop_ext),
+                              graine=args.graine)
+    taille, origine, detail, provision = garde_de_la_course(args, budgets, prop_ext)
+    prix = idn.PRIX_CARACTERE_PRUDENT_USD
+    ctrl = m["consigne_de_controle_externe"]
+    sortie = {"sans_appel": True, "consignes": m,
+              "garde_course": {"taille_max_caracteres": taille, "origine": origine, "detail": detail,
+                               "provision_sortie_caracteres": provision, "consigne_de_controle": ctrl,
+                               "passerait": ctrl <= taille, "cout_prudent_entree_usd": round(ctrl * prix, 4),
+                               "proposeurs_externes": [e for e, _ in prop_ext]},
+              "garde_bras": {}}
+    provision_juge = idn.provision_sortie_juge_caracteres(m["fiches_au_juge_au_maximum"])
+    for e, mod in juges_ext:
+        if args.taille_max_consigne_externe_bras is not None:
+            tb, ob = args.taille_max_consigne_externe_bras, "option --taille-max-consigne-externe-bras"
+        else:
+            tb = idn.taille_max_consigne_par_defaut(budgets[("juge_ideation", mod)], provision_juge)
+            ob = (f"défaut : plafond du juge {budgets[('juge_ideation', mod)]} / prix prudent − provision de sortie "
+                  f"{provision_juge}")
+        sortie["garde_bras"][e] = {"taille_max_caracteres": tb, "origine": ob,
+                                   "consigne_du_juge_maximale": m["consigne_du_juge_maximale"],
+                                   "passerait_au_maximum": m["consigne_du_juge_maximale"] <= tb,
+                                   "cout_prudent_entree_usd": round(m["consigne_du_juge_maximale"] * prix, 4)}
+    print(json.dumps(sortie, ensure_ascii=False, indent=1))
+    return 0
 
 
 def principal(argv=None):
@@ -400,6 +488,28 @@ def principal(argv=None):
         liste = idn.construire_liste_blanche(args.construire_liste_blanche, args.sortie)
         print(json.dumps({"liste_blanche": args.sortie, "fichiers": len(liste)}, indent=1))
         return 0
+    for nom, valeur in (("--taille-max-consigne-externe", args.taille_max_consigne_externe),
+                        ("--taille-max-consigne-externe-bras", args.taille_max_consigne_externe_bras)):
+        if valeur is not None and valeur < 1:  # v42 (CL41-01), v43 (CL42-05)
+            a.error(f"{nom} doit être un entier ≥ 1")
+    if args.mesurer_consignes:  # v43 (CL42-03) : sans dépense, sans appel, sans fichier
+        if args.bras_rapporte_differe:
+            a.error("--mesurer-consignes mesure les consignes d'une course à venir, pas le bras d'une course faite")
+        for nom in ("liste_blanche", "question"):
+            if not getattr(args, nom):
+                a.error(f"--mesurer-consignes exige --{nom.replace('_', '-')}")
+        if not 1 <= args.nombre <= idn.MAX_FICHES_ABSOLU:
+            a.error(f"--nombre ∉ [1, {idn.MAX_FICHES_ABSOLU}]")
+        try:
+            return mesurer(args)
+        except Exception as e:  # noqa: BLE001 — pièce refusée, réglage refusé : code 2, rien écrit
+            print(json.dumps({"arret": type(e).__name__ + " : " + str(e)[:1000]}, ensure_ascii=False), file=sys.stderr)
+            return 2
+    if args.bras_rapporte_differe and args.taille_max_consigne_externe is not None:  # v43 (CL42-05)
+        a.error("--taille-max-consigne-externe ne vaut que pour la course ; au bras : --taille-max-consigne-externe-bras "
+                "(la valeur de la course ne s'applique plus au bras)")
+    if args.taille_max_consigne_externe_bras is not None and not args.bras_rapporte_differe:
+        a.error("--taille-max-consigne-externe-bras ne se donne qu'avec --bras-rapporte-differe")
     requis = ("sortie",) if args.bras_rapporte_differe else ("sortie", "liste_blanche", "question", "temoins")
     for nom in requis:
         if not getattr(args, nom):
@@ -418,8 +528,6 @@ def principal(argv=None):
         a.error("--delai-session-s doit être strictement positif")
     if not args.delai_commande_s > 0:
         a.error("--delai-commande-s doit être strictement positif")
-    if args.taille_max_consigne_externe is not None and args.taille_max_consigne_externe < 1:  # v42 (CL41-01)
-        a.error("--taille-max-consigne-externe doit être un entier ≥ 1")
     import signal
 
     def interrompre(num, _cadre):  # v40 (CL39-05) : SIGTERM et SIGHUP suivent le chemin de SIGINT (groupe d'Argon arrêté,
@@ -439,26 +547,15 @@ def principal(argv=None):
               file=sys.stderr)
         return 2
     except Exception as e:  # noqa: BLE001 — CL35-08 : toute exception après l'analyse des arguments rend 2
-        print(json.dumps({"arret": type(e).__name__ + " : " + str(e)[:1000]}, ensure_ascii=False), file=sys.stderr)
+        arret = {"arret": type(e).__name__ + " : " + str(e)[:1000]}
+        if getattr(e, "repli_impossible", None):  # v43 (CL42-06) : l'échec du classement de repli est dit
+            arret["classement_sans_bras_impossible"] = e.repli_impossible
+        print(json.dumps(arret, ensure_ascii=False), file=sys.stderr)
         return 2
 
 
 def _principal(args):
-    proposeurs = [paire(p, f"proposeur-{i + 1}") for i, p in enumerate(args.proposeur)] or \
-        [("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1")]
-    juges = [paire(j, f"juge-{i + 1}") for i, j in enumerate(args.juge)] or \
-        [("juge-fable", "claude-fable-5-1"), ("juge-opus", "claude-opus-5-5")]
-    juges_ext = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.juge_externe)]
-    prop_ext = [paire(j, f"externe-{i + 1}") for i, j in enumerate(args.proposeur_externe)]
-    budgets = dict(BUDGETS_PAR_DEFAUT)
-    for _, m in juges_ext:
-        budgets.setdefault(("juge_ideation", m), BUDGET_EXTERNE_JUGE)
-    for _, m in prop_ext:
-        budgets.setdefault(("proposeur_ideation", m), BUDGET_EXTERNE_PROPOSEUR)
-    for b in args.budget:
-        cle, valeur = b.split("=", 1)
-        role, modele = cle.split("|", 1)
-        budgets[(role.strip(), modele.strip())] = float(valeur)
+    proposeurs, juges, juges_ext, prop_ext, budgets = roles_et_budgets(args)
 
     etat_bac = None
     versions = {"python": sys.version.split()[0]}
@@ -525,7 +622,8 @@ def _principal(args):
                                             budget_externe_usd=(args.budget_externe_usd
                                                                 if getattr(args, "budget_externe_usd_explicite", False) else None),
                                             commande_externe=commande_externe,
-                                            taille_max_consigne_externe=args.taille_max_consigne_externe)
+                                            # v43 (CL42-05) : garde propre au bras ; la valeur de la course n'y vaut plus
+                                            taille_max_consigne_externe=args.taille_max_consigne_externe_bras)
         except idn.SansJugeExterne as e:
             print(json.dumps({"arret": "sans juge externe, illisible au sens du devis : " + str(e),
                               "classement_sans_bras": "classement-sans-bras.json (deux juges, illisible)",
@@ -564,19 +662,17 @@ def _principal(args):
     versions["tolerances"] = {"claude": tolere_claude, "externe": tolere_externe,
                               "option_ancienne_les_deux": bool(args.tolerer_somme_plafonds)}
     # v42 (CL41-01) : taille maximale de la plus grosse consigne d'Argon dans la course (sa consigne de contrôle) — donnée,
-    # ou plafond du contrôle d'Argon / prix prudent d'un caractère (barème le plus haut du code, 4 caractères par jeton)
-    if args.taille_max_consigne_externe is not None:
-        taille_max, origine_taille = args.taille_max_consigne_externe, "option"
-    else:
-        taille_max = idn.taille_max_consigne_par_defaut(args.budget_controle_externe_usd)
-        origine_taille = (f"défaut : plafond du contrôle d'Argon {args.budget_controle_externe_usd} / prix prudent "
-                          f"{idn.PRIX_CARACTERE_PRUDENT_USD:.2e} dollar par caractère")
+    # ou prix prudent d'un caractère (barème le plus haut du code, 4 caractères par jeton). v43 (CL42-01) : défaut = plus
+    # petit plafond des sessions d'Argon qui reçoivent cette consigne (contrôle, entrée seule ; passe, provision de sortie
+    # déduite) — `--budget-controle-externe-usd 3.0` seul laisse la garde à 520 000 (la passe reste à 2,5)
+    taille_max, _origine, origine_taille, provision_taille = garde_de_la_course(args, budgets, prop_ext)
     versions["taille_max_consigne_externe"] = {"valeur": taille_max, "origine": "option" if args.taille_max_consigne_externe
-                                               is not None else "defaut", "detail": origine_taille}
+                                               is not None else "defaut", "detail": origine_taille,
+                                               "provision_sortie_caracteres": provision_taille}
     try:
         verif = verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
                                           cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe,
-                                          taille_max if prop_ext else None, origine_taille)
+                                          taille_max if prop_ext else None, origine_taille, provision_taille)
     except idn.TailleConsigneRefusee as e:  # refus scellé, avant tout contrôle, rien payé, aucune tentative comptée
         from pole.outils import ecrire_json_scelle, manifeste
         os.makedirs(sortie_controle, exist_ok=True)
@@ -629,7 +725,12 @@ def _principal(args):
                                     delai_session_s=delai_session, taille_max_pieces=args.taille_max_pieces,
                                     cout_externe_deja_engage_usd=cout_controle_externe + cout_tentatives_externe,
                                     tolerer_somme_claude=tolere_claude, tolerer_somme_externe=tolere_externe,
-                                    budget_controle_bras_usd=budget_controle)
+                                    budget_controle_bras_usd=budget_controle,
+                                    # v43 (CL42-01) : chaque passe d'Argon gardée avant son envoi, sans dépense
+                                    taille_max_consigne_externe=args.taille_max_consigne_externe,
+                                    garder_sessions_externes=True,
+                                    origine_taille_max=("option --taille-max-consigne-externe"
+                                                        if args.taille_max_consigne_externe is not None else None))
     except BaseException as e:  # v40 (CL39-02), v41 (CL40-02, CL40-03) : contrôle refusé, contrôle interrompu (plafond
         # compté) ou refus du cœur avant son manifeste de départ → tentative scellée avec ses coûts, relance calculée
         if os.path.exists(os.path.join(sortie, "manifeste-depart.json")):
