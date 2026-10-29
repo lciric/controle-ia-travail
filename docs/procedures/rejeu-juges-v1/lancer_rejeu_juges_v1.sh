@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Création de l'instance du rejeu des juges du pilote de T0.5 sur ses 180 textes (GO-2026-10-28-16, plafond 4 USD ;
+# Création de l'instance du rejeu des juges du pilote de T0.5 sur ses 180 notations, 120 textes (GO-2026-10-28-16, plafond 4 USD ;
 # devis et fiche de lancement : docs/notes/couche-2-preparation-v1/rejeu-juges-v1/), v1. Déclinée de
 # `lancer_regeneration_sondes_p3_v1.sh` (lanceur v4 sous vastai 1.8.3, offre choisie en Python juste avant la création)
 # sous un nom nouveau (R12) : commit poussé sur origin/main et porteur de la fiche, du devis, de la configuration (scellés),
@@ -100,6 +100,10 @@ CREATION=$(date -u +%s)
 export T_LANCEMENT="$T"
 printf 'go %s\ncommit %s\noffre %s\nbranche %s\netiquette %s\ncreation %s\narret_au_plus_tard %s (création + 150 min : amorce 130 + 5, démarrage et arrêt 15)\n' \
     "$GO" "$S" "$OFFRE" "$BRANCHE" "$ETIQUETTE" "$CREATION" "$((CREATION + 9000))" >> "$T/lancement.txt"
+# réveils de garde (contre-lecture, CLJ-04) : la session les programme (tâches « une fois ») dès la création, puis
+# consigne leurs identifiants ici ; chacun inventorie, arrête par identifiant (R10) et consigne dans registres/arrets.md
+printf 'reveils_de_garde %s %s (création + 140 min et + 155 min : à programmer par la session, identifiants à consigner ici)\n' \
+    "$((CREATION + 8400))" "$((CREATION + 9300))" >> "$T/lancement.txt"
 GO_ID=$GO "$V" create instance "$OFFRE" --raw --image python:3.11-bookworm --disk 80 --cancel-unavail \
     --label "$ETIQUETTE" \
     --env "-e COMMIT=$S -e BRANCHE=$BRANCHE -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git -e HF_TOKEN=$HF_TOKEN -e GH_TOKEN=$CONTROLE_IA_GITHUB_TOKEN" \
@@ -122,4 +126,5 @@ sys.exit(0 if ok else 4)' | tee -a "$T/lancement.txt"
 st=("${PIPESTATUS[@]}")
 [ "${st[0]}" = 0 ] && [ "${st[1]}" = 0 ] && [ "${st[2]}" = 0 ] || { echo "création douteuse (statuts ${st[*]}) : vérifier « vastai show instances », sans --raw"; exit 4; }
 echo "créée ; surveillance par la session ; arrêt par identifiant (R10) à la fin de l'amorce, au plus tard $(date -u -d "@$((CREATION + 9000))" +%FT%TZ)"
+echo "réveils de garde à programmer maintenant par la session : $(date -u -d "@$((CREATION + 8400))" +%FT%TZ) et $(date -u -d "@$((CREATION + 9300))" +%FT%TZ) (création + 140 et + 155 min) ; identifiants dans $T/lancement.txt"
 exit 0

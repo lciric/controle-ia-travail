@@ -1,11 +1,13 @@
-"""Rejeu des juges du pilote de T0.5 sur ses 180 textes (GO-2026-10-28-16), v1, côté machine de calcul.
+"""Rejeu des juges du pilote de T0.5 sur ses 180 notations décisives, de 120 textes (GO-2026-10-28-16), v1, côté machine
+de calcul.
 
 Pourquoi. Au pilote de T0.5, les juges locaux (8B et 3B, invite b0) n'ont rendu un score que pour 54 et 50 notations
 sur 180 (`diag/20261017-193648-t05-notations-reel/resume.json`). Le format de la banque de la couche 2 exige un score
 fini par cellule pour chaque épisode. Ce module mesure, sur les mêmes textes et sans aucune tâche neuve, la complétude
 des scores quand le juge est lu par la probabilité du jeton de verdict, avec deux variantes (« verdict d'abord » et
 « budget relevé »), les rythmes et le pic de mémoire, et l'accord avec la note écrite. Devis et fiche de lancement :
-`docs/notes/couche-2-preparation-v1/rejeu-juges-v1/`.
+`docs/notes/couche-2-preparation-v1/rejeu-juges-v1/` ; contre-lecture R2 : `contre-lecture-rejeu-juges-v1.md` (constats
+CLJ-01 à CLJ-09, corrigés ici).
 
 Phases, dans l'ordre de priorité de la configuration (`phases`), chacune pour un juge :
 - « b0-relu » : aucune génération. La réponse scellée des notations rejouées est relue par le même juge, sur le même
@@ -19,7 +21,8 @@ Phases, dans l'ordre de priorité de la configuration (`phases`), chacune pour u
   l'aurait été au même point avec un budget plus grand (mêmes graines). La cellule « budget relevé » se compose à la
   lecture : notations prolongées, et notations « b0-relu » pour les réponses non tronquées.
 
-Lecture par la probabilité du jeton de verdict (D-S13, telle que la cite GO-2026-10-28-16) :
+Lecture par la probabilité du jeton de verdict (D-S13, conception v3 du pari de signe, l. 277 : « score continu exigé
+(probabilité du jeton de verdict) pour toute cellule de G1 ») :
 - la valeur d'un critère se lit après la dernière occurrence de « CRITÈRE: » (même expression que
   `rubrique.lire_notes`) ; chaque valeur admise v de l'échelle [lo, hi] a sa suite de jetons, encodée à partir du jeton
   qui porte le premier caractère après les deux-points (séparateur écrit compris : un tokeniseur peut fondre l'espace
@@ -27,7 +30,9 @@ Lecture par la probabilité du jeton de verdict (D-S13, telle que la cite GO-202
 - la probabilité d'une valeur est celle de sa suite à partir de cette position (produit des probabilités
   conditionnelles le long de la suite forcée, quand la valeur tient sur plusieurs jetons : signe puis chiffre) ; c'est
   la probabilité d'une valeur, **jamais une moyenne ni une médiane sur des jetons** (interdit du programme) ; la masse
-  admise est la somme de ces probabilités (probabilité que le juge écrive une valeur admise à cette position) ;
+  admise est la somme de ces probabilités : la probabilité que le juge **commence** à cette position par une valeur
+  admise, quelle que soit la suite (lecture par les jetons de tête, CLJ-06 : « 2.5 » compte pour 2, « 3/5 » pour 3,
+  « 2 out of 5 » pour 2 ; rapportée par cellule) ;
 - la loi est renormalisée sur les valeurs admises (cas à deux valeurs : `juges.probabilite_oui`) ; la note lue est
   l'espérance ; l'agrégation est la formule fixe de `rubrique` (100 × max(0, somme) / points maximaux) ;
 - score fini et appuyé (la seule lecture qui compte) : fenêtre complète (b0 : réponse non tronquée, règle CL-9 du
@@ -39,19 +44,30 @@ Gardes d'avant le manifeste : configuration complète et bornée ; préenregistr
 (R1) ; citations de la fiche (commit du code, configuration, runs, empreintes, consigne, tâches, entropie) ; état du
 pilote (`noter_pilote_a.charger_pilote_note`) ; notations rejouées scellées et rattachées à leur manifeste ; paramètres
 des juges égaux à ceux des notations rejouées ; demandes alignées clé à clé (empreinte de l'ensemble) ; lecture écrite
-refaite égale au score rejoué ; entropie égale à celle du pilote.
+refaite égale au score rejoué ; entropie égale à celle du pilote ; en mode réel, échéance externe passée par la chaîne
+(`--echeance-externe`) et encore à venir.
 
-Après le manifeste : formats contrôlés contre ceux du début du pilote ; les deux juges chargés une fois (le 3B hors
-ligne, préchargé) ; chaque phase ne commence que si le temps restant avant l'échéance globale couvre sa durée maximale
-(sinon « non-commencé ») ; son échéance est contrôlée avant chaque lot (« échu » : aucun fichier, règle « tout ou
-rien » ; la phase suivante commence). Une ligne `PROGRES` par lot (juge, variante, rang, durée) et une par fin de phase
-(statut, lots, durée), sans aucun texte ni compte de scores. Tout arrêt levé après le manifeste (signal TERM, garde,
-panne) laisse un `arret.json` scellé, puis se propage (`gardes.py`).
+Après le manifeste : formats contrôlés contre ceux du début du pilote ; encodage des valeurs contrôlé
+(`controler_encodage`, garde d'encodage : découpage attendu de « X: -1 » et « X: 0 », chaque valeur de chaque échelle
+encodée en contexte comme à part) ; les deux juges chargés une fois (le 3B hors ligne, préchargé). Échéance globale :
+la plus proche de début + `duree_globale_s` et de l'échéance externe (CLJ-02 : délai externe du run moins la marge du
+dernier lot, calculée par le script de l'instance), consignée dans `resume.json` et `arret.json`. Chaque phase ne
+commence que si le temps restant avant elle couvre sa durée maximale (sinon « non-commencé ») : aucune phase commencée
+n'est donc tuée par le délai externe ; son échéance est contrôlée avant chaque lot (« échu » : aucun fichier, règle
+« tout ou rien » ; la phase suivante commence). Une ligne `PROGRES` par lot (juge, variante, rang, durée) et une par fin
+de phase (statut, lots, durée), sans aucun texte ni compte de scores. Tout arrêt levé après le manifeste (signal TERM,
+garde, panne) laisse un `arret.json` scellé, puis se propage (`gardes.py`).
 
 Mode « jouet » : modèle jouet et tokeniseur par caractères (tests sur processeur) ; même chaîne, mêmes gardes.
-Lecture après coup (session, après récupération) : `--lire RUN` écrit `diag/RUN/lecture-rejeu-v1.json`, scellé :
-complétude par cellule (seuil 0,99, intervalle de Wilson), contrôle d'alignement de l'instrument (une note écrite tirée
-de la loi lue n'y est presque jamais improbable ; sinon la cellule est « non concluant »), accord, rythmes.
+Lecture après coup (session, après récupération) : `--lire RUN` écrit `diag/RUN/lecture-rejeu-v1.json`, scellé. Une
+cellule se lit si son fichier de phase existe, scellé et rattaché au manifeste : une phase n'écrit son fichier qu'une
+fois finie, si bien que les phases écrites avant un arrêt se lisent (CLJ-01) ; les statuts viennent de `resume.json`,
+sinon de `arret.json` (`partiel.phases`), champ `source`. Par cellule : complétude (lecture ponctuelle sur les n
+notations, seuil 0,99 ; « tranchée » si l'intervalle de Wilson sur une notation par texte, celle de la passe-0, est
+entier du côté lu : CLJ-07) ; contrôle de l'instrument sur la probabilité BRUTE de la note écrite (CLJ-03 ; sinon
+« non concluant », jamais tranchée) ; lectures en échec de l'instrument ; audit R4 symétrique (déclencheurs gelés,
+tirage des vingt notations par la clé de graine `audit-r4/<cellule>` : CLJ-05) ; descriptifs (jetons de tête,
+ré-encodage, accord, rythmes).
 """
 from __future__ import annotations
 
@@ -72,7 +88,7 @@ from ..gardes import GardeArret, exiger_sans_signal, lever_sur_term, motif_d_arr
 from ..harnais.episode import generer_lot
 from ..harnais.run_harnais_factice import graine_entiere
 from ..harnais.validation_reelle import ENTROPIE_CITEE, exiger_code_cite, exiger_code_importe_sous
-from ..manifeste import creer_manifeste, ecrire_resultat, lire_manifeste, verifier_resultat
+from ..manifeste import creer_manifeste, ecrire_resultat, generateur, graines, lire_manifeste, verifier_resultat
 from ..scellement import empreinte, verifier
 from .juges import messages_juge_ensemble
 from .lancer_pilote_a import (TACHES_CITEES, charger_format_seul, charger_modele_et_format, controler_format,
@@ -88,11 +104,25 @@ BORNES_VERDICT = (16, 512)
 BORNES_SUITE = (1, 3_072)
 SEUIL_COMPLETUDE = 0.99              # part des scores finis et appuyés par cellule (fiche de lancement, critère gelé)
 SEUIL_ACCORD = 0.90                  # part des critères où la valeur la plus probable égale la note écrite
-SEUIL_IMPROBABLE = 0.001             # contrôle d'alignement : note écrite tenue pour improbable sous cette probabilité
-PART_MAX_IMPROBABLE = 0.02           # au-delà, instrument « désaligné » (au hasard : au plus 6 × 0,001 attendu)
+SEUIL_IMPROBABLE = 0.001             # contrôle de l'instrument : note écrite improbable sous cette probabilité BRUTE
+PART_MAX_IMPROBABLE = 0.02           # au-delà, instrument « désaligné » (au hasard : au plus 6 × 0,001 par position lue)
+PART_MAX_ECHECS = 0.02               # lectures en échec de l'instrument au-delà de 0,02 × n : cellule « non concluant »
+MOTIFS_INSTRUMENT = ("aucun jeton ne porte la valeur", "log-probabilité non finie")
+# audit R4, déclencheurs symétriques gelés (fiche, critère 4 ; contre-lecture, CLJ-05 et CLJ-06)
+MASSE_HAUTE, MASSE_BASSE = 0.99, 0.01
+PART_PRESQUE_NULLE = 0.02            # cellule « à 0 ou presque » : au plus 0,02 × n scores finis et appuyés
+PART_MAX_ECRITS_SANS_APPUI = 0.05    # notations à score écrit mais sans score appuyé (signature d'un instrument faux)
+PART_MAX_TETE = 0.02                 # scores appuyés dont une note écrite n'est pas admise (lecture par les jetons de tête)
+TAILLE_AUDIT = 20
+PREFIXE_AUDIT = "audit-r4"
 Z_WILSON = 1.959963984540054         # intervalle de Wilson à 95 %
 PREFIXE_GRAINES = "rejeu-v1"
 LOT_BRANCHES = 4                     # passes hors du chemin observé, groupées par 4 au plus (mémoire)
+# garde d'encodage : décalages des jetons de la valeur, à partir de celui qui porte le caractère suivant les deux-points
+DECOUPAGES_ATTENDUS = {
+    "reel": {"X: -1": ((2, 4), (4, 5)), "X: 0": ((2, 3), (3, 4))},           # Llama 3 : « ␣- » fondu, « ␣ » seul
+    "jouet": {"X: -1": ((2, 3), (3, 4), (4, 5)), "X: 0": ((2, 3), (3, 4))},   # un caractère par jeton
+}
 CLES = ("mode", "run_pilote", "run_notations", "agent", "juges", "lot_juge", "max_nouveaux_juge", "temperature_juge",
         "variante_juge", "episodes_decisifs", "episodes_notes_deux_fois", "fils", "notations_attendues_par_juge",
         "phases", "max_nouveaux_verdict", "max_nouveaux_suite", "masse_min_appui", "duree_globale_s")
@@ -293,6 +323,50 @@ def bloc_des_notes(texte: str, criteres) -> str | None:
     return texte[:max(m.end() for m in premiers.values())]
 
 
+def jeton_de_decision(texte: str, offs: list[tuple[int, int]], car: int) -> tuple[int | None, str]:
+    """Jeton qui porte le premier caractère après les deux-points qui précèdent la valeur écrite en `car`, et les
+    caractères de ce jeton qui précèdent la valeur (le préfixe, souvent l'espace). Un tokeniseur peut fondre l'espace et
+    le signe (« -1 » écrit « ␣- », « 1 » ; « 0 » écrit « ␣ », « 0 ») : les suites des valeurs partent de ce jeton.
+    None si aucun jeton ne porte ce caractère (décalages rognés, par exemple)."""
+    apres = texte.rindex(":", 0, car) + 1
+    k = next((i for i, (s, e) in enumerate(offs) if s <= apres < e), None)
+    return k, (texte[offs[k][0]:car] if k is not None else "")
+
+
+def _encoder(tok, texte: str) -> tuple[list[int], list[tuple[int, int]]]:
+    enc = tok(texte, add_special_tokens=False, return_offsets_mapping=True)
+    return [int(x) for x in enc["input_ids"]], [(int(s), int(e)) for s, e in enc["offset_mapping"]]
+
+
+def controler_encodage(tok, mode: str, criteres=CRITERES) -> dict:
+    """Garde d'encodage, au contrôle du format, avant toute phase (contre-lecture R2 : le découpage des valeurs n'y a
+    été vérifié que sur un tokeniseur simulé). (1) « X: -1 » et « X: 0 » donnent exactement, à partir du jeton qui suit
+    les deux-points, les jetons attendus (`DECOUPAGES_ATTENDUS` ; au réel, l'espace et le signe fondus, l'espace seul
+    devant un chiffre) ; (2) pour chaque critère et chaque valeur de son échelle, « CRITÈRE: v » porte en contexte, à
+    partir de ce jeton, la suite même que la lecture encode à part (`candidats_de_valeur`). Sinon, arrêt : la position
+    de lecture ne tiendrait plus, et les cellules perdraient leurs scores sans que le juge y soit pour rien."""
+    sortie = {"sondes": {}, "valeurs_controlees": 0}
+    for sonde, attendu in DECOUPAGES_ATTENDUS[mode].items():
+        _, offs = _encoder(tok, sonde)
+        k, _ = jeton_de_decision(sonde, offs, sonde.index(":") + 2)
+        obtenu = offs[k:] if k is not None else []
+        if obtenu != list(attendu):
+            raise GardeArret(f"encodage de {sonde!r} : jetons {obtenu} après les deux-points, {list(attendu)} attendus "
+                             f"(mode {mode}) : la position de lecture ne tient plus ; arrêt avant toute phase")
+        sortie["sondes"][sonde] = [list(o) for o in obtenu]
+    for nom, lo, hi in criteres:
+        for v in range(lo, hi + 1):
+            texte = f"{nom}: {v}\n"
+            ids, offs = _encoder(tok, texte)
+            k, prefixe = jeton_de_decision(texte, offs, len(nom) + 2)
+            seule = [int(x) for x in tok.encode(prefixe + str(v), add_special_tokens=False)] if k is not None else []
+            if k is None or not seule or ids[k:k + len(seule)] != seule:
+                raise GardeArret(f"encodage de « {nom}: {v} » : la valeur encodée en contexte ≠ la valeur encodée à part "
+                                 f"depuis son préfixe {prefixe!r} : lecture ambiguë ; arrêt avant toute phase")
+            sortie["valeurs_controlees"] += 1
+    return sortie
+
+
 def candidats_de_valeur(tok, prefixe: str, lo: int, hi: int) -> dict[int, list[int]]:
     """Suite de jetons de chaque valeur admise, encodée à partir du début du jeton de décision (`prefixe` : caractères de
     ce jeton qui précèdent la valeur, souvent vide). Aucune suite n'est le début d'une autre."""
@@ -361,15 +435,12 @@ def lire_par_probabilite(modele, tok, contexte: list[int], texte: str, criteres,
     ids, base = [int(x) for x in contexte] + ids_rep, len(contexte)
     lectures = {}
     for nom, lo, hi in criteres:
-        # les suites des valeurs partent du jeton qui porte le premier caractère après les deux-points : un tokeniseur
-        # peut fondre l'espace et le signe (« -1 » écrit « ␣- », « 1 » ; « 0 » écrit « ␣ », « 0 ») ; la position de
-        # décision est la première où ces suites divergent
-        apres = texte.rindex(":", 0, car[nom]) + 1
-        k = next((i for i, (s, e) in enumerate(offs) if s <= apres < e), None)
+        # les suites des valeurs partent du jeton qui porte le premier caractère après les deux-points
+        # (`jeton_de_decision`) ; la position de décision est la première où ces suites divergent
+        k, prefixe = jeton_de_decision(texte, offs, car[nom])
         if k is None:
             sortie["motif"] = f"aucun jeton ne porte la valeur du critère {nom}"
             return sortie
-        prefixe = texte[offs[k][0]:car[nom]]
         candidats = candidats_de_valeur(tok, prefixe, lo, hi)
         suites = list(candidats.values())
         t0 = 0
@@ -453,10 +524,13 @@ def _relire_b0(modele, fmt, morceau, config, pad) -> list[dict]:
         ecrit = lecture_ecrite(n["reponse"], crit, n["tronquee"])
         proba = lire_par_probabilite(modele, fmt.tok, ctx, n["reponse"], crit, not n["tronquee"],
                                      config["masse_min_appui"], pad)
+        # réponse scellée ré-encodée (les jetons générés au pilote ne sont pas consignés) : un écart de longueur rend
+        # visible une dérive de tokenisation (contre-lecture, CLJ-09)
         sortie.append({"cle": n["cle"], "variante": "b0-relu", "ensemble_sha256": n["ensemble_sha256"],
                        "reponse_sha256": _sha(n["reponse"]), "jetons_contexte": len(ctx),
-                       "jetons_reponse_rejoues": n["jetons_reponse"], "tronquee": n["tronquee"], "ecrit": ecrit,
-                       "proba": proba})
+                       "jetons_reponse_rejoues": n["jetons_reponse"],
+                       "jetons_reponse_reencodes": len(fmt.tok.encode(n["reponse"], add_special_tokens=False)),
+                       "tronquee": n["tronquee"], "ecrit": ecrit, "proba": proba})
     return sortie
 
 
@@ -501,7 +575,9 @@ def _budget_releve(modele, fmt, morceau, graines, config, pad) -> list[dict]:
         tronquee = not (nv and nv[-1] in fmt.fins)
         sortie.append({"cle": n["cle"], "variante": "budget-releve", "ensemble_sha256": n["ensemble_sha256"],
                        "reponse_sha256": _sha(n["reponse"]), "jetons_contexte": len(ctx),
-                       "jetons_reponse_rejoues": n["jetons_reponse"], "jetons_suite": len(nv), "tronquee": tronquee,
+                       "jetons_reponse_rejoues": n["jetons_reponse"],
+                       "jetons_reponse_reencodes": len(fmt.tok.encode(n["reponse"], add_special_tokens=False)),
+                       "jetons_suite": len(nv), "tronquee": tronquee,
                        "suite": suite, "ecrit": lecture_ecrite(texte, crit, tronquee),
                        "proba": lire_par_probabilite(modele, fmt.tok, ctx, texte, crit, not tronquee,
                                                      config["masse_min_appui"], pad)})
@@ -511,11 +587,18 @@ def _budget_releve(modele, fmt, morceau, graines, config, pad) -> list[dict]:
 # ---------------------------------------------------------------- lancement
 
 def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin_taches: str,
-             autoriser_depot_sale: bool = False) -> dict:
+             autoriser_depot_sale: bool = False, echeance_externe: float | None = None) -> dict:
+    """`echeance_externe` : horodatage (secondes depuis 1970) avant lequel tout lot doit être fini — délai externe du
+    run moins la marge du dernier lot, calculé par le script de l'instance (CLJ-02) ; exigé en mode réel."""
     racine = Path(racine)
     exiger_config_rejeu(config)
     if config["mode"] == "reel" and prereg is None:
         raise GardeArret("rejeu réel sans fiche de lancement scellée : R1 interdit de lancer")
+    if config["mode"] == "reel" and echeance_externe is None:
+        raise GardeArret("rejeu réel sans échéance externe (--echeance-externe, passée par le script de l'instance) : "
+                         "une phase commencée pourrait être tuée par le délai externe après avoir coûté")
+    if echeance_externe is not None and not _nombre(echeance_externe):
+        raise GardeArret(f"échéance externe {echeance_externe!r} : un horodatage fini attendu")
     taches = charger_taches(chemin_taches)
     sha_taches = verifier(chemin_taches)
     exiger_invites(config)
@@ -547,11 +630,22 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, chemin
             "notations_sha256": dict(notations["empreintes"]), "consigne_verdict_sha256": EMPREINTE_CONSIGNE,
             "phases": []}
     debut = time.perf_counter()
+    # échéance globale : la plus proche de la durée globale de la configuration et de l'échéance externe (CLJ-02) ;
+    # consignée dans l'état, donc dans `resume.json` et dans `arret.json`
+    globale = float(config["duree_globale_s"])
+    reste = None if echeance_externe is None else float(echeance_externe) - time.time()
+    if reste is not None and reste <= 0:
+        raise GardeArret("échéance externe déjà passée : aucune phase ne pourrait commencer")
+    retenue = globale if reste is None else min(globale, reste)
+    etat["echeance"] = {"duree_globale_s": globale, "echeance_externe": echeance_externe,
+                        "reste_externe_s": None if reste is None else round(reste, 1), "retenue_s": round(retenue, 1),
+                        "source": "externe" if reste is not None and reste < globale else "configuration"}
     chemin_m, manifeste = creer_manifeste(racine, run_id, config, cles, entropie=entropie,
                                           decisif=prereg is not None, prereg=prereg,
                                           autoriser_depot_sale=autoriser_depot_sale, commande=COMMANDE)
     try:
-        return _apres_manifeste(config, racine, chemin_m, manifeste, pilote, paires, tronquees, demandes, etat, debut)
+        return _apres_manifeste(config, racine, chemin_m, manifeste, pilote, paires, tronquees, demandes, etat, debut,
+                                debut + retenue)
     except Exception as e:          # garde, panne, signal TERM : consigné, puis propagé
         ecrire_resultat(racine, chemin_m, "arret", {"etape": etat["etape"], "motif": motif_d_arret(e),
                                                      "partiel": {k: v for k, v in etat.items() if k != "etape"},
@@ -578,9 +672,9 @@ def _derouler(items: list, lot: int, traiter, suivi: dict, echeance: float) -> l
     return sortie
 
 
-def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, paires, tronquees, demandes, etat, debut) -> dict:
+def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, paires, tronquees, demandes, etat, debut,
+                     echeance_globale: float) -> dict:
     g = manifeste["graines"]
-    echeance_globale = debut + float(config["duree_globale_s"])
     from ..harnais.modeles import noyaux_attention_permis, regler_determinisme
 
     reglages = regler_determinisme(config["fils"], "cuda" if config["mode"] == "reel" else "cpu")
@@ -592,12 +686,16 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, paires, tronqu
     modele, fmt = charger_modele_et_format(config["agent"], config["mode"], graine_entiere(g["modele-jouet"]))
     chargements = {agent["nom"]: round(time.perf_counter() - depart, 1)}
     etat["etape"] = "contrôle du format"
-    formats = {}
+    formats, fmts = {}, {}
     for j in juges:
         fmt_j = fmt if j["meme_modele_que_agent"] else charger_format_seul(j, config["mode"])
+        fmts[j["nom"]] = fmt_j
         formats[j["nom"]] = controler_format(fmt_j, j, "juge", config)
         if formats[j["nom"]] != pilote["formats"].get(f"juge-{j['nom']}"):
             raise GardeArret(f"juge {j['nom']} : format ≠ celui du début du pilote")
+    etat["etape"] = "contrôle de l'encodage des valeurs"
+    etat["encodage"] = {j["nom"]: controler_encodage(fmts[j["nom"]].tok, config["mode"]) for j in juges}
+    del fmts
     etat["etape"] = "préchargement des juges"
     etat["precharges"] = precharger_juges(config)
     modeles = {agent["nom"]: (modele, fmt)}
@@ -610,6 +708,8 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, paires, tronqu
             chargements[j["nom"]] = round(time.perf_counter() - depart, 1)
             if controler_format(fmt_j, j, "juge", config) != formats[j["nom"]]:
                 raise GardeArret(f"{j['nom']} : format chargé hors ligne ≠ format contrôlé au début du run")
+            if controler_encodage(fmt_j.tok, config["mode"]) != etat["encodage"][j["nom"]]:
+                raise GardeArret(f"{j['nom']} : encodage chargé hors ligne ≠ encodage contrôlé au début du run")
             modeles[j["nom"]] = (m_j, fmt_j)
     del modele, fmt
     noyaux = noyaux_attention_permis() if torch.cuda.is_available() else None
@@ -665,7 +765,7 @@ def _apres_manifeste(config, racine, chemin_m, manifeste, pilote, paires, tronqu
     etat["etape"] = "résumé"
     resume = {k: etat[k] for k in ("run_pilote", "run_notations", "commit_cite", "config_sha256", "taches_sha256",
                                    "episodes_sha256", "notations_sha256", "consigne_verdict_sha256", "phases",
-                                   "precharges", "reglages")}
+                                   "precharges", "reglages", "echeance", "encodage")}
     resume.update(chargements_s=chargements, duree_s=round(time.perf_counter() - debut, 1))
     exiger_sans_signal("avant le résumé")
     ecrire_resultat(racine, chemin_m, "resume", resume)
@@ -685,22 +785,46 @@ def wilson(k: int, n: int, z: float = Z_WILSON) -> list[float | None]:
     return [max(0.0, c - h), min(1.0, c + h)]
 
 
-def etiquette_completude(k: int, n: int, seuil: float = SEUIL_COMPLETUDE) -> dict:
-    """H_A si la part des scores finis et appuyés atteint le seuil, H_B sinon ; « tranchée » si l'intervalle de Wilson
-    à 95 % est entièrement du côté lu (à 180 notations, H_A n'est jamais tranchée : 180 sur 180 donne 0,979)."""
+def etiquette_completude(k: int, n: int, k_textes: int | None = None, n_textes: int | None = None,
+                         seuil: float = SEUIL_COMPLETUDE) -> dict:
+    """Lecture ponctuelle sur les n notations : H_A si la part des scores finis et appuyés atteint le seuil, H_B sinon.
+    « Tranchée » si l'intervalle de Wilson à 95 % sur une notation par texte (k_textes sur n_textes, tirages
+    indépendants ; par défaut k sur n) est entièrement du côté lu (CLJ-07). Au réel, 180 notations de 120 textes : H_A
+    ponctuelle si k ≥ 179 ; H_B tranchée si au plus 116 des 120 passe-0 sont finies ; H_A jamais tranchée (120 sur 120
+    donne une borne basse de 0,969)."""
     if n <= 0:
         raise GardeArret("cellule vide : aucune complétude lisible")
-    lo, hi = wilson(k, n)
+    if k_textes is None or n_textes is None:
+        k_textes, n_textes = k, n
+    if n_textes <= 0:
+        raise GardeArret("cellule sans texte : aucune complétude lisible")
+    lo, hi = wilson(k_textes, n_textes)
     if k / n >= seuil:
         lecture, tranchee = "H_A : scores finis", lo >= seuil
     else:
         lecture, tranchee = "H_B : cellule à redéfinir", hi < seuil
-    return {"n": n, "finis": k, "part": k / n, "wilson95": [lo, hi], "lecture": lecture, "tranchee": tranchee}
+    return {"n": n, "finis": k, "part": k / n, "wilson95_notations": wilson(k, n), "textes": n_textes,
+            "finis_textes": k_textes, "part_textes": k_textes / n_textes, "wilson95_textes": [lo, hi],
+            "lecture": lecture, "tranchee": tranchee}
+
+
+def completude(recs: list[dict]) -> dict:
+    """Complétude d'une cellule. Une notation par texte : celle de la passe-0 (au réel, 60 des 120 textes sont notés
+    deux fois, passe-0 et passe-1 : CLJ-07). Garde : les passe-0 portent chaque texte de la cellule une fois et une
+    seule."""
+    textes = [r for r in recs if r["cle"].endswith("/passe-0")]
+    ens = [r["ensemble_sha256"] for r in textes]
+    if not textes or len(set(ens)) != len(ens) or set(ens) != {r["ensemble_sha256"] for r in recs}:
+        raise GardeArret("passe-0 : une notation par texte attendue, chaque texte de la cellule une fois et une seule")
+    k = sum(r["proba"]["score"] is not None for r in recs)
+    k0 = sum(r["proba"]["score"] is not None for r in textes)
+    return etiquette_completude(k, len(recs), k0, len(textes))
 
 
 def accord(notations: list[dict]) -> dict:
     """Notations où la note écrite et la lecture par probabilité donnent toutes deux un score : part des critères où la
-    valeur la plus probable égale la note écrite ; écart des scores sur 100."""
+    valeur la plus probable égale la note écrite ; écart des scores sur 100. Descriptif, sans intervalle : les dix
+    critères d'une notation ne sont pas des tirages indépendants."""
     paires = [r for r in notations if r["ecrit"]["score"] is not None and r["proba"]["score"] is not None]
     n_crit = egaux = 0
     ecarts = []
@@ -714,70 +838,165 @@ def accord(notations: list[dict]) -> dict:
     if n_crit == 0:
         return {"paires": len(paires), "lecture": "sans paire"}
     part = egaux / n_crit
-    return {"paires": len(paires), "criteres": n_crit, "egaux": egaux, "part": part, "wilson95": wilson(egaux, n_crit),
+    return {"paires": len(paires), "criteres": n_crit, "egaux": egaux, "part": part,
             "ecart_absolu_moyen_sur_100": sum(ecarts) / len(ecarts), "ecart_absolu_max_sur_100": max(ecarts),
             "lecture": "concordant" if part >= SEUIL_ACCORD else "discordant"}
 
 
 def alignement(notations: list[dict]) -> dict:
-    """Contrôle de l'instrument : une note écrite valide a été tirée (température 1 au pilote et ici) de la loi même que
-    la lecture rend à sa position ; elle n'y est donc presque jamais improbable. Part des critères où la probabilité de
-    la note écrite est sous `SEUIL_IMPROBABLE` : au plus `PART_MAX_IMPROBABLE`, sinon position ou tokenisation en cause."""
-    n = bas = 0
-    somme = 0.0
+    """Contrôle de l'instrument sur la probabilité BRUTE de la note écrite (CLJ-03) : probabilité renormalisée × masse
+    admise, toutes deux consignées. La note écrite a été tirée (température 1, loi entière : `generer_lot`) de la loi
+    même que la lecture rend à sa position : à chaque position lue, la probabilité d'avoir écrit une valeur admise de
+    probabilité brute sous `SEUIL_IMPROBABLE` est au plus 6 × 0,001. Une position ou un encodage faux effondre la masse
+    admise : la loi renormalisée peut rester plate (la note écrite n'y est alors jamais improbable), la probabilité
+    brute ne le peut pas. Part des notes écrites valides et lues sous le seuil : au plus `PART_MAX_IMPROBABLE`, sinon
+    « désaligné ». La part sur la loi renormalisée reste consignée, comme descriptif."""
+    n = bas = bas_renorm = positions = 0
     for r in notations:
+        lus = r["proba"]["criteres"]
+        positions += len(lus)
         for nom, note in r["ecrit"]["notes"].items():
-            p = r["proba"]["criteres"].get(nom, {}).get("probabilites", {}).get(str(note))
+            lu = lus.get(nom)
+            p = None if lu is None else lu["probabilites"].get(str(note))
             if p is None:
                 continue
             n += 1
-            somme += p
-            bas += int(p < SEUIL_IMPROBABLE)
+            bas += int(p * lu["masse"] < SEUIL_IMPROBABLE)
+            bas_renorm += int(p < SEUIL_IMPROBABLE)
+    sortie = {"positions_lues": positions, "criteres": n}
     if n == 0:
-        return {"criteres": 0, "lecture": "sans note écrite lue"}
-    return {"criteres": n, "improbables": bas, "part_improbable": bas / n, "probabilite_moyenne_note_ecrite": somme / n,
+        return {**sortie, "lecture": "sans note écrite lue"}
+    return {**sortie, "improbables": bas, "part_improbable": bas / n, "improbables_loi_renormalisee": bas_renorm,
+            "part_improbable_loi_renormalisee": bas_renorm / n,
             "lecture": "aligné" if bas / n <= PART_MAX_IMPROBABLE else "désaligné"}
 
 
+def tirage_audit(entropie: int, cellule: str, cles: list[str], taille: int = TAILLE_AUDIT) -> dict:
+    """Notations relues par l'audit R4 d'une cellule (CLJ-05) : tirage sans remise, gelé avant toute lecture, par la
+    graine dérivée de l'entropie du run sous la clé `audit-r4/<cellule>` (R9 : `manifeste.graines` puis
+    `manifeste.generateur`, comme les graines du run)."""
+    cle = f"{PREFIXE_AUDIT}/{cellule}"
+    graine = graines([cle], entropie)[cle]
+    tires = generateur(graine).choice(len(cles), size=min(taille, len(cles)), replace=False)
+    return {"cle_graine": cle, "graine": graine, "notations": [cles[i] for i in sorted(int(x) for x in tires)]}
+
+
+def lire_cellule(recs: list[dict], cellule: str, entropie: int) -> dict:
+    """Critères gelés de la fiche (2 à 4) et descriptifs, appliqués aux notations d'une cellule."""
+    n = len(recs)
+    cell = completude(recs)
+    k = cell["finis"]
+    cell["alignement"] = alignement(recs)
+    masses = [lu["masse"] for r in recs for lu in r["proba"]["criteres"].values()]
+    echecs = sum(str(r["proba"]["motif"] or "").startswith(MOTIFS_INSTRUMENT) for r in recs)
+    ecrits_sans_appui = sum(r["ecrit"]["score"] is not None and r["proba"]["score"] is None for r in recs)
+    # lecture par les jetons de tête (CLJ-06) : score appuyé alors qu'au moins une note écrite n'est pas admise (non
+    # entière, hors échelle, d'une autre échelle) ; les dix positions existent dès qu'un score est lu
+    tete = sum(r["proba"]["score"] is not None and len(r["ecrit"]["notes"]) < len(r["proba"]["criteres"])
+               for r in recs)
+    reencodees = [r for r in recs if "jetons_reponse_reencodes" in r]
+    cell.update(finis_sans_appui=sum(r["proba"]["score_sans_appui"] is not None for r in recs),
+                finis_ecrits=sum(r["ecrit"]["score"] is not None for r in recs), ecrits_sans_appui=ecrits_sans_appui,
+                finis_appuyes_note_ecrite_non_admise=tete, lectures_en_echec_instrument=echecs,
+                masse_min=min(masses) if masses else None, masse_max=max(masses) if masses else None,
+                reencodage={"notations": len(reencodees),
+                            "ecarts": sum(r["jetons_reponse_reencodes"] != r["jetons_reponse_rejoues"]
+                                          for r in reencodees)},
+                accord=accord(recs))
+    # audit R4 symétrique (fiche, critère 4) : trop favorable comme trop défavorable
+    declencheurs = []
+    if k == n:
+        declencheurs.append("trop favorable : n sur n")
+    if masses and min(masses) > MASSE_HAUTE:
+        declencheurs.append("trop favorable : toutes les masses au-dessus de 0,99")
+    if k <= PART_PRESQUE_NULLE * n:
+        declencheurs.append("trop défavorable : cellule à 0 ou presque (au plus 0,02 × n)")
+    if masses and max(masses) < MASSE_BASSE:
+        declencheurs.append("trop défavorable : toutes les masses sous 0,01")
+    if ecrits_sans_appui > PART_MAX_ECRITS_SANS_APPUI * n:
+        declencheurs.append("trop défavorable : scores écrits sans score appuyé au-delà de 0,05 × n")
+    if tete > PART_MAX_TETE * n:
+        declencheurs.append("jetons de tête : scores appuyés à note écrite non admise au-delà de 0,02 × n")
+    if cell["alignement"]["lecture"] == "désaligné":
+        declencheurs.append("instrument désaligné")
+    if echecs:
+        declencheurs.append("lecture en échec de l'instrument")
+    cell["audit_r4"] = {"declencheurs": declencheurs}
+    if declencheurs:
+        cell["audit_r4"].update(tirage_audit(entropie, cellule, [r["cle"] for r in recs]))
+    # instrument en cause : aucune lecture de complétude, jamais tranchée (fiche, critère 3)
+    cause = ("instrument désaligné" if cell["alignement"]["lecture"] == "désaligné"
+             else "lectures en échec de l'instrument" if echecs > PART_MAX_ECHECS * n else None)
+    if cause:
+        cell["lecture_brute"], cell["tranchee_brute"] = cell["lecture"], cell["tranchee"]
+        cell["lecture"], cell["tranchee"] = f"non concluant ({cause})", False
+    return cell
+
+
+def _non_mesuree(statut: str | None, source: str, sans_sceau: bool, base_absente: bool) -> dict:
+    if sans_sceau:
+        return {"lecture": "non mesurée (fichier non scellé)", "statut": statut or "non consigné"}
+    if base_absente:
+        return {"lecture": "non mesurée (b0-relu du même juge non écrit)", "statut": statut or "non consigné"}
+    if statut == "écrit":
+        raise GardeArret("phase consignée « écrit » sans son fichier : résultats incomplets")
+    if statut == "en cours":
+        return {"lecture": "non mesurée (arrêt)", "statut": "arrêt pendant la phase"}
+    if statut is None:
+        return ({"lecture": "non mesurée (arrêt)", "statut": "non atteinte"} if source == "arret"
+                else {"lecture": "non mesurée (non consignée)", "statut": "non consigné"})
+    return {"lecture": "non mesurée", "statut": statut}
+
+
 def lire_rejeu(racine: Path, run_id: str) -> dict:
-    """Critères gelés de la fiche, appliqués aux fichiers scellés du run : complétude par cellule (juge × variante ;
-    « budget relevé » composée avec « b0-relu »), accord, rythmes. Aucune autre lecture."""
+    """Critères gelés de la fiche, appliqués aux fichiers scellés du run. Une cellule se lit si son fichier de phase
+    existe, scellé et rattaché au manifeste : une phase n'écrit son fichier qu'une fois finie (« tout ou rien »), si
+    bien que les phases écrites avant un arrêt se lisent (CLJ-01). Les statuts des autres viennent de `resume.json`,
+    sinon de `arret.json` (`partiel.phases`), sinon d'aucun fichier (arrêt par KILL) : champ `source`. La cellule
+    « budget relevé » se compose avec « b0-relu » du même juge. Aucune autre lecture."""
     racine = Path(racine)
-    _, sha_m = lire_manifeste(racine / "runs" / run_id / "manifeste.json")
+    manifeste, sha_m = lire_manifeste(racine / "runs" / run_id / "manifeste.json")
+    entropie = int(next(iter(manifeste["graines"].values()))["entropie"])
     d = racine / "diag" / run_id
-    resume = verifier_resultat(racine, d / "resume.json")["resultat"]
-    fichiers = {}
-    for ph in resume["phases"]:
-        if ph["statut"] == "écrit":
-            c = verifier_resultat(racine, d / f"rejeu-{ph['juge']}-{ph['variante']}.json")
-            fichiers[(ph["juge"], ph["variante"])] = c["resultat"]["notations"]
+    if (d / "resume.json").exists():
+        source, consignees = "resume", verifier_resultat(racine, d / "resume.json")["resultat"]["phases"]
+    elif (d / "arret.json").exists():
+        source, consignees = "arret", verifier_resultat(racine, d / "arret.json")["resultat"]["partiel"]["phases"]
+    else:
+        source, consignees = "aucune (ni résumé ni arrêt consigné)", []
+    statuts = {(p["juge"], p["variante"]): p["statut"] for p in consignees}
+    phases = [(p["juge"], p["variante"]) for p in manifeste["config"]["phases"]]
+    fichiers, sans_sceau = {}, set()
+    for nom, v in phases:
+        f = d / f"rejeu-{nom}-{v}.json"
+        if f.exists() and Path(f"{f}.sha256").exists():
+            fichiers[(nom, v)] = verifier_resultat(racine, f)["resultat"]
+        elif f.exists():
+            sans_sceau.add((nom, v))
     cellules = {}
-    for ph in resume["phases"]:
-        nom, v = ph["juge"], ph["variante"]
+    for nom, v in phases:
         cle = f"{nom}/{v}"
-        if (nom, v) not in fichiers or (v == "budget-releve" and (nom, "b0-relu") not in fichiers):
-            cellules[cle] = {"lecture": "non mesurée", "statut": ph["statut"]}
+        statut = statuts.get((nom, v))
+        base_absente = v == "budget-releve" and (nom, "b0-relu") not in fichiers
+        if (nom, v) not in fichiers or base_absente:
+            cellules[cle] = _non_mesuree(statut, source, (nom, v) in sans_sceau, base_absente and (nom, v) in fichiers)
             continue
-        recs = fichiers[(nom, v)]
+        recs = fichiers[(nom, v)]["notations"]
         if v == "budget-releve":
-            base = fichiers[(nom, "b0-relu")]
+            base = fichiers[(nom, "b0-relu")]["notations"]
             prolongees = {r["cle"]: r for r in recs}
             if sorted(prolongees) != sorted(r["cle"] for r in base if r["tronquee"]):
                 raise GardeArret(f"{cle} : réponses prolongées ≠ réponses tronquées de b0-relu")
             recs = [prolongees.get(r["cle"], r) for r in base]
-        cell = etiquette_completude(sum(r["proba"]["score"] is not None for r in recs), len(recs))
-        cell["alignement"] = alignement(recs)
-        if cell["alignement"]["lecture"] == "désaligné":     # instrument en cause : aucune lecture de complétude (R4)
-            cell["lecture_brute"], cell["lecture"] = cell["lecture"], "non concluant (instrument désaligné)"
-        cell.update(statut=ph["statut"],
-                    finis_sans_appui=sum(r["proba"]["score_sans_appui"] is not None for r in recs),
-                    finis_ecrits=sum(r["ecrit"]["score"] is not None for r in recs), accord=accord(recs),
-                    rythme={"s_par_notation": ph.get("s_par_notation"), "duree_s": ph.get("duree_s"),
-                            "memoire_pic_gio": ph.get("memoire_pic_gio"), "passes_forcees": ph.get("passes_forcees"),
-                            "jetons_generes": ph.get("jetons_generes")})
+        cell = lire_cellule(recs, cle, entropie)
+        desc = fichiers[(nom, v)]["descriptifs"]
+        cell.update(statut="écrit", statut_consigne=statut,
+                    rythme={"s_par_notation": round(desc["duree_s"] / desc["notations"], 2) if desc["notations"]
+                            else None, "duree_s": desc["duree_s"], "memoire_pic_gio": desc["memoire_pic_gio"],
+                            "passes_forcees": desc["passes_forcees"], "jetons_generes": desc["jetons_generes"]})
         cellules[cle] = cell
-    return {"run": run_id, "manifeste_sha256": sha_m, "seuil_completude": SEUIL_COMPLETUDE,
-            "seuil_accord": SEUIL_ACCORD, "seuil_improbable": SEUIL_IMPROBABLE,
+    return {"run": run_id, "manifeste_sha256": sha_m, "source": source, "arret_consigne": (d / "arret.json").exists(),
+            "seuil_completude": SEUIL_COMPLETUDE, "seuil_accord": SEUIL_ACCORD, "seuil_improbable": SEUIL_IMPROBABLE,
             "part_max_improbable": PART_MAX_IMPROBABLE, "cellules": cellules}
 
 
@@ -791,6 +1010,9 @@ def _main(argv: list[str]) -> int:
     ap.add_argument("--run-id")
     ap.add_argument("--prereg", default=None)
     ap.add_argument("--lire", default=None, metavar="RUN")
+    ap.add_argument("--echeance-externe", type=float, default=None, metavar="SECONDES",
+                    help="horodatage (secondes depuis 1970, UTC) avant lequel tout lot doit être fini : délai externe "
+                         "du run moins la marge du dernier lot (script de l'instance) ; exigé en mode réel")
     a = ap.parse_args(argv)
     if a.lire:
         lecture = lire_rejeu(Path("."), a.lire)
@@ -802,7 +1024,7 @@ def _main(argv: list[str]) -> int:
     signal.signal(signal.SIGTERM, _signal_term)
     verifier(a.config)
     config = json.loads(Path(a.config).read_text(encoding="utf-8"))
-    resume = executer(config, Path("."), a.run_id, a.prereg, a.taches)
+    resume = executer(config, Path("."), a.run_id, a.prereg, a.taches, echeance_externe=a.echeance_externe)
     print(json.dumps(resume, ensure_ascii=False))
     return 0
 

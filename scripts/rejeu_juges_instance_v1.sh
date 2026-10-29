@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rejeu des juges du pilote de T0.5 sur ses 180 textes, sur l'instance de calcul (GO-2026-10-28-16), v1. Dérivé de
+# Rejeu des juges du pilote de T0.5 sur ses 180 notations (120 textes), sur l'instance de calcul (GO-2026-10-28-16), v1. Dérivé de
 # `notations_t05_instance.sh` et de `regeneration_sondes_p3_instance_v1.sh` sous un nom nouveau (R12 : ni l'un ni l'autre
 # n'est modifié) : mise en place, suite ciblée des tests au nombre attendu, un run de
 # `controle_ia.environnements.noter_rejeu_juges_v1` (juges 8B et 3B, phases dans l'ordre de priorité de la configuration),
@@ -18,7 +18,8 @@
 #                   cite une seule fois chacun « Tests attendus : `N` » et les chemins lus ci-dessous, avant l'installation
 #   PREREG_ABSENT   1 seulement en mode jouet : répétition sans fiche ; CONFIG, TACHES, TESTS_ATTENDUS donnés
 #   ECHEANCE_AMORCE horodatage (secondes depuis 1970, UTC) du plafond de l'amorce : le délai externe du run est borné
-#                   par le temps qui reste avant lui, moins 8 minutes (poussées)
+#                   par le temps qui reste avant lui, moins 13 minutes (KILL du run 5, poussées 8) ; l'échéance du
+#                   module (--echeance-externe) est ce délai moins MARGE_DERNIER_LOT (contre-lecture, CLJ-02)
 #   DEPOT_URL       défaut https://github.com/lciric/controle-ia-travail.git (dépôt de travail privé ; N-016)
 #   GH_TOKEN        jeton GitHub à grain fin ; lu par un assistant d'identification, jamais écrit ni affiché
 #   HF_TOKEN        jeton Hugging Face en lecture (mode reel)
@@ -35,9 +36,12 @@ BRANCHE="${BRANCHE:-calcul/rejeu-juges-v1}"
 FICHE="${FICHE:-docs/notes/couche-2-preparation-v1/rejeu-juges-v1/fiche-lancement-rejeu-juges-v1.md}"
 TRAVAIL="${TRAVAIL:-$HOME/rejeu}"
 PREREG_ABSENT="${PREREG_ABSENT:-0}"
-DELAI_RUN_MAX=95                 # minutes : au-dessus de l'échéance globale du module (85 minutes) et du dernier lot
+DELAI_RUN_MAX=95                 # minutes : durée globale du module (85 minutes), plus la marge du dernier lot, et 4
 MARGE_FIN=8                      # minutes gardées avant le plafond de l'amorce pour consigner et pousser
 DELAI_RUN_MIN=20                 # en dessous, le run ne commence pas (consigné)
+MARGE_DERNIER_LOT=6              # minutes : l'échéance passée au module précède le délai externe d'autant ; une phase ne
+                                 # commence que si elle tient avant cette échéance, et son dernier lot (≈ 4 minutes au
+                                 # pire, budget relevé du 8B) finit avant le TERM : aucune phase commencée n'est tuée
 # suite ciblée (devis, § 4) : le module, le lanceur des notations dont il importe les fonctions, le pilote, le manifeste,
 # le scellement et les préenregistrements ; le nombre exact est cité par la fiche
 TESTS_CIBLES=(tests/test_noter_rejeu_juges_v1.py tests/test_noter_pilote_a.py tests/test_pilote_a.py
@@ -94,6 +98,10 @@ if [ "$PREREG_ABSENT" = 1 ]; then
     journal "répétition sans fiche (jouet, non décisive)"
 else
     [ -f "$FICHE" ] && [ -f "$FICHE.sha256" ] || { journal "fiche $FICHE ou son sceau absent au commit $COMMIT : arrêt avant l'installation"; exit 2; }
+    # marqueur restant (même contrôle que le lanceur) : sinon le module ne l'arrêterait qu'après la mise en place payée
+    if grep -q -e 'À REMPLIR' -e '<<[A-Z0-9_]*>>' "$FICHE"; then
+        journal "fiche : marqueur restant (« À REMPLIR » ou marqueur entre chevrons) : arrêt avant l'installation"; exit 2
+    fi
     ATTENDUS=$(lire_unique "Tests attendus")
     [[ "$ATTENDUS" =~ ^[0-9]+$ ]] || { journal "nombre de tests attendus introuvable ou cité plusieurs fois dans la fiche : arrêt avant l'installation"; exit 2; }
     CONFIG=$(lire_unique "Chemin de la configuration du rejeu")
@@ -224,11 +232,15 @@ if [ "$DELAI" -lt "$DELAI_RUN_MIN" ]; then
 fi
 RUN="$(date -u +%Y%m%d-%H%M%S)-rejeu-juges-$MODE"
 ETAPE="run $RUN"
-journal "run : $RUN ; délai externe $DELAI minutes ; configuration $CONFIG ; tâches $TACHES"
+# échéance absolue du module : délai externe moins la marge du dernier lot, calculée juste avant de lancer timeout ;
+# le module retient la plus proche de celle-ci et de sa durée globale, et la consigne (résumé, arrêt)
+ECHEANCE_RUN=$(( $(date -u +%s) + (DELAI - MARGE_DERNIER_LOT) * 60 ))
+journal "run : $RUN ; délai externe $DELAI minutes ; échéance du module $(date -u -d "@$ECHEANCE_RUN" +%FT%TZ) ; configuration $CONFIG ; tâches $TACHES"
 code=0
 : >"$TRAVAIL/run.err"
 PYTHONPATH=src timeout --signal=TERM --kill-after=5m "${DELAI}m" python -m controle_ia.environnements.noter_rejeu_juges_v1 \
-    --config "$CONFIG" --taches "$TACHES" --run-id "$RUN" "${ARGS[@]}" >"$TRAVAIL/run.json" 2>>"$TRAVAIL/run.err" &
+    --config "$CONFIG" --taches "$TACHES" --run-id "$RUN" --echeance-externe "$ECHEANCE_RUN" "${ARGS[@]}" \
+    >"$TRAVAIL/run.json" 2>>"$TRAVAIL/run.err" &
 PID_RUN=$!
 # relais des lignes de progression : tail s'arrête de lui-même à la fin du run (--pid), sans arrêt par motif (R10)
 ( tail -n +1 -F --pid="$PID_RUN" "$TRAVAIL/run.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" \
