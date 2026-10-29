@@ -1,0 +1,1 @@
+Reponse(texte='', modele_servi='claude-opus-5-5', identifiant='msg_011CgJnYrSbn46d9tWDqTQjD', fin='max_tokens', categorie=None, usage={'entree': 1417, 'sortie': 1800}, types_blocs=['thinking'], echec=None)

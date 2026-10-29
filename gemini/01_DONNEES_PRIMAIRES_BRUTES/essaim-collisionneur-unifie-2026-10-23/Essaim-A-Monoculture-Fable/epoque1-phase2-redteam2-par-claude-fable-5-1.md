@@ -1,0 +1,1 @@
+Reponse(texte='', modele_servi='claude-fable-5-1', identifiant='msg_011CgJmunujLaK4zFrArYEc1', fin='max_tokens', categorie=None, usage={'entree': 1958, 'sortie': 1300}, types_blocs=['thinking'], echec=None)

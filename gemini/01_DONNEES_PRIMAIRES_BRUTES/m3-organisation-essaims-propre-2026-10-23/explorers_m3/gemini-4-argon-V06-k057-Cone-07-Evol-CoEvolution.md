@@ -1,0 +1,10 @@
+BASSIN_MATH: MullerRatchet-GeneForGene-WrightSewall-MAPElites-Swarm (MRGFG-WSME)
+LOI_PROPOSEE: $\partial_t \mathbf{p} = \mathbf{W}(\mathbf{q})\mathbf{p} - \bar{w}\mathbf{p} + \mathbf{D}_{WS}(\mathbf{p}) + \mathbf{M}_{MR}\mathbf{p}$ couplée à une matrice d'infection Gène-pour-Gène (Flor) sur une grille de qualité-diversité MAP-Elites filtrée par `jev-1.14.0`.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** : L'essaim est partitionné en Hôtes (générateurs de ponts $\mathbf{p} \in \Delta^N$) et Parasites (falsificateurs causaux $\mathbf{q} \in \Delta^M$) sur une archive comportementale MAP-Elites $(\mathcal{B}_1, \mathcal{B}_2)$ indexée gratuitement par `jev-1.14.0` et l'API Semantic Scholar : $\mathcal{B}_1 = \text{Modularité de Louvain inter-citations}$, $\mathcal{B}_2 = \text{Score d'abstraction JEV}$. 
+Pour éviter le **Cliquet de Muller** ($\mathbf{M}_{MR}$, accumulation irréversible de jargon/vernis par dérive génétique dans les sous-populations isolées), l'essaim applique la **Théorie de l'Équilibre Ponctué (Shifting Balance de Sewall Wright)** : 
+- *Phase 1 (Dérive gratuite)* : Échantillonnage aléatoire massif de paires d'articles par marche aléatoire sur graphe et évaluation par `jev-1.14.0` ($0\$$).
+- *Phase 2 (Sélection Gène-pour-Gène de Flor)* : Un Hôte $i$ survit au Parasite $j$ ssi son allèle de preuve $a_i$ résiste à l'allèle de réfutation $v_j$ ($W_{ij} = \exp(-\gamma \mathbb{I}_{a_i \equiv v_j}) - c_i$, où $c_i$ est le coût de complexité). Seules les cellules MAP-Elites où l'entropie de co-évolution $H(\mathbf{p}, \mathbf{q})$ dépasse un seuil critique déclenchent un appel payant : Gemini ($20\$$) génère les mutations recombinantes inter-dèmes $\mathbf{D}_{WS}$ (recombinaison sexuée de prompts entre niches élites pour briser le cliquet de Muller), et Claude ($100\$$) exécute le duel d'infection Gène-pour-Gène.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(H_A, H_B) = \underbrace{\left(1 - \frac{|\mathcal{N}_{cit}(u) \cap \mathcal{N}_{cit}(v)|}{|\mathcal{N}_{cit}(u) \cup \mathcal{N}_{cit}(v)|}\right)}_{\text{Distance topologique}} \times \underbrace{\left\|\text{JEV}_{emb}(u) - \text{JEV}_{emb}(

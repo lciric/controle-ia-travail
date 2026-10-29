@@ -1,0 +1,10 @@
+BASSIN_MATH: Helly-Nerve-Eckmann-Spectral-Gap-Swarm (HNESG-S)
+LOI_PROPOSEE: L'essaim maximise le trou spectral supérieur d'Eckmann $\lambda_{min}^+(L_k^{up})$ du complexe du nerf $\mathcal{N}(\mathcal{U}_\epsilon)$ des sous-arbres de citations en comblant uniquement les $k$-cavités violant la propriété d'intersection de Helly identifiées sans coût génératif par `jev-1.14.0`.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** :
+Soit $\mathcal{G}$ le graphe bibliographique gratuit (Semantic Scholar/arXiv/GitHub). `jev-1.14.0` (illimité) projette des recouvrements thématiques $\mathcal{U}_\epsilon = \{U_i\}$ sur $\mathcal{G}$ et construit le complexe simplicial du nerf $\mathcal{N}(\mathcal{U}_\epsilon)$. Par le théorème d'Eckmann, l'homologie rationnelle $\tilde{H}_k(\mathcal{N};\mathbb{R}) \cong \ker(L_k)$ où $L_k = B_k^T B_k + B_{k+1} B_{k+1}^T$. Une obstruction de Helly d'ordre $k$ (où $k+1$ silos s'intersectent deux-à-deux mais $\bigcap_{i=0}^k U_i = \emptyset$, soit $\sigma_k \in \ker B_k \cap \ker B_{k+1}^T$) signale un trou structural profond. L'allocation budgétaire (20$ Gemini, 100$ Claude) est gouvernée hors-poids par la sensibilité de perturbation spectrale du co-bord :
+$$p(\text{Agent}_m \to \sigma_k) \propto \text{Softmax}\left(\beta \cdot \frac{\partial \lambda_1(B_{k+1} B_{k+1}^T)}{\partial w(\tau_{k+1})} \cdot \mathbb{I}[\text{jev}(\partial \tau_{k+1} = \sigma_k) > \theta]\right)$$
+Gemini-Flash ($20\$$) génère des candidats $(k+1)$-simplexes $\tau_{k+1}$ de remplissage ; `jev-1.14.0` éague 99.9% des ponts rhétoriques ; Claude-3.5-Sonnet ($100\$$) n'est invoqué que sur les 0.1% où l'ajout de $\tau_{k+1}$ maximise le saut discontinu de la plus petite valeur propre non-nulle du laplacien supérieur $\Delta \lambda_{min}^+(L_k^{up})$.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(\tau_{k+1}) = \underbrace{\|\mathcal{P}_{\ker(L_k)} (\partial \tau_{k+1})\|_2^2}_{\text{Distance inter-silos (Cavité Helly)}} \times \underbrace{\det\left(\langle \nabla_{\text{act}} \text{jev}(H_i), \nabla_{\text{act}} \text{jev}(H_j) \rangle\right)_{i,j

@@ -1,0 +1,11 @@
+BASSIN_MATH: Courant-Nodal-Morse-Steenrod-Birkhoff (CNMSB)
+LOI_PROPOSEE: L'essaim auto-organise l'allocation budgétaire en maximisant le défaut nodal de Courant des $k$-formes harmoniques de Hodge-Laplace le long des trajectoires de gradient de Morse discret, filtrées gratuitement par l'opération de carré de Steenrod $Sq^i$ sur le complexe de Dowker évalué par `jev-1.14.0`.
+
+1. **Apprentissage & Auto-organisation hors-poids** :
+Les API bibliographiques et `jev-1.14.0` (illimité) construisent gratuitement un complexe de Dowker orienté $\mathcal{D}_\epsilon$ où les sommets sont les articles/dépôts et les simplexes les co-validations sémantiques. Une fonction de Morse discrète $f: \mathcal{D}_\epsilon \to \mathbb{R}$ est calculée à coût nul via l'entropie locale des scores `jev-1.14.0`. Les agents explorateurs à bas coût ($20\$$ Gemini) suivent les $V$-chemins du champ de vecteurs gradient discret $-\nabla_M f$ reliant les simplexes critiques d'indice $k$ à $k+1$. Le budget haute précision ($100\$$ Claude) est alloué uniquement lorsque le théorème des domaines nodaux de Courant sur le $k$-Laplacien de Hodge $\Delta_k = \partial_{k+1}\partial_{k+1}^* + \partial_k^*\partial_k$ est saturé : un vecteur propre $\psi_m \in \ker(\Delta_k - \lambda_m I)$ induit exactement $m$ domaines nodaux disjoints $\Omega_j$, signalant une fracture épistémique maximale entre silos. L'historique hors-poids met à jour les poids simpliciaux $w(\sigma)$ par rétropropagation de la largeur de Birkhoff des lacunes spectrales $\lambda_{m+1} - \lambda_m$.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(\sigma_{AB}) = \underbrace{\|\mathrm{Proj}_{\ker \Delta_k}(\phi_A - \phi_B)\|_{\mathcal{L}^2} \cdot \dim(\Omega_A \cap \partial \Omega_B)}_{\text{Distance inter-silos nodale}} \times \underbrace{\|Sq^1(\alpha_{H_A}) \smile \alpha_{H_B}\|_{H^*(\mathcal{D}_\epsilon; \mathbb{Z}_2)} \cdot \mathbb{I}(H_A \perp H_B)}_{\text{Falsifiabilité causale cohomologique}}$$
+où $\phi_{A,B}$ sont les cochaînes des études, $Sq^1$ le carré de Steenrod (homomorphisme de Bockstein mod 2 mesurant l'obstruction à relever l'hypothèse sans contradiction), et $H_A \perp H_B$ l'orthogonalité causale sur Llama-3.1 évaluée par `jev-1.14.0`. Si le pont est un vernis verbal, $Sq^1(\alpha_{H_A}) = 0$ et $\mathcal{J} = 0$.
+
+3. **Pont inédit & Duel ($H_

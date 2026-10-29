@@ -1,0 +1,10 @@
+BASSIN_MATH: Incompressibilite-Conditionnelle-Muchnik-Tadaki-CTW (ICM-T-CTW)
+LOI_PROPOSEE: L'essaim synthétise un code de Muchnik minimal $p^*$ par pondération d'arbres contextuels (CTW) sur `jev-1.14.0`, ne déclenchant l'inférence LLM qu'aux singularités de dimension algorithmique partielle de Tadaki $D^s(x|y) \to s$.
+
+1. **Auto-organisation hors-poids et Allocation (Théorème de Muchnik & CTW)** :
+Les abstracts/commits de deux silos disjoints $X$ et $Y$ (distance de citation $d_G(X,Y) = \infty$) sont encodés en séquences d'activations via le classifieur illimité `jev-1.14.0`. L'essaim maintient hors-poids une forêt d'arbres de contexte (Context-Tree Weighting, Willems) estimant la longueur de code conditionnelle $L_{CTW}(X|Y) \approx K(X|Y)$. D'après le théorème de Muchnik, il existe un programme préfixe court $p$ de longueur $K(X|Y) + O(\log K(X|Y))$ traduisant $Y$ en $X$. L'essaim utilise `jev-1.14.0` pour cribler des millions de paires $(x,y)$ à coût nul. Le budget fini (20$ Gemini pour l'élagage syntaxique d'arbres CTW, 100$ Claude pour l'instanciation du traducteur $p$) est alloué par enchère proportionnelle à la chute abrupte de la dimension de Tadaki : $\Delta D^s = D^s_{CTW}(x) - D^s_{CTW}(x|y)$, garantissant l'extraction d'une équivalence structurelle cachée sous un bruit terminologique maximal.
+
+2. **Fonction objectif anti-vernis (Singularité de Tadaki & Orthogonality)** :
+Pour tout pont $p$ proposé par Claude, on exige la séparation causale stricte $H_A \perp H_B$ mesurée par l'indépendance algorithmique des résidus d'erreur $e_A, e_B$ évalués par `jev-1.14.0` : $I_K(e_A : e_B | p) \approx L_{CTW}(e_A) + L_{CTW}(e_B) - L_{CTW}(e_A, e_B) = 0$.
+$$\mathcal{J}(p; x, y) = \underbrace{\left(1 - \frac{L_{CTW}(x,y)}{L_{CTW}(x) + L_{CTW}(y)}\right)^{-1}}_{\text{Distance Inter-Silos}} \times \underbrace{\left(\frac{L_{CTW}(x) - L_{CTW}(x|y, p)}{|p|_{MDL}}\right)}_{\text{Gain de Muchnik}} \times \mathbb{I}\left(I_K(H_A : H_B | p) < \epsilon\right)$$
+Tout vernis rhétorique gonfle $|p|_{MDL}$ sans réduire $L_{CTW}(x

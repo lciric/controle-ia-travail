@@ -1,0 +1,11 @@
+BASSIN_MATH: Cohomologie-Faisceaux-Holonomie-Bochner (CFHB)
+LOI_PROPOSEE: L'essaim localise et résout les obstructions d'holonomie d'un faisceau cellulaire d'affirmations causales via le Laplacien de connexion de Bochner, allouant son budget aux cycles de Čech non triviaux que `jev-1.14.0` détecte à coût nul.
+
+1. **Auto-organisation hors-poids & Allocation** :
+Le graphe de citations (gratuit) est modélisé comme un 2-complexe cellulaire $X$. Un faisceau cellulaire $\mathcal{F}$ assigne à chaque article $v$ un espace vectoriel d'états d'affirmations $\mathcal{F}(v)$ et à chaque co-citation $e=(u,v)$ une application de restriction $\mathcal{F}_{v \trianglelefteq e}$ estimée sans frais par `jev-1.14.0` (mesurant l'entailment croisé/contradiction). L'opérateur de cobord $\delta_0: C^0(X;\mathcal{F}) \to C^1(X;\mathcal{F})$ définit le Laplacien de faisceau $\Delta_{\mathcal{F}} = \delta_0^\top \delta_0 + \delta_1 \delta_1^\top$. `jev-1.14.0` calcule en continu la courbure locale $F_\nabla = \delta_1 \circ \delta_0$ sur des millions de triangles bibliographiques. Le budget génératif n'est déclenché que sur les générateurs de la 1-cohomologie de Čech $\check{H}^1(X;\mathcal{F}) = \ker \delta_1 / \text{im } \delta_0$ (boucles d'incompatibilité causale irréductibles localement). Gemini ($20\$) propose des morphismes de transition d'arêtes candidats ; Claude ($100\$) synthétise le 2-simplexe expérimental comblant l'obstruction d'holonomie uniquement si le trou spectral $\lambda_{\min}(\Delta_{\mathcal{F}}) > \tau$.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(e_{uv}, H_A, H_B) = \underbrace{\|\mathbf{v}_{\min}(u) - R_{uv}\mathbf{v}_{\min}(v)\|_{\Delta_{\mathcal{F}}^{-1}}}_{\text{Distance de résistance de faisceau inter-silos}} \times \underbrace{\oint_{\gamma \in \check{H}^1} \text{JSD}\big(P_{\text{jev}}(\cdot | \text{do}(H_A)), P_{\text{jev}}(\cdot | \text{do}(H_B))\big)}_{\text{Falsifiabilité par Holonomie Causale } (H_A \perp H_B)} - \beta \|\delta_0 s\|_0$$
+Le vernis sémantique (homotopie triviale où $R_{uv} \approx I$) annule la courbure ; seules les torsions d'holonomie résolues par une intervention orthogonale sur Llama-3.1 maximisent $\mathcal{J}$.
+
+3. **Pont inédit & Duel ($H_A \perp H_B$)**

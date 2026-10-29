@@ -1,0 +1,1 @@
+Reponse(texte='', modele_servi='claude-opus-5-5', identifiant='msg_011CgJnNVz1ee5SQbRPLvt9Z', fin='refusal', categorie='cyber', usage={'entree': 2358, 'sortie': 0}, types_blocs=[], echec=None)

@@ -1,0 +1,11 @@
+BASSIN_MATH: Chimère-Kuramoto-BogdanovTakens-PerronFrobenius (CKBTP)
+LOI_PROPOSEE: L'essaim évolue comme un réseau d'oscillateurs non-linéaires à couplage non-local maintenu au point de bifurcation de codimension-2 de Bogdanov-Takens ($\text{tr}(J)=0, \det(J)=0$), où `jev-1.14.0` estime l'opérateur de transfert de Perron-Frobenius $\mathcal{P}$ pour déclencher des états chimères isolant les ponts inter-silos.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** :
+Chaque agent $i$ possède une phase sémantique $\theta_i(t) \in \mathbb{T}^d$ sur le graphe de citations. `jev-1.14.0` (illimité) construit hors-ligne l'opérateur de Perron-Frobenius $\mathcal{P}_\tau$ en évaluant des millions de paires d'abstracts, extrayant les fonctions propres lentes $\phi_k$ (silos). L'essaim obéit au système de Kuramoto-Sakaguchi généralisé :
+$$\dot{\theta}_i = \omega_i - \sum_{j} G_{ij}(\mathcal{P}_\tau) \sin(\theta_i - \theta_j - \alpha(\mu_1, \mu_2))$$
+où le noyau $G_{ij}$ couple fortement les agents proches mais faiblement les silos distants. Les paramètres de contrôle $\mu_1$ (température/prompting) et $\mu_2$ (déphasage $\alpha$) sont ajustés hors-poids par rétroaction sur le spectre de Lyapunov transversal $\lambda_\perp$ calculé via `jev-1.14.0`. L'essaim se stabilise dans un **état chimère** : un sous-essaim cohérent ($\lambda_\perp < 0$, Gemini 20$ + `jev`) exploite la topologie locale, tandis qu'un sous-essaim incohérent ($\lambda_\perp > 0$, Claude 100$) subit un chaos itinérant sur la variété centrale de Bogdanov-Takens, déclenchant un appel LLM génératif uniquement lors du franchissement d'une bifurcation homocline reliant deux silos $\phi_A, \phi_B$.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(H_A, H_B) = \underbrace{\|\phi_2(A) - \phi_2(B)\|_{\mathcal{P}}}_{\text{Trou spectral inter-silos}} \times \underbrace{\det\begin{pmatrix} \partial_{\mu_1} F(H_A) & \partial_{\mu_2} F(H_A) \\ \partial_{\mu_1} F(H_B) & \partial_{\mu_2} F(H_B) \end{pmatrix}^2}_{\text{Transversalité causale } (H_A \perp H_B)} \times \exp\left(-\lambda_{\max}^{\text{vernis}}(\text{jev})\right)$$
+où $F$ est l'observable d'activation sur Llama-3.1-8B/70B sous interventions $\mu_{1,2}$.

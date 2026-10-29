@@ -1,0 +1,10 @@
+BASSIN_MATH: Pseudogap-Thouless-Anderson-Palmer-Edwards-Anderson-Nishimori (PTAP-EAN)
+LOI_PROPOSEE: L'essaim minimise l'énergie libre de Thouless-Anderson-Palmer (TAP) avec terme de réaction d'Onsager sur la ligne de Nishimori, déclenchant des avalanches de retournement de croyances aux singularités du pseudogap de Pankov-Dotsenko.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** :
+Le graphe de citations/concepts (Semantic Scholar, arXiv, GitHub) est un verre de spin d'Edwards-Anderson où les nœuds $i$ ont une magnétisation d'exploration $m_i \in [-1, 1]$. Les couplages quenched $J_{ij} = \text{sign}(\text{jev}(i,j)) \cdot |\text{jev}(i,j)| \cdot (1 - A_{ij}^{\text{cit}})$ sont évalués gratuitement et à l'infini par `jev-1.14.0`, créant une frustration maximale lorsque deux études sont sémantiquement liées mais bibliographiquement disjointes ($A_{ij}^{\text{cit}}=0$). L'essaim met à jour $m_i$ hors-poids via les équations TAP sans appel LLM :
+$$m_i^{(t+1)} = \tanh\left(\beta_N \sum_{j} J_{ij} m_j^{(t)} - \beta_N^2 \sum_{j} J_{ij}^2 (1 - (m_j^{(t)})^2) m_i^{(t)}\right)$$
+Le terme de réaction d'Onsager $-\beta_N^2 \sum J_{ij}^2 (1-m_j^2)m_i$ soustrait l'auto-croyance (biais de confirmation de l'agent). La température est fixée sur la ligne de Nishimori $\beta_N = \ln\frac{1-p_{\text{err}}}{p_{\text{err}}}$ (où $p_{\text{err}}$ est le taux de bruit de `jev-1.14.0`). Le budget LLM est alloué uniquement lorsque le champ local $h_i = \sum_j J_{ij}m_j$ tombe dans le pseudogap de la densité d'états $\rho(h) \propto |h|^\theta$ ($|h_i| \to 0$) : Gemini (20$) éclaire les avalanches critiques à bas seuil ; Claude (100$) synthétise les gouttelettes d'excitation de Fisher-Huse.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{L}_{\text{PTAP}} = \sum_{\langle i,j \rangle} d_{\text{silo}}(i,j) \cdot \left(J_{ij}^2 (1-m_i^2)(1-m_j^2)\right) \cdot \det\begin{pmatrix} \|P_{H_A} \Delta \mathbf{a}\|_2 & \langle P_{H_A}\Delta \mathbf{a}, P_{H_B}\Delta \mathbf{a}\rangle \\ \langle P_{H_B}\Delta \mathbf{a}, P_{H_A}\Delta \mathbf{a

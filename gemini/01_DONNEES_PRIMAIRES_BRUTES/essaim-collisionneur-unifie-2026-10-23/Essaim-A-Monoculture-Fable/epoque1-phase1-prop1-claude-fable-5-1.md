@@ -1,0 +1,4 @@
+`BASSIN_MATH: Rupture-de-Sous-Espace-Parcimonieux-Dynamique (RSPD) sous observation non-linéaire`
+
+**1. Complémentarité de préconditions**
+Verrou visé : `P3` (sondes linéaires au plancher) + `Sol/Astra` (contournement lors de la délégation $m_{1\to 2}$). Précondition manquante côté `controle-ia` : un détecteur *temporel* et *non-linéaire* qui localise l'acte, pas la lecture. Précondition apportée par arXiv:2009.11713v3 (référence à vérifier) : les données haute-dimension vivent dans des sous-espaces bas-rang *qui changent brutalement* ; la détection de rupture en ligne se fait sur le résidu de projection, sans classif

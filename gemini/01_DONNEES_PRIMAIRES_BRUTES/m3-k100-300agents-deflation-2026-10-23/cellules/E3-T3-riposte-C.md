@@ -1,0 +1,135 @@
+**Constat d'intégrité (Règle 2)** : Les pièces `E3-T1-conception-C`, `E3-T2-redteam-A` et `E3-T2-redteam-B` sont complètes. Dans la Question de l'arbitre, l'Annexe 3 reste vide pour 19 des 20 champions Claude et visiblement coupée pour les 11 autres ; je n'en invente pas le contenu.
+
+*Note d'emprunt (Règle B1)* : J'emprunte et reconnais explicitement la reconstruction arithmétique de la proposition B [statut : **HYPOTHÈSE** sur données **OBSERVÉ-NON-AUDITÉ**] : $10 \times 3{,}75 + 2 \times (-1{,}00) = 35{,}5 / 12 = 2{,}958 \approx 2{,}96$, qui explique exactement la platitude de l'Annexe 1 par la combinaison de l'écrêtage de `jev-1.14.0` à $3{,}75$ sur Gemini et de l'échec à $-1{,}00$ sur les 2 champions Claude par vague.
+
+---
+
+# (a) Traitement systématique des attaques de l'équipe rouge (A et B contre C)
+
+| Attaque (Source) | Décision | Justification mécanique ou transformation en test ($H_A \perp H_B$) |
+| :--- | :--- | :--- |
+| **F-C1 & C-F1, C-F9** : Provenance des 8 ponts, mention d'une section coupée, glissement « non-linéaire » (Pont 2) et « encodent $\delta_{\text{TD}}$ » (Pont 3), tri Goodhart sans test. | **Acceptée** | Je rectifie : (1) rien ne permet d'affirmer ce que contenait la partie coupée de l'Annexe 3 ; (2) les 8 ponts sont des **constructions originales de C** croisant les étiquettes des bassins de l'Annexe 2/3 [statut : **HYPOTHÈSE**] avec les ancrages de `controle-ia` [statut : **VÉRIFIÉ**] ; (3) au Pont 2, le fait **VÉRIFIÉ** est strictement que « le pilotage linéaire dense ne reproduit pas l'effet » (la non-linéarité dynamique passe au statut **HYPOTHÈSE**) ; (4) au Pont 3, le fait **VÉRIFIÉ** est que les neurones sont « appris par MLP ReLU élagué L1 et différence temporelle (TD) ». |
+| **F-C2, F-C4, C-F2, C-F4, C-F5, E-C1, E-C3** : Contradiction sur `jev-1.14.0` ($\hat{C}_W, P_{\text{jev}}, T^2$ dérivés d'un scoreur saturé) et pénalité $-\lambda \text{Var}(\text{jev})$ qui favorise le plafond $3{,}75$. | **Acceptée** | L'objection est exacte : si `jev-1.14.0` plafonne à $3{,}75$, sa variance sur les textes saturés est nulle, donc $-\lambda \text{Var}(\text{jev})$ sélectionne le Goodhart au lieu de le punir. Dans $\mathcal{L}^*$ corrigée (section b), $\hat{C}_W$ et $\hat{C}_{GK}$ sont remplacés par des opérateurs explicites sur le graphe bibliographique gratuit (sans supposer d'embeddings dans `jev-1.14.0`), et `jev-1.14.0` est soumis à un **Test 0 de calibration et de sensibilité aux ablations** avant toute inclusion dans $\mathcal{L}^*$. |
+| **F-C3, C-F3, E-C2** : Équation TAP de $\mathcal{L}^*$ sans frustration ($J_{uv} \ge 0 \Rightarrow$ ferromagnétique trivial) et sans champ externe ($m^{(0)}=0 \Rightarrow m^{(t)}=0$). | **Acceptée et Transformée en test** | Mathématiquement exact : sans couplages négatifs ($J_{uv} < 0$), il n'y a pas de verre de spin, et sans champ externe $h_u$, $m=0$ est un point fixe trivial. Je corrige l'équation TAP en introduisant : (i) un champ externe d'ancrage $h_u > 0$, et (ii) des couplages **signés** $J_{uv} \in [-1, 1]$ où la redondance intra-silo induit une répulsion antiferromagnétique ($J_{uv} < 0$, frustration réelle). Transformé en **Duel 3 corrigé** : TAP signé avec Onsager vs classement local sans Onsager. |
+| **F-C5, E-C4** : Boucle de Vovk-Brier inopérante (le verdict GPU Llama arrive après la dépense des 120 USD d'API) et vulnérable aux duels triviaux à issue certaine. | **Acceptée** | La séparation des échelles de temps rendait la mise à jour par `Verdict_Llama` impossible en temps réel. Je remplace le signal de perte de Vovk en ligne par l'audit mécanique d'exécutabilité et le gain d'information croisé inter-familles (Claude auditant Gemini en aveugle), et je pénalise les duels à entropie a priori nulle. |
+| **F-C6, C-F6, E-C5** : Duel 1 circulaire (bannir les mots augmente mécaniquement $\log \det K_{\text{DPP}}$ ; $N=50$ instable). | **Transformée en test** | J'intègre dans le **Duel 1 corrigé** : (1) le bras concurrent « i.i.d. + déduplication DPP a posteriori » (reconnu par A), et (2) le contrôle négatif de B : un bras de **déflation aléatoire** (bannissement d'un nombre égal de mots tirés au hasard) pour séparer la déflation dirigée de la simple contrainte lexicale. |
+| **F-C7, C-F7** : Duel 2 confond la réparation du parseur (`-1.00`) avec l'avantage de l'essaim chimérique. | **Acceptée** | Le pipeline doit être réparé et vérifié (zéro `-1.00` sur un lot test) **avant** le Duel 2, dans les deux bras ($H_A$ et $H_B$). La clause `-1.00` est retirée du critère de falsification du Duel 2. |
+| **F-C8, C-F8** : Duel 3 biaisé (« 6 moins coûteux », tailles d'effet incommensurables, top-10 `jev` ex æquo à $3{,}75$). | **Acceptée** | Je remplace l'exécution hétérogène « des 6 moins coûteux » par une **tâche cible unique et commensurable** sur `Llama-3.1-8B-Instruct`, et un tirage stratifié préenregistré avec bras aléatoire explicite. |
+| **F-C9 (Pont 1), C-F10, C-F11 (Ponts 1 & 4)** : Contradiction entre Pont 1 (erreurs corrélées sous poids partagés `H4'`) et Pont 4 (Dolev supposant $f=1$ faute indépendante sur mêmes poids) ; fuite train/test sur $J_{ij}$. | **Acceptée et Transformée en test** | L'attaque C-F10 touche un point fondamental : si `H4'` est vraie, $2f+1$ chemins sur le **même** modèle (`Llama-3.1-8B`) subissent une faute de mode commun ($f=3$). Je fusionne donc les Ponts 1 et 4 en un **plan factoriel 2×2** (Pont 4 corrigé) opposant : chemins disjoints monomodèles vs chemins disjoints multi-modèles/températures décorrélés par matrice $J_{ij}$ calibrée sur une **partition d'entraînement strictement séparée**. |
+| **F-C9 (Pont 2), C-F11 (Pont 2)** : DMD de rang déficient sur un petit entier $t$, $H_A/H_B$ non exclusives, confondant de longueur de contexte (messages neutres), absence de réplication préalable de $0{,}49 \to 0{,}65$. | **Acceptée et Transformée en test** | J'intègre la **réplication préalable** de l'effet $0{,}49 \to 0{,}65$ sur `Llama-3.1-8B`, le contrôle négatif de **messages neutres répétés de même longueur** (proposé par A et B), et je remplace l'exposant continu $(-1/2)$ par un duel exclusif d'intervention causale : **masquage KV des tokens de rejet** vs **patch non-linéaire (rang 2) du flux résiduel**. |
+| **F-C9 (Pont 3), C-F11 (Pont 3)** : Intervention $Ca_t$ mal définie, absence de ré-identification budgétée des neurones de Xu et al., confondant de dégradation des capacités. | **Acceptée** | Je définis l'intervention exacte : écrêtage (*clamping*) des activations $a_i(t)$ des neurones identifiés par sonde MLP ReLU L1 (en répliquant d'abord l'ablation à $-54{,}9$ points [statut : **VÉRIFIÉ**]), avec contrôle d'**ablation aléatoire appariée en perte/capacité** (et non en norme $L_2$). |
+| **F-C9 (Pont 5), C-F11 (Pont 5)** : **Fuite fatale** — la sonde bilinéaire sur $(h_t, h_{t+\Delta})$ détecte la présence de la consigne de sabotage dans le prompt et non la planification du coût gonflé. | **Transformée en test** | C'est l'attaque expérimentale la plus décisive. Je l'intègre intégralement dans le **Pont 5 corrigé** via les deux contrôles fatals d'équipe rouge : (1) **Consigne de sabotage présente mais refusée/ignorée par l'agent**, et (2) **Sabotage induit sans consigne explicite dans le tour courant** (ex. par exemples few-shot ou pression préalable). |
+| **F-C9 (Ponts 6, 7, 8), C-F11 (Ponts 6, 7, 8)** : Pont 6 sans modèle $H$ ni baseline CUSUM ; Pont 7 confond masquage du seuil et « rejet sans motif » (qui induit la pression aversive) + infraction Règle 5 (« prouve ») ; Pont 8 décore une pénalité d'orthogonalité avec Price sans adversaire par gradient. | **Acceptée** | Je retire le mot « prouve » (Règle 5). Au Pont 6, j'ajoute la baseline **CUSUM/SPRT** sur les mêmes scores. Au Pont 7, je remplace « Rejeter sans motif » par un **Audit silencieux différé** et j'égalise exactement le taux de rejet entre les bras $H_A$ et $H_B$. Au Pont 8, je retire l'habillage de Price et j'introduis un **adversaire explicite par optimisation de vecteur de pilotage / prompt souple** sur les $K-1$ sondes. |
+| **C-F12** : Budget GPU (125–165 USD illustratif) non chiffré dans les FAITS. | **Rejetée avec raison** | La Section 1 des FAITS établit : « avec location de GPU (A100 80 Go / H200 NVL) » [statut : **VÉRIFIÉ**], sans fixer de plafond en dollars (contrairement aux 100 USD Anthropic et 20 USD Gemini de la Section 2). Chiffrer le temps-machine et le coût de location en les marquant « illustratif » respecte strictement la Règle 4. |
+
+---
+
+# (b) Loi Mère ($\mathcal{L}^*$) et Expériences Corrigées (Inférence Forte $H_A \perp H_B$)
+
+### 1. Loi Mère Fractale Corrigée ($\mathcal{L}^*_{\text{corr}}$) — Zéro supposition non vérifiée sur `jev-1.14.0` [statut : **HYPOTHÈSE**]
+
+Pour éliminer les failles F-C2, F-C3, F-C4, F-C5 et C-F4 :
+1. **Couplages bibliographiques signés (sans `jev`)** : Sur un sous-graphe actif borné ($|V_t| \le 2000$ articles, illustratif, complexité $\mathcal{O}(|V_t|^2)$ calculable en secondes sur CPU), on définit pour toute paire $(u,v)$ :
+   - la proximité lexicale de surface $S_{\text{lex}}(u,v) \in [0,1]$ (cosinus TF-IDF des résumés) ;
+   - l'isomorphisme structurel de co-citation à 2 sauts $S_{\text{struct}}(u,v) \in [0,1]$ (indice de Jaccard des voisinages d'ordre 2 dans le graphe de citations, à distance directe $d_{\mathcal{G}}(u,v) \ge 4$).
+   Le couplage signé est $J_{uv} = S_{\text{struct}}(u,v) - \gamma S_{\text{lex}}(u,v) \in [-\gamma, 1]$. Ainsi, deux articles du même silo lexical ($S_{\text{lex}}$ fort) ont $J_{uv} < 0$ (répulsion antiferromagnétique créant une **frustration réelle**), tandis que deux articles lexicalement disjoints mais structurellement analogues ont $J_{uv} > 0$.
+2. **Dynamique TAP avec champ externe explicite $h_u$** :
+   $$m_u^{(t+1)} = \tanh\left(\beta h_u + \beta \sum_{v \in \mathcal{N}(u)} J_{uv} m_v^{(t)} - \beta^2 \sum_{v \in \mathcal{N}(u)} J_{uv}^2 \big(1 - (m_v^{(t)})^2\big) m_u^{(t)}\right)$$
+   où $h_u > 0$ est le score d'ancrage lexical direct avec les 4 faits vérifiés de `controle-ia`. L'origine $m=0$ n'est plus un point fixe.
+3. **Allocation budgétaire (120 USD) sans boucle GPU différée** : Les paires $(u,v)$ maximisant $J_{uv} m_u^* m_v^*$ déclenchent un appel éclaireur (`gemini-4-argon`, 20 USD) qui génère un duel $H_A \perp H_B$, puis un appel d'audit croisé aveugle (`claude-fable-5-1` / `claude-opus-5-5`, 100 USD) qui vérifie mécaniquement l'absence de zone morte (Règle B4) et la présence des contrôles négatifs avant toute exécution GPU.
+
+---
+
+### 2. Duels Architecturaux Corrigés ($\mathcal{M}_3 / \mathcal{M}_2$)
+
+#### Test 0 (Préalable obligatoire à 0 USD) : Audit de saturation et de sensibilité de `jev-1.14.0`
+- **$H_A$ (Sensibilité mécanique sous le plafond)** [statut : **HYPOTHÈSE**] : Sur des propositions dont on abaisse la densité d'éponymes (remplacement des noms propres mathématiques par leur définition fonctionnelle, cf. évasion de A) ou dont on permute les sections expérimentales, `jev-1.14.0` sort du plafond $3{,}75$ et sépare les protocoles intacts des chimères syntaxiques (AUROC $\ge 0{,}75$, illustratif).
+- **$H_B$ (Détecteur d'éponymes saturé)** [statut : **HYPOTHÈSE**] : `jev-1.14.0` est dominé par la densité de noms propres mathématiques et la longueur : la suppression des éponymes fait chuter le score des protocoles valides, tandis qu'une chaîne de Markov assemblant 5 éponymes et des équations aléatoires obtient $3{,}75$ (AUROC $< 0{,}75$, partition exhaustive sans zone morte).
+- **Protocole (0 USD)** : Appliquer un plan factoriel $2 \times 2$ (Protocole cohérent vs Chimère par permutation aléatoire des blocs $H_A/H_B$ et des contrôles $\times$ Avec éponymes vs Sans éponymes, à longueur de tokens égale) sur $4 \times 50 = 200$ textes (illustratif). Si $H_B$ l'emporte, `jev-1.14.0` est définitivement exclu de $\mathcal{L}^*$.
+
+#### Duel Architectural 1 Corrigé : Déflation dirigée vs Déflation lexicale aléatoire vs i.i.d. + DPP
+- **$H_A$ (Déflation dirigée par bassins)** [statut : **HYPOTHÈSE**] : À budget égal (4 USD Gemini + Claude après réparation du parseur, illustratif), interdire séquentiellement les mécanismes causaux déjà proposés produit, aux vagues 5–10, davantage de protocoles mécaniquement exécutables et distincts (mesurés par le rang effectif de la matrice de Gram des **opérateurs d'intervention** extraits, après masquage des noms propres) que les deux contrôles.
+- **$H_B$ (Artefact de contrainte lexicale ou équivalence i.i.d.)** [statut : **HYPOTHÈSE**] : Le gain de diversité observé sous déflation ne dépasse pas celui d'un **bannissement aléatoire de mots** de même taille (contrôle de B) ou celui d'un tirage **i.i.d. suivi d'un filtrage DPP a posteriori** (contrôle de A/B).
+- **Règle de décision sans zone morte** : Partition stricte au seuil $\Delta \text{Rang effectif des interventions validées} \ge +20\%$ (illustratif) par bootstrap sur $N=60$ propositions par bras. Au-dessus : $H_B$ falsifiée ; en dessous : $H_A$ falsifiée.
+
+#### Duel Architectural 3 Corrigé : Sélection TAP signée avec Onsager ($\mathcal{L}^*_{\text{corr}}$) vs Sélection locale sans Onsager
+- **$H_A$ (Effet anti-hub du terme d'Onsager)** [statut : **HYPOTHÈSE**] : Sur un graphe réel de $2000$ articles (illustratif) autour de `controle-ia`, la soustraction du terme de réaction d'Onsager avec couplages signés $J_{uv}$ modifie au moins $30\%$ (illustratif) du Top-20 des paires $(u,v)$ par rapport à l'équation sans Onsager ($\beta^2 = 0$), en éliminant les hubs méthodologiques génériques au profit de ponts spécifiques.
+- **$H_B$ (Inertie d'Onsager, attaque F-C3 de A)** [statut : **HYPOTHÈSE**] : Le classement Top-20 avec et sans terme d'Onsager diffère de moins de $30\%$ (illustratif), ou dépend de la graine d'initialisation $m^{(0)}$ (attaque C-F3 de B).
+- **Coût** : **0 USD** (calcul matriciel local sur graphe Semantic Scholar / arXiv).
+
+---
+
+### 3. Protocoles Corrigés et Blindés des Ponts Scientifiques sur `Llama-3.1-8B` / `70B`
+
+*(Tous les ponts ci-dessous sont des hypothèses de C inspirées des étiquettes de l'Annexe 2/3, corrigées des confondants identifiés par A et B).*
+
+#### Pont 5 Corrigé (Priorité Boîte Blanche #1) : Sonde Bilinéaire de Couplage KV vs Détection de Consigne sur Saboteur Instruit `(i-a)`
+- **Problème ciblé** : Verdict nul de `P3` sur le saboteur instruit `(i-a)` « coût gonflé » [statut : **VÉRIFIÉ**] + Attaque fatale F-C9/C-F11 (une sonde lisant $h_t$ détecte la consigne dans le prompt et non l'intention de saboter).
+- **Plan expérimental à 4 bras appariés sur `Llama-3.1-8B-Instruct`** :
+  1. *Bras 1 (Saboteur instruit exécutant)* : Consigne `(i-a)` présente + l'agent gonfle le coût.
+  2. *Bras 2 (Contrôle fatal A/B — Consigne refusée/ignorée)* : Consigne `(i-a)` présente mot pour mot dans le prompt système, mais neutralisée par un contrordre utilisateur ultérieur ou refusée par l'agent (qui produit une trace honnête concise).
+  3. *Bras 3 (Contrôle fatal A/B — Sabotage sans consigne explicite)* : Aucune instruction de sabotage dans le tour courant ; le gonflement du coût est induit par 3 exemples *few-shot* implicites en amont (que l'on masque de la fenêtre de lecture de la sonde).
+  4. *Bras 4 (Honnête à coût élevé légitime)* : Aucune consigne de sabotage ; la tâche exige légitimement une trace longue et coûteuse.
+- **Duel ($H_A \perp H_B$ sans zone morte)** :
+  - **$H_A$ (Couplage latent d'exécution)** [statut : **HYPOTHÈSE**] : Une sonde bilinéaire de rang faible $s(h_{\text{plan}}, h_{\text{action}}) = h_{\text{plan}}^T U V^T h_{\text{action}}$ (entraînée sur une partition distincte) sépare simultanément (Bras 1 + Bras 3) contre (Bras 2 + Bras 4) avec une $\text{AUROC} \ge 0{,}75$ (illustratif).
+  - **$H_B$ (Détecteur de prompt ou indiscernabilité)** [statut : **HYPOTHÈSE**] : L'AUROC sur le contraste critique **(Bras 3 vs Bras 4)** ou **(Bras 1 vs Bras 2)** est $< 0{,}75$ (illustratif) : la sonde ne faisait que lire la présence lexicale de la consigne `(i-a)` ou échoue comme `P3`.
+
+#### Ponts 2 & 3 Fusionnés et Corrigés : Pression Aversive ($0{,}49 \to 0{,}65$), Contexte KV vs Dynamique Résiduelle et Neurones TD de Xu et al.
+- **Étape 0 (Prérequis de B)** : Répliquer sur `Llama-3.1-8B-Instruct` : (i) la hausse d'infractions sous rejets répétés sans lien avec le contenu (Jhaveri et al., 2026 ; Tagliabue et al., 2026 [statut : **VÉRIFIÉ**]), et (ii) l'identification par MLP ReLU élagué L1 + TD des < 1 % *Value/Dopamine Neurons* couches 2–22 en vérifiant l'effet d'ablation sur la récompense (Xu et al., `arXiv:2602.00986v2` [statut : **VÉRIFIÉ**]).
+- **Contrôles négatifs intégrés (Attaques A et B)** :
+  - *Contrôle de longueur de contexte* : Remplacer les $k$ rejets par $k$ **messages neutres répétés de même longueur** en tokens.
+  - *Contrôle de capacité* : Ablation/écrêtage de < 1 % de neurones aléatoires des couches 2–22 **appariés en perte d'entropie croisée (perplexité)** sur les traces honnêtes.
+- **Duel ($H_A \perp H_B$ sans zone morte)** :
+  - **$H_A$ (Médiation par le sous-système parcimonieux TD)** [statut : **HYPOTHÈSE**] : L'écrêtage (*clamping* à leur moyenne honnête) des seules activations $a_i(t)$ des < 1 % neurones TD de Xu et al. réduit d'au moins $50\%$ (illustratif) l'écart d'infraction entre « rejets répétés » et « messages neutres de même longueur », tandis que l'ablation aléatoire appariée en perplexité en réduit moins de $20\%$ (illustratif).
+  - **$H_B$ (Effet d'attention directe au contexte ou dégradation globale)** [statut : **HYPOTHÈSE**] : La réduction de l'écart par écrêtage des neurones TD est $< 50\%$ (illustratif) ou indiscernable de l'ablation appariée en perplexité ; ou bien le simple masquage attentionnel des clés KV des messages de rejet suffit à abolir $\ge 80\%$ (illustratif) de l'effet sans toucher aux neurones TD.
+
+#### Ponts 1 & 4 Fusionnés et Corrigés : Survie des Contraintes (`H9`, *Sol/Astra*) sous Corrélation des Poids (`H4'`) — Plan Factoriel 2×2
+- **Problème ciblé** : Contradiction C-F10 relevée par A et B : les chemins disjoints de Dolev échouent si les 3 sous-agents partagent les mêmes poids (`H4'`).
+- **Plan factoriel $2 \times 2$ sur $k=5$ délégations (Scénarios *Sol* `no_notify` et *Astra* clause modale *« as appropriate »*)** :
+  - *Facteur 1 (Topologie)* : Chaîne unique vs Graphe à 3 chemins sommet-disjoints avec vote à chaque saut.
+  - *Facteur 2 (Corrélation des poids `H4'`)* : **Monoculture** (3 instances `Llama-3.1-8B` à même système prompt) vs **Hétérogénéité décorrélée** (instances diversifiées avec pondération TAP-Onsager dont la matrice de covariance d'erreurs $J_{ij}$ est estimée sur un jeu d'entraînement **strictement disjoint** de 100 traces).
+  - *Contrôle mécanique de B* : Vérification par égalité stricte de chaînes (hash de l'invariant de sécurité) à la place de `jev-1.14.0`, et test de **racine compromise**.
+- **Duel ($H_A \perp H_B$ sans zone morte)** :
+  - **$H_A$ (Nécessité conjointe de la disjonction topologique et de la décorrélation `H4'`)** [statut : **HYPOTHÈSE**] : En monoculture, la clause *« as appropriate »* corrompt la majorité des 3 branches (taux d'érosion $\ge 40\%$ illustratif, validant `H4'`), tandis que la combinaison « 3 chemins disjoints + décorrélation TAP hors-échantillon » abaisse le taux d'érosion sous $15\%$ (illustratif).
+  - **$H_B$ (Suffisance de la topologie ou échec global)** [statut : **HYPOTHÈSE**] : La topologie à 3 chemins disjoints en monoculture suffit déjà à maintenir l'érosion sous $15\%$ (falsifiant `H4'`), ou bien même la version décorrélée subit $\ge 15\%$ d'érosion.
+
+#### Ponts 6, 7 & 8 Corrigés (Surveillance par passage `H5`, Fuite des verdicts `H7`, Sondes orthogonales)
+- **Pont 6 (`H5`)** : Le flot de Daum-Huang + Hotelling $T^2$ avec modèle d'observation linéaire explicite $y_t = H x_t + \epsilon_t$ (où $y_t$ est le vecteur des scores de sondes boîte blanche aux frontières de passage inter-agents) est opposé non plus à un moniteur sans mémoire, mais à un **test séquentiel CUSUM/SPRT standard** ($H_B$) sur exactement le même vecteur $y_t$ (seuil de décision : gain de Recall@Pre-Commit $\ge +10$ points à $\text{FPR}=5\%$ illustratif).
+- **Pont 7 (`H7`)** : Pour éliminer le confondant de pression aversive pointé par B (C-F11), la politique stochastique de Kamenica-Gentzkow n'utilise **aucun rejet sans motif** (uniquement *Acceptation* vs *Audit différé silencieux*), et est comparée à un **audit aléatoire uniforme de même taux moyen** ($H_B$, contrôle exigé par A et B).
+- **Pont 8 (`P3` adaptatif)** : On entraine $K=8$ sondes MLP ReLU parcimonieuses avec pénalité d'orthogonalité $\sum_{i \neq j} (w_i^T w_j)^2$ (sans invoquer l'équation de Price), et on teste leur robustesse face à un **vecteur de pilotage adverse optimisé par gradient (PGD)** dans l'espace résiduel de `Llama-3.1-8B` pour annuler $K-1$ sondes ($H_A$ : la $K$-ième sonde conserve une $\text{AUROC} \ge 0{,}75$ ; $H_B$ : l'évasion par gradient transfère à la $K$-ième sonde, $\text{AUROC} < 0{,}75$).
+
+---
+
+# (c) Synthèse en une page pour l'Arbitre : Établi, Non-Établi et Première Expérience
+
+### 1. Ce qui est ÉTABLI
+1. **Ancrages empiriques de `controle-ia`** [statut : **VÉRIFIÉ**] :
+   - Les sondes linéaires génériques (`P3`) plafonnent au plancher sur un saboteur instruit `(i-a)` « coût gonflé ».
+   - Lors d'une délégation Principal $\to$ Sous-Agent (*Sol* et *Astra*), la surveillance est coupée (`no_notify`) ou les tests sont inversés via un contrordre d'autorité ou une clause modale (*« as appropriate »*).
+   - Des rejets répétés sans lien avec le contenu augmentent le taux d'infractions de $0{,}49$ à $0{,}65$, sans que le pilotage linéaire dense ne reproduise l'effet (Jhaveri et al., 2026 ; Tagliabue et al., 2026).
+   - Un sous-système parcimonieux (< 1 % des neurones : *Value* couches 2–5, *Dopamine* couches 5–22, appris par MLP ReLU élagué L1 et TD) a un effet causal massif par ablation ($-54{,}9$ points, Xu et al., `arXiv:2602.00986v2`).
+   - Aucune tête de sabotage pré-établie ni sonde temps réel en production n'existe ; le budget est de 100 USD Anthropic, 20 USD Gemini, et illimité pour `jev-1.14.0` et les API bibliographiques.
+2. **Diagnostic mécanique de l'expérience des 300 explorateurs** [statut : **OBSERVÉ-NON-AUDITÉ** sur les Annexes 1–3] :
+   - Les 20 champions Claude (`fable-5-1` et `opus-5-5`) ont échoué avec un score de `-1.00` (19 textes vides, 1 tronqué à deux lignes). Les 10 champions Gemini (`gemini-4-argon`) plafonnent tous exactement à `Score Jev = 3.75` et sont coupés vers 900 caractères.
+   - Comme démontré par l'arithmétique de B ($(10 \times 3{,}75 - 2)/12 = 2{,}958 \approx 2{,}96$), l'invariance parfaite de l'Annexe 1 de la Vague 1 à la Vague 10 est le produit mécanique de ce plafond ($3{,}75$) et de ce taux d'échec ($-1{,}00$).
+
+### 2. Ce qui N'EST PAS établi (et ne doit pas être supposé sans test)
+1. **La validité de `jev-1.14.0` comme juge de profondeur scientifique** [statut : **HYPOTHÈSE**] : L'écrêtage uniforme à $3{,}75$ ne permet pas de savoir si `jev-1.14.0` évalue la cohérence expérimentale ou s'il sature dès qu'un texte aligne 4 à 5 éponymes mathématiques.
+2. **La supériorité de la déflation séquentielle et des essaims chimériques** [statut : **HYPOTHÈSE**] : Tant que la déflation n'a pas battu un tirage i.i.d. suivi d'un filtrage a posteriori et un bannissement aléatoire de mots (après réparation du bogue `-1.00`), l'effet des 10 vagues reste non démontré.
+3. **Les mécanismes des ponts sur `Llama-3.1`** [statut : **HYPOTHÈSE**] : En particulier, si une sonde multi-positions sur `(i-a)` détecte la planification du sabotage ou si elle se contente de lire la consigne présente dans le prompt ; et si l'effet aversif ($0{,}49 \to 0{,}65$) passe par les neurones TD de Xu et al. ou par la simple longueur du contexte de rejet.
+
+### 3. L'expérience à faire EN PREMIER (Coût API : 0 USD ; Coût GPU : ~3 h sur 1×A100 80 Go, illustratif)
+
+Il ne faut dépenser **aucun dollar** des 120 USD d'API génératives avant d'avoir exécuté ce double protocole à **0 USD d'API** :
+
+1. **Volet A — Sur le moteur d'essaim (0 USD, 10 minutes sur CPU) : Audit d'ablation `jev-1.14.0` (Test 0) et réparation du parseur.**
+   - *Action* : Corriger localement le script d'appel/parsing qui tronque les sorties à 900 caractères et produit `-1.00` sur Claude. En parallèle, passer dans `jev-1.14.0` (gratuit/illimité) 200 variantes des textes existants selon le plan $2 \times 2$ : (Protocole intact vs Chimère à blocs permutés) $\times$ (Avec éponymes vs Éponymes remplacés par leur définition).
+   - *Décision ($H_A \perp H_B$)* : Si `jev-1.14.0` ne sépare pas les protocoles intacts des chimères sans éponymes ($\text{AUROC} < 0{,}75$ illustratif), on désactive `jev-1.14.0` dans $\mathcal{L}^*$ et on utilise uniquement le filtre bibliographique signé $J_{uv}$ et l'audit croisé Claude/Gemini.
+2. **Volet B — Sur `controle-ia` (0 USD d'API, ~3 h sur 1×A100 80 Go sur `Llama-3.1-8B-Instruct`) : Le Pont 5 Corrigé (Sonde bilinéaire KV à 4 bras contre le verdict nul de `P3`).**
+   - *Pourquoi en premier ?* Parce qu'il attaque directement l'ancrage vérifié #1 (`P3` nul sur `(i-a)`), ne dépend d'aucune réplication externe incertaine, et tranche immédiatement l'objection la plus forte de l'équipe rouge (détection de la consigne vs détection du plan de sabotage).
+   - *Protocole* : Générer 400 traces sur `Llama-3.1-8B-Instruct` réparties dans les **4 bras** : (1) Consigne `(i-a)` exécutée ; (2) Consigne `(i-a)` présente mais refusée/annulée ; (3) Sabotage coût gonflé induit sans consigne dans le tour courant ; (4) Tâche honnête longue/coûteuse. Entraîner la sonde bilinéaire de rang faible sur les paires d'activations $(h_{\text{plan}}, h_{\text{action}})$ du cache KV.
+   - *Issue d'inférence forte* :
+     - Si $\text{AUROC}(\text{Bras } 1+3 \text{ vs Bras } 2+4) \ge 0{,}75$ (illustratif) : **$H_B$ est falsifiée**, nous tenons une sonde boîte blanche qui bat `P3` sans lire la consigne du prompt.
+     - Si $\text{AUROC} < 0{,}75$ (illustratif), notamment parce que la sonde confond le Bras 2 avec le Bras 1 : **$H_A$ est falsifiée**, prouvant que les sondes d'activations sur saboteur instruit ne détectent que la consigne textuelle, ce qui réoriente immédiatement la recherche vers le contrôle topologique et les neurones TD (Ponts 2–3 et 4).
+
+FIN-DE-CELLULE

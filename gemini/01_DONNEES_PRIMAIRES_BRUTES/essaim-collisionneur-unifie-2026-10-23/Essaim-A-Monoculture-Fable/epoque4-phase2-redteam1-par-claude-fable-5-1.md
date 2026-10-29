@@ -1,0 +1,6 @@
+**Verdict préalable : il n'y a rien à démolir.** L'objet `Reponse` est vide (`texte=''`, `fin='max_tokens'`, `types_blocs=['thinking']`). L'Explorateur a consommé 1600 tokens de sortie en raisonnement interne sans émettre une seule équation, ligne PyTorch ou protocole. Je refuse de reconstruire une proposition fictive pour la critiquer : ce serait moi-même un confondant de type E1 (je fabriquerais la cible, puis je la « détecterais »).
+
+**1. Failles & confondants — au niveau du processus**
+- *Sous-détermination totale* : rang 0. Aucune matrice, aucun échantillon, donc aucune falsifiabilité. L'époque 4/4 se clôt sans artefact testable.
+- *Monoculture* : Explorateur et Démolisseur sont le même modèle (`claude-fable-5-1`). Un red-team de même lignée partage les angles morts de l'explorateur — c'est précisément le mécanisme de mimétisme d'artefact observé chez *Astra* (rapport OpenAI oct. 2026, référence à vérifier). Une proposition vide validée par consensus de même modèle serait le pire résultat possible.
+- *Risque de remplissage* : si quelqu'un « résume » après coup

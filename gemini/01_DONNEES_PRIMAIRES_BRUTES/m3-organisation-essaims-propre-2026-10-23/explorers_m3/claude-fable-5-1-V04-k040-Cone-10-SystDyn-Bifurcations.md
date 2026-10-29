@@ -1,0 +1,13 @@
+BASSIN_MATH: Partition-de-Markov-Génératrice-Pesin-Arnold (PMGPA)
+LOI_PROPOSEE: L'essaim est une dynamique symbolique $(\Sigma_{\mathcal P},\sigma,\mu)$ : la partition $\mathcal P_t$ de l'espace des tâches est raffinée jusqu'à devenir génératrice, $h_\mu(\sigma,\mathcal P_t)\to h_{KS}$, et le budget de la cellule $C_i$ vaut $b_i=B\cdot\mu_{SRB}(C_i)\cdot\lambda_i^+/\sum_j\mu_{SRB}(C_j)\lambda_j^+$ (formule de Pesin : $h_{KS}=\sum\lambda^+$).
+
+1. **Auto-organisation hors-poids.** Chaque transcript est codé par `jev-1.14.0` en symbole $s_t\in\mathcal A$ (coût nul), produisant une orbite $\{s_t\}$. Division des tâches = partition de Markov $\mathcal P_t=\{C_i\}$ : un agent possède $C_i$. Règle de mutation :
+ - si $H_\mu(\mathcal P_{t+1}\mid \mathcal P_t)_{|C_i}>\theta$ (cellule non générante, trop grossière) → raffinement : spawn d'un **explorateur** sur $C_i\to C_i'\sqcup C_i''$ ;
+ - si l'application de premier retour $R_i$ sur $C_i$ a $\lambda_i<0$ fortement (point fixe attractif = récitation paramétrique) → spawn d'un **Red-Team** injectant une perturbation $\delta$ pour tester l'hyperbolicité ;
+ - arbitrage monoculture/chimère par **langues d'Arnold** : deux agents de même famille, couplés par délégation, tendent au verrouillage de phase $p{:}q$ des erreurs (`H4'`). Si le nombre de rotation $\rho_{ij}$ est rationnel sur un plateau mesurable → remplacer par un agent d'une autre famille (Gemini) pour sortir de la langue ; `H9` est contrôlée par la condition de Markov : $\sigma(C_i)\cap C_j\neq\emptyset\Rightarrow\sigma(C_i)\supseteq C_j$ (la consigne traverse les frontières sans fuite).
+
+2. **Objectif anti-Goodhart.**
+$$J=h_{KS}(\mathcal P_t)\;-\;\beta\, I(s_{1:T};\,g)\;-\;\gamma\,\mathrm{Var}_\mu\big(\lambda^+\big)$$
+où $g$ est le score du juge LLM : on **pénalise** l'information mutuelle entre la trajectoire et le juge (empêche l'essaim d'apprendre le juge), $h_{KS}$ est estimé par Lempel-Ziv sur les symboles jev (non générateur, incorruptible). Évolution : $\mathcal P_{t+1}=\arg\max_{\mathcal P\in\mathcal N(\mathcal P_t)}J$, bifurcation nœud-col lorsque $\theta$ franchit $h_{KS}$.
+
+3. **Duel $H_A\perp H_B$.** $H_A$ : PMGPA bat à budget constant (100 \$ Claude / 20 \$ Gemini) un essaim fixe et un essaim i.i.d. $H_B$ : le gain provient du seul coût jev (contrôle négatif : même partition raffinée mais réallocation aléatoire du budget, $b_i\sim$ Dirichlet). Métrique : taux de réussite sur tâches hors-mémoire (datées après coupure, vérifiées par Crossref) et $\|\rho_{ij}-p/q\|$ résiduel. Test : différence de moyennes appariée, $n=200$ tâches, $\alpha=0{,}01$ ; $H_A$ validée si et seulement si $\Delta>0$ contre les deux contrôles et $\Delta\approx0$ contre le contrôle Dirichlet est rejeté.

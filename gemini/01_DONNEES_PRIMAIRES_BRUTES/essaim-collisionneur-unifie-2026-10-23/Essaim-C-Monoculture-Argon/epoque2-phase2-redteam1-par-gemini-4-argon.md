@@ -1,0 +1,1 @@
+Reponse(texte='', modele_servi='gemini-4-argon', identifiant='Gg_bau3CFo69vdIPxJDLwQY', fin='BLOCAGE_PROMPT', categorie='OTHER', usage={'entree': 0, 'sortie': 0}, types_blocs=[], echec=None)

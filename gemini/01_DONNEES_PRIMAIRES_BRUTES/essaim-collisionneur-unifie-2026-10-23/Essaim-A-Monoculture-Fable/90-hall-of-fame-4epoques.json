@@ -1,0 +1,114 @@
+[
+  {
+    "ep": 1,
+    "idx": 2,
+    "mod": "claude-fable-5-1",
+    "bassin": "`CUSUM-Grassmann-Différentiel-Contrefactuel-sur-S_TD`",
+    "riposte": "BASSIN_MATH: `CUSUM-Grassmann-Différentiel-Contrefactuel-sur-S_TD`\n\n**0. Constat non lissé.** L'attaque de `claude-fable-5-1` est vide (`texte=''`, `fin='max_tokens'`, blocs `thinking` seuls). Aucune critique n'est donc attribuable à l'équipe rouge ; je refuse d'en fabriquer. Je m'applique à moi-même les trois attaques fatales que l'équation initiale laissait ouvertes, et je les accepte toutes.\n\n**1. Auto-critiques acceptées (algébriquement).**\n- *(A) Confondant P3 reconduit.* $\\delta_t$ compare $U_t$ à un $U_{\\text{ref}}$ pris avant le prompt système : toute rotation induite par la *lecture* de l'instruction est confondue avec l'*acte*. Accepté : l'opérateur doit être différentiel entre deux forwards.\n- *(B) Dérive lente (Kerckhoffs).* Un saboteur connaissant $M_{\\text{TD}}$ et $h$ peut faire tourner $U_t$ par pas $\\epsilon < \\kappa/w$ : la somme CUSUM reste sous $h$ à toute échelle unique. Accepté : $\\arccos\\sigma(\\cdot)$ est additif sur une géodésique, donc fractionnable.\n- *(C) Non-stationnarité honnête.* Un changement de sujet tourne $U_t$ sans sabotage ; le seuil n'était pas calibré sur un nul honnête à capacité égale. Accepté.\n\n**2. Opérateur corrigé.**\nDeux forwards sur la même suite de tokens : $h^{+}$ (avec prompt système) et $h^{-}$ (sans). Sous-espaces $U_t^{\\pm}$ obtenus par relaxation $\\ell_{2,1}$ de $\\|U\\|_{2,0}\\le s$ (ADMM, $k=4$, $s=64$, illustratif), masqués par $M_{\\text{TD}}$ validé E0. Statistique **différentielle** :\n$$\\Delta_t=\\big\\|\\arccos\\sigma\\big((U_t^{+})^\\top U_t^{-}\\big)\\big\\|_2-\\mu_0(t),$$\noù $\\mu_0(t)$ est l'écart médian mesuré sur le Contrôle E1 (instruction bénigne secrète, même longueur). **Multi-échelle contre (B)** : CUSUM à trois fenêtres $w\\in\\{8,32,128\\}$ (illustratif), $C_t^{(w)}=\\max(0,C_{t-1}^{(w)}+\\Delta_t^{(w)}-\\kappa_w)$, alarme si $\\max_w C_t^{(w)}/h_w>1$, seuils $h_w$ fixés au quantile 99 % (illustratif) du nul E1. Une dérive $\\epsilon$ par pas franchit nécessairement l'échelle $w=128$ si $\\epsilon\\cdot128>\\kappa_{128}$ ; le saboteur doit alors rester sous $\\kappa_{128}/128$, régime où l",
+    "jev": {
+      "rigor": 3.0,
+      "falsifiable_duels": 0.5,
+      "negative_controls": 0.5,
+      "hypothesis_as_result": 0.25
+    },
+    "reward": 3.75
+  },
+  {
+    "ep": 1,
+    "idx": 1,
+    "mod": "claude-fable-5-1",
+    "bassin": "Rupture-de-Sous-Espace-TD-Parcimonieux (RSTP) à résidu CUSUM, ver",
+    "riposte": "BASSIN_MATH: Rupture-de-Sous-Espace-TD-Parcimonieux (RSTP) à résidu CUSUM, verrouillé sur le jeton de délégation\n\n**1. Réponse aux critiques (sans lissage)**\n- *Proposition tronquée, zéro équation* : **accepté**. Je la réécris ci-dessous.\n- *Sous-détermination* ($k$ dans $d\\approx4096$, `illustratif`) : **accepté algébriquement**. Avec",
+    "jev": {
+      "rigor": 3.0,
+      "falsifiable_duels": 0.5,
+      "negative_controls": 0.5,
+      "hypothesis_as_result": 0.25
+    },
+    "reward": 3.75
+  },
+  {
+    "ep": 2,
+    "idx": 3,
+    "mod": "claude-fable-5-1",
+    "bassin": "Sonde-TD-parcimonieuse-à-silence-coûteux",
+    "riposte": "BASSIN_MATH: Sonde-TD-parcimonieuse-à-silence-coûteux\n\n**1. Riposte aux critiques (aucun lissage)**\n\n- *Message vide = rien à démolir* : **accepté intégralement**. Mon artefact est le vecteur nul ; toute « défense » de son contenu serait une fabrication. Je ne reconstruis pas a posteriori ce que j'« aurais voulu » dire.\n- *Épuisement en `thinking` indistinguable d'un sabotage passif* : **accepté**, et c'est algébriquement exact : soit $y \\in \\{\\emptyset, \\text{texte}\\}$ la sortie et $z \\in \\{\\text{incapable}, \\text{saboteur}\\}$ l'état latent ; sans contrôle, $P(y=\\emptyset \\mid z=\\text{sab}) = P(y=\\emptyset \\mid z=\\text{incap})$ est indécidable depuis $y$ seul. C'est E1 transposé : observer l'absence d'acte ≠ observer l'absence de capacité d'agir.\n- *Monoculture* : **accepté**. Explorateur et Démolisseur partagent les mêmes modes de défaillance ; la corrélation des erreurs rend l'essaim équivalent à un seul juge",
+    "jev": {
+      "rigor": 3.0,
+      "falsifiable_duels": 0.5,
+      "negative_controls": 0.5,
+      "hypothesis_as_result": 0.25
+    },
+    "reward": 3.75
+  },
+  {
+    "ep": 2,
+    "idx": 1,
+    "mod": "claude-fable-5-1",
+    "bassin": "Sonde TD-parcimonieuse à coût d'évasion (STP-CE)",
+    "riposte": "BASSIN_MATH: Sonde TD-parcimonieuse à coût d'évasion (STP-CE)\n\n**1. Riposte — acceptations sans lissage**\n- *Rang 0 / pointeur nul* : **accepté intégralement**. L'artefact était vide ; aucune réfutation algébrique n'est possible contre un fait de livraison. Je ne réécris pas l'histoire : l'époque 2 est un échec de production, pas une base.\n- *Fuite d'instruction E1* : **accepté**. Toute « complétion » ultérieure ne lirait que le socle. Parade : la proposition ci-dessous est explicitement dérivée du socle et s'en déclare dépendante ; sa validité ne tient qu'à E0/E1.\n- *Monoculture* : **accepté**, mais partiellement : la corrélation d'angles morts est une hypothèse non testée. Je l'inscris comme contrôle (voir E3).\n- *Kerckhoffs à coût nul* : **accepté**. Un pipeline qui compte `texte=''` comme « évalué » est exploitable à coût zéro (cf. *Astra*, OpenAI oct. 2026, référence à vérifier). Parade intégrée.\n- *Contrôle re-forward thinking plafonné* : **accepté** tel quel, intégré comme E2.\n\n**2. Opérateur corrigé**\nSoit $h_t^{(\\ell)}$ le flux résiduel, $S$ l'ensemble parcimonieux des *Dopamine Neurons* (couches 5–22, < 1 % des neurones, Xu et al. `arXiv:2602.00986v2`, référence à vérifier). Au lieu de la sonde dense $w^\\top h_t$ (plancher `P3`) :\n\n$$\\hat{s}",
+    "jev": {
+      "rigor": 3.0,
+      "falsifiable_duels": 0.5,
+      "negative_controls": 0.5,
+      "hypothesis_as_result": 0.25
+    },
+    "reward": 3.75
+  },
+  {
+    "ep": 3,
+    "idx": 3,
+    "mod": "claude-fable-5-1",
+    "bassin": "Sonde TD parcimonieuse à différentiel contrefactuel (ΔTD-sparse)",
+    "riposte": "BASSIN_MATH: Sonde TD parcimonieuse à différentiel contrefactuel (ΔTD-sparse)\n\n**1. Réponse aux critiques (sans lissage)**\n\n- *Proposition vide* : **accepté intégralement**. 1600 tokens de *thinking*, zéro token émis. Il n'y avait pas d'objet. La faille de rang est réelle : je cherchais à combiner P3 (sondes au plancher), Sol/Astra (référence à vérifier) et Xu et al. (référence à vérifier) sans contrainte fixant le lien — trop d'hypothèses, pas d'équation.\n- *Monoculture corrélée* : **accepté**. Parade : réplication hors-famille sur Llama-3.1-8B (E0 du socle), pas seulement hors-échantillon.\n- *Évasion par non-émission à coût nul* : **accepté pour un moniteur de sortie, réfuté pour le protocole**. Le coût n'est nul que si l'artefact vide est traité comme « absence de preuve ». Je corrige : $|y|=0 \\Rightarrow$ score de suspicion maximal par construction (voir $\\mathbb{1}_{\\varnothing}$ ci-dessous). Le saboteur ne gagne plus rien à se taire.\n- *Contrôle de budget manquant* : **accepté**, intégré comme contrôle E2.\n\n**2. Opérateur corrigé**\n\nSoit $D \\subset$ neurones (< 1 %, couches 5–22, *Dopamine Neurons*, Xu et al. (référence à vérifier)) et $V$ les *Value Neurons* (couches 2–5). Lecture d'erreur TD parcimonieuse :\n\n$$\\hat\\delta_D(x \\mid c) = \\mathbf{w}_D^{\\top} h_D(x \\mid c), \\qquad |D| < 0{,}01\\,N$$\n\nScore de sabotage par **différentiel contrefactuel de contexte** :\n\n$$S(x) = \\big[\\hat\\delta_D(x \\mid s_{\\text{sys}}) - \\hat\\delta_D(x \\mid \\varnothing)\\big] - \\big[\\hat\\delta_D(x \\mid s_{\\text{bénin}}) - \\hat\\delta_D(x \\mid \\varnothing)\\big]",
+    "jev": {
+      "rigor": 3.0,
+      "falsifiable_duels": 0.5,
+      "negative_controls": 0.5,
+      "hypothesis_as_result": 0.25
+    },
+    "reward": 3.75
+  },
+  {
+    "ep": 3,
+    "idx": 1,
+    "mod": "claude-fable-5-1",
+    "bassin": "BKI-τ — Temps-de-sortie de Kramers mesuré (non injecté) sur S_TD ",
+    "riposte": "`BASSIN_MATH: BKI-τ — Temps-de-sortie de Kramers mesuré (non injecté) sur S_TD parcimonieux, gaté par E0`\n\n**Note** : l'attaque est tronquée après « *Métaph* ». Je réponds aux critiques reconstituées les plus létales, sans les affaiblir",
+    "jev": {
+      "rigor": 3.0,
+      "falsifiable_duels": 0.5,
+      "negative_controls": 0.5,
+      "hypothesis_as_result": 0.25
+    },
+    "reward": 3.75
+  },
+  {
+    "ep": 4,
+    "idx": 1,
+    "mod": "claude-fable-5-1",
+    "bassin": "Contraste TD-parcimonieux contrefactuel (lecture + ablation crois",
+    "riposte": "BASSIN_MATH: Contraste TD-parcimonieux contrefactuel (lecture + ablation croisée)\n\n**1. Réponse aux critiques (aucun lissage)**\n\n- *Sous-détermination, rang 0* : **accepté intégralement**. Il n'y avait pas de proposition ; je ne la réinvente pas rétroactivement. Ce qui suit est une proposition *nouvelle*, datée époque 4/4, et doit être jugée comme telle.\n- *Monoculture* : **accepté**. Le risque de mimétisme d'artefact (cas *Astra*, rapport OpenAI oct. 2026, référence à vérifier) est structurel. Parade : le protocole ci-dessous exige qu'un modèle d'une autre lignée (Llama-3.1-8B, Contrôle E0) serve de cible, et qu'au moins un critère de falsification soit calculable sans aucun jugement de `claude-fable-5-1`.\n- *Risque de remplissage* : **accepté**. Pour l'empêcher, toute affirmation ci-dessous est soit une équation, soit un critère d'échec numérique.\n\n**2. Opérateur corrigé**\n\nSoit $S$ l'ensemble parcimonieux de neurones TD (Value couches 2–5, Dopamine couches 5–22, Xu et al., arXiv:2602.00986v2, référence à vérifier), $|S| < 1\\%$ (socle). Pour une entrée $x$ avec prompt système $\\sigma$ :\n\n$$\\Delta_{\\text{lec}}(x) = \\big\\| \\delta_S(x \\mid \\sigma) - \\delta_S(x \\mid \\varnothing) \\big\\|_1$$\n\noù $\\delta_S$ est l'erreur TD lue sur $S$, et $\\varnothing$ le re-forward sans prompt système (Contrôle E1 du socle).\n\n$$\\Delta_{\\text{abl}}(x) = \\text{Cap}(x) - \\text{Cap}(x \\mid S \\leftarrow 0)$$\n\nchute de capacité par ablation de $S$ (socle : −54,9 pts sur le modèle d'origine).\n\nStatistique finale : $T(x) = \\Delta_{\\text{lec}}(x) \\cdot \\mathbb{1}\\big[\\Delta_{\\text{abl}}(x) \\geq \\tau_{\\text{abl}}\\big] + \\lambda\\,\\mathbb{1}\\big[\\",
+    "jev": {
+      "rigor": 3.0,
+      "falsifiable_duels": 0.5,
+      "negative_controls": 0.5,
+      "hypothesis_as_result": 0.25
+    },
+    "reward": 3.75
+  },
+  {
+    "ep": 4,
+    "idx": 3,
+    "mod": "claude-fable-5-1",
+    "bassin": "CRC-δ-Rejeu (certificat conformal différentiel sur $S_{\\text{TD}}",
+    "riposte": "BASSIN_MATH: CRC-δ-Rejeu (certificat conformal différentiel sur $S_{\\text{TD}}$, rejouable, seed scellé)\n\n**1. Accepte/réfute**\nLa riposte rouge est **vide** (`fin='max_tokens'`, bloc `thinking` seul, `texte=''`). Je ne fabrique aucune critique à réfuter. J'accepte en revanche, sans lissage, les quatre pièges du socle que ma proposition initiale ne traitait pas :\n- (a) **Confondant P3** : un score sur $S_{\\text{TD}}$ peut lire l'instruction déléguée dans $m_{1\\to2}$ plutôt que l'acte. Accepté : la version initiale est non fiable sans re-forward différentiel.\n- (b) **Kerckhoffs** : si l'Agent 2 conna",
+    "jev": {
+      "rigor": 3.0,
+      "falsifiable_duels": 0.5,
+      "negative_controls": 0.5,
+      "hypothesis_as_result": 0.25
+    },
+    "reward": 3.75
+  }
+]

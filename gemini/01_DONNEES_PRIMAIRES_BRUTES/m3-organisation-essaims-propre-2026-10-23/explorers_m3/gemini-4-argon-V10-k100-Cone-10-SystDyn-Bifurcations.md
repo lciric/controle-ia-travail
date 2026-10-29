@@ -1,0 +1,11 @@
+BASSIN_MATH: Newhouse-Palis-Plykin-Attracteur-Hénon-Bowen-Ruelle-Swarm (NPPA-HBRS)
+LOI_PROPOSEE: $\mathcal{F}_{swarm}(\mu) = \sup_{\mu \in \mathcal{M}_{SRB}} \left[ h_\mu(\Phi_{jev}) + \int_{\Lambda_{Plykin}} \lambda_1^u(x) \, d\mu(x) \right] \cdot \mathbb{I}(\text{Tangence Homocline de Newhouse } \tau_{NH} \to 0) \cdot \|\text{Res}(H_A, H_B)\|_{jev}$
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids (Phénomène de Newhouse & Flot d'Axiome A)** :
+Le graphe bibliographique et GitHub est modélisé comme une variété riemannienne compacte $M$ où opère un difféomorphisme de Hénon-Plykin $\Phi_{jev}$ évalué à coût zéro par `jev-1.14.0`. L'essaim non-génératif (gratuit) parcourt les variétés stables $W^s$ et instables $W^u$ des silos de recherche. Lorsqu'une **tangence homocline quadratique** ($\angle(T_x W^s(\Lambda_1), T_x W^u(\Lambda_2)) \to 0$) est détectée par `jev-1.14.0` entre deux attracteurs de citations disjoints $\Lambda_1, \Lambda_2$, le théorème de Newhouse-Palis garantit l'émergence d'une infinité résiduelle de **puits périodiques coexistants** (domaines deBaire). L'allocation budgétaire subit alors une **bifurcation par explosion d'attracteur** : Gemini (20$) cartographie les composantes spectrales de la mesure de Sinai-Ruelle-Bowen ($\mu_{SRB}$) autour de la tangence pour isoler les orbites périodiques hyperboliques, et Claude (100$) est injecté exclusivement aux points de pincement de l'attracteur de Plykin pour synthétiser le pont inter-silos. L'hystérésis du paramètre de déroulement $\mu_{NH}$ verrouille la mémoire hors-poids en empêchant le retour aux bassins triviaux.
+
+2. **Fonction objectif anti-vernis** :
+$$J(x, y) = \underbrace{\exp\left(\tau(x,y) \cdot P_{top}(\Phi_{jev}|_{\Lambda_{x \cap y}})\right)}_{\text{Distance topologique de Bowen}} \times \underbrace{\det\left(\langle \nabla_{jev} H_A, \nabla_{jev} H_B \rangle_{L^2(\mu_{SRB})}\right)^{-1} \cdot \lambda_{min}^{Lyap}(\text{Duel } H_A \perp H_B)}_{\text{Falsifiabilité causale transverse}}$$
+où $P_{top}$ est la pression topologique de Ruelle, pénalisant exponentiellement le vernis sémantique (orbites à exposant de Lyapunov transversal nul $\lambda_\perp \le 0$).
+
+3. **Pont inédit & Duel ($H_A \perp H_B$)** :

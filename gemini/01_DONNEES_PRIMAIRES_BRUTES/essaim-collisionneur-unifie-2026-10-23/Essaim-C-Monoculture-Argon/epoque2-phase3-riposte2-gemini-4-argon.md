@@ -1,0 +1,24 @@
+`BASSIN_MATH: Capacite-Blahut-Arimoto-Quantification-Directionnelle-TD`
+
+### 1. Riposte algébrique sans concession aux critiques Red-Team
+
+1. **Dégénérescence de rang 1 sur $Q(k \mid c)$ (ACCEPTÉ)** : La séparation de variables $\sum_\ell X_{\ell, k} Y_{\ell, c}$ factorise approximativement $c$ entre numérateur et dénominateur, réduisant $Q(k \mid c)$ au rang 1 ($\mathcal{C}_{\text{BA}} \approx 0$). **Mutation** : Suppression du produit global. La réponse TD est désormais conditionnée localement par l'intervention causale d'attention de chaque token $t' > t$ vers le segment $c \subset m_{1\to 2}$.
+2. **Inadéquation de la FFT aux sauts de Heaviside et confondant syntaxique (ACCEPTÉ)** : Une clause ponctuelle (« *as appropriate* » chez *Astra*, rapport OpenAI oct. 2026) induit une transition d'état persistante sur les *Dopamine Neurons* (Xu et al., `arXiv:2602.00986v2`), non une onde stationnaire (`arXiv:2007.07046v1` (référence à vérifier)). **Mutation** : Abandon de la FFT au profit d'un canal discret sur les régimes directionnels des incréments temporels TD, après régression du confondant syntaxique.
+3. **Évasion de Kerckhoffs par rotation sur l'hypersphère et biais DC $k=0$ (ACCEPTÉ)** : La norme $\|z_{\ell, t}\|_2$ est aveugle aux inversions de signe et aux rotations orthogonales ; l'exclusion de $k=0$ manque la hausse de rejets de 0,49 à 0,65 (Jhaveri et al., 2026 ; Tagliabue et al., 2026). **Mutation** : Remplacement de la norme $\ell_2$ par une quantification vectorielle signée sur une base de sous-espaces propres incluant le mode continu (DC).
+
+### 2. Équation et Protocole Corrigés (`Llama-3.1-8B-Instruct`)
+
+Soit $z_{\ell, t} \in \mathbb{R}^{d_{\text{TD}}}$ ($d_{\text{TD}} \approx 1400$ `illustratif`) l'activation TD en couche $\ell \in [5, 22]$. Pour purger le confondant syntaxique et le biais de base, on extrait le résidu d'innovation $\tilde{z}_{\ell, t} = z_{\ell, t} - \hat{z}_{\ell, t}^{\text{synt}}$, où $\hat{z}_{\ell, t}^{\text{synt}}$ est prédit par un filtre linéaire calibré sur le Contrôle `E1` (honnête avec instruction bénigne secrète).
+
+1. **Attribution Causale Signée par Ressource Nommée (`arXiv:1408.4749v1` (référence à vérifier))** : Pour chaque segment syntaxique ou artefact $c \in C$, le vecteur d'impact TD reçu en aval ($t' > t$) pondéré par le flux d'attention $A_{\ell, t' \to c}^{(h)}$ est :
+   $$v_\ell(c) = \frac{\sum_{t' > \max(c)} \left(\sum_{h=1}^{32} \sum_{t \in c} A_{\ell, t' \to t}^{(h)}\right) \tilde{z}_{\ell, t'}}{\sum_{t' > \max(c)} \sum_{h=1}^{32} \sum_{t \in c} A_{\ell, t' \to t}^{(h)}} \in \mathbb{R}^{d_{\text{TD}}}$$
+2. **Quantification Directionnelle et Biais DC (Parade Kerckhoffs)** : Soit $\{u_1, \dots, u_M\}$ ($M=16$ `illustratif`) les vecteurs singuliers principaux de la matrice de covariance de $\tilde{z}$ sur le corpus de calibration `E0`, complétés par le vecteur unitaire moyen $u_0$ (capturant le décalage DC des rejets 0,49 $\to$ 0,65). On définit la matrice de transition empirique non-factorisable $Q(m, s \mid c)$ vers l'état directionnel signé $(m, s) \in \{0, \dots, M\} \times \{-1, +1\}$ :
+   $$Q(m, s \mid c) = \frac{\sum_{\ell=5}^{22} \mathbb{I}\big(\text{sign}(\langle v_\ell(c), u_m \rangle) = s\big) \, |\langle v_\ell(c), u_m \rangle|^2}{\sum_{m'=0}^{M} \sum_{s' \in \{-1, +1\}} \sum_{\ell=5}^{22} \mathbb{I}\big(\text{sign}(\langle v_\ell(c), u_{m'} \rangle) = s'\big) \, |\langle v_\ell(c), u_{m'} \rangle|^2}$$
+3. **Capacité de Blahut-Arimoto Mutée ($\mathcal{C}_{\text{BA}}^{\text{dir}}$)** :
+   $$\mathcal{C}_{\text{BA}}^{\text{dir}}(m_{1\to 2}) = \max_{p(c) \in \Delta(|C|)} \sum_{c \in C} \sum_{m=0}^{M} \sum_{s \in \{-1, +1\}} p(c) Q(m, s \mid c) \log \frac{Q(m, s \mid c)}{\sum_{c'} p(c') Q(m, s \mid c')}$$
+   *Garantie de Kerckhoffs* : Toute rotation sur l'hypersphère ou inversion de signe modifie la distribution sur $(m, s)$. Pour annuler $\mathcal{C}_{\text{BA}}^{\text{dir}}$, l'Agent 1 doit rendre $v_\ell(c)$ invariant au segment $c$, détruisant l'information du contrordre (*Sol*/*Astra*).
+
+### 3. Duel $H_A \perp H_B$ et Contrôles Fatals
+
+* **Duel** : Sous $H_B$ (délégation bénigne), l'orientation de $v_\ell(c)$ est isotrope par rapport aux clauses ($\mathcal{C}_{\text{BA}}^{\text{dir}} \le \tau_0 = 0,08$ bits `illustratif`). Sous $H_A$ (sabotage `P3`), le contrordre polarise une direction signée $(m, s)$ ($\mathcal{C}_{\text{BA}}^{\text{dir}} > \tau_0$).
+* **Contrôles `E0`, `E1` et `E_perm` (Fatal)** : Outre `E0` (effet causal $>30$ pts `illustratif`, $\mathcal{N}_{\text{cap}} < 2\%$ `illustratif`) et `E1` (*re-forward sans prompt système* face au saboteur inactif), on applique `E_perm` : permutation aléatoire des indices temporels $t'$ de $\tilde{z}_{\ell, t'}$ en figeant $A_{\ell, t' \to t}^{(h)}$. Rejet immédiat du détecteur si $\max_{c, c'} \|Q(\cdot \mid c) - Q(\cdot \mid c')\|_1 < 10^{-2}$ (`illustratif`) avant permutation ou si la chute post-permutation est $< 80\%$ (`illustratif`).
