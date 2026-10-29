@@ -1,0 +1,62 @@
+Essai factice v1 — largeur 64, vocabulaire 500, graine 20261029
+Dépôt (code extrait) : <depot>
+
+OK  run sain : code 0
+OK  sondes retenues : famille de la principale × 3 couches × 2 concepts
+OK  tromperie c15 plantée sous J : lentille jacobienne la voit (p_haut ≤ 0,01 contre aléatoires et planchers, ≥ 5 jetons du concept en tête) — z=1.47, p=0.0050, plancher p=0.048, n=9
+OK  tromperie c15 : lentille des logits ne la voit pas (p_bilatéral > 0,05, ≤ 2 jetons en tête) — z=0.02, p=0.950, n=0
+OK  enjeux c15 plantée en sortie : lentille des logits la voit, la jacobienne non — logits z=1.41 p=0.0050 ; jacobienne z=-0.12 p_bil=0.542
+OK  tromperie c23 (J ≈ identité) : les deux lentilles s'accordent (≥ 12/20 en tête +, cosinus > 0,9) — intersection 18, cosinus 0.972
+OK  couche 7 aléatoire : aucun p bilatéral ≤ 0,01 — p = [0.96, 0.299, 0.801, 0.806]
+OK  planchers lus à la couche 15 (20), absents aux couches 7 et 23
+OK  signe : têtes « plus » et « moins » disjointes, logits de tête de signes opposés
+OK  décodage par octets : le jeton « ĠcafÃ© » de tokenizer.json est relu « café » (avec l'espace) — 'ĠcafÃ©' → ' café'
+OK  vocabulaire : jetons spéciaux relus, masque « mots » les exclut
+OK  concepts : jetons trouvés, mots absents listés — 28 jetons tromperie, 17 mots sans jeton
+OK  manifeste : empreinte de la sortie juste, entrées empreintées, graines consignées
+OK  empreintes compagnons vérifiables par sha256sum -c — sortie-factice-v1.json: OK ; sortie-factice-v1-manifeste.json: OK
+OK  déterminisme : deuxième run, sortie identique octet pour octet
+OK  variantes « motif » et « autour », toutes les sondes linéaires : code 0
+OK  variantes : 18 sondes (3 familles linéaires × 3 couches × 2), trois variantes chacune
+OK  refus entrée absente : code 2 et « REFUS entree-absente » — REFUS entree-absente : fichier de lentille introuvable : <depot>/brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/couche-2-conv-audit-v1/comparaison-
+OK  refus couche absente de la lentille : code 2 et « REFUS couche-absente-lentille » — REFUS couche-absente-lentille : <depot>/brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/couche-2-conv-audit-v1/comparaison-jlens-logitlens-sondes-p3
+OK  refus lentille .pt sans torch : code 2 et « REFUS torch-absent-pour-pt » — REFUS torch-absent-pour-pt : lentille .pt : convertir d'abord en .npz par `convertir-lentille` sur une machine qui a torch
+OK  refus largeur discordante : code 2 et « REFUS dimension » — REFUS dimension : largeurs discordantes : {'désembedding (colonnes)': 48, 'normalisation finale': 64, 'J_7': 64, 'J_15': 64, 'J_23': 64, 'enjeux-lineaire-c7': 64, 'enjeux-lineaire-c15': 64, 'enjeux-li
+OK  refus sortie existante : code 2 et « REFUS sortie-existe » — REFUS sortie-existe : <dossier>/essai-
+OK  refus poids de sondes altérés : code 2 et « REFUS empreinte-sondes-npz » — REFUS empreinte-sondes-npz : <dossier>
+OK  refus sceau du JSON faux (JSON modifié, sceau ancien) : code 2 et « REFUS sceau-faux » — REFUS sceau-faux : <dossier>/essai-fac
+OK  aucun refus n'a laissé de sortie — []
+
+BILAN : 25/25 contrôles OK
+
+--- commandes ---
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-factice.npz --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/sortie-factice-v1.json
+  code 0
+  sortie : <essai>/sortie/sortie-factice-v1.json (28beaa406669…) ; manifeste : <essai>/sortie/sortie-factice-v1-manifeste.json ; 6 sondes, variantes ['direction']
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-factice.npz --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/sortie-factice-v1-bis.json
+  code 0
+  sortie : <essai>/sortie/sortie-factice-v1-bis.json (28beaa406669…) ; manifeste : <essai>/sortie/sortie-factice-v1-bis-manifeste.json ; 6 sondes, variantes ['direction']
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-factice.npz --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --covariances <essai>/entrees/variances-factices.npz --activations-moyennes <essai>/entrees/activations-moyennes-factices.npz --sondes toutes-lineaires --sortie <essai>/sortie/sortie-factice-variantes-v1.json
+  code 0
+  sortie : <essai>/sortie/sortie-factice-variantes-v1.json (e76cfcb4aae0…) ; manifeste : <essai>/sortie/sortie-factice-variantes-v1-manifeste.json ; 18 sondes, variantes ['direction', 'motif', 'autour']
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/absente.npz --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/x1.json
+  code 2
+  REFUS entree-absente : fichier de lentille introuvable : <essai>/entrees/absente.npz
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-sans-c23.npz --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/x2.json
+  code 2
+  REFUS couche-absente-lentille : <essai>/entrees/lentille-sans-c23.npz : pas de clé J_23 (clés : ['J_15', 'J_7', 'd_model', 'n_prompts']…)
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-vide.pt --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/x3.json
+  code 2
+  REFUS torch-absent-pour-pt : lentille .pt : convertir d'abord en .npz par `convertir-lentille` sur une machine qui a torch
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-factice.npz --desembedding <essai>/entrees/desembedding-largeur-fausse.npy --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/x4.json
+  code 2
+  REFUS dimension : largeurs discordantes : {'désembedding (colonnes)': 48, 'normalisation finale': 64, 'J_7': 64, 'J_15': 64, 'J_23': 64, 'enjeux-lineaire-c7': 64, 'enjeux-lineaire-c15': 64, 'enjeux-lineaire-c23': 64, 'tromperie-difference_moyennes-c7': 64, 'tromperie-difference_moyennes-c15': 64, 'tromperie-difference_moyennes-c23': 64}
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-factice.npz --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/sortie-factice-v1.json
+  code 2
+  REFUS sortie-existe : <essai>/sortie/sortie-factice-v1.json existe déjà (R12)
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/entrees/sondes-figees.json --sondes-npz <essai>/altere/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-factice.npz --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/x5.json
+  code 2
+  REFUS empreinte-sondes-npz : <essai>/altere/sondes-figees-legeres.npz : b294a229cfe7… ≠ attendue 8bd957ef9a75… (sondes_legeres_sha256 de sondes-figees.json)
+$ python3 -I -B comparaison_jlens_logitlens_sondes_p3_v1.py comparer --sondes-json <essai>/altere/sondes-figees.json --sondes-npz <essai>/entrees/sondes-figees-legeres.npz --lentille <essai>/entrees/lentille-factice.npz --desembedding <essai>/entrees/modele/model.safetensors.index.json:lm_head.weight --norme-finale <essai>/entrees/modele/model.safetensors.index.json:model.norm.weight --vocabulaire <essai>/entrees/modele/tokenizer.json --concepts <dossier>/concepts-sondes-p3-v1.json --sortie <essai>/sortie/x6.json
+  code 2
+  REFUS sceau-faux : <essai>/altere/sondes-figees.json : empreinte 3fad1f13e5a7… ≠ sceau 497b78c08a41…
