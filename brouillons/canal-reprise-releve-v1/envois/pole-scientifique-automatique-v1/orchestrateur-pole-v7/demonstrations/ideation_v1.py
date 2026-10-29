@@ -1,4 +1,4 @@
-"""Course d'idéation de l'organisme (v7, version 44) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 46) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
@@ -81,6 +81,16 @@ tout contrôle ; à la relance, un contrôle Claude réussi n'est repris que si 
 (sinon le relais a été relancé : rejoué) ; la relance reste bornée par les sommes **et** par `idn.MAX_TENTATIVES_BRAS`
 (3) tentatives de contrôle.
 
+v46 (tour (c) « outils clôturés », décisions de Lazar du 29 octobre, R-433 à R-448 ; **en préparation : jamais lancé en
+réel avec ces options**) : `--dossier-ferme DOSSIER` — dossier aux fichiers listés dans un `index.json` scellé (et dans la
+liste blanche), empreintes vérifiées avant tout appel ; la consigne des proposeurs porte l'index, pas le texte
+(`--taille-max-pieces` ne s'y applique pas) ; proposeurs Claude à outils de lecture du kit (`Read`, `Grep`, `Glob` sur une
+copie vérifiée), ou par protocole avec `--outils-par-protocole` (comme Argon : demandes `{"demandes": [...]}` servies au tour
+suivant) ; juges sans outil ; aucun nombre de tours fixé : plafond en dollars de la session, `--delai-session-s` (délai de
+l'ensemble des tours d'une passe par protocole, et de chaque session du kit), `--max-demandes-lecture` (défaut 1 000 ;
+franchi : incident, arrêt) ; avertissement de budget à 80 % ; mesures de lecture au manifeste de fin ; citations vérifiées
+servies aux juges. Sans `--dossier-ferme`, la ligne de commande et les entrées de la v45 restent valides, inchangées.
+
 La commande externe : consigne sur l'entrée standard, environnement minimal explicite (plus `PLAFOND_SESSION_USD`,
 `ROLE_POLE` et `--variable-transmise`, jamais un nom de clé), dernière ligne `{"texte": …, "cout_usd": …}` — coût
 **obligatoire, fini, strictement positif** ; sur un échec, le coût imprimé est compté, sinon le plafond de session l'est
@@ -124,7 +134,10 @@ class AdaptateurIdeationSimule:
     def __init__(self, graine):
         self.graine = graine
 
-    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, racine_lecture=None,
+               max_demandes_lecture=None, mode_lecture=None):
+        """v46 : les arguments de lecture du dossier fermé sont acceptés et ignorés (aucun outil simulé : le proposeur
+        simulé rend ses fiches au premier tour, sans demande)."""
         import random
         rng = random.Random(graine_derivee(self.graine, role, dossier))
         if consigne.startswith(idn.APPEL_DE_CONTROLE_CONSIGNE):  # v40 (CL39-08) : contrôle à la taille réelle
@@ -385,6 +398,14 @@ class _Explicite(argparse.Action):
         setattr(namespace, self.dest + "_explicite", True)
 
 
+def reglages_lecture(args, delai_session):
+    """v46 : arguments du tour (c) passés au cœur — vides sans `--dossier-ferme` (course de la v45, inchangée)."""
+    if not args.dossier_ferme:
+        return {}
+    return {"dossier_ferme": args.dossier_ferme, "outils_par_protocole": args.outils_par_protocole,
+            "max_demandes_lecture": max_demandes_lecture(args)}
+
+
 def construire_analyseur():
     a = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument("sortie", nargs="?", help="dossier de sortie, absent (jamais écrasé)")
@@ -460,6 +481,15 @@ def construire_analyseur():
     a.add_argument("--accepter-sans-bac-a-sable", action="store_true")
     a.add_argument("--motif-sans-bac-a-sable", default="")
     a.add_argument("--horodatage", help="heure UTC lue sur `date -u`")
+    a.add_argument("--dossier-ferme", default=None,
+                   help="v46 (tour (c)) : dossier fermé (fichiers listés dans un index.json scellé et dans la liste blanche) ; "
+                        "proposeurs Claude à outils de lecture du kit, Argon par protocole ; juges sans outil")
+    a.add_argument("--outils-par-protocole", action="store_true",
+                   help="v46 : avec --dossier-ferme, les proposeurs Claude lisent aussi par protocole, sans outil du kit "
+                        "(égalité stricte avec Argon)")
+    a.add_argument("--max-demandes-lecture", type=int, default=None,
+                   help="v46 : garde-fou anti-boucle par session de proposeur (défaut 1000) ; franchi : incident, arrêt de "
+                        "la session ; avec --dossier-ferme seulement")
     return a
 
 
@@ -501,6 +531,8 @@ def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_
     if n_controles_externes is None:
         n_controles_externes = len(prop_ext)
     return idn.verifier_reglages(
+        dossier_ferme=args.dossier_ferme, outils_par_protocole=args.outils_par_protocole,  # v46
+        max_demandes_lecture=max_demandes_lecture(args),
         liste_blanche=args.liste_blanche, question=args.question, pieces=args.piece, materiau=args.materiau,
         pieces_juge=args.piece_juge, temoins=args.temoins, taille_max_pieces=args.taille_max_pieces, max_tours=args.max_tours,
         attestation_materiau=args.attestation_materiau if (prop_ext and args.seconde_passe) else None,
@@ -515,6 +547,12 @@ def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_
         prix_caractere_usd=idn.prix_caractere(args.prix_entree_usd_par_million_jetons),
         budget_passe_2_externe_usd=args.budget_passe_2_externe_usd,  # v44 (CL43-01)
         garder_passes_externes=garder_passes)  # v44 (CL43-02) : passe 1 gardée avant tout contrôle
+
+
+def max_demandes_lecture(args):
+    """v46 : `--max-demandes-lecture`, défaut `MAX_DEMANDES_LECTURE_DEFAUT` (1 000)."""
+    from pole.dossier_ferme import MAX_DEMANDES_LECTURE_DEFAUT
+    return MAX_DEMANDES_LECTURE_DEFAUT if args.max_demandes_lecture is None else args.max_demandes_lecture
 
 
 def roles_et_budgets(args):
@@ -562,7 +600,8 @@ def mesurer(args):
                               materiau=args.materiau, pieces_juge=args.piece_juge, temoins=args.temoins,
                               taille_max_pieces=args.taille_max_pieces, nombre_par_proposeur=args.nombre,
                               seconde_passe=args.seconde_passe, nombre_proposeurs=len(proposeurs) + len(prop_ext),
-                              graine=args.graine)
+                              graine=args.graine, dossier_ferme=args.dossier_ferme,  # v46
+                              max_demandes_lecture=max_demandes_lecture(args))
     taille, origine, detail, provision = garde_de_la_course(args, budgets, prop_ext)
     prix = idn.prix_caractere(args.prix_entree_usd_par_million_jetons)
     ctrl = m["consigne_de_controle_externe"]
@@ -647,6 +686,16 @@ def principal(argv=None):
             a.error("--budget-passe-2-externe-usd doit être un réel fini > 0")
         if not (args.proposeur_externe and args.seconde_passe):
             a.error("--budget-passe-2-externe-usd ne se donne qu'avec --proposeur-externe et --seconde-passe")
+    if args.outils_par_protocole and not args.dossier_ferme:  # v46
+        a.error("--outils-par-protocole ne se donne qu'avec --dossier-ferme")
+    if args.max_demandes_lecture is not None:
+        if not args.dossier_ferme:
+            a.error("--max-demandes-lecture ne se donne qu'avec --dossier-ferme")
+        if args.max_demandes_lecture < 1:
+            a.error("--max-demandes-lecture doit être un entier ≥ 1")
+    if args.dossier_ferme and args.bras_rapporte_differe:
+        a.error("--dossier-ferme ne vaut que pour la course : le bras (juge) ne lit rien, il reçoit les fiches et leurs "
+                "citations vérifiées")
     if args.mesurer_consignes:  # v43 (CL42-03) : sans dépense, sans appel, sans fichier
         if args.bras_rapporte_differe:
             a.error("--mesurer-consignes mesure les consignes d'une course à venir, pas le bras d'une course faite")
@@ -748,6 +797,7 @@ def _principal(args):
         adaptateur = AdaptateurClaudeSDK(args.url_relais, arme=True, interdire_lecture=interdits, delai_s=delai_session)
         adaptateur.bac_a_sable = etat_bac
         lire_relais = lecteur_relais(args.url_relais)
+        adaptateur.lire_etat_relais = lire_relais  # v46 : avertissement de budget du crochet de lecture seule
     else:
         adaptateur = AdaptateurIdeationSimule(args.graine)
 
@@ -909,7 +959,9 @@ def _principal(args):
                                     attestation_materiau=args.attestation_materiau,
                                     cout_deja_engage_usd=cout_controle + cout_tentatives_claude,
                                     lectures_interdites=interdits, commande_externe=commande_externe,
-                                    delai_session_s=delai_session, taille_max_pieces=args.taille_max_pieces,
+                                    # v46 : en moteur simulé avec --dossier-ferme, --delai-session-s borne les passes par protocole
+                                    delai_session_s=(args.delai_session_s if (delai_session is None and args.dossier_ferme)
+                                                     else delai_session), taille_max_pieces=args.taille_max_pieces,
                                     cout_externe_deja_engage_usd=cout_controle_externe + cout_tentatives_externe,
                                     tolerer_somme_claude=tolere_claude, tolerer_somme_externe=tolere_externe,
                                     budget_controle_bras_usd=budget_controle,
@@ -920,7 +972,8 @@ def _principal(args):
                                                         if args.taille_max_consigne_externe is not None else None),
                                     prix_caractere_usd=idn.prix_caractere(args.prix_entree_usd_par_million_jetons),
                                     controles_repris=repris, motifs_reprise_controles=motifs_reprise,  # v44 (CL43-03)
-                                    budget_passe_2_externe_usd=args.budget_passe_2_externe_usd)  # v44 (CL43-01)
+                                    budget_passe_2_externe_usd=args.budget_passe_2_externe_usd,  # v44 (CL43-01)
+                                    **reglages_lecture(args, delai_session))  # v46 : vide sans --dossier-ferme
     except BaseException as e:  # v40 (CL39-02), v41 (CL40-02, CL40-03) : contrôle refusé, contrôle interrompu (plafond
         # compté) ou refus du cœur avant son manifeste de départ → tentative scellée avec ses coûts, relance calculée
         if os.path.exists(os.path.join(sortie, "manifeste-depart.json")):

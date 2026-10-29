@@ -1,0 +1,1705 @@
+{
+ "script": "/home/claude/controle-ia-travail/brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/couche-2-conv-audit-v1/simulation-puissance-garde-delta-v6/simulation-puissance-garde-delta-v6.py",
+ "script_sha256": "355f61d16461d71f4520fe65a5a7e66c9ce70c0b354e1c21f8f8161738e8c3b9",
+ "essais": 104,
+ "conformes": 104,
+ "non_conformes": [],
+ "refus_nommes": 79,
+ "erreurs_brutes": 0,
+ "resultats": [
+  {
+   "essai": "csv souligné, colonne ecart",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "csv_souligne.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : csv_souligne.csv : CSV ligne 2 : nombre mal formé '0.0_5' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "csv souligné, colonnes fA,fB",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "csv_fafb_souligne.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : csv_fafb_souligne.csv : CSV ligne 2 : nombre mal formé '0.0_5' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "csv inf",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "csv_inf.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : csv_inf.csv : CSV ligne 2 : nombre mal formé 'inf' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "csv nan",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "csv_nan.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : csv_nan.csv : CSV ligne 2 : nombre mal formé 'nan' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "csv hexadécimal",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "csv_hex.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : csv_hex.csv : CSV ligne 2 : nombre mal formé '0x1p-3' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "csv chiffres non ASCII",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "csv_arabe.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : csv_arabe.csv : CSV ligne 2 : nombre mal formé '٠.٠٥' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "csv 1e400",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "csv_grand.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : csv_grand.csv : CSV ligne 2 : nombre non fini '1e400'",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "csv virgule décimale entre guillemets",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "csv_virgule.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : csv_virgule.csv : CSV ligne 2 : nombre mal formé '0,05' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "csv sain (espace, exposant, signe, .01)",
+   "constat": "GD4-03 sain",
+   "arguments": [
+    "--ecarts",
+    "csv_ok.csv",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "json souligné",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "json_souligne.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : json_souligne.json : JSON illisible (JSONDecodeError : Expecting ',' delimiter: line 1 column 16 (char 15))",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--deltas 0.0_5",
+   "constat": "GD4-03",
+   "arguments": [
+    "--deltas",
+    "0.0_5"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --deltas : nombre mal formé '0.0_5' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--biais 0_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--biais",
+    "0_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --biais : nombre mal formé '0_0' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--taux 0.0_1",
+   "constat": "GD4-03",
+   "arguments": [
+    "--taux",
+    "0.0_1"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --taux : nombre mal formé '0.0_1' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--repetitions 1_000",
+   "constat": "GD4-03",
+   "arguments": [
+    "--repetitions",
+    "1_000"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --repetitions : entier mal formé '1_000' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--repetitions 1e3",
+   "constat": "GD4-03",
+   "arguments": [
+    "--repetitions",
+    "1e3"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --repetitions : entier mal formé '1e3' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--graine 1_2",
+   "constat": "GD4-03",
+   "arguments": [
+    "--graine",
+    "1_2"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --graine : entier mal formé '1_2' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--alpha 0.0_5",
+   "constat": "GD4-03",
+   "arguments": [
+    "--alpha",
+    "0.0_5"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --alpha : nombre mal formé '0.0_5' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--effet-unite-a 0_5",
+   "constat": "GD4-03",
+   "arguments": [
+    "--effet-unite-a",
+    "0_5"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --effet-unite-a : nombre mal formé '0_5' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--effet-unite-beta 0.1_7",
+   "constat": "GD4-03",
+   "arguments": [
+    "--effet-unite-beta",
+    "0.1_7"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --effet-unite-beta : nombre mal formé '0.1_7' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--ecart-contraste 0.1_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecart-contraste",
+    "0.1_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --ecart-contraste : nombre mal formé '0.1_0' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--tailles 1_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--tailles",
+    "1_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --tailles : entier mal formé '1_0' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--tailles-garde 1_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--tailles-garde",
+    "1_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --tailles-garde : entier mal formé '1_0' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--comparateurs 1_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--comparateurs",
+    "1_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --comparateurs : entier mal formé '1_0' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--m 8_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--m",
+    "8_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --m : entier mal formé '8_0' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--K 1_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--K",
+    "1_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --K : entier mal formé '1_0' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--K-sabotes 1_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--K-sabotes",
+    "1_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --K-sabotes : entier mal formé '1_0' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--m-fiches 2_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--lecture-ebh",
+    "A",
+    "--m-fiches",
+    "2_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --m-fiches : entier mal formé '2_0' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--fiches-nulles 1_0",
+   "constat": "GD4-03",
+   "arguments": [
+    "--lecture-ebh",
+    "A",
+    "--fiches-nulles",
+    "1_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --fiches-nulles : entier mal formé '1_0' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--effectif-attendu 0_6",
+   "constat": "GD4-03",
+   "arguments": [
+    "--ecarts",
+    "g1.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "0_6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --effectif-attendu : entier mal formé '0_6' (chiffres ASCII seulement ; ni souligné, ni point, ni exposant : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--deltas inf",
+   "constat": "GD4-03",
+   "arguments": [
+    "--deltas",
+    "inf"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --deltas : nombre mal formé 'inf' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--deltas virgule finale",
+   "constat": "GD4-03",
+   "arguments": [
+    "--deltas",
+    "0.05,"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --deltas : nombre mal formé '' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--deltas chiffre non ASCII",
+   "constat": "GD4-03",
+   "arguments": [
+    "--deltas",
+    "٠.٠٥"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --deltas : nombre mal formé '٠.٠٥' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--deltas ' 5e-2' (sain)",
+   "constat": "GD4-03 sain",
+   "arguments": [
+    "--deltas",
+    " 5e-2"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "même fichier, ./",
+   "constat": "GD4-04",
+   "arguments": [
+    "--ecarts",
+    "g1.json,./g1.json",
+    "--ecarts-contraste",
+    "c1.json,c2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : même fichier donné deux fois : ./g1.json (garde 2) et g1.json (garde 1), chemin résolu /tmp/claude-0/-home-claude/be74bc5f-030c-58ad-8f83-cdf5edf47ca3/scratchpad/gd6/travail-essais-final/g1.json (GD4-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "même fichier par lien symbolique",
+   "constat": "GD4-04",
+   "arguments": [
+    "--ecarts",
+    "g1.json,g1lien.json",
+    "--ecarts-contraste",
+    "c1.json,c2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : même fichier donné deux fois : g1lien.json (garde 2) et g1.json (garde 1), chemin résolu /tmp/claude-0/-home-claude/be74bc5f-030c-58ad-8f83-cdf5edf47ca3/scratchpad/gd6/travail-essais-final/g1.json (GD4-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "même contenu, deux noms",
+   "constat": "GD4-04",
+   "arguments": [
+    "--ecarts",
+    "g1.json,g1copie.json",
+    "--ecarts-contraste",
+    "c1.json,c2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : deux fichiers de même contenu (empreinte 20ccdb85317d…) : g1copie.json (garde 2) et g1.json (garde 1) (GD4-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "même fichier en garde et en contraste par ./",
+   "constat": "GD4-04",
+   "arguments": [
+    "--ecarts",
+    "e.json",
+    "--ecarts-contraste",
+    "./e.json",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : même fichier donné deux fois : ./e.json (contraste 1) et e.json (garde 1), chemin résolu /tmp/claude-0/-home-claude/be74bc5f-030c-58ad-8f83-cdf5edf47ca3/scratchpad/gd6/travail-essais-final/e.json (GD4-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "même contenu en garde et en contraste",
+   "constat": "GD4-04",
+   "arguments": [
+    "--ecarts",
+    "e.json",
+    "--ecarts-contraste",
+    "ecopie.json",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : deux fichiers de même contenu (empreinte af590e044a5d…) : ecopie.json (contraste 1) et e.json (garde 1) (GD4-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "fichiers distincts (sain)",
+   "constat": "GD4-04 sain",
+   "arguments": [
+    "--ecarts",
+    "g1.json,g2.json",
+    "--ecarts-contraste",
+    "c1.json,c2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 JSON réindenté, clés dans un autre ordre",
+   "constat": "GD5-04",
+   "arguments": [
+    "--ecarts",
+    "n1.json,n1_reindente.json",
+    "--ecarts-contraste",
+    "nc1.json,nc2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : doublon de valeurs : n1_reindente.json (garde 2) et n1.json (garde 1) donnent les mêmes écarts unité par unité (même contenu sous un autre encodage ou une autre mise en forme) (GD5-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 JSON contre CSV aux mêmes valeurs",
+   "constat": "GD5-04",
+   "arguments": [
+    "--ecarts",
+    "n1.json,n1.csv",
+    "--ecarts-contraste",
+    "nc1.json,nc2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : doublon de valeurs : n1.csv (garde 2) et n1.json (garde 1) donnent les mêmes écarts unité par unité (même contenu sous un autre encodage ou une autre mise en forme) (GD5-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 fA,fB contre la forme ecarts",
+   "constat": "GD5-04",
+   "arguments": [
+    "--ecarts",
+    "n1.json,n1_ecarts.json",
+    "--ecarts-contraste",
+    "nc1.json,nc2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : doublon de valeurs : n1_ecarts.json (garde 2) et n1.json (garde 1) donnent les mêmes écarts unité par unité (même contenu sous un autre encodage ou une autre mise en forme) (GD5-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 0.1 contre 0.100",
+   "constat": "GD5-04",
+   "arguments": [
+    "--ecarts",
+    "z01.json,z0100.json",
+    "--ecarts-contraste",
+    "nc1.json,nc2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : doublon de valeurs : z0100.json (garde 2) et z01.json (garde 1) donnent les mêmes écarts unité par unité (même contenu sous un autre encodage ou une autre mise en forme) (GD5-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 0.1 contre 1e-1",
+   "constat": "GD5-04",
+   "arguments": [
+    "--ecarts",
+    "z01.json,z_exp.json",
+    "--ecarts-contraste",
+    "nc1.json,nc2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : doublon de valeurs : z_exp.json (garde 2) et z01.json (garde 1) donnent les mêmes écarts unité par unité (même contenu sous un autre encodage ou une autre mise en forme) (GD5-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 contraste de mêmes valeurs que la garde",
+   "constat": "GD5-04",
+   "arguments": [
+    "--ecarts",
+    "n1.json",
+    "--ecarts-contraste",
+    "n1_ecarts.json",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : doublon de valeurs : n1_ecarts.json (contraste 1) et n1.json (garde 1) donnent les mêmes écarts unité par unité (même contenu sous un autre encodage ou une autre mise en forme) (GD5-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 deux contrastes de mêmes valeurs",
+   "constat": "GD5-04",
+   "arguments": [
+    "--ecarts",
+    "n1.json,n2.json",
+    "--ecarts-contraste",
+    "nc1.json,nc1_ecarts.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : doublon de valeurs : nc1_ecarts.json (contraste 2) et nc1.json (contraste 1) donnent les mêmes écarts unité par unité (même contenu sous un autre encodage ou une autre mise en forme) (GD5-04)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 valeurs distinctes sans identifiants (sain)",
+   "constat": "GD5-04 sain",
+   "arguments": [
+    "--ecarts",
+    "n1.json,n2.json",
+    "--ecarts-contraste",
+    "nc1.json,nc2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-04 CSV et JSON de valeurs distinctes (sain)",
+   "constat": "GD5-04 sain",
+   "arguments": [
+    "--ecarts",
+    "n2.json,n1.csv",
+    "--ecarts-contraste",
+    "nc1.json,nc2.json",
+    "--comparateurs",
+    "2",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 effet des comparateurs σ = 1 (sain) : décomposition et nom",
+   "constat": "GD5-01 sain",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "1.0",
+    "--comparateurs",
+    "2"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": [
+    "binomiale_Kh3_Ks3_taux0.01_effetB1.0"
+   ],
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 effet des comparateurs σ = 1, ρ = 0,17 (sain)",
+   "constat": "GD5-01 sain",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "1.0",
+    "--correlation-comparateurs",
+    "0.17",
+    "--comparateurs",
+    "2"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": [
+    "binomiale_Kh3_Ks3_taux0.01_effetB1.0_corrB0.17"
+   ],
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 effet des comparateurs avec lien coupé (sain)",
+   "constat": "GD5-01 sain",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "0.5",
+    "--lien-coupe",
+    "--comparateurs",
+    "2"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": [
+    "binomiale_Kh3_Ks3_taux0.01_effetB0.5",
+    "binomiale_Kh3_Ks3_taux0.01_effetB0.5_lien_coupe"
+   ],
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 effet sur A et sur les comparateurs ensemble (sain)",
+   "constat": "GD5-01 sain",
+   "arguments": [
+    "--effet-unite-a",
+    "1.0",
+    "--effet-unite-comparateurs",
+    "1.0",
+    "--comparateurs",
+    "2"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 ρ sans σ",
+   "constat": "GD5-01",
+   "arguments": [
+    "--correlation-comparateurs",
+    "0.17"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --correlation-comparateurs sans objet : il demande --effet-unite-comparateurs > 0 (GD5-01)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 σ négatif",
+   "constat": "GD5-01",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "-1"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --effet-unite-comparateurs dans [0 ; 3] (logit) (0 : sans effet)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 σ trop grand",
+   "constat": "GD5-01",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "3.5"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --effet-unite-comparateurs dans [0 ; 3] (logit) (0 : sans effet)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 ρ = 1",
+   "constat": "GD5-01",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "1",
+    "--correlation-comparateurs",
+    "1"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --correlation-comparateurs : ρ dans [0 ; 1[ (0 : comparateurs indépendants)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 ρ négatif",
+   "constat": "GD5-01",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "1",
+    "--correlation-comparateurs",
+    "-0.1"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --correlation-comparateurs : ρ dans [0 ; 1[ (0 : comparateurs indépendants)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 σ 1_0 (souligné)",
+   "constat": "GD4-03",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "1_0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --effet-unite-comparateurs : nombre mal formé '1_0' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 ρ 0.1_7 (souligné)",
+   "constat": "GD4-03",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "1",
+    "--correlation-comparateurs",
+    "0.1_7"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --correlation-comparateurs : nombre mal formé '0.1_7' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-01 effet des comparateurs avec bêta",
+   "constat": "GD5-01",
+   "arguments": [
+    "--effet-unite-comparateurs",
+    "1",
+    "--effet-unite-beta",
+    "0.1"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --effet-unite-comparateurs avec --effet-unite-beta : croisement non traité (l'effet bêta est tiré à part, sans lien ; un seul modèle de dispersion par passage)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "GD5-02 fiches nulles : borne α_c·m₀/m écrite",
+   "constat": "GD5-02 sain",
+   "arguments": [
+    "--lecture-ebh",
+    "A,B",
+    "--fiches-nulles",
+    "2",
+    "--comparateurs",
+    "3",
+    "--m",
+    "2"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "A": 0.025,
+    "B": 0.0125
+   },
+   "conforme": true
+  },
+  {
+   "essai": "--ecarts vide",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    ""
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --ecarts : nom de fichier vide (chaîne vide, virgule finale ou doublée : GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--ecarts-contraste vide",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "g1.json",
+    "--ecarts-contraste",
+    "",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --ecarts-contraste : nom de fichier vide (chaîne vide, virgule finale ou doublée : GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--ecarts virgule finale",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "g1.json,",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --ecarts : nom de fichier vide (chaîne vide, virgule finale ou doublée : GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "fichier absent",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "absent.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : absent.json : fichier absent (garde, comparateur 1) (GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "dossier à la place d'un fichier",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "dossier.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : dossier.json : dossier, pas un fichier (garde, comparateur 1) (GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "secours sans fichier",
+   "constat": "GD4-06",
+   "arguments": [
+    "--contraste-synthetique-de-secours"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --contraste-synthetique-de-secours sans objet : il ne sert qu'avec --ecarts sans --ecarts-contraste (GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "secours avec contraste réel",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "g1.json",
+    "--ecarts-contraste",
+    "c1.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --contraste-synthetique-de-secours sans objet : il ne sert qu'avec --ecarts sans --ecarts-contraste (GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "secours qui sert (sain) : loi nommée",
+   "constat": "GD4-06 sain",
+   "arguments": [
+    "--ecarts",
+    "g1.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": "synthétique de secours (K_h = 3, K_s = 3, τ = 0.01, r_B = 0.4, écart = 0.1) : binomiale_Kh3_Ks3_taux0.01",
+   "conforme": true
+  },
+  {
+   "essai": "sans secours (sain) : option non écrite",
+   "constat": "GD4-06 sain",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "τ = 0",
+   "constat": "GD4-06",
+   "arguments": [
+    "--taux",
+    "0"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --taux : nombres dans ] 0.0 ; 1.0] attendus",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "τ = 0 dans une liste",
+   "constat": "GD4-06",
+   "arguments": [
+    "--taux",
+    "0,0.01"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --taux : nombres dans ] 0.0 ; 1.0] attendus",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "effet logit, τ + biais = 1",
+   "constat": "GD4-06",
+   "arguments": [
+    "--effet-unite-a",
+    "1",
+    "--taux",
+    "0.99",
+    "--biais",
+    "0.01",
+    "--deltas",
+    "0.005"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : effet d'unité avec τ + biais = 1.0 : probabilité 1, sans effet possible (GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "effet bêta, τ + biais = 1",
+   "constat": "GD4-06",
+   "arguments": [
+    "--effet-unite-beta",
+    "0.2",
+    "--taux",
+    "0.99",
+    "--biais",
+    "0.01",
+    "--deltas",
+    "0.005"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : effet d'unité avec τ + biais = 1.0 : probabilité 1, sans effet possible (GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "identifiants nombres",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "ids_nombres.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : ids_nombres.json : « unite » : liste de chaînes non vides attendue (ni nombre, ni true, ni null, ni liste : GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "identifiant true",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "ids_vrai.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : ids_vrai.json : « unite » : liste de chaînes non vides attendue (ni nombre, ni true, ni null, ni liste : GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "identifiant null",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "ids_nul.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : ids_nul.json : « unite » : liste de chaînes non vides attendue (ni nombre, ni true, ni null, ni liste : GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "identifiant vide",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "ids_vide.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : ids_vide.json : « unite » : liste de chaînes non vides attendue (ni nombre, ni true, ni null, ni liste : GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "identifiant liste",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "ids_liste.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : ids_liste.json : « unite » : liste de chaînes non vides attendue (ni nombre, ni true, ni null, ni liste : GD4-06)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "identifiants chaînes (sain)",
+   "constat": "GD4-06 sain",
+   "arguments": [
+    "--ecarts",
+    "g1.json",
+    "--ecarts-contraste",
+    "c1.json",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "clé JSON doublée : motif gardé",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "cle_doublee.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : cle_doublee.json : JSON illisible (ValueError : clé JSON doublée (GD3-05))",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "entier démesuré : motif gardé",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "entier_grand.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : entier_grand.json : JSON illisible (ValueError : entier démesuré, plus de 30 chiffres (GD3-05))",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "NaN en JSON",
+   "constat": "GD4-06",
+   "arguments": [
+    "--ecarts",
+    "json_nan.json",
+    "--contraste-synthetique-de-secours",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : json_nan.json : JSON illisible (ValueError : constante NaN refusée (ni NaN, ni Infinity))",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--lien-coupe sans effet",
+   "constat": "options v5",
+   "arguments": [
+    "--lien-coupe"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --lien-coupe sans objet : il demande --effet-unite-a > 0 ou --effet-unite-comparateurs > 0 (l'effet bêta est déjà tiré à part)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--lien-coupe avec bêta",
+   "constat": "options v5",
+   "arguments": [
+    "--lien-coupe",
+    "--effet-unite-beta",
+    "0.1"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --lien-coupe sans objet : il demande --effet-unite-a > 0 ou --effet-unite-comparateurs > 0 (l'effet bêta est déjà tiré à part)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "deux effets ensemble",
+   "constat": "options v5",
+   "arguments": [
+    "--effet-unite-a",
+    "1",
+    "--effet-unite-beta",
+    "0.1"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --effet-unite-a et --effet-unite-beta ensemble : un seul effet d'unité par passage",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--m-fiches sans lecture e-BH",
+   "constat": "options v5",
+   "arguments": [
+    "--m-fiches",
+    "2"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --m-fiches ou --fiches-nulles sans --lecture-ebh : sans objet",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--lecture-ebh C",
+   "constat": "options v5",
+   "arguments": [
+    "--lecture-ebh",
+    "C"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --lecture-ebh : A, B ou A,B",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--lecture-ebh A,A",
+   "constat": "options v5",
+   "arguments": [
+    "--lecture-ebh",
+    "A,A"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --lecture-ebh : A, B ou A,B",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "fiches nulles et fichiers réels",
+   "constat": "options v5",
+   "arguments": [
+    "--ecarts",
+    "g1.json",
+    "--ecarts-contraste",
+    "c1.json",
+    "--lecture-ebh",
+    "A",
+    "--fiches-nulles",
+    "1",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --fiches-nulles avec des fichiers réels : fiches nulles synthétiques seulement",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "lecture e-BH sur fichiers réels (sain)",
+   "constat": "options v5 sain",
+   "arguments": [
+    "--ecarts",
+    "g1.json",
+    "--ecarts-contraste",
+    "c1.json",
+    "--lecture-ebh",
+    "A,B",
+    "--effectif-attendu",
+    "6"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--sortie non .json",
+   "constat": "GD4-05",
+   "arguments": [
+    "--sortie",
+    "x.txt"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : --sortie : chemin .json dans un dossier existant",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "--sortie (sain) : journal et manifeste",
+   "constat": "GD4-05 sain",
+   "arguments": [
+    "--sortie",
+    "passage.json"
+   ],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "fichiers": {
+     "passage.json": "a701f4e8f5f338f18a35101b96dc37edccace448a5b761361cf6300364d3c623",
+     "passage-journal.txt": "9b11f68628ef45a9026247ecddc7b153a99d7087add9dfaefebeb8889499f16c"
+    },
+    "etat_du_script": "?? brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/couche-2-conv-audit-v1/simulation-puissance-garde-delta-v6/simulation-puissance-garde-delta-v6.py",
+    "commit": "43a3352a8793c36ea4a94afb5cf21daedea45d14"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "--sortie existante",
+   "constat": "GD4-05 / R12",
+   "arguments": [
+    "--sortie",
+    "passage.json"
+   ],
+   "attendu": "refus",
+   "obtenu": "refus",
+   "code": 1,
+   "message": "refus : passage.json existe déjà : on n'écrase jamais (R12)",
+   "detail": null,
+   "conforme": true
+  },
+  {
+   "essai": "git : hors dépôt",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": null,
+    "etat_du_script": "hors dépôt git"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : propriétaire douteux",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": null,
+    "etat_du_script": "inconnu (git rev-parse --show-toplevel : code 128 : fatal: detected dubious ownership in repository at '/x')"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : dépôt sans commit",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": null,
+    "etat_du_script": "inconnu (git rev-parse --verify : code 128 : fatal: Needed a single revision)"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : commit illisible",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": null,
+    "etat_du_script": "inconnu (commit illisible : 'HEAD')"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : ls-files en échec",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "etat_du_script": "inconnu (git ls-files --error-unmatch : code 128 : fatal: index file corrupt)"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : status en échec",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "etat_du_script": "inconnu (git status --porcelain : code 128 : fatal: index file corrupt)"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : ignoré",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "etat_du_script": "non suivi (ignoré ou hors arbre)"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : modifié",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "etat_du_script": "M script.py"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : propre (sain)",
+   "constat": "GD4-05 sain",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": "0123456789abcdef0123456789abcdef01234567",
+    "etat_du_script": "commité, non modifié"
+   },
+   "conforme": true
+  },
+  {
+   "essai": "git : absent du PATH",
+   "constat": "GD4-05",
+   "arguments": [],
+   "attendu": "accepte",
+   "obtenu": "accepte",
+   "code": 0,
+   "message": "",
+   "detail": {
+    "commit": null,
+    "etat_du_script": "inconnu (git non lancé (FileNotFoundError))"
+   },
+   "conforme": true
+  }
+ ]
+}

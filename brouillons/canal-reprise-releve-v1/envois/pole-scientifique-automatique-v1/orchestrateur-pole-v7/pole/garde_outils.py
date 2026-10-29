@@ -281,7 +281,11 @@ def evaluer_commande(commande, dossier):
 
 
 def evaluer_appel(outil, entree, dossier):
-    """(autorisé, motif) pour un appel d'outil quelconque."""
+    """(autorisé, motif) pour un appel d'outil quelconque.
+
+    v46 (tour (c), note de conception § 2.1) : deux trous fermés — le motif de `Glob` (`pattern`) et le filtre de `Grep`
+    (`glob`) sont des chemins : absolu hors du dossier, personnel (`~`), remontant (`..`) ou à accolades → refusés
+    (`motif_hors_racine`) ; avant, `Glob {"pattern": "/etc/*"}` et `Grep {"glob": "/root/**"}` étaient admis."""
     entree = entree or {}
     if outil == "Bash":
         return evaluer_commande(entree.get("command", ""), dossier)
@@ -296,8 +300,164 @@ def evaluer_appel(outil, entree, dossier):
                 return False, f"{outil} : chemin hors du dossier de l'expérience ({chemin})"
         if outil in ("Glob", "Grep") and ".." in str(entree.get("pattern", "")):
             return False, f"{outil} : motif remontant hors du dossier"
+        for cle in ({"Glob": ("pattern",), "Grep": ("glob",)}.get(outil, ())):  # v46 : motifs de chemin
+            if entree.get(cle) is not None:
+                motif = motif_hors_racine(entree[cle], dossier, entree.get("path"))
+                if motif:
+                    return False, f"{outil} : {cle} {motif}"
         return True, f"{outil} dans le dossier"
     return False, f"outil non autorisé pour un agent du pôle : {outil}"
+
+
+# --- v46 : lecture seule confinée à une racine (tour (c), dossier fermé) ------------------------------------------------
+# Proposeurs Claude à outils du kit : `Read`, `Grep`, `Glob` seulement, sur le dossier fermé (copie vérifiée par empreinte,
+# racine de lecture) ; aucune écriture, aucune commande. Le crochet est la barrière principale pour les outils de fichiers
+# (ils tournent dans le processus du kit, pas dans le bac à sable du système : SUPPOSÉ, à éprouver en réel).
+OUTILS_LECTURE = ("Read", "Grep", "Glob")
+PARAMETRES_LECTURE = {
+    "Read": {"file_path", "offset", "limit", "pages"},
+    "Glob": {"pattern", "path"},
+    "Grep": {"pattern", "path", "glob", "type", "output_mode", "-A", "-B", "-C", "-n", "-i", "head_limit", "offset",
+             "multiline", "context"},
+}
+METACARACTERES_MOTIF = "*?["
+
+
+def _composants_interdits(texte):
+    """Motif de refus si `texte` porte `~` en tête de composant, un composant `..`, une accolade ou un caractère nul."""
+    if "\x00" in texte:
+        return "caractère nul"
+    if "{" in texte or "}" in texte:
+        return "accolades refusées (une alternative pourrait sortir de la racine)"
+    composants = texte.replace("\\", "/").split("/")
+    if any(c == ".." for c in composants):
+        return "remontant (..)"
+    if any(c.startswith("~") for c in composants):
+        return "dossier personnel (~)"
+    return None
+
+
+def chemin_hors_racine(chemin, racine):
+    """None si `chemin` (absolu ou relatif à `racine`) reste dans `racine` après liens résolus (`os.path.realpath`), sans
+    `..` ni `~` ; sinon le motif du refus."""
+    if not isinstance(chemin, str) or not chemin:
+        return "chemin manquant"
+    motif = _composants_interdits(chemin)
+    if motif:
+        return f"{motif} : {chemin}"
+    if not chemin_dans(racine, chemin):
+        return f"hors de la racine de lecture (liens résolus) : {chemin}"
+    return None
+
+
+def motif_hors_racine(motif, racine, base=None):
+    """None si le motif de chemin (`Glob.pattern`, `Grep.glob`) ne peut désigner que des fichiers de `racine` ; sinon le
+    motif du refus. Absolu : seulement sous la racine ; relatif : à `base` (dans la racine) ou à la racine ; le préfixe
+    sans métacaractère est résolu (`os.path.realpath`) et doit rester dans la racine."""
+    if not isinstance(motif, str) or not motif:
+        return "motif manquant"
+    refus = _composants_interdits(motif)
+    if refus:
+        return f"{refus} : {motif}"
+    if base is not None:
+        refus = chemin_hors_racine(base, racine)
+        if refus:
+            return "base " + refus
+    depart = racine if base is None else (base if os.path.isabs(base) else os.path.join(racine, base))
+    coupe = min([motif.find(c) for c in METACARACTERES_MOTIF if c in motif] or [len(motif)])
+    prefixe = os.path.dirname(motif[:coupe]) if coupe < len(motif) else motif
+    cible = prefixe if os.path.isabs(motif) else os.path.join(depart, prefixe)
+    if os.path.isabs(motif):
+        r = os.path.realpath(racine)
+        if not (os.path.normpath(motif) == r or os.path.normpath(motif).startswith(r + os.sep)
+                or os.path.normpath(motif).startswith(os.path.normpath(racine) + os.sep)):
+            return f"absolu hors de la racine de lecture : {motif}"
+    if not chemin_dans(racine, cible or depart):
+        return f"hors de la racine de lecture (liens résolus) : {motif}"
+    return None
+
+
+def evaluer_appel_lecture(outil, entree, racine):
+    """(autorisé, motif) pour un proposeur à lecture seule confinée à `racine` (v46) : `Read`, `Grep`, `Glob` seulement ;
+    tout paramètre inconnu refusé ; chemins (`file_path`, `path`) et motifs de chemin (`Glob.pattern`, `Grep.glob`) hors de
+    la racine refusés — absolus hors racine, `..`, `~`, accolades, liens symboliques résolus qui sortent ; toute écriture
+    (`Write`, `Edit`, `MultiEdit`, `NotebookEdit`) et toute commande (`Bash`) refusées ; tout autre outil (`mcp__…`,
+    `WebFetch`, `Task`…) refusé."""
+    entree = entree if isinstance(entree, dict) else {}
+    if outil in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
+        return False, f"écriture interdite (lecture seule du dossier fermé) : {outil}"
+    if outil == "Bash":
+        return False, "commande interdite (lecture seule du dossier fermé) : Bash"
+    if outil not in OUTILS_LECTURE:
+        return False, f"outil non autorisé en lecture seule : {outil}"
+    inconnus = sorted(set(entree) - PARAMETRES_LECTURE[outil])
+    if inconnus:
+        return False, f"{outil} : paramètre inconnu refusé ({', '.join(inconnus)})"
+    if outil == "Read":
+        refus = chemin_hors_racine(entree.get("file_path"), racine)
+        if refus:
+            return False, f"Read : {refus}"
+        return True, "Read dans la racine de lecture"
+    if entree.get("path") is not None:
+        refus = chemin_hors_racine(entree["path"], racine)
+        if refus:
+            return False, f"{outil} : path {refus}"
+    cle_motif = "pattern" if outil == "Glob" else "glob"
+    if outil == "Glob" or entree.get("glob") is not None:
+        refus = motif_hors_racine(entree.get(cle_motif), racine, entree.get("path"))
+        if refus:
+            return False, f"{outil} : {cle_motif} {refus}"
+    if outil == "Grep" and not isinstance(entree.get("pattern"), str):
+        return False, "Grep : motif de recherche manquant"
+    return True, f"{outil} dans la racine de lecture"
+
+
+def fabriquer_crochet_lecture(racine, max_demandes=1000, lire_depense=None, plafond_usd=None, seuil_avertissement=0.8):
+    """v46 : crochet `PreToolUse` de lecture seule confinée à `racine`. Consigne chaque appel (`crochet.journal` : outil,
+    entrée, autorisé, motif, rang) ; au-delà de `max_demandes` appels admis, refuse tout (garde-fou anti-boucle,
+    `crochet.incident` mis) ; si `lire_depense` (dépense de la session lue au relais, en dollars) et `plafond_usd` sont
+    donnés, le premier appel après `seuil_avertissement` × plafond est refusé avec « il te reste X USD : rends ta fiche »
+    (`crochet.avertissement` mis) — le motif d'un refus est rendu au modèle comme résultat de l'outil (SUPPOSÉ, à éprouver)."""
+    racine = os.path.realpath(racine)
+    etat = {"admis": 0}
+
+    async def crochet(input_data, tool_use_id, context):
+        outil = input_data.get("tool_name", "")
+        entree = input_data.get("tool_input") or {}
+        autorise, motif = evaluer_appel_lecture(outil, entree, racine)
+        if autorise and etat["admis"] >= max_demandes:
+            autorise, motif = False, (f"garde-fou anti-boucle : {max_demandes} demandes de lecture admises ; plus aucune "
+                                      "lecture : rends ta fiche")
+            crochet.incident = {"type": "garde-fou anti-boucle", "max_demandes_lecture": max_demandes,
+                                "rang": len(crochet.journal) + 1}
+        if autorise and lire_depense is not None and plafond_usd and not crochet.avertissement:
+            try:
+                depense = float(lire_depense())
+            except Exception:  # noqa: BLE001 — relais illisible : aucun avertissement possible, dit au journal
+                depense = None
+                crochet.relais_illisible = True
+            if depense is not None and depense >= seuil_avertissement * plafond_usd:
+                reste = max(0.0, plafond_usd - depense)
+                autorise, motif = False, f"avertissement de budget : il te reste {reste:.2f} USD : rends ta fiche"
+                crochet.avertissement = {"rang": len(crochet.journal) + 1, "depense_usd": round(depense, 6),
+                                         "reste_usd": round(reste, 6)}
+        if autorise:
+            etat["admis"] += 1
+        crochet.journal.append({"rang": len(crochet.journal) + 1, "outil": outil,
+                                "entree": {k: v for k, v in entree.items() if isinstance(v, (str, int, float, bool))},
+                                "autorise": autorise, "motif": motif})
+        if autorise:
+            return {}
+        return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
+                                       "permissionDecisionReason": motif}}
+
+    crochet.dossier = racine
+    crochet.journal = []
+    crochet.incident = None
+    crochet.avertissement = None
+    crochet.relais_illisible = False
+    crochet.max_demandes = max_demandes
+    return crochet
 
 
 def fabriquer_crochet(dossier):

@@ -3794,9 +3794,6 @@ class TestV44(CasAvecDossier):
                 self.assertNotIn("distance", a["consigne"])
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 class TestV45(CasAvecDossier):
     """v45 (bloquant de lancement démontré par session-depot sur la v44, message n° 175) : `anonymiser` normalisait la
@@ -3922,3 +3919,860 @@ class TestV45(CasAvecDossier):
             lignes = json.load(f)["lignes"]
         self.assertTrue(lignes)
         self.assertTrue(all(l["nombre_juges"] == 3 for l in lignes))
+
+# --- v46 : tour (c) « outils clôturés » (décisions de Lazar du 29 octobre 2026, R-433, R-434, R-441, R-444, R-448) et
+# corrections de la contre-lecture CL12 de la v45 (CL45-01 : TestV45 et TestV46 avant `unittest.main()` ; CL45-02 :
+# caviardage valeur par valeur après l'analyse JSON). En préparation hors ligne : moteur simulé, Argon factice qui émet des
+# demandes, faux kit qui passe ses appels d'outils par le vrai crochet ; aucune session réelle, aucun réseau, aucune clé.
+# Un essai par point : (1) dossier fermé ; (2) outils confinés du kit et épreuves R5 du crochet ; (3) outils par protocole ;
+# (4) aucun nombre de tours, plafonds de sûreté, garde-fou (incident), avertissement de budget ; (5) mesures au manifeste
+# de fin seulement ; (6) cache partagé ; (7) citations vérifiées (L7) ; (8) moisson refusée ; rétrocompatibilité.
+import asyncio  # noqa: E402
+import time  # noqa: E402
+
+from pole import dossier_ferme as dfm  # noqa: E402
+from pole.adaptateurs import AdaptateurCommandeExterne, reglages_kit_par_role  # noqa: E402
+from pole.garde_outils import evaluer_appel, evaluer_appel_lecture, fabriquer_crochet_lecture  # noqa: E402
+from pole.outils import extraire_bloc_json  # noqa: E402
+
+PAGE_2 = "Le taux de détection atteint 0,73 sur les épisodes diffus."
+TEXTE_A = ("# Extrait A\n[p.1] Introduction : moniteurs et menaces diffuses.\n"
+           "[p.2] " + PAGE_2 + "\nUne seconde ligne de la page deux.\n"
+           "[p.3] Conclusion : la borne tient à dix familles.\n")
+TEXTE_B = "Extrait B, page une : grille de mesure bêta.\fExtrait B, page deux : le taux de rappel.\f"
+CITATION_JUSTE = "« Le taux de détection atteint 0,73 » [extrait-a.md, p.2]"
+CITATION_FAUSSE = "« un passage inventé de toutes pièces » [extrait-a.md, p.3]"
+CITATION_ABSENTE = "[extrait-a.md, p.9]"
+
+
+def fiche_citante(nom):
+    return fiche_brute(nom=nom, anteriorite=[{"reference": CITATION_JUSTE + " ; " + CITATION_FAUSSE + " ; " + CITATION_ABSENTE,
+                                              "statut": "RAPPORTE"}])
+
+
+# Argon factice : à chaque tour, lit dans la consigne le nombre de tours déjà servis ; joue le scénario (demandes, version
+# provisoire), puis rend ses fiches ; « toujours » : demande sans fin (garde-fou) ; coût = min(cout, part × plafond restant)
+SCRIPT_ARGON = r'''
+import sys, json, os, re, time
+c = sys.stdin.read()
+plafond = float(os.environ.get('PLAFOND_SESSION_USD', '1'))
+role = os.environ.get('ROLE_POLE')
+S = json.loads(%(scenario)r)
+def sortir(t, cout):
+    with open(%(journal)r, 'a') as j:
+        j.write(json.dumps({'role': role, 'taille': len(c), 'plafond': plafond, 'tours_servis': c.count('"tour": '),
+                            'avertissement': 'Il te reste' in c, 'passe2': 'première passe' in c}) + '\n')
+    print(json.dumps({'texte': t, 'cout_usd': cout})); sys.exit(0)
+if c.startswith('Réponds exactement OK'): sortir('OK', 0.001)
+if role == 'juge_ideation':
+    bloc = json.loads(re.search(r'```json\n(\[.*\])\n```', c, re.S).group(1)); par_nom = {f['nom']: f['identifiant'] for f in bloc}
+    notes = []
+    for f in bloc:
+        k = {x: 2 for x in ('avantage', 'originalite', 'falsifiabilite', 'traitabilite', 'robustesse')}
+        if f['nom'] in ('Verbeux vide', 'Assuré occupé'): k.update({'avantage': 1, 'originalite': 0, 'falsifiabilite': 0})
+        notes.append({'identifiant': f['identifiant'], 'criteres': k, 'justifications': {}})
+    sortir('```json\n' + json.dumps({'notes': notes, 'doublons': [[par_nom['Jumeau'], par_nom['Sobre fort']]]}) + '\n```', 0.01)
+time.sleep(S.get('dormir', 0))
+n = c.count('"tour": ')
+cout = min(S.get('cout', 0.05), S.get('part', 0.5) * plafond)
+fiche = S['fiche']
+if 'première passe' in c: fiche = dict(fiche, nom=fiche['nom'] + ' revue')
+if S.get('toujours') or n < len(S['tours']):
+    t = {'demandes': [{'lire': 'extrait-a.md', 'pages': [1, 1]}]} if S.get('toujours') else S['tours'][n]
+    texte = '```json\n' + json.dumps({'demandes': t['demandes']}, ensure_ascii=False) + '\n```'
+    if t.get('version'):
+        texte += '\n```json\n' + json.dumps({'fiches': [dict(fiche, nom=fiche['nom'] + ' brouillon')]}, ensure_ascii=False) + '\n```'
+    sortir(texte, cout)
+sortir('```json\n' + json.dumps({'fiches': [fiche]}, ensure_ascii=False) + '\n```', cout)
+'''
+
+
+class FauxProtocole:
+    """Proposeur Claude par protocole (en processus) : même scénario que l'Argon factice ; juge : notes qui tiennent les
+    témoins ; consigne chaque appel et ses arguments de lecture."""
+    nom = "faux-protocole"
+
+    def __init__(self, scenarios, juge, dormir=0.0):
+        self.scenarios, self.juge, self.dormir = scenarios, juge, dormir
+        self.appels = []
+
+    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, **lecture):
+        self.appels.append({"role": role, "consigne": consigne, "dossier": dossier, "budget": budget_usd,
+                            "max_tours": max_tours, "lecture": lecture})
+        if consigne.startswith(idn.APPEL_DE_CONTROLE_CONSIGNE):
+            return Resultat("OK", [], 0.01, "ok")
+        if role == "juge_ideation":
+            idents = sorted(set(re.findall(r'"identifiant": "(T\d\d)"', consigne)))
+            return Resultat("```json\n" + json.dumps(self.juge(idents, consigne)) + "\n```", [], 0.1, "ok")
+        time.sleep(self.dormir)
+        etiquette = dossier.split(os.sep)[-3]
+        s = self.scenarios[etiquette]
+        n = consigne.count('"tour": ')
+        if n < len(s["tours"]):
+            return Resultat("```json\n" + json.dumps({"demandes": s["tours"][n]["demandes"]}, ensure_ascii=False) + "\n```",
+                            [], s.get("cout", 0.05), "ok")
+        return Resultat("```json\n" + json.dumps({"fiches": [s["fiche"]]}, ensure_ascii=False) + "\n```", [],
+                        s.get("cout", 0.05), "ok")
+
+
+class FauxKit:
+    """Faux kit d'agent : pour un proposeur à outils, construit les vraies options (`construire_options`, racine de lecture,
+    crochet de lecture seule) et passe chaque appel d'outil scripté par le vrai crochet ; un `Read` admis lit le fichier
+    pour de bon. Juges : notes qui tiennent les témoins. Rend le journal du crochet comme l'adaptateur réel."""
+    nom = "faux-kit"
+
+    def __init__(self, sortie, appels_outils, juge, fiche, ecrire_dans_copie=False, depense=None):
+        self.sortie, self.appels_outils, self.juge, self.fiche = sortie, appels_outils, juge, fiche
+        self.ecrire_dans_copie, self.depense = ecrire_dans_copie, depense
+        self.appels, self.lus, self.decisions = [], [], []
+
+    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, **lecture):
+        self.appels.append({"role": role, "consigne": consigne, "dossier": dossier, "max_tours": max_tours, "lecture": lecture})
+        if consigne.startswith(idn.APPEL_DE_CONTROLE_CONSIGNE):
+            return Resultat("OK", [], 0.01, "ok")
+        if role == "juge_ideation":
+            idents = sorted(set(re.findall(r'"identifiant": "(T\d\d)"', consigne)))
+            return Resultat("```json\n" + json.dumps(self.juge(idents, consigne)) + "\n```", [], 0.1, "ok")
+        racine = lecture["racine_lecture"]
+        o = construire_options(dossier, budget_usd, max_tours, url_relais="http://127.0.0.1:8787", modele=modele, role=role,
+                               interdire_lecture=[self.sortie], racine_lecture=racine,
+                               max_demandes_lecture=lecture["max_demandes_lecture"], lire_depense=self.depense)
+        self.options = o
+        crochet = o["crochets"]["PreToolUse"][0]["crochet"]
+        for outil, entree in self.appels_outils(racine):
+            sortie = asyncio.run(crochet({"tool_name": outil, "tool_input": entree}, "id", None))
+            self.decisions.append((outil, entree, sortie))
+            if not sortie and outil == "Read":
+                with open(entree["file_path"], encoding="utf-8") as f:
+                    self.lus.append(f.read())
+        if self.ecrire_dans_copie:
+            with open(os.path.join(racine, "extrait-a.md"), "a", encoding="utf-8") as f:
+                f.write("altéré\n")
+        texte = "```json\n" + json.dumps({"fiches": [self.fiche]}, ensure_ascii=False) + "\n```"
+        return Resultat(texte, [], 0.2, "ok", journal_outils=list(crochet.journal), incident_outils=crochet.incident,
+                        avertissement_outils=crochet.avertissement)
+
+
+class TestV46(CasAvecDossier):
+    """v46 : tour (c) « outils clôturés » en préparation, et corrections de CL12 (voir le commentaire qui précède)."""
+
+    # --- préparation ---------------------------------------------------------------------------------------------------
+
+    def cours(self):
+        c = TestCourse("test_course_complete")
+        c.tmp = self.tmp
+        return c
+
+    def v41(self):
+        t = TestV41("test_tolerances_separees")
+        t.tmp = self.tmp
+        return t
+
+    def ecrire_dossier(self, nom="dossier-ferme", index=True, pages_a=3):
+        d = os.path.join(self.tmp, nom)
+        os.makedirs(d)
+        with open(os.path.join(d, "extrait-a.md"), "w", encoding="utf-8") as f:
+            f.write(TEXTE_A)
+        os.makedirs(os.path.join(d, "sous"))
+        with open(os.path.join(d, "sous", "extrait-b.md"), "w", encoding="utf-8") as f:
+            f.write(TEXTE_B)
+        if index:
+            dfm.ecrire_index(d, [{"chemin": "extrait-a.md", "titre": "Extrait A", "resume": "Résumé de l'extrait A",
+                                  "sections": ["Introduction", "Résultats"], "pages": pages_a},
+                                 {"chemin": "sous/extrait-b.md", "titre": "Extrait B", "resume": "Résumé B"}])
+        return d
+
+    def preparer(self, dossier=None):
+        """Pièces des essais (TestCourse) et une liste blanche qui porte aussi l'index du dossier fermé."""
+        if not hasattr(self, "_base"):
+            self._base = self.cours().preparer()  # liste blanche des pièces écrite une fois (jamais écrasée)
+        prep = dict(self._base)
+        dossier = dossier or self.ecrire_dossier()
+        lb = os.path.join(self.tmp, "lb-v46-" + os.path.basename(dossier) + ".json")
+        idn.construire_liste_blanche([prep["question"], prep["pieces"][0], prep["materiau"][0], prep["temoins"],
+                                      os.path.join(dossier, "index.json")], lb)
+        return dict(prep, liste_blanche=lb), dossier
+
+    def budgets(self, argon=True):
+        b = dict(self.cours().budgets())
+        if argon:
+            b[("proposeur_ideation", "gemini-argon")] = 1.0
+        return b
+
+    def course(self, ad, nom, prep, dossier, argon=None, **modifs):
+        args = dict(liste_blanche=prep["liste_blanche"], question=prep["question"], pieces=prep["pieces"],
+                    temoins=prep["temoins"], proposeurs=[("opus", "claude-opus-5-5")], juges=[("juge-opus", "claude-opus-5-5")],
+                    graine=7, budget_total_usd=20.0, budgets=self.budgets(), dossier_ferme=dossier)
+        if argon is not None:
+            args.update(proposeurs_externes=[("argon", "gemini-argon", argon)], budget_externe_usd=3.0)
+        args.update(modifs)
+        return idn.executer_ideation(ad, os.path.join(self.tmp, nom), **args)
+
+    def argon(self, scenario, nom):
+        journal = os.path.join(self.tmp, nom + ".journal")
+        script = SCRIPT_ARGON % {"scenario": json.dumps(scenario, ensure_ascii=False), "journal": journal}
+        cmd = TestCommandeExterne("test_commande_factice_notes_et_controle")
+        cmd.tmp = self.tmp
+        return AdaptateurCommandeExterne(cmd.commande(script, nom + ".py"), environnement={}), journal, cmd.commande(script, nom + ".py")
+
+    @staticmethod
+    def lignes(journal):
+        with open(journal, encoding="utf-8") as f:
+            return [json.loads(l) for l in f if l.strip()]
+
+    @staticmethod
+    def lire(chemin):
+        with open(chemin, encoding="utf-8") as f:
+            return f.read()
+
+    def fin(self, nom):
+        return json.loads(self.lire(os.path.join(self.tmp, nom, "manifeste-fin.json")))["reglages"]
+
+    def consignes_des_juges(self, nom):
+        base = os.path.join(self.tmp, nom)
+        trouves = []
+        for racine, _, fichiers in os.walk(base):
+            for f in fichiers:
+                if f in ("consigne.md", "consigne-en-attente.md") and "juges" in racine:
+                    trouves.append(self.lire(os.path.join(racine, f)))
+        return trouves
+
+    # --- point 1 : dossier fermé ---------------------------------------------------------------------------------------
+
+    def test_v46_1_dossier_ferme_index_scelle_empreintes_et_artefacts(self):
+        """Cas sain : le dossier est chargé (pages par `[p.N]` et par saut de page), la consigne porte l'index (titre,
+        résumé, taille, pages, sections) et **jamais le texte** ; `taille_max_pieces` ne s'applique pas au dossier (pièces
+        de 30 caractères au plus, dossier plus grand : accepté). Artefacts (R5), tous refusés **avant tout appel** (aucun
+        appel, SORTIE jamais créée) : fichier en plus, fichier absent, empreinte changée, index non scellé, index hors de la
+        liste blanche, lien symbolique, chemin remontant dans l'index, fichier non texte (octets d'un PDF), secret, nombre
+        de pages faux, fragment interdit."""
+        prep, dossier = self.preparer()
+        d = dfm.charger_dossier_ferme(dossier, idn.charger_liste_blanche(prep["liste_blanche"]))
+        self.assertEqual(sorted(d.fichiers["extrait-a.md"]["pages"]), [1, 2, 3])
+        self.assertIn(PAGE_2, d.page("extrait-a.md", 2))
+        self.assertEqual(sorted(d.fichiers["sous/extrait-b.md"]["pages"]), [1, 2])
+        self.assertEqual(d.pages_total, 5)
+        index = json.dumps(d.vue_index(), ensure_ascii=False)
+        for attendu in ("Extrait A", "Résumé de l'extrait A", "taille_caracteres", "Résultats"):
+            self.assertIn(attendu, index)
+        ad = FauxKit(os.path.join(self.tmp, "c1"), lambda r: [], self.cours().notes_temoins_ok, fiche_brute(nom="O1"))
+        res = self.course(ad, "c1", prep, dossier, taille_max_pieces=30)
+        consigne = ad.appels[0]["consigne"]
+        self.assertIn("Le dossier fermé (index seulement", consigne)
+        self.assertIn("Résumé de l'extrait A", consigne)
+        self.assertNotIn(PAGE_2, consigne)
+        self.assertNotIn("grille de mesure bêta", consigne)
+        self.assertEqual(len(res["fiches"]), 1)
+        depart = json.loads(self.lire(os.path.join(self.tmp, "c1", "manifeste-depart.json")))["reglages"]
+        self.assertEqual(depart["dossier_ferme"]["index_sha256"], d.index_sha256)
+        self.assertEqual(depart["dossier_ferme"]["mode_claude"], "outils")
+
+        def refuse(nom, modifier, motif):
+            p2, d2 = self.preparer(self.ecrire_dossier(nom))
+            modifier(d2, p2)
+            faux = FauxKit(os.path.join(self.tmp, "s-" + nom), lambda r: [], self.cours().notes_temoins_ok, fiche_brute())
+            with self.assertRaises(idn.CourseInterrompue, msg=nom) as ctx:
+                self.course(faux, "s-" + nom, p2, d2)
+            self.assertIn(motif, str(ctx.exception), nom)
+            self.assertEqual(faux.appels, [], nom)
+            self.assertFalse(os.path.exists(os.path.join(self.tmp, "s-" + nom)), nom)
+
+        def ajouter(d2, _):
+            with open(os.path.join(d2, "intrus.md"), "w") as f:
+                f.write("x")
+
+        def retirer(d2, _):
+            os.remove(os.path.join(d2, "sous", "extrait-b.md"))
+
+        def changer(d2, _):
+            with open(os.path.join(d2, "extrait-a.md"), "a") as f:
+                f.write("changé")
+
+        def desceller(d2, _):
+            with open(os.path.join(d2, "index.json.sha256"), "w") as f:
+                f.write("0" * 64 + "  index.json\n")
+
+        def lien(d2, _):
+            os.symlink("/etc/hostname", os.path.join(d2, "lien.md"))
+
+        def reindexer(d2, p2, entrees):
+            os.remove(os.path.join(d2, "index.json"))
+            os.remove(os.path.join(d2, "index.json.sha256"))
+            dfm.ecrire_index(d2, entrees)
+            idn.construire_liste_blanche([p2["question"], p2["pieces"][0], p2["temoins"], os.path.join(d2, "index.json")],
+                                         p2["liste_blanche"] + ".2.json")
+            p2["liste_blanche"] = p2["liste_blanche"] + ".2.json"
+
+        def pdf(d2, p2):
+            with open(os.path.join(d2, "extrait-a.md"), "wb") as f:
+                f.write(b"%PDF-1.7\n\xff\xfe\x00\x81binaire")
+            reindexer(d2, p2, [{"chemin": "extrait-a.md", "titre": "A", "resume": "r"},
+                               {"chemin": "sous/extrait-b.md", "titre": "B", "resume": "r"}])
+
+        def secret(d2, p2):
+            with open(os.path.join(d2, "extrait-a.md"), "w") as f:
+                f.write("clé : " + "sk-" + "ant-" + "abcdefghijklmnopqrstu\n")
+            reindexer(d2, p2, [{"chemin": "extrait-a.md", "titre": "A", "resume": "r"},
+                               {"chemin": "sous/extrait-b.md", "titre": "B", "resume": "r"}])
+
+        def remontant(d2, p2):
+            reindexer(d2, p2, [{"chemin": "extrait-a.md", "titre": "A", "resume": "r"},
+                               {"chemin": "sous/../sous/extrait-b.md", "titre": "B", "resume": "r"}])
+
+        def interdit(d2, p2):
+            os.rename(os.path.join(d2, "extrait-a.md"), os.path.join(d2, "donnees-a.md"))
+            reindexer(d2, p2, [{"chemin": "donnees-a.md", "titre": "A", "resume": "r"},
+                               {"chemin": "sous/extrait-b.md", "titre": "B", "resume": "r"}])
+
+        def hors_liste(d2, p2):
+            idn.construire_liste_blanche([p2["question"], p2["pieces"][0], p2["temoins"]], p2["liste_blanche"] + ".3.json")
+            p2["liste_blanche"] = p2["liste_blanche"] + ".3.json"
+
+        refuse("plus", ajouter, "non listés")
+        refuse("moins", retirer, "absents")
+        refuse("change", changer, "empreinte différente de l'index")
+        refuse("descelle", desceller, "non scellé")
+        refuse("lien", lien, "lien symbolique")
+        refuse("pdf", pdf, "pas un texte UTF-8")
+        refuse("secret", secret, "secret")
+        refuse("remonte", remontant, "chemin relatif propre")
+        refuse("interdit", interdit, "'donnees'")
+        refuse("horsliste", hors_liste, "hors de la liste blanche")
+        p3, d3 = self.preparer(self.ecrire_dossier("pages", pages_a=4))
+        with self.assertRaisesRegex(idn.CourseInterrompue, "déclare 4 pages, 3 trouvées"):
+            self.course(FauxKit(self.tmp, lambda r: [], None, fiche_brute()), "s-pages", p3, d3)
+
+    # --- point 2 : outils confinés du kit, épreuves R5 ---------------------------------------------------------------
+
+    def test_v46_2_outils_confines_du_kit_et_epreuves_r5_du_crochet(self):
+        """Options : proposeur à dossier fermé → `tools` = `allowed_tools` = Read, Grep, Glob, dossier courant = la racine
+        de lecture, crochet de lecture seule ; juge → toujours aucun outil (racine refusée) ; sans dossier : `tools=[]`
+        comme en v45 ; ligne de commande du kit (jamais exécutée) : `--tools Read,Grep,Glob`, juge `--tools ''`.
+        Crochet, cas sain : lecture d'un fichier du dossier et recherche d'un motif (Grep, Glob) admises. Artefacts, tous
+        refusés avec motif : `Read /etc/passwd`, `Glob {"pattern": "/etc/*"}`, `Grep {"glob": "/root/**"}`, `Read` d'un
+        lien symbolique vers l'extérieur, chemins à `..`, `~`, accolades, `path` hors racine, paramètre inconnu, `Write`,
+        `Edit`, `MultiEdit`, `Bash`, `WebFetch`, `Task`, `mcp__…`. La garde générale (`evaluer_appel`, autres rôles)
+        refuse aussi `Glob /etc/*` et `Grep glob /root/**` (v45 : admis). Garde-fou du crochet (incident) et avertissement
+        de budget (« il te reste … : rends ta fiche »). Course : copie du dossier vérifiée par empreinte, appels consignés,
+        juges sans argument de lecture ; copie altérée → incident dit, jamais silencieux."""
+        dossier_agent = self.sous_dossier("course", "proposeurs", "opus", "passe-1")
+        d = dfm.charger_dossier_ferme(self.ecrire_dossier())
+        racine = os.path.join(dossier_agent, "lecture")
+        d.copier_vers(racine)
+        dehors = os.path.join(self.tmp, "secret-dehors.txt")
+        with open(dehors, "w") as f:
+            f.write("secret")
+        os.symlink(dehors, os.path.join(racine, "lien-dehors.md"))
+        interdits = [os.path.join(self.tmp, "course")]
+        o = construire_options(dossier_agent, 1.0, 50, url_relais="http://127.0.0.1:8787", modele="claude-opus-5-5",
+                               role="proposeur_ideation", interdire_lecture=interdits, racine_lecture=racine)
+        self.assertEqual((o["tools"], o["allowed_tools"], o["cwd"]), (["Read", "Grep", "Glob"], ["Read", "Grep", "Glob"], racine))
+        self.assertIn("Read, Grep et Glob", o["system_prompt"])
+        juge = os.path.join(self.tmp, "course", "juges", "j")
+        os.makedirs(juge)
+        with self.assertRaises(ValueError):
+            construire_options(juge, 1.0, 2, url_relais="http://127.0.0.1:8787", role="juge_ideation",
+                               interdire_lecture=interdits, racine_lecture=racine)
+        o_sans = construire_options(dossier_agent, 1.0, 2, url_relais="http://127.0.0.1:8787", role="proposeur_ideation",
+                                    interdire_lecture=interdits)
+        self.assertEqual((o_sans["tools"], o_sans["cwd"]), ([], dossier_agent))
+        o_proto = construire_options(dossier_agent, 1.0, 2, url_relais="http://127.0.0.1:8787", role="proposeur_ideation",
+                                     interdire_lecture=interdits, mode_lecture="protocole")
+        self.assertEqual(o_proto["tools"], [])
+        self.assertIn("bloc JSON {demandes}", o_proto["system_prompt"])
+        self.assertEqual(reglages_kit_par_role("outils")["proposeur_ideation"]["tools"], ["Read", "Grep", "Glob"])
+        self.assertEqual(reglages_kit_par_role("outils")["juge_ideation"]["tools"], [])
+        self.assertEqual(reglages_kit_par_role("protocole")["proposeur_ideation"]["tools"], [])
+        self.assertEqual(reglages_kit_par_role()["proposeur_ideation"]["tools"], [])
+        try:
+            import claude_agent_sdk as sdk
+            from claude_agent_sdk._internal.transport.subprocess_cli import SubprocessCLITransport
+        except ImportError:
+            sdk = None
+        if sdk is not None:
+            from pole.adaptateurs import AdaptateurClaudeSDK
+            for opts, attendu in ((o, "Read,Grep,Glob"), (construire_options(juge, 1.0, 2, url_relais="http://127.0.0.1:8787",
+                                                                               role="juge_ideation", interdire_lecture=interdits), "")):
+                options = AdaptateurClaudeSDK.options_sdk(sdk, opts)
+                options.cli_path = "/bin/true"
+                cmd = SubprocessCLITransport("x", options)._build_command()
+                self.assertEqual(cmd[cmd.index("--tools") + 1], attendu)
+            for nom in [n for n in sys.modules if n.startswith("claude_agent_sdk")]:
+                del sys.modules[nom]
+        # crochet : cas sain
+        fichier = os.path.join(racine, "extrait-a.md")
+        sains = [("Read", {"file_path": fichier}), ("Read", {"file_path": "sous/extrait-b.md", "offset": 1, "limit": 5}),
+                 ("Grep", {"pattern": "taux", "path": racine}), ("Grep", {"pattern": "taux", "glob": "*.md", "-i": True}),
+                 ("Glob", {"pattern": "**/*.md"}), ("Glob", {"pattern": racine + "/sous/*.md"})]
+        for outil, entree in sains:
+            self.assertEqual(evaluer_appel_lecture(outil, entree, racine)[0], True, (outil, entree))
+        artefacts = [("Read", {"file_path": "/etc/passwd"}), ("Glob", {"pattern": "/etc/*"}),
+                     ("Grep", {"pattern": "cle", "glob": "/root/**"}), ("Read", {"file_path": os.path.join(racine, "lien-dehors.md")}),
+                     ("Read", {"file_path": os.path.join(racine, "..", "..", "traces-passe-1", "consigne.md")}),
+                     ("Read", {"file_path": os.path.join(racine, "sous", "..", "extrait-a.md")}),
+                     ("Read", {"file_path": "~/.bashrc"}), ("Glob", {"pattern": "../*"}), ("Glob", {"pattern": "~/*"}),
+                     ("Glob", {"pattern": "{x,/etc}/*"}), ("Glob", {"pattern": "*", "path": "/etc"}),
+                     ("Grep", {"pattern": "x", "path": "/root"}), ("Grep", {"pattern": "x", "glob": "../**"}),
+                     ("Read", {"file_path": fichier, "inconnu": 1}), ("Read", {}),
+                     ("Write", {"file_path": fichier, "content": "x"}), ("Edit", {"file_path": fichier}),
+                     ("MultiEdit", {"file_path": fichier}), ("Bash", {"command": "cat extrait-a.md"}),
+                     ("WebFetch", {"url": "https://exemple.org"}), ("Task", {}), ("Agent", {}), ("mcp__serveur__outil", {})]
+        for outil, entree in artefacts:
+            autorise, motif = evaluer_appel_lecture(outil, entree, racine)
+            self.assertFalse(autorise, (outil, entree, motif))
+            self.assertTrue(motif)
+        # garde générale des autres rôles : les deux trous de la note de conception fermés
+        self.assertFalse(evaluer_appel("Glob", {"pattern": "/etc/*"}, dossier_agent)[0])
+        self.assertFalse(evaluer_appel("Grep", {"pattern": "cle", "glob": "/root/**"}, dossier_agent)[0])
+        self.assertTrue(evaluer_appel("Glob", {"pattern": "**/*.py"}, dossier_agent)[0])
+        # crochet : garde-fou anti-boucle et avertissement de budget
+        crochet = fabriquer_crochet_lecture(racine, max_demandes=2)
+        sorties = [asyncio.run(crochet({"tool_name": "Read", "tool_input": {"file_path": fichier}}, "i", None)) for _ in range(3)]
+        self.assertEqual(sorties[:2], [{}, {}])
+        self.assertEqual(sorties[2]["hookSpecificOutput"]["permissionDecision"], "deny")
+        self.assertIn("garde-fou anti-boucle", sorties[2]["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertEqual(crochet.incident["type"], "garde-fou anti-boucle")
+        crochet = fabriquer_crochet_lecture(racine, lire_depense=lambda: 0.85, plafond_usd=1.0)
+        s = asyncio.run(crochet({"tool_name": "Read", "tool_input": {"file_path": fichier}}, "i", None))
+        self.assertIn("il te reste 0.15 USD : rends ta fiche", s["hookSpecificOutput"]["permissionDecisionReason"])
+        self.assertEqual(asyncio.run(crochet({"tool_name": "Read", "tool_input": {"file_path": fichier}}, "i", None)), {})
+        self.assertAlmostEqual(crochet.avertissement["reste_usd"], 0.15)
+        # course à outils du kit (faux kit, vrai crochet)
+        prep, dossier = self.preparer(self.ecrire_dossier("dossier-c2"))
+
+        def appels(r):
+            return [("Read", {"file_path": os.path.join(r, "extrait-a.md")}), ("Grep", {"pattern": "taux", "path": r}),
+                    ("Read", {"file_path": "/etc/passwd"}), ("Glob", {"pattern": "/etc/*"}),
+                    ("Grep", {"pattern": "x", "glob": "/root/**"}), ("Write", {"file_path": os.path.join(r, "x.md")}),
+                    ("Bash", {"command": "ls"})]
+        sortie = os.path.join(self.tmp, "c2")
+        kit = FauxKit(sortie, appels, self.cours().notes_temoins_ok, fiche_citante("O1"))
+        res = self.course(kit, "c2", prep, dossier)
+        self.assertEqual(len(res["fiches"]), 1)
+        self.assertEqual(kit.lus, [TEXTE_A])  # une seule lecture admise, celle du dossier
+        refus = [(o_, e_) for o_, e_, s_ in kit.decisions if s_]
+        self.assertEqual([o_ for o_, _ in refus], ["Read", "Glob", "Grep", "Write", "Bash"])
+        prop = [a for a in kit.appels if a["role"] == "proposeur_ideation"][0]
+        self.assertEqual(prop["lecture"]["racine_lecture"], os.path.join(sortie, "proposeurs", "opus", "passe-1", "lecture"))
+        self.assertEqual(prop["max_tours"], dfm.MAX_DEMANDES_LECTURE_DEFAUT + 5)
+        self.assertTrue(all(a["lecture"] == {} for a in kit.appels if a["role"] == "juge_ideation"))
+        fin = self.fin("c2")
+        copie = fin["journal"]["copies_dossier_ferme"][0]
+        self.assertEqual(copie["empreintes"]["extrait-a.md"], dfm.charger_dossier_ferme(dossier).fichiers["extrait-a.md"]["sha256"])
+        m = fin["mesures_lecture"]["par_proposeur"]["opus"]["passe-1"]
+        self.assertEqual(m["mode"], "outils")
+        self.assertEqual((m["demandes"]["total"], m["demandes"]["refusees"], m["demandes"]["lire"]), (7, 5, 2))
+        self.assertEqual(sorted({p["page"] for p in m["pages_lues"]}), [1, 2, 3])
+        self.assertEqual(fin["journal"]["incidents"], [])
+        depart = json.loads(self.lire(os.path.join(sortie, "manifeste-depart.json")))["reglages"]
+        self.assertEqual(depart["reglages_kit"]["proposeur_ideation"]["tools"], ["Read", "Grep", "Glob"])
+        self.assertEqual(depart["reglages_kit"]["juge_ideation"]["tools"], [])
+        # copie altérée pendant la session : incident dit (R5), la course continue, fiches lues avec réserve
+        kit2 = FauxKit(os.path.join(self.tmp, "c2b"), lambda r: [], self.cours().notes_temoins_ok, fiche_brute(nom="O1"),
+                       ecrire_dans_copie=True)
+        self.course(kit2, "c2b", prep, dossier)
+        inc = self.fin("c2b")["journal"]["incidents"]
+        self.assertEqual(inc[0]["type"], "copie du dossier fermé altérée")
+        self.assertEqual(inc[0]["ecarts"], [{"chemin": "extrait-a.md", "ecart": "empreinte différente"}])
+        # garde-fou franchi dans le kit : incident, session et course arrêtées
+        kit3 = FauxKit(os.path.join(self.tmp, "c2c"), lambda r: [("Read", {"file_path": os.path.join(r, "extrait-a.md")})] * 4,
+                       self.cours().notes_temoins_ok, fiche_brute(nom="O1"))
+        with self.assertRaisesRegex(idn.CourseInterrompue, "garde-fou anti-boucle"):
+            self.course(kit3, "c2c", prep, dossier, max_demandes_lecture=3)
+        fin3 = self.fin("c2c")
+        self.assertEqual(fin3["journal"]["incidents"][0]["type"], "garde-fou anti-boucle")
+        self.assertIn("garde-fou anti-boucle", fin3["erreur"])
+
+    # --- point 3 : outils par protocole -------------------------------------------------------------------------------
+
+    def test_v46_3_outils_par_protocole_argon_et_claude_a_egalite(self):
+        """Argon (commande factice) demande une page et une recherche au tour 1 ; le noyau les sert au tour 2 depuis le
+        dossier fermé — le texte de la page demandée seulement, et les lignes trouvées avec chemin et page —, rien
+        d'autre ; demandes hors du dossier (`/etc/passwd`, `../`, plage vide) refusées avec motif. Claude sous
+        `outils_par_protocole` : même mécanisme, **aucun outil du kit** (aucune racine de lecture, `mode_lecture` «
+        protocole »). Par le lanceur (moteur simulé, `--dossier-ferme`, seconde passe, puis bras) : code 0, classement à
+        trois juges."""
+        prep, dossier = self.preparer()
+        scenario = {"tours": [{"demandes": [{"lire": "extrait-a.md", "pages": [2, 2]}, {"chercher": "taux"},
+                                            {"lire": "/etc/passwd"}, {"lire": "../extrait-a.md"},
+                                            {"lire": "extrait-a.md", "pages": [7, 9]}]}],
+                    "fiche": fiche_citante("Argon A")}
+        argon, journal, _ = self.argon(scenario, "argon-3")
+        faux = FauxProtocole({"opus": {"tours": [{"demandes": [{"lire": "sous/extrait-b.md"}]}], "fiche": fiche_brute(nom="O1")}},
+                             self.cours().notes_temoins_ok)
+        res = self.course(faux, "c3", prep, dossier, argon=argon, outils_par_protocole=True)
+        self.assertEqual({f["auteur"] for f in res["fiches"]}, {"argon", "opus"})
+        tours = self.lignes(journal)
+        self.assertEqual([t["tours_servis"] for t in tours if t["role"] == "proposeur_ideation"], [0, 1])
+        c2 = self.lire(os.path.join(self.tmp, "c3", "proposeurs", "argon", "passe-1", "traces-tour-002", "consigne.md"))
+        self.assertIn(PAGE_2, c2)
+        self.assertNotIn("Introduction : moniteurs", c2)  # page 1 jamais demandée, jamais servie
+        self.assertNotIn("grille de mesure bêta", c2)  # l'autre fichier non plus
+        self.assertIn('"ligne": "Extrait B, page deux : le taux de rappel."', c2)
+        self.assertIn('"chemin": "sous/extrait-b.md"', c2)
+        servi = json.loads(re.search(r"Ce que le noyau t'a servi[^\n]*\n+```json\n(.*?)\n```", c2, re.S).group(1))
+        statuts = [r["statut"] for r in servi[0]["reponses"]]
+        self.assertEqual(statuts, ["servie", "servie", "refusée", "refusée", "refusée"])
+        self.assertIn("hors du dossier fermé", servi[0]["reponses"][2]["motif"])
+        self.assertEqual({(r["chemin"], r["page"]) for r in servi[0]["reponses"][1]["resultats"]},
+                         {("extrait-a.md", 2), ("sous/extrait-b.md", 2)})
+        claude = [a for a in faux.appels if a["role"] == "proposeur_ideation"]
+        self.assertEqual(len(claude), 2)
+        self.assertTrue(all(a["lecture"] == {"mode_lecture": "protocole"} for a in claude))
+        self.assertIn("grille de mesure bêta", claude[1]["consigne"])
+        depart = json.loads(self.lire(os.path.join(self.tmp, "c3", "manifeste-depart.json")))["reglages"]
+        self.assertEqual(depart["reglages_kit"]["proposeur_ideation"]["tools"], [])
+        self.assertEqual((depart["dossier_ferme"]["mode_claude"], depart["dossier_ferme"]["mode_externes"]),
+                         ("protocole", "protocole"))
+        # par le lanceur, moteur simulé : course à dossier fermé, seconde passe, puis bras différé
+        v41 = self.v41()
+        att = os.path.join(self.tmp, "att-mat-3.json")
+        idn.ecrire_json_scelle(att, {"lecteur": "Lazar", "lu_le": "2026-10-29", "materiau_sha256": {
+            os.path.basename(prep["materiau"][0]): idn.sha256_fichier(prep["materiau"][0])}})
+        idn.construire_liste_blanche([prep["question"], prep["pieces"][0], prep["materiau"][0], prep["temoins"],
+                                      os.path.join(dossier, "index.json")], os.path.join(self.tmp, "lb-l3.json"))
+        prep_l = dict(prep, liste_blanche=os.path.join(self.tmp, "lb-l3.json"))
+        _, _, cmd = self.argon(scenario, "argon-3l")
+        sortie = os.path.join(self.tmp, "l3")
+        code, out, err = v41.principal(v41.lanceur(), v41.base(sortie, prep_l, att, "--commande-externe", " ".join(cmd),
+                                                               "--dossier-ferme", dossier))
+        self.assertEqual(code, 0, err)
+        self.assertTrue(os.path.isdir(os.path.join(sortie, "proposeurs", "argon", "passe-2", "tour-002")))
+        att_l = v41.cmd().attester(os.path.join(self.tmp, "att-l3.json"), sortie, "argon-j")
+        code, out, err = v41.principal(v41.lanceur(), [sortie, "--bras-rapporte-differe", "--attestation-lecture-humaine",
+                                                       att_l, "--juge-externe", "argon-j=gemini-argon", "--commande-externe",
+                                                       " ".join(cmd)])
+        self.assertEqual(code, 0, err)
+        lignes = json.loads(self.lire(os.path.join(sortie, "classement.json")))["lignes"]
+        self.assertTrue(lignes and all(l["nombre_juges"] == 3 for l in lignes))
+        with open(os.path.join(sortie, "juges-bras-rapporte", "traces-argon-j", "consigne-en-attente.md"), encoding="utf-8") as f:
+            self.assertIn("citations_verifiees", f.read())
+
+    # --- point 4 : aucun nombre de tours ; plafonds de sûreté --------------------------------------------------------
+
+    def test_v46_4_tours_libres_garde_fou_incident_avertissement_et_delai(self):
+        """Aucun nombre de tours fixé : Argon lit sept tours (plus que `MAX_TOURS_IDEATION`) puis rend sa fiche, acceptée.
+        Garde-fou : `max_demandes_lecture` = 3 et un Argon qui demande sans fin → arrêt au quatrième tour, **incident** au
+        journal et aux mesures (pas un réglage), manifeste de fin en erreur. Avertissement de budget : Argon à 0,45 par
+        tour sur un plafond de 1,0 → le troisième tour porte « Il te reste 0.10 USD : rends ta fiche. », la fiche rendue
+        est **marquée** sous avertissement, jamais rejetée. Délai de session (`delai_session_s`) sur l'ensemble des tours :
+        dépassé → arrêt. Options du lanceur : `--max-demandes-lecture` < 1 ou sans `--dossier-ferme` refusé."""
+        prep, dossier = self.preparer()
+        juge = self.cours().notes_temoins_ok
+        sept = {"tours": [{"demandes": [{"lire": "extrait-a.md", "pages": [1 + k % 3, 1 + k % 3]}]} for k in range(7)],
+                "fiche": fiche_brute(nom="Argon A"), "cout": 0.01}
+        argon, journal, _ = self.argon(sept, "argon-4a")
+        res = self.course(FauxProtocole({"opus": {"tours": [], "fiche": fiche_brute(nom="O1")}}, juge), "c4a", prep, dossier,
+                          argon=argon, outils_par_protocole=True)
+        self.assertTrue(any(f["auteur"] == "argon" for f in res["fiches"]))
+        m = self.fin("c4a")["mesures_lecture"]["par_proposeur"]["argon"]["passe-1"]
+        self.assertEqual((m["tours"], m["demandes"]["total"]), (8, 7))
+        self.assertGreater(m["tours"], idn.MAX_TOURS_IDEATION)
+        # garde-fou anti-boucle
+        argon, journal, _ = self.argon({"tours": [], "toujours": True, "fiche": fiche_brute(nom="Argon A"), "cout": 0.01},
+                                       "argon-4b")
+        with self.assertRaisesRegex(idn.CourseInterrompue, "garde-fou anti-boucle"):
+            self.course(FauxProtocole({"opus": {"tours": [], "fiche": fiche_brute(nom="O1")}}, juge), "c4b", prep, dossier,
+                        argon=argon, outils_par_protocole=True, max_demandes_lecture=3)
+        fin = self.fin("c4b")
+        self.assertEqual(len(self.lignes(journal)), 4)  # quatre tours envoyés ; le quatrième n'est pas servi
+        incident = fin["journal"]["incidents"][0]
+        self.assertEqual((incident["type"], incident["tour"], incident["consigne"]),
+                         ("garde-fou anti-boucle", 4, "incident (garde-fou), pas un réglage"))
+        self.assertEqual(fin["mesures_lecture"]["incidents"][0]["type"], "garde-fou anti-boucle")
+        self.assertIn("garde-fou anti-boucle", fin["erreur"])
+        self.assertEqual(fin["mesures_lecture"]["par_proposeur"]["argon"]["passe-1"]["demandes"]["total"], 3)
+        # avertissement de budget
+        argon, journal, _ = self.argon({"tours": [{"demandes": [{"lire": "extrait-a.md", "pages": [1, 1]}]},
+                                                  {"demandes": [{"lire": "extrait-a.md", "pages": [2, 2]}]}],
+                                        "fiche": fiche_brute(nom="Argon A"), "cout": 0.45, "part": 1.0}, "argon-4c")
+        res = self.course(FauxProtocole({"opus": {"tours": [], "fiche": fiche_brute(nom="O1")}}, juge), "c4c", prep, dossier,
+                          argon=argon, outils_par_protocole=True)
+        prop = [t for t in self.lignes(journal) if t["role"] == "proposeur_ideation"]
+        self.assertEqual([t["avertissement"] for t in prop], [False, False, True])
+        self.assertEqual([round(t["plafond"], 6) for t in prop], [1.0, 0.55, 0.1])
+        c3 = self.lire(os.path.join(self.tmp, "c4c", "proposeurs", "argon", "passe-1", "traces-tour-003", "consigne.md"))
+        self.assertIn("Il te reste 0.10 USD : rends ta fiche.", c3)
+        m = self.fin("c4c")["mesures_lecture"]["par_proposeur"]["argon"]["passe-1"]
+        self.assertTrue(m["sous_avertissement"])
+        self.assertTrue(any(f["auteur"] == "argon" for f in res["fiches"]))  # jamais rejetée
+        self.assertAlmostEqual(res["journal"]["cout_externe_usd"], 1.0)
+        # délai de session sur l'ensemble des tours
+        lent = FauxProtocole({"opus": {"tours": [{"demandes": [{"chercher": "taux"}]}] * 5, "fiche": fiche_brute(nom="O1")}},
+                             juge, dormir=0.15)
+        with self.assertRaisesRegex(idn.CourseInterrompue, "délai de session dépassé"):
+            self.course(lent, "c4d", prep, dossier, outils_par_protocole=True, delai_session_s=0.2)
+        self.assertLess(len([a for a in lent.appels if a["role"] == "proposeur_ideation"]), 5)
+        # options du lanceur
+        v41 = self.v41()
+        for argv in (["s", "--max-demandes-lecture", "5"], ["s", "--dossier-ferme", dossier, "--max-demandes-lecture", "0"]):
+            with self.assertRaises(SystemExit):
+                v41.principal(v41.lanceur(), argv)
+
+    # --- point 5 : mesures au manifeste de fin seulement --------------------------------------------------------------
+
+    def test_v46_5_mesures_de_lecture_au_manifeste_de_fin_jamais_aux_juges(self):
+        """Par proposeur et par passe : pages lues dans l'ordre (chemin, page, tour), répétitions, nombre de demandes par
+        type, versions de la fiche (une version provisoire rendue avec des demandes, puis la finale : deux versions,
+        distance > 0), part du dossier lu ; au manifeste de fin seulement : ni les consignes des juges, ni les fiches
+        servies, ni le classement ne les portent (N-053) ; `mesures_convergence` renvoie aux mesures de lecture."""
+        prep, dossier = self.preparer()
+        scenario = {"tours": [{"demandes": [{"lire": "extrait-a.md", "pages": [2, 3]}], "version": True},
+                              {"demandes": [{"lire": "extrait-a.md", "pages": [2, 2]}, {"chercher": "borne"}]}],
+                    "fiche": fiche_brute(nom="Argon A"), "cout": 0.01}
+        argon, _, _ = self.argon(scenario, "argon-5")
+        res = self.course(FauxProtocole({"opus": {"tours": [], "fiche": fiche_brute(nom="O1")}}, self.cours().notes_temoins_ok),
+                          "c5", prep, dossier, argon=argon, outils_par_protocole=True)
+        fin = self.fin("c5")
+        m = fin["mesures_lecture"]["par_proposeur"]["argon"]["passe-1"]
+        self.assertEqual([(p["ordre"], p["tour"], p["chemin"], p["page"]) for p in m["pages_lues"]],
+                         [(1, 1, "extrait-a.md", 2), (2, 1, "extrait-a.md", 3), (3, 2, "extrait-a.md", 2)])
+        self.assertEqual(m["repetitions"], {"extrait-a.md|p.2": 2})
+        self.assertEqual(m["demandes"], {"total": 3, "lire": 2, "chercher": 1, "moissonner": 0, "refusees": 0})
+        self.assertEqual(m["recherches"][0]["motif"], "borne")
+        self.assertEqual(m["versions_fiche"], 2)
+        self.assertEqual(len(m["distances_entre_versions"]), 1)
+        self.assertGreater(m["distances_entre_versions"][0], 0)
+        self.assertEqual((m["pages_distinctes"], m["part_du_dossier_lu"]), (2, 0.4))
+        self.assertEqual(fin["mesures_convergence"]["motif_pages_lues"], idn.MOTIF_PAGES_LUES_DOSSIER)
+        interdits = ("pages_lues", "part_du_dossier_lu", "repetitions", "versions_fiche", "mesures_lecture", "tours",
+                     "sous_avertissement", "Ce que le noyau t'a servi")
+        consignes = self.consignes_des_juges("c5")
+        self.assertTrue(consignes)
+        for c in consignes:
+            for mot in interdits:
+                self.assertNotIn(mot, c)
+            bloc = json.loads(re.search(r"```json\n(\[.*\])\n```", c, re.S).group(1))
+            for f in bloc:
+                self.assertEqual(set(f) - set(idn.GABARIT), {"identifiant", idn.CHAMP_CITATIONS})
+        for nom in ("fiches-validees.json", "notes-par-juge.json", "classement.json", "lecture.json"):
+            texte = self.lire(os.path.join(self.tmp, "c5", nom))
+            for mot in interdits[:5]:
+                self.assertNotIn(mot, texte, nom)
+        self.assertEqual(len(res["classement"]), len(res["fiches"]))
+
+    # --- point 6 : cache partagé ---------------------------------------------------------------------------------------
+
+    def test_v46_6_cache_partage_des_pages_servies(self):
+        """Une page servie à Argon est servie à Claude depuis le cache : même texte, même empreinte ; chaque service est
+        consigné (depuis le cache ou non, à qui, à quel tour) au manifeste de fin."""
+        prep, dossier = self.preparer()
+        demande = {"tours": [{"demandes": [{"lire": "extrait-a.md", "pages": [2, 2]}]}], "fiche": fiche_brute(nom="Argon A"),
+                   "cout": 0.01}
+        argon, _, _ = self.argon(demande, "argon-6")
+        faux = FauxProtocole({"opus": dict(demande, fiche=fiche_brute(nom="O1"))}, self.cours().notes_temoins_ok)
+        self.course(faux, "c6", prep, dossier, argon=argon, outils_par_protocole=True)
+        cache = self.fin("c6")["mesures_lecture"]["cache_pages"]
+        services = cache["services_detail"]
+        self.assertEqual([(s["etiquette"], s["depuis_cache"]) for s in services], [("argon", False), ("opus", True)])
+        self.assertEqual(services[0]["sha256"], services[1]["sha256"])
+        self.assertEqual(cache["servies_depuis_cache"], 1)
+        self.assertEqual(cache["par_page"]["extrait-a.md|p.2"]["servie_a"], ["argon/passe-1/tour-1", "opus/passe-1/tour-1"])
+        ca = self.lire(os.path.join(self.tmp, "c6", "proposeurs", "argon", "passe-1", "traces-tour-002", "consigne.md"))
+        co = self.lire(os.path.join(self.tmp, "c6", "proposeurs", "opus", "passe-1", "traces-tour-002", "consigne.md"))
+        texte = dfm.charger_dossier_ferme(dossier).page("extrait-a.md", 2)
+        self.assertIn(json.dumps(texte, ensure_ascii=False), ca)
+        self.assertIn(json.dumps(texte, ensure_ascii=False), co)
+        m = self.fin("c6")["mesures_lecture"]["par_proposeur"]
+        self.assertEqual([p["depuis_cache"] for p in m["opus"]["passe-1"]["pages_lues"]], [True])
+
+    # --- point 7 : citations vérifiées (L7) ------------------------------------------------------------------------------
+
+    def test_v46_7_citations_verifiees_seule_information_outillee_des_juges(self):
+        """Vérification mécanique : `« passage » [extrait-a.md, p.2]` → page existante et passage retrouvé (vrai) ;
+        passage absent de la page → faux ; page absente → faux ; `[p.2]` après une mention du fichier → attribuée ;
+        `[p.4]` sans fichier nommé → non attribuée (manifeste seulement). Dans la course : chaque fiche servie aux juges
+        (témoins compris) porte `citations_verifiees` (vrai/faux par citation) ; la consigne des juges l'explique ; le
+        détail est au manifeste de fin."""
+        d = dfm.charger_dossier_ferme(self.ecrire_dossier("unitaire"))
+        v, na = dfm.verifier_citations_texte(["Voir " + CITATION_JUSTE, CITATION_FAUSSE, CITATION_ABSENTE,
+                                              "D'après extrait-a, la conclusion [p.3] ; « le taux de rappel » [extrait-b, p.2]",
+                                              "rien de nommé [p.4]", "« Le taux… 0,73 » [extrait-a.md, p.2]"], d)
+        self.assertEqual([(c["fichier"], c["page"], c["verifiee"]) for c in v],
+                         [("extrait-a.md", 2, True), ("extrait-a.md", 3, False), ("extrait-a.md", 9, False),
+                          ("extrait-a.md", 3, True), ("sous/extrait-b.md", 2, True), ("extrait-a.md", 2, True)])
+        self.assertEqual((v[1]["page_existe"], v[1]["passage_retrouve"]), (True, False))
+        self.assertEqual((v[2]["page_existe"], v[2]["passage_retrouve"]), (False, None))
+        self.assertEqual([x["citation"] for x in na], ["[p.4]"])
+        prep, dossier = self.preparer()
+        argon, _, _ = self.argon({"tours": [], "fiche": fiche_citante("Argon A")}, "argon-7")
+        res = self.course(FauxProtocole({"opus": {"tours": [], "fiche": fiche_brute(nom="O1")}}, self.cours().notes_temoins_ok),
+                          "c7", prep, dossier, argon=argon, outils_par_protocole=True)
+        a = [f for f in res["fiches"] if f["auteur"] == "argon"][0]
+        self.assertEqual(a[idn.CHAMP_CITATIONS], [{"citation": "[extrait-a.md, p.2]", "verifiee": True},
+                                                  {"citation": "[extrait-a.md, p.3]", "verifiee": False},
+                                                  {"citation": "[extrait-a.md, p.9]", "verifiee": False}])
+        self.assertTrue(all(idn.CHAMP_CITATIONS in t for t in res["temoins"]))
+        consigne = self.consignes_des_juges("c7")[0]
+        self.assertIn(idn.CITATIONS_JUGE.strip(), consigne)
+        bloc = json.loads(re.search(r"```json\n(\[.*\])\n```", consigne, re.S).group(1))
+        self.assertTrue(all(idn.CHAMP_CITATIONS in f for f in bloc))
+        servie = [f for f in bloc if f["nom"] == "Argon A"][0]
+        self.assertEqual([c["verifiee"] for c in servie[idn.CHAMP_CITATIONS]], [True, False, False])
+        detail = self.fin("c7")["citations"]["par_fiche"][a["identifiant_auteur"]]
+        self.assertEqual(detail["verifiees"][0]["passage"], "Le taux de détection atteint 0,73")
+        self.assertTrue(detail["verifiees"][0]["passage_retrouve"])
+
+    # --- point 8 : moisson ---------------------------------------------------------------------------------------------
+
+    def test_v46_8_moisson_reconnue_et_refusee(self):
+        """`{"moissonner": "<requête>"}` est reconnue par le protocole et refusée avec le motif « moisson non disponible »
+        (v47), servie comme réponse au tour suivant, comptée ; une demande inconnue ou double est refusée aussi."""
+        prep, dossier = self.preparer()
+        argon, _, _ = self.argon({"tours": [{"demandes": [{"moissonner": "moniteurs diffus 2026"}, {"telecharger": "x"},
+                                                          {"lire": "extrait-a.md", "chercher": "taux"}]}],
+                                  "fiche": fiche_brute(nom="Argon A"), "cout": 0.01}, "argon-8")
+        self.course(FauxProtocole({"opus": {"tours": [], "fiche": fiche_brute(nom="O1")}}, self.cours().notes_temoins_ok),
+                    "c8", prep, dossier, argon=argon, outils_par_protocole=True)
+        c2 = self.lire(os.path.join(self.tmp, "c8", "proposeurs", "argon", "passe-1", "traces-tour-002", "consigne.md"))
+        servi = json.loads(re.search(r"Ce que le noyau t'a servi[^\n]*\n+```json\n(.*?)\n```", c2, re.S).group(1))
+        r = servi[0]["reponses"]
+        self.assertEqual((r[0]["statut"], r[0]["motif"]), ("refusée", "moisson non disponible (v47)"))
+        self.assertEqual([x["statut"] for x in r], ["refusée"] * 3)
+        m = self.fin("c8")["mesures_lecture"]["par_proposeur"]["argon"]["passe-1"]["demandes"]
+        self.assertEqual((m["moissonner"], m["refusees"], m["total"]), (1, 3, 3))
+        self.assertIn("moissonner", dfm.TYPES_DEMANDE)
+
+    # --- rétrocompatibilité -----------------------------------------------------------------------------------------------
+
+    def test_v46_retrocompatibilite_ligne_de_commande_de_la_v45(self):
+        """Sans `--dossier-ferme`, la ligne de commande et les entrées de la v45 restent valides : course simulée complète
+        (Argon proposeur, seconde passe), code 0 ; consigne de passe 1 identique à celle de la v45 (même fonction, mêmes
+        arguments ; aucun dossier, aucun outil) ; réglages du kit sans outil ; aucun dossier `lecture` ni `tour-…` ; ni
+        mesures de lecture, ni citations au manifeste de fin ; `--outils-par-protocole` sans `--dossier-ferme` et
+        `--dossier-ferme` au bras refusés par l'analyseur."""
+        v41 = self.v41()
+        prep, att = v41.prep_devis()
+        cmd = v41.script(TestCommandeExterne.SCRIPT_OK, "argon-r.py")
+        sortie = os.path.join(self.tmp, "r")
+        code, out, err = v41.principal(v41.lanceur(), v41.base(sortie, prep, att, "--commande-externe", cmd))
+        self.assertEqual(code, 0, err)
+        depart = json.loads(self.lire(os.path.join(sortie, "manifeste-depart.json")))["reglages"]
+        self.assertIsNone(depart["dossier_ferme"])
+        self.assertEqual({r: v["tools"] for r, v in depart["reglages_kit"].items() if r.endswith("ideation")},
+                         {"proposeur_ideation": [], "juge_ideation": []})
+        fin = self.fin("r")
+        self.assertNotIn("mesures_lecture", fin)
+        self.assertNotIn("citations", fin)
+        self.assertNotIn("incidents", fin["journal"])
+        self.assertEqual(fin["mesures_convergence"]["motif_pages_lues"], idn.MOTIF_PAGES_LUES)
+        for racine, dossiers, _ in os.walk(sortie):
+            self.assertFalse([x for x in dossiers if x == "lecture" or x.startswith("tour-")], racine)
+        consigne = self.lire(os.path.join(sortie, "proposeurs", "opus", "traces-passe-1", "consigne.md"))
+        liste = idn.charger_liste_blanche(prep["liste_blanche"])
+        attendue = idn.consigne_proposeur(idn.lire_pieces(prep["pieces"], liste, 750_000), 8,
+                                          idn.lire_pieces([prep["question"]], liste)[0][1])
+        self.assertEqual(consigne, attendue)
+        self.assertTrue(consigne.startswith("# Prise « idéation » du pôle — passe de proposition\n\nTu n'as aucun outil"))
+        self.assertNotIn("citations_verifiees", self.lire(os.path.join(sortie, "fiches-validees.json")))
+        for argv in (v41.base(os.path.join(self.tmp, "r2"), prep, None, "--outils-par-protocole"),
+                     [sortie, "--bras-rapporte-differe", "--dossier-ferme", self.tmp]):
+            with self.assertRaises(SystemExit):
+                v41.principal(v41.lanceur(), argv)
+
+
+    # --- corrections de la contre-lecture CL12 de la v45 -----------------------------------------------------------------
+
+    def test_v46_cl45_01_classes_avant_unittest_main(self):
+        """CL45-01 : toutes les classes d'essais de ce fichier sont définies **avant** `unittest.main()` (v45 : `TestV45`
+        après, sautée en lancement direct) ; le lancement direct du fichier joue `TestV45` et `TestV46`."""
+        import ast
+        import subprocess
+        chemin = os.path.abspath(__file__)
+        with open(chemin, encoding="utf-8") as f:
+            arbre = ast.parse(f.read())
+        rang_main = next(i for i, n in enumerate(arbre.body) if isinstance(n, ast.If) and "__main__" in ast.dump(n.test))
+        classes = [n.name for n in arbre.body[rang_main:] if isinstance(n, ast.ClassDef)]
+        self.assertEqual(classes, [])
+        self.assertEqual(rang_main, len(arbre.body) - 1)
+        racine = os.path.dirname(os.path.dirname(chemin))
+        r = subprocess.run([sys.executable, "-B", "-m", "unittest", "-q", "essais.test_v7_ideation.TestV45"], cwd=racine,
+                           capture_output=True, timeout=300, env={k: v for k, v in os.environ.items()
+                                                                  if k in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")})
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        r = subprocess.run([sys.executable, "-B", "-c", "import sys, runpy; sys.argv = ['x', '-q', 'TestV45.test_v45_1_fiche_et_"
+                            "temoin_a_guillemets_servis_aux_juges', 'TestV46.test_v46_cl45_01_classes_avant_unittest_main_seul']; "
+                            "runpy.run_path(%r, run_name='__main__')" % chemin], cwd=racine, capture_output=True, timeout=300,
+                           env={k: v for k, v in os.environ.items() if k in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")})
+        self.assertIn(b"Ran 2 tests", r.stderr)
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+
+    def test_v46_cl45_01_classes_avant_unittest_main_seul(self):
+        """Témoin du lancement direct (joué par l'essai précédent par `runpy`, en `__main__`) : `TestV46` y est trouvée."""
+        self.assertTrue(issubclass(TestV46, unittest.TestCase))
+
+    def test_v46_cl45_02_caviardage_valeur_par_valeur_apres_analyse_json(self):
+        """CL45-02 (R5). Cas sain : une valeur porte une clé (`sk-ant-…`) → la fiche est admise, la valeur caviardée, la
+        clé n'est écrite nulle part (traces comprises). Artefacts : une valeur `token=abcdefghij"suite` (dans le JSON brut
+        `token=abcdefghij\\"suite` : le caviardage du texte mangeait la barre d'échappement, d'où un guillemet nu) et une
+        clé privée dont le début et la fin sont dans deux valeurs (le caviardage du texte emportait la structure entre
+        elles) : v45 → « aucun bloc JSON {fiches} » (guillemet nu) ou champs perdus en silence (clé privée), course
+        arrêtée ou fiche refusée sans motif juste ; v46 → analysées, puis caviardées valeur par valeur, et la fiche dont
+        un secret reste à cheval sur deux champs est refusée avec ce motif ;
+        même chose pour la justification d'un juge et pour la réponse d'Argon (commande externe : `texte_brut` gardé,
+        `texte_final` caviardé)."""
+        cle = "sk-" + "ant-" + "abcdefghijklmnopqrstu"
+        debut, fin_cle = "-----BEGIN RSA PRIVATE" + " KEY-----", "-----END RSA PRIVATE" + " KEY-----"
+        fiche = fiche_brute(nom="O1", enonce="Valeur avec clé " + cle + " ?", piege='token=abcdefghij"suite')
+        a_cheval = fiche_brute(nom="O3", perte_traduction="avant " + debut + " milieu", cosmetique_si="fin " + fin_cle + " après")
+        brut = "```json\n" + json.dumps({"fiches": [fiche]}, ensure_ascii=False) + "\n```"
+        # les deux défauts de la v45 (caviardage sur le texte du bloc JSON), séparés : guillemet nu → bloc illisible ;
+        # clé privée à cheval sur deux valeurs → les champs situés entre elles disparaissent en silence
+        seul_token = "```json\n" + json.dumps({"fiches": [fiche_brute(piege='token=abcdefghij"suite')]}, ensure_ascii=False) + "\n```"
+        self.assertIsNone(extraire_bloc_json(idn.caviarder(seul_token)[0], "fiches"))
+        seule_cle = "```json\n" + json.dumps({"fiches": [fiche_brute(perte_traduction="avant " + debut,
+                                                                    cosmetique_si=fin_cle + " après")]}, ensure_ascii=False) + "\n```"
+        perdue = extraire_bloc_json(idn.caviarder(seule_cle)[0], "fiches")["fiches"][0]
+        self.assertFalse({"questions_servies", "avantage", "piege", "cosmetique_si"} & set(perdue))
+        c = self.cours()
+        juge = c.notes_temoins_ok
+
+        def juge_piege(idents, consigne):
+            objet = juge(idents, consigne)
+            objet["notes"][0]["justifications"] = {"avantage": 'password=abcdefghij"x ' + cle}
+            return objet
+        ad = FauxAdaptateur({"opus": [fiche, a_cheval], "fable": [fiche_brute(nom="F1")]},
+                            notes_par_juge={"juge-fable": juge_piege, "juge-opus": juge})
+        res = c.lancer(ad, "cl45-02")
+        o1 = [f for f in res["fiches"] if f["nom"] == "O1"][0]
+        self.assertEqual(o1["piege"], 'token=[CAVIARDÉ]"suite')
+        self.assertEqual(o1["enonce"], "Valeur avec clé [CAVIARDÉ] ?")
+        self.assertEqual([f["nom"] for f in res["fiches"] if f["auteur"] == "opus"], ["O1"])
+        self.assertEqual([r["indice"] for r in res["refus"]], [2])  # la clé privée à cheval : refusée, motif dit
+        self.assertIn("secret à cheval sur plusieurs champs", res["refus"][0]["motif"])
+        self.assertTrue(res["classement"])
+        sortie = os.path.join(self.tmp, "cl45-02")
+        for racine, _, noms in os.walk(sortie):
+            for nom in noms:
+                with open(os.path.join(racine, nom), encoding="utf-8", errors="replace") as f:
+                    t = f.read()
+                for fuite in (cle, "abcdefghij"):
+                    self.assertNotIn(fuite, t, os.path.join(racine, nom))
+        notes = json.loads(self.lire(os.path.join(sortie, "notes-par-juge.json")))
+        justifs = [j for n in notes["juge-fable"].values() for j in n["justifications"].values()]
+        self.assertIn('password=[CAVIARDÉ]"x [CAVIARDÉ]', justifs)
+        # commande externe : `texte_final` caviardé, `texte_brut` gardé pour l'analyse, la course passe
+        script = ("import sys, json\nc = sys.stdin.read()\nprint(json.dumps({'texte': %r, 'cout_usd': 0.1}))\n" % brut)
+        cmd = TestCommandeExterne("test_commande_factice_notes_et_controle")
+        cmd.tmp = self.tmp
+        ext = AdaptateurCommandeExterne(cmd.commande(script, "argon-cl45.py"), environnement={})
+        r = ext.lancer("proposeur_ideation", "passe de proposition", self.tmp, 1.0, 1, modele="gemini-argon")
+        self.assertNotIn(cle, r.texte_final)
+        self.assertIsNone(extraire_bloc_json(r.texte_final, "fiches"))
+        self.assertEqual(extraire_bloc_json(r.texte_brut, "fiches")["fiches"][0]["piege"], 'token=abcdefghij"suite')
+        self.assertNotIn("texte_brut", repr(r))
+        budgets = dict(c.budgets())
+        budgets[("proposeur_ideation", "gemini-argon")] = 1.0
+        res = c.lancer(FauxAdaptateur({"opus": [fiche_brute(nom="O2")], "fable": [fiche_brute(nom="F2")]},
+                                                 notes_par_juge={"juge-fable": juge, "juge-opus": juge}), "cl45-02b",
+                                  budgets=budgets, proposeurs_externes=[("argon", "gemini-argon", ext)], budget_externe_usd=3.0)
+        a = [f for f in res["fiches"] if f["auteur"] == "argon"][0]
+        self.assertEqual(a["piege"], 'token=[CAVIARDÉ]"suite')
+        for racine, _, noms in os.walk(os.path.join(self.tmp, "cl45-02b")):
+            for nom in noms:
+                with open(os.path.join(racine, nom), encoding="utf-8", errors="replace") as f:
+                    self.assertNotIn(cle, f.read())
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -10,8 +10,8 @@ import os
 from dataclasses import dataclass, field, replace
 
 from .caviardage import caviarder
-from .garde_outils import fabriquer_crochet
-from .outils import lister_fichiers
+from .garde_outils import OUTILS_LECTURE, fabriquer_crochet, fabriquer_crochet_lecture
+from .outils import chemin_dans, lister_fichiers
 from .relais import CleDansEnvironnement, noms_de_cle_presents, valider_url_relais, variables_agent
 
 ROLES = ("experimentateur", "verificateur", "recombinaison", "synthese", "proposeur",
@@ -26,6 +26,11 @@ OUTILS_AUTORISES = ("Read", "Write", "Edit", "Bash")
 # (`tools=[]` → `--tools ''`, aucun outil intégré). Les rôles listés ici reçoivent donc `tools=[]` ; les autres gardent le jeu
 # par défaut du kit, borné par `allowed_tools` et `disallowed_tools`.
 OUTILS_PAR_ROLE = {"proposeur_ideation": (), "juge_ideation": ()}
+# v46 (tour (c), R-433) : avec un dossier fermé (`--dossier-ferme`) et sans `--outils-par-protocole`, le proposeur Claude
+# reçoit `Read`, `Grep`, `Glob` sur la seule copie du dossier fermé (racine de lecture, crochet `fabriquer_crochet_lecture`) ;
+# les juges restent sans outil. Sans dossier fermé : `OUTILS_PAR_ROLE`, inchangé.
+OUTILS_PAR_ROLE_DOSSIER_FERME = {"proposeur_ideation": OUTILS_LECTURE, "juge_ideation": ()}
+MODES_LECTURE = (None, "outils", "protocole")
 # v35 (CL34-08) : effort de réflexion fixé par rôle (valeurs permises par le kit : low, medium, high, xhigh, max) ; les
 # rôles absents gardent le défaut du kit (None). v36 (CL35-09) : `reglages_kit_par_role()` est consigné au manifeste de
 # départ par la course.
@@ -33,10 +38,25 @@ EFFORT_PAR_ROLE = {"proposeur_ideation": "high", "juge_ideation": "medium"}
 DELAI_SESSION_S = 3600  # v35 (CL34-05) : borne de temps par session réelle ; dépassée → statut « erreur » ; v38 (CL37-08) : 3 600 s pour ≈ 150 000 jetons
 
 
-def reglages_kit_par_role():
-    """v36 (CL35-09) : ce que le kit reçoit par rôle (jeu d'outils disponible, effort), pour le manifeste de départ."""
-    return {role: {"tools": list(OUTILS_PAR_ROLE[role]) if role in OUTILS_PAR_ROLE else "défaut du kit",
-                   "effort": EFFORT_PAR_ROLE.get(role)} for role in ROLES}
+def outils_par_role(role, mode_lecture=None):
+    """v46 : le jeu d'outils disponible d'un rôle — `OUTILS_PAR_ROLE_DOSSIER_FERME` en mode « outils » (dossier fermé),
+    sinon `OUTILS_PAR_ROLE` (le protocole ne donne aucun outil du kit : égalité stricte avec Argon) ; None : défaut du kit."""
+    if mode_lecture not in MODES_LECTURE:
+        raise ValueError(f"mode de lecture inconnu : {mode_lecture!r}")
+    table = OUTILS_PAR_ROLE_DOSSIER_FERME if mode_lecture == "outils" else OUTILS_PAR_ROLE
+    return tuple(table[role]) if role in table else None
+
+
+def reglages_kit_par_role(mode_lecture=None):
+    """v36 (CL35-09) : ce que le kit reçoit par rôle (jeu d'outils disponible, effort), pour le manifeste de départ. v46 :
+    `mode_lecture` (« outils » : lecture seule du dossier fermé pour le proposeur ; « protocole » : aucun outil)."""
+    sortie = {}
+    for role in ROLES:
+        outils = outils_par_role(role, mode_lecture)
+        sortie[role] = {"tools": list(outils) if outils is not None else "défaut du kit", "effort": EFFORT_PAR_ROLE.get(role)}
+        if mode_lecture == "outils" and role == "proposeur_ideation":
+            sortie[role]["racine_lecture"] = "copie vérifiée du dossier fermé (passe-N/lecture), dossier courant de l'agent"
+    return sortie
 OUTILS_INTERDITS = ("WebFetch", "WebSearch", "Agent", "Task", "NotebookEdit", "Skill", "TodoWrite", "KillShell",
                     "BashOutput", "SlashCommand")
 MODE_PERMISSION = "dontAsk"
@@ -67,6 +87,23 @@ CONSIGNES_SYSTEME = {
                       "critère, sans rien ajouter aux fiches et sans rien proposer toi-même. Aucun réseau, aucune "
                       "recherche. Tu réponds par un bloc JSON {notes}."),
 }
+# v46 (tour (c)) : consignes système du proposeur d'idéation avec un dossier fermé — outils de lecture du kit, ou protocole
+CONSIGNES_SYSTEME_DOSSIER_FERME = {
+    "outils": ("Tu es un proposeur du pôle en prise « idéation ». Tu lis les pièces fournies dans la consigne et, avec les "
+               "seuls outils Read, Grep et Glob, le dossier fermé qui est ton dossier courant, rien d'autre ; tu "
+               "proposes des questions de recherche et des approches, chacune au gabarit d'une fiche d'idéation, au niveau "
+               "méthode seulement : aucune technique d'attaque, aucune recette, aucune séquence opérationnelle, aucun "
+               "exemple de mode de sabotage ; les travaux côté attaque sont nommés par classe et protocole d'évaluation. "
+               "Aucun réseau, aucune clé, aucune écriture, aucune recherche hors du dossier fermé ; tu n'inventes aucune "
+               "référence (marque RAPPORTÉ ou SUPPOSÉ). Tu réponds par un bloc JSON {fiches}."),
+    "protocole": ("Tu es un proposeur du pôle en prise « idéation ». Tu lis les pièces fournies dans la consigne ; tu peux "
+                  "demander au noyau, par un bloc JSON {demandes}, des pages du dossier fermé ou une recherche dans ce "
+                  "dossier, rien d'autre ; tu proposes des questions de recherche et des approches, chacune au gabarit "
+                  "d'une fiche d'idéation, au niveau méthode seulement : aucune technique d'attaque, aucune recette, aucune "
+                  "séquence opérationnelle, aucun exemple de mode de sabotage ; les travaux côté attaque sont nommés par "
+                  "classe et protocole d'évaluation. Aucun réseau, aucune clé, aucune recherche hors du dossier fermé ; tu "
+                  "n'inventes aucune référence (marque RAPPORTÉ ou SUPPOSÉ). Ta réponse finale est un bloc JSON {fiches}."),
+}
 
 
 @dataclass
@@ -78,6 +115,13 @@ class Resultat:
     erreur: object = None
     cout_simule_usd: float = 0.0  # v10 : coût déclaré par un rôle simulé dans un adaptateur mixte (information, jamais compté)
     cout_inconnu: bool = False  # v36 (CL35-02) : le coût réel n'a pas pu être lu ; `cout_declare_usd` porte alors le plafond de session
+    journal_outils: object = None  # v46 : appels d'outils vus par le crochet de lecture seule (outil, entrée, autorisé, motif)
+    incident_outils: object = None  # v46 : garde-fou anti-boucle franchi (crochet de lecture seule)
+    avertissement_outils: object = None  # v46 : avertissement de budget rendu par le crochet (motif d'un refus)
+    # v46 (CL45-02) : texte non caviardé, gardé en mémoire pour l'analyse JSON du noyau, **jamais écrit** ; `texte_final`
+    # reste caviardé ; le noyau caviarde chaque valeur après l'analyse (caviarder le texte d'un bloc JSON en cassait la
+    # structure : `token=abcdefghij\"` devenait `token=[CAVIARDÉ]"`)
+    texte_brut: object = field(default=None, repr=False)
 
 
 class Adaptateur:
@@ -185,7 +229,8 @@ def lectures_interdites_par_defaut(dossier):
 
 
 def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=None, role="experimentateur",
-                       interdire_lecture=None):
+                       interdire_lecture=None, racine_lecture=None, max_demandes_lecture=1000, lire_depense=None,
+                       mode_lecture=None):
     """Options d'un agent du pôle (fonction pure, sans import du SDK) ; lève ValueError si un réglage est incohérent.
 
     v7, version 11 : le bac à sable du kit d'agent ne borne, par défaut, que les écritures (« read access to the entire
@@ -194,6 +239,12 @@ def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=Non
     `lectures_interdites_par_defaut`) et rouvertes sur le seul dossier de l'agent ; échec dur si le bac à sable est
     indisponible. La garde par motifs (`garde_outils`) n'est pas une barrière de lecture : un chemin bâti à l'exécution
     la traverse ; la barrière, c'est ceci.
+
+    v46 (tour (c)) : `racine_lecture` (copie du dossier fermé, sous le dossier de l'agent) donne au seul proposeur
+    d'idéation `Read`, `Grep`, `Glob` (`OUTILS_PAR_ROLE_DOSSIER_FERME`), dossier courant = la racine, crochet de lecture
+    seule confiné à la racine (`fabriquer_crochet_lecture` : garde-fou de `max_demandes_lecture` appels, avertissement de
+    budget si `lire_depense` est donné) ; un juge ne reçoit jamais d'outil. `mode_lecture="protocole"` : aucun outil, la
+    consigne système du protocole.
     """
     if not isinstance(dossier, str) or not os.path.isabs(dossier):
         raise ValueError("le dossier de l'agent doit être un chemin absolu")
@@ -211,11 +262,30 @@ def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=Non
         raise ValueError("max_tours : entier ≥ 1")
     if role not in ROLES:
         raise ValueError(f"rôle inconnu : {role!r}")
+    if racine_lecture is not None:  # v46 : outils de lecture du dossier fermé
+        mode_lecture = "outils"
+        if role != "proposeur_ideation":
+            raise ValueError(f"racine de lecture : seul le proposeur d'idéation reçoit des outils (pas {role!r})")
+        if not isinstance(racine_lecture, str) or not os.path.isabs(racine_lecture) or not os.path.isdir(racine_lecture) \
+                or os.path.islink(racine_lecture) or not chemin_dans(dossier, racine_lecture):
+            raise ValueError("racine de lecture : dossier absolu existant sous le dossier de l'agent, sans lien symbolique")
+        if isinstance(max_demandes_lecture, bool) or not isinstance(max_demandes_lecture, int) or max_demandes_lecture < 1:
+            raise ValueError("max_demandes_lecture : entier ≥ 1")
+    elif mode_lecture == "outils":
+        raise ValueError("mode de lecture « outils » sans racine de lecture")
+    outils = outils_par_role(role, mode_lecture)
+    if mode_lecture and role != "proposeur_ideation":
+        raise ValueError(f"mode de lecture : proposeur d'idéation seulement (pas {role!r})")
+    if mode_lecture:
+        crochet = (fabriquer_crochet_lecture(racine_lecture, max_demandes_lecture, lire_depense, float(budget_usd))
+                   if mode_lecture == "outils" else fabriquer_crochet(dossier))
+    else:
+        crochet = fabriquer_crochet(dossier)
     return {
-        "cwd": os.path.normpath(dossier),
-        "allowed_tools": list(OUTILS_PAR_ROLE.get(role, OUTILS_AUTORISES)),
+        "cwd": os.path.normpath(racine_lecture if mode_lecture == "outils" else dossier),
+        "allowed_tools": list(outils if outils is not None else OUTILS_AUTORISES),
         # v35 (CL34-02) : `tools` fixe le jeu disponible ; [] = aucun outil intégré ; None = défaut du kit
-        "tools": list(OUTILS_PAR_ROLE[role]) if role in OUTILS_PAR_ROLE else None,
+        "tools": list(outils) if outils is not None else None,
         "effort": EFFORT_PAR_ROLE.get(role),
         "disallowed_tools": list(OUTILS_INTERDITS),
         "permission_mode": MODE_PERMISSION,
@@ -224,14 +294,15 @@ def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=Non
         "model": modele,
         "setting_sources": [],
         "verbatim_prompts": True,
-        "system_prompt": CONSIGNES_SYSTEME[role],
+        "system_prompt": CONSIGNES_SYSTEME_DOSSIER_FERME[mode_lecture] if mode_lecture else CONSIGNES_SYSTEME[role],
         "sandbox": {"enabled": True, "autoAllowBashIfSandboxed": True, "allowUnsandboxedCommands": False,
                     "excludedCommands": [], "failIfUnavailable": True,
                     "filesystem": {"denyRead": [os.path.normpath(c) for c in interdits], "allowRead": [dossier_norme],
                                    "denyWrite": [os.path.normpath(c) for c in interdits], "allowWrite": [dossier_norme]},
                     "network": {"allowedDomains": [], "allowLocalBinding": False}},
         "env": variables_agent(url_relais),
-        "crochets": {"PreToolUse": [{"matcher": None, "crochet": fabriquer_crochet(dossier)}]},
+        "crochets": {"PreToolUse": [{"matcher": None, "crochet": crochet}]},
+        "mode_lecture": mode_lecture,
     }
 
 
@@ -252,8 +323,10 @@ class AdaptateurClaudeSDK(Adaptateur):
 
     nom = "claude-sdk"
 
-    def __init__(self, url_relais, environnement=None, arme=False, interdire_lecture=None, delai_s=DELAI_SESSION_S):
+    def __init__(self, url_relais, environnement=None, arme=False, interdire_lecture=None, delai_s=DELAI_SESSION_S,
+                 lire_etat_relais=None):
         self.url_relais = valider_url_relais(url_relais)
+        self.lire_etat_relais = lire_etat_relais  # v46 : avertissement de budget du crochet de lecture seule
         self.interdire_lecture = None if interdire_lecture is None else list(interdire_lecture)
         self._environnement = environnement
         self.arme = arme
@@ -274,7 +347,12 @@ class AdaptateurClaudeSDK(Adaptateur):
                                   for c in o["crochets"]["PreToolUse"]]},
         )
 
-    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, racine_lecture=None,
+               max_demandes_lecture=1000, mode_lecture=None):
+        """v46 : `racine_lecture` (outils de lecture du dossier fermé), `max_demandes_lecture` (garde-fou anti-boucle du
+        crochet), `mode_lecture` (« protocole » : aucun outil, consigne système du protocole) ; le journal du crochet est
+        rendu dans `Resultat.journal_outils`, le garde-fou franchi dans `incident_outils`, l'avertissement de budget dans
+        `avertissement_outils` (dépense de la session lue au relais, `lire_etat_relais`)."""
         environnement = os.environ if self._environnement is None else self._environnement
         presents = noms_de_cle_presents(environnement)
         if presents:
@@ -284,11 +362,25 @@ class AdaptateurClaudeSDK(Adaptateur):
             raise MoteurNonArme("moteur réel non armé : aucun agent réel n'est lancé (essais, simulation)")
         verifier_modele_reel(modele)
         sdk = importer_sdk()
+        lire_depense = None
+        if racine_lecture is not None and self.lire_etat_relais is not None:
+            try:
+                base = float(self.lire_etat_relais().get("depense_usd") or 0.0)
+                lire_depense = lambda: float(self.lire_etat_relais().get("depense_usd") or 0.0) - base  # noqa: E731
+            except Exception:  # noqa: BLE001 — relais illisible : pas d'avertissement, dit au journal du crochet
+                lire_depense = None
         o = construire_options(os.path.abspath(dossier), budget_usd, max_tours, url_relais=self.url_relais,
-                               modele=modele, role=role, interdire_lecture=self.interdire_lecture)
+                               modele=modele, role=role, interdire_lecture=self.interdire_lecture,
+                               racine_lecture=racine_lecture, max_demandes_lecture=max_demandes_lecture,
+                               lire_depense=lire_depense, mode_lecture=mode_lecture)
         options = self.options_sdk(sdk, o)
         texte, cout, statut, erreur = asyncio.run(self._executer(sdk, consigne, options, self.delai_s))
-        return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur)
+        crochet = o["crochets"]["PreToolUse"][0]["crochet"]
+        if o["mode_lecture"] == "outils":
+            return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur,
+                            journal_outils=list(crochet.journal), incident_outils=crochet.incident,
+                            avertissement_outils=crochet.avertissement, texte_brut=texte)
+        return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur, texte_brut=texte)
 
     @staticmethod
     async def _executer(sdk, consigne, options, delai_s=DELAI_SESSION_S):
@@ -472,8 +564,8 @@ class AdaptateurCommandeExterne(Adaptateur):
         cout = float(objet["cout_usd"])
         if plafond + 1e-12 < cout:
             return Resultat(caviarder(objet["texte"])[0], [], cout, "budget_depasse",
-                            "coût déclaré au-dessus du plafond de session")
-        return Resultat(caviarder(objet["texte"])[0], [], cout, "ok")
+                            "coût déclaré au-dessus du plafond de session", texte_brut=objet["texte"])
+        return Resultat(caviarder(objet["texte"])[0], [], cout, "ok", texte_brut=objet["texte"])  # v46 (CL45-02)
 
 
 AdaptateurJugeExterne = AdaptateurCommandeExterne  # nom de la v33 à v35, gardé pour les lecteurs
