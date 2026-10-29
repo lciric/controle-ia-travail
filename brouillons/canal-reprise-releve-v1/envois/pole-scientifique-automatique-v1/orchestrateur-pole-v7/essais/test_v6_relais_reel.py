@@ -25,14 +25,19 @@ from pole.relais_reel import (BAREME_INCONNU, LecteurUsageFlux, cout_usd, lire_c
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def lancer_relais(amont_url, plafond, journal, cle=CLE_FACTICE, variable="ANTHROPIC_API_KEY", reserve=0.001):
+MODELES_PERMIS_ESSAIS = "claude-opus-5-5,claude-fable-5-1"  # v47 (R-764, barrière 3) : liste vide = tout refusé
+
+
+def lancer_relais(amont_url, plafond, journal, cle=CLE_FACTICE, variable="ANTHROPIC_API_KEY", reserve=0.001,
+                  modeles_permis=MODELES_PERMIS_ESSAIS):
     env = {"PATH": os.environ.get("PATH", "")}
     if cle is not None:
         env[variable] = cle
-    proc = subprocess.Popen([sys.executable, "-I", "-B", os.path.join(RACINE, "pole", "relais_reel.py"), "--port", "0",
-                             "--amont", amont_url, "--plafond-usd", str(plafond), "--journal", journal,
-                             "--reserve-par-appel", str(reserve)],
-                            env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    argv = [sys.executable, "-I", "-B", os.path.join(RACINE, "pole", "relais_reel.py"), "--port", "0",
+            "--amont", amont_url, "--plafond-usd", str(plafond), "--journal", journal, "--reserve-par-appel", str(reserve)]
+    if modeles_permis is not None:
+        argv += ["--modeles-permis", modeles_permis]
+    proc = subprocess.Popen(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     ligne = proc.stdout.readline()
     if not ligne.startswith("relais prêt sur "):
         proc.kill()

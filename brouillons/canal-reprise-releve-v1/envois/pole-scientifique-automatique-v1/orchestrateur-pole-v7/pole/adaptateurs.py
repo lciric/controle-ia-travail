@@ -19,7 +19,18 @@ ROLES = ("experimentateur", "verificateur", "recombinaison", "synthese", "propos
 # Décision de Lazar du 27 octobre 2026 (14:17, heure de Paris) : dans l'organisme, côté Claude, seulement Opus 5.5 et
 # Fable 5.1. Tout autre nom de modèle est refusé avant tout appel réel (préfixes des identifiants de modèle).
 MODELES_REELS_PERMIS = ("claude-opus-5-5", "claude-fable-5-1")
-STATUTS_RESULTAT = ("ok", "erreur", "budget_depasse", "tours_epuises", "refuse")
+STATUTS_RESULTAT = ("ok", "erreur", "budget_depasse", "tours_epuises", "refuse", "refus")
+# v47, correctif bloquant R-764 (incident réel du 29 octobre 2026, 10:43 UTC : Opus 5.5 a rendu `stop_reason: refusal`, le
+# kit a émis `system/model_refusal_fallback` et a continué sur un modèle non autorisé jusqu'au plafond de session) :
+# (a) le kit ne doit jamais changer de modèle. Dans l'outil en ligne de commande installé (2.1.312, lu dans le binaire) la
+# voie de repli sur refus n'est active que si `vz() = !CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK && !CLAUDE_CODE_NO_MODEL_FALLBACK`
+# ; `CLAUDE_CODE_NO_MODEL_FALLBACK=true` porte en plus un « tripwire » qui lève sur toute substitution de modèle (message
+# « a model-fallback pivot was attempted while the no-fallback guarantee is active »). Les deux variables sont posées dans
+# l'environnement de toute session du pôle (`construire_options`, `env`), et `fallback_model=None` est explicite dans les
+# options du kit. SUPPOSÉ jusqu'à l'épreuve réelle : le binaire a été lu, pas exercé. (b) reste la barrière : le noyau lit
+# le modèle servi de chaque message.
+VARIABLES_SANS_REPLI_DE_MODELE = {"CLAUDE_CODE_NO_MODEL_FALLBACK": "true", "CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK": "1"}
+EVENEMENTS_REPLI_DE_MODELE = ("model_refusal_fallback", "model_fallback", "model_refusal_no_fallback")
 OUTILS_AUTORISES = ("Read", "Write", "Edit", "Bash")
 # v32 (CL31-08) : les rôles de l'idéation n'ont besoin d'aucun outil — tout est dans la consigne. v35 (CL34-02) : dans le
 # kit d'agent 0.2.x, `allowed_tools` ne fait qu'auto-permettre ; c'est `tools` qui fixe le jeu d'outils DISPONIBLES
@@ -122,6 +133,11 @@ class Resultat:
     # reste caviardé ; le noyau caviarde chaque valeur après l'analyse (caviarder le texte d'un bloc JSON en cassait la
     # structure : `token=abcdefghij\"` devenait `token=[CAVIARDÉ]"`)
     texte_brut: object = field(default=None, repr=False)
+    # v47 (R-764) : refus du modèle ou changement de modèle vu par le noyau — {modele_demande, modele_servi, evenement,
+    # messages} ; statut « refus » ; dépense faite sous un modèle non autorisé (barème du relais), comptée à part
+    refus: object = None
+    modele_servi: object = None
+    depense_modele_non_autorise_usd: float = 0.0
 
 
 class Adaptateur:
@@ -300,7 +316,9 @@ def construire_options(dossier, budget_usd, max_tours, *, url_relais, modele=Non
                     "filesystem": {"denyRead": [os.path.normpath(c) for c in interdits], "allowRead": [dossier_norme],
                                    "denyWrite": [os.path.normpath(c) for c in interdits], "allowWrite": [dossier_norme]},
                     "network": {"allowedDomains": [], "allowLocalBinding": False}},
-        "env": variables_agent(url_relais),
+        # v47 (R-764) : aucun repli de modèle par le kit (variables lues dans le binaire de l'outil 2.1.312)
+        "env": dict(variables_agent(url_relais), **VARIABLES_SANS_REPLI_DE_MODELE),
+        "fallback_model": None,  # v47 (R-764) : explicite, jamais un modèle de repli
         "crochets": {"PreToolUse": [{"matcher": None, "crochet": crochet}]},
         "mode_lecture": mode_lecture,
     }
@@ -343,6 +361,7 @@ class AdaptateurClaudeSDK(Adaptateur):
             effort=o["effort"], permission_mode=o["permission_mode"], max_turns=o["max_turns"],
             max_budget_usd=o["max_budget_usd"], model=o["model"], setting_sources=o["setting_sources"],
             verbatim_prompts=o["verbatim_prompts"], system_prompt=o["system_prompt"], sandbox=o["sandbox"], env=o["env"],
+            fallback_model=o["fallback_model"],  # v47 (R-764)
             hooks={"PreToolUse": [sdk.HookMatcher(matcher=c["matcher"], hooks=[c["crochet"]])
                                   for c in o["crochets"]["PreToolUse"]]},
         )
@@ -374,28 +393,73 @@ class AdaptateurClaudeSDK(Adaptateur):
                                racine_lecture=racine_lecture, max_demandes_lecture=max_demandes_lecture,
                                lire_depense=lire_depense, mode_lecture=mode_lecture)
         options = self.options_sdk(sdk, o)
-        texte, cout, statut, erreur = asyncio.run(self._executer(sdk, consigne, options, self.delai_s))
+        texte, cout, statut, erreur, lecture = asyncio.run(self._executer(sdk, consigne, options, self.delai_s))
         crochet = o["crochets"]["PreToolUse"][0]["crochet"]
+        supplement = {"refus": lecture["refus"], "modele_servi": lecture["modele_servi"],
+                      "depense_modele_non_autorise_usd": lecture["depense_modele_non_autorise_usd"],
+                      "cout_inconnu": lecture["cout_inconnu"]}
         if o["mode_lecture"] == "outils":
             return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur,
                             journal_outils=list(crochet.journal), incident_outils=crochet.incident,
-                            avertissement_outils=crochet.avertissement, texte_brut=texte)
-        return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur, texte_brut=texte)
+                            avertissement_outils=crochet.avertissement, texte_brut=texte, **supplement)
+        return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur, texte_brut=texte, **supplement)
+
+    @staticmethod
+    def modele_conforme(demande, servi):
+        """v47 (R-764) : le modèle servi est le modèle demandé (identifiant exact, ou l'identifiant demandé suivi d'un
+        suffixe de date : `claude-opus-5-5-20261001` pour `claude-opus-5-5`) ; tout autre modèle est un écart."""
+        if not isinstance(servi, str) or not servi or not isinstance(demande, str) or not demande:
+            return False
+        return servi == demande or servi.startswith(demande + "-")
 
     @staticmethod
     async def _executer(sdk, consigne, options, delai_s=DELAI_SESSION_S):
         """v35 (CL34-05) : la session entière est bornée par `delai_s` (`asyncio.wait_for`) ; dépassée → statut « erreur »,
         erreur « délai de session dépassé », ce que la course traite comme tout autre arrêt dur. Le coût déjà engagé
-        n'est pas connu dans ce cas (le message de résultat n'est pas arrivé) : la course lit l'écart au relais."""
+        n'est pas connu dans ce cas (le message de résultat n'est pas arrivé) : la course lit l'écart au relais.
+
+        v47 (R-764) : le noyau lit le **modèle servi** de chaque message de l'assistant (`AssistantMessage.model`, le champ
+        `model` de la transcription) et son `stop_reason` ; tout écart au modèle demandé, tout `stop_reason == "refusal"`,
+        tout événement système `model_refusal_fallback` (ou `model_fallback`, `model_refusal_no_fallback`) est un **refus =
+        arrêt propre du tour** : la lecture du flux cesse (session close), statut « refus », jamais « budget_depasse » ;
+        la dépense des messages servis sous un modèle non autorisé est comptée à part (barème du relais,
+        `depense_modele_non_autorise_usd`) et le coût total de la session, non rendu par le kit, est marqué inconnu (la
+        course lit l'écart au relais). Rend (texte, coût, statut, erreur, lecture)."""
+        from .relais_reel import cout_usd
         morceaux, cout, statut, erreur, final = [], 0.0, "erreur", None, None
         sous_types = {"success": "ok", "error_max_budget_usd": "budget_depasse", "error_max_turns": "tours_epuises"}
+        demande = getattr(options, "model", None)
+        lecture = {"refus": None, "modele_servi": None, "depense_modele_non_autorise_usd": 0.0, "cout_inconnu": False,
+                   "messages_assistant": 0}
+
+        def refuser(motif, modele_servi, evenement):
+            lecture["refus"] = {"motif": motif, "modele_demande": demande, "modele_servi": modele_servi, "evenement": evenement,
+                                "messages_assistant": lecture["messages_assistant"]}
 
         async def boucle():
             nonlocal cout, statut, erreur, final
             try:
                 async for message in sdk.query(prompt=consigne, options=options):
                     if isinstance(message, sdk.AssistantMessage):
+                        lecture["messages_assistant"] += 1
+                        servi = getattr(message, "model", None)
+                        if lecture["modele_servi"] is None:
+                            lecture["modele_servi"] = servi
+                        if not AdaptateurClaudeSDK.modele_conforme(demande, servi):
+                            lecture["depense_modele_non_autorise_usd"] += cout_usd(servi, getattr(message, "usage", None))
+                            refuser(f"modèle servi {servi!r} ≠ modèle demandé {demande!r} : changement de modèle par le kit",
+                                    servi, "assistant.model")
+                            break
+                        if getattr(message, "stop_reason", None) == "refusal":
+                            refuser("le modèle a rendu stop_reason = refusal", servi, "assistant.stop_reason")
+                            break
                         morceaux.extend(b.text for b in message.content if isinstance(b, sdk.TextBlock))
+                    elif getattr(sdk, "SystemMessage", None) is not None and isinstance(message, sdk.SystemMessage) \
+                            and getattr(message, "subtype", None) in EVENEMENTS_REPLI_DE_MODELE:
+                        donnees = getattr(message, "data", None) or {}
+                        refuser(f"événement système {message.subtype} émis par le kit", donnees.get("fallback_model"),
+                                "system." + str(message.subtype))
+                        break
                     elif isinstance(message, sdk.ResultMessage):
                         cout = float(message.total_cost_usd or 0.0)
                         final = message.result
@@ -409,7 +473,12 @@ class AdaptateurClaudeSDK(Adaptateur):
             await asyncio.wait_for(boucle(), timeout=delai_s)
         except asyncio.TimeoutError:
             statut, erreur = "erreur", f"délai de session dépassé ({delai_s:g} s) : session interrompue (CL34-05)"
-        return (final if final else "\n".join(morceaux)), cout, statut, erreur
+        if lecture["refus"] is not None:  # v47 (R-764) : refus = arrêt propre, jamais « budget dépassé »
+            statut, final = "refus", None
+            erreur = "refus (R-764) : " + lecture["refus"]["motif"]
+            lecture["cout_inconnu"] = True  # la session est close avant son message de résultat : la course lit le relais
+            cout = max(cout, lecture["depense_modele_non_autorise_usd"])
+        return (final if final else "\n".join(morceaux)), cout, statut, erreur, lecture
 
 
 class AdaptateurMixte(Adaptateur):

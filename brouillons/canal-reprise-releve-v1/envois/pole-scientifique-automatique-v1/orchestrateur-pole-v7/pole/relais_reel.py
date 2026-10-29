@@ -1,5 +1,10 @@
 """Relais de clé réel (version 0.6.0, pièce 2 du premier lancement réel) : un petit serveur local tenu par le noyau.
 
+v47 (R-764, barrière 3 ; mot de Lazar du 29 octobre 2026, 12:33 heure de Paris) : `--modeles-permis` (noms exacts) ; toute
+requête vers `/v1/messages` dont le corps demande un autre modèle est refusée avant envoi (403, « modèle non permis »,
+aucune dépense), journalisée avec le modèle demandé ; `/relais/etat` compte ces refus (`refus_modele`) ; liste vide =
+tout refusé, dit au démarrage. Le relais ne connaît pas le rôle : la forme `role=modele` est refusée au démarrage.
+
 Il tourne dans **son propre processus** (`python -I -m pole.relais_reel …`), lit la vraie clé dans **son seul
 environnement** au démarrage (variable `--variable-cle`, `ANTHROPIC_API_KEY` par défaut), l'efface de cet environnement,
 et la garde en mémoire. Les agents ne reçoivent que le point d'accès local et le jeton factice (`relais.variables_agent`) ;
@@ -140,6 +145,7 @@ class Compteur:
     def __init__(self, plafond_usd, reserve_par_appel=RESERVE_PAR_APPEL_DEFAUT):
         self.plafond, self.reserve, self.depense = float(plafond_usd), float(reserve_par_appel), 0.0
         self.engage, self.appels, self.refus = 0.0, 0, 0
+        self.refus_modele = 0  # v47 (R-764, barrière 3)
         self.depassements, self.depassement_max = 0, 0.0
         self._verrou = threading.Lock()
 
@@ -164,13 +170,33 @@ class Compteur:
         with self._verrou:
             return {"plafond_usd": self.plafond, "reserve_par_appel_usd": self.reserve, "depense_usd": round(self.depense, 6),
                     "engage_usd": round(self.engage, 6), "appels": self.appels, "refus": self.refus,
-                    "restant_usd": round(self.plafond - self.depense, 6),
+                    "restant_usd": round(self.plafond - self.depense, 6), "refus_modele": self.refus_modele,
                     "appels_au_dessus_de_la_reserve": self.depassements,
                     "depassement_max_usd": round(self.depassement_max, 6)}
 
 
-def fabriquer_gestionnaire(cle, amont, compteur, journal, verrou_journal):
-    """Gestionnaire des requêtes ; `compteur` est un `Compteur` (plafond et réserve par appel)."""
+def modele_permis(modele, modeles_permis):
+    """v47 (R-764, barrière 3, mot de Lazar du 29 octobre 12:33) : vrai si le modèle demandé est **exactement** l'un des
+    noms de `modeles_permis` ; une liste vide refuse tout."""
+    return isinstance(modele, str) and modele in tuple(modeles_permis)
+
+
+def lire_modeles_permis(texte):
+    """`--modeles-permis a,b` → tuple de noms exacts ; la forme `role=modele` est refusée : le relais ne connaît pas le rôle
+    (aucun en-tête de session ne le porte), il ne connaît que le modèle du corps de chaque requête."""
+    noms = tuple(m.strip() for m in (texte or "").split(",") if m.strip())
+    for n in noms:
+        if "=" in n or "/" in n or " " in n:
+            raise RelaisInvalide(f"--modeles-permis : nom de modèle exact attendu, reçu {n!r} (la forme role=modele n'est pas "
+                                 "servie : le relais ne connaît pas le rôle)")
+    return noms
+
+
+def fabriquer_gestionnaire(cle, amont, compteur, journal, verrou_journal, modeles_permis=()):
+    """Gestionnaire des requêtes ; `compteur` est un `Compteur` (plafond et réserve par appel). v47 (R-764, barrière 3) :
+    `modeles_permis`, noms exacts ; toute requête vers `/v1/messages` dont le champ `model` du corps n'y est pas est
+    **refusée avant envoi à l'amont** (403, corps JSON « modèle non permis », aucune dépense), journalisée avec le modèle
+    demandé et comptée à l'état (`refus_modele`) ; une liste vide refuse tout (dit au démarrage)."""
     parties = urllib.parse.urlsplit(amont)
     if parties.scheme not in ("http", "https") or not parties.hostname:
         raise RelaisInvalide(f"adresse d'amont invalide : {amont!r}")
@@ -199,7 +225,7 @@ def fabriquer_gestionnaire(cle, amont, compteur, journal, verrou_journal):
 
         def do_GET(self):
             if self.path == "/relais/etat":
-                return self._repondre_json(200, compteur.etat())
+                return self._repondre_json(200, dict(compteur.etat(), modeles_permis=list(modeles_permis)))  # v47 (R-764)
             return self._relayer("GET")
 
         def do_POST(self):
@@ -228,6 +254,20 @@ def fabriquer_gestionnaire(cle, amont, compteur, journal, verrou_journal):
                 compteur.regler(0.0)
                 return self._repondre_json(413, {"erreur": "corps trop volumineux"})
             corps = self.rfile.read(longueur) if longueur else b""
+            try:  # v47 (R-764, barrière 3) : le modèle du corps, lu avant tout envoi
+                demande = (json.loads(corps.decode("utf-8")) or {}).get("model") if corps else None
+            except (UnicodeDecodeError, ValueError, AttributeError):
+                demande = None
+            if not modele_permis(demande, modeles_permis):
+                compteur.refus += 1
+                compteur.refus_modele += 1
+                compteur.regler(0.0)
+                motif = ("modèle non permis (R-764) : liste vide, tout est refusé" if not modeles_permis
+                         else "modèle non permis (R-764) : permis " + ", ".join(modeles_permis))
+                ecrire_journal({"quand": debut, "methode": methode, "chemin": chemin, "statut": 403, "modele": demande,
+                                "motif": motif})
+                return self._repondre_json(403, {"erreur": "modèle non permis", "modele_demande": demande,
+                                                 "modeles_permis": list(modeles_permis), "depense_usd": 0.0})
             en_tetes = {k: v for k, v in self.headers.items() if k.lower() not in EN_TETES_NON_RELAYES}
             en_tetes["x-api-key"] = cle
             en_tetes["Accept-Encoding"] = "identity"
@@ -320,19 +360,22 @@ def lire_cle_fichier(chemin, supprimer=True):
     return cle
 
 
-def servir(hote, port, cle, amont, plafond_usd, journal=None, pret=None, reserve_par_appel=RESERVE_PAR_APPEL_DEFAUT):
-    """Sert jusqu'à l'arrêt du processus ; `pret` (événement) est levé avec l'adresse effective dans `pret.url`."""
+def servir(hote, port, cle, amont, plafond_usd, journal=None, pret=None, reserve_par_appel=RESERVE_PAR_APPEL_DEFAUT,
+           modeles_permis=()):
+    """Sert jusqu'à l'arrêt du processus ; `pret` (événement) est levé avec l'adresse effective dans `pret.url`.
+    v47 (R-764) : `modeles_permis`, liste de modèles admis (vide : tous)."""
     valider_hote(hote)
     compteur = Compteur(plafond_usd, reserve_par_appel)
-    gestionnaire = fabriquer_gestionnaire(cle, amont, compteur, journal, threading.Lock())
+    gestionnaire = fabriquer_gestionnaire(cle, amont, compteur, journal, threading.Lock(), tuple(modeles_permis))
     serveur = ThreadingHTTPServer((hote, port), gestionnaire)
     serveur.daemon_threads = True
     url = f"http://{hote}:{serveur.server_address[1]}"
     if pret is not None:
         pret.url = url
         pret.set()
-    print(f"relais prêt sur {url} (amont {amont}, plafond {plafond_usd} USD, réserve par appel {reserve_par_appel} USD)",
-          flush=True)
+    print(f"relais prêt sur {url} (amont {amont}, plafond {plafond_usd} USD, réserve par appel {reserve_par_appel} USD ; "
+          + ("modèles permis : " + ", ".join(modeles_permis) if modeles_permis
+             else "AUCUN modèle permis (--modeles-permis vide) : toute requête est refusée, R-764") + ")", flush=True)
     try:
         serveur.serve_forever()
     finally:
@@ -354,6 +397,10 @@ def analyseur():
     a.add_argument("--journal", help="journal des appels (JSON par ligne, sans clé ni corps)")
     a.add_argument("--reserve-par-appel", type=float, default=RESERVE_PAR_APPEL_DEFAUT,
                    help="montant réservé avant chaque appel, réglé au coût lu après (borne les appels simultanés)")
+    a.add_argument("--modeles-permis", default="",
+                   help="v47 (R-764, barrière 3) : noms exacts des modèles admis, séparés par des virgules "
+                        "(claude-opus-5-5,claude-fable-5-1 : exactement les modèles des proposeurs et des juges) ; tout autre "
+                        "modèle demandé est refusé (403) avant envoi, sans dépense ; vide : tout est refusé (dit au démarrage)")
     return a
 
 
@@ -371,7 +418,8 @@ def principal(argv=None):
             raise RelaisInvalide("plafond strictement positif requis")
         if not (args.reserve_par_appel >= 0):
             raise RelaisInvalide("réserve par appel positive ou nulle requise")
-        servir(args.hote, args.port, cle, args.amont, args.plafond_usd, args.journal, reserve_par_appel=args.reserve_par_appel)
+        servir(args.hote, args.port, cle, args.amont, args.plafond_usd, args.journal, reserve_par_appel=args.reserve_par_appel,
+               modeles_permis=lire_modeles_permis(args.modeles_permis))
     except RelaisInvalide as erreur:
         print(f"erreur : {erreur}", file=sys.stderr)
         return 2

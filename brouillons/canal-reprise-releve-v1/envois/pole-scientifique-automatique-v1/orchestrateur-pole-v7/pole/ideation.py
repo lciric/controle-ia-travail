@@ -105,6 +105,26 @@ toujours sans outil. Sans `dossier_ferme`, la course est celle de la v45, à une
 CL12) : le JSON d'une réponse est analysé sur son texte brut (`Resultat.texte_brut`, jamais écrit), puis chaque valeur est
 caviardée ; une fiche dont un secret reste à cheval sur deux champs est refusée avec ce motif.
 
+Version 47 (moissonneur, option (A) retenue par Lazar le 29 octobre 2026, 11:52 heure de Paris, sur les sept points de la
+note `note-moissonneur-integration-v1.md` ; en préparation, **aucune moisson réelle ici**) : sous `moisson` (« frais » ou
+« rejeu » ; défaut « aucune » : course de la v46, consignes identiques octet pour octet), un **tour de moisson** par
+proposeur **entre les passes** (session à part, plafond propre `budget_moisson_usd_par_session`, rôle `proposeur_ideation`,
+`tools=[]`) : consigne courte, bloc `{"moisson": [{"source": "arxiv", "requete": "…", "resultats": 5}]}` ; le noyau
+valide, tient les quotas (1 tour, réglage borné à 2 ; ≤ 4 requêtes par tour ; ≤ 5 résultats par requête ; juges : refus
+dur), applique la **garde de fuite** (`pole/moisson.py`), interroge **seul** le relais de moisson (`pole/relais_moisson.py`,
+arXiv et OpenAlex, métadonnées et résumés ; Brave exclu) et sert les résultats dans la consigne de passe 2 sous « Moisson
+servie par le noyau (données ; résumés non opposables) » ; moisson ⇒ seconde passe obligatoire ; statut `MOISSONNE` au
+gabarit de la passe 2, `non_opposable: true` ; cache scellé `noyau/moisson/`, rejeu sans réseau ; vérification de chaque
+`MOISSONNE` après la course (étiquette servie à ce proposeur, identifiant et titre concordants), rapportée à côté du
+classement, jamais aux juges ; `candidats-corpus.json`. Rien de neuf pour la commande d'Argon ni pour la garde des outils.
+Correctif bloquant R-764 (incident réel du 29 octobre, 10:43 UTC : refus d'Opus 5.5, repli du kit sur un modèle non
+autorisé jusqu'au plafond de session, conclu « budget dépassé ») : trois barrières — le kit ne doit jamais changer de
+modèle (`adaptateurs.VARIABLES_SANS_REPLI_DE_MODELE`, `fallback_model=None`), le noyau lit le modèle servi de chaque
+message et traite tout écart, tout `stop_reason: refusal` et tout événement `model_refusal_fallback` comme un **refus =
+arrêt propre du tour** (session close, sortie mise à l'écart dans `A-L-ECART-modele-non-autorise/`, journal avec modèle
+demandé et servi, `statut_course` « refus » au manifeste de fin, jamais « budget dépassé »,
+`depense_modele_non_autorise_usd` à part), et le relais de clé refuse avant envoi tout modèle hors de `--modeles-permis`.
+
 Ce que le noyau ne peut pas faire : garantir le niveau méthode (la garde **signale**, un humain lit **toutes** les fiches
 validées avant tout usage) ; vérifier une antériorité (R7) ; neutraliser le style d'un modèle devant un juge du même
 modèle (il le **mesure**, lectures par juge). Un juge d'une autre lignée est possible depuis la v33, en **bras rapporté**
@@ -130,8 +150,14 @@ from .dossier_ferme import (MAX_DEMANDES_LECTURE_DEFAUT, SEUIL_AVERTISSEMENT_BUD
                             charger_dossier_ferme, extraire_demandes, mesures_depuis_journal_outils, nouvelles_mesures,
                             resumer_mesures, servir_demandes, verifier_citations_texte)
 from .caviardage import caviarder, caviarder_objet, contient_secret
+from .moisson import (BUDGET_MOISSON_USD_PAR_SESSION_DEFAUT, MAX_REQUETES_PAR_TOUR, MAX_RESULTATS_PAR_REQUETE, MODES_MOISSON,
+                      MOTS_MAX_REQUETE, SOURCES, STATUT_MOISSONNE, TAILLE_MAX_REQUETE, TAILLE_MIN_REQUETE,
+                      TAILLE_SERVIE_PIRE_CAS_PAR_TOUR, TOURS_MOISSON_DEFAUT, TOURS_MOISSON_MAX, GardeFuite, MoissonRefusee,
+                      Moissonneur, RejeuInterrompu, charger_registre_bardeaux, extraire_demandes_moisson, resultats_maximaux,
+                      section_moisson, valider_url_relais_moisson)
 from .outils import (dossier_traces, ecrire_json_scelle, ecrire_scelle, empreinte_objet, extraire_bloc_json,
                      graine_derivee, manifeste, sha256_fichier, verifier_scelle)
+from .protocole_outils import QuotaRefuse
 from .pari_apparie import _fini  # v41 (CL40-05, CL40-06) : un seul prédicat « nombre réel fini, ni booléen »
 from .relais import HOTES_LOCAUX, CleDansEnvironnement, RelaisInvalide
 from .relais_reel import BAREME_INCONNU
@@ -143,6 +169,9 @@ NIVEAUX_ORIGINALITE = ("inedite", "transposition", "occupee")
 NATURES_DEMANDE = ("rien", "modification", "ajout")
 NATURES_COUT = ("processeur", "depense")
 STATUTS_ANTERIORITE = ("RAPPORTE", "SUPPOSE")
+# v47 : troisième statut, admis seulement dans la passe 2 d'une course sous `moisson` (notice servie par le noyau, non
+# opposable tant qu'un PDF empreinté n'est pas lu par la chaîne du corpus primaire)
+STATUTS_ANTERIORITE_MOISSON = STATUTS_ANTERIORITE + (STATUT_MOISSONNE,)
 CRITERES = ("avantage", "originalite", "falsifiabilite", "traitabilite", "robustesse")
 NOTE_MAX = 3
 # Porte d'éligibilité (critère double de Lazar, 14:30 et 14:31 heure de Paris), fixée AVANT tout score ; jamais servie
@@ -372,6 +401,18 @@ CHAMPS_INTERNES = ("auteur", "identifiant_auteur", "empreinte", "passe", "temoin
 CHAMP_CITATIONS = "citations_verifiees"  # v46 (L7) : écrit par le noyau après les passes ; servi aux juges seulement
 
 
+def gabarit(moisson=False):
+    """v47 : le gabarit servi — avec `moisson`, l'antériorité admet le statut MOISSONNE (notice servie par le noyau, à
+    citer avec son étiquette [moisson:…], non opposable) ; sans, `GABARIT` tel quel (consignes de la v46 inchangées)."""
+    if not moisson:
+        return GABARIT
+    g = json.loads(json.dumps(GABARIT, ensure_ascii=False))
+    g["anteriorite"] = [{"reference": "titre, auteurs, année, identifiant si connu ; pour une notice moissonnée : titre, auteurs, "
+                                      "année, identifiant, puis son étiquette [moisson:…] telle quelle",
+                         "statut": "RAPPORTE | SUPPOSE | MOISSONNE"}]
+    return g
+
+
 def citations_de_fiche(fiche, dossier):
     """v46 (L7) : (citations vérifiées, non attribuées) d'une fiche contre le dossier fermé — sur ses chaînes feuilles."""
     vue = {k: v for k, v in vue_servie(fiche).items() if k != CHAMP_CITATIONS}
@@ -398,10 +439,12 @@ def _enum(d, cle, permis):
     return v
 
 
-def valider_fiche_ideation(brut, auteur, indice, passe=1):
-    """Valide une fiche proposée ; rend la fiche canonique (dict) ou lève FicheIdeationInvalide. Aucun repli."""
+def valider_fiche_ideation(brut, auteur, indice, passe=1, moisson=False):
+    """Valide une fiche proposée ; rend la fiche canonique (dict) ou lève FicheIdeationInvalide. Aucun repli.
+    v47 : `moisson` admet le statut d'antériorité MOISSONNE, marqué `non_opposable: true` par le noyau."""
     if not isinstance(brut, dict):
         raise FicheIdeationInvalide("fiche non dictionnaire")
+    statuts = STATUTS_ANTERIORITE_MOISSON if moisson else STATUTS_ANTERIORITE
     inconnus = set(brut) - set(GABARIT)
     if inconnus:
         raise FicheIdeationInvalide("champs hors gabarit : " + ", ".join(sorted(inconnus)))
@@ -448,8 +491,10 @@ def valider_fiche_ideation(brut, auteur, indice, passe=1):
     for a in ant:
         if not isinstance(a, dict):
             raise FicheIdeationInvalide("antériorité non dictionnaire")
-        f["anteriorite"].append({"reference": _texte(a, "reference", maximum=500),
-                                 "statut": _enum(a, "statut", STATUTS_ANTERIORITE)})
+        entree = {"reference": _texte(a, "reference", maximum=500), "statut": _enum(a, "statut", statuts)}
+        if entree["statut"] == STATUT_MOISSONNE:  # v47 : marqué par le noyau, jamais par l'auteur
+            entree["non_opposable"] = True
+        f["anteriorite"].append(entree)
     f, _ = caviarder_objet(f)
     if contient_secret("\n".join(feuilles_texte(f))):  # v46 (CL45-02) : un secret à cheval sur deux champs, jamais tu
         raise FicheIdeationInvalide("secret à cheval sur plusieurs champs (le caviardage valeur par valeur ne le retire "
@@ -505,10 +550,11 @@ CLASSES_TEMOIN = ("faux_falsifiabilite", "faux_anteriorite", "vrai", "jumeau")  
 
 
 
-def charger_temoins(chemin, liste_blanche):
+def charger_temoins(chemin, liste_blanche, moisson=False):
     """Fichier JSON `{"temoins": [{"fiche": {…gabarit…}, "attendu": "ineligible|eligible", "note_max": {critere: n},
     "jumeau_de": "nom"?}]}` écrit par un tiers (ni proposeur ni juge), dans la liste blanche. Le critère de lecture est
-    gelé ici : chaque témoin est noté par chaque juge ; `attendu` et `note_max` sont vérifiés par juge."""
+    gelé ici : chaque témoin est noté par chaque juge ; `attendu` et `note_max` sont vérifiés par juge. v47 : sous
+    `moisson`, un témoin peut citer une antériorité MOISSONNE (même forme que les fiches, note § 4)."""
     reel = verifier_pieces([chemin], liste_blanche)[0]
     with open(reel, "r", encoding="utf-8") as f:
         brut = json.load(f)
@@ -520,7 +566,7 @@ def charger_temoins(chemin, liste_blanche):
             raise FicheIdeationInvalide(f"témoin {i} : attendu ∈ {ATTENDUS_TEMOIN}")
         if t.get("classe") not in CLASSES_TEMOIN:
             raise FicheIdeationInvalide(f"témoin {i} : classe ∈ {CLASSES_TEMOIN}")
-        fiche = valider_fiche_ideation(t.get("fiche"), AUTEUR_TEMOIN, i, passe=0)
+        fiche = valider_fiche_ideation(t.get("fiche"), AUTEUR_TEMOIN, i, passe=0, moisson=moisson)
         fiche["temoin"] = {"attendu": t["attendu"], "note_max": dict(t.get("note_max") or {}),
                            "jumeau_de": t.get("jumeau_de"), "classe": t["classe"]}
         if t["classe"] == "jumeau" and not t.get("jumeau_de"):
@@ -578,14 +624,19 @@ def entete_dossier_ferme(mode, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT)
 
 def consigne_proposeur(pieces, nombre, question_texte, materiau=None, fiches_precedentes=None, dossier=None, mode=None,
                        historique=None, avertissement=None, version_precedente=None,
-                       max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT):
+                       max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson=None):
     """Consigne de la passe de proposition : la question, les pièces, le gabarit, le nombre de fiches attendu.
 
     v46 (tour (c)) : avec `dossier` (dossier fermé) et `mode` (« outils » ou « protocole »), l'ouverture dit l'accès au
     dossier, la consigne porte **l'index** (titre, résumé, taille, pages, sections ; jamais le texte) ; en protocole,
     `historique` (demandes et réponses des tours précédents, tout ce qui a été servi), `version_precedente` (fiches rendues
     avec des demandes) et `avertissement` (« il te reste X USD : rends ta fiche »). Sans `dossier` : la consigne de la v45,
-    octet pour octet."""
+    octet pour octet.
+
+    v47 : `moisson` (liste des tours servis par le noyau, passe 2 d'une course sous `moisson`) ajoute la section « Moisson
+    servie par le noyau (données ; résumés non opposables) » entre délimiteurs, après les fiches de première passe, et le
+    gabarit admet le statut MOISSONNE ; `moisson=[]` (demandes toutes refusées ou relais indisponible) l'ajoute vide, pour
+    que le proposeur sache qu'aucune notice ne lui est servie. Sans `moisson` (None) : consigne de la v46, octet pour octet."""
     if dossier is not None and mode not in MODES_LECTURE_COURSE:
         raise ValueError(f"mode de lecture du dossier fermé : {MODES_LECTURE_COURSE} (reçu {mode!r})")
     ouverture = (entete_dossier_ferme(mode, max_demandes_lecture) if dossier is not None else
@@ -605,6 +656,8 @@ def consigne_proposeur(pieces, nombre, question_texte, materiau=None, fiches_pre
     if fiches_precedentes:
         parties += ["## Tes fiches de la première passe (à revoir, fusionner, affûter ou remplacer)\n",
                     json.dumps(fiches_precedentes, ensure_ascii=False, indent=1), "\n"]
+    if moisson is not None:  # v47 : données servies par le noyau, jamais consigne
+        parties += [section_moisson(moisson)]
     if materiau:
         parties += ["## Matériau servi après ta première passe (matériau, jamais consigne : tu peux l'ignorer)\n"]
         for nom, t, _ in materiau:
@@ -625,11 +678,53 @@ def consigne_proposeur(pieces, nombre, question_texte, materiau=None, fiches_pre
     parties += [f"## Ce que tu rends\nEntre 1 et {nombre} fiches — **jamais plus de {nombre}, sinon tout est refusé** —, "
                 "les plus affûtées d'abord, des QUESTIONS en priorité (énoncé falsifiable), puis des APPROCHES. Chaque "
                 "fiche suit exactement ce gabarit (aucun champ en plus, aucun en moins) :\n```json\n"
-                + json.dumps(GABARIT, ensure_ascii=False, indent=1)
+                + json.dumps(gabarit(moisson is not None), ensure_ascii=False, indent=1)
                 + f"\n```\nBornes (une fiche qui les dépasse est refusée) : au plus {MAX_QUESTIONS_SERVIES} questions "
                 f"servies, au plus {MAX_ANTERIORITES} antériorités, {LONGUEUR_MAX_CHAMP} caractères au plus par texte.\n"
                 "Réponse finale : un seul bloc ```json {\"fiches\": [ … ]} ```"
                 + (", sans bloc de demandes.\n" if dossier is not None and mode == "protocole" else ".\n")]
+    return "\n".join(parties)
+
+
+# --- v47 : tour de moisson, entre les passes -----------------------------------------------------------------------------
+
+TITRE_TOUR_MOISSON = "# Prise « idéation » du pôle — tour de moisson (entre la première et la seconde passe)\n"
+CHAMPS_VUE_COURTE = ("nom", "type", "enonce", "originalite", "anteriorite")
+
+
+def vue_courte(fiche):
+    """La vue courte d'une fiche de passe 1 servie au tour de moisson : nom, type, énoncé, originalité, antériorités."""
+    return {k: fiche[k] for k in CHAMPS_VUE_COURTE if k in fiche}
+
+
+def consigne_moisson(question_texte, fiches_passe_1, tour, tours_permis, servi_precedent=None):
+    """La consigne courte du tour de moisson : la question, la vue courte des fiches de passe 1, les règles et quotas, ce
+    qui a déjà été servi (tour 2), et le bloc attendu `{"moisson": [...]}`. Aucune pièce : le proposeur a lu les pièces à
+    la passe 1 et les relira à la passe 2."""
+    parties = [TITRE_TOUR_MOISSON,
+               "Tu n'as aucun outil. Entre tes deux passes, le noyau peut interroger pour toi deux sources de notices "
+               "bibliographiques, arXiv et OpenAlex — métadonnées et résumés seulement, jamais le texte intégral —, et te "
+               "servir les résultats dans la consigne de ta seconde passe. Ce tour sert à éprouver l'antériorité de tes "
+               "fiches de première passe (ce qui est occupé, ce qui est transposé, ce que tu as marqué SUPPOSE) : demande "
+               "des requêtes en mots-clés scientifiques, en anglais ou en français. " + NIVEAU_METHODE_CONSIGNE
+               + " Français, sans sigle non développé.\n",
+               "## La question\n", question_texte.strip(), "\n",
+               "## Tes fiches de la première passe (vue courte : nom, type, énoncé, originalité, antériorités)\n",
+               "```json\n" + json.dumps([vue_courte(f) for f in fiches_passe_1], ensure_ascii=False, indent=1) + "\n```\n"]
+    if servi_precedent:
+        parties += [section_moisson(servi_precedent)]
+    parties += [f"## Règles et quotas (tour {tour} sur {tours_permis})\n"
+                f"- au plus {MAX_REQUETES_PAR_TOUR} requêtes par tour et {MAX_RESULTATS_PAR_REQUETE} résultats par requête ; "
+                f"une requête fait de {TAILLE_MIN_REQUETE} à {TAILLE_MAX_REQUETE} caractères et {MOTS_MAX_REQUETE} mots au plus, "
+                "sans retour à la ligne, sans adresse ni caractère spécial ;\n"
+                "- une requête ne porte ni identifiant interne, ni extrait d'une pièce au-delà de son titre, ni texte d'un témoin "
+                "ou d'un test : une requête refusée par la garde de fuite est comptée dans le quota et son motif servi est "
+                "générique ;\n"
+                "- les résumés servis ne sont pas opposables : aucun chiffre d'un résumé n'entre dans une prédiction ; une "
+                "notice se cite en passe 2 par une antériorité au statut MOISSONNE qui porte son étiquette [moisson:…] ;\n"
+                f"- sources : {', '.join(SOURCES)} (aucune autre).\n",
+                "## Ce que tu rends\nUn seul bloc ```json {\"moisson\": [{\"source\": \"arxiv\", \"requete\": \"…\", "
+                "\"resultats\": 5}, …]} ``` et rien d'autre ; `{\"moisson\": []}` si tu ne veux rien moissonner.\n"]
     return "\n".join(parties)
 
 
@@ -656,9 +751,15 @@ CITATIONS_JUGE = ("Chaque fiche porte un champ `citations_verifiees`, écrit par
                   "rien de la pertinence, et une fiche sans citation n'en est pas moins bonne.\n")
 
 
-def consigne_juge(fiches_anonymes, question_texte, pieces_juge=(), citations=False):
+MOISSON_JUGE = ("Une antériorité au statut MOISSONNE (`non_opposable: true`) cite une notice bibliographique — titre, auteurs, "
+                "date, identifiant, résumé — servie à son auteur par le noyau à partir d'arXiv ou d'OpenAlex, jamais lue sur "
+                "le papier : elle vaut ce qu'un résumé vaut, ni plus ni moins qu'un SUPPOSE vérifiable ; aucun chiffre "
+                "d'un résumé n'est opposable. Tu ne moissonnes rien toi-même : aucune demande n'est servie à un juge.\n")
+
+
+def consigne_juge(fiches_anonymes, question_texte, pieces_juge=(), citations=False, moisson=False):
     """v46 : `citations` (course à dossier fermé) ajoute la phrase qui explique `citations_verifiees` ; sans elle, la
-    consigne de la v45."""
+    consigne de la v45. v47 : `moisson` ajoute la phrase qui explique le statut MOISSONNE ; sans elle, la consigne de la v46."""
     parties = ["# Tournoi d'idéation du pôle — juge figé, aveugle aux auteurs\n",
                "Tu n'as aucun outil : tout est ici, et seule ta réponse finale compte. Tu n'as écrit aucune fiche. Tu "
                "notes chacune sur la grille ci-dessous (entiers de 0 à 3), avec une ligne de justification par critère ; "
@@ -669,6 +770,8 @@ def consigne_juge(fiches_anonymes, question_texte, pieces_juge=(), citations=Fal
                "## La question posée aux proposeurs\n", question_texte.strip(), "\n"]
     if citations:
         parties += [CITATIONS_JUGE]
+    if moisson:
+        parties += [MOISSON_JUGE]
     for nom, t, _ in pieces_juge:
         parties += [f"## Pièce d'antériorité : {nom}\n", t.strip(), "\n"]
     parties += ["## Grille\n"] + [f"- **{c}** : {d}" for c, d in grille(bool(pieces_juge)).items()]
@@ -1277,7 +1380,9 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                       taille_max_consigne_externe=None, origine_taille_max="donnée", provision_sortie_caracteres=0,
                       prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD, budget_passe_2_externe_usd=None,
                       garder_passes_externes=False, dossier_ferme=None, outils_par_protocole=False,
-                      max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT):
+                      max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson="aucune", tours_moisson=TOURS_MOISSON_DEFAUT,
+                      budget_moisson_usd_par_session=BUDGET_MOISSON_USD_PAR_SESSION_DEFAUT, url_relais_moisson=None,
+                      cache_moisson=None, registre_bardeaux=None):
     """v38 (CL37-04) : tout ce que la course refuserait, vérifié AVANT le premier appel de contrôle, sans rien écrire ni
     dépenser : liste blanche et pièces (empreintes, zones interdites, tailles), témoins, attestation du matériau, plafonds
     finis, étiquettes, somme des plafonds (passes et contrôles prévus compris) contre les totaux. Rend les pièces lues
@@ -1296,9 +1401,15 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     taille donnée) : `TailleConsigneRefusee` sans dépense ; rendu dans `garde_passe_1`.
     v46 (tour (c)) : `dossier_ferme` vérifié ici, avant tout appel (`charger_dossier_ferme` : index scellé et dans la liste
     blanche, chaque empreinte) ; le contrôle et la passe 1 d'un proposeur externe portent alors la consigne du protocole
-    (index, pas le texte) ; rendu dans `dossier_ferme`."""
+    (index, pas le texte) ; rendu dans `dossier_ferme`.
+    v47 (moisson) : réglages de la moisson vérifiés (`exiger_reglages_moisson`) ; les tours de moisson entrent dans les
+    deux sommes (`tours_moisson` × plafond du tour par proposeur) ; la consigne de contrôle d'un proposeur externe (sa plus
+    grosse consigne, la passe 2) porte la moisson **au pire cas** (`resultats_maximaux`) ; rendu dans `moisson`."""
     budget_passe_2_externe_usd = exiger_budget_passe_2(budget_passe_2_externe_usd)
     exiger_reglages_lecture(dossier_ferme, outils_par_protocole, max_demandes_lecture)
+    moisson_active = exiger_reglages_moisson(moisson, seconde_passe, tours_moisson, budget_moisson_usd_par_session,
+                                             url_relais_moisson, cache_moisson, registre_bardeaux)
+    moisson_ext = dict(moisson=resultats_maximaux(tours_moisson)) if moisson_active else {}
     if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
             or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
         raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r}")
@@ -1309,13 +1420,15 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     pieces_lues = lire_pieces(pieces, liste, taille_max_pieces)
     materiau_lu = lire_pieces(materiau, liste, taille_max_pieces) if materiau else []
     pieces_juge_lues = lire_pieces(pieces_juge, liste, taille_max_pieces) if pieces_juge else []
-    temoins_lus = charger_temoins(temoins, liste) if temoins else []
+    temoins_lus = charger_temoins(temoins, liste, moisson=moisson_active) if temoins else []
     dossier_lu = lire_dossier_ferme(dossier_ferme, liste)  # v46
     lecture_ext = dict(dossier=dossier_lu, mode="protocole", max_demandes_lecture=max_demandes_lecture) if dossier_lu else {}
     tous_proposeurs = [(e, m) for e, m, *_ in proposeurs_externes] + list(proposeurs)
     tous_juges = list(juges) + [(e, m) for e, m, *_ in juges_externes]
     valider_etiquettes(tous_proposeurs, tous_juges, bool(temoins_lus))
     budgets = budgets or {}
+    # v47 : chaque proposeur joue `tours_moisson` sessions de moisson à `budget_moisson_usd_par_session`
+    sessions_moisson = tours_moisson * float(budget_moisson_usd_par_session) if moisson_active else 0.0
     for role_modele in ([("proposeur_ideation", m) for _, m in tous_proposeurs] + [("juge_ideation", m) for _, m in tous_juges]):
         if role_modele not in budgets:
             raise CourseInterrompue(f"aucun plafond par session pour {role_modele} (CL31-09)")
@@ -1335,12 +1448,13 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                 raise CourseInterrompue(f"attestation_materiau : empreinte absente ou différente pour {nom!r}")
     passes = 2 if seconde_passe else 1
     somme_claude = cout_controles_prevu_usd + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
-        + sum(budgets[("juge_ideation", m)] for _, m in juges)
+        + sum(budgets[("juge_ideation", m)] for _, m in juges) + sessions_moisson * len(list(proposeurs))
     somme_externe = cout_controles_externes_prevu_usd \
         + sum(plafond_passe_externe(budgets, m, n, budget_passe_2_externe_usd)  # v44 (CL43-01) : passe 2 à son plafond
               for _, m, *_ in proposeurs_externes for n in range(1, passes + 1)) \
         + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes) \
-        + budget_controle_bras_usd * len(list(juges_externes))  # v40 (CL39-01) : le contrôle du bras compte
+        + budget_controle_bras_usd * len(list(juges_externes)) \
+        + sessions_moisson * len(list(proposeurs_externes))  # v47 : tours de moisson des proposeurs externes
     if not tolere_claude and somme_claude > budget_total_usd + 1e-9:
         raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} (contrôles prévus compris) > total "
                                 f"{budget_total_usd} (CL37-03)")
@@ -1349,10 +1463,11 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     texte_pieces = "\n\n".join(f"## Pièce : {n}\n{t}" for n, t, _ in pieces_lues)
     # v41 (CL40-04) : le contrôle d'un proposeur externe éprouve sa plus grosse consigne réelle — en seconde passe, la
     # consigne de passe 2 elle-même (pièces, matériau s'il est servi, et `nombre` fiches précédentes à la taille maximale
-    # du gabarit borné, v42) ; sinon la consigne de passe 1
+    # du gabarit borné, v42 ; v47 : la moisson au pire cas) ; sinon la consigne de passe 1
     if seconde_passe:
         texte_controle = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu or None,
-                                            fiches_precedentes=[fiche_maximale()] * nombre_par_proposeur, **lecture_ext)
+                                            fiches_precedentes=[fiche_maximale()] * nombre_par_proposeur, **lecture_ext,
+                                            **moisson_ext)
     else:
         texte_controle = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], **lecture_ext)
     taille_controle = len(consigne_de_controle(texte_controle))
@@ -1376,7 +1491,10 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                         "materiau": sum(len(t) for _, t, _ in materiau_lu), "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues)},
             "temoins": len(temoins_lus), "somme_claude": somme_claude, "somme_externe": somme_externe,
             "tolerances": {"claude": tolere_claude, "externe": tolere_externe},
-            "dossier_ferme": dossier_lu.description() if dossier_lu else None}
+            "dossier_ferme": dossier_lu.description() if dossier_lu else None,
+            "moisson": ({"mode": moisson, "tours": tours_moisson, "budget_usd_par_session": float(budget_moisson_usd_par_session),
+                         "sessions_par_proposeur_usd": sessions_moisson,
+                         "pire_cas_caracteres": len(section_moisson(moisson_ext["moisson"]))} if moisson_active else None)}
 
 
 def exiger_reglages_lecture(dossier_ferme, outils_par_protocole, max_demandes_lecture):
@@ -1385,6 +1503,43 @@ def exiger_reglages_lecture(dossier_ferme, outils_par_protocole, max_demandes_le
         raise CourseInterrompue("outils_par_protocole (--outils-par-protocole) exige un dossier fermé (--dossier-ferme)")
     if isinstance(max_demandes_lecture, bool) or not isinstance(max_demandes_lecture, int) or max_demandes_lecture < 1:
         raise CourseInterrompue(f"max_demandes_lecture : entier ≥ 1 (reçu {max_demandes_lecture!r})")
+
+
+def exiger_reglages_moisson(moisson, seconde_passe, tours_moisson, budget_moisson_usd_par_session, url_relais_moisson,
+                            cache_moisson, registre_bardeaux=None):
+    """v47 : `moisson` ∈ (aucune, frais, rejeu) ; moisson ⇒ seconde passe obligatoire ; tours de 1 à 2 ; plafond du tour
+    réel fini > 0 ; frais ⇒ adresse locale du relais de moisson ; rejeu ⇒ dossier de cache d'une course passée, jamais
+    d'adresse ; `registre_bardeaux` : fichier scellé (vérifié ici). Rend vrai si la moisson est active."""
+    if moisson not in MODES_MOISSON:
+        raise CourseInterrompue(f"moisson : {MODES_MOISSON} (reçu {moisson!r})")
+    if moisson == "aucune":
+        if url_relais_moisson or cache_moisson:
+            raise CourseInterrompue("url_relais_moisson et cache_moisson ne se donnent qu'avec moisson = frais ou rejeu")
+        return False
+    if not seconde_passe:
+        raise CourseInterrompue("moisson ⇒ seconde passe obligatoire (les résultats sont servis dans la consigne de passe 2)")
+    if isinstance(tours_moisson, bool) or not isinstance(tours_moisson, int) or not 1 <= tours_moisson <= TOURS_MOISSON_MAX:
+        raise CourseInterrompue(f"tours_moisson : entier de 1 à {TOURS_MOISSON_MAX} (reçu {tours_moisson!r})")
+    if not _fini(budget_moisson_usd_par_session) or budget_moisson_usd_par_session <= 0:
+        raise CourseInterrompue(f"budget_moisson_usd_par_session : réel fini > 0 (reçu {budget_moisson_usd_par_session!r})")
+    if moisson == "frais":
+        if cache_moisson:
+            raise CourseInterrompue("moisson frais : aucun cache_moisson (le rejeu seul lit un cache passé)")
+        try:
+            valider_url_relais_moisson(url_relais_moisson)
+        except RelaisInvalide as e:
+            raise CourseInterrompue(f"moisson frais : {e}") from e
+    else:
+        if url_relais_moisson:
+            raise CourseInterrompue("moisson rejeu : jamais le réseau, aucune adresse de relais")
+        if not isinstance(cache_moisson, str) or not os.path.isdir(cache_moisson):
+            raise CourseInterrompue(f"moisson rejeu : dossier de cache d'une course passée absent : {cache_moisson!r}")
+    if registre_bardeaux is not None:
+        try:
+            charger_registre_bardeaux(registre_bardeaux)
+        except MoissonRefusee as e:
+            raise CourseInterrompue(str(e)) from e
+    return True
 
 
 def lire_dossier_ferme(dossier_ferme, liste):
@@ -1399,12 +1554,23 @@ def lire_dossier_ferme(dossier_ferme, liste):
 
 def mesurer_consignes(*, liste_blanche, question, pieces, materiau=(), pieces_juge=(), temoins=None,
                       taille_max_pieces=TAILLE_MAX_PIECES, nombre_par_proposeur=8, seconde_passe=False, nombre_proposeurs=3,
-                      graine=0, dossier_ferme=None, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT):
+                      graine=0, dossier_ferme=None, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson="aucune",
+                      tours_moisson=TOURS_MOISSON_DEFAUT):
     """v43 (CL42-03) : tailles réelles (caractères) des consignes que la course et le bras enverraient, pour les fichiers
     donnés (liste blanche, empreintes et zones interdites vérifiées, caviardage appliqué), **sans aucun appel ni aucune
     écriture** : passe 1 ; passe 2 maximale (`nombre` fiches à la taille maximale du gabarit borné, matériau) ; consigne
     de contrôle d'un proposeur externe (celle que `verifier_reglages` garde) ; consigne du juge au maximum (`nombre_proposeurs`
-    × passes × `nombre` fiches maximales, plus les témoins donnés, plus les pièces de juge) ; contrôle du bras (court)."""
+    × passes × `nombre` fiches maximales, plus les témoins donnés, plus les pièces de juge) ; contrôle du bras (court).
+    v47 : sous `moisson` (frais ou rejeu, mesure identique), la passe 2 maximale porte la **moisson au pire cas** (quotas
+    pleins, chaque champ à sa borne : ≈ 56 000 caractères par tour, `TAILLE_SERVIE_PIRE_CAS_PAR_TOUR`), rapportée à part
+    (`moisson_pire_cas_caracteres`), et la consigne du tour de moisson (fiches maximales) est mesurée."""
+    if moisson not in MODES_MOISSON:
+        raise CourseInterrompue(f"moisson : {MODES_MOISSON} (reçu {moisson!r})")
+    moisson_active = moisson != "aucune"
+    if moisson_active and not seconde_passe:
+        raise CourseInterrompue("moisson ⇒ seconde passe obligatoire")
+    if isinstance(tours_moisson, bool) or not isinstance(tours_moisson, int) or not 1 <= tours_moisson <= TOURS_MOISSON_MAX:
+        raise CourseInterrompue(f"tours_moisson : entier de 1 à {TOURS_MOISSON_MAX} (reçu {tours_moisson!r})")
     if isinstance(nombre_par_proposeur, bool) or not isinstance(nombre_par_proposeur, int) \
             or not 1 <= nombre_par_proposeur <= MAX_FICHES_ABSOLU:
         raise CourseInterrompue(f"nombre_par_proposeur ∉ [1, {MAX_FICHES_ABSOLU}] : {nombre_par_proposeur!r}")
@@ -1418,19 +1584,31 @@ def mesurer_consignes(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     pieces_lues = lire_pieces(pieces, liste, taille_max_pieces)
     materiau_lu = lire_pieces(materiau, liste, taille_max_pieces) if materiau else []
     pieces_juge_lues = lire_pieces(pieces_juge, liste, taille_max_pieces) if pieces_juge else []
-    temoins_lus = charger_temoins(temoins, liste) if temoins else []
+    temoins_lus = charger_temoins(temoins, liste, moisson=moisson_active) if temoins else []
     dossier_lu = lire_dossier_ferme(dossier_ferme, liste)  # v46 : consignes du protocole, premier tour (index seul)
     lecture_ext = dict(dossier=dossier_lu, mode="protocole", max_demandes_lecture=max_demandes_lecture) if dossier_lu else {}
+    moisson_max = resultats_maximaux(tours_moisson) if moisson_active else None
+    moisson_ext = dict(moisson=moisson_max) if moisson_active else {}
     passe1 = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], **lecture_ext)
     passe2 = (consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu or None,
-                                 fiches_precedentes=[fiche_maximale()] * nombre_par_proposeur, **lecture_ext)
+                                 fiches_precedentes=[fiche_maximale()] * nombre_par_proposeur, **lecture_ext, **moisson_ext)
               if seconde_passe else None)
     passes = 2 if seconde_passe else 1
     fiches = [valider_fiche_ideation(fiche_maximale(), f"proposeur{k + 1}", i, passe=p)
               for k in range(nombre_proposeurs) for p in range(1, passes + 1) for i in range(1, nombre_par_proposeur + 1)]
     anonymes, _ = anonymiser(fiches + temoins_lus, graine, "mesure")
-    juge = consigne_juge(anonymes, question_lue[1], pieces_juge_lues, citations=dossier_lu is not None)
-    return {"dossier_ferme": dossier_lu.description() if dossier_lu else None,
+    juge = consigne_juge(anonymes, question_lue[1], pieces_juge_lues, citations=dossier_lu is not None, moisson=moisson_active)
+    mesure_moisson = None
+    if moisson_active:  # v47 : la moisson au pire cas, et la consigne du tour de moisson (fiches maximales, dernier tour)
+        tour = consigne_moisson(question_lue[1], [fiche_maximale()] * nombre_par_proposeur, tours_moisson, tours_moisson,
+                                servi_precedent=moisson_max[:-1] if tours_moisson > 1 else None)
+        mesure_moisson = {"mode": moisson, "tours": tours_moisson, "moisson_pire_cas_caracteres": len(section_moisson(moisson_max)),
+                          "pire_cas_par_tour_nominal": TAILLE_SERVIE_PIRE_CAS_PAR_TOUR,
+                          "resultats_au_pire_cas": tours_moisson * MAX_REQUETES_PAR_TOUR * MAX_RESULTATS_PAR_REQUETE,
+                          "consigne_tour_de_moisson_maximale": len(tour),
+                          "regle": "quotas pleins, chaque champ à sa borne, servis par la même fonction que la course ; "
+                                   "compté dans consigne_passe_2_maximale"}
+    return {"dossier_ferme": dossier_lu.description() if dossier_lu else None, "moisson": mesure_moisson,
             "tailles_lues": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
                              "materiau": sum(len(t) for _, t, _ in materiau_lu),
                              "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues), "temoins": len(temoins_lus)},
@@ -1452,8 +1630,20 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                       taille_max_consigne_externe=None, garder_sessions_externes=False, origine_taille_max=None,
                       prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD, controles_repris=None,
                       budget_passe_2_externe_usd=None, motifs_reprise_controles=None, dossier_ferme=None,
-                      outils_par_protocole=False, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT):
-    """Course d'idéation v46 (v36 : Argon à poids égal ; v37 à v44 : relectures CL4 à CL10 ; v46 : tour (c)).
+                      outils_par_protocole=False, max_demandes_lecture=MAX_DEMANDES_LECTURE_DEFAUT, moisson="aucune",
+                      tours_moisson=TOURS_MOISSON_DEFAUT, budget_moisson_usd_par_session=BUDGET_MOISSON_USD_PAR_SESSION_DEFAUT,
+                      url_relais_moisson=None, cache_moisson=None, registre_bardeaux=None, client_moisson=None):
+    """Course d'idéation v47 (v36 : Argon à poids égal ; v37 à v44 : relectures CL4 à CL10 ; v46 : tour (c) ; v47 : moisson).
+
+    v47 (moisson, en préparation ; aucune moisson réelle ici) : `moisson` (« aucune », « frais », « rejeu ») ; `tours_moisson`
+    (1, réglage borné à 2) ; `budget_moisson_usd_par_session` (plafond de chaque tour de moisson, 0,5 par défaut) ;
+    `url_relais_moisson` (frais : adresse locale du relais de moisson, le noyau en est le seul client) ; `cache_moisson`
+    (rejeu : dossier `noyau/moisson` d'une course passée, jamais le réseau) ; `registre_bardeaux` (fichier scellé
+    d'empreintes de bardeaux des textes de test, règle 5 de la garde de fuite) ; `client_moisson` (essais : client injecté
+    à la place du client du relais). Un tour de moisson par proposeur **entre les passes**, session à part sous
+    `proposeur_ideation` sans outil ; résultats servis dans la consigne de passe 2 ; juges : refus dur ; vérification des
+    `MOISSONNE` et `candidats-corpus.json` après les passes ; cache scellé `noyau/moisson/`, index au manifeste de fin.
+    Sans `moisson` : la course de la v46, consignes identiques octet pour octet.
 
     v46 (tour (c), en préparation) : `dossier_ferme` (chemin d'un dossier fermé, vérifié avant tout appel) ; proposeurs
     externes **par protocole** (tours de demandes servies depuis le dossier) ; proposeurs Claude à **outils de lecture du
@@ -1509,6 +1699,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     if max_tours > MAX_TOURS_IDEATION:
         raise CourseInterrompue(f"max_tours > {MAX_TOURS_IDEATION} : ces rôles n'ont besoin d'aucun outil (CL31-08)")
     exiger_reglages_lecture(dossier_ferme, outils_par_protocole, max_demandes_lecture)  # v46
+    moisson_active = exiger_reglages_moisson(moisson, seconde_passe, tours_moisson, budget_moisson_usd_par_session,  # v47
+                                             url_relais_moisson, cache_moisson, registre_bardeaux)
     if isinstance(nombre_par_proposeur, bool) or not isinstance(nombre_par_proposeur, int) \
             or not 1 <= nombre_par_proposeur <= MAX_FICHES_ABSOLU:
         raise CourseInterrompue(f"nombre_par_proposeur ∉ [1, {MAX_FICHES_ABSOLU}] : {nombre_par_proposeur!r} (CL34-11)")
@@ -1547,9 +1739,22 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     pieces_lues = lire_pieces(pieces, liste, taille_max_pieces)
     materiau_lu = lire_pieces(materiau, liste, taille_max_pieces) if materiau else []
     pieces_juge_lues = lire_pieces(pieces_juge, liste, taille_max_pieces) if pieces_juge else []
-    temoins_lus = charger_temoins(temoins, liste) if temoins else []
+    temoins_lus = charger_temoins(temoins, liste, moisson=moisson_active) if temoins else []
     dossier_lu = lire_dossier_ferme(dossier_ferme, liste)  # v46 : avant tout appel et avant toute écriture
     mode_claude = None if dossier_lu is None else ("protocole" if outils_par_protocole else "outils")
+    moissonneur = None
+    if moisson_active:  # v47 : garde de fuite sur ce que le noyau détient ; moissonneur (client du relais ou cache passé)
+        textes_pieces = [question_lue[1]] + [t for _, t, _ in pieces_lues] + [t for _, t, _ in materiau_lu] \
+            + ([f["texte"] for f in dossier_lu.fichiers.values()] if dossier_lu is not None else [])
+        titres = [f["titre"] for f in dossier_lu.fichiers.values()] if dossier_lu is not None else []
+        registre = charger_registre_bardeaux(registre_bardeaux) if registre_bardeaux else set()
+        garde_fuite = GardeFuite(pieces_textes=textes_pieces, titres=titres, registre_bardeaux=registre,
+                                 temoins_textes=["\n".join(feuilles_texte(vue_servie(t))) for t in temoins_lus])
+        try:
+            moissonneur = Moissonneur(moisson, os.path.join(sortie, "noyau", "moisson"), garde_fuite, tours=tours_moisson,
+                                      url_relais=url_relais_moisson, cache_source=cache_moisson, client=client_moisson)
+        except (MoissonRefusee, RejeuInterrompu, QuotaRefuse) as e:
+            raise CourseInterrompue(f"moisson refusée avant tout appel : {e}") from e
     from .adaptateurs import DELAI_SESSION_S
     delai_protocole = float(delai_session_s or DELAI_SESSION_S)
     tous_proposeurs = [(e, m) for e, m, _ in proposeurs_externes] + list(proposeurs)  # v38 (CL37-01) : externes en tête
@@ -1562,18 +1767,21 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     # v38 (CL37-03) : la somme des plafonds de toutes les sessions prévues (contrôles déjà engagés, passes, juges) doit
     # tenir dans le total, sinon le cœur s'arrêterait avant le dernier juge après la dépense ; refus sauf tolérance explicite
     passes = 2 if seconde_passe else 1
+    sessions_moisson = tours_moisson * float(budget_moisson_usd_par_session) if moisson_active else 0.0  # v47
     somme_claude = float(cout_deja_engage_usd) + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
-        + sum(budgets[("juge_ideation", m)] for _, m in juges)
+        + sum(budgets[("juge_ideation", m)] for _, m in juges) + sessions_moisson * len(list(proposeurs))
     somme_externe = float(cout_externe_deja_engage_usd) \
         + sum(plafond_passe_externe(budgets, m, n, budget_passe_2_externe_usd)  # v44 (CL43-01)
               for _, m, _ in proposeurs_externes for n in range(1, passes + 1)) \
         + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes) \
-        + budget_controle_bras_usd * len(juges_externes)  # v40 (CL39-01)
+        + budget_controle_bras_usd * len(juges_externes) \
+        + sessions_moisson * len(proposeurs_externes)  # v47 (v40, CL39-01 : le contrôle du bras compte)
     sommes = {"claude": round(somme_claude, 6), "total_claude": float(budget_total_usd),
               "externe_avec_controle_du_bras": round(somme_externe, 6), "total_externe": float(budget_externe_usd),
               "budget_controle_bras_usd": float(budget_controle_bras_usd), "toleree": tolere_claude or tolere_externe,
               "budget_passe_2_externe_usd": budget_passe_2_externe_usd,  # v44 (CL43-01) : None = celui de la passe 1
-              "toleree_claude": tolere_claude, "toleree_externe": tolere_externe}
+              "toleree_claude": tolere_claude, "toleree_externe": tolere_externe,
+              "sessions_moisson_par_proposeur_usd": sessions_moisson}  # v47
     if not tolere_claude and somme_claude > budget_total_usd + 1e-9:
         raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} > total {budget_total_usd} : la course "
                                 "s'arrêterait avant le dernier juge au pire cas (CL37-03) ; baisser les plafonds par "
@@ -1610,6 +1818,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                                                            total=0) for e, _ in tous_proposeurs}}
     if dossier_lu is not None:  # v46 : incidents (garde-fou anti-boucle, copie altérée) ; copies du dossier fermé
         journal.update({"incidents": [], "copies_dossier_ferme": []})
+    if moisson_active:  # v47 : tours de moisson par proposeur, refus durs (juges), vérification des MOISSONNE
+        journal["moisson"] = {"mode": moisson, "par_proposeur": {}, "refus_durs": [], "verification_moissonnees": None}
     lecture_par_proposeur, citations_detail = {}, {}  # v46 : mesures de lecture (manifeste de fin seulement)
     cache = CachePages(dossier_lu) if dossier_lu is not None else None
     externes_adapt = {e: a for e, _, a in proposeurs_externes}
@@ -1660,7 +1870,17 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             dossier_ferme=(dict(dossier_lu.description(), mode_claude=mode_claude, mode_externes="protocole",
                                 max_demandes_lecture=max_demandes_lecture, delai_passe_protocole_s=delai_protocole,
                                 seuil_avertissement_budget=SEUIL_AVERTISSEMENT_BUDGET, juges="sans outil",
-                                moisson="non disponible (v47)") if dossier_lu is not None else None))
+                                moisson=("au tour de moisson, entre les passes" if moisson_active else "non disponible (course sans moisson)"))
+                           if dossier_lu is not None else None),
+            # v47 : réglages de la moisson (mode, sources, quotas, relais local ou cache passé, plafond du tour, garde)
+            moisson=(dict(moissonneur.description(), tours=tours_moisson, budget_usd_par_session=float(budget_moisson_usd_par_session),
+                          registre_bardeaux=({"fichier": os.path.basename(registre_bardeaux), "sha256": sha256_fichier(registre_bardeaux)}
+                                             if registre_bardeaux else None),
+                          garde_de_fuite={"pieces": len(garde_fuite.pieces), "titres_declares": len(garde_fuite.titres),
+                                          "bardeaux_au_registre": len(garde_fuite.registre), "regles": 6,
+                                          "motif_servi": "générique ; motif exact au journal du noyau seulement"},
+                          seconde_passe_obligatoire=True, client="le noyau seul ; aucun agent n'a l'adresse du relais")
+                     if moisson_active else None))
         ecrire_json_scelle(os.path.join(provisoire, "manifeste-depart.json"), depart)
         if os.path.exists(sortie):
             raise FileExistsError(errno.EEXIST, "SORTIE existe déjà (jamais écrasée, R12)", sortie)
@@ -1692,21 +1912,41 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                                                 "entre guillemets retrouvé à la page (texte normalisé) ; servi aux juges : "
                                                 "vrai/faux par citation (champ citations_verifiees)",
                                        "par_fiche": citations_detail}
+        if moissonneur is not None:  # v47 : index du cache scellé, journal exact, vérification ; jamais aux juges
+            try:
+                chemin_candidats = os.path.join(sortie, "candidats-corpus.json")
+                if not os.path.exists(chemin_candidats):
+                    ecrire_json_scelle(chemin_candidats, moissonneur.candidats_corpus(fiches + [q["fiche"] for q in quarantaine]))
+                supplement["moisson"] = {
+                    "regle": "moisson (option A) : notices servies par le noyau, résumés non opposables (R7) ; motifs exacts des "
+                             "refus ici seulement (l'agent reçoit un motif générique) ; vérification des MOISSONNE rapportée à "
+                             "côté du classement, jamais servie aux juges ; la moisson alimente la chaîne du corpus primaire",
+                    "resume": moissonneur.resume(), "cache_index_sha256": moissonneur.cache.ecrire_index(),
+                    "verification_moissonnees": journal["moisson"].get("verification_moissonnees"),
+                    "candidats_corpus_sha256": sha256_fichier(chemin_candidats)}
+            except Exception as e:  # noqa: BLE001 — mesure d'information : son échec est dit
+                supplement["moisson"] = {"erreur": type(e).__name__ + " : " + caviarder(str(e))[0][:300]}
         ecrire_json_scelle(os.path.join(sortie, "manifeste-fin.json"), manifeste(
             phase="fin", horodatage=horodatage, graine=graine, moteur=moteur, journal=journal, erreur=erreur,
             lecture=lecture, nombre_lignes_classement=len(classement or []), en_attente_bras=bool(juges_externes),
             refus_pour_taille_par_proposeur=journal["refus_pour_taille_par_proposeur"],  # v43 (CL42-07)
+            # v47 (R-764) : le statut de la course dit « refus » (rôle, modèle demandé, modèle servi), jamais « budget
+            # dépassé » ; la dépense faite sous un modèle non autorisé est comptée à part
+            statut_course=journal.get("statut_course") or ({"statut": "erreur"} if erreur else {"statut": "ok"}),
+            depense_modele_non_autorise_usd=float(journal.get("depense_modele_non_autorise_usd", 0.0)),
+            refus_modele=list(journal.get("refus_modele", [])),
             mesures_convergence=convergence, **supplement))
 
     def lancer(role, etiquette, modele, consigne, dossier, adaptateur=adaptateur, externe=False, plafond=None):
         return _lancer(role, etiquette, modele, consigne, dossier, adaptateur, externe, plafond)[0]
 
     def _lancer(role, etiquette, modele, consigne, dossier, adaptateur=adaptateur, externe=False, plafond=None,
-                options_lecture=None, max_tours_session=None, apres_session=None):
+                options_lecture=None, max_tours_session=None, apres_session=None, supplement_journal=None):
         """v46 : `options_lecture` (arguments de lecture du dossier fermé passés à l'adaptateur Claude :
         `racine_lecture`, `max_demandes_lecture`, `mode_lecture`), `max_tours_session` (outils du kit : garde-fou + marge,
         aucun nombre de tours fixé par ailleurs), `apres_session(r)` (mesures, incidents), joué avant le contrôle du statut ;
-        rend (texte, résultat)."""
+        rend (texte, résultat). v47 : `supplement_journal` (champs ajoutés à la ligne du journal : session de moisson)."""
+        supplement_journal = dict(supplement_journal or {})
         plafond = budgets[(role, modele)] if plafond is None else plafond  # v44 (CL43-01) : passe 2 externe
         cle_total, plafond_total = ("cout_externe_usd", budget_externe_usd) if externe else ("cout_total_usd", budget_total_usd)
         if journal[cle_total] + plafond > plafond_total + 1e-9:
@@ -1727,7 +1967,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             journal["appels"].append({"role": role, "etiquette": etiquette, "modele": modele, "statut": "interrompue",
                                       "externe": externe, "cout_declare_usd": None, "ecart_relais_usd": None,
                                       "cout_compte_usd": plafond, "cout_inconnu": True, "taille_consigne": len(consigne),
-                                      "erreur": type(e).__name__ + " : " + caviarder(str(e))[0][:300]})
+                                      "erreur": type(e).__name__ + " : " + caviarder(str(e))[0][:300], **supplement_journal})
             journal["arret"] = f"session {role}/{etiquette} ({modele}) interrompue : {type(e).__name__}"
             raise
         apres = lire_etat_relais() if (lire_etat_relais and not externe) else None
@@ -1743,7 +1983,33 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                                   "cout_compte_usd": cout, "cout_inconnu": bool(getattr(r, "cout_inconnu", False)),
                                   "taille_consigne": len(consigne),  # CL37-06 / CL39-06
                                   "erreur": r.erreur, "fichiers_agent": list(r.fichiers or []),
-                                  "signaux_niveau_methode_reponse": signaux_niveau_methode(texte)})
+                                  "signaux_niveau_methode_reponse": signaux_niveau_methode(texte), **supplement_journal})
+        refus = getattr(r, "refus", None)
+        if refus is not None or r.statut == "refus":  # v47 (R-764) : refus du modèle ou changement de modèle par le kit
+            refus = dict(refus or {"motif": str(r.erreur), "modele_demande": modele, "modele_servi": getattr(r, "modele_servi", None)})
+            depense = float(getattr(r, "depense_modele_non_autorise_usd", 0.0) or 0.0)
+            journal["depense_modele_non_autorise_usd"] = journal.get("depense_modele_non_autorise_usd", 0.0) + depense
+            journal["appels"][-1].update({"statut": "refus", "refus": refus, "modele_servi": refus.get("modele_servi"),
+                                          "depense_modele_non_autorise_usd": depense})
+            # sortie mise à l'écart : jamais servie aux juges ni au matériau (le dossier de l'agent et ses traces)
+            ecart = os.path.join(sortie, "A-L-ECART-modele-non-autorise")
+            deplaces = []
+            for source in (dossier, traces):
+                if os.path.isdir(source):
+                    cible = os.path.join(ecart, os.path.relpath(source, sortie))
+                    os.makedirs(os.path.dirname(cible), exist_ok=True)
+                    shutil.move(source, cible)
+                    deplaces.append(os.path.relpath(cible, sortie))
+            journal.setdefault("refus_modele", []).append({"role": role, "etiquette": etiquette, "modele_demande": modele,
+                                                           "modele_servi": refus.get("modele_servi"), "evenement": refus.get("evenement"),
+                                                           "motif": caviarder(str(refus.get("motif")))[0][:300],
+                                                           "depense_modele_non_autorise_usd": depense, "mis_a_l_ecart": deplaces})
+            journal["statut_course"] = {"statut": "refus", "role": role, "etiquette": etiquette, "modele_demande": modele,
+                                        "modele_servi": refus.get("modele_servi")}
+            journal["arret"] = (f"refus (R-764) : {role}/{etiquette}, modèle demandé {modele!r}, modèle servi "
+                                f"{refus.get('modele_servi')!r} : {refus.get('motif')} ; session close, sortie mise à l'écart "
+                                f"({', '.join(deplaces) or 'rien à déplacer'}), {depense:.4f} USD sous un modèle non autorisé")
+            raise CourseInterrompue(journal["arret"])
         if apres_session is not None:
             apres_session(r)
         if r.statut != "ok" or r.erreur:
@@ -1762,8 +2028,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             raise FicheIdeationInvalide(f"{len(bruts)} fiches rendues pour {nombre_par_proposeur} demandées : tout refusé")
         valides = []
         for i, b in enumerate(bruts, 1):
-            try:
-                valides.append(valider_fiche_ideation(b, etiquette, i, passe=passe))
+            try:  # v47 : MOISSONNE admis dans la passe 2 d'une course sous moisson seulement
+                valides.append(valider_fiche_ideation(b, etiquette, i, passe=passe, moisson=moisson_active and passe == 2))
             except FicheIdeationInvalide as e:
                 refus.append({"auteur": etiquette, "passe": passe, "indice": i, "motif": caviarder(str(e))[0]})
                 if isinstance(e, FicheTropLongue):  # v43 (CL42-07) : refus pour taille, par proposeur et par passe
@@ -1813,6 +2079,61 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             journal["incidents"].append(incident)
         journal["arret"] = motif
         raise CourseInterrompue(motif)
+
+    def tour_de_moisson(etiquette, modele):
+        """v47 : les tours de moisson d'un proposeur, entre sa passe 1 et sa passe 2 — session à part (plafond
+        `budget_moisson_usd_par_session`, rôle `proposeur_ideation`, aucun outil), consigne courte, bloc `{"moisson": [...]}`
+        validé, gardé, servi par le moissonneur ; rend la liste des tours servis (consigne de passe 2). Un bloc illisible
+        ou absent : passe 2 sans moisson, dit au journal ; une session ≠ ok arrête la course (CL31-02) ; un relais
+        indisponible ne l'arrête jamais (« moisson indisponible » servi et consigné)."""
+        ext = etiquette in externes_adapt
+        admises = [vue_servie(f) for f in passe1[etiquette] if not signaux_niveau_methode(vue_servie(f))]
+        etat = journal["moisson"]["par_proposeur"].setdefault(etiquette, {"tours": [], "passe_2_sans_moisson": None})
+        servis = []
+        for k in range(1, tours_moisson + 1):
+            consigne = consigne_moisson(question_lue[1], admises, k, tours_moisson, servi_precedent=servis or None)
+            d = os.path.join(sortie, "proposeurs", etiquette, "moisson", f"tour-{k:03d}")
+            plafond = float(budget_moisson_usd_par_session)
+            if ext and (taille_max_consigne_externe is not None or garder_sessions_externes):  # v43 : gardée avant envoi
+                tmax = taille_max_consigne_par_defaut(plafond, 0, prix_caractere_usd)
+                if taille_max_consigne_externe is not None:
+                    tmax = min(tmax, taille_max_consigne_externe)
+                quoi = f"consigne du tour de moisson {k} du proposeur externe {etiquette!r}"
+                try:
+                    details = garde_taille_consigne(quoi, len(consigne), tmax, f"plafond du tour de moisson {plafond} / prix "
+                                                    f"{prix_caractere_usd:.4e} dollar par caractère (entrée seule)", 0, prix_caractere_usd)
+                except TailleConsigneRefusee as e:
+                    journal["gardes_taille_sessions"].append(dict(e.details, etiquette=etiquette, passe="moisson", tour=k, refusee=True,
+                                                                  plafond_usd=plafond))
+                    journal["arret"] = f"proposeur externe {etiquette} tour de moisson {k} non envoyé : {e}"
+                    raise
+                journal["gardes_taille_sessions"].append(dict(details, etiquette=etiquette, passe="moisson", tour=k, refusee=False,
+                                                              plafond_usd=plafond))
+            texte, _ = _lancer("proposeur_ideation", etiquette, modele, consigne, d,
+                               adaptateur=externes_adapt[etiquette] if ext else adaptateur, externe=ext, plafond=plafond,
+                               supplement_journal={"session": "moisson", "tour_moisson": k})
+            demandes, motif = extraire_demandes_moisson(texte)
+            if demandes is None:
+                motif = motif or "aucun bloc {moisson} dans la réponse"
+                etat["tours"].append({"tour": k, "demandes": None, "motif": motif})
+                etat["passe_2_sans_moisson"] = f"tour {k} : bloc de demandes illisible ou absent ({motif}) : passe 2 sans moisson"
+                break
+            demandes = caviarder_objet(demandes)[0]  # v46 (CL45-02) : valeurs caviardées après analyse
+            try:
+                reponses, numero = moissonneur.tour("proposeur_ideation", etiquette, 1, demandes)
+            except RejeuInterrompu as e:
+                arreter(f"proposeur {etiquette} tour de moisson {k} : {e}")
+            except QuotaRefuse as e:
+                arreter(f"proposeur {etiquette} tour de moisson {k} : {e}")
+            servis.append({"tour": numero, "reponses": reponses})
+            etat["tours"].append({"tour": numero, "demandes": len(demandes),
+                                  "par_statut": {s: sum(1 for r in reponses if r["statut"] == s) for s in sorted({r["statut"] for r in reponses})},
+                                  "resultats_servis": sum(len(r.get("resultats", [])) for r in reponses),
+                                  "caracteres_servis": len(section_moisson(servis))})
+            if not demandes:
+                etat["passe_2_sans_moisson"] = f"tour {k} : bloc vide (rien à moissonner)"
+                break
+        return servis
 
     def passe_dossier(etiquette, modele, numero, champs, taille_fiche):
         """v46 : une passe d'un proposeur avec le dossier fermé — outils du kit (Claude, une session) ou protocole (Argon
@@ -1904,7 +2225,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                             {"type": "garde-fou anti-boucle", "etiquette": etiquette, "passe": numero, "tour": k,
                              "max_demandes_lecture": max_demandes_lecture, "demandes_servies": mes["demandes"]["total"],
                              "demandes_du_tour": len(demandes), "consigne": "incident (garde-fou), pas un réglage"})
-                reponses = servir_demandes(dossier_lu, cache, demandes, etiquette, numero, k, mes)
+                reponses = servir_demandes(dossier_lu, cache, demandes, etiquette, numero, k, mes, moisson_active=moisson_active)
                 historique.append({"tour": k, "demandes": demandes, "reponses": reponses})
                 if bloc is not None:
                     version_prec = bloc.get("fiches")
@@ -1927,13 +2248,16 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
 
         def jouer(etiquette, modele, numero):
             taille_fiche = TAILLE_FICHE_PROVISIONNEE_PASSE
+            # v47 : le tour de moisson, entre les passes ; ses résultats entrent dans la consigne de passe 2 (section de
+            # données), et sa taille dans les gardes de taille de cette passe
+            moisson_servie = {"moisson": tour_de_moisson(etiquette, modele)} if (moisson_active and numero == 2) else {}
             if dossier_lu is not None:  # v46 : tour (c)
                 champs = {}
                 if numero == 2:
                     admises = [f for f in passe1[etiquette] if not signaux_niveau_methode(vue_servie(f))]
                     servies_passe_2[etiquette] = [vue_servie(f) for f in admises]
                     taille_fiche = max([TAILLE_FICHE_PROVISIONNEE_PASSE] + [taille_servie(f) for f in admises])
-                    champs = {"materiau": materiau_lu, "fiches_precedentes": servies_passe_2[etiquette]}
+                    champs = {"materiau": materiau_lu, "fiches_precedentes": servies_passe_2[etiquette], **moisson_servie}
                 (passe1 if numero == 1 else passe2)[etiquette] = passe_dossier(etiquette, modele, numero, champs, taille_fiche)
                 return
             if numero == 1:
@@ -1945,7 +2269,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                 # v44 (CL43-02) : sortie estimée de la passe 2 = `nombre` fiches de la plus grande fiche admise (servie)
                 taille_fiche = max([TAILLE_FICHE_PROVISIONNEE_PASSE] + [taille_servie(f) for f in admises])
                 consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu,
-                                              fiches_precedentes=precedentes)
+                                              fiches_precedentes=precedentes, **moisson_servie)
             (passe1 if numero == 1 else passe2)[etiquette] = passe_de(etiquette, modele, numero, consigne, taille_fiche)
         for etiquette, modele in tous_proposeurs:
             if etiquette in externes_adapt:
@@ -1966,6 +2290,13 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                 verifiees, non_attribuees = citations_de_fiche(f, dossier_lu)
                 f[CHAMP_CITATIONS] = [{"citation": c["citation"], "verifiee": c["verifiee"]} for c in verifiees]
                 citations_detail[f["identifiant_auteur"]] = {"verifiees": verifiees, "non_attribuees": non_attribuees}
+        if moissonneur is not None:  # v47 : chaque MOISSONNE vérifiée (étiquette servie à ce proposeur, identifiant et titre
+            # concordants) ; rapportée à côté du classement (manifeste de fin), jamais servie aux juges ; candidats du corpus
+            from .moisson import verifier_moissonnees
+            journal["moisson"]["verification_moissonnees"] = verifier_moissonnees(fiches + [q["fiche"] for q in quarantaine],
+                                                                                   moissonneur.servies_par_proposeur)
+            ecrire_json_scelle(os.path.join(sortie, "candidats-corpus.json"),
+                               moissonneur.candidats_corpus(fiches + [q["fiche"] for q in quarantaine]))
         ecrire_json_scelle(os.path.join(sortie, "fiches-validees.json"), fiches)
         ecrire_json_scelle(os.path.join(sortie, "fiches-refusees.json"), refus)
         ecrire_json_scelle(os.path.join(sortie, "fiches-en-quarantaine.json"), quarantaine)
@@ -1981,7 +2312,12 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             anonymes, cle = anonymiser(servies, graine, etiquette)
             d = os.path.join(sortie, "juges", etiquette)
             texte = lancer("juge_ideation", etiquette, modele, consigne_juge(anonymes, question_lue[1], pieces_juge_lues,
-                                                                             citations=dossier_lu is not None), d)
+                                                                             citations=dossier_lu is not None,
+                                                                             moisson=moisson_active), d)
+            if moissonneur is not None:  # v47 : un juge qui demande une moisson : refus dur, consigné, rien envoyé
+                bloc_moisson, _ = extraire_demandes_moisson(texte)
+                if bloc_moisson is not None:
+                    journal["moisson"]["refus_durs"].append(moissonneur.refuser_dur("juge_ideation", etiquette, bloc_moisson))
             try:
                 notes, doubles = valider_notes(extraire_bloc_json(texte, "notes"), [f["identifiant"] for f in anonymes])
             except NotesInvalides as e:
@@ -1998,7 +2334,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             os.makedirs(d, exist_ok=True)
             empreinte = ecrire_scelle(os.path.join(dossier_traces(d), "consigne-en-attente.md"),
                                       consigne_juge(anonymes, question_lue[1], pieces_juge_lues,
-                                                    citations=dossier_lu is not None))
+                                                    citations=dossier_lu is not None, moisson=moisson_active))
             cles_par_juge[etiquette] = cle
             modele_par_juge[etiquette] = modele
             bras_differe.append({"etiquette": etiquette, "modele": modele, "consigne_en_attente_sha256": empreinte,
@@ -2425,6 +2761,9 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
                 raise
             texte = caviarder(r.texte_final or "")[0]
             brut = texte_a_analyser(r)  # v46 (CL45-02) : analysé brut, valeurs caviardées par valider_notes
+            if extraire_demandes_moisson(brut)[0] is not None:  # v47 : un juge ne moissonne jamais (refus dur, rien envoyé)
+                journal.setdefault("moisson_refus_durs", []).append({"etiquette": etiquette, "role": "juge_ideation",
+                                                                      "motif": "refus dur : aucun tour de moisson pour un juge"})
             cout = float(r.cout_declare_usd or 0.0)
             if r.statut == "ok" or cout > 0 or texte:  # CL36-01 : une réponse n'est consignée que si quelque chose a eu lieu
                 ecrire_scelle(os.path.join(dossier_traces(d), "reponse.md"), texte)

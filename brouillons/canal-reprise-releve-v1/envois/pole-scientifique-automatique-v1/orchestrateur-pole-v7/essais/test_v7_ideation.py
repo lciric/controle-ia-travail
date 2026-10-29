@@ -485,6 +485,8 @@ class TestCommandeExterne(CasAvecDossier):
         "consigne = sys.stdin.read()\n"
         "if 'exactement OK' in consigne:\n"
         "    print(json.dumps({'texte': 'OK', 'cout_usd': 0.001})); sys.exit(0)\n"
+        "if consigne.startswith('# Prise « idéation » du pôle — tour de moisson'):\n"  # v47 : réponse au tour de moisson
+        "    print(json.dumps({'texte': '```json\\n' + json.dumps({'moisson': [{'source': 'arxiv', 'requete': 'monitor diffuse control', 'resultats': 2}]}) + '\\n```', 'cout_usd': 0.01})); sys.exit(0)\n"
         "if 'passe de proposition' in consigne:\n"
         "    f1 = json.loads(%r); f2 = dict(f1, nom='Argon B')\n"
         "    if 'première passe' in consigne: f1['nom'] = 'Argon A (revue)'\n"
@@ -1992,8 +1994,8 @@ class TestReglagesV35(CasAvecDossier):
             async def query(prompt, options):
                 await asyncio.sleep(5)
                 yield None
-        texte, cout, statut, erreur = asyncio.run(AdaptateurClaudeSDK._executer(FauxSDK, "x", None, delai_s=0.2))
-        self.assertEqual((texte, cout, statut), ("", 0.0, "erreur"))
+        texte, cout, statut, erreur, lecture = asyncio.run(AdaptateurClaudeSDK._executer(FauxSDK, "x", None, delai_s=0.2))
+        self.assertEqual((texte, cout, statut, lecture["refus"]), ("", 0.0, "erreur", None))  # v47 (R-764) : lecture rendue
         self.assertIn("délai de session dépassé", erreur)
         with self.assertRaises(ValueError):
             AdaptateurClaudeSDK("http://127.0.0.1:8787", delai_s=0)
@@ -4772,6 +4774,829 @@ class TestV46(CasAvecDossier):
             for nom in noms:
                 with open(os.path.join(racine, nom), encoding="utf-8", errors="replace") as f:
                     self.assertNotIn(cle, f.read())
+
+
+# --- v47 : moissonneur (option A, « go » de Lazar du 29 octobre 2026, 11:52 heure de Paris, sur les sept points de la note
+# `note-moissonneur-integration-v1.md`) et correctif bloquant R-764 (changement de modèle par le kit). Tout hors ligne :
+# relais de moisson factice en mémoire sur la boucle locale, garde-fou d'essai qui refuse toute connexion hors boucle
+# locale, faux kit pour le refus de modèle ; aucune session réelle, aucun réseau, aucune clé.
+import shutil  # noqa: E402
+import socket  # noqa: E402
+
+from essais.test_v47_relais_moisson import garde_fou_reseau  # noqa: E402
+from pole import moisson as msn  # noqa: E402
+from pole.adaptateurs import AdaptateurClaudeSDK, VARIABLES_SANS_REPLI_DE_MODELE  # noqa: E402
+from pole.protocole_outils import DEBUT_DONNEES, FIN_DONNEES, Quotas  # noqa: E402
+from pole.relais_reel import cout_usd  # noqa: E402
+
+# Rétrocompatibilité v46 → v47 : empreintes SHA-256 des consignes produites par la **v46 reconstruite** (`pole/ideation.py`
+# et `pole/dossier_ferme.py` de la v46 rebâtis en inversant chaque modification de la v47, puis vérifiés contre
+# EMPREINTES-orchestrateur-pole-v7-v46.txt : 506896543db9…, 52c9097d58ef… ; les huit autres modules importés sont ceux
+# de la v46, empreintes égales) sur les gabarits de ces essais : passe 1, passe 2 (matériau, fiche précédente), consigne de
+# contrôle d'Argon (fiches maximales), juge, passe 1 et 2 à dossier fermé par protocole, juge à dossier fermé.
+CONSIGNES_V46_SHA256 = {
+    "passe_1": "c04dabc3fe61048a359010ae1ca2a5031d99a70a3c58864f54aa9830c4ea9afd",
+    "passe_2": "e5f7330baca71f68ae8f4f414e9629c8b1f48d79c569171e3c0c79c464cfd362",
+    "controle_externe": "81cae48e7b52c9b709ffbf88de32f170759564713df808ba3af569c0ae04e621",
+    "juge": "2488eb32417541614ca340fa0723bf02dc4b407cead1396368b57809407f053a",
+    "passe_1_dossier_protocole": "4735ceb5266713a5d3a4a5d66c5aa298f2646bb02cbf7f7315d7e0d1ec808cbb",
+    "passe_2_dossier_protocole": "d0ceb74febb1ceec98240467444846c6383f5ecaffe66e5cf92857e67792a1a6",
+    "juge_dossier": "d199032a7e69a88d02854003f156859700210b5a545d7be9921dd072358b7b17",
+}
+TITRES_CORPUS = [  # les dix extraits du corpus primaire v1 (titres déclarés)
+    "Obfuscated Activations Bypass LLM Latent-Space Defenses",
+    "Adaptive Attacks on Trusted Monitors Subvert AI Control Protocols",
+    "Quickest Change Detection in Discrete-Time in Presence of a Covert Adversary",
+    "When Benchmarks Lie: Evaluating Malicious Prompt Classifiers Under True Distribution Shift",
+    "MonitoringBench: Semi-Automated Red-Teaming for Agent Monitoring",
+    "SLEIGHT-Bench: A Benchmark of Evasion Attacks Against Agent Monitors",
+    "Diffuse AI Control on Fuzzy Tasks",
+    "Distributed Attacks in Persistent-State AI Control",
+    "Multi-Agent AI Control: Distributed Attacks Hamper Per-Instance Monitors",
+    "Caught in the Act: Probes Effectively Detect Sabotage and Catch Unverbalized Deception",
+]
+REQUETE_SAINE = "monitor transfer diffuse sabotage probes"
+
+
+def notices_servies(consigne):
+    m = re.search(re.escape(DEBUT_DONNEES) + r"\s*```json\n(.*?)\n```\s*" + re.escape(FIN_DONNEES), consigne, re.S)
+    if not m:
+        return None
+    return json.loads(m.group(1))
+
+
+def section_servie(consigne):
+    """Les octets de la section de moisson d'une consigne de passe 2 (délimiteurs compris) ; None sans section."""
+    i, j = consigne.find(DEBUT_DONNEES), consigne.find(FIN_DONNEES)
+    return consigne[i:j + len(FIN_DONNEES)] if i >= 0 and j >= 0 else None
+
+
+class FauxMoisson:
+    """Proposeur et juge scriptés pour la moisson : au tour de moisson, rend le bloc du scénario (une liste de demandes par
+    tour, ou un texte brut) ; en passe 2, cite la première notice servie au statut MOISSONNE (`citer`), ou une citation
+    fausse (`citation` : « titre_faux », « etiquette_inconnue ») ; un juge `juge_demande` rend un bloc de moisson."""
+    nom = "faux-moisson"
+
+    def __init__(self, fiches, demandes, juge, citer=True, citation=None, juge_demande=False, cout=0.05):
+        self.fiches, self.demandes, self.juge = fiches, demandes, juge
+        self.citer, self.citation, self.juge_demande, self.cout = citer, citation, juge_demande, cout
+        self.appels = []
+
+    def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, **lecture):
+        self.appels.append({"role": role, "consigne": consigne, "dossier": dossier, "budget": budget_usd, "max_tours": max_tours,
+                            "lecture": lecture})
+        if consigne.startswith(idn.APPEL_DE_CONTROLE_CONSIGNE):
+            return Resultat("OK", [], 0.01, "ok")
+        parts = dossier.split(os.sep)
+        if role == "juge_ideation":
+            idents = sorted(set(re.findall(r'"identifiant": "(T\d\d)"', consigne)))
+            texte = "```json\n" + json.dumps(self.juge(idents, consigne)) + "\n```"
+            if self.juge_demande:
+                texte += "\n```json\n" + json.dumps({"moisson": [{"source": "arxiv", "requete": REQUETE_SAINE, "resultats": 5}]}) + "\n```"
+            return Resultat(texte, [], 0.1, "ok")
+        if parts[-2] == "moisson":  # tour de moisson : SORTIE/proposeurs/<etiquette>/moisson/tour-00k
+            etiquette, k = parts[-3], int(parts[-1][-3:])
+            tours = self.demandes.get(etiquette, [])
+            d = tours[k - 1] if k <= len(tours) else []
+            if isinstance(d, str):
+                return Resultat(d, [], self.cout, "ok")
+            return Resultat("```json\n" + json.dumps({"moisson": d}, ensure_ascii=False) + "\n```", [], self.cout, "ok")
+        etiquette, passe = parts[-2], parts[-1]
+        fiche = dict(self.fiches[etiquette])
+        if passe == "passe-2":
+            fiche["nom"] = fiche["nom"] + " (revue)"
+            tours = notices_servies(consigne) or []
+            notices = [r for t in tours for rep in t.get("reponses", []) for r in rep.get("resultats", [])]
+            if self.citer and notices:
+                r = notices[0]
+                if self.citation == "titre_faux":
+                    ref = f"Un autre titre inventé, {r['auteurs']}, {r['date'][:4]}, {r['identifiant']} {r['etiquette']}"
+                elif self.citation == "etiquette_inconnue":
+                    ref = f"{r['titre']}, {r['auteurs']}, {r['date'][:4]}, 2600.00001v1 [moisson:arxiv:000000000000:2600.00001v1]"
+                else:
+                    ref = f"{r['titre']}, {r['auteurs']}, {r['date'][:4]}, {r['identifiant']} {r['etiquette']}"
+                fiche["anteriorite"] = list(fiche["anteriorite"]) + [{"reference": ref, "statut": "MOISSONNE"}]
+        return Resultat("```json\n" + json.dumps({"fiches": [fiche]}, ensure_ascii=False) + "\n```", [], 0.2, "ok")
+
+
+class FauxKitRefus:
+    """v47 (R-764) : un faux module de kit pour `AdaptateurClaudeSDK._executer` — rejoue un scénario de messages (modèle
+    servi, `stop_reason`, usage, événements système) et note si le flux a été clos (session close)."""
+
+    class TextBlock:
+        def __init__(self, text):
+            self.text = text
+
+    class AssistantMessage:
+        def __init__(self, content, model, stop_reason="end_turn", usage=None):
+            self.content, self.model, self.stop_reason, self.usage = content, model, stop_reason, usage
+
+    class SystemMessage:
+        def __init__(self, subtype, data):
+            self.subtype, self.data = subtype, data
+
+    class ResultMessage:
+        def __init__(self, subtype, result, total_cost_usd, is_error=False):
+            self.subtype, self.result, self.total_cost_usd, self.is_error = subtype, result, total_cost_usd, is_error
+
+    class ClaudeSDKError(Exception):
+        pass
+
+    def __init__(self, scenario):
+        self.scenario, self.clos, self.servis = scenario, False, 0
+
+    async def query(self, prompt, options):
+        try:
+            for m in self.scenario:
+                self.servis += 1
+                yield m
+        finally:
+            self.clos = True
+
+
+class TestV47(CasAvecDossier):
+    """v47 : moissonneur (option A) — cas sain complet (frais puis rejeu), garde de fuite (cas sain et artefacts),
+    artefacts dans la course (quota, source brave, juge qui demande), relais indisponible ou altéré, résumé piégé, bloc
+    illisible, rejeu discordant, absence de canal, garde-fou réseau, `--mesurer-consignes`, démonstration par le
+    lanceur, rétrocompatibilité octet pour octet avec la v46 ; correctif bloquant R-764 (trois barrières)."""
+
+    def setUp(self):
+        super().setUp()
+        self.garde = garde_fou_reseau()
+        self.garde.__enter__()
+        self.addCleanup(self.garde.__exit__, None, None, None)
+
+    def cours(self):
+        c = TestCourse("test_course_complete")
+        c.tmp = self.tmp
+        return c
+
+    def v41(self):
+        t = TestV41("test_tolerances_separees")
+        t.tmp = self.tmp
+        return t
+
+    def prep(self):
+        if not hasattr(self, "_prep"):
+            self._prep = self.cours().preparer()
+        return self._prep
+
+    def course(self, ad, nom, **modifs):
+        prep = self.prep()
+        args = dict(liste_blanche=prep["liste_blanche"], question=prep["question"], pieces=prep["pieces"], temoins=prep["temoins"],
+                    materiau=prep["materiau"], seconde_passe=True, proposeurs=[("opus", "claude-opus-5-5")],
+                    juges=[("juge-opus", "claude-opus-5-5")], graine=7, budget_total_usd=20.0, budgets=self.cours().budgets())
+        args.update(modifs)
+        return idn.executer_ideation(ad, os.path.join(self.tmp, nom), **args)
+
+    def relais(self, **kw):
+        r = msn.RelaisMoissonFactice(**kw)
+        self.addCleanup(r.arreter)
+        return r
+
+    @staticmethod
+    def lire(chemin):
+        with open(chemin, encoding="utf-8") as f:
+            return f.read()
+
+    def fin(self, nom):
+        return json.loads(self.lire(os.path.join(self.tmp, nom, "manifeste-fin.json")))["reglages"]
+
+    def consigne_passe_2(self, ad, etiquette="opus"):
+        return [a["consigne"] for a in ad.appels if a["role"] == "proposeur_ideation" and a["dossier"].endswith(os.path.join(etiquette, "passe-2"))][0]
+
+    # --- cas sain complet ---------------------------------------------------------------------------------------------
+
+    def test_v47_1_cas_sain_complet_frais_puis_rejeu(self):
+        """Une requête → 5 résultats servis dans la consigne de passe 2 (section entre délimiteurs, étiquettes présentes,
+        empreintes recalculées égales, lien de notice jamais un PDF) ; la fiche cite MOISSONNE → `non_opposable: true`,
+        L7 étendue la retrouve (étiquette servie à ce proposeur, identifiant et titre concordants) ; cache scellé, index au
+        manifeste de fin ; juge : phrase MOISSONNE, jamais la vérification ; `candidats-corpus.json` ; puis la course en
+        mode **rejeu** sert les mêmes octets sans appeler le relais."""
+        relais = self.relais()
+        juge = self.cours().notes_temoins_ok
+        demandes = {"opus": [[{"source": "arxiv", "requete": REQUETE_SAINE, "resultats": 5}]]}
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        res = self.course(ad, "m1", moisson="frais", url_relais_moisson=relais.url)
+        tour = [a for a in ad.appels if os.sep + "moisson" + os.sep in a["dossier"]]
+        self.assertEqual(len(tour), 1)
+        self.assertTrue(tour[0]["consigne"].startswith(idn.TITRE_TOUR_MOISSON))
+        self.assertIn('"nom": "O1"', tour[0]["consigne"])
+        self.assertEqual((tour[0]["budget"], tour[0]["lecture"]), (0.5, {}))
+        c2 = self.consigne_passe_2(ad)
+        self.assertIn(msn.TITRE_SECTION_MOISSON, c2)
+        self.assertIn("RAPPORTE | SUPPOSE | MOISSONNE", c2)
+        servis = notices_servies(c2)
+        self.assertEqual([t["tour"] for t in servis], [1])
+        rep = servis[0]["reponses"][0]
+        self.assertEqual((rep["statut"], rep["requete"], len(rep["resultats"])), ("servie", REQUETE_SAINE, 5))
+        for r in rep["resultats"]:
+            self.assertEqual(r["etiquette"], f"[moisson:arxiv:{msn.empreinte_resultat(r)[:12]}:{r['identifiant']}]")
+            self.assertTrue(r["lien"].startswith("https://arxiv.org/abs/"), r["lien"])  # le relais factice sert un lien PDF
+            self.assertLessEqual(len(json.dumps(r, ensure_ascii=False, indent=1)), msn.TAILLE_MAX_PAR_RESULTAT)
+        self.assertEqual(relais.appels[-1]["jeton"], msn.JETON_MOISSON_FACTICE)
+        o1 = [f for f in res["fiches"] if f["auteur"] == "opus" and f["passe"] == 2][0]
+        ant = [a for a in o1["anteriorite"] if a["statut"] == "MOISSONNE"]
+        self.assertEqual(len(ant), 1)
+        self.assertTrue(ant[0]["non_opposable"])
+        fin = self.fin("m1")
+        verif = fin["moisson"]["verification_moissonnees"][o1["identifiant_auteur"]]
+        self.assertEqual((verif[0]["verifiee"], verif[0]["servie_a_ce_proposeur"], verif[0]["identifiant_concordant"],
+                          verif[0]["titre_concordant"]), (True, True, True, True))
+        self.assertEqual(fin["statut_course"], {"statut": "ok"})
+        lignes = fin["moisson"]["resume"]["journal"]["lignes"]
+        self.assertEqual([(l["statut"], l["depuis"]) for l in lignes], [("servie", "relais")])
+        cache = os.path.join(self.tmp, "m1", "noyau", "moisson")
+        cle = lignes[0]["cle"]
+        self.assertTrue(idn.verifier_scelle(os.path.join(cache, cle + ".json")))
+        self.assertTrue(idn.verifier_scelle(os.path.join(cache, "index.json")))
+        self.assertEqual(fin["moisson"]["cache_index_sha256"], idn.sha256_fichier(os.path.join(cache, "index.json")))
+        self.assertEqual(sorted(json.loads(self.lire(os.path.join(cache, "index.json")))["entrees"]), [cle])
+        candidats = json.loads(self.lire(os.path.join(self.tmp, "m1", "candidats-corpus.json")))
+        self.assertEqual(len(candidats["servis"]), 5)
+        self.assertEqual([c["verifiee"] for c in candidats["cites"]], [True])
+        depart = json.loads(self.lire(os.path.join(self.tmp, "m1", "manifeste-depart.json")))["reglages"]
+        self.assertEqual((depart["moisson"]["mode"], depart["moisson"]["sources"], depart["moisson"]["tours"]), ("frais", ["arxiv", "openalex"], 1))
+        self.assertEqual(depart["moisson"]["quotas"]["juge_ideation"]["tours"], 0)
+        self.assertEqual(depart["reglages_kit"]["proposeur_ideation"]["tools"], [])
+        appels_m = [a for a in fin["journal"]["appels"] if a.get("session") == "moisson"]
+        self.assertEqual([(a["etiquette"], a["cout_compte_usd"]) for a in appels_m], [("opus", 0.05)])
+        juge_c = [a["consigne"] for a in ad.appels if a["role"] == "juge_ideation"][0]
+        self.assertIn(idn.MOISSON_JUGE.strip(), juge_c)
+        self.assertIn('"MOISSONNE"', juge_c)
+        for mot in ("verification_moissonnees", "motif_exact", "servie_a_ce_proposeur", "candidats"):
+            self.assertNotIn(mot, juge_c)
+        self.assertTrue(res["classement"])
+        # rejeu : jamais le réseau, mêmes octets servis
+        n_appels = len(relais.appels)
+        ad2 = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        res2 = self.course(ad2, "m1r", moisson="rejeu", cache_moisson=cache)
+        self.assertEqual(len(relais.appels), n_appels)
+        self.assertEqual(section_servie(self.consigne_passe_2(ad2)), section_servie(c2))
+        fin2 = self.fin("m1r")
+        self.assertEqual((fin2["moisson"]["resume"]["mode"], fin2["moisson"]["resume"]["appels_relais"]), ("rejeu", 0))
+        self.assertEqual(fin2["moisson"]["resume"]["journal"]["lignes"][0]["depuis"], "cache de la course passée (rejeu)")
+        self.assertTrue(idn.verifier_scelle(os.path.join(self.tmp, "m1r", "noyau", "moisson", cle + ".json")))
+        self.assertTrue(res2["classement"])
+        # réglages refusés avant tout appel : moisson sans seconde passe ; rejeu avec adresse ; frais sans adresse ; mode inconnu
+        for nom, modifs in (("r1", dict(moisson="frais", url_relais_moisson=relais.url, seconde_passe=False)),
+                            ("r2", dict(moisson="rejeu", cache_moisson=cache, url_relais_moisson=relais.url)),
+                            ("r3", dict(moisson="frais")), ("r4", dict(moisson="brave")),
+                            ("r5", dict(moisson="frais", url_relais_moisson="http://exemple.org:1")),
+                            ("r6", dict(moisson="frais", url_relais_moisson=relais.url, tours_moisson=3))):
+            faux = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+            with self.assertRaises(idn.CourseInterrompue, msg=nom):
+                self.course(faux, nom, **modifs)
+            self.assertEqual(faux.appels, [], nom)
+            self.assertFalse(os.path.exists(os.path.join(self.tmp, nom)), nom)
+
+    # --- garde de fuite -------------------------------------------------------------------------------------------------
+
+    def test_v47_2_garde_de_fuite_cas_sain_et_artefacts(self):
+        """Cas sain : les titres des dix extraits du corpus (pièces à en-tête `# EXTRAIT — Titre`) et des requêtes de 3 à
+        25 mots passent. Artefacts, motif exact par règle : bardeau d'un témoin (registre d'empreintes, le noyau n'a que
+        les empreintes), identifiant d'épisode, étiquette anonyme, empreinte hexadécimale, GO-/R-/CL, nom de fichier,
+        fragment interdit, extrait de pièce de plus de 60 caractères (hors titre), clé `sk-ant-…` construite ici, nom de
+        variable de clé, jeton factice, adresse, retour à la ligne, 201 caractères, 26 mots, caractères refusés, barre
+        oblique hors identifiant arXiv ancien (admis)."""
+        corps = ("Texte de la pièce qui décrit longuement une méthode de mesure du rappel des moniteurs sur des épisodes "
+                 "diffus et une borne tenue à dix familles de tâches, page après page.")
+        pieces = [f"# EXTRAIT — {t}\n\n- Auteurs : X\n\n{corps}\n" for t in TITRES_CORPUS]
+        secret = "le mode tenu à l'écart contient cette phrase de test précise que personne ne doit chercher nulle part"
+        registre = os.path.join(self.tmp, "registre-bardeaux.json")
+        msn.construire_registre_bardeaux([secret], registre)
+        temoin = fiche_brute()
+        garde = msn.GardeFuite(pieces_textes=pieces, registre_bardeaux=msn.charger_registre_bardeaux(registre),
+                               temoins_textes=["\n".join(idn.feuilles_texte(temoin))])
+        for t in TITRES_CORPUS:
+            self.assertIsNone(garde.verifier(t), t)
+        for q in ("monitor diffuse control", " ".join(["mot"] * 25), REQUETE_SAINE, "détection de rupture adversaire caché",
+                  "hep-th/9901001 change detection", "Caught in the Act probes sabotage"):
+            self.assertIsNone(garde.verifier(q), q)
+        cle = "sk-" + "ant-" + "abcdefghijklmnopqrstu"
+        artefacts = [
+            ("transfert d'un moniteur vers le diffus suit-il une courbe", "règle 5"),  # bardeau du témoin
+            ("cette phrase de test précise que personne ne doit chercher", "règle 5"),  # bardeau du registre (texte jamais lu)
+            ("moniteur épisode 003 sabotage", "règle 4 : identifiant d'épisode"),
+            ("T0.6/ep-003/p1 moniteur", "règle 2 : barre oblique"),
+            ("fiche T07 contre T12", "règle 4 : étiquette anonyme"),
+            ("empreinte 0123456789abcdef moniteur", "règle 4 : suite hexadécimale"),
+            ("voir GO-2026-10-29-01 moniteur", "règle 4 : identifiant GO"),
+            ("décision R-764 du noyau", "règle 4 : identifiant R-"),
+            ("relecture CL45 moniteur", "règle 4 : identifiant CL"),
+            ("lire extrait-a.md moniteur", "règle 4 : nom de fichier"),
+            ("données de la banque de tâches", "règle 4 : fragment interdit"),
+            (corps[:70], "règle 6"),
+            ("clé " + cle + " moniteur", "règle 3 : forme de secret"),
+            ("ANTHROPIC_API_KEY moniteur diffus", "règle 3 : nom de variable"),
+            ("jeton " + msn.JETON_MOISSON_FACTICE, "règle 3 : jeton factice"),
+            ("voir https://exemple.org/page", "règle 2 : adresse"),
+            ("moniteur www.exemple.org", "règle 2 : adresse"),
+            ("moniteur\ndiffus", "règle 1 : retour à la ligne"),
+            ("x" * 201, "règle 1 : 201 caractères"),
+            (" ".join(["mot"] * 26), "règle 1 : 26 mots"),
+            ("ab", "règle 1"),
+            ("moniteur a@b", "règle 2 : caractère refusé"),
+            ("moniteur {diffus}", "règle 2 : caractère refusé"),
+            ("moniteur a/b", "règle 2 : barre oblique"),
+            (42, "règle 1 : requête non textuelle"),
+        ]
+        for q, motif in artefacts:
+            m = garde.verifier(q)
+            self.assertIsNotNone(m, q)
+            self.assertIn(motif, m, q)
+        self.assertNotIn(secret, json.dumps(sorted(garde.registre)))  # le noyau ne détient que des empreintes
+        with open(registre, "a") as f:
+            f.write(" ")
+        with self.assertRaisesRegex(msn.MoissonRefusee, "sceau"):
+            msn.charger_registre_bardeaux(registre)
+        # le relais ne refait que les règles 1 à 3
+        garde_relais = msn.GardeFuite(fragments_interdits=())
+        self.assertIsNone(garde_relais.verifier("fiche T07 contre T12", regles=(1, 2, 3)))
+        self.assertIn("règle 2", garde_relais.verifier("voir https://exemple.org", regles=(1, 2, 3)))
+
+    # --- artefacts dans la course ------------------------------------------------------------------------------------------
+
+    def test_v47_3_artefacts_dans_la_course_quota_brave_juge(self):
+        """Cinq demandes dans un tour : bardeau d'un témoin (refusée, motif exact au journal, motif **générique** servi),
+        adresse (idem), source `brave` (refusée au noyau, jamais envoyée), une requête saine (servie), une cinquième
+        (quota : refusée, comptée) ; la course continue ; `resultats: 9` ramené à 5 ; un juge qui demande une moisson :
+        refus dur consigné, rien envoyé ; une citation MOISSONNE au titre faux ou à l'étiquette non servie est rapportée
+        non vérifiée (jamais aux juges) ; demande `{"moissonner"}` d'un tour de lecture : motif « au tour de moisson »."""
+        relais = self.relais()
+        juge = self.cours().notes_temoins_ok
+        temoin_bardeau = "transfert d'un moniteur vers le diffus suit-il une courbe"
+        demandes = {"opus": [[{"source": "arxiv", "requete": temoin_bardeau, "resultats": 5},
+                              {"source": "openalex", "requete": "voir https://exemple.org", "resultats": 5},
+                              {"source": "brave", "requete": "monitor diffus forum", "resultats": 5},
+                              {"source": "arxiv", "requete": REQUETE_SAINE, "resultats": 9},
+                              {"source": "openalex", "requete": "quickest change detection", "resultats": 5}]]}
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge, juge_demande=True, citation="titre_faux")
+        res = self.course(ad, "m3", moisson="frais", url_relais_moisson=relais.url)
+        reps = notices_servies(self.consigne_passe_2(ad))[0]["reponses"]
+        self.assertEqual([r["statut"] for r in reps], ["refusée", "refusée", "refusée", "servie", "refusée"])
+        self.assertEqual(reps[0]["motif"], msn.MOTIF_GENERIQUE)
+        self.assertEqual(reps[1]["motif"], msn.MOTIF_GENERIQUE)
+        self.assertNotIn("règle", reps[0]["motif"] + reps[1]["motif"])
+        self.assertIn("arxiv ou openalex", reps[2]["motif"])
+        self.assertIn("quota", reps[4]["motif"])
+        self.assertEqual(len(reps[3]["resultats"]), 5)  # 9 ramené au quota
+        self.assertEqual([a["params"]["q"][0] for a in relais.appels if a["chemin"] != "/moisson/etat"], [REQUETE_SAINE])
+        fin = self.fin("m3")
+        lignes = fin["moisson"]["resume"]["journal"]["lignes"]
+        self.assertEqual([l["statut"] for l in lignes[:5]], ["refusée", "refusée", "refusée", "servie", "refusée"])
+        self.assertIn("règle 5", lignes[0]["motif_exact"])
+        self.assertIn("règle 2 : adresse", lignes[1]["motif_exact"])
+        self.assertIn("brave", lignes[2]["motif_exact"])
+        self.assertIn("quota", lignes[4]["motif_exact"])
+        self.assertEqual(fin["moisson"]["resume"]["quotas"]["demandes_par_tour"]["proposeur_ideation|opus|tour-1"], 5)
+        # juge qui demande : refus dur, rien envoyé
+        self.assertEqual(len(fin["moisson"]["resume"]["refus_durs"]), 1)
+        self.assertEqual(fin["moisson"]["resume"]["refus_durs"][0]["role"], "juge_ideation")
+        self.assertEqual(len([a for a in relais.appels if a["chemin"] != "/moisson/etat"]), 1)
+        from pole.protocole_outils import QuotaRefuse
+        with self.assertRaisesRegex(QuotaRefuse, "refus dur"):
+            Quotas().ouvrir_tour("juge_ideation", "j")
+        # citation au titre faux : rapportée non vérifiée ; étiquette non servie : idem
+        o1 = [f for f in res["fiches"] if f["auteur"] == "opus" and f["passe"] == 2][0]
+        v = fin["moisson"]["verification_moissonnees"][o1["identifiant_auteur"]][0]
+        self.assertEqual((v["verifiee"], v["titre_concordant"], v["identifiant_concordant"]), (False, False, True))
+        ad2 = FauxMoisson({"opus": fiche_brute(nom="O1")}, {"opus": [[{"source": "arxiv", "requete": REQUETE_SAINE, "resultats": 2}]]},
+                          juge, citation="etiquette_inconnue")
+        res2 = self.course(ad2, "m3b", moisson="frais", url_relais_moisson=relais.url)
+        o1b = [f for f in res2["fiches"] if f["auteur"] == "opus" and f["passe"] == 2][0]
+        v = self.fin("m3b")["moisson"]["verification_moissonnees"][o1b["identifiant_auteur"]][0]
+        self.assertEqual((v["verifiee"], v["servie_a_ce_proposeur"]), (False, False))
+        self.assertTrue(res2["classement"])
+        # MOISSONNE hors d'une course sous moisson, ou en passe 1 : refusé par le gabarit
+        with self.assertRaises(idn.FicheIdeationInvalide):
+            idn.valider_fiche_ideation(fiche_brute(anteriorite=[{"reference": "x", "statut": "MOISSONNE"}]), "a", 1)
+        f = idn.valider_fiche_ideation(fiche_brute(anteriorite=[{"reference": "x", "statut": "MOISSONNE"}]), "a", 1, moisson=True)
+        self.assertTrue(f["anteriorite"][0]["non_opposable"])
+        # demande `moissonner` d'un tour de lecture du dossier fermé, sous moisson : motif « au tour de moisson »
+        mes = dfm.nouvelles_mesures("protocole")
+        d = self.ecrire_dossier_ferme()
+        r = dfm.servir_demandes(dfm.charger_dossier_ferme(d), dfm.CachePages(dfm.charger_dossier_ferme(d)),
+                                [{"moissonner": "x"}], "opus", 1, 1, mes, moisson_active=True)
+        self.assertEqual(r[0]["motif"], dfm.MOTIF_MOISSON_AU_TOUR)
+        r = dfm.servir_demandes(dfm.charger_dossier_ferme(d), dfm.CachePages(dfm.charger_dossier_ferme(d)),
+                                [{"moissonner": "x"}], "opus", 1, 1, mes)
+        self.assertEqual(r[0]["motif"], dfm.MOTIF_MOISSON)
+
+    def ecrire_dossier_ferme(self):
+        d = os.path.join(self.tmp, "dossier-ferme-47")
+        os.makedirs(os.path.join(d, "sous"))
+        with open(os.path.join(d, "extrait-a.md"), "w", encoding="utf-8") as f:
+            f.write(TEXTE_A)
+        with open(os.path.join(d, "sous", "extrait-b.md"), "w", encoding="utf-8") as f:
+            f.write(TEXTE_B)
+        dfm.ecrire_index(d, [{"chemin": "extrait-a.md", "titre": "Extrait A", "resume": "Résumé de l'extrait A",
+                              "sections": ["Introduction", "Résultats"], "pages": 3},
+                             {"chemin": "sous/extrait-b.md", "titre": "Extrait B", "resume": "Résumé B"}])
+        return d
+
+    # --- relais indisponible, réponse altérée, résumé piégé, bloc illisible, rejeu discordant ---------------------------
+
+    def test_v47_4_indisponible_altere_piege_illisible_et_rejeu_discordant(self):
+        """Relais injoignable (refus de connexion), statut 5xx : « moisson indisponible » servi et consigné, la course
+        **continue** ; réponse altérée (empreinte fausse) : rejetée, ni servie ni mise en cache ; résumé piégé (garde
+        lexicale) : servi réduit au titre ; bloc de demandes illisible : passe 2 sans moisson, dit au journal ; en rejeu :
+        requête absente du cache → « absente du cache » ; entrée de cache qui ne concorde plus avec l'index → **arrêt du
+        rejeu** (manifeste de fin en erreur)."""
+        juge = self.cours().notes_temoins_ok
+        demandes = {"opus": [[{"source": "arxiv", "requete": REQUETE_SAINE, "resultats": 3}]]}
+        # injoignable : un relais factice arrêté (port fermé)
+        mort = msn.RelaisMoissonFactice()
+        url_morte = mort.url
+        mort.arreter()
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        res = self.course(ad, "m4a", moisson="frais", url_relais_moisson=url_morte)
+        rep = notices_servies(self.consigne_passe_2(ad))[0]["reponses"][0]
+        self.assertEqual((rep["statut"], rep["motif"]), ("indisponible", "moisson indisponible"))
+        self.assertIn("moisson indisponible", self.consigne_passe_2(ad))
+        fin = self.fin("m4a")
+        self.assertIn("injoignable", fin["moisson"]["resume"]["journal"]["lignes"][0]["motif_exact"])
+        self.assertTrue(res["classement"])
+        self.assertIsNone(fin["erreur"])
+        # statut 500
+        r500 = self.relais(panne="statut_500")
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        self.course(ad, "m4b", moisson="frais", url_relais_moisson=r500.url)
+        self.assertEqual(notices_servies(self.consigne_passe_2(ad))[0]["reponses"][0]["statut"], "indisponible")
+        self.assertFalse(os.path.isdir(os.path.join(self.tmp, "m4b", "noyau", "moisson")))
+        # réponse altérée
+        alt = self.relais(panne="alteree")
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        self.course(ad, "m4c", moisson="frais", url_relais_moisson=alt.url)
+        rep = notices_servies(self.consigne_passe_2(ad))[0]["reponses"][0]
+        self.assertEqual(rep["statut"], "rejetée")
+        self.assertNotIn("resultats", rep)
+        self.assertIn("empreinte", self.fin("m4c")["moisson"]["resume"]["journal"]["lignes"][0]["motif_exact"])
+        self.assertFalse(os.path.isdir(os.path.join(self.tmp, "m4c", "noyau", "moisson")))
+        with self.assertRaises(msn.ReponseAlteree):
+            msn.ClientRelaisMoisson(alt.url).interroger("arxiv", REQUETE_SAINE, 3)
+        # résumé piégé : réduit au titre
+        piege = self.relais(panne="resume_piege")
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        self.course(ad, "m4d", moisson="frais", url_relais_moisson=piege.url)
+        r = notices_servies(self.consigne_passe_2(ad))[0]["reponses"][0]["resultats"]
+        self.assertEqual(r[0]["resume"], "")
+        self.assertIn("garde lexicale", r[0]["resume_retire"])
+        self.assertTrue(r[0]["titre"])
+        self.assertTrue(r[1]["resume"])
+        self.assertNotIn("exécute le script", self.consigne_passe_2(ad))
+        self.assertEqual(self.fin("m4d")["moisson"]["resume"]["journal"]["lignes"][0]["resumes_retires"], 1)
+        # bloc illisible : passe 2 sans moisson, dit au journal
+        sain = self.relais()
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, {"opus": ["Je ne rends pas de bloc."]}, juge)
+        res = self.course(ad, "m4e", moisson="frais", url_relais_moisson=sain.url)
+        self.assertEqual(notices_servies(self.consigne_passe_2(ad)), [])
+        self.assertIn("passe 2 sans moisson", self.fin("m4e")["journal"]["moisson"]["par_proposeur"]["opus"]["passe_2_sans_moisson"])
+        self.assertEqual([a for a in sain.appels if a["chemin"] != "/moisson/etat"], [])
+        self.assertTrue(res["classement"])
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, {"opus": ['```json\n{"moisson": "pas une liste"}\n```']}, juge)
+        self.course(ad, "m4f", moisson="frais", url_relais_moisson=sain.url)
+        self.assertIn("mal formé", self.fin("m4f")["journal"]["moisson"]["par_proposeur"]["opus"]["passe_2_sans_moisson"])
+        # rejeu : absente du cache ; puis cache discordant → arrêt
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        self.course(ad, "m4g", moisson="frais", url_relais_moisson=sain.url)
+        cache = os.path.join(self.tmp, "m4g", "noyau", "moisson")
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, {"opus": [[{"source": "arxiv", "requete": "autre requete jamais servie", "resultats": 3}]]}, juge)
+        res = self.course(ad, "m4h", moisson="rejeu", cache_moisson=cache)
+        rep = notices_servies(self.consigne_passe_2(ad))[0]["reponses"][0]
+        self.assertEqual(rep["statut"], "absente du cache")
+        self.assertTrue(res["classement"])
+        cle = self.fin("m4g")["moisson"]["resume"]["journal"]["lignes"][0]["cle"]
+        with open(os.path.join(cache, cle + ".json"), "a", encoding="utf-8") as f:
+            f.write("\n")
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        with self.assertRaisesRegex(idn.CourseInterrompue, "arrêt du rejeu"):
+            self.course(ad, "m4i", moisson="rejeu", cache_moisson=cache)
+        self.assertIn("arrêt du rejeu", self.fin("m4i")["erreur"])
+        self.assertFalse([a for a in ad.appels if a["role"] == "juge_ideation"])
+        # cache absent ou index descellé : refus avant tout appel
+        with open(os.path.join(cache, "index.json.sha256"), "w") as f:
+            f.write("0" * 64 + "  index.json\n")
+        ad = FauxMoisson({"opus": fiche_brute(nom="O1")}, demandes, juge)
+        with self.assertRaisesRegex(idn.CourseInterrompue, "index"):
+            self.course(ad, "m4j", moisson="rejeu", cache_moisson=cache)
+        self.assertEqual(ad.appels, [])
+
+    # --- absence de canal, garde-fou ----------------------------------------------------------------------------------------
+
+    def test_v47_5_absence_de_canal_et_garde_fou_reseau(self):
+        """Aucune variable du relais de moisson chez un agent (`variables_agent`, `construire_options`) ni dans
+        `environnement_commande` d'Argon ; `tools=[]` inchangé pour les rôles d'idéation ; `garde_outils.py` ne gagne
+        aucune commande ; le client du relais n'accepte qu'une adresse locale ; le garde-fou d'essai refuse toute
+        connexion hors boucle locale."""
+        from pole.relais import variables_agent
+        env = variables_agent("http://127.0.0.1:8787")
+        o = construire_options(self.tmp, 1.0, 2, url_relais="http://127.0.0.1:8787", modele="claude-opus-5-5", role="proposeur_ideation")
+        for cle in list(env) + list(o["env"]):
+            self.assertNotIn("MOISSON", cle.upper())
+        ext = AdaptateurCommandeExterne([sys.executable, "-c", "pass"], environnement={"PATH": "/usr/bin"})
+        for cle in ext.environnement_commande(1.0, "proposeur_ideation"):
+            self.assertNotIn("MOISSON", cle.upper())
+            self.assertNotIn("RELAIS", cle.upper())
+        self.assertEqual({r: v["tools"] for r, v in reglages_kit_par_role().items() if r.endswith("ideation")},
+                         {"proposeur_ideation": [], "juge_ideation": []})
+        self.assertEqual(o["tools"], [])
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pole", "garde_outils.py"), encoding="utf-8") as f:
+            self.assertNotIn("moisson", f.read().lower())
+        for url in ("http://exemple.org:1", "https://127.0.0.1:1", "http://127.0.0.1:1/moisson"):
+            with self.assertRaises(RelaisInvalide, msg=url):
+                msn.ClientRelaisMoisson(url)
+        s = socket.socket()
+        try:
+            with self.assertRaisesRegex(AssertionError, "hors boucle locale"):
+                s.connect(("198.51.100.1", 80))
+        finally:
+            s.close()
+
+    # --- mesures, lanceur -----------------------------------------------------------------------------------------------------
+
+    def test_v47_6_mesurer_consignes_et_lanceur_simule(self):
+        """`--mesurer-consignes --moisson frais` compte la moisson au pire cas (20 résultats, ≈ 56 000 caractères : entre
+        56 000 et 60 000 ; la passe 2 maximale en grandit d'autant) ; le lanceur en moteur simulé avec `--moisson frais`
+        (relais factice en mémoire, Argon simulé) rend 0, le bilan dit la moisson, puis `--moisson rejeu` sur le cache
+        rend 0 sans relais ; options incohérentes refusées par l'analyseur."""
+        v41 = self.v41()
+        prep, att = v41.prep_devis()
+        base = ["--mesurer-consignes", "--liste-blanche", prep["liste_blanche"], "--question", prep["question"], "--piece",
+                prep["pieces"][0], "--temoins", prep["temoins"], "--materiau", prep["materiau"][0], "--seconde-passe",
+                "--proposeur-externe", "argon=gemini-argon", "--juge-externe", "argon-j=gemini-argon"]
+        code, out, err = v41.principal(v41.lanceur(), base)
+        self.assertEqual(code, 0, err)
+        sans = json.loads(out)
+        code, out, err = v41.principal(v41.lanceur(), base + ["--moisson", "frais"])
+        self.assertEqual(code, 0, err)
+        avec = json.loads(out)
+        self.assertIsNone(sans["moisson"])
+        pire = avec["moisson"]["moisson_pire_cas_caracteres"]
+        self.assertTrue(56_000 <= pire <= 60_000, pire)
+        self.assertEqual(avec["moisson"]["pire_cas_par_tour_nominal"], 56_000)
+        self.assertEqual(avec["moisson"]["resultats_au_pire_cas"], 20)
+        self.assertEqual(avec["consignes"]["consigne_passe_2_maximale"] - sans["consignes"]["consigne_passe_2_maximale"],
+                         pire + len("\n") + (len(json.dumps(idn.gabarit(True), ensure_ascii=False, indent=1))
+                                             - len(json.dumps(idn.GABARIT, ensure_ascii=False, indent=1))))
+        self.assertGreater(avec["consignes"]["consigne_de_controle_externe"], sans["consignes"]["consigne_de_controle_externe"])
+        code, out, err = v41.principal(v41.lanceur(), base + ["--moisson", "frais", "--tours-moisson", "2"])
+        self.assertEqual(code, 0, err)
+        self.assertEqual(json.loads(out)["moisson"]["resultats_au_pire_cas"], 40)
+        # course simulée complète par le lanceur : frais (relais factice en mémoire), puis rejeu
+        cmd = v41.script(TestCommandeExterne.SCRIPT_OK, "argon-m6.py")
+        sortie = os.path.join(self.tmp, "l6")
+        argv = v41.base(sortie, prep, att, "--commande-externe", cmd, "--moisson", "frais", "--budget-total-usd", "41",
+                        "--budget-externe-usd", "12.6")
+        code, out, err = v41.principal(v41.lanceur(), argv)
+        self.assertEqual(code, 0, err)
+        bilan = json.loads(out)
+        self.assertEqual(bilan["moisson"]["mode"], "frais")
+        self.assertEqual(bilan["moisson"]["proposeurs_avec_tour"], 3)
+        self.assertGreaterEqual(bilan["moisson"]["demandes_par_statut"]["servie"], 1)
+        self.assertEqual(bilan["moisson"]["moissonnees_verifiees"], bilan["moisson"]["moissonnees_citees"])
+        self.assertGreaterEqual(bilan["moisson"]["moissonnees_citees"], 1)
+        depart = json.loads(self.lire(os.path.join(sortie, "manifeste-depart.json")))["reglages"]
+        self.assertIn("factice en mémoire", depart["versions"]["moisson"]["relais"])
+        self.assertTrue(os.path.isfile(os.path.join(sortie, "candidats-corpus.json.sha256")))
+        sortie2 = os.path.join(self.tmp, "l6r")
+        argv = v41.base(sortie2, prep, att, "--commande-externe", cmd, "--moisson", "rejeu", "--cache-moisson",
+                        os.path.join(sortie, "noyau", "moisson"), "--budget-total-usd", "41", "--budget-externe-usd", "12.6")
+        code, out, err = v41.principal(v41.lanceur(), argv)
+        self.assertEqual(code, 0, err)
+        self.assertEqual(json.loads(out)["moisson"]["mode"], "rejeu")
+        a = section_servie(self.lire(os.path.join(sortie, "proposeurs", "opus", "traces-passe-2", "consigne.md")))
+        b = section_servie(self.lire(os.path.join(sortie2, "proposeurs", "opus", "traces-passe-2", "consigne.md")))
+        self.assertTrue(a and a == b)
+        for argv in (v41.base(os.path.join(self.tmp, "x1"), prep, None, "--moisson", "frais"),  # sans seconde passe
+                     v41.base(os.path.join(self.tmp, "x2"), prep, att, "--moisson", "rejeu"),  # sans cache
+                     v41.base(os.path.join(self.tmp, "x3"), prep, att, "--moisson", "aucune", "--url-relais-moisson", "http://127.0.0.1:1"),
+                     v41.base(os.path.join(self.tmp, "x4"), prep, att, "--moisson", "frais", "--url-relais-moisson", "http://exemple.org:1"),
+                     v41.base(os.path.join(self.tmp, "x5"), prep, att, "--moisson", "frais", "--tours-moisson", "3"),
+                     v41.base(os.path.join(self.tmp, "x6"), prep, att, "--moisson", "frais", "--moteur", "claude-sdk",
+                              "--confirmer-moteur-reel", "--url-relais", "http://127.0.0.1:1"),  # frais réel sans adresse ni confirmation
+                     [sortie, "--bras-rapporte-differe", "--moisson", "frais"]):
+            with self.assertRaises(SystemExit):
+                v41.principal(v41.lanceur(), argv)
+
+    # --- rétrocompatibilité --------------------------------------------------------------------------------------------------
+
+    def test_v47_retrocompatibilite_octet_pour_octet_avec_la_v46(self):
+        """Sans `moisson`, les consignes (passe 1, passe 2, contrôle d'Argon, juge, dossier fermé par protocole) ont, sur
+        les gabarits de ces essais, exactement les empreintes de la v46 reconstruite (`CONSIGNES_V46_SHA256`) ; le gabarit
+        servi est `GABARIT` lui-même ; aucune trace de moisson au manifeste de fin ni dans le journal d'une course sans
+        moisson ; `--moisson` absent du lanceur = course de la v46."""
+        import hashlib
+        import tempfile
+        pieces = [("piece-a.md", "# Pièce A\nTexte de contexte.", "0" * 64)]
+        materiau = [("materiau.md", "# Matériau\nTour interne.", "0" * 64)]
+        question = "Quelles questions ?"
+        o1 = idn.valider_fiche_ideation(fiche_brute(nom="O1"), "opus", 1)
+        f1 = idn.valider_fiche_ideation(fiche_brute(nom="F1"), "fable", 1)
+        temoins = [idn.valider_fiche_ideation(f, idn.AUTEUR_TEMOIN, i, passe=0) for i, f in enumerate(
+            [fiche_brute(nom="Sobre fort"), fiche_brute(nom="Verbeux vide", enonce="Long " * 50),
+             fiche_brute(nom="Assuré occupé", originalite={"niveau": "inedite", "texte": "jamais vu"}), fiche_brute(nom="Jumeau")], 1)]
+        anonymes, _ = idn.anonymiser([o1, f1] + temoins, 7, "juge-opus")
+        with tempfile.TemporaryDirectory(dir=self.tmp) as tmp:
+            d = os.path.join(tmp, "dossier-ferme")
+            os.makedirs(os.path.join(d, "sous"))
+            with open(os.path.join(d, "extrait-a.md"), "w", encoding="utf-8") as f:
+                f.write(TEXTE_A)
+            with open(os.path.join(d, "sous", "extrait-b.md"), "w", encoding="utf-8") as f:
+                f.write(TEXTE_B)
+            dfm.ecrire_index(d, [{"chemin": "extrait-a.md", "titre": "Extrait A", "resume": "Résumé de l'extrait A",
+                                  "sections": ["Introduction", "Résultats"], "pages": 3},
+                                 {"chemin": "sous/extrait-b.md", "titre": "Extrait B", "resume": "Résumé B"}])
+            dossier = dfm.charger_dossier_ferme(d)
+            textes = {
+                "passe_1": idn.consigne_proposeur(pieces, 8, question),
+                "passe_2": idn.consigne_proposeur(pieces, 8, question, materiau=materiau, fiches_precedentes=[idn.vue_servie(o1)]),
+                "controle_externe": idn.consigne_de_controle(idn.consigne_proposeur(
+                    pieces, 8, question, materiau=materiau, fiches_precedentes=[idn.fiche_maximale()] * 8)),
+                "juge": idn.consigne_juge(anonymes, question, (), citations=False),
+                "passe_1_dossier_protocole": idn.consigne_proposeur(pieces, 8, question, dossier=dossier, mode="protocole"),
+                "passe_2_dossier_protocole": idn.consigne_proposeur(
+                    pieces, 8, question, dossier=dossier, mode="protocole", materiau=materiau, fiches_precedentes=[idn.vue_servie(o1)],
+                    historique=[{"tour": 1, "demandes": [{"lire": "extrait-a.md", "pages": [2, 2]}], "reponses": [{"statut": "servie"}]}]),
+                "juge_dossier": idn.consigne_juge(anonymes, question, (), citations=True),
+            }
+        for nom, texte in textes.items():
+            self.assertEqual(hashlib.sha256(texte.encode("utf-8")).hexdigest(), CONSIGNES_V46_SHA256[nom], nom)
+            self.assertNotIn("MOISSONNE", texte)
+        self.assertIs(idn.gabarit(False), idn.GABARIT)
+        self.assertEqual(idn.STATUTS_ANTERIORITE, ("RAPPORTE", "SUPPOSE"))
+        c = self.cours()
+        res = c.lancer(FauxAdaptateur({"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]},
+                                      notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok}), "sans-moisson")
+        fin = json.loads(self.lire(os.path.join(self.tmp, "sans-moisson", "manifeste-fin.json")))["reglages"]
+        self.assertNotIn("moisson", fin)
+        self.assertNotIn("moisson", fin["journal"])
+        self.assertEqual(fin["statut_course"], {"statut": "ok"})
+        self.assertEqual(fin["depense_modele_non_autorise_usd"], 0.0)
+        depart = json.loads(self.lire(os.path.join(self.tmp, "sans-moisson", "manifeste-depart.json")))["reglages"]
+        self.assertIsNone(depart["moisson"])
+        self.assertFalse(os.path.exists(os.path.join(self.tmp, "sans-moisson", "candidats-corpus.json")))
+        self.assertTrue(res["classement"])
+
+    # --- correctif bloquant R-764 : changement de modèle par le kit ----------------------------------------------------------
+
+    def test_v47_r764_refus_de_modele_trois_barrieres(self):
+        """R-764 (incident réel du 29 octobre, 10:43 UTC). Barrière 1 (kit) : `CLAUDE_CODE_NO_MODEL_FALLBACK=true` et
+        `CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK=1` dans l'environnement de toute session, `fallback_model=None` explicite.
+        Barrière 2 (noyau) : cas sain, un message sous le modèle demandé (suffixe de date admis) → ok ; artefacts, un faux
+        kit qui rend `stop_reason: refusal` puis un message sous `claude-opus-4-8` et un résultat « budget dépassé » →
+        statut « refus », jamais « budget_depasse », flux clos avant le second message ; un message sous un autre modèle →
+        refus, dépense sous modèle non autorisé comptée à part ; événement `system/model_refusal_fallback` → refus ; dans
+        la course : session close, sortie mise à l'écart (`A-L-ECART-modele-non-autorise/`, jamais servie aux juges),
+        journal avec modèle demandé et servi, manifeste de fin `statut_course` = refus, `depense_modele_non_autorise_usd`.
+        Barrière 3 (relais) : `--modeles-permis` — modèle permis relayé, `claude-opus-4-8` refusé sans appel amont (403,
+        journal, état), liste vide = tout refusé (dit au démarrage), forme `role=modele` refusée ; le lanceur exige la
+        liste exactement égale aux modèles de la course."""
+        from essais.faux_sdk import claude_agent_sdk as faux_sdk
+        o = construire_options(self.tmp, 1.0, 2, url_relais="http://127.0.0.1:8787", modele="claude-opus-5-5", role="proposeur_ideation")
+        for cle, valeur in VARIABLES_SANS_REPLI_DE_MODELE.items():
+            self.assertEqual(o["env"][cle], valeur)
+        self.assertEqual(o["env"]["CLAUDE_CODE_NO_MODEL_FALLBACK"], "true")
+        self.assertIsNone(o["fallback_model"])
+        options = AdaptateurClaudeSDK.options_sdk(faux_sdk, o)
+        self.assertIsNone(options.fallback_model)
+        self.assertEqual(options.env["CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK"], "1")
+        self.assertTrue(AdaptateurClaudeSDK.modele_conforme("claude-opus-5-5", "claude-opus-5-5-20261001"))
+        for servi in ("claude-opus-4-8", "claude-opus-5", "", None):
+            self.assertFalse(AdaptateurClaudeSDK.modele_conforme("claude-opus-5-5", servi), servi)
+        opts = faux_sdk.ClaudeAgentOptions(model="claude-opus-5-5")
+        K = FauxKitRefus
+        # cas sain
+        kit = K([K.AssistantMessage([K.TextBlock("réponse")], "claude-opus-5-5-20261001"), K.ResultMessage("success", "réponse", 0.3)])
+        texte, cout, statut, erreur, lecture = asyncio.run(AdaptateurClaudeSDK._executer(kit, "consigne", opts, 5))
+        self.assertEqual((texte, cout, statut, erreur, lecture["refus"], lecture["modele_servi"]),
+                         ("réponse", 0.3, "ok", None, None, "claude-opus-5-5-20261001"))
+        # artefact : l'incident rejoué
+        usage = {"input_tokens": 400_000, "output_tokens": 20_000}
+        kit = K([K.AssistantMessage([K.TextBlock("")], "claude-opus-5-5", stop_reason="refusal"),
+                 K.SystemMessage("model_refusal_fallback", {"original_model": "claude-opus-5-5", "fallback_model": "claude-opus-4-8"}),
+                 K.AssistantMessage([K.TextBlock("suite sous un autre modèle")], "claude-opus-4-8", usage=usage),
+                 K.ResultMessage("error_max_budget_usd", "budget dépassé", 4.66, is_error=True)])
+        texte, cout, statut, erreur, lecture = asyncio.run(AdaptateurClaudeSDK._executer(kit, "consigne", opts, 5))
+        self.assertEqual(statut, "refus")
+        self.assertNotEqual(statut, "budget_depasse")
+        self.assertIn("refusal", erreur)
+        self.assertEqual((kit.servis, kit.clos, lecture["cout_inconnu"]), (1, True, True))  # flux clos au premier message
+        self.assertEqual(lecture["refus"]["evenement"], "assistant.stop_reason")
+        self.assertNotIn("autre modèle", texte)
+        # artefact : message sous un autre modèle (dépense comptée à part, barème du relais)
+        kit = K([K.AssistantMessage([K.TextBlock("sous un autre modèle")], "claude-opus-4-8", usage=usage),
+                 K.ResultMessage("error_max_budget_usd", "budget dépassé", 4.66, is_error=True)])
+        texte, cout, statut, erreur, lecture = asyncio.run(AdaptateurClaudeSDK._executer(kit, "consigne", opts, 5))
+        self.assertEqual((statut, lecture["refus"]["modele_servi"], lecture["refus"]["modele_demande"]), ("refus", "claude-opus-4-8", "claude-opus-5-5"))
+        self.assertAlmostEqual(lecture["depense_modele_non_autorise_usd"], cout_usd("claude-opus-4-8", usage))
+        self.assertGreater(lecture["depense_modele_non_autorise_usd"], 0)
+        self.assertEqual(cout, lecture["depense_modele_non_autorise_usd"])
+        self.assertEqual(texte, "")
+        # artefact : événement système seul
+        kit = K([K.SystemMessage("model_refusal_fallback", {"original_model": "claude-opus-5-5", "fallback_model": "claude-opus-4-8"}),
+                 K.AssistantMessage([K.TextBlock("x")], "claude-opus-4-8")])
+        _, _, statut, _, lecture = asyncio.run(AdaptateurClaudeSDK._executer(kit, "consigne", opts, 5))
+        self.assertEqual((statut, lecture["refus"]["evenement"], lecture["refus"]["modele_servi"], kit.servis),
+                         ("refus", "system.model_refusal_fallback", "claude-opus-4-8", 1))
+        # dans la course : refus en passe 1 d'opus → arrêt propre, sortie à l'écart, manifeste de fin
+        c = self.cours()
+
+        class AdaptateurRefus(FauxAdaptateur):
+            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+                r = super().lancer(role, consigne, dossier, budget_usd, max_tours, modele)
+                if role == "proposeur_ideation" and dossier.endswith(os.path.join("opus", "passe-1")):
+                    return Resultat("", [], 4.66, "refus", "refus (R-764) : le modèle a rendu stop_reason = refusal",
+                                    refus={"motif": "le modèle a rendu stop_reason = refusal", "modele_demande": modele,
+                                           "modele_servi": "claude-opus-4-8", "evenement": "assistant.stop_reason"},
+                                    modele_servi="claude-opus-4-8", depense_modele_non_autorise_usd=4.66, cout_inconnu=True)
+                return r
+        ad = AdaptateurRefus({"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]},
+                             notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
+        with self.assertRaisesRegex(idn.CourseInterrompue, "refus \\(R-764\\)") as ctx:
+            c.lancer(ad, "r764")
+        self.assertNotIn("budget", str(ctx.exception).lower().replace("budget_moisson", ""))
+        sortie = os.path.join(self.tmp, "r764")
+        fin = json.loads(self.lire(os.path.join(sortie, "manifeste-fin.json")))["reglages"]
+        self.assertEqual(fin["statut_course"], {"statut": "refus", "role": "proposeur_ideation", "etiquette": "opus",
+                                                "modele_demande": "claude-opus-5-5", "modele_servi": "claude-opus-4-8"})
+        self.assertEqual(fin["depense_modele_non_autorise_usd"], 4.66)
+        self.assertIn("refus (R-764)", fin["erreur"])
+        self.assertNotIn("budget dépassé", fin["erreur"])
+        self.assertEqual(fin["refus_modele"][0]["modele_servi"], "claude-opus-4-8")
+        appel = [a for a in fin["journal"]["appels"] if a["etiquette"] == "opus"][0]
+        self.assertEqual((appel["statut"], appel["modele"], appel["modele_servi"], appel["depense_modele_non_autorise_usd"]),
+                         ("refus", "claude-opus-5-5", "claude-opus-4-8", 4.66))
+        ecart = os.path.join(sortie, "A-L-ECART-modele-non-autorise", "proposeurs", "opus")
+        self.assertTrue(os.path.isdir(os.path.join(ecart, "passe-1")))
+        self.assertTrue(os.path.isfile(os.path.join(ecart, "traces-passe-1", "reponse.md")))
+        self.assertFalse(os.path.exists(os.path.join(sortie, "proposeurs", "opus", "passe-1")))
+        self.assertFalse(os.path.exists(os.path.join(sortie, "proposeurs", "opus", "traces-passe-1")))
+        self.assertFalse([a for a in ad.appels if a["role"] == "juge_ideation"])
+        self.assertEqual(json.loads(self.lire(os.path.join(sortie, "fiches-validees.json"))), [])
+        # barrière 3 : le relais de clé
+        from essais.faux_sdk.amont_factice import AmontFactice
+        from essais.test_v6_relais_reel import appeler, lancer_relais
+        amont = AmontFactice()
+        self.addCleanup(amont.arreter)
+        journal = os.path.join(self.tmp, "journal-r764.jsonl")
+        proc, url, ligne = lancer_relais(amont.url, 1.0, journal, modeles_permis="claude-opus-5-5,claude-fable-5-1")
+        try:
+            self.assertIsNotNone(url, ligne)
+            self.assertIn("modèles permis : claude-opus-5-5, claude-fable-5-1", ligne)
+            statut, _, _ = appeler(url, "/v1/messages", {"model": "claude-opus-5-5", "messages": []})
+            self.assertEqual(statut, 200)
+            n = len(amont.requetes)
+            statut, _, octets = appeler(url, "/v1/messages", {"model": "claude-opus-4-8", "messages": []})
+            self.assertEqual(statut, 403)
+            self.assertEqual(json.loads(octets)["erreur"], "modèle non permis")
+            self.assertEqual(json.loads(octets)["modele_demande"], "claude-opus-4-8")
+            self.assertEqual(len(amont.requetes), n)  # aucun appel amont
+            statut, _, _ = appeler(url, "/v1/messages", {"model": "claude-opus-5-5-20261001", "messages": []})
+            self.assertEqual(statut, 403)  # noms exacts
+            statut, _, octets = appeler(url, "/relais/etat", None, methode="GET")
+            etat = json.loads(octets)
+            self.assertEqual((etat["refus_modele"], etat["modeles_permis"]), (2, ["claude-opus-5-5", "claude-fable-5-1"]))
+            self.assertEqual(etat["depense_usd"], round(cout_usd("claude-opus-5-5", {"input_tokens": 1000, "output_tokens": 200}), 6))
+            limite = time.time() + 3
+            while time.time() < limite:
+                with open(journal, encoding="utf-8") as f:
+                    lignes = [json.loads(l) for l in f if l.strip()]
+                if any(l.get("statut") == 403 for l in lignes):
+                    break
+                time.sleep(0.05)
+            refus = [l for l in lignes if l.get("statut") == 403]
+            self.assertEqual(refus[0]["modele"], "claude-opus-4-8")
+            self.assertIn("modèle non permis", refus[0]["motif"])
+        finally:
+            proc.kill()
+            proc.communicate(timeout=10)
+        proc, url, ligne = lancer_relais(amont.url, 1.0, journal + ".2", modeles_permis="")
+        try:
+            self.assertIsNotNone(url, ligne)
+            self.assertIn("AUCUN modèle permis", ligne)
+            statut, _, octets = appeler(url, "/v1/messages", {"model": "claude-opus-5-5", "messages": []})
+            self.assertEqual(statut, 403)
+            self.assertEqual((json.loads(octets)["erreur"], json.loads(octets)["modeles_permis"]), ("modèle non permis", []))
+        finally:
+            proc.kill()
+            proc.communicate(timeout=10)
+        proc, url, ligne = lancer_relais(amont.url, 1.0, journal + ".3", modeles_permis="proposeur_ideation=claude-opus-5-5")
+        self.assertIsNone(url)
+        self.assertIn("role=modele", ligne)
+        # le lanceur exige la liste exactement égale aux modèles de la course
+        lanceur = self.v41().lanceur()
+        budgets = {("juge_ideation", "claude-opus-5-5"): 4.0, ("juge_ideation", "claude-fable-5-1"): 7.0}
+        juges = [("a", "claude-opus-5-5"), ("b", "claude-fable-5-1")]
+        etat = {"plafond_usd": 40, "reserve_par_appel_usd": 4, "depense_usd": 0.0, "modeles_permis": ["claude-opus-5-5", "claude-fable-5-1"]}
+        lu = lanceur.verifier_relais(etat, 40.0, budgets, juges, modeles_attendus=["claude-opus-5-5", "claude-fable-5-1", "claude-opus-5-5"])
+        self.assertEqual(lu["modeles_permis"], ["claude-opus-5-5", "claude-fable-5-1"])
+        for permis in (["claude-opus-5-5"], ["claude-opus-5-5", "claude-fable-5-1", "claude-opus-4-8"], []):
+            with self.assertRaisesRegex(idn.CourseInterrompue, "R-764"):
+                lanceur.verifier_relais(dict(etat, modeles_permis=permis), 40.0, budgets, juges,
+                                        modeles_attendus=["claude-opus-5-5", "claude-fable-5-1"])
+        lu = lanceur.verifier_relais({"plafond_usd": 40, "reserve_par_appel_usd": 4}, 40.0, budgets, juges, modeles_attendus=["claude-opus-5-5"])
+        self.assertIn("muet", lu["modeles_permis"])  # relais antérieur à la v47 : dit, pas refusé
 
 
 if __name__ == "__main__":

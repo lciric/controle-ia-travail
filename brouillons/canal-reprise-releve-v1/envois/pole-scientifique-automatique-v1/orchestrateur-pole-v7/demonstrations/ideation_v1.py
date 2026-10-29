@@ -1,11 +1,14 @@
-"""Course d'idéation de l'organisme (v7, version 46) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 47) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
   juges scriptés notent par une règle fixe qui respecte le critère des témoins — répétition de la plomberie, du scellement et
   de la lecture ; ce n'est pas l'idéation ; les coûts sont **fictifs** (marqués au manifeste, jamais comptés comme réels) ;
 - `--moteur claude-sdk --url-relais http://127.0.0.1:PORT --confirmer-moteur-reel` (dépense, chez session-depot, sous un
-  GO cité) : vrais agents (Opus 5.5 et Fable 5.1 seuls), **aucun outil intégré** (`tools=[]` du kit, soit `--tools ''`),
+  GO cité) : vrais agents (Opus 5.5 et Fable 5.1 seuls), **aucun outil intégré** (`tools=[]` du kit, soit `--tools ''`) ;
+  v47 (R-764, barrière 3) : le relais de clé est lancé avec `--modeles-permis` égal **exactement** aux modèles des
+  proposeurs et des juges (`claude-opus-5-5,claude-fable-5-1` aux réglages du devis), le lanceur le vérifie à l'état du
+  relais avant tout contrôle,
   deux tours au plus, borne de temps par session, bac à sable exigé, clé tenue par le relais du noyau avec son propre
   plafond ; **appel de contrôle de bout en bout par modèle avant la course** (CL31-01), compté au journal ; toute session en
   erreur arrête la course et le lanceur rend un code ≠ 0.
@@ -91,6 +94,17 @@ l'ensemble des tours d'une passe par protocole, et de chaque session du kit), `-
 franchi : incident, arrêt) ; avertissement de budget à 80 % ; mesures de lecture au manifeste de fin ; citations vérifiées
 servies aux juges. Sans `--dossier-ferme`, la ligne de commande et les entrées de la v45 restent valides, inchangées.
 
+v47 (moissonneur, option (A) retenue par Lazar le 29 octobre 2026, 11:52 heure de Paris ; **en préparation : aucune moisson
+réelle ici, la première est un GO séparé chez session-depot**) : `--moisson frais|rejeu|aucune` (défaut `aucune` : course de
+la v46, consignes identiques octet pour octet) ; un tour de moisson par proposeur entre les passes (`--seconde-passe`
+obligatoire), session à part sous `--budget-moisson-usd-par-session` (0,5), `--tours-moisson` (1, borné à 2) ; sources
+arXiv et OpenAlex (métadonnées et résumés), servies par le noyau, seul client du relais de moisson
+(`pole/relais_moisson.py`, processus à part sur la boucle locale) ; `--url-relais-moisson URL` (frais ; avec le moteur réel :
+obligatoire, plus `--confirmer-moisson-reelle`) — avec le moteur simulé, sans adresse, un **relais factice en mémoire**
+est lancé sur la boucle locale (aucun réseau) ; `--cache-moisson DOSSIER` (rejeu : `noyau/moisson` d'une course passée,
+jamais le réseau) ; `--registre-bardeaux FICHIER` (registre scellé d'empreintes de bardeaux des textes de test, garde de
+fuite, règle 5). Les juges ne moissonnent jamais ; `--mesurer-consignes --moisson frais` compte la moisson au pire cas.
+
 La commande externe : consigne sur l'entrée standard, environnement minimal explicite (plus `PLAFOND_SESSION_USD`,
 `ROLE_POLE` et `--variable-transmise`, jamais un nom de clé), dernière ligne `{"texte": …, "cout_usd": …}` — coût
 **obligatoire, fini, strictement positif** ; sur un échec, le coût imprimé est compté, sinon le plafond de session l'est
@@ -127,12 +141,27 @@ BUDGET_EXTERNE_JUGE = 3.5
 
 class AdaptateurIdeationSimule:
     """Moteur simulé : fiches au gabarit tirées d'un catalogue, notes par règle fixe (les témoins sont reconnus à leur
-    nom, comme un juge honnête les reconnaîtrait à leur contenu), « OK » à l'appel de contrôle. Coûts fictifs."""
+    nom, comme un juge honnête les reconnaîtrait à leur contenu), « OK » à l'appel de contrôle. Coûts fictifs.
+    v47 : au tour de moisson, rend un bloc de demandes (deux requêtes admises, une refusable par la garde) ; en passe 2,
+    cite la première notice servie en antériorité MOISSONNE avec son étiquette."""
     nom = "simule-ideation"
-    COUT = {"proposeur_ideation": 0.40, "juge_ideation": 0.60}
+    COUT = {"proposeur_ideation": 0.40, "juge_ideation": 0.60, "moisson": 0.05}
 
     def __init__(self, graine):
         self.graine = graine
+
+    @staticmethod
+    def notices_servies(consigne):
+        """Les notices de la section « Moisson servie par le noyau » d'une consigne de passe 2 (données entre délimiteurs)."""
+        from pole.protocole_outils import DEBUT_DONNEES, FIN_DONNEES
+        m = re.search(re.escape(DEBUT_DONNEES) + r"\s*```json\n(.*?)\n```\s*" + re.escape(FIN_DONNEES), consigne, re.S)
+        if not m:
+            return []
+        try:
+            tours = json.loads(m.group(1))
+        except ValueError:
+            return []
+        return [r for t in tours for rep in t.get("reponses", []) for r in rep.get("resultats", [])]
 
     def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, racine_lecture=None,
                max_demandes_lecture=None, mode_lecture=None):
@@ -142,8 +171,14 @@ class AdaptateurIdeationSimule:
         rng = random.Random(graine_derivee(self.graine, role, dossier))
         if consigne.startswith(idn.APPEL_DE_CONTROLE_CONSIGNE):  # v40 (CL39-08) : contrôle à la taille réelle
             return Resultat("OK", [], 0.0, "ok")
+        if role == "proposeur_ideation" and consigne.startswith(idn.TITRE_TOUR_MOISSON):  # v47 : tour de moisson
+            demandes = [{"source": "arxiv", "requete": "monitor transfer diffuse sabotage probes", "resultats": 3},
+                        {"source": "openalex", "requete": "quickest change detection covert adversary", "resultats": 2},
+                        {"source": "arxiv", "requete": "voir https://exemple.org/page", "resultats": 5}]  # refusée (adresse)
+            return Resultat("```json\n" + json.dumps({"moisson": demandes}, ensure_ascii=False) + "\n```", [], self.COUT["moisson"], "ok")
         if role == "proposeur_ideation":
             n = rng.randint(2, 4)
+            notices = self.notices_servies(consigne)
             fiches = [{
                 "nom": f"Idée simulée {i + 1}", "type": rng.choice(idn.TYPES_FICHE),
                 "enonce": "Énoncé simulé, falsifiable par construction.",
@@ -158,6 +193,10 @@ class AdaptateurIdeationSimule:
                 "cout": {"nature": rng.choice(idn.NATURES_COUT), "ordre_de_grandeur": "simulé"},
                 "piege": "piège simulé", "cosmetique_si": "si rien ne bouge",
                 "anteriorite": [{"reference": "référence simulée", "statut": "SUPPOSE"}]} for i in range(n)]
+            if notices:  # v47 : la première notice servie, citée au statut MOISSONNE avec son étiquette telle quelle
+                r = notices[0]
+                fiches[0]["anteriorite"].append({"reference": f"{r['titre']}, {r['auteurs']}, {r['date'][:4]}, {r['identifiant']} "
+                                                              f"{r['etiquette']}", "statut": idn.STATUT_MOISSONNE})
             return Resultat("```json\n" + json.dumps({"fiches": fiches}, ensure_ascii=False) + "\n```", [],
                             self.COUT[role], "ok")
         if role == "juge_ideation":
@@ -406,6 +445,17 @@ def reglages_lecture(args, delai_session):
             "max_demandes_lecture": max_demandes_lecture(args)}
 
 
+def reglages_moisson(args, url_relais_moisson=None):
+    """v47 : arguments de la moisson passés au cœur — vides sans `--moisson` (course de la v46, consignes inchangées)."""
+    if args.moisson == "aucune":
+        return {}
+    return {"moisson": args.moisson, "tours_moisson": args.tours_moisson,
+            "budget_moisson_usd_par_session": args.budget_moisson_usd_par_session,
+            "url_relais_moisson": url_relais_moisson if args.moisson == "frais" else None,
+            "cache_moisson": args.cache_moisson if args.moisson == "rejeu" else None,
+            "registre_bardeaux": args.registre_bardeaux}
+
+
 def construire_analyseur():
     a = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument("sortie", nargs="?", help="dossier de sortie, absent (jamais écrasé)")
@@ -490,15 +540,34 @@ def construire_analyseur():
     a.add_argument("--max-demandes-lecture", type=int, default=None,
                    help="v46 : garde-fou anti-boucle par session de proposeur (défaut 1000) ; franchi : incident, arrêt de "
                         "la session ; avec --dossier-ferme seulement")
+    a.add_argument("--moisson", choices=idn.MODES_MOISSON, default="aucune",
+                   help="v47 : tour de moisson entre les passes (arXiv, OpenAlex ; métadonnées et résumés) — frais : relais "
+                        "de moisson interrogé, cache écrit ; rejeu : cache d'une course passée, jamais le réseau ; aucune "
+                        "(défaut) : course de la v46, consignes inchangées. Exige --seconde-passe")
+    a.add_argument("--url-relais-moisson", default=None,
+                   help="v47 : adresse locale du relais de moisson (--moisson frais) ; avec le moteur simulé, sans adresse, un "
+                        "relais factice en mémoire est lancé")
+    a.add_argument("--cache-moisson", default=None, help="v47 : dossier noyau/moisson d'une course passée (--moisson rejeu)")
+    a.add_argument("--budget-moisson-usd-par-session", type=float, default=idn.BUDGET_MOISSON_USD_PAR_SESSION_DEFAUT,
+                   help="v47 : plafond de chaque tour de moisson (session à part ; défaut 0,5, SUPPOSÉ)")
+    a.add_argument("--tours-moisson", type=int, default=idn.TOURS_MOISSON_DEFAUT,
+                   help=f"v47 : tours de moisson par proposeur (défaut 1, borné à {idn.TOURS_MOISSON_MAX})")
+    a.add_argument("--registre-bardeaux", default=None,
+                   help="v47 : registre scellé d'empreintes de bardeaux des textes de test (garde de fuite, règle 5)")
+    a.add_argument("--confirmer-moisson-reelle", action="store_true",
+                   help="v47 : avec --moteur claude-sdk --moisson frais seulement (première moisson réelle : GO séparé)")
     return a
 
 
-def verifier_relais(etat_relais, budget_total_usd, budgets, juges):
+def verifier_relais(etat_relais, budget_total_usd, budgets, juges, modeles_attendus=None):
     """v38 (CL37-03) et v40 (CL39-03) : le relais doit pouvoir servir la dernière session que le cœur lancera :
     plafond − réserve − dépense déjà faite ≥ total − plus petit plafond de juge. Rend l'état lu (pour le manifeste) ;
     lève CourseInterrompue sinon. Fonction séparée pour être éprouvée sans relais.
     v41 (CL40-05) : chaque champ présent est un réel fini ≥ 0, jamais un booléen (un NaN désarmait la garde) ; absent
-    (`None`), il n'est pas vérifié (relais muet sur ses plafonds) ; une dépense absente vaut 0."""
+    (`None`), il n'est pas vérifié (relais muet sur ses plafonds) ; une dépense absente vaut 0.
+    v47 (R-764, barrière 3) : si l'état porte `modeles_permis` (relais v47), la liste doit être **exactement** l'ensemble
+    des modèles Claude de la course (`modeles_attendus` : proposeurs et juges) — un modèle en plus serait une voie de repli,
+    un modèle en moins refuserait une session ; un relais muet (v46) est dit au manifeste."""
     from pole.pari_apparie import _fini
     for champ in ("plafond_usd", "reserve_par_appel_usd", "depense_usd"):
         v = etat_relais.get(champ)
@@ -508,7 +577,14 @@ def verifier_relais(etat_relais, budget_total_usd, budgets, juges):
     plafond_relais = etat_relais.get("plafond_usd")
     reserve = etat_relais.get("reserve_par_appel_usd")
     depense = float(etat_relais.get("depense_usd") or 0.0)
-    lu = {"plafond_usd": plafond_relais, "reserve_par_appel_usd": reserve, "depense_usd": depense}
+    lu = {"plafond_usd": plafond_relais, "reserve_par_appel_usd": reserve, "depense_usd": depense,
+          "modeles_permis": etat_relais.get("modeles_permis", "relais muet (antérieur à la v47) : barrière 3 absente")}
+    if modeles_attendus is not None and "modeles_permis" in etat_relais:  # v47 (R-764, barrière 3)
+        permis = etat_relais.get("modeles_permis")
+        if not isinstance(permis, list) or set(permis) != set(modeles_attendus):
+            raise idn.CourseInterrompue(f"relais : modèles permis {permis!r} ≠ modèles de la course {sorted(set(modeles_attendus))} "
+                                        "(R-764, barrière 3) : relancer le relais avec --modeles-permis exactement égal aux "
+                                        "modèles des proposeurs et des juges")
     if plafond_relais is not None and reserve is not None:
         plus_petit_juge = min(budgets[("juge_ideation", m)] for _, m in juges)
         if float(plafond_relais) - float(reserve) - depense < budget_total_usd - plus_petit_juge - 1e-9:
@@ -521,18 +597,19 @@ def verifier_relais(etat_relais, budget_total_usd, budgets, juges):
 def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
                               cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe, taille_max=None,
                               origine_taille="donnée", provision=0, n_controles_claude=None, n_controles_externes=None,
-                              garder_passes=False):
+                              garder_passes=False, url_relais_moisson=None):
     """v38 (CL37-04) → v42 : tous les réglages vérifiés AVANT tout appel de contrôle, avec le même contrôle du bras que
     celui que reçoit le cœur (`budget_controle`, CL40-03) et la garde de taille d'Argon (CL41-01).
     v43 (CL40-01, option c) : `n_controles_claude`, `n_controles_externes` — les seuls contrôles à jouer (les réussis d'une
-    tentative antérieure sont repris) ; par défaut, tous. Garde au prix `--prix-entree-usd-par-million-jetons`."""
+    tentative antérieure sont repris) ; par défaut, tous. Garde au prix `--prix-entree-usd-par-million-jetons`.
+    v47 : réglages de la moisson (`reglages_moisson`), tours de moisson comptés dans les sommes."""
     if n_controles_claude is None:
         n_controles_claude = len({m for _, m in proposeurs + juges})
     if n_controles_externes is None:
         n_controles_externes = len(prop_ext)
     return idn.verifier_reglages(
         dossier_ferme=args.dossier_ferme, outils_par_protocole=args.outils_par_protocole,  # v46
-        max_demandes_lecture=max_demandes_lecture(args),
+        max_demandes_lecture=max_demandes_lecture(args), **reglages_moisson(args, url_relais_moisson),  # v47
         liste_blanche=args.liste_blanche, question=args.question, pieces=args.piece, materiau=args.materiau,
         pieces_juge=args.piece_juge, temoins=args.temoins, taille_max_pieces=args.taille_max_pieces, max_tours=args.max_tours,
         attestation_materiau=args.attestation_materiau if (prop_ext and args.seconde_passe) else None,
@@ -601,7 +678,8 @@ def mesurer(args):
                               taille_max_pieces=args.taille_max_pieces, nombre_par_proposeur=args.nombre,
                               seconde_passe=args.seconde_passe, nombre_proposeurs=len(proposeurs) + len(prop_ext),
                               graine=args.graine, dossier_ferme=args.dossier_ferme,  # v46
-                              max_demandes_lecture=max_demandes_lecture(args))
+                              max_demandes_lecture=max_demandes_lecture(args),
+                              moisson=args.moisson, tours_moisson=args.tours_moisson)  # v47 : moisson au pire cas
     taille, origine, detail, provision = garde_de_la_course(args, budgets, prop_ext)
     prix = idn.prix_caractere(args.prix_entree_usd_par_million_jetons)
     ctrl = m["consigne_de_controle_externe"]
@@ -610,7 +688,7 @@ def mesurer(args):
     plafonds_passe = [budgets[("proposeur_ideation", mod)] for _, mod in prop_ext]
     taille_dem = min([idn.taille_max_consigne_par_defaut(args.budget_controle_externe_usd, 0, prix)]
                      + [idn.taille_max_consigne_par_defaut(p, prov_dem, prix) for p in plafonds_passe])
-    sortie = {"sans_appel": True, "consignes": m,
+    sortie = {"sans_appel": True, "consignes": m, "moisson": m.get("moisson"),  # v47
               "prix_entree_usd_par_million_jetons": args.prix_entree_usd_par_million_jetons, "prix_caractere_usd": prix,
               "garde_course": {"taille_max_caracteres": taille, "origine": origine, "detail": detail,
                                "provision_sortie_caracteres": provision, "consigne_de_controle": ctrl,
@@ -696,6 +774,41 @@ def principal(argv=None):
     if args.dossier_ferme and args.bras_rapporte_differe:
         a.error("--dossier-ferme ne vaut que pour la course : le bras (juge) ne lit rien, il reçoit les fiches et leurs "
                 "citations vérifiées")
+    # v47 : moisson — seconde passe obligatoire ; frais : adresse (moteur réel : obligatoire, plus la confirmation) ; rejeu : cache
+    if args.moisson == "aucune":
+        for nom, valeur in (("--url-relais-moisson", args.url_relais_moisson), ("--cache-moisson", args.cache_moisson),
+                            ("--registre-bardeaux", args.registre_bardeaux)):
+            if valeur:
+                a.error(f"{nom} ne se donne qu'avec --moisson frais ou rejeu")
+        if args.confirmer_moisson_reelle:
+            a.error("--confirmer-moisson-reelle ne se donne qu'avec --moisson frais et --moteur claude-sdk")
+    else:
+        if args.bras_rapporte_differe:
+            a.error("--moisson ne vaut que pour la course : le bras (juge) ne moissonne jamais")
+        if not args.seconde_passe:
+            a.error("--moisson exige --seconde-passe (les résultats sont servis dans la consigne de passe 2)")
+        if not 1 <= args.tours_moisson <= idn.TOURS_MOISSON_MAX:
+            a.error(f"--tours-moisson ∉ [1, {idn.TOURS_MOISSON_MAX}]")
+        if not (math.isfinite(args.budget_moisson_usd_par_session) and args.budget_moisson_usd_par_session > 0):
+            a.error("--budget-moisson-usd-par-session doit être un réel fini > 0")
+        if args.moisson == "frais":
+            if args.cache_moisson:
+                a.error("--cache-moisson ne se donne qu'avec --moisson rejeu")
+            if args.url_relais_moisson:
+                try:
+                    idn.valider_url_relais_moisson(args.url_relais_moisson)
+                except Exception as e:  # noqa: BLE001 — adresse refusée avant tout
+                    a.error(f"--url-relais-moisson : {e}")
+            if args.moteur == "claude-sdk" and not (args.url_relais_moisson and args.confirmer_moisson_reelle):
+                a.error("--moisson frais avec le moteur réel exige --url-relais-moisson et --confirmer-moisson-reelle (la "
+                        "première moisson réelle est un GO séparé)")
+            if args.moteur != "claude-sdk" and args.confirmer_moisson_reelle:
+                a.error("--confirmer-moisson-reelle ne se donne qu'avec --moteur claude-sdk")
+        else:
+            if args.url_relais_moisson or args.confirmer_moisson_reelle:
+                a.error("--moisson rejeu : jamais le réseau (ni --url-relais-moisson ni --confirmer-moisson-reelle)")
+            if not args.cache_moisson:
+                a.error("--moisson rejeu exige --cache-moisson (dossier noyau/moisson d'une course passée)")
     if args.mesurer_consignes:  # v43 (CL42-03) : sans dépense, sans appel, sans fichier
         if args.bras_rapporte_differe:
             a.error("--mesurer-consignes mesure les consignes d'une course à venir, pas le bras d'une course faite")
@@ -741,8 +854,11 @@ def principal(argv=None):
             signal.signal(sig, interrompre)
         except (ValueError, OSError):  # hors du fil principal
             pass
+    import contextlib
+    pile = contextlib.ExitStack()  # v47 : le relais de moisson factice en mémoire (moteur simulé) est arrêté à la sortie
     try:
-        return _principal(args)
+        with pile:
+            return _principal(args, pile)
     except KeyboardInterrupt as e:
         print(json.dumps({"arret": "interruption : " + str(e)[:200] + " ; session en cours comptée au plafond — contrôle compris "
                           "(v41) : course → manifeste de fin, ou tentative scellée dans SORTIE-controle si l'interruption "
@@ -758,7 +874,7 @@ def principal(argv=None):
         return 2
 
 
-def _principal(args):
+def _principal(args, pile=None):
     proposeurs, juges, juges_ext, prop_ext, budgets = roles_et_budgets(args)
 
     etat_bac = None
@@ -815,6 +931,24 @@ def _principal(args):
         raise idn.CourseInterrompue("--proposeur-externe exige --commande-externe avec le moteur réel")
     elif args.bras_rapporte_differe:
         raise idn.CourseInterrompue("--bras-rapporte-differe exige --commande-externe avec le moteur réel")
+
+    # v47 : relais de moisson — donné (`--url-relais-moisson`, le noyau seul client), ou, avec le moteur simulé sans adresse,
+    # un relais factice en mémoire sur la boucle locale (aucun réseau), arrêté à la sortie ; rejeu : aucun relais
+    url_moisson = None
+    if args.moisson == "frais" and not args.bras_rapporte_differe:
+        if args.url_relais_moisson:
+            url_moisson = idn.valider_url_relais_moisson(args.url_relais_moisson)
+            versions["moisson"] = {"relais": "donné (--url-relais-moisson) ; réel ou factice selon ce qui écoute", "url": url_moisson}
+        else:
+            from pole.moisson import RelaisMoissonFactice
+            relais_factice = RelaisMoissonFactice()
+            if pile is not None:
+                pile.callback(relais_factice.arreter)
+            url_moisson = relais_factice.url
+            versions["moisson"] = {"relais": "factice en mémoire (moteur simulé) : notices de démonstration, aucun réseau",
+                                   "url": url_moisson}
+    elif args.moisson == "rejeu":
+        versions["moisson"] = {"relais": "aucun (rejeu, jamais le réseau)", "cache": os.path.abspath(args.cache_moisson)}
 
     os.makedirs(os.path.dirname(sortie), exist_ok=True)
     if args.bras_rapporte_differe:
@@ -888,7 +1022,8 @@ def _principal(args):
                            identite_claude) for m in modeles}
     if prop_ext and reussis:
         texte_ext = verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
-                                              cout_tentatives_externe, budget_controle, True, True)["texte_controle_externe"]
+                                              cout_tentatives_externe, budget_controle, True, True,
+                                              url_relais_moisson=url_moisson)["texte_controle_externe"]
         for e, m in prop_ext:
             cles[f"externe:{e}"] = cle_reprise("proposeur_ideation", m, hashlib.sha256(
                 idn.consigne_de_controle(texte_ext).encode("utf-8")).hexdigest(), identite_externe)
@@ -903,7 +1038,8 @@ def _principal(args):
                                           cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe,
                                           taille_max if prop_ext else None, origine_taille, provision_taille,
                                           n_controles_claude=len(a_jouer_claude), n_controles_externes=len(a_jouer_externe),
-                                          garder_passes=True)  # v44 (CL43-02) : passe 1 gardée avant tout contrôle
+                                          garder_passes=True,  # v44 (CL43-02) : passe 1 gardée avant tout contrôle
+                                          url_relais_moisson=url_moisson)  # v47
     except idn.TailleConsigneRefusee as e:  # refus scellé, avant tout contrôle, rien payé, aucune tentative comptée
         from pole.outils import ecrire_json_scelle, manifeste
         os.makedirs(sortie_controle, exist_ok=True)
@@ -920,7 +1056,8 @@ def _principal(args):
                                               "nombre": args.nombre, "seconde_passe": args.seconde_passe,
                                               "garde_taille": verif["garde_taille"]}
     if lire_relais is not None:  # CL37-03 / CL39-03 : cohérence plafond, réserve, dépense déjà faite, total du cœur
-        versions["relais_au_depart"] = verifier_relais(lire_relais(), args.budget_total_usd, budgets, juges)
+        versions["relais_au_depart"] = verifier_relais(lire_relais(), args.budget_total_usd, budgets, juges,
+                                                       modeles_attendus=[m for _, m in proposeurs + juges])  # v47 (R-764)
     versions["tentatives_precedentes"] = tentatives
     versions["controles_repris"] = repris  # v43 (CL40-01, option c) : tentative, empreinte du fichier et de la consigne
     versions["motifs_reprise_controles"] = motifs_reprise  # v44 (CL43-03)
@@ -973,7 +1110,8 @@ def _principal(args):
                                     prix_caractere_usd=idn.prix_caractere(args.prix_entree_usd_par_million_jetons),
                                     controles_repris=repris, motifs_reprise_controles=motifs_reprise,  # v44 (CL43-03)
                                     budget_passe_2_externe_usd=args.budget_passe_2_externe_usd,  # v44 (CL43-01)
-                                    **reglages_lecture(args, delai_session))  # v46 : vide sans --dossier-ferme
+                                    **reglages_lecture(args, delai_session),  # v46 : vide sans --dossier-ferme
+                                    **reglages_moisson(args, url_moisson))  # v47 : vide sans --moisson
     except BaseException as e:  # v40 (CL39-02), v41 (CL40-02, CL40-03) : contrôle refusé, contrôle interrompu (plafond
         # compté) ou refus du cœur avant son manifeste de départ → tentative scellée avec ses coûts, relance calculée
         if os.path.exists(os.path.join(sortie, "manifeste-depart.json")):
@@ -1032,6 +1170,19 @@ def _principal(args):
              "temoins_ok": res["lecture"]["temoins"]["temoins_ok"],
              "cout_total_usd": round(res["journal"]["cout_total_usd"], 4),
              "cout_externe_usd": round(res["journal"]["cout_externe_usd"], 4), "cout_fictif": res["journal"]["cout_fictif"]}
+    if "moisson" in res["journal"]:  # v47 : tours de moisson, demandes par statut, MOISSONNE vérifiées (jamais aux juges)
+        m = res["journal"]["moisson"]
+        statuts = {}
+        for etat in m["par_proposeur"].values():
+            for t in etat["tours"]:
+                for s, n in (t.get("par_statut") or {}).items():
+                    statuts[s] = statuts.get(s, 0) + n
+        verif = m.get("verification_moissonnees") or {}
+        bilan["moisson"] = {"mode": m["mode"], "proposeurs_avec_tour": len(m["par_proposeur"]), "demandes_par_statut": statuts,
+                            "refus_durs_juges": len(m["refus_durs"]),
+                            "moissonnees_citees": sum(len(l) for l in verif.values()),
+                            "moissonnees_verifiees": sum(1 for l in verif.values() for x in l if x.get("verifiee")),
+                            "candidats_corpus": "candidats-corpus.json"}
     if res["en_attente_bras"]:
         bilan["en_attente_bras"] = res["lecture"]["bras_rapporte_differe"]
         bilan["classement"] = "aucun avant le bras (n° 118 point 1)"

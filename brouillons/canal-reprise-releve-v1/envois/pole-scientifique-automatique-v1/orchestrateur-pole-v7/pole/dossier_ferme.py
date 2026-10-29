@@ -14,8 +14,10 @@ d'une même page sont joints) ; à défaut, le saut de page (`\\f`) ; à défaut
 Ce module sert aussi, par **protocole**, les demandes d'un proposeur sans outil (Argon, et Claude sous
 `--outils-par-protocole`) : `{"demandes": [{"lire": "<chemin>", "pages": [a, b]}, {"chercher": "<motif>"}]}` ; une page
 servie à un proposeur est servie aux autres depuis un **cache partagé** (même texte, même empreinte, consigné) ; la
-demande `{"moissonner": …}` est reconnue et refusée (« moisson non disponible », v47). Il vérifie enfin les **citations**
-`[chemin, p.N]` des fiches (L7) : la page existe ; le passage cité entre guillemets juste avant s'y retrouve.
+demande `{"moissonner": …}` est reconnue et refusée : « moisson non disponible » sans `--moisson`, et sous `--moisson`
+(v47) « au tour de moisson seulement » (la moisson a son propre bloc, `pole/moisson.py`). Il vérifie enfin les
+**citations** `[chemin, p.N]` des fiches (L7) : la page existe ; le passage cité entre guillemets juste avant s'y
+retrouve. v47 : la lecture du bloc de demandes vit dans `pole/protocole_outils.py`, partagée avec la moisson.
 
 Bibliothèque standard seule ; aucune écriture hors de la copie demandée ; aucun réseau.
 """
@@ -41,7 +43,11 @@ TAILLE_MAX_LIGNE_TROUVEE = 300
 TAILLE_MIN_MOTIF, TAILLE_MAX_MOTIF = 2, 200
 SEUIL_AVERTISSEMENT_BUDGET = 0.8
 TYPES_DEMANDE = ("lire", "chercher", "moissonner")
-MOTIF_MOISSON = "moisson non disponible (v47)"
+MOTIF_MOISSON = "moisson non disponible (v47)"  # course sans `--moisson` : inchangé depuis la v46
+# v47 : sous `--moisson`, la moisson se demande au tour de moisson (entre les passes) par le bloc {"moisson": [...]},
+# jamais dans un tour de lecture du dossier fermé
+MOTIF_MOISSON_AU_TOUR = ("moisson : par le bloc {\"moisson\": [{\"source\": …, \"requete\": …, \"resultats\": …}]} au tour "
+                         "de moisson, entre les passes ; pas dans un tour de lecture")
 # Kit d'agent, outil Read : lignes lues par défaut quand `limit` n'est pas donné (SUPPOSÉ d'après la documentation de l'outil)
 LIGNES_READ_PAR_DEFAUT = 2000
 
@@ -315,15 +321,9 @@ def ecrire_index(dossier, entrees):
 
 def extraire_demandes(texte):
     """(demandes, motif) : la liste du dernier bloc JSON `{"demandes": [...]}` de la réponse, ou (None, None) s'il n'y en
-    a pas ; (None, motif) si le bloc est mal formé."""
-    from .outils import extraire_bloc_json
-    objet = extraire_bloc_json(texte, "demandes")
-    if objet is None:
-        return None, None
-    d = objet.get("demandes")
-    if not isinstance(d, list) or not all(isinstance(x, dict) for x in d):
-        return None, "bloc {demandes} mal formé : liste d'objets attendue"
-    return d, None
+    a pas ; (None, motif) si le bloc est mal formé. v47 : lecture partagée avec la moisson (`protocole_outils`)."""
+    from .protocole_outils import extraire_bloc_demandes
+    return extraire_bloc_demandes(texte, "demandes")
 
 
 class CachePages:
@@ -366,11 +366,13 @@ def _bornes_pages(pages):
     return (a, b), None
 
 
-def servir_demandes(dossier, cache, demandes, etiquette, passe, tour, mesures, taille_max=TAILLE_MAX_SERVIE_PAR_TOUR):
+def servir_demandes(dossier, cache, demandes, etiquette, passe, tour, mesures, taille_max=TAILLE_MAX_SERVIE_PAR_TOUR,
+                    moisson_active=False):
     """Sert les demandes d'un tour depuis le dossier fermé, rien d'autre ; rend la liste des réponses (une par demande,
     statut « servie » ou « refusée » avec motif). `mesures` (dict du proposeur et de la passe) reçoit les pages lues dans
     l'ordre, les recherches et les comptes. Au-delà de `taille_max` caractères servis dans le tour, une demande de
-    lecture est refusée « à redemander au tour suivant »."""
+    lecture est refusée « à redemander au tour suivant ». v47 : `moisson_active` change seulement le motif du refus
+    d'une demande `moissonner` (la moisson se demande au tour de moisson, par son propre bloc)."""
     reponses, servis = [], 0
     for d in demandes:
         mesures["demandes"]["total"] += 1
@@ -378,13 +380,13 @@ def servir_demandes(dossier, cache, demandes, etiquette, passe, tour, mesures, t
         if len(types) != 1:
             mesures["demandes"]["refusees"] += 1
             reponses.append({"demande": d, "statut": "refusée", "motif": "demande inconnue : un seul de lire, chercher "
-                             "(moissonner : non disponible)"})
+                             + ("(moissonner : au tour de moisson)" if moisson_active else "(moissonner : non disponible)")})
             continue
         t = types[0]
         if t == "moissonner":
             mesures["demandes"]["moissonner"] += 1
             mesures["demandes"]["refusees"] += 1
-            reponses.append({"demande": d, "statut": "refusée", "motif": MOTIF_MOISSON})
+            reponses.append({"demande": d, "statut": "refusée", "motif": MOTIF_MOISSON_AU_TOUR if moisson_active else MOTIF_MOISSON})
             continue
         if t == "lire":
             mesures["demandes"]["lire"] += 1

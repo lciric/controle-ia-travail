@@ -60,7 +60,8 @@ def _contient(chemin, motif):
 
 def lancer_relais(amont_url, journal, plafond=5.0):
     proc = subprocess.Popen([sys.executable, "-I", "-B", os.path.join(RACINE, "pole", "relais_reel.py"), "--port", "0",
-                             "--amont", amont_url, "--plafond-usd", str(plafond), "--journal", journal],
+                             "--amont", amont_url, "--plafond-usd", str(plafond), "--journal", journal,
+                             "--modeles-permis", "claude-opus-5-5,claude-fable-5-1"],  # v47 (R-764, barrière 3)
                             env={"PATH": os.environ.get("PATH", ""), "ANTHROPIC_API_KEY": CLE_FACTICE},
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     ligne = proc.stdout.readline()

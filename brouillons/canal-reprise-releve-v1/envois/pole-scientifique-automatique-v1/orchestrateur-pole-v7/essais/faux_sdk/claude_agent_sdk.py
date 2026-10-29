@@ -57,8 +57,13 @@ class TextBlock:
 
 
 class AssistantMessage:
-    def __init__(self, content):
-        self.content = content
+    def __init__(self, content, model=None, stop_reason=None, usage=None):
+        self.content, self.model, self.stop_reason, self.usage = content, model, stop_reason, usage
+
+
+class SystemMessage:
+    def __init__(self, subtype, data):
+        self.subtype, self.data = subtype, data
 
 
 class ResultMessage:
@@ -89,8 +94,11 @@ def _controler_options(options):
     if set(getattr(options, "allowed_tools", [])) != {"Read", "Write", "Edit", "Bash"}:
         raise ClaudeSDKError("outils autorisés inattendus")
     env = getattr(options, "env", None) or {}
-    if set(env) != {"ANTHROPIC_BASE_URL", "ANTHROPIC_API_KEY"}:
+    # v47 (R-764) : le point d'accès, le jeton factice, et les deux variables qui interdisent tout repli de modèle au kit
+    if set(env) != {"ANTHROPIC_BASE_URL", "ANTHROPIC_API_KEY", "CLAUDE_CODE_NO_MODEL_FALLBACK", "CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK"}:
         raise ClaudeSDKError("variables d'environnement de l'agent inattendues : " + ", ".join(sorted(env)))
+    if env["CLAUDE_CODE_NO_MODEL_FALLBACK"] != "true" or getattr(options, "fallback_model", "absent") is not None:
+        raise ClaudeSDKError("repli de modèle non interdit (R-764)")
     if not getattr(options, "model", None):
         raise ClaudeSDKError("modèle non précisé")
     bac = getattr(options, "sandbox", None) or {}
@@ -156,11 +164,18 @@ async def query(prompt, options):
     if cout is None:
         yield ResultMessage("error_during_execution", f"le relais a refusé l'appel (statut {statut})", 0.0, is_error=True)
         return
+    if os.environ.get("FAUX_SDK_REFUS") == role:  # v47 (R-764) : rejoue l'incident du 29 octobre 10:43 UTC
+        yield AssistantMessage([TextBlock("")], model=options.model, stop_reason="refusal")
+        yield SystemMessage("model_refusal_fallback", {"original_model": options.model, "fallback_model": "claude-opus-4-8"})
+        yield AssistantMessage([TextBlock("réponse sous un autre modèle")], model="claude-opus-4-8",
+                               usage={"input_tokens": 400000, "output_tokens": 20000})
+        yield ResultMessage("error_max_budget_usd", "budget dépassé", 4.66, is_error=True)
+        return
     resultat = _simulateur().lancer(role, prompt, options.cwd, options.max_budget_usd, options.max_turns, modele=options.model)
     texte = resultat.texte_final
     if role == "experimentateur" and re.search(r"[0-9a-f]{64}", texte) is None:
         texte += "\n(faux moteur : aucune empreinte dans la réponse simulée)"
-    yield AssistantMessage([TextBlock(texte)])
+    yield AssistantMessage([TextBlock(texte)], model=options.model, stop_reason="end_turn")
     sous_type = {"ok": "success", "budget_depasse": "error_max_budget_usd", "tours_epuises": "error_max_turns"}.get(
         resultat.statut, "error_during_execution")
     # Coût rendu : celui que le relais a réellement compté pour cet appel (le simulateur n'a pas de coût réel).

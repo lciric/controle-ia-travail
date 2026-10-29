@@ -72,7 +72,10 @@ class Options(CasAvecDossier):
         self.assertFalse(o["sandbox"]["allowUnsandboxedCommands"])
         for outil in ("WebFetch", "WebSearch", "Agent", "Task"):
             self.assertIn(outil, o["disallowed_tools"])
-        self.assertEqual(o["env"], {"ANTHROPIC_BASE_URL": RELAIS, "ANTHROPIC_API_KEY": JETON_FACTICE})
+        # v47 (R-764) : point d'accès et jeton factice, plus les deux variables qui interdisent tout repli de modèle au kit
+        self.assertEqual(o["env"], {"ANTHROPIC_BASE_URL": RELAIS, "ANTHROPIC_API_KEY": JETON_FACTICE,
+                                    "CLAUDE_CODE_NO_MODEL_FALLBACK": "true", "CLAUDE_CODE_DISABLE_REFUSAL_FALLBACK": "1"})
+        self.assertIsNone(o["fallback_model"])
         self.assertEqual(o["crochets"]["PreToolUse"][0]["crochet"].dossier, os.path.realpath(self.tmp))
 
     def test_options_incoherentes_refusees(self):
