@@ -61,6 +61,8 @@ RETRAITS = [
     ("livrables/anteriorite-niveau1-v1.zip", "archive qui contient les registres de travail (R-116)"),
     ("livrables/premier-rendu-v1.zip", "archive qui contient les registres de travail (R-116)"),
     ("livrables/controle-ia-v1.bundle", "paquet git qui contient les registres de travail (R-116)"),
+    ("brouillons/**/corpus-primaire-*/**", "corpus intégral des idées : ne quitte jamais le dépôt privé"),
+    ("livrables/lot-ideation-tournoi-*.zip", "lot de l'orchestrateur avec le corpus des idées : ne quitte jamais le dépôt privé"),
 ]
 # L'ancien paquet git (`livrables/controle-ia-v1.bundle`, cinq commits du 2026-10-04, recopié dans
 # `livrables/premier-rendu-v1.zip`) reste : aucun fichier de son historique n'est visé ici (garde des archives).
@@ -104,11 +106,21 @@ GARDES = ("docs/sources/invites-2606.08892-v1/invites/*.txt", "docs/sources/invi
 
 
 def correspond(chemin: str, motif: str) -> bool:
-    """Appariement par segment : `*` ne traverse pas les dossiers ; `/**` final vise tout le dossier."""
-    if motif.endswith("/**"):
+    """Appariement par segment : `*` ne traverse pas les dossiers ; `/**` final vise tout le dossier ; un segment `**`
+    au milieu vaut zéro, un ou plusieurs dossiers."""
+    if motif.endswith("/**") and "**" not in motif[:-3]:
         return chemin.startswith(motif[:-2])
-    c, m = chemin.split("/"), motif.split("/")
-    return len(c) == len(m) and all(fnmatch.fnmatchcase(a, b) for a, b in zip(c, m))
+    return _segments(chemin.split("/"), motif.split("/"))
+
+
+def _segments(c: list[str], m: list[str]) -> bool:
+    if not m:
+        return not c
+    if m[0] == "**":
+        if len(m) == 1:
+            return bool(c)                      # `/**` final : au moins un segment sous le dossier
+        return any(_segments(c[i:], m[1:]) for i in range(len(c) + 1))
+    return bool(c) and fnmatch.fnmatchcase(c[0], m[0]) and _segments(c[1:], m[1:])
 
 
 def motif_de(chemin: str) -> str | None:

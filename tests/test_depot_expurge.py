@@ -31,6 +31,24 @@ def test_appariement_par_segment():
     assert not de.correspond("donnees-bis/x", "donnees/**")
 
 
+def test_segment_double_etoile_au_milieu():
+    motif = "brouillons/**/corpus-primaire-*/**"
+    assert de.correspond("brouillons/corpus-primaire-v1/a.md", motif)                      # zéro dossier
+    assert de.correspond("brouillons/canal/envois/x/corpus-primaire-v2/sous/b.json", motif)
+    assert not de.correspond("brouillons/canal/corpus-primaire-v1", motif)                # le dossier seul, sans fichier
+    assert not de.correspond("brouillons/canal/corpus-secondaire-v1/a.md", motif)
+    assert not de.correspond("docs/corpus-primaire-v1/a.md", motif)
+
+
+def test_corpus_et_lots_de_tournoi_jamais_dans_la_copie():
+    """Le corpus intégral des idées ne quitte jamais le dépôt privé. Cas sains : une note voisine et le compagnon
+    `.sha256` du lot restent."""
+    assert de.motif_de("brouillons/canal-reprise-releve-v1/envois/p/corpus-primaire-v3/idee-001.md") is not None
+    assert de.motif_de("livrables/lot-ideation-tournoi-v47-v1.zip") is not None
+    assert de.motif_de("livrables/lot-ideation-tournoi-v47-v1.zip.sha256") is None
+    assert de.motif_de("brouillons/canal-reprise-releve-v1/envois/p/synthese-v1.md") is None
+
+
 def test_releve_de_gemini_jamais_dans_la_copie():
     """R-348 : la clé Vast.ai gardée par Lazar (N-038 (c)) est écrite en clair sous `gemini/` ; ce dossier ne passe
     jamais dans la copie expurgée. Cas sain : un fichier du programme reste."""
