@@ -1,4 +1,4 @@
-"""Course d'idéation de l'organisme (v7, version 43) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 44) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
@@ -73,6 +73,13 @@ par jeton). CL40-01 option (c) — à la relance après une tentative scellée, 
 modèle, même consigne, même commande ou même moteur et relais) ne sont pas rejoués : ils sont repris (`controles_repris`
 au manifeste de départ et au journal : tentative, empreinte du fichier, empreinte de la consigne), seuls les contrôles
 échoués ou non faits sont (re)payés, et `relancable` compte les seuls contrôles à refaire.
+v44 (contre-lecture CL10) : `--budget-passe-2-externe-usd` — plafond propre à la seconde passe d'Argon (défaut : le
+plafond de sa passe 1, `proposeur_ideation|<Argon>`, 2,5 par défaut), compté dans la somme externe (contrôle + passe 1 +
+passe 2 + juge + contrôle du bras) ; chaque passe d'Argon est gardée contre son propre plafond moins une provision de
+sortie (`idn.garde_passe_externe`), même avec `--taille-max-consigne-externe` (la plus petite des deux), la passe 1 avant
+tout contrôle ; à la relance, un contrôle Claude réussi n'est repris que si la dépense lue au relais n'a pas baissé depuis
+(sinon le relais a été relancé : rejoué) ; la relance reste bornée par les sommes **et** par `idn.MAX_TENTATIVES_BRAS`
+(3) tentatives de contrôle.
 
 La commande externe : consigne sur l'entrée standard, environnement minimal explicite (plus `PLAFOND_SESSION_USD`,
 `ROLE_POLE` et `--variable-transmise`, jamais un nom de clé), dernière ligne `{"texte": …, "cout_usd": …}` — coût
@@ -248,9 +255,49 @@ def controles_reussis(sortie_controle, tentatives):
                 reussis[lec["cle_reprise"]] = {"controle": nom, "repris_de_tentative": numero, "fichier": t["fichier"],
                                                "sha256_tentative": sha256_fichier(chemin),
                                                "consigne_sha256": lec.get("consigne_sha256"),
+                                               # v44 (CL43-03) : dépense lue au relais juste après ce contrôle
+                                               "relais_apres_depense_usd": (lec.get("relais_apres") or {}).get("depense_usd"),
                                                "cout_compte_usd_impute_par_cette_tentative": idn.cout_compte_controle(lec),
                                                "cle_reprise": lec["cle_reprise"]}
     return reussis
+
+
+def filtrer_reprises_claude(repris, lire_relais):
+    """v44 (CL43-03) : un contrôle Claude réussi n'est repris que si le relais n'a pas été relancé depuis — la dépense lue
+    maintenant au relais n'est pas plus basse que celle lue juste après ce contrôle (`relais_apres_depense_usd`). Relais
+    relancé (dépense plus basse), dépense non lue à la tentative, ou relais illisible maintenant : le contrôle est rejoué
+    (0,2 au plus, dans les sommes). Sans relais lisible (moteur simulé) : repris, comme en v43. Rend (reprises gardées,
+    motifs {contrôle: motif}), motifs écrits au manifeste de départ, au journal du cœur et à la tentative."""
+    from pole.pari_apparie import _fini
+    claude = [k for k in repris if not k.startswith("externe:")]
+    if not claude:
+        return dict(repris), {}
+    motifs = {}
+    if lire_relais is None:
+        return dict(repris), {k: "repris : moteur sans relais lisible (simulé)" for k in claude}
+    try:
+        actuelle = lire_relais().get("depense_usd")
+        actuelle = float(actuelle or 0.0) if (actuelle is None or _fini(actuelle)) else None
+    except Exception as e:  # noqa: BLE001 — relais illisible : rien n'est repris côté Claude
+        actuelle, erreur = None, f"{type(e).__name__} : {str(e)[:120]}"
+    else:
+        erreur = "dépense non finie"
+    gardes = dict(repris)
+    for k in claude:
+        avant = repris[k].get("relais_apres_depense_usd")
+        t = repris[k].get("repris_de_tentative")
+        if actuelle is None:
+            motifs[k] = f"rejoué : relais illisible maintenant ({erreur})"
+        elif avant is None or not _fini(avant):
+            motifs[k] = f"rejoué : dépense du relais non lue après ce contrôle à la tentative {t}"
+        elif actuelle < float(avant) - 1e-9:
+            motifs[k] = (f"rejoué : relais relancé depuis la tentative {t} (dépense lue {actuelle:.4f} < {float(avant):.4f} lue "
+                         "juste après ce contrôle)")
+        else:
+            motifs[k] = f"repris de la tentative {t} : dépense lue {actuelle:.4f} ≥ {float(avant):.4f} (relais non relancé)"
+            continue
+        del gardes[k]
+    return gardes, motifs
 
 
 def relance_possible(numero, verif, cout_claude, cout_externe, total_claude, total_externe, tolere_claude, tolere_externe,
@@ -263,8 +310,8 @@ def relance_possible(numero, verif, cout_claude, cout_externe, total_claude, tot
     comprise, est comptée), écrite dans le motif ; le second calcul **« relais relancé à neuf »** (dépense 0, devis point 4)
     est rendu à côté (`details=True` : troisième élément {relancable, motifs}) et nommé dans le motif s'il diffère."""
     motifs = []
-    if numero >= idn.MAX_TENTATIVES_BRAS:
-        motifs.append(f"{idn.MAX_TENTATIVES_BRAS} tentatives faites")
+    if numero >= idn.MAX_TENTATIVES_BRAS:  # v44 (CL43-05) : borne gardée, en plus des sommes
+        motifs.append(f"{idn.MAX_TENTATIVES_BRAS} tentatives faites (borne MAX_TENTATIVES_BRAS, en plus des sommes)")
     somme_c = verif["somme_claude"] + cout_claude
     if not tolere_claude and somme_c > total_claude + 1e-9:
         motifs.append(f"somme des plafonds Claude de la relance {somme_c:.4f} > total {total_claude}")
@@ -381,6 +428,9 @@ def construire_analyseur():
     a.add_argument("--delai-commande-s", type=float, default=1800.0, help="borne de temps de la commande externe (CL37-08)")
     a.add_argument("--budget-controle-externe-usd", type=float, default=2.5,
                    help="plafond de l'appel de contrôle du proposeur externe à la taille réelle de la consigne (CL37-01)")
+    a.add_argument("--budget-passe-2-externe-usd", type=float, default=None,
+                   help="v44 (CL43-01) : plafond de la seconde passe de chaque proposeur externe (défaut : le plafond de sa "
+                        "passe 1, proposeur_ideation|<modèle>) ; avec --proposeur-externe et --seconde-passe seulement")
     a.add_argument("--taille-max-consigne-externe", type=int, default=None,
                    help="v42 (CL41-01), v43 : taille maximale (caractères) de la plus grosse consigne d'Argon dans la course (sa "
                         "consigne de contrôle ; chaque passe aussi) ; au-delà, refus scellé avant tout appel, rien payé (défaut : "
@@ -440,7 +490,8 @@ def verifier_relais(etat_relais, budget_total_usd, budgets, juges):
 
 def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
                               cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe, taille_max=None,
-                              origine_taille="donnée", provision=0, n_controles_claude=None, n_controles_externes=None):
+                              origine_taille="donnée", provision=0, n_controles_claude=None, n_controles_externes=None,
+                              garder_passes=False):
     """v38 (CL37-04) → v42 : tous les réglages vérifiés AVANT tout appel de contrôle, avec le même contrôle du bras que
     celui que reçoit le cœur (`budget_controle`, CL40-03) et la garde de taille d'Argon (CL41-01).
     v43 (CL40-01, option c) : `n_controles_claude`, `n_controles_externes` — les seuls contrôles à jouer (les réussis d'une
@@ -461,7 +512,9 @@ def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_
         tolerer_somme_claude=tolere_claude, tolerer_somme_externe=tolere_externe,
         budget_controle_bras_usd=budget_controle, nombre_par_proposeur=args.nombre,
         taille_max_consigne_externe=taille_max, origine_taille_max=origine_taille, provision_sortie_caracteres=provision,
-        prix_caractere_usd=idn.prix_caractere(args.prix_entree_usd_par_million_jetons))
+        prix_caractere_usd=idn.prix_caractere(args.prix_entree_usd_par_million_jetons),
+        budget_passe_2_externe_usd=args.budget_passe_2_externe_usd,  # v44 (CL43-01)
+        garder_passes_externes=garder_passes)  # v44 (CL43-02) : passe 1 gardée avant tout contrôle
 
 
 def roles_et_budgets(args):
@@ -491,8 +544,10 @@ def garde_de_la_course(args, budgets, prop_ext):
     passe, provision de sortie déduite)."""
     if args.taille_max_consigne_externe is not None:
         return args.taille_max_consigne_externe, "option", "option --taille-max-consigne-externe", 0
-    taille, d = idn.taille_max_consigne_course_par_defaut(
-        args.budget_controle_externe_usd, [budgets[("proposeur_ideation", m)] for _, m in prop_ext], args.nombre,
+    taille, d = idn.taille_max_consigne_course_par_defaut(  # v44 (CL43-01) : la plus grosse consigne est celle de la passe 2
+        args.budget_controle_externe_usd, [idn.plafond_passe_externe(budgets, m, 2 if args.seconde_passe else 1,
+                                                                     args.budget_passe_2_externe_usd) for _, m in prop_ext],
+        args.nombre,
         idn.prix_caractere(args.prix_entree_usd_par_million_jetons))
     provision = next((s["provision_sortie_caracteres"] for s in d["sessions"] if s["session"] == d["retenue"]), 0)
     return taille, "defaut", d["detail"], provision
@@ -530,6 +585,30 @@ def mesurer(args):
                                    "motif": "demandée avec CL42-04 (sortie au rapport 5 de --nombre fiches à fiche_maximale()) ; "
                                             "non appliquée : au-dessus du plafond d'une passe, elle annule la garde"}},
               "garde_bras": {}}
+    # v44 (CL43-02) : gardes de chaque passe d'Argon (son plafond moins la provision ; la taille donnée s'il y en a une)
+    tdon = args.taille_max_consigne_externe
+    gp = {}
+    for e, mod in prop_ext:
+        p1 = idn.plafond_passe_externe(budgets, mod, 1)
+        t1, pv1, o1 = idn.garde_passe_externe(1, p1, args.nombre, prix, tdon)
+        gp[e] = {"passe_1": {"plafond_usd": p1, "consigne": m["consigne_passe_1"], "taille_max_caracteres": t1,
+                             "provision_sortie_caracteres": pv1, "origine": o1, "passerait": m["consigne_passe_1"] <= t1,
+                             "cout_entree_usd": round(m["consigne_passe_1"] * prix, 4),
+                             "cout_avec_provision_usd": round((m["consigne_passe_1"] + pv1) * prix, 4)}}
+        if args.seconde_passe:
+            p2 = idn.plafond_passe_externe(budgets, mod, 2, args.budget_passe_2_externe_usd)
+            c2 = m["consigne_passe_2_maximale"]
+            for nom_g, tf in (("passe_2_fiches_de_passe_1_au_plus_provisionnees", idn.TAILLE_FICHE_PROVISIONNEE_PASSE),
+                              ("passe_2_maximale", m["taille_fiche_maximale_servie"])):
+                t2, pv2, o2 = idn.garde_passe_externe(2, p2, args.nombre, prix, tdon, tf)
+                gp[e][nom_g] = {"plafond_usd": p2, "taille_fiche_provisionnee": tf, "taille_max_caracteres": t2,
+                                "provision_sortie_caracteres": pv2, "origine": o2}
+            gp[e]["passe_2_maximale"].update({"consigne": c2, "passerait": c2 <= gp[e]["passe_2_maximale"]["taille_max_caracteres"],
+                                              "cout_entree_usd": round(c2 * prix, 4),
+                                              "cout_avec_provision_usd": round((c2 + gp[e]["passe_2_maximale"]["provision_sortie_caracteres"]) * prix, 4)})
+            gp[e]["passe_2_fiches_de_passe_1_au_plus_provisionnees"]["consigne_max_admise"] = \
+                gp[e]["passe_2_fiches_de_passe_1_au_plus_provisionnees"]["taille_max_caracteres"]
+    sortie["gardes_passes_externes"] = gp
     provision_juge = idn.provision_sortie_juge_caracteres(m["fiches_au_juge_au_maximum"])
     for e, mod in juges_ext:
         if args.taille_max_consigne_externe_bras is not None:
@@ -563,6 +642,11 @@ def principal(argv=None):
     import math
     if not (math.isfinite(args.prix_entree_usd_par_million_jetons) and args.prix_entree_usd_par_million_jetons > 0):
         a.error("--prix-entree-usd-par-million-jetons doit être un réel fini > 0")  # v43 (CL42-04 b)
+    if args.budget_passe_2_externe_usd is not None:  # v44 (CL43-01)
+        if not (math.isfinite(args.budget_passe_2_externe_usd) and args.budget_passe_2_externe_usd > 0):
+            a.error("--budget-passe-2-externe-usd doit être un réel fini > 0")
+        if not (args.proposeur_externe and args.seconde_passe):
+            a.error("--budget-passe-2-externe-usd ne se donne qu'avec --proposeur-externe et --seconde-passe")
     if args.mesurer_consignes:  # v43 (CL42-03) : sans dépense, sans appel, sans fichier
         if args.bras_rapporte_differe:
             a.error("--mesurer-consignes mesure les consignes d'une course à venir, pas le bras d'une course faite")
@@ -723,8 +807,9 @@ def _principal(args):
         raise idn.CourseInterrompue(f"SORTIE existe déjà : {sortie} (jamais écrasée, R12)")
     tentatives = lire_tentatives_controle(sortie_controle)  # v40 (CL39-02) : contrôles déjà payés dans cette SORTIE-controle
     if len(tentatives) >= idn.MAX_TENTATIVES_BRAS:
-        raise idn.CourseInterrompue(f"{len(tentatives)} tentatives de contrôle déjà faites dans {sortie_controle} : plus de "
-                                    "relance sans un mot de Lazar (CL39-02)")
+        raise idn.CourseInterrompue(f"{len(tentatives)} tentatives de contrôle déjà faites dans {sortie_controle} : la relance "
+                                    f"est bornée par les sommes ET par {idn.MAX_TENTATIVES_BRAS} tentatives "
+                                    "(MAX_TENTATIVES_BRAS) ; plus de relance sans un mot de Lazar (CL39-02, CL43-05)")
     budget_controle = 0.2 if args.budget_controle_usd is None else args.budget_controle_usd  # devis v7 quinquies
     cout_tentatives_claude = sum(t["cout_claude_usd"] for t in tentatives)
     cout_tentatives_externe = sum(t["cout_externe_usd"] for t in tentatives)
@@ -758,13 +843,17 @@ def _principal(args):
             cles[f"externe:{e}"] = cle_reprise("proposeur_ideation", m, hashlib.sha256(
                 idn.consigne_de_controle(texte_ext).encode("utf-8")).hexdigest(), identite_externe)
     repris = {k: reussis[c] for k, c in cles.items() if c in reussis}
+    repris, motifs_reprise = filtrer_reprises_claude(repris, lire_relais)  # v44 (CL43-03)
+    if motifs_reprise:
+        print(json.dumps({"reprise_des_controles_claude": motifs_reprise}, ensure_ascii=False), file=sys.stderr)
     a_jouer_claude = [m for m in modeles if m not in repris]
     a_jouer_externe = [(e, m) for e, m in prop_ext if f"externe:{e}" not in repris]
     try:
         verif = verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
                                           cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe,
                                           taille_max if prop_ext else None, origine_taille, provision_taille,
-                                          n_controles_claude=len(a_jouer_claude), n_controles_externes=len(a_jouer_externe))
+                                          n_controles_claude=len(a_jouer_claude), n_controles_externes=len(a_jouer_externe),
+                                          garder_passes=True)  # v44 (CL43-02) : passe 1 gardée avant tout contrôle
     except idn.TailleConsigneRefusee as e:  # refus scellé, avant tout contrôle, rien payé, aucune tentative comptée
         from pole.outils import ecrire_json_scelle, manifeste
         os.makedirs(sortie_controle, exist_ok=True)
@@ -784,6 +873,7 @@ def _principal(args):
         versions["relais_au_depart"] = verifier_relais(lire_relais(), args.budget_total_usd, budgets, juges)
     versions["tentatives_precedentes"] = tentatives
     versions["controles_repris"] = repris  # v43 (CL40-01, option c) : tentative, empreinte du fichier et de la consigne
+    versions["motifs_reprise_controles"] = motifs_reprise  # v44 (CL43-03)
     numero_tentative = len(tentatives) + 1
     dossier_tentative = os.path.join(sortie_controle, f"tentative-{numero_tentative}")
     controle = {}
@@ -829,7 +919,8 @@ def _principal(args):
                                     origine_taille_max=("option --taille-max-consigne-externe"
                                                         if args.taille_max_consigne_externe is not None else None),
                                     prix_caractere_usd=idn.prix_caractere(args.prix_entree_usd_par_million_jetons),
-                                    controles_repris=repris)
+                                    controles_repris=repris, motifs_reprise_controles=motifs_reprise,  # v44 (CL43-03)
+                                    budget_passe_2_externe_usd=args.budget_passe_2_externe_usd)  # v44 (CL43-01)
     except BaseException as e:  # v40 (CL39-02), v41 (CL40-02, CL40-03) : contrôle refusé, contrôle interrompu (plafond
         # compté) ou refus du cœur avant son manifeste de départ → tentative scellée avec ses coûts, relance calculée
         if os.path.exists(os.path.join(sortie, "manifeste-depart.json")):
@@ -874,6 +965,7 @@ def _principal(args):
                 "claude": verif["somme_claude"], "externe": verif["somme_externe"]}, tolerances=versions["tolerances"],
             hypothese_relancable="relais gardé (sa dépense comptée)", relance_relais_relance_a_neuf=relais_a_neuf,
             controles_repris=repris, controles_a_refaire=a_refaire,  # v43 (CL40-01, option c)
+            motifs_reprise_controles=motifs_reprise,  # v44 (CL43-03)
             sommes_de_la_relance_hors_cette_tentative={"claude": verif_relance["somme_claude"],
                                                        "externe": verif_relance["somme_externe"]}))
         print(json.dumps({"tentative_scellee": chemin_t, "cout_claude_usd": round(cout_c, 6),

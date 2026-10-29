@@ -80,6 +80,18 @@ Version 43 (contre-lecture CL9 de session-depot sur la v42 ; choix fixés par se
 - CL42-07 : refus pour taille comptés par proposeur (journal, manifeste de fin) ;
 - CL42-03 : `mesurer_consignes`, tailles réelles des consignes sans aucun appel.
 
+Version 44 (contre-lecture CL10 de la v43 ; périmètre minimal fixé par session-depot pour lancer) :
+- CL43-01 : plafond propre à la **seconde passe** d'un proposeur externe (`budget_passe_2_externe_usd`, lanceur
+  `--budget-passe-2-externe-usd` ; défaut : le plafond de sa passe 1) ; la somme externe compte contrôle + passe 1 +
+  passe 2 + juge + contrôle du bras ;
+- CL43-02 : chaque passe d'un proposeur externe est gardée contre **son propre plafond moins une provision de sortie**
+  (`garde_passe_externe` : `nombre` fiches de `max(TAILLE_FICHE_PROVISIONNEE_PASSE, plus grande fiche admise de ce
+  proposeur à la passe précédente)` caractères au rapport 5), au prix donné, **même sous une taille donnée** (qui ne fait
+  que s'y ajouter : la plus petite des deux) ; la passe 1 est aussi gardée avant tout contrôle (`verifier_reglages`,
+  `garder_passes_externes`) ;
+- ajout de Lazar (10:09, heure de Paris) : `mesures_convergence` au manifeste de fin (distances entre versions d'une
+  fiche, sources citées, nouveauté), jamais servies aux juges ni au classement (N-053 : aucune sélection sur ces mesures).
+
 Ce que le noyau ne peut pas faire : garantir le niveau méthode (la garde **signale**, un humain lit **toutes** les fiches
 validées avant tout usage) ; vérifier une antériorité (R7) ; neutraliser le style d'un modèle devant un juge du même
 modèle (il le **mesure**, lectures par juge). Un juge d'une autre lignée est possible depuis la v33, en **bras rapporté**
@@ -170,6 +182,15 @@ PROVISION_SORTIE_PAR_FICHE = 12_000
 # justification, le JSON) — convention, aucun gabarit ne borne les notes ; 52 fiches servies → 104 000 caractères de
 # sortie, 520 000 caractères d'entrée équivalents au rapport 5 (1,3 dollar au prix prudent)
 PROVISION_SORTIE_PAR_NOTE = 2_000
+# v44 (CL43-02) : taille de fiche provisionnée pour la garde de chaque passe d'un proposeur externe — la passe 1 la prend
+# telle quelle (aucune fiche n'est encore connue) ; la passe 2 prend la plus grande de cette valeur et de la plus grande
+# fiche admise (servie) du même proposeur à la passe 1. 8 000 : l'exemple de CL10 (CL43-02), au-dessus des fiches réelles
+# relevées par CL8 (3 000 à 5 000) ; aux réglages (β) du devis (passe 1 à 2,5, passe 2 à 3,1, prix 8,3), la passe 2 est
+# refusée avant envoi dès que les fiches d'Argon dépassent ≈ 8 100 caractères servis (CL10 : dépassement réel au-delà de
+# ≈ 8 000). La garde par défaut de la COURSE (`taille_max_consigne_course_par_defaut`) garde, elle, la provision de
+# `PROVISION_SORTIE_PAR_FICHE` (inchangée).
+TAILLE_FICHE_PROVISIONNEE_PASSE = 8_000
+MOTIF_PAGES_LUES = "course sans outils de lecture"  # v44 : `pages_lues` des mesures de convergence, forme du tour (c)
 
 
 class FicheIdeationInvalide(ValueError):
@@ -989,6 +1010,146 @@ def garde_taille_consigne(quoi, taille, taille_max, origine, provision_caractere
     return details
 
 
+def exiger_budget_passe_2(valeur):
+    """v44 (CL43-01) : plafond de la seconde passe d'un proposeur externe — None (celui de sa passe 1) ou réel fini > 0."""
+    if valeur is not None and (not _fini(valeur) or valeur <= 0):
+        raise CourseInterrompue(f"budget_passe_2_externe_usd : réel fini > 0 (reçu {valeur!r})")
+    return None if valeur is None else float(valeur)
+
+
+def plafond_passe_externe(budgets, modele, numero, budget_passe_2_externe_usd=None):
+    """v44 (CL43-01) : plafond de la passe `numero` d'un proposeur externe — passe 2 : `budget_passe_2_externe_usd` s'il
+    est donné, sinon le plafond `proposeur_ideation` du modèle (celui de la passe 1, comme en v43)."""
+    if numero == 2 and budget_passe_2_externe_usd is not None:
+        return float(budget_passe_2_externe_usd)
+    return budgets[("proposeur_ideation", modele)]
+
+
+def garde_passe_externe(numero, plafond_usd, nombre, prix=PRIX_CARACTERE_PRUDENT_USD, taille_donnee=None,
+                        taille_fiche=TAILLE_FICHE_PROVISIONNEE_PASSE, origine_donnee="donnée (--taille-max-consigne-externe)"):
+    """v44 (CL43-02) : garde de taille d'une passe d'un proposeur externe — son propre plafond / prix moins la provision
+    de sortie (`nombre` fiches de `taille_fiche` caractères au rapport `RAPPORT_SORTIE_ENTREE_PRUDENT`), et, si une taille
+    est donnée, la plus petite des deux (la taille donnée ne désarme plus la provision : CL43-02). Rend (taille max,
+    provision, origine). Réglages (β) : passe 1, 2,5 à 8,3 → 1 204 819 − 320 000 = 884 819 ; passe 2, 3,1 → 1 493 975 −
+    320 000 = 1 173 975 (fiches de passe 1 ≤ 8 000), − 358 000 = 1 135 975 (fiches de 8 950)."""
+    prov = provision_sortie_caracteres(nombre, int(taille_fiche))
+    propre = taille_max_consigne_par_defaut(plafond_usd, prov, prix)
+    origine = (f"plafond de cette passe {plafond_usd} / prix {prix:.4e} dollar par caractère − provision de sortie {prov} "
+               f"caractères ({nombre} fiches de {int(taille_fiche)} au rapport {RAPPORT_SORTIE_ENTREE_PRUDENT:g}"
+               + (", plus grande fiche admise de la passe 1 comprise" if numero == 2 else "") + ")")
+    if taille_donnee is not None and taille_donnee < propre:
+        return taille_donnee, prov, f"{origine_donnee} (sous la garde propre : {origine} = {propre})"
+    return propre, prov, origine + (f" (sous la taille {origine_donnee} {taille_donnee})" if taille_donnee is not None else "")
+
+
+# --- v44 : mesures de convergence (ajout de Lazar, 29 octobre 10:09 heure de Paris) -------------------------------------
+# Calculées par l'orchestrateur sur les textes seuls, écrites au manifeste de fin seulement : jamais servies aux juges, ni
+# au classement, ni à aucune sélection (N-053).
+MOTIF_SOURCE = re.compile(r"(?i)\barxiv\s*:\s*(\d{4}\.\d{4,5})(?:v\d+)?|\[\s*p\.\s*(\d+)\s*\]")
+
+
+def texte_fiche(fiche):
+    """Le texte d'une fiche (ses chaînes feuilles, vue servie), joint par des retours à la ligne."""
+    return "\n".join(feuilles_texte(vue_servie(fiche)))
+
+
+def sources_citees(texte):
+    """Identifiants de sources cités : `arxiv:NNNN.NNNNN` (version retirée) et pages `[p.N]`."""
+    return {f"arxiv:{a}" if a else f"[p.{p}]" for a, p in MOTIF_SOURCE.findall(texte)}
+
+
+def _distance_edition(a, b):
+    """1 − rapport de `difflib.SequenceMatcher` sur les mots du texte (0 : identiques)."""
+    import difflib
+    if a == b:
+        return 0.0
+    return round(1.0 - difflib.SequenceMatcher(None, a.split(), b.split()).ratio(), 6)
+
+
+def _distance_jaccard(a, b):
+    union = a | b
+    return round(1.0 - len(a & b) / len(union), 6) if union else 0.0
+
+
+def _part_pieces_citees(texte, pieces):
+    """Part des pièces servies citées : nom de fichier ou nom sans extension présent dans le texte, ou un identifiant
+    arXiv de la pièce cité par la fiche."""
+    if not pieces:
+        return None
+    bas = texte.lower()
+    sources = sources_citees(texte)
+    n = 0
+    for nom, t, _ in pieces:
+        racine = os.path.splitext(nom)[0].lower()
+        if nom.lower() in bas or (len(racine) >= 3 and racine in bas) \
+                or ({s for s in sources_citees(t) if s.startswith("arxiv:")} & sources):
+            n += 1
+    return round(n / len(pieces), 6)
+
+
+def mesures_convergence(passe1, passe2, servies_passe_2, pieces, proposeurs):
+    """v44 : par proposeur → par fiche de passe 1 (et par fiche de passe 2 sans antécédent) : version de passe 2
+    (appariement : même nom, sinon le texte le plus proche, une version au plus par fiche), distance d'édition, distance de
+    Jaccard des sources, sources citées en passe 1 et 2, sources nouvelles en passe 2 (absentes de la fiche de passe 1 et
+    des fiches servies à ce proposeur), part des pièces servies citées ; `pages_lues` nul (course sans outils)."""
+    import difflib
+    par = {}
+    for etiquette, _ in proposeurs:
+        f1s, f2s = list(passe1.get(etiquette, [])), list(passe2.get(etiquette, []))
+        deja_servies = set()
+        for f in servies_passe_2.get(etiquette, []):
+            deja_servies |= sources_citees("\n".join(feuilles_texte(f)))
+        libres = list(range(len(f1s)))
+        version = {}
+        for j, f2 in enumerate(f2s):
+            if not libres:
+                break
+            nom2 = f2["nom"].strip().lower()
+            meme = [i for i in libres if f1s[i]["nom"].strip().lower() == nom2]
+            if meme:
+                i, mode = meme[0], "même nom"
+            else:
+                t2 = texte_fiche(f2).split()
+                i = max(libres, key=lambda k: difflib.SequenceMatcher(None, texte_fiche(f1s[k]).split(), t2).quick_ratio())
+                mode = "texte le plus proche"
+            libres.remove(i)
+            version[i] = (j, mode)
+        lignes = {}
+        for i, f1 in enumerate(f1s):
+            t1 = texte_fiche(f1)
+            s1 = sources_citees(t1)
+            ligne = {"nom": f1["nom"], "identifiant_passe_1": f1["identifiant_auteur"], "identifiant_passe_2": None,
+                     "appariement": None, "distance_edition": None, "distance_jaccard_sources": None,
+                     "sources_passe_1": len(s1), "sources_passe_2": None, "sources_nouvelles_passe_2": None,
+                     "part_pieces_citees_passe_1": _part_pieces_citees(t1, pieces), "part_pieces_citees_passe_2": None,
+                     "pages_lues": None, "motif_pages_lues": MOTIF_PAGES_LUES}
+            if i in version:
+                j, mode = version[i]
+                t2 = texte_fiche(f2s[j])
+                s2 = sources_citees(t2)
+                ligne.update({"identifiant_passe_2": f2s[j]["identifiant_auteur"], "appariement": mode,
+                              "distance_edition": _distance_edition(t1, t2), "distance_jaccard_sources": _distance_jaccard(s1, s2),
+                              "sources_passe_2": len(s2), "sources_nouvelles_passe_2": len(s2 - s1 - deja_servies),
+                              "part_pieces_citees_passe_2": _part_pieces_citees(t2, pieces)})
+            lignes[f1["identifiant_auteur"]] = ligne
+        apparies = {j for j, _ in version.values()}
+        for j, f2 in enumerate(f2s):
+            if j not in apparies:
+                t2 = texte_fiche(f2)
+                s2 = sources_citees(t2)
+                lignes[f2["identifiant_auteur"]] = {
+                    "nom": f2["nom"], "identifiant_passe_1": None, "identifiant_passe_2": f2["identifiant_auteur"],
+                    "appariement": "aucune version de passe 1", "distance_edition": None, "distance_jaccard_sources": None,
+                    "sources_passe_1": None, "sources_passe_2": len(s2), "sources_nouvelles_passe_2": len(s2 - deja_servies),
+                    "part_pieces_citees_passe_1": None, "part_pieces_citees_passe_2": _part_pieces_citees(t2, pieces),
+                    "pages_lues": None, "motif_pages_lues": MOTIF_PAGES_LUES}
+        par[etiquette] = lignes
+    return {"regle": "textes seuls, calculés par l'orchestrateur ; jamais servis aux juges ni au classement (N-053) ; "
+                     "distance d'édition = 1 − rapport de difflib.SequenceMatcher sur les mots ; Jaccard sur les sources "
+                     "(arxiv:…, [p.N]) ; appariement : même nom, sinon texte le plus proche",
+            "pages_lues": None, "motif_pages_lues": MOTIF_PAGES_LUES, "par_proposeur": par}
+
+
 def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_juge=(), temoins=None,
                       taille_max_pieces=TAILLE_MAX_PIECES, attestation_materiau=None, budgets=None, budget_total_usd=0.0,
                       budget_externe_usd=0.0, proposeurs=(), juges=(), proposeurs_externes=(), juges_externes=(),
@@ -996,7 +1157,8 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                       tolerer_somme_plafonds=False, budget_controle_bras_usd=0.2, max_tours=MAX_TOURS_IDEATION,
                       nombre_par_proposeur=8, tolerer_somme_claude=False, tolerer_somme_externe=False,
                       taille_max_consigne_externe=None, origine_taille_max="donnée", provision_sortie_caracteres=0,
-                      prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD):
+                      prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD, budget_passe_2_externe_usd=None,
+                      garder_passes_externes=False):
     """v38 (CL37-04) : tout ce que la course refuserait, vérifié AVANT le premier appel de contrôle, sans rien écrire ni
     dépenser : liste blanche et pièces (empreintes, zones interdites, tailles), témoins, attestation du matériau, plafonds
     finis, étiquettes, somme des plafonds (passes et contrôles prévus compris) contre les totaux. Rend les pièces lues
@@ -1008,7 +1170,12 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     `taille_fiche_maximale` (CL41-02) ; avec `taille_max_consigne_externe`, **garde de taille** (CL41-01) : une consigne de
     contrôle externe plus grosse lève `TailleConsigneRefusee`, avant tout appel.
     v43 (CL42-01) : `provision_sortie_caracteres` (celle que la garde par défaut a déduite) et `prix_caractere_usd` (CL42-04 b)
-    sont écrits au détail."""
+    sont écrits au détail.
+    v44 (CL43-01) : `budget_passe_2_externe_usd` (plafond de la passe 2 d'un proposeur externe ; défaut : celui de sa passe
+    1) entre dans la somme externe ; (CL43-02) avec `garder_passes_externes`, la consigne de **passe 1** de chaque
+    proposeur externe est gardée ici, avant tout appel, contre `garde_passe_externe` (son plafond moins la provision, et la
+    taille donnée) : `TailleConsigneRefusee` sans dépense ; rendu dans `garde_passe_1`."""
+    budget_passe_2_externe_usd = exiger_budget_passe_2(budget_passe_2_externe_usd)
     if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
             or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
         raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r}")
@@ -1045,7 +1212,8 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     somme_claude = cout_controles_prevu_usd + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
         + sum(budgets[("juge_ideation", m)] for _, m in juges)
     somme_externe = cout_controles_externes_prevu_usd \
-        + passes * sum(budgets[("proposeur_ideation", m)] for _, m, *_ in proposeurs_externes) \
+        + sum(plafond_passe_externe(budgets, m, n, budget_passe_2_externe_usd)  # v44 (CL43-01) : passe 2 à son plafond
+              for _, m, *_ in proposeurs_externes for n in range(1, passes + 1)) \
         + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes) \
         + budget_controle_bras_usd * len(list(juges_externes))  # v40 (CL39-01) : le contrôle du bras compte
     if not tolere_claude and somme_claude > budget_total_usd + 1e-9:
@@ -1068,7 +1236,15 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
         garde = garde_taille_consigne("consigne de contrôle du proposeur externe (sa plus grosse consigne)", taille_controle,
                                       exiger_taille_max_consigne(taille_max_consigne_externe), origine_taille_max,
                                       provision_sortie_caracteres, prix_caractere_usd)
-    return {"texte_pieces": texte_pieces, "texte_controle_externe": texte_controle,
+    garde_passe_1 = {}
+    if garder_passes_externes and proposeurs_externes:  # v44 (CL43-02) : la passe 1 est connue : gardée avant tout appel
+        passe1 = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1])
+        for e, m, *_ in proposeurs_externes:
+            tmax, prov, origine = garde_passe_externe(1, plafond_passe_externe(budgets, m, 1), nombre_par_proposeur,
+                                                      prix_caractere_usd, taille_max_consigne_externe)
+            garde_passe_1[e] = garde_taille_consigne(f"consigne de la passe 1 du proposeur externe {e!r}", len(passe1), tmax,
+                                                     origine, prov, prix_caractere_usd)
+    return {"texte_pieces": texte_pieces, "garde_passe_1": garde_passe_1, "texte_controle_externe": texte_controle,
             "taille_consigne_controle_externe": taille_controle, "garde_taille": garde,
             "taille_fiche_maximale": taille_servie(fiche_maximale()), "taille_max_fiche_servie": None,  # v43 : retirée
             "tailles": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
@@ -1126,8 +1302,17 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                       taille_max_pieces=TAILLE_MAX_PIECES, cout_externe_deja_engage_usd=0.0, tolerer_somme_plafonds=False,
                       budget_controle_bras_usd=0.2, tolerer_somme_claude=False, tolerer_somme_externe=False,
                       taille_max_consigne_externe=None, garder_sessions_externes=False, origine_taille_max=None,
-                      prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD, controles_repris=None):
-    """Course d'idéation v43 (v36 : Argon à poids égal ; v37 à v43 : relectures CL4 à CL9).
+                      prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD, controles_repris=None,
+                      budget_passe_2_externe_usd=None, motifs_reprise_controles=None):
+    """Course d'idéation v44 (v36 : Argon à poids égal ; v37 à v44 : relectures CL4 à CL10).
+
+    v44 (CL43-01) : `budget_passe_2_externe_usd`, plafond propre à la passe 2 d'un proposeur externe (défaut : celui de sa
+    passe 1), compté dans la somme externe et donné à la session. (CL43-02) : chaque passe d'un proposeur externe est
+    gardée avant son envoi par `garde_passe_externe` — son propre plafond moins la provision de sortie (passe 2 : fiches à
+    la plus grande de `TAILLE_FICHE_PROVISIONNEE_PASSE` et de sa plus grande fiche admise de passe 1), et la taille donnée
+    s'il y en a une (la plus petite des deux) ; jouée quand une taille est donnée ou `garder_sessions_externes`.
+    (CL43-03) `motifs_reprise_controles` : motifs de reprise ou de rejeu des contrôles (lanceur), au journal. Ajout de
+    Lazar : `mesures_convergence` au manifeste de fin.
 
     v43 (CL42-01) : chaque session de proposeur externe (passe 1, passe 2) est **gardée avant son envoi**, sans dépense :
     contre `taille_max_consigne_externe` s'il est donné (`--taille-max-consigne-externe`), sinon, avec
@@ -1179,6 +1364,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                      ("budget_controle_bras_usd", budget_controle_bras_usd)):  # v41 (CL40-05)
         _exiger_somme(nom_b, b)
     _exiger_plafonds(budgets)
+    budget_passe_2_externe_usd = exiger_budget_passe_2(budget_passe_2_externe_usd)  # v44 (CL43-01)
     if taille_max_consigne_externe is not None:  # v43 (CL42-01)
         exiger_taille_max_consigne(taille_max_consigne_externe)
     if not _fini(prix_caractere_usd) or prix_caractere_usd <= 0:  # v43 (CL42-04 b)
@@ -1215,13 +1401,15 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     passes = 2 if seconde_passe else 1
     somme_claude = float(cout_deja_engage_usd) + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
         + sum(budgets[("juge_ideation", m)] for _, m in juges)
-    somme_externe = float(cout_externe_deja_engage_usd) + passes * sum(budgets[("proposeur_ideation", m)]
-                                                                       for _, m, _ in proposeurs_externes) \
+    somme_externe = float(cout_externe_deja_engage_usd) \
+        + sum(plafond_passe_externe(budgets, m, n, budget_passe_2_externe_usd)  # v44 (CL43-01)
+              for _, m, _ in proposeurs_externes for n in range(1, passes + 1)) \
         + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes) \
         + budget_controle_bras_usd * len(juges_externes)  # v40 (CL39-01)
     sommes = {"claude": round(somme_claude, 6), "total_claude": float(budget_total_usd),
               "externe_avec_controle_du_bras": round(somme_externe, 6), "total_externe": float(budget_externe_usd),
               "budget_controle_bras_usd": float(budget_controle_bras_usd), "toleree": tolere_claude or tolere_externe,
+              "budget_passe_2_externe_usd": budget_passe_2_externe_usd,  # v44 (CL43-01) : None = celui de la passe 1
               "toleree_claude": tolere_claude, "toleree_externe": tolere_externe}
     if not tolere_claude and somme_claude > budget_total_usd + 1e-9:
         raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} > total {budget_total_usd} : la course "
@@ -1254,10 +1442,11 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                "gardes_taille_sessions": [],
                # v43 (CL40-01, option c) : contrôles réussis d'une tentative antérieure, repris sans être rejoués
                "controles_repris": dict(controles_repris or {}),
+               "motifs_reprise_controles": dict(motifs_reprise_controles or {}),  # v44 (CL43-03)
                "refus_pour_taille_par_proposeur": {e: dict({f"passe-{n}": 0 for n in ((1, 2) if seconde_passe else (1,))},
                                                            total=0) for e, _ in tous_proposeurs}}
     externes_adapt = {e: a for e, _, a in proposeurs_externes}
-    provision_sessions = provision_sortie_caracteres(nombre_par_proposeur)
+    passe1, passe2, servies_passe_2 = {}, {}, {}  # v44 : lus aussi par les mesures de convergence du manifeste de fin
 
     from .adaptateurs import reglages_kit_par_role
     # v42 (CL41-06) : le manifeste de départ est écrit dans un dossier provisoire, renommé en SORTIE ensuite — une
@@ -1298,7 +1487,9 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             grille=grille(bool(pieces_juge_lues)), budget_total_usd=budget_total_usd,
             budgets_par_session={f"{r}|{m}": v for (r, m), v in budgets.items()},
             taille_max_fiche_servie=None, taille_fiche_maximale_servie=taille_servie(fiche_maximale()),  # v43 : borne retirée
-            controles_repris=dict(controles_repris or {}))
+            controles_repris=dict(controles_repris or {}),
+            budget_passe_2_externe_usd=budget_passe_2_externe_usd,  # v44 (CL43-01)
+            motifs_reprise_controles=dict(motifs_reprise_controles or {}))  # v44 (CL43-03)
         ecrire_json_scelle(os.path.join(provisoire, "manifeste-depart.json"), depart)
         if os.path.exists(sortie):
             raise FileExistsError(errno.EEXIST, "SORTIE existe déjà (jamais écrasée, R12)", sortie)
@@ -1308,13 +1499,18 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         raise
 
     def ecrire_fin(classement=None, lecture=None, erreur=None):
+        try:  # v44 (ajout de Lazar) : mesures de convergence, manifeste de fin seulement ; un échec est écrit, jamais tu
+            convergence = mesures_convergence(passe1, passe2, servies_passe_2, pieces_lues, tous_proposeurs)
+        except Exception as e:  # noqa: BLE001 — mesure d'information : elle n'arrête pas la course, son échec est dit
+            convergence = {"erreur": type(e).__name__ + " : " + caviarder(str(e))[0][:300]}
         ecrire_json_scelle(os.path.join(sortie, "manifeste-fin.json"), manifeste(
             phase="fin", horodatage=horodatage, graine=graine, moteur=moteur, journal=journal, erreur=erreur,
             lecture=lecture, nombre_lignes_classement=len(classement or []), en_attente_bras=bool(juges_externes),
-            refus_pour_taille_par_proposeur=journal["refus_pour_taille_par_proposeur"]))  # v43 (CL42-07)
+            refus_pour_taille_par_proposeur=journal["refus_pour_taille_par_proposeur"],  # v43 (CL42-07)
+            mesures_convergence=convergence))
 
-    def lancer(role, etiquette, modele, consigne, dossier, adaptateur=adaptateur, externe=False):
-        plafond = budgets[(role, modele)]
+    def lancer(role, etiquette, modele, consigne, dossier, adaptateur=adaptateur, externe=False, plafond=None):
+        plafond = budgets[(role, modele)] if plafond is None else plafond  # v44 (CL43-01) : passe 2 externe
         cle_total, plafond_total = ("cout_externe_usd", budget_externe_usd) if externe else ("cout_total_usd", budget_total_usd)
         if journal[cle_total] + plafond > plafond_total + 1e-9:
             journal["arret"] = f"plafond {'externe' if externe else 'total'} atteint avant {role}/{etiquette}"
@@ -1370,35 +1566,34 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                     compte["total"] += 1
         return valides
 
-    def garder_session_externe(etiquette, modele, numero, consigne):
-        """v43 (CL42-01) : garde de taille d'une session de proposeur externe, avant son envoi, sans dépense."""
-        if taille_max_consigne_externe is not None:
-            tmax, prov = taille_max_consigne_externe, 0
-            origine = origine_taille_max or "donnée (--taille-max-consigne-externe)"
-        elif garder_sessions_externes:
-            plafond = budgets[("proposeur_ideation", modele)]
-            tmax, prov = taille_max_consigne_par_defaut(plafond, provision_sessions, prix_caractere_usd), provision_sessions
-            origine = (f"défaut : plafond de cette session {plafond} / prix {prix_caractere_usd:.4e} dollar par caractère − "
-                       f"provision de sortie {provision_sessions} caractères ({nombre_par_proposeur} fiches de "
-                       f"{PROVISION_SORTIE_PAR_FICHE} au rapport {RAPPORT_SORTIE_ENTREE_PRUDENT:g})")
-        else:
+    def garder_session_externe(etiquette, modele, numero, consigne, plafond, taille_fiche):
+        """v43 (CL42-01) : garde de taille d'une session de proposeur externe, avant son envoi, sans dépense. v44
+        (CL43-02) : toujours son propre plafond moins la provision de sortie (`garde_passe_externe`), et la taille donnée
+        s'il y en a une (la plus petite des deux)."""
+        if taille_max_consigne_externe is None and not garder_sessions_externes:
             return
+        tmax, prov, origine = garde_passe_externe(numero, plafond, nombre_par_proposeur, prix_caractere_usd,
+                                                  taille_max_consigne_externe, taille_fiche,
+                                                  origine_taille_max or "donnée (--taille-max-consigne-externe)")
         quoi = f"consigne de la passe {numero} du proposeur externe {etiquette!r}"
         try:
             details = garde_taille_consigne(quoi, len(consigne), tmax, origine, prov, prix_caractere_usd)
         except TailleConsigneRefusee as e:
-            journal["gardes_taille_sessions"].append(dict(e.details, etiquette=etiquette, passe=numero, refusee=True))
+            journal["gardes_taille_sessions"].append(dict(e.details, etiquette=etiquette, passe=numero, refusee=True,
+                                                          plafond_usd=plafond, taille_fiche_provisionnee=int(taille_fiche)))
             journal["arret"] = f"proposeur externe {etiquette} passe {numero} non envoyée : {e}"
             raise
-        journal["gardes_taille_sessions"].append(dict(details, etiquette=etiquette, passe=numero, refusee=False))
+        journal["gardes_taille_sessions"].append(dict(details, etiquette=etiquette, passe=numero, refusee=False,
+                                                      plafond_usd=plafond, taille_fiche_provisionnee=int(taille_fiche)))
 
-    def passe_de(etiquette, modele, numero, consigne):
+    def passe_de(etiquette, modele, numero, consigne, taille_fiche=TAILLE_FICHE_PROVISIONNEE_PASSE):
         d = os.path.join(sortie, "proposeurs", etiquette, f"passe-{numero}")
         ext = etiquette in externes_adapt
-        if ext:  # v43 (CL42-01) : avant tout envoi, sans dépense
-            garder_session_externe(etiquette, modele, numero, consigne)
+        plafond = plafond_passe_externe(budgets, modele, numero, budget_passe_2_externe_usd) if ext else None
+        if ext:  # v43 (CL42-01), v44 (CL43-02) : avant tout envoi, sans dépense, contre son propre plafond
+            garder_session_externe(etiquette, modele, numero, consigne, plafond, taille_fiche)
         texte = lancer("proposeur_ideation", etiquette, modele, consigne, d,
-                       adaptateur=externes_adapt[etiquette] if ext else adaptateur, externe=ext)
+                       adaptateur=externes_adapt[etiquette] if ext else adaptateur, externe=ext, plafond=plafond)
         try:
             return fiches_de(texte, etiquette, numero, refus)
         except FicheIdeationInvalide as e:
@@ -1411,16 +1606,20 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         # revoit SES fiches de passe 1 non signalées par la garde (CL31-06) ; le matériau est servi à tous (les externes
         # seulement sous attestation, vérifiée plus haut) ; les fiches des autres ne sont jamais servies.
         # v41 (CL40-04) : un proposeur externe joue sa passe 2 juste après sa passe 1, avant toute passe Claude.
-        passe1, passe2 = {}, {}
 
         def jouer(etiquette, modele, numero):
+            taille_fiche = TAILLE_FICHE_PROVISIONNEE_PASSE
             if numero == 1:
                 consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1])
             else:
-                precedentes = [vue_servie(f) for f in passe1[etiquette] if not signaux_niveau_methode(vue_servie(f))]
+                admises = [f for f in passe1[etiquette] if not signaux_niveau_methode(vue_servie(f))]
+                precedentes = [vue_servie(f) for f in admises]
+                servies_passe_2[etiquette] = precedentes
+                # v44 (CL43-02) : sortie estimée de la passe 2 = `nombre` fiches de la plus grande fiche admise (servie)
+                taille_fiche = max([TAILLE_FICHE_PROVISIONNEE_PASSE] + [taille_servie(f) for f in admises])
                 consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu,
                                               fiches_precedentes=precedentes)
-            (passe1 if numero == 1 else passe2)[etiquette] = passe_de(etiquette, modele, numero, consigne)
+            (passe1 if numero == 1 else passe2)[etiquette] = passe_de(etiquette, modele, numero, consigne, taille_fiche)
         for etiquette, modele in tous_proposeurs:
             if etiquette in externes_adapt:
                 jouer(etiquette, modele, 1)
