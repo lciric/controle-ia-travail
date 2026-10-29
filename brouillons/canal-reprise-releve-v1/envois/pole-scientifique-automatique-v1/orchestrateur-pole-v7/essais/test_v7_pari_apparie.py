@@ -442,5 +442,51 @@ class TestValeursNonFiniesV40(unittest.TestCase):
         self.assertTrue(pa.evaluer({"B": [1.0] * 30}, m=10.0)["promue"])  # sain : m réel fini ≥ 1
 
 
+class TestV41(unittest.TestCase):
+    """v41 (CL40-06, relecture CL7 de session-depot) : α de `ebh_pondere` exigé fini dans ]0 ; 1[ ; valeurs de
+    `trajectoire_log_richesse` et parts de `contraste` refusant `True` ; un seul prédicat `_fini` (un entier de numpy admis
+    par `verifier_coefficients` comme par `contraste`, et par la garde) ; `ponderation_plafonnee` refuse un booléen."""
+
+    def test_ebh_pondere_alpha(self):
+        b = {k: 0.3 for k in "abc"}  # somme 0,9 : avant, α NaN, +∞ ou True désarmaient la garde de la somme
+        for a in (NAN, INF, -INF, True, 0, 1, 1.5):
+            with self.subTest(alpha=a), self.assertRaises(pa.ContrasteInvalide):
+                pa.ebh_pondere({"a": 0.0, "b": 0.0, "c": 3.0}, b, a)
+        with self.assertRaises(ValueError):  # sain : somme 0,9 > α = 0,05 refusée
+            pa.ebh_pondere({"a": 0.0, "b": 0.0, "c": 3.0}, b, 0.05)
+        self.assertEqual(pa.ebh_pondere({"a": 0.0, "b": 0.0, "c": 5.0}, {k: 0.05 / 3 for k in "abc"}, 0.05), {"c"})
+        self.assertEqual(pa.ebh_pondere({"a": 0.0}, {"a": 0.9}), set())  # sain : sans α, plafond 1 inchangé
+
+    def test_richesse_et_parts_refusent_les_booleens(self):
+        for v in (True, False, None, NAN, INF, 1.5):  # avant : True valait 1
+            with self.subTest(valeur=v), self.assertRaises(pa.ContrasteInvalide):
+                pa.trajectoire_log_richesse([0.1, v])
+        with self.assertRaises(pa.ContrasteInvalide):
+            pa.evaluer({"B": [True] * 30})  # avant : promue (True = +1)
+        self.assertEqual(len(pa.trajectoire_log_richesse([0.1, -1, 1, 0])), 4)  # sain : entiers des bornes admis
+        for r in (True, None, NAN):
+            with self.subTest(part=r), self.assertRaises(pa.ContrasteInvalide):
+                pa.contraste({"A": r, "B": 0.5}, {"A": 1, "B": -1})
+        self.assertAlmostEqual(pa.contraste({"A": 1, "B": 0.5}, {"A": 1, "B": -1}), 0.5)  # sain : part entière 1
+
+    def test_un_seul_predicat(self):
+        try:
+            import numpy as np
+        except ImportError:
+            self.skipTest("numpy absent")
+        coefs = {"A": np.int64(1), "B": np.float64(-0.5)}
+        self.assertTrue(pa.verifier_coefficients(coefs))  # avant : refusé ici, admis par `contraste`
+        self.assertAlmostEqual(pa.contraste({"A": 0.5, "B": 0.5}, coefs), 0.25)
+        self.assertEqual(len(pa.trajectoire_log_garde([np.float64(0.1), np.int64(0)], 0.05)), 2)
+        with self.assertRaises(pa.ContrasteInvalide):
+            pa.verifier_coefficients({"A": np.bool_(True)})
+
+    def test_ponderation_plafonnee_booleen(self):
+        for m_t, m_max in ((True, 5), (3, True)):
+            with self.subTest(m_t=m_t, m_max=m_max), self.assertRaises(ValueError):
+                pa.ponderation_plafonnee(m_t, m_max)
+        self.assertEqual(pa.ponderation_plafonnee(3, 5), 0.6)  # sain
+
+
 if __name__ == "__main__":
     unittest.main()

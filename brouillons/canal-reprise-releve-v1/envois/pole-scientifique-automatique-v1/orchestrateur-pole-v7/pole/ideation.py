@@ -1,4 +1,4 @@
-"""Course d'idéation (v7, version 40) : la prise « idéation » de l'organisme — proposer et classer seulement.
+"""Course d'idéation (v7, version 41) : la prise « idéation » de l'organisme — proposer et classer seulement.
 
 Demande de Lazar du 28 octobre 2026 (15:27, heure de Paris) : « on a besoin de l'organisme pour qu'il réfléchisse et
 propose lui-même des questions bien affûtées ». Pas de banque ni d'épreuve : des **proposeurs** (vrais agents, Opus 5.5 et
@@ -40,6 +40,15 @@ Version 35 (contre-lecture CL2 de session-depot sur la v34, « lançable après 
 - CL34-12 : longueur des témoins rapportée contre celle des fiches ;
 - CL34-13 : `complet` (toujours vrai) remplacé par `juges_rendus` ; docstrings réécrits.
 
+Version 41 (relecture CL7 de session-depot sur la v40, « lançable ; aucune relance avant corrections ») :
+- CL40-02 : un appel de contrôle **interrompu** (signal, exception de l'adaptateur) compte le **plafond** de sa session ;
+  les lectures des modèles déjà contrôlés sont jointes à l'exception (`lecture`), jamais perdues ;
+- CL40-04 : le contrôle d'un proposeur externe porte sa plus grosse consigne réelle (passe 2 : fiches à la taille maximale
+  champ par champ, `fiche_maximale`) ; **la passe 2 d'un proposeur externe est jouée juste après sa passe 1**, avant toute
+  passe Claude ; le contrôle du bras porte la consigne réelle du juge ;
+- CL40-05, CL40-08 : `budget_controle_bras_usd` vérifié ; tentatives du bras lues sceau vérifié ; un bras interrompu
+  après envoi écrit le classement à deux juges marqué « sans juge externe » ; `relancable` calculé ; deux tolérances.
+
 Ce que le noyau ne peut pas faire : garantir le niveau méthode (la garde **signale**, un humain lit **toutes** les fiches
 validées avant tout usage) ; vérifier une antériorité (R7) ; neutraliser le style d'un modèle devant un juge du même
 modèle (il le **mesure**, lectures par juge). Un juge d'une autre lignée est possible depuis la v33, en **bras rapporté**
@@ -60,6 +69,7 @@ from .adaptateurs import Resultat
 from .caviardage import caviarder, caviarder_objet
 from .outils import (dossier_traces, ecrire_json_scelle, ecrire_scelle, empreinte_objet, extraire_bloc_json,
                      graine_derivee, manifeste, sha256_fichier, verifier_scelle)
+from .pari_apparie import _fini  # v41 (CL40-05, CL40-06) : un seul prédicat « nombre réel fini, ni booléen »
 from .relais import HOTES_LOCAUX, CleDansEnvironnement, RelaisInvalide
 
 TYPES_FICHE = ("question", "approche")
@@ -637,21 +647,64 @@ def consigne_de_controle(supplement=None):
             "requête : ne le lis pas, ne le résume pas, réponds seulement OK.\n\n" + supplement)
 
 
+def cout_compte_controle(lecture_modele):
+    """v41 (CL40-02) : le coût compté d'une lecture de contrôle — `cout_compte_usd` (plafond si la session a été
+    interrompue), à défaut le coût déclaré."""
+    c = lecture_modele.get("cout_compte_usd")
+    if c is None:
+        c = lecture_modele.get("cout_declare_usd")
+    return float(c or 0.0)
+
+
 def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=None, exiger_cout=True,
                       role="juge_ideation", supplement=None):
     """CL31-01 : un appel par modèle, même adaptateur, mêmes options, même bac à sable. Exige statut ok, texte « OK »,
     coût déclaré > 0 (sauf moteur simulé, `exiger_cout=False`) et, si le relais est lisible, un appel de plus et une
     dépense > 0. Lève `ControleRefuse` (qui porte la lecture et son coût) sinon. Rend la lecture, consignée au manifeste
     de départ. v38 : `role` (le contrôle d'un proposeur externe se fait sous `proposeur_ideation`) et `supplement`
-    (matériau de la taille réelle, CL37-01)."""
+    (matériau de la taille réelle, CL37-01).
+
+    v41 (CL40-02) : toute exception pendant la session de contrôle (signal → `KeyboardInterrupt`, panne de l'adaptateur)
+    compte le **plafond** de la session (`cout_compte_usd`, `cout_inconnu`, statut « interrompue ») ; la lecture
+    accumulée (modèles déjà contrôlés compris) est jointe à l'exception (`e.lecture`). Une `Exception` devient
+    `ControleRefuse` ; une interruption (`KeyboardInterrupt`, `SystemExit`) remonte telle quelle. Seule
+    `CleDansEnvironnement` (levée avant tout lancement) compte 0 et marque `non_lance`."""
     lecture = {}
     consigne = consigne_de_controle(supplement)
     for modele in sorted(set(modeles)):
-        avant = lire_etat_relais() if lire_etat_relais else None
-        dossier = os.path.join(sortie, "controle", re.sub(r"[^a-z0-9-]", "-", modele))
-        os.makedirs(dossier, exist_ok=True)
-        r = adaptateur.lancer(role, consigne, dossier, budget_usd, 1, modele=modele)
-        apres = lire_etat_relais() if lire_etat_relais else None
+        etape, r, avant, apres = "avant", None, None, None
+        try:
+            avant = lire_etat_relais() if lire_etat_relais else None
+            dossier = os.path.join(sortie, "controle", re.sub(r"[^a-z0-9-]", "-", modele))
+            os.makedirs(dossier, exist_ok=True)
+            etape = "envoye"
+            r = adaptateur.lancer(role, consigne, dossier, budget_usd, 1, modele=modele)
+            etape = "rendu"
+            apres = lire_etat_relais() if lire_etat_relais else None
+        except BaseException as e:
+            avant_lancement = etape == "avant" or (etape == "envoye" and isinstance(e, CleDansEnvironnement))
+            if etape == "rendu":  # la session a rendu : son coût est connu
+                cout, inconnu = float(r.cout_declare_usd or 0.0), bool(getattr(r, "cout_inconnu", False))
+            elif avant_lancement:
+                cout, inconnu = 0.0, False
+            else:  # interrompue pendant la session : plafond compté (devis v7 quinquies, point 3)
+                cout, inconnu = float(budget_usd), True
+            statut = "non lancee" if avant_lancement else ("interrompue" if etape == "envoye" else r.statut)
+            lecture[modele] = {"statut": statut,
+                               "texte": "", "cout_declare_usd": (r.cout_declare_usd if r is not None else None),
+                               "cout_compte_usd": cout, "cout_inconnu": inconnu, "non_lance": avant_lancement,
+                               "role": role, "taille_consigne": len(consigne), "relais_avant": avant, "relais_apres": apres,
+                               "problemes": [f"exception pendant le contrôle ({etape}) : {type(e).__name__} : "
+                                             + caviarder(str(e))[0][:200]]}
+            try:
+                e.lecture = lecture
+            except AttributeError:
+                pass
+            if isinstance(e, Exception) and not isinstance(e, (ControleRefuse, CleDansEnvironnement)):
+                raise ControleRefuse(f"appel de contrôle interrompu pour {modele} : {type(e).__name__} : "
+                                     + caviarder(str(e))[0][:300] + f" ; {cout:.4f} USD comptés", lecture,
+                                     non_lance=avant_lancement) from e
+            raise
         texte = (r.texte_final or "").strip()
         problemes = []
         if r.statut != "ok":
@@ -667,6 +720,7 @@ def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=
                 problemes.append("le relais n'a compté aucune dépense")
         non_lance = bool(r.erreur) and str(r.erreur).startswith("commande externe non lancée")
         lecture[modele] = {"statut": r.statut, "texte": texte[:80], "cout_declare_usd": r.cout_declare_usd,
+                           "cout_compte_usd": float(r.cout_declare_usd or 0.0),
                            "cout_inconnu": bool(getattr(r, "cout_inconnu", False)), "non_lance": non_lance,
                            "role": role, "taille_consigne": len(consigne),
                            "relais_avant": avant, "relais_apres": apres, "problemes": problemes}
@@ -705,17 +759,57 @@ def _lire_attestation(chemin, champs):
     return attestation
 
 
+def _exiger_somme(nom, b):
+    """v41 (CL40-05) : un montant du chemin de l'argent est un réel fini ≥ 0, jamais un booléen (prédicat `_fini`)."""
+    if not _fini(b) or b < 0:
+        raise CourseInterrompue(f"{nom} : nombre fini ≥ 0 (reçu {b!r})")
+    return float(b)
+
+
+def _exiger_plafonds(budgets):
+    for cle_b, v in budgets.items():
+        if not _fini(v) or v <= 0:
+            raise CourseInterrompue(f"plafond par session non fini ou ≤ 0 : {cle_b} = {v!r}")
+
+
+def tolerances(tolerer_somme_plafonds=False, tolerer_somme_claude=False, tolerer_somme_externe=False):
+    """v41 (CL40-01, code) : les deux tolérances séparées ; l'ancienne (`tolerer_somme_plafonds`) vaut les deux."""
+    return bool(tolerer_somme_plafonds or tolerer_somme_claude), bool(tolerer_somme_plafonds or tolerer_somme_externe)
+
+
+NOMBRE_QUESTIONS_COMPTEES = 9  # Q1 … Q7, Q-pont, « nouvelle » : les neuf valeurs que nomme le gabarit (liste sans borne)
+NOMBRE_ANTERIORITES_COMPTEES = 12  # liste sans borne au gabarit : comptée à douze (reste déclaré, v41)
+
+
+def fiche_maximale():
+    """v41 (CL40-04) : la vue servie d'une fiche à la taille maximale que le gabarit permet champ par champ (nom 200,
+    chaque texte `LONGUEUR_MAX_CHAMP`, questions 80, références 500 ; énumérations à leur valeur la plus longue). Les deux
+    listes n'ont pas de borne au gabarit : elles sont comptées à `NOMBRE_QUESTIONS_COMPTEES` et
+    `NOMBRE_ANTERIORITES_COMPTEES` éléments ; l'échappement JSON (guillemets, retours à la ligne) n'est pas compté."""
+    t = "x" * LONGUEUR_MAX_CHAMP
+    return {"nom": "x" * 200, "type": "question", "enonce": t,
+            "loi_predictive": {"espace_instances": t, "prediction": t, "signe": "+", "metrique": t},
+            "perte_traduction": t, "questions_servies": ["x" * 80] * NOMBRE_QUESTIONS_COMPTEES,
+            "avantage": {"source": "programme", "texte": t, "incopiable_parce_que": t},
+            "originalite": {"niveau": "transposition", "texte": t},
+            "demande_organisme": {"nature": "modification", "texte": t},
+            "cout": {"nature": "processeur", "ordre_de_grandeur": t}, "piege": t, "cosmetique_si": t,
+            "anteriorite": [{"reference": "x" * 500, "statut": "RAPPORTE"}] * NOMBRE_ANTERIORITES_COMPTEES}
+
+
 def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_juge=(), temoins=None,
                       taille_max_pieces=TAILLE_MAX_PIECES, attestation_materiau=None, budgets=None, budget_total_usd=0.0,
                       budget_externe_usd=0.0, proposeurs=(), juges=(), proposeurs_externes=(), juges_externes=(),
                       seconde_passe=False, cout_controles_prevu_usd=0.0, cout_controles_externes_prevu_usd=0.0,
                       tolerer_somme_plafonds=False, budget_controle_bras_usd=0.2, max_tours=MAX_TOURS_IDEATION,
-                      nombre_par_proposeur=8, marge_fiche_caracteres=4000):
+                      nombre_par_proposeur=8, tolerer_somme_claude=False, tolerer_somme_externe=False):
     """v38 (CL37-04) : tout ce que la course refuserait, vérifié AVANT le premier appel de contrôle, sans rien écrire ni
     dépenser : liste blanche et pièces (empreintes, zones interdites, tailles), témoins, attestation du matériau, plafonds
     finis, étiquettes, somme des plafonds (passes et contrôles prévus compris) contre les totaux. Rend les pièces lues
-    (`texte_pieces` : le matériau du contrôle d'un proposeur externe à la taille réelle, CL37-01) et les tailles."""
-    import math
+    (`texte_pieces`), le matériau du contrôle d'un proposeur externe (`texte_controle_externe` : v41, sa plus grosse
+    consigne réelle, CL40-04), les tailles et les deux sommes.
+    v41 : `budget_controle_bras_usd` vérifié (CL40-05) ; deux tolérances séparées (`tolerer_somme_claude`,
+    `tolerer_somme_externe` ; `tolerer_somme_plafonds` vaut les deux)."""
     if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
             or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
         raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r}")
@@ -734,14 +828,13 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     for role_modele in ([("proposeur_ideation", m) for _, m in tous_proposeurs] + [("juge_ideation", m) for _, m in tous_juges]):
         if role_modele not in budgets:
             raise CourseInterrompue(f"aucun plafond par session pour {role_modele} (CL31-09)")
-    for cle_b, v in budgets.items():
-        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
-            raise CourseInterrompue(f"plafond par session non fini ou ≤ 0 : {cle_b} = {v!r}")
+    _exiger_plafonds(budgets)
     for nom_b, b in (("budget_total_usd", budget_total_usd), ("budget_externe_usd", budget_externe_usd),
                      ("cout_controles_prevu_usd", cout_controles_prevu_usd),
-                     ("cout_controles_externes_prevu_usd", cout_controles_externes_prevu_usd)):
-        if isinstance(b, bool) or not isinstance(b, (int, float)) or not math.isfinite(b) or b < 0:
-            raise CourseInterrompue(f"{nom_b} : nombre fini ≥ 0 (reçu {b!r})")
+                     ("cout_controles_externes_prevu_usd", cout_controles_externes_prevu_usd),
+                     ("budget_controle_bras_usd", budget_controle_bras_usd)):  # v41 (CL40-05)
+        _exiger_somme(nom_b, b)
+    tolere_claude, tolere_externe = tolerances(tolerer_somme_plafonds, tolerer_somme_claude, tolerer_somme_externe)
     if seconde_passe and proposeurs_externes and materiau_lu:
         if not attestation_materiau:
             raise CourseInterrompue("seconde passe avec un proposeur externe et un matériau : attestation_materiau obligatoire")
@@ -756,23 +849,25 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
         + passes * sum(budgets[("proposeur_ideation", m)] for _, m, *_ in proposeurs_externes) \
         + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes) \
         + budget_controle_bras_usd * len(list(juges_externes))  # v40 (CL39-01) : le contrôle du bras compte
-    if not tolerer_somme_plafonds:
-        if somme_claude > budget_total_usd + 1e-9:
-            raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} (contrôles prévus compris) > total "
-                                    f"{budget_total_usd} (CL37-03)")
-        if (proposeurs_externes or juges_externes) and somme_externe > budget_externe_usd + 1e-9:
-            raise CourseInterrompue(f"somme des plafonds externes {somme_externe:.2f} > total externe {budget_externe_usd} (CL37-03)")
+    if not tolere_claude and somme_claude > budget_total_usd + 1e-9:
+        raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} (contrôles prévus compris) > total "
+                                f"{budget_total_usd} (CL37-03)")
+    if not tolere_externe and (proposeurs_externes or juges_externes) and somme_externe > budget_externe_usd + 1e-9:
+        raise CourseInterrompue(f"somme des plafonds externes {somme_externe:.2f} > total externe {budget_externe_usd} (CL37-03)")
     texte_pieces = "\n\n".join(f"## Pièce : {n}\n{t}" for n, t, _ in pieces_lues)
-    # v40 (CL39-06) : le contrôle d'un proposeur externe doit éprouver la plus grosse consigne qu'il recevra : les pièces,
-    # le matériau de seconde passe s'il est servi, et une marge pour ses propres fiches de passe 1 (revues en passe 2)
-    texte_controle = texte_pieces
-    if seconde_passe and materiau_lu:
-        texte_controle += "\n\n" + "\n\n".join(f"### {n}\n{t}" for n, t, _ in materiau_lu)
-        texte_controle += "\n\n" + ("x" * marge_fiche_caracteres + "\n") * nombre_par_proposeur
+    # v41 (CL40-04) : le contrôle d'un proposeur externe éprouve sa plus grosse consigne réelle — en seconde passe, la
+    # consigne de passe 2 elle-même (pièces, matériau s'il est servi, et `nombre` fiches précédentes à la taille maximale
+    # champ par champ) ; sinon la consigne de passe 1
+    if seconde_passe:
+        texte_controle = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu or None,
+                                            fiches_precedentes=[fiche_maximale()] * nombre_par_proposeur)
+    else:
+        texte_controle = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1])
     return {"texte_pieces": texte_pieces, "texte_controle_externe": texte_controle,
             "tailles": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
                         "materiau": sum(len(t) for _, t, _ in materiau_lu), "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues)},
-            "temoins": len(temoins_lus), "somme_claude": somme_claude, "somme_externe": somme_externe}
+            "temoins": len(temoins_lus), "somme_claude": somme_claude, "somme_externe": somme_externe,
+            "tolerances": {"claude": tolere_claude, "externe": tolere_externe}}
 
 
 def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, proposeurs, juges, temoins, graine,
@@ -782,8 +877,13 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                       budget_externe_usd=0.0, attestation_lecture_humaine=None, attestation_materiau=None,
                       cout_deja_engage_usd=0.0, lectures_interdites=(), commande_externe=None, delai_session_s=None,
                       taille_max_pieces=TAILLE_MAX_PIECES, cout_externe_deja_engage_usd=0.0, tolerer_somme_plafonds=False,
-                      budget_controle_bras_usd=0.2):
-    """Course d'idéation v40 (v36 : Argon à poids égal ; v37 à v40 : relectures CL4 à CL6).
+                      budget_controle_bras_usd=0.2, tolerer_somme_claude=False, tolerer_somme_externe=False):
+    """Course d'idéation v41 (v36 : Argon à poids égal ; v37 à v41 : relectures CL4 à CL7).
+
+    v41 : `budget_controle_bras_usd` vérifié (CL40-05) et donné par le lanceur (CL40-03) ; deux tolérances séparées ;
+    **un proposeur externe joue sa passe 2 juste après sa passe 1**, avant toute passe Claude (CL40-04 : un échec de
+    taille d'Argon tombe avant la dépense Claude) ; l'ordre des fiches écrites est inchangé (passe 1 puis passe 2, chacune
+    dans l'ordre des proposeurs).
 
     `budgets` : {(role, modele): plafond par session en dollars} ; `budget_total_usd` : plafond des sessions Claude (appels de
     contrôle compris, `cout_deja_engage_usd`) ; `budget_externe_usd` : plafond **séparé** des sessions externes (Argon :
@@ -813,14 +913,12 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
             or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
         raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r} (v37)")
-    import math
     for nom_b, b in (("cout_deja_engage_usd", cout_deja_engage_usd), ("budget_externe_usd", budget_externe_usd),
-                     ("cout_externe_deja_engage_usd", cout_externe_deja_engage_usd), ("budget_total_usd", budget_total_usd)):
-        if isinstance(b, bool) or not isinstance(b, (int, float)) or not math.isfinite(b) or b < 0:
-            raise CourseInterrompue(f"{nom_b} : nombre fini ≥ 0 (reçu {b!r})")
-    for cle_b, v in budgets.items():
-        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
-            raise CourseInterrompue(f"plafond par session non fini ou ≤ 0 : {cle_b} = {v!r}")
+                     ("cout_externe_deja_engage_usd", cout_externe_deja_engage_usd), ("budget_total_usd", budget_total_usd),
+                     ("budget_controle_bras_usd", budget_controle_bras_usd)):  # v41 (CL40-05)
+        _exiger_somme(nom_b, b)
+    _exiger_plafonds(budgets)
+    tolere_claude, tolere_externe = tolerances(tolerer_somme_plafonds, tolerer_somme_claude, tolerer_somme_externe)
     _verifier_adaptateur_principal(adaptateur, moteur, proposeurs, juges)
     juges_externes = [(e, m) for e, m, *_ in juges_externes]
     proposeurs_externes = list(proposeurs_externes)
@@ -858,15 +956,15 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         + budget_controle_bras_usd * len(juges_externes)  # v40 (CL39-01)
     sommes = {"claude": round(somme_claude, 6), "total_claude": float(budget_total_usd),
               "externe_avec_controle_du_bras": round(somme_externe, 6), "total_externe": float(budget_externe_usd),
-              "budget_controle_bras_usd": float(budget_controle_bras_usd), "toleree": bool(tolerer_somme_plafonds)}
-    if not tolerer_somme_plafonds:
-        if somme_claude > budget_total_usd + 1e-9:
-            raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} > total {budget_total_usd} : la course "
-                                    "s'arrêterait avant le dernier juge au pire cas (CL37-03) ; baisser les plafonds par "
-                                    "session, relever le total, ou tolerer_somme_plafonds")
-        if somme_externe > budget_externe_usd + 1e-9:
-            raise CourseInterrompue(f"somme des plafonds externes {somme_externe:.2f} > total externe {budget_externe_usd} "
-                                    "(CL37-03)")
+              "budget_controle_bras_usd": float(budget_controle_bras_usd), "toleree": tolere_claude or tolere_externe,
+              "toleree_claude": tolere_claude, "toleree_externe": tolere_externe}
+    if not tolere_claude and somme_claude > budget_total_usd + 1e-9:
+        raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} > total {budget_total_usd} : la course "
+                                "s'arrêterait avant le dernier juge au pire cas (CL37-03) ; baisser les plafonds par "
+                                "session, relever le total, ou tolerer_somme_claude")
+    if not tolere_externe and somme_externe > budget_externe_usd + 1e-9:
+        raise CourseInterrompue(f"somme des plafonds externes {somme_externe:.2f} > total externe {budget_externe_usd} "
+                                "(CL37-03)")
     attestation_mat = None
     if seconde_passe and proposeurs_externes and materiau_lu:
         if not attestation_materiau:
@@ -988,24 +1086,32 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
 
     fiches, refus, quarantaine = [], [], []
     try:
-        # --- passe 1 (externes en tête, puis Claude : même consigne, mêmes pièces ; CL37-01)
-        passe1 = {}
+        # --- passe 1 (externes en tête, puis Claude : même consigne, mêmes pièces ; CL37-01) ; passe 2 : chaque proposeur
+        # revoit SES fiches de passe 1 non signalées par la garde (CL31-06) ; le matériau est servi à tous (les externes
+        # seulement sous attestation, vérifiée plus haut) ; les fiches des autres ne sont jamais servies.
+        # v41 (CL40-04) : un proposeur externe joue sa passe 2 juste après sa passe 1, avant toute passe Claude.
+        passe1, passe2 = {}, {}
+
+        def jouer(etiquette, modele, numero):
+            if numero == 1:
+                consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1])
+            else:
+                precedentes = [vue_servie(f) for f in passe1[etiquette] if not signaux_niveau_methode(vue_servie(f))]
+                consigne = consigne_proposeur(pieces_lues, nombre_par_proposeur, question_lue[1], materiau=materiau_lu,
+                                              fiches_precedentes=precedentes)
+            (passe1 if numero == 1 else passe2)[etiquette] = passe_de(etiquette, modele, numero, consigne)
         for etiquette, modele in tous_proposeurs:
-            passe1[etiquette] = passe_de(etiquette, modele, 1, consigne_proposeur(pieces_lues, nombre_par_proposeur,
-                                                                                   question_lue[1]))
-        for etiquette, valides in passe1.items():
-            for f in valides:
-                s = signaux_niveau_methode(vue_servie(f))
-                (quarantaine.append({"fiche": f, "signaux": s}) if s else fiches.append(f))
-        # --- passe 2 : chaque proposeur revoit SES fiches non mises en quarantaine ; le matériau est servi à tous (les
-        # externes seulement sous attestation, vérifiée plus haut) ; les fiches des autres ne sont jamais servies
-        if seconde_passe:
+            if etiquette in externes_adapt:
+                jouer(etiquette, modele, 1)
+                if seconde_passe:
+                    jouer(etiquette, modele, 2)
+        for numero in ((1, 2) if seconde_passe else (1,)):
             for etiquette, modele in tous_proposeurs:
-                precedentes = [vue_servie(f) for f in fiches if f["auteur"] == etiquette]
-                valides = passe_de(etiquette, modele, 2, consigne_proposeur(pieces_lues, nombre_par_proposeur,
-                                                                            question_lue[1], materiau=materiau_lu,
-                                                                            fiches_precedentes=precedentes))
-                for f in valides:
+                if etiquette not in externes_adapt:
+                    jouer(etiquette, modele, numero)
+        for par_passe in (passe1, passe2):  # ordre des fiches écrites inchangé : passe 1 puis passe 2, proposeurs dans l'ordre
+            for etiquette, _ in tous_proposeurs:
+                for f in par_passe.get(etiquette, []):
                     s = signaux_niveau_methode(vue_servie(f))
                     (quarantaine.append({"fiche": f, "signaux": s}) if s else fiches.append(f))
         ecrire_json_scelle(os.path.join(sortie, "fiches-validees.json"), fiches)
@@ -1168,9 +1274,9 @@ def construire_liste_blanche(chemins, sortie):
 
 
 def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes, budgets, lire_etat_relais=None,
-                          horodatage=None, budget_controle_usd=0.2, exiger_cout_controle=True, budget_externe_usd=None,
+                          horodatage=None, budget_controle_usd=None, exiger_cout_controle=True, budget_externe_usd=None,
                           commande_externe=None):
-    """v36 → v40 : joue les juges externes différés d'une course déjà faite, **après** une lecture humaine attestée — le seul
+    """v36 → v41 : joue les juges externes différés d'une course déjà faite, **après** une lecture humaine attestée — le seul
     chemin par lequel un juge d'une autre lignée lit les fiches — puis écrit le **classement à trois juges** (médiane par
     critère, porte sur l'agrégat, unanimité et accords de rang par paire rapportés ; n° 118).
 
@@ -1183,7 +1289,11 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     Aucun repli silencieux (n° 118 point 3) : juge externe en panne, au-delà du plafond ou notes invalides → classement à
     deux juges écrit **marqué « sans juge externe, illisible au sens du devis »** (`classement-sans-bras.json`), manifeste
     avec l'erreur, et `CourseInterrompue` ; témoins échoués chez lui → classement à trois juges écrit mais illisible.
-    Le manifeste du bras est écrit **avant** les fichiers de lecture (CL35-01), sur tous les chemins après le départ."""
+    Le manifeste du bras est écrit **avant** les fichiers de lecture (CL35-01), sur tous les chemins après le départ.
+    v41 : `budget_controle_usd` absent → celui que la course a compté (`somme_des_plafonds` du manifeste de départ,
+    CL40-03) ; le contrôle porte la consigne réelle du juge (CL40-04) ; un contrôle interrompu compte son plafond (CL40-02) ;
+    `relancable` calculé (tentatives et plafond externe de la relance) ; tentatives payées lues sceau vérifié (CL40-05) ;
+    tout échec après envoi écrit `classement-sans-bras.json` (CL40-08)."""
     def lire_json_scelle(nom):
         chemin = os.path.join(sortie, nom)
         if not verifier_scelle(chemin):
@@ -1191,6 +1301,8 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
         with open(chemin, "r", encoding="utf-8") as f:
             return json.load(f)
 
+    if budget_controle_usd is not None:  # v41 (CL40-05)
+        _exiger_somme("budget_controle_usd", budget_controle_usd)
     chemin_manifeste = os.path.join(sortie, "manifeste-bras-rapporte.json")
     if os.path.exists(chemin_manifeste):
         raise CourseInterrompue("le bras a déjà été joué pour cette course (manifeste-bras-rapporte.json existe) : jamais "
@@ -1202,9 +1314,14 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     # externe ; au plus MAX_TENTATIVES_BRAS tentatives au total
     tentatives_payees = sorted(f for f in os.listdir(sortie) if re.match(r"bras-tentative-\d+\.json$", f))
     cout_tentatives = 0.0
-    for f in tentatives_payees:
+    for f in tentatives_payees:  # v41 (CL40-05) : sceau vérifié, coût réel fini ≥ 0
+        if not verifier_scelle(os.path.join(sortie, f)):
+            raise CourseInterrompue(f"tentative du bras au sceau absent ou faux : {f} (aucune relance sans un mot de Lazar)")
         with open(os.path.join(sortie, f), "r", encoding="utf-8") as fh:
-            cout_tentatives += float(json.load(fh)["reglages"]["journal"]["cout_total_usd"])
+            c = json.load(fh)["reglages"]["journal"]["cout_total_usd"]
+        if not _fini(c) or c < 0:
+            raise CourseInterrompue(f"tentative du bras au coût illisible : {f} ({c!r})")
+        cout_tentatives += float(c)
     if len(tentatives_non_jouees) + len(tentatives_payees) >= MAX_TENTATIVES_BRAS:
         raise CourseInterrompue(f"{MAX_TENTATIVES_BRAS} tentatives du bras déjà faites : plus de relance sans un mot de "
                                 "Lazar (CL37-02)")
@@ -1224,6 +1341,9 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     lecture_course = lire_json_scelle("lecture-course.json")
     depart = lire_json_scelle("manifeste-depart.json")["reglages"]
     fin = lire_json_scelle("manifeste-fin.json")["reglages"]
+    if budget_controle_usd is None:  # v41 (CL40-03) : par défaut, le contrôle du bras que la course a compté dans sa somme
+        budget_controle_usd = _exiger_somme("budget_controle_bras_usd (manifeste de départ)", (depart.get(
+            "somme_des_plafonds") or {}).get("budget_controle_bras_usd", 0.2))
     if fin.get("erreur"):
         raise CourseInterrompue("la course s'est arrêtée en erreur : aucun bras sur une course incomplète")
     attendus = {e: m for e, m in depart.get("juges_externes", [])}
@@ -1292,21 +1412,33 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
         ecrire_json_scelle(os.path.join(sortie, "lecture-sans-bras.json"), lecture)
         resultat.update({"classement": classement, "lecture": lecture, "sans_bras": True})
 
+    def relance_possible():
+        """v41 : ce que vérifiera la relance — moins de MAX_TENTATIVES_BRAS tentatives et le plafond externe qui couvre
+        encore les contrôles et les sessions, le coût de cette tentative imputé."""
+        motifs = []
+        if journal["tentative"] >= MAX_TENTATIVES_BRAS:
+            motifs.append(f"{MAX_TENTATIVES_BRAS} tentatives faites")
+        if deja_externe + journal["cout_total_usd"] + besoin > plafond_externe + 1e-9:
+            motifs.append(f"plafond externe {plafond_externe} < déjà {deja_externe + journal['cout_total_usd']:.4f} + "
+                          f"contrôles et sessions {besoin}")
+        return not motifs, motifs
+
     try:
         for etiquette, modele, adaptateur in juges_externes:
             dossier_controle = os.path.join(sortie, "bras-rapporte-controle", f"tentative-{journal['tentative']}", etiquette)
-            try:
+            try:  # v41 (CL40-04) : le contrôle porte la consigne réelle du juge (pièces de juge comprises)
                 lecture_controle = appel_de_controle(adaptateur, [modele], dossier_controle, budget_controle_usd, None,
-                                                     exiger_cout=exiger_cout_controle)[modele]
-            except ControleRefuse as e:  # CL37-02 : le coût du contrôle refusé est compté avant toute décision
-                lecture_controle = e.lecture.get(modele, {})
+                                                     exiger_cout=exiger_cout_controle, supplement=consignes[etiquette])[modele]
+            except BaseException as e:  # CL37-02, v41 (CL40-02) : refusé ou interrompu, le coût est compté (plafond si
+                # interrompu) avant toute décision
+                lecture_controle = (getattr(e, "lecture", None) or {}).get(modele, {})
                 journal["controle"][etiquette] = lecture_controle
-                journal["cout_total_usd"] += float(lecture_controle.get("cout_declare_usd") or 0.0)
-                journal["non_lance"] = bool(e.non_lance)
-                journal["arret"] = str(e)
+                journal["cout_total_usd"] += cout_compte_controle(lecture_controle)
+                journal["non_lance"] = bool(getattr(e, "non_lance", False) or lecture_controle.get("non_lance"))
+                journal["arret"] = str(e) or type(e).__name__
                 raise
             journal["controle"][etiquette] = lecture_controle
-            journal["cout_total_usd"] += float(lecture_controle.get("cout_declare_usd") or 0.0)
+            journal["cout_total_usd"] += cout_compte_controle(lecture_controle)
         for etiquette, modele, adaptateur in juges_externes:
             d = os.path.join(sortie, "juges-bras-rapporte", etiquette)
             plafond = budgets[("juge_ideation", modele)]
@@ -1376,30 +1508,37 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
         rien_envoye = (not reponse_rendue and not notes_externes and journal["cout_total_usd"] <= 0
                        and (journal["non_lance"] or isinstance(e, CleDansEnvironnement)))
         numero = journal["tentative"]
+        relancable, motifs = relance_possible()  # v41 : calculé, jamais promis
+        suite = " ; relance permise" if relancable else " ; plus de relance sans un mot de Lazar (" + " ; ".join(motifs) + ")"
         if rien_envoye and not os.path.exists(chemin_manifeste):
             ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-non-joue-{numero}.json"),
                                manifeste(phase="bras-non-joue", horodatage=horodatage, journal=journal, erreur=journal["arret"],
-                                         relancable=True))
-            raise CourseInterrompue("bras non joué (rien envoyé, rien dépensé) : " + journal["arret"]
-                                    + " ; relance permise") from e
+                                         relancable=relancable, motifs_relance=motifs))
+            if not isinstance(e, Exception):  # une interruption reste une interruption
+                raise
+            raise CourseInterrompue("bras non joué (rien envoyé, rien dépensé) : " + journal["arret"] + suite) from e
         if not reponse_rendue and not notes_externes and not os.path.exists(chemin_manifeste):
-            # contrôle refusé après dépense : tentative payée, le bras reste relançable dans la limite des tentatives
+            # contrôle refusé ou interrompu après dépense : tentative payée, comptée, bornée
             ecrire_json_scelle(os.path.join(sortie, f"bras-tentative-{numero}.json"),
                                manifeste(phase="bras-tentative", horodatage=horodatage, journal=journal, erreur=journal["arret"],
-                                         relancable=numero < MAX_TENTATIVES_BRAS))
+                                         relancable=relancable, motifs_relance=motifs))
+            if not isinstance(e, Exception):  # v41 : une interruption reste une interruption (le lanceur rend 2)
+                raise
             raise CourseInterrompue(f"tentative {numero} du bras échouée avant tout envoi des fiches, {journal['cout_total_usd']:.4f} USD "
-                                    "comptés : " + journal["arret"] + (" ; relance permise" if numero < MAX_TENTATIVES_BRAS
-                                                                        else " ; plus de relance")) from e
+                                    "comptés : " + journal["arret"] + suite) from e
         if not os.path.exists(chemin_manifeste):
-            if isinstance(e, CourseInterrompue):
-                try:
-                    classement_sans_bras(journal["arret"])
-                except Exception as e2:  # noqa: BLE001 — le manifeste doit exister même si le classement de repli échoue
-                    if not os.path.exists(chemin_manifeste):
-                        ecrire_manifeste(erreur=journal["arret"] + " ; classement sans bras impossible : " + str(e2)[:200])
+            # v41 (CL40-08) : après envoi, quel que soit l'échec (interruption comprise), le classement à deux juges est
+            # écrit, marqué « sans juge externe, illisible au sens du devis » ; le bras reste verrouillé
+            try:
+                classement_sans_bras(journal["arret"])
+            except Exception as e2:  # noqa: BLE001 — le manifeste doit exister même si le classement de repli échoue
+                if not os.path.exists(chemin_manifeste):
+                    ecrire_manifeste(erreur=journal["arret"] + " ; classement sans bras impossible : " + str(e2)[:200])
+                if isinstance(e, CourseInterrompue):
                     raise
-                raise SansJugeExterne(journal["arret"], resultat) from e
-            ecrire_manifeste(erreur=journal["arret"])
+            else:
+                if isinstance(e, CourseInterrompue):
+                    raise SansJugeExterne(journal["arret"], resultat) from e
         raise
 
 

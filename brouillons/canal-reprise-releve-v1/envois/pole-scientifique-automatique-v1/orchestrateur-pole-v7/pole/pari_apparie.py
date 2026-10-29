@@ -1,4 +1,4 @@
-"""Pari apparié borné (v7, versions 20 à 30) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
+"""Pari apparié borné (v7, versions 20 à 41) — le second type d'engagement du pôle, pour les affirmations globales (H1, H2, H3,
 G1), selon la conception v5 (`../../pari-de-signe/conception-pari-de-signe-v5.md` et les versions qu'elle amende).
 
 Ce module ne contient que le **cœur statistique**, sans lien encore avec le cycle des générations (à faire : monde sur
@@ -39,7 +39,12 @@ banque de scores, engagement, mémoire avec la clé complète de l'héritage) :
   d'état), les valeurs dans [−1 ; 1] (`trajectoire_log_sans_remise`, `borne_basse`, avec α de `borne_basse`) et α, m
   (`evaluer`). Avant : un NaN ou un ±∞ devenait la valeur la plus favorable (v = +1 par le jeu de min/max), dérangeait le tri
   de l'e-BH, ou laissait un seuil NaN (jamais promue, sans erreur). La statistique est inchangée sur les entrées finies
-  valides.
+  valides ;
+- (version 41, relecture CL7 de session-depot, CL40-06) : **un seul prédicat** `_fini` partout (coefficients de
+  `verifier_coefficients`, écarts de la garde : un entier de numpy y est désormais admis comme dans `contraste`) ; α de
+  `ebh_pondere` exigé fini dans ]0 ; 1[ (NaN, +∞ ou `True` désarmaient la garde de la somme des budgets) ; chaque valeur
+  de `trajectoire_log_richesse` passe `_exiger_valeur` et chaque part de cellule de `contraste` `_exiger_fini` (`True`
+  y valait 1) ; `ponderation_plafonnee` refuse un booléen.
 
 Tout est en Python pur (aucune dépendance) ; les instants de lecture sont les unités (une unité = un instant).
 """
@@ -85,8 +90,8 @@ def verifier_coefficients(coefficients, constante=0.0):
         raise ContrasteInvalide("contraste sans cellule")
     _exiger_fini(constante, "constante du contraste")  # v40 : une constante NaN passait la règle double (comparaisons fausses)
     for cellule, a in coefficients.items():
-        if not isinstance(a, (int, float)) or isinstance(a, bool) or not math.isfinite(a):
-            raise ContrasteInvalide(f"coefficient non numérique pour {cellule!r}")
+        if not _fini(a):  # v41 (CL40-06) : le même prédicat que `contraste` (un entier de numpy est admis des deux côtés)
+            raise ContrasteInvalide(f"coefficient non numérique ou non fini pour {cellule!r} : {a!r}")
     positifs = sum(a for a in coefficients.values() if a > 0)
     negatifs = sum(-a for a in coefficients.values() if a < 0)
     if positifs + constante > 1 + 1e-12 or negatifs - constante > 1 + 1e-12:
@@ -103,7 +108,7 @@ def contraste(parts, coefficients, constante=0.0):
     v = _exiger_fini(constante, "constante du contraste")
     for cellule, a in coefficients.items():
         _exiger_fini(a, f"coefficient de {cellule!r}")
-        r = parts[cellule]
+        r = _exiger_fini(parts[cellule], f"part de {cellule!r}")  # v41 (CL40-06) : `True` valait 1
         if not 0.0 <= r <= 1.0:
             raise ContrasteInvalide(f"part hors de [0 ; 1] pour {cellule!r} : {r}")
         v += a * r
@@ -121,9 +126,8 @@ def trajectoire_log_richesse(valeurs, lambdas=LAMBDAS):
     _verifier_lambdas(lambdas)
     logs = [0.0] * len(lambdas)
     sortie = []
-    for v in valeurs:
-        if not -1.0 <= v <= 1.0:
-            raise ContrasteInvalide(f"valeur hors de [−1 ; 1] : {v}")
+    for i, v in enumerate(valeurs):
+        _exiger_valeur(v, f"richesse, unité {i}")  # v41 (CL40-06) : `True` valait 1, None levait TypeError
         logs = [lw + math.log1p(l * v) for lw, l in zip(logs, lambdas)]
         m = max(logs)
         sortie.append(m + math.log(sum(math.exp(lw - m) for lw in logs) / len(lambdas)))
@@ -137,7 +141,7 @@ def trajectoire_log_garde(ecarts_faux_positifs, delta, lambdas=LAMBDAS):
     # v39 : un écart non fini (NaN, ±∞) devenait +1 par le jeu de min/max, la valeur la plus favorable à la promotion
     # (défaut relevé par le sous-agent de la porte PACE, 29 octobre) ; refus explicite
     for g in ecarts_faux_positifs:
-        if isinstance(g, bool) or not isinstance(g, (int, float)) or not math.isfinite(g):
+        if not _fini(g):  # v41 (CL40-06) : un seul prédicat
             raise ContrasteInvalide(f"écart de faux positifs non fini ou non numérique : {g!r}")
     return trajectoire_log_richesse([max(-1.0, min(1.0, delta - g)) for g in ecarts_faux_positifs], lambdas)
 
@@ -263,7 +267,8 @@ def borne_basse(valeurs, alpha=0.05, lambdas=LAMBDAS, pas=0.01):
 def ponderation_plafonnee(m_t, m_max):
     """Poids min(m_t, m_max)/m_max d'une unité de m_t épisodes (D-S27 réécrite) ; estimande « rappel par épisode
     plafonné à m_max ». Pour G1, m_max = maximum de la banque gelée : rien n'est plafonné."""
-    if not (isinstance(m_t, int) and isinstance(m_max, int)) or m_t < 0 or m_max < 1:
+    if not (isinstance(m_t, int) and isinstance(m_max, int)) or isinstance(m_t, bool) or isinstance(m_max, bool) \
+            or m_t < 0 or m_max < 1:  # v41 : un booléen n'est pas un nombre d'épisodes
         raise ValueError("m_t entier ≥ 0, m_max entier ≥ 1")
     return min(m_t, m_max) / m_max
 
@@ -287,6 +292,10 @@ def ebh_pondere(log_e, budgets, alpha=None):
         _exiger_fini(x, f"e-BH : log e-valeur de {i!r}")
     for i, b in budgets.items():
         _exiger_fini(b, f"e-BH : budget de {i!r}")
+    if alpha is not None:  # v41 (CL40-06) : α NaN, +∞ ou True désarmait la garde de la somme des budgets
+        _exiger_fini(alpha, "e-BH : α")
+        if not 0.0 < alpha < 1.0:
+            raise ContrasteInvalide(f"e-BH : α dans ]0 ; 1[ : {alpha!r}")
     plafond = 1.0 if alpha is None else alpha
     if any(not (b > 0) for b in budgets.values()) or sum(budgets.values()) > plafond + 1e-12:
         raise ValueError(f"budgets positifs, de somme ≤ {plafond}")
