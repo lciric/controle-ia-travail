@@ -1,4 +1,4 @@
-"""Course d'idéation de l'organisme (v7, version 37) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 38) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
@@ -67,7 +67,7 @@ from pole.adaptateurs import Resultat  # noqa: E402
 from pole.outils import graine_derivee, horodatage  # noqa: E402
 
 # v37 (CL36-04) : défauts = devis en vigueur (v7 bis : corpus primaire servi) ; tout est réglable par --budget
-BUDGETS_PAR_DEFAUT = {("proposeur_ideation", "claude-opus-5-5"): 5.0, ("proposeur_ideation", "claude-fable-5-1"): 10.0,
+BUDGETS_PAR_DEFAUT = {("proposeur_ideation", "claude-opus-5-5"): 5.0, ("proposeur_ideation", "claude-fable-5-1"): 9.3,
                       ("juge_ideation", "claude-opus-5-5"): 4.0, ("juge_ideation", "claude-fable-5-1"): 7.0}
 BUDGET_EXTERNE_PROPOSEUR = 2.5
 BUDGET_EXTERNE_JUGE = 3.5
@@ -218,10 +218,14 @@ def principal(argv=None):
                    help="plafond total des sessions externes (Argon : deux passes à 2,5, un jugement à 3,5, contrôles ; devis v7 bis)")
     a.add_argument("--budget-controle-usd", type=float, default=0.2)
     a.add_argument("--racine-depot", help="racine du dépôt (lecture interdite aux agents) ; défaut : git rev-parse")
-    a.add_argument("--delai-session-s", type=float, default=None, help="borne de temps par session réelle (défaut 1800)")
-    a.add_argument("--delai-commande-s", type=float, default=900.0, help="borne de temps de la commande externe")
-    a.add_argument("--taille-max-pieces", type=int, default=idn.TAILLE_MAX_PIECES,
-                   help=f"caractères servis au plus par lot de pièces (v37 ; plafond dur {idn.TAILLE_MAX_PIECES_ABSOLUE})")
+    a.add_argument("--delai-session-s", type=float, default=None, help="borne de temps par session réelle (défaut 3600, CL37-08)")
+    a.add_argument("--delai-commande-s", type=float, default=1800.0, help="borne de temps de la commande externe (CL37-08)")
+    a.add_argument("--budget-controle-externe-usd", type=float, default=2.5,
+                   help="plafond de l'appel de contrôle du proposeur externe à la taille réelle de la consigne (CL37-01)")
+    a.add_argument("--tolerer-somme-plafonds", action="store_true",
+                   help="accepte une somme des plafonds par session au-dessus du total (CL37-03 ; sinon refus)")
+    a.add_argument("--taille-max-pieces", type=int, default=750_000,
+                   help=f"caractères servis au plus par lot de pièces (défaut : devis v7 ter ; plafond dur {idn.TAILLE_MAX_PIECES_ABSOLUE})")
     a.add_argument("--graine", type=int, default=20261028)
     a.add_argument("--moteur", choices=("simule", "claude-sdk"), default="simule")
     a.add_argument("--url-relais")
@@ -359,14 +363,38 @@ def _principal(args):
     if args.moteur == "claude-sdk" and not (prop_ext and juges_ext):  # CL36-03
         raise idn.CourseInterrompue("course réelle : --proposeur-externe et --juge-externe (Argon) sont obligatoires "
                                     "(décision de Lazar : poids égal, égalité)")
+    # v38 (CL37-04) : tous les réglages vérifiés AVANT tout appel de contrôle (liste blanche, pièces et tailles, attestation
+    # du matériau, plafonds finis, somme des plafonds) — un refus ici ne coûte rien
+    verif = idn.verifier_reglages(
+        liste_blanche=args.liste_blanche, question=args.question, pieces=args.piece, materiau=args.materiau,
+        pieces_juge=args.piece_juge, temoins=args.temoins, taille_max_pieces=args.taille_max_pieces,
+        attestation_materiau=args.attestation_materiau if (prop_ext and args.seconde_passe) else None,
+        budgets=budgets, budget_total_usd=args.budget_total_usd,
+        budget_externe_usd=args.budget_externe_usd if (prop_ext or juges_ext) else 0.0, proposeurs=proposeurs, juges=juges,
+        proposeurs_externes=prop_ext, juges_externes=juges_ext, seconde_passe=args.seconde_passe,
+        cout_controles_prevu_usd=args.budget_controle_usd * len({m for _, m in proposeurs + juges}),
+        cout_controles_externes_prevu_usd=args.budget_controle_externe_usd * len(prop_ext),
+        tolerer_somme_plafonds=args.tolerer_somme_plafonds)
+    if lire_relais is not None:  # CL37-03 : cohérence entre le plafond du relais, sa réserve et le total du cœur
+        etat_relais = lire_relais()
+        plafond_relais = etat_relais.get("plafond_usd")
+        reserve = etat_relais.get("reserve_par_appel_usd")
+        if plafond_relais is not None and reserve is not None:
+            plus_petit_juge = min(budgets[("juge_ideation", m)] for _, m in juges)
+            if float(plafond_relais) - float(reserve) < args.budget_total_usd - plus_petit_juge - 1e-9:
+                raise idn.CourseInterrompue(f"relais : plafond {plafond_relais} − réserve {reserve} < total {args.budget_total_usd} − "
+                                            f"plus petit juge {plus_petit_juge} : le relais refuserait une session que le cœur "
+                                            "lance (CL37-03) ; relancer le relais avec --reserve-par-appel 4")
     modeles = sorted({m for _, m in proposeurs} | {m for _, m in juges})
     controle = idn.appel_de_controle(adaptateur, modeles, sortie_controle, args.budget_controle_usd, lire_relais,
                                      exiger_cout=(args.moteur == "claude-sdk"))
     cout_controle = sum(float(c.get("cout_declare_usd") or 0.0) for c in controle.values())
     cout_controle_externe = 0.0
-    for e, m in prop_ext:  # CL36-02 : le proposeur externe est contrôlé AVANT la passe 1 des proposeurs Claude
-        lecture_ext = idn.appel_de_controle(externe, [m], sortie_controle + "-externe-" + e, args.budget_controle_usd, None,
-                                            exiger_cout=bool(args.commande_externe))[m]
+    for e, m in prop_ext:  # CL36-02 / CL37-01 : contrôle du proposeur externe AVANT la passe 1, sous son rôle, à la
+        # taille réelle de la consigne (les pièces servies, à ignorer) — quota, taille de requête et délai éprouvés
+        lecture_ext = idn.appel_de_controle(externe, [m], sortie_controle + "-externe-" + e, args.budget_controle_externe_usd,
+                                            None, exiger_cout=bool(args.commande_externe), role="proposeur_ideation",
+                                            supplement=verif["texte_pieces"])[m]
         controle[f"externe:{e}"] = lecture_ext
         cout_controle_externe += float(lecture_ext.get("cout_declare_usd") or 0.0)
     res = idn.executer_ideation(adaptateur, sortie, liste_blanche=args.liste_blanche, question=args.question,
@@ -382,7 +410,8 @@ def _principal(args):
                                 attestation_materiau=args.attestation_materiau, cout_deja_engage_usd=cout_controle,
                                 lectures_interdites=interdits, commande_externe=commande_externe,
                                 delai_session_s=delai_session, taille_max_pieces=args.taille_max_pieces,
-                                cout_externe_deja_engage_usd=cout_controle_externe)
+                                cout_externe_deja_engage_usd=cout_controle_externe,
+                                tolerer_somme_plafonds=args.tolerer_somme_plafonds)
     bilan = {"fiches_validees": len(res["fiches"]), "refusees": len(res["refus"]), "quarantaine": len(res["quarantaine"]),
              "quarantaine_par_proposeur": res["lecture"]["quarantaine_par_proposeur"],
              "temoins_ok": res["lecture"]["temoins"]["temoins_ok"],

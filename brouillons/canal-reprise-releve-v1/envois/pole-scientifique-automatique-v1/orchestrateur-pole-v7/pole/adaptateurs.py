@@ -30,7 +30,7 @@ OUTILS_PAR_ROLE = {"proposeur_ideation": (), "juge_ideation": ()}
 # rôles absents gardent le défaut du kit (None). v36 (CL35-09) : `reglages_kit_par_role()` est consigné au manifeste de
 # départ par la course.
 EFFORT_PAR_ROLE = {"proposeur_ideation": "high", "juge_ideation": "medium"}
-DELAI_SESSION_S = 1800  # v35 (CL34-05) : borne de temps par session réelle ; dépassée → statut « erreur »
+DELAI_SESSION_S = 3600  # v35 (CL34-05) : borne de temps par session réelle ; dépassée → statut « erreur » ; v38 (CL37-08) : 3 600 s pour ≈ 150 000 jetons
 
 
 def reglages_kit_par_role():
@@ -374,7 +374,9 @@ class AdaptateurCommandeExterne(Adaptateur):
     ROLES_PERMIS = ("proposeur_ideation", "juge_ideation")
     VARIABLES_MINIMALES = ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")
 
-    def __init__(self, commande, environnement=None, delai_s=900, variables_transmises=()):
+    DELAI_COMMANDE_S = 1800  # v38 (CL37-08)
+
+    def __init__(self, commande, environnement=None, delai_s=DELAI_COMMANDE_S, variables_transmises=()):
         if not isinstance(commande, (list, tuple)) or not commande or not all(isinstance(c, str) for c in commande):
             raise ValueError("commande externe : liste non vide de chaînes")
         if isinstance(delai_s, bool) or not isinstance(delai_s, (int, float)) or not delai_s > 0:
@@ -450,6 +452,12 @@ class AdaptateurCommandeExterne(Adaptateur):
                 pass
             sortie, err = p.communicate()
             delai_depasse = True
+        except BaseException:  # v38 (CL37-07) : interruption de l'orchestrateur → la commande ne survit pas
+            try:
+                os.killpg(p.pid, signal.SIGKILL)
+            except OSError:
+                pass
+            raise
         objet, motif = self.lire_derniere_ligne(sortie)
         if delai_depasse or p.returncode != 0:
             quoi = (f"délai de {self.delai_s:g} s dépassé, groupe de processus arrêté" if delai_depasse

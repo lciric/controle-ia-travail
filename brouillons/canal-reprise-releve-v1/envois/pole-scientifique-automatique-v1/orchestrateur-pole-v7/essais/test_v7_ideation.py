@@ -419,8 +419,11 @@ class TestCourse(CasAvecDossier):
 
     def test_plafond_total_arrete_avant_depense(self):
         ad = FauxAdaptateur({"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]}, cout=1.0)
-        with self.assertRaises(idn.CourseInterrompue):
-            self.lancer(ad, "c9", budget_total_usd=1.5)
+        with self.assertRaises(idn.CourseInterrompue):  # v38 (CL37-03) : somme des plafonds 4 > 1,5 → refus avant tout appel
+            self.lancer(ad, "c9a", budget_total_usd=1.5)
+        self.assertEqual(ad.appels, [])
+        with self.assertRaises(idn.CourseInterrompue):  # tolérée : arrêt au premier dépassement, avant la dépense
+            self.lancer(ad, "c9", budget_total_usd=1.5, tolerer_somme_plafonds=True)
         self.assertLessEqual(ad.appels[-1]["budget"], 1.0)
 
     def test_reglages_refuses(self):
@@ -494,6 +497,7 @@ class TestCommandeExterne(CasAvecDossier):
         "    if f['nom'] == 'Verbeux vide': c.update({'avantage': 1, 'originalite': 1, 'falsifiabilite': 0})\n"
         "    if f['nom'] == 'Assuré occupé': c.update({'avantage': 1, 'originalite': 0})\n"
         "    if f['nom'].startswith('Argon'): c.update({'avantage': 3})\n"
+        "    if f['nom'] == 'O1': c.update({'avantage': 0})\n"
         "    notes.append({'identifiant': f['identifiant'], 'criteres': c, 'justifications': {}})\n"
         "doublons = [[par_nom['Jumeau'], par_nom['Sobre fort']]] if 'Jumeau' in par_nom and 'Sobre fort' in par_nom else []\n"
         "print(json.dumps({'texte': '```json\\n' + json.dumps({'notes': notes, 'doublons': doublons}) + '\\n```', 'cout_usd': 0.3}))\n") % FICHE
@@ -687,7 +691,7 @@ class TestCommandeExterne(CasAvecDossier):
         for nom in ("lecture-course.json", "notes-par-juge.json", "noyau/temoins-servis.json", "noyau/modeles.json",
                     "juges-bras-rapporte/traces-argon/consigne-en-attente.md"):
             self.assertTrue(os.path.exists(os.path.join(sortie, nom + ".sha256")), nom)
-        self.assertTrue(all("argon" not in a["dossier"] for a in ad.appels))
+        self.assertTrue(all("argon" not in os.path.relpath(a["dossier"], sortie) for a in ad.appels))
         externes = [("argon", "autre-lignee-x", externe)]
         # attestation non scellée → refus
         att_nue = os.path.join(self.tmp, "att-nue.json")
@@ -716,6 +720,9 @@ class TestCommandeExterne(CasAvecDossier):
         apres = idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets, juges_externes=externes)
         self.assertFalse(apres["sans_bras"])
         self.assertTrue(all(l["nombre_juges"] == 3 and l["nom_agregat"] == "mediane" for l in apres["classement"]))
+        o1 = next(l for l in apres["classement"] if l["identifiant_auteur"] == "opus-p1-01")
+        self.assertEqual(o1["agregat"]["avantage"], 2)  # notes (2, 2, 0) : médiane 2, pas la moyenne 1,33
+        self.assertEqual(o1["par_juge"]["argon"]["avantage"], 0)
         self.assertEqual(sorted(apres["lecture"]["juges_agreges"]), ["argon", "juge-fable", "juge-opus"])
         self.assertEqual(len(apres["lecture"]["accords_de_rang_par_paire"]), 3)
         self.assertTrue(apres["lecture"]["temoins"]["temoins_ok"])
@@ -799,11 +806,16 @@ class TestCommandeExterne(CasAvecDossier):
                                       juges_externes=[("argon", "autre-lignee-x", simule)])
         self.assertEqual(simule.appels, [])
         self.assertFalse(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))
-        # et un proposeur externe simulé sur une course réelle est refusé aussi
-        with self.assertRaises(idn.CourseInterrompue):
-            budgets[("proposeur_ideation", "gemini-argon")] = 1.0
-            c.lancer(ad, "cr2", budgets=budgets,
-                     proposeurs_externes=[("argon", "gemini-argon", simule)], budget_externe_usd=2.0, moteur="claude-sdk")
+        # proposeur externe sans juge externe sur une course réelle : refusé (CL36-03, « juge oublié », n° 118)
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            c.lancer(ad, "cr1", budgets=budgets, proposeurs_externes=[("argon-p", "gemini-argon", ext)],
+                     budget_externe_usd=4.0, moteur="claude-sdk")
+        self.assertIn("obligatoires", str(cm.exception))
+        # et un proposeur externe simulé sur une course réelle est refusé aussi (CL35-04), juge externe présent
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            c.lancer(ad, "cr2", budgets=budgets, juges_externes=[("argon", "autre-lignee-x")],
+                     proposeurs_externes=[("argon-p", "gemini-argon", simule)], budget_externe_usd=4.0, moteur="claude-sdk")
+        self.assertIn("CL35-04", str(cm.exception))
 
 
     def test_bras_non_joue_relancable(self):
@@ -830,11 +842,45 @@ class TestCommandeExterne(CasAvecDossier):
             idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
                                       juges_externes=[("argon", "autre-lignee-x", cle_env)])
         self.assertTrue(os.path.exists(os.path.join(sortie, "manifeste-bras-non-joue-2.json")))
+        # attestation complète mais au sceau faux (modifiée après scellement) → refus
+        att_f = os.path.join(self.tmp, "att-n-fausse.json")
+        self.attester(att_f, sortie)
+        with open(att_f, "a") as f:
+            f.write("\n")
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att_f, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", introuvable)])
+        # CL37-02 : contrôle « KO » qui a coûté 0,15 → tentative payée, coût scellé, imputé au plafond externe
+        ko = AdaptateurCommandeExterne(self.commande(
+            "import sys, json\nc = sys.stdin.read()\nprint(json.dumps({'texte': 'KO', 'cout_usd': 0.15}))\n", "ko.py"),
+            environnement={})
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", ko)])
+        self.assertIn("0.1500 USD comptés", str(cm.exception))
+        self.assertTrue(os.path.exists(os.path.join(sortie, "bras-tentative-3.json.sha256")))
+        with open(os.path.join(sortie, "bras-tentative-3.json")) as f:
+            self.assertAlmostEqual(json.load(f)["reglages"]["journal"]["cout_total_usd"], 0.15)
+        # trois tentatives faites : plus de relance
         bon = AdaptateurCommandeExterne(self.commande(self.SCRIPT_OK), environnement={})
-        apres = idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", bon)])
+        self.assertIn("tentatives", str(cm.exception))
+        self.assertFalse(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))
+        # course neuve : une tentative payée, puis le bras joué avec le coût précédent imputé
+        c.lancer(ad, "cn2", budgets=budgets, juges_externes=[("argon", "autre-lignee-x")], budget_externe_usd=2.0)
+        sortie2 = os.path.join(self.tmp, "cn2")
+        att2 = self.attester(os.path.join(self.tmp, "att-n2.json"), sortie2)
+        with self.assertRaises(idn.CourseInterrompue):
+            idn.executer_bras_differe(sortie2, attestation_lecture_humaine=att2, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", ko)])
+        apres = idn.executer_bras_differe(sortie2, attestation_lecture_humaine=att2, budgets=budgets,
                                           juges_externes=[("argon", "autre-lignee-x", bon)])
         self.assertFalse(apres["sans_bras"])
-        self.assertTrue(os.path.exists(os.path.join(sortie, "manifeste-bras-rapporte.json")))
+        self.assertAlmostEqual(apres["journal"]["cout_tentatives_precedentes_usd"], 0.15)
+        self.assertEqual(apres["journal"]["tentative"], 2)
+        self.assertTrue(os.path.exists(os.path.join(sortie2, "manifeste-bras-rapporte.json")))
 
 
 class TestLanceurV37(CasAvecDossier):
@@ -864,7 +910,54 @@ class TestLanceurV37(CasAvecDossier):
             code = lanceur.principal(base + ["--moteur", "claude-sdk"])  # CL35-08 : non armé → 2, pas une trace
         self.assertEqual(code, 2)
         self.assertIn("MoteurNonArme", err.getvalue())
-        self.assertEqual(lanceur.BUDGETS_PAR_DEFAUT[("proposeur_ideation", "claude-fable-5-1")], 10.0)  # CL36-04
+        self.assertEqual(lanceur.BUDGETS_PAR_DEFAUT[("proposeur_ideation", "claude-fable-5-1")], 9.3)  # CL36-04, CL37-03
+
+    def test_controle_argon_avant_toute_passe(self):
+        """CL36-02 / CL37-01 : avec une commande factice, le proposeur externe est contrôlé avant toute passe, sous son
+        rôle, à la taille réelle des pièces, son coût compté ; Argon joue en tête de chaque passe. Une commande qui casse
+        sur une grosse consigne arrête avant tout appel Claude de proposition."""
+        import contextlib
+        import io
+        lanceur = self.lanceur()
+        cours = TestCourse("test_course_complete")
+        cours.tmp = self.tmp
+        prep = cours.preparer()
+        cmd = TestCommandeExterne("test_commande_factice_notes_et_controle")
+        cmd.tmp = self.tmp
+        commande = " ".join(cmd.commande(cmd.SCRIPT_OK))
+        sortie = os.path.join(self.tmp, "lanceur-ok")
+        base = [sortie, "--liste-blanche", prep["liste_blanche"], "--question", prep["question"], "--piece", prep["pieces"][0],
+                "--temoins", prep["temoins"], "--proposeur-externe", "argon=gemini-argon", "--juge-externe",
+                "argon-j=gemini-argon", "--commande-externe", commande, "--budget-externe-usd", "9"]
+        import unittest.mock
+        env_propre = {k: v for k, v in os.environ.items() if k in ("PATH", "HOME", "LANG", "LC_ALL", "TMPDIR")}
+        out = io.StringIO()
+        with unittest.mock.patch.dict(os.environ, env_propre, clear=True), contextlib.redirect_stdout(out):
+            code = lanceur.principal(base)
+        self.assertEqual(code, 0, out.getvalue())
+        with open(os.path.join(sortie, "manifeste-depart.json")) as f:
+            depart = json.load(f)["reglages"]
+        ctrl = depart["versions"]["appel_de_controle"]["externe:argon"]
+        self.assertEqual(ctrl["role"], "proposeur_ideation")
+        self.assertGreater(ctrl["taille_consigne"], depart["taille_pieces_servies"]["proposeurs"])
+        self.assertAlmostEqual(depart["cout_externe_deja_engage_usd"], 0.001)
+        with open(os.path.join(sortie, "manifeste-fin.json")) as f:
+            journal = json.load(f)["reglages"]["journal"]
+        self.assertEqual(journal["appels"][0]["etiquette"], "argon")  # CL37-01 : Argon en tête
+        self.assertAlmostEqual(journal["cout_externe_usd"], 0.001 + 0.25)
+        # commande qui casse au-delà de 100 caractères : refus au contrôle, aucun proposeur Claude appelé
+        casse = " ".join(cmd.commande("import sys, json\nc = sys.stdin.read()\n"
+                                      "if len(c) > 100: sys.exit(3)\nprint(json.dumps({'texte': 'OK', 'cout_usd': 0.001}))\n",
+                                      "casse.py"))
+        sortie2 = os.path.join(self.tmp, "lanceur-casse")
+        err = io.StringIO()
+        with unittest.mock.patch.dict(os.environ, env_propre, clear=True), contextlib.redirect_stdout(io.StringIO()), \
+                contextlib.redirect_stderr(err):
+            code = lanceur.principal([sortie2 if x == sortie else x for x in base[:-4]] + ["--commande-externe", casse,
+                                                                                            "--budget-externe-usd", "9"])
+        self.assertEqual(code, 2)
+        self.assertIn("appel de contrôle refusé", err.getvalue())
+        self.assertFalse(os.path.exists(os.path.join(sortie2, "manifeste-depart.json")))
 
 
 class TestReglagesV35(CasAvecDossier):
@@ -956,9 +1049,13 @@ class TestCourseV35(CasAvecDossier):
         res = c.lancer(ad, "c-ok", cout_deja_engage_usd=0.07)
         self.assertAlmostEqual(res["journal"]["cout_appels_de_controle_usd"], 0.07)
         self.assertAlmostEqual(res["journal"]["cout_total_usd"], 0.07 + 4 * 0.5)
-        c.lancer(ad, "c-juste", budget_total_usd=2.5)  # sans contrôle : 1,5 + 1 = 2,5, passe
+        c.lancer(ad, "c-juste", budget_total_usd=2.5, tolerer_somme_plafonds=True)  # sans contrôle : 1,5 + 1 = 2,5, passe
         with self.assertRaises(idn.CourseInterrompue):  # 0,07 + 1,5 + 1 > 2,5 : le contrôle compté arrête avant le dernier juge
-            c.lancer(ad, "c-plafond", cout_deja_engage_usd=0.07, budget_total_usd=2.5)
+            c.lancer(ad, "c-plafond", cout_deja_engage_usd=0.07, budget_total_usd=2.5, tolerer_somme_plafonds=True)
+        with self.assertRaises(idn.CourseInterrompue):  # CL37-03 : sans tolérance, 4,07 > 4 refusé avant tout appel
+            n = len(ad.appels)
+            c.lancer(ad, "c-somme", cout_deja_engage_usd=0.07, budget_total_usd=4.0)
+        self.assertEqual(len(ad.appels), n)
 
     def test_taille_max_pieces_bornee(self):
         """v37 : taille des pièces réglable, plafond dur, consignée au manifeste ; hors borne → refus avant tout appel."""

@@ -1,4 +1,4 @@
-"""Course d'idéation (v7, version 37) : la prise « idéation » de l'organisme — proposer et classer seulement.
+"""Course d'idéation (v7, version 38) : la prise « idéation » de l'organisme — proposer et classer seulement.
 
 Demande de Lazar du 28 octobre 2026 (15:27, heure de Paris) : « on a besoin de l'organisme pour qu'il réfléchisse et
 propose lui-même des questions bien affûtées ». Pas de banque ni d'épreuve : des **proposeurs** (vrais agents, Opus 5.5 et
@@ -59,7 +59,7 @@ from .adaptateurs import Resultat
 from .caviardage import caviarder, caviarder_objet
 from .outils import (dossier_traces, ecrire_json_scelle, ecrire_scelle, empreinte_objet, extraire_bloc_json,
                      graine_derivee, manifeste, sha256_fichier, verifier_scelle)
-from .relais import HOTES_LOCAUX, RelaisInvalide
+from .relais import HOTES_LOCAUX, CleDansEnvironnement, RelaisInvalide
 
 TYPES_FICHE = ("question", "approche")
 SIGNES = ("+", "-", "0")
@@ -76,6 +76,7 @@ PORTE_ELIGIBILITE = 2
 MAX_FICHES_ABSOLU = 12
 LONGUEUR_MAX_CHAMP = 3000
 MAX_TOURS_IDEATION = 2
+MAX_TENTATIVES_BRAS = 3  # v38 (CL37-02) : tentatives du bras différé, non jouées ou payées, au plus
 TAILLE_MAX_PIECES = 400_000  # caractères servis par lot de pièces (défaut)
 TAILLE_MAX_PIECES_ABSOLUE = 800_000  # v37 : plafond dur, quel que soit le réglage (≈ 200 000 jetons)
 ETIQUETTE = re.compile(r"^[a-z0-9][a-z0-9-]{0,39}$")
@@ -616,16 +617,39 @@ def valider_etiquettes(proposeurs, juges, temoins_presents):
         raise CourseInterrompue("aucun témoin planté : le classement ne serait pas lisible (CL31-03) ; passe --temoins")
 
 
-def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=None, exiger_cout=True):
+class ControleRefuse(CourseInterrompue):
+    """v38 (CL37-02) : l'appel de contrôle a échoué ; `lecture` porte le détail et le coût (compté ou plafond si inconnu),
+    `non_lance` est vrai si aucun processus n'est parti (commande introuvable)."""
+
+    def __init__(self, motif, lecture, non_lance=False):
+        super().__init__(motif)
+        self.lecture = lecture
+        self.non_lance = non_lance
+
+
+def consigne_de_controle(supplement=None):
+    """v38 (CL37-01) : la consigne de contrôle, éventuellement suivie d'un matériau de la taille réelle de la course
+    (les pièces servies), à ignorer — pour éprouver quota, taille de requête et délai avant toute dépense Claude."""
+    if not supplement:
+        return APPEL_DE_CONTROLE_CONSIGNE
+    return (APPEL_DE_CONTROLE_CONSIGNE + "\n\nTout ce qui suit est un matériau servi pour éprouver la taille de la "
+            "requête : ne le lis pas, ne le résume pas, réponds seulement OK.\n\n" + supplement)
+
+
+def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=None, exiger_cout=True,
+                      role="juge_ideation", supplement=None):
     """CL31-01 : un appel par modèle, même adaptateur, mêmes options, même bac à sable. Exige statut ok, texte « OK »,
     coût déclaré > 0 (sauf moteur simulé, `exiger_cout=False`) et, si le relais est lisible, un appel de plus et une
-    dépense > 0. Lève CourseInterrompue sinon. Rend la lecture, consignée au manifeste de départ."""
+    dépense > 0. Lève `ControleRefuse` (qui porte la lecture et son coût) sinon. Rend la lecture, consignée au manifeste
+    de départ. v38 : `role` (le contrôle d'un proposeur externe se fait sous `proposeur_ideation`) et `supplement`
+    (matériau de la taille réelle, CL37-01)."""
     lecture = {}
+    consigne = consigne_de_controle(supplement)
     for modele in sorted(set(modeles)):
         avant = lire_etat_relais() if lire_etat_relais else None
         dossier = os.path.join(sortie, "controle", re.sub(r"[^a-z0-9-]", "-", modele))
         os.makedirs(dossier, exist_ok=True)
-        r = adaptateur.lancer("juge_ideation", APPEL_DE_CONTROLE_CONSIGNE, dossier, budget_usd, 1, modele=modele)
+        r = adaptateur.lancer(role, consigne, dossier, budget_usd, 1, modele=modele)
         apres = lire_etat_relais() if lire_etat_relais else None
         texte = (r.texte_final or "").strip()
         problemes = []
@@ -640,10 +664,14 @@ def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=
                 problemes.append("le relais n'a pas compté l'appel")
             if apres.get("depense_usd", 0.0) <= avant.get("depense_usd", 0.0):
                 problemes.append("le relais n'a compté aucune dépense")
+        non_lance = bool(r.erreur) and str(r.erreur).startswith("commande externe non lancée")
         lecture[modele] = {"statut": r.statut, "texte": texte[:80], "cout_declare_usd": r.cout_declare_usd,
+                           "cout_inconnu": bool(getattr(r, "cout_inconnu", False)), "non_lance": non_lance,
+                           "role": role, "taille_consigne": len(consigne),
                            "relais_avant": avant, "relais_apres": apres, "problemes": problemes}
         if problemes:
-            raise CourseInterrompue(f"appel de contrôle refusé pour {modele} : " + " ; ".join(problemes))
+            raise ControleRefuse(f"appel de contrôle refusé pour {modele} : " + " ; ".join(problemes), lecture,
+                                 non_lance=non_lance)
     return lecture
 
 
@@ -676,13 +704,72 @@ def _lire_attestation(chemin, champs):
     return attestation
 
 
+def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_juge=(), temoins=None,
+                      taille_max_pieces=TAILLE_MAX_PIECES, attestation_materiau=None, budgets=None, budget_total_usd=0.0,
+                      budget_externe_usd=0.0, proposeurs=(), juges=(), proposeurs_externes=(), juges_externes=(),
+                      seconde_passe=False, cout_controles_prevu_usd=0.0, cout_controles_externes_prevu_usd=0.0,
+                      tolerer_somme_plafonds=False):
+    """v38 (CL37-04) : tout ce que la course refuserait, vérifié AVANT le premier appel de contrôle, sans rien écrire ni
+    dépenser : liste blanche et pièces (empreintes, zones interdites, tailles), témoins, attestation du matériau, plafonds
+    finis, étiquettes, somme des plafonds (passes et contrôles prévus compris) contre les totaux. Rend les pièces lues
+    (`texte_pieces` : le matériau du contrôle d'un proposeur externe à la taille réelle, CL37-01) et les tailles."""
+    import math
+    if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
+            or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
+        raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r}")
+    liste = charger_liste_blanche(liste_blanche)
+    question_lue = lire_pieces([question], liste)[0]
+    pieces_lues = lire_pieces(pieces, liste, taille_max_pieces)
+    materiau_lu = lire_pieces(materiau, liste, taille_max_pieces) if materiau else []
+    pieces_juge_lues = lire_pieces(pieces_juge, liste, taille_max_pieces) if pieces_juge else []
+    temoins_lus = charger_temoins(temoins, liste) if temoins else []
+    tous_proposeurs = [(e, m) for e, m, *_ in proposeurs_externes] + list(proposeurs)
+    tous_juges = list(juges) + [(e, m) for e, m, *_ in juges_externes]
+    valider_etiquettes(tous_proposeurs, tous_juges, bool(temoins_lus))
+    budgets = budgets or {}
+    for role_modele in ([("proposeur_ideation", m) for _, m in tous_proposeurs] + [("juge_ideation", m) for _, m in tous_juges]):
+        if role_modele not in budgets:
+            raise CourseInterrompue(f"aucun plafond par session pour {role_modele} (CL31-09)")
+    for cle_b, v in budgets.items():
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
+            raise CourseInterrompue(f"plafond par session non fini ou ≤ 0 : {cle_b} = {v!r}")
+    for nom_b, b in (("budget_total_usd", budget_total_usd), ("budget_externe_usd", budget_externe_usd),
+                     ("cout_controles_prevu_usd", cout_controles_prevu_usd),
+                     ("cout_controles_externes_prevu_usd", cout_controles_externes_prevu_usd)):
+        if isinstance(b, bool) or not isinstance(b, (int, float)) or not math.isfinite(b) or b < 0:
+            raise CourseInterrompue(f"{nom_b} : nombre fini ≥ 0 (reçu {b!r})")
+    if seconde_passe and proposeurs_externes and materiau_lu:
+        if not attestation_materiau:
+            raise CourseInterrompue("seconde passe avec un proposeur externe et un matériau : attestation_materiau obligatoire")
+        att = _lire_attestation(attestation_materiau, ("lecteur", "lu_le", "materiau_sha256"))
+        for nom, _, h in materiau_lu:
+            if att["materiau_sha256"].get(nom) != h:
+                raise CourseInterrompue(f"attestation_materiau : empreinte absente ou différente pour {nom!r}")
+    passes = 2 if seconde_passe else 1
+    somme_claude = cout_controles_prevu_usd + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
+        + sum(budgets[("juge_ideation", m)] for _, m in juges)
+    somme_externe = cout_controles_externes_prevu_usd \
+        + passes * sum(budgets[("proposeur_ideation", m)] for _, m, *_ in proposeurs_externes) \
+        + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes)
+    if not tolerer_somme_plafonds:
+        if somme_claude > budget_total_usd + 1e-9:
+            raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} (contrôles prévus compris) > total "
+                                    f"{budget_total_usd} (CL37-03)")
+        if (proposeurs_externes or juges_externes) and somme_externe > budget_externe_usd + 1e-9:
+            raise CourseInterrompue(f"somme des plafonds externes {somme_externe:.2f} > total externe {budget_externe_usd} (CL37-03)")
+    return {"texte_pieces": "\n\n".join(f"## Pièce : {n}\n{t}" for n, t, _ in pieces_lues),
+            "tailles": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
+                        "materiau": sum(len(t) for _, t, _ in materiau_lu), "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues)},
+            "temoins": len(temoins_lus), "somme_claude": somme_claude, "somme_externe": somme_externe}
+
+
 def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, proposeurs, juges, temoins, graine,
                       budget_total_usd, budgets, nombre_par_proposeur=8, max_tours=MAX_TOURS_IDEATION, materiau=(),
                       seconde_passe=False, pieces_juge=(), horodatage=None, moteur="simule", lire_etat_relais=None,
                       etat_bac_a_sable=None, url_relais=None, versions=None, juges_externes=(), proposeurs_externes=(),
                       budget_externe_usd=0.0, attestation_lecture_humaine=None, attestation_materiau=None,
                       cout_deja_engage_usd=0.0, lectures_interdites=(), commande_externe=None, delai_session_s=None,
-                      taille_max_pieces=TAILLE_MAX_PIECES, cout_externe_deja_engage_usd=0.0):
+                      taille_max_pieces=TAILLE_MAX_PIECES, cout_externe_deja_engage_usd=0.0, tolerer_somme_plafonds=False):
     """Course d'idéation v36.
 
     `budgets` : {(role, modele): plafond par session en dollars} ; `budget_total_usd` : plafond des sessions Claude (appels de
@@ -713,10 +800,14 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
             or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
         raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r} (v37)")
+    import math
     for nom_b, b in (("cout_deja_engage_usd", cout_deja_engage_usd), ("budget_externe_usd", budget_externe_usd),
-                     ("cout_externe_deja_engage_usd", cout_externe_deja_engage_usd)):
-        if isinstance(b, bool) or not isinstance(b, (int, float)) or b < 0:
-            raise CourseInterrompue(f"{nom_b} : nombre ≥ 0")
+                     ("cout_externe_deja_engage_usd", cout_externe_deja_engage_usd), ("budget_total_usd", budget_total_usd)):
+        if isinstance(b, bool) or not isinstance(b, (int, float)) or not math.isfinite(b) or b < 0:
+            raise CourseInterrompue(f"{nom_b} : nombre fini ≥ 0 (reçu {b!r})")
+    for cle_b, v in budgets.items():
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
+            raise CourseInterrompue(f"plafond par session non fini ou ≤ 0 : {cle_b} = {v!r}")
     _verifier_adaptateur_principal(adaptateur, moteur, proposeurs, juges)
     juges_externes = [(e, m) for e, m, *_ in juges_externes]
     proposeurs_externes = list(proposeurs_externes)
@@ -736,13 +827,136 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     materiau_lu = lire_pieces(materiau, liste, taille_max_pieces) if materiau else []
     pieces_juge_lues = lire_pieces(pieces_juge, liste, taille_max_pieces) if pieces_juge else []
     temoins_lus = charger_temoins(temoins, liste) if temoins else []
-    tous_proposeurs = list(proposeurs) + [(e, m) for e, m, _ in proposeurs_externes]
+    tous_proposeurs = [(e, m) for e, m, *_ in proposeurs_externes] + list(proposeurs)
+    tous_juges = list(juges) + [(e, m) for e, m, *_ in juges_externes]
+    valider_etiquettes(tous_proposeurs, tous_juges, bool(temoins_lus))
+    budgets = budgets or {}
+    for role_modele in ([("proposeur_ideation", m) for _, m in tous_proposeurs] + [("juge_ideation", m) for _, m in tous_juges]):
+        if role_modele not in budgets:
+            raise CourseInterrompue(f"aucun plafond par session pour {role_modele} (CL31-09)")
+    for cle_b, v in budgets.items():
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
+            raise CourseInterrompue(f"plafond par session non fini ou ≤ 0 : {cle_b} = {v!r}")
+    for nom_b, b in (("budget_total_usd", budget_total_usd), ("budget_externe_usd", budget_externe_usd),
+                     ("cout_controles_prevu_usd", cout_controles_prevu_usd),
+                     ("cout_controles_externes_prevu_usd", cout_controles_externes_prevu_usd)):
+        if isinstance(b, bool) or not isinstance(b, (int, float)) or not math.isfinite(b) or b < 0:
+            raise CourseInterrompue(f"{nom_b} : nombre fini ≥ 0 (reçu {b!r})")
+    if seconde_passe and proposeurs_externes and materiau_lu:
+        if not attestation_materiau:
+            raise CourseInterrompue("seconde passe avec un proposeur externe et un matériau : attestation_materiau obligatoire")
+        att = _lire_attestation(attestation_materiau, ("lecteur", "lu_le", "materiau_sha256"))
+        for nom, _, h in materiau_lu:
+            if att["materiau_sha256"].get(nom) != h:
+                raise CourseInterrompue(f"attestation_materiau : empreinte absente ou différente pour {nom!r}")
+    passes = 2 if seconde_passe else 1
+    somme_claude = cout_controles_prevu_usd + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
+        + sum(budgets[("juge_ideation", m)] for _, m in juges)
+    somme_externe = cout_controles_externes_prevu_usd \
+        + passes * sum(budgets[("proposeur_ideation", m)] for _, m, *_ in proposeurs_externes) \
+        + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes)
+    if not tolerer_somme_plafonds:
+        if somme_claude > budget_total_usd + 1e-9:
+            raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} (contrôles prévus compris) > total "
+                                    f"{budget_total_usd} (CL37-03)")
+        if (proposeurs_externes or juges_externes) and somme_externe > budget_externe_usd + 1e-9:
+            raise CourseInterrompue(f"somme des plafonds externes {somme_externe:.2f} > total externe {budget_externe_usd} (CL37-03)")
+    return {"texte_pieces": "\n\n".join(f"## Pièce : {n}\n{t}" for n, t, _ in pieces_lues),
+            "tailles": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
+                        "materiau": sum(len(t) for _, t, _ in materiau_lu), "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues)},
+            "temoins": len(temoins_lus), "somme_claude": somme_claude, "somme_externe": somme_externe}
+
+
+def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, proposeurs, juges, temoins, graine,
+                      budget_total_usd, budgets, nombre_par_proposeur=8, max_tours=MAX_TOURS_IDEATION, materiau=(),
+                      seconde_passe=False, pieces_juge=(), horodatage=None, moteur="simule", lire_etat_relais=None,
+                      etat_bac_a_sable=None, url_relais=None, versions=None, juges_externes=(), proposeurs_externes=(),
+                      budget_externe_usd=0.0, attestation_lecture_humaine=None, attestation_materiau=None,
+                      cout_deja_engage_usd=0.0, lectures_interdites=(), commande_externe=None, delai_session_s=None,
+                      taille_max_pieces=TAILLE_MAX_PIECES, cout_externe_deja_engage_usd=0.0, tolerer_somme_plafonds=False):
+    """Course d'idéation v36.
+
+    `budgets` : {(role, modele): plafond par session en dollars} ; `budget_total_usd` : plafond des sessions Claude (appels de
+    contrôle compris, `cout_deja_engage_usd`) ; `budget_externe_usd` : plafond **séparé** des sessions externes (Argon :
+    proposeur dans la course, juge en différé) ; `moteur` : « simule » ou « claude-sdk » (coûts d'un moteur simulé fictifs).
+
+    Décisions de Lazar du 28 octobre (21:05 et 21:20 UTC, n° 118 et 119) : **Argon propose à égalité et juge à poids égal**.
+    - `proposeurs_externes` : liste de (étiquette, modèle, adaptateur « commande-externe ») ; ils tournent **dans la course**
+      avec la même consigne, les mêmes pièces, le même nombre ; leur seconde passe ne reçoit le matériau que si
+      `attestation_materiau` (lecture humaine attestée du matériau, scellée) est donnée — sinon la course refuse avant
+      tout appel ; ils ne voient jamais les fiches des autres proposeurs.
+    - `juges_externes` : liste de (étiquette, modèle[, …]) ; **jamais appelés dans la course** (CL34-01) : consigne en
+      attente scellée, jouée par `executer_bras_differe` après attestation. Tant qu'un juge externe est attendu, la course
+      **n'écrit aucun classement ni aucune lecture agrégée** (n° 118 point 1) : notes des juges Claude, doublons, clés,
+      témoins servis et `lecture-course.json` (lectures par juge seulement) ; le classement à trois juges (médiane) est
+      écrit par le bras.
+    Sans juge externe : classement écrit par la course (comme en v35). `attestation_lecture_humaine` est refusé ici.
+    Toute session ≠ ok lève CourseInterrompue ; toute exception écrit le manifeste de fin.
+    """
+    if max_tours > MAX_TOURS_IDEATION:
+        raise CourseInterrompue(f"max_tours > {MAX_TOURS_IDEATION} : ces rôles n'ont besoin d'aucun outil (CL31-08)")
+    if isinstance(nombre_par_proposeur, bool) or not isinstance(nombre_par_proposeur, int) \
+            or not 1 <= nombre_par_proposeur <= MAX_FICHES_ABSOLU:
+        raise CourseInterrompue(f"nombre_par_proposeur ∉ [1, {MAX_FICHES_ABSOLU}] : {nombre_par_proposeur!r} (CL34-11)")
+    if attestation_lecture_humaine:
+        raise CourseInterrompue("une attestation de lecture humaine ne se donne pas à la course : le bras se joue seulement "
+                                "différé, par executer_bras_differe (CL34-01, N-053 point 5)")
+    if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
+            or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
+        raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r} (v37)")
+    import math
+    for nom_b, b in (("cout_deja_engage_usd", cout_deja_engage_usd), ("budget_externe_usd", budget_externe_usd),
+                     ("cout_externe_deja_engage_usd", cout_externe_deja_engage_usd), ("budget_total_usd", budget_total_usd)):
+        if isinstance(b, bool) or not isinstance(b, (int, float)) or not math.isfinite(b) or b < 0:
+            raise CourseInterrompue(f"{nom_b} : nombre fini ≥ 0 (reçu {b!r})")
+    for cle_b, v in budgets.items():
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0:
+            raise CourseInterrompue(f"plafond par session non fini ou ≤ 0 : {cle_b} = {v!r}")
+    _verifier_adaptateur_principal(adaptateur, moteur, proposeurs, juges)
+    juges_externes = [(e, m) for e, m, *_ in juges_externes]
+    proposeurs_externes = list(proposeurs_externes)
+    if moteur == "claude-sdk" and not (juges_externes and proposeurs_externes):  # v37 (CL36-03)
+        raise CourseInterrompue("course réelle : un juge externe ET un proposeur externe (Argon) sont obligatoires — "
+                                "décision de Lazar du 28 octobre (poids égal, égalité) ; aucun classement à deux juges")
+    for e, m, a in proposeurs_externes:
+        if a is None or (moteur == "claude-sdk" and getattr(a, "nom", None) != "commande-externe"):
+            raise CourseInterrompue(f"proposeur externe {e!r} : avec le moteur réel, seule une commande externe le joue "
+                                    "(jamais un adaptateur simulé sur une course réelle, CL35-04)")
+    if proposeurs_externes and not budget_externe_usd:
+        raise CourseInterrompue("budget_externe_usd > 0 requis quand un proposeur externe tourne dans la course")
+    reel = moteur == "claude-sdk"
+    liste = charger_liste_blanche(liste_blanche)
+    question_lue = lire_pieces([question], liste)[0]
+    pieces_lues = lire_pieces(pieces, liste, taille_max_pieces)
+    materiau_lu = lire_pieces(materiau, liste, taille_max_pieces) if materiau else []
+    pieces_juge_lues = lire_pieces(pieces_juge, liste, taille_max_pieces) if pieces_juge else []
+    temoins_lus = charger_temoins(temoins, liste) if temoins else []
+    tous_proposeurs = [(e, m) for e, m, _ in proposeurs_externes] + list(proposeurs)  # v38 (CL37-01) : externes en tête
     tous_juges = list(juges) + juges_externes
     valider_etiquettes(tous_proposeurs, tous_juges, bool(temoins_lus))
     for role_modele in ([("proposeur_ideation", m) for _, m in tous_proposeurs]
                         + [("juge_ideation", m) for _, m in tous_juges]):
         if role_modele not in budgets:
             raise CourseInterrompue(f"aucun plafond par session pour {role_modele} (CL31-09)")
+    # v38 (CL37-03) : la somme des plafonds de toutes les sessions prévues (contrôles déjà engagés, passes, juges) doit
+    # tenir dans le total, sinon le cœur s'arrêterait avant le dernier juge après la dépense ; refus sauf tolérance explicite
+    passes = 2 if seconde_passe else 1
+    somme_claude = float(cout_deja_engage_usd) + passes * sum(budgets[("proposeur_ideation", m)] for _, m in proposeurs) \
+        + sum(budgets[("juge_ideation", m)] for _, m in juges)
+    somme_externe = float(cout_externe_deja_engage_usd) + passes * sum(budgets[("proposeur_ideation", m)]
+                                                                       for _, m, _ in proposeurs_externes) \
+        + sum(budgets[("juge_ideation", m)] for _, m, *_ in juges_externes)
+    sommes = {"claude": round(somme_claude, 6), "total_claude": float(budget_total_usd),
+              "externe_sans_controle_du_bras": round(somme_externe, 6), "total_externe": float(budget_externe_usd),
+              "toleree": bool(tolerer_somme_plafonds)}
+    if not tolerer_somme_plafonds:
+        if somme_claude > budget_total_usd + 1e-9:
+            raise CourseInterrompue(f"somme des plafonds Claude {somme_claude:.2f} > total {budget_total_usd} : la course "
+                                    "s'arrêterait avant le dernier juge au pire cas (CL37-03) ; baisser les plafonds par "
+                                    "session, relever le total, ou tolerer_somme_plafonds")
+        if somme_externe > budget_externe_usd + 1e-9:
+            raise CourseInterrompue(f"somme des plafonds externes {somme_externe:.2f} > total externe {budget_externe_usd} "
+                                    "(CL37-03)")
     attestation_mat = None
     if seconde_passe and proposeurs_externes and materiau_lu:
         if not attestation_materiau:
@@ -782,7 +996,7 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
         attestation_materiau=({"fichier": os.path.basename(attestation_materiau), "sha256": sha256_fichier(attestation_materiau)}
                               if attestation_mat else None),
         cout_deja_engage_usd=float(cout_deja_engage_usd), budget_externe_usd=float(budget_externe_usd),
-        cout_externe_deja_engage_usd=float(cout_externe_deja_engage_usd),
+        cout_externe_deja_engage_usd=float(cout_externe_deja_engage_usd), somme_des_plafonds=sommes,
         reglages_kit=reglages_kit_par_role(), delai_session_s=delai_session_s, taille_max_pieces=taille_max_pieces,
         taille_pieces_servies={"proposeurs": sum(len(t) for _, t, _ in pieces_lues), "juges": sum(len(t) for _, t, _ in pieces_juge_lues),
                                "materiau": sum(len(t) for _, t, _ in materiau_lu)},
@@ -1064,6 +1278,16 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     # v37 (CL36-01) : un échec AVANT tout envoi et toute dépense (commande introuvable, clé dans l'environnement, contrôle
     # refusé sans coût) écrit un manifeste « non joué » numéroté et laisse le bras relançable.
     tentatives_non_jouees = sorted(f for f in os.listdir(sortie) if re.match(r"manifeste-bras-non-joue-\d+\.json$", f))
+    # v38 (CL37-02) : les tentatives qui ont coûté (contrôle refusé après dépense) sont lues ; leur coût s'impute au plafond
+    # externe ; au plus MAX_TENTATIVES_BRAS tentatives au total
+    tentatives_payees = sorted(f for f in os.listdir(sortie) if re.match(r"bras-tentative-\d+\.json$", f))
+    cout_tentatives = 0.0
+    for f in tentatives_payees:
+        with open(os.path.join(sortie, f), "r", encoding="utf-8") as fh:
+            cout_tentatives += float(json.load(fh)["reglages"]["journal"]["cout_total_usd"])
+    if len(tentatives_non_jouees) + len(tentatives_payees) >= MAX_TENTATIVES_BRAS:
+        raise CourseInterrompue(f"{MAX_TENTATIVES_BRAS} tentatives du bras déjà faites : plus de relance sans un mot de "
+                                "Lazar (CL37-02)")
     attestation = _lire_attestation(attestation_lecture_humaine,
                                     ("lecteur", "lu_le", "fiches_validees_sha256", "consignes_en_attente_sha256"))
     if attestation["fiches_validees_sha256"] != sha256_fichier(os.path.join(sortie, "fiches-validees.json")):
@@ -1095,7 +1319,7 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
         if getattr(a, "nom", None) != "commande-externe":
             cout_fictif = True
     plafond_externe = float(depart.get("budget_externe_usd", 0.0) if budget_externe_usd is None else budget_externe_usd)
-    deja_externe = float(fin["journal"].get("cout_externe_usd", 0.0))
+    deja_externe = float(fin["journal"].get("cout_externe_usd", 0.0)) + cout_tentatives  # CL37-02
     par_ident = {x["identifiant_auteur"]: x for x in fiches}
     for t in temoins:
         par_ident[t["identifiant_auteur"]] = t
@@ -1124,7 +1348,9 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
         raise CourseInterrompue(f"plafond externe {plafond_externe} insuffisant avant tout appel : déjà {deja_externe} + "
                                 f"contrôles et sessions {besoin} (CL35-05)")
     journal = {"appels": [], "cout_total_usd": 0.0, "cout_externe_deja_compte_course_usd": deja_externe,
-               "plafond_externe_usd": plafond_externe, "cout_fictif": cout_fictif, "arret": None, "controle": {}}
+               "cout_tentatives_precedentes_usd": cout_tentatives, "tentative": len(tentatives_non_jouees) + len(tentatives_payees) + 1,
+               "plafond_externe_usd": plafond_externe, "cout_fictif": cout_fictif, "arret": None, "controle": {},
+               "non_lance": False}
     notes_externes, doublons_externes = {}, {}
     resultat = {"classement": None, "lecture": None, "journal": journal, "sans_bras": False}
 
@@ -1148,8 +1374,17 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
 
     try:
         for etiquette, modele, adaptateur in juges_externes:
-            lecture_controle = appel_de_controle(adaptateur, [modele], os.path.join(sortie, "bras-rapporte-controle", etiquette),
-                                                 budget_controle_usd, None, exiger_cout=exiger_cout_controle)[modele]
+            dossier_controle = os.path.join(sortie, "bras-rapporte-controle", f"tentative-{journal['tentative']}", etiquette)
+            try:
+                lecture_controle = appel_de_controle(adaptateur, [modele], dossier_controle, budget_controle_usd, None,
+                                                     exiger_cout=exiger_cout_controle)[modele]
+            except ControleRefuse as e:  # CL37-02 : le coût du contrôle refusé est compté avant toute décision
+                lecture_controle = e.lecture.get(modele, {})
+                journal["controle"][etiquette] = lecture_controle
+                journal["cout_total_usd"] += float(lecture_controle.get("cout_declare_usd") or 0.0)
+                journal["non_lance"] = bool(e.non_lance)
+                journal["arret"] = str(e)
+                raise
             journal["controle"][etiquette] = lecture_controle
             journal["cout_total_usd"] += float(lecture_controle.get("cout_declare_usd") or 0.0)
         for etiquette, modele, adaptateur in juges_externes:
@@ -1204,16 +1439,27 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     except BaseException as e:
         if not journal["arret"]:
             journal["arret"] = type(e).__name__ + " : " + caviarder(str(e))[0][:500]
-        rien_envoye = (journal["cout_total_usd"] <= 0 and not notes_externes
-                       and not any(os.path.exists(os.path.join(dossier_traces(os.path.join(sortie, "juges-bras-rapporte", e2)),
-                                                               "reponse.md")) for e2, _, _ in juges_externes))
-        if rien_envoye and not os.path.exists(chemin_manifeste):  # CL36-01 : le bras reste relançable
-            n = len(tentatives_non_jouees) + 1
-            ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-non-joue-{n}.json"),
+        reponse_rendue = any(os.path.exists(os.path.join(dossier_traces(os.path.join(sortie, "juges-bras-rapporte", e2)),
+                                                         "reponse.md")) for e2, _, _ in juges_externes)
+        # CL36-01 / CL37-02 : « rien envoyé » seulement si aucun processus n'est parti (commande introuvable, clé dans
+        # l'environnement) ; un contrôle refusé qui a coûté est une tentative payée, comptée, bornée
+        rien_envoye = (not reponse_rendue and not notes_externes and journal["cout_total_usd"] <= 0
+                       and (journal["non_lance"] or isinstance(e, CleDansEnvironnement)))
+        numero = journal["tentative"]
+        if rien_envoye and not os.path.exists(chemin_manifeste):
+            ecrire_json_scelle(os.path.join(sortie, f"manifeste-bras-non-joue-{numero}.json"),
                                manifeste(phase="bras-non-joue", horodatage=horodatage, journal=journal, erreur=journal["arret"],
                                          relancable=True))
             raise CourseInterrompue("bras non joué (rien envoyé, rien dépensé) : " + journal["arret"]
                                     + " ; relance permise") from e
+        if not reponse_rendue and not notes_externes and not os.path.exists(chemin_manifeste):
+            # contrôle refusé après dépense : tentative payée, le bras reste relançable dans la limite des tentatives
+            ecrire_json_scelle(os.path.join(sortie, f"bras-tentative-{numero}.json"),
+                               manifeste(phase="bras-tentative", horodatage=horodatage, journal=journal, erreur=journal["arret"],
+                                         relancable=numero < MAX_TENTATIVES_BRAS))
+            raise CourseInterrompue(f"tentative {numero} du bras échouée avant tout envoi des fiches, {journal['cout_total_usd']:.4f} USD "
+                                    "comptés : " + journal["arret"] + (" ; relance permise" if numero < MAX_TENTATIVES_BRAS
+                                                                        else " ; plus de relance")) from e
         if not os.path.exists(chemin_manifeste):
             if isinstance(e, CourseInterrompue):
                 try:
