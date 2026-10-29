@@ -1,4 +1,4 @@
-"""Course d'idéation de l'organisme (v7, version 41) : lanceur.
+"""Course d'idéation de l'organisme (v7, version 42) : lanceur.
 
 Deux moteurs :
 - `--moteur simule` (sans dépense) : des proposeurs scriptés rendent des fiches au gabarit tirées d'un petit catalogue, des
@@ -21,7 +21,7 @@ Usage (course) :
       [--nombre 8] [--graine 20261028] [--moteur simule|claude-sdk] [--url-relais URL] [--confirmer-moteur-reel]
       [--horodatage "date -u"] [--racine-depot CHEMIN] [--delai-session-s 3600] [--delai-commande-s 1800]
       [--taille-max-pieces 750000]                                                  # défauts : devis v7 quinquies
-      [--tolerer-somme-plafonds-claude] [--tolerer-somme-plafonds-externe]
+      [--tolerer-somme-plafonds-claude] [--tolerer-somme-plafonds-externe] [--taille-max-consigne-externe N]
 
 v36 (décisions de Lazar du 28 octobre, 21:05 et 21:20 UTC ; messages n° 117 à 119 de session-depot) :
 - **Argon propose à égalité** (`--proposeur-externe`, joué dans la course par `--commande-externe`, qui reçoit la question
@@ -38,13 +38,21 @@ v36 (décisions de Lazar du 28 octobre, 21:05 et 21:20 UTC ; messages n° 117 à
 une course réelle, `--delai-session-s` ≤ 0 : refusés.
 Codes de sortie : 0 lisible (ou course écrite, en attente du bras) ; 2 arrêt (session en erreur, pièce refusée, appel de
 contrôle, réglage refusé, toute exception — y compris « bras non joué » et « tentative de contrôle scellée ») ; 4 témoins
-échoués chez un juge (classement écrit, marqué illisible ; aucune « retenue » imprimée) ; 5 juge externe sans réponse
-(classement à deux juges écrit, marqué « sans juge externe, illisible au sens du devis »).
+échoués chez un juge (classement écrit, marqué illisible ; aucune « retenue » imprimée) ; 5 juge externe sans réponse,
+ou (v42) tentative du bras scellée non relançable (classement à deux juges écrit, marqué « sans juge externe, illisible
+au sens du devis »).
 v41 (relecture CL7) : toute tentative de contrôle qui a coûté (contrôle refusé, contrôle interrompu — compté au plafond de
 sa session —, ou refus du cœur après les contrôles) est scellée dans `SORTIE-controle/tentative-N.json` ; son champ
 `relancable` est **calculé** : moins de trois tentatives ET, coûts déjà imputés compris, somme des plafonds Claude ≤ total
 Claude, somme externe ≤ total externe, relais suffisant. Aux réglages du devis v7 quinquies (somme Claude 40,0 exactement),
 il est **faux dès qu'un contrôle Claude a coûté** : la relance exige alors un mot de Lazar. Le lanceur l'imprime.
+v42 (contre-lecture CL8) : le contrôle d'Argon est joué **avant** les contrôles Claude (une panne d'Argon ne coûte rien
+chez Claude) ; **garde de taille sans dépense** avant tout contrôle : la consigne de contrôle d'Argon (sa plus grosse
+consigne) au-delà de `--taille-max-consigne-externe` (défaut : `--budget-controle-externe-usd` / prix prudent d'un
+caractère, `idn.PRIX_CARACTERE_PRUDENT_USD`, soit 1 000 000 caractères pour 2,5) → refus scellé dans
+`SORTIE-controle/refus-taille-K.json`, rien payé ; au bras, même garde sur la consigne du juge (défaut : plafond du juge /
+même prix), contrôle **court**, `--budget-externe-usd` transmis s'il est donné ; `relancable` écrit l'hypothèse « relais
+gardé » et calcule aussi « relais relancé à neuf » ; SORTIE sans manifeste de départ → `relancable` faux.
 
 La commande externe : consigne sur l'entrée standard, environnement minimal explicite (plus `PLAFOND_SESSION_USD`,
 `ROLE_POLE` et `--variable-transmise`, jamais un nom de clé), dernière ligne `{"texte": …, "cout_usd": …}` — coût
@@ -189,11 +197,14 @@ def lire_tentatives_controle(sortie_controle):
 
 
 def relance_possible(numero, verif, cout_claude, cout_externe, total_claude, total_externe, tolere_claude, tolere_externe,
-                     externes, relais=None, budgets=None, juges=None):
+                     externes, relais=None, budgets=None, juges=None, details=False):
     """v41 (CL40-01, code) : ce que la relance vérifiera, calculé au moment de sceller la tentative `numero` — moins de
     trois tentatives ; somme des plafonds Claude de la relance (celle de cette course, coûts de cette tentative imputés) ≤
     total ; même chose côté externe ; relais (plafond − réserve − dépense, la dépense de cette tentative ajoutée) ≥ total −
-    plus petit juge. Rend (relançable, motifs). Ne change pas la politique (aucune marge ajoutée)."""
+    plus petit juge. Rend (relançable, motifs). Ne change pas la politique (aucune marge ajoutée).
+    v42 (CL41-05) : `relancable` reste calculé dans l'hypothèse **« relais gardé »** (sa dépense, celle de cette tentative
+    comprise, est comptée), écrite dans le motif ; le second calcul **« relais relancé à neuf »** (dépense 0, devis point 4)
+    est rendu à côté (`details=True` : troisième élément {relancable, motifs}) et nommé dans le motif s'il diffère."""
     motifs = []
     if numero >= idn.MAX_TENTATIVES_BRAS:
         motifs.append(f"{idn.MAX_TENTATIVES_BRAS} tentatives faites")
@@ -203,12 +214,24 @@ def relance_possible(numero, verif, cout_claude, cout_externe, total_claude, tot
     somme_e = verif["somme_externe"] + cout_externe
     if externes and not tolere_externe and somme_e > total_externe + 1e-9:
         motifs.append(f"somme des plafonds externes de la relance {somme_e:.4f} > total externe {total_externe}")
+    autres = list(motifs)  # tout sauf le relais : communs aux deux hypothèses
+    a_neuf = {"relancable": not autres, "motifs": list(autres), "hypothese": "relais relancé à neuf (dépense 0)"}
     if relais and relais.get("plafond_usd") is not None and relais.get("reserve_par_appel_usd") is not None:
         plus_petit_juge = min(budgets[("juge_ideation", m)] for _, m in juges)
-        reste = float(relais["plafond_usd"]) - float(relais["reserve_par_appel_usd"]) \
-            - float(relais.get("depense_usd") or 0.0) - cout_claude
-        if reste < total_claude - plus_petit_juge - 1e-9:
-            motifs.append(f"relais : {reste:.4f} restants < total {total_claude} − plus petit juge {plus_petit_juge}")
+        besoin = total_claude - plus_petit_juge
+        neuf = float(relais["plafond_usd"]) - float(relais["reserve_par_appel_usd"])
+        reste = neuf - float(relais.get("depense_usd") or 0.0) - cout_claude
+        if neuf < besoin - 1e-9:
+            a_neuf["motifs"].append(f"relais relancé à neuf : {neuf:.4f} < total {total_claude} − plus petit juge "
+                                    f"{plus_petit_juge}")
+            a_neuf["relancable"] = False
+        if reste < besoin - 1e-9:
+            motifs.append(f"relais gardé (hypothèse) : {reste:.4f} restants < total {total_claude} − plus petit juge "
+                          f"{plus_petit_juge}" + ("" if a_neuf["motifs"] != autres else
+                                                 f" ; relais relancé à neuf (devis, point 4) : {neuf:.4f} ≥ {besoin:.4f}, "
+                                                 "la garde du relais accepterait"))
+    if details:
+        return not motifs, motifs, a_neuf
     return not motifs, motifs
 
 
@@ -249,6 +272,15 @@ def version_outil_ligne_de_commande(sdk):
     return {"chemin": None, "version": "inconnue"}
 
 
+class _Explicite(argparse.Action):
+    """v42 (CL41-01) : retient qu'une option a été donnée (le bras ne prend `--budget-externe-usd` que s'il est donné ;
+    sinon le plafond relu au manifeste de départ de la course)."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
+        setattr(namespace, self.dest + "_explicite", True)
+
+
 def construire_analyseur():
     a = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     a.add_argument("sortie", nargs="?", help="dossier de sortie, absent (jamais écrasé)")
@@ -281,7 +313,7 @@ def construire_analyseur():
     a.add_argument("--max-tours", type=int, default=idn.MAX_TOURS_IDEATION)
     a.add_argument("--budget-total-usd", type=float, default=40.0,
                    help="plafond total côté Claude, contrôles compris (devis v7 quinquies)")
-    a.add_argument("--budget-externe-usd", type=float, default=11.6,
+    a.add_argument("--budget-externe-usd", type=float, default=11.6, action=_Explicite,
                    help="plafond total des sessions externes (Argon : contrôle à taille réelle 2,5, deux passes à 2,5, juge 3,5, "
                         "contrôle du bras 0,2 ≈ 11,2 ; mot de Lazar : 11,6 — tout est réglable)")
     a.add_argument("--budget-controle-usd", type=float, default=None,
@@ -292,6 +324,10 @@ def construire_analyseur():
     a.add_argument("--delai-commande-s", type=float, default=1800.0, help="borne de temps de la commande externe (CL37-08)")
     a.add_argument("--budget-controle-externe-usd", type=float, default=2.5,
                    help="plafond de l'appel de contrôle du proposeur externe à la taille réelle de la consigne (CL37-01)")
+    a.add_argument("--taille-max-consigne-externe", type=int, default=None,
+                   help="v42 (CL41-01) : taille maximale (caractères) de la plus grosse consigne externe — course : la consigne "
+                        "de contrôle d'Argon ; bras : la consigne du juge ; au-delà, refus scellé avant tout appel, rien payé "
+                        "(défaut : plafond de la session qui la reçoit / prix prudent d'un caractère)")
     a.add_argument("--tolerer-somme-plafonds", action="store_true",
                    help="ancienne option : vaut les deux suivantes (consigné au manifeste)")
     a.add_argument("--tolerer-somme-plafonds-claude", action="store_true",
@@ -335,6 +371,25 @@ def verifier_relais(etat_relais, budget_total_usd, budgets, juges):
     return lu
 
 
+def verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
+                              cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe, taille_max=None,
+                              origine_taille="donnée"):
+    """v38 (CL37-04) → v42 : tous les réglages vérifiés AVANT tout appel de contrôle, avec le même contrôle du bras que
+    celui que reçoit le cœur (`budget_controle`, CL40-03) et la garde de taille d'Argon (CL41-01)."""
+    return idn.verifier_reglages(
+        liste_blanche=args.liste_blanche, question=args.question, pieces=args.piece, materiau=args.materiau,
+        pieces_juge=args.piece_juge, temoins=args.temoins, taille_max_pieces=args.taille_max_pieces, max_tours=args.max_tours,
+        attestation_materiau=args.attestation_materiau if (prop_ext and args.seconde_passe) else None,
+        budgets=budgets, budget_total_usd=args.budget_total_usd,
+        budget_externe_usd=args.budget_externe_usd if (prop_ext or juges_ext) else 0.0, proposeurs=proposeurs, juges=juges,
+        proposeurs_externes=prop_ext, juges_externes=juges_ext, seconde_passe=args.seconde_passe,
+        cout_controles_prevu_usd=cout_tentatives_claude + budget_controle * len({m for _, m in proposeurs + juges}),
+        cout_controles_externes_prevu_usd=cout_tentatives_externe + args.budget_controle_externe_usd * len(prop_ext),
+        tolerer_somme_claude=tolere_claude, tolerer_somme_externe=tolere_externe,
+        budget_controle_bras_usd=budget_controle, nombre_par_proposeur=args.nombre,
+        taille_max_consigne_externe=taille_max, origine_taille_max=origine_taille)
+
+
 def principal(argv=None):
     a = construire_analyseur()
     args = a.parse_args(argv)
@@ -363,6 +418,8 @@ def principal(argv=None):
         a.error("--delai-session-s doit être strictement positif")
     if not args.delai_commande_s > 0:
         a.error("--delai-commande-s doit être strictement positif")
+    if args.taille_max_consigne_externe is not None and args.taille_max_consigne_externe < 1:  # v42 (CL41-01)
+        a.error("--taille-max-consigne-externe doit être un entier ≥ 1")
     import signal
 
     def interrompre(num, _cadre):  # v40 (CL39-05) : SIGTERM et SIGHUP suivent le chemin de SIGINT (groupe d'Argon arrêté,
@@ -463,8 +520,12 @@ def _principal(args):
             res = idn.executer_bras_differe(sortie, attestation_lecture_humaine=args.attestation_lecture_humaine,
                                             juges_externes=[(e, m, externe) for e, m in juges_ext], budgets=budgets,
                                             horodatage=horodatage(args.horodatage), budget_controle_usd=args.budget_controle_usd,
-                                            exiger_cout_controle=bool(args.commande_externe), budget_externe_usd=None,
-                                            commande_externe=commande_externe)
+                                            exiger_cout_controle=bool(args.commande_externe),
+                                            # v42 (CL41-01) : le plafond externe donné passe au bras ; sinon celui de la course
+                                            budget_externe_usd=(args.budget_externe_usd
+                                                                if getattr(args, "budget_externe_usd_explicite", False) else None),
+                                            commande_externe=commande_externe,
+                                            taille_max_consigne_externe=args.taille_max_consigne_externe)
         except idn.SansJugeExterne as e:
             print(json.dumps({"arret": "sans juge externe, illisible au sens du devis : " + str(e),
                               "classement_sans_bras": "classement-sans-bras.json (deux juges, illisible)",
@@ -502,17 +563,35 @@ def _principal(args):
                                                    args.tolerer_somme_plafonds_externe)
     versions["tolerances"] = {"claude": tolere_claude, "externe": tolere_externe,
                               "option_ancienne_les_deux": bool(args.tolerer_somme_plafonds)}
-    verif = idn.verifier_reglages(
-        liste_blanche=args.liste_blanche, question=args.question, pieces=args.piece, materiau=args.materiau,
-        pieces_juge=args.piece_juge, temoins=args.temoins, taille_max_pieces=args.taille_max_pieces, max_tours=args.max_tours,
-        attestation_materiau=args.attestation_materiau if (prop_ext and args.seconde_passe) else None,
-        budgets=budgets, budget_total_usd=args.budget_total_usd,
-        budget_externe_usd=args.budget_externe_usd if (prop_ext or juges_ext) else 0.0, proposeurs=proposeurs, juges=juges,
-        proposeurs_externes=prop_ext, juges_externes=juges_ext, seconde_passe=args.seconde_passe,
-        cout_controles_prevu_usd=cout_tentatives_claude + budget_controle * len({m for _, m in proposeurs + juges}),
-        cout_controles_externes_prevu_usd=cout_tentatives_externe + args.budget_controle_externe_usd * len(prop_ext),
-        tolerer_somme_claude=tolere_claude, tolerer_somme_externe=tolere_externe,
-        budget_controle_bras_usd=budget_controle, nombre_par_proposeur=args.nombre)
+    # v42 (CL41-01) : taille maximale de la plus grosse consigne d'Argon dans la course (sa consigne de contrôle) — donnée,
+    # ou plafond du contrôle d'Argon / prix prudent d'un caractère (barème le plus haut du code, 4 caractères par jeton)
+    if args.taille_max_consigne_externe is not None:
+        taille_max, origine_taille = args.taille_max_consigne_externe, "option"
+    else:
+        taille_max = idn.taille_max_consigne_par_defaut(args.budget_controle_externe_usd)
+        origine_taille = (f"défaut : plafond du contrôle d'Argon {args.budget_controle_externe_usd} / prix prudent "
+                          f"{idn.PRIX_CARACTERE_PRUDENT_USD:.2e} dollar par caractère")
+    versions["taille_max_consigne_externe"] = {"valeur": taille_max, "origine": "option" if args.taille_max_consigne_externe
+                                               is not None else "defaut", "detail": origine_taille}
+    try:
+        verif = verifier_reglages_lanceur(args, budgets, proposeurs, juges, juges_ext, prop_ext, cout_tentatives_claude,
+                                          cout_tentatives_externe, budget_controle, tolere_claude, tolere_externe,
+                                          taille_max if prop_ext else None, origine_taille)
+    except idn.TailleConsigneRefusee as e:  # refus scellé, avant tout contrôle, rien payé, aucune tentative comptée
+        from pole.outils import ecrire_json_scelle, manifeste
+        os.makedirs(sortie_controle, exist_ok=True)
+        k = 1 + sum(1 for n in os.listdir(sortie_controle) if re.match(r"refus-taille-\d+\.json$", n))
+        chemin_r = os.path.join(sortie_controle, f"refus-taille-{k}.json")
+        ecrire_json_scelle(chemin_r, manifeste(phase="controle-refus-taille", horodatage=horodatage(args.horodatage),
+                                               erreur=str(e), garde_taille=e.details, tentative_comptee=False, cout_usd=0.0))
+        print(json.dumps({"refus_taille_scelle": chemin_r, "cout_usd": 0.0, "garde_taille": e.details}, ensure_ascii=False),
+              file=sys.stderr)
+        raise
+    if prop_ext:  # v42 (CL41-02) : la taille de la marge et du contrôle, écrite au manifeste de départ
+        versions["marge_controle_externe"] = {"taille_consigne_de_controle": verif["taille_consigne_controle_externe"],
+                                              "taille_fiche_maximale_servie": verif["taille_fiche_maximale"],
+                                              "nombre": args.nombre, "seconde_passe": args.seconde_passe,
+                                              "garde_taille": verif["garde_taille"]}
     if lire_relais is not None:  # CL37-03 / CL39-03 : cohérence plafond, réserve, dépense déjà faite, total du cœur
         versions["relais_au_depart"] = verifier_relais(lire_relais(), args.budget_total_usd, budgets, juges)
     versions["tentatives_precedentes"] = tentatives
@@ -521,13 +600,15 @@ def _principal(args):
     dossier_tentative = os.path.join(sortie_controle, f"tentative-{numero_tentative}")
     controle = {}
     try:
-        controle = idn.appel_de_controle(adaptateur, modeles, dossier_tentative, budget_controle, lire_relais,
-                                         exiger_cout=(args.moteur == "claude-sdk"))
         for e, m in prop_ext:  # CL36-02 / CL37-01 : contrôle du proposeur externe AVANT la passe 1, sous son rôle, à la
-            # taille réelle de la plus grosse consigne qu'il recevra (CL39-06, CL40-04 : sa consigne de passe 2 au maximum)
+            # taille réelle de la plus grosse consigne qu'il recevra (CL39-06, CL40-04 : sa consigne de passe 2 au maximum ;
+            # v42 : matériau encadré, consigne qui finit par « OK », CL41-03) ; v42 (CL41-07) : joué AVANT les contrôles
+            # Claude — une panne d'Argon au contrôle ne coûte rien chez Claude
             controle[f"externe:{e}"] = idn.appel_de_controle(
                 externe, [m], dossier_tentative + "-externe-" + e, args.budget_controle_externe_usd, None,
                 exiger_cout=bool(args.commande_externe), role="proposeur_ideation", supplement=verif["texte_controle_externe"])[m]
+        controle.update(idn.appel_de_controle(adaptateur, modeles, dossier_tentative, budget_controle, lire_relais,
+                                              exiger_cout=(args.moteur == "claude-sdk")))
         cout_controle = sum(idn.cout_compte_controle(c) for k, c in controle.items() if not k.startswith("externe:"))
         cout_controle_externe = sum(idn.cout_compte_controle(c) for k, c in controle.items() if k.startswith("externe:"))
         # v41 (CL40-03) : le cœur reçoit le même contrôle du bras que verifier_reglages ; tout refus du cœur avant son
@@ -558,20 +639,27 @@ def _principal(args):
             lectures[("externe:" + etiquette_externe.get(m, m)) if c.get("role") == "proposeur_ideation" else m] = c
         cout_c = sum(idn.cout_compte_controle(c) for k, c in lectures.items() if not k.startswith("externe:"))
         cout_x = sum(idn.cout_compte_controle(c) for k, c in lectures.items() if k.startswith("externe:"))
-        relancable, motifs = relance_possible(
+        relancable, motifs, relais_a_neuf = relance_possible(
             numero_tentative, verif, cout_c, cout_x, args.budget_total_usd,
             args.budget_externe_usd if (prop_ext or juges_ext) else 0.0, tolere_claude, tolere_externe,
-            bool(prop_ext or juges_ext), versions.get("relais_au_depart"), budgets, juges)
+            bool(prop_ext or juges_ext), versions.get("relais_au_depart"), budgets, juges, details=True)
+        if os.path.exists(sortie):  # v42 (CL41-06) : SORTIE sans manifeste de départ — la relance refuserait « SORTIE existe »
+            relancable = False
+            relais_a_neuf = dict(relais_a_neuf, relancable=False)
+            motifs.append(f"SORTIE {sortie} existe sans manifeste de départ (interruption entre sa création et le manifeste) : "
+                          "la relance refuserait « SORTIE existe déjà » ; mot de Lazar")
         from pole.outils import ecrire_json_scelle, manifeste
         chemin_t = os.path.join(sortie_controle, f"tentative-{numero_tentative}.json")
         ecrire_json_scelle(chemin_t, manifeste(
             phase="controle-tentative", horodatage=horodatage(args.horodatage), lectures=lectures,
             cout_claude_usd=cout_c, cout_externe_usd=cout_x, erreur=type(e).__name__ + " : " + str(e)[:500],
             relancable=relancable, motifs_relance=motifs, sommes_de_cette_course={
-                "claude": verif["somme_claude"], "externe": verif["somme_externe"]}, tolerances=versions["tolerances"]))
+                "claude": verif["somme_claude"], "externe": verif["somme_externe"]}, tolerances=versions["tolerances"],
+            hypothese_relancable="relais gardé (sa dépense comptée)", relance_relais_relance_a_neuf=relais_a_neuf))
         print(json.dumps({"tentative_scellee": chemin_t, "cout_claude_usd": round(cout_c, 6),
                           "cout_externe_usd": round(cout_x, 6), "relancable": relancable,
-                          "motifs_relance": motifs or ["aucun : relance permise"]}, ensure_ascii=False), file=sys.stderr)
+                          "motifs_relance": motifs or ["aucun : relance permise"],
+                          "relance_relais_relance_a_neuf": relais_a_neuf}, ensure_ascii=False), file=sys.stderr)
         raise
     bilan = {"fiches_validees": len(res["fiches"]), "refusees": len(res["refus"]), "quarantaine": len(res["quarantaine"]),
              "quarantaine_par_proposeur": res["lecture"]["quarantaine_par_proposeur"],
