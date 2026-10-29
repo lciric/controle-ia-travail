@@ -1531,7 +1531,9 @@ class TestV41(CasAvecDossier):
         """CL40-04 (S5) : le contrôle d'Argon porte sa consigne de passe 2 au maximum (fiches à la taille maximale champ par
         champ × nombre, matériau) ; une passe 2 réelle à champs de 3 000 caractères n'est pas plus grosse que le contrôle ;
         sans matériau la seconde passe compte aussi ses fiches ; Argon joue sa passe 2 juste après sa passe 1, avant toute
-        passe Claude."""
+        passe Claude. **Changé en v43** (CL42-04, décision de Lazar : « retirer » la borne de fiche) : retour aux assertions de
+        la v41 — fiche maximale de plus de 13 × 3 000 caractères, grosse fiche d'Argon à quatre champs de 3 000 (v42 : 12 000
+        et trois champs)."""
         c = self.cours()
         prep = c.preparer()
         c._prep = prep
@@ -1546,7 +1548,7 @@ class TestV41(CasAvecDossier):
                     proposeurs_externes=[("argon", "gemini-argon")], budget_total_usd=20.0, budget_externe_usd=5.0,
                     nombre_par_proposeur=8)
         taille_fiche = len(json.dumps([idn.fiche_maximale()], ensure_ascii=False, indent=1))
-        self.assertEqual(taille_fiche, idn.TAILLE_MAX_FICHE_SERVIE)  # v42 (CL41-02) : fiche bornée (v41 : > 13 × 3 000)
+        self.assertGreater(taille_fiche, 13 * idn.LONGUEUR_MAX_CHAMP)  # v43 (CL42-04) : comme la v41 (v42 : 12 000)
         v2 = idn.verifier_reglages(materiau=prep["materiau"], seconde_passe=True, attestation_materiau=att, **args)
         self.assertGreater(len(v2["texte_controle_externe"]), 8 * taille_fiche)  # v40 : 8 × 4 000
         self.assertIn("Tour interne", v2["texte_controle_externe"])
@@ -1555,10 +1557,10 @@ class TestV41(CasAvecDossier):
         v1 = idn.verifier_reglages(**args)
         self.assertLess(len(v1["texte_controle_externe"]), taille_fiche)
         # une passe 2 réelle aux champs de 3 000 caractères (8 fiches) n'est pas plus grosse que la consigne de contrôle
-        # (v42 : trois champs de 3 000, la fiche restant sous la borne de 12 000 caractères servis)
+        # (v43 : quatre champs de 3 000, comme la v41 ; v42 : trois, sous la borne de 12 000 retirée)
         controle = idn.consigne_de_controle(v2["texte_controle_externe"])
         grosse = fiche_brute(nom="Argon gros")
-        for k in ("enonce", "perte_traduction", "piege"):
+        for k in ("enonce", "perte_traduction", "piege", "cosmetique_si"):
             grosse[k] = "y" * idn.LONGUEUR_MAX_CHAMP
         ordre = []
 
@@ -1629,12 +1631,14 @@ class TestV41(CasAvecDossier):
 
     def test_relancable_calcule_avec_un_controle_claude_paye(self):
         """CL40-01 (code), point 6 : contrôle Claude payé (0,01 puis 0,2 par modèle), réglages du devis v7 quinquies (somme
-        Claude 40,0 exactement) : la tentative scellée porte les coûts, `relancable` est faux (somme de la relance 40,02 >
-        40), le lanceur l'imprime, et la relance est refusée avant tout contrôle. Total relevé à 41 : relançable, et la
-        relance repasse bien par les contrôles. v42 (CL41-07) : Argon est contrôlé d'abord (« OK » à 0,15) ; l'échec vient
-        du second contrôle Claude (« KO », payé) — v41 : Argon « KO » après les contrôles Claude."""
+        Claude 40,0 exactement), Argon « OK » à 0,15, le second contrôle Claude « KO » (payé). **Changé en v43** (CL40-01,
+        option c, décision de Lazar : les contrôles réussis ne sont pas rejoués) : la somme de la relance compte les coûts
+        imputés et le seul contrôle à refaire — 0,02 + 0,2 + 39,6 = 39,82 ≤ 40, relançable, et la relance ne rejoue que le
+        contrôle « KO » (Argon et le premier contrôle Claude repris) ; à 0,2 : 0,4 + 0,2 + 39,6 = 40,2 > 40, non relançable,
+        relance refusée avant tout contrôle. Total relevé à 41 : trois tentatives au plus, Argon appelé une seule fois.
+        (v42 : relance 40,02 et 40,4, non relançable ; la relance à 41 rejouait tous les contrôles, Argon trois fois.)"""
         prep, att = self.prep_devis()
-        for cout, somme in ((0.01, "40.0200"), (0.2, "40.4000")):
+        for cout, somme, relancable in ((0.01, "39.8200", True), (0.2, "40.2000", False)):
             journal = os.path.join(self.tmp, f"ko-{cout}.log")
             ko = self.script(self.SCRIPT_CTRL_OK % journal, f"ko-{cout}.py")
             sortie = os.path.join(self.tmp, f"l-paye-{cout}")
@@ -1647,22 +1651,34 @@ class TestV41(CasAvecDossier):
                 r = json.load(f)["reglages"]
             self.assertAlmostEqual(r["cout_claude_usd"], 2 * cout)
             self.assertAlmostEqual(r["cout_externe_usd"], 0.15)
-            self.assertFalse(r["relancable"], r)  # v40 : vrai
-            self.assertTrue(any(somme in m for m in r["motifs_relance"]), r["motifs_relance"])
-            self.assertIn('"relancable": false', err)
+            self.assertEqual(r["relancable"], relancable, r["motifs_relance"])
+            self.assertEqual(r["controles_a_refaire"], ["claude-opus-5-5"])
+            self.assertAlmostEqual(r["sommes_de_la_relance_hors_cette_tentative"]["claude"], 39.8)
+            if not relancable:
+                self.assertTrue(any(somme in m for m in r["motifs_relance"]), r["motifs_relance"])
+                self.assertIn('"relancable": false', err)
             self.assertNotIn("trois tentatives", err)
             n = len(_lire(journal).splitlines())
             code, out, err = self.principal(self.lanceur(cout_controle_claude=cout, ko_claude="claude-opus-5-5"), argv)
             self.assertEqual(code, 2)
-            self.assertIn("somme des plafonds Claude", err)
-            self.assertEqual(len(_lire(journal).splitlines()), n)  # aucun contrôle rejoué, Argon non rappelé
-            self.assertFalse(os.path.exists(os.path.join(sortie + "-controle", "tentative-2.json")))
-        # total relevé à 41 : relance calculée possible, et elle repasse par les contrôles (bornée à trois)
+            self.assertEqual(len(_lire(journal).splitlines()), n)  # Argon jamais rappelé (refus, ou contrôle repris)
+            if relancable:  # la relance ne rejoue que le contrôle « KO »
+                with open(os.path.join(sortie + "-controle", "tentative-2.json")) as f:
+                    r2 = json.load(f)["reglages"]
+                self.assertEqual(sorted(r2["lectures"]), ["claude-opus-5-5"])
+                self.assertEqual(sorted(r2["controles_repris"]), ["claude-fable-5-1", "externe:argon"])
+                self.assertEqual({v["repris_de_tentative"] for v in r2["controles_repris"].values()}, {1})
+                self.assertAlmostEqual(r2["cout_claude_usd"], cout)
+                self.assertEqual(r2["cout_externe_usd"], 0.0)
+            else:
+                self.assertIn("somme des plafonds Claude", err)
+                self.assertFalse(os.path.exists(os.path.join(sortie + "-controle", "tentative-2.json")))
+        # total relevé à 41 : relance calculée possible, seul le contrôle « KO » rejoué (bornée à trois)
         journal = os.path.join(self.tmp, "ko-41.log")
         ko = self.script(self.SCRIPT_CTRL_OK % journal, "ko-41.py")
         sortie = os.path.join(self.tmp, "l-paye-41")
         argv = self.base(sortie, prep, att, "--commande-externe", ko, "--budget-total-usd", "41", "--budget-externe-usd", "12")
-        for n in (1, 2, 3):  # sommes de la relance : 40,4 puis 40,8 (≤ 41) ; la troisième atteint la borne
+        for n in (1, 2, 3):  # sommes de la relance : 40,2 ; 40,4 ; 40,6 (≤ 41) ; la troisième atteint la borne
             code, _, err = self.principal(self.lanceur(cout_controle_claude=0.2, ko_claude="claude-opus-5-5"), argv)
             self.assertEqual(code, 2)
             with open(os.path.join(sortie + "-controle", f"tentative-{n}.json")) as f:
@@ -1672,7 +1688,7 @@ class TestV41(CasAvecDossier):
         code, _, err = self.principal(self.lanceur(cout_controle_claude=0.2, ko_claude="claude-opus-5-5"), argv)
         self.assertEqual(code, 2)
         self.assertIn("tentatives", err)
-        self.assertEqual(len(_lire(journal).splitlines()), 3)
+        self.assertEqual(len(_lire(journal).splitlines()), 1)  # v42 : 3
 
     def test_tolerances_separees(self):
         """CL40-01 (code), point 5 : la tolérance Claude ne désarme pas la somme externe, et inversement ; l'ancienne option
@@ -2308,23 +2324,26 @@ class TestV42(CasAvecDossier):
     # --- CL41-02 ---------------------------------------------------------------------------------------------------------
 
     def test_cl41_02_fiche_bornee_et_marge_realiste(self):
-        """CL41-02 : listes bornées (9 questions, 12 antériorités) et fiche bornée à 12 000 caractères servis (échappements
-        compris) ; `fiche_maximale` = le maximum du gabarit borné ; la passe 2 réelle à fiches maximales ne dépasse pas la
-        consigne éprouvée ; tailles écrites au manifeste de départ et au journal (v41 : listes sans borne, fiches de 44 163)."""
+        """CL41-02 : listes bornées (9 questions, 12 antériorités) ; `fiche_maximale` = le maximum du gabarit ; la passe 2
+        réelle à fiches maximales ne dépasse pas la consigne éprouvée ; tailles écrites au manifeste de départ et au journal.
+        **Changé en v43** (CL42-04, décision de Lazar : « retirer ») : plus de borne de 12 000 caractères sur la fiche — les
+        deux fiches que la v42 refusait (guillemets échappés, quatre champs de 3 000) sont admises ; `fiche_maximale` revient
+        au pire cas aux bornes par champ (44 259 caractères servis, v42 : 12 000) ; les listes restent bornées."""
         ok9 = idn.valider_fiche_ideation(fiche_brute(questions_servies=["Q1"] * 9), "a", 1)
         self.assertEqual(len(ok9["questions_servies"]), 9)
         for modif, motif in ((dict(questions_servies=["Q1"] * 10), "questions_servies"),
-                             (dict(anteriorite=[{"reference": "r", "statut": "SUPPOSE"}] * 13), "anteriorite"),
-                             (dict(enonce='"' * 2900, perte_traduction='"' * 2900, piege='"' * 2900), "trop longue"),
-                             (dict(enonce="y" * 3000, perte_traduction="y" * 3000, piege="y" * 3000, cosmetique_si="y" * 3000),
-                              "trop longue")):
+                             (dict(anteriorite=[{"reference": "r", "statut": "SUPPOSE"}] * 13), "anteriorite")):
             with self.subTest(motif=motif), self.assertRaises(idn.FicheIdeationInvalide) as cm:
                 idn.valider_fiche_ideation(fiche_brute(**modif), "a", 1)
             self.assertIn(motif, str(cm.exception))
+        for modif in (dict(enonce='"' * 2900, perte_traduction='"' * 2900, piege='"' * 2900),
+                      dict(enonce="y" * 3000, perte_traduction="y" * 3000, piege="y" * 3000, cosmetique_si="y" * 3000)):
+            self.assertGreater(idn.taille_servie(idn.valider_fiche_ideation(fiche_brute(**modif), "a", 1)), 12_000)  # v42 : refusées
         idn.valider_fiche_ideation(fiche_brute(anteriorite=[{"reference": "r", "statut": "SUPPOSE"}] * 12), "a", 1)
         fm = idn.fiche_maximale()
-        self.assertEqual(idn.taille_servie(fm), idn.TAILLE_MAX_FICHE_SERVIE)
-        self.assertEqual(idn.taille_servie(idn.valider_fiche_ideation(fm, "a", 1)), idn.TAILLE_MAX_FICHE_SERVIE)
+        taille_fm = idn.taille_servie(fm)
+        self.assertGreater(taille_fm, 44_000)  # 44 259 : douze textes de 3 000, listes à leur borne
+        self.assertEqual(idn.taille_servie(idn.valider_fiche_ideation(fm, "a", 1)), taille_fm)
         # la passe 2 réelle d'Argon (8 fiches à la taille maximale) tient dans la consigne éprouvée
         c = self.cours()
         prep = c.preparer()
@@ -2339,8 +2358,8 @@ class TestV42(CasAvecDossier):
                                    attestation_materiau=att, proposeurs=[("opus", "claude-opus-5-5"), ("fable", "claude-fable-5-1")],
                                    juges=[("juge-fable", "claude-fable-5-1"), ("juge-opus", "claude-opus-5-5")],
                                    proposeurs_externes=[("argon", "gemini-argon")], budget_total_usd=20.0, budget_externe_usd=5.0)
-        self.assertEqual(v2["taille_fiche_maximale"], 12_000)
-        self.assertLess(v2["taille_consigne_controle_externe"], 8 * 13_000)  # v41 : > 8 × 44 163
+        self.assertEqual(v2["taille_fiche_maximale"], taille_fm)
+        self.assertGreater(v2["taille_consigne_controle_externe"], 8 * taille_fm)  # v43 : comme la v41 (v42 : < 8 × 13 000)
         tailles = []
 
         class Argon:
@@ -2357,9 +2376,9 @@ class TestV42(CasAvecDossier):
         self.assertEqual([d for d, _ in tailles], ["passe-1", "passe-2"])
         self.assertLessEqual(tailles[1][1], len(v2["texte_controle_externe"]))
         self.assertEqual(sum(1 for f in res["fiches"] if f["auteur"] == "argon"), 16)
-        self.assertEqual(res["journal"]["marge_seconde_passe"]["taille_fiche_maximale_servie"], 12_000)
+        self.assertEqual(res["journal"]["marge_seconde_passe"]["taille_fiche_maximale_servie"], taille_fm)
         with open(os.path.join(self.tmp, "c-borne", "manifeste-depart.json")) as f:
-            self.assertEqual(json.load(f)["reglages"]["taille_fiche_maximale_servie"], 12_000)
+            self.assertEqual(json.load(f)["reglages"]["taille_fiche_maximale_servie"], taille_fm)
         # la consigne des proposeurs dit les bornes
         self.assertIn("au plus 9 questions servies, au plus 12 antériorités", v2["texte_controle_externe"])
         # au lanceur : taille de la marge et du contrôle au manifeste de départ
@@ -2371,7 +2390,7 @@ class TestV42(CasAvecDossier):
         with open(os.path.join(sortie, "manifeste-depart.json")) as f:
             v = json.load(f)["reglages"]["versions"]
         m = v["marge_controle_externe"]
-        self.assertEqual(m["taille_fiche_maximale_servie"], 12_000)
+        self.assertEqual(m["taille_fiche_maximale_servie"], taille_fm)
         self.assertEqual(m["taille_consigne_de_controle"], v["appel_de_controle"]["externe:argon"]["taille_consigne"])
 
     def test_v36_listes_comptees_dans_fiche_maximale(self):
@@ -2628,9 +2647,12 @@ class TestV42(CasAvecDossier):
 
     def test_n04_n07_n08_couts_des_tentatives_precedentes(self):
         """CL41-08 (N04, N07, N08) : deux tentatives payées (Claude 0,02 et Argon 0,3 ; puis Argon 2,5) ; la relance sous un
-        total externe juste (11,4 < 8,7 + 0,3 + 2,5) est refusée avant tout contrôle ; à 11,5 la course part et son
-        manifeste de départ porte `cout_deja_engage_usd` = 0,02 + 0,02 et `cout_externe_deja_engage_usd` = 0,3 + 2,5 + 0,3,
-        comme le journal du cœur."""
+        total externe juste est refusée avant tout contrôle ; ensuite la course part et son manifeste de départ porte les
+        coûts imputés, comme le journal du cœur. **Changé en v43** (CL40-01, option c, décision de Lazar) : la troisième
+        tentative reprend le contrôle d'Argon réussi en tentative 1 (même commande, même consigne) et le premier contrôle
+        Claude ; elle ne rejoue que le contrôle Claude « KO » — somme externe de la relance 0,3 + 2,5 + 0 + 6,2 = 9,0 (refusée
+        sous 8,9 ; v42 : 11,5, refusée sous 11,4) ; `cout_deja_engage_usd` = 0,02 + 0,01 (v42 : 0,04) et
+        `cout_externe_deja_engage_usd` = 0,3 + 2,5 (v42 : 3,1) ; contrôles repris écrits au manifeste et au journal."""
         v41 = self.v41()
         prep = self.cours().preparer()
         journal = os.path.join(self.tmp, "n04.log")
@@ -2649,23 +2671,30 @@ class TestV42(CasAvecDossier):
         t = [json.loads(_lire(os.path.join(sortie + "-controle", f"tentative-{n}.json")))["reglages"] for n in (1, 2)]
         self.assertEqual([(round(x["cout_claude_usd"], 6), round(x["cout_externe_usd"], 6)) for x in t], [(0.02, 0.3), (0.0, 2.5)])
         n = len(_lire(journal).splitlines())
-        code, _, err = v41.principal(v41.lanceur(cout_controle_claude=0.01), argv(argon_ok, "11.4"))
+        code, _, err = v41.principal(v41.lanceur(cout_controle_claude=0.01), argv(argon_ok, "8.9"))
         self.assertEqual(code, 2)
-        self.assertIn("somme des plafonds externes 11.50 > total externe 11.4", err)  # N04
+        self.assertIn("somme des plafonds externes 9.00 > total externe 8.9", err)  # N04 (v42 : 11.50 > 11.4)
         self.assertEqual(len(_lire(journal).splitlines()), n)
         self.assertFalse(os.path.exists(os.path.join(sortie + "-controle", "tentative-3.json")))
         code, _, err = v41.principal(v41.lanceur(cout_controle_claude=0.01), argv(argon_ok, "11.5"))
         self.assertEqual(code, 0, err)
         with open(os.path.join(sortie, "manifeste-depart.json")) as f:
             d = json.load(f)["reglages"]
-        self.assertAlmostEqual(d["cout_deja_engage_usd"], 0.04)  # N08
-        self.assertAlmostEqual(d["cout_externe_deja_engage_usd"], 3.1)  # N07
-        self.assertAlmostEqual(d["somme_des_plafonds"]["externe_avec_controle_du_bras"], 3.1 + 2.5 + 3.5 + 0.2)
+        self.assertAlmostEqual(d["cout_deja_engage_usd"], 0.03)  # N08 (v42 : 0,04, le contrôle réussi rejoué)
+        self.assertAlmostEqual(d["cout_externe_deja_engage_usd"], 2.8)  # N07 (v42 : 3,1)
+        self.assertAlmostEqual(d["somme_des_plafonds"]["externe_avec_controle_du_bras"], 2.8 + 2.5 + 3.5 + 0.2)
+        repris = d["versions"]["controles_repris"]
+        self.assertEqual(sorted(repris), ["claude-fable-5-1", "externe:argon"])
+        self.assertEqual({v["repris_de_tentative"] for v in repris.values()}, {1})
+        self.assertEqual(repris["externe:argon"]["sha256_tentative"],
+                         idn.sha256_fichier(os.path.join(sortie + "-controle", "tentative-1.json")))
+        self.assertEqual(sorted(d["versions"]["appel_de_controle"]), ["claude-opus-5-5"])
         with open(os.path.join(sortie, "manifeste-fin.json")) as f:
             j = json.load(f)["reglages"]["journal"]
-        self.assertAlmostEqual(j["cout_appels_de_controle_usd"], 0.04)
-        self.assertAlmostEqual(j["cout_appels_de_controle_externes_usd"], 3.1)
-        self.assertAlmostEqual(j["cout_externe_usd"], 3.1 + 0.25)
+        self.assertAlmostEqual(j["cout_appels_de_controle_usd"], 0.03)
+        self.assertAlmostEqual(j["cout_appels_de_controle_externes_usd"], 2.8)
+        self.assertAlmostEqual(j["cout_externe_usd"], 2.8 + 0.25)
+        self.assertEqual(j["controles_repris"], repris)
 
     def test_v12_relancable_avec_le_cout_externe_de_la_tentative(self):
         """CL41-08 (V12) : réglages du devis, seul le coût externe de la tentative fait dépasser — Argon « KO » à 0,5 :
@@ -2735,6 +2764,12 @@ class TestV43(CasAvecDossier):
             return []
         return [json.loads(l) for l in _lire(chemin).splitlines() if l.strip()]
 
+    def prep(self):
+        """Pièces, question, matériau et témoins des essais, préparés une fois par essai (liste blanche jamais écrasée)."""
+        if not hasattr(self, "_prep_base"):
+            self._prep_base = self.cours().preparer()
+        return self._prep_base
+
     def argon_journal(self, journal, nom):
         """Le script commun (`SCRIPT_OK`) qui consigne chaque appel : taille, contrôle, passe 2."""
         script = self.cmd().SCRIPT_OK.replace(
@@ -2764,7 +2799,7 @@ class TestV43(CasAvecDossier):
     def prep_grand(self):
         """Réglages du devis (CL9, § 4) : pièce de 750 000 caractères, matériau de 350 000, question de 19 caractères,
         témoins des essais, matériau attesté."""
-        prep = self.cours().preparer()
+        prep = self.prep()
         p = os.path.join(self.tmp, "piece-grande.md")
         with open(p, "w", encoding="utf-8") as f:
             f.write(("# Pièce A\n" + "Texte de contexte. " * 40_000)[:750_000])
@@ -2779,7 +2814,7 @@ class TestV43(CasAvecDossier):
         return dict(prep, liste_blanche=lb, pieces=[p], materiau=[m]), att
 
     def prep_piece_juge(self, taille=200_000):
-        prep = self.cours().preparer()
+        prep = self.prep()
         pj = os.path.join(self.tmp, "piece-juge.md")
         with open(pj, "w", encoding="utf-8") as f:
             f.write("# Antériorité\n" + ("Résumé d'article. " * 20000)[:taille])
@@ -2790,6 +2825,7 @@ class TestV43(CasAvecDossier):
     def course_bras(self, nom, juge_budget=1.0, budget_externe=2.0):
         """Course (cœur, faux adaptateur Claude) avec un juge externe différé ; rend (cours, sortie, attestation, budgets)."""
         c = self.cours()
+        c._prep = self.prep()
         ad = FauxAdaptateur({"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]},
                             notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
         budgets = dict(c.budgets())
@@ -2806,9 +2842,12 @@ class TestV43(CasAvecDossier):
         `--budget-controle-externe-usd 3.0 --budget-externe-usd 12.1` seuls → **refus sans dépense** : la garde reste à
         1 000 000 − 480 000 = 520 000 (la passe d'Argon reste à 2,5, provision de huit fiches de 12 000 au rapport 5),
         refus scellé, ni Argon (au tarif du devis) ni Claude appelés (v42 : garde 1 200 000, contrôle payé 2,73, course
-        perdue après la passe 2 d'Argon à 2,51 > 2,5). Cas sain : `--taille-max-consigne-externe 1200000` donné, Argon au
-        pire cas (chaque session à son plafond) → course et bras passent, classement à trois juges ; les deux passes
-        d'Argon gardées par le cœur avant leur envoi contre la taille donnée."""
+        perdue après la passe 2 d'Argon à 2,51 > 2,5). Au prix de 8,3 dollars par million de jetons
+        (`--prix-entree-usd-par-million-jetons`, CL42-04 b) : garde 1 204 819 − 480 000 = 724 819, refus aussi ; prix nul ou
+        non fini refusé. Cas sain : `--taille-max-consigne-externe 1500000` donné (le contrôle fait ≈ 1 457 000 caractères
+        depuis que la borne de fiche est retirée, CL42-04), Argon au pire cas (chaque session à son plafond) → course et bras
+        passent, classement à trois juges ; les deux passes d'Argon gardées par le cœur avant leur envoi contre la taille
+        donnée."""
         self.assertEqual(idn.provision_sortie_caracteres(8), 480_000)
         self.assertEqual(idn.taille_max_consigne_course_par_defaut(3.0, [2.5], 8)[0], 520_000)
         self.assertEqual(idn.taille_max_consigne_course_par_defaut(2.5, [2.5], 8)[0], 520_000)
@@ -2834,20 +2873,35 @@ class TestV43(CasAvecDossier):
         self.assertIn("passe du proposeur externe 2.5", g["garde_taille"]["origine_taille_max"])
         self.assertEqual(sorted(os.listdir(sortie + "-controle")), ["refus-taille-1.json", "refus-taille-1.json.sha256"])
         self.assertFalse(os.path.exists(sortie))  # aucun contrôle Claude, aucune SORTIE
+        # CL42-04 b : prix d'entrée du devis (8,3 dollars par million de jetons) — garde plus haute, refus quand même
+        code, out, err = v41.principal(v41.lanceur(cout_controle_claude=0.2), v41.base(
+            sortie, prep, att, "--commande-externe", devis, "--prix-entree-usd-par-million-jetons", "8.3"))
+        self.assertEqual(code, 2, err)
+        with open(os.path.join(sortie + "-controle", "refus-taille-2.json")) as f:
+            g2 = json.load(f)["reglages"]["garde_taille"]
+        self.assertEqual((g2["taille_max_caracteres"], g2["prix_entree_usd_par_million_jetons"]), (724_819, 8.3))
+        self.assertAlmostEqual(g2["cout_prudent_entree_usd"], round(g2["taille_caracteres"] * 8.3e-6 / 4, 4))
+        self.assertEqual(self.journal_de(journal), [])
+        import contextlib
+        import io
+        for prix in ("0", "nan", "-1"):
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                v41.lanceur().principal(v41.base(sortie, prep, att, "--prix-entree-usd-par-million-jetons", prix))
         # cas sain : garde donnée explicitement, Argon au pire cas → course puis bras, classement à trois juges
         argon = v41.script(v41.SCRIPT_PLAFOND, "argon-plafond-43.py")
         sortie2 = os.path.join(self.tmp, "l-devis-c")
         code, out, err = v41.principal(v41.lanceur(), v41.base(sortie2, prep, att, "--commande-externe", argon,
-                                                                "--taille-max-consigne-externe", "1200000"))
+                                                                "--taille-max-consigne-externe", "1500000"))
         self.assertEqual(code, 0, err)
         with open(os.path.join(sortie2, "manifeste-depart.json")) as f:
             v = json.load(f)["reglages"]["versions"]
         self.assertEqual((v["taille_max_consigne_externe"]["valeur"], v["taille_max_consigne_externe"]["origine"]),
-                         (1_200_000, "option"))
+                         (1_500_000, "option"))
+        self.assertGreater(v["marge_controle_externe"]["taille_consigne_de_controle"], 1_450_000)  # CL42-04 : borne retirée
         with open(os.path.join(sortie2, "manifeste-fin.json")) as f:
             j = json.load(f)["reglages"]["journal"]
         self.assertEqual([(x["passe"], x["taille_max_caracteres"], x["refusee"]) for x in j["gardes_taille_sessions"]],
-                         [(1, 1_200_000, False), (2, 1_200_000, False)])
+                         [(1, 1_500_000, False), (2, 1_500_000, False)])
         self.assertGreater(j["gardes_taille_sessions"][1]["taille_caracteres"], 1_100_000)
         att_b = self.cmd().attester(os.path.join(self.tmp, "att-devis-c.json"), sortie2, "argon-j")
         code, out, err = v41.principal(v41.lanceur(), [sortie2, "--bras-rapporte-differe", "--attestation-lecture-humaine", att_b,
@@ -2863,7 +2917,7 @@ class TestV43(CasAvecDossier):
         en erreur, gardes au journal (v42 : aucune garde dans le cœur, la passe 2 part). Cas sain : plafond 2,5 → les deux
         passes gardées et jouées."""
         c = self.cours()
-        prep = c.preparer()
+        prep = self.prep()
         c._prep = prep
         att = os.path.join(self.tmp, "att-p2.json")
         idn.ecrire_json_scelle(att, {"lecteur": "Lazar", "lu_le": "2026-10-29", "materiau_sha256": {
@@ -2953,7 +3007,7 @@ class TestV43(CasAvecDossier):
         code, out, err = v41.principal(v41.lanceur(), [sortie_b] + course[1:])
         self.assertEqual(code, 0, err)
         att_b = self.cmd().attester(os.path.join(self.tmp, "att-w07-b.json"), sortie_b, "argon-j")
-        bras_b = [sortie_b] + bras[1:4] + [att_b] + bras[5:]
+        bras_b = [sortie_b] + bras[1:3] + [att_b] + bras[4:]
         n = len(self.journal_de(journal))
         code, out, err = v41.principal(v41.lanceur(), bras_b + ["--taille-max-consigne-externe-bras", "1000"])
         self.assertEqual(code, 5, err)
@@ -2990,7 +3044,7 @@ class TestV43(CasAvecDossier):
         (juge en erreur), même échec : fichier scellé, manifeste du bras et exception le disent."""
         import unittest.mock
         v41 = self.v41()
-        prep = self.cours().preparer()
+        prep = self.prep()
         sortie = os.path.join(self.tmp, "l-s14")
         code, out, err = v41.principal(v41.lanceur(), v41.base(sortie, prep, None, "--commande-externe",
                                                                 " ".join(self.cmd().commande(self.cmd().SCRIPT_OK))))
@@ -3037,7 +3091,8 @@ class TestV43(CasAvecDossier):
         """CL42-06, W36 : deux tentatives non relançables de suite — refus de taille (tentative 1 : classement sans bras
         écrit), puis contrôle « KO » payé 0,9 qui épuise le plafond externe (tentative 2) : le second repli est joué, ne
         réécrit pas le classement (même empreinte, motif de la tentative 1) et l'exception le dit ; aucun échec de repli
-        (v42 : le refus de taille n'écrivait aucun classement)."""
+        (v42 : le refus de taille n'écrivait aucun classement). Un troisième refus de taille est la tentative 3 ; la quatrième
+        est refusée avant tout appel (« 3 tentatives du bras déjà faites ») : les refus de taille comptent."""
         c, sortie, att, budgets = self.course_bras("w36")
         with self.assertRaises(idn.SansJugeExterne) as cm:
             idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
@@ -3064,6 +3119,18 @@ class TestV43(CasAvecDossier):
         with open(cl) as f:
             self.assertIn("tentative 1", json.load(f)["sans_juge_externe"])
         self.assertFalse(any(n.startswith("classement-sans-bras-impossible") for n in os.listdir(sortie)))
+        # CL42-05 : les refus de taille comptent parmi les trois tentatives — un troisième (tentative 3), puis plus rien
+        with self.assertRaises(idn.SansJugeExterne):
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", Enregistreur(c))], taille_max_consigne_externe=100)
+        self.assertTrue(idn.verifier_scelle(os.path.join(sortie, "manifeste-bras-refus-taille-3.json")))
+        juge = Enregistreur(c)
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            idn.executer_bras_differe(sortie, attestation_lecture_humaine=att, budgets=budgets,
+                                      juges_externes=[("argon", "autre-lignee-x", juge)], taille_max_consigne_externe=100)
+        self.assertNotIsInstance(cm.exception, idn.SansJugeExterne)
+        self.assertIn("3 tentatives du bras déjà faites", str(cm.exception))
+        self.assertEqual(juge.recu, [])
 
     # --- CL42-07 (W30, W35b) --------------------------------------------------------------------------------------------
 
@@ -3083,7 +3150,7 @@ class TestV43(CasAvecDossier):
             self.assertEqual(juge.recu, [])
             self.assertEqual(sorted(os.listdir(sortie)), avant)
         v41 = self.v41()
-        prep = self.cours().preparer()
+        prep = self.prep()
         journal = os.path.join(self.tmp, "argon-w30.jsonl")
         argon = self.argon_journal(journal, "argon-w30.py")
         s2 = os.path.join(self.tmp, "l-w30")
@@ -3099,21 +3166,26 @@ class TestV43(CasAvecDossier):
         self.assertEqual(len(self.journal_de(journal)), n)
         self.assertFalse(any(x.startswith(("bras-", "manifeste-bras", "classement")) for x in os.listdir(s2)))
 
-    def test_cl42_07_w35b_borne_dite_et_refus_pour_taille_par_proposeur(self):
-        """CL42-07, W35b : la consigne des proposeurs dit « 12000 caractères au plus par fiche » (consigne construite et
-        consigne reçue par Argon) ; les refus **pour taille** sont comptés par proposeur et par passe, au journal et au
-        manifeste de fin (Argon 2, Opus 1, Fable 0 — son refus pour neuf questions de trop n'est pas un refus pour
-        taille ; v42 : aucun compte). La règle de la borne est inchangée (CL42-04 : décision de Lazar)."""
+    def test_cl42_04_borne_de_fiche_retiree_et_refus_pour_taille_par_proposeur(self):
+        """CL42-04 (décision de Lazar : « retirer ») et CL42-07 : la consigne des proposeurs ne dit plus « 12000 caractères au
+        plus par fiche » (consigne construite et consigne reçue par Argon) ; une fiche de plus de 40 000 caractères servis,
+        champs dans leurs bornes (`fiche_maximale`), est admise ; les bornes par champ et de listes restent, et leurs refus
+        sont comptés **par proposeur et par passe**, au journal et au manifeste de fin (Argon 2 : un champ de 3 001
+        caractères, dix questions servies ; Opus 1 : treize antériorités ; Fable 0 — son refus pour un signe hors valeurs
+        n'est pas un refus pour taille). Remplace l'essai W35b (la phrase n'existe plus). v42 : phrase présente, fiche de
+        44 259 caractères refusée, aucun compte."""
         c = self.cours()
-        prep = c.preparer()
+        prep = self.prep()
         c._prep = prep
         liste = idn.charger_liste_blanche(prep["liste_blanche"])
         consigne = idn.consigne_proposeur(idn.lire_pieces(prep["pieces"], liste), 8, "Quelles questions ?")
-        self.assertIn("12000 caractères au plus par fiche", consigne)
-        longue = fiche_brute(nom="Longue", enonce="y" * 3000, perte_traduction="y" * 3000, piege="y" * 3000,
-                             cosmetique_si="y" * 3000)
+        self.assertNotIn("caractères au plus par fiche", consigne)
+        self.assertIn("au plus 9 questions servies, au plus 12 antériorités, 3000 caractères au plus par texte.", consigne)
+        fm = idn.valider_fiche_ideation(idn.fiche_maximale(), "a", 1)
+        self.assertGreater(idn.taille_servie(fm), 40_000)
+        trop_long = fiche_brute(nom="Champ trop long", enonce="y" * (idn.LONGUEUR_MAX_CHAMP + 1))
         with self.assertRaises(idn.FicheTropLongue):
-            idn.valider_fiche_ideation(longue, "a", 1)
+            idn.valider_fiche_ideation(trop_long, "a", 1)
         recu = []
 
         class Argon:
@@ -3121,16 +3193,19 @@ class TestV43(CasAvecDossier):
 
             def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
                 recu.append(consigne)
-                fiches = [dict(longue, nom="Argon long 1"), dict(longue, nom="Argon long 2"), fiche_brute(nom="Argon court")]
+                fiches = [dict(idn.fiche_maximale(), nom="Argon maximal"), dict(trop_long, nom="Argon trop long"),
+                          fiche_brute(nom="Argon dix questions", questions_servies=["Q1"] * 10)]
                 return Resultat("```json\n" + json.dumps({"fiches": fiches}, ensure_ascii=False) + "\n```", [], 0.1, "ok")
-        ad = FauxAdaptateur({"opus": [fiche_brute(nom="O1"), dict(longue, nom="O long")],
-                             "fable": [fiche_brute(nom="F1"), fiche_brute(nom="F trop de questions", questions_servies=["Q1"] * 10)]},
+        ad = FauxAdaptateur({"opus": [fiche_brute(nom="O1"), fiche_brute(nom="O treize", anteriorite=[
+                                 {"reference": "r", "statut": "SUPPOSE"}] * 13)],
+                             "fable": [fiche_brute(nom="F1"), fiche_brute(nom="F signe", loi_predictive={"signe": "?"})]},
                             notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
         budgets = dict(c.budgets())
         budgets[("proposeur_ideation", "gemini-argon")] = 1.0
         res = c.lancer(ad, "c-refus-taille", budgets=budgets, proposeurs_externes=[("argon", "gemini-argon", Argon())],
                        budget_externe_usd=3.0)
-        self.assertIn("12000 caractères au plus par fiche", recu[0])
+        self.assertNotIn("caractères au plus par fiche", recu[0])
+        self.assertIn("Argon maximal", [f["nom"] for f in res["fiches"]])  # 44 259 caractères servis, admise
         attendu = {"argon": {"passe-1": 2, "total": 2}, "opus": {"passe-1": 1, "total": 1}, "fable": {"passe-1": 0, "total": 0}}
         self.assertEqual(res["journal"]["refus_pour_taille_par_proposeur"], attendu)
         self.assertEqual(len(res["refus"]), 4)
@@ -3139,6 +3214,76 @@ class TestV43(CasAvecDossier):
         self.assertEqual(fin["refus_pour_taille_par_proposeur"], attendu)
         self.assertEqual(fin["journal"]["refus_pour_taille_par_proposeur"], attendu)
 
+    # --- CL40-01, option (c) -----------------------------------------------------------------------------------------
+
+    def test_cl40_01_c_relance_sans_rejouer_les_controles_reussis(self):
+        """CL40-01, option (c) (décision de Lazar) : réglages du devis, contrôles Claude payés 0,2 et réussis, Argon « OK » à
+        0,15 (commande A), puis panne du cœur avant son départ → tentative 1 relançable (0,4 + 0 + 39,6 = 40,0 ≤ 40 ; v42 :
+        40,4 > 40, non relançable). Tentative 2 avec une autre commande d'Argon, qui rend « KO » : Argon rejoué (commande
+        changée), échoue ; Claude **jamais rappelé**, ses contrôles repris. Tentative 3 avec une commande d'Argon qui marche :
+        **seul le contrôle d'Argon est repayé**, Claude n'est pas rappelé pour ses contrôles, la course part ; manifeste de
+        départ et journal : contrôles Claude repris de la tentative 1 (empreinte du fichier, de la consigne), coûts imputés
+        Claude 0,4 (et non 0,8) et Argon 0,15 + 0,15 + 2,5."""
+        import unittest.mock
+        v41 = self.v41()
+        prep, att = v41.prep_devis()
+        lanceur = v41.lanceur(cout_controle_claude=0.2)
+        appels_claude = []
+        original = lanceur.AdaptateurIdeationSimule.lancer
+
+        def lancer(s, role, consigne, dossier, budget_usd, max_tours, modele=None):
+            appels_claude.append((modele, consigne.startswith(idn.APPEL_DE_CONTROLE_CONSIGNE)))
+            return original(s, role, consigne, dossier, budget_usd, max_tours, modele)
+        lanceur.AdaptateurIdeationSimule.lancer = lancer
+        journal = os.path.join(self.tmp, "argon-c.log")
+        argon_a = v41.script(v41.SCRIPT_CTRL_OK % journal, "argon-a.py")
+        argon_ko = v41.script(v41.SCRIPT_KO % journal, "argon-ko.py")
+        argon_b = v41.script(v41.SCRIPT_PLAFOND, "argon-b.py")
+        sortie = os.path.join(self.tmp, "l-c")
+
+        def panne(*a, **k):
+            raise idn.CourseInterrompue("panne simulée du cœur avant son départ")
+        with unittest.mock.patch.object(idn, "executer_ideation", panne):
+            code, _, err = v41.principal(lanceur, v41.base(sortie, prep, att, "--commande-externe", argon_a))
+        self.assertEqual(code, 2, err)
+        t1 = os.path.join(sortie + "-controle", "tentative-1.json")
+        with open(t1) as f:
+            r1 = json.load(f)["reglages"]
+        self.assertEqual((round(r1["cout_claude_usd"], 6), round(r1["cout_externe_usd"], 6)), (0.4, 0.15))
+        self.assertEqual(r1["controles_a_refaire"], [])
+        self.assertTrue(r1["relancable"], r1["motifs_relance"])  # v42 : 40,4 > 40
+        self.assertEqual(sum(1 for _, ctrl in appels_claude if ctrl), 2)
+        # tentative 2 : Argon (autre commande) rejoué, « KO » ; Claude jamais rappelé
+        appels_claude.clear()
+        code, _, err = v41.principal(lanceur, v41.base(sortie, prep, att, "--commande-externe", argon_ko))
+        self.assertEqual(code, 2, err)
+        self.assertEqual(appels_claude, [])
+        with open(os.path.join(sortie + "-controle", "tentative-2.json")) as f:
+            r2 = json.load(f)["reglages"]
+        self.assertEqual(sorted(r2["lectures"]), ["externe:argon"])
+        self.assertEqual(sorted(r2["controles_repris"]), ["claude-fable-5-1", "claude-opus-5-5"])
+        self.assertEqual((r2["cout_claude_usd"], round(r2["cout_externe_usd"], 6)), (0.0, 0.15))
+        self.assertEqual(r2["controles_a_refaire"], ["externe:argon"])
+        self.assertTrue(r2["relancable"], r2["motifs_relance"])
+        # tentative 3 : seul le contrôle d'Argon est repayé ; la course part
+        appels_claude.clear()
+        code, _, err = v41.principal(lanceur, v41.base(sortie, prep, att, "--commande-externe", argon_b))
+        self.assertIn(code, (0, 4), err)
+        self.assertFalse(any(ctrl for _, ctrl in appels_claude))  # aucun contrôle Claude rejoué
+        self.assertTrue(appels_claude)  # les sessions Claude de la course, elles, ont eu lieu
+        with open(os.path.join(sortie, "manifeste-depart.json")) as f:
+            d = json.load(f)["reglages"]
+        self.assertAlmostEqual(d["cout_deja_engage_usd"], 0.4)  # imputé une fois (v42 : contrôles rejoués, 0,8)
+        self.assertAlmostEqual(d["cout_externe_deja_engage_usd"], 0.15 + 0.15 + 2.5)
+        repris = d["versions"]["controles_repris"]
+        self.assertEqual(sorted(repris), ["claude-fable-5-1", "claude-opus-5-5"])
+        for v in repris.values():
+            self.assertEqual((v["repris_de_tentative"], v["sha256_tentative"]), (1, idn.sha256_fichier(t1)))
+            self.assertEqual(v["consigne_sha256"], r1["lectures"][v["controle"]]["consigne_sha256"])
+        self.assertEqual(sorted(d["versions"]["appel_de_controle"]), ["externe:argon"])
+        with open(os.path.join(sortie, "manifeste-fin.json")) as f:
+            self.assertEqual(json.load(f)["reglages"]["journal"]["controles_repris"], repris)
+
     # --- CL42-03 ---------------------------------------------------------------------------------------------------------
 
     def test_cl42_03_mesurer_consignes_sans_appel(self):
@@ -3146,7 +3291,10 @@ class TestV43(CasAvecDossier):
         maximum : 3 proposeurs × 2 passes × 8 fiches maximales + 4 témoins + pièce de juge) et les gardes (course 520 000 ;
         bras 1 400 000 − 52 × 10 000), code 0, sans aucun appel (adaptateurs piégés, commande jamais lancée), sans fichier
         ni SORTIE, même avec `--moteur claude-sdk` non armé. La course réelle lancée ensuite envoie à Argon un contrôle de
-        la taille mesurée, et une consigne de juge plus petite que le maximum mesuré (v42 : option inconnue)."""
+        la taille mesurée, et une consigne de juge plus petite que le maximum mesuré (v42 : option inconnue). v43 (CL42-04 b) :
+        coûts et gardes au prix donné (`--prix-entree-usd-par-million-jetons 8.3` : garde 724 819) et figures de la provision
+        demandée (huit fiches à `fiche_maximale()`, 1 770 360 caractères équivalents), rapportées, non appliquées (garde 0).
+        Course lancée sans option : chaque passe d'Argon gardée par le cœur à 520 000 (provision 480 000)."""
         import unittest.mock
         from pole.adaptateurs import AdaptateurCommandeExterne
         v41 = self.v41()
@@ -3169,9 +3317,20 @@ class TestV43(CasAvecDossier):
                 unittest.mock.patch.object(AdaptateurCommandeExterne, "lancer", piege):
             code, out, err = v41.principal(lanceur, argv + ["--mesurer-consignes"])
             code_r, out_r, err_r = v41.principal(lanceur, argv + ["--mesurer-consignes", "--moteur", "claude-sdk"])
-        self.assertEqual((code, code_r), (0, 0), err + err_r)
+            code_p, out_p, err_p = v41.principal(lanceur, argv + ["--mesurer-consignes", "--prix-entree-usd-par-million-jetons",
+                                                                  "8.3"])
+        self.assertEqual((code, code_r, code_p), (0, 0, 0), err + err_r + err_p)
         m = json.loads(out)
         self.assertEqual(json.loads(out_r)["consignes"], m["consignes"])
+        mp = json.loads(out_p)
+        ctrl = m["consignes"]["consigne_de_controle_externe"]
+        self.assertEqual((m["prix_entree_usd_par_million_jetons"], mp["prix_entree_usd_par_million_jetons"]), (10.0, 8.3))
+        self.assertAlmostEqual(m["garde_course"]["cout_entree_controle_usd"], round(ctrl * 2.5e-6, 4))
+        self.assertAlmostEqual(mp["garde_course"]["cout_entree_controle_usd"], round(ctrl * 8.3e-6 / 4, 4))
+        self.assertEqual(mp["garde_course"]["taille_max_caracteres"], 724_819)
+        for x in (m, mp):
+            nd = x["garde_course"]["provision_huit_fiches_maximales_non_appliquee"]
+            self.assertEqual((nd["provision_sortie_caracteres"], nd["taille_max_caracteres"]), (8 * idn.taille_servie(idn.fiche_maximale()) * 5, 0))
         self.assertFalse(os.path.exists(sortie) or os.path.exists(sortie + "-controle") or os.path.exists(journal))
         budgets = dict(self.cours().budgets())
         budgets[("proposeur_ideation", "gemini-argon")] = 2.5
@@ -3196,9 +3355,14 @@ class TestV43(CasAvecDossier):
         appels = self.journal_de(journal)
         self.assertEqual(appels[0]["controle"], True)
         self.assertEqual(appels[0]["taille"], cs["consigne_de_controle_externe"])
-        self.assertLessEqual(max(a["taille"] for a in appels if a["passe2"]), cs["consigne_passe_2_maximale"])
+        self.assertLessEqual(max(a["taille"] for a in appels if a["passe2"] and not a["controle"]), cs["consigne_passe_2_maximale"])
         with open(os.path.join(sortie, "juges-bras-rapporte", "traces-argon-j", "consigne-en-attente.md"), encoding="utf-8") as f:
             self.assertLess(len(f.read()), cs["consigne_du_juge_maximale"])
+        # CL42-01 : sans option, le lanceur fait garder chaque passe d'Argon par le cœur contre son propre plafond
+        with open(os.path.join(sortie, "manifeste-fin.json")) as f:
+            g = json.load(f)["reglages"]["journal"]["gardes_taille_sessions"]
+        self.assertEqual([(x["passe"], x["taille_max_caracteres"], x["provision_sortie_caracteres"], x["refusee"]) for x in g],
+                         [(1, 520_000, 480_000, False), (2, 520_000, 480_000, False)])
 
 
 if __name__ == "__main__":

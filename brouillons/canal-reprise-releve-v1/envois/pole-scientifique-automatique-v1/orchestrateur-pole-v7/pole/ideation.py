@@ -65,8 +65,13 @@ message n° 151) :
 Version 43 (contre-lecture CL9 de session-depot sur la v42 ; choix fixés par session-depot, message n° 156) :
 - CL42-01 : la garde de taille de la course se règle sur le **plus petit plafond** des sessions d'Argon qui reçoivent la
   plus grosse consigne (contrôle, entrée seule ; passe, entrée plus une **provision pour la sortie** : `nombre` fiches de
-  `TAILLE_MAX_FICHE_SERVIE` caractères au rapport sortie/entrée du barème prudent, `provision_sortie_caracteres`) ; chaque
+  `PROVISION_SORTIE_PAR_FICHE` caractères au rapport sortie/entrée du barème, `provision_sortie_caracteres`) ; chaque
   session de proposeur externe est aussi gardée contre son propre plafond avant son envoi (`garder_sessions_externes`) ;
+  le prix d'entrée de la garde est réglable (`prix_caractere`, lanceur `--prix-entree-usd-par-million-jetons`) ;
+- CL42-04 (décision de Lazar : « retirer ») : **plus de borne de taille de la fiche entière** ; seules les bornes par champ
+  et de listes du gabarit restent ; `fiche_maximale` redevient le pire cas à ces bornes ;
+- CL40-01 (décision de Lazar, option c) : à la relance, les contrôles réussis d'une tentative scellée ne sont pas rejoués
+  (lanceur) ; le cœur les écrit au journal (`controles_repris`) ;
 - CL42-05 : le bras a sa propre garde (plafond du juge / prix prudent, moins une provision de sortie par fiche servie,
   `provision_sortie_juge_caracteres`) ; la valeur de la course ne s'y applique plus ; un refus de taille au bras compte
   une tentative non relançable et écrit le classement sans bras ;
@@ -141,21 +146,26 @@ APPEL_DE_CONTROLE_CONSIGNE = "Réponds exactement OK, sans rien d'autre."
 APPEL_DE_CONTROLE_FIN = "Fin du matériau. Réponds exactement OK, sans rien d'autre."  # v42 (CL41-03) : dernière phrase
 DEBUT_MATERIAU_CONTROLE = "<<<<< DÉBUT DU MATÉRIAU DE TAILLE >>>>>"
 FIN_MATERIAU_CONTROLE = "<<<<< FIN DU MATÉRIAU DE TAILLE >>>>>"
-# v42 (CL41-02) : la fiche bornée au gabarit — deux listes bornées (les neuf valeurs que nomme le gabarit ; douze
-# antériorités) et une taille maximale de la fiche servie (JSON tel que servi en passe 2, échappements compris). Les
-# fiches réelles font 3 000 à 5 000 caractères (contre-lecture CL8, § 4) : 12 000 laisse plus du double.
+# v42 (CL41-02) : deux listes bornées au gabarit (les neuf valeurs que nomme le gabarit ; douze antériorités). v43
+# (CL42-04, décision de Lazar : « retirer ») : la borne de 12 000 caractères sur la fiche entière est retirée ; seules
+# restent les bornes par champ et de listes.
 MAX_QUESTIONS_SERVIES = 9
 MAX_ANTERIORITES = 12
-TAILLE_MAX_FICHE_SERVIE = 12_000
 # v42 (CL41-01) : prix prudent d'un caractère d'entrée pour la garde de taille — barème le plus haut du code
 # (`relais_reel.BAREME_INCONNU`, 10 dollars par million de jetons d'entrée) à 4 caractères par jeton ; entrée seule (le
 # contrôle rend « OK »). Taille maximale par défaut d'une consigne externe = plafond de la session qui la reçoit / ce prix.
+# v43 : prix réglable (`prix_caractere`, `--prix-entree-usd-par-million-jetons`), ce prix-ci par défaut.
 CARACTERES_PAR_JETON_PRUDENT = 4
 PRIX_CARACTERE_PRUDENT_USD = BAREME_INCONNU[0] / 1e6 / CARACTERES_PAR_JETON_PRUDENT
 # v43 (CL42-01) : rapport sortie/entrée du même barème (50 / 10 = 5) ; la sortie d'une session qui rend des fiches est
-# provisionnée à `nombre` fiches de TAILLE_MAX_FICHE_SERVIE caractères à ce rapport (8 fiches : 480 000 caractères
-# d'entrée équivalents, 1,2 dollar au prix prudent)
+# provisionnée à `nombre` fiches de PROVISION_SORTIE_PAR_FICHE caractères à ce rapport (8 fiches : 480 000 caractères
+# d'entrée équivalents, 1,2 dollar au prix prudent). 12 000 : l'ancienne borne de la fiche, gardée comme taille de fiche
+# provisionnée (plus du double des fiches réelles relevées par CL8). La provision « huit fiches à `fiche_maximale()` »
+# (44 259 caractères chacune) demandée avec CL42-04 n'est pas appliquée : 1 770 360 caractères équivalents, 4,43 dollars au
+# prix prudent et 3,67 à 8,3 dollars par million de jetons, au-dessus du plafond 2,5 d'une passe d'Argon — la garde par
+# défaut vaudrait 0 et refuserait toute course avec Argon (voir LISEZMOI v43, à trancher).
 RAPPORT_SORTIE_ENTREE_PRUDENT = BAREME_INCONNU[1] / BAREME_INCONNU[0]
+PROVISION_SORTIE_PAR_FICHE = 12_000
 # v43 (CL42-05) : provision pour la sortie du juge externe, par fiche servie (une note : cinq entiers, cinq lignes de
 # justification, le JSON) — convention, aucun gabarit ne borne les notes ; 52 fiches servies → 104 000 caractères de
 # sortie, 520 000 caractères d'entrée équivalents au rapport 5 (1,3 dollar au prix prudent)
@@ -167,7 +177,8 @@ class FicheIdeationInvalide(ValueError):
 
 
 class FicheTropLongue(FicheIdeationInvalide):
-    """v43 (CL42-07) : fiche refusée pour sa seule taille servie (comptée par proposeur au journal)."""
+    """v43 (CL42-07) : fiche refusée pour une borne de taille du gabarit — un champ trop long, une liste au-delà de sa
+    borne (CL42-04 : plus de borne sur la fiche entière) ; comptée par proposeur au journal."""
 
 
 class PieceInterdite(ValueError):
@@ -318,8 +329,8 @@ def _texte(d, cle, obligatoire=True, maximum=LONGUEUR_MAX_CHAMP):
         return ""
     if not isinstance(v, str):
         raise FicheIdeationInvalide(f"champ non textuel : {cle}")
-    if len(v) > maximum:
-        raise FicheIdeationInvalide(f"champ trop long : {cle} ({len(v)} > {maximum})")
+    if len(v) > maximum:  # v43 (CL42-07) : refus pour taille, compté par proposeur
+        raise FicheTropLongue(f"champ trop long : {cle} ({len(v)} > {maximum})")
     return v.strip()
 
 
@@ -349,7 +360,7 @@ def valider_fiche_ideation(brut, auteur, indice, passe=1):
     if not isinstance(qs, list) or not qs or not all(isinstance(q, str) and 0 < len(q) <= 80 for q in qs):
         raise FicheIdeationInvalide("questions_servies : liste non vide de textes courts")
     if len(qs) > MAX_QUESTIONS_SERVIES:  # v42 (CL41-02) : liste bornée au gabarit
-        raise FicheIdeationInvalide(f"questions_servies : {len(qs)} éléments > {MAX_QUESTIONS_SERVIES}")
+        raise FicheTropLongue(f"questions_servies : {len(qs)} éléments > {MAX_QUESTIONS_SERVIES}")
     f["questions_servies"] = [q.strip() for q in qs]
     av = brut.get("avantage")
     if not isinstance(av, dict):
@@ -375,7 +386,7 @@ def valider_fiche_ideation(brut, auteur, indice, passe=1):
     if not isinstance(ant, list):
         raise FicheIdeationInvalide("anteriorite : liste (éventuellement vide)")
     if len(ant) > MAX_ANTERIORITES:  # v42 (CL41-02) : liste bornée au gabarit
-        raise FicheIdeationInvalide(f"anteriorite : {len(ant)} éléments > {MAX_ANTERIORITES}")
+        raise FicheTropLongue(f"anteriorite : {len(ant)} éléments > {MAX_ANTERIORITES}")
     f["anteriorite"] = []
     for a in ant:
         if not isinstance(a, dict):
@@ -383,9 +394,7 @@ def valider_fiche_ideation(brut, auteur, indice, passe=1):
         f["anteriorite"].append({"reference": _texte(a, "reference", maximum=500),
                                  "statut": _enum(a, "statut", STATUTS_ANTERIORITE)})
     f, _ = caviarder_objet(f)
-    taille = taille_servie(f)
-    if taille > TAILLE_MAX_FICHE_SERVIE:  # v42 (CL41-02) : fiche bornée (taille telle que servie, échappements compris)
-        raise FicheTropLongue(f"fiche trop longue : {taille} caractères servis > {TAILLE_MAX_FICHE_SERVIE}")
+    # v43 (CL42-04, décision de Lazar : « retirer ») : aucune borne sur la taille de la fiche entière
     f["auteur"] = auteur
     f["passe"] = passe
     f["identifiant_auteur"] = f"{auteur}-p{passe}-{indice:02d}"
@@ -503,8 +512,7 @@ def consigne_proposeur(pieces, nombre, question_texte, materiau=None, fiches_pre
                 "fiche suit exactement ce gabarit (aucun champ en plus, aucun en moins) :\n```json\n"
                 + json.dumps(GABARIT, ensure_ascii=False, indent=1)
                 + f"\n```\nBornes (une fiche qui les dépasse est refusée) : au plus {MAX_QUESTIONS_SERVIES} questions "
-                f"servies, au plus {MAX_ANTERIORITES} antériorités, {LONGUEUR_MAX_CHAMP} caractères au plus par texte, "
-                f"{TAILLE_MAX_FICHE_SERVIE} caractères au plus par fiche (JSON compris).\n"
+                f"servies, au plus {MAX_ANTERIORITES} antériorités, {LONGUEUR_MAX_CHAMP} caractères au plus par texte.\n"
                 "Réponse finale : un seul bloc ```json {\"fiches\": [ … ]} ```.\n"]
     return "\n".join(parties)
 
@@ -749,6 +757,7 @@ def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=
     `CleDansEnvironnement` (levée avant tout lancement) compte 0 et marque `non_lance`."""
     lecture = {}
     consigne = consigne_de_controle(supplement)
+    consigne_sha256 = hashlib.sha256(consigne.encode("utf-8")).hexdigest()  # v43 (CL40-01 c) : clé de reprise
     for modele in sorted(set(modeles)):
         etape, r, avant, apres = "avant", None, None, None
         try:
@@ -772,7 +781,7 @@ def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=
                                "texte": "", "cout_declare_usd": (r.cout_declare_usd if r is not None else None),
                                "cout_compte_usd": cout, "cout_inconnu": inconnu, "non_lance": avant_lancement,
                                "role": role, "taille_consigne": len(consigne), "consigne_courte": consigne == APPEL_DE_CONTROLE_CONSIGNE,
-                               "relais_avant": avant, "relais_apres": apres,
+                               "consigne_sha256": consigne_sha256, "relais_avant": avant, "relais_apres": apres,
                                "problemes": [f"exception pendant le contrôle ({etape}) : {type(e).__name__} : "
                                              + caviarder(str(e))[0][:200]]}
             try:
@@ -803,6 +812,7 @@ def appel_de_controle(adaptateur, modeles, sortie, budget_usd, lire_etat_relais=
                            "cout_inconnu": bool(getattr(r, "cout_inconnu", False)), "non_lance": non_lance,
                            "role": role, "taille_consigne": len(consigne),
                            "consigne_courte": consigne == APPEL_DE_CONTROLE_CONSIGNE,  # v42 (CL41-04)
+                           "consigne_sha256": consigne_sha256,  # v43 (CL40-01 c)
                            "relais_avant": avant, "relais_apres": apres, "problemes": problemes}
         if problemes:
             raise ControleRefuse(f"appel de contrôle refusé pour {modele} : " + " ; ".join(problemes), lecture,
@@ -874,15 +884,11 @@ def _fiche_textes(k, reste=0):
 
 
 def fiche_maximale():
-    """v42 (CL41-02) : la vue servie de la plus grosse fiche que le gabarit **borné** accepte — `MAX_QUESTIONS_SERVIES`
-    questions de 80 caractères, `MAX_ANTERIORITES` références de 500, nom de 200, énumérations à leur valeur la plus longue,
-    les douze textes remplis à parts égales jusqu'à `TAILLE_MAX_FICHE_SERVIE` caractères servis exactement (échappements
-    compris, puisque la borne porte sur le JSON servi). v41 : chaque texte à 3 000 caractères (44 163 servis), sans borne
-    sur la fiche."""
-    base = taille_servie(_fiche_textes(0))
-    k = min(LONGUEUR_MAX_CHAMP, (TAILLE_MAX_FICHE_SERVIE - base) // 12)
-    reste = min(LONGUEUR_MAX_CHAMP - k, TAILLE_MAX_FICHE_SERVIE - base - 12 * k)
-    return _fiche_textes(k, reste)
+    """La vue servie de la plus grosse fiche que le gabarit accepte — `MAX_QUESTIONS_SERVIES` questions de 80 caractères,
+    `MAX_ANTERIORITES` références de 500, nom de 200, énumérations à leur valeur la plus longue, **les douze textes à
+    `LONGUEUR_MAX_CHAMP` caractères** (44 259 caractères servis). v43 (CL42-04, décision de Lazar : « retirer ») : retour au
+    pire cas aux bornes par champ (v42 : remplie jusqu'à la borne de 12 000 caractères de la fiche, retirée)."""
+    return _fiche_textes(LONGUEUR_MAX_CHAMP)
 
 
 class TailleConsigneRefusee(CourseInterrompue):
@@ -894,13 +900,24 @@ class TailleConsigneRefusee(CourseInterrompue):
         self.details = details
 
 
-def provision_sortie_caracteres(nombre):
+def prix_caractere(prix_entree_usd_par_million_jetons):
+    """v43 (CL42-04 b) : prix d'un caractère d'entrée pour la garde de taille — prix d'entrée en dollars par million de
+    jetons, à `CARACTERES_PAR_JETON_PRUDENT` (4) caractères par jeton ; 10,0 (défaut du lanceur) → 2,5 × 10⁻⁶ ; 8,3 →
+    2,075 × 10⁻⁶. Réel fini > 0."""
+    if not _fini(prix_entree_usd_par_million_jetons) or prix_entree_usd_par_million_jetons <= 0:
+        raise CourseInterrompue(f"prix d'entrée par million de jetons : réel fini > 0 (reçu {prix_entree_usd_par_million_jetons!r})")
+    return float(prix_entree_usd_par_million_jetons) / 1e6 / CARACTERES_PAR_JETON_PRUDENT
+
+
+def provision_sortie_caracteres(nombre, taille_fiche=PROVISION_SORTIE_PAR_FICHE):
     """v43 (CL42-01) : provision pour la sortie d'une session externe, en caractères d'entrée équivalents — `nombre` fiches
-    de `TAILLE_MAX_FICHE_SERVIE` caractères au plus, au rapport sortie/entrée du barème prudent
-    (`RAPPORT_SORTIE_ENTREE_PRUDENT`, 5) : 8 fiches → 480 000 caractères (1,2 dollar au prix prudent)."""
+    de `taille_fiche` caractères (`PROVISION_SORTIE_PAR_FICHE`, 12 000), au rapport sortie/entrée du barème
+    (`RAPPORT_SORTIE_ENTREE_PRUDENT`, 5) : 8 fiches → 480 000 caractères (1,2 dollar au prix prudent). Avec
+    `taille_fiche=taille_servie(fiche_maximale())` (44 259) : 1 770 360 — la provision demandée avec CL42-04, rapportée par
+    `--mesurer-consignes` mais non appliquée (voir `PROVISION_SORTIE_PAR_FICHE`)."""
     if isinstance(nombre, bool) or not isinstance(nombre, int) or nombre < 0:
         raise CourseInterrompue(f"nombre de fiches de la provision : entier ≥ 0 (reçu {nombre!r})")
-    return int(round(nombre * TAILLE_MAX_FICHE_SERVIE * RAPPORT_SORTIE_ENTREE_PRUDENT))
+    return int(round(nombre * taille_fiche * RAPPORT_SORTIE_ENTREE_PRUDENT))
 
 
 def provision_sortie_juge_caracteres(fiches_servies):
@@ -912,32 +929,34 @@ def provision_sortie_juge_caracteres(fiches_servies):
     return int(round(fiches_servies * PROVISION_SORTIE_PAR_NOTE * RAPPORT_SORTIE_ENTREE_PRUDENT))
 
 
-def taille_max_consigne_par_defaut(plafond_usd, provision_caracteres=0):
+def taille_max_consigne_par_defaut(plafond_usd, provision_caracteres=0, prix=PRIX_CARACTERE_PRUDENT_USD):
     """v42 (CL41-01) : taille maximale par défaut d'une consigne externe — le plafond de la session qui la reçoit divisé
     par le prix prudent d'un caractère (`PRIX_CARACTERE_PRUDENT_USD`) : au-delà, au barème le plus haut du code, cette
     session dépasserait son plafond sur la seule entrée. v43 (CL42-01) : moins la provision pour la sortie de cette
-    session (`provision_caracteres`, 0 pour un contrôle qui rend « OK ») ; jamais négative (0 : tout est refusé)."""
-    brut = int(_exiger_somme("plafond de la session", plafond_usd) / PRIX_CARACTERE_PRUDENT_USD + 1e-6)  # 2,5 → 1 000 000
+    session (`provision_caracteres`, 0 pour un contrôle qui rend « OK ») ; jamais négative (0 : tout est refusé) ; au prix
+    d'un caractère `prix` (`prix_caractere`, prudent par défaut)."""
+    brut = int(_exiger_somme("plafond de la session", plafond_usd) / prix + 1e-6)  # 2,5 au prix prudent → 1 000 000
     return max(0, brut - int(provision_caracteres))
 
 
-def taille_max_consigne_course_par_defaut(plafond_controle_usd, plafonds_passe_usd, nombre):
+def taille_max_consigne_course_par_defaut(plafond_controle_usd, plafonds_passe_usd, nombre, prix=PRIX_CARACTERE_PRUDENT_USD):
     """v43 (CL42-01) : garde de taille par défaut de la course — la plus grosse consigne d'un proposeur externe est reçue
     par son contrôle (entrée seule, il rend « OK ») et par sa passe la plus grosse (entrée, plus la provision pour sa
     sortie, `provision_sortie_caracteres(nombre)`) ; la garde est la plus petite des tailles que ces sessions tiennent dans
     leur plafond au prix prudent. Rend (taille, détail). Réglages du devis : contrôle 2,5 → 1 000 000 ; passe 2,5 →
-    1 000 000 − 480 000 = **520 000** ; contrôle relevé à 3,0 seul : toujours 520 000 (la passe reste à 2,5)."""
+    1 000 000 − 480 000 = **520 000** ; contrôle relevé à 3,0 seul : toujours 520 000 (la passe reste à 2,5). v43 (CL42-04 b) :
+    au prix `prix` (8,3 dollars par million de jetons : contrôle 1 204 819 ; passe 724 819)."""
     provision = provision_sortie_caracteres(nombre)
     sessions = [{"session": "contrôle du proposeur externe", "plafond_usd": float(plafond_controle_usd),
-                 "provision_sortie_caracteres": 0, "taille_max": taille_max_consigne_par_defaut(plafond_controle_usd)}]
+                 "provision_sortie_caracteres": 0, "taille_max": taille_max_consigne_par_defaut(plafond_controle_usd, 0, prix)}]
     for p in plafonds_passe_usd:
         sessions.append({"session": "passe du proposeur externe", "plafond_usd": float(p), "provision_sortie_caracteres": provision,
-                         "taille_max": taille_max_consigne_par_defaut(p, provision)})
+                         "taille_max": taille_max_consigne_par_defaut(p, provision, prix)})
     retenue = min(sessions, key=lambda s: s["taille_max"])
     detail = (f"défaut : plus petit plafond des sessions d'Argon qui reçoivent la plus grosse consigne — {retenue['session']} "
-              f"{retenue['plafond_usd']} / prix prudent {PRIX_CARACTERE_PRUDENT_USD:.2e} dollar par caractère"
+              f"{retenue['plafond_usd']} / prix {prix:.4e} dollar par caractère ({prix * 4e6:g} dollars par million de jetons)"
               + (f" − provision de sortie {retenue['provision_sortie_caracteres']} caractères ({nombre} fiches de "
-                 f"{TAILLE_MAX_FICHE_SERVIE} au rapport {RAPPORT_SORTIE_ENTREE_PRUDENT:g})"
+                 f"{PROVISION_SORTIE_PAR_FICHE} au rapport {RAPPORT_SORTIE_ENTREE_PRUDENT:g})"
                  if retenue["provision_sortie_caracteres"] else " (entrée seule)"))
     return retenue["taille_max"], {"detail": detail, "sessions": sessions, "provision_sortie_caracteres": provision,
                                    "retenue": retenue["session"]}
@@ -949,19 +968,21 @@ def exiger_taille_max_consigne(valeur):
     return valeur
 
 
-def garde_taille_consigne(quoi, taille, taille_max, origine, provision_caracteres=0):
+def garde_taille_consigne(quoi, taille, taille_max, origine, provision_caracteres=0, prix=PRIX_CARACTERE_PRUDENT_USD):
     """v42 (CL41-01) : refus sans dépense si `taille` (caractères) dépasse `taille_max` ; rend le détail sinon.
-    v43 : la provision de sortie retenue est écrite au détail."""
+    v43 : la provision de sortie retenue et le prix d'un caractère (`prix`, prudent par défaut) sont écrits au détail ;
+    les coûts du détail sont à ce prix (les noms « prudent » des champs sont gardés pour les lecteurs de la v42)."""
     details = {"quoi": quoi, "taille_caracteres": int(taille), "taille_max_caracteres": int(taille_max),
                "origine_taille_max": origine, "prix_caractere_prudent_usd": PRIX_CARACTERE_PRUDENT_USD,
-               "cout_prudent_entree_usd": round(taille * PRIX_CARACTERE_PRUDENT_USD, 4),
+               "prix_caractere_usd": prix, "prix_entree_usd_par_million_jetons": round(prix * 1e6 * CARACTERES_PAR_JETON_PRUDENT, 6),
+               "cout_prudent_entree_usd": round(taille * prix, 4),
                "provision_sortie_caracteres": int(provision_caracteres),
-               "cout_prudent_avec_provision_usd": round((taille + provision_caracteres) * PRIX_CARACTERE_PRUDENT_USD, 4)}
+               "cout_prudent_avec_provision_usd": round((taille + provision_caracteres) * prix, 4)}
     if taille > taille_max:
         raise TailleConsigneRefusee(
             f"garde de taille : {quoi} de {taille} caractères > taille maximale admise {taille_max} ({origine}) ; refus "
-            f"avant tout appel, rien payé ; au barème prudent du code ({PRIX_CARACTERE_PRUDENT_USD * 1e6:.2f} dollars par "
-            f"million de caractères d'entrée) elle coûterait {details['cout_prudent_entree_usd']} en entrée"
+            f"avant tout appel, rien payé ; au barème retenu ({prix * 1e6:.3f} dollars par million de caractères "
+            f"d'entrée) elle coûterait {details['cout_prudent_entree_usd']} en entrée"
             + (f", {details['cout_prudent_avec_provision_usd']} avec la provision de sortie" if provision_caracteres else "")
             + " : relever le plafond de cette session, ou --taille-max-consigne-externe (course) ou "
             "--taille-max-consigne-externe-bras (bras) après confirmation du barème d'Argon (mot de Lazar)", details)
@@ -974,7 +995,8 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
                       seconde_passe=False, cout_controles_prevu_usd=0.0, cout_controles_externes_prevu_usd=0.0,
                       tolerer_somme_plafonds=False, budget_controle_bras_usd=0.2, max_tours=MAX_TOURS_IDEATION,
                       nombre_par_proposeur=8, tolerer_somme_claude=False, tolerer_somme_externe=False,
-                      taille_max_consigne_externe=None, origine_taille_max="donnée", provision_sortie_caracteres=0):
+                      taille_max_consigne_externe=None, origine_taille_max="donnée", provision_sortie_caracteres=0,
+                      prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD):
     """v38 (CL37-04) : tout ce que la course refuserait, vérifié AVANT le premier appel de contrôle, sans rien écrire ni
     dépenser : liste blanche et pièces (empreintes, zones interdites, tailles), témoins, attestation du matériau, plafonds
     finis, étiquettes, somme des plafonds (passes et contrôles prévus compris) contre les totaux. Rend les pièces lues
@@ -985,7 +1007,8 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     v42 : rend aussi `taille_consigne_controle_externe` (la consigne de contrôle entière d'un proposeur externe) et
     `taille_fiche_maximale` (CL41-02) ; avec `taille_max_consigne_externe`, **garde de taille** (CL41-01) : une consigne de
     contrôle externe plus grosse lève `TailleConsigneRefusee`, avant tout appel.
-    v43 (CL42-01) : `provision_sortie_caracteres` (celle que la garde par défaut a déduite) est écrite au détail."""
+    v43 (CL42-01) : `provision_sortie_caracteres` (celle que la garde par défaut a déduite) et `prix_caractere_usd` (CL42-04 b)
+    sont écrits au détail."""
     if isinstance(taille_max_pieces, bool) or not isinstance(taille_max_pieces, int) \
             or not 1 <= taille_max_pieces <= TAILLE_MAX_PIECES_ABSOLUE:
         raise CourseInterrompue(f"taille_max_pieces ∉ [1, {TAILLE_MAX_PIECES_ABSOLUE}] : {taille_max_pieces!r}")
@@ -1044,10 +1067,10 @@ def verifier_reglages(*, liste_blanche, question, pieces, materiau=(), pieces_ju
     if taille_max_consigne_externe is not None and proposeurs_externes:  # v42 (CL41-01) : avant tout appel
         garde = garde_taille_consigne("consigne de contrôle du proposeur externe (sa plus grosse consigne)", taille_controle,
                                       exiger_taille_max_consigne(taille_max_consigne_externe), origine_taille_max,
-                                      provision_sortie_caracteres)
+                                      provision_sortie_caracteres, prix_caractere_usd)
     return {"texte_pieces": texte_pieces, "texte_controle_externe": texte_controle,
             "taille_consigne_controle_externe": taille_controle, "garde_taille": garde,
-            "taille_fiche_maximale": taille_servie(fiche_maximale()), "taille_max_fiche_servie": TAILLE_MAX_FICHE_SERVIE,
+            "taille_fiche_maximale": taille_servie(fiche_maximale()), "taille_max_fiche_servie": None,  # v43 : retirée
             "tailles": {"question": len(question_lue[1]), "pieces": sum(len(t) for _, t, _ in pieces_lues),
                         "materiau": sum(len(t) for _, t, _ in materiau_lu), "pieces_juge": sum(len(t) for _, t, _ in pieces_juge_lues)},
             "temoins": len(temoins_lus), "somme_claude": somme_claude, "somme_externe": somme_externe,
@@ -1102,15 +1125,18 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                       cout_deja_engage_usd=0.0, lectures_interdites=(), commande_externe=None, delai_session_s=None,
                       taille_max_pieces=TAILLE_MAX_PIECES, cout_externe_deja_engage_usd=0.0, tolerer_somme_plafonds=False,
                       budget_controle_bras_usd=0.2, tolerer_somme_claude=False, tolerer_somme_externe=False,
-                      taille_max_consigne_externe=None, garder_sessions_externes=False, origine_taille_max=None):
+                      taille_max_consigne_externe=None, garder_sessions_externes=False, origine_taille_max=None,
+                      prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD, controles_repris=None):
     """Course d'idéation v43 (v36 : Argon à poids égal ; v37 à v43 : relectures CL4 à CL9).
 
     v43 (CL42-01) : chaque session de proposeur externe (passe 1, passe 2) est **gardée avant son envoi**, sans dépense :
     contre `taille_max_consigne_externe` s'il est donné (`--taille-max-consigne-externe`), sinon, avec
     `garder_sessions_externes` (toujours donné par le lanceur), contre son propre plafond / prix prudent moins la provision
     de sortie ; un refus arrête la course (`TailleConsigneRefusee`, manifeste de fin), la session n'est pas lancée ; les
-    gardes jouées sont au journal (`gardes_taille_sessions`). CL42-07 : les refus pour taille sont comptés par proposeur
-    et par passe (`refus_pour_taille_par_proposeur`, au journal et au manifeste de fin).
+    gardes jouées sont au journal (`gardes_taille_sessions`), au prix `prix_caractere_usd` (CL42-04 b). CL42-07 : les refus
+    pour taille (bornes par champ et de listes ; CL42-04 : plus de borne de fiche) sont comptés par proposeur et par passe
+    (`refus_pour_taille_par_proposeur`, au journal et au manifeste de fin). CL40-01 (option c) : `controles_repris`
+    (contrôles réussis d'une tentative antérieure, non rejoués par le lanceur) est écrit au journal.
 
     v42 : manifeste de départ écrit dans un dossier provisoire puis renommé en SORTIE (CL41-06) ; marge de la passe 2
     au journal et au manifeste (CL41-02).
@@ -1155,6 +1181,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
     _exiger_plafonds(budgets)
     if taille_max_consigne_externe is not None:  # v43 (CL42-01)
         exiger_taille_max_consigne(taille_max_consigne_externe)
+    if not _fini(prix_caractere_usd) or prix_caractere_usd <= 0:  # v43 (CL42-04 b)
+        raise CourseInterrompue(f"prix_caractere_usd : réel fini > 0 (reçu {prix_caractere_usd!r})")
     tolere_claude, tolere_externe = tolerances(tolerer_somme_plafonds, tolerer_somme_claude, tolerer_somme_externe)
     _verifier_adaptateur_principal(adaptateur, moteur, proposeurs, juges)
     juges_externes = [(e, m) for e, m, *_ in juges_externes]
@@ -1219,11 +1247,13 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                "cout_appels_de_controle_externes_usd": float(cout_externe_deja_engage_usd),  # CL36-02
                # v42 (CL41-02) : la marge de la passe 2 (fiches à la taille maximale du gabarit borné), écrite au journal
                "marge_seconde_passe": {"taille_fiche_maximale_servie": taille_servie(fiche_maximale()),
-                                       "taille_max_fiche_servie": TAILLE_MAX_FICHE_SERVIE, "nombre": nombre_par_proposeur,
+                                       "taille_max_fiche_servie": None, "nombre": nombre_par_proposeur,  # v43 : retirée
                                        "max_questions_servies": MAX_QUESTIONS_SERVIES, "max_anteriorites": MAX_ANTERIORITES},
                # v43 (CL42-01) : gardes de taille jouées avant chaque session de proposeur externe ; (CL42-07) refus pour
                # taille, par proposeur et par passe
                "gardes_taille_sessions": [],
+               # v43 (CL40-01, option c) : contrôles réussis d'une tentative antérieure, repris sans être rejoués
+               "controles_repris": dict(controles_repris or {}),
                "refus_pour_taille_par_proposeur": {e: dict({f"passe-{n}": 0 for n in ((1, 2) if seconde_passe else (1,))},
                                                            total=0) for e, _ in tous_proposeurs}}
     externes_adapt = {e: a for e, _, a in proposeurs_externes}
@@ -1267,7 +1297,8 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             porte_eligibilite=PORTE_ELIGIBILITE, criteres=list(CRITERES), note_max=NOTE_MAX,
             grille=grille(bool(pieces_juge_lues)), budget_total_usd=budget_total_usd,
             budgets_par_session={f"{r}|{m}": v for (r, m), v in budgets.items()},
-            taille_max_fiche_servie=TAILLE_MAX_FICHE_SERVIE, taille_fiche_maximale_servie=taille_servie(fiche_maximale()))
+            taille_max_fiche_servie=None, taille_fiche_maximale_servie=taille_servie(fiche_maximale()),  # v43 : borne retirée
+            controles_repris=dict(controles_repris or {}))
         ecrire_json_scelle(os.path.join(provisoire, "manifeste-depart.json"), depart)
         if os.path.exists(sortie):
             raise FileExistsError(errno.EEXIST, "SORTIE existe déjà (jamais écrasée, R12)", sortie)
@@ -1346,15 +1377,15 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
             origine = origine_taille_max or "donnée (--taille-max-consigne-externe)"
         elif garder_sessions_externes:
             plafond = budgets[("proposeur_ideation", modele)]
-            tmax, prov = taille_max_consigne_par_defaut(plafond, provision_sessions), provision_sessions
-            origine = (f"défaut : plafond de cette session {plafond} / prix prudent {PRIX_CARACTERE_PRUDENT_USD:.2e} dollar "
-                       f"par caractère − provision de sortie {provision_sessions} caractères ({nombre_par_proposeur} fiches "
-                       f"de {TAILLE_MAX_FICHE_SERVIE} au rapport {RAPPORT_SORTIE_ENTREE_PRUDENT:g})")
+            tmax, prov = taille_max_consigne_par_defaut(plafond, provision_sessions, prix_caractere_usd), provision_sessions
+            origine = (f"défaut : plafond de cette session {plafond} / prix {prix_caractere_usd:.4e} dollar par caractère − "
+                       f"provision de sortie {provision_sessions} caractères ({nombre_par_proposeur} fiches de "
+                       f"{PROVISION_SORTIE_PAR_FICHE} au rapport {RAPPORT_SORTIE_ENTREE_PRUDENT:g})")
         else:
             return
         quoi = f"consigne de la passe {numero} du proposeur externe {etiquette!r}"
         try:
-            details = garde_taille_consigne(quoi, len(consigne), tmax, origine, prov)
+            details = garde_taille_consigne(quoi, len(consigne), tmax, origine, prov, prix_caractere_usd)
         except TailleConsigneRefusee as e:
             journal["gardes_taille_sessions"].append(dict(e.details, etiquette=etiquette, passe=numero, refusee=True))
             journal["arret"] = f"proposeur externe {etiquette} passe {numero} non envoyée : {e}"
@@ -1565,7 +1596,7 @@ def construire_liste_blanche(chemins, sortie):
 
 def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes, budgets, lire_etat_relais=None,
                           horodatage=None, budget_controle_usd=None, exiger_cout_controle=True, budget_externe_usd=None,
-                          commande_externe=None, taille_max_consigne_externe=None):
+                          commande_externe=None, taille_max_consigne_externe=None, prix_caractere_usd=PRIX_CARACTERE_PRUDENT_USD):
     """v36 → v41 : joue les juges externes différés d'une course déjà faite, **après** une lecture humaine attestée — le seul
     chemin par lequel un juge d'une autre lignée lit les fiches — puis écrit le **classement à trois juges** (médiane par
     critère, porte sur l'agrégat, unanimité et accords de rang par paire rapportés ; n° 118).
@@ -1596,7 +1627,8 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
     des fiches servies à ce juge ; 3,5 et 52 fiches → 1 400 000 − 520 000 = 880 000) ; **la valeur donnée à la course ne s'y
     applique plus** ;
     un refus de taille **compte une tentative non relançable** (`manifeste-bras-refus-taille-N.json`, N = numéro de
-    tentative) et écrit le classement sans bras (`SansJugeExterne`). CL42-06 : un échec du classement de repli est dit
+    tentative) et écrit le classement sans bras (`SansJugeExterne`) ; prix d'un caractère `prix_caractere_usd` (CL42-04 b,
+    `--prix-entree-usd-par-million-jetons`). CL42-06 : un échec du classement de repli est dit
     dans l'exception levée et scellé (`classement-sans-bras-impossible-N.json`) ; un classement de repli déjà écrit n'est
     jamais réécrit, et l'exception le dit."""
     def lire_json_scelle(nom):
@@ -1612,6 +1644,8 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
         _exiger_somme("budget_externe_usd", budget_externe_usd)
     if taille_max_consigne_externe is not None:
         exiger_taille_max_consigne(taille_max_consigne_externe)
+    if not _fini(prix_caractere_usd) or prix_caractere_usd <= 0:  # v43 (CL42-04 b)
+        raise CourseInterrompue(f"prix_caractere_usd : réel fini > 0 (reçu {prix_caractere_usd!r})")
     chemin_manifeste = os.path.join(sortie, "manifeste-bras-rapporte.json")
     if os.path.exists(chemin_manifeste):
         raise CourseInterrompue("le bras a déjà été joué pour cette course (manifeste-bras-rapporte.json existe) : jamais "
@@ -1782,14 +1816,14 @@ def executer_bras_differe(sortie, *, attestation_lecture_humaine, juges_externes
             plafond_juge = budgets[("juge_ideation", modele)]
             servies = len(cles_par_juge[etiquette])
             prov = provision_sortie_juge_caracteres(servies)
-            tmax = taille_max_consigne_par_defaut(plafond_juge, prov)
-            origine = (f"défaut : plafond de la session du juge {plafond_juge} / prix prudent "
-                       f"{PRIX_CARACTERE_PRUDENT_USD:.2e} dollar par caractère − provision de sortie {prov} caractères "
+            tmax = taille_max_consigne_par_defaut(plafond_juge, prov, prix_caractere_usd)
+            origine = (f"défaut : plafond de la session du juge {plafond_juge} / prix {prix_caractere_usd:.4e} dollar par "
+                       f"caractère − provision de sortie {prov} caractères "
                        f"({servies} fiches servies × {PROVISION_SORTIE_PAR_NOTE} caractères de note au rapport "
                        f"{RAPPORT_SORTIE_ENTREE_PRUDENT:g})")
         try:
             journal["garde_taille"][etiquette] = garde_taille_consigne(
-                f"consigne du juge externe {etiquette!r}", len(consignes[etiquette]), tmax, origine, prov)
+                f"consigne du juge externe {etiquette!r}", len(consignes[etiquette]), tmax, origine, prov, prix_caractere_usd)
         except TailleConsigneRefusee as e:
             numero = journal["tentative"]
             journal["garde_taille"][etiquette] = e.details
