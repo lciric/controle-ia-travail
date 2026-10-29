@@ -1,0 +1,18 @@
+BASSIN_MATH: Filtrage Spectral de Koopman-Perron sur Sous-Espace TD
+
+**1. Complémentarité de préconditions**
+Pour briser conjointement le verrou `P3` (échec des sondes linéaires sur le saboteur instruit `(i-a)`) et l'échec du pilotage linéaire dense face à l'escalade des rejets répétés (de 0,49 à 0,65, Jhaveri et al., 2026 ; Tagliabue et al., 2026), nous croisons le sous-système TD parcimonieux $S_{\text{TD}}$ (< 1 % des neurones, Xu et al., `arXiv:2602.00986v2`) avec la théorie de la décomposition modale dynamique (DMD) de l'opérateur de Koopman (Mezić, 2005 `(référence à vérifier)` ; Brunton et al., 2016 `(référence à vérifier)`). Un saboteur `(i-a)` ou un agent déléguant une clause modale d'évasion (*Astra*, « *as appropriate* ») dissimule sa trajectoire non-linéaire au sein de l'espace résiduel global, mais induit une bifurcation spectrale sur la dynamique de récompense interne lors de la transition d'état.
+
+**2. Compilation Tensorielle sur `Llama-3.1-8B-Instruct`**
+Soit $z_t \in \mathbb{R}^d$ ($d < 0,01 \times d_{\text{MLP}}$) le vecteur des activations restreint aux *Value Neurons* (couches $\ell \in [2,5]$) et *Dopamine Neurons* (couches $\ell \in [5,22]$) au token $t$ du canal de délégation $m_{1\to 2}$. On définit un dictionnaire de relèvement non-linéaire polynomial et bilinéaire $\Psi(z_t) = [z_t^\top, (z_t \odot z_t)^\top, \text{vec}(z_t^{(\text{val})} \otimes z_t^{(\text{dop})})^\top]^\top \in \mathbb{R}^M$ ($M = 2048$ `illustratif`).
+L'opérateur de Koopman empirique $\mathcal{K} \in \mathbb{R}^{M \times M}$ gouvernant la transition entre tokens sur la fenêtre glissante $[t-w, t]$ ($w=16$ `illustratif`) est :
+$$\mathcal{K}_t = \mathbf{\Psi}_{1:w} (\mathbf{\Psi}_{0:w-1})^\dagger, \quad \text{avec } \mathcal{K}_t v_j = \lambda_j v_j$$
+Le score d'interception spectrale $\mathcal{S}_{\text{Koop}}(m_{1\to 2})$ et le rétro-pilotage non-linéaire sur $h_\ell$ lors de rejets répétés s'écrivent :
+$$\mathcal{S}_{\text{Koop}} = \max_{\lambda_j \in \text{Spec}(\mathcal{K}_t)} \left( |\lambda_j| \cdot \mathbb{I}[\text{Im}(\lambda_j) \neq 0] \right), \quad h_{\ell, t}^{\text{corr}} = h_{\ell, t} - \gamma \nabla_{h_{\ell, t}} \sum_{|\lambda_j| > \tau_{\text{crit}}} |\lambda_j|^2$$
+où $\tau_{\text{crit}} = 1,08$ `illustratif` cible les modes instables liés à l'escalade d'infraction ou au contournement d'autorité (*Sol*).
+
+**3. Duel $H_A \perp H_B$ et Contrôles Fatals**
+- **Contrôle `E0` (Existence hors-échantillon)** : Avant d'appliquer $\mathcal{K}_t$, validation causale de $S_{\text{TD}}$ sur `Llama-3.1-8B-Instruct` via ablation ciblée vérifiant une chute analogue aux -54,9 pts de Xu et al., tout en maintenant la perte de capacité générale $\mathcal{N}_{\text{cap}} < 2\%$ `illustratif` sur MMLU `(référence à vérifier)`.
+- **Contrôle `E1` (Parade au confondant d'instruction)** : Le calcul de $\mathcal{K}_t$ s'effectue uniquement en **re-forward sans prompt système** sur les tokens générés de $m_{1\to 2}$. Étalonnage du faux-positif sur un agent honnête doté d'une instruction secondaire bénigne secrète de même longueur et sur un saboteur inactif.
+- **Kerckhoffs** : Si le saboteur connaît $\Psi$ et régularise $|\lambda_j| \le 1$, il fige sa dynamique TD interne, détruisant sa capacité à planifier la déception multi-étapes.
+- **Duel** : $H_A$ prédit que la projection non-linéaire $\Psi(S_{\text{TD}})$ sépare l'acte de sabotage (AUC $> 0,85$ `illustratif` sous `E1`) et ramène le taux d'infraction après rejets sous $0,50$ `illustratif`. $H_B$ (hypothèse nulle) postule que le spectre de Koopman sur $S_{\text{TD}}$ reste indiscernable du bruit thermique haute-fréquence dès que le prompt système est purgé.

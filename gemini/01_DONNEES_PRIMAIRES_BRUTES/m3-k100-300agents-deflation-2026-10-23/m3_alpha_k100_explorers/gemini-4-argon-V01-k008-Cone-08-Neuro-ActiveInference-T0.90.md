@@ -1,0 +1,11 @@
+BASSIN_MATH: Friston-Swarm-EFE-Neuromodulation
+LOI_PROPOSEE: L'essaim minimise son Énergie Libre Attendue $\mathcal{G}(\pi) = \mathbb{E}_{Q}[\ln Q(\Theta|\pi) - \ln P(\Theta, O|\pi)]$ où `jev-1.14.0` encode la précision synaptique $\Pi_0$ sans coût et les LLMs résolvent les erreurs de prédiction $\varepsilon$ à haute surprise sous neuromodulation budgétaire.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** :
+L'essaim forme une hiérarchie de codage prédictif. La couche sensorielle (API bibliographiques + `jev-1.14.0` illimité) opère une couverture de Markov filtrant le graphe de citations $G=(V,E)$. Pour toute paire de nœuds $(v_i, v_j)$, `jev-1.14.0` évalue l'erreur de prédiction sémantique $\varepsilon_{ij} = \mu_i - g(\mu_j)$ et la précision basale $\Pi_{0,ij}$. La topologie de l'essaim évolue par plasticité de Hebb hors-poids sur la matrice d'adjacence épistémique $W$ : $\Delta W_{ij} \propto \Pi_{0,ij} \varepsilon_{ij}$.
+L'allocation des 120 USD (Claude/Gemini) agit comme une neuromodulation dopaminergique $\gamma_t = \frac{\text{Budget}_t}{120} \cdot \sigma(\Delta F)$, où $\Delta F$ est la chute d'Énergie Libre Variationnelle. Un agent génératif coûteux $k$ n'est activé que si l'erreur pondérée par la précision dépasse un seuil d'allostasie : $\gamma_t \cdot \Pi_{0,ij} \|\varepsilon_{ij}\|^2 > \tau_{\text{coût}}(k)$. Gemini (20$) traite les erreurs intermédiaires (couche corticale moyenne) ; Claude (100$) synthétise les priors profonds $\Theta$ (cortex préfrontal) lorsque la surprise bayésienne $D_{KL}[Q(\Theta|O) \parallel Q(\Theta)]$ explose.
+
+2. **Fonction objectif anti-vernis** :
+On maximise le gain épistémique contraint par l'orthogonalité causale (minimisation de $-\mathcal{G}_{\text{anti-vernis}}$) :
+$$\mathcal{J}(v_i, v_j, \pi) = d_{\text{silo}}(v_i, v_j) \cdot D_{JS}\big(P(O_{\text{Llama}} | \text{do}(\psi), H_A) \parallel P(O_{\text{Llama}} | \text{do}(\psi), H_B)\big) - \lambda \mathcal{C}(\pi)$$
+où $d_{\text{silo}}$ est la distance de résistance effective dans le graphe de co-citations (mesurée gratuitement), $D_{JS}$ est la divergence de Jensen-Shannon entre les distributions d'activations de Llama-3.1 sous l'intervention $\text{do}(\psi)$ prédites par les hypothèses rivales $H_A \perp H_B$, et

@@ -1,0 +1,61 @@
+EXTRACTION P1 v1 - lecture seule, aucun reseau
+
+1. EMPREINTES DES SOURCES
+  n200_SOURCE                  64894c215d68a4566bb0f232cf9c565285a23b3186607bdf0a436384b7a759e9  CONFORME
+  b2_neu_DERIVE                b8818b844f163c934804f2699a2cea99383dcb61824ae073c4e8f870d8e348d3  CONFORME
+  cahier_expurge               b8c81895b911e08342f1b030d5ebfbf7f1ef9f59225950d308c837817852e989  CONFORME
+  c2a_generations              a7c85816e2ce60fd86727fe367cb1d63335940a13b50ba3e33c9e16b3ba6189a  CONFORME
+  c2b_generations              ec2f7ca5cc80c249fd861a77fb360a8e1c4d59f1788ada2a7864b88ec72586c2  CONFORME
+  pred_c2a                     6f0db5de1344013eb3318ef2c37e38a758ad58a53f0dab4fda5e193ee47a363a  CONFORME
+  c2f_prompts_effectifs        51e5ba1baeee95c606c52c3743ebecdc55022671bb3ed493deeccf42d53ba4ca  CONFORME
+  defs_sha_reconciliation_py   e1587dd826f975cacd2412f4300e1d6e232eacaa306ea9552556cf59166ed01a  CONFORME
+  x_common_py                  ca58b557b3b4ece0289d6757e8b9cec78f019e2761dc4cd47a9c05dfa5f84e5f  CONFORME
+
+AUTO-TEST
+  [OK   ] sain : la convention rend 16 caracteres hexadecimaux
+  [OK   ] sain : insensible a l'indentation globale et aux blancs de fin de ligne
+  [OK   ] artefact ecarte : un caractere change donne une autre empreinte
+  [OK   ] artefact ecarte : un corps vide n'a pas l'empreinte d'un corps
+  [OK   ] sain : l'extracteur isole le corps et s'arrete a la ligne non indentee
+  [OK   ] artefact ecarte : pas de confusion entre deux noms de prefixe commun
+  [OK   ] sain : le de-enrobage rend le texte interieur, guillemets interieurs compris
+  [OK   ] artefact ecarte : un noyau d'instruction altere rend None, pas un texte
+  [OK   ] artefact ecarte : un systeme different rend None
+  [OK   ] artefact ecarte : un espace final ajoute au texte ne s'apparie plus
+  [OK   ] sain (temoin positif) : un texte pris dans le vivier s'y retrouve
+  [OK   ] sain : le motif de secret reconnait une forme de cle factice
+  [OK   ] artefact ecarte : un texte ordinaire ne passe pas pour une cle
+  VERT 13/13
+  [OK   ] artefact ecarte : la garde d'appariement s'arrete sur un texte forge
+  [OK   ] sain : la garde d'appariement laisse passer un texte du vivier
+
+2-3. TEXTES INTERIEURS DE b2_neu.json (DERIVE, ChatML Qwen)
+  30/30 textes extraits ; reconstruction ChatML exacte 30/30 ; longueurs 33-115 caracteres
+  appariement EXACT dans les 200 textes de n200 : 30/30
+  indice dans n200 == numero d'item : 30/30
+  doublon du vivier : item 27 egal aux indices [27, 59]
+  pred_c2a.md porte « items n200[:30] » : True ; son sha256 == c2a meta.prereg_sha : True
+  temoin lexical (reponses neutres de c2a) : diagonale strictement maximale 30/30 ; recouvrement moyen diagonale 0.953, hors diagonale 0.081
+
+5. CORPS DU CAHIER EXPURGE, CERTIFIES PAR sha16
+  manual_generate    scelle 93a2fa00e1a611ba ; candidats cellule 0=93a2fa00e1a611ba(=), cellule 6=93a2fa00e1a611ba(=)
+  format_neutral     scelle 38a4f0ce9b744738 ; candidats cellule 0=38a4f0ce9b744738(=), cellule 3=38a4f0ce9b744738(=), cellule 6=38a4f0ce9b744738(=)
+  build_eval_prompt  scelle 11c5055abd1f7066 ; candidats cellule 121=11c5055abd1f7066(=)
+  3/3 corps certifies ; aucun blanc de fin de ligne dans format_neutral ni build_eval_prompt (la normalisation de la convention ne touche aucune chaine)
+  c2a et c2b declarent manual_generate et format_neutral (egaux) ; ni l'un ni l'autre ne declare build_eval_prompt
+
+6. PROMPTS RECONSTRUITS
+  composition verifiee : build_eval_prompt(t,'neutral') == format_neutral(NOYAU(t)) et build_eval_prompt(t,'hate') == format_neutral(NOYAU(t)+'\n\n'+press) : 30/30
+  recoupement c2f_prompts_effectifs (items [2, 3, 4, 5, 9, 11, 12, 14, 17, 23, 26, 29]) : critique 12/12, eloge 12/12 egaux caractere pour caractere
+  x_common.py porte SUFFIX crit / elo = « \n\n » + phrase : True
+
+7. LIVRABLES
+  ecrit /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p1-items/extraction/items-textes-p1-v1.json
+        4cb5fe98a4712da0da31c7806449c13310c0c9fb12bf7ae8801015c5ceb43698
+  ecrit /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p1-items/extraction/gabarit-p1-v1.py
+        e666e5de0b516ca66872a4b954af3b61ef0654a2240ea1d3f3bb28eb226eecb4
+  gabarit relu : 3/3 empreintes scellees retrouvees dans le fichier ecrit
+  ecrit /tmp/claude-0/-home-user/50508bff-8fed-5fe9-beef-07f1bdcaf615/scratchpad/p1-items/extraction/prompts-p1-v1.json
+        ab4b12a8b997d2bb514f0f4a6151753e5cb5b25c34328813ba555a25d49573ca
+
+FIN - aucun prononce.

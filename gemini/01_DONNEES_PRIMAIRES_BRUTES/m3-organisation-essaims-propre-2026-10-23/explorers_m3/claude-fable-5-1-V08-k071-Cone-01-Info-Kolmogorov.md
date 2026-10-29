@@ -1,0 +1,4 @@
+BASSIN_MATH: Recherche-de-Levin-Profondeur-Logique (RLPL)
+LOI_PROPOSEE: Une topologie d'essaim est un programme $p$ ; budget $B(p)\propto 2^{-\ell(p)}/t(p)$ (coût de Levin $Kt$), sélection $p^\*=\arg\min_p\big[\ell(p)+L(D\mid p)\big]$ sous contraintes $\mathrm{depth}_\epsilon(y)\ge\delta$ et $\mathrm{NID}(y_i,y_j)\ge\eta$.
+
+**1. Auto-organisation hors-poids.** Chaque topologie (graphe de délégation, rôles explorateur/démolisseur, mélange monoculture/chimère) est encodée en une chaîne $p$ d'un langage de topologies fixé ; $\ell(p)$ est sa longueur. L'essaim exécute une recherche universelle de Levin : les programmes courts reçoivent un quart d'heure d'inférence d'abord, les longs ensuite, en dollars $100/20$ répartis par $2^{-\ell(p)}/t(p)$. Mutation = édition minimale de $p$ (ajout d'un nœud Red-Team, croisement de familles). Arbitrage H4' : la chimère est spawnée quand la distance d'information normalisée $\mathrm{NID}(y_i,y_j)=\frac{\max(K(y_i|y_j),K(y_j|y_

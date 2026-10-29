@@ -1,0 +1,11 @@
+BASSIN_MATH: Mécanisme-dAspremontGérardVaret-Blackwell-Gneiting-Aumann (AGV-BGA-Swarm)
+LOI_PROPOSEE: L'essaim converge vers un équilibre Bayésien-Nash incitatif (BIC) et budgétairement équilibré (BB) via les transferts d'Aspremont-Gérard-Varet sur des expériences de Blackwell filtrées sans coût par `jev-1.14.0`, rémunérées selon un score de Gneiting-Raftery sur la brisure de connaissance commune d'Aumann.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** :
+En l'absence de corrélation entre priors (défaillance de Crémer-McLean sur ponts distants), l'auto-organisation hors-poids opère en deux phases :
+* **Phase 0 (Filtrage de Blackwell gratuit)** : Un essaim de marcheurs aléatoires sur le graphe de citations génère des millions de paires de nœuds $(u,v)$. Le classifieur non-génératif `jev-1.14.0` évalue la matrice de transition stochastique $\pi_{uv} : \Theta \to \Delta(S)$. Une paire n'est soumise aux LLMs que si $\pi_{uv}$ domine au sens de Blackwell ($\pi_{uv} \succeq_B \pi_0$) l'enveloppe convexe des signaux intra-silos.
+* **Phase 1 (Allocation AGV des 120 USD)** : Chaque agent LLM $i$ détient un type privé $\theta_i$ (sous-graphe d'interprétabilité) et annonce $\hat{\theta}_i$. L'allocation de budget d'inférence $k(\hat{\theta}) \in \{\text{0\$}, \text{Gemini-20\$}, \text{Claude-100\$}\}$ maximise le gain épistémique social $\sum_i v_i(k, \hat{\theta}_i)$. Pour garantir la véracité (BIC) et l'équilibre budgétaire strict ($\sum_i t_i(\hat{\theta}) = 0$), le transfert en tokens d'attention/prompts est régi par le mécanisme d'Aspremont-Gérard-Varet (AGV) :
+$$t_i(\hat{\theta}) = \mathbb{E}_{\theta_{-i}}\left[\sum_{j \neq i} v_j(k(\hat{\theta}_i, \theta_{-i}), \theta_j)\right] - \frac{1}{N-1}\sum_{j \neq i} \mathbb{E}_{\theta_{-j}}\left[\sum_{m \neq j} v_m(k(\hat{\theta}_j, \theta_{-j}), \theta_m)\right]$$
+
+2. **Fonction objectif anti-vernis** :
+Le vernis linguistique est éliminé par le théorème d'accord d'Aumann : deux agents aux priors identiques dont les posteriors $q_A, q_B$ sont connaissance commune ne peuvent s'accorder sur un désaccord que si leurs expériences sont causalement orthogonales. La valeur $v_i$ est évaluée par `jev-1.14.0` via le score strictement propre de Gneiting-Raftery $S_{\text

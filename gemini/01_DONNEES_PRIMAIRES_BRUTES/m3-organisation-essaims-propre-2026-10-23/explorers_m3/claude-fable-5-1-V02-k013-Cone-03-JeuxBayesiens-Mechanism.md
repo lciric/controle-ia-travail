@@ -1,0 +1,4 @@
+BASSIN_MATH: Marché-Myerson-Chimérique (MMC)
+LOI_PROPOSEE: $x^*=\arg\max_x \sum_{i,t} x_{it}\big[\mathbb{E}S(p_{it},y_t)-c_{it}\big]-\lambda\sum_{i\sim j}\rho_{ij}x_{it}x_{jt}$ sous $\sum_{it}c_{it}x_{it}\le B$ ; paiement VCG $\pi_i=W_{-i}-W_{-i}(x^*)$, score propre $S$ = log-score.
+
+1. **Auto-organisation hors-poids** : chaque tâche $t$ est un contrat de prédiction. Un agent $i$ (famille $f(i)$) soumet un rapport bayésien $(p_{it},c_{it})$ : probabilité que son livrable soit validé, coût d'inférence demandé. L'allocateur VCG attribue les tâches ; la propriété stricte de $S$ rend le rapport sincère dominant, donc la topologie émerge sans coordinateur. Arête $i\to j$ créée ssi la valeur d'information de Blackwell $V_i(\sigma_j)-V_i(\varnothing)>$ prix demandé par $j$. Spawn d'explorateur quand le prix de marché $\bar p_t\in[0,4;0,6]$ (entropie haute) ; spawn d'un démolisse

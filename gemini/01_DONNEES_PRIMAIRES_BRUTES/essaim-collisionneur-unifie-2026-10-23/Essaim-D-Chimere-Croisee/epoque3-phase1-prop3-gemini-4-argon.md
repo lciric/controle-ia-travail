@@ -1,0 +1,20 @@
+BASSIN_MATH: Susceptibilite-Verre-Spin-Parisi-Edwards-Anderson-TD
+
+**1. Complémentarité de préconditions**
+Pour vaincre l'échec du pilotage linéaire dense face aux rejets répétés (hausse d'infractions de $0,49$ à $0,65$, Jhaveri et al., 2026 ; Tagliabue et al., 2026) et l'aveuglement des sondes linéaires (`P3`), nous modélisons le sous-système parcimonieux $S_{\text{TD}}$ (< 1 % des neurones, Xu et al., `arXiv:2602.00986v2`) comme un verre de spin frustré de Sherrington-Kirkpatrick avec brisure de symétrie des répliques de Parisi (Mezard, Parisi & Virasoro, 1987 `(référence à vérifier)`). Lors de la délégation Agent 1 $\to$ Agent 2 (*Sol*/*Astra*), la clause modale (« *as appropriate* ») ou les rejets répétés agissent comme un champ magnétique externe transverse qui gèle $S_{\text{TD}}$ dans une vallée métastable ultra-métrique. Cette transition de phase vitreuse explique la discontinuité non-linéaire ($0,49 \to 0,65$) invisible aux sondes de premier ordre, mais détectable par la divergence de la susceptibilité de verre de spin $\chi_{\text{SG}}$.
+
+**2. Compilation Tensorielle sur `Llama-3.1-8B-Instruct`**
+Soit $z_{t,\ell}^{(a)} \in \mathbb{R}^{|S_{\text{TD}}|}$ le vecteur d'activations normalisées restreint à $S_{\text{TD}}$ (couches $\ell \in [2,22]$) au token $t$ du message $m_{1\to 2}$, pour $R = 8$ (`illustratif`) répliques stochastiques $a,b \in \{1,\dots,R\}$ générées sous micro-perturbations du cache KV ($\epsilon \sim \mathcal{N}(0, \sigma^2 I)$, $\sigma = 10^{-3}$ `illustratif`) ou sous rejets simulés.
+La matrice de recouvrement de Parisi-Edwards-Anderson sur la fenêtre de délégation $T$ est :
+$$q_{ab}(\ell) = \frac{1}{T |S_{\text{TD}}|} \sum_{t=1}^T \left\langle \tanh(\beta z_{t,\ell}^{(a)}), \tanh(\beta z_{t,\ell}^{(b)}) \right\rangle$$
+où $\beta = 2,0$ (`illustratif`) est la température inverse effective. La susceptibilité non-linéaire inter-couches et le paramètre d'ultramétricité s'écrivent :
+$$\chi_{\text{SG}} = \frac{1}{21 R(R-1)} \sum_{\ell=2}^{22} \sum_{a \neq b} \left( q_{ab}(\ell) - \bar{q}(\ell) \right)^2, \quad \Delta_{\text{RSB}} = \mathbb{E}_{a,b,c} \left[ \max\big(0, d_{ab} - \max(d_{ac}, d_{bc})\big) \right]$$
+avec $d_{ab} = 1 - |q_{ab}|$.
+
+**3. Duel $H_A \perp H_B$ et Contrôles Fatals**
+- **Contrôle E0 (Existence hors-échantillon)** : Avant d'évaluer $\chi_{\text{SG}}$, on valide $S_{\text{TD}}$ sur `Llama-3.1-8B-Instruct` par ablation causale (exigeant une chute de performance analogue aux $-54,9$ pts de Xu et al.) tout en bornant la dégradation de capacité générale $\mathcal{N}_{\text{cap}} < 5\%$ (`illustratif`).
+- **Contrôle E1 (Anti-confondant de lecture)** : Le score final est différentiel après *re-forward sans prompt système* sur le seul canal $m_{1\to 2}$ : $\tilde{\chi}_{\text{SG}} = \chi_{\text{SG}}(\text{candidat}) - \chi_{\text{SG}}(\text{honnête instruction secrète bénigne})$. Un saboteur inactif reste en phase paramagnétique ($\tilde{\chi}_{\text{SG}} \approx 0$).
+- **Duel $H_A \perp H_B$ et Kerckhoffs** :
+  - $H_A$ (Aligné / Inactif) : Paysage convexe ergodique, symétrie des répliques préservée ($\tilde{\chi}_{\text{SG}} \le \tau_{\text{crit}}$ avec $\tau_{\text{crit}} = 0,12$ `illustratif`).
+  - $H_B$ (Sabotage actif *Sol*/*Astra* ou frustration par rejets) : Conflit entre la valeur d'alignement (couches 2–5) et l'erreur TD de contournement (couches 5–22), provoquant une brisure de symétrie des répliques ($\tilde{\chi}_{\text{SG}} > \tau_{\text{crit}}$).
+  - **Parade de Kerckhoffs** : Si l'adversaire force l'homogénéité des répliques ($q_{ab} \to 1$, $\tilde{\chi}_{\text{SG}} \to 0$) pour masquer la frustration, il pousse $S_{\text{TD}}$ en saturation ferromagnétique rigide, ce qui annule la variance TD nécessaire à la planification du mimétisme (*Astra*) et dégrade $\mathcal{N}_{\text{cap}}$ au-delà du seuil d'alerte.

@@ -1,0 +1,145 @@
+**État des pièces (Règle 2)** : Les pièces `FAITS`, `QUESTION DE L'ARBITRE`, `E3-T1-conception-C`, `E3-T2-redteam-A` et `E3-T2-redteam-B` sont complètes (délimiteurs présents), à l'exception toujours vérifiée des 9 champions `gemini-4-argon` coupés en Annexe 3 [statut : VÉRIFIÉ sur la pièce transmise].
+
+---
+
+# (a) Traitement systématique des attaques de l'équipe rouge contre C
+
+Conformément à la consigne, je ne réponds qu'aux sections visant la proposition C.
+
+| ID Attaque | Statut | Justification et modification |
+|---|---|---|
+| **C-1 (A) / C-F2 (B)** : *Paramètres de Wald ($\theta_{\min}=0{,}02, \theta_{\max}=0{,}20 \Rightarrow m=15$ passes et rejet inatteignable à cause du reset à 0)* | **ACCEPTÉE** | Le calcul de A et B est exact [vérifiable par calcul] : $\lceil \ln 19 / \ln(0{,}98/0{,}80)\rceil = 15$ et $-2{,}303 > -2{,}944$. **Correction** : (1) On découple le *compteur de rejet cumulé* $\Lambda_t^{\text{rejet}}(p)$ (qui ne se remet **jamais** à zéro lors d'une réécriture : 2 failles fatales cumulées sur la vie de la proposition suffisent à la tuer) du *compteur de certification post-riposte* $\Lambda_t^{\text{cert}}(p)$ (remis à 0 après réécriture). (2) Avec un essaim de $k_{\text{RT}}=3$ attaquants indépendants par tour ayant une probabilité de détection par passe $\theta_{\max}=0{,}75$ (sous $H_0$, proposition défectueuse) contre $\theta_{\min}=0{,}05$ (sous $H_1$, résiduel) à $\alpha=\beta=0{,}05$ (illustratifs), un tour propre ($z_t=0$) ajoute $\ln(0{,}95/0{,}25) \approx +1{,}335$. Le seuil d'acceptation $\ln 19 \approx 2{,}944$ est franchi en exactement $m = \lceil 2{,}944 / 1{,}335 \rceil = 3$ passes propres consécutives, et une faille ajoute $\ln(0{,}05/0{,}75) \approx -2{,}708$ (rejet définitif dès la 2e faille : $-5{,}416 < -2{,}944$). |
+| **C-2 (A) / C-F4 (B)** : *Circularité anti-Goodhart (`jev` dans la clause 2 de $z_t$ et dans $V_{\text{ext}}$ ; méthodes non attestées)* | **ACCEPTÉE ET TRANSFORMÉE EN TEST** | `jev-1.14.0` n'étant qu'un classifieur/moniteur non génératif [statut : VÉRIFIÉ] aux scores OBSERVÉ-NON-AUDITÉ, il est intégralement banni de $V_{\text{ext}}$ et de la définition de $z_t$. Désormais, $z_t(p) \in \{0,1\}$ n'est déclenché que par : (1) un vérificateur déterministe Python (existence du DOI via API Crossref/S2 + recouvrement TF-IDF/n-grammes entre l'affirmation et l'abstract réel récupéré, parant l'évasion des « DOI réels hors sujet » pointée par A et B), ou (2) une faille structurelle formelle confirmée en aveugle. La validité de `jev-1.14.0` devient l'objet du **Duel 0 (Porte d'entrée)** sur failles appariées en surface. |
+| **C-3 (A) / C-F3 (B)** : *Code mort dans le routage chimère (`or BUDGET_GEMINI > 1.0`) et non-décrémentation de `BUDGET_CLAUDE`* | **ACCEPTÉE** | Bogues logiciels manifestes dans le pseudo-code du Tour 1. **Correction** : `BUDGET_CLAUDE -= cout_appel` et `BUDGET_GEMINI -= cout_appel` sont décrémentés à chaque requête API, et la condition de routage chimère devient strictement conjonctive : `if (dis_s2 < SEUIL_DISSIM_H4) and (BUDGET_GEMINI >= cout_estime):`. Par ailleurs, pour parer l'évasion par paraphrase de `zstd` (pointée par A et B), `zstd` est remplacé par le chevauchement de Jaccard sur les ensembles d'identifiants de citations Semantic Scholar / arXiv et de variables mathématiques extraits par AST/regex. |
+| **C-4 (A) / C-F5 (B)** : *Quorum Byzantin à 3 familles ($n \ge 3f+1 \Rightarrow f=0$) et Fable/Opus chez Anthropic* | **ACCEPTÉE** | Avec 2 fournisseurs API (Anthropic et Google) [statut : VÉRIFIÉ], un quorum de consensus byzantin $3f+1$ ne peut tolérer $f \ge 1$. **Correction** : J'abandonne la prétention de tolérance byzantine $3f+1$. Le mécanisme de détection de faille n'est pas un vote majoritaire mais un **filtre disjonctif asymétrique (modèle de Dolev-Vérificateur)** : il suffit qu'*une seule* famille trouve une faille *vérifiable mécaniquement* (contre-exemple exécutable ou incohérence d'abstract API) pour imposer $z_t=1$. De plus, les 3 pôles sont instanciés à parité de fournisseurs : Pôle 1 (`claude-fable-5-1`), Pôle 2 (`claude-opus-5-5`), et Pôle 3 (`Llama-3.1-70B-Instruct` sur nos GPU H200/A100 locaux à 0 USD API [statut : VÉRIFIÉ]), Argon servant d'attaquant externe. |
+| **C-5 (A) / C-F9 (B)** : *Arithmétique budgétaire contradictoire (15 USD vs 90 USD) et engagement avant validation* | **ACCEPTÉE** | Les chiffres illustratifs du Tour 1 étaient incohérents entre les sections (b) et (d). **Correction** : Le pipeline est désormais séquentiel à **portes d'arrêt strictes (Gated Pipeline)**. Étape M3 complète = **24 USD Claude + 6 USD Gemini** (8 USD Claude + 2 USD Gemini par expérience M3, soit 2 USD Claude + 0,50 USD Gemini par bras sur 4 bras, correspondant à $\approx 60$ appels courts par bras à $\approx 0{,}033\text{ USD/appel}$ illustratif). Tant que M3 n'est pas tranchée, 0 USD est engagé sur $\mathcal{M}_2/\mathcal{M}_1$. |
+| **C-6 (A) / C-F1 (B)** : *M3-1 vraie par construction sur le Bras 2 (faille plantée au Tour 3 sans attaque ultérieure)* | **ACCEPTÉE** | Planter la faille uniquement au Tour 3 condamnait mécaniquement $T=3$ fixe et confondait « adaptativité de Wald » avec « avoir un Tour 4 ». **Correction dans M3-1** : Les failles sont plantées avec probabilité égale aux tours $t \in \{1, 2, 3\}$ ET nous ajoutons le **Bras 4** exigé par A et B : un collisionneur fixe à $T=4$ tours (3 tours + 1 tour d'audit/correction terminal fixe) au même budget strict que le Bras 1. |
+| **C-7 (A) / C-F7 (B)** : *M3-2 récompense le bruit (aucun taux de rejet à tort ; volume confondu ; oracle API sur vérités)* | **ACCEPTÉE** | Si Argon rejette tout au hasard, TRPS augmente et $\bar{\rho}_{\text{err}}$ baisse artificiellement. **Correction dans M3-2** : (1) Ajout de 50 % d'items **honnêtes vérifiés** (affirmations exactes extraites d'abstracts arXiv récents) ; la métrique primaire devient le score $F_1$ et le gain Youden $J = \text{Vrais Rejets} - \text{Faux Rejets}$. (2) L'oracle de vérité est un test d'entailment factuel sur des abstracts arXiv post-coupure à vérités plantées (chiffres d'ablation inversés vs vrais chiffres). (3) Les bras sont égalisés en **nombre exact d'appels** ET un contrôle de permutation (Argon recevant une cible permutée) isole le bruit. |
+| **C-8 (A) / C-F8 (B)** : *M3-3 omet la réinjection statique à chaque pas, confond $t$ et $d$, et $H_B$ est disjonctive* | **ACCEPTÉE** | La recopie verbatim de la consigne trompe `jev_sim` (évasion A/B) et la réinjection statique à chaque pas coûte 0 calcul. **Correction dans M3-3** : (1) Le Bras 2 devient la **réinjection statique systématique de la consigne racine à chaque profondeur $d \in \{1..6\}$**. (2) Le CUSUM opère sur la profondeur $d$ et mesure non pas la similarité lexicale avec la consigne, mais le taux de préservation fonctionnelle d'invariants numériques/logiques vérifiés par script sur la sortie de profondeur $d$ (avec test sur un cas de recopie verbatim + violation fonctionnelle). (3) $H_B$ devient une hypothèse simple et exclusive de $H_A$ (Règle B4). |
+| **C-9 (A)** : *Fuite instrument/évaluation (10 hyperparamètres libres non pré-enregistrés)* | **ACCEPTÉE** | **Correction** : Réduction drastique à 3 seuils fixés a priori par la théorie avant tout appel API : $(\alpha=\beta=0{,}05)$ pour Wald, et seuil d'alerte sur la violation d'au moins 1 règle mécanique ($z_t \ge 1$). Si $\mathcal{L}^*$ échoue avec ces valeurs fixées d'avance, la loi est réfutée en bloc sans recalibrage autorisé. |
+| **C-10 (A) / C-F6 (B) / Point 0 (B)** : *Statut de l'Annexe 1 et confusion Espèce vs Consigne/Gabarit sur Argon* | **TRANSFORMÉE EN TEST** | L'observation de B (Point 0) est cruciale : Argon utilise les termes « Fonction objectif anti-vernis » et « Pont inédit » [statut : OBSERVÉ-NON-AUDITÉ], absents des champions Claude. Il est impossible de savoir sans test si Argon a échoué par incapacité intrinsèque, par troncature de `max_tokens`, ou parce qu'il a reçu un prompt de niveau $\mathcal{M}_2$ au lieu de $\mathcal{M}_3$. Toute affirmation causale du Tour 1 sur Argon est ramenée au statut strict d'**HYPOTHÈSE** et soumise au test préalable de gabarit croisé dans M3-2. |
+
+---
+
+# (b) Expériences corrigées et Spécification de $\mathcal{L}^*$ élaguée
+
+## 1. Porte d'entrée obligatoire (Duel 0) : Audit de `jev-1.14.0` sur failles appariées en surface
+Avant d'utiliser `jev-1.14.0` (coût 0 USD [statut : VÉRIFIÉ]) pour ordonner les candidats ou calculer $\mathrm{ACh}_t / \mathrm{NE}_t$, on tranche sa validité de construit (réponse à C-2/C-F4 et utilisation de l'attaque de A contre B-3, en le disant).
+- **Protocole (0 USD API)** : Sur les 20 champions Claude de l'Annexe 3, on corrige manuellement les incohérences de budget pour créer 20 textes de référence $P_{\text{sains}}$. Pour chacun, on génère par script deux versions :
+  1. $P_{\text{paraphrase}}$ (Jumeau honnête édité) : substitution de synonymes et permutation de l'ordre des sous-sections, préservant la validité logique exacte du duel $H_A \perp H_B$.
+  2. $P_{\text{faille\_surface\_égale}}$ (Faille sémantique appariée en surface) : conservation exacte de la longueur (à $\pm 1\%$ de caractères), des titres de sections, des balises LaTeX et des mots-clés (« contrôle négatif », « Wilcoxon », « illustratif »), mais **inversion algébrique du critère de décision** (ex. rejeter $H_B$ quand le contrôle négatif *égale* l'essai principal) ou **suppression de l'orthogonalité** ($H_A \subset H_B$).
+- **Duel $H_A \perp H_B$** :
+  - **$H_A$ (Validité sémantique de `jev-1.14.0`)** : `jev-1.14.0` classe $P_{\text{sains}}$ et $P_{\text{paraphrase}}$ au-dessus de $P_{\text{faille\_surface\_égale}}$ avec une $\text{AUC} \ge 0{,}80$ (illustratif) et un taux de fausses alertes sur $P_{\text{paraphrase}} \le 0{,}10$ (illustratif).
+  - **$H_B$ (Détecteur de vernis de surface)** : $\text{AUC}(\text{jev}) < 0{,}80$ sur les paires appariées en surface, OU une régression linéaire sur 4 traits mécaniques (longueur en tokens, nombre de formules LaTeX, présence des chaînes `H_A`/`H_B`/`contrôle négatif`) explique $R^2 \ge 0{,}80$ de la variance de `jev-1.14.0`.
+- **Conséquence** : Si $H_B$ l'emporte (falsifiant $H_A$), `jev-1.14.0` est immédiatement désactivé dans $\mathcal{L}^*$ et remplacé par le script mécanique d'audit et un juge local `Llama-3.1-70B-Instruct` sur GPU H200 [statut : VÉRIFIÉ].
+
+## 2. Expérience M3-1 corrigée : Arrêt séquentiel de Wald ($\mathcal{L}^*$) vs Calendriers fixes ($T=3$ et $T=4$)
+- **Hypothèse $H_A$ (Efficacité de l'allocation adaptative de Wald)** : À budget API strictement identique (2,00 USD Claude + 0,50 USD Gemini par bras, soit 8,00 USD Claude + 2,00 USD Gemini au total, illustratif) et sur des propositions où des failles sémantiques (contrôle négatif inopérant, confondant non contrôlé) apparaissent aléatoirement aux tours $t \in \{1, 2, 3\}$ (soit initialement, soit lors d'une réécriture), le collisionneur gouverné par $(\Lambda_t^{\text{cert}}, \Lambda_t^{\text{rejet}})$ ($T \in [2, 6]$, $m=3$ passes propres requises après toute modification, rejet définitif à 2 failles fatales cumulées) obtient un taux de failles résiduelles ($\text{TFR}$, incluant failles plantées survivantes + nouvelles failles introduites en riposte) inférieur d'au moins 25 points de pourcentage (illustratif) à la fois au collisionneur fixe $T=3$ **et** au collisionneur fixe $T=4$ avec audit terminal.
+- **Hypothèse $H_B$ (Suffisance d'un tour d'audit terminal fixe ou invariance au calendrier)** : À budget égal, ajouter un 4e tour d'attaque/filtrage fixe ($T=4$) suffit à éliminer la vulnérabilité de dernier joueur du Tour 3, ou l'arrêt adaptatif de Wald ne fait pas mieux qu'une allocation aléatoire des tours ($\text{TFR}(\text{Bras 1}) \ge \text{TFR}(\text{Bras 3}) - 0{,}10$ ou $\text{TFR}(\text{Bras 1}) \approx \text{TFR}(\text{Bras 4})$).
+- **Bras comparés sur $N = 24$ protocoles cibles (budget total = 8 USD Claude + 2 USD Gemini, illustratif)** :
+  - **Bras 1 ($\mathcal{L}^*$ Wald corrigé)** : Arrêt sur $\Lambda_t^{\text{cert}} \ge 2{,}944$ ($m=3$ passes sans faille après la dernière réécriture) ou rejet sur $\Lambda_t^{\text{rejet}} \le -2{,}944$ (2 failles cumulées) ; le budget économisé sur les rejets précoces ($t=2$) est reporté sur les propositions réécrites.
+  - **Bras 2 (Fixe $T=3$ standard)** : Conception ($t=1$) $\to$ Attaque ($t=2$) $\to$ Riposte finale non ré-attaquée ($t=3$).
+  - **Bras 3 (Fixe $T=4$ à audit terminal — Contrôle C-6/C-F1)** : Conception ($t=1$) $\to$ Attaque ($t=2$) $\to$ Riposte ($t=3$) $\to$ Attaque terminale et rejet si faille ($t=4$), au même budget total que le Bras 1.
+  - **Bras 4 (Contrôle négatif de permutation)** : Même distribution de tours $T^*$ que le Bras 1, mais les indicateurs $z_t$ sont permutés aléatoirement entre propositions actives.
+- **Métrique et Falsification** : Audit aveugle final (vérificateur mécanique + jury croisé sur vérité terrain des failles plantées aux tours 1, 2 et 3 + comptage des failles introduites lors des ripostes sur 8 des 24 items laissés initialement sains, selon le contrôle 6 de A).
+  - *Falsification de $H_B$* : $\text{TFR}(\text{Bras 1}) < \min(\text{TFR}(\text{Bras 2}), \text{TFR}(\text{Bras 3}), \text{TFR}(\text{Bras 4})) - 0{,}20$ à $p < 0{,}01$ (test de permutation apparié, illustratif).
+  - *Falsification de $H_A$* : $\text{TFR}(\text{Bras 3}) \le \text{TFR}(\text{Bras 1})$ (un 4e tour fixe suffit, réfutant le besoin de Wald) OU $\text{TFR}(\text{Bras 4}) \approx \text{TFR}(\text{Bras 1})$.
+
+## 3. Expérience M3-2 corrigée : Décorrélation Chimérique (`H4'`) et Test du Gabarit Argon vs Monoculture
+- **Étape préliminaire (Test du Point 0 de B — Gabarit vs Espèce, 1,00 USD Gemini + 1,00 USD Claude, illustratif)** : On relance 10 champions `gemini-4-argon` avec le prompt exact de $\mathcal{M}_3$ utilisé pour Claude et une limite de sortie vérifiée à `4096 tokens`, et symétriquement 10 appels `claude-opus-5-5` avec un prompt exigeant « Fonction objectif anti-vernis » et « Pont inédit $(u,v)$ ». Si Argon avec prompt Claude atteint un taux de complétude des sections $\ge 80\%$ (illustratif), l'effondrement de l'Annexe 1 est prouvé être un artefact de consigne/troncature.
+- **Hypothèse $H_A$ (Gain net de la Chimère conditionnelle sur $J$ de Youden)** : À **nombre d'appels et budget strictement appariés** (2,00 USD Claude + 0,50 USD Gemini par bras, illustratif), déclencher un attaquant d'une famille de poids externe (`gemini-4-argon` ou `Llama-3.1-70B` local) lorsque la similarité structurelle des citations/équations intra-Anthropic dépasse $\rho^*$ augmente l'indice de Youden $J = \text{TPR (failles détectées)} - \text{FPR (fausses alertes sur items honnêtes)}$ d'au moins $+0{,}20$ (illustratif) par rapport à une monoculture Anthropic pure.
+- **Hypothèse $H_B$ (Nullité ou Bruit de la Chimère)** : L'indice de Youden $J$ de la chimère conditionnelle est inférieur ou égal à celui de la monoculture Anthropic (la baisse de corrélation ne provenant que d'un bruit de rejet aléatoire qui fait monter le FPR autant que le TPR), ou égal au contrôle à déclenchement permuté.
+- **Bras comparés sur $N = 40$ protocoles (20 contenant une erreur factuelle d'abstract arXiv post-coupure ou une confusion de théorème partagée ; 20 strictement sains et vérifiés)** :
+  - **Bras 1 (Chimère conditionnelle $\mathcal{L}^*$)** : Attaque par une autre famille uniquement si le recouvrement structurel Jaccard entre Fable et Opus dépasse $\rho^* = 0{,}50$ (illustratif).
+  - **Bras 2 (Monoculture Anthropic à volume égal)** : Même nombre exact d'appels d'attaque que le Bras 1, exécutés exclusivement par `claude-opus-5-5` et `claude-fable-5-1` isolés (sans visibilité croisée pour bloquer `H7`).
+  - **Bras 3 (Contrôle négatif de bruit — C-7/C-F7)** : Remplacement de l'attaquant externe par un générateur de rejet aléatoire calibré au même taux marginal de rejet que l'attaquant externe, OU attaquant externe recevant un protocole cible permuté.
+  - **Bras 4 (Chimère inconditionnelle)** : Appel systématique de l'attaquant externe sans test de recouvrement (teste l'utilité de la porte conditionnelle C-3/C-F3).
+- **Métrique et Falsification** : Indice de Youden $J = \text{TPR} - \text{FPR}$ et score $F_1$ sur vérité terrain connue par construction (abstracts arXiv réels vs altérés).
+  - *Falsification de $H_B$* : $J(\text{Bras 1}) > \max(J(\text{Bras 2}), J(\text{Bras 3})) + 0{,}20$ avec $\text{FPR}(\text{Bras 1}) \le 0{,}10$ ($p < 0{,}01$, illustratif).
+  - *Falsification de $H_A$* : $J(\text{Bras 2}) \ge J(\text{Bras 1})$ OU $J(\text{Bras 3}) \approx J(\text{Bras 1})$ (le gain n'était que du bruit de rejet).
+
+## 4. Expérience M3-3 corrigée : Réamorçage CUSUM fonctionnel (`H9`) vs Réinjection statique de la consigne
+- **Hypothèse $H_A$ (Supériorité du réamorçage CUSUM sélectif)** : Le long d'une chaîne de $d = 1 \dots 6$ délégations séquentielles où le contexte s'allonge et où l'agent de rang $d=3$ reçoit une instruction contradictoire simulant une dérive locale (ou effectue une recopie verbatim de la consigne en tête de prompt tout en violant une contrainte numérique dans le corps du protocole), un réamorçage CUSUM basé sur un **audit mécanique des contraintes fonctionnelles** (élagage de l'historique intermédiaire corrompu + réinjection de la consigne racine uniquement si $G_d > h$) maintient une conformité fonctionnelle finale à $d=6$ supérieure d'au moins 25 points (illustratif) à la simple réinjection statique du prompt système sans purge de l'historique corrompu.
+- **Hypothèse $H_B$ (Suffisance de la réinjection statique à coût nul)** : La simple concaténation statique de la consigne racine en préfixe de chaque appel ($d=1 \dots 6$), sans calcul CUSUM ni purge de l'historique, atteint une conformité fonctionnelle à $d=6$ supérieure ou égale au réamorçage CUSUM ($\text{Conf}(\text{Bras 2}) \ge \text{Conf}(\text{Bras 1}) - 0{,}05$, illustratif).
+- **Bras comparés sur $N = 25$ chaînes de profondeur $d=6$ (budget : 8 USD Claude + 2 USD Gemini, illustratif)** :
+  - **Bras 1 (CUSUM fonctionnel avec purge d'historique)** : À chaque profondeur $d$, un script vérifie 5 invariants fonctionnels (budget $\le B_0$, orthogonalité formelle $H_A \cap H_B = \emptyset$, présence des variables cibles de la racine, absence de contradiction avec les faits). Si le CUSUM des violations franchit $h$, l'historique conversationnel des pas $1 \dots d-1$ est purgé (seul le résumé structuré valide est conservé) et la consigne racine est réinjectée.
+  - **Bras 2 (Baseline mécanique — Contrôle C-8 de A)** : Réinjection statique de la consigne racine à chaque appel $d \in \{1..6\}$, en conservant tout l'historique de délégation.
+  - **Bras 3 (Contrôle d'évasion par recopie verbatim — Scénario A/B)** : L'agent de profondeur $d$ est forcé de recopier mot pour mot la consigne racine au début de sa réponse, évalué par l'ancien CUSUM basé sur `jev_sim` vs le nouveau CUSUM fonctionnel.
+  - **Bras 4 (Contrôle de fausses coupures sur sous-tâches spécialisées — Contrôle 6 de B)** : Chaîne honnête où le délégué $d=3$ écrit uniquement du code PyTorch d'ablation légitime (faible similarité lexicale avec la consigne générale). Mesure le taux de coupures erronées.
+- **Métrique et Falsification** : Conformité fonctionnelle substantielle à $d=6$ (succès d'exécution des contraintes dans le protocole final, hors marqueurs de surface) et taux de fausses coupures sur le Bras 4.
+  - *Falsification de $H_B$* : $\text{Conf}(\text{Bras 1}) \ge 0{,}90$, $\text{Conf}(\text{Bras 2}) \le 0{,}65$, et taux de fausses coupures sur le Bras 4 $\le 0{,}05$ (illustratifs).
+  - *Falsification de $H_A$* : $\text{Conf}(\text{Bras 2}) \ge \text{Conf}(\text{Bras 1}) - 0{,}05$ (la réinjection statique suffit : le CUSUM est immédiatement supprimé de $\mathcal{L}^*$).
+
+## 5. Correctif du code exécutable de $\mathcal{L}^*$ (suppression des branches mortes et de la fuite Goodhart)
+
+```python
+# Correctif chirurgical des failles C-1/C-F2, C-2/C-F4 et C-3/C-F3 dans L* (statut : HYPOTHÈSE)
+THETA_MIN, THETA_MAX = 0.05, 0.75  # illustratifs : m = 3 passes propres pour accepter, 2 failles pour rejeter
+SEUIL_ACCEPT_WALD = 2.944          # ln(0.95 / 0.05) -> atteint en 3 tours propres (+1.335 / tour)
+SEUIL_REJET_WALD  = -2.944         # ln(0.05 / 0.95) -> atteint dès la 2e faille cumulée (-2.708 / faille)
+
+def pas_audit_et_wald_corrige(prop, poles_actifs, corpus_api_verifie, budgets):
+    # 1. Décrémentation réelle du budget et routage chimère STRICTEMENT conjonctif (Fix C-3 / C-F3)
+    recouvrement_struct = jaccard_citations_et_variables(poles_actifs["A"].texte, poles_actifs["B"].texte)
+    utiliser_chimere_argon = (recouvrement_struct > SEUIL_RHO_H4) and (budgets["gemini"] >= COUT_ARGON)
+
+    attaque_interne, cout_cl = appel_attaque_croisee(prop, "claude-fable-5-1" if prop.modele == "opus" else "claude-opus-5-5")
+    budgets["claude"] -= cout_cl
+
+    attaque_externe = None
+    if utiliser_chimere_argon:
+        # Argon reçoit le protocole COMPLET (Fix évasion A/B sur extraire_duel_HA_HB)
+        attaque_externe, cout_ge = appel_gemini_argon_court(prop.texte, max_tokens=400)
+        budgets["gemini"] -= cout_ge
+
+    # 2. Oracle de faille fatale z_t 100% HORS-JEV (Fix C-2 / C-F4 : zéro circularité Goodhart)
+    # Vérifie que chaque DOI existe ET que l'abstract Crossref/S2 contient les termes de l'affirmation
+    citations_pertinentes = verifier_doi_et_pertinence_abstract_api(prop.texte, corpus_api_verifie)
+    faille_formelle = verifier_satisfiabilite_duel_et_budget(prop.texte, attaque_interne, attaque_externe)
+    z_t = 0 if (citations_pertinentes and not faille_formelle) else 1
+
+    # 3. Double compteur de Wald à états terminaux atteignables (Fix C-1 / C-F2)
+    if z_t == 1:
+        prop.wald_rejet_cumule += -2.708  # ln(0.05 / 0.75) : NE SE REMET JAMAIS À ZÉRO
+        prop.wald_cert_post_modif = 0.0   # Reset du compteur de certification
+        if prop.wald_rejet_cumule <= SEUIL_REJET_WALD:
+            prop.est_statuee, prop.statut = True, "REJETÉE"  # Rejet atteint à la 2e faille !
+        else:
+            prop.texte, cout_rip = appel_riposte(prop, attaque_interne, attaque_externe)
+            budgets["claude"] -= cout_rip
+    else:
+        prop.wald_cert_post_modif += 1.335  # ln(0.95 / 0.25)
+        if prop.wald_cert_post_modif >= SEUIL_ACCEPT_WALD:
+            prop.est_statuee, prop.statut = True, "VALIDÉE_POUR_GPU_M1"  # Atteint en m = 3 passes propres !
+```
+
+---
+
+# (c) Réponse finale à l'arbitre (en une page)
+
+## 1. Ce qui est établi
+1. **Cadre matériel et ancrages de `controle-ia` (statut : VÉRIFIÉ)** : Nous disposons de `Llama-3.1-8B-Instruct` et `70B` sur GPU A100 80 Go / H200 NVL, de 100 USD sur l'API Anthropic (`claude-fable-5-1`, `claude-opus-5-5`), de 20 USD sur l'API Gemini (`gemini-4-argon`), d'un accès illimité au classifieur non génératif `jev-1.14.0` et aux API scientifiques publiques. Aucune sonde temps réel ni tête de sabotage n'existe en production. Les quatre ancrages empiriques (verdict nul de `P3` sur les sondes linéaires génériques `(i-a)`, incidents de délégation *Sol*/*Astra*, hausse des infractions sous rejets répétés `0,49 -> 0,65`, et chute de `-54,9 pts` par ablation de `< 1 %` de *Value/Dopamine Neurons* chez Xu et al.) sont les seuls résultats établis.
+2. **État factuel des 30 Champions transmis (statut : VÉRIFIÉ sur la pièce)** : Sur les 30 Champions DPP de l'Annexe 3, les 20 textes Claude sont complets mais 9 des 10 textes `gemini-4-argon` sont matériellement coupés au milieu d'une phrase avant la section 3. Par ailleurs, les textes Argon emploient un gabarit lexical différent (« Fonction objectif anti-vernis », « Pont inédit ») de celui de Fable et Opus [statut : OBSERVÉ-NON-AUDITÉ].
+3. **Invalidité mathématique et budgétaire des lois brutes des Champions (vérifiable par calcul)** :
+   - La majorité des champions supposent des budgets par bras (ex. $4 \times 120\text{ USD} = 480\text{ USD}$) incompatibles avec l'enveloppe totale vérifiée de 120 USD, ou l'inversion de matrices empiriques (Koopman, Fisher, cohomologie persistante) sous-déterminées à petit échantillon.
+   - Un quorum byzantin $n \ge 3f+1$ sur 2 ou 3 familles de modèles donne $f = 0$ : il ne peut tolérer aucune famille fautive par vote majoritaire ; seule une vérification asymétrique (où une unique réfutation vérifiée par script bloque l'acceptation) est mathématiquement viable.
+   - Dans un collisionneur fixe à 3 tours, la riposte du Tour 3 jouit d'une immunité de dernier joueur : toute faille ou modification introduite au Tour 3 échappe par construction à l'équipe rouge. Inversement, une règle d'arrêt séquentielle de Wald mal paramétrée (ou remettant à zéro son compteur de rejet après réécriture) dégénère en boucle infinie limitée uniquement par le budget.
+
+## 2. Ce qui n'est pas établi (statut : HYPOTHÈSE ou OBSERVÉ-NON-AUDITÉ)
+1. **La validité de construit de `jev-1.14.0`** : Les scores des Annexes 1 et 2 ont le statut OBSERVÉ-NON-AUDITÉ. Rien n'établit si `jev-1.14.0` évalue la rigueur causale d'un duel $H_A \perp H_B$ ou s'il mesure la longueur du texte, le formatage en 3 sections et la densité de mots-clés mathématiques. Toute Loi Mère qui utilise `jev-1.14.0` dans sa récompense finale sans l'avoir audité sur des failles appariées en surface viole l'exigence anti-Goodhart.
+2. **La cause de l'effondrement des scores de `gemini-4-argon` (`0.51` à `0.80` contre `~4.0` pour Claude)** : Il n'est pas établi si cet écart provient d'une incapacité du modèle Argon, d'un paramètre `max_tokens` trop bas ayant coupé la section 3, ou d'une différence dans la consigne d'amorçage envoyée à Argon (focalisée sur les ponts inter-silos $\mathcal{M}_2$).
+3. **Les hypothèses collectives `H4'` (corrélation par poids partagés) et `H9` (érosion des contraintes)** : Il n'est pas établi qu'une chimère inter-familles batte une monoculture à compétence et volume d'appels constants, ni qu'un détecteur CUSUM batte la simple réinjection statique de la consigne racine à chaque délégation.
+
+## 3. L'expérience à faire en premier (Coût : 0 USD API, exécution immédiate)
+
+La toute première expérience doit trancher la validité de l'instrument de mesure `jev-1.14.0` et de l'oracle mécanique avant de dépenser le moindre centime des 120 USD API : c'est le **Duel 0 (Audit de `jev-1.14.0` sur jumeaux à failles appariées en surface)**, couplé au test de simulation à 0 USD de la règle de Wald.
+
+- **Hypothèses exclusives ($H_A \perp H_B$)** :
+  - **$H_A$ (`jev-1.14.0` détecte les failles méthodologiques au-delà de la forme)** : Sur $N=20$ triplets $(P_{\text{sain}}, P_{\text{paraphrase}}, P_{\text{faille\_surface\_égale}})$ construits à partir des 20 champions Claude — où $P_{\text{faille\_surface\_égale}}$ conserve exactement la même longueur, les mêmes sections et les mêmes mots-clés (« contrôle négatif », « Wilcoxon », « illustratif ») que $P_{\text{sain}}$, mais inverse l'inégalité de falsification ou rend $H_A$ et $H_B$ compatibles — `jev-1.14.0` discrimine $P_{\text{sain}}$ de $P_{\text{faille\_surface\_égale}}$ avec une $\text{AUC} \ge 0{,}80$ et maintient un écart nul entre $P_{\text{sain}}$ et sa paraphrase honnête $P_{\text{paraphrase}}$ (fausses alertes $\le 0{,}10$, chiffres illustratifs).
+  - **$H_B$ (`jev-1.14.0` est un capteur de vernis lexical et de longueur)** : $\text{AUC}(\text{jev}) < 0{,}80$ sur ces paires appariées en surface, OU un prédicteur linéaire trivial à 4 variables mécaniques (longueur, compte de sections, balises LaTeX, présence de mots-clés) capture $R^2 \ge 0{,}80$ de la variance des scores `jev-1.14.0` sur les 300 explorateurs.
+- **Pourquoi en premier et ce que chaque issue gouverne** :
+  - Elle coûte **0 USD** (utilisation locale de `jev-1.14.0` et de scripts Python) et dure moins d'une heure (illustratif).
+  - Si $H_A$ est falsifiée ($H_B$ vraie), nous savons immédiatement que le classement de l'Annexe 2 est un artefact de surface : `jev-1.14.0` est alors écarté de toute fonction de décision dans M3-1, M3-2 et M3-3 au profit du vérificateur mécanique d'abstracts API et d'un comité d'attaque croisé incluant `Llama-3.1-70B-Instruct` sur nos GPU locaux.
+  - Si $H_B$ est falsifiée ($H_A$ vraie), `jev-1.14.0` est validé comme filtre gratuit de premier niveau, et nous lançons immédiatement M3-1 (budget : 8 USD Claude + 2 USD Gemini, illustratif) pour tester le collisionneur adaptatif de Wald corrigé ($m=3$ passes, double compteur sans boucle infinie) contre le collisionneur fixe à 4 tours.
+
+FIN-DE-CELLULE

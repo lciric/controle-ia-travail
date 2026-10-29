@@ -1,0 +1,10 @@
+BASSIN_MATH: Intermittence-PomeauManneville-KaplanYorke-BifurcationCrise (IPM-KY-BC)
+LOI_PROPOSEE: L'essaim navigue par intermittence de Pomeau-Manneville sur le graphe bibliographique via `jev-1.14.0`, déclenchant les appels génératifs (Claude/Gemini) uniquement aux crises de frontière où la dimension de Kaplan-Yorke de l'attracteur sémantique chute brutalement sous l'effet d'une collision avec une orbite périodique instable inter-silos.
+
+1. **Auto-organisation hors-poids & Allocation budgétaire** :
+Le graphe de citations $G=(V,E)$ muni des embeddings `jev-1.14.0` $\phi(v) \in \mathbb{R}^d$ définit un système dynamique discret $x_{n+1} = F(x_n, u_n)$ où une population d'éclaireurs Zéro-Coût ($0\$$) évolue par dynamique de Pomeau-Manneville de type I : $x_{n+1} = (x_n + \omega + K \sin(2\pi x_n) + \epsilon \nabla_{\phi} \text{jev}(x_n)) \pmod 1$. Durant les phases laminaires ($\lambda_1(x_n) \approx 0$), `jev-1.14.0` filtre gratuitement des millions de paires d'articles. Lorsqu'un éclaireur entre en bouffée chaotique ($\lambda_1 > 0$) et approche une variété stable de col inter-silos, une **crise de frontière** (Grebogi-Ott-Yorke) est détectée par la divergence du temps de récurrence de Kac $\tau_R \to \infty$. L'allocation budgétaire $B(t) \in \{100\$\text{ Claude}, 20\$\text{ Gemini}\}$ est gouvernée par une porte à hystérésis de Schmitt sur la dimension de Kaplan-Yorke $D_{KY} = j + \frac{\sum_{i=1}^j \lambda_i}{|\lambda_{j+1}|}$ du sous-graphe local :
+- Si $D_{KY} > D_{\text{crit}}^+$ (turbulence inter-silos), éveil d'un duelliste Gemini ($0.02\$$) pour formuler le pont.
+- Si l'invariant de Parry-Pollicott du pont survit au crible `jev-1.14.0`, injection d'un juge Claude ($0.25\$$) pour sceller le protocole expérimental sur Llama-3.1-8B/70B.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(H_A, H_B) = \underbrace{\left(1 - \cos(\phi(u), \phi(v))\right) \cdot d_{\text{topo}}^G(u,v)}_{\text{Distance Inter-Silos}} \times \underbrace{\det\left(\mathbf{J}_{\text{jev}}(H_A) - \mathbf{J}_{\text{jev}}(H_B)\right)^2}_{\text{Orthogonalité Causale } H_A \perp H_B} \times

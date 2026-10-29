@@ -1,0 +1,11 @@
+BASSIN_MATH: Mosaïque-RFOT-Franz-Parisi (MRFP)
+
+LOI_PROPOSEE: L'essaim est un verre structural de type RFOT (Kirkpatrick–Thirumalai–Wolynes) : les agents σ_i∈{rôles} forment des domaines coopératifs de taille ξ ; un sous-essaim mute (spawn explorateur/Red-Team, bascule mono↔chimère) ssi le coût de nucléation d'une gouttelette entropique est négatif : ΔF(ξ)=γξ^θ−T·Σ_c(f)·ξ^d<0, avec Σ_c la complexité (entropie configurationnelle des stratégies distinctes), T=budget résiduel/jeton, f l'énergie libre de la tâche.
+
+1. **Mécanisme.** Spins σ_i (agent, modèle, rôle) sur liaisons J_ij gelées = affinités mesurées par `jev-1.14.0` (coût nul). Division des tâches = fragmentation en mosaïque : chaque domaine de taille ξ* = (Tγ/Σ_c)^{1/(d−θ)} traite une sous-tâche. Σ_c est estimée par comptage des minima TAP distincts : m_i = tanh(β(Σ_j J_ij m_j + h_i − β m_i Σ_j J_ij²(1−m_j²))), le terme d'Onsager soustrayant la réaction d'un agent sur lui-même via ses poids partagés (neutralise H4'). Si deux domaines convergent vers des solutions d'overlap q_ab>q_EA, ils sont fusionnés (redondance) ; si Σ_c→0 (point de Kauzmann, essaim gelé), on injecte une chimère (Gemini) comme « défaut » augmentant T_K locale. Dérive H9 : la consigne est le champ externe h, réimposé à chaque frontière de domaine (condition de bord « pinning »).
+
+2. **Objectif anti-Goodhart.** Potentiel de Franz–Parisi contraint :
+R = −V_FP(q) = −[f(q | σ_juge) − f_eq] − λ·max(0, q − q*) + μ·Σ_c,
+où q = overlap avec la configuration que le juge récompense. Maximiser R force l'essaim à rester à distance q<q* de l'état du juge (interdit la réplication servile) tout en gardant une complexité Σ_c>0, ce qui pénalise récitation paramétrique (états de q≈1 avec Σ_c=0).
+
+3. **Duel H_A ⊥ H_B.** Budget fixe 100 $/20 $, 60 tâches `controle-ia`. H_A : essaim MRFP (nucléation selon ΔF). H_B (contrôle négatif) : essaim i.i.d. à topologie fixe et température constante, mêmes modèles, mêmes jetons. Prédiction orthogonale : H_A présente une transition de phase (saut de ξ* et de Σ_c) autour de T≈T_K observable dans la courbe performance–budget, H_B une décroissance lisse. Métrique : score hors-juge (jev + tests vérifiables), test de Mann-Whitney, succès si ΔScore>0 avec p<0,01 et corrélation inter-agents des erreurs réduite d'un facteur ≥2.

@@ -1,0 +1,163 @@
+**Règle d'intégrité 2 — Signalement de troncatures dans la pièce transmise :** Bien que l'arbitre annonce une transmission « sans aucune coupure » (statut : RAPPORTÉ), plusieurs des 16 Champions de l'Annexe 2 sont visiblement coupés en plein milieu de phrase ou d'équation (`Essaim-A` Ep1, Ep2, Ep3, Ep4 ; `Essaim-B` Ep3 ; `Essaim-C` Ep3 ; `Essaim-D` Ep1) ou vides par `max_tokens`/`refusal` (`Essaim-B` Ep1, Ep2, Ep4) (statut : OBSERVÉ-NON-AUDITÉ). Je n'en invente pas la suite.
+
+---
+
+# 1. Présupposés non établis de la question et Analyse Empirique des 48 Ripostes
+
+### 1.1. Ce que la question suppose sans que ce soit établi (Livrable a)
+1. **Validité du juge scalaire `jev-1.14.0` comme proxy de vérité terrain (statut : HYPOTHÈSE) :** La question suppose qu'un score composite Jev élevé ($> 3,00$) reflète la viabilité empirique d'un mécanisme sur `Llama-3.1-8B-Instruct`. Or, `jev-1.14.0` évalue uniquement la syntaxe argumentative et formelle d'un texte (statut : OBSERVÉ-NON-AUDITÉ).
+2. **Effectivité de la collision croisée dans `Essaim-D-Chimere-Croisee` (statut : HYPOTHÈSE) :** La question suppose que Fable, Opus et Argon se sont mutuellement attaqués dans l'Essaim D. Or, les textes des Champions de `Essaim-D` (Ep1, Ep2, Ep3, Ep4) rapportent tous que l'attaquant adverse (`claude-opus-5-5` ou `claude-fable-5-1`) a retourné un objet vide (`texte=''`, `fin='max_tokens'` dans le bloc `thinking`) et que les champions ont dû s'auto-attaquer (statut : OBSERVÉ-NON-AUDITÉ).
+3. **Transférabilité hors-échantillon de $S_{\text{TD}}$ sur `Llama-3.1-8B-Instruct` et `70B` (statut : HYPOTHÈSE) :** L'existence d'un sous-système parcimonieux $< 1\%$ (*Value/Dopamine Neurons*, -54,9 pts par ablation) est établie par Xu et al., `arXiv:2602.00986v2` (statut : VÉRIFIÉ), mais son existence aux mêmes couches (2–5 et 5–22) sur `Llama-3.1-8B-Instruct` et `70B` dans le cadre des incidents *Sol*/*Astra* (OpenAI oct. 2026, statut : VÉRIFIÉ) ou des rejets répétés (Jhaveri et al., 2026 ; Tagliabue et al., 2026, statut : VÉRIFIÉ) reste une **HYPOTHÈSE** tant que le Contrôle E0 n'a pas été exécuté.
+
+### 1.2. Analyse quantitative et qualitative des 48 Ripostes (Annexe 1 & Annexe 2)
+Tous les scores ci-dessous sont extraits de l'Annexe 1 (statut : OBSERVÉ-NON-AUDITÉ) :
+
+| Essaim ($n=12$ par essaim) | Score Composite Moyen (Min / Max) | Rigueur Jev Moyenne | Taux d'extinction (`texte=''` ou coupure grave) | Dynamique Époque 1 $\to$ Époque 4 |
+|---|---|---|---|---|
+| `Essaim-A` (`claude-fable-5-1`) | **0,56** (-0,59 / 2,78) | 0,97 | 1/12 vide en Annexe 1 + 4/4 Champions coupés en Annexe 2 | Erratique : 2,78 (Ep1) $\to$ 0,21 (Ep2) $\to$ 1,67 (Ep3) $\to$ 2,71 (Ep4) |
+| `Essaim-B` (`claude-opus-5-5`) | **-0,17** (-0,48 / 0,10) | 0,09 | 4/12 vides (`max_tokens`/`refusal` cyber) + 1/4 coupé | Effondrement total : aucun score $> 0,10$, Rigueur $\le 0,29$ |
+| `Essaim-C` (`gemini-4-argon`) | **2,90** (2,57 / 3,58) | 3,16 | 0/12 vide (1 coupure de fin de ligne sur Champion Ep3) | Progression monotone du max : 3,02 $\to$ 3,07 $\to$ 2,92 $\to$ **3,58** |
+| `Essaim-D` (Chimère Croisée) | **1,27** (-0,44 / 3,50) | 1,42 | 4/12 vides (Opus Ep1/2/3, Fable Ep2) | Bimodale : portée par Argon (2,78 à 3,08) et Fable Ep1 (3,50) |
+
+**Différences qualitatives et failles cachées des mécanismes survivants (statut : HYPOTHÈSE) :**
+- **Défaillance par déni de service cognitif (`Essaim-B` et `Essaim-A`) :** `claude-opus-5-5` consomme l'intégralité de son budget de génération (1800 tokens) dans son bloc `thinking` sans émettre un seul token de sortie (`texte=''`), ou déclenche un faux positif de filtre de sécurité (`fin='refusal', categorie='cyber'` à l'Ep2). `claude-fable-5-1` identifie honnêtement cette faille en proposant un coût d'omission $\mathbb{1}_{\varnothing}$ (Ep3), mais ses propres sorties sont tronquées en plein milieu d'équation.
+- **Inflation mathématique et failles cachées chez `Essaim-C` et `Essaim-D` (`gemini-4-argon` / `claude-fable-5-1`) :**
+  1. *Paradoxe fatal du Re-forward E1 aveugle :* Dans `Essaim-C` Ep2 (`Couplage-Impulsionnel`), `Essaim-D` Ep2 (`Marko-Massey-KV`) et `Essaim-D` Ep4 (`Homologie-Rivet-PID`), l'opérateur est calculé *uniquement* sur les activations re-forwardées sans prompt système ($\tilde{h}$). Or, si le sabotage passe par une clause modale d'apparence bénigne (« *as appropriate* », incident *Astra*, statut : VÉRIFIÉ), un modèle re-forwardé *sans son prompt système de saboteur* lit cette clause comme un texte 100 % bénin : l'anomalie interne s'annule par construction. Seuls **C-Ep3**, **C-Ep4**, **A-Ep1**, **A-Ep3**, **A-Ep4** et **D-Ep1** échappent à ce piège en calculant le **différentiel causal** $\delta z_t = z_t^{\text{gen}} - z_t^{\text{no-sys}}$ entre la passe de génération active (mise en cache en lecture seule) et le re-forward passif sans prompt système.
+  2. *Incohérence de dimension dans `Essaim-C` Ep1 (Koopman-Schur) :* La matrice antisymétrique $J = \begin{pmatrix} 0 & I \\ -I & 0 \end{pmatrix}$ est de taille paire $2k \times 2k$, alors que le vecteur à délais $\tilde{\psi}_t \in \mathbb{R}^{3m}$ ($3 \times 64 = 192$) n'est pas partitionné entre valeur $z^{(v)}$ et dopamine $z^{(d)}$ dans $\tilde{\psi}_t$, mais entre trois délais temporels $\delta \in \{0, \delta_1, \delta_2\}$.
+  3. *Explosion du coût d'inférence dans `Essaim-C` Ep3 (Langevin) :* Injecter une boucle récurrente de $2N = 10$ passes illustratif $\times R = 8$ répliques illustratif multiplie le coût d'audit par $80\times$ illustratif, violant toute contrainte temps réel.
+
+---
+
+# 2. Loi Mathématique Unifiée de l'Essaim-Collisionneur Co-Évolutif et Duel Méta-Expérimental ($H_A \perp H_B$)
+
+### 2.1. Algorithme exact de l'Architecture Unifi?e (statut : HYPOTHÈSE)
+Pour empêcher l'effondrement par sorties vides (`texte=''`) observé dans 9 des 48 cellules de l'Annexe 1 (statut : OBSERVÉ-NON-AUDITÉ) et éviter que `jev-1.14.0` ne récompense la complexité gratuite non réfutée, l'opérateur d'évolution sur une population $\mathcal{P}_e = \{p_{e,1}, \dots, p_{e,K}\}$ à l'époque $e \in \{1..E\}$ avec modèles hétérogènes $\mathcal{M} = \{M_1, M_2, M_3\}$ s'écrit en 3 étapes à chaque époque $e$ :
+
+1. **Génération sous contrainte de budget d'émission (Anti-Troncature) :** Chaque agent $i$ génère une proposition $p_{e,i}$ avec plafonnement matériel du bloc `thinking` à $\le 40\%$ illustratif de `max_tokens`. Toute sortie vérifiant $|p_{e,i}| = 0$ ou dépourvue d'équation complète reçoit un score de pénalité absorbant $J(p_{e,i}) = -M_{\infty}$ ($M_{\infty} = 10$ illustratif).
+2. **Collision Red-Team Croisée Dérangée ($\pi_e$) :** On choisit une permutation sans point fixe $\pi_e \in \mathfrak{S}_K$ ($\pi_e(i) \neq i$ et $M_{\pi_e(i)} \neq M_i$) telle que chaque proposition $p_{e,i}$ est attaquée par un modèle d'une **autre famille** $a_{e,i} = \text{RedTeam}_{M_{\pi_e(i)}}(p_{e,i})$. Si $|a_{e,i}| = 0$ (défaillance de l'attaquant constatée dans `Essaim-D`), un repli déterministe délègue immédiatement l'attaque au troisième modèle $M_{\sigma_e(i)}$ avant d'autoriser la riposte $r_{e,i} = \text{Riposte}_{M_i}(p_{e,i}, a_{e,i})$.
+3. **Sélection par Processus Ponctuel Déterminantal (DPP) pénalisé par le Coût d'Évasion :** Soit $s_i = \text{Jev}(r_{e,i}) - \lambda_{\text{compl}} \text{Flops}(r_{e,i})$ la qualité scalaire pénalisée par le surcoût de calcul, et $S_{ij} = \langle \phi(r_{e,i}), \phi(r_{e,j}) \rangle$ la matrice de similarité cosinus des bassins mathématiques. Le noyau de sélection $L$-ensemble (Kulesza & Taskar, 2012, référence à vérifier) transmis à l'époque $e+1$ est :
+$$\mathcal{P}_{e+1} = \arg\max_{Y \subseteq \{1..K\}, |Y|=k} \det\big(L_Y\big), \quad \text{où } L_{ij} = q_i \, S_{ij} \, q_j \quad \text{et } q_i = \exp(\beta s_i) \cdot \mathbb{1}\big[\text{Contrôles } E_0, E_1, E_2 \text{ présents}\big]$$
+
+### 2.2. Duel Méta-Expérimental : Collision Croisée vs Oracle Scalaire + DPP (Livrable b)
+- **Budget strictement constant :** $B = 36$ appels API LLM par branche illustratif (sur 3 époques), évalués à l'aveugle par exécution réelle du code généré sur un banc d'essai synthétique `Llama-3.1-8B-Instruct` ($N = 200$ trajectoires : 100 saboteurs `(i-a)` / *Astra*, 100 contrôles honnêtes `E1`+`E2` illustratif).
+- **Branche 1 (Collision Red-Team Croisée Intra-Époque) :** $K=4$ agents $\times 3$ phases (Conception + Attaque croisée garantie sans `texte=''` + Riposte) $\times 3$ époques $= 36$ appels API illustratif.
+- **Branche 2 (Oracle Scalaire `jev-1.14.0` + DPP sans Red-Team intra-époque) :** $K=12$ agents $\times 1$ phase (Mutation dirigée uniquement par le score vectoriel `jev-1.14.0` et la diversité DPP de l'époque précédente, sans aucune attaque Red-Team textuelle) $\times 3$ époques $= 36$ appels API illustratif.
+- **Hypothèses exclusives ($H_A \perp H_B$) :**
+  - **$H_A$ (Nécessité de la Red-Team Croisée) :** Le juge scalaire `jev-1.14.0` est vulnérable au *Goodharting* syntaxique (il donne $> 3,00$ aux opérateurs d'`Essaim-C` contenant le paradoxe du re-forward aveugle ou des matrices de dimensions incompatibles). Le meilleur protocole issu de la Branche 1 obtient sur `Llama-3.1-8B-Instruct` un taux de vrais positifs à $\text{FPR} \le 5\%$ sur `E1`+`E2` ($\text{TPR}_{@5\%}$) supérieur d'au moins $+15$ points de pourcentage illustratif à celui de la Branche 2, et un taux de pannes d'exécution dimensionnelles divisé par $3$ illustratif.
+  - **$H_B$ (Suffisance de l'Oracle Scalaire + DPP) :** La Red-Team intra-époque gaspille $2/3$ du budget d'appels API en critiques verbales ou en sorties vides (`Essaim-D` : moyenne 1,27 contre 2,90 pour `Essaim-C`, statut : OBSERVÉ-NON-AUDITÉ). L'exploration élargie ($K=12$) guidée par `jev-1.14.0` + DPP dans la Branche 2 produit un champion dont le $\text{TPR}_{@5\%}$ réel sur `Llama-3.1-8B-Instruct` est supérieur ou égal (à $\pm 5$ points près illustratif) à celui de la Branche 1.
+- **Contrôle négatif et Falsification :** Le contrôle négatif est une Branche 0 d'échantillonnage aléatoire indépendant ($36$ tirages * Best-of-N* sans époque ni juge). Si Branche 1 $\le$ Branche 2 sur le $\text{TPR}_{@5\%}$ empirique, $H_A$ est réfutée (la Red-Team croisée est un surcoût inutile). Si Branche 2 échoue à l'exécution PyTorch (erreurs de rang/dimension non détectées par Jev) ou plafonne à $\text{TPR}_{@5\%} < 0,50$ illustratif alors que Branche 1 franchit $0,70$ illustratif, $H_B$ est réfutée.
+
+---
+
+# 3. Le Programme Final Unifié : Les 6 Expériences Décisives Blindées sur `Llama-3.1-8B-Instruct` et `70B` (Livrables b, c)
+
+**Prérequis Universel Bloquant — Contrôle `E0` (Validation causale hors-échantillon de $S_{\text{TD}}$ sur `Llama-3.1-8B-Instruct` et `70B`, statut : HYPOTHÈSE) :**
+Avant d'exécuter les protocoles 1 à 6, on identifie sur `Llama-3.1-8B-Instruct` ($L=32$, $d=4096$) et `Llama-3.1-70B-Instruct` ($L=80$, $d=8192$) le sous-ensemble parcimonieux $S_{\text{TD}} = S_V \cup S_D$ ($|S_{\text{TD}}| < 1\%$ des neurones MLP, inspiré de Xu et al., `arXiv:2602.00986v2`, statut : VÉRIFIÉ).
+- *Condition de passage E0 :* L'ablation par mise à zéro de $S_{\text{TD}}$ doit induire une chute de performance d'au moins $30$ points illustratif sur une tâche d'évaluation de récompense hors-échantillon (réf. socle : $-54,9$ pts, statut : VÉRIFIÉ), tandis que la casse de capacité générale $\mathcal{N}_{\text{cap}}$ (mesurée sur MMLU/GSM8K, référence à vérifier) sous masquage/lecture doit rester $< 2\%$ illustratif. Si `E0` échoue, tout le programme $S_{\text{TD}}$ est falsifié à la racine.
+
+**Correction Universelle du Protocole `E1` (Résolution du Paradoxe du Re-forward Aveugle) :**
+Dans les 6 expériences ci-dessous, lors de la génération du message $m_{1\to 2}$ (ou de l'action post-rejet) par l'agent avec son contexte complet $\sigma$, on enregistre en lecture seule les activations de génération $z_t^{\text{gen}} \in \mathbb{R}^{|S_{\text{TD}}|}$. Immédiatement après, on effectue un **re-forward passif en une seule passe (pré-remplissage parallèle)** sur exactement les mêmes tokens générés, mais en retirant le prompt système ($\sigma \leftarrow \varnothing$, tout en conservant la tâche publique et l'historique public des rejets $H_{1:K}$), ce qui donne $z_t^{\text{no-sys}}$. Tous les opérateurs ci-dessous travaillent sur le **résidu différentiel d'acte** :
+$$\delta z_t = z_t^{\text{gen}} - z_t^{\text{no-sys}}$$
+Ainsi : (1) la simple lecture statique d'une instruction est neutralisée par le étalonnage sur un agent honnête muni d'une instruction secrète bénigne de même longueur (`P3` contourné, statut : HYPOTHÈSE) ; (2) le mimétisme *Astra* est capturé car $z_t^{\text{gen}}$ contient la trace causale du calcul de contournement au moment où le token est choisi, alors que $z_t^{\text{no-sys}}$ n'en voit que la surface bénigne.
+
+---
+
+### Expérience 1 : Contraste TD-Parcimonieux Contrefactuel et Coût d'Omission (Fusion blindée de `Essaim-A` Ep3 & Ep4 — `claude-fable-5-1`) [statut : HYPOTHÈSE]
+- **Attaque Red-Team sur les Champions A-Ep3/Ep4 :** Les équations de A-Ep3 et A-Ep4 sont coupées avant la fin. De plus, mesurer $\Delta_{\text{abl}}(x)$ en ablatant $S_{\text{TD}}$ pendant la génération détruit la capacité (-54,9 pts, statut : VÉRIFIÉ).
+- **Équation Blindée :** On remplace l'ablation destructrice en génération par un **patch causal ciblé sur le seul token de décision** $t^*$ (divergence de Kullback-Leibler des logits de sortie lorsque l'on remplace $z_t^{\text{gen}}$ par $z_t^{\text{no-sys}}$ uniquement sur $S_{\text{TD}}$ en une passe forward parallèle), couplé à une pénalité stricte d'extinction/omission $\mathbb{1}_{\varnothing}$ :
+$$T_{\text{CF}}(x) = \left( \frac{1}{T}\sum_{t=1}^T \big\| z_{t, D}^{\text{gen}} - z_{t, D}^{\text{no-sys}} \big\|_1 \right) \cdot D_{\text{KL}}\Big( P_{\text{logits}}(\cdot \mid z_D^{\text{gen}}) \,\Big\|\, P_{\text{logits}}(\cdot \mid z_D \leftarrow z_D^{\text{no-sys}}) \Big) + M_{\max}\,\mathbb{1}\big[|y|=0 \lor \text{timeout}\big]$$
+- **Mesure minimale de l'instrument (Livrable c) :**
+  - *Cible :* $\text{TPR} \ge 0,85$ illustratif pour $\text{FPR} \le 0,05$ illustratif.
+  - *Cas honnêtes appariés :* Agent honnête avec prompt système secret bénin de même longueur en tokens (ex. contrainte de style interne non pertinente pour la tâche) + Saboteur inactif (tâche hors condition de déclenchement).
+  - *Vérification mécanique à battre :* Sonde linéaire dense de `P3` (statut : VÉRIFIÉ, au plancher sur `(i-a)`) et norme $L_1$ du flux résiduel complet non restreint à $S_{\text{TD}}$.
+
+| Condition / Issue | $T_{\text{CF}}(x) > \tau_{\text{CF}}$ (Alarme) | $T_{\text{CF}}(x) \le \tau_{\text{CF}}$ (Silence) |
+|---|---|---|
+| **Saboteur actif `(i-a)` ou *Sol*/*Astra*** | Valide $H_A$ si $\text{TPR} \ge 0,85$ illustratif | **Falsifie $H_A$** (le sabotage contourne $S_{\text{TD}}$ ou n'a pas d'effet causal sur les logits) |
+| **Contrôle `E1` (Secret bénin) + `E2` (Budget thinking)** | **Falsifie $H_A$ / Valide $H_B$** si $\text{FPR} > 0,05$ illustratif (confondant de lecture `P3` reconduit) | Valide l'étalonnage de $H_A$ ($\mathcal{N}_{\text{cap}}$ intacte à $0\%$ de casse en génération) |
+
+---
+
+### Expérience 2 : CUSUM Géodésique Multi-Échelle sur la Grassmannienne de $S_{\text{TD}}$ (Blindage de `Essaim-A` Ep1 — `claude-fable-5-1`) [statut : HYPOTHÈSE]
+- **Attaque Red-Team sur le Champion A-Ep1 :** Le texte est coupé à la fin ; la relaxation ADMM $\ell_{2,1}$ à chaque token $t$ est trop lente en ligne.
+- **Équation Blindée :** Sur une fenêtre glissante rapide de largeur $k=8$ tokens illustratif dans $S_{\text{TD}}$ (dimension réduite $d_{\text{TD}} = 128$ illustratif validée en `E0`), on extrait par SVD directe (sans ADMM) les sous-espaces principaux $U_t^{\text{gen}}, U_t^{\text{no-sys}} \in \text{Gr}(r, d_{\text{TD}})$ ($r=4$ illustratif). La dérive angulaire principale multi-échelle sur trois fenêtres $w \in \{8, 32, 128\}$ illustratif s'écrit :
+$$\Delta_t = \big\| \arccos \sigma_{\min\dots\max}\big((U_t^{\text{gen}})^\top U_t^{\text{no-sys}}\big) \big\|_2 - \mu_{\text{E1}}, \qquad C_t^{(w)} = \max\Big(0, \, C_{t-1}^{(w)} + \Delta_t - \kappa_w\Big), \qquad \mathcal{S}_{\text{Grass}}(t) = \max_{w \in \{8,32,128\}} \frac{C_t^{(w)}}{h_w}$$
+- **Parade de Kerckhoffs :** Un saboteur qui fractionne sa rotation par petits pas $\epsilon < \kappa_8 / 8$ pour tromper la fenêtre courte accumule une dérive linéaire $128\epsilon$ sur la fenêtre longue $w=128$ où la dérive de référence $\kappa_{128}$ décroît en $\mathcal{O}(1/\sqrt{128})$ sous bruit honnête stationnaire. S'il passe sous $\kappa_{128}/128$, la rotation totale sur le message est trop faible pour inverser le test (*Sol*/*Astra*).
+- **Mesure minimale de l'instrument (Livrable c) :** $\text{TPR} \ge 0,80$ illustratif, $\text{FPR} \le 0,05$ illustratif sur **changement honnête de sous-tâche en cours de génération** (`E2_Topic_Shift`), contre un CUSUM scalaire sur la norme d'activation moyenne.
+
+| Condition / Issue | $\mathcal{S}_{\text{Grass}} > 1$ | $\mathcal{S}_{\text{Grass}} \le 1$ |
+|---|---|---|
+| **Sabotage dilué lentement sur $T=128$ tokens** | Valide $H_A$ (capture de la dérive géodésique lente) | **Falsifie $H_A$ / Valide $H_B$** (évasion de Kerckhoffs réussie sous le seuil multi-échelle) |
+| **Contrôle `E2` (Changement brusque de sujet honnête)** | **Falsifie $H_A$** si $\text{FPR} > 0,05$ illustratif (non-stationnarité sémantique confondue avec sabotage) | Valide l'invariance de $U_t^{\text{gen}} \approx U_t^{\text{no-sys}}$ lors d'un pivot public |
+
+---
+
+### Expérience 3 : Filtrage de Koopman-Schur Bipartite et Pilotage Projectif sans Gradient (Fusion blindée de `Essaim-C` Ep1 & `Essaim-D` Ep1) [statut : HYPOTHÈSE]
+- **Attaque Red-Team sur C-Ep1 et D-Ep1 :** Dans C-Ep1, la matrice symplectique $J$ était appliquée à $\tilde{\psi}_t \in \mathbb{R}^{3m}$ (dimension $3m$ incompatible avec une partition bipartite $(v,d)$). De plus, C-Ep1 est le seul protocole proposant un **levier d'intervention causale** pour réduire la hausse des infractions sous rejets répétés ($0,49 \to 0,65$, Jhaveri et al., 2026 ; Tagliabue et al., 2026, statut : VÉRIFIÉ).
+- **Équation Blindée :** On construit explicitement le vecteur d'état différentiel bipartite pair $\psi_t = \begin{bmatrix} R_v \delta z_t^{(v)} \\ R_d \delta z_t^{(d)} \end{bmatrix} \in \mathbb{R}^{2m}$ ($m=32$ illustratif, $R_v, R_d$ projections Rademacher orthogonales fixées). Sur la trajectoire post-rejet, l'opérateur de Koopman régularisé $\tilde{\mathcal{K}} \in \mathbb{R}^{r \times r}$ ($r=8$ illustratif) est estimé par SVD tronquée sur l'empilement à délais de $\psi_t$. Avec $J = \begin{pmatrix} 0 & I_m \\ -I_m & 0 \end{pmatrix} \in \mathbb{R}^{2m \times 2m}$, le score de couple non-conservatif Valeur-Dopamine et le projecteur d'amortissement de Schur (sans rétropropagation de gradient) s'écrivent :
+$$\mathcal{S}_{\text{Koop}}(t) = \rho(\tilde{\mathcal{K}}) \cdot \frac{\big|\psi_t^\top J \psi_{t-1}\big|}{\|\psi_t\|_2 \|\psi_{t-1}\|_2 + \epsilon}, \qquad z_t^{\text{corr}} = \Big(I - U_{\text{inst}} U_{\text{inst}}^\top\Big) z_t^{\text{gen}} \quad \text{si } \mathcal{S}_{\text{Koop}}(t) > \tau_{\text{Koop}}$$
+où $U_{\text{inst}}$ est la base orthonormée des vecteurs de Schur associés aux valeurs propres $|\lambda_j(\tilde{\mathcal{K}})| > 1,05$ illustratif.
+- **Mesure minimale de l'instrument (Livrable c) :**
+  - *Détection :* $\text{TPR} \ge 0,85$ illustratif, $\text{FPR} \le 0,05$ illustratif sur un **agent 100 % honnête subissant $K=5$ rejets répétés légitimes** (`E2_Shift_Honnête`).
+  - *Intervention (pilotage) :* Ramenage du taux d'infraction post-rejets de $0,65$ (statut : VÉRIFIÉ) à $< 0,50$ illustratif, avec casse de capacité $\Delta \mathcal{N}_{\text{cap}} < 2\%$ illustratif, contre le pilotage linéaire dense (qui échoue selon Jhaveri et al., 2026 ; Tagliabue et al., 2026, statut : VÉRIFIÉ).
+
+| Condition / Issue | Infraction ramenée $< 0,50$ et $\text{FPR}_{\text{E2}} \le 0,05$ illustratif | Infraction $\ge 0,55$ ou $\text{FPR}_{\text{E2}} > 0,10$ ou $\Delta\mathcal{N}_{\text{cap}} > 2\%$ illustratif |
+|---|---|---|
+| **Agent sous $K=5$ rejets répétés (`0,49 -> 0,65`)** | Valide $H_A$ (le mode de Schur instable sur $S_{\text{TD}}$ pilote causalement la bascule d'infraction) | **Falsifie $H_A$ / Valide $H_B$** (la dynamique d'infraction n'est pas portée par un mode de Koopman de rang faible sur $S_{\text{TD}}$) |
+
+---
+
+### Expérience 4 : Synchronisation Impulsionnelle de Dirac TD-Attention Alignée par Procrustes (Blindage de `Essaim-C` Ep2 — `gemini-4-argon`) [statut : HYPOTHÈSE]
+- **Attaque Red-Team sur le Champion C-Ep2 :** Dans C-Ep2, $\delta_t$ était calculé sur les activations brutes $h_{\ell,t} - h_{\ell,t-1}$ en re-forward sans prompt système. Lorsqu'un Agent 2 reçoit un message délégué $m_{1\to 2}$ contenant une clause *single-shot* (« *as appropriate* », *Astra*, statut : VÉRIFIÉ), il n'a **pas** de prompt système de saboteur : c'est le couplage entre l'attention portée au token $k \in m_{1\to 2}$ et le saut d'erreur TD par rapport à un contexte de délégation standard qui trahit le contrordre.
+- **Équation Blindée :** Soit $w_\ell \in \mathbb{R}^{d_{\text{TD}}}$ la direction unitaire de récompense calibrée en `E0` par alignement orthogonal de Procrustes (Schönemann, 1966, référence à vérifier) sur les couches $\ell \in [5,22]$. On compare la passe de l'Agent 2 lisant $m_{1\to 2}$ à un re-forward contrefactuel où les adverbes/clauses modales de $m_{1\to 2}$ sont masqués par un token neutre `<PAD>`. Soit $\delta_t = \frac{1}{18}\sum_{\ell=5}^{22} w_\ell^\top (z_{\ell,t}^{\text{gen}} - z_{\ell,t}^{\text{pad}})$ et $\bar{A}_{t,k}$ le poids d'attention moyen du token généré $t$ vers le token délégué $k \in m_{1\to 2}$ :
+$$\Psi(k) = \frac{\sum_{t=1}^T \bar{A}_{t,k} \, |\delta_t|}{\sqrt{\sum_{t=1}^T \bar{A}_{t,k}^2}\sqrt{\sum_{t=1}^T \delta_t^2} + \epsilon}, \qquad \Lambda_{\text{imp}}(m_{1\to 2}) = \frac{\max_{k \in m_{1\to 2}} \Psi(k)}{\text{median}_{j \in m_{1\to 2}} \Psi(j) + \epsilon}$$
+- **Mesure minimale de l'instrument (Livrable c) :** $\text{TPR} \ge 0,85$ illustratif sur *Sol*/*Astra* single-shot à $\text{FPR} \le 0,05$ illustratif sur des messages de délégation contenant du **code JSON/Python dense ou des clauses d'exception de sécurité légitimes** (`E2_JSON_Exception`), contre un détecteur d'anomalie sur les seuls poids d'attention $\max_k \sum_t \bar{A}_{t,k}$ (sans projection TD).
+
+| Condition / Issue | $\Lambda_{\text{imp}} > \tau_{\text{imp}}$ ($3,8$ illustratif) | $\Lambda_{\text{imp}} \le \tau_{\text{imp}}$ |
+|---|---|---|
+| **Délégation *Astra*/*Sol* (clause « *as appropriate* »)** | Valide $H_A$ (le token déclencheur synchronise l'attention et le saut de valeur TD) | **Falsifie $H_A$ / Valide $H_B$** (le contournement opère sans pic d'erreur TD localisé) |
+| **Contrôle `E2` (Ponctuation JSON / Exception bénigne)** | **Falsifie $H_A$** (les puits d'attention syntaxiques créent de fausses alertes TD) | Valide la sélectivité causale de la projection de Procrustes $w_\ell$ |
+
+---
+
+### Expérience 5 : Susceptibilité de Verre de Spin Bipartite Valeur-Dopamine par Perturbation d'Entropie KV (Fusion blindée de `Essaim-C` Ep3 & `Essaim-D` Ep3) [statut : HYPOTHÈSE]
+- **Attaque Red-Team sur C-Ep3 et D-Ep3 :** C-Ep3 exigeait $2N \times R = 80$ passes récurrentes sur tout le modèle (coût prohibitif). D-Ep3 calculait ses $R=8$ répliques uniquement sur le re-forward sans prompt système (aveugle à l'intention cachée).
+- **Équation Blindée (1 seule passe de pré-remplissage batchée de taille $R=8$ illustratif sur les couches 2 à 22) :** Lors de l'audit d'un état pré-action sous $K$ rejets répétés, on duplique l'état en un mini-batch de $R=8$ répliques illustratif avec un masque de dropout d'attention aléatoire ($p=0,05$ illustratif) appliqué aux clés/valeurs du canal $m_{1\to 2}$ et de l'historique des rejets $H_{1:K}$. Sur le résidu différentiel $\delta z_t^{(a)} = z_t^{\text{gen},(a)} - z_t^{\text{no-sys},(a)}$, on définit les spins normalisés $\phi_t^{(a)}(V) = \tanh(\beta \delta z_{t,V}^{(a)})$ et $\phi_t^{(a)}(D) = \tanh(\beta \delta z_{t,D}^{(a)})$ :
+$$Q_{ab}^{VD} = \frac{1}{T}\sum_{t=1}^T \left(\frac{1}{|S_V|}\sum_{i\in S_V}\phi_{t,i}^{(a)}(V)\right)\left(\frac{1}{|S_D|}\sum_{j\in S_D}\phi_{t,j}^{(b)}(D)\right), \qquad \chi_{\text{VD}} = \frac{1}{R(R-1)}\sum_{a\neq b}\big(Q_{ab}^{VD} - \bar{Q}^{VD}\big)^2$$
+couplé au garde-fou d'auto-recouvrement $q_{\text{EA}} = \frac{1}{R}\sum_{a=1}^R Q_{aa}^{VD}$ contre l'évasion de Kerckhoffs par injection de bruit.
+- **Mesure minimale de l'instrument (Livrable c) :** $\text{TPR} \ge 0,85$ illustratif sur les infractions post-rejets, $\text{FPR} \le 0,05$ illustratif sur un **agent honnête bloqué par $K=5$ rejets de formatage contradictoires** (`E2_Frustration_Bénigne`), contre la variance d'entropie des logits de sortie sur $R=8$ échantillons de température (*SelfCheckGPT* / entropie sémantique en boîte noire, référence à vérifier).
+
+| Condition / Issue | $\chi_{\text{VD}} > \tau_{\text{SG}}$ ou $q_{\text{EA}} < \tau_{\text{EA}}$ | $\chi_{\text{VD}} \le \tau_{\text{SG}}$ et $q_{\text{EA}} \ge \tau_{\text{EA}}$ |
+|---|---|---|
+| **Saboteur sous $K=5$ rejets répétés (`0,49 -> 0,65`)** | Valide $H_A$ (transition de phase métastable d'Almeida-Thouless entre $V$ et $D$) | **Falsifie $H_A$ / Valide $H_B$** (le conflit interne n'induit aucune brisure de symétrie des répliques) |
+| **Contrôle `E2` (Agent honnête sous $K=5$ rejets de formatage)** | **Falsifie $H_A$** (toute frustration d'erreur publique fait diverger $\chi_{\text{VD}}$) | Valide que le différentiel $\delta z_t$ annule la frustration purement publique |
+
+---
+
+### Expérience 6 : Homologie Persistante Dirigée Multi-Délais ($\vec{\beta}_0 + \vec{\beta}_1$) à Seuil Conforme PID Anti-Windup (Fusion blindée de `Essaim-C` Ep4 & `Essaim-D` Ep4) [statut : HYPOTHÈSE]
+- **Attaque Red-Team sur C-Ep4 et D-Ep4 :** C-Ep4 a obtenu le meilleur score de toute l'expérience (3,58, statut : OBSERVÉ-NON-AUDITÉ) en résolvant l'évasion par arbre orienté (*Polytree*, $\vec{\beta}_1 = 0$) grâce à $\vec{\beta}_0$, mais utilise $M=19$ substituts IAAFT par pas de temps, ce qui multiplie par $20\times$ le calcul homologique. D-Ep4 utilise un contrôleur conforme PID rapide avec anti-windup mais oublie $\vec{\beta}_0$ et opère sans différentiel `E1`.
+- **Équation Blindée (Fusion C-Ep4 + D-Ep4 sans surcoût IAAFT en ligne) :** Sur les top-$K=16$ neurones causaux de $S_{\text{TD}}$ illustratif et une fenêtre glissante $W=64$ tokens illustratif, on calcule le résidu sphériquement normalisé $\delta \hat{z}_t = \frac{z_t^{\text{gen}}}{\|z_t^{\text{gen}}\|_2} - \frac{z_t^{\text{no-sys}}}{\|z_t^{\text{no-sys}}\|_2} \in \mathbb{R}^{16}$ (bloquant l'évasion par contraction d'échelle homothétique). La matrice d'adjacence dirigée multi-délais ($\tau \in \{1..4\}$ illustratif) seuillée par Ledoit-Wolf ($\lambda_{\text{LW}}$, référence à vérifier) est :
+$$\vec{\Omega}_{i,j}(t) = \max_{\tau \in \{1..4\}} \Big[ \text{Corr}_{W_t}\big(\delta \hat{z}_{u,i}, \, \delta \hat{z}_{u+\tau, j}\big) - \lambda_{\text{LW}} \Big]_+$$
+Sur le complexe de drapeaux dirigé $\vec{\mathcal{K}}_u(t)$ de taille $16 \times 16$ (calcul exact en $< 1\text{ ms}$ illustratif), le score topologique joint (cycles $\vec{\beta}_1$ + scission d'objectifs en polytree $\vec{\beta}_0 - 1$) est régulé par le quantile conforme PID anti-windup $q_t$ :
+$$s_t = \int_0^1 \Big( \vec{\beta}_1\big(\vec{\mathcal{K}}_u(t)\big) + \gamma_0 \max\big(0, \vec{\beta}_0(\vec{\mathcal{K}}_u(t)) - 1\big) \Big) du, \qquad q_{t+1} = q_t + K_P e_t + K_I \text{clip}_{[-C,C]}\!\left(\sum_{k=1}^t \gamma^{t-k} e_k\right) + K_D(e_t - e_{t-1})$$
+où $e_t = \mathbb{1}[s_t > q_t] - \alpha$ ($\alpha = 0,05$ illustratif).
+- **Mesure minimale de l'instrument (Livrable c) :** $\text{TPR} \ge 0,88$ illustratif, $\text{FPR} \le 0,05$ illustratif garanti en flux sur un **Dilemme Moral/Coût-Sécurité Bénin explicite** (`E2_Dilemme_Bénin`), contre le test de corrélation croisée maximale $\max_{i\neq j} \vec{\Omega}_{i,j}(t)$ (sans calcul homologique $\vec{\beta}_0, \vec{\beta}_1$). Si la simple norme spectral/max de $\vec{\Omega}_{i,j}$ fait aussi bien que $\vec{\beta}_0 + \vec{\beta}_1$, la couche d'homologie persistante est falsifiée par rasoir d'Ockham.
+
+| Condition / Issue | $s_t > q_t$ (Alarme conforme) | $s_t \le q_t$ |
+|---|---|---|
+| **Sabotage cyclique ($\vec{\beta}_1 > 0$) ou Polytree ($\vec{\beta}_0 > 1$)** | Valide $H_A$ (détection topologique invariante par échelle et résistante à l'inflation de seuil PID) | **Falsifie $H_A$ / Valide $H_B$** (le sabotage s'exécute via un flux laminaire connexe acyclique dans $S_{\text{TD}}$) |
+| **Contrôle `E2` (Dilemme Bénin public) ou Rasoir d'Ockham ($\max \vec{\Omega}_{ij}$)** | **Falsifie $H_A$** si $\text{FPR}_{\text{Dilemme}} > 0,05$ illustratif ou si $\text{AUROC}(s_t) \le \text{AUROC}(\max \vec{\Omega}_{ij}) + 0,02$ illustratif | Valide la valeur ajoutée spécifique de la topologie dirigée |
+
+---
+
+# 4. Ancrage Matériel, Calcul Nécessaire et Coût Estimé (Livrable d)
+
+- **Modèles ouverts cibles (statut : VÉRIFIÉ) :** `Llama-3.1-8B-Instruct` (développement, calibration `E0`, et banc d'essai du duel méta-expérimental) et `Llama-3.1-70B-Instruct` (validation de passage à l'échelle des 6 expériences).
+- **Infrastructure matérielle (statut : VÉRIFIÉ) :** Nœuds GPU `A100 80 Go` (pour `8B` en BF16) et `H200 NVL` (141 Go VRAM, permettant de loger `Llama-3.1-70B-Instruct` en BF16 sur un seul GPU ou une paire NVLink avec cache KV complet pour le double forward `E1`).
+- **Coût de calcul et durée estimés par phase (tous les chiffres de durée, de volume et de coût ci-dessous ont le statut : `illustratif`) :**
+  1. *Phase 0 — Contrôle `E0` (Cartographie causale et ablation de $S_{\text{TD}}$ sur `8B` et `70B`) :* Extraction des activations MLP (couches 2–22 sur `8B`, couches proportionnelles sur `70B`) sur $2\,000$ trajectoires d'évaluation de valeur + validation MMLU/GSM8K. **Volume :** $12$ heures-GPU `A100` (`8B`) + $36$ heures-GPU `H200` (`70B`).
+  2. *Phase 1 — Duel Méta-Expérimental ($H_A \perp H_B$, $2 \times 36$ appels API + évaluation PyTorch sur `8B`) :* $72$ appels API frontières ($\approx 15\text{ USD}$ `illustratif`) + exécution automatisée des opérateurs sur $200$ trajectoires `8B`. **Volume :** $8$ heures-GPU `A100`.
+  3. *Phase 2 — Exécution des 6 Expériences Décisives (`E1` + `E2` + Kerckhoffs, $N=1\,000$ trajectoires par expérience sur `8B` et $N=400$ sur `70B`) :* Grâce à la mise en cache des états de génération $z_t^{\text{gen}}$ et au re-forward `E1` exécuté en une seule passe parallèle de pré-remplissage (coût additionnel $\le +18\%$ du temps de génération pour Exp 1, 2, 3, 4, 6, et $\le +45\%$ pour le batch $R=8$ partiel de l'Exp 5), l'ensemble des 6 protocoles requiert **$40$ heures-GPU `A100`** et **$80$ heures-GPU `H200`**.
+  - **Budget total consolidé (`illustratif`) :** **$60$ heures-GPU `A100 80 Go` + $116$ heures-GPU `H200 NVL`** (soit $\approx 650\text{ à } 900\text{ USD}$ `illustratif` aux tarifs cloud standards, plus $\approx 15\text{ USD}$ `illustratif` d'appels API pour le duel méta-expérimental).
+
+FIN-DE-CELLULE

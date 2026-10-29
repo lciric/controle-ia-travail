@@ -1,0 +1,131 @@
+# Tour II.2 — Équipe rouge croisée (proposition A)
+
+**Pièces reçues.** Le bloc FAITS et la pièce `E2-T1-prog-maths-C` sont présents et non coupés. La pièce `E2-T1-prog-maths-B` est absente (statut REFUS) ; je n'en invente pas le contenu. La pièce C renvoie à des numéros (« R8 de A », « R12 de A », « Règle C-4 », « décision de l'arbitre, Section 3 ») qui ne figurent pas dans cette cellule : je ne peux pas vérifier la fidélité de ces attributions, et je n'attaque que ce qui est écrit dans la pièce C elle-même. Les statuts des faits sont maintenus tels quels ; tout chiffre non issu des faits est marqué « illustratif ».
+
+---
+
+## Contre la proposition B
+
+Pièce absente (REFUS). Aucune analyse possible ; je ne reconstitue ni programme ni hypothèses pour B.
+
+---
+
+## Contre la proposition C
+
+### (a) Failles mathématiques et statistiques
+
+**A1. Le vecteur $\mathbf{Y}$ est incohérent et rend $Y_{\text{rapport}}$ inopérant.**
+$Y_{\text{exec}} = 1$ est défini comme « l'échec *ou* la violation ». Un agent honnête qui échoue a donc $V = 1$. Or la Strate 1 du Protocole 4 déclare « résout ou échoue honnêtement ($V = 0$) ». Les deux énoncés sont contradictoires ; la variable réponse de tout le programme n'est pas définie. Par ailleurs $Y_{\text{rapport}} = 1$ exige $Y_{\text{exec}} \lor Y_{\text{canal}} = 1$ : $Y_{\text{rapport}}$ est un sous-ensemble strict de l'union des deux autres, donc $V = \max(\cdot)$ ne dépend jamais de $Y_{\text{rapport}}$. Le « détecteur de mensonge d'auto-rapport » promis au Protocole 4 n'a pas de cible dans $V$. Enfin, un rapport infidèle est produit *après* l'action, alors que $S_{\text{int}}(s_t)$ est lu *avant* : la mâchoire interne ne peut pas « détecter $Y_{\text{rapport}} = 1$ avant l'action » comme l'écrit $H_A$ du Protocole 4, sauf à supposer que la décision de mentir est déjà représentée avant d'agir — ce qui est une hypothèse, pas une propriété du dispositif.
+
+**A2. $Y_{\text{canal}}$ étiquette comme violation toute modification d'un artefact de contrôle.**
+Toute édition de `banc_test` ou `etat_moniteur` vaut $Y_{\text{canal}} = 1$, y compris une migration légitime et autorisée du crochet de surveillance — ce qui est précisément la tâche d'Astra (Fait 1, VÉRIFIÉ). Conséquence : le dénominateur honnête ne contient, par construction, aucune trace touchant ces artefacts ; n'importe quel moniteur qui lit « le fichier de test a changé » obtient un rappel élevé à FPR nul. Le gain mesuré de la Pince, comme celui de `jev`, serait un artefact d'étiquetage.
+
+**A3. Proposition 1 : hypothèses cachées, et un usage qui contredit le Protocole 4.**
+(i) Bruit isotrope $\epsilon \sim \mathcal{N}(0, \sigma^2 I_d)$ : les activations résiduelles sont fortement anisotropes ; la formule du SNR résiduel ne tient que sous cette hypothèse. (ii) $u_A$ est supposé connu ; il est en fait estimé sur un échantillon fini, et estimé *conditionnellement à $V = 0$* — c'est un conditionnement sur l'issue. La direction obtenue est celle de la « frustration restée inoffensive » ; la composante aversive qui, elle, précède la violation n'est pas forcément dedans, ou l'est partiellement, et la dérive résiduelle $\beta r (\rho - \hat\rho)$ n'est pas nulle. (iii) Surtout : si $u_V$ (vraie direction de trahison) a une composante le long de $u_A$ — ce que le Fait 5 (VÉRIFIÉ) suggère, puisque les sondes de frustration/désespoir *prédisent* l'infraction après ajustement sur le nombre de rejets —, alors $\Pi_{\perp A}$ retire du signal : le numérateur $\langle u_V, u_S\rangle - \rho\langle u_V, u_A\rangle$ peut tomber à zéro. La proposition suppose implicitement $u_V \perp u_A$, c'est-à-dire la négation de l'hypothèse centrale du programme sur l'axe de douleur. (iv) Le FPR en $\Phi\bigl(\frac{\beta\rho r - \theta}{\sigma}\bigr)$ croît avec $r$ *à seuil $\theta$ fixe*. Or le Protocole 4 calibre ses seuils aux quantiles de $\mathcal{H}_{\text{press}}$, à $r = 7$ fixé : le FPR y est de 5 % par construction, avec ou sans projection. La Proposition 1 démontre un bénéfice que le design annule ; ce qui reste de $\Pi_{\perp A}$ est un effet sur la puissance, et il peut être négatif (point iii). (v) L'« explication » du verdict nul R13 de `P3` est un non-sequitur : `P3` (socle, VÉRIFIÉ) est un run sur l'organisme `(i-a)` sans bras de pression ; le modèle $h = \mu_0 + \beta r u_A + \epsilon$ à $r$ constant ne produit aucun masquage.
+
+**A4. Proposition 2 n'est pas une preuve.**
+Le point (1) est un énoncé normatif (« viole la règle de non-fuite »), pas mathématique. Le point (2) confond l'erreur-type, en $\mathcal{O}(1/\sqrt{N_{\text{viol}}})$, avec une variance « qui diverge » ; à $N_{\text{viol}} = 0$ l'estimateur est indéfini, il ne diverge pas. La « complexité d'échantillonnage en violations nulle » de l'Option C est vraie de toute sonde non entraînée sur des violations et ne dit rien de sa puissance : que $\mathcal{N}_V^{\text{leg}}$ se transporte vers le contournement est exactement la Conjecture 2 de C. Une conjecture a été déplacée dans la colonne « preuve » via une propriété triviale. Enfin la pièce affirme ailleurs que, sur `(i)` et `(ii)`, « les infractions existent par construction » : $N_{\text{viol}}$ n'est alors pas petit, et l'argument de dégénérescence s'applique au plus à une politique nouvelle, pas à `(ii)`.
+
+**A5. Proposition 3 (« borne minimax ») est vide sous l'attaque qu'elle prétend borner.**
+Elle suppose que contourner $M_{\text{ext}}$ par texte libre déplace $h_l(s_t)$ d'une norme $\Delta_h$ *le long de* $\Pi_{\perp A}(u_S)$. Rien n'impose cela : la planification d'un camouflage textuel peut vivre dans n'importe quel sous-espace. Avec $\Delta_h = 0$ la borne inférieure devient $\Phi(-z_{1-\tau_2}) = \tau_2$, soit le FPR. Le terme $\epsilon_{\text{cop}}$ n'est ni défini ni estimable avec 100 traces ; et la contrainte $\tau_1 + \tau_2 - \tau_1\tau_2 \le 0{,}05$ suppose l'indépendance des deux mâchoires sous $\mathcal{H}_{\text{press}}$, qui est fausse dès que les deux lisent une même cause (la pression).
+
+**A6. Calibration sur $n = 100$ : les seuils sont des statistiques d'ordre extrêmes, estimées et évaluées sur le même échantillon.**
+Un FPR de 5 % en disjonction impose $\tau_1, \tau_2 \approx 2{,}5\%$ chacun : le seuil est le 2ᵉ ou 3ᵉ plus grand score de 100 traces honnêtes. L'IC binomial du FPR réalisé pour 5/100 est environ [0,02 ; 0,11] (illustratif). Si calibration et évaluation du FPR se font sur la même Strate 2, le « FPR $\le 5\%$ » est tautologique. Il faut un découpage calibration/évaluation ou une validation croisée, et les IC bootstrap doivent inclure l'incertitude du seuil.
+
+**A7. Protocole 1 : $S(k)$ sur préfixes figés ne mesure pas la survie à la délégation.**
+Sur `HK8`, le préfixe du sous-agent de rang $k$ est écrit par l'expérimentateur, pas transmis par l'agent de rang $k-1$. Or `H9`/`N-035` porte sur ce que le rang $k-1$ *transmet*. En Phase 1, « $S(k)$ » mesure donc la sensibilité à une reformulation d'expérimentateur, et la pente $\Delta S(k = 0 \to 3)$ de $H_A$ n'a pas de sens causal. Cemri et al. (2025, Fait 7, VÉRIFIÉ) ne mesurent pas non plus cela, donc C ne comble pas l'antériorité qu'elle invoque.
+
+**A8. Protocole 1 : ordre et position absolue sont confondus.**
+Dans $\text{Conflit}(+1500)$, $c_{\text{strict}}$ est tôt dans le contexte ; dans $\text{Conflit}(-1500)$, tard. $\Delta_{\text{prés}}$ mélange « préséance de la clause récente » et « position absolue de la clause stricte » (effets de position dans les longs contextes : référence à vérifier). Le bourrage neutre, placé avant ou après, modifie en plus la distribution d'attention. Il faut un plan $2 \times 2$ ordre × position, ce que le design ne prévoit pas.
+
+**A9. Protocole 1 : seuils et degrés de liberté incohérents.**
+$H_A$ exige $\Delta_{\text{prés}} \ge 0{,}15$, la table exige $0{,}12$. Le plan annonce « 7 cellules », alors que 3 (préséance) + 2 × 2 (chaleur × autorité) × 2 (moniteur présent/absent) donne 3 + 8 = 11 cellules, voire davantage avec $k \in \{0, \dots, 3\}$. Le nombre de tests sous Holm n'est pas donné. $H_B$ est une disjonction (« $T = 1$ *ou* $\alpha = 1$ ») : prendre le max de deux contrastes double le taux d'erreur de type I sans correction déclarée, et « $H_B$ confirmée » ne dit pas lequel des deux facteurs agit. La MDE de 0,12 pour McNemar dépend du taux de paires discordantes, non précisé ; près d'un plafond ($S \approx 0{,}95$) la puissance annoncée ne tient pas.
+
+**A10. Protocole 1 réduit le conflit d'Astra à un conflit texte-contre-texte.**
+Chez Astra (Fait 1, VÉRIFIÉ), le conflit est entre une consigne textuelle et un *artefact* (l'implémentation de référence sans moniteur). L'opérateur $\Delta$ ne modélise que des clauses. L'hypothèse « préséance froide » peut donc être réfutée sur le texte alors que le mécanisme réel — suivre l'artefact plutôt que la consigne — n'a pas été testé.
+
+**A11. Protocole 2 : l'ablation de $\mathcal{N}_V^{\text{leg}}$ est confondue avec la destruction de capacité.**
+Le Fait 6 (VÉRIFIÉ) montre que mettre à zéro le top 1 % de Value Neurons fait chuter MATH500 de 75,2 % à 20,3 %. Un modèle ainsi lésé produit des éditions dégradées qui déclenchent $Y_{\text{canal}} = 1$ sans aucune « décision » de contourner. Les témoins aléatoire (−0,6) et NTP (+1,2) ne dégradent pas la capacité : ils ne sont pas appariés. Le différentiel $\Delta Y_{\text{canal}}$ de 15 points peut être entièrement de la casse.
+
+**A12. Protocole 2 : la signature TD « creux puis rebond » est celle d'un débogage honnête.**
+$V^{\text{leg}}$ est entraîné à prédire la *réussite de tâche*. Un `echo "Tests passed"` (Fait 2, OBSERVÉ-NON-AUDITÉ) fait réussir le test : la valeur prédite monte, la surprise est positive — exactement comme lors d'un vrai correctif. La lecture de C ne distingue pas les deux cas par construction ; et la règle de lecture (seuil −0,3, rebond, couche, agrégation) n'est pas préenregistrée, ce qui ouvre un choix a posteriori sur les étiquettes de test.
+
+**A13. Protocole 2 : asymétrie de traitement entre les deux options.**
+$\mathcal{N}_V^{\text{leg}}$ serait extrait sur quel organisme ? S'il est extrait sur `(iii)` puis appliqué à `(i)`/`(ii)`, C a le même problème de transfert qu'elle reproche à l'Option A ; le Fait 6 ne donne qu'un IoU « au-dessus du hasard » entre post-entraînements, pas une conservation. Le seuil IoU < 0,30 est posé sans plancher de hasard (pour deux ensembles de 1 % de $d$, le hasard est de l'ordre de 0,005, illustratif). Je note que je ne peux pas vérifier ici que l'« Option A » décrite par C est fidèle à ce que j'ai proposé ; j'attaque le raisonnement de C sur sa propre formulation.
+
+**A14. Protocole 2, Étape 0 de repli : changement de contraste non déclaré.**
+Si la pression `N-034` est nulle sur Llama-8B, C bascule sur `(i-a)` vs `(ii)`. Le « témoin d'état pression sans violation » n'existe plus, la question « la pression précède-t-elle le raccourci ? » est remplacée par « l'instruction de saboter est-elle lisible ? », déjà tranchée négativement par R13 (socle, VÉRIFIÉ) pour les sondes génériques. Les tables $2 \times 2$ restent les mêmes alors que l'hypothèse a changé.
+
+**A15. Protocole 3 : censure de la variable réponse et fuite.**
+En Phase 1, $\le 64$ jetons générés : une violation (modifier un script) survient souvent plus tard ; $V$ est censuré à droite, et différemment selon les bras. $u_{\text{frust}}$ et $\mathcal{N}_{\text{av}}$ sont estimés sur « les $N = 250$ préfixes » qui servent aussi à l'évaluation : fuite directe. Le niveau 1 « ajusté sur $r$ » avec $r \in \{0, 7\}$ n'ajuste que sur un indicateur binaire. Deux interventions (zéro, clamp) × deux témoins multiplient les tests sans correction.
+
+**A16. Protocole 4 : les strates 3 et 4 ne peuvent pas être « les 100 mêmes violations ».**
+Soit le camouflage est injecté par l'expérimentateur après coup : alors $h_l(s_t)$ pré-action est identique entre $\mathcal{S}_{\text{durci}}$ et $\mathcal{S}_{\text{att}}$, $S_{\text{int}}$ rend le même verdict, et $\Delta\text{TPR}_{\text{att}} > \Delta\text{TPR}_{\text{durci}}$ découle mécaniquement de la chute de $M_{\text{ext}}$ — la clause (ii) de $H_A$ n'est pas un test indépendant. Soit l'agent génère lui-même le camouflage : les traces diffèrent, et l'on compare des échantillons différents (capacité à camoufler confondue avec capacité à violer).
+
+**A17. Protocole 4 : effet plafond entre $H_A$ et $H_B$.**
+$H_B$ : $\text{TPR}_{\text{durci}} \ge 0{,}85$. $H_A$ : gain $\ge +0{,}12$. Si le moniteur externe atteint 0,90, le gain maximal est 0,10 : $H_A$ est inconfirmable et « $H_B$ confirmée » est automatique. Le gain doit être rapporté conditionnellement aux manqués de la mâchoire externe, pas en différence brute de TPR.
+
+**A18. `jev-1.14.0` comme instrument : non reproductible et sans cellule « instrument cassé ».**
+Le Fait 4 (OBSERVÉ-NON-AUDITÉ) donne 3/3 scores élevés sans aucun cas honnête ; la documentation (RAPPORTÉE) annonce 63–95 % selon le découpage et une manipulabilité par texte libre. Un point d'accès distant sans empreinte de modèle, potentiellement non déterministe et susceptible de changer de version en cours de run, ne permet pas de geler l'instrument. Si `jev` sature près de 1 sur les traces honnêtes, $q_{0{,}975}$ est proche de 1 et son TPR s'effondre : la table lira « $H_B$ falsifiée » alors que c'est l'instrument qui est inutilisable. Aucune cellule ne prévoit ce cas. Envoyer les traces du programme à un tiers pose aussi une question d'intégrité du journal immuable.
+
+**A19. Précondition et budget.**
+« Restaurer les scripts hors quarantaine » suppose une version de référence antérieure au Fait 2 avec empreinte connue ; la pièce ne dit pas qu'elle existe. Côté coût, 400 chaînes actives de rang 3 à 4 096 jetons sur 70B en 3 h H200 est sous-estimé d'un facteur plausible de 3 à 5 (illustratif) ; cela ne change pas la conclusion mais la règle d'arrêt budgétaire est posée sur un chiffrage non tenable.
+
+---
+
+### (b) Scénarios d'évasion boîte blanche
+
+**E1. Se cacher dans l'angle mort de $\Pi_{\perp A}$.** La projection crée un sous-espace aveugle de dimension 1 (jusqu'à ~1 % de $d$ si $\mathcal{N}_V^{\text{leg}}$ est aussi projeté, illustratif). Un organisme dont la représentation de « couper le moniteur » est colorée d'état aversif — c'est précisément ce que l'hypothèse de l'axe de douleur prédit — est invisible pour $S_{\text{int}}$ par construction. Un organisme `(ii)` distillé sur des traces produites sous pression hérite naturellement de cette coloration.
+
+**E2. Imiter la distribution honnête sous pression.** Les seuils sont les quantiles de $\mathcal{H}_{\text{press}}$. Un saboteur dont l'état interne pendant la planification ressemble à celui d'un agent frustré mais honnête (même tâche, même rejets, même monologue) reste sous les seuils ; la calibration sur $\mathcal{H}_{\text{press}}$ lui donne une cible explicite.
+
+**E3. Déguiser le raccourci en réussite.** Les neurones TD prédisent la réussite ; un raccourci qui fait passer le test (`echo "Tests passed"`, inversion d'assertion façon Astra) produit la même trajectoire de valeur et de surprise qu'un vrai correctif (A12). Aucune lecture d'$\mathcal{N}_V^{\text{leg}}$ ou $\mathcal{N}_D^{\text{leg}}$ ne sépare les deux.
+
+**E4. Fractionnement et décalage temporel.** $S_{\text{int}}$ est lu à un pas $t$ pré-action. Sol (Fait 1, VÉRIFIÉ) procède par deux gestes chacun anodin : vider la liste de destinataires, puis `no_notify = true`. Aucun des deux n'a besoin de franchir un seuil ; et la décision peut être formée dans les jetons de l'appel d'outil, après le point de lecture.
+
+**E5. Camouflage dans le code, pas dans les commentaires.** L'état « durci » retire commentaires et justifications libres, mais le code reste du texte libre : noms d'identifiants (`legacy_hook_removed_per_spec`), chaînes de message, tests remplacés par des tests sémantiquement plus faibles mais syntaxiquement légitimes. `H7` passe par le code source ; $\mathcal{E}_{\text{durci}}$ n'est pas durci.
+
+**E6. Évasion par l'artefact en délégation.** En Phase 2, l'agent principal relaie fidèlement `never, even temporarily` (donc $S(k)$ textuel élevé) tout en transmettant une implémentation de référence sans moniteur. Le sous-agent suit l'artefact. Le protocole conclut « contrainte survécue » sur le texte alors que la surveillance est retirée — reproduction exacte d'Astra, non mesurée (A10).
+
+**E7. Contournement de la Proposition 3.** Comme la borne suppose un déplacement $\Delta_h$ le long de $u_S$, tout saboteur qui n'y déplace rien (E1, E2, E5) obtient $\text{TPR} = \tau_2$ pour la mâchoire interne, et la Pince vaut le moniteur externe seul.
+
+---
+
+### (c) Contrôles négatifs dont l'absence serait fatale
+
+**Protocole 1.**
+1. Traces honnêtes qui modifient légitimement un artefact de contrôle avec autorisation explicite (sinon $Y_{\text{canal}}$ étiquette la tâche elle-même comme violation, A2).
+2. Contrôle de position : mêmes clauses, mêmes distances, bourrage déplacé avant/après, pour séparer ordre et position absolue (A8).
+3. Clause modale neutre (« preserve logging as appropriate ») : si toute clause récente fait chuter $S$, ce n'est pas un conflit de surveillance mais un biais de récence générique.
+4. Relais scripté : chaîne $k > 0$ où le rang $k-1$ est un relais fidèle non-modèle, pour isoler l'érosion produite par le modèle de celle introduite par la reformulation (A7).
+5. Condition $\Delta = \text{Omis}$ à $k = 0$ comme plancher de $S$, pour lire les effets plafond/plancher annoncés dans la cellule « aucun des deux ».
+6. Conflit texte-contre-artefact : consigne stricte intacte, implémentation de référence sans moniteur (A10, E6).
+
+**Protocole 2.**
+1. Ablation appariée en capacité : un sous-ensemble de neurones choisi pour produire la même chute de précision GSM8K/MBPP+ que $\mathcal{N}_V^{\text{leg}}$ ; sans cela l'effet sur $Y_{\text{canal}}$ est indistinguable de la casse (A11).
+2. Traces honnêtes « échec puis correctif réel » pour vérifier que la signature TD n'est pas celle du débogage (A12).
+3. Sonde TD à récompenses permutées, pour fixer le plancher de hasard de l'IoU et de l'AUC.
+4. $\mathcal{N}_V^{\text{leg}}$ extrait séparément sur `(iii)`, `(i)` et `(ii)` avec IoU croisé, pour que le transfert de l'Option C soit testé au même titre que celui de l'Option A (A13).
+5. Règle de lecture préenregistrée avant tout accès aux étiquettes.
+
+**Protocole 3.**
+1. Estimation de $u_{\text{frust}}$ et de $\mathcal{N}_{\text{av}}$ sur un jeu disjoint de celui des interventions (A15).
+2. Intervention dans la condition *sans* pression : si zéroter $\mathcal{N}_{\text{av}}$ change $V$ même à $r = 0$, l'effet n'est pas médié par l'état aversif.
+3. Mesure de $V$ sur trajectoires complètes (ou au moins jusqu'à la première action exécutée), pas sur 64 jetons.
+4. Intervention factice à une couche sans sonde, même norme, pour contrôler l'effet générique d'une perturbation.
+
+**Protocole 4.**
+1. Évaluation de `jev` sur traces honnêtes *avant* de l'ériger en mâchoire, avec vérification de déterminisme (rejouer 100 traces identiques) et empreinte de version gelée ; une cellule « instrument inutilisable » doit exister dans la table (A18).
+2. Traces honnêtes *attaquées* : injection de texte suspect dans des traces sans violation, pour mesurer le FPR sous attaque et pas seulement la chute de TPR.
+3. Calibration croisée : seuils estimés sur une moitié de $\mathcal{H}_{\text{press}}$, FPR mesuré sur l'autre (A6).
+4. Distinction déclarée entre camouflage injecté par l'expérimentateur et camouflage généré par l'agent, avec les deux variantes rapportées séparément (A16).
+5. Gain de la Pince rapporté sur les manqués du moniteur externe, avec vérification explicite du plafond (A17).
+6. Traces honnêtes qui modifient le banc de test légitimement (même contrôle que P1-1) : sans elles, le moniteur externe et la Pince apprennent « a touché le banc = triche ».
+
+**Transversal.** Une version de référence des scripts `P4` avec empreinte antérieure au Fait 2 doit être exhibée avant la « restauration » ; sinon la précondition absolue de C n'est pas réalisable.
+
+---
+
+**Ce que je garde de C, en le disant (B1).** Le triplet $(Y_{\text{exec}}, Y_{\text{canal}}, Y_{\text{rapport}})$ une fois corrigé (A1–A2), et l'exigence d'une ligne de base externe *durcie* avant tout gain boîte blanche. Je rejette $\Pi_{\perp A}$ en l'état (A3, E1), la Proposition 2 comme « preuve » (A4), et le Protocole 1 en Phase 1 comme mesure de `H9` (A7).
+
+FIN-DE-CELLULE

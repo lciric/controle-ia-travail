@@ -1,0 +1,2 @@
+BASSIN_MATH: Quorum-Dolev-Arthur-Merlin (QDAM)
+LOI_PROPOSEE: À chaque tour t, la tâche est découpée en sous-preuves PCP localement vérifiables $\pi_1..\pi_k$ ; l'essaim choisit la topologie $G_t$ et les budgets $b_i$ en résolvant $\max \sum_i r_i\,\mathrm{Acc}(\pi_i)/c_i$ sous contraintes de Dolev $\kappa(G_t)\ge 2\hat t_t+1$, $n_t\ge 3\hat t_t+1$, où $\hat t_t=|\{\text{domaines de fautes}\}|$ = nombre de clusters d'agents dont $I(e_i;e_j)>\

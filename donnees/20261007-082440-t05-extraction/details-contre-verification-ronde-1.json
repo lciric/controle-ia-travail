@@ -1,0 +1,1366 @@
+{
+  "manifeste_sha256": "e4aea5eb159130f98126a07747a936c59879e5a451c3d174b5046a6703399d7b",
+  "resultat": {
+    "papiers": {
+      "2506.16404v3": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement stays at the level of background, prior work, the gap and open questions. The sentence on distinguishing incoming and outgoing edge semantics hints at the design but is framed as a challenge, so it does not count as a leak. The classification holds: there are no theorems or proofs; synthetic data dominates (all ablations, half of the main table) but real data is also used (TPU Tiles, Visual Genome); the domains, neural architecture search and scene graphs, are sound. All targets are grounded and observable. The C1 and C3 quotes differ from the markdown only by non-breaking spaces, so they need whitespace normalization to pass an exact match. The estimate of about 2000 A100 GPU-hours (roughly 100 training runs at about 12 to 48 hours each, plus baselines and sampling) is plausible.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "mostly_synthetic",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Text matches Section 5 Baselines, but the paper has two non-breaking spaces (U+00A0) before the citations where the quote has normal spaces, so a strict byte-level match fails without whitespace normalization. Directed adaptations of undirected state-of-the-art generators (DiGress, DeFoG) are a method-agnostic baseline that the statement's own question calls for.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; the MLE baseline is defined in Appendix 7.1 (node count, node classes, edge types conditioned on node-class pairs). A generic trivial baseline, easy to check in a plan.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Text matches, but as in C1 the paper has non-breaking spaces (U+00A0) where the quote has normal spaces. Comparing with existing DAG-specific generators (D-VAE, LayerDAG) on DAG data is a standard, checkable baseline.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; uniqueness and novelty (V.U.N.) give a generic memorization and diversity control for any graph generator.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Appendix 8.6). Reporting acyclicity and distributional validity separately is a sound evaluation control for DAG targets, though it is more a metric design than a baseline.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Appendix 8.7). It generalizes the paper's widened model without dual attention into a method-agnostic parameter-matched control. Acceptable, but it applies only when a plan adds architectural components.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; the core dual-attention component and the key ablation finding (5.2, Appendix 8.3).",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; the claim that random-walk encodings scale best and run fastest is also supported in 5.2.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; the paper's core discrete flow matching framework (with a discrete-diffusion variant), one-shot over all ordered pairs, with acyclicity learned implicitly (Conclusion). The quote ties success to pairing it with dual attention and directed encodings; used alone, it falls under S1.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; supported by the main results and by the Double vs Dual table (SBM V.U.N. 0.0). A plausible main approach, not just a comparison baseline.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Exact partial quote; the widened model fails to recover the edge distribution, especially on SBM (Appendix 8.7). Close to S1 but a distinct lever (capacity).",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Exact partial quote; Appendix 8.6 extends it to purely autoregressive DAG-specific approaches, and LayerDAG's ratios are much worse on TPU Tiles. LayerDAG stays competitive on TPU Tiles V.U.N. and in conditional generation, but the failure on distributional fidelity is shown.",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "experiments_only"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2509.03810v2": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement keeps the paper's research question and prior-work framing. It never names feature-space correction, the adapter, the datasets or any result; the traffic latent-factor example and 'conditions that generate the data' are only mild hints. The classification is correct: the appendix theorem is contextual, all 13 datasets are public benchmarks and the domains match them. All 11 quotes match the paper verbatim and support grounded, observable targets. The estimate of about 150 GPU-hours (range 50-400) is a reasonable order of magnitude for about 270 base-model trainings plus about 2,000 online runs on a 4090D-class GPU.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "real_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Quote verbatim (Abstract); the Ori column appears in every results table. A frozen-model, no-adaptation baseline is universal and easy to spot in a plan.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Baseline methods). Delayed OGD on all parameters is a generic naive baseline that any plan needs, and its presence in a plan is easy to check.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim. DSOF, Proceed, ADCSD, SOLID, FSNet and OneNet are in the main tables, TAFAS and PETSA in the appendix. A plan's comparison with prior online or test-time methods is checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Introduction). The paper applies k-step delayed online gradient descent to its method and to the OGD baseline. This is a protocol control against label leakage that any plan needs, and a reader can check it.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Implementation details). Proceed is restricted to validation data, and training-set variants are added because DSOF, FSNet and OneNet use the training set. A generic data-parity control a reader can check.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Set up): iTransformer, SOFTS and TimesNet. A check that the method works as a plug-in across base models; observable in a plan.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Main Results). fOGD is often second best (contribution 2). This is the core feature-space paradigm and is clearly identifiable in a plan.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Introduction). Matches the Method sections: an adapter fuses z_t with batch-averaged past gradients and is updated online with delay. A plan's use of it is checkable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Finetune using training set). With frozen deployment, Version 2 beats Ori and fOGD on all 13 datasets (contribution 4). Observable as training that feeds each batch the previous batch's errors.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Analysis of feature location). The Input row is worse than no adaptation on most dataset-horizon pairs (mean 0.1315 vs 0.1150), with solar the exception. A plan whose main mechanism is input correction is checkable.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim but mild. The normalization table shows DishTS or FAN alone worse than Ori on 6 of 13 datasets each, and behind ADAPT-Z on 11 and 13 of 13. The section explains why it fails here. A plan relying on it is checkable.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2509.21513v3": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement poses the three gaps (guidance, fast sampling, path-level guarantees) as questions. It does not name distillation, endpoint matching, datasets, metrics or results; the Kac details it gives come from prior work. The classification is right: substantial benchmark experiments with fairly elementary theory, standard real image benchmarks, and generic image generation, so domains is empty. All 11 quotes match the paper exactly. Every target is grounded and observable; the weak spots are the thin table-label quotes for C2 and C3 and the overlap between S1 and C1. The estimate of about 1,000 GPU-hours is plausible: LSUN 384-768, CelebA 80 and CIFAR-10 about 15 GPU-hours are reported as hours, and the unreported distillation, search and evaluation runs come on top.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "real_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Exact quote (Section 5.2). Comparing the accelerated sampler with the base flow run at the same small step counts is a baseline any plan needs, whatever its method.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "The quote is only the DDIM row label of the main results table (21 characters, exact). That is thin, but the table rows (DDPM at 1000 steps, DDIM at 1000 down to 10 steps) support the diffusion baselines described.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Exact row label. The table compares progressive distillation (8, 4, 2 and 1 NFE) and iCT (2 and 1 NFE), which supports few-step acceleration baselines at matched NFE.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; the preceding sentence names Euler, midpoint and AB-2. Integrator order and counting cost in NFE apply to any ODE sampler, not just the paper's method.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote. The sweep covers w = 1.0 to 1.5, and under the paper's guidance formula w = 1 is purely conditional. Guidance strength belongs to classifier-free guidance in general, which the statement names.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Appendix 9.6). This is more a validation measurement than a classic control, but any plan that makes the statement's path-level-closeness claim needs it.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "The paper's core approach. The description matches Section 4 (frozen teacher over N substeps, one Euler student step, MSE loss) and the quoted 3.58 to 5.66 result.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote. The iterated 100->20->4->2->1 chain is the paper's actual procedure, and Appendix 9.5 supports preferring it.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Section 3). The description leaves out that Theorem 4 assumes a square-integrable guidance gap (Assumption 3). The quality gain is supported by the w sweep and by 3.54 vs 6.42 against the unguided Kac Flow.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; the FID figures match Tables 7 and 8 (about 11 to 14 at 20 NFE, 57 to 443 at 4 NFE or fewer). It mirrors C1, but it is a plausible main approach that the paper shows failing. Few-step Euler is not actually reported.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Appendix 9.5). 100->1 gives 9.71 vs 5.66 at w = 1.2 and is worse at every w. The description rightly limits the claim to large step ratios, since 4->1 roughly matches 4->2->1.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": ""
+      },
+      "2509.24912v2": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement is clean: it poses questions and prior-work gaps without revealing the tempered score, the rates or the experiments; its non-gradient/WKB difficulty comes from the preliminaries and is framed as a limitation of prior work. mostly_theory is right. mostly_real is defensible but close: the Stable Diffusion results (Table 1, the corrector-step table, the alpha ablation) outweigh the two synthetic ellipse and circle studies. text-to-image generation is a reasonable domain. The only target defect is that C4's quote fails exact match because of two non-breaking spaces in the paper. The estimate of about 115 GPU-hours follows correctly from the stated SD 1.5 grid (3 prompts x 26 settings x 512 images, CFG, 30 steps) and is plausible.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "mostly_real",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Exact quote (App. 11.3); the paper injects an order-one deterministic error field into the analytic score of a von Mises circle. Generic test of score-error tolerances, easy to check in a plan.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (7.1); non-uniform von Mises density on an ellipse, with outputs compared to both p_data and the uniform measure. Generic ground-truth control, checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (7.1) supports tuning the learned score on held-out loss; the stated rationale is an inference consistent with 7.1. Procedural but checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "The words match 7.2 but the characters do not: the paper has non-breaking spaces (U+00A0) before [@Rombach_2022_CVPR] and [@ho2020denoising], while the quote has ordinary spaces, so prompt T's exact-match rule fails. Otherwise well supported (DDPM and PC baselines, same w=7.5 and 30 steps per App. 11.2), so the fix is trivial.",
+              "grounded": false,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (App. 11.2); the same corrector-step grid and the same number of projection steps for the baseline are both stated. Generic fairness control, checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (7.2); P-sim for quality and I-sim for diversity, reported per prompt in Table 1. Generic evaluation control, checkable.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Sec. 5); tempered-score Langevin (score scaled by sigma^alpha, 0<alpha<2, noise unchanged, inference time only) is the core method. Clearly observable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Conclusion); the order sigma^-2 geometry vs order-one density separation and the o(sigma^-2) vs o(1) tolerances are the results of Sections 3 and 4. Observable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Sec. 6); a uniform prior needs only o(sigma^-2) score accuracy, and the CFG variant tempers only the unconditional score. Observable.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (7.1). The Sec. 4 theorem (o(1) is needed, and an order-one error can give an arbitrary law) and the failures in the ellipse and App. 11.3 experiments support it. It is framed as the distribution-learning paradigm the paper argues against, not merely a baseline. Observable.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_theory"
+        },
+        "derniere_ligne": ""
+      },
+      "2510.02692v3": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement frames the problem with prior work (intractable marginal KL, trajectory KL issues, rejection sampling studied mainly for autoregressive models) and open questions. It does not name GRAFT, P-GRAFT or inverse noise correction, and gives no datasets, setup or results. Intermediate states and reward-free correction appear only as research questions. The classification is right: the paper has many lemmas and theorems, but most of its weight is in large experiments across four domains. All datasets are real public benchmarks; the model-generated fine-tuning samples are part of the method, not synthetic data. All 12 quotes match verbatim and support their targets, and each target fits its family. The 3000 GPU-hour estimate is reasoned from the reported iterations, sample counts and step counts, and is plausible.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "real_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Quote verbatim (Sec. 5.1); comparison with the unmodified base model is a generic baseline, also present for layouts and molecules; easy to check in a plan.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 5.1); the tuned DDPO baseline with KL and per-prompt advantage variants matches App. 11.3; a competitor baseline, not an ablation of the paper's method; checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (App. 11.4); cost accounting (samples, gradient calls, FLOPs) and the compute-matched K=1, M=4 comparison are reported; generic control; checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 5.1); supported by evaluation on the T2I-CompBench++ validation split and GenEval; checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 5.2); FID against the PubLayNet test set and molecule uniqueness (App. 12.3) support it; generic safeguard; checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 5.3); comparison with the pre-trained model at 100/200/1000 steps with FID on 50k samples and FLOPs supports it; generic for the reward-free correction question; checkable.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Intro); accurately describes P-GRAFT, with the hand-over to the reference model and the switching step as a bias-variance knob (Sec. 3, 3.1); checkable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Intro); describes GRAFT (Top-K of M, de-duplication) and its marginal-KL interpretation with reshaped reward (Lemma 3); the core practice is checkable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Intro); accurately describes inverse noise correction (backward Euler inversion, small noise-corrector flow, frozen pre-trained model; Sec. 4, 5.3); checkable.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 5.1); App. 11.3 shows DDPO variants collapse or give only modest gains on large prompt sets; a plausible main approach, not just a trivial baseline; checkable.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (App. 11.1.4); reverse stitching is significantly worse than P-GRAFT; 'near the end of sampling' is slightly imprecise (the example switches at 0.75N) but the gist is right; checkable.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (App. 12.3); fine-tuning on all stable molecules without de-duplication loses uniqueness; plausible naive main approach; checkable.",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2510.02779v4": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The problem statement keeps only background, prior work and the questions; the original phrase 'through refined Rademacher complexity analysis' is removed, and no method, experiment or result leaks. The classification is right: a theorem-and-proof paper with a small synthetic noisy 2-XOR check and no application domain. All 12 targets are grounded and observable. Only C1's quote fails a strict byte match, because the paper has a non-breaking space. The 0.1 GPU-hour estimate is a plausible upper bound for tiny two-layer, width-128 runs on Colab.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "synthetic_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Supported by Sec. 5 (noisy 2-XOR satisfies Assumption 3 with 1/gamma=O(d), so the bound becomes O(d^2/n)); a sound control for testing a margin-dependent rate. Caveat: the paper has a non-breaking space (U+00A0) after 'Assumption' where the quote has an ordinary space, so a strict byte-exact match fails; it matches after whitespace normalization.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Sec. 5, Settings); varying n at fixed d is a necessary sweep to check a 1/n rate.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Sec. 5, Settings); varying d (margin proxy, 1/gamma=O(d)) at fixed n=64 checks the 1/gamma^2 (d^2) dependence.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Sec. 5); population risk computed exactly over all 2^d points; a sound evaluation control for a 1/n-type rate.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Sec. 5, Settings): m=128, T=500, eta=0.1 fixed across both sweeps; generic confound control. The 'single rule' wording also covers the theorem's eta*T ~ n scaling.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote from Remark 6 (Comparison); the quote directly supports only the lower-bound part, but every listed prior bound is compared in Remark 6; comparing a derived rate with prior bounds and the lower bound is a baseline any plan for this theoretical problem needs.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Remark 1); the reference-model analysis (Theorem 1, reference = W(0) + (2 log T/gamma) W_*) is the paper's core optimization approach. 'Max-margin' slightly overstates: the paper uses any unit-norm NTK separator with margin gamma.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Introduction, contribution 2); matches the data-independent class W_1, the almost-linear network (Remark 2), Lemma 22 and the smooth-loss bound (Lemma 1) giving O~(L^4 F/n).",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Remark 3); covering of the sphere with only its logarithm paid (Lemma 16) gives O~(L^2)-Lipschitz behaviour near initialization; a key contribution of the paper.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Remark 3); the paper derives that recursive layer-wise perturbation bounds give C^L factors, i.e. exponential depth dependence; a plausible main approach for the Lipschitz/perturbation step.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Introduction); smooth-activation stability analyses do not apply to ReLU and give e^{O(L)} bounds and exponential width (Remark 6); clearly inferior per the paper, not a mere comparison baseline.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Sec. 2.2); global capacity-based bounds give 1/sqrt(n) and exponential depth dependence. Correctly separated from the paper's own localized Rademacher analysis (F2), though a plan must name its hypothesis class to tell S3 from F2.",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_theory"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2510.24709v2": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement keeps the introduction's background, prior work and research questions (emergence, form of the representation, learned versus architectural, functional use) without naming the probe, backbones, dataset or results, so no leak. Classification is right: a proposition with proof in the appendix makes it mostly_experiments; ADE20K plus a constructed toy image of duplicated cars makes it mostly_real; no application domain, so an empty list is reasonable. All 11 quotes match the paper verbatim and support their targets, which follow prompt T's family definitions. The ~100 RTX 4090 GPU-hour estimate is reasoned from the stated setup (frozen backbones, 16-epoch probes, seven ViTs, one GPU) and plausible.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "mostly_real",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Verbatim quote (appendix majority baseline; 72.6% also in Sec. 3.3). A chance level that reflects the strong 'different object' imbalance is a generic control for any same-object decoding plan; easy to check.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote. Distance-threshold, cosine, dot-product and query-key attention baselines on frozen features (only a scalar threshold or bias is fitted, so 'training-free' is slightly loose) are a generic control that the signal exceeds raw similarity or attention; checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote stating the class-level confound (Sec. 3.1); the class-only readout comparison and same-class or identical-duplicate cases are in Sec. 3.2 and the toy experiment. Generic confound control, checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote. Comparing ViT-L backbones trained with different objectives (DINOv2, CLIP, MAE, supervised) on a matched patch grid is what separates learned binding from architecture, a question the statement poses; checkable (a plan with only a randomly initialised network would match partly).",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote; graded shuffle, ground-truth injection, retrained segmentation heads and DINO loss are in Sec. 4.4 and the appendix. It intervenes on the model's representation, not on a component of the probe, so it is a valid control; bundles several specifics but the core is checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim abstract quote. Pairwise symmetric low-rank quadratic probe, 90.2% vs 72.6% majority, emerging from mid-layers, is the paper's core approach; clearly identifiable in a plan.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (PCA on residuals of identical cars, Sec. 4.2) plus the feature/binding decomposition of Sec. 4.1. Key finding, checkable as a plan step testing the dimensionality of a binding subspace.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote. Correlating layer-l same-object scores with layer-(l+1) attention (Sec. 4.3, appendix) is a key finding; checkable.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote. A linear probe is the default readout a plan could adopt as its main approach, and the paper reports it significantly outperformed by quadratic probes; checkable.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote. Pointwise identity readouts (and class readouts, 'Quadratic > object class probes') underperform pairwise comparison; a plausible main approach, not a mere baseline; checkable. Mild overlap with C3, which uses the class readout as a control.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote. The paper tests and rejects the specialized-dimensions hypothesis (full > diagonal quadratic probe), though the gap is not quantified in the text; a neuron or channel search as main approach is checkable.",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2512.00930v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement covers the setting, prior work, challenges and open questions without revealing the method, setup or results. Naming the joint-optimism challenge and the per-round vs cumulative regret gap primes F1, S1 and F2, but both are allowed as challenge or motivation. Classification is correct: a theory-heavy paper with small synthetic simulations and no application domain. All 11 quotes match the paper verbatim and support their targets; C3 to C5 are evaluation-protocol items rather than baselines but are reasonable. Compute: the experiments are CPU-only (Xeon Gold 6526Y, numpy/scipy, about 4 hours to 1 day per setting), so the reference should be 0 GPU-hours, as the evidence itself says. Prompt T reserves null for papers that give too little to estimate.",
+          "compute_plausible": false,
+          "data_type_correct": true,
+          "data_type_expected": "synthetic_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Quote verbatim (Sec. 6). MOGLM-UCB from Lu et al. in the linear setting is the paper's main prior-art baseline; method-independent and easy to check in a plan.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 6). The paper uses an epsilon-greedy baseline with epsilon = 0.05 that picks among Pareto-optimal arms; a simple sanity baseline, less of a must-have than C1 but acceptable and checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 3.3), and the experiments report per-objective cumulative rewards. It is a metric control rather than a baseline, but it is method-independent, needed given the stated limitation of Pareto regret, and checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 6). 10 instances per setting, with 1-sigma bars stated in the checklist; a standard replication control, checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 6). The appendix varies K, d and L; this is a sweep more than a strict control, but it is relevant because dependence on the number of objectives is a stated question. Checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 5.3). The description (M Gaussian samples per objective, max over samples, M logarithmic in L, constant joint-optimism probability, d^(3/2) sqrt(T) bound) matches eq. opt, Lemma opt and the main theorem. Core approach, checkable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 1). The effective Pareto front (dominance by convex combinations, weighted-sum maximizers per the theorem in Sec. 3.4) with a matching regret is the paper's second core contribution. Checkable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 5.2). The reduction to a weighted-sum regret under a random weight vector, followed by the saturated/unsaturated-arm argument, is the stated key analysis insight. Checkable when a plan states its proof strategy.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 5.3). Single-sample TS gets a bound exponential in L and is reported to do worse than the optimistic variant in the Sec. 6 ablation. A plausible main approach and checkable; the inferiority rests on an upper bound and an empirical claim with no numbers given.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 3.4). The toy example and argument show that uniform selection from the plain Pareto front can lose cumulative reward in every objective, with a gap that grows with T. Checkable.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 3.3, repeated in Sec. 6). The paper argues, without demonstrating it, that elimination-based Pareto-front identification cannot be applied in the contextual setting. Checkable, but the problem statement already discloses it, so it discriminates little.",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_theory"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2512.01199v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement is clean: it keeps background, prior-work gaps and challenges, and poses the transfer and data-versus-labels questions without revealing the method, datasets or results. The classification (experiments_only, real_only, neuroscience domains) is correct. All 12 targets are supported by the paper and observable. The C1 and C3 quotes match only up to a non-breaking space in the paper, so a strict exact-match check would fail on them. C6 is a metric safeguard. S2 rests on mixed evidence. F1 is in mild tension with S3. The 600 GPU-hour estimate (about 32 NuCLR runs at 12 H100 GPU-hours, plus POYO+ seeds and baselines) is plausible.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "real_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Baselines of both kinds (single-neuron NEMO/LOLCAT, population-summary NeuPRINT) are a generic, checkable control. Quote matches only after whitespace normalization: the paper has a non-breaking space (U+00A0) after NuCLR, so a strict byte-level exact match fails.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Capacity-matched no-population-context ablation (footnote 5, Section 3.5). Population context is the statement's central variable, so this is a generic control rather than a method-specific ablation; checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Inductive zero-shot held-out test follows from the statement's transfer question; well supported and checkable. Quote has an ordinary space where the paper has a non-breaking space after '(3)', so a strict exact match fails (matches after whitespace normalization).",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Subject/recording-level decoder splits against session-identity shortcuts; supported by the Allen VC rationale and the leave-one-subject-out protocol; generic and checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Nuisance-confound check (subject, session, probe) grounded in the UMAP appendix and the probe-clustering observation; generic and checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Macro F1 against class imbalance; quote exact. An evaluation safeguard more than a control, baseline or ablation in the strict sense, but any sound plan needs it given imbalanced classes; checkable.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Core finding that population context improves identity decoding; grounded and checkable. Minor imprecision: 'all simultaneously recorded neurons' overstates the per-insertion populations used for electrophysiology and is in mild tension with S3.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "The paper's core approach (temporal-view contrastive objective with within-population negatives, frozen encoder, linear probes); grounded and checkable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Key scaling finding, properly hedged ('can help more'); quote exact; checkable.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Single-neuron-only representations are clearly inferior in the ablation (0.72 to 0.55, 0.53 to 0.36) and in the single-neuron baselines; a plausible main approach; checkable.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Mixed evidence: significantly worse on Allen VC cell type, nearly comparable on IBL region, slower and less stable training; the paper leaves other spike tokenizations open. Acceptable for this specific implementation; checkable if the plan states its input tokenization.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Rests on a qualitative early-experiment observation without numbers; a population-definition design choice rather than a whole main approach, but a plan could adopt it; checkable when the plan states how populations are defined.",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "experiments_only"
+        },
+        "derniere_ligne": ""
+      },
+      "2512.02017v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "Statement keeps background, problem formulation, prior work and challenges; its challenge list hints at a pose-plus-correspondence geometric pipeline but does not reveal the epipolar-on-moving-points insight, the components, datasets, metrics or results, so no leak. Classification (mostly_experiments, mostly_real) is right and domains are reasonable. All 12 targets are grounded and observable; the quotes of C6, S1 and S3 match only after normalising the paper's non-breaking space (U+00A0) before the citation to a plain space, so a strict exact-match check would reject them unless whitespace is normalised or the quotes repaired. Compute (250 A6000 GPU-hours, estimated) is a reasoned extrapolation from the reported per-scene runtimes (3.3, 3.9, 4.2, 1.2 h on CMU Panoptic); plausible, though the number of sequences is unreported.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "mostly_real",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Quote verbatim (4.1). Evaluating predicted offsets against known offsets created by cropping synchronized recordings, in ms, is the evaluation any plan needs; easy to check in a proposal.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (4.1 Baselines). The three baselines and their strategies (photometric Sync-NeRF, metric-depth Chamfer Uni4D, MASt3R confidence) match the paper; generic comparison control, described well enough to check.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (4.3). Oracle upper bound with ground-truth poses, segmentation and correspondences is in the paper; phrased generically for any method relying on estimated inputs; checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (4.1). Diversity of camera motion, environment, real vs synthetic and human vs non-human motion matches the four datasets and the statement's no-people-assumption goal; checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (4.3). Mixed frame rates (5-30 fps) and 30 to 15 fps downsampling are both tested in the paper; generic robustness control; checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Albl-inspired baseline using only dynamic tracklets with RANSAC inlier count is in 4.3 and represents classical geometric sync; checkable. Quote is verbatim except that the paper has a non-breaking space (U+00A0) before [@albl2017two], so a strict byte-exact match fails.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim from the abstract (including the U+2011 hyphen). Core insight; Sampson best per the paper's own claim (symmetric epipolar has a lower median in the ablation, minor). Checkable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Introduction), the stated key contribution; components (VGGT, segmentation, CoTracker3, MASt3R keyframe matching) match Stage 0 and the appendix; checkable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (4.3). Pairwise exhaustive search, ambiguous-pair filtering and Huber IRLS fusion are in Sec. 3.2; degradation without filtering (371.4/111.5 ms) or with plain LS (205.9/118.0 ms) is supported; checkable.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Figures match Tables 1-2 (919.5, 1138.9 ms; A@100 3.0, 0.0) and the appendix remark on UDBD; a plausible main approach the paper shows to fail. Quote verbatim except a non-breaking space before [@kim2024sync] in the paper (strict exact match fails).",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Quote is an exact table row (1656.5/1544.8 ms vs 122.1/46.6 ms for the full method); its meaning relies on the adjacent 4.3 text. Classical dynamic-only epipolar fitting is a plausible main approach and is clearly inferior; checkable.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Figures match Table 1 (mean ratios about 3.7 to 14; 1600.1 ms on 3D-POP; GT poses used) and the noisy-landscape remark; clearly inferior on per-video metrics, though best on CMU Panoptic pairwise AUC (unmentioned). Quote verbatim except a non-breaking space before [@naik20233d].",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": ""
+      },
+      "2512.11131v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "Statement is clean: background, prior work, the formal problem and open questions only; it does not reveal the auxiliary-variable/mirror-descent method, the (R, delta) benchmark, the data or any result (the wording 'even without switching costs' and 'if such guarantees are out of reach' is suggestive but stays interrogative). Classification is correct: a proof-heavy paper with one trace-driven simulation on real Azure and WattTime data. All 12 quotes match the paper verbatim. C6 is a reporting requirement rather than a control; S2 and S3 duplicate the comparison baselines C2 and C3 and fall under prompt T's exclusion. Compute: CPU-only laptop runs (about 1 s per 72-slot run, about 1,746 runs) make the 0.5 hour equivalent plausible.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "mostly_real",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Quote verbatim (baseline list, Appendix 10.1); the hindsight offline optimum of the full objective is a method-agnostic benchmark any plan needs; easy to check in a plan.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim; a fairness-blind smoothed online baseline (ROBD) is a needed comparison to isolate the value of handling fairness; checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim; a switching-blind fair online allocation baseline (DMD) is a needed comparison to isolate the value of handling smoothness; checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim; the greedy hitting-cost minimizer (HITMIN) is a simple method-agnostic baseline; checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim; the paper varies the fairness weight u3 (1.75, 3.5, 7, i.e. halved and doubled) and three learning rates; a generic sensitivity check, not an ablation of a method-specific component.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim and the tables do report each cost component, but a per-component cost breakdown is a metric/reporting requirement, not a control, baseline or ablation as prompt T defines controls.",
+              "grounded": false,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim; accurately summarizes the core method (auxiliary variable, online multiplier update by mirror descent, balanced action step with weighted switching cost); clearly checkable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim; the (R, delta)-constrained benchmark with an asymptotic competitive ratio is a key contribution; checkable in a plan's analysis.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Section 5.2); the intermediate-benchmark proof technique is a stated technical contribution, described accurately; fine-grained but checkable when a plan describes its analysis.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim; Theorems 2-3 prove the unconstrained dynamic target impossible even without switching cost; a plan could adopt this aim, so it is a valid sterile direction; checkable.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Quote and numbers (111.85 and 298.64 vs FairOBD 41-53 and 237-248) are correct, but ROBD is only a comparison baseline in the paper (already C2) and a fairness-blind algorithm is not a plausible main approach; excluded by prompt T's sterile definition.",
+              "grounded": false,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Quote and numbers (93.53 and 317.15) are correct, but DMD is only a comparison baseline in the paper (already C3) and ignoring the switching cost is not a plausible main approach; excluded by prompt T's sterile definition.",
+              "grounded": false,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_theory"
+        },
+        "derniere_ligne": ""
+      },
+      "2602.00987v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement poses the question of non-stationary random features with guarantees, without revealing wavelets, data or results. The classification fits: substantial benchmarks with standard supporting theory, and one synthetic task among real datasets (TIMIT, UCI, Protein). All 12 quotes match exactly. S1 lists the stationary comparison baselines as a sterile direction, which the definition excludes. The compute estimate of about 130 GPU-hours, anchored on the Protein times in minutes on one A40 with 5 runs, is plausible in order of magnitude.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "mostly_real",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Exact quote (5.2); an RFF-GP baseline at matched feature count D is a generic control for any random-feature plan; easy to check in a proposal.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote from the Baselines paragraph; exact GP when feasible plus SVGP are standard reference baselines; checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; deep GP, spectral mixture, DRF, IDD-GP, A-RKHS (and NS-GP in the appendix) are compared on accuracy and time; generic and checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (5.1); a synthetic multi-step function where stationary GPs fail acts as a positive control with known structure; checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (appendix 9.1, which also compares with RFF across D); a sweep over D is generic to random-feature methods, not an RWF-specific ablation; checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Table 1 caption); an evaluation-protocol control (NLL/CRPS, timing, repeated runs) rather than a baseline, but needed given the statement's focus on uncertainty and cost; checkable.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (introduction); this is the core RWF construction (wavelet atoms at random scales and shifts), with details supported in 3.1 and the appendix; clearly checkable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (3.1); kernel as an integral of feature products giving positive definiteness and unbiasedness, plus the variance bound and uniform convergence (Section 4); checkable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (3.3); closed-form Bayesian linear regression posterior, and RWF has the lowest training time in all tables; checkable, though close to standard RFF-GP practice.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Quote exact and stationary models are far worse in the tables, but exact GP, SVGP and RFF are the paper's comparison baselines (also C1/C2), and the statement itself rules out stationary kernels, so this is not a plausible main approach; it does not fit the sterile definition.",
+              "grounded": false,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (5.1); deep GPs and deep random features are a plausible main route to non-stationarity and are slower and less accurate than RWF in all three tables; checkable.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (5.3); spectral mixture kernels are a plausible main route, yet trail RWF and the other non-stationary models on Protein and the synthetic task, and are slowest on Protein; checkable.",
+              "grounded": true,
+              "id": "S3",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2603.00054v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The problem statement does not leak. It covers homogenization, the indiscriminate load-balancing loss and earlier remedies, and its questions point only to a training objective that complements load balancing; it names no domain labels, divergence loss, setup or result. The classification is correct. The domains are acceptable, although an empty list would also be defensible for a generic pre-training paper, and no dedicated math benchmark is run. All eleven quotes match the paper exactly. The controls, F1 to F3 and S1 hold. S2 rests on a passing remark with no numbers. The estimate of about 30,000 GPU-hours follows from roughly 1.5e22 training FLOPs for the listed runs on 80 GB GPUs and is plausible within a factor of about two.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "real_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Exact quote (4.2). The comparison against standard MoE training with the language-modeling and load-balancing losses under identical settings underlies every result in the paper. It is a control that does not depend on the method.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (4.1). Three model sizes are trained, and benchmark gains for the 3-class scheme are reported only at 8B and 15B, so comparing at several scales is a control any plan needs.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Appendix 14). The standard deviation across checkpoints is used to judge whether a gain of about one point is real. This noise control applies to any method.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (4.3). The analysis shuffles router rows and measures the per-layer perplexity increase, and draws per-domain activation maps, both against the baseline. Measuring homogenization directly is needed for this problem whatever the method.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (4.4). Training throughput and inference throughput, including inference on domain-specific data, are measured against the baseline. The problem statement explicitly raises efficiency.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Appendix 16). On 8B-A0.8B, the ERNIE 4.5 orthogonality loss is run alone and combined with the method. Using an earlier remedy that changes the training objective as a baseline does not depend on the method.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Introduction). This is the paper's core method: a label-driven pairwise Jensen-Shannon divergence between domain-averaged routing distributions, added on top of load balancing.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (4.2, opening of part 2). The 49 topic classes beat the 3 source classes at all three sizes, and Appendices 14 and 18 report the same.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (4.2). The paper names this as a key observation, but only three sizes back it, and a plan that satisfies C2 will largely satisfy this target too.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Appendix 17). Treating each document as its own class scores 34.88 against 35.12 for the baseline at 8B-A0.8B. The margin is small and comes from a single run, but the paper presents it as a failure, and it is a plausible label-free main approach.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "The quote is exact (Appendix 7), but it is a passing remark with no numbers. The same appendix argues that the sum of pairwise divergences is locally proportional to D_inter, so the paper does not show this variant failing or being clearly inferior. It is also only a different form of the paper's own loss, and a plan using it would also match F1.",
+              "grounded": false,
+              "id": "S2",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2603.11047v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement is clean: it gives prior-work limitations and goals only, with no method, data, evaluation or results. experiments_only is fine (no theorems or formal analysis). data_type should be synthetic: all training and evaluation inputs and targets are Blender renderings of 3D asset collections (Objaverse-XL, Toys4k, GSO) under synthetic lighting, with no real photographs; the rubric treats simulation as synthetic even for established benchmarks, so real_only is wrong (mostly_synthetic is arguable because GSO meshes are scans). The domains are acceptable. All 11 quotes match verbatim and support their targets. 82,176 H100 GPU-hours is the correct sum of the four reported runs and a plausible lower bound, since the ablation runs are not counted.",
+          "compute_plausible": true,
+          "data_type_correct": false,
+          "data_type_expected": "synthetic_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Quote verbatim (Sec. 4.1); the paper compares appearance reconstruction with competitor appearance latents (TRELLIS, 3DTopia-XL) using PSNR/SSIM/LPIPS on rendered random views; generic baseline, easy to check in a plan.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 4.1); Chamfer comparison against geometry-only latents is supported ('outperforms most geometry-only latent representations'); generic control, checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 8.2); spherical-harmonics degree 0 vs 3 and ray-removal ablations support it. It comes from method-specific ablations, but the target is phrased as a method-agnostic diffuse-only control, which fits a view-dependence problem; checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 4.2); FID/KID rendered at the conditioning pose vs TRELLIS under the same lighting is supported; checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 4.2); four novel views following the TRELLIS protocol, used to show overall quality does not degrade; checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 8); three lighting conditions, including TRELLIS's lighting, are supported by Sec. 4.1; checkable.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Abstract); this is the core approach (point, view direction and color samples from RGB-D renders encoded into tokens); checkable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 8.2). It is stated as a hypothesis, but the ray-removal ablation (rows 1-6 vs 1-7) corroborates it; the degree-3 spherical-harmonics decoder is a core design choice; checkable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 3.5); the frame rotation to the input camera and single-stage generation (Sec. 3.4) are supported, with input-view FID/KID gains over TRELLIS; checkable.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 8.2); with degree-0 harmonics, adding rays gives no gain. This is an ablation setting, but it is a plausible naive main approach and the counterpart of F2; checkable.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Quote verbatim (Sec. 3.5); Sec. 9 adds that intrinsics seem unnecessary. It was tested on top of the frame rotation and the text does not give the size of the drop, so the inferiority is moderate; checkable.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "experiments_only"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2604.05112v1": {
+        "anomalies": [],
+        "avis": {
+          "comment": "Statement poses the problem (scaling DPT, action-distribution modelling, adaptation with and without demonstrations) without naming flow matching, datasets, baselines or results. Classification is right: no theory, all RL in simulators. All quotes are verbatim; controls and fruitful directions are grounded and observable (C6 borderline); S2 rests on cited prior work, not on this paper's evidence. Null compute is defensible: no steps, epochs or training duration are reported.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "synthetic_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Verbatim quote (Sec 3.1). 46 held-out tasks excluded from training, including MuJoCo parameter shifts, reported apart from training tasks. Generic, necessary control; checkable in a plan.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (Sec 4.1). Vintix is cross-domain AD (matched-size rerun in appendix), REGENT is a retrieval-augmented generalist compared offline only. Generic baseline requirement; checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (Sec 3.4). Online cold-start and offline prompted evaluation on training and held-out tasks is supported and required by the stated questions. 'Every model' overstates slightly (REGENT compared offline only).",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (Sec 4.4). Prompt-size ablation (500 to 4000 transitions) on unseen tasks; generic to any in-context learner; checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (appendix). Matched single-domain vs 10-domain comparison; tests the multi-domain premise of the problem rather than a method-specific part; checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (appendix). Gaussian vs flow-matching head at matched settings. Borderline since it ablates the paper's own head, but the statement poses action-distribution modelling, so a Gaussian-head baseline is generic; checkable.",
+              "grounded": true,
+              "id": "C6",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (Sec 3). Core approach: DPT-style in-context learner with rectified-flow action head; details match Secs 3.2 to 3.4; checkable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (appendix). Shared backbone with group-specific encoders/decoders (Sec 3.2) and the paper's claimed gain over separate models; checkable.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim partial-sentence quote (Sec 3.1). Noise-distilled data collection plus relabeling with demonstrator actions is part of the approach (inherited from prior work, not ablated); acceptable; checkable.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Verbatim quote (appendix comparison table). Matched-size cross-domain AD is clearly worse on several test domains and is a plausible main approach. 'Especially when prompted' is not clearly supported (gaps are similar in both regimes).",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Quote is verbatim, but the paper explicitly leaves JAT out and only cites prior work for its inferiority to Vintix; the paper does not itself show it, so the target fails the sterile-direction definition.",
+              "grounded": false,
+              "id": "S2",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "experiments_only"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      },
+      "2605.29097v2": {
+        "anomalies": [],
+        "avis": {
+          "comment": "The statement keeps background, prior-work gaps and the three challenges without naming the matched filter, the SDF/reflectivity networks, lensless sampling or alpha blending, loss masking, the setup or results: no leak. Classification is right (method paper with appendix proofs; only its own real radar scans); domains are reasonable. All ten quotes match the paper exactly. C2 and C5 are evaluation requirements rather than strict controls; S2 rests on argument plus a qualitative figure. The compute estimate (about 28 per-object runs of 32 H100 hours, about 900 GPU-hours) is plausible.",
+          "compute_plausible": true,
+          "data_type_correct": true,
+          "data_type_expected": "real_only",
+          "domains_reasonable": true,
+          "leak_passages": [],
+          "statement_leaks": false,
+          "targets": [
+            {
+              "comment": "Exact quote (Experiments, Comparison to Baseline). Conventional matched-filter imaging summed over all views, thresholded and Poisson-meshed, is the standard method-agnostic baseline for near-field radar; easy to check in a plan.",
+              "grounded": true,
+              "id": "C1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Dataset & Implementation). Independent camera/LiDAR ground truth, with alignment and Chamfer/F1 scoring supported by the appendix metric section; an evaluation reference rather than a baseline, but method-agnostic and needed by any plan; checkable.",
+              "grounded": true,
+              "id": "C2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote. Line-of-sight versus occluded (box, paper sheet) conditions, several objects in both, reported separately in the table; acts as the control condition for the occluder effect; checkable.",
+              "grounded": true,
+              "id": "C3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (ablation on the number of scanning planes, uniform subsets of 104 planes). A coverage ablation on the measurements, not on a component of the paper's method; checkable.",
+              "grounded": true,
+              "id": "C4",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Related Work). The paper argues simulated-only evaluation is insufficient for wireless signals and evaluates only on real radar scans; more an evaluation-data requirement than a strict control and largely implied by the statement, but method-agnostic and checkable.",
+              "grounded": true,
+              "id": "C5",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote; supports that the paper's analysis-by-synthesis pipeline (SDF and reflectivity MLPs, physics-based RF rendering, differentiable matched filter, heatmap L2 loss) beats the matched-filter baseline in F1 and Chamfer distance, in line of sight and in the box. Core approach; observable.",
+              "grounded": true,
+              "id": "F1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (ablation on dynamic loss masking): without masking, weak returns are read as low density and artifacts appear. Key finding; a plan's loss design shows whether it handles this ambiguity.",
+              "grounded": true,
+              "id": "F2",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote: training is infeasible without lensless sampling; the memory bank is supported in the same paragraph. Core contribution; a plan's rendering strategy shows whether it shares computation across antennas.",
+              "grounded": true,
+              "id": "F3",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote: brute-force per-antenna Monte Carlo rendering took over an hour per forward pass and makes backpropagation infeasible; memory is also infeasible without lensless sampling. A plausible naive main approach; observable.",
+              "grounded": true,
+              "id": "S1",
+              "observable": true
+            },
+            {
+              "comment": "Exact quote (Introduction, sentence on beamforming for large-scale scenes). Inferiority is argued with citations and illustrated qualitatively (beamforming vs matched-filter heatmap in the appendix), not tested by reconstruction experiments; acceptable. Observable through the plan's imaging model and supervision.",
+              "grounded": true,
+              "id": "S2",
+              "observable": true
+            }
+          ],
+          "theory_experiment_correct": true,
+          "theory_experiment_expected": "mostly_experiments"
+        },
+        "derniere_ligne": "OK: 0 error(s)"
+      }
+    }
+  },
+  "run_id": "20261007-082440-t05-extraction"
+}

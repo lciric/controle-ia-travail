@@ -1,0 +1,11 @@
+BASSIN_MATH: Torsion-Reidemeister-Conley-Massey-AtiyahSinger (TRCM-AS)
+LOI_PROPOSEE: L'essaim minimise la torsion de Reidemeister-Ray-Singer sur les sous-complexes de Morse-Conley à indice d'Atiyah-Singer non nul, ne déclenchant d'inférence LLM qu'aux singularités où le triple produit de Massey $\langle [\alpha], [\beta], [\gamma] \rangle$ s'annule avec indétermination minimale.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** :
+Le graphe de citations + code GitHub forme un complexe cellulaire filtré $K_\epsilon$. Le classifieur gratuit `jev-1.14.0` évalue un champ de vecteurs discret $V$ (gradient de compatibilité méthodologique) sur $K_\epsilon$, partitionnant le graphe en ensembles isolés invariants via l'**indice de Conley** $CH_*(S)$ et la matrice de connexion de Franzosa $\Delta^{Conley}$. L'essaim localise les obstructions d'ordre supérieur via le **triple produit de Massey** $\langle [u], [v], [w] \rangle \in H^2(K)/ (u \smile H^1 + H^1 \smile w)$, qui détecte des liens borroméens (trois silos deux à deux disjoints mais globalement couplés). La densité des ponts latents est gouvernée par la **torsion analytique de Ray-Singer** $\ln T_{RS}(K, \rho) = \frac{1}{2} \sum_{q=0}^D (-1)^q q \zeta'_{\Delta_q}(0)$, où $\zeta_{\Delta_q}(s)$ est la fonction zêta spectrale du Laplacien combinatoire $\Delta_q$. L'allocation budgétaire (20\$ Gemini pour tri d'abstracts aux cols de Morse ; 100\$ Claude pour synthèse causale) n'est débloquée sur une arête candidate $e$ que si sa chirurgie cellulaire induit un saut de torsion $\Delta \ln T_{RS}(e) > \tau$ couplé à une asymétrie spectrale d'Atiyah-Patodi-Singer $\eta(D_K) \neq 0$ (excès de preuves empiriques sur les tautologies).
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(e_{AB}) = \frac{\left| \ln T_{RS}(K \cup e_{AB}) - \ln T_{RS}(K) \right|}{\text{Indet}\langle [u_A], [v_{pont}], [w_B] \rangle + \epsilon} \times \det\nolimits^*(\Delta_1^{H_A \perp H_B}) \times \mathbb{I}\left(\text{Ind}_{AS}(D_{AB}) \neq 0\right)$$
+Où $\text{Indet}\langle \cdot \rangle$ pénalise le vernis verbal (cohomologie triviale au premier ordre), et $\det^*(\Delta_1^{H_A \perp H_B})$ mesure le volume spectral d'orthogonalité causale évalué hors-poids par `jev-1.14.0`.
+
+3. **Pont inédit et duel ($H_A \perp H_

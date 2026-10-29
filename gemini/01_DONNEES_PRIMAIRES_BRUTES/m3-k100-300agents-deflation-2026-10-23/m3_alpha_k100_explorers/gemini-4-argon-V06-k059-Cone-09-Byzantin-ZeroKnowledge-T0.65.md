@@ -1,0 +1,10 @@
+BASSIN_MATH: Nova-Folding-KingRabin-Equivocation-Swarm (NFKRES)
+LOI_PROPOSEE: L'essaim auto-organise l'extraction de ponts causaux en pliant récursivement des instances R1CS détendues (Nova) sous protocole à monnaie partagée de King-Rabin, pénalisant toute équivocation sémantique (collusion inter-modèles) par destruction de mise budgétaire via l'oracle `jev-1.14.0`.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids (NFKRES)** :
+Le graphe de citations $G=(V,E)$ est exploré gratuitement en amont : `jev-1.14.0` pré-calcule une matrice de couplage creuse $M \in \mathbb{F}_p^{|V|\times|V|}$ définissant une relation R1CS détendue $(A z) \circ (B z) = u \cdot (C z) + E_{err}$, où $z$ encode un chemin inter-silos.
+- **Échantillonnage King-Rabin (20$ Gemini)** : Des sous-essaims légers (Gemini Flash) opèrent en comités polylogarithmiques. Une graine commune $r \leftarrow \text{jev-1.14.0}(\text{hash}(G))$ force les agents à soumettre simultanément des témoins partiels $w_i$ sans communication préalable, empêchant la collusion adaptative.
+- **Pliage Nova & Détection d'Équivocation (0$ `jev-1.14.0` / 100$ Claude)** : Deux hypothèses candidates $(z_1, E_1)$ et $(z_2, E_2)$ sont pliées en $z_{fold} = z_1 + \rho z_2$ avec le terme croisé $T = A z_1 \circ B z_2 + A z_2 \circ B z_1 - u_1 C z_2 - u_2 C z_1$ évalué gratuitement par `jev-1.14.0`. Si un agent (ou une chimère Claude/Gemini) signe deux vecteurs d'erreur $E_{err}$ contradictoires sur le même sous-graphe (faute d'équivocation / vernis complaisant), son budget d'API $b_i(t)$ subit une coupe franche : $b_i(t+1) = b_i(t) \cdot \mathbb{I}(\|T - \hat{T}_{jev}\|_0 = 0)$. Les 100$ Claude sont exclusivement alloués aux nœuds survivants ayant maintenu $u \to 1$ et $E_{err} \to 0$ sur plus de $k$ pliages récursifs.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(z_{fold}) = d_{\text{eff}}(V_A, V_B; G) \cdot \exp\left(-\lambda \|E_{err}\|_{jev}\right) \cdot \min_{\pi \in \Pi_{KR}} \text{JS}\left(\mathbb{P}_{jev}(Y \mid do(H_A), \pi) \,\|\, \mathbb{P

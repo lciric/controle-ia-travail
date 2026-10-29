@@ -1,0 +1,17 @@
+BASSIN_MATH: RedQueen-Replicator-Elites
+LOI_PROPOSEE: $\Delta \bar{z} = \frac{1}{\bar{w}}\text{Cov}(w_i, z_i) + \frac{1}{\bar{w}}\mathbb{E}[w_i \Delta z_i] \quad \text{avec} \quad x_i^{(t+1)} = \sum_j x_j^{(t)} \frac{w_j^{(t)}}{\bar{w}^{(t)}} Q_{ji}$
+
+1. **Mécanisme d'Auto-Organisation (Essaim + Collisionneur Adaptatif)** :
+L'architecture modélise la division des tâches selon l'équation de Price (référence à vérifier) et la dynamique réplicateur-mutateur (référence à vérifier). La population d'instructions est structurée par une grille MAP-Elites (référence à vérifier) indexée par deux descripteurs phénotypiques : la densité de citations vérifiées par les API bibliographiques ($d_1$) et la divergence inter-familles ($d_2$). Chaque cellule maintient un sous-essaim de taille $k_t \in [2, 6]$ (`illustratif`). Pour vaincre la corrélation des erreurs (`H4'`), le système applique une co-évolution antagoniste hôte-parasite (hypothèse de la Reine Rouge, référence à vérifier) : les hôtes génératifs (`claude-fable-5-1`, `claude-opus-5-5`, budget 100 USD) sont systématiquement routés vers des parasites prédateurs d'une autre espèce (`gemini-4-argon`, budget 20 USD) chargés de réfuter leurs preuves. La matrice de mutation topologique $Q_{ji}$ ajuste l'allocation budgétaire sans réentraîner les poids. Pour contrer la dérive de consigne (`H9`), le terme de transmission $\mathbb{E}[w_i \Delta z_i]$ pénalise l'écart sémantique au prompt initial via `jev-1.14.0`. L'horizon $T$ s'arrête dynamiquement lorsque la covariance sélective $\text{Cov}(w_i, z_i) < 0.02$ (`illustratif`) ou à l'épuisement des budgets (100 USD / 20 USD).
+
+2. **Fonction Objectif & Anti-Goodhart** :
+La fitness $w_i$ d'un sous-essaim $i$ évite la loi de Goodhart (référence à vérifier) et la récitation paramétrique en couplant `jev-1.14.0` ($J_i$), la réfutation prédatrice inter-espèces ($R_i \in [0,1]$) et la nouveauté épistémique ($N_i$, proportion de nœuds d'API bibliographiques hors-mémoire) :
+$$w_i = \frac{J_i \cdot (1 - R_i) \cdot N_i}{c_i} \cdot \Theta(L_i - L_{\min}) \cdot \left(1 - \max_{m \in \text{Archive}} \text{Sim}_{\text{jev}}(i, m)\right)$$
+où $c_i$ est le coût en USD consommé, $\Theta(L_i - L_{\min})$ la fonction de Heaviside annulant le score des sorties vides sous le seuil $L_{\min} = 150$ mots (`illustratif`), et $\text{Sim}_{\text{jev}}$ l'anti-gabarit pénalisant le mimétisme lexical dans l'archive MAP-Elites.
+
+3. **Duel Décisif de Validation M3 ($H_A \perp H_B$)** :
+Protocole à budget constant fixé à 10 USD Claude et 2 USD Gemini (`illustratif`). 
+- Contrôle négatif ($H_B$, topologie statique monoculture) : $T=3$ tours fixes (`illustratif`), $k_t=4$ agents (`illustratif`) sans prédation inter-espèces ni grille MAP-Elites ($Q_{ji} = I$).
+- Hypothèse testée ($H_A$, auto-organisation RedQueen-Replicator-Elites) : routage prédateur inter-espèces actif, $T$ et $k_t$ adaptatifs gouvernés par $\text{Cov}(w_i, z_i)$.
+- Observable unique $O$ : taux de survie des synthèses produites face à un audit d'invalidation factuelle sur le graphe Crossref/arXiv couplé au filtre anti-gabarit `jev-1.14.0`.
+- Intervalles disjoints de décision : validation de $H_B$ si $O \in I_B = [0.00, 0.35]$ (`illustratif`) ; validation de $H_A$ si $O \in I_A = [0.50, 1.00]$ (`illustratif`), garantissant $I_A \cap I_B = \emptyset$. L'auto-organisation est validée si et seulement si l'essaim atteint l'intervalle $I_A$ sans dépasser l'enveloppe budgétaire allouée. FIN-EXPLORATEUR-M3

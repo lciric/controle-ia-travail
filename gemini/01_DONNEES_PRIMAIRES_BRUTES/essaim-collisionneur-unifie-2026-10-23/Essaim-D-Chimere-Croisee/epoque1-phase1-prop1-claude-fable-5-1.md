@@ -1,0 +1,8 @@
+`BASSIN_MATH: Koopman-DMD à noyau sur la trajectoire inter-couches de $S_{\text{TD}}$`
+
+**1. Complémentarité de préconditions**
+Verrou P3 : les sondes linéaires sont au plancher sur le saboteur instruit $(i\text{-}a)$, et E1 montre que la direction linéaire capture la *lecture* de l'instruction, pas l'*acte*. Hypothèse du silo : l'acte de sabotage est un changement de **dynamique** (non linéaire) de la trajectoire d'activations à travers les couches, invisible dans un instantané $h_\ell$ mais visible dans le **spectre** de l'opérateur de transition. L'opérateur de Koopman à noyau (Williams et al., 2015, EDMD ; Brunton et al., 2022, (référence à vérifier)) linéarise une dynamique non linéaire dans un espace relevé ; ses valeurs propres sont des invariants de régime. Précondition croisée avec le socle 4 : restreindre l'opérateur au sous-système TD parcimonieux (Value Neurons couches 2–5, Dopamine Neurons 5–22), car c'est là que l'erreur TD « sabotage réussi vs échec » devrait moduler la dynamique.
+
+**2. Compilation tensorielle (Llama-3.1-8B-Instruct)**
+Pour chaque token $t$ de la réponse (ou du canal $m_{1\to2}$), $z_{\ell,t} = h_{\ell,t}[S_{\text{TD}}] \in \mathbb{R}^{d_S}$, $d_S < 1\%\cdot 4096$. Relèvement par caractéristiques de Fourier aléatoires $\phi: \mathbb{R}^{d_S}\to\mathbb{R}^{D}$, $D=512$ (illustratif). Opérateur de Koopman couche-à-couche :
+$$\hat K = \arg\min_K \sum_{\ell=2}^{21}\sum_t \|\phi(z_{\ell+1,t}) -

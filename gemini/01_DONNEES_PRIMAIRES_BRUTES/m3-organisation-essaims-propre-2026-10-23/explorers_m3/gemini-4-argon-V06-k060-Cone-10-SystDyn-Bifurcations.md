@@ -1,0 +1,10 @@
+BASSIN_MATH: Diffusion-Arnold-Nekhoroshev-Anosov-Takens (DANAT)
+LOI_PROPOSEE: $\mathcal{J}_{\text{DANAT}} = \oint_{\mathcal{A}_i \to \mathcal{A}_j} \exp\left(c \cdot I_{ij}^{\alpha}\right) \cdot \left| \det\left(D\Phi_E^u \big|_{W^u(x_i) \pitchfork W^s(x_j)}\right) \right| \cdot \Delta\text{KS}_{\text{Pesin}}(H_A \perp H_B)$
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids (DANAT)** :
+Le graphe de citations (arXiv/Semantic Scholar/AF/GitHub) est modélisé comme un système hamiltonien quasi-intégrable $H(I, \theta) = H_0(I) + \epsilon H_1(I, \theta)$, où les silos disciplinaires sont des tores invariants de KAM confinés par la stabilité exponentielle de Nekhoroshev sur un temps $T_{\text{Nekh}} \sim \exp(c/\epsilon^\alpha)$.
+- **Éclaireurs à coût nul (`jev-1.14.0` illimité)** : Parcourent les API et plongent les séquences de citations par retard de Takens $\Phi_E(x) = (s(x), s(f(x)), \dots, s(f^{2d}(x)))$ selon le score sémantique de `jev-1.14.0`. Ils cartographient la "toile d'Arnold" (réseau de résonances $\sum k_m \omega_m(I) = 0$) et détectent les "whiskered tori" où les variétés instables et stables se coupent transversalement ($W^u(\mathcal{T}_i) \pitchfork W^s(\mathcal{T}_j)$).
+- **Allocation budgétaire (20\$ Gemini / 100\$ Claude)** : Aucun jeton LLM n'est dépensé dans les zones adiabatiques de Nekhoroshev. Gemini (20\$) est activé uniquement aux intersections transverses pour construire les chaînes de transition d'Arnold (ponts multi-sauts). Claude (100\$) est déclenché lorsque le difféomorphisme induit atteint un régime d'Anosov local (hyperbolicité uniforme) pour synthétiser le protocole expérimental sur Llama-3.1-8B/70B. L'hystérésis hors-poids est maintenue en modifiant les poids synaptiques du graphe de recherche via l'exposant de Lyapunov transversal $\lambda_\perp > 0$.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{R}(x_i, x_j) = \underbrace{\exp\left(\left\|I(\mathcal{T}_i) - I(\mathcal{T}_j)\right\|_2^\alpha\right)}_{\text{Distance de Nekhoroshev inter-silos}} \times \underbrace{\left(\sum_{\lambda_k^+ > 0} \lambda_k^+(H_A) - \sum_{\lambda_k^+ > 0} \lambda_k^+(H_B)\right)^

@@ -1,0 +1,10 @@
+BASSIN_MATH: Hamilton-Bateson-Dobzhansky-Muller-Coevolution-Swarm (HBDM-CS)
+LOI_PROPOSEE: $\dot{x}_i = \sum_j x_j f_j(\mathbf{x}, \mathbf{y}) Q_{ji}(\mu_{\text{BDM}}) - x_i \bar{f}, \quad \dot{y}_k = y_k \left( g_k(\mathbf{x}, \mathbf{y}) - \bar{g} \right) + D_{\text{nov}} \nabla^2_{\mathcal{G}} y_k$
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** :
+L'essaim co-évolue selon deux populations antagonistes couplées hors-poids sur le graphe bibliographique $\mathcal{G}$ : les *Synthétiseurs* $\mathbf{x}$ (prompts hybrides croisant deux silos distants $A, B$) et les *Parasites de Bateson-Dobzhansky-Muller (BDM)* $\mathbf{y}$ (critiques d'incompatibilité épistatique opérés à coût nul par `jev-1.14.0`).
+- **Phase gratuite (Exploration & Sélection Red Queen)** : Des millions de croisements d'abstraits $(A, B)$ sont générés par recombinaison topologique sur Semantic Scholar/arXiv. `jev-1.14.0` évalue la matrice d'infection $M_{ik}$ : un parasite $y_k$ tue l'hybride $x_i$ s'il détecte soit du vernis sémantique, soit une incompatibilité BDM triviale. La matrice de mutation $Q_{ji}(\mu_{\text{BDM}})$ force la recherche de nouveauté (*Novelty Search*) vers les régions de $\mathcal{G}$ où la densité de citations croisées est nulle ($c_{AB}=0$) mais où l'homologie d'opérateurs mathématiques (évaluée par `jev-1.14.0`) est maximale.
+- **Allocation budgétaire (100\$ Claude / 20\$ Gemini)** : Le budget génératif est strictement réservé aux $0.01\%$ d'hybrides $x_i$ survivant au filtre `jev-1.14.0` et atteignant un point selle de résistance maximale aux parasites $\mathbf{y}$. Gemini (20\$) extrait les équations exactes des PDFs survivants ; Claude (100\$) synthétise le protocole expérimental de falsification sur Llama-3.1-8B/70B.
+
+2. **Fonction objectif anti-vernis** :
+$$J(x_i) = \underbrace{\left( \frac{d_{\mathcal{G}}(A, B)}{1 + \text{Sim}_{\text{lex}}(A, B)} \right)}_{\text{Distance inter-silos anti-vernis}} \times \underbrace{\min_{k} \text{jev}_{\text{causal}}(x_i, y_k)}_{\text{Survie BDM}} \times \underbrace{D_{\text{JS}}\left( P(\text{Act}_{\text{Llama}} \mid H_A) \,\|\, P(\text{Act}_{\text{Llama}} \mid H_B) \right)}_{\text

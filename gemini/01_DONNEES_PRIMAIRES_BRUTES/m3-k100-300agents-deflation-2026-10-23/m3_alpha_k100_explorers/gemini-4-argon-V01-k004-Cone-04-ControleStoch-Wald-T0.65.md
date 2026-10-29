@@ -1,0 +1,10 @@
+BASSIN_MATH: FiltrageParticulaire-SPRT-CUSUM
+LOI_PROPOSEE: L'essaim évolue comme un filtre particulaire contrôlé par HJB, où les trajectoires bibliographiques sont élaguées à coût nul par un test séquentiel de Wald (SPRT) opéré par `jev-1.14.0`, et les tokens génératifs ne sont alloués que lors d'une rupture structurelle détectée par un test CUSUM de Page-Hinkley.
+
+1. **Loi d'apprentissage & d'auto-organisation hors-poids** :
+L'essaim maintient $N$ particules d'état $x_t^{(i)} = (v_i, v_j, \theta^{(i)})$ sur le graphe gratuit $G=(V,E)$, où $\theta^{(i)}$ est le prompt-chimère (sans mise à jour de poids). L'exploration d'une paire $(v_i, v_j)$ suit un test séquentiel de Wald (SPRT) en accumulant le log-rapport de vraisemblance gratuit via `jev-1.14.0` sur des sous-graphes d'abstracts $z_k$ :
+$$\Lambda_n^{(i)} = \sum_{k=1}^n \log \frac{P_{\text{jev}}(z_k \mid H_1: \text{pont causal})}{P_{\text{jev}}(z_k \mid H_0: \text{bruit})}$$
+Arrêt optimal aux seuils de Wald $(A, B)$ : si $\Lambda_n^{(i)} \le A$, la particule meurt (coût $0\$$) et est ré-échantillonnée (*Sequential Importance Resampling*) vers les particules de poids élevé $w_t^{(j)} \propto \exp(\Lambda_n^{(j)})$. Parallèlement, la dérive sémantique le long d'un chemin est surveillée par la statistique CUSUM de Page-Hinkley : $U_t = \max_{1 \le k \le t} \sum_{m=k}^t (\Delta_{\text{jev}}(e_m) - \mu_0 - \nu)$. L'allocation budgétaire $u_t \in \{\text{jev}(0\$), \text{Gemini}(20\$), \text{Claude}(100\$)\}$ résout l'équation de Hamilton-Jacobi-Bellman (HJB) sous contrainte $B_t$ : Gemini n'est déclenché que si $U_t > \lambda_{\text{PH}}$ (rupture inter-silos), et Claude uniquement si $\Lambda_n^{(i)} \ge B$ pour formaliser le duel causal.
+
+2. **Fonction objectif anti-vernis** :
+$$\mathcal{J}(v_i, v_j, H_A, H_B) = d_{\text{eff}}(v_i, v_j) \cdot \mathbb{I}(U_t > \lambda_{\text{PH}}) \cdot \mathcal{D}_{JS}\big(P_{\text{Llama}}(\mathbf{y} \mid \text{do}(\mathbf{a}), H_A) \,\|\, P_{\text{Llama}}(\mathbf{y} \mid \text{do}(\mathbf{a}), H_B)\big) \cdot \exp(-\
