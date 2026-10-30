@@ -66,3 +66,20 @@ xmin5 = min(x for x in range(n5 + 1) if wilson(x, n5)[0] >= 0.60)
 print(f"  plus petit nombre de mondes réussis : {xmin5} sur {n5} (part {xmin5 / n5:.2f})")
 for p in (0.50, 0.60, 0.70, 0.75, 0.80, 0.90):
     print(f"  part vraie {p:.2f} : règle tenue = {proba(n5, p, lambda x: x >= xmin5):.3f}")
+
+print("§ 6 — volet B regroupé (Bv0 + Bv1 : n = 100) : part de mondes avec corrélation au facteur vrai >= 0,70, règle borne basse de Wilson >= 0,60")
+n6 = 100
+xmin6 = min(x for x in range(n6 + 1) if wilson(x, n6)[0] >= 0.60)
+print(f"  plus petit nombre de mondes réussis : {xmin6} sur {n6} (part {xmin6 / n6:.2f})")
+for p in (0.60, 0.65, 0.70, 0.75, 0.80, 0.90):
+    print(f"  part vraie {p:.2f} : règle tenue = {proba(n6, p, lambda x: x >= xmin6):.3f}")
+
+print("§ 7 — jugeabilité du leurre : part d'erreur du prédicteur associatif sur le leurre, regroupée sous R (n = 400) ; règle estimation >= 0,20")
+for p in (0.10, 0.15, 0.18, 0.20, 0.25, 0.30):
+    print(f"  part vraie {p:.2f} : règle tenue = {proba(n4, p, lambda x: x >= 80):.3f}")
+
+print("§ 8 — ordre de grandeur de la détection (approximation normale, SUPPOSÉ) : 30 000 paires-années, 10 % traitées, effet beta en écarts-types de la sortie annuelle, sortie cumulée sur 3 ans (écart-type multiplié par racine de 3)")
+for beta in (0.1, 0.2, 0.4):
+    se = sqrt(1 / 3000 + 1 / 27000)
+    z = (beta / sqrt(3)) / se
+    print(f"  beta = {beta:.1f} : statistique de test attendue {z:.1f}")
