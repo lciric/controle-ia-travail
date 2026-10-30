@@ -62,8 +62,10 @@ def test_q01_artefact_regeneration_entiere_change_le_monde_de_base(monkeypatch):
     assert differe == len(cas)
 
 
-def test_q01_mondes_sans_echec_inchanges_et_inertes_replantes_comme_M_bien():
-    # sans échec, la replantation 0 suit le flux rng0 : pas de tirage en plus ; M_inertes reprend la replantation de M_bien
+def test_q01_inertes_replantes_comme_M_bien_et_SP_sans_plantation():
+    # M_inertes replante sous le code 1, donc garde les latents de M_bien même après replantation ; SP ne plante rien.
+    # (L'identité bit à bit des mondes sans échec avec le code d'avant est vérifiée à part :
+    # plomberie-corrections-v2/identite_ancien_nouveau_v1.py.)
     for i, _ in _premiers_replantes(2):
         assert mo.empreinte_latents(mo.generer("M_bien", RV, i)) == mo.empreinte_latents(mo.generer("M_inertes", RV, i))
     L = mo.generer("SP", RV, K_REPLANT).latent(mo.JETON_MESURE)
