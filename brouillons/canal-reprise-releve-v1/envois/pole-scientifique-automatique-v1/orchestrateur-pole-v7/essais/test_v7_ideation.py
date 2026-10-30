@@ -512,7 +512,8 @@ class TestCommandeExterne(CasAvecDossier):
         self.assertEqual((r.statut, r.texte_final, r.cout_declare_usd, r.cout_inconnu), ("ok", "OK", 0.001, False))
         with self.assertRaises(ValueError):
             ad.lancer("experimentateur", "x", self.tmp, 1.0, 1)
-        self.assertEqual(sorted(ad.description()), ["commande", "controle_modele_servi", "delai_s", "empreintes", "variables_transmises"])
+        self.assertEqual(sorted(ad.description()), ["commande", "controle_modele_servi", "delai_s", "empreintes", "modeles_servis_permis",
+                                                       "variables_transmises"])
         self.assertIn("facultatif", ad.description()["controle_modele_servi"])  # v49 (CL13-05) : barrière dite absente si non exigée
         self.assertIn(ad.commande[-1], ad.description()["empreintes"])
         with self.assertRaises(ValueError):
@@ -3639,6 +3640,7 @@ class TestV44(CasAvecDossier):
         argon = v41.script(v41.SCRIPT_PLAFOND, "argon-relais.py")
         sortie = os.path.join(self.tmp, "l-relais")
         argv = v41.base(sortie, prep, att, "--commande-externe", argon, "--moteur", "claude-sdk", "--confirmer-moteur-reel",
+                        "--modele-commande-externe", "gemini-argon",  # v50 (CL14-07) : l'étiquette de l'essai n'est pas celle d'Argon v2
                         "--url-relais", "http://127.0.0.1:9", "--racine-depot", self.tmp, "--budget-total-usd", "41")
 
         def panne(*a, **k):
@@ -5719,6 +5721,9 @@ class ExecuteurNonIsole(tdm.ExecuteurBacASable):
     def verifier_outils(self):
         return None
 
+    def verifier_identite(self):
+        return None  # v50 : l'identité n'est pas le sujet de ce faux (c'est l'absence d'isolation du réseau que la sonde doit voir)
+
     def commande(self, script, travail):
         return [self.python, "-I", "-B", script]
 
@@ -6043,7 +6048,7 @@ class TestV48(CasAvecDossier):
         e2 = par[dedans_id]["executions"][0]
         self.assertEqual(e2["statut"], "réussie")
         self.assertEqual([p["chemin"] for p in e2["fichiers_produits"]], ["produit.txt"])
-        copie = os.path.join(self.tmp, "e5", "noyau", "tests-de-mort", dedans_id, "execution-01", "produits", "produit.txt")
+        copie = os.path.join(self.tmp, "e5", "noyau", "tests-de-mort", dedans_id, "execution-01", "produits", "produit.txt.copie")  # v50 (CL14-05) : suffixe de copie
         self.assertTrue(idn.verifier_scelle(copie))
 
     # --- 6. quotas ----------------------------------------------------------------------------------------------------------------
@@ -6090,7 +6095,7 @@ class TestV48(CasAvecDossier):
     def test_v48_07_delai_depasse_tue_et_non_concluant(self):
         """Un script qui dort au-delà du délai est tué (groupe de processus) : exécution « tuée (délai) », verdict
         mécanique « non concluant », lecteur honnête aussi ; le processus n'existe plus ensuite (R10)."""
-        script = "import os, time\nopen('pid.txt', 'w').write(str(os.getpid()))\nprint('RESULTAT: 0.9', flush=True)\ntime.sleep(60)\n"
+        script = "import os, time\nprint('pid', os.getpid(), flush=True)\nprint('RESULTAT: 0.9', flush=True)\ntime.sleep(60)\n"
         ad = self.kit({"opus": [self.fiche("Lent")]}, exp=lambda f, t, c: bloc_exp(executer(script)) if t == 1 else bloc_fin())
         debut = time.monotonic()
         self.course(ad, "e7", etage=self.etage(nombre=1, delai_execution_s=1.0, executeur=tdm.ExecuteurFactice(delai_s=1.0)),
@@ -6101,8 +6106,9 @@ class TestV48(CasAvecDossier):
         self.assertEqual((e["statut"], e["delai_depasse"]), ("tuée (délai)", True))
         self.assertEqual(r["lecture_mecanique"]["verdict"], "non concluant")
         self.assertEqual((r["verdict"], r["desaccord"]), ("non concluant", None))
-        pid_fichier = os.path.join(self.tmp, "e7", "noyau", "tests-de-mort", r["identifiant_auteur"], "execution-01", "travail", "pid.txt")  # v49 : dossier neuf par exécution
-        pid = int(self.lire(pid_fichier))
+        sortie_standard = os.path.join(self.tmp, "e7", "noyau", "tests-de-mort", r["identifiant_auteur"], "execution-01", "stdout.txt")  # v50 (CL14-04) : le dossier de travail n'est plus gardé
+        pid = int(self.lire(sortie_standard).split()[1])
+        self.assertFalse(os.path.exists(os.path.join(os.path.dirname(sortie_standard), "travail")))
         with self.assertRaises(ProcessLookupError):
             os.kill(pid, 0)
 
@@ -6720,7 +6726,7 @@ class TestV48(CasAvecDossier):
         est joué avec le vrai bac sur trois fiches : un script qui lit la tranche et recalcule son chiffre → « survit » ; un
         script qui écrit hors du dossier de travail (cible factice dans le dossier provisoire) → exécution échouée, rien créé,
         « non concluant » ; un script trop long → « tuée (délai) ». Non rejoué dans la machine de la v49 (pas de `bwrap`)."""
-        vrai = tdm.ExecuteurBacASable(delai_s=5.0)
+        vrai = executeur_reel(self, 5.0)  # v50 : noyau superutilisateur = utilisateur dédié exigé (variables d'environnement)
         ok, motif = vrai.disponible()
         self.assertTrue(ok, motif)
         self.assertIn("aucune capacité", motif)
@@ -6792,7 +6798,11 @@ os.execv(commande[0], commande)
 """
 
 SORTIE_PRIVILEGES_SAINE = ("UID=65534\nCapEff=0000000000000000\nCapPrm=0000000000000000\nCapBnd=0000000000000000\n"
-                           "REMONTAGE /travail/tranche=refus-errno-1\nREMONTAGE /=refus-errno-1\nECRITURE-TRANCHE=refus\n")
+                           "UID_HOTE=64321\nGID_HOTE=64321\n"  # v50 (CL14-01) : l'identité du script sur l'hôte, jamais 0
+                           "REMONTAGE /travail/tranche=refus-errno-1\nREMONTAGE /=refus-errno-1\nECRITURE-TRANCHE=refus\n"
+                           "PROCSYS kernel/core_pattern=refus-errno-30\nPROCSYS fs/suid_dumpable=refus-errno-30\n"
+                           "PROCSYS-OUVRABLES=0\nUSERNS-IMBRIQUE=refus\nSHM=refus-apres-32-Mo-errno-28\n"
+                           "PROCESSUS=refus-apres-1000-errno-11\n")
 
 
 class ExecuteurBacSimule(tdm.ExecuteurFactice):
@@ -6805,6 +6815,9 @@ class ExecuteurBacSimule(tdm.ExecuteurFactice):
     def __init__(self, sortie_privileges, code=0, effet=None, **kw):
         super().__init__(**kw)
         self.sortie_privileges, self.code, self.effet, self.joues = sortie_privileges, code, effet, []
+
+    def uid_hote_attendu(self):
+        return None  # la sortie rendue est donnée : l'identité de l'hôte de la machine d'essai n'est pas en jeu
 
     def executer(self, script, travail, delai_s=None, dossier_capture=None):
         with open(script, encoding="utf-8") as f:
@@ -6869,6 +6882,19 @@ class TestV49(CasAvecDossier):
         h.course(ad, nom, etage=h.etage(nombre=nombre, **modifs), proposeurs=self.PROP, juges=self.JUGES)
         return ad, h.par_fiche(nom)
 
+    @staticmethod
+    def liens_tubes_et_prises(racine):
+        """Tout ce qui, sous `racine`, n'est ni un dossier ni un fichier régulier (liens, tubes, prises, périphériques), et tout
+        fichier setuid ou setgid : la sortie scellée n'en garde aucun (CL14-04, CL14-02)."""
+        trouves = []
+        for base, dossiers, noms in os.walk(racine, followlinks=False):
+            for n in dossiers + noms:
+                chemin = os.path.join(base, n)
+                mode = os.lstat(chemin).st_mode
+                if _stat.S_ISLNK(mode) or not (_stat.S_ISDIR(mode) or _stat.S_ISREG(mode)) or mode & (_stat.S_ISUID | _stat.S_ISGID):
+                    trouves.append(os.path.relpath(chemin, racine))
+        return sorted(trouves)
+
     def arbre_des_octets(self, racine):
         """Tous les octets lisibles sous `racine` (sans suivre de lien), pour chercher un secret dans les sorties scellées."""
         morceaux = []
@@ -6899,14 +6925,22 @@ class TestV49(CasAvecDossier):
         self.assertEqual(valeur("--cap-drop"), "ALL")
         self.assertEqual((valeur("--uid"), valeur("--gid")), ("65534", "65534"))
         self.assertGreater(min(int(valeur("--uid")), int(valeur("--gid"))), 0)
-        for interdit in ("--cap-add", "--share-net", "--unshare-user-try", "--dev-bind", "--dev-bind-try", "--bind-try", "--tmpfs",
+        for interdit in ("--cap-add", "--share-net", "--unshare-user-try", "--dev-bind", "--dev-bind-try", "--bind-try",
                          "--userns", "--userns2", "--perms"):
             self.assertNotIn(interdit, cmd)
+        # v50 : le seul `--tmpfs` est le `/dev/shm` borné (CL14-10) ; `/proc/sys` en lecture seule juste après `/proc` (CL14-01) ;
+        # pas d'espace d'utilisateurs imbriqué (CL14-03)
+        self.assertEqual([cmd[i + 1] for i, x in enumerate(cmd) if x == "--tmpfs"], ["/dev/shm"])
+        self.assertEqual(cmd[cmd.index("--tmpfs") - 2:cmd.index("--tmpfs") + 2], ["--size", str(tdm.TAILLE_MAX_DEV_SHM), "--tmpfs", "/dev/shm"])
+        self.assertEqual(cmd[cmd.index("--proc") + 1:cmd.index("--proc") + 6], ["/proc", "--ro-bind", "/proc/sys", "/proc/sys", "--dev"])
+        self.assertIn("--disable-userns", cmd)
+        self.assertLess(cmd.index("--unshare-user"), cmd.index("--disable-userns"))
+        self.assertLess(cmd.index("--disable-userns"), cmd.index("--cap-drop"))
         inscriptibles = [(cmd[i], cmd[i + 1], cmd[i + 2]) for i, x in enumerate(cmd) if x in ("--bind", "--bind-try", "--dev-bind")]
         self.assertEqual(inscriptibles, [("--bind", travail, "/travail")])
         sources_lecture_seule = {cmd[i + 1] for i, x in enumerate(cmd) if x in ("--ro-bind", "--ro-bind-try")}
         self.assertLessEqual(sources_lecture_seule, {"/usr", "/lib", "/lib64", "/bin", "/sbin", "/etc/ld.so.cache", "/etc/alternatives",
-                                                     "/etc/localtime", "/etc/python3", os.path.join(travail, "tranche")})
+                                                     "/etc/localtime", "/etc/python3", "/proc/sys", os.path.join(travail, "tranche")})
         self.assertLess(cmd.index("--bind"), cmd.index("--remount-ro"))
         self.assertLess(cmd.index("--unshare-user"), cmd.index("--cap-drop"))
         self.assertEqual(cmd[-5:], ["--", "/usr/bin/python3", "-I", "-B", "/travail/script.py"])
@@ -6919,7 +6953,7 @@ class TestV49(CasAvecDossier):
         cmd2 = vrai.commande(os.path.join(t2, "script.py"), t2)
         self.assertNotIn("/travail/tranche", cmd2)
         d = vrai.description()
-        for mot in ("--unshare-user", "--cap-drop ALL", "--new-session", "--uid 65534"):
+        for mot in ("--unshare-user", "--cap-drop ALL", "--new-session", "--uid 65534", "--disable-userns", "/proc/sys en lecture seule"):
             self.assertIn(mot, d["isolation"])
         self.assertTrue(d["dossier_de_travail"]["neuf_par_execution"])
 
@@ -7178,12 +7212,16 @@ class TestV49(CasAvecDossier):
                          [("script.py", "lien", "non copié : lien")])
         self.assertEqual(r["lecture_mecanique"]["chiffre"], 0.5)
         base = os.path.join(self.tmp, "e49l1", "noyau", "tests-de-mort", list(par)[0])
-        self.assertTrue(os.path.isdir(os.path.join(base, "execution-02", "travail")))
-        self.assertEqual(self.h().lire(os.path.join(base, "execution-02", "travail", "script.py")), script_resultat(0.5))
+        # v50 (CL14-04) : plus de dossier de travail dans la sortie scellée ; le script de chaque exécution reste scellé à côté
+        self.assertFalse(os.path.exists(os.path.join(base, "execution-02", "travail")))
+        self.assertEqual(self.h().lire(os.path.join(base, "execution-02", "script.py")), script_resultat(0.5))
         # seconde attaque : le dossier de l'exécution suivante est un lien posé par le script
         cible = os.path.join(self.tmp, "cible-dossier")
         os.makedirs(cible)
-        s2 = f"import os\nos.symlink({cible!r}, '../../execution-02')\nprint('RESULTAT: 0.4')\n"
+        # v50 : les dossiers de travail sont frères sous la racine de l'étage (hors de la sortie) ; le script qui les atteint (exécuteur
+        # factice : aucune barrière) pose un lien à la place de celui de l'exécution suivante
+        s2 = (f"import os\nfor n in os.listdir('..'):\n    if n.endswith('-execution-01'):\n"
+              f"        os.symlink({cible!r}, '../' + n[:-len('-execution-01')] + '-execution-02')\nprint('RESULTAT: 0.4')\n")
         tours2 = {1: bloc_exp(executer(s2)), 2: bloc_exp(executer(script_resultat(0.5))), 3: bloc_fin()}
         h = self.h()
         ad = h.kit({"opus": [h.fiche("Lien2")]}, exp=lambda f, t, c: tours2[t])
@@ -7229,7 +7267,8 @@ class TestV49(CasAvecDossier):
             self.assertEqual(genres["peripherique"], "périphérique caractère")
         self.assertEqual(sorted(genres), sorted(set(genres) & {"environ.txt", "secret.txt", "dossier-lie", "tuyau", "prise.sock", "peripherique"}))
         d = os.path.join(self.tmp, "e49p", "noyau", "tests-de-mort", list(par)[0], "execution-01")
-        self.assertEqual(sorted(os.listdir(os.path.join(d, "produits"))), ["regulier.txt", "regulier.txt.sha256"])
+        self.assertEqual(sorted(os.listdir(os.path.join(d, "produits"))), ["regulier.txt.copie", "regulier.txt.copie.sha256"])  # v50 (CL14-05)
+        self.assertEqual(self.liens_tubes_et_prises(os.path.join(self.tmp, "e49p")), [])  # v50 (CL14-04)
         tout = self.arbre_des_octets(os.path.join(self.tmp, "e49p"))
         for interdit in (b"SECRET-FACTICE-DE-L-HOTE", b"SECRET-DANS-UN-DOSSIER-LIE", b"FACTICE-CANARI-DU-NOYAU", b"CLE_FACTICE_DU_NOYAU"):
             self.assertNotIn(interdit, tout, interdit)
@@ -7703,7 +7742,7 @@ class TestV49(CasAvecDossier):
         self.assertEqual(tdm.etiquette_materiau(dict(base, verdict="survit", fiabilite_du_chiffre=tdm.ETIQUETTE_NON_RECALCULE)),
                          "survit (chiffre imprimé par le script, non recalculé)")
         self.assertEqual(tdm.etiquette_materiau(dict(base, verdict="éliminée", fiabilite_du_chiffre=tdm.ETIQUETTE_RECALCULE)),
-                         "éliminée (chiffre recalculé par le noyau)")
+                         "éliminée (statistique déclarée par le script, recalculée par le noyau)")
         self.assertEqual(tdm.etiquette_materiau(dict(base, verdict="non concluant", fiabilite_du_chiffre=tdm.ETIQUETTE_RECALCULE)), "non concluant")
         self.assertEqual(tdm.etiquette_materiau(dict(base, verdict="survit")), "survit")
         self.assertEqual(tdm.etiquette_materiau({"statut": "refusée à l'étage", "motif": "sans seuil"}), "non testée (sans seuil)")
@@ -7758,19 +7797,22 @@ class TestV49(CasAvecDossier):
 
     def test_v49_18_provenance_du_code_modifie_dit_au_lisezmoi(self):
         """R12 : le LISEZMOI de la v49 liste **chaque fichier de code modifié** avec l'empreinte v48 (celle de
-        `EMPREINTES-orchestrateur-pole-v7-v48.txt`, vérifiée) et l'empreinte v49 (celle du disque) ; tout fichier de
-        l'empreinte v48 dont le contenu a changé figure dans le tableau ; aucun fichier du tableau n'est inchangé. Le fichier
-        d'essais lui-même est exclu de la comparaison de l'empreinte v49 (il ne peut pas contenir sa propre empreinte
-        stable) mais sa ligne existe."""
+        `EMPREINTES-orchestrateur-pole-v7-v48.txt`, vérifiée) et l'empreinte v49 (celle de `EMPREINTES-orchestrateur-pole-v7-v49.txt`,
+        scellée : depuis la v50 le disque a changé, le fichier de la v49 ne change plus) ; tout fichier de l'empreinte v48 dont le
+        contenu a changé dans la v49 figure dans le tableau ; aucun fichier du tableau n'est inchangé."""
         from essais.test_v47_relais_moisson import RACINE
         lisezmoi = os.path.join(RACINE, "LISEZMOI-orchestrateur-pole-v7-v49.md")
         self.assertTrue(os.path.exists(lisezmoi), "LISEZMOI de la v49 absent")
-        v48 = {}
-        with open(os.path.join(RACINE, "EMPREINTES-orchestrateur-pole-v7-v48.txt"), encoding="utf-8") as f:
-            for ligne in f:
-                if ligne.strip():
-                    empreinte, chemin = ligne.split(None, 1)
-                    v48[chemin.strip()] = empreinte
+
+        def lire_empreintes(nom):
+            sortie = {}
+            with open(os.path.join(RACINE, nom), encoding="utf-8") as f:
+                for ligne in f:
+                    if ligne.strip():
+                        empreinte, chemin = ligne.split(None, 1)
+                        sortie[chemin.strip()] = empreinte
+            return sortie
+        v48, v49 = lire_empreintes("EMPREINTES-orchestrateur-pole-v7-v48.txt"), lire_empreintes("EMPREINTES-orchestrateur-pole-v7-v49.txt")
         tableau = {}
         with open(lisezmoi, encoding="utf-8") as f:
             for ligne in f:
@@ -7778,21 +7820,18 @@ class TestV49(CasAvecDossier):
                 if m:
                     tableau[m.group(1)] = (m.group(2), m.group(3))
         self.assertTrue(tableau, "tableau de provenance absent du LISEZMOI")
-        moi = "essais/test_v7_ideation.py"
-        self.assertIn(moi, tableau)
+        self.assertIn("essais/test_v7_ideation.py", tableau)
         for chemin, (ancienne, nouvelle) in tableau.items():
             if chemin in v48:
                 self.assertEqual(ancienne, v48[chemin], f"empreinte v48 de {chemin} ≠ EMPREINTES v48")
             self.assertNotEqual(ancienne, nouvelle, f"{chemin} : listé mais inchangé")
-            if chemin != moi:
-                self.assertEqual(nouvelle, hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest(), f"{chemin} : empreinte v49 ≠ disque")
+            self.assertEqual(nouvelle, v49[chemin], f"{chemin} : empreinte v49 ≠ EMPREINTES v49")
         for chemin, empreinte in v48.items():
             if chemin.startswith(("LISEZMOI", "EMPREINTES")):
                 self.assertEqual(hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest(), empreinte, f"{chemin} : fichier scellé modifié")
                 continue
-            actuelle = hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest()
-            if actuelle != empreinte:
-                self.assertIn(chemin, tableau, f"{chemin} a changé depuis la v48 et n'est pas dans le tableau de provenance")
+            if v49[chemin] != empreinte:
+                self.assertIn(chemin, tableau, f"{chemin} a changé dans la v49 et n'est pas dans le tableau de provenance")
 
     # --- CL13-01, CL13-08 : essais réels, seulement avec `bwrap` ---------------------------------------------------------------------------------
 
@@ -7827,7 +7866,7 @@ class TestV49(CasAvecDossier):
             "print('environ', sorted(os.environ))\n"
             "print('RESULTAT: 0.4')\n") % (os.path.join(hote, "ecrit.txt"), secret)
         _, par = self.etage_simple("e49v", lambda f, t, c: bloc_exp(executer(sonde)) if t == 1 else bloc_fin(),
-                                   executeur=tdm.ExecuteurBacASable(delai_s=20.0), delai_execution_s=20.0)
+                                   executeur=executeur_reel(self, 20.0), delai_execution_s=20.0)
         r = list(par.values())[0]
         sortie = self.h().lire(os.path.join(self.tmp, "e49v", "noyau", "tests-de-mort", list(par)[0], "execution-01", "stdout.txt"))
         for ligne in sortie.splitlines():
@@ -7844,6 +7883,951 @@ class TestV49(CasAvecDossier):
 
     def prep_tranche(self):
         return self.h().prep()["tranche"]
+
+
+# ======================================================================================================================
+# v50 : corrections de la contre-lecture CL14 (Opus neuf) — identité du script SUR L'HÔTE (CL14-01, CL14-02 : utilisateur
+# dédié sans privilège, /proc/sys en lecture seule, borne de processus, aucun fichier setuid), espaces d'utilisateurs
+# imbriqués (CL14-03), sortie scellée sans dossier de travail (CL14-04), noms `.sha256` (CL14-05), recalcul strict (CL14-06),
+# Argon (CL14-07 à 09), /dev/shm (CL14-10), artefacts de la sonde et essais réels (CL14-11), dossier fermé (CL14-12).
+# Aucun essai n'écrit dans un réglage réel du noyau de l'hôte ni hors de dossiers temporaires créés ici : une ouverture en
+# écriture de /proc/sys qui réussirait serait un échec d'essai, jamais une écriture.
+# ======================================================================================================================
+
+import tempfile as _tempfile  # noqa: E402
+import subprocess as _subprocess  # noqa: E402
+
+UID_ESSAI = 64097  # identité sans privilège des essais « utilisateur dédié » (noyau superutilisateur de la machine d'essai seulement)
+
+
+def utilisateur_dedie_possible():
+    """Vrai si les essais peuvent jouer un processus sous l'identité sans privilège `UID_ESSAI` : noyau superutilisateur et
+    `setpriv` qui fonctionne. Sinon ces essais sont ignorés (dit)."""
+    if os.geteuid() != 0 or not shutil.which("setpriv"):
+        return False
+    try:
+        r = _subprocess.run(["setpriv", "--reuid", str(UID_ESSAI), "--regid", str(UID_ESSAI), "--clear-groups", "--no-new-privs",
+                             "--", "/usr/bin/id", "-u"], capture_output=True, timeout=20)
+    except (OSError, _subprocess.SubprocessError):
+        return False
+    return r.returncode == 0 and r.stdout.strip() == str(UID_ESSAI).encode()
+
+
+def executeur_reel(test, delai, **kw):
+    """Le vrai bac à sable (v50) : un noyau superutilisateur **doit** donner un utilisateur dédié sans privilège et un dossier
+    racine à lui (variables `POLE_ESSAI_UTILISATEUR_BAC` et `POLE_ESSAI_RACINE_TRAVAIL_BAC`), sinon l'étage est refusé et l'essai
+    est ignoré (dit) ; un noyau non superutilisateur joue le bac sous sa propre identité."""
+    if os.geteuid() == 0:
+        utilisateur, racine = os.environ.get("POLE_ESSAI_UTILISATEUR_BAC"), os.environ.get("POLE_ESSAI_RACINE_TRAVAIL_BAC")
+        if not (utilisateur and racine):
+            test.skipTest("noyau superutilisateur : donner POLE_ESSAI_UTILISATEUR_BAC (uid sans privilège) et "
+                          "POLE_ESSAI_RACINE_TRAVAIL_BAC (dossier à lui, traversable par lui) ; sinon l'étage serait refusé (CL14-01)")
+        return tdm.ExecuteurBacASable(delai_s=delai, utilisateur_bac=utilisateur, racine_travail=racine, **kw)
+    return tdm.ExecuteurBacASable(delai_s=delai, **kw)
+
+
+def en_tant_que(uid, fonction):
+    """Joue `fonction()` dans un processus enfant d'identité `uid` (noyau superutilisateur) et rend son résultat (JSON) ; le
+    parent garde son identité. L'enfant vérifie son identité avant tout appel : s'il est resté superutilisateur, il n'y a aucun
+    appel."""
+    lecture, ecriture = os.pipe()
+    pid = os.fork()
+    if pid == 0:
+        try:
+            os.close(lecture)
+            os.setgroups([])
+            os.setgid(uid)
+            os.setuid(uid)
+            if os.getuid() != uid or os.geteuid() != uid or os.getgid() != uid:
+                raise RuntimeError("identité non changée")
+            resultat = fonction()
+        except BaseException as e:  # noqa: BLE001
+            resultat = {"erreur": repr(e)}
+        os.write(ecriture, json.dumps(resultat).encode())
+        os._exit(0)
+    os.close(ecriture)
+    morceaux = []
+    while True:
+        m = os.read(lecture, 65536)
+        if not m:
+            break
+        morceaux.append(m)
+    os.close(lecture)
+    os.waitpid(pid, 0)
+    return json.loads(b"".join(morceaux).decode() or "null")
+
+
+SCRIPT_ARGON_CODE = ("import json, os, sys\nsys.stdin.read()\nobjet = {'texte': 'JAMAIS SERVI', 'cout_usd': 0.2}\nobjet.update(%s)\n"
+                     "print(json.dumps(objet))\nsys.exit(%d)\n")
+
+
+class TestV50(CasAvecDossier):
+    """v50 (corrections de la contre-lecture CL14) : un groupe d'essais par constat ; les essais qui exigent un noyau
+    superutilisateur (utilisateur dédié, `setpriv`) ou `bwrap` sont ignorés ailleurs, avec leur motif."""
+
+    def setUp(self):
+        super().setUp()
+        self.garde = garde_fou_reseau()
+        self.garde.__enter__()
+        self.addCleanup(self.garde.__exit__, None, None, None)
+
+    def h(self):
+        return TestV49.h(self)
+
+    octets = staticmethod(TestV49.octets)
+    liens_tubes_et_prises = staticmethod(TestV49.liens_tubes_et_prises)
+    PROP = TestV49.PROP
+    JUGES = TestV49.JUGES
+    SCRIPT_ARGON = TestV49.SCRIPT_ARGON
+
+    def etage_simple(self, nom, exp, nombre=1, fiches=None, **modifs):
+        h = self.h()
+        ad = h.kit({"opus": fiches or [h.fiche("Une")]}, exp=exp)
+        h.course(ad, nom, etage=h.etage(nombre=nombre, **modifs), proposeurs=self.PROP, juges=self.JUGES)
+        return ad, h.par_fiche(nom)
+
+    def dossier_systeme_isole(self):
+        """Un dossier provisoire qui tient lieu de dossier provisoire du système pour la durée de l'essai : on y voit tout ce que
+        l'étage y crée (et doit y retirer)."""
+        racine = os.path.join(self.tmp, "tmp-systeme")
+        os.makedirs(racine)
+        patch = _mock.patch.object(_tempfile, "tempdir", racine)
+        patch.start()
+        self.addCleanup(patch.stop)
+        return racine
+
+    def dossier_traversable(self):
+        """Un dossier provisoire du système (le dossier de l'essai est dans le dépôt, que l'utilisateur dédié ne traverse pas)
+        traversable par tous, retiré à la fin."""
+        base = _tempfile.mkdtemp(prefix="essai-bac-v50-")
+        os.chmod(base, 0o711)
+        self.addCleanup(shutil.rmtree, base, True)
+        return os.path.realpath(base)
+
+    # --- CL14-01, CL14-02 : l'utilisateur dédié -----------------------------------------------------------------------------------
+
+    def test_v50_01_utilisateur_dedie_resolution_et_commande_lancee(self):
+        """`resoudre_utilisateur_bac` : un entier, un entier en texte ou un nom ; jamais le superutilisateur, un identifiant
+        négatif ou énorme, un booléen, un nom inconnu. `commande_lancee` : sans utilisateur dédié, la commande de `bwrap` seule ;
+        avec : `setpriv --reuid U --regid U --clear-groups --no-new-privs --` devant (le noyau superutilisateur ne lance jamais
+        `bwrap` lui-même). `description()` dit l'identité sur l'hôte, `--disable-userns`, `/dev/shm`, la borne de processus."""
+        r = tdm.resoudre_utilisateur_bac
+        self.assertEqual(r(64097), (64097, 64097, None))
+        self.assertEqual(r("64097"), (64097, 64097, None))
+        self.assertEqual(r(" 7 "), (7, 7, None))
+        for mauvais in (0, "0", -1, 2**31, True, False, None, "utilisateur-inconnu-v50-xyz", "", 1.5, [1]):
+            with self.assertRaises(ValueError, msg=repr(mauvais)):
+                r(mauvais)
+        with self.assertRaises(ValueError):
+            r("root")  # le superutilisateur, par son nom
+        sans = tdm.ExecuteurBacASable(bwrap="/usr/bin/bwrap", python="/usr/bin/python3")
+        travail = os.path.join(self.tmp, "t")
+        os.makedirs(travail)
+        self.assertEqual(sans.commande_lancee(os.path.join(travail, "script.py"), travail), sans.commande(os.path.join(travail, "script.py"), travail))
+        self.assertIsNone(sans.proprietaire_travail())
+        avec = tdm.ExecuteurBacASable(bwrap="/usr/bin/bwrap", python="/usr/bin/python3", utilisateur_bac=64097, racine_travail=travail,
+                                      chercher=lambda nom: "/usr/bin/" + nom)
+        cmd = avec.commande_lancee(os.path.join(travail, "script.py"), travail)
+        self.assertEqual(cmd[:8], ["/usr/bin/setpriv", "--reuid", "64097", "--regid", "64097", "--clear-groups", "--no-new-privs", "--"])
+        self.assertEqual(cmd[8:], avec.commande(os.path.join(travail, "script.py"), travail))
+        self.assertEqual(avec.proprietaire_travail(), (64097, 64097))
+        d = avec.description()
+        self.assertEqual(d["identite_du_script_sur_l_hote"]["utilisateur_dedie"]["uid"], 64097)
+        self.assertEqual(d["espaces_d_utilisateurs_imbriques"], "interdits (--disable-userns)")
+        self.assertEqual(d["dev_shm_octets_max"], tdm.TAILLE_MAX_DEV_SHM)
+        self.assertTrue(d["dossier_de_travail"]["hors_de_la_sortie"] and d["dossier_de_travail"]["retire_apres_chaque_execution"])
+        self.assertTrue(d["borne_de_processus_effective"])
+        self.assertIn("utilisateur dédié sans privilège", d["isolation"])
+        with _mock.patch.object(tdm, "_euid_noyau", return_value=0):
+            self.assertFalse(sans.borne_processus_effective())  # CL14-02 : la borne ne vaut pas pour le superutilisateur
+            self.assertTrue(avec.borne_processus_effective())
+            self.assertTrue(sans.description()["identite_du_script_sur_l_hote"]["noyau_superutilisateur"])
+        with _mock.patch.object(tdm, "_euid_noyau", return_value=1000):
+            self.assertTrue(sans.borne_processus_effective())
+        permis = tdm.ExecuteurBacASable(bwrap="/usr/bin/bwrap", python="/usr/bin/python3", userns_imbriques_permis=True)
+        self.assertNotIn("--disable-userns", permis.commande(os.path.join(travail, "script.py"), travail))
+        self.assertIn("PERMIS", permis.description()["espaces_d_utilisateurs_imbriques"])
+        self.assertNotIn("--disable-userns", permis.description()["isolation"])
+        with self.assertRaises(ValueError):
+            tdm.ExecuteurBacASable(bwrap="/usr/bin/bwrap", racine_travail="relatif")
+
+    def test_v50_02_identite_du_noyau_superutilisateur_sans_utilisateur_dedie_refusee(self):
+        """CL14-01 : un noyau superutilisateur sans utilisateur dédié est refusé **avant** la sonde (aucun `bwrap` lancé : le
+        journal du faux `bwrap` reste vide) ; avec un utilisateur dédié, le dossier racine est exigé, doit être un vrai dossier
+        possédé par lui, non inscriptible par le groupe ni les autres ; un utilisateur dédié sous un noyau qui n'est pas
+        superutilisateur est refusé ; `setpriv` absent aussi ; sans identité superutilisatrice, aucun utilisateur n'est exigé."""
+        faux, journal = TestV49.faux_bwrap(self)
+        racine = os.path.join(self.tmp, "racine")
+        os.makedirs(racine)
+        moi = os.getuid()
+        with _mock.patch.object(tdm, "_euid_noyau", return_value=0):
+            ex = tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable)
+            self.assertIn("aucun utilisateur dédié", ex.verifier_identite())
+            ok, motif = ex.disponible()
+            self.assertFalse(ok)
+            self.assertIn("CL14-01", motif)
+            self.assertIn("aucun repli", motif)
+            self.assertFalse(os.path.exists(journal))  # rien n'a été lancé
+            # l'exécuteur factice et le faux bac des essais ne sont pas soumis à l'identité (aucune barrière, dit)
+            self.assertIsNone(tdm.ExecuteurFactice().verifier_identite())
+            # utilisateur dédié : dossier racine obligatoire, possédé, non inscriptible par d'autres
+            u = moi if moi else UID_ESSAI
+            sans_racine = tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, utilisateur_bac=u)
+            self.assertIn("sans dossier de travail racine", sans_racine.verifier_identite())
+            absent = tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, utilisateur_bac=u, racine_travail=os.path.join(racine, "absent"))
+            self.assertIn("illisible", absent.verifier_identite())
+            lien = os.path.join(self.tmp, "lien-racine")
+            os.symlink(racine, lien)
+            self.assertIn("pas un dossier réel", tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, utilisateur_bac=u,
+                                                                         racine_travail=lien).verifier_identite())
+            os.chmod(racine, 0o700)
+            if moi == 0:  # superutilisateur de la machine d'essai : on peut donner le dossier à un autre
+                os.chown(racine, UID_ESSAI, UID_ESSAI)
+                mauvais_proprio = tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, utilisateur_bac=UID_ESSAI + 1, racine_travail=racine)
+                self.assertIn("non possédé", mauvais_proprio.verifier_identite())
+            bon = tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, utilisateur_bac=u if moi else UID_ESSAI, racine_travail=racine)
+            if moi:
+                self.assertIsNone(tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, utilisateur_bac=UID_ESSAI,
+                                                         racine_travail=racine, chercher=lambda n: sys.executable).verifier_identite())
+            os.chmod(racine, 0o770)
+            self.assertIn("inscriptible par le groupe", tdm.ExecuteurBacASable(
+                bwrap=faux, python=sys.executable, utilisateur_bac=u if moi else UID_ESSAI, racine_travail=racine).verifier_identite()
+                if moi == 0 else "inscriptible par le groupe")
+            os.chmod(racine, 0o700)
+        with _mock.patch.object(tdm, "_euid_noyau", return_value=1000):
+            ex = tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, utilisateur_bac=64097)
+            self.assertIn("n'est pas superutilisateur", ex.verifier_identite())
+            self.assertIsNone(tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable).verifier_identite())
+        absent = tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, utilisateur_bac=64097, chercher=lambda nom: None)
+        self.assertIn("setpriv absent", absent.verifier_outils())
+        # un étage avec un exécuteur refusé pour son identité : rien n'est écrit, rien n'est payé (comme pour un bac absent)
+        ad = self.h().kit()
+        with _mock.patch.object(tdm, "_euid_noyau", return_value=0):
+            with self.assertRaisesRegex(idn.CourseInterrompue, "aucun utilisateur dédié"):
+                self.h().course(ad, "e50i", etage=self.h().etage(executeur=tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable)))
+        self.assertEqual(ad.appels, [])
+        self.assertFalse(os.path.exists(os.path.join(self.tmp, "e50i")))
+
+    def test_v50_03_sonde_les_nouveaux_artefacts_chacun_refuse_l_executeur(self):
+        """R5 : la sonde lit l'identité de l'hôte, `/proc/sys`, l'espace d'utilisateurs imbriqué, `/dev/shm`, la borne de processus
+        et l'ensemble limite des capacités. Cas sain accepté ; **chaque artefact refuse l'exécuteur**, avec son motif : identité 0
+        de l'hôte (utilisateur et groupe — le défaut de la v49), différente de l'utilisateur dédié attendu, illisible ; `CapBnd`
+        non nul ; `core_pattern`, `suid_dumpable` ou un autre réglage ouvert en écriture ; réglages ouvrables en nombre ;
+        espace d'utilisateurs imbriqué créé (accepté seulement sur demande explicite) ; `/dev/shm` non borné (accepté : non monté) ;
+        borne de processus qui ne tient pas ou non posée ; toute ligne manquante. Joué aussi avec un faux bac qui rend la sortie."""
+        ev = tdm.evaluer_sonde_privileges
+        self.assertEqual(ev(SORTIE_PRIVILEGES_SAINE), (True, "privilèges nuls"))
+        self.assertEqual(ev(SORTIE_PRIVILEGES_SAINE, uid_hote_attendu=64321), (True, "privilèges nuls"))
+        cas = [("UID_HOTE=64321", "UID_HOTE=0", "identité 0 de l'hôte"), ("GID_HOTE=64321", "GID_HOTE=0", "identité 0 de l'hôte"),
+               ("UID_HOTE=64321", "UID_HOTE=inconnue", "illisible"), ("UID_HOTE=64321\n", "", "absente"), ("GID_HOTE=64321\n", "", "absente"),
+               ("CapBnd=0000000000000000", "CapBnd=000001ffffffffff", "capacités"), ("CapBnd=0000000000000000\n", "", "absente"),
+               ("PROCSYS kernel/core_pattern=refus-errno-30", "PROCSYS kernel/core_pattern=OUVERT-EN-ECRITURE", "core_pattern"),
+               ("PROCSYS fs/suid_dumpable=refus-errno-30", "PROCSYS fs/suid_dumpable=OUVERT-EN-ECRITURE", "suid_dumpable"),
+               ("PROCSYS-OUVRABLES=0", "PROCSYS-OUVRABLES=528", "528 réglages"), ("PROCSYS-OUVRABLES=0\n", "", "absente"),
+               ("PROCSYS kernel/core_pattern=refus-errno-30\n", "", "absente"),
+               ("USERNS-IMBRIQUE=refus", "USERNS-IMBRIQUE=REUSSI", "imbriqué"), ("USERNS-IMBRIQUE=refus\n", "", "absente"),
+               ("SHM=refus-apres-32-Mo-errno-28", "SHM=REUSSI-40-Mo", "/dev/shm n'est pas borné"), ("SHM=refus-apres-32-Mo-errno-28\n", "", "absente"),
+               ("PROCESSUS=refus-apres-1000-errno-11", "PROCESSUS=REUSSI-1056", "borne de processus"),
+               ("PROCESSUS=refus-apres-1000-errno-11", "PROCESSUS=non-borne", "borne de processus"),
+               ("PROCESSUS=refus-apres-1000-errno-11\n", "", "absente")]
+        for avant, apres, motif in cas:
+            sortie = SORTIE_PRIVILEGES_SAINE.replace(avant, apres)
+            self.assertNotEqual(sortie, SORTIE_PRIVILEGES_SAINE, avant)
+            ok, m = ev(sortie)
+            self.assertFalse(ok, avant)
+            self.assertIn(motif, m, avant)
+        # accepté : /dev/shm non monté ; espace imbriqué sur demande explicite ; mais pas l'identité 0 même alors
+        self.assertTrue(ev(SORTIE_PRIVILEGES_SAINE.replace("SHM=refus-apres-32-Mo-errno-28", "SHM=non-monte-errno-2"))[0])
+        self.assertTrue(ev(SORTIE_PRIVILEGES_SAINE.replace("USERNS-IMBRIQUE=refus", "USERNS-IMBRIQUE=REUSSI"), userns_permis=True)[0])
+        self.assertFalse(ev(SORTIE_PRIVILEGES_SAINE.replace("UID_HOTE=64321", "UID_HOTE=0"), userns_permis=True)[0])
+        # utilisateur dédié attendu différent
+        ok, m = ev(SORTIE_PRIVILEGES_SAINE, uid_hote_attendu=64097)
+        self.assertFalse(ok)
+        self.assertIn("≠ utilisateur dédié attendu", m)
+        # tous les autres refus de la v49 tiennent toujours (régression)
+        self.assertFalse(ev(SORTIE_PRIVILEGES_SAINE.replace("UID=65534", "UID=0"))[0])
+        # `disponible()` complète avec le faux bac : un artefact refuse, le cas sain passe, l'identité attendue est lue
+        for avant, apres, motif in cas[:2] + cas[5:6] + cas[7:8] + cas[12:13] + cas[14:15] + cas[16:17]:
+            ex = ExecuteurBacSimule(SORTIE_PRIVILEGES_SAINE.replace(avant, apres), delai_s=30.0)
+            ok, m = ex.disponible()
+            self.assertFalse(ok, avant)
+            self.assertIn("étage refusé", m)
+            self.assertEqual(len(ex.joues), 1)
+        ok, m = ExecuteurBacSimule(SORTIE_PRIVILEGES_SAINE, delai_s=30.0).disponible()
+        self.assertTrue(ok, m)
+        for mot in ("/proc/sys en lecture seule", "borne de processus tenue", "/dev/shm borné", "ni sur l'hôte"):
+            self.assertIn(mot, m)
+        # la sonde jouée dans le bac est bien le script qui produit ces lignes
+        for cle in ("UID_HOTE", "GID_HOTE", "PROCSYS %s=", "kernel/core_pattern", "fs/suid_dumpable", "PROCSYS-OUVRABLES", "USERNS-IMBRIQUE",
+                    "SHM", "PROCESSUS", "CapBnd"):
+            self.assertIn(cle, tdm.SONDE_PRIVILEGES)
+        self.assertIn("/proc/self/uid_map", tdm.SONDE_PRIVILEGES)
+        self.assertNotIn("@", tdm.SONDE_PRIVILEGES)
+        self.assertNotIn("write(", tdm.SONDE_PRIVILEGES.split("# CL14-01 : aucun réglage")[1].split("# CL14-03")[0])  # jamais d'écriture dans /proc/sys
+
+    def test_v50_04_sonde_jouee_sous_un_utilisateur_sans_privilege_de_la_machine(self):
+        """Le script de la sonde est joué **pour de vrai**, sous l'identité sans privilège `UID_ESSAI` (`setpriv`), dans un
+        dossier provisoire, avec une borne de processus basse : il rend toutes les lignes attendues ; `/proc/sys` n'est ouvert en
+        écriture nulle part (EACCES), le remontage est refusé, l'identité de l'hôte est celle de l'utilisateur, la borne de
+        processus tient (refus avant la borne). Hors du bac, l'ensemble limite des capacités n'est pas vide : l'évaluation de la
+        sonde **refuse** ce processus (artefact : un processus non confiné). Aucune écriture dans `/proc/sys` ni `/dev/shm`."""
+        if not utilisateur_dedie_possible():
+            self.skipTest("noyau superutilisateur avec setpriv requis pour jouer un processus sans privilège")
+        python = "/usr/bin/python3"
+        base = self.dossier_traversable()
+        travail = os.path.join(base, "t")
+        os.mkdir(travail)
+        os.chown(travail, UID_ESSAI, UID_ESSAI)
+        script = os.path.join(base, "sonde.py")
+        with open(script, "w", encoding="utf-8") as f:
+            f.write(tdm.sonde_pour(travail, fichier_shm=os.path.join(travail, "fichier-shm")))
+        os.chmod(script, 0o644)
+        enveloppe = ("import os, sys, resource\nassert os.getuid() != 0 and os.geteuid() != 0 and os.getgid() != 0\n"
+                     "resource.setrlimit(resource.RLIMIT_NPROC, (40, 40))\nos.chdir(sys.argv[1])\n"
+                     "exec(compile(open(sys.argv[2]).read(), 'sonde', 'exec'), {'__name__': '__main__'})\n")
+        r = _subprocess.run(["setpriv", "--reuid", str(UID_ESSAI), "--regid", str(UID_ESSAI), "--clear-groups", "--no-new-privs", "--",
+                             python, "-I", "-c", enveloppe, travail, script], capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        valeurs = dict(l.rsplit("=", 1) for l in r.stdout.splitlines() if "=" in l)
+        for cle in ("UID", "CapEff", "CapPrm", "CapBnd", "UID_HOTE", "GID_HOTE", "REMONTAGE " + travail + "/tranche", "REMONTAGE /",
+                    "ECRITURE-TRANCHE", "PROCSYS kernel/core_pattern", "PROCSYS fs/suid_dumpable", "PROCSYS vm/drop_caches",
+                    "PROCSYS kernel/modprobe", "PROCSYS-OUVRABLES", "USERNS-IMBRIQUE", "SHM", "PROCESSUS"):
+            self.assertIn(cle, valeurs, r.stdout)
+        self.assertEqual((valeurs["UID"], valeurs["UID_HOTE"], valeurs["GID_HOTE"]), (str(UID_ESSAI),) * 3)
+        self.assertEqual(int(valeurs["CapEff"], 16), 0)
+        self.assertTrue(valeurs["PROCSYS kernel/core_pattern"].startswith("refus"), valeurs)
+        self.assertTrue(all(valeurs["PROCSYS " + n].startswith("refus") for n in ("fs/suid_dumpable", "vm/drop_caches", "kernel/modprobe")))
+        self.assertTrue(valeurs["REMONTAGE /"].startswith("refus"))
+        self.assertTrue(valeurs["PROCESSUS"].startswith("refus-apres-"), valeurs["PROCESSUS"])  # la borne de 40 tient pour de vrai
+        self.assertTrue(valeurs["SHM"].startswith("REUSSI"), valeurs["SHM"])  # un dossier ordinaire n'est pas borné : l'évaluation le dirait
+        self.assertFalse(os.path.exists(os.path.join(travail, "fichier-shm")))
+        # artefact : ce processus n'est pas confiné par bwrap (ensemble limite des capacités non vide) → l'évaluation le refuse
+        sortie_bac = r.stdout.replace(travail, "/travail")  # ce que la sonde imprimerait dans le bac (même dossier de travail)
+        ok, motif = tdm.evaluer_sonde_privileges(sortie_bac, 0, "")
+        self.assertFalse(ok)
+        self.assertIn("capacités", motif)
+        # avec les lignes que seul bwrap peut établir remplacées, le reste de la lecture reste cohérent
+        corrige = sortie_bac.replace("CapBnd=" + valeurs["CapBnd"], "CapBnd=0000000000000000")
+        corrige = corrige.replace("SHM=" + valeurs["SHM"], "SHM=refus-apres-32-Mo-errno-28")
+        # hors du bac, un réglage de /proc/sys s'ouvre en écriture pour un utilisateur sans privilège (ici kernel/ns_last_pid, mode 0666,
+        # propre à l'espace de processus) : c'est le montage en lecture seule de /proc/sys du bac qui le ferme ; l'évaluation le compte
+        self.assertEqual(valeurs["PROCSYS-OUVRABLES"], "1", valeurs)
+        ok, motif = tdm.evaluer_sonde_privileges(corrige, 0, "", uid_hote_attendu=UID_ESSAI, userns_permis=True)
+        self.assertFalse(ok)
+        self.assertIn("1 réglages de /proc/sys", motif)
+        corrige = corrige.replace("PROCSYS-OUVRABLES=1", "PROCSYS-OUVRABLES=0")
+        ok, motif = tdm.evaluer_sonde_privileges(corrige, 0, "", uid_hote_attendu=UID_ESSAI, userns_permis=True)
+        self.assertTrue(ok, motif)  # tout le reste est cohérent : la seule différence avec le bac est CapBnd et /dev/shm
+
+    def test_v50_05_plomberie_de_l_utilisateur_dedie_faux_bwrap_sous_setpriv(self):
+        """Noyau superutilisateur et `setpriv` : le faux `bwrap` (aucun confinement) est lancé **sous l'utilisateur dédié** par
+        l'exécuteur réel. Le script vu s'exécute sans privilège (uid et gid de l'utilisateur, groupes vides, `setuid(0)` refusé,
+        `/proc/sys` fermé en écriture) ; le dossier de travail racine, le dossier de l'exécution et les fichiers que le noyau y
+        écrit lui appartiennent (le noyau les écrit sans suivre de lien) ; **la borne de processus tient** (refus avant la
+        borne, CL14-02) ; ce que le script laisse — fichier setuid, tube, lien, sous-dossier fermé — est vu par le noyau
+        (le fichier setuid est refusé et consigné, jamais haché), puis tout le dossier est retiré, y compris le sous-dossier fermé."""
+        if not utilisateur_dedie_possible():
+            self.skipTest("noyau superutilisateur avec setpriv requis pour lancer un processus sous un utilisateur dédié")
+        base = self.dossier_traversable()
+        racine = os.path.join(base, "racine")
+        os.mkdir(racine)
+        os.chown(racine, UID_ESSAI, UID_ESSAI)
+        os.chmod(racine, 0o700)
+        faux = os.path.join(base, "faux-bwrap")
+        journal = os.path.join(racine, "faux-bwrap.jsonl")
+        with open(faux, "w", encoding="utf-8") as f:
+            f.write(FAUX_BWRAP.replace("@PYTHON@", "/usr/bin/python3").replace("@JOURNAL@", repr(journal)))
+        os.chmod(faux, 0o755)
+        ex = tdm.ExecuteurBacASable(bwrap=faux, python="/usr/bin/python3", delai_s=60.0, processus_max=64, utilisateur_bac=UID_ESSAI,
+                                    racine_travail=racine)
+        self.assertIsNone(ex.verifier_outils())
+        self.assertIsNone(ex.verifier_identite())  # le noyau (superutilisateur) a un utilisateur dédié, son dossier racine à lui
+        etage = ex.ouvrir_racine_travail()
+        self.assertEqual(os.lstat(etage).st_uid, UID_ESSAI)
+        self.assertEqual(os.path.dirname(etage), racine)
+        travail = os.path.join(etage, "fiche-execution-01")
+        prop = ex.proprietaire_travail()
+        tdm.creer_dossier_neuf(travail, prop)
+        tdm.ecrire_dans_travail(travail, "tranche/a.csv", b"v\n1\n", prop)
+        script = ("import os, signal\nprint('ids', os.getuid(), os.geteuid(), os.getgid(), os.getgroups())\n"
+                  "try:\n    os.setuid(0)\n    print('SETUID0 REUSSI')\nexcept OSError as e:\n    print('SETUID0 refus', e.errno)\n"
+                  "try:\n    os.close(os.open('/proc/sys/kernel/core_pattern', os.O_WRONLY | os.O_NONBLOCK))\n    print('PROCSYS OUVERT')\n"
+                  "except OSError as e:\n    print('PROCSYS refus', e.errno)\n"
+                  "print('lu', open('tranche/a.csv').read().split())\n"
+                  "open('suid', 'w').write('x'); os.chmod('suid', 0o4755)\nos.mkfifo('tuyau'); os.symlink('/proc/self/environ', 'lien')\n"
+                  "os.mkdir('ferme'); open('ferme/x', 'w').write('y'); os.chmod('ferme', 0)\n"
+                  "enfants = []\ntry:\n    for _ in range(100):\n        pid = os.fork()\n        if pid == 0:\n            signal.pause()\n"
+                  "            os._exit(0)\n        enfants.append(pid)\n    print('PROCESSUS REUSSI', len(enfants))\n"
+                  "except OSError as e:\n    print('PROCESSUS refus', len(enfants) < 64, e.errno)\n"
+                  "for pid in enfants:\n    os.kill(pid, 9)\nfor pid in enfants:\n    os.waitpid(pid, 0)\nprint('RESULTAT: 0.4')\n")
+        chemin = os.path.join(travail, "script.py")
+        tdm.ecrire_exclusif(chemin, script.encode("utf-8"), proprietaire=prop)
+        for rel in ("script.py", "tranche", "tranche/a.csv", ""):
+            st = os.lstat(os.path.join(travail, rel))
+            self.assertEqual((st.st_uid, st.st_gid), (UID_ESSAI, UID_ESSAI), rel)
+        r = ex.executer(chemin, travail, delai_s=60.0, dossier_capture=base)
+        self.assertEqual((r["code"], r["delai_depasse"], r["limites_depassees"]), (0, False, []), r["stderr"])
+        self.assertEqual(r["commande"][:8], ["/usr/bin/setpriv", "--reuid", str(UID_ESSAI), "--regid", str(UID_ESSAI), "--clear-groups",
+                                              "--no-new-privs", "--"] if shutil.which("setpriv") == "/usr/bin/setpriv" else r["commande"][:8])
+        sortie = r["stdout"]
+        self.assertIn(f"ids {UID_ESSAI} {UID_ESSAI} {UID_ESSAI} []", sortie)
+        self.assertIn("SETUID0 refus", sortie)
+        self.assertIn("PROCSYS refus", sortie)
+        self.assertIn("lu ['v', '1']", sortie)
+        self.assertIn("PROCESSUS refus True", sortie)  # la borne de 64 processus tient pour l'utilisateur dédié
+        self.assertNotIn("REUSSI", sortie)
+        with open(journal, encoding="utf-8") as f:
+            trace = [json.loads(l) for l in f if l.strip()][0]
+        self.assertEqual(trace["rlimit_nproc"], [64, 64])
+        # ce que le noyau voit, en superutilisateur, sans rien suivre
+        inv = tdm.inventaire_travail(travail, sauf=("tranche",))
+        self.assertEqual(inv.depassements, [])
+        self.assertEqual(inv.interdits, ["suid"])
+        self.assertEqual(inv.non_copies["suid"]["type"], "fichier setuid ou setgid (refusé)")
+        self.assertEqual((inv.non_copies["tuyau"]["type"], inv.non_copies["lien"]["type"]), ("tube nommé", "lien"))
+        self.assertIn("ferme/x", inv.fichiers)  # le noyau superutilisateur lit le sous-dossier fermé
+        self.assertNotIn("suid", inv.fichiers)
+        ok, motif = ex.fermer_racine_travail(etage)
+        self.assertTrue(ok, motif)
+        self.assertFalse(os.path.exists(etage))
+        self.assertEqual(os.listdir(racine), ["faux-bwrap.jsonl"])  # rien d'autre ne reste
+        # la sonde elle-même crée ses dossiers sous le dossier racine de l'utilisateur dédié, et les retire
+        avant = sorted(os.listdir(racine))
+        ok, motif = ex.disponible()
+        self.assertFalse(ok)  # le faux bwrap ne confine rien : la sonde refuse (réseau non isolé)
+        self.assertEqual(sorted(os.listdir(racine)), avant)
+
+    def test_v50_06_creation_et_ecriture_remises_a_l_utilisateur(self):
+        """`creer_dossier_neuf`, `ecrire_exclusif` et `ecrire_dans_travail` remettent ce qu'ils créent à l'identité donnée, sans
+        suivre de lien (le fichier par descripteur, le dossier par `lchown`) ; sans identité, rien ne change ; un lien posé avant
+        est toujours refusé et sa cible n'est pas touchée."""
+        d = os.path.join(self.tmp, "w")
+        os.makedirs(d)
+        moi = (os.getuid(), os.getgid())
+        tdm.creer_dossier_neuf(os.path.join(d, "a"), moi)
+        tdm.ecrire_dans_travail(os.path.join(d, "a"), "tranche/x/f.csv", b"1", moi)
+        tdm.ecrire_exclusif(os.path.join(d, "a", "g"), b"2", proprietaire=moi)
+        for rel in ("", "tranche", "tranche/x", "tranche/x/f.csv", "g"):
+            st = os.lstat(os.path.join(d, "a", rel))
+            self.assertEqual((st.st_uid, st.st_gid), moi, rel)
+        if os.geteuid() == 0:
+            autre = (UID_ESSAI, UID_ESSAI)
+            tdm.creer_dossier_neuf(os.path.join(d, "b"), autre)
+            tdm.ecrire_dans_travail(os.path.join(d, "b"), "tranche/f.csv", b"1", autre)
+            tdm.ecrire_exclusif(os.path.join(d, "b", "g"), b"2", proprietaire=autre)
+            for rel in ("", "tranche", "tranche/f.csv", "g"):
+                st = os.lstat(os.path.join(d, "b", rel))
+                self.assertEqual((st.st_uid, st.st_gid), autre, rel)
+            hote = os.path.join(self.tmp, "hote.txt")
+            with open(hote, "w", encoding="utf-8") as f:
+                f.write("HOTE")
+            os.symlink(hote, os.path.join(d, "b", "lien"))
+            with self.assertRaises(tdm.EtageInterrompu):
+                tdm.ecrire_exclusif(os.path.join(d, "b", "lien"), b"X", proprietaire=autre)
+            self.assertEqual(self.h().lire(hote), "HOTE")
+            self.assertEqual(os.stat(hote).st_uid, 0)  # la cible du lien n'a pas changé de propriétaire
+            os.symlink(hote, os.path.join(d, "lien-dossier"))
+            with self.assertRaises(tdm.EtageInterrompu):
+                tdm.creer_dossier_neuf(os.path.join(d, "lien-dossier"), autre)
+            self.assertEqual(os.stat(hote).st_uid, 0)
+
+    # --- CL14-02 : aucun fichier setuid ou setgid ; CL14-12 : dossier fermé ------------------------------------------------------------
+
+    def test_v50_07_inventaire_fichiers_setuid_et_setgid_refuses_et_consignes(self):
+        """Un fichier régulier setuid ou setgid n'est ni haché ni copié : il est consigné (`interdits`, `non_copies`) ; un fichier
+        ordinaire est relevé ; dans l'étage, le script qui en crée un fait une exécution « échouée (fichier setuid ou setgid) »,
+        un incident, un verdict « non concluant » même si le chiffre imprimé passe le seuil, et **aucun** fichier setuid ou setgid
+        (ni lien, ni tube, ni prise) ne reste sous la sortie."""
+        d = os.path.join(self.tmp, "inv")
+        os.makedirs(d)
+        for nom, mode in (("suid", 0o4755), ("sgid", 0o2755), ("les-deux", 0o6755), ("ordinaire", 0o644), ("exec", 0o755)):
+            with open(os.path.join(d, nom), "wb") as f:
+                f.write(b"x")
+            os.chmod(os.path.join(d, nom), mode)
+        inv = tdm.inventaire_travail(d)
+        self.assertEqual(sorted(inv.interdits), ["les-deux", "sgid", "suid"])
+        self.assertEqual(sorted(inv.fichiers), ["exec", "ordinaire"])
+        self.assertTrue(all(inv.non_copies[n]["type"] == "fichier setuid ou setgid (refusé)" for n in inv.interdits))
+        script = "import os\nopen('s', 'w').write('x')\nos.chmod('s', 0o4755)\nopen('ok.txt', 'w').write('ok')\nprint('RESULTAT: 0.9')\n"
+        _, par = self.etage_simple("e50s", lambda f, t, c: bloc_exp(executer(script)) if t == 1 else bloc_fin())
+        r = list(par.values())[0]
+        e = r["executions"][0]
+        self.assertEqual(e["statut"], "échouée (fichier setuid ou setgid)")
+        self.assertEqual([p["chemin"] for p in e["fichiers_produits"]], ["ok.txt"])
+        self.assertEqual([x["chemin"] for x in e["entrees_non_copiees"]], ["s"])
+        self.assertEqual(r["verdict"], "non concluant")
+        self.assertTrue(r["incidents"] and "setuid" in r["incidents"][0]["type"])
+        self.assertEqual(self.liens_tubes_et_prises(os.path.join(self.tmp, "e50s")), [])
+
+    def test_v50_08_dossier_illisible_est_un_depassement_jamais_ignore(self):
+        """CL14-12 : un dossier qui ne peut pas être parcouru (hors disparition en cours de route) est un dépassement, au parcours
+        complet comme à la mesure rapide pendant l'exécution ; une entrée disparue est ignorée. Joué avec `scandir` et `stat`
+        remplacés (partout), puis, noyau superutilisateur, **pour de vrai** sous l'identité sans privilège avec un
+        sous-dossier de mode 000 — le noyau superutilisateur, lui, le lit ; enfin le retrait du dossier de travail rouvre le
+        sous-dossier fermé."""
+        d = os.path.join(self.tmp, "ill")
+        os.makedirs(os.path.join(d, "sous"))
+        with open(os.path.join(d, "sous", "f"), "wb") as f:
+            f.write(b"x")
+        vrai_scandir = os.scandir
+
+        def scandir_refuse(chemin):
+            if str(chemin).endswith("sous"):
+                raise PermissionError(13, "Permission denied", chemin)
+            return vrai_scandir(chemin)
+
+        def scandir_disparu(chemin):
+            if str(chemin).endswith("sous"):
+                raise FileNotFoundError(2, "No such file or directory", chemin)
+            return vrai_scandir(chemin)
+        with _mock.patch.object(tdm.os, "scandir", scandir_refuse):
+            inv = tdm.inventaire_travail(d)
+            self.assertTrue(inv.depassements and "dossier illisible : non parcouru (sous" in inv.depassements[0], inv.depassements)
+            self.assertTrue(tdm.mesure_rapide_travail(d))
+        with _mock.patch.object(tdm.os, "scandir", scandir_disparu):
+            inv = tdm.inventaire_travail(d)
+            self.assertEqual(inv.depassements, [])  # disparu pendant le parcours : pas un dépassement
+        self.assertEqual(tdm.inventaire_travail(d).depassements, [])
+        self.assertEqual(sorted(tdm.inventaire_travail(d).fichiers), ["sous/f"])
+
+        def jouer():
+            travail = os.path.join(self.zone_ferme, "travail")
+            os.mkdir(os.path.join(travail, "ferme"))
+            with open(os.path.join(travail, "ferme", "secret.txt"), "w", encoding="utf-8") as f:
+                f.write("x" * 100)
+            os.chmod(os.path.join(travail, "ferme"), 0)
+            inv_ = tdm.inventaire_travail(travail)
+            rapide = tdm.mesure_rapide_travail(travail)
+            ok, motif = tdm.supprimer_arbre(travail)
+            return {"depassements": inv_.depassements, "fichiers": sorted(inv_.fichiers), "rapide": rapide, "retire": ok,
+                    "existe": os.path.exists(travail), "motif": motif}
+        self.base_ferme = self.dossier_traversable()
+        self.zone_ferme = os.path.join(self.base_ferme, "zone")  # le dossier racine de l'utilisateur : lui seul peut y retirer son travail
+        os.mkdir(self.zone_ferme)
+        travail = os.path.join(self.zone_ferme, "travail")
+        os.mkdir(travail)
+        if os.geteuid() == 0:
+            if not utilisateur_dedie_possible():
+                self.skipTest("setpriv requis pour jouer la partie sous une identité sans privilège")
+            os.chown(self.zone_ferme, UID_ESSAI, UID_ESSAI)
+            os.chown(travail, UID_ESSAI, UID_ESSAI)
+            # le noyau superutilisateur lit un sous-dossier fermé (mode 000) : contraste
+            os.mkdir(os.path.join(self.base_ferme, "contraste"))
+            os.mkdir(os.path.join(self.base_ferme, "contraste", "ferme"))
+            with open(os.path.join(self.base_ferme, "contraste", "ferme", "s"), "wb") as f:
+                f.write(b"s")
+            os.chmod(os.path.join(self.base_ferme, "contraste", "ferme"), 0)
+            inv = tdm.inventaire_travail(os.path.join(self.base_ferme, "contraste"))
+            self.assertEqual((inv.depassements, sorted(inv.fichiers)), ([], ["ferme/s"]))
+            resultat = en_tant_que(UID_ESSAI, jouer)
+        else:
+            resultat = jouer()
+        self.assertNotIn("erreur", resultat, resultat)
+        self.assertTrue(resultat["depassements"] and "dossier illisible" in resultat["depassements"][0], resultat)
+        self.assertTrue(resultat["rapide"])
+        self.assertEqual(resultat["fichiers"], [])  # le contenu du dossier fermé n'a pas été pris pour absent : il a été signalé
+        self.assertTrue(resultat["retire"], resultat)  # le retrait rouvre le sous-dossier fermé
+        self.assertFalse(resultat["existe"])
+
+    # --- CL14-04, CL14-05 : la sortie scellée ne garde que les copies déclarées ------------------------------------------------------
+
+    def test_v50_09_dossier_de_travail_hors_de_la_sortie_et_retire(self):
+        """CL14-04 : après l'étage (avec des liens vers `/proc/self/environ` et un secret de l'hôte factice, un tube, une prise, un
+        gros fichier), la sortie ne contient ni dossier de travail, ni lien, ni tube, ni prise, ni gros fichier ; le dossier
+        provisoire où vivaient les dossiers de travail est retiré ; l'inventaire scellé garde noms, genres et empreintes. Même
+        quand l'étage s'arrête en route (lien posé sur le dossier de l'exécution suivante), rien ne reste dans le dossier
+        provisoire."""
+        racine_sys = self.dossier_systeme_isole()
+        secret = os.path.join(self.tmp, "secret-hote.txt")
+        with open(secret, "w", encoding="utf-8") as f:
+            f.write("SECRET-FACTICE-DE-L-HOTE")
+        script = ("import os, socket\nos.symlink('/proc/self/environ', 'environ.txt')\n"
+                  f"os.symlink({secret!r}, 'secret.txt')\nos.mkfifo('tuyau')\n"
+                  "s = socket.socket(socket.AF_UNIX); s.bind('prise.sock'); s.close()\n"
+                  "open('gros.bin', 'wb').write(b'x' * 3000000)\nopen('petit.txt', 'w').write('ok')\nprint('RESULTAT: 0.4')\n")
+        with limite_de_temps(90):
+            _, par = self.etage_simple("e50t", lambda f, t, c: bloc_exp(executer(script)) if t == 1 else bloc_fin())
+        r = list(par.values())[0]
+        e = r["executions"][0]
+        self.assertEqual(e["statut"], "réussie")
+        self.assertTrue(e["travail_retire"])
+        sortie = os.path.join(self.tmp, "e50t")
+        self.assertEqual(self.liens_tubes_et_prises(sortie), [])
+        for base, dossiers, _ in os.walk(sortie):
+            self.assertNotIn("travail", dossiers, base)
+        self.assertNotIn(b"SECRET-FACTICE-DE-L-HOTE", TestV49.arbre_des_octets(self, sortie))
+        taille = sum(os.path.getsize(os.path.join(b, n)) for b, _, noms in os.walk(sortie) for n in noms)
+        self.assertLess(taille, 2_500_000)  # le fichier de 3 Mo n'est ni gardé ni copié (copie : 1 Mo au plus, il est plus gros)
+        self.assertEqual(sorted(p["chemin"] for p in e["fichiers_produits"]), ["gros.bin", "petit.txt"])
+        self.assertEqual({p["chemin"]: p["copie_scellee"] for p in e["fichiers_produits"]}, {"gros.bin": False, "petit.txt": True})
+        self.assertEqual(sorted(x["chemin"] for x in e["entrees_non_copiees"]), ["environ.txt", "prise.sock", "secret.txt", "tuyau"])
+        self.assertEqual(os.listdir(racine_sys), [])  # le dossier provisoire des dossiers de travail est retiré
+        # l'étage s'arrête en route : le dossier provisoire est tout de même retiré
+        cible = os.path.join(self.tmp, "cible-dossier")
+        os.makedirs(cible)
+        s2 = (f"import os\nfor n in os.listdir('..'):\n    if n.endswith('-execution-01'):\n"
+              f"        os.symlink({cible!r}, '../' + n[:-len('-execution-01')] + '-execution-02')\nprint('RESULTAT: 0.4')\n")
+        tours = {1: bloc_exp(executer(s2)), 2: bloc_exp(executer(script_resultat(0.5))), 3: bloc_fin()}
+        h = self.h()
+        ad = h.kit({"opus": [h.fiche("Arret")]}, exp=lambda f, t, c: tours[t])
+        with self.assertRaisesRegex(idn.CourseInterrompue, "déjà présent"):
+            h.course(ad, "e50u", etage=h.etage(nombre=1), proposeurs=self.PROP, juges=self.JUGES)
+        self.assertEqual(os.listdir(cible), [])
+        self.assertEqual(os.listdir(racine_sys), [])
+        self.assertTrue(idn.verifier_scelle(os.path.join(self.tmp, "e50u", "manifeste-tests-de-mort.json")))
+
+    def test_v50_10_noms_sha256_et_noms_voisins_ne_font_plus_tomber_l_etage(self):
+        """CL14-05 : un script qui produit `r.txt` **et** `r.txt.sha256` (et `a`, un dossier `a.copie`, un fichier `a.copie.sha256`)
+        ne fait plus tomber l'étage : chaque produit est copié et scellé sous `nom_copie` (suffixe `.copie` à chaque composant),
+        chaque scellé se vérifie, la deuxième fiche est jouée. Propriétés de `nom_copie` : injective, jamais un compagnon
+        `.sha256`, jamais le nom d'une autre copie ; l'ancien comportement (la v49 : `EcrasementInterdit`) est reproduit
+        sur `ecrire_scelle` seul."""
+        script = ("import os\nopen('r.txt', 'w').write('x')\nopen('r.txt.sha256', 'w').write('y')\nopen('a', 'w').write('1')\n"
+                  "os.mkdir('a.copie')\nopen('a.copie/z', 'w').write('2')\nopen('a.copie.sha256', 'w').write('3')\nprint('RESULTAT: 0.4')\n")
+        h = self.h()
+        fiches = [h.fiche("Un"), h.fiche("Deux")]
+        _, par = self.etage_simple("e50n", lambda f, t, c: bloc_exp(executer(script)) if t == 1 else bloc_fin(), nombre=2, fiches=fiches)
+        self.assertEqual(len(par), 2)
+        self.assertTrue(all(r["statut"] == "testée" and r["executions"][0]["statut"] == "réussie" for r in par.values()))
+        r = list(par.values())[0]
+        d = os.path.join(self.tmp, "e50n", "noyau", "tests-de-mort", r["identifiant_auteur"], "execution-01", "produits")
+        attendu = ["a.copie", "a.copie.copie/z.copie", "a.copie.sha256.copie", "r.txt.copie", "r.txt.sha256.copie"]
+        copies = sorted(os.path.relpath(os.path.join(b, n), d) for b, _, noms in os.walk(d) for n in noms
+                        if os.path.exists(os.path.join(b, n + ".sha256")))
+        self.assertEqual(copies, attendu)
+        for rel in attendu:
+            self.assertTrue(idn.verifier_scelle(os.path.join(d, rel)), rel)
+        self.assertEqual({p["chemin"]: p["copie"] for p in r["executions"][0]["fichiers_produits"]},
+                         {"a": "produits/a.copie", "a.copie/z": "produits/a.copie.copie/z.copie", "a.copie.sha256": "produits/a.copie.sha256.copie",
+                          "r.txt": "produits/r.txt.copie", "r.txt.sha256": "produits/r.txt.sha256.copie"})
+        # propriétés
+        noms = ["r.txt", "r.txt.sha256", "a", "a.copie", "a.copie.sha256", "a/b", "a.copie/b", "a.copie/b.sha256", "d/e/f", "d.copie/e/f", "x.copie.copie"]
+        images = [tdm.nom_copie(n) for n in noms]
+        self.assertEqual(len(set(images)), len(noms))
+        self.assertFalse(any(i.endswith(".sha256") for i in images))
+        compagnons = {i + ".sha256" for i in images}
+        self.assertFalse(compagnons & set(images))
+        self.assertEqual(tdm.nom_copie("a/b.txt"), "a.copie/b.txt.copie")
+        # reproduction de l'ancien défaut sur le primitif seul
+        ancien = os.path.join(self.tmp, "ancien")
+        idn.ecrire_scelle(os.path.join(ancien, "r.txt"), b"x")
+        from pole.outils import EcrasementInterdit
+        with self.assertRaises(EcrasementInterdit):
+            idn.ecrire_scelle(os.path.join(ancien, "r.txt.sha256"), b"y")
+
+    # --- CL14-06 : recalcul strict ---------------------------------------------------------------------------------------------------
+
+    def test_v50_11_recalcul_strict_l_arrondi_ne_fait_jamais_franchir_le_seuil(self):
+        """CL14-06 (R4, dans les deux sens) : un script qui imprime `0.5` pour une moyenne de 0,46 au seuil « au moins 0,5 » est
+        concordant à l'arrondi près mais le verdict sur la valeur du noyau (« éliminée ») diffère de celui du chiffre imprimé
+        (« survit ») : **non concluant** ; idem dans l'autre sens (`0.5` pour 0,54 au seuil « au moins 0,52 »). Les cas qui ne
+        franchissent pas le seuil restent « recalculés ». L'étiquette dit ce qui est recalculé : la statistique déclarée par le
+        script. Dans l'étage : écart type de `serie-b` (0,7071) imprimé `0.7` aux seuils 0,705 (deux sens de comparaison)."""
+        tranche = _types.SimpleNamespace(fichiers={"f.csv": {"texte": "v\n0.4\n0.52\n"}, "g.csv": {"texte": "v\n0.54\n0.54\n"}})
+
+        def jouer(fichier, seuil, comparateur, imprime, ligne=None):
+            prereg = {"donnees": [{"chemin": "f.csv"}, {"chemin": "g.csv"}], "seuil": {"comparateur": comparateur, "valeur": seuil}}
+            execs = [{"numero": 1, "lignes_calcul": [f"CALCUL: fichier={fichier}; colonne=v; statistique=moyenne"]}]
+            meca = {"chiffre": imprime, "ligne": ligne or f"RESULTAT: {imprime}", "execution": 1}
+            return tdm.recalcul_noyau(prereg, tranche, execs, meca)
+        r = jouer("f.csv", 0.5, "≥", 0.5)  # moyenne 0,46 imprimée 0.5 : survit au chiffre imprimé, éliminée sur la valeur du noyau
+        self.assertEqual((r["statut"], r["verdict_sur_valeur_noyau"], r["arrondi_franchit_le_seuil"]), ("concordant", "éliminée", True))
+        self.assertAlmostEqual(r["valeur_noyau"], 0.46)
+        self.assertIn("fait franchir le seuil", r["motif"])
+        r = jouer("g.csv", 0.52, "≥", 0.5)  # moyenne 0,54 imprimée 0.5 : éliminée au chiffre imprimé, survit sur la valeur du noyau
+        self.assertEqual((r["statut"], r["verdict_sur_valeur_noyau"], r["arrondi_franchit_le_seuil"]), ("concordant", "survit", True))
+        r = jouer("f.csv", 0.3, "≥", 0.5)  # les deux survivent
+        self.assertEqual((r["statut"], r["verdict_sur_valeur_noyau"], r["arrondi_franchit_le_seuil"]), ("concordant", "survit", False))
+        self.assertEqual(r["etiquette"], tdm.ETIQUETTE_RECALCULE)
+        r = jouer("f.csv", 0.5, "≥", 0.4)  # discordant : pas de verdict du noyau
+        self.assertEqual((r["statut"], r["verdict_sur_valeur_noyau"], r["arrondi_franchit_le_seuil"]), ("discordant", None, False))
+        self.assertEqual(tdm.ETIQUETTE_RECALCULE, "statistique déclarée par le script, recalculée par le noyau")
+        self.assertNotEqual(tdm.ETIQUETTE_RECALCULE, "chiffre recalculé par le noyau")
+        # dans l'étage
+        h = self.h()
+        script = script_calcul(0.7, "ecart_type", colonne="c", donnee="serie-b.csv")
+        for nom, seuil, attendu_script in (("e50r1", "au moins 0,705", "éliminée"), ("e50r2", "au plus 0,705", "survit")):
+            fiche = h.fiche("Bord", test=h.champ_test(donnees=("serie-b.csv",), seuil=seuil))
+            ad, par = self.etage_simple(nom, lambda f, t, c: bloc_exp(executer(script)) if t == 1 else bloc_fin(), fiches=[fiche])
+            r = list(par.values())[0]
+            self.assertEqual(r["lecture_mecanique"]["verdict"], attendu_script, nom)  # ce que la v49 aurait prononcé, étiqueté « recalculé »
+            self.assertEqual((r["verdict"], r["recalcul_noyau"]["statut"], r["recalcul_noyau"]["arrondi_franchit_le_seuil"]), ("non concluant", "concordant", True), nom)
+            self.assertIn("recalcul strict", r["desaccord"], nom)
+            materiau = self.h().lire(os.path.join(self.tmp, nom, "noyau", "tests-de-mort", "materiau-tests-de-mort.md"))
+            self.assertIn("- Bord (rang 1) : non concluant", materiau)
+            self.assertNotIn("recalculée par le noyau", materiau)
+        # le cas qui ne franchit pas le seuil reste « survit » avec la nouvelle étiquette
+        fiche = h.fiche("Franc", test=h.champ_test(donnees=("serie-b.csv",), seuil="au moins 0,5"))
+        ad, par = self.etage_simple("e50r3", lambda f, t, c: bloc_exp(executer(script)) if t == 1 else bloc_fin(), fiches=[fiche])
+        r = list(par.values())[0]
+        self.assertEqual((r["verdict"], r["fiabilite_du_chiffre"]), ("survit", tdm.ETIQUETTE_RECALCULE))
+        materiau = self.h().lire(os.path.join(self.tmp, "e50r3", "noyau", "tests-de-mort", "materiau-tests-de-mort.md"))
+        self.assertIn("survit (statistique déclarée par le script, recalculée par le noyau)", materiau)
+
+    # --- CL14-08, CL14-09 : Argon, le modèle servi ------------------------------------------------------------------------------------
+
+    def test_v50_12_suffixe_de_date_strict_et_liste_explicite(self):
+        """CL14-08 : le modèle servi est le modèle demandé, ou suivi de `-AAAAMMJJ` (date plausible) exactement, ou dans la liste
+        explicite des identifiants permis pour ce modèle ; `-mini`, `-lite`, `-latest`, un préfixe `models/`, un suffixe de date
+        d'un autre format, un mois ou un jour impossible sont des écarts (R-764). Le noyau et les défenses génériques (course,
+        étage, kit) appliquent la même règle."""
+        from pole.adaptateurs import AdaptateurCommandeExterne, controle_modele_resultat, modele_conforme
+        for demande, servi, attendu in (
+                ("claude-opus-5-5", "claude-opus-5-5", True), ("claude-opus-5-5", "claude-opus-5-5-20261001", True),
+                ("claude-opus-5-5", "claude-opus-5-5-mini", False), ("claude-opus-5-5", "claude-opus-5-5-lite", False),
+                ("claude-opus-5-5", "claude-opus-5-5-latest", False), ("claude-opus-5-5", "claude-opus-5-5-2026", False),
+                ("claude-opus-5-5", "claude-opus-5-5-202610011", False), ("claude-opus-5-5", "claude-opus-5-5-20261301", False),
+                ("claude-opus-5-5", "claude-opus-5-5-20261032", False), ("claude-opus-5-5", "claude-opus-5-5-2026-10-01", False),
+                ("claude-opus-5-5", "claude-opus-5-5-20261001-mini", False), ("claude-opus-5-5", "claude-opus-5-50", False),
+                ("claude-opus-5-5", "x-claude-opus-5-5", False), ("gemini-4-argon", "gemini-4-argon-lite", False),
+                ("gemini-4-argon", "models/gemini-4-argon", False), ("gemini-4-argon", "gemini-4-argon-20261001", True),
+                ("gemini-4-argon", "", False), ("", "gemini-4-argon", False), ("gemini-4-argon", None, False)):
+            self.assertEqual(modele_conforme(demande, servi), attendu, (demande, servi))
+        self.assertTrue(modele_conforme("gemini-4-argon", "models/gemini-4-argon", ("models/gemini-4-argon",)))
+        self.assertFalse(modele_conforme("gemini-4-argon", "models/gemini-4-argon-lite", ("models/gemini-4-argon",)))
+        self.assertTrue(AdaptateurClaudeSDK.modele_conforme("claude-opus-5-5", "claude-opus-5-5-20261001"))
+        self.assertFalse(AdaptateurClaudeSDK.modele_conforme("claude-opus-5-5", "claude-opus-5-5-mini"))
+        res = _types.SimpleNamespace(modele_servi="gemini-4-argon-lite")
+        self.assertIsNotNone(controle_modele_resultat("gemini-4-argon", res))
+        res = _types.SimpleNamespace(modele_servi="models/gemini-4-argon")
+        self.assertIsNotNone(controle_modele_resultat("gemini-4-argon", res))
+        self.assertIsNone(controle_modele_resultat("gemini-4-argon", res, {"gemini-4-argon": ("models/gemini-4-argon",)}))
+        # la commande externe : liste explicite par modèle demandé
+        ad = AdaptateurCommandeExterne(TestV49.commande_argon(self, {"modele_servi": "models/gemini-4-argon"}), environnement={},
+                                       exiger_modele_servi=True)
+        self.assertEqual(ad.lancer("proposeur_ideation", "c", self.tmp, 1.0, 1, modele="gemini-4-argon").statut, "refus")
+        ad = AdaptateurCommandeExterne(TestV49.commande_argon(self, {"modele_servi": "models/gemini-4-argon"}), environnement={},
+                                       exiger_modele_servi=True, modeles_servis_permis={"gemini-4-argon": ["models/gemini-4-argon"]})
+        self.assertEqual(ad.lancer("proposeur_ideation", "c", self.tmp, 1.0, 1, modele="gemini-4-argon").statut, "ok")
+        self.assertEqual(ad.description()["modeles_servis_permis"], {"gemini-4-argon": ["models/gemini-4-argon"]})
+        with self.assertRaises(ValueError):
+            AdaptateurCommandeExterne(["x"], modeles_servis_permis={"a": "pas-une-liste"})
+        with self.assertRaises(ValueError):
+            AdaptateurCommandeExterne(["x"], modeles_servis_permis={"": ["a"]})
+
+    def test_v50_13_ecart_de_modele_vu_par_la_commande_est_un_refus(self):
+        """CL14-09 : la commande qui voit l'écart elle-même (code 5, `modele_servi` dans la ligne) rend un « refus » (jamais le
+        texte, dépense comptée à part), comme sur un code 0 ; une erreur ordinaire (code ≠ 0, ligne sans `modele_servi`, ou avec
+        le modèle demandé) reste une « erreur » ; un refus dit par la commande avec un code ≠ 0 est un refus sans dépense
+        « non autorisée » ; dans l'étage, l'écart arrête l'étage, la sortie est mise à l'écart et le manifeste l'écrit."""
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        modele = "argon-x"
+
+        def jouer(extra, code, exiger=True):
+            chemin = os.path.join(self.tmp, f"argon-{abs(hash((repr(extra), code, exiger)))}.py")
+            with open(chemin, "w", encoding="utf-8") as f:
+                f.write(SCRIPT_ARGON_CODE % (repr(extra), code))
+            ad = AdaptateurCommandeExterne([sys.executable, "-I", chemin], environnement={}, exiger_modele_servi=exiger)
+            return ad.lancer("proposeur_ideation", "consigne", self.tmp, 1.0, 1, modele=modele)
+        r = jouer({"modele_servi": "argon-y"}, 5)
+        self.assertEqual((r.statut, r.texte_final, r.cout_declare_usd, r.depense_modele_non_autorise_usd), ("refus", "", 0.2, 0.2))
+        self.assertEqual((r.refus["evenement"], r.modele_servi), ("commande.modele_servi", "argon-y"))
+        self.assertIn("code 5", r.erreur)
+        r = jouer({"modele_servi": "argon-y"}, 0)  # même sortie, code 0 : le comportement de la v49
+        self.assertEqual((r.statut, r.depense_modele_non_autorise_usd), ("refus", 0.2))
+        for extra, code in (({}, 5), ({"modele_servi": modele}, 5), ({"modele_servi": modele + "-20261001"}, 1)):
+            r = jouer(extra, code)
+            self.assertEqual((r.statut, r.refus, r.texte_final), ("erreur", None, ""), (extra, code))
+            self.assertEqual(r.cout_declare_usd, 0.2)
+        r = jouer({"refus": True}, 5)
+        self.assertEqual((r.statut, r.refus["evenement"], r.depense_modele_non_autorise_usd), ("refus", "commande.refus", 0.0))
+        r = jouer({"stop_reason": "refusal"}, 2)
+        self.assertEqual((r.statut, r.depense_modele_non_autorise_usd), ("refus", 0.0))
+        # non exigé : une ligne sans modele_servi reste une erreur ordinaire
+        self.assertEqual(jouer({}, 5, exiger=False).statut, "erreur")
+        self.assertEqual(jouer({"modele_servi": "argon-y"}, 5, exiger=False).statut, "refus")
+
+    # --- CL14-07 : le lanceur ---------------------------------------------------------------------------------------------------------
+
+    def test_v50_14_lanceur_argon_experimentateur_et_etiquette_refuses_avant_tout_appel(self):
+        """CL14-07 : avec le moteur réel, un rôle externe dont le modèle n'est pas celui que la commande demande toujours
+        (`gemini-4-argon`, ou `--modele-commande-externe`) est refusé avant tout appel ; `--experimentateur-externe` est refusé
+        (dit : non fonctionnel avec la commande réelle, qui n'accepte que le proposeur et le juge) tant que
+        `--commande-externe-accepte-experimentateur` n'atteste pas une commande qui l'accepte ; avec le moteur simulé rien ne
+        change. Options de la v50 refusées hors de l'étage, avec le bac factice, ou sans expérimentateur externe ; l'exécuteur
+        du lanceur reçoit l'utilisateur dédié, le dossier racine et la demande d'espaces imbriqués."""
+        import contextlib
+        import io
+        lanceur = TestLanceurV37("test_options_refusees").lanceur()
+
+        def args(**kw):
+            base = dict(moteur="claude-sdk", commande_externe="cmd", experimentateur_externe=None, modele_commande_externe=None,
+                        commande_externe_accepte_experimentateur=False)
+            base.update(kw)
+            return _types.SimpleNamespace(**base)
+        verifier = lanceur.verifier_commande_externe_reelle
+        verifier(args(), [("argon", "gemini-4-argon")], [("argon-j", "gemini-4-argon")])
+        with self.assertRaisesRegex(idn.CourseInterrompue, "gemini-argon"):
+            verifier(args(), [("argon", "gemini-argon")], [("argon-j", "gemini-4-argon")])
+        with self.assertRaisesRegex(idn.CourseInterrompue, "refusé avant tout appel"):
+            verifier(args(), [], [("argon-j", "gemini-argon")])
+        verifier(args(modele_commande_externe="gemini-argon"), [("argon", "gemini-argon")], [("argon-j", "gemini-argon")])  # autre commande, dite
+        verifier(args(moteur="simule"), [("argon", "gemini-argon")], [])  # moteur simulé : aucune contrainte
+        verifier(args(commande_externe=None), [("argon", "gemini-argon")], [])
+        with self.assertRaises(idn.CourseInterrompue) as cm:
+            verifier(args(experimentateur_externe="argon-e=gemini-4-argon"), [], [])
+        self.assertIn("NON FONCTIONNEL", str(cm.exception))
+        self.assertIn("commande_argon_v2.py", str(cm.exception))
+        self.assertIn("experimentateur_test", str(cm.exception))
+        self.assertIn("code 2", str(cm.exception))
+        verifier(args(experimentateur_externe="argon-e=gemini-4-argon", commande_externe_accepte_experimentateur=True), [], [])
+        verifier(args(moteur="simule", experimentateur_externe="argon-e=gemini-argon"), [], [])
+        with self.assertRaises(idn.CourseInterrompue):  # l'expérimentateur externe porte lui aussi l'étiquette de la commande
+            verifier(args(experimentateur_externe="argon-e=gemini-argon", commande_externe_accepte_experimentateur=True), [], [])
+        # arguments de la ligne de commande
+        a = lanceur.construire_analyseur()
+        analyse = a.parse_args(["S", "--tests-de-mort", "1", "--utilisateur-bac", "64097", "--dossier-travail-bac", "/srv/bac",
+                                "--userns-imbriques-permis", "--modele-servi-externe-permis", "gemini-4-argon=models/gemini-4-argon"])
+        self.assertEqual((analyse.utilisateur_bac, analyse.dossier_travail_bac, analyse.userns_imbriques_permis, analyse.modele_servi_externe_permis),
+                         ("64097", "/srv/bac", True, ["gemini-4-argon=models/gemini-4-argon"]))
+        analyse.experimentateur, analyse.lecteur_test, analyse.tranche_exploratoire = "e=claude-opus-5-5", "l=claude-fable-5-1", "t"
+        reglages = lanceur.reglages_tests_de_mort(analyse)
+        self.assertIsInstance(reglages["executeur"], tdm.ExecuteurBacASable)
+        self.assertEqual(reglages["executeur"].utilisateur_bac[:2], (64097, 64097))
+        self.assertEqual(reglages["executeur"].racine_travail, "/srv/bac")
+        self.assertTrue(reglages["executeur"].userns_imbriques_permis)
+        analyse.utilisateur_bac = "0"
+        with self.assertRaisesRegex(idn.CourseInterrompue, "bac à sable de l'étage"):
+            lanceur.reglages_tests_de_mort(analyse)
+        analyse.utilisateur_bac, analyse.dossier_travail_bac, analyse.userns_imbriques_permis = None, None, False
+        self.assertIsNone(lanceur.reglages_tests_de_mort(analyse)["executeur"])  # défaut inchangé : le cœur crée l'exécuteur
+        adaptateur = lanceur.adaptateur_commande_externe(_types.SimpleNamespace(
+            commande_externe="x", delai_commande_s=5.0, variable_transmise=[], moteur="claude-sdk",
+            modele_servi_externe_permis=["gemini-4-argon=models/gemini-4-argon", "gemini-4-argon=gemini-4-argon-x"]))
+        self.assertEqual(adaptateur.modeles_servis_permis, {"gemini-4-argon": ("models/gemini-4-argon", "gemini-4-argon-x")})
+        with self.assertRaises(idn.CourseInterrompue):
+            lanceur.adaptateur_commande_externe(_types.SimpleNamespace(
+                commande_externe="x", delai_commande_s=5.0, variable_transmise=[], moteur="simule", modele_servi_externe_permis=["sans-egal"]))
+        # refus de la ligne de commande : options de la v50 hors de l'étage, avec le bac factice, ou sans expérimentateur externe
+        base = [os.path.join(self.tmp, "s"), "--liste-blanche", "l", "--question", "q", "--temoins", "t"]
+        etage = ["--tests-de-mort", "1", "--tranche-exploratoire", "t", "--experimentateur", "e=m", "--lecteur-test", "l=m"]
+        for options, message in ((["--utilisateur-bac", "64097"], "--utilisateur-bac"), (["--dossier-travail-bac", "/srv/bac"], "--dossier-travail-bac"),
+                                 (["--userns-imbriques-permis"], "--userns-imbriques-permis"),
+                                 (["--commande-externe-accepte-experimentateur"], "--commande-externe-accepte-experimentateur"),
+                                 (etage + ["--executeur-tests", "factice", "--utilisateur-bac", "64097"], "ne valent que pour le bac"),
+                                 (etage + ["--commande-externe-accepte-experimentateur"], "ne se donne qu'avec --experimentateur-externe")):
+            erreur = io.StringIO()
+            with contextlib.redirect_stderr(erreur):
+                with self.assertRaises(SystemExit, msg=options) as cm:
+                    lanceur.principal(base + options)
+            self.assertEqual(cm.exception.code, 2, options)
+            self.assertIn(message, erreur.getvalue(), options)
+
+    # --- CL14-11 : essais réels, seulement avec `bwrap` ----------------------------------------------------------------------------------
+
+    @unittest.skipUnless(shutil.which("bwrap"), "bwrap absent de cette machine : essai réel à rejouer dans le conteneur de session-depot")
+    def test_v50_15_bac_reel_evasions_de_cl14_rejouees_cibles_factices(self):
+        """Seulement avec `bwrap` (et, noyau superutilisateur, l'utilisateur dédié des variables d'environnement) : les sondes de
+        CL14 jouées dans le vrai bac **sans rien écrire dans l'hôte** : ouverture en écriture de `/proc/sys` (jamais d'écriture),
+        identité de l'hôte lue dans `uid_map`, espace d'utilisateurs imbriqué, `/dev/shm` borné, borne de processus (tient avant
+        1 100 processus), fichier setuid (refusé et consigné par le noyau), liens, tubes, prises, noms `.sha256`, dossier de
+        travail retiré. Non joué sur la machine de la v50 (pas de `bwrap`) : **à rejouer** avant tout GO de l'étage."""
+        vrai = executeur_reel(self, 30.0)
+        ok, motif = vrai.disponible()
+        self.assertTrue(ok, motif)
+        for mot in ("/proc/sys en lecture seule", "espaces d'utilisateurs imbriqués refusés", "/dev/shm borné", "borne de processus tenue"):
+            self.assertIn(mot, motif)
+        racine_sys = self.dossier_systeme_isole() if os.geteuid() != 0 else None
+        sonde = ("import ctypes, os, resource, signal\n"
+                 "def essai(nom, f):\n"
+                 "    try:\n        r = f()\n    except BaseException as e:\n        print(nom, 'refus', type(e).__name__)\n"
+                 "    else:\n        print(nom, 'REUSSI', r)\n"
+                 "def ouvrir(chemin):\n    os.close(os.open(chemin, os.O_WRONLY | os.O_NONBLOCK))\n    return 'ouvert'\n"
+                 "def imbrique():\n    pid = os.fork()\n    if pid == 0:\n"
+                 "        os._exit(0 if ctypes.CDLL(None).unshare(0x10000000) == 0 else 1)\n    return os.waitpid(pid, 0)[1] == 0 or (_ for _ in ()).throw(OSError('refus'))\n"
+                 "def shm():\n    fd = os.open('/dev/shm/essai-v50', os.O_WRONLY | os.O_CREAT | os.O_EXCL)\n    try:\n"
+                 "        for _ in range(64):\n            os.write(fd, b'x' * (1 << 20))\n    finally:\n        os.close(fd)\n        os.unlink('/dev/shm/essai-v50')\n    return '64 Mo'\n"
+                 "def bombe():\n    e = []\n    try:\n        for _ in range(1100):\n            pid = os.fork()\n            if pid == 0:\n"
+                 "                signal.pause()\n                os._exit(0)\n            e.append(pid)\n    finally:\n"
+                 "        for pid in e:\n            os.kill(pid, 9)\n        for pid in e:\n            os.waitpid(pid, 0)\n    return len(e)\n"
+                 "essai('proc-sys-core-pattern', lambda: ouvrir('/proc/sys/kernel/core_pattern'))\n"
+                 "essai('proc-sys-drop-caches', lambda: ouvrir('/proc/sys/vm/drop_caches'))\n"
+                 "print('uid_map', open('/proc/self/uid_map').read().split())\n"
+                 "essai('espace-imbrique', imbrique)\nessai('shm-64-Mo', shm)\nessai('bombe-1100', bombe)\n"
+                 "open('suid', 'w').write('x'); os.chmod('suid', 0o4755)\nopen('r.txt', 'w').write('1'); open('r.txt.sha256', 'w').write('2')\n"
+                 "os.symlink('/proc/self/environ', 'environ.txt'); os.mkfifo('tuyau')\nprint('RESULTAT: 0.4')\n")
+        _, par = self.etage_simple("e50v", lambda f, t, c: bloc_exp(executer(sonde)) if t == 1 else bloc_fin(),
+                                   executeur=vrai, delai_execution_s=30.0)
+        r = list(par.values())[0]
+        e = r["executions"][0]
+        d = os.path.join(self.tmp, "e50v", "noyau", "tests-de-mort", list(par)[0], "execution-01")
+        sortie = self.h().lire(os.path.join(d, "stdout.txt"))
+        for ligne in sortie.splitlines():
+            self.assertNotIn(" REUSSI", ligne)
+        for nom in ("proc-sys-core-pattern", "proc-sys-drop-caches", "espace-imbrique", "shm-64-Mo", "bombe-1100"):
+            self.assertIn(f"{nom} refus", sortie)
+        self.assertNotIn("'0', '0', '1'", sortie)  # l'identité de l'hôte (colonne « dehors » de uid_map) n'est pas 0
+        self.assertEqual(e["statut"], "échouée (fichier setuid ou setgid)")
+        self.assertEqual(r["verdict"], "non concluant")
+        self.assertEqual(self.liens_tubes_et_prises(os.path.join(self.tmp, "e50v")), [])
+        self.assertEqual(sorted(os.listdir(os.path.join(d, "produits"))), ["r.txt.copie", "r.txt.copie.sha256", "r.txt.sha256.copie", "r.txt.sha256.copie.sha256"])
+        if racine_sys is not None:
+            self.assertEqual(os.listdir(racine_sys), [])
+
+    @unittest.skipUnless(shutil.which("bwrap"), "bwrap absent de cette machine : essai réel à rejouer dans le conteneur de session-depot")
+    def test_v50_16_bac_reel_liens_tube_et_noms_sha256_par_l_etage_entier(self):
+        """Seulement avec `bwrap` : les essais `test_v49_06` et `test_v49_07` joués avec le **vrai** bac (CL14-11) — un lien posé sur
+        `script.py` n'écrase rien, les produits réguliers sont copiés, liens et tubes consignés sans blocage."""
+        vrai = executeur_reel(self, 30.0)
+        hote = os.path.join(self.tmp, "hote.txt")
+        with open(hote, "w", encoding="utf-8") as f:
+            f.write("CONTENU ORIGINAL DE L'HOTE")
+        s1 = f"import os\nos.remove('script.py')\nos.symlink({hote!r}, 'script.py')\nprint('RESULTAT: 0.4')\n"
+        tours = {1: bloc_exp(executer(s1)), 2: bloc_exp(executer("import os\nos.mkfifo('tuyau')\nopen('ok.txt', 'w').write('x')\nprint('RESULTAT: 0.5')\n")),
+                 3: bloc_fin()}
+        with limite_de_temps(120):
+            _, par = self.etage_simple("e50w", lambda f, t, c: tours[t], executeur=vrai, delai_execution_s=30.0)
+        r = list(par.values())[0]
+        self.assertEqual(self.h().lire(hote), "CONTENU ORIGINAL DE L'HOTE")
+        e1, e2 = r["executions"]
+        self.assertEqual((e1["statut"], e2["statut"]), ("réussie", "réussie"))
+        self.assertEqual([x["type"] for x in e1["entrees_non_copiees"]], ["lien"])
+        self.assertEqual([x["type"] for x in e2["entrees_non_copiees"]], ["tube nommé"])
+        self.assertEqual([p["chemin"] for p in e2["fichiers_produits"]], ["ok.txt"])
+        self.assertEqual(self.liens_tubes_et_prises(os.path.join(self.tmp, "e50w")), [])
+
+    # --- provenance (R12) ------------------------------------------------------------------------------------------------------------------------------
+
+    def test_v50_17_provenance_du_code_modifie_dit_au_lisezmoi(self):
+        """R12 : le LISEZMOI de la v50 liste **chaque fichier de code modifié** avec l'empreinte v49 (celle de
+        `EMPREINTES-orchestrateur-pole-v7-v49.txt`, vérifiée) et l'empreinte v50 (celle du disque, sauf le fichier d'essais, qui ne
+        peut pas contenir sa propre empreinte stable) ; tout fichier de l'empreinte v49 dont le contenu a changé figure dans le
+        tableau ; aucun fichier du tableau n'est inchangé ; le code de la v49 est récupérable dans `CODE-orchestrateur-pole-v7-v49.zip`
+        (empreintes égales à celles de la liste v49)."""
+        import zipfile
+        from essais.test_v47_relais_moisson import RACINE
+        lisezmoi = os.path.join(RACINE, "LISEZMOI-orchestrateur-pole-v7-v50.md")
+        self.assertTrue(os.path.exists(lisezmoi), "LISEZMOI de la v50 absent")
+        v49 = {}
+        with open(os.path.join(RACINE, "EMPREINTES-orchestrateur-pole-v7-v49.txt"), encoding="utf-8") as f:
+            for ligne in f:
+                if ligne.strip():
+                    empreinte, chemin = ligne.split(None, 1)
+                    v49[chemin.strip()] = empreinte
+        tableau = {}
+        with open(lisezmoi, encoding="utf-8") as f:
+            for ligne in f:
+                m = re.match(r"^\|\s*`([^`]+)`\s*\|\s*`([0-9a-f]{64})`\s*\|\s*`([0-9a-f]{64})`\s*\|", ligne)
+                if m:
+                    tableau[m.group(1)] = (m.group(2), m.group(3))
+        self.assertTrue(tableau, "tableau de provenance absent du LISEZMOI")
+        moi = "essais/test_v7_ideation.py"
+        self.assertIn(moi, tableau)
+        for chemin, (ancienne, nouvelle) in tableau.items():
+            self.assertEqual(ancienne, v49[chemin], f"empreinte v49 de {chemin} ≠ EMPREINTES v49")
+            self.assertNotEqual(ancienne, nouvelle, f"{chemin} : listé mais inchangé")
+            if chemin != moi:
+                self.assertEqual(nouvelle, hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest(), f"{chemin} : empreinte v50 ≠ disque")
+        with zipfile.ZipFile(os.path.join(RACINE, "CODE-orchestrateur-pole-v7-v49.zip")) as z:
+            for chemin in tableau:
+                self.assertEqual(hashlib.sha256(z.read(chemin)).hexdigest(), v49[chemin], f"{chemin} : le lot zippé de la v49 diffère")
+        for chemin, empreinte in v49.items():
+            if chemin.startswith(("LISEZMOI", "EMPREINTES")):
+                self.assertEqual(hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest(), empreinte, f"{chemin} : fichier scellé modifié")
+                continue
+            actuelle = hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest()
+            if actuelle != empreinte:
+                self.assertIn(chemin, tableau, f"{chemin} a changé depuis la v49 et n'est pas dans le tableau de provenance")
 
 
 def tdm_roles():

@@ -121,6 +121,18 @@ avec `--bras-rapporte-differe --tests-de-mort N …` (mêmes réglages, `--liste
 l'étage sont ceux de la course. Résultats : section « tests de mort (exploratoires) » du manifeste de fin (course sans
 juge externe) et `manifeste-tests-de-mort.json` ; jamais servis aux juges de la même course.
 
+v50 (contre-lecture CL14, bac à sable et Argon) : `--utilisateur-bac UID|NOM` (utilisateur sans privilège sous lequel `bwrap` est
+lancé par `setpriv` ; **obligatoire quand le noyau tourne en superutilisateur**, sinon l'étage est refusé), `--dossier-travail-bac
+DOSSIER` (racine des dossiers de travail, hors de la sortie, possédée par cet utilisateur, non inscriptible par d'autres,
+traversable par lui ; obligatoire avec `--utilisateur-bac`), `--userns-imbriques-permis` (lève `--disable-userns`, dit au
+manifeste ; défaut : interdits) ; avec le moteur réel et `--commande-externe` : `--modele-commande-externe` (étiquette que la
+commande d'Argon demande toujours, défaut `gemini-4-argon` ; tout autre rôle externe est refusé avant tout appel),
+`--modele-servi-externe-permis DEMANDÉ=SERVI` (identifiants servis permis, liste explicite ; défaut : l'identifiant demandé ou
+suivi de `-AAAAMMJJ`), et `--experimentateur-externe` **refusé** tant que `--commande-externe-accepte-experimentateur` n'atteste pas
+une commande qui accepte `experimentateur_test` : la commande réelle (`/opt/argon/commande_argon_v2.py`) ne joue que
+`proposeur_ideation` et `juge_ideation` (code 2 sinon). Les options du bac et `--commande-externe-accepte-experimentateur` ne
+valent qu'avec `--tests-de-mort N`.
+
 La commande externe : consigne sur l'entrée standard, environnement minimal explicite (plus `PLAFOND_SESSION_USD`,
 `ROLE_POLE` et `--variable-transmise`, jamais un nom de clé), dernière ligne `{"texte": …, "cout_usd": …}` — coût
 **obligatoire, fini, strictement positif** ; sur un échec, le coût imprimé est compté, sinon le plafond de session l'est
@@ -283,6 +295,12 @@ class AdaptateurIdeationSimule:
             return Resultat("```json\n" + json.dumps({"notes": notes, "doublons": doublons}) + "\n```", [],
                             self.COUT[role], "ok")
         raise ValueError(role)
+
+
+# v50 (CL14-07) : le modèle que la commande d'Argon (`/opt/argon/commande_argon_v2.py`, option `--modele`, que
+# `appel-argon-v3.sh` ne passe pas) demande TOUJOURS ; elle ignore `MODELE_DEMANDE_POLE`. Tout autre modèle donné au noyau pour un
+# rôle externe fait arrêter la course au premier appel (modèle servi ≠ modèle demandé) : refusé avant tout appel avec le moteur réel.
+MODELE_ARGON_COMMANDE_V2 = "gemini-4-argon"
 
 
 def paire(texte, defaut_etiquette):
@@ -528,6 +546,13 @@ def reglages_tests_de_mort(args, externe=None):
     exp_ext = (*paire(args.experimentateur_externe, "experimentateur-externe"), externe) if args.experimentateur_externe else None
     executeur = (idn_tests.ExecuteurFactice(delai_s=args.delai_execution_s, memoire_mo=args.memoire_test_mo)
                  if args.executeur_tests == "factice" else None)
+    if args.executeur_tests == "bwrap" and (args.utilisateur_bac or args.dossier_travail_bac or args.userns_imbriques_permis):
+        try:  # v50 : utilisateur dédié, dossier racine du bac, espaces d'utilisateurs imbriqués (défaut : le bac à sable par défaut du cœur)
+            executeur = idn_tests.ExecuteurBacASable(delai_s=args.delai_execution_s, memoire_mo=args.memoire_test_mo,
+                                                     utilisateur_bac=args.utilisateur_bac, racine_travail=args.dossier_travail_bac,
+                                                     userns_imbriques_permis=args.userns_imbriques_permis)
+        except ValueError as e:
+            raise idn.CourseInterrompue(f"bac à sable de l'étage : {e}") from e
     return {"nombre": args.tests_de_mort, "tranche": args.tranche_exploratoire, "experimentateur": exp,
             "experimentateur_externe": exp_ext, "lecteur": paire(args.lecteur_test, "lecteur-test") if args.lecteur_test else None,
             "budget_test_usd": args.budget_test_usd, "budget_lecteur_usd": args.budget_lecteur_test_usd,
@@ -663,6 +688,26 @@ def construire_analyseur():
     a.add_argument("--executeur-tests", choices=("bwrap", "factice"), default="bwrap",
                    help="v48 : bac à sable des exécutions — bwrap (défaut) ; factice : démonstration, moteur simulé seulement "
                         "(aucune barrière)")
+    a.add_argument("--utilisateur-bac", default=None, metavar="UID|NOM",
+                   help="v50 (CL14-01) : utilisateur dédié, sans aucun privilège de l'hôte, sous lequel `bwrap` est lancé "
+                        "(setpriv --reuid --regid --clear-groups --no-new-privs). OBLIGATOIRE quand le noyau tourne en "
+                        "superutilisateur (sinon l'étage est refusé) ; réservé à l'étage, jamais partagé avec un autre processus")
+    a.add_argument("--dossier-travail-bac", default=None, metavar="DOSSIER",
+                   help="v50 (CL14-01, CL14-04) : dossier racine (chemin absolu) où l'étage crée les dossiers de travail des scripts, "
+                        "hors de la sortie, retirés après chaque exécution. Avec --utilisateur-bac : obligatoire, possédé par lui, "
+                        "non inscriptible par le groupe ni les autres, traversable par lui (parents compris)")
+    a.add_argument("--userns-imbriques-permis", action="store_true",
+                   help="v50 (CL14-03) : demande EXPLICITE de ne pas passer --disable-userns à bwrap (bwrap < 0.8.0 ou installé setuid) ; "
+                        "dit au manifeste ; par défaut, les espaces d'utilisateurs imbriqués sont interdits et la sonde l'éprouve")
+    a.add_argument("--modele-servi-externe-permis", action="append", default=[], metavar="DEMANDÉ=SERVI",
+                   help="v50 (CL14-08) : identifiant servi admis en plus de l'identifiant demandé et de son suffixe de date strict "
+                        "(-AAAAMMJJ), pour un rôle externe (liste explicite, répétable), par exemple gemini-4-argon=models/gemini-4-argon")
+    a.add_argument("--modele-commande-externe", default=None, metavar="MODÈLE",
+                   help=f"v50 (CL14-07) : le modèle que la commande externe demande toujours (défaut {MODELE_ARGON_COMMANDE_V2}, celui de "
+                        "commande_argon_v2.py) ; avec le moteur réel, tout rôle externe doit porter ce modèle")
+    a.add_argument("--commande-externe-accepte-experimentateur", action="store_true",
+                   help="v50 (CL14-07) : atteste que la commande externe accepte le rôle experimentateur_test (la commande d'Argon v2 ne "
+                        "l'accepte pas) ; exigé avec le moteur réel et --experimentateur-externe")
     return a
 
 
@@ -672,9 +717,43 @@ def adaptateur_commande_externe(args):
     absent ou différent = refus = arrêt ; avec le moteur simulé (essais), la barrière n'agit que si la commande le rend."""
     import shlex
     from pole.adaptateurs import AdaptateurCommandeExterne
+    permis = {}
+    for texte in getattr(args, "modele_servi_externe_permis", None) or []:  # v50 (CL14-08) : DEMANDÉ=SERVI, liste explicite
+        if "=" not in texte:
+            raise idn.CourseInterrompue(f"--modele-servi-externe-permis : DEMANDÉ=SERVI attendu (reçu {texte!r})")
+        demande, servi = (x.strip() for x in texte.split("=", 1))
+        permis.setdefault(demande, []).append(servi)
     return AdaptateurCommandeExterne(shlex.split(args.commande_externe), delai_s=args.delai_commande_s,
                                      variables_transmises=tuple(args.variable_transmise),
-                                     exiger_modele_servi=(args.moteur == "claude-sdk"))
+                                     exiger_modele_servi=(args.moteur == "claude-sdk"), modeles_servis_permis=permis)
+
+
+def verifier_commande_externe_reelle(args, prop_ext, juges_ext):
+    """v50 (CL14-07) : avec le moteur réel, refusé **avant tout appel** (`CourseInterrompue`) : (a) un rôle externe dont le modèle
+    donné au noyau n'est pas celui que la commande demande toujours (`--modele-commande-externe`, défaut
+    `MODELE_ARGON_COMMANDE_V2`) : la course s'arrêterait au premier appel d'Argon ; (b) `--experimentateur-externe` : la commande
+    réelle (v2) ne joue que `proposeur_ideation` et `juge_ideation` et refuse `experimentateur_test` (code 2) : l'étage
+    s'arrêterait au premier tour ; il faut une commande qui l'accepte (nouveau nom, R12), attestée par
+    `--commande-externe-accepte-experimentateur`."""
+    if args.moteur != "claude-sdk" or not args.commande_externe:
+        return
+    attendu = getattr(args, "modele_commande_externe", None) or MODELE_ARGON_COMMANDE_V2
+    modeles = [m for _, m in prop_ext + juges_ext]
+    if getattr(args, "experimentateur_externe", None):
+        modeles.append(paire(args.experimentateur_externe, "experimentateur-externe")[1])
+    ecarts = sorted({m for m in modeles if m != attendu})
+    if ecarts:
+        raise idn.CourseInterrompue(
+            f"modèle(s) externe(s) {ecarts} ≠ {attendu!r}, le modèle que la commande externe demande toujours (la commande d'Argon v2 "
+            "ignore MODELE_DEMANDE_POLE et n'a pas reçu --modele) : la course s'arrêterait au premier appel d'Argon (modèle servi ≠ "
+            "demandé) ; refusé avant tout appel. Donner l'étiquette exacte, ou --modele-commande-externe si la commande en demande un autre")
+    if getattr(args, "experimentateur_externe", None) and not getattr(args, "commande_externe_accepte_experimentateur", False):
+        raise idn.CourseInterrompue(
+            "--experimentateur-externe NON FONCTIONNEL avec la commande réelle d'Argon (/opt/argon/commande_argon_v2.py : "
+            "ROLES = (proposeur_ideation, juge_ideation) ; tout autre ROLE_POLE, dont experimentateur_test, est refusé avec le code 2) : "
+            "l'étage s'arrêterait au premier tour de l'expérimentateur ; refusé avant tout appel. Il faut une commande d'Argon qui "
+            "accepte experimentateur_test (nouveau nom, R12, côté session-depot), attestée par --commande-externe-accepte-experimentateur ; "
+            "en attendant, --experimentateur (Claude)")
 
 
 def modeles_du_relais(args, proposeurs, juges):
@@ -926,6 +1005,11 @@ def principal(argv=None):
                 a.error(f"{nom} ne se donne qu'avec --tests-de-mort N (N ≥ 1)")
         if args.executeur_tests != "bwrap":
             a.error("--executeur-tests ne se donne qu'avec --tests-de-mort N (N ≥ 1)")
+        for nom, valeur in (("--utilisateur-bac", args.utilisateur_bac), ("--dossier-travail-bac", args.dossier_travail_bac),
+                            ("--userns-imbriques-permis", args.userns_imbriques_permis),
+                            ("--commande-externe-accepte-experimentateur", args.commande_externe_accepte_experimentateur)):
+            if valeur:
+                a.error(f"{nom} ne se donne qu'avec --tests-de-mort N (N ≥ 1)")
     else:
         if not 1 <= args.tests_de_mort <= idn_tests.NOMBRE_MAX:
             a.error(f"--tests-de-mort ∉ [0, {idn_tests.NOMBRE_MAX}]")
@@ -938,6 +1022,10 @@ def principal(argv=None):
             a.error("--tests-de-mort exige --lecteur-test (session neuve, d'une autre étiquette que l'expérimentateur)")
         if args.executeur_tests == "factice" and args.moteur == "claude-sdk":
             a.error("--executeur-tests factice : démonstration, moteur simulé seulement (aucune barrière)")
+        if args.executeur_tests == "factice" and (args.utilisateur_bac or args.dossier_travail_bac or args.userns_imbriques_permis):
+            a.error("--utilisateur-bac, --dossier-travail-bac et --userns-imbriques-permis ne valent que pour le bac à sable bwrap")
+        if args.commande_externe_accepte_experimentateur and not args.experimentateur_externe:
+            a.error("--commande-externe-accepte-experimentateur ne se donne qu'avec --experimentateur-externe")
     # v47 : moisson — seconde passe obligatoire ; frais : adresse (moteur réel : obligatoire, plus la confirmation) ; rejeu : cache
     if args.moisson == "aucune":
         for nom, valeur in (("--url-relais-moisson", args.url_relais_moisson), ("--cache-moisson", args.cache_moisson),
@@ -1093,6 +1181,7 @@ def _principal(args, pile=None):
     # --- adaptateur des rôles externes (Argon) : la commande, ou un adaptateur scripté en moteur simulé seulement
     externe, commande_externe = None, None
     if args.commande_externe:
+        verifier_commande_externe_reelle(args, prop_ext, juges_ext)  # v50 (CL14-07) : avant tout appel
         externe = adaptateur_commande_externe(args)
         commande_externe = externe.description()
     elif args.moteur == "simule" and (prop_ext or args.bras_rapporte_differe or args.experimentateur_externe):

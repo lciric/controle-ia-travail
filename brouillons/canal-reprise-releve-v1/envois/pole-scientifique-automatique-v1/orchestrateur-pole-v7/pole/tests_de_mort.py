@@ -1,4 +1,4 @@
-"""Étage de tests de mort (v48, corrigé en v49 après la contre-lecture CL13 ; décision de Lazar R-776, option (a) : « les cinq meilleures fiches passent à des agents
+"""Étage de tests de mort (v48, corrigé en v49 après la contre-lecture CL13, puis en v50 après CL14 ; décision de Lazar R-776, option (a) : « les cinq meilleures fiches passent à des agents
 expérimentateurs qui exécutent le test de mort de la fiche sur processeur, sur les données déjà là, dans le dossier fermé,
 prédiction scellée avant exécution, lecteur neuf, résultat exploratoire » ; forme empruntée à la note
 `note-organisme-hybride-ai-scientist-v1.md`, option (b) : boucle d'exécution légère, « fiche gelée → script en bac à sable →
@@ -36,6 +36,18 @@ vérifie après ; N-053 : aucune sélection sur le verdict) :
    de lien (`O_CREAT|O_EXCL|O_NOFOLLOW`, vérifié par `lstat`), et il ne lit les produits que par `lstat` puis ouverture sans
    suivre de lien : **fichiers réguliers seulement** (liens, tubes, prises, périphériques sont consignés, jamais ouverts ni
    copiés ; CL13-02 à CL13-04).
+
+   v50 (contre-lecture CL14) : **l'identité du script sur l'hôte** compte autant que son identité dans le bac. Avec `--unshare-user
+   --uid 65534`, un noyau superutilisateur fait correspondre 65534 à l'identifiant 0 de l'hôte : `/proc/sys` (par exemple
+   `kernel/core_pattern`) s'ouvrait alors en écriture, des fichiers setuid-root pouvaient être déposés dans la sortie et la borne
+   de processus ne valait pas (CL14-01, 02). Corrections : `bwrap` est lancé **sous un utilisateur dédié sans privilège**
+   (`setpriv --reuid U --regid U --clear-groups --no-new-privs`, option `utilisateur_bac` ; **exigé quand le noyau est
+   superutilisateur**, sinon l'étage est refusé avant toute sonde) ; `/proc/sys` est lié en lecture seule ; les espaces
+   d'utilisateurs imbriqués sont interdits (`--disable-userns`, CL14-03, sauf demande expresse) ; `/dev/shm` est un `tmpfs` borné
+   (CL14-10) ; le dossier de travail de chaque exécution vit sous un dossier racine **hors de la sortie**, possédé par l'utilisateur
+   dédié, et n'est jamais gardé dans la sortie scellée : seuls les fichiers réguliers déclarés sont copiés, sous
+   `nom_copie` (CL14-04, 05) ; aucun fichier setuid ou setgid n'est ni haché ni copié, il est refusé et consigné (CL14-02) ; un
+   dossier illisible est un dépassement, jamais ignoré (CL14-12).
 3. **Rôle `lecteur_test`** (session neuve, sans outil, n'a écrit ni la fiche ni le script, ne voit pas le script) : reçoit
    le préenregistrement court et la sortie scellée ; rend une ligne parmi « survit », « éliminée », « non concluant »
    **selon le seuil gelé seulement**, avec le chiffre lu et sa ligne ; toute autre réponse vaut « non concluant ». Ajout du
@@ -49,8 +61,9 @@ vérifie après ; N-053 : aucune sélection sur le verdict) :
 
 Limites dites : le nombre lu est celui que le script imprime ; le noyau ne le recalcule (CL13-11) que si le script déclare une
 ligne `CALCUL: fichier=…; colonne=…; statistique=…` sur une statistique simple d'une colonne d'un fichier de la tranche
-(moyenne, médiane, somme, minimum, maximum, nombre, part positive, écart type) : concordant, le chiffre est « recalculé par le
-noyau » ; discordant, « non concluant » ; sans ligne, l'étiquette dit « chiffre imprimé par le script, non recalculé » ; le
+(moyenne, médiane, somme, minimum, maximum, nombre, part positive, écart type) : concordant, la statistique est « déclarée par
+le script, recalculée par le noyau » et le seuil est appliqué **aussi à la valeur du noyau, sans arrondi** (si l'arrondi d'affichage
+fait franchir le seuil : « non concluant », CL14-06) ; discordant, « non concluant » ; sans ligne, l'étiquette dit « chiffre imprimé par le script, non recalculé » ; le
 bac à sable `bwrap` n'a pas été exercé en réel (ni dans le conteneur de session-depot ni sur la machine de cette version).
 
 Bibliothèque standard seule ; aucun réseau (hors la sonde, sur la boucle locale) ; aucune écriture hors de SORTIE.
@@ -111,10 +124,14 @@ MAX_ENTREES_TRAVAIL = 2000
 PROFONDEUR_MAX_TRAVAIL = 12
 TAILLE_MAX_NOM_COPIE = 200  # octets : un produit au nom plus long est consigné, jamais copié
 PERIODE_SURVEILLANCE_S = 0.25
-PROCESSUS_MAX_DEFAUT = 1024  # RLIMIT_NPROC (par utilisateur de l'hôte ; non appliquée à root) ; None : non posée
+PROCESSUS_MAX_DEFAUT = 1024  # RLIMIT_NPROC (par utilisateur de l'hôte ; sans effet pour le superutilisateur : v50, CL14-02) ; None : non posée
 DESCRIPTEURS_MAX = 512  # RLIMIT_NOFILE
 MARGE_PROCESSEUR_S = 5  # RLIMIT_CPU = délai arrondi + cette marge
 UID_BAC = GID_BAC = 65534  # identité du script dans le bac à sable (jamais 0)
+# v50 (contre-lecture CL14) : l'identité du script **sur l'hôte** compte autant que celle qu'il voit (CL14-01, CL14-02)
+TAILLE_MAX_DEV_SHM = 32 << 20  # CL14-10 : `/dev/shm` du bac borné (`--size`, `--tmpfs`) ; mégaoctets de la sonde déduits d'ici
+SUFFIXE_COPIE = ".copie"  # CL14-05 : les copies des produits portent ce suffixe à chaque composant : aucun nom ne rencontre un `.sha256`
+SUFFIXE_SCEAU = ".sha256"
 STATISTIQUES = ("moyenne", "mediane", "somme", "minimum", "maximum", "nombre", "part_positive", "ecart_type")
 LIGNE_CALCUL = re.compile(r"^[ \t]*CALCUL[ \t]*:[ \t]*([^\n]{1,300})[ \t]*$", re.M)
 MAX_LIGNES_CALCUL = 5
@@ -440,7 +457,7 @@ def _tolerance_d_affichage(ligne):
 
 
 ETIQUETTE_NON_RECALCULE = "chiffre imprimé par le script, non recalculé"
-ETIQUETTE_RECALCULE = "chiffre recalculé par le noyau"
+ETIQUETTE_RECALCULE = "statistique déclarée par le script, recalculée par le noyau"  # v50 (CL14-06) : ce que le noyau a vérifié, rien de plus
 
 
 def recalcul_noyau(prereg, tranche, executions, mecanique):
@@ -448,7 +465,8 @@ def recalcul_noyau(prereg, tranche, executions, mecanique):
     statistique simple d'une colonne d'un fichier du préenregistrement (`CALCUL:`). Rend {statut, motif, execution,
     valeur_noyau, valeur_script, etiquette} ; statuts : « concordant », « discordant » (le verdict devient « non concluant »,
     dans les deux sens : R4), « non recalculable » (CALCUL déclaré mais illisible ou impossible : étiquette « non recalculé »),
-    « non demandé » (aucune ligne CALCUL:), « sans chiffre »."""
+    « non demandé » (aucune ligne CALCUL:), « sans chiffre ». v50 (CL14-06) : `verdict_sur_valeur_noyau` et `arrondi_franchit_le_seuil` — concordant à
+    l'arrondi près, mais le verdict diffère selon qu'on lit la valeur du noyau ou le chiffre imprimé : « non concluant »."""
     base = {"statut": "non demandé", "motif": "aucune ligne CALCUL: dans la sortie", "execution": mecanique.get("execution"),
             "valeur_noyau": None, "valeur_script": mecanique.get("chiffre"), "etiquette": ETIQUETTE_NON_RECALCULE}
     if mecanique.get("chiffre") is None:
@@ -469,9 +487,19 @@ def recalcul_noyau(prereg, tranche, executions, mecanique):
     tolerance = _tolerance_d_affichage(mecanique.get("ligne"))
     tolerance = 1e-9 * max(1.0, abs(valeur)) if tolerance is None else tolerance
     concordant = ecart <= tolerance
+    # v50 (CL14-06) : recalcul strict. La tolérance ne sert qu'à reconnaître que le script a imprimé la statistique qu'il
+    # déclare (arrondie à l'affichage) ; elle ne fait jamais franchir le seuil. Le verdict se prend aussi sur la valeur du
+    # noyau, au seuil gelé, sans arrondi ; si les deux verdicts diffèrent, le résultat est « non concluant ».
+    seuil, comparateur = prereg["seuil"]["valeur"], prereg["seuil"]["comparateur"]
+    verdict_noyau = ("survit" if comparer(valeur, comparateur, seuil) else "éliminée") if concordant else None
+    verdict_script = "survit" if comparer(mecanique["chiffre"], comparateur, seuil) else "éliminée"
+    franchit = bool(concordant and verdict_noyau != verdict_script)
     return dict(base, statut="concordant" if concordant else "discordant", valeur_noyau=valeur, declaration=champs,
+                verdict_sur_valeur_noyau=verdict_noyau, arrondi_franchit_le_seuil=franchit,
                 motif=(f"{champs['statistique']} de {champs['fichier']}[{champs['colonne']}] = {valeur:g}, chiffre du script "
-                       f"{mecanique['chiffre']:g}, écart {ecart:.3g} (tolérance {tolerance:.3g})"),
+                       f"{mecanique['chiffre']:g}, écart {ecart:.3g} (tolérance {tolerance:.3g})"
+                       + (f" ; l'arrondi d'affichage fait franchir le seuil ({comparateur} {seuil:g}) : le verdict sur la valeur "
+                          f"du noyau est « {verdict_noyau} », sur le chiffre imprimé « {verdict_script} »" if franchit else "")),
                 etiquette=ETIQUETTE_RECALCULE if concordant else ETIQUETTE_NON_RECALCULE)
 
 
@@ -529,20 +557,29 @@ def _drapeaux_repertoire():
     return os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
 
 
-def creer_dossier_neuf(chemin):
+def _euid_noyau():
+    """L'identité effective du noyau sur l'hôte (fonction de module : les essais la remplacent)."""
+    return os.geteuid()
+
+
+def creer_dossier_neuf(chemin, proprietaire=None):
     """Crée un dossier **neuf** (`mkdir` : refus s'il existe, lien compris) et vérifie par `lstat` que c'est un vrai dossier.
-    `EtageInterrompu` sinon : quelque chose a été posé là avant l'exécution."""
+    `EtageInterrompu` sinon : quelque chose a été posé là avant l'exécution. v50 (CL14-01) : `proprietaire` = (uid, gid) de
+    l'utilisateur dédié du bac à sable ; le dossier lui est remis (sans suivre de lien) pour que le script y écrive."""
     try:
         os.mkdir(chemin, 0o700)
     except FileExistsError:
         raise EtageInterrompu(f"dossier de travail déjà présent (dossier, fichier ou lien posé avant l'exécution) : {chemin}") from None
     if not stat.S_ISDIR(os.lstat(chemin).st_mode):
         raise EtageInterrompu(f"dossier de travail qui n'est pas un dossier réel : {chemin}")
+    if proprietaire is not None:
+        os.chown(chemin, proprietaire[0], proprietaire[1], follow_symlinks=False)
 
 
-def ecrire_exclusif(chemin, octets, mode=0o600):
+def ecrire_exclusif(chemin, octets, mode=0o600, proprietaire=None):
     """Écrit `octets` dans un fichier **créé** par `O_CREAT|O_EXCL|O_NOFOLLOW` : refus s'il existe déjà (lien, fichier, tube) ;
-    vérifié ensuite par `lstat` (fichier régulier, un seul nom, taille attendue). Le noyau n'écrit jamais à travers un lien."""
+    vérifié ensuite par `lstat` (fichier régulier, un seul nom, taille attendue). Le noyau n'écrit jamais à travers un lien.
+    v50 (CL14-01) : `proprietaire` = (uid, gid) de l'utilisateur dédié, remis par descripteur (`fchown`, jamais par chemin)."""
     drapeaux = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0)
     try:
         fd = os.open(chemin, drapeaux, mode)
@@ -553,15 +590,18 @@ def ecrire_exclusif(chemin, octets, mode=0o600):
             raise EtageInterrompu(f"écriture refusée : lien symbolique sur {chemin}") from None
         raise
     with os.fdopen(fd, "wb") as f:
+        if proprietaire is not None:
+            os.fchown(f.fileno(), proprietaire[0], proprietaire[1])
         f.write(octets)
     st = os.lstat(chemin)
     if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1 or st.st_size != len(octets):
         raise EtageInterrompu(f"écriture refusée : {chemin} n'est pas le fichier régulier unique attendu après création")
 
 
-def ecrire_dans_travail(travail, relatif, octets):
+def ecrire_dans_travail(travail, relatif, octets, proprietaire=None):
     """Écrit `relatif` (chemin propre de l'index de la tranche, ou nom simple) sous `travail` : chaque dossier intermédiaire est
-    créé ou vérifié par `lstat` (un vrai dossier, jamais un lien), le fichier l'est par création exclusive."""
+    créé ou vérifié par `lstat` (un vrai dossier, jamais un lien), le fichier l'est par création exclusive. `proprietaire` :
+    voir `ecrire_exclusif` (v50)."""
     composants = relatif.split("/")
     if not _chemin_relatif_propre(relatif):
         raise EtageInterrompu(f"chemin refusé pour le dossier de travail : {relatif!r}")
@@ -570,11 +610,13 @@ def ecrire_dans_travail(travail, relatif, octets):
         courant = os.path.join(courant, nom)
         try:
             os.mkdir(courant, 0o700)
+            if proprietaire is not None:
+                os.chown(courant, proprietaire[0], proprietaire[1], follow_symlinks=False)
         except FileExistsError:
             pass
         if not stat.S_ISDIR(os.lstat(courant).st_mode):
             raise EtageInterrompu(f"écriture refusée : {courant} n'est pas un dossier réel (lien posé ?)")
-    ecrire_exclusif(os.path.join(courant, composants[-1]), octets)
+    ecrire_exclusif(os.path.join(courant, composants[-1]), octets, proprietaire=proprietaire)
 
 
 def ouvrir_regulier(racine, relatif):
@@ -666,11 +708,14 @@ def _genre(mode):
 
 class InventaireTravail:
     """Ce que le noyau voit du dossier de travail après une exécution, par `lstat` seulement : `fichiers` {chemin: sha256}
-    des fichiers **réguliers** ; `non_copies` {chemin: {type, cible?}} des liens, tubes, prises, périphériques et noms
-    invalides (jamais ouverts, jamais suivis) ; `depassements` : motifs si la borne de nombre ou de place est franchie."""
+    des fichiers **réguliers** ; `non_copies` {chemin: {type, cible?}} des liens, tubes, prises, périphériques, noms
+    invalides et fichiers setuid ou setgid (jamais ouverts, jamais suivis) ; `interdits` : chemins des fichiers réguliers
+    portant un bit setuid ou setgid (v50, CL14-02 : refusés et consignés) ; `depassements` : motifs si la borne de nombre ou
+    de place est franchie, ou si un dossier n'a pas pu être parcouru (v50, CL14-12 : jamais ignoré en silence)."""
 
     def __init__(self):
         self.fichiers, self.non_copies, self.depassements, self.entrees, self.octets = {}, {}, [], 0, 0
+        self.interdits = []
 
 
 def inventaire_travail(travail, sauf=(), max_entrees=None, max_octets=None, hacher=True):
@@ -678,7 +723,10 @@ def inventaire_travail(travail, sauf=(), max_entrees=None, max_octets=None, hach
     `sha256_regulier` (descripteur vérifié par `fstat`), jamais l'ouverture d'un tube ou d'un périphérique. Les dossiers de
     premier niveau de `sauf` sont ignorés s'ils sont de vrais dossiers (un lien de ce nom est consigné comme lien). Bornes :
     `max_entrees` entrées, `max_octets` octets en tout, `PROFONDEUR_MAX_TRAVAIL` niveaux ; franchie, la borne est un motif de
-    `depassements` et le parcours s'arrête."""
+    `depassements` et le parcours s'arrête. v50 : un dossier ou une entrée illisible (hors disparition en cours de
+    parcours) est un `depassement` « dossier illisible : non parcouru » — quand le noyau n'est pas superutilisateur, le
+    script peut fermer un sous-dossier (mode 000) ; son contenu échapperait à la borne de place et à l'inventaire (CL14-12) ;
+    un fichier régulier setuid ou setgid n'est ni haché ni copié, il est consigné (CL14-02)."""
     inv = InventaireTravail()
     max_entrees = MAX_ENTREES_TRAVAIL if max_entrees is None else max_entrees  # lus à l'appel (essais : bornes réduites)
     max_octets = TAILLE_MAX_TOTALE_TRAVAIL if max_octets is None else max_octets
@@ -688,8 +736,12 @@ def inventaire_travail(travail, sauf=(), max_entrees=None, max_octets=None, hach
         chemin_dossier = os.path.join(travail, relatif_dossier) if relatif_dossier else travail
         try:
             it = os.scandir(chemin_dossier)
-        except OSError:
-            continue
+        except FileNotFoundError:
+            continue  # disparu pendant le parcours (le script l'a retiré)
+        except OSError as e:
+            inv.depassements.append(f"dossier illisible : non parcouru ({_nom_affichable(relatif_dossier or '.')[0]} : "
+                                    f"{e.strerror or type(e).__name__})")
+            break
         with it:
             for entree in it:
                 inv.entrees += 1
@@ -700,8 +752,11 @@ def inventaire_travail(travail, sauf=(), max_entrees=None, max_octets=None, hach
                 affiche, sur = _nom_affichable(relatif)
                 try:
                     st = entree.stat(follow_symlinks=False)
-                except OSError:
+                except FileNotFoundError:
                     continue
+                except OSError as e:
+                    inv.depassements.append(f"entrée illisible : non parcourue ({affiche} : {e.strerror or type(e).__name__})")
+                    break
                 mode = st.st_mode
                 if stat.S_ISDIR(mode):
                     if not relatif_dossier and entree.name in sauf:
@@ -724,6 +779,10 @@ def inventaire_travail(travail, sauf=(), max_entrees=None, max_octets=None, hach
                 if inv.octets > max_octets:
                     inv.depassements.append(f"plus de {max_octets} octets dans le dossier de travail")
                     break
+                if mode & (stat.S_ISUID | stat.S_ISGID):  # CL14-02 : ni haché, ni copié ; refusé et consigné
+                    inv.interdits.append(affiche)
+                    inv.non_copies[affiche] = {"type": "fichier setuid ou setgid (refusé)"}
+                    continue
                 if not sur:
                     inv.non_copies[affiche] = {"type": "nom invalide (octets ou caractères de contrôle)"}
                     continue
@@ -736,6 +795,46 @@ def inventaire_travail(travail, sauf=(), max_entrees=None, max_octets=None, hach
                 else:
                     inv.fichiers[relatif] = None
     return inv
+
+
+def nom_copie(relatif):
+    """CL14-05 : le nom sous lequel un produit est copié et scellé — chaque composant reçoit `SUFFIXE_COPIE`. L'application est
+    injective, et aucun nom produit n'est jamais le compagnon `<x>.sha256` d'un autre : `r.txt` et `r.txt.sha256` produits
+    ensemble donnent `r.txt.copie` et `r.txt.sha256.copie`, sans collision."""
+    return "/".join(c + SUFFIXE_COPIE for c in relatif.split("/"))
+
+
+def _rendre_accessible(chemin):
+    """Remet le droit de parcours (0700) aux vrais dossiers sous `chemin`, sans suivre de lien (le script est mort) : un
+    script qui a fermé un sous-dossier (mode 000) ne l'empêche pas d'être retiré quand le noyau n'est pas superutilisateur."""
+    pile = [chemin]
+    while pile:
+        courant = pile.pop()
+        try:
+            if not stat.S_ISDIR(os.lstat(courant).st_mode):
+                continue
+            os.chmod(courant, 0o700, follow_symlinks=False)
+            with os.scandir(courant) as it:
+                pile.extend(e.path for e in it if e.is_dir(follow_symlinks=False))
+        except OSError:
+            continue
+
+
+def supprimer_arbre(chemin):
+    """(ok, motif) : retire un dossier de travail **sans suivre aucun lien** (`shutil.rmtree` : un lien est retiré, jamais sa
+    cible) ; un sous-dossier fermé est rouvert une fois. Jamais d'exception : un échec est un motif consigné par l'appelant."""
+    for essai in (1, 2):
+        try:
+            shutil.rmtree(chemin)
+            return True, None
+        except FileNotFoundError:
+            return True, None
+        except OSError as e:
+            if essai == 1:
+                _rendre_accessible(chemin)
+                continue
+            return False, f"{type(e).__name__} : {e.strerror or e}"[:200]
+    return False, "dossier non retiré"
 
 
 def mesure_rapide_travail(travail):
@@ -752,6 +851,29 @@ def _tete_et_queue(octets, maximum=TAILLE_MAX_SORTIE_CONSERVEE):
     return texte[:moitie] + "\n[… sortie tronquée par le noyau …]\n" + texte[-moitie:], True
 
 
+def resoudre_utilisateur_bac(valeur):
+    """v50 (CL14-01) : l'utilisateur dédié du bac à sable, sans aucun privilège sur l'hôte — (uid, gid, nom). `valeur` : un
+    entier (uid, avec le même gid), un entier en texte, ou un nom d'utilisateur de l'hôte. Refusé : le superutilisateur
+    (uid ou gid 0), un identifiant négatif ou énorme."""
+    if isinstance(valeur, bool) or valeur is None:
+        raise ValueError("utilisateur_bac : entier (uid) ou nom d'utilisateur")
+    if isinstance(valeur, str) and not valeur.strip().isdigit():
+        try:
+            import pwd
+            entree = pwd.getpwnam(valeur.strip())
+        except (KeyError, ImportError):
+            raise ValueError(f"utilisateur_bac : utilisateur inconnu de l'hôte : {valeur!r}") from None
+        uid, gid, nom = entree.pw_uid, entree.pw_gid, entree.pw_name
+    elif isinstance(valeur, (int, str)):
+        uid = gid = int(valeur)
+        nom = None
+    else:
+        raise ValueError("utilisateur_bac : entier (uid) ou nom d'utilisateur")
+    if not (0 < uid < 2**31 and 0 < gid < 2**31):
+        raise ValueError(f"utilisateur_bac : uid et gid entre 1 et 2^31 (reçu {uid}, {gid}) ; jamais le superutilisateur")
+    return uid, gid, nom
+
+
 class ExecuteurBacASable:
     """Exécute un script Python dans `bwrap` : réseau isolé (`--unshare-all --unshare-net`), **sans aucune capacité de
     superutilisateur** (v49, CL13-01 : `--unshare-user --uid 65534 --gid 65534 --cap-drop ALL`, `--new-session`), système de
@@ -760,11 +882,23 @@ class ExecuteurBacASable:
     temps (le bac est tué au délai : `--die-with-parent` et espace de processus à part), de temps processeur, de mémoire
     (`RLIMIT_AS`), de processus, de descripteurs et de taille de fichier (sorties comprises, écrites dans des fichiers et non en
     mémoire), et surveillance du nombre et de la place des fichiers du dossier de travail pendant l'exécution (CL13-12).
+
+    v50 (contre-lecture CL14) — l'identité du script **sur l'hôte** : `--unshare-user --uid 65534` n'y change rien quand
+    `bwrap` est lancé par le superutilisateur (le 65534 du bac **est** le 0 de l'hôte : `/proc/sys` inscriptible, fichiers
+    setuid-root, borne de processus inopérante). Donc : (1) **le noyau superutilisateur doit donner un utilisateur dédié sans
+    privilège** (`utilisateur_bac`, `setpriv --reuid U --regid U --clear-groups --no-new-privs`), faute de quoi l'étage est
+    refusé ; le dossier de travail (`racine_travail`) est possédé par cet utilisateur ; (2) `--ro-bind /proc/sys /proc/sys`
+    juste après `--proc /proc` ; (3) `--disable-userns` (pas d'espace d'utilisateurs imbriqué) sauf demande explicite
+    (`userns_imbriques_permis`, dite au manifeste) ; (4) `/dev/shm` borné (`--size`, `--tmpfs`).
+
     `disponible()` joue une **sonde** avant tout usage (R5) : cas sain `print("OK")` ; artefacts : une connexion vers un port
     ouvert par le noyau sur la boucle locale doit échouer, une écriture hors du dossier de travail doit échouer, les
-    capacités du script doivent être nulles, il ne doit pas être superutilisateur, remonter en écriture un montage en lecture
-    seule (la tranche factice de la sonde, la racine) doit échouer. SUPPOSÉ, **non exercé en réel** (`bwrap` absent de la
-    machine de développement) : jeu de montages suffisant pour le python3 du système, effet réel des drapeaux et des limites."""
+    capacités du script (y compris l'ensemble limite) doivent être nulles, il ne doit pas être superutilisateur **ni sur
+    l'hôte** (`/proc/self/uid_map`), remonter en écriture un montage en lecture seule (la tranche factice de la sonde, la
+    racine) doit échouer, aucun réglage de `/proc/sys` ne doit s'ouvrir en écriture, `unshare(CLONE_NEWUSER)` doit échouer,
+    `/dev/shm` ne doit pas dépasser sa borne, la borne de processus doit tenir. SUPPOSÉ, **non exercé en réel** (`bwrap` absent
+    de la machine de développement) : jeu de montages suffisant pour le python3 du système, effet réel des drapeaux et des
+    limites, comportement de `bwrap` sous un utilisateur dédié."""
 
     nom = "bwrap"
     factice = False
@@ -776,7 +910,7 @@ class ExecuteurBacASable:
     LIMITER_PROCESSUS = True
 
     def __init__(self, bwrap=None, python=None, delai_s=DELAI_EXECUTION_S_DEFAUT, memoire_mo=MEMOIRE_MO_DEFAUT, chercher=None,
-                 processus_max=PROCESSUS_MAX_DEFAUT):
+                 processus_max=PROCESSUS_MAX_DEFAUT, utilisateur_bac=None, racine_travail=None, userns_imbriques_permis=False):
         chercher = chercher or shutil.which
         self.bwrap = bwrap or chercher("bwrap")
         self.python = python or ("/usr/bin/python3" if os.path.isfile("/usr/bin/python3") else chercher("python3"))
@@ -787,16 +921,45 @@ class ExecuteurBacASable:
         if processus_max is not None and (isinstance(processus_max, bool) or not isinstance(processus_max, int) or processus_max < 8):
             raise ValueError("processus_max : entier ≥ 8, ou None")
         self.delai_s, self.memoire_mo, self.processus_max = float(delai_s), memoire_mo, processus_max
+        self.utilisateur_bac = resoudre_utilisateur_bac(utilisateur_bac) if utilisateur_bac is not None else None
+        self.setpriv = chercher("setpriv") if self.utilisateur_bac else None
+        if racine_travail is not None and (not isinstance(racine_travail, str) or not os.path.isabs(racine_travail)):
+            raise ValueError("racine_travail : chemin absolu d'un dossier")
+        self.racine_travail = os.path.normpath(racine_travail) if racine_travail else None
+        self.userns_imbriques_permis = bool(userns_imbriques_permis)
+
+    def proprietaire_travail(self):
+        """(uid, gid) de l'utilisateur dédié, à qui appartiennent les dossiers et fichiers du dossier de travail ; None sinon."""
+        return self.utilisateur_bac[:2] if self.utilisateur_bac else None
+
+    def borne_processus_effective(self):
+        """Vrai si `RLIMIT_NPROC` s'applique réellement : le script a une identité de l'hôte autre que 0 (utilisateur dédié, ou
+        noyau non superutilisateur) ; faux sinon (CL14-02 : la borne ne vaut pas pour le superutilisateur)."""
+        return bool(self.LIMITER_PROCESSUS and self.processus_max and (self.utilisateur_bac or _euid_noyau() != 0))
 
     def description(self):
         return {"nom": self.nom, "factice": self.factice, "bwrap": self.bwrap, "python": self.python, "delai_s": self.delai_s,
                 "memoire_mo": self.memoire_mo, "processus_max": self.processus_max if self.LIMITER_PROCESSUS else None,
+                "borne_de_processus_effective": self.borne_processus_effective(),
                 "descripteurs_max": DESCRIPTEURS_MAX, "temps_processeur_s": self._temps_processeur(self.delai_s),
                 "dossier_de_travail": {"neuf_par_execution": True, "entrees_max": MAX_ENTREES_TRAVAIL,
-                                       "octets_max": TAILLE_MAX_TOTALE_TRAVAIL, "octets_max_par_fichier": TAILLE_MAX_FICHIER_PRODUIT},
+                                       "octets_max": TAILLE_MAX_TOTALE_TRAVAIL, "octets_max_par_fichier": TAILLE_MAX_FICHIER_PRODUIT,
+                                       "hors_de_la_sortie": True, "retire_apres_chaque_execution": True,
+                                       "racine": self.racine_travail or "dossier provisoire du système (créé par le noyau)"},
+                "identite_du_script_sur_l_hote": (
+                    {"utilisateur_dedie": {"uid": self.utilisateur_bac[0], "gid": self.utilisateur_bac[1], "nom": self.utilisateur_bac[2]},
+                     "lance_par": "setpriv --reuid --regid --clear-groups --no-new-privs"} if self.utilisateur_bac else
+                    {"utilisateur_dedie": None, "noyau_superutilisateur": _euid_noyau() == 0}),
+                "espaces_d_utilisateurs_imbriques": "PERMIS (demande explicite)" if self.userns_imbriques_permis
+                else "interdits (--disable-userns)",
+                "dev_shm_octets_max": TAILLE_MAX_DEV_SHM,
                 "isolation": "--unshare-all --unshare-net --unshare-user --uid 65534 --gid 65534 --cap-drop ALL --new-session "
                              "--die-with-parent --clearenv ; /usr en lecture seule, racine remontée en lecture seule ; "
-                             "dossier de travail neuf seul en écriture ; tranche en lecture seule"}
+                             "/proc/sys en lecture seule ; "
+                             + ("" if self.userns_imbriques_permis else "--disable-userns ; ")
+                             + "/dev/shm borné ; dossier de travail neuf seul en écriture ; tranche en lecture seule ; "
+                             + ("lancé sous un utilisateur dédié sans privilège de l'hôte" if self.utilisateur_bac else
+                                "lancé sous l'identité du noyau (jamais le superutilisateur : étage refusé sinon)")}
 
     @staticmethod
     def _temps_processeur(delai):
@@ -807,7 +970,55 @@ class ExecuteurBacASable:
             return "bwrap absent : étage de tests de mort refusé (aucune exécution hors d'un bac à sable, aucun repli)"
         if not self.python or not os.path.isfile(self.python) or not os.path.realpath(self.python).startswith("/usr/"):
             return f"python3 du bac à sable introuvable sous /usr ({self.python!r}) : étage refusé"
+        if self.utilisateur_bac and (not self.setpriv or not os.path.isfile(self.setpriv)):
+            return "setpriv absent : impossible de lancer bwrap sous l'utilisateur dédié : étage refusé (aucun repli)"
         return None
+
+    def verifier_identite(self):
+        """Motif de refus (None si l'identité du script sur l'hôte est acceptable) — CL14-01 : un noyau superutilisateur
+        **doit** donner un utilisateur dédié sans privilège, dont le dossier de travail racine est la propriété ; un noyau non
+        superutilisateur n'en donne pas (il ne peut pas changer d'identité)."""
+        if _euid_noyau() == 0:
+            if not self.utilisateur_bac:
+                return ("le noyau tourne en superutilisateur et aucun utilisateur dédié n'est donné (--utilisateur-bac) : le script "
+                        "aurait l'identité 0 de l'hôte (/proc/sys inscriptible, fichiers setuid-root, borne de processus "
+                        "inopérante : CL14-01, CL14-02) : étage refusé, aucun repli")
+            if not self.racine_travail:
+                return ("utilisateur dédié sans dossier de travail racine (--dossier-travail-bac) : un dossier à lui, traversable "
+                        "par lui, est obligatoire : étage refusé")
+            try:
+                st = os.lstat(self.racine_travail)
+            except OSError as e:
+                return f"dossier de travail racine illisible ({self.racine_travail} : {e.strerror}) : étage refusé"
+            if not stat.S_ISDIR(st.st_mode):
+                return f"dossier de travail racine qui n'est pas un dossier réel (lien ?) : {self.racine_travail} : étage refusé"
+            if st.st_uid != self.utilisateur_bac[0]:
+                return (f"dossier de travail racine {self.racine_travail} non possédé par l'utilisateur dédié "
+                        f"(propriétaire {st.st_uid}, attendu {self.utilisateur_bac[0]}) : étage refusé")
+            if st.st_mode & 0o022:
+                return f"dossier de travail racine {self.racine_travail} inscriptible par le groupe ou les autres : étage refusé"
+        elif self.utilisateur_bac:
+            return "utilisateur dédié donné mais le noyau n'est pas superutilisateur : il ne peut pas changer d'identité (setpriv) : étage refusé"
+        elif self.racine_travail and not os.path.isdir(self.racine_travail):
+            return f"dossier de travail racine introuvable : {self.racine_travail} : étage refusé"
+        return None
+
+    def uid_hote_attendu(self):
+        if self.utilisateur_bac:
+            return self.utilisateur_bac[0]
+        return _euid_noyau() or None
+
+    def ouvrir_racine_travail(self):
+        """Un dossier neuf, hors de la sortie, où l'étage crée le dossier de travail de chaque exécution (CL14-04 : rien du
+        dossier de travail n'est gardé dans la sortie scellée). Sous `racine_travail` s'il est donné, sinon sous le dossier
+        provisoire du système ; remis à l'utilisateur dédié, le cas échéant."""
+        racine = tempfile.mkdtemp(prefix="etage-travail-", dir=self.racine_travail)
+        if self.utilisateur_bac:
+            os.chown(racine, self.utilisateur_bac[0], self.utilisateur_bac[1], follow_symlinks=False)
+        return racine
+
+    def fermer_racine_travail(self, racine):
+        return supprimer_arbre(racine)
 
     def commande(self, script, travail):
         montages = ["--ro-bind", "/usr", "/usr"]
@@ -828,14 +1039,29 @@ class ExecuteurBacASable:
         # en écriture les montages en lecture seule (/usr, racine, tranche) ; `--unshare-user` (et non `-try`) : si le noyau de
         # l'hôte l'interdit, `bwrap` échoue, la sonde échoue, l'étage est refusé. `--new-session` : pas de terminal de commande
         # (la v48 l'omettait à cause de `start_new_session`, retiré ici).
+        # v50 (CL14-01) : `/proc/sys` lié en lecture seule juste après `/proc` (sans cela, les réglages globaux du noyau
+        # Linux étaient inscriptibles dès que l'identité du script sur l'hôte était 0) ; (CL14-03) `--disable-userns` avant
+        # `--cap-drop`, sauf demande explicite ; (CL14-10) `/dev/shm` en mémoire bornée.
+        sans_userns = [] if self.userns_imbriques_permis else ["--disable-userns"]
         return [self.bwrap, "--unshare-all", "--unshare-net", "--unshare-user", "--uid", str(UID_BAC), "--gid", str(GID_BAC),
-                "--cap-drop", "ALL", "--new-session", "--die-with-parent", "--clearenv",
+                *sans_userns, "--cap-drop", "ALL", "--new-session", "--die-with-parent", "--clearenv",
                 "--setenv", "PATH", "/usr/bin:/bin", "--setenv", "HOME", "/travail", "--setenv", "LANG", "C.UTF-8",
                 "--setenv", "PYTHONIOENCODING", "utf-8", "--setenv", "PYTHONDONTWRITEBYTECODE", "1",
                 "--setenv", "PYTHONHASHSEED", "0",
-                *montages, "--proc", "/proc", "--dev", "/dev", "--bind", travail, "/travail", *lecture_seule,
+                *montages, "--proc", "/proc", "--ro-bind", "/proc/sys", "/proc/sys", "--dev", "/dev",
+                "--size", str(TAILLE_MAX_DEV_SHM), "--tmpfs", "/dev/shm",
+                "--bind", travail, "/travail", *lecture_seule,
                 "--remount-ro", "/", "--chdir", "/travail",
                 "--", self.python, "-I", "-B", "/travail/" + os.path.basename(script)]
+
+    def commande_lancee(self, script, travail):
+        """La commande effectivement lancée : celle de `bwrap`, précédée sous l'utilisateur dédié de `setpriv` (identité réelle
+        et effective, groupes vidés, aucun gain de privilège) — le noyau superutilisateur ne lance jamais `bwrap` lui-même."""
+        cmd = self.commande(script, travail)
+        if self.utilisateur_bac:
+            uid, gid = self.utilisateur_bac[:2]
+            return [self.setpriv, "--reuid", str(uid), "--regid", str(gid), "--clear-groups", "--no-new-privs", "--"] + cmd
+        return cmd
 
     def _limites(self, delai):
         octets = self.memoire_mo << 20
@@ -867,7 +1093,7 @@ class ExecuteurBacASable:
         mémoire pendant l'exécution. Au délai, ou si le dossier de travail dépasse ses bornes (nombre d'entrées, place),
         le bac est tué. Le noyau ne passe au script que l'environnement minimal ci-dessous."""
         delai = float(delai_s or self.delai_s)
-        cmd = self.commande(script, travail)
+        cmd = self.commande_lancee(script, travail)
         env = {"PATH": "/usr/bin:/bin", "HOME": travail, "LANG": "C.UTF-8", "PYTHONIOENCODING": "utf-8", "PYTHONDONTWRITEBYTECODE": "1",
                "PYTHONHASHSEED": "0"}
         debut = time.monotonic()
@@ -915,64 +1141,94 @@ class ExecuteurBacASable:
                 "duree_s": duree, "commande": cmd}
 
     def disponible(self):
-        """(ok, motif) : outils présents, puis sonde (R5) dans un dossier provisoire — cas sain `print("OK")` → OK ;
-        artefacts : une connexion vers un port ouvert par le noyau sur la boucle locale doit échouer (réseau isolé) ; une
-        écriture hors du dossier de travail doit échouer ; (exécuteur non factice) le script n'a aucune capacité (CapEff et
-        CapPrm nuls), n'est pas superutilisateur, ne remonte pas en écriture un montage en lecture seule (la tranche factice de
-        la sonde, la racine) et n'y écrit pas (CL13-01). Chaque essai de la sonde a son dossier de travail neuf, écrit par
-        création exclusive. Toutes les cibles sont des dossiers provisoires ou le montage de la sonde : jamais un chemin réel
-        de l'hôte (`/usr`, `/etc`, `/root`)."""
+        """(ok, motif) : outils présents, identité du script sur l'hôte acceptable (CL14-01), puis sonde (R5) dans un dossier
+        provisoire — cas sain `print("OK")` → OK ; artefacts : une connexion vers un port ouvert par le noyau sur la boucle
+        locale doit échouer (réseau isolé) ; une écriture hors du dossier de travail doit échouer ; (exécuteur non factice) le
+        script n'a aucune capacité (CapEff, CapPrm et CapBnd nuls), n'est pas superutilisateur — ni sur l'hôte —, ne remonte pas
+        en écriture un montage en lecture seule (la tranche factice de la sonde, la racine), n'ouvre aucun réglage de
+        `/proc/sys` en écriture, ne crée pas d'espace d'utilisateurs imbriqué, ne dépasse pas la borne de `/dev/shm` et ne
+        dépasse pas la borne de processus (CL13-01, CL14-01 à 03, 10, 11). Chaque essai de la sonde a son dossier de travail
+        neuf, écrit par création exclusive, dans le dossier racine du bac (celui de l'utilisateur dédié, le cas échéant).
+        Toutes les cibles sont des dossiers provisoires ou le montage de la sonde : jamais un chemin réel de l'hôte (`/usr`,
+        `/etc`, `/root`) ; une ouverture en écriture de `/proc/sys` qui réussirait serait un échec de la sonde, jamais une
+        écriture."""
         motif = self.verifier_outils()
         if motif:
             return False, motif
-        with tempfile.TemporaryDirectory(prefix="sonde-bac-a-sable-") as t:
-            limite = min(30.0, self.delai_s)
-            numero = [0]
+        motif = self.verifier_identite()
+        if motif:
+            return False, motif
+        try:
+            racine = self.ouvrir_racine_travail()
+        except OSError as e:
+            return False, f"dossier de travail du bac à sable impossible à créer ({type(e).__name__} : {str(e)[:200]}) : étage refusé"
+        try:
+            return self._sonde(racine)
+        finally:
+            supprimer_arbre(racine)
 
-            def jouer(corps, avec_tranche=False):
-                numero[0] += 1
-                travail = os.path.join(t, "travail" if numero[0] == 1 else f"travail-{numero[0]}")
-                creer_dossier_neuf(travail)
-                if avec_tranche:
-                    ecrire_dans_travail(travail, "tranche/temoin.txt", b"temoin de la sonde\n")
-                sain = os.path.join(travail, "script.py")
-                ecrire_exclusif(sain, corps.encode("utf-8"))
-                return self.executer(sain, travail, delai_s=limite, dossier_capture=t), travail
-            try:
-                r, _ = jouer("print('OK')\n")
-            except OSError as e:
-                return False, f"{self.nom} ne s'exécute pas ({type(e).__name__} : {str(e)[:200]})"
-            if r["delai_depasse"] or r["code"] != 0 or r["stdout"].strip() != "OK":
-                return False, (f"sonde du bac à sable : code {r['code']}, délai dépassé {r['delai_depasse']}, sortie {r['stdout'][:100]!r}, "
-                               f"erreur {r['stderr'][:300]!r} (espaces de noms interdits dans ce conteneur ?)")
-            ecoute = socket.socket()
-            try:
-                ecoute.bind(("127.0.0.1", 0))
-                ecoute.listen(1)
-                port = ecoute.getsockname()[1]
-                r, _ = jouer("import socket\ns = socket.socket()\ns.settimeout(3)\ns.connect(('127.0.0.1', %d))\nprint('RESEAU')\n" % port)
-            finally:
-                ecoute.close()
-            if r["code"] == 0 or "RESEAU" in r["stdout"]:
-                return False, "sonde du bac à sable : une connexion vers la boucle locale du noyau a réussi (réseau NON isolé) : étage refusé"
-            r, _ = jouer("open('../hors-travail.txt', 'w').write('x')\nprint('ECRIT')\n")
-            if r["code"] == 0 or "ECRIT" in r["stdout"] or os.path.exists(os.path.join(t, "hors-travail.txt")):
-                return False, "sonde du bac à sable : une écriture hors du dossier de travail a réussi (système de fichiers NON en lecture seule) : étage refusé"
-            if not self.factice:
-                r, travail = jouer(SONDE_PRIVILEGES, avec_tranche=True)
-                ok, motif_p = evaluer_sonde_privileges(r["stdout"], r["code"], r["stderr"])
-                if not ok:
-                    return False, motif_p
-                if os.path.exists(os.path.join(travail, "tranche", "temoin-ecriture.txt")):
-                    return False, ("sonde du bac à sable : le script a écrit dans la tranche montée en lecture seule (CL13-01) : "
-                                   "étage refusé")
+    def _sonde(self, t):
+        prop = self.proprietaire_travail()
+        limite = min(30.0, self.delai_s)
+        numero = [0]
+
+        def jouer(corps, avec_tranche=False):
+            numero[0] += 1
+            travail = os.path.join(t, "travail" if numero[0] == 1 else f"travail-{numero[0]}")
+            creer_dossier_neuf(travail, prop)
+            if avec_tranche:
+                ecrire_dans_travail(travail, "tranche/temoin.txt", b"temoin de la sonde\n", prop)
+            sain = os.path.join(travail, "script.py")
+            ecrire_exclusif(sain, corps.encode("utf-8"), proprietaire=prop)
+            return self.executer(sain, travail, delai_s=limite, dossier_capture=t), travail
+        indice = (" (le dossier de travail racine et tous ses parents doivent être traversables par l'utilisateur dédié)"
+                  if self.utilisateur_bac else "")
+        try:
+            r, _ = jouer("print('OK')\n")
+        except OSError as e:
+            return False, f"{self.nom} ne s'exécute pas ({type(e).__name__} : {str(e)[:200]})"
+        if r["delai_depasse"] or r["code"] != 0 or r["stdout"].strip() != "OK":
+            plus = ""
+            if "disable-userns" in (r["stderr"] or "") and not self.factice:
+                plus = (" ; bwrap trop ancien ou installé setuid pour --disable-userns (bwrap ≥ 0.8.0, sans mode setuid) : "
+                        "mettre à jour bwrap, ou demander expressément les espaces d'utilisateurs imbriqués "
+                        "(--userns-imbriques-permis, dit au manifeste)")
+            elif "--size" in (r["stderr"] or "") or "--tmpfs" in (r["stderr"] or ""):
+                plus = " ; bwrap trop ancien pour --size (bwrap ≥ 0.9.0 pour borner /dev/shm)"
+            return False, (f"sonde du bac à sable : code {r['code']}, délai dépassé {r['delai_depasse']}, sortie {r['stdout'][:100]!r}, "
+                           f"erreur {r['stderr'][:300]!r} (espaces de noms interdits dans ce conteneur ?){plus}{indice}")
+        ecoute = socket.socket()
+        try:
+            ecoute.bind(("127.0.0.1", 0))
+            ecoute.listen(1)
+            port = ecoute.getsockname()[1]
+            r, _ = jouer("import socket\ns = socket.socket()\ns.settimeout(3)\ns.connect(('127.0.0.1', %d))\nprint('RESEAU')\n" % port)
+        finally:
+            ecoute.close()
+        if r["code"] == 0 or "RESEAU" in r["stdout"]:
+            return False, "sonde du bac à sable : une connexion vers la boucle locale du noyau a réussi (réseau NON isolé) : étage refusé"
+        r, _ = jouer("open('../hors-travail.txt', 'w').write('x')\nprint('ECRIT')\n")
+        if r["code"] == 0 or "ECRIT" in r["stdout"] or os.path.exists(os.path.join(t, "hors-travail.txt")):
+            return False, "sonde du bac à sable : une écriture hors du dossier de travail a réussi (système de fichiers NON en lecture seule) : étage refusé"
+        if not self.factice:
+            r, travail = jouer(SONDE_PRIVILEGES, avec_tranche=True)
+            ok, motif_p = evaluer_sonde_privileges(r["stdout"], r["code"], r["stderr"], uid_hote_attendu=self.uid_hote_attendu(),
+                                                   userns_permis=self.userns_imbriques_permis)
+            if not ok:
+                return False, motif_p
+            if os.path.exists(os.path.join(travail, "tranche", "temoin-ecriture.txt")):
+                return False, ("sonde du bac à sable : le script a écrit dans la tranche montée en lecture seule (CL13-01) : "
+                               "étage refusé")
         return True, (f"{self.nom} présent ; sonde OK ; connexion réseau refusée (réseau isolé) ; écriture hors du dossier de "
-                      "travail refusée" + ("" if self.factice else "; aucune capacité, pas de superutilisateur, remontage en "
-                                           "écriture refusé"))
+                      "travail refusée" + ("" if self.factice else "; aucune capacité, pas de superutilisateur (ni sur l'hôte), "
+                                           "remontage en écriture refusé, /proc/sys en lecture seule, "
+                                           + ("espaces d'utilisateurs imbriqués PERMIS (demande explicite), " if self.userns_imbriques_permis
+                                              else "espaces d'utilisateurs imbriqués refusés, ")
+                                           + "/dev/shm borné, borne de processus tenue"))
 
 
-SONDE_PRIVILEGES = r"""import ctypes, os, sys
-if os.getcwd() != "/travail":
+_SONDE_MODELE = r"""import ctypes, os, signal, sys
+if os.getcwd() != "@RACINE@":
     print("HORS-BAC")
     sys.exit(0)
 etat = {}
@@ -983,22 +1239,106 @@ for ligne in open("/proc/self/status", encoding="utf-8"):
 print("UID=%d" % os.getuid())
 for cle in ("CapEff", "CapPrm", "CapBnd"):
     print("%s=%s" % (cle, etat.get(cle, "absent")))
+# CL14-01 : l'identité du script sur l'hôte (colonne « dehors » de uid_map et gid_map)
+def hote(chemin, mon_id):
+    try:
+        for l in open(chemin, encoding="utf-8"):
+            dedans, dehors, n = (int(x) for x in l.split())
+            if dedans <= mon_id < dedans + n:
+                return dehors + (mon_id - dedans)
+    except (OSError, ValueError):
+        pass
+    return "inconnue"
+print("UID_HOTE=%s" % hote("/proc/self/uid_map", os.getuid()))
+print("GID_HOTE=%s" % hote("/proc/self/gid_map", os.getgid()))
 libc = ctypes.CDLL(None, use_errno=True)
-for cible in ("/travail/tranche", "/"):
+for cible in ("@RACINE@/tranche", "/"):
     r = libc.mount(b"none", cible.encode(), None, 32 | 4096, None)  # MS_REMOUNT | MS_BIND : lecture seule levée ?
     print("REMONTAGE %s=%s" % (cible, "REUSSI" if r == 0 else "refus-errno-%d" % ctypes.get_errno()))
 try:
-    open("/travail/tranche/temoin-ecriture.txt", "w").write("x")
+    open("@RACINE@/tranche/temoin-ecriture.txt", "w").write("x")
     print("ECRITURE-TRANCHE=REUSSIE")
 except OSError:
     print("ECRITURE-TRANCHE=refus")
+# CL14-01 : aucun réglage global du noyau Linux ne s'ouvre en écriture (ouverture seule, JAMAIS d'écriture)
+for nom in ("kernel/core_pattern", "fs/suid_dumpable", "vm/drop_caches", "kernel/modprobe"):
+    try:
+        os.close(os.open("/proc/sys/" + nom, os.O_WRONLY | os.O_NONBLOCK | os.O_NOCTTY))
+        print("PROCSYS %s=OUVERT-EN-ECRITURE" % nom)
+    except OSError as e:
+        print("PROCSYS %s=refus-errno-%d" % (nom, e.errno))
+ouvrables = 0
+for base, dossiers, fichiers in os.walk("/proc/sys"):
+    for f in fichiers:
+        try:
+            os.close(os.open(os.path.join(base, f), os.O_WRONLY | os.O_NONBLOCK | os.O_NOCTTY))
+            ouvrables += 1
+        except OSError:
+            pass
+print("PROCSYS-OUVRABLES=%d" % ouvrables)
+# CL14-03 : pas d'espace d'utilisateurs imbriqué (essayé dans un enfant)
+pid = os.fork()
+if pid == 0:
+    os._exit(0 if libc.unshare(0x10000000) == 0 else 1)  # CLONE_NEWUSER
+print("USERNS-IMBRIQUE=%s" % ("REUSSI" if os.waitpid(pid, 0)[1] == 0 else "refus"))
+# CL14-10 : /dev/shm borné
+try:
+    fd = os.open("@SHM_FICHIER@", os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    total, resultat = 0, None
+    try:
+        for _ in range((@SHM_OCTETS@ >> 20) + 8):
+            os.write(fd, b"x" * (1 << 20))
+            total += 1
+        resultat = "REUSSI-%d-Mo" % total
+    except OSError as e:
+        resultat = "refus-apres-%d-Mo-errno-%d" % (total, e.errno)
+    finally:
+        os.close(fd)
+        os.unlink("@SHM_FICHIER@")
+except OSError as e:
+    resultat = "non-monte-errno-%d" % e.errno
+print("SHM=%s" % resultat)
+# CL14-02 : la borne de processus tient (les enfants dorment, puis sont tués)
+import resource
+limite = resource.getrlimit(resource.RLIMIT_NPROC)[0]
+if limite <= 0 or limite == resource.RLIM_INFINITY or limite > 20000:
+    print("PROCESSUS=non-borne")
+else:
+    enfants, resultat = [], "REUSSI-%d" % (limite + 32)
+    try:
+        for _ in range(limite + 32):
+            pid = os.fork()
+            if pid == 0:
+                signal.pause()
+                os._exit(0)
+            enfants.append(pid)
+    except OSError as e:
+        resultat = "refus-apres-%d-errno-%d" % (len(enfants), e.errno)
+    for pid in enfants:
+        os.kill(pid, signal.SIGKILL)
+    for pid in enfants:
+        os.waitpid(pid, 0)
+    print("PROCESSUS=%s" % resultat)
 """
 
 
-def evaluer_sonde_privileges(sortie, code=0, erreur=""):
-    """(ok, motif) : lit la sortie de `SONDE_PRIVILEGES` (R5, CL13-01). Cas sain : `UID` ≠ 0, `CapEff` et `CapPrm` nuls,
-    chaque `REMONTAGE` refusé, `ECRITURE-TRANCHE=refus`. Toute ligne manquante, le script joué hors du bac (`HORS-BAC`) ou
-    une sortie ≠ 0 vaut refus de l'exécuteur : aucun repli silencieux."""
+def sonde_pour(racine, fichier_shm="/dev/shm/sonde-shm"):
+    """Le script de la sonde des privilèges, pour un dossier de travail `racine` (`/travail` dans le bac ; les essais le jouent
+    sous un utilisateur sans privilège de la machine, dans un dossier provisoire, avec un `fichier_shm` provisoire aussi :
+    jamais le `/dev/shm` de la machine)."""
+    return (_SONDE_MODELE.replace("@RACINE@", racine).replace("@SHM_OCTETS@", str(TAILLE_MAX_DEV_SHM))
+            .replace("@SHM_FICHIER@", fichier_shm))
+
+
+SONDE_PRIVILEGES = sonde_pour("/travail")
+
+
+def evaluer_sonde_privileges(sortie, code=0, erreur="", uid_hote_attendu=None, userns_permis=False):
+    """(ok, motif) : lit la sortie de `SONDE_PRIVILEGES` (R5, CL13-01, CL14-01 à 03, 10). Cas sain : `UID` ≠ 0, `CapEff`, `CapPrm`
+    et `CapBnd` nuls, **identité de l'hôte (`UID_HOTE`, `GID_HOTE`) ≠ 0** (et égale à l'utilisateur dédié s'il est donné),
+    chaque `REMONTAGE` refusé, `ECRITURE-TRANCHE=refus`, aucun `PROCSYS` ouvert en écriture, `USERNS-IMBRIQUE=refus` (sauf
+    demande explicite), `SHM` borné (ou non monté), `PROCESSUS` refusé au-delà de la borne. Toute ligne manquante, le script
+    joué hors du bac (`HORS-BAC`) ou une sortie ≠ 0 vaut refus de l'exécuteur : aucun repli silencieux."""
     if code != 0:
         return False, f"sonde des privilèges : code {code}, erreur {str(erreur)[:200]!r} (étage refusé)"
     if "HORS-BAC" in (sortie or ""):
@@ -1008,12 +1348,23 @@ def evaluer_sonde_privileges(sortie, code=0, erreur=""):
         if "=" in ligne:
             cle, valeur = ligne.rsplit("=", 1)
             valeurs[cle.strip()] = valeur.strip()
-    for cle in ("UID", "CapEff", "CapPrm", "REMONTAGE /travail/tranche", "REMONTAGE /", "ECRITURE-TRANCHE"):
+    cles = ["UID", "CapEff", "CapPrm", "CapBnd", "UID_HOTE", "GID_HOTE", "REMONTAGE /travail/tranche", "REMONTAGE /",
+            "ECRITURE-TRANCHE", "PROCSYS kernel/core_pattern", "PROCSYS-OUVRABLES", "USERNS-IMBRIQUE", "SHM", "PROCESSUS"]
+    for cle in cles:
         if cle not in valeurs:
             return False, f"sonde des privilèges : ligne {cle!r} absente de la sortie : étage refusé"
     if valeurs["UID"] == "0":
         return False, "sonde du bac à sable : le script est superutilisateur (identifiant 0, CL13-01) : étage refusé"
-    for cle in ("CapEff", "CapPrm"):
+    for cle in ("UID_HOTE", "GID_HOTE"):  # CL14-01 : l'identité 0 de l'hôte rend /proc/sys, les fichiers setuid et la borne de processus
+        if not valeurs[cle].isdigit():
+            return False, f"sonde du bac à sable : identité de l'hôte illisible ({cle}={valeurs[cle]}, CL14-01) : étage refusé"
+        if int(valeurs[cle]) == 0:
+            return False, (f"sonde du bac à sable : le script a l'identité 0 de l'hôte ({cle}=0, CL14-01) : /proc/sys, fichiers "
+                           "setuid-root, borne de processus : étage refusé (utilisateur dédié sans privilège obligatoire)")
+    if uid_hote_attendu is not None and int(valeurs["UID_HOTE"]) != uid_hote_attendu:
+        return False, (f"sonde du bac à sable : identité de l'hôte du script {valeurs['UID_HOTE']} ≠ utilisateur dédié attendu "
+                       f"{uid_hote_attendu} (CL14-01) : étage refusé")
+    for cle in ("CapEff", "CapPrm", "CapBnd"):
         try:
             nul = int(valeurs[cle], 16) == 0
         except ValueError:
@@ -1025,6 +1376,20 @@ def evaluer_sonde_privileges(sortie, code=0, erreur=""):
             return False, f"sonde du bac à sable : le script a remonté un montage en écriture ({cle} : {valeurs[cle]}, CL13-01) : étage refusé"
     if valeurs["ECRITURE-TRANCHE"] != "refus":
         return False, "sonde du bac à sable : le script a écrit dans la tranche montée en lecture seule (CL13-01) : étage refusé"
+    for cle, valeur in valeurs.items():
+        if cle.startswith("PROCSYS ") and not valeur.startswith("refus"):
+            return False, (f"sonde du bac à sable : {cle.split(' ', 1)[1]} de /proc/sys s'ouvre en écriture ({valeur}, CL14-01) : "
+                           "voie vers l'exécution de code en superutilisateur de l'hôte : étage refusé")
+    if valeurs["PROCSYS-OUVRABLES"] != "0":
+        return False, (f"sonde du bac à sable : {valeurs['PROCSYS-OUVRABLES']} réglages de /proc/sys s'ouvrent en écriture "
+                       "(CL14-01) : étage refusé")
+    if valeurs["USERNS-IMBRIQUE"] != "refus" and not userns_permis:
+        return False, ("sonde du bac à sable : le script crée un espace d'utilisateurs imbriqué (CL14-03 : toutes les capacités dans "
+                       "un espace imbriqué, grande surface du noyau Linux) : étage refusé")
+    if not (valeurs["SHM"].startswith("refus") or valeurs["SHM"].startswith("non-monte")):
+        return False, f"sonde du bac à sable : /dev/shm n'est pas borné ({valeurs['SHM']}, CL14-10) : étage refusé"
+    if not valeurs["PROCESSUS"].startswith("refus"):
+        return False, (f"sonde du bac à sable : la borne de processus ne tient pas ({valeurs['PROCESSUS']}, CL14-02) : étage refusé")
     return True, "privilèges nuls"
 
 
@@ -1072,6 +1437,9 @@ class ExecuteurFactice(ExecuteurBacASable):
 
     def verifier_outils(self):
         return None if self.python and os.path.isfile(self.python) else "python3 introuvable"
+
+    def verifier_identite(self):
+        return None  # aucune barrière, dit : l'identité du script n'est pas un sujet (moteur simulé seulement)
 
     def commande(self, script, travail):
         return [self.python, "-I", "-B", "-c", PRELUDE_FACTICE, script]
@@ -1164,7 +1532,8 @@ def vue_lecteur(executions, recalcul=None):
             if e.get("limites_depassees"):
                 v["limites_depassees"] = e["limites_depassees"]
         if recalcul is not None and recalcul.get("execution") == e["numero"] and recalcul.get("statut") != "sans chiffre":
-            v["recalcul_noyau"] = {k: recalcul.get(k) for k in ("statut", "valeur_script", "valeur_noyau", "etiquette")}
+            v["recalcul_noyau"] = {k: recalcul.get(k) for k in ("statut", "valeur_script", "valeur_noyau", "etiquette",
+                                                                "verdict_sur_valeur_noyau", "arrondi_franchit_le_seuil")}
         vue.append(v)
     return vue
 
@@ -1358,6 +1727,8 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
         "reglages": {k: resume[k] for k in ("nombre_demande", "tranche", "bac_a_sable", "quotas", "experimentateur", "lecteur",
                                               "dossier_ferme")}, "regle": REGLE_ETAGE}))
     cache = CachePages(dossier) if dossier is not None else None
+    racine_travail = None  # v50 (CL14-04) : dossier racine des dossiers de travail, HORS de la sortie ; ouvert dans le `try`, retiré en `finally`
+    proprietaire = executeur.proprietaire_travail() if hasattr(executeur, "proprietaire_travail") else None
 
     def lancer(role, etiquette, modele, consigne, dossier_agent, plafond, externe, adapt, supplement):
         """Session de l'étage : plafond vérifié, traces scellées, coût compté (relais lu si possible), refus R-764 → sortie
@@ -1400,7 +1771,7 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
         ecart_generique = None
         if refus is None and r.statut != "refus":  # v49 (CL13-05, CL13-06) : défense en profondeur sur le modèle servi, tout adaptateur
             from .adaptateurs import controle_modele_resultat
-            ecart_generique = refus = controle_modele_resultat(modele, r)
+            ecart_generique = refus = controle_modele_resultat(modele, r, getattr(adapt, "modeles_servis_permis", None))
         if refus is not None or r.statut == "refus":  # v47 (R-764) : barrière du noyau, héritée par les rôles de l'étage
             refus = dict(refus or {"motif": str(r.erreur), "modele_demande": modele, "modele_servi": getattr(r, "modele_servi", None)})
             depense = float(getattr(r, "depense_modele_non_autorise_usd", 0.0) or 0.0)
@@ -1544,15 +1915,17 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
                     continue
                 creer_dossier_neuf(d_exec)  # v49 (CL13-02) : refus si quelque chose (un lien posé par un script) occupe déjà la place
                 script_sha256 = ecrire_scelle(os.path.join(d_exec, "script.py"), script)
-                travail = os.path.join(d_exec, "travail")
-                creer_dossier_neuf(travail)
+                # v50 (CL14-04, CL14-01) : le dossier de travail est HORS de la sortie (sous la racine de l'étage, possédée par
+                # l'utilisateur dédié le cas échéant) et retiré après l'inventaire ; la sortie ne garde que les copies scellées
+                travail = os.path.join(racine_travail, f"{ident}-execution-{numero:02d}")
+                creer_dossier_neuf(travail, proprietaire)
                 for d in prereg["donnees"]:
-                    ecrire_dans_travail(travail, "tranche/" + d["chemin"], tranche.fichiers[d["chemin"]]["texte"].encode("utf-8"))
+                    ecrire_dans_travail(travail, "tranche/" + d["chemin"], tranche.fichiers[d["chemin"]]["texte"].encode("utf-8"), proprietaire)
                     empreinte_copie, _ = sha256_regulier(travail, "tranche/" + d["chemin"])
                     if empreinte_copie != d["sha256"]:
                         raise EtageInterrompu(f"copie de la tranche : empreinte différente pour {d['chemin']}")
                 chemin_script = os.path.join(travail, "script.py")
-                ecrire_exclusif(chemin_script, script.encode("utf-8"))
+                ecrire_exclusif(chemin_script, script.encode("utf-8"), proprietaire=proprietaire)
                 signaux = signaux_script(script)
                 evenement("execution", fiche=ident, numero=numero, script_sha256=script_sha256)
                 r_exec = executeur.executer(chemin_script, travail, delai_s=float(delai_execution_s), dossier_capture=d_exec)
@@ -1570,7 +1943,7 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
                         continue
                     octets = lire_regulier(travail, p, TAILLE_MAX_COPIE_PRODUIT)
                     if octets is not None and hashlib.sha256(octets).hexdigest() == inv.fichiers[p]:
-                        ecrire_scelle(os.path.join(d_exec, "produits", p), octets)
+                        ecrire_scelle(os.path.join(d_exec, "produits", nom_copie(p)), octets)  # CL14-05 : nom_copie, jamais `<x>.sha256`
                         copies.append(p)
                 e = {"numero": numero, "tour": k, "statut": statut, "code": r_exec["code"], "delai_depasse": r_exec["delai_depasse"],
                      "duree_s": r_exec["duree_s"], "script_sha256": script_sha256, "signaux_du_script": signaux,
@@ -1580,7 +1953,8 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
                      "stderr_tronque": r_exec["stderr_tronque"], "lignes_resultat": r_exec["lignes_resultat"],
                      "lignes_calcul": r_exec.get("lignes_calcul") or [],
                      "limites_depassees": limites,
-                     "fichiers_produits": [{"chemin": p, "sha256": inv.fichiers[p], "copie_scellee": p in copies} for p in produits],
+                     "fichiers_produits": [{"chemin": p, "sha256": inv.fichiers[p], "copie_scellee": p in copies,
+                                            "copie": ("produits/" + nom_copie(p)) if p in copies else None} for p in produits],
                      "entrees_non_copiees": [dict({"chemin": c, "motif": f"non copié : {v['type']}"
                                                    + (f" vers {v['cible']}" if v.get("cible") else "")}, **v)
                                              for c, v in sorted(inv.non_copies.items())],
@@ -1594,6 +1968,19 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
                     journal["incidents"].append(incident)
                     resultat["incidents"].append(incident)
                     e["statut"], statut = "échouée (données altérées)", "échouée (données altérées)"
+                if inv.interdits:  # CL14-02 : un fichier setuid ou setgid est refusé et consigné (jamais copié ni haché)
+                    incident = {"type": "fichier setuid ou setgid refusé dans le dossier de travail", "fiche": ident, "execution": numero,
+                                "chemins": sorted(inv.interdits)}
+                    journal["incidents"].append(incident)
+                    resultat["incidents"].append(incident)
+                    e["statut"], statut = "échouée (fichier setuid ou setgid)", "échouée (fichier setuid ou setgid)"
+                # CL14-04 : plus rien du dossier de travail (liens, tubes, prises, gros fichiers) ne reste après l'inventaire
+                retire, motif_retrait = supprimer_arbre(travail)
+                e["travail_retire"] = retire
+                if not retire:
+                    incident = {"type": "dossier de travail non retiré", "fiche": ident, "execution": numero, "motif": motif_retrait}
+                    journal["incidents"].append(incident)
+                    resultat["incidents"].append(incident)
                 ecrire_json_scelle(os.path.join(d_exec, "resultat.json"), e)
                 executions.append(e)
                 reponses.append({"demande": {"executer": {"script": script}}, "statut": "exécutée", "numero": numero, "resultat": statut,
@@ -1633,6 +2020,10 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
             resultat["verdict"] = "non concluant"
             resultat["desaccord"] = ("recalcul du noyau discordant avec le chiffre imprimé par le script : non concluant (R4, "
                                      f"CL13-11) ; {recalcul['motif']}")
+        elif recalcul.get("arrondi_franchit_le_seuil"):
+            resultat["verdict"] = "non concluant"
+            resultat["desaccord"] = ("recalcul strict (R4, CL14-06) : l'arrondi du chiffre imprimé fait franchir le seuil : non "
+                                     f"concluant ; {recalcul['motif']}")
         elif lu["verdict"] != mecanique["verdict"]:
             resultat["verdict"] = "non concluant"
             resultat["desaccord"] = (f"lecteur « {lu['verdict']} » ≠ lecture mécanique « {mecanique['verdict']} » : non concluant (R4) ; "
@@ -1649,6 +2040,8 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
         ecrire_json_scelle(chemin_manifeste, manifeste(phase="tests-de-mort", horodatage=horodatage, journal=j, erreur=erreur, resume=resume))
 
     try:
+        racine_travail = executeur.ouvrir_racine_travail()
+        resume["dossier_de_travail_racine"] = "hors de la sortie, retiré à la fin de l'étage (CL14-04)"
         for ligne in candidates:
             r = jouer_fiche(ligne)
             resume["par_fiche"].append(r)
@@ -1689,3 +2082,6 @@ def executer_tests_de_mort(adaptateur, sortie, *, tranche, nombre, experimentate
         if not os.path.exists(chemin_manifeste):
             ecrire_manifeste(erreur=journal["arret"])
         raise
+    finally:
+        if racine_travail is not None:
+            executeur.fermer_racine_travail(racine_travail)

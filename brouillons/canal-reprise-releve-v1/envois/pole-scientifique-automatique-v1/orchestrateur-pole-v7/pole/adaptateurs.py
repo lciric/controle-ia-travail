@@ -7,6 +7,7 @@ Le paquet `claude_agent_sdk` n'est importé que paresseusement, au premier lance
 import asyncio
 import math
 import os
+import re
 from dataclasses import dataclass, field, replace
 
 from .caviardage import caviarder
@@ -358,13 +359,21 @@ def importer_sdk():
     return sdk
 
 
-def modele_conforme(demande, servi):
-    """v47 (R-764) : le modèle servi est le modèle demandé (identifiant exact, ou l'identifiant demandé suivi d'un
-    suffixe de date : `claude-opus-5-5-20261001` pour `claude-opus-5-5`) ; tout autre modèle est un écart. v49 : fonction de
-    module (les contrôles du noyau sur Argon et sur le résultat de tout adaptateur ne passent pas par la classe du kit)."""
+SUFFIXE_DE_DATE = re.compile(r"-20\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])")  # v50 (CL14-08) : -AAAAMMJJ, rien d'autre
+
+
+def modele_conforme(demande, servi, permis=()):
+    """v47 (R-764) : le modèle servi est le modèle demandé — identifiant exact, ou l'identifiant demandé suivi d'un suffixe de
+    date **strict** (`-AAAAMMJJ` : `claude-opus-5-5-20261001` pour `claude-opus-5-5`), ou un identifiant de la liste explicite
+    `permis` ; tout autre modèle est un écart. v49 : fonction de module (les contrôles du noyau sur Argon et sur le résultat de
+    tout adaptateur ne passent pas par la classe du kit). v50 (CL14-08) : le suffixe n'est plus « tout ce qui suit un
+    tiret » (`-mini`, `-lite` étaient admis : modèles différents) ; une variante d'écriture connue d'un modèle (par exemple le
+    préfixe `models/` d'une commande) s'admet par la liste explicite, jamais par un motif large."""
     if not isinstance(servi, str) or not servi or not isinstance(demande, str) or not demande:
         return False
-    return servi == demande or servi.startswith(demande + "-")
+    if servi == demande or servi in tuple(permis or ()):
+        return True
+    return servi.startswith(demande) and SUFFIXE_DE_DATE.fullmatch(servi[len(demande):]) is not None
 
 
 class AdaptateurClaudeSDK(Adaptateur):
@@ -542,7 +551,7 @@ class AdaptateurClaudeSDK(Adaptateur):
         return (final if final else "\n".join(morceaux)), cout, statut, erreur, lecture
 
 
-def controle_modele_resultat(modele, resultat):
+def controle_modele_resultat(modele, resultat, permis_par_modele=None):
     """v49 (CL13-05, CL13-06) : défense en profondeur du noyau, pour **tout** adaptateur. Si le résultat porte un modèle servi
     (`modele_servi`, texte non vide) qui n'est pas le modèle demandé (identifiant exact, ou suivi d'un suffixe de date), rend
     le dictionnaire de refus (R-764) ; sinon None. Un adaptateur qui ne dit pas le modèle servi (simulé) n'est pas concerné
@@ -550,7 +559,7 @@ def controle_modele_resultat(modele, resultat):
     servi = getattr(resultat, "modele_servi", None)
     if not isinstance(servi, str) or not servi or not isinstance(modele, str) or not modele:
         return None
-    if modele_conforme(modele, servi):
+    if modele_conforme(modele, servi, (permis_par_modele or {}).get(modele, ())):
         return None
     return {"motif": f"modèle servi {servi!r} ≠ modèle demandé {modele!r} (contrôle du noyau sur le résultat)",
             "modele_demande": modele, "modele_servi": servi, "evenement": "resultat.modele_servi"}
@@ -612,7 +621,8 @@ class AdaptateurCommandeExterne(Adaptateur):
 
     DELAI_COMMANDE_S = 1800  # v38 (CL37-08)
 
-    def __init__(self, commande, environnement=None, delai_s=DELAI_COMMANDE_S, variables_transmises=(), exiger_modele_servi=False):
+    def __init__(self, commande, environnement=None, delai_s=DELAI_COMMANDE_S, variables_transmises=(), exiger_modele_servi=False,
+                 modeles_servis_permis=None):
         if not isinstance(commande, (list, tuple)) or not commande or not all(isinstance(c, str) for c in commande):
             raise ValueError("commande externe : liste non vide de chaînes")
         if isinstance(delai_s, bool) or not isinstance(delai_s, (int, float)) or not delai_s > 0:
@@ -624,6 +634,13 @@ class AdaptateurCommandeExterne(Adaptateur):
         # réellement répondu) ; absent ou différent du modèle demandé = refus = arrêt. Le lanceur l'exige pour le moteur
         # réel ; faux (défaut de la classe, essais), la barrière n'agit que si la commande rend `modele_servi` (dit au manifeste).
         self.exiger_modele_servi = bool(exiger_modele_servi)
+        # v50 (CL14-08) : liste EXPLICITE des identifiants servis admis en plus de l'identifiant demandé et de son suffixe de date
+        # strict, par modèle demandé ({demandé: (servi, …)}) ; vide par défaut
+        permis = dict(modeles_servis_permis or {})
+        if not all(isinstance(k, str) and k and isinstance(v, (list, tuple)) and all(isinstance(x, str) and x for x in v)
+                   for k, v in permis.items()):
+            raise ValueError("modeles_servis_permis : {modèle demandé: (identifiants servis admis, …)}")
+        self.modeles_servis_permis = {k: tuple(v) for k, v in permis.items()}
         self.variables_transmises = tuple(variables_transmises)
         if noms_de_cle_presents({v: "x" for v in self.variables_transmises}):
             raise CleDansEnvironnement("variables_transmises : un nom de variable de clé ne se transmet jamais")
@@ -652,27 +669,32 @@ class AdaptateurCommandeExterne(Adaptateur):
         return {"commande": list(self.commande),
                 "empreintes": {c: sha256_fichier(c) for c in self.commande if os.path.isfile(c)},
                 "variables_transmises": list(self.variables_transmises), "delai_s": self.delai_s,
+                "modeles_servis_permis": {k: list(v) for k, v in self.modeles_servis_permis.items()},
                 "controle_modele_servi": (
                     "exigé (CL13-05) : la dernière ligne rend `modele_servi`, égal au modèle demandé (ou suivi d'un suffixe de "
-                    "date), sinon refus et arrêt" if self.exiger_modele_servi else
+                    "date strict -AAAAMMJJ, ou dans la liste explicite des identifiants permis), sinon refus et arrêt, y compris "
+                    "quand la commande voit l'écart elle-même et sort avec un code non nul (CL14-09)" if self.exiger_modele_servi else
                     "facultatif : la barrière du modèle servi n'agit que si la commande rend `modele_servi` ; sinon elle est "
                     "ABSENTE pour ce rôle externe (R-764, barrière 2)")}
 
-    def controle_modele(self, objet, modele):
+    def controle_modele(self, objet, modele, seulement_si_dit=False):
         """v49 (CL13-05) : le refus (dict, comme celui du kit) si la commande dit un refus (`refus` vrai, `stop_reason` =
-        « refusal »), si `modele_servi` manque alors qu'il est exigé, ou s'il diffère du modèle demandé ; sinon None."""
+        « refusal »), si `modele_servi` manque alors qu'il est exigé, ou s'il diffère du modèle demandé ; sinon None.
+        v50 (CL14-09) : `seulement_si_dit` — sur une sortie avec un code non nul (la commande a vu l'écart elle-même et rendu
+        `modele_servi`), le refus n'est prononcé que si la ligne le **dit** (refus déclaré, ou `modele_servi` présent et
+        différent) ; une ligne d'erreur ordinaire, sans `modele_servi`, reste une erreur."""
         servi = objet.get("modele_servi")
         base = {"modele_demande": modele, "modele_servi": servi if isinstance(servi, str) else None, "evenement": "commande.reponse"}
         if objet.get("refus") not in (None, False, "", 0) or objet.get("stop_reason") == "refusal":
             return dict(base, motif="la commande externe dit un refus du modèle", evenement="commande.refus")
-        if "modele_servi" in objet or self.exiger_modele_servi:
+        if "modele_servi" in objet or (self.exiger_modele_servi and not seulement_si_dit):
             if not isinstance(servi, str) or not servi.strip():
                 return dict(base, motif="la commande externe ne rend pas modele_servi (exigé : barrière du modèle servi)",
                             evenement="commande.modele_servi_absent")
             if not isinstance(modele, str) or not modele:
                 return dict(base, motif="modèle demandé inconnu du noyau : le modèle servi ne peut pas être contrôlé",
                             evenement="commande.modele_demande_inconnu")
-            if not modele_conforme(modele, servi):
+            if not modele_conforme(modele, servi, self.modeles_servis_permis.get(modele, ())):
                 return dict(base, motif=f"modèle servi {servi!r} ≠ modèle demandé {modele!r} : changement de modèle par la commande",
                             evenement="commande.modele_servi")
         return None
@@ -730,6 +752,11 @@ class AdaptateurCommandeExterne(Adaptateur):
             quoi = (f"délai de {self.delai_s:g} s dépassé, groupe de processus arrêté" if delai_depasse
                     else "code " + str(p.returncode) + " : " + caviarder(err.decode("utf-8", "replace"))[0][:300])
             if objet is not None:  # CL35-02 : le coût imprimé avant l'échec est compté
+                refus = self.controle_modele(objet, modele, seulement_si_dit=True)  # v50 (CL14-09) : l'écart vu par la commande = refus
+                if refus is not None:
+                    non_autorise = float(objet["cout_usd"]) if refus["evenement"] in ("commande.modele_servi", "commande.modele_servi_absent") else 0.0
+                    return Resultat("", [], float(objet["cout_usd"]), "refus", "refus (R-764) : " + refus["motif"] + " (" + quoi + ")",
+                                    refus=refus, modele_servi=refus["modele_servi"], depense_modele_non_autorise_usd=non_autorise)
                 return Resultat("", [], float(objet["cout_usd"]), "erreur", "commande externe : " + quoi)
             return Resultat("", [], plafond, "erreur", "commande externe : " + quoi + " ; coût inconnu, plafond de "
                             "session compté", cout_inconnu=True)
