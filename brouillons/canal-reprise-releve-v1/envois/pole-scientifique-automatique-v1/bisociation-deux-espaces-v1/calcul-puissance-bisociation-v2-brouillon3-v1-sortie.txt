@@ -1,0 +1,201 @@
+== 0. Erreurs types (points) ==
+n=600 | sigma 11 : 0.449 | sigma 15,3 : 0.625 | demi-largeur 95 % (15,3) : 1.224
+n=1200 | sigma 11 : 0.318 | sigma 15,3 : 0.442 | demi-largeur 95 % (15,3) : 0.866
+n=2400 | sigma 11 : 0.225 | sigma 15,3 : 0.312 | demi-largeur 95 % (15,3) : 0.612
+n=4800 | sigma 11 : 0.159 | sigma 15,3 : 0.221 | demi-largeur 95 % (15,3) : 0.433
+
+== 1. A1 par condition, n=2400, theta_abs=4, theta_rel=1,20 ==
+mu | moyen sigma 11 | moyen sigma 15,3 | bien sigma 15,3
+2 | 0.00 | 0.00 | 0.00
+3 | 0.00 | 0.00 | 0.00
+4 | 0.50 | 0.50 | 0.42
+4.5 | 0.99 | 0.95 | 0.92
+5 | 1.00 | 1.00 | 1.00
+6 | 1.00 | 1.00 | 1.00
+8 | 1.00 | 1.00 | 1.00
+12 | 1.00 | 1.00 | 1.00
+17 | 1.00 | 1.00 | 1.00
+seuil effectif : bien 4.07  moyen 4.00
+
+== 2. A1, valeurs du brouillon 2 (n=1200, theta_abs=5, theta_rel=1,25) : reproduction du 0,06 / 0,13 ==
+mu | moyen sigma 11 | moyen sigma 15,3
+4 | 0.00 | 0.01
+4.5 | 0.06 | 0.13
+5 | 0.50 | 0.50
+
+== 3. Detection (R-A, R-B), delta=2,5, n=2400, probabilite de 'detecte' selon mu ==
+mu | R-A s11 | R-A s15,3 | R-B s11 | R-B s15,3
+1 | 0.00 | 0.00 | 0.00 | 0.00
+2 | 0.01 | 0.05 | 0.00 | 0.00
+2.5 | 0.50 | 0.50 | 0.02 | 0.02
+3 | 0.99 | 0.95 | 0.61 | 0.36
+3.5 | 1.00 | 1.00 | 0.99 | 0.89
+4 | 1.00 | 1.00 | 1.00 | 1.00
+5.5 | 1.00 | 1.00 | 1.00 | 1.00
+8 | 1.00 | 1.00 | 1.00 | 1.00
+effet vrai donnant la puissance 0,8 (R-A : delta + 0,84 se ; R-B : delta + 2,80 se) a n=2400 :
+sigma | 11 | R-A | 2.689 | R-B | 3.129
+sigma | 15.3 | R-A | 2.763 | R-B | 3.375
+sigma | 18 | R-A | 2.809 | R-B | 3.529
+
+== 4. Nombre de mondes pour la puissance 0,8 (R-A) a mu donne, delta=2,5 ==
+(le plus grand de : borne basse > 0 seule = ((1,96+0,84) sigma/mu)^2 ; delta = (0,84 sigma/(mu-delta))^2)
+mu | sigma | borne basse seule | delta (mu>delta) | retenu | conjoint 2 conditions (z=1,25)
+5.5 | 11 | 32 | 10 | 32 | 42
+5.5 | 15.3 | 61 | 19 | 61 | 80
+4 | 11 | 60 | 39 | 60 | 85
+4 | 15.3 | 115 | 74 | 115 | 164
+3.5 | 11 | 78 | 86 | 86 | 191
+3.5 | 15.3 | 150 | 166 | 166 | 368
+3 | 11 | 106 | 343 | 343 | 761
+3 | 15.3 | 205 | 664 | 664 | 1471
+controle avec delta=3 du brouillon 2 a mu=5,5 : sigma 11 -> 32 ; sigma 15,3 -> 61 ; conjoint -> 42 / 80
+
+== 5. A2 contre d1 en 'moyen' (mu = effet vrai sur N - d1), borne basse > 0 ==
+mu | n | sigma 11 | sigma 15,3
+0.7 | 1200 | 0.60 | 0.35
+0.7 | 2400 | 0.88 | 0.61
+0.7 | 4800 | 0.99 | 0.89
+1.5 | 1200 | 1.00 | 0.92
+1.5 | 2400 | 1.00 | 1.00
+1.5 | 4800 | 1.00 | 1.00
+3 | 1200 | 1.00 | 1.00
+3 | 2400 | 1.00 | 1.00
+3 | 4800 | 1.00 | 1.00
+8.3 | 1200 | 1.00 | 1.00
+8.3 | 2400 | 1.00 | 1.00
+8.3 | 4800 | 1.00 | 1.00
+mondes pour 0,8 sur ce seul contraste a mu=0,7 : 1939 / 3750
+
+== 6. 'oui' (Table 2 ligne 6) : D0 et DF dans les deux, A8, pas de gain de controle (N_PCg), n=2400 ==
+(PG et J supposes tenus ; gain N_PCg - N_beta0 : deux tests a 99 %, vrai effet <= 0 -> facteur 0,99^2)
+P4 | P5 | sigma moyen | oui R-A (D0, DF, A8) | oui R-A complet (x 0,99^2) | oui R-B (D0, DF, A8)
+5.5 | 3.0 | 11.0 | 0.91 | 0.89 | 0.21
+5.5 | 3.0 | 15.3 | 0.87 | 0.85 | 0.13
+5.5 | 4.0 | 11.0 | 0.97 | 0.96 | 0.97
+5.5 | 4.0 | 15.3 | 0.97 | 0.96 | 0.97
+5.5 | 5.0 | 11.0 | 0.98 | 0.96 | 0.98
+5.5 | 5.0 | 15.3 | 0.98 | 0.96 | 0.97
+3.0 | 3.0 | 11.0 | 0.85 | 0.83 | 0.05
+3.0 | 3.0 | 15.3 | 0.78 | 0.76 | 0.02
+5.5 | 2.5 | 11.0 | 0.24 | 0.24 | 0.00
+5.5 | 2.5 | 15.3 | 0.24 | 0.24 | 0.00
+5.5 | 2.0 | 11.0 | 0.00 | 0.00 | 0.00
+5.5 | 2.0 | 15.3 | 0.00 | 0.00 | 0.00
+5.5 | 1.5 | 11.0 | 0.00 | 0.00 | 0.00
+5.5 | 1.5 | 15.3 | 0.00 | 0.00 | 0.00
+8 | 3 | 11.0 | 0.91 | 0.89 | 0.21
+8 | 3 | 15.3 | 0.87 | 0.85 | 0.13
+
+== 6 bis. 'oui' a n=1200 (seuils recommandes : delta 2,5 ; delta_non 1,5) et valeurs du brouillon 2 (delta 3 ; delta_non 2), P4=5,5 ; P5=3 ==
+variante | sigma moyen | oui (D0 x DF x A8, A8 exact) | oui avec A8 = produit (forme de la contre-lecture)
+recommandes, n=1200 | 11.0 | 0.76 | 0.74
+recommandes, n=1200 | 15.3 | 0.70 | 0.68
+brouillon 2, n=1200 | 11.0 | 0.24 | 0.24
+brouillon 2, n=1200 | 15.3 | 0.24 | 0.24
+
+== 7. 'non' (Table 2 lignes 3 et 5) : N0 dans les deux, n=2400, selon l'effet vrai de N - N_beta0 ==
+mu | sigma moyen | P(N0 dans les deux)
+0 | 11.0 | 1.00
+0 | 15.3 | 1.00
+0.5 | 11.0 | 0.89
+0.5 | 15.3 | 0.80
+1 | 11.0 | 0.22
+1 | 15.3 | 0.13
+1.5 | 11.0 | 0.00
+1.5 | 15.3 | 0.00
+2 | 11.0 | 0.00
+2 | 15.3 | 0.00
+
+== 8. M_inertes (A8 = borne basse <= 0 et borne haute < delta_non=1,5) selon le gain parasite mu ==
+n | mu | A8 passe : sigma 11 | sigma 13 | sigma 15,3 | prise en defaut = 1 - passe (15,3 / 11)
+1200 | 0 | 0.98 | 0.98 | 0.92 | 0.08 / 0.02
+1200 | 0.5 | 0.65 | 0.73 | 0.62 | 0.38 / 0.35
+1200 | 1 | 0.12 | 0.24 | 0.20 | 0.80 / 0.88
+1200 | 1.5 | 0.00 | 0.02 | 0.02 | 0.98 / 1.00
+1200 | 2 | 0.00 | 0.00 | 0.00 | 1.00 / 1.00
+2400 | 0 | 0.98 | 0.98 | 0.98 | 0.02 / 0.02
+2400 | 0.5 | 0.39 | 0.53 | 0.64 | 0.36 / 0.61
+2400 | 1 | 0.01 | 0.04 | 0.11 | 0.89 / 0.99
+2400 | 1.5 | 0.00 | 0.00 | 0.00 | 1.00 / 1.00
+2400 | 2 | 0.00 | 0.00 | 0.00 | 1.00 / 1.00
+A8 avec delta_non=2 (brouillon 2), n=1200 et mu=0, sigma 15,3 : 0.975
+
+== 9. Non-regression : borne basse a 99 % >= marge ; une condition ==
+n | sigma | marge -1, mu 0 | marge -1, mu 1 | marge -2, mu 0 | marge -2, mu 1
+600 | 11 | 0.36 | 0.97 | 0.97 | 1.00
+600 | 15.3 | 0.16 | 0.73 | 0.73 | 0.99
+1200 | 11 | 0.72 | 1.00 | 1.00 | 1.00
+1200 | 15.3 | 0.38 | 0.97 | 0.97 | 1.00
+
+== 10. A4 (Delta_INV - Delta_bien) et A6 (V_fuite), n1=600, n2=2400, sigma 15,3 ==
+erreur type de la difference : 0.698 (INV 600 contre bien 1200 :  0.765 )
+mu | -1 | P(borne haute < 0) | 0.30
+mu | -3 | P(borne haute < 0) | 0.99
+mu | -5 | P(borne haute < 0) | 1.00
+mu | -12 | P(borne haute < 0) | 1.00
+
+== 11. J : borne basse a 95 % de Delta(d1c, c) > 0, selon l'effet vrai ==
+mu_J | n | sigma 11 | sigma 15,3 | conjonction bien (15,3) x moyen (11 / 15,3)
+0 | 2400 | 0.02 | 0.02 | 0.00 / 0.00
+0.5 | 2400 | 0.61 | 0.36 | 0.22 / 0.13
+1 | 2400 | 0.99 | 0.89 | 0.89 / 0.80
+1.5 | 2400 | 1.00 | 1.00 | 1.00 / 1.00
+2 | 2400 | 1.00 | 1.00 | 1.00 / 1.00
+3 | 2400 | 1.00 | 1.00 | 1.00 / 1.00
+5 | 2400 | 1.00 | 1.00 | 1.00 / 1.00
+
+== 12. Adoption (Table 1 ligne 8) selon le scenario de centres ==
+facteurs : A1(b,m) A2-d1(b,m) A2-a(b,m) A2-d1c(b,m) A7(b,m) A3 A4 A5(2 NR) A6 A8 gain_controle J
+-- L (centres du brouillon 2, implicite N_beta0 - b = +2,5 / -1)
+sigma moyen 11.0 | valeurs recommandees (n=2400) | A1 0.99 | A2d1 0.88 | A2a 1.00 | A2d1c 0.61 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.97 | A6 1.00 | A8 0.98 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture ; A2 contre a et d1c non prédits au brouillon 2) : | 0.80
+sigma moyen 11.0 | seuils recommandes, n=1200 | A1 0.94 | A2d1 0.60 | A2a 1.00 | A2d1c 0.35 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.97 | A6 1.00 | A8 0.92 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture ; A2 contre a et d1c non prédits au brouillon 2) : | 0.49
+sigma moyen 11.0 | valeurs du brouillon 2 (n=1200, theta 5, x1,25) | A1 0.06 | A2d1 0.60 | A2a 1.00 | A2d1c 0.35 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.97 | A6 1.00 | A8 0.98 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture ; A2 contre a et d1c non prédits au brouillon 2) : | 0.03
+sigma moyen 15.3 | valeurs recommandees (n=2400) | A1 0.95 | A2d1 0.61 | A2a 1.00 | A2d1c 0.36 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.95 | A6 1.00 | A8 0.98 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture ; A2 contre a et d1c non prédits au brouillon 2) : | 0.52
+sigma moyen 15.3 | seuils recommandes, n=1200 | A1 0.87 | A2d1 0.35 | A2a 1.00 | A2d1c 0.20 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.95 | A6 1.00 | A8 0.92 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture ; A2 contre a et d1c non prédits au brouillon 2) : | 0.26
+sigma moyen 15.3 | valeurs du brouillon 2 (n=1200, theta 5, x1,25) | A1 0.13 | A2d1 0.35 | A2a 1.00 | A2d1c 0.20 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.95 | A6 1.00 | A8 0.98 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture ; A2 contre a et d1c non prédits au brouillon 2) : | 0.04
+-- V (centres reconcilies, ancres sur v1 : N_beta0 - b = +11,9 / +6,6)
+sigma moyen 11.0 | valeurs recommandees (n=2400) | A1 1.00 | A2d1 1.00 | A2a 1.00 | A2d1c 1.00 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.97 | A6 1.00 | A8 0.98 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture) : | 0.92 | ; produit complet des 12 facteurs : | 0.91
+sigma moyen 11.0 | seuils recommandes, n=1200 | A1 1.00 | A2d1 1.00 | A2a 1.00 | A2d1c 1.00 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.97 | A6 1.00 | A8 0.92 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture) : | 0.87 | ; produit complet des 12 facteurs : | 0.86
+sigma moyen 11.0 | valeurs du brouillon 2 (n=1200, theta 5, x1,25) | A1 1.00 | A2d1 1.00 | A2a 1.00 | A2d1c 1.00 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.97 | A6 1.00 | A8 0.98 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture) : | 0.92 | ; produit complet des 12 facteurs : | 0.91
+sigma moyen 15.3 | valeurs recommandees (n=2400) | A1 1.00 | A2d1 1.00 | A2a 1.00 | A2d1c 1.00 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.95 | A6 1.00 | A8 0.98 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture) : | 0.90 | ; produit complet des 12 facteurs : | 0.89
+sigma moyen 15.3 | seuils recommandes, n=1200 | A1 1.00 | A2d1 1.00 | A2a 1.00 | A2d1c 1.00 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.95 | A6 1.00 | A8 0.92 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture) : | 0.85 | ; produit complet des 12 facteurs : | 0.84
+sigma moyen 15.3 | valeurs du brouillon 2 (n=1200, theta 5, x1,25) | A1 1.00 | A2d1 1.00 | A2a 1.00 | A2d1c 1.00 | A7 1.00 | A3 0.97 | A4 1.00 | A5 0.95 | A6 1.00 | A8 0.98 | GC 0.99 | J 1.00
+      -> produit A1 x A2d1 x A8 x A3 x A5 (forme de la contre-lecture) : | 0.90 | ; produit complet des 12 facteurs : | 0.89
+
+== 13. Sensibilite : adoption complete selon l'avance vraie de N_beta0 sur b en 'moyen' (n=2400) ==
+(P4 = 5,5 ; 'bien' fixe aux centres reconcilies V : Delta(N,b)=17,4 ; d1 : +3,5 / +3,8 ; d1c : +4 ; a : -4,8 / -2,2 ; controles comme au 12)
+avance N_beta0 - b en moyen | Delta(N,b) moyen | Delta(N,d1) moyen | adoption (sigma moyen 11 / 15,3)
+-2 | 3.5 | -0.3 | 0.00 / 0.00
+-1.5 | 4.0 | 0.2 | 0.00 / 0.00
+-1 | 4.5 | 0.7 | 0.48 / 0.18
+-0.5 | 5.0 | 1.2 | 0.91 / 0.77
+0 | 5.5 | 1.7 | 0.91 / 0.89
+1 | 6.5 | 2.7 | 0.91 / 0.89
+3 | 8.5 | 4.7 | 0.91 / 0.89
+6.6 | 12.1 | 8.3 | 0.91 / 0.89
+
+== 14. S9 : nombre de mondes etendu = min(4800, max(n, ceil(n (sigma_hat / 15,3)^2))) ==
+sigma_hat | n etendu (n=2400)
+11 | 2400
+15.3 | 2400
+16 | 2625
+18 | 3322
+20 | 4101
+21.64 | 4800
+23 | 4800
+erreur relative d'un ecart-type estime sur 200 mondes : 1/sqrt(2*199) = 0.0501
+
+== 15. Mondes decisifs, total ==
+decision : 11400 ; descriptives : 4200 ; total : 15600 ; maximum avec extension a 4800 pour les trois : 22800
