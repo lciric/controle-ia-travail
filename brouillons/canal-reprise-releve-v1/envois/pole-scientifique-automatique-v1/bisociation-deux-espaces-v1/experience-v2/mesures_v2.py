@@ -20,6 +20,7 @@ SIGMA_REFERENCE = 15.3   # S9
 N_PLAFOND = 4800         # S9
 TAUX_ARRET = 0.02        # S11
 MARGE_S12 = 0.02         # S12
+PLAFOND_ORACLE_S8 = 0.30  # S8
 # B § 1 (trancher-recombinaison-v1.md, 72cff8a0…) : intervalles à 95 % de la précision, « bien » et « moyen »
 INTERVALLES_V1 = {
     "NR_bien": {"b": (0.192, 0.215), "a": (0.144, 0.168), "c": (0.141, 0.162), "d1": (0.227, 0.249)},
@@ -95,6 +96,20 @@ def classe(obs, L, x):
     return "autre"
 
 
+MECANISMES = ("greffe", "jumeau", "pont_conceptuel_direct", "expansion")
+
+
+def mecanismes_vrais(L):
+    """G12, Métrique : mécanisme de chaque vraie paire, dérivé de la fonction de vérité (L.vrais) et du registre des
+    ponts plantés (L.plante) : greffe, jumeau, pont conceptuel direct (planté, statut « conceptuel »), expansion (toute
+    vraie paire non plantée)."""
+    out = {}
+    for x in L.vrais:
+        statut = L.plante.get(x)
+        out[x] = {"greffe": "greffe", "jumeau": "jumeau", "conceptuel": "pont_conceptuel_direct"}.get(statut, "expansion")
+    return out
+
+
 def mesurer(obs, L, sortie, n_complete, vide):
     if len(sortie) != BUDGET:
         raise GardeArret(f"sortie de {len(sortie)} paires après complément")
@@ -105,7 +120,11 @@ def mesurer(obs, L, sortie, n_complete, vide):
         raise GardeArret("précision hors de [0 ; 1]")
     vrais_valides = set(obs.valides) & L.vrais
     arts = {a for x in sortie for a in obs.paires[x]}
+    mec = mecanismes_vrais(L)
+    mec_valides = Counter(mec[x] for x in vrais_valides)
+    mec_trouves = Counter(mec[x] for x in tp)
     return {
+        "rappel_par_mecanisme": {m: (mec_trouves[m] / mec_valides[m] if mec_valides[m] else None) for m in MECANISMES},
         "precision": precision, "precision_placebo": placebo, "n_complete": n_complete, "sortie_vide": vide,
         "rappel": len(tp) / len(vrais_valides) if vrais_valides else None,
         "part_eloignes": sum(1 for x in sortie if L.info_paires[x]["eloigne"]) / BUDGET,
@@ -126,7 +145,9 @@ def executer_monde(monde, condition, racine, indice, bras, aux_extra=None, fonct
     raison = exclu(monde, condition)
     base = {"condition": condition, "indice": indice, "n_valides": len(obs.valides),
             "n_vrais_valides": len(set(obs.valides) & L.vrais), "n_vrais": len(L.vrais),
-            "n_champs": L.n_champs, "tentatives": L.tentatives}
+            "n_champs": L.n_champs, "tentatives": L.tentatives,
+            "mecanismes_vrais": dict(Counter(mecanismes_vrais(L).values())),
+            "mecanismes_vrais_valides": dict(Counter(m for x, m in mecanismes_vrais(L).items() if x in set(obs.valides)))}
     if raison:
         return {**base, "exclu": raison}
     _, nuls = br.vecteurs_concepts(obs)
@@ -204,9 +225,13 @@ def sigma_chapeau(delta_points):
 
 # --- contrôles de la liste d'arrêt --------------------------------------------------------------------------
 
-def verifier_taux(lignes, condition):
-    """S11 : mondes exclus, mondes régénérés, bras de sortie vide avant complément ; chacun ≤ 2 %."""
+def verifier_taux(lignes, condition, decision=True):
+    """S11 : mondes exclus (condition de décision seulement), mondes régénérés, bras de sortie vide avant complément ;
+    chacun ≤ 2 %. Hors condition de décision, le taux d'exclusion est rapporté sans arrêt (le texte ne vise que les
+    conditions de décision ; voir ecarts-et-questions-v1.md, Q-08 pour la portée des deux autres taux)."""
     n = len(lignes)
+    if n == 0:
+        raise GardeArret(f"{condition} : aucun monde")
     exclus = sum(1 for l in lignes if l["exclu"]) / n
     regen = sum(1 for l in lignes if l["tentatives"] > 0) / n
     vides = {}
@@ -216,9 +241,60 @@ def verifier_taux(lignes, condition):
     pire_vide = max((sum(v) / n for v in vides.values()), default=0.0)
     rapport = {"taux_exclus": exclus, "taux_regeneres": regen, "taux_vide_max": pire_vide}
     for k, v in rapport.items():
+        if k == "taux_exclus" and not decision:
+            continue
         if v > TAUX_ARRET:
             raise GardeArret(f"{condition} : {k} = {v:.4f} > S11 ({TAUX_ARRET})")
     return rapport
+
+
+def verifier_plafond_oracle(moyenne_oracle, condition):
+    """Liste d'arrêt : plafond de l'oracle < S8 en M_bien ou en M_moyen : arrêt (monde non jugeable)."""
+    if not math.isfinite(moyenne_oracle):
+        raise GardeArret(f"{condition} : plafond de l'oracle non fini")
+    if condition in ("M_bien", "M_moyen") and moyenne_oracle < PLAFOND_ORACLE_S8:
+        raise GardeArret(f"{condition} : plafond de l'oracle {moyenne_oracle:.3f} < S8 ({PLAFOND_ORACLE_S8}) : "
+                         "monde non jugeable")
+    return moyenne_oracle >= PLAFOND_ORACLE_S8
+
+
+def verifier_nombre_de_mondes(condition, execute, attendu):
+    """Liste d'arrêt : nombre de mondes exécuté d'une condition différent de son nombre gelé (S15, S7) ou de n' (S9)."""
+    if execute != attendu:
+        raise GardeArret(f"{condition} : {execute} mondes exécutés ≠ {attendu} attendus (S15, S7, S9)")
+    return True
+
+
+def verifier_racine(racine, decision):
+    """Liste d'arrêt (R9) : racine différente de RACINE (mondes de décision) ou de RACINE_VALIDATION (validation)."""
+    attendue = gr.RACINE if decision else gr.RACINE_VALIDATION
+    if racine != attendue:
+        raise GardeArret(f"racine {racine} ≠ {attendue} ({'décision' if decision else 'validation'}) : arrêt (R9)")
+    return True
+
+
+def empreintes_code():
+    """Empreintes (sha256) des fichiers de code du run : les modules de l'expérience v2, `monde_v1`, `methodes_v1` et
+    la pièce A (`recombinaison.py`). Consignées au manifeste ; comparées entre sessions d'un même run."""
+    import hashlib
+    from pathlib import Path
+
+    ici = Path(__file__).resolve().parent
+    fichiers = sorted(ici.glob("*.py"))
+    fichiers += [ici.parent.parent / "trancher-recombinaison" / "monde_v1.py",
+                 ici.parent.parent / "trancher-recombinaison" / "methodes_v1.py",
+                 ici.parent.parent / "orchestrateur-pole-v7" / "pole" / "recombinaison.py"]
+    return {f.name if f.parent == ici else f"{f.parent.name}/{f.name}": hashlib.sha256(f.read_bytes()).hexdigest()
+            for f in fichiers}
+
+
+def verifier_empreintes_code(attendues):
+    """Liste d'arrêt : empreinte du code différente entre deux sessions d'un même run."""
+    actuelles = empreintes_code()
+    diff = sorted(k for k in set(attendues) | set(actuelles) if attendues.get(k) != actuelles.get(k))
+    if diff:
+        raise GardeArret(f"empreinte du code différente entre deux sessions d'un même run : {diff}")
+    return True
 
 
 def verifier_reproduction(condition, moyennes):

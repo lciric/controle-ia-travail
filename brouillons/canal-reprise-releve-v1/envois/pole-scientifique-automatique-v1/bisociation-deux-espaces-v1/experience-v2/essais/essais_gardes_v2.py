@@ -109,15 +109,21 @@ def test_g03_artefact_bras_qui_demande_latent_leve():
     w = _monde()
 
     def bras_curieux(obs, rng, aux):
-        return list(obs.vrais)[:12]
+        return list(obs.vrais)[:12]          # champ latent demandé à la vue observée
 
-    with pytest.raises(mo.AccesLatent):
-        ms.executer_monde(w, "M_bien", RV, INDICE_ESSAI, ["N", "curieux"], fonctions={**br.FONCTIONS, "curieux": bras_curieux},
-                          aux_extra={}) if "curieux" in br.RANG else bras_curieux(w.obs, None, {})
+    def bras_curieux_2(obs, rng, aux):
+        return list(obs.arts)[:12]
+
+    for curieux in (bras_curieux, bras_curieux_2):
+        with pytest.raises(mo.AccesLatent):   # le bras « N » est remplacé par le bras artefact, dans l'exécution réelle
+            ms.executer_monde(w, "M_bien", RV, INDICE_ESSAI, ["N"], fonctions={**br.FONCTIONS, "N": curieux})
     with pytest.raises(mo.AccesLatent):
         w.latent()
     with pytest.raises(mo.AccesLatent):
-        w.obs.champ
+        w.latent(object())                    # un jeton qui n'est pas le jeton de mesure
+    for nom in ("champ", "vrais", "arts", "plantes", "rares", "provenance", "verite", "latent"):
+        with pytest.raises(mo.AccesLatent):
+            getattr(w.obs, nom)
     with pytest.raises(mo.AccesLatent):
         w.obs.n = 3
 
@@ -249,9 +255,10 @@ def test_g06_artefact_sans_vraie_paire_exclu_hors_SP():
 
 def test_g07_artefact_pont_d_impossible_regeneration_comptee_puis_arret(monkeypatch):
     # 8 champs d'un domaine chacun : aucun pont proche (d) possible, à chaque tentative
-    monkeypatch.setattr(mo, "MAX_TENTATIVES", 5)
-    with pytest.raises(GardeArret):
-        mo.generer("M_bien", RV, INDICE_ESSAI, surcharge={"champs_choix": (8,)})
+    with monkeypatch.context() as m:
+        m.setattr(mo, "MAX_TENTATIVES", 5)
+        with pytest.raises(GardeArret):
+            mo.generer("M_bien", RV, INDICE_ESSAI, surcharge={"champs_choix": (8,)})
     # impossible une fois sur deux : régénérations comptées, puis arrêt au-dessus du taux S11
     lignes = []
     for k in range(30):
@@ -370,7 +377,7 @@ def test_g12_garde_configuration():
     p7444 = dict(p, ponts=dict(p["ponts"], b=7, c=4, d=4, e=4))
     with pytest.raises(GardeArret):
         mo.garde_configuration(p7444)                             # artefact : 7 / 4 / 4 / 4
-    assert mo.garde_configuration(dict(p, ponts=mo.S16["ponts_V_surface"])) == (18, 14)
+    assert mo.garde_configuration(dict(p, ponts=mo.S16["ponts_V_surface"])) == (18, 13)  # 6 + 3 + 2 + 2 = 13 rares
 
 
 # 13. N_filtre -----------------------------------------------------------------------------------------------
@@ -517,4 +524,6 @@ def test_g16_artefact_b_eloigne_bat_N_clause_fausse_ligne_9bis():
     b = le.booleens(c)
     assert not b[("A2", "M_bien")] and not b[("A2", "M_moyen")]
     assert le.table1(b, True, False, False, False)[0] == "9 bis"
-    assert le.table1(b, True, False, False, False, s17_option=2)[0] == 10 or True  # option 2 : clause absente
+    # option 2 (b_eloigne descriptif) : clause de A2 absente, ligne 9 bis absente : la même donnée donne la ligne 10
+    b2 = le.booleens(c, s17_option=2)
+    assert b2[("A2", "M_bien")] and le.table1(b2, True, False, False, False, s17_option=2)[0] == 10

@@ -61,6 +61,7 @@ BASE_V2 = {
     "lambda": S16["lambda"], "taille_palette": S16["taille_palette"], "loi_fonds": S16["loi_fonds"],
     "p_moyeu_concept": 0.30, "rho": None, "ponts": S16["ponts"], "sans_pont": False,
     "concepts_absents": False, "palettes_disjointes": False, "inertes": False,
+    "jumelle": False,   # V4 seulement (validation) : échange des mots propres entre les deux domaines de chaque pont
 }
 
 CONDITIONS_V2 = {
@@ -367,7 +368,7 @@ def _observer_operateurs(rng, p, arts, champ, groupe, n_groupes, ops_groupe, for
             elif u < b["p_mot_global"] + b["p_mot_champ"]:
                 sac.append(f"c{a['champ']}_{rng.randrange(b['vocab_champ'])}")
             else:
-                sac.append(f"d{a['dom']}_{rng.randrange(b['vocab_propre'])}")
+                sac.append(f"d{a.get('dom_mots', a['dom'])}_{rng.randrange(b['vocab_propre'])}")
         sac += [f"z{x}" for x in rng.choices(range(b["vocab_general"]), weights=zipf, k=b["mots_generaux"])]
         a["sac_domaine"], a["etiq_op"] = sac, etiq
         if rng.random() < b["p_etiquette_domaine_fausse"]:
@@ -468,6 +469,9 @@ def _construire(p, racine, code_latent, code_miroir, indice, tentative, conditio
         info["surface"] = [pos[i] for i in info["surface"]]
     forces = [(pl["o_a"], arts[pl["a"]]["dom"], pl["o_b"], arts[pl["b"]]["dom"]) for pl in plantes
               if pl["statut"] == "surface"]
+    if p["jumelle"]:  # V4 : mêmes latents, mêmes flux de graines des rôles 1 à 3 ; seuls les mots propres sont échangés
+        for pl in plantes:
+            arts[pl["a"]]["dom_mots"], arts[pl["b"]]["dom_mots"] = arts[pl["b"]]["dom"], arts[pl["a"]]["dom"]
     # concept de fond dominant de chaque domaine (latent ; départage par indice)
     dominant = {}
     for d in range(len(champ)):

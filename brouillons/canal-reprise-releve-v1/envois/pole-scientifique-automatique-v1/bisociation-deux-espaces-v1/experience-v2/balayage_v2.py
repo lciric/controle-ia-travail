@@ -4,7 +4,9 @@ Refuse : (1) toute instruction `try` munie d'un `except` (spécifique ou génér
 qui vise un `except` autour de `cholesky`, `glouton_paires` ou de la copie gardée : un `except` ailleurs dans le code
 des bras est refusé aussi ; (2) toute mention d'un champ ou objet latent (`latent`, `Latent`, `JETON_MESURE`,
 `vrais`, `plante`, `plantes`, `rares`, `info_paires`, `champ`, `arts`, `provenance`) comme nom ou attribut ;
-(3) tout import de `monde_v2` ou de `mesures_v2`.
+(3) tout import de `monde_v2` ou de `mesures_v2` ; (4) tout accès dynamique qui contournerait (2) : appel de
+`getattr`, `setattr`, `vars`, `eval`, `exec`, `globals`, `locals`, `__import__`, attribut `__dict__`, ou chaîne de
+caractères égale à un nom interdit.
 """
 import ast
 from pathlib import Path
@@ -14,6 +16,7 @@ from controle_ia.gardes import GardeArret
 INTERDITS = {"latent", "Latent", "_latent", "JETON_MESURE", "vrais", "plante", "plantes", "rares", "info_paires",
              "champ", "arts", "provenance", "verite"}
 MODULES_INTERDITS = {"monde_v2", "mesures_v2"}
+APPELS_DYNAMIQUES = {"getattr", "setattr", "vars", "eval", "exec", "globals", "locals", "__import__"}
 APPELS_GARDES = {"cholesky", "glouton_paires", "ordre_glouton_garde"}
 
 
@@ -30,6 +33,12 @@ def problemes(source, nom="<module>"):
             out.append(f"{nom}:{n.lineno} : nom latent « {n.id} »")
         if isinstance(n, ast.Attribute) and n.attr in INTERDITS:
             out.append(f"{nom}:{n.lineno} : attribut latent « {n.attr} »")
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id in APPELS_DYNAMIQUES:
+            out.append(f"{nom}:{n.lineno} : accès dynamique « {n.func.id} »")
+        if isinstance(n, ast.Attribute) and n.attr == "__dict__":
+            out.append(f"{nom}:{n.lineno} : attribut « __dict__ »")
+        if isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value in INTERDITS:
+            out.append(f"{nom}:{n.lineno} : chaîne latente « {n.value} »")
         if isinstance(n, ast.Import):
             out += [f"{nom}:{n.lineno} : import {a.name}" for a in n.names if a.name in MODULES_INTERDITS]
         if isinstance(n, ast.ImportFrom) and n.module in MODULES_INTERDITS:
