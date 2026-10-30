@@ -1,0 +1,101 @@
+python 3.13.18 ; numpy 2.5.3 ; scipy 1.18.1 ; racine 20261031 ; tirages 20000
+seuils utilisés : S1=0.8, S2=0.7, S3=0.7, S4_fleiss=0.45, S4_couple=0.35, S4_plancher=0.3, S10_min_sur_12=11, S10_bande=0.75, S11_ord=0.1, S12=0.1, S13=0.9, S14=0.7, S15=0.1, S17_arret=40.0, S17_plafond=45.0, S18_max_auc=0.7, S18_min_kimi=6, S19_max_auc=0.65, S20_ambigus=4, S20_P=8, S20_N=10, S8=0.8, S9_rappel=0.75, refut_ii=0.1
+
+== M1, un juge seul : 28 fonds rendus une fois (P 10, N 13), sans appariement (variante (1) de D-i) ==
+  juge vrai à 0.90 : étalonné 0.92, défaillant 0.01 ; après exclusion d'ambigus (P 8, N 10) : étalonné 0.90 ; étalonné au total après complément (P 22, N 25) 0.99 ; rappel v3 (plan apparié 18 fonds, rho 0,6) : étalonné 0.89 ; variante (3) de D-i (24 fonds dont 4 doublés, P 11, N 13, rho 0,6) : étalonné 0.91
+  juge vrai à 0.85 : étalonné 0.75, défaillant 0.04 ; après exclusion d'ambigus (P 8, N 10) : étalonné 0.71 ; étalonné au total après complément (P 22, N 25) 0.88 ; rappel v3 (plan apparié 18 fonds, rho 0,6) : étalonné 0.71 ; variante (3) de D-i (24 fonds dont 4 doublés, P 11, N 13, rho 0,6) : étalonné 0.73
+  juge vrai à 0.80 : étalonné 0.50, défaillant 0.13 ; après exclusion d'ambigus (P 8, N 10) : étalonné 0.50 ; étalonné au total après complément (P 22, N 25) 0.63 ; rappel v3 (plan apparié 18 fonds, rho 0,6) : étalonné 0.52 ; variante (3) de D-i (24 fonds dont 4 doublés, P 11, N 13, rho 0,6) : étalonné 0.50
+  juge vrai à 0.75 : étalonné 0.29, défaillant 0.30 ; après exclusion d'ambigus (P 8, N 10) : étalonné 0.31 ; étalonné au total après complément (P 22, N 25) 0.36 ; rappel v3 (plan apparié 18 fonds, rho 0,6) : étalonné 0.33 ; variante (3) de D-i (24 fonds dont 4 doublés, P 11, N 13, rho 0,6) : étalonné 0.30
+  juge vrai à 0.70 : étalonné 0.14, défaillant 0.50 ; après exclusion d'ambigus (P 8, N 10) : étalonné 0.17 ; étalonné au total après complément (P 22, N 25) 0.16 ; rappel v3 (plan apparié 18 fonds, rho 0,6) : étalonné 0.19 ; variante (3) de D-i (24 fonds dont 4 doublés, P 11, N 13, rho 0,6) : étalonné 0.16
+  juge vrai à 0.60 : étalonné 0.02, défaillant 0.84 ; après exclusion d'ambigus (P 8, N 10) : étalonné 0.03 ; étalonné au total après complément (P 22, N 25) 0.02 ; rappel v3 (plan apparié 18 fonds, rho 0,6) : étalonné 0.05 ; variante (3) de D-i (24 fonds dont 4 doublés, P 11, N 13, rho 0,6) : étalonné 0.03
+
+== M1, simulation jointe (porte des juges C1-C2 seule) ==
+  prédiction P1 (Opus 0,90 ; Argon 0,85 ; Kimi 0,80) : C1-C2 (porte des juges) 0.38 ; C3 accord non réfuté et (ii) non atteinte 0.907 (accord « confirmé » 0.50) ; C1-C3 0.37 ; complément proposable (si le reste tient) 0.42 ; puis C1-C3 sur le cumul 0.34 ; audit R4 déclenché par M1 0.11 (trop propre 0.11, trop sale 0.00)
+  tous à 0,90 : C1-C2 (porte des juges) 0.85 ; C3 accord non réfuté et (ii) non atteinte 0.994 (accord « confirmé » 0.88) ; C1-C3 0.85 ; complément proposable (si le reste tient) 0.13 ; puis C1-C3 sur le cumul 0.86 ; audit R4 déclenché par M1 0.24 (trop propre 0.24, trop sale 0.00)
+  tous à 0,85 : C1-C2 (porte des juges) 0.54 ; C3 accord non réfuté et (ii) non atteinte 0.906 (accord « confirmé » 0.52) ; C1-C3 0.53 ; complément proposable (si le reste tient) 0.31 ; puis C1-C3 sur le cumul 0.56 ; audit R4 déclenché par M1 0.07 (trop propre 0.07, trop sale 0.00)
+  tous à 0,80 : C1-C2 (porte des juges) 0.22 ; C3 accord non réfuté et (ii) non atteinte 0.654 (accord « confirmé » 0.20) ; C1-C3 0.21 ; complément proposable (si le reste tient) 0.32 ; puis C1-C3 sur le cumul 0.24 ; audit R4 déclenché par M1 0.03 (trop propre 0.02, trop sale 0.01)
+  Kimi 0,70, autres 0,90 : C1-C2 (porte des juges) 0.13 ; C3 accord non réfuté et (ii) non atteinte 0.804 (accord « confirmé » 0.28) ; C1-C3 0.13 ; complément proposable (si le reste tient) 0.35 ; puis C1-C3 sur le cumul 0.07 ; audit R4 déclenché par M1 0.22 (trop propre 0.17, trop sale 0.07)
+  variante (3) de D-i, prédiction P1 (24 fonds dont 4 doublés, 8 fiches corrélées à rho 0,6) : C1-C2 0.37 ; C1-C3 0.37 ; complément proposable 0.43 ; audit M1 0.15
+
+== Option nommée R-1 du nœud : S1 relâché à 0,75 (S2, S3 inchangés), prédiction P1 ==
+  C1-C2 0.61 ; C1-C3 0.60 (à comparer à la ligne « prédiction P1 » ci-dessus)
+  un juge vrai à 0.80 : étalonné 0.50 sous S1 = 0,80 ; 0.69 sous 0,75
+  un juge vrai à 0.75 : étalonné 0.29 sous S1 = 0,80 ; 0.47 sous 0,75
+  un juge vrai à 0.70 : étalonné 0.14 sous S1 = 0,80 ; 0.28 sous 0,75
+
+== Probabilité de chaque autre condition aux valeurs prédites (hypothèse écrite à droite) ==
+  C4 étage 1 conforme : 0.97 (SUPPOSÉ : programme éprouvé en É0 ; 100 % des G et 0 % des P, N, C)
+  C5 contrôles avant juges : par version 0.57 (S18 0.81, S19 0.79, S20 0.88) ; en deux versions 0.81 (aire normale autour de la prédiction P12 ; ambiguïté 0.10 par témoin, SUPPOSÉ)
+    garde S19 à aire vraie 0,50 : dépassée 0.11 par version, 0.011 sur deux versions (faux positif de garde accepté, CP2-12)
+    accord de 100 % du relecteur (déclencheur « trop propre ») : 0.09
+  C6 mémoire et axe 7 non défaillantes : 0.952 (P6 : rappel 0,85 sur ≈ 9 positifs de vérification (PB seules, variante (1)), fausses alertes 0,06 sur 250 ; P7 : union 0,75 sur 12)
+    variantes (2) et (3) de D-i (≈ 11 positifs : PB ≈ 9 + PA ≈ 2) : 0.970 ; rappel v3 (≈ 14 positifs, 10 PA) : 0.974
+    déclencheur R4 « trop propre » de M3 (rappel 9 sur 9 ET zéro fausse alerte sur ≈ 250 NA et 4 NB) aux valeurs prédites : 0.0000 (rappel seul 9 sur 9 : 0.23)
+  C7 aiguilleur étalonné : direct 0.66, à corriger 0.31, défaillant 0.03 ; étalonné après nouvel essai 0.85 (P8 : 0,96 en C1-C3, 0,80 en C4, SUPPOSÉ ; concrets écrits)
+    sensibilité, 0,92 dans chaque classe : direct 0.56 ; après nouvel essai 0.82 ; un nouvel essai d'une classe à 0,92 passe 0.78
+    déclencheur R4 « trop propre » de M4, part aiguilleur (12 sur 12 ET zéro fausse alerte sur 34 + 6 difficiles) aux valeurs prédites : 0.033 (12 sur 12 : 0.35 ; zéro fausse alerte sur 40 : 0.09) ; la condition « accord de 100 % entre aiguilleur et second lecteur sur la passe 1 » s'y ajoute (C8)
+    défaut R-819 (aucun concret écrit) : C7 « non étalonné » avec certitude : porte fermée (probabilité 0)
+    accord de 100 % entre les deux lecteurs sur 20 fiches : 0.27 ; déclencheur « trop propre » de M4 complet (12 sur 12, zéro fausse alerte sur 40, accord 100 %) : 0.0088
+  C8 Kimi proposeur conforme : 0.92 — union <= S12 0.65 ; intersection > S12 0.05 ; adjudication 0.30, dont conforme à la majorité 0.89 (P9 : taux 0,05 ; sensibilité 0,90 et fausses alertes 0,03 par lecteur, SUPPOSÉ)
+    taux vrai 0.10 : déclaré conforme 0.68
+    taux vrai 0.20 : déclaré conforme 0.22
+  C9 antériorité non défaillante : 0.992 (P10 : inventées 0,95) ; M6 « étalonnée » 0.22 (C9 accepte « non concluant ») ; déclencheur R4 « trop propre » de M6 (9 sur 9, 9 sur 9, 0 sur 22) : 0.0041
+    D-g option (b), M6b (4 fiches d'antériorité non citée) : 4 sur 4 vues ne bornent le rappel qu'à 0.47 (unilatérale 95 %) ; à rappel vrai 0,75, « 3 sur 4 au moins » se voit avec 0.74, à 0,50 avec 0.31 : garde grossière, réserve
+
+== Budget du pré-pilote selon la règle d'A1, étape par étape (CP4-15 ; rapports P11 ; seconde version comprise) ==
+  aux bases (rapports à 1) : protégé 20.5 USD ; sacrifiable 8.0 USD ; total attendu 28.4 ; somme des plafonds de relais 44.9 ; seconde version de témoins ≈ 4.9 USD si C5 échoue en première version (probabilité 0.43)
+  plafond 45, arrêt d'étape 40, ordre B du brouillon 5 (lecture principale, S17 recommandé) : dépense médiane 36.3 USD, quantile 90 % 42.4 ; P(un sacrifice ou une réduction au moins) 0.24 (fusions retirées 0.09 ; M6 réduite 0.23 ; table seule retirée 0.15 ; passe « tableau » retirée 0.04) ; P(arrêt d'étape touché) 0.30 ; P(étape protégée non lancée, « non mesuré (budget) ») 0.032
+  plafond 45, arrêt d'étape 40, ordre A du brouillon 4 (juges après les sacrifiables ; comparaison) : dépense médiane 36.0 USD, quantile 90 % 41.6 ; P(un sacrifice ou une réduction au moins) 0.25 (fusions retirées 0.09 ; M6 réduite 0.25 ; table seule retirée 0.19 ; passe « tableau » retirée 0.01) ; P(arrêt d'étape touché) 0.25 ; P(étape protégée non lancée, « non mesuré (budget) ») 0.085
+  plafond 32, arrêt d'étape 28, ordre B (GO-2026-10-30-07 tel quel ; information) : dépense médiane 27.7 USD, quantile 90 % 30.2 ; P(un sacrifice ou une réduction au moins) 0.92 (fusions retirées 0.89 ; M6 réduite 0.82 ; table seule retirée 0.68 ; passe « tableau » retirée 0.61) ; P(arrêt d'étape touché) 0.46 ; P(étape protégée non lancée, « non mesuré (budget) ») 0.226
+  plafond 45 sans arrêt d'étape, ordre B (sensibilité) : dépense médiane 36.3 USD, quantile 90 % 43.2 ; P(un sacrifice ou une réduction au moins) 0.24 (fusions retirées 0.09 ; M6 réduite 0.23 ; table seule retirée 0.09 ; passe « tableau » retirée 0.04) ; P(arrêt d'étape touché) 0.03 ; P(étape protégée non lancée, « non mesuré (budget) ») 0.032
+  rappel du modèle grossier de la v4 (total sans sacrifice > plafond ; protégé > plafond) : à 45 : 0.16 / 0.005 ; à 32 : 0.73 / 0.150 ; dépense médiane sans plafond 36.3
+  complément conditionnel (24 fonds rendus une fois) aux bases : redacteur 1.44 ; rendus 1.72 ; relecteur 1.12 ; aiguilleur 1.37 ; juges 6.00 ; total 11.6 USD ; plafond (ratios des plafonds de relais du tableau principal) 17.5 ; médiane aux rapports P11 13.0
+  D-g option (b), M6b : 4 fiches (rédacteur 4 × 0,06 + lecture du PDF source 4 × 0,10 SUPPOSÉ ; vérificateur 4 × 0,25) : 1.6 USD attendus ; plafond ×1,5 : 2.5
+  C10, reste = 110 − dépense (GO-2026-10-30-07 inchangé), course à S22 k = 1 (trois bras, 12 fusions) : devis refait médian 103.0 USD pour 4 sous-sessions ; reste médian 73.7 ; tient à 4 0.07, à 3 0.36, à 2 0.49, à aucune 0.081
+  C10, reste = 110 − dépense (GO-2026-10-30-07 inchangé), course à S22 k = 2 (trois bras, 24 fusions) : devis refait médian 114.8 USD pour 4 sous-sessions ; reste médian 73.7 ; tient à 4 0.02, à 3 0.24, à 2 0.57, à aucune 0.171
+  C10, reste = 78 (total porté à 123 par la ligne nouvelle ; LECTURE À CONFIRMER), course à S22 k = 1 (trois bras, 12 fusions) : devis refait médian 103.0 USD pour 4 sous-sessions ; reste médian 78.0 ; tient à 4 0.03, à 3 0.49, à 2 0.45, à aucune 0.021
+  C10, reste = 78 (total porté à 123 par la ligne nouvelle ; LECTURE À CONFIRMER), course à S22 k = 2 (trois bras, 24 fusions) : devis refait médian 114.8 USD pour 4 sous-sessions ; reste médian 78.0 ; tient à 4 0.01, à 3 0.28, à 2 0.65, à aucune 0.064
+    lecture principale de C10 (110 − dépense, k = 1) : 0.92 ; après complément (110 − dépense − complément, k = 1) : 0.70 (tient à 4 0.01, à 3 0.17, à 2 0.51) ; au plafond 32 (110 − dépense, k = 1) : 0.98
+    décomposition v3 -> v5 (CP4-11) : lecture v3 (k = 2, reste 78) 0.936 (v3 : 0,933 ; v4 : 0,94) -> k = 1, reste 78 : 0.98 -> k = 1, reste = 110 − dépense : 0.92
+    M7 « poste refait » (un rapport > 1,30) : 0.96 (réserve, hors porte)
+  C11 cloisons du tableau : 0.99 ; C12 garde de paire (trois bras : méta, Gu-Krenn, basique) : 0.99 (SUPPOSÉ : programmes éprouvés en É0)
+  C13 arrêts clos et rien « non mesuré » : technique 0.95 (SUPPOSÉ : A2, A3, A5, A11, A14 clos dans les plafonds) × budget 0.968 (règle d'A1, plafond 45, arrêt 40) ; au plafond 32 : budget 0.774
+  C14 : probabilité d'un déclencheur hors M1 (relecteur 100 %, contradiction, M3, M4, M6 « trop propres ») : 0.145
+
+== CONJONCTION ENTIÈRE C1 à C14 (conditions hors juges indépendantes entre elles et des juges, SUPPOSÉ) ==
+  produit des conditions hors juges (C4 à C13, aiguilleur étalonné par concrets écrits) : 0.48
+  prédiction P1 (Opus 0,90 ; Argon 0,85 ; Kimi 0,80) : porte des juges seule (C1-C2) 0.38 ; C14 0.96 ; CONJONCTION ENTIÈRE ouverte d'emblée 0.17 ; complément proposé 0.20 ; nœud d'emblée 0.63 ; ouverte au total si le complément reçoit son GO 0.22
+  tous à 0,90 : porte des juges seule (C1-C2) 0.85 ; C14 0.95 ; CONJONCTION ENTIÈRE ouverte d'emblée 0.39 ; complément proposé 0.06 ; nœud d'emblée 0.55 ; ouverte au total si le complément reçoit son GO 0.42
+  tous à 0,85 : porte des juges seule (C1-C2) 0.54 ; C14 0.97 ; CONJONCTION ENTIÈRE ouverte d'emblée 0.25 ; complément proposé 0.15 ; nœud d'emblée 0.61 ; ouverte au total si le complément reçoit son GO 0.31
+  tous à 0,80 : porte des juges seule (C1-C2) 0.22 ; C14 0.97 ; CONJONCTION ENTIÈRE ouverte d'emblée 0.10 ; complément proposé 0.15 ; nœud d'emblée 0.75 ; ouverte au total si le complément reçoit son GO 0.13
+  Kimi 0,70, autres 0,90 : porte des juges seule (C1-C2) 0.13 ; C14 0.95 ; CONJONCTION ENTIÈRE ouverte d'emblée 0.06 ; complément proposé 0.16 ; nœud d'emblée 0.78 ; ouverte au total si le complément reçoit son GO 0.07
+  sensibilités à la prédiction P1 : C13 technique à 1,00 -> ouverte d'emblée 0.18 ; audit sans artefact (0) -> 0.18 ; artefact 0,30 -> 0.17
+  coûts aux bases (rapports à 1 : C13 budget = 1) -> ouverte d'emblée 0.18
+  C10 selon « reste = 110 − dépense (GO-2026-10-30-07 inchangé) », k = 2 (0.83) -> ouverte d'emblée 0.16
+  C10 selon « reste = 78 (total porté à 123 par la ligne nouvelle ; LECTURE À CONFIRMER) », k = 1 (0.98) -> ouverte d'emblée 0.18
+  C10 selon « reste = 78 (total porté à 123 par la ligne nouvelle ; LECTURE À CONFIRMER) », k = 2 (0.94) -> ouverte d'emblée 0.18
+  PLAFOND 32 (arrêt d'étape 28 ; GO-2026-10-30-07 tel quel) : C13 budget 0.774 ; C10 0.98 ; ouverte d'emblée 0.15 ; complément proposé 0.17 ; nœud d'emblée 0.69 (CP4-07 : information, un seul plafond au gel)
+  rappel v4 (modèle grossier du budget, C10 sans complément) : ouverte d'emblée 0,17 ; complément 0,20 ; nœud 0,63 ; au total 0,24 ; rappel v3 (plafond 32, fonds appariés, alarme S5 dans C14) : 0,15 ; 0,15 ; 0,71 ; 0,20
+  défaut R-819 (pas d'étalonnage de l'aiguilleur) : C7 non étalonné -> conjonction entière 0,00 ; nœud certain
+
+== Décision D-i : variantes du plan des fonds (prédiction P1 ; coûts aux bases du devis v3, SUPPOSÉ) ==
+  (1) 28 fonds uniques (texte du brouillon) : coût attendu 28.4 USD ; paires PA : 0 ; C1-C2 0.38 ; C6 0.952 ; C13 budget 0.968 ; C10 0.92 ; porte entière 0.173 ; nœud 0.63 ; au total après complément 0.223
+  (2) 28 fonds + 4 rendus appariés (mémoire seule, 4 lectures d'aiguilleur, aucun juge) : coût attendu 28.9 USD (+0.50) ; paires PA : 4 (≈ 2 en vérification) ; C1-C2 0.38 (inchangé) ; C6 0.970 ; C13 budget 0.965 ; C10 0.92 ; porte entière 0.175 ; nœud 0.63 ; au total 0.226
+  (3) 24 fonds dont 4 doublés (P 9, N 11, C 2, G 2 ; fiches P 11, N 13 ; 8 fiches corrélées) : coût attendu 28.2 USD (−0.24) ; paires PA : 4 ; C1-C2 0.37 ; C6 0.970 ; C13 budget 0.969 ; C10 0.92 ; porte entière 0.172 ; nœud 0.63 ; au total 0.237 (graines v5 : l'écart de M1 avec (1) comprend le bruit de simulation, ±0,01)
+
+== M4 : fausses alertes sur 34 fiches de niveau méthode (CP2-13 : effectif 34) ==
+  fausses alertes vraies 0.03 : P(taux observé <= 0.1) = 0.98
+  fausses alertes vraies 0.10 : P(taux observé <= 0.1) = 0.55
+  fausses alertes vraies 0.20 : P(taux observé <= 0.1) = 0.07
+
+== Bisociation exploratoire à trois bras (méta v1, Gu-Krenn, basique) : paires et coût (SUPPOSÉ) ==
+  6 fiches non aiguillées de passe 1 : 15 paires ; chaque bras choisit son argmax, les trois paires sont distinctes (la suivante en cas de coïncidence, ordre de priorité tiré par pp2-bisoc-ordre)
+  10 fiches non aiguillées de passe 1 : 45 paires ; chaque bras choisit son argmax, les trois paires sont distinctes (la suivante en cas de coïncidence, ordre de priorité tiré par pp2-bisoc-ordre)
+  k = 1 par bras : 3 fusions ; pré-pilote ≈ 2.12 USD ; course, 4 cases ≈ 8.5 USD
+  k = 2 par bras : 6 fusions ; pré-pilote ≈ 4.24 USD ; course, 4 cases ≈ 17.0 USD
+  k = 3 par bras : 9 fusions ; pré-pilote ≈ 6.36 USD ; course, 4 cases ≈ 25.5 USD
+  lectures d'étiquettes : trois lectures séparées par fiche (liste fermée ; vocabulaire Gu-Krenn ; grille des niches et structures du bras méta) : ≈ 0.75 USD pour dix fiches (0,25 par lecture et par dix fiches, prorata de la v3)
+  bras méta, 6 fiches, grille à 6 niches (SUPPOSÉ ; faible 0,5, forte 0,3, bande 0,6) : paires dans le profil médiane 1, P(zéro) 0.31, P(toutes les fiches de même niche) 0.000
+  bras méta, 10 fiches, grille à 6 niches (SUPPOSÉ ; faible 0,5, forte 0,3, bande 0,6) : paires dans le profil médiane 3, P(zéro) 0.03, P(toutes les fiches de même niche) 0.000
+  note Gu-Krenn (modèle ou substitut) des trois paires et leur passage : rapportés sans test ; aucune comparaison entre bras au pré-pilote (une paire par bras) ; course à k = 1 : 12 fusions, erreur-type d'une aire sous la courbe à 6 contre 6 ≈ 0.17 (Hanley-McNeil, à 0,5)
+fin ; 3.13.18
