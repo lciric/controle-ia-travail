@@ -3,6 +3,9 @@
 
 Chaque tâche reçoit numpy.random.SeedSequence(entropy=RACINE, spawn_key=(code_condition, indice_monde, code_rôle)) ;
 une régénération (G11) ajoute le numéro de tentative comme quatrième élément (tentative 0 : clé à trois éléments).
+Replantation sur le même monde de base (addendum v2, Q-01 (b), R-600) : la r-ième replantation (r ≥ 1) des ponts de la
+tentative t reçoit spawn_key = (code_condition, indice_monde, 0, t, r), cinq éléments, t écrit même s'il vaut 0 ;
+aucune autre clé du § 7 n'a cinq éléments, donc aucune collision.
 Rééchantillonnage : spawn_key = (code_condition, code_contraste, 99) et, pour le second ensemble d'un écart entre
 ensembles distincts, (code_condition, code_contraste, 99, 1).
 """
@@ -24,8 +27,9 @@ ROLE_PLACEBO_PC, ROLE_PLACEBO_SP, ROLE_PLACEBO_PCG, ROLE_MIROIR = 4, 5, 6, 7
 ROLE_BRAS_BASE, ROLE_REECHANTILLONNAGE = 10, 99
 
 
-def sequence(racine, code_condition, indice, role, tentative=0, extra=None):
-    """SeedSequence d'une tâche (§ 7). `extra` sert seulement au second flux du rééchantillonnage."""
+def sequence(racine, code_condition, indice, role, tentative=0, extra=None, replantation=None):
+    """SeedSequence d'une tâche (§ 7). `extra` sert seulement au second flux du rééchantillonnage ; `replantation`
+    (≥ 1) seulement au rôle 0 (placement des ponts retenté sur le même monde de base)."""
     exiger_numpy_minimal()
     if racine not in RACINES_PERMISES:
         raise GardeArret(f"racine {racine} : seules RACINE={RACINE} et RACINE_VALIDATION={RACINE_VALIDATION} "
@@ -37,11 +41,15 @@ def sequence(racine, code_condition, indice, role, tentative=0, extra=None):
         if role != ROLE_REECHANTILLONNAGE:
             raise GardeArret("quatrième élément « extra » réservé au rôle 99")
         cle = cle + (int(extra),)
+    if replantation is not None:
+        if role != ROLE_MONDE or extra is not None or int(replantation) < 1:
+            raise GardeArret("replantation : rôle 0 seulement, numéro ≥ 1, sans « extra »")
+        cle = (int(code_condition), int(indice), int(role), int(tentative), int(replantation))
     return np.random.SeedSequence(entropy=racine, spawn_key=cle)
 
 
-def generateur(racine, code_condition, indice, role, tentative=0, extra=None):
-    return np.random.default_rng(sequence(racine, code_condition, indice, role, tentative, extra))
+def generateur(racine, code_condition, indice, role, tentative=0, extra=None, replantation=None):
+    return np.random.default_rng(sequence(racine, code_condition, indice, role, tentative, extra, replantation))
 
 
 class RngAdapte:

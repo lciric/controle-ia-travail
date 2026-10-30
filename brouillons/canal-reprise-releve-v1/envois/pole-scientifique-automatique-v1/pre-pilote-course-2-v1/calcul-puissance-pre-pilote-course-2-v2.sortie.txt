@@ -1,0 +1,106 @@
+python 3.13.18 ; numpy 2.5.3 ; scipy 1.18.1 ; racine 20261031 ; tirages 20000
+seuils utilisés : S1=0.8, S2=0.7, S3=0.7, S5_points=20.0, S10_min_sur_12=11, S11_ord=0.1, S13=0.9, S14=0.7, S15=0.1, S7_tol=0.1, S18_max_auc=0.7, S19_max_auc=0.65
+
+== M1, règle par juge (estimation ponctuelle : BA >= S1 et rappel P >= S2 -> étalonné ; BA < S3 -> défaillant) ==
+  rho=0.0, juste vraie 0.95 : étalonné 0.99, non concluant 0.01, défaillant 0.00
+  rho=0.0, juste vraie 0.90 : étalonné 0.93, non concluant 0.07, défaillant 0.00
+  rho=0.0, juste vraie 0.85 : étalonné 0.75, non concluant 0.21, défaillant 0.04
+  rho=0.0, juste vraie 0.80 : étalonné 0.51, non concluant 0.36, défaillant 0.13
+  rho=0.0, juste vraie 0.70 : étalonné 0.14, non concluant 0.35, défaillant 0.51
+  rho=0.0, juste vraie 0.60 : étalonné 0.02, non concluant 0.14, défaillant 0.84
+  rho=0.6, juste vraie 0.95 : étalonné 0.98, non concluant 0.02, défaillant 0.00
+  rho=0.6, juste vraie 0.90 : étalonné 0.88, non concluant 0.10, défaillant 0.01
+  rho=0.6, juste vraie 0.85 : étalonné 0.71, non concluant 0.22, défaillant 0.07
+  rho=0.6, juste vraie 0.80 : étalonné 0.52, non concluant 0.31, défaillant 0.17
+  rho=0.6, juste vraie 0.70 : étalonné 0.20, non concluant 0.31, défaillant 0.49
+  rho=0.6, juste vraie 0.60 : étalonné 0.05, non concluant 0.16, défaillant 0.79
+
+== M1 sous exclusion de témoins ambigus (sensibilité : P 8 fiches, N 10 fiches ; rho 0,6) ==
+  juste vraie 0.90 : étalonné 0.85, défaillant 0.02
+  juste vraie 0.85 : étalonné 0.69, défaillant 0.08
+  juste vraie 0.80 : étalonné 0.52, défaillant 0.18
+
+== Porte M1 jointe (Kimi étalonné ET Argon étalonné ET Opus non défaillant), rho 0,6 ==
+  tous à 0,90 : porte M1 ouverte 0.77 ; complément demandé 0.19 ; défaillance d'au moins un juge 0.04
+  tous à 0,85 : porte M1 ouverte 0.47 ; complément demandé 0.34 ; défaillance d'au moins un juge 0.19
+  tous à 0,80 : porte M1 ouverte 0.23 ; complément demandé 0.35 ; défaillance d'au moins un juge 0.43
+  prédiction P1 (Opus 0,90, Argon 0,85, Kimi 0,80) : porte M1 ouverte 0.37 ; complément demandé 0.39 ; défaillance d'au moins un juge 0.24
+  Kimi 0,70, autres 0,90 : porte M1 ouverte 0.17 ; complément demandé 0.32 ; défaillance d'au moins un juge 0.51
+
+== Complément : lecture sur le cumul (P 22, N 25), mêmes seuils ; risque de faux succès à deux étapes ==
+  juste vraie 0.90 : étalonné à l'étape 1 0.88 ; étalonné au total (1 ou cumul) 0.96
+  juste vraie 0.80 : étalonné à l'étape 1 0.52 ; étalonné au total (1 ou cumul) 0.63
+  juste vraie 0.70 : étalonné à l'étape 1 0.20 ; étalonné au total (1 ou cumul) 0.23
+  juste vraie 0.60 : étalonné à l'étape 1 0.05 ; étalonné au total (1 ou cumul) 0.05
+
+== M2 : résolution de X (k = 5 items, pas 20 points) ; écart-type par fond et erreur-type ==
+  sans effet : écart-type de la double différence par fond 25.7 points ; erreur-type de SP_dd sur 10 fonds 8.1 points ; erreur-type de B_cc 8.8 points
+
+== M2 : puissance de l'alarme de biais résiduel (|B_cc| >= S5 et intervalle à 90 % excluant 0) ==
+  écart de style (échelle logistique) 0.00, sévérité 0,40 : B_cc moyen -0.0 points ; alarme 0.03
+  écart de style (échelle logistique) 0.25, sévérité 0,40 : B_cc moyen +4.8 points ; alarme 0.05
+  écart de style (échelle logistique) 0.50, sévérité 0,40 : B_cc moyen +9.1 points ; alarme 0.12
+  écart de style (échelle logistique) 0.75, sévérité 0,40 : B_cc moyen +13.4 points ; alarme 0.24
+  écart de style (échelle logistique) 1.00, sévérité 0,40 : B_cc moyen +18.3 points ; alarme 0.42
+
+== M2 : SP_dd (descriptif) — probabilité que la borne basse à 90 % dépasse 0 ==
+  auto-préférence 0.0 (logistique) : SP_dd moyen -1.9 points ; détectée 0.04
+  auto-préférence 0.5 (logistique) : SP_dd moyen +6.5 points ; détectée 0.18
+  auto-préférence 1.0 (logistique) : SP_dd moyen +13.0 points ; détectée 0.47
+  auto-préférence 1.5 (logistique) : SP_dd moyen +17.9 points ; détectée 0.75
+
+== Bornes de Clopper-Pearson unilatérales à 95 %, aux effectifs réels du brouillon 2 ==
+  M3, un niveau de paraphrase (vérification) : 3 sur 3 -> borne basse 0.37 ; 2 sur 3 -> 0.14
+  M3, paires inter-fournisseurs (vérification) : 5 sur 5 -> borne basse 0.55 ; 4 sur 5 -> 0.34
+  M3, positifs de vérification : 14 sur 14 -> borne basse 0.81 ; 13 sur 14 -> 0.70
+  M6, inventées / altérées : 9 sur 9 -> borne basse 0.72 ; 8 sur 9 -> 0.57
+  M4, concrets : 12 sur 12 -> borne basse 0.78 ; 11 sur 12 -> 0.66
+  M4, classes C1 + C2 : 6 sur 6 -> borne basse 0.61 ; 5 sur 6 -> 0.42
+  M3 axe 7, paraphrases : 12 sur 12 -> borne basse 0.78 ; 11 sur 12 -> 0.66
+  M3, voisines NB (vérification) : 0 sur 4 -> borne haute 0.527
+  M6, réelles : 0 sur 22 -> borne haute 0.127
+  M4, niveau méthode (28 rendus + 6 difficiles) : 0 sur 34 -> borne haute 0.084
+  M3 axe 7, angles distincts : 0 sur 12 -> borne haute 0.221
+  M3, paires NA (vérification, ordre de grandeur) : 0 sur 250 -> borne haute 0.012
+
+== Erreurs tolérées par chaque seuil (lecture en estimation ponctuelle) ==
+  S13 inventées : 0 erreur(s) tolérée(s) sur 9
+  S14 altérées : 2 erreur(s) tolérée(s) sur 9
+  S15 réelles : 2 erreur(s) tolérée(s) sur 22
+  S11 niveau méthode : 3 erreur(s) tolérée(s) sur 34
+  S7 tolérance vérification NA : 25 erreur(s) tolérée(s) sur 250
+
+== M4 : aiguilleur, 12 concrets (3 par classe) ==
+  rappel vrai 0.99 : P(>= 11 sur 12) = 0.99 ; P(aucun oubli en C1 et C2, 6 fiches) = 0.94
+  rappel vrai 0.95 : P(>= 11 sur 12) = 0.88 ; P(aucun oubli en C1 et C2, 6 fiches) = 0.74
+  rappel vrai 0.90 : P(>= 11 sur 12) = 0.66 ; P(aucun oubli en C1 et C2, 6 fiches) = 0.53
+  rappel vrai 0.80 : P(>= 11 sur 12) = 0.27 ; P(aucun oubli en C1 et C2, 6 fiches) = 0.26
+  fausses alertes vraies 0.03 sur 34 fiches de niveau méthode : P(taux observé <= 0.1) = 0.98
+  fausses alertes vraies 0.10 sur 34 fiches de niveau méthode : P(taux observé <= 0.1) = 0.51
+  fausses alertes vraies 0.20 sur 34 fiches de niveau méthode : P(taux observé <= 0.1) = 0.05
+
+== M5 : débordement de Kimi, deux passes (<= 20 fiches) ==
+  n=10, taux vrai 0.05 : P(>= 1 signalée) = 0.40
+  n=10, taux vrai 0.10 : P(>= 1 signalée) = 0.65
+  n=10, taux vrai 0.20 : P(>= 1 signalée) = 0.89
+  0 sur 10 -> borne haute unilatérale à 95 % 0.259
+  n=20, taux vrai 0.05 : P(>= 1 signalée) = 0.64
+  n=20, taux vrai 0.10 : P(>= 1 signalée) = 0.88
+  n=20, taux vrai 0.20 : P(>= 1 signalée) = 0.99
+  0 sur 20 -> borne haute unilatérale à 95 % 0.139
+
+== Aire sous la courbe : erreur-type (Hanley-McNeil) ==
+  S18 témoins (28) contre fiches de Kimi (15) : erreur-type à 0,50 = 0.09 ; à 0,70 = 0.08
+  S18 témoins (28) contre fiches de Kimi (20) : erreur-type à 0,50 = 0.09 ; à 0,70 = 0.08
+  S19 P (10) contre N (13), entre classes : erreur-type à 0,50 = 0.12 ; à 0,70 = 0.11
+
+== Bisociation exploratoire : nombre de paires disponibles et coût des fusions (SUPPOSÉ) ==
+  10 fiches de passe 1 dans une case (texte, bras) : 45 paires
+  20 fiches de passe 1 dans une case (texte, bras) : 190 paires
+  29 fiches de passe 1 dans une case (texte, bras) : 406 paires
+  k = 1 (k paires règle N + k paires au hasard) : 2 fusions ; pré-pilote ≈ 1.41 USD ; course, 4 cases ≈ 5.7 USD
+  k = 2 (k paires règle N + k paires au hasard) : 4 fusions ; pré-pilote ≈ 2.83 USD ; course, 4 cases ≈ 11.3 USD
+  k = 3 (k paires règle N + k paires au hasard) : 6 fusions ; pré-pilote ≈ 4.24 USD ; course, 4 cases ≈ 17.0 USD
+  k = 4 (k paires règle N + k paires au hasard) : 8 fusions ; pré-pilote ≈ 5.66 USD ; course, 4 cases ≈ 22.6 USD
+  P(la fusion d'une paire N est notable plus souvent qu'une paire au hasard) : non calculable à ces effectifs (module exploratoire, sans revendication)
+fin ; 3.13.18

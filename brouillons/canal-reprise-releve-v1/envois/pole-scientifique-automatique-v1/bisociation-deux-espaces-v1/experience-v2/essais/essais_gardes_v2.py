@@ -253,27 +253,48 @@ def test_g06_artefact_sans_vraie_paire_exclu_hors_SP():
 
 # 7. échec de plantation ---------------------------------------------------------------------------------
 
+def _lignes_plantation(k0, n, surcharge=None):
+    out = []
+    for k in range(n):
+        L = mo.generer("M_bien", RV, k0 + k, surcharge=surcharge).latent(mo.JETON_MESURE)
+        out.append({"exclu": None, "tentatives": L.tentatives, "replantations": L.replantations,
+                    "n_champs": L.n_champs, "bras": {}})
+    return out
+
+
 def test_g07_artefact_pont_d_impossible_regeneration_comptee_puis_arret(monkeypatch):
-    # 8 champs d'un domaine chacun : aucun pont proche (d) possible, à chaque tentative
+    # 8 champs d'un domaine chacun : aucun pont proche (d) possible, ni par replantation ni par régénération
+    monkeypatch.setattr(mo, "MAX_REPLANTATIONS", 2)                  # nombre réduit : durée de l'essai seulement
     with monkeypatch.context() as m:
         m.setattr(mo, "MAX_TENTATIVES", 5)
         with pytest.raises(GardeArret):
             mo.generer("M_bien", RV, INDICE_ESSAI, surcharge={"champs_choix": (8,)})
-    # impossible une fois sur deux : régénérations comptées, puis arrêt au-dessus du taux S11
-    lignes = []
-    for k in range(30):
-        w = mo.generer("M_bien", RV, INDICE_ESSAI + k, surcharge={"champs_choix": (4, 8)})
-        lignes.append({"exclu": None, "tentatives": w.latent(mo.JETON_MESURE).tentatives, "bras": {}})
+    # impossible une fois sur deux (monde de base à 8 champs : la replantation n'y peut rien) : régénérations entières
+    # comptées, puis arrêt au-dessus du taux S11
+    lignes = _lignes_plantation(INDICE_ESSAI, 30, surcharge={"champs_choix": (4, 8)})
     assert sum(l["tentatives"] > 0 for l in lignes) > 0
     with pytest.raises(GardeArret):
         ms.verifier_taux(lignes, "M_bien")
 
 
-def test_g07_sain_parametres_de_decision_generent():
-    for k in range(10):
-        w = mo.generer("M_bien", RV, INDICE_ESSAI + k)
-        assert w.latent(mo.JETON_MESURE).tentatives >= 0
-    ms.verifier_taux([{"exclu": None, "tentatives": 0, "bras": {}}] * 50, "M_bien")
+# Cas sain réécrit (contre-lecture du code, garde 7) : paramètres de décision, 300 mondes d'essai hors plages, taux de
+# régénération entière soumis à S11 (2 %) par la garde réelle ; il PEUT échouer : l'essai jumeau ci-dessous montre que,
+# sur les mêmes graines, l'ancienne règle (régénération entière dès le premier échec) le fait échouer.
+K0_PLANTATION, N_PLANTATION = 951_000, 300
+
+
+def test_g07_sain_parametres_de_decision_sous_S11():
+    lignes = _lignes_plantation(K0_PLANTATION, N_PLANTATION)
+    r = ms.verifier_taux(lignes, "M_bien")
+    assert r["taux_regeneres"] <= ms.TAUX_ARRET
+    assert r["taux_replantes"] > 0                                   # la replantation a bien servi sur ces graines
+
+
+def test_g07_artefact_ancienne_regle_depasse_S11(monkeypatch):
+    monkeypatch.setattr(mo, "MAX_REPLANTATIONS", 0)                  # sans replantation : régénération entière
+    lignes = _lignes_plantation(K0_PLANTATION, N_PLANTATION)
+    with pytest.raises(GardeArret):
+        ms.verifier_taux(lignes, "M_bien")
 
 
 # 8. monde jouet dont la précision est calculée à la main -------------------------------------------------

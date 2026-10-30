@@ -7,8 +7,14 @@ et ses niveaux d'observation des opérateurs (`NIVEAUX`) sont réutilisés ; la 
 réécrites ici pour séparer les rôles de graine du § 7 (monde 0, opérateurs 1, concepts 2, contraintes 3, miroir 7).
 
 G1 : un monde est une paire (Latent, Obs). Les bras ne reçoivent que `Obs`, dont tout attribut absent lève
-`AccesLatent` ; `Monde.latent(jeton)` lève `AccesLatent` sans le jeton de mesure `JETON_MESURE`.
+`AccesLatent` ; `Monde.latent(jeton)` lève `AccesLatent` sans le jeton de mesure `JETON_MESURE`. La vue observée ne porte
+pas le nom de la condition (corrections v2, contre-lecture du code).
+
+Corrections v2 (décisions de Lazar R-600, addendum `prereg/addendum-ecarts-bisociation-deux-espaces-v2-v2.md`) :
+G11 lu en (b) — un échec de plantation retente seulement le placement des ponts sur le même monde de base (au plus
+MAX_REPLANTATIONS fois, flux (code, m, 0, t, r)), puis régénère le monde entier ; V4 lu en « copie ».
 """
+import copy
 import sys
 from collections import Counter
 from pathlib import Path
@@ -32,7 +38,9 @@ class AccesLatent(Exception):
 
 
 class EchecPlantation(Exception):
-    """Un pont n'a pas pu être planté en 1 000 essais (G11) : le monde est régénéré, la tentative est comptée."""
+    """Un pont n'a pas pu être planté en 1 000 essais (G11). Addendum v2, Q-01 (b) : le placement des ponts est
+    retenté sur le même monde de base (replantation comptée) ; après MAX_REPLANTATIONS replantations échouées, le monde
+    entier est régénéré (tentative suivante, comptée)."""
 
 
 JETON_MESURE = object()
@@ -61,7 +69,7 @@ BASE_V2 = {
     "lambda": S16["lambda"], "taille_palette": S16["taille_palette"], "loi_fonds": S16["loi_fonds"],
     "p_moyeu_concept": 0.30, "rho": None, "ponts": S16["ponts"], "sans_pont": False,
     "concepts_absents": False, "palettes_disjointes": False, "inertes": False,
-    "jumelle": False,   # V4 seulement (validation) : échange des mots propres entre les deux domaines de chaque pont
+    "jumelle": False,   # V4 seulement (validation) : copie des mots propres (addendum v2, Q-04 « copie », R-600)
 }
 
 CONDITIONS_V2 = {
@@ -82,6 +90,9 @@ CONDITIONS_V2 = {
 }
 CONDITIONS_NR = {"NR_bien": "bien", "NR_moyen": "moyen"}
 MAX_TENTATIVES = 200
+# Addendum v2, Q-01 (b) (R-600) : replantations sur le même monde de base avant une régénération entière (choix de code,
+# déclaré ; la contre-lecture du code a essayé ≤ 50 et n'a jamais eu besoin de régénérer sur 2 400 mondes d'essai).
+MAX_REPLANTATIONS = 50
 
 
 # --- gardes de configuration (S16e, loi de M_fonds_1ou2) ----------------------------------------------------
@@ -108,7 +119,7 @@ def garde_configuration(p):
 class Obs:
     """Vue observée en lecture seule. Tout attribut absent (champ latent, vérité, provenance…) lève AccesLatent."""
     __slots__ = ("n", "cos", "etiq_op", "etiq_co", "c_obs", "dom_obs", "q", "df", "paires", "valides", "pont",
-                 "concepts_absents", "nr", "condition", "_fige")
+                 "concepts_absents", "nr", "_fige")  # sans le nom de la condition (contre-lecture du code, G1)
 
     def __init__(self, **champs):
         for k, v in champs.items():
@@ -436,9 +447,9 @@ def _observer_concepts_rares(rng, p, arts, rares, dominant, miroir):
 
 # --- monde complet ----------------------------------------------------------------------------------------
 
-def _construire(p, racine, code_latent, code_miroir, indice, tentative, condition):
-    g = lambda code, role: gr.RngAdapte(gr.generateur(racine, code, indice, role, tentative))
-    rng0 = g(code_latent, gr.ROLE_MONDE)
+def _tirer_base(p, rng0):
+    """Monde de base (rôle 0, avant les ponts) : champs, groupes, articles (domaines, opérateurs, moyeux, contraintes
+    vraies, q), palettes, concepts de fond, moyeu de concept. Inchangé par une replantation (addendum v2, Q-01 (b))."""
     base = dict(mo.BASE)
     base.update({"verite": p["verite"], "groupes": p["groupes"], "niveau": p["niveau"]})
     if "champs_choix" in p:  # réservé à l'essai R5 de l'échec de plantation (jamais dans une condition)
@@ -453,7 +464,37 @@ def _construire(p, racine, code_latent, code_miroir, indice, tentative, conditio
         a["fonds"] = sorted(rng0.sample(pal, _tirer_nb_fonds(rng0, p["loi_fonds"])))
         a["moyeu_concept"] = rng0.random() < p["p_moyeu_concept"]
         a["rares"] = set()
-    plantes = [] if p["sans_pont"] else _planter_v2(rng0, p, arts, champ, groupe, ops_groupe)
+    return base, f, champ, n_groupes, groupe, arts, ops_groupe
+
+
+def _construire(p, racine, code_latent, code_miroir, indice, tentative, condition):
+    g = lambda code, role: gr.RngAdapte(gr.generateur(racine, code, indice, role, tentative))
+    rng0 = g(code_latent, gr.ROLE_MONDE)
+    base, f, champ, n_groupes, groupe, arts, ops_groupe = _tirer_base(p, rng0)
+    # Addendum v2, Q-01 (b) : le monde de base (champs, groupes, articles, opérateurs, contraintes vraies, q, palettes,
+    # fonds, moyeu) est tiré une fois ; seul le placement des ponts est retenté. Replantation 0 : suite du flux rng0
+    # (mondes sans échec identiques bit à bit au code d'avant l'addendum) ; replantation r ≥ 1 : flux
+    # (code, m, 0, t, r). La suite du rôle 0 (rares, ordre des articles) continue sur le flux de la plantation réussie.
+    replantations, echecs_plantation = 0, []
+    if p["sans_pont"]:
+        plantes, rng_p = [], rng0
+    else:
+        base_arts = arts
+        for r in range(MAX_REPLANTATIONS + 1):
+            rng_p = rng0 if r == 0 else gr.RngAdapte(gr.generateur(racine, code_latent, indice, gr.ROLE_MONDE,
+                                                                    tentative, replantation=r))
+            arts = copy.deepcopy(base_arts)
+            try:
+                plantes = _planter_v2(rng_p, p, arts, champ, groupe, ops_groupe)
+            except EchecPlantation as e:
+                echecs_plantation.append(str(e))
+                continue
+            replantations = r
+            break
+        else:
+            raise EchecPlantation(f"{MAX_REPLANTATIONS} replantations échouées sur le même monde de base "
+                                  f"({echecs_plantation[:3]})")
+    rng0 = rng_p
     rares = _attribuer_rares(rng0, p, plantes, len(arts))
     for r, info in rares.items():
         for i in info["porteurs"]:
@@ -469,9 +510,13 @@ def _construire(p, racine, code_latent, code_miroir, indice, tentative, conditio
         info["surface"] = [pos[i] for i in info["surface"]]
     forces = [(pl["o_a"], arts[pl["a"]]["dom"], pl["o_b"], arts[pl["b"]]["dom"]) for pl in plantes
               if pl["statut"] == "surface"]
-    if p["jumelle"]:  # V4 : mêmes latents, mêmes flux de graines des rôles 1 à 3 ; seuls les mots propres sont échangés
+    if p["jumelle"]:
+        # V4, addendum v2, Q-04 « copie » (R-600) : mêmes latents, mêmes flux de graines des rôles 1 à 3 ; pour chaque
+        # pont planté, l'article de plus grand indice (ordre final des articles) prend les mots propres du domaine de
+        # l'article de plus petit indice ; règle déterministe, sans tirage.
         for pl in plantes:
-            arts[pl["a"]]["dom_mots"], arts[pl["b"]]["dom_mots"] = arts[pl["b"]]["dom"], arts[pl["a"]]["dom"]
+            bas, haut = min(pl["a"], pl["b"]), max(pl["a"], pl["b"])
+            arts[haut]["dom_mots"] = arts[bas]["dom"]
     # concept de fond dominant de chaque domaine (latent ; départage par indice)
     dominant = {}
     for d in range(len(champ)):
@@ -489,7 +534,7 @@ def _construire(p, racine, code_latent, code_miroir, indice, tentative, conditio
     for a in arts:
         a["c_obs"] = mo._observer_contraintes(rng3, a["c_vraies"], base["bruit_contraintes"], base["axe_homographe"])
     cos = mo._cosinus(arts, "tf")
-    return f, champ, groupe, arts, plantes, rares, cos, dominant
+    return f, champ, groupe, arts, plantes, rares, cos, dominant, (replantations, echecs_plantation)
 
 
 def _verite(p, champ, arts, paires):
@@ -510,6 +555,24 @@ def _verite(p, champ, arts, paires):
     return vrais, info
 
 
+def monde_de_base(condition, racine, indice, tentative=0):
+    """Monde de base d'une tentative, sans ponts (instrument d'essai de la replantation ; lit des latents)."""
+    p = dict(BASE_V2)
+    p.update(CONDITIONS_V2[condition])
+    code_latent = gr.CODES_CONDITION["M_bien"] if p["inertes"] else gr.CODES_CONDITION[condition]
+    rng0 = gr.RngAdapte(gr.generateur(racine, code_latent, indice, gr.ROLE_MONDE, tentative))
+    _, f, champ, _, groupe, arts, _ = _tirer_base(p, rng0)
+    return f, champ, groupe, arts
+
+
+def signature_base(champ, groupe, arts):
+    """Ce qu'une replantation ne doit pas changer : champs, groupes, et le multiensemble (domaine, q, fonds, moyeu de
+    concept, moyeux d'opérateur) des articles (l'ordre final des articles est tiré après les ponts)."""
+    return (tuple(champ), tuple(groupe),
+            tuple(sorted((a["dom"], a["q"], tuple(a["fonds"]), bool(a["moyeu_concept"]), tuple(a["moyeux"]))
+                         for a in arts)))
+
+
 def generer(condition, racine, indice, surcharge=None):
     """Monde v2 d'une condition (§ 6). M_inertes : rôles 0 à 3 sous le code 1, miroir sous (12, m, 7) (§ 7)."""
     if condition in CONDITIONS_NR:
@@ -525,7 +588,7 @@ def generer(condition, racine, indice, surcharge=None):
     echecs = []
     for tentative in range(MAX_TENTATIVES):
         try:
-            f, champ, groupe, arts, plantes, rares, cos, dominant = _construire(
+            f, champ, groupe, arts, plantes, rares, cos, dominant, (replantations, echecs_pl) = _construire(
                 p, racine, code_latent, code, indice, tentative, condition)
         except EchecPlantation as e:
             echecs.append(str(e))
@@ -544,7 +607,7 @@ def generer(condition, racine, indice, surcharge=None):
     paires, valides, pont = etage_commun(n, [etiq_op[i] | etiq_co[i] for i in range(n)], c_obs, dom_obs, df)
     obs = Obs(n=n, cos=_figer(cos), etiq_op=etiq_op, etiq_co=etiq_co, c_obs=c_obs, dom_obs=dom_obs,
               q=tuple(a["q"] for a in arts), df=MappingProxyType(dict(df)), paires=paires, valides=valides,
-              pont=pont, concepts_absents=p["concepts_absents"], nr=False, condition=condition)
+              pont=pont, concepts_absents=p["concepts_absents"], nr=False)
     vrais, info = _verite(p, champ, arts, paires)
     plante = {}
     for pl in plantes:
@@ -555,7 +618,8 @@ def generer(condition, racine, indice, surcharge=None):
     placebo = {valides[int(k)] for k in rng_sp.choice(len(valides), size=nb_pl, replace=False)} if nb_pl else set()
     latent = Latent(condition=condition, params=p, n_champs=f, champ=champ, groupe=groupe, arts=arts,
                     plantes=plantes, rares=rares, vrais=vrais, info_paires=info, plante=plante,
-                    placebo=placebo, tentatives=len(echecs), echecs=echecs, dominant=dominant, nr=False)
+                    placebo=placebo, tentatives=len(echecs), echecs=echecs, replantations=replantations,
+                    echecs_plantation=echecs_pl, dominant=dominant, nr=False)
     return Monde(obs, latent)
 
 
@@ -578,7 +642,7 @@ def generer_nr(condition, racine, indice):
         raise GardeArret("NR : étage commun v2 ≠ paires valides de monde_v1")
     obs = Obs(n=n, cos=_figer(w["cos"]), etiq_op=etiq, etiq_co=etiq, c_obs=c_obs, dom_obs=dom_obs,
               q=tuple(a["q"] for a in arts), df=MappingProxyType(dict(df)), paires=paires, valides=valides,
-              pont=pont, concepts_absents=False, nr=True, condition=condition)
+              pont=pont, concepts_absents=False, nr=True)
     info = [{"compat_vraie": pp["compat_vraie"], "op_commun": pp["op_commun"], "rare_commun": [],
              "proche": pp["proche"], "eloigne": pp["eloigne"]} for pp in w["paires"]]
     plante = {}
@@ -587,7 +651,8 @@ def generer_nr(condition, racine, indice):
     latent = Latent(condition=condition, params={"niveau": CONDITIONS_NR[condition]}, n_champs=w["n_champs"],
                     champ=w["champ"], groupe=w["groupe"], arts=arts, plantes=w["plantes"], rares={},
                     vrais=set(w["vrais"]), info_paires=info, plante=plante, placebo=set(w["placebo"]),
-                    tentatives=0, echecs=[], dominant={}, nr=True, graine_v1=graine)
+                    tentatives=0, echecs=[], replantations=0, echecs_plantation=[], dominant={}, nr=True,
+                    graine_v1=graine)
     return Monde(obs, latent)
 
 

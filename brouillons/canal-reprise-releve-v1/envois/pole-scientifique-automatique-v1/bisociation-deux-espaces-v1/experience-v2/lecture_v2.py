@@ -102,15 +102,38 @@ def table2(b, v0, declencheur_audit, audit_rendu, artefact):
     return 8, "indécis"
 
 
+# Audit R4, troisième puce : « N identique au bit près à N_global, N_β0 ou à un témoin sur tous les mondes d'une
+# condition, hors identités déclarées d'avance (N ≡ N_β0 dans V_concepts_absents ; d1c ≡ d1 dans NR_bien et NR_moyen) ».
+# Témoins au sens du § 4 : b, a, d1, d1c, b_eloigne, et la référence c.
+BRAS_IDENTITE_AUDIT = ("N_global", "N_beta0", "b", "a", "d1", "d1c", "c", "b_eloigne")
+IDENTITES_DECLAREES = {("V_concepts_absents", "N", "N_beta0"), ("NR_bien", "d1c", "d1"), ("NR_moyen", "d1c", "d1")}
+
+
+def identites_audit(identites):
+    """`identites` : {condition : [bras identiques à N sur tous les mondes non exclus]} (invocation_unique_v2).
+    Rend (identités qui déclenchent l'audit, identités rapportées sans déclencher : hors liste du texte ou déclarées
+    d'avance)."""
+    declenche, rapporte = {}, {}
+    for cond, bras in identites.items():
+        for x in bras:
+            declaree = (cond, "N", x) in IDENTITES_DECLAREES or (cond, x, "N") in IDENTITES_DECLAREES
+            cible = declenche if (x in BRAS_IDENTITE_AUDIT and not declaree) else rapporte
+            cible.setdefault(cond, []).append(x)
+    return declenche, rapporte
+
+
 def declencheurs_audit(c, b, prec_N, prec_oracle, identites, j_miroirs, fuite_F, concordance_verite):
-    """Déclencheurs de l'audit de symétrie (R4) ; rend la liste des déclencheurs présents."""
+    """Déclencheurs de l'audit de symétrie (R4) ; rend la liste des déclencheurs présents. `identites` :
+    {condition : [bras identiques à N]} ; filtrées par `identites_audit`. `concordance_verite` : {condition :
+    concordance} (mesures_v2.concordance_verite, conditions de décision v2) ou un nombre ; None : non calculée."""
     d = []
     if any(abs(c[("N-b", X)]["estimation"]) >= AUDIT_ABS for X in X2):
         d.append("|Δ(N, b)| ≥ S10")
     if any(prec_N[X] >= AUDIT_ORACLE * prec_oracle[X] for X in prec_N):
         d.append("précision de N ≥ 0,9 × oracle")
-    if identites:
-        d.append(f"identités non déclarées : {identites}")
+    declenche, _ = identites_audit(identites or {})
+    if declenche:
+        d.append(f"identités non déclarées : {declenche}")
     if not b["A3"] or b["gain_controle"]:
         d.append("écart de contrôle excluant 0")
     if j_miroirs:
@@ -119,6 +142,8 @@ def declencheurs_audit(c, b, prec_N, prec_oracle, identites, j_miroirs, fuite_F,
         d.append("N ne bat pas la forme corrigée (P15)")
     if fuite_F is not None and abs(fuite_F) <= 1e-12:
         d.append("fuite F exactement nulle")
-    if concordance_verite is not None and concordance_verite > 0.99:
-        d.append("concordance des étiquettes avec la vérité > 0,99")
+    if concordance_verite is not None:
+        valeurs = concordance_verite.values() if isinstance(concordance_verite, dict) else [concordance_verite]
+        if any(v is not None and v > 0.99 for v in valeurs):
+            d.append("concordance des étiquettes avec la vérité > 0,99")
     return d

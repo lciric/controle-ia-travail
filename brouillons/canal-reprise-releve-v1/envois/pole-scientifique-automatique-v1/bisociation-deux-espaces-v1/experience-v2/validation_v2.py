@@ -8,7 +8,8 @@ Elle ne calcule aucun bras candidat (N et ses ablations) : seuls l'oracle (V6, p
 Les essais appellent chaque fonction sur quelques mondes d'essai hors de toute plage du § 7 (indices ≥ 900 000), pour
 vérifier la plomberie ; leurs valeurs ne sont ni imprimées ni lues.
 
-Lectures retenues sur des points que le texte laisse ouverts : voir ecarts-et-questions-v1.md (Q-04, Q-05, Q-06, Q-07).
+Lectures retenues sur des points que le texte laisse ouverts : voir ecarts-et-questions-v1.md (Q-04, Q-05, Q-06, Q-07) ;
+Q-04 tranchée par Lazar (R-600, addendum v2) : jumelle par « copie ».
 """
 import math
 from collections import Counter
@@ -97,7 +98,7 @@ def kappa_latent(L, n):
     return v @ v.T
 
 
-def v2_fuite(liste_mondes, racine, indice0):
+def v2_fuite(liste_mondes, racine, indice0, condition="M_bien"):
     """F = ρ_S(κ_obs, cos_obs) − ρ_S(κ_lat, cos_obs), sur les paires d'articles de chaque monde, moyenné ; loi nulle :
     κ_obs recalculé après permutation des vecteurs de concepts observés entre articles d'un même domaine observé."""
     F, F0 = [], []
@@ -110,7 +111,7 @@ def v2_fuite(liste_mondes, racine, indice0):
         k_lat = kappa_latent(L, obs.n)[iu]
         r_lat = spearman(k_lat, cos)
         F.append(spearman(k_obs, cos) - r_lat)
-        perm = br.placebo_permutation(obs, gr.generateur(racine, gr.CODES_CONDITION[obs.condition], indice0 + k,
+        perm = br.placebo_permutation(obs, gr.generateur(racine, gr.CODES_CONDITION[condition], indice0 + k,
                                                          gr.ROLE_PLACEBO_PC), "domaine")
         F0.append(spearman(br.kappa(v[perm])[iu], cos) - r_lat)
     return {"F": float(np.mean(F)), "F_nulle": float(np.mean(F0))}
@@ -136,16 +137,18 @@ def v3_queue(liste_mondes):
 
 # --- V4 : jumelles ----------------------------------------------------------------------------------------
 
-LECTURE_V4 = "echange_ponts"
+LECTURE_V4 = "copie_ponts"
 
 
 def v4_jumelles(racine, indices, condition="M_bien", lecture=None):
     """Concordance des couples (article, étiquette de concept observée) et variation des cosinus de domaine entre un
-    monde et sa jumelle. LECTURE DU TEXTE NON TRANCHÉE (Q-04) : la jumelle échange, pour chaque pont planté, les mots
-    propres de ses deux domaines. N'est exécutée que si `lecture` est passée explicitement, après réponse de Lazar."""
+    monde et sa jumelle. Lecture décidée par Lazar (R-600, addendum v2, Q-04 « copie ») : pour chaque pont planté,
+    l'article de plus grand indice prend les mots propres du domaine de l'article de plus petit indice
+    (`monde_v2._construire`). La lecture doit être passée explicitement (`lecture='copie_ponts'`) ; la lecture
+    « échange » de R-585, remplacée, est refusée (elle laissait le cosinus de chaque paire plantée inchangé)."""
     if lecture != LECTURE_V4:
-        raise GardeArret("V4 : définition de la jumelle à confirmer par Lazar (Q-04 de ecarts-et-questions-v1.md) ; "
-                         f"passer lecture='{LECTURE_V4}' seulement après confirmation")
+        raise GardeArret(f"V4 : lecture « {lecture} » refusée ; seule la lecture décidée par Lazar (R-600, addendum v2) "
+                         f"est permise : lecture='{LECTURE_V4}'")
     conc, var = [], []
     for m in indices:
         w = mo.generer(condition, racine, m)
@@ -205,16 +208,17 @@ def plafond_oracle(condition, racine, indices):
 
 def v8_rapport(liste_mondes, condition):
     """Comptes de vraies paires par mécanisme, taux d'exclusion, taux de régénération, paires valides par monde."""
-    meca, excl, regen, nv = Counter(), 0, 0, []
+    meca, excl, regen, replant, nv = Counter(), 0, 0, 0, []
     for w in liste_mondes:
         L = w.latent(JETON_MESURE)
         meca.update(ms.mecanismes_vrais(L).values())
         excl += 1 if ms.exclu(w, condition) else 0
         regen += 1 if L.tentatives > 0 else 0
+        replant += 1 if L.replantations > 0 else 0
         nv.append(len(w.obs.valides))
     n = len(nv)
     return {"mecanismes_par_monde": {k: v / n for k, v in meca.items()}, "taux_exclusion": excl / n,
-            "taux_regeneration": regen / n, "paires_valides_moyenne": float(np.mean(nv)), "n_mondes": n}
+            "taux_regeneration": regen / n, "taux_replantation": replant / n, "paires_valides_moyenne": float(np.mean(nv)), "n_mondes": n}
 
 
 # --- V7 : rapport sans seuil ------------------------------------------------------------------------------
@@ -267,10 +271,12 @@ def v7_rapport(liste_mondes):
 
 def v9_j_miroirs(racine, indices, fonctions=None):
     """J = (borne basse à 95 % de Δ(d1c, c) > 0) sur les miroirs de M_inertes. Ne calcule que d1c et c, jamais N ;
-    ne rend que le booléen (l'estimation n'est pas rendue). `fonctions` : essais seulement."""
+    ne rend que le booléen (l'estimation n'est pas rendue). `fonctions` : essais seulement. Liste d'arrêt
+    (contre-lecture du code) : chaque miroir a les latents, bit à bit, du monde « bien » de validation de même indice."""
     pd, pc = [], []
     for i in indices:
         w = mo.generer("M_inertes", racine, i)
+        ms.verifier_inertes(mo.generer("M_bien", racine, i), w)
         r = ms.executer_monde(w, "M_inertes", racine, i, ["d1c", "c"], fonctions=fonctions)
         if not r["exclu"]:
             pd.append(r["bras"]["d1c"]["precision"])
@@ -317,7 +323,7 @@ def executer_validation(racine=gr.RACINE_VALIDATION, lecture_v4=None):
 
 
 def main(argv):
-    """python3 -B validation_v2.py SORTIE.json --lancer-la-validation [--lecture-v4 echange_ponts]
+    """python3 -B validation_v2.py SORTIE.json --lancer-la-validation --lecture-v4 copie_ponts
     Refuse de partir sans l'option explicite : la validation n'est pas lancée par l'auteur du code."""
     import json
     from datetime import datetime, timezone
@@ -326,6 +332,8 @@ def main(argv):
 
     if "--lancer-la-validation" not in argv:
         raise GardeArret("validation non lancée : option --lancer-la-validation absente")
+    import invocation_unique_v2 as inv
+    inv.exiger_addendum_scelle(inv.DEPOT)   # addendum d'écarts (R-600) scellé avant la validation
     lecture = argv[argv.index("--lecture-v4") + 1] if "--lecture-v4" in argv else None
     r = executer_validation(lecture_v4=lecture)
     r["ecrit_le"] = datetime.now(timezone.utc).isoformat(timespec="seconds")

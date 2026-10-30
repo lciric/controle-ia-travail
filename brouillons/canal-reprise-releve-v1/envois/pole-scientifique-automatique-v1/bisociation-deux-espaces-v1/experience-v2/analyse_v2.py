@@ -18,9 +18,8 @@ import graines_v2 as gr
 import mesures_v2 as ms
 
 # Code de contraste du rééchantillonnage de la non-régression (C11, A5) : le § 7 dit seulement que C11 est « sans code
-# de contraste ». Valeur laissée VIDE : question Q-03 de ecarts-et-questions-v1.md ; tout calcul NR s'arrête tant que
-# Lazar ne l'a pas fixée.
-CODE_CONTRASTE_NR = None
+# de contraste ». Fixé par Lazar (R-585, confirmé R-600 ; addendum v2, Q-03) : 16, clés (10, 16, 99) et (11, 16, 99).
+CODE_CONTRASTE_NR = 16
 
 CONDITIONS_DECISION = ("M_bien", "M_moyen", "SP", "INV", "V_fuite", "M_inertes", "NR_bien", "NR_moyen")
 CONDITIONS_DESCRIPTIVES = ("M_mal", "V_concepts_absents", "V_moyeu_conceptuel", "V_surface", "M_couplage_faible",

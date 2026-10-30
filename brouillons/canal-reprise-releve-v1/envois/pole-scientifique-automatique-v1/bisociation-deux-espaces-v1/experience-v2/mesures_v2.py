@@ -12,7 +12,7 @@ from controle_ia.gardes import GardeArret
 
 import bras_v2 as br
 import graines_v2 as gr
-from monde_v2 import JETON_MESURE
+from monde_v2 import JETON_MESURE, empreinte_latents
 
 BUDGET = br.BUDGET
 B_REECHANTILLONNAGE = 2000
@@ -134,6 +134,41 @@ def mesurer(obs, L, sortie, n_complete, vide):
     }
 
 
+# --- concordance des étiquettes de concept avec la vérité (déclencheur d'audit R4) -----------------------------
+
+def concordance_verite_monde(L):
+    """Grandeur du déclencheur « concordance des étiquettes avec la vérité > 0,99 » (contre-lecture du code) : parmi
+    les couples (article, étiquette de concept observée), ceux dont le concept est latent chez l'article (fond F_f
+    avec f dans ses fonds, rare R_r avec r dans ses rares, moyeu H si l'article porte le concept moyeu). Rend
+    (couples concordants, couples) ; None pour NR (canal de concepts absent). Instrument de mesure, jamais un bras."""
+    if L.nr:
+        return None
+    vrais = tot = 0
+    for a in L.arts:
+        for lab in a["etiq_co"]:
+            tot += 1
+            if lab == "H":
+                vrais += bool(a["moyeu_concept"])
+            elif lab.startswith("F"):
+                vrais += int(lab[1:]) in a["fonds"]
+            elif lab.startswith("R"):
+                vrais += int(lab[1:]) in a["rares"]
+            else:
+                raise GardeArret(f"étiquette de concept inconnue « {lab} »")
+    return vrais, tot
+
+
+def concordance_verite(lignes):
+    """Concordance agrégée d'une condition (mondes non exclus) : Σ concordants / Σ couples ; None si aucun couple."""
+    v = t = 0
+    for l in lignes:
+        c = l.get("concordance_verite")
+        if l["exclu"] or c is None:
+            continue
+        v, t = v + c[0], t + c[1]
+    return v / t if t else None
+
+
 # --- exécution d'un monde -----------------------------------------------------------------------------------
 
 def executer_monde(monde, condition, racine, indice, bras, aux_extra=None, fonctions=None):
@@ -145,7 +180,8 @@ def executer_monde(monde, condition, racine, indice, bras, aux_extra=None, fonct
     raison = exclu(monde, condition)
     base = {"condition": condition, "indice": indice, "n_valides": len(obs.valides),
             "n_vrais_valides": len(set(obs.valides) & L.vrais), "n_vrais": len(L.vrais),
-            "n_champs": L.n_champs, "tentatives": L.tentatives,
+            "n_champs": L.n_champs, "tentatives": L.tentatives, "replantations": L.replantations,
+            "empreinte_latents": None if L.nr else empreinte_latents(monde), "concordance_verite": concordance_verite_monde(L),
             "mecanismes_vrais": dict(Counter(mecanismes_vrais(L).values())),
             "mecanismes_vrais_valides": dict(Counter(m for x, m in mecanismes_vrais(L).items() if x in set(obs.valides)))}
     if raison:
@@ -226,9 +262,11 @@ def sigma_chapeau(delta_points):
 # --- contrôles de la liste d'arrêt --------------------------------------------------------------------------
 
 def verifier_taux(lignes, condition, decision=True):
-    """S11 : mondes exclus (condition de décision seulement), mondes régénérés, bras de sortie vide avant complément ;
-    chacun ≤ 2 %. Hors condition de décision, le taux d'exclusion est rapporté sans arrêt (le texte ne vise que les
-    conditions de décision ; voir ecarts-et-questions-v1.md, Q-08 pour la portée des deux autres taux)."""
+    """S11 : mondes exclus (condition de décision seulement), mondes régénérés entièrement, bras de sortie vide avant
+    complément ; chacun ≤ 2 %. Hors condition de décision, le taux d'exclusion est rapporté sans arrêt (le texte ne vise
+    que les conditions de décision ; voir ecarts-et-questions-v1.md, Q-08 pour la portée des deux autres taux).
+    Addendum v2, Q-01 (b) : le taux de mondes replantés (placement des ponts retenté sur le même monde de base) est
+    rapporté, par condition et par nombre de champs, sans seuil ; la régénération entière reste soumise à S11 (2 %)."""
     n = len(lignes)
     if n == 0:
         raise GardeArret(f"{condition} : aucun monde")
@@ -245,6 +283,14 @@ def verifier_taux(lignes, condition, decision=True):
             continue
         if v > TAUX_ARRET:
             raise GardeArret(f"{condition} : {k} = {v:.4f} > S11 ({TAUX_ARRET})")
+    rapport["taux_replantes"] = sum(1 for l in lignes if l.get("replantations", 0) > 0) / n
+    par_champs = {}
+    for l in lignes:
+        pc = par_champs.setdefault(str(l.get("n_champs")), {"n": 0, "replantes": 0, "regeneres": 0})
+        pc["n"] += 1
+        pc["replantes"] += l.get("replantations", 0) > 0
+        pc["regeneres"] += l["tentatives"] > 0
+    rapport["par_nombre_de_champs"] = par_champs
     return rapport
 
 
@@ -312,11 +358,27 @@ def verifier_reproduction(condition, moyennes):
 
 def verifier_inertes(monde_bien, monde_inertes):
     """Liste d'arrêt : latents d'un monde de M_inertes égaux bit à bit à ceux du monde de M_bien de même indice."""
-    from monde_v2 import empreinte_latents
     a, b = empreinte_latents(monde_bien), empreinte_latents(monde_inertes)
     if a != b:
         raise GardeArret(f"latents de M_inertes ≠ latents de M_bien ({a[:12]}… ≠ {b[:12]}…)")
     return a
+
+
+def verifier_inertes_lignes(lignes_bien, lignes_inertes, contexte="décision"):
+    """Liste d'arrêt, pendant l'invocation (et pour les miroirs de V9) : pour chaque indice de M_inertes, l'empreinte
+    des latents (portée par la ligne de résultats ; rien de latent ne sort) est égale bit à bit à celle du monde de
+    M_bien de même indice. Un indice de M_inertes sans monde de M_bien de même indice est aussi un arrêt."""
+    bien = {l["indice"]: l["empreinte_latents"] for l in lignes_bien}
+    if len(bien) != len(lignes_bien):
+        raise GardeArret(f"M_bien ({contexte}) : indices en double")
+    for l in lignes_inertes:
+        e = bien.get(l["indice"])
+        if e is None:
+            raise GardeArret(f"M_inertes ({contexte}) : indice {l['indice']} sans monde de M_bien de même indice")
+        if e != l["empreinte_latents"]:
+            raise GardeArret(f"M_inertes ({contexte}) : latents du monde {l['indice']} ≠ latents du monde de M_bien de "
+                             f"même indice ({e[:12]}… ≠ {l['empreinte_latents'][:12]}…)")
+    return len(lignes_inertes)
 
 
 def verifier_ordre(manifeste_chemin, resultats_chemins, comptes_executes):

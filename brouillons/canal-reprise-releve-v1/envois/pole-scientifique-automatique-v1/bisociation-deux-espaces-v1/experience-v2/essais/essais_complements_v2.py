@@ -1,7 +1,9 @@
 """Essais complémentaires (seconde session, Sonnet) : graines du § 7, gardes de la liste d'arrêt non couvertes par
 essais_gardes_v2.py, plomberie de l'analyse, de la validation et de l'invocation unique. Aucun contraste de décision
 n'est calculé sur un monde : les contrastes sont calculés sur des tableaux synthétiques (nombres tirés par numpy, sans
-monde) ; les mondes d'essai ont des indices ≥ 900 000 sous RACINE_VALIDATION ; RACINE n'est jamais employée.
+monde) ; les mondes d'essai ont des indices ≥ 950 000 sous RACINE_VALIDATION ; RACINE n'est jamais employée.
+Corrections v2 (après la contre-lecture du code et R-600) : V4 par copie, code 16, lignes synthétiques porteuses de
+l'empreinte des latents ; les essais propres aux corrections sont dans essais_corrections_v2.py.
 Usage : PYTHONPATH=<dépôt>/src python3 -B -m pytest -q -p no:cacheprovider essais/essais_complements_v2.py
 """
 import json
@@ -235,16 +237,21 @@ def _lignes_synthetiques(cond, n, rng, decalage=0.0):
             bras[b] = {"precision": p, "precision_placebo": float(rng.integers(0, 13)) / 12, "n_complete": 0,
                        "sortie_vide": False}
         out.append({"indice": i, "exclu": None, "n_champs": int(rng.choice([2, 3, 4])), "tentatives": 0,
-                    "n_valides": 100, "n_vrais_valides": 5, "n_vrais": 6, "bras": bras})
+                    "replantations": 0, "n_valides": 100, "n_vrais_valides": 5, "n_vrais": 6, "bras": bras,
+                    "empreinte_latents": None if cond.startswith("NR_") else f"latents-{i}",
+                    "concordance_verite": None if cond.startswith("NR_") else (9, 10)})
     return out
 
 
 def test_analyse_et_lecture_sur_donnees_synthetiques_sans_monde():
     rng = np.random.default_rng(0)
     par = {c: _lignes_synthetiques(c, 40, rng) for c in gr.CODES_CONDITION}
-    with pytest.raises(GardeArret):
-        an.calculer_tout(par, RV)                                  # code de contraste NR non fixé : arrêt (Q-03)
-    plat = an.calculer_tout(par, RV, code_contraste_nr=1)           # 1 : valeur d'essai, sans autorité
+    assert an.CODE_CONTRASTE_NR == 16                               # Q-03 décidée (R-585, R-600)
+    with pytest.MonkeyPatch.context() as m:
+        m.setattr(an, "CODE_CONTRASTE_NR", None)
+        with pytest.raises(GardeArret):
+            an.calculer_tout(par, RV)                              # garde gardée : code non fixé, arrêt
+    plat = an.calculer_tout(par, RV)                                # code 16
     c = an.charger_pour_lecture(plat)
     for X in le.X2:
         for k in ("N-b", "N-a", "N-d1", "N-d1c", "N-b_eloigne", "N-N_beta0", "d1c-c", "N-N_filtre", "N-N_PCg",
@@ -317,12 +324,14 @@ def test_v9_ne_calcule_que_d1c_et_c_et_ne_rend_qu_un_booleen():
 def test_v4_jumelle_refusee_sans_lecture_confirmee_puis_latents_egaux():
     with pytest.raises(GardeArret):
         va.v4_jumelles(RV, range(INDICE_ESSAI, INDICE_ESSAI + 2))
+    with pytest.raises(GardeArret):
+        va.v4_jumelles(RV, range(INDICE_ESSAI, INDICE_ESSAI + 2), lecture="echange_ponts")   # lecture remplacée (R-600)
     for m in range(INDICE_ESSAI, INDICE_ESSAI + 3):
         w, j = mo.generer("M_bien", RV, m), mo.generer("M_bien", RV, m, surcharge={"jumelle": True})
         assert mo.empreinte_latents(w) == mo.empreinte_latents(j)
         assert w.obs.etiq_co == j.obs.etiq_co and w.obs.etiq_op == j.obs.etiq_op      # absence de couplage dans le code
     r = va.v4_jumelles(RV, range(INDICE_ESSAI, INDICE_ESSAI + 3), lecture=va.LECTURE_V4)
-    assert r["concordance"] == 1.0
+    assert r["concordance"] == 1.0 and r["variation_cos"] > 0.0    # la variation n'est pas lue au-delà de « non nulle »
 
 
 def test_validation_seuils_sain_et_artefact():
@@ -410,6 +419,7 @@ def test_invocation_sain_manifeste_avant_tout_resultat_et_comptes(tmp_path, monk
 
 
 def test_invocation_prerequis_manquant_arrete_avant_tout_monde(tmp_path, monkeypatch):
+    monkeypatch.setattr(an, "CODE_CONTRASTE_NR", None)              # artefact : code de la non-régression absent
     ex = Executeur(tmp_path)
     with pytest.raises(GardeArret):
         inv.invocation(tmp_path, "20261101-000001-essai", 2, "v", "r", None, executer=ex,
@@ -455,7 +465,8 @@ def test_invocation_code_modifie_en_cours_de_run_arrete(tmp_path, monkeypatch):
                        verifier_prerequis_fn=_prerequis_factices)
 
 
-def test_prerequis_reels_refusent_validation_non_passee(tmp_path):
+def test_prerequis_reels_refusent_validation_non_passee(tmp_path, monkeypatch):
+    monkeypatch.setattr(inv, "exiger_addendum_scelle", lambda depot: "0" * 64)   # addendum : essai à part (corrections)
     v = tmp_path / "validation.json"
     v.write_text(json.dumps({"seuils": {"V1_M_bien": False}}))
     sceller(v)

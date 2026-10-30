@@ -10,8 +10,8 @@ Elle enchaîne, en un seul processus :
       scellé de résultats par condition, rattaché au manifeste par son empreinte et horodaté après lui ; puis les
       contrastes du § 7 (fichier scellé), les données de l'audit, et rien d'autre : aucun verdict (R13).
 
-Aucune moyenne de Δ(N, ·) n'est imprimée. Les prérequis (préenregistrement scellé, balayage statique, validation du
-générateur passée, reproduction des témoins passée, code de contraste de la non-régression fixé) sont vérifiés AVANT le
+Aucune moyenne de Δ(N, ·) n'est imprimée. Les prérequis (préenregistrement scellé, addendum d'écarts scellé, balayage
+statique, validation du générateur passée, reproduction des témoins passée, code de contraste de la non-régression fixé) sont vérifiés AVANT le
 premier monde ; le moindre manque arrête l'invocation avant tout calcul.
 """
 import argparse
@@ -31,12 +31,16 @@ import balayage_v2 as ba
 import bras_v2 as br
 import graines_v2 as gr
 import mesures_v2 as ms
+import monde_v2 as mo
 import travail_v2 as tr
 
 ICI = Path(__file__).resolve().parent
 DEPOT = ICI.parents[5]
 PREREG = DEPOT / "prereg" / "preenregistrement-bisociation-deux-espaces-v2.md"
 EMPREINTE_PREREG = "e821e8752532fdabc03cb684e9a3bb71a40bcb4267de842da228de2b88c314ea"
+# Addendum d'écarts déclarés (Q-01 (b), Q-03 = 16, Q-04 copie ; R-600) : il doit être scellé avant l'invocation. Si la
+# contre-lecture R2 en fait une version nouvelle (R12), ce nom change avec elle.
+ADDENDUM = "addendum-ecarts-bisociation-deux-espaces-v2-v2.md"
 
 CONDITIONS = [c for c, _ in sorted(gr.CODES_CONDITION.items(), key=lambda kv: kv[1])]
 # S15 et S7 (valeurs gelées par Lazar, R-580)
@@ -59,6 +63,7 @@ def verifier_prerequis(depot, validation, reproduction, audit_rendu, code_contra
     sha = pre.exiger_prereg_scelle(Path(depot) / "prereg" / PREREG.name)
     if sha != EMPREINTE_PREREG:
         raise GardeArret(f"préenregistrement {sha[:12]}… ≠ {EMPREINTE_PREREG[:12]}…")
+    sha_addendum = exiger_addendum_scelle(depot)
     ba.exiger_propre([ICI / m for m in ba.MODULES_BRAS])
     if code_contraste_nr is None:
         raise GardeArret("code de contraste de la non-régression non fixé : Q-03 de ecarts-et-questions-v1.md")
@@ -77,8 +82,17 @@ def verifier_prerequis(depot, validation, reproduction, audit_rendu, code_contra
     rr = rep["resultat"] if "resultat" in rep else rep
     if not rr.get("reproduction_passee"):
         raise GardeArret("reproduction des témoins de v1 non passée : le code des témoins diffère de v1")
-    return {"prereg_sha256": sha, "validation_sha256": ms_sha(validation), "reproduction_sha256": ms_sha(reproduction),
+    return {"prereg_sha256": sha, "addendum_sha256": sha_addendum, "validation_sha256": ms_sha(validation), "reproduction_sha256": ms_sha(reproduction),
             "audit_rendu_sha256": ms_sha(audit_rendu) if audit_rendu else None}
+
+
+def exiger_addendum_scelle(depot):
+    """L'addendum d'écarts (R-600) est scellé : son empreinte compagnon existe et concorde (sinon arrêt)."""
+    from controle_ia.scellement import compagnon
+    chemin = Path(depot) / "prereg" / ADDENDUM
+    if not chemin.is_file() or not compagnon(chemin).is_file():
+        raise GardeArret(f"addendum {ADDENDUM} non scellé : ni validation ni invocation (R1)")
+    return verifier(chemin)
 
 
 def ms_sha(chemin):
@@ -127,7 +141,8 @@ def reduire(lignes):
 
 
 def identites_a_N(lignes):
-    """Bras dont la sortie est identique à celle de N, au bit près, sur tous les mondes non exclus de la condition."""
+    """Bras dont la sortie est identique à celle de N, au bit près, sur tous les mondes non exclus de la condition (tous
+    les bras ; le filtre de la liste du texte et des identités déclarées d'avance est dans lecture_v2.identites_audit)."""
     ident = None
     for l in lignes:
         if l["exclu"]:
@@ -140,7 +155,7 @@ def identites_a_N(lignes):
 
 def executer_decision(depot, run_id, manifeste_chemin, s9, processus, rapport, executer=tr.executer_condition,
                       ecrire_resultat=man.ecrire_resultat, code_contraste_nr=None, attendus_code=None):
-    reduit, fichiers, comptes, identites, audit = {}, [], {}, {}, {}
+    reduit, fichiers, comptes, identites, audit, lignes_bien = {}, [], {}, {}, {}, None
     n_prime = {c: (s9["M_bien"]["n_prime"] if c == "M_inertes" else s9[c]["n_prime"] if c in s9 else N_GELES[c])
                for c in CONDITIONS}
     for cond in CONDITIONS:
@@ -148,6 +163,13 @@ def executer_decision(depot, run_id, manifeste_chemin, s9, processus, rapport, e
         n = n_prime[cond]
         lignes = executer(cond, gr.RACINE, range(n), processus=processus, rapport=rapport)
         ms.verifier_nombre_de_mondes(cond, len(lignes), n)
+        # liste d'arrêt (contre-lecture du code) : latents de M_inertes égaux bit à bit à ceux de M_bien, monde par monde
+        if cond == "M_bien":
+            lignes_bien = [{"indice": l["indice"], "empreinte_latents": l["empreinte_latents"]} for l in lignes]
+        if cond == "M_inertes":
+            if lignes_bien is None:
+                raise GardeArret("M_inertes exécutée avant M_bien : comparaison des latents impossible")
+            ms.verifier_inertes_lignes(lignes_bien, lignes)
         taux = ms.verifier_taux(lignes, cond, decision=cond in an.CONDITIONS_DECISION)
         info = {"taux": taux}
         if cond in ("M_bien", "M_moyen", "M_mal"):
@@ -165,7 +187,8 @@ def executer_decision(depot, run_id, manifeste_chemin, s9, processus, rapport, e
         comptes[cond] = len(lignes)
         reduit[cond] = reduire(lignes)
         audit[cond] = {"precision_N": float(np.mean([l["bras"]["N"]["precision"] for l in lignes if not l["exclu"]])),
-                       "precision_oracle": float(np.mean([l["bras"]["oracle"]["precision"] for l in lignes if not l["exclu"]]))}
+                       "precision_oracle": float(np.mean([l["bras"]["oracle"]["precision"] for l in lignes if not l["exclu"]])),
+                       "concordance_verite": ms.concordance_verite(lignes)}
         if cond in ("NR_bien", "NR_moyen"):
             # liste d'arrêt : reproduction des témoins de v1 (marge S12) ; le résultat est déjà écrit et scellé
             moyennes = {b: float(np.mean([l["bras"][b]["precision"] for l in lignes if not l["exclu"]]))
@@ -175,7 +198,10 @@ def executer_decision(depot, run_id, manifeste_chemin, s9, processus, rapport, e
     fichiers.append(str(ecrire_resultat(depot, manifeste_chemin, "contrastes",
                                         {"ecrit_le": _maintenant(), "contrastes": contrastes})))
     fichiers.append(str(ecrire_resultat(depot, manifeste_chemin, "donnees-audit",
-                                        {"ecrit_le": _maintenant(), "par_condition": audit, "identites_a_N": identites})))
+                                        {"ecrit_le": _maintenant(), "par_condition": audit, "identites_a_N": identites,
+                                         "concordance_verite_conditions_decision": {
+                                             c: audit[c]["concordance_verite"] for c in an.CONDITIONS_DECISION
+                                             if c in audit and not c.startswith("NR_")}})))
     return fichiers, comptes
 
 
@@ -198,7 +224,9 @@ def invocation(depot, run_id, processus, validation, reproduction, audit_rendu=N
               "codes_condition": gr.CODES_CONDITION, "ordre_conditions": CONDITIONS, "bras": br.ORDRE_BRAS,
               "s9": {c: {"n": i["n"], "sigma_chapeau": i["sigma_chapeau"], "n_prime": i["n_prime"]} for c, i in s9.items()},
               "nombres_de_mondes": n_prime, "empreintes_code": empreintes, "prerequis": prerequis,
-              "derivation_des_graines": "SeedSequence(entropy=racine, spawn_key=(code_condition, indice_monde, code_role)[, tentative])",
+              "derivation_des_graines": "SeedSequence(entropy=racine, spawn_key=(code_condition, indice_monde, code_role)[, tentative]) ; "
+                                        "replantation r >= 1 (addendum v2, Q-01 (b)) : (code_condition, indice_monde, 0, tentative, r)",
+              "max_replantations": mo.MAX_REPLANTATIONS, "addendum": ADDENDUM,
               "processus": processus}
     chemin, manifeste = creer_manifeste(depot, run_id, config, [], entropie=gr.RACINE, decisif=True,
                                         prereg=Path(depot) / "prereg" / PREREG.name,
