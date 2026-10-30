@@ -1,0 +1,9 @@
+# Question 4 — apprendre les concepts, les dimensions, les chapelles, l'hypergraphe et les paramètres de la fertilité — v1
+
+Mots directs de Lazar (30 octobre 2026, 18:01 heure de Paris), transcrits sans reformulation de fond :
+
+« [Sur les témoins : des paires de chapelles comparables qui ne se sont jamais rencontrées, sinon on ne voit que les survivants ; la bonne distance est celle qui sépare les vrais ponts des témoins, mesurée avant la date du pont :] ouiiiii. Ne pourrait-on pas entraîner un modèle carrément à trouver les bons concepts, distance, dimensions, voire chapelles, etc. ? Voire à trouver les bons paramètres qui créent la fertilité ou la transition de phase ? Par identification de patterns ? Identifier l'hypergraphe ? »
+
+Consigne de forme (de Lazar) : « Je souhaite une version plus approfondie de cette tâche, pas une version plus longue. Avant de la reformuler : (1) indiquez ce qu'un expert du domaine ferait ici, et que je ne demande pas ; (2) précisez les données brutes qu'il utiliserait au départ, au lieu de celles déjà analysées ; (3) indiquez les méthodes et outils spécifiques qu'il utiliserait ; (4) expliquez ce qui, en dehors de vous ou de moi, permettrait de vérifier la validité du résultat. Ensuite, reformulez ma demande pour qu'elle réponde précisément à cette exigence. »
+
+Contexte minimal : questions 1 à 3 jointes (`question-1-chapelles-v1.md`, `question-2-niches-v1.md`, `question-3-fertilite-v1.md`) ; antériorités déjà relevées : Swanson 1986, Burt 1992/2004, Vilhena 2014, Rzhetsky-Foster-Evans 2015, Shi-Evans 2023, Sourati-Evans 2023 (hypergraphe auteurs / matériaux / propriétés), Krenn (Science4Cast), Uzzi 2013 (en cloche), Fleming 2001. Toute référence citée de mémoire est à marquer SUPPOSÉ. Niveau méthode ; aucune décision n'est prise par le répondant.
