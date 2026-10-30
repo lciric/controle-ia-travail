@@ -7,7 +7,7 @@
 
 ## Verdict court
 
-Oui, à une condition qui n'est pas d'apprentissage profond : un réseau peut *estimer* des effets causaux, il ne peut pas *fournir* ce qui les identifie. Sans intervention, expérience naturelle ou hypothèse d'invariance explicite, le modèle le plus profond apprend les paramètres qui accompagnent la fertilité (sélection, mode, prestige, survivants), jamais ceux qui la créent. La question « peut-on ? » devient donc « quelle source de variation exogène possédons-nous ? » ; l'apprentissage profond intervient ensuite, pour absorber les variables de confusion à haute dimension (texte, réseau) et estimer des effets hétérogènes et non linéaires — ce qui est précisément la forme d'une « transition de phase ».
+Oui, à une condition qui n'est pas d'apprentissage profond : un réseau peut *estimer* des effets causaux, il ne peut pas *fournir* ce qui les identifie. Sans intervention, expérience naturelle ou hypothèse d'invariance explicite, le modèle le plus profond apprend les paramètres qui accompagnent la fertilité (sélection, mode, prestige, survivants), jamais ceux qui la créent. « Peut-on ? » devient « quelle variation exogène possédons-nous ? » ; l'apprentissage profond sert ensuite à absorber les confondeurs à haute dimension (texte, réseau) et à estimer des effets hétérogènes et non linéaires — la forme même d'une « transition de phase ».
 
 ## (1) Ce qu'un expert ferait, et que la question ne demande pas
 
@@ -56,9 +56,9 @@ Pas les distances déjà calculées (Sourati-Evans, cité en question 1), ni les
 
 ## (4) Ce qui permettrait de vérifier, hors de Lazar et hors de nous
 
-1. **Vérité terrain plantée** : dans les mondes inventés, planter un paramètre qui *cause* la fertilité et un paramètre qui *l'accompagne* (corrélé par un confondeur commun) ; l'estimateur doit retenir le premier et rejeter le second, avec taux d'erreur préenregistrés (R5 : testé sur un cas sain et sur un artefact).
-2. **Tests placebo** : date de traitement fictive, résultat antérieur au traitement, niche jumelle non exposée ; un effet trouvé là est un échec, consigné.
-3. **Recalibrage sur un résultat publié** : à partir des données brutes, retrouver le *signe* d'un effet connu (Azoulay 2010 ; Borjas-Doran 2012) ; si notre chaîne ne le retrouve pas, elle n'est pas prête.
+1. **Vérité terrain plantée** : dans les mondes inventés, un paramètre qui *cause* la fertilité et un qui *l'accompagne* (corrélé par un confondeur commun) ; l'estimateur doit retenir le premier et rejeter le second, taux d'erreur préenregistrés (R5 : cas sain et artefact).
+2. **Tests placebo** : date de traitement fictive, résultat antérieur au traitement, niche jumelle non exposée ; un effet trouvé là est un échec consigné.
+3. **Recalibrage sur un résultat publié** : retrouver, depuis les données brutes, le *signe* d'un effet connu (Azoulay 2010 ; Borjas-Doran 2012) ; sinon la chaîne n'est pas prête.
 4. **Prédiction hors environnement, scellée** : les paramètres déclarés causaux doivent prédire la fertilité dans un environnement (discipline, période) jamais vu, après la coupure temporelle déjà prévue dans le programme ; prédiction chiffrée et signée avant lecture (R1).
 5. **Intervention prospective dans l'organisme** : si un paramètre est déclaré causal, le manipuler dans le bisociateur et observer la fertilité sous juge figé indépendant ; c'est la seule vérification qui ne dépend d'aucune hypothèse d'observation.
 6. **Réanalyse indépendante** : données brutes, code et préenregistrement empreintés (R6), remis à un analyste extérieur qui applique le plan gelé ; convergence ou divergence consignée.
