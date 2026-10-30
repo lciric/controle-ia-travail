@@ -1,0 +1,2187 @@
+[
+  {
+    "anteriorite": [
+      {
+        "reference": "Quickest Change Detection in Discrete-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2026, arXiv:2601.20022v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Quickest Change Detection in Continuous-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2025, arXiv:2509.17778v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Distributed Attacks in Persistent-State AI Control, Hills, Caspary, Cooper Stickland, 2026, arXiv:2607.02514v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Multi-Agent AI Control: Distributed Attacks Hamper Per-Instance Monitors, Angelini, Makins, Shams, Phuong, 2026, arXiv:2607.07368v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Diffuse AI Control on Fuzzy Tasks, Terekhov, Gulcehre, Hebbar, Benton, 2026, arXiv:2606.08892v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Adaptive Deployment of Untrusted LLMs Reduces Distributed Threats, Wen et al., ICLR 2025, arXiv:2411.17693",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "TRACE, Mittapalli et al., 2026, arXiv:2606.07054",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Caught in the Act: Probes Effectively Detect Sabotage and Catch Unverbalized Deception, Hollinsworth, Spies, Diriba, Gleave, Cundy, 2026, arXiv:2610.12445v1",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants du diffus (Terekhov et al., Makins et al., Hills et al.) opèrent à 100 % en boîte noire sur modèles fermés par interface de programmation et couplent leur évaluation à l'élicitation d'un attaquant (sujette aux refus des modèles de frontière et au surajustement en distribution). Reproduire notre mesure exige d'extraire les états cachés inter-épisodes sur 70 milliards de paramètres et d'abandonner la co-évolution d'invites d'attaque au profit d'un découpage paramétrique sous juge figé.",
+      "source": "programme",
+      "texte": "Intersection exclusive de quatre briques du programme : ancrage théorique formel (lemme du plafond d'horizon), sondes en boîte blanche sur poids ouverts de 8 et 70 milliards de paramètres, agrégateur séquentiel formel, et sélection sous juge figé garanti sur familles tenues à l'écart — le tout en variant la dilution par découpage contrôlé sans construire d'attaquant."
+    },
+    "cosmetique_si": "La courbe empirique de détection en fonction de K ne montre aucune transition au voisinage de gamma fois la divergence de Kullback-Leibler d'ordre 1, ou si l'agrégateur séquentiel sur activations ne bat pas le moniteur textuel à notes persistantes (link-tracker de Hills et al.).",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Processeur seul pour la théorie, l'opérateur de dilution et le rejeu sur scores boîte noire publiés ; 100 à 400 dollars de processeur graphique pour l'extraction unique d'activations sur 8 et 70 milliards de paramètres."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "En priorité sur processeur (coût nul) : opérateur de dilution paramétrique sur traces existantes et module d'agrégation séquentielle inter-épisodes. Puis en dépense modeste : extraction unique et mise en cache des activations (8 et 70 milliards de paramètres) sur les séquences diluées."
+    },
+    "empreinte": "9ca8b26b5cd58119e76948adedf72f1060ef89f5d232079acc07b4a6051b6afa",
+    "enonce": "En désaccord avec la pièce B (qui relègue Q4 à l'étape 2 et enchaîne Q3 à faible puissance puis Q-pont), Q4 est LA question centrale : un moniteur (sonde d'activations internes et/ou boîte noire) évolué sur des menaces concentrées échoue-t-il au transfert vers des menaces diffuses à dommage total constant selon la loi de transition théorique, et la combinaison boîte blanche inter-épisodes plus agrégation séquentielle par processus de pari restaure-t-elle ce transfert sur des familles tenues à l'écart ?",
+    "identifiant_auteur": "argon-p1-01",
+    "loi_predictive": {
+      "espace_instances": "Séquences multi-épisodes ou multi-agents obtenues par dilution paramétrique (facteur K de 1 à 9 épisodes ou requêtes de fusion) de trajectoires issues de bancs publics (ControlArena, SHADE-Arena, Iterative Vibe Coding, FakeLab), N >= 300 séquences par niveau de K, évaluées sur modèles à poids ouverts de 8 et 70 milliards de paramètres.",
+      "metrique": "Pente du rappel (et du taux d'évasion) en fonction du facteur de dilution K à taux de fausses alertes fixé à 1 % par séquence sur familles diffuses tenues à l'écart, normalisée par famille selon la robustesse aux attaques imprévues (Unforeseen Attack Robustness), et écart d'erreur quadratique avec l'asymptotique théorique de Ramtin, Nain et Towsley.",
+      "prediction": "Sous règle de décision par instant, le rappel d'un moniteur évolué sur du concentré chute avec le facteur de dilution K et le délai moyen de détection bascule de O(log gamma) à Theta(gamma) dès que le produit de la contrainte de fausse alarme gamma par la divergence de Kullback-Leibler par pas franchit le seuil critique O(1) ; à scores d'activations identiques, le remplacement du seuil par instant par un processus de pari séquentiel inter-épisodes abaisse le taux d'évasion graduelle d'au moins 25 points de pourcentage à taux de fausses alertes fixé.",
+      "signe": "-"
+    },
+    "nom": "Q4 — Le diffus comme axe d'universalité séparé sous borne d'horizon",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Transpose la théorie asymptotique de la détection de changement le plus rapide face à un adversaire furtif (Ramtin, Nain et Towsley 2025/2026) aux moniteurs d'agents (boîte blanche et boîte noire) en co-évolution défensive. Les constats boîte noire statiques existent (Hills et al. 2026 ; Angelini, Makins et al. 2026), et Terekhov et al. (2026) font évoluer une instruction de juge en boîte noire sur tâches floues sans agrégation séquentielle ni boîte blanche."
+    },
+    "passe": 1,
+    "perte_traduction": "Réduit la richesse stratégique des menaces diffuses (choix adaptatif du moment d'attaque pour maximiser la couverture naturelle, coordination par planificateur) à un paramètre scalaire de dilution K et de divergence de Kullback-Leibler stationnaire par épisode.",
+    "piege": "Confondre l'effet mécanique de dilution avec l'effet de plausibilité de la couverture par la tâche principale (Angelini, Makins et al. montrent que la couverture explique 45 à 53 % de la baisse de suspicion contre 20 à 25 % pour la dilution pure), ou revendiquer le lemme du plafond d'horizon comme neuf sans citer Ramtin, Nain et Towsley (nœud N-A).",
+    "questions_servies": [
+      "Q4",
+      "Q2",
+      "Q7"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Pay Only for Disagreement: Certified No-Regression Verdicts for Model Updates with Matching Label-Complexity Bounds, Balachandran, 2026, arXiv:2609.17560v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Can Old Evaluations Certify a New Model? Label-Efficient Release Decisions under Evaluator Drift, Mondal, Banik, Apurba, Mahmud, 2026, arXiv:2609.32267v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Benchmarks Lie: Evaluating Malicious Prompt Classifiers Under True Distribution Shift, Fomin, 2026, arXiv:2602.14161v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "SafeCoEvo: Co-Evolving Safety Harnesses and Guards for LLM Agents at Test-Time, Cheng et al., 2026, arXiv:2609.36580v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "AgentSafeEvo: Adversarial Co-Evolution for LLM Agent Safety, Wang et al., 2026, arXiv:2610.19422v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MAGIC: A Co-Evolving Attacker-Defender Adversarial Game for Robust LLM Safety, Wen et al., 2026, arXiv:2602.01539v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoSafety: Model-Agnostic Lifelong LLM Safety via Externalized Attack-Defense Co-Evolution, Zhang et al., 2026, arXiv:2605.13411v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoDefense: Co-Evolving Black-Box Defense with Large Language Models, Li et al., 2026, arXiv:2605.31140v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Lie Detectors Learn Model Identity: Confounds in Black-Box Sandbagging Detection, Lin, Bernabeu-Perez, Arnav, Wells, Phuong, ICLR 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Optimizing the Score, Losing Sight of the Task, 2026, arXiv:2609.25848",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants ont un conflit d'intérêt structurel : leurs gains publiés (par exemple +21,5 points pour SafeCoEvo en choisissant le point de contrôle époque 13 sur la même validation, ou l'usage de Qwen3Guard et Qwen3.8-27B à la fois comme récompense et comme juge final dans MAGIC, EvoSafety et AgentSafeEvo) reposent sur le couplage que cette question invalide. Adopter notre juge figé garanti détruirait rétroactivement leurs courbes de progrès.",
+      "source": "organisme",
+      "texte": "L'organisme dispose déjà en production (pièce F, démonstration couche 1 v7) du juge figé à mise contre bibliothèque de nuls avec borne de Ville, des témoins plantés (vrais et faux) et du pare-feu N-053 (aucun score du juge dans l'entraînement ou la sélection)."
+    },
+    "cosmetique_si": "La sélection en distribution de type SafeCoEvo ne produit pas plus de fausses promotions sur les témoins plantés ni plus de dérive de rétention r_j que le juge figé garanti à budget de calcul égal.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Entièrement sur processeur si exécuté sur activations et scores précalculés (ou quelques dizaines de dollars d'inférence locale)."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Sur processeur seul : brancher le bras « fuite textuelle » (N-053 point 1) et le calcul de rétention des coefficients r_j (Fomin) à chaque génération de la boucle existante de la pièce F, et instancier deux juges témoins dégradés (validation en distribution ; juge-modèle) pour la comparaison à trois bras."
+    },
+    "empreinte": "453221839b1045b0ac285f0085780fbd4e7f1662346b96c0743fc0e90c58c736",
+    "enonce": "Contre l'hésitation de la pièce B sur Q2 (hygiène ou résultat), on fusionne Q2 et Q6 en une entrée oblique offensive : dans les boucles de sélection de moniteurs utilisant un juge-modèle partagé ou une validation en distribution non garantie (protocoles de SafeCoEvo, AgentSafeEvo, MAGIC, EvoDefense, EvoSafety), quelle fraction du gain déclaré au fil des générations G est une fausse promotion ou une exploitation de l'artefact de source (mesurée par rétention des coefficients sous protocole laissant une famille de côté), et notre juge figé garanti à processus de pari plus témoins plantés annule-t-il cet écart ?",
+    "identifiant_auteur": "argon-p1-02",
+    "loi_predictive": {
+      "espace_instances": "Trois régimes de jugement exécutés sur la même boucle d'évolution de moniteurs pendant G = 20 générations sur un corpus multi-sources de trajectoires et d'invites publiques (FIBS 28 familles, MonitoringBench, Agent-SafetyBench, les 18 jeux de Fomin), avec K >= 10 familles en rotation laissant une famille de côté.",
+      "metrique": "Écart cumulé de rappel (à 1 % de faux positifs sur témoins bénins appariés du même modèle) entre validation interne et protocole laissant une famille de côté, taux empirique de fausses promotions sur témoins nuls plantés, et métrique de rétention des coefficients r_j par génération G.",
+      "prediction": "Sous les régimes des occupants (validation en distribution type SafeCoEvo ou juge-modèle partagé type MAGIC et AgentSafeEvo), l'écart entre le gain déclaré en distribution et le gain réel sur familles tenues à l'écart sous témoins bénins appariés du même générateur croît d'au moins 10 points de pourcentage en 20 générations, avec un taux de fausses promotions supérieur à 25 % et une chute de la rétention des coefficients sous 0,5 pour plus de 30 % des traits actifs ; sous notre juge figé à processus de pari composé (inégalité de Ville, seuil alpha = 0,05) et filtre d'artefact, le taux de fausses promotions reste borné par 5 % à tout temps d'arrêt.",
+      "signe": "+"
+    },
+    "nom": "Nouvelle Q-N1 — Dégradation en ligne des bancs co-évolutifs (loi de Goodhart du juge)",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Combine la certification séquentielle de mises à jour par séquences de confiance et processus de pari (Balachandran 2026 ; Mondal et al. 2026, qui n'ont ni boucle évolutive de moniteurs ni contrôle d'artefact) avec le diagnostic statique d'artefact de source sous rotation laissant un jeu de côté (Fomin 2026 ; Lin et al. 2026) pour mesurer la dérive dynamique d'une boucle (voisin en vision : Pathak et al. 2023)."
+    },
+    "passe": 1,
+    "perte_traduction": "Ramène la diversité des architectures co-évolutives publiées (apprentissage par renforcement multi-agents, optimisation de préférences, mémoire externe) à la seule statistique de sélection et de filtrage d'artefacts de leur boucle.",
+    "piege": "Croire que la borne de Ville sur le jeu du juge garantit à elle seule la généralisation hors distribution (réserve C mineur de la pièce B : la borne contrôle les fausses promotions sur la loi du juge ; sans rotation des familles et témoins bénins appariés du même générateur, le juge figé certifie un raccourci de jeu de données).",
+    "questions_servies": [
+      "Q2",
+      "Q6",
+      "nouvelle"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "SLEIGHT-Bench: A Benchmark of Evasion Attacks Against Agent Monitors, Najt, Toft, Tracy, Roger, Benton, 2026, arXiv:2605.16626v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench: Semi-Automated Red-Teaming for Agent Monitoring, Jotautaite, Martinez, Matthews, Tracy, 2026, arXiv:2605.09684v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Impact of Off-Policy Training Data on Probe Generalisation, Kirch, Dower, Skapars, Yannakoudakis, Lubana, Krasheninnikov, 2025/2026, arXiv:2511.17408v4",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Constitutional Black-Box Monitoring for Scheming in LLM Agents, Storf, Barton-Cooper, Peters-Gill, Hobbhahn, ICML 2026, arXiv:2603.00829v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Simulated control evaluations, Olmo, Zhang, Tracy, Redwood Research, billet du 23 octobre 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Sim2Real Predictivity, Kadian et al., 2019, arXiv:1912.06321",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Inherited Circuits, Learned Semantics, Fetterman, 2026, arXiv:2606.27091",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant qui construit ses attaques par itération contre des moniteurs de développement (SLEIGHT-Bench fait environ 10 itérations par transcription contre le moniteur ; MonitoringBench filtre ses raffinements sur 3 moniteurs de développement) consomme les degrés de liberté de ses catégories pendant la construction même du banc : ses catégories sont en partie a posteriori et ne peuvent plus jamais faire l'objet d'une prédiction aveugle préenregistrée sur ce banc.",
+      "source": "methodes",
+      "texte": "Scellement cryptographique avant toute lecture des données de test (R1), séparation stricte de la troisième instance qui fige la grille taxonomique (N-054), carte explicite des hypothèses des moniteurs, et refus de construire l'attaquant qui élimine toute contamination entre la conception du banc et la prédiction."
+    },
+    "cosmetique_si": "Les prédictions issues de la carte des hypothèses ne battent pas un prédicteur naïf fondé sur la seule longueur de la transcription ou la perplexité moyenne, ou si la corrélation Q-pont est nulle sur toutes les propriétés P_k (ce qui invaliderait aussitôt Q1 et toute la voie synthétique).",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Processeur seul pour la dérivation, le scellement et l'évaluation sur transcriptions publiques déjà scorées ; 50 à 200 dollars si calcul des scores de nos propres sondes sur les transcriptions publiques."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Préalable obligatoire avant toute exécution de Q3 (réponse explicite au point 3 de la question : la troisième instance est un préalable immédiat à Q3 et au test final de Q4/Q-pont, mais pas au développement théorique de Q2 ni à l'instrumentation statique de Q6) : instancier la troisième instance (N-054) qui fige la grille des K cellules et l'opérateur synthétique de P_k sans accès à la carte des hypothèses ni aux moniteurs ; inutile d'attendre la couche 4 complète en Lean (des dérivations analytiques empreintées suffisent en étape 0)."
+    },
+    "empreinte": "28d170bd58d30319236cbc02aabeef70facc091ca1dda9d954ac5607f43f0957",
+    "enonce": "Contre la pièce B qui sépare Q3 et Q-pont et échoue par manque de puissance statistique sur K = 11 catégories (objection 1a), la théorie explicite des hypothèses des moniteurs (carte des hypothèses) prédit-elle a priori et sous scellement cryptographique, sur la matrice croisée de M moniteurs distincts et K cellules taxonomiques tenues à l'écart, à la fois (i) le classement des taux d'échec sur trajectoires d'agents et (ii) la corrélation de rang entre épisodes synthétiques sans attaquant portant la propriété P_k et épisodes semi-réalistes portant P_k ?",
+    "identifiant_auteur": "argon-p1-03",
+    "loi_predictive": {
+      "espace_instances": "Produit cartésien de M >= 8 moniteurs (sondes linéaires, sondes multicouches, autoencodeurs parcimonieux, moniteurs boîte noire par étape et par trajectoire, agrégateurs CUSUM) par K >= 30 cellules d'angles morts (issues de l'union figée de SLEIGHT-Bench 11 catégories, MonitoringBench T1-T5 × S1-S4 × E1-E4, et FIBS 28 familles), soit N >= 240 paires (moniteur, cellule) évaluées une seule fois après gel.",
+      "metrique": "Corrélation de rang de Spearman (et statistique de concordance c-index) entre prédictions scellées et rappels observés à 1 % de faux positifs (étalonnés sur transcriptions bénignes appariées), évaluée sur les N >= 240 cellules contre un nul de permutation.",
+      "prediction": "La corrélation de rang de Spearman entre la vulnérabilité prédite analytiquement (depuis les hypothèses violées de chaque moniteur m sur la propriété P_k) et le taux d'évasion observé dépasse 0,45 (valeur p < 0,001 par test de permutation stratifié par moniteur et par difficulté de base) ; sur les propriétés textuellement explicites, la corrélation synthétique-réel (Q-pont) dépasse 0,70, mais elle s'effondre sous 0,30 sur les propriétés textuellement ambiguës pour les moniteurs boîte noire tout en restant supérieure à 0,60 pour les sondes d'activations introspectives.",
+      "signe": "+"
+    },
+    "nom": "Q3 + Q-pont fusionnées — Prédiction préenregistrée des angles morts par cellule (moniteur × propriété)",
+    "originalite": {
+      "niveau": "inedite",
+      "texte": "Transforme l'énumération qualitative et a posteriori d'angles morts (SLEIGHT-Bench 2026 ; Ptacek et Newsham 1998) et le test de transfert global (Storf et al. 2026 ; Kirch et al. 2025) en une épreuve de prévisionniste notée par cellule (moniteur × propriété), préenregistrée et contrôlée contre le hasard."
+    },
+    "passe": 1,
+    "perte_traduction": "Remplace la preuve formelle binaire en Lean (« telle famille casse tel moniteur ») par un score de vulnérabilité ordinale sur une grille finie de cellules pré-existantes.",
+    "piege": "Circularité par fuite des taux de détection publiés dans SLEIGHT-Bench ou MonitoringBench vers l'instance qui rédige les prédictions (si l'analyste connaît déjà que les catégories « N-hops » ou « Omission » sont à 0 % de détection dans SLEIGHT-Bench, la prédiction est contaminée), ou confusion avec la difficulté intrinsèque de la cellule si la permutation ne stratifie pas par taux de base.",
+    "questions_servies": [
+      "Q3",
+      "Q-pont",
+      "Q1"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Pay Only for Disagreement: Certified No-Regression Verdicts for Model Updates with Matching Label-Complexity Bounds, Balachandran, 2026, arXiv:2609.17560v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Can Old Evaluations Certify a New Model? Label-Efficient Release Decisions under Evaluator Drift, Mondal, Banik, Apurba, Mahmud, 2026, arXiv:2609.32267v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Estimating means of bounded random variables by betting, Waudby-Smith, Ramdas, JRSS-B 2024",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant dont l'attaquant co-évolue change la distribution d'entrée à chaque génération, ce qui détruit la stationnarité du flux sous-jacent et invalide l'identité de support entre générations ; notre refus de construire l'attaquant maintient le vivier d'épreuve contrôlé et rend l'échantillonnage sur désaccord mathématiquement exact.",
+      "source": "methodes",
+      "texte": "Économie radicale du budget d'épreuve scellée et du budget de calcul, permettant à un programme doté de quelques milliers de dollars de faire tourner 5 à 20 fois plus de générations certifiées qu'un laboratoire qui réévalue chaque candidat sur tout le banc."
+    },
+    "cosmetique_si": "Les moniteurs candidats proposés d'une génération à l'autre sont en désaccord sur plus de 50 % des exemples au seuil de 1 % de faux positifs (auquel cas rho est proche de 1 et le gain d'échantillonnage disparaît).",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Coût de développement nul (quelques dizaines de lignes de Python dans le juge v7) ; gain net négatif en dépense (économise les appels d'évaluation)."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Sur processeur dans l'orchestrateur v7 du juge figé : ajouter le filtre de désaccord At = 1{f(Xt) != g(Xt)} au point de fonctionnement 1 % de faux positifs avant l'appel au juge d'épreuve, et remplacer la mise unique par la moyenne 1/2 Et^Théorie + 1/2 Et^Robuste."
+    },
+    "empreinte": "9128206c441611dfd6b775c718dd5ad01dbbac9a5ea2c5c83cd9401360d1d2cc",
+    "enonce": "Transposer à notre juge figé et à l'affinage des proposeurs (pièce F) l'identité de support de Balachandran (2609.17560) combinée au mélange d'experts de Mondal et al. (2609.32267) : lors de l'évolution d'un moniteur candidat g face au moniteur en place f, observer gratuitement leur taux de désaccord sur un grand flux non étiqueté de trajectoires multi-familles (Palier 0 : rejet ou certification immédiate à zéro étiquette si le désaccord est hors bande), et ne dépenser le budget d'exposition du juge figé que sur les instances de désaccord (At = 1), en mixant à poids 1/2 un parieur guidé par la carte théorique des hypothèses (conseil non fiable au sens M2) et un parieur robuste n'apprenant que des étiquettes d'épreuve.",
+    "identifiant_auteur": "argon-p1-06",
+    "loi_predictive": {
+      "espace_instances": "Flux de M >= 200 candidats moniteurs générés par les proposeurs au fil des générations sur une banque d'épreuve de N >= 5 000 épisodes.",
+      "metrique": "Nombre d'évaluations d'épreuve consommées par promotion certifiée, nombre total de générations soutenables avant renouvellement de la banque sœur (N-049), et taux empirique de fausses promotions sur témoins plantés.",
+      "prediction": "À garantie de fausses promotions identique (delta_seq <= 0,05 composée sur toute la suite de promotions par série en k^-2), la restriction au support de désaccord réduit la consommation d'unités d'épreuve scellées d'un facteur proportionnel à l'inverse du taux de désaccord (gain de 5 à 20 fois en longévité de la banque scellée avant épuisement), et le portefeuille 1/2-1/2 borne le regret de log-évidence à log(2) même lorsque la théorie conseillère est fausse.",
+      "signe": "+"
+    },
+    "nom": "Approche A1 — Évolution guidée par le support de désaccord sans étiquette (fusion Discern + Portfolio Vigilance)",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Fusionne deux préimpressions statistiques de septembre 2026 (Discern, 2609.17560, et Portfolio Vigilance, 2609.32267, conçues pour le déploiement industriel d'une mise à jour unique ou en chaîne passive) pour en faire le moteur de sélection darwinienne d'un pôle de recherche automatique de moniteurs."
+    },
+    "passe": 1,
+    "perte_traduction": "L'identité de support exacte exige une perte déterminée par la décision binaire au seuil fixé (rappel à 1 % de faux positifs) ; pour des scores continus d'aire sous la courbe ROC, elle ne s'applique qu'à travers la version relâchée Lipschitz (Proposition 14 de Balachandran), ce qui réduit le gain d'échantillonnage.",
+    "piege": "Violer la condition de prévisibilité du routage (Lemme 3 de Balachandran) : la probabilité d'interroger l'épreuve pi_t doit dépendre uniquement du passé Ft-1 et des prédictions des moniteurs sur Xt, jamais d'un signal corrélé à l'étiquette vraie Yt non encore révélée, et doit respecter un plancher strict pi_min > 0.",
+    "questions_servies": [
+      "Q2",
+      "Q5",
+      "Q4"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "When Benchmarks Lie: Evaluating Malicious Prompt Classifiers Under True Distribution Shift, Fomin, 2026, arXiv:2602.14161v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Impact of Off-Policy Training Data on Probe Generalisation, Kirch et al., 2025/2026, arXiv:2511.17408v4",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Distributed Attacks in Persistent-State AI Control, Hills, Caspary, Cooper Stickland, 2026, arXiv:2607.02514v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Constitutional Black-Box Monitoring for Scheming in LLM Agents, Storf et al., ICML 2026, arXiv:2603.00829v2",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants qui reposent sur l'élicitation de modèles de frontière subissent un biais de sélection massif (Hills et al. notent en section 4.1 et 6 que leurs attaques graduelles réussies concentrent en réalité l'attaque en 1 ou 2 requêtes et que Opus 4.6 refuse d'attaquer ; Storf et al. jettent 49 % des trajectoires où la tâche secondaire échoue). Notre opérateur mécanique contrôle exactement la dilution K sans perte ni refus.",
+      "source": "programme",
+      "texte": "Réconcilie la contrainte de sûreté R-597 (zéro génération d'attaque nouvelle, zéro refus de modèle de frontière, coût processeur) avec le besoin d'avoir un bouton continu de difficulté et de dilution (gamma * D) ainsi qu'une annulation par construction de l'artefact de source."
+    },
+    "cosmetique_si": "Un moniteur boîte noire ou une sonde distingue la greffe « bénin-dans-bénin » de la trace bénigne originale à un taux supérieur à 5 % pour un seuil étalonné à 1 %.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Zéro dollar (calcul matriciel sur processeur à partir des transcriptions et activations déjà extraites)."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Un script Python pur sur processeur dans le module de préparation des banques de développement et d'épreuve (découpage d'étapes JSONL et algèbre linéaire sur tenseurs d'activations mis en cache)."
+    },
+    "empreinte": "3e1db01c0e94c8c7929f37c5c53d879ece54d17773ae9352dd0f145cef5e2c61",
+    "enonce": "Pour alimenter Q4, Q-pont et Q1 sans jamais construire ni exécuter d'agent attaquant (respect absolu de R-597 et R-611), remplacer l'équipe rouge par un opérateur purement mécanique de chirurgie de traces et d'états cachés : à partir d'une paire (trajectoire bénigne, trajectoire de sabotage issue d'un banc public figé comme ControlArena, SHADE-Arena ou FIBS) du même modèle sur la même tâche principale, construire un continuum paramétrique d'instances par (i) dilution temporelle (insertion de K pas bénins authentiques du même agent entre deux pas liés au sabotage, à dommage final identique) et (ii) interpolation ou greffe de sous-espaces d'activations (remplacement de la composante orthogonale au sous-espace d'identité de jeu de données de Fomin à intensité contrôlée alpha dans [0, 1]), étalonné comme une courbe dose-réponse en métrologie.",
+    "identifiant_auteur": "argon-p1-07",
+    "loi_predictive": {
+      "espace_instances": "Grille paramétrique (K, alpha) appliquée à N >= 200 paires de trajectoires (bénigne, sabotage) appariées par tâche et par modèle agent sur 8 et 70 milliards de paramètres.",
+      "metrique": "Corrélation de rang entre la dose médiane de détection (ED50) sur l'opérateur mécanique et le taux d'évasion sur bancs diffus externes, et précision d'un classifieur d'identité de source entre paires bénignes et greffées.",
+      "prediction": "La dose médiane de détection (ED50 : valeur de K ou de 1/alpha à laquelle le rappel à 1 % de faux positifs passe sous 50 %) mesurée sur ce banc purement mécanique prédit avec une corrélation de rang supérieure à 0,75 le classement de robustesse des moniteurs sur les attaques graduelles et multi-agents tenues à l'écart de Hills et al. et d'Angelini, Makins et al., tout en ramenant la séparabilité d'identité de source (classifieur de jeu de données de Fomin) de plus de 90 % à moins de 55 %.",
+      "signe": "+"
+    },
+    "nom": "Approche A2 — Opérateur de dilution et de greffe contrefactuelle sans attaquant (emprunt à la métrologie)",
+    "originalite": {
+      "niveau": "inedite",
+      "texte": "Transpose le titrage dose-réponse de la métrologie analytique et l'étalonnage contrefactuel apparié (Kirch et al. 2025 ; Fomin 2026) à la génération de bancs d'épreuve séquentiels pour moniteurs d'agents, sans aucun appel de modèle générateur."
+    },
+    "passe": 1,
+    "perte_traduction": "Ne capture pas l'invention de nouvelles stratégies sémantiques de couverture par l'agent (puisque les briques élémentaires proviennent de traces figées).",
+    "piege": "Créer des discontinuités syntaxiques ou temporelles aux points de greffe des pas bénins, qu'un moniteur détecterait comme une anomalie de cohérence plutôt que comme du sabotage (à contrôler par un témoin « greffe bénin-dans-bénin » qui doit rester à 1 % de faux positifs).",
+    "questions_servies": [
+      "Q4",
+      "Q-pont",
+      "Q6",
+      "Q1"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "When Lie Detectors Learn Model Identity: Confounds in Black-Box Sandbagging Detection, Lin et al., ICLR 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Benchmarks Lie: Evaluating Malicious Prompt Classifiers Under True Distribution Shift, Fomin, 2026, arXiv:2602.14161v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Dos and Don'ts of Machine Learning in Computer Security, Arp et al., USENIX Security 2022",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MAGIC: A Co-Evolving Attacker-Defender Adversarial Game for Robust LLM Safety, Wen et al., 2026, arXiv:2602.01539v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "SafeCoEvo: Co-Evolving Safety Harnesses and Guards for LLM Agents at Test-Time, Cheng et al., 2026, arXiv:2609.36580v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoSafety: Model-Agnostic Lifelong LLM Safety via Externalized Attack-Defense Co-Evolution, Zhang et al., 2026, arXiv:2605.13411v1",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Un laboratoire auteur de SafeCoEvo, MAGIC ou EvoSafety ne publiera jamais un audit automatique montrant que sa boucle co-évolutive exploite son propre évaluateur ou ses artefacts de partitionnement ; et un laboratoire tiers sans notre organisme à vérification croisée et juge certifié ne peut pas produire d'enregistrements de preuve vérifiables par machine à la chaîne.",
+      "source": "organisme",
+      "texte": "L'architecture à castes contradictoires (expérimentateur d'une lignée, vérificateur neuf d'une autre lignée, juge figé hors des agents, sortie 5 d'auto-critique mécanique) transforme les publications des concurrents en matériau gratuit pour notre organisme."
+    },
+    "cosmetique_si": "Les gains co-évolutifs des occupants restent inchangés (à moins de 5 % près) sous juge externe indépendant, sous témoins bénins appariés du même générateur et sous protocole laissant une famille de côté.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Processeur seul pour la ré-analyse des journaux et des partitions ; moins de 100 dollars pour réévaluer les petits modèles de garde ouverts (Llama-3.2-3B d'EvoSafety, Qwen-3-4B d'EvoDefense)."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Dans la couche 1 (pièce F), ouvrir un répertoire en lecture seule dans le bac à sable contenant les artéfacts publics des occupants (journaux JSON, poids de gardes légers 3B/4B, prédictions) et paramétrer le gabarit de fiche « sortie 5 — faille méthodologique »."
+    },
+    "empreinte": "1b096989e9dd185980a6808572f8b0ecc041e12cc2ab9f2e0bff603e38ebf49f",
+    "enonce": "Plutôt que d'entrer dans la course en entraînant un n-ième défenseur sur HarmBench ou Agent-SafetyBench (terrain saturé où EvoSafety revendique déjà 99,61 % et SafeCoEvo 94,33 %), pointer les proposeurs de notre organisme (sortie 5 de la pièce F : « failles du programme actuel ») sur les dépôts, points de contrôle et journaux publiés des occupants (SafeCoEvo, EvoSafety, AgentSafeEvo, MAGIC, FIBS, MonitoringBench) pour générer et certifier sous juge figé des fiches de réfutation méthodologique (« le gain publié du système X entre le tour 1 et le tour T tombe de Y % lorsqu'on applique le contrôle C »).",
+    "identifiant_auteur": "argon-p1-08",
+    "loi_predictive": {
+      "espace_instances": "Journaux d'évaluation, banques de mémoire vérifiée et modèles de garde publiés d'au moins K = 4 occupants à code ouvert (SafeCoEvo, EvoSafety, MAGIC, Fomin/FIBS), testés par des fiches d'ablation générées et affinées automatiquement par nos proposeurs.",
+      "metrique": "Réduction relative certifiée (avec intervalle de confiance valable à tout instant) du gain co-évolutif déclaré par les occupants sous les contrôles générés par l'organisme, et taux de survie de notre propre défense sous les mêmes fiches d'audit.",
+      "prediction": "Sur au moins 3 des 4 systèmes audités, l'organisme découvre en moins de 5 générations sur processeur un contrôle de rigueur omis (substitution du juge-modèle partagé par un juge d'une autre famille comme dans l'annexe D.3 de MAGIC où les distributions de scores divergent de 0,24 à 0,49 ; retrait des raccourcis de jeu de données ; évaluation au point de fonctionnement à 1 % de faux positifs sur bénins appariés du même modèle au lieu du taux d'erreur global) qui réduit l'amélioration co-évolutive revendiquée d'au moins 40 % en valeur relative.",
+      "signe": "+"
+    },
+    "nom": "Approche A3 — Détournement de l'organisme en auditeur adversarial des courbes publiées (méta-benchmarking)",
+    "originalite": {
+      "niveau": "inedite",
+      "texte": "Réoriente un système « scientifique automatique » (au sens de Sakana AI Scientist ou Agent Laboratory, corrigé par nos gardes de gel et de juge externe de la pièce F) vers l'audit méthodologique automatisé et préenregistré des systèmes de sécurité co-évolutifs."
+    },
+    "passe": 1,
+    "perte_traduction": "Déplace une partie de la contribution d'une performance brute de détection vers une norme métrologique et un audit de reproductibilité du domaine (tout en servant de filtre dur pour nos propres moniteurs).",
+    "piege": "Passer pour de la critique purement négative si l'on n'applique pas exactement les mêmes fiches de réfutation à nos propres moniteurs évolués (sur Q4 et Q-N2) pour démontrer qu'ils y survivent.",
+    "questions_servies": [
+      "Q6",
+      "Q2",
+      "Q5",
+      "nouvelle"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "SLEIGHT-Bench: A Benchmark of Evasion Attacks Against Agent Monitors, Najt, Toft, Tracy, Roger, Benton, 2026, arXiv 2605.16626",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench: Semi-Automated Red-Teaming for Agent Monitoring, Jotautaitė, Martinez, Matthews, Tracy, 2026, arXiv 2605.09684",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Inherited Circuits, Learned Semantics, Fetterman, 2026, arXiv 2606.27091",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Insertion, Evasion, and Denial of Service, Ptacek et Newsham, 1998",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "What Happened to Anomaly Detection?, Inoue et Somayaji, 2006, rapport Carleton TR-07-09",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "No Free Lunch: The Hazards of Over-Expressive Representations in Anomaly Detection, Reiss, Cohen, Hoshen, arXiv 2306.07284",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Formulating Robustness Against Unforeseen Attacks, Dai, Mahloujifar, Mittal, NeurIPS 2022",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Caught in the Act (jeu FIBS), Hollinsworth, Spies, Diriba, Gleave, Cundy, 2026, arXiv 2610.12445",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Why 6? Defining the Operational Limits of stide, Tan et Maxion, IEEE S&P 2002",
+        "statut": "SUPPOSE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant qui construit l'attaquant tire ses catégories des échecs observés (SLEIGHT-Bench le dit : les catégories sont nées des transcriptions qui ont échappé aux moniteurs) ; sa « prédiction » est a posteriori par construction et ne vaut rien. Un laboratoire mieux doté ne gagne rien : le résultat tient à la séquence scellée (théorie → prédiction → test), pas au calcul. Il faudrait de plus une théorie explicite des hypothèses statistiques du moniteur, qu'aucun occupant ne publie.",
+      "source": "programme",
+      "texte": "La carte des hypothèses existe et son gardien n'a conçu aucun moniteur ; le préenregistrement scellé (méthodes) fait de l'horodatage, et non du calcul, l'objet de la preuve ; la quantité prédite est inédite par construction."
+    },
+    "cosmetique_si": "La corrélation obtenue n'excède pas celle de la prédiction naïve « comme les moniteurs publiés », ou si le classement prédit est entièrement expliqué par la longueur de trajectoire ou par le seul niveau structurel S.",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Dérivation et préenregistrement sur processeur ; extraction des activations du modèle à 8 milliards de paramètres sur ~3 000 trajectoires longues : quelques heures de processeur graphique (dizaines de dollars) ; boîte noire par appels : centaines de dollars."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "La troisième instance (fixe l'appariement cellules ↔ hypothèses, scelle la prédiction, n'a lu aucune pièce ni aucun score) ; une garde de code qui refuse de lancer l'évaluation si l'empreinte de la prédiction est postérieure au premier score ; un lecteur des formats de trajectoires publiés ; un moniteur dont les données d'entraînement excluent ces bancs."
+    },
+    "empreinte": "27b7ac6ce157ca6213d7cc3b9657a3384f5e5c8d3f48aa574284af2f96996b94",
+    "enonce": "Une instance de théorie qui ne connaît que la carte des hypothèses (et aucun score de nos moniteurs) prédit-elle, avant le test et contre une référence de permutation ET contre la prédiction naïve « comme les moniteurs publiés », le classement des taux de détection de notre moniteur (sonde sur modèle à 8 milliards de paramètres, plus boîte noire) par cellule de la taxonomie publiée de MonitoringBench (niveaux techniques T, structurels S, d'évasion E) et par catégorie de SLEIGHT-Bench ? La quantité prédite est le vecteur par cellule de NOTRE moniteur, qui n'existe nulle part : elle ne peut être ni mémorisée ni lue après coup. Cette formulation répond au risque de non-conclusion de Q3 « faute de puissance » (une dizaine de familles) : la taxonomie croisée T×S×E fournit des dizaines de cellules peuplées.",
+    "identifiant_auteur": "fable-p1-01",
+    "loi_predictive": {
+      "espace_instances": "Cellules peuplées (≥ 30 trajectoires d'attaque réussies) de la taxonomie MonitoringBench, soit ~25 à 40 cellules sur 2 644 trajectoires, plus les 11 catégories de SLEIGHT-Bench (40 attaques, 10 essais chacune, bénins appariés). Un seul moniteur, non entraîné sur ces bancs (les auteurs de MonitoringBench demandent l'exclusion des corpus d'entraînement : lecture pour évaluation seulement).",
+      "metrique": "Rappel à 1 % de faux positifs par cellule, seuil calibré sur les 416 trajectoires honnêtes (MonitoringBench) et sur les bénins appariés (SLEIGHT-Bench) ; prédiction empreintée avant le premier score ; test lu une seule fois.",
+      "prediction": "Corrélation de rang de Spearman ≥ 0,4 entre le classement prédit et le classement observé des cellules, au-delà du 95e centile de 10 000 permutations ; ET au moins égale à celle obtenue par la prédiction naïve « classement des moniteurs modèles publiés par cellule ». Second engagement chiffré : la théorie désigne ≥ 3 cellules « échec » (rappel < 20 %) dont ≥ 2 se confirment.",
+      "signe": "+"
+    },
+    "nom": "Q3 sur grille publiée : prédire les cellules où notre propre sonde échoue",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Le schéma « hypothèses du détecteur → familles d'évasion → vérification » est ancien (détection d'intrusion) et SLEIGHT-Bench le réalise avec une théorie informelle ; la notation de la théorie comme prévisionniste, préenregistrée, par cellule, contre permutation et contre la prédiction naïve, n'a pas été vue (pièce C, Q3)."
+    },
+    "passe": 1,
+    "perte_traduction": "« Savoir où sa défense casse sans y être attaqué » devient un classement de cellules d'une taxonomie fixée par d'autres, étiquetée a posteriori par un juge modèle ; on perd les familles inédites hors taxonomie et le volet « au fil des générations » (une génération ici, le moniteur est figé). On perd aussi le diffus inter-épisodes : S4 est intra-trajectoire.",
+    "piege": "Circularité à deux voies. (a) Les cellules et catégories sont nées des échecs de moniteurs modèles : une théorie qui dit « les moniteurs échouent là où la taxonomie le dit » prédit trivialement ; d'où la référence naïve (taux publiés des moniteurs modèles par cellule) que la théorie doit égaler SANS les avoir lus. (b) Le prédicteur est un modèle dont le corpus contient peut-être les papiers ; d'où la prédiction de NOTRE moniteur, jamais publié, et une instance de théorie qui n'a pas lu les pièces. Puissance : 11 catégories seules ne suffisent pas ; les cellules peuplées sont nécessaires. Confusion : les cellules sont confondues avec la longueur de trajectoire et l'étape de raffinement.",
+    "questions_servies": [
+      "Q3",
+      "Q-pont",
+      "Q4",
+      "Q6"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "MAGIC: A Co-Evolving Attacker–Defender Adversarial Game for Robust LLM Safety, Wen, He et al., 2026, arXiv 2602.01539",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "AgentSafeEvo: Adversarial Co-Evolution for LLM Agent Safety, Wang, Wen et al., 2026, arXiv 2610.19422",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoSafety: Model-Agnostic Lifelong LLM Safety via Externalized Attack-Defense Co-Evolution, Zhang et al., 2026, arXiv 2605.13411",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoDefense: Co-Evolving Black-Box Defense with Large Language Models, Li et al., 2026, arXiv 2605.31140",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "RvB: Automating AI System Hardening via Iterative Red-Blue Games, Huang, Liu, Zhang et al., 2026, arXiv 2601.19726",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "SafeCoEvo, Cheng et al., 2026, arXiv 2609.36580",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Miconi, EuroGP 2009, progrès local / historique / global en co-évolution",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Czempin et Gleave, arXiv 2208.05083, entraînement par population et exploitabilité",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "On Adaptive Attacks to Adversarial Example Defenses, Tramèr et al., NeurIPS 2020",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Adaptive Attacks on Trusted Monitors Subvert AI Control Protocols, Terekhov et al., 2025, arXiv 2510.09462",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Pas une question de calcul mais de conflit d'intérêt : chaque occupant publie sa diagonale comme preuve centrale ; l'auditer, c'est auditer sa propre revendication. De plus, une fois la paire construite, c'est le seul objet qu'il peut mesurer sans tiers ; il ne peut pas, sans changer de méthode, produire une mesure qui ne passe pas par son attaquant.",
+      "source": "methodes",
+      "texte": "Le refus de construire l'attaquant : nous n'avons pas de diagonale à défendre, et notre aptitude est la généralisation sur familles tenues par un tiers, jamais le score contre un adversaire maison."
+    },
+    "cosmetique_si": "Moins de 5 matrices exploitables, ou si le résultat se réduit à « un attaquant adaptatif est plus fort qu'un banc figé », déjà établi (Terekhov et al., Tramèr et al.).",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Quelques jours d'extraction et de contre-lecture ; aucun calcul."
+    },
+    "demande_organisme": {
+      "nature": "rien",
+      "texte": "Lecture de fichiers PDF (Portable Document Format) et extraction préenregistrée par un sous-agent neuf ; vérification R7 sur PDF empreinté avant tout chiffre."
+    },
+    "empreinte": "bb766da94be1066d4211cead8af9e18a12d1fc9de89bc7c6e1a15ca922cd0cbd",
+    "enonce": "Dans les matrices croisées attaquant × défenseur publiées par les occupants co-évolutifs, le taux de succès d'attaque du défenseur final contre l'attaquant avec lequel il a co-évolué (la « diagonale ») est-il informatif sur son taux contre des familles publiées tenues à l'écart ? Hypothèse : non. La paire co-évoluée converge vers une spécialisation mutuelle (MAGIC : l'attaquant co-entraîné est le plus faible de tous contre son propre défenseur) ou, quand l'attaquant reste adaptatif à l'évaluation, la diagonale surestime (AgentSafeEvo : attaquant final bien plus fort que les bancs externes). Dans les deux cas la diagonale n'est pas une mesure de généralisation — c'est ce que le refus de construire l'attaquant nous évite par construction.",
+    "identifiant_auteur": "fable-p1-02",
+    "loi_predictive": {
+      "espace_instances": "Paires (défenseur, matrice) extraites des occupants qui publient à la fois la diagonale et ≥ 2 familles externes : MAGIC (tableaux 3 et 10), AgentSafeEvo (évaluation croisée par étape et quatre bancs), EvoSafety (tableau 2 : compétences vues / non vues / attaquant évolué), EvoDefense (tableaux 1, 2, 3), RvB (gardes par tour contre quatre bancs externes), SafeCoEvo si une diagonale existe ; attendu : 5 à 8 matrices, 15 à 30 paires.",
+      "metrique": "Taux de succès d'attaque tel que publié, au point de fonctionnement et avec le juge de l'occupant ; règles d'extraction fixées avant lecture des tableaux.",
+      "prediction": "Corrélation de rang < 0,3 entre le taux sur la diagonale et le taux médian sur familles externes, à travers les paires ; écart absolu > 15 points dans ≥ 70 % des paires, dans les deux sens (sous-estimation quand la paire est figée, surestimation quand l'attaquant est adaptatif à l'évaluation) ; quand plusieurs tours sont publiés, le ratio diagonale/externe s'éloigne de 1 avec le nombre de tours.",
+      "signe": "0"
+    },
+    "nom": "La diagonale de l'auto-jeu : le score contre l'attaquant co-évolué prédit-il la généralisation ?",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Miconi (progrès historique pris pour global), Czempin et Gleave (l'adversaire unique surajuste), Tramèr et al. (attaques adaptatives) occupent le principe ; la mesure en méta-analyse de matrices publiées de co-évolution défensive n'a pas été vue dans les pièces."
+    },
+    "passe": 1,
+    "perte_traduction": "Le mécanisme (spécialisation de paire, Goodhart réciproque) devient une méta-analyse de tableaux hétérogènes ; on ne mesure pas la dynamique interne de la paire, seulement son empreinte publiée. Les points de fonctionnement et les juges diffèrent d'un papier à l'autre.",
+    "piege": "Sélection après lecture : fixer la liste d'occupants, les tableaux à lire et la règle d'appariement diagonale ↔ externe AVANT d'ouvrir les PDF, par la troisième instance. Hétérogénéité des juges (MAGIC montre que Qwen3Guard et GPT-4o divergent sur les défenseurs forts) et des points de fonctionnement : rapporter par papier, jamais en moyenne globale. Tables incomplètes : une matrice sans familles externes est écartée, pas interprétée.",
+    "questions_servies": [
+      "nouvelle",
+      "Q1",
+      "Q2",
+      "Q5"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Multi-Agent AI Control: Distributed Attacks Hamper Per-Instance Monitors, Angelini, Makins, Shams, Phuong, 2026, arXiv 2607.07368",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Distributed Attacks in Persistent-State AI Control, Hills, Caspary, Cooper Stickland, 2026, arXiv 2607.02514",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench, Jotautaitė et al., 2026, arXiv 2605.09684",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Quickest Change Detection in Discrete-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2026, arXiv 2601.20022",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Quickest Change Detection in Continuous-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2025, arXiv 2509.17778",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Gualandi, Maggio, Papadopoulos, MED 2022, plafond lié à l'horizon contre CUSUM",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Limiting the Impact of Stealthy Attacks on Industrial Control Systems, Urbina et al., ACM CCS 2016",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Adaptive Deployment of Untrusted LLMs Reduces Distributed Threats, Wen et al., ICLR 2025, arXiv 2411.17693",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "TRACE, Mittapalli et al., 2026, arXiv 2606.07054",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Diffuse AI Control on Fuzzy Tasks, Terekhov, Gulcehre, Hebbar, Benton, 2026, arXiv 2606.08892",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Lorden 1971 ; Moustakides 1986 (optimalité de CUSUM), cités par Ramtin et al.",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Manuel d'ingénierie statistique du NIST, section 6.3.2.3.1, Shewhart contre CUSUM",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Makins et Hills construisent l'attaquant et choisissent la dilution après coup ; leur décomposition (dilution 25 %, récit de couverture 53 %, 38–43 % inexpliqué) est descriptive. Aucun occupant ne détient une prédiction préenregistrée du coude dérivée d'hypothèses du moniteur ; la valeur est dans l'engagement avant lecture, pas dans le calcul.",
+      "source": "programme",
+      "texte": "Un lemme formel du coude (à comparer d'abord sur PDF à Ramtin et al. et Gualandi et al., nœud N-A : s'il est couvert, il devient antécédent cité et la prédiction reste la nôtre), l'agrégateur séquentiel, et la boîte blanche sur poids ouverts appliquée aux traces publiées."
+    },
+    "cosmetique_si": "La chute (i) disparaît une fois stratifiée par T et E, ou si la règle séquentielle n'apporte rien au-delà d'un « max » recalibré par trajectoire.",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Activations du modèle à 8 milliards sur ~3 000 trajectoires : dizaines de dollars de processeur graphique (à mutualiser avec la fiche Q3) ; boîte noire par appels : centaines de dollars."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "L'agrégateur séquentiel doit accepter des scores par pas externes ; ajout d'un lecteur des formats de trajectoires publiés (lignes JSON) ; strate « diffus / concentré » de la banque étendue aux étiquettes S."
+    },
+    "empreinte": "2d854011c1670f40e91316c618a7bd0efb05c5005a194ecd78329f91b9730662",
+    "enonce": "Pour un moniteur conçu ou sélectionné sur des familles concentrées (niveaux structurels S1–S2 de MonitoringBench), le rappel décroît-il avec la dilution structurelle (S3, S4 ; attaques graduelles contre positionnelles de Hills et al. ; K = 1, 3, 9 agents de Makins et al.) à dommage total constant, selon un coude prédit par le lemme du plafond d'horizon (chute franche quand la divergence par pas multipliée par l'horizon effectif passe sous l'unité) ; et une règle séquentielle (somme cumulée CUSUM ou e-valeurs) appliquée aux MÊMES scores par pas récupère-t-elle une part prédite de cette chute, là où la règle « seuil par pas » ne le peut pas ? Le coude est préenregistré à partir des seuls scores S1–S2, avant lecture de S3–S4.",
+    "identifiant_auteur": "fable-p1-04",
+    "loi_predictive": {
+      "espace_instances": "Trajectoires d'attaque réussies de MonitoringBench étiquetées S1 à S4 (2 644 ; cellule S4 attendue ≥ 100), stratifiées par niveau technique T et stratégie E ; familles graduelle/positionnelle de Hills (n = 120 / 600) et séries K de Makins (FakeLab, sur demande) si accessibles ; notre moniteur : sonde sur modèle à 8 milliards de paramètres plus boîte noire, scores par pas, non entraîné sur ces bancs.",
+      "metrique": "Rappel à 1 % de faux positifs par trajectoire, seuil calibré sur les 416 trajectoires honnêtes, deux règles de décision sur scores identiques ; comparaison au coude préenregistré.",
+      "prediction": "(i) Règle « max par pas » : rappel à 1 % de faux positifs par trajectoire chute de ≥ 25 points de S1–S2 à S4 à T et E fixés ; (ii) règle séquentielle sur les mêmes scores, calibrée au même 1 % trajectoire : récupère ≥ la moitié de cette chute sur S4 ; (iii) le niveau S du coude observé coïncide avec le coude préenregistré depuis S1–S2 (tolérance d'un niveau).",
+      "signe": "-"
+    },
+    "nom": "Q4 par l'axe structurel publié : dilution à dommage constant, même score, deux règles",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "« Même score, deux règles » est occupé hors champ (Shewhart contre CUSUM, Urbina et al.) ; l'agrégation déployable est partielle en contrôle (Wen et al., TRACE, link-tracker de Hills) ; la confrontation d'un moniteur d'agent à un coude préenregistré issu de la détection de rupture n'a pas été vue."
+    },
+    "passe": 1,
+    "perte_traduction": "Le diffus « entre épisodes et entre agents » devient surtout « réparti dans une trajectoire » (S4 est intra-épisode) ; le vrai inter-épisodes dépend de l'accès aux données de Hills et Makins. Le moniteur est figé : le volet « boucle sélectionnée sur du concentré » n'est pas servi ici. Le dommage total « constant » est approché par la réussite de la tâche secondaire, pas mesuré.",
+    "piege": "Confusion de la dilution avec T et E (le raffinement rééquilibre les catégories) et sélection : les S4 réussies ont survécu au raffinement contre trois moniteurs de développement, donc sont les plus discrètes. Parade : stratifier par T et E, comparer raffinées et élicitées. Autre piège : la règle séquentielle « gagne » trivialement si son seuil est plus permissif ; MonitoringBench note qu'1 % par pas compose à 6,7–17,4 % par trajectoire : calibrer les deux règles au même taux trajectoire.",
+    "questions_servies": [
+      "Q4",
+      "Q7",
+      "Q-pont",
+      "Q3"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "SLEIGHT-Bench, Najt et al., 2026, arXiv 2605.16626",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench, Jotautaitė et al., 2026, arXiv 2605.09684",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Sim2Real Predictivity, Kadian et al., 2019, arXiv 1912.06321",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Impact of Off-Policy Training Data on Probe Generalisation, Kirch, Dower, Skapars et al., 2025, arXiv 2511.17408",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Constitutional Black-Box Monitoring for Scheming in LLM Agents, Storf, Barton-Cooper, Peters-Gill, Hobbhahn, 2026, arXiv 2603.00829",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Steinbuss et Böhm, 2020, arXiv 2004.06947, anomalies synthétiques caractérisables",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Simulated control evaluations, Olmo, Zhang, Tracy, Redwood Research, billet du 23 octobre 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Hesford et al., arXiv 2403.17458, inversion de classements entre jeux de détection d'intrusion",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Les deux bancs viennent des mêmes équipes, qui n'ont aucune incitation à publier que l'un ne prédit pas l'autre ; un occupant qui construit ses transcriptions choisit l'appariement après avoir vu les taux, ce qui fabrique la corrélation. L'enjeu est le scellement, pas le calcul.",
+      "source": "methodes",
+      "texte": "L'appariement scellé par un tiers avant lecture, et un seul moniteur boîte blanche (programme) mesuré sur les deux bancs, alors que les bancs publiés ont des moniteurs différents (Opus 4.5 contre Opus 4.6)."
+    },
+    "cosmetique_si": "L'appariement scellé ne fait pas mieux que des appariements aléatoires de même taille, ou si la corrélation disparaît quand on retire la seule paire « attaque répartie ↔ S4 ».",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Nulle si mutualisée avec l'extraction d'activations des fiches Q3 et Q4 ; sinon dizaines de dollars."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "La troisième instance pour l'appariement ; sinon rien : mêmes lecteurs et mêmes activations que les fiches Q3 et Q4."
+    },
+    "empreinte": "f6898b93d5da41412fe66b32dd85aea2c23e8cb8af77811adf322ba3e77782a0",
+    "enonce": "Pour un même moniteur figé (le nôtre), le taux de détection par catégorie sur les transcriptions fabriquées de SLEIGHT-Bench (sorties d'outils inventées, auteurs humains, vérificateurs de réalisme) prédit-il le taux sur les trajectoires réellement exécutées de MonitoringBench (BashArena), catégorie par catégorie appariée — l'appariement étant fixé par un tiers AVANT toute lecture de taux ? En miroir : les taux publiés des moniteurs modèles communs aux deux bancs sont-ils corrélés par catégorie appariée ? Cette version de Q-pont ne dépend pas des propriétés dérivées par Q3 : les propriétés sont les catégories publiées. C'est un désaccord avec l'ordre de la pièce B : Q-pont peut commencer avant Q3, et l'ordre n'a pas à attendre le scellement de Q3 pour cette expérience.",
+    "identifiant_auteur": "fable-p1-05",
+    "loi_predictive": {
+      "espace_instances": "6 à 8 paires de catégories appariables entre les 11 classes SLEIGHT-Bench et les niveaux T×S×E de MonitoringBench (par exemple : attaque répartie ↔ S4 ; nommage plausible ↔ E1 ; charge dans contenu long ↔ E3 ; persuasion ↔ E4 — l'appariement exact est scellé par le tiers) ; un moniteur à nous sur les deux bancs ; plus les moniteurs publiés communs.",
+      "metrique": "Rappel à 1 % de faux positifs par catégorie ; calibration sur bénins appariés (SLEIGHT-Bench) et sur trajectoires honnêtes (MonitoringBench) ; rang de Spearman par sous-ensemble de paires, préenregistré.",
+      "prediction": "Corrélation de rang de Spearman ≥ 0,5 sur les paires « visibles dans le texte » (nommage, contenu long, obfuscation) et < 0,2 sur les paires qui reposent sur l'état, la persuasion ou l'ambiguïté d'autorisation — l'effondrement attendu par Kirch et al. pour les propriétés « ambiguës dans le texte ». Prédiction annexe : la corrélation ne dépasse pas celle d'un appariement aléatoire de même taille si les paires « état/persuasion » sont incluses.",
+      "signe": "+"
+    },
+    "nom": "Q-pont à coût nul : fabriqué (SLEIGHT-Bench) contre exécuté (MonitoringBench), par catégorie appariée scellée",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Métrique de prédictivité simulation-réel (Kadian et al.) et comparaison de classements d'anomalies synthétiques contre réelles (Steinbuss et Böhm) hors champ ; dans le contrôle, Storf et al. et le billet de Redwood mesurent un transfert global, jamais par propriété appariée."
+    },
+    "passe": 1,
+    "perte_traduction": "Le « réel » reste instruit, raffiné contre des moniteurs et à sabotage injecté ; les « propriétés P » sont des catégories de banc, pas des statistiques prédites du moniteur ; 6 à 8 paires donnent une puissance faible : le résultat est un signal d'alerte, pas une validation de la voie synthétique.",
+    "piege": "L'appariement EST le résultat : fait après lecture, la corrélation est fabriquée ; parade : scellement par le tiers et test contre appariements aléatoires. Effectifs : certaines classes SLEIGHT-Bench comptent une ou deux attaques ; exclure toute paire à n < 3 attaques. Raffinement : les trajectoires MonitoringBench ont été rendues discrètes contre trois moniteurs, ce qui abaisse mécaniquement le « réel ».",
+    "questions_servies": [
+      "Q-pont",
+      "Q3",
+      "Q1",
+      "Q6"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "When Benchmarks Lie, Fomin, 2026, arXiv 2602.14161",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Lie Detectors Learn Model Identity, Lin, Bernabeu-Perez, Arnav, Wells, Phuong, ICLR 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Building Better Deception Probes Using Targeted Instruction Pairs, Natarajan et al., 2026, arXiv 2602.01425",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Sequential Training of GANs Against GAN-Classifiers Reveals Correlated Knowledge Gaps, Pathak et al., CVPR 2023",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Analyzing Dynamic Adversarial Training Data in the Limit, Wallace, Williams, Jia, Kiela, arXiv 2110.08514",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Constitutional Black-Box Monitoring, Storf et al., 2026, arXiv 2603.00829 (artefacts du synthétique exploités par l'optimisation)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Caught in the Act / FIBS, Hollinsworth et al., 2026, arXiv 2610.12445",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Testing Robustness Against Unforeseen Adversaries (UAR, normalisation par famille), Kang, Sun, Hendrycks, Brown, Steinhardt, 2019, arXiv 1908.08016",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants à moniteur-modèle fermé ne peuvent pas mesurer la rétention ni projeter hors du sous-espace de provenance ; ceux qui construisent l'attaquant produisent eux-mêmes la signature (le raffinement par un même modèle est une provenance) et n'ont pas intérêt à la mesurer. Un laboratoire mieux doté pourrait faire le volet statique ; le volet par tour exige une boucle à juge figé et témoins appariés, que personne n'a.",
+      "source": "organisme",
+      "texte": "Le bras « fuite textuelle » (N-053), la mémoire qui refuse les redites et les tâches fraîches, plus la boîte blanche sur poids ouverts (programme) : la rétention de coefficients exige l'accès aux activations."
+    },
+    "cosmetique_si": "La projection hors provenance ne change pas le rappel et la rétention dépasse 0,8 partout : l'artefact n'explique alors rien sur ces bancs et Q6 n'est qu'une précaution.",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Statique : dizaines de dollars (mêmes activations que les fiches précédentes). Dynamique : générations de la boucle, nœud de dépense pour Lazar."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Étiqueter la provenance dans la banque et dans la strate des familles ; brancher le bras « fuite textuelle » sur des sources externes ; témoins bénins appariés par provenance dans la sélection (invariant N-053)."
+    },
+    "empreinte": "e847f925cd4e0df03092496cd8fb087621acc601ee277cfb9bdfc1d3c27d9059",
+    "enonce": "Quelle part du rappel d'une sonde (entraînée hors de ces bancs, par exemple sur le jeu FIBS, Falsehoods in Broad Settings) ou d'un moniteur boîte noire, mesuré sur les bancs d'agents publiés, est expliquée par la provenance de la trajectoire (élicitée contre raffinée ; stratégie humaine contre agent de reconnaissance ; STRIDE contre Gloom contre ControlArena ; fabriquée contre exécutée) plutôt que par le sabotage — et, dans une boucle de sélection de moniteurs non contrôlée, cette part croît-elle de génération en génération ? Le volet statique est l'instrument (occupé en principe par Fomin et Lin et al., jamais sur des trajectoires d'agents) ; le volet « par tour » est le résultat distinctif.",
+    "identifiant_auteur": "fable-p1-06",
+    "loi_predictive": {
+      "espace_instances": "Statique : ~3 000 trajectoires MonitoringBench à provenance connue (élicitées / raffinées, quatre sources), 43 transcriptions SLEIGHT-Bench avec bénins appariés, trajectoires ControlArena si accessibles ; activations d'un modèle à 8 milliards de paramètres lisant les transcriptions. Dynamique : ≥ 5 générations de notre boucle sur ces familles, avec et sans contrôle de provenance.",
+      "metrique": "Exactitude du classifieur de provenance ; rappel à 1 % de faux positifs avant et après projection ; rétention de coefficients par tour (protocole « un jeu de données laissé de côté », LODO).",
+      "prediction": "Statique : un classifieur de provenance sur activations atteint ≥ 85 % (hasard 25–50 %) ; projeter hors des 16 principales directions de provenance dégrade le rappel de ≥ 2 points en moyenne avec hétérogénéité par source de ± 20 points (schéma de Fomin : −1,75 point moyen, −34 à +21 par jeu) ; rétention de coefficients < 0,5 pour ≥ 25 % des 50 traits principaux. Dynamique : sans contrôle, la part de rappel attribuable à la provenance augmente d'au moins 5 points par génération ; avec témoins bénins appariés par provenance dans la sélection, elle reste stable.",
+      "signe": "+"
+    },
+    "nom": "Q6 sur bancs d'agents : la part de provenance dans le rappel, puis par tour",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Fomin (LODO, rétention) et Lin et al. (identité du modèle) sur invites et sous-performance ; Pathak et al. pour la migration d'artefacts en bloc entre tours ; Wallace et al. pour « la collecte adversariale ne purge pas » ; le suivi par tour dans une boucle de moniteurs d'agents n'a pas été vu."
+    },
+    "passe": 1,
+    "perte_traduction": "L'« artefact du générateur » devient « provenance étiquetée par les auteurs des bancs » ; on ne mesure pas l'artefact de notre propre générateur de familles tant que la boucle n'existe pas, et la provenance est confondue avec la difficulté (les trajectoires raffinées sont plus discrètes par construction).",
+    "piege": "Provenance et difficulté confondues : un classifieur de provenance qui apprend la difficulté est légitime. Parade : témoins bénins appariés par provenance (SLEIGHT-Bench en fournit), ligne de base « honnête contre honnête » de Lin et al., et comparaison à provenance fixée. Autre piège : les directions de provenance et de sabotage se recouvrent (Fomin) ; la projection « redistribue » plutôt qu'elle ne réduit : rapporter par source, jamais en moyenne seule.",
+    "questions_servies": [
+      "Q6",
+      "Q-pont",
+      "Q1",
+      "Q5"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Quickest Change Detection in Discrete-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2026, arXiv 2601.20022",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Manuel d'ingénierie statistique du NIST, section 6.3.2.3.1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Page, 1954, Continuous Inspection Schemes (somme cumulée) ; Shewhart, 1931, cartes de contrôle",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Optimizing the Score, Losing Sight of the Task, 2026, arXiv 2609.25848 (canaris)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "More Convincing, Not More Correct, 2026, arXiv 2607.05904 (ancre cachée)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Can Old Evaluations Certify a New Model?, Mondal et al., 2026, arXiv 2609.32267 (prix de la vigilance)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Pay Only for Disagreement, Balachandran, 2026, arXiv 2609.17560 (composition sur une suite de promotions)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Ladder, Blum et Hardt, ICML 2015",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "HyperAgents, Zhang et al., 2026, arXiv 2603.19461 (boucle externe de sélection et d'évaluation gardée fixe)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Miconi, EuroGP 2009",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Les boucles des occupants n'ont ni témoins à vérité connue ni juge hors des agents (le juge sert de récompense chez MAGIC et AgentSafeEvo ; validation en distribution chez SafeCoEvo) ; ajouter une carte à une boucle dont le juge dérive ne mesure que sa propre dérive. Le calcul est négligeable ; c'est l'architecture (juge figé, tiers, témoins frais) qui manque.",
+      "source": "organisme",
+      "texte": "Témoins plantés, juge figé à mise, archive complète et test final lu une fois existent déjà ; la carte les relie en une garantie séquentielle sur la boucle."
+    },
+    "cosmetique_si": "Le taux de bonne élimination des témoins est à 100 % dès la génération 0 (témoins triviaux), ou si la carte ne déclenche pas sous un juge délibérément corrompu (test (a) échoué).",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Simulation sur processeur (jours) ; la mesure sur une vraie boucle suit le coût des générations (nœud de dépense)."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Une carte de contrôle dans le noyau (jamais réécrite par le pôle), alimentée par les verdicts sur témoins ; un vivier de témoins tenu par le tiers et tiré frais à chaque génération ; une règle d'invalidation rétroactive des promotions depuis le dernier point de contrôle."
+    },
+    "empreinte": "3ca18643335c269e54fa253acfbdffe5b007a031db8d89fbd5e7eab16584a9f6",
+    "enonce": "Traiter la boucle elle-même comme le processus sous surveillance, avec les mêmes mathématiques que Q4 : à chaque génération, les verdicts du juge sur les témoins plantés (fiches vraies, fiches fausses, nuls de bibliothèque) alimentent un e-processus ou une somme cumulée (CUSUM) dont le franchissement arrête la boucle et invalide toutes les promotions depuis le dernier point de contrôle. Le taux de fausses promotions sur témoins devient une courbe publiée avec sa séquence de confiance ; le « coût par famille » de Q5 se lit sur l'horloge de cette carte ; et le régime « juge-modèle co-évoluant » de Q2 se mesure en simulant une dérive du juge et en lisant le délai de détection. C'est « faire de la boucle elle-même l'objet mesuré » (pièce E) sous une forme que les occupants ne peuvent pas produire : ils n'ont pas de témoins à vérité connue dans leur boucle.",
+    "identifiant_auteur": "fable-p1-07",
+    "loi_predictive": {
+      "espace_instances": "Générations de la boucle (≥ 50 en simulation, ≥ 20 en vrai), ≥ 10 témoins par génération (moitié vrais, moitié faux, tirés frais d'un vivier tenu par le tiers).",
+      "metrique": "Délai moyen de détection et temps moyen avant fausse alarme (la paire ADD / AT2FA de la détection de rupture) ; taux de fausses promotions sur témoins avec séquence de confiance.",
+      "prediction": "(a) Sous dérive injectée du juge (remplacement du juge figé par un juge réaffiné sur les survivantes), la carte déclenche en ≤ 5 générations après le début de la dérive, avec ≤ 1 fausse alarme sur 100 générations sous juge figé ; (b) sous juge figé garanti, la carte ne déclenche pas sur 50 générations et le taux de bonne élimination des témoins reste dans sa séquence de confiance ; (c) une boucle sans carte sous dérive promeut ≥ 20 % de témoins faux à la génération 10.",
+      "signe": "+"
+    },
+    "nom": "Approche : la carte de contrôle du pôle — les témoins plantés comme processus surveillé",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Contrôle statistique de procédé (Shewhart, Page) et détection de rupture (Ramtin et al.) vers le pôle lui-même ; canaris de 2609.25848 et ancre cachée de 2607.05904 posent le principe sans séquence de confiance ; « la vigilance ne se valide pas sans étiquettes fraîches » (2609.32267) justifie les témoins frais. Réflexivité (la même théorie garde le moniteur et la boucle) non vue."
+    },
+    "passe": 1,
+    "perte_traduction": "La « validité de la mesure sous évolution » devient « détection d'une dérive du taux de bonne élimination des témoins » : une dérive qui n'atteint pas les témoins (artefact ciblé sur les vraies fiches) passe inaperçue ; la carte mesure le juge sur ce qu'on lui a planté, pas sur l'inédit.",
+    "piege": "Les témoins deviennent reconnaissables (mémoire à empreinte, gabarits) : le pôle apprend à bien traiter les témoins et mal le reste ; parade : témoins frais du vivier du tiers, indiscernables en forme des vraies fiches. Fausse sécurité : une carte qui ne déclenche jamais peut être aveugle (témoins trop faciles, dérive hors de leur portée) ; d'où le test (a) à dérive injectée, obligatoire avant toute lecture de (b).",
+    "questions_servies": [
+      "Q2",
+      "Q5",
+      "Q4",
+      "nouvelle"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Adaptive Attacks on Trusted Monitors Subvert AI Control Protocols, Terekhov et al., 2025, arXiv 2510.09462 (asymétrie de date de coupure)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Generalization in Adaptive Data Analysis and Holdout Reuse, Dwork et al., NeurIPS 2015",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Ladder, Blum et Hardt, ICML 2015",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench, 2605.09684 (demande d'exclusion des corpus d'entraînement) ; SLEIGHT-Bench, 2605.16626 (chaînes canari)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Registered reports, Nosek et Lakens, 2014 (Social Psychology)",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Evaluating the replicability of social science experiments / marchés de prédiction, Camerer et al., 2018, Nature Human Behaviour",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Série ASVspoof (familles inconnues tenues par l'organisateur), 2019, arXiv 1904.05441",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Tavallaee et al., 2009, critique de KDD'99 / NSL-KDD (banc rejoué devient surajusté)",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant qui construit l'attaquant a déjà tout lu : la prédiction scellée n'a de valeur que par l'ordre temporel, et cet ordre est irréversible (une prédiction vue après coup ne vaut rien). Rien à voir avec le calcul : c'est une discipline d'accès que la plupart des pipelines publiés violent par construction (même modèle pour construire, évaluer et discuter).",
+      "source": "methodes",
+      "texte": "Préenregistrement scellé avant toute lecture, contre-lecture par un modèle différent, verdict par sous-agent neuf, et la troisième instance : la quarantaine est leur assemblage avec une garde temporelle."
+    },
+    "cosmetique_si": "Les deux prédicteurs obtiennent la même erreur sur le corps de papier ET sur les annexes (aucune fuite détectable, donc aucune protection mesurée), ou si une seule prédiction est scellée après la lecture de son résultat.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Appels de modèle modestes (deux prédicteurs par campagne) ; aucun calcul."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Le rôle de tiers dans le noyau ; une garde d'empreinte temporelle sur toute prédiction ; un registre des dates de coupure des modèles employés ; une passation « sans chiffres » comme gabarit obligatoire pour le prédicteur."
+    },
+    "empreinte": "dbbcbbe042f5e0c74ea3576442314a6855b224c696beb9edb9a1f57ee63c8f26",
+    "enonce": "Pour toute question où la théorie est notée comme prévisionniste (Q3 sur grille, Q-pont à coût nul, méta-audit Q2, diagonale de l'auto-jeu), séparer trois rôles tenus par trois instances à information strictement croissante : (1) le prédicteur, instance neuve d'un modèle dont la date de coupure déclarée est antérieure à la publication du banc, ou qui n'a reçu qu'une passation sans chiffres rédigée par le tiers, et dont la prédiction est empreintée avant tout accès ; (2) l'apparieur tiers, qui fixe cellules, appariements et règles d'extraction ; (3) l'évaluateur, qui lit une fois les tableaux ou calcule les scores. Les annexes jamais extraites des fichiers PDF (Portable Document Format) deviennent une banque scellée gratuite : on prédit les chiffres qu'elles contiennent (tableaux par environnement, matrices de dégradation croisée des invites ciblées, résultats par modèle) avant de les ouvrir. C'est l'asymétrie de Terekhov et al. (l'attaquant à date de coupure postérieure sait tout du moniteur) renversée en garde : le prédicteur à date de coupure antérieure ne peut rien savoir du résultat.",
+    "identifiant_auteur": "fable-p1-08",
+    "loi_predictive": {
+      "espace_instances": "Campagnes de ≥ 20 quantités publiées non lues par campagne, réparties entre corps de papier (indexé, mémorisable) et annexes (peu indexées) ; deux prédicteurs par campagne : quarantainé et non quarantainé (date de coupure postérieure, accès au corpus).",
+      "metrique": "Erreur absolue médiane de prédiction par classe de quantité (corps / annexe) ; empreintes et horodatages des prédictions ; registre des dates de coupure.",
+      "prediction": "Le protocole se teste lui-même : l'erreur absolue médiane du prédicteur non quarantainé est ≤ la moitié de celle du quarantainé sur les quantités du corps de papier (fuite par mémorisation mesurable), et les deux erreurs sont indiscernables sur les quantités d'annexes ; une campagne qui ne montre pas cet écart signale soit une annexe indexée, soit une fuite par la passation.",
+      "signe": "+"
+    },
+    "nom": "Approche : le prédicteur en quarantaine — date de coupure antérieure et annexes non lues comme épreuve scellée",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Rapports enregistrés et marchés de prédiction de réplication (hors champ, SUPPOSÉ) ; jeu tenu à l'écart réutilisable (Dwork et al.) ; canaris anti-entraînement des bancs (MonitoringBench, SLEIGHT-Bench) posent le problème inverse. L'usage des annexes non lues comme épreuve et la date de coupure comme garde du prédicteur ne sont pas vus."
+    },
+    "passe": 1,
+    "perte_traduction": "La « fuite » est mesurée par une différence entre deux instances, pas prouvée ; la date de coupure déclarée n'est pas une garantie ; une annexe non indexée aujourd'hui peut l'être demain, ce qui périme la banque scellée. On ne mesure pas la théorie, on mesure la propreté de l'épreuve.",
+    "piege": "Fuite par la passation : les extraits eux-mêmes citent des chiffres ; une consigne rédigée par quelqu'un qui a lu les pièces fuit sans le vouloir ; parade : passation rédigée par le tiers, relue par un modèle différent pour y chercher tout chiffre ou nom de résultat. Date de coupure non fiable (mises à jour du corpus). Et le témoin non quarantainé peut échouer aussi : alors la « fuite » n'est pas mesurable et la quarantaine ne protège de rien de démontrable.",
+    "questions_servies": [
+      "Q3",
+      "Q-pont",
+      "Q2",
+      "Q1",
+      "nouvelle"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Quickest Change Detection in Discrete-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2026, arXiv:2601.20022v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Quickest Change Detection in Continuous-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2025, arXiv:2509.17778v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Distributed Attacks in Persistent-State AI Control, Hills, Caspary, Cooper Stickland, 2026, arXiv:2607.02514v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Multi-Agent AI Control: Distributed Attacks Hamper Per-Instance Monitors, Angelini, Makins, Shams, Phuong, 2026, arXiv:2607.07368v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Diffuse AI Control on Fuzzy Tasks, Terekhov, Gulcehre, Hebbar, Benton, 2026, arXiv:2606.08892v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Adaptive Deployment of Untrusted LLMs Reduces Distributed Threats, Wen et al., ICLR 2025, arXiv:2411.17693",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "TRACE, Mittapalli et al., 2026, arXiv:2606.07054",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Caught in the Act: Probes Effectively Detect Sabotage and Catch Unverbalized Deception, Hollinsworth, Spies, Diriba, Gleave, Cundy, 2026, arXiv:2610.12445v1",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants du diffus (Terekhov et al., Angelini et Makins et al., Hills et al.) opèrent à 100 % en boîte noire sur modèles fermés par interface de programmation et couplent leur évaluation à l'élicitation d'un attaquant (sujette aux refus des modèles de frontière et au biais de sélection des attaques réussies). Reproduire notre mesure exige d'extraire les états cachés inter-épisodes sur 70 milliards de paramètres et d'abandonner la co-évolution d'invites d'attaque au profit d'un découpage paramétrique sous juge figé.",
+      "source": "programme",
+      "texte": "Intersection exclusive de quatre briques du programme : ancrage théorique formel (lemme du plafond d'horizon), sondes en boîte blanche sur poids ouverts de 8 et 70 milliards de paramètres, agrégateur séquentiel formel, et sélection sous juge figé garanti sur familles tenues à l'écart — le tout en variant la dilution par découpage contrôlé sans construire d'attaquant."
+    },
+    "cosmetique_si": "La courbe empirique de détection en fonction de K ne montre aucune transition au voisinage de gamma fois la divergence de Kullback-Leibler d'ordre 1, ou si l'agrégateur séquentiel sur activations ne bat pas le moniteur textuel à notes persistantes (link-tracker de Hills et al.).",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Processeur seul pour la théorie, l'opérateur de dilution et le rejeu sur scores boîte noire publiés ; 100 à 400 dollars de processeur graphique pour l'extraction unique d'activations sur 8 et 70 milliards de paramètres."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "En priorité sur processeur (coût nul) : opérateur de dilution paramétrique sur traces existantes et module d'agrégation séquentielle inter-épisodes. Puis en dépense modeste : extraction unique et mise en cache des activations (8 et 70 milliards de paramètres) sur les séquences diluées."
+    },
+    "empreinte": "efe4a63bc253426985d6b1a13ffec7988d60941acaa403b61af9e1dbbca1ec94",
+    "enonce": "En désaccord avec la pièce B (qui relègue Q4 à l'étape 2 et subordonne tout à Q3 sur une dizaine de familles puis à Q-pont), Q4 est LA question centrale du programme : un moniteur (sonde d'activations internes et/ou boîte noire) évolué sur des menaces concentrées échoue-t-il au transfert vers des menaces diffuses à dommage total constant selon la loi de transition asymptotique, et la combinaison boîte blanche inter-épisodes plus agrégation séquentielle par processus de pari restaure-t-elle ce transfert sur des familles tenues à l'écart ?",
+    "identifiant_auteur": "argon-p2-01",
+    "loi_predictive": {
+      "espace_instances": "Séquences multi-épisodes ou multi-agents obtenues par dilution paramétrique (facteur K de 1 à 9 épisodes ou requêtes de fusion) de trajectoires issues de bancs publics (ControlArena, SHADE-Arena, Iterative Vibe Coding, FakeLab), N >= 300 séquences par niveau de K, évaluées sur modèles à poids ouverts de 8 et 70 milliards de paramètres.",
+      "metrique": "Pente du rappel (et du taux d'évasion) en fonction du facteur de dilution K à taux de fausses alertes fixé à 1 % par séquence sur familles diffuses tenues à l'écart, normalisée par famille selon la robustesse aux attaques imprévues (Unforeseen Attack Robustness), et erreur quadratique vis-à-vis de l'asymptotique théorique de Ramtin, Nain et Towsley.",
+      "prediction": "Sous règle de décision par instant, le rappel d'un moniteur évolué sur du concentré chute avec le facteur de dilution K et le délai moyen de détection bascule de O(log gamma) à Theta(gamma) dès que le produit de la contrainte de fausse alarme gamma par la divergence de Kullback-Leibler par pas franchit le seuil critique O(1) ; à scores d'activations identiques, le remplacement du seuil par instant par un processus de pari séquentiel inter-épisodes abaisse le taux d'évasion graduelle d'au moins 25 points de pourcentage à taux de fausses alertes fixé à 1 %.",
+      "signe": "-"
+    },
+    "nom": "Q4 — Le diffus comme axe d'universalité séparé sous borne d'horizon",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Transpose la théorie asymptotique de la détection de changement le plus rapide face à un adversaire furtif (Ramtin, Nain et Towsley 2025/2026) aux moniteurs d'agents (boîte blanche et boîte noire) en co-évolution défensive. Les constats boîte noire statiques existent (Hills et al. 2026 ; Angelini, Makins et al. 2026), et Terekhov et al. (2026) font évoluer une instruction de juge faible en boîte noire sur tâches floues sans agrégation séquentielle ni boîte blanche."
+    },
+    "passe": 2,
+    "perte_traduction": "Réduit la richesse stratégique des menaces diffuses (choix adaptatif du moment d'attaque pour maximiser la couverture naturelle, coordination par planificateur) à un paramètre scalaire de dilution K et de divergence de Kullback-Leibler stationnaire par épisode.",
+    "piege": "Confondre l'effet mécanique de dilution avec l'effet de plausibilité de la couverture par la tâche principale (Angelini, Makins et al. montrent que la couverture explique 45 à 53 % de la baisse de suspicion contre 20 à 25 % pour la dilution pure), ou revendiquer le lemme du plafond d'horizon comme neuf sans citer Ramtin, Nain et Towsley (nœud N-A).",
+    "questions_servies": [
+      "Q4",
+      "Q2",
+      "Q7"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Pay Only for Disagreement: Certified No-Regression Verdicts for Model Updates with Matching Label-Complexity Bounds, Balachandran, 2026, arXiv:2609.17560v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Can Old Evaluations Certify a New Model? Label-Efficient Release Decisions under Evaluator Drift, Mondal, Banik, Apurba, Mahmud, 2026, arXiv:2609.32267v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Benchmarks Lie: Evaluating Malicious Prompt Classifiers Under True Distribution Shift, Fomin, 2026, arXiv:2602.14161v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "SafeCoEvo: Co-Evolving Safety Harnesses and Guards for LLM Agents at Test-Time, Cheng et al., 2026, arXiv:2609.36580v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "AgentSafeEvo: Adversarial Co-Evolution for LLM Agent Safety, Wang et al., 2026, arXiv:2610.19422v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MAGIC: A Co-Evolving Attacker-Defender Adversarial Game for Robust LLM Safety, Wen et al., 2026, arXiv:2602.01539v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoSafety: Model-Agnostic Lifelong LLM Safety via Externalized Attack-Defense Co-Evolution, Zhang et al., 2026, arXiv:2605.13411v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoDefense: Co-Evolving Black-Box Defense with Large Language Models, Li et al., 2026, arXiv:2605.31140v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Lie Detectors Learn Model Identity: Confounds in Black-Box Sandbagging Detection, Lin, Bernabeu-Perez, Arnav, Wells, Phuong, ICLR 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Sequential Training of GANs Against GAN-Classifiers Reveals Correlated Knowledge Gaps, Pathak et al., CVPR 2023",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants ont un conflit d'intérêt structurel : leurs gains publiés (choix du point de contrôle époque 13 sur la même validation dans SafeCoEvo ; usage de Qwen3Guard ou Qwen3.8-27B à la fois comme récompense d'entraînement et comme juge d'évaluation dans MAGIC, EvoSafety et AgentSafeEvo) reposent sur le couplage que cette question mesure. Appliquer notre juge figé garanti et nos témoins du même générateur invaliderait rétroactivement leurs courbes de progrès.",
+      "source": "organisme",
+      "texte": "L'organisme dispose déjà en production (pièce F, démonstration couche 1 v7) du juge figé à mise contre bibliothèque de nuls avec borne de Ville, des témoins plantés (vrais et faux), de l'empreinte prédictive de la mémoire et du pare-feu N-053 (aucun score du juge dans l'entraînement ou la sélection)."
+    },
+    "cosmetique_si": "Plus de 80 % des promotions publiées survivent à la borne séquentielle et la sélection en distribution de type SafeCoEvo ne produit pas plus de fausses promotions sur les témoins plantés ni plus de dérive de rétention r_j que le juge figé garanti.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Entièrement sur processeur pour le rejugement des courbes publiées et l'exécution sur activations et scores précalculés."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Sur processeur seul : brancher le bras « fuite textuelle » (N-053 point 1), le calcul de rétention des coefficients r_j (Fomin) et l'export de l'empreinte de mémoire à chaque génération de la boucle existante de la pièce F, plus un adaptateur lisant les tableaux publiés des occupants."
+    },
+    "empreinte": "ef2d2b6c14a6d8c166a3aafdff12c33ef93073fb5136e38dd20a0b5ae283c7b6",
+    "enonce": "Contre l'hésitation de la pièce B sur Q2 (hygiène ou résultat) et son report de Q6, on les fusionne en une entrée oblique : dans les boucles de sélection de moniteurs utilisant un juge-modèle partagé ou une validation en distribution non garantie (protocoles de SafeCoEvo, AgentSafeEvo, MAGIC, EvoDefense, EvoSafety), quelle fraction du gain déclaré au fil des générations G est une fausse promotion (rejugée par processus de pari) ou une dérive vers l'artefact de source (mesurée par la compétition entre distance de mécanisme et distance de surface), et notre juge figé garanti à témoins plantés annule-t-il cette dérive ?",
+    "identifiant_auteur": "argon-p2-02",
+    "loi_predictive": {
+      "espace_instances": "Deux volets : (a) ré-analyse sans exécution des courbes de promotion publiées par les occupants (SafeCoEvo 15 époques, MAGIC 200 pas, AgentSafeEvo, EvoDefense 10 tours, EvoSafety) ; (b) exécution comparative de trois régimes de jugement sur notre propre boucle pendant G = 20 générations sur un corpus multi-sources (FIBS 28 familles, MonitoringBench, Agent-SafetyBench, les 18 jeux de Fomin) en rotation laissant une famille de côté.",
+      "metrique": "Fraction de promotions publiées survivant à une séquence de confiance de Ville (alpha = 0,05), écart cumulé de rappel à 1 % de faux positifs entre validation interne et protocole laissant une famille de côté avec témoins bénins du même modèle, et rétention des coefficients r_j par génération.",
+      "prediction": "En volet (a), plus de 40 % des améliorations par tour rapportées par les occupants sans garantie statistique échouent au seuil d'arrêt valable à tout instant (alpha = 0,05) ou s'inversent après l'époque optimale choisie en distribution (comme l'époque 13 de SafeCoEvo). En volet (b), sous juge-modèle partagé ou validation en distribution, l'écart entre gain en distribution et gain sous témoins bénins appariés du même générateur croît d'au moins 10 points de pourcentage en 20 générations et la rétention des coefficients r_j chute sous 0,5 pour plus de 30 % des traits, tandis que sous notre juge figé garanti le taux de fausses promotions sur témoins nuls plantés reste borné par 5 %.",
+      "signe": "+"
+    },
+    "nom": "Nouvelle Q-N1 (fusion Q2 + Q6) — Loi de dégradation de Goodhart des boucles co-évolutives",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Combine la certification séquentielle de mises à jour par séquences de confiance et processus de pari (Balachandran 2026 ; Mondal et al. 2026, qui n'ont ni boucle évolutive de moniteurs ni contrôle d'artefact) avec le diagnostic d'artefact de source sous rotation laissant un jeu de côté (Fomin 2026 ; Lin et al. 2026) pour mesurer la dérive dynamique d'une boucle (voisin en vision : Pathak et al. 2023)."
+    },
+    "passe": 2,
+    "perte_traduction": "Ramène la diversité des architectures co-évolutives publiées (apprentissage par renforcement multi-agents, optimisation de préférences, mémoire externe) à la seule statistique de sélection et de filtrage d'artefacts de leur évaluateur.",
+    "piege": "Croire que la borne de Ville sur le jeu du juge garantit à elle seule la généralisation hors distribution (réserve C mineur de la pièce B : la borne contrôle les fausses promotions sur la loi du juge ; sans rotation des familles et témoins bénins appariés du même générateur, un juge figé certifie un raccourci de jeu de données).",
+    "questions_servies": [
+      "Q2",
+      "Q6",
+      "Q5",
+      "nouvelle"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "SLEIGHT-Bench: A Benchmark of Evasion Attacks Against Agent Monitors, Najt, Toft, Tracy, Roger, Benton, 2026, arXiv:2605.16626v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench: Semi-Automated Red-Teaming for Agent Monitoring, Jotautaite, Martinez, Matthews, Tracy, 2026, arXiv:2605.09684v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Impact of Off-Policy Training Data on Probe Generalisation, Kirch, Dower, Skapars, Yannakoudakis, Lubana, Krasheninnikov, 2025/2026, arXiv:2511.17408v4",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Constitutional Black-Box Monitoring for Scheming in LLM Agents, Storf, Barton-Cooper, Peters-Gill, Hobbhahn, ICML 2026, arXiv:2603.00829v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Simulated control evaluations, Olmo, Zhang, Tracy, Redwood Research, billet du 23 octobre 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Sim2Real Predictivity, Kadian et al., 2019, arXiv:1912.06321",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Mapping the antigenic and genetic evolution of influenza virus, Smith et al., Science 2004",
+        "statut": "SUPPOSE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant qui construit ses attaques par itération contre des moniteurs de développement (SLEIGHT-Bench fait environ 10 itérations par transcription contre le moniteur ; MonitoringBench filtre ses raffinements sur 3 moniteurs de développement) consomme les degrés de liberté de ses catégories pendant la construction même du banc : ses catégories sont en partie a posteriori et ne peuvent plus jamais faire l'objet d'une prédiction aveugle préenregistrée sur ce banc.",
+      "source": "methodes",
+      "texte": "Scellement cryptographique avant toute lecture des données de test (R1), séparation stricte de la troisième instance qui fige la grille taxonomique (N-054), carte explicite des hypothèses opposée à un témoin géométrique (R4), et refus de construire l'attaquant qui élimine toute contamination entre la conception du banc et la prédiction."
+    },
+    "cosmetique_si": "Les prédictions issues de la carte des hypothèses ne battent pas le prédicteur géométrique sans théorie (cartographie par factorisation de la matrice de développement) ou un prédicteur naïf fondé sur la longueur de la transcription, ou si la corrélation Q-pont est nulle sur toutes les propriétés P_k (ce qui écarte immédiatement Q1).",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Processeur seul pour la dérivation, le scellement, le témoin géométrique et l'évaluation sur transcriptions publiques déjà scorées ; 50 à 200 dollars si calcul des scores de nos propres sondes sur ces transcriptions."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Réponse explicite au point 3 de la question : la troisième instance (N-054) est un préalable immédiat à Q3 et au scellement de Q-pont (elle doit fixer la grille des K cellules et les traits déclarés sans voir la carte des hypothèses ni les moniteurs), mais elle n'est PAS un préalable aux travaux théoriques de Q2/Q4 ni au rejugement de Q-N1. Inutile d'attendre Lean (couche 4) : des contrats hypothèse-garantie analytiques empreintés suffisent en étape 0."
+    },
+    "empreinte": "c71c0ec66145ac5c441895f6279e7e4a365435af4535caf4973690cc97dcd01c",
+    "enonce": "Pour lever l'objection 1a (manque de puissance statistique de Q3 sur une dizaine de familles et dépendance séquentielle de Q-pont), la carte théorique des hypothèses des moniteurs prédit-elle a priori et sous scellement cryptographique, sur la matrice croisée de M moniteurs distincts et K cellules taxonomiques tenues à l'écart, à la fois (i) le classement des taux d'échec mieux qu'un prédicteur géométrique sans théorie (cartographie antigénique de la matrice de développement), et (ii) la corrélation de rang entre épisodes synthétiques sans attaquant portant la propriété P_k et épisodes semi-réalistes portant P_k ?",
+    "identifiant_auteur": "argon-p2-03",
+    "loi_predictive": {
+      "espace_instances": "Produit cartésien de M >= 8 moniteurs (sondes linéaires, sondes multicouches, autoencodeurs parcimonieux, moniteurs boîte noire par étape et par trajectoire, agrégateurs CUSUM) par K >= 30 cellules d'angles morts (issues de l'union figée par la troisième instance de SLEIGHT-Bench 11 catégories, MonitoringBench T1-T5 × S1-S4 × E1-E4, et FIBS 28 familles), soit N >= 240 paires (moniteur, cellule) évaluées une seule fois après gel.",
+      "metrique": "Corrélation de rang de Spearman (et écart de score de Brier contre le témoin géométrique et le hasard) entre prédictions scellées et rappels observés à 1 % de faux positifs (étalonnés sur transcriptions bénignes appariées), sur les N >= 240 cellules.",
+      "prediction": "La corrélation de rang de Spearman entre la vulnérabilité prédite par la carte des hypothèses et le taux d'évasion observé dépasse 0,45 (valeur p < 0,001 par test de permutation stratifié par moniteur et par taux de base) et bat d'au moins 0,10 le bras témoin géométrique sans théorie ; pour Q-pont, la corrélation synthétique-réel dépasse 0,70 sur les propriétés textuellement explicites, chute sous 0,30 sur les propriétés textuellement ambiguës pour les moniteurs boîte noire, mais reste supérieure à 0,60 pour les sondes d'activations introspectives.",
+      "signe": "+"
+    },
+    "nom": "Q3 + Q-pont fusionnées — Prédiction préenregistrée des angles morts par cellule (moniteur × propriété) contre témoin géométrique",
+    "originalite": {
+      "niveau": "inedite",
+      "texte": "Transforme l'énumération qualitative et a posteriori d'angles morts (SLEIGHT-Bench 2026 ; Ptacek et Newsham 1998) et le test de transfert global (Storf et al. 2026 ; Kirch et al. 2025) en une épreuve de prévisionniste notée par cellule (moniteur × propriété), préenregistrée et contrôlée contre un témoin de cartographie géométrique."
+    },
+    "passe": 2,
+    "perte_traduction": "Remplace la preuve formelle binaire en Lean (« telle famille casse tel moniteur ») par un score de vulnérabilité ordinale sur une grille finie de cellules pré-existantes.",
+    "piege": "Circularité par fuite des taux de détection déjà publiés dans SLEIGHT-Bench ou MonitoringBench vers l'instance qui rédige les prédictions (si l'analyste sait déjà que « N-hops » ou « Omission » sont à 0 % dans SLEIGHT-Bench, la prédiction est contaminée : il faut donc soit masquer les noms de catégories et ne donner que les contrats formels, soit inclure dans les 240 cellules nos propres sondes boîte blanche jamais testées sur SLEIGHT-Bench).",
+    "questions_servies": [
+      "Q3",
+      "Q-pont",
+      "Q1"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Nonparametric Estimation of the Number of Classes in a Population, Chao, Scandinavian Journal of Statistics 1984",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Estimating the Error Rates of Diagnostic Tests, Hui, Walter, Biometrics 1980",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "STADS: Software Testing as Species Discovery, Böhme, ACM Transactions on Software Engineering and Methodology 2018",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Obfuscated Activations Bypass LLM Latent-Space Defenses, Bailey et al., 2025, arXiv:2412.09565v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "RL-Obfuscation, Gupta et al., 2025, arXiv:2506.14261",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Benchmarking Deception Probes via Black-to-White Performance Boosts, Parrack, Hex, Nardo, 2025, arXiv:2507.12691",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Building Production-Ready Probes For Gemini, Kramar et al., 2026, arXiv:2601.11516",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Caught in the Act: Probes Effectively Detect Sabotage and Catch Unverbalized Deception, Hollinsworth et al., 2026, arXiv:2610.12445v1",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant qui construit l'attaquant évalue sa défense sur les attaques que son propre générateur a réussi à produire (avec un fort effondrement de modes : MonitoringBench montre que 81 % des attaques élicitées tombent dans 2 niveaux techniques sur 5) ; il mesure un taux de capture conditionnel à son générateur et ne peut structurellement pas estimer la masse cachée hors de son générateur.",
+      "source": "programme",
+      "texte": "Nécessite simultanément les deux canaux sur poids ouverts de 8 et 70 milliards de paramètres (programme : un occupant boîte noire n'a qu'un seul canal textuel ; Bailey et al. n'ont que le canal latent), les témoins plantés à prévalence connue pour étalonner le biais de dépendance (organisme), et l'évaluation sur familles non générées par nous (méthodes)."
+    },
+    "cosmetique_si": "L'estimateur de masse cachée ne prédit pas mieux le taux d'échec sur l'épreuve qu'une simple constante proportionnelle au taux de détection du meilleur canal seul, ou si l'erreur sur les témoins plantés dépasse la variance inter-familles.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Processeur seul sur les scores boîte blanche et boîte noire déjà extraits pour Q4 et Q3 (zéro dépense additionnelle)."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Sur processeur : un module statistique d'estimation de masse cachée (estimateur de Chao avec correction de dépendance par témoins plantés et modèle à classes latentes à 3 listes) branché sur les sorties binaires des canaux à 1 % de faux positifs."
+    },
+    "empreinte": "90ba90b135a12ada626f4dd7a7a317f1a0539405a5b607d4eccc63fff8f8a939",
+    "enonce": "Au lieu de traiter Q7 (dynamique du mélange boîte blanche / boîte noire, posable par tout laboratoire) et Q5 (coût de la boucle, cher en générations) comme des questions ordinaires, on les remplace par la question oblique que le domaine attend sans pouvoir la poser : sur un flux d'épisodes tenus à l'écart ou non étiquetés, le recouvrement des détections entre canaux mécanistiquement orthogonaux (sonde d'activations introspectives sur poids ouverts contre moniteur d'actions boîte noire) permet-il d'estimer par capture-recapture et modèles à classes latentes la « masse cachée » d'épisodes de sabotage qui échappent simultanément à tous les moniteurs, et cette masse cachée décroît-elle au fil des générations de notre organisme ?",
+    "identifiant_auteur": "argon-p2-04",
+    "loi_predictive": {
+      "espace_instances": "Triplets d'évaluateurs aux mécanismes disjoints — (1) sonde d'activations sur question de suivi pré-remplie type FIBS, (2) moniteur boîte noire par trajectoire ou par différence de code, (3) agrégateur séquentiel inter-épisodes — appliqués à K >= 15 familles tenues à l'écart (concentrées et diffuses) contenant une fraction connue mais masquée de témoins positifs plantés, sur G >= 5 générations.",
+      "metrique": "Erreur absolue et corrélation de rang entre la masse cachée estimée sans étiquettes de vérité et le taux réel d'évasion conjointe sur l'épreuve à 1 % de faux positifs, plus la pente de cette masse cachée en fonction du rang de génération.",
+      "prediction": "Calibré par les témoins plantés pour corriger la dépendance résiduelle entre canaux, l'estimateur de capture-recapture (Chao / classes latentes de Hui-Walter) prédit le taux réel de faux négatifs conjoints (la masse cachée) avec une erreur absolue médiane inférieure à 8 points de pourcentage et une corrélation de rang supérieure à 0,65 entre familles ; la masse cachée estimée est au moins 1,5 fois plus élevée sur les familles diffuses que sur les familles concentrées, et décroît significativement de la génération 0 à la génération G.",
+      "signe": "+"
+    },
+    "nom": "Nouvelle Q-N2 — Masse cachée d'évasion et plafond de couverture par capture-recapture inter-canaux",
+    "originalite": {
+      "niveau": "inedite",
+      "texte": "Transpose les estimateurs écologiques et épidémiologiques de population cachée (capture-recapture de Chao 1984/1987 ; évaluation diagnostique sans étalon-or de Hui et Walter 1980 ; découverte d'espèces en test logiciel de Böhme 2018) à la fusion boîte blanche / boîte noire en contrôle des intelligences artificielles, transformant l'ensemble de moniteurs en instrument de mesure de ce que l'ensemble manque."
+    },
+    "passe": 2,
+    "perte_traduction": "L'indépendance conditionnelle parfaite entre la sonde interne et le moniteur textuel est violée si l'évasion latente modifie aussi le comportement visible (RL-Obfuscation rapporte qu'environ 70 % de la baisse de rappel vient d'un changement visible) ; l'estimateur fournit donc un indicateur étalonné par témoins et une borne inférieure, pas une identité exacte sans témoins.",
+    "piege": "Sous-estimer la masse cachée à cause d'une corrélation positive non corrigée entre canaux (biais rassurant, le plus dangereux en sûreté) : parade obligatoire en stratifiant par longueur et perplexité et en vérifiant que l'estimateur retrouve le nombre exact de témoins plantés aveugles avant toute lecture sur le test.",
+    "questions_servies": [
+      "Q7",
+      "Q5",
+      "Q4",
+      "Q-pont",
+      "nouvelle"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "On the Doctrine of Original Antigenic Sin, Francis, Proceedings of the American Philosophical Society 1960",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "The Primacy Bias in Deep Reinforcement Learning, Nikishin et al., ICML 2022",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Loss of plasticity in deep continual learning, Dohare et al., Nature 2024",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "On the Spontaneous Emergence of Discrete and Modularzner / Facilitated Variation, Parter, Kashtan, Alon, PLoS Computational Biology 2008",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "HyperAgents, Zhang, Zhao, Yang, Foerster, Clune, Jiang, Devlin, Shavrina, 2026, arXiv:2603.19461v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "SkillFlow, 2026, arXiv:2604.17308",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoSafety: Model-Agnostic Lifelong LLM Safety via Externalized Attack-Defense Co-Evolution, Zhang et al., 2026, arXiv:2605.13411v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "SafeCoEvo: Co-Evolving Safety Harnesses and Guards for LLM Agents at Test-Time, Cheng et al., 2026, arXiv:2609.36580v2",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants de l'apprentissage continu de sécurité (SafeCoEvo, EvoSafety, Lifelong Safety Alignment) traitent la mémoire comme un simple tampon d'exemples ou de règles toujours supposé bénéfique et évaluent sur un ordre fixe unique sans distance théorique ni témoin sans héritage à budget égal. Tester l'hystérésis et le péché antigénique remet en cause leur hypothèse d'accumulation monotone.",
+      "source": "organisme",
+      "texte": "L'héritage récompensé sur K >= 3 générations (N-045-v2), la mémoire à empreinte prédictive et la sortie 5 (« pointer le proposeur sur les failles de notre propre programme ») sont câblés dans l'organisme ; la carte des hypothèses fournit la distance de mécanisme a priori."
+    },
+    "cosmetique_si": "La différence de rappel entre défense héritée et défense neuve est monotone en distance ou statistiquement indiscernable de zéro sur les trois bandes, et l'inversion de l'ordre des familles ne change pas le vecteur de rappel final.",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Zéro dollar sur simulateur jouet et sur sondes linéaires réentraînées sur activations mises en cache ; 100 à 250 dollars d'appels aux proposeurs pour 2 permutations × 3 générations."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Sur processeur : ajouter un commutateur désactivant l'héritage N-045-v2 à budget d'évaluation identique (bras témoin naïf) et un planificateur d'ordre exécutant deux permutations inverses de la rotation des familles."
+    },
+    "empreinte": "5c5afb574217ded6f69174c26bdbb23ec433af7d27b18327e5d4bfedaa195080",
+    "enonce": "Alors que la pièce B met Q5 en réserve à cause du coût de nombreuses générations et que HyperAgents (2603.19461) occupe déjà « évaluer le méta-agent », notre organisme récompense explicitement l'héritage sur K >= 3 générations (N-045-v2) : cet héritage induit-il un « péché antigénique originel » (une défense héritée généralise moins bien qu'une défense repartie de zéro à budget égal lorsqu'elle rencontre une famille à distance de mécanisme intermédiaire de sa famille fondatrice, et rend le point d'arrivée dépendant de l'ordre de présentation des familles) ?",
+    "identifiant_auteur": "argon-p2-05",
+    "loi_predictive": {
+      "espace_instances": "Paires appariées par graine (boucle avec héritage récompensé N-045-v2 et mémoire active contre boucle sans héritage repartant du moniteur initial à budget d'appels égal) exposées à des suites courtes de 3 à 4 familles d'attaque ordonnées selon deux permutations inverses (concentré -> diffus contre diffus -> concentré ; ou famille A -> B -> C contre C -> B -> A) et évaluées sur des familles tenues à l'écart situées à distance de mécanisme proche, intermédiaire ou lointaine.",
+      "metrique": "Différence appariée de rappel à 1 % de faux positifs (héritée moins neuve à budget égal) stratifiée en trois bandes de distance de mécanisme (proche, intermédiaire, lointaine), et norme L1 de l'écart de performance finale entre deux permutations inverses de l'ordre des familles.",
+      "prediction": "Dans la bande de distance de mécanisme intermédiaire (où la nouvelle famille partage les traits de surface ou une partie des couches activées mais viole une clause adjacente de la carte des hypothèses), la défense héritée accuse un déficit de rappel d'au moins 5 points de pourcentage à 1 % de faux positifs par rapport à la défense sans héritage à budget égal (courbe non monotone en U), et la permutation de l'ordre d'exposition déplace le rappel final par famille de plus de 8 points de pourcentage.",
+      "signe": "-"
+    },
+    "nom": "Nouvelle Q-N3 — Péché antigénique originel et hystérésis d'ordre dans l'héritage de la boucle",
+    "originalite": {
+      "niveau": "inedite",
+      "texte": "Transpose le concept immunologique de péché antigénique originel (Francis 1960) et de biais de primauté en apprentissage par renforcement (Nikishin et al. 2022) aux boucles co-évolutives de moniteurs de sécurité, en transformant une règle interne de notre organisme (N-045-v2) en hypothèse falsifiable à bas coût (3 à 4 familles au lieu d'une longue courbe asymptotique)."
+    },
+    "passe": 2,
+    "perte_traduction": "Discrétise l'espace continu des mécanismes de sabotage en trois bandes de distance et remplace une trajectoire évolutive longue (coûteuse) par un test d'hystérésis sur des séquences courtes de 3 à 4 familles.",
+    "piege": "Confondre le péché antigénique (creux spécifique dans la bande de distance intermédiaire par réactivation d'une règle inadaptée) avec une perte générale de plasticité ou une saturation du budget (où la défense héritée serait uniformément pire partout) : seule la non-monotonie (gain sur le proche, perte sur l'intermédiaire, neutre sur le lointain) valide l'effet.",
+    "questions_servies": [
+      "Q5",
+      "Q1",
+      "Q4",
+      "nouvelle"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Pay Only for Disagreement: Certified No-Regression Verdicts for Model Updates with Matching Label-Complexity Bounds, Balachandran, 2026, arXiv:2609.17560v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Can Old Evaluations Certify a New Model? Label-Efficient Release Decisions under Evaluator Drift, Mondal, Banik, Apurba, Mahmud, 2026, arXiv:2609.32267v1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Estimating means of bounded random variables by betting, Waudby-Smith, Ramdas, JRSS-B 2024",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant dont l'attaquant co-évolue change la distribution d'entrée à chaque génération, ce qui détruit la stationnarité du flux sous-jacent et invalide l'identité de support entre générations ; notre refus de construire l'attaquant maintient le vivier d'épreuve contrôlé et rend l'échantillonnage sur désaccord mathématiquement exact.",
+      "source": "methodes",
+      "texte": "Économie radicale du budget d'épreuve scellée et du budget de calcul, permettant à un programme doté de quelques milliers de dollars de faire tourner 5 à 20 fois plus de générations certifiées qu'un laboratoire qui réévalue chaque candidat sur tout le banc."
+    },
+    "cosmetique_si": "Les moniteurs candidats proposés d'une génération à l'autre sont en désaccord sur plus de 50 % des exemples au seuil de 1 % de faux positifs (auquel cas rho est proche de 1 et le gain d'échantillonnage disparaît).",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Coût de développement nul (quelques dizaines de lignes de Python dans le juge v7) ; gain net négatif en dépense (économise les appels d'évaluation)."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Sur processeur dans l'orchestrateur v7 du juge figé : ajouter le filtre de désaccord At = 1{f(Xt) != g(Xt)} au point de fonctionnement 1 % de faux positifs avant l'appel au juge d'épreuve, et remplacer la mise unique par la moyenne 1/2 Et^Théorie + 1/2 Et^Robuste."
+    },
+    "empreinte": "5bb9d2db9c65e6f66af3024073087ed5f888d3574182979e3390b74d094125e1",
+    "enonce": "Transposer à notre juge figé et à la sélection des proposeurs (pièce F) l'identité de support de Balachandran (2609.17560) combinée au mélange d'experts de Mondal et al. (2609.32267) : lorsqu'un proposeur soumet un moniteur candidat g face au moniteur en place f, observer gratuitement leur taux de désaccord sur un grand flux non étiqueté (Palier 0 : rejet ou certification à zéro étiquette si le désaccord est hors bande), et ne dépenser le budget d'exposition de la banque d'épreuve scellée que sur les instances où f et g sont en désaccord au seuil de 1 % de faux positifs (At = 1), en mixant à poids 1/2 un parieur guidé par la carte théorique des hypothèses (conseil non fiable au sens M2) et un parieur robuste n'apprenant que des étiquettes d'épreuve.",
+    "identifiant_auteur": "argon-p2-06",
+    "loi_predictive": {
+      "espace_instances": "Flux de M >= 200 candidats moniteurs générés par les proposeurs au fil des générations sur une banque d'épreuve de N >= 5 000 épisodes.",
+      "metrique": "Nombre d'évaluations d'épreuve consommées par promotion certifiée, nombre total de générations soutenables avant renouvellement de la banque sœur (N-049), et taux empirique de fausses promotions sur témoins plantés.",
+      "prediction": "À garantie de fausses promotions identique (delta_seq <= 0,05 composée sur toute la suite de promotions par série en k^-2), la restriction au support de désaccord réduit la consommation d'unités d'épreuve scellées d'un facteur proportionnel à l'inverse du taux de désaccord (gain de 5 à 20 fois en longévité de la banque scellée avant épuisement), et le portefeuille 1/2-1/2 borne le regret de log-évidence à log(2) même lorsque la théorie conseillère est fausse.",
+      "signe": "+"
+    },
+    "nom": "Approche A1 — Juge à support de désaccord et portefeuille de vigilance (fusion Discern + Portfolio Vigilance)",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Fusionne deux préimpressions statistiques de septembre 2026 (Discern, 2609.17560, et Portfolio Vigilance, 2609.32267, conçues pour le déploiement industriel d'une mise à jour de modèle) pour en faire le moteur de sélection darwinienne d'un pôle de recherche automatique de moniteurs."
+    },
+    "passe": 2,
+    "perte_traduction": "L'identité de support exacte exige une perte déterminée par la décision binaire au seuil fixé (rappel à 1 % de faux positifs) ; pour des scores continus d'aire sous la courbe ROC, elle ne s'applique qu'à travers la version relâchée Lipschitz (Proposition 14 de Balachandran), ce qui réduit le gain d'échantillonnage.",
+    "piege": "Violer la condition de prévisibilité du routage (Lemme 3 de Balachandran) : la probabilité d'interroger l'épreuve pi_t doit dépendre uniquement du passé Ft-1 et des prédictions des moniteurs sur Xt, jamais d'un signal corrélé à l'étiquette vraie Yt non encore révélée, et doit respecter un plancher strict pi_min > 0.",
+    "questions_servies": [
+      "Q2",
+      "Q5",
+      "Q4"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "When Benchmarks Lie: Evaluating Malicious Prompt Classifiers Under True Distribution Shift, Fomin, 2026, arXiv:2602.14161v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Impact of Off-Policy Training Data on Probe Generalisation, Kirch et al., 2025/2026, arXiv:2511.17408v4",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Distributed Attacks in Persistent-State AI Control, Hills, Caspary, Cooper Stickland, 2026, arXiv:2607.02514v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Constitutional Black-Box Monitoring for Scheming in LLM Agents, Storf et al., ICML 2026, arXiv:2603.00829v2",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Probabilistic Encryption, Goldwasser, Micali, Journal of Computer and System Sciences 1984",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Locating and Editing Factual Associations in GPT, Meng et al., NeurIPS 2022",
+        "statut": "SUPPOSE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants qui reposent sur l'élicitation de modèles de frontière subissent un biais de sélection massif (Hills et al. notent en sections 4.1 et 6 que leurs attaques graduelles réussies concentrent en réalité l'attaque en 1 ou 2 requêtes et que Opus 4.6 refuse d'attaquer ; Storf et al. jettent 49 % des trajectoires où la tâche secondaire échoue), et les occupants boîte noire n'ont pas accès aux hybrides d'activations.",
+      "source": "programme",
+      "texte": "Réconcilie la contrainte de sûreté R-597 (zéro génération d'attaque nouvelle, zéro refus de modèle de frontière, coût processeur) avec le besoin d'avoir un bouton continu de dilution (gamma * D) et une localisation couche par couche sur poids ouverts de 8 et 70 milliards de paramètres."
+    },
+    "cosmetique_si": "Un moniteur boîte noire ou une sonde distingue la greffe « bénin-dans-bénin » de la trace bénigne originale à un taux supérieur à 5 % pour un seuil étalonné à 1 %, ou si les classements ED50 ne corrèlent pas avec ceux de Hills et al.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Zéro dollar sur les transcriptions et activations déjà extraites."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Un script Python pur sur processeur dans le module de préparation des banques (entrelacement d'étapes JSONL et substitution couche par couche sur tenseurs d'activations mis en cache)."
+    },
+    "empreinte": "55a3796fe42cba7ac5eb580a6374efcb6b631dbe3e2056740cc3c141dd3fd2b5",
+    "enonce": "Pour alimenter Q4, Q-pont et Q1 sans jamais construire ni exécuter d'agent attaquant (respect absolu de R-597 et R-611), remplacer l'équipe rouge par un opérateur purement mécanique combinant le titrage dose-réponse de la métrologie et l'argument hybride de la cryptographie : à partir de paires appariées (trajectoire bénigne, trajectoire de sabotage issue d'un banc public figé comme ControlArena, SHADE-Arena ou FIBS) du même modèle sur la même tâche principale, générer (i) une échelle de dilution temporelle K par entrelacement de pas bénins authentiques du même agent à dommage final constant, et (ii) une chaîne d'hybrides remplaçant un composant à la fois dans le texte puis couche par couche dans les activations mises en cache.",
+    "identifiant_auteur": "argon-p2-07",
+    "loi_predictive": {
+      "espace_instances": "Grille paramétrique de dilution K et chaîne d'hybrides couche par couche appliquées à N >= 200 paires de trajectoires (bénigne, sabotage) appariées par tâche et par modèle agent sur 8 et 70 milliards de paramètres.",
+      "metrique": "Corrélation de rang entre la dose médiane ED50 sur l'opérateur mécanique et le taux d'évasion sur bancs diffus externes, et part de la variation totale du score de détection concentrée sur l'étape hybride porteuse de P_k.",
+      "prediction": "La dose médiane de détection (ED50 : valeur de K où le rappel à 1 % de faux positifs passe sous 50 %) mesurée sur l'opérateur mécanique prédit avec une corrélation de rang supérieure à 0,75 le classement de robustesse des moniteurs sur les attaques graduelles et multi-agents tenues à l'écart de Hills et al. et d'Angelini et Makins et al. ; sur la chaîne d'hybrides, une propriété P_k valide concentre au moins 60 % du saut de détection sur l'étape ou la couche porteuse de P_k, tandis qu'une propriété dominée par l'artefact disperse le saut sur les couches d'identité de source.",
+      "signe": "+"
+    },
+    "nom": "Approche A2 — Chirurgie mécanique de dilution et chaîne d'hybrides d'activations sans attaquant",
+    "originalite": {
+      "niveau": "inedite",
+      "texte": "Fusionne le titrage dose-réponse métrologique et l'argument hybride cryptographique (Goldwasser et Micali 1984 ; échanges causaux sur activations de Meng et al. 2022) pour créer un banc d'épreuve séquentiel et un diagnostic de validité de pont sans aucun appel de modèle générateur."
+    },
+    "passe": 2,
+    "perte_traduction": "Ne capture pas l'invention de nouvelles stratégies sémantiques de couverture par l'agent (puisque les briques élémentaires proviennent de traces figées).",
+    "piege": "Créer des discontinuités syntaxiques ou représentationnelles aux points de greffe, qu'un moniteur détecterait comme une anomalie de cohérence plutôt que comme du sabotage : parade obligatoire par un témoin « hybride bénin-dans-bénin » qui doit maintenir le taux de faux positifs à 1 %.",
+    "questions_servies": [
+      "Q4",
+      "Q-pont",
+      "Q6",
+      "Q1"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Hints on Test Data Selection: Help for the Practicing Programmer, DeMillo, Lipton, Sayward, IEEE Computer 1978",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "DeepMutation: Mutation Testing of Deep Learning Systems, Ma et al., ISSRE 2018",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Null It Out: Guarding Protected Attributes by Iterative Nullspace Projection, Ravfogel et al., ACL 2020",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "LEACE: Perfect linear concept erasure in closed form, Belrose et al., NeurIPS 2023",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "When Benchmarks Lie: Evaluating Malicious Prompt Classifiers Under True Distribution Shift, Fomin, 2026, arXiv:2602.14161v2",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "argon",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant sans carte explicite des hypothèses ni sondes boîte blanche ne peut que perturber aléatoirement ses invites de moniteur (ce qui produit des mutants dégénérés ou équivalents), et son banc d'évaluation est déjà co-adapté à son propre attaquant.",
+      "source": "organisme",
+      "texte": "Combine les témoins plantés à vérité connue du juge figé (organisme), l'accès boîte blanche aux couches et sous-espaces d'activations sur poids ouverts (programme : requis pour créer des mutants d'effacement de concept), et la carte des hypothèses qui indexe chaque mutant sur une clause théorique précise."
+    },
+    "cosmetique_si": "Tous les mutants non triviaux sont tués à 100 % sur tous les bancs (score de mutation saturé à 1 sans pouvoir discriminant) ou le mutant aveugle au contenu tombe à 0,50 d'aire sous la courbe sur tous les bancs publiés.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Entièrement sur processeur une fois les activations et traits de surface extraits (opérations matricielles et réévaluation de classifieurs légers)."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Sur processeur : un générateur automatique de moniteurs mutants (projection orthogonale sur tenseurs d'activations, masquage de couches, troncature de fenêtre CUSUM, classifieur de surface seul) inscrit au registre des témoins plantés du juge v7."
+    },
+    "empreinte": "3874306c22c54f7e5cb81ac2c36a535f3a112fe474865b3d91b961e8487be60b",
+    "enonce": "Au lieu de mesurer la puissance d'un banc d'évaluation en lançant un attaquant (interdit par R-597), emprunter le test par mutation du génie logiciel en mutant chirurgicalement la DÉFENSE : à partir d'un moniteur complet et de la carte des hypothèses, générer automatiquement des « moniteurs mutants » dont une capacité précise est amputée par construction (effacement linéaire LEACE d'un sous-espace d'activations, retrait d'une couche, troncature de l'horizon de l'agrégateur séquentiel à K = 1, ou « mutant aveugle au contenu » qui ne lit que les traits de surface et d'identité du générateur) et les injecter comme témoins plantés dans le juge figé et sur les bancs des occupants.",
+    "identifiant_auteur": "argon-p2-08",
+    "loi_predictive": {
+      "espace_instances": "Ensemble de M >= 20 moniteurs mutants (un par clause de la carte des hypothèses, plus le mutant aveugle au contenu) évalués sur nos banques tenues à l'écart et sur K >= 5 bancs publiés d'occupants.",
+      "metrique": "Score de mutation du banc (fraction de mutants d'hypothèse tués avec sélectivité >= 20 points de rappel) et aire sous la courbe ROC du mutant aveugle au contenu sur chaque banc.",
+      "prediction": "Sur un banc valide, chaque mutant d'hypothèse h subit une chute de rappel d'au moins 20 points de pourcentage sur la seule famille qui viole h sans perte sur les autres (sélectivité diagnostique), tandis que sur les bancs d'occupants non contrôlés pour l'artefact, le « mutant aveugle au contenu » atteint encore une aire sous la courbe ROC supérieure à 0,70 et plus de 25 % des mutants d'hypothèses survivent sans être détectés par le banc.",
+      "signe": "+"
+    },
+    "nom": "Approche A3 — Test par mutation chirurgicale des moniteurs (témoins plantés côté défense)",
+    "originalite": {
+      "niveau": "inedite",
+      "texte": "Transpose l'analyse de mutation logicielle (DeMillo, Lipton et Sayward 1978 ; DeepMutation de Ma et al. 2018) et l'effacement chirurgical de concepts dans les représentations (Ravfogel et al. 2020 ; Belrose et al. 2023) à l'étalonnage des bancs de contrôle d'agents et au contrôle d'artefact sans attaquant."
+    },
+    "passe": 2,
+    "perte_traduction": "Un défaut chirurgical injecté dans une sonde ou un agrégateur ne reproduit pas toutes les défaillances émergentes d'un moniteur appris ; on mesure la résolution de l'instrument de test, pas la distribution naturelle des bogues.",
+    "piege": "Générer des « mutants équivalents » (lorsque l'information retirée d'une couche est redondante dans une autre couche, comme Fomin le montre p.11 où l'ablation de 14 traits raccourcis ne bouge l'aire sous la courbe que de -0,1 point par compensation) : il faut donc opérer par projection orthogonale sur l'ensemble des couches lues.",
+    "questions_servies": [
+      "Q6",
+      "Q2",
+      "Q3",
+      "Q-pont"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "SLEIGHT-Bench: A Benchmark of Evasion Attacks Against Agent Monitors, Najt, Toft, Tracy, Roger, Benton, 2026, arXiv 2605.16626",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench: Semi-Automated Red-Teaming for Agent Monitoring, Jotautaitė, Martinez, Matthews, Tracy, 2026, arXiv 2605.09684",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Inherited Circuits, Learned Semantics, Fetterman, 2026, arXiv 2606.27091",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Insertion, Evasion, and Denial of Service, Ptacek et Newsham, 1998",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "What Happened to Anomaly Detection?, Inoue et Somayaji, 2006, rapport Carleton TR-07-09",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "No Free Lunch: The Hazards of Over-Expressive Representations in Anomaly Detection, Reiss, Cohen, Hoshen, arXiv 2306.07284",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Formulating Robustness Against Unforeseen Attacks, Dai, Mahloujifar, Mittal, NeurIPS 2022",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Caught in the Act (jeu FIBS), Hollinsworth, Spies, Diriba, Gleave, Cundy, 2026, arXiv 2610.12445",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Why 6? Defining the Operational Limits of stide, Tan et Maxion, IEEE S&P 2002",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Predict science to improve science, DellaVigna, Pope, Vivalt, Science 2019",
+        "statut": "SUPPOSE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant qui construit l'attaquant tire ses catégories des échecs observés (SLEIGHT-Bench l'écrit : les catégories sont nées des transcriptions qui ont échappé aux moniteurs) ; sa « prédiction » est a posteriori par construction. Il ne peut pas davantage préenregistrer de prédiction crédible sur son propre prochain attaquant : il le conçoit, il voit ses échecs. Un laboratoire mieux doté en calcul ne gagne rien : le résultat tient à la séquence scellée théorie → prédiction → test, et il faudrait une théorie explicite des hypothèses statistiques du moniteur qu'aucun occupant ne publie.",
+      "source": "programme",
+      "texte": "La carte des hypothèses existe et son gardien n'a conçu aucun moniteur ; le préenregistrement scellé (méthodes) fait de l'horodatage, et non du calcul, l'objet de la preuve ; la quantité prédite (notre moniteur, leurs familles futures) est inédite par construction."
+    },
+    "cosmetique_si": "La corrélation n'excède pas celle de la prédiction naïve, ou le classement prédit est entièrement expliqué par la longueur de trajectoire ou le seul niveau S ; volet 2 : on ne bat pas la persistance, ou la règle de correspondance doit être retouchée après lecture.",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Dérivation et préenregistrement sur processeur ; activations du modèle à 8 milliards sur ~3 000 trajectoires longues : quelques heures de processeur graphique (dizaines de dollars) ; boîte noire par appels : centaines de dollars ; volet 2 : processeur seul."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "La troisième instance (fixe l'appariement cellules ↔ hypothèses, la règle de correspondance pour le volet 2, scelle les prédictions, n'a lu ni pièce ni score) : préalable à cette fiche, pas à toutes ; une garde de code qui refuse l'évaluation si l'empreinte de la prédiction est postérieure au premier score ou à la parution ; un lecteur des formats de trajectoires publiés ; un moniteur dont les données d'entraînement excluent ces bancs ; un registre de veille gelé (liste d'occupants). Un horodatage public de l'empreinte serait une publication : nœud pour Lazar."
+    },
+    "empreinte": "65114000ce0e71f7b7d7f28c6f5e5144caadc211e31cb1a2b3e2e77cd07f19d7",
+    "enonce": "Volet 1 (rétrospectif, bancs existants) : une instance de théorie qui ne connaît que la carte des hypothèses (aucun score de nos moniteurs, aucun taux publié) prédit-elle, avant le test, contre une référence de permutation ET contre la prédiction naïve « comme les moniteurs modèles publiés », le classement des taux de détection de NOTRE moniteur (sonde sur modèle à 8 milliards de paramètres plus boîte noire) par cellule de la taxonomie croisée de MonitoringBench (niveaux techniques T, structurels S, d'évasion E) et par catégorie de SLEIGHT-Bench ? La quantité prédite n'existe nulle part : elle ne peut être ni mémorisée ni lue après coup. Volet 2 (prospectif, règle gelée) : la même instance scelle, pour une liste déclarée d'occupants, le signe de l'écart de détection par classe d'hypothèse violée que révéleront leurs prochaines versions publiées (nouvelles versions de SLEIGHT-Bench, de MonitoringBench, travaux de l'institut britannique), une règle de correspondance catégories → classes étant gelée avant parution. Leur attaquant devient notre test final, lu une fois, que nous n'avons pas pu contaminer. Cette formulation lève le risque « Q3 non concluante faute de puissance » : la grille T×S×E fournit des dizaines de cellules peuplées, et le volet 2 ajoute des familles vraiment inédites au fil des douze mois.",
+    "identifiant_auteur": "fable-p2-01",
+    "loi_predictive": {
+      "espace_instances": "Volet 1 : cellules peuplées (≥ 30 trajectoires d'attaque réussies) de MonitoringBench, ~25 à 40 cellules sur 2 644 trajectoires, plus les 11 catégories de SLEIGHT-Bench (40 attaques, 10 essais, bénins appariés) ; un moniteur à nous non entraîné sur ces bancs (les auteurs demandent l'exclusion des corpus d'entraînement : lecture pour évaluation seulement). Volet 2 : couples (classe de moniteur publiée, catégorie de famille) parus après la date de scellement, 20 à 60 couples attendus en douze mois.",
+      "metrique": "Rappel à 1 % de faux positifs par cellule, seuil calibré sur les 416 trajectoires honnêtes (MonitoringBench) et sur les bénins appariés (SLEIGHT-Bench) ; score logarithmique des probabilités scellées pour le volet 2 ; prédictions empreintées avant tout score ou toute parution ; test lu une seule fois.",
+      "prediction": "Volet 1 : corrélation de rang de Spearman ≥ 0,4 entre classement prédit et observé, au-delà du 95e centile de 10 000 permutations, ET au moins égale à celle de la prédiction naïve ; la théorie désigne ≥ 3 cellules « échec » (rappel < 20 %) dont ≥ 2 se confirment. Volet 2 : signe de l'écart à la moyenne du papier correct dans ≥ 65 % des couples, contre 50 % (hasard) et contre une référence de persistance (classement du papier précédent).",
+      "signe": "+"
+    },
+    "nom": "Q3 sur grille publiée, puis sur grille à venir : prédire les cellules où notre propre moniteur échoue",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Le schéma « hypothèses du détecteur → familles d'évasion → vérification » est ancien (détection d'intrusion) et SLEIGHT-Bench le réalise avec une théorie informelle ; la notation de la théorie comme prévisionniste, préenregistrée, par cellule, contre permutation et contre la prédiction naïve, puis sur les bancs à venir des concurrents, n'a pas été vue (pièce C, Q3)."
+    },
+    "passe": 2,
+    "perte_traduction": "« Savoir où sa défense casse sans y être attaqué » devient un classement de cellules d'une taxonomie fixée par d'autres, étiquetée a posteriori par un juge modèle ; on perd les familles hors taxonomie, le diffus inter-épisodes (S4 est intra-trajectoire) et le volet « au fil des générations » (moniteur figé). Le volet 2 dépend du calendrier et de la granularité des catégories publiées, hors de notre contrôle.",
+    "piege": "Circularité à deux voies : (a) cellules et catégories nées des échecs de moniteurs modèles — une théorie qui dit « les moniteurs échouent là où la taxonomie le dit » prédit trivialement, d'où la référence naïve à égaler SANS l'avoir lue ; (b) le prédicteur est un modèle dont le corpus contient peut-être les papiers — d'où la prédiction de NOTRE moniteur jamais publié, une instance qui n'a pas lu les pièces, et la fiche « prédicteur en quarantaine ». Confusion des cellules avec la longueur de trajectoire et l'étape de raffinement. Volet 2 : règle de correspondance écrite en connaissant leurs catégories antérieures ; prédictions triviales si un occupant republie le même motif ; trop peu de parutions en douze mois.",
+    "questions_servies": [
+      "Q3",
+      "Q-pont",
+      "Q4",
+      "Q6",
+      "Q1"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "MAGIC: A Co-Evolving Attacker–Defender Adversarial Game for Robust LLM Safety, Wen, He et al., 2026, arXiv 2602.01539",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "AgentSafeEvo: Adversarial Co-Evolution for LLM Agent Safety, Wang, Wen et al., 2026, arXiv 2610.19422",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoSafety, Zhang et al., 2026, arXiv 2605.13411",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoDefense: Co-Evolving Black-Box Defense with Large Language Models, Li et al., 2026, arXiv 2605.31140",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "RvB: Automating AI System Hardening via Iterative Red-Blue Games, Huang, Liu, Zhang et al., 2026, arXiv 2601.19726",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "SafeCoEvo, Cheng et al., 2026, arXiv 2609.36580",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Miconi, EuroGP 2009, progrès local / historique / global en co-évolution",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Czempin et Gleave, arXiv 2208.05083",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "On Adaptive Attacks to Adversarial Example Defenses, Tramèr et al., NeurIPS 2020",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Adaptive Attacks on Trusted Monitors Subvert AI Control Protocols, Terekhov et al., 2025, arXiv 2510.09462",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Ce n'est pas une question de calcul mais de conflit d'intérêt : chaque occupant publie sa diagonale comme preuve centrale ; l'auditer, c'est auditer sa propre revendication. De plus, une fois la paire construite, la diagonale est le seul objet qu'il mesure sans tiers ; produire une mesure qui ne passe pas par son attaquant exige de changer de méthode.",
+      "source": "methodes",
+      "texte": "Le refus de construire l'attaquant : nous n'avons pas de diagonale à défendre ; notre aptitude est la généralisation sur familles tenues par un tiers, jamais le score contre un adversaire maison."
+    },
+    "cosmetique_si": "Moins de 5 matrices exploitables, ou si le résultat se réduit à « un attaquant adaptatif est plus fort qu'un banc figé », déjà établi (Terekhov et al., Tramèr et al.).",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Quelques jours d'extraction et de contre-lecture ; aucun calcul."
+    },
+    "demande_organisme": {
+      "nature": "rien",
+      "texte": "Extraction préenregistrée par un sous-agent neuf, règle d'appariement fixée par la troisième instance avant lecture ; contre-lecture par un modèle d'une autre lignée ; vérification R7 sur PDF empreinté."
+    },
+    "empreinte": "002626d1507ef63cfb324910b03b7151d8d089eb043501e29fede0b6320aa42d",
+    "enonce": "Dans les matrices croisées attaquant × défenseur publiées par les occupants co-évolutifs, le taux de succès d'attaque du défenseur final contre l'attaquant avec lequel il a co-évolué (la « diagonale ») est-il informatif sur son taux contre des familles publiées tenues à l'écart ? Hypothèse : non, et dans les deux sens. Quand la paire est figée, elle converge vers une spécialisation mutuelle (MAGIC, tableau 10 : l'attaquant co-entraîné est le plus faible de tous contre son propre défenseur, 9,0 % contre 10,5 % pour l'attaquant de base) ; quand l'attaquant reste adaptatif à l'évaluation, la diagonale surestime (AgentSafeEvo : attaquant final à 49,8 % contre le défenseur final, bien au-dessus des bancs externes). Dans les deux cas la diagonale n'est pas une mesure de généralisation — c'est précisément l'objet que le refus de construire l'attaquant nous interdit de publier, et que nous pouvons donc auditer sans conflit.",
+    "identifiant_auteur": "fable-p2-02",
+    "loi_predictive": {
+      "espace_instances": "Paires (défenseur, matrice) extraites des occupants publiant à la fois une diagonale et ≥ 2 familles externes : MAGIC (tableaux 3 et 10), AgentSafeEvo (évaluation croisée par stade, quatre bancs), EvoSafety (tableau 2 : compétences vues / non vues / attaquant évolué), EvoDefense (tableaux 1 à 3), RvB (gardes par tour contre quatre bancs externes), SafeCoEvo si une diagonale existe ; attendu : 5 à 8 matrices, 15 à 30 paires. Liste, tableaux et règle d'appariement fixés avant ouverture des fichiers PDF (Portable Document Format).",
+      "metrique": "Taux de succès d'attaque tel que publié, au point de fonctionnement et avec le juge de l'occupant, rapporté par papier (jamais en moyenne globale) ; extraction préenregistrée, vérifiée sur PDF empreinté avant tout chiffre.",
+      "prediction": "Corrélation de rang < 0,3 entre taux sur la diagonale et taux médian sur familles externes ; écart absolu > 15 points dans ≥ 70 % des paires, dans les deux sens (sous-estimation du risque quand la paire est figée, surestimation de la robustesse quand l'attaquant est adaptatif à l'évaluation) ; quand plusieurs tours sont publiés, le ratio diagonale/externe s'éloigne de 1 avec le nombre de tours.",
+      "signe": "0"
+    },
+    "nom": "La diagonale de l'auto-jeu : le score contre l'attaquant co-évolué prédit-il la généralisation ?",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Miconi (progrès historique pris pour global), Czempin et Gleave (l'adversaire unique surajuste), Tramèr et al. (attaques adaptatives) occupent le principe ; la mesure en méta-analyse de matrices publiées de co-évolution défensive, à règle d'extraction scellée, n'a pas été vue dans les pièces."
+    },
+    "passe": 2,
+    "perte_traduction": "Le mécanisme (spécialisation de paire, Goodhart réciproque) devient une méta-analyse de tableaux hétérogènes ; on ne mesure pas la dynamique interne de la paire, seulement son empreinte publiée ; juges et points de fonctionnement diffèrent d'un papier à l'autre (MAGIC montre que Qwen3Guard et GPT-4o divergent sur les défenseurs forts).",
+    "piege": "Sélection après lecture (liste d'occupants, tableaux, règle diagonale ↔ externe fixés AVANT d'ouvrir les PDF) ; hétérogénéité des juges et des points de fonctionnement (rapporter par papier) ; tables incomplètes (une matrice sans familles externes est écartée, pas interprétée) ; chiffres transcrits non opposables avant lecture sur PDF empreinté.",
+    "questions_servies": [
+      "nouvelle",
+      "Q1",
+      "Q2",
+      "Q5"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Pay Only for Disagreement: Certified No-Regression Verdicts for Model Updates, Balachandran, 2026, arXiv 2609.17560",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Can Old Evaluations Certify a New Model?, Mondal, Banik, Apurba, Al Mahmud, 2026, arXiv 2609.32267",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Generalization in Adaptive Data Analysis and Holdout Reuse, Dwork et al., NeurIPS 2015, arXiv 1506.02629",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Ladder, Blum et Hardt, ICML 2015",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Optimizing the Score, Losing Sight of the Task, 2026, arXiv 2609.25848",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "EvoDefense, Li et al., 2026, arXiv 2605.31140 (tableau 3)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "SafeCoEvo, Cheng et al., 2026, arXiv 2609.36580 (sélection du point de contrôle, annexe F)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Obfuscated Activations Bypass LLM Latent-Space Defenses, Bailey et al., 2025, arXiv 2412.09565 (§3.5)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Universal inference, Wasserman, Ramdas, Balakrishnan, PNAS 2020",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Deep RL at the Edge of the Statistical Precipice, Agarwal et al., NeurIPS 2021",
+        "statut": "SUPPOSE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant ne peut se l'appliquer sans conflit d'intérêt : c'est sa courbe qui est rejugée. Les travaux de certification (2609.17560, 2609.32267) fournissent l'outil mais excluent les pertes jugées et n'ont pas d'adversaire ; l'assemblage sur des boucles co-évolutives de moniteurs, avec étalonnage par témoins, n'existe que chez nous.",
+      "source": "organisme",
+      "texte": "Le juge figé à mise contre bibliothèque de nuls avec borne composée sur une suite de promotions existe déjà (démonstration couche 1) ; les témoins plantés étalonnent sa sévérité ; la règle est préenregistrée (méthodes)."
+    },
+    "cosmetique_si": "Sur les témoins plantés toutes les courbes survivent ou aucune ; ou si la part survivante ne diffère pas entre régimes de juge (alors c'est la taille d'échantillon, pas le juge, qui parle) ; ou si moins de 4 courbes exploitables.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Processeur seul ; lecture des PDF empreintés (R7) ; quelques jours."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Un adaptateur d'entrée du juge pour des suites de scores externes avec dispersion ; une bibliothèque de nuls d'archive simulés ; rien au noyau."
+    },
+    "empreinte": "b13087069b17f0da3aae98bac128f26100d06d13f9c6bfeabb998b5a4e017feb",
+    "enonce": "Chaque occupant publie une courbe : tour après tour, la défense s'améliore contre son attaquant. Ces courbes sont des suites de promotions prononcées par un juge qui dérive (juge-modèle partagé entre récompense et évaluation chez MAGIC et AgentSafeEvo ; sélection du point de contrôle sur la validation même qui est rapportée chez SafeCoEvo, avec une courbe non monotone après l'époque 13 ; scoreur figé sans garantie chez EvoDefense, où le taux remonte de 4,4 % à 6,6 % au tour 5). Rejouées sous NOTRE juge — chaque amélioration rapportée devenant une mise d'un e-processus à budget d'erreur unique composé sur toute la suite (inégalité de Ville), contre un nul d'archive préenregistré — combien de leurs promotions survivraient, et à quel tour un arrêt honnête les aurait arrêtées ? Si moins de la moitié survit, et moins encore dans le régime « validation en distribution », le juge figé garanti est un résultat (1c de la question), pas une hygiène. Sans rien lancer, et avant que notre boucle existe : les trois régimes de Q2 sont lus sur leurs courbes.",
+    "identifiant_auteur": "fable-p2-03",
+    "loi_predictive": {
+      "espace_instances": "Courbes tour par tour publiées avec effectifs et dispersion : EvoDefense (tableau 3, tours 1, 2, 5, 10 × 4 modèles × 5 classes), Bailey et al. (70 époques, rappel sur la dernière attaque), RvB (4 tours), AgentSafeEvo (stades), SafeCoEvo (15 époques de validation), Terekhov et al. 2606 (itérations de point-selle) ; liste gelée ; chaque courbe classée par régime de juge avant lecture ; témoins plantés : courbes simulées sous le nul et sous effet vrai, insérées à l'aveugle.",
+      "metrique": "Part survivante par courbe et par régime ; tour d'arrêt honnête ; taux de bonne élimination sur témoins plantés ; règle de rejugement et nul d'archive empreintés avant toute lecture de courbe.",
+      "prediction": "La part des promotions rapportées qui survivent à la borne (niveau 0,05, budget composé sur la suite) est < 50 % ; elle est la plus basse dans le régime « validation en distribution », intermédiaire sous « juge-modèle partagé », la plus haute sous « scoreur figé » ; les régressions rapportées puis ignorées (EvoDefense tour 5) sont signalées comme alarmes ; sur les témoins plantés, ≥ 90 % des promotions sous effet vrai survivent et ≤ 10 % sous le nul.",
+      "signe": "-"
+    },
+    "nom": "Q2 : résultat ou hygiène ? Rejugement des courbes publiées sous juge figé à borne",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Analyse adaptative des données (Dwork et al.), certification de promotions par e-processus (Balachandran ; Mondal et al.), prix de la vigilance sous dérive d'évaluateur ; le rejugement de courbes co-évolutives de sûreté publiées, par régime de juge, n'a pas été vu."
+    },
+    "passe": 2,
+    "perte_traduction": "On dépend de ce qui est rapporté (sans dispersion, pas de mise ; moyennes de trois exécutions souvent) ; on juge leur rapport, pas leur défense ; la borne contrôle les fausses promotions sur le jeu du juge, pas la robustesse à l'inédit.",
+    "piege": "Chiffres transcrits non opposables ; nul choisi après avoir vu les courbes ; résultat attendu (« petits effectifs → intervalles larges ») pris pour résultat de défense, et propreté suspecte (R4) ; lecture comme dénigrement des occupants ; témoins plantés trop faciles.",
+    "questions_servies": [
+      "Q2",
+      "Q5",
+      "nouvelle"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Multi-Agent AI Control: Distributed Attacks Hamper Per-Instance Monitors, Angelini, Makins, Shams, Phuong, 2026, arXiv 2607.07368",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Distributed Attacks in Persistent-State AI Control, Hills, Caspary, Cooper Stickland, 2026, arXiv 2607.02514",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench, Jotautaitė et al., 2026, arXiv 2605.09684",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Quickest Change Detection in Discrete-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2026, arXiv 2601.20022",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Quickest Change Detection in Continuous-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2025, arXiv 2509.17778",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Gualandi, Maggio, Papadopoulos, MED 2022",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Limiting the Impact of Stealthy Attacks on Industrial Control Systems, Urbina et al., ACM CCS 2016",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Adaptive Deployment of Untrusted LLMs Reduces Distributed Threats, Wen et al., ICLR 2025, arXiv 2411.17693",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "TRACE, Mittapalli et al., 2026, arXiv 2606.07054",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Diffuse AI Control on Fuzzy Tasks, Terekhov, Gulcehre, Hebbar, Benton, 2026, arXiv 2606.08892",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Lorden 1971 ; Moustakides 1986, cités par Ramtin et al.",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Manuel d'ingénierie statistique du NIST, section 6.3.2.3.1, Shewhart contre CUSUM",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Makins et Hills construisent l'attaquant et choisissent la dilution après coup ; leur décomposition (dilution 25 %, récit de couverture 53 %, 38–43 % inexpliqué) est descriptive. Aucun occupant ne détient une prédiction préenregistrée du coude dérivée des hypothèses du moniteur ; la valeur est dans l'engagement avant lecture, pas dans le calcul.",
+      "source": "programme",
+      "texte": "Un lemme formel du coude (comparé d'abord sur PDF à Ramtin et al. et Gualandi et al. : s'il est couvert, il devient antécédent cité et la prédiction reste la nôtre), l'agrégateur séquentiel, et la boîte blanche sur poids ouverts appliquée aux traces publiées."
+    },
+    "cosmetique_si": "La chute (i) disparaît une fois stratifiée par T et E, ou si la règle séquentielle n'apporte rien au-delà d'un « max » recalibré par trajectoire, ou si le coude préenregistré tombe à ± 2 niveaux (aucune prédiction).",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Activations du modèle à 8 milliards sur ~3 000 trajectoires : dizaines de dollars de processeur graphique (mutualisées avec la fiche Q3) ; boîte noire par appels : centaines de dollars."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "L'agrégateur séquentiel doit accepter des scores par pas externes ; lecteur des formats de trajectoires publiés (lignes JSON) ; strate « diffus / concentré » de la banque étendue aux étiquettes S."
+    },
+    "empreinte": "8c0b8aa9118f55845efb08c7667f092452d550c9980f690ba2d4669927abea39",
+    "enonce": "Pour un moniteur conçu ou sélectionné sur des familles concentrées (niveaux structurels S1–S2 de MonitoringBench), le rappel décroît-il avec la dilution structurelle (S3, S4 ; attaques graduelles contre positionnelles de Hills et al. ; K = 1, 3, 9 agents de Makins et al.) à dommage total constant, selon un coude prédit par le lemme du plafond d'horizon (chute franche quand la divergence par pas multipliée par l'horizon effectif passe sous l'unité, transposition de la transition γ·D = Θ(1) de Ramtin et al.) ; et une règle séquentielle (somme cumulée CUSUM ou e-valeurs) appliquée aux MÊMES scores par pas récupère-t-elle une part prédite de cette chute, là où la règle « seuil par pas » ne le peut pas ? Le coude est préenregistré à partir des seuls scores S1–S2, avant lecture de S3–S4. Cette fiche ne dépend ni de Q3 ni de la troisième instance : elle peut commencer dès l'accord sur le nœud N-A (lecture du lemme contre Ramtin et Gualandi sur PDF).",
+    "identifiant_auteur": "fable-p2-04",
+    "loi_predictive": {
+      "espace_instances": "Trajectoires d'attaque réussies de MonitoringBench étiquetées S1 à S4 (2 644 ; S4 attendue ≥ 100), stratifiées par niveau technique T et stratégie E, élicitées contre raffinées ; familles graduelle/positionnelle de Hills (n = 120 / 600) et séries K de Makins (FakeLab, sur demande : contact externe, nœud) si accessibles ; notre moniteur : sonde sur modèle à 8 milliards plus boîte noire, scores par pas, non entraîné sur ces bancs.",
+      "metrique": "Rappel à 1 % de faux positifs par trajectoire, seuil calibré sur les 416 trajectoires honnêtes ; deux règles de décision sur scores identiques, calibrées au même taux trajectoire (MonitoringBench : 1 % par pas compose à 6,7–17,4 % par trajectoire) ; comparaison au coude préenregistré.",
+      "prediction": "(i) Règle « max par pas » : rappel à 1 % de faux positifs par trajectoire chute de ≥ 25 points de S1–S2 à S4 à T et E fixés ; (ii) règle séquentielle sur les mêmes scores, calibrée au même 1 % trajectoire : récupère ≥ la moitié de cette chute sur S4 ; (iii) le niveau S du coude observé coïncide avec le coude préenregistré depuis S1–S2 (tolérance d'un niveau) ; (iv) sur Hills : l'écart graduel − positionnel est plus grand pour la règle par pas que pour la règle séquentielle.",
+      "signe": "-"
+    },
+    "nom": "Q4 par l'axe structurel publié : dilution à dommage constant, même score, deux règles, coude préenregistré",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "« Même score, deux règles » est occupé hors champ (Shewhart contre CUSUM, Urbina et al.) ; l'agrégation déployable est partielle en contrôle (Wen et al., TRACE, link-tracker de Hills) ; la confrontation d'un moniteur d'agent à un coude préenregistré issu de la détection de rupture n'a pas été vue."
+    },
+    "passe": 2,
+    "perte_traduction": "Le diffus « entre épisodes et entre agents » devient surtout « réparti dans une trajectoire » (S4 est intra-épisode) ; le vrai inter-épisodes dépend de l'accès aux données de Hills et Makins. Le moniteur est figé : le volet « boucle sélectionnée sur du concentré » n'est pas servi ici. Le dommage « constant » est approché par la réussite de la tâche secondaire, pas mesuré.",
+    "piege": "Confusion de la dilution avec T et E (le raffinement rééquilibre les catégories) et sélection : les S4 réussies ont survécu au raffinement contre trois moniteurs de développement, donc sont les plus discrètes ; parade : stratifier par T et E, comparer raffinées et élicitées. La règle séquentielle « gagne » trivialement si son seuil est plus permissif : calibrer les deux au même taux trajectoire. Lemme revendiqué avant lecture de ses voisins (N-A).",
+    "questions_servies": [
+      "Q4",
+      "Q7",
+      "Q-pont",
+      "Q3"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "SLEIGHT-Bench, Najt et al., 2026, arXiv 2605.16626",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench, Jotautaitė et al., 2026, arXiv 2605.09684",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Sim2Real Predictivity, Kadian et al., 2019, arXiv 1912.06321",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Impact of Off-Policy Training Data on Probe Generalisation, Kirch, Dower, Skapars et al., 2025, arXiv 2511.17408",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Constitutional Black-Box Monitoring for Scheming in LLM Agents, Storf, Barton-Cooper, Peters-Gill, Hobbhahn, 2026, arXiv 2603.00829",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Steinbuss et Böhm, 2020, arXiv 2004.06947",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Simulated control evaluations, Olmo, Zhang, Tracy, Redwood Research, billet du 23 octobre 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Hesford et al., arXiv 2403.17458",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Les deux bancs viennent des mêmes équipes, qui n'ont aucune incitation à publier que l'un ne prédit pas l'autre ; un occupant qui construit ses transcriptions choisit l'appariement après avoir vu les taux, ce qui fabrique la corrélation. L'enjeu est le scellement, pas le calcul.",
+      "source": "methodes",
+      "texte": "L'appariement scellé par un tiers avant lecture, et un seul moniteur boîte blanche (programme) mesuré sur les deux bancs, alors que les bancs publiés ont des moniteurs différents."
+    },
+    "cosmetique_si": "L'appariement scellé ne fait pas mieux que des appariements aléatoires de même taille, ou si la corrélation disparaît quand on retire la seule paire « harm réparti ↔ S4 ».",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Nulle si mutualisée avec l'extraction d'activations des fiches Q3 et Q4 ; sinon dizaines de dollars."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "La troisième instance pour l'appariement ; sinon rien : mêmes lecteurs et mêmes activations que les fiches Q3 et Q4."
+    },
+    "empreinte": "7927f3497f6704bcda53aba5e75e7b2bcacc69c79de47e789b6d788782fb47c5",
+    "enonce": "Pour un même moniteur figé (le nôtre), le taux de détection par catégorie sur les transcriptions fabriquées de SLEIGHT-Bench (sorties d'outils inventées, auteurs humains, vérificateurs de réalisme) prédit-il le taux sur les trajectoires réellement exécutées de MonitoringBench (BashArena), catégorie par catégorie appariée — l'appariement étant fixé par un tiers AVANT toute lecture de taux ? En miroir : les taux publiés des moniteurs modèles communs aux deux bancs sont-ils corrélés par catégorie appariée ? Cette version de Q-pont ne dépend pas des propriétés dérivées par Q3 : les propriétés sont les catégories publiées. Désaccord avec la pièce B : Q-pont peut commencer avant le scellement de Q3 ; la version « P_k issues de Q3 » reste la seconde expérience, pas la première.",
+    "identifiant_auteur": "fable-p2-05",
+    "loi_predictive": {
+      "espace_instances": "6 à 8 paires de catégories appariables entre les 11 classes SLEIGHT-Bench et les niveaux T×S×E de MonitoringBench (par exemple : harm réparti ↔ S4 ; nommage plausible ↔ E1 ; charge dans contenu long ↔ E3 ; persuasion ↔ E4 — appariement exact scellé par le tiers) ; un moniteur à nous sur les deux bancs ; plus les moniteurs publiés communs aux deux (lignée Opus 4.5 / 4.6).",
+      "metrique": "Rappel à 1 % de faux positifs par catégorie ; calibration sur bénins appariés (SLEIGHT-Bench) et sur trajectoires honnêtes (MonitoringBench) ; rang de Spearman par sous-ensemble de paires, préenregistré ; exclusion des paires à n < 3 attaques.",
+      "prediction": "Corrélation de rang de Spearman ≥ 0,5 sur les paires « visibles dans le texte » (nommage, contenu long, obfuscation) et < 0,2 sur les paires qui reposent sur l'état, la persuasion ou l'ambiguïté d'autorisation — l'effondrement attendu par Kirch et al. pour les propriétés « ambiguës dans le texte » ; prédiction annexe : avec toutes les paires, la corrélation ne dépasse pas celle d'appariements aléatoires de même taille.",
+      "signe": "+"
+    },
+    "nom": "Q-pont à coût nul : fabriqué (SLEIGHT-Bench) contre exécuté (MonitoringBench), par catégorie appariée scellée",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Métrique de prédictivité simulation-réel (Kadian et al.) et comparaison de classements d'anomalies synthétiques contre réelles (Steinbuss et Böhm) hors champ ; dans le contrôle, Storf et al. et le billet de Redwood mesurent un transfert global, jamais par propriété appariée scellée."
+    },
+    "passe": 2,
+    "perte_traduction": "Le « réel » reste instruit, raffiné contre des moniteurs et à sabotage injecté ; les « propriétés P » sont des catégories de banc, pas des statistiques prédites du moniteur ; 6 à 8 paires donnent une puissance faible : le résultat est un signal d'alerte sur la voie synthétique, pas une validation.",
+    "piege": "L'appariement EST le résultat : fait après lecture, la corrélation est fabriquée ; parade : scellement par le tiers et test contre appariements aléatoires. Effectifs : certaines classes SLEIGHT-Bench comptent une ou deux attaques. Raffinement : les trajectoires MonitoringBench ont été rendues discrètes contre trois moniteurs, ce qui abaisse mécaniquement le « réel ».",
+    "questions_servies": [
+      "Q-pont",
+      "Q3",
+      "Q1",
+      "Q6"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "When Benchmarks Lie, Fomin, 2026, arXiv 2602.14161",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Lie Detectors Learn Model Identity, Lin, Bernabeu-Perez, Arnav, Wells, Phuong, ICLR 2026",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Building Better Deception Probes Using Targeted Instruction Pairs, Natarajan et al., 2026, arXiv 2602.01425",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Sequential Training of GANs Against GAN-Classifiers Reveals Correlated Knowledge Gaps, Pathak et al., CVPR 2023",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Analyzing Dynamic Adversarial Training Data in the Limit, Wallace, Williams, Jia, Kiela, arXiv 2110.08514",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Constitutional Black-Box Monitoring, Storf et al., 2026, arXiv 2603.00829",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Caught in the Act / FIBS, Hollinsworth et al., 2026, arXiv 2610.12445",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Testing Robustness Against Unforeseen Adversaries (UAR), Kang, Sun, Hendrycks, Brown, Steinhardt, 2019, arXiv 1908.08016",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Hints on test data selection, DeMillo, Lipton, Sayward, IEEE Computer 1978",
+        "statut": "SUPPOSE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Les occupants à moniteur-modèle fermé ne peuvent ni mesurer la rétention ni projeter hors du sous-espace de provenance ; ceux qui construisent l'attaquant produisent eux-mêmes la signature (le raffinement par un même modèle est une provenance) et n'ont pas intérêt à la mesurer. Un laboratoire mieux doté peut faire le volet statique ; le volet par tour exige une boucle à juge figé et témoins appariés, que personne n'a.",
+      "source": "organisme",
+      "texte": "Le bras « fuite textuelle » (N-053), les témoins plantés (le mutant aveugle en est un, côté défense), la mémoire qui refuse les redites et les tâches fraîches, plus la boîte blanche sur poids ouverts (programme) : la rétention de coefficients exige l'accès aux activations."
+    },
+    "cosmetique_si": "La projection hors provenance ne change pas le rappel, la rétention dépasse 0,8 partout et le mutant aveugle est à 0,5 sur tous les bancs : l'artefact n'explique alors rien et Q6 n'est qu'une précaution.",
+    "cout": {
+      "nature": "depense",
+      "ordre_de_grandeur": "Statique : dizaines de dollars (mêmes activations que les fiches précédentes) ; mutant aveugle : processeur seul. Dynamique : générations de la boucle, nœud de dépense."
+    },
+    "demande_organisme": {
+      "nature": "modification",
+      "texte": "Étiqueter la provenance dans la banque et la strate des familles ; brancher le bras « fuite textuelle » sur des sources externes ; inscrire le mutant aveugle comme témoin planté ; témoins bénins appariés par provenance dans la sélection (invariant N-053)."
+    },
+    "empreinte": "dc79202fba0340c5da48fddc9cb471a9ef76faf03f24f9358665aa5bd48019f3",
+    "enonce": "Quelle part du rappel d'une sonde (entraînée hors de ces bancs, par exemple sur le jeu FIBS, Falsehoods in Broad Settings) ou d'un moniteur boîte noire, mesuré sur les bancs d'agents publiés, est expliquée par la provenance de la trajectoire (élicitée contre raffinée ; stratégie humaine contre agent de reconnaissance ; STRIDE contre Gloom contre ControlArena ; fabriquée contre exécutée) plutôt que par le sabotage — et, dans une boucle de sélection de moniteurs non contrôlée, cette part croît-elle de génération en génération ? L'instrument central est le « mutant aveugle au contenu » : un classifieur qui ne voit que des traits de surface (source, longueur, style, gabarit) et aucun contenu d'action ; s'il n'est pas « tué » par un banc (aire nettement au-dessus de 0,5), le banc est séparable par l'artefact, sans aucun attaquant — et le mutant devient un témoin planté « faux » que le juge doit refuser. Le volet statique est l'instrument (principe occupé par Fomin et Lin et al., jamais sur des trajectoires d'agents) ; le volet « par tour » est le résultat distinctif.",
+    "identifiant_auteur": "fable-p2-06",
+    "loi_predictive": {
+      "espace_instances": "Statique : ~3 000 trajectoires MonitoringBench à provenance connue (quatre sources, élicitées / raffinées), 43 transcriptions SLEIGHT-Bench avec bénins appariés, trajectoires ControlArena si accessibles ; activations d'un modèle à 8 milliards lisant les transcriptions. Dynamique : ≥ 5 générations de notre boucle sur ces familles, avec et sans contrôle de provenance.",
+      "metrique": "Exactitude du classifieur de provenance ; aire sous la courbe du mutant aveugle ; rappel à 1 % de faux positifs avant et après projection ; rétention de coefficients par tour (protocole « un jeu de données laissé de côté », LODO).",
+      "prediction": "Statique : classifieur de provenance sur activations ≥ 85 % (hasard 25–50 %) ; mutant aveugle au contenu : aire ≥ 0,6 pour séparer attaques et bénins sur au moins un banc d'occupant, mais ≤ 0,55 sur SLEIGHT-Bench avec bénins appariés (contrôle négatif) ; projeter hors des 16 principales directions de provenance dégrade le rappel de ≥ 2 points en moyenne avec hétérogénéité par source de ± 20 points ; rétention de coefficients < 0,5 pour ≥ 25 % des 50 traits principaux. Dynamique : sans contrôle, la part de rappel attribuable à la provenance augmente d'au moins 5 points par génération ; avec témoins bénins appariés par provenance dans la sélection, elle reste stable.",
+      "signe": "+"
+    },
+    "nom": "Q6 sur bancs d'agents : la part de provenance dans le rappel, mutant aveugle au contenu, puis par tour",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Fomin (LODO, rétention) et Lin et al. (identité du modèle) sur invites et sous-performance ; Pathak et al. pour la migration d'artefacts entre tours ; Wallace et al. pour « la collecte adversariale ne purge pas » ; analyse de mutants (test logiciel) pour le mutant aveugle ; le suivi par tour dans une boucle de moniteurs d'agents n'a pas été vu."
+    },
+    "passe": 2,
+    "perte_traduction": "L'« artefact du générateur » devient « provenance étiquetée par les auteurs des bancs » ; on ne mesure pas l'artefact de notre propre générateur de familles tant que la boucle n'existe pas ; la provenance est confondue avec la difficulté (les trajectoires raffinées sont plus discrètes par construction).",
+    "piege": "Provenance et difficulté confondues : un classifieur de provenance qui apprend la difficulté est légitime ; parade : témoins bénins appariés par provenance, ligne de base « honnête contre honnête » de Lin et al., comparaison à provenance fixée. Directions de provenance et de sabotage qui se recouvrent (Fomin) : la projection redistribue plus qu'elle ne réduit, rapporter par source. Mutant aveugle grossier (tué partout) ou surentraîné sur un seul banc.",
+    "questions_servies": [
+      "Q6",
+      "Q-pont",
+      "Q1",
+      "Q5",
+      "Q2"
+    ],
+    "type": "question"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Quickest Change Detection in Discrete-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2026, arXiv 2601.20022",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Manuel d'ingénierie statistique du NIST, section 6.3.2.3.1",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Page, 1954, Continuous Inspection Schemes ; Shewhart, 1931, cartes de contrôle",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Optimizing the Score, Losing Sight of the Task, 2026, arXiv 2609.25848",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "More Convincing, Not More Correct, 2026, arXiv 2607.05904",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "When Can Old Evaluations Certify a New Model?, Mondal et al., 2026, arXiv 2609.32267",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Pay Only for Disagreement, Balachandran, 2026, arXiv 2609.17560",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Ladder, Blum et Hardt, ICML 2015",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "HyperAgents, Zhang et al., 2026, arXiv 2603.19461 (boucle externe de sélection gardée fixe)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Miconi, EuroGP 2009",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Les boucles des occupants n'ont ni témoins à vérité connue ni juge hors des agents (juge = récompense chez MAGIC et AgentSafeEvo ; validation en distribution chez SafeCoEvo) ; ajouter une carte à une boucle dont le juge dérive ne mesure que sa propre dérive. Le calcul est négligeable ; c'est l'architecture (juge figé, tiers, témoins frais) qui manque.",
+      "source": "organisme",
+      "texte": "Témoins plantés, juge figé à mise, archive complète et test final lu une fois existent déjà ; la carte les relie en une garantie séquentielle sur la boucle."
+    },
+    "cosmetique_si": "Le taux de bonne élimination des témoins est à 100 % dès la génération 0 (témoins triviaux), ou si la carte ne déclenche pas sous un juge délibérément corrompu (test (a) échoué).",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Simulation sur processeur (jours) ; la mesure sur une vraie boucle suit le coût des générations (nœud de dépense)."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Une carte de contrôle dans le noyau (jamais réécrite par le pôle), alimentée par les verdicts sur témoins ; un vivier de témoins tenu par le tiers, tiré frais à chaque génération ; une règle d'invalidation rétroactive des promotions depuis le dernier point de contrôle."
+    },
+    "empreinte": "5d36b2f49ea74850cc8c031339003827c6cb96205276a965a1819a2baa981bd2",
+    "enonce": "Traiter la boucle elle-même comme le processus sous surveillance, avec les mêmes mathématiques que Q4 : à chaque génération, les verdicts du juge sur les témoins plantés (fiches vraies, fiches fausses, nuls de bibliothèque, mutants aveugles de la fiche Q6) alimentent un e-processus ou une somme cumulée (CUSUM) dont le franchissement arrête la boucle et invalide toutes les promotions depuis le dernier point de contrôle. Le taux de fausses promotions sur témoins devient une courbe publiée avec sa séquence de confiance ; le « coût par famille » de Q5 se lit sur l'horloge de cette carte ; le régime « juge-modèle co-évoluant » de Q2 se mesure en injectant une dérive du juge et en lisant le délai de détection. C'est « faire de la boucle elle-même l'objet mesuré » (pièce E) sous une forme que les occupants ne peuvent pas produire : ils n'ont pas de témoins à vérité connue dans leur boucle.",
+    "identifiant_auteur": "fable-p2-07",
+    "loi_predictive": {
+      "espace_instances": "Générations de la boucle (≥ 50 en simulation, ≥ 20 en vrai), ≥ 10 témoins par génération (moitié vrais, moitié faux, tirés frais d'un vivier tenu par le tiers).",
+      "metrique": "Délai moyen de détection et temps moyen avant fausse alarme (la paire de la détection de rupture) ; taux de fausses promotions sur témoins avec séquence de confiance.",
+      "prediction": "(a) Sous dérive injectée du juge (remplacement du juge figé par un juge réaffiné sur les survivantes), la carte déclenche en ≤ 5 générations après le début de la dérive, avec ≤ 1 fausse alarme sur 100 générations sous juge figé ; (b) sous juge figé garanti, pas de déclenchement sur 50 générations et taux de bonne élimination des témoins dans sa séquence de confiance ; (c) une boucle sans carte sous dérive promeut ≥ 20 % de témoins faux à la génération 10.",
+      "signe": "+"
+    },
+    "nom": "Approche : la carte de contrôle du pôle — les témoins plantés comme processus surveillé",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Contrôle statistique de procédé (Shewhart, Page) et détection de rupture (Ramtin et al.) appliqués au pôle lui-même ; canaris de 2609.25848 et ancre cachée de 2607.05904 posent le principe sans séquence de confiance ; « la vigilance ne se valide pas sans étiquettes fraîches » (2609.32267) justifie les témoins frais. La réflexivité (la même théorie garde le moniteur et la boucle) n'est pas vue."
+    },
+    "passe": 2,
+    "perte_traduction": "La « validité de la mesure sous évolution » devient « détection d'une dérive du taux de bonne élimination des témoins » : une dérive qui n'atteint pas les témoins (artefact ciblé sur les vraies fiches) passe inaperçue ; la carte mesure le juge sur ce qu'on lui a planté, pas sur l'inédit.",
+    "piege": "Témoins reconnaissables (mémoire à empreinte, gabarits) : le pôle apprend à bien traiter les témoins et mal le reste ; parade : témoins frais, indiscernables en forme des vraies fiches. Fausse sécurité : une carte qui ne déclenche jamais peut être aveugle (témoins trop faciles, dérive hors de portée) ; d'où le test (a) à dérive injectée, obligatoire avant toute lecture de (b).",
+    "questions_servies": [
+      "Q2",
+      "Q5",
+      "Q4",
+      "Q6",
+      "nouvelle"
+    ],
+    "type": "approche"
+  },
+  {
+    "anteriorite": [
+      {
+        "reference": "Adaptive Attacks on Trusted Monitors Subvert AI Control Protocols, Terekhov et al., 2025, arXiv 2510.09462",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Generalization in Adaptive Data Analysis and Holdout Reuse, Dwork et al., NeurIPS 2015",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "The Ladder, Blum et Hardt, ICML 2015",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "MonitoringBench, 2605.09684 (exclusion des corpus d'entraînement) ; SLEIGHT-Bench, 2605.16626 (chaînes canari)",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Registered reports, Nosek et Lakens, 2014, Social Psychology",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Evaluating the replicability of social science experiments, Camerer et al., 2018, Nature Human Behaviour",
+        "statut": "SUPPOSE"
+      },
+      {
+        "reference": "Série ASVspoof, 2019, arXiv 1904.05441",
+        "statut": "RAPPORTE"
+      },
+      {
+        "reference": "Tavallaee et al., 2009, critique de KDD'99 / NSL-KDD",
+        "statut": "RAPPORTE"
+      }
+    ],
+    "auteur": "fable",
+    "avantage": {
+      "incopiable_parce_que": "Un occupant qui construit l'attaquant a déjà tout lu : la prédiction scellée n'a de valeur que par l'ordre temporel, et cet ordre est irréversible (une prédiction vue après coup ne vaut rien). Rien à voir avec le calcul : c'est une discipline d'accès que la plupart des pipelines publiés violent par construction (même modèle pour construire, évaluer et discuter).",
+      "source": "methodes",
+      "texte": "Préenregistrement scellé avant toute lecture, contre-lecture par un modèle différent, verdict par sous-agent neuf, et la troisième instance : la quarantaine est leur assemblage avec une garde temporelle."
+    },
+    "cosmetique_si": "Les deux prédicteurs obtiennent la même erreur sur le corps de papier ET sur les annexes (aucune fuite détectable, donc aucune protection mesurée), ou si une seule prédiction est scellée après la lecture de son résultat.",
+    "cout": {
+      "nature": "processeur",
+      "ordre_de_grandeur": "Appels de modèle modestes (deux prédicteurs par campagne) ; aucun calcul."
+    },
+    "demande_organisme": {
+      "nature": "ajout",
+      "texte": "Le rôle de tiers dans le noyau ; une garde d'empreinte temporelle sur toute prédiction ; un registre des dates de coupure des modèles employés ; une passation « sans chiffres » comme gabarit obligatoire pour le prédicteur, relue par un modèle différent pour y chercher tout chiffre ou nom de résultat."
+    },
+    "empreinte": "ba3bedf33eb1699a258578f9b0e1453892e040ddd80e8a2c06d6487cf2365afc",
+    "enonce": "Pour toute question où la théorie est notée comme prévisionniste (Q3 sur grille, Q-pont à coût nul, rejugement Q2, diagonale de l'auto-jeu), séparer trois rôles tenus par trois instances à information strictement croissante : (1) le prédicteur, instance neuve d'un modèle dont la date de coupure déclarée est antérieure à la publication du banc, ou qui n'a reçu qu'une passation sans chiffres rédigée par le tiers, et dont la prédiction est empreintée avant tout accès ; (2) l'apparieur tiers, qui fixe cellules, appariements et règles d'extraction ; (3) l'évaluateur, qui lit une fois les tableaux ou calcule les scores. Les annexes jamais extraites des fichiers PDF (Portable Document Format) deviennent une banque scellée gratuite : on prédit les chiffres qu'elles contiennent (tableaux par environnement, matrices de dégradation croisée des invites ciblées, résultats par modèle) avant de les ouvrir. C'est l'asymétrie de Terekhov et al. (l'attaquant à date de coupure postérieure sait tout du moniteur) renversée en garde : le prédicteur à date de coupure antérieure ne peut rien savoir du résultat. Le protocole se teste lui-même par un témoin non quarantainé.",
+    "identifiant_auteur": "fable-p2-08",
+    "loi_predictive": {
+      "espace_instances": "Campagnes de ≥ 20 quantités publiées non lues par campagne, réparties entre corps de papier (indexé, mémorisable) et annexes (peu indexées) ; deux prédicteurs par campagne : quarantainé et non quarantainé (date de coupure postérieure, accès au corpus).",
+      "metrique": "Erreur absolue médiane de prédiction par classe de quantité (corps / annexe) ; empreintes et horodatages des prédictions ; registre des dates de coupure.",
+      "prediction": "L'erreur absolue médiane du prédicteur non quarantainé est ≤ la moitié de celle du quarantainé sur les quantités du corps de papier (fuite par mémorisation mesurable), et les deux erreurs sont indiscernables sur les quantités d'annexes ; une campagne qui ne montre pas cet écart signale soit une annexe indexée, soit une fuite par la passation.",
+      "signe": "+"
+    },
+    "nom": "Approche : le prédicteur en quarantaine — date de coupure antérieure et annexes non lues comme épreuve scellée",
+    "originalite": {
+      "niveau": "transposition",
+      "texte": "Rapports enregistrés et marchés de prédiction de réplication (hors champ, SUPPOSÉ) ; jeu tenu à l'écart réutilisable (Dwork et al.) ; canaris anti-entraînement des bancs (MonitoringBench, SLEIGHT-Bench) posent le problème inverse. L'usage des annexes non lues comme épreuve et la date de coupure comme garde du prédicteur ne sont pas vus."
+    },
+    "passe": 2,
+    "perte_traduction": "La « fuite » est mesurée par une différence entre deux instances, pas prouvée ; la date de coupure déclarée n'est pas une garantie ; une annexe non indexée aujourd'hui peut l'être demain, ce qui périme la banque scellée. On ne mesure pas la théorie, on mesure la propreté de l'épreuve.",
+    "piege": "Fuite par la passation : les extraits eux-mêmes citent des chiffres ; une consigne rédigée par quelqu'un qui a lu les pièces fuit sans le vouloir. Date de coupure non fiable (mises à jour du corpus). Et le témoin non quarantainé peut échouer aussi : alors la « fuite » n'est pas mesurable et la quarantaine ne protège de rien de démontrable.",
+    "questions_servies": [
+      "Q3",
+      "Q-pont",
+      "Q2",
+      "Q1",
+      "nouvelle"
+    ],
+    "type": "approche"
+  }
+]

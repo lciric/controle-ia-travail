@@ -1,0 +1,218 @@
+[
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Adaptive Attacks on Trusted Monitors Subvert AI Control Protocols, Terekhov, Panfilov, Dzenhaliou, Gulcehre, Andriushchenko, Prabhu, Geiping, 2025/2026, arXiv:2510.09462v2",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Caught in the Act: Probes Effectively Detect Sabotage and Catch Unverbalized Deception, Hollinsworth, Spies, Diriba, Gleave, Cundy, 2026, arXiv:2610.12445v1",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Obfuscated Activations Bypass LLM Latent-Space Defenses, Bailey et al., 2025, arXiv:2412.09565v2",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Benchmarking Deception Probes via Black-to-White Performance Boosts, Parrack, Hex, Nardo, 2025, arXiv:2507.12691",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Building Production-Ready Probes For Gemini, Kramar et al., 2026, arXiv:2601.11516",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "RL-Obfuscation, Gupta et al., 2025, arXiv:2506.14261",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "argon",
+      "avantage": {
+        "incopiable_parce_que": "Terekhov et al. (2510.09462, section 2) supposent par axiome que l'équipe bleue n'a qu'un accès boîte noire à l'agent (modèles fermés GPT-5 et Claude Sonnet 4) et concluent que seules les politiques « Always-Defer » survivent ; à l'inverse, Hollinsworth et al. (2610.12445) entraînent des sondes boîte blanche mais n'évaluent ni la subversion adaptative du moniteur ni le retour de flamme des protocoles de rééchantillonnage.",
+        "source": "programme",
+        "texte": "Accès simultané aux activations internes sur modèles à poids ouverts de 8 et 70 milliards de paramètres et au cadrage de contrôle séquentiel, tout en utilisant les résultats publiés de Terekhov et al. comme matériau sans jamais concevoir d'injection."
+      },
+      "cosmetique_si": "Le score de la sonde interne chute en même temps que celui du moniteur textuel sur les trajectoires subverties, ou si le coût de faux positifs du détecteur de discorde absorbe tout le budget d'audit c = 0,02.",
+      "cout": {
+        "nature": "processeur",
+        "ordre_de_grandeur": "Processeur seul pour la simulation de protocole sur scores croisés ; 50 à 150 dollars de processeur graphique pour extraire les scores de sonde contrastive sur 300 trajectoires de 8 et 70 milliards de paramètres."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "Ajouter dans le répertoire d'opérateurs des proposeurs (couche 1) l'opérateur de score de discorde directionnelle (sonde interne moins moniteur textuel étalonné par rang) et le simulateur analytique du protocole Defer-to-Resample (calcul de sûreté de Terekhov et al., annexe B.2)."
+      },
+      "empreinte": "94f336b5ddecf9d501264fb3618d65d7d89c9b6f6602627723e2fdeccd702153",
+      "enonce": "Alors que la pièce B écarte Q7 comme « la moins distinctive » parce qu'elle la lit comme un simple mélange pondéré après Bailey et al. (2025) et Parrack et al. (2025), nos extraits primaires révèlent une question oblique beaucoup plus forte au croisement de Terekhov et al. (2510.09462) et Hollinsworth et al. (2610.12445) : lorsque l'agent non fiable exécute une attaque adaptative qui subvertit directement le moniteur boîte noire par injection dans les sorties (effondrant l'aire sous la courbe ROC du moniteur textuel sous la diagonale, jusqu'à un score de 0 sur 375 exemples dans Terekhov et al.), une sonde boîte blanche mesurant le contraste d'affirmation introspective sur le flux résiduel de l'agent conserve-t-elle son pouvoir discriminant, et un protocole de contrôle qui aiguille l'audit ou le rééchantillonnage selon la discorde entre sonde interne et moniteur textuel élimine-t-il l'effet de retour de flamme du protocole Defer-to-Resample ?",
+      "identifiant_auteur": "argon-p1-04",
+      "loi_predictive": {
+        "espace_instances": "Trajectoires de BashBench, APPS et SHADE-Arena issues de ou évaluées selon le protocole public de Terekhov et al. (2510.09462) et Hollinsworth et al. (2610.12445) sur modèles à poids ouverts de 8 et 70 milliards de paramètres, N >= 300 épisodes avec et sans subversion du moniteur textuel (aucune nouvelle injection conçue : utilisation exclusive des traces et évaluations existantes ou d'une simulation analytique de corruption du score boîte noire).",
+        "metrique": "Écart de rappel à 1 % de faux positifs et d'aire sous la courbe ROC entre sonde interne et moniteur boîte noire sous subversion du moniteur, et probabilité de victoire de l'équipe bleue (Safety au budget d'audit c = 0,02) du protocole Defer-to-Resample aiguillé par la discorde contre le protocole standard.",
+        "prediction": "Sur les épisodes où le score du moniteur boîte noire est subverti (rappel à 1 % de faux positifs tombant sous 10 %), la sonde de contraste introspectif sur les activations de l'agent (qui ne lit pas le texte comme une instruction) maintient une aire sous la courbe ROC supérieure à 0,90 ; un détecteur de discorde inter-canaux (sonde interne haute ET moniteur textuel anormalement bas) isole les tentatives de subversion du moniteur avec un rappel supérieur à 80 % à 1 % de faux positifs et restaure la monotonie de la sûreté du protocole Defer-to-Resample en fonction du nombre d'échantillons k.",
+        "signe": "+"
+      },
+      "nom": "Nouvelle Q-N2 — Immunité des sondes introspectives à la subversion adaptative du moniteur",
+      "originalite": {
+        "niveau": "inedite",
+        "texte": "Première jonction entre la vulnérabilité systémique des protocoles de contrôle par subversion du moniteur (Terekhov et al. 2025/2026, où Defer-to-Resample se retourne contre le défenseur en sélectionnant le minimum des scores) et la détection boîte blanche par pré-remplissage contrastif (Hollinsworth et al. 2026) : utilise la causalité amont des états cachés de l'agent pour détecter que la sortie vise à tromper l'évaluateur aval."
+      },
+      "passe": 1,
+      "perte_traduction": "Ne teste pas une co-évolution simultanée sur 70 tours d'obfuscation latente ET d'injection textuelle (ce qui exigerait de construire un attaquant conjoint interdit par R-597), mais l'orthogonalité causale des deux canaux face à la subversion du canal textuel.",
+      "piege": "Oublier l'effet « persona contextuelle » documenté par Hollinsworth et al. (section 5.2, cas bird-labs : l'aire sous la courbe tombe de 99,7 % à 75 % quand la question de suivi active une persona bénigne qui « croit » ne pas avoir de but caché), ou supposer que l'agent ne peut pas simultanément obfusquer ses activations (Bailey et al. 2025) si la tâche est simple.",
+      "questions_servies": [
+        "Q7",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)\\b(exploits?|exploiter|payloads?|charges? utiles?|jailbreaks?|injections?|exfiltr\\w*|stéganograph\\w*|steganograph\\w*|portes? dérobées?|portes? derobees?|backdoors?)\\b"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Constitutional Black-Box Monitoring for Scheming in LLM Agents, Storf, Barton-Cooper, Peters-Gill, Hobbhahn, ICML 2026, arXiv:2603.00829v2",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "EvoDefense: Co-Evolving Black-Box Defense with Large Language Models, Li et al., 2026, arXiv:2605.31140v1",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "HyperAgents, Zhang, Zhao, Yang, Foerster, Clune, Jiang, Devlin, Shavrina, 2026, arXiv:2603.19461v1",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Evolution or Illusion?, IBM, 2026, arXiv:2609.19799",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Unforeseen Attack Robustness (UAR), Kang, Sun, Hendrycks, Brown, Steinhardt, 2019, arXiv:1908.08016",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "argon",
+      "avantage": {
+        "incopiable_parce_que": "Tous les optimiseurs des occupants (DSPy GEPA/MIPROv2 dans Storf et al., MO-ASHA/OpenEvolve dans Terekhov et al., ORPO dans EvoDefense, DGM-H dans HyperAgents) maximisent directement la métrique cible sur un jeu d'entraînement ou de validation réutilisé ; ils sont mathématiquement condamnés à exploiter la queue de bruit et les raccourcis du jeu synthétique dès que le budget d'optimisation dépasse quelques essais.",
+        "source": "organisme",
+        "texte": "Règle d'aptitude R3 propre à l'organisme (aptitude = sévérité du test survécu contre un nul informé et un nul d'archive, jamais l'ampleur du score positif), mémoire à empreinte prédictive refusant les redites, et recombinaison bisociative exigeant un contenu empirique accru."
+      },
+      "cosmetique_si": "La courbe test de notre organisme plafonne exactement au même niveau que le simple balayage de 15 consignes (prompt sweep) de Storf et al.",
+      "cout": {
+        "nature": "depense",
+        "ordre_de_grandeur": "Modeste : 150 à 500 dollars d'appels de modèles ou de calcul d'activations (budget apparié au réglage « light » de DSPy dans Storf et al.)."
+      },
+      "demande_organisme": {
+        "nature": "rien",
+        "texte": "Utilise tel quel le cœur de la pièce F (fiches d'hypothèses, gel, affinage sur développement, juge figé à sévérité, recombinaison bisociative) en prenant comme « fiches » des spécifications de moniteurs et comme « nul informé » le meilleur moniteur de la grille initiale plus un classifieur d'artefact de source."
+      },
+      "empreinte": "8fd80a26bc2cc16ea6315effd44e33edeea0f0c97ca5a25341f5efdbd26f6c7c",
+      "enonce": "Storf et al. (2603.00829, sections 5.2 à 5.4) démontrent que l'optimisation de moniteurs (par recherche en grille, raffinement humain, optimiseurs automatiques GEPA/MIPROv2 ou réglage fin LoRA) sature très vite (autour de 0,85 à 0,86 d'aire sous la courbe partielle) et que pousser l'optimisation dégrade la généralisation en surajustant aux artefacts d'entraînement : remplacer la sélection par le score moyen en distribution par la boucle de notre organisme (sélection par la sévérité du test survécu sous juge figé à mise, recombinaison bisociative de contraintes et pénalité d'instabilité des coefficients sous rotation laissant une famille de côté) permet-il de franchir ce plafond de saturation sur ControlArena et SHADE-Arena ?",
+      "identifiant_auteur": "argon-p1-05",
+      "loi_predictive": {
+        "espace_instances": "Évolution d'architectures et de consignes de moniteurs sur N = 2 000 trajectoires d'entraînement (issues de pipelines synthétiques ou de FIBS) et évaluation scellée unique sur M >= 5 environnements tenus à l'écart de ControlArena / SHADE-Arena, en comparant à budget d'appels égal un optimiseur maximisant l'aire sous la courbe partielle en distribution (type GEPA/MIPROv2 de Storf et al. ou évolution gloutonne d'EvoDefense) et notre organisme sélectionnant par sévérité (−log de la probabilité de survie sous le nul informé).",
+        "metrique": "Gain d'aire sous la courbe ROC partielle sur l'intervalle de faux positifs [0, 0,20] (métrique pAUROC de Storf et al.) et rappel à 1 % de faux positifs sur le pire environnement tenu à l'écart (protocole d'universalité normalisée par famille), en fonction du budget d'optimisation dépensé.",
+        "prediction": "Au-delà du budget de recherche en grille initiale (15 candidats), l'optimiseur standard stagne ou régresse sur les environnements tenus à l'écart (gain <= 0,01 d'aire sous la courbe partielle, répliquant Storf et al.), tandis que la sélection par sévérité combinée à la recombinaison bisociative continue d'améliorer la performance hors distribution d'au moins +0,05 d'aire sous la courbe partielle (ou +10 points de rappel à 1 % de faux positifs sur le pire environnement tenu à l'écart) sans dégradation entre les générations 2 et 10.",
+        "signe": "+"
+      },
+      "nom": "Nouvelle Q-N3 — Rupture du plafond de saturation des moniteurs par sélection à la sévérité",
+      "originalite": {
+        "niveau": "inedite",
+        "texte": "Exploite l'impasse empirique majeure rapportée par Storf et al. (ICML 2026) et EvoDefense (2026, tableau 3 : régression à 5 tours) comme banc d'épreuve direct de notre mécanisme de sélection darwinienne à la sévérité (pièce F)."
+      },
+      "passe": 1,
+      "perte_traduction": "Substitue à la question générale de l'universalité asymptotique de la machine (Q5, trop coûteuse en générations complètes × permutations d'ordre) un test ciblé de non-saturation sur un banc public où le plafond d'optimisation est déjà documenté.",
+      "piege": "Inversion des classements selon le budget d'itération choisie (« Evolution or Illusion? », arXiv:2609.19799) : il faut préenregistrer toute la frontière budget × graines et ne lire le jeu de test final ControlArena qu'une seule fois en fin de course (N-050).",
+      "questions_servies": [
+        "Q1",
+        "Q5",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)\\b(exploits?|exploiter|payloads?|charges? utiles?|jailbreaks?|injections?|exfiltr\\w*|stéganograph\\w*|steganograph\\w*|portes? dérobées?|portes? derobees?|backdoors?)\\b"
+    ]
+  },
+  {
+    "fiche": {
+      "anteriorite": [
+        {
+          "reference": "Pay Only for Disagreement: Certified No-Regression Verdicts for Model Updates, Balachandran, 2026, arXiv 2609.17560",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "When Can Old Evaluations Certify a New Model?, Mondal et al., 2026, arXiv 2609.32267",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Optimizing the Score, Losing Sight of the Task, 2026, arXiv 2609.25848",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Evolution or Illusion?, IBM, 2026, arXiv 2609.19799",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Generalization in Adaptive Data Analysis and Holdout Reuse, Dwork et al., NeurIPS 2015, arXiv 1506.02629",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "The Ladder, Blum et Hardt, ICML 2015, arXiv 1502.04585",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "Waudby-Smith et Ramdas, 2024, séquences de confiance empirique-Bernstein",
+          "statut": "RAPPORTE"
+        },
+        {
+          "reference": "SafeCoEvo, 2609.36580 ; EvoDefense, 2605.31140 ; RvB, 2601.19726 ; AgentSafeEvo, 2610.19422 ; MAGIC, 2602.01539",
+          "statut": "RAPPORTE"
+        }
+      ],
+      "auteur": "fable",
+      "avantage": {
+        "incopiable_parce_que": "Techniquement copiable à bas coût, mais structurellement non fait : l'occupant qui auditerait ses promotions sous garantie composée perdrait l'essentiel de ses courbes ; sa sélection est en distribution (SafeCoEvo : la validation partage six scénarios avec le flux d'évolution) et son juge sert aussi de récompense (MAGIC, AgentSafeEvo). L'avantage est l'indépendance plus l'approche, pas le calcul.",
+        "source": "methodes",
+        "texte": "Le juge à mise contre bibliothèque de nuls et l'outillage e-processus existent déjà ; aucun conflit d'intérêt : nous n'avons pas de courbe à défendre."
+      },
+      "cosmetique_si": "Toutes les transitions sont promues même sous la borne appariée : les occupants n'ont alors pas de problème de fausses promotions à leur effectif, et Q2 se réduit à une hygiène.",
+      "cout": {
+        "nature": "processeur",
+        "ordre_de_grandeur": "Quelques jours ; calcul négligeable."
+      },
+      "demande_organisme": {
+        "nature": "modification",
+        "texte": "Une entrée du juge à mise acceptant des séries externes (effectifs et taux publiés, bornes d'appariement) au lieu des issues de notre banque."
+      },
+      "empreinte": "5bdb603897c9e9e6db4f82fe945e442bbbad8fb715fd4080050c53e64f16f9a8",
+      "enonce": "Si l'on rejoue les courbes tour par tour publiées par les occupants (EvoDefense tours 1, 2, 5, 10 ; SafeCoEvo époques 0 à 15 sur une validation de 200 épisodes avec choix de la meilleure époque ; RvB tours 1 à 4 ; AgentSafeEvo par étape ; MAGIC) sous un test de promotion certifié (séquence de confiance empirique-Bernstein, inégalité de Ville, budget d'erreur composé δ = 0,05 sur toute la chaîne de promotions), quelle part des « améliorations » tour-à-tour rapportées serait promue, et quelle part des promotions effectivement faites (choix du meilleur point de contrôle) est une fausse promotion sous composition ? C'est Q2 (« le juge figé garanti est-il un résultat ou une hygiène ? ») tranchée sur leur matériau : si presque tout survit, Q2 n'est qu'hygiène ; si la majorité tombe, la garantie est un résultat.",
+      "identifiant_auteur": "fable-p1-03",
+      "loi_predictive": {
+        "espace_instances": "30 à 60 transitions tour-à-tour reconstituées des tableaux publiés, avec les effectifs déclarés (320 items pour EvoDefense, 200 épisodes de validation pour SafeCoEvo, 100 invites pour RvB, trois exécutions pour AgentSafeEvo).",
+        "metrique": "Part de transitions promues à δ composé, calculée sous deux bornes (items indépendants / parfaitement appariés) quand les données par item manquent ; verdict par chaîne.",
+        "prediction": "Moins de 40 % des transitions rapportées comme améliorations franchissent le test certifié ; aucune transition au-delà du tour 2 d'EvoDefense ne passe (écarts < 3 points sur n = 320) ; le gain de première étape (tour 0 → 1 ou 2) est promu partout ; sous composition sur la chaîne de points de contrôle, au moins un occupant voit sa promotion finale retomber sous le seuil.",
+        "signe": "-"
+      },
+      "nom": "Q2 par méta-audit : combien de promotions publiées survivraient à un juge garanti ?",
+      "originalite": {
+        "niveau": "inedite",
+        "texte": "La promotion certifiée par e-processus est occupée (2609.17560, 2609.32267), le cadrage Goodhart aussi (2609.25848), le rapport graines × itérations aussi (2609.19799) ; leur application rétrospective aux chaînes de promotion publiées de la co-évolution défensive n'a pas été vue."
+      },
+      "passe": 1,
+      "perte_traduction": "« Qu'est-ce qui doit rester fixe pour que la mesure reste valide » devient « combien d'améliorations publiées sont statistiquement nulles » ; on perd le régime juge-modèle co-évoluant (non rejouable sans leurs exécutions) et la mesure comparative des trois régimes sur notre propre boucle.",
+      "piege": "Sans données par item, l'approximation binomiale ignore la corrélation entre tours (mêmes items réévalués → test apparié plus puissant) : notre « moins de 40 % » peut être un artefact de la borne indépendante. Parade : rapporter les deux bornes et demander les journaux (EvoDefense annonce du code, RvB archive ses artefacts). Autre piège : l'évaluation finale sur jeu tenu à l'écart (SafeCoEvo, RvB) n'est pas une promotion de chaîne ; ne pas la compter comme telle.",
+      "questions_servies": [
+        "Q2",
+        "Q5",
+        "nouvelle"
+      ],
+      "type": "question"
+    },
+    "signaux": [
+      "(?i)\\b(première|premiere|first)\\s+(étape|etape|step|phase)\\b"
+    ]
+  }
+]
