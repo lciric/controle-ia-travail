@@ -51,3 +51,4 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 - 2026-10-30 11:47:51 UTC — relais Gemini de l'appel « Argon seul, texte III » **arrêté par son PID 6944** (R10 ; lancé sans setsid, `$!` = PID de python).
 - 2026-10-30 11:50:43 UTC — relais Kimi v3 du juge de la course 1 **arrêté par son PID 5310** (R10 ; PID lu sur `/relais/etat`).
 - 2026-10-30 ≈ 11:58 UTC — relais Kimi v3 du tour du texte III **arrêté par son PID 6959** (R10) par le lanceur, en fin de tour 1.
+- 2026-10-30 12:05:20 UTC — suite à trois espèces du tour du texte III **arrêtée par PID** (R10) : collisionneur 9449 (timeout) et 9450 (python), relais Kimi v3 9443 ; lanceur 9413 terminé de lui-même. Motif : R-830 (Opus 4.6 en quatrième espèce, nouveau run).
