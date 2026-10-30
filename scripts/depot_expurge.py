@@ -37,6 +37,7 @@ RACINE = Path(__file__).resolve().parents[1]
 # Un `*` ne traverse pas les dossiers ; un motif qui finit par `/**` vise tout le dossier, à toute profondeur.
 RETRAITS = [
     ("docs/sources/pdf/*.pdf", "copie d'un PDF d'arXiv de tiers"),
+    ("docs/sources/pdf/**/*.pdf", "copie d'un PDF de tiers (sous-dossier ; bisociation, R-590 de conv-audit)"),
     ("docs/sources/lecture-pdf-niveau1/*.tar", "fichiers de travail d'un lecteur : pages extraites des PDF de tiers"),
     ("docs/sources/lecture-pdf-niveau2/*.tar", "fichiers de travail d'un lecteur : pages extraites des PDF de tiers"),
     ("docs/sources/invites-2606.08892-v1/extrait.tar", "texte complet extrait d'un papier de tiers"),

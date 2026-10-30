@@ -207,3 +207,10 @@ def test_archive_d_un_format_non_examine_arrete(tmp_path, monkeypatch):
     with pytest.raises(SystemExit, match="format non examiné"):
         de.main(["HEAD", str(tmp_path / "sortie-gz")])
     assert list((tmp_path / "sortie-gz").glob("*.bundle")) == []
+
+
+def test_pdf_de_sous_dossier_retire():
+    import depot_expurge as d
+    assert any(d.correspond("docs/sources/pdf/bisociation-litterature-reelle-v1/arxiv-2306.01495.pdf", m) for m, _ in d.RETRAITS)
+    assert not any(d.correspond("docs/sources/pdf/bisociation-litterature-reelle-v1/arxiv-2306.01495.pdf.sha256", m)
+                   for m, _ in d.RETRAITS)
