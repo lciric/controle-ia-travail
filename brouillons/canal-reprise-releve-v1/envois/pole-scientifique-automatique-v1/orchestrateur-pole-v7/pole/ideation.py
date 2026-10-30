@@ -2211,9 +2211,15 @@ def executer_ideation(adaptateur, sortie, *, liste_blanche, question, pieces, pr
                                   "erreur": r.erreur, "fichiers_agent": list(r.fichiers or []),
                                   "signaux_niveau_methode_reponse": signaux_niveau_methode(texte), **supplement_journal})
         refus = getattr(r, "refus", None)
+        ecart_generique = None
+        if refus is None and r.statut != "refus":  # v49 (CL13-05, CL13-06) : défense en profondeur sur le modèle servi, tout adaptateur
+            from .adaptateurs import controle_modele_resultat
+            ecart_generique = refus = controle_modele_resultat(modele, r)
         if refus is not None or r.statut == "refus":  # v47 (R-764) : refus du modèle ou changement de modèle par le kit
             refus = dict(refus or {"motif": str(r.erreur), "modele_demande": modele, "modele_servi": getattr(r, "modele_servi", None)})
             depense = float(getattr(r, "depense_modele_non_autorise_usd", 0.0) or 0.0)
+            if ecart_generique is not None and not depense:
+                depense = float(cout)  # écart de modèle vu par le noyau seul : toute la session est comptée à part
             journal["depense_modele_non_autorise_usd"] = journal.get("depense_modele_non_autorise_usd", 0.0) + depense
             journal["appels"][-1].update({"statut": "refus", "refus": refus, "modele_servi": refus.get("modele_servi"),
                                           "depense_modele_non_autorise_usd": depense})

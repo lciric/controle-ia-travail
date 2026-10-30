@@ -119,12 +119,14 @@ class AmontMoissonFactice:
         self.serveur.server_close()
 
 
-def lancer_relais(amont_url, journal, plafond=200, courriel=None, hote="127.0.0.1"):
+def lancer_relais(amont_url, journal, plafond=200, courriel=None, hote="127.0.0.1", dossier_compteur=None):
     env = {"PATH": os.environ.get("PATH", "")}
     argv = [sys.executable, "-I", "-B", os.path.join(RACINE, "pole", "relais_moisson.py"), "--hote", hote, "--port", "0",
             "--amont-factice", amont_url, "--journal", journal, "--plafond-par-source-par-jour", str(plafond)]
     if courriel:
         argv += ["--courriel-politesse", courriel]
+    if dossier_compteur:  # v49 (CL13-09)
+        argv += ["--dossier-compteur", dossier_compteur]
     proc = subprocess.Popen(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     ligne = proc.stdout.readline()
     if not ligne.startswith("relais de moisson prêt sur "):
@@ -333,7 +335,7 @@ class TestLecteursAmont(unittest.TestCase):
     """Lecteurs des amonts (formats SUPPOSÉS) et adresses interrogées."""
 
     def test_url_amont(self):
-        self.assertEqual(url_amont("arxiv", "a b", 3), "http://export.arxiv.org/api/query?search_query=all%3Aa+b&start=0&max_results=3")
+        self.assertEqual(url_amont("arxiv", "a b", 3), "https://export.arxiv.org/api/query?search_query=all%3Aa+b&start=0&max_results=3")  # v49 (CL13-09) : https
         u = url_amont("openalex", "a b", 2)
         self.assertTrue(u.startswith("https://api.openalex.org/works?search=a+b&per-page=2&select="))
         self.assertNotIn("mailto", u)

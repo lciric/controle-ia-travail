@@ -8,7 +8,9 @@ Deux moteurs :
   GO cité) : vrais agents (Opus 5.5 et Fable 5.1 seuls), **aucun outil intégré** (`tools=[]` du kit, soit `--tools ''`) ;
   v47 (R-764, barrière 3) : le relais de clé est lancé avec `--modeles-permis` égal **exactement** aux modèles des
   proposeurs et des juges (`claude-opus-5-5,claude-fable-5-1` aux réglages du devis), le lanceur le vérifie à l'état du
-  relais avant tout contrôle,
+  relais avant tout contrôle ; v49 (contre-lecture CL13) : cette liste comprend aussi, avec `--tests-de-mort`, le modèle de
+  l'expérimentateur Claude et celui du lecteur, et avec le moteur réel la commande externe doit rendre `modele_servi`
+  (R-764 pour Argon : absent ou différent du modèle demandé = refus = arrêt),
   deux tours au plus, borne de temps par session, bac à sable exigé, clé tenue par le relais du noyau avec son propre
   plafond ; **appel de contrôle de bout en bout par modèle avant la course** (CL31-01), compté au journal ; toute session en
   erreur arrête la course et le lanceur rend un code ≠ 0.
@@ -664,6 +666,31 @@ def construire_analyseur():
     return a
 
 
+def adaptateur_commande_externe(args):
+    """v49 (CL13-05, R-764 pour Argon) : l'adaptateur de la commande externe de la course. Avec le moteur réel
+    (`claude-sdk`), la commande **doit** rendre `modele_servi` (égal au modèle demandé, ou suivi d'un suffixe de date) :
+    absent ou différent = refus = arrêt ; avec le moteur simulé (essais), la barrière n'agit que si la commande le rend."""
+    import shlex
+    from pole.adaptateurs import AdaptateurCommandeExterne
+    return AdaptateurCommandeExterne(shlex.split(args.commande_externe), delai_s=args.delai_commande_s,
+                                     variables_transmises=tuple(args.variable_transmise),
+                                     exiger_modele_servi=(args.moteur == "claude-sdk"))
+
+
+def modeles_du_relais(args, proposeurs, juges):
+    """v49 (CL13-07, R-764 barrière 3) : les modèles Claude que le relais doit permettre, exactement — proposeurs et juges de
+    la course et, quand l'étage de tests de mort est demandé, le modèle de l'expérimentateur (s'il est Claude ; Argon n'est
+    pas servi par le relais) et celui du lecteur. Un modèle en plus serait une voie de repli ; un en moins ferait refuser la
+    session de l'étage (403) : le LISEZMOI de la v48 le disait, le code de la v48 ne le faisait pas."""
+    modeles = [m for _, m in proposeurs + juges]
+    if getattr(args, "tests_de_mort", 0):
+        if getattr(args, "experimentateur", None):
+            modeles.append(paire(args.experimentateur, "experimentateur")[1])
+        if getattr(args, "lecteur_test", None):
+            modeles.append(paire(args.lecteur_test, "lecteur-test")[1])
+    return modeles
+
+
 def verifier_relais(etat_relais, budget_total_usd, budgets, juges, modeles_attendus=None):
     """v38 (CL37-03) et v40 (CL39-03) : le relais doit pouvoir servir la dernière session que le cœur lancera :
     plafond − réserve − dépense déjà faite ≥ total − plus petit plafond de juge. Rend l'état lu (pour le manifeste) ;
@@ -671,7 +698,8 @@ def verifier_relais(etat_relais, budget_total_usd, budgets, juges, modeles_atten
     v41 (CL40-05) : chaque champ présent est un réel fini ≥ 0, jamais un booléen (un NaN désarmait la garde) ; absent
     (`None`), il n'est pas vérifié (relais muet sur ses plafonds) ; une dépense absente vaut 0.
     v47 (R-764, barrière 3) : si l'état porte `modeles_permis` (relais v47), la liste doit être **exactement** l'ensemble
-    des modèles Claude de la course (`modeles_attendus` : proposeurs et juges) — un modèle en plus serait une voie de repli,
+    des modèles Claude de la course (`modeles_attendus` : proposeurs, juges et, avec l'étage, expérimentateur et lecteur —
+    `modeles_du_relais`, v49) — un modèle en plus serait une voie de repli,
     un modèle en moins refuserait une session ; un relais muet (v46) est dit au manifeste."""
     from pole.pari_apparie import _fini
     for champ in ("plafond_usd", "reserve_par_appel_usd", "depense_usd"):
@@ -689,7 +717,7 @@ def verifier_relais(etat_relais, budget_total_usd, budgets, juges, modeles_atten
         if not isinstance(permis, list) or set(permis) != set(modeles_attendus):
             raise idn.CourseInterrompue(f"relais : modèles permis {permis!r} ≠ modèles de la course {sorted(set(modeles_attendus))} "
                                         "(R-764, barrière 3) : relancer le relais avec --modeles-permis exactement égal aux "
-                                        "modèles des proposeurs et des juges")
+                                        "modèles des proposeurs, des juges et, avec --tests-de-mort, de l'expérimentateur Claude et du lecteur")
     if plafond_relais is not None and reserve is not None:
         plus_petit_juge = min(budgets[("juge_ideation", m)] for _, m in juges)
         if float(plafond_relais) - float(reserve) - depense < budget_total_usd - plus_petit_juge - 1e-9:
@@ -1065,10 +1093,7 @@ def _principal(args, pile=None):
     # --- adaptateur des rôles externes (Argon) : la commande, ou un adaptateur scripté en moteur simulé seulement
     externe, commande_externe = None, None
     if args.commande_externe:
-        import shlex
-        from pole.adaptateurs import AdaptateurCommandeExterne
-        externe = AdaptateurCommandeExterne(shlex.split(args.commande_externe), delai_s=args.delai_commande_s,
-                                            variables_transmises=tuple(args.variable_transmise))
+        externe = adaptateur_commande_externe(args)
         commande_externe = externe.description()
     elif args.moteur == "simule" and (prop_ext or args.bras_rapporte_differe or args.experimentateur_externe):
         externe = AdaptateurIdeationSimule(args.graine + 1)
@@ -1128,7 +1153,7 @@ def _principal(args, pile=None):
         if args.tests_de_mort:  # v48 : l'étage se joue après le bras, classement scellé et figé ; jamais sur un classement illisible
             if lisible:
                 if lire_relais is not None:  # barrière 3 (R-764) : relais permettant exactement les modèles de la course
-                    verifier_relais(lire_relais(), 0.0, budgets, juges, modeles_attendus=[m for _, m in proposeurs + juges])
+                    verifier_relais(lire_relais(), 0.0, budgets, juges, modeles_attendus=modeles_du_relais(args, proposeurs, juges))
                 bilan["tests_de_mort"] = bilan_tests_de_mort(idn.jouer_etage_apres_bras(
                     adaptateur, sortie, reglages_tests_de_mort(args, externe), liste_blanche=args.liste_blanche,
                     dossier_ferme=args.dossier_ferme, moteur=args.moteur, horodatage=horodatage(args.horodatage),
@@ -1217,7 +1242,7 @@ def _principal(args, pile=None):
                                               "garde_taille": verif["garde_taille"]}
     if lire_relais is not None:  # CL37-03 / CL39-03 : cohérence plafond, réserve, dépense déjà faite, total du cœur
         versions["relais_au_depart"] = verifier_relais(lire_relais(), args.budget_total_usd, budgets, juges,
-                                                       modeles_attendus=[m for _, m in proposeurs + juges])  # v47 (R-764)
+                                                       modeles_attendus=modeles_du_relais(args, proposeurs, juges))  # v47 (R-764), v49
     versions["tentatives_precedentes"] = tentatives
     versions["controles_repris"] = repris  # v43 (CL40-01, option c) : tentative, empreinte du fichier et de la consigne
     versions["motifs_reprise_controles"] = motifs_reprise  # v44 (CL43-03)

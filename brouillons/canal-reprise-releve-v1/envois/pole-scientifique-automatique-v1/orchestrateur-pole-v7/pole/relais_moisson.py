@@ -9,6 +9,11 @@ les gardes 1 à 3 de la garde de fuite sont refaites ici ; un **plafond de requ�
 de l'orchestrateur, est tenu. La réponse est normalisée : `{source, requete, n, horodatage, empreinte_brute, resultats,
 empreinte}` (SHA-256 des octets de l'amont, puis du JSON normalisé canonique). Journal JSON par ligne, sans clé.
 
+v49 (CL13-09) : le plafond « par jour » est **persistant** (`--dossier-compteur`, un fichier scellé par jour UTC,
+`compteur-AAAA-MM-JJ.json` et son `.sha256`, réécrit à chaque requête réservée ou refusée) : relancer le relais le même jour ne
+remet plus le compteur à zéro ; un fichier dont le sceau est faux, ou illisible, **empêche le démarrage** (aucun repli).
+Sans amont factice (amont réel), `--dossier-compteur` est obligatoire ; arXiv est interrogé en https.
+
 Aucune clé en option (A). Le **courriel de politesse** d'OpenAlex est une option (`--courriel-politesse`), vide par
 défaut : tant que Lazar n'en a pas nommé un, le relais n'envoie **aucun en-tête d'identité** (ni `User-Agent`, ni `mailto`).
 
@@ -30,8 +35,10 @@ if __name__ == "__main__" and not __package__:  # `python -I pole/relais_moisson
 
 import argparse
 import datetime
+import hashlib
 import http.client
 import json
+import os
 import re
 import sys
 import threading
@@ -44,7 +51,8 @@ from .moisson import JETON_MOISSON_FACTICE, MAX_RESULTATS_PAR_REQUETE, SOURCES, 
 from .relais import HOTES_LOCAUX, RelaisInvalide
 
 # Adresses des amonts (SUPPOSÉES, de mémoire ; à relire au branchement) : arXiv, interface Atom ; OpenAlex, JSON.
-AMONTS = {"arxiv": "http://export.arxiv.org/api/query", "openalex": "https://api.openalex.org/works"}
+# v49 (CL13-09) : arXiv en https (la v47 l'interrogeait en clair : requêtes lisibles et modifiables en route)
+AMONTS = {"arxiv": "https://export.arxiv.org/api/query", "openalex": "https://api.openalex.org/works"}
 PLAFOND_PAR_SOURCE_PAR_JOUR_DEFAUT = 200  # SUPPOSÉ ; ≈ 12 requêtes par course (note § 6)
 DELAI_AMONT_S = 30
 TAILLE_MAX_AMONT = 5_000_000
@@ -129,18 +137,82 @@ def lire_openalex(octets):
 LECTEURS = {"arxiv": lire_arxiv, "openalex": lire_openalex}
 
 
-class CompteurJournalier:
-    """Plafond de requêtes par source et par jour (UTC), indépendant de l'orchestrateur."""
+class CompteurInvalide(RelaisInvalide):
+    """Le fichier du compteur journalier est illisible ou son sceau est faux : le relais ne démarre pas (aucun repli)."""
 
-    def __init__(self, plafond):
+
+class CompteurJournalier:
+    """Plafond de requêtes par source et par jour (UTC), indépendant de l'orchestrateur. v49 (CL13-09) : avec `dossier`, le
+    compteur du jour est **persistant** — `compteur-AAAA-MM-JJ.json` et son `.sha256` (format de sha256sum), écrits de façon
+    atomique (fichier provisoire puis renommage) à chaque changement ; relancé le même jour, le relais relit le fichier
+    (sceau vérifié ; sceau faux ou fichier illisible : `CompteurInvalide`, le relais ne démarre pas). Sans `dossier` (essais,
+    amont factice), le compteur reste en mémoire seulement."""
+
+    def __init__(self, plafond, dossier=None):
         self.plafond = int(plafond)
+        self.dossier = dossier
         self.jour, self.appels, self.refus = None, {s: 0 for s in SOURCES}, {s: 0 for s in SOURCES}
         self._verrou = threading.Lock()
+        if dossier is not None:
+            os.makedirs(dossier, exist_ok=True)
+            with self._verrou:
+                self._aujourd_hui()
+
+    @staticmethod
+    def _maintenant_jour():
+        return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+
+    def _chemin(self, jour):
+        return os.path.join(self.dossier, f"compteur-{jour}.json")
+
+    def _charger(self, jour):
+        """Le compteur du jour sur disque, ou None s'il n'existe pas ; `CompteurInvalide` si le sceau ou le contenu est faux."""
+        chemin = self._chemin(jour)
+        if not os.path.exists(chemin) and not os.path.exists(chemin + ".sha256"):
+            return None
+        try:
+            with open(chemin, "rb") as f:
+                octets = f.read()
+            with open(chemin + ".sha256", encoding="utf-8") as f:
+                attendue = f.read().split()[0]
+            if hashlib.sha256(octets).hexdigest() != attendue:
+                raise CompteurInvalide(f"compteur journalier {chemin} : sceau faux (le fichier a été modifié) : le relais ne démarre pas")
+            objet = json.loads(octets.decode("utf-8"))
+            appels, refus = objet["appels"], objet["refus"]
+            if objet.get("jour") != jour or set(appels) != set(SOURCES) or set(refus) != set(SOURCES) \
+                    or any(isinstance(v, bool) or not isinstance(v, int) or v < 0 for v in list(appels.values()) + list(refus.values())):
+                raise CompteurInvalide(f"compteur journalier {chemin} : contenu invalide")
+            return {s: appels[s] for s in SOURCES}, {s: refus[s] for s in SOURCES}
+        except CompteurInvalide:
+            raise
+        except (OSError, ValueError, KeyError, IndexError, TypeError, UnicodeDecodeError) as e:
+            raise CompteurInvalide(f"compteur journalier {chemin} : illisible ({type(e).__name__}) : le relais ne démarre pas") from e
+
+    def _ecrire(self):
+        if self.dossier is None:
+            return
+        chemin = self._chemin(self.jour)
+        octets = (json.dumps({"jour": self.jour, "appels": self.appels, "refus": self.refus}, sort_keys=True, ensure_ascii=False,
+                             indent=1) + "\n").encode("utf-8")
+        for cible, contenu in ((chemin, octets), (chemin + ".sha256",
+                                                    f"{hashlib.sha256(octets).hexdigest()}  {os.path.basename(chemin)}\n".encode("utf-8"))):
+            provisoire = cible + ".provisoire"
+            with open(provisoire, "wb") as f:
+                f.write(contenu)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(provisoire, cible)
 
     def _aujourd_hui(self):
-        jour = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+        jour = self._maintenant_jour()
         if jour != self.jour:
             self.jour, self.appels, self.refus = jour, {s: 0 for s in SOURCES}, {s: 0 for s in SOURCES}
+            if self.dossier is not None:
+                lu = self._charger(jour)
+                if lu is not None:
+                    self.appels, self.refus = lu
+                else:
+                    self._ecrire()
         return jour
 
     def reserver(self, source):
@@ -148,8 +220,10 @@ class CompteurJournalier:
             self._aujourd_hui()
             if self.appels[source] + 1 > self.plafond:
                 self.refus[source] += 1
+                self._ecrire()
                 return False
             self.appels[source] += 1
+            self._ecrire()
             return True
 
     def refuser(self, source):
@@ -157,11 +231,13 @@ class CompteurJournalier:
             self._aujourd_hui()
             if source in self.refus:
                 self.refus[source] += 1
+                self._ecrire()
 
     def etat(self):
         with self._verrou:
             jour = self._aujourd_hui()
-            return {"jour": jour, "plafond_par_source_par_jour": self.plafond, "appels": dict(self.appels), "refus": dict(self.refus)}
+            return {"jour": jour, "plafond_par_source_par_jour": self.plafond, "appels": dict(self.appels), "refus": dict(self.refus),
+                    "persistant": self.dossier is not None}
 
 
 def fabriquer_gestionnaire(compteur, journal, verrou_journal, amont_factice=None, courriel=None):
@@ -267,11 +343,14 @@ def fabriquer_gestionnaire(compteur, journal, verrou_journal, amont_factice=None
     return Gestionnaire
 
 
-def servir(hote, port, plafond_par_source_par_jour, journal=None, amont_factice=None, courriel=None, pret=None):
+def servir(hote, port, plafond_par_source_par_jour, journal=None, amont_factice=None, courriel=None, pret=None, dossier_compteur=None):
     valider_hote(hote)
     if amont_factice:
         amont_factice = valider_amont_factice(amont_factice)
-    compteur = CompteurJournalier(plafond_par_source_par_jour)
+    elif not dossier_compteur:  # v49 (CL13-09) : l'amont réel exige un plafond journalier persistant
+        raise RelaisInvalide("amont réel : --dossier-compteur est obligatoire (plafond par jour persistant, sinon un redémarrage "
+                             "le remettrait à zéro)")
+    compteur = CompteurJournalier(plafond_par_source_par_jour, dossier_compteur)
     gestionnaire = fabriquer_gestionnaire(compteur, journal, threading.Lock(), amont_factice, courriel or None)
     serveur = ThreadingHTTPServer((hote, port), gestionnaire)
     serveur.daemon_threads = True
@@ -281,7 +360,8 @@ def servir(hote, port, plafond_par_source_par_jour, journal=None, amont_factice=
         pret.set()
     print(f"relais de moisson prêt sur {url} (sources {', '.join(SOURCES)} ; amont "
           f"{'factice ' + amont_factice if amont_factice else 'réel (SUPPOSÉ)'} ; plafond {plafond_par_source_par_jour} par "
-          f"source et par jour ; identité {'envoyée' if courriel else 'non envoyée'})", flush=True)
+          f"source et par jour, {'persistant dans ' + dossier_compteur if dossier_compteur else 'en mémoire seulement'} ; "
+          f"identité {'envoyée' if courriel else 'non envoyée'})", flush=True)
     try:
         serveur.serve_forever()
     finally:
@@ -295,6 +375,9 @@ def analyseur():
     a.add_argument("--port", type=int, default=8788, help="0 : port libre choisi par le système")
     a.add_argument("--plafond-par-source-par-jour", type=int, default=PLAFOND_PAR_SOURCE_PAR_JOUR_DEFAUT)
     a.add_argument("--journal", help="journal des appels (JSON par ligne, sans clé)")
+    a.add_argument("--dossier-compteur", default=None,
+                   help="v49 : dossier du compteur journalier persistant (un fichier scellé par jour UTC) ; obligatoire avec "
+                        "l'amont réel")
     a.add_argument("--amont-factice", default=None, help="essais : adresse http de la boucle locale qui remplace les amonts "
                                                          "(/arxiv, /openalex)")
     a.add_argument("--courriel-politesse", default="", help="courriel de politesse d'OpenAlex ; vide (défaut) : aucun en-tête "
@@ -307,7 +390,8 @@ def principal(argv=None):
     try:
         if not (args.plafond_par_source_par_jour >= 1):
             raise RelaisInvalide("plafond par source et par jour : entier ≥ 1")
-        servir(args.hote, args.port, args.plafond_par_source_par_jour, args.journal, args.amont_factice, args.courriel_politesse)
+        servir(args.hote, args.port, args.plafond_par_source_par_jour, args.journal, args.amont_factice, args.courriel_politesse,
+               dossier_compteur=args.dossier_compteur)
     except RelaisInvalide as erreur:
         print(f"erreur : {erreur}", file=sys.stderr)
         return 2

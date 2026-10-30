@@ -67,8 +67,9 @@ class SystemMessage:
 
 
 class ResultMessage:
-    def __init__(self, subtype, result, total_cost_usd, is_error=False):
+    def __init__(self, subtype, result, total_cost_usd, is_error=False, stop_reason=None, model_usage=None):
         self.subtype, self.result, self.total_cost_usd, self.is_error = subtype, result, total_cost_usd, is_error
+        self.stop_reason, self.model_usage = stop_reason, model_usage  # v49 (CL13-06) : champs du kit 0.2.172
 
 
 def _consigner(entree):

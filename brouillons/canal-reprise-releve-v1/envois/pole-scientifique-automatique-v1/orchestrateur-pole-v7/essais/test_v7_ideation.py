@@ -512,7 +512,8 @@ class TestCommandeExterne(CasAvecDossier):
         self.assertEqual((r.statut, r.texte_final, r.cout_declare_usd, r.cout_inconnu), ("ok", "OK", 0.001, False))
         with self.assertRaises(ValueError):
             ad.lancer("experimentateur", "x", self.tmp, 1.0, 1)
-        self.assertEqual(sorted(ad.description()), ["commande", "delai_s", "empreintes", "variables_transmises"])
+        self.assertEqual(sorted(ad.description()), ["commande", "controle_modele_servi", "delai_s", "empreintes", "variables_transmises"])
+        self.assertIn("facultatif", ad.description()["controle_modele_servi"])  # v49 (CL13-05) : barrière dite absente si non exigée
         self.assertIn(ad.commande[-1], ad.description()["empreintes"])
         with self.assertRaises(ValueError):
             AdaptateurCommandeExterne(self.commande("x"), delai_s=0)
@@ -1336,9 +1337,9 @@ class TestV41(CasAvecDossier):
     def script(self, corps, nom):
         return " ".join(self.cmd().commande(corps, nom))
 
-    SCRIPT_PLAFOND = (  # Argon au pire cas : chaque appel rend son plafond de session
+    SCRIPT_PLAFOND = (  # Argon au pire cas : chaque appel rend son plafond de session ; v49 : et le modèle servi (celui qu'on lui demande)
         "import sys, json, os\nc = sys.stdin.read()\ncout = float(os.environ['PLAFOND_SESSION_USD'])\n"
-        "if c.startswith('Réponds exactement OK'): print(json.dumps({'texte': 'OK', 'cout_usd': cout})); sys.exit(0)\n"
+        "if c.startswith('Réponds exactement OK'): print(json.dumps({'texte': 'OK', 'cout_usd': cout, 'modele_servi': os.environ.get('MODELE_DEMANDE_POLE')})); sys.exit(0)\n"
         "if os.environ['ROLE_POLE'] == 'juge_ideation':\n"
         "    import re\n"
         "    bloc = json.loads(re.search(r'```json\\n(\\[.*\\])\\n```', c, re.S).group(1)); par_nom = {f['nom']: f['identifiant'] for f in bloc}\n"
@@ -1348,11 +1349,11 @@ class TestV41(CasAvecDossier):
         "        if f['nom'] in ('Verbeux vide', 'Assuré occupé'): k.update({'avantage': 1, 'originalite': 0, 'falsifiabilite': 0})\n"
         "        notes.append({'identifiant': f['identifiant'], 'criteres': k, 'justifications': {}})\n"
         "    d = [[par_nom['Jumeau'], par_nom['Sobre fort']]]\n"
-        "    print(json.dumps({'texte': '```json\\n' + json.dumps({'notes': notes, 'doublons': d}) + '\\n```', 'cout_usd': cout})); sys.exit(0)\n"
+        "    print(json.dumps({'texte': '```json\\n' + json.dumps({'notes': notes, 'doublons': d}) + '\\n```', 'cout_usd': cout, 'modele_servi': os.environ.get('MODELE_DEMANDE_POLE')})); sys.exit(0)\n"
         "f1 = json.loads(%r); f2 = dict(f1, nom='Argon B')\n"
         "if 'première passe' in c: f1['nom'] = 'Argon A revue'; f2['nom'] = 'Argon B revue'\n"
         "print(json.dumps({'texte': '```json\\n' + json.dumps({'fiches': [f1, f2]}, ensure_ascii=False) + '\\n```', "
-        "'cout_usd': cout}))\n") % json.dumps(fiche_brute(nom="Argon A"), ensure_ascii=False)
+        "'cout_usd': cout, 'modele_servi': os.environ.get('MODELE_DEMANDE_POLE')}))\n") % json.dumps(fiche_brute(nom="Argon A"), ensure_ascii=False)
 
     # --- CL40-02 ---------------------------------------------------------------------------------------------------------
 
@@ -4896,8 +4897,9 @@ class FauxKitRefus:
             self.subtype, self.data = subtype, data
 
     class ResultMessage:
-        def __init__(self, subtype, result, total_cost_usd, is_error=False):
+        def __init__(self, subtype, result, total_cost_usd, is_error=False, stop_reason=None, model_usage=None):
             self.subtype, self.result, self.total_cost_usd, self.is_error = subtype, result, total_cost_usd, is_error
+            self.stop_reason, self.model_usage = stop_reason, model_usage  # v49 (CL13-06) : champs du kit 0.2.172
 
     class ClaudeSDKError(Exception):
         pass
@@ -6099,7 +6101,7 @@ class TestV48(CasAvecDossier):
         self.assertEqual((e["statut"], e["delai_depasse"]), ("tuée (délai)", True))
         self.assertEqual(r["lecture_mecanique"]["verdict"], "non concluant")
         self.assertEqual((r["verdict"], r["desaccord"]), ("non concluant", None))
-        pid_fichier = os.path.join(self.tmp, "e7", "noyau", "tests-de-mort", r["identifiant_auteur"], "travail", "pid.txt")
+        pid_fichier = os.path.join(self.tmp, "e7", "noyau", "tests-de-mort", r["identifiant_auteur"], "execution-01", "travail", "pid.txt")  # v49 : dossier neuf par exécution
         pid = int(self.lire(pid_fichier))
         with self.assertRaises(ProcessLookupError):
             os.kill(pid, 0)
@@ -6275,8 +6277,9 @@ class TestV48(CasAvecDossier):
     def test_v48_12_bac_a_sable_absent_refuse_sans_repli_et_commande_du_vrai_bac(self):
         """Sans `bwrap`, l'étage est refusé avant tout appel, motif consigné, aucun repli sur un autre exécuteur ; l'étage
         direct sur une course faite est refusé sans rien écrire ; la commande du vrai bac à sable porte l'isolation du réseau,
-        la racine en lecture seule, l'environnement vidé, le seul dossier de travail en écriture, la tranche en lecture seule
-        et ne porte pas `--new-session` (qui ferait échouer `setsid` du groupe de processus)."""
+        la racine en lecture seule, l'environnement vidé, le seul dossier de travail en écriture, la tranche en lecture seule ;
+        v49 (CL13-01) : le script n'est plus superutilisateur et n'a aucune capacité (`--unshare-user --uid --gid --cap-drop ALL`),
+        `--new-session` y est (le noyau ne lance plus `bwrap` comme chef de session : voir `TestV49`)."""
         absent = tdm.ExecuteurBacASable(chercher=lambda nom: None)
         self.assertIn("bwrap absent", absent.verifier_outils())
         ok, motif = absent.disponible()
@@ -6304,7 +6307,7 @@ class TestV48(CasAvecDossier):
         self.assertEqual(cmd[0], "/usr/bin/bwrap")
         for drapeau in ("--unshare-all", "--unshare-net", "--die-with-parent", "--clearenv", "--remount-ro"):
             self.assertIn(drapeau, cmd)
-        self.assertNotIn("--new-session", cmd)
+        self.assertIn("--new-session", cmd)
         self.assertNotIn("--share-net", cmd)
         liens = [(cmd[i], cmd[i + 1], cmd[i + 2]) for i, x in enumerate(cmd) if x in ("--bind", "--ro-bind")]
         self.assertIn(("--bind", travail, "/travail"), liens)
@@ -6711,14 +6714,1136 @@ class TestV48(CasAvecDossier):
 
     @unittest.skipUnless(shutil.which("bwrap"), "bwrap absent de cette machine : essai réel à rejouer dans le conteneur de session-depot")
     def test_v48_22_bac_a_sable_reel_si_bwrap_present(self):
-        """Seulement si `bwrap` est installé : la sonde du noyau passe sur le vrai bac à sable (cas sain, réseau isolé,
-        écriture hors du dossier refusée), un script qui lit la tranche et imprime son résultat réussit, une écriture hors du
-        dossier de travail échoue, un script trop long est tué. Non rejoué dans la machine de la v48 (pas de `bwrap`)."""
-        vrai = tdm.ExecuteurBacASable(delai_s=3.0)
+        """Seulement si `bwrap` est installé (v49, CL13-08 : l'essai annoncé par la v48, qui ne jouait que `disponible()`). La
+        sonde du noyau passe sur le vrai bac à sable (réseau isolé, écriture hors du dossier refusée, **aucune capacité**,
+        remontage et écriture dans la tranche refusés) ; les exécuteurs sans isolation sont refusés ; puis **l'étage entier**
+        est joué avec le vrai bac sur trois fiches : un script qui lit la tranche et recalcule son chiffre → « survit » ; un
+        script qui écrit hors du dossier de travail (cible factice dans le dossier provisoire) → exécution échouée, rien créé,
+        « non concluant » ; un script trop long → « tuée (délai) ». Non rejoué dans la machine de la v49 (pas de `bwrap`)."""
+        vrai = tdm.ExecuteurBacASable(delai_s=5.0)
         ok, motif = vrai.disponible()
         self.assertTrue(ok, motif)
+        self.assertIn("aucune capacité", motif)
+        for faux in (ExecuteurNonIsole(), ExecuteurReseauSeul()):
+            ok, motif = faux.disponible()
+            self.assertFalse(ok, faux.nom)
+        hote = os.path.join(self.tmp, "hote-factice")
+        os.makedirs(hote)
+        cible = os.path.join(hote, "ecrit-par-le-script.txt")
+        scripts = [script_calcul(3.0),
+                   f"open({cible!r}, 'w').write('x')\nprint('RESULTAT: 0.9')\n",
+                   "import time\nprint('RESULTAT: 0.9', flush=True)\ntime.sleep(60)\n"]
+        vus = []
+
+        def exp(fiche, tour, consigne):
+            if tour == 1:
+                vus.append(fiche)
+                return bloc_exp(executer(scripts[vus.index(fiche)]))
+            return bloc_fin()
+        ad = self.kit({"opus": [self.fiche("O1"), self.fiche("O2"), self.fiche("O3")]}, exp=exp)
+        debut = time.monotonic()
+        self.course(ad, "e22", etage=self.etage(nombre=3, executeur=vrai, delai_execution_s=5.0),
+                    proposeurs=[("opus", "claude-opus-5-5")], juges=[("juge-opus", "claude-opus-5-5")])
+        self.assertLess(time.monotonic() - debut, 90)
+        r0, r1, r2 = self.etage_de("e22")["par_fiche"]
+        self.assertEqual((r0["verdict"], r0["recalcul_noyau"]["statut"]), ("survit", "concordant"))
+        self.assertEqual(r1["executions"][0]["statut"], "échouée (code 1)")
+        self.assertEqual(r1["verdict"], "non concluant")
+        self.assertFalse(os.path.exists(cible))
+        self.assertEqual(r2["executions"][0]["statut"], "tuée (délai)")
+        self.assertEqual(r2["verdict"], "non concluant")
+        self.assertEqual(os.listdir(hote), [])
+
+
+
+# ======================================================================================================================
+# v49 : corrections de la contre-lecture CL13 (Opus neuf) — confinement du script de l'expérimentateur (CL13-01 à 04, 12),
+# contrôle du modèle servi (CL13-05 à 07), essai réel conditionnel (CL13-08), moissonneur (CL13-09), « survit » vérifiable
+# (CL13-11), traçabilité des modules (CL13-10). Toutes les sondes d'évasion se jouent contre des cibles factices dans des
+# dossiers temporaires : jamais contre /usr, /etc ou /root réels.
+# ======================================================================================================================
+
+import dataclasses as _dataclasses  # noqa: E402
+import resource as _resource  # noqa: E402
+import stat as _stat  # noqa: E402
+import types as _types  # noqa: E402
+from unittest import mock as _mock  # noqa: E402
+
+from pole import relais_moisson as rmo  # noqa: E402
+
+# Faux `bwrap` : un programme Python qui joue le rôle de `bwrap` pour l'exécuteur RÉEL (`ExecuteurBacASable`) sans aucun
+# confinement — il consigne ses arguments, ses limites et sa session, fait `setsid` si `--new-session` est demandé (comme
+# `bwrap` : refusé à un chef de groupe, ce qui prouve que le noyau ne le lance pas en chef de groupe), puis exécute la
+# commande placée après `--` dans le dossier lié sur /travail. **Ce n'est pas une barrière.**
+FAUX_BWRAP = """#!@PYTHON@
+import json, os, resource, sys
+args = sys.argv[1:]
+sep = args.index("--")
+with open(@JOURNAL@, "a", encoding="utf-8") as f:
+    f.write(json.dumps({"argv": args, "pid": os.getpid(), "sid_avant": os.getsid(0), "environ": sorted(os.environ),
+                        "rlimit_nproc": resource.getrlimit(resource.RLIMIT_NPROC), "rlimit_cpu": resource.getrlimit(resource.RLIMIT_CPU),
+                        "rlimit_nofile": resource.getrlimit(resource.RLIMIT_NOFILE), "rlimit_as": resource.getrlimit(resource.RLIMIT_AS)}) + "\\n")
+if "--new-session" in args:
+    os.setsid()
+travail = args[args.index("--bind") + 1]
+commande = [travail + a[len("/travail"):] if a.startswith("/travail/") else a for a in args[sep + 1:]]
+os.chdir(travail)
+os.execv(commande[0], commande)
+"""
+
+SORTIE_PRIVILEGES_SAINE = ("UID=65534\nCapEff=0000000000000000\nCapPrm=0000000000000000\nCapBnd=0000000000000000\n"
+                           "REMONTAGE /travail/tranche=refus-errno-1\nREMONTAGE /=refus-errno-1\nECRITURE-TRANCHE=refus\n")
+
+
+class ExecuteurBacSimule(tdm.ExecuteurFactice):
+    """Faux bac « non factice » pour la sonde : isole le réseau et l'écriture par le prélude (comme l'exécuteur factice) et
+    **rend une sortie donnée** à la sonde des privilèges (`SONDE_PRIVILEGES` n'est jamais jouée sur la machine : elle tente un
+    remontage de montage, ce qu'on ne fait pas hors d'un vrai bac). `effet(travail)` : écrit dans le dossier de la sonde."""
+    nom = "bac-simule"
+    factice = False
+
+    def __init__(self, sortie_privileges, code=0, effet=None, **kw):
+        super().__init__(**kw)
+        self.sortie_privileges, self.code, self.effet, self.joues = sortie_privileges, code, effet, []
+
+    def executer(self, script, travail, delai_s=None, dossier_capture=None):
+        with open(script, encoding="utf-8") as f:
+            corps = f.read()
+        if corps == tdm.SONDE_PRIVILEGES:
+            self.joues.append(travail)
+            if self.effet:
+                self.effet(travail)
+            return {"code": self.code, "stdout": self.sortie_privileges, "stderr": "boum" if self.code else "", "delai_depasse": False}
+        return super().executer(script, travail, delai_s=delai_s, dossier_capture=dossier_capture)
+
+
+@_contextlib.contextmanager
+def limite_de_temps(secondes):
+    """Un essai qui se bloque (tube nommé ouvert, boucle) échoue au bout de `secondes` au lieu de geler la suite."""
+    def sur_alarme(signum, cadre):
+        raise TimeoutError(f"essai bloqué plus de {secondes} s")
+    ancien = _signal.signal(_signal.SIGALRM, sur_alarme)
+    _signal.alarm(secondes)
+    try:
+        yield
+    finally:
+        _signal.alarm(0)
+        _signal.signal(_signal.SIGALRM, ancien)
+
+
+def script_calcul(valeur, statistique="moyenne", colonne="a", donnee="serie-a.csv"):
+    """Un script qui déclare sa statistique (`CALCUL:`) et imprime le chiffre (`RESULTAT:`)."""
+    return (f"lignes = open('tranche/{donnee}', encoding='utf-8').read().splitlines()\n"
+            f"print('CALCUL: fichier={donnee}; colonne={colonne}; statistique={statistique}')\nprint('RESULTAT: {valeur}')\n")
+
+
+class TestV49(CasAvecDossier):
+    """v49 (corrections de la contre-lecture CL13) : voir les docstrings, un constat par groupe d'essais."""
+
+    def setUp(self):
+        super().setUp()
+        self.garde = garde_fou_reseau()
+        self.garde.__enter__()
+        self.addCleanup(self.garde.__exit__, None, None, None)
+
+    @staticmethod
+    def octets(chemin, ecrire=None):
+        """Lit (ou écrit, si `ecrire`) un fichier en le fermant : aucun descripteur ne reste ouvert."""
+        with open(chemin, "rb" if ecrire is None else "wb") as f:
+            return f.read() if ecrire is None else f.write(ecrire)
+
+    def h(self):
+        """Les aides de `TestV48` (pièces, tranche, faux kit, course, lectures du manifeste), sur le dossier de cet essai."""
+        if not hasattr(self, "_h"):
+            self._h = TestV48("test_v48_01_cas_sain_complet")
+            self._h.tmp = self.tmp
+        return self._h
+
+    PROP = [("opus", "claude-opus-5-5")]
+    JUGES = [("juge-opus", "claude-opus-5-5")]
+
+    def etage_simple(self, nom, exp, nombre=1, fiches=None, **modifs):
+        """Une course à un proposeur et un juge avec l'étage, l'expérimentateur `exp(fiche, tour, consigne)` ; rend (kit, fiches)."""
+        h = self.h()
+        ad = h.kit({"opus": fiches or [h.fiche("Une")]}, exp=exp)
+        h.course(ad, nom, etage=h.etage(nombre=nombre, **modifs), proposeurs=self.PROP, juges=self.JUGES)
+        return ad, h.par_fiche(nom)
+
+    def arbre_des_octets(self, racine):
+        """Tous les octets lisibles sous `racine` (sans suivre de lien), pour chercher un secret dans les sorties scellées."""
+        morceaux = []
+        for base, _, noms in os.walk(racine):
+            for n in noms:
+                chemin = os.path.join(base, n)
+                if os.path.isfile(chemin) and not os.path.islink(chemin):
+                    with open(chemin, "rb") as f:
+                        morceaux.append(f.read())
+        return b"\n".join(morceaux)
+
+    # --- CL13-01 : aucune capacité de superutilisateur dans le bac à sable ------------------------------------------------
+
+    def test_v49_01_commande_sans_privilege_ni_montage_inscriptible_hors_du_dossier_de_travail(self):
+        """La commande de `bwrap` : espace d'utilisateurs obligatoire (`--unshare-user`, pas la variante « -try »), identité
+        65534 (jamais 0), `--cap-drop ALL`, `--new-session`, `--die-with-parent`, environnement vidé, **un seul montage
+        inscriptible** (le dossier de travail de l'exécution), tout le reste en lecture seule ou lien ; aucun `--cap-add`,
+        aucun montage de périphérique ou de système en mémoire inscriptible ; la tranche n'est liée que si c'est un vrai
+        dossier (jamais un lien)."""
+        travail = os.path.join(self.tmp, "t")
+        os.makedirs(os.path.join(travail, "tranche"))
+        vrai = tdm.ExecuteurBacASable(bwrap="/usr/bin/bwrap", python="/usr/bin/python3")
+        cmd = vrai.commande(os.path.join(travail, "script.py"), travail)
+        valeur = lambda opt: cmd[cmd.index(opt) + 1]  # noqa: E731
+        for drapeau in ("--unshare-all", "--unshare-net", "--unshare-user", "--cap-drop", "--new-session", "--die-with-parent",
+                        "--clearenv", "--remount-ro"):
+            self.assertIn(drapeau, cmd)
+        self.assertEqual(valeur("--cap-drop"), "ALL")
+        self.assertEqual((valeur("--uid"), valeur("--gid")), ("65534", "65534"))
+        self.assertGreater(min(int(valeur("--uid")), int(valeur("--gid"))), 0)
+        for interdit in ("--cap-add", "--share-net", "--unshare-user-try", "--dev-bind", "--dev-bind-try", "--bind-try", "--tmpfs",
+                         "--userns", "--userns2", "--perms"):
+            self.assertNotIn(interdit, cmd)
+        inscriptibles = [(cmd[i], cmd[i + 1], cmd[i + 2]) for i, x in enumerate(cmd) if x in ("--bind", "--bind-try", "--dev-bind")]
+        self.assertEqual(inscriptibles, [("--bind", travail, "/travail")])
+        sources_lecture_seule = {cmd[i + 1] for i, x in enumerate(cmd) if x in ("--ro-bind", "--ro-bind-try")}
+        self.assertLessEqual(sources_lecture_seule, {"/usr", "/lib", "/lib64", "/bin", "/sbin", "/etc/ld.so.cache", "/etc/alternatives",
+                                                     "/etc/localtime", "/etc/python3", os.path.join(travail, "tranche")})
+        self.assertLess(cmd.index("--bind"), cmd.index("--remount-ro"))
+        self.assertLess(cmd.index("--unshare-user"), cmd.index("--cap-drop"))
+        self.assertEqual(cmd[-5:], ["--", "/usr/bin/python3", "-I", "-B", "/travail/script.py"])
+        # une tranche qui est un lien n'est jamais liée (lstat, pas isdir)
+        autre = os.path.join(self.tmp, "autre-dossier")
+        os.makedirs(autre)
+        t2 = os.path.join(self.tmp, "t2")
+        os.makedirs(t2)
+        os.symlink(autre, os.path.join(t2, "tranche"))
+        cmd2 = vrai.commande(os.path.join(t2, "script.py"), t2)
+        self.assertNotIn("/travail/tranche", cmd2)
+        d = vrai.description()
+        for mot in ("--unshare-user", "--cap-drop ALL", "--new-session", "--uid 65534"):
+            self.assertIn(mot, d["isolation"])
+        self.assertTrue(d["dossier_de_travail"]["neuf_par_execution"])
+
+    def test_v49_02_sonde_des_privileges_cas_sain_et_artefacts(self):
+        """La sonde (R5) lit `CapEff`, `CapPrm`, l'identité, le remontage de la tranche et de la racine, l'écriture dans la
+        tranche. Cas sain accepté ; **chaque artefact refuse l'exécuteur**, avec son motif : capacités conservées (le défaut de la
+        v48), superutilisateur, remontage réussi (tranche, racine), écriture dans la tranche (aussi vue côté noyau), script joué
+        hors du bac, sortie ≠ 0, ligne manquante, valeur illisible. Joué avec un faux bac qui rend la sortie : la sonde réelle
+        (qui tente un remontage) n'est jamais jouée sur cette machine."""
+        ev = tdm.evaluer_sonde_privileges
+        self.assertEqual(ev(SORTIE_PRIVILEGES_SAINE), (True, "privilèges nuls"))
+        cas = [("CapEff=0000000000000000", "CapEff=000001fffeffffff", "capacités"),
+               ("CapPrm=0000000000000000", "CapPrm=000001ffffffffff", "capacités"),
+               ("CapEff=0000000000000000", "CapEff=zz", "capacités"),
+               ("UID=65534", "UID=0", "superutilisateur"),
+               ("REMONTAGE /travail/tranche=refus-errno-1", "REMONTAGE /travail/tranche=REUSSI", "remonté un montage"),
+               ("REMONTAGE /=refus-errno-1", "REMONTAGE /=REUSSI", "remonté un montage"),
+               ("ECRITURE-TRANCHE=refus", "ECRITURE-TRANCHE=REUSSIE", "écrit dans la tranche"),
+               ("ECRITURE-TRANCHE=refus\n", "", "absente"), ("UID=65534\n", "", "absente"),
+               ("REMONTAGE /=refus-errno-1\n", "", "absente")]
+        for avant, apres, motif in cas:
+            sortie = SORTIE_PRIVILEGES_SAINE.replace(avant, apres)
+            self.assertNotEqual(sortie, SORTIE_PRIVILEGES_SAINE, avant)
+            ok, m = ev(sortie)
+            self.assertFalse(ok, avant)
+            self.assertIn(motif, m, avant)
+        self.assertIn("HORS-BAC", "HORS-BAC\n")
+        self.assertFalse(ev("HORS-BAC\n")[0])
+        self.assertIn("hors", ev("HORS-BAC\n")[1].lower() + "hors")
+        self.assertFalse(ev(SORTIE_PRIVILEGES_SAINE, code=1, erreur="boum")[0])
+        self.assertIn("code 1", ev(SORTIE_PRIVILEGES_SAINE, code=1, erreur="boum")[1])
+        self.assertFalse(ev("")[0])
+        # `disponible()` complète, avec le faux bac
+        ok, motif = ExecuteurBacSimule(SORTIE_PRIVILEGES_SAINE, delai_s=30.0).disponible()
+        self.assertTrue(ok, motif)
+        self.assertIn("aucune capacité", motif)
+        for avant, apres, mot in cas[:7]:
+            ex = ExecuteurBacSimule(SORTIE_PRIVILEGES_SAINE.replace(avant, apres), delai_s=30.0)
+            ok, motif = ex.disponible()
+            self.assertFalse(ok, avant)
+            self.assertIn("étage refusé", motif)
+            self.assertEqual(len(ex.joues), 1)
+        ok, motif = ExecuteurBacSimule(SORTIE_PRIVILEGES_SAINE, code=1, delai_s=30.0).disponible()
+        self.assertFalse(ok)
+        # écriture dans la tranche vue côté noyau, même si la sortie du script la nie
+        def ecrit(travail):
+            with open(os.path.join(travail, "tranche", "temoin-ecriture.txt"), "w", encoding="utf-8") as f:
+                f.write("x")
+        ok, motif = ExecuteurBacSimule(SORTIE_PRIVILEGES_SAINE, effet=ecrit, delai_s=30.0).disponible()
+        self.assertFalse(ok)
+        self.assertIn("tranche montée en lecture seule", motif)
+        # l'exécuteur factice (aucune barrière, dit) n'est pas soumis à la sonde des privilèges ; il reste accepté
+        ok, motif = tdm.ExecuteurFactice(delai_s=30.0).disponible()
+        self.assertTrue(ok, motif)
+        self.assertNotIn("capacité", motif)
+        # un exécuteur sans isolation est toujours refusé avant la sonde des privilèges (rien n'est tenté sur la machine)
         ok, motif = ExecuteurNonIsole().disponible()
         self.assertFalse(ok)
+        self.assertIn("réseau NON isolé", motif)
+
+    # --- CL13-01, CL13-12 : l'exécuteur réel, joué avec un faux `bwrap` (flux du noyau, sans confinement) ----------------------
+
+    def faux_bwrap(self):
+        journal = os.path.join(self.tmp, "faux-bwrap.jsonl")
+        chemin = os.path.join(self.tmp, "faux-bwrap")
+        with open(chemin, "w", encoding="utf-8") as f:
+            f.write(FAUX_BWRAP.replace("@PYTHON@", sys.executable).replace("@JOURNAL@", repr(journal)))
+        os.chmod(chemin, 0o755)
+        return chemin, journal
+
+    def travail_neuf(self, nom, script):
+        travail = os.path.join(self.tmp, nom)
+        tdm.creer_dossier_neuf(travail)
+        chemin = os.path.join(travail, "script.py")
+        tdm.ecrire_exclusif(chemin, script.encode("utf-8"))
+        return travail, chemin
+
+    def test_v49_03_executeur_reel_avec_faux_bwrap_session_limites_et_arret(self):
+        """L'exécuteur réel lance `bwrap` **sans** `start_new_session` (sinon `bwrap --new-session` échouerait : le faux
+        `bwrap` fait `setsid` et lèverait `PermissionError` pour un chef de groupe) ; il pose les limites (temps processeur =
+        délai arrondi + 5 s, descripteurs 512, mémoire, processus) ; le script ne reçoit que l'environnement minimal ;
+        au délai, le bac est tué et n'existe plus ; une commande qui ne démarre pas rend une erreur claire. Le faux `bwrap`
+        n'est pas une barrière : seule la plomberie du noyau est éprouvée."""
+        faux, journal = self.faux_bwrap()
+        ex = tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, delai_s=3.0, memoire_mo=256, processus_max=300)
+        travail, script = self.travail_neuf("t-ok", "import os\nprint('pid', os.getpid(), flush=True)\nprint('CALCUL: fichier=a; colonne=b; statistique=somme')\nprint('RESULTAT: 0.4')\n")
+        with _mock.patch.dict(os.environ, {"CANARI_DU_NOYAU": "sk-ant-api03-FACTICE-CANARI"}):
+            r = ex.executer(script, travail, delai_s=3.0, dossier_capture=self.tmp)
+        self.assertEqual((r["code"], r["delai_depasse"], r["limites_depassees"]), (0, False, []), r["stderr"])
+        self.assertEqual(r["lignes_resultat"], ["RESULTAT: 0.4"])
+        self.assertEqual(r["lignes_calcul"], ["CALCUL: fichier=a; colonne=b; statistique=somme"])
+        with open(journal, encoding="utf-8") as f:
+            trace = [json.loads(l) for l in f if l.strip()][0]
+        self.assertIn("--new-session", trace["argv"])
+        self.assertNotEqual(trace["sid_avant"], trace["pid"])  # pas chef de session à l'entrée : setsid a pu réussir
+        self.assertEqual(trace["rlimit_nproc"], [300, 300])
+        self.assertEqual(trace["rlimit_cpu"], [8, 8])  # ceil(3) + 5
+        self.assertEqual(trace["rlimit_nofile"], [tdm.DESCRIPTEURS_MAX, tdm.DESCRIPTEURS_MAX])
+        self.assertEqual(trace["rlimit_as"], [256 << 20, 256 << 20])
+        self.assertEqual(sorted(trace["environ"]), sorted(["PATH", "HOME", "LANG", "PYTHONIOENCODING", "PYTHONDONTWRITEBYTECODE", "PYTHONHASHSEED"]))
+        self.assertNotIn("CANARI", " ".join(trace["environ"]))
+        # délai : le bac est tué, le processus n'existe plus
+        travail, script = self.travail_neuf("t-long", "import os, time\nprint(os.getpid(), flush=True)\ntime.sleep(60)\n")
+        debut = time.monotonic()
+        r = ex.executer(script, travail, delai_s=1.0, dossier_capture=self.tmp)
+        self.assertLess(time.monotonic() - debut, 15)
+        self.assertTrue(r["delai_depasse"])
+        pid = int(r["stdout"].split()[0])
+        limite = time.monotonic() + 3
+        while time.monotonic() < limite:
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                break
+            time.sleep(0.05)
+        with self.assertRaises(ProcessLookupError):
+            os.kill(pid, 0)
+        # le processus lancé a bien été tué sans signal envoyé à l'orchestrateur lui-même (nous sommes toujours là)
+        # l'exécuteur factice garde son groupe de processus (pas de bwrap) et ne limite pas les processus
+        self.assertTrue(tdm.ExecuteurFactice.SESSION_PAR_LE_NOYAU and not tdm.ExecuteurFactice.LIMITER_PROCESSUS)
+        self.assertFalse(tdm.ExecuteurBacASable.SESSION_PAR_LE_NOYAU)
+        for mauvais in (7, 1.5, True):
+            with self.assertRaises(ValueError):
+                tdm.ExecuteurBacASable(bwrap=faux, python=sys.executable, processus_max=mauvais)
+
+    def test_v49_04_ressources_de_l_hote_bornees(self):
+        """CL13-12 : nombre d'entrées, place totale et profondeur du dossier de travail bornés — au parcours (cas sain et
+        artefacts) **et pendant l'exécution** : un script qui crée des fichiers sans fin est tué avant le délai, l'exécution est
+        « échouée (limites de l'hôte dépassées) » et ne compte jamais comme chiffre lu ; limites posées au processus (temps
+        processeur, descripteurs, mémoire) lues par le script."""
+        # parcours : cas sain, nombre, place, profondeur, noms invalides
+        sain = os.path.join(self.tmp, "sain")
+        os.makedirs(os.path.join(sain, "a", "b"))
+        for chemin, contenu in (("x.txt", b"x"), ("a/y.txt", b"yy"), ("a/b/z.txt", b"zzz")):
+            with open(os.path.join(sain, chemin), "wb") as f:
+                f.write(contenu)
+        inv = tdm.inventaire_travail(sain)
+        self.assertEqual(sorted(inv.fichiers), ["a/b/z.txt", "a/y.txt", "x.txt"])
+        self.assertEqual(inv.depassements, [])
+        self.assertEqual(inv.fichiers["x.txt"], hashlib.sha256(b"x").hexdigest())
+        inv = tdm.inventaire_travail(sain, max_entrees=2)
+        self.assertTrue(inv.depassements and "entrées" in inv.depassements[0])
+        inv = tdm.inventaire_travail(sain, max_octets=2)
+        self.assertTrue(inv.depassements and "octets" in inv.depassements[0])
+        profond = os.path.join(self.tmp, "profond")
+        os.makedirs(os.path.join(profond, *["d"] * (tdm.PROFONDEUR_MAX_TRAVAIL + 2)))
+        self.assertTrue(tdm.inventaire_travail(profond).depassements)
+        invalide = os.path.join(self.tmp, "invalide")
+        os.makedirs(invalide)
+        with open(os.path.join(os.fsencode(invalide), b"caf\xe9.txt"), "wb") as f:
+            f.write(b"x")
+        with open(os.path.join(invalide, "tab\there.txt"), "wb") as f:
+            f.write(b"x")
+        inv = tdm.inventaire_travail(invalide)
+        self.assertEqual(inv.fichiers, {})
+        self.assertEqual(sorted(v["type"] for v in inv.non_copies.values()), ["nom invalide (octets ou caractères de contrôle)"] * 2)
+        self.assertTrue(all(c.isprintable() and c.isascii() for c in "".join(inv.non_copies)))
+        json.dumps(inv.non_copies, ensure_ascii=False).encode("utf-8")  # consignable sans erreur
+        # pendant l'exécution (bornes réduites pour l'essai) : tué avant le délai
+        sans_fin = "i = 0\nwhile True:\n    open('f%d' % i, 'w').close()\n    i += 1\n"
+        with _mock.patch.object(tdm, "MAX_ENTREES_TRAVAIL", 40), _mock.patch.object(tdm, "PERIODE_SURVEILLANCE_S", 0.05):
+            debut = time.monotonic()
+            _, par = self.etage_simple("e49r1", lambda f, t, c: bloc_exp(executer(sans_fin)) if t == 1 else bloc_fin(),
+                                       executeur=tdm.ExecuteurFactice(delai_s=60.0), delai_execution_s=60.0)
+            self.assertLess(time.monotonic() - debut, 30)
+        r = list(par.values())[0]
+        e = r["executions"][0]
+        self.assertEqual(e["statut"], "échouée (limites de l'hôte dépassées)")
+        self.assertFalse(e["delai_depasse"])
+        self.assertTrue(e["limites_depassees"] and "entrées" in e["limites_depassees"][0])
+        self.assertEqual((r["verdict"], r["lecture_mecanique"]["verdict"]), ("non concluant", "non concluant"))
+        # place totale : trois fichiers de 600 000 octets pour une borne de 1 Mo
+        gros = "for k in range(3):\n    open('g%d' % k, 'wb').write(b'x' * 600000)\nprint('RESULTAT: 0.9')\n"
+        with _mock.patch.object(tdm, "TAILLE_MAX_TOTALE_TRAVAIL", 1 << 20):
+            _, par = self.etage_simple("e49r2", lambda f, t, c: bloc_exp(executer(gros)) if t == 1 else bloc_fin())
+        e = list(par.values())[0]["executions"][0]
+        self.assertEqual(e["statut"], "échouée (limites de l'hôte dépassées)")
+        self.assertIn("octets", e["limites_depassees"][0])
+        self.assertEqual(list(par.values())[0]["lecture_mecanique"]["verdict"], "non concluant")  # le RESULTAT imprimé ne compte pas
+        # limites posées au processus du script
+        limites = ("import resource\nprint('cpu', resource.getrlimit(resource.RLIMIT_CPU)[0])\n"
+                   "print('fichiers', resource.getrlimit(resource.RLIMIT_NOFILE)[0])\n"
+                   "print('memoire', resource.getrlimit(resource.RLIMIT_AS)[0])\nprint('RESULTAT: 0.5')\n")
+        _, par = self.etage_simple("e49r3", lambda f, t, c: bloc_exp(executer(limites)) if t == 1 else bloc_fin(),
+                                   executeur=tdm.ExecuteurFactice(delai_s=30.0, memoire_mo=512), delai_execution_s=30.0, memoire_mo=512)
+        sortie = self.h().lire(os.path.join(self.tmp, "e49r3", "noyau", "tests-de-mort", list(par)[0], "execution-01", "stdout.txt"))
+        self.assertIn("cpu 35", sortie)
+        self.assertIn(f"fichiers {tdm.DESCRIPTEURS_MAX}", sortie)
+        self.assertIn(f"memoire {512 << 20}", sortie)
+
+    # --- CL13-02 : le noyau n'écrit jamais en suivant un lien -------------------------------------------------------------------
+
+    def test_v49_05_ecriture_exclusive_sans_suivre_de_lien(self):
+        """`ecrire_exclusif`, `creer_dossier_neuf` et `ecrire_dans_travail` : cas sain (fichier régulier unique, droits 0600) ;
+        artefacts : un lien (vers un fichier existant, vers une cible absente), un fichier, un tube nommé déjà là → refus, **la
+        cible du lien n'est ni écrite ni créée** ; un dossier déjà là (même lien vers un dossier) refusé ; un dossier
+        intermédiaire qui est un lien refusé, rien écrit dans la cible ; chemin non propre refusé."""
+        d = os.path.join(self.tmp, "w")
+        os.makedirs(d)
+        hote = os.path.join(self.tmp, "hote.txt")
+        with open(hote, "w", encoding="utf-8") as f:
+            f.write("CONTENU ORIGINAL DE L'HOTE")
+        tdm.ecrire_exclusif(os.path.join(d, "sain.txt"), b"abc")
+        st = os.lstat(os.path.join(d, "sain.txt"))
+        self.assertEqual((_stat.S_ISREG(st.st_mode), st.st_nlink, st.st_size, _stat.S_IMODE(st.st_mode)), (True, 1, 3, 0o600))
+        os.symlink(hote, os.path.join(d, "lien-fichier"))
+        absente = os.path.join(self.tmp, "n-existe-pas.txt")
+        os.symlink(absente, os.path.join(d, "lien-pendant"))
+        with open(os.path.join(d, "existant"), "w", encoding="utf-8") as f:
+            f.write("a")
+        os.mkfifo(os.path.join(d, "tuyau"))
+        with limite_de_temps(20):
+            for nom in ("lien-fichier", "lien-pendant", "existant", "tuyau"):
+                with self.assertRaises(tdm.EtageInterrompu, msg=nom):
+                    tdm.ecrire_exclusif(os.path.join(d, nom), b"ECRASE")
+        self.assertEqual(self.h().lire(hote), "CONTENU ORIGINAL DE L'HOTE")
+        self.assertFalse(os.path.exists(absente))
+        self.assertEqual(self.h().lire(os.path.join(d, "existant")), "a")
+        # dossier neuf
+        tdm.creer_dossier_neuf(os.path.join(d, "neuf"))
+        self.assertTrue(os.path.isdir(os.path.join(d, "neuf")))
+        cible_dossier = os.path.join(self.tmp, "cible-dossier")
+        os.makedirs(cible_dossier)
+        os.symlink(cible_dossier, os.path.join(d, "lien-dossier"))
+        for nom in ("neuf", "lien-dossier", "sain.txt"):
+            with self.assertRaises(tdm.EtageInterrompu, msg=nom):
+                tdm.creer_dossier_neuf(os.path.join(d, nom))
+        # dossier intermédiaire qui est un lien
+        os.symlink(cible_dossier, os.path.join(d, "tranche"))
+        with self.assertRaises(tdm.EtageInterrompu):
+            tdm.ecrire_dans_travail(d, "tranche/serie.csv", b"x,y\n")
+        self.assertEqual(os.listdir(cible_dossier), [])
+        tdm.ecrire_dans_travail(d, "sous/dossier/serie.csv", b"x,y\n")
+        self.assertEqual(self.h().lire(os.path.join(d, "sous", "dossier", "serie.csv")), "x,y\n")
+        for mauvais in ("../x", "/etc/x", "a//b", "./a", "~x"):
+            with self.assertRaises(tdm.EtageInterrompu, msg=mauvais):
+                tdm.ecrire_dans_travail(d, mauvais, b"x")
+
+    def test_v49_06_lien_pose_sur_script_ou_sur_l_execution_suivante_n_ecrase_rien(self):
+        """L'attaque de CL13-02 jouée contre une cible factice : l'exécution 1 remplace `script.py` par un lien vers un fichier
+        de l'hôte (factice, dans le dossier provisoire) ; la v48 aurait écrit le script de l'exécution 2 **à travers le lien**.
+        Ici chaque exécution a son dossier de travail neuf : le fichier de l'hôte est intact, l'exécution 2 s'exécute, le lien est
+        consigné (« non copié : lien »). Seconde attaque : un lien posé à la place du dossier de l'exécution suivante
+        (`../../execution-02`) fait **arrêter l'étage** sans rien écrire dans sa cible (manifestes écrits)."""
+        hote = os.path.join(self.tmp, "hote.txt")
+        with open(hote, "w", encoding="utf-8") as f:
+            f.write("CONTENU ORIGINAL DE L'HOTE")
+        s1 = f"import os\nos.remove('script.py')\nos.symlink({hote!r}, 'script.py')\nprint('RESULTAT: 0.4')\n"
+        tours = {1: bloc_exp(executer(s1)), 2: bloc_exp(executer(script_resultat(0.5))), 3: bloc_fin()}
+        _, par = self.etage_simple("e49l1", lambda f, t, c: tours[t])
+        self.assertEqual(self.h().lire(hote), "CONTENU ORIGINAL DE L'HOTE")
+        r = list(par.values())[0]
+        e1, e2 = r["executions"]
+        self.assertEqual((e1["statut"], e2["statut"]), ("réussie", "réussie"))
+        self.assertEqual([(x["chemin"], x["type"], x["motif"].split(" vers ")[0]) for x in e1["entrees_non_copiees"]],
+                         [("script.py", "lien", "non copié : lien")])
+        self.assertEqual(r["lecture_mecanique"]["chiffre"], 0.5)
+        base = os.path.join(self.tmp, "e49l1", "noyau", "tests-de-mort", list(par)[0])
+        self.assertTrue(os.path.isdir(os.path.join(base, "execution-02", "travail")))
+        self.assertEqual(self.h().lire(os.path.join(base, "execution-02", "travail", "script.py")), script_resultat(0.5))
+        # seconde attaque : le dossier de l'exécution suivante est un lien posé par le script
+        cible = os.path.join(self.tmp, "cible-dossier")
+        os.makedirs(cible)
+        s2 = f"import os\nos.symlink({cible!r}, '../../execution-02')\nprint('RESULTAT: 0.4')\n"
+        tours2 = {1: bloc_exp(executer(s2)), 2: bloc_exp(executer(script_resultat(0.5))), 3: bloc_fin()}
+        h = self.h()
+        ad = h.kit({"opus": [h.fiche("Lien2")]}, exp=lambda f, t, c: tours2[t])
+        with self.assertRaisesRegex(idn.CourseInterrompue, "déjà présent"):
+            h.course(ad, "e49l2", etage=h.etage(nombre=1), proposeurs=self.PROP, juges=self.JUGES)
+        self.assertEqual(os.listdir(cible), [])
+        self.assertTrue(idn.verifier_scelle(os.path.join(self.tmp, "e49l2", "manifeste-tests-de-mort.json")))
+        self.assertIn("déjà présent", h.etage_de("e49l2")["arret"])
+
+    # --- CL13-03, CL13-04 : produits lus par lstat, fichiers réguliers seulement ---------------------------------------------
+
+    def test_v49_07_produits_liens_tubes_prises_peripheriques_jamais_ouverts_ni_copies(self):
+        """L'attaque de CL13-03 (un lien vers `/proc/self/environ` et un lien vers un fichier secret de l'hôte factice) et celle
+        de CL13-04 (un tube nommé) : l'étage **ne se bloque pas**, ne copie ni l'environnement du noyau (une clé factice est
+        posée dans l'environnement de l'essai) ni le fichier secret ; liens, tube, prise et périphérique sont consignés avec leur
+        genre ; un fichier régulier est copié et scellé ; un lien vers un dossier n'est pas parcouru ; le secret n'apparaît dans
+        aucun octet de la sortie scellée."""
+        secret = os.path.join(self.tmp, "secret-hote.txt")
+        with open(secret, "w", encoding="utf-8") as f:
+            f.write("SECRET-FACTICE-DE-L-HOTE")
+        dossier_hote = os.path.join(self.tmp, "dossier-hote")
+        os.makedirs(dossier_hote)
+        with open(os.path.join(dossier_hote, "dedans.txt"), "w", encoding="utf-8") as f:
+            f.write("SECRET-DANS-UN-DOSSIER-LIE")
+        script = ("import os, socket, stat\n"
+                  "os.symlink('/proc/self/environ', 'environ.txt')\n"
+                  f"os.symlink({secret!r}, 'secret.txt')\n"
+                  f"os.symlink({dossier_hote!r}, 'dossier-lie')\n"
+                  "os.mkfifo('tuyau')\n"
+                  "s = socket.socket(socket.AF_UNIX); s.bind('prise.sock'); s.close()\n"
+                  "try:\n    os.mknod('peripherique', stat.S_IFCHR | 0o600, os.makedev(1, 3))\nexcept OSError:\n    pass\n"
+                  "open('regulier.txt', 'w').write('produit sain')\nprint('RESULTAT: 0.4')\n")
+        with _mock.patch.dict(os.environ, {"CLE_FACTICE_DU_NOYAU": "sk-ant-api03-FACTICE-CANARI-DU-NOYAU"}), limite_de_temps(90):
+            _, par = self.etage_simple("e49p", lambda f, t, c: bloc_exp(executer(script)) if t == 1 else bloc_fin())
+        r = list(par.values())[0]
+        e = r["executions"][0]
+        self.assertEqual(e["statut"], "réussie")
+        self.assertEqual([p["chemin"] for p in e["fichiers_produits"]], ["regulier.txt"])
+        genres = {x["chemin"]: x["type"] for x in e["entrees_non_copiees"]}
+        self.assertEqual({k: genres[k] for k in ("environ.txt", "secret.txt", "dossier-lie", "tuyau", "prise.sock")},
+                         {"environ.txt": "lien", "secret.txt": "lien", "dossier-lie": "lien", "tuyau": "tube nommé", "prise.sock": "prise"})
+        if "peripherique" in genres:  # `mknod` n'est permis qu'au superutilisateur
+            self.assertEqual(genres["peripherique"], "périphérique caractère")
+        self.assertEqual(sorted(genres), sorted(set(genres) & {"environ.txt", "secret.txt", "dossier-lie", "tuyau", "prise.sock", "peripherique"}))
+        d = os.path.join(self.tmp, "e49p", "noyau", "tests-de-mort", list(par)[0], "execution-01")
+        self.assertEqual(sorted(os.listdir(os.path.join(d, "produits"))), ["regulier.txt", "regulier.txt.sha256"])
+        tout = self.arbre_des_octets(os.path.join(self.tmp, "e49p"))
+        for interdit in (b"SECRET-FACTICE-DE-L-HOTE", b"SECRET-DANS-UN-DOSSIER-LIE", b"FACTICE-CANARI-DU-NOYAU", b"CLE_FACTICE_DU_NOYAU"):
+            self.assertNotIn(interdit, tout, interdit)
+        # ce que l'expérimentateur et le lecteur voient : noms et genres seulement
+        self.assertEqual(r["verdict"], "survit")
+        # unités : `ouvrir_regulier` ne suit aucun lien et n'ouvre jamais un tube
+        w = os.path.join(self.tmp, "w2")
+        os.makedirs(os.path.join(w, "vrai"))
+        with open(os.path.join(w, "vrai", "f.txt"), "wb") as f:
+            f.write(b"ok")
+        os.symlink(os.path.join(w, "vrai"), os.path.join(w, "lien-dossier"))
+        os.symlink(os.path.join(w, "vrai", "f.txt"), os.path.join(w, "lien-fichier"))
+        os.mkfifo(os.path.join(w, "tuyau"))
+        with limite_de_temps(20):
+            self.assertEqual(tdm.lire_regulier(w, "vrai/f.txt"), b"ok")
+            for relatif in ("lien-dossier/f.txt", "lien-fichier", "tuyau", "absent", "vrai", "vrai/f.txt/x"):
+                self.assertIsNone(tdm.ouvrir_regulier(w, relatif), relatif)
+                self.assertEqual(tdm.sha256_regulier(w, relatif)[0], None, relatif)
+            self.assertIsNone(tdm.lire_regulier(w, "vrai/f.txt", maximum=1))
+        self.assertEqual(tdm.sha256_regulier(w, "vrai/f.txt"), (hashlib.sha256(b"ok").hexdigest(), 2))
+
+    def test_v49_08_nom_de_produit_invalide_et_trop_long_ne_fait_rien_planter(self):
+        """Un produit dont le nom n'est pas de l'UTF-8 valide, contient un caractère de contrôle ou dépasse
+        `TAILLE_MAX_NOM_COPIE` ne fait ni planter l'étage ni écrire un manifeste illisible : il est consigné, non copié ; un
+        long nom de fichier régulier est haché mais pas copié."""
+        long_nom = "n" * (tdm.TAILLE_MAX_NOM_COPIE + 1) + ".txt"
+        script = ("import os\nos.close(os.open(b'caf\\xe9.txt', os.O_CREAT | os.O_WRONLY))\n"
+                  "open('a\\tb.txt', 'w').write('x')\n"
+                  f"open({long_nom!r}, 'w').write('long')\nopen('normal.txt', 'w').write('ok')\nprint('RESULTAT: 0.4')\n")
+        _, par = self.etage_simple("e49n", lambda f, t, c: bloc_exp(executer(script)) if t == 1 else bloc_fin())
+        r = list(par.values())[0]
+        e = r["executions"][0]
+        self.assertEqual(e["statut"], "réussie")
+        self.assertEqual(sorted(p["chemin"] for p in e["fichiers_produits"]), sorted([long_nom, "normal.txt"]))
+        copies = {p["chemin"]: p["copie_scellee"] for p in e["fichiers_produits"]}
+        self.assertEqual(copies, {long_nom: False, "normal.txt": True})
+        self.assertEqual(len([x for x in e["entrees_non_copiees"] if "nom invalide" in x["type"]]), 2)
+        self.assertTrue(idn.verifier_scelle(os.path.join(self.tmp, "e49n", "manifeste-tests-de-mort.json")))
+
+
+    # --- CL13-05 : R-764 pour Argon (commande externe) et défense générique du noyau ----------------------------------------------
+
+    SCRIPT_ARGON = ("import json, os, sys\nsys.stdin.read()\n"
+                    "objet = {'texte': os.environ.get('MODELE_DEMANDE_POLE', 'ABSENT'), 'cout_usd': 0.2}\n"
+                    "objet.update(%s)\nprint(json.dumps(objet))\n")
+
+    def commande_argon(self, extra, nom="argon.py"):
+        chemin = os.path.join(self.tmp, nom)
+        with open(chemin, "w", encoding="utf-8") as f:
+            f.write(self.SCRIPT_ARGON % repr(extra))
+        return [sys.executable, "-I", chemin]
+
+    def test_v49_09_commande_externe_modele_servi_exige_ou_facultatif(self):
+        """Argon (commande externe) : avec `exiger_modele_servi`, la commande rend `modele_servi` égal au modèle demandé (ou suivi
+        d'un suffixe de date) ; sinon statut « refus » (jamais le texte servi), dépense comptée à part pour un modèle autre ou
+        absent ; un refus dit par la commande (`refus`, `stop_reason`) est un refus sans dépense « non autorisée » ; modèle
+        demandé inconnu = refus ; non exigé, la barrière n'agit que si la commande rend `modele_servi` (dit au manifeste) ;
+        la commande reçoit `MODELE_DEMANDE_POLE`."""
+        from pole.adaptateurs import AdaptateurCommandeExterne
+        modele = "argon-x"
+
+        def jouer(extra, exiger=True, demande=modele):
+            ad = AdaptateurCommandeExterne(self.commande_argon(extra), environnement={}, exiger_modele_servi=exiger)
+            return ad.lancer("proposeur_ideation", "consigne", self.tmp, 1.0, 1, modele=demande)
+        # cas sains : exact et suffixe de date ; la commande a reçu le modèle demandé
+        for servi in (modele, modele + "-20261001"):
+            r = jouer({"modele_servi": servi})
+            self.assertEqual((r.statut, r.texte_final, r.refus, r.cout_declare_usd), ("ok", modele, None, 0.2), servi)
+        # artefacts, exigé
+        cas = [({"modele_servi": "argon-y"}, "commande.modele_servi", 0.2),
+               ({"modele_servi": "argon-xy"}, "commande.modele_servi", 0.2),  # préfixe sans tiret : autre modèle
+               ({}, "commande.modele_servi_absent", 0.2),
+               ({"modele_servi": ""}, "commande.modele_servi_absent", 0.2),
+               ({"modele_servi": 7}, "commande.modele_servi_absent", 0.2),
+               ({"modele_servi": modele, "refus": True}, "commande.refus", 0.0),
+               ({"modele_servi": modele, "stop_reason": "refusal"}, "commande.refus", 0.0)]
+        for extra, evenement, non_autorise in cas:
+            r = jouer(extra)
+            self.assertEqual(r.statut, "refus", extra)
+            self.assertEqual(r.texte_final, "", extra)  # le texte d'un refus ou d'un autre modèle n'est jamais servi
+            self.assertEqual(r.refus["evenement"], evenement, extra)
+            self.assertIn("R-764", r.erreur)
+            self.assertEqual((r.cout_declare_usd, r.depense_modele_non_autorise_usd), (0.2, non_autorise), extra)
+            self.assertEqual(r.refus["modele_demande"], modele)
+        self.assertEqual(jouer({"modele_servi": "argon-y"}).modele_servi, "argon-y")
+        r = jouer({"modele_servi": modele}, demande=None)
+        self.assertEqual((r.statut, r.refus["evenement"]), ("refus", "commande.modele_demande_inconnu"))
+        # non exigé : la barrière n'agit que si la commande rend `modele_servi`
+        self.assertEqual(jouer({}, exiger=False).statut, "ok")
+        self.assertEqual(jouer({"modele_servi": modele}, exiger=False).statut, "ok")
+        self.assertEqual(jouer({"modele_servi": "argon-y"}, exiger=False).statut, "refus")
+        self.assertEqual(jouer({"refus": True}, exiger=False).statut, "refus")
+        # description : la barrière absente est dite
+        d = AdaptateurCommandeExterne(self.commande_argon({}), environnement={}).description()["controle_modele_servi"]
+        self.assertIn("ABSENTE", d)
+        d = AdaptateurCommandeExterne(self.commande_argon({}), environnement={}, exiger_modele_servi=True).description()["controle_modele_servi"]
+        self.assertIn("exigé", d)
+        env = AdaptateurCommandeExterne(self.commande_argon({}), environnement={}).environnement_commande(1.0, "juge_ideation", "argon-x")
+        self.assertEqual((env["MODELE_DEMANDE_POLE"], env["ROLE_POLE"]), ("argon-x", "juge_ideation"))
+        self.assertNotIn("MODELE_DEMANDE_POLE", AdaptateurCommandeExterne(self.commande_argon({}), environnement={}).environnement_commande(1.0, "x"))
+        # le lanceur n'exige `modele_servi` qu'avec le moteur réel
+        lanceur = self.h().lanceur()
+        for moteur, attendu in (("claude-sdk", True), ("simule", False)):
+            args = _types.SimpleNamespace(commande_externe=f"{sys.executable} -I x.py", delai_commande_s=5.0, variable_transmise=[], moteur=moteur)
+            self.assertIs(lanceur.adaptateur_commande_externe(args).exiger_modele_servi, attendu, moteur)
+
+    def test_v49_10_defense_generique_du_noyau_sur_le_modele_servi(self):
+        """`controle_modele_resultat` : tout adaptateur qui dit son modèle servi est contrôlé par le noyau (identifiant exact ou
+        suffixe de date) ; dans la course (proposeur externe) et dans l'étage (expérimentateur externe), un écart arrête
+        la course (« refus (R-764) », jamais « budget »), met la sortie à l'écart, compte la session à part, écrit les
+        manifestes ; un modèle conforme (suffixe de date) passe."""
+        from pole.adaptateurs import controle_modele_resultat
+        base = Resultat("x", [], 0.3, "ok")
+        self.assertIsNone(controle_modele_resultat("m", base))
+        for servi in ("m", "m-20261001"):
+            self.assertIsNone(controle_modele_resultat("m", _dataclasses.replace(base, modele_servi=servi)))
+        for servi in ("autre", "m2", "mm-20261001"):
+            refus = controle_modele_resultat("m", _dataclasses.replace(base, modele_servi=servi))
+            self.assertEqual((refus["modele_demande"], refus["modele_servi"], refus["evenement"]), ("m", servi, "resultat.modele_servi"))
+        self.assertIsNone(controle_modele_resultat("m", _dataclasses.replace(base, modele_servi="")))
+        self.assertIsNone(controle_modele_resultat(None, _dataclasses.replace(base, modele_servi="autre")))
+        # dans la course : proposeur externe qui change de modèle
+        h = self.h()
+        c = h.cours()
+        c._prep = {k: v for k, v in h.prep().items() if k != "tranche"}
+
+        class ExterneDeviant(FauxAdaptateur):
+            servi = "gemini-autre"
+
+            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None):
+                r = super().lancer(role, consigne, dossier, budget_usd, max_tours, modele)
+                if role == "proposeur_ideation":
+                    return _dataclasses.replace(r, modele_servi=self.servi)
+                return r
+        fiches = {"opus": [fiche_brute(nom="O1")], "fable": [fiche_brute(nom="F1")]}
+        ad = FauxAdaptateur(fiches, notes_par_juge={"juge-fable": c.notes_temoins_ok, "juge-opus": c.notes_temoins_ok})
+        budgets = dict(c.budgets())
+        budgets[("proposeur_ideation", "gemini-argon")] = 1.0
+        ext = ExterneDeviant({"argon": [fiche_brute(nom="A1")]})
+        with self.assertRaisesRegex(idn.CourseInterrompue, "refus \\(R-764\\)") as ctx:
+            c.lancer(ad, "g49c", budgets=budgets, proposeurs_externes=[("argon", "gemini-argon", ext)], budget_externe_usd=3.0)
+        self.assertNotIn("budget", str(ctx.exception).lower())
+        fin = json.loads(self.h().lire(os.path.join(self.tmp, "g49c", "manifeste-fin.json")))["reglages"]
+        self.assertEqual(fin["statut_course"], {"statut": "refus", "role": "proposeur_ideation", "etiquette": "argon",
+                                                "modele_demande": "gemini-argon", "modele_servi": "gemini-autre"})
+        self.assertEqual(fin["depense_modele_non_autorise_usd"], 0.5)
+        self.assertTrue(os.path.isdir(os.path.join(self.tmp, "g49c", "A-L-ECART-modele-non-autorise", "proposeurs", "argon")))
+        self.assertFalse(os.path.exists(os.path.join(self.tmp, "g49c", "proposeurs", "argon", "passe-1")))
+        # un modèle servi conforme (suffixe de date) passe
+        ExterneDeviant.servi = "gemini-argon-20261001"
+        res = c.lancer(ad, "g49d", budgets=budgets, proposeurs_externes=[("argon", "gemini-argon", ext)], budget_externe_usd=3.0)
+        self.assertEqual({f["auteur"] for f in res["fiches"]}, {"opus", "fable", "argon"})
+        # dans l'étage : expérimentateur externe qui change de modèle
+
+        class ExperimentateurDeviant(FauxKitEtage):
+            def lancer(self, role, consigne, dossier, budget_usd, max_tours, modele=None, **lecture):
+                r = super().lancer(role, consigne, dossier, budget_usd, max_tours, modele)
+                return _dataclasses.replace(r, modele_servi="gemini-autre") if role == "experimentateur_test" else r
+        externe = ExperimentateurDeviant({"opus": [h.fiche("O1")], "fable": [h.fiche("F1")]}, cout_exp=0.07)
+        ad2 = h.kit({"opus": [h.fiche("O1")], "fable": [h.fiche("F1")]})
+        with self.assertRaisesRegex(idn.CourseInterrompue, "refus \\(R-764\\)"):
+            h.course(ad2, "g49e", budget_externe_usd=2.0,
+                     etage=h.etage(nombre=1, experimentateur=None, experimentateur_externe=("argon", "autre-lignee-x", externe)))
+        fin = h.fin("g49e")
+        self.assertEqual((fin["statut_course"]["statut"], fin["statut_course"]["role"], fin["statut_course"]["modele_servi"]),
+                         ("refus", "experimentateur_test", "gemini-autre"))
+        self.assertEqual(fin["depense_modele_non_autorise_usd"], 0.07)
+        self.assertIn("refus (R-764)", h.etage_de("g49e")["arret"])
+        self.assertTrue(idn.verifier_scelle(os.path.join(self.tmp, "g49e", "manifeste-tests-de-mort.json")))
+        self.assertFalse([a for a in ad2.appels if a["role"] == "lecteur_test"])  # le lecteur n'est jamais joué
+
+    # --- CL13-06 : message de résultat du kit (stop_reason, model_usage) ----------------------------------------------------------
+
+    def test_v49_11_message_de_resultat_du_kit_stop_reason_et_modeles_factures(self):
+        """Défense en profondeur sur le `ResultMessage` : `stop_reason == "refusal"` → refus (événement `result.stop_reason`) ;
+        un modèle facturé (coût ou jetons non nuls) autre que le modèle demandé dans `model_usage` → refus
+        (`result.model_usage`), dépense comptée ; le modèle demandé (suffixe de date admis), une entrée à zéro, un
+        `model_usage` absent ou vide → pas de refus ; une entrée illisible compte comme ayant servi (prudence). Les noms de
+        champs lus existent dans le kit réel installé (s'il l'est)."""
+        from essais.faux_sdk import claude_agent_sdk as faux_sdk
+        K = FauxKitRefus
+        opts = faux_sdk.ClaudeAgentOptions(model="claude-opus-5-5")
+
+        def jouer(*messages):
+            kit = K([K.AssistantMessage([K.TextBlock("réponse")], "claude-opus-5-5")] + list(messages))
+            return kit, asyncio.run(AdaptateurClaudeSDK._executer(kit, "consigne", opts, 5))
+        _, (texte, cout, statut, erreur, lecture) = jouer(K.ResultMessage("success", "réponse", 0.3, model_usage={
+            "claude-opus-5-5-20261001": {"costUSD": 0.3, "inputTokens": 10, "outputTokens": 5},
+            "claude-fable-5-1": {"costUSD": 0.0, "inputTokens": 0, "outputTokens": 0}}))
+        self.assertEqual((statut, lecture["refus"], texte), ("ok", None, "réponse"))
+        for sans in (None, {}):
+            _, (texte, cout, statut, erreur, lecture) = jouer(K.ResultMessage("success", "réponse", 0.3, model_usage=sans))
+            self.assertEqual((statut, lecture["refus"]), ("ok", None))
+        # stop_reason au message de résultat
+        _, (texte, cout, statut, erreur, lecture) = jouer(K.ResultMessage("success", "suite", 0.3, stop_reason="refusal"))
+        self.assertEqual((statut, lecture["refus"]["evenement"], texte, lecture["cout_inconnu"]), ("refus", "result.stop_reason", "", True))
+        self.assertIn("refusal", erreur)
+        _, (_, _, statut, _, lecture) = jouer(K.ResultMessage("success", "suite", 0.3, stop_reason="end_turn"))
+        self.assertEqual((statut, lecture["refus"]), ("ok", None))
+        # un autre modèle facturé
+        usage = {"claude-opus-5-5": {"costUSD": 0.1, "inputTokens": 5, "outputTokens": 5},
+                 "claude-opus-4-8": {"costUSD": 0.25, "inputTokens": 1000, "outputTokens": 200}}
+        _, (texte, cout, statut, erreur, lecture) = jouer(K.ResultMessage("success", "suite", 0.35, model_usage=usage))
+        self.assertEqual((statut, lecture["refus"]["evenement"], lecture["refus"]["modele_servi"], texte), ("refus", "result.model_usage", "claude-opus-4-8", ""))
+        self.assertAlmostEqual(lecture["depense_modele_non_autorise_usd"], 0.25)
+        self.assertIn("claude-opus-4-8", erreur)
+        # jetons sans coût, et entrée illisible : comptent comme ayant servi
+        for autre in ({"claude-opus-4-8": {"costUSD": 0.0, "inputTokens": 3}}, {"claude-opus-4-8": "illisible"}, {"claude-opus-4-8": None}):
+            _, (_, _, statut, _, lecture) = jouer(K.ResultMessage("success", "suite", 0.3, model_usage=autre))
+            self.assertEqual((statut, lecture["refus"]["evenement"]), ("refus", "result.model_usage"), autre)
+        # les unités
+        self.assertFalse(AdaptateurClaudeSDK._a_servi({"costUSD": 0, "inputTokens": 0, "outputTokens": 0}))
+        self.assertTrue(AdaptateurClaudeSDK._a_servi({"cacheReadInputTokens": 4}))
+        self.assertTrue(AdaptateurClaudeSDK._a_servi({"costUSD": "x"}))
+        # champs du kit réel (si installé) : ceux que le noyau lit
+        try:
+            import claude_agent_sdk as reel
+        except ImportError:
+            return
+        champs = {f.name for f in _dataclasses.fields(reel.ResultMessage)}
+        self.assertLessEqual({"stop_reason", "model_usage", "total_cost_usd", "subtype", "result", "is_error"}, champs)
+        self.assertIn("model", {f.name for f in _dataclasses.fields(reel.AssistantMessage)})
+
+    # --- CL13-07 : les modèles de l'étage dans la liste exigée du relais -----------------------------------------------------------
+
+    def test_v49_12_modeles_exiges_du_relais_avec_l_etage(self):
+        """`modeles_du_relais` : sans étage, proposeurs et juges ; avec l'étage, aussi l'expérimentateur Claude et le lecteur ;
+        l'expérimentateur externe (Argon, non servi par le relais) n'y est pas. `verifier_relais` : la liste du relais doit être
+        exactement cet ensemble — l'ensemble de la v48 (sans le lecteur Fable) est refusé, un modèle en plus est refusé."""
+        lanceur = self.h().lanceur()
+        proposeurs = [("opus", "claude-opus-5-5")]
+        juges = [("juge-opus", "claude-opus-5-5")]
+        base = dict(tests_de_mort=0, experimentateur=None, experimentateur_externe=None, lecteur_test=None)
+        sans = lanceur.modeles_du_relais(_types.SimpleNamespace(**base), proposeurs, juges)
+        self.assertEqual(sorted(set(sans)), ["claude-opus-5-5"])
+        etage = dict(base, tests_de_mort=2, experimentateur="exp=claude-opus-5-5", lecteur_test="lec=claude-fable-5-1")
+        avec = lanceur.modeles_du_relais(_types.SimpleNamespace(**etage), proposeurs, juges)
+        self.assertEqual(sorted(set(avec)), ["claude-fable-5-1", "claude-opus-5-5"])
+        argon = dict(etage, experimentateur=None, experimentateur_externe="argon=gemini-argon")
+        self.assertEqual(sorted(set(lanceur.modeles_du_relais(_types.SimpleNamespace(**argon), proposeurs, juges))),
+                         ["claude-fable-5-1", "claude-opus-5-5"])
+        # sans modèle unique pour l'expérimentateur : forme « modèle » seul admise
+        nu = dict(etage, experimentateur="claude-fable-5-1", lecteur_test="claude-opus-5-5")
+        self.assertEqual(sorted(set(lanceur.modeles_du_relais(_types.SimpleNamespace(**nu), proposeurs, juges))),
+                         ["claude-fable-5-1", "claude-opus-5-5"])
+        # le contrôle du relais
+        budgets = {("juge_ideation", "claude-opus-5-5"): 4.0}
+        etat = {"plafond_usd": 40, "reserve_par_appel_usd": 4, "depense_usd": 0.0, "modeles_permis": ["claude-opus-5-5", "claude-fable-5-1"]}
+        lu = lanceur.verifier_relais(etat, 40.0, budgets, juges, modeles_attendus=avec)
+        self.assertEqual(lu["modeles_permis"], ["claude-opus-5-5", "claude-fable-5-1"])
+        with self.assertRaisesRegex(idn.CourseInterrompue, "R-764"):  # la liste de la v48 : proposeurs et juges seulement
+            lanceur.verifier_relais(etat, 40.0, budgets, juges, modeles_attendus=sans)
+        with self.assertRaisesRegex(idn.CourseInterrompue, "R-764"):
+            lanceur.verifier_relais(dict(etat, modeles_permis=["claude-opus-5-5"]), 40.0, budgets, juges, modeles_attendus=avec)
+        with self.assertRaisesRegex(idn.CourseInterrompue, "tests-de-mort"):
+            lanceur.verifier_relais(dict(etat, modeles_permis=["claude-opus-5-5"]), 40.0, budgets, juges, modeles_attendus=avec)
+
+    # --- CL13-09 : compteur journalier persistant, amont arXiv en https --------------------------------------------------------------------------------
+
+    def test_v49_13_compteur_journalier_persistant_cas_sain_et_artefacts(self):
+        """Le compteur du jour est un fichier scellé (`compteur-AAAA-MM-JJ.json` + `.sha256`, format de sha256sum) relu au
+        redémarrage : appels et refus conservés, plafond tenu après relance. Artefacts (aucun repli) : contenu modifié sans le
+        sceau, sceau faux, sceau absent, JSON illisible, valeur négative, booléenne ou fractionnaire, source en trop,
+        mauvais jour → `CompteurInvalide`. Changement de jour (UTC) : compteur à zéro, nouveau fichier, l'ancien intact.
+        Sans dossier : en mémoire, dit par `etat()`."""
+        d = os.path.join(self.tmp, "compteurs")
+        with _mock.patch.object(rmo.CompteurJournalier, "_maintenant_jour", staticmethod(lambda: "2026-10-30")):
+            c = rmo.CompteurJournalier(2, d)
+            self.assertTrue(c.reserver("arxiv") and c.reserver("arxiv"))
+            self.assertFalse(c.reserver("arxiv"))
+            self.assertTrue(c.reserver("openalex"))
+            chemin = os.path.join(d, "compteur-2026-10-30.json")
+            octets = self.octets(chemin)
+            self.assertEqual(self.octets(chemin + ".sha256").decode("utf-8"),
+                             f"{hashlib.sha256(octets).hexdigest()}  compteur-2026-10-30.json\n")
+            self.assertEqual(sorted(os.listdir(d)), ["compteur-2026-10-30.json", "compteur-2026-10-30.json.sha256"])  # pas de provisoire
+            # relance le même jour : le compteur est relu
+            c2 = rmo.CompteurJournalier(2, d)
+            etat = c2.etat()
+            self.assertEqual((etat["appels"]["arxiv"], etat["refus"]["arxiv"], etat["appels"]["openalex"], etat["persistant"]), (2, 1, 1, True))
+            self.assertFalse(c2.reserver("arxiv"))
+            self.assertTrue(c2.reserver("openalex"))
+            self.assertEqual(rmo.CompteurJournalier(2, d).etat()["appels"]["openalex"], 2)
+            # artefacts
+            sain = self.octets(chemin)
+
+            def sceller(contenu):
+                with open(chemin, "wb") as f:
+                    f.write(contenu)
+                with open(chemin + ".sha256", "w", encoding="utf-8") as f:
+                    f.write(f"{hashlib.sha256(contenu).hexdigest()}  compteur-2026-10-30.json\n")
+            sceller(sain)
+            rmo.CompteurJournalier(2, d)  # le sceau refait est accepté
+            avec_sceau_faux = [("contenu modifié, sceau inchangé", lambda: self.octets(chemin, sain.replace(b'"arxiv": 2', b'"arxiv": 0', 1))),
+                               ("sceau faux", lambda: self.octets(chemin + ".sha256", ("0" * 64 + "  compteur-2026-10-30.json\n").encode())),
+                               ("sceau absent", lambda: os.remove(chemin + ".sha256")),
+                               ("sceau vide", lambda: self.octets(chemin + ".sha256", b""))]
+            for nom, abimer in avec_sceau_faux:
+                sceller(sain)
+                abimer()
+                with self.assertRaises(rmo.CompteurInvalide, msg=nom):
+                    rmo.CompteurJournalier(2, d)
+            sceller(sain)
+            os.remove(chemin)  # le fichier a disparu, son sceau reste
+            with self.assertRaises(rmo.CompteurInvalide):
+                rmo.CompteurJournalier(2, d)
+            invalides = [b"pas du json", b"[]", json.dumps({"jour": "2026-10-30", "appels": {"arxiv": -1, "openalex": 0}, "refus": {"arxiv": 0, "openalex": 0}}).encode(),
+                         json.dumps({"jour": "2026-10-30", "appels": {"arxiv": True, "openalex": 0}, "refus": {"arxiv": 0, "openalex": 0}}).encode(),
+                         json.dumps({"jour": "2026-10-30", "appels": {"arxiv": 1.5, "openalex": 0}, "refus": {"arxiv": 0, "openalex": 0}}).encode(),
+                         json.dumps({"jour": "2026-10-30", "appels": {"arxiv": 1, "openalex": 0, "brave": 0}, "refus": {"arxiv": 0, "openalex": 0}}).encode(),
+                         json.dumps({"jour": "2026-10-29", "appels": {"arxiv": 1, "openalex": 0}, "refus": {"arxiv": 0, "openalex": 0}}).encode()]
+            for contenu in invalides:
+                sceller(contenu)
+                with self.assertRaises(rmo.CompteurInvalide, msg=contenu):
+                    rmo.CompteurJournalier(2, d)
+            sceller(sain)
+            # changement de jour : compteur à zéro, nouveau fichier, l'ancien intact
+            avant = self.octets(chemin)
+        with _mock.patch.object(rmo.CompteurJournalier, "_maintenant_jour", staticmethod(lambda: "2026-10-31")):
+            c3 = rmo.CompteurJournalier(2, d)
+            etat = c3.etat()
+            self.assertEqual((etat["jour"], etat["appels"]["arxiv"], etat["appels"]["openalex"]), ("2026-10-31", 0, 0))
+            self.assertTrue(c3.reserver("arxiv"))
+            self.assertTrue(os.path.exists(os.path.join(d, "compteur-2026-10-31.json.sha256")))
+            self.assertEqual(self.octets(chemin), avant)
+        with _mock.patch.object(rmo.CompteurJournalier, "_maintenant_jour", staticmethod(lambda: "2026-10-30")):
+            self.assertEqual(rmo.CompteurJournalier(2, d).etat()["appels"]["openalex"], 2)  # revenir au jour relit son fichier
+        # sans dossier : en mémoire seulement, dit
+        m = rmo.CompteurJournalier(1)
+        self.assertTrue(m.reserver("arxiv"))
+        self.assertFalse(m.etat()["persistant"])
+        self.assertFalse(rmo.CompteurJournalier(1).etat()["appels"]["arxiv"])
+
+    def test_v49_14_relais_de_moisson_relance_arxiv_https_et_dossier_obligatoire(self):
+        """Dans un vrai processus : le relais relancé sur le même dossier garde le compteur (plafond 2 : deux appels, arrêt du
+        processus, relance, le troisième est refusé 429) ; un sceau faux empêche le démarrage ; l'amont réel exige
+        `--dossier-compteur` (`servir` lève `RelaisInvalide`, `principal` rend 2, aucun serveur ne démarre) ; arXiv est
+        interrogé en https. Amont factice local, aucun réseau."""
+        from essais.test_v47_relais_moisson import AmontMoissonFactice, appeler, lancer_relais, requete
+        self.assertTrue(rmo.AMONTS["arxiv"].startswith("https://export.arxiv.org/"))
+        self.assertFalse(any(v.startswith("http://") for v in rmo.AMONTS.values()))
+        amont = AmontMoissonFactice()
+        self.addCleanup(amont.arreter)
+        d = os.path.join(self.tmp, "compteur-relais")
+        procs = []
+
+        def demarrer(nom):
+            proc, url, ligne = lancer_relais(amont.url, os.path.join(self.tmp, nom), plafond=2, dossier_compteur=d)
+            procs.append(proc)
+            return proc, url, ligne
+        try:
+            proc, url, ligne = demarrer("j1.jsonl")
+            self.assertIsNotNone(url, ligne)
+            self.assertIn("persistant", ligne)
+            self.assertEqual([appeler(url, requete("arxiv", f"monitor diffus {k}", 1))[0] for k in range(2)], [200, 200])
+            proc.kill()
+            proc.communicate(timeout=10)
+            proc, url, ligne = demarrer("j2.jsonl")
+            self.assertIsNotNone(url, ligne)
+            self.assertEqual(appeler(url, requete("arxiv", "monitor diffus 3", 1))[0], 429)  # le redémarrage n'a pas remis à zéro
+            etat = json.loads(appeler(url, "/moisson/etat")[1])
+            self.assertEqual((etat["appels"]["arxiv"], etat["refus"]["arxiv"], etat["persistant"]), (2, 1, True))
+            proc.kill()
+            proc.communicate(timeout=10)
+            # sceau faux : le relais ne démarre pas
+            fichier = [n for n in os.listdir(d) if n.endswith(".json")][0]
+            with open(os.path.join(d, fichier), "ab") as f:
+                f.write(b" ")
+            proc, url, ligne = demarrer("j3.jsonl")
+            self.assertIsNone(url)
+            self.assertIn("sceau faux", ligne)
+        finally:
+            for p in procs:
+                if p.poll() is None:
+                    p.kill()
+                    p.communicate(timeout=10)
+        # l'amont réel exige le dossier du compteur
+        with self.assertRaisesRegex(RelaisInvalide, "dossier-compteur"):
+            rmo.servir("127.0.0.1", 0, 5)
+        erreurs = _io.StringIO()
+        with _contextlib.redirect_stderr(erreurs):
+            self.assertEqual(rmo.principal(["--port", "0"]), 2)
+        self.assertIn("dossier-compteur", erreurs.getvalue())
+
+    # --- CL13-11 : « survit » vérifiable quand la métrique le permet -------------------------------------------------------------------------------
+
+    def test_v49_15_statistiques_et_lecture_de_la_ligne_calcul(self):
+        """Unités : `lignes_calcul`, `lire_ligne_calcul` (cas sain et artefacts), `statistique_de_colonne` (huit statistiques,
+        colonne par nom ou rang, cellules vides ignorées, erreurs dites), tolérance d'affichage."""
+        self.assertEqual(tdm.lignes_calcul("a\nCALCUL: fichier=f.csv; colonne=v; statistique=somme\nRESULTAT: 1\nx"),
+                         ["CALCUL: fichier=f.csv; colonne=v; statistique=somme"])
+        self.assertEqual(tdm.lignes_calcul(""), [])
+        self.assertEqual(tdm.lignes_calcul(None), [])
+        trop = "".join(f"CALCUL: fichier=f{k}.csv; colonne=v; statistique=somme\n" for k in range(tdm.MAX_LIGNES_CALCUL + 3))
+        self.assertEqual(len(tdm.lignes_calcul(trop)), tdm.MAX_LIGNES_CALCUL)
+        champs, motif = tdm.lire_ligne_calcul("CALCUL: fichier=serie-a.csv; colonne=a; statistique=moyenne")
+        self.assertEqual((champs, motif), ({"fichier": "serie-a.csv", "colonne": "a", "statistique": "moyenne"}, None))
+        for ligne, mot in (("CALCUL: fichier=f.csv; colonne=a", "incomplète"), ("CALCUL: n'importe quoi", "illisible"),
+                           ("CALCUL: fichier=f.csv; colonne=a; statistique=moyenne; extra=1", "inconnu"),
+                           ("CALCUL: fichier=f.csv; fichier=g.csv; colonne=a; statistique=moyenne", "double"),
+                           ("CALCUL: fichier=f.csv; colonne=; statistique=moyenne", "vide"),
+                           ("CALCUL: fichier=f.csv; colonne=a; statistique=quantile", "statistique inconnue")):
+            champs, motif = tdm.lire_ligne_calcul(ligne)
+            self.assertIsNone(champs, ligne)
+            self.assertIn(mot, motif, ligne)
+        csv_ = "v,w\n1,x\n3,y\n5,z\n"
+        attendu = {"moyenne": 3.0, "mediane": 3.0, "somme": 9.0, "minimum": 1.0, "maximum": 5.0, "nombre": 3.0, "part_positive": 1.0, "ecart_type": 2.0}
+        self.assertEqual(set(attendu), set(tdm.STATISTIQUES))
+        for nom, valeur in attendu.items():
+            self.assertEqual(tdm.statistique_de_colonne(csv_, "v", nom), (valeur, None), nom)
+        self.assertEqual(tdm.statistique_de_colonne(csv_, "0", "somme"), (9.0, None))  # colonne par son rang
+        self.assertEqual(tdm.statistique_de_colonne("v\n1\n-2\n0\n", "v", "part_positive"), (1 / 3, None))
+        self.assertEqual(tdm.statistique_de_colonne("v,w\n1,\n,\n3,\n", "v", "nombre"), (2.0, None))  # cellules vides ignorées
+        for texte, colonne, stat_, mot in (("", "v", "somme", "vide"), ("v\n1\n", "absente", "somme", "introuvable"),
+                                            ("v\nabc\n", "v", "somme", "non numérique"), ("v\nnan\n", "v", "somme", "non finie"),
+                                            ("v\ninf\n", "v", "somme", "non finie"), ("v,w\n1\n", "w", "somme", "trop courte"),
+                                            ("v\n", "v", "somme", "aucune valeur"), ("v,w\n1,x\n\n3,y\n", "v", "somme", "trop courte"), ("v\n1\n", "v", "ecart_type", "deux valeurs"),
+                                            ("v\n1\n", "9", "somme", "introuvable")):
+            valeur, motif = tdm.statistique_de_colonne(texte, colonne, stat_)
+            self.assertIsNone(valeur, texte)
+            self.assertIn(mot, motif, texte)
+        self.assertEqual(tdm.statistique_de_colonne("v\n1\n2\n3\n", "v", "somme", max_lignes=2)[1], "fichier trop long pour le recalcul")
+        self.assertAlmostEqual(tdm._tolerance_d_affichage("RESULTAT: 0.33"), 0.005, places=6)
+        self.assertAlmostEqual(tdm._tolerance_d_affichage("RESULTAT: 0,3333"), 0.00005, places=9)
+        self.assertIsNone(tdm._tolerance_d_affichage("RESULTAT: 3"))
+        self.assertIsNone(tdm._tolerance_d_affichage("RESULTAT: 1e-1"))
+
+    def test_v49_16_recalcul_du_noyau_concordant_discordant_non_recalculable(self):
+        """`recalcul_noyau` : concordant à l'arrondi d'affichage près (0,33 pour 1/3), discordant au-delà ; « non demandé » sans
+        ligne `CALCUL:` ; « non recalculable » (ligne illisible, statistique inconnue, fichier hors des données du
+        préenregistrement, colonne absente) avec l'étiquette « non recalculé » ; « sans chiffre » ; l'exécution lue est celle
+        du chiffre."""
+        tranche = _types.SimpleNamespace(fichiers={"f.csv": {"texte": "v\n0\n0\n1\n"}, "g.csv": {"texte": "v\n9\n"}})
+        prereg = {"donnees": [{"chemin": "f.csv"}], "seuil": {"comparateur": "≥", "valeur": 0.3}}
+        calc = "CALCUL: fichier=f.csv; colonne=v; statistique=moyenne"
+
+        def jouer(ligne_calcul, imprime, ligne=None, numero=1):
+            execs = [{"numero": 1, "lignes_calcul": ["CALCUL: fichier=f.csv; colonne=v; statistique=somme"] if numero == 2 else []},
+                     {"numero": 2, "lignes_calcul": [ligne_calcul] if ligne_calcul else []}]
+            meca = {"chiffre": imprime, "ligne": ligne or f"RESULTAT: {imprime}", "execution": numero}
+            return tdm.recalcul_noyau(prereg, tranche, execs, meca)
+        r = jouer(calc, 0.33, numero=2)
+        self.assertEqual((r["statut"], r["etiquette"], r["execution"]), ("concordant", tdm.ETIQUETTE_RECALCULE, 2))
+        self.assertAlmostEqual(r["valeur_noyau"], 1 / 3)
+        self.assertEqual(jouer(calc, 0.3333, numero=2)["statut"], "concordant")
+        self.assertEqual(jouer(calc, 0.3333333333, numero=2)["statut"], "concordant")
+        self.assertEqual(jouer(calc, 0.3, numero=2)["statut"], "concordant")  # 1/3 arrondi à une décimale
+        for faux in (0.2, 0.34, 0.9, 0.0):
+            r = jouer(calc, faux, numero=2)
+            self.assertEqual((r["statut"], r["etiquette"]), ("discordant", tdm.ETIQUETTE_NON_RECALCULE), faux)
+            self.assertIn("écart", r["motif"])
+        r = jouer(calc, 0.33, ligne="RESULTAT: 0,33", numero=2)
+        self.assertEqual(r["statut"], "concordant")  # virgule décimale
+        r = jouer(None, 0.4, numero=2)
+        self.assertEqual((r["statut"], r["etiquette"], r["valeur_noyau"]), ("non demandé", tdm.ETIQUETTE_NON_RECALCULE, None))
+        for ligne_calcul, mot in (("CALCUL: n'importe quoi", "illisible"),
+                                  ("CALCUL: fichier=f.csv; colonne=v; statistique=quantile", "inconnue"),
+                                  ("CALCUL: fichier=g.csv; colonne=v; statistique=somme", "hors des données"),
+                                  ("CALCUL: fichier=h.csv; colonne=v; statistique=somme", "hors des données"),
+                                  ("CALCUL: fichier=f.csv; colonne=absente; statistique=somme", "introuvable")):
+            r = jouer(ligne_calcul, 0.4, numero=2)
+            self.assertEqual((r["statut"], r["etiquette"]), ("non recalculable", tdm.ETIQUETTE_NON_RECALCULE), ligne_calcul)
+            self.assertIn(mot, r["motif"], ligne_calcul)
+        r = tdm.recalcul_noyau(prereg, tranche, [], {"chiffre": None, "ligne": None, "execution": None})
+        self.assertEqual(r["statut"], "sans chiffre")
+        # la dernière ligne CALCUL: de l'exécution lue fait foi
+        execs = [{"numero": 1, "lignes_calcul": ["CALCUL: fichier=f.csv; colonne=v; statistique=somme", calc]}]
+        self.assertEqual(tdm.recalcul_noyau(prereg, tranche, execs, {"chiffre": 0.33, "ligne": "RESULTAT: 0.33", "execution": 1})["statut"], "concordant")
+        # étiquettes du matériau
+        base = {"statut": "testée", "motif": None}
+        self.assertEqual(tdm.etiquette_materiau(dict(base, verdict="survit", fiabilite_du_chiffre=tdm.ETIQUETTE_NON_RECALCULE)),
+                         "survit (chiffre imprimé par le script, non recalculé)")
+        self.assertEqual(tdm.etiquette_materiau(dict(base, verdict="éliminée", fiabilite_du_chiffre=tdm.ETIQUETTE_RECALCULE)),
+                         "éliminée (chiffre recalculé par le noyau)")
+        self.assertEqual(tdm.etiquette_materiau(dict(base, verdict="non concluant", fiabilite_du_chiffre=tdm.ETIQUETTE_RECALCULE)), "non concluant")
+        self.assertEqual(tdm.etiquette_materiau(dict(base, verdict="survit")), "survit")
+        self.assertEqual(tdm.etiquette_materiau({"statut": "refusée à l'étage", "motif": "sans seuil"}), "non testée (sans seuil)")
+        # vue du lecteur : le recalcul est joint à l'exécution dont il porte le chiffre, jamais à une autre
+        vue = tdm.vue_lecteur([{"numero": 1, "statut": "réussie"}, {"numero": 2, "statut": "réussie"}],
+                              {"execution": 2, "statut": "concordant", "valeur_script": 0.33, "valeur_noyau": 1 / 3, "etiquette": tdm.ETIQUETTE_RECALCULE})
+        self.assertNotIn("recalcul_noyau", vue[0])
+        self.assertEqual(vue[1]["recalcul_noyau"]["statut"], "concordant")
+        vue = tdm.vue_lecteur([{"numero": 1, "statut": "réussie"}], {"execution": 1, "statut": "sans chiffre"})
+        self.assertNotIn("recalcul_noyau", vue[0])
+
+    def test_v49_17_etage_le_chiffre_imprime_n_est_plus_pris_sur_parole(self):
+        """Dans l'étage : script qui déclare sa statistique et dont le chiffre concorde → « survit », matériau « (chiffre
+        recalculé par le noyau) » ; script qui imprime un chiffre faux, **dans les deux sens** (R4 : 0,9 pour une moyenne de 3
+        n'est pas plus sûr que 0,1) → « non concluant » avec `desaccord`, la lecture mécanique et le lecteur concordant entre
+        eux ; script sans `CALCUL:` → « survit » étiqueté « non recalculé » ; `CALCUL:` hors des données → « non recalculable ».
+        Le lecteur voit le champ `recalcul_noyau`, jamais le script ; l'expérimentateur sait ce que `CALCUL:` fait."""
+        scenarios = [("e49c1", script_calcul(3.0), "survit", "concordant", tdm.ETIQUETTE_RECALCULE),
+                     ("e49c2", script_calcul(0.9), "non concluant", "discordant", tdm.ETIQUETTE_NON_RECALCULE),
+                     ("e49c3", script_calcul(0.1), "non concluant", "discordant", tdm.ETIQUETTE_NON_RECALCULE),
+                     ("e49c4", script_resultat(0.4), "survit", "non demandé", tdm.ETIQUETTE_NON_RECALCULE),
+                     ("e49c5", script_calcul(3.0, donnee="serie-a.csv", colonne="inexistante"), "survit", "non recalculable", tdm.ETIQUETTE_NON_RECALCULE),
+                     ("e49c6", script_calcul(3.0).replace("serie-a.csv; colonne", "serie-b.csv; colonne"), "survit", "non recalculable", tdm.ETIQUETTE_NON_RECALCULE)]
+        for nom, script, verdict, statut, etiquette in scenarios:
+            ad, par = self.etage_simple(nom, lambda f, t, c, s=script: bloc_exp(executer(s)) if t == 1 else bloc_fin())
+            r = list(par.values())[0]
+            self.assertEqual((r["verdict"], r["recalcul_noyau"]["statut"], r["fiabilite_du_chiffre"]), (verdict, statut, etiquette), nom)
+            self.assertEqual(r["lecture_mecanique"]["verdict"], "survit" if nom != "e49c3" else "éliminée", nom)
+            if statut == "discordant":
+                self.assertIn("discordant", r["desaccord"])
+                self.assertEqual(r["lecteur"]["verdict"], r["lecture_mecanique"]["verdict"])  # le lecteur et la lecture mécanique concordent : seul le noyau voit
+            materiau = self.h().lire(os.path.join(self.tmp, nom, "noyau", "tests-de-mort", "materiau-tests-de-mort.md"))
+            self.assertIn(f"- Une (rang 1) : {verdict}" + (f" ({etiquette})" if verdict != "non concluant" else ""), materiau, nom)
+            lecteur = [a for a in ad.appels if a["role"] == "lecteur_test"][0]["consigne"]
+            vue = section_de(lecteur, "Sortie scellée des exécutions")
+            self.assertEqual(vue[0]["recalcul_noyau"]["statut"], statut, nom)
+            self.assertNotIn("open('tranche/serie-a.csv'", lecteur)  # le lecteur ne voit pas le script
+            self.assertIn("recalcul_noyau", lecteur)
+        # le lecteur voit le champ du recalcul pour le cas concordant
+        ad, par = self.etage_simple("e49c7", lambda f, t, c: bloc_exp(executer(script_calcul(3.0))) if t == 1 else bloc_fin())
+        lecteur = [a for a in ad.appels if a["role"] == "lecteur_test"][0]["consigne"]
+        vue = section_de(lecteur, "Sortie scellée des exécutions")
+        self.assertEqual(vue[0]["recalcul_noyau"]["statut"], "concordant")
+        self.assertEqual(vue[0]["recalcul_noyau"]["valeur_noyau"], 3.0)
+        experimentateur = [a for a in ad.appels if a["role"] == "experimentateur_test"][0]["consigne"]
+        self.assertIn("CALCUL:", experimentateur)
+        self.assertIn("recalcul", experimentateur.lower())
+        # le manifeste de l'étage porte le recalcul
+        self.assertEqual(list(par.values())[0]["recalcul_noyau"]["valeur_noyau"], 3.0)
+
+    # --- CL13-10 : traçabilité du code modifié ---------------------------------------------------------------------------------------------------------
+
+    def test_v49_18_provenance_du_code_modifie_dit_au_lisezmoi(self):
+        """R12 : le LISEZMOI de la v49 liste **chaque fichier de code modifié** avec l'empreinte v48 (celle de
+        `EMPREINTES-orchestrateur-pole-v7-v48.txt`, vérifiée) et l'empreinte v49 (celle du disque) ; tout fichier de
+        l'empreinte v48 dont le contenu a changé figure dans le tableau ; aucun fichier du tableau n'est inchangé. Le fichier
+        d'essais lui-même est exclu de la comparaison de l'empreinte v49 (il ne peut pas contenir sa propre empreinte
+        stable) mais sa ligne existe."""
+        from essais.test_v47_relais_moisson import RACINE
+        lisezmoi = os.path.join(RACINE, "LISEZMOI-orchestrateur-pole-v7-v49.md")
+        self.assertTrue(os.path.exists(lisezmoi), "LISEZMOI de la v49 absent")
+        v48 = {}
+        with open(os.path.join(RACINE, "EMPREINTES-orchestrateur-pole-v7-v48.txt"), encoding="utf-8") as f:
+            for ligne in f:
+                if ligne.strip():
+                    empreinte, chemin = ligne.split(None, 1)
+                    v48[chemin.strip()] = empreinte
+        tableau = {}
+        with open(lisezmoi, encoding="utf-8") as f:
+            for ligne in f:
+                m = re.match(r"^\|\s*`([^`]+)`\s*\|\s*`([0-9a-f]{64})`\s*\|\s*`([0-9a-f]{64})`\s*\|", ligne)
+                if m:
+                    tableau[m.group(1)] = (m.group(2), m.group(3))
+        self.assertTrue(tableau, "tableau de provenance absent du LISEZMOI")
+        moi = "essais/test_v7_ideation.py"
+        self.assertIn(moi, tableau)
+        for chemin, (ancienne, nouvelle) in tableau.items():
+            if chemin in v48:
+                self.assertEqual(ancienne, v48[chemin], f"empreinte v48 de {chemin} ≠ EMPREINTES v48")
+            self.assertNotEqual(ancienne, nouvelle, f"{chemin} : listé mais inchangé")
+            if chemin != moi:
+                self.assertEqual(nouvelle, hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest(), f"{chemin} : empreinte v49 ≠ disque")
+        for chemin, empreinte in v48.items():
+            if chemin.startswith(("LISEZMOI", "EMPREINTES")):
+                self.assertEqual(hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest(), empreinte, f"{chemin} : fichier scellé modifié")
+                continue
+            actuelle = hashlib.sha256(open(os.path.join(RACINE, chemin), "rb").read()).hexdigest()
+            if actuelle != empreinte:
+                self.assertIn(chemin, tableau, f"{chemin} a changé depuis la v48 et n'est pas dans le tableau de provenance")
+
+    # --- CL13-01, CL13-08 : essais réels, seulement avec `bwrap` ---------------------------------------------------------------------------------
+
+    @unittest.skipUnless(shutil.which("bwrap"), "bwrap absent de cette machine : essai réel à rejouer dans le conteneur de session-depot")
+    def test_v49_19_evasion_rejouee_dans_le_vrai_bac_cibles_factices(self):
+        """Seulement avec `bwrap` : les évasions de la contre-lecture CL13, jouées **contre des cibles factices dans un dossier
+        provisoire** (jamais contre le vrai `/usr`, `/etc` ou `/root`), échouent toutes dans le vrai bac : superutilisateur,
+        capacités, remontage de la tranche (copie factice), écriture dans la tranche, écriture dans un dossier de l'hôte
+        (factice), lecture d'un secret de l'hôte (factice), lecture de l'environnement, `setsid`, réseau."""
+        hote = os.path.join(self.tmp, "hote-factice")
+        os.makedirs(hote)
+        secret = os.path.join(hote, "secret.txt")
+        with open(secret, "w", encoding="utf-8") as f:
+            f.write("SECRET-FACTICE-DE-L-HOTE")
+        sonde = (
+            "import ctypes, os, socket\n"
+            "def essai(nom, f):\n"
+            "    try:\n        resultat = f()\n    except BaseException as e:\n        print(nom, 'refus', type(e).__name__)\n"
+            "    else:\n        print(nom, 'REUSSI', resultat)\n"
+            "def remonter():\n"
+            "    r = ctypes.CDLL(None, use_errno=True).mount(b'none', b'/travail/tranche', None, 32 | 4096, None)\n"
+            "    if r != 0:\n        raise OSError(ctypes.get_errno(), 'refus')\n"
+            "    return 'monte'\n"
+            "print('identifiant', os.getuid())\n"
+            "essai('ecrire-hote', lambda: open(%r, 'w').write('x'))\n"
+            "essai('lire-secret', lambda: open(%r).read())\n"
+            "essai('ecrire-tranche', lambda: open('tranche/nouveau.txt', 'w').write('x'))\n"
+            "essai('ecrire-donnee', lambda: open('tranche/serie-a.csv', 'w').write('x'))\n"
+            "essai('remonter-tranche', remonter)\n"
+            "essai('ecrire-racine', lambda: open('/essai-racine.txt', 'w').write('x'))\n"
+            "essai('reseau', lambda: socket.create_connection(('127.0.0.1', 9), 1))\n"
+            "print('environ', sorted(os.environ))\n"
+            "print('RESULTAT: 0.4')\n") % (os.path.join(hote, "ecrit.txt"), secret)
+        _, par = self.etage_simple("e49v", lambda f, t, c: bloc_exp(executer(sonde)) if t == 1 else bloc_fin(),
+                                   executeur=tdm.ExecuteurBacASable(delai_s=20.0), delai_execution_s=20.0)
+        r = list(par.values())[0]
+        sortie = self.h().lire(os.path.join(self.tmp, "e49v", "noyau", "tests-de-mort", list(par)[0], "execution-01", "stdout.txt"))
+        for ligne in sortie.splitlines():
+            self.assertNotIn(" REUSSI", ligne)
+        for nom in ("ecrire-hote", "lire-secret", "ecrire-tranche", "ecrire-donnee", "remonter-tranche", "ecrire-racine", "reseau"):
+            self.assertIn(f"{nom} refus", sortie)
+        self.assertIn("identifiant 65534", sortie)
+        self.assertNotIn("SECRET-FACTICE-DE-L-HOTE", sortie)
+        self.assertFalse(os.path.exists(os.path.join(hote, "ecrit.txt")))
+        self.assertEqual(r["executions"][0]["statut"], "réussie")
+        tranche = self.prep_tranche()
+        self.assertNotIn("nouveau.txt", os.listdir(tranche))
+        self.assertEqual(self.h().lire(os.path.join(tranche, "serie-a.csv")), "a,b\n1,2\n3,4\n5,6\n")
+
+    def prep_tranche(self):
+        return self.h().prep()["tranche"]
 
 
 def tdm_roles():

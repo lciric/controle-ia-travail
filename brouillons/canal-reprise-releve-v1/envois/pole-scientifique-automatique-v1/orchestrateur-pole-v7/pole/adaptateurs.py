@@ -358,6 +358,15 @@ def importer_sdk():
     return sdk
 
 
+def modele_conforme(demande, servi):
+    """v47 (R-764) : le modèle servi est le modèle demandé (identifiant exact, ou l'identifiant demandé suivi d'un
+    suffixe de date : `claude-opus-5-5-20261001` pour `claude-opus-5-5`) ; tout autre modèle est un écart. v49 : fonction de
+    module (les contrôles du noyau sur Argon et sur le résultat de tout adaptateur ne passent pas par la classe du kit)."""
+    if not isinstance(servi, str) or not servi or not isinstance(demande, str) or not demande:
+        return False
+    return servi == demande or servi.startswith(demande + "-")
+
+
 class AdaptateurClaudeSDK(Adaptateur):
     """Moteur réel : `query()` du Claude Agent SDK, une session neuve par appel, dans le dossier de l'agent.
 
@@ -430,12 +439,21 @@ class AdaptateurClaudeSDK(Adaptateur):
         return Resultat(caviarder(texte)[0], lister_fichiers(dossier), cout, statut, erreur, texte_brut=texte, **supplement)
 
     @staticmethod
+    def _a_servi(usage):
+        """Vrai si une entrée de `ResultMessage.model_usage` montre une facturation ou des jetons (coût ou jetons non nuls) ;
+        une entrée illisible compte comme ayant servi (prudence : refus)."""
+        if not isinstance(usage, dict):
+            return True
+        valeurs = [usage.get(k) for k in ("costUSD", "inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens")]
+        try:
+            return any(float(v or 0.0) > 0 for v in valeurs)
+        except (TypeError, ValueError):
+            return True
+
+    @staticmethod
     def modele_conforme(demande, servi):
-        """v47 (R-764) : le modèle servi est le modèle demandé (identifiant exact, ou l'identifiant demandé suivi d'un
-        suffixe de date : `claude-opus-5-5-20261001` pour `claude-opus-5-5`) ; tout autre modèle est un écart."""
-        if not isinstance(servi, str) or not servi or not isinstance(demande, str) or not demande:
-            return False
-        return servi == demande or servi.startswith(demande + "-")
+        """v47 (R-764) : voir la fonction de module `modele_conforme` (v49)."""
+        return modele_conforme(demande, servi)
 
     @staticmethod
     async def _executer(sdk, consigne, options, delai_s=DELAI_SESSION_S):
@@ -470,7 +488,7 @@ class AdaptateurClaudeSDK(Adaptateur):
                         servi = getattr(message, "model", None)
                         if lecture["modele_servi"] is None:
                             lecture["modele_servi"] = servi
-                        if not AdaptateurClaudeSDK.modele_conforme(demande, servi):
+                        if not modele_conforme(demande, servi):
                             lecture["depense_modele_non_autorise_usd"] += cout_usd(servi, getattr(message, "usage", None))
                             refuser(f"modèle servi {servi!r} ≠ modèle demandé {demande!r} : changement de modèle par le kit",
                                     servi, "assistant.model")
@@ -491,6 +509,23 @@ class AdaptateurClaudeSDK(Adaptateur):
                         statut = sous_types.get(message.subtype, "erreur")
                         if message.is_error and statut == "ok":
                             statut = "erreur"
+                        # v49 (CL13-06) : défense en profondeur sur le message de résultat — un refus qui n'aurait pas été vu
+                        # au flux (forme non prévue) ou un modèle facturé autre que le modèle demandé reste un refus
+                        if getattr(message, "stop_reason", None) == "refusal":
+                            refuser("le message de résultat porte stop_reason = refusal", lecture["modele_servi"], "result.stop_reason")
+                            break
+                        usage_par_modele = getattr(message, "model_usage", None)
+                        if isinstance(usage_par_modele, dict) and usage_par_modele:
+                            # seuls les modèles qui ont réellement servi comptent (coût ou jetons non nuls) : une entrée à zéro n'est
+                            # pas une facturation (SUPPOSÉ, à vérifier en réel : forme exacte de `model_usage` du kit 0.2.172)
+                            autres = {m: u for m, u in usage_par_modele.items()
+                                      if not modele_conforme(demande, m) and AdaptateurClaudeSDK._a_servi(u)}
+                            if autres:
+                                lecture["depense_modele_non_autorise_usd"] += sum(
+                                    float(u.get("costUSD") or 0.0) for u in autres.values() if isinstance(u, dict))
+                                refuser("modèles facturés ≠ modèle demandé " + repr(demande) + " : " + ", ".join(sorted(map(str, autres))),
+                                        sorted(map(str, autres))[0], "result.model_usage")
+                                break
             except sdk.ClaudeSDKError as exc:
                 erreur = type(exc).__name__ + " : " + caviarder(str(exc))[0][:500]
 
@@ -500,10 +535,25 @@ class AdaptateurClaudeSDK(Adaptateur):
             statut, erreur = "erreur", f"délai de session dépassé ({delai_s:g} s) : session interrompue (CL34-05)"
         if lecture["refus"] is not None:  # v47 (R-764) : refus = arrêt propre, jamais « budget dépassé »
             statut, final = "refus", None
+            morceaux.clear()  # v49 : un refus vu au message de résultat n'emporte pas le texte déjà reçu
             erreur = "refus (R-764) : " + lecture["refus"]["motif"]
             lecture["cout_inconnu"] = True  # la session est close avant son message de résultat : la course lit le relais
             cout = max(cout, lecture["depense_modele_non_autorise_usd"])
         return (final if final else "\n".join(morceaux)), cout, statut, erreur, lecture
+
+
+def controle_modele_resultat(modele, resultat):
+    """v49 (CL13-05, CL13-06) : défense en profondeur du noyau, pour **tout** adaptateur. Si le résultat porte un modèle servi
+    (`modele_servi`, texte non vide) qui n'est pas le modèle demandé (identifiant exact, ou suivi d'un suffixe de date), rend
+    le dictionnaire de refus (R-764) ; sinon None. Un adaptateur qui ne dit pas le modèle servi (simulé) n'est pas concerné
+    ici : l'exigence est celle de l'adaptateur (commande externe : `exiger_modele_servi`)."""
+    servi = getattr(resultat, "modele_servi", None)
+    if not isinstance(servi, str) or not servi or not isinstance(modele, str) or not modele:
+        return None
+    if modele_conforme(modele, servi):
+        return None
+    return {"motif": f"modèle servi {servi!r} ≠ modèle demandé {modele!r} (contrôle du noyau sur le résultat)",
+            "modele_demande": modele, "modele_servi": servi, "evenement": "resultat.modele_servi"}
 
 
 class AdaptateurMixte(Adaptateur):
@@ -562,7 +612,7 @@ class AdaptateurCommandeExterne(Adaptateur):
 
     DELAI_COMMANDE_S = 1800  # v38 (CL37-08)
 
-    def __init__(self, commande, environnement=None, delai_s=DELAI_COMMANDE_S, variables_transmises=()):
+    def __init__(self, commande, environnement=None, delai_s=DELAI_COMMANDE_S, variables_transmises=(), exiger_modele_servi=False):
         if not isinstance(commande, (list, tuple)) or not commande or not all(isinstance(c, str) for c in commande):
             raise ValueError("commande externe : liste non vide de chaînes")
         if isinstance(delai_s, bool) or not isinstance(delai_s, (int, float)) or not delai_s > 0:
@@ -570,12 +620,17 @@ class AdaptateurCommandeExterne(Adaptateur):
         self.commande = list(commande)
         self._environnement = environnement
         self.delai_s = float(delai_s)
+        # v49 (CL13-05, R-764 pour Argon) : `exiger_modele_servi` — la commande doit rendre `modele_servi` (le modèle qui a
+        # réellement répondu) ; absent ou différent du modèle demandé = refus = arrêt. Le lanceur l'exige pour le moteur
+        # réel ; faux (défaut de la classe, essais), la barrière n'agit que si la commande rend `modele_servi` (dit au manifeste).
+        self.exiger_modele_servi = bool(exiger_modele_servi)
         self.variables_transmises = tuple(variables_transmises)
         if noms_de_cle_presents({v: "x" for v in self.variables_transmises}):
             raise CleDansEnvironnement("variables_transmises : un nom de variable de clé ne se transmet jamais")
 
-    def environnement_commande(self, budget_usd=None, role=None):
-        """L'environnement effectivement passé à la commande (fonction séparée pour être testée)."""
+    def environnement_commande(self, budget_usd=None, role=None, modele=None):
+        """L'environnement effectivement passé à la commande (fonction séparée pour être testée). v49 : `MODELE_DEMANDE_POLE`
+        (le modèle que le noyau demande) quand il est connu — la commande rend `modele_servi` en regard."""
         source = os.environ if self._environnement is None else self._environnement
         presents = noms_de_cle_presents(source)
         if presents:
@@ -587,6 +642,8 @@ class AdaptateurCommandeExterne(Adaptateur):
             env["PLAFOND_SESSION_USD"] = repr(float(budget_usd))
         if role is not None:
             env["ROLE_POLE"] = str(role)
+        if modele is not None:
+            env["MODELE_DEMANDE_POLE"] = str(modele)
         return env
 
     def description(self):
@@ -594,7 +651,31 @@ class AdaptateurCommandeExterne(Adaptateur):
         from .outils import sha256_fichier
         return {"commande": list(self.commande),
                 "empreintes": {c: sha256_fichier(c) for c in self.commande if os.path.isfile(c)},
-                "variables_transmises": list(self.variables_transmises), "delai_s": self.delai_s}
+                "variables_transmises": list(self.variables_transmises), "delai_s": self.delai_s,
+                "controle_modele_servi": (
+                    "exigé (CL13-05) : la dernière ligne rend `modele_servi`, égal au modèle demandé (ou suivi d'un suffixe de "
+                    "date), sinon refus et arrêt" if self.exiger_modele_servi else
+                    "facultatif : la barrière du modèle servi n'agit que si la commande rend `modele_servi` ; sinon elle est "
+                    "ABSENTE pour ce rôle externe (R-764, barrière 2)")}
+
+    def controle_modele(self, objet, modele):
+        """v49 (CL13-05) : le refus (dict, comme celui du kit) si la commande dit un refus (`refus` vrai, `stop_reason` =
+        « refusal »), si `modele_servi` manque alors qu'il est exigé, ou s'il diffère du modèle demandé ; sinon None."""
+        servi = objet.get("modele_servi")
+        base = {"modele_demande": modele, "modele_servi": servi if isinstance(servi, str) else None, "evenement": "commande.reponse"}
+        if objet.get("refus") not in (None, False, "", 0) or objet.get("stop_reason") == "refusal":
+            return dict(base, motif="la commande externe dit un refus du modèle", evenement="commande.refus")
+        if "modele_servi" in objet or self.exiger_modele_servi:
+            if not isinstance(servi, str) or not servi.strip():
+                return dict(base, motif="la commande externe ne rend pas modele_servi (exigé : barrière du modèle servi)",
+                            evenement="commande.modele_servi_absent")
+            if not isinstance(modele, str) or not modele:
+                return dict(base, motif="modèle demandé inconnu du noyau : le modèle servi ne peut pas être contrôlé",
+                            evenement="commande.modele_demande_inconnu")
+            if not modele_conforme(modele, servi):
+                return dict(base, motif=f"modèle servi {servi!r} ≠ modèle demandé {modele!r} : changement de modèle par la commande",
+                            evenement="commande.modele_servi")
+        return None
 
     @staticmethod
     def lire_derniere_ligne(sortie_octets):
@@ -620,7 +701,7 @@ class AdaptateurCommandeExterne(Adaptateur):
         import subprocess
         if role not in self.ROLES_PERMIS:
             raise ValueError(f"la commande externe ne joue que {self.ROLES_PERMIS}, pas {role!r}")
-        env = self.environnement_commande(budget_usd, role)
+        env = self.environnement_commande(budget_usd, role, modele)
         plafond = float(budget_usd)
         try:
             p = subprocess.Popen(self.commande, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
@@ -656,6 +737,11 @@ class AdaptateurCommandeExterne(Adaptateur):
             return Resultat("", [], plafond, "erreur", "commande externe : " + motif + " ; coût inconnu, plafond de "
                             "session compté", cout_inconnu=True)
         cout = float(objet["cout_usd"])
+        refus = self.controle_modele(objet, modele)  # v49 (CL13-05) : le texte d'un refus ou d'un autre modèle n'est jamais servi
+        if refus is not None:
+            non_autorise = cout if refus["evenement"] in ("commande.modele_servi", "commande.modele_servi_absent") else 0.0
+            return Resultat("", [], cout, "refus", "refus (R-764) : " + refus["motif"], refus=refus,
+                            modele_servi=refus["modele_servi"], depense_modele_non_autorise_usd=non_autorise)
         if plafond + 1e-12 < cout:
             return Resultat(caviarder(objet["texte"])[0], [], cout, "budget_depasse",
                             "coût déclaré au-dessus du plafond de session", texte_brut=objet["texte"])
