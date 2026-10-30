@@ -466,8 +466,11 @@ def test_g14_artefact_V_concepts_absents_d1c_non_applicable_et_J_non_calculee():
     assert all(not e for e in w.obs.etiq_co)
     r = ms.executer_monde(w, "V_concepts_absents", RV, INDICE_ESSAI, ["N", "d1c", "c"])
     assert r["exclu"] or "d1c" not in r["bras"]
-    with pytest.raises(GardeArret):
-        br.bras_d1c(w.obs, np.random.default_rng(0), {})
+    # CLA-09 : la vue observée ne porte plus l'indicateur `concepts_absents` ; la non-applicabilité est décidée par
+    # NON_APPLICABLES seul (essais sain et artefact de cette garde : essais/essais_cla_v2.py)
+    assert "d1c" in ms.NON_APPLICABLES["V_concepts_absents"]
+    with pytest.raises(mo.AccesLatent):
+        w.obs.concepts_absents
     # l'artefact principal (J fausse sur les 300 miroirs de validation de M_inertes) est V9 : non lancé ici
     # (consigne de la mission : validation du générateur après contre-lecture du code) ; voir valider_generateur_v2.py
 

@@ -38,9 +38,10 @@ ICI = Path(__file__).resolve().parent
 DEPOT = ICI.parents[5]
 PREREG = DEPOT / "prereg" / "preenregistrement-bisociation-deux-espaces-v2.md"
 EMPREINTE_PREREG = "e821e8752532fdabc03cb684e9a3bb71a40bcb4267de842da228de2b88c314ea"
-# Addendum d'écarts déclarés (Q-01 (b), Q-03 = 16, Q-04 copie ; R-600) : il doit être scellé avant l'invocation. Si la
-# contre-lecture R2 en fait une version nouvelle (R12), ce nom change avec elle.
-ADDENDUM = "addendum-ecarts-bisociation-deux-espaces-v2-v2.md"
+# Addendum d'écarts déclarés (Q-01 (b), Q-03 = 16, Q-04 copie ; R-600) : il doit être scellé avant l'invocation. Nom et
+# empreinte du texte final (addendum v4, point (vii), ordre de gel, CLA-04) : si le texte change, les deux changent avec lui.
+ADDENDUM = "addendum-ecarts-bisociation-deux-espaces-v2-v4.md"
+EMPREINTE_ADDENDUM = "ff354432010b8fad7f2c29d8036eedd196c6f4d14eceef2ec291c36c29864602"
 
 CONDITIONS = [c for c, _ in sorted(gr.CODES_CONDITION.items(), key=lambda kv: kv[1])]
 # S15 et S7 (valeurs gelées par Lazar, R-580)
@@ -87,12 +88,16 @@ def verifier_prerequis(depot, validation, reproduction, audit_rendu, code_contra
 
 
 def exiger_addendum_scelle(depot):
-    """L'addendum d'écarts (R-600) est scellé : son empreinte compagnon existe et concorde (sinon arrêt)."""
+    """L'addendum d'écarts (R-600) est scellé : son empreinte compagnon existe et concorde, et l'empreinte du fichier
+    égale EMPREINTE_ADDENDUM, celle du texte final contre-lu (CLA-04, même logique que EMPREINTE_PREREG) ; sinon arrêt."""
     from controle_ia.scellement import compagnon
     chemin = Path(depot) / "prereg" / ADDENDUM
     if not chemin.is_file() or not compagnon(chemin).is_file():
         raise GardeArret(f"addendum {ADDENDUM} non scellé : ni validation ni invocation (R1)")
-    return verifier(chemin)
+    sha = verifier(chemin)
+    if sha != EMPREINTE_ADDENDUM:
+        raise GardeArret(f"addendum {sha[:12]}… ≠ {EMPREINTE_ADDENDUM[:12]}… : texte autre que celui fixé dans le code")
+    return sha
 
 
 def ms_sha(chemin):
@@ -140,17 +145,26 @@ def reduire(lignes):
                       for b, m in (l.get("bras") or {}).items()}} for l in lignes]
 
 
-def identites_a_N(lignes):
-    """Bras dont la sortie est identique à celle de N, au bit près, sur tous les mondes non exclus de la condition (tous
-    les bras ; le filtre de la liste du texte et des identités déclarées d'avance est dans lecture_v2.identites_audit)."""
+def identites_paires(lignes):
+    """Paires de bras dont les sorties sont identiques au bit près (égalité des listes ordonnées `_paires`) sur tous les
+    mondes non exclus de la condition ; mondes exclus ignorés. Toutes les paires parmi N et tous les bras présents
+    (CLA-03 ; addendum v4, (vi-b)). Chaque paire est un tuple (x, y) rangé dans l'ordre de br.ORDRE_BRAS (N d'abord) ;
+    liste triée. Le filtre de la liste du texte et des identités déclarées d'avance est dans lecture_v2.identites_audit.
+    Un bras absent d'un monde non exclu (non applicable) ne forme de paire avec aucun autre."""
     ident = None
     for l in lignes:
         if l["exclu"]:
             continue
-        sortie_N = l["bras"]["N"]["_paires"]
-        egaux = {b for b, m in l["bras"].items() if b != "N" and m["_paires"] == sortie_N}
+        bras = sorted(l["bras"], key=lambda b: (br.RANG.get(b, len(br.RANG)), b))
+        egaux = {(x, y) for k, x in enumerate(bras) for y in bras[k + 1:]
+                 if l["bras"][x]["_paires"] == l["bras"][y]["_paires"]}
         ident = egaux if ident is None else ident & egaux
-    return sorted(ident or [])
+    return sorted(ident or [], key=lambda p: (br.RANG.get(p[0], len(br.RANG)), br.RANG.get(p[1], len(br.RANG)), p))
+
+
+def identites_a_N(lignes):
+    """Bras identiques à N (déduits de identites_paires ; gardé pour le rapport)."""
+    return [y if x == "N" else x for x, y in identites_paires(lignes) if "N" in (x, y)]
 
 
 def executer_decision(depot, run_id, manifeste_chemin, s9, processus, rapport, executer=tr.executer_condition,
@@ -179,10 +193,11 @@ def executer_decision(depot, run_id, manifeste_chemin, s9, processus, rapport, e
                 info["abandonnee_plafond_sous_S8"] = plafond < ms.PLAFOND_ORACLE_S8
             else:
                 ms.verifier_plafond_oracle(plafond, cond)
-        ident = identites_a_N(lignes)
+        ident = identites_paires(lignes)
         identites[cond] = ident
         contenu = {"condition": cond, "n_mondes": len(lignes), "ecrit_le": _maintenant(), "info": info,
-                   "identites_a_N": ident, "lignes": lignes}
+                   "identites_paires": [list(p) for p in ident],
+                   "identites_a_N": [y if x == "N" else x for x, y in ident if "N" in (x, y)], "lignes": lignes}
         fichiers.append(str(ecrire_resultat(depot, manifeste_chemin, f"resultats-{cond}", contenu)))
         comptes[cond] = len(lignes)
         reduit[cond] = reduire(lignes)
@@ -198,7 +213,8 @@ def executer_decision(depot, run_id, manifeste_chemin, s9, processus, rapport, e
     fichiers.append(str(ecrire_resultat(depot, manifeste_chemin, "contrastes",
                                         {"ecrit_le": _maintenant(), "contrastes": contrastes})))
     fichiers.append(str(ecrire_resultat(depot, manifeste_chemin, "donnees-audit",
-                                        {"ecrit_le": _maintenant(), "par_condition": audit, "identites_a_N": identites,
+                                        {"ecrit_le": _maintenant(), "par_condition": audit,
+                                         "identites_paires": {c: [list(p) for p in v] for c, v in identites.items()},
                                          "concordance_verite_conditions_decision": {
                                              c: audit[c]["concordance_verite"] for c in an.CONDITIONS_DECISION
                                              if c in audit and not c.startswith("NR_")}})))

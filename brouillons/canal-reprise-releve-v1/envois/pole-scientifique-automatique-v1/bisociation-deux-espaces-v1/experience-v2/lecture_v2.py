@@ -110,21 +110,27 @@ IDENTITES_DECLAREES = {("V_concepts_absents", "N", "N_beta0"), ("NR_bien", "d1c"
 
 
 def identites_audit(identites):
-    """`identites` : {condition : [bras identiques à N sur tous les mondes non exclus]} (invocation_unique_v2).
-    Rend (identités qui déclenchent l'audit, identités rapportées sans déclencher : hors liste du texte ou déclarées
-    d'avance)."""
+    """`identites` : {condition : [paires (x, y) de bras identiques sur tous les mondes non exclus]}
+    (invocation_unique_v2.identites_paires, toutes les paires parmi N et les bras, CLA-03) ; un élément qui est un nom
+    de bras seul `x` vaut la paire (N, x) (forme d'avant CLA-03, gardée pour les appels existants).
+    Déclenchent l'audit seulement les paires (N, x) avec x dans BRAS_IDENTITE_AUDIT et non déclarées d'avance (texte
+    scellé, « Audit de symétrie » ; addendum v4, (vi-b)) ; toutes les autres (paires sans N, dont d1c ≡ d1 en toute
+    condition ; N avec un bras hors liste ; identités déclarées d'avance) sont rapportées sans déclencher.
+    Rend (identités qui déclenchent, identités rapportées), chacune {condition : [éléments tels que reçus]}."""
     declenche, rapporte = {}, {}
-    for cond, bras in identites.items():
-        for x in bras:
-            declaree = (cond, "N", x) in IDENTITES_DECLAREES or (cond, x, "N") in IDENTITES_DECLAREES
-            cible = declenche if (x in BRAS_IDENTITE_AUDIT and not declaree) else rapporte
-            cible.setdefault(cond, []).append(x)
+    for cond, elements in identites.items():
+        for e in elements:
+            x, y = ("N", e) if isinstance(e, str) else tuple(e)
+            autre = y if x == "N" else x if y == "N" else None
+            declaree = (cond, x, y) in IDENTITES_DECLAREES or (cond, y, x) in IDENTITES_DECLAREES
+            cible = declenche if (autre in BRAS_IDENTITE_AUDIT and not declaree) else rapporte
+            cible.setdefault(cond, []).append(e)
     return declenche, rapporte
 
 
 def declencheurs_audit(c, b, prec_N, prec_oracle, identites, j_miroirs, fuite_F, concordance_verite):
     """Déclencheurs de l'audit de symétrie (R4) ; rend la liste des déclencheurs présents. `identites` :
-    {condition : [bras identiques à N]} ; filtrées par `identites_audit`. `concordance_verite` : {condition :
+    {condition : [paires de bras identiques, ou bras identiques à N]} ; filtrées par `identites_audit`. `concordance_verite` : {condition :
     concordance} (mesures_v2.concordance_verite, conditions de décision v2) ou un nombre ; None : non calculée."""
     d = []
     if any(abs(c[("N-b", X)]["estimation"]) >= AUDIT_ABS for X in X2):

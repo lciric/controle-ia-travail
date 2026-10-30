@@ -119,7 +119,9 @@ def garde_configuration(p):
 class Obs:
     """Vue observée en lecture seule. Tout attribut absent (champ latent, vérité, provenance…) lève AccesLatent."""
     __slots__ = ("n", "cos", "etiq_op", "etiq_co", "c_obs", "dom_obs", "q", "df", "paires", "valides", "pont",
-                 "concepts_absents", "nr", "_fige")  # sans le nom de la condition (contre-lecture du code, G1)
+                 "_fige")  # sans le nom de la condition (contre-lecture du code, G1) ni les indicateurs `nr` et
+    # `concepts_absents`, qui désignaient NR et V_concepts_absents (CLA-09) : la non-applicabilité de d1c est décidée
+    # par mesures_v2.NON_APPLICABLES
 
     def __init__(self, **champs):
         for k, v in champs.items():
@@ -607,7 +609,7 @@ def generer(condition, racine, indice, surcharge=None):
     paires, valides, pont = etage_commun(n, [etiq_op[i] | etiq_co[i] for i in range(n)], c_obs, dom_obs, df)
     obs = Obs(n=n, cos=_figer(cos), etiq_op=etiq_op, etiq_co=etiq_co, c_obs=c_obs, dom_obs=dom_obs,
               q=tuple(a["q"] for a in arts), df=MappingProxyType(dict(df)), paires=paires, valides=valides,
-              pont=pont, concepts_absents=p["concepts_absents"], nr=False)
+              pont=pont)
     vrais, info = _verite(p, champ, arts, paires)
     plante = {}
     for pl in plantes:
@@ -642,7 +644,7 @@ def generer_nr(condition, racine, indice):
         raise GardeArret("NR : étage commun v2 ≠ paires valides de monde_v1")
     obs = Obs(n=n, cos=_figer(w["cos"]), etiq_op=etiq, etiq_co=etiq, c_obs=c_obs, dom_obs=dom_obs,
               q=tuple(a["q"] for a in arts), df=MappingProxyType(dict(df)), paires=paires, valides=valides,
-              pont=pont, concepts_absents=False, nr=True)
+              pont=pont)
     info = [{"compat_vraie": pp["compat_vraie"], "op_commun": pp["op_commun"], "rare_commun": [],
              "proche": pp["proche"], "eloigne": pp["eloigne"]} for pp in w["paires"]]
     plante = {}

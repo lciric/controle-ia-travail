@@ -276,8 +276,8 @@ def bras_d1(obs, rng, aux):
 
 
 def bras_d1c(obs, rng, aux):
-    if obs.nr or obs.concepts_absents:
-        raise GardeArret("d1c non applicable (NR, V_concepts_absents) : exclu d'avance, jamais exécuté")
+    """Non applicable dans NR et V_concepts_absents : exclu d'avance par mesures_v2.NON_APPLICABLES, jamais exécuté
+    (la vue observée ne porte plus d'indicateur de condition, CLA-09)."""
     return marche_swanson(obs, rng, obs.etiq_co)
 
 
