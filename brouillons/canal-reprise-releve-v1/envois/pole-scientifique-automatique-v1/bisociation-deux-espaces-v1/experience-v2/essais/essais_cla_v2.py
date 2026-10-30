@@ -40,7 +40,7 @@ def _copie_addendum(tmp_path, suffixe=b""):
 
 
 def test_cla04_sain_texte_v4_scelle_accepte(tmp_path):
-    assert inv.ADDENDUM == "addendum-ecarts-bisociation-deux-espaces-v2-v5.md"
+    assert inv.ADDENDUM == "addendum-ecarts-bisociation-deux-espaces-v2-v6.md"
     assert hashlib.sha256(VRAI_ADDENDUM.read_bytes()).hexdigest() == inv.EMPREINTE_ADDENDUM   # lecture seule
     _copie_addendum(tmp_path)
     assert inv.exiger_addendum_scelle(tmp_path) == inv.EMPREINTE_ADDENDUM

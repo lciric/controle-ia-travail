@@ -1,0 +1,124 @@
+# Vérification des corrections de code CLA-03, CLA-04, CLA-09 et de l'addendum v5 — expérience de bisociation à deux espaces — v1
+
+- **Auteur** : sous-agent Sonnet 5.5 neuf (`claude-sonnet-5-5`), auteur d'aucune des pièces relues. Je suis du même modèle que la contre-lecture CLA et que la seconde session (`validation_v2.py`, `invocation_unique_v2.py`) : la règle R2 est tenue, pas l'indépendance de modèle pour ces modules (voir (viii) de l'addendum).
+- **Date et heure** : relevés `date -u` le 30 octobre 2026, début 23:38Z, fin de rédaction 23:42Z environ.
+- **Interdits respectés** : rien lu sous `donnees/` ; ni la validation V1 à V9 ni l'invocation unique lancées ; aucun contraste de décision, aucune moyenne de Δ(N, ·), aucun résultat V1 à V9 calculé ou lu ; graine RACINE non employée ; aucun `.sha256` écrit ; aucun commit ; aucune clé. Seul fichier écrit : ce rapport. Mes seules exécutions de code : les essais et mutations du dossier (indices déjà listés dans l'addendum, 951000 à 956009), `--runxfail` sur les mutations, et deux petits appels de plomberie sans monde (filtre `identites_audit` sur des listes JSON ; `balayage_v2.problemes` sur des chaînes de source). Aucune n'ajoute d'indice à la liste « ce qui a été lu avant ».
+
+## Fichiers lus, avec empreinte (sha256 calculée par moi)
+
+Chemins du dépôt ; `experience-v2/` = `brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/bisociation-deux-espaces-v1/experience-v2/`.
+
+| Fichier | sha256 |
+|---|---|
+| `prereg/addendum-ecarts-bisociation-deux-espaces-v2-v5.md` (lu en entier ; différences avec v4 et v3 lues) | `c054ac65e4d4898afc05afa4b3644406a84afe8615bbfa8f850e1fe43ba0cd2e` |
+| `prereg/preenregistrement-bisociation-deux-espaces-v2.md` (lignes 198, 273-275, 499, 580, 640-647, 703-705 lues) | `e821e8752532fdabc03cb684e9a3bb71a40bcb4267de842da228de2b88c314ea` (égale à son compagnon) |
+| `experience-v2/contre-lecture-code/contre-lecture-addendum-v3-et-corrections-v1.md` | `2979e889e3eb9c0318060a135a8e81c2585caf313de053d5276cfad0feed2357` |
+| `experience-v2/LISEZMOI-experience-v2-v3.md` | `3a3d77c2cc87c6ebafd0612e1e1e7fcd833b9cd718f7f49d0819c2eaa33aceb4` |
+| `experience-v2/complement-lisezmoi-v3-addendum-v5-v1.md` | `2425e37c2b5870d1e111ffa64e5cdd22dbcd8ba0911e24537489aeadf978d269` |
+| `experience-v2/invocation_unique_v2.py` | `05f012f4a2aefd1e661d462e5797d0b294159e50bb27d29d235ee6bb309a4c29` |
+| `experience-v2/lecture_v2.py` | `e096a72e0e17fbb5afdf3c27dac66c7be3c74252f4afffcdcda844c2d2880884` |
+| `experience-v2/monde_v2.py` (lignes 95, 108-140, 480-525, 600-660) | `0986a0cbfd48478a17d7a0bae1b69f868fea4a98a431b259dc9ec9b94264c8d0` |
+| `experience-v2/bras_v2.py` (diff ; lignes 270-290) | `21f79481482e074b91b1fb62b280ade0afebfa6f36beb55994953825160a199f` |
+| `experience-v2/balayage_v2.py` | `4ad2f71ac989ab95daba19dff71dca0d1149481991df3ca3644b5d91c4f69c68` |
+| `experience-v2/essais/essais_cla_v2.py` (en entier) | `56e0ae2684568870e0ff8d759b660956ec7ef80e0ef71be38095d9fd2ad6cac7` |
+| `experience-v2/essais/jouets_v2.py` | `65bf2e7d584a86327ffc595244fe9910d29510216bb6686e62cccddd61eb4064` |
+| `experience-v2/essais/essais_gardes_v2.py` (diff) | `45665f33f3a76ca1827fd52ddea71d0d81a66a6f05b04aa53d5e7d201a700668` |
+| `experience-v2/essais/essais_corrections_v2.py` (diff, lignes 95-112, 230-245, 300-320) | `7b6beb93c0f2fc11f87530865b053525c2e9102dffc3f9e256d924cffc30fd1d` |
+| `experience-v2/essais/essais_complements_v2.py` (grep seulement) | `49f9d999bbb4e7afc9db08d733a7a097b602402905e70e6086bd1bf10991a21a` |
+| `experience-v2/plomberie-corrections-v2/mutations_corrections_v1.py` | `b4efb12bf6189471be29e6705cac718b5e868bc16502d7c11637b0d5b78369ac` |
+| `experience-v2/plomberie-corrections-v2/identite_avant_apres_cla_v1.py` | `67c6dc375a113c197dcc7136f42d6ac861383fbc44535b4fdf4b5bbeb123054a` |
+| `experience-v2/plomberie-corrections-v2/identite-avant-cla-resultats-v1.json` et `…-apres-…` (octet pour octet égaux, 960 entrées ; contenu non lu, seulement `cmp` et empreinte) | `db1cc174b647fb0233e220c8de8bf0512beff54174fb679f23ae8d3adc4b7ed9` (les deux) |
+| `experience-v2/plomberie-corrections-v2/taux-q01-replantation-sortie-v1.txt` (comptes de plomberie) | non recalculée ; lue |
+| Modules déclarés inchangés : `analyse_v2.py`, `mesures_v2.py`, `graines_v2.py`, `validation_v2.py`, `travail_v2.py` | débuts d'empreinte `8fdf11c1…`, `40a6f23a…`, `283d9368…`, `7e872917…`, `1a9c9e8f…` : égales à celles relevées par la contre-lecture CLA avant les corrections |
+
+---
+
+## 1. Constats de texte CLA-01, 02, 05, 06, 07, 08, 10, 11 dans l'addendum v5 — **traités, fidèles, avec une scorie de rédaction (VC-01)**
+
+Différences v3 → v4 → v5 lues par `diff`. Entre v4 et v5, seuls changent : l'en-tête, la liste « ce qui a été lu avant » (ajout des indices 956000 à 956009 et 980000 à 980059) et la ligne (vii) (noms v5, étapes (2) et (3) marquées faites, essais 118 et mutations 8).
+
+| Constat | Où dans la v5 | Fidèle ? |
+|---|---|---|
+| CLA-01 population sous (b) | Section « Effet attendu », première puce : « Sous (b), le monde de base suit la loi de G (nombre de champs compris) et seul le placement des ponts est conditionné à sa réussite ; la population diffère donc de celle du texte scellé, qui régénérait le monde entier et repondérait ainsi les mondes de base… ; l'effet sur la grandeur des écarts et sur les contrastes 14, 15, 39 n'est pas mesuré ; aucun effet sur le signe d'un écart apparié » | **Oui.** Concorde avec le code : `monde_v2.py` lignes 483-496 (le monde de base est tiré une fois, `range(MAX_REPLANTATIONS + 1)`, seul le placement est retenté) et avec la mesure de plomberie (0 régénération sur 33 600 mondes). L'expression « par exemple moins de mondes à 2 champs » est une direction non mesurée, dite « par exemple » : acceptable. |
+| CLA-02 conséquence sur S11 | Ligne Q-01 du tableau : « la règle d'arrêt S11 sur "les mondes régénérés après échec de plantation" ne s'applique plus aux mondes replantés, seulement aux régénérations entières ; sous la lecture du texte scellé, le taux mesuré en M_bien (5,29 % de mondes replantés sur 2 400 mondes d'essai) aurait arrêté le run ; sous (b), il est rapporté sans seuil. C'est la décision de Lazar (R-600…) » | **Oui, et le chiffre est exact** : `taux-q01-replantation-sortie-v1.txt`, M_bien « replant 127 (0.0529) » sur 2 400 ; le texte scellé soumet bien « le taux de régénération » à S11 (G11, ligne 499 ; ligne 704). Réserve de forme seulement : la phrase n'est pas répétée dans « Effet attendu », où l'on lit encore « Aucun seuil ne change » (VC-05, mineure). |
+| CLA-05 liste de ce qui a été lu | Section « Pourquoi un addendum » | **Oui.** Contre-lecteur du code, auteur des corrections (950000-950599, 951000-955000, 953000-953002, 960000-960002, 970000-972399, 980000-980059), contre-lecteur R2, et en v5 les corrections CLA-03/04/09 (956000-956009 ; 980000-980059). Les plages des essais du dossier (`K_REPLANT`… `K_CONC` = 952000, 953000, 954000, 955000 ; `K_CLA` = 956000) sont couvertes. La présente vérification n'ajoute aucun indice. |
+| CLA-06 plafond | Ligne (v) | **Oui** : « après 50 replantations échouées… (soit 51 placements en échec, le placement initial compris) », concorde avec `monde_v2.py` ligne 485. |
+| CLA-07 règle de copie de Q-04 | Ligne Q-04 | **Oui** : « l'article de plus grand indice (ordre final des articles) prend les mots propres du domaine de l'article de plus petit indice, pour chaque pont planté de tout statut » ; concorde avec `monde_v2.py` ligne 521 (`arts[haut]["dom_mots"] = arts[bas]["dom"]`). |
+| CLA-08 (vi-a) | Ligne (vi-a) | **Oui** : concepts seulement ; six conditions de décision v2 nommées ; NR non calculée ; « dès qu'une de ces conditions le franchit » ; homonymie levée par deux noms (« concordance avec la vérité », « concordance de jumelle »). Les valeurs de plomberie (0,70 à 0,96) sont dans la liste des lectures, non répétées dans (vi-a) : suffisant. |
+| CLA-10 heure | En-tête | **Oui** : v3 23:13 UTC, v4 23:23 UTC, v5 23:35 UTC ; les dates de fichier (`ls`, heure locale UTC+1 : 00:13, 00:23, 00:35) le confirment. |
+| CLA-11 indépendance de modèle | Ligne (viii) | **Oui** (dit, relecture par un troisième modèle « souhaitable, non exigée »). |
+| CLA-12 (essais : plafond à 2 seulement ; signature du monde de base incomplète) | non traité | Non exigé par la contre-lecture (« ajouter ou le dire ») ; ni ajouté ni dit. Mineure (VC-08). |
+
+**Scorie de rédaction (VC-01)** : la ligne (vi-b) de la v5 est restée dans l'état de la v4, écrite *avant* la correction de code. Elle dit que la chaîne `identites_a_N` « ne compare que chaque bras à N », que les identités entre deux autres bras sont rapportées « si la correction de code (CLA-03) est faite avant scellement, sinon ne sont pas détectées, ce que ce texte déclare », et que « deux essais… sont exigés avant scellement ». Or la correction est faite : le code compare toutes les paires (voir 2). Le texte scellé serait donc faux sur ce qu'il décrit (conditionnel obsolète) et ferait croire que les identités entre témoins ne sont pas contrôlées. De même, la section « Contre-lecture et scellement » dit encore « corrections de code en cours » (première puce) et décrit les constats « traités dans cette v4 ».
+
+## 2. CLA-03 — `identites_paires` — **tenu**
+
+- **Toutes les paires, mondes non exclus, listes ordonnées** : `invocation_unique_v2.py` lignes 148-162. Pour chaque ligne non exclue, tous les couples (x, y) de bras présents, rangés selon `br.RANG` (`bras_v2.py` ligne 25, N en rang 0), retenus si `l["bras"][x]["_paires"] == l["bras"][y]["_paires"]` (égalité de listes ordonnées) ; intersection entre mondes ; mondes exclus sautés (`if l["exclu"]: continue`) ; bras non applicable absent d'une ligne : aucune paire. Tri final déterministe. `identites_a_N` (lignes 165-167) est déduite et n'est plus qu'un rapport. `executer_decision` appelle `identites_paires` (ligne 196) et écrit `identites_paires` dans les résultats par condition (ligne 199) et dans `donnees-audit` (ligne 217).
+- **Seules les paires (N, x) déclarées déclenchent, deux exceptions** : `lecture_v2.py` lignes 106-128. `autre` vaut le bras opposé à N, ou `None` si N n'est pas dans la paire ; déclenche seulement si `autre in BRAS_IDENTITE_AUDIT` (N_global, N_beta0, b, a, d1, d1c, c, b_eloigne) et si la paire n'est pas dans `IDENTITES_DECLAREES` (dans les deux sens). Exceptions : (V_concepts_absents, N, N_beta0), et (NR_bien / NR_moyen, d1c, d1), cette dernière sans effet puisqu'une paire sans N ne déclenche jamais (et d1c n'est pas exécuté en NR). Conforme au texte scellé (ligne 643) et à la ligne (vi-b). Vérifié en plus par moi sur la forme JSON (listes `[x, y]`, telle que lue depuis `donnees-audit`) : `identites_audit({'M_bien': [['N','N_global'],['d1','d1c']], 'NR_bien': [['d1c','d1']], 'V_concepts_absents': [['N','N_beta0']]})` rend déclenche = `{'M_bien': [['N','N_global']]}`, tout le reste rapporté.
+- **Essais** (`essais/essais_cla_v2.py`) :
+  - sain (lignes 79-89) : bras différent sur un monde (pas d'identité) ; identité sur le seul monde exclu (ignorée) ; même ensemble dans un autre ordre (pas identique) ; aucun déclenchement ;
+  - artefact (lignes 92-116) : cinq copies sur tous les mondes non exclus, différentes sur un monde exclu → cinq paires exactement, dans l'ordre attendu ; seule (N, N_global) déclenche ; `d1c ≡ d1` rapportée sans déclencher ; N ≡ N_β0 déclarée en V_concepts_absents, déclenche en M_moyen ; **chaîne réelle** jusqu'à `declencheurs_audit` (présence puis absence de l'entrée « identités non déclarées » quand on retire la paire fautive) ; la production de la liste passe par la vraie `inv.identites_paires`, pas par un dictionnaire donné ;
+  - sain sur mondes réels (lignes 119-123, indices 956000 à 956002) : d1c non applicable en V_concepts_absents ne forme aucune paire.
+  - mutation m8 (l'ancienne chaîne, chaque bras comparé à N seulement) : échoue sur l'égalité des cinq paires, comme voulu (vérifié avec `--runxfail`, raison : `AssertionError` à la ligne 98 de l'essai, donc pour la bonne raison).
+- Point d'attention (VC-07, mineure) : l'ensemble `executer_decision` → fichiers n'est exécuté que par les essais d'invocation synthétique, sans assertion sur le contenu de `identites_paires` écrit ; la partie « liste JSON → filtre » n'est éprouvée que par mon appel ci-dessus, pas par un essai du dossier.
+
+## 3. CLA-04 — garde d'empreinte de l'addendum — **tenu**
+
+- `invocation_unique_v2.py` lignes 43-44 : `ADDENDUM = "addendum-ecarts-bisociation-deux-espaces-v2-v5.md"`, `EMPREINTE_ADDENDUM = "c054ac65…0cd2e"`. Lignes 90-100 : `exiger_addendum_scelle` exige le fichier et son compagnon (sinon `GardeArret`), appelle `verifier` (qui compare le fichier à son compagnon et rend l'empreinte), puis lève `GardeArret` si l'empreinte ≠ `EMPREINTE_ADDENDUM`. Appelée par `verifier_prerequis` (ligne 67) et `validation_v2.py` ligne 336.
+- `sha256sum prereg/addendum-ecarts-bisociation-deux-espaces-v2-v5.md` = `c054ac65e4d4898afc05afa4b3644406a84afe8615bbfa8f850e1fe43ba0cd2e` = la constante. **Égale.**
+- `ls prereg/` : aucun compagnon pour les addendums v1 à v5 (seuls `preenregistrement-bisociation-deux-espaces-v2.md.sha256` existe). La garde de procédure `test_cla04_le_vrai_addendum_n_est_pas_scelle_par_les_essais` (ligne 63) le vérifie.
+- Essais : sain (copie temporaire du vrai texte, scellée dans `tmp_path` : acceptée, rend la constante) ; artefact (texte modifié puis rescellé, compagnon concordant : refusé par la seule constante, message « texte autre que celui fixé » ; vrai texte avec constante remplacée : refusé) ; mutation m7 (ancienne garde sans constante) : échoue par « DID NOT RAISE GardeArret », donc pour la bonne raison. Les essais absent / non scellé / modifié après scellement subsistent (`essais_corrections_v2.py` lignes 300-320, texte réel copié).
+
+## 4. CLA-09 — vue observée et balayage — **tenu, limite déclarée plus étroite que la limite réelle (VC-04)**
+
+- `nr` et `concepts_absents` absents de `Obs.__slots__` (`monde_v2.py` lignes 121-125) et des deux constructeurs (lignes 610-612 et 645-647). `Obs.__init__` passe par `object.__setattr__` sur chaque clé : un constructeur qui leur donnerait une valeur lèverait `AttributeError` (pas de slot) ; toute lecture lève `AccesLatent` via `__getattr__`. Aucun module livré ne lit plus `obs.nr` ni `obs.concepts_absents` (`grep` : seuls les essais, qui vérifient qu'elle lève). Les `nr` / `concepts_absents` restants sont ceux du `Latent` et des paramètres de condition, légitimes.
+- `bras_d1c` n'a plus de test propre ; la non-applicabilité repose sur `mesures_v2.NON_APPLICABLES` (ligne 29, utilisée ligne 195), seul garde-fou ; l'artefact (essai ligne 142-151) le montre : table vidée, d1c tourne en NR. Équivalent à l'ancien comportement (d1c n'était déjà jamais exécuté, la table l'empêchait) ; seule `validation_v2.v9_j_miroirs` appelle d1c, et sur M_inertes (applicable).
+- Balayage : `balayage_v2.py` lignes 25-27, 49-52 : refuse toute constante de chaîne qui commence par `co:` ou `op:` (y compris les morceaux de f-chaîne, qui sont des `ast.Constant`) et les appels de méthode `startswith`, `endswith`, `removeprefix`, `removesuffix`, `partition`, `rpartition`, `split`, `rsplit`. Essais : sain (modules livrés + lecture opaque d'une étiquette par égalité à une variable : accepté) ; artefact ×5 (`startswith`, égalité à `'co:R3'`, tranche comparée à `'co:R'`, f-chaîne `op:h…`, `partition`) refusés par `problemes` et par `exiger_propre` (`GardeArret`).
+- **Limite déclarée écrite** : oui, dans `LISEZMOI-experience-v2-v3.md` § 1 « Choix de code » point 1 (test caractère par caractère et tranches non attrapées ; noms d'étiquettes toujours visibles). **Mais elle est plus étroite que le trou réel** : j'ai vérifié par `balayage_v2.problemes` que passent sans signalement `'R' in p`, `p.find('R') >= 0`, `p == 'c' + 'o:R3'`, `p[3] == 'R'` ; sont attrapés `lstrip('co:op')` et `replace('co:', '')` (par la constante). La phrase du docstring (« un bras ne lit le nom d'une étiquette que comme une clé opaque ») est une intention, non une garantie. Pas de fuite effective : aucun bras livré ne le fait (`grep`) et `bras_v2.py` ne change que par le retrait du test de `d1c` (voir 6). Mais l'addendum ne dit rien de cette limite (elle n'est que dans le LISEZMOI). À dire dans l'addendum (VC-04).
+
+## 5. Rejeu
+
+Commande du LISEZMOI v3, depuis `experience-v2/`, `PYTHONPATH=/home/claude/controle-ia-travail/src`, le 30 octobre 2026 à 23:39Z :
+
+- Essais : **118 réussis, 0 échec, en 29,67 s** (41 + 42 + 21 + 14, attendu 118). Concorde.
+- Mutations (`plomberie-corrections-v2/mutations_corrections_v1.py`) : **8 xfail stricts, 8 sur 8 échouent comme attendu en comptage** (7,48 s). Concorde en comptage. **Mais** avec `--runxfail` j'ai relevé la raison de chaque échec : m1, m2, m7 « DID NOT RAISE GardeArret » ; m3, m4, m8 `AssertionError` sur l'assertion visée ; m5 `AssertionError: aucun monde replanté trouvé` (cohérent avec `MAX_REPLANTATIONS = 0`) ; **m6 échoue par `TypeError: <lambda>() got an unexpected keyword argument 'surcharge'`**, c'est-à-dire par un défaut de la mutation (la lambda `lambda c, r, i, s=None` ne reçoit pas le mot-clé `surcharge=`), non parce que l'essai de Q-04 détecte la jumelle rendue inerte. m6 est donc vide depuis la correction précédente (fichier inchangé pour m1 à m6, `diff` en 6). Avec une lambda à la bonne signature (`surcharge=None`, jumelle retirée), l'essai échoue par `AssertionError`, donc la correction est possible et l'essai de Q-04 est sain (VC-03).
+
+## 6. `diff` de chaque fichier modifié contre `version-v2-avant-cla/`
+
+Tout est décrit dans le LISEZMOI v3 ou le complément, rien d'autre :
+- `invocation_unique_v2.py` : `ADDENDUM`, `EMPREINTE_ADDENDUM`, `exiger_addendum_scelle`, `identites_paires` / `identites_a_N`, deux sites d'écriture des résultats. Décrit.
+- `lecture_v2.py` : `identites_audit` (paires ; forme « nom seul » gardée), docstrings. Décrit.
+- `monde_v2.py` : retrait de `nr` et `concepts_absents` des slots et des deux constructeurs, commentaire. Décrit.
+- `bras_v2.py` : retrait du test de `bras_d1c`, docstring. Décrit.
+- `balayage_v2.py` : constantes et deux règles. Décrit.
+- `essais/jouets_v2.py` : retrait des deux arguments. Décrit. `essais/essais_gardes_v2.py` : un essai adapté. Décrit. `essais/essais_corrections_v2.py` : une ligne (copie du vrai texte). Décrit (mais voir la dépendance de cet essai au texte de l'addendum : si le texte change en v6, l'essai suit automatiquement, il lit le fichier).
+- `plomberie-corrections-v2/mutations_corrections_v1.py` : en-tête, imports, m7, m8. Décrit. m1 à m6 inchangées.
+- Fichiers jamais copiés dans `version-v2-avant-cla/` et déclarés inchangés : empreintes concordantes (voir tableau).
+- Non décrit mais sans conséquence : `LISEZMOI-experience-v2-v3.md` cite encore l'addendum v4 et `ff354432…` (en-tête, ligne CLA-04, § 6) ; c'est corrigé par le complément (VC-06, information).
+
+## 7. Compagnons
+
+`PYTHONPATH=/home/claude/controle-ia-travail/src python3 -m controle_ia.scellement verifier-arbre .` depuis `experience-v2/` : **« arbre intact »**. Le rapport présent n'a pas de compagnon (consigne).
+
+## 8. Fuite
+
+Rien de nouveau ne lit un latent, le nom d'une condition ou un résultat de décision dans le code d'un bras : `Obs` perd deux champs (un indicateur de condition en moins, donc moins de fuite possible) ; `bras_v2.py` ne change que par le retrait d'un test qui lisait ces champs ; `identites_paires` compare des sorties de bras (listes de paires) entre elles, après l'exécution et sans lire de précision ni de latent ; `identite_avant_apres_cla_v1.py` lit les latents (`w.latent(JETON_MESURE)`) seulement pour en tirer des empreintes de plomberie, hors du chemin des bras, aux indices 980000-980059 (listés) ; les essais lisent des latents avec le jeton, comme les essais précédents. `RACINE` n'est utilisée nulle part ; le grep des plages d'indices dans `essais/` et `plomberie-corrections-v2/` ne trouve que des indices listés dans l'addendum. Le balayage n'interdit toujours pas la lecture de la forme d'une étiquette par des moyens non listés (VC-04) : limite, pas fuite constatée.
+
+---
+
+## Constats
+
+| N° | Gravité | Constat | Correction demandée |
+|---|---|---|---|
+| VC-01 | moyenne | Addendum v5, ligne (vi-b) et section « Contre-lecture et scellement » : texte d'avant la correction de code. (vi-b) dit que `identites_a_N` « ne compare que chaque bras à N » et que les identités entre autres bras sont détectées « si la correction de code (CLA-03) est faite avant scellement, sinon ne sont pas détectées » ; la première puce de « Contre-lecture et scellement » dit « corrections de code en cours » et la dernière renvoie à la « v4 ». Le code compare toutes les paires et seules les paires (N, x) déclenchent : le texte à sceller décrit un état qui n'existe plus. | Écrire une v6 : remplacer la limite de (vi-b) par l'état réel (`identites_paires` : toutes les paires parmi N et les bras présents, égalité des listes ordonnées sur les mondes non exclus ; seules les paires (N, x), x de la liste, non déclarées d'avance, déclenchent ; les autres, dont d1c ≡ d1 — sans objet en NR où d1c n'est pas exécuté — sont rapportées), supprimer le conditionnel et l'exigence d'essais « avant scellement » (faits), mettre à jour la puce « corrections de code en cours ». Conséquences mécaniques : nouveau nom `…-v6.md`, `ADDENDUM` et `EMPREINTE_ADDENDUM` (`invocation_unique_v2.py` lignes 43-44), nom attendu ligne 43 de `essais_cla_v2.py`, rejeu des 118 essais et des 8 mutations, compagnons du code, complément au LISEZMOI ; et nouvelle vérification de ces seules différences par un sous-agent neuf (ou, si Lazar préfère sceller la v5 telle quelle, le dire dans le registre : la phrase conditionnelle sera alors fausse mais sans effet sur le code ni sur une lecture). |
+| VC-02 | mineure | Même v6 : la liste « ce qui a été lu avant » ne mentionne pas la présente vérification. | Aucune lecture d'indice nouvelle ; ajouter une ligne de déclaration (« vérification des corrections : aucune lecture de monde ») est facultatif. |
+| VC-03 | mineure (moyenne si l'on compte la mutation comme preuve de R5) | Mutation m6 vide : elle « échoue » par `TypeError` (signature de la lambda), non par détection d'une jumelle inerte. Les comptes « 6 puis 8 échouent comme attendu » reposent sur xfail strict sans contrôle de la raison pour m6 ; la contre-lecture CLA ne l'a pas vu. L'essai de Q-04 lui-même est sain. | Corriger la lambda (`lambda c, r, i, surcharge=None: vrai(c, r, i, None)`), rejouer : m6 doit échouer par `AssertionError`. Fichier de plomberie, hors addendum : aucune constante à changer, seulement son compagnon. |
+| VC-04 | mineure | Limite du balayage (CLA-09) plus large que celle déclarée : passent `'R' in p`, `.find`, concaténation `'c' + 'o:R3'`, `p[3]`. La limite n'est écrite que dans le LISEZMOI, pas dans l'addendum ; le docstring de `balayage_v2.py` affirme « clé opaque » comme si c'était garanti. | Dire dans l'addendum (par exemple dans (vii) ou (viii)) que le balayage n'interdit que ce qui est listé et que `Obs.etiq_co`, `etiq_op`, `pont` restent lisibles ; élargir la déclaration du LISEZMOI aux tests de sous-chaîne et de recherche. |
+| VC-05 | mineure | CLA-02 : la conséquence sur S11 n'est écrite que dans la ligne Q-01 ; « Effet attendu » garde « Aucun seuil ne change » sans la rappeler. | Ajouter un renvoi à la ligne Q-01 (à faire dans la v6). |
+| VC-06 | information | `LISEZMOI-experience-v2-v3.md` cite l'addendum v4 et `ff354432…` ; le complément le corrige. Le LISEZMOI n'est pas réécrit (R12). | Aucune ; en v6, un second complément. |
+| VC-07 | mineure | Le chemin `executer_decision` → `identites_paires` → fichiers de résultats n'a pas d'assertion sur le contenu écrit, et le filtre n'est pas éprouvé sur des listes issues de JSON (j'ai vérifié à la main qu'elles passent). | Facultatif : un essai de filtre sur des listes `[x, y]`. |
+| VC-08 | mineure | CLA-12 non traité ni déclaré (plafond de 50 éprouvé seulement à 2 ; `signature_base` incomplète). | Le dire en une ligne dans la v6, ou l'ajouter. |
+
+## Verdict global
+
+**Scellable après corrections mineures.** Le code des trois corrections (CLA-03, CLA-04, CLA-09) fait ce que le LISEZMOI dit, les essais sain et artefact existent et éprouvent la chaîne réelle, l'empreinte de l'addendum v5 égale la constante, aucun compagnon d'addendum n'existe, 118 essais et 8 mutations concordent en comptage, l'arbre est intact, aucune fuite nouvelle. Les corrections mineures sont : VC-01 (obligatoire avant scellement du texte, car la v5 décrit un état de code périmé ; elle impose une v6 et le rejeu mécanique), VC-03 (indépendante de l'addendum), et les phrases VC-04, VC-05, VC-08 à joindre à la v6. Aucune ne touche un seuil, un signe de contraste ni une décision de Lazar.

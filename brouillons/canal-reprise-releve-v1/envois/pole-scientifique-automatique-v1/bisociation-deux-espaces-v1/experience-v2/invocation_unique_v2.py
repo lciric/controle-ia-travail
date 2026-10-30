@@ -40,8 +40,8 @@ PREREG = DEPOT / "prereg" / "preenregistrement-bisociation-deux-espaces-v2.md"
 EMPREINTE_PREREG = "e821e8752532fdabc03cb684e9a3bb71a40bcb4267de842da228de2b88c314ea"
 # Addendum d'écarts déclarés (Q-01 (b), Q-03 = 16, Q-04 copie ; R-600) : il doit être scellé avant l'invocation. Nom et
 # empreinte du texte final (addendum v4, point (vii), ordre de gel, CLA-04) : si le texte change, les deux changent avec lui.
-ADDENDUM = "addendum-ecarts-bisociation-deux-espaces-v2-v5.md"
-EMPREINTE_ADDENDUM = "c054ac65e4d4898afc05afa4b3644406a84afe8615bbfa8f850e1fe43ba0cd2e"
+ADDENDUM = "addendum-ecarts-bisociation-deux-espaces-v2-v6.md"
+EMPREINTE_ADDENDUM = "37f6df2e0f3653088643b4eb1883c2a5b083111227edd3c53a0e411cd187774f"
 
 CONDITIONS = [c for c, _ in sorted(gr.CODES_CONDITION.items(), key=lambda kv: kv[1])]
 # S15 et S7 (valeurs gelées par Lazar, R-580)

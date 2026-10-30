@@ -44,7 +44,7 @@ def test_m5_replantation_absente(monkeypatch):
 @X
 def test_m6_jumelle_inerte(monkeypatch):
     vrai = mo.generer
-    monkeypatch.setattr(mo, "generer", lambda c, r, i, s=None: vrai(c, r, i, None))
+    monkeypatch.setattr(mo, "generer", lambda c, r, i, surcharge=None: vrai(c, r, i, None))  # VC-03 : signature par mot-clé
     ec.test_q04_sain_copie_change_le_cosinus_des_paires_plantees_sur_3_mondes()
 
 # --- corrections CLA (contre-lecture R2 de l'addendum v3 ; addendum v4, (vii)) ------------------------------------
