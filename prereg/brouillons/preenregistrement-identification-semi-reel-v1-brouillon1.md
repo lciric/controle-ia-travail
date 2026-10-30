@@ -7,7 +7,7 @@
 1. **Ce que l'épreuve mesure.** On prend les vraies métadonnées d'OpenAlex (contrôle des intelligences artificielles et sous-domaines témoins), on y **plante une cause connue** de fertilité — un « contact » C entre deux niches qui ajoute, deux ans plus tard, des œuvres-ponts synthétiques —, et l'on regarde si chaque méthode retrouve C au milieu du vrai bruit, **sans jamais prétendre connaître les vraies causes**.
 2. **Les pièges plantés.** Un facteur caché H (que les méthodes ne voient pas) qui crée lui aussi des ponts ; un **leurre** L (rendu plus probable par C et par H, sans effet) ; un **jumeau sans effet** C⁰ (même mécanisme d'affectation que C, tiré à part). Une méthode qui « trouve » L ou C⁰ se trompe, et on le sait.
 3. **Trois affectations de C.** Au hasard (R), confondue par la popularité observée (O), confondue par le facteur caché (H) ; quatre tailles d'effet, dont **zéro** (contrôle de plomberie) ; 100 mondes par condition.
-4. **Volet A (cause observée)** : popularité seule (témoin), prédicteur associatif (témoin), prédiction causale invariante, PCMCI, LiNGAM, plus un témoin d'artefact (tri par variance, Reisach 2021). **Volet B (cause latente)** : analyse en composantes indépendantes non linéaire avec variable auxiliaire (iVAE) contre **le même réseau sans variable auxiliaire** (contre-exemple libre), plus l'analyse en composantes principales.
+4. **Volet A (cause observée)** : popularité seule (témoin), prédicteur associatif (témoin), prédiction causale invariante, découverte de structure sur séries temporelles (PCMCI), découverte sous non-gaussianité (LiNGAM, modèle linéaire acyclique non gaussien), plus un témoin d'artefact (tri par variance, Reisach 2021). **Volet B (cause latente)** : analyse en composantes indépendantes non linéaire avec variable auxiliaire (iVAE) contre **le même réseau sans variable auxiliaire** (contre-exemple libre), plus l'analyse en composantes principales.
 5. **Verdict par méthode, écrit d'avance** : qualifiée pour les gradations 2 et 3, pour la gradation 3 seulement, détection seulement, non qualifiée (avec sa raison), ou non concluant.
 6. **Mes paris (SUPPOSÉ)** : les méthodes qui supposent l'absence de facteur caché (PCMCI, LiNGAM, prédicteur associatif) retrouveront C mais **avaleront le leurre** ; la prédiction invariante sera prudente (abstentions) ; l'iVAE battra le réseau libre seulement quand la loi de la cause latente varie avec la variable auxiliaire. Chaque pari a son critère de mort.
 7. **Ce qu'elle n'autorise pas** : aucune affirmation sur les vraies causes de la fertilité ; seulement l'entrée (ou non) de chaque méthode dans les gradations 2 (expériences naturelles) et 3 (nos courses).
@@ -108,7 +108,7 @@ Toutes les grandeurs sont des **paris de l'auteur, SUPPOSÉS, sans aucune donné
 
 **Prédictions transversales (signe seul, descriptives).** (i) Le recouvrement croît avec β pour toute méthode candidate (pente positive) ; une pente nulle ou négative est rapportée. (ii) Sous O, les erreurs C⁰ des méthodes linéaires sont plus fortes dans le tiers supérieur de popularité (effet Matthieu résiduel, ajustement linéaire incomplet). (iii) En D2 (H sans effet sur la sortie), les erreurs L et C⁰ de T1, M2 et M3 retombent au niveau nominal : c'est la preuve que leur erreur sous H vient de H, pas d'un défaut de code. (iv) En D1 (effet planté non invariant), M1 s'abstient plus souvent qu'en R2 ; M2 et M3 n'en sont pas affectées en moyenne.
 
-**Verdicts attendus (SUPPOSÉ), écrits d'avance.** T1, M2, M3 : « non qualifiées : confondent le leurre » (Table A, ligne 5) avec la confiance 0,6 ; M1 : « non qualifiée : ne retrouve pas » (ligne 7) ou « qualifiée, prudente » (ligne 12), sans préférence nette ; volet B : « oui sous hypothèse » (Table B, ligne 9) avec la confiance 0,45. **Si toutes les méthodes du volet A sont non qualifiées**, la conclusion écrite d'avance est : « aucune méthode d'observation pure n'identifie ce mécanisme dans ce bruit ; les gradations 2 et 3 doivent apporter l'affectation (expérience naturelle, randomisation) », jamais « la fertilité n'a pas de cause identifiable ».
+**Verdicts attendus (SUPPOSÉ), écrits d'avance.** T1, M2, M3 : « non qualifiées : confondent le leurre » (Table A, ligne 5) avec la confiance 0,6 ; M1 : « non qualifiée : ne retrouve pas » (ligne 7) ou « qualifiée, prudente » (ligne 13), sans préférence nette ; volet B : « oui sous hypothèse » (Table B, ligne 9) avec la confiance 0,45. **Si toutes les méthodes du volet A sont non qualifiées**, la conclusion écrite d'avance est : « aucune méthode d'observation pure n'identifie ce mécanisme dans ce bruit ; les gradations 2 et 3 doivent apporter l'affectation (expérience naturelle, randomisation) », jamais « la fertilité n'a pas de cause identifiable ».
 
 ## Métrique
 
@@ -136,7 +136,7 @@ Toutes les grandeurs sont des **paris de l'auteur, SUPPOSÉS, sans aucune donné
 
 **Artefacts (mesures, § 6 du plan)** : ordre des variances et ordre des coefficients de détermination du sous-graphe planté ; recouvrement en échelles brute, standardisée et redimensionnée ; recouvrement et erreurs par tiers de taille, de degré et d'âge.
 
-**Mondes exclus.** Un monde est exclu pour toutes les méthodes à la fois si, **avant toute méthode**, il compte moins de 50 paires-années traitées dans l'ensemble d'ajustement, ou si sa simulation contrefactuelle échoue. Taux d'exclusion rapporté ; au-delà de 2 % dans une condition de décision : arrêt.
+**Mondes exclus.** Un monde est exclu pour toutes les méthodes à la fois si, **avant toute méthode**, il compte moins de 50 paires-années traitées dans l'ensemble d'ajustement (volet A), ou si sa simulation contrefactuelle échoue. Taux d'exclusion rapporté ; au-delà de 2 % dans une condition de décision : arrêt.
 
 ## Seuil
 
@@ -292,7 +292,7 @@ Z_ij,t selon S6 (rôle 7) ; réseau de mélange (rôle 8) ; indicateurs x_ij,t ;
 | Ordre des variances (Reisach, Seiler et Weichwald 2021, « varsortability ») | les méthodes qui exploitent les variances marginales « trouvent » l'ordre causal quand la variance croît le long du graphe ; ici, des binaires de variance ≈ 0,09 précèdent une sortie en log de variance plus grande | part des couples (cause, effet) du sous-graphe planté (C → sortie, C → L) où la variance de la cause est la plus faible, en échelle brute et standardisée ; idem pour le coefficient de détermination (« R²-sortabilité », Reisach et collègues 2023, SUPPOSÉ) ; témoin T2 ; variantes d'échelle | S12 : « artefact d'ordre des variances » ou « d'échelle » pour la méthode (Table A, ligne 3) |
 | Échelle | comptes à queue lourde ; la transformation g change les corrélations | variantes brute, standardisée, redimensionnée ; descriptif : rangs normalisés | S12 |
 | Degré et âge des nœuds | les grandes et vieilles niches ont plus de ponts réels et plus de variance | recouvrement et erreurs par tiers de S, de D et de A ; part des réussites dans le tiers supérieur | descriptif ; prédiction transversale (ii) |
-| Effet Matthieu (Merton 1968, SUPPOSÉ) | sous O, C suit la popularité, qui prédit la sortie réelle ; une méthode qui ajuste mal « trouve » C sans effet | erreur C en O0 ; erreur C⁰ sous O (jumeau au même mécanisme d'affectation, 400 mondes) ; jugeabilité J_O | Table A, lignes 4 et 9 ; J_O conditionne la lecture de O |
+| Effet Matthieu (Merton 1968, SUPPOSÉ) | sous O, C suit la popularité, qui prédit la sortie réelle ; une méthode qui ajuste mal « trouve » C sans effet | erreur C en O0 ; erreur C⁰ sous O (jumeau au même mécanisme d'affectation, 400 mondes) ; jugeabilité J_O | Table A, lignes 9 et 10 ; J_O conditionne la lecture de O |
 | Survivants | les paires retenues sont celles qui existent assez longtemps | toutes les paires de niches retenues sont à risque, ponts ou non ; aucune sélection sur la sortie | — (par construction) |
 | Fuite temporelle | une covariable calculée avec l'avenir | recalcul sur la base tronquée en t (garde R5) | arrêt |
 | Œuvres synthétiques reconnaissables | un agrégat qui distingue réel et synthétique (par exemple, le nombre de références) | liste fermée des agrégats permis ; garde R5 | arrêt |
@@ -349,18 +349,19 @@ Un sous-agent neuf (ni auteur du préenregistrement ni de l'analyse, R13) appliq
 | 1 | AUDIT_EN_ATTENTE | **non concluant** (audit en attente) |
 | 2 | ARTEFACT | **non concluant** ; version nouvelle (R12) |
 | 3 | non ART(M) | **non qualifiée : artefact d'échelle ou d'ordre des variances** |
-| 4 | non ERR_R(M) | **non qualifiée : fausses causes même sous affectation au hasard** |
-| 5 | non J_L, puis lecture de la ligne 6 avec la mention « leurre non jugeable » ; sinon passer | (transition) |
-| 6 | non REC_R(M) | **non qualifiée : ne retrouve pas la cause plantée, même au hasard** |
-| 7 | non INT_R(M) | **détection seulement** : retrouve C sans prédire l'effet d'une intervention ; non qualifiée pour les gradations 2 et 3 |
-| 8 | non J_O | **qualifiée pour la gradation 3 seulement**, mention « confusion observée non jugeable » |
-| 9 | non (REC_O(M) ∧ ERR_O(M) ∧ INT_O(M)) | **qualifiée pour la gradation 3 seulement** (affectation randomisée) ; échoue sous confusion observée |
-| 10 | non J_H, ou non ERR_H(M) | **qualifiée pour la gradation 3, et pour la gradation 2 sous confusion observée seulement** ; mention « confusion cachée non jugeable » si non J_H, sinon « trompée par la confusion cachée : jamais en observation pure » |
-| 11 | ROB_H(M) | **qualifiée pour les gradations 2 et 3, robuste sous confusion cachée** (dans ce monde) |
-| 12 | PRU_H(M) | **qualifiée pour les gradations 2 et 3, prudente** : s'abstient sous confusion cachée plutôt que de se tromper |
-| 13 | tout autre cas | **qualifiée pour la gradation 3, et pour la gradation 2 sous confusion observée seulement** ; sous confusion cachée ni robuste ni prudente |
+| 4 | règle d'erreur C non tenue en R0 | **non qualifiée : invente une cause sans effet, même sous affectation au hasard** |
+| 5 | règle d'erreur L non tenue sous R (400 mondes) | **non qualifiée : confond le leurre** |
+| 6 | règle d'erreur C⁰ non tenue sous R (400 mondes) | **non qualifiée : confond le jumeau sans effet, même au hasard** |
+| 7 | non REC_R(M) | **non qualifiée : ne retrouve pas la cause plantée, même au hasard** |
+| 8 | non INT_R(M) | **détection seulement** : retrouve C sans prédire l'effet d'une intervention ; non qualifiée pour les gradations 2 et 3 |
+| 9 | non J_O | **qualifiée pour la gradation 3 seulement**, mention « confusion observée non jugeable » |
+| 10 | non (REC_O(M) ∧ ERR_O(M) ∧ INT_O(M)) | **qualifiée pour la gradation 3 seulement** (affectation randomisée) ; échoue sous confusion observée |
+| 11 | non J_H, ou non ERR_H(M) | **qualifiée pour la gradation 3, et pour la gradation 2 sous confusion observée seulement** ; mention « confusion cachée non jugeable » si non J_H, sinon « trompée par la confusion cachée : jamais en observation pure » |
+| 12 | ROB_H(M) | **qualifiée pour les gradations 2 et 3, robuste sous confusion cachée** (dans ce monde) |
+| 13 | PRU_H(M) | **qualifiée pour les gradations 2 et 3, prudente** : s'abstient sous confusion cachée plutôt que de se tromper |
+| 14 | tout autre cas | **qualifiée pour la gradation 3, et pour la gradation 2 sous confusion observée seulement** ; sous confusion cachée ni robuste ni prudente |
 
-Notes : la ligne 4 précède la ligne 6 parce qu'une méthode qui invente des causes au hasard n'a pas de recouvrement lisible. Les lignes 3, 4, 6 et 7 sont des raisons de non-qualification distinctes et nommées. **T0** ne reçoit pas de verdict de qualification : ses erreurs non nulles, ou un effet prédit non nul, sont un **arrêt de plomberie**. **T2** ne reçoit pas de verdict : il ne sert qu'à S12 et S14 (d). La ligne 5 est une transition : si le leurre n'est pas jugeable, les verdicts suivants portent la mention « leurre non jugeable » et l'erreur L n'est pas lue comme une réussite ; elle reste lue comme un échec si elle dépasse S9 (direction prudente).
+Notes : les lignes 4 à 6 précèdent la ligne 7 parce qu'une méthode qui invente des causes au hasard n'a pas de recouvrement lisible. Les lignes 3 à 8 sont des raisons de non-qualification distinctes et nommées. **Leurre non jugeable** : si J_L est fausse, tout verdict des lignes 7 à 14 porte la mention « leurre non jugeable » (la règle d'erreur L tenue ne vaut pas réussite) ; la ligne 5 s'applique quand même (un échec reste un échec : direction prudente). **T0** ne reçoit pas de verdict de qualification : ses erreurs non nulles, ou un effet prédit non nul, sont un **arrêt de plomberie**. **T2** ne reçoit pas de verdict : il ne sert qu'à S12 et S14 (d).
 
 ### Table B — volet B : « l'apprentissage non supervisé identifie-t-il la cause latente à lui seul ? »
 
