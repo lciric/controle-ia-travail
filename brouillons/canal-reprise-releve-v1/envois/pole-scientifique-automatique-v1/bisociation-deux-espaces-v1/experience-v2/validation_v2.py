@@ -314,3 +314,29 @@ def executer_validation(racine=gr.RACINE_VALIDATION, lecture_v4=None):
     r["V9_J_vraie"] = v9_j_miroirs(racine, idx)
     r["seuils"] = evaluer_seuils(r)
     return r
+
+
+def main(argv):
+    """python3 -B validation_v2.py SORTIE.json --lancer-la-validation [--lecture-v4 echange_ponts]
+    Refuse de partir sans l'option explicite : la validation n'est pas lancée par l'auteur du code."""
+    import json
+    from datetime import datetime, timezone
+
+    from controle_ia.scellement import sceller
+
+    if "--lancer-la-validation" not in argv:
+        raise GardeArret("validation non lancée : option --lancer-la-validation absente")
+    lecture = argv[argv.index("--lecture-v4") + 1] if "--lecture-v4" in argv else None
+    r = executer_validation(lecture_v4=lecture)
+    r["ecrit_le"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    r["empreintes_code"] = ms.empreintes_code()
+    sortie = Path(argv[1])
+    sortie.write_text(json.dumps(r, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    sceller(sortie)
+    print("seuils :", r["seuils"], "; V9 J vraie :", r["V9_J_vraie"])
+    return 0 if all(r["seuils"].values()) else 2
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main(sys.argv))
