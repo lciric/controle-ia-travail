@@ -6,7 +6,10 @@ corrigé. Deux empreintes par monde :
   - « obs_hors_cla » : TOUS les champs de la vue observée (__slots__) sauf `_fige`, `nr` et `concepts_absents`,
     sérialisés de façon déterministe (cos par octets, df trié).
 Plus tentatives et replantations. Ne lit que des égalités et comptes ; aucun bras n'est exécuté.
-Usage (depuis ce dossier) : PYTHONPATH=<dépôt>/src python3 -B plomberie-corrections-v2/identite_avant_apres_cla_v1.py DOSSIER_DES_MODULES SORTIE.json"""
+Usage (depuis experience-v2/, T = ../../trancher-recombinaison, chemin absolu) :
+  avant : PYTHONPATH=<dépôt>/src:$PWD:$T python3 -B plomberie-corrections-v2/identite_avant_apres_cla_v1.py version-v2-avant-cla identite-avant-cla-resultats-v1.json
+  après : PYTHONPATH=<dépôt>/src python3 -B plomberie-corrections-v2/identite_avant_apres_cla_v1.py . identite-apres-cla-resultats-v1.json
+(version-v2-avant-cla ne contient que les modules modifiés : les autres viennent de $PWD, inchangés.)"""
 import hashlib
 import json
 import sys

@@ -299,7 +299,8 @@ def test_addendum_sain_scelle_accepte(tmp_path):
     from controle_ia.scellement import sceller
     (tmp_path / "prereg").mkdir()
     a = tmp_path / "prereg" / inv.ADDENDUM
-    a.write_text("addendum d'essai\n", encoding="utf-8")
+    # copie du texte fixé par EMPREINTE_ADDENDUM (CLA-04), scellée dans tmp_path seulement
+    a.write_bytes((inv.DEPOT / "prereg" / inv.ADDENDUM).read_bytes())
     sceller(a)
     assert len(inv.exiger_addendum_scelle(tmp_path)) == 64
 
