@@ -1,0 +1,186 @@
+## T1. Table au ρ vrai (GD8-01) : ρ_B vrai → n80, n90 (pire des quatre cellules), n80 ajusté (GD8-04), n_h
+
+Source : passages v8 (`rho0`, `meme-…`, `moitie-…`) et v9 (`meme-rho0.125`, `-0.20`, `-0.30`, `-0.35`, `double-rhoB…`) ; n80 par dichotomie (borne haute du dernier pas) et par ajustement logistique (± écart-type) ; n_h = max(288 ; multiple de 16 ≥ 1,06 × n80 dichotomie pire), enveloppe croissante par hypothèse ; fiche pire à 288 et 400 unités
+
+| hypothèse | ρ_B | ρ_A | passage | fiche 288 (40) | fiche 288 (160) | fiche 400 (40) | fiche 400 (160) | n80 40 | n80 40 ajusté | n80 160 | n80 160 ajusté | n90 40 | n90 160 | n_h 40 | n_h 160 | n_h depuis n80 ajusté (40 / 160, sans enveloppe) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ρ_A = ρ_B | 0 | 0 | `rho0` | 1,000 | 0,935 | 1,000 | 1,000 | 184 | 183,1 ± 0,4 | 264 | 257,9 ± 0,8 | 196 | 280 | 288 | 288 | 288 / 288 |
+| ρ_A = ρ_B | 0,05 | 0,05 | `meme-rho0.05` | 0,995 | 0,869 | 1,000 | 0,998 | 200 | 197,2 ± 0,7 | 280 | 272,1 ± 0,6 | 216 | 296 | 288 | 304 | 288 / 304 |
+| ρ_A = ρ_B | 0,1 | 0,1 | `meme-rho0.10` | 0,971 | 0,768 | 0,999 | 0,990 | 224 | 223,6 ± 0,6 | 304 | 297,7 ± 0,7 | 252 | 328 | 288 | 336 | 288 / 320 |
+| ρ_A = ρ_B | 0,125 | 0,125 | `meme-rho0.125` | 0,936 | 0,666 | 0,995 | 0,977 | 244 | 239,6 ± 1,1 | 320 | 314,2 ± 1,0 | 272 | 352 | 288 | 352 | 288 / 336 |
+| ρ_A = ρ_B | 0,17 | 0,17 | `meme-rho0.17` | 0,847 | 0,509 | 0,980 | 0,905 | 280 | 275,6 ± 1,1 | 360 | 357,0 ± 1,0 | 320 | 400 | 304 | 384 | 304 / 384 |
+| ρ_A = ρ_B | 0,2 | 0,2 | `meme-rho0.20` | 0,758 | 0,391 | 0,962 | 0,826 | 312 | 305,6 ± 1,0 | 400 | 388,2 ± 1,3 | 344 | 440 | 336 | 432 | 336 / 416 |
+| ρ_A = ρ_B | 0,25 | 0,25 | `meme-rho0.25` | 0,584 | 0,251 | 0,902 | 0,694 | 360 | 352,7 ± 1,4 | 456 | 447,2 ± 1,1 | 408 | 512 | 384 | 496 | 384 / 480 |
+| ρ_A = ρ_B | 0,3 | 0,3 | `meme-rho0.30` | 0,429 | 0,162 | 0,800 | 0,514 | 408 | 397,6 ± 2,3 | 504 | 505,3 ± 1,6 | 456 | 576 | 448 | 544 | 432 / 544 |
+| ρ_A = ρ_B | 0,35 | 0,35 | `meme-rho0.35` | 0,312 | 0,098 | 0,673 | 0,368 | 440 | 443,6 ± 1,4 | 560 | 556,8 ± 1,5 | 512 | 640 | 480 | 608 | 480 / 592 |
+| ρ_A = 2 ρ_B | 0 | 0 | `rho0` | 1,000 | 0,935 | 1,000 | 1,000 | 184 | 183,1 ± 0,4 | 264 | 257,9 ± 0,8 | 196 | 280 | 288 | 288 | 288 / 288 |
+| ρ_A = 2 ρ_B | 0,025 | 0,05 | `moitie-rho0.05` | 0,996 | 0,901 | 1,000 | 0,999 | 196 | 194,0 ± 0,7 | 272 | 268,7 ± 0,6 | 216 | 296 | 288 | 304 | 288 / 288 |
+| ρ_A = 2 ρ_B | 0,05 | 0,1 | `moitie-rho0.10` | 0,989 | 0,823 | 1,000 | 0,994 | 208 | 209,9 ± 0,6 | 288 | 286,4 ± 0,9 | 236 | 320 | 288 | 320 | 288 / 304 |
+| ρ_A = 2 ρ_B | 0,085 | 0,17 | `moitie-rho0.17` | 0,923 | 0,655 | 0,995 | 0,958 | 244 | 243,8 ± 0,8 | 320 | 322,0 ± 1,0 | 280 | 360 | 288 | 352 | 288 / 352 |
+| ρ_A = 2 ρ_B | 0,1 | 0,2 | `double-rhoB0.10` | 0,877 | 0,566 | 0,989 | 0,932 | 264 | 260,7 ± 1,3 | 344 | 340,9 ± 0,9 | 296 | 384 | 288 | 368 | 288 / 368 |
+| ρ_A = 2 ρ_B | 0,125 | 0,25 | `double-rhoB0.125` | 0,782 | 0,432 | 0,970 | 0,851 | 296 | 293,2 ± 1,1 | 384 | 377,2 ± 1,0 | 336 | 432 | 320 | 416 | 320 / 400 |
+| ρ_A = 2 ρ_B | 0,17 | 0,34 | `double-rhoB0.17` | 0,599 | 0,272 | 0,895 | 0,682 | 352 | 355,4 ± 1,3 | 464 | 453,7 ± 1,2 | 408 | 512 | 384 | 496 | 384 / 496 |
+| ρ_A = 2 ρ_B | 0,2 | 0,4 | `double-rhoB0.20` | 0,461 | 0,195 | 0,813 | 0,524 | 392 | 394,6 ± 1,9 | 504 | 503,4 ± 1,7 | 464 | 576 | 416 | 544 | 432 / 544 |
+
+## T2. Table en ρ̂ lu au pilote (GD8-01) : ρ̂ (côté sabotage) → n_h, marge 1,645 × écart-type de lecture incluse
+
+Règle : ρ_haut = max(ρ̂ ; 0) + 1,645 × σ(ρ̂) (σ de `precision-rho-pilote-v9-sortie.json`, p = 0,4, K = 10, au plus petit ρ de la grille ≥ ρ̂) ; dans chaque hypothèse la ligne de T1 égale ou immédiatement supérieure à ρ_haut ; n_h = le plus grand des deux ; « hors table » si l'une n'a pas de ligne. ρ̂ par pas de 0,01 de 0 à 0,40 (plus 0,125).
+
+#### T2-50. Pilote de 50 unités — intervalles de ρ̂ (pas 0,01) de même réponse (les deux hypothèses ; puis ρ_A = ρ_B seule)
+
+| ρ̂ de | à | n_h seuil 40 | n_h seuil 160 | | ρ̂ de (ρ_A = ρ_B seule) | à | n_h 40 | n_h 160 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0,00 | 0,00 | 288 | 320 | | 0,00 | 0,00 | 288 | 304 |
+| 0,01 | 0,03 | 288 | 352 | | 0,01 | 0,05 | 288 | 336 |
+| 0,04 | 0,05 | 288 | 368 | | 0,06 | 0,06 | 288 | 352 |
+| 0,06 | 0,06 | 320 | 416 | | 0,07 | 0,10 | 304 | 384 |
+| 0,07 | 0,10 | 384 | 496 | | 0,11 | 0,12 | 336 | 432 |
+| 0,11 | 0,12 | 416 | 544 | | 0,13 | 0,17 | 384 | 496 |
+| 0,13 | 0,40 | hors table | hors table | | 0,18 | 0,21 | 448 | 544 |
+|  |  |  |  | | 0,22 | 0,25 | 480 | 608 |
+|  |  |  |  | | 0,26 | 0,40 | hors table | hors table |
+
+#### T2-100. Pilote de 100 unités — intervalles de ρ̂ (pas 0,01) de même réponse (les deux hypothèses ; puis ρ_A = ρ_B seule)
+
+| ρ̂ de | à | n_h seuil 40 | n_h seuil 160 | | ρ̂ de (ρ_A = ρ_B seule) | à | n_h 40 | n_h 160 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0,00 | 0,00 | 288 | 304 | | 0,00 | 0,01 | 288 | 304 |
+| 0,01 | 0,01 | 288 | 320 | | 0,02 | 0,05 | 288 | 336 |
+| 0,02 | 0,05 | 288 | 352 | | 0,06 | 0,08 | 288 | 352 |
+| 0,06 | 0,08 | 320 | 416 | | 0,09 | 0,12 | 304 | 384 |
+| 0,09 | 0,12 | 384 | 496 | | 0,13 | 0,14 | 336 | 432 |
+| 0,13 | 0,14 | 416 | 544 | | 0,15 | 0,19 | 384 | 496 |
+| 0,15 | 0,40 | hors table | hors table | | 0,20 | 0,23 | 448 | 544 |
+|  |  |  |  | | 0,24 | 0,28 | 480 | 608 |
+|  |  |  |  | | 0,29 | 0,40 | hors table | hors table |
+
+#### T2-288. Pilote de 288 unités — intervalles de ρ̂ (pas 0,01) de même réponse (les deux hypothèses ; puis ρ_A = ρ_B seule)
+
+| ρ̂ de | à | n_h seuil 40 | n_h seuil 160 | | ρ̂ de (ρ_A = ρ_B seule) | à | n_h 40 | n_h 160 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0,00 | 0,00 | 288 | 304 | | 0,00 | 0,02 | 288 | 304 |
+| 0,01 | 0,02 | 288 | 320 | | 0,03 | 0,07 | 288 | 336 |
+| 0,03 | 0,06 | 288 | 352 | | 0,08 | 0,10 | 288 | 352 |
+| 0,07 | 0,07 | 288 | 368 | | 0,11 | 0,14 | 304 | 384 |
+| 0,08 | 0,10 | 320 | 416 | | 0,15 | 0,17 | 336 | 432 |
+| 0,11 | 0,14 | 384 | 496 | | 0,18 | 0,21 | 384 | 496 |
+| 0,15 | 0,17 | 416 | 544 | | 0,22 | 0,26 | 448 | 544 |
+| 0,18 | 0,40 | hors table | hors table | | 0,27 | 0,30 | 480 | 608 |
+|  |  |  |  | | 0,31 | 0,40 | hors table | hors table |
+
+#### T2-points. Lectures ponctuelles (ρ̂ = 0 ; 0,05 ; 0,10 ; 0,125 ; 0,17 ; 0,20 ; 0,25)
+
+| N pilote | ρ̂ | σ lu | ρ_haut | ligne ρ_A = ρ_B | ligne ρ_A = 2 ρ_B | n_h 40 (hyp. 1 / hyp. 2) | n_h 160 (hyp. 1 / hyp. 2) | n_h 40 | n_h 160 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 50 | 0 | 0,0213 | 0,0351 | 0.05 | 0.05 | 288 / 288 | 304 / 320 | 288 | 320 |
+| 50 | 0,05 | 0,0289 | 0,0976 | 0.1 | 0.1 | 288 / 288 | 336 / 368 | 288 | 368 |
+| 50 | 0,1 | 0,0368 | 0,1605 | 0.17 | 0.17 | 304 / 384 | 384 / 496 | 384 | 496 |
+| 50 | 0,125 | 0,0405 | 0,1916 | 0.2 | 0.2 | 336 / 416 | 432 / 544 | 416 | 544 |
+| 50 | 0,17 | 0,0443 | 0,2428 | 0.25 | — | 384 / — | 496 / — | hors table | hors table |
+| 50 | 0,2 | 0,0474 | 0,2780 | 0.3 | — | 448 / — | 544 / — | hors table | hors table |
+| 50 | 0,25 | 0,0536 | 0,3381 | 0.35 | — | 480 / — | 608 / — | hors table | hors table |
+| 100 | 0 | 0,0149 | 0,0245 | 0.05 | 0.025 | 288 / 288 | 304 / 304 | 288 | 304 |
+| 100 | 0,05 | 0,0210 | 0,0846 | 0.1 | 0.085 | 288 / 288 | 336 / 352 | 288 | 352 |
+| 100 | 0,1 | 0,0250 | 0,1411 | 0.17 | 0.17 | 304 / 384 | 384 / 496 | 384 | 496 |
+| 100 | 0,125 | 0,0285 | 0,1719 | 0.2 | 0.2 | 336 / 416 | 432 / 544 | 416 | 544 |
+| 100 | 0,17 | 0,0324 | 0,2233 | 0.25 | — | 384 / — | 496 / — | hors table | hors table |
+| 100 | 0,2 | 0,0338 | 0,2557 | 0.3 | — | 448 / — | 544 / — | hors table | hors table |
+| 100 | 0,25 | 0,0369 | 0,3107 | 0.35 | — | 480 / — | 608 / — | hors table | hors table |
+| 288 | 0 | 0,0088 | 0,0145 | 0.05 | 0.025 | 288 / 288 | 304 / 304 | 288 | 304 |
+| 288 | 0,05 | 0,0123 | 0,0702 | 0.1 | 0.085 | 288 / 288 | 336 / 352 | 288 | 352 |
+| 288 | 0,1 | 0,0150 | 0,1248 | 0.125 | 0.125 | 288 / 320 | 352 / 416 | 320 | 416 |
+| 288 | 0,125 | 0,0168 | 0,1526 | 0.17 | 0.17 | 304 / 384 | 384 / 496 | 384 | 496 |
+| 288 | 0,17 | 0,0182 | 0,1999 | 0.2 | 0.2 | 336 / 416 | 432 / 544 | 416 | 544 |
+| 288 | 0,2 | 0,0191 | 0,2314 | 0.25 | — | 384 / — | 496 / — | hors table | hors table |
+| 288 | 0,25 | 0,0209 | 0,2844 | 0.3 | — | 448 / — | 544 / — | hors table | hors table |
+
+Premier ρ̂ hors table : N = 50 : 0.13 (les deux hypothèses), 0.26 (ρ_A = ρ_B seule) ; N = 100 : 0.15 (les deux hypothèses), 0.29 (ρ_A = ρ_B seule) ; N = 288 : 0.18 (les deux hypothèses), 0.31 (ρ_A = ρ_B seule)
+
+## T8. Repli C (restriction à ρ_A = ρ_B) : puissance, dans un monde ρ_A = 2 ρ_B, à la taille lue sous ρ_A = ρ_B (même ρ_B)
+
+Source : T1 ; puissance au pire des quatre cellules par les courbes logistiques ajustées sur les points de dichotomie du passage `double-…`/`moitie-…` (interpolation)
+
+| ρ_B | ρ_A du monde | n_h 40 lu sous ρ_A = ρ_B | puissance (40) à cette taille, monde ρ_A = 2 ρ_B | n_h 160 lu sous ρ_A = ρ_B | puissance (160) à cette taille |
+| --- | --- | --- | --- | --- | --- |
+| 0,025 | 0,05 | 288 (ligne 0,05) | 0,996 | 304 | 0,938 |
+| 0,05 | 0,1 | 288 (ligne 0,05) | 0,983 | 304 | 0,873 |
+| 0,085 | 0,17 | 288 (ligne 0,1) | 0,928 | 336 | 0,847 |
+| 0,1 | 0,2 | 288 (ligne 0,1) | 0,882 | 336 | 0,783 |
+| 0,125 | 0,25 | 288 (ligne 0,125) | 0,783 | 352 | 0,723 |
+| 0,17 | 0,34 | 304 (ligne 0,17) | 0,649 | 384 | 0,607 |
+| 0,2 | 0,4 | 336 (ligne 0,2) | 0,643 | 432 | 0,627 |
+
+## T3. Neuvième comparateur en n_h (GD8-02) : n_h à huit et à neuf comparateurs, écart des n_h
+
+Source : passages v8 `rho0`, `meme-…`, `neuf-k8-…`, `neuf-k9-g0.05-…` (écart du neuvième 0,05 : SUPPOSÉ, « comparateur fort » ; côté honnête du neuvième inchangé : SUPPOSÉ) et `neuf-k9-g0.10-…` ; n80 pire (dichotomie) ; n_h = max(288 ; multiple de 16 ≥ 1,06 × n80 pire), ligne par ligne, sans enveloppe
+
+| dispersion | n80 40 (8) | n80 40 (9, 0,05 SUPPOSÉ) | n80 40 (9, 0,10) | n_h 40 (8) | n_h 40 (9, 0,05 SUPPOSÉ) | écart n_h 40 | n_h 40 (9, 0,10) | n80 160 (8) | n80 160 (9, 0,05 SUPPOSÉ) | n_h 160 (8) | n_h 160 (9, 0,05 SUPPOSÉ) | écart n_h 160 | n_h 160 (9, 0,10) | fiche 288 pire (9, 0,05 SUPPOSÉ, seuil 40) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| nulle | 184 | 264 | 184 | 288 | 288 | +0 | 288 | 264 | 344 | 288 | 368 | +80 | 288 | 0,866 |
+| ρ_A = ρ_B = 0,05 | 200 | 368 | 200 | 288 | 400 | +112 | 288 | 280 | 504 | 304 | 544 | +240 | 304 | 0,672 |
+| bêta (σ de référence 1,0) | 212 | 456 | 212 | 288 | 496 | +208 | 288 | 280 | 624 | 304 | 672 | +368 | 320 | 0,534 |
+| logit σ = 1,0 | 208 | 472 | 208 | 288 | 512 | +224 | 288 | 280 | 624 | 304 | 672 | +368 | 304 | 0,542 |
+| ρ_A = ρ_B = 0,10 | 224 | 504 | 228 | 288 | 544 | +256 | 288 | 304 | 688 | 336 | 736 | +400 | 336 | 0,484 |
+| ρ_A = ρ_B = 0,17 | 280 | 688 | 280 | 304 | 736 | +432 | 304 | 360 | 912 | 384 | 976 | +592 | 384 | 0,312 |
+
+## T4. Puissances clés sur plusieurs graines (GD8-04) : ρ_A = ρ_B = 0,17, 288 et 400 unités
+
+Source : passage v8 `meme-rho0.17` (graine 20261029) et passages v9 `graine11…18-meme-rho0.17` présents (9 graines) ; moyenne ± erreur type (écart-type entre graines / √nombre)
+
+| taille | seuil | valeur v8 (graine 20261029) | pire des 4 cellules, par graine : moyenne ± erreur type | cellule la plus exigeante en moyenne : moyenne ± erreur type | cette cellule |
+| --- | --- | --- | --- | --- | --- |
+| 288 | 40 | 0,847 | 0,840 ± 0,003 | 0,840 ± 0,003 | K_h = 5, biais 0.0125 |
+| 288 | 160 | 0,509 | 0,506 ± 0,003 | 0,506 ± 0,003 | K_h = 5, biais 0.0125 |
+| 400 | 40 | 0,980 | 0,980 ± 0,001 | 0,981 ± 0,001 | K_h = 5, biais 0.0125 |
+| 400 | 160 | 0,905 | 0,908 ± 0,002 | 0,908 ± 0,002 | K_h = 5, biais 0.0125 |
+
+## T5. ρ honnête = 2 × ρ saboté (GD8-07, SUPPOSÉ) contre ρ honnête = ρ saboté (v8)
+
+Source : passages v9 `rhoh2x-meme-rho…` (`--facteur-rho-honnetes 2`) et v8 `meme-rho…` ; pire des quatre cellules
+
+| ρ saboté (A et B) | ρ honnête | fiche 288 (40) | fiche 288 (160) | n80 40 | n80 160 | n80 160 ajusté | n_h 40 | n_h 160 | garde min. 8, 288, seuil 160 (K_h 5, δ/4) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 0,05 | 0,05 | 0,995 | 0,869 | 200 | 280 | 272,1 ± 0,6 | 288 | 304 | 0,880 |
+| 0,05 | 0,1 | 0,987 | 0,835 | 208 | 288 | 283,5 ± 0,6 | 288 | 320 | 0,847 |
+| 0,10 | 0,1 | 0,971 | 0,768 | 224 | 304 | 297,7 ± 0,7 | 288 | 336 | 0,845 |
+| 0,10 | 0,2 | 0,922 | 0,654 | 240 | 328 | 321,4 ± 1,0 | 288 | 352 | 0,716 |
+| 0,17 | 0,17 | 0,847 | 0,509 | 280 | 360 | 357,0 ± 1,0 | 304 | 384 | 0,751 |
+| 0,17 | 0,34 | 0,735 | 0,379 | 312 | 408 | 401,0 ± 1,0 | 336 | 448 | 0,567 |
+
+## T6. Strates (GD8-03) : parts de variance et corrélation sujet–comparateurs (v8, cellule K_h = 10, biais 0, 288 unités)
+
+Source : `moments_tires` et `decomposition_effet_unite` des passages v8 de strates ; corrélation des p sabotés de A et des comparateurs en portée commune : 0,5·0,4·γ²·moyenne(d²)/√(ρ·0,25 × ρ·0,24) (calcul de GD8-03), recalculée ici
+
+| passage | part de variance de p_A entre strates, sabotés | idem, honnêtes | part de variance du contraste prévue par les strates | idem, garde | corr. p_A–p_B sabotés calculée (commune) | fiche 288 (40), moyenne des 4 cellules (mesure du tableau v8) | fiche 288 (40), pire des 4 cellules |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `strates-commune-S2-g0.4-brut` | 0,941 | 0,010 | 0,027 | 0,000 | 0,768 | 0,991 | 0,967 |
+| `strates-commune-S2-g0.4-calibre` | 0,941 | 0,010 | 0,027 | 0,000 | 0,768 | 0,990 | 0,966 |
+| `strates-commune-S3-g0.4-brut` | 0,627 | 0,006 | 0,013 | 0,000 | 0,512 | 0,984 | 0,954 |
+| `strates-commune-S3-g0.4-calibre` | 0,627 | 0,006 | 0,013 | 0,000 | 0,512 | 0,985 | 0,965 |
+| `strates-partielle-f0.5-S2-g0.4-brut` | 0,941 | 0,010 | 0,157 | 0,001 | — | 0,982 | 0,961 |
+| `strates-partielle-f0.5-S2-g0.4-calibre` | 0,941 | 0,010 | 0,157 | 0,001 | — | 0,986 | 0,962 |
+| `strates-partielle-f0.5-S3-g0.4-brut` | 0,627 | 0,006 | 0,094 | 0,001 | — | 0,959 | 0,928 |
+| `strates-partielle-f0.5-S3-g0.4-calibre` | 0,627 | 0,006 | 0,094 | 0,001 | — | 0,967 | 0,942 |
+| `strates-sujet-S2-g0.2-brut` | 0,235 | 0,002 | 0,081 | 0,001 | — | 0,874 | 0,841 |
+| `strates-sujet-S2-g0.2-calibre` | 0,235 | 0,002 | 0,081 | 0,001 | — | 0,910 | 0,887 |
+| `strates-sujet-S2-g0.4-brut` | 0,941 | 0,010 | 0,322 | 0,003 | — | 0,933 | 0,922 |
+| `strates-sujet-S2-g0.4-calibre` | 0,941 | 0,010 | 0,323 | 0,003 | — | 0,979 | 0,944 |
+| `strates-sujet-S3-g0.2-brut` | 0,157 | 0,002 | 0,054 | 0,001 | — | 0,869 | 0,840 |
+| `strates-sujet-S3-g0.2-calibre` | 0,157 | 0,002 | 0,054 | 0,001 | — | 0,894 | 0,871 |
+| `strates-sujet-S3-g0.4-brut` | 0,627 | 0,006 | 0,215 | 0,002 | — | 0,907 | 0,878 |
+| `strates-sujet-S3-g0.4-calibre` | 0,627 | 0,006 | 0,215 | 0,002 | — | 0,961 | 0,934 |
+| `strates-sujet-S3-g0.4-iid-brut` | 0,627 | 0,006 | 0,215 | 0,002 | — | 0,857 | 0,823 |
+
+## T7. Strates : gain de l'étalonnage selon la portée (commune, partielle f = 0,5, sujet), ρ = 0,17, S ∈ {2 ; 3}, γ_A = 0,4 (GD8-03)
+
+Source : passages v8 `strates-commune-…`, `strates-sujet-…` et v9 `strates-partielle-f0.5-…` (brut et étalonné) ; fiche au seuil 40, moyenne des quatre cellules (mesure de la v8) et pire des quatre ; gain = étalonné − brut (moyenne des quatre différences)
+
+| portée | S | γ_B | fiche 288 brut (moy.) | fiche 288 étalonné (moy.) | gain 288 | fiche 288 étalonné (pire) | gain 400 | part de variance du contraste retirée par l'étalonnage |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| commune | 2 | 0,4 | 0,991 | 0,990 | −0,001 | 0,966 | −0,000 | 0,027 |
+| commune | 3 | 0,4 | 0,984 | 0,985 | +0,001 | 0,965 | +0,000 | 0,013 |
+| partielle | 2 | 0,2 | 0,982 | 0,986 | +0,004 | 0,962 | −0,000 | 0,157 |
+| partielle | 3 | 0,2 | 0,959 | 0,967 | +0,009 | 0,942 | −0,000 | 0,094 |
+| sujet | 2 | 0 | 0,933 | 0,979 | +0,046 | 0,944 | +0,003 | 0,323 |
+| sujet | 3 | 0 | 0,907 | 0,961 | +0,055 | 0,934 | +0,004 | 0,215 |
+

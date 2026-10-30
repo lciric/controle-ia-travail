@@ -1,0 +1,988 @@
+{
+ "version": "simulation-puissance-garde-delta-v9",
+ "statut": "exploratoire, non préenregistré, non opposable ; lois synthétiques seulement",
+ "script_sha256": "f483a271d364b2900505cc314464ea6cf7101ad4e68e0fb09a579df10661c148",
+ "commit": "0c8e1c8a991fddc15b62890b5454d0fb7472faff (HEAD lu par l'appelant, git rev-parse HEAD, lecture seule)",
+ "etat_du_script": "non lu : aucune commande git (GD7-09) ; le commit est celui de --commit-declare, non vérifié",
+ "reglages": {
+  "ecarts": null,
+  "ecarts_contraste": null,
+  "effectif_attendu": null,
+  "repetitions": 2000,
+  "graine": 11,
+  "tailles": "288,400",
+  "tailles_garde": null,
+  "deltas": "0.05",
+  "m": "8,2",
+  "alpha": 0.05,
+  "K": "10,5",
+  "K_sabotes": null,
+  "K_s": "10",
+  "taux": "0.01",
+  "biais": "0,0.0125",
+  "comparateurs": "8",
+  "comparateurs_independants": false,
+  "effet_unite_a": 0.0,
+  "effet_unite_beta": 0.17,
+  "effet_unite_comparateurs": 0.0,
+  "correlation_comparateurs": 0.0,
+  "echelle_dispersion": "beta",
+  "rho_comparateurs": 0.17,
+  "combiner_dispersion_a_et_comparateurs": true,
+  "ecart_contraste_neuvieme": null,
+  "correlation_sujet_comparateurs": 0.0,
+  "strates": "0",
+  "amplitude_strates": "0",
+  "portee_strates": null,
+  "allocation_strates": "bloc",
+  "calibrage_par_strate": false,
+  "cibles_n80": [
+   0.8
+  ],
+  "n80_fiche": false,
+  "lien_coupe": false,
+  "ecart_contraste": 0.1,
+  "lecture_ebh": "A",
+  "m_fiches": 2,
+  "fiches_nulles": 0,
+  "sans_n80": true,
+  "sortie": "simulation-puissance-garde-delta-v9-sortie-graine11-meme-rho0.17.json",
+  "commit_declare": "0c8e1c8a991fddc15b62890b5454d0fb7472faff (HEAD lu par l'appelant, git rev-parse HEAD, lecture seule)",
+  "paires_K_h_K_s": [
+   [
+    10,
+    10
+   ],
+   [
+    5,
+    10
+   ]
+  ],
+  "strates_parametres": null,
+  "seuils": [
+   160.0,
+   40.0
+  ],
+  "lambdas": [
+   0.1,
+   0.3,
+   0.6,
+   0.9
+  ],
+  "lecture_des_seuils": "m/α_c : borne basse de la lecture e-BH"
+ },
+ "taille_minimale_ecarts_nuls": {
+  "delta=0.05|seuil=160.0": 144,
+  "delta=0.05|seuil=40.0": 111
+ },
+ "lois": {
+  "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe": {
+   "biais_essayes": [
+    0.0,
+    0.0125
+   ],
+   "artefacts": true,
+   "decomposition_effet_unite": {
+    "biais=0.0": {
+     "honnetes_fA": {
+      "p0_esperance_visee": 0.01,
+      "ecart_type_ajoute_sur_p": 0.04102438299353203,
+      "correlation_intra_unite": 0.16999999999999998,
+      "variance_binomiale_par_unite": 0.00099,
+      "variance_ajoutee_par_unite": 0.0015147000000000001,
+      "part_ajoutee_de_la_variance": 0.6047430830039525
+     },
+     "sabotes_rA": {
+      "p0_esperance_visee": 0.5,
+      "ecart_type_ajoute_sur_p": 0.20615528128088303,
+      "correlation_intra_unite": 0.17,
+      "variance_binomiale_par_unite": 0.025,
+      "variance_ajoutee_par_unite": 0.038250000000000006,
+      "part_ajoutee_de_la_variance": 0.6047430830039526
+     },
+     "comparateurs_honnetes_fB": {
+      "p0_esperance_visee": 0.01,
+      "esperance_exacte": 0.01,
+      "echelle": "beta",
+      "kappa_concentration": 4.88235294117647,
+      "parametres_beta_a_b": [
+       0.0488235294117647,
+       4.833529411764705
+      ],
+      "correlation_intra_unite": 0.17,
+      "ecart_type_ajoute_sur_p": 0.04102438299353203,
+      "variance_binomiale_par_unite": 0.00099,
+      "variance_ajoutee_par_unite": 0.0015147000000000001,
+      "part_ajoutee_de_la_variance": 0.6047430830039525,
+      "correspondance": "v8 : ρ_b donnée directement (--rho-comparateurs), κ = (1 − ρ_b)/ρ_b commune à f_B et r_B ; honnêtes et sabotés tirés à part, sans corrélation entre comparateurs"
+     },
+     "comparateurs_sabotes_rB": {
+      "p0_esperance_visee": 0.4,
+      "esperance_exacte": 0.4,
+      "echelle": "beta",
+      "kappa_concentration": 4.88235294117647,
+      "parametres_beta_a_b": [
+       1.9529411764705882,
+       2.9294117647058817
+      ],
+      "correlation_intra_unite": 0.17,
+      "ecart_type_ajoute_sur_p": 0.20199009876724155,
+      "variance_binomiale_par_unite": 0.024,
+      "variance_ajoutee_par_unite": 0.03672,
+      "part_ajoutee_de_la_variance": 0.6047430830039526,
+      "correspondance": "v8 : ρ_b donnée directement (--rho-comparateurs), κ = (1 − ρ_b)/ρ_b commune à f_B et r_B ; honnêtes et sabotés tirés à part, sans corrélation entre comparateurs"
+     },
+     "lien_garde_contraste": "effet tiré à part : lien coupé"
+    },
+    "biais=0.0125": {
+     "honnetes_fA": {
+      "p0_esperance_visee": 0.0225,
+      "ecart_type_ajoute_sur_p": 0.06114685192223718,
+      "correlation_intra_unite": 0.17000000000000004,
+      "variance_binomiale_par_unite": 0.002199375,
+      "variance_ajoutee_par_unite": 0.0033650437500000003,
+      "part_ajoutee_de_la_variance": 0.6047430830039526
+     },
+     "sabotes_rA": {
+      "p0_esperance_visee": 0.5,
+      "ecart_type_ajoute_sur_p": 0.20615528128088303,
+      "correlation_intra_unite": 0.17,
+      "variance_binomiale_par_unite": 0.025,
+      "variance_ajoutee_par_unite": 0.038250000000000006,
+      "part_ajoutee_de_la_variance": 0.6047430830039526
+     },
+     "comparateurs_honnetes_fB": {
+      "p0_esperance_visee": 0.01,
+      "esperance_exacte": 0.01,
+      "echelle": "beta",
+      "kappa_concentration": 4.88235294117647,
+      "parametres_beta_a_b": [
+       0.0488235294117647,
+       4.833529411764705
+      ],
+      "correlation_intra_unite": 0.17,
+      "ecart_type_ajoute_sur_p": 0.04102438299353203,
+      "variance_binomiale_par_unite": 0.00099,
+      "variance_ajoutee_par_unite": 0.0015147000000000001,
+      "part_ajoutee_de_la_variance": 0.6047430830039525,
+      "correspondance": "v8 : ρ_b donnée directement (--rho-comparateurs), κ = (1 − ρ_b)/ρ_b commune à f_B et r_B ; honnêtes et sabotés tirés à part, sans corrélation entre comparateurs"
+     },
+     "comparateurs_sabotes_rB": {
+      "p0_esperance_visee": 0.4,
+      "esperance_exacte": 0.4,
+      "echelle": "beta",
+      "kappa_concentration": 4.88235294117647,
+      "parametres_beta_a_b": [
+       1.9529411764705882,
+       2.9294117647058817
+      ],
+      "correlation_intra_unite": 0.17,
+      "ecart_type_ajoute_sur_p": 0.20199009876724155,
+      "variance_binomiale_par_unite": 0.024,
+      "variance_ajoutee_par_unite": 0.03672,
+      "part_ajoutee_de_la_variance": 0.6047430830039526,
+      "correspondance": "v8 : ρ_b donnée directement (--rho-comparateurs), κ = (1 − ρ_b)/ρ_b commune à f_B et r_B ; honnêtes et sabotés tirés à part, sans corrélation entre comparateurs"
+     },
+     "lien_garde_contraste": "effet tiré à part : lien coupé"
+    }
+   }
+  },
+  "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe": {
+   "biais_essayes": [
+    0.0,
+    0.0125
+   ],
+   "artefacts": true,
+   "decomposition_effet_unite": {
+    "biais=0.0": {
+     "honnetes_fA": {
+      "p0_esperance_visee": 0.01,
+      "ecart_type_ajoute_sur_p": 0.04102438299353203,
+      "correlation_intra_unite": 0.16999999999999998,
+      "variance_binomiale_par_unite": 0.00198,
+      "variance_ajoutee_par_unite": 0.0013464000000000002,
+      "part_ajoutee_de_la_variance": 0.4047619047619048
+     },
+     "sabotes_rA": {
+      "p0_esperance_visee": 0.5,
+      "ecart_type_ajoute_sur_p": 0.20615528128088303,
+      "correlation_intra_unite": 0.17,
+      "variance_binomiale_par_unite": 0.025,
+      "variance_ajoutee_par_unite": 0.038250000000000006,
+      "part_ajoutee_de_la_variance": 0.6047430830039526
+     },
+     "comparateurs_honnetes_fB": {
+      "p0_esperance_visee": 0.01,
+      "esperance_exacte": 0.01,
+      "echelle": "beta",
+      "kappa_concentration": 4.88235294117647,
+      "parametres_beta_a_b": [
+       0.0488235294117647,
+       4.833529411764705
+      ],
+      "correlation_intra_unite": 0.17,
+      "ecart_type_ajoute_sur_p": 0.04102438299353203,
+      "variance_binomiale_par_unite": 0.00198,
+      "variance_ajoutee_par_unite": 0.0013464000000000002,
+      "part_ajoutee_de_la_variance": 0.4047619047619048,
+      "correspondance": "v8 : ρ_b donnée directement (--rho-comparateurs), κ = (1 − ρ_b)/ρ_b commune à f_B et r_B ; honnêtes et sabotés tirés à part, sans corrélation entre comparateurs"
+     },
+     "comparateurs_sabotes_rB": {
+      "p0_esperance_visee": 0.4,
+      "esperance_exacte": 0.4,
+      "echelle": "beta",
+      "kappa_concentration": 4.88235294117647,
+      "parametres_beta_a_b": [
+       1.9529411764705882,
+       2.9294117647058817
+      ],
+      "correlation_intra_unite": 0.17,
+      "ecart_type_ajoute_sur_p": 0.20199009876724155,
+      "variance_binomiale_par_unite": 0.024,
+      "variance_ajoutee_par_unite": 0.03672,
+      "part_ajoutee_de_la_variance": 0.6047430830039526,
+      "correspondance": "v8 : ρ_b donnée directement (--rho-comparateurs), κ = (1 − ρ_b)/ρ_b commune à f_B et r_B ; honnêtes et sabotés tirés à part, sans corrélation entre comparateurs"
+     },
+     "lien_garde_contraste": "effet tiré à part : lien coupé"
+    },
+    "biais=0.0125": {
+     "honnetes_fA": {
+      "p0_esperance_visee": 0.0225,
+      "ecart_type_ajoute_sur_p": 0.06114685192223718,
+      "correlation_intra_unite": 0.17000000000000004,
+      "variance_binomiale_par_unite": 0.00439875,
+      "variance_ajoutee_par_unite": 0.0029911500000000006,
+      "part_ajoutee_de_la_variance": 0.4047619047619048
+     },
+     "sabotes_rA": {
+      "p0_esperance_visee": 0.5,
+      "ecart_type_ajoute_sur_p": 0.20615528128088303,
+      "correlation_intra_unite": 0.17,
+      "variance_binomiale_par_unite": 0.025,
+      "variance_ajoutee_par_unite": 0.038250000000000006,
+      "part_ajoutee_de_la_variance": 0.6047430830039526
+     },
+     "comparateurs_honnetes_fB": {
+      "p0_esperance_visee": 0.01,
+      "esperance_exacte": 0.01,
+      "echelle": "beta",
+      "kappa_concentration": 4.88235294117647,
+      "parametres_beta_a_b": [
+       0.0488235294117647,
+       4.833529411764705
+      ],
+      "correlation_intra_unite": 0.17,
+      "ecart_type_ajoute_sur_p": 0.04102438299353203,
+      "variance_binomiale_par_unite": 0.00198,
+      "variance_ajoutee_par_unite": 0.0013464000000000002,
+      "part_ajoutee_de_la_variance": 0.4047619047619048,
+      "correspondance": "v8 : ρ_b donnée directement (--rho-comparateurs), κ = (1 − ρ_b)/ρ_b commune à f_B et r_B ; honnêtes et sabotés tirés à part, sans corrélation entre comparateurs"
+     },
+     "comparateurs_sabotes_rB": {
+      "p0_esperance_visee": 0.4,
+      "esperance_exacte": 0.4,
+      "echelle": "beta",
+      "kappa_concentration": 4.88235294117647,
+      "parametres_beta_a_b": [
+       1.9529411764705882,
+       2.9294117647058817
+      ],
+      "correlation_intra_unite": 0.17,
+      "ecart_type_ajoute_sur_p": 0.20199009876724155,
+      "variance_binomiale_par_unite": 0.024,
+      "variance_ajoutee_par_unite": 0.03672,
+      "part_ajoutee_de_la_variance": 0.6047430830039526,
+      "correspondance": "v8 : ρ_b donnée directement (--rho-comparateurs), κ = (1 − ρ_b)/ρ_b commune à f_B et r_B ; honnêtes et sabotés tirés à part, sans corrélation entre comparateurs"
+     },
+     "lien_garde_contraste": "effet tiré à part : lien coupé"
+    }
+   }
+  }
+ },
+ "cellules": {
+  "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=288|n_garde=288|biais=0.0|k=8": {
+   "etiquette": "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=288|n_garde=288|biais=0.0|k=8",
+   "graine_derivee": 1386783244393352917,
+   "160.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 149.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 164.0
+    },
+    "k_contrastes": {
+     "part": 0.682,
+     "unites_mediane_si_atteint": 205.0
+    },
+    "fiche_entiere": {
+     "part": 0.6805,
+     "unites_mediane_si_atteint": 210.0
+    },
+    "frontiere_part": 0.0,
+    "frontiere_borne_ville": 0.00625,
+    "tricheur_part": 0.0
+   },
+   "40.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 114.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 126.0
+    },
+    "k_contrastes": {
+     "part": 0.858,
+     "unites_mediane_si_atteint": 176.0
+    },
+    "fiche_entiere": {
+     "part": 0.856,
+     "unites_mediane_si_atteint": 180.0
+    },
+    "frontiere_part": 0.0015,
+    "frontiere_borne_ville": 0.025,
+    "tricheur_part": 0.0
+   },
+   "moments_tires": {
+    "E_fA": 0.009944791666666668,
+    "E_fB": 0.009943511284722224,
+    "E_g": 1.2803819444441589e-06,
+    "E_rA": 0.4996413194444445,
+    "E_rB": 0.39999021267361107,
+    "E_v": 0.09965110677083344,
+    "ecart_type_fA": 0.04976881003238806,
+    "ecart_type_rA": 0.2514265061900311,
+    "ecart_type_pA_honnetes": 0.04105836630698025,
+    "ecart_type_pA_sabotes": 0.2060007355595434,
+    "correlation_pA_honnetes_sabotes_meme_unite": -0.001320044348872089,
+    "ecart_type_pB_honnetes": 0.04084285390879112,
+    "ecart_type_pB_sabotes": 0.20197078264450122,
+    "correlation_pB_honnetes_entre_comparateurs": -0.000275138498130418,
+    "correlation_pB_sabotes_entre_comparateurs": 4.39216809503064e-05,
+    "correlation_g_entre_comparateurs": 0.4998816634271886,
+    "correlation_v_entre_comparateurs": 0.5098197063256925
+   },
+   "ebh_graines_derivees": {
+    "modes": 17476776199658639947
+   },
+   "ebh_A": {
+    "m": 2,
+    "seuil_d_arret": 40.0,
+    "fiches_vraies": 2,
+    "fiches_nulles": 0,
+    "fiches_du_sujet": 1,
+    "premiere_atteinte_une_fiche": 0.856,
+    "premiere_atteinte_fiches_du_sujet": 0.856,
+    "retenue_une_fiche": 0.887,
+    "retenues_fiches_du_sujet": 0.887,
+    "retenues_toutes_vraies": 0.7955,
+    "vraies_retenues_moyenne": 1.771,
+    "retenue_sans_atteinte_une_fiche": 0.031
+   }
+  },
+  "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=288|n_garde=288|biais=0.0125|k=8": {
+   "etiquette": "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=288|n_garde=288|biais=0.0125|k=8",
+   "graine_derivee": 15578331140767079559,
+   "160.0": {
+    "garde_seule": {
+     "part": 0.9465,
+     "unites_mediane_si_atteint": 205.0
+    },
+    "k_gardes": {
+     "part": 0.861,
+     "unites_mediane_si_atteint": 225.0
+    },
+    "k_contrastes": {
+     "part": 0.6835,
+     "unites_mediane_si_atteint": 203.0
+    },
+    "fiche_entiere": {
+     "part": 0.572,
+     "unites_mediane_si_atteint": 243.0
+    },
+    "frontiere_part": 0.0,
+    "frontiere_borne_ville": 0.00625,
+    "tricheur_part": 0.0
+   },
+   "40.0": {
+    "garde_seule": {
+     "part": 0.993,
+     "unites_mediane_si_atteint": 156.0
+    },
+    "k_gardes": {
+     "part": 0.9845,
+     "unites_mediane_si_atteint": 178.0
+    },
+    "k_contrastes": {
+     "part": 0.841,
+     "unites_mediane_si_atteint": 173.0
+    },
+    "fiche_entiere": {
+     "part": 0.8245,
+     "unites_mediane_si_atteint": 204.0
+    },
+    "frontiere_part": 0.002,
+    "frontiere_borne_ville": 0.025,
+    "tricheur_part": 0.0
+   },
+   "moments_tires": {
+    "E_fA": 0.02235763888888889,
+    "E_fB": 0.009952126736111113,
+    "E_g": 0.012405512152777775,
+    "E_rA": 0.49969322916666664,
+    "E_rB": 0.4001484592013889,
+    "E_v": 0.09954476996527772,
+    "ecart_type_fA": 0.07442275925028011,
+    "ecart_type_rA": 0.25197654691897686,
+    "ecart_type_pA_honnetes": 0.060924551869380644,
+    "ecart_type_pA_sabotes": 0.20641361726073998,
+    "correlation_pA_honnetes_sabotes_meme_unite": 0.0012691258303438601,
+    "ecart_type_pB_honnetes": 0.04097022146413097,
+    "ecart_type_pB_sabotes": 0.2019643994327355,
+    "correlation_pB_honnetes_entre_comparateurs": -0.0002855402381880217,
+    "correlation_pB_sabotes_entre_comparateurs": 2.389684338347361e-05,
+    "correlation_g_entre_comparateurs": 0.6893295913367167,
+    "correlation_v_entre_comparateurs": 0.5107350579923516
+   },
+   "ebh_graines_derivees": {
+    "modes": 5592955817179246488
+   },
+   "ebh_A": {
+    "m": 2,
+    "seuil_d_arret": 40.0,
+    "fiches_vraies": 2,
+    "fiches_nulles": 0,
+    "fiches_du_sujet": 1,
+    "premiere_atteinte_une_fiche": 0.8245,
+    "premiere_atteinte_fiches_du_sujet": 0.8245,
+    "retenue_une_fiche": 0.8565,
+    "retenues_fiches_du_sujet": 0.8565,
+    "retenues_toutes_vraies": 0.7445,
+    "vraies_retenues_moyenne": 1.7125,
+    "retenue_sans_atteinte_une_fiche": 0.032
+   }
+  },
+  "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=400|n_garde=400|biais=0.0|k=8": {
+   "etiquette": "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=400|n_garde=400|biais=0.0|k=8",
+   "graine_derivee": 1896801024148727614,
+   "160.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 149.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 163.0
+    },
+    "k_contrastes": {
+     "part": 0.928,
+     "unites_mediane_si_atteint": 231.0
+    },
+    "fiche_entiere": {
+     "part": 0.928,
+     "unites_mediane_si_atteint": 233.0
+    },
+    "frontiere_part": 0.0,
+    "frontiere_borne_ville": 0.00625,
+    "tricheur_part": 0.0
+   },
+   "40.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 114.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 126.0
+    },
+    "k_contrastes": {
+     "part": 0.977,
+     "unites_mediane_si_atteint": 183.0
+    },
+    "fiche_entiere": {
+     "part": 0.977,
+     "unites_mediane_si_atteint": 186.0
+    },
+    "frontiere_part": 0.0025,
+    "frontiere_borne_ville": 0.025,
+    "tricheur_part": 0.0
+   },
+   "moments_tires": {
+    "E_fA": 0.010018875,
+    "E_fB": 0.009995500000000001,
+    "E_g": 2.337499999999909e-05,
+    "E_rA": 0.49979987499999995,
+    "E_rB": 0.39998415624999994,
+    "E_v": 0.09981571875,
+    "ecart_type_fA": 0.05000134641921531,
+    "ecart_type_rA": 0.25154278453174594,
+    "ecart_type_pA_honnetes": 0.04103057029932897,
+    "ecart_type_pA_sabotes": 0.20613932584605962,
+    "correlation_pA_honnetes_sabotes_meme_unite": 8.735025936526765e-05,
+    "ecart_type_pB_honnetes": 0.04107244282979235,
+    "ecart_type_pB_sabotes": 0.2019523947936166,
+    "correlation_pB_honnetes_entre_comparateurs": -0.00046969422630373437,
+    "correlation_pB_sabotes_entre_comparateurs": 0.0003819124911679239,
+    "correlation_g_entre_comparateurs": 0.4997082942783197,
+    "correlation_v_entre_comparateurs": 0.5103855390298495
+   },
+   "ebh_graines_derivees": {
+    "modes": 7841703797468540369
+   },
+   "ebh_A": {
+    "m": 2,
+    "seuil_d_arret": 40.0,
+    "fiches_vraies": 2,
+    "fiches_nulles": 0,
+    "fiches_du_sujet": 1,
+    "premiere_atteinte_une_fiche": 0.977,
+    "premiere_atteinte_fiches_du_sujet": 0.977,
+    "retenue_une_fiche": 0.983,
+    "retenues_fiches_du_sujet": 0.983,
+    "retenues_toutes_vraies": 0.971,
+    "vraies_retenues_moyenne": 1.971,
+    "retenue_sans_atteinte_une_fiche": 0.006
+   }
+  },
+  "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=400|n_garde=400|biais=0.0125|k=8": {
+   "etiquette": "binomiale_Kh10_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=400|n_garde=400|biais=0.0125|k=8",
+   "graine_derivee": 15219388750694081804,
+   "160.0": {
+    "garde_seule": {
+     "part": 0.9995,
+     "unites_mediane_si_atteint": 208.0
+    },
+    "k_gardes": {
+     "part": 0.9965,
+     "unites_mediane_si_atteint": 234.0
+    },
+    "k_contrastes": {
+     "part": 0.9265,
+     "unites_mediane_si_atteint": 232.0
+    },
+    "fiche_entiere": {
+     "part": 0.92,
+     "unites_mediane_si_atteint": 270.0
+    },
+    "frontiere_part": 0.0,
+    "frontiere_borne_ville": 0.00625,
+    "tricheur_part": 0.0
+   },
+   "40.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 159.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 181.5
+    },
+    "k_contrastes": {
+     "part": 0.971,
+     "unites_mediane_si_atteint": 186.5
+    },
+    "fiche_entiere": {
+     "part": 0.97,
+     "unites_mediane_si_atteint": 219.5
+    },
+    "frontiere_part": 0.001,
+    "frontiere_borne_ville": 0.025,
+    "tricheur_part": 0.0
+   },
+   "moments_tires": {
+    "E_fA": 0.022528000000000003,
+    "E_fB": 0.009976812500000001,
+    "E_g": 0.012551187500000002,
+    "E_rA": 0.49978925,
+    "E_rB": 0.40007640625,
+    "E_v": 0.09971284375,
+    "ecart_type_fA": 0.07472893827694864,
+    "ecart_type_rA": 0.25154712398363355,
+    "ecart_type_pA_honnetes": 0.06123760825907426,
+    "ecart_type_pA_sabotes": 0.20627551317566523,
+    "correlation_pA_honnetes_sabotes_meme_unite": -0.0008197515459420548,
+    "ecart_type_pB_honnetes": 0.04097053993633904,
+    "ecart_type_pB_sabotes": 0.20197918746274832,
+    "correlation_pB_honnetes_entre_comparateurs": -0.0003738170524205188,
+    "correlation_pB_sabotes_entre_comparateurs": -6.799310898067798e-05,
+    "correlation_g_entre_comparateurs": 0.6907663875201153,
+    "correlation_v_entre_comparateurs": 0.5102930391604626
+   },
+   "ebh_graines_derivees": {
+    "modes": 9823886689848204040
+   },
+   "ebh_A": {
+    "m": 2,
+    "seuil_d_arret": 40.0,
+    "fiches_vraies": 2,
+    "fiches_nulles": 0,
+    "fiches_du_sujet": 1,
+    "premiere_atteinte_une_fiche": 0.97,
+    "premiere_atteinte_fiches_du_sujet": 0.97,
+    "retenue_une_fiche": 0.978,
+    "retenues_fiches_du_sujet": 0.978,
+    "retenues_toutes_vraies": 0.964,
+    "vraies_retenues_moyenne": 1.9625,
+    "retenue_sans_atteinte_une_fiche": 0.008
+   }
+  },
+  "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=288|n_garde=288|biais=0.0|k=8": {
+   "etiquette": "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=288|n_garde=288|biais=0.0|k=8",
+   "graine_derivee": 5837672768484957313,
+   "160.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 151.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 168.0
+    },
+    "k_contrastes": {
+     "part": 0.6865,
+     "unites_mediane_si_atteint": 201.0
+    },
+    "fiche_entiere": {
+     "part": 0.683,
+     "unites_mediane_si_atteint": 212.0
+    },
+    "frontiere_part": 0.0,
+    "frontiere_borne_ville": 0.00625,
+    "tricheur_part": 0.0
+   },
+   "40.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 115.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 129.0
+    },
+    "k_contrastes": {
+     "part": 0.8435,
+     "unites_mediane_si_atteint": 170.0
+    },
+    "fiche_entiere": {
+     "part": 0.841,
+     "unites_mediane_si_atteint": 175.0
+    },
+    "frontiere_part": 0.0025,
+    "frontiere_borne_ville": 0.025,
+    "tricheur_part": 0.0
+   },
+   "moments_tires": {
+    "E_fA": 0.009892708333333333,
+    "E_fB": 0.010019010416666668,
+    "E_g": -0.00012630208333333504,
+    "E_rA": 0.4998649305555555,
+    "E_rB": 0.3999932291666667,
+    "E_v": 0.09987170138888879,
+    "ecart_type_fA": 0.057271123125479384,
+    "ecart_type_rA": 0.2513714103133287,
+    "ecart_type_pA_honnetes": 0.041070941019978616,
+    "ecart_type_pA_sabotes": 0.20616474588852196,
+    "correlation_pA_honnetes_sabotes_meme_unite": 0.0004458622167266677,
+    "ecart_type_pB_honnetes": 0.040961054415609315,
+    "ecart_type_pB_sabotes": 0.20192162432853955,
+    "correlation_pB_honnetes_entre_comparateurs": 4.597819788080112e-05,
+    "correlation_pB_sabotes_entre_comparateurs": 0.000324351795230271,
+    "correlation_g_entre_comparateurs": 0.4964911313396979,
+    "correlation_v_entre_comparateurs": 0.5101695853180984
+   },
+   "ebh_graines_derivees": {
+    "modes": 13470215521422988499
+   },
+   "ebh_A": {
+    "m": 2,
+    "seuil_d_arret": 40.0,
+    "fiches_vraies": 2,
+    "fiches_nulles": 0,
+    "fiches_du_sujet": 1,
+    "premiere_atteinte_une_fiche": 0.841,
+    "premiere_atteinte_fiches_du_sujet": 0.841,
+    "retenue_une_fiche": 0.8685,
+    "retenues_fiches_du_sujet": 0.8685,
+    "retenues_toutes_vraies": 0.7655,
+    "vraies_retenues_moyenne": 1.739,
+    "retenue_sans_atteinte_une_fiche": 0.0275
+   }
+  },
+  "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=288|n_garde=288|biais=0.0125|k=8": {
+   "etiquette": "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=288|n_garde=288|biais=0.0125|k=8",
+   "graine_derivee": 14249684040684624650,
+   "160.0": {
+    "garde_seule": {
+     "part": 0.8695,
+     "unites_mediane_si_atteint": 209.0
+    },
+    "k_gardes": {
+     "part": 0.743,
+     "unites_mediane_si_atteint": 231.0
+    },
+    "k_contrastes": {
+     "part": 0.6915,
+     "unites_mediane_si_atteint": 204.0
+    },
+    "fiche_entiere": {
+     "part": 0.5025,
+     "unites_mediane_si_atteint": 246.0
+    },
+    "frontiere_part": 0.0,
+    "frontiere_borne_ville": 0.00625,
+    "tricheur_part": 0.0
+   },
+   "40.0": {
+    "garde_seule": {
+     "part": 0.976,
+     "unites_mediane_si_atteint": 161.5
+    },
+    "k_gardes": {
+     "part": 0.9285,
+     "unites_mediane_si_atteint": 184.0
+    },
+    "k_contrastes": {
+     "part": 0.8445,
+     "unites_mediane_si_atteint": 173.0
+    },
+    "fiche_entiere": {
+     "part": 0.7735,
+     "unites_mediane_si_atteint": 212.0
+    },
+    "frontiere_part": 0.001,
+    "frontiere_borne_ville": 0.025,
+    "tricheur_part": 0.0
+   },
+   "moments_tires": {
+    "E_fA": 0.02266701388888889,
+    "E_fB": 0.009996788194444444,
+    "E_g": 0.012670225694444445,
+    "E_rA": 0.49964444444444445,
+    "E_rB": 0.3998278645833333,
+    "E_v": 0.09981657986111114,
+    "ecart_type_fA": 0.0863256002535673,
+    "ecart_type_rA": 0.25161149775491015,
+    "ecart_type_pA_honnetes": 0.06101111575219516,
+    "ecart_type_pA_sabotes": 0.20657404745998453,
+    "correlation_pA_honnetes_sabotes_meme_unite": 0.0014598811577034073,
+    "ecart_type_pB_honnetes": 0.04098858653026673,
+    "ecart_type_pB_sabotes": 0.20196655156191917,
+    "correlation_pB_honnetes_entre_comparateurs": -0.00018326842124392697,
+    "correlation_pB_sabotes_entre_comparateurs": -8.881696936599173e-05,
+    "correlation_g_entre_comparateurs": 0.6918671364034575,
+    "correlation_v_entre_comparateurs": 0.5103570216616261
+   },
+   "ebh_graines_derivees": {
+    "modes": 3003662147739696801
+   },
+   "ebh_A": {
+    "m": 2,
+    "seuil_d_arret": 40.0,
+    "fiches_vraies": 2,
+    "fiches_nulles": 0,
+    "fiches_du_sujet": 1,
+    "premiere_atteinte_une_fiche": 0.7735,
+    "premiere_atteinte_fiches_du_sujet": 0.7735,
+    "retenue_une_fiche": 0.8245,
+    "retenues_fiches_du_sujet": 0.8245,
+    "retenues_toutes_vraies": 0.7005,
+    "vraies_retenues_moyenne": 1.653,
+    "retenue_sans_atteinte_une_fiche": 0.051
+   }
+  },
+  "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=400|n_garde=400|biais=0.0|k=8": {
+   "etiquette": "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=400|n_garde=400|biais=0.0|k=8",
+   "graine_derivee": 12040401587280194786,
+   "160.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 151.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 168.0
+    },
+    "k_contrastes": {
+     "part": 0.9385,
+     "unites_mediane_si_atteint": 230.0
+    },
+    "fiche_entiere": {
+     "part": 0.9385,
+     "unites_mediane_si_atteint": 233.0
+    },
+    "frontiere_part": 0.001,
+    "frontiere_borne_ville": 0.00625,
+    "tricheur_part": 0.0
+   },
+   "40.0": {
+    "garde_seule": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 114.0
+    },
+    "k_gardes": {
+     "part": 1.0,
+     "unites_mediane_si_atteint": 130.0
+    },
+    "k_contrastes": {
+     "part": 0.981,
+     "unites_mediane_si_atteint": 184.0
+    },
+    "fiche_entiere": {
+     "part": 0.981,
+     "unites_mediane_si_atteint": 188.0
+    },
+    "frontiere_part": 0.0085,
+    "frontiere_borne_ville": 0.025,
+    "tricheur_part": 0.0
+   },
+   "moments_tires": {
+    "E_fA": 0.00994325,
+    "E_fB": 0.0100155625,
+    "E_g": -7.231249999999946e-05,
+    "E_rA": 0.5003704999999999,
+    "E_rB": 0.399873125,
+    "E_v": 0.10049737499999994,
+    "ecart_type_fA": 0.057478533205341104,
+    "ecart_type_rA": 0.25146359126074297,
+    "ecart_type_pA_honnetes": 0.04060896165543312,
+    "ecart_type_pA_sabotes": 0.20605701016465441,
+    "correlation_pA_honnetes_sabotes_meme_unite": -0.000967904545446738,
+    "ecart_type_pB_honnetes": 0.04109158097013284,
+    "ecart_type_pB_sabotes": 0.20202054810052855,
+    "correlation_pB_honnetes_entre_comparateurs": -0.0004370101432506728,
+    "correlation_pB_sabotes_entre_comparateurs": -2.1559254457998683e-05,
+    "correlation_g_entre_comparateurs": 0.49808358830002664,
+    "correlation_v_entre_comparateurs": 0.5101185025022412
+   },
+   "ebh_graines_derivees": {
+    "modes": 992140238395459915
+   },
+   "ebh_A": {
+    "m": 2,
+    "seuil_d_arret": 40.0,
+    "fiches_vraies": 2,
+    "fiches_nulles": 0,
+    "fiches_du_sujet": 1,
+    "premiere_atteinte_une_fiche": 0.981,
+    "premiere_atteinte_fiches_du_sujet": 0.981,
+    "retenue_une_fiche": 0.988,
+    "retenues_fiches_du_sujet": 0.988,
+    "retenues_toutes_vraies": 0.973,
+    "vraies_retenues_moyenne": 1.973,
+    "retenue_sans_atteinte_une_fiche": 0.007
+   }
+  },
+  "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=400|n_garde=400|biais=0.0125|k=8": {
+   "etiquette": "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_lien_coupe|delta=0.05|n=400|n_garde=400|biais=0.0125|k=8",
+   "graine_derivee": 18239377831759963848,
+   "160.0": {
+    "garde_seule": {
+     "part": 0.9885,
+     "unites_mediane_si_atteint": 214.0
+    },
+    "k_gardes": {
+     "part": 0.9765,
+     "unites_mediane_si_atteint": 244.0
+    },
+    "k_contrastes": {
+     "part": 0.9265,
+     "unites_mediane_si_atteint": 228.0
+    },
+    "fiche_entiere": {
+     "part": 0.9035,
+     "unites_mediane_si_atteint": 280.0
+    },
+    "frontiere_part": 0.0,
+    "frontiere_borne_ville": 0.00625,
+    "tricheur_part": 0.0
+   },
+   "40.0": {
+    "garde_seule": {
+     "part": 0.999,
+     "unites_mediane_si_atteint": 161.5
+    },
+    "k_gardes": {
+     "part": 0.996,
+     "unites_mediane_si_atteint": 189.0
+    },
+    "k_contrastes": {
+     "part": 0.971,
+     "unites_mediane_si_atteint": 183.0
+    },
+    "fiche_entiere": {
+     "part": 0.966,
+     "unites_mediane_si_atteint": 228.0
+    },
+    "frontiere_part": 0.003,
+    "frontiere_borne_ville": 0.025,
+    "tricheur_part": 0.0
+   },
+   "moments_tires": {
+    "E_fA": 0.022475500000000002,
+    "E_fB": 0.009995968749999999,
+    "E_g": 0.012479531250000004,
+    "E_rA": 0.500321,
+    "E_rB": 0.400109984375,
+    "E_v": 0.10021101562500001,
+    "ecart_type_fA": 0.08594912390333016,
+    "ecart_type_rA": 0.25130225219643376,
+    "ecart_type_pA_honnetes": 0.061091022236718036,
+    "ecart_type_pA_sabotes": 0.20597776596810624,
+    "correlation_pA_honnetes_sabotes_meme_unite": -0.0005353937459169315,
+    "ecart_type_pB_honnetes": 0.04104149271311001,
+    "ecart_type_pB_sabotes": 0.20205920449408799,
+    "correlation_pB_honnetes_entre_comparateurs": -0.00022538002592488646,
+    "correlation_pB_sabotes_entre_comparateurs": 0.0002525688495933487,
+    "correlation_g_entre_comparateurs": 0.6899916389944823,
+    "correlation_v_entre_comparateurs": 0.5094610571719856
+   },
+   "ebh_graines_derivees": {
+    "modes": 1665991186607393076
+   },
+   "ebh_A": {
+    "m": 2,
+    "seuil_d_arret": 40.0,
+    "fiches_vraies": 2,
+    "fiches_nulles": 0,
+    "fiches_du_sujet": 1,
+    "premiere_atteinte_une_fiche": 0.966,
+    "premiere_atteinte_fiches_du_sujet": 0.966,
+    "retenue_une_fiche": 0.976,
+    "retenues_fiches_du_sujet": 0.976,
+    "retenues_toutes_vraies": 0.957,
+    "vraies_retenues_moyenne": 1.9555,
+    "retenue_sans_atteinte_une_fiche": 0.01
+   }
+  }
+ },
+ "lecture_ebh": {
+  "lectures": [
+   "A"
+  ],
+  "M_modes": 2,
+  "N_fiches_nulles": 0,
+  "alpha_c": 0.05,
+  "A": "une fiche par mode : minimum des k gardes et des k contrastes ; m = M + N",
+  "B": "une fiche par (mode, comparateur) : minimum d'une garde et d'un contraste ; m = M·k + N",
+  "regle": "chaque fiche est arrêtée au premier instant où son minimum atteint m/α_c (valeur arrêtée), sinon elle garde sa valeur finale ; puis e-BH à budgets α_c/m : pari_apparie.Course.ajouter_trajectoire puis ebh_pondere, une génération, valeur héritée 1",
+  "hypotheses": "modes indépendants et de même loi (mode 1 = tirage principal de la cellule) ; en (B), les k fiches d'un mode partagent le sujet ; fiches vraies : sujet honnête (biais de la cellule < δ), écart de contraste de la loi ; fiches nulles : écart de contraste 0 et biais 0, sujet propre à chaque fiche nulle, indépendantes des vraies",
+  "alpha_de_reference_des_fiches_nulles": "GD5-02 : e-BH à budgets α_c/m : FDR ≤ α_c·m₀/m, m₀ = fiches nulles, m = taille de la famille ; écrit par cellule (borne_fdr_alpha_c_m0_sur_m) ; (A) m = M + N, (B) m = M·k + N. La quantité comparable est la proportion moyenne de fausses découvertes ; « au moins une nulle retenue » n'est pas la quantité garantie. Forme de nulle essayée : contraste nul sur les k comparateurs, garde vraie (la plus facile pour (A)) ; « un seul comparateur nul » et « garde à la frontière » : non essayées ici",
+  "parts": {
+   "premiere_atteinte_une_fiche": "la fiche 1 (mode 1 ; en B, mode 1, comparateur 1) atteint m/α_c",
+   "premiere_atteinte_fiches_du_sujet": "A : la fiche du mode 1 ; B : les k fiches du mode 1 atteignent m/α_c",
+   "retenue_une_fiche": "la fiche 1 est retenue par l'e-BH",
+   "retenues_fiches_du_sujet": "A : la fiche du mode 1 ; B : les k fiches du mode 1 sont retenues",
+   "retenues_toutes_vraies": "toutes les fiches vraies de la famille sont retenues"
+  },
+  "taille_minimale_ecarts_nuls": {
+   "A|m=2|delta=0.05|seuil=40": 111
+  }
+ },
+ "environnement": {
+  "python": "3.13.18",
+  "numpy": "2.5.3",
+  "duree_s": 58.1
+ }
+}

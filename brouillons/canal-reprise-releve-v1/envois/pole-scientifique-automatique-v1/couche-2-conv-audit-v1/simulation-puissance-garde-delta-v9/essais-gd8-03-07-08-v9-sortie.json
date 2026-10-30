@@ -1,0 +1,206 @@
+{
+ "script": "essais-gd8-03-07-08-v9.py",
+ "script_sha256": "4ea5093b114e7e0cd796ba107bf748d7f3f2211fbef9ee8e6e88e950663129b1",
+ "v9_sha256": "f483a271d364b2900505cc314464ea6cf7101ad4e68e0fb09a579df10661c148",
+ "critere_ecrit_avant_execution": "tous les cas conformes à l'attendu (docstring)",
+ "cas": [
+  {
+   "cas": "GD8-08 sain 1 : neuvième sans fiche nulle",
+   "attendu": "code 0",
+   "conforme": true,
+   "code": 0,
+   "message": "",
+   "fichiers_laisses": [
+    "essai-gd8-08-sain-neuvieme.json",
+    "essai-gd8-08-sain-neuvieme-journal.txt",
+    "manifeste-essai-gd8-08-sain-neuvieme.json"
+   ]
+  },
+  {
+   "cas": "GD8-08 sain 2 : fiche nulle sans neuvième particulier",
+   "attendu": "code 0",
+   "conforme": true,
+   "code": 0,
+   "message": "",
+   "fichiers_laisses": [
+    "essai-gd8-08-sain-nulle.json",
+    "essai-gd8-08-sain-nulle-journal.txt",
+    "manifeste-essai-gd8-08-sain-nulle.json"
+   ]
+  },
+  {
+   "cas": "GD8-08 artefact 1 : commande de GD8",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --fiches-nulles avec --ecart-contraste-neuvieme : fiche nulle d'un neuvième comparateur particulier non définie, refusée (GD8-08)",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-08 artefact 2 : variante nulle tirée à k = 9",
+   "attendu": "Refus de la loi",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : fiche nulle avec un neuvième comparateur particulier (--ecart-contraste-neuvieme) : non définie, refusée (GD8-08)"
+  },
+  {
+   "cas": "GD8-08 sain 3 : variante nulle tirée à k = 8",
+   "attendu": "tirage sans refus",
+   "conforme": true,
+   "code": 0,
+   "message": "tirage fait (neuvième inactif à k = 8)"
+  },
+  {
+   "cas": "GD8-07 sain : F = 2, dispersion combinée",
+   "attendu": "code 0 ; ρ honnête = 2ρ, saboté = ρ ; écarts-types tirés à 10 % (honnêtes) et 5 % (sabotés)",
+   "conforme": true,
+   "code": 0,
+   "message": "",
+   "fichiers_laisses": [
+    "essai-gd8-07-sain-facteur2.json",
+    "essai-gd8-07-sain-facteur2-journal.txt",
+    "manifeste-essai-gd8-07-sain-facteur2.json"
+   ],
+   "detail": {
+    "nom_loi": "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.1_rhoB0.1_beta_rhoHonnetes2.0x_lien_coupe",
+    "rho_decomposition": {
+     "honnetes_fA": 0.19999999999999998,
+     "sabotes_rA": 0.1,
+     "comparateurs_honnetes_fB": 0.2,
+     "comparateurs_sabotes_rB": 0.1
+    },
+    "ecarts_types_tires_contre_attendus": {
+     "ecart_type_pA_honnetes": [
+      0.04498395912858443,
+      0.044497190922573975,
+      0.010939301918124311
+     ],
+     "ecart_type_pB_honnetes": [
+      0.045099339673840624,
+      0.044497190922573975,
+      0.013532286842879548
+     ],
+     "ecart_type_pA_sabotes": [
+      0.15769295094657382,
+      0.15811388300841897,
+      -0.0026622081112430696
+     ],
+     "ecart_type_pB_sabotes": [
+      0.1551946436014465,
+      0.15491933384829668,
+      0.0017771168149962602
+     ]
+    }
+   }
+  },
+  {
+   "cas": "GD8-07 artefact : sans-combine",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --facteur-rho-honnetes sans objet : il demande --combiner-dispersion-a-et-comparateurs avec --effet-unite-beta et --rho-comparateurs (v9)",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-07 artefact : copule",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --facteur-rho-honnetes avec la copule, les strates, le neuvième comparateur, --lien-coupe ou des fichiers réels : non traité (v9)",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-07 artefact : neuvieme",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --facteur-rho-honnetes avec la copule, les strates, le neuvième comparateur, --lien-coupe ou des fichiers réels : non traité (v9)",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-07 artefact : f-rho-sup-1",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --facteur-rho-honnetes : F·ρ_A et F·ρ_B doivent rester < 1",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-07 artefact : f-zero",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --facteur-rho-honnetes : F dans ]0 ; 10]",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-07 artefact : f-nan",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --facteur-rho-honnetes : nombre mal formé 'nan' (chiffres ASCII, point décimal, exposant facultatif ; ni souligné, ni inf, ni nan, ni virgule décimale : GD4-03)",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-03 sain : portée partielle f = 0,5",
+   "attendu": "code 0 ; γ_B = 0,2 ; espérances de strate ; écart-type tiré à 5 %",
+   "conforme": true,
+   "code": 0,
+   "message": "",
+   "fichiers_laisses": [
+    "essai-gd8-03-sain-partielle.json",
+    "essai-gd8-03-sain-partielle-journal.txt",
+    "manifeste-essai-gd8-03-sain-partielle.json"
+   ],
+   "detail": {
+    "nom_loi": "binomiale_Kh5_Ks10_taux0.01_betaA_rho0.17_rhoB0.17_beta_strates3g0.4partielle0.5_calibre_bloc_lien_coupe",
+    "gamma_B": 0.2,
+    "esperances_de_strate_B_sabotes": [
+     0.32000000000000006,
+     0.4,
+     0.48
+    ],
+    "ecart_type_pB_sabotes": [
+     0.20160017280956843,
+     0.20199009876724155,
+     -0.0019304211446643516
+    ]
+   }
+  },
+  {
+   "cas": "GD8-03 artefact : partielle-sans-fraction",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --fraction-strates-comparateurs : exigée avec --portee-strates partielle, sans objet sinon (v9)",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-03 artefact : fraction-avec-commune",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --fraction-strates-comparateurs : exigée avec --portee-strates partielle, sans objet sinon (v9)",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-03 artefact : fraction-1",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --fraction-strates-comparateurs : f dans ]0 ; 1[ (v9)",
+   "fichiers_laisses": []
+  },
+  {
+   "cas": "GD8-03 artefact : fraction-0",
+   "attendu": "refus nommé, aucun fichier",
+   "conforme": true,
+   "code": 1,
+   "message": "refus : --fraction-strates-comparateurs : f dans ]0 ; 1[ (v9)",
+   "fichiers_laisses": []
+  }
+ ],
+ "conformes": 17,
+ "total": 17,
+ "conforme": true
+}
