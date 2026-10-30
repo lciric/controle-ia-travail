@@ -24,9 +24,9 @@ Oui, on peut entraîner un modèle, mais la question cache trois problèmes que 
 
 - **Corpus bibliographiques complets, pas des agrégats** : OpenAlex (copie intégrale, gratuite : concepts, auteurs, affiliations, citations, dates) ; Semantic Scholar Open Research Corpus ; arXiv (sources LaTeX, utiles pour extraire les objets mathématiques) ; PubMed avec descripteurs MeSH (vocabulaire contrôlé, partition tierce) ; Microsoft Academic Graph gelé en 2021 (comparabilité) ; zbMATH et sa classification MSC ; PatentsView pour les brevets comme second corpus de réplication.
 - **Jeux publics déjà coupés dans le temps** : données du concours Science4Cast (réseau sémantique de l'intelligence artificielle, dizaines de milliers de concepts, SUPPOSÉ pour le nombre) ; données publiées avec Gu et Krenn 2024.
-- **Traces de chapelles au-delà du texte** : affiliations, comités éditoriaux, programmes de conférences, cocitations, codirections de thèses, listes de diffusion et dépôts de code (Papers With Code, GitHub) : ce sont les « canaux de communication » de la question 2, observés et non inférés.
-- **Vérités terrain indépendantes sur les ponts** : indices de disruption calculés par d'autres ; listes de découvertes datées codées par des historiens ; prix ; bases de « premières citations croisées » entre revues.
-- **Séries temporelles brutes** (mois par mois) de densité, de degré, de co-occurrences par paire de chapelles, nécessaires pour toute recherche de transition ; jamais des moyennes annuelles déjà lissées.
+- **Traces de chapelles au-delà du texte** : affiliations, comités éditoriaux, programmes de conférences, cocitations, codirections de thèses, dépôts de code : les « canaux de communication » de la question 2, observés et non inférés.
+- **Vérités terrain indépendantes sur les ponts** : indices de disruption calculés par d'autres ; découvertes datées codées par des historiens ; prix ; premières citations croisées entre revues.
+- **Séries temporelles brutes** (mois par mois) de densité, de degré, de co-occurrences par paire de chapelles ; jamais des moyennes annuelles déjà lissées.
 
 ## (3) Méthodes et outils spécifiques
 
