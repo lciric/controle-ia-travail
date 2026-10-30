@@ -1,0 +1,22 @@
+# Lecture de la réponse d'Argon avec recherche sur la bisociation — v1
+
+conv-audit (Fable 5.1), 30 octobre 2026, 23:20 UTC. Pièce lue : `docs/notes/ideation-organisme-v1/argon-recherche-v1/reponse-bisociation-v1/reponse-argon-recherche-v1.md` (main `b1a21a07`, R-856 : 4 359 mots, 4 requêtes Google, 0,61 USD). Réponse à la question fusionnée A–G (`question-fusionnee-argon-collisionneur-v1.md`). Cette lecture n'entre dans aucun préenregistrement ; elle sert au collisionneur (déjà dans son lot de faits, R-856) et à la révision v2 de mes réponses.
+
+## Ce qu'Argon apporte que mes réponses et les relectures Fable n'avaient pas
+
+1. **Bettencourt et l'« allumage » (section G)** : ma relecture Fable de la réponse 3 (R-616) disait « Bettencourt allumage » introuvable. Argon identifie la famille : Bettencourt, Cintrón-Arias, Kaiser, Castillo-Chávez 2006 (Physica A, contagion d'idées, seuil R0 > 1) ; Bettencourt, Kaiser, Kaur, Castillo-Chávez, Wojick 2008 (Scientometrics 75(3) 495–518) ; Bettencourt, Kaiser, Kaur 2009 (Journal of Informetrics 3(3) 210–221, « topological transitions in collaboration networks ») ; Bettencourt et Kaiser 2015 (arXiv 1504.00319, « Formation of Scientific Fields as a Universal Topological Transition »). **Existence vérifiée d'ici** (listing arXiv 1504.00319, notice IDEAS de l'article de 2009 et de celui de 2008, copie ouverte MIT DSpace 1721.1/50230 pour 2009) ; **contenu SUPPOSÉ** tant que les PDF ne sont pas empreintés et lus page citée (R7). Le mot « ignition » selon Argon vient d'un autre travail de Bettencourt (réseaux de neurones en culture, Ham et al. 2007) : l'« allumage d'un champ » est une métaphore de Lazar, pas un terme de ces papiers — à vérifier sur PDF.
+   - Portée pour la question 7 : deux formalisations candidates d'un « allumage » d'un champ, (a) seuil épidémiologique R0 > 1 (avec bistabilité possible), (b) condensation d'une composante géante dans le graphe de co-auteurs. Elles s'ajoutent à la piste des ensembles autocatalytiques (RAF) de ma question 7 ; elles sont **mesurables sur nos fiches** (graphe fiche → fusion → fiche) sans attendre la génération 2.
+2. **Section A** : trois couches à séparer (réseau social de citations, réseau épistémique d'objets, réseau formel des équations) ; la « structure commune » du bras méta devient mesurable par une distance sur les arbres syntaxiques des équations après anonymisation des variables — proposition concrète, non testée, coûteuse. La vérification hors programme proposée (prédire à t0 des traductions interdomaines avérées à t0 + Δt, à distance sociale égale) est le même banc que mes antériorités (Gu-Krenn, Sourati-Evans) mais sur les paires de **niches**, pas de concepts : c'est une différence utile.
+3. **Signes attribués aux antériorités** (Fleming 2001 : contre l'éloignement pour la moyenne, pour la variance ; Guimerà et al. 2005 : cloche sur les contacts antérieurs ; Shi et Evans 2023 : pour la distance contenu / contexte ; Derex et Boyd 2016 : pour l'isolement partiel) : cohérents avec ma revue de fertilité ; Shi et Evans 2023 et Guimerà 2005 n'y étaient pas — à ajouter à la liste des antériorités à vérifier.
+4. Références non vérifiées et à traiter avec réserve : « Bastounis et al. 2026 » (preprint sur la preuve Navier-Stokes d'OpenAI, cité via un communiqué KCL du 27 octobre 2026 : SUPPOSÉ) ; Gu et Krenn cité sous deux identifiants arXiv (2402.08640 et 2405.17044) qui sont deux papiers différents ; Catalini 2018 marqué SUPPOSÉ par Argon lui-même.
+
+## Ce que je conteste ou nuance
+
+- Argon ne chiffre pas plus que moi un **critère de mort** du bisociateur (reproche fait à toutes mes réponses) ; sa « vérification hors programme » est un banc de prédiction, pas un seuil.
+- La proposition d'un modèle à blocs stochastiques sur un multiplexe est au-dessus des moyens de la course 2 (génération 1) ; elle décrit l'organisme cible, pas le bras méta v1 à paramètres fixés à la main (R-638).
+
+## Suites proposées (routine, sauf dépense)
+
+- Demander à session-depot le versement des PDF ouverts : arXiv 1504.00319 ; Bettencourt, Kaiser, Kaur 2009 (copie MIT DSpace) ; vérification page citée avant toute mention dans un préenregistrement.
+- Révision v2 de la réponse 3 et de la réponse 7 : corriger « introuvable » ; ajouter Shi et Evans 2023, Guimerà et al. 2005 à `revue-biblio-fertilite-v1.md` (en v2).
+- Bras méta v1 : noter la grandeur « composante géante du graphe fiche → fusion → fiche » comme journalisation candidate dès la génération 1 (pas un paramètre).
