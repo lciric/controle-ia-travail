@@ -1,15 +1,15 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-31 ≈ 13:05 UTC, lignée « session-depot », instance 2 (R-819 à R-919). **Passation : `registres/passations/2026-10-31-1020.md` (à lire en premier ; la prochaine passation sera écrite avant la fin de l'autonomie vers 00:15 UTC le 1er novembre).**
+Dernière mise à jour : 2026-10-31 ≈ 13:16 UTC, lignée « session-depot », instance 2 (R-819 à R-921). **Passation : `registres/passations/2026-10-31-1316.md` (intermédiaire, à lire en premier ; reprise exacte décrite) ; passation de fin avant ≈ 00:15 UTC le 1er novembre.** Sauvegarde des données hors `main` : branche `donnees/sauvegarde-autonomie-2026-10-31-v1`.
 
-**Autonomie de 12 heures** (R-905, 12:17 → ≈ 00:15 UTC 1er novembre). Quatre processus actifs depuis 13:01 UTC (scripts v3 sur le gabarit éprouvé, contrôle préalable, R-919) :
+**Autonomie de 12 heures** (R-905, 12:17 → ≈ 00:15 UTC 1er novembre) ; surveillance du canal de conv-audit pendant toute la durée (consigne de Lazar, 13:07 UTC). Dernier message lu : conv-audit n° 299.
 
-1. **Collisionneur des nœuds tour 1** (GO-06, plafond du run 22 USD, relais Kimi PID 25364 port 8793) : tour 1 A, B, C valides (6,36 USD), Kimi D en essai 2, puis tours 2 et 3.
-2. **Collisionneur D-ML-1 reprise** (GO-07, plafond 12 USD, relais Kimi PID 25366 port 8794) : tour 1 B/C/D et tour 2 B/C valides (2,53 USD), Kimi D tour 2 en essai 2, puis tour 3. Fable absent (R-831).
-3. **Collisionneur protocelles tour 2** (GO-05, plafond 31 USD, relais Kimi PID 25360 port 8792) : tour 1 B, C valides (2,04 USD), Kimi D en essai 2, puis tours 2 et 3. Fable absent (refus « bio », R-831). Faits = synthèse du tour 1 seule.
-4. **Argon seul question C** (GO-08, relais Gemini PID 25347 port 8788) : bisociation, arène, reste.
+1. **Collisionneur D-ML-1 reprise** (GO-07, plafond 12 USD, relais Kimi PID 25366 port 8794) : **actif**, tour 3 ; 2,71 USD. Fable absent (R-831).
+2. **Collisionneur des nœuds** (GO-06) : run v10 **arrêté** 13:06 (n° 293) ; à relancer en run neuf sur la v12 (liste A v6, annexe v5) ; reste ≈ 37,7 / 45.
+3. **Collisionneur protocelles tour 2** (GO-05) : **arrêté** 13:12 (n° 299, erreur de ma synthèse du tour 1) ; synthèse v2 puis run neuf, plafond ≤ 29.
+4. **Argon seul** (GO-08) : A, B, C terminées (1,05 + 0,61 + 0,54) ; cumul 4,20 / 25 ; à lire et synthétiser.
 
-Argon seul : question A terminée (1,05 USD, `d3c6a085…`), question B terminée (0,61 USD, `8e0ce80c…`) ; cumul GO-08 : 3,62/25.
+**R-920 (décision de Lazar)** : récompense collective d'Avalon pour l'organisme, « (a) puis (c) » — lectures vérifiées et note de proposition de conv-audit d'abord, puis bras de l'étape 2 avec signalement aux humains mesuré.
 
 Décisions de Lazar ce matin (R-888 à R-893, R-899, R-905, R-907, R-908, R-915, R-916, R-917) : R-611 levée ; examen final et malléabilité hors gel et approuvés ; GO-05 (210 USD) ; GO-06 (45 USD nœuds) ; GO-07 (12 USD D-ML-1) ; GO-08 (25 USD Argon seul) ; R-912 « oui » (protocole paramétré, route à choisir) ; tour 2 protocelles « go » ; bras canal social « go » ; captures ASIS&T acceptées (R7).
 
