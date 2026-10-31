@@ -1,0 +1,234 @@
+# Calcul de puissance — arène mélange d'équilibre — v2 (RACINE_ESSAI v2 seulement)
+fichier : brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/essai-pilote-arene-melange-v2-detection.json
+racine = 20261293 ; racine des tenues = 20261294 ; configuration 1d7544e652ee6ab782577c5731127c7338844ef3d39844d86842688ddb2031a3
+code : 8e1e651b4be3e6fea6bf6bdf0fc00a19d479aa818323461fbf550582dfdb46bb ; commit c187a609a39a2e9578416bb117f1df003fb822c8 ; numpy 2.5.3 ; scipy 1.18.1
+tâches lues : 48 (24 instances × 2 δ = (1.4, 1.8)) ; graine de simulation SeedSequence(20261293, spawn_key=(0, 0, 0, 0, 77))
+
+## 1. Moyennes par bras (pilote détection)
+δ1 = 1.4, n = 24
+  A  : (iii) 0.0764 [min 0.0034 ; max 0.2468] ; (ii) 0.4400 ; (i) 0.2800 ; fausses alertes moyenne 0.0103 [0.0083 ; 0.0121]
+  B  : (iii) 0.2109 [min 0.1681 ; max 0.2743] ; (ii) 0.3788 ; (i) 0.2495 ; fausses alertes moyenne 0.0100 [0.0092 ; 0.0111]
+  C1 : (iii) 0.1863 [min 0.1281 ; max 0.2501] ; (ii) 0.4138 ; (i) 0.2472 ; fausses alertes moyenne 0.0099 [0.0091 ; 0.0109]
+  C2 : (iii) 0.1752 [min 0.1077 ; max 0.2515] ; (ii) 0.4115 ; (i) 0.2459 ; fausses alertes moyenne 0.0099 [0.0089 ; 0.0111]
+  C3 : (iii) 0.4041 [min 0.2988 ; max 0.4549] ; (ii) 0.8216 ; (i) 0.5138 ; fausses alertes moyenne 0.0098 [0.0083 ; 0.0113]
+  D  : (iii) 0.4463 [min 0.4033 ; max 0.4773] ; (ii) 0.8388 ; (i) 0.5051 ; fausses alertes moyenne 0.0100 [0.0082 ; 0.0118]
+δ2 = 1.8, n = 24
+  A  : (iii) 0.0154 [min 0.0004 ; max 0.0839] ; (ii) 0.4270 ; (i) 0.2566 ; fausses alertes moyenne 0.0103 [0.0083 ; 0.0119]
+  B  : (iii) 0.1430 [min 0.1072 ; max 0.1778] ; (ii) 0.3576 ; (i) 0.1968 ; fausses alertes moyenne 0.0101 [0.0091 ; 0.0108]
+  C1 : (iii) 0.1246 [min 0.0881 ; max 0.1662] ; (ii) 0.3895 ; (i) 0.1955 ; fausses alertes moyenne 0.0100 [0.0093 ; 0.0108]
+  C2 : (iii) 0.1064 [min 0.0638 ; max 0.1633] ; (ii) 0.3901 ; (i) 0.1960 ; fausses alertes moyenne 0.0100 [0.0091 ; 0.0109]
+  C3 : (iii) 0.2237 [min 0.1887 ; max 0.2669] ; (ii) 0.8112 ; (i) 0.4074 ; fausses alertes moyenne 0.0098 [0.0083 ; 0.0131]
+  D  : (iii) 0.2549 [min 0.2068 ; max 0.2893] ; (ii) 0.8174 ; (i) 0.3368 ; fausses alertes moyenne 0.0101 [0.0080 ; 0.0123]
+
+## 2. Contrastes appariés (pilote ; rééchantillonnage 20 000 du fichier)
+   IC95 = [q0.025 ; q0.975] ; B2 = Bonferroni 2 δ [q0.00625 ; q0.99375] ; B8 = Bonferroni 8 tests [q0.003125 ; q0.996875]
+  δ1 B-A (i)      moyenne -0.0305 ; é.-t. 0.0212 ; IC95 [-0.0384 ; -0.0217] ; B2 [-0.0403 ; -0.0189] ; B8 [-0.0411 ; -0.0176] ; zéros exacts 0
+  δ1 B-A (ii)     moyenne -0.0612 ; é.-t. 0.0720 ; IC95 [-0.0880 ; -0.0320] ; B2 [-0.0944 ; -0.0233] ; B8 [-0.0968 ; -0.0183] ; zéros exacts 0
+  δ1 B-A (iii)    moyenne +0.1345 ; é.-t. 0.0485 ; IC95 [+0.1150 ; +0.1524] ; B2 [+0.1088 ; +0.1572] ; B8 [+0.1065 ; +0.1589] ; zéros exacts 0
+  δ1 B-C1 (iii)   moyenne +0.0246 ; é.-t. 0.0239 ; IC95 [+0.0159 ; +0.0345] ; B2 [+0.0138 ; +0.0373] ; B8 [+0.0130 ; +0.0385] ; zéros exacts 0
+  δ1 B-C2 (iii)   moyenne +0.0357 ; é.-t. 0.0260 ; IC95 [+0.0259 ; +0.0463] ; B2 [+0.0235 ; +0.0494] ; B8 [+0.0225 ; +0.0507] ; zéros exacts 0
+  δ1 B-C3 (ii)    moyenne -0.4428 ; é.-t. 0.0820 ; IC95 [-0.4737 ; -0.4094] ; B2 [-0.4811 ; -0.3991] ; B8 [-0.4847 ; -0.3944] ; zéros exacts 0
+  δ1 B-C3 (iii)   moyenne -0.1932 ; é.-t. 0.0464 ; IC95 [-0.2104 ; -0.1742] ; B2 [-0.2148 ; -0.1687] ; B8 [-0.2169 ; -0.1659] ; zéros exacts 0
+  δ1 B-D (ii)     moyenne -0.4600 ; é.-t. 0.0681 ; IC95 [-0.4856 ; -0.4321] ; B2 [-0.4921 ; -0.4228] ; B8 [-0.4942 ; -0.4197] ; zéros exacts 0
+  δ1 B-D (iii)    moyenne -0.2354 ; é.-t. 0.0204 ; IC95 [-0.2434 ; -0.2275] ; B2 [-0.2454 ; -0.2253] ; B8 [-0.2463 ; -0.2243] ; zéros exacts 0
+  δ1 C1-C2 (iii)  moyenne +0.0111 ; é.-t. 0.0232 ; IC95 [+0.0018 ; +0.0200] ; B2 [-0.0010 ; +0.0223] ; B8 [-0.0020 ; +0.0233] ; zéros exacts 0
+  δ1 C3-A (iii)   moyenne +0.3277 ; é.-t. 0.0807 ; IC95 [+0.2943 ; +0.3569] ; B2 [+0.2847 ; +0.3636] ; B8 [+0.2790 ; +0.3665] ; zéros exacts 0
+  δ1 D-A (iii)    moyenne +0.3699 ; é.-t. 0.0576 ; IC95 [+0.3459 ; +0.3910] ; B2 [+0.3386 ; +0.3960] ; B8 [+0.3357 ; +0.3981] ; zéros exacts 0
+  δ2 B-A (i)      moyenne -0.0598 ; é.-t. 0.0206 ; IC95 [-0.0678 ; -0.0517] ; B2 [-0.0697 ; -0.0494] ; B8 [-0.0707 ; -0.0484] ; zéros exacts 0
+  δ2 B-A (ii)     moyenne -0.0694 ; é.-t. 0.0641 ; IC95 [-0.0937 ; -0.0439] ; B2 [-0.1000 ; -0.0367] ; B8 [-0.1027 ; -0.0336] ; zéros exacts 0
+  δ2 B-A (iii)    moyenne +0.1276 ; é.-t. 0.0139 ; IC95 [+0.1217 ; +0.1327] ; B2 [+0.1201 ; +0.1340] ; B8 [+0.1193 ; +0.1345] ; zéros exacts 0
+  δ2 B-C1 (iii)   moyenne +0.0184 ; é.-t. 0.0197 ; IC95 [+0.0106 ; +0.0263] ; B2 [+0.0087 ; +0.0285] ; B8 [+0.0077 ; +0.0293] ; zéros exacts 0
+  δ2 B-C2 (iii)   moyenne +0.0367 ; é.-t. 0.0272 ; IC95 [+0.0262 ; +0.0473] ; B2 [+0.0234 ; +0.0502] ; B8 [+0.0220 ; +0.0517] ; zéros exacts 0
+  δ2 B-C3 (ii)    moyenne -0.4536 ; é.-t. 0.0474 ; IC95 [-0.4715 ; -0.4342] ; B2 [-0.4758 ; -0.4290] ; B8 [-0.4776 ; -0.4267] ; zéros exacts 0
+  δ2 B-C3 (iii)   moyenne -0.0807 ; é.-t. 0.0173 ; IC95 [-0.0874 ; -0.0739] ; B2 [-0.0893 ; -0.0721] ; B8 [-0.0901 ; -0.0713] ; zéros exacts 0
+  δ2 B-D (ii)     moyenne -0.4599 ; é.-t. 0.0470 ; IC95 [-0.4777 ; -0.4407] ; B2 [-0.4816 ; -0.4355] ; B8 [-0.4837 ; -0.4330] ; zéros exacts 0
+  δ2 B-D (iii)    moyenne -0.1118 ; é.-t. 0.0175 ; IC95 [-0.1186 ; -0.1050] ; B2 [-0.1203 ; -0.1028] ; B8 [-0.1210 ; -0.1020] ; zéros exacts 0
+  δ2 C1-C2 (iii)  moyenne +0.0183 ; é.-t. 0.0247 ; IC95 [+0.0086 ; +0.0279] ; B2 [+0.0062 ; +0.0307] ; B8 [+0.0052 ; +0.0322] ; zéros exacts 0
+  δ2 C3-A (iii)   moyenne +0.2083 ; é.-t. 0.0235 ; IC95 [+0.1991 ; +0.2173] ; B2 [+0.1969 ; +0.2201] ; B8 [+0.1953 ; +0.2212] ; zéros exacts 0
+  δ2 D-A (iii)    moyenne +0.2394 ; é.-t. 0.0199 ; IC95 [+0.2312 ; +0.2470] ; B2 [+0.2291 ; +0.2490] ; B8 [+0.2278 ; +0.2500] ; zéros exacts 0
+
+## 3. Plomberie B − A sur (iii) : règle « moyenne ≥ S1 et borne basse B2 > 0 », lue PAR δ (CM-05)
+instances appariées 24 ; écart-type δ1 0.0485, δ2 0.0139 ; corrélation entre δ +0.487
+### S1 = 0.00
+  N =  40 : e=0 δ1 0.011 δ2 0.014 ; e=S1 δ1 0.011 δ2 0.015 ; e=0,03 δ1 0.897 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  N =  60 : e=0 δ1 0.011 δ2 0.016 ; e=S1 δ1 0.010 δ2 0.013 ; e=0,03 δ1 0.980 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  N =  80 : e=0 δ1 0.012 δ2 0.015 ; e=S1 δ1 0.008 δ2 0.011 ; e=0,03 δ1 0.996 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  N = 100 : e=0 δ1 0.008 δ2 0.010 ; e=S1 δ1 0.006 δ2 0.014 ; e=0,03 δ1 1.000 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  N = 150 : e=0 δ1 0.008 δ2 0.009 ; e=S1 δ1 0.010 δ2 0.014 ; e=0,03 δ1 1.000 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+### S1 = 0.02
+  N =  40 : e=0 δ1 0.004 δ2 0.000 ; e=S1 δ1 0.484 δ2 0.507 ; e=0,03 δ1 0.868 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  N =  60 : e=0 δ1 0.001 δ2 0.000 ; e=S1 δ1 0.519 δ2 0.527 ; e=0,03 δ1 0.944 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  N =  80 : e=0 δ1 0.000 δ2 0.000 ; e=S1 δ1 0.506 δ2 0.503 ; e=0,03 δ1 0.972 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  N = 100 : e=0 δ1 0.000 δ2 0.000 ; e=S1 δ1 0.491 δ2 0.501 ; e=0,03 δ1 0.977 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  N = 150 : e=0 δ1 0.000 δ2 0.000 ; e=S1 δ1 0.501 δ2 0.506 ; e=0,03 δ1 0.993 δ2 1.000 ; e=pilote δ1 1.000 δ2 1.000
+  Lecture : « e=0 » est la taille par δ sous l'hypothèse nulle d'absence d'effet ; « e=S1 » la taille sous l'hypothèse nulle « effet = S1 » (règle de pertinence et de significativité, pas un test de « effet ≥ S1 ») ; la règle « aux deux δ » a pour taille celle du δ le plus défavorable (intersection-union).
+
+## 4. Marges des contrastes principaux : m(δ) = max(ρ × moyenne pilote de B − A à δ ; S1/2 = 0.01)
+  ρ = 0.10 : m(δ1 = 1.4) = 0.0135 ; m(δ2 = 1.8) = 0.0128
+  ρ = 0.25 : m(δ1 = 1.4) = 0.0336 ; m(δ2 = 1.8) = 0.0319
+  ρ = 0.50 : m(δ1 = 1.4) = 0.0673 ; m(δ2 = 1.8) = 0.0638
+
+## 5. Contrastes principaux (Table 3) : probabilité de chaque classe, pilote pris pour vérité
+   classes : B>X (borne basse B8 > m) ; X>B (borne haute B8 < −m) ; ≈ (intervalle d'équivalence Bonferroni 8 ⊂ ]−m ; m[) ; B≳X ; X≳B ; ?
+### N = 60, ρ = 0.10
+  B-C1 (iii)  δ1 (pilote +0.0246) B>X 0.863 B≳X 0.137 | δ2 (pilote +0.0184) B>X 0.279 B≳X 0.721
+  B-C2 (iii)  δ1 (pilote +0.0357) B>X 1.000 | δ2 (pilote +0.0367) B>X 1.000
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### N = 60, ρ = 0.25
+  B-C1 (iii)  δ1 (pilote +0.0246) ≈ 0.652 B≳X 0.348 | δ2 (pilote +0.0184) ≈ 0.997 B≳X 0.003
+  B-C2 (iii)  δ1 (pilote +0.0357) B>X 0.009 ≈ 0.003 B≳X 0.988 | δ2 (pilote +0.0367) B>X 0.075 B≳X 0.925
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### N = 60, ρ = 0.50
+  B-C1 (iii)  δ1 (pilote +0.0246) ≈ 1.000 | δ2 (pilote +0.0184) ≈ 1.000
+  B-C2 (iii)  δ1 (pilote +0.0357) ≈ 1.000 | δ2 (pilote +0.0367) ≈ 1.000
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### N = 100, ρ = 0.10
+  B-C1 (iii)  δ1 (pilote +0.0246) B>X 0.993 B≳X 0.007 | δ2 (pilote +0.0184) B>X 0.550 B≳X 0.450
+  B-C2 (iii)  δ1 (pilote +0.0357) B>X 1.000 | δ2 (pilote +0.0367) B>X 1.000
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### N = 100, ρ = 0.25
+  B-C1 (iii)  δ1 (pilote +0.0246) ≈ 0.882 B≳X 0.118 | δ2 (pilote +0.0184) ≈ 1.000
+  B-C2 (iii)  δ1 (pilote +0.0357) B>X 0.016 ≈ 0.001 B≳X 0.983 | δ2 (pilote +0.0367) B>X 0.158 B≳X 0.842
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### N = 100, ρ = 0.50
+  B-C1 (iii)  δ1 (pilote +0.0246) ≈ 1.000 | δ2 (pilote +0.0184) ≈ 1.000
+  B-C2 (iii)  δ1 (pilote +0.0357) ≈ 1.000 | δ2 (pilote +0.0367) ≈ 1.000
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### N = 150, ρ = 0.10
+  B-C1 (iii)  δ1 (pilote +0.0246) B>X 1.000 | δ2 (pilote +0.0184) B>X 0.797 B≳X 0.203
+  B-C2 (iii)  δ1 (pilote +0.0357) B>X 1.000 | δ2 (pilote +0.0367) B>X 1.000
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### N = 150, ρ = 0.25
+  B-C1 (iii)  δ1 (pilote +0.0246) ≈ 0.970 B≳X 0.030 | δ2 (pilote +0.0184) ≈ 1.000
+  B-C2 (iii)  δ1 (pilote +0.0357) B>X 0.030 ≈ 0.000 B≳X 0.970 | δ2 (pilote +0.0367) B>X 0.292 B≳X 0.708
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### N = 150, ρ = 0.50
+  B-C1 (iii)  δ1 (pilote +0.0246) ≈ 1.000 | δ2 (pilote +0.0184) ≈ 1.000
+  B-C2 (iii)  δ1 (pilote +0.0357) ≈ 1.000 | δ2 (pilote +0.0367) ≈ 1.000
+  B-C3 (iii)  δ1 (pilote -0.1932) X>B 1.000 | δ2 (pilote -0.0807) X>B 1.000
+  B-D (iii)   δ1 (pilote -0.2354) X>B 1.000 | δ2 (pilote -0.1118) X>B 1.000
+### Taille de chaque classe à la frontière (écarts centrés puis décalés), N = 100, ρ = 0,25
+  B-C1 (iii)  δ1 : P(B>X | Δ=+m) 0.002 ; P(X>B | Δ=−m) 0.007 ; P(≈ | Δ=+m) 0.013 ; P(≈ | Δ=0) 1.000 | δ2 : P(B>X | Δ=+m) 0.002 ; P(X>B | Δ=−m) 0.005 ; P(≈ | Δ=+m) 0.009 ; P(≈ | Δ=0) 1.000
+  B-C2 (iii)  δ1 : P(B>X | Δ=+m) 0.003 ; P(X>B | Δ=−m) 0.006 ; P(≈ | Δ=+m) 0.009 ; P(≈ | Δ=0) 1.000 | δ2 : P(B>X | Δ=+m) 0.003 ; P(X>B | Δ=−m) 0.002 ; P(≈ | Δ=+m) 0.007 ; P(≈ | Δ=0) 1.000
+  B-C3 (iii)  δ1 : P(B>X | Δ=+m) 0.002 ; P(X>B | Δ=−m) 0.006 ; P(≈ | Δ=+m) 0.009 ; P(≈ | Δ=0) 1.000 | δ2 : P(B>X | Δ=+m) 0.003 ; P(X>B | Δ=−m) 0.003 ; P(≈ | Δ=+m) 0.006 ; P(≈ | Δ=0) 1.000
+  B-D (iii)   δ1 : P(B>X | Δ=+m) 0.002 ; P(X>B | Δ=−m) 0.003 ; P(≈ | Δ=+m) 0.005 ; P(≈ | Δ=0) 1.000 | δ2 : P(B>X | Δ=+m) 0.003 ; P(X>B | Δ=−m) 0.005 ; P(≈ | Δ=+m) 0.009 ; P(≈ | Δ=0) 1.000
+  Lecture : P(B>X | Δ = +m), P(X>B | Δ = −m) et P(≈ | Δ = +m) sont les tailles (erreur de première espèce par test, au plus 0,003 et 0,006 attendus) ; P(≈ | Δ = 0) est la puissance d'équivalence.
+
+## 6. Table 2, non-régression sur (ii), B − A (bornes B2)
+  pilote, sans seuil : δ1 moyenne -0.0612 (é.-t. 0.0720) ; δ2 moyenne -0.0694 (é.-t. 0.0641)
+  S5 = 0.01, pilote   N = 100 : avérée 1.000 ; démontrée sous la tolérance 0.000 ; amélioration 0.000 ; sans régression 0.000 ; non exclue 0.000
+  S5 = 0.01, e=0      N = 100 : avérée 0.000 ; démontrée sous la tolérance 0.000 ; amélioration 0.000 ; sans régression 0.026 ; non exclue 0.973
+  S5 = 0.01, e=−S5/2  N = 100 : avérée 0.002 ; démontrée sous la tolérance 0.000 ; amélioration 0.000 ; sans régression 0.002 ; non exclue 0.997
+  S5 = 0.02, pilote   N = 100 : avérée 1.000 ; démontrée sous la tolérance 0.000 ; amélioration 0.000 ; sans régression 0.000 ; non exclue 0.000
+  S5 = 0.02, e=0      N = 100 : avérée 0.000 ; démontrée sous la tolérance 0.000 ; amélioration 0.000 ; sans régression 0.491 ; non exclue 0.509
+  S5 = 0.02, e=−S5/2  N = 100 : avérée 0.000 ; démontrée sous la tolérance 0.000 ; amélioration 0.000 ; sans régression 0.026 ; non exclue 0.973
+  S5 = 0.05, pilote   N = 100 : avérée 0.731 ; démontrée sous la tolérance 0.000 ; amélioration 0.000 ; sans régression 0.000 ; non exclue 0.269
+  S5 = 0.05, e=0      N = 100 : avérée 0.000 ; démontrée sous la tolérance 0.017 ; amélioration 0.000 ; sans régression 0.983 ; non exclue 0.000
+  S5 = 0.05, e=−S5/2  N = 100 : avérée 0.000 ; démontrée sous la tolérance 0.807 ; amélioration 0.000 ; sans régression 0.028 ; non exclue 0.165
+
+## 7. Lecture simulée des quatre tables (pilote pris pour vérité, N = 100, 1000 répétitions, S1 = S5 = 0,02)
+### ρ = 0.10
+  table1 : mécanisme exercé 1.000
+  table2 : régression avérée au-delà de la tolérance 1.000
+  table4 : HP réfutée 1.000
+  B-C1 (iii) (δ1 / δ2) : B>X / B>X 0.548 ; B>X / B≳X 0.445 ; B≳X / B>X 0.004 ; B≳X / B≳X 0.003
+  B-C2 (iii) (δ1 / δ2) : B>X / B>X 1.000
+  B-C3 (iii) (δ1 / δ2) : X>B / X>B 1.000
+  B-D (iii) (δ1 / δ2) : X>B / X>B 1.000
+### ρ = 0.25
+  table1 : mécanisme exercé 1.000
+  table2 : régression avérée au-delà de la tolérance 1.000
+  table4 : HP réfutée 1.000
+  B-C1 (iii) (δ1 / δ2) : ≈ / ≈ 0.879 ; B≳X / ≈ 0.121
+  B-C2 (iii) (δ1 / δ2) : B≳X / B≳X 0.821 ; B≳X / B>X 0.165 ; B>X / B≳X 0.013 ; ≈ / B>X 0.001
+  B-C3 (iii) (δ1 / δ2) : X>B / X>B 1.000
+  B-D (iii) (δ1 / δ2) : X>B / X>B 1.000
+### ρ = 0.50
+  table1 : mécanisme exercé 1.000
+  table2 : régression avérée au-delà de la tolérance 1.000
+  table4 : HP réfutée 1.000
+  B-C1 (iii) (δ1 / δ2) : ≈ / ≈ 1.000
+  B-C2 (iii) (δ1 / δ2) : ≈ / ≈ 1.000
+  B-C3 (iii) (δ1 / δ2) : X>B / X>B 1.000
+  B-D (iii) (δ1 / δ2) : X>B / X>B 1.000
+
+## 8. Temps processeur mesuré (`time.process_time`, un fil par processus)
+  par tâche (6 bras) : moyenne 30.00 s ; médiane 29.64 s ; maximum 35.68 s
+  δ1 : moyenne 28.32 s ; maximum 32.36 s
+  δ2 : moyenne 31.68 s ; maximum 35.68 s
+  bras A  : trajectoire 0.57 s ; phase finale (attaques finales, tenues, courbe, coût) 1.06 s
+  bras B  : trajectoire 1.06 s ; phase finale (attaques finales, tenues, courbe, coût) 2.96 s
+  bras C1 : trajectoire 0.00 s ; phase finale (attaques finales, tenues, courbe, coût) 4.84 s
+  bras C2 : trajectoire 0.00 s ; phase finale (attaques finales, tenues, courbe, coût) 4.93 s
+  bras C3 : trajectoire 0.00 s ; phase finale (attaques finales, tenues, courbe, coût) 4.32 s
+  bras D  : trajectoire 4.56 s ; phase finale (attaques finales, tenues, courbe, coût) 5.64 s
+  pilote : mur 750.3 s sur 2 processus ; somme des temps processeur 1440.0 s ; efficacité 0.96
+  N =  40 × 2 δ : processeur projeté 40.0 min ; mur projeté sur 2 cœurs 20.8 min
+  N =  60 × 2 δ : processeur projeté 60.0 min ; mur projeté sur 2 cœurs 31.3 min
+  N =  80 × 2 δ : processeur projeté 80.0 min ; mur projeté sur 2 cœurs 41.7 min
+  N = 100 × 2 δ : processeur projeté 100.0 min ; mur projeté sur 2 cœurs 52.1 min
+  N = 150 × 2 δ : processeur projeté 150.0 min ; mur projeté sur 2 cœurs 78.2 min
+  N maximal sous 1.25 h de mur sur 2 cœurs, au temps moyen par tâche : 143 ; au temps maximal : 121
+  N maximal sous 2.0 h de mur sur 2 cœurs, au temps moyen par tâche : 230 ; au temps maximal : 193
+
+## 9. Plomberie et déclencheurs d'audit observés (pilote détection)
+  entraînements non convergés : 0/1248 ; maximum par tâche 0
+  δ1 attaquant : départs 25290 ; non finis 0 ; statuts SLSQP {'0': 25290} ; itérations max 83 ; réponses à la limite d'itérations 0
+  δ1 écart de fausses alertes entre bras (par tâche) : moyen 0.0014 ; max 0.0025 ; écart à α de la moyenne par bras : A +0.0003 ; B +0.0000 ; C1 -0.0001 ; C2 -0.0001 ; C3 -0.0002 ; D -0.0000
+  δ1 B : poids purs 0.00 ; égaux à l'uniforme 0.00 ; support moyen 3.83 ; valeur du jeu restreint − V(B) +0.0153 ; B = C1 au bit 0 tâches ; D = A au bit 0 tâches
+  δ1 contrôle de l'optimiseur (V standard − V renforcé ; positif = le renforcé trouve mieux) : A +0.0007 (max +0.0052) ; B +0.0007 (max +0.0048) ; C1 -0.0002 (max +0.0033) ; C2 +0.0003 (max +0.0043) ; C3 +0.0015 (max +0.0131) ; D -0.0000 (max +0.0108)
+     B-A (iii) : attaquant standard +0.1344 ; renforcé +0.1344 ; retenu +0.1345
+     B-C1 (iii) : attaquant standard +0.0253 ; renforcé +0.0244 ; retenu +0.0246
+     B-C2 (iii) : attaquant standard +0.0359 ; renforcé +0.0355 ; retenu +0.0357
+     B-C3 (iii) : attaquant standard -0.1950 ; renforcé -0.1943 ; retenu -0.1932
+     B-D (iii) : attaquant standard -0.2371 ; renforcé -0.2378 ; retenu -0.2354
+  δ1 A  coût : défini 1.00 ; censuré parmi définies 0.00 ; médiane des fractions non censurées 0.656 (n = 24) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.472 0.381 0.284 0.180 0.076
+  δ1 B  coût : défini 1.00 ; censuré parmi définies 0.75 ; médiane des fractions non censurées 0.969 (n = 6) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.402 0.363 0.318 0.268 0.211
+  δ1 C1 coût : défini 1.00 ; censuré parmi définies 0.12 ; médiane des fractions non censurées 0.906 (n = 21) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.442 0.385 0.323 0.257 0.186
+  δ1 C2 coût : défini 1.00 ; censuré parmi définies 0.21 ; médiane des fractions non censurées 0.844 (n = 19) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.439 0.381 0.317 0.249 0.175
+  δ1 C3 coût : défini 1.00 ; censuré parmi définies 0.08 ; médiane des fractions non censurées 0.969 (n = 22) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.880 0.789 0.681 0.556 0.404
+  δ1 D  coût : défini 1.00 ; censuré parmi définies 0.46 ; médiane des fractions non censurées 1.000 (n = 13) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.898 0.812 0.710 0.592 0.446
+  δ2 attaquant : départs 26928 ; non finis 0 ; statuts SLSQP {'0': 26928} ; itérations max 77 ; réponses à la limite d'itérations 0
+  δ2 écart de fausses alertes entre bras (par tâche) : moyen 0.0016 ; max 0.0032 ; écart à α de la moyenne par bras : A +0.0003 ; B +0.0001 ; C1 -0.0000 ; C2 +0.0000 ; C3 -0.0002 ; D +0.0001
+  δ2 B : poids purs 0.00 ; égaux à l'uniforme 0.00 ; support moyen 4.00 ; valeur du jeu restreint − V(B) +0.0247 ; B = C1 au bit 0 tâches ; D = A au bit 0 tâches
+  δ2 contrôle de l'optimiseur (V standard − V renforcé ; positif = le renforcé trouve mieux) : A +0.0000 (max +0.0025) ; B +0.0003 (max +0.0048) ; C1 -0.0001 (max +0.0035) ; C2 +0.0001 (max +0.0027) ; C3 +0.0016 (max +0.0066) ; D +0.0002 (max +0.0084)
+     B-A (iii) : attaquant standard +0.1279 ; renforcé +0.1277 ; retenu +0.1276
+     B-C1 (iii) : attaquant standard +0.0184 ; renforcé +0.0180 ; retenu +0.0184
+     B-C2 (iii) : attaquant standard +0.0369 ; renforcé +0.0367 ; retenu +0.0367
+     B-C3 (iii) : attaquant standard -0.0823 ; renforcé -0.0811 ; retenu -0.0807
+     B-D (iii) : attaquant standard -0.1127 ; renforcé -0.1128 ; retenu -0.1118
+  δ2 A  coût : défini 1.00 ; censuré parmi définies 0.00 ; médiane des fractions non censurées 0.531 (n = 24) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.468 0.359 0.232 0.095 0.015
+  δ2 B  coût : défini 1.00 ; censuré parmi définies 0.00 ; médiane des fractions non censurées 0.875 (n = 24) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.385 0.338 0.282 0.219 0.143
+  δ2 C1 coût : défini 1.00 ; censuré parmi définies 0.00 ; médiane des fractions non censurées 0.750 (n = 24) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.423 0.360 0.289 0.209 0.125
+  δ2 C2 coût : défini 1.00 ; censuré parmi définies 0.00 ; médiane des fractions non censurées 0.719 (n = 24) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.424 0.357 0.281 0.194 0.106
+  δ2 C3 coût : défini 1.00 ; censuré parmi définies 0.00 ; médiane des fractions non censurées 0.781 (n = 24) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.889 0.771 0.629 0.450 0.224
+  δ2 D  coût : défini 1.00 ; censuré parmi définies 0.00 ; médiane des fractions non censurées 0.781 (n = 24) ; tâches non monotones 0 ; courbe V(δ') moyenne 0.897 0.782 0.642 0.474 0.255
+  A : nouveauté résiduelle par tour 1.000 0.755 0.397 0.398 0.254 0.278 0.147 0.149 ; (iii) par tour 0.061 0.052 0.046 0.047 0.055 0.051 0.052 0.056
+  B : nouveauté résiduelle par tour 1.000 0.957 0.648 0.632 0.383 0.225 0.208 0.164 ; (iii) par tour 0.060 0.027 0.105 0.108 0.148 0.159 0.166 0.169
+  D : nouveauté résiduelle par tour 1.000 0.806 0.590 0.327 0.244 0.203 0.192 0.179 ; (iii) par tour 0.061 0.122 0.286 0.347 0.353 0.354 0.355 0.356
+
+## 10. S10 calibré : plage [minimum ; maximum] des V par tâche au pilote, par bras et par δ
+  δ1 : A [0.0034 ; 0.2468] ; B [0.1681 ; 0.2743] ; C1 [0.1281 ; 0.2501] ; C2 [0.1077 ; 0.2515] ; C3 [0.2988 ; 0.4549] ; D [0.4033 ; 0.4773]
+  δ2 : A [0.0004 ; 0.0839] ; B [0.1072 ; 0.1778] ; C1 [0.0881 ; 0.1662] ; C2 [0.0638 ; 0.1633] ; C3 [0.1887 ; 0.2669] ; D [0.2068 ; 0.2893]
+
+## 11. Pilote logistique (descriptif ; prédictions L1 et L2 de `gel-conception-arene-melange-v2.md`)
+fichier : brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/essai-pilote-arene-melange-v2-logistique.json ; configuration 7296e7898e7174499f314cb70e9dd2396ec18c74d03ea917723be43bc36c4daa ; code 8e1e651b4be3e6fea6bf6bdf0fc00a19d479aa818323461fbf550582dfdb46bb
+  δ1 : B poids purs 0.29 (L1 prédit > 0,5) ; support moyen 2.04 ; B − A (iii) +0.0030 IC95 [+0.0015 ; +0.0047] (L2 prédit |·| < 0,02)
+        moyennes (iii) : A 0.0310 ; B 0.0341 ; C1 0.0316 ; C2 0.0312 ; C3 0.0318 ; D 0.4537
+        contrastes : B-A (ii) -0.0251 ; B-C1 (iii) +0.0025 ; B-C2 (iii) +0.0029 ; B-C3 (iii) +0.0023 ; B-D (iii) -0.4197
+  δ2 : B poids purs 0.12 (L1 prédit > 0,5) ; support moyen 2.46 ; B − A (iii) +0.0015 IC95 [+0.0005 ; +0.0030] (L2 prédit |·| < 0,02)
+        moyennes (iii) : A 0.0068 ; B 0.0083 ; C1 0.0071 ; C2 0.0069 ; C3 0.0068 ; D 0.2594
+        contrastes : B-A (ii) -0.0483 ; B-C1 (iii) +0.0012 ; B-C2 (iii) +0.0013 ; B-C3 (iii) +0.0015 ; B-D (iii) -0.2511
+  temps : mur 730.5 s ; somme des temps processeur 1377.3 s ; entraînements non convergés 0/1248
+
+real	0m22.924s
+user	0m22.453s
+sys	0m0.150s

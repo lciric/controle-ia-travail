@@ -26,3 +26,21 @@
   B − C1 « ≈ 0, |moyenne| < 0,01 » RÉFUTÉE aux deux δ (+0,0246 IC95 [+0,0159 ; +0,0345] ; +0,0184 IC95 [+0,0106 ; +0,0263]) : les poids d'équilibre battent les poids uniformes d'environ 0,02 ;
   vérification de symétrie (R4) sur ce résultat favorable à la piste 3 : identique sous l'attaquant standard seul (+0,0253 ; +0,0184) et renforcé seul (+0,0244 ; +0,0180).
 [2026-10-31T09:31:29Z] Étape 5 — pilote oracle logistique lancé à 09:30 UTC (même racine) ; script de puissance exécuté pendant ce pilote (25 s de processeur sur un des deux cœurs : le temps du pilote logistique est rapporté sans servir aux projections).
+
+[2026-10-31T09:29:48Z → 2026-10-31T09:42:00Z] Étape 5 (suite) — pilote oracle logistique (même racine 20261293 / 20261294, 24 instances × δ (1,4 ; 1,8))
+  commande : PYTHONPATH=src python3 $D/arene_melange_v2.py essai --instances 0:24 --oracle logistique --sortie $D/essai-pilote-arene-melange-v2-logistique.json --processus 2
+  mur 730,5 s (bash : réel 12 min 11,6 s, utilisateur 22 min 58,3 s) ; somme des temps processeur 1 377,3 s ; configuration 7296e7898e7174499f314cb70e9dd2396ec18c74d03ea917723be43bc36c4daa (CONFIG_V2, entrainement = logistique)
+  essai-pilote-arene-melange-v2-logistique.json sha256 a948c85a0dc074559133bc29067f6ed4975a1c0818426773822e8b6b5ac70d01
+  confrontation aux prédictions du gel : L1 (poids de B purs sur plus de la moitié des tâches) RÉFUTÉE : 0,29 (δ 1,4) et 0,12 (δ 1,8), support moyen 2,04 et 2,46 (contre 3,83 et 4,00 sous l'oracle détection) ;
+  L2 (|B − A| < 0,02) TENUE : +0,0030 IC95 [+0,0015 ; +0,0047] et +0,0015 IC95 [+0,0005 ; +0,0030] ; sous cet oracle, A, B, C1, C2, C3 sont à 0,007–0,034 et D à 0,45 / 0,26.
+[2026-10-31T09:44:06Z] Étape 6 — archive de l'observation du brouillon 1 (code v1 inchangé 6402dc6b…, racine du brouillon 1 20261291 / 20261292, instance 0, δ = 1,6)
+  commande : PYTHONPATH=src python3 $D/archive-observation-oracle-v1.py $D/archive-observation-oracle-v1.json ; mur 35,5 s (utilisateur 1 min 7,0 s)
+  archive-observation-oracle-v1.py sha256 4338d3558d25a1ae188c9067ba7281a403a17b1db22c6c8691cff5068a988def
+  archive-observation-oracle-v1.json sha256 0b52cac34b83aa04bca918cf0384d3bd5f3dd0a2154fd39957e17a95d4a65bc4
+  oracle logistique : B 0,0702 contre A 0,0689, poids de B purs (« 0,070 contre 0,069 » du brouillon 1 reproduit) ; oracle détection, seuil 0,5 : coût de B 0,031 de δ (« contournement gratuit » reproduit) ;
+  variante détection, seuil 0,10 identique bit à bit (hors temps) à la tâche du pilote v2 du brouillon 1.
+[2026-10-31T09:44:06Z] Étape 7 — sortie finale du calcul de puissance (deux pilotes)
+  commande : PYTHONPATH=src python3 $D/calcul-puissance-arene-melange-v2.py $D/essai-pilote-arene-melange-v2-detection.json $D/essai-pilote-arene-melange-v2-logistique.json > $D/calcul-puissance-arene-melange-v2-sortie.txt
+  calcul-puissance-arene-melange-v2.py sha256 0991184bd899c82a192c052b44944e84eeee1858dd8526b0381d038ca0843efc (écrit à 09:18:31 UTC, avant la fin du pilote détection à 09:29:27 UTC : la grille ρ = 0,10 / 0,25 / 0,50 précède tout résultat)
+  calcul-puissance-arene-melange-v2-sortie.txt sha256 9cf0eaeb764524ad1b337009f4de551a7339fe05fb80405d3e006f6855a72c38 ; sections 1 à 10 identiques au premier passage (graine fixe) ; 22,9 s.
+[2026-10-31T09:44:06Z] Fin du journal. Racine de décision jamais employée ; aucun fichier existant modifié ; aucun .sha256 écrit dans le dépôt.
