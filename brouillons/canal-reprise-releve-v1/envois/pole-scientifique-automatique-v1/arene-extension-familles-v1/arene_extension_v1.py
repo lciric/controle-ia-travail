@@ -76,10 +76,12 @@ RACINE_Q3 = 20265901           # décision Q3 : jamais employée hors décision 
 RACINE_PRIX = 20265902         # décision Q3b : idem
 RACINES_DECISION = (RACINE_Q3, RACINE_PRIX)
 RACINE_PRINCIPALE = 20261201   # racine de décision de l'arène principale : le calcul décisif de l'extension la suit
-# racines déjà employées dans le dossier de l'arène (brouillons 1 à 3, LISEZMOI, journaux, contre-lectures, essais)
+# racines déjà employées dans le dossier de l'arène (brouillons 1 à 3, LISEZMOI, journaux, contre-lectures, essais) ;
+# 20262297 et 20262313 : employées par décalage dans les essais v2 et v3 (RACINE_TESTS + 1000), absentes des textes,
+# relevées par la session parallèle (gel v4) et vérifiées dans test_arene_melange_v2.py l. 643 et v3 l. 699
 RACINES_DEJA_EMPLOYEES = (20261201, 20261202, 20261291, 20261292, 20261293, 20261294, 20261295, 20261296, 20261297,
-                          20261298, 20262291, 20261301, 20261101, 20261311, 20261312, 20261313, 20261314, 20261315,
-                          20261316, 20269501, 20269502, 20269731, 20269732, 20269741, 20269742)
+                          20261298, 20262291, 20262297, 20262313, 20261301, 20261101, 20261311, 20261312, 20261313,
+                          20261314, 20261315, 20261316, 20269501, 20269502, 20269731, 20269732, 20269741, 20269742)
 PLAGE_B4 = (20264001, 20264999)          # pilote b4 en parallèle (R-747)
 PLAGE_EXTENSION = (20265001, 20265999)   # seule plage permise hors décision (R-747)
 RACINE_TESTS, RACINE_TESTS_BIS = 20265001, 20265002

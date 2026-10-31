@@ -226,7 +226,19 @@ def test_toutes_les_racines_deja_employees_refusees_et_liste_recoupee_avec_l_are
     for f in ARENE.rglob("*"):
         if f.is_file() and f.suffix in (".md", ".py", ".txt"):
             trouves |= {int(x) for x in re.findall(r"\b2026\d{4}\b", f.read_text(encoding="utf-8"))}
-    assert trouves and trouves <= set(ae.RACINES_DEJA_EMPLOYEES), sorted(trouves - set(ae.RACINES_DEJA_EMPLOYEES))
+    # la session parallèle (pilote b4, fichiers v4 du même dossier) écrit ses racines dans sa plage et cite la plage de
+    # l'extension par ses bornes : les deux plages sont couvertes par les gardes de plage ; tout le reste doit figurer
+    # nommément dans la liste
+    hors_plages = {r for r in trouves if not (ae.PLAGE_B4[0] <= r <= ae.PLAGE_B4[1])
+                   and not (ae.PLAGE_EXTENSION[0] <= r <= ae.PLAGE_EXTENSION[1])}
+    assert hors_plages and hors_plages <= set(ae.RACINES_DEJA_EMPLOYEES), sorted(hors_plages - set(ae.RACINES_DEJA_EMPLOYEES))
+    assert {r for r in trouves if ae.PLAGE_EXTENSION[0] <= r <= ae.PLAGE_EXTENSION[1]} <= {20265001, 20265999}
+    for r in trouves:                                                 # aucune ne passe la garde, sauf les bornes citées
+        if r not in (20265001, 20265999):
+            with pytest.raises(GardeArret):
+                ae.exiger_racine_essai(r)
+    # racines employées par décalage dans le code des essais v2 et v3 (RACINE_TESTS + 1000), absentes des textes
+    assert {20262291, 20262297, 20262313} <= set(ae.RACINES_DEJA_EMPLOYEES)
 
 
 def test_gen_garde_racine_de_decision():
