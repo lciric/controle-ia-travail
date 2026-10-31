@@ -1,0 +1,69 @@
+La critique croisée A est absente, statut « jamais lancée » ; je n’en invente pas le contenu.
+
+Je ne réponds qu’aux sections visant D. Les faits du papier repris ci-dessous sont **VÉRIFIÉS par le lecteur de la synthèse v2**, non revérifiés par moi. Leur transfert à l’organisme demeure une **HYPOTHÈSE**. Les formules et calculs nouveaux des critiques sont **OBSERVÉS-NON-AUDITÉS** : je n’en fais pas des résultats.
+
+## (a) Réponse aux critiques
+
+### Critiques de B
+
+| Critique | Décision | Réponse |
+|---|---|---|
+| **B-a1 — prédictions S sous-spécifiées** | **Acceptée en partie** | P5, P7 et P8 passent de S à **F** : il manque respectivement une taille d’effet informative et une puissance, un estimand d’injection tranché, et une procédure explicite de validation du noyau. P10 reste **S** pour son seul test arithmétique : marge certifiée strictement positive, ou contre-exemple reproduit ; l’échec de certification est déclaré non concluant. |
+| **B-a2 — le duel sur \(n\) est une lecture de code** | **Acceptée** | Je retire le prétendu duel. L’identification de \(n\) est un **audit déterministe**, pas une expérience B4. L’issue « autre règle » ou « absence de division » est explicitement prévue ; elle laisse \(n\) non défini au sens du papier. |
+| **B-a3 — traitement asymétrique de P12** | **Acceptée** | P12 passe à **A dans ce protocole**. Ses tests d’ingénierie peuvent être utiles ailleurs, mais ils ne doivent ni entrer dans le bilan du transfert ni être présentés comme confirmant ou réfutant le papier. |
+| **B-a4 — absence de contrôles positifs** | **Acceptée, exemple rejeté** | J’ajoute des cas positifs à vérité plantée et vérification mécanique, des matrices à rayon connu et des sorties non vides attendues. L’exemple de B — parents identiques devant impliquer une fille vraie — n’est pas retenu : identité des parents n’implique ni vérité ni copie par le bisociateur. |
+| **B-b1 — puissance de P5 non bornée** | **Acceptée** | P5 n’est signable qu’après estimation de la variance de \(\hat\rho\), choix du nombre de lots et démonstration qu’elle détecte l’effet minimal retenu. Les valeurs numériques proposées par B restent **illustratives** et ne deviennent pas mes paramètres. |
+| **B-b2 — injection partielle dans P7** | **Acceptée et transformée en test préalable** | L’injection implicite ou graduelle compte comme injection. P7 exige soit un bras prospectif sans injection, soit des comptes séparés et auditables des apports externes et des productions internes. Sinon, l’estimand endogène n’existe pas et P7 est abandonnée, non « corrigée » après observation. |
+| **B-b3 — validation composite du noyau pour P8** | **Acceptée pour le fond, calcul rejeté** | P8 passe à **F** et cesse d’être appelée « S conditionnelle ». Chaque condition — tirage, retrait, division, stérilité, consommation, budget — doit être auditée ou testée séparément. Je ne retiens pas l’affirmation que leurs probabilités se multiplient : elle suppose une indépendance non démontrée. |
+| **B-b4 — P10 probablement peu informative** | **Rejetée comme objection à la signature, acceptée pour la portée** | Aucune probabilité a priori d’échec n’est fournie ; je ne déclare donc pas un résultat « le plus probable ». La signature porte sur une décision asymétrique, pas sur la garantie d’un résultat informatif. Une recherche de contre-exemples non exhaustive ne reçoit aucune puissance implicite. |
+| **B-c1 — gel de l’arène non contrôlé** | **Acceptée** | J’ajoute empreintes des poids, invites, configurations et budgets, identification de version et de routage, ainsi qu’un rejeu témoin en début et fin. Sans preuve de gel effectif, une dérive est non interprétable et le duel est non jugeable. |
+| **B-c2 — indépendance des modèles non mesurée** | **Acceptée** | Les deux instruments reçoivent les mêmes cas plantés, stratifiés par difficulté et famille. Je mesure corrélations marginales et conditionnelles des erreurs sur familles tenues à part. On borne une dépendance pertinente ; on ne prouve pas une indépendance universelle. |
+| **B-c3 — confusion entre aucun parent et rembourrage inerte** | **Acceptée** | Les bras sont séparés : invite sans contenu parental, deux fiches fausses, un parent avec rembourrage inerte de longueur appariée, et contrôles du juge seul sur entrées vides ou inertes. Ils distinguent production spontanée, effet du contenu et faux positifs du juge. |
+
+### Critiques de C
+
+| Critique | Décision | Réponse |
+|---|---|---|
+| **C-a1 — duel sur \(n\) vrai par construction** | **Acceptée** | Même correction qu’en B-a2 : vérification d’implémentation, sans présentation comme inférence expérimentale. |
+| **C-a2 — circularité des seuils simulés** | **Acceptée en partie** | Je sépare désormais deux objets : le **seuil dynamique** (\(0\), \(1\), ou une marge de persistance justifiée avant les données) et la **marge statistique**, estimée sur un étalonnage indépendant. Le noyau dont on teste l’extinction ne fixe pas sa propre marge de confirmation. Les simulateurs nuls doivent inclure surdispersion et corrélations familiales. |
+| **C-a3 — capacité fixe confond P5** | **Acceptée** | P5 passe à **F** et reçoit un troisième bras : quarantaine avec emplacements verrouillés pendant la durée qu’auraient occupée les brouillons. Ainsi, capacité utile et effet propre des brouillons ne sont plus confondus. |
+| **C-a4 — espace d’états spectral non défini** | **Acceptée** | Avant tout étalonnage, il faut définir les états du lot, leurs transitions et le modèle d’observation par le juge. Un étalonnage sur états vrais parfaitement observés ne qualifie pas un estimateur appliqué à des états classés avec erreur. |
+| **C-b1 — faux positifs et renversement spectral** | **Risque accepté, seuil et formule rejetés** | La probabilité de classer un lot stérile comme fertile ne suffit pas, à elle seule, à déterminer \(\rho(\tilde K)>1\) ; il faut toute la matrice observée. Je ne retiens donc ni le seuil annoncé ni la correction matricielle affichée comme établis. Le risque devient un test obligatoire sur matrices connues bruitées. |
+| **C-b2 — sparsité et rupture d’irréductibilité** | **Acceptée qualitativement** | Je n’endosse pas l’inégalité probabiliste exacte sans vérification. Le critère retenu est opérationnel : couverture suffisante des transitions du cycle principal et erreur permettant de distinguer les matrices témoins. Sinon, aucun test spectral n’est signé. |
+| **C-b3 — difficulté latente et fausse indépendance** | **Acceptée** | Des mondes plantés de difficulté quasi constante ne suffisent pas. L’étalonnage doit couvrir une distribution de difficultés et être réévalué sur familles réelles tenues à part ; une corrélation résiduelle impose un modèle d’erreur joint ou invalide le débiaisage. |
+| **C-c1 — contrôle négatif spectral bruité** | **Acceptée** | Une matrice sous-critique connue, comprenant des états absorbants, est passée par le modèle de confusion mesuré. Si l’estimateur naïf change sa classification, il est rejeté ; si la version corrigée ne retrouve pas la marge prescrite, P5, P7 et P8 restent non signables. |
+| **C-c2 — contrôle de capacité appariée** | **Acceptée** | Intégré à P5, avec budget total d’appels et règle de troncature identiques entre bras. Un remplissage inerte apparié peut servir à isoler séparément occupation et poids de tirage. |
+| **C-c3 — permutation temporelle inadéquate** | **Acceptée** | Je remplace la permutation simple par un processus stationnaire de branchement avec généalogie et grappes familiales. Il calibre les fluctuations légitimes sans détruire la dépendance entre générations. |
+
+## (b) Expériences corrigées
+
+### Préalables, qui ne sont pas des duels
+
+1. **Audit du code** : existence d’une division et de \(n\), tirage simple ou bipartite, consommation des parents, retraits, injection, budget, retour d’archive et critère d’abandon. Tant que ce code n’est pas fourni, ces propriétés restent non identifiées.
+2. **Qualification des instruments** : deux juges, contrôles positifs et négatifs plantés, estimation des erreurs par type de paire et par difficulté ; définition de l’espace d’états spectral ; étalonnage naïf et corrigé sur matrices connues, avec états bruités. Seuils statistiques gelés sur données d’étalonnage disjointes de l’évaluation.
+
+### Duels révisés
+
+| Expérience | Hypothèses et mesure | Contrôles et issues falsifiantes |
+|---|---|---|
+| **E1 — fertilité trans/cis, réunissant P2/P3** | \(H_A\) : toutes les voies alternatives à vraie–vraie sont sous une marge d’équivalence \(\delta_0\), avec \(q_{vv}>0\). \(H_B\) : au moins une voie alternative atteint une marge \(\delta_1>\delta_0\). Taux par occasion, intervalles simultanés, tirage prospectif stratifié à budget constant. | Aucun parent, fausse–fausse, rembourrage inerte, juge seul, contrôle positif vraie–vraie et second juge. Toute borne inférieure au-dessus de \(\delta_0\) falsifie \(H_A\) ; toutes les bornes supérieures sous \(\delta_0\), avec puissance suffisante, falsifient \(H_B\). La zone intermédiaire est non concluante. |
+| **E2 — extinction à faible densité** | Seulement après audit et E1. \(H_A\) : croissance des fiches vraies \(r\le0\). \(H_B\) : invasion persistante \(r\ge r_{\min}\), marge fixée par un critère de persistance antérieur, non par la simulation de \(H_A\). | Contrôle sans fiche vraie, qui doit produire zéro naissance vraie, et contrôle enrichi capable de démontrer la détectabilité. Une extinction bornée supérieurement sous zéro falsifie \(H_B\) ; une invasion reproductible au-dessus de la marge falsifie \(H_A\). |
+| **E3 — sort des inachevées, P4/P5 fusionnables** | \(H_A\) : le vivier n’améliore pas \(\rho\) par rapport à la quarantaine. \(H_B\) : il l’améliore d’au moins une marge dynamique fixée avant les données. Mesure préalable de \(q_B,\theta',\tau\), puis trois bras : vivier, quarantaine, quarantaine à capacité appariée. | Troncature exogène, budget constant, remplissage inerte et estimateur spectral qualifié. Un gain positif borné inférieurement falsifie \(H_A\) ; une différence bornée sous la marge avec puissance suffisante falsifie \(H_B\). Si \(q_B=0\) et sans copies rapides non filtrables, l’essai n’est pas présenté comme un test de « supériorité du bain ». |
+| **E4 — allumage endogène, P7** | Uniquement avec injection nulle ou séparable. \(H_A:\rho\le1\) ; \(H_B:\rho\ge1+\delta\), avec marge et puissance fixées après qualification instrumentale mais avant ouverture des données. | Bras avec injection mesurée comme témoin de production externe, et bras sans bisociation. Si l’injection ne peut être séparée, aucun duel n’est exécuté. |
+| **E5 — stationnarité locale de l’arène gelée** | \(H_A\) : dérive sous une marge d’équivalence. \(H_B\) : dérive structurelle au-dessus d’une marge distincte. Blocs temporels et familles tenues à part. | Gel attesté, rejeu témoin et nul de branchement stationnaire corrélé. Une dérive excessive falsifie \(H_A\) ; une dérive confinée dans la marge avec puissance suffisante falsifie \(H_B\), sans valider l’arène adaptative. |
+
+**P8** reste **F** : elle n’est exécutable qu’après validation explicite du noyau littéral, avec la condition complète \(q_{vv}\le\min(\theta,1)/2\), et non comme prédiction globale de l’organisme. **P10** reste **S** au processeur : certificat revérifié ou contre-exemple reproduit ; échec de certification non concluant. **P12** est retirée du protocole.
+
+Classement révisé : **S = P10** ; **F = P2, P3, P4, P5, P6, P7, P8** ; **A = P1, P9, P11, P12**.
+
+## (c) Réponse à l’arbitre : établi, non établi, première expérience
+
+**Établi dans le papier.** Sous les hypothèses de son noyau, notamment fiche seule stérile et division aveugle, le non-allumage pour \(q\le\min(\theta,1)/2\) est un résultat **VÉRIFIÉ par le lecteur** (synthèse, section 4 : p. 4, l. 355-358 ; p. 17, l. 1607-1610). La perte des copies inachevées multiplie la fécondité requise par \(1/(1-\tau)\), sous un même \(\tau\) pour tous les modèles ; détruire et archiver hors du vivier sont alors dynamiquement équivalents (section 6 : p. 8, l. 703 ; p. 56, l. 4043-4052). Le bain n’est pas établi comme supérieur au rejet pur : le comparateur de la p. 59 est différent, et le seuil du bain stationnaire reste numérique ou conjectural selon l’énoncé (p. 59, l. 4278-4281 ; p. 21, l. 1782-1783).
+
+**Non établi pour l’organisme.** Aucune correspondance terme à terme n’est acquise. Sont encore indéterminés : l’existence même de \(n\), la réduction de la fidélité à un scalaire, la stérilité des voies alternatives, la consommation des parents, le retrait, le caractère bipartite des paires et la séparation de l’injection. Aucun estimateur spectral n’est encore qualifié sous les erreurs du juge. Il n’existe donc **aucune prédiction globale d’allumage signée**. La pince n’a pas de prédiction transposable démontrée ; l’arène n’a, au mieux, qu’un régime local gelé à tester. Les calculs de puissance rapportés suffisent déjà à exclure les tests décisifs au niveau des lots sur la course 2, pas nécessairement toutes les mesures au niveau des paires.
+
+**Première expérience empirique.** Après l’audit du code et la qualification des instruments — travaux préalables au processeur — je lance **E1, le test prospectif stratifié trans/cis**, avant toute lecture des journaux. C’est le premier partage qui change réellement le programme : une voie alternative fertile falsifie le noyau à fiche seule stérile et supprime le transfert direct du plafond ; une stérilité opérationnelle des alternatives permet seulement de poursuivre vers E2 avec \(q_{vv}\) comme paramètre conditionnel. P10 peut avancer en parallèle, mais ne tranche rien sur l’organisme.
+
+Entre-temps, la politique par défaut demeure **archivage étanche hors du vivier**, sans réinjection non contrôlée ; elle préserve la mesure sans prétendre que l’équivalence dynamique est acquise lorsque \(\tau\) dépend du contenu.
+
+FIN-DE-CELLULE
