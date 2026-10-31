@@ -500,29 +500,44 @@ class MoniteurOu(Moniteur):
         self.b = np.concatenate([m.b for m in self.membres])
         self.tailles = np.array([m.m for m in self.membres])
         self.bornes = np.concatenate([[0], np.cumsum(self.tailles)])
+        # membres groupés par nombre d'unités : log-somme-exp vectorisée par groupe (calcul identique, plus rapide)
+        self.groupes = []
+        for u in sorted(set(self.tailles.tolist())):
+            ids = np.flatnonzero(self.tailles == u)
+            self.groupes.append((ids, np.stack([np.arange(self.bornes[i], self.bornes[i + 1]) for i in ids])))
+        self.mu_a, self.sd_a = np.asarray(self.mu), np.asarray(self.sd)
         self.t = np.nan
         self.e = np.nan
         self._cache = {}
 
     def _z(self, X, avec_internes: bool = False):
         A = X @ self.W.T + self.b
-        z = np.empty((len(X), len(self.membres)))
+        S = np.empty((len(X), len(self.membres)))
         S_int = np.ones_like(A) if avec_internes else None
-        for i, (a0, a1) in enumerate(zip(self.bornes[:-1], self.bornes[1:])):
-            Ai = A[:, a0:a1]
-            si = Ai[:, 0] if a1 - a0 == 1 else logsumexp(Ai, axis=1)
-            if avec_internes and a1 - a0 > 1:
-                S_int[:, a0:a1] = softmax(Ai, axis=1)
-            z[:, i] = self.lam * (si - self.mu[i]) / self.sd[i]
-        return z, S_int
+        for ids, unites in self.groupes:
+            Ag = A[:, unites]                                 # (n, membres du groupe, unités)
+            mx = Ag.max(axis=2, keepdims=True)
+            ex = np.exp(Ag - mx)
+            som = ex.sum(axis=2, keepdims=True)
+            S[:, ids] = (mx + np.log(som))[:, :, 0]
+            if avec_internes:
+                S_int[:, unites.ravel()] = (ex / som).reshape(len(X), -1)
+        return self.lam * (S - self.mu_a) / self.sd_a, S_int
+
+    @staticmethod
+    def _lse_softmax(z):
+        mx = z.max(axis=1, keepdims=True)
+        ex = np.exp(z - mx)
+        som = ex.sum(axis=1, keepdims=True)
+        return (mx + np.log(som))[:, 0], ex / som
 
     def score(self, X: np.ndarray) -> np.ndarray:
-        return logsumexp(self._z(X)[0], axis=1)
+        return self._lse_softmax(self._z(X)[0])[0]
 
     def score_et_grad(self, X: np.ndarray):
         z, S_int = self._z(X, avec_internes=True)
-        coef = softmax(z, axis=1) * (self.lam / np.asarray(self.sd))
-        return logsumexp(z, axis=1), (S_int * np.repeat(coef, self.tailles, axis=1)) @ self.W
+        s, Sz = self._lse_softmax(z)
+        return s, (S_int * np.repeat(Sz * (self.lam / self.sd_a), self.tailles, axis=1)) @ self.W
 
     def grad(self, X: np.ndarray) -> np.ndarray:
         return self.score_et_grad(X)[1]
