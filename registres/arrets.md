@@ -62,3 +62,4 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 - 2026-10-31 00:36 UTC — relais Kimi v4 (port 8791) **arrêté par son PID 4312** (R10) par le lanceur.
 - 2026-10-31 01:11 UTC — relais Kimi du tour question 6 **arrêté par son PID 6384** (R10) par le lanceur.
 - 2026-10-31 06:2x UTC — relais Kimi de la question 7 suite 2 **arrêté par son PID 704** (R10) par le lanceur.
+- 2026-10-31 06:4x et 06:5x UTC — relais Kimi des tours « sans Kimi » des questions 7 (PID 1617) et 6 (PID 2395) **arrêtés par leur PID** (R10) par les lanceurs (lancés, jamais appelés).

@@ -263,3 +263,5 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-31 ≈ 00:00 UTC — **tour bisociation, lot complet** (GO-2026-10-30-16 relevé par GO-17), collisionneur v7, 12 cellules : **20,30 USD**, plus l'appel Fable perdu lors de l'arrêt de 23:03 (≤ 4,33 au pire cas, probablement < 0,5) ; plafond du run 35.
 - 2026-10-31 00:35 UTC — **OpenAlex** : moisson de 197 681 œuvres sur l'allocation gratuite (0,99 USD de crédits gratuits, solde prépayé nul : aucune facture).
 - 2026-10-31 00:36 UTC — **Kimi K3.1 Pro avec recherche Web** (GO-17, poste 2) : 6 tours, 20 recherches (0,10 USD), **0,39 USD** au total compté par la commande (relais v4, PID 4312, arrêté) sur 3.
+- 2026-10-31 06:5x UTC — **question 6** (GO-2026-10-30-17 poste 3 puis GO-2026-10-31-01), collisionneur v7, 10 cellules sur 12 (Kimi absent aux tours III.2 et III.3) : **9,19 USD** (barème du collisionneur), plus 3 appels Kimi coupés comptés au pire cas par les relais (≈ 1,6 USD) ; plafond du run 20.
+- 2026-10-31 06:4x UTC — **question 7** (mêmes GO), 9 cellules sur 12 (Kimi absent des trois tours) : **9,02 USD**, plus 3 appels Kimi coupés (≈ 1,3 USD) ; plafond 20.
