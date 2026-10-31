@@ -84,7 +84,7 @@ RACINE_CALIBRAGE, RACINE_CALIBRAGE_TENUE = 20261295, 20261296  # choix des δ (b
 RACINE_TESTS, RACINE_TESTS_TENUE = 20261297, 20261298          # essais du code et mesures de temps de développement
 
 # --- δ de la décision : fixés par la règle `choisir_deltas` appliquée au calibrage (seule ligne écrite après lui) ----
-DELTAS_V2 = None
+DELTAS_V2 = (1.4, 1.8)   # calibrage-deltas-arene-melange-v2.json : V(A) 0,131 à 1,4 (≥ 10α) ; 0,034 à 1,8 (≥ 3α)
 GRILLE_CALIBRAGE = (0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.4)
 
 # --- codes de dérivation des graines ----------------------------------------------------------------------------
