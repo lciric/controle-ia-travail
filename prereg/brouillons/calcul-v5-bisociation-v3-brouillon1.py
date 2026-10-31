@@ -174,6 +174,20 @@ def main():
         print(f"    {cond} : échec à tort {p_etendue_sup([0, 0, 0, 0], ses, 0.50):.2e} ; détection d = 0,5 : {det:.3f} ;"
               f" d = 0,75 : {det75:.3f}")
 
+    print("\n§ 7. Ce que la grandeur détecte en termes de générateur : un défaut qui décale de D le nombre moyen")
+    print("     d'émetteurs latents L_r d'UN statut décale l'espérance observée de D × p_surf (p_surf = probabilité")
+    print("     qu'un émetteur de surface soit compté, § 1) ; détection (minimum sur le statut décalé), erreurs types × 1,00")
+    for cond, (c, p_par, rho) in CANAL.items():
+        q = p_par / N_CONCEPTS_PARASITES
+        p_surf = c * (1 - rho) + (1 - c * (1 - rho)) * q
+        ses = [se[cond][st] for st in STATUTS]
+        for D in (0.5, 1.0):
+            d = D * p_surf
+            vals = [min(p_etendue_sup([d if j == k else 0 for j in range(4)], ses, t) for k in range(4))
+                    for t in (0.30, 0.40, 0.50)]
+            print(f"  {cond} : p_surf {p_surf:.4f} ; D = {D:.1f} émetteur → décalage observé {d:.3f} ; détection "
+                  f"t=0,30 : {vals[0]:.3f} ; t=0,40 : {vals[1]:.3f} ; t=0,50 : {vals[2]:.3f}")
+
 
 if __name__ == "__main__":
     main()

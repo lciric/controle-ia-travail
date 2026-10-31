@@ -1,0 +1,76 @@
+Calcul du seuil de la V5 redéfinie — v3 brouillon 1 — aucun monde, aucun tirage, aucune graine
+
+§ 1. Loi de la fréquence documentaire observée de l'étiquette du concept rare planté, vue des deux côtés
+     (S16d et canal G9 seulement ; identique pour tous les statuts par construction)
+  M_bien : espérance 2.8739 ; écart-type par pont 0.8089   (comparaison, diagnostic T2 : vrai_conceptuel 2.824, faux 2.875, proche 2.961, vrai_operateur_avec_trace 2.911)
+  M_moyen : espérance 2.7531 ; écart-type par pont 0.8034   (comparaison, diagnostic T2 : vrai_conceptuel 2.686, faux 2.690, proche 2.821, vrai_operateur_avec_trace 2.783)
+
+§ 2. Erreurs types attendues par statut à 300 mondes : écart-type du § 1 / racine(n_300),
+     n_300 = 1,5 × compte du diagnostic sur 200 mondes (comptes de plomberie)
+  M_bien : vrai_conceptuel n_300 536, et 0.0350 (diag. ramené à 300 : 0.0335) ; faux n_300 192, et 0.0584 (diag. ramené à 300 : 0.0555) ; proche n_300 534, et 0.0350 (diag. ramené à 300 : 0.0343) ; vrai_operateur_avec_trace n_300 724, et 0.0301 (diag. ramené à 300 : 0.0310)
+    erreur type de la plus bruitée des différences entre deux statuts : 0.0681
+  M_moyen : vrai_conceptuel n_300 282, et 0.0478 (diag. ramené à 300 : 0.0465) ; faux n_300 87, et 0.0861 (diag. ramené à 300 : 0.0906) ; proche n_300 234, et 0.0525 (diag. ramené à 300 : 0.0514) ; vrai_operateur_avec_trace n_300 381, et 0.0412 (diag. ramené à 300 : 0.0392)
+    erreur type de la plus bruitée des différences entre deux statuts : 0.1009
+
+§ 3. Échec à tort : P(écart maximal > t) si les quatre statuts ont exactement la même loi (S16d tenu)
+  erreurs types × 1.00
+    M_bien : t=0.20 : 0.0073 ; t=0.25 : 0.0005 ; t=0.30 : 0.0000 ; t=0.35 : 0.0000 ; t=0.40 : 0.0000 ; t=0.45 : 0.0000 ; t=0.50 : 0.0000
+    M_moyen : t=0.20 : 0.0928 ; t=0.25 : 0.0256 ; t=0.30 : 0.0057 ; t=0.35 : 0.0010 ; t=0.40 : 0.0001 ; t=0.45 : 0.0000 ; t=0.50 : 0.0000
+  erreurs types × 1.25
+    M_bien : t=0.20 : 0.0406 ; t=0.25 : 0.0073 ; t=0.30 : 0.0010 ; t=0.35 : 0.0001 ; t=0.40 : 0.0000 ; t=0.45 : 0.0000 ; t=0.50 : 0.0000
+    M_moyen : t=0.20 : 0.2232 ; t=0.25 : 0.0928 ; t=0.30 : 0.0337 ; t=0.35 : 0.0106 ; t=0.40 : 0.0029 ; t=0.45 : 0.0007 ; t=0.50 : 0.0001
+  erreurs types × 1.50
+    M_bien : t=0.20 : 0.1079 ; t=0.25 : 0.0311 ; t=0.30 : 0.0073 ; t=0.35 : 0.0014 ; t=0.40 : 0.0002 ; t=0.45 : 0.0000 ; t=0.50 : 0.0000
+    M_moyen : t=0.20 : 0.3669 ; t=0.25 : 0.1948 ; t=0.30 : 0.0928 ; t=0.35 : 0.0402 ; t=0.40 : 0.0159 ; t=0.45 : 0.0057 ; t=0.50 : 0.0018
+
+§ 4. Détection : P(écart maximal > t) si UN statut a une espérance décalée de d (les trois autres égaux) ;
+     on rapporte le minimum sur le statut décalé (cas le moins favorable)
+  erreurs types × 1.00
+    M_bien, d = 0.20 : t=0.20 : 0.671 ; t=0.25 : 0.365 ; t=0.30 : 0.086 ; t=0.35 : 0.012 ; t=0.40 : 0.001 ; t=0.45 : 0.000 ; t=0.50 : 0.000
+    M_bien, d = 0.30 : t=0.20 : 0.979 ; t=0.25 : 0.891 ; t=0.30 : 0.671 ; t=0.35 : 0.365 ; t=0.40 : 0.086 ; t=0.45 : 0.012 ; t=0.50 : 0.001
+    M_bien, d = 0.50 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 0.998 ; t=0.40 : 0.979 ; t=0.45 : 0.891 ; t=0.50 : 0.671
+    M_bien, d = 0.75 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 1.000 ; t=0.40 : 1.000 ; t=0.45 : 1.000 ; t=0.50 : 1.000
+    M_bien, d = 1.00 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 1.000 ; t=0.40 : 1.000 ; t=0.45 : 1.000 ; t=0.50 : 1.000
+    M_moyen, d = 0.20 : t=0.20 : 0.667 ; t=0.25 : 0.457 ; t=0.30 : 0.228 ; t=0.35 : 0.075 ; t=0.40 : 0.020 ; t=0.45 : 0.005 ; t=0.50 : 0.001
+    M_moyen, d = 0.30 : t=0.20 : 0.934 ; t=0.25 : 0.833 ; t=0.30 : 0.666 ; t=0.35 : 0.457 ; t=0.40 : 0.226 ; t=0.45 : 0.074 ; t=0.50 : 0.020
+    M_moyen, d = 0.50 : t=0.20 : 1.000 ; t=0.25 : 0.999 ; t=0.30 : 0.995 ; t=0.35 : 0.980 ; t=0.40 : 0.934 ; t=0.45 : 0.833 ; t=0.50 : 0.666
+    M_moyen, d = 0.75 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 1.000 ; t=0.40 : 1.000 ; t=0.45 : 1.000 ; t=0.50 : 0.999
+    M_moyen, d = 1.00 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 1.000 ; t=0.40 : 1.000 ; t=0.45 : 1.000 ; t=0.50 : 1.000
+  erreurs types × 1.25
+    M_bien, d = 0.20 : t=0.20 : 0.671 ; t=0.25 : 0.426 ; t=0.30 : 0.167 ; t=0.35 : 0.041 ; t=0.40 : 0.008 ; t=0.45 : 0.001 ; t=0.50 : 0.000
+    M_bien, d = 0.30 : t=0.20 : 0.956 ; t=0.25 : 0.859 ; t=0.30 : 0.671 ; t=0.35 : 0.426 ; t=0.40 : 0.167 ; t=0.45 : 0.041 ; t=0.50 : 0.008
+    M_bien, d = 0.50 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 0.999 ; t=0.35 : 0.990 ; t=0.40 : 0.956 ; t=0.45 : 0.859 ; t=0.50 : 0.671
+    M_bien, d = 0.75 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 1.000 ; t=0.40 : 1.000 ; t=0.45 : 1.000 ; t=0.50 : 1.000
+    M_bien, d = 1.00 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 1.000 ; t=0.40 : 1.000 ; t=0.45 : 1.000 ; t=0.50 : 1.000
+    M_moyen, d = 0.20 : t=0.20 : 0.674 ; t=0.25 : 0.502 ; t=0.30 : 0.333 ; t=0.35 : 0.153 ; t=0.40 : 0.059 ; t=0.45 : 0.020 ; t=0.50 : 0.006
+    M_moyen, d = 0.30 : t=0.20 : 0.903 ; t=0.25 : 0.805 ; t=0.30 : 0.666 ; t=0.35 : 0.499 ; t=0.40 : 0.326 ; t=0.45 : 0.150 ; t=0.50 : 0.058
+    M_moyen, d = 0.50 : t=0.20 : 0.999 ; t=0.25 : 0.995 ; t=0.30 : 0.984 ; t=0.35 : 0.957 ; t=0.40 : 0.901 ; t=0.45 : 0.805 ; t=0.50 : 0.666
+    M_moyen, d = 0.75 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 1.000 ; t=0.40 : 1.000 ; t=0.45 : 0.999 ; t=0.50 : 0.995
+    M_moyen, d = 1.00 : t=0.20 : 1.000 ; t=0.25 : 1.000 ; t=0.30 : 1.000 ; t=0.35 : 1.000 ; t=0.40 : 1.000 ; t=0.45 : 1.000 ; t=0.50 : 1.000
+
+§ 5. Sensibilité (NON employée par la règle) : si les écarts de T2 observés sur les mondes d'essai étaient
+     des écarts vrais (moyennes du diagnostic prises pour espérances), P(écart maximal > t)
+  × 1.00 M_bien : t=0.20 : 0.1480 ; t=0.25 : 0.0203 ; t=0.30 : 0.0015 ; t=0.35 : 0.0001 ; t=0.40 : 0.0000 ; t=0.45 : 0.0000 ; t=0.50 : 0.0000
+  × 1.00 M_moyen : t=0.20 : 0.4022 ; t=0.25 : 0.1767 ; t=0.30 : 0.0616 ; t=0.35 : 0.0178 ; t=0.40 : 0.0043 ; t=0.45 : 0.0008 ; t=0.50 : 0.0001
+  × 1.25 M_bien : t=0.20 : 0.2509 ; t=0.25 : 0.0676 ; t=0.30 : 0.0119 ; t=0.35 : 0.0015 ; t=0.40 : 0.0001 ; t=0.45 : 0.0000 ; t=0.50 : 0.0000
+  × 1.25 M_moyen : t=0.20 : 0.5077 ; t=0.25 : 0.2861 ; t=0.30 : 0.1361 ; t=0.35 : 0.0563 ; t=0.40 : 0.0207 ; t=0.45 : 0.0068 ; t=0.50 : 0.0020
+
+§ 6. Règle proposée : plus petit multiple de 0,05 tel que l'échec à tort (§ 3) soit ≤ 0,01 dans chaque
+     condition, avec les erreurs types gonflées de 25 % (marge pour l'approximation du § 1 et la
+     corrélation éventuelle entre ponts d'un même monde) ; puis sa détection d'un décalage de 0,5 (§ 4)
+  seuil retenu par la règle : 0.40
+  M_bien, × 1.00 : échec à tort 0.0000 ; détection d = 0,5 : 0.979 ; d = 0,3 : 0.086
+  M_bien, × 1.25 : échec à tort 0.0000 ; détection d = 0,5 : 0.956 ; d = 0,3 : 0.167
+  M_moyen, × 1.00 : échec à tort 0.0001 ; détection d = 0,5 : 0.934 ; d = 0,3 : 0.226
+  M_moyen, × 1.25 : échec à tort 0.0029 ; détection d = 0,5 : 0.901 ; d = 0,3 : 0.326
+  comparaison, ancien seuil 0,50 appliqué à la grandeur nouvelle :
+    M_bien : échec à tort 4.31e-13 ; détection d = 0,5 : 0.671 ; d = 0,75 : 1.000
+    M_moyen : échec à tort 1.21e-06 ; détection d = 0,5 : 0.666 ; d = 0,75 : 0.999
+
+§ 7. Ce que la grandeur détecte en termes de générateur : un défaut qui décale de D le nombre moyen
+     d'émetteurs latents L_r d'UN statut décale l'espérance observée de D × p_surf (p_surf = probabilité
+     qu'un émetteur de surface soit compté, § 1) ; détection (minimum sur le statut décalé), erreurs types × 1,00
+  M_bien : p_surf 0.8078 ; D = 0.5 émetteur → décalage observé 0.404 ; détection t=0,30 : 0.982 ; t=0,40 : 0.693 ; t=0,50 : 0.099
+  M_bien : p_surf 0.8078 ; D = 1.0 émetteur → décalage observé 0.808 ; détection t=0,30 : 1.000 ; t=0,40 : 1.000 ; t=0,50 : 1.000
+  M_moyen : p_surf 0.5549 ; D = 0.5 émetteur → décalage observé 0.277 ; détection t=0,30 : 0.574 ; t=0,40 : 0.142 ; t=0,50 : 0.010
+  M_moyen : p_surf 0.5549 ; D = 1.0 émetteur → décalage observé 0.555 ; détection t=0,30 : 0.999 ; t=0,40 : 0.982 ; t=0,50 : 0.846
