@@ -1,28 +1,23 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-31 ≈ 10:40 UTC, lignée « session-depot », instance 2 (R-819 à R-896). **Passation : `registres/passations/2026-10-31-1020.md` (à lire en premier).**
+Dernière mise à jour : 2026-10-31 ≈ 13:05 UTC, lignée « session-depot », instance 2 (R-819 à R-919). **Passation : `registres/passations/2026-10-31-1020.md` (à lire en premier ; la prochaine passation sera écrite avant la fin de l'autonomie vers 00:15 UTC le 1er novembre).**
 
-Décisions de Lazar ce matin (R-888 à R-893) : R-611 levée (revue de sécurité extérieure réalisée) ; examen final et estimation de la malléabilité hors gel et lancement approuvé ; pire cas certifié = assemblage. R-892 : collision identifiants réglée. R-893 : DEP4 formalisé.
+**Autonomie de 12 heures** (R-905, 12:17 → ≈ 00:15 UTC 1er novembre). Quatre processus actifs depuis 13:01 UTC (scripts v3 sur le gabarit éprouvé, contrôle préalable, R-919) :
 
-**Synthèse du tour 2 de l'arène terminée** (`docs/notes/anteriorite-P-041-v1/collisionneur-organisme-coevolutif-v1/synthese-organisme-coevolutif-tour2-v1.md`, `8a612a8f…`, scellée) : dix convergences, six divergences non résolues, noyau consensuel pour le préenregistrement P-041.
+1. **Collisionneur des nœuds tour 1** (GO-06, plafond du run 22 USD, relais Kimi PID 25364 port 8793) : tour 1 A, B, C valides (6,36 USD), Kimi D en essai 2, puis tours 2 et 3.
+2. **Collisionneur D-ML-1 reprise** (GO-07, plafond 12 USD, relais Kimi PID 25366 port 8794) : tour 1 B/C/D et tour 2 B/C valides (2,53 USD), Kimi D tour 2 en essai 2, puis tour 3. Fable absent (R-831).
+3. **Collisionneur protocelles tour 2** (GO-05, plafond 31 USD, relais Kimi PID 25360 port 8792) : tour 1 B, C valides (2,04 USD), Kimi D en essai 2, puis tours 2 et 3. Fable absent (refus « bio », R-831). Faits = synthèse du tour 1 seule.
+4. **Argon seul question C** (GO-08, relais Gemini PID 25347 port 8788) : bisociation, arène, reste.
 
-**Préenregistrement examen final v2 prêt** : `prereg/P-041-examen-final-v2.md`, contre-lu (9 points traités). Trois éléments à fixer avant scellement : StrongREJECT (version), jeu bénin, préenregistrement de l'arène.
+Argon seul : question A terminée (1,05 USD, `d3c6a085…`), question B terminée (0,61 USD, `8e0ce80c…`) ; cumul GO-08 : 3,62/25.
 
-**Préenregistrement malléabilité v2 prêt** : `prereg/P-041-malleabilite-v2.md` (`877e1c7a…`), contre-lu (9 points traités, rapport `docs/notes/anteriorite-P-041-v1/contre-lecture-prereg-malleabilite-v1.md`, `2f4e8cab…`). Deux éléments à fixer avant scellement : StrongREJECT (version), jeu de données bénin/nuisible.
+Décisions de Lazar ce matin (R-888 à R-893, R-899, R-905, R-907, R-908, R-915, R-916, R-917) : R-611 levée ; examen final et malléabilité hors gel et approuvés ; GO-05 (210 USD) ; GO-06 (45 USD nœuds) ; GO-07 (12 USD D-ML-1) ; GO-08 (25 USD Argon seul) ; R-912 « oui » (protocole paramétré, route à choisir) ; tour 2 protocelles « go » ; bras canal social « go » ; captures ASIS&T acceptées (R7).
 
-**Devis consolidé rédigé** (`docs/notes/anteriorite-P-041-v1/devis-P-041-gpu-et-collisionneur-protocelles-v1.md`, `22c34601…`, R-896) : test (a) Bailey (75 USD plafond), examen final (90), malléabilité (70), collisionneur protocelles deux tours (50, séquencé). Total si tout lancé : 210 USD plafond. Aucune dépense engagée ; GO de Lazar sur le devis en attente.
+**Malléabilité v4 bloquée** (R-912, R-915) : classificateur de sécurité, route à choisir par Lazar.
 
-Messages de conv-audit n° 270 à 280 lus, réponse n° 221 poussée. Vocabulaire : « la pince » = défense jointe boîte blanche + boîte noire (R-707 chez conv-audit). Pilote « mélange d'équilibre » : hypothèse principale serait réfutée (R-895).
+Messages de conv-audit n° 270 à 292 lus, réponses n° 221 à 228 poussées. Surveillance du canal en cours.
 
-Arène : tour 1 (8,22 USD, synthèse v2) et tour 2 (8,41 USD, 12/12, **synthèse v1 terminée**). P-041 v3 fait foi (72aec532…).
-
-R-892 : collision d'identifiants de décisions, plage R-1000+ réservée à conv-audit. R-893 : DEP4 (relais accepte dépassement jusqu'à S17 − cumul). R-894 : messages 214–217 introuvables (erreur de passation).
-
-Devis du collisionneur sur les nœuds (n° 272/n277 de conv-audit) : 7 à 15 USD, 24 cellules en 2 passes, GO de Lazar en attente.
-
-Décisions en attente de Lazar : machine jetable (GO 10 USD + location, R-868) ; Gu-Krenn D-GK-1 (R-873) ; **GO de dépense de carte graphique et collisionneur protocelles (devis v1, R-896)** ; GO du collisionneur sur les nœuds (7–15 USD) ; défauts sous 48 h : R-859 (1er nov. ≈ 23:10), R-862 et R-867 (2 nov. ≈ 00:30), R-882 et R-884 (2 nov. matin).
-
-Suite d'essais : 1 293 passés, 4 échecs : 3 `pypandoc` connus, 1 corrigé. Arbre scellé : seule l'orpheline connue (R-799). Aucun processus actif sauf les agents de la session.
+Défauts sous 48 h : R-859 (1er nov. ≈ 23:10 UTC) ; R-862, R-867 (2 nov. ≈ 00:30) ; R-882, R-884 (2 nov. matin) ; R-910 (≈ 12:17 UTC 2 nov.).
 
 Mise à jour précédente : 2026-10-30 ≈ 10:12 UTC, lignée « session-depot », instance 2 (R-815 à R-818). Essai réel de Kimi fait (`kimi-k3.1-pro`, 0,0003 USD) ; **course 2 : juges Kimi et Argon croisés plus Opus 5.5 troisième juge** (R-818) ; devis v3 ≈ 95 USD attendus, ≈ 196 au pire, au-dessus du plafond de 110 → **nœud de dépense chez Lazar**. `HCLOUD_TOKEN` pas encore visible : essai à blanc de la v3 en attente d'une session neuve et d'un GO. Aucune instance, aucun relais.
 
