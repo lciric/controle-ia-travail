@@ -980,7 +980,7 @@ def test_lire_tables_lignes():
     assert t["table1"] == "mécanisme exercé" and t["table2"] == "régression avérée au-delà de la tolérance"
     assert t["table4"] == "Q1 réfutée" and t["table7"] == "Q2 réfutée"
     assert t["table5"].startswith("condition d'application vérifiée")
-    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, avec oubli"}
+    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, retours au-delà du hasard (cycle)"}
     t = lt(fausse_analyse((0.12, -0.05), (-0.01, -0.01), base), 0.02, 0.02, marges, 0.02)
     assert t["table1"].startswith("le mélange perd") and t["table2"] == "régression démontrée sous la tolérance"
     t = lt(fausse_analyse((0.12, 0.01), (0.02, 0.03), base), 0.02, 0.02, marges, 0.02)
@@ -1009,10 +1009,12 @@ def test_lire_tables_lignes():
     # Table 5
     t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i1=(0.08, 0.0)), 0.02, 0.02, marges, 0.02)
     assert t["table5_par_delta"]["1"] == "A progresse" and t["table5"].startswith("condition d'application non vérifiée")
-    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i2=(0.0, 0.015), s=0.0005), 0.02, 0.02, marges, 0.02)
-    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, sans oubli"}
-    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i2=(0.02, 0.02)), 0.02, 0.02, marges, 0.02)
-    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, oubli indéterminé"}
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i3n=(-0.15, -0.15)), 0.02, 0.02, marges, 0.02)
+    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, sans retours au-delà du hasard"}
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i3n=(0.0, 0.0)), 0.02, 0.02, marges, 0.02)
+    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, forme indéterminée"}
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i2=(-0.3, -0.3)), 0.02, 0.02, marges, 0.02)
+    assert t["table5"].startswith("condition d'application vérifiée")        # I2 recopié, sans effet sur la ligne
     t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i1=(0.02, 0.02)), 0.02, 0.02, marges, 0.02)
     assert t["table5"] == "condition d'application indéterminée"
 
@@ -1034,12 +1036,28 @@ def test_lire_tables_exhaustive():
         q2 = {lib: tuple(g.uniform(-0.1, 0.1, 2)) for lib in am.CONTRASTES_Q2}
         t = am.lire_tables(fausse_analyse(tuple(g.uniform(-0.05, 0.15, 2)), tuple(g.uniform(-0.08, 0.04, 2)), princ,
                                           s=float(g.uniform(0.001, 0.03)), q2=q2, i1=tuple(g.uniform(-0.05, 0.1, 2)),
-                                          i2=tuple(g.uniform(-0.05, 0.1, 2)), pur=tuple(g.uniform(0, 1, 2))),
+                                          i2=tuple(g.uniform(-0.05, 0.1, 2)), pur=tuple(g.uniform(0, 1, 2)),
+                                          i3n=tuple(g.uniform(-0.3, 0.3, 2))),
                            0.02, 0.02, {"1": 0.02, "2": 0.02}, 0.02)
         assert t["table1"] in L1 and t["table2"] in L2 and t["table4"] in L4 and t["table5"] in L5 and \
             t["table7"] in L7
         for tab in ("table3", "table6"):
             assert all(c in {"B>X", "X>B", "≈", "B≳X", "X≳B", "?"} for v in t[tab].values() for c in v.values())
+        assert set(t["table5_par_delta"].values()) <= L5_LIGNES
+
+
+L5_LIGNES = {"A progresse", "A ne progresse pas, retours au-delà du hasard (cycle)",
+             "A ne progresse pas, sans retours au-delà du hasard", "A ne progresse pas, forme indéterminée",
+             "indéterminé"}
+
+
+def test_lire_tables_refuse_sans_I3():
+    base = {lib: (-0.15, -0.10) for lib in am.CONTRASTES_PRINCIPAUX}
+    an = fausse_analyse((0.12, 0.10), (-0.06, -0.06), base)
+    am.lire_tables(an, 0.02, 0.02, {"1": 0.02, "2": 0.02}, 0.02)                # sain
+    del an["2"]["indicateurs"]["A I3-nul"]
+    with leve("lecture impossible"):
+        am.lire_tables(an, 0.02, 0.02, {"1": 0.02, "2": 0.02}, 0.02)
 
 
 def test_analyse_sur_taches_reelles():
@@ -1051,8 +1069,11 @@ def test_analyse_sur_taches_reelles():
         for lib in am.CONTRASTES_PRINCIPAUX + am.CONTRASTES_Q2 + ("B-A (iii)", "B-A (ii)"):
             q = an[cd]["contrastes"][lib]["quantiles"]
             assert q["q0.003125"] <= q["q0.025"] <= q["q0.975"] <= q["q0.996875"]
-        assert {"A I1", "A I2", "Bp I1", "D I2"} <= set(an[cd]["indicateurs"])
+        assert {"A I1", "A I2", "Bp I1", "D I2", "A I3-nul", "D I3-nul", "Bp I3-nul"} <= set(an[cd]["indicateurs"])
         assert "poids" in an[cd]["bras"]["Bp"] and "cycle" in an[cd]["bras"]["A"] and "cout" in an[cd]["bras"]["C3p"]
+        assert {"part_purete_forcee", "indices_poids_max"} <= set(an[cd]["bras"]["Bp"]["equilibre"])
+        sp = an[cd]["contrastes"]["Bp-D (iii)"]["selon_purete"]
+        assert sp["taches_pures"]["n"] + sp["taches_a_melange"]["n"] == 2
     t = am.lire_tables(an, 0.02, 0.02, {"1": 0.02, "2": 0.02}, 0.02)
     assert t["table7"].startswith("Q2")
     assert an == am.analyser(res, am.RACINE_TESTS, n_reech=500)                # rééchantillonnage reproductible
@@ -1063,46 +1084,117 @@ def test_analyse_sur_taches_reelles():
 # =================================================================================================================
 def test_audit_sain_et_artefacts():
     cfg = PETITE
-    src = {(0, cd): am.executer_tache(0, cd, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg) for cd in (1, 2)}
-    res, temps, jug = am.auditer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, src, processus=1)   # sain
-    assert len(res) == 2 and set(jug["par_delta"]) == {"1", "2"} and isinstance(jug["artefact"], bool)
+    src = {(i, cd): am.executer_tache(i, cd, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg) for cd in (1, 2) for i in (0, 1)}
+    res, temps, jug = am.auditer([0, 1], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, src, processus=1)   # sain
+    assert len(res) == 4 and set(jug["par_delta"]) == {"1", "2"} and isinstance(jug["drapeau_i"], bool)
     for r in res:
+        assert set(r["bras"]) == set(am.BRAS_AUDIT) and "A" in r["bras"]                # A audité (CM3-04)
         for nom, b in r["bras"].items():
-            assert b["V_source"] == src[(0, r["code_delta"])]["bras"][nom]["V_iii_final"]
-            assert b["V_audit"] <= b["V_source"] and 0 <= b["V_lourd"] <= 1
+            assert b["V_source"] == src[(r["instance"], r["code_delta"])]["bras"][nom]["V_iii_final"]
+            assert b["V_audit_min4"] <= b["V_source"] and 0 <= b["V_lourd"] <= 1
+            if b["choix_audit"] == "source":                                      # même choix : écart nul au bit
+                assert b["V_audit_reeval"] == b["V_source_reeval"]
+        ta = r["tours_A"]
+        assert len(ta["iii_audit"]) == cfg.T and all(x <= y for x, y in zip(ta["iii_audit"], ta["iii_source"]))
+        assert ta["I1_source"] == src[(r["instance"], r["code_delta"])]["bras"]["A"]["cycle"]["I1_progres"]
+        assert ta["I3_source"] == src[(r["instance"], r["code_delta"])]["bras"]["A"]["cycle"]["I3_retours"]
+    assert set(jug["par_delta"]["1"]) == {"B-A", "B-C3", "B-D", "Bp-D", "Bp-C3p", "A I1", "A I3"}
     faux = json.loads(json.dumps(src[(0, 1)]))
     faux["bras"]["D"]["V_iii_final"] += 0.1
     with leve("audit : V reconstruit"):
         am.auditer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, {(0, 1): faux, (0, 2): src[(0, 2)]}, processus=1)
+    faux_i1 = json.loads(json.dumps(src[(0, 1)]))
+    faux_i1["bras"]["A"]["cycle"]["I1_progres"] += 1e-9
+    with leve("audit : I1 reconstruit"):
+        am.auditer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, {(0, 1): faux_i1, (0, 2): src[(0, 2)]},
+                   processus=1)
     manque = json.loads(json.dumps(src[(0, 1)]))
-    del manque["bras"]["C3p"]
+    del manque["bras"]["A"]
     with leve("audit : bras"):
         am.auditer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, {(0, 1): manque, (0, 2): src[(0, 2)]},
                    processus=1)
     with leve("audit : tâche absente"):
-        am.auditer([0, 1], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, src, processus=1)
+        am.auditer([0, 2], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, src, processus=1)
 
 
-def _taches_audit(decalage=0.0, inverse=False):
+def _taches_audit(K=10, decalages=None, bruit=0.0, i1=0.0, i3=0.0, graine=0):
+    """Tâches d'audit synthétiques : V réévalués de la source et de l'audit par bras ; `decalages` = {bras: écart
+    moyen ajouté à V_audit_reeval} (amélioration propre au bras) ; `bruit` = écart-type d'un bruit par tâche."""
+    g = np.random.default_rng(graine)
+    decalages = decalages or {}
     sortie = []
     for cd in (1, 2):
-        for i in range(5):
-            b = {"B": 0.20, "C3": 0.30, "D": 0.35, "Bp": 0.30, "C3p": 0.33}
-            sortie.append({"instance": i, "code_delta": cd,
-                           "bras": {k: {"V_source": v, "V_audit": v} for k, v in b.items()}})
-            if inverse:
-                sortie[-1]["bras"]["D"]["V_audit"] = 0.10            # B − D change de signe
-            sortie[-1]["bras"]["C3p"]["V_audit"] -= decalage
+        for i in range(K):
+            b = {"A": 0.05, "B": 0.20, "C3": 0.30, "D": 0.35, "Bp": 0.351, "C3p": 0.33}
+            bras = {}
+            for k, v in b.items():
+                bras[k] = {"V_source_reeval": v, "V_audit_reeval": v + decalages.get(k, 0.0) + bruit * g.standard_normal()}
+            sortie.append({"instance": i, "code_delta": cd, "bras": bras,
+                           "tours_A": {"I1_source": 0.0, "I1_audit": i1 + bruit * g.standard_normal(),
+                                       "I3_source": 0.8, "I3_audit": 0.8 + i3}})
     return sortie
 
 
-def test_juger_audit_sain_et_artefact():
-    assert am.juger_audit(_taches_audit(), 0.05)["artefact"] is False                 # sain : rien ne change
-    assert am.juger_audit(_taches_audit(decalage=0.02), 0.05)["artefact"] is False    # change de 0,02, même signe
-    j = am.juger_audit(_taches_audit(decalage=0.06), 0.05)                            # change de plus de 0,05
-    assert j["artefact"] is True and j["par_delta"]["1"]["Bp-C3p"]["artefact"] is True
-    j = am.juger_audit(_taches_audit(inverse=True), 0.05)                             # signe changé
-    assert j["artefact"] is True and j["par_delta"]["2"]["B-D"]["artefact"] is True
+def test_juger_audit_sain_et_artefacts():
+    cfg = config_complete()
+    j = am.juger_audit(_taches_audit(), cfg)                                        # sain : rien ne change
+    assert j["drapeau_i"] is False and all(not v["drapeau_i"] for b in j["par_delta"].values() for v in b.values())
+    # CM3-01 (1) : bruit autour de zéro sur un contraste presque nul (B′ − D) : signe qui change, aucun drapeau
+    j = am.juger_audit(_taches_audit(bruit=0.003, graine=4), cfg)
+    assert j["drapeau_i"] is False
+    # CM3-01 (2) : B′ − D passe de +0,001 à +0,016 (écart 0,015 > m/2) sans changer de signe : drapeau (i)
+    j = am.juger_audit(_taches_audit(decalages={"D": -0.015}), cfg)
+    assert j["drapeau_i"] is True and j["par_delta"]["1"]["Bp-D"]["drapeau_i"] is True
+    assert abs(j["par_delta"]["1"]["Bp-D"]["ecart_moyen"] - 0.015) < 1e-12
+    j = am.juger_audit(_taches_audit(decalages={"D": -0.009}), cfg)                # 0,009 ≤ m/2 : pas de (i)
+    assert j["drapeau_i"] is False and j["par_delta"]["1"]["Bp-D"]["significatif"] is False  # écart-type nul : t × 0
+    j = am.juger_audit(_taches_audit(i1=0.02), cfg)                                 # Table 5 : I1 décalé de 0,02
+    assert j["par_delta"]["2"]["A I1"]["drapeau_i"] is True
+    j = am.juger_audit(_taches_audit(K=6, bruit=0.002, decalages={"C3": -0.004}, graine=2), cfg)
+    st = j["par_delta"]["1"]["B-C3"]
+    assert st["n"] == 6 and abs(st["multiplicateur_t"] - 4.0321) < 1e-3              # t(5 ; 0,995)
+    with leve("audit : moins de deux tâches"):
+        am.juger_audit(_taches_audit(K=1), cfg)
+
+
+def test_classes_sous_audit_sain_et_artefacts():
+    cfg = config_complete()
+    marges = {"1": 0.02, "2": 0.02}
+    base = {lib: (-0.15, -0.10) for lib in am.CONTRASTES_PRINCIPAUX}
+    # B′ − D « ≈ » (moyenne 0,005, bornes E4 ≈ ±0,01) : un écart de +0,012 significatif fait sortir de « ≈ »
+    an = fausse_analyse((0.12, 0.10), (-0.06, -0.06), base, q2={"Bp-D (iii)": (0.005, 0.005),
+                                                                "Bp-C3p (iii)": (0.03, 0.03)})
+    j = am.juger_audit(_taches_audit(), cfg)
+    c = am.classes_sous_audit(an, j, 0.02, marges, 0.02)                            # sain
+    assert c["artefact"] is False and c["par_delta"]["1"]["Bp-D"]["classe_lue"] == "≈"
+    assert c["par_delta"]["1"]["Table 5"]["ligne_lue"].startswith("A ne progresse pas")
+    j = am.juger_audit(_taches_audit(decalages={"D": -0.008}, bruit=0.0005, graine=1), cfg)   # 0,008 : sous m/2
+    c = am.classes_sous_audit(an, j, 0.02, marges, 0.02)
+    v = c["par_delta"]["1"]["Bp-D"]
+    assert v["classe_lue"] == "≈" and v["classe_decalee"] != "≈" and v["drapeau_i"] is False
+    assert v["drapeau_ii"] is True and c["artefact"] is True                        # changement de classe démontré
+    j = am.juger_audit(_taches_audit(decalages={"D": -0.008}, bruit=0.02, graine=1), cfg)     # même écart, très bruité
+    c = am.classes_sous_audit(an, j, 0.02, marges, 0.02)
+    assert c["par_delta"]["1"]["Bp-D"]["drapeau_ii"] is False                       # non démontré : pas d'artefact
+    # Table 5 : I3 de A ramené sous la valeur nulle par l'audit (écart −0,3, sans bruit : significatif si non nul)
+    j = am.juger_audit(_taches_audit(i3=-0.3, bruit=0.0001, graine=3), cfg)
+    j["par_delta"]["1"]["A I3"]["significatif"] = True
+    c = am.classes_sous_audit(an, j, 0.02, marges, 0.02)
+    assert c["par_delta"]["1"]["Table 5"]["ligne_decalee"] != c["par_delta"]["1"]["Table 5"]["ligne_lue"]
+    assert c["par_delta"]["1"]["Table 5"]["drapeau_ii"] is True
+    del an["1"]["indicateurs"]["A I3-nul"]
+    with leve("jugement impossible"):
+        am.classes_sous_audit(an, j, 0.02, marges, 0.02)
+
+
+def test_bornes_marges_et_cli_audit(tmp_path):
+    assert am._bornes_marges(0.02, 0.02, 0.02) == (0.02, {"1": 0.02, "2": 0.02}, 0.02)    # sain
+    for x in ((0.0, 0.02, 0.02), (0.02, None, 0.02), (0.02, 0.02, -1.0)):
+        with leve("audit : marges"):
+            am._bornes_marges(*x)
+    with leve("audit : --instances"):
+        am.main(["audit", "--prereg", str(tmp_path / "p.md"), "--source-run", "x", "--instances", "0:5",
+                 "--run-id", "y", "--S1", "0.02", "--S6", "0.02", "--S15", "0.02"])
 
 
 def test_audit_essai_refuse_pilote_etranger(tmp_path):
