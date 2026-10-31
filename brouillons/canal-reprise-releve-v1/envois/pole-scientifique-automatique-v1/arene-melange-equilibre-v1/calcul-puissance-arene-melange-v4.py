@@ -145,7 +145,7 @@ def ecarts_audit(au):
 
 def juger_simule(an_sim, c_par_cd, K, quantile_t):
     """Applique le critère S17 v4 complet ((i) écart pratique, (ii) changement de classe démontré) à une analyse de
-    décision simulée et à des écarts d'audit simulés (K tâches par δ). Renvoie True si un artefact est déclaré."""
+    décision simulée et à des écarts d'audit simulés (K tâches par δ). Renvoie (un drapeau (i), un drapeau (ii))."""
     mult = float(loi_t.ppf(quantile_t, K - 1))
     jug = {"par_delta": {}}
     for cd, cs in c_par_cd.items():
@@ -155,7 +155,9 @@ def juger_simule(an_sim, c_par_cd, K, quantile_t):
             bloc[cle] = {"ecart_moyen": moy, "significatif": bool(abs(moy) > mult * es),
                          "drapeau_i": bool(abs(moy) > am.CONFIG_V4.audit_critere) if cle != "A I3" else False}
         jug["par_delta"][cd] = bloc
-    return am.classes_sous_audit(an_sim, jug, S1, {"1": S6, "2": S6}, S15)["artefact"]
+    cl = am.classes_sous_audit(an_sim, jug, S1, {"1": S6, "2": S6}, S15)["par_delta"]
+    return (any(v["drapeau_i"] for b in cl.values() for v in b.values()),
+            any(v["drapeau_ii"] for b in cl.values() for v in b.values()))
 
 
 def main(argv):
@@ -472,29 +474,33 @@ def main(argv):
         K = cfg.audit_k
         an_sims = [fausse_analyse(m, q, pur, colonnes) for m, q, pur in scen["pilote N=100"]]
 
-        def taux(transfo, quantile_t, n=2000):
-            alertes = 0
+        def taux(transfo, quantile_t, n=2000, detail=False):
+            a_i = a_ii = a = 0
             for r_ in range(n):
                 an_sim = an_sims[r_ % len(an_sims)]
                 c_sim = {cd: {k: transfo(k, x[ga.integers(0, len(x), size=K)], x) for k, x in cs.items()}
                          for cd, cs in E.items()}
-                alertes += juger_simule(an_sim, c_sim, K, quantile_t)
-            return alertes / n
+                d_i, d_ii = juger_simule(an_sim, c_sim, K, quantile_t)
+                a_i, a_ii, a = a_i + d_i, a_ii + d_ii, a + (d_i or d_ii)
+            return (a / n, a_i / n, a_ii / n) if detail else a / n
 
         centre = (lambda k, tir, x: tir - x.mean())
         brut = (lambda k, tir, x: tir)
         gauss2 = (lambda k, tir, x: ga.normal(0.0, 2 * max(x.std(ddof=1), 1e-12), size=K))
         q_t = cfg.audit_quantile_t
-        f_c, f_b, f_g = taux(centre, q_t), taux(brut, q_t), taux(gauss2, q_t)
-        print(f"  fausse alerte (sur les 12 tests : 5 paires + Table 5, aux deux δ), t(K − 1 ; {q_t}) : écarts centrés "
-              f"{f_c:.3f} ; écarts bruts (amélioration systématique observée tenue pour normale) {f_b:.3f} ; bruit "
-              f"gaussien d'écart-type double {f_g:.3f}")
-        repli = max(f_c, f_b) > 0.05
-        if repli:
+        (f_c, f_ci, f_cii), (f_b, f_bi, f_bii), (f_g, f_gi, f_gii) = (taux(t_, q_t, detail=True)
+                                                                     for t_ in (centre, brut, gauss2))
+        print(f"  fausse alerte (sur les 12 tests : 5 paires + Table 5, aux deux δ), t(K − 1 ; {q_t}) — total (i seul ; "
+              f"ii seul) : écarts centrés (aucun artefact : définition de la fausse alerte) {f_c:.3f} ({f_ci:.3f} ; "
+              f"{f_cii:.3f}) ; bruit gaussien d'écart-type double, centré {f_g:.3f} ({f_gi:.3f} ; {f_gii:.3f}) ; écarts "
+              f"bruts (amélioration systématique observée reconduite : ce n'est plus une fausse alerte au sens strict) "
+              f"{f_b:.3f} ({f_bi:.3f} ; {f_bii:.3f})")
+        if f_c > 0.05:
             f_c2, f_b2 = taux(centre, 0.9995), taux(brut, 0.9995)
-            print(f"  repli du gel v4 § 3.2 déclenché : t(K − 1 ; 0,9995) : centrés {f_c2:.3f} ; bruts {f_b2:.3f}")
+            print(f"  repli du gel v4 § 3.2 déclenché (taux centré > 0,05) : t(K − 1 ; 0,9995) : centrés {f_c2:.3f} ; "
+                  f"bruts {f_b2:.3f}")
         else:
-            print("  repli du gel v4 § 3.2 non déclenché (taux ≤ 0,05)")
+            print("  repli du gel v4 § 3.2 non déclenché (taux centré ≤ 0,05)")
         for paire in ("Bp-D", "B-C3"):
             ligne = []
             for s in (0.005, 0.01, 0.015, 0.02):
