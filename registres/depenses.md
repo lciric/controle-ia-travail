@@ -280,3 +280,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-31 13:15 UTC — **en cours : D-ML-1** (GO-07) : 2,71 / 12, tour 3.
 - 2026-10-31 13:15 UTC — **fin : D-ML-1** (GO-2026-10-31-07) : 9 cellules sur 12 (Fable refusé, R-831), **4,30 / 12 USD** (barème du collisionneur, refus de Fable compté 0,24), « tout tient ».
 - 2026-10-31 13:34 UTC — **en cours : nœuds v12, tour 1** (GO-2026-10-31-06, run neuf, plafond 22 USD) ; appel de contrôle 0,003 USD ; reste du GO avant ce run ≈ 37,7 / 45.
+- 2026-10-31 14:22 UTC — **arrêt : nœuds v12, tour 1** (GO-2026-10-31-06), garde de plafond : **18,60 / 22 USD**, 9/12 cellules ; cumul du GO : 6,36 (v10) + 18,60 = **24,96 / 45** (plus un appel Kimi coupé de la v10, au pire 0,93).

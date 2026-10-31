@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-31 ≈ 13:16 UTC, lignée « session-depot », instance 2 (R-819 à R-921). **Passation : `registres/passations/2026-10-31-1316.md` (intermédiaire, à lire en premier ; reprise exacte décrite) ; passation de fin avant ≈ 00:15 UTC le 1er novembre.** Sauvegarde des données hors `main` : branche `donnees/sauvegarde-autonomie-2026-10-31-v1`.
+Dernière mise à jour : 2026-10-31 ≈ 17:58 UTC — **passation `registres/passations/2026-10-31-1758.md` à lire en premier** (coupure 14:10–17:56 par limite hebdomadaire ; tour 1 v12 des nœuds arrêté à 9/12 par la garde de plafond, décision de Lazar requise ; aucun processus actif). Mise à jour précédente : 2026-10-31 ≈ 13:16 UTC, lignée « session-depot », instance 2 (R-819 à R-921). **Passation : `registres/passations/2026-10-31-1316.md` (intermédiaire, à lire en premier ; reprise exacte décrite) ; passation de fin avant ≈ 00:15 UTC le 1er novembre.** Sauvegarde des données hors `main` : branche `donnees/sauvegarde-autonomie-2026-10-31-v1`.
 
 **Autonomie de 12 heures** (R-905, 12:17 → ≈ 00:15 UTC 1er novembre) ; surveillance du canal de conv-audit pendant toute la durée (consigne de Lazar, 13:07 UTC). Dernier message lu : conv-audit n° 299.
 
