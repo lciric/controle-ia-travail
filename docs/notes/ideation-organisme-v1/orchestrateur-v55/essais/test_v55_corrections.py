@@ -260,12 +260,16 @@ class TestCL19_03CleDesClasses(Base):
 class TestCL19_04Sessions(Base):
     def test_cas_sain_sessions_hors_de_la_sortie(self):
         g = self.gen()
+        vus = []
+        orig = g.session
+        g.session = lambda *l: (vus.append(orig(*l)), vus[-1])[1]
         g.executer()
         self.assertFalse(os.path.exists(os.path.join(self.tmp, "s", "sessions")))
-        self.assertTrue(g.sessions)
-        for opaque in g.sessions:
-            d = os.path.join(g.racine_sessions, opaque)
-            self.assertTrue(os.path.isdir(d))
+        self.assertTrue(g.sessions and vus)
+        self.assertEqual(self.fin()["sessions"]["rangement"]["retires_vides"], len(g.sessions))  # moteur simulé : aucune trace
+        self.assertFalse(os.path.exists(g.base_sessions))
+        for d in vus:
+            self.assertEqual(os.path.dirname(d), g.racine_sessions)
             self.assertFalse(os.path.realpath(d).startswith(os.path.realpath(os.path.join(self.tmp, "s")) + os.sep))
             for k in (1, 2):
                 self.assertFalse(os.path.exists(os.path.join(d, *[".."] * k, "coffre")))

@@ -90,6 +90,22 @@ class OrchestreV55:
             controle_a2(a["r"].statut, getattr(a["r"], "modele_servi", None), kw.get("modele"))
         return a
 
+    def ranger_sessions(self):
+        """Fin de run : retire les dossiers de session **vides** (aucune trace écrite), puis `sessions/` et la base s'ils sont
+        vides ; un dossier qui porte une trace est laissé. Rend {retires, gardes}."""
+        retires, gardes = 0, 0
+        for opaque in sorted(self.sessions):
+            d = os.path.join(self.racine_sessions, opaque)
+            if os.path.isdir(d) and not os.listdir(d):
+                os.rmdir(d)
+                retires += 1
+            elif os.path.isdir(d):
+                gardes += 1
+        for d in (self.racine_sessions, self.base_sessions):
+            if os.path.isdir(d) and not os.listdir(d):
+                os.rmdir(d)
+        return {"retires_vides": retires, "gardes_avec_traces": gardes}
+
     def deposer_cles(self):
         super().deposer_cles()
         self.coffre.deposer(self.tache("emplacement-sessions"), {"base": self.base_sessions, "racine": self.racine_sessions})

@@ -334,6 +334,7 @@ class PrePiloteV55(p54.PrePiloteV54, GenerationV55):
             raise
         finally:
             self.aiguilleur.sceller()
+            rangement = self.ranger_sessions()
             ecrire_json_scelle(os.path.join(self.sortie, "manifeste-fin.json"), {
                 "version": VERSION, "arret": self.arret, "noeud": self.noeud, "evenements": self.evenements,
                 "etapes": self.etapes_etat, "budget": self.budget.etat(), "graines": self.graines.manifeste(),
@@ -342,7 +343,7 @@ class PrePiloteV55(p54.PrePiloteV54, GenerationV55):
                 "exclues_a4": self.exclues_a4, "rendus": len(self.rendus), "fonds": len(self.fonds),
                 "m5": {k: len(v) for k, v in self.m5.items()}, "e5": self.decisions_e5,
                 "juges_absents": self.absents_juges, "modele_servi_juges": self.modele_servi_juges,
-                "sessions": {"base": self.base_sessions, "nombre": len(self.sessions)}})
+                "sessions": {"base": self.base_sessions, "nombre": len(self.sessions), "rangement": rangement}})
         return resultat
 
     def _analyse_m1(self, verdicts):

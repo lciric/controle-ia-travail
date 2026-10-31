@@ -144,6 +144,7 @@ class GenerationV55(OrchestreV55, c54.GenerationV54):
             raise
         finally:
             self.aiguilleur.sceller()
+            rangement = self.ranger_sessions()
             fin = {"version": VERSION, "generation": self.numero, "arret": self.arret, "noeud": self.noeud,
                    "evenements": self.evenements, "etapes": self.etapes_etat, "budget": self.budget.etat(),
                    "graines": self.graines.manifeste(), "coffre": self.coffre.journal(), "garde_kimi": self.garde_kimi.etat(),
@@ -155,7 +156,7 @@ class GenerationV55(OrchestreV55, c54.GenerationV54):
                    "refus_lectures": self.refus_lectures, "exclues_a4": self.exclues_a4, "appels_sautes": self.appels_sautes,
                    "fusions": {"comptees_a_part": len(self.fusions), "etiquette": "exploratoire (registre seulement)"},
                    "juges_absents": self.absents_juges, "modele_servi_juges": self.modele_servi_juges,
-                   "sessions": {"base": self.base_sessions, "nombre": len(self.sessions)}}
+                   "sessions": {"base": self.base_sessions, "nombre": len(self.sessions), "rangement": rangement}}
             ecrire_json_scelle(os.path.join(self.sortie, "manifeste-fin.json"), fin)
             with open(os.path.join(self.sortie, "empreintes-sortie.txt"), "w", encoding="utf-8") as g:
                 for rel in lister_fichiers(self.sortie):
