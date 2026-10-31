@@ -53,7 +53,7 @@ PETITE = am.replace(
     am.CONFIG_BASE_V4, d=3, K=2, T=3, n_propre_entr=300, n_attaque_entr=300, n_cal=2000, n_fpr=2000, n_eval=2000,
     n_mc=32, n_mc_final=32, departs=1, departs_final=1, departs_cout=1, departs_renforce=2, iter_renforce=20,
     iter_max=20, iter_entr=300, n_tenue=4, n_eval_tenue=200, pas_bissection=1, tol_fpr=0.03, departs_entr=3,
-    r_cible=3.0, deltas=(1.0, 1.5), unites_Bp=3, audit_departs=2, audit_n_mc=16, audit_iter=10,
+    r_cible=3.0, deltas=(1.0, 1.5), unites_Bp=4, audit_departs=2, audit_n_mc=16, audit_iter=10,
     audit_es_generations=3, audit_es_lambda=2)
 
 
@@ -375,10 +375,10 @@ def test_identite_prereg_sain_et_artefacts():
     ligne_cfg = next(li for li in ok.splitlines() if cfg.empreinte() in li and "Configuration" in li)
     artefacts = [
         (ok.replace(bloc, ""), "bloc de configuration canonique absent"),
-        (ok.replace('"T": 2', '"T": 2,,'), "bloc de configuration illisible"),
+        (ok.replace('"T": 3', '"T": 3,,'), "bloc de configuration illisible"),
         (ok.replace(am.IDENTIFIANT_PREREG, "PREREG-AUTRE"), "sans l'identifiant"),
         (ok.replace(f"RACINE = {am.RACINE} ", "RACINE = 20261101 "), "absent ou différent du code"),
-        (ok.replace('"T": 2', '"T": 3'), "configuration différente du code"),
+        (ok.replace('"T": 3', '"T": 4'), "configuration différente du code"),
         (ok.replace(ligne_cfg, "- Configuration : (absente)"), "empreinte de la configuration du code absente"),
         (ok.replace(code, "1" * 64), "empreinte du fichier de code exécuté absente"),
         (ok.replace(lib, "2" * 64), "bibliothèque modifiée après gel"),
@@ -390,8 +390,8 @@ def test_identite_prereg_sain_et_artefacts():
             am.exiger_identite_prereg(texte, cfg)
     with leve("(S4, configuration gelée)"):
         am.exiger_identite_prereg(ok, cfg, "0:99")
-    with pytest.raises(GardeArret, match=r"T : texte 3 ≠ code 2"):
-        am.exiger_identite_prereg(ok.replace('"T": 2', '"T": 3'), cfg)
+    with pytest.raises(GardeArret, match=r"T : texte 4 ≠ code 3"):
+        am.exiger_identite_prereg(ok.replace('"T": 3', '"T": 4'), cfg)
 
 
 def test_prereg_scelle_refus_pour_la_bonne_raison(tmp_path):
@@ -1189,7 +1189,8 @@ def test_classes_sous_audit_sain_et_artefacts():
         am.classes_sous_audit(an, j, 0.02, marges, 0.02)
 
 
-def test_bornes_marges_et_cli_audit(tmp_path):
+def test_bornes_marges_et_cli_audit(tmp_path, monkeypatch):
+    monkeypatch.setattr(am, "CONFIG_V4", config_complete())
     assert am._bornes_marges(0.02, 0.02, 0.02) == (0.02, {"1": 0.02, "2": 0.02}, 0.02)    # sain
     for x in ((0.0, 0.02, 0.02), (0.02, None, 0.02), (0.02, 0.02, -1.0)):
         with leve("audit : marges"):

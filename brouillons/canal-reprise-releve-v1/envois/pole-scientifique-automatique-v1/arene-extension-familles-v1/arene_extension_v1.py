@@ -562,7 +562,7 @@ def couche_exacte(fam: Famille, delta: float, cfg: Config) -> dict:
     elif fam.nom in ("C2", "CV"):
         ex = exact_couvrable(fam, delta, cfg)
     else:
-        raise GardeArret(f"famille inconnue : {fam.nom!r}")
+        raise GardeArret(f"couche exacte : famille inconnue {fam.nom!r}")
     exiger_regime(fam.nom, ex, cfg)
     return ex
 
@@ -573,10 +573,10 @@ def exiger_regime(nom: str, ex: dict, cfg: Config) -> None:
     th = cfg.theta_couverture
     if nom in NON_COUVRABLES:
         if not (ex["V_pur"] < th and ex["V_union"] >= th):
-            raise GardeArret(f"régime non tenu ({nom}) : V_pur = {ex['V_pur']:.4f}, V_union = {ex['V_union']:.4f}, "
-                             f"θ* = {th}")
+            raise GardeArret(f"régime non couvrable non tenu ({nom}) : V_pur = {ex['V_pur']:.4f}, "
+                             f"V_union = {ex['V_union']:.4f}, θ* = {th}")
     elif not ex["V_pur"] >= th:
-        raise GardeArret(f"régime non tenu ({nom}) : témoin non couvrable, V_pur = {ex['V_pur']:.4f} < θ* = {th}")
+        raise GardeArret(f"régime témoin non tenu ({nom}) : V_pur = {ex['V_pur']:.4f} < θ* = {th}")
 
 
 # =================================================================================================================
@@ -920,7 +920,7 @@ def exiger_departs_finis(non_finis: int, total: int, cfg: Config) -> None:
 class Contexte:
     def __init__(self, nom_famille: str, instance: int, code_delta: int, racine: int, cfg: Config):
         if nom_famille not in FAMILLES:
-            raise GardeArret(f"famille inconnue : {nom_famille!r}")
+            raise GardeArret(f"contexte : famille inconnue {nom_famille!r}")
         self.cfg, self.i, self.cd, self.r = cfg, instance, code_delta, racine
         self.cf = FAMILLES[nom_famille]
         self.fam = generer_familles(instance, racine, cfg)[nom_famille]
