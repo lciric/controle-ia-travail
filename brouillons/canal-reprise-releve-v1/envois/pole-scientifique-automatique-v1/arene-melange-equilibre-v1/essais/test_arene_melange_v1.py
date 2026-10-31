@@ -81,11 +81,14 @@ def test_decision_refusee_prereg_scelle_d_une_autre_experience():
 
 
 def test_identite_prereg_sain_et_artefacts():
+    import hashlib
+
+    code = hashlib.sha256(Path(am.__file__).read_bytes()).hexdigest()
     ok = (f"{am.IDENTIFIANT_PREREG}\nRACINE = {am.RACINE}\nRACINE_TENUE = {am.RACINE_TENUE}\n"
-          f"configuration {am.CONFIG_V1.empreinte()}\n")
+          f"configuration {am.CONFIG_V1.empreinte()}\ncode {code}\n")
     am.exiger_identite_prereg(ok)
     for mauvais in (ok.replace(am.IDENTIFIANT_PREREG, "AUTRE"), ok.replace(str(am.RACINE) + "\n", "20261101\n"),
-                    ok.replace(am.CONFIG_V1.empreinte(), "0" * 64)):
+                    ok.replace(am.CONFIG_V1.empreinte(), "0" * 64), ok.replace(code, "1" * 64)):
         with pytest.raises(GardeArret):
             am.exiger_identite_prereg(mauvais)
 

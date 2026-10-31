@@ -1,0 +1,205 @@
+# Calcul de puissance — arène mélange d'équilibre — v1 (RACINE_ESSAI seulement)
+fichier d'essai : brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/essai-pilote-racine-essai-v2.json
+racine = 20261291 ; racine des tenues = 20261292 ; configuration 6685585fcfc028e0617d6786eb78bdb4fc159930af8fdf0444be1085f960d2ca
+code : 9ed8c8b542477b4e35e3b8ed1fe3d2c75104404d5ea77878985d6ba592c5d326 ; commit 5919719a88c65ccf1e4b2214458e3a6d7a3a639c ; numpy 2.5.3 ; scipy 1.18.1
+tâches lues : 48 (24 instances × 2 valeurs de δ = (1.6, 2.4))
+
+## 1. Moyennes par bras (pilote)
+δ code 1 (δ = 1.6), n = 24
+  A : (iii) 0.0427 ; (ii) 0.4398 ; (i) 0.2674 ; coût (fraction de δ) 0.8242
+  B : (iii) 0.1676 ; (ii) 0.3838 ; (i) 0.2326 ; coût (fraction de δ) 0.9948
+  C : (iii) 0.1759 ; (ii) 0.4135 ; (i) 0.2007 ; coût (fraction de δ) 1.0000
+  D : (iii) 0.3539 ; (ii) 0.8272 ; (i) 0.4288 ; coût (fraction de δ) 1.0000
+δ code 2 (δ = 2.4), n = 24
+  A : (iii) 0.0008 ; (ii) 0.4075 ; (i) 0.2639 ; coût (fraction de δ) 0.5221
+  B : (iii) 0.0374 ; (ii) 0.3480 ; (i) 0.1249 ; coût (fraction de δ) 0.8242
+  C : (iii) 0.0374 ; (ii) 0.3453 ; (i) 0.0927 ; coût (fraction de δ) 0.8190
+  D : (iii) 0.0326 ; (ii) 0.7774 ; (i) 0.1319 ; coût (fraction de δ) 0.9036
+
+## 2. Contrastes appariés (pilote, rééchantillonnage 10 000, racine d'essai)
+  δ1 B-A (ii)     moyenne -0.0560 ; écart-type 0.0785 ; IC95 [-0.0852 ; -0.0240] ; zéros exacts 0
+  δ1 B-A (iii)    moyenne +0.1249 ; écart-type 0.0403 ; IC95 [+0.1085 ; +0.1398] ; zéros exacts 0
+  δ1 B-A cout     moyenne +0.1706 ; écart-type 0.1436 ; IC95 [+0.1172 ; +0.2305] ; zéros exacts 3
+  δ1 B-C (iii)    moyenne -0.0083 ; écart-type 0.0267 ; IC95 [-0.0202 ; +0.0004] ; zéros exacts 0
+  δ1 B-D (ii)     moyenne -0.4435 ; écart-type 0.0744 ; IC95 [-0.4695 ; -0.4129] ; zéros exacts 0
+  δ1 B-D (iii)    moyenne -0.1862 ; écart-type 0.0363 ; IC95 [-0.2015 ; -0.1730] ; zéros exacts 0
+  δ1 C-A (iii)    moyenne +0.1332 ; écart-type 0.0318 ; IC95 [+0.1206 ; +0.1455] ; zéros exacts 0
+  δ1 D-A (iii)    moyenne +0.3112 ; écart-type 0.0414 ; IC95 [+0.2937 ; +0.3263] ; zéros exacts 0
+  δ2 B-A (ii)     moyenne -0.0595 ; écart-type 0.0755 ; IC95 [-0.0887 ; -0.0298] ; zéros exacts 0
+  δ2 B-A (iii)    moyenne +0.0367 ; écart-type 0.0059 ; IC95 [+0.0344 ; +0.0391] ; zéros exacts 0
+  δ2 B-A cout     moyenne +0.3021 ; écart-type 0.0956 ; IC95 [+0.2643 ; +0.3385] ; zéros exacts 0
+  δ2 B-C (iii)    moyenne -0.0000 ; écart-type 0.0082 ; IC95 [-0.0032 ; +0.0033] ; zéros exacts 0
+  δ2 B-D (ii)     moyenne -0.4294 ; écart-type 0.0597 ; IC95 [-0.4506 ; -0.4033] ; zéros exacts 0
+  δ2 B-D (iii)    moyenne +0.0048 ; écart-type 0.0066 ; IC95 [+0.0021 ; +0.0073] ; zéros exacts 0
+  δ2 C-A (iii)    moyenne +0.0367 ; écart-type 0.0083 ; IC95 [+0.0334 ; +0.0399] ; zéros exacts 0
+  δ2 D-A (iii)    moyenne +0.0319 ; écart-type 0.0049 ; IC95 [+0.0299 ; +0.0337] ; zéros exacts 0
+
+## 3. Puissance de la règle primaire (B − A sur (iii), « estimation ≥ S1 et borne basse 95 % > 0 » dans les deux δ), 4000 simulations
+instances appariées : 24 ; écart-type pilote δ1 0.0403, δ2 0.0059 ; corrélation entre δ -0.023
+### S1 = 0.00
+N    e=0.00 e=0.01 e=0.02 e=0.03 e=0.04 e=0.05 e=0.06 e=0.08 e=0.10 e=0.12 e=0.15
+10    0.001  0.162  0.362  0.575  0.754  0.900  0.964  0.999  1.000  1.000  1.000
+15    0.001  0.200  0.477  0.742  0.910  0.982  0.998  1.000  1.000  1.000  1.000
+20    0.001  0.245  0.579  0.858  0.974  0.996  1.000  1.000  1.000  1.000  1.000
+30    0.000  0.298  0.743  0.961  0.998  1.000  1.000  1.000  1.000  1.000  1.000
+40    0.000  0.374  0.849  0.988  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+60    0.001  0.495  0.951  1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+80    0.000  0.607  0.986  1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+100   0.001  0.700  0.997  1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+150   0.001  0.854  1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  N =  10 : effet minimal détectable (grille) à 0,8 : 0.05 ; à 0,9 : 0.06
+  N =  15 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.04
+  N =  20 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.04
+  N =  30 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.03
+  N =  40 : effet minimal détectable (grille) à 0,8 : 0.02 ; à 0,9 : 0.03
+  N =  60 : effet minimal détectable (grille) à 0,8 : 0.02 ; à 0,9 : 0.02
+  N =  80 : effet minimal détectable (grille) à 0,8 : 0.02 ; à 0,9 : 0.02
+  N = 100 : effet minimal détectable (grille) à 0,8 : 0.02 ; à 0,9 : 0.02
+  N = 150 : effet minimal détectable (grille) à 0,8 : 0.01 ; à 0,9 : 0.02
+### S1 = 0.02
+N    e=0.00 e=0.01 e=0.02 e=0.03 e=0.04 e=0.05 e=0.06 e=0.08 e=0.10 e=0.12 e=0.15
+10    0.000  0.000  0.159  0.578  0.756  0.888  0.964  0.996  1.000  1.000  1.000
+15    0.000  0.000  0.209  0.735  0.913  0.982  0.998  1.000  1.000  1.000  1.000
+20    0.000  0.000  0.235  0.839  0.975  0.999  1.000  1.000  1.000  1.000  1.000
+30    0.000  0.000  0.252  0.916  0.996  1.000  1.000  1.000  1.000  1.000  1.000
+40    0.000  0.000  0.248  0.946  0.999  1.000  1.000  1.000  1.000  1.000  1.000
+60    0.000  0.000  0.244  0.970  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+80    0.000  0.000  0.241  0.983  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+100   0.000  0.000  0.251  0.995  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+150   0.000  0.000  0.254  0.999  1.000  1.000  1.000  1.000  1.000  1.000  1.000
+  N =  10 : effet minimal détectable (grille) à 0,8 : 0.05 ; à 0,9 : 0.06
+  N =  15 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.04
+  N =  20 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.04
+  N =  30 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.03
+  N =  40 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.03
+  N =  60 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.03
+  N =  80 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.03
+  N = 100 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.03
+  N = 150 : effet minimal détectable (grille) à 0,8 : 0.03 ; à 0,9 : 0.03
+### S1 = 0.03
+N    e=0.00 e=0.01 e=0.02 e=0.03 e=0.04 e=0.05 e=0.06 e=0.08 e=0.10 e=0.12 e=0.15
+10    0.000  0.000  0.000  0.222  0.719  0.891  0.961  0.999  1.000  1.000  1.000
+15    0.000  0.000  0.000  0.253  0.836  0.964  0.996  1.000  1.000  1.000  1.000
+20    0.000  0.000  0.000  0.248  0.858  0.985  0.999  1.000  1.000  1.000  1.000
+30    0.000  0.000  0.000  0.251  0.913  0.996  1.000  1.000  1.000  1.000  1.000
+40    0.000  0.000  0.000  0.262  0.943  0.999  1.000  1.000  1.000  1.000  1.000
+60    0.000  0.000  0.000  0.253  0.971  1.000  1.000  1.000  1.000  1.000  1.000
+80    0.000  0.000  0.000  0.232  0.987  1.000  1.000  1.000  1.000  1.000  1.000
+100   0.000  0.000  0.000  0.239  0.991  1.000  1.000  1.000  1.000  1.000  1.000
+150   0.000  0.000  0.000  0.248  0.998  1.000  1.000  1.000  1.000  1.000  1.000
+  N =  10 : effet minimal détectable (grille) à 0,8 : 0.05 ; à 0,9 : 0.06
+  N =  15 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.05
+  N =  20 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.05
+  N =  30 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.04
+  N =  40 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.04
+  N =  60 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.04
+  N =  80 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.04
+  N = 100 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.04
+  N = 150 : effet minimal détectable (grille) à 0,8 : 0.04 ; à 0,9 : 0.04
+### S1 = 0.05
+N    e=0.00 e=0.01 e=0.02 e=0.03 e=0.04 e=0.05 e=0.06 e=0.08 e=0.10 e=0.12 e=0.15
+10    0.000  0.000  0.000  0.000  0.000  0.255  0.792  0.989  1.000  1.000  1.000
+15    0.000  0.000  0.000  0.000  0.000  0.242  0.839  0.997  1.000  1.000  1.000
+20    0.000  0.000  0.000  0.000  0.000  0.257  0.866  1.000  1.000  1.000  1.000
+30    0.000  0.000  0.000  0.000  0.000  0.244  0.916  1.000  1.000  1.000  1.000
+40    0.000  0.000  0.000  0.000  0.000  0.241  0.944  1.000  1.000  1.000  1.000
+60    0.000  0.000  0.000  0.000  0.000  0.247  0.972  1.000  1.000  1.000  1.000
+80    0.000  0.000  0.000  0.000  0.000  0.240  0.987  1.000  1.000  1.000  1.000
+100   0.000  0.000  0.000  0.000  0.000  0.253  0.995  1.000  1.000  1.000  1.000
+150   0.000  0.000  0.000  0.000  0.000  0.249  0.999  1.000  1.000  1.000  1.000
+  N =  10 : effet minimal détectable (grille) à 0,8 : 0.08 ; à 0,9 : 0.08
+  N =  15 : effet minimal détectable (grille) à 0,8 : 0.06 ; à 0,9 : 0.08
+  N =  20 : effet minimal détectable (grille) à 0,8 : 0.06 ; à 0,9 : 0.08
+  N =  30 : effet minimal détectable (grille) à 0,8 : 0.06 ; à 0,9 : 0.06
+  N =  40 : effet minimal détectable (grille) à 0,8 : 0.06 ; à 0,9 : 0.06
+  N =  60 : effet minimal détectable (grille) à 0,8 : 0.06 ; à 0,9 : 0.06
+  N =  80 : effet minimal détectable (grille) à 0,8 : 0.06 ; à 0,9 : 0.06
+  N = 100 : effet minimal détectable (grille) à 0,8 : 0.06 ; à 0,9 : 0.06
+  N = 150 : effet minimal détectable (grille) à 0,8 : 0.06 ; à 0,9 : 0.06
+
+Erreur de première espèce à e = 0 (S1 = 0, deux δ exigés) :
+  N =  10 : deux δ 0.0003 ; δ1 seul 0.0508 ; δ2 seul 0.0205
+  N =  15 : deux δ 0.0013 ; δ1 seul 0.0530 ; δ2 seul 0.0208
+  N =  20 : deux δ 0.0005 ; δ1 seul 0.0505 ; δ2 seul 0.0200
+  N =  30 : deux δ 0.0000 ; δ1 seul 0.0382 ; δ2 seul 0.0205
+  N =  40 : deux δ 0.0008 ; δ1 seul 0.0408 ; δ2 seul 0.0232
+  N =  60 : deux δ 0.0010 ; δ1 seul 0.0375 ; δ2 seul 0.0232
+  N =  80 : deux δ 0.0005 ; δ1 seul 0.0338 ; δ2 seul 0.0192
+  N = 100 : deux δ 0.0008 ; δ1 seul 0.0325 ; δ2 seul 0.0205
+  N = 150 : deux δ 0.0005 ; δ1 seul 0.0330 ; δ2 seul 0.0260
+
+## 4. Contrastes témoins : puissance pour exclure l'hypothèse rivale et lire le rôle du programme linéaire
+  B-D (iii) : moyenne pilote δ1 -0.1862, δ2 +0.0048 ; écart-type δ1 0.0363, δ2 0.0066
+    N = 40 : demi-largeur de l'IC95 attendue δ1 0.0113, δ2 0.0020
+    N = 60 : demi-largeur de l'IC95 attendue δ1 0.0092, δ2 0.0017
+    N = 80 : demi-largeur de l'IC95 attendue δ1 0.0080, δ2 0.0014
+    N = 100 : demi-largeur de l'IC95 attendue δ1 0.0071, δ2 0.0013
+  B-C (iii) : moyenne pilote δ1 -0.0083, δ2 -0.0000 ; écart-type δ1 0.0267, δ2 0.0082
+    N = 40 : demi-largeur de l'IC95 attendue δ1 0.0083, δ2 0.0025
+    N = 60 : demi-largeur de l'IC95 attendue δ1 0.0067, δ2 0.0021
+    N = 80 : demi-largeur de l'IC95 attendue δ1 0.0058, δ2 0.0018
+    N = 100 : demi-largeur de l'IC95 attendue δ1 0.0052, δ2 0.0016
+  B-A (ii) non-régression : moyenne pilote δ1 -0.0560, δ2 -0.0595 ; écart-type δ1 0.0785, δ2 0.0755
+    N = 40 : demi-largeur de l'IC95 attendue δ1 0.0243, δ2 0.0234
+    N = 60 : demi-largeur de l'IC95 attendue δ1 0.0199, δ2 0.0191
+    N = 80 : demi-largeur de l'IC95 attendue δ1 0.0172, δ2 0.0165
+    N = 100 : demi-largeur de l'IC95 attendue δ1 0.0154, δ2 0.0148
+
+## 4 bis. Puissance de la non-régression sur (ii) et de l'équivalence B − C (rééchantillonnage centré)
+  non-régression : P(borne basse 95 % de B − A sur (ii) > −S5 dans les deux δ) si l'écart vrai vaut e
+    S5 = 0.02, e = +0.000 : N=40 0.140 ; N=60 0.290 ; N=100 0.588 ; N=150 0.815
+    S5 = 0.02, e = -0.010 : N=40 0.017 ; N=60 0.039 ; N=100 0.085 ; N=150 0.152
+    S5 = 0.03, e = +0.000 : N=40 0.503 ; N=60 0.764 ; N=100 0.969 ; N=150 0.998
+    S5 = 0.03, e = -0.015 : N=40 0.062 ; N=60 0.122 ; N=100 0.279 ; N=150 0.489
+    S5 = 0.05, e = +0.000 : N=40 0.985 ; N=60 0.999 ; N=100 1.000 ; N=150 1.000
+    S5 = 0.05, e = -0.025 : N=40 0.283 ; N=60 0.532 ; N=100 0.845 ; N=150 0.973
+  équivalence B − C : P(IC90 ⊂ [−S7 ; S7] dans les deux δ) si l'écart vrai est nul
+    S7 = 0.01 : N=40 0.636 ; N=60 0.831 ; N=100 0.954 ; N=150 0.993
+    S7 = 0.02 : N=40 0.984 ; N=60 0.997 ; N=100 1.000 ; N=150 1.000
+    S7 = 0.03 : N=40 1.000 ; N=60 1.000 ; N=100 1.000 ; N=150 1.000
+
+## 5. Temps processeur mesuré (temps processeur du processus, `time.process_time`, un fil par processus)
+  par tâche (δ, instance), 4 bras : moyenne 23.85 s ; médiane 24.20 s ; maximum 32.01 s
+  bras A : par tour (moyenne sur tâches) 0.10 0.09 0.09 0.09 0.09 0.09 0.09 0.09 s ; phase finale (meilleure réponse finale, tenues, coût) 1.46 s
+  bras B : par tour (moyenne sur tâches) 0.09 0.14 0.14 0.15 0.17 0.17 0.18 0.19 s ; phase finale (meilleure réponse finale, tenues, coût) 3.07 s
+  bras C : par tour (moyenne sur tâches) 0.08 0.11 0.12 0.14 0.15 0.17 0.18 0.20 s ; phase finale (meilleure réponse finale, tenues, coût) 5.77 s
+  bras D : par tour (moyenne sur tâches) 0.35 0.60 0.56 0.66 0.61 0.67 0.72 0.71 s ; phase finale (meilleure réponse finale, tenues, coût) 5.50 s
+  pilote : mur 590.4 s sur 2 processus ; somme des temps processeur des tâches 1145.0 s ; efficacité 0.97
+  N =  10 instances × 2 δ : temps processeur projeté 8.0 min ; mur projeté sur 2 cœurs 4.1 min
+  N =  15 instances × 2 δ : temps processeur projeté 11.9 min ; mur projeté sur 2 cœurs 6.1 min
+  N =  20 instances × 2 δ : temps processeur projeté 15.9 min ; mur projeté sur 2 cœurs 8.2 min
+  N =  30 instances × 2 δ : temps processeur projeté 23.9 min ; mur projeté sur 2 cœurs 12.3 min
+  N =  40 instances × 2 δ : temps processeur projeté 31.8 min ; mur projeté sur 2 cœurs 16.4 min
+  N =  60 instances × 2 δ : temps processeur projeté 47.7 min ; mur projeté sur 2 cœurs 24.6 min
+  N =  80 instances × 2 δ : temps processeur projeté 63.6 min ; mur projeté sur 2 cœurs 32.8 min
+  N = 100 instances × 2 δ : temps processeur projeté 79.5 min ; mur projeté sur 2 cœurs 41.0 min
+  N = 150 instances × 2 δ : temps processeur projeté 119.3 min ; mur projeté sur 2 cœurs 61.5 min
+  N maximal sous 2 h de mur sur 2 cœurs, au temps maximal par tâche : 218
+
+## 6. Plomberie et déclencheurs d'audit observés sur le pilote (racine d'essai)
+  entraînements non convergés : 1/1632
+  projections après SLSQP (comptées) : 23
+  coût par contournement censuré à δ (non contourné à δ) : A 0.06 ; B 0.48 ; C 0.50 ; D 0.50
+  B : équilibre final pur 0.00 des tâches ; égal à l'uniforme 0.00 ; support moyen 3.75
+  B : V ≥ 0,99 : 0 tâches ; B = C exactement : 0 tâches
+  fausses alertes finales mesurées : moyenne 0.0100 ; min 0.0077 ; max 0.0132
+  B : valeur du jeu restreint − (iii) final : moyenne +0.0387 (positif attendu : l'attaquant final trouve mieux que les attaques du jeu restreint)
+  nouveauté résiduelle moyenne par tour (A, B, C, D) :
+    A : 1.000 0.824 0.492 0.334 0.247 0.155 0.131 0.144
+    B : 1.000 0.902 0.644 0.571 0.426 0.281 0.213 0.170
+    C : 1.000 0.502 0.342 0.232 0.175 0.137 0.087 0.084
+    D : 1.000 0.842 0.599 0.365 0.261 0.209 0.178 0.187
+  contrôle de l'optimiseur : (iii) standard − (iii) renforcé, par bras et par δ (positif = le renforcé trouve mieux) :
+    δ1 : A moyenne +0.0002 max +0.0051 part > 0,01 0.00 ; B moyenne +0.0002 max +0.0046 part > 0,01 0.00 ; C moyenne -0.0005 max +0.0030 part > 0,01 0.00 ; D moyenne -0.0005 max +0.0093 part > 0,01 0.00
+    δ1 : B − A avec l'attaquant standard +0.1252 ; avec le renforcé +0.1253
+    δ2 : A moyenne -0.0001 max +0.0001 part > 0,01 0.00 ; B moyenne -0.0001 max +0.0015 part > 0,01 0.00 ; C moyenne +0.0004 max +0.0041 part > 0,01 0.00 ; D moyenne -0.0005 max +0.0022 part > 0,01 0.00
+    δ2 : B − A avec l'attaquant standard +0.0371 ; avec le renforcé +0.0371
+  (iii) par tour contre la meilleure réponse du tour (moyenne) :
+    A : 0.030 0.023 0.026 0.026 0.021 0.027 0.026 0.025
+    B : 0.030 0.010 0.057 0.059 0.077 0.088 0.091 0.100
+    C : 0.030 0.056 0.075 0.087 0.094 0.100 0.102 0.106
+    D : 0.030 0.052 0.142 0.187 0.193 0.198 0.198 0.194
+
+real	0m8.312s
+user	0m8.095s
+sys	0m0.126s

@@ -147,6 +147,9 @@ def exiger_identite_prereg(texte: str) -> None:
             raise GardeArret(f"préenregistrement : {nom} = {val} absent ou différent du code")
     if not re.search(rf"\b{CONFIG_V1.empreinte()}\b", texte):
         raise GardeArret("préenregistrement : empreinte de la configuration du code absente")
+    code = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    if not re.search(rf"\b{code}\b", texte):
+        raise GardeArret("préenregistrement : empreinte du fichier de code exécuté absente (code modifié après gel ?)")
 
 
 def exiger_prereg_arene(chemin: str | Path) -> str:
