@@ -133,6 +133,9 @@ class TestCL18_02CoupureEtNoeud(Base):
         fin = lire(os.path.join(self.tmp, "c", "generation-1", "manifeste-fin.json"))
         coupee = [n for n, e in fin["etapes"].items() if e == bv.NON_MESUREE]
         self.assertEqual(len(coupee), 1)
+        # l'étape déclarée non mesurée est celle où un appel n'a pas été lancé faute de reste (coupée en route, pas « jouée »)
+        self.assertTrue(any(e["evenement"] == "coupure-budget" and e["etape"] == coupee[0] for e in fin["evenements"]))
+        self.assertTrue(any(j["quoi"] == "coupee" and j["etape"] == coupee[0] and j["signalee"] for j in fin["budget"]["journal"]))
         self.assertNotEqual(fin["etapes"][coupee[0]], "jouee")
         self.assertFalse(fin["budget"]["c13_budget_satisfaite"])
         self.assertIn("C13", fin["noeud"])
@@ -319,7 +322,7 @@ class TestCL18_09Specification(unittest.TestCase):
 
     def test_dep4_exige_au_lancement_reel(self):
         conf = {"pieces": {}}
-        self.assertTrue(any("dep4" in m for m in cfg.verifier_dependances_lancement(conf)))
+        self.assertTrue(any("confirmation de DEP4" in m for m in cfg.verifier_dependances_lancement(conf)))
         self.assertTrue(any("decisions_a15" in m for m in cfg.verifier_dependances_lancement(conf, "pre_pilote")))
 
 

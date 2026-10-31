@@ -184,6 +184,9 @@ class TestI6Types(Base):
                 d, _ = self.decl(annexe=self.annexe(f"i6-{i}.md", **modif))
                 self.assertFalse(d["produit"])
                 self.assertIn("non produit (annexe non conforme)", d["cause"])
+                # refusée par le contrôle de type, pas par une garde suivante (les niches en double tombent déjà au contrôle v53 des
+                # tables, qui exige une valeur par paire de niches distinctes)
+                self.assertIn("A20" if quoi == "niches en double" else "I-6", d["motif"])
 
 
 class TestI7I8Paires(Base):
@@ -236,13 +239,16 @@ class TestI9I10Annexe(Base):
         d, _ = self.decl()
         self.assertEqual(d["non_vacuite_e0"], {"argmax": ["e1", "e2"], "dans_profil": 1, "hors_profil": 4, "meme_niche": 1,
                                                "score_argmax": 1.5})
-        cas = {"jeu absent": {}, "profil vide": {"e1": {"niche": "n1_seq", "structures": []}, "e3": {"niche": "n3_ano", "structures": []}},
-               "tout dans le profil": {"e1": {"niche": "n1_seq", "structures": ["me_cusum"]}, "e2": {"niche": "n2_act", "structures": ["me_cusum"]}}}
-        for i, (quoi, jeu) in enumerate(cas.items()):
+        cas = {"jeu absent": ({}, "jeu_essai_non_vacuite absent"),
+               "profil vide": ({"e1": {"niche": "n1_seq", "structures": []}, "e3": {"niche": "n3_ano", "structures": []}}, "profil vide"),
+               "tout dans le profil": ({"e1": {"niche": "n1_seq", "structures": ["me_cusum"]}, "e2": {"niche": "n2_act", "structures": ["me_cusum"]}},
+                                       "toutes les paires")}
+        for i, (quoi, (jeu, motif)) in enumerate(cas.items()):
             with self.subTest(quoi):
                 d, _ = self.decl(annexe=A.annexe_meta(self.tmp, nom=f"i10-{i}.md", jeu=jeu))
                 self.assertFalse(d["produit"])
                 self.assertIn("I-10", d["motif"])
+                self.assertIn(motif, d["motif"])
 
 
 class TestAnnexeReelle(CasAvecDossier):

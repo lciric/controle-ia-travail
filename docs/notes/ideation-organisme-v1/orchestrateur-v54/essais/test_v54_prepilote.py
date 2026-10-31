@@ -366,7 +366,7 @@ class TestLanceurV6(CasAvecDossier):
         code, _, err, _ = self.lancer(reel + [A.registre_go(self.tmp, A.ligne_go("GO-2026-10-31-09", "45 USD"))],
                                       env={"PATH": "/usr/bin", "GO_ID": "GO-2026-10-31-09"})
         self.assertEqual(code, 2)
-        self.assertIn("dep4", err)
+        self.assertIn("confirmation de DEP4", err)
         conf["pieces"]["dep4"] = A.ecrire(os.path.join(self.tmp, "p", "dep4.md"), "Confirmation DEP4 (essai).")
         conf["dependances"] = {"dep4": "dep4"}
         ch2 = self.ecrire_conf(conf, "conf2.json")
