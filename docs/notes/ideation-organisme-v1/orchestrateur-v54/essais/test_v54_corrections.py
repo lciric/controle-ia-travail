@@ -405,8 +405,10 @@ class TestCL18_15Essais(Base):
         self.assertTrue(any(e["evenement"] == "passe-tableau-arretee" and "A18" in e["motif"] for e in fin["evenements"]))
 
     def test_la_suite_n_ecrit_pas_dans_l_arbre(self):
+        import aides
         self.assertFalse(self.tmp.startswith(RACINE))
-        self.assertFalse(os.path.exists(os.path.join(ICI, "_tmp")))
+        self.assertFalse(aides.BASE.startswith(RACINE))
+        self.assertTrue(sys.dont_write_bytecode)
 
 
 class TestCL18_16Budget(unittest.TestCase):
