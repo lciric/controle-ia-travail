@@ -347,7 +347,7 @@ Autres cas (texte de base ; porte des juges seule → conjonction entière d'emb
 | Table seule retirée (3) | 0,13 (0,145) | axe 7 lu sur les bardeaux seuls (rappel prédit 0,60) ; « table non mesurée » | C6 lue sur la mémoire et l'union réduite aux bardeaux : 0,81 (0,83) dans ce cas, 0,93 (0,95) mélangée ; réserve ; C13 inchangée |
 | Passe « tableau » retirée (4) | 0,04 (0,07) | M5 sur 10 fiches ; M8 : tableau construit, redites non mesurées | C8 sur 10 fiches : 0,91 ; C11 lue sur le tableau construit : inchangée ; réserve « M5 sur 10 fiches » ; C13 inchangée |
 | M6b non lancée (D-g b) | — (0,09) | M6b « non mesurée (budget) » | aucune condition (hors porte) ; réserve ; C13 inchangée |
-| Autre étape protégée non lancée ou coupée à S17 | 0,004 (0,009) | mesure « non mesurée (budget) » | **C13 non satisfaite** |
+| Autre étape protégée non lancée ou coupée à S17 | 0,004 (0,008) | mesure « non mesurée (budget) » | **C13 non satisfaite** |
 
 **Analyses.** Toutes les comparaisons sont pré-définies dans « Métrique » ; aucune autre ne décide. Unité indépendante : le fond (rééchantillonnage par fond). Corrélation longueur–verdict par juge à l'intérieur de chaque classe : rapportée (alerte à |rho| > 0,5, descriptive). **Aucune comparaison entre bras de bisociation, entre passes de Kimi, ni entre metteurs en forme n'est testée** (R-634).
 
