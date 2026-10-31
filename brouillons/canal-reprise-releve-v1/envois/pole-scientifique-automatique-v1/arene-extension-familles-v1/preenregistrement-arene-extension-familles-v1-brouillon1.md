@@ -81,7 +81,37 @@ Double oracle (McMahan, Gordon et Blum 2003 ; PDF versé au dépôt, R-736, non 
 
 ### A. Prédictions du gel (écrites avant tout code) et leur sort au pilote d'essai
 
-⟦PREDICTIONS_A⟧
+Gel `gel-conception-arene-extension-v1.md` (12:52 UTC, avant tout code ; § 4) ; pilote d'essai sur la racine 20265011 (12 instances × 2 δ × 4 familles) et 20265021 (120 configurations). Moyennes sur les 12 instances [intervalle à 95 % du rééchantillonnage des instances].
+
+| # | Prédiction du gel (avant) | Pilote d'essai : δ = 1,0 ; δ = 1,4 | Sort |
+|---|---|---|---|
+| X1 | Couche exacte N2 : V_pur 0,0004 / 0,0001 ; V_mél ≈ 0,44 / 0,39 ; V_union ≈ 0,82 / 0,70 | ⟦X1⟧ | ⟦X1s⟧ |
+| X2 | NV : V_pur = α ; V_mél ≈ 0,445 / 0,395 ; V_union ≈ 0,82 / 0,70 | ⟦X2⟧ | ⟦X2s⟧ |
+| X3 | C2, CV : V_pur ≈ 0,84 / 0,72 ; selle pure certifiée dans 100 % des instances (VT exact = 0) | ⟦X3⟧ | ⟦X3s⟧ |
+| E1 | VT_B sur N2 > m, entre +0,36 et +0,45 (0,9) | ⟦E1⟧ | ⟦E1s⟧ |
+| E2 | VT_BpV sur NV > m, entre +0,35 et +0,44 (0,9) | ⟦E2⟧ | ⟦E2s⟧ |
+| E3 | Part pure de B (N2) et B′V (NV) = 0, support ≥ 2 (0,9) | ⟦E3⟧ | ⟦E3s⟧ |
+| E4 | CAL_B (N2), CAL_BpV (NV) dans [−0,03 ; +0,005] (0,7) | ⟦E4⟧ | ⟦E4s⟧ |
+| E5 | UM_B (N2), UM_BpV (NV) > 0, entre +0,20 et +0,38 (0,85) | ⟦E5⟧ | ⟦E5s⟧ |
+| E6 | CAL_U (N2, NV) dans [−0,08 ; +0,005] (0,6) | ⟦E6⟧ | ⟦E6s⟧ |
+| E7 | VT_B (C2), VT_BpV (CV) dans ]−m ; +m[ (0,7) | ⟦E7⟧ | ⟦E7s⟧ |
+| E8 | Part pure de B (C2), B′V (CV) entre 0,3 et 0,9 (0,5, non ferme) | ⟦E8⟧ | ⟦E8s⟧ |
+| E9 | UM sur C2, CV entre −0,03 et +0,01 (0,6) | ⟦E9⟧ | ⟦E9s⟧ |
+| E10 | B′ sur N2 : VT_B′ ≈ 0, part pure ≥ 0,5 ; V(B′), V(D) entre V_union − 0,08 et V_union (0,6) | ⟦E10⟧ | ⟦E10s⟧ |
+| E11 | A (N2), AV (NV) : V ≤ 0,012 ; I1 dans [−0,02 ; +0,02] ; I3 ≥ 0,85 ; I4 ≥ 0,8 (0,8) | ⟦E11⟧ | ⟦E11s⟧ |
+| E12 | A (C2), AV (CV) : V entre V_pur − 0,08 et V_pur ; I3 ≥ 0,735 ; I4 ≥ 0,6 (0,6) | ⟦E12⟧ | ⟦E12s⟧ |
+| E13 | DV sur NV : V ≤ 0,012 (0,85) | ⟦E13⟧ | ⟦E13s⟧ |
+| E14 | VT(non couvrable) − VT(témoin), apparié, entre +0,35 et +0,45, B (N2 − C2) et B′V (NV − CV) (0,85) | ⟦E14⟧ | ⟦E14s⟧ |
+| P1 | G*_act strictement décroissant en L pour toutes les configurations (0,9) ; médiane G*_act(8)/G*_act(1) entre 0,15 et 0,5 (0,6) | ⟦P1⟧ | ⟦P1s⟧ |
+| P2 | G*_comp = Φ(z − β₀), entre 0,91 et 0,99 (identité) | ⟦P2⟧ | ⟦P2s⟧ |
+| P3 | G*_joint ≤ min(G*_act, G*_comp) toujours (identité) | ⟦P3⟧ | ⟦P3s⟧ |
+| P4 | Part avec dilemme strict (Δ > m_b) à L = 4 entre 0,5 et 0,9 (0,6) | ⟦P4⟧ | ⟦P4s⟧ |
+| P5 | Cette part croissante de L = 1 à L = 8 (0,6) | ⟦P5⟧ | ⟦P5s⟧ |
+| P6 | Pour κ ≥ 0,5, G*_joint/G*_act décroissant en L (0,7) | ⟦P6⟧ | ⟦P6s⟧ |
+| P7 | κ < 0,2 et β₀ < 0,2 : Δ < m_b (0,7) | ⟦P7⟧ | ⟦P7s⟧ |
+| T | Temps : non prédit au gel (mesuré : 47,6 s de processeur par couple instance × δ, quatre familles) | ⟦T⟧ | — |
+
+⟦BILAN_A⟧
 
 ### B. Prédictions pour la décision
 
