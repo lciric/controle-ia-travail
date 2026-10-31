@@ -336,3 +336,4 @@ for q in (0.01,0.02,0.03,0.05):
 
 ```
 A: P=12, u2, annees 1..9 (hyp. du brouillon 4, N=45) fe=True eff=True: reps=250 n(E1)=1111 n(E2)=1521 | deff 1: k_ok 0.88 sig 0.76 trouve 0.76 | deff 2: k_ok 0.88 sig 0.46 trouve 0.46
+B: P=16, u1, annees 6..13 fe=True eff=True: reps=250 n(E1)=1106 n(E2)=1209 | deff 1: k_ok 0.92 sig 0.63 trouve 0.63 | deff 2: k_ok 0.92 sig 0.28 trouve 0.28
