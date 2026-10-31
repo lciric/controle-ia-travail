@@ -294,7 +294,9 @@ def test_gen_garde_racine_de_decision():
         with leve(motif):                                           # jusque dans `gen` : aucune graine ne part
             am.gen(r, 0)
     with leve("non gelée"):
-        am.executer_tache(0, 1, am.RACINE_TESTS + 1000, am.RACINE_TESTS_TENUE, PETITE)
+        am.executer_tache(0, 1, 20264777, am.RACINE_TESTS_TENUE, PETITE)
+    with leve("d'une autre session"):
+        am.executer_tache(0, 1, am.RACINE_TESTS + 1000, am.RACINE_TESTS_TENUE, PETITE)   # 20265301 : plage voisine
     am._AUTORISATION_DECISION["prereg_sha256"] = "0" * 64           # autorisation posée (simulée) : la graine part
     assert am.gen(am.RACINE, 1, 2).integers(10) >= 0
 
@@ -322,6 +324,12 @@ def test_cli_refuse_d_ecraser(tmp_path, monkeypatch):
         am.main(["essai", "--instances", "0:1", "--sortie", str(f)])
     with leve("existe déjà : R12"):
         am.main(["calibrage", "--sortie", str(f)])                       # instances par défaut 0:48 : conformes
+    with leve("apparu pendant l'exécution"):
+        am._ecrire_nouveau(f, {"a": 1})
+    g = tmp_path / "neuf.json"
+    am._ecrire_nouveau(g, {"a": 1})                                   # sain
+    assert g.read_text().strip().startswith("{")
+    assert f.read_text() == "{}"
 
 
 def test_cli_calibrage_refuse_autres_instances(tmp_path):
@@ -340,12 +348,6 @@ def test_stabilite_calibrage_sain():
     assert st == {"(1.0, 1.4)": 1.0}
     assert am.choisir_deltas({d: float(np.mean([r["bras"]["A"]["V_iii_final"] for r in res if r["delta"] == d]))
                               for d in grille}, cfg) == (1.0, 1.4)
-    with leve("apparu pendant l'exécution"):
-        am._ecrire_nouveau(f, {"a": 1})
-    g = tmp_path / "neuf.json"
-    am._ecrire_nouveau(g, {"a": 1})                                   # sain
-    assert g.read_text().strip().startswith("{")
-    assert f.read_text() == "{}"
 
 
 # =================================================================================================================
@@ -1147,7 +1149,7 @@ def test_juger_audit_sain_et_artefacts():
     assert j["drapeau_i"] is True and j["par_delta"]["1"]["Bp-D"]["drapeau_i"] is True
     assert abs(j["par_delta"]["1"]["Bp-D"]["ecart_moyen"] - 0.015) < 1e-12
     j = am.juger_audit(_taches_audit(decalages={"D": -0.009}), cfg)                # 0,009 ≤ m/2 : pas de (i)
-    assert j["drapeau_i"] is False and j["par_delta"]["1"]["Bp-D"]["significatif"] is False  # écart-type nul : t × 0
+    assert j["drapeau_i"] is False and j["par_delta"]["1"]["Bp-D"]["significatif"] is True   # écart sûr, sous m/2
     j = am.juger_audit(_taches_audit(i1=0.02), cfg)                                 # Table 5 : I1 décalé de 0,02
     assert j["par_delta"]["2"]["A I1"]["drapeau_i"] is True
     j = am.juger_audit(_taches_audit(K=6, bruit=0.002, decalages={"C3": -0.004}, graine=2), cfg)
