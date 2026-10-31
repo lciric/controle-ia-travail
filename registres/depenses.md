@@ -265,3 +265,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-31 00:36 UTC — **Kimi K3.1 Pro avec recherche Web** (GO-17, poste 2) : 6 tours, 20 recherches (0,10 USD), **0,39 USD** au total compté par la commande (relais v4, PID 4312, arrêté) sur 3.
 - 2026-10-31 06:5x UTC — **question 6** (GO-2026-10-30-17 poste 3 puis GO-2026-10-31-01), collisionneur v7, 10 cellules sur 12 (Kimi absent aux tours III.2 et III.3) : **9,19 USD** (barème du collisionneur), plus 3 appels Kimi coupés comptés au pire cas par les relais (≈ 1,6 USD) ; plafond du run 20.
 - 2026-10-31 06:4x UTC — **question 7** (mêmes GO), 9 cellules sur 12 (Kimi absent des trois tours) : **9,02 USD**, plus 3 appels Kimi coupés (≈ 1,3 USD) ; plafond 20.
+- 2026-10-31 07:36 UTC — **tour 1 de l'arène coévolutive, question v5** (GO-2026-10-31-02), collisionneur v6, 12 cellules sur 12 (Kimi compris) : **8,22 USD** (barème du collisionneur) sur 17 ; reste ≈ 16,8 USD du GO pour le tour 2.
