@@ -13,7 +13,7 @@
   - synthèse v2 de la question 6 (sur `origin/main`) : `…/collisionneur-question-6-v1/synthese-question-6-v2.md` `ff3b19e3fb21a24329cd403efdf57db22423ce8630386425e3ac07c1207f05cf` ;
   - synthèse v2 de la question 7 (sur `origin/main`) : `…/collisionneur-question-7-v1/synthese-question-7-v2.md` `0ced3b28fa5cf1c2bc439fa4006a9a207dc9b3e69322c8709b4269c01d0352b0` ;
   - `registres/decisions.md` de `origin/main` (lignes R-878 et R-884) : contenu `0edd2154db8665ca91b84442cb0d20db21f44c86e993ae689be675a74d23c92f` ;
-  - préenregistrement semi-réel, brouillon 4 : `prereg/brouillons/preenregistrement-identification-semi-reel-v1-brouillon4.md` `30f45ac5af140913bdd3fa34af3bdd2322850f6e052e5d856f5c1ce9e35081d3` (forme des six garde-fous et des moitiés disjointes ; aucun brouillon 5 n'existe localement ni sur `origin/main`) ;
+  - préenregistrement semi-réel, brouillon 4 : `prereg/brouillons/preenregistrement-identification-semi-reel-v1-brouillon4.md` `30f45ac5af140913bdd3fa34af3bdd2322850f6e052e5d856f5c1ce9e35081d3` (forme des six garde-fous et des moitiés disjointes ; aucun brouillon 5 n'existait localement ni sur `origin/main` à la lecture, vers 11:00 UTC ; un script `calcul-regles-identification-semi-reel-v1-brouillon5.py` est apparu depuis, non lu) ;
   - préenregistrement Gu-Krenn v2 (sur `origin/main`) : `docs/notes/gu-krenn-v1/prereg-gu-krenn-reproduction-et-hors-echantillon-v2.md` `7f32c4e0f841fe670b00bd726198770731a8edd4e09be54a4d302e035404a77b` (paires non reliées, appariement degré et âge, témoins attachement préférentiel et Simpson, dérive d'OpenAlex) ;
   - bras « trou à structure commune » : R-638 et R-672 de `registres/decisions.md` (branche locale) ; annexe du bras méta `brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/pre-pilote-course-2-v1/annexe-bras-meta-v1-brouillon1.md` `3a2e8dc2f8d764674941498ab0da9a977e7cbbd1478d868428efb8d1ca3441a0` et sa contre-lecture `…/contre-lecture-annexe-bras-meta-v1-brouillon1.md` `db249b9356f8d19cd8c9811c3db184b0d7587eba97ed8386501e146434e24f1d` ;
   - gabarit `prereg/gabarit-preregistrement-v1.md` `8cad43714b562e28238a92200d6315b1769d8bdf7e9f0a8d72dfe2bc9b37700e` ; validateur `src/controle_ia/prereg.py` `3b2e3ee56463f30ffd3c549e7fe480fea574c707581bcf30098bf38f4980c306`.
@@ -27,7 +27,7 @@
 4. **Règle principale** : coefficient β₂ du profil, ajusté sur distance, popularité et attachement préférentiel, borne basse de l'intervalle à 90 % > 0.
 5. **Rétrodiction inversée obligatoire** : le même profil « prédit »-il les ponts d'avant sa fenêtre de calcul ? Si oui, suspension.
 6. **Moitiés disjointes** par niche et par période : E₁ (revues 𝒜, dates 2009–2013) pour l'étalonnage et le choix parmi quatre variantes scellées ; E₂ (revues ℬ, dates 2017–2021) pour la seule décision.
-7. **Puissance** (données synthétiques) : 30 à 50 ponts ne suffisent pas ; voir « Taille de base » ci-dessous.
+7. **Puissance** (données synthétiques) : 30 à 50 ponts ne suffisent pas (puissance 0,63 à 50 ponts contre un rapport de cotes de 1,5) ; recommandation : **500 ponts validés** (200 en E₂ prospective, 200 en E₂ rétrodite, 100 en E₁) ; la règle de rétrodiction de la synthèse (δ₀ = 0,03) suspendrait presque toujours un vrai effet : règle (c) proposée.
 8. **Construction** par une session distincte, aveugle au profil ; protocole pas à pas dans la pièce compagne.
 9. **Coût** : processeur ; OpenAlex dans l'allocation gratuite ou devis ; lecteurs = sous-agents de session (sans dépense) ou devis.
 10. **Pour geler** : seuils S1 à S16 et décisions DE-1 à DE-8 (toutes « À REMPLIR ») ; contre-lecture par un modèle autre qu'Opus.
@@ -63,9 +63,36 @@ Format : décision ; enjeu ; options (avantage, inconvénient) ; recommandation 
 
 Calcul sur données synthétiques (`calcul-puissance-E1-base-de-ponts-v1-brouillon1.py`, sortie rejouée deux fois à l'octet près), modèle génératif décrit en tête du script (corrélation −0,5 entre profil et distance, effets propres de la distance, de la popularité et de l'attachement préférentiel, propension de niche, plan cas-témoins à K = 5 témoins par cas, erreur type robuste à deux voies par niche). Tout est SUPPOSÉ : la structure du calcul est opposable, ses entrées non.
 
-TABLE_PUISSANCE
+Empreintes : script `db04ebbbdfd1fb3f75044e16587e7e580a43ee4572f64df7bf44229c4d3e42ed`, sortie `d0af5c92da31b90c3e531673b96bad369616b1c41fdef9051f5361a593418453` (deux exécutions `python3 -I` depuis deux dossiers temporaires vides, sorties identiques à l'octet ; numpy 2.5.3, Python 3.13.18 ; 7 min 47 s de temps mural).
 
-**Conclusion.** CONCLUSION_TAILLE
+Puissance de la règle principale (borne basse à 90 % de β₂ > 0), 400 répétitions par case (calcul § 1) ; M = ponts validés de la portion de décision, K = 5 témoins par cas :
+
+| Rapport de cotes par écart type de Π \ M | 30 | 50 | 100 | 200 | 300 | 500 | 800 |
+|---|---|---|---|---|---|---|---|
+| 1,00 (fausse alarme) | 0,033 | 0,043 | 0,068 | 0,060 | 0,080 | 0,068 | 0,080 |
+| 1,25 | 0,280 | 0,328 | 0,475 | 0,680 | 0,787 | 0,927 | 0,975 |
+| 1,50 | 0,537 | 0,632 | 0,855 | 0,980 | 1,000 | 1,000 | 1,000 |
+| 2,00 | 0,815 | 0,948 | 0,995 | 1,000 | 1,000 | 1,000 | 1,000 |
+| 3,00 | 0,980 | 0,998 | 1,000 | 1,000 | 1,000 | 1,000 | 1,000 |
+
+Autres caractéristiques (calcul § 3 à § 5) :
+- **Équivalence** sous β₂ = 0 (intervalle à 90 % dans ± marge) : marge log 1,25 → 0,458 à M = 200, 0,880 à M = 500 ; marge log 1,5 → 0,983 à M = 200. Une marge log 1,10 est inatteignable dans la grille.
+- **Bruit d'étiquette** (rapport de cotes 1,5) : à M = 200, 20 % de faux ponts font passer la puissance de 0,980 à 0,925.
+- **Rétrodiction** (rapport de cotes 1,5, 300 répétitions) — probabilité de suspension :
+
+| Monde | M | gain d'aire prospectif | règle (a) δ₀ = 0,03 | règle (b) δ₀ = 0,01 | règle (c) β̂₂⁻ ≥ β̂₂⁺/2 | P(confirmé), règle (c) |
+|---|---|---|---|---|---|---|
+| anticipation (β₂⁻ = 0) | 100 | +0,013 | 0,867 | 0,393 | 0,080 | 0,807 |
+| anticipation | 200 | +0,014 | 0,960 | 0,307 | 0,053 | 0,937 |
+| moitié (β₂⁻ = β₂/2) | 200 | +0,012 | 0,987 | 0,600 | 0,537 | 0,463 |
+| statique (β₂⁻ = β₂) | 100 | +0,013 | 0,977 | 0,757 | 0,910 | 0,087 |
+| statique | 200 | +0,012 | 1,000 | 0,820 | 0,957 | 0,040 |
+
+  À rapport de cotes 2,0, la règle (a) suspend encore environ une fois sur deux en monde d'anticipation (0,457 à 0,517).
+- **Disponibilité** (calcul § 6, arithmétique) : 150 revues par moitié donnent 33 525 paires × dates ; à un taux de base de ponts validés de 0,5 % / 1 % / 2 % par paire et par fenêtre de 3 ans, 168 / 335 / 670 ponts au plus. Le taux réel est inconnu.
+- **Lectures** (calcul § 7) : 2 200 à 5 000 lectures pour une portion de 200 ponts (q = 0,4 à 0,2 de précision du filtre, SUPPOSÉ).
+
+**Conclusion.** **30 à 50 ponts ne suffisent pas** sauf si l'effet est fort : à 50 ponts, la puissance vaut 0,63 contre un rapport de cotes de 1,5 et 0,33 contre 1,25 ; elle n'atteint 0,80 qu'à partir d'un rapport de cotes de 2,0 (0,815 à 30, 0,948 à 50) ; et l'équivalence (« pas d'effet utile ») n'est presque jamais démontrable sous 100 ponts (≤ 0,35). La position de A et D (« une base assez grande pour avoir de la puissance ») est retenue. **Recommandation (S2) : M₂ = 200 ponts validés en E₂ prospective, 200 en E₂ rétrodite, 100 en E₁, soit 500 ponts validés au total.** À 200, contre un rapport de cotes de 1,5 : puissance 0,980, probabilité de confirmation avec la règle (c) de rétrodiction 0,937 en monde d'anticipation, suspension 0,957 en monde statique, marge contre 20 % de faux ponts. **M_min (S3) = 100** (puissance 0,855 ; confirmation 0,807). Deux constats chiffrés : (1) **la règle de la synthèse (δ₀ = 0,03 sur l'aire) est inutilisable** à ces tailles d'effet : elle suspend 0,96 fois sur 1 un profil qui anticipe vraiment (DE-6) ; (2) **la règle principale est un peu anti-conservatrice** : fausse alarme 0,060 à 0,080 pour M ≥ 100 au lieu de 0,05 (erreur de Monte-Carlo ± 0,013) ; correction à fixer au brouillon 2, avant gel (S4).
 
 ## Six garde-fous de R-878 (obligatoires dans tout préenregistrement sur littérature réelle)
 
@@ -137,9 +164,9 @@ Chaque seuil est **À REMPLIR** (gel par Lazar), avec la recommandation de l'aut
 | Seuil | Objet | Recommandation | Confiance | État |
 |---|---|---|---|---|
 | S1 | Kappa minimal (oui contre autre), étalonnage et base | 0,60 | 0,6 (option : collisionneur) | À REMPLIR |
-| S2 | M₂ = ponts validés en E₂ prospective (= en E₂ rétrodite) ; M₁ = ⌈M₂/2⌉ en E₁ | SEUIL_M | 0,5 (option : collisionneur) | À REMPLIR |
-| S3 | M_min : sous ce nombre en E₂ prospective, « non concluant (base insuffisante) » | SEUIL_MMIN | 0,5 (option : collisionneur) | À REMPLIR |
-| S4 | Niveau : borne basse unilatérale à 95 % (intervalle bilatéral à 90 %) | 0,05 unilatéral | 0,7 | À REMPLIR |
+| S2 | M₂ = ponts validés en E₂ prospective (= en E₂ rétrodite) ; M₁ = ⌈M₂/2⌉ en E₁ | M₂ = 200 (E₂ prospective) = 200 (E₂ rétrodite) ; M₁ = 100 ; total 500 | 0,5 (option : collisionneur) | À REMPLIR |
+| S3 | M_min : sous ce nombre en E₂ prospective, « non concluant (base insuffisante) » | 100 | 0,5 (option : collisionneur) | À REMPLIR |
+| S4 | Niveau : borne basse unilatérale à 95 % (intervalle bilatéral à 90 %) ; **correction de la fausse alarme** (0,060 à 0,080 observée pour M ≥ 100, calcul § 1) | 0,05 unilatéral, valeur critique étalonnée par simulation du nul sur le plan réel (permutation de Π entre paires d'une même date, 1 000 tirages, enfant `(3,)` de RACINE_ANALYSE), à écrire et éprouver au brouillon 2 | 0,5 (option : collisionneur) | À REMPLIR |
 | S5 | Règle de rétrodiction (DE-6) | β̂₂⁻ ≥ β̂₂⁺ / 2 → suspension | 0,55 (option : collisionneur) | À REMPLIR |
 | S6 | Bande d'équivalence de β₂ | ± log 1,25 | 0,5 (option : collisionneur) | À REMPLIR |
 | S7 | Horizon h | 3 ans | 0,6 (option : collisionneur) | À REMPLIR |
@@ -247,6 +274,8 @@ Lectures croisées (rapportées, sans changer le verdict) : ligne 3 avec duel pe
 - Le filtre de termes caractéristiques est mécaniquement lié à la distance (plus deux revues sont loin, plus les termes de i sont nouveaux pour j) : cela favorise le témoin « distance », non le profil ; rapporté.
 - L'étiquette mesure une reprise **textuelle** validée, non un rapprochement durable des communautés ; la validité de construit n'a pas de vérité extérieure.
 - Une paire à structure commune peut rendre une reprise plus facile à reconnaître par les lecteurs (lien relevé par la contre-lecture de l'annexe, CA1-08, dans un autre cadre) ; les lecteurs ne voient pas la structure, mais le risque n'est pas nul.
+- La règle principale, telle que simulée, est un peu anti-conservatrice (fausse alarme 0,060 à 0,080 au lieu de 0,05 pour M ≥ 100) ; la cause n'est pas établie (erreur type robuste à deux voies avec 150 grappes, propension de niche omise du modèle ajusté : hypothèses de l'auteur). La correction (S4) n'est pas encore écrite ni éprouvée.
+- Le calcul ne simule ni le choix de variante sur E₁ (il suppose la variante juste), ni l'amputation, ni la dépendance du filtre à la distance.
 - L'auteur est de la lignée conv-audit, comme les pièces du bras méta ; la contre-lecture doit venir d'un modèle autre qu'Opus.
 
 ## Contre-lecture
