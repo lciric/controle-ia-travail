@@ -45,7 +45,7 @@ Fait : lecture du LISEZMOI, de la liste d'empreintes, de CL19 et de tout le code
 Non fait, conformément à la consigne : aucun appel de modèle, aucune clé lue, aucun `git fetch`, aucun commit, aucun `.sha256` écrit dans le dépôt (l'empreinte de ce fichier est à calculer par l'appelant), rien lu sous `donnees/`, aucun fichier existant modifié.
 
 Limites propres à cette contre-lecture :
-- `bwrap` est absent ici : les 12 essais ignorés (bac réel, filtre d'appels système) ne sont pas joués, comme chez l'auteur. L'isolement réel reste à éprouver sur la machine du run.
+- `bwrap` est absent ici : les essais de bac réel (ignorés par la variable explicite, motif « ESSAI RÉEL NON JOUÉ ») ne sont pas joués, comme chez l'auteur, et `test_v51_06` échoue pour cette raison. Sur les 12 ignorés, deux demandent seulement le brouillon 7 et l'annexe réelle dans l'arbre du dépôt : je les ai rejoués avec ces deux fichiers copiés dans mon arbre de rejeu, ils passent (93 réussis, 0 ignoré sur `test_v54_annexe.py`, `test_v54_corrections.py` et `test_v55_corrections.py`). Les dix autres ignorés sont, d'après les motifs du code d'essai, des essais de bac réel ou de kit d'agent absent ; je n'ai pas relevé le motif de chacun. L'isolement réel reste à éprouver sur la machine du run.
 - Je n'ai pas vu la configuration réelle de la course (hors livraison) : le branchement d'Argon (CL20-01) est déduit de `demonstrations/ideation_v5.py:64-66` et du dossier de service (`docs/notes/ideation-organisme-v1/course-2/dossier-service-course-2-v1.md:30`, devis v4 à v6 : `commande_argon_v3d.py`).
 - Je n'ai pas pu lire les lignes GO-2026-10-31-03 et GO-2026-10-31-04 : le `registres/go.md` local s'arrête avant (le brouillon 10 les cite d'après `origin/main`, commit `587ac246`), et je n'ai pas fait de `git fetch`. J'ai seulement essayé `lire_plafond` sur les textes que le brouillon cite (« 50 USD » passe).
 - Le rejeu complet de la suite s'est fait sur une machine chargée par cinq autres agents : le temps mesuré n'est pas comparable à celui de l'auteur.
@@ -65,7 +65,7 @@ Limites propres à cette contre-lecture :
 | mesure | annoncé par l'auteur | rejoué ici |
 |---|---|---|
 | Fichier d'essais v55 seul (arbre à l'image du dépôt) | 46 réussis | **46 réussis**, 36 sous-essais, 4,5 s |
-| Suite complète (`essais/`) | 709 réussis, 12 ignorés, 1 échoué (`test_v51_06`, bac réel), 461 sous-essais, 4 min 28 s | premier passage : **708 réussis, 12 ignorés, 2 échoués**, 461 sous-essais, **9 min 40 s** ; le second échec (`test_v53_course2.py::TestR12`) venait de mon arbre de rejeu, qui n'avait pas `EMPREINTES-orchestrateur-v52b.txt` dans le dossier parent ; réexécuté avec ce fichier : réussi. Total équivalent : **709 réussis, 12 ignorés, 1 échoué** (`test_v51_06`, `bwrap` absent : l'essai exige le vrai bac) |
+| Suite complète (`essais/`) | 709 réussis, 12 ignorés, 1 échoué (`test_v51_06`, bac réel), 461 sous-essais, 4 min 28 s | premier passage : **708 réussis, 12 ignorés, 2 échoués**, 461 sous-essais, **9 min 40 s** ; le second échec (`test_v53_course2.py::TestR12`) venait de mon arbre de rejeu, qui n'avait pas `EMPREINTES-orchestrateur-v52b.txt` dans le dossier parent ; réexécuté avec ce fichier : réussi. Total équivalent : **709 réussis, 12 ignorés, 1 échoué** (`test_v51_06`, `bwrap` absent : l'essai exige le vrai bac) ; parmi les 12 ignorés, 2 passent quand le brouillon 7 et l'annexe réelle sont présents (voir §1) |
 | Banc de mutations (`essais/mutations_v55.py --raisons`) | 106 essais témoins, 103 mutations tuées pour la raison attendue | **103 mutations (v54 : 56, v55 : 47), 103 tuées pour la raison attendue, 0 autre raison, 0 défaut du banc, 0 survivante, 0 non appliquée ; témoin après restauration : 106 essais, 0 échec** ; 2 min 46 s |
 
 Audit de propreté (R4, « trop beau » → même audit) : 103 sur 103 n'est pas suspect en soi, car le banc neutralise des gardes **qui existent** (`if False:`) et vérifie que leur essai échoue ; 19 motifs d'échec attendus sont le générique « not raised ». Le banc ne peut donc rien dire des gardes **absentes**. C'est exactement la zone où je trouve les défauts : adaptateur réel (CL20-01), signal (CL20-04), fusions inachevées (CL20-05), lecture interdite du bac (CL20-06), copie résiduelle de la clé (CL20-09). Aucun essai ni mutation de la v55 ne passe par un vrai adaptateur, ne reçoit de signal, ne coupe l'étape des fusions, ni ne regarde la liste de lecture interdite.
@@ -279,7 +279,7 @@ Pour la course 2 (au-delà de la question posée) : `verifier_go_v55` exige l'é
 ## 10. Ce que je n'ai pas vérifié
 
 - Le comportement des adaptateurs réels hors Kimi (pas de réseau, pas de kit installé) : j'ai seulement exécuté `AdaptateurCommandeExterne` sur une commande locale factice.
-- Les 12 essais qui demandent `bwrap`.
+- Les essais de bac réel (dix des douze ignorés, d'après leurs motifs) : ils demandent `bwrap`.
 - Les scripts du brouillon 10 (chiffrage, puissance) : non rejoués.
 - Le contenu du brouillon 10 hors des plages et recherches listées en tête de ce document.
 - Le LISEZMOI dans le détail de ses « décisions laissées ouvertes » (choix 1, 4, 5, 8, 10, `nombres_ajoutes_max`, phrase DEP4, I-2, A14 sur petits échantillons) : lu, non rejoué.

@@ -19,3 +19,25 @@
   (« a3… ») ; remplacée par 7ccc1460d6925fb1c743cb099a4490fcca2c7146c99ec4098e49234bb15dc236. Aucune autre modification ;
   le fichier n'est plus rouvert (naissance = modification = 12:44:35Z).
   gel-conception-arene-melange-v4.md sha256 9e1f25aeaf1c992e96f8d2d66acab7ca9028d498720461cbccaa87f38d23568d
+
+[2026-10-31T12:46:00Z → 2026-10-31T13:04:00Z] Étape 2 — code v4 écrit (copie de arene_melange_v3.py sous un nom neuf, v3 intact), puis essais v4
+  (copie de test_arene_melange_v3.py sous un nom neuf) et calcul de puissance v4. Changements conformes au gel v4 § 3 :
+  racines et garde (gen refuse toute racine non permise), gel épinglé (GEL_V4_SHA256), S18 = 0,10, n_calibrage = 48,
+  audit_critere = 0,01, audit_k = 10, audit_quantile_t = 0,995, A et B − A dans l'audit, contrôle des tours de A,
+  choix réévalués sur un même échantillon frais, juger_audit et classes_sous_audit, valeur nulle de I3 et Table 5 v4,
+  plus petit poids maximal parmi les équilibres, B′ − X selon la pureté, pureté « ≥ 1 − 10⁻⁹ », garde relative de
+  MoniteurOu ; DELTAS_V4 = None. Premières exécutions : essai de fumée (/tmp, hors dépôt) sur RACINE_TESTS 20264301 /
+  20264302 (racines gelées), configuration réduite ; puis essais v4 (configuration réduite T = 3, unites_Bp = 4).
+  Corrections révélées par les essais, sans changement de conception : I3 indéfini quand T < 3 (configurations d'essai)
+  traité explicitement (garde « lecture impossible » dans lire_tables, « jugement impossible » dans classes_sous_audit) ;
+  motifs de garde rendus uniques (solveur des équilibres, Table 5 de l'audit) ; essais mal paramétrés corrigés (T = 3).
+  Essais v4 : 97 réussis hors les 3 qui lisent le brouillon 4 (pas encore écrit), dont test_bras_v3_inchanges (les huit
+  bras du code v4 = code v3 champ à champ) et test_bras_v2_inchanges.
+
+[2026-10-31T13:05:13Z] Étape 3 — empreinte du code AU CALIBRAGE (DELTAS_V4 = None, ligne 137) :
+  arene_melange_v4.py sha256 dcc3e0b9426097e5610038e924aa481a7e2404b88eac34e8ab0fa6917661e0fb
+  essais/test_arene_melange_v4.py sha256 2adcf876a09a23d151182a0edeccb5e5a7338a004bed7490f9f3a24dcc1013c0
+  Charge de la machine : 5,5 sur 2 cœurs (une autre session et la fin des essais).
+  Lancement du recalibrage (R-739, gel v4 § 2) : racine 20264101 / 20264102, A seul, instances 0:48, grille de 9 δ.
+  commande : PYTHONPATH=src python3 $D/arene_melange_v4.py calibrage --instances 0:48 \
+             --sortie $D/calibrage-deltas-arene-melange-v4.json --processus 2
