@@ -6,7 +6,7 @@
 - Pièce compagne : `prereg/brouillons/preenregistrement-E1-base-de-ponts-v1-brouillon2.md`. Ce protocole est la section exécutable de son « Plan d'analyse » (étapes C0 à C12) ; en cas de divergence, le préenregistrement prime et la divergence est un écart (R1).
 - Remplace, sans le modifier, `protocole-construction-base-de-ponts-E1-v1-brouillon1.md` (`60fa75472c7304754a3a6ecde590314d12973dfaf8a1c6ce4c90b65ba62f5592`). Constats traités : contre-lecture `contre-lecture-E1-base-de-ponts-v1-brouillon1.md` (`836b8c190e7fea6d469204ff7b4f0f307586591b0a896d1172cca8daae1f95eb`) ; la table de traitement est dans le préenregistrement.
 - Ce que le rédacteur a fait : rien lu de réel. Aucune requête à OpenAlex, aucun fichier sous `donnees/`, aucune moisson, aucun pont, aucun `git fetch`. Les tailles de l'instantané d'OpenAlex viennent du manifeste versé sur `origin/main` (lu par `git show`, sans téléchargement).
-- Ce qu'il exige de la session qui l'appliquera : qu'elle soit **distincte** de la session des prédicteurs et de celle d'analyse ; qu'elle **ne calcule ni ne voie jamais** Π, S, C, D, P ou PA d'aucune paire, et que son arbre de travail ne contienne **aucun** module, table ou sortie de prédicteurs (garde G-C15) ; qu'elle ne commence qu'après le scellement du préenregistrement et l'inscription du GO de la moisson (`registres/go.md`).
+- Ce qu'il exige de la session qui l'appliquera : qu'elle soit **distincte** de la session des prédicteurs et de celle d'analyse ; qu'elle **ne calcule ni ne voie jamais** Π, S, C, D, P, PA ou SOC (distance sociale) d'aucune paire, et que son arbre de travail ne contienne **aucun** module, table ou sortie de prédicteurs (garde G-C15) ; qu'elle ne commence qu'après le scellement du préenregistrement et l'inscription du GO de la moisson (`registres/go.md`).
 
 ## Ce qui change par rapport au brouillon 1
 
@@ -26,6 +26,7 @@
 | Couverture des résumés | par fenêtre de calcul | aussi sur l'**historique de nouveauté** ; longueur moyenne des résumés transmise comme covariable | CE1-10 |
 | Gardes | G-C1 à G-C14 | + G-C15 (arbre de construction), G-C16 (rejeu de file), G-C17 (plafond commun), G-C18 (fenêtres), G-C19 (dépense), G-C20 (activité sur le passé) ; G-C7 avec test et seuil écrits | CE1-14, CE1-20 |
 | Moisson | API, « allocation gratuite ou devis » | devis séparé (`devis-moisson-openalex-E1-v1.md`) ; pilote de coût ; garde de dépense sur le champ `cost_usd` | CE1-07, R-729 |
+| Distance sociale | absente | champ `authorships` moissonné pour le témoin SOC (calculé par la session des prédicteurs, jamais par la construction) | R-735 (décision de Lazar) |
 
 ## 0. Vocabulaire
 
@@ -71,7 +72,7 @@
 
 ## C3. Moisson (une seule extraction, figée)
 
-1. Pour chacune des 700 revues : toutes les œuvres de `publication_date` du 1er janvier 1995 au 31 décembre 2023, tri `publication_date:asc`, pagination par curseur, `per_page=100`. Champs (`select`) : `id`, `doi`, `publication_date`, `publication_year`, `type`, `language`, `is_retracted`, `title`, `abstract_inverted_index`, `referenced_works`, `primary_location`, `updated_date`.
+1. Pour chacune des 700 revues : toutes les œuvres de `publication_date` du 1er janvier 1995 au 31 décembre 2023, tri `publication_date:asc`, pagination par curseur, `per_page=100`. Champs (`select`) : `id`, `doi`, `publication_date`, `publication_year`, `type`, `language`, `is_retracted`, `title`, `abstract_inverted_index`, `referenced_works`, `primary_location`, `updated_date`, **`authorships`** (identifiants d'auteurs, pour le témoin de distance sociale SOC, R-735).
 2. Journal de requêtes (adresse sans la clé, heure, statut, compte annoncé, `cost_usd`, empreinte de la page) ; fichiers bruts compressés par revue ; empreinte de chacun.
 3. Complétude (G-C4) : somme des œuvres reçues = compte annoncé par la première page, à l'unité, par revue ; et écart au compte de C1.5 rapporté. Sinon reprise de la revue entière (jamais de recollage partiel), consignée.
 4. Pas de deuxième extraction mêlée à la première ; une reprise complète crée une version nouvelle (R12). La date d'extraction est la référence (dérive d'OpenAlex) ; voie « instantané » : la date de version (`2026-10-14` ou suivante) et le manifeste en tiennent lieu.
@@ -117,7 +118,7 @@ La construction ne calcule aucun prédicteur ; elle remet la liste des œuvres �
 
 ## C8. Paquet de lecture et lecteurs
 
-1. **Paquet** (gabarit scellé) : titre et résumé de l'œuvre ; nom de la revue où elle paraît (j) ; nom de la revue d'origine supposée (i) ; le ou les groupes détectés ; trois titres de i tirés dans [a − 4, a) parmi ceux qui contiennent le groupe. Rien d'autre : ni score, ni compte de citations, ni date de coupure, ni année de l'œuvre, ni statut, ni marque `touche_LS`.
+1. **Paquet** (gabarit scellé ; aucun nom d'auteur) : titre et résumé de l'œuvre ; nom de la revue où elle paraît (j) ; nom de la revue d'origine supposée (i) ; le ou les groupes détectés ; trois titres de i tirés dans [a − 4, a) parmi ceux qui contiennent le groupe. Rien d'autre : ni score, ni compte de citations, ni date de coupure, ni année de l'œuvre, ni statut, ni marque `touche_LS`.
 2. **Question scellée** : « Cette œuvre, publiée dans j, reprend-elle une méthode, un objet mathématique, un modèle ou un résultat propre à la communauté de i, et l'emploie-t-elle pour une question de j ? Répondre oui, non ou indécidable, puis une phrase de justification. Une simple coïncidence de mots, un usage générique ou un usage déjà courant dans j est « non ». » (Avec DE-9 = (b), le filtre laisse passer les méthodes et objets nommés : la question et le filtre sont alignés.)
 3. **Lecteurs** (DE-3) : deux sous-agents de familles différentes, appels neufs et isolés, sans accès au dépôt ni au réseau, recevant seulement des lots. Tout appel payant : nœud, devis, GO.
 4. Chaque réponse est enregistrée avec l'identifiant du paquet, du lecteur, du lot, l'heure et l'empreinte du paquet. Un lecteur ne voit jamais la réponse de l'autre.
@@ -139,7 +140,7 @@ La construction ne calcule aucun prédicteur ; elle remet la liste des œuvres �
 | G-C2 nouveauté | groupe présent dans j dans [a − 6, a) : jamais candidat | un tel groupe passé comme candidat |
 | G-C3 lexique | DE-9 (b) : marque `touche_LS` exacte ; (a) : aucun groupe de L_S | marque absente, ou groupe de L_S gardé sous (a) |
 | G-C4 complétude | somme des pages = compte annoncé | une page retirée : écart détecté, reprise exigée |
-| G-C5 aveugle des paquets | paquet conforme au gabarit | champ score, citation, coupure, année, cas, témoin, S, C, D, P, PA, Π ou `touche_LS` |
+| G-C5 aveugle des paquets | paquet conforme au gabarit | champ score, citation, coupure, année, cas, témoin, auteur, S, C, D, P, PA, SOC, Π ou `touche_LS` |
 | G-C6 aucun prédicteur | aucun import de module de prédicteurs | import présent (balayage statique) |
 | G-C7 entrelacement | test des séquences de Wald et Wolfowitz sur le statut caché, p ≥ 0,01 | file triée cas puis témoins : p < 0,01, refus |
 | G-C8 kappa | kappa jouet = calcul à la main | fonction qui rend l'accord brut |

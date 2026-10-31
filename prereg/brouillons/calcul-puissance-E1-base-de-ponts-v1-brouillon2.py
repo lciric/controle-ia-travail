@@ -23,9 +23,14 @@ Ce qui change par rapport au script du brouillon 1 (contre-lecture `836b8c19…`
   queue lourde, plafond par paire commun aux cas et aux témoins) ; appels et jetons des lecteurs.
 - § 7 (CE1-16) : incertitude du kappa sur un lot d'étalonnage de 100 ou 200 paquets.
 - Régression logistique avec drapeau de convergence compté (CE1-20).
+- Distance sociale (R-735, décision de Lazar, 31 octobre 2026, 11:51 UTC ; antériorité ASIS&T 2025,
+  doi 10.1002/pra2.1298) : cinquième prédicteur SOC (distance dans le réseau de cosignature) ajouté
+  au modèle génératif et au modèle ajusté ; le profil doit apporter au-delà de D + P + PA + SOC.
+  § 2 rapporte aussi la puissance du modèle sans SOC (coût de l'ajout) ; § 1 et § 2 éprouvent une
+  corrélation forte entre profil et distance sociale.
 
-Modèle génératif (toutes valeurs SUPPOSÉ) : comme au brouillon 1 (quatre prédicteurs standardisés
-D, P, PA, PI à composantes de niche, de paire persistante et de date ; issue logistique avec
+Modèle génératif (toutes valeurs SUPPOSÉ) : comme au brouillon 1 avec un cinquième prédicteur (cinq
+prédicteurs standardisés D, P, PA, SOC, PI à composantes de niche, de paire persistante et de date ; issue logistique avec
 propension de niche u ~ N(0, sigma_U²) ; plan cas-témoins à K témoins de même date ; erreur type
 robuste à deux voies par niche, correction G/(G-1)). Base : 250 niches par moitié, taux de base
 P0 = 0,01 par paire et par date.
@@ -53,15 +58,22 @@ K = 5
 N_BASE = 250              # revues par moitié (recommandation S10 du brouillon 2)
 P0_BASE = 0.01            # ponts validés par paire et par date (fenêtre de 3 ans)
 SIGMA_BASE = 0.4
-R_BASE = np.array([[1.0, -0.1, -0.1, -0.5],
-                   [-0.1, 1.0, 0.6, 0.2],
-                   [-0.1, 0.6, 1.0, 0.1],
-                   [-0.5, 0.2, 0.1, 1.0]])
+# ordre des colonnes : D, P, PA, SOC (distance sociale), PI (profil, toujours en dernier)
+R_BASE = np.array([[1.0, -0.1, -0.1, 0.4, -0.5],
+                   [-0.1, 1.0, 0.6, -0.2, 0.2],
+                   [-0.1, 0.6, 1.0, -0.3, 0.1],
+                   [0.4, -0.2, -0.3, 1.0, 0.3],
+                   [-0.5, 0.2, 0.1, 0.3, 1.0]])
 R_FORT = R_BASE.copy()
-R_FORT[0, 3] = R_FORT[3, 0] = -0.8
-A2 = np.array([0.3, 0.9, 0.8, 0.4])        # part de variance de niche
-B2 = np.array([0.5, 0.05, 0.1, 0.4])       # part de variance persistante de paire
-BETA_TEMOINS = np.array([-0.5, 0.4, 0.3])  # D, P, PA (log-rapport de cotes par écart type)
+R_FORT[0, 4] = R_FORT[4, 0] = -0.8          # profil très proche de la distance
+R_FORT[3, 4] = R_FORT[4, 3] = 0.0           # (corrélation PI-SOC ramenée à 0 pour garder R définie positive)
+R_SOC = R_BASE.copy()
+R_SOC[3, 4] = R_SOC[4, 3] = 0.6             # profil très proche de la distance sociale
+R_SOC[0, 3] = R_SOC[3, 0] = 0.1             # (corrélation D-SOC ramenée à 0,1 pour garder R définie positive)
+A2 = np.array([0.3, 0.9, 0.8, 0.5, 0.4])        # part de variance de niche
+B2 = np.array([0.5, 0.05, 0.1, 0.3, 0.4])       # part de variance persistante de paire
+BETA_TEMOINS = np.array([-0.5, 0.4, 0.3, -0.3])  # D, P, PA, SOC (log-rapport de cotes par écart type)
+NT = BETA_TEMOINS.size
 DELTA0 = 0.03                              # marge de la synthèse (T3-B)
 M_MIN = 100
 BANDES = (("log 1,25", float(np.log(1.25))), ("log 1,33", float(np.log(1.33))), ("log 1,50", float(np.log(1.5))))
@@ -71,7 +83,7 @@ REPS_PUIS = 400
 REPS_RETRO = 400
 REPS_RETRO_HET = 300
 REPS_DISPO = 300
-NOMS = ("D", "P", "PA", "PI")
+NOMS = ("D", "P", "PA", "SOC", "PI")
 
 
 class GardeFenetres(Exception):
@@ -178,12 +190,12 @@ class Pop:
 def population(rng, n, sigma_u, lchol):
     iu, ju = triu(n)
     npaires = iu.size
-    f = rng.standard_normal((n, 4)) @ lchol.T
-    e_pers = rng.standard_normal((npaires, 4)) @ lchol.T
+    f = rng.standard_normal((n, NT + 1)) @ lchol.T
+    e_pers = rng.standard_normal((npaires, NT + 1)) @ lchol.T
     u = sigma_u * rng.standard_normal(n)
     blocs = []
     for _ in range(N_DATES):
-        e_date = rng.standard_normal((npaires, 4)) @ lchol.T
+        e_date = rng.standard_normal((npaires, NT + 1)) @ lchol.T
         blocs.append(np.sqrt(A2) * (f[iu] + f[ju]) / np.sqrt(2.0)
                      + np.sqrt(B2) * e_pers + np.sqrt(1.0 - A2 - B2) * e_date)
     p = Pop()
@@ -199,7 +211,7 @@ def population(rng, n, sigma_u, lchol):
 
 
 def lin(pop, beta2, echelle=1.0):
-    return pop.X[:, :3] @ (BETA_TEMOINS * echelle) + beta2 * pop.X[:, 3] + pop.uij
+    return pop.X[:, :NT] @ (BETA_TEMOINS * echelle) + beta2 * pop.X[:, NT] + pop.uij
 
 
 def alpha_pour(eta, p0):
@@ -245,11 +257,11 @@ def echantillon(rng, y, date, m, lam=0.0, poids=None):
     return idx, lab, m_eff
 
 
-def plan(pop, idx, avec_pi=True):
+def plan(pop, idx, avec_pi=True, temoins=tuple(range(NT))):
     cols = [np.ones(idx.size)] + [(pop.date[idx] == d).astype(float) for d in range(1, N_DATES)]
-    cols += [pop.X[idx, 0], pop.X[idx, 1], pop.X[idx, 2]]
+    cols += [pop.X[idx, k] for k in temoins]
     if avec_pi:
-        cols.append(pop.X[idx, 3])
+        cols.append(pop.X[idx, NT])
     return np.column_stack(cols)
 
 
@@ -289,8 +301,8 @@ def se_deux_voies(Z, y, p, H, I, J, pid, n, npaires):
     return (np.sqrt(v) if v > 0 else naive), naive, v <= 0
 
 
-def ajuster(pop, idx, lab):
-    Z = plan(pop, idx, True)
+def ajuster(pop, idx, lab, temoins=tuple(range(NT))):
+    Z = plan(pop, idx, True, temoins)
     b, p, H, ok = logistique(Z, lab)
     se, naive, repli = se_deux_voies(Z, lab, p, H, pop.I[idx], pop.J[idx], pop.pid[idx], pop.n, pop.npaires)
     COMPTE["ajustements"] += 1
@@ -333,9 +345,10 @@ def moyenne(v):
 
 
 # ---- § 1. Valeur critique fixe sous l'hypothèse nulle ---------------------------------------
-CONFIGS_NUL = (("base : sigma_U 0,4, corr(PI, D) -0,5", SIGMA_BASE, R_BASE),
+CONFIGS_NUL = (("base : sigma_U 0,4, corr(PI, D) -0,5, corr(PI, SOC) +0,3", SIGMA_BASE, R_BASE),
                ("niches hétérogènes : sigma_U 1,2", 1.2, R_BASE),
-               ("profil proche de la distance : corr -0,8", SIGMA_BASE, R_FORT))
+               ("profil proche de la distance : corr(PI, D) -0,8, corr(PI, SOC) 0", SIGMA_BASE, R_FORT),
+               ("profil proche de la distance sociale : corr(PI, SOC) +0,6, corr(D, SOC) +0,1", SIGMA_BASE, R_SOC))
 M_NUL = (100, 200, 300)
 
 
@@ -379,10 +392,12 @@ def section2():
     print(f"§ 2. Puissance de la règle principale à la valeur critique fixe {C_FIXE} "
           f"({REPS_PUIS} répétitions par case ; erreur de Monte-Carlo <= 0,025).")
     stock = {}
-    configs = (("base (sigma_U 0,4, corr -0,5)", SIGMA_BASE, R_BASE, OR_PUIS),
+    configs = (("base (sigma_U 0,4, corr(PI, D) -0,5, corr(PI, SOC) +0,3)", SIGMA_BASE, R_BASE, OR_PUIS),
                ("sigma_U 1,2", 1.2, R_BASE, OR_PUIS),
-               ("corr(PI, D) -0,8", SIGMA_BASE, R_FORT, (1.5,)))
+               ("corr(PI, D) -0,8", SIGMA_BASE, R_FORT, (1.5,)),
+               ("corr(PI, SOC) +0,6", SIGMA_BASE, R_SOC, (1.5,)))
     bruit = {}
+    sans_soc = {}
     for ic, (nom, sig, r, ors) in enumerate(configs):
         lch = np.linalg.cholesky(r)
         print(f"  {nom}")
@@ -399,6 +414,11 @@ def section2():
                 for m in M_PUIS:
                     idx, lab, _ = echantillon(rng, y, pop.date, m)
                     acc[m].append(ajuster(pop, idx, lab))
+                if ic in (0, 3) and orv in (1.25, 1.5):
+                    for m in (200, 300):
+                        idx, lab, _ = echantillon(rng, y, pop.date, m)
+                        b, se = ajuster(pop, idx, lab, (0, 1, 2))
+                        sans_soc.setdefault((ic, orv, m), []).append(b - C_FIXE * se > 0)
                 if ic == 0 and orv == 1.5:
                     for m in (200, 300):
                         for nb, poids in (("non différentiel", None), ("lié à la distance", np.exp(0.7 * pop.X[:, 0]))):
@@ -414,6 +434,14 @@ def section2():
         txt = " ; ".join(f"{nb} → {f3(np.mean(bruit[(m, nb)]))}" for nb in ("non différentiel", "lié à la distance"))
         print(f"     M = {m} : sans bruit {f3(base)} ; {txt}")
     print("  (« lié à la distance » : faux ponts tirés avec un poids exp(0,7 × D), plus souvent parmi les paires lointaines.)")
+    print("  Effet de l'ajout de la distance sociale (R-735) : puissance du modèle sans SOC (D, P, PA seulement) sur un")
+    print("  échantillon cas-témoins frais de la même population (« avec SOC » = tableau ci-dessus). Dans ce modèle")
+    print("  génératif, SOC a un effet propre (-0,3) et corr(PI, SOC) > 0 : l'omettre biaise beta2 vers le bas.")
+    for ic, nom in ((0, "base"), (3, "corr(PI, SOC) +0,6")):
+        for orv in ((1.25, 1.5) if ic == 0 else (1.5,)):
+            for m in (200, 300):
+                avec = np.mean([b - C_FIXE * s > 0 for b, s in stock[(ic, orv)][m]])
+                print(f"     {nom:<20} RC {orv:.2f}, M = {m} : avec SOC {f3(avec)} ; sans SOC {f3(np.mean(sans_soc[(ic, orv, m)]))}")
     print()
     return stock
 
@@ -488,8 +516,8 @@ def bloc_retro(cle, mondes, sig, reps):
                 idr, labr, _ = echantillon(rng, yr, pop.date, m)
                 b1, s1 = ajuster(pop, idp, labp)
                 b2, s2 = ajuster(pop, idr, labr)
-                ap = aire(pop.X[idp, 3], labp)
-                ar = aire(pop.X[idr, 3], labr)
+                ap = aire(pop.X[idp, NT], labp)
+                ar = aire(pop.X[idr, NT], labr)
                 gp = gr = float("nan")
                 if avec_gain and m == 200:
                     gp = gain_aire_croise(rng, pop, idp, labp)
@@ -691,10 +719,10 @@ def main():
     print(f"numpy {np.__version__} ; racine SeedSequence {RACINE} ; valeur critique fixe {C_FIXE}")
     print(f"Base : {N_BASE} niches par moitié, {N_DATES} dates, paires × dates = {triu(N_BASE)[0].size * N_DATES}, "
           f"K = {K}, P0 = {P0_BASE}, sigma_U = {SIGMA_BASE}, delta0 = {DELTA0}, M_min = {M_MIN}")
-    print("Corrélations R (D, P, PA, PI) de base :")
+    print("Corrélations R (D, P, PA, SOC, PI) de base :")
     for nom, ligne in zip(NOMS, R_BASE):
         print(f"  {nom:>2} " + " ".join(f"{v:+.2f}" for v in ligne))
-    print(f"Parts de variance niche {A2.tolist()}, paire {B2.tolist()} ; effets des témoins D, P, PA = {BETA_TEMOINS.tolist()}")
+    print(f"Parts de variance niche {A2.tolist()}, paire {B2.tolist()} ; effets des témoins D, P, PA, SOC = {BETA_TEMOINS.tolist()}")
     print()
     echecs = section0()
     if echecs:
