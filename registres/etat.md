@@ -1,6 +1,6 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-31 ≈ 10:20 UTC, lignée « session-depot », instance 2 (R-819 à R-894). **Passation : `registres/passations/2026-10-31-1020.md` (à lire en premier).**
+Dernière mise à jour : 2026-10-31 ≈ 10:40 UTC, lignée « session-depot », instance 2 (R-819 à R-896). **Passation : `registres/passations/2026-10-31-1020.md` (à lire en premier).**
 
 Décisions de Lazar ce matin (R-888 à R-893) : R-611 levée (revue de sécurité extérieure réalisée) ; examen final et estimation de la malléabilité hors gel et lancement approuvé ; pire cas certifié = assemblage. R-892 : collision identifiants réglée. R-893 : DEP4 formalisé.
 
@@ -8,15 +8,19 @@ Décisions de Lazar ce matin (R-888 à R-893) : R-611 levée (revue de sécurit�
 
 **Préenregistrement examen final v2 prêt** : `prereg/P-041-examen-final-v2.md`, contre-lu (9 points traités). Trois éléments à fixer avant scellement : StrongREJECT (version), jeu bénin, préenregistrement de l'arène.
 
-**Préenregistrement malléabilité v2 prêt** : `prereg/P-041-malleabilite-v2.md` (`877e1c7a…`), contre-lu (9 points traités, rapport `docs/notes/anteriorite-P-041-v1/contre-lecture-prereg-malleabilite-v1.md`, `2f4e8cab…`). Deux éléments à fixer avant scellement : StrongREJECT (version), jeu de données bénin/nuisible. Messages de conv-audit n° 270 à 278 lus, réponse groupée n° 220 poussée.
+**Préenregistrement malléabilité v2 prêt** : `prereg/P-041-malleabilite-v2.md` (`877e1c7a…`), contre-lu (9 points traités, rapport `docs/notes/anteriorite-P-041-v1/contre-lecture-prereg-malleabilite-v1.md`, `2f4e8cab…`). Deux éléments à fixer avant scellement : StrongREJECT (version), jeu de données bénin/nuisible.
+
+**Devis consolidé rédigé** (`docs/notes/anteriorite-P-041-v1/devis-P-041-gpu-et-collisionneur-protocelles-v1.md`, `22c34601…`, R-896) : test (a) Bailey (75 USD plafond), examen final (90), malléabilité (70), collisionneur protocelles deux tours (50, séquencé). Total si tout lancé : 210 USD plafond. Aucune dépense engagée ; GO de Lazar sur le devis en attente.
+
+Messages de conv-audit n° 270 à 280 lus, réponse n° 221 poussée. Vocabulaire : « la pince » = défense jointe boîte blanche + boîte noire (R-707 chez conv-audit). Pilote « mélange d'équilibre » : hypothèse principale serait réfutée (R-895).
 
 Arène : tour 1 (8,22 USD, synthèse v2) et tour 2 (8,41 USD, 12/12, **synthèse v1 terminée**). P-041 v3 fait foi (72aec532…).
 
 R-892 : collision d'identifiants de décisions, plage R-1000+ réservée à conv-audit. R-893 : DEP4 (relais accepte dépassement jusqu'à S17 − cumul). R-894 : messages 214–217 introuvables (erreur de passation).
 
-Devis du collisionneur sur les nœuds (n° 272/n277 de conv-audit) : 7 à 15 USD, 24 cellules en 2 passes, GO de Lazar en attente. Devis du test (a) Bailey (rejouer la boucle GPU) : 50 à 75 USD, GO de Lazar en attente.
+Devis du collisionneur sur les nœuds (n° 272/n277 de conv-audit) : 7 à 15 USD, 24 cellules en 2 passes, GO de Lazar en attente.
 
-Décisions en attente de Lazar : machine jetable (GO 10 USD + location, R-868) ; Gu-Krenn D-GK-1 (R-873) ; GO de dépense de carte graphique pour l'examen final et la malléabilité (devis à rédiger) ; GO du collisionneur sur les nœuds (7–15 USD) ; GO du test (a) Bailey GPU (50–75 USD) ; défauts sous 48 h : R-859 (1er nov. ≈ 23:10), R-862 et R-867 (2 nov. ≈ 00:30), R-882 et R-884 (2 nov. matin).
+Décisions en attente de Lazar : machine jetable (GO 10 USD + location, R-868) ; Gu-Krenn D-GK-1 (R-873) ; **GO de dépense de carte graphique et collisionneur protocelles (devis v1, R-896)** ; GO du collisionneur sur les nœuds (7–15 USD) ; défauts sous 48 h : R-859 (1er nov. ≈ 23:10), R-862 et R-867 (2 nov. ≈ 00:30), R-882 et R-884 (2 nov. matin).
 
 Suite d'essais : 1 293 passés, 4 échecs : 3 `pypandoc` connus, 1 corrigé. Arbre scellé : seule l'orpheline connue (R-799). Aucun processus actif sauf les agents de la session.
 
