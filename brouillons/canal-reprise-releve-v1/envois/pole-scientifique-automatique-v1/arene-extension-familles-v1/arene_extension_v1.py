@@ -468,10 +468,14 @@ def exact_N2(fam: Famille, delta: float, cfg: Config) -> dict:
     a1, a2, b1, b2 = _phi(r1 - z), _phi(r2 - z), _phi(-r1 - z), _phi(-r2 - z)
     M = np.array([[a1, b2], [b1, a2]])
     p, q, V = resoudre_jeu(M)
+    # borne inférieure : p* garantit au moins V contre tout point des deux boules (seule la projection sur u compte ;
+    # elle parcourt [R_j − δ, R_j + δ]) ; borne supérieure : q* (pires points) plafonne toute direction w à V (seul w·u
+    # compte) ; les deux ensemble certifient que V est la valeur du jeu continu (défenseur linéaire quelconque)
     s1, s2 = np.linspace(r1, R1 + delta, n), np.linspace(r2, R2 + delta, n)
     h1 = p[0] * _phi(s1 - z) + p[1] * _phi(-s1 - z)
     h2 = p[0] * _phi(-s2 - z) + p[1] * _phi(s2 - z)
-    att_ok = h1.min() >= h1[0] - cfg.tol_selle and h2.min() >= h2[0] - cfg.tol_selle
+    lip_s = 0.4 * (s1[1] - s1[0] + s2[1] - s2[0])
+    att_ok = min(h1.min(), h2.min()) >= V - lip_s - cfg.tol_selle
     cs = np.linspace(-1, 1, n)
     f = q[0] * _phi(r1 * cs - z) + q[1] * _phi(-r2 * cs - z)
     lip = 0.4 * max(r1, r2) * (cs[1] - cs[0])
@@ -507,7 +511,9 @@ def exact_NV(fam: Famille, delta: float, cfg: Config) -> dict:
     a1, a2 = float(_phi(r1 - z)), float(_phi(r2 - z))
     p, q, V = resoudre_jeu(np.array([[a1, al], [al, a2]]))
     ferme = (a1 * a2 - al ** 2) / (a1 + a2 - 2 * al)
-    if abs(V - ferme) > 1e-9:
+    garanti = min(p[0] * a1 + p[1] * al, p[0] * al + p[1] * a2)       # p* contre chaque mode (pire point)
+    plafond = max(q[0] * a1 + q[1] * al, q[0] * al + q[1] * a2)       # q* contre chaque vue (Neyman–Pearson)
+    if abs(V - ferme) > 1e-9 or garanti < V - 1e-9 or plafond > V + 1e-9:
         raise GardeArret("couche exacte NV : valeur du jeu 2 × 2 ≠ formule fermée")
 
     def d1(t1, t2):

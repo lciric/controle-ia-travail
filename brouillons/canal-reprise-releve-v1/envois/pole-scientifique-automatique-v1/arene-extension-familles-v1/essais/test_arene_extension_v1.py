@@ -46,7 +46,9 @@ PETITE = ae.replace(
     ae.CONFIG_V1, T=4, n_propre_entr=500, n_attaque_entr=500, n_cal=4000, n_fpr=4000, n_eval=4000, n_mc=64,
     n_mc_final=64, departs=1, departs_final=1, departs_renforce=2, iter_renforce=30, iter_max=30, iter_entr=300,
     departs_entr=3, unites_Bp=3, tol_fpr=0.02, audit_departs=2, audit_n_mc=32, audit_iter=10, audit_es_generations=3,
-    audit_es_lambda=2, grille_exacte=2001, L_max=3, grille_partage=21, grille_x=101)
+    audit_es_lambda=2, grille_exacte=2001, L_max=3, grille_partage=21, grille_x=101, taux_nonconv_max=0.3)
+# petite configuration : échantillons d'entraînement réduits, d'où une tolérance de convergence élargie (0,3) pour les
+# essais de plomberie seulement ; la configuration complète garde 0,10 (essai `test_garde_convergence_et_identite_tour0`)
 Z99 = float(ndtri(0.99))
 
 
@@ -232,9 +234,10 @@ def test_toutes_les_racines_deja_employees_refusees_et_liste_recoupee_avec_l_are
     hors_plages = {r for r in trouves if not (ae.PLAGE_B4[0] <= r <= ae.PLAGE_B4[1])
                    and not (ae.PLAGE_EXTENSION[0] <= r <= ae.PLAGE_EXTENSION[1])}
     assert hors_plages and hors_plages <= set(ae.RACINES_DEJA_EMPLOYEES), sorted(hors_plages - set(ae.RACINES_DEJA_EMPLOYEES))
-    assert {r for r in trouves if ae.PLAGE_EXTENSION[0] <= r <= ae.PLAGE_EXTENSION[1]} <= {20265001, 20265999}
-    for r in trouves:                                                 # aucune ne passe la garde, sauf les bornes citées
-        if r not in (20265001, 20265999):
+    # les nombres de la plage de l'extension présents dans le dossier de l'arène sont des mentions de la session
+    # parallèle (bornes de plage, essais de REFUS de son code) : aucune graine n'y est tirée ; ils ne sont pas refusés ici
+    for r in trouves:
+        if not ae.PLAGE_EXTENSION[0] <= r <= ae.PLAGE_EXTENSION[1]:
             with pytest.raises(GardeArret):
                 ae.exiger_racine_essai(r)
     # racines employées par décalage dans le code des essais v2 et v3 (RACINE_TESTS + 1000), absentes des textes
@@ -848,10 +851,13 @@ def test_garde_fausses_alertes_sain_et_artefact():
 
 
 def test_garde_convergence_et_identite_tour0():
-    ae.exiger_convergence(1, 100, PETITE)
-    ae.exiger_convergence(10, 100, PETITE)
+    cfg = ae.CONFIG_V1                                              # seuil de la configuration complète : 0,10
+    ae.exiger_convergence(1, 100, cfg)
+    ae.exiger_convergence(10, 100, cfg)
     with leve("entraînements non convergés"):
-        ae.exiger_convergence(11, 100, PETITE)
+        ae.exiger_convergence(11, 100, cfg)
+    with leve("entraînements non convergés"):
+        ae.exiger_convergence(4, 34, cfg)                           # 4/34 > 0,10 : une tâche du régime champ complet
     a = ae.Moniteur(np.array([[1.0, 2.0]]), np.array([0.5])).calibrer(np.random.default_rng(0).standard_normal((99, 2)),
                                                                      0.01)
     b = ae.Moniteur(a.W.copy(), a.b.copy())
@@ -955,7 +961,8 @@ def test_classer_effet_et_etalonnage():
 
 def _analyse_factice(vt_nc, vt_tem, cal):
     def bloc(vt, cl, vp):
-        qq = {f"q{p:g}": vt for p in ae.QUANTILES}
+        lo, hi = vt if isinstance(vt, tuple) else (vt, vt)
+        qq = {f"q{p:g}": (lo if p < 0.5 else hi) for p in ae.QUANTILES}
         qc = {f"q{p:g}": cl for p in ae.QUANTILES}
         return {"grandeurs": {"VT_B": {"quantiles": qq}, "VT_BpV": {"quantiles": qq}, "CAL_B": {"quantiles": qc},
                               "CAL_BpV": {"quantiles": qc}}, "bras": {}, "indicateurs": {}, "exact": {"V_pur": vp}}
@@ -972,7 +979,7 @@ def test_lire_tables_verdicts_atteignables():
     assert ae.lire_tables(_analyse_factice(0.0, 0.0, -0.01), m, tau)["E5"].startswith("instrument incapable")
     assert ae.lire_tables(_analyse_factice(0.4, 0.1, -0.01), m, tau)["E5"].startswith("instrument qui fabrique")
     assert ae.lire_tables(_analyse_factice(0.4, 0.0, -0.1), m, tau)["E5"].startswith("tirage montré, étalonnage")
-    assert ae.lire_tables(_analyse_factice(0.4, 0.015, -0.01), m, tau)["E5"] == "non tranché"
+    assert ae.lire_tables(_analyse_factice(0.4, (0.005, 0.03), -0.01), m, tau)["E5"] == "non tranché"
 
 
 def test_analyse_et_lecture_sur_taches_reelles():
@@ -1068,9 +1075,10 @@ def test_audit_sain_et_artefacts():
     faux["bras"]["BpV"]["V_final"] += 1e-6
     with leve("audit : V reconstruit"):
         ae.auditer_tache("NV", 0, 1, ae.RACINE_TESTS, PETITE, faux)
-    del faux["bras"]["DV"]
+    manque = json.loads(json.dumps(src))
+    del manque["bras"]["DV"]
     with leve("audit : bras"):
-        ae.auditer_tache("NV", 0, 1, ae.RACINE_TESTS, PETITE, faux)
+        ae.auditer_tache("NV", 0, 1, ae.RACINE_TESTS, PETITE, manque)
     with leve("audit : tâche absente"):
         ae.auditer([("NV", 0, 1)], ae.RACINE_TESTS, PETITE, {}, processus=1)
     j = ae.juger_audit([a], 0.02, 0.01)
