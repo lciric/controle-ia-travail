@@ -210,7 +210,7 @@ def test_archive_d_un_format_non_examine_arrete(tmp_path, monkeypatch):
 
 
 def test_pdf_de_sous_dossier_retire():
-    import depot_expurge as d
+    d = de
     assert any(d.correspond("docs/sources/pdf/bisociation-litterature-reelle-v1/arxiv-2306.01495.pdf", m) for m, _ in d.RETRAITS)
     assert not any(d.correspond("docs/sources/pdf/bisociation-litterature-reelle-v1/arxiv-2306.01495.pdf.sha256", m)
                    for m, _ in d.RETRAITS)
