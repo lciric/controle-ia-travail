@@ -278,3 +278,5 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-31 13:06 UTC — **arrêt : nœuds v10** (GO-06, R-921) : 6,36 USD comptés (Fable 2,40, Opus 4.6 ≈ 2,35, Argon 1,61) + un appel Kimi coupé (réservé au pire 0,93 par le relais, 0 dépensé compté) ; **dont ≤ 4,9 USD après le n° 293** (trou de surveillance). Reste du GO ≈ 37,7 / 45.
 - 2026-10-31 13:12 UTC — **arrêt : protocelles tour 2** (GO-05, R-921) : 2,21 USD comptés (refus de Fable 0,27, Opus 0,74, Argon 1,02, Kimi 0,18 par le relais) + un appel d'Opus du tour 2 coupé en vol (non compté) ; poste collisionneur protocelles : 18,52 + 2,21 = **20,73 / 50**.
 - 2026-10-31 13:15 UTC — **en cours : D-ML-1** (GO-07) : 2,71 / 12, tour 3.
+- 2026-10-31 13:15 UTC — **fin : D-ML-1** (GO-2026-10-31-07) : 9 cellules sur 12 (Fable refusé, R-831), **4,30 / 12 USD** (barème du collisionneur, refus de Fable compté 0,24), « tout tient ».
+- 2026-10-31 13:34 UTC — **en cours : nœuds v12, tour 1** (GO-2026-10-31-06, run neuf, plafond 22 USD) ; appel de contrôle 0,003 USD ; reste du GO avant ce run ≈ 37,7 / 45.

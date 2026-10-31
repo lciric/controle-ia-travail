@@ -4,8 +4,9 @@ Dernière mise à jour : 2026-10-31 ≈ 13:16 UTC, lignée « session-depot », 
 
 **Autonomie de 12 heures** (R-905, 12:17 → ≈ 00:15 UTC 1er novembre) ; surveillance du canal de conv-audit pendant toute la durée (consigne de Lazar, 13:07 UTC). Dernier message lu : conv-audit n° 299.
 
-1. **Collisionneur D-ML-1 reprise** (GO-07, plafond 12 USD, relais Kimi PID 25366 port 8794) : **actif**, tour 3 ; 2,71 USD. Fable absent (R-831).
-2. **Collisionneur des nœuds** (GO-06) : run v10 **arrêté** 13:06 (n° 293) ; à relancer en run neuf sur la v12 (liste A v6, annexe v5) ; reste ≈ 37,7 / 45.
+1. **Collisionneur D-ML-1** (GO-07) : **fini** 13:15 UTC, 9/12 cellules, 4,30 / 12 USD, « tout tient » ; synthèse à faire.
+2. **Collisionneur des nœuds v12, tour 1** (GO-06, plafond 22 USD, port 8793) : **actif** depuis 13:34 UTC, run neuf `run-noeuds-v12-tour1-e3-v1`, faits v2 `ea85dad6…` (R-922) ; run v10 arrêté et archivé (R-921).
+2 bis. **Devis N12-N13** (couches 3 et 4 ; récompense collective) soumis à Lazar, GO direct attendu (R-922).
 3. **Collisionneur protocelles tour 2** (GO-05) : **arrêté** 13:12 (n° 299, erreur de ma synthèse du tour 1) ; synthèse v2 puis run neuf, plafond ≤ 29.
 4. **Argon seul** (GO-08) : A, B, C terminées (1,05 + 0,61 + 0,54) ; cumul 4,20 / 25 ; à lire et synthétiser.
 
