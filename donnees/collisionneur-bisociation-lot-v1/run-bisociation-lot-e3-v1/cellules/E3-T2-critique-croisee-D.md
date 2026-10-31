@@ -1,0 +1,90 @@
+Les contenus des trois propositions sont **RAPPORTÉ** ; leurs emprunts aux résumés bibliographiques restent **OBSERVÉ-NON-AUDITÉ**. Les diagnostics ci-dessous sont des analyses d’identification statistique ; les lois alternatives sont des **HYPOTHÈSE** testables. Je ne reprends aucun seuil chiffré comme un résultat établi.
+
+## Sur la proposition A
+
+### (a) Défauts de méthode
+
+- **E1 n’oppose pas deux hypothèses exclusives.** Le profil « canal faible et structure commune » peut contenir la distance scalaire comme coordonnée. Une victoire du profil ne démontre donc ni que la distance est inutile, ni que le trou est le facteur actif : il faut tester l’information conditionnelle de chaque composante. Surtout, A ne sépare pas explicitement trois jeux : construction de la base, choix des traits et du classement, évaluation finale. Une coupure par dates ne suffit pas si les mêmes niches et les mêmes ponts servent à régler le profil.
+- **Le critère de pont risque d’être circulaire.** Si un pont est identifié par des citations croisées ou une co-citation, alors qu’un terme du score mesure précisément le déficit de citations, l’évaluation récompense une relation incorporée dans l’étiquette. La permutation des dates ne détecte pas cette incorporation, ni les fuites par concepts bibliographiques assignés après coup.
+- **E2 confond criticité et relation moyenne–variance.** Le pic de variance et l’effondrement des courbes sont calculés sur les mêmes réalisations que celles qui servent à ajuster taille, seuil et exposants. Avec une fertilité binaire ou comptée, un pic de variance peut être purement mécanique. Enfin, changer la taille du monde tout en changeant le nombre de prémisses accessibles modifie simultanément le dénominateur des découvertes possibles : le paramètre de taille n’est pas isolé.
+- **E3 ne compare pas seulement communication et indépendance.** À budget total fixe, augmenter \(N\) réduit la profondeur disponible par agent ; communiquer consomme aussi des jetons. Le meilleur-de-\(N\), l’agent long et l’essaim diffèrent donc par profondeur, nombre de lectures et frais de coordination. Le contrôle par messages routés au hasard teste surtout la pertinence du contenu reçu.
+- **E4 et E5 conservent des confusions de traitement.** Dans E4, la réécriture historique peut modifier ensemble distance apparente, clarté et plausibilité ; les idées « non reprises » sont partiellement censurées à droite. Dans E5, une dose de titres varie longueur, diversité, pertinence et position dans le contexte. Le placebo sans structure commune change encore autre chose que la dose. La comparaison de signe avec une expérience naturelle ne porte pas nécessairement sur le même estimande.
+
+### (b) Conditions de perte de puissance ou de non-jugeabilité
+
+| Mesure | Loi ou paramètre critique |
+|---|---|
+| E1, E6 : score \(S\), résultat \(Y\) | Si \(\operatorname{logit}\Pr(Y=1\mid S,X)=\alpha+\beta S+\gamma^\top X\), avec \(X\) regroupant popularité, âge et croissance, alors \(\beta=0\) supprime tout gain conditionnel du score. L’AUPRC n’est pas comparable entre strates si \(\Pr(Y=1\mid D=d)=\pi_d\) varie avec la distance. Avec \(\operatorname{Corr}(Y_{ij},Y_{ik})=\rho_i>0\), un bootstrap par paires sous-estime la variance ; l’information effective dépend des niches, pas du nombre de paires. |
+| E2 : pic de variance et transition | Pour \(Y\sim\mathrm{Bernoulli}(p(d))\), \(\operatorname{Var}(Y\mid d)=p(d)[1-p(d)]\) : le maximum à \(p=1/2\) n’est pas une susceptibilité critique. Pour un compte à loi de Poisson-gamma, \(\operatorname{Var}(Y)=\mu+\phi\mu^2\) : le pic peut suivre \(\mu\). Si les exposants sont ajustés sur les mêmes courbes que le test d’effondrement, le résidu minimal n’est plus une statistique de validation calibrée. |
+| E3 : avantage de l’essaim | Si les sorties d’agents ont corrélation \(\rho>0\), le nombre de tirages indépendants effectifs est \(N_{\rm eff}<N\). L’avantage attendu du meilleur-de-\(N\) dépend alors de la queue de la loi des scores et de \(N_{\rm eff}\), non de \(N\). Pour un gain binaire \(\delta\), l’erreur type est de l’ordre de \(\sqrt{p_1(1-p_1)/n_1+p_0(1-p_0)/n_0}\) : si \(|\delta|\) est inférieur à l’incertitude, la non-significativité ne juge rien. |
+| E4 : pente contre la distance | Dans \(\operatorname{logit}\Pr(\text{note haute}\mid D,Q)=\alpha+\beta D+\gamma Q\), \(\beta\) n’est pas interprétable si \(Q\), la qualité latente, est non observée et \(\operatorname{Cov}(D,Q)\neq0\). Si la probabilité qu’un témoin devienne un pont après l’horizon est \(q(D)>0\), croissante avec \(D\), les témoins contaminés attenuent ou inversent la pente estimée. |
+| E5 : dose-réponse et transport | Si \(Y_i(d)\) dépend aussi des doses \(d_j\), \(j\neq i\), l’estimateur randomisé n’identifie plus un effet propre sans modèle d’interférence. Si les versions du traitement vérifient \(d=(\text{longueur},\text{pertinence},\text{structure})\), il n’existe pas une courbe unidimensionnelle unique \(Y(d)\). Enfin, \(\tau_{\rm courses}\neq\tau_{\rm science}\) ne renseigne pas, à lui seul, sur la causalité dans l’un ou l’autre monde. |
+
+### (c) Contrôles négatifs dont l’absence serait fatale
+
+1. **Pour E1/E6 :** une évaluation finale disjointe par niches et par période, avec une étiquette de pont indépendante du canal mesuré — par exemple reprise effective par une tierce niche. La permutation des dates ne remplace pas ce contrôle.
+2. **Pour E2 :** des unions de prémisses sans rapport, appariées en nombre et en complexité à \(A\cup B\). Si elles produisent la même sur-additivité ou les mêmes signatures, le critère mesure la combinatoire disponible. Les exposants doivent aussi être appris sans la taille réservée au test d’effondrement.
+3. **Pour E3 :** des messages de longueur et de contenu comparables, mais dont la provenance ou l’ordre est détruit **au sein de la même paire**, ainsi qu’un témoin sans communication recevant le même volume de texte. Sans cela, contenu, relance et communication restent confondus.
+4. **Pour E4 :** des idées distantes documentées comme stériles sur un horizon complet, et des contre-factuels de réécriture où seule la forme change. Sans eux, le test ne distingue pas biais anti-nouveauté, censure des témoins et préférence pour la lisibilité.
+5. **Pour E5 :** un placebo apparié en longueur, structure et pertinence de surface, un résultat antérieur au traitement et une intervention préenregistrée sans effet. Le changement de contexte ne peut pas être validé par le seul placebo « autre structure ».
+
+## Sur la proposition B
+
+### (a) Défauts de méthode
+
+- **B rehausse indûment plusieurs statuts.** Des références lues seulement dans le lot, ou sur des pages rapportées, deviennent « VÉRIFIÉ ». Ce n’est pas seulement bibliographique : plusieurs présupposés P2–P4 présentent ensuite comme établis la forme d’une courbe ou la domination de la centralité, alors que ces points restent **RAPPORTÉ** ou **OBSERVÉ-NON-AUDITÉ**.
+- **Le contrôle négatif de l’expérience 1 est vide par construction.** Les témoins sont retenus parce qu’ils ne se relient jamais jusqu’à \(T_0+5\), puis B exige que le score n’y prédise pas de ponts futurs sur cette même fenêtre. Il n’y a alors aucun positif à détecter. En outre, sélectionner les témoins sur le futur et apparier sur une distance textuelle potentiellement calculée après coupure mélange construction et évaluation.
+- **L’expérience 2 ne possède pas un paramètre de taille identifiable.** Faire passer un sous-domaine de 100 à 2 000 articles change les niches, les taux de base, le nombre de contacts possibles et l’horizon de reprise. Une absence de superposition ne peut donc pas être attribuée spécifiquement à l’absence de transition. Le modèle nul à degrés conservés ne neutralise ni jargon, ni structure mathématique, ni vieillissement.
+- **Les expériences 3 et 4 convertissent une absence de réfutation en équivalence.** « \(H_B\) non réfutée, donc l’essaim n’ajoute rien » et « le modèle prédictif fait aussi bien, donc les traits sont des corrélats » exigent une marge d’équivalence et une puissance préenregistrées. Un seuil \(p<0{,}05\) ne fournit ni l’une ni l’autre.
+- **Le critère causal de l’expérience 4 privilegie possiblement le modèle le plus étroit, non le plus juste.** Exiger que l’intervalle du modèle causal contienne l’effet observé et que celui du prédictif ne le contienne pas compare deux largeurs d’intervalle autant que deux erreurs. Le placebo graphique ne teste qu’une intervention manifestement irrémédiable, pas la confusion propre aux paires.
+- **Les étalons de c4 contredisent la contrainte de corpus.** B reprend des ponts antérieurs à la disponibilité des sources LaTeX tout en exigeant une extraction AST. Les exemples canoniques risquent aussi de servir à écrire les règles d’extraction puis à démontrer leur réussite.
+
+### (b) Conditions de perte de puissance ou de non-jugeabilité
+
+| Mesure | Loi ou paramètre critique |
+|---|---|
+| Exp. 1 : témoins et AUPRC | Si \(Y=0\) mélange des non-ponts et des futurs ponts avec probabilité \(q(S)\), et si \(q(S)\) croît avec le score, le rangement estimé est biaisé de manière dépendante de \(S\). Dans le contrôle proposé, \(\Pr(Y=1)=0\), donc rappel, précision et AUPRC ne sont pas définis. |
+| Exp. 2 : LOESS et effondrement | Si \(\Pr(D=d\mid X)>0\) seulement pour une partie des niches \(X\), la courbe \(\hat p(d)\) est une extrapolation hors support dans les autres. Si la loi de taille dépend du couplage, \(N\mid D=d\), alors l’effet de \(N\) et celui de \(D\) sont aliassés. Après ajustement de la moyenne, une variance résiduelle constante \(\operatorname{Var}(Y-\hat\mu\mid D)=\sigma^2\) supprime la signature de susceptibilité sans supprimer la non-linéarité moyenne. |
+| Exp. 3 : produit survie × couverture | Le produit des moyennes ne définit pas un rendement joint si survie \(S\) et couverture \(C\) sont dépendantes : \(\mathbb E[SC]\neq\mathbb E[S]\mathbb E[C]\). Deux régimes peuvent avoir le même produit avec des risques opposés. Une permutation au niveau des idées sous-estime encore la variance si \(\operatorname{Corr}(Y_{ri},Y_{rj})>0\) au sein d’une course \(r\). |
+| Exp. 3/4 : non-rejet | Pour une différence estimée \(\hat\delta\), un intervalle contenant zéro mais dépassant les bornes \([-\delta_0,\delta_0]\) est compatible à la fois avec « nul » et avec un effet substantiel. Sans borne \(\delta_0\) et sans puissance a posteriori calculée sur l’estimande retenu, « aussi bien » n’est pas estimé. |
+| Exp. 4 : intervalles de prédiction | Si \(\operatorname{Var}(\hat\tau_C)\ll\operatorname{Var}(\hat\tau_P)\), le critère de B peut favoriser \(C\) même lorsque \(\mathbb E[(Y-\hat\tau_C)^2]>\mathbb E[(Y-\hat\tau_P)^2]\). Il n’est donc pas un estimateur cohérent de supériorité causale ou prédictive. |
+| c1–c4 : taux de détection | Avec très peu de cas étalons, l’information de Fisher sur TPR/FPR est faible et les bornes d’acceptation deviennent instables. Si la probabilité d’inclusion dans l’étalon dépend du succès de l’instrument, TPR et FPR sont des paramètres de sélection, pas ceux de la population de ponts. |
+
+### (c) Contrôles négatifs dont l’absence serait fatale
+
+1. **Remplacer le contrôle vide de l’expérience 1** par des pseudo-coupures antérieures, des témoins non sélectionnés sur le résultat futur et une étiquette externe au graphe de citation. La validation finale doit être disjointe par niches.
+2. **Pour l’expérience 2 :** un nul non critique conservant degrés, vocabulaire et croissance, mais sans couplage fertile ; ainsi qu’un test de variance résiduelle après conditionnement à la moyenne. Le recâblage seul est insuffisant.
+3. **Pour les expériences 3 et 4 :** une marge d’équivalence, une analyse de puissance et une randomisation/permutation au niveau de la course entière. Sans elles, les conclusions « n’ajoute rien » et « simple correlat » sont injustifiées.
+4. **Pour l’expérience 4 :** un résultat placebo antérieur, une dose fictive et une comparaison des deux modèles par la même perte sur des interventions randomisées tenues à l’écart. Le changement de couleur ne teste pas ces fuites.
+5. **Pour c4 :** un étalon temporellement compatible, constitué sans les règles de l’extracteur, avec des paires négatives appariées en notations et en complexité syntaxique.
+
+## Sur la proposition C
+
+### (a) Défauts de méthode
+
+- **Le duel 1 contient une circularité explicite.** Les ponts sont définis par un sous-graphe de co-citation traversant les niches, alors que le sélecteur utilise le déficit de citations et des voisinages du même graphe. Le contrôle qui permute les AST n’est pas non plus décisif : \(H_B\) est multicomposante et peut conserver un signal social ou lexical. Exiger qu’elle tombe au hasard testerait seulement un modèle où l’AST porte toute l’information.
+- **Le duel 2 appelle « intrinsèque » une fertilité qui resterait positive sous unions aléatoires.** \(R(A\cup B)\) dispose de davantage de prémisses, de chemins et de candidats que \(R(A)\) ou \(R(B)\). Sans unions témoins appariées en taille, la sur-additivité peut être vraie par construction. Le BIC moyenne/variance et la remise à l’échelle sont ajustés sur les mêmes trois tailles, sans contrôle d’identifiabilité des exposants.
+- **Le duel 3 change plusieurs facteurs à la fois.** Traits, classe de modèle, hypergraphe, transfert de domaine et restriction aux longues distances varient ensemble. Leur succès ou échec ne permet pas d’attribuer l’effet au goulot ou à l’apprentissage libre. La régression symbolique de \(H_B\) n’est pas évaluée séparément comme extracteur de loi.
+- **Le duel 4 teste un empilement, pas une hypothèse causale unique.** Une erreur de prédiction peut provenir de l’estimateur observationnel, de la correspondance entre « fragments échangés » et contact historique, de la mesure de l’issue ou du transport humain–agents. \(H_A\) et \(H_B\) peuvent être vraies pour des paramètres différents : elles ne sont pas exclusives.
+- **Le duel 5 conserve des différences de profondeur et de coût de messages, puis agrège deux issues sans poids identifiable.** Le produit survie–Simpson peut augmenter par diversité seule, sans amélioration de la survie. Les messages venant d’une autre paire testent la pertinence thématique, pas la structure de consolidation.
+- **Les instruments de (c) mesurent parfois une autre validité que celle revendiquée.** Révoquer tous les descendants d’un DAG vérifie le logiciel de révocation, pas la vérité scientifique. Interdire au juge de noter la plausibilité ne transforme pas sa note en fertilité différée. Enfin, les exemples canoniques, petits et réutilisés pour concevoir les filtres, surestiment leurs taux de détection.
+
+### (b) Conditions de perte de puissance ou de non-jugeabilité
+
+| Mesure | Loi ou paramètre critique |
+|---|---|
+| Duel 1 : pont par co-citation | Si \(Y=\mathbf 1(C\geq c_0)\) et \(S=g(C,M)\), où \(C\) est la co-citation et \(M\) la structure mathématique, alors \(\Pr(Y=1\mid C,M)\) est déterministe en \(C\). Le coefficient de \(M\) n’est identifiable que conditionnellement à \(C\), et disparaît si \(\operatorname{Var}(M\mid C)\approx0\). |
+| Duel 2 : sur-additivité \(F\) | Si \(R(X)\sim\mathrm{Binomial}\{M(X),p\}\), avec \(p\) indépendant de la pertinence et \(M(A\cup B)>M(A)+M(B)-M(A\cap B)\), alors \(\mathbb E[F]>0\) sans synergie. Si \(M\) croît avec la taille \(N\) et le couplage, moyenne et variance de \(F\) sont contrôlées par la même combinatoire. |
+| Duels 2 et 3 : seuil et longue portée | Avec trois tailles seulement et \((\beta,\nu,\kappa_c)\) estimés conjointement, la matrice d’information peut être quasi singulière : plusieurs triplets produisent des courbes presque identiques. Si le nombre de positifs à \(D\geq3\) est petit et \(\pi_D=\Pr(Y=1\mid D)\) varie, Précision@100 et son classement sont dominés par la variance et le taux de base. |
+| Duel 4 : transport | Soient \(\tau_H\) l’effet historique et \(\tau_L\) l’effet dans les courses. Sans loi de correspondance \(\tau_L=g(\tau_H)+\eta\), avec loi de \(\eta\) estimable, l’erreur observée mélange \(\eta\), l’erreur d’estimation et l’erreur de dose. Elle n’est donc pas une statistique de falsification de l’estimateur observationnel. |
+| Duel 5 : critère composite et meilleur-de-\(K\) | Le critère \(\mathbb E[S V]\) peut croître avec \(\mathbb E[V]\) alors que \(\mathbb E[S]\) reste constant. Si les propositions indépendantes ont covariance intra-paire \(\rho>0\), la loi du meilleur-de-\(K\) dépend de \(K_{\rm eff}\) et de la queue du score ; l’excédent attribué à l’émergence peut être uniquement un changement de taille effective d’échantillon. |
+
+### (c) Contrôles négatifs dont l’absence serait fatale
+
+1. **Duel 1 :** une étiquette de pont indépendante de la co-citation, plus des ablations séparées social-seul, lexical-seul et mathématique-seul. La permutation AST ne doit pas être exigée de faire chuter tout le profil.
+2. **Duel 2 :** des unions aléatoires appariées en nombre de prémisses, longueur de preuve et budget, ainsi qu’un monde planté à fertilité strictement nulle. Une taille supplémentaire, non utilisée pour ajuster les exposants, est nécessaire au contrôle d’effondrement.
+3. **Duel 3 :** des modèles appariés en capacité et en données, une séparation par niches entre réglage et test, et un monde où la loi symbolique est nulle. Sans cela, ni l’avantage architectural ni la prétendue loi extraite ne sont jugés.
+4. **Duel 4 :** une intervention externe documentée comme sans effet, un placebo de pré-tendance et une intervention randomisée interne servant d’étalon commun. Leur échec doit être attribué séparément à l’estimation, à la dose et au transport.
+5. **Duel 5 :** des messages de même paire, même longueur et même pertinence, mais à provenance ou ordre brouillé ; survie et diversité doivent aussi être rapportées séparément. Le témoin monolithique seul ne valide pas l’isolation intermittente.
+
+FIN-DE-CELLULE
