@@ -432,6 +432,13 @@ class Moniteur:
             return np.broadcast_to(self.W[0], X.shape)
         return softmax(X @ self.W.T + self.b, axis=1) @ self.W
 
+    def score_et_grad(self, X: np.ndarray):
+        """Score et gradient en un seul calcul des activations (mêmes opérations que `score` puis `grad`)."""
+        a = X @ self.W.T + self.b
+        if self.m == 1:
+            return a[:, 0], np.broadcast_to(self.W[0], X.shape)
+        return logsumexp(a, axis=1), softmax(a, axis=1) @ self.W
+
     def calibrer(self, Xcal: np.ndarray, alpha: float) -> "Moniteur":
         s = self.score(Xcal)
         if not np.all(np.isfinite(s)):
@@ -489,22 +496,36 @@ class MoniteurOu(Moniteur):
                 raise GardeArret("« ou » composite : score propre de variance nulle ou non fini")
             self.mu.append(mu)
             self.sd.append(sd)
-        self.W = np.vstack([m.W for m in self.membres])     # pour l'inventaire des paramètres seulement
+        self.W = np.vstack([m.W for m in self.membres])     # unités empilées : un seul produit matriciel par appel
         self.b = np.concatenate([m.b for m in self.membres])
+        self.tailles = np.array([m.m for m in self.membres])
+        self.bornes = np.concatenate([[0], np.cumsum(self.tailles)])
         self.t = np.nan
         self.e = np.nan
         self._cache = {}
 
-    def _z(self, X):
-        return np.stack([self.lam * (m.score(X) - mu) / sd for m, mu, sd in zip(self.membres, self.mu, self.sd)],
-                        axis=1)
+    def _z(self, X, avec_internes: bool = False):
+        A = X @ self.W.T + self.b
+        z = np.empty((len(X), len(self.membres)))
+        S_int = np.ones_like(A) if avec_internes else None
+        for i, (a0, a1) in enumerate(zip(self.bornes[:-1], self.bornes[1:])):
+            Ai = A[:, a0:a1]
+            si = Ai[:, 0] if a1 - a0 == 1 else logsumexp(Ai, axis=1)
+            if avec_internes and a1 - a0 > 1:
+                S_int[:, a0:a1] = softmax(Ai, axis=1)
+            z[:, i] = self.lam * (si - self.mu[i]) / self.sd[i]
+        return z, S_int
 
     def score(self, X: np.ndarray) -> np.ndarray:
-        return logsumexp(self._z(X), axis=1)
+        return logsumexp(self._z(X)[0], axis=1)
+
+    def score_et_grad(self, X: np.ndarray):
+        z, S_int = self._z(X, avec_internes=True)
+        coef = softmax(z, axis=1) * (self.lam / np.asarray(self.sd))
+        return logsumexp(z, axis=1), (S_int * np.repeat(coef, self.tailles, axis=1)) @ self.W
 
     def grad(self, X: np.ndarray) -> np.ndarray:
-        S = softmax(self._z(X), axis=1)
-        return sum(S[:, [i]] * (self.lam / sd) * m.grad(X) for i, (m, sd) in enumerate(zip(self.membres, self.sd)))
+        return self.score_et_grad(X)[1]
 
 
 def ou_composite(moniteurs: list[Moniteur], Xcal: np.ndarray, lam: float, alpha: float) -> MoniteurOu:
@@ -657,11 +678,12 @@ def objectif_lisse(theta, defense, z, cfg: Config):
     for m, p in defense:
         if p <= 0:
             continue
-        u = (m.score(X) - m.t) / (cfg.tau * m.e)
+        s, gr = m.score_et_grad(X)
+        u = (s - m.t) / (cfg.tau * m.e)
         sg = expit(u)
         total += p * sg.mean()
         ds = p * sg * (1 - sg) / (cfg.tau * m.e) / (K * n)
-        G = (m.grad(X) * ds[:, None]).reshape(K, n, d)
+        G = (gr * ds[:, None]).reshape(K, n, d)
         gmu += G.sum(1)
         gsig += (G * z).sum(1)
     return total, vecteur(gmu, gsig)
