@@ -1,0 +1,338 @@
+Calcul de puissance — E1' base de ponts — brouillon 2 (données synthétiques)
+numpy 2.5.3 ; racine SeedSequence 20261031113500 ; valeur critique fixe 1.96
+Base : 250 niches par moitié, 3 dates, paires × dates = 93375, K = 5, P0 = 0.01, sigma_U = 0.4, delta0 = 0.03, M_min = 100
+Corrélations R (D, P, PA, SOC, PI) de base :
+   D +1.00 -0.10 -0.10 +0.40 -0.50
+   P -0.10 +1.00 +0.60 -0.20 +0.20
+  PA -0.10 +0.60 +1.00 -0.30 +0.10
+  SOC +0.40 -0.20 -0.30 +1.00 +0.30
+  PI -0.50 +0.20 +0.10 +0.30 +1.00
+Parts de variance niche [0.3, 0.9, 0.8, 0.5, 0.4], paire [0.5, 0.05, 0.1, 0.3, 0.4] ; effets des témoins D, P, PA, SOC = [-0.5, 0.4, 0.3, -0.3]
+
+§ 0. Garde des fenêtres (garde-fou 2, constat CE1-01 ; garde-fou 5).
+  Principal : E1 t ∈ (2009, 2011, 2013), E2 t ∈ (2017, 2019, 2021), w_s ∈ (3, 5), décalage rétrodit g = max(w_s) = 5, h = 3, w_lab = 4, historique de nouveauté h_nov = 6 ; moisson [1995, 2024).
+  t = 2009, w_s = 5 : calcul du profil [2004, 2009) ; evenement prospectif [2009, 2012) ; evenement retrodit [2001, 2004) ; termes prospectifs [2005, 2009) ; termes retrodits [1997, 2001) ; nouveaute prospective [2003, 2009) ; nouveaute retrodite [1995, 2001)
+  t = 2021, w_s = 5 : calcul du profil [2016, 2021) ; evenement prospectif [2021, 2024) ; evenement retrodit [2013, 2016) ; termes prospectifs [2017, 2021) ; termes retrodits [2009, 2013) ; nouveaute prospective [2015, 2021) ; nouveaute retrodite [2007, 2013)
+  sain (w_s = 3 et 5, g = 5) : accepté (attendu)
+  artefact g = 4 avec w_s = 5 (brouillon 1) : refusé (attendu) — GF2 : t=2009, w_s=5, g=4 : calcul (2004, 2009) recouvre l'événement rétrodit (2002, 2005)
+  artefact w_s = 6 avec g = 5 : refusé (attendu) — GF2 : t=2009, w_s=6, g=5 : calcul (2003, 2009) recouvre l'événement rétrodit (2001, 2004)
+  artefact E2 t = 2015 (recouvre E1 2013-2015) : refusé (attendu) — GF5 : années d'événement prospectif communes à E1 et E2 : [2015]
+  artefact E1 t = 2007 avec g = 5 (moisson avant 1995) : refusé (attendu) — t=2007, w_s=3 : fenêtre hors de la moisson [1995, 2024)
+
+§ 1. Règle principale sous l'hypothèse nulle (beta2 = 0) : fausse alarme selon la valeur critique.
+     2000 répétitions par configuration ; 250 niches par moitié ; P0 = 0.01 ; erreur de Monte-Carlo d'un taux de 0,05 : ± 0,005 (un écart type).
+  base : sigma_U 0,4, corr(PI, D) -0,5, corr(PI, SOC) +0,3
+     M   P(z>1,645)  P(z>1,96)  P(z>2,20)  quantile 0,95 de z  quantile 0,975 de z  P(|z|>1,96)
+    100       0.056      0.034      0.023               1.690                2.154        0.070
+    200       0.057      0.031      0.017               1.732                2.070        0.059
+    300       0.052      0.027      0.018               1.649                1.984        0.059
+  niches hétérogènes : sigma_U 1,2
+     M   P(z>1,645)  P(z>1,96)  P(z>2,20)  quantile 0,95 de z  quantile 0,975 de z  P(|z|>1,96)
+    100       0.069      0.043      0.029               1.865                2.277        0.088
+    200       0.059      0.034      0.018               1.712                2.053        0.073
+    300       0.071      0.040      0.025               1.814                2.236        0.080
+  profil proche de la distance : corr(PI, D) -0,8, corr(PI, SOC) 0
+     M   P(z>1,645)  P(z>1,96)  P(z>2,20)  quantile 0,95 de z  quantile 0,975 de z  P(|z|>1,96)
+    100       0.059      0.031      0.018               1.704                2.091        0.066
+    200       0.068      0.039      0.025               1.836                2.200        0.067
+    300       0.064      0.036      0.023               1.767                2.156        0.071
+  profil proche de la distance sociale : corr(PI, SOC) +0,6, corr(D, SOC) +0,1
+     M   P(z>1,645)  P(z>1,96)  P(z>2,20)  quantile 0,95 de z  quantile 0,975 de z  P(|z|>1,96)
+    100       0.066      0.030      0.015               1.752                1.995        0.052
+    200       0.058      0.031      0.020               1.732                2.014        0.060
+    300       0.062      0.034      0.020               1.802                2.081        0.060
+  Règle retenue : borne basse beta2 - 1.96 × erreur type > 0 (valeur critique fixe, sans étalonnage sur données).
+
+§ 2. Puissance de la règle principale à la valeur critique fixe 1.96 (400 répétitions par case ; erreur de Monte-Carlo <= 0,025).
+  base (sigma_U 0,4, corr(PI, D) -0,5, corr(PI, SOC) +0,3)
+     rapport de cotes \ M     100    150    200    300    400
+                     1.25   0.235  0.310  0.362  0.490  0.635
+                     1.33   0.333  0.445  0.573  0.705  0.795
+                     1.50   0.555  0.705  0.823  0.917  0.963
+                     2.00   0.930  0.993  1.000  1.000  1.000
+  sigma_U 1,2
+     rapport de cotes \ M     100    150    200    300    400
+                     1.25   0.223  0.280  0.323  0.320  0.355
+                     1.33   0.263  0.338  0.367  0.403  0.453
+                     1.50   0.422  0.555  0.595  0.670  0.733
+                     2.00   0.815  0.902  0.940  0.960  0.963
+  corr(PI, D) -0,8
+     rapport de cotes \ M     100    150    200    300    400
+                     1.50   0.355  0.497  0.552  0.745  0.807
+  corr(PI, SOC) +0,6
+     rapport de cotes \ M     100    150    200    300    400
+                     1.50   0.443  0.517  0.645  0.807  0.870
+  Bruit d'étiquette, 20 % de faux ponts (base, rapport de cotes 1,5) :
+     M = 200 : sans bruit 0.823 ; non différentiel → 0.625 ; lié à la distance → 0.627
+     M = 300 : sans bruit 0.917 ; non différentiel → 0.828 ; lié à la distance → 0.792
+  (« lié à la distance » : faux ponts tirés avec un poids exp(0,7 × D), plus souvent parmi les paires lointaines.)
+  Effet de l'ajout de la distance sociale (R-735) : puissance du modèle sans SOC (D, P, PA seulement) sur un
+  échantillon cas-témoins frais de la même population (« avec SOC » = tableau ci-dessus). Dans ce modèle
+  génératif, SOC a un effet propre (-0,3) et corr(PI, SOC) > 0 : l'omettre biaise beta2 vers le bas.
+     base                 RC 1.25, M = 200 : avec SOC 0.362 ; sans SOC 0.043
+     base                 RC 1.25, M = 300 : avec SOC 0.490 ; sans SOC 0.045
+     base                 RC 1.50, M = 200 : avec SOC 0.823 ; sans SOC 0.500
+     base                 RC 1.50, M = 300 : avec SOC 0.917 ; sans SOC 0.672
+     corr(PI, SOC) +0,6   RC 1.50, M = 200 : avec SOC 0.645 ; sans SOC 0.258
+     corr(PI, SOC) +0,6   RC 1.50, M = 300 : avec SOC 0.807 ; sans SOC 0.365
+
+§ 3. Équivalence (« réfuté ») : intervalle beta2 ± 1.96 × erreur type contenu dans ± bande.
+     Sous le nul (souhaité grand) et à la borne de la bande (fausse alarme de « réfuté », souhaitée petite).
+     bande      M   P(équiv | nul)  P(équiv | RC = borne)  P(équiv | RC = 1,25)  P(équiv | RC = 1,33)
+     log 1,25   100           0.000                  0.000                 0.000                 0.000
+     log 1,25   200           0.007                  0.003                 0.003                 0.000
+     log 1,25   300           0.081                  0.020                 0.020                 0.007
+     log 1,33   100           0.004                  0.003                 0.000                 0.003
+     log 1,33   200           0.152                  0.028                 0.043                 0.028
+     log 1,33   300           0.431                  0.022                 0.083                 0.022
+     log 1,50   100           0.175                  0.028                 0.085                 0.043
+     log 1,50   200           0.690                  0.030                 0.265                 0.133
+     log 1,50   300           0.897                  0.035                 0.388                 0.200
+  (sous le nul : 2 000 répétitions ; à la borne : 400 ; configuration de base.)
+
+§ 4. Rétrodiction inversée et tableau de lecture entier (constats CE1-02, CE1-08, CE1-11).
+     Règles de suspension (toutes rapportées) :
+       (a)  lettre de la synthèse, « score » = aire du profil seul : aire- >= aire+ - 0,03 ;
+       (a,0,01) même règle, delta0 = 0,01 ;
+       (c)  beta2- estimé >= beta2+/2 et beta2+ > 0 (règle du brouillon 1) ;
+       (a') gain d'aire en validation croisée : gain- >= gain+ - 0,03 (lecture du brouillon 1 ; M = 200, trois mondes).
+     400 répétitions par monde ; 250 niches ; sigma_U 0.4 ; les colonnes susp sont inconditionnelles (sans exiger beta2+ significatif).
+  M = 100 ponts par portion (prospective et rétrodite) :
+     monde                                        aire+   aire-  susp(a)  susp(a,0,01) susp(c)  susp(a')
+     nul (beta+ = beta- = 0)                      0.570  0.569    0.733         0.578    0.155        —
+     barrière HR-2 (RC 1/1,5 partout)             0.459  0.457    0.740         0.588    0.000        —
+     anticipation RC 1,25                         0.627  0.571    0.270         0.155    0.228        —
+     anticipation RC 1,5                          0.671  0.570    0.060         0.020    0.138        —
+     anticipation RC 2,0                          0.739  0.569    0.000         0.000    0.040        —
+     moitié RC 1,5 (beta- = beta+/2)              0.674  0.622    0.295         0.158    0.470        —
+     statique atténuée 0,6 (RC 1,5)               0.674  0.637    0.432         0.253    0.590        —
+     statique atténuée 0,8 (RC 1,5)               0.678  0.652    0.537         0.340    0.708        —
+     statique RC 1,5 (beta- = beta+)              0.674  0.674    0.760         0.580    0.795        —
+     statique RC 1,5, témoins du passé × 0,7      0.673  0.656    0.615         0.443    0.820        —
+     anticipation RC 1,5, témoins du passé × 1,3  0.675  0.588    0.102         0.052    0.188        —
+  M = 200 ponts par portion (prospective et rétrodite) :
+     monde                                        aire+   aire-  susp(a)  susp(a,0,01) susp(c)  susp(a')
+     nul (beta+ = beta- = 0)                      0.568  0.568    0.843         0.637    0.152    1.000
+     barrière HR-2 (RC 1/1,5 partout)             0.455  0.458    0.850         0.675    0.000        —
+     anticipation RC 1,25                         0.629  0.571    0.182         0.060    0.210        —
+     anticipation RC 1,5                          0.673  0.568    0.005         0.000    0.085    1.000
+     anticipation RC 2,0                          0.739  0.567    0.000         0.000    0.007        —
+     moitié RC 1,5 (beta- = beta+/2)              0.674  0.621    0.225         0.100    0.468        —
+     statique atténuée 0,6 (RC 1,5)               0.675  0.635    0.345         0.165    0.568        —
+     statique atténuée 0,8 (RC 1,5)               0.672  0.655    0.675         0.412    0.838        —
+     statique RC 1,5 (beta- = beta+)              0.675  0.674    0.825         0.593    0.900    1.000
+     statique RC 1,5, témoins du passé × 0,7      0.676  0.657    0.642         0.422    0.907        —
+     anticipation RC 1,5, témoins du passé × 1,3  0.674  0.588    0.035         0.003    0.083        —
+  M = 300 ponts par portion (prospective et rétrodite) :
+     monde                                        aire+   aire-  susp(a)  susp(a,0,01) susp(c)  susp(a')
+     nul (beta+ = beta- = 0)                      0.570  0.568    0.855         0.642    0.207        —
+     barrière HR-2 (RC 1/1,5 partout)             0.457  0.460    0.910         0.710    0.000        —
+     anticipation RC 1,25                         0.626  0.569    0.120         0.030    0.177        —
+     anticipation RC 1,5                          0.673  0.569    0.003         0.000    0.037        —
+     anticipation RC 2,0                          0.738  0.568    0.000         0.000    0.003        —
+     moitié RC 1,5 (beta- = beta+/2)              0.673  0.622    0.220         0.058    0.505        —
+     statique atténuée 0,6 (RC 1,5)               0.676  0.634    0.310         0.095    0.578        —
+     statique atténuée 0,8 (RC 1,5)               0.675  0.653    0.660         0.343    0.845        —
+     statique RC 1,5 (beta- = beta+)              0.674  0.673    0.902         0.670    0.950        —
+     statique RC 1,5, témoins du passé × 0,7      0.674  0.657    0.720         0.362    0.948        —
+     anticipation RC 1,5, témoins du passé × 1,3  0.676  0.587    0.005         0.000    0.058        —
+
+  Distribution des verdicts, M = 100, bande log 1,25, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.000        0.028        0.015        0.020        0.938
+     barrière HR-2 (RC 1/1,5 partout)                     0.000        0.595        0.000        0.000        0.405
+     anticipation RC 1,25                                 0.000        0.003        0.033        0.177        0.787
+     anticipation RC 1,5                                  0.000        0.000        0.013        0.573        0.415
+     anticipation RC 2,0                                  0.000        0.000        0.000        0.935        0.065
+     moitié RC 1,5 (beta- = beta+/2)                      0.000        0.000        0.102        0.463        0.435
+     statique atténuée 0,6 (RC 1,5)                       0.000        0.000        0.217        0.350        0.432
+     statique atténuée 0,8 (RC 1,5)                       0.000        0.000        0.237        0.305        0.458
+     statique RC 1,5 (beta- = beta+)                      0.000        0.000        0.395        0.180        0.425
+     statique RC 1,5, témoins du passé × 0,7              0.000        0.000        0.280        0.278        0.443
+     anticipation RC 1,5, témoins du passé × 1,3          0.000        0.000        0.025        0.517        0.458
+  Distribution des verdicts, M = 200, bande log 1,25, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.003        0.013        0.010        0.013        0.963
+     barrière HR-2 (RC 1/1,5 partout)                     0.000        0.848        0.000        0.000        0.152
+     anticipation RC 1,25                                 0.000        0.000        0.028        0.360        0.613
+     anticipation RC 1,5                                  0.000        0.000        0.003        0.797        0.200
+     anticipation RC 2,0                                  0.000        0.000        0.000        1.000        0.000
+     moitié RC 1,5 (beta- = beta+/2)                      0.000        0.000        0.160        0.667        0.172
+     statique atténuée 0,6 (RC 1,5)                       0.000        0.000        0.233        0.593        0.175
+     statique atténuée 0,8 (RC 1,5)                       0.000        0.000        0.492        0.300        0.207
+     statique RC 1,5 (beta- = beta+)                      0.000        0.000        0.680        0.168        0.152
+     statique RC 1,5, témoins du passé × 0,7              0.000        0.000        0.490        0.330        0.180
+     anticipation RC 1,5, témoins du passé × 1,3          0.000        0.000        0.018        0.823        0.160
+  Distribution des verdicts, M = 300, bande log 1,25, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.068        0.055        0.015        0.010        0.853
+     barrière HR-2 (RC 1/1,5 partout)                     0.000        0.945        0.000        0.000        0.055
+     anticipation RC 1,25                                 0.013        0.000        0.022        0.448        0.517
+     anticipation RC 1,5                                  0.000        0.000        0.003        0.940        0.058
+     anticipation RC 2,0                                  0.000        0.000        0.000        1.000        0.000
+     moitié RC 1,5 (beta- = beta+/2)                      0.000        0.000        0.203        0.740        0.058
+     statique atténuée 0,6 (RC 1,5)                       0.003        0.000        0.287        0.672        0.037
+     statique atténuée 0,8 (RC 1,5)                       0.000        0.000        0.603        0.338        0.060
+     statique RC 1,5 (beta- = beta+)                      0.000        0.000        0.848        0.098        0.055
+     statique RC 1,5, témoins du passé × 0,7              0.000        0.000        0.655        0.273        0.072
+     anticipation RC 1,5, témoins du passé × 1,3          0.000        0.000        0.005        0.935        0.060
+
+  Distribution des verdicts, M = 100, bande log 1,33, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.000        0.028        0.015        0.020        0.938
+     barrière HR-2 (RC 1/1,5 partout)                     0.000        0.595        0.000        0.000        0.405
+     anticipation RC 1,25                                 0.000        0.003        0.033        0.177        0.787
+     anticipation RC 1,5                                  0.000        0.000        0.013        0.573        0.415
+     anticipation RC 2,0                                  0.000        0.000        0.000        0.935        0.065
+     moitié RC 1,5 (beta- = beta+/2)                      0.000        0.000        0.102        0.463        0.435
+     statique atténuée 0,6 (RC 1,5)                       0.000        0.000        0.217        0.350        0.432
+     statique atténuée 0,8 (RC 1,5)                       0.000        0.000        0.237        0.305        0.458
+     statique RC 1,5 (beta- = beta+)                      0.000        0.000        0.395        0.180        0.425
+     statique RC 1,5, témoins du passé × 0,7              0.000        0.000        0.280        0.278        0.443
+     anticipation RC 1,5, témoins du passé × 1,3          0.000        0.000        0.025        0.517        0.458
+  Distribution des verdicts, M = 200, bande log 1,33, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.130        0.013        0.010        0.013        0.835
+     barrière HR-2 (RC 1/1,5 partout)                     0.000        0.848        0.000        0.000        0.152
+     anticipation RC 1,25                                 0.037        0.000        0.028        0.360        0.575
+     anticipation RC 1,5                                  0.005        0.000        0.003        0.797        0.195
+     anticipation RC 2,0                                  0.000        0.000        0.000        1.000        0.000
+     moitié RC 1,5 (beta- = beta+/2)                      0.000        0.000        0.160        0.667        0.172
+     statique atténuée 0,6 (RC 1,5)                       0.000        0.000        0.233        0.593        0.175
+     statique atténuée 0,8 (RC 1,5)                       0.000        0.000        0.492        0.300        0.207
+     statique RC 1,5 (beta- = beta+)                      0.003        0.000        0.680        0.168        0.150
+     statique RC 1,5, témoins du passé × 0,7              0.000        0.000        0.490        0.330        0.180
+     anticipation RC 1,5, témoins du passé × 1,3          0.000        0.000        0.018        0.823        0.160
+  Distribution des verdicts, M = 300, bande log 1,33, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.393        0.055        0.015        0.010        0.527
+     barrière HR-2 (RC 1/1,5 partout)                     0.003        0.945        0.000        0.000        0.052
+     anticipation RC 1,25                                 0.110        0.000        0.022        0.448        0.420
+     anticipation RC 1,5                                  0.000        0.000        0.003        0.940        0.058
+     anticipation RC 2,0                                  0.000        0.000        0.000        1.000        0.000
+     moitié RC 1,5 (beta- = beta+/2)                      0.000        0.000        0.203        0.740        0.058
+     statique atténuée 0,6 (RC 1,5)                       0.003        0.000        0.287        0.672        0.037
+     statique atténuée 0,8 (RC 1,5)                       0.000        0.000        0.603        0.338        0.060
+     statique RC 1,5 (beta- = beta+)                      0.000        0.000        0.848        0.098        0.055
+     statique RC 1,5, témoins du passé × 0,7              0.000        0.000        0.655        0.273        0.072
+     anticipation RC 1,5, témoins du passé × 1,3          0.000        0.000        0.005        0.935        0.060
+
+  Distribution des verdicts, M = 100, bande log 1,50, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.163        0.028        0.015        0.020        0.775
+     barrière HR-2 (RC 1/1,5 partout)                     0.010        0.595        0.000        0.000        0.395
+     anticipation RC 1,25                                 0.080        0.003        0.033        0.177        0.708
+     anticipation RC 1,5                                  0.013        0.000        0.013        0.573        0.403
+     anticipation RC 2,0                                  0.000        0.000        0.000        0.935        0.065
+     moitié RC 1,5 (beta- = beta+/2)                      0.018        0.000        0.102        0.463        0.417
+     statique atténuée 0,6 (RC 1,5)                       0.022        0.000        0.217        0.350        0.410
+     statique atténuée 0,8 (RC 1,5)                       0.035        0.000        0.237        0.305        0.422
+     statique RC 1,5 (beta- = beta+)                      0.028        0.000        0.395        0.180        0.398
+     statique RC 1,5, témoins du passé × 0,7              0.018        0.000        0.280        0.278        0.425
+     anticipation RC 1,5, témoins du passé × 1,3          0.020        0.000        0.025        0.517        0.438
+  Distribution des verdicts, M = 200, bande log 1,50, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.738        0.013        0.010        0.013        0.228
+     barrière HR-2 (RC 1/1,5 partout)                     0.030        0.848        0.000        0.000        0.122
+     anticipation RC 1,25                                 0.268        0.000        0.028        0.360        0.345
+     anticipation RC 1,5                                  0.037        0.000        0.003        0.797        0.163
+     anticipation RC 2,0                                  0.000        0.000        0.000        1.000        0.000
+     moitié RC 1,5 (beta- = beta+/2)                      0.037        0.000        0.160        0.667        0.135
+     statique atténuée 0,6 (RC 1,5)                       0.037        0.000        0.233        0.593        0.138
+     statique atténuée 0,8 (RC 1,5)                       0.037        0.000        0.490        0.300        0.172
+     statique RC 1,5 (beta- = beta+)                      0.022        0.000        0.680        0.168        0.130
+     statique RC 1,5, témoins du passé × 0,7              0.022        0.000        0.490        0.330        0.158
+     anticipation RC 1,5, témoins du passé × 1,3          0.037        0.000        0.018        0.823        0.122
+  Distribution des verdicts, M = 300, bande log 1,50, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.873        0.050        0.013        0.010        0.055
+     barrière HR-2 (RC 1/1,5 partout)                     0.022        0.943        0.000        0.000        0.035
+     anticipation RC 1,25                                 0.415        0.000        0.020        0.425        0.140
+     anticipation RC 1,5                                  0.025        0.000        0.003        0.938        0.035
+     anticipation RC 2,0                                  0.000        0.000        0.000        1.000        0.000
+     moitié RC 1,5 (beta- = beta+/2)                      0.028        0.000        0.203        0.735        0.035
+     statique atténuée 0,6 (RC 1,5)                       0.028        0.000        0.282        0.667        0.022
+     statique atténuée 0,8 (RC 1,5)                       0.022        0.000        0.600        0.338        0.040
+     statique RC 1,5 (beta- = beta+)                      0.033        0.000        0.843        0.098        0.028
+     statique RC 1,5, témoins du passé × 0,7              0.033        0.000        0.652        0.273        0.043
+     anticipation RC 1,5, témoins du passé × 1,3          0.018        0.000        0.005        0.935        0.043
+
+  Niches hétérogènes (sigma_U 1,2), 300 répétitions, trois mondes :
+  M = 200 ponts par portion (prospective et rétrodite) :
+     monde                                        aire+   aire-  susp(a)  susp(a,0,01) susp(c)  susp(a')
+     nul (beta+ = beta- = 0)                      0.561  0.562    0.827         0.640    0.247    1.000
+     anticipation RC 1,5                          0.657  0.564    0.010         0.003    0.127    0.990
+     statique RC 1,5 (beta- = beta+)              0.660  0.658    0.850         0.577    0.823    1.000
+  Distribution des verdicts, M = 200, bande log 1,33, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.020        0.043        0.023        0.000        0.913
+     anticipation RC 1,5                                  0.003        0.000        0.000        0.573        0.423
+     statique RC 1,5 (beta- = beta+)                      0.007        0.000        0.470        0.107        0.417
+  M = 300 ponts par portion (prospective et rétrodite) :
+     monde                                        aire+   aire-  susp(a)  susp(a,0,01) susp(c)  susp(a')
+     nul (beta+ = beta- = 0)                      0.561  0.561    0.890         0.627    0.253        —
+     anticipation RC 1,5                          0.657  0.562    0.010         0.000    0.077        —
+     statique RC 1,5 (beta- = beta+)              0.659  0.658    0.913         0.643    0.873        —
+  Distribution des verdicts, M = 300, bande log 1,33, règle de rétrodiction (a) :
+     monde                                               réfuté réf. inverse     suspendu   non réfuté   non concl.
+     nul (beta+ = beta- = 0)                              0.103        0.043        0.027        0.010        0.817
+     anticipation RC 1,5                                  0.000        0.000        0.007        0.657        0.337
+     statique RC 1,5 (beta- = beta+)                      0.003        0.000        0.547        0.073        0.377
+
+§ 5. Disponibilité des ponts et puissance réelle (rapport de cotes 1,5, quota visé 200, M_min 100, valeur critique 1.96, 300 répétitions).
+     Ponts attendus par portion = paires × 3 dates × P0 (arithmétique) :
+     revues/moitié  paires×dates  P0=0,0025  P0=0,005  P0=0,01  P0=0,02
+               150         33525         84       168       335       670
+               250         93375        233       467       934      1868
+               300        134550        336       673      1346      2691
+               350        183225        458       916      1832      3664
+     Simulation (M effectif = min(200, ponts disponibles)) :
+     revues/moitié     P0   M eff. moyen  P(M>=200)  P(M<100 : non concl. base)  P(confirmé)
+               150 0.0025          105.8      0.000                        0.360        0.427
+               150 0.0050          196.3      0.807                        0.000        0.820
+               150 0.0100          199.7      0.983                        0.000        0.813
+               250 0.0025          200.0      0.997                        0.000        0.817
+               250 0.0050          200.0      1.000                        0.000        0.803
+               250 0.0100          200.0      1.000                        0.000        0.840
+               300 0.0025          200.0      1.000                        0.000        0.803
+               300 0.0050          200.0      1.000                        0.000        0.827
+               300 0.0100          200.0      1.000                        0.000        0.843
+
+§ 6. Charge de lecture (modèle par paire, SUPPOSÉ) pour les trois portions (200 + 200 + 100 ponts).
+     r = part des paires signalées qui portent une vraie reprise ; mu = candidats moyens par paire signalée
+     (1 + binomiale négative, dispersion 0,5) ; plafond commun aux cas et aux témoins ; s = part des paires
+     à risque signalées ; validation d'un candidat : 0,3 si vraie reprise, 0,01 sinon.
+     rho = rendement d'une paire signalée ; P0 implicite = s × rho ; ponts disponibles = 93 375 × P0 (250 revues).
+     Paquets = lus par chaque lecteur ; lectures = 2 × paquets ; appels = lectures / 50 (lots de 50).
+       r    mu  plafond    s    rho   P0 impl.  ponts dispo.  paquets cas  paquets tém.  lectures   appels
+     0.03    3       10   0.2  0.043    0.0086           801        32986          1449     68870     1377
+     0.03    3       10   0.5  0.044    0.0219          2048        34379          3433     75624     1512
+     0.03    8       10   0.2  0.069    0.0137          1281        37312          2637     79898     1597
+     0.03    8       10   0.5  0.068    0.0342          3197        37518          6008     87052     1741
+     0.10    3       10   0.2  0.078    0.0156          1458        16380          1373     35506      710
+     0.10    3       10   0.5  0.077    0.0385          3598        17835          3347     42364      847
+     0.10    8       10   0.2  0.113    0.0226          2108        19376          2295     43342      866
+     0.10    8       10   0.5  0.112    0.0562          5246        21168          6252     54840     1096
+     0.25    3       10   0.2  0.153    0.0306          2861         8511          1055     19132      382
+     0.25    3       10   0.5  0.153    0.0764          7130         8323          3321     23288      465
+     0.25    8       10   0.2  0.209    0.0417          3897        10240          2347     25174      503
+     0.25    8       10   0.5  0.209    0.1044          9748        10814          5919     33466      669
+     0.03    8       20   0.5  0.083    0.0415          3879        37948          8686     93268     1865
+     0.10    8       20   0.5  0.126    0.0632          5899        23256          8126     62764     1255
+     Fixes : étalonnage 2 × 200 lectures (et 2 × 200 si révision) ; audit tiers 60 ; test de masquage 2 × 30 ;
+     exclusion des revues pluridisciplinaires 2 × (500 + 200 de liste d'attente) noms.
+     Fourchette des lectures de base : 19132 à 93268 (hors fixes, environ 2 300).
+
+§ 7. Kappa (oui contre autre) sur le lot d'étalonnage : 10 000 tirages, prévalence de « oui » 0,3.
+     kappa vrai   n   écart type de kappa estimé   P(kappa estimé < 0,60)
+           0.50  100                        0.094                   0.871
+           0.50  200                        0.068                   0.935
+           0.55  100                        0.093                   0.706
+           0.55  200                        0.065                   0.784
+           0.65  100                        0.086                   0.288
+           0.65  200                        0.059                   0.201
+           0.70  100                        0.080                   0.117
+           0.70  200                        0.056                   0.043
+
+§ 8. Contrôles numériques : ajustements 82392 ; non-convergences 0 ; replis de l'erreur type 0.
+Fin.

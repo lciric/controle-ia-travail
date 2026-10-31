@@ -1,17 +1,18 @@
-"""Essais de `arene_melange_v3.py` : chaque garde (R5) avec un cas sain et un artefact, vérifiés par leur motif ;
-contrôle par l'arbre syntaxique qu'aucune garde du code n'est sans essai nommé (`test_chaque_garde_a_son_essai` ; il
-prouve l'existence de l'entrée et de l'essai, pas que l'essai provoque le motif : chaque essai nommé le vérifie
-lui-même par `pytest.raises(..., match=motif)`) ; refus de partir sans préenregistrement scellé POUR LA BONNE RAISON,
-sur des copies temporaires (CM2-01) ; garde de la racine de décision jusque dans `gen` ; reproductibilité bit à bit ;
-bras de la v2 inchangés (comparaison directe au code v2) ; B′ et C3′ ; indicateurs de la condition d'application ;
-attaquant indépendant et jugement d'audit ; arrêt par PID et garde « aucun orphelin » ; lecture mécanique des tables.
-Racine des essais du code v3 seulement (RACINE_TESTS = 20261313 / 20261314).
+"""Essais de `arene_melange_v4.py` : chaque garde (R5) avec un cas sain et un artefact, vérifiés par leur motif ;
+contrôle par l'arbre syntaxique qu'aucune garde du code n'est sans essai nommé (`test_chaque_garde_a_son_essai`) ;
+racines (gel v4 : racines neuves gelées, racines déjà employées refusées jusque dans `gen`, plage de la session voisine
+refusée, gel épinglé) ; refus de partir sans préenregistrement scellé POUR LA BONNE RAISON, sur des copies temporaires ;
+reproductibilité bit à bit ; bras de la v3 (et de la v2) inchangés, comparaison directe au code ; B′ et C3′ ; valeur
+nulle de I3 et Table 5 réécrite ; plus petit poids maximal parmi les équilibres ; audit indépendant v4 (choix
+réévalués, A et tours de A, critère en écart pratique ou en changement de classe démontré) ; arrêt par PID ; lecture
+mécanique des tables. Racines des essais du code v4 seulement (RACINE_TESTS = 20264301 / 20264302, autre racine
+20264303), toutes écrites dans `gel-conception-arene-melange-v4.md` avant emploi.
 
 Les essais du scellement écrivent des fichiers et leurs compagnons `.sha256` dans le dossier temporaire de pytest
 (hors dépôt), jamais dans le dépôt.
 
     PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m pytest -q -p no:cacheprovider \
-        brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/essais/test_arene_melange_v3.py
+        brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/essais/test_arene_melange_v4.py
 """
 from __future__ import annotations
 
@@ -34,20 +35,22 @@ from scipy.optimize import check_grad
 
 ICI = Path(__file__).resolve().parent
 sys.path.insert(0, str(ICI.parent))
-import arene_melange_v3 as am  # noqa: E402
+import arene_melange_v4 as am  # noqa: E402
 from controle_ia import gardes  # noqa: E402
 from controle_ia.gardes import GardeArret  # noqa: E402
 
 DEPOT = am.DEPOT
-BROUILLON3 = ICI.parent / "preenregistrement-arene-melange-equilibre-v1-brouillon3.md"
+BROUILLON4 = ICI.parent / "preenregistrement-arene-melange-equilibre-v1-brouillon4.md"
 PREREG_AUTRE = DEPOT / "prereg" / "preenregistrement-bisociation-deux-espaces-v2.md"  # scellé, d'une autre expérience
 EMPREINTES_INTERDITES = ("6402dc6b2998d2f48262ddfe1d4d0d13b6a6115fcc8d01852c3b7c8182fd0d3b",   # code v1
                          "6685585fcfc028e0617d6786eb78bdb4fc159930af8fdf0444be1085f960d2ca",   # CONFIG_V1
                          "8e1e651b4be3e6fea6bf6bdf0fc00a19d479aa818323461fbf550582dfdb46bb",   # code v2
-                         "1d7544e652ee6ab782577c5731127c7338844ef3d39844d86842688ddb2031a3")   # CONFIG_V2
+                         "1d7544e652ee6ab782577c5731127c7338844ef3d39844d86842688ddb2031a3",   # CONFIG_V2
+                         "88c8781815007d92d5b0af17a7dc1995c00eae0773085c5a0ca35a1aafee4f0d",   # code v3
+                         "02db9c9183f4f601d9a77fd956f61f92de3bbafe31d78b809096743c6b15ac44")   # CONFIG_V3
 
 PETITE = am.replace(
-    am.CONFIG_BASE_V3, d=3, K=2, T=2, n_propre_entr=300, n_attaque_entr=300, n_cal=2000, n_fpr=2000, n_eval=2000,
+    am.CONFIG_BASE_V4, d=3, K=2, T=3, n_propre_entr=300, n_attaque_entr=300, n_cal=2000, n_fpr=2000, n_eval=2000,
     n_mc=32, n_mc_final=32, departs=1, departs_final=1, departs_cout=1, departs_renforce=2, iter_renforce=20,
     iter_max=20, iter_entr=300, n_tenue=4, n_eval_tenue=200, pas_bissection=1, tol_fpr=0.03, departs_entr=3,
     r_cible=3.0, deltas=(1.0, 1.5), unites_Bp=3, audit_departs=2, audit_n_mc=16, audit_iter=10,
@@ -55,7 +58,7 @@ PETITE = am.replace(
 
 
 def config_complete():
-    return am.CONFIG_V3 if am.CONFIG_V3 is not None else am.replace(am.CONFIG_BASE_V3, deltas=(1.0, 1.6))
+    return am.CONFIG_V4 if am.CONFIG_V4 is not None else am.replace(am.CONFIG_BASE_V4, deltas=(1.0, 1.6))
 
 
 @pytest.fixture(autouse=True)
@@ -74,6 +77,15 @@ def sans_temps(x):
     return x
 
 
+def restreindre(nouveau, ancien):
+    """Le résultat v4 restreint aux clés que rend l'ancien code (la v4 ne fait qu'ajouter des champs)."""
+    if isinstance(ancien, dict):
+        return {k: restreindre(nouveau[k], v) for k, v in ancien.items()}
+    if isinstance(ancien, list):
+        return [restreindre(n, a) for n, a in zip(nouveau, ancien)]
+    return nouveau
+
+
 def leve(motif):
     return pytest.raises(GardeArret, match=re.escape(motif))
 
@@ -90,10 +102,17 @@ MOTIFS = {
     "entraînement inconnu (configuration)": "test_config_sain_et_artefacts",
     "B′ sans moniteurs non linéaires": "test_config_sain_et_artefacts",
     "attaquant indépendant : paramètres non positifs": "test_config_sain_et_artefacts",
+    "audit : K =": "test_config_sain_et_artefacts",
     "sans autorisation": "test_gen_garde_racine_de_decision",
-    "réservée à la décision": "test_racines_essai_artefact",
     "déjà employée": "test_racines_essai_artefact",
+    "d'une autre session": "test_racines_essai_artefact",
+    "non gelée": "test_racines_essai_artefact",
+    "racine absente": "test_racines_essai_artefact",
+    "réservée à la décision": "test_racines_essai_artefact",
     "racine à part exigée": "test_racines_essai_artefact",
+    "gel v4 absent": "test_gel_v4_sain_et_artefacts",
+    "gel v4 modifié": "test_gel_v4_sain_et_artefacts",
+    "absente du gel v4": "test_gel_v4_sain_et_artefacts",
     "bloc de configuration canonique absent": "test_identite_prereg_sain_et_artefacts",
     "bloc de configuration illisible": "test_identite_prereg_sain_et_artefacts",
     "sans l'identifiant": "test_identite_prereg_sain_et_artefacts",
@@ -103,7 +122,7 @@ MOTIFS = {
     "empreinte du fichier de code exécuté absente": "test_identite_prereg_sain_et_artefacts",
     "bibliothèque modifiée après gel": "test_identite_prereg_sain_et_artefacts",
     "du processus absente du texte": "test_identite_prereg_sain_et_artefacts",
-    "--instances": "test_identite_prereg_sain_et_artefacts",
+    "(S4, configuration gelée)": "test_identite_prereg_sain_et_artefacts",
     "loi d'attaque non finie": "test_admissibilite_sain_et_artefact",
     "loi d'attaque hors de la boîte": "test_admissibilite_sain_et_artefact",
     "loi d'attaque à distance": "test_admissibilite_sain_et_artefact",
@@ -115,7 +134,8 @@ MOTIFS = {
     "moniteurs linéaires exigés": "test_ou_deterministe_sain_et_artefacts",
     "« ou » déterministe : score propre": "test_ou_deterministe_sain_et_artefacts",
     "« ou » composite : aucun moniteur": "test_ou_composite_sain_et_artefacts",
-    "« ou » composite : score propre": "test_ou_composite_sain_et_artefacts",
+    "« ou » composite : score propre de variance nulle": "test_ou_composite_sain_et_artefacts",
+    "presque constant": "test_ou_composite_sain_et_artefacts",
     "maxout sans graine": "test_entrainement_gardes",
     "entraînement logistique : paramètres ou perte non finis": "test_entrainement_gardes",
     "entraînement inconnu : ": "test_entrainement_gardes",
@@ -124,6 +144,7 @@ MOTIFS = {
     "matrice de gains invalide": "test_jeu_artefact",
     "programme linéaire non résolu": "test_jeu_solveur_artefacts",
     "valeurs primale et duale": "test_jeu_solveur_artefacts",
+    "équilibres du jeu restreint": "test_equilibres_poids_max_min",
     "aucun départ n'a donné de point fini": "test_meilleure_reponse_departs_non_finis",
     "départs de l'attaquant au point non fini": "test_garde_departs_finis",
     "taux de fausses alertes mesuré": "test_garde_fausses_alertes_sain_et_artefact",
@@ -135,6 +156,8 @@ MOTIFS = {
     "entraînements non convergés": "test_garde_convergence_et_identite_tour0",
     "aucun δ de la grille": "test_choisir_deltas",
     "aucun δ <": "test_choisir_deltas",
+    "lecture impossible": "test_lire_tables_refuse_sans_I3",
+    "jugement impossible": "test_classes_sous_audit_sain_et_artefacts",
     "processus de travail sans préenregistrement": "test_travail_refuse_racine_de_decision_sans_prereg",
     "processus de travail encore vivants": "test_arret_par_pid_sain_et_artefact",
     "existe déjà : R12": "test_cli_refuse_d_ecraser",
@@ -143,7 +166,12 @@ MOTIFS = {
     "audit : run audité rattaché": "test_exiger_meme_prereg",
     "audit : bras": "test_audit_sain_et_artefacts",
     "audit : V reconstruit": "test_audit_sain_et_artefacts",
+    "audit : I1 reconstruit": "test_audit_sain_et_artefacts",
     "audit : tâche absente": "test_audit_sain_et_artefacts",
+    "audit : moins de deux tâches": "test_juger_audit_sain_et_artefacts",
+    "audit : marges": "test_bornes_marges_et_cli_audit",
+    "audit : --instances": "test_bornes_marges_et_cli_audit",
+    "calibrage : --instances": "test_cli_calibrage_refuse_autres_instances",
 }
 
 
@@ -162,7 +190,7 @@ def test_chaque_garde_a_son_essai():
     assert sorted(vus) == sorted(MOTIFS), "motif sans garde ou garde comptée deux fois"
     for nom_essai in set(MOTIFS.values()):
         assert callable(globals().get(nom_essai)), f"essai {nom_essai} absent"
-    assert len(sites) == len(MOTIFS) == 62
+    assert len(sites) == len(MOTIFS) == 78
 
 
 # =================================================================================================================
@@ -174,7 +202,7 @@ def test_config_sain_et_artefacts():
     with leve("δ non fixés"):
         am.exiger_config(None)
     with leve("δ non fixés"):
-        am.exiger_config(am.CONFIG_BASE_V3)
+        am.exiger_config(am.CONFIG_BASE_V4)
     for mauvais, motif in ((dict(deltas=(1.5, 1.0)), "δ invalides"), (dict(deltas=(0.0, 1.0)), "δ invalides"),
                            (dict(n_eval=2001), "n'est pas un multiple de K"),
                            (dict(kappa_contournement=1.0), "κ de contournement hors"),
@@ -183,30 +211,73 @@ def test_config_sain_et_artefacts():
                            (dict(entrainement="autre"), "entraînement inconnu (configuration)"),
                            (dict(unites_Bp=1), "B′ sans moniteurs non linéaires"),
                            (dict(audit_departs=0), "attaquant indépendant : paramètres non positifs"),
-                           (dict(audit_critere=0.0), "attaquant indépendant : paramètres non positifs")):
+                           (dict(audit_critere=0.0), "attaquant indépendant : paramètres non positifs"),
+                           (dict(audit_k=1), "audit : K ="), (dict(audit_quantile_t=0.4), "audit : K =")):
         with leve(motif):
             am.exiger_config(am.replace(PETITE, **mauvais))
 
 
 def test_racines_essai_sain():
     for r, rt in ((am.RACINE_ESSAI, am.RACINE_ESSAI_TENUE), (am.RACINE_TESTS, am.RACINE_TESTS_TENUE),
-                  (am.RACINE_RECALIBRAGE, am.RACINE_RECALIBRAGE_TENUE)):
+                  (am.RACINE_RECALIBRAGE, am.RACINE_RECALIBRAGE_TENUE), (am.RACINE_REPRISE, am.RACINE_REPRISE_TENUE),
+                  (am.RACINE_TESTS_AUTRE, am.RACINE_SIMULATION)):
         am.exiger_racines_essai(r, rt)
-    assert not set(am.RACINES_DEJA_EMPLOYEES) & {am.RACINE_ESSAI, am.RACINE_ESSAI_TENUE, am.RACINE_TESTS,
-                                                 am.RACINE_TESTS_TENUE, am.RACINE_RECALIBRAGE,
-                                                 am.RACINE_RECALIBRAGE_TENUE, *am.RACINES_DECISION}
+    gelees = set(am.RACINES_GELEES)
+    assert len(gelees) == len(am.RACINES_GELEES) == 10
+    assert all(am.PLAGE_V4[0] < r < am.PLAGE_V4[1] for r in gelees)          # bornes de la plage elles-mêmes exclues
+    assert not gelees & (set(am.RACINES_DEJA_EMPLOYEES) | set(am.RACINES_DECISION))
+    assert not any(am.PLAGE_SESSION_VOISINE[0] <= r <= am.PLAGE_SESSION_VOISINE[1] for r in gelees)
+    texte = am.GEL_V4.read_text(encoding="utf-8")
+    assert all(re.search(rf"\b{r}\b", texte) for r in gelees | set(am.RACINES_DEJA_EMPLOYEES) | set(am.RACINES_DECISION))
+
+
+# toutes les racines déjà employées ou nommées (brouillons 1 à 3, LISEZMOI, journaux, codes et essais v1 à v3,
+# contre-lectures 1 à 3), relevées une à une : chacune est refusée
+DEJA = (20261101, 20261291, 20261292, 20261293, 20261294, 20261295, 20261296, 20261297, 20261298, 20261301, 20261311,
+        20261312, 20261313, 20261314, 20261315, 20261316, 20262291, 20262297, 20262313, 20269501, 20269502, 20269731,
+        20269732, 20269741, 20269742)
+
+
+def test_liste_des_racines_deja_employees_complete():
+    assert tuple(sorted(am.RACINES_DEJA_EMPLOYEES)) == DEJA
+    import arene_melange_v3 as am3
+
+    assert set(am3.RACINES_DEJA_EMPLOYEES) | {am3.RACINE_ESSAI, am3.RACINE_ESSAI_TENUE, am3.RACINE_TESTS,
+                                               am3.RACINE_TESTS_TENUE, am3.RACINE_RECALIBRAGE,
+                                               am3.RACINE_RECALIBRAGE_TENUE, am3.RACINE_TESTS + 1000} <= set(DEJA)
 
 
 @pytest.mark.parametrize("r, rt, motif", [(am.RACINE, am.RACINE_ESSAI_TENUE, "réservée à la décision"),
                                           (am.RACINE_ESSAI, am.RACINE_TENUE, "réservée à la décision"),
-                                          (20261291, am.RACINE_ESSAI_TENUE, "déjà employée"),
-                                          (20261293, am.RACINE_ESSAI_TENUE, "déjà employée"),
+                                          *[(x, am.RACINE_ESSAI_TENUE, "déjà employée") for x in DEJA],
                                           (am.RACINE_ESSAI, 20261298, "déjà employée"),
-                                          (20269501, am.RACINE_ESSAI_TENUE, "déjà employée"),
+                                          (20265001, am.RACINE_ESSAI_TENUE, "d'une autre session"),
+                                          (am.RACINE_ESSAI, 20265500, "d'une autre session"),
+                                          (20265999, am.RACINE_ESSAI_TENUE, "d'une autre session"),
+                                          (20264777, am.RACINE_ESSAI_TENUE, "non gelée"),
+                                          (am.RACINE_ESSAI, 20264999, "non gelée"),
+                                          (20264001, am.RACINE_ESSAI_TENUE, "non gelée"),
+                                          (12345, am.RACINE_ESSAI_TENUE, "non gelée"),
+                                          (None, am.RACINE_ESSAI_TENUE, "racine absente"),
                                           (am.RACINE_ESSAI, am.RACINE_ESSAI, "racine à part exigée")])
 def test_racines_essai_artefact(r, rt, motif):
     with leve(motif):
         am.exiger_racines_essai(r, rt)
+
+
+def test_gel_v4_sain_et_artefacts(tmp_path):
+    assert am.exiger_gel_v4(am.RACINES_GELEES) == am.GEL_V4_SHA256 == am.empreinte_fichier(am.GEL_V4)   # sain
+    with leve("absente du gel v4"):
+        am.exiger_gel_v4((am.RACINE_ESSAI, 20264777))
+    with leve("gel v4 absent"):
+        am.exiger_gel_v4((), tmp_path / "absent.md")
+    copie = tmp_path / "gel-modifie.md"
+    copie.write_text(am.GEL_V4.read_text(encoding="utf-8") + "\najout après coup\n", encoding="utf-8")
+    with leve("gel v4 modifié"):
+        am.exiger_gel_v4((), copie)
+    exact = tmp_path / "gel-copie-exacte.md"
+    shutil.copyfile(am.GEL_V4, exact)
+    am.exiger_gel_v4((am.RACINE_TESTS,), exact)                               # copie exacte : saine
 
 
 def test_gen_garde_racine_de_decision():
@@ -218,6 +289,12 @@ def test_gen_garde_racine_de_decision():
         am.executer_tache(0, 1, am.RACINE, am.RACINE_TESTS_TENUE, PETITE)
     with leve("sans autorisation"):
         am.loi_cible(0, am.RACINE, PETITE)
+    for r, motif in ((20261313, "déjà employée"), (20269741, "déjà employée"), (20265042, "d'une autre session"),
+                     (20264555, "non gelée")):
+        with leve(motif):                                           # jusque dans `gen` : aucune graine ne part
+            am.gen(r, 0)
+    with leve("non gelée"):
+        am.executer_tache(0, 1, am.RACINE_TESTS + 1000, am.RACINE_TESTS_TENUE, PETITE)
     am._AUTORISATION_DECISION["prereg_sha256"] = "0" * 64           # autorisation posée (simulée) : la graine part
     assert am.gen(am.RACINE, 1, 2).integers(10) >= 0
 
@@ -230,20 +307,39 @@ def test_travail_refuse_racine_de_decision_sans_prereg():
 
 
 def test_cli_essai_refuse_racines_interdites(tmp_path):
-    for r, motif in ((am.RACINE, "réservée à la décision"), (20261293, "déjà employée")):
+    for r, motif in ((am.RACINE, "réservée à la décision"), (20261293, "déjà employée"), (20261311, "déjà employée"),
+                     (20265001, "d'une autre session"), (20264777, "non gelée")):
         with leve(motif):
             am.main(["essai", "--instances", "0:1", "--sortie", str(tmp_path / "x.json"), "--racine", str(r)])
     assert not (tmp_path / "x.json").exists()
 
 
 def test_cli_refuse_d_ecraser(tmp_path, monkeypatch):
-    monkeypatch.setattr(am, "CONFIG_V3", config_complete())
+    monkeypatch.setattr(am, "CONFIG_V4", config_complete())
     f = tmp_path / "deja.json"
     f.write_text("{}")
     with leve("existe déjà : R12"):
         am.main(["essai", "--instances", "0:1", "--sortie", str(f)])
     with leve("existe déjà : R12"):
-        am.main(["calibrage", "--sortie", str(f)])
+        am.main(["calibrage", "--sortie", str(f)])                       # instances par défaut 0:48 : conformes
+
+
+def test_cli_calibrage_refuse_autres_instances(tmp_path):
+    for inst in ("0:12", "0:47", "1:49"):
+        with leve("calibrage : --instances"):
+            am.main(["calibrage", "--instances", inst, "--sortie", str(tmp_path / "c.json")])
+    assert not (tmp_path / "c.json").exists()
+
+
+def test_stabilite_calibrage_sain():
+    grille = (1.0, 1.4, 1.8)
+    cfg = am.CONFIG_BASE_V4
+    res = [{"instance": i, "delta": d, "bras": {"A": {"V_iii_final": v}}}
+           for i in range(6) for d, v in zip(grille, (0.20 + 0.01 * i, 0.12, 0.01 + 0.002 * i))]
+    st = am.stabilite_calibrage(res, list(grille), cfg, n_tirages=300)
+    assert st == {"(1.0, 1.4)": 1.0}
+    assert am.choisir_deltas({d: float(np.mean([r["bras"]["A"]["V_iii_final"] for r in res if r["delta"] == d]))
+                              for d in grille}, cfg) == (1.0, 1.4)
     with leve("apparu pendant l'exécution"):
         am._ecrire_nouveau(f, {"a": 1})
     g = tmp_path / "neuf.json"
@@ -290,7 +386,7 @@ def test_identite_prereg_sain_et_artefacts():
         assert texte != ok
         with leve(motif):
             am.exiger_identite_prereg(texte, cfg)
-    with leve("--instances"):
+    with leve("(S4, configuration gelée)"):
         am.exiger_identite_prereg(ok, cfg, "0:99")
     with pytest.raises(GardeArret, match=r"T : texte 3 ≠ code 2"):
         am.exiger_identite_prereg(ok.replace('"T": 2', '"T": 3'), cfg)
@@ -329,20 +425,22 @@ def test_prereg_scelle_refus_pour_la_bonne_raison(tmp_path):
     am.gen(am.RACINE, 0)
 
 
-def test_decision_refusee_copie_brouillon3_pour_la_bonne_raison(tmp_path, monkeypatch):
-    """CM2-01 : sur une COPIE temporaire du brouillon 3, indépendante de l'état du dossier. Sans compagnon : refus par
-    le scellement ; copie scellée : refus par non-conformité (Seuil, Contre-lecture) ; aucun run créé."""
+def test_decision_refusee_copie_brouillon4_pour_la_bonne_raison(tmp_path, monkeypatch):
+    """Sur une COPIE temporaire du brouillon 4, indépendante de l'état du dossier. Sans compagnon : refus par le
+    scellement ; copie scellée : refus par non-conformité (Seuil, Contre-lecture) ; aucun run créé."""
     from controle_ia.scellement import sceller
 
-    assert BROUILLON3.is_file()
-    monkeypatch.setattr(am, "CONFIG_V3", config_complete())
-    run_id = "20990101-000000-arene-essai-garde-v3"
-    copie = tmp_path / "copie-brouillon3.md"
-    shutil.copyfile(BROUILLON3, copie)
-    with pytest.raises(GardeArret, match=r"empreinte compagnon copie-brouillon3\.md\.sha256 absente"):
+    assert BROUILLON4.is_file()
+    monkeypatch.setattr(am, "CONFIG_V4", config_complete())
+    run_id = "20990101-000000-arene-essai-garde-v4"
+    copie = tmp_path / "copie-brouillon4.md"
+    shutil.copyfile(BROUILLON4, copie)
+    marges = ["--S1", "0.02", "--S6", "0.02", "--S15", "0.02"]
+    with pytest.raises(GardeArret, match=r"empreinte compagnon copie-brouillon4\.md\.sha256 absente"):
         am.main(["decision", "--prereg", str(copie), "--instances", "0:100", "--run-id", run_id])
-    with pytest.raises(GardeArret, match=r"empreinte compagnon copie-brouillon3\.md\.sha256 absente"):
-        am.main(["audit", "--prereg", str(copie), "--source-run", run_id, "--run-id", run_id + "-audit"])
+    with pytest.raises(GardeArret, match=r"empreinte compagnon copie-brouillon4\.md\.sha256 absente"):
+        am.main(["audit", "--prereg", str(copie), "--source-run", run_id, "--instances", "0:10", "--run-id",
+                 run_id + "-audit"] + marges)
     sceller(copie)
     with pytest.raises(GardeArret, match=r"scellé mais non conforme.*Seuil.*Contre-lecture"):
         am.main(["decision", "--prereg", str(copie), "--instances", "0:100", "--run-id", run_id])
@@ -350,26 +448,28 @@ def test_decision_refusee_copie_brouillon3_pour_la_bonne_raison(tmp_path, monkey
     assert am._AUTORISATION_DECISION["prereg_sha256"] is None
 
 
-def test_brouillon3_non_conforme_au_validateur_et_identite_du_code():
+def test_brouillon4_non_conforme_au_validateur_et_identite_du_code():
     """Le brouillon garde ses marqueurs : le validateur refuse de le sceller. Son bloc d'identité est celui du code et
-    de la configuration remis. Il ne cite les empreintes des codes v1, v2 et de leurs configurations qu'abrégées."""
+    de la configuration remis (δ recalibrés). Il ne cite les empreintes des codes v1 à v3 et de leurs configurations
+    qu'abrégées (aucun de ces codes ne peut partir sur ce texte)."""
     from controle_ia.prereg import problemes
 
-    p = problemes(BROUILLON3)
+    p = problemes(BROUILLON4)
     assert any("Seuil" in x for x in p) and any("Contre-lecture" in x for x in p)
-    texte = BROUILLON3.read_text(encoding="utf-8")
-    assert am.CONFIG_V3 is not None, "δ non fixés dans le code remis"
-    am.exiger_identite_prereg(texte, am.CONFIG_V3, f"0:{am.CONFIG_V3.n_instances}")
+    texte = BROUILLON4.read_text(encoding="utf-8")
+    assert am.CONFIG_V4 is not None, "δ non fixés dans le code remis"
+    am.exiger_identite_prereg(texte, am.CONFIG_V4, f"0:{am.CONFIG_V4.n_instances}")
     assert not any(e in texte for e in EMPREINTES_INTERDITES)
+    assert am.GEL_V4_SHA256 in texte
 
 
 def test_cli_identite(capsys, monkeypatch):
-    monkeypatch.setattr(am, "CONFIG_V3", config_complete())
+    monkeypatch.setattr(am, "CONFIG_V4", config_complete())
     am.main(["identite"])
     sortie = capsys.readouterr().out
-    assert am.CONFIG_V3.empreinte() in sortie and am.empreinte_fichier(am.__file__) in sortie
-    assert "arene_melange_v3.py" in sortie
-    assert am.extraire_configuration(sortie) == json.loads(json.dumps(asdict(am.CONFIG_V3)))
+    assert am.CONFIG_V4.empreinte() in sortie and am.empreinte_fichier(am.__file__) in sortie
+    assert "arene_melange_v4.py" in sortie
+    assert am.extraire_configuration(sortie) == json.loads(json.dumps(asdict(am.CONFIG_V4)))
 
 
 # =================================================================================================================
@@ -413,6 +513,25 @@ def test_jeu_solveur_artefacts(monkeypatch):
         am.resoudre_jeu(np.array([[1.0, 0.0], [0.0, 1.0]]))
     monkeypatch.setattr(am, "linprog", vrai)
     am.resoudre_jeu(np.array([[1.0, 0.0], [0.0, 1.0]]))                      # sain
+
+
+def test_equilibres_poids_max_min(monkeypatch):
+    G = np.array([[1.0, 0.0], [0.0, 1.0]])
+    _, _, v = am.resoudre_jeu(G)
+    assert abs(am.poids_max_min_equilibres(G, v) - 0.5) < 1e-6                 # seul équilibre : (1/2, 1/2)
+    G2 = np.array([[0.9, 0.8], [0.1, 0.2]])
+    p2, _, v2 = am.resoudre_jeu(G2)
+    assert am.est_pur(p2) and am.poids_max_min_equilibres(G2, v2) >= am.SEUIL_PURETE_FORCEE   # pureté forcée
+    G3 = np.array([[0.5, 0.5], [0.5, 0.5], [0.2, 0.9]])                         # deux lignes équivalentes
+    p3, _, v3 = am.resoudre_jeu(G3)
+    assert abs(am.poids_max_min_equilibres(G3, v3) - 0.5) < 1e-6               # un mélange de même valeur existe
+    vrai = am.linprog
+    monkeypatch.setattr(am, "linprog", lambda *a, **k: SimpleNamespace(status=2, message="infaisable (simulé)",
+                                                                        fun=np.nan, x=np.zeros(3)))
+    with leve("équilibres du jeu restreint"):
+        am.poids_max_min_equilibres(G, v)
+    monkeypatch.setattr(am, "linprog", vrai)
+    assert am.est_pur([1 - 1e-9, 1e-9]) and not am.est_pur([1 - 2e-9, 2e-9])   # pureté : un poids ≥ 1 − 10⁻⁹
 
 
 def test_poids_sain_et_artefact():
@@ -502,8 +621,12 @@ def test_ou_composite_sain_et_artefacts():
     assert abs(float(np.mean(c.detecte(Xf))) - 0.01) < 0.004
     with leve("« ou » composite : aucun moniteur"):
         am.ou_composite([], Xcal, 8.0, 0.01)
-    with leve("« ou » composite : score propre"):
+    with leve("« ou » composite : score propre de variance nulle"):
         am.ou_composite([mx[0], am.Moniteur(np.zeros((2, 3)), np.zeros(2))], Xcal, 8.0, 0.01)
+    presque = am.Moniteur(np.full((1, 3), 1e-9), np.array([5.0]))              # écart-type ≈ 1,7e-9, moyenne 5
+    with leve("presque constant"):
+        am.ou_composite([mx[0], presque], Xcal, 8.0, 0.01)
+    am.ou_composite([mx[0], am.Moniteur(np.full((1, 3), 1e-4), np.array([5.0]))], Xcal, 8.0, 0.01)   # sain
 
 
 def test_entrainement_gardes(monkeypatch):
@@ -620,10 +743,14 @@ def test_garde_fausses_alertes_sain_et_artefact():
 
 
 def test_garde_convergence_et_identite_tour0():
+    assert PETITE.taux_nonconv_max == am.CONFIG_BASE_V4.taux_nonconv_max == 0.10      # S18 (R-739)
     am.exiger_convergence(1, 100, PETITE)
-    am.exiger_convergence(5, 100, PETITE)
+    am.exiger_convergence(10, 100, PETITE)
+    am.exiger_convergence(3, 34, PETITE)                                       # 3 sur 34 entraînements d'une tâche
     with leve("entraînements non convergés"):
-        am.exiger_convergence(6, 100, PETITE)
+        am.exiger_convergence(11, 100, PETITE)
+    with leve("entraînements non convergés"):
+        am.exiger_convergence(4, 34, PETITE)
     a = am.Moniteur(np.array([[1.0, 2.0]]), np.array([0.5])).calibrer(np.random.default_rng(0).standard_normal((99, 2)),
                                                                      0.01)
     b = am.Moniteur(a.W.copy(), a.b.copy())
@@ -678,7 +805,7 @@ def test_cout_contournement_ligne_de_base_et_bissection():
 
 
 def test_choisir_deltas():
-    cfg = am.CONFIG_BASE_V3
+    cfg = am.CONFIG_BASE_V4
     moy = {0.6: 0.30, 0.8: 0.20, 1.0: 0.12, 1.2: 0.08, 1.4: 0.05, 1.6: 0.035, 1.8: 0.02, 2.0: 0.01, 2.4: 0.001}
     assert am.choisir_deltas(moy, cfg) == (1.0, 1.6)
     moy2 = {**moy, 2.0: 0.031}
@@ -696,7 +823,7 @@ def test_reproductibilite_bit_a_bit_et_temoins():
     a = am.executer_tache(0, 1, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE)
     b = am.executer_tache(0, 1, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE)
     assert sans_temps(a) == sans_temps(b)
-    c = am.executer_tache(0, 1, am.RACINE_TESTS + 1000, am.RACINE_TESTS_TENUE, PETITE)
+    c = am.executer_tache(0, 1, am.RACINE_TESTS_AUTRE, am.RACINE_TESTS_TENUE, PETITE)
     assert sans_temps(a)["bras"] != sans_temps(c)["bras"]
     B = a["bras"]
     n, u, T = PETITE.T + 1, PETITE.unites_Bp, PETITE.T
@@ -737,9 +864,28 @@ def test_ordre_des_bras_sans_effet():
         assert sans_temps(sans_bp["bras"][x]) == sans_temps(tous["bras"][x])
 
 
+def test_bras_v3_inchanges():
+    """Continuité (gel v4, § 3.9) : les HUIT bras du code v4 rendent, champ à champ, ce que rend le code v3 remis (même
+    racine, même configuration réduite) ; la v4 ne fait qu'ajouter des champs (équilibres, I3 − nul)."""
+    import arene_melange_v3 as am3
+
+    champs = {k: v for k, v in asdict(PETITE).items() if k in asdict(am3.CONFIG_BASE_V3)}
+    p3 = am3.Config(**champs)
+    r3 = am3.executer_tache(0, 2, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, p3)
+    r4 = am.executer_tache(0, 2, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE)
+    for x in am.TOUS_LES_BRAS:
+        v3 = sans_temps(r3["bras"][x])
+        assert v3 == restreindre(sans_temps(r4["bras"][x]), v3), x
+    assert r3["attaquant"] == r4["attaquant"] and r3["entrainements"] == r4["entrainements"]
+    assert r3["non_convergences"] == r4["non_convergences"]
+    for x in ("B", "Bp"):                                                     # champs ajoutés par la v4
+        assert set(r4["bras"][x]["equilibre"]) == {"poids_max_min", "indice_poids_max", "pur"}
+    assert r4["bras"]["A"]["cycle"]["I3_nul"] == am.valeur_nulle_I3(PETITE.T)
+
+
 def test_bras_v2_inchanges():
-    """Continuité : A, B, C1, C2, C3, D du code v3 rendent, champ à champ, ce que rend le code v2 remis (même racine,
-    même configuration réduite) ; la v3 ne fait qu'ajouter des champs (cycle, paramètres par requête)."""
+    """Continuité : A, B, C1, C2, C3, D du code v4 rendent, champ à champ, ce que rend le code v2 remis (même racine,
+    même configuration réduite) ; les versions suivantes ne font qu'ajouter des champs."""
     import arene_melange_v2 as am2
 
     champs = {k: v for k, v in asdict(PETITE).items() if k in asdict(am2.CONFIG_BASE_V2)}
@@ -749,7 +895,7 @@ def test_bras_v2_inchanges():
     r3 = am.executer_tache(0, 1, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE, bras=bras)
     for x in bras:
         v2 = sans_temps(r2["bras"][x])
-        assert v2 == {k: sans_temps(r3["bras"][x])[k] for k in v2}, x
+        assert v2 == restreindre(sans_temps(r3["bras"][x]), v2), x
     assert r2["attaquant"] == r3["attaquant"]
 
 
@@ -770,8 +916,25 @@ def test_indicateurs_cycle_sain():
     assert abs(r["retention"]["0"] - np.mean([0.5, 0.6, 0.7, 0.8])) < 1e-12
     assert abs(r["retention"]["-1"] - 0.1) < 1e-12
     assert r["I3_retours"] == 0.5          # t = 3 revient vers t = 1 ; t = 4 ne revient pas
+    assert abs(r["I3_nul"] - np.mean([1 / 2, 2 / 3])) < 1e-12 and abs(r["I3_moins_nul"] - (0.5 - r["I3_nul"])) < 1e-12
     r2 = am.indicateurs_cycle(H, [0.0, 0.0, 0.2, 0.2], dep)
     assert abs(r2["I1_progres"] - 0.2) < 1e-12
+    r3 = am.indicateurs_cycle(H[:3, :2], [0.1, 0.1], dep[:2])                 # T = 2 : I3 indéfini, déclaré
+    assert r3["I3_retours"] is None and r3["I3_nul"] is None and r3["I3_moins_nul"] is None
+
+
+def test_valeur_nulle_I3():
+    """CM3-03 : sous échangeabilité, E[I3] = moyenne sur t = 3 … T de (t − 2)/(t − 1) ; 0,7345 à T = 8 ; vérifié par
+    simulation sur des déplacements tirés au hasard (dimension 36, racine des essais v4)."""
+    assert abs(am.valeur_nulle_I3(8) - np.mean([(t - 2) / (t - 1) for t in range(3, 9)])) < 1e-15
+    assert abs(am.valeur_nulle_I3(8) - 0.7345238) < 1e-6 and am.valeur_nulle_I3(2) is None
+    g = am.gen(am.RACINE_TESTS, 0, 0, 0, 0, 50)
+    x = [am.taux_retours(list(g.standard_normal((8, 36)))) for _ in range(4000)]
+    assert abs(float(np.mean(x)) - am.valeur_nulle_I3(8)) < 0.015
+    cycle = [np.array(v, float) for v in ([1, 0], [0, 1], [1, 0.1], [0.1, 1], [1, 0], [0, 1], [1, 0.1], [0.1, 1])]
+    assert am.taux_retours(cycle) == 1.0                                       # va-et-vient : au-dessus de la valeur nulle
+    derive = [np.array([1.0, 0.1 * t]) for t in range(8)]
+    assert am.taux_retours(derive) == 0.0                                      # dérive régulière : sous la valeur nulle
 
 
 # =================================================================================================================
@@ -783,8 +946,9 @@ def faux_contraste(m, s):
     return {"moyenne": m, "ecart_type": s, "quantiles": {f"q{p:g}": m + s * float(norm.ppf(p)) for p in am.QUANTILES}}
 
 
-def fausse_analyse(ba, ba_ii, princ, s=0.004, q2=None, i1=(0.0, 0.0), i2=(0.05, 0.05), pur=(0.0, 0.0)):
-    """ba, ba_ii, i1, i2, pur : (δ1, δ2) ; princ, q2 : {contraste: (δ1, δ2)}."""
+def fausse_analyse(ba, ba_ii, princ, s=0.004, q2=None, i1=(0.0, 0.0), i2=(0.05, 0.05), pur=(0.0, 0.0),
+                   i3n=(0.15, 0.15)):
+    """ba, ba_ii, i1, i2, pur, i3n : (δ1, δ2) ; princ, q2 : {contraste: (δ1, δ2)} ; i3n = I3 − valeur nulle de A."""
     q2 = q2 or {lib: (-0.05, -0.05) for lib in am.CONTRASTES_Q2}
     an = {}
     for k, cd in enumerate(("1", "2")):
@@ -793,7 +957,8 @@ def fausse_analyse(ba, ba_ii, princ, s=0.004, q2=None, i1=(0.0, 0.0), i2=(0.05, 
             cs[lib] = faux_contraste(princ[lib][k], s)
         for lib in am.CONTRASTES_Q2:
             cs[lib] = faux_contraste(q2[lib][k], s)
-        an[cd] = {"contrastes": cs, "indicateurs": {"A I1": faux_contraste(i1[k], s), "A I2": faux_contraste(i2[k], s)},
+        an[cd] = {"contrastes": cs, "indicateurs": {"A I1": faux_contraste(i1[k], s), "A I2": faux_contraste(i2[k], s),
+                                                    "A I3-nul": faux_contraste(i3n[k], 10 * s)},
                   "bras": {"Bp": {"poids": {"part_pure": pur[k]}}}}
     return an
 

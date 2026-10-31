@@ -780,7 +780,7 @@ def poids_max_min_equilibres(G: np.ndarray, valeur: float, tol: float = 1e-9) ->
     r = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=np.hstack([np.ones((1, ni)), np.zeros((1, 1))]), b_eq=[1],
                 bounds=[(0, None)] * (ni + 1), method="highs")
     if r.status != 0 or not np.isfinite(r.fun):
-        raise GardeArret(f"équilibres du jeu restreint : programme linéaire non résolu ({r.message})")
+        raise GardeArret(f"équilibres du jeu restreint : solveur en échec ({r.message})")
     return float(r.fun)
 
 
@@ -1545,6 +1545,8 @@ def lire_tables(analyse: dict, S1: float, S5: float, marges: dict, S15: float) -
     t5 = {}
     for cd in cds:
         ind = analyse[cd]["indicateurs"]
+        if "A I3-nul" not in ind:
+            raise GardeArret("Table 5 : indicateur « A I3-nul » absent de l'analyse (T < 3) : lecture impossible")
         t5[cd] = ligne_table5(ind["A I1"]["quantiles"]["q0.00625"], ind["A I1"]["quantiles"]["q0.99375"],
                               ind["A I3-nul"]["quantiles"]["q0.00625"], ind["A I3-nul"]["quantiles"]["q0.99375"], S15)
     if all(s.startswith("A ne progresse pas") for s in t5.values()):
@@ -1777,8 +1779,11 @@ def juger_audit(taches: list[dict], cfg: Config) -> dict:
         st1 = _stat_ecarts(np.array([t["tours_A"]["I1_audit"] - t["tours_A"]["I1_source"] for t in ts]), cfg)
         st1["drapeau_i"] = bool(abs(st1["ecart_moyen"]) > cfg.audit_critere)
         drap.append(st1["drapeau_i"])
-        st3 = _stat_ecarts(np.array([t["tours_A"]["I3_audit"] - t["tours_A"]["I3_source"] for t in ts]), cfg)
-        st3["drapeau_i"] = False
+        if all(t["tours_A"]["I3_source"] is not None and t["tours_A"]["I3_audit"] is not None for t in ts):
+            st3 = _stat_ecarts(np.array([t["tours_A"]["I3_audit"] - t["tours_A"]["I3_source"] for t in ts]), cfg)
+            st3["drapeau_i"] = False
+        else:                                               # T < 3 (configurations d'essai) : I3 indéfini, déclaré
+            st3 = {"ecart_moyen": None, "significatif": False, "drapeau_i": False, "note": "I3 indéfini (T < 3)"}
         bloc["A I1"], bloc["A I3"] = st1, st3
         sortie[str(cd)] = bloc
     return {"par_delta": sortie, "drapeau_i": any(drap), "critere_i": cfg.audit_critere,
@@ -1820,8 +1825,10 @@ def classes_sous_audit(analyse: dict, jugement: dict, S1: float, marges: dict, S
                                  "ecart_moyen": c, "drapeau_i": j["drapeau_i"], "drapeau_ii": d2,
                                  "artefact": bool(j["drapeau_i"] or d2)}
         ind = an["indicateurs"]
+        if "A I3-nul" not in ind:
+            raise GardeArret("audit : Table 5 sans « A I3-nul » dans l'analyse (T < 3) : jugement impossible")
         q1, q3 = ind["A I1"]["quantiles"], ind["A I3-nul"]["quantiles"]
-        c1, c3 = bloc["A I1"]["ecart_moyen"], bloc["A I3"]["ecart_moyen"]
+        c1, c3 = bloc["A I1"]["ecart_moyen"], bloc["A I3"]["ecart_moyen"] or 0.0
         avant = ligne_table5(q1["q0.00625"], q1["q0.99375"], q3["q0.00625"], q3["q0.99375"], S15)
         apres = ligne_table5(q1["q0.00625"] + c1, q1["q0.99375"] + c1, q3["q0.00625"] + c3, q3["q0.99375"] + c3, S15)
         d2 = bool(avant != apres and (bloc["A I1"]["significatif"] or bloc["A I3"]["significatif"]))
@@ -2031,14 +2038,38 @@ def exiger_meme_prereg(manifeste_source: dict, sha: str) -> None:
         raise GardeArret("audit : run audité rattaché à un autre préenregistrement (ou à aucun)")
 
 
+def _bornes_marges(S1, S6, S15) -> tuple[float, dict, float]:
+    if not all(x is not None and x > 0 for x in (S1, S6, S15)):
+        raise GardeArret(f"audit : marges S1, S6, S15 positives exigées (reçu {S1}, {S6}, {S15})")
+    return float(S1), {"1": float(S6), "2": float(S6)}, float(S15)
+
+
+def stabilite_calibrage(res: list[dict], grille, cfg: Config, n_tirages: int = 2000) -> dict:
+    """Descriptif (gel v4, § 2) : fréquence de chaque couple (δ_bas, δ_haut) rendu par `choisir_deltas` sous
+    rééchantillonnage des instances du calibrage (générateur dérivé de RACINE_RECALIBRAGE, rôle 98). Sans effet sur
+    le choix, qui se fait sur l'échantillon entier."""
+    inst = sorted({r["instance"] for r in res})
+    M = np.array([[next(r["bras"]["A"]["V_iii_final"] for r in res if r["instance"] == i and r["delta"] == d)
+                   for d in grille] for i in inst])
+    g = gen(RACINE_RECALIBRAGE, 0, 0, 0, 0, 98)
+    comptes = Counter()
+    for _ in range(n_tirages):
+        moy = dict(zip(grille, M[g.integers(0, len(inst), size=len(inst))].mean(0)))
+        hauts = [d for d in grille if moy[d] >= cfg.seuil_calibrage_haut]      # même règle que `choisir_deltas`,
+        dh = max(hauts) if hauts else None                                     # sans garde : un tirage sans couple
+        bas = [d for d in grille if dh is not None and d < dh and moy[d] >= cfg.seuil_calibrage_bas]
+        comptes[str((max(bas), dh)) if bas else "aucun couple"] += 1           # est compté, jamais remplacé
+    return {k: v / n_tirages for k, v in comptes.most_common()}
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sp = ap.add_subparsers(dest="mode", required=True)
-    c = sp.add_parser("calibrage", help="option de recalibrage des δ (racine réservée, bras A seul), si Lazar la retient")
+    c = sp.add_parser("calibrage", help="recalibrage des δ (R-739) : bras A seul, racine du gel v4, instances 0:48")
     c.add_argument("--instances", default="0:48")
     c.add_argument("--sortie", required=True)
     c.add_argument("--processus", type=int, default=2)
-    e = sp.add_parser("essai", help="racine d'essai : pilote et puissance")
+    e = sp.add_parser("essai", help="racine d'essai gelée : pilote et puissance")
     e.add_argument("--instances", default="0:4")
     e.add_argument("--sortie", required=True)
     e.add_argument("--processus", type=int, default=2)
@@ -2048,9 +2079,11 @@ def main(argv=None) -> int:
     e.add_argument("--pids", default=None, help="fichier (nouveau) des PID des processus de travail")
     ae = sp.add_parser("audit-essai", help="attaquant indépendant sur des tâches d'un pilote (racine d'essai)")
     ae.add_argument("--pilote", required=True)
-    ae.add_argument("--instances", default="0:1")
+    ae.add_argument("--instances", default="0:5")
     ae.add_argument("--sortie", required=True)
     ae.add_argument("--processus", type=int, default=2)
+    for x in ("--S1", "--S6", "--S15"):
+        ae.add_argument(x, type=float, default=0.02, help="valeur recommandée (essai seulement)")
     sp.add_parser("identite", help="imprime le bloc d'identité à recopier dans le préenregistrement")
     dc = sp.add_parser("decision", help="racine de décision : exige le préenregistrement scellé")
     dc.add_argument("--prereg", required=True)
@@ -2060,15 +2093,17 @@ def main(argv=None) -> int:
     au = sp.add_parser("audit", help="attaquant indépendant sur des tâches du run de décision (après scellement)")
     au.add_argument("--prereg", required=True)
     au.add_argument("--source-run", required=True)
-    au.add_argument("--instances", default="0:5")
+    au.add_argument("--instances", required=True)
     au.add_argument("--run-id", required=True)
     au.add_argument("--processus", type=int, default=2)
+    for x in ("--S1", "--S6", "--S15"):
+        au.add_argument(x, type=float, required=True, help="valeur gelée par Lazar (recopiée dans la sortie)")
     o = sp.add_parser("orphelins", help="R10 : vérifie (et, avec --arreter, arrête par PID) les processus consignés")
     o.add_argument("--pids", required=True)
     o.add_argument("--arreter", action="store_true")
     a = ap.parse_args(argv)
     if a.mode == "identite":
-        print(bloc_identite(exiger_config(CONFIG_V3)))
+        print(bloc_identite(exiger_config(CONFIG_V4)))
         return 0
     if a.mode == "orphelins":
         pids = lire_pids(a.pids)
@@ -2078,27 +2113,45 @@ def main(argv=None) -> int:
         print("aucun processus de travail consigné ne tourne")
         return 0
     if a.mode == "calibrage":
-        cfg = replace(CONFIG_BASE_V3, deltas=tuple(CONFIG_BASE_V3.grille_calibrage))
-        exiger_config(cfg)
         exiger_racines_essai(RACINE_RECALIBRAGE, RACINE_RECALIBRAGE_TENUE)
+        sha_gel = exiger_gel_v4((RACINE_RECALIBRAGE, RACINE_RECALIBRAGE_TENUE))
+        cfg = replace(CONFIG_BASE_V4, deltas=tuple(CONFIG_BASE_V4.grille_calibrage))
+        exiger_config(cfg)
+        if a.instances != f"0:{cfg.n_calibrage}":
+            raise GardeArret(f"calibrage : --instances {a.instances} ≠ 0:{cfg.n_calibrage} (règle du gel v4, § 2)")
         sortie = _exiger_absent(Path(a.sortie))
         res, temps = executer(_plage(a.instances), RACINE_RECALIBRAGE, RACINE_RECALIBRAGE_TENUE, cfg, a.processus,
                               bras=("A",), leger=True)
-        moyennes = {float(d): float(np.mean([r["bras"]["A"]["V_iii_final"] for r in res if r["delta"] == d]))
-                    for d in cfg.deltas}
-        choix = choisir_deltas(moyennes, CONFIG_BASE_V3)
+        par_delta = {}
+        for d in cfg.deltas:
+            x = np.array([r["bras"]["A"]["V_iii_final"] for r in res if r["delta"] == d])
+            par_delta[str(float(d))] = {"n": int(len(x)), "moyenne_V_A": float(x.mean()),
+                                        "erreur_type": float(x.std(ddof=1) / np.sqrt(len(x))),
+                                        "en_alpha": float(x.mean() / cfg.alpha), "min": float(x.min()),
+                                        "max": float(x.max())}
+        moyennes = {float(d): par_delta[str(float(d))]["moyenne_V_A"] for d in cfg.deltas}
+        choix = choisir_deltas(moyennes, CONFIG_BASE_V4)
         corps = {"mode": "calibrage", "manifeste": {"racine": RACINE_RECALIBRAGE,
                                                     "racine_tenue": RACINE_RECALIBRAGE_TENUE, "config": asdict(cfg),
                                                     "config_sha256": cfg.empreinte(), "versions": _versions(),
-                                                    "instances": a.instances, "commande": " ".join(sys.argv)},
-                 "temps": temps, "moyennes_V_A": {str(k): v for k, v in moyennes.items()},
-                 "deltas_choisis": list(choix), "resultats": res}
+                                                    "gel_v4_sha256": sha_gel, "instances": a.instances,
+                                                    "commande": " ".join(sys.argv)},
+                 "regle": "δ_haut = plus grand δ de la grille où V(A) moyen ≥ 3α ; δ_bas = plus grand δ < δ_haut où "
+                          "V(A) moyen ≥ 10α (gel v4, § 2 ; R-739)",
+                 "temps": temps, "par_delta": par_delta, "moyennes_V_A": {str(k): v for k, v in moyennes.items()},
+                 "deltas_choisis": list(choix),
+                 "stabilite_reechantillonnage": stabilite_calibrage(res, list(cfg.deltas), CONFIG_BASE_V4),
+                 "resultats": res}
         _ecrire_nouveau(sortie, corps)
-        print(f"calibrage écrit : {sortie} ; V(A) moyen par δ {moyennes} ; δ choisis {choix} ; {temps}")
+        print(f"calibrage écrit : {sortie} ; δ choisis {choix} ; {temps}")
+        for d, b in par_delta.items():
+            print(f"  δ {d} : V(A) moyen {b['moyenne_V_A']:.4f} (erreur-type {b['erreur_type']:.4f} ; "
+                  f"{b['en_alpha']:.1f} α)")
         return 0
     if a.mode == "essai":
         exiger_racines_essai(a.racine, a.racine_tenue)
-        cfg = exiger_config(CONFIG_V3)
+        sha_gel = exiger_gel_v4((a.racine, a.racine_tenue))
+        cfg = exiger_config(CONFIG_V4)
         if a.oracle == "logistique":
             cfg = replace(cfg, entrainement="logistique")
         sortie = _exiger_absent(Path(a.sortie))
@@ -2106,46 +2159,57 @@ def main(argv=None) -> int:
         corps = {"mode": "essai", "oracle": a.oracle,
                  "manifeste": {"racine": a.racine, "racine_tenue": a.racine_tenue, "schema_graines": cfg.schema_graines,
                                "config": asdict(cfg), "config_sha256": cfg.empreinte(), "versions": _versions(),
-                               "commande": " ".join(sys.argv)},
+                               "gel_v4_sha256": sha_gel, "commande": " ".join(sys.argv)},
                  "temps": temps, "analyse": analyser(res, a.racine), "resultats": res}
         _ecrire_nouveau(sortie, corps)
         print(f"essai écrit : {sortie} ; {temps}")
         return 0
     if a.mode == "audit-essai":
-        cfg = exiger_config(CONFIG_V3)
+        cfg = exiger_config(CONFIG_V4)
         pil = charger_pilote(a.pilote, cfg)
-        sortie = _exiger_absent(Path(a.sortie))
         man = pil["manifeste"]
+        sha_gel = exiger_gel_v4((man["racine"], man["racine_tenue"]))
+        S1, marges, S15 = _bornes_marges(a.S1, a.S6, a.S15)
+        sortie = _exiger_absent(Path(a.sortie))
         res, temps, jugement = auditer(_plage(a.instances), man["racine"], man["racine_tenue"], cfg,
                                        _sources_par_tache(pil["resultats"]), a.processus)
+        classes = classes_sous_audit(pil["analyse"], jugement, S1, marges, S15)
         corps = {"mode": "audit-essai", "pilote": str(a.pilote), "pilote_sha256": empreinte_fichier(a.pilote),
                  "manifeste": {"racine": man["racine"], "racine_tenue": man["racine_tenue"],
-                               "config_sha256": cfg.empreinte(), "versions": _versions(),
+                               "config_sha256": cfg.empreinte(), "versions": _versions(), "gel_v4_sha256": sha_gel,
                                "commande": " ".join(sys.argv)},
-                 "temps": temps, "jugement": jugement, "taches": res}
+                 "temps": temps, "jugement": jugement, "classes_sous_audit": classes, "taches": res}
         _ecrire_nouveau(sortie, corps)
-        print(f"audit d'essai écrit : {sortie} ; artefact {jugement['artefact']} ; {temps}")
+        print(f"audit d'essai écrit : {sortie} ; drapeau (i) {jugement['drapeau_i']} ; artefact {classes['artefact']} ;"
+              f" {temps}")
         return 0
     from controle_ia import manifeste as man
 
-    cfg = exiger_config(CONFIG_V3)
+    cfg = exiger_config(CONFIG_V4)
     if a.mode == "audit":
-        # audit d'attaquant indépendant (déclencheur 9) : après scellement de l'analyse, sur les tâches de la décision
+        # audit d'attaquant indépendant (déclencheur 9) : après scellement de l'analyse, sur les K premières tâches
+        S1, marges, S15 = _bornes_marges(a.S1, a.S6, a.S15)
+        if a.instances != f"0:{cfg.audit_k}":
+            raise GardeArret(f"audit : --instances {a.instances} ≠ 0:{cfg.audit_k} (S17, configuration gelée)")
         sha = autoriser_decision(a.prereg, cfg)
         src = man.verifier_resultat(DEPOT, DEPOT / "diag" / a.source_run / "resultats-arene.json")
+        ana = man.verifier_resultat(DEPOT, DEPOT / "diag" / a.source_run / "analyse-arene.json")
         man_src, _ = man.lire_manifeste(DEPOT / "runs" / a.source_run / "manifeste.json")
         exiger_meme_prereg(man_src, sha)
         chemin_m, _ = man.creer_manifeste(DEPOT, a.run_id, {"config": asdict(cfg), "config_sha256": cfg.empreinte(),
                                                             "racine": RACINE, "racine_tenue": RACINE_TENUE,
                                                             "instances": a.instances, "source_run": a.source_run,
-                                                            "prereg_sha256": sha, "versions": _versions()},
+                                                            "prereg_sha256": sha, "versions": _versions(),
+                                                            "S1": S1, "S6": marges["1"], "S15": S15},
                                           ["audit"], entropie=RACINE, decisif=True, prereg=a.prereg,
                                           commande=" ".join(sys.argv))
         res, temps, jugement = auditer(_plage(a.instances), RACINE, RACINE_TENUE, cfg,
                                        _sources_par_tache(src["resultat"]["resultats"]), a.processus, prereg=a.prereg,
                                        fichier_pids=chemin_m.parent / "pids-travail.txt", sceller_pids=True)
-        man.ecrire_resultat(DEPOT, chemin_m, "audit-attaquant", {"temps": temps, "jugement": jugement, "taches": res})
-        print(f"audit écrit sous diag/{a.run_id}/ ; artefact {jugement['artefact']}")
+        classes = classes_sous_audit(ana["resultat"], jugement, S1, marges, S15)
+        man.ecrire_resultat(DEPOT, chemin_m, "audit-attaquant", {"temps": temps, "jugement": jugement,
+                                                                 "classes_sous_audit": classes, "taches": res})
+        print(f"audit écrit sous diag/{a.run_id}/ ; artefact {classes['artefact']}")
         return 0
     # décision : le préenregistrement scellé est exigé AVANT toute graine de décision
     sha = autoriser_decision(a.prereg, cfg, a.instances)
@@ -2167,10 +2231,11 @@ def main(argv=None) -> int:
     return 0
 
 
-__all__ = ["Config", "CONFIG_BASE_V3", "CONFIG_V3", "RACINE", "RACINE_TENUE", "RACINE_ESSAI", "RACINE_ESSAI_TENUE",
-           "RACINE_TESTS", "executer_tache", "analyser", "lire_tables", "classer", "resoudre_jeu", "meilleure_reponse",
-           "exiger_prereg_arene", "exiger_identite_prereg", "autoriser_decision", "exiger_racines_essai",
-           "choisir_deltas", "auditer", "juger_audit", "attaquant_independant", "replace"]
+__all__ = ["Config", "CONFIG_BASE_V4", "CONFIG_V4", "RACINE", "RACINE_TENUE", "RACINE_ESSAI", "RACINE_ESSAI_TENUE",
+           "RACINE_TESTS", "RACINE_SIMULATION", "executer_tache", "analyser", "lire_tables", "classer", "resoudre_jeu",
+           "meilleure_reponse", "exiger_prereg_arene", "exiger_identite_prereg", "autoriser_decision",
+           "exiger_racines_essai", "exiger_racine_permise", "exiger_gel_v4", "choisir_deltas", "auditer", "juger_audit",
+           "classes_sous_audit", "attaquant_independant", "valeur_nulle_I3", "poids_max_min_equilibres", "replace"]
 
 if __name__ == "__main__":
     sys.exit(main())
