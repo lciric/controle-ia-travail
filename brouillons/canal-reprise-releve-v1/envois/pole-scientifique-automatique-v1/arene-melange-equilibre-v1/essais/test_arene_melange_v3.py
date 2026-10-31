@@ -1,21 +1,28 @@
-"""Essais de `arene_melange_v2.py` : chaque garde (R5) avec un cas sain et un artefact, vérifiés par leur motif ;
-contrôle mécanique qu'aucune garde du code n'est sans essai (`test_chaque_garde_a_son_essai`) ; refus de partir sans
-préenregistrement scellé POUR LA BONNE RAISON (compagnon absent, compagnon altéré, scellé non conforme, autre
-expérience) ; garde de la racine de décision jusque dans `gen` ; reproductibilité bit à bit ; témoins construits sur
-les moniteurs mêmes de B ; lecture mécanique des tables. Racine des essais du code seulement (RACINE_TESTS).
+"""Essais de `arene_melange_v3.py` : chaque garde (R5) avec un cas sain et un artefact, vérifiés par leur motif ;
+contrôle par l'arbre syntaxique qu'aucune garde du code n'est sans essai nommé (`test_chaque_garde_a_son_essai` ; il
+prouve l'existence de l'entrée et de l'essai, pas que l'essai provoque le motif : chaque essai nommé le vérifie
+lui-même par `pytest.raises(..., match=motif)`) ; refus de partir sans préenregistrement scellé POUR LA BONNE RAISON,
+sur des copies temporaires (CM2-01) ; garde de la racine de décision jusque dans `gen` ; reproductibilité bit à bit ;
+bras de la v2 inchangés (comparaison directe au code v2) ; B′ et C3′ ; indicateurs de la condition d'application ;
+attaquant indépendant et jugement d'audit ; arrêt par PID et garde « aucun orphelin » ; lecture mécanique des tables.
+Racine des essais du code v3 seulement (RACINE_TESTS = 20261313 / 20261314).
 
 Les essais du scellement écrivent des fichiers et leurs compagnons `.sha256` dans le dossier temporaire de pytest
 (hors dépôt), jamais dans le dépôt.
 
     PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m pytest -q -p no:cacheprovider \
-        brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/essais/test_arene_melange_v2.py
+        brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/essais/test_arene_melange_v3.py
 """
 from __future__ import annotations
 
 import ast
-import hashlib
+import json
 import re
+import shutil
+import signal
+import subprocess
 import sys
+import threading
 import time
 from dataclasses import asdict
 from pathlib import Path
@@ -27,24 +34,28 @@ from scipy.optimize import check_grad
 
 ICI = Path(__file__).resolve().parent
 sys.path.insert(0, str(ICI.parent))
-import arene_melange_v2 as am  # noqa: E402
+import arene_melange_v3 as am  # noqa: E402
+from controle_ia import gardes  # noqa: E402
 from controle_ia.gardes import GardeArret  # noqa: E402
 
 DEPOT = am.DEPOT
-BROUILLON2 = ICI.parent / "preenregistrement-arene-melange-equilibre-v1-brouillon2.md"
+BROUILLON3 = ICI.parent / "preenregistrement-arene-melange-equilibre-v1-brouillon3.md"
 PREREG_AUTRE = DEPOT / "prereg" / "preenregistrement-bisociation-deux-espaces-v2.md"  # scellé, d'une autre expérience
-EMPREINTE_CODE_V1 = "6402dc6b2998d2f48262ddfe1d4d0d13b6a6115fcc8d01852c3b7c8182fd0d3b"
-EMPREINTE_CONFIG_V1 = "6685585fcfc028e0617d6786eb78bdb4fc159930af8fdf0444be1085f960d2ca"
+EMPREINTES_INTERDITES = ("6402dc6b2998d2f48262ddfe1d4d0d13b6a6115fcc8d01852c3b7c8182fd0d3b",   # code v1
+                         "6685585fcfc028e0617d6786eb78bdb4fc159930af8fdf0444be1085f960d2ca",   # CONFIG_V1
+                         "8e1e651b4be3e6fea6bf6bdf0fc00a19d479aa818323461fbf550582dfdb46bb",   # code v2
+                         "1d7544e652ee6ab782577c5731127c7338844ef3d39844d86842688ddb2031a3")   # CONFIG_V2
 
 PETITE = am.replace(
-    am.CONFIG_BASE_V2, d=3, K=2, T=2, n_propre_entr=300, n_attaque_entr=300, n_cal=2000, n_fpr=2000, n_eval=2000,
+    am.CONFIG_BASE_V3, d=3, K=2, T=2, n_propre_entr=300, n_attaque_entr=300, n_cal=2000, n_fpr=2000, n_eval=2000,
     n_mc=32, n_mc_final=32, departs=1, departs_final=1, departs_cout=1, departs_renforce=2, iter_renforce=20,
     iter_max=20, iter_entr=300, n_tenue=4, n_eval_tenue=200, pas_bissection=1, tol_fpr=0.03, departs_entr=3,
-    r_cible=3.0, deltas=(1.0, 1.5))
+    r_cible=3.0, deltas=(1.0, 1.5), unites_Bp=3, audit_departs=2, audit_n_mc=16, audit_iter=10,
+    audit_es_generations=3, audit_es_lambda=2)
 
 
 def config_complete():
-    return am.CONFIG_V2 if am.CONFIG_V2 is not None else am.replace(am.CONFIG_BASE_V2, deltas=(1.0, 1.6))
+    return am.CONFIG_V3 if am.CONFIG_V3 is not None else am.replace(am.CONFIG_BASE_V3, deltas=(1.0, 1.6))
 
 
 @pytest.fixture(autouse=True)
@@ -52,6 +63,7 @@ def sans_autorisation():
     am._AUTORISATION_DECISION["prereg_sha256"] = None
     yield
     am._AUTORISATION_DECISION["prereg_sha256"] = None
+    gardes.SIGNAL_TERM_RECU.clear()
 
 
 def sans_temps(x):
@@ -67,7 +79,7 @@ def leve(motif):
 
 
 # =================================================================================================================
-# Contrôle mécanique : chaque `raise GardeArret` du code a un motif unique et un essai qui le provoque (CM-08)
+# Contrôle par l'arbre syntaxique : chaque `raise GardeArret` a un motif unique et un essai nommé
 # =================================================================================================================
 MOTIFS = {
     "δ non fixés": "test_config_sain_et_artefacts",
@@ -76,9 +88,11 @@ MOTIFS = {
     "κ de contournement hors": "test_config_sain_et_artefacts",
     "fractions de la courbe invalides": "test_config_sain_et_artefacts",
     "entraînement inconnu (configuration)": "test_config_sain_et_artefacts",
+    "B′ sans moniteurs non linéaires": "test_config_sain_et_artefacts",
+    "attaquant indépendant : paramètres non positifs": "test_config_sain_et_artefacts",
     "sans autorisation": "test_gen_garde_racine_de_decision",
     "réservée à la décision": "test_racines_essai_artefact",
-    "du brouillon 1": "test_racines_essai_artefact",
+    "déjà employée": "test_racines_essai_artefact",
     "racine à part exigée": "test_racines_essai_artefact",
     "bloc de configuration canonique absent": "test_identite_prereg_sain_et_artefacts",
     "bloc de configuration illisible": "test_identite_prereg_sain_et_artefacts",
@@ -99,7 +113,9 @@ MOTIFS = {
     "variance nulle : seuil non calibrable": "test_moniteur_gardes",
     "moniteur non calibré": "test_moniteur_gardes",
     "moniteurs linéaires exigés": "test_ou_deterministe_sain_et_artefacts",
-    "variance nulle ou non fini": "test_ou_deterministe_sain_et_artefacts",
+    "« ou » déterministe : score propre": "test_ou_deterministe_sain_et_artefacts",
+    "« ou » composite : aucun moniteur": "test_ou_composite_sain_et_artefacts",
+    "« ou » composite : score propre": "test_ou_composite_sain_et_artefacts",
     "maxout sans graine": "test_entrainement_gardes",
     "entraînement logistique : paramètres ou perte non finis": "test_entrainement_gardes",
     "entraînement inconnu : ": "test_entrainement_gardes",
@@ -120,8 +136,14 @@ MOTIFS = {
     "aucun δ de la grille": "test_choisir_deltas",
     "aucun δ <": "test_choisir_deltas",
     "processus de travail sans préenregistrement": "test_travail_refuse_racine_de_decision_sans_prereg",
+    "processus de travail encore vivants": "test_arret_par_pid_sain_et_artefact",
     "existe déjà : R12": "test_cli_refuse_d_ecraser",
     "apparu pendant l'exécution": "test_cli_refuse_d_ecraser",
+    "audit-essai :": "test_audit_essai_refuse_pilote_etranger",
+    "audit : run audité rattaché": "test_exiger_meme_prereg",
+    "audit : bras": "test_audit_sain_et_artefacts",
+    "audit : V reconstruit": "test_audit_sain_et_artefacts",
+    "audit : tâche absente": "test_audit_sain_et_artefacts",
 }
 
 
@@ -140,7 +162,7 @@ def test_chaque_garde_a_son_essai():
     assert sorted(vus) == sorted(MOTIFS), "motif sans garde ou garde comptée deux fois"
     for nom_essai in set(MOTIFS.values()):
         assert callable(globals().get(nom_essai)), f"essai {nom_essai} absent"
-    assert len(sites) == len(MOTIFS) == 52
+    assert len(sites) == len(MOTIFS) == 62
 
 
 # =================================================================================================================
@@ -152,27 +174,35 @@ def test_config_sain_et_artefacts():
     with leve("δ non fixés"):
         am.exiger_config(None)
     with leve("δ non fixés"):
-        am.exiger_config(am.CONFIG_BASE_V2)
+        am.exiger_config(am.CONFIG_BASE_V3)
     for mauvais, motif in ((dict(deltas=(1.5, 1.0)), "δ invalides"), (dict(deltas=(0.0, 1.0)), "δ invalides"),
                            (dict(n_eval=2001), "n'est pas un multiple de K"),
                            (dict(kappa_contournement=1.0), "κ de contournement hors"),
                            (dict(fractions_courbe=(0.5, 0.25)), "fractions de la courbe invalides"),
                            (dict(fractions_courbe=(0.5, 1.0)), "fractions de la courbe invalides"),
-                           (dict(entrainement="autre"), "entraînement inconnu (configuration)")):
+                           (dict(entrainement="autre"), "entraînement inconnu (configuration)"),
+                           (dict(unites_Bp=1), "B′ sans moniteurs non linéaires"),
+                           (dict(audit_departs=0), "attaquant indépendant : paramètres non positifs"),
+                           (dict(audit_critere=0.0), "attaquant indépendant : paramètres non positifs")):
         with leve(motif):
             am.exiger_config(am.replace(PETITE, **mauvais))
 
 
 def test_racines_essai_sain():
-    for r, rt in ((am.RACINE_ESSAI, am.RACINE_ESSAI_TENUE), (am.RACINE_CALIBRAGE, am.RACINE_CALIBRAGE_TENUE),
-                  (am.RACINE_TESTS, am.RACINE_TESTS_TENUE)):
+    for r, rt in ((am.RACINE_ESSAI, am.RACINE_ESSAI_TENUE), (am.RACINE_TESTS, am.RACINE_TESTS_TENUE),
+                  (am.RACINE_RECALIBRAGE, am.RACINE_RECALIBRAGE_TENUE)):
         am.exiger_racines_essai(r, rt)
+    assert not set(am.RACINES_DEJA_EMPLOYEES) & {am.RACINE_ESSAI, am.RACINE_ESSAI_TENUE, am.RACINE_TESTS,
+                                                 am.RACINE_TESTS_TENUE, am.RACINE_RECALIBRAGE,
+                                                 am.RACINE_RECALIBRAGE_TENUE, *am.RACINES_DECISION}
 
 
 @pytest.mark.parametrize("r, rt, motif", [(am.RACINE, am.RACINE_ESSAI_TENUE, "réservée à la décision"),
                                           (am.RACINE_ESSAI, am.RACINE_TENUE, "réservée à la décision"),
-                                          (20261291, am.RACINE_ESSAI_TENUE, "du brouillon 1"),
-                                          (am.RACINE_ESSAI, 20261292, "du brouillon 1"),
+                                          (20261291, am.RACINE_ESSAI_TENUE, "déjà employée"),
+                                          (20261293, am.RACINE_ESSAI_TENUE, "déjà employée"),
+                                          (am.RACINE_ESSAI, 20261298, "déjà employée"),
+                                          (20269501, am.RACINE_ESSAI_TENUE, "déjà employée"),
                                           (am.RACINE_ESSAI, am.RACINE_ESSAI, "racine à part exigée")])
 def test_racines_essai_artefact(r, rt, motif):
     with leve(motif):
@@ -180,7 +210,6 @@ def test_racines_essai_artefact(r, rt, motif):
 
 
 def test_gen_garde_racine_de_decision():
-    """CM-15 : la garde est dans `gen` ; sans autorisation, aucune graine de décision, même par appel direct."""
     am.gen(am.RACINE_TESTS, 1, 2)                                   # sain
     for r in am.RACINES_DECISION:
         with leve("sans autorisation"):
@@ -195,18 +224,20 @@ def test_gen_garde_racine_de_decision():
 
 def test_travail_refuse_racine_de_decision_sans_prereg():
     with leve("processus de travail sans préenregistrement"):
-        am._travail((0, 1, am.RACINE, am.RACINE_TENUE, asdict(PETITE), ("A",), True, None))
+        am._travail(("tache", 0, 1, am.RACINE, am.RACINE_TENUE, asdict(PETITE), ("A",), True, None, None))
+    with leve("processus de travail sans préenregistrement"):
+        am._travail(("audit", 0, 1, am.RACINE, am.RACINE_TENUE, asdict(PETITE), am.BRAS_AUDIT, True, None, {}))
 
 
 def test_cli_essai_refuse_racines_interdites(tmp_path):
-    for r, motif in ((am.RACINE, "réservée à la décision"), (20261291, "du brouillon 1")):
+    for r, motif in ((am.RACINE, "réservée à la décision"), (20261293, "déjà employée")):
         with leve(motif):
             am.main(["essai", "--instances", "0:1", "--sortie", str(tmp_path / "x.json"), "--racine", str(r)])
     assert not (tmp_path / "x.json").exists()
 
 
 def test_cli_refuse_d_ecraser(tmp_path, monkeypatch):
-    monkeypatch.setattr(am, "CONFIG_V2", config_complete())
+    monkeypatch.setattr(am, "CONFIG_V3", config_complete())
     f = tmp_path / "deja.json"
     f.write_text("{}")
     with leve("existe déjà : R12"):
@@ -261,43 +292,36 @@ def test_identite_prereg_sain_et_artefacts():
             am.exiger_identite_prereg(texte, cfg)
     with leve("--instances"):
         am.exiger_identite_prereg(ok, cfg, "0:99")
-    # le message de configuration nomme le champ en écart
     with pytest.raises(GardeArret, match=r"T : texte 3 ≠ code 2"):
         am.exiger_identite_prereg(ok.replace('"T": 2', '"T": 3'), cfg)
 
 
 def test_prereg_scelle_refus_pour_la_bonne_raison(tmp_path):
-    """CM-08 : chaque refus est vérifié par son motif ; le cas sain (scellé, conforme, identifié) autorise la décision."""
     from controle_ia.scellement import sceller
 
     cfg = PETITE
-    # 1. conforme et identifié, mais sans compagnon : refus par le scellement
     p1 = tmp_path / "p1.md"
     p1.write_text(texte_prereg(cfg), encoding="utf-8")
     with pytest.raises(GardeArret, match=r"empreinte compagnon p1\.md\.sha256 absente"):
         am.autoriser_decision(p1, cfg)
     assert am._AUTORISATION_DECISION["prereg_sha256"] is None
-    # 2. scellé puis altéré
     p2 = tmp_path / "p2.md"
     p2.write_text(texte_prereg(cfg), encoding="utf-8")
     sceller(p2)
     p2.write_text(texte_prereg(cfg) + "\nmodification après scellement\n", encoding="utf-8")
     with pytest.raises(GardeArret, match=r"≠ scellée"):
         am.autoriser_decision(p2, cfg)
-    # 3. scellé mais non conforme (marqueur restant)
     p3 = tmp_path / "p3.md"
     p3.write_text(texte_prereg(cfg, marqueur=True), encoding="utf-8")
     sceller(p3)
     with pytest.raises(GardeArret, match=r"scellé mais non conforme"):
         am.autoriser_decision(p3, cfg)
-    # 4. scellé, conforme, d'une autre expérience (vrai scellé du dépôt)
     from controle_ia.prereg import exiger_prereg_scelle
 
     exiger_prereg_scelle(PREREG_AUTRE)
     with leve("sans l'identifiant"):
         am.autoriser_decision(PREREG_AUTRE, cfg)
     assert am._AUTORISATION_DECISION["prereg_sha256"] is None
-    # 5. sain : scellé, conforme, identifié → autorisation posée, la racine de décision devient utilisable
     p5 = tmp_path / "p5.md"
     p5.write_text(texte_prereg(cfg), encoding="utf-8")
     sha = sceller(p5)
@@ -305,37 +329,47 @@ def test_prereg_scelle_refus_pour_la_bonne_raison(tmp_path):
     am.gen(am.RACINE, 0)
 
 
-def test_decision_refusee_brouillon2_pour_la_bonne_raison(monkeypatch):
-    """Le brouillon 2 n'a pas de compagnon : le refus vient du scellement, pas d'une autre garde ; aucun run créé."""
-    assert BROUILLON2.is_file()
-    monkeypatch.setattr(am, "CONFIG_V2", config_complete())
-    run_id = "20990101-000000-arene-essai-garde-v2"
-    with pytest.raises(GardeArret, match=r"empreinte compagnon .*brouillon2\.md\.sha256 absente"):
-        am.main(["decision", "--prereg", str(BROUILLON2), "--instances", "0:100", "--run-id", run_id])
-    assert not (DEPOT / "runs" / run_id).exists()
+def test_decision_refusee_copie_brouillon3_pour_la_bonne_raison(tmp_path, monkeypatch):
+    """CM2-01 : sur une COPIE temporaire du brouillon 3, indépendante de l'état du dossier. Sans compagnon : refus par
+    le scellement ; copie scellée : refus par non-conformité (Seuil, Contre-lecture) ; aucun run créé."""
+    from controle_ia.scellement import sceller
+
+    assert BROUILLON3.is_file()
+    monkeypatch.setattr(am, "CONFIG_V3", config_complete())
+    run_id = "20990101-000000-arene-essai-garde-v3"
+    copie = tmp_path / "copie-brouillon3.md"
+    shutil.copyfile(BROUILLON3, copie)
+    with pytest.raises(GardeArret, match=r"empreinte compagnon copie-brouillon3\.md\.sha256 absente"):
+        am.main(["decision", "--prereg", str(copie), "--instances", "0:100", "--run-id", run_id])
+    with pytest.raises(GardeArret, match=r"empreinte compagnon copie-brouillon3\.md\.sha256 absente"):
+        am.main(["audit", "--prereg", str(copie), "--source-run", run_id, "--run-id", run_id + "-audit"])
+    sceller(copie)
+    with pytest.raises(GardeArret, match=r"scellé mais non conforme.*Seuil.*Contre-lecture"):
+        am.main(["decision", "--prereg", str(copie), "--instances", "0:100", "--run-id", run_id])
+    assert not (DEPOT / "runs" / run_id).exists() and not (DEPOT / "runs" / (run_id + "-audit")).exists()
     assert am._AUTORISATION_DECISION["prereg_sha256"] is None
 
 
-def test_brouillon2_non_conforme_au_validateur_et_identite_du_code():
-    """Le brouillon garde ses marqueurs : le validateur refuse de le sceller. Son bloc d'identité est celui du code
-    et de la configuration remis (empreintes, versions, configuration champ à champ, N). Il ne cite les empreintes du
-    code v1 et de CONFIG_V1 qu'abrégées : le code v1 ne peut pas partir sur ce texte."""
+def test_brouillon3_non_conforme_au_validateur_et_identite_du_code():
+    """Le brouillon garde ses marqueurs : le validateur refuse de le sceller. Son bloc d'identité est celui du code et
+    de la configuration remis. Il ne cite les empreintes des codes v1, v2 et de leurs configurations qu'abrégées."""
     from controle_ia.prereg import problemes
 
-    p = problemes(BROUILLON2)
+    p = problemes(BROUILLON3)
     assert any("Seuil" in x for x in p) and any("Contre-lecture" in x for x in p)
-    texte = BROUILLON2.read_text(encoding="utf-8")
-    assert am.CONFIG_V2 is not None, "δ non fixés dans le code remis"
-    am.exiger_identite_prereg(texte, am.CONFIG_V2, f"0:{am.CONFIG_V2.n_instances}")
-    assert EMPREINTE_CODE_V1 not in texte and EMPREINTE_CONFIG_V1 not in texte
+    texte = BROUILLON3.read_text(encoding="utf-8")
+    assert am.CONFIG_V3 is not None, "δ non fixés dans le code remis"
+    am.exiger_identite_prereg(texte, am.CONFIG_V3, f"0:{am.CONFIG_V3.n_instances}")
+    assert not any(e in texte for e in EMPREINTES_INTERDITES)
 
 
 def test_cli_identite(capsys, monkeypatch):
-    monkeypatch.setattr(am, "CONFIG_V2", config_complete())
+    monkeypatch.setattr(am, "CONFIG_V3", config_complete())
     am.main(["identite"])
     sortie = capsys.readouterr().out
-    assert am.CONFIG_V2.empreinte() in sortie and am.empreinte_fichier(am.__file__) in sortie
-    assert am.extraire_configuration(sortie) == __import__("json").loads(__import__("json").dumps(asdict(am.CONFIG_V2)))
+    assert am.CONFIG_V3.empreinte() in sortie and am.empreinte_fichier(am.__file__) in sortie
+    assert "arene_melange_v3.py" in sortie
+    assert am.extraire_configuration(sortie) == json.loads(json.dumps(asdict(am.CONFIG_V3)))
 
 
 # =================================================================================================================
@@ -346,9 +380,9 @@ def test_jeu_sain():
     assert np.allclose(p, [0.5, 0.5]) and np.allclose(q, [0.5, 0.5]) and abs(v - 0.5) < 1e-9
     p, q, v = am.resoudre_jeu(np.array([[0.9, 0.8], [0.1, 0.2]]))
     assert np.allclose(p, [1, 0]) and abs(v - 0.8) < 1e-9
-    p, q, v = am.resoudre_jeu(np.array([[0.6, 0.0], [0.2, 0.4]]))           # valeur connue (contre-lecture § D)
+    p, q, v = am.resoudre_jeu(np.array([[0.6, 0.0], [0.2, 0.4]]))
     assert np.allclose(p, [0.25, 0.75]) and np.allclose(q, [0.5, 0.5]) and abs(v - 0.3) < 1e-9
-    p, q, v = am.resoudre_jeu(np.full((3, 2), 0.4))                          # équilibres non uniques : un sommet
+    p, q, v = am.resoudre_jeu(np.full((3, 2), 0.4))
     assert abs(v - 0.4) < 1e-9 and abs(p.sum() - 1) < 1e-12 and np.all(p >= 0)
 
 
@@ -389,7 +423,7 @@ def test_poids_sain_et_artefact():
 
 
 # =================================================================================================================
-# Lois, admissibilité, moniteurs, « ou » déterministe, entraînement
+# Lois, admissibilité, moniteurs, « ou » déterministe et composite, entraînement
 # =================================================================================================================
 def test_admissibilite_sain_et_artefact():
     cfg = config_complete()
@@ -398,7 +432,7 @@ def test_admissibilite_sain_et_artefact():
     assert bouge and am.distance(p, c, cfg) <= 1.6 * (1 + 1e-9)
     am.exiger_admissible(p, c, 1.6, cfg)
     loin = c.copy()
-    loin[: cfg.K * cfg.d] += 1.0                             # moyennes seulement : dans la boîte, distance 2,45 > δ
+    loin[: cfg.K * cfg.d] += 1.0
     with leve("loi d'attaque à distance"):
         am.exiger_admissible(loin, c, 1.6, cfg)
     hors = c.copy()
@@ -409,6 +443,9 @@ def test_admissibilite_sain_et_artefact():
     nan[3] = np.nan
     with leve("loi d'attaque non finie"):
         am.exiger_admissible(nan, c, 1.6, cfg)
+    for th in am.departs_structures(c, 1.6, cfg):                  # départs structurés de l'attaquant indépendant
+        am.exiger_admissible(th, c, 1.6, cfg)
+    assert len(am.departs_structures(c, 1.6, cfg)) == 3 * (cfg.K + 1)
 
 
 def test_echantillonnage_stratifie():
@@ -440,7 +477,7 @@ def test_ou_deterministe_sain_et_artefacts():
     Xcal, Xf = g.standard_normal((20000, 3)), g.standard_normal((20000, 3))
     mons = [am.Moniteur(g.standard_normal((1, 3)), g.standard_normal(1)).calibrer(Xcal, 0.01) for _ in range(3)]
     ou = am.ou_deterministe(mons, Xcal, 8.0, 0.01)
-    assert ou.m == 3 and sum(x.W.size + x.b.size for x in mons) == ou.W.size + ou.b.size
+    assert ou.m == 3 and sum(x.nb_parametres for x in mons) == ou.nb_parametres
     assert abs(float(np.mean(ou.detecte(Xf))) - 0.01) < 0.004
     z = np.stack([(m.score(Xf) - m.score(Xcal).mean()) / m.score(Xcal).std() for m in mons], axis=1)
     s = ou.score(Xf)
@@ -448,16 +485,33 @@ def test_ou_deterministe_sain_et_artefacts():
     with leve("moniteurs linéaires exigés"):
         am.ou_deterministe([am.Moniteur(g.standard_normal((2, 3)), np.zeros(2)).calibrer(Xcal, 0.01)], Xcal, 8, 0.01)
     plat = am.Moniteur(np.zeros((1, 3)), np.zeros(1))
-    with leve("variance nulle ou non fini"):
+    with leve("« ou » déterministe : score propre"):
         am.ou_deterministe([mons[0], plat], Xcal, 8.0, 0.01)
+
+
+def test_ou_composite_sain_et_artefacts():
+    g = np.random.default_rng(6)
+    Xcal, Xf = g.standard_normal((20000, 3)), g.standard_normal((20000, 3))
+    lin = [am.Moniteur(g.standard_normal((1, 3)), g.standard_normal(1)).calibrer(Xcal, 0.01) for _ in range(3)]
+    a, b = am.ou_deterministe(lin, Xcal, 8.0, 0.01), am.ou_composite(lin, Xcal, 8.0, 0.01)
+    assert np.allclose(a.score(Xf), b.score(Xf), atol=1e-9, rtol=0) and abs(a.t - b.t) < 1e-9   # même fonction
+    assert np.allclose(a.grad(Xf[:50]), b.grad(Xf[:50]), atol=1e-9)
+    mx = [am.Moniteur(g.standard_normal((3, 3)), g.standard_normal(3)).calibrer(Xcal, 0.01) for _ in range(2)]
+    c = am.ou_composite([lin[0]] + mx, Xcal, 8.0, 0.01)
+    assert c.m == 7 and c.nb_parametres == 4 + 2 * 12
+    assert abs(float(np.mean(c.detecte(Xf))) - 0.01) < 0.004
+    with leve("« ou » composite : aucun moniteur"):
+        am.ou_composite([], Xcal, 8.0, 0.01)
+    with leve("« ou » composite : score propre"):
+        am.ou_composite([mx[0], am.Moniteur(np.zeros((2, 3)), np.zeros(2))], Xcal, 8.0, 0.01)
 
 
 def test_entrainement_gardes(monkeypatch):
     cfg = PETITE
     g = np.random.default_rng(1)
     Xp, Xa = g.standard_normal((300, 3)), g.standard_normal((300, 3)) + 1.5
-    mon, ok = am.entrainer(Xp, Xa, 1, cfg, None, [np.ones(3) / np.sqrt(3)])              # sain, linéaire
-    mon2, _ = am.entrainer(Xp, Xa, 2, cfg, np.random.default_rng(2), [np.ones(3) / np.sqrt(3)])   # sain, maxout
+    mon, ok = am.entrainer(Xp, Xa, 1, cfg, None, [np.ones(3) / np.sqrt(3)])
+    mon2, _ = am.entrainer(Xp, Xa, 2, cfg, np.random.default_rng(2), [np.ones(3) / np.sqrt(3)])
     assert mon.m == 1 and mon2.m == 2
     with leve("maxout sans graine"):
         am.entrainer(Xp, Xa, 2, cfg, None)
@@ -491,8 +545,10 @@ def test_gradients():
                           lambda x: am.objectif_detection(x, Xp, Xa, m, cfg)[1], p) < 1e-6
     c = am.loi_cible(0, am.RACINE_TESTS, cfg)
     lin = [am.Moniteur(g.standard_normal((1, 6)), g.standard_normal(1)).calibrer(Xp, 0.01) for _ in range(3)]
-    for defense in ([(am.Moniteur(g.standard_normal((3, 6)), g.standard_normal(3)).calibrer(Xp, 0.01), 1.0)],
-                    [(am.ou_deterministe(lin, Xp, 8.0, 0.01), 1.0)], list(zip(lin, (0.2, 0.5, 0.3)))):
+    mx = [am.Moniteur(g.standard_normal((3, 6)), g.standard_normal(3)).calibrer(Xp, 0.01) for _ in range(2)]
+    for defense in ([(mx[0], 1.0)], [(am.ou_deterministe(lin, Xp, 8.0, 0.01), 1.0)],
+                    list(zip(lin, (0.2, 0.5, 0.3))), [(am.ou_composite([lin[0]] + mx, Xp, 8.0, 0.01), 1.0)],
+                    list(zip(mx, (0.4, 0.6)))):
         z = g.standard_normal((3, 40, 6))
         th = c + 0.1 * g.standard_normal(c.size)
         assert check_grad(lambda x: am.objectif_lisse(x, defense, z, cfg)[0],
@@ -532,7 +588,7 @@ def test_meilleure_reponse_departs_non_finis(monkeypatch):
 
     monkeypatch.setattr(am, "minimize", un_sur_deux)
     th, info = am.meilleure_reponse([(M, 1.0)], ctx.cible, ctx.delta, cfg, np.random.default_rng(2),
-                                    np.random.default_rng(3), n_departs=3)      # sain : compté, point fini rendu
+                                    np.random.default_rng(3), n_departs=3)
     assert info["non_finis"] == 2 and info["departs"] == 4
     am.exiger_admissible(th, ctx.cible, ctx.delta, cfg)
 
@@ -558,7 +614,7 @@ def test_garde_fausses_alertes_sain_et_artefact():
     ctx = am.Contexte(0, 1, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE)
     m = am.Moniteur(np.array([[1.0, 0.0, 0.0]]), np.array([0.0])).calibrer(ctx.Xcal, PETITE.alpha)
     ctx.exiger_fpr([(m, 1.0)])
-    m.t -= 1.0                                               # seuil faussé : beaucoup de fausses alertes
+    m.t -= 1.0
     with leve("taux de fausses alertes mesuré"):
         ctx.exiger_fpr([(m, 1.0)])
 
@@ -593,6 +649,10 @@ def test_bras_inconnus():
         am.trajectoire("C1", ctx, M)
     etat = am.trajectoire("B", ctx, am.Moniteur(M.W.copy(), M.b.copy()).calibrer(ctx.Xcal, PETITE.alpha), leger=True)
     am.defense_temoin("C1", etat, ctx)                                           # sain
+    etat_p = am.trajectoire("Bp", ctx, am.Moniteur(M.W.copy(), M.b.copy()).calibrer(ctx.Xcal, PETITE.alpha),
+                            leger=True)
+    (ou, w), = am.defense_temoin("C3p", etat_p, ctx)                             # sain : C3′ sur les moniteurs de B′
+    assert w == 1.0 and ou.membres == etat_p["moniteurs"]
     with leve("témoin inconnu"):
         am.defense_temoin("C9", etat, ctx)
     with leve("bras inconnu : "):
@@ -600,32 +660,28 @@ def test_bras_inconnus():
 
 
 # =================================================================================================================
-# Coût par contournement (garde de mesure sur la ligne de base), calibrage des δ
+# Coût par contournement, calibrage des δ
 # =================================================================================================================
 def test_cout_contournement_ligne_de_base_et_bissection():
     cfg = PETITE
     ctx = am.Contexte(0, 1, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg)
     M = ctx.entrainer(am.COMMUN, 0, [ctx.cible], np.array([1.0]), 1)
     d = [(M, 1.0)]
-    # artefact : ligne de base trop basse (κ × base < 2α) → mesure non définie, sans calcul ni valeur substituée
     r = am.cout_contournement(d, ctx, 1, [], 0.03, [0.02, 0.02, 0.02], 0.01)
     assert r["defini"] is False and r["fraction"] is None and r["censure"] is None
-    # sain, censuré : aucun point de la courbe sous le seuil
     r = am.cout_contournement(d, ctx, 1, [], 0.5, [0.45, 0.40, 0.35], 0.30)
     assert r["defini"] and r["censure"] and r["fraction"] == 1.0 and r["non_monotone"] == 0
-    # sain, non censuré : encadrement par la courbe puis bissection
     r = am.cout_contournement(d, ctx, 1, [], 0.9, [0.8, 0.1, 0.05], 0.02)
     assert r["defini"] and not r["censure"] and r["encadrement"] == [0.25, 0.5] and 0.25 <= r["fraction"] <= 0.5
-    # non-monotonie comptée (hausse de plus de α entre points consécutifs)
     r = am.cout_contournement(d, ctx, 1, [], 0.5, [0.30, 0.40, 0.35], 0.30)
     assert r["non_monotone"] == 1
 
 
 def test_choisir_deltas():
-    cfg = am.CONFIG_BASE_V2
+    cfg = am.CONFIG_BASE_V3
     moy = {0.6: 0.30, 0.8: 0.20, 1.0: 0.12, 1.2: 0.08, 1.4: 0.05, 1.6: 0.035, 1.8: 0.02, 2.0: 0.01, 2.4: 0.001}
     assert am.choisir_deltas(moy, cfg) == (1.0, 1.6)
-    moy2 = {**moy, 2.0: 0.031}                                    # non monotone : la règle prend le plus grand
+    moy2 = {**moy, 2.0: 0.031}
     assert am.choisir_deltas(moy2, cfg) == (1.0, 2.0)
     with leve("aucun δ de la grille"):
         am.choisir_deltas({d: 0.02 for d in moy}, cfg)
@@ -634,7 +690,7 @@ def test_choisir_deltas():
 
 
 # =================================================================================================================
-# Exécution complète : reproductibilité bit à bit, témoins sur les moniteurs de B, capacité égale
+# Exécution complète : reproductibilité, témoins, B′ et C3′, continuité avec la v2
 # =================================================================================================================
 def test_reproductibilite_bit_a_bit_et_temoins():
     a = am.executer_tache(0, 1, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE)
@@ -643,10 +699,17 @@ def test_reproductibilite_bit_a_bit_et_temoins():
     c = am.executer_tache(0, 1, am.RACINE_TESTS + 1000, am.RACINE_TESTS_TENUE, PETITE)
     assert sans_temps(a)["bras"] != sans_temps(c)["bras"]
     B = a["bras"]
-    n = PETITE.T + 1
-    # paramètres égaux : D, B, C1, C2, C3 déploient T + 1 unités et autant de paramètres
+    n, u, T = PETITE.T + 1, PETITE.unites_Bp, PETITE.T
+    # Q1 : D, B, C1, C2, C3 au même total ; B déploie 7 paramètres (d + 1) par requête, C3 et D le total
     assert B["D"]["unites_deployees"] == n == len(B["B"]["poids_finaux"]) == B["C3"]["unites_deployees"]
     assert len({B[x]["parametres_deployes"] for x in ("B", "C1", "C2", "C3", "D")}) == 1
+    assert B["B"]["parametres_par_requete"] == PETITE.d + 1
+    assert B["C3"]["parametres_par_requete"] == B["D"]["parametres_par_requete"] == n * (PETITE.d + 1)
+    # Q2 : B′ tire des maxouts à u unités (classe de D) ; C3′ en a le total
+    assert B["Bp"]["unites_deployees"] == 1 + T * u == B["C3p"]["unites_deployees"]
+    assert B["Bp"]["parametres_deployes"] == B["C3p"]["parametres_deployes"] == (1 + T * u) * (PETITE.d + 1)
+    assert B["Bp"]["parametres_par_requete"] <= u * (PETITE.d + 1) == B["D"]["parametres_par_requete"]
+    assert len(B["Bp"]["poids_finaux"]) == n and B["C3p"]["source"] == "Bp" and B["C3p"]["poids_finaux"] == [1.0]
     assert np.allclose(B["C1"]["poids_finaux"], 1 / n)
     w = am.gen(am.RACINE_TESTS, 1, 0, am.BRAS["C2"], PETITE.T + 1, am.ROLE_DIRICHLET).dirichlet(np.ones(n))
     assert np.allclose(B["C2"]["poids_finaux"], w)
@@ -654,15 +717,61 @@ def test_reproductibilite_bit_a_bit_et_temoins():
     for x in am.TOUS_LES_BRAS:
         assert abs(B[x]["fpr_final"] - PETITE.alpha) <= PETITE.tol_fpr
         assert len(B[x]["courbe"]["V"]) == len(PETITE.fractions_courbe) + 2
+    for x in am.BRAS_TRAJECTOIRE:
+        cy = B[x]["cycle"]
+        assert np.array(cy["H"]).shape == (T + 1, T) and set(cy) >= {"I1_progres", "I2_oubli", "retention"}
+    # H[t − 1, t − 1] : moniteur déployé au tour t contre l'attaque du tour t = (iii) par tour pour A
+    assert np.allclose([B["A"]["cycle"]["H"][t][t] for t in range(T)], B["A"]["par_tour"]["iii"], atol=0)
     assert a["attaquant"]["departs"] > 0 and sum(a["attaquant"]["statuts"].values()) == a["attaquant"]["departs"]
 
 
 def test_ordre_des_bras_sans_effet():
     """Chaque bras tire ses graines de son propre code : l'ordre et la présence des autres bras ne changent rien."""
     tous = am.executer_tache(1, 2, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE)
-    seul = am.executer_tache(1, 2, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE, bras=("C3", "A"))
-    for x in ("C3", "A"):
+    seul = am.executer_tache(1, 2, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE, bras=("C3p", "A"))
+    for x in ("C3p", "A"):
         assert sans_temps(seul["bras"][x]) == sans_temps(tous["bras"][x])
+    sans_bp = am.executer_tache(1, 2, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE,
+                                bras=("A", "B", "C1", "C2", "C3", "D"))
+    for x in ("A", "B", "C1", "C2", "C3", "D"):
+        assert sans_temps(sans_bp["bras"][x]) == sans_temps(tous["bras"][x])
+
+
+def test_bras_v2_inchanges():
+    """Continuité : A, B, C1, C2, C3, D du code v3 rendent, champ à champ, ce que rend le code v2 remis (même racine,
+    même configuration réduite) ; la v3 ne fait qu'ajouter des champs (cycle, paramètres par requête)."""
+    import arene_melange_v2 as am2
+
+    champs = {k: v for k, v in asdict(PETITE).items() if k in asdict(am2.CONFIG_BASE_V2)}
+    p2 = am2.Config(**champs)
+    bras = ("A", "B", "C1", "C2", "C3", "D")
+    r2 = am2.executer_tache(0, 1, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, p2, bras=bras)
+    r3 = am.executer_tache(0, 1, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE, bras=bras)
+    for x in bras:
+        v2 = sans_temps(r2["bras"][x])
+        assert v2 == {k: sans_temps(r3["bras"][x])[k] for k in v2}, x
+    assert r2["attaquant"] == r3["attaquant"]
+
+
+# =================================================================================================================
+# Condition d'application : indicateurs de cycle
+# =================================================================================================================
+def test_indicateurs_cycle_sain():
+    H = np.array([[0.1, 0.0, 0.0, 0.0],
+                  [0.5, 0.1, 0.0, 0.0],
+                  [0.4, 0.6, 0.1, 0.0],
+                  [0.3, 0.5, 0.7, 0.1],
+                  [0.2, 0.4, 0.6, 0.8]])
+    iii = [0.1, 0.1, 0.1, 0.1]
+    dep = [np.array([1.0, 0, 0]), np.array([0, 1.0, 0]), np.array([0.9, 0.1, 0]), np.array([0, 0, 1.0])]
+    r = am.indicateurs_cycle(H, iii, dep)
+    assert abs(r["I1_progres"]) < 1e-12
+    assert abs(r["I2_oubli"] - np.mean([0.5 - 0.2, 0.6 - 0.4, 0.7 - 0.6])) < 1e-12
+    assert abs(r["retention"]["0"] - np.mean([0.5, 0.6, 0.7, 0.8])) < 1e-12
+    assert abs(r["retention"]["-1"] - 0.1) < 1e-12
+    assert r["I3_retours"] == 0.5          # t = 3 revient vers t = 1 ; t = 4 ne revient pas
+    r2 = am.indicateurs_cycle(H, [0.0, 0.0, 0.2, 0.2], dep)
+    assert abs(r2["I1_progres"] - 0.2) < 1e-12
 
 
 # =================================================================================================================
@@ -674,14 +783,18 @@ def faux_contraste(m, s):
     return {"moyenne": m, "ecart_type": s, "quantiles": {f"q{p:g}": m + s * float(norm.ppf(p)) for p in am.QUANTILES}}
 
 
-def fausse_analyse(ba, ba_ii, princ, s=0.004):
-    """ba, ba_ii : (δ1, δ2) ; princ : {contraste: (δ1, δ2)}."""
+def fausse_analyse(ba, ba_ii, princ, s=0.004, q2=None, i1=(0.0, 0.0), i2=(0.05, 0.05), pur=(0.0, 0.0)):
+    """ba, ba_ii, i1, i2, pur : (δ1, δ2) ; princ, q2 : {contraste: (δ1, δ2)}."""
+    q2 = q2 or {lib: (-0.05, -0.05) for lib in am.CONTRASTES_Q2}
     an = {}
     for k, cd in enumerate(("1", "2")):
         cs = {"B-A (iii)": faux_contraste(ba[k], s), "B-A (ii)": faux_contraste(ba_ii[k], s)}
         for lib in am.CONTRASTES_PRINCIPAUX:
             cs[lib] = faux_contraste(princ[lib][k], s)
-        an[cd] = {"contrastes": cs}
+        for lib in am.CONTRASTES_Q2:
+            cs[lib] = faux_contraste(q2[lib][k], s)
+        an[cd] = {"contrastes": cs, "indicateurs": {"A I1": faux_contraste(i1[k], s), "A I2": faux_contraste(i2[k], s)},
+                  "bras": {"Bp": {"poids": {"part_pure": pur[k]}}}}
     return an
 
 
@@ -695,29 +808,48 @@ def test_classer_ordre():
 
 
 def test_lire_tables_lignes():
-    marges = {"1": 0.03, "2": 0.03}
+    marges = {"1": 0.02, "2": 0.02}
     base = {lib: (-0.15, -0.10) for lib in am.CONTRASTES_PRINCIPAUX}
-    t = am.lire_tables(fausse_analyse((0.12, 0.10), (-0.06, -0.06), base), 0.02, 0.02, marges)
+    lt = am.lire_tables
+    t = lt(fausse_analyse((0.12, 0.10), (-0.06, -0.06), base), 0.02, 0.02, marges, 0.02)
     assert t["table1"] == "mécanisme exercé" and t["table2"] == "régression avérée au-delà de la tolérance"
-    assert t["table4"] == "HP réfutée"
-    t = am.lire_tables(fausse_analyse((0.12, -0.05), (-0.01, -0.01), base), 0.02, 0.02, marges)
+    assert t["table4"] == "Q1 réfutée" and t["table7"] == "Q2 réfutée"
+    assert t["table5"].startswith("condition d'application vérifiée")
+    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, avec oubli"}
+    t = lt(fausse_analyse((0.12, -0.05), (-0.01, -0.01), base), 0.02, 0.02, marges, 0.02)
     assert t["table1"].startswith("le mélange perd") and t["table2"] == "régression démontrée sous la tolérance"
-    t = am.lire_tables(fausse_analyse((0.12, 0.01), (0.02, 0.03), base), 0.02, 0.02, marges)
+    t = lt(fausse_analyse((0.12, 0.01), (0.02, 0.03), base), 0.02, 0.02, marges, 0.02)
     assert t["table1"].startswith("mécanisme non démontré") and t["table2"] == "amélioration sur (ii)"
-    t = am.lire_tables(fausse_analyse((0.12, 0.10), (0.0, 0.0), base, s=0.002), 0.02, 0.02, marges)
+    t = lt(fausse_analyse((0.12, 0.10), (0.0, 0.0), base, s=0.002), 0.02, 0.02, marges, 0.02)
     assert t["table2"] == "sans régression à S5 près"
-    t = am.lire_tables(fausse_analyse((0.12, 0.10), (0.0, -0.02), base, s=0.006), 0.02, 0.02, marges)
+    t = lt(fausse_analyse((0.12, 0.10), (0.0, -0.02), base, s=0.006), 0.02, 0.02, marges, 0.02)
     assert t["table2"] == "régression non exclue (imprécis)"
     gagne = {lib: (0.10, 0.10) for lib in am.CONTRASTES_PRINCIPAUX}
-    assert am.lire_tables(fausse_analyse((0.12, 0.1), (0, 0), gagne), 0.02, 0.02, marges)["table4"] == "HP confirmée"
+    assert lt(fausse_analyse((0.12, 0.1), (0, 0), gagne), 0.02, 0.02, marges, 0.02)["table4"] == "Q1 confirmée"
     mixte = {lib: (0.10, -0.10) for lib in am.CONTRASTES_PRINCIPAUX}
-    assert am.lire_tables(fausse_analyse((0.12, 0.1), (0, 0), mixte), 0.02, 0.02, marges)["table4"] == "HP dépend de δ"
-    flou = {lib: (0.10, 0.02) for lib in am.CONTRASTES_PRINCIPAUX}
-    t = am.lire_tables(fausse_analyse((0.12, 0.1), (0, 0), flou, s=0.008), 0.02, 0.02, marges)
-    assert t["table4"] == "HP non tranchée" and t["table3"]["2"]["B-C1 (iii)"] == "?"
+    assert lt(fausse_analyse((0.12, 0.1), (0, 0), mixte), 0.02, 0.02, marges, 0.02)["table4"] == "Q1 dépend de δ"
+    flou = {lib: (0.10, 0.015) for lib in am.CONTRASTES_PRINCIPAUX}
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), flou, s=0.008), 0.02, 0.02, marges, 0.02)
+    assert t["table4"] == "Q1 non tranchée" and t["table3"]["2"]["B-C1 (iii)"] == "?"
     egal = dict(gagne, **{"B-C1 (iii)": (0.0, 0.0)})
-    t = am.lire_tables(fausse_analyse((0.12, 0.1), (0, 0), egal), 0.02, 0.02, marges)
-    assert t["table4_par_delta"]["1"] == "réfutée (équivalence)" and t["table4"] == "HP réfutée"
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), egal), 0.02, 0.02, marges, 0.02)
+    assert t["table4_par_delta"]["1"] == "réfutée (équivalence)" and t["table4"] == "Q1 réfutée"
+    # Q2
+    q2g = {lib: (0.08, 0.08) for lib in am.CONTRASTES_Q2}
+    assert lt(fausse_analyse((0.12, 0.1), (0, 0), base, q2=q2g), 0.02, 0.02, marges, 0.02)["table7"] == "Q2 confirmée"
+    q2m = {lib: (0.08, -0.08) for lib in am.CONTRASTES_Q2}
+    assert lt(fausse_analyse((0.12, 0.1), (0, 0), base, q2=q2m), 0.02, 0.02, marges, 0.02)["table7"] == "Q2 dépend de δ"
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, q2=q2g, pur=(0.6, 0.1)), 0.02, 0.02, marges, 0.02)
+    assert t["table7"] == "Q2 non exercée (au moins un δ)" and t["table7_par_delta"]["2"] == "tenue"
+    # Table 5
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i1=(0.08, 0.0)), 0.02, 0.02, marges, 0.02)
+    assert t["table5_par_delta"]["1"] == "A progresse" and t["table5"].startswith("condition d'application non vérifiée")
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i2=(0.0, 0.019), s=0.0005), 0.02, 0.02, marges, 0.02)
+    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, sans oubli"}
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i2=(0.02, 0.02)), 0.02, 0.02, marges, 0.02)
+    assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, oubli indéterminé"}
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i1=(0.02, 0.02)), 0.02, 0.02, marges, 0.02)
+    assert t["table5"] == "condition d'application indéterminée"
 
 
 def test_lire_tables_exhaustive():
@@ -727,23 +859,158 @@ def test_lire_tables_exhaustive():
           "mécanisme non démontré (gain sous S1 ou imprécis, au moins un δ)"}
     L2 = {"régression avérée au-delà de la tolérance", "régression démontrée sous la tolérance", "amélioration sur (ii)",
           "sans régression à S5 près", "régression non exclue (imprécis)"}
-    L4 = {"HP confirmée", "HP réfutée", "HP dépend de δ", "HP non tranchée"}
+    L4 = {f"Q1 {x}" for x in ("confirmée", "réfutée", "dépend de δ", "non tranchée")}
+    L5 = {"condition d'application vérifiée (A ne progresse pas aux deux δ)",
+          "condition d'application non vérifiée (A progresse dans au moins un δ)",
+          "condition d'application indéterminée"}
+    L7 = {f"Q2 {x}" for x in ("confirmée", "réfutée", "dépend de δ", "non tranchée", "non exercée (au moins un δ)")}
     for _ in range(2000):
         princ = {lib: tuple(g.uniform(-0.1, 0.1, 2)) for lib in am.CONTRASTES_PRINCIPAUX}
+        q2 = {lib: tuple(g.uniform(-0.1, 0.1, 2)) for lib in am.CONTRASTES_Q2}
         t = am.lire_tables(fausse_analyse(tuple(g.uniform(-0.05, 0.15, 2)), tuple(g.uniform(-0.08, 0.04, 2)), princ,
-                                          s=float(g.uniform(0.001, 0.03))), 0.02, 0.02, {"1": 0.03, "2": 0.02})
-        assert t["table1"] in L1 and t["table2"] in L2 and t["table4"] in L4
-        assert all(c in {"B>X", "X>B", "≈", "B≳X", "X≳B", "?"} for v in t["table3"].values() for c in v.values())
+                                          s=float(g.uniform(0.001, 0.03)), q2=q2, i1=tuple(g.uniform(-0.05, 0.1, 2)),
+                                          i2=tuple(g.uniform(-0.05, 0.1, 2)), pur=tuple(g.uniform(0, 1, 2))),
+                           0.02, 0.02, {"1": 0.02, "2": 0.02}, 0.02)
+        assert t["table1"] in L1 and t["table2"] in L2 and t["table4"] in L4 and t["table5"] in L5 and \
+            t["table7"] in L7
+        for tab in ("table3", "table6"):
+            assert all(c in {"B>X", "X>B", "≈", "B≳X", "X≳B", "?"} for v in t[tab].values() for c in v.values())
 
 
 def test_analyse_sur_taches_reelles():
-    cfg = am.replace(PETITE, taux_nonconv_max=0.5)   # petite configuration : une non-convergence sur 8 tolérée ici
+    cfg = am.replace(PETITE, taux_nonconv_max=0.5)
     res = [am.executer_tache(i, cd, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg) for cd in (1, 2) for i in (0, 1)]
     an = am.analyser(res, am.RACINE_TESTS, n_reech=500)
     for cd in ("1", "2"):
         assert an[cd]["n"] == 2 and set(an[cd]["bras"]) == set(am.TOUS_LES_BRAS)
-        for lib in am.CONTRASTES_PRINCIPAUX + ("B-A (iii)", "B-A (ii)"):
+        for lib in am.CONTRASTES_PRINCIPAUX + am.CONTRASTES_Q2 + ("B-A (iii)", "B-A (ii)"):
             q = an[cd]["contrastes"][lib]["quantiles"]
             assert q["q0.003125"] <= q["q0.025"] <= q["q0.975"] <= q["q0.996875"]
-        assert "poids" in an[cd]["bras"]["B"] and "cout" in an[cd]["bras"]["C3"]
+        assert {"A I1", "A I2", "Bp I1", "D I2"} <= set(an[cd]["indicateurs"])
+        assert "poids" in an[cd]["bras"]["Bp"] and "cycle" in an[cd]["bras"]["A"] and "cout" in an[cd]["bras"]["C3p"]
+    t = am.lire_tables(an, 0.02, 0.02, {"1": 0.02, "2": 0.02}, 0.02)
+    assert t["table7"].startswith("Q2")
     assert an == am.analyser(res, am.RACINE_TESTS, n_reech=500)                # rééchantillonnage reproductible
+
+
+# =================================================================================================================
+# Attaquant indépendant, audit (CM2-05)
+# =================================================================================================================
+def test_audit_sain_et_artefacts():
+    cfg = PETITE
+    src = {(0, cd): am.executer_tache(0, cd, am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg) for cd in (1, 2)}
+    res, temps, jug = am.auditer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, src, processus=1)   # sain
+    assert len(res) == 2 and set(jug["par_delta"]) == {"1", "2"} and isinstance(jug["artefact"], bool)
+    for r in res:
+        for nom, b in r["bras"].items():
+            assert b["V_source"] == src[(0, r["code_delta"])]["bras"][nom]["V_iii_final"]
+            assert b["V_audit"] <= b["V_source"] and 0 <= b["V_lourd"] <= 1
+    faux = json.loads(json.dumps(src[(0, 1)]))
+    faux["bras"]["D"]["V_iii_final"] += 0.1
+    with leve("audit : V reconstruit"):
+        am.auditer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, {(0, 1): faux, (0, 2): src[(0, 2)]}, processus=1)
+    manque = json.loads(json.dumps(src[(0, 1)]))
+    del manque["bras"]["C3p"]
+    with leve("audit : bras"):
+        am.auditer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, {(0, 1): manque, (0, 2): src[(0, 2)]},
+                   processus=1)
+    with leve("audit : tâche absente"):
+        am.auditer([0, 1], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, cfg, src, processus=1)
+
+
+def _taches_audit(decalage=0.0, inverse=False):
+    sortie = []
+    for cd in (1, 2):
+        for i in range(5):
+            b = {"B": 0.20, "C3": 0.30, "D": 0.35, "Bp": 0.30, "C3p": 0.33}
+            sortie.append({"instance": i, "code_delta": cd,
+                           "bras": {k: {"V_source": v, "V_audit": v} for k, v in b.items()}})
+            if inverse:
+                sortie[-1]["bras"]["D"]["V_audit"] = 0.10            # B − D change de signe
+            sortie[-1]["bras"]["C3p"]["V_audit"] -= decalage
+    return sortie
+
+
+def test_juger_audit_sain_et_artefact():
+    assert am.juger_audit(_taches_audit(), 0.05)["artefact"] is False                 # sain : rien ne change
+    assert am.juger_audit(_taches_audit(decalage=0.02), 0.05)["artefact"] is False    # change de 0,02, même signe
+    j = am.juger_audit(_taches_audit(decalage=0.06), 0.05)                            # change de plus de 0,05
+    assert j["artefact"] is True and j["par_delta"]["1"]["Bp-C3p"]["artefact"] is True
+    j = am.juger_audit(_taches_audit(inverse=True), 0.05)                             # signe changé
+    assert j["artefact"] is True and j["par_delta"]["2"]["B-D"]["artefact"] is True
+
+
+def test_audit_essai_refuse_pilote_etranger(tmp_path):
+    cfg = config_complete()
+    bon = {"mode": "essai", "oracle": "detection", "manifeste": {"racine": am.RACINE_ESSAI,
+                                                                 "racine_tenue": am.RACINE_ESSAI_TENUE,
+                                                                 "config_sha256": cfg.empreinte()}, "resultats": []}
+    f = tmp_path / "p.json"
+    f.write_text(json.dumps(bon))
+    am.charger_pilote(f, cfg)                                                          # sain
+    for modif, motif in ((dict(oracle="logistique"), "audit-essai :"),
+                         (dict(manifeste={**bon["manifeste"], "config_sha256": "0" * 64}), "audit-essai :"),
+                         (dict(manifeste={**bon["manifeste"], "racine": 20261293}), "déjà employée")):
+        g = tmp_path / f"p{len(motif)}{len(str(modif))}.json"
+        g.write_text(json.dumps({**bon, **modif}))
+        with leve(motif):
+            am.charger_pilote(g, cfg)
+
+
+def test_exiger_meme_prereg():
+    am.exiger_meme_prereg({"preenregistrement": {"sha256": "a" * 64}}, "a" * 64)      # sain
+    with leve("audit : run audité rattaché"):
+        am.exiger_meme_prereg({"preenregistrement": {"sha256": "b" * 64}}, "a" * 64)
+    with leve("audit : run audité rattaché"):
+        am.exiger_meme_prereg({"preenregistrement": None}, "a" * 64)
+
+
+# =================================================================================================================
+# Processus de travail : PID, arrêt par PID (R10), aucun orphelin, signal TERM (CM2-14)
+# =================================================================================================================
+def test_arret_par_pid_sain_et_artefact(tmp_path, capsys):
+    p = subprocess.Popen(["sleep", "60"])
+    try:
+        pids = [(p.pid, am._debut_processus(p.pid))]
+        assert am.processus_vivant(*pids[0])
+        assert not am.processus_vivant(p.pid, "0")                 # même PID, autre instant de départ : pas le nôtre
+        with leve("processus de travail encore vivants"):          # artefact : un processus consigné tourne
+            am.exiger_aucun_orphelin(pids)
+        f = tmp_path / "pids.txt"
+        f.write_text("# essai\n" + "".join(f"{a} {b}\n" for a, b in pids))
+        assert am.lire_pids(f) == pids
+        with leve("processus de travail encore vivants"):
+            am.main(["orphelins", "--pids", str(f)])
+        am.main(["orphelins", "--pids", str(f), "--arreter"])      # arrêt par PID, puis garde : saine
+        assert "aucun processus" in capsys.readouterr().out
+        am.exiger_aucun_orphelin(pids)
+        assert am.arreter_par_pid(pids) == []                      # rien à arrêter
+    finally:
+        p.kill()
+        p.wait()
+
+
+def test_lancer_consigne_pids_sans_orphelin(tmp_path):
+    f = tmp_path / "pids-travail.txt"
+    res, temps = am.executer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE, processus=2, bras=("A",),
+                             leger=True, fichier_pids=f)
+    pids = am.lire_pids(f)
+    assert len(res) == 2 and len(pids) == 2 and not any(am.processus_vivant(a, b) for a, b in pids)
+    with leve("existe déjà : R12"):                                # le fichier des PID n'est jamais écrasé
+        am.executer([0], am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE, processus=2, bras=("A",), leger=True,
+                    fichier_pids=f)
+
+
+def test_signal_term_arrete_le_pool_par_pid(tmp_path):
+    """Un TERM reçu pendant le calcul arrête le run (motif TERM) ; les processus de travail consignés sont arrêtés."""
+    f = tmp_path / "pids-term.txt"
+    minuterie = threading.Timer(4.0, lambda: signal.raise_signal(signal.SIGTERM))
+    minuterie.start()
+    try:
+        with pytest.raises(GardeArret, match=re.escape(gardes.MOTIF_TERM)):
+            am.executer(range(6), am.RACINE_TESTS, am.RACINE_TESTS_TENUE, PETITE, processus=2, fichier_pids=f)
+    finally:
+        minuterie.cancel()
+    pids = am.lire_pids(f)
+    assert len(pids) == 2 and not any(am.processus_vivant(a, b) for a, b in pids)
+    assert signal.getsignal(signal.SIGTERM) is not gardes.lever_sur_term   # gestionnaire rétabli
