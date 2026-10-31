@@ -242,17 +242,17 @@ print(f"  Campos et collègues 2018 : 0,0241 / 0,1563 = {0.0241 / 0.1563:.1%} (l
 print(f"  Azoulay et collègues : 1 - exp(-0,092) = {1 - exp(-0.092):.2%} (note du tableau III, colonne 1a) ; 1 - exp(-0,086) = {1 - exp(-0.086):.2%} (le texte écrit 8,2 %, p. 17)")
 
 # ---------------------------------------------------------------- paragraphes nouveaux du brouillon 4
-print("§ 21 — budget du brouillon 4 (temps unitaires SUPPOSÉS comme au § 12) : ajouts D5 (rétroaction), rétrodiction inversée, variante « graphe amputé des ponts », préconditions du volet B ; options de DL-10")
+print("§ 21 — budget du brouillon 4 (temps unitaires SUPPOSÉS comme au § 12) : ajouts D5 (rétroaction), rétrodiction inversée, variantes « graphe amputé des ponts » et « disjonction par niche », préconditions du volet B ; options de DL-10")
 T_RETRO = T_ECH                                   # une variante de rétrodiction d'un monde coûte comme une variante d'échelle (SUPPOSÉ)
 N_DESC = 5                                        # D1 à D5
 
 
-def budget4(desc=50, bh_par_cond=30, ech=30, amp=30, retro=30, graines_bh=5, sous_etude_mondes=2,
+def budget4(desc=50, bh_par_cond=30, ech=30, amp=30, niche=30, retro=30, graines_bh=5, sous_etude_mondes=2,
             graines_bt=5, bt_conf=0):
     mA = mondes_decision_A + N_DESC * desc
     e = 13 * ech * 2                              # variantes d'échelle (2 en plus de la brute), 13 conditions
     r = 7 * retro                                 # rétrodiction : R2, R3, O2, O3, H2, H3, R2- (une variante)
-    a = 2 * amp                                   # graphe amputé des ponts : O2, O3 (une variante)
+    a = 2 * amp + 2 * niche                       # graphe amputé des ponts et disjonction par niche (volet A) : O2, O3 (une variante chacune)
     entr = (mondes_bt + bt_conf) * 2 * graines_bt + (4 * bh_par_cond) * 2 * graines_bh
     se = sous_etude_mondes * 50 * 2
     return (mA * T_A + (e + a) * T_ECH + r * T_RETRO + (entr + se) * T_ENTR) / 60
@@ -268,21 +268,23 @@ for nom, bt_conf in (("DL-10 option 1 (aucune condition nouvelle en B-thêta)", 
     tot = b + validation4 + gardes4
     print(f"  {nom} : mondes {mondes} ; calcul {b:.1f} h ; validation {validation4:.2f} h ; gardes {gardes4:.1f} h ; total {tot:.1f} h ;"
           f" multiplicateur toléré à 140 h {140 / tot:.2f}, à 150 h {150 / tot:.2f}, à 160 h {160 / tot:.2f}")
-print(f"  détail des ajouts (option 1) : D5 {50 * T_A / 60:.2f} h ; rétrodiction {7 * 30 * T_RETRO / 60:.2f} h ; graphe amputé {2 * 30 * T_ECH / 60:.2f} h")
+print(f"  détail des ajouts (option 1) : D5 {50 * T_A / 60:.2f} h ; rétrodiction {7 * 30 * T_RETRO / 60:.2f} h ; graphe amputé {2 * 30 * T_ECH / 60:.2f} h ; disjonction par niche {2 * 30 * T_ECH / 60:.2f} h")
 for nom_opt, bt_conf in (("option 1", 0), ("option 2", 50)):
     etapes4 = (("(0) aucun", {}),
                ("(1) D1 à D5 à 30 mondes", {"desc": 30}),
                ("(2) + B-hors à 20 mondes par condition", {"desc": 30, "bh_par_cond": 20}),
-               ("(3) + variantes d'échelle et graphe amputé à 15 mondes", {"desc": 30, "bh_par_cond": 20, "ech": 15, "amp": 15}),
-               ("(4) + graines de B-hors à 3", {"desc": 30, "bh_par_cond": 20, "ech": 15, "amp": 15, "graines_bh": 3}),
-               ("(5) + sous-étude à 1 monde", {"desc": 30, "bh_par_cond": 20, "ech": 15, "amp": 15, "graines_bh": 3, "sous_etude_mondes": 1}))
+               ("(3) + variantes d'échelle, graphe amputé et disjonction par niche à 15 mondes", {"desc": 30, "bh_par_cond": 20, "ech": 15, "amp": 15, "niche": 15}),
+               ("(4) + graines de B-hors à 3", {"desc": 30, "bh_par_cond": 20, "ech": 15, "amp": 15, "niche": 15, "graines_bh": 3}),
+               ("(5) + sous-étude à 1 monde", {"desc": 30, "bh_par_cond": 20, "ech": 15, "amp": 15, "niche": 15, "graines_bh": 3, "sous_etude_mondes": 1}))
     for nom, kw in etapes4:
         b = budget4(bt_conf=bt_conf, **kw)
         print(f"  DL-10 {nom_opt}, réduction cumulée {nom} : calcul {b:.1f} h ; avec validation et gardes {b + validation4 + gardes4:.1f} h")
-    b_min4 = budget4(bt_conf=bt_conf, desc=30, bh_par_cond=20, ech=15, amp=15, graines_bh=3, sous_etude_mondes=1)
+    b_min4 = budget4(bt_conf=bt_conf, desc=30, bh_par_cond=20, ech=15, amp=15, niche=15, graines_bh=3, sous_etude_mondes=1)
     print(f"  DL-10 {nom_opt}, multiplicateur toléré après réduction complète : à 140 h {140 / (b_min4 + validation4 + gardes4):.2f} ;"
           f" à 150 h {150 / (b_min4 + validation4 + gardes4):.2f} ; à 160 h {160 / (b_min4 + validation4 + gardes4):.2f}")
 print(f"  150 h de temps mural = {150 / 24:.2f} jours continus ; 160 h = {160 / 24:.2f} jours")
+print(f"  options non recommandées, pour mémoire : DL-11 option 2 (affectation F de décision, 4 tailles x 100 mondes) = {400 * T_A / 60:.1f} h ;"
+      f" mondes compagnons B-thêta à une violation (4 conditions x 30 mondes x 2 méthodes x 5 graines) = {4 * 30 * 2 * 5 * T_ENTR / 60:.1f} h")
 
 print("§ 22 — rétrodiction inversée (garde-fou 2 de R-878, S23) : règle « recouvrement rétrodit (30 mondes) >= recouvrement prospectif (100 mondes) - 0,05 », dans X2 et dans X3 (deux conditions indépendantes)")
 

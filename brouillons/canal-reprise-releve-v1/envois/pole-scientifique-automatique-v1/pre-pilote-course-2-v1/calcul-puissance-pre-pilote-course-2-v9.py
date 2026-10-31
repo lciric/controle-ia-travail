@@ -1,7 +1,34 @@
-"""Calculs de puissance du pré-pilote de la course 2, brouillon 9. Processeur seul, aucune donnée de run.
-Remplace calcul-puissance-pre-pilote-course-2-v7.py (gardé, R12 ; brouillon 8). Ce qui change par rapport à la v7
-(décision de routine de conv-audit, R-698 : adopter les bases de coût du devis v6 que le brouillon 8 n'avait pas
-reprises) :
+"""Calculs de puissance du pré-pilote de la course 2, brouillon 10. Processeur seul, aucune donnée de run.
+Remplace calcul-puissance-pre-pilote-course-2-v8.py (gardé, R12 ; brouillon 9). Ce qui change par rapport à la v8
+(vérification du brouillon 9, verification-corrections-brouillon9-v1.md, 3509df87…, constats VB9-02, VB9-04, VB9-12,
+VB9-13, VB9-16 ; choix de l'auteur du brouillon 10, déclaré : reprendre les deux bases du devis v6 que la v8 ne
+reprenait pas) :
+  - FUSION OBSERVÉE (devis v6 § 2.2 : 7 appels longs de Kimi, médiane 0,204 USD) : 0,204 par fusion au lieu de 0,40,
+    coupures de Kimi ×1,447 comprises comme au devis ; rapport mesuré ÷ supposé de médiane 1,0 (devis v6 § 2.4 : les
+    médianes de P11 ne s'appliquent qu'aux bases non observées), obtenu par r_fu / 1,3 sur les MÊMES tirages (même
+    dispersion, 0,70) ; sensibilité : médiane 1,3 gardée ;
+  - RÉDACTEUR AU PRIX DE SONNET 5.5 (devis v6 § 2.1 et § 3.2) : É1 à 1,8 (attendu du devis v6 § 3.2, 270 000 / 129 000
+    jetons à 2 / 10 par million) au lieu de 2,6 ; É8 à 0,3 au lieu de 0,6 ; la rédaction des 4 fiches de M6b est
+    comprise dans ce 1,8 (ligne du devis : « É1 rédacteur (Sonnet 5.5), dont M6b ») : M6b n'ajoute plus en É1 que la
+    lecture des PDF sources (4 × 0,10), d'où D-g (b) = 0,40 + 1,0 (É9b) = 1,4, l'attendu d'É9b au devis ; au texte de
+    base, É1 garde 1,8 (prudent d'environ 0,1, le devis ne sépare pas la part de M6b) ; delta_e1 (variante (3) de D-i)
+    ×0,5 (rapport de prix Sonnet ÷ Opus) ; seconde version : composition rédacteur ×0,6 de 1,8, toujours calée sur 5,8 ;
+  - plafonds de relais INCHANGÉS (plafonds du brouillon 5, GO-2026-10-31-03), y compris l'incrément d'É1 pour M6b ;
+  - VB9-13 : la coupure ×1,447 s'applique aussi aux 2 rendus Kimi appariés de D-i (2) (configuration recommandée et
+    variante (2) de D-i) : (d) de la décomposition = recommandée du brouillon 9 sans réserve ;
+  - décomposition prolongée : (d) -> (e) + fusion observée seule ; (e') + rédacteur Sonnet seul ; (f) les deux = bases
+    du devis v6 entières = « rec » ;
+  - VB9-12 : sensibilité du complément conditionnel avec la coupure de Kimi ×1,447 sur ses postes de Kimi (information ;
+    le complément principal garde ses bases) ;
+  - VB9-16 : étiquettes périmées corrigées (lectures d'étiquettes 1,5 USD ; D-i aux bases du devis v6 ; course à
+    24 fusions, la puissance du test de bisociation renvoyée au préenregistrement de la course ; le mode « réservation »
+    à 45 ; 40 ne redonne la sortie v6 qu'aux bases du devis v3 : étiqueté information, plus contrôle) ; coût affiché de
+    la variante (3) de D-i au prix de Sonnet (−0,12), comme la simulation.
+  Le modèle de coût de la course (C10) garde les bases du devis v3 (fusion 0,40, sans coupures), comme en v8.
+Aucune graine nouvelle ; aucun tirage déplacé : les simulations ajoutées sont déterministes à tirages donnés.
+
+Ce qui avait changé de la v7 à la v8 (brouillon 9 ; décision de routine de conv-audit, R-698 : adopter les bases de
+coût du devis v6 que le brouillon 8 n'avait pas reprises) :
   - BASES DE COÛT DU DEVIS v6 (§ 2.1, 2.3, 3.2, 3.4) adoptées comme défaut du tableau de coût (etapes_pre_pilote) :
     (1) lectures d'étiquettes = 60 lectures, 1,5 USD (etiq=1,5 ; le devis v6 § 3.2 relève que le brouillon 5 ne comptait
     qu'un lecteur, 30 lectures) ; (2) coupures de Kimi comptées ×1,447 sur ses postes (kc=1,447 ; devis v6 § 2.3 :
@@ -60,7 +87,7 @@ Rappel : ce qui avait changé de la v5 à la v6 (contre-lecture 4, constats CP5-
 Graines : les simulations gardées de la v4 et de la v5 gardent leurs noms de tâche « v4-… » et « v5-… » (mêmes tirages) ;
 les simulations nouvelles portent des noms « v6-… ». SeedSequence(RACINE, spawn_key=(cle_de_tache(nom),)), même
 dérivation que src/controle_ia/manifeste.py (R9).
-Hypothèses déclarées dans le préenregistrement (brouillon 8) ; valeurs supposées marquées SUPPOSÉ.
+Hypothèses déclarées dans le préenregistrement (brouillon 10) ; valeurs supposées marquées SUPPOSÉ.
 Seuils paramétrés en tête : si Lazar gèle d'autres valeurs, changer SEUILS et rejouer ; la sortie fait foi.
 Sortie : texte sur la sortie standard."""
 import hashlib
@@ -432,6 +459,11 @@ v2_ind = (g.random(N_SIM) < 1 - np.mean(ok_v[:, 0])).astype(float)
 ETIQ_DEVIS_V6, KC_DEVIS_V6, PRIX_T_SONNET, PRIX_T_ARGON = 1.5, 1.447, 0.035, 0.079
 V2_DEVIS_V6 = 5.8          # seconde version des témoins, attendus aux bases (devis v6 § 3.4 pt 4)
 REDACTEUR_E1, REDACTEUR_E8, RENDUS_K, RENDUS_A, RENDUS_T = 2.6, 0.6, 9, 9, 10
+# v9 (brouillon 10) : les deux bases du devis v6 que la v8 ne reprenait pas.
+FUSION_DEVIS_V6, FUSION_V3 = 0.204, 0.40          # par fusion ; 0,204 OBSERVÉ (devis v6 § 2.2, médiane de 7 appels longs)
+REDACTEUR_E1_SONNET, REDACTEUR_E8_SONNET = 1.8, 0.3   # devis v6 § 3.2 (Sonnet 5.5 à 2 / 10 par million)
+PRIX_RED_SONNET = 0.5                              # Sonnet ÷ Opus (2 / 10 contre 4 / 20, devis v6 § 2.1) : M6b
+r_fu_obs = r_fu / 1.3      # médiane 1,0 pour une base observée (devis v6 § 2.4) ; mêmes tirages, dispersion 0,70
 rendus_base = RENDUS_K * 0.057 + RENDUS_A * 0.079 + RENDUS_T * PRIX_T_SONNET
 rendus = RENDUS_K * 0.057 * r_kj + (RENDUS_A * 0.079 + RENDUS_T * PRIX_T_SONNET) * r_ar
 juge3 = 0.114 * r_op + 0.079 * r_ar + 0.057 * r_kj          # trois juges sur une fiche (course, C10 : bases devis v3, sans kc)
@@ -447,7 +479,8 @@ ORDRE_M6_TOT = ["É1", "É9", "É2", "É3", "É4", "É5", "É5bis", "É6", "É7a
 
 
 def etapes_pre_pilote(delta_e1=0.0, delta_e3_base=0.0, delta_e3=None, delta_e4_base=0.0, delta_e4=None, ordre=None,
-                      m6b=False, etiq=ETIQ_DEVIS_V6, kc=KC_DEVIS_V6, prix_t=PRIX_T_SONNET, v2_aig=True):
+                      m6b=False, etiq=ETIQ_DEVIS_V6, kc=KC_DEVIS_V6, prix_t=PRIX_T_SONNET, v2_aig=True,
+                      fus=FUSION_DEVIS_V6, red=True, fus_med13=False):
     """Étapes du pré-pilote : (clé, nom, coût simulé, plafond de relais, attendu aux bases, rôle), dans l'ordre demandé.
     rôle : 'prot' = protégée (jamais sacrifiée ; non lancée ou coupée -> C13) ; 'prot_hp' = protégée hors porte (M6b :
     non lancée ou coupée -> réserve, C13 inchangée) ; 'sacr1', 'sacr3', 'sacr4' = retirables dans l'ordre d'A1 ;
@@ -457,11 +490,21 @@ def etapes_pre_pilote(delta_e1=0.0, delta_e3_base=0.0, delta_e3=None, delta_e4_b
     devis v6 § 2.3 ; 1 au brouillon 8) ; prix_t = prix par rendu du tiers T (0,035 Sonnet 5.5, devis v6 § 3.4 pt 5 ;
     0,079 prix d'Argon au brouillon 8) ; v2_aig = seconde version calée sur 5,8 USD (devis v6 § 3.4 pt 4 : + 28 lectures
     d'aiguillage) si True, 4,9 USD (brouillon 8) sinon. À etiq=0,75, kc=1, prix_t=0,079, v2_aig=False : bases du
-    brouillon 8 (tirages identiques à la v7, mêmes graines)."""
+    brouillon 8 (tirages identiques à la v7, mêmes graines).
+    v9 (brouillon 10), deux bases du devis v6 de plus, par défaut : fus = coût d'une fusion de Kimi aux bases (0,204
+    OBSERVÉ, devis v6 § 2.2, rapport r_fu_obs de médiane 1,0 ; 0,40 SUPPOSÉ des v4 à v8, rapport r_fu de médiane 1,3) ;
+    red = rédacteur au prix de Sonnet 5.5 (É1 1,8 « dont M6b » et É8 0,3, devis v6 § 3.2 ; delta_e1 ×0,5) si True,
+    bases des v4 à v8 (2,6 ; 0,6 ; rédaction de M6b 0,24 ; ×1) sinon. Plafonds de relais inchangés (brouillon 5, GO-2026-10-31-03).
+    À fus=0,40, red=False : tableau de la v8 (rapport de fusion r_fu, médiane 1,3)."""
     d3 = 0 * un if delta_e3 is None else delta_e3
     d4 = 0 * un if delta_e4 is None else delta_e4
     ordre = ORDRE_TEXTE if ordre is None else ordre
     d1 = delta_e1 + (0.64 if m6b else 0.0)      # M6b : rédacteur 4 × 0,06 + lecture des PDF sources 4 × 0,10 (SUPPOSÉ)
+    # v9 : d1 fixe le PLAFOND (inchangé) ; d1_c fixe le coût et l'attendu (rédaction au prix de Sonnet si red)
+    pr = PRIX_RED_SONNET if red else 1.0
+    d1_c = pr * delta_e1 + ((0.0 if red else 0.24) + 0.40 if m6b else 0.0)   # red : rédaction de M6b comprise dans 1,8
+    red_e1, red_e8 = (REDACTEUR_E1_SONNET, REDACTEUR_E8_SONNET) if red else (REDACTEUR_E1, REDACTEUR_E8)
+    rf = r_fu_obs if (fus == FUSION_DEVIS_V6 and not fus_med13) else r_fu   # fus_med13 : sensibilité, médiane 1,3
     rend = RENDUS_K * 0.057 * r_kj * kc + (RENDUS_A * 0.079 + RENDUS_T * prix_t) * r_ar
     rend_base = RENDUS_K * 0.057 * kc + RENDUS_A * 0.079 + RENDUS_T * prix_t
     j3 = 0.114 * r_op + 0.079 * r_ar + 0.057 * r_kj * kc
@@ -471,14 +514,15 @@ def etapes_pre_pilote(delta_e1=0.0, delta_e3_base=0.0, delta_e3=None, delta_e4_b
     # chiffre sans refaire son découpage en jetons. Bases du brouillon 8 (v2_aig=False) : rédacteur ×0,6 + rendus +
     # relecteur = 4,9 USD, sans lecture d'aiguillage ni calage.
     if v2_aig:
-        v2_comp = 1.5 * r_re + rend + 1.4 * r_re + 28 * 0.057 * r_ai
-        v2_base_comp = 1.5 + rend_base + 1.4 + 28 * 0.057
+        r06 = 0.6 * red_e1 if red else 1.5           # rédacteur ×0,6 (1,08 au prix de Sonnet ; 1,5 des v4 à v8)
+        v2_comp = r06 * r_re + rend + 1.4 * r_re + 28 * 0.057 * r_ai
+        v2_base_comp = r06 + rend_base + 1.4 + 28 * 0.057
         v2_sc = V2_DEVIS_V6 / v2_base_comp
         v2_cost, v2_att = v2_ind * v2_comp * v2_sc, v2_ind * V2_DEVIS_V6
     else:
         v2_cost, v2_att = v2_ind * (1.5 * r_re + rend + 1.4 * r_re), v2_ind * (1.5 + rend_base + 1.4)
     liste = [
-        ("É1", "É1 rédacteur", (REDACTEUR_E1 + d1) * r_re, 3.3 + 1.25 * d1, REDACTEUR_E1 + d1, "prot"),
+        ("É1", "É1 rédacteur", (red_e1 + d1_c) * r_re, 3.3 + 1.25 * d1, red_e1 + d1_c, "prot"),
         ("É2", "É2 Kimi passe 1", 2.0 * r_kp * kc, 3.0, 2.0 * kc, "prot"),
         ("É3", "É3 rendus", rend + d3, 2.8 + 1.4 * delta_e3_base, rend_base + delta_e3_base, "prot"),
         ("É4", "É4 aiguilleur 56 lectures, second lecteur 10, adjudicateur, nouvel essai",
@@ -490,10 +534,10 @@ def etapes_pre_pilote(delta_e1=0.0, delta_e3_base=0.0, delta_e3=None, delta_e4_b
         ("É7a", "É7a passe « tableau » de Kimi, aiguilleur et second lecteur sur elle", 2.0 * r_kp * kc + 20 * 0.057 * r_ai,
          4.6, 2.0 * kc + 20 * 0.057, "sacr4"),
         ("É7b", "É7b lectures d'étiquettes (trois lectures, deux lecteurs)", etiq * r_op, 1.0, etiq, "prot"),
-        ("É7c", "É7c fusions (3), aiguilleur et trois juges sur elles", 1.2 * r_fu * kc + 3 * 0.057 * r_ai + 3 * j3,
-         3.5, 1.2 * kc + 3 * 0.057 + 3 * j3_base, "sacr1"),
+        ("É7c", "É7c fusions (3), aiguilleur et trois juges sur elles", 3 * fus * rf * kc + 3 * 0.057 * r_ai + 3 * j3,
+         3.5, 3 * fus * kc + 3 * 0.057 + 3 * j3_base, "sacr1"),
         ("É7d", "É7d Opus, table seule de l'axe 7", 0.7 * r_op, 1.0, 0.7, "sacr3"),
-        ("É8", "É8 paraphrases (rédacteur)", REDACTEUR_E8 * r_re, 0.7, REDACTEUR_E8, "prot"),
+        ("É8", "É8 paraphrases (rédacteur)", red_e8 * r_re, 0.7, red_e8, "prot"),
         ("É9", "É9 antériorité, 8 fiches (réduite : 4 fiches)", 2.0 * r_an, 6.0, 2.0, "sacr2"),
     ]
     if m6b:
@@ -712,13 +756,17 @@ print(f"  aux bases (rapports à 1) : protégé {prot_base:.1f} USD ; sacrifiabl
       f"(probabilité {1 - np.mean(ok_v[:, 0]):.2f})")
 total_brut = sum(e[2] for e in ETAPES)
 # Configuration de base (D-g a, D-i 1) et configuration recommandée (D-g b, D-i 2)
-d3_base2 = 2 * 0.057 + 2 * 0.079
+# v9 (VB9-13) : coupure de Kimi ×1,447 sur les 2 rendus Kimi appariés de D-i (2), comme (d) de la décomposition v8
+d3_base2 = 2 * 0.057 * KC_DEVIS_V6 + 2 * 0.079
+D3_SIM2 = 2 * 0.057 * r_kj * KC_DEVIS_V6 + 2 * 0.079 * r_ar
 d4_base2 = 4 * 0.057
-ETAPES_REC = etapes_pre_pilote(delta_e3_base=d3_base2, delta_e3=2 * 0.057 * r_kj + 2 * 0.079 * r_ar,
+ETAPES_REC = etapes_pre_pilote(delta_e3_base=d3_base2, delta_e3=D3_SIM2,
                                delta_e4_base=d4_base2, delta_e4=4 * 0.057 * r_ai, m6b=True)
 rec_base = sum(e[4] for e in ETAPES_REC if e[0] != "É5bis")
 print(f"  configuration recommandée (D-g b : M6b en É1 et É9b ; D-i 2 : 4 rendus appariés) aux bases : total attendu "
-      f"{rec_base:.1f} USD (+{rec_base - prot_base - sacr_base:.2f} : M6b 1,64 ; D-i (2) 0,50)")
+      f"{rec_base:.1f} USD (+{rec_base - prot_base - sacr_base:.2f} : M6b {0.40 + 1.0:.2f}, rédaction comprise dans É1 1,8 ; "
+      f"D-i (2) {d3_base2 + d4_base2:.2f}) ; plafonds de relais : É1 +{1.25 * 0.64:.2f} (M6b, inchangé), É9b 1,5, "
+      f"É3 +{1.4 * d3_base2:.2f}, É4 +{1.4 * d4_base2:.2f} (D-i (2), convention ×1,4)")
 BUDGETS = {}
 PL, AR = PLAFOND, ARRET      # 50 ; 45 (GO-2026-10-31-03)
 CONFIGS = [("base", PL, AR, ETAPES, "texte de base (D-g a, D-i 1), plafond 50, arrêt d'étape 45, relais souples ET bases du devis v6 (R-698), ordre du Plan"),
@@ -730,7 +778,7 @@ CONFIGS = [("base", PL, AR, ETAPES, "texte de base (D-g a, D-i 1), plafond 50, a
            ("base-ordre-v5", PL, AR, etapes_pre_pilote(ordre=ORDRE_V5), "texte de base, 50 ; 45, ordre joué par le script v5 (étiquettes, fusions, puis passe « tableau » ; CP5-04, comparaison)"),
            ("base-ordre-b4", PL, AR, etapes_pre_pilote(ordre=ORDRE_B4), "texte de base, 50 ; 45, ordre du brouillon 4 (juges après les sacrifiables ; comparaison)"),
            ("base-m6-tot", PL, AR, etapes_pre_pilote(ordre=ORDRE_M6_TOT), "texte de base, 50 ; 45, M6 jouée juste après É1 (information : option de plan non retenue, à la décision de Lazar)"),
-           ("rec-m6-tot", PL, AR, etapes_pre_pilote(delta_e3_base=d3_base2, delta_e3=2 * 0.057 * r_kj + 2 * 0.079 * r_ar, delta_e4_base=d4_base2, delta_e4=4 * 0.057 * r_ai, m6b=True, ordre=ORDRE_M6_TOT), "RECOMMANDÉE, 50 ; 45, M6 jouée juste après É1 (information)")]
+           ("rec-m6-tot", PL, AR, etapes_pre_pilote(delta_e3_base=d3_base2, delta_e3=D3_SIM2, delta_e4_base=d4_base2, delta_e4=4 * 0.057 * r_ai, m6b=True, ordre=ORDRE_M6_TOT), "RECOMMANDÉE, 50 ; 45, M6 jouée juste après É1 (information)")]
 for cle, pl, ar, et, etiquette in CONFIGS:
     BUDGETS[cle] = simuler_budget(et, pl, ar)
     decrire(BUDGETS[cle], etiquette, m6b=any(e[0] == "É9b" for e in et))
@@ -743,8 +791,8 @@ for cle, et, etiquette in (("base-tout-souple", ETAPES, "texte de base, 50 ; 45,
     BUDGETS[cle] = simuler_budget(et, PL, AR, mode="tout_souple")
     decrire(BUDGETS[cle], etiquette, m6b=any(e[0] == "É9b" for e in et))
 print("  -- information : modèle « réservation, S17 seul plafond qui coupe » du brouillon 7 (v6), sans objet depuis GO-2026-10-31-03 --")
-for cle, pl, ar, et, etiquette in (("base-resa-45", 45.0, 40.0, ETAPES, "texte de base, 45 ; 40, RÉSERVATION (contrôle : doit redonner la sortie v6)"),
-                                   ("rec-resa-45", 45.0, 40.0, ETAPES_REC, "RECOMMANDÉE, 45 ; 40, RÉSERVATION (contrôle : sortie v6)"),
+for cle, pl, ar, et, etiquette in (("base-resa-45", 45.0, 40.0, ETAPES, "texte de base, 45 ; 40, RÉSERVATION (information ; ne redonne la sortie v6 qu'aux bases du devis v3)"),
+                                   ("rec-resa-45", 45.0, 40.0, ETAPES_REC, "RECOMMANDÉE, 45 ; 40, RÉSERVATION (information)"),
                                    ("base-resa", PL, AR, ETAPES, "texte de base, 50 ; 45, RÉSERVATION"),
                                    ("rec-resa", PL, AR, ETAPES_REC, "RECOMMANDÉE, 50 ; 45, RÉSERVATION")):
     BUDGETS[cle] = simuler_budget(et, pl, ar, mode="reservation")
@@ -757,17 +805,32 @@ for cle, pl, ar, et, etiquette in (("base-dur", PL, AR, ETAPES, "texte de base, 
     decrire(BUDGETS[cle], etiquette, m6b=any(e[0] == "É9b" for e in et))
 print("  -- décomposition de l'écart avec le devis v6 (§ 3.3, 50 ; 45, config. recommandée, ses bases : sacrifice 0,17, "
       "fusions 0,12, non lancée 0,021, coupée 0,063, dépense médiane 40,6) : du brouillon 8 (devis v3) au devis v6, base "
-      "par base ; la dernière (d) = défaut = « rec » ci-dessus --")
-for cle, etq, kco, pxt, v2a, etiquette in (
-        ("rec-b8", 0.75, 1.0, PRIX_T_ARGON, False, "(a) bases du brouillon 8 (devis v3) : 30 lectures, Kimi sans coupures, T au prix d'Argon, seconde version 4,9"),
-        ("rec-b8-etiq", 1.5, 1.0, PRIX_T_ARGON, False, "(b) + 60 lectures d'étiquettes (1,5 ; erreur de compte du brouillon 5 relevée par le devis v6 § 3.2)"),
-        ("rec-b8-etiq-kc", 1.5, 1.447, PRIX_T_ARGON, False, "(c) + coupures de Kimi ×1,447 (devis v6 § 2.3) [les deux principales : porte annoncée 0,169 au brouillon 8]"),
-        ("rec-devis-v6", 1.5, 1.447, PRIX_T_SONNET, True, "(d) + prix de Sonnet pour T (§ 3.4 pt 5) ET seconde version 5,8 (§ 3.4 pt 4) = bases du devis v6 = « rec »")):
+      "par base ; (d) = « rec » du brouillon 9 (v8, coupure comprise sur les 2 rendus appariés) ; (f) = défaut = « rec » "
+      "ci-dessus (v9) --")
+DECOMPOSITION = (
+    ("rec-b8", 0.75, 1.0, PRIX_T_ARGON, False, FUSION_V3, False, False, "(a) bases du brouillon 8 (devis v3) : 30 lectures, Kimi sans coupures, T au prix d'Argon, seconde version 4,9"),
+    ("rec-b8-etiq", 1.5, 1.0, PRIX_T_ARGON, False, FUSION_V3, False, False, "(b) + 60 lectures d'étiquettes (1,5 ; erreur de compte du brouillon 5 relevée par le devis v6 § 3.2)"),
+    ("rec-b8-etiq-kc", 1.5, 1.447, PRIX_T_ARGON, False, FUSION_V3, False, False, "(c) + coupures de Kimi ×1,447 (devis v6 § 2.3) [les deux principales : porte annoncée 0,169 par R-698]"),
+    ("rec-devis-v6", 1.5, 1.447, PRIX_T_SONNET, True, FUSION_V3, False, False, "(d) + prix de Sonnet pour T (§ 3.4 pt 5) ET seconde version 5,8 (§ 3.4 pt 4) = les quatre bases de R-698 = « rec » du brouillon 9"),
+    ("rec-b9-fus", 1.5, 1.447, PRIX_T_SONNET, True, FUSION_DEVIS_V6, False, False, "(e) (d) + fusion observée 0,204, médiane 1,0 (§ 2.2, § 2.4), seule"),
+    ("rec-b9-red", 1.5, 1.447, PRIX_T_SONNET, True, FUSION_V3, True, False, "(e') (d) + rédacteur au prix de Sonnet (É1 1,8 ; É8 0,3 ; § 3.2), seul"),
+    ("rec-b10", 1.5, 1.447, PRIX_T_SONNET, True, FUSION_DEVIS_V6, True, False, "(f) (d) + les deux = bases du devis v6 entières = « rec » (v9)"),
+    ("rec-fus13", 1.5, 1.447, PRIX_T_SONNET, True, FUSION_DEVIS_V6, True, True, "(f') sensibilité : comme (f), rapport de fusion de médiane 1,3 (P11) gardé"))
+for cle, etq, kco, pxt, v2a, fu, rd, f13, etiquette in DECOMPOSITION:
     et = etapes_pre_pilote(delta_e3_base=2 * 0.057 * kco + 2 * 0.079, delta_e3=2 * 0.057 * r_kj * kco + 2 * 0.079 * r_ar,
-                           delta_e4_base=d4_base2, delta_e4=4 * 0.057 * r_ai, m6b=True, etiq=etq, kc=kco, prix_t=pxt, v2_aig=v2a)
+                           delta_e4_base=d4_base2, delta_e4=4 * 0.057 * r_ai, m6b=True, etiq=etq, kc=kco, prix_t=pxt, v2_aig=v2a,
+                           fus=fu, red=rd, fus_med13=f13)
     BUDGETS[cle] = simuler_budget(et, PL, AR)
     decrire(BUDGETS[cle], etiquette + f" (attendu aux bases {sum(e[4] for e in et if e[0] != 'É5bis'):.1f})", m6b=True)
     detail_coupures(BUDGETS[cle], etiquette)
+    sens_devis(BUDGETS[cle], etiquette)
+print("  -- texte de base (D-g a, D-i 1), mêmes pas (information ; attendu sans seconde version ; devis v6 § 3.2 : texte 30,1) --")
+for cle, fu, rd, etiquette in (("base-b9", FUSION_V3, False, "texte de base aux bases du brouillon 9 (les quatre de R-698)"),
+                               ("base-b9-fus", FUSION_DEVIS_V6, False, "texte de base, + fusion observée seule"),
+                               ("base-b9-red", FUSION_V3, True, "texte de base, + rédacteur Sonnet seul")):
+    et = etapes_pre_pilote(fus=fu, red=rd)
+    BUDGETS[cle] = simuler_budget(et, PL, AR)
+    decrire(BUDGETS[cle], etiquette + f" (attendu aux bases {sum(e[4] for e in et if e[0] != 'É5bis'):.1f})")
     sens_devis(BUDGETS[cle], etiquette)
 print(f"  rappel du modèle grossier de la v4 (total sans sacrifice > plafond ; protégé > plafond) : à 50 : "
       f"{np.mean(total_brut > 50):.2f} / {np.mean(sum(e[2] for e in ETAPES if e[5] == 'prot') > 50):.3f} ; à 45 : "
@@ -785,10 +848,19 @@ print(f"  complément conditionnel (24 fonds rendus une fois) aux bases : " +
       " ; ".join(f"{k} {v:.2f}" for k, v in COMPL_BASE.items()) +
       f" ; total {sum(COMPL_BASE.values()):.1f} USD ; plafond (ratios des plafonds de relais du tableau principal) "
       f"{compl_plafond:.1f} ; médiane aux rapports P11 {np.median(compl_cout):.1f} ; tient sous 17,5 avec "
-      f"{np.mean(compl_cout <= 17.5):.3f} (devis v6, sur ses bases : 0,951)")
-dg_base = 4 * (0.06 + 0.10) + 4 * 0.25
-print(f"  D-g option (b), M6b : 4 fiches (rédacteur 4 × 0,06 + lecture du PDF source 4 × 0,10 SUPPOSÉ, en É1 ; vérificateur "
-      f"4 × 0,25 en É9b) : {dg_base:.1f} USD attendus ; plafond ×1,5 : {1.5 * dg_base:.1f}")
+      f"{np.mean(compl_cout <= 17.5):.3f} (devis v6, sur ses bases : 0,951) ; HORS coupure de Kimi (lecture principale, "
+      f"bases du devis v3)")
+# v9 (VB9-12) : sensibilité, coupure de Kimi ×1,447 sur les postes de Kimi du complément (8 rendus, 24 jugements)
+compl_kimi = 8 * 0.057 * r_kj + 24 * 0.057 * r_kj
+compl_cout_kc = compl_cout + (KC_DEVIS_V6 - 1) * compl_kimi
+print(f"    sensibilité (VB9-12) : coupure de Kimi ×{KC_DEVIS_V6} sur ses postes du complément : attendu aux bases "
+      f"{sum(COMPL_BASE.values()) + (KC_DEVIS_V6 - 1) * 32 * 0.057:.1f} USD ; médiane {np.median(compl_cout_kc):.1f} ; "
+      f"tient sous 17,5 avec {np.mean(compl_cout_kc <= 17.5):.3f}")
+dg_base = 4 * 0.10 + 4 * 0.25
+print(f"  D-g option (b), M6b : 4 fiches (rédaction comprise dans É1 1,8, devis v6 § 3.2 « dont M6b », v9 ; lecture du PDF "
+      f"source 4 × 0,10 SUPPOSÉ, en É1 ; vérificateur 4 × 0,25 en É9b) : {dg_base:.2f} USD attendus (devis v6 : É9b 1,4 ; "
+      f"1,64 aux bases des v4 à v8) ; plafonds de relais "
+      f"inchangés : É1 +0,80, É9b 1,5 (ensemble 2,3 ; le « 2,5 » du texte = 1,6 × 1,5 d'ensemble)")
 
 # C10 : devis de la course refait (devis v3 § 3 : 4 sous-sessions) + bisociation à trois bras.
 fus_unit = 0.40 * r_fu + 0.057 * r_ai + juge3
@@ -831,9 +903,11 @@ print(f"    lecture principale de C10 ({TOTAL_COURSE:.0f} − dépense, {N_FUS} 
       f"{np.mean(ss_c == 3):.2f}, à 2 {np.mean(ss_c == 2):.2f}, à aucune {np.mean(ss_c == 0):.3f})")
 ligne_c10(f"sensibilité : devis de la course mis à l'échelle de la médiane tirée du devis v6 (×{ECHELLE_DEVIS_V6:.3f}), "
           f"{TOTAL_COURSE:.0f} − dépense, {N_FUS} fusions", ss_e, course_e, TOTAL_COURSE - depense)
-print(f"    même sensibilité après complément : tient à 4 {np.mean(ss_ec == 4):.2f}, à 3 {np.mean(ss_ec == 3):.2f}, à 2 "
-      f"{np.mean(ss_ec == 2):.2f}, à aucune {np.mean(ss_ec == 0):.3f} (devis v6 § 5, à 160, lecture B, avec complément : "
-      f"0,213 ; 0,550 ; 0,227 ; 0,010)")
+print(f"    même sensibilité, sans complément : appariement exact avec le devis v6 § 5, à 160, lecture B, SANS complément "
+      f"(0,246 ; 0,556 ; 0,191 ; 0,007 ; VB9-05)")
+print(f"    même sensibilité après complément certain : tient à 4 {np.mean(ss_ec == 4):.2f}, à 3 {np.mean(ss_ec == 3):.2f}, à 2 "
+      f"{np.mean(ss_ec == 2):.2f}, à aucune {np.mean(ss_ec == 0):.3f} (devis v6 § 5, à 160, lecture B, AVEC complément "
+      f"proposé avec 0,20, coût tiré : 0,213 ; 0,550 ; 0,227 ; 0,010 — non apparié : complément certain ici, à 0,20 au devis)")
 print(f"    décomposition v6 -> v7 : lecture v6 (110 − dépense à 45 ; 40, 12 fusions) 0,92 -> 110 − dépense à 50 ; 45, 12 "
       f"fusions : {P['C10'][('reste = 110 − dépense (GO-2026-10-30-07, remplacé : information)', 12)]:.3f} -> 24 fusions : "
       f"{P['C10'][('reste = 110 − dépense (GO-2026-10-30-07, remplacé : information)', N_FUS)]:.3f} "
@@ -945,7 +1019,14 @@ for cle, var23, etiquette in (("base", False, "texte de base, 50 ; 45, relais so
                               ("rec-b8", True, "RECOMMANDÉE, 50 ; 45, (a) bases du brouillon 8 (devis v3 ; décomposition de l'écart au devis v6)"),
                               ("rec-b8-etiq", True, "RECOMMANDÉE, 50 ; 45, (b) + 60 lectures d'étiquettes"),
                               ("rec-b8-etiq-kc", True, "RECOMMANDÉE, 50 ; 45, (c) + coupures de Kimi ×1,447 (les deux principales)"),
-                              ("rec-devis-v6", True, "RECOMMANDÉE, 50 ; 45, (d) + Sonnet T et seconde version 5,8 = bases du devis v6 (= « rec »)")):
+                              ("rec-devis-v6", True, "RECOMMANDÉE, 50 ; 45, (d) + Sonnet T et seconde version 5,8 = les quatre bases de R-698 (= « rec » du brouillon 9)"),
+                              ("rec-b9-fus", True, "RECOMMANDÉE, 50 ; 45, (e) (d) + fusion observée 0,204 seule"),
+                              ("rec-b9-red", True, "RECOMMANDÉE, 50 ; 45, (e') (d) + rédacteur Sonnet seul"),
+                              ("rec-b10", True, "RECOMMANDÉE, 50 ; 45, (f) bases du devis v6 entières (= « rec »)"),
+                              ("rec-fus13", True, "RECOMMANDÉE, 50 ; 45, (f') comme (f), rapport de fusion de médiane 1,3"),
+                              ("base-b9", False, "texte de base, 50 ; 45, aux bases du brouillon 9 (information)"),
+                              ("base-b9-fus", False, "texte de base, 50 ; 45, + fusion observée seule (information)"),
+                              ("base-b9-red", False, "texte de base, 50 ; 45, + rédacteur Sonnet seul (information)")):
     b = BUDGETS[cle]
     ss_k, _ = c10(TOTAL_COURSE - b["depense"], N_FUS)
     ss_ck, _ = c10(TOTAL_COURSE - b["depense"] - compl_cout, N_FUS)
@@ -966,8 +1047,8 @@ print(f"  rappel v6 (brouillon 7 : 45 ; 40, réservation, C10 à 110 − dépens
 print("  défaut R-819 (pas d'étalonnage de l'aiguilleur) : C7 non étalonné -> conjonction entière 0,00 ; nœud certain")
 
 # ================================================================ D-i : trois variantes du plan des fonds
-print("\n== Décision D-i : variantes du plan des fonds (prédiction P1 ; D-g a ; 50 ; 45, relais souples ; coûts aux bases du devis v3, SUPPOSÉ) ==")
-E2 = etapes_pre_pilote(delta_e3_base=d3_base2, delta_e3=2 * 0.057 * r_kj + 2 * 0.079 * r_ar,
+print("\n== Décision D-i : variantes du plan des fonds (prédiction P1 ; D-g a ; 50 ; 45, relais souples ; coûts aux bases du devis v6 entières, v9) ==")
+E2 = etapes_pre_pilote(delta_e3_base=d3_base2, delta_e3=D3_SIM2,
                        delta_e4_base=d4_base2, delta_e4=4 * 0.057 * r_ai)
 B2 = simuler_budget(E2, PL, AR)
 ss2, _ = c10(TOTAL_COURSE - B2["depense"], N_FUS)
@@ -987,7 +1068,7 @@ print(f"  (2) 28 fonds + 4 rendus appariés (mémoire seule, 4 lectures d'aiguil
       f"C1-C2 {np.mean(d['c1c2']):.2f} (inchangé) ; C6 {R2['cs']['c6']:.3f} ; C13 budget {R2['c13b']:.4f} ; "
       f"C10 {np.mean(ss2 >= 2):.3f} ; porte entière {R2['ouverte']:.3f} ; nœud {R2['noeud']:.2f} ; au total {R2['apres']:.3f}")
 print(f"  (3) 24 fonds dont 4 doublés (P 9, N 11, C 2, G 2 ; fiches P 11, N 13 ; 8 fiches corrélées) : coût attendu "
-      f"{prot_base + sacr_base - 4 * 0.06:.1f} USD (−{4 * 0.06:.2f}) ; paires PA : 4 ; C1-C2 {np.mean(M1_VAR3['c1c2']):.2f} ; "
+      f"{prot_base + sacr_base - 4 * 0.06 * PRIX_RED_SONNET:.1f} USD (−{4 * 0.06 * PRIX_RED_SONNET:.2f}, rédaction au prix de Sonnet, v9) ; paires PA : 4 ; C1-C2 {np.mean(M1_VAR3['c1c2']):.2f} ; "
       f"C6 {R3['cs']['c6']:.3f} ; C13 budget {R3['c13b']:.4f} ; C10 {np.mean(ss3 >= 2):.3f} ; "
       f"porte entière {R3['ouverte']:.3f} ; nœud {R3['noeud']:.2f} ; au total {R3['apres']:.3f} "
       f"(graines v5 : l'écart de M1 avec (1) comprend le bruit de simulation, ±0,01 ; l'avance de (3) « au total » est dans ce bruit, CP5-11)")
@@ -1000,7 +1081,7 @@ for fa in (0.03, 0.10, 0.20):
 
 # ================================================================ Bisociation à trois bras (R-643)
 print("\n== Bisociation exploratoire à trois bras (méta v1, Gu-Krenn, basique) : paires et coût (SUPPOSÉ) ==")
-unit = 0.40 + 0.25 + 0.057   # fusion par Kimi + trois juges + aiguilleur, par fusion (SUPPOSÉ, bases du devis v3)
+unit = FUSION_DEVIS_V6 * KC_DEVIS_V6 + (0.114 + 0.079 + 0.057 * KC_DEVIS_V6) + 0.057   # v9 : bases du devis v6 (fusion observée, coupures)
 for n_fiches in (6, 10):
     npairs = n_fiches * (n_fiches - 1) // 2
     print(f"  {n_fiches} fiches non aiguillées de passe 1 : {npairs} paires ; chaque bras choisit son argmax, les trois "
@@ -1009,7 +1090,7 @@ for k in (1, 2, 3):
     print(f"  k = {k} par bras : {3 * k} fusions ; pré-pilote ≈ {3 * k * unit:.2f} USD ; course, 4 cases ≈ "
           f"{4 * 3 * k * unit:.1f} USD")
 print("  lectures d'étiquettes : trois lectures séparées par fiche (liste fermée ; vocabulaire Gu-Krenn ; grille des niches "
-      f"et structures du bras méta) : ≈ {3 * 0.25:.2f} USD pour dix fiches (0,25 par lecture et par dix fiches, prorata de la v3)")
+      f"et structures du bras méta), deux lecteurs : 60 lectures, ≈ {ETIQ_DEVIS_V6:.2f} USD pour dix fiches (devis v6 § 3.2, R-698)")
 # CP4-06 : nombre de paires dans le profil du bras méta (SUPPOSÉ : grille à 6 niches, affectation uniforme ;
 # communication faible avec probabilité 0,5 par paire de niches distinctes ; structure forte avec 0,3 par paire de fiches ;
 # éloignement dans la bande avec 0,6 ; indépendants) — paramètres FICTIFS (CP5-07) : la prédiction P14 sera refaite
@@ -1026,6 +1107,7 @@ for n_fiches in (6, 10):
           f"à l'annexe, CP5-07) : paires dans le profil médiane {np.median(npf):.0f}, P(zéro) {np.mean(npf == 0):.2f}, "
           f"P(toutes les fiches de même niche) {np.mean(~diff.any(1)):.3f}")
 print("  note Gu-Krenn (modèle ou substitut) des trois paires et leur passage : rapportés sans test ; aucune comparaison "
-      "entre bras au pré-pilote (une paire par bras) ; course à k = 1 : 12 fusions, erreur-type d'une aire sous la courbe "
-      f"à 6 contre 6 ≈ {np.sqrt((0.5 * 0.5 + 5 * (0.5 / 1.5 - 0.25) + 5 * (2 * 0.25 / 1.5 - 0.25)) / 36):.2f} (Hanley-McNeil, à 0,5)")
+      "entre bras au pré-pilote (une paire par bras) ; course : 24 fusions (GO-2026-10-31-04) ; le calcul de puissance du test "
+      "de bisociation est à faire au préenregistrement de la course ; rappel PÉRIMÉ (écrit pour 12 fusions) : erreur-type "
+      f"d'une aire sous la courbe à 6 contre 6 ≈ {np.sqrt((0.5 * 0.5 + 5 * (0.5 / 1.5 - 0.25) + 5 * (2 * 0.25 / 1.5 - 0.25)) / 36):.2f} (Hanley-McNeil, à 0,5)")
 print("fin ;", sys.version.split()[0])
