@@ -267,3 +267,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-10-31 06:4x UTC — **question 7** (mêmes GO), 9 cellules sur 12 (Kimi absent des trois tours) : **9,02 USD**, plus 3 appels Kimi coupés (≈ 1,3 USD) ; plafond 20.
 - 2026-10-31 07:36 UTC — **tour 1 de l'arène coévolutive, question v5** (GO-2026-10-31-02), collisionneur v6, 12 cellules sur 12 (Kimi compris) : **8,22 USD** (barème du collisionneur) sur 17 ; reste ≈ 16,8 USD du GO pour le tour 2.
 | 2026-10-31 | arène coévolutive tour 2 (GO-2026-10-31-02) | 8.41 USD | 12/12 cellules, 4 espèces, aucune absence |
+| 2026-10-31 | GO-2026-10-31-05 | R-896 (poste collisionneur protocelles, 50 séquencé) | API (collisionneur v7, relais Kimi port 8792) | appels | — | 18.52 | 18.52 / 50 | tour 1 protocelles, 9/12 cellules (Fable refusé « bio », R-831), barème du collisionneur (Opus 4.6 compté à prix haut supposé) ; sous 22 USD : tour 2 sous le même GO |
