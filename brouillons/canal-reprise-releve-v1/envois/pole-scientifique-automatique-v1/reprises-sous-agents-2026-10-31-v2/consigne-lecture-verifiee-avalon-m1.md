@@ -1,0 +1,22 @@
+<!-- consigne d'origine du sous-agent « lecture-verifiee-avalon-m1 » ; modèle : opus ; extraite du journal le 31 octobre 2026 pour reprise exacte (passation) -->
+
+Tu es **lecteur neuf (Opus)** dans la lignée conv-audit d'un programme de recherche défensive sur le contrôle des intelligences artificielles (directeur : Lazar). Tu n'as rien écrit sur ce papier. Écris en français, sans acronymes inutiles.
+
+**Règles** : lecture sur processeur seulement ; aucun commit, aucun `.sha256` écrit, ne modifie aucun fichier existant, ne lis rien sous `donnees/`, **n'exécute aucun `git fetch`**, aucun appel de modèle ni de réseau. **R7** : tout chiffre cité renvoie à une page du PDF, que tu as lue toi-même ; ce que tu ne lis pas sur la page est écrit « non vérifié ». **R8** : une limite d'un papier n'est pas un trou du champ ; une zone vierge séduisante se vérifie plus durement ; tu dis « non couvert par ce papier », jamais « non couvert ».
+
+**Pièce** : `/home/claude/controle-ia-travail/docs/sources/pdf/rlcr-v1/avalonm1-general-reasoning-2026-10-23-v1.pdf` (General Reasoning, « Avalon-M1: Reinforcement Learning from Collective Rewards », 81 pages, empreinte `6429a78f…`, vérifie-la). Texte par `pdftotext -layout` ; lis-le en entier, annexes comprises. Provenance et premières vérifications de conv-audit : `docs/sources/pdf/rlcr-v1/provenance-rlcr-v1.md` (recoupe-les).
+
+**Éléments du programme à confronter** (dépôt `/home/claude/controle-ia-travail`) :
+- **H9** (papier B), `docs/decisions/decision-N-035-v1.md` : survie d'une contrainte de sécurité explicite le long d'une chaîne de délégation entre agents, avec ou sans moniteur à chaque passage ; acceptée « sous réserve d'antériorité ».
+- **La pince** : moniteur joint, boîte blanche (sondes sur les activations) et boîte noire (moniteur sur le texte et les actions), contre des **menaces diffuses** (dommage étalé sur beaucoup d'actions peu suspectes, ou fait d'omissions) ; programme : `docs/programme-controle-ia-v2.md` (hypothèses, menace diffuse).
+- **Axe 8 de la course d'idéation** (défendre contre un surveillé qui s'adapte ; prix de l'évasion) : `brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/question-mere-course-v1/recoupement-v1/analyse-approfondie-axe-8-robustesse-v2.md` — pour savoir ce qu'est l'axe ; juge par toi-même.
+- **L'organisme d'idéation** (proposeurs de fiches, bisociateur à trois bras, règle de reconduction des bras décidée par Lazar : R-1002 de `registres/decisions.md`).
+
+**À écrire** : `docs/notes/rlcr-v1/lecture-verifiee-avalon-m1-v1.md` (crée le dossier) :
+1. Fiche : objet, recette RLCR (récompense collective, attribution du crédit), modèle, environnements, évaluations de sécurité (§ 5.3 et annexes : scénarios, protocole, nombre de runs, points de contrôle, tests statistiques), résultats et limites des auteurs — pages citées.
+2. **Antériorité face à H9** : collision, collision partielle ou voisinage ; ce que le papier mesure (au fil de l'entraînement) contre ce que H9 mesure (au fil des passages de délégation) ; ce que le papier couvre de H9 et ce qu'il ne couvre pas. Décision de citation proposée pour Lazar, au format : décision en une phrase ; enjeu ; options (avantage, inconvénient) ; recommandation et confiance.
+3. **Face à la pince et aux menaces diffuses** : le motif « le raisonnement envisage d'alerter, l'action ne suit pas » (p. 35) est-il une menace diffuse par omission au sens du programme ? Ce qu'un moniteur d'actions seul verrait ; ce qu'un moniteur du raisonnement verrait ; ce que des sondes pourraient apporter ; est-ce un cas d'étude utilisable (poids, harnais et environnements annoncés en publication, p. 41 : vérifie ce qui est réellement publié, si le papier le dit) ? Niveau méthode, aucune recette.
+4. **Face à l'organisme d'idéation** : le papier dit-il quelque chose d'utile sur des organisations d'agents, sur l'attribution du crédit sans contribution individuelle, ou sur la reconduction de rôles (rien de forcé si rien ne s'applique).
+5. Ce qu'il faudrait lire ensuite (références du papier, pages), et les chiffres des notes du 24 octobre (messages `brouillons/canal-reprise-releve-v1/messages/conv-audit_2026-10-24_n21.md` et `…_n22.md`, sections sur Avalon) : confirmés, corrigés ou introuvables.
+
+Réponds en moins de 250 mots : verdict d'antériorité face à H9, cas d'étude pour la pince (oui / non, pourquoi), trois chiffres clés avec pages, recommandation de citation et confiance.
