@@ -41,3 +41,32 @@
   Lancement du recalibrage (R-739, gel v4 § 2) : racine 20264101 / 20264102, A seul, instances 0:48, grille de 9 δ.
   commande : PYTHONPATH=src python3 $D/arene_melange_v4.py calibrage --instances 0:48 \
              --sortie $D/calibrage-deltas-arene-melange-v4.json --processus 2
+  Correction de comptage de l'étape 2 : 97 essais au total dans le fichier v4 ; à cette étape, 94 lancés (91 réussis et 3
+  échecs d'essais mal paramétrés, corrigés puis repassés : 6 réussis), 3 non lancés (lisent le brouillon 4 ou l'identité).
+
+[2026-10-31T13:41:25Z] Étape 3 (fin) — recalibrage terminé : mur 2 167,6 s (réel 36 min 12 s ; machine très chargée : charge 9 à 11
+  sur 2 cœurs, plusieurs autres sessions) ; somme des temps processeur 768,2 s ; 432 tâches (48 instances × 9 δ).
+  V(A) moyen (erreur-type) : 0,6 : 0,3722 (0,0183) ; 0,8 : 0,3120 (0,0181) ; 1,0 : 0,2328 (0,0185) ; 1,2 : 0,1614 (0,0159) ;
+  1,4 : 0,1019 (0,0131) ; 1,6 : 0,0563 (0,0107) ; 1,8 : 0,0256 (0,0060) ; 2,0 : 0,0072 (0,0022) ; 2,4 : 0,0008 (0,0004).
+  Règle (gel v4 § 2) : δ_haut = 1,6 (plus grand δ où V(A) ≥ 0,03 ; 1,8 donne 0,0256) ; δ_bas = 1,4 (plus grand δ < 1,6 où
+  V(A) ≥ 0,10 ; 0,1019). δ choisis : (1,4 ; 1,6).
+  Stabilité (descriptif, 2 000 rééchantillonnages des instances) : (1,2 ; 1,6) 0,4345 ; (1,4 ; 1,6) 0,3295 ; (1,4 ; 1,8) 0,2275 ;
+  (1,2 ; 1,4) 0,004 ; (1,2 ; 1,8) 0,004 ; (1,6 ; 1,8) 0,0005 : le couple dépend de deux franchissements de seuil bruités
+  (1,4 est à 0,15 erreur-type au-dessus de 10α ; 1,8 à 0,7 erreur-type sous 3α). Règle appliquée telle qu'écrite.
+  calibrage-deltas-arene-melange-v4.json sha256 622c3bb448650c6ce07405534c8ea5defba3a89dcea8481ccd2c23156a70eb31
+  (code du calibrage d'après le manifeste : dcc3e0b9… ; gel : 9e1f25ae…)
+
+[2026-10-31T13:43:18Z] Étape 4 — une seule ligne de configuration change (ligne 137) : « DELTAS_V4 = None » → « DELTAS_V4 = (1.4, 1.6) ».
+  arene_melange_v4.py sha256 70c77fd5c0ec72b63ae4c10e1e6b2fc423aacfedce9a4a0792869d92c5a2ae61 (code du pilote et du brouillon 4)
+  Vérification : remettre l'ancienne ligne redonne dcc3e0b9426097e5610038e924aa481a7e2404b88eac34e8ab0fa6917661e0fb ;
+  diff : la seule ligne 137.
+
+[2026-10-31T13:43:40Z] Étape 5 — pilote v4 (racine 20264201 / 20264202, 24 instances × δ (1,4 ; 1,6), 8 bras), lancé en DEUX
+  invocations du même code sur des instances disjointes, en parallèle (la machine est saturée par d'autres sessions ;
+  l'audit d'essai pourra démarrer dès la fin de la première partie). Chaque tâche ne dépend que de (racine, δ, instance) :
+  l'union est identique au bit à un lancement unique ; l'analyse est recalculée sur l'union par la fonction analyser du code.
+  commande A : PYTHONPATH=src python3 $D/arene_melange_v4.py essai --instances 0:5 \
+               --sortie $D/essai-pilote-arene-melange-v4-detection-instances-00-05.json --processus 2 \
+               --pids $D/essai-pilote-arene-melange-v4-pids-instances-00-05.txt
+  commande B : idem avec --instances 5:24, --sortie …-instances-05-24.json, --pids …-pids-instances-05-24.txt
+  PID des processus de travail : A 17586 17587 ; B 17601 17602.

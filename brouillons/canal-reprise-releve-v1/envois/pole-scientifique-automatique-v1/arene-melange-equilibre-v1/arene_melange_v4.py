@@ -134,7 +134,7 @@ GEL_V4 = ICI / "gel-conception-arene-melange-v4.md"
 GEL_V4_SHA256 = "9e1f25aeaf1c992e96f8d2d66acab7ca9028d498720461cbccaa87f38d23568d"
 
 # --- δ de la décision : recalibrés en v4 (R-739) par la règle `choisir_deltas` sur RACINE_RECALIBRAGE, A seul ------
-DELTAS_V4 = None
+DELTAS_V4 = (1.4, 1.6)
 GRILLE_CALIBRAGE = (0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.4)
 
 # --- codes de dérivation des graines ----------------------------------------------------------------------------

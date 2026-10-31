@@ -17,7 +17,11 @@ configuration que CONFIG_V4) et, en option, la sortie de `audit-essai`. Rapporte
  9. la valeur nulle de I3 par simulation.
 Marges par principe (gel v3) : m = S1 = S5 = S6 = S15 = 0,02. Aucune marge ne vient du pilote.
 
-    PYTHONPATH=src python3 calcul-puissance-arene-melange-v4.py PILOTE.json [AUDIT_ESSAI.json]
+    PYTHONPATH=src python3 calcul-puissance-arene-melange-v4.py PILOTE.json [PILOTE_SUITE.json …] [--audit AUDIT_ESSAI.json]
+
+Le pilote peut être donné en plusieurs fichiers produits par le même code sur des instances disjointes de la même racine
+(chaque tâche ne dépend que de sa racine, de son δ et de son instance : l'union est identique au bit à un seul lancement) ;
+l'analyse (rééchantillonnage) est alors recalculée sur l'union par `analyser` du code.
 """
 from __future__ import annotations
 
@@ -60,8 +64,33 @@ def charger(chemin):
         raise GardeArret(f"{chemin} : pas un essai d'oracle détection")
     if am.CONFIG_V4 is None or man["config_sha256"] != am.CONFIG_V4.empreinte():
         raise GardeArret(f"{chemin} : configuration différente de celle du code")
+    if man["versions"]["code_sha256"] != am.empreinte_fichier(am.__file__):
+        raise GardeArret(f"{chemin} : produit par un autre code que celui-ci")
     for r in corps["resultats"]:
         am.exiger_racines_essai(r["racine"], r["racine_tenue"])
+    return corps
+
+
+def charger_tous(chemins):
+    """Union de pilotes du même code, de la même racine, sur des instances disjointes ; analyse recalculée sur l'union."""
+    parts = [charger(c) for c in chemins]
+    m0 = parts[0]["manifeste"]
+    for c, p in zip(chemins, parts):
+        m = p["manifeste"]
+        if (m["racine"], m["racine_tenue"], m["config_sha256"]) != (m0["racine"], m0["racine_tenue"], m0["config_sha256"]):
+            raise GardeArret(f"{c} : racine ou configuration différente du premier fichier")
+    res = [r for p in parts for r in p["resultats"]]
+    cles = [(r["instance"], r["code_delta"]) for r in res]
+    if len(set(cles)) != len(cles):
+        raise GardeArret("pilotes à instances non disjointes : tâche en double")
+    corps = {"manifeste": m0, "resultats": res, "parties": [{"fichier": str(c), "sha256": am.empreinte_fichier(c),
+                                                              "temps": p["temps"], "taches": len(p["resultats"]),
+                                                              "commande": p["manifeste"].get("commande")}
+                                                             for c, p in zip(chemins, parts)]}
+    corps["analyse"] = parts[0]["analyse"] if len(parts) == 1 else am.analyser(res, m0["racine"])
+    corps["temps"] = {"mur_s": sum(p["temps"]["mur_s"] for p in parts),
+                      "cpu_somme_taches_s": sum(p["temps"]["cpu_somme_taches_s"] for p in parts),
+                      "processus": parts[0]["temps"]["processus"], "taches": len(res)}
     return corps
 
 
@@ -161,16 +190,24 @@ def juger_simule(an_sim, c_par_cd, K, quantile_t):
 
 
 def main(argv):
-    if len(argv) not in (1, 2):
-        print(__doc__)
-        return 2
-    corps = charger(argv[0])
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("pilotes", nargs="+")
+    ap.add_argument("--audit", default=None)
+    args = ap.parse_args(argv)
+    corps = charger_tous(args.pilotes)
     cfg = am.CONFIG_V4
     res = corps["resultats"]
     man = corps["manifeste"]
     an = corps["analyse"]
     print("# Calcul de puissance — arène mélange d'équilibre — v4 (pilote v4, racine d'essai gelée)")
-    print(f"fichier : {argv[0]}")
+    for pa in corps["parties"]:
+        print(f"fichier : {pa['fichier']} — {pa['sha256']} ; {pa['taches']} tâches ; mur {pa['temps']['mur_s']:.1f} s ; "
+              f"processeur {pa['temps']['cpu_somme_taches_s']:.1f} s ; {pa['temps']['processus']} processus")
+    if len(corps["parties"]) > 1:
+        print("  (pilote en plusieurs lancements du même code sur des instances disjointes ; analyse recalculée sur "
+              "l'union par `analyser` ; chaque tâche est identique au bit à un lancement unique)")
     print(f"racine = {man['racine']} ; racine des tenues = {man['racine_tenue']} ; configuration {man['config_sha256']}"
           f" ; δ = {cfg.deltas}")
     v = man["versions"]
@@ -321,10 +358,14 @@ def main(argv):
         fin = np.array([r["bras"][nom]["cpu_final_s"] for r in res])
         tr = np.array([r["bras"][nom].get("cpu_trajectoire_s", 0.0) for r in res])
         print(f"  bras {am.NOMS.get(nom, nom):3s} : trajectoire {tr.mean():.2f} s ; phase finale {fin.mean():.2f} s")
-    t = corps["temps"]
-    eff = t["cpu_somme_taches_s"] / (t["mur_s"] * t["processus"])
-    print(f"  pilote : mur {t['mur_s']:.1f} s sur {t['processus']} processus ; somme des temps processeur "
-          f"{t['cpu_somme_taches_s']:.1f} s ; efficacité {eff:.2f}")
+    effs = []
+    for pa in corps["parties"]:
+        t = pa["temps"]
+        e = t["cpu_somme_taches_s"] / (t["mur_s"] * t["processus"])
+        effs.append(e)
+        print(f"  lancement {Path(pa['fichier']).name} : mur {t['mur_s']:.1f} s sur {t['processus']} processus ; somme des "
+              f"temps processeur {t['cpu_somme_taches_s']:.1f} s ; efficacité {e:.2f} (machine partagée)")
+    eff = min(effs)
     for N in (60, 80, 100):
         tot = 2 * N * cpu.mean()
         print(f"  N = {N:3d} × 2 δ : processeur projeté {tot / 60:.1f} min ; mur projeté sur {COEURS} cœurs "
@@ -426,13 +467,23 @@ def main(argv):
         print(f"  δ{cd} : " + " ; ".join(txt))
     print()
 
-    if len(argv) == 2:
-        au = json.loads(Path(argv[1]).read_text(encoding="utf-8"))
-        if au.get("pilote_sha256") != am.empreinte_fichier(argv[0]):
+    if args.audit is not None:
+        au = json.loads(Path(args.audit).read_text(encoding="utf-8"))
+        if au.get("pilote_sha256") not in {pa["sha256"] for pa in corps["parties"]}:
             raise GardeArret("audit d'essai rattaché à un autre pilote")
+        V = {(r["instance"], r["code_delta"]): r for r in res}
+        for tch in au["taches"]:
+            for nom, b in tch["bras"].items():
+                if b["V_source"] != V[(tch["instance"], tch["code_delta"])]["bras"][nom]["V_iii_final"]:
+                    raise GardeArret("audit d'essai : V source ≠ V du pilote")
+        an_audit = json.loads(Path(next(pa["fichier"] for pa in corps["parties"]
+                                        if pa["sha256"] == au["pilote_sha256"])).read_text(encoding="utf-8"))["analyse"]
+        cl_union = am.classes_sous_audit(an, au["jugement"], S1, {"1": S6, "2": S6}, S15)
         print("## 8. Audit d'attaquant indépendant sur le pilote (racine d'essai ; non opposable)")
-        print(f"fichier : {argv[1]} ; pilote audité {au['pilote_sha256']} ; drapeau (i) {au['jugement']['drapeau_i']} ; "
-              f"artefact (i ou ii, marges 0,02, analyse du pilote) {au['classes_sous_audit']['artefact']}")
+        print(f"fichier : {args.audit} ; pilote audité {au['pilote_sha256']} ; drapeau (i) {au['jugement']['drapeau_i']} ; "
+              f"artefact (i ou ii, marges 0,02) : sur l'analyse du fichier audité {au['classes_sous_audit']['artefact']}, "
+              f"sur l'analyse du pilote entier {cl_union['artefact']}")
+        assert an_audit is not None
         for cd, bloc in sorted(au["jugement"]["par_delta"].items()):
             for k, v in bloc.items():
                 if v.get("ecart_moyen") is None:
@@ -441,7 +492,7 @@ def main(argv):
                 print(f"  δ{cd} {k:6s} : écart moyen {v['ecart_moyen']:+.4f} ; erreur-type {v['erreur_type']:.4f} ; "
                       f"t × é.-t. {v['borne_t']:.4f} ; écart maximal par tâche {v['ecart_max_tache']:.4f} ; n {v['n']} ; "
                       f"(i) {v['drapeau_i']} ; significatif {v['significatif']}")
-            for k, v in au["classes_sous_audit"]["par_delta"][cd].items():
+            for k, v in cl_union["par_delta"][cd].items():
                 if k == "Table 5":
                     print(f"  δ{cd} Table 5 : {v['ligne_lue']} → {v['ligne_decalee']} ; (ii) {v['drapeau_ii']}")
                 else:
