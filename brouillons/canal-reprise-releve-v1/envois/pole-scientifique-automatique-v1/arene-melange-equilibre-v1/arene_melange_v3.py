@@ -485,7 +485,7 @@ class MoniteurOu(Moniteur):
         for mon in self.membres:
             s = mon.score(Xcal)
             mu, sd = float(np.mean(s)), float(np.std(s))
-            if not (np.isfinite(mu) and sd > 0):
+            if not (np.isfinite(mu) and sd > 1e-12):       # un score constant laisse un écart-type d'arrondi ≈ 1e-16
                 raise GardeArret("« ou » composite : score propre de variance nulle ou non fini")
             self.mu.append(mu)
             self.sd.append(sd)
