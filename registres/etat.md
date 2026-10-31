@@ -1,6 +1,16 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-31 ≈ 04:40 UTC, lignée « session-depot », instance 2 (R-819 à R-875 ; autonomie de dix heures de la nuit, R-854, enveloppe GO-17 ≈ 18,9 USD imputés sur 60). **Passation : `registres/passations/2026-10-31-0350.md` (à lire en premier).** Décisions de Lazar en attente : questions 6 et 7 sans Kimi ou de jour (R-871) ; arène coévolutive (a)/(b)/(c), v5 prête (R-874) ; revendication de P-041 après Bailey ; devis v6 course 2 (pré-pilote 50/45, total 160, 24 fusions) et machine jetable (R-868) ; Gu-Krenn D-GK-1 et machine louée (R-873). Défauts sous 48 h : R-859 (1er nov. ≈ 23:10), R-862 et R-867 (2 nov. ≈ 00:30). Suite d'essais : 1 293 passés, 4 échecs : 3 `pypandoc` connus, 1 essai mal importé (`test_pdf_de_sous_dossier_retire`, ajouté par session-depot le 30) corrigé ensuite (12 passés sur le fichier). Arbre scellé : seule l'orpheline connue (R-799). Aucun processus ni instance actif.
+Dernière mise à jour : 2026-10-31 ≈ 09:50 UTC, lignée « session-depot », instance 2 (R-819 à R-891). **Passation : `registres/passations/2026-10-31-0350.md` (à lire en premier).**
+
+Décisions de Lazar ce matin (R-888 à R-891) : R-611 levée (revue de sécurité extérieure réalisée) ; examen final et estimation de la malléabilité hors gel et lancement approuvé ; pire cas certifié = assemblage.
+
+Travaux en cours : synthèse du tour 2 de l'arène (lecteur neuf + sceptiques, agent en arrière-plan) ; contre-lectures des préenregistrements de l'examen final et de la malléabilité (deux agents).
+
+Arène : tour 1 (8,22 USD, synthèse v2) et tour 2 (8,41 USD, 12/12, synthèse en cours). P-041 v3 fait foi (72aec532…). Deux préenregistrements rédigés (brouillons non scellés) : `prereg/P-041-examen-final-v1.md`, `prereg/P-041-malleabilite-v1.md`.
+
+Décisions en attente de Lazar : machine jetable (GO 10 USD + location, R-868) ; Gu-Krenn D-GK-1 (R-873) ; GO de dépense de carte graphique pour l'examen final et la malléabilité (devis à rédiger) ; défauts sous 48 h : R-859 (1er nov. ≈ 23:10), R-862 et R-867 (2 nov. ≈ 00:30), R-882 et R-884 (2 nov. matin).
+
+Suite d'essais : 1 293 passés, 4 échecs : 3 `pypandoc` connus, 1 corrigé. Arbre scellé : seule l'orpheline connue (R-799). Aucun processus actif sauf les agents de la session.
 
 Mise à jour précédente : 2026-10-30 ≈ 10:12 UTC, lignée « session-depot », instance 2 (R-815 à R-818). Essai réel de Kimi fait (`kimi-k3.1-pro`, 0,0003 USD) ; **course 2 : juges Kimi et Argon croisés plus Opus 5.5 troisième juge** (R-818) ; devis v3 ≈ 95 USD attendus, ≈ 196 au pire, au-dessus du plafond de 110 → **nœud de dépense chez Lazar**. `HCLOUD_TOKEN` pas encore visible : essai à blanc de la v3 en attente d'une session neuve et d'un GO. Aucune instance, aucun relais.
 
