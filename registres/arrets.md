@@ -64,3 +64,4 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 - 2026-10-31 06:2x UTC — relais Kimi de la question 7 suite 2 **arrêté par son PID 704** (R10) par le lanceur.
 - 2026-10-31 06:4x et 06:5x UTC — relais Kimi des tours « sans Kimi » des questions 7 (PID 1617) et 6 (PID 2395) **arrêtés par leur PID** (R10) par les lanceurs (lancés, jamais appelés).
 - 2026-10-31 07:36 UTC — relais Kimi du tour de l'arène **arrêté par son PID 2697** (R10) par le lanceur.
+| 2026-10-31 09:35 | relais Kimi v3 (arène tour 2) | PID 11043 | arrêté par le lanceur en fin de tour |
