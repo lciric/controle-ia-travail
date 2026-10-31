@@ -282,6 +282,21 @@ def choisir_paires(fiches, notes_par_bras, ordre_bras, k, aiguilleur, departage)
     return choix, non_produits
 
 
+def garde_desaccord_hors_score(fonction_score, p, na, nb, sa, sb):
+    """Garde R5 ligne 24 : la même paire, désaccord « oui » puis « non », reçoit le même score ; une fonction de score qui
+    accepte un argument de désaccord et en dépend est un arrêt."""
+    import inspect
+    noms = set(inspect.signature(fonction_score).parameters)
+    if not noms & {"desaccord", "d"}:
+        return True
+    cle = "desaccord" if "desaccord" in noms else "d"
+    oui = fonction_score(p, na, nb, sa, sb, **{cle: "oui"})
+    non = fonction_score(p, na, nb, sa, sb, **{cle: "non"})
+    if oui != non:
+        raise BisociationRefusee("R-638 : le désaccord entre dans le score du bras méta (scores différents) : arrêt")
+    return True
+
+
 def entree_fusion(consigne_fusion, fa, fb, etiquettes_interdites):
     """Entrée du metteur en fusion : consigne figée commune aux trois bras + les deux fiches, sans nom de bras ni de règle."""
     corps = json.dumps([vue_servie(fa), vue_servie(fb)], ensure_ascii=False, indent=1)

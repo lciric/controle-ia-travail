@@ -88,16 +88,20 @@ OBLIGATOIRES = (
     ("aiguilleur.etiquette", lambda v: isinstance(v, str) and v, "étiquette de l'aiguilleur"),
     ("aiguilleur.modele", lambda v: isinstance(v, str) and v, "modèle de l'aiguilleur"),
     ("aiguilleur.consigne", lambda v: isinstance(v, str) and v, "pièce : consigne figée de l'aiguilleur"),
+    ("aiguilleur.fournisseur", lambda v: isinstance(v, str) and v, "fournisseur (adaptateur) de l'aiguilleur"),
     ("garde_kimi.debordement_max", lambda v: reel(v, 0, 1), "S12 : débordement maximal du proposeur Kimi"),
     ("tableau.longueur_max_titre", lambda v: entier(v, 1), "S21 : longueur maximale d'un titre"),
     ("tableau.longueur_max_resume", lambda v: entier(v, 1), "S21 : longueur maximale d'un résumé"),
     ("tableau.champ_resume", lambda v: isinstance(v, str) and v, "champ tronqué en résumé d'une ligne (M8)"),
+    ("memoire.methode", lambda v: v in ("bardeaux", "plongement"), "M3 : méthode (bardeaux ; plongement injecté)"),
     ("memoire.taille_bardeau", lambda v: entier(v, 1), "M3 : taille des bardeaux de mots"),
     ("memoire.seuil", lambda v: reel(v, 0, 1), "M3 : seuil t* de similarité"),
     ("bisociateur.bras", lambda v: isinstance(v, list) and set(v) <= set(BRAS_CONNUS) and len(set(v)) == len(v),
      f"bras du bisociateur parmi {BRAS_CONNUS}"),
     ("bisociateur.k_paires", lambda v: entier(v, 0), "S22/S23 : paires par bras et par session"),
     ("pieces", lambda v: isinstance(v, dict) and v, "pièces empreintées {nom: {chemin, sha256}}"),
+    ("etiquettes_interdites", lambda v: isinstance(v, list) and v and all(isinstance(x, str) and x for x in v),
+     "A4 : étiquettes interdites dans toute entrée servie"),
 )
 
 OBLIGATOIRES_BRAS = {

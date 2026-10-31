@@ -57,7 +57,7 @@ class Aiguilleur:
         self.interdites = list(etiquettes_interdites)
         self.plafond = float(plafond_session_usd)
         self.dossier = journal_dossier
-        self.passeports = {}      # empreinte -> ident
+        self.passeports = {}      # ident -> empreinte (le contenu exact qui a été aiguillé)
         self.decisions = {}       # ident -> {classe, motif}
         self.journal = []         # fiches retenues : jamais de contenu
         self.refus = 0
@@ -82,7 +82,7 @@ class Aiguilleur:
             classe_retenue = classe
         self.decisions[fiche["ident"]] = {"classe": classe_retenue, "lue": classe, "motif": motif}
         if classe_retenue == "niveau_methode":
-            self.passeports[fiche["empreinte"]] = fiche["ident"]
+            self.passeports[fiche["ident"]] = fiche["empreinte"]
         else:
             self.journal.append({"ident": fiche["ident"], "empreinte": fiche["empreinte"], "classe": classe_retenue,
                                  "categorie": categorie, "fournisseur": fiche["meta"]["fournisseur"],
@@ -91,7 +91,7 @@ class Aiguilleur:
         return classe_retenue, float(r.cout_declare_usd)
 
     def a_passeport(self, fiche):
-        return self.passeports.get(fiche["empreinte"]) == fiche["ident"]
+        return self.passeports.get(fiche.get("ident")) == fiche.get("empreinte")
 
     def exiger_passeport(self, fiche, destination):
         if not self.a_passeport(fiche):

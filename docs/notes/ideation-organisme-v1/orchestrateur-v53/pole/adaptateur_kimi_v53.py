@@ -132,7 +132,12 @@ class AdaptateurKimiProtocole(Adaptateur):
                 refus = {"modele_demande": modele, "modele_servi": None, "evenement": "relais.modele_non_permis"} if e.code == 403 else None
                 return Resultat("", [], PLANCHER, statut, f"relais Kimi HTTP {e.code} avant l'amont : " + caviarder(texte)[0][:300],
                                 refus=refus)
-            if e.code == 502 and "modèle servi" in texte:
+            try:
+                corps_erreur = json.loads(texte)
+            except ValueError:
+                corps_erreur = {}
+            erreur_dite = str(corps_erreur.get("erreur", "")) if isinstance(corps_erreur, dict) else ""
+            if e.code == 502 and ("modèle servi" in erreur_dite or (isinstance(corps_erreur, dict) and "modele_servi" in corps_erreur)):
                 return Resultat("", [], pire, "refus", "refus (R-764) : le relais a vu un modèle servi différent (502)",
                                 refus={"modele_demande": modele, "modele_servi": None, "evenement": "relais.modele_servi"},
                                 cout_inconnu=True, depense_modele_non_autorise_usd=pire)
