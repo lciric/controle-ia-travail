@@ -51,10 +51,10 @@ class SuiviRoles:
             raise RoleArrete(f"rôle {role} arrêté : {r['arrete']}")
         return self.horloge()
 
-    def apres(self, role, etape, *, fournisseur, modele, debut, statut, exploitable, refus=None, modele_servi=None):
-        """Rend (utilisable, motif) : `utilisable` faux si l'appel est coupé ou inexploitable."""
+    def apres(self, role, etape, *, fournisseur, modele, duree, statut, exploitable, refus=None, modele_servi=None):
+        """Rend (utilisable, motif, durée) : `utilisable` faux si l'appel est coupé ou inexploitable. `duree` : mesurée par
+        l'orchestrateur autour de l'appel (horloge injectée)."""
         r = self._r(role)
-        duree = self.horloge() - debut
         r["appels"] += 1
         e = r["etapes"].setdefault(etape, {"appels": 0, "inexploitables": 0})
         e["appels"] += 1
