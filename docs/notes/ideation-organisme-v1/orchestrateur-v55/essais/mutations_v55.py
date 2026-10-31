@@ -34,6 +34,7 @@ sys.dont_write_bytecode = True
 import aides  # noqa: E402
 
 aides.BASE = tempfile.mkdtemp(prefix="pole-mutations-v55-")
+_PREMIER = aides.BASE
 import essais.aides as _ea  # noqa: E402
 
 _ea.BASE = aides.BASE
@@ -42,7 +43,13 @@ from essais import mutations_v54 as m54  # noqa: E402  (liste v54 seulement ; so
 from pole import bisociateur_v55, configuration_v55, coffre_v55, course2_v55, etage_entre_generations_v55  # noqa: E402
 from pole import gardes_e0_v55, noyau_v55, prepilote_v55  # noqa: E402
 
+import atexit  # noqa: E402
+import shutil  # noqa: E402
+
+for _d in {_PREMIER, aides.BASE, _ea.BASE, m54.aides.BASE}:  # dossiers temporaires des bancs v54 et v55 : retirés en fin de banc
+    atexit.register(shutil.rmtree, _d, True)
 aides.BASE = _ea.BASE = m54.aides.BASE = tempfile.mkdtemp(prefix="pole-mutations-v55-")
+atexit.register(shutil.rmtree, aides.BASE, True)
 T = "essais.test_v55_corrections."
 BANC = re.compile(r"super\(\): __class__ cell not found|NameError|SyntaxError|IndentationError")
 NR = r"not raised"
