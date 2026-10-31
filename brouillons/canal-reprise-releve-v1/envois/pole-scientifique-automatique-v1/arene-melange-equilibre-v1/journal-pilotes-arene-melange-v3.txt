@@ -1,0 +1,65 @@
+# Journal des exécutions — arène mélange d'équilibre — code v3 (sous-agent neuf Opus 5.5, lignée conv-audit)
+# Branche canal/conv-audit-n04 ; HEAD au pilote 050cd4e4, à la fin 1460fe8f (commits posés par d'autres agents ; le code v3 n'y est pas).
+# Aucune racine de décision employée ; rien sous donnees/ ; aucun fichier existant modifié ; aucun .sha256 écrit dans le dépôt.
+# Machine partagée pendant la session (charge moyenne ≈ 4 sur 2 cœurs, un autre sous-agent actif) : les temps de mur en portent la trace.
+
+[2026-10-31T10:17:54Z] Étape 0 — vérification des compagnons du dossier (sha256sum -c, 22 fichiers) : conformes.
+  Racines d'essai v3 choisies avant toute exécution, absentes du dépôt (recherche hors donnees/, .git, .venv) :
+  20261311/12 (pilote), 20261313/14 (essais du code, temps), 20261315/16 (réservées au recalibrage, non employées).
+  20261301 écarté : déjà présent dans d'autres essais du dépôt.
+  Copies de départ : arene_melange_v2.py → arene_melange_v3.py ; essais/test_arene_melange_v2.py → essais/test_arene_melange_v3.py (nouveaux noms, v2 intacts).
+
+[2026-10-31T10:23:58Z] Étape 1 — code v3 écrit (B′, C3′, indicateurs de cycle, attaquant indépendant, audit, PID) ; seule une compilation syntaxique
+  (py_compile, cache supprimé aussitôt) ; AUCUNE exécution.
+  arene_melange_v3.py sha256 04df57d2761a1249691624f131829bf0bb11749855051b2c2feb5350d1c93721
+
+[2026-10-31T10:25:25Z] Étape 2 — gel de la conception v3 et prédictions Q2 signées, AVANT toute exécution de B′ :
+  gel-conception-arene-melange-v3.md sha256 25035088a36742db86c3b6be818e5c97fabd8dd48c1f9e56934fce15e9f09506
+
+[2026-10-31T10:29:38Z] Étape 3 — premiers essais du code v3 (RACINE_TESTS 20261313, configuration réduite ; premières exécutions de B′).
+  Corrections de plomberie révélées par les essais, sans changement de conception :
+  (a) garde de variance de MoniteurOu : sd > 1e-12 au lieu de sd > 0 (un score constant de maxout laisse un écart-type d'arrondi) ;
+  (b) rétention par décalage limitée aux décalages définis (k < T) : moyenne vide → NaN quand T < 4 (configuration réduite seulement) ;
+  (c) une valeur d'essai de la Table 5 corrigée (essai mal paramétré, pas le code).
+  Essais : 55 réussis (hors les 2 qui lisent le brouillon 3, pas encore écrit).
+  arene_melange_v3.py sha256 0316396a11bfbf8b5e976e5bf6f20c1fc184100d98942b688e9728e5b658c997 ; essais 3fa646dbf132c813d924511c1e8fd7f190a2924049949d93c3b8003b17bc0051
+
+[2026-10-31T10:32:29Z] Étape 4 — mesure de temps, une tâche pleine taille (RACINE_TESTS, instance 0, δ 1,8) ; lus : temps et compteurs seulement.
+  111,4 s de processeur, dont C3′ 61,6 s en phase finale. Accélération sans changement de fonction :
+  score et gradient en un seul calcul (Moniteur.score_et_grad, employé par objectif_lisse), puis MoniteurOu vectorisé (unités empilées,
+  log-somme-exp groupée par nombre d'unités). Version intermédiaire (score_et_grad seul) : 94,2 s, non conservée. Version finale : 64,6 s
+  [10:38:34Z]. Essais de continuité repassés après chaque changement : test_bras_v2_inchanges (sorties de A, B, C1, C2, C3, D identiques
+  champ à champ au code v2), test_ou_composite_sain_et_artefacts, test_gradients, test_reproductibilite_bit_a_bit_et_temoins : réussis.
+  arene_melange_v3.py sha256 88c8781815007d92d5b0af17a7dc1995c00eae0773085c5a0ca35a1aafee4f0d (code final ; plus modifié ensuite)
+
+[2026-10-31T10:39:5xZ → 2026-10-31T11:08:36Z] Étape 5 — pilote v3, oracle détection (RACINE_ESSAI 20261311 / 20261312, 24 instances × δ (1,4 ; 1,8), 8 bras)
+  commande : PYTHONPATH=src python3 $D/arene_melange_v3.py essai --instances 0:24 --sortie $D/essai-pilote-arene-melange-v3-detection.json \
+             --processus 2 --pids $D/essai-pilote-arene-melange-v3-pids.txt
+  PID des processus de travail : 11635 11636 (instant de départ 819565) ; à la fin, `orphelins --pids …` : « aucun processus de travail consigné ne tourne ».
+  mur 1 720,4 s (bash : réel 28 min 41,8 s, utilisateur 45 min 35,8 s) ; somme des temps processeur 2 736,8 s ; 48 tâches ; efficacité 0,80 (machine partagée).
+  essai-pilote-arene-melange-v3-detection.json sha256 e171e303330e47195757a9855a55181aea1bf1f75078fa9c6c7891033221427d
+  essai-pilote-arene-melange-v3-pids.txt sha256 4a767a82d99dda69d350f172f858430c1ddc70a5c1832a6497de4e5a91c94736
+  code du pilote = code final (code_sha256 du manifeste : 88c8781815007d92d5b0af17a7dc1995c00eae0773085c5a0ca35a1aafee4f0d) ; commit du manifeste 050cd4e4 (sans le code).
+  Confrontation au gel v3 (non opposable) : Q2 — B′ − D + / + (prédit −) RÉFUTÉE ; B′ − C3′ + / + (prédit −) RÉFUTÉE ; C3′ − D − / − (prédit +) RÉFUTÉE ;
+  poids de B′ purs 0,62 / 0,54 (prédit ≤ 0,5) RÉFUTÉE ; B′ − B + / + tenue. Condition d'application — A : I1 −0,0013 / −0,0015, I2 +0,072 / +0,114,
+  Table 5 « A ne progresse pas, avec oubli » aux deux δ : tenue ; I1 > 0 pour B, D, B′ : tenue. Q1 : 12 branches de signe tenues.
+
+[2026-10-31T11:08:52Z → 2026-10-31T11:19:13Z] Étape 6 — audit d'attaquant indépendant sur le pilote (instance 0, deux δ ; bras B, C3, D, B′, C3′)
+  commande : PYTHONPATH=src python3 $D/arene_melange_v3.py audit-essai --pilote $D/essai-pilote-arene-melange-v3-detection.json --instances 0:1 \
+             --sortie $D/audit-essai-arene-melange-v3.json --processus 2
+  V reconstruit = V du pilote au bit près pour les 10 défenses ; changements des contrastes de 0,000 à 0,005 ; artefact selon S17 : non.
+  mur 614,3 s (réel 10 min 15,8 s) ; 229,0 s de processeur par tâche (machine partagée : mur ≈ 2,7 × processeur).
+  audit-essai-arene-melange-v3.json sha256 681efec1e67fb18effb687dee6dd9873f5339a87c2c321fe5698876569ee2172
+
+[2026-10-31T11:19:3xZ → 2026-10-31T11:24:10Z] Étape 7 — calcul de puissance v3 (pilote et audit d'essai ; règle réelle, 1 000 répétitions × 20 000 tirages par scénario)
+  commande : PYTHONPATH=src python3 $D/calcul-puissance-arene-melange-v3.py $D/essai-pilote-arene-melange-v3-detection.json $D/audit-essai-arene-melange-v3.json \
+             > $D/calcul-puissance-arene-melange-v3-sortie.txt
+  calcul-puissance-arene-melange-v3.py sha256 1d92d6a18c2d79c1f56630ac7e0ec9bf8610648d5331c194cb5a36546dd48c20 (écrit pendant le pilote, avant sa fin ; marges par principe fixées au gel)
+  calcul-puissance-arene-melange-v3-sortie.txt sha256 00a2234972c7bc0f0138a5c3e2c6b9fc1c6810b7c888b1b91342aecd10e434e5 ; réel 4 min 33 s.
+
+[2026-10-31T11:30:20Z] Étape 8 — brouillon 3 écrit (bloc d'identité régénéré par `identite` sur le code final), essais complets : 57 réussis en 56,5 s ;
+  validateur `problemes` : refuse « Seuil » et « Contre-lecture » seulement (voulu).
+  preenregistrement-arene-melange-equilibre-v1-brouillon3.md sha256 3ac8fe1fd1ee4cdb6ebc904a739f8098226703b02b6c0be428e2a572449dced0
+
+[2026-10-31T11:31:27Z] Fin. Compagnons v1 et v2 revérifiés : intacts. Racine de décision jamais employée. Total processeur consommé ≈ 60 min (pilote 46 min,
+  audit 8 min, puissance 3 min, essais et mesures ≈ 4 min).
