@@ -1,14 +1,16 @@
 # État du programme
 
-Dernière mise à jour : 2026-10-31 ≈ 10:05 UTC, lignée « session-depot », instance 2 (R-819 à R-894). **Passation : `registres/passations/2026-10-31-0350.md` (à lire en premier).**
+Dernière mise à jour : 2026-10-31 ≈ 10:20 UTC, lignée « session-depot », instance 2 (R-819 à R-894). **Passation : `registres/passations/2026-10-31-1020.md` (à lire en premier).**
 
-Décisions de Lazar ce matin (R-888 à R-891) : R-611 levée (revue de sécurité extérieure réalisée) ; examen final et estimation de la malléabilité hors gel et lancement approuvé ; pire cas certifié = assemblage.
+Décisions de Lazar ce matin (R-888 à R-893) : R-611 levée (revue de sécurité extérieure réalisée) ; examen final et estimation de la malléabilité hors gel et lancement approuvé ; pire cas certifié = assemblage. R-892 : collision identifiants réglée. R-893 : DEP4 formalisé.
 
-Travaux en cours : synthèse du tour 2 de l'arène (lecteur neuf, deuxième tentative, agent en arrière-plan) ; contre-lecture du préenregistrement de la malléabilité (agent en arrière-plan). Messages de conv-audit n° 270 à 278 lus, réponse groupée n° 220 poussée.
+**Synthèse du tour 2 de l'arène terminée** (`docs/notes/anteriorite-P-041-v1/collisionneur-organisme-coevolutif-v1/synthese-organisme-coevolutif-tour2-v1.md`, `8a612a8f…`, scellée) : dix convergences, six divergences non résolues, noyau consensuel pour le préenregistrement P-041.
 
-**Préenregistrement examen final v2 prêt** : `prereg/P-041-examen-final-v2.md`, contre-lu (9 points traités, rapport `docs/notes/anteriorite-P-041-v1/contre-lecture-prereg-examen-final-v1.md`). Trois éléments à fixer avant scellement : StrongREJECT (version), jeu bénin, préenregistrement de l'arène. Préenregistrement malléabilité v1 en contre-lecture.
+**Préenregistrement examen final v2 prêt** : `prereg/P-041-examen-final-v2.md`, contre-lu (9 points traités). Trois éléments à fixer avant scellement : StrongREJECT (version), jeu bénin, préenregistrement de l'arène.
 
-Arène : tour 1 (8,22 USD, synthèse v2) et tour 2 (8,41 USD, 12/12, synthèse en cours). P-041 v3 fait foi (72aec532…).
+**Préenregistrement malléabilité v2 prêt** : `prereg/P-041-malleabilite-v2.md` (`877e1c7a…`), contre-lu (9 points traités, rapport `docs/notes/anteriorite-P-041-v1/contre-lecture-prereg-malleabilite-v1.md`, `2f4e8cab…`). Deux éléments à fixer avant scellement : StrongREJECT (version), jeu de données bénin/nuisible. Messages de conv-audit n° 270 à 278 lus, réponse groupée n° 220 poussée.
+
+Arène : tour 1 (8,22 USD, synthèse v2) et tour 2 (8,41 USD, 12/12, **synthèse v1 terminée**). P-041 v3 fait foi (72aec532…).
 
 R-892 : collision d'identifiants de décisions, plage R-1000+ réservée à conv-audit. R-893 : DEP4 (relais accepte dépassement jusqu'à S17 − cumul). R-894 : messages 214–217 introuvables (erreur de passation).
 
