@@ -844,7 +844,7 @@ def test_lire_tables_lignes():
     # Table 5
     t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i1=(0.08, 0.0)), 0.02, 0.02, marges, 0.02)
     assert t["table5_par_delta"]["1"] == "A progresse" and t["table5"].startswith("condition d'application non vérifiée")
-    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i2=(0.0, 0.019), s=0.0005), 0.02, 0.02, marges, 0.02)
+    t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i2=(0.0, 0.015), s=0.0005), 0.02, 0.02, marges, 0.02)
     assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, sans oubli"}
     t = lt(fausse_analyse((0.12, 0.1), (0, 0), base, i2=(0.02, 0.02)), 0.02, 0.02, marges, 0.02)
     assert set(t["table5_par_delta"].values()) == {"A ne progresse pas, oubli indéterminé"}

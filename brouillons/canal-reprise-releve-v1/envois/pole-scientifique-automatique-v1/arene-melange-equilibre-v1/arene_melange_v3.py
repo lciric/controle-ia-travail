@@ -885,7 +885,8 @@ def indicateurs_cycle(H: np.ndarray, iii: list[float], deplacements: list[np.nda
     h = T // 2
     I1 = float(np.mean(iii[h:]) - np.mean(iii[:h]))
     I2 = float(np.mean([H[t, t - 1] - H[T, t - 1] for t in range(1, T)]))
-    ret = {str(k): float(np.mean([H[t + k, t - 1] for t in range(1, T + 1) if t + k <= T])) for k in range(0, 4)}
+    ret = {str(k): float(np.mean([H[t + k, t - 1] for t in range(1, T + 1) if t + k <= T]))
+           for k in range(0, min(4, T))}
     ret["-1"] = float(np.mean([H[t - 1, t - 1] for t in range(1, T + 1)]))
     retours = []
     for t in range(3, T + 1):
