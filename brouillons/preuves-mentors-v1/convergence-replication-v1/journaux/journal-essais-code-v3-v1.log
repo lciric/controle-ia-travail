@@ -1,0 +1,541 @@
+# Journal des essais du code v3 (réplication de la course de convergence) — v1
+# écrit le 2026-11-01T22:19:40Z par un sous-agent de la session principale (Claude Opus 5.5)
+# HEAD du dépôt : e29a63dfd301fb40108d9ee44787e8694bf335aa ; fichiers essayés (le fichier complémentaire n'est pas encore commité) :
+3519123b7297df93ea07ec3ef72ca1f84947e2d8c9950094acaeddf8288d24d9  brouillons/preuves-mentors-v1/convergence-replication-v1/code/arene_regles_defense_v3.py
+d1afa9db925af7265c8aad1b238288229fb5b6f2977803a43411e27c4b96c849  brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py
+cad209394bf7fd6a84c905bec31fd6550e5bb6f0fcea858ce3ff50e726152328  brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py
+# plate-forme : Linux 6.18.44-fc-v185 x86_64 ; Python 3.13.18 numpy 2.4.6 scipy 1.17.1 ; nproc 2
+# charge au départ :  23:19:41 up  2:44,  0 user,  load average: 2.99, 3.01, 3.05
+# commande : cd brouillons/preuves-mentors-v1/convergence-replication-v1/code && PYTHONPATH=/home/claude/controle-ia-travail/src OMP_NUM_THREADS=1 REGLES_ESSAIS_LENTS=1 /home/claude/controle-ia-travail/.venv/bin/python -B -m pytest -q -rP --durations=0 -p no:cacheprovider test_arene_regles_defense_v3.py test_arene_regles_defense_v3_complements.py
+...........................................                              [100%]
+=============================== warnings summary ===============================
+brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_X_barre_egale_X1_quand_T_vaut_1
+  /home/claude/controle-ia-travail/.venv/lib/python3.13/site-packages/numpy/_core/fromnumeric.py:3824: RuntimeWarning: Mean of empty slice
+    return _methods._mean(a, axis=axis, dtype=dtype,
+
+brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_X_barre_egale_X1_quand_T_vaut_1
+  /home/claude/controle-ia-travail/.venv/lib/python3.13/site-packages/numpy/_core/_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+    ret = ret.dtype.type(ret / rcount)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+______ test_C9_main_decision_racines_derivees_manifeste_course_et_analyse ______
+----------------------------- Captured stdout call -----------------------------
+run de décision écrit sous diag/20261101-000000-essai/
+____________ test_cli_essai_refuse_racines_interdites_et_ecrasement ____________
+----------------------------- Captured stderr call -----------------------------
+PID des processus de travail : 11983 11984
+____________ test_cli_essai_ecrit_un_pilote_minuscule_et_orphelins _____________
+----------------------------- Captured stdout call -----------------------------
+essai écrit : /tmp/pytest-of-root/pytest-72/test_cli_essai_ecrit_un_pilote0/pilote.json ; {'mur_s': 0.8497056710002653, 'cpu_somme_taches_s': 0.7547098829999968, 'processus': 1, 'taches': 2}
+aucun processus de travail consigné ne tourne
+_ test_E5_etendu_inventaire_de_tous_les_noeuds_diffs_imprimes_et_C10_mecanique _
+----------------------------- Captured stdout call -----------------------------
+inventaire v2 (95 nœuds) : {'AnnAssign': 2, 'Assert': 2, 'Assign': 33, 'Expr': 1, 'For': 2, 'FunctionDef': 37, 'If': 2, 'Import': 11, 'ImportFrom': 5}
+inventaire v3 (108 nœuds) : {'AnnAssign': 2, 'Assert': 2, 'Assign': 41, 'Expr': 1, 'For': 2, 'FunctionDef': 42, 'If': 2, 'Import': 11, 'ImportFrom': 5}
+nœuds de v2 retrouvés à l'identique dans v3, par type : {'AnnAssign': 1, 'Assert': 2, 'Assign': 28, 'For': 2, 'FunctionDef': 29, 'If': 2, 'Import': 11, 'ImportFrom': 5} (total 80 sur 95)
+
+===== C1 — ('docstring',) : 45 lignes changées =====
+--- v2 ('docstring',)
++++ v3 ('docstring',)
+@@ -1,5 +1,45 @@
+ """Quatre règles de mise à jour de la défense dans l'arène coévolutive synthétique v4, plus le témoin « défense figée »
+-et la mesure X̄ — v2 (code d'essai et de pilote).
++et la mesure X̄ — v3 (réplication sur graine neuve de la course de convergence, PREREG-REPLICATION-REGLES-DEFENSE-V1).
+ 
+-CE QUI CHANGE PAR RAPPORT À LA v1 (`arene_regles_defense_v1.py`, empreinte sha256
++CE QUI CHANGE PAR RAPPORT À LA v2 (`arene_regles_defense_v2.py`, empreinte sha256
++9f0dcf5e0d10fe93dd19c318f076728d62b64734161dc72b40a812a817340da3, code de la course originale du 1er novembre 2026,
++jamais modifié, R12) — la liste fermée C1 à C12 du préenregistrement de réplication (§ Plan 2), rien d'autre :
++- C1 cet en-tête ;
++- C2 `VERSION = "arene_regles_defense_v3"` ; `IDENTIFIANT_PREREG = "PREREG-REPLICATION-REGLES-DEFENSE-V1"` ;
++- C3 chemins : l'arène v4 est chargée depuis sa copie suivie par git (`brouillons/canal-reprise-releve-v1/envois/
++  pole-scientifique-automatique-v1/arene-melange-equilibre-v1/arene_melange_v4.py`), empreinte épinglée inchangée
++  (70c77fd5…, refus sinon), identique au bit au fichier `donnees/argon-seul-convergence-v1/arene_melange_v4.py` que
++  chargeait la course originale ; les fonctions employées de l'arène ne dépendent pas de l'emplacement du fichier. Ce
++  code n'étant plus rangé à côté du gel v2, le gel est désigné par son chemin dans le dépôt (même fichier, même
++  empreinte épinglée 9977d7df…) ;
++- C4 racines par la règle D (spécification statistique § 4) : (ρ, ρ_t) = les deux premiers mots de 64 bits de
++  `numpy.random.SeedSequence(entropy=int(H, 16))`, H = empreinte SHA-256 du préenregistrement SCELLÉ ; elles ne sont
++  écrites nulle part et remplacent les racines de décision ; gardes : ρ ≠ ρ_t, aucune dans l'ensemble interdit
++  F = {20261201, 20261202, 20266201, 20266202} ∪ [20261000 ; 20269999], aucune égale à un des six entiers des vecteurs
++  d'essai de la spécification ; les racines de la course originale (RACINE_DECISION = 20266201,
++  RACINE_DECISION_TENUE = 20266202) rejoignent les racines employées (refusées) ;
++- C5 `exiger_racine_permise_regles` : une racine dérivée n'est permise qu'une fois posée par l'autorisation (texte
++  scellé), comme une racine de décision en v2 ; les racines de la course originale sont refusées (seul l'essai de
++  non-régression E6 pose lui-même leur autorisation) ;
++- C6 `exiger_identite_prereg_regles` : identifiant neuf ; la ligne « RACINES_REPLICATION = règle D » est exigée à la
++  place de « RACINE_DECISION = … » ; l'empreinte du code v2 est exigée aussi ;
++- C7 `autoriser_decision_regles` : dérive et pose les racines après `exiger_prereg_scelle` (texte scellé, empreinte
++  compagnon concordante) ; refuse un second texte ;
++- C8 `_travail` : dans chaque processus de travail, l'autorisation dérive les racines du même texte et vérifie leur
++  égalité avec celles de la tâche ; en décision seulement, la tâche est sérialisée (C10) ;
++- C9 `main`, mode `decision` : gel v2 vérifié par son empreinte seule (il ne peut citer des racines dérivées d'un texte
++  postérieur ; la règle est dans le texte scellé) ; manifeste : racines (entiers et chaînes), règle D, empreinte du
++  code v2 ; course et analyse sur les racines dérivées (`analyser_regles(res, ρ)`) ;
++- C10 sérialisation, sortie seulement : pour chaque variante, la défense finale (W, b, seuil t, échelle e et poids de
++  chaque moniteur), les attaques passées de la trajectoire et les deux attaques finales (option `rendre_attaques` de
++  `phase_finale` du v4, qui ne change aucun calcul) ; la loi cible de la tâche (`serialiser_moniteur`,
++  `serialiser_variante`, options `rendre_attaques` de `finale_regle` et `serialiser` de `executer_tache_regles`) ;
++- C11 `bloc_identite` : identifiant, ligne de la règle D, empreinte du code v2 ;
++- C12 `__all__`.
++Rien d'autre : règles, oracle, attaquant, lois tenues, finale, `analyser_regles`, `_boot`, `MESURES_CONTRASTE`,
++compteurs, gardes, mode `essai` et ses racines d'essai v2 (employées par des essais seulement) restent identiques
++(essai de diff restreint par l'arbre syntaxique, E5 ; essai de non-régression au bit sur deux tâches de la course
++originale, E6).
++
++CE QUI CHANGEAIT DE LA v1 À LA v2 (historique, inchangé ; `arene_regles_defense_v1.py`, empreinte sha256
+ 337c569bd90d5b8964a4e6b7491c0c5a67042d54333401b65540e889a15a2c97, jamais modifiée, R12) — gel v2 § 0 :
+@@ -38,2 +78,3 @@
+     python3 <ce fichier> decision --prereg prereg/<scellé>.md --instances 0:N --run-id ID --lambda L --reference R
++        (racines : règle D sur l'empreinte du texte scellé ; aucune racine sur la ligne de commande)
+     python3 <ce fichier> orphelins --pids FICHIER [--arreter]
+
+===== C2 — ('assign', 'VERSION') : 2 lignes changées =====
+--- v2 ('assign', 'VERSION')
++++ v3 ('assign', 'VERSION')
+@@ -1 +1 @@
+-VERSION = "arene_regles_defense_v2"
++VERSION = "arene_regles_defense_v3"
+
+===== C2 — ('assign', 'IDENTIFIANT_PREREG') : 2 lignes changées =====
+--- v2 ('assign', 'IDENTIFIANT_PREREG')
++++ v3 ('assign', 'IDENTIFIANT_PREREG')
+@@ -1 +1 @@
+-IDENTIFIANT_PREREG = "PREREG-REGLES-DEFENSE-V2"
++IDENTIFIANT_PREREG = "PREREG-REPLICATION-REGLES-DEFENSE-V1"
+
+===== C3 — ('assign', 'ARENE_V4') : 3 lignes changées =====
+--- v2 ('assign', 'ARENE_V4')
++++ v3 ('assign', 'ARENE_V4')
+@@ -1 +1,2 @@
+-ARENE_V4 = DEPOT / "donnees" / "argon-seul-convergence-v1" / "arene_melange_v4.py"
++ARENE_V4 = (DEPOT / "brouillons" / "canal-reprise-releve-v1" / "envois" / "pole-scientifique-automatique-v1"
++            / "arene-melange-equilibre-v1" / "arene_melange_v4.py")
+
+===== C3 — ('assign', 'DOSSIER_V2') : 1 lignes changées =====
+--- v2 ('assign', 'DOSSIER_V2')
++++ v3 ('assign', 'DOSSIER_V2')
+@@ -0,0 +1 @@
++DOSSIER_V2 = DEPOT / "docs" / "notes" / "convergence-defense-v1" / "regles-defense-v1"
+
+===== C3 — ('assign', 'GEL') : 2 lignes changées =====
+--- v2 ('assign', 'GEL')
++++ v3 ('assign', 'GEL')
+@@ -1 +1 @@
+-GEL = ICI / "gel-regles-defense-v2.md"
++GEL = DOSSIER_V2 / "gel-regles-defense-v2.md"
+
+===== C6, C11 — ('assign', 'CODE_V2') : 1 lignes changées =====
+--- v2 ('assign', 'CODE_V2')
++++ v3 ('assign', 'CODE_V2')
+@@ -0,0 +1 @@
++CODE_V2 = DOSSIER_V2 / "arene_regles_defense_v2.py"
+
+===== C6, C11 — ('assign', 'CODE_V2_SHA256') : 1 lignes changées =====
+--- v2 ('assign', 'CODE_V2_SHA256')
++++ v3 ('assign', 'CODE_V2_SHA256')
+@@ -0,0 +1 @@
++CODE_V2_SHA256 = "9f0dcf5e0d10fe93dd19c318f076728d62b64734161dc72b40a812a817340da3"
+
+===== C4, C9 — ('assign', 'REGLE_D') : 3 lignes changées =====
+--- v2 ('assign', 'REGLE_D')
++++ v3 ('assign', 'REGLE_D')
+@@ -0,0 +1,3 @@
++REGLE_D = ("règle D : (racine, racine_tenue) = les deux premiers mots de 64 bits non signés de "
++           "numpy.random.SeedSequence(entropy=int(H, 16)).generate_state(2, numpy.uint64), H = empreinte SHA-256 "
++           "(64 chiffres hexadécimaux minuscules) du préenregistrement scellé ; spécification statistique § 4")
+
+===== C4 — ('assign', 'RACINES_INTERDITES_REGLE_D') : 1 lignes changées =====
+--- v2 ('assign', 'RACINES_INTERDITES_REGLE_D')
++++ v3 ('assign', 'RACINES_INTERDITES_REGLE_D')
+@@ -0,0 +1 @@
++RACINES_INTERDITES_REGLE_D = frozenset({20261201, 20261202, 20266201, 20266202})
+
+===== C4 — ('assign', 'PLAGE_INTERDITE_REGLE_D') : 1 lignes changées =====
+--- v2 ('assign', 'PLAGE_INTERDITE_REGLE_D')
++++ v3 ('assign', 'PLAGE_INTERDITE_REGLE_D')
+@@ -0,0 +1 @@
++PLAGE_INTERDITE_REGLE_D = (20261000, 20269999)
+
+===== C4 — ('assign', 'VECTEURS_ESSAI_REGLE_D') : 5 lignes changées =====
+--- v2 ('assign', 'VECTEURS_ESSAI_REGLE_D')
++++ v3 ('assign', 'VECTEURS_ESSAI_REGLE_D')
+@@ -0,0 +1,5 @@
++VECTEURS_ESSAI_REGLE_D = {                         # spécification § 4 : jamais employés comme racines
++    "d82dea3388684dd369520b4f394c53b9e5f71159b9c056a6f739ef32c73d025d": (11786724493248295725, 9136419304016434890),
++    "0" * 64: (15793235383387715774, 12390638538380655177),
++    "f" * 64: (10168828190493638947, 4616211851522120706),
++}
+
+===== C4 — ('assign', '_RACINES_VECTEURS_ESSAI') : 1 lignes changées =====
+--- v2 ('assign', '_RACINES_VECTEURS_ESSAI')
++++ v3 ('assign', '_RACINES_VECTEURS_ESSAI')
+@@ -0,0 +1 @@
++_RACINES_VECTEURS_ESSAI = frozenset(r for paire in VECTEURS_ESSAI_REGLE_D.values() for r in paire)
+
+===== C4, C5, C7 — ('assign', '_AUTORISATION_DECISION') : 2 lignes changées =====
+--- v2 ('assign', '_AUTORISATION_DECISION')
++++ v3 ('assign', '_AUTORISATION_DECISION')
+@@ -1 +1 @@
+-_AUTORISATION_DECISION: dict = {"prereg_sha256": None}
++_AUTORISATION_DECISION: dict = {"prereg_sha256": None, "racines": None}
+
+===== C4 — ('def', 'etat_regle_D') : 10 lignes changées =====
+--- v2 ('def', 'etat_regle_D')
++++ v3 ('def', 'etat_regle_D')
+@@ -0,0 +1,10 @@
++def etat_regle_D(empreinte_hex: str) -> tuple[int, int]:
++    """Règle D, calcul seul, sans les gardes : (w₀, w₁) = les deux premiers mots de 64 bits non signés de l'état
++    engendré par `SeedSequence(entropy=int(H, 16))` (aucune clé de descendance). Sert aux vecteurs d'essai ; toute
++    racine de course passe par `deriver_racines_regle_D`. Garde : H en 64 chiffres hexadécimaux minuscules."""
++    h = str(empreinte_hex)
++    if not re.fullmatch(r"[0-9a-f]{64}", h):
++        raise GardeArret(f"règle D : empreinte SHA-256 en 64 chiffres hexadécimaux minuscules exigée (reçu {h!r})")
++    exiger_numpy_minimal()
++    w = np.random.SeedSequence(entropy=int(h, 16)).generate_state(2, dtype=np.uint64)
++    return int(w[0]), int(w[1])
+
+===== C4 — ('def', 'exiger_racines_regle_D') : 13 lignes changées =====
+--- v2 ('def', 'exiger_racines_regle_D')
++++ v3 ('def', 'exiger_racines_regle_D')
+@@ -0,0 +1,13 @@
++def exiger_racines_regle_D(racine: int, racine_tenue: int) -> None:
++    """Gardes de la règle D (spécification § 4, point 6 ; chacune : arrêt, aucun repli, aucune autre dérivation) :
++    racines distinctes ; aucune dans l'ensemble interdit F (dont les racines de la course originale) ; aucune égale à
++    un des six entiers des vecteurs d'essai."""
++    r, rt = int(racine), int(racine_tenue)
++    if r == rt:
++        raise GardeArret(f"règle D : racine principale égale à la racine des lois tenues ({r}) : arrêt")
++    for x in (r, rt):
++        if x in RACINES_INTERDITES_REGLE_D or PLAGE_INTERDITE_REGLE_D[0] <= x <= PLAGE_INTERDITE_REGLE_D[1]:
++            raise GardeArret(f"règle D : racine {x} dans l'ensemble interdit F (racines et plages déjà nommées par les "
++                             "arènes v1 à v4 et les règles de défense v1 et v2, course originale comprise) : arrêt")
++        if x in _RACINES_VECTEURS_ESSAI:
++            raise GardeArret(f"règle D : racine {x} égale à un vecteur d'essai de la spécification : arrêt")
+
+===== C4 — ('def', 'deriver_racines_regle_D') : 6 lignes changées =====
+--- v2 ('def', 'deriver_racines_regle_D')
++++ v3 ('def', 'deriver_racines_regle_D')
+@@ -0,0 +1,6 @@
++def deriver_racines_regle_D(empreinte_hex: str) -> tuple[int, int]:
++    """Racines de la réplication (ρ, ρ_t) dérivées de l'empreinte H du texte scellé, gardes de la règle D comprises.
++    N'est appelée en course que par `autoriser_decision_regles`, sur l'empreinte vérifiée du texte scellé."""
++    r, rt = etat_regle_D(empreinte_hex)
++    exiger_racines_regle_D(r, rt)
++    return r, rt
+
+===== C5 — ('def', 'exiger_racine_permise_regles') : 22 lignes changées =====
+--- v2 ('def', 'exiger_racine_permise_regles')
++++ v3 ('def', 'exiger_racine_permise_regles')
+@@ -1,11 +1,14 @@
+ def exiger_racine_permise_regles(racine: int) -> None:
+-    """Garde : une racine de décision exige l'autorisation par préenregistrement scellé ; sont refusées les racines de
+-    décision du v4, toutes les racines déjà employées (arène v1 à v4), la plage 20265001–20265999 d'une autre session,
+-    la plage 20264001–20264999 du v4 (réservée au v4), et toute racine absente du gel v1."""
++    """Garde (C5) : une racine dérivée par la règle D n'est permise qu'une fois posée par l'autorisation
++    (`autoriser_decision_regles`, préenregistrement scellé) ; les racines de la course originale (RACINES_DECISION)
++    sont refusées comme employées, sauf autorisation posée par l'essai de non-régression E6 lui-même ; sont refusées
++    aussi les racines de décision du v4, toutes les racines déjà employées (arène v1 à v4), la plage 20265001–20265999
++    d'une autre session, la plage 20264001–20264999 du v4 (réservée au v4), et toute racine absente du gel v2."""
+     r = int(racine)
++    autorisees = _AUTORISATION_DECISION["racines"]
++    if autorisees is not None and _AUTORISATION_DECISION["prereg_sha256"] is not None and r in autorisees:
++        return
+     if r in RACINES_DECISION:
+-        if _AUTORISATION_DECISION["prereg_sha256"] is None:
+-            raise GardeArret(f"racine de décision {r} sans autorisation : préenregistrement scellé exigé "
+-                             "(autoriser_decision_regles)")
+-        return
++        raise GardeArret(f"racine {r} de la course originale (décision v2) : employée, refusée en v3 (seul l'essai de "
++                         "non-régression E6 en pose l'autorisation)")
+     if r in v4.RACINES_DECISION:
+@@ -21,3 +24,4 @@
+     if r not in _PERMISES_HORS_DECISION:
+-        raise GardeArret(f"racine {r} non gelée : seules les racines du gel v2 des règles ({PLAGE_REGLES[0]} à "
+-                         f"{PLAGE_REGLES[1]}, § 1) sont permises hors décision")
++        raise GardeArret(f"racine {r} non gelée et non autorisée : hors décision, seules les racines du gel v2 des "
++                         f"règles ({PLAGE_REGLES[0]} à {PLAGE_REGLES[1]}, § 1) sont permises ; une racine dérivée par "
++                         "la règle D exige l'autorisation par le texte scellé (autoriser_decision_regles)")
+
+===== C6 — ('def', 'exiger_identite_prereg_regles') : 14 lignes changées =====
+--- v2 ('def', 'exiger_identite_prereg_regles')
++++ v3 ('def', 'exiger_identite_prereg_regles')
+@@ -2,4 +2,5 @@
+                                   reference: str | None = None) -> None:
+-    """Garde : le préenregistrement est celui de ce module (identifiant, racines, configuration champ à champ,
+-    empreintes de ce code, de l'arène v4, du gel et de la bibliothèque, versions, N, λ* et référence gelés)."""
++    """Garde (C6) : le préenregistrement est celui de ce module (identifiant, ligne de la règle D, configuration champ à
++    champ, empreintes de ce code, du code v2 de la course originale, de l'arène v4, du gel et de la bibliothèque,
++    versions, N, λ* et référence gelés)."""
+     import scipy
+@@ -8,5 +9,5 @@
+         raise GardeArret(f"préenregistrement sans l'identifiant {IDENTIFIANT_PREREG}")
+-    for nom, val in (("RACINE_DECISION", RACINE_DECISION), ("RACINE_DECISION_TENUE", RACINE_DECISION_TENUE)):
+-        if not re.search(rf"\b{nom}\s*=\s*{val}\b", texte):
+-            raise GardeArret(f"préenregistrement : {nom} = {val} absent ou différent du code")
++    if not re.search(r"\bRACINES_REPLICATION\s*=\s*règle D\b", texte):
++        raise GardeArret("préenregistrement : ligne « RACINES_REPLICATION = règle D » absente (racines dérivées de "
++                         "l'empreinte du texte scellé, § Plan 3)")
+     ecarts = v4.comparer_configuration(v4.extraire_configuration(texte), cfg)
+@@ -15,3 +16,4 @@
+     for lib, sha in (("configuration", cfg.empreinte()), ("code", empreinte_fichier(__file__)),
+-                     ("arène v4", ARENE_V4_SHA256), ("gel", GEL_SHA256)):
++                     ("code v2 de la course originale", CODE_V2_SHA256), ("arène v4", ARENE_V4_SHA256),
++                     ("gel", GEL_SHA256)):
+         if not re.search(rf"\b{sha}\b", texte):
+
+===== C7 — ('def', 'autoriser_decision_regles') : 11 lignes changées =====
+--- v2 ('def', 'autoriser_decision_regles')
++++ v3 ('def', 'autoriser_decision_regles')
+@@ -1,2 +1,6 @@
+ def autoriser_decision_regles(chemin: str | Path, cfg, instances: str | None = None, lam=None, reference=None) -> str:
++    """C7 : texte scellé et intact (`exiger_prereg_scelle` : empreinte compagnon présente et concordante), identifié,
++    puis racines dérivées de son empreinte par la règle D (gardes comprises) et posées avec elle. Refus, sans rien
++    poser : texte non scellé, empreinte discordante, identité fausse, texte modifié pendant la vérification, racine
++    dérivée interdite, autorisation déjà posée par un autre texte (une seule version scellée par processus)."""
+     from controle_ia.prereg import exiger_prereg_scelle
+@@ -5,3 +9,10 @@
+     exiger_identite_prereg_regles(Path(chemin).read_text(encoding="utf-8"), cfg, instances, lam, reference)
++    if empreinte_fichier(chemin) != sha:
++        raise GardeArret(f"préenregistrement {chemin} modifié pendant la vérification : arrêt")
++    racines = deriver_racines_regle_D(sha)
++    if _AUTORISATION_DECISION["prereg_sha256"] not in (None, sha):
++        raise GardeArret("autorisation déjà posée par un autre préenregistrement scellé "
++                         f"({_AUTORISATION_DECISION['prereg_sha256']}) : arrêt")
+     _AUTORISATION_DECISION["prereg_sha256"] = sha
++    _AUTORISATION_DECISION["racines"] = racines
+     return sha
+
+===== C8 — ('def', '_travail') : 13 lignes changées =====
+--- v2 ('def', '_travail')
++++ v3 ('def', '_travail')
+@@ -3,8 +3,11 @@
+     cfg = v4.Config(**{k: tuple(v) if isinstance(v, list) else v for k, v in cfg_dict.items()})
+-    if (racine in RACINES_DECISION or racine_tenue in RACINES_DECISION) and \
+-            _AUTORISATION_DECISION["prereg_sha256"] is None:
+-        if prereg is None:
+-            raise GardeArret("racine de décision dans un processus de travail sans préenregistrement")
++    if prereg is not None:
++        # C8 : dans chaque processus de travail (et à chaque tâche), l'autorisation revérifie le texte scellé et en
++        # dérive les racines par la règle D ; elles doivent être exactement celles de la tâche
+         autoriser_decision_regles(prereg, cfg, None, lam_dec, ref_dec)
++        if (int(racine), int(racine_tenue)) != _AUTORISATION_DECISION["racines"]:
++            raise GardeArret(f"racines de la tâche ({racine}, {racine_tenue}) ≠ racines dérivées par la règle D du "
++                             f"texte scellé {_AUTORISATION_DECISION['racines']} : arrêt")
++    # sans préenregistrement (mode essai), les racines passent par `exiger_racine_permise_regles` dans `gen_regles`
+     return executer_tache_regles(instance, cd, racine, racine_tenue, cfg, tuple(regles), tuple(lambdas),
+-                                 tuple(references), complete)
++                                 tuple(references), complete, serialiser=prereg is not None)
+
+===== C9 — ('def', 'main') : 17 lignes changées =====
+--- v2 ('def', 'main')
++++ v3 ('def', 'main')
+@@ -58,4 +58,4 @@
+         return 0
+-    # décision : le préenregistrement scellé est exigé AVANT toute graine de décision ; manifeste et résultats
+-    # rattachés sous runs/ et diag/ (bibliothèque du dépôt), comme le v4
++    # décision : le préenregistrement scellé est exigé AVANT toute graine ; les racines sont dérivées de son empreinte
++    # par la règle D (C9) ; manifeste et résultats rattachés sous runs/ et diag/ (bibliothèque du dépôt), comme le v4
+     from controle_ia import manifeste as man
+@@ -63,5 +63,8 @@
+     sha = autoriser_decision_regles(a.prereg, cfg, a.instances, a.lam, a.reference)
+-    sha_gel = exiger_gel_regles(RACINES_DECISION)      # CL-08 : gel sur disque revérifié en décision (v2)
++    rho, rho_t = _AUTORISATION_DECISION["racines"]
++    sha_gel = exiger_gel_regles(())      # C9 : gel v2 vérifié par son empreinte seule (il ne cite pas ρ, ρ_t)
+     chemin_m, _ = man.creer_manifeste(DEPOT, a.run_id, {"config": asdict(cfg), "config_sha256": cfg.empreinte(),
+-                                                        "racine": RACINE_DECISION, "racine_tenue": RACINE_DECISION_TENUE,
++                                                        "racine": rho, "racine_tenue": rho_t,
++                                                        "racine_chaine": str(rho), "racine_tenue_chaine": str(rho_t),
++                                                        "regle_racines": REGLE_D, "code_v2_sha256": CODE_V2_SHA256,
+                                                         "instances": a.instances, "prereg_sha256": sha,
+@@ -71,5 +74,5 @@
+                                                         "versions": _versions()},
+-                                      ["regles-defense"], entropie=RACINE_DECISION, decisif=True, prereg=a.prereg,
++                                      ["regles-defense"], entropie=rho, decisif=True, prereg=a.prereg,
+                                       commande=" ".join(sys.argv))
+-    res, temps = executer(_plage(a.instances), RACINE_DECISION, RACINE_DECISION_TENUE, cfg, a.processus, REGLES,
++    res, temps = executer(_plage(a.instances), rho, rho_t, cfg, a.processus, REGLES,
+                           (a.lam,), (a.reference,), False, prereg=a.prereg, lam_dec=a.lam, ref_dec=a.reference,
+@@ -77,3 +80,3 @@
+     man.ecrire_resultat(DEPOT, chemin_m, "resultats-regles-defense", {"temps": temps, "resultats": res})
+-    man.ecrire_resultat(DEPOT, chemin_m, "analyse-regles-defense", analyser_regles(res, RACINE_DECISION))
++    man.ecrire_resultat(DEPOT, chemin_m, "analyse-regles-defense", analyser_regles(res, rho))
+     print(f"run de décision écrit sous diag/{a.run_id}/")
+
+===== C10 — ('def', 'finale_regle') : 11 lignes changées =====
+--- v2 ('def', 'finale_regle')
++++ v3 ('def', 'finale_regle')
+@@ -1,8 +1,11 @@
+-def finale_regle(regle: str, etat: dict, ctx, complete: bool = False) -> dict:
++def finale_regle(regle: str, etat: dict, ctx, complete: bool = False, rendre_attaques: bool = False):
+     """Défense figée, l'attaquant joue en dernier : `phase_finale` du v4 (standard puis renforcée ; V = la plus basse).
+     Finale « légère » complétée de (ii) finale et de (i) sur les attaques vues ; `complete` ajoute courbe et coût de
+-    contournement du v4."""
++    contournement du v4. C10 : avec `rendre_attaques`, rend (résultat, (attaque standard, attaque renforcée)) par
++    l'option du même nom de `phase_finale`, qui ne change aucun calcul (sortie seulement)."""
+     c0, entr0, dep0 = dict(COMPTEUR), ctx.entr, ctx.att["departs"]
+     dfin = etat["defense_finale"]
+-    res = v4.phase_finale(regle, dfin, ctx, etat, leger=not complete)
++    res = v4.phase_finale(regle, dfin, ctx, etat, leger=not complete, rendre_attaques=rendre_attaques)
++    if rendre_attaques:
++        res, attaques_finales = res
+     if not complete:
+@@ -16,2 +19,2 @@
+     res["cout_finale"] = _cout_depuis(ctx, c0, entr0, dep0)
+-    return res
++    return (res, attaques_finales) if rendre_attaques else res
+
+===== C10 — ('def', 'serialiser_moniteur') : 6 lignes changées =====
+--- v2 ('def', 'serialiser_moniteur')
++++ v3 ('def', 'serialiser_moniteur')
+@@ -0,0 +1,6 @@
++def serialiser_moniteur(mon, poids) -> dict:
++    """C10 (sortie seulement) : un moniteur de la défense finale — paramètres W et b, seuil t, échelle e — et son
++    poids dans la défense ; lecture seule des attributs, aucun calcul, aucun tirage."""
++    return {"W": [[float(x) for x in ligne] for ligne in np.asarray(mon.W, float)],
++            "b": [float(x) for x in np.asarray(mon.b, float)], "t": float(mon.t), "e": float(mon.e),
++            "poids": float(poids)}
+
+===== C10 — ('def', 'serialiser_variante') : 10 lignes changées =====
+--- v2 ('def', 'serialiser_variante')
++++ v3 ('def', 'serialiser_variante')
+@@ -0,0 +1,10 @@
++def serialiser_variante(etat: dict, attaques_finales) -> dict:
++    """C10 (sortie seulement) : défense finale d'une variante (ses moniteurs sérialisés, dans l'ordre de la défense,
++    poids nuls compris), attaques passées de sa trajectoire (`etat["attaques"][1:]`, meilleures réponses des tours 1
++    à T, soit l'argument `passes` de `attaquant_independant` du v4 ; la cible, tour 0, est sous `loi_cible` de la tâche)
++    et ses deux attaques finales (standard puis renforcée, rendues par `phase_finale`). Permet d'opposer plus tard un
++    autre attaquant aux défenses finales sans rejouer la course."""
++    a_fin, a_renf = attaques_finales
++    return {"defense_finale": [serialiser_moniteur(m, w) for m, w in etat["defense_finale"]],
++            "attaques_passees": [[float(x) for x in a] for a in etat["attaques"][1:]],
++            "attaques_finales": {"standard": [float(x) for x in a_fin], "renforce": [float(x) for x in a_renf]}}
+
+===== C10 — ('def', 'executer_tache_regles') : 15 lignes changées =====
+--- v2 ('def', 'executer_tache_regles')
++++ v3 ('def', 'executer_tache_regles')
+@@ -1,5 +1,8 @@
+ def executer_tache_regles(instance: int, code_delta: int, racine: int, racine_tenue: int, cfg, regles=REGLES,
+-                          lambdas=GRILLE_LAMBDA, references=("dernier",), complete: bool = False) -> dict:
++                          lambdas=GRILLE_LAMBDA, references=("dernier",), complete: bool = False,
++                          serialiser: bool = False) -> dict:
+     """Une tâche = (δ, instance) : contexte du v4, moniteur commun M0 (reproductibilité bit à bit exigée), puis chaque
+-    variante (règle, λ, référence) : trajectoire, finale, indicateurs, coût ; gardes du v4 en fin de tâche."""
++    variante (règle, λ, référence) : trajectoire, finale, indicateurs, coût ; gardes du v4 en fin de tâche. C10 : avec
++    `serialiser` (sortie seulement, aucun calcul changé), chaque variante porte aussi `serialisation`
++    (`serialiser_variante`) et la tâche porte `loi_cible`."""
+     v4.exiger_config(cfg)
+@@ -16,3 +19,5 @@
+         etat = trajectoire_regle(regle, ctx, M, lam or 0.0, ref or "dernier")
+-        res = finale_regle(regle, etat, ctx, complete)
++        res = finale_regle(regle, etat, ctx, complete, rendre_attaques=serialiser)
++        if serialiser:
++            res, attaques_finales = res
+         res.update({"regle": regle, "lam": lam, "reference": ref, "par_tour": etat["par_tour"],
+@@ -25,2 +30,4 @@
+             res["equilibre"] = etat["equilibre"]
++        if serialiser:
++            res["serialisation"] = serialiser_variante(etat, attaques_finales)
+         sortie["regles"][nom_variante(regle, lam, ref)] = res
+@@ -32,2 +39,4 @@
+                            "iter_max": ctx.att["iter_max"], "reponses_a_la_limite": ctx.att["a_la_limite"]}
++    if serialiser:
++        sortie["loi_cible"] = [float(x) for x in ctx.cible]
+     v4.exiger_convergence(ctx.nonconv, ctx.entr, cfg)
+
+===== C11 — ('def', 'bloc_identite') : 5 lignes changées =====
+--- v2 ('def', 'bloc_identite')
++++ v3 ('def', 'bloc_identite')
+@@ -4,5 +4,6 @@
+     lignes = [f"- Identifiant : {IDENTIFIANT_PREREG}",
+-              f"- Racines de décision : RACINE_DECISION = {RACINE_DECISION} ; RACINE_DECISION_TENUE = "
+-              f"{RACINE_DECISION_TENUE}",
++              "- Racines : RACINES_REPLICATION = règle D (dérivées de l'empreinte SHA-256 de ce texte scellé ; jamais "
++              "écrites dans ce texte ; § Plan 3)",
+               f"- Code : `{Path(__file__).name}` — {empreinte_fichier(__file__)}",
++              f"- Code de la course originale (référence du diff) : `{CODE_V2.name}` — {CODE_V2_SHA256}",
+               f"- Arène v4 : `{ARENE_V4.name}` — {ARENE_V4_SHA256}",
+
+===== C12 — ('assign', '__all__') : 5 lignes changées =====
+--- v2 ('assign', '__all__')
++++ v3 ('assign', '__all__')
+@@ -6,2 +6,5 @@
+            "entrainer_regularise", "penalite_direction", "direction_reference", "analyser_regles", "choisir_lambda",
+-           "bloc_identite", "exiger_identite_prereg_regles", "autoriser_decision_regles", "COMPTEUR", "replace"]
++           "bloc_identite", "exiger_identite_prereg_regles", "autoriser_decision_regles", "COMPTEUR", "replace",
++           # C12 : ajouts de la v3
++           "CODE_V2_SHA256", "REGLE_D", "VECTEURS_ESSAI_REGLE_D", "etat_regle_D", "exiger_racines_regle_D",
++           "deriver_racines_regle_D", "serialiser_moniteur", "serialiser_variante"]
+_ test_lent_E6_chemin_de_production_trois_taches_de_la_course_originale_avec_repli[2-0] _
+----------------------------- Captured stdout call -----------------------------
+E6 (δ 1.6 ; instance 0) : 14.0 s de processeur
+E6 (δ 1.6 ; instance 0) : {'issue': 'égal au fichier original'}
+_ test_lent_E6_chemin_de_production_trois_taches_de_la_course_originale_avec_repli[1-0] _
+----------------------------- Captured stdout call -----------------------------
+E6 (δ 1.4 ; instance 0) : 11.5 s de processeur
+E6 (δ 1.4 ; instance 0) : {'issue': 'égal au fichier original'}
+_ test_lent_E6_chemin_de_production_trois_taches_de_la_course_originale_avec_repli[1-1] _
+----------------------------- Captured stdout call -----------------------------
+E6 (δ 1.4 ; instance 1) : 12.6 s de processeur
+E6 (δ 1.4 ; instance 1) : {'issue': 'égal au fichier original'}
+__________ test_E9_garde_C8_dans_de_vrais_processus_de_travail_neufs ___________
+----------------------------- Captured stdout call -----------------------------
+E9 artefact 0 (14818296829446469554, 9318597362315725240) : refusé dans un processus neuf en 1.5 s
+E9 artefact 1 (14818296829446469553, 9318597362315725241) : refusé dans un processus neuf en 1.8 s
+E9 artefact 2 (20266201, 20266202) : refusé dans un processus neuf en 1.5 s
+E9 artefact 3 (9318597362315725240, 14818296829446469553) : refusé dans un processus neuf en 1.6 s
+----------------------------- Captured stderr call -----------------------------
+PID des processus de travail : 13533 13534
+PID des processus de travail : 13538 13539
+PID des processus de travail : 13576 13577
+PID des processus de travail : 13620 13621
+_________ test_E10_bout_en_bout_main_decision_racines_de_plus_de_2_63 __________
+----------------------------- Captured stdout call -----------------------------
+run de décision écrit sous diag/20261101-000000-essai-e10/
+E10 : course de bout en bout (4 tâches, 2 processus spawn) en 7.6 s de mur ; ρ = 14818296829446469553, ρ_t = 9318597362315725240
+----------------------------- Captured stderr call -----------------------------
+PID des processus de travail : 13634 13635
+============================== slowest durations ===============================
+33.47s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_lent_E6_non_regression_au_bit_deux_taches_de_la_course_originale
+22.53s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py::test_lent_E6_chemin_de_production_trois_taches_de_la_course_originale_avec_repli[2-0]
+15.39s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py::test_lent_E6_chemin_de_production_trois_taches_de_la_course_originale_avec_repli[1-0]
+14.35s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py::test_lent_E6_chemin_de_production_trois_taches_de_la_course_originale_avec_repli[1-1]
+7.98s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py::test_E10_bout_en_bout_main_decision_racines_de_plus_de_2_63
+6.32s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py::test_E9_garde_C8_dans_de_vrais_processus_de_travail_neufs
+4.72s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py::test_E6_repli_de_plate_forme_sain_et_artefacts_et_v3_egal_v2_budget_1_6
+2.68s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_lent_parite_de_T_X_barre_stable_X_finale_non_pour_R1
+2.33s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_E7_serialisation_ne_change_aucune_valeur_et_restitue_les_defenses
+2.12s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_E5_diff_restreint_v2_v3_par_l_arbre_syntaxique
+1.97s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_cli_essai_refuse_racines_interdites_et_ecrasement
+1.92s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py::test_E8_statistique_de_A_contre_la_specification
+1.67s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_E6_bis_analyse_v3_des_200_taches_originales_egale_l_analyse_scellee_au_bit
+1.63s setup    brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_chaque_regle_trajectoire_T3_petite_config_en_moins_de_30_s
+1.59s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_analyse_et_choix_lambda
+0.91s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_cli_essai_ecrit_un_pilote_minuscule_et_orphelins
+0.75s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_tenues_jamais_vues_par_l_entrainement
+0.59s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3_complements.py::test_E5_etendu_inventaire_de_tous_les_noeuds_diffs_imprimes_et_C10_mecanique
+0.46s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_R3_reproduit_B_du_v4_au_bit
+0.37s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_R4_lambda_zero_egal_R2_sur_la_trajectoire_a_code_de_graine_egal
+0.34s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_R2_reproduit_A_du_v4_au_bit
+0.33s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_graine_reproductible_et_autre_racine_change_le_resultat
+0.30s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_R0_reproductible_a_graine_fixee_et_autre_racine_differente
+0.26s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_R0_ne_reentraine_jamais_instrumentation
+0.11s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_X_barre_egale_X1_quand_T_vaut_1
+0.09s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_chargement_v4_copie_suivie_empreinte_sain_et_artefacts
+0.08s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_plafond_de_temps_processeur_sain_et_artefact
+0.08s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_entrainement_regularise_lambda_zero_egal_v4_et_lambda_fort_rapproche
+0.02s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_C9_main_decision_racines_derivees_manifeste_course_et_analyse
+0.02s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_E3_bloc_identite_et_identite_prereg_sain_et_artefacts
+0.01s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_E4_decision_refusee_sans_texte_scelle_et_racines_par_regle_D
+0.01s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_C8_travail_derive_les_racines_du_meme_texte_et_exige_leur_egalite
+0.01s call     brouillons/preuves-mentors-v1/convergence-replication-v1/code/test_arene_regles_defense_v3.py::test_racines_sain_et_artefacts
+
+(96 durations < 0.005s hidden.  Use -vv to show these durations.)
+43 passed, 2 warnings in 127.52s (0:02:07)
+
+real	2m8.560s
+user	1m35.066s
+sys	0m1.215s
+# code de sortie de pytest : 0
+# charge à la fin :  23:21:49 up  2:46,  0 user,  load average: 3.64, 3.25, 3.14
