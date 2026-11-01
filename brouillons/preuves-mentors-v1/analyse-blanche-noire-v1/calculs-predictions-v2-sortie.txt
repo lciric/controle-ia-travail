@@ -1,0 +1,49 @@
+# Sortie de calculs-predictions-v2.py (formules fermées, aucune graine)
+T = 10 ; taux conforme attendu 1/21 = 0.0476 ; z = 1.6684
+
+## 1. Sondes génériques de P3 (bras iii), statistique « somme terminale »
+tromperie aire observée 0.5748 → d = +0.267 ; ρ = 0.0 : d_ép = +0.843, aire d'épisode 0.725, puissance 0.182
+tromperie aire observée 0.5748 → d = +0.267 ; ρ = 0.2 : d_ép = +0.504, aire d'épisode 0.639, puissance 0.113
+tromperie aire observée 0.5748 → d = +0.267 ; ρ = 0.6 : d_ép = +0.333, aire d'épisode 0.593, puissance 0.086
+tromperie borne basse   0.5313 → d = +0.111 ; ρ = 0.0 : d_ép = +0.351, aire d'épisode 0.598, puissance 0.088
+tromperie borne basse   0.5313 → d = +0.111 ; ρ = 0.2 : d_ép = +0.210, aire d'épisode 0.559, puissance 0.070
+tromperie borne basse   0.5313 → d = +0.111 ; ρ = 0.6 : d_ép = +0.139, aire d'épisode 0.539, puissance 0.061
+tromperie borne haute   0.6183 → d = +0.426 ; ρ = 0.0 : d_ép = +1.346, aire d'épisode 0.829, puissance 0.324
+tromperie borne haute   0.6183 → d = +0.426 ; ρ = 0.2 : d_ép = +0.805, aire d'épisode 0.715, puissance 0.173
+tromperie borne haute   0.6183 → d = +0.426 ; ρ = 0.6 : d_ép = +0.532, aire d'épisode 0.647, puissance 0.118
+enjeux    aire observée 0.5248 → d = +0.088 ; ρ = 0.0 : d_ép = +0.278, aire d'épisode 0.578, puissance 0.078
+enjeux    aire observée 0.5248 → d = +0.088 ; ρ = 0.2 : d_ép = +0.166, aire d'épisode 0.547, puissance 0.065
+enjeux    aire observée 0.5248 → d = +0.088 ; ρ = 0.6 : d_ép = +0.110, aire d'épisode 0.531, puissance 0.058
+enjeux    borne basse   0.4813 → d = -0.066 ; ρ = 0.0 : d_ép = -0.210, aire d'épisode 0.441, puissance 0.032
+enjeux    borne basse   0.4813 → d = -0.066 ; ρ = 0.2 : d_ép = -0.125, aire d'épisode 0.465, puissance 0.037
+enjeux    borne basse   0.4813 → d = -0.066 ; ρ = 0.6 : d_ép = -0.083, aire d'épisode 0.477, puissance 0.041
+enjeux    borne haute   0.5700 → d = +0.249 ; ρ = 0.0 : d_ép = +0.789, aire d'épisode 0.711, puissance 0.170
+enjeux    borne haute   0.5700 → d = +0.249 ; ρ = 0.2 : d_ép = +0.471, aire d'épisode 0.631, puissance 0.107
+enjeux    borne haute   0.5700 → d = +0.249 ; ρ = 0.6 : d_ép = +0.312, aire d'épisode 0.587, puissance 0.083
+
+## 2. Coût déclaré seul (base du témoin lexical L), deux lectures
+(a) aire par action 0,8878 → d = 1.718 ; équicorrélation :
+    ρ = 0.2 : d_ép = 3.247, aire d'épisode 0.989, puissance 0.889
+    ρ = 0.6 : d_ép = 2.148, aire d'épisode 0.936, puissance 0.601
+    ρ = 0.8 : d_ép = 1.897, aire d'épisode 0.910, puissance 0.514
+(b) moyenne d'épisode du log10 du coût : décalage 1,5227 (P3-P1), écart type d'épisode dans une tâche 0,795 (pilote), plus un effet de tâche τ (non mesuré) :
+    τ = 0.0 : écart type 0.795, d_ép = 1.915, aire d'épisode 0.912, puissance 0.520
+    τ = 0.4 : écart type 0.890, d_ép = 1.711, aire d'épisode 0.887, puissance 0.448
+    τ = 0.8 : écart type 1.128, d_ép = 1.350, aire d'épisode 0.830, puissance 0.325
+
+## 3. Différence d'aire minimale détectable à 80 %, Holm bilatéral au pire rang
+m = 1 (version « R1 seul » : (i) − (L)) : facteur (z(1 − 0,05/2) + z(0,80)) = 2.802
+  aire 0.60 : erreur type d'une aire (Hanley-McNeil, 60 + 60, indépendance) 0.0516 ; écart type d'une différence non appariée √2 × 0.0516 = 0.0730 ; DMD ≈ 0.205 (l'appariement par tâche la réduit)
+  aire 0.75 : erreur type d'une aire (Hanley-McNeil, 60 + 60, indépendance) 0.0445 ; écart type d'une différence non appariée √2 × 0.0445 = 0.0630 ; DMD ≈ 0.176 (l'appariement par tâche la réduit)
+  aire 0.90 : erreur type d'une aire (Hanley-McNeil, 60 + 60, indépendance) 0.0293 ; écart type d'une différence non appariée √2 × 0.0293 = 0.0414 ; DMD ≈ 0.116 (l'appariement par tâche la réduit)
+  aire 0.97 : erreur type d'une aire (Hanley-McNeil, 60 + 60, indépendance) 0.0160 ; écart type d'une différence non appariée √2 × 0.0160 = 0.0227 ; DMD ≈ 0.063 (l'appariement par tâche la réduit)
+m = 4 (famille du brouillon 1, pour mémoire) : facteur (z(1 − 0,05/8) + z(0,80)) = 3.339
+  aire 0.60 : erreur type d'une aire (Hanley-McNeil, 60 + 60, indépendance) 0.0516 ; écart type d'une différence non appariée √2 × 0.0516 = 0.0730 ; DMD ≈ 0.244 (l'appariement par tâche la réduit)
+  aire 0.75 : erreur type d'une aire (Hanley-McNeil, 60 + 60, indépendance) 0.0445 ; écart type d'une différence non appariée √2 × 0.0445 = 0.0630 ; DMD ≈ 0.210 (l'appariement par tâche la réduit)
+  aire 0.90 : erreur type d'une aire (Hanley-McNeil, 60 + 60, indépendance) 0.0293 ; écart type d'une différence non appariée √2 × 0.0293 = 0.0414 ; DMD ≈ 0.138 (l'appariement par tâche la réduit)
+  aire 0.97 : erreur type d'une aire (Hanley-McNeil, 60 + 60, indépendance) 0.0160 ; écart type d'une différence non appariée √2 × 0.0160 = 0.0227 ; DMD ≈ 0.076 (l'appariement par tâche la réduit)
+
+## 4. Points de contrôle de la puissance exacte
+d_ép = 0.00 : aire d'épisode 0.5000, puissance 0.0476 (attendu 1/21 = 0,0476)
+d_ép = 3.32 : aire d'épisode 0.9906, puissance 0.9001
+d_ép = 3.74 : aire d'épisode 0.9959, puissance 0.9500
