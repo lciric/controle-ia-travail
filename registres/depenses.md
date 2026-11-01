@@ -309,3 +309,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-11-01 21:19 UTC — **en cours : T0.5 graines neuves** (GO-2026-11-01-11) : instances 58714023 (A, 1,089 USD/h), 58714191 (B, 1,16), 58714336 (C, 1,203) ; D sans offre conforme ; location ≈ 3,45 USD/h pour trois, au plus 6 h chacune.
 - 2026-11-01 21:21 UTC — **en cours : T0.5 graines neuves** : lot D 58714588 (1,161 USD/h) ; quatre instances, ≈ 4,61 USD/h.
 - 2026-11-01 21:46 UTC — **en cours : mini-course Kimi + Argon** (GO-2026-11-01-12, plafond 10 USD ; relais 3 + 7 USD) : run-20261101-2146, 68 appels prévus, ≈ 6,4 USD estimés ; contrôles 0,0014 USD.
+- 2026-11-01 22:51 UTC — **fin : mini-course Kimi + Argon** (GO-2026-11-01-12) : **1,47 / 10 USD** (registre cumulé ; facture réelle à relire chez Moonshot et Google) ; GO-12 clos. **T0.5 lot D** détruit (≈ 1 h 30 à 1,161 USD/h ≈ 1,8 USD).
