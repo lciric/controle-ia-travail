@@ -1,0 +1,52 @@
+Essais R5 du lanceur lancer_graines_neuves_t05_v1.sh (8e9cd4a2fe68e8468d8d3d20571655fa39df4be3abf79af5879a2967aa369fff), 2026-11-01T20:20:02Z ; étapes 6 et 8 extraites telles quelles, faux vastai (aucun appel au service) ; offres reprises de essais-lanceur-v4-offre-v1.txt plus trois artefacts
+Étape 6 (instances) :
+- lot A, compte vide (cas sain) :
+  sortie : ok 0 ; code 0
+- lot B, seule l'instance du lot A (cas sain du parallèle) :
+  sortie : ok 1 ; code 0
+- lot A, une instance du lot A déjà là (artefact : double lancement) :
+  sortie : 1 instance(s), dont 1 sans l étiquette t05-graines-neuves-b-v1 ; code 1
+- lot B, deux instances à l'étiquette du lot A (artefact) :
+  sortie : 2 instance(s), dont 0 sans l étiquette t05-graines-neuves-a-v1 ; code 1
+- lot B, une instance sans étiquette (artefact : autre course) :
+  sortie : 1 instance(s), dont 1 sans l étiquette t05-graines-neuves-a-v1 ; code 1
+- liste illisible (artefact) :
+liste des instances illisible
+  sortie :  ; code 1
+Étape 8 (offre) :
+- plafond 1,40, EXCLURE vide (cas sain : 101 Texas ; 102 écartée par la fiabilité, 103 par la mémoire, 104 par CUDA, 105 par la machine 142924) :
+  choix : 101 1.366 146917 13.0 81920 0.998 Texas,_US ; code 0
+- EXCLURE=146917 (artefact machine exclue) :
+  aucune offre conforme
+  code 1
+- plafond 1,20 (artefact prix) :
+  aucune offre conforme
+  code 1
+- EXCLURE=abc (artefact argument) :
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+    exclues = {int(x) for x in ("142924," + sys.argv[2]).split(",") if x.strip()}
+               ~~~^^^
+ValueError: invalid literal for int() with base 10: 'abc'
+  code 1
+Lanceur entier, faux vastai (vastai réel absent de ce conteneur ; le faux refuse toute commande autre que --version, show, search), arrêts attendus avant toute création :
+- LOT absent :
+  LOT : a ou b attendu
+  code 2
+- GO_ID mal formé :
+  GO_ID : forme GO-AAAA-MM-JJ-NN attendue
+  code 2
+- COMMIT abrégé :
+  COMMIT : 40 caractères hexadécimaux attendus
+  code 2
+- vastai d'une autre version :
+  vastai : version différente de 1.8.3
+  code 2
+- branche de préparation non poussée (état actuel) :
+  fatal: couldn't find remote ref prep/t05-graines-neuves-v1
+  arrêt avant la création (ligne 47)
+  code 2
+- dossier de traces déjà présent (R12) :
+  /tmp/claude-0/-home-user-controle-ia-travail/4ff7d1a3-3d12-504e-b550-a8bc2f8510b1/scratchpad/essais-lanceur/t5 existe déjà (R12)
+  code 2
+(étape 5, garde de calcul : inchangée depuis la v4, seul le GO vient de GO_ID ; non rejouée ici : la garde du dépôt bloque toute commande de session qui la cite avec un GO fictif)
