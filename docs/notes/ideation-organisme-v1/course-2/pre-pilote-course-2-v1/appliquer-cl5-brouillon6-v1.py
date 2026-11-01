@@ -27,9 +27,9 @@ SHA5_ATTENDUE = "c04ddf15c92c68c33a6770d42ffb6513c66414ee41a7ae76b7bf5bf6d91faf0
 
 # Valeurs reportées depuis le rejeu du script v5 sur le brouillon 6 (voir traitement-contre-lecture-5-annexe-bras-meta-v1.md).
 SORTIE_B6 = {
-    "empreinte": "à reporter après le rejeu 1",
-    "lignes": "à reporter",
-    "ecart_v5": "à reporter",
+    "empreinte": "02d9c99432ec923b63573398f24ed2344243987b4a2b40238254b49e4e311087",
+    "lignes": "313",
+    "ecart_v5": "cinq",
 }
 
 CL5 = "156b9c557f9c5a692374db1f991a7e38846fa2e38214735178f5d5eae0911e2e"
