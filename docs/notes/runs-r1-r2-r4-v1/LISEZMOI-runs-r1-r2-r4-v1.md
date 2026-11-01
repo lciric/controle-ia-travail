@@ -119,5 +119,8 @@ fin, poussée des sorties (`activations-p3-rejeu-v1.npz`, complément, `scores-j
 jeton spécial que le texte stocké efface : ces actions sont « non conformes en longueur », la suite de leur épisode
 « hors contexte exact », signalées par action ; le même mécanisme vaut pour une tokenisation non canonique du 8B. Une
 première répétition, dont le dépôt local manquait des invites transcrites, s'est arrêtée aux tests et a consigné l'arrêt
-(cas d'artefact de la garde). Non répété en jouet : le passage de R4 par `p3_instance.sh` (script inchangé de P3, déjà
-éprouvé par P3 et ses tests).
+(cas d'artefact de la garde). Puis `amorce_instance_r4_v1.sh` complet en mode jouet (vers 21:26 à 21:36 UTC) :
+`p3_instance_r4_v1.sh` (suite ciblée, 123 passés en 470 s ; run de P3 jouet 12 épisodes, sondes figées, poussée), puis
+la suite (run source lu au journal, rejeu `etape=fidelite lecture=conforme`, juge, poussées), code 0. Journaux :
+`docs/notes/runs-r1-r2-r4-v1/essai-jouet-v1/`. Ce qui n'est pas éprouvé hors réseau : la carte, les vrais poids, le vrai
+tokeniseur dans la passe (le contrôle préalable l'a éprouvé seul), la poussée vers GitHub (éprouvée vers un dépôt local).
