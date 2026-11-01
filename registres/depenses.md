@@ -305,3 +305,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-11-01 18:54 UTC — **fin : Kimi seul, relecture de la candidature (tel quel), premier appel** (GO-10) : TRONQUÉ à 32 000 jetons de sortie, **0,36 USD** ; cumul GO-10 0,71 / 5.
 - 2026-11-01 18:59 UTC — **en cours : Kimi seul, relance au plafond de 65 536 jetons** (GO-10, relais local port 8804, pire cas 0,71) ; cumul au pire cas 1,42 / 5.
 - 2026-11-01 19:18 UTC — **fin : Kimi seul, relance** (GO-10) : OK, **0,40 USD** ; cumul GO-10 **1,11 / 5**. GO-10 clos à 1,11.
+- 2026-11-01 21:10 UTC — **engagement : T0.5 graines neuves** (GO-2026-11-01-11, plafond 45 USD) : quatre instances A100 SXM4 80 Go ≤ 1,40 USD/h, au plus 6 h chacune ; attendu ≈ 17 à 21,5 USD, borne dure de location 33,6 USD ; crédit Vast.ai lu 18,57 USD à 20:10 UTC (recharge automatique selon Lazar).
