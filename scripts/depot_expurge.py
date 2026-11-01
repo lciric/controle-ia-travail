@@ -64,6 +64,8 @@ RETRAITS = [
     ("livrables/controle-ia-v1.bundle", "paquet git qui contient les registres de travail (R-116)"),
     ("brouillons/**/corpus-primaire-*/**", "corpus intégral des idées : ne quitte jamais le dépôt privé"),
     ("livrables/lot-ideation-tournoi-*.zip", "lot de l'orchestrateur avec le corpus des idées : ne quitte jamais le dépôt privé"),
+    ("brouillons/canal-reprise-releve-v1/envois/candidature-pivotal-v1/**",
+     "candidature personnelle de Lazar au Pivotal Research Fellowship, privée (n° 322 de conv-audit, R-984)"),
 ]
 # L'ancien paquet git (`livrables/controle-ia-v1.bundle`, cinq commits du 2026-10-04, recopié dans
 # `livrables/premier-rendu-v1.zip`) reste : aucun fichier de son historique n'est visé ici (garde des archives).
