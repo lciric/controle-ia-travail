@@ -1,0 +1,37 @@
+Essais R5 du lanceur lancer_graines_neuves_t05_v2.sh (deec50b1897aadeff9e3bb031db2451eb4182e7ddd9444b6250c65194fa8a9d8), 2026-11-01T20:50:08Z ; étapes 6 et 8 extraites telles quelles, faux vastai (vastai réel absent de ce conteneur ; aucun appel au service)
+Étape 6 (instances) :
+- lot A, compte vide (cas sain) :
+  sortie : ok 0 ; code 0
+- lot D, instances de A, B et C (cas sain, quatrième lancement en parallèle) :
+  sortie : ok 3 ; code 0
+- lot C, instance de D seule (cas sain) :
+  sortie : ok 1 ; code 0
+- lot A, instances de A, B et C (artefact : lot A déjà lancé) :
+  sortie : 3 instance(s) ; étiquettes hors des autres lots : ['t05-graines-neuves-a-v1'] ; doublons : False ; code 1
+- lot B, deux instances à l'étiquette de A (artefact : doublon) :
+  sortie : 2 instance(s) ; étiquettes hors des autres lots : [] ; doublons : True ; code 1
+- lot B, une instance sans étiquette (artefact : autre course) :
+  sortie : 1 instance(s) ; étiquettes hors des autres lots : [None] ; doublons : False ; code 1
+- lot B, une instance de la couche 1 bis (artefact : autre course) :
+  sortie : 1 instance(s) ; étiquettes hors des autres lots : ['t05-banque-complete-v1'] ; doublons : False ; code 1
+Étape 8 (offre ; même code que la v1) :
+- plafond 1,40, EXCLURE vide (cas sain : 101) :
+  choix : 101 1.366 146917 13.0 81920 0.998 Texas,_US ; code 0
+- plafond 1,20 (artefact prix) :
+  aucune offre conforme
+  code 1
+Lanceur entier, arrêts attendus avant toute création :
+- LOT=e :
+  LOT : a, b, c ou d attendu
+  code 2
+- GO_ID absent :
+  GO_ID : forme GO-AAAA-MM-JJ-NN attendue
+  code 2
+- vastai d'une autre version :
+  vastai : version différente de 1.8.3
+  code 2
+- lot D, branche de préparation non poussée (état actuel) :
+  fatal: couldn't find remote ref prep/t05-graines-neuves-v1
+  arrêt avant la création (ligne 51)
+  code 2
+(étape 5, garde de calcul : inchangée ; non rejouée ici, la garde du dépôt filtre les commandes de session qui la citent)

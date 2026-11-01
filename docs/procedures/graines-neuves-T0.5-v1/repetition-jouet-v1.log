@@ -1,0 +1,49 @@
+Répétition jouet de la course T0.5 « graines neuves » : repetition_jouet_graines_neuves_v1.sh (813c56d833221ed37e6a66c0d5f295b198740e63d27f59aea016555f22f87a1f) au commit abbfea32074185e5921eda781f0af0400d7afc34 de prep/t05-graines-neuves-v1, lancée le 2026-11-01 vers 20:25 UTC, environnement /tmp/claude-0/-home-user-controle-ia-travail/4ff7d1a3-3d12-504e-b550-a8bc2f8510b1/scratchpad/venv-repetition-v1 (= .venv local, python 3.13, torch 2.14.1+cu130, plus pypandoc_binary 1.17 par un .pth ; l'instance installe requirements-gpu.txt, qui inclut requirements-donnees.txt)
+Notes : (1) la ligne « script répété » est vide (sha256sum lancé sur un chemin relatif après cd ; sans effet sur la répétition) ; (2) la variable PYTHONPATH_TESTS du script est sans effet sur les tests de l'amorce (le script de l'instance pose PYTHONPATH=src), d'où l'environnement à .pth ; (3) la répétition a été tuée vers 20:55 UTC par la limite de 30 min de la tâche de fond de la session, pendant les tests du passage 3 : le script de l'instance a reçu TERM et l'a traité comme le plafond de l'amorce (journal : « TERM reçu pendant tests (plafond de l'amorce) », « ARRÊT pendant tests … aucun résultat à committer », « branche calcul/t05-graines-neuves-jouet-c-v1 poussée ») ; les contrôles du passage 1 sur le dépôt nu et l'artefact du passage 3 ont été rejoués à la main (fin de ce journal).
+----- sortie du script
+commit du code répété : abbfea32074185e5921eda781f0af0400d7afc34
+sha256sum: wt-graines/docs/procedures/graines-neuves-T0.5-v1/repetition_jouet_graines_neuves_v1.sh: No such file or directory
+script répété : repetition_jouet_graines_neuves_v1.sh 
+tâches jouet : ['2604.12086v1-g2', '2602.00987v1-g2']
+tests collectés : 689
+commit de l'essai : fb7580218f89bef9ebbf19ea6e0031a1300b82cf
+passage 1-sain : code 0 ; durée 1152 s
+    | AMORCE 2026-11-01T20:25:57Z : commit fb7580218f89bef9ebbf19ea6e0031a1300b82cf
+    | AMORCE 2026-11-01T20:45:09Z : fin, code 0
+    | 2026-11-01T20:26:02Z début : ETUDE=pilote MODE=jouet COMMIT=fb7580218f89bef9ebbf19ea6e0031a1300b82cf BRANCHE=calcul/t05-graines-neuves-jouet-a-v1
+    | 2026-11-01T20:26:07Z préenregistrement lu : 689 tests attendus ; configuration prereg/T0.5-graines-neuves-jouet-config-v1.json ; tâches donnees/t05-graines-neuves-v1/taches-graines-neuves-jouet-2-v1.json présentes et scellées
+    | 2026-11-01T20:26:07Z branche calcul/t05-graines-neuves-jouet-a-v1 poussée avant l'installation (droit d'écriture éprouvé)
+    | 2026-11-01T20:44:11Z tests : 689 passed in 1076.20s (0:17:56)
+    | 2026-11-01T20:44:11Z run : 20261101-204411-t05-pilote-jouet
+    | 2026-11-01T20:45:09Z run terminé : 20261101-204411-t05-pilote-jouet ; {"commit_cite": "2660b07220ec011674f871c47fd14a2cdd840fd7", "config_sha256": "786f790bfb5a692071f667d4d2732dc1b6f59cda85eb1343cc934e454d74275b", "taches_sha256": "e0da5d7c0bbae7c29e1fc0e0da
+    | 2026-11-01T20:45:09Z vecteurs poussés : branche donnees/t05/20261101-204411-t05-pilote-jouet, commit a0faca9f96709054e97777655fc5993e839acdcc, 7258 octets
+    | 2026-11-01T20:45:09Z fin : 20261101-204411-t05-pilote-jouet ; arrêter l'instance par son identifiant (R10)
+    | 2026-11-01T20:45:09Z branche calcul/t05-graines-neuves-jouet-a-v1 poussée (résultats et traces)
+passage 2-artefact-branche-presente : code 2 ; durée 7 s
+    | AMORCE 2026-11-01T20:45:12Z : commit fb7580218f89bef9ebbf19ea6e0031a1300b82cf
+    | AMORCE 2026-11-01T20:45:19Z : fin, code 2
+    | 2026-11-01T20:45:16Z début : ETUDE=pilote MODE=jouet COMMIT=fb7580218f89bef9ebbf19ea6e0031a1300b82cf BRANCHE=calcul/t05-graines-neuves-jouet-a-v1
+    | 2026-11-01T20:45:19Z branche calcul/t05-graines-neuves-jouet-a-v1 déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…) ; arrêt avant l'installation
+----- passage 3 (artefact « tâches fausses »), journal de l'instance jouet jusqu'à l'arrêt
+2026-11-01T20:45:23Z début : ETUDE=pilote MODE=jouet COMMIT=fb7580218f89bef9ebbf19ea6e0031a1300b82cf BRANCHE=calcul/t05-graines-neuves-jouet-c-v1
+2026-11-01T20:45:27Z préenregistrement lu : 689 tests attendus ; configuration prereg/T0.5-graines-neuves-jouet-config-v1.json ; tâches donnees/t05-graines-neuves-v1/taches-graines-neuves-jouet-2-v1.json présentes et scellées
+2026-11-01T20:45:27Z branche calcul/t05-graines-neuves-jouet-c-v1 poussée avant l'installation (droit d'écriture éprouvé)
+torch 2.14.1+cu130 cuda 13.0 disponible False
+2026-11-01T20:55:27Z TERM reçu pendant tests (plafond de l'amorce)
+2026-11-01T20:55:27Z ARRÊT pendant tests (plafond de l'amorce) : aucun résultat à committer
+2026-11-01T20:55:27Z branche calcul/t05-graines-neuves-jouet-c-v1 poussée
+----- branches du dépôt nu
+branche distante :   calcul/t05-graines-neuves-jouet-a-v1
+branche distante :   calcul/t05-graines-neuves-jouet-c-v1
+branche distante :   donnees/t05/20261101-204411-t05-pilote-jouet
+branche distante : * main
+branche distante :   prep/t05-graines-neuves-v1
+----- contrôles rejoués à la main, 2026-11-01T21:02:54Z
+entropie de la fiche jouet : 112680079993504262313729028453489171983 ; entropies du manifeste : ['112680079993504262313729028453489171983']
+décisif : True ; prereg : None
+épisodes : 6 ; tâches : ['2602.00987v1-g2', '2604.12086v1-g2']
+clés de graines : 22 ; exemples : ['2602.00987v1-g2/e0', '2602.00987v1-g2/e1'] ['juge-8B/2604.12086v1-g2/e2/passe-0']
+contrôles du passage 1 : CONFORMES
+cas sain (fiche jouet) : entropie 112680079993504262313729028453489171983
+artefact tâches fausses : GardeArret : tâches e0da5d7c0bba ≠ tâches citées ffffffffffff
+Bilan : passage 1 (cas sain) code 0, 6 épisodes aux identifiants « -g2 », entropie du manifeste = entropie de la fiche (lot A), résultats, traces et vecteurs poussés ; passage 2 (branche présente) code 2 avant l'installation ; artefact « tâches fausses » arrêté par la garde du lanceur Python (rejoué hors amorce). Le modèle jouet ne produit aucune action valide : 0 notation, comme à la répétition du pilote.

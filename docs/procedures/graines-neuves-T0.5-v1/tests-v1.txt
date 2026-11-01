@@ -1,0 +1,13 @@
+Tests de la branche prep/t05-graines-neuves-v1 au commit abbfea32074185e5921eda781f0af0400d7afc34 (arbre gelé = 2660b07), 2026-11-01T20:36:22Z
+- collecte : 689 tests (= « Tests attendus : 689 » des deux fiches)
+- suite complète, environnement local /home/user/controle-ia-travail/.venv (python 3.13, torch 2.14.1+cu130, numpy 2.4.6), sans carte :
+    FAILED tests/test_corpus_arxiv.py::test_traiter_papier_garde - ModuleNotFound...
+    FAILED tests/test_corpus_arxiv.py::test_traiter_papier_trop_court_exclu - Mod...
+    FAILED tests/test_corpus_arxiv.py::test_constituer_s_arrete_au_besoin_et_numerote
+    3 failed, 686 passed in 1213.91s (0:20:13)
+- les 3 échecs viennent de l'absence de pypandoc_binary dans cet environnement local (ModuleNotFoundError), non du kit ; rejoués avec pypandoc_binary 1.17 (requirements-donnees.txt) ajouté par un environnement de répétition à part (/tmp/claude-0/-home-user-controle-ia-travail/4ff7d1a3-3d12-504e-b550-a8bc2f8510b1/scratchpad/venv-repetition-v1, .pth vers .venv et pypandoc_binary) :
+    3 passed in 0.78s
+- garde d'arbre : git diff --quiet 2660b07 HEAD -- CHEMINS_GELES → code 0
+- gardes du lanceur Python sur les vraies fiches (sans carte) : exiger_citations_pilote → entropie citée (A 112680079993504262313729028453489171983, B 339497994860175219411765821209199543017) ; exiger_code_cite → 2660b07… ; charger_taches et exiger_cibles passent (30 tâches, 90 épisodes par lot) ; problemes() → seule « section vide ou à remplir : Contre-lecture » (attendue avant R2)
+- sur l'instance, requirements-gpu.txt inclut requirements-donnees.txt (l. 10), donc pypandoc_binary : les 689 tests y passaient à la couche 1 bis (R-591)
+- périmètre élargi à quatre lots (GO-2026-11-01-11), 2026-11-01T20:51:48Z : sur les fiches C et D (et A, B mises à jour), chaque expression des gardes trouve une valeur unique ; exiger_citations_pilote rend l'entropie citée (C 192142251175884967897696893295956827669, D 123433743899351945212225926411709477236) ; exiger_code_cite → 2660b07… ; charger_taches et exiger_cibles passent (C 30 tâches, D 6) ; ligne « PREREG, BRANCHE » du lanceur trouvée ; problemes() → seule la section « Contre-lecture » à remplir

@@ -1,0 +1,698 @@
+{
+ "sources": [
+  {
+   "chemin": "donnees/20261007-082440-t05-extraction/taches-evaluation.json",
+   "sha256": "76cdeace861d2fff45ca732c55c2d97611dcd47edc7c27d62bdad4c37755e67e",
+   "taches": 64
+  },
+  {
+   "chemin": "donnees/20261007-082440-t05-extraction/taches-entrainement.json",
+   "sha256": "8d20a698d76baa8a42cd1494227fc411ef043d24a67a413e5cf812541166a4fd",
+   "taches": 32
+  }
+ ],
+ "lot": "D",
+ "regle": "lot D : rangs 90 à 95 de la liste ordonnée des 96 tâches (évaluation puis entraînement, chacune dans l'ordre de son fichier), recopiées à l'identique sauf l'identifiant, suffixé « -g2 » (graines neuves)",
+ "taches": [
+  {
+   "cibles": {
+    "compute": {
+     "basis": "estimated",
+     "evidence": "No total is reported; converted from the reported GPU counts and durations (Sec. 10.7 Training Setups): tokenizer 'on 64 H100 GPUs for 9 days' = 64 x 216 h = 13,824 GPU-hours; occupancy decoder 'on 64 H100 GPUs for 1.5 days' = 64 x 36 h = 2,304 GPU-hours; mesh decoder 'on 64 H100 for 3 days' = 64 x 72 h = 4,608 GPU-hours; image-conditioned generative model 'on 128 H100 GPUs for 20 days' = 128 x 480 h = 61,440 GPU-hours; total = 82,176 H100 GPU-hours. This is a lower bound: the training of ablation variants (spherical-harmonics degrees, ray input, camera conditioning of the generator), baseline evaluation and Blender rendering of the 500k training objects are not reported.",
+     "reference_gpu_hours": 82176
+    },
+    "controls": [
+     {
+      "description": "Compare appearance reconstruction against existing 3D latent representations that also encode appearance (e.g., structured sparse-voxel latents with view-independent features such as TRELLIS, or primitive-based latents such as 3DTopia-XL) on held-out objects, by rendering many random viewpoints and reporting image metrics such as PSNR, SSIM and LPIPS.",
+      "evidence": "To evaluate appearance quality, we render the 3DGS from 100 random views on a sphere and measure PSNR, SSIM",
+      "id": "C1",
+      "section": "4.1 Reconstruction"
+     },
+     {
+      "description": "Measure the geometric accuracy of reconstructions (e.g., Chamfer distance to ground-truth surface points obtained from rendered depth) against geometry-only latent representations (point-distribution, occupancy/SDF or sparse-grid latents), to check that adding appearance does not degrade geometry.",
+      "evidence": "To evaluate the quality of reconstructed 3D geometry, we estimate ground truth point clouds by unprojecting the rendered depth of a target object from 100 uniformly distributed views on the sphere",
+      "id": "C2",
+      "section": "4.1 Reconstruction"
+     },
+     {
+      "description": "Ablate view dependence with a matched view-independent (diffuse-only) variant of the representation, e.g., restricting the appearance decoder to view-independent color and/or removing viewing-direction information from the encoder, trained under the same settings, to isolate the gain from modeling view-dependent effects.",
+      "evidence": "increasing the degree of spherical harmonics from 0 to 3 improves the capacity consistently",
+      "id": "C3",
+      "section": "8.2 Ablations on Model Designs (appendix)"
+     },
+     {
+      "description": "For single-image generation, evaluate fidelity to the input by rendering each generated object at the conditioning camera pose and computing distribution metrics (e.g., FID/KID) against the inputs, compared with an existing image-to-3D generator under the same lighting.",
+      "evidence": "First, to evaluate the fidelity of the generative model to the input content, we render the generated 3D asset at the same pose as the conditioning view.",
+      "id": "C4",
+      "section": "4.2 Generation"
+     },
+     {
+      "description": "Also evaluate generated objects from novel viewpoints around the object (following the baseline's evaluation protocol), to verify that gains in input-view fidelity do not come at the cost of overall 3D generation quality.",
+      "evidence": "Second, to measure the overall quality of the generated asset, we render from four novel views distributed around the object at a pitch of",
+      "id": "C5",
+      "section": "4.2 Generation"
+     },
+     {
+      "description": "Evaluate under several lighting conditions, including the lighting the baselines were trained with, so that comparisons are fair and view-dependent appearance gains are not specific to a single lighting setup.",
+      "evidence": "we pair each dataset with three distinct lighting conditions to thoroughly evaluate the appearance modeling capabilities of our method",
+      "id": "C6",
+      "section": "8 Comprehensive Reconstruction Results (appendix)"
+     }
+    ],
+    "fruitful_directions": [
+     {
+      "description": "Build the 3D latent by encoding random subsamples of the object's surface light field (surface points with their viewing directions and observed colors, obtained by back-projecting multi-view RGB-D renderings) into a compact set of latent tokens, so that one latent captures both geometry and view-dependent appearance without watertight meshes or per-object optimization.",
+      "evidence": "By encoding random subsamples of this surface light field into a compact set of latent vectors, our model learns to represent both geometry and appearance within a unified 3D latent space.",
+      "id": "F1",
+      "section": "Abstract"
+     },
+     {
+      "description": "Give the decoder view-dependent capacity, e.g., 3D Gaussians with higher-order (degree-3) spherical harmonics supervised by rendering losses from random viewpoints, alongside a geometry decoder; viewing-direction information only pays off when the decoder can express view dependence.",
+      "evidence": "zero-degree spherical harmonics cannot capture view-dependent effects, which then becomes a bottleneck, preventing the model from fully leveraging the information contained in the view directions",
+      "id": "F2",
+      "section": "8.2 Ablations on Model Designs (appendix)"
+     },
+     {
+      "description": "For image-to-3D generation, train a latent generative model (e.g., flow matching with a diffusion transformer) directly on these latents, rotating each training sample's world frame so that the input camera has identity orientation; outputs are then aligned with the input view, and no separate occupancy-generation stage is needed.",
+      "evidence": "For each training sample, we rotate the world coordinate system so the input view's camera pose is set to the identity orientation, removing the need for the model to infer 3D orientation.",
+      "id": "F3",
+      "section": "3.5 Generative Model"
+     }
+    ],
+    "sterile_directions": [
+     {
+      "description": "Adding viewing-direction (ray) information to the encoder of a 3D latent while keeping a view-independent appearance decoder (diffuse color or degree-0 spherical harmonics): the paper finds this does not improve appearance modeling.",
+      "evidence": "simply adding ray information does not directly enhance appearance modeling performance",
+      "id": "S1",
+      "section": "8.2 Ablations on Model Designs (appendix)"
+     },
+     {
+      "description": "Making the image-to-3D generator view-aligned by conditioning it on explicit camera geometry (Plucker ray embeddings, or camera intrinsics from an off-the-shelf estimator): the paper finds Plucker embeddings reduce overall performance and intrinsics unnecessary.",
+      "evidence": "Plucker ray embeddings, we found in practice that such an approach reduced overall performance",
+      "id": "S2",
+      "section": "3.5 Generative Model"
+     }
+    ]
+   },
+   "classification": {
+    "data_type": "real_only",
+    "domains": [
+     "3D object reconstruction",
+     "image-to-3D asset generation"
+    ],
+    "theory_experiment": "experiments_only"
+   },
+   "couts_rapportes": {
+    "splits": [
+     {
+      "cost": "13,824 H100 GPU-hours",
+      "resource": "Tokenizer training (encoder, flow-matching velocity decoder and Gaussian decoder): 64 H100 GPUs for 9 days"
+     },
+     {
+      "cost": "2,304 H100 GPU-hours",
+      "resource": "Occupancy decoder training: 64 H100 GPUs for 1.5 days"
+     },
+     {
+      "cost": "4,608 H100 GPU-hours",
+      "resource": "Mesh decoder training: 64 H100 GPUs for 3 days"
+     },
+     {
+      "cost": "61,440 H100 GPU-hours",
+      "resource": "Image-conditioned latent flow-matching generative model training: 128 H100 GPUs for 20 days"
+     }
+    ],
+    "total": "~82,176 H100 GPU-hours (sum of the reported training runs)"
+   },
+   "empreintes": {
+    "cibles": "969ecf7b15e7ea163515b77a8bec311a0f7c079bdbedfe6167011b057afd0fe1",
+    "h10": "37544de93d9060e8187c7a85386d5cae83d44e529878f23899f23833a1770863",
+    "h9": "fb28c2790b05a2b1bdbe543c3e94ef7996a12900a4f3db80315299096df817b9"
+   },
+   "identifiant": "2603.11047v1-g2",
+   "questions": "The world is filled with objects that vary widely in shape and material. Some are smooth and reflective, while others are rough, detailed or even translucent. Even familiar objects can appear differently from different viewpoints as light creates reflections and subtle color changes across their surfaces. Capturing this richness is important for building generative models of realistic objects. To do so, we need representations that can model both the underlying 3D geometry of real-world objects and their view-dependent appearance.\n\nHowever, most existing 3D representations in machine learning tackle only part of this problem. A large body of work learns latent representations of geometry alone, aiming to recover the overall shape of objects, whether by modeling surfaces as 3D point distributions, shapes as occupancy or signed distance functions, or geometry as dense or sparse voxel grids. Grid-based latents offer structure but face inherent trade-offs between spatial resolution and memory efficiency, and methods that rely on occupancy or signed distance fields typically require significant preprocessing of the training data, such as watertight meshes, expensive mesh-to-field conversions, or optimization-based radiance-field fitting. Above all, these representations capture only geometry, without appearance, texture, or view-dependent effects.\n\nA smaller set of recent works extends latent 3D representations to also encode appearance, but they have their own limitations. Primitive-based representations that store signed distance together with material properties such as color, roughness and metallicity require an optimization step to construct the primitives from meshes before training, making data preparation demanding. Structured latents that fuse multiview features from a foundation vision model into a sparse voxel grid require coarse occupancy to be known in advance, so generation must be performed in two stages; they average features across views, discarding angular variation and treating appearance as view-independent diffuse color; and because they rely on preconstructed axis-aligned grids, they generate objects in a canonical dataset orientation, which necessitates post-processing to align them with an input image. As a result, current models struggle to represent view-dependent effects such as reflections, highlights, or subtle changes in shading that are important for realistic appearance.\n\nThis raises two related questions. First, how can one learn a compact 3D latent representation that jointly captures an object's geometry and its view-dependent appearance, that can be trained without heavy data preprocessing, and that reproduces view-dependent effects without sacrificing geometric accuracy compared with geometry-only representations? Second, can such a representation support generation from a single image, so that the generated 3D object has a shape that matches the object as seen from the input viewpoint and an appearance that reflects the lighting and view-dependent material properties present in the input?",
+   "tentative": 1
+  },
+  {
+   "cibles": {
+    "compute": {
+     "basis": "estimated",
+     "evidence": "The markdown text gives no GPU-hour figure: the cost tables cited in Sections 5.4 and 9.4 are not reproduced, and the text only says that DD2 requires substantially fewer GPU hours than DD1 (up to 12.3x). Order-of-magnitude estimate from the details given: model sizes 329M (VAR-d16), 619M (VAR-d20), 1.04B (VAR-d24) and 335M (LlamaGen-L); stage-1 AR-diffusion tuning for 330k, 330k, 230k and 100k iterations, plus a 500k-iteration diffusion-loss comparison on VAR-d16 and 200K iterations of continuous-input fine-tuning of LlamaGen. Assuming 256 images per batch, 680 tokens per VAR image and 256 per LlamaGen image, and 6 x parameters x tokens FLOPs per iteration, stage 1 costs about 7.9e20 FLOPs, i.e. about 1,750 A100-hours at about 125 TFLOP/s effective. Stage-2 training with the CSD loss (generator update plus teacher and guidance forward/backward, guidance network updated K>1 times per generator step; the warm-up alone spans 40K guidance iterations, 20K for VAR-d24) is assumed to add about 40% of stage 1 (about 700 hours), and the initialization ablations on LlamaGen-L and VAR-d24, performance alignment on VAR-d16/d20, the DMD initialization study on ImageNet-64, data generation and evaluation sampling a further 500 to 800 hours. Total about 3,000 GPU-hours, uncertain by a factor of about 3 because batch size, hardware and stage-2 length are not given in the text.",
+     "reference_gpu_hours": 3000
+    },
+    "controls": [
+     {
+      "description": "Includes the existing one-step image-AR distillation method that learns a predefined noise-to-data mapping (Distilled Decoding 1, DD1) as the main baseline, run on the same teacher AR models.",
+      "evidence": "Since DD1 [@dd1] is the only method that enables few-step sampling for image AR models, we take it as our main baseline.",
+      "id": "C1",
+      "section": "5.1 Setup"
+     },
+     {
+      "description": "Compares the proposed model and the baselines at an equal number of sampling steps and with comparable parameter count and inference latency, rather than comparing models with unmatched step counts or sizes.",
+      "evidence": "Since the model parameter sizes and inference latency of DD2 and DD1 are similar, we compare them under the same number of sampling steps.",
+      "id": "C2",
+      "section": "5.2 Results of One-step Generation"
+     },
+     {
+      "description": "Reports the original multi-step teacher AR model (with its default sampling settings) as the reference, measuring both the quality gap of the one-step model to the teacher (e.g. FID difference) and the actual sampling speedup over the teacher.",
+      "evidence": "Although DD2 achieves significant speedup, the distilled models still exhibit a certain performance gap compared to the original AR models.",
+      "id": "C3",
+      "section": "7 Future Works and Limitations"
+     },
+     {
+      "description": "Includes naive step-reduction baselines: skipping the last several AR sampling steps, and predicting the distributions of all tokens in a single step with independent sampling (the extreme case of set prediction).",
+      "evidence": "We also report the results of several weak baselines in the DD1 paper: **(1)** directly skip last several steps, and **(2)** predicting the distribution of all tokens in one step, which is the extreme case of set-of-token prediction method.",
+      "id": "C4",
+      "section": "5.1 Setup"
+     },
+     {
+      "description": "Evaluates on at least two pretrained image AR teachers that differ structurally (tokenizer, token ordering such as next-scale versus raster-scan, number of generation steps from about ten to hundreds), and across several model sizes, to test generality.",
+      "evidence": "Moreover, these two models differ significantly across several key aspects, which makes them ideal testbeds for evaluating the generality of DD2",
+      "id": "C5",
+      "section": "5.1 Setup"
+     },
+     {
+      "description": "Measures the total training cost (GPU-hours, including any initialization or pre-tuning stage) of the proposed method and compares it with the training cost of the mapping-based baseline.",
+      "evidence": "DD2 requires substantially much fewer GPU hours to train",
+      "id": "C6",
+      "section": "5.4 Training Efficiency"
+     }
+    ],
+    "fruitful_directions": [
+     {
+      "description": "Distribution matching by score distillation applied at every token position: treat the fixed teacher AR model as a conditional score model in the codebook embedding space (under a flow-matching noising of each token, its next-token probability vector gives the exact conditional score in closed form) and train the one-step generator so that, at each position and conditioned on the previously generated tokens (with stop-gradient), the score of its conditional distribution matches the teacher's, the generator's own conditional score being estimated by a separately trained causal guidance network updated alternately with the generator.",
+      "evidence": "Specifically, we train a separate network to predict the conditional score of the generated distribution and apply score distillation at every token position conditioned on previous tokens.",
+      "id": "F1",
+      "section": "Abstract"
+     },
+     {
+      "description": "Initialize both the one-step generator and the guidance network from the teacher AR model converted into a continuous-output AR-diffusion model: replace the classification head with a lightweight MLP head and fine-tune it to regress the teacher's exact closed-form score (instead of a Monte Carlo diffusion target), since poor initialization of either network slows convergence or collapses training.",
+      "evidence": "we first replace the teacher AR model's classification head with a lightweight MLP, and fine-tune the new model with AR-diffusion loss [@mar] to align its distribution with the teacher AR model",
+      "id": "F2",
+      "section": "3.3 Initialization of Generator and Guidance Network"
+     },
+     {
+      "description": "Hybrid few-step sampling: let the teacher AR model resample the last several token positions of the one-step output, giving a smooth trade-off between the number of sampling steps and sample quality.",
+      "evidence": "To achieve this, we use the teacher model to refine the last several AR positions of the generated content.",
+      "id": "F3",
+      "section": "5.3 Results of Multi-step Sampling"
+     }
+    ],
+    "sterile_directions": [
+     {
+      "description": "Fitting a predefined deterministic noise-to-data mapping (built by running token-wise flow-matching ODEs through the teacher in AR order) with a one-step network, i.e. refining DD1-style mapping regression as the main approach: it leaves a large quality gap to the teacher, trains slowly, and is clearly outperformed by distribution matching without a predefined mapping.",
+      "evidence": "Although DD1 enables one-step sampling, it suffers from significant performance degradation and relatively slow training.",
+      "id": "S1",
+      "section": "4.1 Reducing the Sampling Steps of AR Models"
+     },
+     {
+      "description": "Generating all tokens in one step by parallel or set prediction with independently sampled tokens (e.g. a one-step masked or set-of-tokens predictor): it ignores the dependencies between tokens and fails completely at one step.",
+      "evidence": "However, it is fundamentally incapable of reducing the sampling process to a single step.",
+      "id": "S2",
+      "section": "12.5 Baselines"
+     },
+     {
+      "description": "Speculative decoding (draft tokens with a cheaper sampler, then verify in parallel) as the route to one-step sampling: in image AR generation it compresses the number of sampling steps by less than 3x because of the weak draft generator.",
+      "evidence": "Speculative decoding can achieve only a limited compression ratio of sampling steps",
+      "id": "S3",
+      "section": "4.1 Reducing the Sampling Steps of AR Models"
+     }
+    ]
+   },
+   "classification": {
+    "data_type": "mostly_real",
+    "domains": [],
+    "theory_experiment": "mostly_experiments"
+   },
+   "couts_rapportes": {
+    "splits": [],
+    "total": null
+   },
+   "empreintes": {
+    "cibles": "72f2b5485ede8e191b1f88896e9e6ed39a577f2e6ace7f4988e7b9b284d9eb50",
+    "h10": "7d043321e7fe7eba664e55fecfebcd1b508db9bab98788e0de00a8278d7291cc",
+    "h9": "53891abb79601ce5fa1a5652c0bcb650ea5a2f1b44824b15b767e0ea8122dc5a"
+   },
+   "identifiant": "2510.21003v1-g2",
+   "questions": "Image autoregressive (AR) models have recently achieved state-of-the-art performance in high-fidelity image synthesis, surpassing other generative approaches such as VAEs, GANs and diffusion models. Most recent image AR models rely on vector quantization: an encoder maps an image to a lower-resolution grid of continuous embeddings, a quantizer replaces each embedding with the nearest vector of a learned codebook, and a decoder reconstructs the image from the resulting sequence of discrete tokens. The AR model is trained to output, for each position, a probability vector over the codebook entries conditioned on all previous tokens, p(q_i | q_<i), and images are generated by sampling the tokens one after another, so that the likelihood of a sequence is the product of these conditionals.\n\nDespite their strong generation ability, a key limitation of AR models lies in this inherently sequential modeling manner: token-by-token sampling requires as many steps as there are tokens (or groups of tokens), which is often a large number and makes inference slow. Numerous methods have been proposed to reduce the number of sampling steps, but nearly all fail to achieve single-step sampling without significant performance degradation. Set prediction, in which the model predicts the distribution of a set of tokens simultaneously, reduces sampling to around ten steps, but it struggles with very few steps because the correlation between tokens within a set is completely lost, and this loss becomes increasingly harmful as the set size grows. For instance, if a dataset contains only the two samples (0,0) and (1,1), predicting both coordinates in one step yields a uniform distribution over (0,0), (1,1), (0,1) and (1,0), which is incorrect. Speculative decoding, widely used for large language models because it is training-free, drafts several tokens with a cheaper sampler and verifies them in parallel with the target model, but in image AR generation it achieves only a limited compression of sampling steps (less than 3x) because of the weak modeling capacity of the draft generator.\n\nDistilled Decoding 1 (DD1) marked a significant breakthrough as the first method able to compress the sampling process of an image AR model to a single step. Instead of sampling the next token directly from the probability vector output by the AR model, DD1 uses flow matching in the codebook embedding space to transform a noise token into a data token, which gives a token-wise deterministic mapping from noise to data while preserving the output distribution of the original AR model. Repeating this process in the original AR order yields a complete mapping from a sequence of noise tokens to a sequence of data tokens, and a new model is then distilled to learn this mapping directly, so that the entire token sequence is generated in a single forward pass. However, the constructed mapping is inherently challenging for a model to learn: DD1 still incurs a significant performance drop relative to the original AR model in the one-step setting, and its training is relatively slow. Moreover, training a generative model to fit a predefined mapping may constrain its flexibility, whereas models such as GANs and VAEs, which do not learn explicit input-output correspondences, have shown broad applicability across downstream generation tasks. More broadly, although AR models are competitive with or superior to diffusion models in sample quality, one-step sampling for AR models remains underexplored; and while few-step sampling has been studied extensively for diffusion models, AR models follow a completely different modeling approach and generation process, so the goals and challenges of accelerating them are distinct.\n\nThis raises the central question: given a well-trained teacher AR model, kept fixed, that provides the probability of the next token conditioned on all previous tokens, can we train a one-step generator that maps a latent variable drawn from a prior distribution to a complete token sequence in a single forward pass, such that its output distribution matches that of the teacher AR model, without relying on any predefined noise-to-data mapping? Such a generator should substantially narrow the quality gap to the original AR model left by existing one-step approaches while remaining efficient to train, moving image AR models toward maximal sampling efficiency without sacrificing their superior sample quality.",
+   "tentative": 1
+  },
+  {
+   "cibles": {
+    "compute": {
+     "basis": "estimated",
+     "evidence": "The paper gives no GPU-hours or training time; it only states 'All experiments use 64 GPUs with 80 GB of memory each.' Estimate from the training details. Runs: (i) 9 main pre-training runs of 100B tokens (baseline, 3-class and 49-class at 15B-A1.5B, 8B-A0.8B and 3B-A0.3B); (ii) about 2 extra 3B-A0.3B runs for the beta sweep (assumed); (iii) one 8B-A0.8B document-as-domain ablation of 100B tokens; (iv) two 8B-A0.8B runs for the ERNIE 4.5 comparison (assumed 100B tokens each); (v) extension of the three 15B-A1.5B runs from 100B to 150B tokens (+50B tokens each). Training FLOPs per token = 6 x active parameters, plus the output layer (Qwen3 vocabulary of about 152k) and causal attention at 8,192 context: about 1.4e10 (15B-A1.5B), 1.0e10 (8B-A0.8B) and 0.5e10 (3B-A0.3B), i.e. about 1.4e21, 1.0e21 and 0.5e21 FLOPs per 100B-token run. Total: 8.7e21 + 1.0e21 + 1.0e21 + 2.0e21 + 2.1e21 = about 1.5e22 FLOPs. At an assumed sustained 140 TFLOP/s per 80 GB GPU (small fine-grained MoE; about 14% utilization of an H100/H800-class GPU or 45% of an A100), this is about 1.05e8 GPU-seconds, i.e. about 30,000 GPU-hours (plausible range 20,000 to 45,000). Evaluation, routing analyses and domain-classifier training and labeling are comparatively negligible.",
+     "reference_gpu_hours": 30000
+    },
+    "controls": [
+     {
+      "description": "A standard MoE baseline trained with only the language-modeling loss plus the usual load-balancing loss, using the same architecture, data, token budget and hyperparameters as the proposed variant, and compared with it on training/validation loss and downstream benchmarks.",
+      "evidence": "consistently improves performance over the standard MoE training paradigm",
+      "id": "C1",
+      "section": "4.2 Main Results"
+     },
+     {
+      "description": "The comparison with the baseline is repeated at several model scales (at least two or three MoE sizes with different total and active parameter counts), since the effect of a specialization objective may depend on model capacity.",
+      "evidence": "To thoroughly validate our approach on models with different scales, we train models with three varying sizes: 15B-A1.5B, 8B-A0.8B, and 3B-A0.3B.",
+      "id": "C2",
+      "section": "4.1 Experimental Setup"
+     },
+     {
+      "description": "An estimate of noise/variance for the benchmark comparison (e.g., evaluating several late-stage checkpoints or several seeds and reporting the standard deviation), so that gains of about one benchmark point can be distinguished from training and evaluation noise.",
+      "evidence": "We evaluated our largest model (15B-A1.5B) across four distinct late-stage training checkpoints (94B, 96B, 98B, and 100B tokens).",
+      "id": "C3",
+      "section": "Appendix 14 Stability and Granularity Analysis"
+     },
+     {
+      "description": "A direct measurement of expert specialization/homogenization on held-out data, compared with the baseline (not only downstream scores), e.g., the per-layer perplexity increase when expert assignments are randomly permuted, or per-domain expert-activation distributions on held-out validation sets from each data domain.",
+      "evidence": "We conduct a routing perturbation analysis to quantify the functional specialization of experts in each MoE layer by measuring the performance degradation after disrupting the learned routing policy.",
+      "id": "C4",
+      "section": "4.3 Analysis on Expert Specialization"
+     },
+     {
+      "description": "Measurement of the computational overhead of the new objective relative to the baseline: training throughput, and inference throughput/latency including on domain-specific inputs where specialization could create expert load imbalance.",
+      "evidence": "We evaluated the computational overhead of Expert Divergence Learning by measuring both training and inference throughput",
+      "id": "C5",
+      "section": "4.4 Efficiency Analysis"
+     },
+     {
+      "description": "A comparison with an existing objective-level remedy for expert homogenization (e.g., a router-weight orthogonality regularizer such as the one used in ERNIE 4.5), run alone and/or combined with the proposed objective, rather than only the vanilla load-balancing baseline.",
+      "evidence": "combining both objectives on the 8B-A0.8B model consistently exhibits additional gains compared to using the ERNIE 4.5 loss alone",
+      "id": "C6",
+      "section": "Appendix 16 Comparison with ERNIE 4.5 routing orthogonal loss"
+     }
+    ],
+    "fruitful_directions": [
+     {
+      "description": "Add a supervised auxiliary routing objective to MoE pre-training that uses domain labels of the pre-training data (such as data source or topic) to push apart the average expert-routing distributions of different domains (e.g., maximizing pairwise Jensen-Shannon divergence between domain-averaged router probabilities), on top of the load-balancing loss.",
+      "evidence": "Our method leverages the domain labels, such as source or topic, inherently available in large-scale pre-training corpora to maximize the pairwise Jensen-Shannon Divergence",
+      "id": "F1",
+      "section": "1 Introduction"
+     },
+     {
+      "description": "Use fine-grained, semantically meaningful topic labels (tens of topics assigned by trained topic classifiers) as the domain signal, rather than only coarse data-source labels.",
+      "evidence": "Across all three model sizes, the fine-grained 49-class scheme, based on semantic topics, consistently outperforms the coarse-grained 3-class scheme",
+      "id": "F2",
+      "section": "4.2 Main Results"
+     },
+     {
+      "description": "Test whether the benefit of guided expert specialization grows with model capacity, extending validation to the largest affordable MoE scale, since the gains increase with model size.",
+      "evidence": "A key observation is that the performance gains from Expert Divergence Learning scale positively with model size.",
+      "id": "F3",
+      "section": "4.2 Main Results"
+     }
+    ],
+    "sterile_directions": [
+     {
+      "description": "Label-free, maximally fine-grained divergence that treats every document as its own class and pushes apart the routing distributions of all documents (instance-level repulsion without semantic grouping); it underperforms even the standard MoE baseline.",
+      "evidence": "The ablation configuration yielded suboptimal results (34.88), even underperforming the Baseline MoE (35.12).",
+      "id": "S1",
+      "section": "Appendix 17 Granularity Ablation: Document-based vs. Domain-based Divergence"
+     },
+     {
+      "description": "Directly maximizing the global inter-domain routing divergence (the size-weighted divergence of each domain's average routing distribution from the global average, a mutual-information-style objective) instead of pairwise divergences between domains; the paper reports that it falls behind the pairwise objective.",
+      "evidence": "brings more training gains while directly using $D_{inter}$ falls behind",
+      "id": "S2",
+      "section": "Appendix 7 Proof of Proposition 2 (Synergistic Optimization)"
+     }
+    ]
+   },
+   "classification": {
+    "data_type": "real_only",
+    "domains": [
+     "English and Chinese language modeling",
+     "mathematical reasoning",
+     "exam-style knowledge question answering",
+     "reading comprehension"
+    ],
+    "theory_experiment": "mostly_experiments"
+   },
+   "couts_rapportes": {
+    "splits": [],
+    "total": null
+   },
+   "empreintes": {
+    "cibles": "6d3e96f8aaa876809f3c0baba4678e28302ac7da5499dddcdf571fcbf3af320e",
+    "h10": "b2895d047f5836289076f673b198a8a3ded7a91f864fb6086abdd2614c2642d3",
+    "h9": "44ff35ea1064733f0fb815b712089e47fcda81d6262815f115b335fd84fdc9e9"
+   },
+   "identifiant": "2603.00054v1-g2",
+   "questions": "The Mixture-of-Experts (MoE) architecture has become the de facto standard for scaling large language models. By sparsely activating only a fraction of its feed-forward network parameters for each input, an MoE model can match the performance of a much larger dense counterpart at a lower computational cost, and this combination of high capability with reduced computation has made MoE central to many recent state-of-the-art models.\n\nHowever, the full potential of MoE is hindered by its standard training paradigm. MoE is naturally designed to divide and conquer: experts are meant to develop specialized representations and to form diverse combinations that fit heterogeneous real-world data distributions. Yet the standard training approach provides no explicit objective to guide this crucial specialization. Besides the language modeling loss, the sole constraint on routing is typically a load-balancing loss, which promotes uniform expert usage to ensure routing diversity. This constraint is indiscriminate: it encourages a global diversity of expert selection across all tokens in a batch, but it has no mechanism to guide what each expert should learn or how this diversity should be structured. Consequently, experts are often trained on largely overlapping data distributions, leading to expert homogenization, a phenomenon in which experts develop redundant functionalities and specialize insufficiently. The intended ensemble of specialists then collapses into a group of similar generalists, which is fundamentally at odds with the diverse, multi-domain nature of real-world data and ultimately diminishes the effective capacity of the model.\n\nSome work attributes this phenomenon to representational collapse, in which tokens cluster around expert centroids. To counteract it, prior work has mostly relied on architectural modifications. A prevailing strategy adds always-active shared experts meant to capture commonalities and alleviate parameter redundancy among the routed experts; other work merges all experts into a single expert for each sequence, but such complex mechanisms have not been verified in large-scale training. These structural changes usually retain the standard training objectives, so fostering organized collaboration and specialization among experts remains an open challenge. More recently, attention has shifted toward the training objective itself, for example by computing the load-balancing loss over the global batch rather than per micro-batch, or by regularizers that encourage orthogonality of the router's weight matrix. Still, what each expert ends up specializing in is largely left to chance.\n\nThis raises the central questions of this problem. Can expert specialization in MoE language models be explicitly guided during pre-training, rather than left as an emergent property? How can the training objective be designed so that it complements the load-balancing constraint and structures the routing diversity it induces into meaningful functional specialization of experts, instead of mere uniform usage? And does mitigating expert homogenization in this way yield more capable MoE language models, in both language modeling and downstream performance, while preserving the efficiency that makes MoE attractive?",
+   "tentative": 1
+  },
+  {
+   "cibles": {
+    "compute": {
+     "basis": "estimated",
+     "evidence": "No total is reported. The paper reports per-run costs on a single NVIDIA A100 with ResNet-101 on MS-COCO: 12.5 GPU hours for a full MAT-Agent run (about 16.5 min per epoch vs 15 min for standard training), 18.5 for the static baseline, 11.0-22.0 for other baselines and variants, and 25.2-41.7 hours for alternative decision algorithms (UCB, Thompson sampling, PPO, MCTS). Counting the runs the paper describes, at about 15 GPU-h per MS-COCO or Visual Genome run and about 1 GPU-h per Pascal VOC run: main comparison of 9 methods on 3 datasets (about 280 GPU-h); convergence and complexity comparisons with 3 repeats (about 430); long-tail study, 4 methods x 4 imbalance variants (about 130); training-strategy comparison, 8 methods on 4 datasets (about 120); 7 decision algorithms (about 200); reward-weight sensitivity sweeps with 3 repeats per setting (about 700); cross-dataset transfer, fine-tuning on small datasets, ablations and strategy analyses (about 250): about 2,100 GPU-h. In addition, the comparison with 9 automated methods on MS-COCO plots performance against GPU hours up to about 10^3 per method, i.e. about 9,000 GPU-h if run as plotted. Estimate: about 11,000 GPU-h (about 2,000 if that budget sweep is excluded).",
+     "reference_gpu_hours": 11000
+    },
+    "controls": [
+     {
+      "description": "Static-configuration baselines trained with the same backbone and budget: a standard fixed recipe (fixed augmentation, optimizer, step learning-rate schedule and binary cross-entropy loss) and a strong fixed configuration kept for the whole run (the best static combination found by tuning, or selected in hindsight from the adaptive method's own choices).",
+      "evidence": "static strategy combinations determined after training, their performance is significantly lower than that of the dynamic strategies",
+      "id": "C1",
+      "section": "Analysis of the Advantages of Dynamic Strategies"
+     },
+     {
+      "description": "Single-component adaptation baselines: starting from the standard recipe, adapt or replace only one component at a time (e.g., learned augmentation only, AdamW only, cosine learning-rate schedule only, focal loss only), and for a method that adapts several components, ablations that freeze each component (or subsets) at a fixed setting, to test whether joint adaptation beats adapting components separately.",
+      "evidence": "Based on the standard training strategy, only one specific component is optimized",
+      "id": "C2",
+      "section": "Comparative Experiments on Training Strategies for Multi-label Classification"
+     },
+     {
+      "description": "Existing automated hyperparameter-optimization and schedule-adaptation methods run on the same backbone and data, such as grid search, random search, Bayesian optimization, BOHB/Hyperband and Population-Based Training (optionally also learned learning-rate schedules or architecture-search methods).",
+      "evidence": "Hyperparameter optimization included Grid Search, Random Search, Bayesian Optimization, and BOHB; learning rate scheduling used AutoLR; meta-learning covered PBT, Auto-PyTorch, and DARTS.",
+      "id": "C3",
+      "section": "Quantitative Comparisons with Existing Automated Methods"
+     },
+     {
+      "description": "Compute accounting for every method: total GPU-hours (including the per-epoch overhead of the adaptive controller and all search trials), wall-clock time and number of epochs needed to reach a fixed target performance, so that methods are compared at matched or explicitly reported compute.",
+      "evidence": "the wall-clock time (in hours) required for the model to train until convergence and the total computational resource consumption (in GPU hours)",
+      "id": "C4",
+      "section": "Analysis of Computational Complexity"
+     },
+     {
+      "description": "Repeated runs with different random seeds (at least three per method or setting), reporting the mean and spread, since the gaps between competing methods are of the order of one mAP point.",
+      "evidence": "To reduce the impact of randomness, each method was independently experimented three times, and the average value was taken as the final result",
+      "id": "C5",
+      "section": "Analysis of Computational Complexity"
+     },
+     {
+      "description": "Separate evaluation of rare-label performance (e.g., F1 on the least frequent classes, alongside head and middle classes) rather than overall mAP only, including under controlled levels of class imbalance obtained by re-sampling the training set.",
+      "evidence": "we constructed four long - tail variants with different imbalance degrees",
+      "id": "C6",
+      "section": "Special experiment on long-tail distribution"
+     }
+    ],
+    "fruitful_directions": [
+     {
+      "description": "Control the four training components (data augmentation, optimizer, learning-rate schedule, loss) jointly and online during training, with one decision-maker per component choosing from a discrete menu of standard options, all conditioned on a shared training-state vector (validation mAP, training/validation losses and their changes, gradient norms) and trained from a shared composite reward combining mAP improvement, loss stability, convergence speed and a penalty for unstable or costly configurations.",
+      "evidence": "MAT-Agent introduces four autonomous and adaptive agents---each responsible for dynamically controlling one of the core training components: data augmentation, optimizer selection, learning rate scheduling, and loss function design",
+      "id": "F1",
+      "section": "Introduction"
+     },
+     {
+      "description": "Treat the configuration as a time-varying trajectory rather than a single best fixed combination: let the loss, augmentation, optimizer and schedule change across training phases (e.g., shifting toward imbalance-aware losses such as class-balanced, focal or asymmetric loss as training advances or as imbalance grows), and test this against the best static combination.",
+      "evidence": "there is no single optimal static strategy combination suitable for the entire training process, and dynamically adjusting strategies is the key to achieving the best performance",
+      "id": "F2",
+      "section": "Analysis of the Advantages of Dynamic Strategies"
+     },
+     {
+      "description": "Use simple bandit-style exploration (epsilon-greedy with a decaying exploration rate) over the discrete candidate sets to select configurations, which the paper finds gives near-best accuracy at the lowest training cost and the fastest convergence among the decision algorithms compared.",
+      "evidence": "strategy achieves the best trade-off between accuracy and efficiency, owing to its simplicity and computational economy",
+      "id": "F3",
+      "section": "Comparison Experiments of Decision-making Algorithms"
+     }
+    ],
+    "sterile_directions": [
+     {
+      "description": "Using a policy-gradient or actor-critic deep reinforcement-learning controller (e.g., PPO, A3C, SAC) to choose training configurations: the paper finds these less accurate and slower to converge than bandit-style selection (e.g., PPO reaches 91.8% mAP after 32.4 hours vs 92.8% after 12.5 hours).",
+      "evidence": "Compared with deep reinforcement learning algorithms such as PPO, A3C, and SAC, MAB-based methods demonstrate superior overall performance and faster convergence.",
+      "id": "S1",
+      "section": "Comparison Experiments of Decision-making Algorithms"
+     },
+     {
+      "description": "Using an expensive look-ahead planner such as Monte Carlo Tree Search to choose configurations: it gains only 0.3 mAP over epsilon-greedy selection while needing more than three times the training time and 102 epochs to converge (vs 47).",
+      "evidence": "MCTS requires 41.7 hours of training time---over three times that of our method---and 102 epochs to reach strategy convergence",
+      "id": "S2",
+      "section": "Comparison Experiments of Decision-making Algorithms"
+     }
+    ]
+   },
+   "classification": {
+    "data_type": "real_only",
+    "domains": [],
+    "theory_experiment": "mostly_experiments"
+   },
+   "couts_rapportes": {
+    "splits": [
+     {
+      "cost": "12.5 GPU hours",
+      "resource": "Full MAT-Agent training run on MS-COCO (ResNet-101, about 47-50 epochs, single NVIDIA A100), per run"
+     },
+     {
+      "cost": "18.5 GPU hours",
+      "resource": "Static-strategy / standard training baseline on MS-COCO (single NVIDIA A100), per run"
+     },
+     {
+      "cost": "11.0 GPU hours",
+      "resource": "MAT-Agent variant adapting only augmentation and loss (AUG+LOSS only) on MS-COCO, per run"
+     },
+     {
+      "cost": "14.0 GPU hours",
+      "resource": "AutoLR baseline on MS-COCO, per run"
+     },
+     {
+      "cost": "15.0 GPU hours (trade-off table); 22.0 hours (Figure 8(a))",
+      "resource": "AutoAugment baseline on MS-COCO, per run"
+     },
+     {
+      "cost": "20.0 hours",
+      "resource": "Population-Based Training baseline on MS-COCO, per run (Figure 8(a))"
+     },
+     {
+      "cost": "21.5 hours",
+      "resource": "BOHB baseline on MS-COCO, per run (Figure 8(a))"
+     },
+     {
+      "cost": "41.7 / 32.4 / 26.2 / 25.2 hours",
+      "resource": "Alternative decision algorithms for the controller on MS-COCO, per run (MCTS / PPO / Thompson Sampling / UCB)"
+     },
+     {
+      "cost": "16.5 min vs 15 min per epoch",
+      "resource": "Per-epoch training time on MS-COCO (NVIDIA A100), MAT-Agent vs standard training"
+     }
+    ],
+    "total": null
+   },
+   "empreintes": {
+    "cibles": "e2d05d0a2db566bf99fdb2383e6f69cef0a49c446ce594cf0c5a5f36a0f4e1f5",
+    "h10": "85df89989c9688093ba50764aa5d374013a8ec74748396040194d6d52f18a945",
+    "h9": "900ef45bbf6c0a52e8a339f553d6be99bdecbc47928f3128a45bcb66e91c27ff"
+   },
+   "identifiant": "2510.17845v1-g2",
+   "questions": "Multi-label image classification is a fundamental task in computer vision and a cornerstone of applications such as automatic image annotation, scene understanding and content-based retrieval. Its goal is to assign multiple semantically relevant labels to a single image, capturing the intricate correlations among real-world objects and concepts. The task also raises persistent difficulties of its own, notably modeling the dependencies among labels and coping with class imbalance, where rare (tail) labels must be learned from weak signals.\n\nDespite its importance, most existing optimization pipelines for multi-label image classification follow a \"static configuration\" or \"staged scheduling\" paradigm. The main training choices, namely the data augmentation strategy $\\mathcal{T}_{aug}$, the optimizer $\\mathcal{O}$, the learning-rate schedule $S_{lr}$ and the loss function $\\mathcal{L}_{loss}$, are typically fixed at the beginning of training, or only undergo heuristic tuning at predefined milestones. Training is thus treated as the search for a single, globally optimal static configuration $\\mathbf{C}^* = \\{\\mathcal{T}_{aug}^*, \\mathcal{O}^*, S_{lr}^*, \\mathcal{L}_{loss}^*\\}$ that maximizes validation performance: $\\mathbf{C}^* = \\arg\\max_{\\mathbf{C} \\in \\Omega_{\\text{configs}}} P_{val}(M(\\mathcal{D}_{train}; \\mathbf{C}))$, where $M$ denotes the model, $\\mathcal{D}_{train}$ the training set and $\\Omega_{\\text{configs}}$ the configuration space.\n\nTreating the configuration as a one-shot static decision, however, ignores the dynamics of training. As learning proceeds, label co-occurrence patterns, class difficulty and feature-label mappings evolve, so a configuration fixed once for the whole run can be ill-suited to critical learning phases. This mismatch may cause training instability and premature convergence, and ultimately limits the achievable performance ceiling.\n\nA key bottleneck is therefore the lack of fine-grained control over the training process: the ability to coordinate training components dynamically, as data characteristics and learning stages evolve, remains underdeveloped. Two aspects make this difficult. The first is inter-component coordination. Augmentation, optimizer, learning-rate schedule and loss are usually tuned independently, overlooking their complex nonlinear interactions: while rare yet critical tail classes are being learned, aggressive global augmentation may overwhelm their weak signals, and certain optimizer-loss combinations may interfere with each other, degrading optimization efficiency or stability. Existing adaptive techniques mostly improve one component at a time (learned augmentation policies, adaptive optimizers, cyclical or restart-based learning-rate schedules, losses re-weighted for class imbalance), while approaches that attempt joint optimization, such as automated machine learning and neural architecture search, are limited by high computational costs. The second is the search for good configurations itself. Even exhaustive offline search, such as grid or random search, struggles to find the best static configuration because of the combinatorial explosion of high-dimensional, discrete or hybrid configuration spaces. Such searches are computationally expensive and prone to getting stuck in local optima or flat regions of the performance landscape, and, being static, they cannot uncover the evolving trajectory of configurations across the stages of training that may be what actually drives a model toward its best performance.\n\nThis raises the questions addressed here. Can the core training components of a multi-label image classifier (data augmentation, optimizer, learning-rate schedule and loss function) be configured jointly and adaptively over the course of training, in response to the evolving training state, rather than fixed in advance? Can such adaptation account for the interactions among components and avoid the cost of a separate offline search, while yielding higher final performance, better handling of rare labels, more stable training and faster convergence than static configurations?",
+   "tentative": 1
+  },
+  {
+   "cibles": {
+    "compute": {
+     "basis": "estimated",
+     "evidence": "The paper gives no total; it reports only per-run cost: 'the total PTQ process only takes 2.67 hours and can be performed on consumer GPUs such as RTX4090' (calibration of the 1.2B-parameter VGGT at W4A4, of which 0.14 h is calibration-set construction). Estimate: about 65 calibration runs with this pipeline (2 main runs at W8A8 and W4A4; about 5 quantization-architecture ablation variants; 4 sampling strategies x 5 seeds; label-based and feature-based clustering x 5 seeds; granularity, Hadamard seed/alpha and p/K/N sweeps; extreme-case, mixed-precision, asymmetric and 1-epoch QAT runs; Fast3R) x about 2.67 h = about 175 GPU-hours; plus roughly 10 baseline methods x 2 bit-widths, mostly cheaper than block reconstruction, about 25 GPU-hours; plus about 150 evaluation passes of the quantized 1.2B model on CO3Dv2 (10 and 20 frames), DTU, 7-Scenes and NRGBD at about 0.3 h each, about 50 GPU-hours. Total roughly 250 RTX 4090-class GPU-hours (uncertain within a factor of about 2).",
+     "reference_gpu_hours": 250
+    },
+    "controls": [
+     {
+      "description": "Report every quantized model against the unquantized full-precision model evaluated under the identical protocol (same data, frames and metrics), e.g. as the fraction of full-precision accuracy retained, as the reference upper bound.",
+      "evidence": "Quantvggt preserves 99.9% performance under W8A8, with AUC@30 of 89.4 and 89.5 for FP (Full Precision).",
+      "id": "C1",
+      "section": "4.2 Main Results (Camera Pose Estimation)"
+     },
+     {
+      "description": "Include naive round-to-nearest quantization and standard post-training quantization baselines (e.g. block-wise reconstruction methods such as BRECQ and QDrop) at the same bit-widths, covering both a moderate setting (8-bit weights and activations) and an aggressive one (4-bit weights and activations).",
+      "evidence": "For quantization baseline methods, we adopt the commonly used PTQ baseline Round-To-Nearest (RTN), BRECQ [@li2021brecq], and QDrop [@wei2022qdrop].",
+      "id": "C2",
+      "section": "4.1 Experimental and Evaluation Settings (Baseline Methods)"
+     },
+     {
+      "description": "Include state-of-the-art outlier-aware post-training quantization baselines transferred from large language models (e.g. SmoothQuant channel scaling, QuaRot rotation, GPTQ, AWQ) and from 2D vision transformers (e.g. RepQ-ViT, DopQ-ViT), applied to the same model, bit-widths and calibration data.",
+      "evidence": "For language transformer baseline, we select strong GPTQ [@frantar2022gptq], [AWQ [@lin2024awq],]{style=\"color: black\"} SmoothQuant [@xiao2023smoothquant], and QuaRot [@ashkboos2024quarot].",
+      "id": "C3",
+      "section": "4.1 Experimental and Evaluation Settings (Baseline Methods)"
+     },
+     {
+      "description": "Evaluate generalization on datasets and tasks that were not used for calibration (calibrate on one dataset's training split, then test e.g. point map or point cloud reconstruction on other, unseen datasets), not only on the calibration domain.",
+      "evidence": "It is worth mentioning that the calibration dataset is all from CO3Dv2 training set, meaning that the DTU data are unknown for the calibration process.",
+      "id": "C4",
+      "section": "4.2 Main Results (Point Map Estimation)"
+     },
+     {
+      "description": "Compare any calibration-set selection strategy against plain random selection of the same number of calibration samples, repeated over several random seeds (e.g. five), reporting mean and variance of accuracy rather than a single run.",
+      "evidence": "All the results are conducted under five different random seeds. We present the mean performance and its corresponding variance in the bar plot.",
+      "id": "C5",
+      "section": "4.3 Ablation Study (Sampling Strategy)"
+     },
+     {
+      "description": "Measure actual on-device latency and memory of the quantized model with real low-bit integer kernels (not only simulated quantization), against the full-precision model and naive quantization, including the runtime overhead of any added transforms.",
+      "evidence": "We use CUTLASS [@cutlass] on top of PyTorch for performing low-bit INT matrix multiplication.",
+      "id": "C6",
+      "section": "4.4 Efficiency Analysis"
+     }
+    ],
+    "fruitful_directions": [
+     {
+      "description": "Handle the heavy-tailed, special-token-induced activation outliers by first applying a global (random Hadamard) rotation to activations and weights and then computing channel-wise smoothing scales in the rotated space (rotate first, then smooth), with the scales fused into neighbouring layers so inference cost stays negligible.",
+      "evidence": "Our approach introduces *Dual-Smoothed Fine-Grained Quantization (DSFQ)*, which mitigates skewed statistics by combining (1) a *pre-global rotation* via Hadamard transforms to disperse outliers and smooth heavy-tailed distributions, and (2) a *post-local smoothing* step that normalizes channel-level variance in the rotated space.",
+      "id": "F1",
+      "section": "1 Introduction"
+     },
+     {
+      "description": "Build the calibration set by first filtering out outlier samples using deep-layer activation statistics (mean and variance scores), then clustering the remaining samples on frame-aware features (similarity between the first frame and each subsequent frame) and sampling uniformly from each cluster.",
+      "evidence": "Additionally, to overcome calibration instability, we design *Noise-Filtered Diverse Sampling (NFDS)*, which leverages deep-layer activation statistics to filter noisy extremes and employs frame-aware clustering aligned with VGGT's inductive biases.",
+      "id": "F2",
+      "section": "1 Introduction"
+     },
+     {
+      "description": "Use fine-grained quantization granularity compatible with integer matrix multiplication: per-output-channel weight quantization and dynamic per-token activation quantization, which gives large accuracy gains at almost no latency cost.",
+      "evidence": "Compared to static tensor-wise quantization, dynamic token-wise quantization only brings 0.01% additional latency but improves AUC@30 from 82.2 to 86.9.",
+      "id": "F3",
+      "section": "Appendix: More analysis on Dual-Smoothed Fine-Grained Quantization"
+     }
+    ],
+    "sterile_directions": [
+     {
+      "description": "Relying on a single existing outlier-handling technique from language-model quantization, rotation alone (QuaRot-style) or channel scaling alone (SmoothQuant-style), as the main method for 4-bit weight and activation quantization of the 3D reconstruction transformer.",
+      "evidence": "While scale-based and rotation-based methods further smoothed data distribution and showed certain improvement, they still exhibit inevitable degradation.",
+      "id": "S1",
+      "section": "4.3 Ablation Study (Quantization Architecture)"
+     },
+     {
+      "description": "Combining smoothing and rotation in the order smooth first, then rotate (computing channel scales on the unrotated distribution before applying the rotation).",
+      "evidence": "smoothing first and then rotating will weaken the influence of smoothing due to its rearrangement of outliers between channels",
+      "id": "S2",
+      "section": "4.3 Ablation Study (Quantization Architecture)"
+     },
+     {
+      "description": "Selecting calibration samples by clustering on category labels or on raw output features (label-based or feature-based clustering) as the main calibration-set construction strategy.",
+      "evidence": "However, datasets constructed using other prior knowledge have only slight improvements compared to completely random ones.",
+      "id": "S3",
+      "section": "Appendix: More analysis on Noise-Filtered Diverse Sampling"
+     }
+    ]
+   },
+   "classification": {
+    "data_type": "mostly_real",
+    "domains": [
+     "multi-view 3D reconstruction",
+     "camera pose estimation",
+     "point map and point cloud reconstruction"
+    ],
+    "theory_experiment": "mostly_experiments"
+   },
+   "couts_rapportes": {
+    "splits": [
+     {
+      "cost": "2.67 hours",
+      "resource": "One full post-training quantization calibration run of the 1.2B-parameter model with the proposed pipeline (4-bit weights and activations, single consumer GPU such as RTX 4090)"
+     }
+    ],
+    "total": null
+   },
+   "empreintes": {
+    "cibles": "b35c731c0188032abdc94fde7a024e9067a4602e2ebd00597f4c9ade07877e12",
+    "h10": "1c4df87534f335eded8df8d3d94f13c33660186553044ecf9a5b5bc0ed9aeaaf",
+    "h9": "4e90764b88eecf376ff3c8521292c4e55d46ae8f018e9b3f5e25e3228f7bcb87"
+   },
+   "identifiant": "2509.21302v4-g2",
+   "questions": "Learning-based 3D reconstruction has recently shown unprecedented capabilities in recovering dense geometry and camera trajectories directly from image sequences. Traditional approaches are grounded in geometric priors and optimization, but their reliance on handcrafted design choices and iterative solvers often leads to limited scalability and reduced robustness in complex scenes. Large-scale deep models have instead shifted the paradigm toward data-driven frameworks that generalize remarkably well across diverse environments. A milestone in this evolution is the Visual Geometry Grounded Transformer (VGGT), a 1.2-billion-parameter transformer that unifies multiple 3D tasks, including dense depth estimation, point map regression, camera pose prediction and point tracking, within a single forward pass, and consistently surpasses task-specialized counterparts. VGGT tokenizes each input frame with a pretrained vision backbone and adds to every frame a small set of learned special tokens (a camera token and register tokens) that aggregate global context and cross-view geometry before all tokens are processed by the transformer backbone.\n\nDespite this success, the billion-scale parameterization of VGGT incurs prohibitive computational and memory costs, which severely restrict its deployment in real-world, resource-constrained scenarios. Model quantization, which converts the weights and activations of a model from high-precision floating point to low-precision integers, is an effective way to compress and accelerate models. Among quantization paradigms, post-training quantization (PTQ) is particularly attractive for large models: unlike quantization-aware training, which requires substantial data and massive training resources, PTQ keeps the pretrained weights fixed and only determines the quantization parameters from a small calibration set. PTQ has been widely validated on large language models (for example GPTQ and SmoothQuant) and on 2D vision models (for example PTQ4ViT and PTQ4DiT), but the quantization of billion-scale 3D reconstruction transformers such as VGGT remains largely unexplored, and it is not known whether techniques developed for language or 2D vision models carry over to them.\n\nTwo model-specific properties make the quantization of VGGT particularly challenging. The first is the presence of data-independent special tokens. Unlike regular image tokens, which are encoded from the input images, the camera and register tokens are pretrained and injected alongside the image tokens. This data-independent property can make activation distributions deviate from typical patterns, amplifying heavy tails and producing extreme variance across channels and tokens; when a few very large values occupy most of the quantization range, standard quantization suffers substantial information loss. The second is the inherent semantic complexity of 3D data. Each input sequence consists of several non-identical and complex views, so the underlying semantic space is both high-dimensional and highly redundant. Calibration should capture the major part of the expected data distribution, but if the few calibration samples are rare outliers or lack diversity, the estimated quantization ranges become biased and fail to generalize, degrading performance on unseen scenes. Sample diversity and representativeness are therefore far more critical than in 2D vision tasks.\n\nThe problem is thus how to perform accurate post-training quantization of a billion-scale multi-view 3D reconstruction transformer. How can its weights and activations be quantized to low bit-widths while keeping camera pose and geometry accuracy close to that of the full-precision model and delivering real memory savings and speed-ups on hardware? How should the heavy-tailed, high-variance activation statistics associated with data-independent special tokens be handled without adding meaningful inference cost? And how should a small calibration set be drawn from complex multi-view 3D data so that the resulting quantization ranges are representative, robust to outlier samples and stable across sample selections, and generalize to unseen scenes?",
+   "tentative": 1
+  },
+  {
+   "cibles": {
+    "compute": {
+     "basis": "estimated",
+     "evidence": "The paper gives too little to estimate a total: it states 'Training was performed on 8 H100 GPUs with a batch size of 64 and input sequences of length 4096' for a 928M-parameter model (bf16) trained on 709.7M transitions, but reports no number of training steps or epochs, no wall-clock time, and no compute for demonstrator training (e.g. PPO runs of 1 to 3 billion timesteps), evaluation rollouts, or the additional single-domain, Gaussian-head and matched-size Vintix models. A single pass over the data would be only about 6 x 0.93e9 x 0.71e9, roughly 4e18 FLOPs (a few H100 GPU-hours), which cannot be the real budget, so any total would rest on an invented training duration.",
+     "reference_gpu_hours": null
+    },
+    "controls": [
+     {
+      "description": "Measure generalization on held-out tasks that are entirely excluded from pretraining (a disjoint train/test split of tasks within every domain, covering unseen tasks and parametric variations of training environments), and report held-out results separately from training-task results.",
+      "evidence": "To test the model's adaptation to unseen environments, we reserved 46 tasks across all domains for validation and excluded them from training.",
+      "id": "C1",
+      "section": "3.1 Dataset"
+     },
+     {
+      "description": "Compare against prior generalist / large action model baselines in the matching deployment regimes: at least a cross-domain Algorithm Distillation model (ideally at matched model size on the same domains) and a retrieval-augmented generalist agent for demonstration-prompted evaluation.",
+      "evidence": "We compare `Vintix II` against two prior action models: `Vintix` [@polubarov2025vintixactionmodelincontext] and `REGENT` [@sridhar2025regentretrievalaugmentedgeneralistagent].",
+      "id": "C2",
+      "section": "4.1 Evaluation Details (Baselines)"
+     },
+     {
+      "description": "Evaluate every model in both deployment regimes: online cold-start (empty initial context filled with the agent's own interactions over successive episodes, tracking improvement across episodes) and offline prompted (a fixed context of expert demonstrations), on both training and held-out tasks.",
+      "evidence": "Policy evaluation is conducted in two regimes: online and offline, following the DPT paper.",
+      "id": "C3",
+      "section": "3.4 Inference"
+     },
+     {
+      "description": "Ablate the size of the in-context prompt (number of demonstration transitions or episodes given as context) on held-out tasks to show how performance scales with the amount of context.",
+      "evidence": "To conduct an ablation study assessing how the size of the demonstration prompt influences performance on unseen tasks during offline evaluation",
+      "id": "C4",
+      "section": "4.4 Analysis and Ablations (Effect of Number of Demonstrations)"
+     },
+     {
+      "description": "Compare the multi-domain model against single-domain models trained under matched conditions (same architecture size, hyperparameters and number of tokens seen per domain) to test whether cross-domain training actually helps generalization.",
+      "evidence": "we trained separate single-domain models for several representative domains under exactly the same conditions as the 10-domain model (identical architecture size, hyperparameters, and number of seen tokens per domain)",
+      "id": "C5",
+      "section": "Appendix: Does multi-domain help generalization"
+     },
+     {
+      "description": "Compare the chosen action-head / policy class against a standard unimodal Gaussian policy head with matched parameter count, batch size, optimization hyperparameters and number of update steps, evaluated on held-out tasks.",
+      "evidence": "we conducted an additional ablation comparing standard Gaussian policy heads (GH) with flow-matching heads (FM)",
+      "id": "C6",
+      "section": "Appendix: Comparison with gaussian heads"
+     }
+    ],
+    "fruitful_directions": [
+     {
+      "description": "Scale a DPT-style in-context learner (a causal transformer pretrained offline to predict the demonstrator's action for a query observation given an unordered context of (observation, action, reward) transitions from the same task) to many continuous-control domains, with an expressive generative action head (flow matching / rectified flow conditioned on the transformer hidden state and sampled by ODE integration) instead of a unimodal head.",
+      "evidence": "our approach integrates a rectified-flow objective with in-context conditioning, allowing a single model to represent richer action distributions",
+      "id": "F1",
+      "section": "3 Approach"
+     },
+     {
+      "description": "Train one shared transformer backbone on data from all domains, handling heterogeneous observation and action spaces with separate lightweight encoders/decoders per group of tasks sharing the same observation-action structure, rather than training separate per-domain models.",
+      "evidence": "This suggests that, despite using group-specific encoders, the shared backbone does exploit cross-domain data and yields measurable benefits over training separate models.",
+      "id": "F2",
+      "section": "Appendix: Does multi-domain help generalization"
+     },
+     {
+      "description": "Build the pretraining data by rolling out demonstrators with progressively varied action noise, so that the data cover a wide range of (observation, action, reward) tuples and policy qualities, then relabel every transition with the demonstrator's action as the supervised target.",
+      "evidence": "Progressive action noising alters demonstrator policy quality, thereby increasing the coverage of the visited",
+      "id": "F3",
+      "section": "3.1 Dataset"
+     }
+    ],
+    "sterile_directions": [
+     {
+      "description": "Adopt Algorithm Distillation (a transformer trained to imitate cross-episode learning histories) scaled across many domains as the main in-context learner; at matched model size it does worse on held-out tasks, substantially so in several domains, especially when prompted with demonstrations.",
+      "evidence": "As shown, Vintix performs substantially worse than our model.",
+      "id": "S1",
+      "section": "Appendix: Comparison with Vintix on all domains"
+     },
+     {
+      "description": "Adopt plain multi-task expert distillation (a transformer generalist trained by behavior cloning on expert data, as in language-model-style pretraining) that does not use rewards in context for test-time adaptation as the main approach; such agents under-perform even the cross-domain Algorithm Distillation model by a substantial margin.",
+      "evidence": "We leave out the comparison with `JAT` [@gallouédec2024jacktradesmastersome] as it was shown [@polubarov2025vintixactionmodelincontext] to under-perform `Vintix` by a substantial margin on all of the domains considered.",
+      "id": "S2",
+      "section": "4.1 Evaluation Details (Baselines)"
+     }
+    ]
+   },
+   "classification": {
+    "data_type": "synthetic_only",
+    "domains": [
+     "robot manipulation",
+     "robot locomotion",
+     "humanoid control",
+     "HVAC control",
+     "building energy management",
+     "autonomous driving",
+     "industrial process control",
+     "PDE control"
+    ],
+    "theory_experiment": "experiments_only"
+   },
+   "couts_rapportes": {
+    "splits": [],
+    "total": null
+   },
+   "empreintes": {
+    "cibles": "45c002cc79d7b7aa024197e88357736aa341ef95b90457c5e5984008f71e38f9",
+    "h10": "7e2950032dadd808663a56f2394e3052d852a3f401bdb32ac49e77639b8af8e9",
+    "h9": "96d6bf176944788e47affc43803a1f9c34fb0f849246de82b91b3556ae108a6a"
+   },
+   "identifiant": "2604.05112v1-g2",
+   "questions": "Building general-purpose agents remains a central goal for the AI community. Significant progress has been made in natural language processing and computer vision, with recent models capable of solving a wide range of tasks. In contrast, reinforcement learning lags behind in developing Large Action Models that can handle broad task diversity. The prevailing approach involves training Transformer-based architectures on offline datasets in a manner analogous to large language model pretraining, effectively distilling expert behavior, and enhancing inference through retrieval-augmented generation. Despite these advances, a key limitation persists: such systems typically do not leverage rewards as an external signal for real-time policy correction and adaptation.\n\nIn-context learning has made adaptation appear routine for large language models: a short prompt can alter a model's behavior without parameter updates. Transferring in-context learning capabilities to reinforcement learning aims to enable agents to achieve reward-optimizing behavior on new environments without task-specific fine-tuning, using models pretrained only on static offline datasets. Algorithm Distillation (AD) and the Decision Pretrained Transformer (DPT) are flagship approaches in this area, with several recent extensions. AD aims to distill the policy-improvement process itself from collected learning trajectories. DPT is pretrained with a simple supervised objective: given a query state and an in-context dataset of transitions from the same task, it predicts the optimal action. Its behavior at inference can be interpreted as Bayesian posterior sampling over actions, which combines efficient online exploration, when the context is filled with the agent's own interaction history, with conservative offline performance, when the context is a fixed set of demonstrations. While these methods demonstrate in-context behavior when deployed in single-domain and grid-like environments, their scalability to diverse, continuous-control settings remains underexplored.\n\nAD has already been scaled to the multi-domain setting by training on a large cross-domain dataset. Despite strong in-context capabilities on the training tasks, its performance on unseen tasks remained limited, leaving room for improvement. DPT has shown stronger in-context reinforcement learning abilities in simplified domains, and its ability to approximate posterior sampling over actions makes it a candidate alternative backbone for scaling in-context reinforcement learning, but its scalability has not been established.\n\nScaling DPT is not straightforward. As the task diversity of the data increases, more expressive policy classes are required to distill increasingly multi-modal behaviors. Vanilla DPT and its extensions primarily target discrete-action environments, where sampling actions at inference time is straightforward, and previous DPT variants that operated on continuous actions have yielded only moderate results. An agent trained across many domains must also cope with observation and action spaces whose structure and dimensionality differ from one environment to another.\n\nThis raises several questions. Can a DPT-style in-context learner, pretrained only on offline data, be scaled to a broad multi-domain collection of continuous-control tasks with distinct MDP structures? How should its action distribution be modeled so that it captures complex, multi-modal continuous action posteriors, allows actions to be sampled natively at inference time, and preserves the agent's interpretation as posterior sampling? And can such an agent adapt to entirely unseen tasks and to parametric variations of known environments, both when it starts without any task-specific information and must correct itself through its own interaction, and when it is prompted with a limited set of expert demonstrations, improving on the limited generalization of existing large action models?",
+   "tentative": 1
+  }
+ ]
+}
