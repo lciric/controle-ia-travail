@@ -476,17 +476,10 @@ def garde_absence_fuite(regle: RegleDePaires, documents, coupure: int, racine: i
 # ---------------------------------------------------------------------------------------------------------------------
 
 def _rangs_moyens(x: np.ndarray) -> np.ndarray:
-    ordre = np.argsort(x, kind="mergesort")
-    xs = x[ordre]
-    rangs = np.empty(len(x))
-    i = 0
-    while i < len(x):
-        j = i
-        while j + 1 < len(x) and xs[j + 1] == xs[i]:
-            j += 1
-        rangs[ordre[i:j + 1]] = 0.5 * (i + j) + 1.0
-        i = j + 1
-    return rangs
+    """Rangs moyens (1 à n), égalités au rang moyen de leur groupe."""
+    _, inverse, compte = np.unique(x, return_inverse=True, return_counts=True)
+    fin = np.cumsum(compte)
+    return ((fin - compte + 1 + fin) / 2.0)[inverse]
 
 
 def delong(scores: list, y: np.ndarray):

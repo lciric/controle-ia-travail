@@ -135,8 +135,8 @@ def test_retrodiction_monde_nul_aucun_bras_n_entre():
     docs = rp.monde_jouet(RACINE, fermeture=0.0, n_apres=1500)
     res = rp.retrodiction(docs, COUPURE, HORIZON, 1,
                           [rp.Hasard(), rp.SwansonABC(), rp.Voisinage("aa")], racine=RACINE)
-    assert rp.regle_entree_course_2(res["holm"]) == [] or all(
-        res["comparaison"][k]["delta"] < 0.06 for k in res["comparaison"])
+    assert rp.regle_entree_course_2(res["holm"]) == []
+    assert all(abs(res["comparaison"][k]["delta"]) < 0.05 for k in res["comparaison"])
 
 
 # ---------------------------------------------------------------------------------------------- gardes : sain + artefact
