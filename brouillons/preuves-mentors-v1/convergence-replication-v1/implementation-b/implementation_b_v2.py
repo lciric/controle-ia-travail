@@ -2045,6 +2045,12 @@ AMBIGUITES_RESTANTES = (
     "comparé à celui de E1.",
     "Une marque de frontière sur un élément ne fait que tolérer une différence A/B ; la valeur « retenue » est celle de A, mais B ne "
     "remplace pas ses propres classes : il écrit les deux.",
+    "T3 : la comparaison du plus grand poids à 0x1.fffffff768fa1p-1 porte sur une valeur brute de E1 (exclue de la marque, § 8) ; B écrit "
+    "seulement à titre d'information le nombre de tâches à moins de ε de ce seuil, sans marque.",
+    "Contrastes de concordance exigée : « z_π(A) − z_π(B) ≤ 1e-9 » est appliqué aux quatre contrastes primaires, ce qui est plus étroit que "
+    "la tolérance sur la moyenne (un écart de 5e-10 sur la moyenne d'un contraste primaire déplace z_π de plus de 1e-9 : arrêt).",
+    "Mode `essai` (pièces de la course originale ou de ses variantes) : sous-commande de B hors du contrat du § 3, utilisée pour le § 12 ; "
+    "elle impose les racines de la course originale et ne peut pas servir pour la réplication (E3 et E2 y sont refusés).",
 )
 
 LIMITES_VALIDATION = (
@@ -2058,18 +2064,20 @@ LIMITES_VALIDATION = (
 )
 
 FICHIERS_OUVERTS = (
-    "/home/claude/controle-ia-travail/CLAUDE.md (consignes permanentes du dépôt, chargées automatiquement par l'outil, relues une fois)",
-    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/consigne-implementation-b-v2.md",
-    "…/convergence-replication-v1/implementation-b/entrees/specification-statistique-decisive-v2.md",
-    "…/convergence-replication-v1/implementation-b/entrees/specification-statistique-decisive-v1.md (v1, travail précédent)",
-    "…/convergence-replication-v1/implementation-b/entrees/resultats-regles-defense.json (lecture et empreinte)",
-    "…/convergence-replication-v1/implementation-b/entrees/analyse-regles-defense.json (lecture et empreinte)",
-    "…/convergence-replication-v1/implementation-b/implementation_b.py (v1, lecture seule, non modifié)",
-    "…/convergence-replication-v1/implementation-b/test_implementation_b.py (v1, lecture seule, non modifié)",
-    "…/convergence-replication-v1/implementation-b/validation-b-v1.md et .json, sortie-b-originale-v1.json (v1, listés, non modifiés)",
-    "/home/claude/controle-ia-travail/.venv/bin/python (exécution) ; pytest et numpy de ce même environnement (importés)",
-    "Dossier temporaire de l'outil (…/scratchpad/v2/…, …/scratchpad/mut/…) : brouillons de ce travail et script de mutations, supprimés à la fin",
-    "Listage (ls) du dossier parent …/convergence-replication-v1/ et du dossier temporaire de l'outil (noms seulement, aucun contenu ouvert)",
+    "/home/claude/controle-ia-travail/CLAUDE.md (consignes permanentes du dépôt, fournies par l'outil dans le contexte de la session ; non ouvert par une commande)",
+    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/consigne-implementation-b-v2.md (lu)",
+    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/implementation-b/entrees/specification-statistique-decisive-v2.md (lu en entier ; empreinte vérifiée)",
+    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/implementation-b/entrees/specification-statistique-decisive-v1.md (v1, lu lors du travail précédent)",
+    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/implementation-b/entrees/resultats-regles-defense.json (lu ; empreinte vérifiée)",
+    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/implementation-b/entrees/analyse-regles-defense.json (lu ; empreinte vérifiée)",
+    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/implementation-b/implementation_b.py (v1, lu, non modifié)",
+    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/implementation-b/test_implementation_b.py (v1, lu, non modifié)",
+    "/home/claude/controle-ia-travail/brouillons/preuves-mentors-v1/convergence-replication-v1/implementation-b/validation-b-v1.md, validation-b-v1.json, sortie-b-originale-v1.json (v1, lus, non modifiés)",
+    "/home/claude/controle-ia-travail/.venv/bin/python (exécution) ; pytest 9.1.1 et numpy 2.4.6 de ce même environnement (importés par l'exécution)",
+    "/tmp/claude-0/-home-claude/730d0294-0b2b-55ca-8b32-49f2d3ec072d/scratchpad/mut/mutations.py (mon script de mutations de la v1, lu pour l'adapter)",
+    "/tmp/claude-0/-home-claude/730d0294-0b2b-55ca-8b32-49f2d3ec072d/scratchpad/v2/ (mes brouillons : part1-3.py, tpart1-4.py, mutations2.py, run/, mutw/ ; supprimés à la fin)",
+    "Listage (ls) des dossiers …/convergence-replication-v1/, …/implementation-b/ et du dossier temporaire de la session (noms seulement ; aucun fichier étranger à ce travail n'a été ouvert)",
+    "/tmp/pytest-of-root/ et dossiers temporaires créés par les essais et la campagne de mutations (écrits par les essais eux-mêmes, supprimés à la fin)",
 )
 
 MODELE = "Claude Sonnet 5.5 (identifiant claude-sonnet-5-5), famille Claude, d'Anthropic"
