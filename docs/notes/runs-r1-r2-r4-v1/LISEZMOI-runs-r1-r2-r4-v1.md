@@ -37,7 +37,8 @@ de fidélité est tiré parmi les actions en contexte exact (≥ 378 par conditi
 2. Commit final du code (`src/`, `tests/`, `scripts/` gelés) : inscrire son empreinte complète à la place de
    `COMMIT_A_INSCRIRE_AU_SCELLEMENT` dans les deux préenregistrements (`prereg/` est hors de l'arbre gelé) ; inscrire
    « Tests attendus » : le nombre de la suite ciblée (même liste dans `r1_r2_instance_v1.sh` et `p3_instance_r4_v1.sh`),
-   relu au commit cité (`PYTHONPATH=src:tests python -m pytest -q <liste>`).
+   relu au commit cité (`PYTHONPATH=src:tests python -m pytest -q <liste>`) ; inscrit provisoirement : 123 (mesuré le
+   1er novembre vers 21:29 UTC, 123 passés en 462 s), à revérifier si la contre-lecture change le code ou les tests.
 3. Sceller (R6) :
    ```
    PYTHONPATH=src python -m controle_ia.scellement sceller prereg/R1-rejeu-config-v1.json prereg/R2-juge3b-config-v1.json \

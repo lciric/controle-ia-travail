@@ -22,7 +22,7 @@
 - Configuration du juge 8B (empreinte canonique) : `8782af18874ef1fd622d0b1c328307f8763e77810575751a373de8f37bb151a0`
 - Invite gelée du juge : `prereg/R2-invite-juge-v1.md` (`44d48a28d182b644ff140245f4e5746a5564c530f5b295a434c4de0345271b50`)
 - Entropie : `36410133060804533274328900142752730279`
-- Tests attendus : `TESTS_A_INSCRIRE_AU_SCELLEMENT`
+- Tests attendus : `123`
 
 **Statut.** Les runs ne visent aucun signe (R3) : ils produisent des entrées (activations rejouées, scores d'un juge) pour
 une comparaison appariée dont le calcul est codé et scellé par conv-audit avant toute lecture (n° 328). Le présent texte
