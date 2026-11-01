@@ -17,7 +17,7 @@
 - Tâches de P3 : `8d20a698d76baa8a42cd1494227fc411ef043d24a67a413e5cf812541166a4fd`
 - Chemin des consignes de P3 : `prereg/R4-consignes-dose-faible-v1.md`
 - Entropie : `37363879406597456335199269822657656203`
-- Tests attendus : `123`
+- Tests attendus : `288`
 - **Suite sur la même instance** (`scripts/r4_suite_instance_v1.sh`) :
 - Chemin de la configuration du rejeu de R4 : `prereg/R4-rejeu-config-v2.json`
 - Configuration du rejeu (empreinte canonique) : `cd1a6f7b995c65351b2d8e69cbf26067dd011d19aad426b77e729656131c0464`

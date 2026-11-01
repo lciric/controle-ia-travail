@@ -176,13 +176,15 @@ def tirer_echantillon(identite: dict, eligibles: np.ndarray, n_par_condition: in
 
 def controle_negatif(modele, fmt, notation, noms, index, source, echantillon, lignes, par_episode, taches, consignes,
                      guide, T, couches, jetons, jetons_notes, tol, minimum) -> dict:
-    """Contrôle négatif fixé d'avance (CLR-04) : chaque action de l'échantillon est rejouée dans un contexte faux (la
-    consigne de l'honnête pour une condition instruite, celle du saboteur pour l'honnête ; mêmes textes) ; l'écart des
-    scores à ceux de P3 doit dépasser la tolérance pour au moins `minimum` actions, sinon le contrôle de fidélité ne
-    discrimine pas et la course s'arrête."""
+    """Contrôle négatif fixé d'avance (CLR-04) : chaque action de l'échantillon est rejouée dans un contexte faux — la
+    consigne de l'honnête pour une condition instruite, celle du saboteur pour l'honnête (mêmes textes) — **et** lue sur un
+    empan décalé d'un jeton (l'erreur de reconstruction redoutée : un jeton de trop ou de moins avant l'action) ; l'écart
+    des scores à ceux de P3 doit dépasser la tolérance pour au moins `minimum` actions, sinon le contrôle de fidélité ne
+    discrimine pas et la course s'arrête. L'écart sous la seule consigne fausse (empan juste) est rapporté, descriptif :
+    il mesure ce que la consigne change aux activations de l'action, non l'instrument."""
     from ..premier_test_ia.conditions import environnement
 
-    ecarts = []
+    ecarts, consigne_seule = [], []
     for r in echantillon:
         e = lignes[r]["episode"]
         rs = par_episode[e]
@@ -194,9 +196,14 @@ def controle_negatif(modele, fmt, notation, noms, index, source, echantillon, li
         a = rec["actions"][rs.index(r)]
         acts = passe_unique(modele, rec["ids"], notation.couches)
         seg = {c: acts[c][a["debut"]:a["fin"]] for c in notation.couches}
+        consigne_seule.append(ecart_relatif(notation.noter(seg), source[r], noms, index))
+        n_pos = acts[notation.couches[0]].shape[0]
+        d1, f1 = a["debut"] + 1, min(a["fin"] + 1, n_pos)
+        seg = {c: acts[c][d1:f1] for c in notation.couches}
         ecarts.append(ecart_relatif(notation.noter(seg), source[r], noms, index))
     hors = int(sum(1 for x in ecarts if not x <= tol))
-    return {"rangs": echantillon, "ecarts_contexte_faux": [float(x) for x in ecarts], "hors_tolerance": hors,
+    return {"rangs": echantillon, "ecarts_contexte_faux": [float(x) for x in ecarts],
+            "ecarts_consigne_fausse_seule": [float(x) for x in consigne_seule], "hors_tolerance": hors,
             "minimum": minimum, "tolerance": tol, "lecture": "discriminant" if hors >= minimum else "non discriminant"}
 
 

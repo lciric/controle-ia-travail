@@ -131,6 +131,22 @@ Vérifier les sceaux des sorties ; verser les empreintes à conv-audit ; aucune 
 soit scellée et qu'un lecteur neuf ait vérifié la concordance des deux textes. R4 : aucune lecture des colonnes de sondes
 ni des activations avant le scellement du verdict de la règle.
 
-## Essais (brouillon 2)
+## Essais (brouillon 2, 1er novembre, 22:10 à 22:30 UTC, hors réseau, sur processeur)
 
-Voir la section ajoutée en fin de fichier après les essais.
+Journaux : `docs/notes/runs-r1-r2-r4-v1/essai-jouet-v2/`.
+
+- **Suite ciblée de 17 fichiers** : **288 passés** en 808 s (« Tests attendus : `288` » inscrit dans les deux
+  préenregistrements, à revérifier au commit cité). `tests/test_runs_nuit_v1.py` seul : 9 passés.
+- **Instance A en jouet** (`ETAPES="rejeu juge3b juge8b"`, run de P3 jouet de 3 tâches comme source) : code 0 ;
+  `trajectoires_identiques=8` sur 12 épisodes (empreintes de P3 retrouvées octet pour octet ; les 4 autres ont une action
+  dont le jeton spécial échantillonné a disparu du texte) ; fidélité conforme (écart 0) ; contrôle négatif discriminant
+  (4 sur 4) ; juges 3B et 8B, 0 anomalie ; poussées.
+- **Instance B en jouet** (amorce complète) : suite ciblée 288 passés, run de P3 jouet, juges 3B et 8B poussés ; le rejeu
+  s'est **arrêté** sur le contrôle négatif dans sa première forme (consigne fausse seule : 2 sur 4 hors tolérance), arrêt
+  consigné, étapes suivantes non bloquées, code de sortie 1 — la garde a fait son office, mais le contrôle était trop
+  faible. Corrigé : consigne fausse **et** empan décalé d'un jeton ; suite de R4 relancée sur le même clone : fidélité
+  conforme, contrôle négatif discriminant (4 sur 4), rejeu poussé, code 0.
+- **Garde de calcul** (`essai_garde_calcul_v1.py`) : commande au chemin littéral avec `GO_ID=GO-2026-11-01-13` → code 0 ;
+  sans GO → code 2 (bloquée) ; ancienne forme `"$V" create instance` → code 0 sans contrôle (d'où CLR-09).
+- Non éprouvé hors réseau : la carte, les vrais poids, le vrai gabarit de dialogue (les empreintes de trajectoire de P3 le
+  vérifieront sur l'instance), la poussée vers GitHub, la facturation après destruction.
