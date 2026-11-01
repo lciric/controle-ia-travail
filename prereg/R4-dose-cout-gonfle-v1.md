@@ -1,7 +1,7 @@
 # Préenregistrement — R4 : seconde dose de l'organisme (i-a) « coût gonflé » (dose faible, recherche de dose sur la boîte noire seule, P-015 (b), étape 1) — v1
 
-- Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 2** (après la
-  contre-lecture 1), non scellé.
+- Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 3** (après la
+  contre-lecture 1 et la contre-lecture ciblée du brouillon 2), non scellé.
 - Date (UTC) : 2026-11-01 ≈ 22:50.
 - Commit du code d'analyse : `COMMIT_A_INSCRIRE_AU_SCELLEMENT`
 - Documents qui font foi (chemin + empreinte) : `docs/brief-claude-code-programme-complet-v2.md`,
@@ -126,8 +126,10 @@ inutilisable.
 
 - Gardes du lanceur de P3, inchangées (préenregistrement, commit cité, configuration, tâches, consignes et entropie cités,
   tests attendus de la suite ciblée, format, mémoire, équivalence en ligne, contrôle négatif de phase, délai de 300 min) : arrêt consigné.
-- Suite (juges, rejeu) : configurations citées non scellées, run source incomplet, contrôle de fidélité contraire ou
-  contrôle négatif non discriminant, masse : comme R1 et R2 ; un arrêt de la suite laisse les épisodes de R4 versés et
+- Suite (juges, rejeu) : configurations citées non scellées, run source incomplet, contrôle de fidélité contraire, écart
+  non fini au contrôle négatif (un contrôle négatif non discriminant applique la règle de repli de R1-R2, sans arrêt ;
+  sans fiches de référence propres, le rejeu de R4 n'a pas d'empreintes de P3 à comparer : ses empreintes de trajectoire
+  sont celles du run de R4 lui-même, lues dans son `episodes-p3.json`), masse : comme R1 et R2 ; un arrêt de la suite laisse les épisodes de R4 versés et
   lisibles ; un juge 8B arrêté met la règle (i) « non lisible » (l'ensemble de P-015 serait incomplet), pas « diffuse ».
 - Un défaut de R4 le met « en échec » sans toucher la lecture de R1 (n° 330).
 - Plafond de l'amorce 330 min (partie P3 : 310 min, soit le délai du run plus 10 min, déclaré) ; au plafond, résultats
@@ -150,3 +152,9 @@ inutilisable.
   CLR-19 hypothèses de coût (devis v2) ; CLR-21 message de journal sur un sceau non conforme, test des gardes de citation ;
   CLR-22 rien à faire. Point « non vérifié » sur le statut de réserve des 32 tâches : source citée ci-dessus. Écart au
   n° 330 (43 tâches) déclaré ci-dessus.
+- **Contre-lecture ciblée du brouillon 2** : sous-agent neuf (Opus 5.5), le 1er novembre 2026. Brouillon relu : brouillon 2,
+  commit `067ed1997d4e987701daf28d5cf498cf051fd43e`, empreinte du fichier `9787efd6db53346971db603bc03746ab578b3653f075c63c61745e8b896ba90a`. Rapport
+  `docs/notes/runs-r1-r2-r4-v1/contre-lecture-ciblee-brouillon2-runs-r1-r2-r4-v1.md` (`ae4941e58cd4f5ecf0b4737ab1928376231d01bbda6bdd14cb60eaffe06a335d`).
+  Verdict : **scellable après corrections**, aucun bloquant ; la règle boîte noire et la dose ne sont pas touchées.
+- Traitement : CLC-01 et CLC-03 portés au rejeu de R4 par le code partagé (consigne fausse seule décisive, repli gelé
+  sans arrêt ; arrêt sur épisode conforme à trajectoire différente) ; CLC-04, CLC-05, CLC-07, CLC-08, CLC-09 comme R1-R2.

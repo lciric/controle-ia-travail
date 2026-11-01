@@ -161,13 +161,61 @@ def test_juge_jouet_aligne(source, tmp_path):
         ja.charger_invite_juge(mauvaise, None)
 
 
-def test_controle_negatif_non_discriminant_arrete(source, monkeypatch):
+def test_controle_negatif_non_discriminant_applique_le_repli_sans_arret(source, monkeypatch):
     depot, f, c = source
     monkeypatch.setattr(ra, "controle_negatif", lambda *a, **k: {"lecture": "non discriminant", "hors_tolerance": 1})
-    with pytest.raises(GardeArret, match="non discriminant"):
-        ra.executer(_config_rejeu(depot, f, c), depot, "20261101-215000-r1-jouet", None, autoriser_depot_sale=True,
+    r = ra.executer(_config_rejeu(depot, f, c), depot, "20261101-215000-r1-jouet", None, autoriser_depot_sale=True,
                     entropie_essai=11)
-    assert not (depot / "donnees" / "20261101-215000-r1-jouet").exists()
+    assert r["regle_repli_appliquee"] and r["lecture"].startswith("réserve")
+    with np.load(depot / "donnees" / "20261101-215000-r1-jouet" / "activations-p3-rejeu-v1.npz") as z:
+        assert z["fidele"].any() and (z["fidele"] <= z["trajectoire_identique"]).all()
+
+
+def test_vrai_controle_negatif_non_discriminant_a_forte_tolerance(source):
+    """Vraie fonction sur un cas non discriminant (CLC-05) : à la tolérance 0,99, la consigne fausse ne sort pas de la
+    tolérance ; la règle de repli s'applique, sans arrêt."""
+    depot, f, c = source
+    r = ra.executer(_config_rejeu(depot, f, c, tolerance_fidelite=0.99), depot, "20261101-215100-r1-jouet", None,
+                    autoriser_depot_sale=True, entropie_essai=11)
+    cn = r["controle_negatif"]
+    assert cn["lecture"] == "non discriminant" and len(cn["ecarts_consigne_fausse"]) == 4
+    assert len(cn["ecarts_empan_decale_descriptif"]) == 4 and r["regle_repli_appliquee"]
+
+
+def test_fiches_alterees_ou_empreinte_fausse_arretent(source, tmp_path):
+    """CLC-03 et CLC-05 : une trajectoire altérée pour un épisode entièrement conforme arrête la course ; une empreinte
+    de fiches fausse aussi ; rien n'est versé."""
+    depot, f, c = source
+    fiches_p = depot / "diag" / RUN_P3 / "episodes-p3.json"
+    with pytest.raises(GardeArret, match="empreinte"):
+        ra.executer(_config_rejeu(depot, f, c, fiches_sha256="0" * 64), depot, "20261101-215200-r1-jouet", None,
+                    autoriser_depot_sale=True, entropie_essai=11)
+    d = json.loads(fiches_p.read_text(encoding="utf-8"))
+    for fi in d["resultat"]["fiches"]:
+        if fi["episode"].endswith("2506.00002v1/e0"):     # épisodes entièrement conformes dans ce jeu jouet
+            fi["empreintes"]["trajectoire"] = "f" * 64
+    alt = tmp_path / "fiches-alterees.json"
+    alt.write_text(json.dumps(d), encoding="utf-8")
+    sceller(alt)
+    with pytest.raises(GardeArret, match="trajectoire différente"):
+        ra.executer(_config_rejeu(depot, f, c, chemin_fiches=str(alt)), depot, "20261101-215300-r1-jouet", None,
+                    autoriser_depot_sale=True, entropie_essai=11)
+    assert not (depot / "donnees" / "20261101-215300-r1-jouet").exists()
+
+
+def test_garde_n029_cas_sain_et_artefact(tmp_path):
+    from controle_ia.runs_nuit.garde_n029_v1 import exiger_exception_n029
+
+    d = tmp_path / "decisions.md"
+    d.write_text("| R-1 | N-029 cité sans confirmation |\n| R-2 | exception confirmée par Lazar, sans le nœud |\n",
+                 encoding="utf-8")
+    with pytest.raises(GardeArret, match="R2 non autorisé"):
+        exiger_exception_n029(d)
+    with pytest.raises(GardeArret, match="absent"):
+        exiger_exception_n029(tmp_path / "absent.md")
+    d.write_text(d.read_text(encoding="utf-8") + "| R-3 | N-029 : exception confirmée par Lazar pour R2 |\n",
+                 encoding="utf-8")
+    assert "R-3" in exiger_exception_n029(d)
 
 
 def test_f16_arrete_sur_valeur_non_finie_ou_hors_etendue():

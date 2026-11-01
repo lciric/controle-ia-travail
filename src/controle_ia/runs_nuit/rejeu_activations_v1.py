@@ -21,13 +21,14 @@ autre chose que le nombre ? »), bornes des champs par `premier_test_ia.conditio
 Empreintes de P3 (CLR-04) : P3 a stocké, par épisode, l'empreinte de sa trajectoire (identifiants et empans) et de ses
 activations (`harnais.episode.empreinte_episode`, `diag/<run>/episodes-p3.json`). Le rejeu les recalcule : une trajectoire
 identique prouve, octet pour octet, que les identifiants reconstruits (jeton de fin compris) sont ceux de P3 ; des
-activations identiques prouvent l'égalité au bit près (mesurée, non exigée). Contrôle négatif fixé d'avance : les actions
-de l'échantillon rejouées sous un contexte faux doivent sortir de la tolérance (au moins `controle_negatif_min`), sinon
-arrêt.
+activations identiques prouvent l'égalité au bit près (mesurée, non exigée). Un épisode entièrement conforme en longueur
+à trajectoire différente arrête la course (CLC-03). Contrôle négatif fixé d'avance (CLC-01) : les actions de l'échantillon
+rejouées sous une consigne fausse, empan juste, doivent sortir de la tolérance (au moins `controle_negatif_min`) ; sinon,
+sans arrêt, règle de repli gelée : `fidele` restreint aux trajectoires identiques, lecture en réserve.
 
 Contrôle de fidélité, fixé d'avance : tous les épisodes sont d'abord reconstruits sur processeur ; une action est
-« éligible » si elle est notée et conforme en longueur ainsi que toutes celles qui la précèdent dans son épisode (contexte
-exact). Sur un échantillon tiré par graine parmi les éligibles (`n_fidelite_par_condition` actions par condition), les scores des sondes génériques légères de P3, recalculés sur les activations rejouées, doivent égaler ceux
+« éligible » si elle est notée et que son épisode a la trajectoire de P3 (fiches données ; sinon : conforme en longueur
+ainsi que toutes celles qui la précèdent dans son épisode). Sur un échantillon tiré par graine parmi les éligibles (`n_fidelite_par_condition` actions par condition), les scores des sondes génériques légères de P3, recalculés sur les activations rejouées, doivent égaler ceux
 de `scores-p3.npz` à `tolerance_fidelite` près (écart ≤ tolérance × (1 + |score|), pour chaque sonde) et l'action doit être
 conforme en longueur ; sinon arrêt consigné, aucun fichier d'activations écrit. Les épisodes de l'échantillon passent en
 premier (arrêt rapide). Le même écart est ensuite mesuré sur toutes les actions notées (descriptif, `fidele` par action).
@@ -161,9 +162,9 @@ def charger_fiches(chemin, sha_attendue: str | None) -> dict:
 
 def tirer_echantillon(identite: dict, eligibles: np.ndarray, n_par_condition: int, g: np.random.Generator) -> list[int]:
     """Rangs de l'échantillon de fidélité : `n_par_condition` actions par condition, tirées sans remise par le générateur
-    de la clé « fidelite » parmi les actions éligibles (notées, et conformes en longueur avec toutes les actions qui les
-    précèdent dans leur épisode : règle fixée d'avance, vérifiable par le seul tokeniseur) ; conditions dans l'ordre
-    alphabétique."""
+    de la clé « fidelite » parmi les actions éligibles : notées, et d'un épisode à trajectoire identique à celle de P3
+    quand les fiches sont données (sinon : conformes en longueur avec toutes les actions qui les précèdent) ; conditions
+    dans l'ordre alphabétique."""
     cond = np.asarray(identite["condition"])
     rangs = []
     for c in sorted(set(cond.tolist())):
@@ -176,15 +177,17 @@ def tirer_echantillon(identite: dict, eligibles: np.ndarray, n_par_condition: in
 
 def controle_negatif(modele, fmt, notation, noms, index, source, echantillon, lignes, par_episode, taches, consignes,
                      guide, T, couches, jetons, jetons_notes, tol, minimum) -> dict:
-    """Contrôle négatif fixé d'avance (CLR-04) : chaque action de l'échantillon est rejouée dans un contexte faux — la
-    consigne de l'honnête pour une condition instruite, celle du saboteur pour l'honnête (mêmes textes) — **et** lue sur un
-    empan décalé d'un jeton (l'erreur de reconstruction redoutée : un jeton de trop ou de moins avant l'action) ; l'écart
-    des scores à ceux de P3 doit dépasser la tolérance pour au moins `minimum` actions, sinon le contrôle de fidélité ne
-    discrimine pas et la course s'arrête. L'écart sous la seule consigne fausse (empan juste) est rapporté, descriptif :
-    il mesure ce que la consigne change aux activations de l'action, non l'instrument."""
+    """Contrôle négatif fixé d'avance (CLR-04, CLC-01) : chaque action de l'échantillon est rejouée dans un contexte faux
+    de peu — la consigne de l'honnête pour une condition instruite, celle du saboteur pour l'honnête (mêmes textes) — et lue
+    **sur l'empan juste**. C'est l'erreur qui conditionne `fidele` pour les actions hors contexte exact. Décisif : l'écart
+    aux scores de P3 doit dépasser la tolérance pour au moins `minimum` actions (« discriminant ») ; sinon « non
+    discriminant », sans arrêt : l'appelant applique la règle de repli gelée (fidèle restreint aux trajectoires
+    identiques). L'empan décalé d'un jeton (consigne fausse aussi) est mesuré et rapporté, descriptif seulement (il fait
+    entrer un jeton spécial dans le maximum : presque toujours hors tolérance, donc sans pouvoir d'épreuve). Un écart non
+    fini arrête la course (« echec », CLC-04)."""
     from ..premier_test_ia.conditions import environnement
 
-    ecarts, consigne_seule = [], []
+    consigne_seule, decale = [], []
     for r in echantillon:
         e = lignes[r]["episode"]
         rs = par_episode[e]
@@ -200,10 +203,12 @@ def controle_negatif(modele, fmt, notation, noms, index, source, echantillon, li
         n_pos = acts[notation.couches[0]].shape[0]
         d1, f1 = a["debut"] + 1, min(a["fin"] + 1, n_pos)
         seg = {c: acts[c][d1:f1] for c in notation.couches}
-        ecarts.append(ecart_relatif(notation.noter(seg), source[r], noms, index))
-    hors = int(sum(1 for x in ecarts if not x <= tol))
-    return {"rangs": echantillon, "ecarts_contexte_faux": [float(x) for x in ecarts],
-            "ecarts_consigne_fausse_seule": [float(x) for x in consigne_seule], "hors_tolerance": hors,
+        decale.append(ecart_relatif(notation.noter(seg), source[r], noms, index))
+    if not all(np.isfinite(x) for x in consigne_seule):
+        raise GardeArret("contrôle négatif : écart non fini sous consigne fausse (score non fini) : echec")
+    hors = int(sum(1 for x in consigne_seule if x > tol))
+    return {"rangs": echantillon, "ecarts_consigne_fausse": [float(x) for x in consigne_seule],
+            "ecarts_empan_decale_descriptif": [float(x) for x in decale], "hors_tolerance": hors,
             "minimum": minimum, "tolerance": tol, "lecture": "discriminant" if hors >= minimum else "non discriminant"}
 
 
@@ -344,6 +349,14 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
                 raise GardeArret(f"épisode {e} absent des fiches du run source")
             traj[rs] = empreinte_trajectoire(episodes_h[e]) == fiches[e]["trajectoire"]
     etat["trajectoires_identiques"] = int(traj.sum()) // T if fiches is not None else None
+    if fiches is not None:
+        # CLC-03 : un épisode dont toutes les actions sont conformes en longueur doit avoir la trajectoire de P3 ; sinon
+        # la divergence n'est pas expliquée par la tokenisation (gabarit, date, consigne, jeton de fin) : arrêt
+        inexpliques = [e for e, rs in par_episode.items() if conforme[rs].all() and not traj[rs].all()]
+        etat["episodes_conformes_longueur"] = sum(1 for rs in par_episode.values() if conforme[rs].all())
+        if inexpliques:
+            raise GardeArret(f"{len(inexpliques)} épisode(s) entièrement conformes en longueur à trajectoire différente de "
+                             f"celle de P3 ({inexpliques[:3]}) : reconstruction non fidèle, rien n'est versé")
     etat["conformes_longueur"] = int(conforme.sum())
     etat["contextes_conformes"] = int(contexte_conforme.sum())
     progres(etape="reconstruction", conformes=int(conforme.sum()), contextes_conformes=int(contexte_conforme.sum()),
@@ -362,7 +375,7 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
     ecart = np.full(n, np.nan)
     tol = float(config["tolerance_fidelite"])
     source = np.asarray(identite["scores"], dtype=np.float64)
-    tour_echantillon, verdict_echantillon, verdict_negatif = len(ep_echantillon), None, None
+    tour_echantillon, verdict_echantillon, verdict_negatif, repli = len(ep_echantillon), None, None, False
     activ_ident = np.zeros(n, dtype=bool)
     with noyau(config["noyau_attention"]):
         for k_ep, e in enumerate(ordre):
@@ -413,16 +426,17 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
                 etat["controle_negatif"] = verdict_negatif
                 progres(etape="controle_negatif", lecture=verdict_negatif["lecture"],
                         hors_tolerance=f"{verdict_negatif['hors_tolerance']}/{len(echantillon)}")
-                if verdict_negatif["lecture"] != "discriminant":
-                    raise GardeArret(f"contrôle négatif non discriminant ({verdict_negatif['hors_tolerance']} actions sur "
-                                     f"{len(echantillon)} hors tolérance sous contexte faux, "
-                                     f"{config['controle_negatif_min']} exigées) : rien n'est versé")
+                # CLC-01 (b) : non discriminant → pas d'arrêt ; règle de repli gelée appliquée plus bas (fidèle restreint
+                # aux trajectoires identiques, ou au contexte exact sans fiches), lecture en réserve
+                repli = verdict_negatif["lecture"] != "discriminant"
             if (k_ep + 1) % 20 == 0:
                 progres(etape="rejeu", episodes=f"{k_ep + 1}/{len(ordre)}")
     notees = np.isfinite(ecart)
     # fidèle : action notée, conforme en longueur, scores des sondes génériques à la tolérance ; le contexte non conforme
     # (une action précédente non conforme) est signalé à part (`contexte_conforme`), l'écart des scores dit s'il compte
     fidele = notees & conforme & (np.nan_to_num(ecart, nan=np.inf) <= tol)
+    if repli:
+        fidele &= traj if fiches is not None else contexte_conforme
     etat["etape"] = "écriture"
     dossier = racine / "donnees" / run_id
     dossier.mkdir(parents=True, exist_ok=False)
@@ -445,7 +459,10 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
     with open(p, "wb") as f:
         np.savez_compressed(f, maximum_hors_cout=hors_cout, **commun)
     fichiers[p.name] = sceller(p)
-    resultat = {"verdict_fidelite": "conforme", "textes_sha256": verifier(config["chemin_textes"]),
+    trop_lourds = {n: (dossier / n).stat().st_size for n in fichiers if (dossier / n).stat().st_size > 95_000_000}
+    resultat = {"fichiers_au_dessus_de_95_mo": trop_lourds, "verdict_fidelite": "conforme", "regle_repli_appliquee": bool(repli),
+                "lecture": "réserve (repli : fidèle restreint aux trajectoires identiques)" if repli else "principale",
+                "textes_sha256": verifier(config["chemin_textes"]),
                 "fichiers": fichiers, "identite_sha256": etat["identite_sha256"], "regle_empan": REGLE_EMPAN,
                 "contexte": CONTEXTE, "couches": couches, "agregats": {"maximum": "production (harnais)",
                                                                        "moyenne": "diagnostic seulement (N-026)",

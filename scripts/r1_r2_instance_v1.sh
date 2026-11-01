@@ -104,6 +104,16 @@ else
     journal "préenregistrement lu : $ATTENDUS tests attendus ; rejeu $CONFIG_REJEU ; juges $CONFIG_JUGE3B, $CONFIG_JUGE8B : présents et scellés"
 fi
 
+# garde codée de N-029 (CLC-02) : un juge dans ETAPES exige la ligne de confirmation de Lazar au commit lancé
+case " $ETAPES " in
+    *" juge3b "*|*" juge8b "*)
+        if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m controle_ia.runs_nuit.garde_n029_v1 registres/decisions.md \
+                >"$TRAVAIL/garde-n029.txt" 2>&1; then
+            journal "R2 demandé (ETAPES=$ETAPES) sans ligne « N-029 … exception confirmée par Lazar » dans registres/decisions.md au commit $COMMIT : arrêt avant l'installation"
+            exit 2
+        fi
+        journal "exception à N-029 confirmée au commit $COMMIT : R2 autorisé" ;;
+esac
 if ! git push -q origin "$BRANCHE" 2>"$TRAVAIL/poussee-initiale.err"; then
     journal "poussée initiale de la branche $BRANCHE refusée ($(tail -n 1 "$TRAVAIL/poussee-initiale.err")) : droit d'écriture du jeton ? arrêt"
     exit 2
