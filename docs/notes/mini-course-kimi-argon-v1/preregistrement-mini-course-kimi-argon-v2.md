@@ -98,9 +98,10 @@ Aucun seuil de décision scientifique. Seuils **de fonctionnement**, fixés dans
 
 ## Plan d'analyse
 
-- **Pièces** : configuration `configuration-mini-course-kimi-argon-v1.json` et ses six pièces empreintées ; génération
-  `course2_nuit_v1.py` avec l'adaptateur de `course2_nuit_v2.py` ; lanceurs v2 ; commandes ; registre cumulé ; agrégateur v2 ;
-  recherche des clés (section « Pièces gelées »).
+- **Pièces** : configuration `configuration-mini-course-kimi-argon-v2.json` (la v1, dont seule change la commande d'Argon) et
+  ses six pièces empreintées ; génération `course2_nuit_v1.py` avec l'adaptateur de `course2_nuit_v2.py` ; lanceurs v2 ;
+  commande de Kimi `commande_kimi_v2.py` ; commande et relais d'Argon `commande_argon_v56_nuit_v2.py` ; registre cumulé ;
+  agrégateur v2 ; recherche des clés (section « Pièces gelées »).
 - **Graines (R9)** : racine `20261102`, préfixe `mc1` ; `numpy.random.SeedSequence(racine, spawn_key=(clé de tâche,))`
   (`pole/graines_v53.py`) ; manifeste R9 écrit par l'orchestrateur (`manifeste-depart.json`).
 - **Plan de dépense (règle d'A1 du brouillon 10, `budget_v56`)** : proposition (attendu 0,94 ; plafond de relais 2,50 ;
@@ -159,12 +160,13 @@ réponse factice ; son résultat est une réserve écrite, jamais une correction
 ## Gardes éprouvées et gardes non éprouvées (CLM-03, CLM-12)
 
 **Éprouvées sur un cas sain et sur un artefact, sans réseau** (`test_gardes_mini_course_v1.py`, 16 essais ;
-`test_gardes_mini_course_v2.py`, 13 essais ; `repetition_complete_v2.sh`, quatre essais par le vrai lanceur shell v2) :
+`test_gardes_mini_course_v2.py`, 14 essais ; `repetition_complete_v2.sh`, quatre essais par le vrai lanceur shell v2) :
 registre cumulé (plafond cumulé, plafond d'étape, ligne illisible) ; commande Kimi (refus sans envoi au plafond cumulé, porte
 incomplète, 502 « modèle servi » converti puis arrêt) ; commande Argon (modèle servi différent, refus du modèle, garde cumulée
 puis `ArretPlafondCumule`, dépassement de réserve de bout en bout) ; relais Argon (402 au plafond, 429 au nombre d'appels puis
 `ArretPlafondRelais`, 403 modèle non permis, refus de servir sans clé, refus de servir un collisionneur à empreinte différente) ;
-adaptateur v2 (dépassement de réserve, modèle servi) ; trois échecs consécutifs ; débordement de la garde Kimi ; configuration du
+adaptateur v2 (dépassement de réserve, modèle servi) ; échec d'Argon compté au pire cas
+sans faux dépassement ; trois échecs consécutifs ; débordement de la garde Kimi ; configuration du
 scénario B ; ligne de GO (montant, extension, **révocation lue à travers l'extrait**, GO autre que GO-2026-11-01-12) ; pièces
 gelées ; spécification non scellée (moteur réel refusé, rien d'écrit) ; trace (canari, titre, six mots, liste blanche ; motifs
 v2 ; L3 et L4 non calculés après un arrêt ; fusion exclue de L4) ; recherche des clés (clé plantée trouvée, variable absente
@@ -178,6 +180,31 @@ d'entrée sur caractères ; les durées réelles ; le lancement avec la vraie sp
 de ce texte scellée dans le bloc-notes, et le vrai rapport de contre-lecture) ; la recherche des clés **dans le lanceur shell**
 quand une clé est réellement présente (éprouvée dans l'outil, pas dans le lanceur) ; le refus d'une étape par la garde d'étape
 du registre **au cours d'une course** (éprouvé dans le registre et dans la conversion du motif, pas dans une course).
+
+## Répétition v2 (faite le 1er novembre 2026, 21:43 UTC, sans dépense)
+
+Par le vrai `lancer-mini-course-v2.sh` (mode `repeter`), les vrais relais (relais Kimi vers `api.moonshot.ai`, `servir` donc
+`appeler_gemini` vers `generativelanguage.googleapis.com`), derrière un faux mandataire TLS local et une autorité factice, clés
+factices, vraie ligne de GO lue (`repetition_complete_v2.sh`) :
+- essai 0 : mode `repeter` sans autorité factice : refusé (code 2), aucun dossier créé ;
+- essai 1 : course complète, code 0 ; 68 appels au registre (Kimi 27, Argon 41 aux relais ; 2 contrôles, 66 de course) ;
+  aucun dépassement ; trace « conforme » ; fiche factice dans `fiches.json` (2 fois), absente de la trace ; épreuve anti-fuite
+  sur le run : tout vu ; aucune clé trouvée ; relais arrêtés, ports libres ;
+- essai 2 : `kill -TERM` du lanceur après 12 appels : SIGTERM transmis à la course, bilan « signal SIGTERM reçu
+  (ArretParSignal) », code 130 en 2 s, course et relais arrêtés, ports libres, trace écrite (`signal_recu`, L3 et L4 non
+  calculés), épreuve anti-fuite et recherche des clés faites ; l'appel d'Argon tué en vol reste au registre à son pire cas
+  (0,21 USD « engagés », côté prudent) ;
+- essai 3 : contrôle d'Argon en échec (modèle servi faux) : code 3, aucune course, relais arrêtés.
+
+**Défauts trouvés par la répétition et corrigés** (avant la répétition qui a réussi) :
+1. une variable de mandataire **vide** en minuscules (`https_proxy=`) passée au relais Argon annulait `HTTPS_PROXY` pour urllib :
+   `appeler_gemini` se connectait **en direct**. Lors du premier passage de la répétition (21:37 UTC, trois contrôles d'Argon),
+   la connexion directe vers `generativelanguage.googleapis.com` a été refusée à la vérification TLS par l'autorité factice ;
+   aucune requête HTTP n'a été écrite, aucune clé (factice) envoyée, rien de facturé. Sans effet dans la session réelle (les
+   deux variables y sont posées), mais vrai défaut : le lanceur v2 ne transmet que les variables posées ;
+2. sur un échec d'Argon, la commande v1 comptait l'arrondi à 8 décimales du relais, qui pouvait dépasser le pire cas réservé de
+   moins de 1e-8 et marquer un faux dépassement de réserve (devenu un arrêt en v2) : `commande_argon_v56_nuit_v2.py` compte le
+   pire cas réservé exactement (essai ajouté).
 
 ## Canaris
 
@@ -202,7 +229,26 @@ du registre **au cours d'une course** (éprouvé dans le registre et dans la con
 
 | Pièce (chemin depuis la racine du dépôt) | SHA-256 | Rôle |
 |---|---|---|
-TABLE_DES_PIECES
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/configuration-mini-course-kimi-argon-v2.json` | `4ae5a1e0947d44c1a08548d1b0197bfd96a2264f455189713b06183b2bc83108` | configuration figée v2 (scénario B ; commande d'Argon v2) |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/pieces/consigne-proposeur-mini-course-v1.md` | `98185e70f5d4bd3f0574b7517858efbec982d6decea0e5493da6abe12e9607b1` | consigne figée du proposeur |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/pieces/consigne-aiguilleur-mini-course-v1.md` | `4b15b31add9fe8e3ae5a18a309fdc9a7165da3be0533c5240dd9854ba08e14e9` | consigne figée de l'aiguilleur |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/pieces/consigne-juge-mini-course-v1.md` | `df57bc9117e85b6a032355159a84451c4fe60a5c44793c5986ac6b1a89c45bd9` | consigne figée des juges |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/pieces/consigne-lecteur-mini-course-v1.md` | `016789aeb9fc4177d865634882e1e5bc18053d0a16b72ccc83c7abbc6fbcb636` | consigne figée des lecteurs d'étiquettes |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/pieces/consigne-metteur-mini-course-v1.md` | `95b92e325ca95ded574073db8d13dcc8886c475d30dd01317c31fc40b96609e4` | consigne figée du metteur en fusion |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/pieces/concepts-mini-course-v1.json` | `036de84a297f5c3e402caeb9069e4d8eb9d0d3ec4ef86a5fc6a039022c8b3874` | liste fermée des concepts (bras basique) |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/pole/course2_nuit_v1.py` | `b0506f7eb8ed384d0284b6b3335d93f31fb67c040fa53a932043ab44f1d33286` | génération sans passe tableau, liste d'arrêt (v1) |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/pole/course2_nuit_v2.py` | `5d15660eca9f23b9480cb6bf7a05379859255294d377652231d944170fe69032` | adaptateur v2 : dépassement de réserve et plafonds hors noyau = arrêt |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/lancer_mini_course_v2.py` | `7a4d1a8a25efdb4020c1e8e57222b2bc1609e5b8ec4d5463bc63d48c3d22720e` | lanceur Python v2 (gardes, moteur réel) |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/lancer-mini-course-v2.sh` | `7b4374f01b9e76fff93bd029dc444ac899fba890d4d8a9b79ccacb6f03e772df` | lanceur shell v2 (course sous wait, piège, relais 3 et 7 USD) |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/commande_kimi_v2.py` | `644dbb39003f234db7b5fc295c6b061a0e84720e01ba08322ae1fe7936d9dcbe` | commande externe de Kimi |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/commande_argon_v56_nuit_v2.py` | `221df610681ed47bf66fbfef21d583006aa3e09a3147e22227faacd98622b851` | commande externe et relais d'Argon (v2) |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/registre_depense_cumulee_v1.py` | `8ba92066b358ffb8206dea9e70251388c30620484fab1ac578778d9f21e578ff` | garde cumulée au pire cas |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/trace_agregee_mini_course_v2.py` | `224b0003b38cb33a2de2ba071b4540ecf955598cff2677df10f8b99498eaa3db` | agrégateur v2 de la trace publique |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/chercher_cles_v1.py` | `5d6f82fc5cc95f9998877852c08835b83df1ba572597303f447cb983cf97cf61` | recherche des clés (valeurs lues dans l'environnement) |
+| `donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/EMPREINTES-orchestrateur-v56-copie-v1.txt` | `3c72e4aae6abfdf177776d9fcb177569e3bc156daa7edaf796f33db286c8565b` | copie de l'orchestrateur v56 (archive 29b1b38c…) |
+| `docs/notes/ideation-organisme-v1/relais-kimi-v1/relais_kimi_v3.py` | `d54ed2bce54f5c89e9f078d1a03b5d8159894d6565ae560c3601c1e63ca76239` | relais Kimi local |
+| `donnees/espece-seule-v1/collisionneur_v7.py` | `c9725f025407c3ece3e8c16d19cfdfdec078f084a811f0a3b6ea3209be5d98dc` | appeler_gemini (Argon) |
+| `.claude/hooks/garde_calcul.py` | `84512d4a1bef0403668000942cf5f5d383aab280bf5a58f6aec328e77f807d59` | garde du dépôt : lecture du registre des GO (CLM-08) |
 
 ## Réserves
 
@@ -239,7 +285,7 @@ TABLE_DES_PIECES
 |---|---|
 | CLM-01 (bloquant) piège inopérant pendant la course | **appliqué** : `lancer-mini-course-v2.sh` (course en arrière-plan sous `wait`, SIGTERM à la course par son PID, relais arrêtés par PID, agrégateur et recherche des clés après un signal, code 130) ; éprouvé par `kill -TERM` du lanceur en pleine course (`repetition_complete_v2.sh`, essai 2) |
 | CLM-02 garantie conditionnelle ; dépassement non arrêtant | **appliqué** : borne reformulée (barème supposé, hypothèses, facture à relire) ; `ArretDepassementReserve` (`course2_nuit_v2.py`) ; option « entrée à caractères / 2 » ou plafond cumulé à 9,5 USD **non appliquée** : remplacée par la somme des plafonds des relais à 10 USD (CLM-05) |
-| CLM-03 affirmation R5 inexacte | **appliqué** : essais ajoutés (13) et section « Gardes éprouvées et gardes non éprouvées » avec la liste exacte de ce qui ne l'est pas |
+| CLM-03 affirmation R5 inexacte | **appliqué** : essais ajoutés (14) et section « Gardes éprouvées et gardes non éprouvées » avec la liste exacte de ce qui ne l'est pas |
 | CLM-04 nom du rapport | **appliqué** : `lancer_mini_course_v2.py` et le lanceur shell v2 attendent `contre-lecture-mini-course-kimi-argon-v1.md` (aucune copie nécessaire) |
 | CLM-05 plafonds des relais | **appliqué** : Kimi 3 USD, Argon 7 USD |
 | CLM-06 clé en argument de `grep` ; outils hors `env -i` | **appliqué** : `chercher_cles_v1.py` (valeurs lues dans l'environnement) ; agrégateur, registre, état des relais sous `env -i` |
@@ -250,3 +296,4 @@ TABLE_DES_PIECES
 | CLM-11 troncatures prévisibles | **appliqué** : réserve ajoutée ; plafonds de sortie **inchangés** (ceux du devis) |
 | CLM-12 répétition incomplète | **appliqué** : la répétition v2 passe par le vrai lanceur shell v2 et le vrai chemin `servir` (et `appeler_gemini`), derrière un faux mandataire TLS et une autorité factice ; ce qui reste non vu est listé |
 | CLM-13 fusion dans L4 | **appliqué** : fusion exclue de L4 |
+| (répétition v2) mandataire vide, arrondi du coût d'un échec d'Argon | **corrigés** : lanceur v2 et `commande_argon_v56_nuit_v2.py` ; configuration v2 (seule la commande d'Argon change) ; voir « Répétition v2 » |
