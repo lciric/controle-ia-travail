@@ -1,0 +1,789 @@
+{
+ "version": "essaim-grille-v1",
+ "preenregistrement": "prereg/essaim-simulation-v1.md",
+ "graine_racine": "entier des 128 premiers bits du sha256 du préenregistrement scellé (run_essaim.entropie_depuis_prereg)",
+ "alpha": 0.05,
+ "q": 0.1,
+ "fractions_lambda": [
+  0.1,
+  0.25,
+  0.5,
+  0.75
+ ],
+ "tailles": {
+  "R": 20000,
+  "R_cal": 100000,
+  "R0": 100000,
+  "equivalence": 200
+ },
+ "replication": {
+  "facteur_R": 5
+ },
+ "lecture": {
+  "gamma": 1e-05
+ },
+ "configs": {
+  "e5x40": {
+   "K": 5,
+   "T": 40,
+   "panneau": {
+    "somme": "exact",
+    "max": "exact",
+    "comptage": "exact",
+    "agent_moyenne": "exact",
+    "agent_comptage": "exact",
+    "pas_moyenne": "exact",
+    "coelev_comptage": "exact",
+    "coelev_somme3": "mc",
+    "e_coelev_cal": "mc",
+    "e_coelev_ville": "ville",
+    "ed_coelev": "mc",
+    "e_pas_ville": "ville"
+   }
+  },
+  "e10x20": {
+   "K": 10,
+   "T": 20,
+   "panneau": {
+    "somme": "exact",
+    "max": "exact",
+    "comptage": "exact",
+    "agent_moyenne": "exact",
+    "agent_comptage": "exact",
+    "pas_moyenne": "exact",
+    "coelev_comptage": "exact",
+    "coelev_somme3": "mc",
+    "e_coelev_cal": "mc",
+    "e_coelev_ville": "ville",
+    "ed_coelev": "mc",
+    "e_pas_ville": "ville"
+   }
+  },
+  "e20x20": {
+   "K": 20,
+   "T": 20,
+   "panneau": {
+    "somme": "exact",
+    "max": "exact",
+    "comptage": "exact",
+    "agent_moyenne": "exact",
+    "agent_comptage": "exact",
+    "pas_moyenne": "exact",
+    "coelev_comptage": "exact",
+    "coelev_somme3": "mc",
+    "e_coelev_cal": "mc",
+    "e_coelev_ville": "ville",
+    "ed_coelev": "mc",
+    "e_pas_ville": "ville"
+   }
+  },
+  "e10x50": {
+   "K": 10,
+   "T": 50,
+   "panneau": {
+    "somme": "exact",
+    "max": "exact",
+    "comptage": "exact",
+    "agent_moyenne": "exact",
+    "agent_comptage": "exact",
+    "pas_moyenne": "exact",
+    "coelev_comptage": "exact",
+    "e_coelev_ville": "ville",
+    "e_pas_ville": "ville"
+   }
+  }
+ },
+ "C": {
+  "e5x40": [
+   {
+    "nom": "A_rebrassage",
+    "genre": "rebrassage_agents",
+    "groupe": "agents"
+   },
+   {
+    "nom": "A_routage_un_m10",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 10,
+    "k_dest": 1,
+    "lecture_par_agent": "au_dessus"
+   },
+   {
+    "nom": "A_routage_un_m40",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 40,
+    "k_dest": 1,
+    "lecture_par_agent": "au_dessus"
+   },
+   {
+    "nom": "A_relais_m40",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 40,
+    "k_dest": 5,
+    "lecture_par_agent": "en_dessous"
+   },
+   {
+    "nom": "T_rebrassage",
+    "genre": "rebrassage_temps",
+    "groupe": "temps"
+   },
+   {
+    "nom": "T_synchro_m2",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 2,
+    "r": 1,
+    "borne_coelev_comptage": 0.054769,
+    "lecture_au_dessus": [],
+    "lecture_e": {
+     "e_coelev_cal": "au_plus",
+     "ed_coelev": "au_plus"
+    }
+   },
+   {
+    "nom": "T_synchro_m3",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 3,
+    "r": 1,
+    "borne_coelev_comptage": 0.273244,
+    "lecture_au_dessus": [
+     "coelev_comptage",
+     "pas_moyenne",
+     "coelev_somme3"
+    ],
+    "lecture_e": {
+     "e_coelev_cal": "au_plus",
+     "ed_coelev": "au_plus"
+    }
+   },
+   {
+    "nom": "T_synchro_m5",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 5,
+    "r": 1,
+    "borne_coelev_comptage": 0.998122,
+    "lecture_au_dessus": [
+     "coelev_comptage",
+     "pas_moyenne",
+     "coelev_somme3"
+    ],
+    "lecture_e": {
+     "e_coelev_cal": "au_plus",
+     "ed_coelev": "au_plus"
+    }
+   },
+   {
+    "nom": "I_rebrassage",
+    "genre": "rebrassage_tout",
+    "groupe": "tout"
+   }
+  ],
+  "e10x20": [
+   {
+    "nom": "A_rebrassage",
+    "genre": "rebrassage_agents",
+    "groupe": "agents"
+   },
+   {
+    "nom": "A_routage_un_m5",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 5,
+    "k_dest": 1,
+    "lecture_par_agent": "au_dessus"
+   },
+   {
+    "nom": "A_routage_un_m20",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 20,
+    "k_dest": 1,
+    "lecture_par_agent": "au_dessus"
+   },
+   {
+    "nom": "A_relais_m20",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 20,
+    "k_dest": 10,
+    "lecture_par_agent": "en_dessous"
+   },
+   {
+    "nom": "T_rebrassage",
+    "genre": "rebrassage_temps",
+    "groupe": "temps"
+   },
+   {
+    "nom": "T_synchro_m2",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 2,
+    "r": 1,
+    "borne_coelev_comptage": 0.041615,
+    "lecture_au_dessus": [],
+    "lecture_e": {
+     "e_coelev_cal": "au_plus",
+     "ed_coelev": "au_plus"
+    }
+   },
+   {
+    "nom": "T_synchro_m5",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 5,
+    "r": 1,
+    "borne_coelev_comptage": 0.702142,
+    "lecture_au_dessus": [
+     "coelev_comptage",
+     "pas_moyenne",
+     "coelev_somme3"
+    ],
+    "lecture_e": {
+     "e_coelev_cal": "au_plus",
+     "ed_coelev": "au_plus"
+    }
+   },
+   {
+    "nom": "T_synchro_m10",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 10,
+    "r": 1,
+    "borne_coelev_comptage": 0.999599,
+    "lecture_au_dessus": [
+     "coelev_comptage",
+     "pas_moyenne",
+     "coelev_somme3"
+    ],
+    "lecture_e": {
+     "e_coelev_cal": "en_dessous",
+     "ed_coelev": "en_dessous"
+    }
+   },
+   {
+    "nom": "I_rebrassage",
+    "genre": "rebrassage_tout",
+    "groupe": "tout"
+   }
+  ],
+  "e20x20": [
+   {
+    "nom": "A_rebrassage",
+    "genre": "rebrassage_agents",
+    "groupe": "agents"
+   },
+   {
+    "nom": "A_routage_un_m5",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 5,
+    "k_dest": 1,
+    "lecture_par_agent": "au_dessus"
+   },
+   {
+    "nom": "A_routage_un_m20",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 20,
+    "k_dest": 1,
+    "lecture_par_agent": "au_dessus"
+   },
+   {
+    "nom": "A_relais_m20",
+    "genre": "routage",
+    "groupe": "agents",
+    "m": 20,
+    "k_dest": 20,
+    "lecture_par_agent": "en_dessous"
+   },
+   {
+    "nom": "T_rebrassage",
+    "genre": "rebrassage_temps",
+    "groupe": "temps"
+   },
+   {
+    "nom": "T_synchro_m2",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 2,
+    "r": 1,
+    "borne_coelev_comptage": 0.024403,
+    "lecture_au_dessus": [],
+    "lecture_e": {
+     "e_coelev_cal": "au_plus",
+     "ed_coelev": "au_plus"
+    }
+   },
+   {
+    "nom": "T_synchro_m10",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 10,
+    "r": 1,
+    "borne_coelev_comptage": 0.989853,
+    "lecture_au_dessus": [
+     "coelev_comptage",
+     "pas_moyenne",
+     "coelev_somme3"
+    ],
+    "lecture_e": {
+     "e_coelev_cal": "au_plus",
+     "ed_coelev": "au_plus"
+    }
+   },
+   {
+    "nom": "T_synchro_m20",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 20,
+    "r": 1,
+    "borne_coelev_comptage": 1.0,
+    "lecture_au_dessus": [
+     "coelev_comptage",
+     "pas_moyenne",
+     "coelev_somme3"
+    ],
+    "lecture_e": {
+     "e_coelev_cal": "en_dessous",
+     "ed_coelev": "en_dessous"
+    }
+   },
+   {
+    "nom": "I_rebrassage",
+    "genre": "rebrassage_tout",
+    "groupe": "tout"
+   }
+  ]
+ },
+ "M": {
+  "e5x40": [
+   {
+    "nom": "M_concentre_B3",
+    "genre": "concentre",
+    "B": 3,
+    "m": 1
+   },
+   {
+    "nom": "M_concentre_B4",
+    "genre": "concentre",
+    "B": 4,
+    "m": 1
+   },
+   {
+    "nom": "M_concentre_B5",
+    "genre": "concentre",
+    "B": 5,
+    "m": 1
+   },
+   {
+    "nom": "M_synchro_B8_m2",
+    "genre": "synchro",
+    "B": 8,
+    "m": 2
+   },
+   {
+    "nom": "M_synchro_B8_m3",
+    "genre": "synchro",
+    "B": 8,
+    "m": 3
+   },
+   {
+    "nom": "M_synchro_B8_m5",
+    "genre": "synchro",
+    "B": 8,
+    "m": 5
+   },
+   {
+    "nom": "M_synchro_B12_m2",
+    "genre": "synchro",
+    "B": 12,
+    "m": 2
+   },
+   {
+    "nom": "M_synchro_B12_m3",
+    "genre": "synchro",
+    "B": 12,
+    "m": 3
+   },
+   {
+    "nom": "M_synchro_B12_m5",
+    "genre": "synchro",
+    "B": 12,
+    "m": 5
+   },
+   {
+    "nom": "M_temps_B8_m2",
+    "genre": "temps",
+    "B": 8,
+    "m": 2
+   },
+   {
+    "nom": "M_temps_B8_m20",
+    "genre": "temps",
+    "B": 8,
+    "m": 20
+   },
+   {
+    "nom": "M_temps_B8_m40",
+    "genre": "temps",
+    "B": 8,
+    "m": 40
+   },
+   {
+    "nom": "M_temps_B12_m2",
+    "genre": "temps",
+    "B": 12,
+    "m": 2
+   },
+   {
+    "nom": "M_temps_B12_m20",
+    "genre": "temps",
+    "B": 12,
+    "m": 20
+   },
+   {
+    "nom": "M_temps_B12_m40",
+    "genre": "temps",
+    "B": 12,
+    "m": 40
+   }
+  ],
+  "e10x20": [
+   {
+    "nom": "M_concentre_B3",
+    "genre": "concentre",
+    "B": 3,
+    "m": 1
+   },
+   {
+    "nom": "M_concentre_B4",
+    "genre": "concentre",
+    "B": 4,
+    "m": 1
+   },
+   {
+    "nom": "M_concentre_B5",
+    "genre": "concentre",
+    "B": 5,
+    "m": 1
+   },
+   {
+    "nom": "M_synchro_B8_m2",
+    "genre": "synchro",
+    "B": 8,
+    "m": 2
+   },
+   {
+    "nom": "M_synchro_B8_m5",
+    "genre": "synchro",
+    "B": 8,
+    "m": 5
+   },
+   {
+    "nom": "M_synchro_B8_m10",
+    "genre": "synchro",
+    "B": 8,
+    "m": 10
+   },
+   {
+    "nom": "M_synchro_B12_m2",
+    "genre": "synchro",
+    "B": 12,
+    "m": 2
+   },
+   {
+    "nom": "M_synchro_B12_m5",
+    "genre": "synchro",
+    "B": 12,
+    "m": 5
+   },
+   {
+    "nom": "M_synchro_B12_m10",
+    "genre": "synchro",
+    "B": 12,
+    "m": 10
+   },
+   {
+    "nom": "M_temps_B8_m2",
+    "genre": "temps",
+    "B": 8,
+    "m": 2
+   },
+   {
+    "nom": "M_temps_B8_m10",
+    "genre": "temps",
+    "B": 8,
+    "m": 10
+   },
+   {
+    "nom": "M_temps_B8_m20",
+    "genre": "temps",
+    "B": 8,
+    "m": 20
+   },
+   {
+    "nom": "M_temps_B12_m2",
+    "genre": "temps",
+    "B": 12,
+    "m": 2
+   },
+   {
+    "nom": "M_temps_B12_m10",
+    "genre": "temps",
+    "B": 12,
+    "m": 10
+   },
+   {
+    "nom": "M_temps_B12_m20",
+    "genre": "temps",
+    "B": 12,
+    "m": 20
+   }
+  ],
+  "e20x20": [
+   {
+    "nom": "M_concentre_B3",
+    "genre": "concentre",
+    "B": 3,
+    "m": 1
+   },
+   {
+    "nom": "M_concentre_B4",
+    "genre": "concentre",
+    "B": 4,
+    "m": 1
+   },
+   {
+    "nom": "M_concentre_B5",
+    "genre": "concentre",
+    "B": 5,
+    "m": 1
+   },
+   {
+    "nom": "M_synchro_B8_m2",
+    "genre": "synchro",
+    "B": 8,
+    "m": 2
+   },
+   {
+    "nom": "M_synchro_B8_m10",
+    "genre": "synchro",
+    "B": 8,
+    "m": 10
+   },
+   {
+    "nom": "M_synchro_B8_m20",
+    "genre": "synchro",
+    "B": 8,
+    "m": 20
+   },
+   {
+    "nom": "M_synchro_B12_m2",
+    "genre": "synchro",
+    "B": 12,
+    "m": 2
+   },
+   {
+    "nom": "M_synchro_B12_m10",
+    "genre": "synchro",
+    "B": 12,
+    "m": 10
+   },
+   {
+    "nom": "M_synchro_B12_m20",
+    "genre": "synchro",
+    "B": 12,
+    "m": 20
+   },
+   {
+    "nom": "M_temps_B8_m2",
+    "genre": "temps",
+    "B": 8,
+    "m": 2
+   },
+   {
+    "nom": "M_temps_B8_m10",
+    "genre": "temps",
+    "B": 8,
+    "m": 10
+   },
+   {
+    "nom": "M_temps_B8_m20",
+    "genre": "temps",
+    "B": 8,
+    "m": 20
+   },
+   {
+    "nom": "M_temps_B12_m2",
+    "genre": "temps",
+    "B": 12,
+    "m": 2
+   },
+   {
+    "nom": "M_temps_B12_m10",
+    "genre": "temps",
+    "B": 12,
+    "m": 10
+   },
+   {
+    "nom": "M_temps_B12_m20",
+    "genre": "temps",
+    "B": 12,
+    "m": 20
+   }
+  ]
+ },
+ "HE3": {
+  "configs": [
+   "e10x20",
+   "e10x50"
+  ],
+  "lois": [
+   {
+    "nom": "iid",
+    "loi": {
+     "type": "iid",
+     "marginale": "gauss"
+    }
+   },
+   {
+    "nom": "tau0.1",
+    "loi": {
+     "type": "effet_episode",
+     "tau": 0.1
+    }
+   },
+   {
+    "nom": "tau0.2",
+    "loi": {
+     "type": "effet_episode",
+     "tau": 0.2
+    }
+   },
+   {
+    "nom": "c0.2",
+    "loi": {
+     "type": "equicorrelation",
+     "c": 0.2
+    }
+   },
+   {
+    "nom": "c0.4",
+    "loi": {
+     "type": "equicorrelation",
+     "c": 0.4
+    }
+   }
+  ],
+  "alarmes": [
+   "somme",
+   "max",
+   "comptage",
+   "agent_moyenne",
+   "agent_comptage",
+   "pas_moyenne",
+   "coelev_comptage",
+   "e_coelev_ville",
+   "e_pas_ville"
+  ],
+  "conforme": {
+   "K": 1000,
+   "n_test": 400,
+   "L": 50,
+   "statistiques": [
+    "coelev_comptage",
+    "e_coelev",
+    "e_pas",
+    "agent_moyenne"
+   ]
+  },
+  "lecture": {
+   "depasse": {
+    "tau0.1": [
+     "e_pas_ville"
+    ],
+    "tau0.2": [
+     "e_coelev_ville",
+     "e_pas_ville"
+    ],
+    "c0.2": [
+     "e_pas_ville"
+    ],
+    "c0.4": [
+     "e_pas_ville"
+    ]
+   }
+  }
+ },
+ "HE6": {
+  "configs": [
+   "e10x20"
+  ],
+  "lois": [
+   {
+    "nom": "c0.2",
+    "loi": {
+     "type": "equicorrelation",
+     "c": 0.2
+    }
+   },
+   {
+    "nom": "c0.4",
+    "loi": {
+     "type": "equicorrelation",
+     "c": 0.4
+    }
+   }
+  ],
+  "alarmes": [
+   "somme",
+   "max",
+   "comptage",
+   "agent_moyenne",
+   "agent_comptage",
+   "pas_moyenne",
+   "coelev_comptage",
+   "coelev_somme3",
+   "e_coelev",
+   "ed_coelev"
+  ],
+  "arrangements": [
+   {
+    "nom": "T_synchro_m5",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 5,
+    "r": 1
+   },
+   {
+    "nom": "T_synchro_m10",
+    "genre": "synchro",
+    "groupe": "temps",
+    "m": 10,
+    "r": 1
+   }
+  ],
+  "lecture": {
+   "c0.2": {
+    "T_synchro_m10": {
+     "coelev_comptage": "au_dessus",
+     "pas_moyenne": "au_dessus"
+    }
+   },
+   "c0.4": {
+    "T_synchro_m5": {
+     "coelev_comptage": "en_dessous",
+     "pas_moyenne": "en_dessous"
+    },
+    "T_synchro_m10": {
+     "coelev_comptage": "au_dessus",
+     "pas_moyenne": "au_dessus"
+    }
+   }
+  }
+ }
+}
