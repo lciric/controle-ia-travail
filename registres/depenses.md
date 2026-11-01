@@ -301,3 +301,6 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-11-01 16:45 UTC — **fin : Kimi seul, bac à sable (second essai)** (GO-04) : OK, 0,31 USD ; cumul GO-04 **1,09 (+ ≤ 0,5 réservé par le premier essai coupé) / 3**.
 - 2026-11-01 18:21 UTC — **en cours : épreuve fraîche du pont** (GO-2026-11-01-09, plafond 5 USD ; préenregistrement v2 scellé `66d5bde7…` ; 8 fiches de Fable + 6 témoins ; traducteurs Kimi (relais local, port 8802) et Argon ; estimation 2,0 à 6,4, SUPPOSÉ ; garde cumulée au pire cas avant chaque appel).
 - 2026-11-01 18:30 UTC — **fin : épreuve fraîche du pont** (GO-2026-11-01-09) : **1,34 / 5 USD** ; run `run-epreuve-pont-v2` (14 passages) ; aucune fuite de clé ; relais arrêté. GO-09 clos à 1,34.
+- 2026-11-01 18:35 UTC — **fin : Argon seul, relecture de la candidature (tel quel)** (GO-2026-11-01-10) : OK, **0,35 USD** ; cumul GO-10 0,35 / 5.
+- 2026-11-01 18:54 UTC — **fin : Kimi seul, relecture de la candidature (tel quel), premier appel** (GO-10) : TRONQUÉ à 32 000 jetons de sortie, **0,36 USD** ; cumul GO-10 0,71 / 5.
+- 2026-11-01 18:59 UTC — **en cours : Kimi seul, relance au plafond de 65 536 jetons** (GO-10, relais local port 8804, pire cas 0,71) ; cumul au pire cas 1,42 / 5.
