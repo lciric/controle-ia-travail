@@ -10,7 +10,7 @@ en parallèle recommandées : **A** = R1 puis R2 (même instance, étapes en sé
 | Poste | Instance A (R1 + R2) | Instance B (R4) |
 |---|---|---|
 | Mise en place (image, clonage, installation, téléchargement des poids : 8B 16 Go ; 3B 6,4 Go) | 15 à 20 min | 15 min |
-| Tests (A : suite ciblée, ≈ 250 tests ; B : suite complète de `p3_instance.sh`, ≈ 1 300 tests) | 10 à 15 min | 35 à 45 min |
+| Tests (suite ciblée des runs de nuit, même liste sur A et B) | 10 à 15 min | 10 à 15 min |
 | R1 : reconstruction (processeur) + passe unique de 240 épisodes (≈ 1,04 M jetons) + agrégats + notation de contrôle | 5 à 10 min | — |
 | R2 : juge 3B, 2 bras × 2 400 actions (≈ 5,8 M jetons lus, sans génération) | 5 à 10 min | — |
 | R2 : juge 8B, 2 bras × 2 400 actions (bras secondaire) | 10 à 15 min | — |
@@ -18,13 +18,13 @@ en parallèle recommandées : **A** = R1 puis R2 (même instance, étapes en sé
 | R4 : 128 épisodes (P3 : 37,9 s par épisode) | — | 80 min |
 | R4 : rejeu (1 280 actions) + juge 3B | — | 10 min |
 | Poussées, marges | 5 min | 5 min |
-| **Durée attendue** | **≈ 1 h 10** | **≈ 2 h 50** |
-| **Coût attendu** (1,40 USD/h au plafond, stockage et réseau ≈ 0,05 USD/h compris) | **≈ 1,7 USD** | **≈ 4,1 USD** |
+| **Durée attendue** | **≈ 1 h 10** | **≈ 2 h 25** |
+| **Coût attendu** (1,40 USD/h au plafond, stockage et réseau ≈ 0,05 USD/h compris) | **≈ 1,7 USD** | **≈ 3,5 USD** |
 | Plafond de durée imposé par l'amorce | 150 min | 330 min |
 | Pire cas (plafond de l'amorce × 1,45 USD/h) | 3,6 USD | 8,0 USD |
 | **Pire cas × 1,5** | **5,4 USD** | **12,0 USD** |
 
-**Total attendu ≈ 5,8 USD ; pire cas × 1,5 ≈ 17,4 USD**, sous le plafond de 25 USD du GO. Le pire cas suppose que la
+**Total attendu ≈ 5,2 USD ; pire cas × 1,5 ≈ 17,4 USD**, sous le plafond de 25 USD du GO. Le pire cas suppose que la
 session n'arrête l'instance qu'au plafond de l'amorce ; la surveillance (LISEZMOI) arrête l'instance par son identifiant
 dès la fin du journal (R10). Une relance (branche `…-v2`) après un arrêt précoce reste sous le plafond tant que le cumul
 consigné dans `registres/depenses.md` le permet ; sinon, nœud.

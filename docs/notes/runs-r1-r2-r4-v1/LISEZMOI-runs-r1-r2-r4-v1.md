@@ -13,12 +13,21 @@ contre-lectures, création d'instance et dépense restent à la session « sessi
 | `src/controle_ia/runs_nuit/juge_actions_v1.py` | R2 : juge par action, P(Yes) et log-probabilités brutes, bras spécialisé (principal) et générique |
 | `tests/test_runs_nuit_v1.py` | 5 essais jouet (rejeu fidèle au bit, texte altéré → arrêt sans versement, gardes d'alignement, moyenne de diagnostic, juge aligné) |
 | `scripts/amorce_instance_r1_r2_v1.sh`, `scripts/r1_r2_instance_v1.sh` | instance A (R1 puis R2 3B puis R2 8B) |
-| `scripts/amorce_instance_r4_v1.sh`, `scripts/r4_suite_instance_v1.sh` | instance B (lanceur de P3 tel quel avec le préenregistrement de R4, puis rejeu et juge) |
+| `scripts/amorce_instance_r4_v1.sh`, `scripts/p3_instance_r4_v1.sh`, `scripts/r4_suite_instance_v1.sh` | instance B (lanceur de P3 tel quel, script d'instance de P3 décliné avec la suite ciblée, préenregistrement de R4 ; puis rejeu et juge) |
 | `prereg/R1-R2-rejeu-p3-v1.md` ; `prereg/R1-rejeu-config-v1.json`, `prereg/R2-juge3b-config-v1.json`, `prereg/R2-juge8b-config-v1.json`, `prereg/R2-invite-juge-v1.md` | préenregistrement et pièces de R1 + R2 |
 | `prereg/R4-dose-cout-gonfle-v1.md` ; `prereg/R4-config-v1.json`, `prereg/R4-consignes-dose-faible-v1.md`, `prereg/R4-rejeu-config-v1.json`, `prereg/R4-juge3b-config-v1.json` | préenregistrement et pièces de R4 |
 
 Les deux préenregistrements passent `controle_ia.prereg.problemes` à une remarque près, attendue : « contre-lecture 1
 sans ses deux empreintes » (la contre-lecture R2 n'est pas faite).
+
+## Réponse au point (a) et contrôle préalable
+
+Le rejeu forcé dans le contexte exact est possible sans relancer l'environnement : l'environnement (a) se rejoue depuis
+les textes, les consignes viennent du fichier scellé de P3 ; seuls les identifiants générés manquent. Mesuré hors carte
+avec le tokeniseur de P3 (`controle_prealable_tokenisation_v1.py`, sortie `controle-prealable-tokenisation-v1.txt`) :
+2 236 actions sur 2 400 retrouvent exactement leurs jetons (93 %), 1 782 en contexte exact (74 %). Les autres sont
+signalées par action (`conforme_longueur`, `contexte_conforme`, `ecart_fidelite`, `fidele`) ; l'échantillon du contrôle
+de fidélité est tiré parmi les actions en contexte exact (≥ 378 par condition).
 
 ## Avant toute dépense (session)
 
@@ -27,8 +36,8 @@ sans ses deux empreintes » (la contre-lecture R2 n'est pas faite).
    la section « Contre-lecture » (empreinte du brouillon relu, rapport et son empreinte).
 2. Commit final du code (`src/`, `tests/`, `scripts/` gelés) : inscrire son empreinte complète à la place de
    `COMMIT_A_INSCRIRE_AU_SCELLEMENT` dans les deux préenregistrements (`prereg/` est hors de l'arbre gelé) ; inscrire
-   « Tests attendus » : instance A = nombre de la suite ciblée (liste dans `r1_r2_instance_v1.sh`) ; instance B = nombre
-   de la suite complète (`python -m pytest -q`) au commit cité, sur une machine où `requirements-donnees.txt` est installé.
+   « Tests attendus » : le nombre de la suite ciblée (même liste dans `r1_r2_instance_v1.sh` et `p3_instance_r4_v1.sh`),
+   relu au commit cité (`PYTHONPATH=src:tests python -m pytest -q <liste>`).
 3. Sceller (R6) :
    ```
    PYTHONPATH=src python -m controle_ia.scellement sceller prereg/R1-rejeu-config-v1.json prereg/R2-juge3b-config-v1.json \

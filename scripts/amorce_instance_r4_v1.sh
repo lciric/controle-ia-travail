@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Amorce de l'instance du run de nuit R4 (seconde dose de l'organisme « coût gonflé », GO-2026-11-01-13), lancement en
-# mode « args ». Copie déclinée de `amorce_instance_p3.sh` sous un nom nouveau (R12) : (1) le script de P3,
-# `p3_instance.sh`, tel quel, avec le préenregistrement de R4 (PREREG) et une branche de résultats propre (BRANCHE) : même
+# mode « args ». Copie déclinée de `amorce_instance_p3.sh` sous un nom nouveau (R12) : (1) le script de P3 décliné en
+# `p3_instance_r4_v1.sh` (seule différence : suite de tests ciblée), avec le préenregistrement de R4 (PREREG) et une branche de résultats propre (BRANCHE) : même
 # lanceur, mêmes gardes, mêmes sorties que P3 ; (2) puis, sur le même clone et le même environnement,
 # `r4_suite_instance_v1.sh` : rejeu des actions de R4 (activations au format de R1) et juge de 3 milliards (format de R2).
-# Plafond de l'ensemble : 330 minutes (P3 : 300 au plus ; R4 attendu ≈ 2 h 30), sous la surveillance de la session. Une
+# Plafond de l'ensemble : 330 minutes (P3 : 300 au plus ; R4 attendu ≈ 2 h 20), sous la surveillance de la session. Une
 # seconde exécution refuse de repartir (R12) ; seule la session de pilotage arrête l'instance, par son identifiant (R10).
 # Variables passées par --env à la création de l'instance : COMMIT (commit de scellement du préenregistrement de R4),
 # GH_TOKEN, HF_TOKEN, DEPOT_URL ; BRANCHE (facultatif, défaut calcul/r4-dose-reel-v1).
@@ -31,7 +31,7 @@ if ! git -C amorce-depot checkout -q "$COMMIT"; then
 fi
 T="$RACINE_AMORCE/r4"
 debut=$(date +%s)
-timeout --signal=TERM --kill-after=5m 310m env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/p3_instance.sh
+timeout --signal=TERM --kill-after=5m 310m env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/p3_instance_r4_v1.sh
 code=$?
 echo "AMORCE $(date -u +%FT%TZ) : lanceur de P3 (R4) fini, code $code"
 if [ "$code" -eq 0 ]; then

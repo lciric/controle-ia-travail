@@ -7,7 +7,8 @@
   `docs/programme-controle-ia-v2.md` (empreintes dans `docs/sha256sums-lancement-v2.txt`) ; décision P-015 (défaut (b),
   R-321 ; `docs/decisions/proposition-P-015-T0.6-T0.8-mode-cout-v1.md`, `6e74c6cb…`) ; P3 et ses pièces
   (`prereg/P3-premier-test-i-a-v1.md`, `prereg/P3-consignes-v1.md`) ; GO-2026-11-01-13 (plafond 25 USD).
-- **Libellés lus par le lanceur de P3, réutilisé tel quel** (`scripts/p3_instance.sh`, `controle_ia.premier_test_ia.run`) :
+- **Libellés lus par le lanceur de P3, réutilisé tel quel** (`controle_ia.premier_test_ia.run`), et par son script
+  d'instance décliné `scripts/p3_instance_r4_v1.sh` (seule différence avec `p3_instance.sh` : suite de tests ciblée) :
 - Chemin de la configuration de P3 : `prereg/R4-config-v1.json`
 - Configuration de P3 (empreinte canonique) : `129c7f4cab058443adfa97b18fff828fb6d388706f93a43164073ab61a45d6f0`
 - Chemin des tâches de P3 : `donnees/20261007-082440-t05-extraction/taches-entrainement.json`
@@ -102,7 +103,7 @@ inutilisable.
 ## Liste d'arrêt
 
 - Gardes du lanceur de P3, inchangées (préenregistrement, commit cité, configuration, tâches, consignes et entropie cités,
-  tests attendus, format, mémoire, équivalence en ligne, contrôle négatif de phase, délai de 300 min) : arrêt consigné.
+  tests attendus de la suite ciblée, format, mémoire, équivalence en ligne, contrôle négatif de phase, délai de 300 min) : arrêt consigné.
 - Suite (rejeu, juge) : configurations citées non scellées, run source incomplet, contrôle de fidélité contraire, masse :
   comme R1 et R2 ; un arrêt de la suite laisse les épisodes de R4 versés et lisibles.
 - Plafond de l'amorce 330 min ; dépense au plus le pire cas du devis ; arrêt de l'instance par son identifiant (R10).

@@ -36,7 +36,8 @@ else
     PYTHONPATH=src python -m controle_ia.scellement verifier "$CONFIG_REJEU_R4" "$CONFIG_JUGE_R4" >/dev/null
     ARGS=(--prereg "$PREREG")
 fi
-SOURCE=$(ls -1d diag/*-p3-"$MODE" 2>/dev/null | sort | tail -1 | xargs -r basename)
+# run source : celui que le lanceur vient d'écrire (ligne « run terminé : <run> » du journal de p3_instance_r4_v1.sh)
+SOURCE=$(sed -n 's/.* run terminé : \([0-9]\{8\}-[0-9]\{6\}-p3-[a-z]*\)$/\1/p' "$JOURNAL" | tail -1)
 [ -n "$SOURCE" ] && [ -f "diag/$SOURCE/resume.json" ] && [ ! -f "diag/$SOURCE/arret.json" ] || {
     journal "suite de R4 : aucun run complet du lanceur de P3 trouvé : arrêt"; exit 2; }
 journal "suite de R4 : run source $SOURCE"
