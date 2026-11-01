@@ -105,8 +105,10 @@ def bornes_hors_cout(bornes: dict, n: int) -> tuple[int, int] | None:
     return d, min([n, *suivantes])
 
 
-def reconstruire_episode(fmt, env, T: int, lignes: list[dict], jetons: list[int], jetons_notes: list[int]) -> dict:
-    """Transcription complète de l'épisode et, par action, empan noté, identifiants et conformité de longueur."""
+def reconstruire_episode(fmt, env, T: int, lignes: list[dict], jetons: list[int], jetons_notes: list[int],
+                         fins_par_pas: dict | None = None) -> dict:
+    """Transcription complète de l'épisode et, par action, empan noté, identifiants et conformité de longueur.
+    `fins_par_pas` : jeton de fin à prendre au pas t (défaut : le premier jeton de clôture du tour, fin de tour)."""
     from ..premier_test_ia.conditions import bornes_champs
 
     obs0 = env.observation(0, 0, [])
@@ -125,7 +127,7 @@ def reconstruire_episode(fmt, env, T: int, lignes: list[dict], jetons: list[int]
         a_fin = jetons[t] - jetons_notes[t]
         if a_fin not in (0, 1):
             raise GardeArret(f"épisode {lignes[t]['episode']}, pas {t} : jetons − jetons notés = {a_fin}")
-        nv = notes + ([fin_de_tour] if a_fin == 1 else [])
+        nv = notes + ([(fins_par_pas or {}).get(t, fin_de_tour)] if a_fin == 1 else [])
         conforme = (len(notes) == jetons_notes[t] and len(nv) == jetons[t]
                     and fmt.tok.decode(nv, skip_special_tokens=True) == texte)
         actions.append({"debut": len(ctx), "fin": len(ctx) + len(notes), "conforme": bool(conforme), "nv": nv,
@@ -134,6 +136,23 @@ def reconstruire_episode(fmt, env, T: int, lignes: list[dict], jetons: list[int]
         ids = ctx + nv + fmt.cloture(debut, nv)
         journal.append((0, t, texte))
     return {"ids": ids, "actions": actions}
+
+
+def resoudre_fins(fmt, env, T, lignes, jetons, jetons_notes, empreinte: str, identifiant: str):
+    """Cherche le jeton de fin de chaque action (parmi `fmt.fins`) qui redonne l'empreinte de trajectoire de P3 : une
+    substitution, puis deux, dans un ordre fixe ; rend (reconstruction, épisode du harnais) ou None."""
+    import itertools
+
+    pas = [t for t in range(T) if jetons[t] - jetons_notes[t] == 1]
+    autres = sorted(int(x) for x in fmt.fins)
+    for k in (1, 2):
+        for choix in itertools.combinations(pas, k):
+            for valeurs in itertools.product(autres, repeat=k):
+                rec = reconstruire_episode(fmt, env, T, lignes, jetons, jetons_notes, dict(zip(choix, valeurs)))
+                ep = episode_harnais(identifiant, T, rec)
+                if empreinte_trajectoire(ep) == empreinte:
+                    return rec, ep
+    return None
 
 
 def episode_harnais(identifiant: str, T: int, rec: dict):
@@ -342,12 +361,25 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
     fiches = charger_fiches(config["chemin_fiches"], config["fiches_sha256"]) if config["chemin_fiches"] else None
     traj = np.zeros(n, dtype=bool)
     episodes_h = {}
+    fins_resolues = 0
     for e, rs in par_episode.items():
         episodes_h[e] = episode_harnais(e, T, recs[e])
         if fiches is not None:
             if e not in fiches:
                 raise GardeArret(f"épisode {e} absent des fiches du run source")
             traj[rs] = empreinte_trajectoire(episodes_h[e]) == fiches[e]["trajectoire"]
+            if not traj[rs].all() and conforme[rs].all():
+                # P3 accepte tout jeton de `fmt.fins` comme fin d'action ; le texte ne dit pas lequel. On essaie, dans un
+                # ordre fixe, une puis deux substitutions du jeton de fin ; l'empreinte de P3 tranche (aucun choix libre)
+                x0 = lignes[rs[0]]
+                env = environnement(x0["condition"], tache_de(taches[x0["tache"]]), T, guide, consignes)
+                trouve = resoudre_fins(fmt, env, T, [lignes[r] for r in rs], [jetons[r] for r in rs],
+                                       [jetons_notes[r] for r in rs], fiches[e]["trajectoire"], e)
+                if trouve is not None:
+                    recs[e], episodes_h[e] = trouve
+                    traj[rs] = True
+                    fins_resolues += 1
+    etat["episodes_fin_resolue"] = fins_resolues
     etat["trajectoires_identiques"] = int(traj.sum()) // T if fiches is not None else None
     if fiches is not None:
         # CLC-03 : un épisode dont toutes les actions sont conformes en longueur doit avoir la trajectoire de P3 ; sinon
@@ -360,7 +392,7 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
     etat["conformes_longueur"] = int(conforme.sum())
     etat["contextes_conformes"] = int(contexte_conforme.sum())
     progres(etape="reconstruction", conformes=int(conforme.sum()), contextes_conformes=int(contexte_conforme.sum()),
-            trajectoires_identiques=etat["trajectoires_identiques"], actions=n)
+            trajectoires_identiques=etat["trajectoires_identiques"], fins_resolues=etat["episodes_fin_resolue"], actions=n)
     # éligibles au contrôle de fidélité : trajectoire identique à celle de P3, octet pour octet (identifiants et empans,
     # empreinte stockée par P3), quand les fiches sont données ; sinon contexte conforme en longueur
     eligibles = (traj if fiches is not None else contexte_conforme) & (np.asarray(jetons_notes) > 0)

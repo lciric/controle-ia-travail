@@ -14,9 +14,9 @@
 #                 « Chemin de la configuration du rejeu : `…` », « Chemin de la configuration du juge 3B : `…` »,
 #                 « Chemin de la configuration du juge 8B : `…` », lus avant toute installation
 #   PREREG_ABSENT 1 seulement en mode jouet ; CONFIG_REJEU, CONFIG_JUGE3B, CONFIG_JUGE8B donnent alors les chemins
-#   ETAPES        défaut « rejeu » (R1 seul) ; « rejeu juge3b juge8b » pour R1 puis R2. Le bras boîte noire de R2 sur
-#                 les textes de P3 est une exception à N-029 (section 2) : il ne se lance qu'après la confirmation de
-#                 Lazar consignée dans registres/decisions.md. Ordre fixe ; un arrêt d'une étape n'empêche pas les
+#   ETAPES        défaut « rejeu juge3b juge8b » (R1 puis R2) ; « rejeu » pour R1 seul. Le bras boîte noire de R2 sur
+#                 les textes de P3 est une exception à N-029 (section 2), confirmée par Lazar (R-1014, 1er novembre
+#                 2026) : comparaison préenregistrée hors porte ; la garde codée vérifie la ligne au commit lancé. Ordre fixe ; un arrêt d'une étape n'empêche pas les
 #                 suivantes (le juge ne dépend pas du rejeu, CLR-16) ; le code de sortie dit s'il y a eu un arrêt.
 #   DEPOT_URL     défaut https://github.com/lciric/controle-ia-travail.git (dépôt de travail privé ; N-016)
 #   GH_TOKEN      jeton GitHub à grain fin ; lu par un assistant d'identification, jamais écrit
@@ -38,7 +38,7 @@ BRANCHE="${BRANCHE:-calcul/r1-r2-$MODE-v1}"
 PREREG="${PREREG:-prereg/R1-R2-rejeu-p3-v1.md}"
 TRAVAIL="${TRAVAIL:-$HOME/r1r2}"
 PREREG_ABSENT="${PREREG_ABSENT:-0}"
-ETAPES="${ETAPES:-rejeu}"
+ETAPES="${ETAPES:-rejeu juge3b juge8b}"
 case "$MODE" in reel|jouet) ;; *) echo "MODE=$MODE : reel ou jouet" >&2; exit 2 ;; esac
 if [ "$PREREG_ABSENT" = 1 ] && [ "$MODE" != jouet ]; then
     echo "PREREG_ABSENT=1 n'est permis qu'en mode jouet (R1)" >&2; exit 2
