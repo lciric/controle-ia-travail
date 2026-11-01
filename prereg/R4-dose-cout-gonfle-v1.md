@@ -3,11 +3,13 @@
 - Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 3** (après la
   contre-lecture 1 et la contre-lecture ciblée du brouillon 2), non scellé.
 - Date (UTC) : 2026-11-01 ≈ 22:50.
-- Commit du code d'analyse : `COMMIT_A_INSCRIRE_AU_SCELLEMENT`
+- Commit du code d'analyse : `29bd8e2ea29e82a08b4e540ce0ac0b70c025a484`
 - Documents qui font foi (chemin + empreinte) : `docs/brief-claude-code-programme-complet-v2.md`,
   `docs/programme-controle-ia-v2.md` (empreintes dans `docs/sha256sums-lancement-v2.txt`) ; décision P-015 (défaut (b),
   R-321 ; `docs/decisions/proposition-P-015-T0.6-T0.8-mode-cout-v1.md`, `6e74c6cb…`) ; N-029
-  (`docs/decisions/decision-N-029-v1.md` : juge à capacité égale et prédicteur sur les traits du texte obligatoires) ; P3 et ses pièces
+  (`docs/decisions/decision-N-029-v1.md` : juge à capacité égale et prédicteur sur les traits du texte obligatoires) ; R-1014
+  (exception à N-029 pour R2 seul, comparaison hors porte ; R4 n'est pas concerné : recherche de dose de P-015 (b), non
+  décisive, hors porte elle aussi, prédicteur sur les traits obligatoire dans son ensemble boîte noire) ; P3 et ses pièces
   (`prereg/P3-premier-test-i-a-v1.md`, `prereg/P3-consignes-v1.md`) ; GO-2026-11-01-13 (plafond 25 USD).
 - **Libellés lus par le lanceur de P3, réutilisé tel quel** (`controle_ia.premier_test_ia.run`), et par son script
   d'instance décliné `scripts/p3_instance_r4_v1.sh` (seule différence avec `p3_instance.sh` : suite de tests ciblée) :
@@ -17,7 +19,7 @@
 - Tâches de P3 : `8d20a698d76baa8a42cd1494227fc411ef043d24a67a413e5cf812541166a4fd`
 - Chemin des consignes de P3 : `prereg/R4-consignes-dose-faible-v1.md`
 - Entropie : `37363879406597456335199269822657656203`
-- Tests attendus : `288`
+- Tests attendus : `291`
 - **Suite sur la même instance** (`scripts/r4_suite_instance_v1.sh`) :
 - Chemin de la configuration du rejeu de R4 : `prereg/R4-rejeu-config-v2.json`
 - Configuration du rejeu (empreinte canonique) : `cd1a6f7b995c65351b2d8e69cbf26067dd011d19aad426b77e729656131c0464`
