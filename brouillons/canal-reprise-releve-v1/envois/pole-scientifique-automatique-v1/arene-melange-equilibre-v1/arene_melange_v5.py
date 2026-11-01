@@ -1,0 +1,2627 @@
+#!/usr/bin/env python3
+"""Arène coévolutive synthétique : le mélange d'équilibre contre ses témoins, à nombre de paramètres égal (Q1) et à
+classe de fonctions égale F_u (maxouts à u unités) contre D_u, à moniteurs égaux contre C3′_u (Q2) — v5.
+
+Changements de la v5 (après la vérification courte `verification-arene-melange-v4-brouillon4.md`, constats CM4-01 à
+CM4-09, et la décision de Lazar R-1034 point 5 « go réécriture et correction » ; tous fixés dans
+`gel-conception-arene-melange-v5.md` AVANT toute exécution de ce code, gel dont l'empreinte est épinglée ci-dessous) :
+- racines neuves (plage 20264001 à 20264999, hors toute racine des v1 à v4), écrites dans le gel v5 avant emploi ; `gen`
+  refuse toute racine des v1 à v4 (gelées v4 comprises), la plage 20265001 à 20265999 et toute racine non gelée ;
+- Q2 reposée à une classe F_u où le jeu n'impose pas la pureté : bras B_u (« Bu », double oracle à maxouts de u unités),
+  D_u (« Du », un seul maxout à u unités réentraîné contre le mélange uniforme des attaques passées : A = D_1), C3′_u
+  (« C3u », « ou » des moniteurs de B_u) et M_u (« Mu », moniteur de poids maximal de B_u déployé seul, descriptif) ;
+  u = `UNITES_Q2_V5`, choisi par la règle du gel v5 § 2 sur le seul diagnostic de pureté (mode `diagnostic`) ;
+- diagnostic de la pureté : pureté forcée, ε-équilibres (fragilité au bruit de G), gain du mélange dans le jeu restreint,
+  dominance de la ligne de poids maximal, sur l'échelle de classes u ∈ (2, 3, 5, 9) ;
+- jeux témoins à équilibre intérieur connu (`jeu_temoin`) et garde R5 `controle_temoins` : le chemin de calcul doit
+  retrouver un équilibre intérieur sur le témoin sain et reconnaître le témoin dégénéré, sinon aucun lancement ;
+- B′ et C3′ (9 unités) sortent de la décision (code inchangé, essai de continuité).
+Les bras A, B, C1, C2, C3, D, B′, C3′ calculent exactement comme en v4 (essai `test_bras_v4_inchanges`).
+
+Changements de la v4 (après la contre-lecture `contre-lecture-arene-melange-v3-brouillon3.md`, constats CM3-01 à CM3-16,
+et la décision R-739 ; tous fixés dans `gel-conception-arene-melange-v4.md` AVANT toute exécution de ce code, gel dont
+l'empreinte est épinglée ci-dessous) :
+- racines neuves (plage 20264001 à 20264999), toutes écrites dans le gel avant emploi ; `gen` refuse toute racine non
+  permise (décision sans autorisation, racine déjà employée, plage 20265001 à 20265999 d'une autre session, racine non
+  gelée) ; les modes d'essai exigent le gel à l'empreinte épinglée et qu'il cite la racine (CM3-08) ;
+- δ recalibrés sur le bras A seul (48 instances, règle `choisir_deltas` inchangée), une seule ligne (`DELTAS_V4`) ;
+- S18 = 0,10 (`taux_nonconv_max`), N = 100 (R-739) ;
+- audit d'attaquant indépendant : A ajouté (et B − A), contrôle des tours de A (I1, I3 de la Table 5), choix source et
+  choix audit réévalués sur un même échantillon frais, critère d'artefact en écart pratique (m/2) ou en changement de
+  classe démontré (t × erreur-type), sur 10 tâches par δ (CM3-01, CM3-04) ;
+- I3 lu contre sa valeur nulle (échangeabilité : moyenne de (t − 2)/(t − 1)), Table 5 réécrite (CM3-03) ;
+- plus petit poids maximal parmi les équilibres du jeu restreint (pureté forcée ou tenant au sommet du solveur) ;
+  B′ − D et B′ − C3′ selon la pureté ; pureté « ≥ 1 − 10⁻⁹ » comme le texte (CM3-02, CM3-12) ;
+- garde relative de variance de `MoniteurOu` (CM3-15).
+Les huit bras calculent exactement comme en v3 (essai `test_bras_v3_inchanges`).
+
+Historique : pilote de mécanisme, sur processeur, de la piste 3 du brainstorm
+`p-041-pont-vers-les-vrais-modeles-v1/brainstorm-malleabilite-et-arene-v1.md` (décision de Lazar R-695), réécrit après
+la contre-lecture `contre-lecture-arene-melange-v1-brouillon1.md` (constats CM-01 à CM-17), puis après
+`contre-lecture-arene-melange-v2-brouillon2.md` (constats CM2-01 à CM2-16). Ajouts de la v3 (bifurcation de conception
+postérieure au pilote v2, déclarée) :
+- B′ (code « Bp ») : mélange d'équilibre par double oracle dont l'oracle du défenseur rend des moniteurs maxout à
+  `unites_Bp` unités, la classe du moniteur final de D ; C3′ (code « C3p ») : « ou » déterministe des moniteurs mêmes
+  de B′ (composition standardisée, `MoniteurOu`) ;
+- mesures de la condition d'application (la défense unique A converge-t-elle, oublie-t-elle ?) : matrice de détection
+  croisée moniteur du tour s × attaque du tour t, indicateurs I1 (progrès), I2 (oubli), I3 (retours) ;
+- contrôle d'attaquant indépendant (`attaquant_independant`, modes `audit` et `audit-essai`) ;
+- arrêt par PID des processus de travail (R10) et garde « aucun orphelin » avant toute reprise.
+Les bras A, B, C1, C2, C3, D sont ceux de la v2, inchangés. Aucun modèle de langage,
+aucun texte : « l'attaquant » est un choix de paramètres dans une famille bornée de lois synthétiques (mélanges
+gaussiens en dimension d), sous une contrainte de comportement (distance ≤ δ à une loi cible, piste 2). Le défenseur
+est un classificateur simple sur échantillons, seuillé à un taux de fausses alertes α sur des échantillons propres.
+
+Bras à trajectoire propre (T tours ; l'attaquant joue en dernier à chaque tour), à partir d'un moniteur commun au tour 0 :
+- A « défense unique réentraînée, même oracle » : un moniteur linéaire réentraîné à chaque tour sur toutes les
+  attaques passées (mélange uniforme), seul déployé. Ce n'est PAS le protocole de Bailey et collègues : l'oracle
+  d'entraînement est celui des autres bras (maximisation de la détection à α), non la régression des sondes ;
+- B « mélange d'équilibre » (double oracle tronqué à T tours) : tous les moniteurs passés, tirés au hasard selon les
+  poids d'équilibre du jeu à somme nulle restreint (programme linéaire) ; l'oracle du défenseur entraîne un moniteur
+  linéaire contre la stratégie d'équilibre de l'attaquant ;
+- D « paramètres égaux » : un seul moniteur « maxout » (log-somme-exp de m scores linéaires) réentraîné sur toutes
+  les attaques passées, m = nombre de moniteurs du mélange de B au même tour (même nombre de paramètres ; autre
+  famille de fonctions et agrégation déterministe : ce n'est pas « la capacité » au sens fonctionnel).
+Témoins « finale seulement », construits sur les T + 1 moniteurs MÊMES de B après le tour T (aucune trajectoire) :
+- C1 poids uniformes ; C2 poids tirés au hasard (loi de Dirichlet uniforme, graine dérivée) ;
+- C3 « ou » déterministe : scores standardisés sur le propre de calibration, multipliés par λ, empilés dans un seul
+  moniteur à T + 1 unités (log-somme-exp ≈ maximum), seuil recalibré à α.
+Pour tous les bras, la défense finale est figée puis l'attaquant joue en dernier (meilleure réponse standard et
+renforcée ; (iii) retient la plus forte des deux).
+
+Racines (R9) : RACINE et RACINE_TENUE servent à la décision, ne s'emploient qu'après autorisation par un
+préenregistrement scellé, conforme et identifié (`autoriser_decision`, vérifiée aussi dans `gen` et dans chaque
+processus de travail) ; les racines d'essai de la v4 (recalibrage, pilote, reprise réservée, essais du code,
+simulations) sont neuves, écrites dans le gel v4 avant emploi ; toutes les racines déjà employées (brouillon 1, v2, v3,
+contre-lectures 2 et 3) et la plage d'une autre session sont refusées jusque dans `gen`. Toute graine est
+`SeedSequence(entropy=racine, spawn_key=(code_delta, instance, code_bras, tour, role, …))`.
+
+Commandes (v5) :
+    PYTHONPATH=src python3 <ce fichier> temoins
+    PYTHONPATH=src python3 <ce fichier> diagnostic --instances 0:16 --sortie FICHIER.json --processus 2 [--pids FICHIER]
+    PYTHONPATH=src python3 <ce fichier> essai --instances 0:24 --sortie FICHIER.json --processus 2 [--pids FICHIER]
+    PYTHONPATH=src python3 <ce fichier> audit-essai --pilote FICHIER.json --instances 0:5 --sortie AUDIT.json
+    PYTHONPATH=src python3 <ce fichier> identite
+    PYTHONPATH=src python3 <ce fichier> decision --prereg prereg/<scellé>.md --instances 0:N --run-id ID  (après GO)
+    PYTHONPATH=src python3 <ce fichier> audit --prereg prereg/<scellé>.md --source-run ID --instances 0:10 --run-id ID2 \
+        --S1 0.02 --S6 0.02 --S15 0.02   (valeurs gelées par Lazar)
+    PYTHONPATH=src python3 <ce fichier> orphelins --pids FICHIER [--arreter]   (R10 : arrêt par PID, avant reprise)
+"""
+from __future__ import annotations
+
+import os
+
+for _v in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_v, "1")
+
+import argparse  # noqa: E402
+import hashlib  # noqa: E402
+import json  # noqa: E402
+import re  # noqa: E402
+import signal  # noqa: E402
+import subprocess  # noqa: E402
+import sys  # noqa: E402
+import time  # noqa: E402
+from collections import Counter  # noqa: E402
+from dataclasses import asdict, dataclass, replace  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+import numpy as np  # noqa: E402
+from scipy.optimize import linprog, minimize  # noqa: E402
+from scipy.special import expit, logsumexp, softmax  # noqa: E402
+from scipy.stats import norm  # noqa: E402
+
+ICI = Path(__file__).resolve().parent
+DEPOT = ICI.parents[4]
+if str(DEPOT / "src") not in sys.path:
+    sys.path.insert(0, str(DEPOT / "src"))
+
+from controle_ia.gardes import GardeArret, exiger_numpy_minimal, lever_sur_term  # noqa: E402
+
+VERSION = "arene_melange_v5"
+IDENTIFIANT_PREREG = "PREREG-ARENE-MELANGE-EQUILIBRE-V1"
+FICHIERS_BIBLIOTHEQUE = ("src/controle_ia/gardes.py", "src/controle_ia/prereg.py", "src/controle_ia/scellement.py",
+                         "src/controle_ia/manifeste.py")
+
+# --- racines (R9) : écrites dans le gel v4 avant toute exécution de ce code, sans lien avec un résultat ------------
+RACINE = 20261201              # décision : jamais employée hors décision autorisée
+RACINE_TENUE = 20261202        # décision : familles tenues à l'écart (racine à part)
+RACINES_DECISION = (RACINE, RACINE_TENUE)
+# racines déjà employées ou nommées (brouillon 1 et code v1 : 20261291/2, essais v1 : 20262291 ; v2 : pilotes
+# 20261293/4, calibrage 20261295/6, essais 20261297/8, essais 20262297 ; contre-lecture 2 : 20269501/2 ; v3 : pilote
+# 20261311/2, essais 20261313/4 et 20262313, réservées 20261315/6, écartée 20261301 ; contre-lecture 3 : 20269731/2,
+# 20269741/2 ; valeur fautive des essais : 20261101) : refusées jusque dans `gen`
+RACINES_DEJA_EMPLOYEES_V1_V3 = (20261101, 20261291, 20261292, 20261293, 20261294, 20261295, 20261296, 20261297,
+                                20261298, 20261301, 20261311, 20261312, 20261313, 20261314, 20261315, 20261316, 20262291,
+                                20262297, 20262313, 20269501, 20269502, 20269731, 20269732, 20269741, 20269742)
+# v4 : racines gelées (employées ou réservées), valeurs nommées par les essais v4 comme « non gelées », bornes de plage
+RACINES_V4 = (20264101, 20264102, 20264201, 20264202, 20264211, 20264212, 20264301, 20264302, 20264303, 20264401,
+              20264555, 20264777, 20264001, 20264999)
+RACINES_DEJA_EMPLOYEES = RACINES_DEJA_EMPLOYEES_V1_V3 + RACINES_V4
+PLAGE_SESSION_VOISINE = (20265001, 20265999)   # autre session (dossier voisin) : plage refusée en entier
+PLAGE_V5 = (20264001, 20264999)                # plage des racines neuves de la v5 (bornes exclues, refusées)
+RACINE_DIAGNOSTIC, RACINE_DIAGNOSTIC_TENUE = 20264601, 20264602     # diagnostic de la pureté (échelle de classes)
+RACINE_TEMOINS = 20264611                                           # jeux témoins à équilibre intérieur connu
+RACINE_ESSAI, RACINE_ESSAI_TENUE = 20264621, 20264622               # pilote v5 et audit d'essai v5
+RACINE_REPRISE, RACINE_REPRISE_TENUE = 20264631, 20264632           # réservées : reprise du pilote (erreur de code)
+RACINE_TESTS, RACINE_TESTS_TENUE = 20264641, 20264642               # essais du code v5 et mesures de temps
+RACINE_TESTS_AUTRE = 20264643                                       # essais : « une autre racine change le résultat »
+RACINE_SIMULATION = 20264651                                        # simulations du calcul de puissance v5
+RACINES_GELEES = (RACINE_DIAGNOSTIC, RACINE_DIAGNOSTIC_TENUE, RACINE_TEMOINS, RACINE_ESSAI, RACINE_ESSAI_TENUE,
+                  RACINE_REPRISE, RACINE_REPRISE_TENUE, RACINE_TESTS, RACINE_TESTS_TENUE, RACINE_TESTS_AUTRE,
+                  RACINE_SIMULATION)
+_PERMISES_HORS_DECISION = frozenset(RACINES_GELEES)
+_DEJA_EMPLOYEES = frozenset(RACINES_DEJA_EMPLOYEES)
+# gel de la conception v5, écrit avant ce code : son empreinte est épinglée (chaîne gel → code → sorties)
+GEL_V5 = ICI / "gel-conception-arene-melange-v5.md"
+GEL_V5_SHA256 = "b55689cbddb1699ac288deb1b8b808e4d9e5d9fe2f827e2b9e827bc56017d2a0"
+# additif b (après les seuls jeux témoins, avant tout calcul sur l'arène) : jeu dégénéré = gain du mélange ≤ τ
+GEL_V5B = ICI / "gel-conception-arene-melange-v5b.md"
+GEL_V5B_SHA256 = "a91d29fd748f29d14f3c839594d434569d3a3f6284dac39e856711045601e391"
+
+# --- δ de la décision : recalibrés en v4 (R-739), inchangés en v5 ; aucune racine de calibrage en v5 -----------------
+DELTAS_V4 = (1.4, 1.6)
+GRILLE_CALIBRAGE = (0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.4)
+# --- classe de Q2 (gel v5 § 2) : None jusqu'au diagnostic, puis u* rendu par `choisir_unites` (une seule ligne) -------
+UNITES_Q2_V5 = 1
+
+# --- codes de dérivation des graines ----------------------------------------------------------------------------
+BRAS_TRAJECTOIRE = ("A", "B", "D", "Bp", "Bu", "Du")
+TEMOINS_FINALE = ("C1", "C2", "C3", "C3p", "C3u", "Mu")
+SOURCE_TEMOIN = {"C1": "B", "C2": "B", "C3": "B", "C3p": "Bp", "C3u": "Bu", "Mu": "Bu"}
+TOUS_LES_BRAS_V4 = ("A", "B", "C1", "C2", "C3", "D", "Bp", "C3p")
+TOUS_LES_BRAS = ("A", "B", "C1", "C2", "C3", "D", "Bu", "Du", "C3u", "Mu")      # tous les bras de la v5
+TOUS_LES_BRAS_Q1 = ("A", "B", "C1", "C2", "C3", "D")                               # Q1 et Tables 1, 2, 5
+BRAS_Q2_U = ("Bu", "Du", "C3u", "Mu")                                             # Q2 à la classe F_u (u ≥ 2)
+BRAS_MELANGE = ("B", "Bp", "Bu")
+
+
+def bras_decision(cfg) -> tuple:
+    """Bras calculés par défaut (décision, essai) : ceux de Q1 et des Tables 1, 2, 5, plus ceux de Q2 à la classe F_u
+    si u ≥ 2. À u = 1 (règle du gel v5 § 2 sans classe retenue), Q2 se confond avec la Table 1 (B contre A = D_1) :
+    aucun bras de Q2 séparé n'est calculé (branche écrite au gel v5 § 2 et § 6 ; décision de retrait à Lazar)."""
+    return TOUS_LES_BRAS_Q1 + (BRAS_Q2_U if cfg.unites_u >= 2 else ())
+
+
+def bras_audit(cfg) -> tuple:
+    """Bras audités (S17) : A, B, C3, D, plus B_u, D_u, C3′_u si u ≥ 2."""
+    return ("A", "B", "C3", "D") + (("Bu", "Du", "C3u") if cfg.unites_u >= 2 else ())
+BRAS = {"A": 1, "B": 2, "D": 4, "C1": 5, "C2": 6, "C3": 7, "Bp": 8, "C3p": 9,   # code 3 (ancien bras C) retiré
+        "Bu": 10, "Du": 11, "C3u": 12, "Mu": 13}
+NOMS = {"Bp": "B′", "C3p": "C3′", "Bu": "B_u", "Du": "D_u", "C3u": "C3′_u", "Mu": "M_u"}
+BRAS_DIAGNOSTIC = ("Bu", "Du", "Mu")            # par u de l'échelle ; A et B (u = 1) une fois par tâche
+COMMUN = 0
+ROLE_CIBLE, ROLE_PROPRE_ENTR, ROLE_ATTAQUE_ENTR, ROLE_CAL, ROLE_FPR = 0, 1, 2, 3, 4
+ROLE_MC, ROLE_DEPARTS, ROLE_EVAL, ROLE_INIT_MAXOUT = 5, 6, 7, 8
+ROLE_TENUE_LOIS, ROLE_TENUE_EVAL, ROLE_FINAL, ROLE_COUT = 9, 10, 11, 12
+ROLE_DIRICHLET, ROLE_COURBE, ROLE_AUDIT = 13, 14, 15
+ROLE_REECH = 99
+SCHEMA_GRAINES = ("SeedSequence(entropy=racine, spawn_key=(code_delta, instance, code_bras, tour, role, ...)) ; "
+                  "bras commun 0, A 1, B 2, D 4, C1 5, C2 6, C3 7, B' 8, C3' 9, B_u 10, D_u 11, C3'_u 12, M_u 13 ; "
+                  "roles cible 0, propre 1, attaques "
+                  "d'entrainement 2, calibration 3, fausses alertes 4, Monte-Carlo 5, departs 6, evaluation 7, init "
+                  "maxout 8, lois tenues 9, echantillons tenus 10, final 11, cout 12, Dirichlet 13, courbe 14, attaquant "
+                  "independant 15 ; reechantillonnage (code_delta, code_contraste, 0, 0, 99) ; temoins "
+                  "(racine des temoins : (unites, cas, tour, role 16, ...))")
+ROLE_TEMOIN = 16
+
+# niveaux de quantiles du rééchantillonnage : bilatéral 95 % et 90 % ; Bonferroni sur 2 tests (δ), 4 tests (Q2) et
+# 8 tests (Q1) ; équivalence au niveau 0,05/4 (Q2) et 0,05/8 (Q1) par côté
+QUANTILES = (0.003125, 0.00625, 0.0125, 0.025, 0.05, 0.95, 0.975, 0.9875, 0.99375, 0.996875)
+
+
+@dataclass(frozen=True)
+class Config:
+    d: int = 6                       # dimension des « activations » synthétiques
+    K: int = 3                       # composantes du mélange (cible et attaque)
+    r_cible: float = 4.0             # distance des moyennes cibles à l'origine (loi propre N(0, I))
+    sigma_cible: float = 1.0
+    boite_mu: float = 5.0            # |μ_kj| ≤ boite_mu
+    sigma_min: float = 0.5
+    sigma_max: float = 1.5
+    deltas: tuple = ()               # budgets de comportement (δ_bas, δ_haut), fixés par `choisir_deltas`
+    alpha: float = 0.01              # taux de fausses alertes visé sur le propre
+    T: int = 8                       # tours de coévolution
+    n_propre_entr: int = 2000
+    n_attaque_entr: int = 2001       # multiple de K
+    n_cal: int = 20000
+    n_fpr: int = 20000
+    n_eval: int = 19998              # multiple de K
+    n_mc: int = 256                  # échantillons de Monte-Carlo par composante pour l'attaquant
+    n_mc_final: int = 512
+    departs: int = 4                 # départs aléatoires de la meilleure réponse à chaque tour
+    departs_final: int = 12
+    departs_cout: int = 3            # départs aléatoires des meilleures réponses de la courbe et du coût
+    departs_renforce: int = 48       # attaquant final renforcé (contrôle de l'optimiseur)
+    iter_renforce: int = 200
+    iter_max: int = 100              # itérations SLSQP
+    tau: float = 0.25                # température du lissage (unités d'écart-type du score propre)
+    l2: float = 1e-3
+    entrainement: str = "detection"  # oracle du défenseur, identique pour tous les bras ("logistique" : pilote témoin)
+    departs_entr: int = 8
+    iter_entr: int = 300             # itérations L-BFGS-B de l'entraînement
+    n_tenue: int = 50                # lois tenues à l'écart par tâche (deux sous-familles)
+    n_eval_tenue: int = 3999         # multiple de K
+    lambda_ou: float = 8.0           # C3 : facteur des scores standardisés (log-somme-exp ≈ maximum)
+    kappa_contournement: float = 0.5   # contourné si détection ≤ κ × détection de la cible non modifiée
+    fractions_courbe: tuple = (0.25, 0.5, 0.75)   # courbe V(δ') aux fractions de δ (plus 0 et 1)
+    pas_bissection: int = 3          # bissection dans l'intervalle de la courbe qui encadre le contournement
+    tol_fpr: float = 0.005           # garde : |FPR mesuré − α| ≤ tol_fpr
+    taux_nonconv_max: float = 0.10   # garde : part d'entraînements non convergés par tâche (S18 = 0,10, R-739)
+    taux_departs_non_finis_max: float = 0.05   # garde : part de départs de l'attaquant au point non fini
+    plafond_cpu_tache_s: float = 600.0  # garde : temps processeur d'une tâche (δ, instance)
+    n_instances: int = 100           # N par δ (S4) ; comparé à --instances en décision
+    grille_calibrage: tuple = GRILLE_CALIBRAGE
+    n_calibrage: int = 48            # instances du recalibrage v4 (R-739 : au moins 48), instances 0 à 47
+    seuil_calibrage_haut: float = 0.03   # δ_haut : plus grand δ de la grille où V(A) moyen ≥ 3 α
+    seuil_calibrage_bas: float = 0.10    # δ_bas : plus grand δ < δ_haut où V(A) moyen ≥ 10 α
+    schema_graines: str = SCHEMA_GRAINES
+    unites_Bp: int = 9               # B′ : unités de chaque moniteur entraîné (classe du moniteur final de D, T + 1)
+    audit_departs: int = 100         # attaquant indépendant : départs tirés (plus 12 départs structurés et les passés)
+    audit_n_mc: int = 1024           # attaquant indépendant : échantillons de Monte-Carlo par composante
+    audit_iter: int = 300            # attaquant indépendant : itérations SLSQP
+    audit_es_generations: int = 400  # attaquant indépendant : générations de la stratégie d'évolution (1 + λ)
+    audit_es_lambda: int = 12        # attaquant indépendant : descendants par génération
+    audit_critere: float = 0.01      # S17 (i) : artefact si |écart moyen d'un contraste audité| > m/2 (ou de I1 > S15/2)
+    audit_k: int = 10                # S17 : tâches auditées par δ (instances 0 à audit_k − 1 de la décision)
+    audit_quantile_t: float = 0.995  # S17 (ii) : changement de classe démontré si |écart| > t(K − 1 ; q) × erreur-type
+    # --- v5 (gel v5) ---
+    unites_u: int = 0                # Q2 v5 : unités des moniteurs de B_u et D_u (0 : non fixé, diagnostic d'abord)
+    echelle_unites: tuple = (2, 3, 5, 9)   # diagnostic : échelle de classes (u = 1 : bras B et A)
+    n_diagnostic: int = 16           # diagnostic : instances 0 à 15, deux δ
+    part_forcee_max: float = 0.25    # règle du gel v5 § 2 : f_u(δ) ≤ 0,25 aux deux δ
+    part_pure_max: float = 0.5       # règle du gel v5 § 2 : r_u(δ) ≤ 0,5 aux deux δ
+    eps_equilibres: tuple = (0.002, 0.005, 0.01)   # diagnostic : ε-équilibres (fragilité de la pureté au bruit de G)
+    tol_dominance: float = 0.005     # diagnostic : dominance faible de la ligne de poids maximal
+    temoin_modes: int = 3            # jeux témoins : modes aux sommets d'un polygone régulier centré (plan e1, e2)
+    temoin_rayon: float = 4.0
+    temoin_tours: int = 6
+    temoin_unites_artefact: int = 3  # témoin artefact : classe qui couvre les trois modes (point-selle)
+    temoin_pur_max_alpha: float = 3.0    # C-T (i) : meilleur minimum de ligne pure ≤ 3 α (témoin sans point-selle)
+    temoin_poids_max: float = 0.5    # C-T (ii) : poids maximal ≤ 0,5 (et support ≥ 2)
+    temoin_tol_valeur: float = 0.05  # C-T (iii) : |valeur − v*| ≤ 0,05
+    tau_selle: float = 0.01          # additif b : jeu dégénéré si gain du mélange (valeur − meilleur pur) ≤ τ = m/2
+
+    def canonique(self) -> bytes:
+        return json.dumps(asdict(self), sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+
+    def empreinte(self) -> str:
+        return hashlib.sha256(self.canonique()).hexdigest()
+
+
+CONFIG_BASE_V4 = Config()
+CONFIG_V4 = replace(CONFIG_BASE_V4, deltas=tuple(DELTAS_V4)) if DELTAS_V4 is not None else None
+CONFIG_DIAGNOSTIC_V5 = CONFIG_V4                                    # unites_u = 0 : l'échelle est parcourue par tâche
+CONFIG_V5 = replace(CONFIG_V4, unites_u=int(UNITES_Q2_V5)) if UNITES_Q2_V5 is not None else None
+
+
+def exiger_config(cfg: Config) -> Config:
+    """Garde : configuration cohérente avant toute exécution."""
+    if cfg is None or not cfg.deltas:
+        raise GardeArret("δ non fixés : lancer le calibrage et appliquer `choisir_deltas` d'abord")
+    if any(not d > 0 for d in cfg.deltas) or list(cfg.deltas) != sorted(set(cfg.deltas)):
+        raise GardeArret(f"δ invalides (positifs, strictement croissants exigés) : {cfg.deltas}")
+    for nom in ("n_attaque_entr", "n_eval", "n_eval_tenue"):
+        if getattr(cfg, nom) % cfg.K:
+            raise GardeArret(f"configuration : {nom} = {getattr(cfg, nom)} n'est pas un multiple de K = {cfg.K}")
+    if not 0 < cfg.kappa_contournement < 1:
+        raise GardeArret(f"κ de contournement hors de ]0 ; 1[ : {cfg.kappa_contournement}")
+    fr = list(cfg.fractions_courbe)
+    if not fr or fr != sorted(set(fr)) or fr[0] <= 0 or fr[-1] >= 1:
+        raise GardeArret(f"fractions de la courbe invalides : {cfg.fractions_courbe}")
+    if cfg.entrainement not in ("detection", "logistique"):
+        raise GardeArret(f"entraînement inconnu (configuration) : {cfg.entrainement!r}")
+    if cfg.unites_Bp < 2:
+        raise GardeArret(f"B′ sans moniteurs non linéaires : unites_Bp = {cfg.unites_Bp} (au moins 2 exigé, sinon B′ = B)")
+    if min(cfg.audit_departs, cfg.audit_n_mc, cfg.audit_iter, cfg.audit_es_generations, cfg.audit_es_lambda) < 1 or \
+            not cfg.audit_critere > 0:
+        raise GardeArret("attaquant indépendant : paramètres non positifs dans la configuration")
+    if cfg.audit_k < 2 or not 0.5 < cfg.audit_quantile_t < 1:
+        raise GardeArret(f"audit : K = {cfg.audit_k} < 2 ou quantile t = {cfg.audit_quantile_t} hors de ]0,5 ; 1[")
+    ech = list(cfg.echelle_unites)
+    if cfg.unites_u < 0 or not ech or ech != sorted(set(ech)) or ech[0] < 2:
+        raise GardeArret(f"classe de Q2 invalide : unites_u = {cfg.unites_u}, échelle {cfg.echelle_unites} (entiers ≥ 2, "
+                         "strictement croissants)")
+    if not (0 < cfg.part_forcee_max < 1 and 0 < cfg.part_pure_max < 1) or cfg.n_diagnostic < 2:
+        raise GardeArret("règle du gel v5 § 2 : parts limites hors de ]0 ; 1[ ou moins de deux instances de diagnostic")
+    if cfg.temoin_modes < 3 or cfg.temoin_tours < 2 or cfg.temoin_unites_artefact < cfg.temoin_modes or \
+            not (cfg.temoin_rayon > 0 and 0 < cfg.temoin_poids_max < 1 and cfg.temoin_tol_valeur > 0 and
+                 0 < cfg.tau_selle < 1):
+        raise GardeArret("jeux témoins : paramètres invalides (au moins 3 modes, 2 tours, artefact couvrant les modes)")
+    return cfg
+
+
+def exiger_classe_u(cfg: Config, bras) -> None:
+    """Garde (gel v5 § 2) : les bras de la classe F_u exigent u fixé (diagnostic fait, `UNITES_Q2_V5`)."""
+    if any(b in ("Bu", "Du", "C3u", "Mu") for b in bras) and cfg.unites_u < 1:
+        raise GardeArret("bras B_u, D_u, C3′_u ou M_u demandés sans classe fixée (unites_u = 0) : diagnostic et règle "
+                         "du gel v5 § 2 d'abord")
+
+
+# =================================================================================================================
+# Graines, racines et autorisation de décision
+# =================================================================================================================
+_AUTORISATION_DECISION: dict = {"prereg_sha256": None}
+
+
+def exiger_racine_permise(racine: int) -> None:
+    """Garde (R9, gel v5) : une racine hors décision n'est permise que si elle est gelée en v5 ; toute racine déjà
+    employée ou nommée (v1 à v4) et toute racine de la plage de la session voisine sont refusées ; une racine de
+    décision exige l'autorisation par préenregistrement scellé."""
+    r = int(racine)
+    if r in RACINES_DECISION:
+        if _AUTORISATION_DECISION["prereg_sha256"] is None:
+            raise GardeArret(f"racine de décision {r} sans autorisation : préenregistrement scellé exigé "
+                             "(autoriser_decision)")
+        return
+    if r in _DEJA_EMPLOYEES:
+        raise GardeArret(f"racine {r} déjà employée (brouillons 1 à 4, codes v1 à v4, contre-lectures 2 et 3) : "
+                         "conception choisie ou résultats lus dessus, interdite en v5")
+    if PLAGE_SESSION_VOISINE[0] <= r <= PLAGE_SESSION_VOISINE[1]:
+        raise GardeArret(f"racine {r} dans la plage {PLAGE_SESSION_VOISINE} d'une autre session : interdite")
+    if r not in _PERMISES_HORS_DECISION:
+        raise GardeArret(f"racine {r} non gelée : seules les racines du gel v5 ({PLAGE_V5[0]} à {PLAGE_V5[1]}, "
+                         "listées au § 1.1) sont permises hors décision")
+
+
+def gen(racine: int, *cle: int) -> np.random.Generator:
+    """Générateur dérivé (R9). Garde : racine permise (`exiger_racine_permise`) ; une racine de décision exige
+    l'autorisation par préenregistrement scellé."""
+    exiger_numpy_minimal()
+    exiger_racine_permise(racine)
+    return np.random.default_rng(np.random.SeedSequence(entropy=int(racine), spawn_key=tuple(int(c) for c in cle)))
+
+
+def exiger_racines_essai(racine: int, racine_tenue: int) -> None:
+    """Garde : hors décision, aucune racine de décision, aucune racine déjà employée, aucune racine de la plage voisine,
+    aucune racine non gelée ; racine des tenues à part."""
+    for r in (racine, racine_tenue):
+        if r is None:
+            raise GardeArret("racine absente (manifeste ou commande) : racine d'essai gelée exigée")
+        if int(r) in RACINES_DECISION:
+            raise GardeArret(f"racine {r} réservée à la décision : interdite hors décision (préenregistrement scellé "
+                             "exigé)")
+        exiger_racine_permise(r)
+    if racine == racine_tenue:
+        raise GardeArret("racine des familles tenues à l'écart égale à la racine principale : racine à part exigée")
+
+
+def exiger_gel_v5(racines=(), chemin: str | Path | None = None, chemin_b: str | Path | None = None) -> str:
+    """Garde (CM3-08) : le gel de la conception v5 et son additif b sont présents, aux empreintes épinglées dans ce
+    code, et le gel v5 cite chaque racine employée (écrite AVANT emploi). Renvoie l'empreinte du gel v5."""
+    p = Path(GEL_V5 if chemin is None else chemin)
+    pb = Path(GEL_V5B if chemin_b is None else chemin_b)
+    for f, attendu, nom in ((p, GEL_V5_SHA256, "gel v5"), (pb, GEL_V5B_SHA256, "additif b du gel v5")):
+        if not f.is_file():
+            raise GardeArret(f"{nom} absent : {f}")
+        sha_f = empreinte_fichier(f)
+        if sha_f != attendu:
+            raise GardeArret(f"{nom} modifié : empreinte {sha_f} ≠ épinglée {attendu}")
+    texte = p.read_text(encoding="utf-8")
+    for r in racines:
+        if not re.search(rf"\b{int(r)}\b", texte):
+            raise GardeArret(f"racine {r} absente du gel v5 : elle doit y être écrite avant emploi")
+    return GEL_V5_SHA256
+
+
+def empreinte_fichier(chemin: str | Path) -> str:
+    return hashlib.sha256(Path(chemin).read_bytes()).hexdigest()
+
+
+DEBUT_CONFIG = "<!-- configuration-canonique-debut -->"
+FIN_CONFIG = "<!-- configuration-canonique-fin -->"
+
+
+def bloc_identite(cfg: Config) -> str:
+    """Texte à recopier tel quel dans le préenregistrement : identité, empreintes, versions, configuration canonique."""
+    import scipy
+
+    lignes = [f"- Identifiant : {IDENTIFIANT_PREREG}",
+              f"- Racines de décision : RACINE = {RACINE} ; RACINE_TENUE = {RACINE_TENUE}",
+              f"- Code : `{Path(__file__).name}` — {empreinte_fichier(__file__)}",
+              f"- Configuration (empreinte de la forme canonique) : {cfg.empreinte()}"]
+    for f in FICHIERS_BIBLIOTHEQUE:
+        lignes.append(f"- Bibliothèque `{f}` — {empreinte_fichier(DEPOT / f)}")
+    lignes.append(f"- Versions : numpy {np.__version__} ; scipy {scipy.__version__} ; Python {sys.version.split()[0]}")
+    lignes += ["", DEBUT_CONFIG, "```json", json.dumps(asdict(cfg), indent=1, sort_keys=True, ensure_ascii=False),
+               "```", FIN_CONFIG]
+    return "\n".join(lignes)
+
+
+def extraire_configuration(texte: str) -> dict:
+    m = re.search(re.escape(DEBUT_CONFIG) + r"\s*```json\s*(.*?)\s*```\s*" + re.escape(FIN_CONFIG), texte, re.S)
+    if not m:
+        raise GardeArret("préenregistrement : bloc de configuration canonique absent")
+    try:
+        return json.loads(m.group(1))
+    except json.JSONDecodeError as e:
+        raise GardeArret(f"préenregistrement : bloc de configuration illisible ({e})") from None
+
+
+def comparer_configuration(texte_cfg: dict, cfg: Config) -> list[str]:
+    code = json.loads(json.dumps(asdict(cfg)))
+    ecarts = [f"{k} absent du texte" for k in sorted(set(code) - set(texte_cfg))]
+    ecarts += [f"{k} absent du code" for k in sorted(set(texte_cfg) - set(code))]
+    ecarts += [f"{k} : texte {texte_cfg[k]!r} ≠ code {code[k]!r}" for k in sorted(set(code) & set(texte_cfg))
+               if texte_cfg[k] != code[k]]
+    return ecarts
+
+
+def exiger_identite_prereg(texte: str, cfg: Config, instances: str | None = None) -> None:
+    """Garde : le préenregistrement est celui de cette arène, avec les racines, la configuration (champ à champ),
+    les empreintes du code et de la bibliothèque, les versions du code, et le nombre d'instances (S4)."""
+    import scipy
+
+    if IDENTIFIANT_PREREG not in texte:
+        raise GardeArret(f"préenregistrement sans l'identifiant {IDENTIFIANT_PREREG} : ce n'est pas celui de l'arène")
+    for nom, val in (("RACINE", RACINE), ("RACINE_TENUE", RACINE_TENUE)):
+        if not re.search(rf"\b{nom}\s*=\s*{val}\b", texte):
+            raise GardeArret(f"préenregistrement : {nom} = {val} absent ou différent du code")
+    ecarts = comparer_configuration(extraire_configuration(texte), cfg)
+    if ecarts:
+        raise GardeArret("préenregistrement : configuration différente du code : " + " ; ".join(ecarts))
+    if not re.search(rf"\b{cfg.empreinte()}\b", texte):
+        raise GardeArret("préenregistrement : empreinte de la configuration du code absente")
+    if not re.search(rf"\b{empreinte_fichier(__file__)}\b", texte):
+        raise GardeArret("préenregistrement : empreinte du fichier de code exécuté absente (code modifié après gel ?)")
+    for f in FICHIERS_BIBLIOTHEQUE:
+        if not re.search(rf"\b{empreinte_fichier(DEPOT / f)}\b", texte):
+            raise GardeArret(f"préenregistrement : empreinte de {f} absente (bibliothèque modifiée après gel ?)")
+    for nom, v in (("numpy", np.__version__), ("scipy", scipy.__version__)):
+        if not re.search(rf"\b{nom} {re.escape(v)}(?![0-9.])", texte):
+            raise GardeArret(f"préenregistrement : version {nom} {v} du processus absente du texte")
+    if instances is not None and instances != f"0:{cfg.n_instances}":
+        raise GardeArret(f"--instances {instances} ≠ 0:{cfg.n_instances} (S4, configuration gelée)")
+
+
+def exiger_prereg_arene(chemin: str | Path, cfg: Config, instances: str | None = None) -> str:
+    """Avant toute exécution sur RACINE : préenregistrement conforme, scellé, intact, et identifié (R1)."""
+    from controle_ia.prereg import exiger_prereg_scelle
+
+    sha = exiger_prereg_scelle(chemin)
+    exiger_identite_prereg(Path(chemin).read_text(encoding="utf-8"), cfg, instances)
+    return sha
+
+
+def autoriser_decision(chemin: str | Path, cfg: Config, instances: str | None = None) -> str:
+    sha = exiger_prereg_arene(chemin, cfg, instances)
+    _AUTORISATION_DECISION["prereg_sha256"] = sha
+    return sha
+
+
+# =================================================================================================================
+# Lois : mélanges gaussiens à poids égaux, covariances diagonales
+# =================================================================================================================
+def vecteur(mu: np.ndarray, sig: np.ndarray) -> np.ndarray:
+    return np.concatenate([mu.ravel(), sig.ravel()])
+
+
+def deplier(theta: np.ndarray, cfg: Config) -> tuple[np.ndarray, np.ndarray]:
+    n = cfg.K * cfg.d
+    return theta[:n].reshape(cfg.K, cfg.d), theta[n:].reshape(cfg.K, cfg.d)
+
+
+def bornes(cfg: Config) -> list[tuple[float, float]]:
+    n = cfg.K * cfg.d
+    return [(-cfg.boite_mu, cfg.boite_mu)] * n + [(cfg.sigma_min, cfg.sigma_max)] * n
+
+
+def distance(theta: np.ndarray, cible: np.ndarray, cfg: Config) -> float:
+    """Distance de comportement : racine de la moyenne sur k de W2² entre composantes appariées (diagonales)."""
+    return float(np.sqrt(np.sum((theta - cible) ** 2) / cfg.K))
+
+
+def exiger_admissible(theta: np.ndarray, cible: np.ndarray, delta: float, cfg: Config) -> None:
+    if not np.all(np.isfinite(theta)):
+        raise GardeArret("loi d'attaque non finie")
+    lo = np.array([b[0] for b in bornes(cfg)])
+    hi = np.array([b[1] for b in bornes(cfg)])
+    if np.any(theta < lo - 1e-9) or np.any(theta > hi + 1e-9):
+        raise GardeArret("loi d'attaque hors de la boîte")
+    if distance(theta, cible, cfg) > delta * (1 + 1e-9) + 1e-12:
+        raise GardeArret(f"loi d'attaque à distance {distance(theta, cible, cfg):.6f} > δ = {delta}")
+
+
+def projeter(theta: np.ndarray, cible: np.ndarray, delta: float, cfg: Config) -> tuple[np.ndarray, bool]:
+    """Projection déclarée (contrainte puis boîte) ; renvoie aussi si elle a bougé le point (compté, jamais tu)."""
+    v = theta - cible
+    dist = distance(theta, cible, cfg)
+    if dist > delta:
+        v = v * (delta / dist)
+    lo = np.array([b[0] for b in bornes(cfg)])
+    hi = np.array([b[1] for b in bornes(cfg)])
+    p = np.clip(cible + v, lo, hi)
+    bouge = bool(np.max(np.abs(p - theta)) > 1e-6)   # en deçà : tolérance numérique de SLSQP, non comptée
+    exiger_admissible(p, cible, delta, cfg)
+    return p, bouge
+
+
+def echantillonner(theta: np.ndarray, n: int, rng: np.random.Generator, cfg: Config) -> np.ndarray:
+    if n % cfg.K:
+        raise GardeArret(f"n = {n} non multiple de K = {cfg.K} : échantillonnage stratifié impossible")
+    mu, sig = deplier(theta, cfg)
+    z = rng.standard_normal((cfg.K, n // cfg.K, cfg.d))
+    return (mu[:, None, :] + sig[:, None, :] * z).reshape(n, cfg.d)
+
+
+def loi_cible(instance: int, racine: int, cfg: Config) -> np.ndarray:
+    g = gen(racine, COMMUN, instance, COMMUN, 0, ROLE_CIBLE)
+    u = g.standard_normal((cfg.K, cfg.d))
+    u /= np.linalg.norm(u, axis=1, keepdims=True)
+    return vecteur(cfg.r_cible * u, np.full((cfg.K, cfg.d), cfg.sigma_cible))
+
+
+def depart_tire_vers_l_origine(cible: np.ndarray, delta: float, cfg: Config) -> np.ndarray:
+    mu, sig = deplier(cible, cfg)
+    n = np.linalg.norm(mu, axis=1, keepdims=True)
+    return projeter(vecteur(mu * (1 - np.minimum(delta / n, 1.0)), sig), cible, delta, cfg)[0]
+
+
+# =================================================================================================================
+# Moniteurs
+# =================================================================================================================
+class Moniteur:
+    """Score « maxout » : log-somme-exp de m scores linéaires (m = 1 : linéaire). Seuil t calibré à α sur le propre."""
+
+    def __init__(self, W: np.ndarray, b: np.ndarray):
+        W = np.atleast_2d(np.asarray(W, float))
+        b = np.atleast_1d(np.asarray(b, float))
+        if not (np.all(np.isfinite(W)) and np.all(np.isfinite(b))):
+            raise GardeArret("paramètres de moniteur non finis")
+        self.W, self.b = W, b
+        self.t = np.nan
+        self.e = np.nan
+        self._cache: dict = {}
+
+    @property
+    def m(self) -> int:
+        return self.W.shape[0]
+
+    @property
+    def nb_parametres(self) -> int:
+        return int(self.W.size + self.b.size)
+
+    def score(self, X: np.ndarray) -> np.ndarray:
+        a = X @ self.W.T + self.b
+        return a[:, 0] if self.m == 1 else logsumexp(a, axis=1)
+
+    def grad(self, X: np.ndarray) -> np.ndarray:
+        if self.m == 1:
+            return np.broadcast_to(self.W[0], X.shape)
+        return softmax(X @ self.W.T + self.b, axis=1) @ self.W
+
+    def score_et_grad(self, X: np.ndarray):
+        """Score et gradient en un seul calcul des activations (mêmes opérations que `score` puis `grad`)."""
+        a = X @ self.W.T + self.b
+        if self.m == 1:
+            return a[:, 0], np.broadcast_to(self.W[0], X.shape)
+        return logsumexp(a, axis=1), softmax(a, axis=1) @ self.W
+
+    def calibrer(self, Xcal: np.ndarray, alpha: float) -> "Moniteur":
+        s = self.score(Xcal)
+        if not np.all(np.isfinite(s)):
+            raise GardeArret("scores propres non finis")
+        self.t = float(np.quantile(s, 1 - alpha, method="higher"))
+        self.e = float(np.std(s))
+        if not self.e > 0:
+            raise GardeArret("score propre de variance nulle : seuil non calibrable")
+        return self
+
+    def detecte(self, X: np.ndarray) -> np.ndarray:
+        if not np.isfinite(self.t):
+            raise GardeArret("moniteur non calibré")
+        return self.score(X) > self.t
+
+    def taux_cache(self, cle, X_fournisseur) -> float:
+        """Taux de détection sur un ensemble d'évaluation identifié par `cle` (mémorisé)."""
+        if cle not in self._cache:
+            self._cache[cle] = float(np.mean(self.detecte(X_fournisseur())))
+        return self._cache[cle]
+
+
+def ou_deterministe(moniteurs: list[Moniteur], Xcal: np.ndarray, lam: float, alpha: float) -> Moniteur:
+    """C3 : « ou » déterministe de moniteurs linéaires. Chaque score est standardisé sur le propre de calibration
+    (z_i = (s_i − μ_i)/σ_i), multiplié par λ ; le moniteur rendu a pour score log-somme-exp_i(λ z_i), proche de
+    λ max_i z_i (écart ≤ log(m)), seuil recalibré à α. Même nombre de paramètres que le mélange des moniteurs."""
+    W, b = [], []
+    for mon in moniteurs:
+        if mon.m != 1:
+            raise GardeArret("« ou » déterministe : moniteurs linéaires exigés")
+        s = mon.score(Xcal)
+        mu, sd = float(np.mean(s)), float(np.std(s))
+        if not (np.isfinite(mu) and sd > 0):
+            raise GardeArret("« ou » déterministe : score propre de variance nulle ou non fini")
+        W.append(lam * mon.W[0] / sd)
+        b.append(lam * (mon.b[0] - mu) / sd)
+    return Moniteur(np.stack(W), np.array(b)).calibrer(Xcal, alpha)
+
+
+class MoniteurOu(Moniteur):
+    """C3′ : « ou » déterministe de moniteurs quelconques (linéaires ou maxout). Score log-somme-exp_i(λ z_i), z_i =
+    (s_i − μ_i)/σ_i standardisé sur le propre de calibration ; même interface que `Moniteur` (score, gradient, seuil,
+    taux). Sur des moniteurs linéaires, c'est la même fonction que `ou_deterministe` (essai). Paramètres : la somme de
+    ceux des membres (la standardisation n'en ajoute pas : μ_i, σ_i sont absorbés comme dans `ou_deterministe`)."""
+
+    def __init__(self, membres: list[Moniteur], Xcal: np.ndarray, lam: float):
+        if not membres:
+            raise GardeArret("« ou » composite : aucun moniteur")
+        self.membres, self.lam = list(membres), float(lam)
+        self.mu, self.sd = [], []
+        for mon in self.membres:
+            s = mon.score(Xcal)
+            mu, sd = float(np.mean(s)), float(np.std(s))
+            if not (np.isfinite(mu) and sd > 1e-12):       # un score constant laisse un écart-type d'arrondi ≈ 1e-16
+                raise GardeArret("« ou » composite : score propre de variance nulle ou non fini")
+            if not sd > 1e-6 * max(1.0, abs(mu)):          # CM3-15 : presque constant, la standardisation amplifierait
+                raise GardeArret(f"« ou » composite : score propre presque constant (écart-type {sd:.3e} ≤ 10⁻⁶ × "
+                                 f"max(1, |moyenne| = {abs(mu):.3e}))")
+            self.mu.append(mu)
+            self.sd.append(sd)
+        self.W = np.vstack([m.W for m in self.membres])     # unités empilées : un seul produit matriciel par appel
+        self.b = np.concatenate([m.b for m in self.membres])
+        self.tailles = np.array([m.m for m in self.membres])
+        self.bornes = np.concatenate([[0], np.cumsum(self.tailles)])
+        # membres groupés par nombre d'unités : log-somme-exp vectorisée par groupe (calcul identique, plus rapide)
+        self.groupes = []
+        for u in sorted(set(self.tailles.tolist())):
+            ids = np.flatnonzero(self.tailles == u)
+            self.groupes.append((ids, np.stack([np.arange(self.bornes[i], self.bornes[i + 1]) for i in ids])))
+        self.mu_a, self.sd_a = np.asarray(self.mu), np.asarray(self.sd)
+        self.t = np.nan
+        self.e = np.nan
+        self._cache = {}
+
+    def _z(self, X, avec_internes: bool = False):
+        A = X @ self.W.T + self.b
+        S = np.empty((len(X), len(self.membres)))
+        S_int = np.ones_like(A) if avec_internes else None
+        for ids, unites in self.groupes:
+            Ag = A[:, unites]                                 # (n, membres du groupe, unités)
+            mx = Ag.max(axis=2, keepdims=True)
+            ex = np.exp(Ag - mx)
+            som = ex.sum(axis=2, keepdims=True)
+            S[:, ids] = (mx + np.log(som))[:, :, 0]
+            if avec_internes:
+                S_int[:, unites.ravel()] = (ex / som).reshape(len(X), -1)
+        return self.lam * (S - self.mu_a) / self.sd_a, S_int
+
+    @staticmethod
+    def _lse_softmax(z):
+        mx = z.max(axis=1, keepdims=True)
+        ex = np.exp(z - mx)
+        som = ex.sum(axis=1, keepdims=True)
+        return (mx + np.log(som))[:, 0], ex / som
+
+    def score(self, X: np.ndarray) -> np.ndarray:
+        return self._lse_softmax(self._z(X)[0])[0]
+
+    def score_et_grad(self, X: np.ndarray):
+        z, S_int = self._z(X, avec_internes=True)
+        s, Sz = self._lse_softmax(z)
+        return s, (S_int * np.repeat(Sz * (self.lam / self.sd_a), self.tailles, axis=1)) @ self.W
+
+    def grad(self, X: np.ndarray) -> np.ndarray:
+        return self.score_et_grad(X)[1]
+
+
+def ou_composite(moniteurs: list[Moniteur], Xcal: np.ndarray, lam: float, alpha: float) -> MoniteurOu:
+    return MoniteurOu(moniteurs, Xcal, lam).calibrer(Xcal, alpha)
+
+
+def _somme_ponderee(X: np.ndarray, S: np.ndarray, w: np.ndarray) -> np.ndarray:
+    """Σ_i w_i ∂s(x_i)/∂(W, b) pour un score maxout (S = poids softmax des unités ; m = 1 : S = 1)."""
+    G = w[:, None] * S
+    return np.concatenate([(G.T @ X).ravel(), G.sum(0)])
+
+
+def _scores(p: np.ndarray, X: np.ndarray, m: int):
+    d = X.shape[1]
+    A = X @ p[: m * d].reshape(m, d).T + p[m * d:]
+    if m == 1:
+        return A[:, 0], np.ones((len(X), 1))
+    return logsumexp(A, axis=1), softmax(A, axis=1)
+
+
+def _logistique(Xp, Xa, m, cfg: Config, x0):
+    X = np.vstack([Xp, Xa])
+    y = np.concatenate([-np.ones(len(Xp)), np.ones(len(Xa))])
+    n, d = X.shape
+
+    def f(p):
+        s, S = _scores(p, X, m)
+        ys = y * s
+        W = p[: m * d]
+        g = _somme_ponderee(X, S, -y * expit(-ys) / n)
+        g[: m * d] += 2 * cfg.l2 * W
+        return np.mean(np.logaddexp(0.0, -ys)) + cfg.l2 * np.sum(W * W), g
+
+    return minimize(f, x0, jac=True, method="L-BFGS-B", options={"maxiter": cfg.iter_entr})
+
+
+def objectif_detection(p, Xp, Xa, m, cfg: Config):
+    """Taux de détection lissé au seuil α, seuil approché par moyenne + z_{1−α} × écart-type des scores propres
+    (exact en population pour un moniteur linéaire, la loi propre étant N(0, I) ; approché pour m > 1, au détriment
+    de D). Renvoie (−J, −∇J)."""
+    z = norm.ppf(1 - cfg.alpha)
+    sp, Sp = _scores(p, Xp, m)
+    sa, Sa = _scores(p, Xa, m)
+    moy, et = sp.mean(), sp.std()
+    if not et > 0:
+        return 0.0, np.zeros_like(p)
+    u = (sa - moy) / et - z
+    sg = expit(u / cfg.tau)
+    J = sg.mean()
+    ga = sg * (1 - sg) / cfg.tau / len(Xa)
+    d_sa = _somme_ponderee(Xa, Sa, ga)
+    d_moy = _somme_ponderee(Xp, Sp, np.full(len(Xp), 1.0 / len(Xp)))
+    d_et = _somme_ponderee(Xp, Sp, (sp - moy) / (len(Xp) * et))
+    dJ = (d_sa - ga.sum() * d_moy) / et - (np.sum(ga * (sa - moy)) / et ** 2) * d_et
+    return -J, -dJ
+
+
+def entrainer(Xp: np.ndarray, Xa: np.ndarray, m: int, cfg: Config, rng_init: np.random.Generator | None,
+              directions=()):
+    """Entraîne un moniteur à m unités (m = 1 : linéaire). Renvoie (moniteur, convergé).
+
+    - `entrainement = "logistique"` : régression logistique (départ nul si m = 1, départ tiré si m > 1) ;
+    - `entrainement = "detection"` (défaut) : oracle qui maximise le taux de détection lissé au seuil α ; départs
+      déterministes = solution logistique, puis (m = 1) les directions des moyennes de composantes des lois
+      d'entraînement, par poids décroissant, jusqu'à `departs_entr` départs ; (m > 1) une seconde initialisation dont
+      les unités sont ces directions. Le meilleur départ (objectif d'entraînement) est retenu.
+    """
+    d = Xp.shape[1]
+    if m == 1:
+        x0 = np.zeros(d + 1)
+    else:
+        if rng_init is None:
+            raise GardeArret("maxout sans graine d'initialisation")
+        idx = rng_init.permutation(len(Xa))
+        W0 = np.stack([0.5 * Xa[part].mean(0) for part in np.array_split(idx, m)])
+        x0 = np.concatenate([W0.ravel(), np.zeros(m)])
+    res = _logistique(Xp, Xa, m, cfg, x0)
+    if not np.all(np.isfinite(res.x)) or not np.isfinite(res.fun):
+        raise GardeArret("entraînement logistique : paramètres ou perte non finis")
+    if cfg.entrainement == "logistique":
+        return Moniteur(res.x[: m * d].reshape(m, d), res.x[m * d:]), bool(res.success)
+    if cfg.entrainement != "detection":
+        raise GardeArret(f"entraînement inconnu : {cfg.entrainement!r}")
+    dirs = [np.asarray(v, float) for v in directions]
+    departs = [res.x]
+    if m == 1:
+        departs += [np.concatenate([v, [0.0]]) for v in dirs[: max(cfg.departs_entr - 1, 0)]]
+    elif dirs:
+        departs.append(np.concatenate([np.stack([dirs[j % len(dirs)] for j in range(m)]).ravel(), np.zeros(m)]))
+    meilleur = None
+    for x in departs:
+        r = minimize(objectif_detection, x, args=(Xp, Xa, m, cfg), jac=True, method="L-BFGS-B",
+                     options={"maxiter": cfg.iter_entr})
+        if not np.all(np.isfinite(r.x)) or not np.isfinite(r.fun):
+            raise GardeArret("entraînement par détection : paramètres ou objectif non finis")
+        if meilleur is None or r.fun < meilleur.fun:
+            meilleur = r
+    return Moniteur(meilleur.x[: m * d].reshape(m, d), meilleur.x[m * d:]), bool(meilleur.success)
+
+
+# =================================================================================================================
+# Défense mixte et jeu à somme nulle
+# =================================================================================================================
+def exiger_poids(p: np.ndarray) -> np.ndarray:
+    p = np.asarray(p, float)
+    if not np.all(np.isfinite(p)) or np.any(p < -1e-9) or abs(p.sum() - 1) > 1e-6:
+        raise GardeArret(f"poids de mélange invalides : {p}")
+    p = np.clip(p, 0, None)
+    return p / p.sum()
+
+
+def taux_defense(defense, X: np.ndarray) -> float:
+    return float(sum(p * np.mean(m.detecte(X)) for m, p in defense if p > 0))
+
+
+def resoudre_jeu(G: np.ndarray) -> tuple[np.ndarray, np.ndarray, float]:
+    """Jeu à somme nulle : lignes = moniteurs (maximisent la détection), colonnes = attaques. Renvoie (p, q, valeur).
+    Équilibres non uniques : le sommet rendu est celui du solveur HiGHS (déterministe à version de scipy fixée,
+    consignée au manifeste) ; aucune règle de choix entre équilibres (déclaré)."""
+    G = np.asarray(G, float)
+    if G.ndim != 2 or not np.all(np.isfinite(G)) or np.any(G < 0) or np.any(G > 1):
+        raise GardeArret("matrice de gains invalide (non finie ou hors [0, 1])")
+    ni, nj = G.shape
+    c = np.zeros(ni + 1)
+    c[-1] = -1
+    r1 = linprog(c, A_ub=np.hstack([-G.T, np.ones((nj, 1))]), b_ub=np.zeros(nj),
+                 A_eq=np.hstack([np.ones((1, ni)), np.zeros((1, 1))]), b_eq=[1],
+                 bounds=[(0, None)] * ni + [(None, None)], method="highs")
+    c2 = np.zeros(nj + 1)
+    c2[-1] = 1
+    r2 = linprog(c2, A_ub=np.hstack([G, -np.ones((ni, 1))]), b_ub=np.zeros(ni),
+                 A_eq=np.hstack([np.ones((1, nj)), np.zeros((1, 1))]), b_eq=[1],
+                 bounds=[(0, None)] * nj + [(None, None)], method="highs")
+    if r1.status != 0 or r2.status != 0:
+        raise GardeArret(f"programme linéaire non résolu ({r1.message} ; {r2.message})")
+    v, u = -r1.fun, r2.fun
+    if abs(v - u) > 1e-7:
+        raise GardeArret(f"valeurs primale et duale du jeu différentes : {v} ≠ {u}")
+    return exiger_poids(r1.x[:ni]), exiger_poids(r2.x[:nj]), float(v)
+
+
+SEUIL_PURETE = 1 - 1e-9          # « pur » : un poids ≥ 1 − 10⁻⁹ (texte et code identiques, CM3-12 c)
+SEUIL_PURETE_FORCEE = 1 - 1e-6   # « pureté forcée » : le plus petit poids maximal parmi les équilibres ≥ 1 − 10⁻⁶
+
+
+def est_pur(poids) -> bool:
+    return bool(max(poids) >= SEUIL_PURETE)
+
+
+def poids_max_min_equilibres(G: np.ndarray, valeur: float, tol: float = 1e-9) -> float:
+    """Plus petit poids maximal parmi les stratégies d'équilibre du défenseur (lignes) du jeu restreint G de valeur
+    `valeur` (CM3-02, contrôle de P10) : min t s.c. p_i ≤ t, Gᵀp ≥ valeur − tol, Σ p = 1, p ≥ 0. Proche de 1 si la
+    seule stratégie d'équilibre est pure (pureté forcée par le jeu) ; nettement sous 1 si un équilibre mélangé de même
+    valeur existe (la pureté rendue tient alors au sommet choisi par le solveur). La valeur du jeu est unique, la
+    stratégie ne l'est pas toujours."""
+    G = np.asarray(G, float)
+    ni, nj = G.shape
+    c = np.zeros(ni + 1)
+    c[-1] = 1.0
+    A_ub = np.vstack([np.hstack([np.eye(ni), -np.ones((ni, 1))]), np.hstack([-G.T, np.zeros((nj, 1))])])
+    b_ub = np.concatenate([np.zeros(ni), -(float(valeur) - tol) * np.ones(nj)])
+    r = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=np.hstack([np.ones((1, ni)), np.zeros((1, 1))]), b_eq=[1],
+                bounds=[(0, None)] * (ni + 1), method="highs")
+    if r.status != 0 or not np.isfinite(r.fun):
+        raise GardeArret(f"équilibres du jeu restreint : solveur en échec ({r.message})")
+    return float(r.fun)
+
+
+def diagnostic_equilibre(G: np.ndarray, p: np.ndarray, valeur: float, cfg: Config) -> dict:
+    """v5 (gel v5 § 2), descriptif, aucune graine : fragilité de la pureté au bruit de G (plus petit poids maximal parmi
+    les ε-équilibres, stratégies qui garantissent au moins valeur − ε), gain du mélange dans le jeu restreint (valeur −
+    meilleur minimum de ligne pure), dominance faible de la ligne de poids maximal (à `tol_dominance` près)."""
+    G = np.asarray(G, float)
+    mins = G.min(axis=1)
+    i_max = int(np.argmax(p))
+    return {"poids_max_min_eps": {f"{e:g}": poids_max_min_equilibres(G, valeur, tol=float(e))
+                                  for e in cfg.eps_equilibres},
+            "gain_melange_restreint": float(valeur - mins.max()), "meilleure_ligne_pure": int(np.argmax(mins)),
+            "degenere": bool(float(valeur - mins.max()) <= cfg.tau_selle),               # additif b § 2.1
+            "dominance_ligne_max": bool(np.all(G[i_max][None, :] >= G - cfg.tol_dominance)),
+            "taille_jeu": [int(G.shape[0]), int(G.shape[1])]}
+
+
+# =================================================================================================================
+# Jeux témoins à équilibre intérieur connu (gel v5 § 3) : condition C-T et garde R5
+# =================================================================================================================
+def lois_temoin(cfg: Config, identiques: bool = False) -> list[np.ndarray]:
+    """M modes : lois dont les K composantes ont la même moyenne r·v_m, v_m sommets d'un polygone régulier centré à
+    l'origine dans le plan (e1, e2), écarts-types 1. `identiques` (artefact d'essai) : M copies du mode 0."""
+    M, r = cfg.temoin_modes, cfg.temoin_rayon
+    lois = []
+    for m in range(M):
+        a = 0.0 if identiques else 2 * np.pi * m / M
+        v = np.zeros(cfg.d)
+        v[0], v[1] = np.cos(a), np.sin(a)
+        lois.append(vecteur(np.tile(r * v, (cfg.K, 1)), np.ones((cfg.K, cfg.d))))
+    return lois
+
+
+def valeur_temoin_lineaire(cfg: Config) -> float:
+    """v* (gel v5 § 3) : valeur, en population, du mélange uniforme des M spécialistes linéaires (w = v_m) contre
+    chaque mode : moyenne sur k de Φ(r cos(2πk/M) − z), z = Φ⁻¹(1 − α) (0,318 à M = 3, r = 4, α = 0,01)."""
+    z = norm.ppf(1 - cfg.alpha)
+    M, r = cfg.temoin_modes, cfg.temoin_rayon
+    return float(np.mean([norm.sf(z - r * np.cos(2 * np.pi * k / M)) for k in range(M)]))
+
+
+def jeu_temoin(u: int, cfg: Config, cas: int, lois=None, racine: int = RACINE_TEMOINS) -> dict:
+    """Jeu témoin (gel v5 § 3) : l'attaquant choisit un mode (meilleure réponse discrète : plus faible détection de la
+    défense mixte courante, sur échantillons frais) ; le défenseur emploie l'oracle `entrainer` du code (u unités)
+    contre la stratégie d'équilibre q de l'attaquant (programme linéaire `resoudre_jeu`) ; double oracle à partir d'un
+    moniteur entraîné contre le mode 0 ; `temoin_tours` tours. Rend la matrice G finale (lignes : moniteurs ; colonnes :
+    modes joués, répétitions comprises), les poids, la valeur, le plus petit poids maximal parmi les équilibres, le
+    meilleur minimum de ligne pure et v*."""
+    lois = lois_temoin(cfg) if lois is None else list(lois)
+    M = len(lois)
+
+    def g(tour, role, *x):
+        return gen(racine, int(u), int(cas), int(tour), ROLE_TEMOIN, int(role), *x)
+
+    Xcal = g(0, 0).standard_normal((cfg.n_cal, cfg.d))
+    Xeval = [echantillonner(l, cfg.n_eval, g(0, 1, m), cfg) for m, l in enumerate(lois)]
+
+    def entr(tour, q):
+        q = exiger_poids(q)
+        n = cfg.n_attaque_entr // cfg.K
+        comptes = np.floor(q * n).astype(int)
+        comptes[np.argsort(-(q * n - comptes), kind="stable")[:n - comptes.sum()]] += 1
+        ga = g(tour, 2)
+        Xa = np.vstack([echantillonner(lois[m], cfg.K * c, ga, cfg) for m, c in enumerate(comptes) if c > 0])
+        dirs = []
+        for j in np.argsort(-q, kind="stable"):
+            if q[j] > 0:
+                mu, _ = deplier(lois[j], cfg)
+                dirs += [v / np.linalg.norm(v) for v in mu if np.linalg.norm(v) > 1e-12]
+        Xp = g(tour, 3).standard_normal((cfg.n_propre_entr, cfg.d))
+        mon, ok = entrainer(Xp, Xa, int(u), cfg, g(tour, 4) if u > 1 else None, dirs)
+        return mon.calibrer(Xcal, cfg.alpha), bool(ok)
+
+    def ligne(mon):
+        return [float(np.mean(mon.detecte(X))) for X in Xeval]
+
+    q0 = np.zeros(M)
+    q0[0] = 1.0
+    mon, ok = entr(0, q0)
+    lignes, nonconv, cols = [ligne(mon)], int(not ok), [0]
+    for t in range(1, cfg.temoin_tours + 1):
+        R = np.array(lignes)
+        p, _, _ = resoudre_jeu(R[:, cols])
+        cols.append(int(np.argmin(p @ R)))                 # égalité : le plus petit indice
+        _, q, _ = resoudre_jeu(R[:, cols])
+        qm = np.zeros(M)
+        for c, w in zip(cols, q):
+            qm[c] += w
+        mon, ok = entr(t, qm)
+        lignes.append(ligne(mon))
+        nonconv += int(not ok)
+    G = np.array(lignes)[:, cols]
+    p, q, v = resoudre_jeu(G)
+    return {"unites": int(u), "cas": int(cas), "G": G.tolist(), "colonnes": cols, "poids": p.tolist(),
+            "valeur": float(v), "poids_max_min": poids_max_min_equilibres(G, v),
+            "meilleur_min_pur": float(G.min(axis=1).max()), "support": int(np.sum(p > 1e-6)),
+            "v_etoile": valeur_temoin_lineaire(cfg), "non_convergences": nonconv}
+
+
+def gain_melange(G: np.ndarray, valeur: float) -> float:
+    """Gain du mélange dans le jeu restreint : valeur du jeu − meilleur minimum de ligne pure (≥ 0 au bruit près)."""
+    return float(valeur - np.asarray(G, float).min(axis=1).max())
+
+
+def est_degenere(G: np.ndarray, valeur: float, cfg: Config) -> bool:
+    """Additif b du gel v5 : jeu restreint dégénéré si le gain du mélange est ≤ τ (quasi point-selle : le tirage ne
+    peut rien gagner d'utile dans ce jeu). La pureté forcée est un cas particulier (gain nul)."""
+    return gain_melange(G, valeur) <= cfg.tau_selle
+
+
+def exiger_jeu_non_degenere(G: np.ndarray, valeur: float, cfg: Config, ou: str = "") -> float:
+    """Garde R5 (gel v5 § 3, additif b § 2.1) : arrêt si le jeu restreint est dégénéré (gain du mélange ≤ τ). Renvoie
+    le gain."""
+    g = gain_melange(G, valeur)
+    if g <= cfg.tau_selle:
+        pmm = poids_max_min_equilibres(np.asarray(G, float), valeur)
+        raise GardeArret(f"jeu dégénéré{ou} : gain du mélange {g:.4f} ≤ τ = {cfg.tau_selle:g} (quasi point-selle ; "
+                         f"plus petit poids maximal parmi les équilibres {pmm:.4f})")
+    return g
+
+
+def exiger_temoin_interieur(res: dict, cfg: Config) -> None:
+    """Garde R5, condition C-T (gel v5 § 3, additif b § 2.2) sur le témoin sain : (i) aucun point-selle (meilleur
+    minimum de ligne pure ≤ 3α) ; (ii) poids maximal ≤ 0,5 et support ≥ 2 ; (iii) |valeur − v*| ≤ 0,05 ; (iv) gain
+    du mélange > τ."""
+    if res["meilleur_min_pur"] > cfg.temoin_pur_max_alpha * cfg.alpha:
+        raise GardeArret(f"témoin non intérieur : une ligne pure garantit {res['meilleur_min_pur']:.4f} > "
+                         f"{cfg.temoin_pur_max_alpha:g} α (point-selle : ce n'est pas le témoin attendu)")
+    if max(res["poids"]) > cfg.temoin_poids_max or res["support"] < 2:
+        raise GardeArret(f"témoin : poids non intérieurs (poids maximal {max(res['poids']):.4f}, support "
+                         f"{res['support']}) : le chemin de calcul ne retrouve pas l'équilibre intérieur connu")
+    if abs(res["valeur"] - res["v_etoile"]) > cfg.temoin_tol_valeur:
+        raise GardeArret(f"témoin : valeur {res['valeur']:.4f} hors de v* = {res['v_etoile']:.4f} ± "
+                         f"{cfg.temoin_tol_valeur:g}")
+    exiger_jeu_non_degenere(np.array(res["G"]), res["valeur"], cfg, " (témoin sain)")
+
+
+def controle_temoins(cfg: Config) -> dict:
+    """Garde R5 (gel v5 § 3, additif b), appelée avant tout lancement : témoin sain (classe linéaire) → C-T tenue ;
+    témoin artefact (classe qui couvre les modes) → jeu dégénéré reconnu (gain du mélange ≤ τ). Sinon arrêt."""
+    t0 = time.process_time()
+    sain = jeu_temoin(1, cfg, cas=1)
+    exiger_temoin_interieur(sain, cfg)
+    art = jeu_temoin(cfg.temoin_unites_artefact, cfg, cas=2)
+    try:
+        exiger_jeu_non_degenere(np.array(art["G"]), art["valeur"], cfg, " (témoin artefact)")
+    except GardeArret:
+        pass
+    else:
+        raise GardeArret(f"témoin artefact non reconnu dégénéré (gain du mélange "
+                         f"{gain_melange(np.array(art['G']), art['valeur']):.4f} > τ) : la garde ne voit pas un "
+                         "point-selle connu")
+
+    def resume(r):
+        out = {k: r[k] for k in ("unites", "poids", "valeur", "poids_max_min", "meilleur_min_pur", "support",
+                                 "v_etoile", "colonnes", "non_convergences")}
+        out["gain_melange"] = gain_melange(np.array(r["G"]), r["valeur"])
+        return out
+
+    return {"sain": resume(sain), "artefact": resume(art), "cpu_s": time.process_time() - t0,
+            "racine": RACINE_TEMOINS}
+
+
+# =================================================================================================================
+# Attaquant : meilleure réponse dans la boîte, sous la contrainte de comportement
+# =================================================================================================================
+def objectif_lisse(theta, defense, z, cfg: Config):
+    mu, sig = deplier(theta, cfg)
+    K, n, d = z.shape
+    X = (mu[:, None, :] + sig[:, None, :] * z).reshape(K * n, d)
+    total, gmu, gsig = 0.0, np.zeros((K, d)), np.zeros((K, d))
+    for m, p in defense:
+        if p <= 0:
+            continue
+        s, gr = m.score_et_grad(X)
+        u = (s - m.t) / (cfg.tau * m.e)
+        sg = expit(u)
+        total += p * sg.mean()
+        ds = p * sg * (1 - sg) / (cfg.tau * m.e) / (K * n)
+        G = (gr * ds[:, None]).reshape(K, n, d)
+        gmu += G.sum(1)
+        gsig += (G * z).sum(1)
+    return total, vecteur(gmu, gsig)
+
+
+def taux_dur(theta, defense, z, cfg: Config) -> float:
+    mu, sig = deplier(theta, cfg)
+    K, n, d = z.shape
+    return taux_defense(defense, (mu[:, None, :] + sig[:, None, :] * z).reshape(K * n, d))
+
+
+def meilleure_reponse(defense, cible, delta, cfg: Config, rng_mc, rng_departs, departs_suppl=(), n_departs=None,
+                      n_mc=None, iter_max=None) -> tuple[np.ndarray, dict]:
+    """Meilleure réponse approchée (SLSQP, plusieurs départs). Consigne le statut et les itérations de chaque départ ;
+    un départ au point non fini est compté (garde de taux par tâche), jamais sauté en silence."""
+    n_departs = cfg.departs if n_departs is None else n_departs
+    iter_max = cfg.iter_max if iter_max is None else iter_max
+    z = rng_mc.standard_normal((cfg.K, cfg.n_mc if n_mc is None else n_mc, cfg.d))
+    departs = [depart_tire_vers_l_origine(cible, delta, cfg)]
+    for _ in range(n_departs):
+        v = rng_departs.standard_normal(cible.size)
+        v *= np.sqrt(cfg.K) * delta * rng_departs.uniform(0.5, 1.0) / np.linalg.norm(v)
+        departs.append(projeter(cible + v, cible, delta, cfg)[0])
+    departs += [projeter(np.asarray(s, float), cible, delta, cfg)[0] for s in departs_suppl]
+    contrainte = {"type": "ineq",
+                  "fun": lambda th: delta ** 2 - np.sum((th - cible) ** 2) / cfg.K,
+                  "jac": lambda th: -2 * (th - cible) / cfg.K}
+    meilleur, n_proj, non_finis, statuts, it_max = None, 0, 0, Counter(), 0
+    for x0 in departs:
+        res = minimize(objectif_lisse, x0, args=(defense, z, cfg), jac=True, method="SLSQP", bounds=bornes(cfg),
+                       constraints=[contrainte], options={"maxiter": iter_max, "ftol": 1e-7})
+        statuts[int(res.status)] += 1
+        it_max = max(it_max, int(getattr(res, "nit", 0)))
+        if not np.all(np.isfinite(res.x)):
+            non_finis += 1
+            continue
+        th, bouge = projeter(res.x, cible, delta, cfg)
+        n_proj += bouge
+        cand = (taux_dur(th, defense, z, cfg), objectif_lisse(th, defense, z, cfg)[0], th)
+        if meilleur is None or cand[:2] < meilleur[:2]:
+            meilleur = cand
+    if meilleur is None:
+        raise GardeArret("meilleure réponse : aucun départ n'a donné de point fini")
+    exiger_admissible(meilleur[2], cible, delta, cfg)
+    return meilleur[2], {"projections": n_proj, "departs": len(departs), "non_finis": non_finis,
+                         "statuts": {str(k): v for k, v in sorted(statuts.items())}, "iter_max": it_max,
+                         "limite_iter": iter_max, "distance_consommee": distance(meilleur[2], cible, cfg)}
+
+
+def exiger_departs_finis(non_finis: int, total: int, cfg: Config) -> None:
+    if total and non_finis / total > cfg.taux_departs_non_finis_max:
+        raise GardeArret(f"départs de l'attaquant au point non fini : {non_finis}/{total} > "
+                         f"{cfg.taux_departs_non_finis_max}")
+
+
+# =================================================================================================================
+# Familles tenues à l'écart (racine à part)
+# =================================================================================================================
+def lois_tenues(cible, delta, instance, code_delta, racine_tenue, cfg: Config) -> list[np.ndarray]:
+    g = gen(racine_tenue, code_delta, instance, COMMUN, 0, ROLE_TENUE_LOIS)
+    sortie = []
+    for j in range(cfg.n_tenue):
+        if j % 2 == 0:  # sous-famille 1 : déplacement aléatoire dans la boule de comportement
+            v = g.standard_normal(cible.size)
+            v *= np.sqrt(cfg.K) * delta * g.uniform(0.5, 1.0) / np.linalg.norm(v)
+        else:           # sous-famille 2 : tout le budget sur une composante, tirée vers l'origine, échelle tirée
+            mu, sig = deplier(cible, cfg)
+            k = int(g.integers(cfg.K))
+            dmu, dsig = np.zeros_like(mu), np.zeros_like(sig)
+            dmu[k] = -mu[k] / np.linalg.norm(mu[k])
+            dsig[k] = g.uniform(-1, 1, cfg.d)
+            v = vecteur(dmu, dsig)
+            v *= np.sqrt(cfg.K) * delta * g.uniform(0.5, 1.0) / np.linalg.norm(v)
+        sortie.append(projeter(cible + v, cible, delta, cfg)[0])
+    return sortie
+
+
+# =================================================================================================================
+# Une tâche = (δ, instance)
+# =================================================================================================================
+class Contexte:
+    def __init__(self, instance, code_delta, racine, racine_tenue, cfg: Config):
+        self.i, self.cd, self.r, self.rt, self.cfg = instance, code_delta, racine, racine_tenue, cfg
+        self.delta = cfg.deltas[code_delta - 1]
+        self.cible = loi_cible(instance, racine, cfg)
+        self.Xcal = gen(racine, code_delta, instance, COMMUN, 0, ROLE_CAL).standard_normal((cfg.n_cal, cfg.d))
+        self.Xfpr = gen(racine, code_delta, instance, COMMUN, 0, ROLE_FPR).standard_normal((cfg.n_fpr, cfg.d))
+        self.tenues = lois_tenues(self.cible, self.delta, instance, code_delta, racine_tenue, cfg)
+        self._Xt = None
+        self.nonconv = 0
+        self.entr = 0
+        self.att = {"departs": 0, "non_finis": 0, "statuts": Counter(), "iter_max": 0, "a_la_limite": 0}
+
+    def g(self, bras, tour, role, *extra):
+        return gen(self.r, self.cd, self.i, bras, tour, role, *extra)
+
+    def X_tenues(self):
+        if self._Xt is None:
+            g = gen(self.rt, self.cd, self.i, COMMUN, 0, ROLE_TENUE_EVAL)
+            self._Xt = [echantillonner(th, self.cfg.n_eval_tenue, g, self.cfg) for th in self.tenues]
+        return self._Xt
+
+    def propre_entr(self, tour):
+        return self.g(COMMUN, tour, ROLE_PROPRE_ENTR).standard_normal((self.cfg.n_propre_entr, self.cfg.d))
+
+    def meilleure_reponse(self, defense, delta, rng_mc, rng_departs, **kw):
+        th, info = meilleure_reponse(defense, self.cible, delta, self.cfg, rng_mc, rng_departs, **kw)
+        self.att["departs"] += info["departs"]
+        self.att["non_finis"] += info["non_finis"]
+        self.att["statuts"].update({int(k): v for k, v in info["statuts"].items()})
+        self.att["iter_max"] = max(self.att["iter_max"], info["iter_max"])
+        self.att["a_la_limite"] += int(info["iter_max"] >= info["limite_iter"])
+        return th, info
+
+    def entrainer(self, bras, tour, attaques, q, m):
+        """Moniteur entraîné sur le propre du tour (commun aux bras) contre le mélange q des attaques."""
+        cfg = self.cfg
+        q = exiger_poids(q)
+        n = cfg.n_attaque_entr // cfg.K
+        comptes = np.floor(q * n).astype(int)
+        reste = n - comptes.sum()
+        comptes[np.argsort(-(q * n - comptes), kind="stable")[:reste]] += 1
+        g = self.g(bras, tour, ROLE_ATTAQUE_ENTR)
+        Xa = np.vstack([echantillonner(a, cfg.K * c, g, cfg) for a, c in zip(attaques, comptes) if c > 0])
+        init = self.g(bras, tour, ROLE_INIT_MAXOUT) if m > 1 else None
+        dirs = []
+        for j in np.argsort(-q, kind="stable"):
+            if q[j] <= 0:
+                continue
+            mu, _ = deplier(attaques[j], cfg)
+            dirs += [v / np.linalg.norm(v) for v in mu if np.linalg.norm(v) > 1e-12]
+        mon, ok = entrainer(self.propre_entr(tour), Xa, m, cfg, init, dirs)
+        self.entr += 1
+        self.nonconv += (not ok)
+        return mon.calibrer(self.Xcal, cfg.alpha)
+
+    def exiger_fpr(self, defense) -> float:
+        f = taux_defense(defense, self.Xfpr)
+        if abs(f - self.cfg.alpha) > self.cfg.tol_fpr:
+            raise GardeArret(f"taux de fausses alertes mesuré {f:.4f} hors de α ± {self.cfg.tol_fpr}")
+        return f
+
+    def taux_tenues(self, defense) -> list[float]:
+        Xt = self.X_tenues()
+        return [float(sum(p * m.taux_cache(("tenue", j), lambda j=j: Xt[j]) for m, p in defense if p > 0))
+                for j in range(len(Xt))]
+
+
+def residu_relatif(v: np.ndarray, passes: list[np.ndarray]) -> float:
+    """Nouveauté résiduelle (piste 4) : norme du résidu de v après projection sur l'espace des déplacements passés."""
+    nv = np.linalg.norm(v)
+    if nv == 0:
+        return 0.0
+    if not passes:
+        return 1.0
+    B = np.stack(passes, axis=1)
+    coef, *_ = np.linalg.lstsq(B, v, rcond=None)
+    return float(np.linalg.norm(v - B @ coef) / nv)
+
+
+def courbe_detection(defense, ctx: Contexte, code_bras: int, passes) -> tuple[float, list[float]]:
+    """Courbe V(δ') (piste 5, sans censure) : détection de la cible non modifiée (δ' = 0, ligne de base), puis de la
+    meilleure réponse (départs du coût + attaques passées projetées) aux fractions `fractions_courbe` de δ."""
+    cfg = ctx.cfg
+    base = taux_defense(defense, echantillonner(ctx.cible, cfg.n_eval, ctx.g(code_bras, 99, ROLE_COURBE, 0, 1), cfg))
+    pts = []
+    for j, f in enumerate(cfg.fractions_courbe, start=1):
+        dp = f * ctx.delta
+        th, _ = ctx.meilleure_reponse(defense, dp, ctx.g(code_bras, 99, ROLE_COURBE, j, 2),
+                                      ctx.g(code_bras, 99, ROLE_COURBE, j, 3),
+                                      departs_suppl=[projeter(s, ctx.cible, dp, cfg)[0] for s in passes],
+                                      n_departs=cfg.departs_cout)
+        pts.append(taux_defense(defense, echantillonner(th, cfg.n_eval, ctx.g(code_bras, 99, ROLE_COURBE, j, 4), cfg)))
+    return base, pts
+
+
+def cout_contournement(defense, ctx: Contexte, code_bras: int, passes, base: float, pts: list[float],
+                       V: float) -> dict:
+    """Coût par contournement (piste 5), seuil RELATIF : contourné à δ' si la détection est ≤ κ × détection de la cible
+    non modifiée (ligne de base). Garde de ligne de base : si κ × base < 2α, le contournement n'est pas
+    distinguable du bruit des fausses alertes : mesure « non définie » pour ce bras et cette tâche (comptée, rapportée,
+    jamais remplacée). Sinon : premier point de la courbe (0, fractions, 1) sous le seuil ; censuré à 1 si aucun ;
+    puis bissection (`pas_bissection` pas) dans l'intervalle qui l'encadre. La monotonie de la courbe n'est pas
+    supposée : les hausses de plus de α entre points consécutifs sont comptées."""
+    cfg = ctx.cfg
+    seuil = cfg.kappa_contournement * base
+    fr = (0.0,) + tuple(cfg.fractions_courbe) + (1.0,)
+    vals = [base] + list(pts) + [V]
+    non_monotone = int(sum(vals[k] > vals[k - 1] + cfg.alpha for k in range(1, len(vals))))
+    r = {"ligne_de_base": base, "seuil": seuil, "non_monotone": non_monotone}
+    if seuil < 2 * cfg.alpha:
+        return {**r, "defini": False, "censure": None, "fraction": None}
+    k = next((k for k in range(1, len(vals)) if vals[k] <= seuil), None)
+    if k is None:
+        return {**r, "defini": True, "censure": True, "fraction": 1.0}
+    lo, hi = fr[k - 1] * ctx.delta, fr[k] * ctx.delta
+    for s in range(1, cfg.pas_bissection + 1):
+        mid = (lo + hi) / 2
+        th, _ = ctx.meilleure_reponse(defense, mid, ctx.g(code_bras, 99, ROLE_COUT, s, 2),
+                                      ctx.g(code_bras, 99, ROLE_COUT, s, 3),
+                                      departs_suppl=[projeter(x, ctx.cible, mid, cfg)[0] for x in passes],
+                                      n_departs=cfg.departs_cout)
+        t = taux_defense(defense, echantillonner(th, cfg.n_eval, ctx.g(code_bras, 99, ROLE_COUT, s, 4), cfg))
+        if t <= seuil:
+            hi = mid
+        else:
+            lo = mid
+    return {**r, "defini": True, "censure": False, "fraction": hi / ctx.delta, "encadrement": [fr[k - 1], fr[k]]}
+
+
+def valeur_nulle_I3(T: int) -> float | None:
+    """Valeur attendue de I3 sous échangeabilité des déplacements (CM3-03) : au tour t, la probabilité que le plus
+    proche des t − 1 déplacements passés ne soit pas le dernier vaut (t − 2)/(t − 1) ; moyenne sur t = 3 … T
+    (0,7345 à T = 8)."""
+    return float(np.mean([(t - 2) / (t - 1) for t in range(3, T + 1)])) if T >= 3 else None
+
+
+def taux_retours(deplacements: list[np.ndarray]) -> float | None:
+    """I3, retours : part des tours t ≥ 3 où le déplacement de l'attaque est plus proche (cosinus) d'une attaque d'un
+    tour s ≤ t − 2 que de celle du tour t − 1 (calcul identique à la v3)."""
+    T = len(deplacements)
+    retours = []
+    for t in range(3, T + 1):
+        v = deplacements[t - 1]
+        cs = [float(v @ deplacements[s - 1] / (np.linalg.norm(v) * np.linalg.norm(deplacements[s - 1]) + 1e-300))
+              for s in range(1, t)]
+        retours.append(max(cs[:-1]) > cs[-1])
+    return float(np.mean(retours)) if retours else None
+
+
+def indicateurs_cycle(H: np.ndarray, iii: list[float], deplacements: list[np.ndarray]) -> dict:
+    """Condition d'application de la piste 3 (CM2-03, CM3-03) à partir de la matrice de détection croisée H, ligne
+    s = moniteur du tour s (0 … T), colonne t − 1 = attaque du tour t (1 … T) :
+    - I1, progrès : moyenne de (iii) sur la seconde moitié des tours moins la première (≈ 0 : exploitabilité plate) ;
+    - I2, baisse de détection des attaques passées (oubli ou saturation, non distingués) : moyenne sur t = 1 … T − 1
+      de H[t, t] − H[T, t] ; pour B et B′, H porte sur les moniteurs un à un, pas sur la défense mixte ;
+    - rétention par décalage k = 0 … 3 : moyenne de H[t + k, t] ; décalage −1 : H[t − 1, t] = (iii) du tour t ;
+    - I3, retours (`taux_retours`), sa valeur nulle sous échangeabilité (`valeur_nulle_I3`) et l'écart I3 − nul."""
+    T = H.shape[1]
+    h = T // 2
+    I1 = float(np.mean(iii[h:]) - np.mean(iii[:h]))
+    I2 = float(np.mean([H[t, t - 1] - H[T, t - 1] for t in range(1, T)]))
+    ret = {str(k): float(np.mean([H[t + k, t - 1] for t in range(1, T + 1) if t + k <= T]))
+           for k in range(0, min(4, T))}
+    ret["-1"] = float(np.mean([H[t - 1, t - 1] for t in range(1, T + 1)]))
+    I3 = taux_retours(deplacements)
+    nul = valeur_nulle_I3(T)
+    return {"I1_progres": I1, "I2_oubli": I2, "retention": ret, "I3_retours": I3, "I3_nul": nul,
+            "I3_moins_nul": (I3 - nul) if I3 is not None and nul is not None else None,
+            "H": [[float(x) for x in ligne] for ligne in H]}
+
+
+def trajectoire(nom: str, ctx: Contexte, M0: Moniteur, leger: bool = False) -> dict:
+    """Trajectoire coévolutive d'un bras A, B, D ou B′. Renvoie l'état final (moniteurs, défense finale, attaques…)."""
+    if nom not in BRAS_TRAJECTOIRE:
+        raise GardeArret(f"bras sans trajectoire : {nom!r}")
+    cfg, cb = ctx.cfg, BRAS[nom]
+    exiger_classe_u(cfg, (nom,))
+    melange = nom in BRAS_MELANGE
+    unites_oracle = {"B": 1, "Bp": cfg.unites_Bp, "Bu": cfg.unites_u}.get(nom)   # B′ : classe de D ; B_u : classe F_u
+    t0 = time.process_time()
+    attaques = [ctx.cible]
+    moniteurs = [M0]
+    historique = [M0]                   # tous les moniteurs déployés, tour par tour (D n'en déploie qu'un)
+    cles_eval = [("eval", COMMUN, 0)]
+    eval_X = {cles_eval[0]: lambda: echantillonner(ctx.cible, cfg.n_eval, ctx.g(COMMUN, 0, ROLE_EVAL), cfg)}
+    G = np.array([[M0.taux_cache(cles_eval[0], eval_X[cles_eval[0]])]]) if melange else None
+    p = np.array([1.0])
+    par_tour = {"iii": [], "ii": [], "poids_max": [], "distance": [], "nouveaute": [], "projections": [], "cpu_s": []}
+    deplacements: list[np.ndarray] = []
+
+    def defense_courante():
+        if nom in ("A", "D", "Du"):
+            return [(moniteurs[-1], 1.0)]
+        return list(zip(moniteurs, p))
+
+    for t in range(1, cfg.T + 1):
+        tt = time.process_time()
+        if melange:
+            p, _, _ = resoudre_jeu(G)
+        dfs = defense_courante()
+        a, info = ctx.meilleure_reponse(dfs, ctx.delta, ctx.g(cb, t, ROLE_MC), ctx.g(cb, t, ROLE_DEPARTS),
+                                        departs_suppl=[attaques[-1]])
+        cle = ("eval", cb, t)
+        eval_X[cle] = (lambda a=a, t=t: echantillonner(a, cfg.n_eval, ctx.g(cb, t, ROLE_EVAL), cfg))
+        par_tour["iii"].append(taux_defense(dfs, eval_X[cle]()))
+        if not leger:
+            par_tour["ii"].append(float(np.mean(ctx.taux_tenues(dfs))))
+        par_tour["poids_max"].append(float(max(w for _, w in dfs)))
+        par_tour["distance"].append(info["distance_consommee"])
+        par_tour["projections"].append(info["projections"])
+        v = a - ctx.cible
+        par_tour["nouveaute"].append(residu_relatif(v, deplacements))
+        deplacements.append(v)
+        attaques.append(a)
+        cles_eval.append(cle)
+        if melange:
+            col = np.array([[m.taux_cache(cle, eval_X[cle]) for m in moniteurs]]).T
+            G = np.hstack([G, col])
+            _, q, _ = resoudre_jeu(G)
+            mon = ctx.entrainer(cb, t, attaques, q, unites_oracle)   # B′ : maxout, classe de D ; B_u : classe F_u
+            ligne = np.array([[mon.taux_cache(c, eval_X[c]) for c in cles_eval]])
+            G = np.vstack([G, ligne])
+        else:
+            # D : autant d'unités que de moniteurs dans le mélange de B ; D_u : u unités à tous les tours ; A : linéaire
+            m_unites = t + 1 if nom == "D" else (cfg.unites_u if nom == "Du" else 1)
+            mon = ctx.entrainer(cb, t, attaques, np.full(len(attaques), 1.0 / len(attaques)), m_unites)
+        if nom in ("D", "Du"):
+            moniteurs = [mon]
+        else:
+            moniteurs.append(mon)
+        historique.append(mon)
+        par_tour["cpu_s"].append(time.process_time() - tt)
+        exiger_plafond(t0, cfg, f"bras {nom}, tour {t}")
+    valeur_restreinte = None
+    equilibre = None
+    if melange:
+        p, _, valeur_restreinte = resoudre_jeu(G)
+        # contrôle de P10 (descriptif, aucune graine) : la pureté est-elle forcée par le jeu restreint final ?
+        equilibre = {"poids_max_min": poids_max_min_equilibres(G, valeur_restreinte),
+                     "indice_poids_max": int(np.argmax(p)), "pur": est_pur(p)}
+        equilibre.update(diagnostic_equilibre(G, p, valeur_restreinte, cfg))   # v5 : descriptif, aucune graine
+    H = np.array([[mon.taux_cache(c, eval_X[c]) for c in cles_eval[1:]] for mon in historique])
+    cycle = indicateurs_cycle(H, par_tour["iii"], deplacements)
+    return {"nom": nom, "moniteurs": moniteurs, "defense_finale": defense_courante(), "attaques": attaques,
+            "cles_eval": cles_eval, "eval_X": eval_X, "par_tour": par_tour, "valeur_jeu_restreint": valeur_restreinte,
+            "equilibre": equilibre, "cycle": cycle, "cpu_trajectoire_s": time.process_time() - t0}
+
+
+def defense_temoin(nom: str, etat_source: dict, ctx: Contexte) -> list:
+    """Témoins « finale seulement » sur les moniteurs mêmes de leur source après le tour T (B pour C1, C2, C3 ; B′ pour
+    C3′)."""
+    mons = etat_source["moniteurs"]
+    if nom == "C1":
+        return [(m, 1.0 / len(mons)) for m in mons]
+    if nom == "C2":
+        w = exiger_poids(ctx.g(BRAS["C2"], ctx.cfg.T + 1, ROLE_DIRICHLET).dirichlet(np.ones(len(mons))))
+        return list(zip(mons, w))
+    if nom == "C3":
+        return [(ou_deterministe(mons, ctx.Xcal, ctx.cfg.lambda_ou, ctx.cfg.alpha), 1.0)]
+    if nom in ("C3p", "C3u"):
+        return [(ou_composite(mons, ctx.Xcal, ctx.cfg.lambda_ou, ctx.cfg.alpha), 1.0)]
+    if nom == "Mu":   # v5 (CM3-02, point 4) : le moniteur de poids maximal de B_u, déployé seul (aucune graine)
+        poids = [w for _, w in etat_source["defense_finale"]]
+        return [(mons[int(np.argmax(poids))], 1.0)]
+    raise GardeArret(f"témoin inconnu : {nom!r}")
+
+
+def phase_finale(nom: str, dfin, ctx: Contexte, etat: dict, leger: bool = False, rendre_attaques: bool = False):
+    """Défense figée ; l'attaquant joue en dernier (standard puis renforcé ; (iii) = la plus basse des deux
+    détections, biais d'au plus un écart d'échantillonnage en faveur de l'attaquant, déclaré)."""
+    cfg, cb = ctx.cfg, BRAS[nom]
+    tf = time.process_time()
+    T1 = cfg.T + 1
+    passes = etat["attaques"][1:]
+    fpr = ctx.exiger_fpr(dfin)
+    a_fin, i_fin = ctx.meilleure_reponse(dfin, ctx.delta, ctx.g(cb, T1, ROLE_FINAL, 1), ctx.g(cb, T1, ROLE_FINAL, 2),
+                                         departs_suppl=passes, n_departs=cfg.departs_final, n_mc=cfg.n_mc_final)
+    V_std = taux_defense(dfin, echantillonner(a_fin, cfg.n_eval, ctx.g(cb, T1, ROLE_FINAL, 3), cfg))
+    a_renf, i_renf = ctx.meilleure_reponse(dfin, ctx.delta, ctx.g(cb, T1, ROLE_FINAL, 4), ctx.g(cb, T1, ROLE_FINAL, 5),
+                                           departs_suppl=passes + [a_fin], n_departs=cfg.departs_renforce,
+                                           n_mc=cfg.n_mc_final, iter_max=cfg.iter_renforce)
+    V_renf = taux_defense(dfin, echantillonner(a_renf, cfg.n_eval, ctx.g(cb, T1, ROLE_FINAL, 6), cfg))
+    V = min(V_std, V_renf)
+    sortie = {"V_iii_final": V, "V_iii_standard": V_std, "V_iii_renforce": V_renf, "fpr_final": fpr,
+              "poids_finaux": [float(w) for _, w in dfin], "distance_finale": i_fin["distance_consommee"],
+              "projections_finales": i_fin["projections"] + i_renf["projections"],
+              "unites_deployees": int(sum(m.m for m, _ in dfin)),
+              "parametres_deployes": int(sum(m.nb_parametres for m, _ in dfin)),
+              "parametres_par_requete": int(max(m.nb_parametres for m, w in dfin if w > 0))}
+    if leger:
+        sortie["cpu_final_s"] = time.process_time() - tf
+        return (sortie, (a_fin, a_renf)) if rendre_attaques else sortie
+    if not leger:
+        tenues = ctx.taux_tenues(dfin)
+        sortie["ii_final"] = float(np.mean(tenues))
+        sortie["ii_final_sous_familles"] = [float(np.mean(tenues[0::2])), float(np.mean(tenues[1::2]))]
+        cles, ex = etat["cles_eval"], etat["eval_X"]
+        sortie["i_final_vus"] = float(np.mean([sum(w * m.taux_cache(c, ex[c]) for m, w in dfin if w > 0)
+                                               for c in cles[1:]]))
+        departs_cc = passes + [a_fin, a_renf]
+        base, pts = courbe_detection(dfin, ctx, cb, departs_cc)
+        sortie["courbe"] = {"fractions": [0.0] + list(cfg.fractions_courbe) + [1.0], "V": [base] + pts + [V]}
+        sortie["cout"] = cout_contournement(dfin, ctx, cb, departs_cc, base, pts, V)
+    sortie["cpu_final_s"] = time.process_time() - tf
+    return (sortie, (a_fin, a_renf)) if rendre_attaques else sortie
+
+
+def construire_defenses(instance: int, code_delta: int, racine: int, racine_tenue: int, cfg: Config, bras,
+                        leger: bool = False):
+    """Contexte, trajectoires et défenses finales (déterministes) des bras demandés et de leurs sources."""
+    exiger_config(cfg)
+    for nom in bras:
+        if nom not in BRAS_TRAJECTOIRE and nom not in TEMOINS_FINALE:
+            raise GardeArret(f"bras inconnu : {nom!r}")
+    exiger_classe_u(cfg, bras)
+    ctx = Contexte(instance, code_delta, racine, racine_tenue, cfg)
+    M0 = ctx.entrainer(COMMUN, 0, [ctx.cible], np.array([1.0]), 1)
+    M0_bis = ctx.entrainer(COMMUN, 0, [ctx.cible], np.array([1.0]), 1)
+    exiger_meme_moniteur(M0, M0_bis)
+    a_faire = [b for b in BRAS_TRAJECTOIRE if b in bras or any(SOURCE_TEMOIN[c] == b for c in bras
+                                                                if c in TEMOINS_FINALE)]
+    etats, defenses = {}, {}
+    for nom in a_faire:
+        M = Moniteur(M0.W.copy(), M0.b.copy()).calibrer(ctx.Xcal, cfg.alpha)
+        etats[nom] = trajectoire(nom, ctx, M, leger)
+    for nom in bras:
+        if nom in BRAS_TRAJECTOIRE:
+            defenses[nom] = (etats[nom], etats[nom]["defense_finale"])
+        else:
+            src = etats[SOURCE_TEMOIN[nom]]
+            defenses[nom] = (src, defense_temoin(nom, src, ctx))
+    return ctx, etats, defenses
+
+
+def executer_tache(instance: int, code_delta: int, racine: int, racine_tenue: int, cfg: Config,
+                   bras=None, leger: bool = False) -> dict:
+    exiger_config(cfg)
+    bras = bras_decision(cfg) if bras is None else tuple(bras)
+    t0 = time.process_time()
+    ctx, etats, defenses = construire_defenses(instance, code_delta, racine, racine_tenue, cfg, bras, leger)
+    sortie = {"instance": instance, "code_delta": code_delta, "delta": ctx.delta, "racine": racine,
+              "racine_tenue": racine_tenue, "config_sha256": cfg.empreinte(), "version": VERSION, "bras": {}}
+    for nom in bras:
+        etat, dfin = defenses[nom]
+        res = phase_finale(nom, dfin, ctx, etat, leger)
+        if nom in BRAS_TRAJECTOIRE:
+            res["par_tour"] = etat["par_tour"]
+            res["valeur_jeu_restreint"] = etat["valeur_jeu_restreint"]
+            if etat["equilibre"] is not None:
+                res["equilibre"] = etat["equilibre"]
+            res["cycle"] = etat["cycle"]
+            res["cpu_trajectoire_s"] = etat["cpu_trajectoire_s"]
+        else:
+            res["source"] = SOURCE_TEMOIN[nom]
+        sortie["bras"][nom] = res
+        exiger_plafond(t0, cfg, f"après la finale de {nom}")
+    sortie["entrainements"] = ctx.entr
+    sortie["non_convergences"] = ctx.nonconv
+    sortie["attaquant"] = {"departs": ctx.att["departs"], "non_finis": ctx.att["non_finis"],
+                           "statuts": {str(k): v for k, v in sorted(ctx.att["statuts"].items())},
+                           "iter_max": ctx.att["iter_max"], "reponses_a_la_limite": ctx.att["a_la_limite"]}
+    exiger_convergence(ctx.nonconv, ctx.entr, cfg)
+    exiger_departs_finis(ctx.att["non_finis"], ctx.att["departs"], cfg)
+    sortie["cpu_tache_s"] = time.process_time() - t0
+    return sortie
+
+
+def executer_diagnostic_tache(instance: int, code_delta: int, racine: int, racine_tenue: int, cfg: Config) -> dict:
+    """Diagnostic de la pureté (gel v5 § 2), mode léger : A et B (classe linéaire, u = 1), puis, pour chaque u de
+    l'échelle, B_u, D_u et M_u (même tâche, mêmes graines : le contexte est reconstruit à l'identique pour chaque u)."""
+    exiger_config(cfg)
+    t0 = time.process_time()
+    # S18 s'applique à la tâche de diagnostic entière (comme à une tâche v4), pas à chaque classe u : les sous-appels
+    # ne l'appliquent pas, la garde est appelée une fois sur le total (aucun autre champ ne change)
+    sous = replace(cfg, taux_nonconv_max=1.0)
+    base = executer_tache(instance, code_delta, racine, racine_tenue, sous, bras=("A", "B"), leger=True)
+    sortie = {k: base[k] for k in ("instance", "code_delta", "delta", "racine", "racine_tenue", "version")}
+    sortie["config_sha256"] = cfg.empreinte()
+    sortie["bras"] = base["bras"]
+    sortie["echelle"] = {}
+    sortie["entrainements"], sortie["non_convergences"] = base["entrainements"], base["non_convergences"]
+    sortie["cpu_par_u_s"] = {"1": base["cpu_tache_s"]}
+    for u in cfg.echelle_unites:
+        r = executer_tache(instance, code_delta, racine, racine_tenue, replace(sous, unites_u=int(u)),
+                           bras=BRAS_DIAGNOSTIC, leger=True)
+        sortie["echelle"][str(int(u))] = r["bras"]
+        sortie["entrainements"] += r["entrainements"]
+        sortie["non_convergences"] += r["non_convergences"]
+        sortie["cpu_par_u_s"][str(int(u))] = r["cpu_tache_s"]
+    exiger_convergence(sortie["non_convergences"], sortie["entrainements"], cfg)
+    sortie["cpu_tache_s"] = time.process_time() - t0
+    return sortie
+
+
+def _purete_par_u(rs: list[dict], u: int) -> list[dict]:
+    """Équilibres finaux du bras de mélange de la classe u sur des tâches de diagnostic (u = 1 : B)."""
+    return [r["bras"]["B"]["equilibre"] if u == 1 else r["echelle"][str(u)]["Bu"]["equilibre"] for r in rs]
+
+
+def analyser_diagnostic(resultats: list[dict], cfg: Config) -> dict:
+    """Statistiques du diagnostic (gel v5 § 2), par δ et par u (u = 1 : B et A) : f_u (pureté forcée), r_u (pureté),
+    gain moyen du mélange dans le jeu restreint, fragilité (ε-équilibres) parmi les tâches pures, dominance, pureté par
+    tour, V moyens et écarts B_u − D_u, B_u − M_u (moyenne, erreur-type ; descriptifs, hors de la règle)."""
+    sortie = {}
+    for cd in sorted({r["code_delta"] for r in resultats}):
+        rs = sorted((r for r in resultats if r["code_delta"] == cd), key=lambda r: r["instance"])
+        bloc = {"n": len(rs), "delta": rs[0]["delta"], "par_u": {}}
+        for u in (1,) + tuple(int(x) for x in cfg.echelle_unites):
+            eq = _purete_par_u(rs, u)
+            bm = "B" if u == 1 else "Bu"
+            bd = "A" if u == 1 else "Du"
+            src = [r["bras"] if u == 1 else r["echelle"][str(u)] for r in rs]
+            pures = [e for e in eq if e["pur"]]
+            V = {k: np.array([s[b]["V_iii_final"] for s in src]) for k, b in (("B_u", bm), ("D_u", bd))}
+            par_tour = np.array([s[bm]["par_tour"]["poids_max"] for s in src])
+            ecarts = {"B_u-D_u": V["B_u"] - V["D_u"]}
+            if u > 1:
+                V["M_u"] = np.array([s["Mu"]["V_iii_final"] for s in src])
+                ecarts["B_u-M_u"] = V["B_u"] - V["M_u"]
+            b = {"g_part_degeneree": float(np.mean([e["degenere"] for e in eq])),      # additif b § 2.3 (règle)
+                 "f_part_forcee": float(np.mean([e["poids_max_min"] >= SEUIL_PURETE_FORCEE for e in eq])),
+                 "r_part_pure": float(np.mean([e["pur"] for e in eq])),
+                 "n_pures": len(pures),
+                 "gain_melange_restreint_moyen": float(np.mean([e["gain_melange_restreint"] for e in eq])),
+                 "dominance_part": float(np.mean([e["dominance_ligne_max"] for e in eq])),
+                 "dominance_part_parmi_pures": (float(np.mean([e["dominance_ligne_max"] for e in pures]))
+                                                if pures else None),
+                 "fragilite_parmi_pures": {k: (float(np.mean([e["poids_max_min_eps"][k] < 0.9 for e in pures]))
+                                               if pures else None) for k in eq[0]["poids_max_min_eps"]},
+                 "poids_max_min_eps_moyen": {k: float(np.mean([e["poids_max_min_eps"][k] for e in eq]))
+                                             for k in eq[0]["poids_max_min_eps"]},
+                 "part_pure_par_tour": [float(np.mean(par_tour[:, t] >= SEUIL_PURETE)) for t in range(par_tour.shape[1])],
+                 "V_moyen": {k: float(v.mean()) for k, v in V.items()},
+                 "ecarts": {k: {"moyenne": float(x.mean()), "erreur_type": float(x.std(ddof=1) / np.sqrt(len(x)))}
+                            for k, x in ecarts.items()}}
+            bloc["par_u"][str(u)] = b
+        sortie[str(cd)] = bloc
+    return sortie
+
+
+def choisir_unites(stats: dict, cfg: Config) -> int:
+    """Règle du gel v5 § 2, modifiée par l'additif b § 2.3 : u* = le plus grand u de l'échelle tel que g_u(δ) (part des
+    jeux restreints dégénérés : gain du mélange ≤ τ) ≤ `part_forcee_max` et r_u(δ) ≤ `part_pure_max` aux deux δ ; 1 si
+    aucun (Q2 se confond alors avec la Table 1 : proposition de retrait). Seules les statistiques d'équilibre entrent
+    dans la règle (aucune valeur de V, aucun contraste)."""
+    if len(stats) != len(cfg.deltas):
+        raise GardeArret(f"règle du gel v5 § 2 : {len(stats)} δ dans le diagnostic, {len(cfg.deltas)} attendus")
+    ok = [int(u) for u in cfg.echelle_unites
+          if all(stats[cd]["par_u"][str(int(u))]["g_part_degeneree"] <= cfg.part_forcee_max and
+                 stats[cd]["par_u"][str(int(u))]["r_part_pure"] <= cfg.part_pure_max for cd in stats)]
+    return max(ok) if ok else 1
+
+
+def exiger_meme_moniteur(a: Moniteur, b: Moniteur) -> None:
+    if not (np.array_equal(a.W, b.W) and np.array_equal(a.b, b.b) and a.t == b.t):
+        raise GardeArret("moniteur du tour 0 non reproductible bit à bit : il doit être commun à tous les bras")
+
+
+def exiger_plafond(t0: float, cfg: Config, ou: str) -> None:
+    """Garde : temps processeur d'une tâche (depuis son début t0) au plus `plafond_cpu_tache_s`."""
+    if time.process_time() - t0 > cfg.plafond_cpu_tache_s:
+        raise GardeArret(f"plafond de temps processeur d'une tâche dépassé ({ou})")
+
+
+def exiger_convergence(nonconv: int, total: int, cfg: Config) -> None:
+    if total and nonconv / total > cfg.taux_nonconv_max:
+        raise GardeArret(f"entraînements non convergés : {nonconv}/{total} > {cfg.taux_nonconv_max}")
+
+
+# =================================================================================================================
+# Calibrage des δ (bras A seul, racine de calibrage) : règle écrite avant toute exécution de la v2
+# =================================================================================================================
+def choisir_deltas(moyennes: dict, cfg: Config) -> tuple[float, float]:
+    """δ_haut = plus grand δ de la grille où la détection moyenne de A en (iii) est ≥ 3α (A pas au plancher) ;
+    δ_bas = plus grand δ < δ_haut où elle est ≥ 10α (A pas presque entièrement contourné). Critère sur A seul."""
+    grille = sorted(float(d) for d in moyennes)
+    hauts = [d for d in grille if moyennes[d] >= cfg.seuil_calibrage_haut]
+    if not hauts:
+        raise GardeArret(f"calibrage : aucun δ de la grille où V(A) ≥ {cfg.seuil_calibrage_haut}")
+    dh = max(hauts)
+    bas = [d for d in grille if d < dh and moyennes[d] >= cfg.seuil_calibrage_bas]
+    if not bas:
+        raise GardeArret(f"calibrage : aucun δ < {dh} où V(A) ≥ {cfg.seuil_calibrage_bas}")
+    return (max(bas), dh)
+
+
+# =================================================================================================================
+# Analyse : écarts appariés par instance, intervalles par rééchantillonnage
+# =================================================================================================================
+CONTRASTES = {  # code de contraste → (nom, bras 1, bras 2, mesure)
+    1: ("B-A (iii)", "B", "A", "V_iii_final"),
+    2: ("B-C1 (iii)", "B", "C1", "V_iii_final"),
+    3: ("B-C2 (iii)", "B", "C2", "V_iii_final"),
+    4: ("B-C3 (iii)", "B", "C3", "V_iii_final"),
+    5: ("B-D (iii)", "B", "D", "V_iii_final"),
+    6: ("B-A (ii)", "B", "A", "ii_final"),
+    7: ("B-C3 (ii)", "B", "C3", "ii_final"),
+    8: ("B-D (ii)", "B", "D", "ii_final"),
+    9: ("C3-A (iii)", "C3", "A", "V_iii_final"),
+    10: ("D-A (iii)", "D", "A", "V_iii_final"),
+    11: ("C1-C2 (iii)", "C1", "C2", "V_iii_final"),
+    12: ("B-A (i)", "B", "A", "i_final_vus"),
+    13: ("Bp-D (iii)", "Bp", "D", "V_iii_final"),
+    14: ("Bp-C3p (iii)", "Bp", "C3p", "V_iii_final"),
+    15: ("Bp-B (iii)", "Bp", "B", "V_iii_final"),
+    16: ("C3p-C3 (iii)", "C3p", "C3", "V_iii_final"),
+    17: ("Bp-D (ii)", "Bp", "D", "ii_final"),
+    18: ("Bp-C3p (ii)", "Bp", "C3p", "ii_final"),
+    19: ("C3p-D (iii)", "C3p", "D", "V_iii_final"),
+    # v5 : Q2 à la classe F_u (gel v5 § 4.1) ; M_u et les autres sont descriptifs
+    20: ("Bu-Du (iii)", "Bu", "Du", "V_iii_final"),
+    21: ("Bu-C3u (iii)", "Bu", "C3u", "V_iii_final"),
+    22: ("Bu-Mu (iii)", "Bu", "Mu", "V_iii_final"),
+    23: ("Bu-B (iii)", "Bu", "B", "V_iii_final"),
+    24: ("Du-A (iii)", "Du", "A", "V_iii_final"),
+    25: ("Bu-A (iii)", "Bu", "A", "V_iii_final"),
+    26: ("Bu-Du (ii)", "Bu", "Du", "ii_final"),
+    27: ("Bu-C3u (ii)", "Bu", "C3u", "ii_final"),
+    28: ("C3u-Du (iii)", "C3u", "Du", "V_iii_final"),
+    29: ("Du-D (iii)", "Du", "D", "V_iii_final"),
+    30: ("Mu-Du (iii)", "Mu", "Du", "V_iii_final"),
+}
+CONTRASTES_PRINCIPAUX = ("B-C1 (iii)", "B-C2 (iii)", "B-C3 (iii)", "B-D (iii)")   # Q1
+CONTRASTES_Q2_V4 = ("Bp-D (iii)", "Bp-C3p (iii)")                                  # Q2 de la v4 (B′, 9 unités)
+CONTRASTES_Q2 = ("Bu-Du (iii)", "Bu-C3u (iii)")                                    # Q2 de la v5 (classe F_u)
+SOURCE_PURETE = {"Bp-D (iii)": "Bp", "Bp-C3p (iii)": "Bp", "Bu-Du (iii)": "Bu", "Bu-C3u (iii)": "Bu",
+                 "Bu-Mu (iii)": "Bu"}
+# condition d'application (CM2-03) : moyennes d'un bras, intervalles par rééchantillonnage ; A seul porte un verdict
+INDICATEURS = {
+    101: ("A I1", "A", "I1_progres"), 102: ("A I2", "A", "I2_oubli"), 103: ("A I3", "A", "I3_retours"),
+    104: ("B I1", "B", "I1_progres"), 105: ("B I2", "B", "I2_oubli"),
+    106: ("D I1", "D", "I1_progres"), 107: ("D I2", "D", "I2_oubli"),
+    108: ("Bp I1", "Bp", "I1_progres"), 109: ("Bp I2", "Bp", "I2_oubli"),
+    # v4 (CM3-03) : I3 lu contre sa valeur nulle sous échangeabilité ; A porte la lecture « cycle » de la Table 5
+    110: ("A I3-nul", "A", "I3_moins_nul"), 111: ("B I3-nul", "B", "I3_moins_nul"),
+    112: ("D I3-nul", "D", "I3_moins_nul"), 113: ("Bp I3-nul", "Bp", "I3_moins_nul"),
+    # v5 : B_u et D_u (descriptifs)
+    114: ("Bu I1", "Bu", "I1_progres"), 115: ("Bu I2", "Bu", "I2_oubli"), 116: ("Bu I3-nul", "Bu", "I3_moins_nul"),
+    117: ("Du I1", "Du", "I1_progres"), 118: ("Du I2", "Du", "I2_oubli"), 119: ("Du I3-nul", "Du", "I3_moins_nul"),
+}
+
+
+def _q(boot: np.ndarray) -> dict:
+    return {f"q{p:g}": float(np.quantile(boot, p)) for p in QUANTILES}
+
+
+def resume_bras(rs: list[dict], nom: str) -> dict:
+    """Résumé descriptif d'un bras sur les tâches d'un δ (moyennes, fausses alertes, coût, courbe, poids)."""
+    b = [r["bras"][nom] for r in rs]
+    out = {"V_iii_final": float(np.mean([x["V_iii_final"] for x in b])),
+           "V_min_tache": float(np.min([x["V_iii_final"] for x in b])),
+           "V_max_tache": float(np.max([x["V_iii_final"] for x in b])),
+           "fpr_moyen": float(np.mean([x["fpr_final"] for x in b])),
+           "fpr_min": float(np.min([x["fpr_final"] for x in b])), "fpr_max": float(np.max([x["fpr_final"] for x in b])),
+           "standard_moins_renforce": float(np.mean([x["V_iii_standard"] - x["V_iii_renforce"] for x in b])),
+           "standard_moins_renforce_max": float(np.max([x["V_iii_standard"] - x["V_iii_renforce"] for x in b]))}
+    if all("ii_final" in x for x in b):
+        out["ii_final"] = float(np.mean([x["ii_final"] for x in b]))
+        out["i_final_vus"] = float(np.mean([x["i_final_vus"] for x in b]))
+        c = [x["cout"] for x in b]
+        defs = [y for y in c if y["defini"]]
+        nc = [y["fraction"] for y in defs if not y["censure"]]
+        out["cout"] = {"part_definie": len(defs) / len(c),
+                       "part_censuree_parmi_definies": (float(np.mean([y["censure"] for y in defs])) if defs else None),
+                       "mediane_fraction_non_censurees": float(np.median(nc)) if nc else None,
+                       "n_non_censurees": len(nc),
+                       "taches_non_monotones": int(sum(y["non_monotone"] > 0 for y in c))}
+        out["courbe_moyenne"] = [float(v) for v in np.mean([x["courbe"]["V"] for x in b], axis=0)]
+    if nom in ("B", "C2", "Bp", "Bu"):
+        P = [x["poids_finaux"] for x in b]
+        out["poids"] = {"part_pure": float(np.mean([est_pur(w) for w in P])),
+                        "part_uniforme": float(np.mean([np.allclose(w, 1 / len(w), atol=1e-6) for w in P])),
+                        "support_moyen": float(np.mean([sum(v > 1e-6 for v in w) for w in P])),
+                        "poids_max_moyen": float(np.mean([max(w) for w in P]))}
+    if nom in BRAS_MELANGE:
+        out["valeur_restreinte_moins_V"] = float(np.mean([x["valeur_jeu_restreint"] - x["V_iii_final"] for x in b]))
+        if all("equilibre" in x for x in b):
+            eq = [x["equilibre"] for x in b]
+            pures = [e for e in eq if e["pur"]]
+            out["equilibre"] = {
+                "poids_max_min_moyen": float(np.mean([e["poids_max_min"] for e in eq])),
+                "part_purete_forcee": float(np.mean([e["poids_max_min"] >= SEUIL_PURETE_FORCEE for e in eq])),
+                "part_purete_forcee_parmi_pures": (float(np.mean([e["poids_max_min"] >= SEUIL_PURETE_FORCEE
+                                                                  for e in pures])) if pures else None),
+                "n_pures": len(pures),
+                "indices_poids_max": {str(k): v for k, v in sorted(Counter(e["indice_poids_max"] for e in eq).items())},
+                "indices_poids_max_taches_pures": {str(k): v for k, v in
+                                                   sorted(Counter(e["indice_poids_max"] for e in pures).items())}}
+            if all("gain_melange_restreint" in e for e in eq):    # v5 : diagnostic de l'équilibre (descriptif)
+                out["equilibre"]["gain_melange_restreint_moyen"] = float(np.mean([e["gain_melange_restreint"]
+                                                                                  for e in eq]))
+                out["equilibre"]["part_degeneree"] = float(np.mean([e["degenere"] for e in eq]))   # additif b § 2.4
+                out["equilibre"]["dominance_part"] = float(np.mean([e["dominance_ligne_max"] for e in eq]))
+                out["equilibre"]["poids_max_min_eps_moyen"] = {
+                    k: float(np.mean([e["poids_max_min_eps"][k] for e in eq])) for k in eq[0]["poids_max_min_eps"]}
+    if all("cycle" in x for x in b):
+        cy = [x["cycle"] for x in b]
+        out["cycle"] = {"I1_progres": float(np.mean([c["I1_progres"] for c in cy])),
+                        "I2_oubli": float(np.mean([c["I2_oubli"] for c in cy])),
+                        "I3_nul": cy[0].get("I3_nul"),
+                        "I3_retours": (float(np.mean([c["I3_retours"] for c in cy]))
+                                       if all(c["I3_retours"] is not None for c in cy) else None),
+                        "retention": {k: float(np.mean([c["retention"][k] for c in cy])) for k in cy[0]["retention"]},
+                        "H_moyenne": [[float(v) for v in ligne] for ligne in np.mean([c["H"] for c in cy], axis=0)]}
+    out["parametres_deployes"] = int(b[0]["parametres_deployes"])
+    out["parametres_par_requete_max"] = int(max(x["parametres_par_requete"] for x in b))
+    return out
+
+
+def analyser(resultats: list[dict], racine_reech: int, n_reech: int = 20000) -> dict:
+    sortie = {}
+    for cd in sorted({r["code_delta"] for r in resultats}):
+        rs = sorted((r for r in resultats if r["code_delta"] == cd), key=lambda r: r["instance"])
+        bloc = {"n": len(rs), "delta": rs[0]["delta"], "bras": {}, "contrastes": {}}
+        tous = TOUS_LES_BRAS + tuple(b for b in TOUS_LES_BRAS_V4 if b not in TOUS_LES_BRAS)   # v4 et v5
+        for nom in tous:
+            if all(nom in r["bras"] for r in rs):
+                bloc["bras"][nom] = resume_bras(rs, nom)
+        noms = [n for n in tous if n in bloc["bras"] and n != "Mu"]   # M_u : descriptif, hors de l'écart des fausses alertes
+        if len(noms) > 1:
+            ecart_fpr = [max(r["bras"][n]["fpr_final"] for n in noms) - min(r["bras"][n]["fpr_final"] for n in noms)
+                         for r in rs]
+            bloc["ecart_fpr_entre_bras"] = {"moyen": float(np.mean(ecart_fpr)), "max": float(np.max(ecart_fpr))}
+        if all("B" in r["bras"] and "C1" in r["bras"] for r in rs):
+            bloc["B_egal_C1_au_bit"] = int(sum(r["bras"]["B"]["V_iii_final"] == r["bras"]["C1"]["V_iii_final"]
+                                               for r in rs))
+        if all("A" in r["bras"] and "D" in r["bras"] for r in rs):
+            bloc["D_egal_A_au_bit"] = int(sum(r["bras"]["D"]["V_iii_final"] == r["bras"]["A"]["V_iii_final"]
+                                              for r in rs))
+        att = [r["attaquant"] for r in rs if "attaquant" in r]
+        if att:
+            st = Counter()
+            for a in att:
+                st.update(a["statuts"])
+            bloc["attaquant"] = {"departs": int(sum(a["departs"] for a in att)),
+                                 "non_finis": int(sum(a["non_finis"] for a in att)), "statuts": dict(st),
+                                 "iter_max": int(max(a["iter_max"] for a in att)),
+                                 "reponses_a_la_limite": int(sum(a["reponses_a_la_limite"] for a in att))}
+        for code, (lib, b1, b2, mes) in CONTRASTES.items():
+            if not all(b1 in r["bras"] and b2 in r["bras"] and mes in r["bras"][b1] for r in rs):
+                continue
+            dlt = np.array([r["bras"][b1][mes] - r["bras"][b2][mes] for r in rs])
+            g = gen(racine_reech, cd, code, 0, 0, ROLE_REECH)
+            idx = g.integers(0, len(dlt), size=(n_reech, len(dlt)))
+            boot = dlt[idx].mean(1)
+            bloc["contrastes"][lib] = {
+                "moyenne": float(dlt.mean()), "ecart_type": float(dlt.std(ddof=1)) if len(dlt) > 1 else float("nan"),
+                "quantiles": _q(boot), "zeros_exacts": int(np.sum(dlt == 0)),
+                "std_attaquant_standard": (float(np.mean([r["bras"][b1]["V_iii_standard"] - r["bras"][b2]["V_iii_standard"]
+                                                          for r in rs])) if mes == "V_iii_final" else None),
+                "std_attaquant_renforce": (float(np.mean([r["bras"][b1]["V_iii_renforce"] - r["bras"][b2]["V_iii_renforce"]
+                                                          for r in rs])) if mes == "V_iii_final" else None)}
+            if lib in SOURCE_PURETE and all(SOURCE_PURETE[lib] in r["bras"] for r in rs):
+                # CM3-02 : B′ − X (v4) et B_u − X (v5) selon la pureté des poids finaux (descriptif, sans verdict)
+                pur = np.array([est_pur(r["bras"][SOURCE_PURETE[lib]]["poids_finaux"]) for r in rs])
+                sp = {}
+                for cle, masque in (("taches_pures", pur), ("taches_a_melange", ~pur)):
+                    x = dlt[masque]
+                    sp[cle] = {"n": int(masque.sum()), "moyenne": float(x.mean()) if len(x) else None,
+                               "erreur_type": float(x.std(ddof=1) / np.sqrt(len(x))) if len(x) > 1 else None}
+                bloc["contrastes"][lib]["selon_purete"] = sp
+        bloc["indicateurs"] = {}
+        for code, (lib, nom, mes) in INDICATEURS.items():
+            if not all(nom in r["bras"] and "cycle" in r["bras"][nom] and r["bras"][nom]["cycle"][mes] is not None
+                       for r in rs):
+                continue
+            x = np.array([r["bras"][nom]["cycle"][mes] for r in rs])
+            g = gen(racine_reech, cd, code, 0, 0, ROLE_REECH)
+            boot = x[g.integers(0, len(x), size=(n_reech, len(x)))].mean(1)
+            bloc["indicateurs"][lib] = {"moyenne": float(x.mean()),
+                                        "ecart_type": float(x.std(ddof=1)) if len(x) > 1 else float("nan"),
+                                        "quantiles": _q(boot)}
+        sortie[str(cd)] = bloc
+    return sortie
+
+
+# =================================================================================================================
+# Lecture mécanique des tables (aide au lecteur R13 ; le texte scellé fait foi en cas d'écart)
+# =================================================================================================================
+def classer(lb: float, ub: float, eq_lo: float, eq_hi: float, m: float) -> str:
+    """Classement d'un contraste B − X à δ fixé, marge m : dans cet ordre, la première condition vraie."""
+    if lb > m:
+        return "B>X"
+    if ub < -m:
+        return "X>B"
+    if eq_lo > -m and eq_hi < m:
+        return "≈"
+    if lb > 0:
+        return "B≳X"
+    if ub < 0:
+        return "X≳B"
+    return "?"
+
+
+def _verdict_question(statut: dict, nom: str) -> str:
+    v = list(statut.values())
+    if any(s.startswith("non exercée") for s in v):
+        return f"{nom} non exercée (au moins un δ)"
+    if all(s == "tenue" for s in v):
+        return f"{nom} confirmée"
+    if all(s.startswith("réfutée") for s in v):
+        return f"{nom} réfutée"
+    if any(s == "tenue" for s in v) and any(s.startswith("réfutée") for s in v):
+        return f"{nom} dépend de δ"
+    return f"{nom} non tranchée"
+
+
+def _statut_classes(cl) -> str:
+    cl = list(cl)
+    if all(x == "B>X" for x in cl):
+        return "tenue"
+    if any(x == "X>B" for x in cl):
+        return "réfutée (un témoin fait mieux)"
+    if any(x == "≈" for x in cl):
+        return "réfutée (équivalence)"
+    return "non tranchée"
+
+
+def ligne_table5(lb1: float, ub1: float, lb3: float, ub3: float, S15: float) -> str:
+    """Table 5 (v4) à un δ : bornes B2 de I1 (progrès) et de I3 − valeur nulle (retours au-delà du hasard)."""
+    if lb1 > S15:
+        return "A progresse"
+    if ub1 < S15 and lb3 > 0:
+        return "A ne progresse pas, retours au-delà du hasard (cycle)"
+    if ub1 < S15 and ub3 < 0:
+        return "A ne progresse pas, sans retours au-delà du hasard"
+    if ub1 < S15:
+        return "A ne progresse pas, forme indéterminée"
+    return "indéterminé"
+
+
+def classe_table1(est: float, q: dict, S1: float) -> str:
+    """Classe par δ de la Table 1 (B − A sur (iii)) : condition de la ligne 4, de la ligne 5, ou ni l'une ni l'autre."""
+    if est >= S1 and q["q0.00625"] > 0:
+        return "exercé"
+    if q["q0.99375"] < 0:
+        return "perd"
+    return "non démontré"
+
+
+def lire_tables(analyse: dict, S1: float, S5: float, marges: dict, S15: float) -> dict:
+    """Applique les Tables 1 à 7 (texte du préenregistrement, brouillon 5 ; une analyse v4 sans B_u est lue comme au
+    brouillon 4) à une analyse. `marges` : code δ → marge
+    (S6, la même pour Q1 et Q2). Intervalles : Tables 1, 2 et 5, Bonferroni sur 2 δ (q0.00625, q0.99375) ; Table 3
+    (Q1), Bonferroni sur 8 tests (q0.003125, q0.996875 ; équivalence q0.00625, q0.99375) ; Table 6 (Q2), Bonferroni
+    sur 4 tests (q0.00625, q0.99375 ; équivalence q0.0125, q0.9875). Les audits ne sont pas lus ici : le lecteur R13
+    applique les déclencheurs et leurs effets écrits (aide mécanique seulement)."""
+    cds = sorted(analyse)
+    t1 = {}
+    for cd in cds:
+        c = analyse[cd]["contrastes"]["B-A (iii)"]
+        q = c["quantiles"]
+        t1[cd] = {"exerce": c["moyenne"] >= S1 and q["q0.00625"] > 0, "perd": q["q0.99375"] < 0}
+    if all(v["exerce"] for v in t1.values()):
+        l1 = "mécanisme exercé"
+    elif any(v["perd"] for v in t1.values()):
+        l1 = "le mélange perd contre la défense unique (au moins un δ)"
+    else:
+        l1 = "mécanisme non démontré (gain sous S1 ou imprécis, au moins un δ)"
+    t2 = {}
+    for cd in cds:
+        q = analyse[cd]["contrastes"]["B-A (ii)"]["quantiles"]
+        t2[cd] = (q["q0.00625"], q["q0.99375"])
+    if any(ub < -S5 for _, ub in t2.values()):
+        l2 = "régression avérée au-delà de la tolérance"
+    elif all(lb > -S5 for lb, _ in t2.values()) and any(ub < 0 for _, ub in t2.values()):
+        l2 = "régression démontrée sous la tolérance"
+    elif all(lb > 0 for lb, _ in t2.values()):
+        l2 = "amélioration sur (ii)"
+    elif all(lb > -S5 for lb, _ in t2.values()):
+        l2 = "sans régression à S5 près"
+    else:
+        l2 = "régression non exclue (imprécis)"
+    t3 = {}
+    for cd in cds:
+        t3[cd] = {}
+        for lib in CONTRASTES_PRINCIPAUX:
+            q = analyse[cd]["contrastes"][lib]["quantiles"]
+            t3[cd][lib] = classer(q["q0.003125"], q["q0.996875"], q["q0.00625"], q["q0.99375"], marges[cd])
+    statut = {cd: _statut_classes(t3[cd].values()) for cd in cds}
+    l4 = _verdict_question(statut, "Q1")
+    # Table 5 (v4, CM3-03) : condition d'application (défense unique A), bornes B2 ; forme lue sur I3 − valeur nulle
+    t5 = {}
+    for cd in cds:
+        ind = analyse[cd]["indicateurs"]
+        if "A I3-nul" not in ind:
+            raise GardeArret("Table 5 : indicateur « A I3-nul » absent de l'analyse (T < 3) : lecture impossible")
+        t5[cd] = ligne_table5(ind["A I1"]["quantiles"]["q0.00625"], ind["A I1"]["quantiles"]["q0.99375"],
+                              ind["A I3-nul"]["quantiles"]["q0.00625"], ind["A I3-nul"]["quantiles"]["q0.99375"], S15)
+    if all(s.startswith("A ne progresse pas") for s in t5.values()):
+        l5 = "condition d'application vérifiée (A ne progresse pas aux deux δ)"
+    elif any(s == "A progresse" for s in t5.values()):
+        l5 = "condition d'application non vérifiée (A progresse dans au moins un δ)"
+    else:
+        l5 = "condition d'application indéterminée"
+    # Tables 6 et 7 : Q2 à classe de fonctions égale — v5 : B_u contre D_u et C3′_u (brouillon 5) ; une analyse v4 (sans
+    # B_u) est lue comme au brouillon 4 (B′ contre D et C3′)
+    if not all(("Bu" in analyse[cd]["bras"]) or ("Bp" in analyse[cd]["bras"]) for cd in cds):
+        # classe u* = 1 (règle du gel v5 § 2) : Q2 se confond avec la Table 1, aucun bras de Q2 calculé
+        return {"table1": l1, "table1_par_delta": t1, "table2": l2, "table3": t3, "table4_par_delta": statut,
+                "table4": l4, "table5_par_delta": t5, "table5": l5, "table6": {},
+                "table7_par_delta": {cd: "retirée" for cd in cds},
+                "table7": "Q2 retirée (classe u* = 1 : Q2 se confond avec la Table 1)"}
+    v5 = all("Bu" in analyse[cd]["bras"] for cd in cds)
+    libs, src = (CONTRASTES_Q2, "Bu") if v5 else (CONTRASTES_Q2_V4, "Bp")
+    t6, statut2 = {}, {}
+    for cd in cds:
+        t6[cd] = {}
+        for lib in libs:
+            q = analyse[cd]["contrastes"][lib]["quantiles"]
+            t6[cd][lib] = classer(q["q0.00625"], q["q0.99375"], q["q0.0125"], q["q0.9875"], marges[cd])
+        bp = analyse[cd]["bras"][src]
+        if not v5:                                    # brouillon 4 : pureté des poids de B′
+            statut2[cd] = ("non exercée (mélange B′ dégénéré)" if bp["poids"]["part_pure"] > 0.5
+                           else _statut_classes(t6[cd].values()))
+        elif bp["equilibre"]["part_degeneree"] > 0.5:  # brouillon 5 (additif b § 2.4) : gain du mélange ≤ τ
+            statut2[cd] = "non exercée (jeu dégénéré : gain du mélange ≤ 0,01 sur plus de la moitié des tâches)"
+        elif bp["poids"]["part_pure"] > 0.5:
+            statut2[cd] = "non exercée (pureté du sommet du solveur)"
+        else:
+            statut2[cd] = _statut_classes(t6[cd].values())
+    l7 = _verdict_question(statut2, "Q2")
+    return {"table1": l1, "table1_par_delta": t1, "table2": l2, "table3": t3, "table4_par_delta": statut, "table4": l4,
+            "table5_par_delta": t5, "table5": l5, "table6": t6, "table7_par_delta": statut2, "table7": l7}
+
+
+# =================================================================================================================
+# Points d'entrée
+# =================================================================================================================
+# =================================================================================================================
+# Attaquant indépendant (CM2-05) : départs structurés, beaucoup de départs, stratégie d'évolution sans gradient
+# =================================================================================================================
+BRAS_AUDIT = ("A", "B", "C3", "D", "Bu", "Du", "C3u")                    # v5 : B_u, D_u, C3′_u (gel v5 § 4.4)
+PAIRES_AUDIT = (("B", "A"), ("B", "C3"), ("B", "D"), ("Bu", "Du"), ("Bu", "C3u"))
+# contraste de la décision lu pour chaque paire auditée, et table qui le classe
+CONTRASTE_DE_PAIRE = {("B", "A"): ("B-A (iii)", "table1"), ("B", "C3"): ("B-C3 (iii)", "table3"),
+                      ("B", "D"): ("B-D (iii)", "table3"), ("Bu", "Du"): ("Bu-Du (iii)", "table6"),
+                      ("Bu", "C3u"): ("Bu-C3u (iii)", "table6")}
+
+
+def departs_structures(cible: np.ndarray, delta: float, cfg: Config) -> list[np.ndarray]:
+    """3 × (K + 1) départs : pour chaque échelle s ∈ {0,5 ; 1 ; 1,5}, chaque composante k tirée vers l'origine de tout
+    le budget avec ses écarts-types fixés à s, puis toutes les composantes tirées vers l'origine avec écarts-types s
+    (chaque départ projeté sur la contrainte et la boîte)."""
+    mu, sig = deplier(cible, cfg)
+    sortie = []
+    for s in (0.5, 1.0, 1.5):
+        for k in range(cfg.K):
+            m2, s2 = mu.copy(), sig.copy()
+            m2[k] = mu[k] * (1 - min(delta * np.sqrt(cfg.K) / np.linalg.norm(mu[k]), 1.0))
+            s2[k] = s
+            sortie.append(projeter(vecteur(m2, s2), cible, delta, cfg)[0])
+        m3 = mu * (1 - np.minimum(delta / np.linalg.norm(mu, axis=1, keepdims=True), 1.0))
+        sortie.append(projeter(vecteur(m3, np.full_like(sig, s)), cible, delta, cfg)[0])
+    return sortie
+
+
+def _deux_taux(theta, defense, z, cfg: Config) -> tuple[float, float]:
+    """(taux dur, taux lissé) d'une loi d'attaque sur des échantillons fixés z (un seul calcul de score par moniteur)."""
+    mu, sig = deplier(theta, cfg)
+    K, n, d = z.shape
+    X = (mu[:, None, :] + sig[:, None, :] * z).reshape(K * n, d)
+    dur = lisse = 0.0
+    for m, p in defense:
+        if p <= 0:
+            continue
+        s = m.score(X)
+        dur += p * float(np.mean(s > m.t))
+        lisse += p * float(np.mean(expit((s - m.t) / (cfg.tau * m.e))))
+    return dur, lisse
+
+
+def evolution(defense, x0, cible, delta, cfg: Config, rng: np.random.Generator, z) -> tuple[np.ndarray, int]:
+    """Stratégie d'évolution (1 + λ) sans gradient : critère (taux dur, puis taux lissé pour départager), pas initial
+    0,1 δ, ×1,5 sur succès, ×0,9 sinon ; chaque descendant est projeté sur la contrainte et la boîte."""
+    x = projeter(np.asarray(x0, float), cible, delta, cfg)[0]
+    fx = _deux_taux(x, defense, z, cfg)
+    pas, succes = 0.1 * delta, 0
+    for _ in range(cfg.audit_es_generations):
+        meilleur = None
+        for _ in range(cfg.audit_es_lambda):
+            y = projeter(x + pas * rng.standard_normal(x.size), cible, delta, cfg)[0]
+            fy = _deux_taux(y, defense, z, cfg)
+            if meilleur is None or fy < meilleur[0]:
+                meilleur = (fy, y)
+        if meilleur[0] < fx:
+            fx, x = meilleur
+            pas *= 1.5
+            succes += 1
+        else:
+            pas = max(pas * 0.9, 1e-4 * delta)
+    return x, succes
+
+
+def attaquant_independant(defense, ctx: Contexte, cb: int, passes, attaques_finales, rendre_reponses: bool = False):
+    """Contrôle d'attaquant indépendant d'une défense figée : (1) SLSQP lourd (départs structurés, `audit_departs`
+    départs tirés, attaques passées et finales, `audit_n_mc` échantillons, `audit_iter` itérations) ; (2) stratégie
+    d'évolution sans gradient depuis (1) et depuis l'attaque finale standard. Chaque réponse est évaluée sur
+    `n_eval` échantillons frais. Avec `rendre_reponses`, renvoie aussi les trois réponses (lourde, évolution depuis la
+    lourde, évolution depuis la standard)."""
+    cfg = ctx.cfg
+
+    def g(k):
+        return ctx.g(cb, cfg.T + 1, ROLE_AUDIT, k)
+
+    th_l, info = meilleure_reponse(defense, ctx.cible, ctx.delta, cfg, g(1), g(2),
+                                   departs_suppl=departs_structures(ctx.cible, ctx.delta, cfg) + list(passes) +
+                                   list(attaques_finales), n_departs=cfg.audit_departs, n_mc=cfg.audit_n_mc,
+                                   iter_max=cfg.audit_iter)
+    exiger_departs_finis(info["non_finis"], info["departs"], cfg)
+    z = g(4).standard_normal((cfg.K, cfg.audit_n_mc, cfg.d))
+    th_e1, s1 = evolution(defense, th_l, ctx.cible, ctx.delta, cfg, g(5), z)
+    th_e2, s2 = evolution(defense, attaques_finales[0], ctx.cible, ctx.delta, cfg, g(7), z)
+    for th in (th_l, th_e1, th_e2):
+        exiger_admissible(th, ctx.cible, ctx.delta, cfg)
+    sortie = {"V_lourd": taux_defense(defense, echantillonner(th_l, cfg.n_eval, g(3), cfg)),
+              "V_evolution_depuis_lourd": taux_defense(defense, echantillonner(th_e1, cfg.n_eval, g(6), cfg)),
+              "V_evolution_depuis_standard": taux_defense(defense, echantillonner(th_e2, cfg.n_eval, g(8), cfg)),
+              "succes_evolution": [s1, s2], "departs_lourd": info["departs"], "non_finis_lourd": info["non_finis"],
+              "statuts_lourd": info["statuts"], "iter_max_lourd": info["iter_max"]}
+    return (sortie, [th_l, th_e1, th_e2]) if rendre_reponses else sortie
+
+
+def auditer_tours_A(etat: dict, ctx: Contexte) -> dict:
+    """Contrôle de la Table 5 (CM3-04, P11) : à chaque tour t, réponse renforcée (départs renforcés, départs
+    structurés, attaque du tour ; `n_mc_final` échantillons, `iter_renforce` itérations) contre le moniteur de A
+    déployé au tour t ; (iii) audité du tour = minimum de (iii) du tour et de la réponse renforcée évaluée sur un
+    échantillon frais ; I1 et I3 recalculés sur les tours audités (déplacements des réponses retenues)."""
+    cfg, cb = ctx.cfg, BRAS["A"]
+    iii_src = [float(x) for x in etat["par_tour"]["iii"]]
+    iii_aud, deps_src, deps_aud, non_finis, departs = [], [], [], 0, 0
+    for t in range(1, cfg.T + 1):
+        mon = etat["moniteurs"][t - 1]                     # moniteur déployé au tour t (A n'en déploie qu'un)
+        a_t = etat["attaques"][t]
+        d = [(mon, 1.0)]
+        th, info = meilleure_reponse(d, ctx.cible, ctx.delta, cfg, ctx.g(cb, t, ROLE_AUDIT, 11),
+                                     ctx.g(cb, t, ROLE_AUDIT, 12),
+                                     departs_suppl=departs_structures(ctx.cible, ctx.delta, cfg) + [a_t],
+                                     n_departs=cfg.departs_renforce, n_mc=cfg.n_mc_final, iter_max=cfg.iter_renforce)
+        non_finis += info["non_finis"]
+        departs += info["departs"]
+        v_r = taux_defense(d, echantillonner(th, cfg.n_eval, ctx.g(cb, t, ROLE_AUDIT, 13), cfg))
+        deps_src.append(a_t - ctx.cible)
+        if v_r < iii_src[t - 1]:
+            iii_aud.append(float(v_r))
+            deps_aud.append(th - ctx.cible)
+        else:
+            iii_aud.append(iii_src[t - 1])
+            deps_aud.append(a_t - ctx.cible)
+    exiger_departs_finis(non_finis, departs, cfg)
+    h = cfg.T // 2
+    I1_s = float(np.mean(iii_src[h:]) - np.mean(iii_src[:h]))
+    I1_a = float(np.mean(iii_aud[h:]) - np.mean(iii_aud[:h]))
+    return {"iii_source": iii_src, "iii_audit": iii_aud, "I1_source": I1_s, "I1_audit": I1_a,
+            "I3_source": taux_retours(deps_src), "I3_audit": taux_retours(deps_aud), "departs": departs,
+            "non_finis": non_finis}
+
+
+def auditer_tache(instance: int, code_delta: int, racine: int, racine_tenue: int, cfg: Config, source: dict) -> dict:
+    """Reconstruit les défenses de la tâche (déterministe), exige V (et, pour A, I1) reconstruits = ceux du run audité
+    au bit près, puis oppose l'attaquant indépendant aux défenses finales de A, B, C3, D, B′ et C3′. Pour chaque bras :
+    choix source = meilleure des deux réponses de la décision ; choix audit = meilleure du choix source et des trois
+    réponses indépendantes (selon leurs évaluations propres) ; les deux choix sont réévalués sur un MÊME échantillon
+    frais (graine commune : écart nul au bit si le choix ne change pas), ce qui retire le biais de sélection du minimum
+    (CM3-01, point 3). Contrôle des tours de A pour la Table 5."""
+    t0 = time.process_time()
+    audites = bras_audit(cfg)
+    for nom in audites:
+        if nom not in source.get("bras", {}):
+            raise GardeArret(f"audit : bras {nom} absent du run audité")
+    ctx, _, defenses = construire_defenses(instance, code_delta, racine, racine_tenue, cfg, audites, leger=True)
+    sortie = {"instance": instance, "code_delta": code_delta, "bras": {}}
+    for nom in audites:
+        etat, dfin = defenses[nom]
+        res, (a_fin, a_renf) = phase_finale(nom, dfin, ctx, etat, leger=True, rendre_attaques=True)
+        if res["V_iii_final"] != source["bras"][nom]["V_iii_final"]:
+            raise GardeArret(f"audit : V reconstruit ≠ V du run audité ({nom}, instance {instance}, δ {code_delta})")
+        ind, reps = attaquant_independant(dfin, ctx, BRAS[nom], etat["attaques"][1:], [a_fin, a_renf],
+                                          rendre_reponses=True)
+        V_min4 = min(res["V_iii_final"], ind["V_lourd"], ind["V_evolution_depuis_lourd"],
+                     ind["V_evolution_depuis_standard"])
+        choix_src = a_fin if res["V_iii_standard"] <= res["V_iii_renforce"] else a_renf
+        cands = [(res["V_iii_final"], choix_src), (ind["V_lourd"], reps[0]),
+                 (ind["V_evolution_depuis_lourd"], reps[1]), (ind["V_evolution_depuis_standard"], reps[2])]
+        k_aud = min(range(4), key=lambda k: (cands[k][0], k))          # égalité : le choix source est gardé
+        g_re = BRAS[nom], ctx.cfg.T + 1, ROLE_AUDIT, 9                  # même graine pour les deux réévaluations
+        V_src_re = taux_defense(dfin, echantillonner(choix_src, cfg.n_eval, ctx.g(*g_re), cfg))
+        V_aud_re = V_src_re if k_aud == 0 else taux_defense(dfin, echantillonner(cands[k_aud][1], cfg.n_eval,
+                                                                                    ctx.g(*g_re), cfg))
+        sortie["bras"][nom] = {"V_source": res["V_iii_final"], **ind, "V_audit_min4": V_min4,
+                               "choix_audit": ["source", "lourd", "evolution_depuis_lourd",
+                                               "evolution_depuis_standard"][k_aud],
+                               "V_source_reeval": V_src_re, "V_audit_reeval": V_aud_re}
+    etat_A = defenses["A"][0]
+    if etat_A["cycle"]["I1_progres"] != source["bras"]["A"]["cycle"]["I1_progres"]:
+        raise GardeArret(f"audit : I1 reconstruit ≠ I1 du run audité (A, instance {instance}, δ {code_delta})")
+    sortie["tours_A"] = auditer_tours_A(etat_A, ctx)
+    sortie["cpu_tache_s"] = time.process_time() - t0
+    return sortie
+
+
+def _stat_ecarts(c: np.ndarray, cfg: Config) -> dict:
+    from scipy.stats import t as loi_t
+
+    K = len(c)
+    es = float(c.std(ddof=1) / np.sqrt(K))
+    mult = float(loi_t.ppf(cfg.audit_quantile_t, K - 1))
+    moy = float(c.mean())
+    return {"ecart_moyen": moy, "erreur_type": es, "multiplicateur_t": mult, "borne_t": mult * es,
+            "significatif": bool(abs(moy) > mult * es), "n": int(K), "ecart_max_tache": float(np.max(np.abs(c))),
+            "ecarts": [float(x) for x in c]}
+
+
+def juger_audit(taches: list[dict], cfg: Config) -> dict:
+    """Statistiques de l'audit (S17, v4), par δ, sur les K tâches auditées. Pour chaque contraste audité (B − A,
+    B − C3, B − D, B′ − D, B′ − C3′) : c_i = contraste sur les choix audit réévalués − contraste sur les choix source
+    réévalués ; c̄, erreur-type, borne t(K − 1 ; q) × erreur-type, drapeau (i) |c̄| > `audit_critere` (m/2). Pour A
+    (Table 5) : écarts de I1 (drapeau (i) |écart moyen| > `audit_critere` = S15/2) et de I3 (pas de seuil pratique).
+    Le drapeau (ii) (changement de classe démontré) demande l'analyse de la décision : `classes_sous_audit`."""
+    sortie, drap = {}, []
+    for cd in sorted({t["code_delta"] for t in taches}):
+        ts = sorted((t for t in taches if t["code_delta"] == cd), key=lambda t: t["instance"])
+        if len(ts) < 2:
+            raise GardeArret(f"audit : moins de deux tâches auditées au δ {cd} (erreur-type indéfinie)")
+        bloc = {}
+        for b1, b2 in [pa for pa in PAIRES_AUDIT if all(pa[0] in x["bras"] and pa[1] in x["bras"] for x in ts)]:
+            c = np.array([(t["bras"][b1]["V_audit_reeval"] - t["bras"][b2]["V_audit_reeval"]) -
+                          (t["bras"][b1]["V_source_reeval"] - t["bras"][b2]["V_source_reeval"]) for t in ts])
+            st = _stat_ecarts(c, cfg)
+            st["drapeau_i"] = bool(abs(st["ecart_moyen"]) > cfg.audit_critere)
+            drap.append(st["drapeau_i"])
+            bloc[f"{b1}-{b2}"] = st
+        st1 = _stat_ecarts(np.array([t["tours_A"]["I1_audit"] - t["tours_A"]["I1_source"] for t in ts]), cfg)
+        st1["drapeau_i"] = bool(abs(st1["ecart_moyen"]) > cfg.audit_critere)
+        drap.append(st1["drapeau_i"])
+        if all(t["tours_A"]["I3_source"] is not None and t["tours_A"]["I3_audit"] is not None for t in ts):
+            st3 = _stat_ecarts(np.array([t["tours_A"]["I3_audit"] - t["tours_A"]["I3_source"] for t in ts]), cfg)
+            st3["drapeau_i"] = False
+        else:                                               # T < 3 (configurations d'essai) : I3 indéfini, déclaré
+            st3 = {"ecart_moyen": None, "significatif": False, "drapeau_i": False, "note": "I3 indéfini (T < 3)"}
+        bloc["A I1"], bloc["A I3"] = st1, st3
+        sortie[str(cd)] = bloc
+    return {"par_delta": sortie, "drapeau_i": any(drap), "critere_i": cfg.audit_critere,
+            "quantile_t": cfg.audit_quantile_t}
+
+
+def _decaler_quantiles(q: dict, c: float) -> dict:
+    return {k: v + c for k, v in q.items()}
+
+
+def classes_sous_audit(analyse: dict, jugement: dict, S1: float, marges: dict, S15: float) -> dict:
+    """Drapeau (ii) de S17 (v4) et verdict de l'audit : pour chaque contraste audité et chaque δ, classe lue dans sa
+    table (Table 1 par δ pour B − A ; Table 3, bornes B8/E8, pour B − C3 et B − D ; Table 6, bornes B4/E4, pour B′ − D et
+    B′ − C3′), puis classe recalculée en décalant l'estimation et toutes les bornes de l'écart moyen c̄ de l'audit ;
+    (ii) = classe changée ET |c̄| > t × erreur-type. Pour A : ligne de la Table 5 recalculée avec I1 et I3 − nul
+    décalés de leurs écarts moyens ; (ii) = ligne changée ET un des deux écarts significatif. Artefact = un drapeau
+    (i) ou (ii) au moins. Aide mécanique au lecteur R13 ; le texte scellé fait foi."""
+    sortie, drap = {}, []
+    for cd, bloc in sorted(jugement["par_delta"].items()):
+        an = analyse[cd]
+        res = {}
+        for b1, b2 in [pa for pa in PAIRES_AUDIT if f"{pa[0]}-{pa[1]}" in bloc]:
+            lib, table = CONTRASTE_DE_PAIRE[(b1, b2)]
+            j = bloc[f"{b1}-{b2}"]
+            c = j["ecart_moyen"]
+            est, q = an["contrastes"][lib]["moyenne"], an["contrastes"][lib]["quantiles"]
+            qd = _decaler_quantiles(q, c)
+            if table == "table1":
+                avant, apres = classe_table1(est, q, S1), classe_table1(est + c, qd, S1)
+            elif table == "table3":
+                avant = classer(q["q0.003125"], q["q0.996875"], q["q0.00625"], q["q0.99375"], marges[cd])
+                apres = classer(qd["q0.003125"], qd["q0.996875"], qd["q0.00625"], qd["q0.99375"], marges[cd])
+            else:
+                avant = classer(q["q0.00625"], q["q0.99375"], q["q0.0125"], q["q0.9875"], marges[cd])
+                apres = classer(qd["q0.00625"], qd["q0.99375"], qd["q0.0125"], qd["q0.9875"], marges[cd])
+            d2 = bool(avant != apres and j["significatif"])
+            drap += [j["drapeau_i"], d2]
+            res[f"{b1}-{b2}"] = {"contraste": lib, "table": table, "classe_lue": avant, "classe_decalee": apres,
+                                 "ecart_moyen": c, "drapeau_i": j["drapeau_i"], "drapeau_ii": d2,
+                                 "artefact": bool(j["drapeau_i"] or d2)}
+        ind = an["indicateurs"]
+        if "A I3-nul" not in ind:
+            raise GardeArret("audit : Table 5 sans « A I3-nul » dans l'analyse (T < 3) : jugement impossible")
+        q1, q3 = ind["A I1"]["quantiles"], ind["A I3-nul"]["quantiles"]
+        c1, c3 = bloc["A I1"]["ecart_moyen"], bloc["A I3"]["ecart_moyen"] or 0.0
+        avant = ligne_table5(q1["q0.00625"], q1["q0.99375"], q3["q0.00625"], q3["q0.99375"], S15)
+        apres = ligne_table5(q1["q0.00625"] + c1, q1["q0.99375"] + c1, q3["q0.00625"] + c3, q3["q0.99375"] + c3, S15)
+        d2 = bool(avant != apres and (bloc["A I1"]["significatif"] or bloc["A I3"]["significatif"]))
+        drap += [bloc["A I1"]["drapeau_i"], d2]
+        res["Table 5"] = {"ligne_lue": avant, "ligne_decalee": apres, "ecart_I1": c1, "ecart_I3": c3,
+                          "drapeau_i": bloc["A I1"]["drapeau_i"], "drapeau_ii": d2,
+                          "artefact": bool(bloc["A I1"]["drapeau_i"] or d2)}
+        sortie[cd] = res
+    return {"par_delta": sortie, "artefact": any(drap), "S1": S1, "marges": dict(marges), "S15": S15}
+
+
+# =================================================================================================================
+# Processus de travail : lancement, arrêt par PID (R10), garde « aucun orphelin »
+# =================================================================================================================
+def _debut_processus(pid: int) -> str | None:
+    """Instant de départ du processus (champ 22 de /proc/<pid>/stat) : distingue un PID réemployé."""
+    try:
+        return Path(f"/proc/{int(pid)}/stat").read_text().rsplit(")", 1)[1].split()[19]
+    except (OSError, IndexError):
+        return None
+
+
+def processus_vivant(pid: int, debut: str | None = None) -> bool:
+    """Vivant, non zombie, et (si `debut` est donné) le même processus que celui consigné."""
+    try:
+        os.kill(int(pid), 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        pass
+    try:
+        champs = Path(f"/proc/{int(pid)}/stat").read_text().rsplit(")", 1)[1].split()
+    except OSError:
+        return False
+    if champs[0] in ("Z", "X"):
+        return False
+    return debut is None or champs[19] == str(debut)
+
+
+def lire_pids(chemin: str | Path) -> list[tuple[int, str | None]]:
+    sortie = []
+    for ligne in Path(chemin).read_text(encoding="utf-8").splitlines():
+        if ligne.strip() and not ligne.startswith("#"):
+            pid, debut = (ligne.split() + [None])[:2]
+            sortie.append((int(pid), debut))
+    return sortie
+
+
+def arreter_par_pid(pids, delai_s: float = 10.0) -> list[int]:
+    """R10 : signal TERM à chaque PID consigné encore vivant (même instant de départ), puis KILL après le délai.
+    Renvoie les PID qui étaient vivants. Jamais d'arrêt par motif de ligne de commande."""
+    vivants = [(int(p), d) for p, d in pids if processus_vivant(p, d)]
+    for p, _ in vivants:
+        try:
+            os.kill(p, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    t = time.monotonic()
+    while time.monotonic() - t < delai_s and any(processus_vivant(p, d) for p, d in vivants):
+        time.sleep(0.05)
+    for p, d in vivants:
+        if processus_vivant(p, d):
+            try:
+                os.kill(p, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+    return [p for p, _ in vivants]
+
+
+def exiger_aucun_orphelin(pids) -> None:
+    """Garde (CM2-14) : aucune reprise ni fin de run tant qu'un processus de travail consigné tourne encore."""
+    vivants = [int(p) for p, d in pids if processus_vivant(p, d)]
+    if vivants:
+        raise GardeArret(f"processus de travail encore vivants (PID {vivants}) : arrêter par PID avant toute "
+                         "reprise (R10)")
+
+
+def _consigner_pids(pids, fichier_pids, sceller_pids: bool) -> None:
+    texte = "# PID et instant de départ des processus de travail (arrêt par PID, R10)\n" + \
+            "".join(f"{p} {d}\n" for p, d in pids)
+    print("PID des processus de travail : " + " ".join(str(p) for p, _ in pids), file=sys.stderr, flush=True)
+    if fichier_pids is not None:
+        f = _exiger_absent(Path(fichier_pids))
+        f.write_text(texte, encoding="utf-8")
+        if sceller_pids:
+            from controle_ia.scellement import sceller
+
+            sceller(f)
+
+
+def _travail(args):
+    mode, instance, cd, racine, racine_tenue, cfg_dict, bras, leger, prereg, source = args
+    cfg = Config(**{k: tuple(v) if isinstance(v, list) else v for k, v in cfg_dict.items()})
+    if (racine in RACINES_DECISION or racine_tenue in RACINES_DECISION) and \
+            _AUTORISATION_DECISION["prereg_sha256"] is None:
+        if prereg is None:
+            raise GardeArret("racine de décision dans un processus de travail sans préenregistrement")
+        autoriser_decision(prereg, cfg)
+    if mode == "audit":
+        return auditer_tache(instance, cd, racine, racine_tenue, cfg, source)
+    if mode == "diagnostic":
+        return executer_diagnostic_tache(instance, cd, racine, racine_tenue, cfg)
+    return executer_tache(instance, cd, racine, racine_tenue, cfg, bras=bras, leger=leger)
+
+
+def _lancer(taches, processus: int, fichier_pids=None, sceller_pids: bool = False) -> list:
+    """Pool `spawn` ; signal TERM converti en `GardeArret` (le bloc `with` termine alors les processus de travail) ;
+    PID consignés (attribut interne `pool._pool` de multiprocessing, déclaré) ; à la sortie, arrêt par PID de tout
+    survivant puis garde « aucun orphelin »."""
+    import multiprocessing as mp
+
+    if processus <= 1:
+        return [_travail(t) for t in taches]
+    ancien = signal.signal(signal.SIGTERM, lever_sur_term)
+    pids = []
+    try:
+        with mp.get_context("spawn").Pool(processus) as pool:
+            pids = [(p.pid, _debut_processus(p.pid)) for p in pool._pool]
+            _consigner_pids(pids, fichier_pids, sceller_pids)
+            res = pool.map(_travail, taches, chunksize=1)
+    finally:
+        signal.signal(signal.SIGTERM, ancien)
+        arreter_par_pid(pids)
+        exiger_aucun_orphelin(pids)
+    return res
+
+
+def executer(instances, racine, racine_tenue, cfg: Config, processus: int = 2, codes_delta=None,
+             bras=None, leger=False, prereg=None, fichier_pids=None,
+             sceller_pids=False, mode: str = "tache") -> tuple[list[dict], dict]:
+    if mode not in ("tache", "diagnostic"):
+        raise GardeArret(f"mode de tâche inconnu : {mode!r}")
+    bras = bras_decision(cfg) if bras is None else tuple(bras)
+    codes = codes_delta if codes_delta is not None else range(1, len(cfg.deltas) + 1)
+    taches = [(mode, i, cd, racine, racine_tenue, asdict(cfg), tuple(bras), leger,
+               None if prereg is None else str(prereg), None) for cd in codes for i in instances]
+    m0 = time.perf_counter()
+    res = _lancer(taches, processus, fichier_pids, sceller_pids)
+    temps = {"mur_s": time.perf_counter() - m0, "cpu_somme_taches_s": float(sum(r["cpu_tache_s"] for r in res)),
+             "processus": processus, "taches": len(taches)}
+    return res, temps
+
+
+def auditer(instances, racine, racine_tenue, cfg: Config, sources: dict, processus: int = 2, prereg=None,
+            fichier_pids=None, sceller_pids=False) -> tuple[list[dict], dict, dict]:
+    """Audit d'attaquant indépendant sur les tâches (instance, δ) demandées ; `sources` : (instance, code δ) → résultat
+    de la tâche du run audité."""
+    taches = []
+    for cd in range(1, len(cfg.deltas) + 1):
+        for i in instances:
+            if (i, cd) not in sources:
+                raise GardeArret(f"audit : tâche absente du run audité (instance {i}, δ {cd})")
+            taches.append(("audit", i, cd, racine, racine_tenue, asdict(cfg), bras_audit(cfg), True,
+                           None if prereg is None else str(prereg), sources[(i, cd)]))
+    m0 = time.perf_counter()
+    res = _lancer(taches, processus, fichier_pids, sceller_pids)
+    temps = {"mur_s": time.perf_counter() - m0, "cpu_somme_taches_s": float(sum(r["cpu_tache_s"] for r in res)),
+             "processus": processus, "taches": len(taches)}
+    return res, temps, juger_audit(res, cfg)
+
+
+def _versions() -> dict:
+    import platform
+
+    import scipy
+
+    try:
+        commit = subprocess.run(["git", "-C", str(DEPOT), "rev-parse", "HEAD"], capture_output=True,
+                                text=True).stdout.strip()
+    except OSError:
+        commit = None
+    return {"python": sys.version.split()[0], "numpy": np.__version__, "scipy": scipy.__version__,
+            "plateforme": platform.platform(), "commit": commit, "code_sha256": empreinte_fichier(__file__),
+            "bibliotheque_sha256": {f: empreinte_fichier(DEPOT / f) for f in FICHIERS_BIBLIOTHEQUE}}
+
+
+def _plage(s: str) -> list[int]:
+    a, b = s.split(":")
+    return list(range(int(a), int(b)))
+
+
+def _exiger_absent(sortie: Path) -> Path:
+    if sortie.exists():
+        raise GardeArret(f"{sortie} existe déjà : R12 interdit d'écraser")
+    return sortie
+
+
+def _ecrire_nouveau(sortie: Path, corps: dict) -> None:
+    if sortie.exists():
+        raise GardeArret(f"{sortie} apparu pendant l'exécution : R12 interdit d'écraser")
+    sortie.write_text(json.dumps(corps, indent=1, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _sources_par_tache(resultats: list[dict]) -> dict:
+    return {(r["instance"], r["code_delta"]): r for r in resultats}
+
+
+def charger_pilote(chemin: str | Path, cfg: Config) -> dict:
+    """Pilote « détection » produit par ce code (mode essai) : racines d'essai permises, configuration identique."""
+    corps = json.loads(Path(chemin).read_text(encoding="utf-8"))
+    man = corps.get("manifeste", {})
+    exiger_racines_essai(man.get("racine"), man.get("racine_tenue"))
+    if corps.get("mode") != "essai" or corps.get("oracle") != "detection" or man.get("config_sha256") != cfg.empreinte():
+        raise GardeArret(f"audit-essai : {chemin} n'est pas un pilote « détection » de cette configuration")
+    return corps
+
+
+def exiger_meme_prereg(manifeste_source: dict, sha: str) -> None:
+    """Garde : le run audité a été lancé sous le préenregistrement qui autorise l'audit."""
+    p = manifeste_source.get("preenregistrement") or {}
+    if p.get("sha256") != sha:
+        raise GardeArret("audit : run audité rattaché à un autre préenregistrement (ou à aucun)")
+
+
+def _bornes_marges(S1, S6, S15) -> tuple[float, dict, float]:
+    if not all(x is not None and x > 0 for x in (S1, S6, S15)):
+        raise GardeArret(f"audit : marges S1, S6, S15 positives exigées (reçu {S1}, {S6}, {S15})")
+    return float(S1), {"1": float(S6), "2": float(S6)}, float(S15)
+
+
+def _exiger_config_v5() -> Config:
+    """Configuration de la décision v5 : δ de la v4 (R-739) et classe u* de Q2 (gel v5 § 2) ; arrêt si u* non fixé."""
+    if CONFIG_V5 is None:
+        raise GardeArret("classe de Q2 non fixée (UNITES_Q2_V5 = None) : lancer `diagnostic` et appliquer la règle du gel "
+                         "v5 § 2 d'abord")
+    return exiger_config(CONFIG_V5)
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    sp = ap.add_subparsers(dest="mode", required=True)
+    sp.add_parser("temoins", help="jeux témoins à équilibre intérieur connu (garde R5, gel v5 § 3)")
+    dg = sp.add_parser("diagnostic", help="diagnostic de la pureté : échelle de classes (gel v5 § 2), instances 0:16")
+    dg.add_argument("--instances", default="0:16")
+    dg.add_argument("--sortie", required=True)
+    dg.add_argument("--processus", type=int, default=2)
+    dg.add_argument("--pids", default=None, help="fichier (nouveau) des PID des processus de travail")
+    e = sp.add_parser("essai", help="racine d'essai gelée : pilote et puissance")
+    e.add_argument("--instances", default="0:4")
+    e.add_argument("--sortie", required=True)
+    e.add_argument("--processus", type=int, default=2)
+    e.add_argument("--oracle", choices=("detection", "logistique"), default="detection")
+    e.add_argument("--racine", type=int, default=RACINE_ESSAI)
+    e.add_argument("--racine-tenue", type=int, default=RACINE_ESSAI_TENUE)
+    e.add_argument("--pids", default=None, help="fichier (nouveau) des PID des processus de travail")
+    ae = sp.add_parser("audit-essai", help="attaquant indépendant sur des tâches d'un pilote (racine d'essai)")
+    ae.add_argument("--pilote", required=True)
+    ae.add_argument("--instances", default="0:5")
+    ae.add_argument("--sortie", required=True)
+    ae.add_argument("--processus", type=int, default=2)
+    ae.add_argument("--pids", default=None, help="fichier (nouveau) des PID des processus de travail")
+    for x in ("--S1", "--S6", "--S15"):
+        ae.add_argument(x, type=float, default=0.02, help="valeur recommandée (essai seulement)")
+    sp.add_parser("identite", help="imprime le bloc d'identité à recopier dans le préenregistrement")
+    dc = sp.add_parser("decision", help="racine de décision : exige le préenregistrement scellé")
+    dc.add_argument("--prereg", required=True)
+    dc.add_argument("--instances", required=True)
+    dc.add_argument("--run-id", required=True)
+    dc.add_argument("--processus", type=int, default=2)
+    au = sp.add_parser("audit", help="attaquant indépendant sur des tâches du run de décision (après scellement)")
+    au.add_argument("--prereg", required=True)
+    au.add_argument("--source-run", required=True)
+    au.add_argument("--instances", required=True)
+    au.add_argument("--run-id", required=True)
+    au.add_argument("--processus", type=int, default=2)
+    for x in ("--S1", "--S6", "--S15"):
+        au.add_argument(x, type=float, required=True, help="valeur gelée par Lazar (recopiée dans la sortie)")
+    o = sp.add_parser("orphelins", help="R10 : vérifie (et, avec --arreter, arrête par PID) les processus consignés")
+    o.add_argument("--pids", required=True)
+    o.add_argument("--arreter", action="store_true")
+    a = ap.parse_args(argv)
+    if a.mode == "identite":
+        print(bloc_identite(_exiger_config_v5()))
+        return 0
+    if a.mode == "orphelins":
+        pids = lire_pids(a.pids)
+        if a.arreter:
+            print(f"arrêtés par PID : {arreter_par_pid(pids)}")
+        exiger_aucun_orphelin(pids)
+        print("aucun processus de travail consigné ne tourne")
+        return 0
+    if a.mode == "temoins":
+        exiger_gel_v5((RACINE_TEMOINS,))
+        t = controle_temoins(exiger_config(CONFIG_DIAGNOSTIC_V5))
+        print(json.dumps(t, indent=1, ensure_ascii=False))
+        return 0
+    if a.mode == "diagnostic":
+        exiger_racines_essai(RACINE_DIAGNOSTIC, RACINE_DIAGNOSTIC_TENUE)
+        sha_gel = exiger_gel_v5((RACINE_DIAGNOSTIC, RACINE_DIAGNOSTIC_TENUE, RACINE_TEMOINS))
+        cfg = exiger_config(CONFIG_DIAGNOSTIC_V5)
+        if a.instances != f"0:{cfg.n_diagnostic}":
+            raise GardeArret(f"diagnostic : --instances {a.instances} ≠ 0:{cfg.n_diagnostic} (règle du gel v5, § 2)")
+        sortie = _exiger_absent(Path(a.sortie))
+        temoins = controle_temoins(cfg)
+        res, temps = executer(_plage(a.instances), RACINE_DIAGNOSTIC, RACINE_DIAGNOSTIC_TENUE, cfg, a.processus,
+                              fichier_pids=a.pids, mode="diagnostic")
+        stats = analyser_diagnostic(res, cfg)
+        u_choisi = choisir_unites(stats, cfg)
+        corps = {"mode": "diagnostic", "manifeste": {"racine": RACINE_DIAGNOSTIC, "racine_tenue": RACINE_DIAGNOSTIC_TENUE,
+                                                     "config": asdict(cfg), "config_sha256": cfg.empreinte(),
+                                                     "versions": _versions(), "gel_v5_sha256": sha_gel,
+                                                     "instances": a.instances, "commande": " ".join(sys.argv)},
+                 "regle": "u* = plus grand u de l'échelle tel que g_u(δ) ≤ 0,25 (part des jeux restreints dégénérés : "
+                          "gain du mélange ≤ 0,01) et r_u(δ) ≤ 0,5 aux deux δ ; 1 si aucun (gel v5 § 2, additif b § 2.3)",
+                 "temoins": temoins, "temps": temps, "analyse_diagnostic": stats, "u_choisi": u_choisi,
+                 "resultats": res}
+        _ecrire_nouveau(sortie, corps)
+        print(f"diagnostic écrit : {sortie} ; u* = {u_choisi} ; {temps}")
+        for cd, b in stats.items():
+            for u, x in b["par_u"].items():
+                print(f"  δ {b['delta']} u {u} : dégénérée {x['g_part_degeneree']:.3f} ; forcée {x['f_part_forcee']:.3f} ;"
+                      f" pure {x['r_part_pure']:.3f}")
+        return 0
+    if a.mode == "essai":
+        exiger_racines_essai(a.racine, a.racine_tenue)
+        sha_gel = exiger_gel_v5((a.racine, a.racine_tenue, RACINE_TEMOINS))
+        cfg = _exiger_config_v5()
+        if a.oracle == "logistique":
+            cfg = replace(cfg, entrainement="logistique")
+        sortie = _exiger_absent(Path(a.sortie))
+        temoins = controle_temoins(cfg)
+        res, temps = executer(_plage(a.instances), a.racine, a.racine_tenue, cfg, a.processus, fichier_pids=a.pids)
+        corps = {"mode": "essai", "oracle": a.oracle,
+                 "manifeste": {"racine": a.racine, "racine_tenue": a.racine_tenue, "schema_graines": cfg.schema_graines,
+                               "config": asdict(cfg), "config_sha256": cfg.empreinte(), "versions": _versions(),
+                               "gel_v5_sha256": sha_gel, "commande": " ".join(sys.argv)},
+                 "temoins": temoins, "temps": temps, "analyse": analyser(res, a.racine), "resultats": res}
+        _ecrire_nouveau(sortie, corps)
+        print(f"essai écrit : {sortie} ; {temps}")
+        return 0
+    if a.mode == "audit-essai":
+        cfg = _exiger_config_v5()
+        pil = charger_pilote(a.pilote, cfg)
+        man = pil["manifeste"]
+        sha_gel = exiger_gel_v5((man["racine"], man["racine_tenue"], RACINE_TEMOINS))
+        S1, marges, S15 = _bornes_marges(a.S1, a.S6, a.S15)
+        sortie = _exiger_absent(Path(a.sortie))
+        temoins = controle_temoins(cfg)
+        res, temps, jugement = auditer(_plage(a.instances), man["racine"], man["racine_tenue"], cfg,
+                                       _sources_par_tache(pil["resultats"]), a.processus, fichier_pids=a.pids)
+        classes = classes_sous_audit(pil["analyse"], jugement, S1, marges, S15)
+        corps = {"mode": "audit-essai", "pilote": str(a.pilote), "pilote_sha256": empreinte_fichier(a.pilote),
+                 "manifeste": {"racine": man["racine"], "racine_tenue": man["racine_tenue"],
+                               "config_sha256": cfg.empreinte(), "versions": _versions(), "gel_v5_sha256": sha_gel,
+                               "commande": " ".join(sys.argv)},
+                 "temoins": temoins, "temps": temps, "jugement": jugement, "classes_sous_audit": classes, "taches": res}
+        _ecrire_nouveau(sortie, corps)
+        print(f"audit d'essai écrit : {sortie} ; drapeau (i) {jugement['drapeau_i']} ; artefact {classes['artefact']} ;"
+              f" {temps}")
+        return 0
+    from controle_ia import manifeste as man
+
+    cfg = _exiger_config_v5()
+    if a.mode == "audit":
+        # audit d'attaquant indépendant (déclencheur 9) : après scellement de l'analyse, sur les K premières tâches
+        S1, marges, S15 = _bornes_marges(a.S1, a.S6, a.S15)
+        if a.instances != f"0:{cfg.audit_k}":
+            raise GardeArret(f"audit : --instances {a.instances} ≠ 0:{cfg.audit_k} (S17, configuration gelée)")
+        sha = autoriser_decision(a.prereg, cfg)
+        src = man.verifier_resultat(DEPOT, DEPOT / "diag" / a.source_run / "resultats-arene.json")
+        ana = man.verifier_resultat(DEPOT, DEPOT / "diag" / a.source_run / "analyse-arene.json")
+        man_src, _ = man.lire_manifeste(DEPOT / "runs" / a.source_run / "manifeste.json")
+        exiger_meme_prereg(man_src, sha)
+        temoins = controle_temoins(cfg)
+        chemin_m, _ = man.creer_manifeste(DEPOT, a.run_id, {"config": asdict(cfg), "config_sha256": cfg.empreinte(),
+                                                            "racine": RACINE, "racine_tenue": RACINE_TENUE,
+                                                            "instances": a.instances, "source_run": a.source_run,
+                                                            "prereg_sha256": sha, "versions": _versions(),
+                                                            "S1": S1, "S6": marges["1"], "S15": S15},
+                                          ["audit"], entropie=RACINE, decisif=True, prereg=a.prereg,
+                                          commande=" ".join(sys.argv))
+        res, temps, jugement = auditer(_plage(a.instances), RACINE, RACINE_TENUE, cfg,
+                                       _sources_par_tache(src["resultat"]["resultats"]), a.processus, prereg=a.prereg,
+                                       fichier_pids=chemin_m.parent / "pids-travail.txt", sceller_pids=True)
+        classes = classes_sous_audit(ana["resultat"], jugement, S1, marges, S15)
+        man.ecrire_resultat(DEPOT, chemin_m, "audit-attaquant", {"temps": temps, "jugement": jugement, "temoins": temoins,
+                                                                 "classes_sous_audit": classes, "taches": res})
+        print(f"audit écrit sous diag/{a.run_id}/ ; artefact {classes['artefact']}")
+        return 0
+    # décision : le préenregistrement scellé est exigé AVANT toute graine de décision ; témoins avant tout calcul
+    sha = autoriser_decision(a.prereg, cfg, a.instances)
+    temoins = controle_temoins(cfg)
+    chemin_m, _ = man.creer_manifeste(DEPOT, a.run_id, {"config": asdict(cfg), "config_sha256": cfg.empreinte(),
+                                                        "racine": RACINE, "racine_tenue": RACINE_TENUE,
+                                                        "instances": a.instances, "prereg_sha256": sha,
+                                                        "schema_graines": cfg.schema_graines,
+                                                        "note_graines": "le champ « graines » du manifeste n'est pas "
+                                                                        "employé : le code dérive tout de RACINE "
+                                                                        "selon schema_graines",
+                                                        "versions": _versions()},
+                                      ["arene"], entropie=RACINE, decisif=True, prereg=a.prereg,
+                                      commande=" ".join(sys.argv))
+    res, temps = executer(_plage(a.instances), RACINE, RACINE_TENUE, cfg, a.processus, prereg=a.prereg,
+                          fichier_pids=chemin_m.parent / "pids-travail.txt", sceller_pids=True)
+    man.ecrire_resultat(DEPOT, chemin_m, "resultats-arene", {"temps": temps, "temoins": temoins, "resultats": res})
+    man.ecrire_resultat(DEPOT, chemin_m, "analyse-arene", analyser(res, RACINE))
+    print(f"run de décision écrit sous diag/{a.run_id}/")
+    return 0
+
+
+__all__ = ["Config", "CONFIG_BASE_V4", "CONFIG_V4", "CONFIG_V5", "CONFIG_DIAGNOSTIC_V5", "RACINE", "RACINE_TENUE",
+           "RACINE_ESSAI", "RACINE_ESSAI_TENUE", "RACINE_TESTS", "RACINE_SIMULATION", "RACINE_DIAGNOSTIC",
+           "RACINE_TEMOINS", "executer_tache", "executer_diagnostic_tache", "analyser", "analyser_diagnostic",
+           "choisir_unites", "lire_tables", "classer", "resoudre_jeu", "meilleure_reponse", "exiger_prereg_arene",
+           "exiger_identite_prereg", "autoriser_decision", "exiger_racines_essai", "exiger_racine_permise",
+           "exiger_gel_v5", "choisir_deltas", "auditer", "juger_audit", "classes_sous_audit", "attaquant_independant",
+           "valeur_nulle_I3", "poids_max_min_equilibres", "jeu_temoin", "controle_temoins", "exiger_jeu_non_degenere",
+           "exiger_temoin_interieur", "diagnostic_equilibre", "replace"]
+
+if __name__ == "__main__":
+    sys.exit(main())

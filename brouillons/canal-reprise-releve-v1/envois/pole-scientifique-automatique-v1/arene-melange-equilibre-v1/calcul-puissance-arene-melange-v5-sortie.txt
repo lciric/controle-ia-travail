@@ -1,0 +1,253 @@
+# Calcul de puissance — arène mélange d'équilibre — v5 (pilote v5, racine d'essai gelée ; classe u* = 1)
+fichier : /home/claude/controle-ia-travail/brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/essai-pilote-arene-melange-v5-detection.json — 116084f83fc95d2c9de08a3af97f89667474ff3138d000cd93384fa648fbfab6 ; 48 tâches ; mur 963.4 s ; processeur 1883.7 s ; 2 processus
+racine = 20264621 ; racine des tenues = 20264622 ; configuration 51c9922d7f974d2de3f28050293514aa53a8fb3d335ff71007d600f13ad9c3d1 ; δ = (1.4, 1.6)
+code : 71df9a49ba2594837cb38485a50de5b0f25fd210c9f56838f35fdf634c78d575 ; commit 4ff7b0f564a1a12d470e134582a3383bd176a3b0 (HEAD du dépôt ; le code remis n'y est pas committé) ; numpy 2.5.3 ; scipy 1.18.1 ; gel v5 b55689cbddb1699ac288deb1b8b808e4d9e5d9fe2f827e2b9e827bc56017d2a0 ; additif b a91d29fd748f29d14f3c839594d434569d3a3f6284dac39e856711045601e391
+tâches lues : 48 (24 instances × 2 δ) ; simulations : SeedSequence(20264651, spawn_key=(0, 0, 0, clé, 77)), clés {'regles': 1, 's10': 2, 'audit': 3, 'p10': 4, 'i3': 5, 'temps': 6, 'n80': 7, 'n60': 8} ; 1000 répétitions × 20000 tirages par scénario
+
+## 1. Moyennes par bras (pilote détection)
+δ1 = 1.4, n = 24
+  A   : (iii) 0.1114 [min 0.0059 ; max 0.2811] ; (ii) 0.4794 ; (i) 0.2895 ; fausses alertes 0.0101 [0.0086 ; 0.0124] ; paramètres stockés 7, par requête ≤ 7
+  B   : (iii) 0.2230 [min 0.1470 ; max 0.3178] ; (ii) 0.4340 ; (i) 0.2657 ; fausses alertes 0.0103 [0.0091 ; 0.0124] ; paramètres stockés 63, par requête ≤ 7
+  C1  : (iii) 0.2092 [min 0.1559 ; max 0.3133] ; (ii) 0.4541 ; (i) 0.2606 ; fausses alertes 0.0101 [0.0090 ; 0.0120] ; paramètres stockés 63, par requête ≤ 7
+  C2  : (iii) 0.1991 [min 0.1209 ; max 0.3135] ; (ii) 0.4503 ; (i) 0.2619 ; fausses alertes 0.0101 [0.0089 ; 0.0119] ; paramètres stockés 63, par requête ≤ 7
+  C3  : (iii) 0.3988 [min 0.3227 ; max 0.4442] ; (ii) 0.8203 ; (i) 0.5079 ; fausses alertes 0.0102 [0.0082 ; 0.0130] ; paramètres stockés 63, par requête ≤ 63
+  D   : (iii) 0.4469 [min 0.4145 ; max 0.4932] ; (ii) 0.8395 ; (i) 0.5089 ; fausses alertes 0.0102 [0.0083 ; 0.0127] ; paramètres stockés 63, par requête ≤ 63
+  V(A) en multiples de α : 11.1 α
+δ2 = 1.6, n = 24
+  A   : (iii) 0.0614 [min 0.0037 ; max 0.1712] ; (ii) 0.4826 ; (i) 0.2708 ; fausses alertes 0.0100 [0.0084 ; 0.0123] ; paramètres stockés 7, par requête ≤ 7
+  B   : (iii) 0.1836 [min 0.1452 ; max 0.2534] ; (ii) 0.4018 ; (i) 0.2333 ; fausses alertes 0.0099 [0.0088 ; 0.0116] ; paramètres stockés 63, par requête ≤ 7
+  C1  : (iii) 0.1643 [min 0.1030 ; max 0.2469] ; (ii) 0.4451 ; (i) 0.2293 ; fausses alertes 0.0099 [0.0088 ; 0.0115] ; paramètres stockés 63, par requête ≤ 7
+  C2  : (iii) 0.1497 [min 0.0718 ; max 0.2369] ; (ii) 0.4439 ; (i) 0.2259 ; fausses alertes 0.0099 [0.0088 ; 0.0117] ; paramètres stockés 63, par requête ≤ 7
+  C3  : (iii) 0.3153 [min 0.2676 ; max 0.3756] ; (ii) 0.8177 ; (i) 0.4569 ; fausses alertes 0.0101 [0.0083 ; 0.0120] ; paramètres stockés 63, par requête ≤ 63
+  D   : (iii) 0.3504 [min 0.3161 ; max 0.4035] ; (ii) 0.8279 ; (i) 0.4252 ; fausses alertes 0.0097 [0.0077 ; 0.0116] ; paramètres stockés 63, par requête ≤ 63
+  V(A) en multiples de α : 6.1 α
+
+## 2. Contrastes appariés et indicateurs (pilote ; rééchantillonnage 20 000 du fichier)
+   IC95 = [q0.025 ; q0.975] ; B2/B4 = [q0.00625 ; q0.99375] ; B8 = [q0.003125 ; q0.996875] ; E4 = [q0.0125 ; q0.9875]
+  δ1 B-A (i)       moyenne -0.0238 ; é.-t. 0.0190 ; IC95 [-0.0310 ; -0.0162] ; B2/B4 [-0.0327 ; -0.0140] ; B8 [-0.0335 ; -0.0130] ; E4 [-0.0320 ; -0.0151]
+  δ1 B-A (ii)      moyenne -0.0454 ; é.-t. 0.0539 ; IC95 [-0.0667 ; -0.0244] ; B2/B4 [-0.0725 ; -0.0194] ; B8 [-0.0751 ; -0.0173] ; E4 [-0.0696 ; -0.0215]
+  δ1 B-A (iii)     moyenne +0.1116 ; é.-t. 0.0474 ; IC95 [+0.0930 ; +0.1299] ; B2/B4 [+0.0876 ; +0.1349] ; B8 [+0.0852 ; +0.1376] ; E4 [+0.0903 ; +0.1327]
+  δ1 B-C1 (iii)    moyenne +0.0137 ; é.-t. 0.0161 ; IC95 [+0.0075 ; +0.0200] ; B2/B4 [+0.0059 ; +0.0218] ; B8 [+0.0052 ; +0.0225] ; E4 [+0.0067 ; +0.0209]
+  δ1 B-C2 (iii)    moyenne +0.0238 ; é.-t. 0.0246 ; IC95 [+0.0147 ; +0.0339] ; B2/B4 [+0.0125 ; +0.0366] ; B8 [+0.0115 ; +0.0381] ; E4 [+0.0135 ; +0.0354]
+  δ1 B-C3 (ii)     moyenne -0.3863 ; é.-t. 0.1141 ; IC95 [-0.4300 ; -0.3411] ; B2/B4 [-0.4398 ; -0.3278] ; B8 [-0.4446 ; -0.3226] ; E4 [-0.4354 ; -0.3341]
+  δ1 B-C3 (iii)    moyenne -0.1758 ; é.-t. 0.0522 ; IC95 [-0.1959 ; -0.1551] ; B2/B4 [-0.2012 ; -0.1499] ; B8 [-0.2033 ; -0.1473] ; E4 [-0.1988 ; -0.1523]
+  δ1 B-D (ii)      moyenne -0.4055 ; é.-t. 0.1061 ; IC95 [-0.4457 ; -0.3628] ; B2/B4 [-0.4566 ; -0.3507] ; B8 [-0.4608 ; -0.3453] ; E4 [-0.4509 ; -0.3570]
+  δ1 B-D (iii)     moyenne -0.2239 ; é.-t. 0.0348 ; IC95 [-0.2379 ; -0.2102] ; B2/B4 [-0.2414 ; -0.2068] ; B8 [-0.2428 ; -0.2052] ; E4 [-0.2399 ; -0.2083]
+  δ1 C1-C2 (iii)   moyenne +0.0101 ; é.-t. 0.0151 ; IC95 [+0.0044 ; +0.0160] ; B2/B4 [+0.0029 ; +0.0176] ; B8 [+0.0022 ; +0.0183] ; E4 [+0.0036 ; +0.0168]
+  δ1 C3-A (iii)    moyenne +0.2873 ; é.-t. 0.0893 ; IC95 [+0.2519 ; +0.3216] ; B2/B4 [+0.2425 ; +0.3300] ; B8 [+0.2382 ; +0.3331] ; E4 [+0.2468 ; +0.3262]
+  δ1 D-A (iii)     moyenne +0.3355 ; é.-t. 0.0737 ; IC95 [+0.3056 ; +0.3637] ; B2/B4 [+0.2983 ; +0.3709] ; B8 [+0.2944 ; +0.3741] ; E4 [+0.3018 ; +0.3675]
+  δ1 A I1          moyenne -0.0006 ; é.-t. 0.0171 ; IC95 [-0.0076 ; +0.0056] ; B2/B4 [-0.0096 ; +0.0072] ; B8 [-0.0106 ; +0.0077] ; E4 [-0.0087 ; +0.0065]
+  δ1 A I2          moyenne +0.0800 ; é.-t. 0.0350 ; IC95 [+0.0660 ; +0.0937] ; B2/B4 [+0.0622 ; +0.0972] ; B8 [+0.0600 ; +0.0989] ; E4 [+0.0639 ; +0.0955]
+  δ1 A I3          moyenne +0.9097 ; é.-t. 0.1202 ; IC95 [+0.8611 ; +0.9514] ; B2/B4 [+0.8472 ; +0.9653] ; B8 [+0.8403 ; +0.9722] ; E4 [+0.8542 ; +0.9583]
+  δ1 A I3-nul      moyenne +0.1752 ; é.-t. 0.1202 ; IC95 [+0.1266 ; +0.2169] ; B2/B4 [+0.1127 ; +0.2308] ; B8 [+0.1058 ; +0.2342] ; E4 [+0.1196 ; +0.2238]
+  δ1 B I1          moyenne +0.0807 ; é.-t. 0.0330 ; IC95 [+0.0680 ; +0.0937] ; B2/B4 [+0.0649 ; +0.0971] ; B8 [+0.0633 ; +0.0987] ; E4 [+0.0664 ; +0.0956]
+  δ1 B I2          moyenne +0.0461 ; é.-t. 0.0385 ; IC95 [+0.0312 ; +0.0614] ; B2/B4 [+0.0276 ; +0.0655] ; B8 [+0.0260 ; +0.0670] ; E4 [+0.0291 ; +0.0635]
+  δ1 B I3-nul      moyenne +0.0224 ; é.-t. 0.1902 ; IC95 [-0.0540 ; +0.0919] ; B2/B4 [-0.0817 ; +0.1127] ; B8 [-0.0887 ; +0.1196] ; E4 [-0.0679 ; +0.1058]
+  δ1 D I1          moyenne +0.1630 ; é.-t. 0.0479 ; IC95 [+0.1441 ; +0.1812] ; B2/B4 [+0.1391 ; +0.1861] ; B8 [+0.1367 ; +0.1887] ; E4 [+0.1416 ; +0.1840]
+  δ1 D I2          moyenne -0.0298 ; é.-t. 0.0174 ; IC95 [-0.0366 ; -0.0231] ; B2/B4 [-0.0385 ; -0.0212] ; B8 [-0.0393 ; -0.0206] ; E4 [-0.0376 ; -0.0222]
+  δ1 D I3-nul      moyenne -0.3456 ; é.-t. 0.1447 ; IC95 [-0.4012 ; -0.2901] ; B2/B4 [-0.4151 ; -0.2762] ; B8 [-0.4220 ; -0.2658] ; E4 [-0.4081 ; -0.2831]
+  δ2 B-A (i)       moyenne -0.0375 ; é.-t. 0.0166 ; IC95 [-0.0439 ; -0.0310] ; B2/B4 [-0.0457 ; -0.0291] ; B8 [-0.0465 ; -0.0284] ; E4 [-0.0448 ; -0.0300]
+  δ2 B-A (ii)      moyenne -0.0809 ; é.-t. 0.0550 ; IC95 [-0.1020 ; -0.0592] ; B2/B4 [-0.1082 ; -0.0527] ; B8 [-0.1105 ; -0.0504] ; E4 [-0.1052 ; -0.0560]
+  δ2 B-A (iii)     moyenne +0.1222 ; é.-t. 0.0324 ; IC95 [+0.1094 ; +0.1345] ; B2/B4 [+0.1057 ; +0.1377] ; B8 [+0.1042 ; +0.1392] ; E4 [+0.1076 ; +0.1362]
+  δ2 B-C1 (iii)    moyenne +0.0193 ; é.-t. 0.0215 ; IC95 [+0.0108 ; +0.0275] ; B2/B4 [+0.0084 ; +0.0298] ; B8 [+0.0075 ; +0.0308] ; E4 [+0.0096 ; +0.0286]
+  δ2 B-C2 (iii)    moyenne +0.0338 ; é.-t. 0.0335 ; IC95 [+0.0206 ; +0.0468] ; B2/B4 [+0.0167 ; +0.0503] ; B8 [+0.0152 ; +0.0517] ; E4 [+0.0186 ; +0.0488]
+  δ2 B-C3 (ii)     moyenne -0.4159 ; é.-t. 0.0893 ; IC95 [-0.4497 ; -0.3795] ; B2/B4 [-0.4577 ; -0.3684] ; B8 [-0.4610 ; -0.3645] ; E4 [-0.4539 ; -0.3740]
+  δ2 B-C3 (iii)    moyenne -0.1317 ; é.-t. 0.0263 ; IC95 [-0.1419 ; -0.1213] ; B2/B4 [-0.1445 ; -0.1184] ; B8 [-0.1458 ; -0.1173] ; E4 [-0.1432 ; -0.1197]
+  δ2 B-D (ii)      moyenne -0.4261 ; é.-t. 0.0872 ; IC95 [-0.4588 ; -0.3911] ; B2/B4 [-0.4670 ; -0.3810] ; B8 [-0.4699 ; -0.3765] ; E4 [-0.4628 ; -0.3856]
+  δ2 B-D (iii)     moyenne -0.1668 ; é.-t. 0.0257 ; IC95 [-0.1769 ; -0.1566] ; B2/B4 [-0.1795 ; -0.1539] ; B8 [-0.1805 ; -0.1531] ; E4 [-0.1783 ; -0.1553]
+  δ2 C1-C2 (iii)   moyenne +0.0145 ; é.-t. 0.0248 ; IC95 [+0.0053 ; +0.0248] ; B2/B4 [+0.0030 ; +0.0279] ; B8 [+0.0018 ; +0.0291] ; E4 [+0.0041 ; +0.0265]
+  δ2 C3-A (iii)    moyenne +0.2539 ; é.-t. 0.0512 ; IC95 [+0.2337 ; +0.2735] ; B2/B4 [+0.2277 ; +0.2784] ; B8 [+0.2253 ; +0.2808] ; E4 [+0.2307 ; +0.2760]
+  δ2 D-A (iii)     moyenne +0.2890 ; é.-t. 0.0522 ; IC95 [+0.2681 ; +0.3088] ; B2/B4 [+0.2617 ; +0.3143] ; B8 [+0.2595 ; +0.3166] ; E4 [+0.2650 ; +0.3116]
+  δ2 A I1          moyenne -0.0024 ; é.-t. 0.0087 ; IC95 [-0.0060 ; +0.0008] ; B2/B4 [-0.0072 ; +0.0015] ; B8 [-0.0078 ; +0.0018] ; E4 [-0.0066 ; +0.0012]
+  δ2 A I2          moyenne +0.0966 ; é.-t. 0.0332 ; IC95 [+0.0836 ; +0.1091] ; B2/B4 [+0.0801 ; +0.1125] ; B8 [+0.0785 ; +0.1138] ; E4 [+0.0819 ; +0.1108]
+  δ2 A I3          moyenne +0.9444 ; é.-t. 0.0941 ; IC95 [+0.9028 ; +0.9792] ; B2/B4 [+0.8958 ; +0.9861] ; B8 [+0.8889 ; +0.9861] ; E4 [+0.8958 ; +0.9792]
+  δ2 A I3-nul      moyenne +0.2099 ; é.-t. 0.0941 ; IC95 [+0.1683 ; +0.2446] ; B2/B4 [+0.1613 ; +0.2516] ; B8 [+0.1544 ; +0.2516] ; E4 [+0.1683 ; +0.2446]
+  δ2 B I1          moyenne +0.0839 ; é.-t. 0.0225 ; IC95 [+0.0752 ; +0.0927] ; B2/B4 [+0.0727 ; +0.0952] ; B8 [+0.0718 ; +0.0963] ; E4 [+0.0739 ; +0.0941]
+  δ2 B I2          moyenne +0.0377 ; é.-t. 0.0297 ; IC95 [+0.0263 ; +0.0495] ; B2/B4 [+0.0231 ; +0.0530] ; B8 [+0.0218 ; +0.0546] ; E4 [+0.0247 ; +0.0514]
+  δ2 B I3-nul      moyenne +0.0224 ; é.-t. 0.1628 ; IC95 [-0.0401 ; +0.0849] ; B2/B4 [-0.0609 ; +0.1058] ; B8 [-0.0609 ; +0.1127] ; E4 [-0.0470 ; +0.0988]
+  δ2 D I1          moyenne +0.1588 ; é.-t. 0.0310 ; IC95 [+0.1465 ; +0.1706] ; B2/B4 [+0.1435 ; +0.1740] ; B8 [+0.1423 ; +0.1751] ; E4 [+0.1449 ; +0.1724]
+  δ2 D I2          moyenne -0.0230 ; é.-t. 0.0161 ; IC95 [-0.0293 ; -0.0165] ; B2/B4 [-0.0309 ; -0.0147] ; B8 [-0.0317 ; -0.0139] ; E4 [-0.0302 ; -0.0156]
+  δ2 D I3-nul      moyenne -0.2970 ; é.-t. 0.2074 ; IC95 [-0.3804 ; -0.2206] ; B2/B4 [-0.4012 ; -0.1998] ; B8 [-0.4151 ; -0.1859] ; E4 [-0.3942 ; -0.2067]
+  valeur nulle de I3 (T = 8) : 0.7345
+
+## 3. Règles de lecture sous le rééchantillonnage de la décision
+   marges par principe : m = S6 = 0.02 (Q1 et Q2) ; S1 = S5 = S15 = 0.02
+### 3a. Plomberie B − A (iii), règle « moyenne ≥ S1 et borne basse B2 > 0 », par δ, N = 100
+  taille, effet nul (frontière −) : δ1 0.000 ; δ2 0.000
+  taille, effet = S1 (frontière +) : δ1 0.485 ; δ2 0.491
+  puissance, effet 0,03 (nul) : δ1 0.980 ; δ2 1.000
+  pilote pris pour vérité : δ1 1.000 ; δ2 1.000
+### 3b. Q1 (Table 3), bornes B8, équivalence E8 : probabilité de chaque classe (pilote pris pour vérité, N = 100)
+    B-C1 (iii)   δ1 (pilote +0.0137) : ≈ 0.934 B≳X 0.066
+    B-C1 (iii)   δ2 (pilote +0.0193) : B≳X 0.980 ≈ 0.018 B>X 0.002
+    B-C2 (iii)   δ1 (pilote +0.0238) : B≳X 0.874 B>X 0.126
+    B-C2 (iii)   δ2 (pilote +0.0338) : B>X 0.932 B≳X 0.068
+    B-C3 (iii)   δ1 (pilote -0.1758) : X>B 1.000
+    B-C3 (iii)   δ2 (pilote -0.1317) : X>B 1.000
+    B-D (iii)    δ1 (pilote -0.2239) : X>B 1.000
+    B-D (iii)    δ2 (pilote -0.1668) : X>B 1.000
+  tailles à la frontière (N = 100) : P(B>X | Δ=+m) ; P(X>B | Δ=−m) ; P(≈ | Δ=+m) ; P(≈ | Δ=−m) ; puissance P(≈ | Δ=0)
+    B-C1 (iii)   δ1 : 0.003 ; 0.005 ; 0.007 ; 0.013 ; 1.000
+    B-C1 (iii)   δ2 : 0.004 ; 0.003 ; 0.005 ; 0.013 ; 1.000
+    B-C2 (iii)   δ1 : 0.005 ; 0.006 ; 0.006 ; 0.007 ; 1.000
+    B-C2 (iii)   δ2 : 0.004 ; 0.003 ; 0.006 ; 0.012 ; 1.000
+    B-C3 (iii)   δ1 : 0.002 ; 0.002 ; 0.011 ; 0.005 ; 0.858
+    B-C3 (iii)   δ2 : 0.002 ; 0.005 ; 0.012 ; 0.005 ; 1.000
+    B-D (iii)    δ1 : 0.004 ; 0.004 ; 0.008 ; 0.003 ; 1.000
+    B-D (iii)    δ2 : 0.001 ; 0.004 ; 0.010 ; 0.005 ; 1.000
+  nominal par test : 0,003 (supériorité) ; 0,006 (équivalence, par côté)
+### 3c. Q2 (Table 6), bornes B4, équivalence E4 : sans objet (u* = 1 : Q2 se confond avec la Table 1)
+### 3d. Table 2 (ii), S5 = 0,02, N = 100 : « sans régression » et « régression avérée »
+  écart nul (frontière +) : borne basse > −S5 aux deux δ 0.797 ; régression avérée 0.000
+  écart −S5 (frontière −) : borne basse > −S5 aux deux δ 0.000 ; régression avérée 0.006
+  pilote : borne basse > −S5 aux deux δ 0.000 ; régression avérée 1.000
+### 3e. Table 5 v4 (I1 et I3 − nul de A), bornes B2, S15 = 0,02, N = 100
+  I1 = S15, I3 − nul = 0 (frontière +) : δ1 P(I1 haute < S15) 0.003, P(I1 basse > S15) 0.013, P(I3−nul basse > 0) 0.007, P(I3−nul haute < 0) 0.002 ; δ2 P(I1 haute < S15) 0.002, P(I1 basse > S15) 0.011, P(I3−nul basse > 0) 0.011, P(I3−nul haute < 0) 0.006
+  I1 = 0, I3 − nul = 0 (frontière −) : δ1 P(I1 haute < S15) 1.000, P(I1 basse > S15) 0.000, P(I3−nul basse > 0) 0.019, P(I3−nul haute < 0) 0.001 ; δ2 P(I1 haute < S15) 1.000, P(I1 basse > S15) 0.000, P(I3−nul basse > 0) 0.010, P(I3−nul haute < 0) 0.003
+  I1 = 0, I3 − nul = 0,1 (nul) : δ1 P(I1 haute < S15) 1.000, P(I1 basse > S15) 0.000, P(I3−nul basse > 0) 1.000, P(I3−nul haute < 0) 0.000 ; δ2 P(I1 haute < S15) 1.000, P(I1 basse > S15) 0.000, P(I3−nul basse > 0) 1.000, P(I3−nul haute < 0) 0.000
+  pilote : δ1 P(I1 haute < S15) 1.000, P(I1 basse > S15) 0.000, P(I3−nul basse > 0) 1.000, P(I3−nul haute < 0) 0.000 ; δ2 P(I1 haute < S15) 1.000, P(I1 basse > S15) 0.000, P(I3−nul basse > 0) 1.000, P(I3−nul haute < 0) 0.000
+  lecture : sous « frontière + », P(I1 haute < S15) est une taille (nominal 0,00625) ; sous I3 − nul = 0, P(I3−nul basse > 0) et P(I3−nul haute < 0) sont des tailles (nominal 0,00625)
+
+## 4. Lecture simulée des Tables 1 à 7 (`lire_tables`, pilote pris pour vérité, 1 000 répétitions, N = 100)
+  table1 : mécanisme exercé 1.000
+  table2 : régression avérée au-delà de la tolérance 1.000
+  table4 : Q1 réfutée 1.000
+  table5 : condition d'application vérifiée (A ne progresse pas aux deux δ) 1.000
+  table7 : Q2 retirée (classe u* = 1 : Q2 se confond avec la Table 1) 1.000
+  table5 par δ : A ne progresse pas, retours au-delà du hasard (cycle) / A ne progresse pas, retours au-delà du hasard (cycle) 1.000
+  table3 B-C1 (iii) : ≈ / B≳X 0.914 B≳X / B≳X 0.066 ≈ / ≈ 0.018 ≈ / B>X 0.002
+  table3 B-C2 (iii) : B≳X / B>X 0.824 B>X / B>X 0.108 B≳X / B≳X 0.050 B>X / B≳X 0.018
+  table3 B-C3 (iii) : X>B / X>B 1.000
+  table3 B-D (iii) : X>B / X>B 1.000
+### 4a. Même lecture à N = 80 et N = 60 (gel v5 § 4.5 ; CM4-01) : tables 1, 4, 5, 7 et classes de la Table 6
+  N = 80 table1 : mécanisme exercé 1.000
+  N = 80 table4 : Q1 réfutée 1.000
+  N = 80 table5 : condition d'application vérifiée (A ne progresse pas aux deux δ) 1.000
+  N = 80 table7 : Q2 retirée (classe u* = 1 : Q2 se confond avec la Table 1) 1.000
+  N = 60 table1 : mécanisme exercé 1.000
+  N = 60 table4 : Q1 réfutée 1.000
+  N = 60 table5 : condition d'application vérifiée (A ne progresse pas aux deux δ) 1.000
+  N = 60 table7 : Q2 retirée (classe u* = 1 : Q2 se confond avec la Table 1) 1.000
+### 4b. P10 (statut de la Table 7) avec l'incertitude du pilote (CM3-06, CM4-06) : part pure et part dégénérée de B_u par δ ~ bêta(k + 1, n − k + 1), puis binomiale à N = 100 ; « non exercée » à un δ si l'une des deux dépasse 0,5
+  sans objet : u* = 1, la Table 7 lit « Q2 retirée » par construction (probabilité 1)
+  (sans objet) P(« non exercée » à au moins un δ) : tirages indépendants entre δ 0.000 ; bornes sans hypothèse d'indépendance (CM4-06) : au moins 0.000, au plus 0.000 ; conditionnel au pilote (section 4) 0.000
+
+## 5. Temps processeur mesuré (`time.process_time`, un fil par processus) et table de temps (CM4-01)
+  par tâche (6 bras) : moyenne 39.24 s ; médiane 38.81 s ; maximum 46.58 s ; écart-type 2.75 s
+  δ1 : moyenne 37.92 s ; maximum 42.34 s
+  δ2 : moyenne 40.57 s ; maximum 46.58 s
+  bras A     : trajectoire 0.98 s ; phase finale 1.50 s
+  bras B     : trajectoire 1.45 s ; phase finale 3.79 s
+  bras C1    : trajectoire 0.00 s ; phase finale 6.70 s
+  bras C2    : trajectoire 0.00 s ; phase finale 6.83 s
+  bras C3    : trajectoire 0.00 s ; phase finale 5.26 s
+  bras D     : trajectoire 6.04 s ; phase finale 6.64 s
+  lancement essai-pilote-arene-melange-v5-detection.json : mur 963.4 s sur 2 processus ; somme des temps processeur 1883.7 s ; efficacité 0.978
+  efficacités mesurées (temps processeur / (mur × 2)) : pilote v3 0.800 ; pilote v4 0.518 ; audit d'essai v4 0.509 ; pilote v5 (essai-pilote-arene-melange-v5-detection.json) 0.978 ; diagnostic v5 0.909 ; audit d'essai v5 0.962
+### 5a. Table de temps de la décision (gel v5 § 4.5) : probabilité d'arrêt sur la garde de délai ; entre crochets le mur médian (s) ; « mélange » = efficacité tirée parmi les efficacités mesurées ci-dessus
+  N    délai    e min  e=0.51  e=0.52  e=0.60  e=0.67  e=0.80  e=0.90  e=1.00  mélange
+  100     9000  0.44   0.000 [7786]  0.000 [7636]  0.000 [6618]  0.000 [5927]  0.000 [4964]  0.000 [4412]  0.000 [3971]  0.000 [4413]
+  100    12600  0.31   0.000 [7786]  0.000 [7636]  0.000 [6618]  0.000 [5926]  0.000 [4964]  0.000 [4412]  0.000 [3971]  0.000 [4430]
+  100    14400  0.27   0.000 [7786]  0.000 [7636]  0.000 [6618]  0.000 [5926]  0.000 [4964]  0.000 [4412]  0.000 [3971]  0.000 [4895]
+   80     9000  0.35   0.000 [6247]  0.000 [6127]  0.000 [5310]  0.000 [4755]  0.000 [3982]  0.000 [3540]  0.000 [3186]  0.000 [3937]
+   80    12600  0.25   0.000 [6247]  0.000 [6127]  0.000 [5310]  0.000 [4755]  0.000 [3982]  0.000 [3540]  0.000 [3186]  0.000 [3542]
+   80    14400  0.22   0.000 [6247]  0.000 [6127]  0.000 [5310]  0.000 [4756]  0.000 [3983]  0.000 [3540]  0.000 [3186]  0.000 [3559]
+   60     9000  0.26   0.000 [4708]  0.000 [4617]  0.000 [4001]  0.000 [3583]  0.000 [3001]  0.000 [2668]  0.000 [2401]  0.000 [2670]
+   60    12600  0.19   0.000 [4708]  0.000 [4617]  0.000 [4002]  0.000 [3583]  0.000 [3001]  0.000 [2667]  0.000 [2401]  0.000 [2672]
+   60    14400  0.16   0.000 [4708]  0.000 [4617]  0.000 [4001]  0.000 [3584]  0.000 [3001]  0.000 [2668]  0.000 [2401]  0.000 [2682]
+  règle du gel v5 § 4.5 : combinaison proposée N = 100, délai 9000 s (probabilité d'arrêt 0.000 à e = 0,51 ; 0.000 au mélange des efficacités mesurées)
+  N = 100 : processeur 7849 s (131 min) ; mur à efficacité 1 3924 s ; efficacité minimale pour 9 000 s 0.44, 12 600 s 0.31, 14 400 s 0.27
+### 5b. Audit de la décision (20 tâches, audit d'essai v5 : 86.9 s par tâche, max 109.2 s) : processeur 1738 s ; mur à efficacité 1 869 s ; efficacité minimale pour 5 400 s 0.16, 7 200 s 0.12
+  délai de l'audit 5400 s : probabilité d'arrêt e=0.51 0.000 ; e=0.60 0.000 ; e=0.80 0.000 ; e=1.00 0.000
+  délai de l'audit 7200 s : probabilité d'arrêt e=0.51 0.000 ; e=0.60 0.000 ; e=0.80 0.000 ; e=1.00 0.000
+  durée totale décision + audit, N = 100, délai 14400 s, e = 0.51 : 2.61 h
+  durée totale décision + audit, N = 100, délai 14400 s, e = 1.00 : 1.33 h
+  durée totale décision + audit, N = 80, délai 12600 s, e = 0.51 : 2.18 h
+  durée totale décision + audit, N = 80, délai 12600 s, e = 1.00 : 1.11 h
+  durée totale décision + audit, N = 100, délai 12600 s, e = 0.51 : 2.61 h
+  durée totale décision + audit, N = 100, délai 12600 s, e = 1.00 : 1.33 h
+  durée totale décision + audit, N = 100, délai 9000 s, e = 0.51 : 2.61 h
+  durée totale décision + audit, N = 100, délai 9000 s, e = 1.00 : 1.33 h
+
+## 6. Plomberie, poids, condition d'application (pilote détection)
+  entraînements non convergés : 0/1248 ; maximum par tâche 0 (S18 = 0.1 par tâche)
+  δ1 attaquant : départs 25962 ; non finis 0 ; statuts SLSQP {'0': 25962} ; itérations max 77 ; réponses à la limite 0
+  δ1 écart de fausses alertes entre bras (par tâche) : moyen 0.0014 ; max 0.0024 ; écart à α des moyennes : A +0.0001 ; B +0.0003 ; C1 +0.0001 ; C2 +0.0001 ; C3 +0.0002 ; D +0.0002
+  δ1 B : poids purs 0.000 ; support moyen 3.50 ; poids maximal moyen 0.447 ; valeur du jeu restreint − V +0.0179 ; plus petit poids maximal parmi les équilibres (moyenne) 0.447 ; pureté forcée 0.000 (parmi les tâches pures : —, n = 0) ; indice du moniteur de poids maximal {'1': 2, '2': 3, '3': 1, '4': 3, '5': 5, '6': 2, '7': 6, '8': 2} ; tâches pures {} ; jeux restreints dégénérés (gain ≤ τ) 0.000 ; gain du mélange moyen 0.0658 ; dominance 0.000
+  δ1 B = C1 au bit 0 tâches ; D = A au bit 0 tâches
+  δ1 V standard − V renforcé : A +0.0001 (max +0.0045) ; B -0.0007 (max +0.0026) ; C1 -0.0001 (max +0.0036) ; C2 -0.0000 (max +0.0040) ; C3 +0.0011 (max +0.0108) ; D +0.0007 (max +0.0124)
+     B-A (iii) : standard +0.1108 ; renforcé +0.1116 ; retenu +0.1116
+     B-C1 (iii) : standard +0.0136 ; renforcé +0.0141 ; retenu +0.0137
+     B-C2 (iii) : standard +0.0236 ; renforcé +0.0242 ; retenu +0.0238
+     B-C3 (iii) : standard -0.1776 ; renforcé -0.1758 ; retenu -0.1758
+     B-D (iii) : standard -0.2259 ; renforcé -0.2246 ; retenu -0.2239
+  δ1 A   coût : défini 1.00 ; censuré 0.00 ; médiane 0.703 ; non monotones 0 ; courbe 0.514 0.429 0.332 0.225 0.111
+  δ1 B   coût : défini 1.00 ; censuré 0.42 ; médiane 0.938 ; non monotones 0 ; courbe 0.461 0.412 0.355 0.294 0.223
+  δ1 C1  coût : défini 1.00 ; censuré 0.04 ; médiane 0.906 ; non monotones 0 ; courbe 0.485 0.425 0.359 0.288 0.209
+  δ1 C2  coût : défini 1.00 ; censuré 0.04 ; médiane 0.875 ; non monotones 0 ; courbe 0.481 0.420 0.352 0.279 0.199
+  δ1 C3  coût : défini 1.00 ; censuré 0.00 ; médiane 0.969 ; non monotones 0 ; courbe 0.879 0.786 0.679 0.553 0.399
+  δ1 D   coût : défini 1.00 ; censuré 0.46 ; médiane 1.000 ; non monotones 0 ; courbe 0.898 0.811 0.709 0.593 0.447
+  δ1 A   cycle : I1 -0.0006 ; I2 (baisse sur les attaques passées) +0.0800 ; I3 0.910 (valeur nulle 0.7345) ; rétention k=-1 0.111 k=0 0.360 k=1 0.290 k=2 0.279 k=3 0.291
+  δ1 B   cycle : I1 +0.0807 ; I2 (baisse sur les attaques passées) +0.0461 ; I3 0.757 (valeur nulle 0.7345) ; rétention k=-1 0.161 k=0 0.299 k=1 0.277 k=2 0.285 k=3 0.268
+  δ1 D   cycle : I1 +0.1630 ; I2 (baisse sur les attaques passées) -0.0298 ; I3 0.389 (valeur nulle 0.7345) ; rétention k=-1 0.370 k=0 0.483 k=1 0.515 k=2 0.526 k=3 0.537
+  δ2 attaquant : départs 26718 ; non finis 0 ; statuts SLSQP {'0': 26718} ; itérations max 91 ; réponses à la limite 0
+  δ2 écart de fausses alertes entre bras (par tâche) : moyen 0.0013 ; max 0.0026 ; écart à α des moyennes : A +0.0000 ; B -0.0001 ; C1 -0.0001 ; C2 -0.0001 ; C3 +0.0001 ; D -0.0003
+  δ2 B : poids purs 0.000 ; support moyen 3.46 ; poids maximal moyen 0.436 ; valeur du jeu restreint − V +0.0227 ; plus petit poids maximal parmi les équilibres (moyenne) 0.436 ; pureté forcée 0.000 (parmi les tâches pures : —, n = 0) ; indice du moniteur de poids maximal {'1': 6, '2': 3, '3': 1, '4': 2, '5': 1, '6': 2, '7': 1, '8': 8} ; tâches pures {} ; jeux restreints dégénérés (gain ≤ τ) 0.000 ; gain du mélange moyen 0.0794 ; dominance 0.000
+  δ2 B = C1 au bit 0 tâches ; D = A au bit 0 tâches
+  δ2 V standard − V renforcé : A -0.0000 (max +0.0050) ; B +0.0006 (max +0.0066) ; C1 +0.0004 (max +0.0045) ; C2 -0.0003 (max +0.0043) ; C3 +0.0011 (max +0.0090) ; D +0.0015 (max +0.0149)
+     B-A (iii) : standard +0.1224 ; renforcé +0.1217 ; retenu +0.1222
+     B-C1 (iii) : standard +0.0193 ; renforcé +0.0190 ; retenu +0.0193
+     B-C2 (iii) : standard +0.0342 ; renforcé +0.0333 ; retenu +0.0338
+     B-C3 (iii) : standard -0.1339 ; renforcé -0.1334 ; retenu -0.1317
+     B-D (iii) : standard -0.1691 ; renforcé -0.1682 ; retenu -0.1668
+  δ2 A   coût : défini 1.00 ; censuré 0.00 ; médiane 0.625 ; non monotones 0 ; courbe 0.520 0.419 0.305 0.175 0.061
+  δ2 B   coût : défini 1.00 ; censuré 0.21 ; médiane 0.906 ; non monotones 0 ; courbe 0.429 0.378 0.322 0.258 0.184
+  δ2 C1  coût : défini 1.00 ; censuré 0.00 ; médiane 0.813 ; non monotones 0 ; courbe 0.479 0.411 0.336 0.254 0.164
+  δ2 C2  coût : défini 1.00 ; censuré 0.00 ; médiane 0.781 ; non monotones 0 ; courbe 0.478 0.407 0.327 0.241 0.150
+  δ2 C3  coût : défini 1.00 ; censuré 0.00 ; médiane 0.875 ; non monotones 0 ; courbe 0.885 0.782 0.656 0.507 0.315
+  δ2 D   coût : défini 1.00 ; censuré 0.00 ; médiane 0.906 ; non monotones 0 ; courbe 0.896 0.796 0.674 0.535 0.350
+  δ2 A   cycle : I1 -0.0024 ; I2 (baisse sur les attaques passées) +0.0966 ; I3 0.944 (valeur nulle 0.7345) ; rétention k=-1 0.058 k=0 0.355 k=1 0.253 k=2 0.267 k=3 0.248
+  δ2 B   cycle : I1 +0.0839 ; I2 (baisse sur les attaques passées) +0.0377 ; I3 0.757 (valeur nulle 0.7345) ; rétention k=-1 0.115 k=0 0.277 k=1 0.243 k=2 0.258 k=3 0.237
+  δ2 D   cycle : I1 +0.1588 ; I2 (baisse sur les attaques passées) -0.0230 ; I3 0.438 (valeur nulle 0.7345) ; rétention k=-1 0.280 k=0 0.405 k=1 0.435 k=2 0.450 k=3 0.464
+  A : nouveauté résiduelle par tour 1.000 0.743 0.414 0.363 0.301 0.256 0.247 0.155 ; (iii) par tour 0.088 0.086 0.076 0.091 0.083 0.083 0.084 0.084
+  B : nouveauté résiduelle par tour 1.000 0.918 0.635 0.538 0.388 0.235 0.187 0.141 ; (iii) par tour 0.088 0.059 0.140 0.142 0.169 0.185 0.202 0.202
+  D : nouveauté résiduelle par tour 1.000 0.800 0.559 0.382 0.277 0.255 0.198 0.187 ; (iii) par tour 0.087 0.159 0.333 0.399 0.405 0.404 0.407 0.407
+
+## 7. S10 v5 : bandes moyenne pilote ± k × écart-type × √(1/n_pilote + 1/N), par bras et par δ (N = 100)
+  taux simulé de fausse alerte sur les 12 bandes (5000 paires pilote/décision tirées par tâches entières du pilote) : k = 3 0.049 (pour mémoire) ; k = 4 0.010 ; k = 5 0.003
+  k retenu par la règle du gel v5 (§ 4.3 : k = 4, repli k = 5 si le taux dépasse 0,05) : k = 4
+  δ1 : A [0.0348 ; 0.1880] ; B [0.1822 ; 0.2638] ; C1 [0.1680 ; 0.2504] ; C2 [0.1554 ; 0.2429] ; C3 [0.3733 ; 0.4242] ; D [0.4282 ; 0.4655]
+  δ2 : A [0.0078 ; 0.1150] ; B [0.1558 ; 0.2114] ; C1 [0.1307 ; 0.1978] ; C2 [0.1041 ; 0.1954] ; C3 [0.2912 ; 0.3394] ; D [0.3332 ; 0.3676]
+
+## 8. Audit d'attaquant indépendant sur le pilote (racine d'essai ; non opposable)
+fichier : /home/claude/controle-ia-travail/brouillons/canal-reprise-releve-v1/envois/pole-scientifique-automatique-v1/arene-melange-equilibre-v1/audit-essai-arene-melange-v5.json ; pilote audité 116084f83fc95d2c9de08a3af97f89667474ff3138d000cd93384fa648fbfab6 ; drapeau (i) False ; artefact (i ou ii, marges 0,02) : sur l'analyse du fichier audité False, sur l'analyse du pilote entier False
+  δ1 A I1   : écart moyen +0.0003 ; erreur-type 0.0006 ; t × é.-t. 0.0026 ; écart maximal par tâche 0.0026 ; n 5 ; (i) False ; significatif False
+  δ1 A I3   : écart moyen -0.0333 ; erreur-type 0.0333 ; t × é.-t. 0.1535 ; écart maximal par tâche 0.1667 ; n 5 ; (i) False ; significatif False
+  δ1 B-A    : écart moyen +0.0005 ; erreur-type 0.0004 ; t × é.-t. 0.0020 ; écart maximal par tâche 0.0013 ; n 5 ; (i) False ; significatif False
+  δ1 B-C3   : écart moyen +0.0009 ; erreur-type 0.0004 ; t × é.-t. 0.0017 ; écart maximal par tâche 0.0018 ; n 5 ; (i) False ; significatif False
+  δ1 B-D    : écart moyen +0.0022 ; erreur-type 0.0019 ; t × é.-t. 0.0086 ; écart maximal par tâche 0.0095 ; n 5 ; (i) False ; significatif False
+  δ1 B-A    : classe exercé → exercé ; (ii) False
+  δ1 B-C3   : classe X>B → X>B ; (ii) False
+  δ1 B-D    : classe X>B → X>B ; (ii) False
+  δ1 Table 5 : A ne progresse pas, retours au-delà du hasard (cycle) → A ne progresse pas, retours au-delà du hasard (cycle) ; (ii) False
+  δ2 A I1   : écart moyen -0.0005 ; erreur-type 0.0005 ; t × é.-t. 0.0023 ; écart maximal par tâche 0.0023 ; n 5 ; (i) False ; significatif False
+  δ2 A I3   : écart moyen +0.0333 ; erreur-type 0.0333 ; t × é.-t. 0.1535 ; écart maximal par tâche 0.1667 ; n 5 ; (i) False ; significatif False
+  δ2 B-A    : écart moyen -0.0009 ; erreur-type 0.0005 ; t × é.-t. 0.0024 ; écart maximal par tâche 0.0021 ; n 5 ; (i) False ; significatif False
+  δ2 B-C3   : écart moyen -0.0012 ; erreur-type 0.0009 ; t × é.-t. 0.0041 ; écart maximal par tâche 0.0038 ; n 5 ; (i) False ; significatif False
+  δ2 B-D    : écart moyen +0.0003 ; erreur-type 0.0011 ; t × é.-t. 0.0051 ; écart maximal par tâche 0.0043 ; n 5 ; (i) False ; significatif False
+  δ2 B-A    : classe exercé → exercé ; (ii) False
+  δ2 B-C3   : classe X>B → X>B ; (ii) False
+  δ2 B-D    : classe X>B → X>B ; (ii) False
+  δ2 Table 5 : A ne progresse pas, retours au-delà du hasard (cycle) → A ne progresse pas, retours au-delà du hasard (cycle) ; (ii) False
+  choix de l'audit par bras : {'A': {'lourd': 2, 'source': 6, 'evolution_depuis_lourd': 2}, 'B': {'source': 3, 'evolution_depuis_standard': 2, 'lourd': 4, 'evolution_depuis_lourd': 1}, 'C3': {'evolution_depuis_lourd': 1, 'lourd': 4, 'source': 4, 'evolution_depuis_standard': 1}, 'D': {'source': 5, 'evolution_depuis_standard': 4, 'evolution_depuis_lourd': 1}}
+  tours de A : (iii) baissé par la réponse renforcée dans 41 tours sur 80 ; baisse moyenne 0.0012
+  temps : mur 451.7 s ; processeur par tâche auditée 86.9 s (max 109.2) ; efficacité 0.96 ; audit de la décision (2 × K = 20 tâches) sur 2 cœurs : ≈ 14.5 min à efficacité 1, 15.1 min à l'efficacité mesurée
+### 8b. Critère S17 v5 : taux de fausse alerte et puissance simulés
+   décision simulée : N = 100 instances tirées du pilote (section 3, « pilote N=100 ») ; audit simulé : K = 10 écarts par δ tirés avec remise parmi ceux de l'audit d'essai (5 par δ), pour chaque paire et pour I1, I3 de A
+  fausse alerte (sur les 8 tests : 3 paires + Table 5, aux deux δ), t(K − 1 ; 0.995) — total (i seul ; ii seul) : écarts centrés (aucun artefact : définition de la fausse alerte) 0.000 (0.000 ; 0.000) ; bruit gaussien d'écart-type double, centré 0.001 (0.000 ; 0.001) ; écarts bruts (amélioration systématique observée reconduite : ce n'est plus une fausse alerte au sens strict) 0.000 (0.000 ; 0.000)
+  repli du gel v4 § 3.2 (reconduit au gel v5 § 4.4) non déclenché (taux centré ≤ 0,05)
+  puissance (écart moyen ajouté à B-C3 aux deux δ, autres paires centrées) : écart 0.005 : 0.000 ; écart 0.010 : 0.753 ; écart 0.015 : 1.000 ; écart 0.020 : 1.000
+  puissance (écart moyen ajouté à B-D aux deux δ, autres paires centrées) : écart 0.005 : 0.000 ; écart 0.010 : 0.715 ; écart 0.015 : 1.000 ; écart 0.020 : 1.000
+
+## 9. Valeur nulle de I3 par simulation (déplacements tirés au hasard, dimension 36, T = 8)
+  moyenne simulée 0.7337 (erreur-type 0.0012) ; formule 0.7345

@@ -1,0 +1,94 @@
+# Journal des exécutions — arène mélange d'équilibre — code v5 (rédacteur neuf Opus 5.5, lignée conv-audit)
+# Le rédacteur n'a écrit aucun des brouillons 1 à 4, aucun code v1 à v4, aucune contre-lecture ni vérification de ce pilote.
+# Horodatages relevés par `date -u` au moment des étapes. Aucune racine de décision ; rien sous donnees/ ; rien lu ni
+# écrit dans arene-extension-familles-v1/ ; aucun fichier existant modifié ; aucun .sha256 ; aucun commit ; aucun git fetch ;
+# aucun réseau ; aucun modèle. Scripts lancés par `python3 -I` depuis un dossier temporaire vide, chemins absolus.
+
+[2026-11-01T09:05:59Z] Étape 0 — arrivée. Tous les compagnons du dossier vérifiés (`sha256sum -c`, essais depuis essais/) :
+  conformes. Brouillon 4 sans compagnon, empreinte calculée 305911b7ab1945d7607377ede9c8cbfcf2257834bca6d6aadcf7c19be41f8160
+  (conforme à la consigne ; CM4-07). Lus : vérification courte (28ab322f…, en entier), brouillon 4, gel v4, code v4, essais
+  v4, LISEZMOI v4, journal v4b, contre-lecture 3 (CM3-02), R-739, R-1031, R-1034, question v1 (671c613b…). Lus avant le
+  gel, pour budgéter seulement : les temps processeur par bras du pilote v4 (déclaré au gel v5).
+  Racines relevées dans le dossier et le dépôt (hors donnees/ et arene-extension-familles-v1/) : v1 à v3 (25 valeurs),
+  v4 (20264101/102, 201/202, 211/212, 301/302/303, 401), 20264555 et 20264777 (essais v4), bornes 20264001/20264999 ;
+  aucune racine 20264xxx ailleurs dans le dépôt que les bornes de plage (registre, passation, consigne).
+
+[2026-11-01T09:14:23Z] Étape 1 — gel v5 écrit AVANT toute ligne de code v5 et tout calcul :
+  gel-conception-arene-melange-v5.md  b55689cbddb1699ac288deb1b8b808e4d9e5d9fe2f827e2b9e827bc56017d2a0
+
+[2026-11-01T09:16:58Z] Étape 2 — code v5 commencé par copie de arene_melange_v4.py (nouveau fichier ; le v4 n'est pas touché).
+
+[2026-11-01T09:22:44Z] Étape 3 — premier calcul v5 : jeux témoins (racine 20264611), `arene_melange_v5.py temoins`.
+  Témoin sain : C-T tenue (poids 0,334/0,334/0,333 ; valeur 0,3182 ; v* 0,3176). Témoin artefact : NON reconnu par la
+  garde du gel v5 (pureté forcée) : plus petit poids maximal 0,9516, poids rendus (0,952 ; 0,048), gain du mélange 0,0026.
+  Inspection des deux matrices (09:23). Prédiction du gel « artefact : pureté forcée détectée (0,85) » : réfutée.
+
+[2026-11-01T09:23:52Z] Étape 4 — additif b écrit, après les seuls jeux témoins, avant tout calcul sur l'arène :
+  gel-conception-arene-melange-v5b.md  a91d29fd748f29d14f3c839594d434569d3a3f6284dac39e856711045601e391
+  (jeu dégénéré = gain du mélange ≤ τ = 0,01 ; règle de u* sur g_u au lieu de f_u ; Table 7 réécrite). Code mis à jour,
+  empreinte de l'additif épinglée ; témoins rejoués : sain tenu, artefact reconnu (gain 0,0026 ≤ 0,01).
+  Essai de fumée (racine des essais 20264641/642, configuration réduite) : la garde S18 s'appliquait à chaque sous-appel du
+  diagnostic (18 entraînements) ; corrigé avant tout diagnostic : S18 appliquée à la tâche de diagnostic entière.
+
+[2026-11-01T09:28:29Z] Étape 5 — diagnostic de la pureté lancé (charge 0,48), code
+  1cdf4a58ad06630af39580be39c1d8ba48d2ca2a34befb92e10fd169899543a9 :
+  python3 -I -B arene_melange_v5.py diagnostic --instances 0:16 --sortie diagnostic-purete-arene-melange-v5.json \
+     --processus 2 --pids diagnostic-purete-arene-melange-v5-pids.txt      (PYTHONPATH=src ; PID 2084 2085)
+  Pendant le diagnostic (09:30–09:33), un sous-ensemble rapide des essais v5 a tourné à basse priorité (nice 19) :
+  84 réussis ; l'efficacité du diagnostic en est légèrement abaissée (déclaré).
+[2026-11-01T10:00:28Z] Diagnostic terminé : mur 1 909,8 s ; processeur 3 473,2 s ; efficacité 0,909 ; 8 non-convergences sur
+  2 880 entraînements. Règle (gel v5 § 2, additif b § 2.3) : u = 2 échoue à δ 1,4 (g = 0,312 > 0,25) ; u* = 1.
+  diagnostic-purete-arene-melange-v5.json       19d9acfb01c324ff34777d7dfa3b50052ec6a27ef271a8fad351cf1bf209d367
+  diagnostic-purete-arene-melange-v5-pids.txt   6998d3f460047c8c8a6df5fc05c191edcb92eac7624e2233d07977164f7471d3
+  Commande `orphelins` : aucun processus de travail consigné ne tourne.
+
+[2026-11-01T10:02:27Z] Étape 6 — ligne gelée : `UNITES_Q2_V5 = None` → `UNITES_Q2_V5 = 1` (diff vérifié : cette seule ligne) ;
+  code 1cdf4a58… → 2fe618698ffca326984d6d7c2a00accef673a9df71d625cf64128c803109842e.
+  Puis branche « u* = 1 » écrite au gel v5 § 2 et § 6 (Q2 se confond avec la Table 1) : `bras_decision`, `bras_audit` (les
+  bras de Q2 ne sont calculés que si u ≥ 2), paires d'audit selon les bras présents, Table 7 « Q2 retirée ». Aucun
+  chemin de calcul d'un bras changé : une tâche du diagnostic (instance 3, δ 2, u = 2) recalculée par le code final est
+  identique au bit (10:03:54) ; essai `test_bras_v4_inchanges` réussi.
+[2026-11-01T10:03:59Z → 10:06:46Z] Essais v5 complets : 111 réussis, 4 échecs (2 attendus : le brouillon 5 n'existait pas
+  encore ; 1 erreur de syntaxe dans un essai ; 1 essai à deux bras arrêté par S18 sur la racine des essais v5, une
+  non-convergence sur 8 entraînements). Les deux essais corrigés (le second relâche S18 dans cet essai seulement).
+  Code du pilote : 71df9a49ba2594837cb38485a50de5b0f25fd210c9f56838f35fdf634c78d575 (aucun changement ensuite).
+
+[2026-11-01T10:08:04Z] Étape 7 — pilote v5 lancé (charge 0,80 : fin des essais), 24 instances × 2 δ, bras de la décision à
+  u* = 1 (A, B, C1, C2, C3, D) :
+  python3 -I -B arene_melange_v5.py essai --instances 0:24 --sortie essai-pilote-arene-melange-v5-detection.json \
+     --processus 2 --pids essai-pilote-arene-melange-v5-pids.txt            (PID 8160 8161)
+[2026-11-01T10:24:11Z] Pilote terminé : mur 963,4 s ; processeur 1 883,7 s (39,2 s par tâche, maximum 46,6 s) ;
+  efficacité 0,978 ; 0 non-convergence sur 1 248.
+  essai-pilote-arene-melange-v5-detection.json  116084f83fc95d2c9de08a3af97f89667474ff3138d000cd93384fa648fbfab6
+  essai-pilote-arene-melange-v5-pids.txt        2ad2727c6386737b5df2dbdcc906287dc2f83011627a113882c8f5e53b376f32
+
+[2026-11-01T10:24:24Z] Étape 8 — audit d'essai v5 lancé (charge 1,50 : fin du pilote), instances 0 à 4, deux δ, bras A, B, C3, D :
+  python3 -I -B arene_melange_v5.py audit-essai --pilote essai-pilote-arene-melange-v5-detection.json --instances 0:5 \
+     --sortie audit-essai-arene-melange-v5.json --processus 2 --pids audit-essai-arene-melange-v5-pids.txt   (PID 8499 8500)
+[2026-11-01T10:31:58Z] Audit terminé : mur 451,7 s ; processeur 868,8 s (86,9 s par tâche, max 109,2) ; efficacité 0,962 ;
+  drapeau (i) faux ; artefact faux.
+  audit-essai-arene-melange-v5.json            2f1c3931c4d7c394632af871e95096021581b8e59e6a742c5d92d861fe78fa33
+  audit-essai-arene-melange-v5-pids.txt        28d551c040f8c7e9780195690a6d26fdcf155de445d859c3f3c6afd138eb3be3
+  Commande `orphelins` sur les trois fichiers de PID : aucun processus de travail consigné ne tourne.
+
+[2026-11-01T10:32:16Z → 10:35:41Z] Étape 9 — calcul de puissance v5 (racine 20264651), en même temps que les essais v1 à v4
+  sur l'autre cœur :
+  python3 -I -B calcul-puissance-arene-melange-v5.py essai-pilote-arene-melange-v5-detection.json \
+     --audit audit-essai-arene-melange-v5.json --diagnostic diagnostic-purete-arene-melange-v5.json
+  Sortie copiée sous un nom neuf : calcul-puissance-arene-melange-v5-sortie.txt
+  78ff081970a139b814e9a1c57e5d723a88d3d90cb9519c41a7b683c730f9b423  (M5)
+  Lus : S10 k = 4 → 0,010 (repli k = 5 non déclenché) ; audit : fausse alerte 0,000, repli non déclenché ; table de temps :
+  N = 100, 9 000 s tient jusqu'à e = 0,44 (proposition de la règle du gel v5 § 4.5).
+  Essais v1 : 25 réussis ; v2 : 44 réussis, 1 échec connu (CM2-01) ; v3 : 57 réussis ; v4 : 97 réussis.
+
+[2026-11-01T10:38Z → 10:45:21Z] Étape 10 — brouillon 5 écrit (assemblé par script depuis des parties rédigées pendant les
+  calculs, bloc d'identité recopié de `arene_melange_v5.py identite`) ; une retouche de texte à 10:45 (Table 1, ligne 3 :
+  « tous les bras calculés » au lieu de « neuf bras »).
+  preenregistrement-arene-melange-equilibre-v1-brouillon5.md  70655e34391c1c8478f2cf80c8cd59a883ae964272960b7da74c3ce058ad7620
+  Validateur `problemes` : « section vide ou à remplir : Seuil » ; « section vide ou à remplir : Contre-lecture »
+  (attendu ; 19 marqueurs). Essais v5 complets (10:42–10:45) : 115 réussis ; les 3 essais qui lisent le brouillon 5,
+  rejoués après la retouche : réussis.
+
+[2026-11-01T10:46Z] Étape 11 — LISEZMOI v5 écrit ; ce journal clos. Consommé : ≈ 58 min de processeur (diagnostic),
+  ≈ 31 min (pilote), ≈ 14 min (audit d'essai), ≈ 4 min (puissance), ≈ 12 min (essais). Aucune instance de calcul ; aucune
+  dépense. Fichiers non suivis laissés dans le dépôt : les seuls fichiers v5 de ce dossier (git status vérifié).

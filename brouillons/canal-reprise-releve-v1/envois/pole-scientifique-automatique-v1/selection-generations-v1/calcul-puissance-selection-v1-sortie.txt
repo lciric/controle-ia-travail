@@ -1,0 +1,149 @@
+# calcul-puissance-selection-v1 — sortie
+python 3.13.18 ; numpy 2.5.3 ; entropie SeedSequence = SHA-256(« calcul-puissance-selection-v1 »)
+α = 0.05 ; réservoirs de 2000 trajectoires ; épreuve ≤ 1800 épisodes ; générations simulées par case : 2000
+
+## A. Puissance par fiche vraie (P(sup log W ≥ log(m/α)) à n épisodes d'épreuve) ; m = 1 : seuil par fiche
+Colonnes : effet β (log-rapport de cotes par écart type) ; loi engagée ; numérateur ; m ; puissance pour n = 100, 150, 200, 300, 450, 600, 900, 1200, 1800 ; n requis pour 0,8
+β=0.3 | exacte        | plein     | m= 1 | 0.00 0.01 0.04 0.16 0.38 0.58 0.81 0.91 0.99 | n80=886
+β=0.3 | exacte        | plein     | m=20 | 0.00 0.00 0.00 0.01 0.09 0.24 0.57 0.77 0.95 | n80=1260
+β=0.3 | exacte        | plein     | m=30 | 0.00 0.00 0.00 0.01 0.07 0.21 0.53 0.74 0.94 | n80=1297
+β=0.3 | exacte        | plein     | m=40 | 0.00 0.00 0.00 0.01 0.06 0.18 0.50 0.73 0.93 | n80=1331
+β=0.3 | exacte        | fractions | m= 1 | 0.00 0.00 0.01 0.07 0.25 0.46 0.75 0.89 0.99 | n80=989
+β=0.3 | exacte        | fractions | m=20 | 0.00 0.00 0.00 0.00 0.04 0.14 0.46 0.71 0.94 | n80=1347
+β=0.3 | exacte        | fractions | m=30 | 0.00 0.00 0.00 0.00 0.03 0.12 0.42 0.68 0.93 | n80=1393
+β=0.3 | exacte        | fractions | m=40 | 0.00 0.00 0.00 0.00 0.02 0.10 0.39 0.66 0.92 | n80=1435
+β=0.3 | surestimée ×2 | plein     | m= 1 | 0.03 0.08 0.12 0.20 0.30 0.36 0.45 0.52 0.59 | n80=—
+β=0.3 | surestimée ×2 | plein     | m=20 | 0.00 0.01 0.03 0.06 0.12 0.18 0.27 0.34 0.44 | n80=—
+β=0.3 | surestimée ×2 | plein     | m=30 | 0.00 0.01 0.02 0.05 0.11 0.16 0.25 0.32 0.42 | n80=—
+β=0.3 | surestimée ×2 | plein     | m=40 | 0.00 0.01 0.02 0.04 0.10 0.15 0.23 0.30 0.41 | n80=—
+β=0.3 | surestimée ×2 | fractions | m= 1 | 0.01 0.04 0.08 0.16 0.30 0.43 0.68 0.84 0.97 | n80=1113
+β=0.3 | surestimée ×2 | fractions | m=20 | 0.00 0.00 0.01 0.03 0.10 0.20 0.41 0.64 0.90 | n80=1485
+β=0.3 | surestimée ×2 | fractions | m=30 | 0.00 0.00 0.01 0.02 0.09 0.17 0.38 0.60 0.89 | n80=1525
+β=0.3 | surestimée ×2 | fractions | m=40 | 0.00 0.00 0.01 0.02 0.07 0.16 0.36 0.59 0.88 | n80=1567
+β=0.6 | exacte        | plein     | m= 1 | 0.31 0.59 0.76 0.93 0.99 1.00 1.00 1.00 1.00 | n80=215
+β=0.6 | exacte        | plein     | m=20 | 0.05 0.23 0.45 0.77 0.95 0.99 1.00 1.00 1.00 | n80=312
+β=0.6 | exacte        | plein     | m=30 | 0.03 0.19 0.41 0.74 0.94 0.98 1.00 1.00 1.00 | n80=330
+β=0.6 | exacte        | plein     | m=40 | 0.03 0.17 0.39 0.71 0.93 0.98 1.00 1.00 1.00 | n80=337
+β=0.6 | exacte        | fractions | m= 1 | 0.19 0.46 0.68 0.91 0.99 1.00 1.00 1.00 1.00 | n80=238
+β=0.6 | exacte        | fractions | m=20 | 0.02 0.13 0.34 0.69 0.94 0.99 1.00 1.00 1.00 | n80=343
+β=0.6 | exacte        | fractions | m=30 | 0.01 0.10 0.30 0.66 0.93 0.99 1.00 1.00 1.00 | n80=356
+β=0.6 | exacte        | fractions | m=40 | 0.01 0.09 0.27 0.64 0.92 0.99 1.00 1.00 1.00 | n80=363
+β=0.6 | surestimée ×2 | plein     | m= 1 | 0.34 0.43 0.51 0.61 0.71 0.76 0.82 0.87 0.91 | n80=796
+β=0.6 | surestimée ×2 | plein     | m=20 | 0.12 0.23 0.30 0.42 0.54 0.62 0.72 0.78 0.85 | n80=1310
+β=0.6 | surestimée ×2 | plein     | m=30 | 0.11 0.21 0.27 0.39 0.52 0.60 0.70 0.77 0.85 | n80=1367
+β=0.6 | surestimée ×2 | plein     | m=40 | 0.09 0.19 0.25 0.36 0.50 0.58 0.69 0.76 0.84 | n80=1414
+β=0.6 | surestimée ×2 | fractions | m= 1 | 0.30 0.47 0.65 0.86 0.97 1.00 1.00 1.00 1.00 | n80=265
+β=0.6 | surestimée ×2 | fractions | m=20 | 0.08 0.21 0.35 0.66 0.92 0.99 1.00 1.00 1.00 | n80=365
+β=0.6 | surestimée ×2 | fractions | m=30 | 0.07 0.18 0.31 0.62 0.90 0.98 1.00 1.00 1.00 | n80=380
+β=0.6 | surestimée ×2 | fractions | m=40 | 0.06 0.16 0.29 0.59 0.89 0.98 1.00 1.00 1.00 | n80=387
+β=0.9 | exacte        | plein     | m= 1 | 0.79 0.94 0.98 1.00 1.00 1.00 1.00 1.00 1.00 | n80=102
+β=0.9 | exacte        | plein     | m=20 | 0.45 0.78 0.93 0.99 1.00 1.00 1.00 1.00 1.00 | n80=155
+β=0.9 | exacte        | plein     | m=30 | 0.41 0.76 0.92 0.99 1.00 1.00 1.00 1.00 1.00 | n80=159
+β=0.9 | exacte        | plein     | m=40 | 0.38 0.73 0.91 0.99 1.00 1.00 1.00 1.00 1.00 | n80=164
+β=0.9 | exacte        | fractions | m= 1 | 0.70 0.92 0.99 1.00 1.00 1.00 1.00 1.00 1.00 | n80=115
+β=0.9 | exacte        | fractions | m=20 | 0.33 0.72 0.91 1.00 1.00 1.00 1.00 1.00 1.00 | n80=167
+β=0.9 | exacte        | fractions | m=30 | 0.28 0.68 0.90 1.00 1.00 1.00 1.00 1.00 1.00 | n80=174
+β=0.9 | exacte        | fractions | m=40 | 0.24 0.65 0.88 0.99 1.00 1.00 1.00 1.00 1.00 | n80=178
+β=0.9 | surestimée ×2 | plein     | m= 1 | 0.56 0.67 0.74 0.82 0.89 0.93 0.96 0.97 0.99 | n80=262
+β=0.9 | surestimée ×2 | plein     | m=20 | 0.32 0.48 0.58 0.70 0.81 0.86 0.92 0.95 0.98 | n80=438
+β=0.9 | surestimée ×2 | plein     | m=30 | 0.30 0.45 0.55 0.69 0.79 0.85 0.92 0.95 0.98 | n80=464
+β=0.9 | surestimée ×2 | plein     | m=40 | 0.28 0.43 0.54 0.67 0.78 0.84 0.91 0.94 0.98 | n80=481
+β=0.9 | surestimée ×2 | fractions | m= 1 | 0.68 0.88 0.97 1.00 1.00 1.00 1.00 1.00 1.00 | n80=126
+β=0.9 | surestimée ×2 | fractions | m=20 | 0.36 0.68 0.87 0.99 1.00 1.00 1.00 1.00 1.00 | n80=178
+β=0.9 | surestimée ×2 | fractions | m=30 | 0.32 0.65 0.85 0.99 1.00 1.00 1.00 1.00 1.00 | n80=186
+β=0.9 | surestimée ×2 | fractions | m=40 | 0.29 0.62 0.84 0.98 1.00 1.00 1.00 1.00 1.00 | n80=190
+
+Contrôles du calcul (cas sains : la garantie de Ville doit tenir)
+- fiche nulle affirmant β=0.3, numérateur plein : P(sup log W ≥ log 1/α sur 1800 épisodes) = 0.0000 (garantie : ≤ 0.05)
+- fiche nulle affirmant β=0.3, numérateur fractions : P(sup log W ≥ log 1/α sur 1800 épisodes) = 0.0000 (garantie : ≤ 0.05)
+- fiche nulle affirmant β=0.6, numérateur plein : P(sup log W ≥ log 1/α sur 1800 épisodes) = 0.0025 (garantie : ≤ 0.05)
+- fiche nulle affirmant β=0.6, numérateur fractions : P(sup log W ≥ log 1/α sur 1800 épisodes) = 0.0020 (garantie : ≤ 0.05)
+- fiche nulle affirmant β=0.9, numérateur plein : P(sup log W ≥ log 1/α sur 1800 épisodes) = 0.0020 (garantie : ≤ 0.05)
+- fiche nulle affirmant β=0.9, numérateur fractions : P(sup log W ≥ log 1/α sur 1800 épisodes) = 0.0020 (garantie : ≤ 0.05)
+
+## A bis. Approximation du pont (n ≈ 2·log(m/α) / I(Y;Z)) contre n requis simulé (loi exacte, numérateur plein)
+β=0.3 | I = 0.0109 nat/épisode | m= 1 | pont ≈ 551 | simulé (0,8) = 886
+β=0.3 | I = 0.0109 nat/épisode | m=17 | pont ≈ 1071 | simulé (0,8) = 1236
+β=0.3 | I = 0.0109 nat/épisode | m=30 | pont ≈ 1176 | simulé (0,8) = 1297
+β=0.6 | I = 0.0399 nat/épisode | m= 1 | pont ≈ 151 | simulé (0,8) = 215
+β=0.6 | I = 0.0399 nat/épisode | m=17 | pont ≈ 293 | simulé (0,8) = 307
+β=0.6 | I = 0.0399 nat/épisode | m=30 | pont ≈ 321 | simulé (0,8) = 330
+β=0.9 | I = 0.0794 nat/épisode | m= 1 | pont ≈ 76 | simulé (0,8) = 102
+β=0.9 | I = 0.0794 nat/épisode | m=17 | pont ≈ 147 | simulé (0,8) = 152
+β=0.9 | I = 0.0794 nat/épisode | m=30 | pont ≈ 162 | simulé (0,8) = 159
+
+## B. Coût en données du renouvellement (m = 30 fiches jugées par génération, puissance 0,8 par fiche vraie, k = 1)
+Transcription qui fuit d'une génération à la suivante si l'épreuve est réutilisée : ensemble des retenues (≤ 3 sur 30) → |T| = 4526 (log = 8.42 nat) ; avec l'aptitude en 3 niveaux → |T| = 113626 (log = 11.64 nat). Seuil corrigé après r réutilisations : log(m/α) + r·log|T| (borne d'union sur les transcriptions possibles).
+β=0.3 | plein     | tranche fraîche : n80 = 1297 par génération, 3 générations = 3891 épisodes (≈ 182.9 USD illustratif) | épreuve réutilisée (retenues seules) : génération 2 n80 = —, génération 3 n80 = — → tranche unique ≥ — épisodes (≈ — USD) | génération 2 avec aptitude en 3 niveaux : n80 = —
+β=0.3 | fractions | tranche fraîche : n80 = 1393 par génération, 3 générations = 4179 épisodes (≈ 196.4 USD illustratif) | épreuve réutilisée (retenues seules) : génération 2 n80 = —, génération 3 n80 = — → tranche unique ≥ — épisodes (≈ — USD) | génération 2 avec aptitude en 3 niveaux : n80 = —
+β=0.6 | plein     | tranche fraîche : n80 = 330 par génération, 3 générations = 990 épisodes (≈ 46.5 USD illustratif) | épreuve réutilisée (retenues seules) : génération 2 n80 = 578, génération 3 n80 = 826 → tranche unique ≥ 826 épisodes (≈ 38.8 USD) | génération 2 avec aptitude en 3 niveaux : n80 = 673
+β=0.6 | fractions | tranche fraîche : n80 = 356 par génération, 3 générations = 1068 épisodes (≈ 50.2 USD illustratif) | épreuve réutilisée (retenues seules) : génération 2 n80 = 608, génération 3 n80 = 857 → tranche unique ≥ 857 épisodes (≈ 40.3 USD) | génération 2 avec aptitude en 3 niveaux : n80 = 703
+β=0.9 | plein     | tranche fraîche : n80 = 159 par génération, 3 générations = 477 épisodes (≈ 22.4 USD illustratif) | épreuve réutilisée (retenues seules) : génération 2 n80 = 286, génération 3 n80 = 411 → tranche unique ≥ 411 épisodes (≈ 19.3 USD) | génération 2 avec aptitude en 3 niveaux : n80 = 333
+β=0.9 | fractions | tranche fraîche : n80 = 174 par génération, 3 générations = 522 épisodes (≈ 24.5 USD illustratif) | épreuve réutilisée (retenues seules) : génération 2 n80 = 300, génération 3 n80 = 427 → tranche unique ≥ 427 épisodes (≈ 20.1 USD) | génération 2 avec aptitude en 3 niveaux : n80 = 351
+
+## C. Génération de m fiches dont m1 vraies (β = 0,6, loi exacte, numérateur plein) : puissance moyenne (part des vraies retenues), P(au moins une vraie retenue), taux de fausses découvertes moyen
+Règles : « par fiche » = seuil 1/α sans multiplicité (aucun contrôle) ; « e-BH α » = règle codée, au niveau α.
+m=20 m1=1 n=300 | par fiche : 0.94 ; 0.94 ; 0.029 | e-BH 0.05 : 0.79 ; 0.79 ; 0.006 | e-BH 0.10 : 0.84 ; 0.84 ; 0.005 | e-BH 0.20 : 0.87 ; 0.87 ; 0.005
+m=20 m1=1 n=600 | par fiche : 1.00 ; 1.00 ; 0.027 | e-BH 0.05 : 0.99 ; 0.99 ; 0.005 | e-BH 0.10 : 0.99 ; 0.99 ; 0.005 | e-BH 0.20 : 0.99 ; 0.99 ; 0.005
+m=20 m1=1 n=1200 | par fiche : 1.00 ; 1.00 ; 0.026 | e-BH 0.05 : 1.00 ; 1.00 ; 0.005 | e-BH 0.10 : 1.00 ; 1.00 ; 0.005 | e-BH 0.20 : 1.00 ; 1.00 ; 0.005
+m=20 m1=2 n=300 | par fiche : 0.93 ; 1.00 ; 0.016 | e-BH 0.05 : 0.79 ; 0.96 ; 0.004 | e-BH 0.10 : 0.83 ; 0.97 ; 0.004 | e-BH 0.20 : 0.87 ; 0.98 ; 0.004
+m=20 m1=2 n=600 | par fiche : 1.00 ; 1.00 ; 0.018 | e-BH 0.05 : 0.99 ; 1.00 ; 0.004 | e-BH 0.10 : 0.99 ; 1.00 ; 0.003 | e-BH 0.20 : 0.99 ; 1.00 ; 0.003
+m=20 m1=2 n=1200 | par fiche : 1.00 ; 1.00 ; 0.012 | e-BH 0.05 : 1.00 ; 1.00 ; 0.002 | e-BH 0.10 : 1.00 ; 1.00 ; 0.002 | e-BH 0.20 : 1.00 ; 1.00 ; 0.002
+m=20 m1=4 n=300 | par fiche : 0.92 ; 1.00 ; 0.008 | e-BH 0.05 : 0.80 ; 1.00 ; 0.002 | e-BH 0.10 : 0.84 ; 1.00 ; 0.002 | e-BH 0.20 : 0.87 ; 1.00 ; 0.002
+m=20 m1=4 n=600 | par fiche : 1.00 ; 1.00 ; 0.007 | e-BH 0.05 : 0.99 ; 1.00 ; 0.001 | e-BH 0.10 : 0.99 ; 1.00 ; 0.001 | e-BH 0.20 : 0.99 ; 1.00 ; 0.001
+m=20 m1=4 n=1200 | par fiche : 1.00 ; 1.00 ; 0.009 | e-BH 0.05 : 1.00 ; 1.00 ; 0.003 | e-BH 0.10 : 1.00 ; 1.00 ; 0.003 | e-BH 0.20 : 1.00 ; 1.00 ; 0.003
+m=30 m1=2 n=300 | par fiche : 0.93 ; 0.99 ; 0.023 | e-BH 0.05 : 0.76 ; 0.93 ; 0.000 | e-BH 0.10 : 0.81 ; 0.96 ; 0.005 | e-BH 0.20 : 0.85 ; 0.97 ; 0.005
+m=30 m1=2 n=600 | par fiche : 1.00 ; 1.00 ; 0.019 | e-BH 0.05 : 0.99 ; 1.00 ; 0.000 | e-BH 0.10 : 0.99 ; 1.00 ; 0.004 | e-BH 0.20 : 0.99 ; 1.00 ; 0.004
+m=30 m1=2 n=1200 | par fiche : 1.00 ; 1.00 ; 0.023 | e-BH 0.05 : 1.00 ; 1.00 ; 0.000 | e-BH 0.10 : 1.00 ; 1.00 ; 0.004 | e-BH 0.20 : 1.00 ; 1.00 ; 0.004
+m=30 m1=3 n=300 | par fiche : 0.93 ; 1.00 ; 0.018 | e-BH 0.05 : 0.77 ; 0.98 ; 0.000 | e-BH 0.10 : 0.82 ; 0.99 ; 0.003 | e-BH 0.20 : 0.86 ; 0.99 ; 0.003
+m=30 m1=3 n=600 | par fiche : 0.99 ; 1.00 ; 0.015 | e-BH 0.05 : 0.98 ; 1.00 ; 0.000 | e-BH 0.10 : 0.99 ; 1.00 ; 0.003 | e-BH 0.20 : 0.99 ; 1.00 ; 0.003
+m=30 m1=3 n=1200 | par fiche : 1.00 ; 1.00 ; 0.016 | e-BH 0.05 : 1.00 ; 1.00 ; 0.000 | e-BH 0.10 : 1.00 ; 1.00 ; 0.004 | e-BH 0.20 : 1.00 ; 1.00 ; 0.004
+m=30 m1=6 n=300 | par fiche : 0.93 ; 1.00 ; 0.009 | e-BH 0.05 : 0.79 ; 1.00 ; 0.000 | e-BH 0.10 : 0.84 ; 1.00 ; 0.001 | e-BH 0.20 : 0.87 ; 1.00 ; 0.001
+m=30 m1=6 n=600 | par fiche : 1.00 ; 1.00 ; 0.007 | e-BH 0.05 : 0.99 ; 1.00 ; 0.000 | e-BH 0.10 : 0.99 ; 1.00 ; 0.002 | e-BH 0.20 : 0.99 ; 1.00 ; 0.002
+m=30 m1=6 n=1200 | par fiche : 1.00 ; 1.00 ; 0.010 | e-BH 0.05 : 1.00 ; 1.00 ; 0.000 | e-BH 0.10 : 1.00 ; 1.00 ; 0.002 | e-BH 0.20 : 1.00 ; 1.00 ; 0.002
+m=40 m1=2 n=300 | par fiche : 0.93 ; 0.99 ; 0.030 | e-BH 0.05 : 0.73 ; 0.92 ; 0.000 | e-BH 0.10 : 0.79 ; 0.95 ; 0.006 | e-BH 0.20 : 0.83 ; 0.97 ; 0.006
+m=40 m1=2 n=600 | par fiche : 1.00 ; 1.00 ; 0.030 | e-BH 0.05 : 0.98 ; 1.00 ; 0.000 | e-BH 0.10 : 0.99 ; 1.00 ; 0.006 | e-BH 0.20 : 0.99 ; 1.00 ; 0.006
+m=40 m1=2 n=1200 | par fiche : 1.00 ; 1.00 ; 0.034 | e-BH 0.05 : 1.00 ; 1.00 ; 0.000 | e-BH 0.10 : 1.00 ; 1.00 ; 0.006 | e-BH 0.20 : 1.00 ; 1.00 ; 0.006
+m=40 m1=4 n=300 | par fiche : 0.93 ; 1.00 ; 0.020 | e-BH 0.05 : 0.76 ; 1.00 ; 0.000 | e-BH 0.10 : 0.81 ; 1.00 ; 0.005 | e-BH 0.20 : 0.85 ; 1.00 ; 0.005
+m=40 m1=4 n=600 | par fiche : 1.00 ; 1.00 ; 0.018 | e-BH 0.05 : 0.99 ; 1.00 ; 0.000 | e-BH 0.10 : 0.99 ; 1.00 ; 0.004 | e-BH 0.20 : 0.99 ; 1.00 ; 0.004
+m=40 m1=4 n=1200 | par fiche : 1.00 ; 1.00 ; 0.018 | e-BH 0.05 : 1.00 ; 1.00 ; 0.000 | e-BH 0.10 : 1.00 ; 1.00 ; 0.004 | e-BH 0.20 : 1.00 ; 1.00 ; 0.004
+m=40 m1=8 n=300 | par fiche : 0.93 ; 1.00 ; 0.010 | e-BH 0.05 : 0.79 ; 1.00 ; 0.000 | e-BH 0.10 : 0.84 ; 1.00 ; 0.002 | e-BH 0.20 : 0.87 ; 1.00 ; 0.002
+m=40 m1=8 n=600 | par fiche : 1.00 ; 1.00 ; 0.008 | e-BH 0.05 : 0.99 ; 1.00 ; 0.000 | e-BH 0.10 : 0.99 ; 1.00 ; 0.002 | e-BH 0.20 : 0.99 ; 1.00 ; 0.002
+m=40 m1=8 n=1200 | par fiche : 1.00 ; 1.00 ; 0.010 | e-BH 0.05 : 1.00 ; 1.00 ; 0.000 | e-BH 0.10 : 1.00 ; 1.00 ; 0.002 | e-BH 0.20 : 1.00 ; 1.00 ; 0.002
+Sensibilité β = 0,3 (e-BH 0,05) :
+  m=20 m1=2 n=600 | puissance 0.26 ; P(≥ 1 vraie) 0.44
+  m=20 m1=2 n=1800 | puissance 0.95 ; P(≥ 1 vraie) 1.00
+  m=40 m1=4 n=600 | puissance 0.19 ; P(≥ 1 vraie) 0.55
+  m=40 m1=4 n=1800 | puissance 0.94 ; P(≥ 1 vraie) 1.00
+
+## D. Tests de mort comme filtre éliminatoire avant le pôle (ILLUSTRATIF : tuent une nulle sur 2, une vraie sur 10 ; tranche exploratoire disjointe de l'épreuve) : m' = fiches restantes, fixé avant toute issue d'épreuve
+m=30 m1=3 n=300 | sans filtre : puissance 0.77 | avec filtre : m' moyen 16.1, puissance (sur les m1 de départ) 0.73, taux de fausses découvertes 0.002
+m=30 m1=3 n=600 | sans filtre : puissance 0.98 | avec filtre : m' moyen 16.2, puissance (sur les m1 de départ) 0.89, taux de fausses découvertes 0.002
+m=40 m1=4 n=300 | sans filtre : puissance 0.76 | avec filtre : m' moyen 21.6, puissance (sur les m1 de départ) 0.73, taux de fausses découvertes 0.002
+m=40 m1=4 n=600 | sans filtre : puissance 0.99 | avec filtre : m' moyen 21.7, puissance (sur les m1 de départ) 0.89, taux de fausses découvertes 0.002
+
+## E. Ablation : bras A (parents promus par le pôle) contre bras B (parents choisis par les juges), N fiches par bras, même tranche fraîche (n = 600), e-BH 0,05 dans chaque bras (m = N) ; part de fiches vraies πA, πB
+Puissance (unilatérale, 5 %) de : M1 = test exact de Fisher sur le nombre de retenues ; M2 = Mann-Whitney sur log W final ; M3 = « survivantes neuves par euro » à coût égal par bras (= M1)
+πB=0.05 πA=0.10 N= 20 | retenues moyennes A 2.00, B 1.01 | M1 0.02 | M2 0.09
+πB=0.05 πA=0.10 N= 40 | retenues moyennes A 3.95, B 1.95 | M1 0.10 | M2 0.11
+πB=0.05 πA=0.10 N= 80 | retenues moyennes A 7.90, B 3.97 | M1 0.22 | M2 0.13
+πB=0.05 πA=0.10 N=160 | retenues moyennes A 15.89, B 7.77 | M1 0.46 | M2 0.22
+πB=0.05 πA=0.15 N= 20 | retenues moyennes A 3.07, B 0.98 | M1 0.09 | M2 0.13
+πB=0.05 πA=0.15 N= 40 | retenues moyennes A 5.93, B 1.99 | M1 0.27 | M2 0.18
+πB=0.05 πA=0.15 N= 80 | retenues moyennes A 11.87, B 3.89 | M1 0.59 | M2 0.30
+πB=0.05 πA=0.15 N=160 | retenues moyennes A 23.69, B 7.80 | M1 0.89 | M2 0.47
+πB=0.10 πA=0.20 N= 20 | retenues moyennes A 3.91, B 1.99 | M1 0.10 | M2 0.13
+πB=0.10 πA=0.20 N= 40 | retenues moyennes A 8.01, B 3.94 | M1 0.25 | M2 0.18
+πB=0.10 πA=0.20 N= 80 | retenues moyennes A 15.81, B 7.88 | M1 0.47 | M2 0.29
+πB=0.10 πA=0.20 N=160 | retenues moyennes A 31.58, B 15.71 | M1 0.76 | M2 0.45
+πB=0.10 πA=0.30 N= 20 | retenues moyennes A 5.91, B 2.00 | M1 0.33 | M2 0.30
+πB=0.10 πA=0.30 N= 40 | retenues moyennes A 11.86, B 3.90 | M1 0.67 | M2 0.48
+πB=0.10 πA=0.30 N= 80 | retenues moyennes A 23.85, B 7.81 | M1 0.92 | M2 0.71
+πB=0.10 πA=0.30 N=160 | retenues moyennes A 47.45, B 15.66 | M1 1.00 | M2 0.93
+
+## F. Témoin interne : chaque génération de 30 = 21 filles (parents promus) + 9 immigrants (sans parents), même tranche, e-BH 0,05 sur les 30 ; cumul sur G générations ; πI = 0,05
+πO=0.10 | G=1: M1 0.00, M2 0.07 | G=2: M1 0.02, M2 0.09 | G=4: M1 0.10, M2 0.12 | G=6: M1 0.17, M2 0.11 | G=10: M1 0.33, M2 0.17
+πO=0.15 | G=1: M1 0.01, M2 0.11 | G=2: M1 0.12, M2 0.15 | G=4: M1 0.34, M2 0.21 | G=6: M1 0.54, M2 0.29 | G=10: M1 0.78, M2 0.39
+πO=0.25 | G=1: M1 0.08, M2 0.19 | G=2: M1 0.49, M2 0.35 | G=4: M1 0.83, M2 0.54 | G=6: M1 0.96, M2 0.72 | G=10: M1 1.00, M2 0.88
+
+# fin
