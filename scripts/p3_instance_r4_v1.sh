@@ -226,7 +226,9 @@ fi
 ETAPE="tests"
 CIBLES=(tests/test_runs_nuit_v1.py tests/test_premier_test_ia_run.py tests/test_premier_test_ia_notation.py
         tests/test_premier_test_ia_figees.py tests/test_premier_test_ia_conditions.py tests/test_harnais_formats.py
-        tests/test_pilote_a.py tests/test_manifeste.py tests/test_scellement.py tests/test_prereg.py)
+        tests/test_pilote_a.py tests/test_manifeste.py tests/test_scellement.py tests/test_prereg.py
+        tests/test_harnais.py tests/test_bases.py tests/test_validation_reelle.py tests/test_harnais_lots.py
+        tests/test_environnement_a.py tests/test_premier_test_ia_gardes_v1.py tests/test_premier_test_ia_entrainement.py)
 if ! PYTHONPATH=src:tests python -m pytest -q -p no:cacheprovider --color=no "${CIBLES[@]}" >"$TRAVAIL/tests.txt" 2>"$TRAVAIL/tests.err"; then
     tail -n 5 "$TRAVAIL/tests.txt" "$TRAVAIL/tests.err" | tee -a "$JOURNAL"
     journal "tests en échec : arrêt"

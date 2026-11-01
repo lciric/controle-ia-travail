@@ -14,7 +14,10 @@
 #                 « Chemin de la configuration du rejeu : `…` », « Chemin de la configuration du juge 3B : `…` »,
 #                 « Chemin de la configuration du juge 8B : `…` », lus avant toute installation
 #   PREREG_ABSENT 1 seulement en mode jouet ; CONFIG_REJEU, CONFIG_JUGE3B, CONFIG_JUGE8B donnent alors les chemins
-#   ETAPES        défaut « rejeu juge3b juge8b » (ordre fixe ; une étape absente est sautée)
+#   ETAPES        défaut « rejeu » (R1 seul) ; « rejeu juge3b juge8b » pour R1 puis R2. Le bras boîte noire de R2 sur
+#                 les textes de P3 est une exception à N-029 (section 2) : il ne se lance qu'après la confirmation de
+#                 Lazar consignée dans registres/decisions.md. Ordre fixe ; un arrêt d'une étape n'empêche pas les
+#                 suivantes (le juge ne dépend pas du rejeu, CLR-16) ; le code de sortie dit s'il y a eu un arrêt.
 #   DEPOT_URL     défaut https://github.com/lciric/controle-ia-travail.git (dépôt de travail privé ; N-016)
 #   GH_TOKEN      jeton GitHub à grain fin ; lu par un assistant d'identification, jamais écrit
 #   HF_TOKEN      jeton Hugging Face en lecture (mode reel ; licences Llama 3.1 et 3.2 acceptées)
@@ -35,7 +38,7 @@ BRANCHE="${BRANCHE:-calcul/r1-r2-$MODE-v1}"
 PREREG="${PREREG:-prereg/R1-R2-rejeu-p3-v1.md}"
 TRAVAIL="${TRAVAIL:-$HOME/r1r2}"
 PREREG_ABSENT="${PREREG_ABSENT:-0}"
-ETAPES="${ETAPES:-rejeu juge3b juge8b}"
+ETAPES="${ETAPES:-rejeu}"
 case "$MODE" in reel|jouet) ;; *) echo "MODE=$MODE : reel ou jouet" >&2; exit 2 ;; esac
 if [ "$PREREG_ABSENT" = 1 ] && [ "$MODE" != jouet ]; then
     echo "PREREG_ABSENT=1 n'est permis qu'en mode jouet (R1)" >&2; exit 2
@@ -132,7 +135,7 @@ traces() {
 ajouter_donnees() {
     local f
     for f in donnees/*/activations-p3-rejeu-v1.npz donnees/*/activations-p3-rejeu-v1.npz.sha256 \
-             donnees/*/activations-p3-rejeu-v1-moyenne.npz* donnees/*/activations-p3-rejeu-v1-maximum.npz* \
+             donnees/*/activations-p3-rejeu-v1-maximum.npz* \
              donnees/*/activations-p3-rejeu-v1-complement-hors-cout.npz* \
              donnees/*/scores-juge3b-p3-v1.npz donnees/*/scores-juge3b-p3-v1.npz.sha256 \
              donnees/*/scores-juge8b-p3-v1.npz donnees/*/scores-juge8b-p3-v1.npz.sha256; do
@@ -196,7 +199,9 @@ fi
 ETAPE="tests"
 CIBLES=(tests/test_runs_nuit_v1.py tests/test_premier_test_ia_run.py tests/test_premier_test_ia_notation.py
         tests/test_premier_test_ia_figees.py tests/test_premier_test_ia_conditions.py tests/test_harnais_formats.py
-        tests/test_pilote_a.py tests/test_manifeste.py tests/test_scellement.py tests/test_prereg.py)
+        tests/test_pilote_a.py tests/test_manifeste.py tests/test_scellement.py tests/test_prereg.py
+        tests/test_harnais.py tests/test_bases.py tests/test_validation_reelle.py tests/test_harnais_lots.py
+        tests/test_environnement_a.py tests/test_premier_test_ia_gardes_v1.py tests/test_premier_test_ia_entrainement.py)
 if [ -n "${TESTS_CIBLES:-}" ]; then
     [ "$MODE" = jouet ] || { journal "TESTS_CIBLES n'est permis qu'en mode jouet : arrêt"; consigner_arret "tests"; exit 2; }
     read -r -a CIBLES <<<"$TESTS_CIBLES"
@@ -232,7 +237,12 @@ etape() {
     wait "$relais" 2>/dev/null || true
     if [ "$code" -ne 0 ] || [ -f "diag/$run/arret.json" ]; then
         grep -v '^PROGRES ' "$TRAVAIL/$nom.err" | tail -n 5 | tee -a "$JOURNAL" || true
-        consigner_arret "$nom (code $code)"; exit 1
+        git add -A runs diag; ajouter_donnees
+        git commit -qm "R1-R2 : arrêt de l'étape $nom ($run)" >/dev/null 2>&1 || true
+        pousser || journal "poussée après l'arrêt de $nom impossible"
+        journal "étape $nom arrêtée (code $code) ; étapes suivantes poursuivies"
+        ARRETS="$ARRETS $nom"
+        return 0
     fi
     git add "runs/$run" "diag/$run"
     ajouter_donnees
@@ -240,6 +250,7 @@ etape() {
     journal "étape $nom terminée : $run"
     pousser || journal "poussée après $nom impossible : résultats restés sur l'instance"
 }
+ARRETS=""
 for e in $ETAPES; do
     case "$e" in
         rejeu)  [ -n "$CONFIG_REJEU" ] && etape r1-rejeu controle_ia.runs_nuit.rejeu_activations_v1 "$CONFIG_REJEU" 60 ;;
@@ -249,7 +260,8 @@ for e in $ETAPES; do
     esac
 done
 ETAPE="fin"
-journal "fin : étapes « $ETAPES » terminées ; arrêter l'instance par son identifiant (R10)"
+journal "fin : étapes « $ETAPES » passées (arrêtées :${ARRETS:- aucune}) ; arrêter l'instance par son identifiant (R10)"
 CONSIGNE=1
 traces "fin"
 if pousser; then journal "branche $BRANCHE poussée (résultats et traces)"; else journal "poussée finale impossible"; exit 1; fi
+[ -z "$ARRETS" ] || exit 1

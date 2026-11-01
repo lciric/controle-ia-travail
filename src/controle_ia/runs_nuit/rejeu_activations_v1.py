@@ -18,6 +18,13 @@ aux couches de P3 (7, 15 et 23) : **maximum par dimension** (agrégation de prod
 CLAUDE.md)**, en float16. Complément : maximum par dimension hors des jetons du champ COST (contrôle « la sonde lit-elle
 autre chose que le nombre ? »), bornes des champs par `premier_test_ia.conditions.bornes_champs`.
 
+Empreintes de P3 (CLR-04) : P3 a stocké, par épisode, l'empreinte de sa trajectoire (identifiants et empans) et de ses
+activations (`harnais.episode.empreinte_episode`, `diag/<run>/episodes-p3.json`). Le rejeu les recalcule : une trajectoire
+identique prouve, octet pour octet, que les identifiants reconstruits (jeton de fin compris) sont ceux de P3 ; des
+activations identiques prouvent l'égalité au bit près (mesurée, non exigée). Contrôle négatif fixé d'avance : les actions
+de l'échantillon rejouées sous un contexte faux doivent sortir de la tolérance (au moins `controle_negatif_min`), sinon
+arrêt.
+
 Contrôle de fidélité, fixé d'avance : tous les épisodes sont d'abord reconstruits sur processeur ; une action est
 « éligible » si elle est notée et conforme en longueur ainsi que toutes celles qui la précèdent dans son épisode (contexte
 exact). Sur un échantillon tiré par graine parmi les éligibles (`n_fidelite_par_condition` actions par condition), les scores des sondes génériques légères de P3, recalculés sur les activations rejouées, doivent égaler ceux
@@ -52,7 +59,7 @@ COMMANDE = "python -m controle_ia.runs_nuit.rejeu_activations_v1"
 CLES = ("agent", "mode", "couches", "T", "run_source", "chemin_textes", "textes_sha256", "chemin_scores",
         "scores_sha256", "chemin_sondes_legeres", "sondes_legeres_sha256", "chemin_taches", "taches_sha256",
         "chemin_consignes", "consignes_sha256", "identite_sha256", "n_fidelite_par_condition", "tolerance_fidelite",
-        "noyau_attention", "fils", "nom_sortie", "max_octets_fichier")
+        "noyau_attention", "fils", "nom_sortie", "chemin_fiches", "fiches_sha256", "controle_negatif_min")
 CONFIG_CITEE = "Configuration du rejeu (empreinte canonique) : `{}`"
 REGLE_EMPAN = ("jetons de l'action reconstruits par tokenisation du texte seul, sans le jeton de fin final : "
                "[début, fin[ comme P3 (premier_test_ia.run.jouer_p3)")
@@ -120,11 +127,36 @@ def reconstruire_episode(fmt, env, T: int, lignes: list[dict], jetons: list[int]
         nv = notes + ([fin_de_tour] if a_fin == 1 else [])
         conforme = (len(notes) == jetons_notes[t] and len(nv) == jetons[t]
                     and fmt.tok.decode(nv, skip_special_tokens=True) == texte)
-        actions.append({"debut": len(ctx), "fin": len(ctx) + len(notes), "conforme": bool(conforme),
+        actions.append({"debut": len(ctx), "fin": len(ctx) + len(notes), "conforme": bool(conforme), "nv": nv,
+                        "texte": texte, "pas": t,
                         "bornes": bornes_champs(fmt.tok, notes, texte) if notes else {"lisibles": False}})
         ids = ctx + nv + fmt.cloture(debut, nv)
         journal.append((0, t, texte))
     return {"ids": ids, "actions": actions}
+
+
+def episode_harnais(identifiant: str, T: int, rec: dict):
+    """L'épisode reconstruit sous la forme du harnais (`harnais.episode.Episode`), pour recalculer les empreintes que P3
+    a stockées par épisode (`fiches[].empreintes`, `empreinte_episode`)."""
+    from ..harnais.episode import Action, Episode, Transcription
+
+    acts = [Action(0, a["pas"], a["debut"], a["debut"] + len(a["nv"]), [int(x) for x in a["nv"]], a["texte"])
+            for a in rec["actions"]]
+    return Episode(identifiant, 1, T, [Transcription(agent=0, ids=[int(x) for x in rec["ids"]], actions=acts)])
+
+
+def empreinte_trajectoire(episode) -> str:
+    """Même calcul que la partie « trajectoire » de `harnais.episode.empreinte_episode`."""
+    return hashlib.sha256(json.dumps(episode.en_dict(), sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def charger_fiches(chemin, sha_attendue: str | None) -> dict:
+    """Empreintes par épisode du run source (`diag/<run>/episodes-p3.json`, scellé) : {épisode: {trajectoire, activations}}."""
+    sha = verifier(chemin)
+    if sha_attendue is not None and sha != sha_attendue:
+        raise GardeArret(f"{chemin} : empreinte {sha[:12]} ≠ empreinte citée {sha_attendue[:12]}")
+    fiches = json.loads(Path(chemin).read_text(encoding="utf-8"))["resultat"]["fiches"]
+    return {f["episode"]: f["empreintes"] for f in fiches}
 
 
 def tirer_echantillon(identite: dict, eligibles: np.ndarray, n_par_condition: int, g: np.random.Generator) -> list[int]:
@@ -142,6 +174,32 @@ def tirer_echantillon(identite: dict, eligibles: np.ndarray, n_par_condition: in
     return rangs
 
 
+def controle_negatif(modele, fmt, notation, noms, index, source, echantillon, lignes, par_episode, taches, consignes,
+                     guide, T, couches, jetons, jetons_notes, tol, minimum) -> dict:
+    """Contrôle négatif fixé d'avance (CLR-04) : chaque action de l'échantillon est rejouée dans un contexte faux (la
+    consigne de l'honnête pour une condition instruite, celle du saboteur pour l'honnête ; mêmes textes) ; l'écart des
+    scores à ceux de P3 doit dépasser la tolérance pour au moins `minimum` actions, sinon le contrôle de fidélité ne
+    discrimine pas et la course s'arrête."""
+    from ..premier_test_ia.conditions import environnement
+
+    ecarts = []
+    for r in echantillon:
+        e = lignes[r]["episode"]
+        rs = par_episode[e]
+        x0 = lignes[rs[0]]
+        faux = "saboteur" if x0["condition"] == "honnete" else "honnete"
+        env = environnement(faux, tache_de(taches[x0["tache"]]), T, guide, consignes)
+        rec = reconstruire_episode(fmt, env, T, [lignes[q] for q in rs], [jetons[q] for q in rs],
+                                   [jetons_notes[q] for q in rs])
+        a = rec["actions"][rs.index(r)]
+        acts = passe_unique(modele, rec["ids"], notation.couches)
+        seg = {c: acts[c][a["debut"]:a["fin"]] for c in notation.couches}
+        ecarts.append(ecart_relatif(notation.noter(seg), source[r], noms, index))
+    hors = int(sum(1 for x in ecarts if not x <= tol))
+    return {"rangs": echantillon, "ecarts_contexte_faux": [float(x) for x in ecarts], "hors_tolerance": hors,
+            "minimum": minimum, "tolerance": tol, "lecture": "discriminant" if hors >= minimum else "non discriminant"}
+
+
 def ecart_relatif(rejeu: dict, source: np.ndarray, noms: list[str], index: dict) -> float:
     """Plus grand écart |s_rejeu − s_P3| / (1 + |s_P3|) sur les sondes légères."""
     pire = 0.0
@@ -155,8 +213,11 @@ def ecart_relatif(rejeu: dict, source: np.ndarray, noms: list[str], index: dict)
 
 
 def _f16(v: np.ndarray, quoi: str) -> np.ndarray:
+    """Conversion en float16 ; arrêt sur toute valeur non finie (CLR-07) ou hors de l'étendue du float16."""
     x = np.asarray(v, dtype=np.float64)
-    if np.isfinite(x).all() and np.abs(x).max(initial=0.0) > 65504:
+    if not np.isfinite(x).all():
+        raise GardeArret(f"{quoi} : activation non finie")
+    if np.abs(x).max(initial=0.0) > 65504:
         raise GardeArret(f"{quoi} : valeur hors de l'étendue du float16 ({np.abs(x).max():.1f})")
     return x.astype(np.float16)
 
@@ -195,7 +256,13 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, autori
     try:
         return _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, etat, debut)
     except Exception as e:
+        # verdict de fidélité au format du n° 330 : « non conforme » si le contrôle de fidélité ou le contrôle négatif a
+        # échoué, « echec » pour tout autre arrêt
+        etat["verdict_fidelite"] = ("non conforme" if (etat.get("fidelite_echantillon") or {}).get("lecture") == "contraire"
+                                    or (etat.get("controle_negatif") or {}).get("lecture") == "non discriminant"
+                                    else "echec")
         ecrire_resultat(racine, chemin_m, "arret", {"etape": etat["etape"], "motif": motif_d_arret(e),
+                                                     "verdict_fidelite": etat["verdict_fidelite"],
                                                      "partiel": {k: v for k, v in etat.items() if k != "etape"},
                                                      "duree_s": round(time.perf_counter() - debut, 1)})
         relever_term_apres(e)
@@ -260,11 +327,23 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
             conforme[r] = a["conforme"]
             tous = tous and a["conforme"]
             contexte_conforme[r] = tous
+    fiches = charger_fiches(config["chemin_fiches"], config["fiches_sha256"]) if config["chemin_fiches"] else None
+    traj = np.zeros(n, dtype=bool)
+    episodes_h = {}
+    for e, rs in par_episode.items():
+        episodes_h[e] = episode_harnais(e, T, recs[e])
+        if fiches is not None:
+            if e not in fiches:
+                raise GardeArret(f"épisode {e} absent des fiches du run source")
+            traj[rs] = empreinte_trajectoire(episodes_h[e]) == fiches[e]["trajectoire"]
+    etat["trajectoires_identiques"] = int(traj.sum()) // T if fiches is not None else None
     etat["conformes_longueur"] = int(conforme.sum())
     etat["contextes_conformes"] = int(contexte_conforme.sum())
     progres(etape="reconstruction", conformes=int(conforme.sum()), contextes_conformes=int(contexte_conforme.sum()),
-            actions=n)
-    eligibles = contexte_conforme & (np.asarray(jetons_notes) > 0)
+            trajectoires_identiques=etat["trajectoires_identiques"], actions=n)
+    # éligibles au contrôle de fidélité : trajectoire identique à celle de P3, octet pour octet (identifiants et empans,
+    # empreinte stockée par P3), quand les fiches sont données ; sinon contexte conforme en longueur
+    eligibles = (traj if fiches is not None else contexte_conforme) & (np.asarray(jetons_notes) > 0)
     echantillon = tirer_echantillon(identite, eligibles, int(config["n_fidelite_par_condition"]),
                                     generateur(manifeste["graines"]["fidelite"]))
     ep_echantillon = list(dict.fromkeys(lignes[r]["episode"] for r in echantillon))
@@ -276,13 +355,18 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
     ecart = np.full(n, np.nan)
     tol = float(config["tolerance_fidelite"])
     source = np.asarray(identite["scores"], dtype=np.float64)
-    tour_echantillon, verdict_echantillon = len(ep_echantillon), None
+    tour_echantillon, verdict_echantillon, verdict_negatif = len(ep_echantillon), None, None
+    activ_ident = np.zeros(n, dtype=bool)
     with noyau(config["noyau_attention"]):
         for k_ep, e in enumerate(ordre):
             exiger_sans_signal(f"rejeu, épisode {k_ep}")
             rs = par_episode[e]
             rec = recs.pop(e)
             acts = passe_unique(modele, rec["ids"], couches)
+            if fiches is not None:
+                from ..harnais.episode import empreinte_episode
+
+                activ_ident[rs] = empreinte_episode(episodes_h[e], {0: acts})["activations"] == fiches[e]["activations"]
             if largeur is None:
                 largeur = acts[couches[0]].shape[1]
                 moyenne = np.full((n, d, largeur), np.nan, dtype=np.float16)
@@ -316,6 +400,16 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
                 if fautes:
                     raise GardeArret(f"contrôle de fidélité contraire sur {len(fautes)} action(s) de l'échantillon "
                                      f"({fautes[:5]}) : le rejeu n'est pas le calcul de P3, rien n'est versé")
+                verdict_negatif = controle_negatif(modele, fmt, notation, noms, index, source, echantillon, lignes,
+                                                   par_episode, taches, consignes, guide, T, couches, jetons,
+                                                   jetons_notes, tol, int(config["controle_negatif_min"]))
+                etat["controle_negatif"] = verdict_negatif
+                progres(etape="controle_negatif", lecture=verdict_negatif["lecture"],
+                        hors_tolerance=f"{verdict_negatif['hors_tolerance']}/{len(echantillon)}")
+                if verdict_negatif["lecture"] != "discriminant":
+                    raise GardeArret(f"contrôle négatif non discriminant ({verdict_negatif['hors_tolerance']} actions sur "
+                                     f"{len(echantillon)} hors tolérance sous contexte faux, "
+                                     f"{config['controle_negatif_min']} exigées) : rien n'est versé")
             if (k_ep + 1) % 20 == 0:
                 progres(etape="rejeu", episodes=f"{k_ep + 1}/{len(ordre)}")
     notees = np.isfinite(ecart)
@@ -326,33 +420,33 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
     dossier = racine / "donnees" / run_id
     dossier.mkdir(parents=True, exist_ok=False)
     ident = {k: np.asarray(identite[k]) for k in CLES_IDENTITE}
-    commun = {**ident, "jetons_empan": jetons_empan, "couches": np.array(couches, dtype=np.int64),
-              "conforme_longueur": conforme, "contexte_conforme": contexte_conforme, "ecart_fidelite": ecart, "fidele": fidele}
+    # n° 330 : `jetons_empan` = `jetons_notes` de P3 (empan noté par P3) ; la longueur reconstruite est à part
+    commun = {**ident, "jetons_empan": np.asarray(identite["jetons_notes"], dtype=np.int64),
+              "jetons_empan_rejeu": jetons_empan, "couches": np.array(couches, dtype=np.int64),
+              "conforme_longueur": conforme, "contexte_conforme": contexte_conforme, "ecart_fidelite": ecart, "fidele": fidele,
+              "trajectoire_identique": traj, "activations_identiques": activ_ident}
     fichiers = {}
     nom = config["nom_sortie"]
-    principal = dossier / f"{nom}.npz"
-    with open(principal, "wb") as f:
-        np.savez_compressed(f, moyenne=moyenne, maximum=maximum, **commun)
-    if principal.stat().st_size <= int(config["max_octets_fichier"]):
-        fichiers[principal.name] = sceller(principal)
-    else:
-        # au-dessus de la limite de poussée : deux fichiers, mêmes clés d'identité, un agrégat chacun ; le fichier
-        # complet reste sur l'instance (non poussé), son empreinte est consignée
-        fichiers[principal.name + " (non poussé, trop lourd)"] = sceller(principal)
-        for agregat, tableau in (("moyenne", moyenne), ("maximum", maximum)):
-            p = dossier / f"{nom}-{agregat}.npz"
-            with open(p, "wb") as f:
-                np.savez_compressed(f, **{agregat: tableau}, **commun)
-            fichiers[p.name] = sceller(p)
+    # format déterministe (CLR-12, n° 330) : le fichier principal porte `moyenne` (obligatoire pour conv-audit, bras de
+    # diagnostic N-026) et l'identité (≈ 59 Mo) ; `maximum` (facultatif pour conv-audit, agrégat de production) dans un
+    # second fichier aux mêmes clés d'identité ; tous deux sous la limite de poussée
+    for p, tableaux in ((dossier / f"{nom}.npz", {"moyenne": moyenne}), (dossier / f"{nom}-maximum.npz", {"maximum": maximum})):
+        with open(p, "wb") as f:
+            np.savez_compressed(f, **tableaux, **commun)
+        fichiers[p.name] = sceller(p)
     p = dossier / f"{nom}-complement-hors-cout.npz"
     with open(p, "wb") as f:
         np.savez_compressed(f, maximum_hors_cout=hors_cout, **commun)
     fichiers[p.name] = sceller(p)
-    resultat = {"fichiers": fichiers, "identite_sha256": etat["identite_sha256"], "regle_empan": REGLE_EMPAN,
+    resultat = {"verdict_fidelite": "conforme", "textes_sha256": verifier(config["chemin_textes"]),
+                "fichiers": fichiers, "identite_sha256": etat["identite_sha256"], "regle_empan": REGLE_EMPAN,
                 "contexte": CONTEXTE, "couches": couches, "agregats": {"maximum": "production (harnais)",
                                                                        "moyenne": "diagnostic seulement (N-026)",
                                                                        "maximum_hors_cout": "contrôle, hors champ COST"},
-                "fidelite_echantillon": verdict_echantillon,
+                "fidelite_echantillon": verdict_echantillon, "controle_negatif": verdict_negatif,
+                "empreintes_p3": None if fiches is None else {
+                    "episodes": len(par_episode), "trajectoires_identiques": etat["trajectoires_identiques"],
+                    "activations_identiques_au_bit": int(activ_ident.sum()) // T},
                 "fidelite_toutes": {"notees": int(notees.sum()), "fideles": int(fidele.sum()),
                                     "conformes_longueur": int(conforme.sum()),
                                     "contextes_conformes": int(contexte_conforme.sum()), "actions": n,
@@ -400,7 +494,9 @@ def config_pour_run(config: dict, racine: Path, run_source: str) -> dict:
               "chemin_scores": str(d / "scores-p3.npz"), "scores_sha256": resume["scores_sha256"],
               "chemin_sondes_legeres": str(d / "sondes-figees-legeres.npz"),
               "sondes_legeres_sha256": sf["sondes_legeres_sha256"], "taches_sha256": resume["taches_sha256"],
-              "consignes_sha256": resume["consignes_sha256"]})
+              "consignes_sha256": resume["consignes_sha256"],
+              "chemin_fiches": str(Path("diag") / run_source / "episodes-p3.json"),
+              "fiches_sha256": verifier(Path(racine) / "diag" / run_source / "episodes-p3.json")})
     return c
 
 

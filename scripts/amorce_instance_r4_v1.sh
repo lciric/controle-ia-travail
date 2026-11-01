@@ -4,7 +4,9 @@
 # `p3_instance_r4_v1.sh` (seule différence : suite de tests ciblée), avec le préenregistrement de R4 (PREREG) et une branche de résultats propre (BRANCHE) : même
 # lanceur, mêmes gardes, mêmes sorties que P3 ; (2) puis, sur le même clone et le même environnement,
 # `r4_suite_instance_v1.sh` : rejeu des actions de R4 (activations au format de R1) et juge de 3 milliards (format de R2).
-# Plafond de l'ensemble : 330 minutes (P3 : 300 au plus ; R4 attendu ≈ 2 h 20), sous la surveillance de la session. Une
+# Plafond de l'ensemble : 330 minutes ; partie P3 : 310 minutes, soit le délai externe du run (300) plus 10 minutes
+# seulement pour l'installation et les tests (déclaré, CLR-17 : un run qui irait au bout de son délai serait coupé par
+# l'amorce ; R4 attendu ≈ 2 h 30 au total), sous la surveillance de la session. Une
 # seconde exécution refuse de repartir (R12) ; seule la session de pilotage arrête l'instance, par son identifiant (R10).
 # Variables passées par --env à la création de l'instance : COMMIT (commit de scellement du préenregistrement de R4),
 # GH_TOKEN, HF_TOKEN, DEPOT_URL ; BRANCHE (facultatif, défaut calcul/r4-dose-reel-v1).
@@ -34,6 +36,20 @@ debut=$(date +%s)
 timeout --signal=TERM --kill-after=5m 310m env COMMIT="$COMMIT" TRAVAIL="$T" bash amorce-depot/scripts/p3_instance_r4_v1.sh
 code=$?
 echo "AMORCE $(date -u +%FT%TZ) : lanceur de P3 (R4) fini, code $code"
+# bloc rétabli de amorce_instance_p3.sh (CLR-17) : au plafond (124, 137), résultats partiels et traces committés et poussés
+if { [ "$code" -eq 124 ] || [ "$code" -eq 137 ]; } && [ -d "$T/controle-ia/.git" ]; then
+    (
+        cd "$T/controle-ia" && mkdir -p traces && d=$(mktemp -d "traces/r4-plafond-$(date -u +%Y%m%d-%H%M%S)-XXXX") &&
+        for f in "$T/journal.txt" "$T/tests.txt" "$T/tests.err" "$T/run.err" "$T/run.json"; do [ -f "$f" ] && cp "$f" "$d/"; done
+        (cd "$d" && sha256sum -- * > empreintes.sha256) || true
+        for f in donnees/*/sondes-figees-legeres.npz donnees/*/sondes-figees-legeres.npz.sha256 donnees/*/scores-p3.npz \
+                 donnees/*/scores-p3.npz.sha256 donnees/*/jetons-principales-p3.npz donnees/*/jetons-principales-p3.npz.sha256 \
+                 donnees/*/textes-actions-p3.jsonl donnees/*/textes-actions-p3.jsonl.sha256 \
+                 donnees/*/sondes-figees.npz.sha256; do [ -f "$f" ] && git add -f "$f"; done
+        git add -A runs diag "$d" && git commit -qm "R4 : plafond de l'amorce atteint : résultats partiels et traces" || true
+        git push -q origin "$BRANCHE" || echo "AMORCE : poussée impossible"
+    )
+fi
 if [ "$code" -eq 0 ]; then
     reste=$(( 330 - ($(date +%s) - debut) / 60 ))
     if [ "$reste" -lt 10 ]; then

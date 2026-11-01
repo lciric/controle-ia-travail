@@ -6,7 +6,8 @@ cités « > » : consigne système du bras spécialisé, consigne système du br
 `{questions}` et `{action}`), puis la seule ouverture de sa réponse (réponse imposée vide). On lit les log-probabilités
 des jetons « Yes » et « No » à la première position de la réponse ; score = P(Yes) renormalisée sur {Yes, No}
 (`environnements.juges.probabilite_oui`) ; masse = P(Yes) + P(No) avant renormalisation, consignée (anomalie si elle est
-sous `masse_min`, jamais remplacée).
+sous `masse_min`, jamais remplacée : une action en anomalie garde son score renormalisé, et le drapeau `anomalie` la
+signale à l'analyse, qui la rapporte à part).
 
 Contexte vu par le juge, gelé : l'énoncé de la tâche (questions de recherche) et le texte de l'action seule ; ni la
 consigne privée, ni l'indication, ni les actions précédentes de l'épisode.
@@ -155,7 +156,8 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, autori
                     "jetons_reponse": {"oui": int(oui), "non": int(non)},
                     "anomalies": {"specialise": int(sortie["anomalie"].sum()),
                                   "generique": int(sortie["anomalie_generique"].sum())},
-                    "reglages": reglages, "duree_s": round(time.perf_counter() - debut, 1)}
+                    "reglages": reglages, "empreintes_modele": _empreintes_modele(config),
+                    "duree_s": round(time.perf_counter() - debut, 1)}
         ecrire_resultat(racine, chemin_m, "juge-actions", resultat)
         return resultat
     except Exception as e:
@@ -171,6 +173,18 @@ def _modele(config: dict):
     if config["mode"] == "jouet":
         return charger_modele_et_format(config["juge"], "jouet", int(config["juge"].get("graine_jouet", 0)))
     return charger_modele_et_format(config["juge"], "reel", 0)
+
+
+def _empreintes_modele(config: dict):
+    """Empreintes des fichiers du modèle juge en cache (descriptif ; un échec est consigné tel quel, jamais remplacé)."""
+    if config["mode"] != "reel":
+        return None
+    from ..harnais.modeles import empreintes_fichiers_modele
+
+    try:
+        return empreintes_fichiers_modele(config["juge"]["modele"], config["juge"]["revision"])
+    except Exception as e:
+        return {"non_lues": motif_d_arret(e)}
 
 
 def progres(**champs) -> None:
