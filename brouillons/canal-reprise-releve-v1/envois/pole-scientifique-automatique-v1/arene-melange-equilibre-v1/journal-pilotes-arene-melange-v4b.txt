@@ -1,0 +1,88 @@
+# Journal des exécutions — arène mélange d'équilibre — code v4 — SUITE (rédacteur de reprise, Opus, lignée conv-audit)
+# Suite de `journal-pilotes-arene-melange-v4.txt` (a69e4cef…, laissé intact : il s'arrête au lancement du pilote v4,
+# étape 5, 31 octobre 13:43:40Z ; son rédacteur a été coupé par la limite d'usage vers 13:30-13:50Z).
+# Le rédacteur de reprise n'a écrit aucun des brouillons 1 à 3, aucun code v1 à v4, aucune contre-lecture de ce pilote.
+# Horodatages relevés par `date -u` au moment des étapes. Aucune racine de décision ; rien sous donnees/ ; rien lu ni
+# écrit dans arene-extension-familles-v1/ ; aucun fichier existant modifié ; aucun .sha256 ; aucun commit ; aucun git fetch.
+
+[2026-11-01T07:10:54Z] Étape R0 — reprise. Consigne `consigne-pilote-melange-b4-reprise.md` vérifiée contre son compagnon
+  (ddf931c6…, conforme) ; tous les compagnons du dossier (essais compris) conformes. Aucun fichier *brouillon4* à
+  l'arrivée. Fichiers v4 trouvés, non scellés, empreintes relevées à l'arrivée :
+    arene_melange_v4.py                                         70c77fd5c0ec72b63ae4c10e1e6b2fc423aacfedce9a4a0792869d92c5a2ae61
+    essais/test_arene_melange_v4.py                             2adcf876a09a23d151182a0edeccb5e5a7338a004bed7490f9f3a24dcc1013c0
+    calcul-puissance-arene-melange-v4.py                        cf5543a76842a81f77fd381e9f08dd7ef876aa1ddc289a5cf06f3edf5a538031
+    gel-conception-arene-melange-v4.md                          9e1f25aeaf1c992e96f8d2d66acab7ca9028d498720461cbccaa87f38d23568d
+    calibrage-deltas-arene-melange-v4.json                      622c3bb448650c6ce07405534c8ea5defba3a89dcea8481ccd2c23156a70eb31
+    essai-pilote-arene-melange-v4-detection-instances-00-05.json 963441f8456436bb046c26c851a5c794ddfdd1967d6d5f3dcdcd670e6b858bcc
+    essai-pilote-arene-melange-v4-detection-instances-05-24.json 11b31596bb360a00e35be191900f966ff71599d0f18757a4af7153901cf76171
+    essai-pilote-arene-melange-v4-pids-instances-00-05.txt      a3c945444d029e8fa450979460ee8e47bc9a72b3a778c187840145b57f1c3e79
+    essai-pilote-arene-melange-v4-pids-instances-05-24.txt      a6e8397385daaf385a59d11ac675e26013934ed522d5ebd2e06d86bde2d56f18
+    journal-pilotes-arene-melange-v4.txt                        a69e4ceff41f78773517c778ca30c9caf456a8078db46cb2f4db37519643b218
+  (le fichier d'essais v4 existait aussi, contrairement à ce que disait la consigne de reprise : réutilisé tel quel).
+
+[2026-11-01T07:11Z → 07:13Z] Étape R1 — vérifications des pièces laissées (lecture seule) :
+  - Gel avant calcul : le gel (9e1f25ae…) est dans le commit f65feb1a (2026-10-31T12:51:10Z, commit de conv-audit, pas
+    du rédacteur) ; le code au calibrage (dcc3e0b9…) apparaît au commit c34a06d7 (12:57:30Z) ; le journal date le
+    lancement du calibrage à 13:05:13Z et le pilote à 13:43:40Z ; le calibrage et le pilote n'apparaissent qu'au commit
+    fd37ceb3. Le code épingle l'empreinte du gel (GEL_V4_SHA256) et refuse calibrage, essai et audit d'essai si le
+    gel manque, a changé ou ne cite pas la racine. Ordre gel → code → calcul : tenu, attesté par des commits externes.
+  - Calibrage : 432 tâches = 48 instances (0 à 47) × 9 δ, bras A seul, racine 20264101 / 20264102 (gelées au § 1.1),
+    code dcc3e0b9… (manifeste), gel 9e1f25ae… (manifeste). Moyennes et erreurs-types recalculées depuis les tâches :
+    identiques au fichier. Règle du gel § 2 réappliquée : δ_haut = 1,6 (0,0563 ≥ 0,03 ; 1,8 : 0,0256 < 0,03) ;
+    δ_bas = 1,4 (0,1019 ≥ 0,10). Correct.
+  - Code : la seule différence entre dcc3e0b9… (commit c34a06d7, lu par `git show`, sans réseau) et 70c77fd5… est
+    la ligne 137 « DELTAS_V4 = None » → « DELTAS_V4 = (1.4, 1.6) » (diff vérifié).
+  - Pilote : deux lancements du même code (70c77fd5…), même configuration (3fbb27fc…), racine 20264201 / 20264202,
+    instances 0:5 (10 tâches) et 5:24 (38 tâches) ; union = 24 instances × 2 δ sans doublon ni trou ; tous deux terminés.
+    Commande `orphelins` sur les deux fichiers de PID : « aucun processus de travail consigné ne tourne ».
+
+[2026-11-01T07:13:36Z] Étape R2 — audit d'essai v4 (attaquant indépendant), instances 0 à 4 du pilote, aux deux δ
+  (10 tâches), sur la partie « instances 00-05 » du pilote (la sortie de `audit-essai` doit renvoyer à un fichier de
+  pilote produit par `essai`), machine calme au lancement (charge 0,3 sur 2 cœurs) :
+  cd <dossier temporaire vide> ; python3 -I $D/arene_melange_v4.py audit-essai \
+     --pilote $D/essai-pilote-arene-melange-v4-detection-instances-00-05.json --instances 0:5 \
+     --sortie $D/audit-essai-arene-melange-v4.json --processus 2      (PYTHONPATH=src)
+  PID des processus de travail : 979 980.
+  Note : une première tentative à 07:13:26Z a échoué avant tout calcul (`/usr/bin/time` absent de la machine) ;
+  rien n'a été écrit.
+
+[2026-11-01T07:15:42Z] Étape R3 — pilote complet v4 assemblé (pièce manquante) par un script neuf,
+  `assembler-pilote-arene-melange-v4.py` : union des deux parties chargées par `charger_tous` du calcul de puissance
+  v4 (gardes : racines permises, configuration et empreinte du code identiques, instances disjointes), contrôle
+  « 24 instances × 2 δ », analyse recalculée par `analyser` du code v4 ; aucune tâche recalculée.
+  essai-pilote-arene-melange-v4-detection.json  4d1fb23f0c72de79270609fa6516020f71611e54210dc1a02059c3c67db36b8e
+  Un dossier __pycache__ créé par cet appel (sans -B) dans le dossier du pilote a été supprimé à 07:21Z (créé par moi,
+  non suivi par git).
+
+[2026-11-01T07:16:29Z → 07:20:52Z] Étape R4 — essais v1 à v3 (`python3 -I -B -m pytest -q -p no:cacheprovider`, depuis un
+  dossier temporaire vide, à basse priorité, pendant l'audit) : v1 25 réussis (11,1 s) ; v2 44 réussis, 1 échec
+  (`test_decision_refusee_brouillon2_pour_la_bonne_raison` : attend que le brouillon 2 n'ait PAS de compagnon ;
+  il a été scellé depuis — échec connu, CM2-01, corrigé en v3 par l'essai sur copie temporaire ; fichier scellé,
+  non modifiable) ; v3 57 réussis (188,8 s).
+
+[2026-11-01T07:53:13Z] Étape R2 (fin) — audit d'essai v4 terminé : mur 2 375,0 s ; processeur 2 415,5 s (241,5 s par tâche,
+  max 287,1 s) ; efficacité 0,51 (charge 3 à 6 sur 2 cœurs : d'autres sessions actives) ; drapeau (i) faux ;
+  artefact faux. Écarts moyens |c̄| ≤ 0,0011 ; I3 de A inchangé par l'audit des tours sur les 10 tâches.
+  audit-essai-arene-melange-v4.json  528b5cd4f68b48812895a39ecd7b249cd3e9dffdb888f14e6244486dc3102ead
+  (manifeste : code 70c77fd5… ; pilote audité 963441f8… ; gel 9e1f25ae…)
+
+[2026-11-01T07:53:24Z → 07:59:40Z] Étape R5 — calcul de puissance v4 (script laissé tel quel, cf5543a7…) sur les deux parties
+  du pilote et l'audit d'essai, sortie dans le dossier temporaire puis copiée sous un nom neuf à 08:00Z :
+  python3 -I -B calcul-puissance-arene-melange-v4.py <partie 00-05> <partie 05-24> --audit audit-essai-arene-melange-v4.json
+  calcul-puissance-arene-melange-v4-sortie.txt  45a7fe3b56d80f571ffbaf02203fe1c9993d7aa162a1e0161aeed289decb8428
+  Lus : S10 k = 3 → 0,095 > 0,05 : repli k = 4 (gel v4 § 3.4) → 0,025 ; audit : fausse alerte 0,002, repli non
+  déclenché (gel v4 § 3.2) ; P10 0,990 avec l'incertitude du pilote ; I3 nul simulé 0,7329 (0,0012).
+  Note : la projection de temps de la sortie prend l'efficacité minimale des deux lancements (0,16), faite pendant
+  qu'ils tournaient en même temps sur une machine chargée ; efficacité de l'union : 2 912,4 / (2 812,4 × 2) = 0,52.
+
+[2026-11-01T08:02Z] Étape R6 — brouillon 4 écrit (aucun *brouillon4* n'existait), à partir d'un gabarit rempli par script
+  (bloc d'identité recopié de `arene_melange_v4.py identite`) ; deux retouches de texte à 08:08Z (fourchette de I3 − nul
+  de D et B′ ; nom de l'entrée « Contre-lecture 4 »). Validateur `problemes` : « section vide ou à remplir : Seuil » ;
+  « section vide ou à remplir : Contre-lecture » (attendu : 15 seuils à geler, contre-lecture 4 à faire).
+  preenregistrement-arene-melange-equilibre-v1-brouillon4.md  305911b7ab1945d7607377ede9c8cbfcf2257834bca6d6aadcf7c19be41f8160
+
+[2026-11-01T08:02:05Z → 08:07:55Z] Étape R7 — essais v4 : 97 réussis (348,9 s), dont les 3 qui lisent le brouillon 4.
+  Aucun __pycache__ créé ; aucun dossier runs/ créé ; git status : seulement les fichiers neufs de cette reprise.
+
+[2026-11-01T08:09Z] Étape R8 — LISEZMOI v4 écrit ; ce journal clos. Consommé dans cette reprise : ≈ 40 min de processeur
+  (audit) + ≈ 6 min (puissance) + ≈ 10 min (essais v1 à v4). Aucune instance de calcul ; aucune dépense.
