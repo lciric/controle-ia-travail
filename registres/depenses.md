@@ -307,3 +307,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-11-01 19:18 UTC — **fin : Kimi seul, relance** (GO-10) : OK, **0,40 USD** ; cumul GO-10 **1,11 / 5**. GO-10 clos à 1,11.
 - 2026-11-01 21:10 UTC — **engagement : T0.5 graines neuves** (GO-2026-11-01-11, plafond 45 USD) : quatre instances A100 SXM4 80 Go ≤ 1,40 USD/h, au plus 6 h chacune ; attendu ≈ 17 à 21,5 USD, borne dure de location 33,6 USD ; crédit Vast.ai lu 18,57 USD à 20:10 UTC (recharge automatique selon Lazar).
 - 2026-11-01 21:19 UTC — **en cours : T0.5 graines neuves** (GO-2026-11-01-11) : instances 58714023 (A, 1,089 USD/h), 58714191 (B, 1,16), 58714336 (C, 1,203) ; D sans offre conforme ; location ≈ 3,45 USD/h pour trois, au plus 6 h chacune.
+- 2026-11-01 21:21 UTC — **en cours : T0.5 graines neuves** : lot D 58714588 (1,161 USD/h) ; quatre instances, ≈ 4,61 USD/h.
