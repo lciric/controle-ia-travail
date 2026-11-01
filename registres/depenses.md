@@ -304,3 +304,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-11-01 18:35 UTC — **fin : Argon seul, relecture de la candidature (tel quel)** (GO-2026-11-01-10) : OK, **0,35 USD** ; cumul GO-10 0,35 / 5.
 - 2026-11-01 18:54 UTC — **fin : Kimi seul, relecture de la candidature (tel quel), premier appel** (GO-10) : TRONQUÉ à 32 000 jetons de sortie, **0,36 USD** ; cumul GO-10 0,71 / 5.
 - 2026-11-01 18:59 UTC — **en cours : Kimi seul, relance au plafond de 65 536 jetons** (GO-10, relais local port 8804, pire cas 0,71) ; cumul au pire cas 1,42 / 5.
+- 2026-11-01 19:18 UTC — **fin : Kimi seul, relance** (GO-10) : OK, **0,40 USD** ; cumul GO-10 **1,11 / 5**. GO-10 clos à 1,11.
