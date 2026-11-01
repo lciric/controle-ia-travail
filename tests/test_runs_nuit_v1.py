@@ -54,8 +54,8 @@ def test_rejeu_jouet_fidele_au_bit(source):
     # le modèle jouet échantillonne parfois un jeton spécial, effacé du texte stocké : action non conforme en longueur,
     # suite de son épisode hors contexte exact (cas réel prévu, signalé par action) ; ailleurs, égalité au bit près
     assert 0 < ft["contextes_conformes"] <= ft["conformes_longueur"] <= ft["actions"] == 16
-    assert ft["fideles_parmi_contextes_conformes"] == ft["notees_contextes_conformes"] == ft["fideles"] > 0
-    assert ft["egalite_exacte"] >= ft["fideles"]
+    assert ft["fideles_parmi_contextes_conformes"] == ft["notees_contextes_conformes"] > 0
+    assert ft["egalite_exacte"] >= ft["fideles_parmi_contextes_conformes"]
     p = depot / "donnees" / "20261101-211000-r1-jouet" / "activations-p3-rejeu-v1.npz"
     with np.load(p, allow_pickle=False) as z, np.load(depot / "donnees" / RUN_P3 / "scores-p3.npz") as s:
         assert z["maximum"].shape == z["moyenne"].shape == (16, 2, 32) and z["maximum"].dtype == np.float16
@@ -64,7 +64,7 @@ def test_rejeu_jouet_fidele_au_bit(source):
         assert empreinte_identite(z) == empreinte_identite(s) == r["identite_sha256"]
         notees = s["jetons_notes"] > 0
         assert (z["jetons_empan"][z["conforme_longueur"]] == s["jetons_notes"][z["conforme_longueur"]]).all()
-        assert (z["ecart_fidelite"][z["fidele"]] == 0).all()
+        assert (z["ecart_fidelite"][z["fidele"] & z["contexte_conforme"]] == 0).all()
         assert np.isfinite(z["maximum"][notees].astype(float)).all()
         assert (z["maximum"][notees].astype(float) >= z["moyenne"][notees].astype(float) - 1e-2).all()
     assert (p.parent / "activations-p3-rejeu-v1-complement-hors-cout.npz.sha256").exists()

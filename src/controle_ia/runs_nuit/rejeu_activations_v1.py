@@ -319,7 +319,9 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, eta
             if (k_ep + 1) % 20 == 0:
                 progres(etape="rejeu", episodes=f"{k_ep + 1}/{len(ordre)}")
     notees = np.isfinite(ecart)
-    fidele = notees & contexte_conforme & (np.nan_to_num(ecart, nan=np.inf) <= tol)
+    # fidèle : action notée, conforme en longueur, scores des sondes génériques à la tolérance ; le contexte non conforme
+    # (une action précédente non conforme) est signalé à part (`contexte_conforme`), l'écart des scores dit s'il compte
+    fidele = notees & conforme & (np.nan_to_num(ecart, nan=np.inf) <= tol)
     etat["etape"] = "écriture"
     dossier = racine / "donnees" / run_id
     dossier.mkdir(parents=True, exist_ok=False)

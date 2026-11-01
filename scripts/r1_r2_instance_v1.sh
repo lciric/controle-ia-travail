@@ -22,7 +22,10 @@
 #   TESTS_ATTENDUS nombre de tests attendus (sans préenregistrement seulement)
 #   TRAVAIL       défaut $HOME/r1r2
 #   VENV_EXISTANT environnement Python déjà prêt à réutiliser (sinon : python3.11 -m venv + requirements-gpu.txt)
-#   TESTS_CIBLES  mode jouet seulement : fichiers de tests à lancer au lieu de la suite complète (répétition rapide)
+#   TESTS_CIBLES  mode jouet seulement : fichiers de tests remplaçant la suite ciblée (répétition rapide)
+# Suite ciblée (précédent : rejeu_juges_instance_v2.sh) : modules des runs de nuit, lanceur, notation, sondes figées et
+# conditions de P3, format du harnais, pilote (logits, jetons Yes/No), manifeste, scellement, préenregistrements ; le
+# nombre exact est cité par le préenregistrement (« Tests attendus »).
 set -euo pipefail
 
 : "${COMMIT:?COMMIT obligatoire}"
@@ -191,7 +194,9 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     journal "carte indisponible pour torch : arrêt avant les tests"; consigner_arret "contrôle de la carte"; exit 1
 fi
 ETAPE="tests"
-CIBLES=()
+CIBLES=(tests/test_runs_nuit_v1.py tests/test_premier_test_ia_run.py tests/test_premier_test_ia_notation.py
+        tests/test_premier_test_ia_figees.py tests/test_premier_test_ia_conditions.py tests/test_harnais_formats.py
+        tests/test_pilote_a.py tests/test_manifeste.py tests/test_scellement.py tests/test_prereg.py)
 if [ -n "${TESTS_CIBLES:-}" ]; then
     [ "$MODE" = jouet ] || { journal "TESTS_CIBLES n'est permis qu'en mode jouet : arrêt"; consigner_arret "tests"; exit 2; }
     read -r -a CIBLES <<<"$TESTS_CIBLES"
