@@ -23,14 +23,16 @@ COMPARAISONS_SECONDAIRES = (("J8s", "G"), ("J8s", "T"))
 COMPARAISONS_DESCRIPTIVES = (("J3g", "G"), ("J3s", "J3g"), ("J8s", "J3s"), ("T", "G"), ("C", "G"), ("J3s", "C"),
                              ("J3s", "G_enjeux"), ("T", "C"))
 BRAS_CONTROLE = "J3s"                  # contrôles « mention » et « témoin » lus au seuil du juge 3B spécialisé
+BRAS_CONTROLE_G = "G"                  # C-2 : mention au seuil de G, pour la seule ligne « G au-dessus du juge » (règle R4)
 VERDICTS_ARRET = {"echec": "rejeu_en_echec", "non conforme": "rejeu_non_conforme"}   # verdict de l'arret.json → motif
 MOTIFS_J8_NUL = ("non_livre",)
 COMMANDE_REJEU = "python -m controle_ia.runs_nuit.rejeu_activations_v1"   # commande du rejeu (commit 29bd8e2e)
+RUN_R1_ARRETE = "20261102-002114-r1-rejeu-reel"   # C-3 : run du rejeu arrêté (n° 247 de session-depot)
 CLES_GRAINES = ("plis", "tirages")
 REGLE_ENTROPIE = "128 premiers bits de l'empreinte sha256 du préenregistrement « R2 seul » scellé"
 
 NOMS_GELES = ("VERSION", "COMMANDE", "NOM_SORTIE", "FORMAT_FICHE", "BRAS", "COMPARAISONS_PRINCIPALES",
-              "COMPARAISONS_SECONDAIRES", "COMPARAISONS_DESCRIPTIVES", "BRAS_CONTROLE", "VERDICTS_ARRET", "MOTIFS_J8_NUL", "COMMANDE_REJEU",
+              "COMPARAISONS_SECONDAIRES", "COMPARAISONS_DESCRIPTIVES", "BRAS_CONTROLE", "BRAS_CONTROLE_G", "VERDICTS_ARRET", "MOTIFS_J8_NUL", "COMMANDE_REJEU", "RUN_R1_ARRETE",
               "CLES_GRAINES", "REGLE_ENTROPIE")
 
 

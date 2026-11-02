@@ -60,12 +60,20 @@ def verifier_arret_r1(racine: Path, preuve: dict, motif: str) -> dict:
     if chemin.name != "arret.json" or len(chemin.parts) != 3 or chemin.parts[0] != "diag":
         raise GardeArret(f"preuve de l'arrêt de R1 : {chemin} ≠ diag/<run>/arret.json")
     run = chemin.parts[1]
+    if run != K3.RUN_R1_ARRETE:
+        raise GardeArret(f"preuve de l'arrêt de R1 : run {run} ≠ run arrêté cité ({K3.RUN_R1_ARRETE}, n° 247)")
     exiger_empreinte(racine, str(chemin), preuve["sha256"], "preuve de l'arrêt de R1")
     corps = verifier_resultat(racine, racine / chemin)
+    if corps.get("run_id") != run:
+        raise GardeArret(f"preuve de l'arrêt de R1 : résultat rattaché au run {corps.get('run_id')!r} ≠ {run}")
     m, _ = lire_manifeste(racine / "runs" / run / "manifeste.json")
     if m.get("commande") != K3.COMMANDE_REJEU:
         raise GardeArret(f"preuve de l'arrêt de R1 : run {run} n'est pas un rejeu ({m.get('commande')!r})")
     cfg = m.get("config") or {}
+    if m.get("decisif") is not True or cfg.get("mode") != "reel":
+        raise GardeArret(f"preuve de l'arrêt de R1 : rejeu {run} non décisif ou hors du mode « reel »")
+    if (m.get("preenregistrement") or {}).get("sha256") != K.PREREG_FOURNISSEUR["sha256"]:
+        raise GardeArret(f"preuve de l'arrêt de R1 : rejeu {run} lancé sous un autre texte que celui du fournisseur")
     if cfg.get("textes_sha256") != K.EMPREINTES_P3["textes"] or cfg.get("identite_sha256") != K.IDENTITE_SHA256:
         raise GardeArret("preuve de l'arrêt de R1 : textes ou identité du rejeu ≠ empreintes citées")
     verdict = corps["resultat"].get("verdict_fidelite")
@@ -73,6 +81,9 @@ def verifier_arret_r1(racine: Path, preuve: dict, motif: str) -> dict:
         raise GardeArret(f"preuve de l'arrêt de R1 : verdict {verdict!r} ≠ motif déclaré {motif!r}")
     if (racine / "diag" / run / f"{K.RESULTAT_R1}.json").exists():
         raise GardeArret(f"run {run} : {K.RESULTAT_R1}.json présent à côté de l'arrêt : R1 n'est pas arrêté")
+    autres = sorted(str(q.relative_to(racine)) for q in (racine / "diag").glob(f"*/{K.RESULTAT_R1}.json"))
+    if autres:
+        raise GardeArret(f"{autres[:3]} : un rejeu a versé ses sorties dans l'arbre : ce mode ne s'applique pas (nœud)")
     d = racine / "donnees" / run
     if d.exists() and any(p.name.startswith("activations-") for p in d.iterdir()):
         raise GardeArret(f"run {run} : fichiers d'activations présents : R1 n'est pas arrêté")

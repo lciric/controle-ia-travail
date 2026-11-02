@@ -24,7 +24,7 @@ from controle_ia.scellement import empreinte, sceller
 from test_analyse_principale_r1_r2_v1 import RUN, _donnees, _ecrire_juge, _ecrire_p3, _npz
 
 RACINE = Path(__file__).resolve().parents[1]
-RUN_R1 = "20261102-002114-r1-rejeu-synthetique"
+RUN_R1 = K3.RUN_R1_ARRETE
 
 
 @pytest.fixture(autouse=True)
@@ -33,10 +33,31 @@ def constantes_reduites(monkeypatch):
         monkeypatch.setattr(K, nom, v)
 
 
+def _texte_jouet(depot, nom, graine):
+    """Préenregistrement jouet conforme (sections exigées), scellé : tient lieu du texte du fournisseur."""
+    texte = "\n\n".join([f"# Texte jouet {graine}", "## Hypothèse", "h", "## Prédiction chiffrée et signe attendu", "p",
+                          "## Métrique", "m", "## Seuil", "s", "## Plan d'analyse", "a", "## Critères de lecture gelés", "c",
+                          "## Liste d'arrêt", "l", "## Contre-lecture", f"relu `{'a' * 64}`, rapport `{'b' * 64}`"]) + "\n"
+    q = depot / nom
+    q.parent.mkdir(parents=True, exist_ok=True)
+    q.write_text(texte, encoding="utf-8")
+    return sceller(q)
+
+
+def _fournisseur_jouet(depot, monkeypatch):
+    sha = _texte_jouet(depot, "prereg/fournisseur-jouet.md", 1)
+    monkeypatch.setattr(K, "PREREG_FOURNISSEUR", {**K.PREREG_FOURNISSEUR, "sha256": sha})
+    return sha
+
+
 def _ecrire_arret(depot, d, sha_textes, verdict="echec", run=RUN_R1, commande=K3.COMMANDE_REJEU,
-                  resultat_rejeu=False, activations=False):
-    cfg = {"mode": "jouet", "textes_sha256": sha_textes, "identite_sha256": EN.empreinte_identite(d["tables"])}
-    m, _ = creer_manifeste(depot, run, cfg, ["fidelite"], entropie=12, autoriser_depot_sale=True, commande=commande)
+                  resultat_rejeu=False, activations=False, decisif=True, mode="reel",
+                  prereg="prereg/fournisseur-jouet.md"):
+    """Arrêt d'un rejeu au format du fournisseur : manifeste décisif (texte jouet scellé), configuration en mode « reel »,
+    `diag/<run>/arret.json` rattaché ; les artefacts changent un de ces traits."""
+    cfg = {"mode": mode, "textes_sha256": sha_textes, "identite_sha256": EN.empreinte_identite(d["tables"])}
+    m, _ = creer_manifeste(depot, run, cfg, ["fidelite"], entropie=12, autoriser_depot_sale=True, commande=commande,
+                           decisif=decisif, prereg=str(depot / prereg) if decisif else None)
     p = ecrire_resultat(depot, m, "arret", {"etape": "rejeu", "motif": "épisodes conformes à trajectoire différente",
                                             "verdict_fidelite": verdict, "partiel": {}, "duree_s": 1.0})
     if resultat_rejeu:
@@ -47,6 +68,7 @@ def _ecrire_arret(depot, d, sha_textes, verdict="echec", run=RUN_R1, commande=K3
 
 
 def _source_r2(depot, monkeypatch, d, motif="rejeu_en_echec", j8=True, j3_kw=None, fiche="fiche-r2.json", **arret_kw):
+    _fournisseur_jouet(depot, monkeypatch)
     sha = _ecrire_p3(depot, d)
     monkeypatch.setattr(K, "EMPREINTES_P3", sha)
     monkeypatch.setattr(K, "IDENTITE_SHA256", EN.empreinte_identite(d["tables"]))
@@ -131,20 +153,107 @@ def test_gardes_fiche_et_preuve_d_arret(depot, monkeypatch):
         EN3.verifier_arret_r1(depot, f["preuve_R1"], "rejeu_non_conforme")
     with pytest.raises(GardeArret, match="empreinte"):
         EN3.verifier_arret_r1(depot, {**f["preuve_R1"], "sha256": "0" * 64}, f["motif_R1"])
-    p = _ecrire_arret(depot, d, sha["textes"], verdict="non conforme", run="20261102-002115-r1-b")
-    EN3.verifier_arret_r1(depot, p, "rejeu_non_conforme")                           # sain : autre motif fermé
-    p = _ecrire_arret(depot, d, sha["textes"], run="20261102-002116-r1-c", resultat_rejeu=True)
+    def autre(run, motif="rejeu_en_echec", **kw):
+        monkeypatch.setattr(K3, "RUN_R1_ARRETE", run)
+        return EN3.verifier_arret_r1(depot, _ecrire_arret(depot, d, sha["textes"], run=run, **kw), motif)
+    autre("20261102-002115-r1-b", "rejeu_non_conforme", verdict="non conforme")    # sain : autre motif fermé
     with pytest.raises(GardeArret, match="n'est pas arrêté"):
-        EN3.verifier_arret_r1(depot, p, "rejeu_en_echec")
-    p = _ecrire_arret(depot, d, sha["textes"], run="20261102-002117-r1-d", activations=True)
-    with pytest.raises(GardeArret, match="n'est pas arrêté"):
-        EN3.verifier_arret_r1(depot, p, "rejeu_en_echec")
-    p = _ecrire_arret(depot, d, sha["textes"], run="20261102-002118-r1-e", commande="python -m autre")
+        autre("20261102-002117-r1-d", activations=True)
     with pytest.raises(GardeArret, match="n'est pas un rejeu"):
-        EN3.verifier_arret_r1(depot, p, "rejeu_en_echec")
-    p = _ecrire_arret(depot, d, "f" * 64, run="20261102-002119-r1-f")
+        autre("20261102-002118-r1-e", commande="python -m autre")
     with pytest.raises(GardeArret, match="textes ou identité"):
+        p = _ecrire_arret(depot, d, "f" * 64, run="20261102-002119-r1-f")
+        monkeypatch.setattr(K3, "RUN_R1_ARRETE", "20261102-002119-r1-f")
         EN3.verifier_arret_r1(depot, p, "rejeu_en_echec")
+    with pytest.raises(GardeArret, match="non décisif"):                           # C-3 : rejeu jouet
+        autre("20261102-002120-r1-g", mode="jouet")
+    with pytest.raises(GardeArret, match="non décisif"):                           # C-3 : manifeste non décisif
+        autre("20261102-002121-r1-h", decisif=False)
+    _texte_jouet(depot, "prereg/autre-texte.md", 2)
+    with pytest.raises(GardeArret, match="autre texte"):                           # C-3 : lancé sous un autre texte
+        autre("20261102-002122-r1-i", prereg="prereg/autre-texte.md")
+    monkeypatch.setattr(K3, "RUN_R1_ARRETE", RUN_R1)
+    with pytest.raises(GardeArret, match="run arrêté cité"):                       # C-3 : autre nom de run
+        EN3.verifier_arret_r1(depot, _ecrire_arret(depot, d, sha["textes"], run="20261102-002123-r1-j"),
+                              "rejeu_en_echec")
+    EN3.verifier_arret_r1(depot, f["preuve_R1"], f["motif_R1"])                    # sain, encore
+    _ecrire_arret(depot, d, sha["textes"], run="20261102-002124-r1-k", resultat_rejeu=True)
+    with pytest.raises(GardeArret, match="versé ses sorties"):                     # rejeu-activations.json ailleurs
+        EN3.verifier_arret_r1(depot, f["preuve_R1"], f["motif_R1"])
+    with pytest.raises(GardeArret, match="n'est pas arrêté"):                      # même run : sorties du rejeu
+        autre("20261102-002116-r1-c", resultat_rejeu=True)
+
+
+def test_gardes_fiche_et_preuve_artefacts(depot, monkeypatch):
+    """C-1 (règle R5) : les gardes restantes, chacune sur un artefact ; les cas sains sont les essais voisins."""
+    d = _donnees(40)
+    f = _source_r2(depot, monkeypatch, d)
+    EN3.lire_fiche_r2(depot, "fiche-r2.json", scellee=True)                       # cas sain
+
+    def refus(motif, change):
+        g = copy.deepcopy(f)
+        change(g)
+        with pytest.raises(GardeArret, match=motif):
+            EN3.lire_fiche_r2(depot, _fiche(depot, g, "x.json"), scellee=False)
+    refus("clés ou format", lambda g: g.update(format="autre"))
+    refus("clés ou format", lambda g: g.update(cle_en_trop=1))
+    refus("preuve_R1", lambda g: g["preuve_R1"].pop("sha256"))
+    refus("exige R2 livré", lambda g: g.update(motif_R2="sorties_non_livrees"))
+    refus("R2 hors de forme", lambda g: g["R2"].update(en_trop=1))
+    refus("sans le juge 3B", lambda g: g["R2"].update(juge3b=None))
+    refus("R2.juge3b hors de forme", lambda g: g["R2"]["juge3b"].pop("resultat"))
+    refus("juge 8B nul sans motif", lambda g: g["R2"].update(juge8b=None, motif_juge8b=None))
+    refus("juge 8B nul sans motif", lambda g: g["R2"].update(motif_juge8b="non_livre"))
+    refus("juge 8B nul sans motif", lambda g: g["R2"].update(juge8b=None, motif_juge8b="autre"))
+    (depot / "non-scellee.json").write_text(json.dumps(f, ensure_ascii=False), encoding="utf-8")
+    with pytest.raises(GardeArret):                                                 # fiche non scellée, mode décisif
+        EN3.lire_fiche_r2(depot, "non-scellee.json", scellee=True)
+    # sceau rompu : arret.json modifié après scellement (la fiche porte la nouvelle empreinte)
+    q = depot / f["preuve_R1"]["chemin"]
+    q.write_text(q.read_text(encoding="utf-8").replace('"echec"', '"echec" '), encoding="utf-8")
+    with pytest.raises(GardeArret):
+        EN3.verifier_arret_r1(depot, {**f["preuve_R1"], "sha256": empreinte(q)}, f["motif_R1"])
+    # rattachement rompu : manifeste du rejeu modifié puis rescellé
+    d2 = _donnees(41)
+    monkeypatch.setattr(K3, "RUN_R1_ARRETE", "20261102-002125-r1-l")
+    p2 = _ecrire_arret(depot, d2, K.EMPREINTES_P3["textes"], run="20261102-002125-r1-l")
+    m = depot / "runs" / "20261102-002125-r1-l" / "manifeste.json"
+    texte = json.loads(m.read_text(encoding="utf-8"))
+    texte["cree_le"] = "2000-01-01T00:00:00+00:00"
+    Path(str(m) + ".sha256").unlink()
+    m.write_text(json.dumps(texte, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    sceller(m)
+    with pytest.raises(GardeArret, match="rattaché"):
+        EN3.verifier_arret_r1(depot, p2, "rejeu_en_echec")
+
+
+def test_calcul_exige_soixante_taches():
+    d = _donnees(42)
+    t = d["tables"]
+    garde = np.asarray(t["tache"]).astype(str) != "t059"
+    sous = {k: (v[garde] if getattr(v, "shape", ()) and v.shape[0] == garde.size else v) for k, v in t.items()}
+    n = int(garde.sum())
+    j3 = {"score": d["juges"]["J3"][0][garde], "score_generique": d["juges"]["J3"][1][garde],
+          "anomalie": np.zeros(n, bool), "anomalie_generique": np.zeros(n, bool)}
+    with pytest.raises(GardeArret, match="tâches"):
+        LR.calculer_r2({"tables": sous}, j3, None, d["longueurs"][garde], graines(list(K3.CLES_GRAINES), 1))
+    j3 = {"score": d["juges"]["J3"][0], "score_generique": d["juges"]["J3"][1],
+          "anomalie": np.zeros(t["pas"].size, bool), "anomalie_generique": np.zeros(t["pas"].size, bool)}
+    c = LR.calculer_r2({"tables": t}, j3, None, d["longueurs"], graines(list(K3.CLES_GRAINES), 1))   # sain : 60
+    assert len(c["plis"]) == 5 and "J8s" in c["principale"]["non_lus"]
+
+
+def test_G_au_dessus_du_juge_confondu(depot, monkeypatch):
+    """C-2 (règle R4) : G signale aussi les actions « mention » : « confondu », jamais « G sépare mieux »."""
+    d = _donnees(43, g=4.0, j=0.0, cout=0.0)
+    cond = d["tables"]["condition"]
+    d["tables"]["scores"][cond == "mention", 0] = d["tables"]["scores"][cond == "saboteur", 0]
+    _source_r2(depot, monkeypatch, d)
+    r = _analyser(depot)
+    assert _cl(r, "J3s-G") == "inférieure" and r["issue"]["mention_G"] == "contraire"
+    ligne = [x for x in r["issue"]["lignes"] if x.startswith("S-1, J3s − G")][0]
+    assert "« confondu »" in ligne and "G lit la présence de la consigne" in ligne
+    assert any("nettement inférieur" in x for x in r["issue"]["audit_R4"])
     with pytest.raises(GardeArret, match="diag/<run>/arret.json"):
         EN3.verifier_arret_r1(depot, {"chemin": "arret.json", "sha256": "0" * 64}, "rejeu_en_echec")
 
@@ -174,6 +283,8 @@ def test_masse_saine_et_audit_juge_nettement_inferieur(depot, monkeypatch):
     _source_r2(depot, monkeypatch, d, j3_kw={"anomalie": 0.04})
     r = _analyser(depot)
     assert _cl(r, "J3s-G") == "inférieure" and any("nettement inférieur" in x for x in r["issue"]["audit_R4"])
+    assert r["issue"]["mention_G"] == "conforme"                                     # C-2 : cas sain
+    assert any("la sonde générique G sépare mieux que le juge" in x for x in r["issue"]["lignes"])
     assert not any("juge réservée" in x for x in r["issue"]["reserves"])
 
 
