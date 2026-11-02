@@ -1,0 +1,14 @@
+# Candidature Pivotal — envoi final : versions à utiliser, v65 (2 novembre 2026, 14:32 UTC) — FIGÉE
+
+Remplace la v64. Versions figées après la relecture chiffrée de l'instance sycophancie (Lazar, 14:31 UTC). Fait foi sur les versions.
+
+| Pièce | Fichier à envoyer | À ne pas envoyer |
+|---|---|---|
+| Formulaire commun, sections 1 à 10 | `reponses-formulaire-v18.md` | v14 à v17 |
+| CV | `Lazar_Ciric_CV_2026-11-02_v16_universel.pdf` (bloc sycophancie : trois remplacements du brief `brief-pour-instance-pivotal-2026-11-02-v1.md`, rien d'autre ; interligne 1,175 → 1,15 pour rester sur deux pages ; source `cv-v15/construire_cv_v15.py` ; variantes `_v16_persona-sycophancie`, `_interpretabilite`, `_controle-recherche-automatisee` rebâties de même) | tout CV `_v15_` et `_v14_` |
+| Writing sample 1 | `Lazar_Ciric_writing_sample_1_essay_v1.pdf` | — |
+| Writing sample 2 | `Lazar_Ciric_writing_sample_2_control-proposal-extract_v21.pdf` (reformulation de Lazar de 13:45 UTC — fin de la section 3, état des lieux, G1, puces de B, H3, H4′, H5, H7, G2, G3, ouverture de la section 5 —, fond corrigé ; avant : v20) (5 pages ; passe section par section de Lazar terminée, jusqu'à sa section de 11:06 Paris, corrigée sur le fond) | v1 à v12 ; les reformulations de 10:51 et 10:52 (sens perdu, non corrigées), `Lazar_Ciric_writing_samples_v3.pdf` |
+| Mémo de carrière | `Lazar_Ciric_career_memo_2026-11-02_v6.pdf` | v3 à v5 |
+| Mentors | **Ibrahim v21** (Q2 de Lazar + trois corrections de l'instance sycophancie : marge 0,76 entre intervalles et cibles à 1,1 ; critère « two-destination » ; items engagés publiquement ; PDF des questions-réponses v6) (réponses aux deux questions réelles du formulaire, après lecture de ses travaux), **Kirchner v24** (réponses aux deux questions réelles du formulaire ; la v12 ne sert plus à ce formulaire), **Heimersheim v22** (Q1 longue et Q2 reformulées par Lazar, fond corrigé) (réponses aux deux questions réelles du formulaire : direction qui échouera, pourquoi l'interprétabilité mécaniste ; la v11 ne sert plus à ce formulaire), **Jang et Feng v20** (réponse à la question réelle du formulaire, après lecture de leurs travaux), **Scheurer v14** (proposition de tendance d'échelle, question réelle du formulaire), **Colognese et Ward v13** (deux questions réelles du formulaire), Tilli v10, Jain et Jacob v10 ; ordre de cochage : 6 d'abord (Heimersheim, Kirchner, Jang et Feng, Scheurer, Ibrahim, Colognese et Ward), puis Tilli et Jain et Jacob après un premier envoi | Ibrahim v10, Kirchner v11, Heimersheim v10, Jang et Feng v12 |
+
+Liens publics : R1, https://github.com/lciric/ideation-organism/tree/main/resultats/controle-r1-blanche-noire (GO-2026-11-02-09) ; A1, https://github.com/lciric/ideation-organism/tree/main/resultats/attaque-goodhart-v2 (GO-2026-11-02-10).
