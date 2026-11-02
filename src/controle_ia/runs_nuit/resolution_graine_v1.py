@@ -25,13 +25,28 @@ dernier jeton d'une action est un jeton de fin (parmi `fmt.fins`, même règle) 
 candidat compatibles, marge en log du choix non contraint. **Arbitre unique : l'empreinte de trajectoire de P3**
 (sha256 de l'épisode du harnais), recalculée sur l'épisode reconstruit.
 
-**Repli écrit** (`resoudre_avec_repli`) : si l'empreinte n'est pas retrouvée, les quasi-égalités du premier essai (écart
-sous `seuil_ecart`, au plus `quasi_egalites_max`, les plus fragiles d'abord) sont basculées vers leur second candidat,
-une, puis deux à la fois (`bascules_max`), dans l'ordre de `itertools.combinations`, au plus `combinaisons_max`
-combinaisons, chacune rejouée depuis l'action basculée et arbitrée par l'empreinte ; sinon « non résolu », avec sa
-cause. Caractère de remplacement U+FFFD dans le texte : **cas déclaré** (compté par épisode) ; les octets inconnus qu'il
-recouvre sont traités par un balayage du vocabulaire seulement si c'est simple (au plus `balayages_max` balayages par
-épisode), sinon « non résolu » déclaré.
+**Repli écrit, itératif** (`resoudre_avec_repli`) : si l'empreinte n'est pas retrouvée, les quasi-égalités de l'essai
+direct (écart sous `seuil_ecart`, au plus `quasi_egalites_max`, les plus fragiles d'abord) sont basculées vers leur
+second candidat, une à la fois ; chaque rejeu basculé (arrêté ou non par une contradiction : son journal partiel compte)
+apporte ses propres quasi-égalités, **après** sa dernière bascule (au plus `quasi_egalites_max`), qui forment la frontière
+du niveau suivant (deux bascules, jusqu'à `bascules_max`) ; dans chaque niveau, les combinaisons de plus faible écart
+cumulé d'abord ; au plus `combinaisons_max` rejeux en tout, chacun rejoué depuis l'action de sa première bascule et
+arbitré par l'empreinte ; sinon « non résolu », avec sa cause. Une bascule change souvent le découpage, donc la longueur
+des jetons qui suivent : la seconde erreur d'une paire n'apparaît que dans le rejeu de la première, d'où la frontière
+enrichie. Caractère de remplacement U+FFFD dans le texte : **cas déclaré** (compté par épisode) ; les octets inconnus qu'il
+recouvre sont traités par un balayage complet du vocabulaire seulement si c'est simple (au plus `balayages_max` balayages
+complets par épisode ; les recherches par préfixe, bornées, ne comptent pas), sinon « non résolu » déclaré.
+
+**Durées** : budget par épisode (`duree_max_episode_s`) et par étape (`duree_max_s`) ; un épisode dont le budget s'épuise
+finit « non résolu : durée » sans arrêter l'étape ; une fois le budget de l'étape épuisé, les épisodes restants sont
+consignés « non tenté : durée » ; le résultat est toujours écrit. Chaque épisode traité est consigné aussitôt dans un
+fichier scellé (`diag/<run>/episodes-<étape>/NNN.json` : statut, cause, identifiants retrouvés, empreinte), cité dans
+`arret.json` en cas d'arrêt (signal, erreur de chaîne).
+
+**Validation : une mesure, pas un arrêt** (décision de session sur VG-03). La résolution se lance quelle que soit la
+lecture de la validation (comptes, accord du choix non contraint en moyenne et par épisode, distribution des écarts,
+rapportés) ; seule une erreur de chaîne (pièces, sceaux, graines illisibles) arrête avant la résolution ; un « résolu »
+ne se lit que sur l'égalité de l'empreinte de P3, revérifiée à la construction de la table.
 
 **Forme nouvelle d'entrée de table** (`METHODE_IDENTIFIANTS`, table version 3) : identifiants explicites des actions
 corrigées (`actions` : pas, identifiants de la reconstruction de base, identifiants retrouvés), appliquée par
@@ -58,14 +73,13 @@ import argparse
 import bisect
 import codecs
 import hashlib
-import itertools
 import json
 import math
 import signal
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import numpy as np
@@ -94,12 +108,28 @@ CLES = ("agent", "mode", "T", "run_source", "chemin_textes", "textes_sha256", "c
         "table_tokenisation_sha256", "episodes_resolution", "temperature", "max_nouveaux", "noyau_attention", "fils",
         "hors_ligne", "fils_tirages", "episodes_d_avance", "seuil_ecart", "quasi_egalites_max", "bascules_max",
         "combinaisons_max", "combinaisons_max_validation", "balayages_max", "seuil_validation", "duree_max_s")
+# clés ajoutées par les corrections VG-01 à VG-09 : exigées par `exiger_reglages_execution` (étapes validation et
+# resolution de ce module) ; `CLES` reste la liste des versions antérieures (modules qui l'importent)
+CLES_EXECUTION = ("duree_max_episode_s",)
+CLES_COMPLETES = CLES + CLES_EXECUTION
+NOYAUX = ("defaut", "math")
+CLES_AGENT_P3 = ("modele", "revision", "variables_gabarit")
+# environnement de P3 (`diag/20261019-230011-p3-reel/episodes-p3.json`, manifeste de P3) : un écart est une réserve
+# écrite au résultat, pas un arrêt (la version de torch, elle, arrête dans le script d'instance)
+ENVIRONNEMENT_P3 = {"torch": "2.14.1+cu130", "cuda": "13.0", "cudnn": 92400, "carte": "A100-SXM4-80GB"}
 REGLE = ("rejeu à graine : graines des actions de P3 (manifeste, clé tache/<identifiant>, graines_des_actions) ; à chaque "
          "pas, parmi les jetons compatibles avec les octets restants du texte stocké (spéciaux hors fins : zéro octet ; "
          "dernier pas : jeton de fin si jetons − jetons_notes = 1), celui qui maximise p / q, q = tirages exponentiels de "
          "la graine ; passe forcée par l'enseignant, redécoupage canonique du reste après chaque divergence ; arbitre "
-         "unique : empreinte de trajectoire de P3 ; repli : bascule des quasi-égalités (écart sous le seuil), une puis "
-         "deux, combinaisons bornées, arbitrées par l'empreinte ; sinon non résolu, cause écrite")
+         "unique : empreinte de trajectoire de P3 ; repli itératif : bascule des quasi-égalités (écart sous le seuil) "
+         "de l'essai direct, puis de chaque rejeu basculé après sa dernière bascule, une puis deux, combinaisons bornées, "
+         "arbitrées par l'empreinte ; budgets par épisode et par étape (non résolu : durée) ; sinon non résolu, cause "
+         "écrite")
+
+
+def horloge() -> float:
+    """Horloge des échéances (remplacée dans les essais pour éprouver une échéance en milieu d'étape)."""
+    return time.perf_counter()
 
 
 class Contradiction(Exception):
@@ -112,6 +142,11 @@ class Contradiction(Exception):
 
 class NonResolu(Exception):
     """Cas déclaré hors de la méthode (caractère de remplacement non simple) : l'épisode est « non résolu »."""
+
+
+class DureeEpuisee(Exception):
+    """Budget de l'épisode (ou de l'étape) épuisé pendant un essai : l'épisode finit « non résolu : durée », l'étape
+    continue (ce n'est pas une garde d'arrêt du run)."""
 
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -293,7 +328,9 @@ class Cible:
         return seg, atteint
 
     def candidats(self, etat) -> tuple[list[int], bool]:
-        """(jetons ordinaires compatibles, triés ; vrai si un balayage du vocabulaire a été nécessaire)."""
+        """(jetons ordinaires compatibles, triés ; vrai si un balayage **complet** du vocabulaire a été nécessaire : octets
+        connus épuisés devant un U+FFFD, tout jeton est alors examiné ; une recherche par préfixe connu non vide, bornée
+        par l'ordre des octets, n'en est pas un et n'est pas comptée)."""
         r = self._attendu(etat)
         if r is None:
             return [], False
@@ -302,7 +339,7 @@ class Cible:
         if atteint:
             c += self.voc.commencant_par(E)
         c = [i for i in set(c) if self.avancer(etat, i) is not None]
-        return sorted(c), bool(atteint)
+        return sorted(c), bool(atteint and not E)
 
     def reste(self, etat) -> tuple[bytes, str]:
         """(octets qui complètent le caractère en attente, texte qui suit) : base du découpage deviné."""
@@ -384,6 +421,7 @@ class Reglages:
     combinaisons_max: int = 80
     balayages_max: int = 64
     echeance: float | None = None
+    duree_episode_s: float | None = None
 
 
 @dataclass
@@ -396,7 +434,8 @@ def resoudre_action(moteur, voc: Vocabulaire, tok, ctx: list[int], texte: str, n
                     fin_defaut: int, reglages: Reglages, t: int = 0, forcages: dict | None = None,
                     pas: list | None = None, compteurs: Compteurs | None = None) -> list[int]:
     """Identifiants d'une action : n jetons, le dernier parmi les fins si `a_fin`. `pas` reçoit, par jeton, (t, s, choix,
-    non contraint, candidats, écart, second, marge, balayage). Lève `Contradiction` (essai à rejeter) ou `NonResolu`."""
+    non contraint, candidats, écart, second, marge, balayage complet). Lève `Contradiction` (essai à rejeter),
+    `NonResolu` ou `DureeEpuisee` (échéance `reglages.echeance` passée)."""
     cible = Cible(texte, voc)
     forcages = forcages or {}
     compteurs = compteurs if compteurs is not None else Compteurs()
@@ -410,8 +449,8 @@ def resoudre_action(moteur, voc: Vocabulaire, tok, ctx: list[int], texte: str, n
     choisis: list[int] = []
     while len(choisis) < n:
         exiger_sans_signal(f"résolution, pas {t}, jeton {len(choisis)}")
-        if reglages.echeance is not None and time.perf_counter() > reglages.echeance:
-            raise GardeArret(f"limite de durée dépassée (pas {t}, jeton {len(choisis)})")
+        if reglages.echeance is not None and horloge() > reglages.echeance:
+            raise DureeEpuisee(f"budget épuisé (pas {t}, jeton {len(choisis)})")
         s0 = len(choisis)
         devine = deviner(cible, etat, voc, tok, n - s0, a_fin, fin_defaut)
         k_lignes = len(devine) + 1
@@ -536,22 +575,46 @@ def rejouer_episode(moteur, voc, fmt, env, identifiant: str, T: int, textes, jet
     return transcription(fmt, env, T, textes, trouves, jetons, jetons_notes), trouves
 
 
+def echeance_episode(reglages: Reglages, depart: float) -> float | None:
+    """Échéance d'un épisode : la plus proche de l'échéance de l'étape et de `depart + duree_episode_s`."""
+    bornes = [x for x in (reglages.echeance,
+                          None if reglages.duree_episode_s is None else depart + float(reglages.duree_episode_s))
+              if x is not None]
+    return min(bornes) if bornes else None
+
+
+def quasi_egalites(journal: list, seuil: float, n_max: int, apres: tuple[int, int] = (-1, -1)) -> list:
+    """Quasi-égalités d'un journal de pas : second candidat présent, écart sous `seuil`, position (pas, rang) strictement
+    après `apres` ; les plus fragiles d'abord (écart, puis position), au plus `n_max`."""
+    q = sorted((x for x in journal if x[6] >= 0 and x[5] < seuil and (x[0], x[1]) > tuple(apres)),
+               key=lambda x: (x[5], x[0], x[1]))
+    return q[:int(n_max)]
+
+
 def resoudre_avec_repli(moteur, voc, fmt, fabrique_env, identifiant: str, T: int, textes, jetons, jetons_notes, Qs,
                         empreinte_cible: str, reglages: Reglages, combinaisons_max: int | None = None) -> dict:
-    """Essai direct, puis repli écrit (bascule des quasi-égalités, voir le module) ; arbitre : `empreinte_cible`."""
-    depart = time.perf_counter()
+    """Essai direct, puis repli écrit itératif (voir le module) ; arbitre : `empreinte_cible`. Budget de l'épisode
+    (`echeance_episode`) : épuisé, l'épisode finit « non résolu », cause « durée : … », `duree_epuisee` vrai (jamais une
+    exception : l'étape continue). Rend aussi `repli` : rejeux par niveau et par issue."""
+    depart = horloge()
     cmax = reglages.combinaisons_max if combinaisons_max is None else int(combinaisons_max)
+    reg = replace(reglages, echeance=echeance_episode(reglages, depart))
     sortie = {"episode": identifiant, "fffd": sum(x.count(FFFD) for x in textes), "statut": "non_resolu", "voie": None,
               "cause": None, "forcages": [], "combinaisons_essayees": 0, "ids": None, "ids_directs": None,
-              "empreinte": None, "empreinte_cible": empreinte_cible}
+              "empreinte": None, "empreinte_cible": empreinte_cible, "duree_epuisee": False}
     pas: list = []
     compteurs = Compteurs()
     trouves_directs: list = []
 
     def essai(forcages, prefixe, journal_pas, cpt):
         rec, trouves = rejouer_episode(moteur, voc, fmt, fabrique_env(), identifiant, T, textes, jetons, jetons_notes,
-                                       Qs, reglages, forcages, prefixe, journal_pas, cpt)
+                                       Qs, reg, forcages, prefixe, journal_pas, cpt)
         return rec, trouves, empreinte_trajectoire(episode_harnais(identifiant, T, rec))
+
+    def finir(**k):
+        sortie.update(k)
+        sortie["duree_s"] = round(horloge() - depart, 2)
+        return sortie
 
     try:
         rec, trouves, emp = essai(None, None, pas, compteurs)
@@ -564,47 +627,70 @@ def resoudre_avec_repli(moteur, voc, fmt, fabrique_env, identifiant: str, T: int
     except Contradiction as c:
         sortie["cause"] = f"contradiction à l'essai direct ({c})"
     except NonResolu as c:
-        sortie.update(cause=str(c), pas=pas, balayages=compteurs.balayages, passes=compteurs.passes,
-                      duree_s=round(time.perf_counter() - depart, 2))
-        return sortie
+        return finir(cause=str(c), pas=pas, balayages=compteurs.balayages, passes=compteurs.passes)
+    except DureeEpuisee as c:
+        sortie["duree_epuisee"] = True
+        sortie["cause"] = f"durée : {c} à l'essai direct"
     # identifiants de l'essai direct, action par action (partiels en cas de contradiction) : pour la mesure à l'aveugle
     par_action: dict[int, list[int]] = {}
     for (t, s, c, *_r) in pas:
         par_action.setdefault(t, []).append(c)
     sortie["ids_directs"] = trouves_directs or [par_action[t] for t in sorted(par_action)]
     sortie.update(pas=pas, pas_direct=pas, balayages=compteurs.balayages, passes=compteurs.passes)
-    if sortie["statut"] == "resolu":
-        sortie["duree_s"] = round(time.perf_counter() - depart, 2)
-        return sortie
-    quasi = sorted((x for x in pas if x[6] >= 0 and x[5] < reglages.seuil_ecart), key=lambda x: (x[5], x[0], x[1]))
-    quasi = quasi[:reglages.quasi_egalites_max]
+    if sortie["statut"] == "resolu" or sortie["duree_epuisee"]:
+        return finir()
+    quasi = quasi_egalites(pas, reg.seuil_ecart, reg.quasi_egalites_max)
     sortie["quasi_egalites"] = [{"pas": x[0], "rang": x[1], "choix": x[2], "second": x[6], "ecart": x[5]} for x in quasi]
     essayees = 0
-    for taille in range(1, reglages.bascules_max + 1):
-        for combo in itertools.combinations(quasi, taille):
+    issues: dict[str, int] = {}
+    par_niveau: dict[str, int] = {}
+    frontiere = [(x[5], (x,)) for x in quasi]
+    for taille in range(1, reg.bascules_max + 1):
+        suivante = []
+        for cout, combo in sorted(frontiere, key=lambda c: (c[0], [(x[0], x[1]) for x in c[1]])):
             if essayees >= cmax:
                 break
+            if reg.echeance is not None and horloge() > reg.echeance:
+                sortie["duree_epuisee"] = True
+                break
             essayees += 1
+            par_niveau[str(taille)] = par_niveau.get(str(taille), 0) + 1
             forcages = {(x[0], x[1]): x[6] for x in combo}
-            t0 = min(x[0] for x in combo)
+            t0 = combo[0][0]
             prefixe = [par_action[t] for t in range(t0)]
             journal_pas: list = [x for x in pas if x[0] < t0]
             cpt = Compteurs()
+            issue = "empreinte_differente"
             try:
                 rec, trouves, emp = essai(forcages, prefixe, journal_pas, cpt)
-            except (Contradiction, NonResolu):
-                continue
-            if emp == empreinte_cible:
-                sortie.update(statut="resolu", voie="repli", ids=trouves, empreinte=emp, cause=None, pas=journal_pas,
-                              forcages=[{"pas": x[0], "rang": x[1], "jeton": x[6], "ecart": x[5]} for x in combo])
-                sortie["combinaisons_essayees"] = essayees
-                sortie["duree_s"] = round(time.perf_counter() - depart, 2)
-                return sortie
+            except Contradiction:
+                issue = "contradiction"
+            except NonResolu:
+                issue = "non_resolu"
+            except DureeEpuisee:
+                sortie["duree_epuisee"] = True
+                break
+            if issue == "empreinte_differente" and emp == empreinte_cible:
+                sortie["repli"] = {"par_niveau": par_niveau, "issues": issues}
+                return finir(statut="resolu", voie="repli", ids=trouves, empreinte=emp, cause=None, pas=journal_pas,
+                             forcages=[{"pas": x[0], "rang": x[1], "jeton": x[6], "ecart": x[5]} for x in combo],
+                             combinaisons_essayees=essayees)
+            issues[issue] = issues.get(issue, 0) + 1
+            if taille < reg.bascules_max:
+                # frontière enrichie : quasi-égalités du rejeu basculé (journal partiel compris), après sa dernière bascule
+                for y in quasi_egalites(journal_pas, reg.seuil_ecart, reg.quasi_egalites_max, (combo[-1][0], combo[-1][1])):
+                    suivante.append((cout + y[5], combo + (y,)))
+        if sortie["duree_epuisee"] or essayees >= cmax:
+            break
+        frontiere = suivante
+    sortie["repli"] = {"par_niveau": par_niveau, "issues": issues}
     sortie["combinaisons_essayees"] = essayees
-    sortie["cause"] = (f"{sortie['cause']} ; repli : {len(quasi)} quasi-égalité(s) sous {reglages.seuil_ecart}, "
-                       f"{essayees} combinaison(s) essayée(s), aucune ne redonne l'empreinte")
-    sortie["duree_s"] = round(time.perf_counter() - depart, 2)
-    return sortie
+    if sortie["duree_epuisee"]:
+        return finir(cause=f"durée : budget de l'épisode épuisé pendant le repli ({sortie['cause']} ; {essayees} "
+                           f"combinaison(s) essayée(s))")
+    return finir(cause=f"{sortie['cause']} ; repli itératif : {len(quasi)} quasi-égalité(s) directe(s) sous "
+                       f"{reg.seuil_ecart}, {essayees} combinaison(s) essayée(s) ({par_niveau}), aucune ne redonne "
+                       f"l'empreinte")
 
 
 def accord_non_contraint(pas: list, verite: list[list[int]] | None = None) -> float | None:
@@ -748,6 +834,9 @@ def construire_table_v3(table_v2: dict, sha_v2: str, resultat: dict, sha_resulta
             continue
         if r["empreinte_cible"] != x["trajectoire_p3"]:
             raise GardeArret(f"{x['episode']} : empreinte de P3 du résultat ≠ table v2")
+        if r.get("empreinte") != x["trajectoire_p3"]:
+            raise GardeArret(f"{x['episode']} : « résolu » sans l'empreinte de P3 recalculée égale (un résolu ne se lit "
+                             f"que sur l'égalité d'empreinte)")
         res = {"voie": r["voie"], "forcages": r["forcages"], "resultat_sha256": sha_resultat}
         episodes.append({**entree_identifiants(x["episode"], x["trajectoire_p3"], base_nv[x["episode"]], r["ids"], res),
                          "essais": x.get("essais"), "essais_c6": x.get("essais_c6")})
@@ -797,11 +886,86 @@ def exiger_config(config: dict) -> None:
                 raise GardeArret(f"mode réel : {k} obligatoire")
 
 
-def reglages_de(config: dict, echeance: float | None) -> Reglages:
+def exiger_reglages_execution(config: dict) -> None:
+    """Gardes des étapes de ce module (VG-03, VG-04), avant tout chargement : `duree_max_episode_s` présent et positif,
+    au plus `duree_max_s` ; `noyau_attention` parmi « defaut » et « math » (toute autre valeur tomberait en silence sur
+    le noyau par défaut) ; paires permises en validation (`combinaisons_max_validation` = `combinaisons_max`)."""
+    manquantes = [k for k in CLES_EXECUTION if k not in config]
+    if manquantes:
+        raise GardeArret(f"configuration de la résolution à graine incomplète : {manquantes}")
+    d = config["duree_max_episode_s"]
+    if isinstance(d, bool) or not isinstance(d, (int, float)) or not d > 0 or d > float(config["duree_max_s"]):
+        raise GardeArret(f"duree_max_episode_s = {d!r} : nombre > 0 et ≤ duree_max_s attendu")
+    if config["noyau_attention"] not in NOYAUX:
+        raise GardeArret(f"noyau_attention = {config['noyau_attention']!r} : {NOYAUX} attendus")
+    if config["combinaisons_max_validation"] != config["combinaisons_max"]:
+        raise GardeArret("combinaisons_max_validation ≠ combinaisons_max : la validation doit permettre les paires comme "
+                         "la résolution")
+
+
+def reglages_de(config: dict, echeance: float | None, duree_episode_s: float | None = None) -> Reglages:
     return Reglages(temperature=float(config["temperature"]), max_nouveaux=int(config["max_nouveaux"]),
                     seuil_ecart=float(config["seuil_ecart"]), quasi_egalites_max=int(config["quasi_egalites_max"]),
                     bascules_max=int(config["bascules_max"]), combinaisons_max=int(config["combinaisons_max"]),
-                    balayages_max=int(config["balayages_max"]), echeance=echeance)
+                    balayages_max=int(config["balayages_max"]), echeance=echeance,
+                    duree_episode_s=None if duree_episode_s is None else float(duree_episode_s))
+
+
+def exiger_agent_de_p3(agent: dict, manifeste_p3: dict, reel: bool) -> None:
+    """L'agent de la configuration est celui de P3 (`CLES_AGENT_P3` : modèle, révision, variables du gabarit, comparés au
+    manifeste de P3) ; en mode réel, modèle et révision présents."""
+    a3 = (manifeste_p3.get("config") or {}).get("agent") or {}
+    differentes = [k for k in CLES_AGENT_P3 if agent.get(k) != a3.get(k)]
+    if differentes:
+        raise GardeArret(f"agent de la configuration ≠ agent de P3 ({differentes})")
+    if reel and not (agent.get("modele") and agent.get("revision")):
+        raise GardeArret("mode réel : agent sans modèle ou sans révision")
+
+
+def exiger_seuil_atteignable(seuil: int, episodes: int) -> None:
+    """Avant la boucle (VG-04) : le seuil de lecture de la validation ne dépasse pas le nombre d'épisodes à identifiants
+    connus (sinon la configuration est fausse : arrêt avant tout calcul)."""
+    if int(seuil) > int(episodes):
+        raise GardeArret(f"seuil de validation {seuil} > {episodes} épisodes à identifiants connus")
+
+
+def environnement_d_execution(reel: bool) -> dict:
+    """Versions et carte de l'exécution, pour la comparaison à P3 (`ENVIRONNEMENT_P3`)."""
+    env = {"torch": torch.__version__, "cuda": torch.version.cuda, "cudnn": None, "carte": None}
+    if reel and torch.cuda.is_available():
+        env["cudnn"] = torch.backends.cudnn.version()
+        env["carte"] = torch.cuda.get_device_name(0)
+    return env
+
+
+def reserves_environnement(env: dict, reel: bool) -> list[str]:
+    """Réserves écrites au résultat (VG-05), sans arrêt : construction de torch pour une autre version de CUDA que P3
+    (13.0), autre cuDNN, autre carte. Rien en mode jouet (processeur)."""
+    if not reel:
+        return []
+    r = []
+    if env.get("cuda") != ENVIRONNEMENT_P3["cuda"]:
+        r.append(f"torch construit pour CUDA {env.get('cuda')!r} ≠ {ENVIRONNEMENT_P3['cuda']} (P3, "
+                 f"{ENVIRONNEMENT_P3['torch']}) : noyaux de la carte possiblement autres, arrondis des logits plus "
+                 f"éloignés ; l'empreinte de P3 reste seule juge")
+    if env.get("cudnn") != ENVIRONNEMENT_P3["cudnn"]:
+        r.append(f"cuDNN {env.get('cudnn')!r} ≠ {ENVIRONNEMENT_P3['cudnn']} (P3)")
+    if ENVIRONNEMENT_P3["carte"] not in str(env.get("carte") or ""):
+        r.append(f"carte {env.get('carte')!r} ≠ {ENVIRONNEMENT_P3['carte']} (P3)")
+    return r
+
+
+def lecture_controle_croise(controle: list[dict]) -> str:
+    """Lecture du contrôle croisé (épisodes de la résolution à identifiants déjà connus), à trois valeurs (VG-06) :
+    « contraire » si un épisode résolu a des identifiants autres que ceux connus ; sinon « non résolu » si un épisode du
+    contrôle n'est pas résolu ; sinon « conforme ». Sans épisode de contrôle : « sans objet »."""
+    if not controle:
+        return "sans objet"
+    if any(c["statut"] == "resolu" and not c["identifiants_egaux"] for c in controle):
+        return "contraire"
+    if any(c["statut"] != "resolu" for c in controle):
+        return "non résolu"
+    return "conforme"
 
 
 def charger_identite_sans_scores(chemin_scores, sha_attendue: str | None) -> dict:
@@ -857,6 +1021,7 @@ def charger_pieces(config: dict, racine: Path) -> Pieces:
         raise GardeArret(f"manifeste de P3 : empreinte {sha_m[:12]} ≠ empreinte citée")
     if m["run_id"] != config["run_source"]:
         raise GardeArret(f"manifeste du run {m['run_id']} ≠ run source {config['run_source']}")
+    exiger_agent_de_p3(config["agent"], m, config["mode"] == "reel")
     for k in ("T", "temperature", "max_nouveaux"):
         if m["config"].get(k) != config[k]:
             raise GardeArret(f"{k} = {config[k]!r} ≠ {m['config'].get(k)!r} dans la configuration de P3")
@@ -945,7 +1110,9 @@ def episodes_de_l_etape(etape: str, config: dict, classement: dict) -> list[str]
 
 
 def exiger_seuil_validation(trouvees: int, seuil: int, episodes: int) -> None:
-    """Garde de la validation : au moins `seuil` empreintes de P3 retrouvées sur `episodes` (arrêt sinon)."""
+    """Garde : au moins `seuil` empreintes de P3 retrouvées sur `episodes` (arrêt sinon). Gardée pour les modules qui
+    l'importent ; les étapes de ce module ne s'en servent plus après la boucle (VG-03 : la validation est une mesure
+    rapportée) ; avant la boucle, `exiger_seuil_atteignable`."""
     if seuil > episodes:
         raise GardeArret(f"seuil de validation {seuil} > {episodes} épisodes à identifiants connus")
     if trouvees < seuil:
@@ -954,15 +1121,17 @@ def exiger_seuil_validation(trouvees: int, seuil: int, episodes: int) -> None:
 
 
 def exiger_validation(racine: Path, chemin, config: dict) -> dict:
-    """La résolution exige une validation scellée, rattachée à son manifeste, de même configuration et même commit, de
-    lecture « atteint »."""
+    """La résolution exige une validation scellée, rattachée à son manifeste, de même configuration et même commit,
+    **quelle que soit sa lecture** (VG-03 : la validation est une mesure rapportée, pas un arrêt ; l'ordre « validation
+    puis résolution » garde la validation à l'aveugle)."""
     if not chemin:
         raise GardeArret("étape « resolution » sans --validation : la validation à l'aveugle passe d'abord")
     corps = verifier_resultat(racine, chemin)
     m, _ = lire_manifeste(Path(racine) / "runs" / corps["run_id"] / "manifeste.json")
     r = corps["resultat"]
-    if r.get("etape") != "validation" or r.get("lecture") != "atteint":
-        raise GardeArret(f"validation {chemin} : étape {r.get('etape')!r}, lecture {r.get('lecture')!r}")
+    if r.get("etape") != "validation" or r.get("version") != VERSION or r.get("lecture") is None:
+        raise GardeArret(f"validation {chemin} : étape {r.get('etape')!r}, version {r.get('version')!r}, lecture "
+                         f"{r.get('lecture')!r}")
     if m["config_sha256"] != empreinte_config(config):
         raise GardeArret("validation faite sous une autre configuration")
     exiger_meme_code(racine, m["commit"])
@@ -1017,6 +1186,27 @@ def premier_ecart(ids_directs, verite_ids, pas) -> dict | None:
     return None
 
 
+def consigner_episode(dossier: Path, k: int, r: dict) -> dict:
+    """Consigne un épisode traité, aussitôt (VG-01) : `dossier/NNN.json` scellé (statut, cause, identifiants retrouvés,
+    empreinte, graines ; sans le journal des pas). Rend la référence citée par `arret.json` en cas d'arrêt."""
+    dossier.mkdir(parents=True, exist_ok=True)
+    chemin = dossier / f"{k:03d}.json"
+    if chemin.exists():
+        raise GardeArret(f"{chemin} existe déjà : R12 interdit d'écraser")
+    corps = {k2: v for k2, v in r.items() if k2 not in ("pas", "pas_direct")}
+    chemin.write_text(json.dumps(corps, indent=1, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
+    sha = sceller(chemin)
+    return {"episode": r["episode"], "statut": r["statut"], "fichier": f"{dossier.name}/{chemin.name}", "sha256": sha}
+
+
+def non_tente(ep: "EpisodeP3", motif: str) -> dict:
+    """Épisode non tenté (budget de l'étape épuisé avant lui) : « non résolu », cause « durée : … »."""
+    return {"episode": ep.e, "fffd": sum(x.count(FFFD) for x in ep.textes), "statut": "non_resolu", "voie": None,
+            "cause": f"durée : {motif}", "forcages": [], "combinaisons_essayees": 0, "ids": None, "ids_directs": None,
+            "empreinte": None, "empreinte_cible": ep.empreinte, "duree_epuisee": True, "non_tente": True,
+            "balayages": 0, "passes": 0, "duree_s": 0.0}
+
+
 def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, debut) -> dict:
     from ..harnais.modeles import regler_determinisme
     from ..harnais.validation_reelle import noyau
@@ -1027,6 +1217,9 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
     reglages_det = regler_determinisme(config["fils"], appareil)
     T = int(config["T"])
     echeance = debut + float(config["duree_max_s"])
+    environnement = environnement_d_execution(reel)
+    reserves = reserves_environnement(environnement, reel)
+    etat["reserves"] = reserves
     modele, fmt = _modele(config, racine, pieces)
     attendu = config["agent"].get("texte_attendu_ouverture")
     if reel and not attendu:
@@ -1034,6 +1227,10 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
     etat["etape"] = "classement"
     classement = classer(pieces, fmt, T)
     episodes = episodes_de_l_etape(etape, config, classement)
+    if etape == "validation":
+        exiger_seuil_atteignable(int(config["seuil_validation"]), len(episodes))
+    if not episodes:
+        raise GardeArret(f"étape {etape} : aucun épisode")
     if attendu:
         ep0 = EpisodeP3(pieces, episodes[0], T)
         e0 = ep0.env()
@@ -1042,30 +1239,35 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
     voc = Vocabulaire(fmt.tok, fmt.fins, int(modele.config.vocab_size))
     etat["equivalence_tirage"] = exiger_equivalence_tirage(voc.V)
     moteur = Moteur(modele)
-    reglages = reglages_de(config, echeance)
+    reglages = reglages_de(config, echeance, float(config["duree_max_episode_s"]))
     cmax = int(config["combinaisons_max_validation" if etape == "validation" else "combinaisons_max"])
     tirages = Tirages(voc.V, int(config["fils_tirages"]))
     eps = {e: EpisodeP3(pieces, e, T) for e in episodes}
+    dossier = Path(racine) / "diag" / run_id
+    dossier_eps = dossier / f"episodes-{etape}"
     resultats, pas_tous, pas_directs = [], [], []
+    etat["episodes_consignes"] = []
     etat["etape"] = etape
     progres(etape=etape, episodes=len(episodes))
     try:
         with noyau(config["noyau_attention"]):
             for k, e in enumerate(episodes):
                 exiger_sans_signal(f"résolution à graine, épisode {k}")
-                if time.perf_counter() > echeance:
-                    raise GardeArret(f"limite de durée dépassée avant l'épisode {k}")
-                for e2 in episodes[k:k + 1 + int(config["episodes_d_avance"])]:
-                    tirages.demander(e2, eps[e2].graines, eps[e2].jetons)
                 ep = eps[e]
-                Qs = tirages.prendre(e)
-                r = resoudre_avec_repli(moteur, voc, fmt, ep.env, e, T, ep.textes, ep.jetons, ep.jetons_notes, Qs,
-                                        ep.empreinte, reglages, cmax)
-                del Qs
+                if horloge() > echeance:
+                    r = non_tente(ep, f"budget de l'étape ({config['duree_max_s']} s) épuisé avant l'épisode {k}")
+                else:
+                    for e2 in episodes[k:k + 1 + int(config["episodes_d_avance"])]:
+                        tirages.demander(e2, eps[e2].graines, eps[e2].jetons)
+                    Qs = tirages.prendre(e)
+                    r = resoudre_avec_repli(moteur, voc, fmt, ep.env, e, T, ep.textes, ep.jetons, ep.jetons_notes, Qs,
+                                            ep.empreinte, reglages, cmax)
+                    del Qs
                 r["graines"] = ep.graines
                 pas_tous.append(r.pop("pas", []))
                 pas_directs.append(r.pop("pas_direct", None) or pas_tous[-1])
                 resultats.append(r)
+                etat["episodes_consignes"].append(consigner_episode(dossier_eps, k, r))
                 etat["episodes_traites"] = k + 1
                 if (k + 1) % 10 == 0 or k + 1 == len(episodes):
                     progres(etape=etape, episodes=f"{k + 1}/{len(episodes)}",
@@ -1086,8 +1288,9 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
         if acc_v is not None:
             accords.append(acc_v)
         d = {k2: r[k2] for k2 in ("episode", "statut", "voie", "cause", "forcages", "combinaisons_essayees", "passes",
-                                  "balayages", "fffd", "duree_s", "graines") if k2 in r}
-        d["empreinte_retrouvee"] = r["statut"] == "resolu"
+                                  "balayages", "fffd", "duree_s", "graines", "empreinte", "duree_epuisee", "repli",
+                                  "non_tente") if k2 in r}
+        d["empreinte_retrouvee"] = r["statut"] == "resolu" and r["empreinte"] == r["empreinte_cible"]
         d["accord_non_contraint"] = acc_v
         d["pas"] = len(pas)
         d["ecart_min"] = min((x[5] for x in pas if x[4] > 1), default=None)
@@ -1102,7 +1305,7 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
                 erreurs_directes.append({"episode": e, **pe})
             if etape == "resolution":
                 controle.append({"episode": e, "methode_table": (classement[e]["entree"] or {}).get("methode")
-                                 or "identique_base", "identifiants_egaux": eg})
+                                 or "identique_base", "statut": r["statut"], "identifiants_egaux": eg})
         if etape == "resolution":
             d["ids"] = r["ids"]
             d["empreinte_cible"] = r["empreinte_cible"]
@@ -1112,8 +1315,7 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
             d["ids"] = r["ids"]
             d["ids_directs"] = r["ids_directs"]
         detail.append(d)
-    trouvees = sum(x["statut"] == "resolu" for x in resultats)
-    dossier = Path(racine) / "diag" / run_id
+    trouvees = sum(1 for x in detail if x["empreinte_retrouvee"])
     dossier.mkdir(parents=True, exist_ok=True)
     chemin_pas = dossier / f"pas-resolution-graine-{etape}.npz"
     lignes_pas = [(i, *x) for i, pas in enumerate(pas_tous) for x in pas]
@@ -1127,36 +1329,43 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
                             second=np.asarray(col[7], dtype=np.int64), marge=np.asarray(col[8], dtype=np.float64),
                             balayage=np.asarray(col[9], dtype=bool))
     sha_pas = sceller(chemin_pas)
+    par_ep = {d["episode"]: d["accord_non_contraint"] for d in detail if d["accord_non_contraint"] is not None}
     resultat = {
         "etape": etape, "version": VERSION, "regle": REGLE, "run_source": config["run_source"],
         "episodes_etape": len(episodes), "empreintes_retrouvees": trouvees,
         "directes": sum(x["voie"] == "directe" for x in resultats),
         "par_repli": sum(x["voie"] == "repli" for x in resultats),
+        "par_repli_bascules": {str(n): sum(1 for x in resultats if x["voie"] == "repli" and len(x["forcages"]) == n)
+                               for n in range(1, int(config["bascules_max"]) + 1)},
         "non_resolus": [{"episode": x["episode"], "cause": x["cause"]} for x in resultats if x["statut"] != "resolu"],
+        "non_resolus_duree": sum(1 for x in resultats if x["statut"] != "resolu" and x.get("duree_epuisee")),
+        "non_tentes": sum(1 for x in resultats if x.get("non_tente")),
         "identifiants_egaux_episodes": egaux_ep, "actions_egales": actions_egales, "actions_comparees": actions_tot,
         "accord_non_contraint": {"pas": n_pas, "par_episode_min": min(accords) if accords else None,
                                  "moyenne_par_episode": float(np.mean(accords)) if accords else None,
+                                 "par_episode": par_ep, "distribution_par_episode": quantiles(accords),
                                  "pas_en_desaccord": len(marges_desaccord)},
         "ecarts_contraints": quantiles(ecarts), "marges_en_desaccord": quantiles(marges_desaccord),
         "erreurs_directes": erreurs_directes, "controle_croise": controle,
         "fffd_declares": {x["episode"]: x["fffd"] for x in resultats if x["fffd"]},
         "passes": moteur.passes, "jetons_en_passe": moteur.jetons, "seuils": {
             k: config[k] for k in ("seuil_ecart", "quasi_egalites_max", "bascules_max", "combinaisons_max",
-                                   "combinaisons_max_validation", "balayages_max", "seuil_validation")},
+                                   "combinaisons_max_validation", "balayages_max", "seuil_validation", "duree_max_s",
+                                   "duree_max_episode_s")},
         "equivalence_tirage": etat["equivalence_tirage"], "reglages": reglages_det, "modele": config["agent"],
+        "environnement": environnement, "environnement_p3": ENVIRONNEMENT_P3, "reserves": reserves,
+        "episodes_consignes": etat["episodes_consignes"],
         "pas_fichier": chemin_pas.name, "pas_sha256": sha_pas, "episodes": detail,
-        "duree_s": round(time.perf_counter() - debut, 1)}
+        "duree_s": round(horloge() - debut, 1)}
     if etape == "validation":
+        # mesure rapportée, jamais un arrêt (VG-03) : la résolution se lance quelle que soit cette lecture
         resultat["seuil_validation"] = int(config["seuil_validation"])
         resultat["lecture"] = "atteint" if trouvees >= int(config["seuil_validation"]) else "sous le seuil"
     else:
         resultat["lecture"] = "complète" if trouvees == len(episodes) else "partielle"
-        resultat["controle_croise_lecture"] = ("conforme" if all(c["identifiants_egaux"] for c in controle)
-                                               else "contraire")
+        resultat["controle_croise_lecture"] = lecture_controle_croise(controle)
     ecrire_resultat(racine, chemin_m, f"resolution-graine-{etape}", resultat)
     progres(etape="fin", resolus=f"{trouvees}/{len(episodes)}", lecture=resultat["lecture"].replace(" ", "_"))
-    if etape == "validation":
-        exiger_seuil_validation(trouvees, int(config["seuil_validation"]), len(episodes))
     return resultat
 
 
@@ -1164,6 +1373,7 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, etape:
              autoriser_depot_sale: bool = False, entropie_essai: int | None = None) -> dict:
     racine = Path(racine)
     exiger_config(config)
+    exiger_reglages_execution(config)
     if etape not in ETAPES:
         raise GardeArret(f"étape {etape!r} : {ETAPES} attendues")
     if config["mode"] == "reel" and prereg is None:
@@ -1187,13 +1397,14 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, etape:
                                           decisif=prereg is not None, prereg=prereg,
                                           autoriser_depot_sale=autoriser_depot_sale, commande=f"{COMMANDE} --etape {etape}")
     etat = {"etape": "chargement"}
-    debut = time.perf_counter()
+    debut = horloge()
     try:
         return _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, debut)
     except Exception as e:
+        # partiel : épisodes déjà consignés (fichiers scellés, identifiants retrouvés), réserves, garde du tirage
         ecrire_resultat(racine, chemin_m, "arret", {"etape": etat["etape"], "motif": motif_d_arret(e),
                                                      "partiel": {k: v for k, v in etat.items() if k != "etape"},
-                                                     "duree_s": round(time.perf_counter() - debut, 1)})
+                                                     "duree_s": round(horloge() - debut, 1)})
         relever_term_apres(e)
         raise
 
@@ -1235,6 +1446,19 @@ def construire_et_verifier_table(config: dict, racine: Path, tokeniseur: str | N
     return table
 
 
+def ecrire_table_v3(table: dict, sortie) -> str:
+    """Écrit la table version 3 (jamais par-dessus un fichier existant, R12) et la scelle (VG-08, R6) ; rend son
+    empreinte, relue par `verifier`."""
+    sortie = Path(sortie)
+    if sortie.exists() or Path(f"{sortie}.sha256").exists():
+        raise GardeArret(f"{sortie} (ou son sceau) existe déjà (R12 : on n'écrase jamais)")
+    sortie.write_text(json.dumps(table, sort_keys=True, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    sha = sceller(sortie)
+    if verifier(sortie) != sha:
+        raise GardeArret(f"{sortie} : sceau non conforme après écriture")
+    return sha
+
+
 def _main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog=COMMANDE)
     ap.add_argument("--etape", required=True, choices=ETAPES + ("table",))
@@ -1253,12 +1477,12 @@ def _main(argv: list[str]) -> int:
         if not (a.tokeniseur and a.resultat and a.sortie):
             raise GardeArret("étape table : --tokeniseur, --resultat et --sortie obligatoires")
         sortie = Path(a.sortie)
-        if sortie.exists():
+        if sortie.exists() or Path(f"{sortie}.sha256").exists():
             raise GardeArret(f"{sortie} existe déjà (R12 : on n'écrase jamais)")
         table = construire_et_verifier_table(config, Path("."), a.tokeniseur, a.resultat)
-        sortie.write_text(json.dumps(table, sort_keys=True, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        sha = ecrire_table_v3(table, sortie)
         print(json.dumps({"comptes": table["comptes"], "corrections_verifiees": table["corrections_verifiees"],
-                          "sha256": hashlib.sha256(sortie.read_bytes()).hexdigest()}, ensure_ascii=False))
+                          "sha256": sha}, ensure_ascii=False))
         return 0
     if not a.run_id:
         raise GardeArret("--run-id obligatoire")
