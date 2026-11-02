@@ -3,7 +3,9 @@
 table calculée par `resolution_tokenisation_v1`, configurations jouet (saine, et table falsifiée), dépôt nu servant de
 « dépôt distant » à l'amorce v2.
 
-    PYTHONPATH=<arbre>/src:<arbre>/tests python preparer_essai_v1.py <arbre> <commit> <dossier d'essai>
+    cd <arbre> && PYTHONPATH=<arbre>/src:<arbre>/tests python preparer_essai_v1.py <arbre> <commit> <dossier d'essai>
+
+(le run de P3 jouet lit ses faits sous `donnees/` relativement au répertoire courant : lancer depuis l'arbre)
 """
 import copy
 import json
@@ -17,7 +19,8 @@ src = essai / "depot-source"
 src.mkdir()
 archive = subprocess.run(["git", "-C", str(arbre), "archive", commit, "src", "tests", "scripts", "prereg",
                           "pyproject.toml", "requirements-cpu.txt", "requirements-gpu.txt", ".gitignore",
-                          "docs/sources/invites-2606.08892-v1"], capture_output=True, check=True).stdout
+                          "docs/sources/invites-2606.08892-v1", "donnees/T0.7-faits-repe-v1",
+                          "donnees/T0.7-models-under-pressure-v1"], capture_output=True, check=True).stdout
 subprocess.run(["tar", "-x", "-C", str(src)], input=archive, check=True)
 
 

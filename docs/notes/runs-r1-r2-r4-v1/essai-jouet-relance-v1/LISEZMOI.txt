@@ -1,0 +1,17 @@
+Essais de la relance de R1 (2 novembre 2026, 02:20 à 03:17 UTC, hors réseau, processeur, aucune dépense).
+Code au commit 5b72e2e2a1f6d42a3fecbfc3001b86dbbf77154f (branche locale prep/r1-relance-addendum-v1) ; dépôt d'essai
+tiré de 7f0396f6 par preparer_essai_v1.py (commit d'essai e23eb49a), dépôt nu local servant de dépôt distant.
+- suite-ciblee-299-au-commit-du-code.txt : suite ciblée de 18 fichiers (celle de R1-R2, 291, plus tests/test_runs_nuit_v2.py, 8) : 299 passed.
+- amorce-sain.log : amorce v2, MODE=jouet, table jouet (un épisode à jeton de fin substitué dans les fiches) : tests 8 passés,
+  reconstruction corrections=1 non_conformes=0 trajectoires_identiques=4, fidélité conforme, contrôle négatif 4/4,
+  sorties poussées, verdict « conforme », code 0.
+- amorce-falsifiee.log : même chose avec une table falsifiée (jeton de fin par défaut au lieu de celui « de P3 ») :
+  arrêt « ne redonne pas l'empreinte de trajectoire de P3 », arret.json consigné (verdict « echec »), aucun fichier
+  d'activations, code 1.
+- amorce-etapes-refusees.log : ETAPES="rejeu juge3b" : arrêt avant l'installation, code 2 (R2 ne se relance pas).
+- amorce-reel-addendum-non-scelle.log : MODE=reel au commit d'essai, addendum absent ou non scellé : arrêt avant
+  l'installation, code 2.
+- Garde de calcul : ../essai-garde-calcul-relance-v1.txt (chemin littéral avec GO-2026-11-01-13 : code 0 ; sans GO, ou
+  GO inexistant : code 2). Le GO échoit le 2026-11-02 : le même essai donnera code 2 après ce jour.
+- Table réelle et comptes : ../comptes-table-relance-v1.json (chemin de l'instance jusqu'à la carte, vraies pièces de P3).
+Tolérance des cas jouet fabriqués : 1e-5 (voir tests/test_runs_nuit_v2.py, TOL_FABRIQUE).
