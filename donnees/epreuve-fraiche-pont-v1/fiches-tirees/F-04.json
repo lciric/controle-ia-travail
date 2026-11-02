@@ -1,0 +1,80 @@
+{
+ "anteriorite": [
+  {
+   "reference": "SLEIGHT-Bench: A Benchmark of Evasion Attacks Against Agent Monitors, Najt, Toft, Tracy, Roger, Benton, 2026, arXiv 2605.16626",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "MonitoringBench: Semi-Automated Red-Teaming for Agent Monitoring, Jotautaitė, Martinez, Matthews, Tracy, 2026, arXiv 2605.09684",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Inherited Circuits, Learned Semantics, Fetterman, 2026, arXiv 2606.27091",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Insertion, Evasion, and Denial of Service, Ptacek et Newsham, 1998",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "What Happened to Anomaly Detection?, Inoue et Somayaji, 2006, rapport Carleton TR-07-09",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "No Free Lunch: The Hazards of Over-Expressive Representations in Anomaly Detection, Reiss, Cohen, Hoshen, arXiv 2306.07284",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Formulating Robustness Against Unforeseen Attacks, Dai, Mahloujifar, Mittal, NeurIPS 2022",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Caught in the Act (jeu FIBS), Hollinsworth, Spies, Diriba, Gleave, Cundy, 2026, arXiv 2610.12445",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Why 6? Defining the Operational Limits of stide, Tan et Maxion, IEEE S&P 2002",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "Predict science to improve science, DellaVigna, Pope, Vivalt, Science 2019",
+   "statut": "SUPPOSE"
+  }
+ ],
+ "avantage": {
+  "incopiable_parce_que": "Un occupant qui construit l'attaquant tire ses catégories des échecs observés (SLEIGHT-Bench l'écrit : les catégories sont nées des transcriptions qui ont échappé aux moniteurs) ; sa « prédiction » est a posteriori par construction. Il ne peut pas davantage préenregistrer de prédiction crédible sur son propre prochain attaquant : il le conçoit, il voit ses échecs. Un laboratoire mieux doté en calcul ne gagne rien : le résultat tient à la séquence scellée théorie → prédiction → test, et il faudrait une théorie explicite des hypothèses statistiques du moniteur qu'aucun occupant ne publie.",
+  "source": "programme",
+  "texte": "La carte des hypothèses existe et son gardien n'a conçu aucun moniteur ; le préenregistrement scellé (méthodes) fait de l'horodatage, et non du calcul, l'objet de la preuve ; la quantité prédite (notre moniteur, leurs familles futures) est inédite par construction."
+ },
+ "cosmetique_si": "La corrélation n'excède pas celle de la prédiction naïve, ou le classement prédit est entièrement expliqué par la longueur de trajectoire ou le seul niveau S ; volet 2 : on ne bat pas la persistance, ou la règle de correspondance doit être retouchée après lecture.",
+ "cout": {
+  "nature": "depense",
+  "ordre_de_grandeur": "Dérivation et préenregistrement sur processeur ; activations du modèle à 8 milliards sur ~3 000 trajectoires longues : quelques heures de processeur graphique (dizaines de dollars) ; boîte noire par appels : centaines de dollars ; volet 2 : processeur seul."
+ },
+ "demande_organisme": {
+  "nature": "ajout",
+  "texte": "La troisième instance (fixe l'appariement cellules ↔ hypothèses, la règle de correspondance pour le volet 2, scelle les prédictions, n'a lu ni pièce ni score) : préalable à cette fiche, pas à toutes ; une garde de code qui refuse l'évaluation si l'empreinte de la prédiction est postérieure au premier score ou à la parution ; un lecteur des formats de trajectoires publiés ; un moniteur dont les données d'entraînement excluent ces bancs ; un registre de veille gelé (liste d'occupants). Un horodatage public de l'empreinte serait une publication : nœud pour Lazar."
+ },
+ "enonce": "Volet 1 (rétrospectif, bancs existants) : une instance de théorie qui ne connaît que la carte des hypothèses (aucun score de nos moniteurs, aucun taux publié) prédit-elle, avant le test, contre une référence de permutation ET contre la prédiction naïve « comme les moniteurs modèles publiés », le classement des taux de détection de NOTRE moniteur (sonde sur modèle à 8 milliards de paramètres plus boîte noire) par cellule de la taxonomie croisée de MonitoringBench (niveaux techniques T, structurels S, d'évasion E) et par catégorie de SLEIGHT-Bench ? La quantité prédite n'existe nulle part : elle ne peut être ni mémorisée ni lue après coup. Volet 2 (prospectif, règle gelée) : la même instance scelle, pour une liste déclarée d'occupants, le signe de l'écart de détection par classe d'hypothèse violée que révéleront leurs prochaines versions publiées (nouvelles versions de SLEIGHT-Bench, de MonitoringBench, travaux de l'institut britannique), une règle de correspondance catégories → classes étant gelée avant parution. Leur attaquant devient notre test final, lu une fois, que nous n'avons pas pu contaminer. Cette formulation lève le risque « Q3 non concluante faute de puissance » : la grille T×S×E fournit des dizaines de cellules peuplées, et le volet 2 ajoute des familles vraiment inédites au fil des douze mois.",
+ "loi_predictive": {
+  "espace_instances": "Volet 1 : cellules peuplées (≥ 30 trajectoires d'attaque réussies) de MonitoringBench, ~25 à 40 cellules sur 2 644 trajectoires, plus les 11 catégories de SLEIGHT-Bench (40 attaques, 10 essais, bénins appariés) ; un moniteur à nous non entraîné sur ces bancs (les auteurs demandent l'exclusion des corpus d'entraînement : lecture pour évaluation seulement). Volet 2 : couples (classe de moniteur publiée, catégorie de famille) parus après la date de scellement, 20 à 60 couples attendus en douze mois.",
+  "metrique": "Rappel à 1 % de faux positifs par cellule, seuil calibré sur les 416 trajectoires honnêtes (MonitoringBench) et sur les bénins appariés (SLEIGHT-Bench) ; score logarithmique des probabilités scellées pour le volet 2 ; prédictions empreintées avant tout score ou toute parution ; test lu une seule fois.",
+  "prediction": "Volet 1 : corrélation de rang de Spearman ≥ 0,4 entre classement prédit et observé, au-delà du 95e centile de 10 000 permutations, ET au moins égale à celle de la prédiction naïve ; la théorie désigne ≥ 3 cellules « échec » (rappel < 20 %) dont ≥ 2 se confirment. Volet 2 : signe de l'écart à la moyenne du papier correct dans ≥ 65 % des couples, contre 50 % (hasard) et contre une référence de persistance (classement du papier précédent).",
+  "signe": "+"
+ },
+ "nom": "Q3 sur grille publiée, puis sur grille à venir : prédire les cellules où notre propre moniteur échoue",
+ "originalite": {
+  "niveau": "transposition",
+  "texte": "Le schéma « hypothèses du détecteur → familles d'évasion → vérification » est ancien (détection d'intrusion) et SLEIGHT-Bench le réalise avec une théorie informelle ; la notation de la théorie comme prévisionniste, préenregistrée, par cellule, contre permutation et contre la prédiction naïve, puis sur les bancs à venir des concurrents, n'a pas été vue (pièce C, Q3)."
+ },
+ "perte_traduction": "« Savoir où sa défense casse sans y être attaqué » devient un classement de cellules d'une taxonomie fixée par d'autres, étiquetée a posteriori par un juge modèle ; on perd les familles hors taxonomie, le diffus inter-épisodes (S4 est intra-trajectoire) et le volet « au fil des générations » (moniteur figé). Le volet 2 dépend du calendrier et de la granularité des catégories publiées, hors de notre contrôle.",
+ "piege": "Circularité à deux voies : (a) cellules et catégories nées des échecs de moniteurs modèles — une théorie qui dit « les moniteurs échouent là où la taxonomie le dit » prédit trivialement, d'où la référence naïve à égaler SANS l'avoir lue ; (b) le prédicteur est un modèle dont le corpus contient peut-être les papiers — d'où la prédiction de NOTRE moniteur jamais publié, une instance qui n'a pas lu les pièces, et la fiche « prédicteur en quarantaine ». Confusion des cellules avec la longueur de trajectoire et l'étape de raffinement. Volet 2 : règle de correspondance écrite en connaissant leurs catégories antérieures ; prédictions triviales si un occupant republie le même motif ; trop peu de parutions en douze mois.",
+ "questions_servies": [
+  "Q3",
+  "Q-pont",
+  "Q4",
+  "Q6",
+  "Q1"
+ ],
+ "type": "question"
+}

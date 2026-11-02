@@ -1,0 +1,49 @@
+{
+ "nom": "Les actions valides ne protègent de l'incohérence que dans les épisodes longs",
+ "type": "question",
+ "enonce": "Le moniteur 3B:COHERENCE juge si un épisode tient ensemble, et sa classe la plus basse signale un texte qui perd le fil. La question est de savoir si les actions valides protègent de cette classe basse au-delà de ce que prévoit déjà le prédicteur connu du moniteur, et surtout si cette protection dépend de la longueur de l'épisode. L'hypothèse de mécanisme est une dérive : un épisode long accumule du texte, et chaque nouvelle portion risque de s'éloigner de ce qui a été établi plus haut ; les actions valides, parce qu'elles aboutissent à un état vérifiable de l'environnement, servent de points d'ancrage qui ramènent le récit à des faits acquis. Dans un épisode court, il n'y a pas assez de texte pour dériver, et les points d'ancrage n'ont rien à empêcher : on n'attend alors aucun effet propre des actions valides au-delà de la référence. Dans un épisode long, au contraire, chaque action valide supplémentaire réduirait le risque de tomber dans la classe la plus basse. La forme conditionnelle de la prédiction est donc le cœur de l'idée, et non un raffinement : un effet uniforme, présent dans les épisodes courts comme dans les longs, réfuterait le mécanisme de dérive même s'il allait dans le bon sens.",
+ "loi_predictive": {
+  "espace_instances": "Les épisodes de la banque banque-t05-v2, pris un à un, avec leurs traits centrés et réduits, la note du moniteur 3B:COHERENCE et la valeur de son prédicteur connu, partagés en épisodes longs et courts selon le signe du trait log_jetons_total ; effectif plausible : la banque entière, sans tri, chaque épisode tombant dans l'un des deux groupes.",
+  "prediction": "Au-delà du prédicteur connu du moniteur 3B:COHERENCE, la probabilité de l'issue 0 (la classe la plus basse) de 3B:COHERENCE diminue avec le trait actions_valides, seulement lorsque le trait log_jetons_total est positif (au-dessus de sa moyenne), avec un log-rapport de cotes de 0,6 par unité de actions_valides, donné comme une grandeur positive dont le sens est celui de la diminution ; aucun effet ajouté lorsque log_jetons_total est négatif.",
+  "signe": "-",
+  "metrique": "Log-rapport de cotes de l'issue 0 du moniteur 3B:COHERENCE contre ses issues plus hautes, estimé par une régression logistique qui prend le prédicteur connu comme terme de décalage. Le trait actions_valides porte l'effet ; le trait log_jetons_total en est la condition, par son signe. Le modèle contient le produit de actions_valides par l'indicatrice « log_jetons_total positif » et le produit de actions_valides par l'indicatrice complémentaire ; point de fonctionnement : ces deux coefficients, leurs intervalles de confiance et leur différence, lus sur la banque entière."
+ },
+ "perte_traduction": "La dérive est progressive : elle croît avec la longueur, sans seuil. La loi la remplace par une coupure nette au signe du logarithme du total de jetons, choisie parce qu'elle est fixée d'avance et sans paramètre libre, mais qui place dans le même groupe un épisode à peine plus long que la moyenne et un épisode démesuré. La loi ignore aussi la position des actions valides dans l'épisode, alors que le mécanisme voudrait qu'un ancrage tardif protège mieux la fin du texte qu'un ancrage précoce. Enfin, elle réduit la cohérence à la seule classe la plus basse et laisse de côté le passage entre les classes intermédiaire et haute, où la dérive pourrait aussi se manifester.",
+ "questions_servies": [
+  "Q-pont",
+  "nouvelle : dérive des épisodes longs"
+ ],
+ "avantage": {
+  "source": "methodes",
+  "texte": "La prédiction est conditionnelle et préenregistrée sous une forme qui ne laisse aucun degré de liberté : la coupure, le décalage par la référence et les deux coefficients sont fixés avant la lecture. Une prédiction de ce type est plus risquée qu'un effet principal, donc plus informative si elle tient.",
+  "incopiable_parce_que": "Un concurrent mieux doté trouverait vite une interaction quelconque en explorant les découpages ; ce qu'il ne reproduit pas à bas coût, c'est une interaction annoncée d'avance, avec sa forme et son sens, sur des notes de juge déjà débarrassées de ce que la référence explique. L'exploration libre produit des interactions en abondance et n'en confirme aucune."
+ },
+ "originalite": {
+  "niveau": "transposition",
+  "texte": "La modification d'effet par une variable tierce est une notion ancienne de l'épidémiologie et de la statistique appliquée. La transposition consiste à l'appliquer aux notes de juges sur des épisodes d'agents, avec un mécanisme nommé, la dérive des épisodes longs, qui dicte d'avance la forme de l'interaction. Je n'ai pas connaissance d'un travail qui ait posé cette prédiction conditionnelle sur ce type de notes, sous réserve d'une recherche plus complète."
+ },
+ "demande_organisme": {
+  "nature": "rien",
+  "texte": "Rien : les deux traits, la note et la référence sont déjà dans la banque ; la coupure se calcule à partir d'un trait existant."
+ },
+ "cout": {
+  "nature": "processeur",
+  "ordre_de_grandeur": "Quelques minutes de processeur ; une journée de travail pour figer le modèle, la coupure et les sorties à rapporter."
+ },
+ "piege": "Une interaction demande beaucoup plus d'épisodes qu'un effet principal pour être estimée avec la même précision ; si la banque est trop petite, l'intervalle du coefficient conditionnel sera large et l'on sera tenté de lire un effet dans le bruit, ou de changer de coupure jusqu'à en trouver une qui convienne. La coupure doit donc rester celle annoncée, sans variante lue avant la conclusion. Le second piège est la colinéarité : dans les épisodes longs, le nombre d'actions valides croît avec le total de jetons, si bien que l'effet attribué aux actions valides pourrait n'être qu'un reste de longueur au-delà de la coupure. Il faut rapporter le coefficient après ajustement sur le logarithme du total de jetons à l'intérieur de chaque groupe, et vérifier que la référence ne contient pas déjà une interaction de même forme.",
+ "cosmetique_si": "L'idée serait cosmétique si les coefficients des deux groupes étaient indiscernables, car la condition ne serait alors qu'un ornement posé sur un effet principal ; si remplacer la coupure par une interaction continue avec le total de jetons effaçait l'effet ; ou si le même schéma conditionnel apparaissait avec le trait de bruit à la place des actions valides.",
+ "anteriorite": [
+  {
+   "reference": "Modern Epidemiology, Kenneth Rothman, Sander Greenland, Timothy Lash, 2008 (troisième édition)",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "The garden of forking paths (titre abrégé), Andrew Gelman et Eric Loken, 2013",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "Regression Models for Ordinal Data, Peter McCullagh, 1980",
+   "statut": "SUPPOSE"
+  }
+ ]
+}

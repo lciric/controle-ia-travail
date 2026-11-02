@@ -1,0 +1,57 @@
+{
+ "nom": "Aucun moniteur qui ne lit que des résumés ne sépare deux lois qui ont les mêmes résumés : énoncé à démontrer dans Lean",
+ "type": "question",
+ "enonce": "La question est mathématique et se tranche par une démonstration, non par des épisodes. On se donne un espace mesurable d'épisodes, une application mesurable de résumé qui associe à chaque épisode ses statistiques résumées, et un moniteur qui ne lit que ce résumé, éventuellement de façon aléatoire, ce qu'on modélise par un noyau de Markov allant de l'espace des résumés vers un espace de verdicts. L'énoncé dit que si deux lois de probabilité sur les épisodes ont la même loi image par le résumé, alors le moniteur produit sous l'une et sous l'autre exactement la même loi de verdicts : aucune règle d'alerte construite sur ce moniteur ne peut les séparer, et son taux de détection est égal à son taux de fausse alarme quel que soit le seuil. La forme bornée prolonge l'énoncé : l'écart entre les lois des verdicts, mesuré en variation totale, ne dépasse jamais l'écart entre les lois des résumés. L'intérêt pour le programme est double. D'une part, toute proposition de moniteur fondé sur des traits agrégés hérite d'une limite démontrée : s'il existe deux comportements, l'un honnête et l'autre non, qui produisent les mêmes résumés, aucun réglage de ce moniteur ne les distinguera, et il faut lire autre chose que les résumés. D'autre part, la version vérifiée par machine devient une pièce réutilisable, citable dans les préenregistrements sans reprendre l'argument à chaque fois.",
+ "loi_predictive": {
+  "espace_instances": "aucun épisode : énoncé mathématique ; la quantification porte sur tous les espaces mesurables d'épisodes, toutes les applications mesurables de résumé, toutes les paires de lois de probabilité et tous les noyaux de Markov de lecture.",
+  "prediction": "Énoncé à prouver : pour tout espace mesurable d'épisodes, toute application mesurable de résumé, toutes lois de probabilité P et Q sur les épisodes dont les lois images par le résumé coïncident, et tout noyau de Markov allant de l'espace des résumés vers un espace mesurable de verdicts, les lois des verdicts obtenues sous P et sous Q coïncident ; en conséquence, pour toute partie mesurable de l'espace des verdicts, c'est-à-dire toute règle d'alerte, la probabilité d'alerte sous P est égale à la probabilité d'alerte sous Q. Forme bornée : la distance en variation totale entre les lois des verdicts est majorée par la distance en variation totale entre les lois des résumés.",
+  "signe": "+",
+  "metrique": "preuve vérifiée par le noyau de Lean, dans la bibliothèque Mathlib, sans axiome ajouté à ceux qu'elle utilise et sans aucune étape laissée admise."
+ },
+ "perte_traduction": "L'énoncé idéalise à plusieurs titres. Il suppose que le moniteur ne lit que le résumé, alors qu'un moniteur réel lit souvent un peu plus, ne serait-ce que par une fuite de l'ordre des épisodes ou de leur horodatage ; il suppose l'égalité exacte des lois des résumés, alors qu'en pratique on n'observe que des échantillons finis et des lois approximativement égales ; et il ne dit rien des moniteurs qui lisent l'intérieur du modèle, qui sont précisément ceux que le programme veut défendre. La forme bornée corrige en partie la deuxième idéalisation, mais elle reste un énoncé sur les lois, non sur des estimations faites avec un nombre fini d'épisodes. Enfin, la traduction en énoncé formel perd la motivation : le théorème ignore que l'un des comportements est malhonnête.",
+ "questions_servies": [
+  "Q-pont",
+  "nouvelle : limites des moniteurs qui ne lisent que des résumés"
+ ],
+ "avantage": {
+  "source": "methodes",
+  "texte": "Le programme pratique déjà l'écriture d'énoncés figés avant les résultats ; un énoncé vérifié par machine pousse cette discipline à son terme, puisqu'il ne laisse aucune place à une hypothèse implicite ou à une étape admise sans le dire.",
+  "incopiable_parce_que": "L'énoncé lui-même est copiable, et son contenu mathématique est classique. Ce qui l'est moins, c'est son insertion dans une chaîne où les préenregistrements citent des énoncés vérifiés pour justifier le choix de ce qu'un moniteur doit lire ; un concurrent peut reproduire la preuve, mais l'avantage tient à l'usage qui en est fait dans la conception des moniteurs, et il reste modeste."
+ },
+ "originalite": {
+  "niveau": "transposition",
+  "texte": "Le contenu est classique : il découle de l'inégalité de traitement des données et de la théorie de la comparaison des expériences. La bibliothèque Mathlib contient déjà une bonne part des outils nécessaires, images de mesures et noyaux de Markov notamment ; il faudra vérifier ce qui existe pour la distance en variation totale. La transposition consiste à poser l'énoncé dans le vocabulaire des moniteurs et des résumés d'épisodes et à en livrer une version vérifiée par machine qui serve de référence au programme."
+ },
+ "demande_organisme": {
+  "nature": "rien",
+  "texte": "Rien : l'énoncé se démontre hors de l'organisme et n'en modifie aucune partie ; il sert ensuite de référence lors de la conception des moniteurs."
+ },
+ "cout": {
+  "nature": "processeur",
+  "ordre_de_grandeur": "Calcul négligeable ; quelques jours de travail d'un formalisateur familier de la théorie de la mesure dans Mathlib, davantage si la variation totale doit être définie."
+ },
+ "piege": "Le piège principal est la trivialité : si le moniteur est défini comme une fonction du résumé, l'égalité des lois de verdicts suit en une ligne de la composition des images de mesures, et présenter ce lemme comme un résultat serait de l'habillage. La valeur doit venir de la forme bornée et de l'exactitude de la correspondance entre l'énoncé formel et la situation visée. Le second piège est précisément cette correspondance : il est facile de formaliser un énoncé voisin mais faux pour le cas qui compte, par exemple en laissant le moniteur dépendre d'une source d'aléa corrélée à l'épisode, ce qui revient à lui faire lire plus que le résumé. Le troisième piège tient aux hypothèses de mesurabilité, qui peuvent se glisser dans la preuve sous une forme plus forte que nécessaire et restreindre l'énoncé sans qu'on le remarque.",
+ "cosmetique_si": "L'énoncé serait cosmétique si sa preuve se réduisait à l'application d'un lemme existant sans aucun apport sur la forme bornée, ou si aucun préenregistrement ni aucune conception de moniteur du programme ne venait jamais le citer pour écarter un moniteur ou justifier ce qu'il lit.",
+ "anteriorite": [
+  {
+   "reference": "On the Mathematical Foundations of Theoretical Statistics, Ronald Fisher, 1922",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "Equivalent Comparisons of Experiments, David Blackwell, 1953",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "Elements of Information Theory, Thomas Cover et Joy Thomas, 1991",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "The Lean Mathematical Library, The mathlib Community, 2020",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "The Lean 4 Theorem Prover and Programming Language, Leonardo de Moura et Sebastian Ullrich, 2021",
+   "statut": "SUPPOSE"
+  }
+ ]
+}

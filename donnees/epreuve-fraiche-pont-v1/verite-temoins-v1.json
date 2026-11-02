@@ -1,0 +1,18 @@
+{
+ "version": "verite-temoins-v1",
+ "jamais_servi": true,
+ "redige": "2026-11-01, sous-agent neuf de session-depot ; gelé avec le préenregistrement, avant l'écriture des témoins",
+ "regle": "Un témoin « signature » est juste si la sortie est une loi (sortie 1, sortie 1 différée ou sortie 2) dont la signature compilée égale la signature attendue (genre, forme, banque, moniteur, traits dans l'ordre, issue visée, sens, sous-population) et dont l'effet est à un facteur 2 au plus de l'effet attendu (pont_v1.RAPPORT_EFFET_MAX). Un témoin « renvoi » est juste si la sortie est « non_testable » avec un code de la liste attendue. Un témoin non traité n'est ni juste ni faux : L1 est alors non lisible.",
+ "T1": {"attendu": "signature", "nature": "aller-retour, loi monotone",
+        "signature": {"genre": "instances", "forme": "monotone_un_trait", "banque": "banque-t05-v2", "moniteur": "8B:RIGOR",
+                      "traits": ["jetons_par_action_ecart_type"], "issue_visee": 2, "sens": "+",
+                      "sous_population_visee": null, "effet": 0.8}},
+ "T2": {"attendu": "signature", "nature": "aller-retour, interaction de deux traits",
+        "signature": {"genre": "instances", "forme": "interaction_deux_traits", "banque": "banque-t05-v2",
+                      "moniteur": "3B:COHERENCE", "traits": ["actions_valides", "log_jetons_total"], "issue_visee": 0,
+                      "sens": "-", "sous_population_visee": null, "effet": 0.6}},
+ "T3": {"attendu": "renvoi", "nature": "vide : deux valeurs chiffrées égales, écart nul", "codes": ["N5"]},
+ "T4": {"attendu": "renvoi", "nature": "méthode sans mesure sur des épisodes", "codes": ["N1"]},
+ "T5": {"attendu": "renvoi", "nature": "théorème à prouver, hors banque", "codes": ["N3"]},
+ "T6": {"attendu": "renvoi", "nature": "prédiction signée sans aucun chiffre", "codes": ["N2", "N9"]}
+}

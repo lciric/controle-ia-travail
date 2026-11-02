@@ -1,0 +1,279 @@
+{
+  "f2cae4c8c79f8": {
+    "contenu": {
+      "axe": "boite_blanche_par_action",
+      "cout": "supposé : 8 heures-cœur et 24 Go de mémoire, activations déjà stockées et distances de référence mutualisées.",
+      "hypothese": "Sous une loi déplacée inédite, la distance d'énergie entre une activation et la loi de référence conserve un signal lorsque le déplacement est orthogonal à la direction apprise. Un rang conforme bilatère détectera aussi les contractions de variance, qu'un score uniquement dirigé vers les valeurs extrêmes manquerait.",
+      "invariance": "Après blanchiment, les distances sont invariantes aux rotations et permutations communes des coordonnées internes ; les rangs sont invariants aux transformations monotones propres à chaque couche. Une régression logistique fige au contraire une projection signée : une famille inédite peut déplacer les activations hors de cette projection, voire inverser son signe, sans modifier sa géométrie globale de manière invisible au score d'énergie.",
+      "prediction": "supposé : sur les dix jeux du programme, aire = 0,5748 + δ, avec δ dans [+0,08 ; +0,20], donc amélioration de signe positif ; 0,5748 est l'aire de transfert de la seconde sonde (programme, « Repères chiffrés »).",
+      "quantite_lue": "Boîte blanche : h_ℓ(a_t) au jeton final, aux couches intermédiaire et finale. Après blanchissement estimé sur P_0, le score d'énergie de chaque activation vis-à-vis de l'échantillon de référence est transformé en rang conforme bilatère ; S(a_t) est le maximum des scores de couche calibrés, sans agrégation entre actions.",
+      "test_de_mort": "Tuer si l'aire moyenne appariée, évaluée une seule fois avec calibration croisée sur les données existantes, est inférieure ou égale à 0,5748 (programme, « Repères chiffrés », aire de transfert de la seconde sonde).",
+      "titre": "Score d'énergie bilatère sur activations blanchies"
+    },
+    "empreinte": "627297c8cd73a2acff349de90057dd04e035195781ca924dd10c9f883f0b3a34",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "f417612547849": {
+    "contenu": {
+      "axe": "boite_blanche_sequentielle",
+      "cout": "supposé : 18,5 heures-cœur processeur et 32 Go de mémoire vive (0,5 heure-cœur pour la décomposition spectrale régularisée des incréments sur P_0 et 18 heures-cœur pour le calcul des autocovariances par blocs et le rééchantillonnage séquentiel sur activations pré-extraites).",
+      "hypothese": "Les lois déplacées inédites altèrent à la fois la structure temporelle entre actions et l'énergie dans les directions de faible variance de la loi de référence P_0. En projetant les incréments temporels des activations dans le sous-espace résiduel (composantes principales de moindre variance de P_0) et en cumulant à la fois leur norme de Mahalanobis régularisée et l'écart de Frobenius de leurs matrices d'autocovariance à retards fixés, on obtient une statistique conjointe plus puissante et plus robuste au transfert. La différenciation temporelle élimine les décalages constants propres à une nouvelle tâche (qui fausseraient une distance marginale dans le sous-espace de faible variance), tandis que la restriction au noyau résiduel amplifie le rapport signal-sur-bruit des ruptures dynamiques (qui seraient masquées par la variance naturelle des composantes principales majeures).",
+      "invariance": "Double invariance : (1) invariance exacte aux translations constantes par trajectoire ou par gabarit de tâche grâce au passage aux incréments Δh_t ; (2) invariance par rotation orthogonale dans le sous-espace résiduel blanchi de P_0 grâce à l'isotropie de la norme quadratique (apparentée à « A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks », Lee et al., 2018, arXiv:1807.03888, à vérifier) et de la norme de Frobenius. Contrairement à une sonde linéaire supervisée figée qui projette sur une direction unique vulnérable aux déplacements orthogonaux et aux biais de tâche, cette statistique capte toute déviation géométrique ou dynamique hors du support de P_0.",
+      "prediction": "supposé : sur les dix jeux du programme, gain d'aire δ dans [+0,15 ; +0,28] (amélioration de signe positif) par rapport à la référence de transfert 0,5748 du programme, soit une aire totale comprise entre 0,7248 et 0,8548 (supposé), dépassant le seuil de détection à 80 % (0,6315) et surclassant les composantes spatiale ou temporelle prises isolément.",
+      "quantite_lue": "Boîte blanche : activations internes aux couches intermédiaire (16 sur 32, supposé) et finale, moyennées sur les jetons de chaque action a_t et concaténées au jeton final. Sur P_0, former les incréments Δh_t = h(a_t) - h(a_{t-1}), estimer leur covariance et projeter Δh_t sur le sous-espace des composantes principales de moindre variance avec blanchiment régularisé. À chaque pas t, calculer la somme de la norme quadratique instantanée (distance de Mahalanobis sur l'incrément projeté) et de l'écart en norme de Frobenius entre l'autocovariance empirique locale (sur blocs contigus à retards fixés) et celle de P_0 dans ce même sous-espace. Cumuler ce score mixte sur le préfixe et calibrer par rééchantillonnage de trajectoires de P_0 avec dépense alpha sommable.",
+      "test_de_mort": "calcul : sur les dix jeux existants (2 400 actions), calculer D = aire(statistique combinée) − max(aire(norme quadratique seule sans termes d'autocovariance ni incréments), aire(autocovariance des incréments sur l'espace complet sans projection résiduelle), 0,5717 [plancher aléatoire au quantile 0,95]) ; lire D une seule fois et réfuter la méthode si D ≤ 0.",
+      "titre": "Autocovariance résiduelle des incréments d'activations par Mahalanobis"
+    },
+    "empreinte": "db81f8f2a661e9d70c89d09a4b8f7c30421107ab0f5c9cde3aea2b6f11679986",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "argon",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 0
+    }
+  },
+  "f4221eac0c617": {
+    "contenu": {
+      "axe": "boite_blanche_sequentielle",
+      "cout": "2 heures-cœur et 8 Go de mémoire vive (supposé) pour le calcul incrémental des matrices de Gram sur 240 épisodes [programme].",
+      "hypothese": "Une martingale de test séquentiel mesurant l'écart en moyenne dans un espace de Hilbert à noyau reproduisant entre le préfixe de la trajectoire et un échantillon de P_0 détecte les menaces diffuses à horizon fini avec fausse alerte garantie.",
+      "invariance": "Invariance par rapport à la géométrie linéaire du déplacement grâce au noyau caractéristique (fondée sur « A Kernel Two-Sample Test », Gretton et al., 2012, JMLR, à vérifier, et « Nonparametric Martingales for Testing Exchangeability », Ramdas et al., 2022, arXiv:2102.06304, à vérifier) : ce test détecte toute différence dans les moments d'ordre supérieur entre P_0 et P_ε, alors que la régression logistique est aveugle aux déplacements de variance ou de corrélation temporelle qui ne translatent pas la moyenne projetée.",
+      "prediction": "Sur un transfert de type HELIOS, rappel à 1 % de fausses alertes compris entre +0,45 et +0,65 (supposé), soit un gain de +0,07 à +0,27 (supposé) au-dessus du plafond observé de 0,38 [HELIOS, p. 18].",
+      "quantite_lue": "Séquence des activations du dernier jeton de chaque action (h_ℓ(a_1), ..., h_ℓ(a_t)) à la couche ℓ = 20 (supposé), accumulée de l'action 1 à t.",
+      "test_de_mort": "Aire finale à l'horizon T sur les 240 épisodes [programme] inférieure à 0,5966 (aire minimale détectable à 80 % [programme]).",
+      "titre": "Martingale d'échangeabilité par divergence maximale en moyenne (MMD)"
+    },
+    "empreinte": "fc723829b4ef1644ab6fa8276047d983bd2fd52b2810159ea2447e2eac3cb7d2",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f4b11beb128eb": {
+    "contenu": {
+      "axe": "boite_blanche_par_action",
+      "cout": "1,5 heure-cœur et 4 Go de mémoire vive (supposé) pour le tri sur 200 directions [programme] fois 2 400 actions [programme].",
+      "hypothese": "La distance de Wasserstein tranchée entre le nuage des activations des jetons d'une action a_t et la mesure marginale des jetons sous P_0, intégrée sur le demi-espace orthogonal aux directions principales de P_0, détecte les lois P_ε inédites.",
+      "invariance": "Invariance par permutation de la position des jetons et isotropie angulaire sur la sphère unité (issue de « Sliced and Radon Wasserstein Barycenters of Measures », Bonneel et al., 2015, JMIV, à vérifier) : en moyennant la distance de transport optimal 1D sur des projections aléatoires tirées selon la covariance de P_0, la statistique capte les déplacements de forme de la distribution des jetons dans toutes les directions, contrairement à la sonde logistique figée sur une seule projection.",
+      "prediction": "Aire sur les familles de transfert entre 0,64 et 0,80 (supposé), dépassant de +0,04 à +0,20 (supposé) l'aire minimale détectable à 80 % (0,5966 et 0,6315 [programme]).",
+      "quantite_lue": "Ensemble non ordonné des vecteurs d'activations h_ℓ(a_t) de tous les jetons de l'action a_t à la couche ℓ = 18 (supposé).",
+      "test_de_mort": "Borne basse de l'aire sur les dix jeux [programme] inférieure au quantile 0,95 du plancher aléatoire apparié (0,5356 [programme]) avec 200 projections [programme].",
+      "titre": "Distance de Wasserstein tranchée sur le nuage de jetons d'une action"
+    },
+    "empreinte": "580d824e017fbfb01f17539ecd9f24509bfae9b47720e00a309cb3995e2d91f0",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f4f0af2a97b13": {
+    "contenu": {
+      "axe": "boite_blanche_par_action",
+      "cout": "3 heures-cœur et 6 Go de mémoire vive (supposé) pour les décompositions en valeurs singulières par action sur 2 400 actions [programme].",
+      "hypothese": "Tout déplacement de loi P_ε modifie le ratio d'entropie spectrale des activations entre les couches basses et les couches hautes d'une même action a_t, indépendamment de la direction sémantique du déplacement.",
+      "invariance": "Invariance par transformation unitaire de l'espace de représentation à chaque couche (inspirée de « The Effective Rank: A Measure of Effective Dimensionality », Roy et Vetterli, 2007, EUSIPCO, à vérifier) : la statistique ne lit que la concentration du spectre des valeurs singulières intra-action, là où une sonde linéaire dépend des coordonnées absolues dans la base des neurones et échoue dès que la famille de transfert active des sous-espaces orthogonaux.",
+      "prediction": "Aire sur les familles de transfert comprise entre 0,62 et 0,76 (supposé) sur les dix jeux du programme, soit une différence de +0,05 à +0,24 (supposé) par rapport aux sondes figées à 0,5248 et 0,5748 [programme].",
+      "quantite_lue": "Matrices des activations de tous les jetons de l'action a_t aux couches ℓ_1 = 8 et ℓ_2 = 24 (supposé), agrégées par le rapport de leurs rangs effectifs.",
+      "test_de_mort": "Aire sur les 2 400 actions [programme] inférieure à 0,5717 (quantile 0,95 du second plancher aléatoire apparié [programme]).",
+      "titre": "Discordance inter-couches du rang effectif de la matrice des jetons"
+    },
+    "empreinte": "0c30c2f137be5eda2f4c7b3782655cd8c93c5cee23b96f30d3fd2cbd677bb4af",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f564bce308185": {
+    "contenu": {
+      "axe": "boite_blanche_sequentielle",
+      "cout": "supposé : 18 heures-cœur et 32 Go de mémoire, activations déjà stockées et autocovariances de référence précalculées.",
+      "hypothese": "Des lois déplacées inédites modifieront les dépendances temporelles des incréments d'activations avant de produire un déplacement marginal suffisant pour une sonde par action. L'écart cumulé d'autocovariance détectera cette composante et apportera un gain au-delà d'une statistique sans mémoire.",
+      "invariance": "Les incréments sont invariants à l'ajout d'un décalage constant propre à une tâche ou à un gabarit, et la norme de Frobenius est invariante aux rotations orthogonales communes. Une direction de régression logistique sur les activations absolues n'a pas la première invariance et ne lit pas les dépendances temporelles : elle peut rester inchangée alors que toute la dynamique interne a changé.",
+      "prediction": "supposé : sur les dix jeux du programme, aire = 0,5748 + δ, avec δ dans [+0,06 ; +0,20], amélioration de signe positif ; la référence 0,5748 est l'aire de transfert rapportée par le programme, « Repères chiffrés ».",
+      "quantite_lue": "Boîte blanche : activations du jeton final de chaque action, aux couches intermédiaire et finale. Blanchir sur P_0, former les incréments entre actions successives, puis mesurer par norme de Frobenius l'écart entre leurs autocovariances empiriques à retards fixés et celles de P_0. S_t cumule ces écarts sur des blocs contigus du préfixe ; des p-valeurs par rééchantillonnage de trajectoires honnêtes et une dépense alpha sommable contrôlent la fausse alerte à tout horizon.",
+      "test_de_mort": "calcul : G = aire de la statistique complète − aire de sa version sans termes d'autocovariance ; lire G une seule fois sur les dix jeux existants et tuer si G est inférieur ou égal à zéro.",
+      "titre": "Rupture d'autocovariance des dynamiques internes"
+    },
+    "empreinte": "f622267a38e9181f2250519d4482d859c3106f5ae83707138ea2dde1ebf44738",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "f5c94a9da5a04": {
+    "contenu": {
+      "axe": "boite_noire_sequentielle",
+      "cout": "supposé : 14 heures-cœur et 12 Go de mémoire, permutations bornées par les temps de contrôle et noyaux réutilisés.",
+      "hypothese": "Pour une menace diffuse, les MMD textuelles de courts segments restent individuellement faibles, mais leur scan cumulé sur le préfixe produit une rupture détectable. L'accumulation multi-échelle augmentera le rappel sans relâcher la fausse alerte à aucun horizon.",
+      "invariance": "Le scan est invariant aux rotations de l'espace de noyau et aux transformations monotones des statistiques à l'intérieur de chaque échelle calibrée. Il agrège des écarts de loi plutôt que des projections signées susceptibles de s'annuler. Une régression logistique séquentielle construite sur une direction apprise perd précisément cette propriété quand la nouvelle famille change d'orientation ou répartit son effet entre plusieurs échelles.",
+      "prediction": "supposé : sur les dix jeux du programme, aire = 0,5748 + δ, avec δ dans [+0,10 ; +0,24], amélioration de signe positif ; la valeur 0,5748 est celle de la seconde sonde sur une autre famille (programme, « Repères chiffrés »).",
+      "quantite_lue": "Boîte noire : textes des actions 1 à t, comparés à P_0 par un noyau de chaînes. Pour chaque préfixe, balayer les MMD entre les suffixes candidats et la référence sur plusieurs longueurs ; aux temps de contrôle fixés, obtenir des p-valeurs par permutation et leur attribuer des budgets alpha sommables sur les temps et les échelles. S_t est le scan standardisé du préfixe, avec fausse alerte contrôlée à tout horizon.",
+      "test_de_mort": "calcul : G = aire du scan séquentiel − aire de la même MMD appliquée sans accumulation ; lire G une seule fois sur les dix jeux existants et tuer si G est inférieur ou égal à zéro.",
+      "titre": "Scan MMD séquentiel multi-échelle sur le texte"
+    },
+    "empreinte": "6b5efea20cce8854d745b2c20cff0ac8ecae068e38362e5cbabb90ceca8ee47e",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "f5dbf1e8c8a0b": {
+    "contenu": {
+      "axe": "boite_blanche_sequentielle",
+      "cout": "supposé : 40 heures-cœur et 48 Go de mémoire, graphes recalculés uniquement aux temps de contrôle.",
+      "hypothese": "Un graphe de plus proches voisins conservera des écarts locaux et multimodaux entre P_ε et P_0 lorsque la géométrie globale apprise change de famille. Leur accumulation par comptages d'arêtes donnera une puissance supérieure à celle d'une direction linéaire, notamment pour les déplacements diffus.",
+      "invariance": "Le graphe est invariant aux rotations orthogonales des activations et à toute transformation monotone commune des distances, donc à des changements de coordonnées qui ne préservent pas une direction apprise. Les comptages d'arêtes lisent aussi la géométrie locale et les modes multiples ; une régression logistique ne peut représenter qu'une frontière et une projection signées, sans cette invariance.",
+      "prediction": "supposé : sur les dix jeux du programme, aire = 0,5748 + δ, avec δ dans [+0,12 ; +0,26], donc gain de signe positif ; 0,5748 provient du programme, « Repères chiffrés ».",
+      "quantite_lue": "Boîte blanche : activations du jeton final de chaque action, aux couches intermédiaire et finale. Construire le graphe de plus proches voisins du pool formé par la référence honnête et le préfixe observé, puis cumuler les comptages standardisés d'arêtes entre échantillons. Combiner les couches par poids fixés ; aux temps de contrôle, utiliser des p-valeurs de permutation et une dépense alpha sommable garantissant la fausse alerte à tout horizon.",
+      "test_de_mort": "Tuer si l'aire moyenne appariée lue une seule fois sur les données existantes est inférieure ou égale à 0,6315, seuil retenu d'après la plus grande des deux aires minimales détectables à 80 % (programme, « Repères chiffrés »).",
+      "titre": "Graphe de voisinage séquentiel sur activations"
+    },
+    "empreinte": "513cbe9c3ef63e7315b604da93476ecf1533fe81a71563da4607a6948f6822b3",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "f8c305047303f": {
+    "contenu": {
+      "axe": "boite_noire_par_action",
+      "cout": "supposé : 3 heures-cœur et 8 Go de mémoire, texte seul, avec noyau de référence précalculé.",
+      "hypothese": "Si une famille inédite modifie conjointement plusieurs fréquences de jetons et de bigrammes, une MMD conditionnée par la longueur détectera cet écart de mesure sans direction stable entre familles. Son aire de transfert dépassera celle d'une séparation linéaire apprise sur les familles d'apprentissage.",
+      "invariance": "À longueur conditionnée, la statistique dépend d'une distance entre mesures et est invariante aux rotations de l'espace de noyau ainsi qu'aux recalibrations monotones du score. Elle ne comporte donc ni signe ni orientation à réapprendre. Une direction de régression logistique peut au contraire donner un poids nul aux combinaisons de fréquences utilisées par une famille inédite et reste sensible aux variations de longueur.",
+      "prediction": "supposé : sur les dix jeux du programme, aire = 0,5748 + δ, avec δ dans [+0,02 ; +0,12], donc écart positif ; 0,5748 est la référence de transfert donnée par le programme, « Repères chiffrés ».",
+      "quantite_lue": "Boîte noire : texte de a_t uniquement, représenté par ses histogrammes normalisés de jetons et de bigrammes. S(a_t) est la MMD à noyau caractéristique entre cette mesure empirique et l'échantillon honnête de référence, avec calibration et seuil propres à chaque strate de longueur ; aucune agrégation entre actions.",
+      "test_de_mort": "calcul : D = aire moyenne observée − quantile 0,95 du plancher aléatoire apparié propre à cette statistique ; lire D une seule fois et tuer si D est inférieur ou égal à zéro. Les 200 tirages et le quantile 0,95 sont ceux prescrits par le glossaire du programme.",
+      "titre": "MMD textuelle conditionnée par la longueur"
+    },
+    "empreinte": "1a030e4edbc39d5473a2d17f5cbe7ec6abdab2fa18833571052df0d60c773261",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "fbc3b1825fb4c": {
+    "contenu": {
+      "axe": "boite_noire_sequentielle",
+      "cout": "0,1 heure-cœur et 1 Go de mémoire vive (supposé) pour compresser les 2 400 actions réparties en 240 épisodes [programme].",
+      "hypothese": "Une menace diffuse induit une dérive non paramétrique dans la complexité algorithmique conditionnelle des actions successives, détectable par un estimateur de rupture sur les taux de compression sans lecture des activations.",
+      "invariance": "Invariance par substitution de gabarit syntaxique et de vocabulaire spécifique à la tâche (fondée sur « Nonparametric Methods in Change-Point Problems », Brodsky et Darkhovsky, 1993, Springer, à vérifier, et « The Similarity Metric », Li et al., 2004, IEEE TIT, arXiv:cs/0111054, à vérifier) : la statistique ne mesure que la redondance structurelle interne de la trajectoire au fil du temps, là où une direction apprise en représentation textuelle échoue lorsque la thématique ou le format de surface change entre familles.",
+      "prediction": "Sur les dix jeux du programme, aire comprise entre 0,60 et 0,72 (supposé), soit une amélioration de +0,03 à +0,19 (supposé) par rapport aux sondes de référence en transfert (0,5248 et 0,5748 [programme]).",
+      "quantite_lue": "Texte brut des actions (a_1, ..., a_t), transformé à chaque pas k ≤ t en la différence de longueur compressée L(a_1...a_k) - L(a_1...a_{k-1}) normalisée par la longueur de a_k.",
+      "test_de_mort": "Aire moyenne sur les dix jeux des données existantes [programme] inférieure à 0,5356 (quantile 0,95 du premier plancher du programme [programme]).",
+      "titre": "Statistique de rupture de Brodsky-Darkhovsky sur profils de compression"
+    },
+    "empreinte": "e65d1bdfd5361f99f947e2886dd81ed5d16f1337d9eb1039fd7f78eaac7bf1a1",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fc5afe368eea6": {
+    "contenu": {
+      "axe": "boite_blanche_par_action",
+      "cout": "0,5 heure-cœur et 4 Go de mémoire vive (supposé) pour la décomposition spectrale de la covariance sur les 2 400 actions [programme].",
+      "hypothese": "La norme quadratique des activations dans le sous-espace des composantes principales de moindre variance de la loi de référence P_0 sépare les lois déplacées P_ε inédites mieux qu'une sonde linéaire supervisée.",
+      "invariance": "Invariance par rotation orthogonale dans le sous-espace résiduel de P_0 : la statistique (apparentée à « A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks », Lee et al., 2018, arXiv:1807.03888, à vérifier) est isotrope vis-à-vis de la direction du déplacement hors du support de P_0, tandis qu'une régression logistique projette sur un unique vecteur normal qui devient orthogonal aux déplacements d'une nouvelle famille.",
+      "prediction": "Sur les dix jeux du programme, gain d'aire de +0,12 à +0,25 (supposé) par rapport aux sondes principales figées (0,5248 et 0,5748 [programme]), soit une aire entre 0,65 et 0,82 (supposé), dépassant l'aire minimale détectable à 80 % (0,5966 et 0,6315 [programme]).",
+      "quantite_lue": "Activations internes h_ℓ(a_t) de la couche intermédiaire (ℓ = 16 sur 32 supposé), moyennées sur les jetons de l'action a_t.",
+      "test_de_mort": "Aire inférieure ou égale au quantile 0,95 du plancher aléatoire apparié (0,5356 et 0,5717 [programme]) sur les 2 400 actions des données existantes.",
+      "titre": "Distance de Mahalanobis régularisée sur le noyau de la loi de référence"
+    },
+    "empreinte": "e8c12788cd9173676a5ca54b0328d59cdd11c392a7b93b0733e1927cb903961f",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fdbaf41c39a44": {
+    "contenu": {
+      "axe": "boite_blanche_par_action",
+      "cout": "supposé : 12 heures-cœur et 32 Go de mémoire, avec décompositions spectrales réutilisées entre calibrations.",
+      "hypothese": "Certaines lois déplacées modifient le spectre de covariance des activations entre jetons sans déplacement moyen détectable. La distance de ce spectre à celui de P_0 aura alors une puissance de transfert positive lorsque les sondes linéaires retombent au plancher.",
+      "invariance": "Le spectre est invariant aux rotations orthogonales de l'espace des neurones, et son calcul inter-jetons est invariant à leur permutation. Une direction de régression logistique ne possède pas ces invariances et ne lit qu'une projection du premier moment : une modification de variance ou de sous-espace orthogonale à cette direction peut lui échapper complètement.",
+      "prediction": "supposé : sur les dix jeux du programme, aire = 0,5748 + δ, avec δ dans [+0,04 ; +0,16], de signe positif ; la référence 0,5748 vient du programme, « Repères chiffrés ».",
+      "quantite_lue": "Boîte blanche : matrice des activations de tous les jetons de a_t aux couches intermédiaire et finale. Pour chaque action, calculer une covariance inter-jetons régularisée, trier son spectre et mesurer son écart au spectre de référence conditionné au nombre de jetons ; agréger les couches par maximum de scores conformes.",
+      "test_de_mort": "Tuer si l'aire moyenne appariée lue une seule fois sur les données existantes est inférieure ou égale à 0,5966, seuil retenu d'après la plus petite des deux aires minimales détectables à 80 % (programme, « Repères chiffrés »).",
+      "titre": "Spectre de covariance inter-jetons"
+    },
+    "empreinte": "63f496d094c8b5c09dd2f36b5e976516a2195f7b2474eeaa9adfacbbf0b8b246",
+    "meta": {
+      "case": [
+        "statistiques-qui-transferent",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  }
+}

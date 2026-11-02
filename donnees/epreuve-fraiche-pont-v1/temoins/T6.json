@@ -1,0 +1,45 @@
+{
+ "nom": "Le volume total de jetons annonce la rigueur haute au-delà de la référence : le juge récompense-t-il la longueur ?",
+ "type": "question",
+ "enonce": "Le moniteur 3B:RIGOR range chaque épisode dans une classe de rigueur, et son prédicteur connu résume ce que l'on sait déjà prévoir de cette note. La question est de savoir si le volume total de l'épisode, mesuré par le logarithme du nombre total de jetons, annonce la classe la plus haute au-delà de ce que prévoit la référence. Deux lectures s'opposent. Dans la première, un épisode long a eu la place de justifier, de vérifier et de citer, et le juge récompense à bon droit une rigueur réellement plus grande ; dans la seconde, le juge se laisse impressionner par l'abondance du texte, et une part de sa note de rigueur n'est qu'une mesure de longueur. La prédiction est que l'effet existe et qu'il est net ; l'enjeu est de savoir ensuite laquelle des deux lectures il soutient. Si la seconde l'emporte, le moniteur est en partie un compteur de longueur, ce qui compte pour son usage comme signal de sécurité : un moniteur qui récompense la longueur se laisse influencer par la seule verbosité, et sa note perd de sa valeur dès que la longueur des épisodes varie pour des raisons étrangères à la qualité. Si la première l'emporte, le volume devient un trait d'appoint légitime, et l'on comprend mieux ce que la référence laisse échapper.",
+ "loi_predictive": {
+  "espace_instances": "Les épisodes de la banque d'épisodes du catalogue, pris un à un, avec le trait log_jetons_total centré et réduit, la note du moniteur 3B:RIGOR et la valeur de son prédicteur connu ; effectif plausible : la banque entière, sans tri ni sous-échantillonnage, les sous-populations gardées ensemble et signalées dans le modèle.",
+  "prediction": "Au-delà du prédicteur connu du moniteur 3B:RIGOR, la probabilité de la classe la plus haute de 3B:RIGOR augmente nettement avec le trait log_jetons_total.",
+  "signe": "+",
+  "metrique": "Log-rapport de cotes de la classe la plus haute du moniteur 3B:RIGOR contre sa classe basse, estimé par une régression logistique qui prend le prédicteur connu comme terme de décalage et ajoute le trait log_jetons_total, avec un indicateur de sous-population ; point de fonctionnement : le signe du coefficient du trait et son intervalle de confiance, lus sur la banque entière, sans seuil de décision appliqué à la note."
+ },
+ "perte_traduction": "L'idée oppose deux lectures, rigueur réelle ou biais de longueur, et la loi ne les départage pas : elle constate seulement que le volume annonce la classe haute au-delà de la référence. Pour trancher, il faudrait une mesure de la rigueur indépendante du juge, que la banque ne fournit pas. La loi suppose aussi un effet monotone sur l'échelle des cotes, alors qu'au-delà d'une certaine longueur le juge pourrait au contraire pénaliser la prolixité. Enfin, elle mesure un reste après la référence : si celle-ci contient déjà le volume, un effet faible ne voudrait pas dire que le juge est insensible à la longueur, seulement que la référence l'a déjà absorbée.",
+ "questions_servies": [
+  "nouvelle : sensibilité des juges à la longueur",
+  "Q-pont"
+ ],
+ "avantage": {
+  "source": "programme",
+  "texte": "Le programme dispose de la note de ce juge, de son prédicteur connu et du volume de chaque épisode sur la même banque ; on peut donc mesurer l'effet propre de la longueur sur la classe haute, au-delà de ce que la référence explique, sans rien collecter de plus.",
+  "incopiable_parce_que": "Le biais de longueur des juges est connu et chacun peut le mesurer en gros ; ce qu'un concurrent ne reproduit pas à bas coût, c'est la mesure de ce biais au-delà d'une référence ajustée sur ce juge, sur la classe qui sert de signal, et sur des épisodes d'agents plutôt que sur des réponses isolées."
+ },
+ "originalite": {
+  "niveau": "transposition",
+  "texte": "La sensibilité des juges automatiques à la longueur des réponses est documentée, et des corrections ont été proposées pour l'en débarrasser. La transposition porte sur trois points : la note est une note de rigueur et non de préférence générale, l'unité est un épisode d'agent et non une réponse isolée, et l'effet est mesuré au-delà d'une référence qui résume déjà ce que l'on sait de la note."
+ },
+ "demande_organisme": {
+  "nature": "rien",
+  "texte": "Rien : la note, la référence et le trait de volume sont déjà disponibles ; l'idée se traite avec ce qui est en place."
+ },
+ "cout": {
+  "nature": "processeur",
+  "ordre_de_grandeur": "Quelques minutes de processeur ; une journée de travail pour figer l'analyse et la faire relire."
+ },
+ "piege": "Le piège principal est la référence elle-même : si le prédicteur connu contient déjà le volume total, l'effet résiduel du trait sera faible par construction, et l'on conclura à tort que le juge est insensible à la longueur ; si la référence ne le contient pas, l'effet sera fort par construction et l'on y verra un biais là où il n'y a peut-être qu'une rigueur réelle. Il faut donc établir avant la lecture ce que la référence contient. Le second piège est la confusion entre longueur et contenu : les épisodes longs sont aussi ceux qui comptent plus d'actions valides, et l'effet du volume pourrait n'être qu'un effet de l'exécution ; il faut rapporter le coefficient aussi après ajustement sur le nombre d'actions valides. Le troisième piège est la composition entre sous-populations, qu'on écarte en rapportant l'effet dans chacune.",
+ "cosmetique_si": "L'idée serait cosmétique si l'effet du volume disparaissait dès que le nombre d'actions valides entre dans le modèle, s'il changeait de signe d'une sous-population à l'autre, ou si le gain de prédiction de la classe haute, mesuré hors échantillon, restait indiscernable de celui qu'apporte le trait de bruit.",
+ "anteriorite": [
+  {
+   "reference": "Length-Controlled AlpacaEval: A Simple Way to Debias Automatic Evaluators, Yann Dubois, Balázs Galambosi, Percy Liang, Tatsunori Hashimoto",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "Generalized Linear Models, Peter McCullagh et John Nelder",
+   "statut": "SUPPOSE"
+  }
+ ]
+}

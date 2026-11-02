@@ -1,0 +1,45 @@
+{
+ "nom": "Les épisodes riches en actions valides et la nouveauté intermédiaire perçue par le juge",
+ "type": "question",
+ "enonce": "Le moniteur 8B:NOVELTY range chaque épisode dans l'une de trois classes de nouveauté ; la classe intermédiaire, l'issue 1, désigne un travail qui ne se contente pas de reformuler l'existant sans pour autant apporter une contribution franchement neuve. La question est de savoir si les épisodes qui réussissent plus d'actions valides que la moyenne tombent plus souvent dans cette classe intermédiaire. Le mécanisme proposé est le suivant : une action valide produit un résultat concret, une donnée obtenue, un calcul abouti, une vérification passée, et ces résultats concrets éloignent le texte final de la simple paraphrase, ce qui le fait sortir de la classe basse ; mais l'accumulation de résultats ne suffit pas à produire une idée neuve, qui demande un déplacement de point de vue plutôt qu'un surcroît d'exécution, si bien que l'épisode s'arrête le plus souvent à la classe intermédiaire. Les actions valides déplaceraient donc la masse de probabilité de la classe basse vers la classe intermédiaire, sans atteindre la classe haute. Si l'effet existe, il éclaire ce que le juge appelle nouveauté : une part de sa note récompenserait la substance exécutée plutôt que l'originalité de l'idée, ce qu'il faut savoir avant de se servir de ce moniteur comme d'un signal sur le contenu.",
+ "loi_predictive": {
+  "espace_instances": "Les épisodes de la banque banque-t05-v2, pris un à un, partagés en deux groupes selon le signe du trait actions_valides, centré et réduit : au-dessus de sa moyenne d'un côté, les autres de l'autre ; effectif plausible : la banque entière, sans tri ni sous-échantillonnage.",
+  "prediction": "La probabilité de l'issue 1 du moniteur 8B:NOVELTY vaut 0,40 pour les épisodes dont le trait actions_valides est au-dessus de sa moyenne et 0,40 pour les autres, soit un écart de 0, l'écart étant compté comme la probabilité du premier groupe moins celle du second.",
+  "signe": "+",
+  "metrique": "Proportion d'épisodes rangés dans l'issue 1 du moniteur 8B:NOVELTY, calculée séparément dans le groupe dont le trait actions_valides est au-dessus de sa moyenne et dans le groupe des autres épisodes ; écart entre ces deux proportions, avec un intervalle obtenu par rééchantillonnage des épisodes ; la note est lue telle que le juge la donne, sans regroupement de classes, et les deux autres issues sont rapportées à côté."
+ },
+ "perte_traduction": "Le mécanisme est graduel : chaque action valide supplémentaire ajouterait un peu de substance. La loi le réduit à une partition en deux groupes au signe du trait, qui perd toute la relation entre dose et effet et traite de la même façon un épisode juste au-dessus de la moyenne et un épisode qui en est très loin. Elle ne retient aussi qu'une classe sur trois, alors que l'idée prédit un déplacement de masse depuis la classe basse ; un mouvement depuis la classe haute vers la classe intermédiaire produirait la même hausse et dirait le contraire. Enfin, elle mesure une association brute, sans ajuster sur la longueur de l'épisode, qui croît sans doute avec le nombre d'actions valides.",
+ "questions_servies": [
+  "Q-pont",
+  "nouvelle : ce que récompense la note de nouveauté"
+ ],
+ "avantage": {
+  "source": "programme",
+  "texte": "Le programme dispose des trois classes de ce juge et des traits structurels sur la même banque : on peut lire la répartition complète des classes dans chaque groupe et vérifier d'où vient la masse, ce qu'une simple corrélation entre note et nombre d'actions ne montre pas.",
+  "incopiable_parce_que": "Un concurrent peut obtenir des notes de nouveauté sur ses propres épisodes, mais sans traits structurels calculés de façon uniforme et sans une note à plusieurs classes lue telle quelle, il ne voit qu'une moyenne de notes ; or le mécanisme porte sur la classe intermédiaire, que la moyenne efface."
+ },
+ "originalite": {
+  "niveau": "inedite",
+  "texte": "À ma connaissance, la décomposition de la note de nouveauté d'un juge selon l'exécution de l'épisode n'a pas été étudiée ; les travaux sur les biais des juges portent surtout sur la longueur et la position des réponses. Le niveau est donné sous réserve d'une recherche plus complète, et la question mérite d'être vérifiée plus durement précisément parce qu'elle paraît libre."
+ },
+ "demande_organisme": {
+  "nature": "rien",
+  "texte": "Rien : la note à plusieurs classes et le trait des actions valides existent déjà ; la partition se calcule sur un trait présent."
+ },
+ "cout": {
+  "nature": "processeur",
+  "ordre_de_grandeur": "Négligeable : quelques minutes de processeur, rééchantillonnage compris ; une demi-journée pour figer l'analyse et la faire relire."
+ },
+ "piege": "Le piège principal est la classe intermédiaire elle-même : une hausse de sa probabilité peut venir de la classe basse, comme le veut le mécanisme, ou de la classe haute, ce qui signifierait que les épisodes très actifs perdent en nouveauté véritable. Lire la seule issue intermédiaire sans regarder les deux autres ferait conclure au mécanisme dans les deux cas. Il faut donc rapporter les trois proportions dans chaque groupe. Le second piège est la longueur : les épisodes riches en actions valides sont probablement plus longs, et l'on sait que les juges réagissent à la longueur ; une partie de l'effet pourrait n'être qu'un biais de longueur, qu'il faut séparer en rapportant aussi l'écart à l'intérieur de strates de longueur fixées d'avance.",
+ "cosmetique_si": "L'idée serait cosmétique si la hausse de la classe intermédiaire provenait de la classe haute plutôt que de la classe basse, si l'écart disparaissait à longueur égale, ou si un partage des épisodes selon le trait de bruit produisait un écart du même ordre.",
+ "anteriorite": [
+  {
+   "reference": "Dichotomizing continuous predictors in multiple regression: a bad idea, Patrick Royston, Douglas Altman, Willi Sauerbrei, 2006",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "An Introduction to the Bootstrap, Bradley Efron et Robert Tibshirani, 1993",
+   "statut": "SUPPOSE"
+  }
+ ]
+}

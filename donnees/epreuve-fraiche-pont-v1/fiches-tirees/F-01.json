@@ -1,0 +1,79 @@
+{
+ "anteriorite": [
+  {
+   "reference": "Quickest Change Detection in Discrete-Time in Presence of a Covert Adversary, Ramtin, Nain, Towsley, 2026, arXiv 2601.20022",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Manuel d'ingénierie statistique du NIST, section 6.3.2.3.1",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Page, 1954, Continuous Inspection Schemes (somme cumulée) ; Shewhart, 1931, cartes de contrôle",
+   "statut": "SUPPOSE"
+  },
+  {
+   "reference": "Optimizing the Score, Losing Sight of the Task, 2026, arXiv 2609.25848 (canaris)",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "More Convincing, Not More Correct, 2026, arXiv 2607.05904 (ancre cachée)",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "When Can Old Evaluations Certify a New Model?, Mondal et al., 2026, arXiv 2609.32267 (prix de la vigilance)",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Pay Only for Disagreement, Balachandran, 2026, arXiv 2609.17560 (composition sur une suite de promotions)",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "The Ladder, Blum et Hardt, ICML 2015",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "HyperAgents, Zhang et al., 2026, arXiv 2603.19461 (boucle externe de sélection et d'évaluation gardée fixe)",
+   "statut": "RAPPORTE"
+  },
+  {
+   "reference": "Miconi, EuroGP 2009",
+   "statut": "RAPPORTE"
+  }
+ ],
+ "avantage": {
+  "incopiable_parce_que": "Les boucles des occupants n'ont ni témoins à vérité connue ni juge hors des agents (le juge sert de récompense chez MAGIC et AgentSafeEvo ; validation en distribution chez SafeCoEvo) ; ajouter une carte à une boucle dont le juge dérive ne mesure que sa propre dérive. Le calcul est négligeable ; c'est l'architecture (juge figé, tiers, témoins frais) qui manque.",
+  "source": "organisme",
+  "texte": "Témoins plantés, juge figé à mise, archive complète et test final lu une fois existent déjà ; la carte les relie en une garantie séquentielle sur la boucle."
+ },
+ "cosmetique_si": "Le taux de bonne élimination des témoins est à 100 % dès la génération 0 (témoins triviaux), ou si la carte ne déclenche pas sous un juge délibérément corrompu (test (a) échoué).",
+ "cout": {
+  "nature": "processeur",
+  "ordre_de_grandeur": "Simulation sur processeur (jours) ; la mesure sur une vraie boucle suit le coût des générations (nœud de dépense)."
+ },
+ "demande_organisme": {
+  "nature": "ajout",
+  "texte": "Une carte de contrôle dans le noyau (jamais réécrite par le pôle), alimentée par les verdicts sur témoins ; un vivier de témoins tenu par le tiers et tiré frais à chaque génération ; une règle d'invalidation rétroactive des promotions depuis le dernier point de contrôle."
+ },
+ "enonce": "Traiter la boucle elle-même comme le processus sous surveillance, avec les mêmes mathématiques que Q4 : à chaque génération, les verdicts du juge sur les témoins plantés (fiches vraies, fiches fausses, nuls de bibliothèque) alimentent un e-processus ou une somme cumulée (CUSUM) dont le franchissement arrête la boucle et invalide toutes les promotions depuis le dernier point de contrôle. Le taux de fausses promotions sur témoins devient une courbe publiée avec sa séquence de confiance ; le « coût par famille » de Q5 se lit sur l'horloge de cette carte ; et le régime « juge-modèle co-évoluant » de Q2 se mesure en simulant une dérive du juge et en lisant le délai de détection. C'est « faire de la boucle elle-même l'objet mesuré » (pièce E) sous une forme que les occupants ne peuvent pas produire : ils n'ont pas de témoins à vérité connue dans leur boucle.",
+ "loi_predictive": {
+  "espace_instances": "Générations de la boucle (≥ 50 en simulation, ≥ 20 en vrai), ≥ 10 témoins par génération (moitié vrais, moitié faux, tirés frais d'un vivier tenu par le tiers).",
+  "metrique": "Délai moyen de détection et temps moyen avant fausse alarme (la paire ADD / AT2FA de la détection de rupture) ; taux de fausses promotions sur témoins avec séquence de confiance.",
+  "prediction": "(a) Sous dérive injectée du juge (remplacement du juge figé par un juge réaffiné sur les survivantes), la carte déclenche en ≤ 5 générations après le début de la dérive, avec ≤ 1 fausse alarme sur 100 générations sous juge figé ; (b) sous juge figé garanti, la carte ne déclenche pas sur 50 générations et le taux de bonne élimination des témoins reste dans sa séquence de confiance ; (c) une boucle sans carte sous dérive promeut ≥ 20 % de témoins faux à la génération 10.",
+  "signe": "+"
+ },
+ "nom": "Approche : la carte de contrôle du pôle — les témoins plantés comme processus surveillé",
+ "originalite": {
+  "niveau": "transposition",
+  "texte": "Contrôle statistique de procédé (Shewhart, Page) et détection de rupture (Ramtin et al.) vers le pôle lui-même ; canaris de 2609.25848 et ancre cachée de 2607.05904 posent le principe sans séquence de confiance ; « la vigilance ne se valide pas sans étiquettes fraîches » (2609.32267) justifie les témoins frais. Réflexivité (la même théorie garde le moniteur et la boucle) non vue."
+ },
+ "perte_traduction": "La « validité de la mesure sous évolution » devient « détection d'une dérive du taux de bonne élimination des témoins » : une dérive qui n'atteint pas les témoins (artefact ciblé sur les vraies fiches) passe inaperçue ; la carte mesure le juge sur ce qu'on lui a planté, pas sur l'inédit.",
+ "piege": "Les témoins deviennent reconnaissables (mémoire à empreinte, gabarits) : le pôle apprend à bien traiter les témoins et mal le reste ; parade : témoins frais du vivier du tiers, indiscernables en forme des vraies fiches. Fausse sécurité : une carte qui ne déclenche jamais peut être aveugle (témoins trop faciles, dérive hors de leur portée) ; d'où le test (a) à dérive injectée, obligatoire avant toute lecture de (b).",
+ "questions_servies": [
+  "Q2",
+  "Q5",
+  "Q4",
+  "nouvelle"
+ ],
+ "type": "approche"
+}
