@@ -1,0 +1,238 @@
+Writing sample 2 — White-Box Control of Diffuse Threats
+
+Excerpt from a research proposal by Lazar Ciric October 2026 (sections 1-5 of 8) adapted for this application (removed references to funder).
+
+Accumulate evidence internal to the model over time and agents and see how susceptible the monitor is to manipulation
+
+1. Summary
+
+Most AI monitors will monitor individual actions. They will fail by construction when trying to stop diffuse attacks. Agent could perform research and cause harm at a smaller scale. May cause less restrictive controls in the experiments it proposes. Will run into more dead ends and cost more. None of these monitors would be tripped. Or you could have many instances of the same model and divide up a harmful change into smaller pieces that are not harmful individually. I plan to run some pre registered experiments that will test if we can accumulate evidence within agents. Paper A will accumulate evidence over time using probe scores and have an anytime valid bound on false positives. Paper C will treat the monitor as an attack surface. See how far we can manipulate LLM judges and probes using persuasion. What does it take to manipulate a probe. Can we tell if the monitor will be manipulated by an optimizing attacker with a harmless test. These two papers will take place over the next 7 months. C will finish before A. C will rely on a law that I have measured and not the result of A. Paper B we will gather data from many agents that share weights. We will build off this paper. Have a lemma about additivity and negative result with permutations across time and agents. Managed to get all 31 predictions that we pre registered in our simulation. So we know our statistics are sound but not yet our claims about actual models. We were able to extract activations from Llama-3.1-8B-Instruct at phase 0. Given our constraints with compute and context length. Below are the things we plan to do at each gate and what we will need to proceed. Will be sealed before we look at any data. Negative results will be published if we find any.
+
+2. Problem
+
+An agent that can diffuse sabotage will beat any monitor that checks individual actions. There have been attempts at using AI agents to help with some tasks in AI research. As long as that agent isn't aligned with you they can just do nothing that stands out. It will be most cost effective for an agent to sabotage many things slightly. Terekhov et al ("Diffuse AI Control on Fuzzy Tasks" arXiv 2606.08892) described this as a control problem. They propose solving it through training as monitoring and incriminating seem "theoretically and empirically less promising for mitigating diffuse threats" (p.2). You can compare an action to a threshold of what an honest agent would do. If it's not above that you have to build up evidence. This could apply to many agents. Attacks that happen across multiple agents, sessions or PRs can also avoid being detected by monitors that check one thing at a time (arXiv 2607.07368, 2605.31593, 2607.02514). A single monitor that watches all actions will be costly. You can attack the monitor. Agents can interact with your monitor. Monitors that oversee AI: Can be swayed by rhetoric (arXiv 2505.23575); Will take an attacker's word for their score (arXiv 2510.09462); Can be talked into approving by the agent we can quantify this with approval rate (arXiv 2607.08066). It is easy to evade activation probes if you can modify the weights (arXiv 2609.36490). They found that you could not evade by shifting enough given only context. To our knowledge, no one has investigated how much it takes to shift a probe as a function of type of attack and strength. Nor compared it to shifting a judge.
+
+Why white box.
+
+Developer will have access to activations if they are using agents in house. We can build a case if there is some internal indication that an agent is trying to sabotage. Maybe not externally. Not sure if this will be possible with model organisms we can expect to exist. Will find out through this project and can pre commit to our next steps.
+
+3. Theory: A Lemma, Negative Theorem and Important Question
+
+Let Xi,t be the monitor score for agent i ∈ {1,...,N} and step t ∈ {1,...,T}. Time (N=1) and Swarm (N=k) are equivalent. Both can be thought of as subgroups of the permutations over the index set. Permuting time for an agent and agents for a step. So we can have a single theory for paper A and paper B.
+
+Lemma (L) Additivity if attacker exists.
+
+Attacker has budget B = Σδk to shift means of agents, steps, at what point, how much and where. Can do so adaptively. Defender has an anytime valid bound on false positives.
+
+Terminal invariance.
+
+Sum at the end will be changed by B regardless of how you distribute your budget. So its power can only be a function of B, horizon n0 = NT, distribution of honest scores and alpha. Will decrease as n0 grows given B.
+
+Max comparison.
+
+If you have a cutoff exactly then your max over actions will become less powerful the more you distribute your attack.
+
+Anytime valid.
+
+We want the attacker to sabotage early. There is a lower bound on power as a function of just (B,n0) for any schedule. Can calculate the cost of waiting and being anytime valid.
+
+Detect before harm.
+
+If we want to say that we are secure if we can detect before it causes θ damage. Then we need something more than a cumulative e process. Need a change detection process (Page's CUSUM, e detectors). Two things to note. Power is not an optimal metric to use with optional stopping. We want to maximize expected log growth in the worst case (GROW) (Pérez-Ortiz, Lardy, de Heide and Grünwald arXiv 2208.07610). And that there is a budget is something we are assuming. Nearest paper to having a hidden adversary (Ramtin, Nain and Towsley arXiv 2601.20022) shows that you get Θ(γ) delay compared to log γ. They also assume your adversary is stationary and knows your false positive constraint γ. Do not consider total budgets or anytime valid bounds.
+
+Negative Theorem (T) Due to invariance. Blind.
+
+If the attack only permutes the scores using some group G. Then all statistics that are invariant under G (max, mean, sum, number above threshold). Will be blind on a path by path level. Same power as false positive rate.
+
+Not possible.
+
+If you have honest scores that are exchangeable under some group H. Permute the scores and uniformly randomly permute under H you get the honest score distribution. Any monitor that uses scores will perform no better than their false positive rate. What group is important.
+
+We will have some local guarantees.
+
+Statistics that are local (scans, Page's CUSUM, co elevation between agents) will keep their guarantees. Statistics that are global (auto correlation, runs) can be beaten by an adaptive attacker.
+
+There are 2 classes of attacks.
+
+We keep the multiset (C), or keep the marginals (K) and change the dependency. If the scores are positively correlated in the case of K our sum and e-process will be greater than their false positive rate. And max will be less than or equal to it (Slepian).
+
+This is what we can say.
+
+Known, and we cite it: mixture boundaries. Sum vs max and marginal vs copula. New: show that we can unify time and agents by taking the permutation subgroup. Can differentiate between C and K and if its effect is + or -. Local security guarantees against adaptive adversary. Be able to measure this on real activations. A paper on marginal vs correlation uses a black box method with synthetic data (arXiv 2606.10456). Their main claim does not hold when simulating their setup.
+
+Currently.
+
+We have verified all 31 predictions from our pre registered simulation (342 statistical and 544 path level cells verified, 0 violations). We also discovered that if you use Ville's inequality you will have too many false positives outside of its assumptions. We had a false positive rate between .21 and .35 (instead of .05) when there were episode effects. And .17 when agents were correlated. We will need to calibrate our cutoffs on full episodes of honest behavior. This validates our methods and not our claim about actual models. We need to test the lemma when the budget is spread across agents in the same step.
+
+Important Empirical Question.
+
+Will model organisms change the marginal of probe scores when sabotaging (δ > 0). If yes we can use the lemma and accumulate evidence over time. If no we will need to use the negative theorem to determine what to aggregate over. If the attack only changes the correlation between scores (K) we will need to use auto correlation over time or co elevation across agents. If the attacker can preserve the multiset (C) and is adaptive only local statistics will maintain their guarantees. We will know when monitoring with marginals will fail. Both outcomes are publishable.
+
+4. Two papers one extension
+
+Paper A - Time Paper C - Instrument Paper B - Swarm (Extension)
+Question Can we build up evidence if each action is below a threshold. What would moving the monitor cost an attacker if it was possible. Can we detect attacks across agents with white box.
+
+Method 2 x 2 Access (Black/White Box) x Aggregation (Per Action/Sequential) Law of deference when under pressure. Judge vs Probe How to aggregate across N agents
+
+Months 1-7 1-4 8-12 Extension Only
+
+Gates G1 (End of month 4) GC (End of month 2) G2, G3
+
+Paper A and C will share the same harness. Will use model organisms and probes from phase 0. Want to complete C first; A will run alongside it and continue from month 5.
+
+Paper A - Time (Single Agent)
+
+Setup.
+
+Agents will be generating and modifying ML experiment proposals. Evaluated by a trusted model that is less capable than the agent using a rubric. If they diffuse sabotage we expect many proposals to be slightly worse. More dead ends, lower quality controls and higher price. Can establish ground truth by pre registering what we add and verifying some at the end. Similar to arXiv 2606.08892, whose code and data were not made public. We'll be using open weights. Each contribution can be labeled as (i,t) which allows for us to scale to N>1.
+
+Model Organisms.
+
+(i) Have them follow a hidden instruction in their system prompt. (ii) Will have a LoRA applied that causes them to sabotage like (i) but no instruction needed. (iii) Extension Only. Publicly available sandbagging model organisms from UK AISI (70B). We believe we can make a probe that will identify if a model has a hidden instruction for (i) but not (ii). If we probe for intent we should be able to detect both. We will have 2 control cases to separate knowing it's being tested from intent. One that knows it's being tested and one that does not. Honest organism that knows it's being watched. Saboteur that does not know it's being watched. Our probes will not be trained and tested on the same organisms.
+
+Monitors.
+
+Probes that are linear, diff of means, small MLP, attention probe and Mahalanobis. We will aggregate over tokens with only max or attention. All probes need to outperform a random probe with the same covariance. We will also have a set of detectors we won't use to monitor that we can use to audit. Black box baselines will be a weak monitor per action and TRACE-lite (we will reimplement the monitor from arXiv 2606.07054). We will have 4 other baselines that test each aspect of our method. Accumulate evidence on black box scores (E-valuator arXiv 2512.03109). Many independent gates on our probes (arXiv 2607.06503). Probe on the terminal state. Temporal model trained on another observer (TRACES arXiv 2605.27690).
+
+Hypotheses.
+
+H1 White Box is Superior to Black Box.
+
+Given the same aggregation and false positive rate we will be able to detect more diffuse sabotage on fuzzy tasks using activation monitors than black box monitors.
+
+H2 Accumulate Evidence with Probes.
+
+We will gather all paths where the saboteur's actions are below the cutoff of a per action monitor with a 1% false positive rate. We will be able to detect that they are sabotaging by accumulating evidence with probes on the agent that is taking actions with an anytime valid guarantee on false positives. We will have increasing recall as we have more time. Our probes have access to the agent's private context. We will only calibrate on honest episodes. These have all been done individually. Probing the agent that is acting over many turns (2607.06503). Testing any score sequentially (2512.03109). Page's CUSUM on model internals (SafeDream, 2604.16824). Activations changing over a conversation (2604.28129). Calibrating cutoffs on only successful episodes (FIPER, 2510.09459). Not all together that we can find which is our claim.
+
+L and T on Real Activations.
+
+Will the terminal sum only have power as a function of total budget if we hold time constant. This will tell us if δ > 0. If we do this sequentially it will be dependent on the schedule as the lemma states. We will test the negative theorem semi synthetically. By introducing correlation to honest scores while holding the marginals constant.
+
+Tr Tokens to Actions.
+
+One paper found that if you RL on the weights at the token level you did not evade probes that aggregate over max or attention (arXiv 2506.14261). The authors believe this may be because it is difficult to optimize. There are other papers that suggest this may not be the case (2412.09565, 2511.00554, 2507.12691, 2609.36490). Will any of these be true when we are looking at actions and paths and accumulating evidence sequentially. We will attack with content. Then fine tune and RL on actions to try and evade the probe.
+
+H6 Asymmetric Margin.
+
+There are 4 interventions that are not task specific. Paraphrase, resample, reset context and add noise to activations. We predict that there will be a point where on average at a given strength sabotage success drops off significantly faster than honest utility for at least one of these. There is precedent for using noise in simpler settings. Noise on the weights can detect sandbagging (arXiv 2412.01784). Noise on activations can detect alignment faking (arXiv 2405.05466). We will do this in an agent setting and compare the slopes.
+
+H8 Validity Predicts Robustness.
+
+What the probe is measuring (intent or if they know they are being evaluated) will predict how robust it is to attacks. We will also move our sequential monitor to concentrated sabotage (ControlArena) to test for robustness.
+
+Gate G1 (End of Month 4).
+
+Our white box sequential monitor needs to outperform our best black box baseline across all modifications. We will measure this with recall at a 1% false positive rate. It needs to be significant at a 95% confidence interval over paired episodes. We will calibrate our false positive rate on held out honest episodes. We will report floors but they are not our criteria. Flag everything and one pass judge with the same model. If we do not achieve G1 we will publish our negative result and look at construct validity (H8).
+
+Paper C - Instrument (Corrupting the Monitor)
+
+Law of Deference (HC1).
+
+We will apply pressure to a generative monitor with one type of attack at various strengths. We will measure how far the monitor moves on their verdict v. We can get a continuous score by looking at the probability of the tokens that comprise the verdict. It will move towards some c̃.
+
+Δv = g · (c̃ − v0)
+
+We will estimate g and c̃ by regressing over the different strengths. We will not force c̃ to be anything. We predict that c̃ will be the target of the attacker and not the mean of the corpus. (This was the null I used in my previous project on sycophancy). g will be > 0 for generative judges and vary by attack family. We will have 5 attack families. Flattery and begging, stating they are an authority, fake approvals, mimic the instructor's style and instructions in band. g will be consistent across monitors when ordered. Judges and probes will differ. This is the same equation as weight of advice in judgment psychology. It has been used to measure weight of advice between LLMs when one is attacking (arXiv 2603.15809). However they forced the destination. There is a paper that estimates the free attractor when there is no attack (arXiv 2606.18276). Measuring continuous deference in assistants with no attacker (arXiv 2606.07897). Bias in judges has been measured with no destination or control monitor (CALM, arXiv 2410.02736). Using fake authority and fake majority at varying strengths. Our claim is estimating the destination freely and determining if it is the target of the attacker or the mean of the corpus. On control monitors that are being attacked by each family. Closest paper not on arXiv (Panin, SSRN 7424179) forces the destination and doesn't look at monitors or attacks. They found that weight of advice is near binary for 3 of 5 models. Another reason to look at the probability of the verdict tokens.
+
+Other Hypotheses for Paper C.
+
+HC2 Probe Robustness.
+
+If we attack with black box content g will be ~0 for a probe that robustly aggregates over the agent that is acting. They will not be immune but robust. We will have an arm that uses a reader probe (probe the model that is reading the content) to see if there is a difference between author and reader. We know that reader probes can be impacted by content attacks.
+
+HC2b Betrayal by Activations.
+
+If an agent is attempting to manipulate the monitor their probe score will increase. We will control for style and the backfire effect of mentioning that they are trying to manipulate.
+
+HC3 Impersonation.
+
+If we consider all content to be data our judge monitors will be able to detect instructions in band with high probability. Mimicking the instructor's style without instructions will have a positive g on judges and 0 on probes that read the author. We know that instructions in band can impact judges (arXiv 2508.19461, 2510.09462). There is some work on the style aspect (2603.12277 on the model being attacked; SLEIGHT-Bench, 2605.16626 on monitors).
+
+HC4 Cost of Moving.
+
+It costs nothing to move a judge with rhetoric. If you want to move a probe that reads the agent you need to have write access to activations or weights. It can't be done from context alone. We will measure how much it costs on each axis (Access, Queries, Compute and Success Rate) for each access we give. We expect it to be orders of magnitude higher if we only allow context.
+
+HC5 Defenses.
+
+Trusted paraphrase, Quorum of monitors with different access (Generative judges and probes that read the agent). We will also construct a matrix of how attacks transfer between judges and probes. There is work on quorums of judges (2605.15377). Quorum of judges and a probe that reads a different encoder than the agent (2603.13791). And attacks transferring between probes (2609.36490) and judge monitors (2605.09684).
+
+HC6 Acceptance Criteria.
+
+We can predict when a monitor will fail under an optimized attack by measuring g on benign pressure. We will use what we learned from my previous project on this. Don't look at verdicts on truncated windows. Use ordinal or continuous measures. Have a null of regressing to the mean when estimating g.
+
+Gate GC (End of Month 2).
+
+If gprobe is > 0 without access to weights. We will change the title of the paper to reflect construct contamination. If someone has done what we are claiming we will focus on HC4 and HC6.
+
+Paper B - Swarm (Extension)
+
+Paper B will be an extension once our 7 months are completed.
+
+Setup.
+
+We will have various roles in a code base (Coder, Tester and Reviewer). We will spread a backdoor over many commits such that each diff is benign on its own. We will use FakeLab (arXiv 2607.07368, will ask for access) or the setup from arXiv 2607.02514 (Uses ControlArena). We will use open weights models.
+
+Experiments.
+
+1. How does the red team split up work with and without a planner. This will allow us to see the fragmentation effect from the inside.
+
+2. Red team collaborating with explicit channels vs sharing weights.
+
+3. Statistics that look across agents. We will use the aggregators from NARCBench (arXiv 2604.01151) as baselines.
+
+4. Our statistic over space time vs monitoring each agent sequentially and aggregating over agents. This is what Paper B will focus on. There is work on detecting collusion with white box (NARCBench). We haven't found any that look at multiple copies of a model elevating together over time with probes.
+
+Hypotheses.
+
+H3 Security(N).
+
+We will have a higher curve for white box than black box given a constant budget of sabotage. And it will decrease slower as we increase N.
+
+H4′ Diversification vs Coordination.
+
+If we diversify our agents (Personas, Fine Tunes) they will be less correlated internally. However they won't be able to coordinate as well. We can measure this tradeoff.
+
+H5 Number of Monitors x Diversity.
+
+We will only gain security from more monitors if they are diverse. We can measure diversity by constructing an attack transfer matrix over a panel of probes. There is precedent for this with 3 probes (2609.36490). The law is our claim.
+
+H7 Retaliation and Leakage.
+
+The red team will be able to adapt at a rate that is determined by our retaliation policy. We can predict this by the mutual information between our detection state and what the red team can see. There is precedent for this (2609.36490) but predicting this and comparing policies is our claim. We will test 4 policies and have 2 ablations. Stochastic vs Fixed thresholds and using cover traffic or not. We will use the link tracker and 4 monitor ensemble from arXiv 2607.02514 as baselines. And monitoring that can remember between sessions (arXiv 2605.31593).
+
+Gates.
+
+G2 (2 Months into Paper B).
+
+We need to be able to replicate the fragmentation effect. And our statistic over the population needs to outperform monitoring each agent. If not we will focus on the time case N = 1.
+
+G3.
+
+We will only allow a data curation environment if we can find a cheap proxy for delayed ground truth that we can verify.
+
+5. How we will accomplish this
+
+These are the rules we will follow for all decisive experiments. Including simulations. We have followed these in the past and have tooling to assist.
+
+1. Pre register before looking at data. Hash with SHA-256. Include hypothesis, numerical prediction with sign, metric, cutoff, analysis plan, how you will interpret the data and when you will stop. Have another instance of a reviewer that didn't write it review it.
+
+2. Do not run experiments aiming for a positive sign. If the result is too good (positive or negative) audit it the same way.
+
+3. Ensure all stop guards are tested on a healthy case and an artifact. No silent fallbacks.
+
+4. Any number in a document should have a file path and hash. If you are pulling from a paper ensure it matches a hashed pdf and cite the page.
+
+5. If you believe something hasn't been done ask if it has. Research if it has been done before you claim something is novel. If it has been done retract your claim.
+
+6. Have a new reviewer that didn't write the plan or analysis decide on the gate. I will then approve.
+
+7. Use a seed derived from the task (Numpy SeedSequence). Maintain a manifest of all runs with config hash, versions, seeds and commit.
+
+Always do in the control game.
+
+Have a channel for the operator that is authenticated. Consider everything in band to be data. Only allow information to flow from the agent to the monitor. Do not allow monitors to remember between episodes. Use stochastic thresholds and cover traffic (will ablate in Paper B). Maintain persistent state that is clean. Tag all silent detections and use them to train probes. We are not considering an adversary that controls the infrastructure (Keys, Harness, Logs).
+
+Division of labor.
+
+I will ask the questions and make all decisions. I will utilize AI Agents (Claude Code) to perform the engineering, run experiments, read papers and do internal review.
