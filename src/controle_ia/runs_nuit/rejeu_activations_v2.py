@@ -11,8 +11,11 @@ empreintes, échantillon, écart, agrégats, conversion en float16). Seule la ga
   (`appliquer_entree`, gardes : mêmes octets, même longueur, même texte) et doit redonner **exactement** l'empreinte de
   trajectoire de P3, sinon arrêt (table falsifiée ou non applicable). La recherche des jetons de fin, faite à la volée
   par la v1, passe dans la table (même ordre, même fonction).
-- **Règle B (non résolus)** : un épisode de la table « non résolu » est classé **non conforme** au lieu d'arrêter la
-  course : ses actions ont `fidele` = faux et `contexte_conforme` = faux (hors contexte exact, non éligibles) ;
+- **Règle B (non résolus ; voie retenue après la concordance de conv-audit, n° 343)** : un épisode de la table « non
+  résolu » ne fait plus arrêter la course ; il est traité comme les épisodes déjà non conformes en longueur : ses
+  actions ont `contexte_conforme` = faux et `trajectoire_identique` = faux (hors contexte exact, non éligibles à
+  l'échantillon de fidélité), et `fidele` est tranché **action par action par la tolérance**, comme pour toute action
+  hors contexte exact (règle de la v1 ; la règle de repli les exclut si le contrôle négatif ne discrimine pas) ;
   `conforme_longueur` garde la mesure par action. Arrêt si ces épisodes dépassent `seuil_non_conformes` (10).
 
 Tout le reste est la v1 : contrôle de fidélité, contrôle négatif (appliqué aux identifiants corrigés pour les épisodes
@@ -39,7 +42,7 @@ from ..scellement import sceller, verifier
 from ..sondes.familles import SondeMahalanobis
 from . import rejeu_activations_v1 as v1
 from .alignement_v1 import CLES_IDENTITE, charger_identite, charger_textes_alignes, empreinte_identite
-from .resolution_tokenisation_v1 import appliquer_entree, charger_table, classer_episodes, table_des_octets
+from .resolution_tokenisation_v1 import CORRIGEES, appliquer_entree, charger_table, classer_episodes, table_des_octets
 
 COMMANDE = "python -m controle_ia.runs_nuit.rejeu_activations_v2"
 CLES = v1.CLES + ("chemin_table_tokenisation", "table_tokenisation_sha256", "seuil_non_conformes",
@@ -227,7 +230,7 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, tab
             etat["regle_b"] = "au-delà du seuil"
         raise
     etat["regle_b"] = "dans le seuil"
-    etat["episodes_non_conformes"] = non_resolus
+    etat["episodes_non_resolus"] = non_resolus
     octets = table_des_octets(fmt.tok)[0] if any(c.get("paires") for c in corrections.values()) else None
     for e, ent in corrections.items():
         rs = par_episode[e]
@@ -242,18 +245,18 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, tab
         for r, a in zip(rs, rec["actions"]):
             conforme[r] = a["conforme"]
             contexte_conforme[r] = True
-    non_conforme_b = np.zeros(n, dtype=bool)
+    non_resolu = np.zeros(n, dtype=bool)
     for e in non_resolus:
-        non_conforme_b[par_episode[e]] = True
-    contexte_conforme &= ~non_conforme_b
-    par_methode = {m: sum(1 for c in corrections.values() if c["methode"] == m) for m in ("fins", "une_paire", "deux_paires")}
+        non_resolu[par_episode[e]] = True
+    contexte_conforme &= ~non_resolu
+    par_methode = {m: sum(1 for c in corrections.values() if c["methode"] == m) for m in CORRIGEES}
     etat["episodes_fin_resolue"] = par_methode["fins"]
     etat["trajectoires_identiques"] = int(traj.sum()) // T
     etat["conformes_longueur"] = int(conforme.sum())
     etat["contextes_conformes"] = int(contexte_conforme.sum())
     progres(etape="reconstruction", conformes=int(conforme.sum()), contextes_conformes=int(contexte_conforme.sum()),
             trajectoires_identiques=etat["trajectoires_identiques"], corrections=len(corrections),
-            non_conformes=len(non_resolus), actions=n)
+            non_resolus=len(non_resolus), actions=n)
     eligibles = traj & (np.asarray(jetons_notes) > 0)
     echantillon = v1.tirer_echantillon(identite, eligibles, int(config["n_fidelite_par_condition"]),
                                        generateur(manifeste["graines"]["fidelite"]))
@@ -322,8 +325,9 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, tab
             if (k_ep + 1) % 20 == 0:
                 progres(etape="rejeu", episodes=f"{k_ep + 1}/{len(ordre)}")
     notees = np.isfinite(ecart)
-    # fidèle (v1) : notée, conforme en longueur, scores à la tolérance ; règle B : jamais pour un épisode non conforme
-    fidele = notees & conforme & (np.nan_to_num(ecart, nan=np.inf) <= tol) & ~non_conforme_b
+    # fidèle (v1, inchangé) : notée, conforme en longueur, scores à la tolérance ; les actions des épisodes non résolus
+    # (règle B) sont jugées comme toute action hors contexte exact, par la tolérance
+    fidele = notees & conforme & (np.nan_to_num(ecart, nan=np.inf) <= tol)
     if repli:
         fidele &= traj
     etat["etape"] = "écriture"
@@ -368,8 +372,9 @@ def _executer(config, racine, run_id, chemin_m, manifeste, identite, lignes, tab
                                  "table_sha256": verifier(config["chemin_table_tokenisation"]),
                                  "trajectoires_identiques_base": etat["trajectoires_identiques_base"],
                                  "signales": len(signales), "corrections_par_methode": par_methode,
-                                 "episodes_non_conformes": non_resolus,
-                                 "actions_non_conformes": int(non_conforme_b.sum()),
+                                 "episodes_non_resolus": non_resolus,
+                                 "actions_non_resolues": int(non_resolu.sum()),
+                                 "fideles_parmi_non_resolues": int((fidele & non_resolu).sum()),
                                  "seuil_non_conformes": int(config["seuil_non_conformes"]),
                                  "part_fideles_parmi_notees": p_r5,
                                  "p_r5_au_moins_90_pour_cent": None if p_r5 is None else bool(p_r5 >= 0.9)},

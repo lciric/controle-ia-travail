@@ -11,6 +11,14 @@ Ordre fixe (premier succès retenu, rien d'autre n'est essayé ensuite) :
 2. **une paire** — sur la reconstruction de base (jetons de fin par défaut), une paire de jetons voisins des jetons notés
    d'une action redécoupée en deux jetons ordinaires du vocabulaire couvrant les mêmes octets ;
 3. **deux paires** — deux redécoupages de ce type à la fois (paires disjointes), sur la même base.
+Étapes ajoutées (version 2 de la table, demande C-6 de conv-audit : hypothèses 1 à 3 du rapport d'enquête) :
+4. **fin et paire** — un jeton de fin substitué (pas croissant, valeur croissante) et une paire ;
+5. **fenêtre de trois** — trois jetons voisins redécoupés en trois, les deux frontières déplacées ;
+6. **trois paires dans une même action** ;
+7. **copie** — toutes les occurrences d'un même redécoupage (au moins trois), puis toutes les occurrences d'un
+   redécoupage répété et une autre paire.
+Non explorés, pour leur coût (déclaré dans `REGLE`) : trois paires dans des actions différentes hors copie, jeton de fin
+et deux paires, quatre redécoupages ou plus hors copie.
 Ordre des candidats : pas croissant, rang croissant dans l'action, point de coupe croissant (en octets) ; ordre des
 couples : `itertools.combinations` sur cette liste. Un épisode qu'aucune étape ne résout est « non résolu » (règle B).
 
@@ -34,12 +42,18 @@ from pathlib import Path
 from ..gardes import GardeArret
 from .rejeu_activations_v1 import episode_harnais, empreinte_trajectoire, reconstruire_episode
 
-VERSION_TABLE = 1
-METHODES = ("fins", "une_paire", "deux_paires", "non_resolu")
+VERSION_TABLE = 2
+METHODES = ("fins", "une_paire", "deux_paires", "fin_et_paire", "fenetre_trois", "trois_paires_meme_action",
+            "copie", "non_resolu")
+CORRIGEES = METHODES[:-1]
 REGLE = ("ordre fixe, premier succès retenu : (1) substitutions du jeton de fin (une, puis deux ; "
          "rejeu_activations_v1.resoudre_fins) ; (2) une paire de jetons voisins redécoupée (mêmes octets, même longueur) ; "
-         "(3) deux paires disjointes ; candidats par pas, rang, coupe croissants ; arbitre unique : égalité de "
-         "l'empreinte de trajectoire avec celle de P3")
+         "(3) deux paires disjointes ; (4) un jeton de fin substitué et une paire ; (5) une fenêtre de trois jetons "
+         "voisins redécoupée en trois (deux frontières déplacées) ; (6) trois paires disjointes dans une même action ; "
+         "(7) copie : toutes les occurrences d'un même redécoupage (au moins trois), puis toutes les occurrences d'un "
+         "redécoupage répété et une autre paire ; candidats par pas, rang, coupe croissants ; arbitre unique : égalité "
+         "de l'empreinte de trajectoire avec celle de P3 ; non explorés (coût) : trois paires dans des actions "
+         "différentes hors copie, jeton de fin et deux paires, quatre redécoupages ou plus hors copie")
 
 
 def _octets_vers_unicode() -> dict[int, str]:
@@ -121,34 +135,67 @@ def candidats_paires(rec: dict, a_fins: list[int], octets, par_octets) -> list[t
 
 
 class Hacheur:
-    """Empreinte de trajectoire d'une variante (paires redécoupées), sans recopier l'épisode : on modifie le
-    dictionnaire du harnais en place, on hache, on rétablit. Même sérialisation que `empreinte_trajectoire`."""
+    """Empreinte de trajectoire d'une variante (remplacements de largeur constante : paires ou fenêtres de trois
+    jetons), sans recopier l'épisode : on modifie le dictionnaire du harnais en place, on hache, on rétablit. Même
+    sérialisation que `empreinte_trajectoire`. Une modification est (pas, rang, identifiants nouveaux)."""
 
     def __init__(self, identifiant: str, T: int, rec: dict):
         self.d = episode_harnais(identifiant, T, rec).en_dict()
         self.debuts = [a["debut"] for a in rec["actions"]]
 
-    def _poser(self, t: int, k: int, deux: list[int]):
+    def _poser(self, t: int, k: int, nouv):
         tr = self.d["transcriptions"][0]
-        p = self.debuts[t] + k
-        ancien = (tr["ids"][p:p + 2], tr["actions"][t]["ids"][k:k + 2])
-        tr["ids"][p:p + 2] = deux
-        tr["actions"][t]["ids"][k:k + 2] = deux
+        p, w = self.debuts[t] + k, len(nouv)
+        ancien = (tr["ids"][p:p + w], tr["actions"][t]["ids"][k:k + w])
+        tr["ids"][p:p + w] = list(nouv)
+        tr["actions"][t]["ids"][k:k + w] = list(nouv)
         return ancien
 
     def _retablir(self, t: int, k: int, ancien):
         tr = self.d["transcriptions"][0]
-        p = self.debuts[t] + k
-        tr["ids"][p:p + 2] = ancien[0]
-        tr["actions"][t]["ids"][k:k + 2] = ancien[1]
+        p, w = self.debuts[t] + k, len(ancien[0])
+        tr["ids"][p:p + w] = ancien[0]
+        tr["actions"][t]["ids"][k:k + w] = ancien[1]
 
-    def empreinte(self, modifs: list[tuple[int, int, int, int]] = ()) -> str:
-        anciens = [self._poser(t, k, [g, d]) for t, k, g, d in modifs]
+    def empreinte(self, modifs=()) -> str:
+        modifs = [m if len(m) == 3 else (m[0], m[1], tuple(m[2:])) for m in modifs]
+        anciens = [self._poser(t, k, nouv) for t, k, nouv in modifs]
         try:
             return hashlib.sha256(json.dumps(self.d, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
         finally:
-            for (t, k, _, _), a in reversed(list(zip(modifs, anciens))):
+            for (t, k, _), a in reversed(list(zip(modifs, anciens))):
                 self._retablir(t, k, a)
+
+
+def candidats_fenetres(rec: dict, a_fins: list[int], octets, par_octets) -> list[tuple[int, int, tuple]]:
+    """Fenêtres de trois jetons notés voisins redécoupées en trois jetons ordinaires couvrant les mêmes octets, les deux
+    frontières déplacées (une seule frontière déplacée est une paire, déjà essayée) ; ordre : pas, rang, coupes."""
+    sortie = []
+    for t, a in enumerate(rec["actions"]):
+        notes = a["nv"][:len(a["nv"]) - a_fins[t]]
+        for k in range(len(notes) - 2):
+            o = [octets(int(x)) for x in notes[k:k + 3]]
+            if any(x is None for x in o):
+                continue
+            b, f1, f2 = o[0] + o[1] + o[2], len(o[0]), len(o[0]) + len(o[1])
+            for c1 in range(1, len(b) - 1):
+                if c1 == f1:
+                    continue
+                g = par_octets.get(b[:c1])
+                if g is None:
+                    continue
+                for c2 in range(c1 + 1, len(b)):
+                    if c2 == f2:
+                        continue
+                    m, d = par_octets.get(b[c1:c2]), par_octets.get(b[c2:])
+                    if m is not None and d is not None:
+                        sortie.append((t, k, (int(g), int(m), int(d))))
+    return sortie
+
+
+def _disjoints(mods) -> bool:
+    plages = sorted((t, k, k + len(n)) for t, k, n in mods)
+    return all(not (a[0] == b[0] and b[1] < a[2]) for a, b in zip(plages, plages[1:]))
 
 
 def _resoudre_fins(fmt, env, T, lignes, jetons, jetons_notes, empreinte, identifiant):
@@ -169,37 +216,85 @@ def _resoudre_fins(fmt, env, T, lignes, jetons, jetons_notes, empreinte, identif
 
 def resoudre_episode(fmt, env, T, lignes, jetons, jetons_notes, empreinte: str, identifiant: str, octets,
                      par_octets) -> dict:
-    """Entrée de table pour un épisode conforme en longueur à trajectoire différente (ordre fixe, voir le module)."""
+    """Entrée de table pour un épisode conforme en longueur à trajectoire différente (ordre fixe, voir `REGLE`)."""
     fins, essais_fins = _resoudre_fins(fmt, env, T, lignes, jetons, jetons_notes, empreinte, identifiant)
     base = {"episode": identifiant, "trajectoire_p3": empreinte, "fins": {}, "paires": []}
+    essais = {"fins": essais_fins}
     if fins is not None:
-        return {**base, "methode": "fins", "fins": fins, "essais": {"fins": essais_fins}}
+        return {**base, "methode": "fins", "fins": fins, "essais": essais}
     rec = reconstruire_episode(fmt, env, T, lignes, jetons, jetons_notes)
     a_fins = [jetons[t] - jetons_notes[t] for t in range(T)]
-    cands = candidats_paires(rec, a_fins, octets, par_octets)
+    cands = [(t, k, (g, d)) for t, k, g, d in candidats_paires(rec, a_fins, octets, par_octets)]
+    essais["candidats"] = len(cands)
     h = Hacheur(identifiant, T, rec)
     if h.empreinte() == empreinte:
         raise GardeArret(f"{identifiant} : la base redonne déjà l'empreinte de P3 (épisode mal signalé)")
 
-    def paire(c):
-        t, k, g, d = c
-        a = rec["actions"][t]["nv"]
-        return {"pas": t, "rang": k, "canonique": [int(a[k]), int(a[k + 1])], "p3": [g, d]}
+    def entree(methode, mods, fins_=None):
+        ps = [{"pas": t, "rang": k, "canonique": [int(x) for x in rec["actions"][t]["nv"][k:k + len(n)]],
+               "p3": [int(x) for x in n]} for t, k, n in sorted(mods)]
+        return {**base, "methode": methode, "paires": ps, "fins": fins_ or {}, "essais": essais}
 
-    for n1, c in enumerate(cands):
-        if h.empreinte([c]) == empreinte:
-            return {**base, "methode": "une_paire", "paires": [paire(c)],
-                    "essais": {"fins": essais_fins, "une_paire": n1 + 1, "candidats": len(cands)}}
-    n2 = 0
-    for c1, c2 in itertools.combinations(cands, 2):
-        if c1[0] == c2[0] and abs(c1[1] - c2[1]) < 2:
-            continue
-        n2 += 1
-        if h.empreinte([c1, c2]) == empreinte:
-            return {**base, "methode": "deux_paires", "paires": [paire(c1), paire(c2)],
-                    "essais": {"fins": essais_fins, "une_paire": len(cands), "deux_paires": n2, "candidats": len(cands)}}
-    return {**base, "methode": "non_resolu",
-            "essais": {"fins": essais_fins, "une_paire": len(cands), "deux_paires": n2, "candidats": len(cands)}}
+    def essayer(nom, iterable, hacheur=None):
+        n = 0
+        for mods in iterable:
+            n += 1
+            if (hacheur or h).empreinte(list(mods)) == empreinte:
+                essais[nom] = n
+                return mods
+        essais[nom] = n
+        return None
+
+    m = essayer("une_paire", ([c] for c in cands))
+    if m:
+        return entree("une_paire", m)
+    m = essayer("deux_paires", (p for p in itertools.combinations(cands, 2) if _disjoints(p)))
+    if m:
+        return entree("deux_paires", m)
+    # (4) un jeton de fin substitué (pas croissant, valeur croissante, hors la fin par défaut) et une paire
+    n4 = 0
+    for t in [t for t in range(T) if a_fins[t] == 1]:
+        defaut = int(rec["actions"][t]["nv"][-1])
+        for v in sorted(int(x) for x in fmt.fins):
+            if v == defaut:
+                continue
+            rf = reconstruire_episode(fmt, env, T, lignes, jetons, jetons_notes, {t: v})
+            hf = Hacheur(identifiant, T, rf)
+            m = essayer("fin_et_paire", ([c] for c in cands), hf)
+            n4 += essais["fin_et_paire"]
+            if m:
+                essais["fin_et_paire"] = n4
+                return entree("fin_et_paire", m, {str(t): v})
+    essais["fin_et_paire"] = n4
+    m = essayer("fenetre_trois", ([c] for c in candidats_fenetres(rec, a_fins, octets, par_octets)))
+    if m:
+        return entree("fenetre_trois", m)
+    m = essayer("trois_paires_meme_action",
+                (p for t in range(T) for p in itertools.combinations([c for c in cands if c[0] == t], 3)
+                 if _disjoints(p)))
+    if m:
+        return entree("trois_paires_meme_action", m)
+    # (7) copie : classes de redécoupages identiques (même paire canonique, même paire nouvelle), ordre de première
+    # occurrence ; occurrences disjointes seulement
+    classes: dict = {}
+    for c in cands:
+        cle = (tuple(int(x) for x in rec["actions"][c[0]]["nv"][c[1]:c[1] + 2]), c[2])
+        classes.setdefault(cle, []).append(c)
+    repetees = [v for v in classes.values() if len(v) >= 2 and _disjoints(v)]
+
+    def copies():
+        for v in repetees:
+            if len(v) >= 3:
+                yield v
+        for v in repetees:
+            for c in cands:
+                if c not in v and _disjoints(v + [c]):
+                    yield v + [c]
+
+    m = essayer("copie", copies())
+    if m:
+        return entree("copie", list(m))
+    return {**base, "methode": "non_resolu", "essais": essais}
 
 
 def appliquer_entree(fmt, env, T, lignes, jetons, jetons_notes, entree: dict, octets=None) -> dict:
@@ -209,7 +304,7 @@ def appliquer_entree(fmt, env, T, lignes, jetons, jetons_notes, entree: dict, oc
     l'empreinte à celle de P3."""
     from ..premier_test_ia.conditions import bornes_champs
 
-    if entree.get("methode") not in ("fins", "une_paire", "deux_paires"):
+    if entree.get("methode") not in CORRIGEES:
         raise GardeArret(f"entrée de table sans correction applicable : {entree.get('methode')!r}")
     fins = {}
     for t, v in (entree.get("fins") or {}).items():
@@ -223,31 +318,34 @@ def appliquer_entree(fmt, env, T, lignes, jetons, jetons_notes, entree: dict, oc
     speciaux = ids_speciaux(fmt.tok)
     if entree.get("paires") and octets is None:
         octets, _ = table_des_octets(fmt.tok)
-    vues = set()
+    vues: list[tuple[int, int, int]] = []
     for p in entree.get("paires") or []:
         t, k = int(p["pas"]), int(p["rang"])
         can, nouv = [int(x) for x in p["canonique"]], [int(x) for x in p["p3"]]
+        w = len(can)
+        if w not in (2, 3) or len(nouv) != w:
+            raise GardeArret(f"{entree['episode']} : remplacement de largeur {w} → {len(nouv)} (2 ou 3, égales, attendues)")
         if not (0 <= t < T):
             raise GardeArret(f"{entree['episode']} : pas {t} hors de l'épisode")
         a = rec["actions"][t]
         n_notes = len(a["nv"]) - (jetons[t] - jetons_notes[t])
-        if not (0 <= k and k + 2 <= n_notes) or [int(x) for x in a["nv"][k:k + 2]] != can:
+        if not (0 <= k and k + w <= n_notes) or [int(x) for x in a["nv"][k:k + w]] != can:
             raise GardeArret(f"{entree['episode']} : paire canonique {can} absente au pas {t}, rang {k}")
-        if (t, k) in vues or (t, k - 1) in vues or (t, k + 1) in vues:
+        if any(t == t2 and k < f2 and k2 < k + w for t2, k2, f2 in vues):
             raise GardeArret(f"{entree['episode']} : paires qui se chevauchent au pas {t}")
-        vues.add((t, k))
+        vues.append((t, k, k + w))
         if nouv == can or any(x in speciaux for x in nouv):
             raise GardeArret(f"{entree['episode']} : redécoupage {nouv} identique ou spécial")
         oc = [octets(x) for x in can + nouv]
-        if any(o is None for o in oc) or oc[0] + oc[1] != oc[2] + oc[3]:
+        if any(o is None for o in oc) or b"".join(oc[:w]) != b"".join(oc[w:]):
             raise GardeArret(f"{entree['episode']} : redécoupage {nouv} ne couvre pas les mêmes octets que {can}")
         a["nv"] = list(a["nv"])
-        a["nv"][k:k + 2] = nouv
+        a["nv"][k:k + w] = nouv
         pos = a["debut"] + k
-        if [int(x) for x in rec["ids"][pos:pos + 2]] != can:
+        if [int(x) for x in rec["ids"][pos:pos + w]] != can:
             raise GardeArret(f"{entree['episode']} : transcription incohérente au pas {t}, rang {k}")
         rec["ids"] = list(rec["ids"])
-        rec["ids"][pos:pos + 2] = nouv
+        rec["ids"][pos:pos + w] = nouv
     for t, a in enumerate(rec["actions"]):
         notes = a["nv"][:len(a["nv"]) - (jetons[t] - jetons_notes[t])]
         if len(notes) != jetons_notes[t] or len(a["nv"]) != jetons[t] \
@@ -337,7 +435,7 @@ def calculer_table(fmt, lignes, identite, fiches: dict, taches, consignes, guide
             progres(e, ent["methode"], round(time.perf_counter() - t0, 1))
     for m in METHODES:
         comptes[m] = sum(1 for x in entrees if x["methode"] == m)
-    comptes["identiques_apres_table"] = comptes["identiques_base"] + sum(comptes[m] for m in METHODES[:3])
+    comptes["identiques_apres_table"] = comptes["identiques_base"] + sum(comptes[m] for m in CORRIGEES)
     return {"version": VERSION_TABLE, "regle": REGLE, **meta, "fins_du_format": sorted(int(x) for x in fmt.fins),
             "comptes": comptes, "episodes": entrees}
 

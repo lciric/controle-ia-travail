@@ -113,7 +113,7 @@ def test_relance_sain_table_fins_formats_et_champs_inchanges(source, tmp_path):
                                 tolerance_fidelite=TOL_FABRIQUE), depot, "20261102-100100-r1-jouet", None, autoriser_depot_sale=True, entropie_essai=11)
     assert r2["verdict_fidelite"] == "conforme" and r2["tokenisation"]["corrections_par_methode"]["fins"] == 1
     assert r2["controle_negatif"]["lecture"] == "discriminant" and not r2["regle_repli_appliquee"]
-    assert r2["tokenisation"]["episodes_non_conformes"] == [] and r2["tokenisation"]["signales"] == 1
+    assert r2["tokenisation"]["episodes_non_resolus"] == [] and r2["tokenisation"]["signales"] == 1
     assert r2["empreintes_p3"]["trajectoires_identiques"] == r1["empreintes_p3"]["trajectoires_identiques"]
     assert r2["tokenisation"]["trajectoires_identiques_base"] == r1["empreintes_p3"]["trajectoires_identiques"] - 1
     assert set(r1) <= set(r2) and set(r1["fidelite_toutes"]) == set(r2["fidelite_toutes"])
@@ -159,15 +159,23 @@ def test_relance_regle_b_non_resolus_fidele_faux_et_seuil(source, tmp_path, monk
     sceller(alt)
     t = _table(depot, f, c, alt, tmp_path / "table.json")
     assert sorted(x["episode"] for x in t["episodes"] if x["methode"] == "non_resolu") == sorted(vises)
-    r = rb.executer(_config_v2(depot, f, c, tmp_path / "table.json", chemin_fiches=str(alt)), depot,
-                    "20261102-101000-r1-jouet", None, autoriser_depot_sale=True, entropie_essai=11)
-    assert r["verdict_fidelite"] == "conforme"
-    assert sorted(r["tokenisation"]["episodes_non_conformes"]) == sorted(vises)
-    assert r["tokenisation"]["actions_non_conformes"] == len(vises) * int(c["T"])
+    # échantillon réduit à deux conditions (ci-dessus) : minimum du contrôle négatif ramené à 2 sur 2, pour que la règle
+    # de repli ne s'applique pas et que la voie « tolérance action par action » soit éprouvée
+    r = rb.executer(_config_v2(depot, f, c, tmp_path / "table.json", chemin_fiches=str(alt), controle_negatif_min=2),
+                    depot, "20261102-101000-r1-jouet", None, autoriser_depot_sale=True, entropie_essai=11)
+    assert r["verdict_fidelite"] == "conforme" and not r["regle_repli_appliquee"]
+    assert sorted(r["tokenisation"]["episodes_non_resolus"]) == sorted(vises)
+    assert r["tokenisation"]["actions_non_resolues"] == len(vises) * int(c["T"])
     with np.load(depot / "donnees" / "20261102-101000-r1-jouet" / "activations-p3-rejeu-v1.npz") as z:
         b = np.isin(z["episode"], vises)
-        assert not z["fidele"][b].any() and not z["contexte_conforme"][b].any() and not z["trajectoire_identique"][b].any()
+        assert not z["contexte_conforme"][b].any() and not z["trajectoire_identique"][b].any()
         assert z["conforme_longueur"][b].all() and z["fidele"][~b].any()
+        # voie retenue (n° 343) : `fidele` tranché par la tolérance, action par action, comme hors contexte exact ; ici
+        # les fiches mentent (les épisodes sont en fait rejoués à l'identique) : écart nul, donc fidèles
+        tol = 1e-9
+        attendu = z["conforme_longueur"][b] & np.isfinite(z["ecart_fidelite"][b]) & (z["ecart_fidelite"][b] <= tol)
+        assert (z["fidele"][b] == attendu).all() and z["fidele"][b].all()
+        assert r["tokenisation"]["fideles_parmi_non_resolues"] == int(z["fidele"][b].sum())
         assert r["fidelite_toutes"]["fideles"] == int(z["fidele"].sum())
     # au-delà du seuil : arrêt, verdict « non conforme », rien n'est versé
     with pytest.raises(GardeArret, match="au-delà du seuil"):
@@ -315,19 +323,23 @@ def test_configuration_v2_gardes():
 
 def test_table_reelle_versee_coherente():
     """La table versée pour la relance (calculée sur processeur sur les vraies pièces de P3) : version, règle, comptes
-    cohérents, une seule méthode par épisode, au plus 10 non résolus, chaque paire de même longueur (deux jetons)."""
-    p = RACINE / "prereg" / "R1-table-tokenisation-v1.json"
+    cohérents, une seule méthode par épisode, au plus 10 non résolus, chaque remplacement de même largeur (deux ou trois
+    jetons)."""
+    p = RACINE / "prereg" / "R1-table-tokenisation-v2.json"
     t = json.loads(p.read_text(encoding="utf-8"))
     assert t["version"] == rt.VERSION_TABLE and t["regle"] == rt.REGLE
     co = t["comptes"]
     assert co["signales"] == len(t["episodes"]) == sum(co[m] for m in rt.METHODES)
-    assert co["identiques_apres_table"] == co["identiques_base"] + co["fins"] + co["une_paire"] + co["deux_paires"]
+    assert co["identiques_apres_table"] == co["identiques_base"] + sum(co[m] for m in rt.CORRIGEES)
     assert co["non_resolu"] <= 10
     for e in t["episodes"]:
-        n = {"fins": 0, "une_paire": 1, "deux_paires": 2, "non_resolu": 0}[e["methode"]]
-        assert len(e["paires"]) == n and (e["methode"] == "fins") == bool(e["fins"])
+        n = {"fins": 0, "une_paire": 1, "deux_paires": 2, "fin_et_paire": 1, "fenetre_trois": 1,
+             "trois_paires_meme_action": 3, "non_resolu": 0}.get(e["methode"])
+        assert n is None or len(e["paires"]) == n
+        assert bool(e["fins"]) == (e["methode"] in ("fins", "fin_et_paire"))
         for q in e["paires"]:
-            assert len(q["canonique"]) == len(q["p3"]) == 2 and q["canonique"] != q["p3"]
+            assert len(q["canonique"]) == len(q["p3"]) in (2, 3) and q["canonique"] != q["p3"]
+            assert len(q["p3"]) == 3 or e["methode"] != "fenetre_trois"
 
 
 def test_gardes_du_parent_et_de_l_addendum_cas_sain_et_artefacts(source, tmp_path):
@@ -382,3 +394,26 @@ def test_gardes_du_parent_et_de_l_addendum_cas_sain_et_artefacts(source, tmp_pat
     for run in ("110100", "110200", "110300", "110400"):
         assert not (depot / "donnees" / f"20261102-{run}-r1-jouet").exists()
         assert not (depot / "runs" / f"20261102-{run}-r1-jouet").exists()
+
+
+def test_fenetres_de_trois_jetons_sur_faux_tokeniseur():
+    """C-6 : une fenêtre de trois jetons redécoupée en trois, les deux frontières déplacées ; une seule frontière
+    déplacée n'est pas une fenêtre (c'est une paire)."""
+    tok = FauxTokOctet()
+    tok.vocab.update({"abc": 8, "cab": 9, "ca": 10})
+    tok.inverse = {i: s for s, i in tok.vocab.items()}
+    v = tok.vocab
+    octets, par_octets = rt.table_des_octets(tok, niveau_octet=True)
+    # « ab » + « c » + « a » (abca) : fenêtres à deux frontières déplacées : « a » + « bc » + « a »? non (une seule
+    # déplacée : 2→1 ; 3→3) ; « a » + « b » + « ca » (1, 2) : les deux déplacées
+    rec = {"ids": [v["ab"], v["c"], v["a"]],
+           "actions": [{"pas": 0, "debut": 0, "fin": 3, "nv": [v["ab"], v["c"], v["a"]], "texte": "abca"}]}
+    f = rt.candidats_fenetres(rec, [0], octets, par_octets)
+    assert (0, 0, (v["a"], v["b"], v["ca"])) in f
+    assert all(n[0] != v["ab"] and n != (v["ab"], v["c"], v["a"]) for _, _, n in f)
+    h = rt.Hacheur("e", 1, rec)
+    var = copy.deepcopy(rec)
+    var["ids"][0:3] = [v["a"], v["b"], v["ca"]]
+    var["actions"][0]["nv"][0:3] = [v["a"], v["b"], v["ca"]]
+    assert h.empreinte([(0, 0, (v["a"], v["b"], v["ca"]))]) == ra.empreinte_trajectoire(ra.episode_harnais("e", 1, var))
+    assert rt._disjoints([(0, 0, (1, 2)), (0, 2, (3, 4))]) and not rt._disjoints([(0, 0, (1, 2, 3)), (0, 2, (3, 4))])
