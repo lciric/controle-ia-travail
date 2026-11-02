@@ -1,0 +1,161 @@
+{
+ "verification": "conforme",
+ "ecriture": "aucune",
+ "appel": "aucun",
+ "plan": {
+  "cartes": 12,
+  "mondes": [
+   "W1",
+   "W2"
+  ],
+  "n_max": 16,
+  "rejeux": {
+   "v8": 200,
+   "v7": 20
+  },
+  "rejeux_audit": 200,
+  "plafond_usd": 80.0,
+  "duree_max_s": 72000.0,
+  "processus": 2,
+  "parallele": true,
+  "decision_ecart": "registres/decisions.md, R-1123 (dépôt privé), mot de Lazar du 2 novembre 2026 vers 07:20 UTC",
+  "configuration_sha256": "e5306c47e1b21a5e55b599411dba92c97e88aa98bb6d6fa91fc5d358a2bdde30",
+  "go": "GO-2026-11-02-07"
+ },
+ "configuration": {
+  "budget_appel_usd": 1.8,
+  "modeles_demandes": {
+   "kimi": "kimi-k3.1-pro",
+   "argon": "gemini-4-argon"
+  },
+  "role_pole": "proposeur_ideation",
+  "part_par_relais_usd": 40.0,
+  "substitutions_dans_les_commandes": [
+   {
+    "fournisseur": "argon",
+    "argument": 8,
+    "avant": "{REGISTRE}",
+    "apres": "/tmp/claude-0/-home-user-controle-ia-travail/497afc2c-4fe2-5650-ae14-ca112bc3f1f2/scratchpad/ideation-organism/resultats/attaque-goodhart-v2/registre-depense-cumulee-v1.jsonl"
+   },
+   {
+    "fournisseur": "argon",
+    "argument": 10,
+    "avant": "80",
+    "apres": "80"
+   },
+   {
+    "fournisseur": "kimi",
+    "argument": 7,
+    "avant": "{REGISTRE}",
+    "apres": "/tmp/claude-0/-home-user-controle-ia-travail/497afc2c-4fe2-5650-ae14-ca112bc3f1f2/scratchpad/ideation-organism/resultats/attaque-goodhart-v2/registre-depense-cumulee-v1.jsonl"
+   },
+   {
+    "fournisseur": "kimi",
+    "argument": 9,
+    "avant": "80",
+    "apres": "80"
+   }
+  ],
+  "consigne_la_plus_longue_octets": 90363,
+  "adaptateurs": {
+   "kimi": {
+    "commande": [
+     "/usr/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/commande_kimi_v2.py",
+     "--url-relais",
+     "http://127.0.0.1:8804",
+     "--registre",
+     "/tmp/claude-0/-home-user-controle-ia-travail/497afc2c-4fe2-5650-ae14-ca112bc3f1f2/scratchpad/ideation-organism/resultats/attaque-goodhart-v2/registre-depense-cumulee-v1.jsonl",
+     "--plafond-cumule-usd",
+     "80",
+     "--max-sortie-proposeur",
+     "65536",
+     "--max-sortie-court",
+     "16000",
+     "--sortie-min-jetons",
+     "4096",
+     "--delai-s",
+     "1750"
+    ],
+    "empreintes": {
+     "/usr/bin/python3": "dc9c6efba6e3583b8a2570140928b5278d8d39858dfcfe3792ca39daba7e045f",
+     "/home/user/controle-ia-travail/donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/commande_kimi_v2.py": "644dbb39003f234db7b5fc295c6b061a0e84720e01ba08322ae1fe7936d9dcbe"
+    },
+    "variables_transmises": [],
+    "delai_s": 1800.0,
+    "modeles_servis_permis": {},
+    "controle_modele_servi": "exigé (CL13-05) : la dernière ligne rend `modele_servi`, égal au modèle demandé (ou suivi d'un suffixe de date strict -AAAAMMJJ, ou dans la liste explicite des identifiants permis), sinon refus et arrêt, y compris quand la commande voit l'écart elle-même et sort avec un code non nul (CL14-09)",
+    "version": "adaptateurs-v56",
+    "modele_servi_recopie": "CL20-01 : modele_servi de la dernière ligne recopié dans le résultat « ok » (et « budget_depasse ») après le contrôle de la commande ; absent : A2 au noyau",
+    "plafond_etape": "variables ETAPE_POLE et PLAFOND_ETAPE_USD (porte « environnement »), fixées au lancement de l'étape"
+   },
+   "argon": {
+    "commande": [
+     "/usr/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/commande_argon_v56_nuit_v2.py",
+     "appeler",
+     "--url-relais",
+     "http://127.0.0.1:8805",
+     "--registre",
+     "/tmp/claude-0/-home-user-controle-ia-travail/497afc2c-4fe2-5650-ae14-ca112bc3f1f2/scratchpad/ideation-organism/resultats/attaque-goodhart-v2/registre-depense-cumulee-v1.jsonl",
+     "--plafond-cumule-usd",
+     "80",
+     "--max-sortie-proposeur",
+     "32000",
+     "--max-sortie-court",
+     "4000",
+     "--sortie-min-jetons",
+     "1000",
+     "--delai-s",
+     "1750"
+    ],
+    "empreintes": {
+     "/usr/bin/python3": "dc9c6efba6e3583b8a2570140928b5278d8d39858dfcfe3792ca39daba7e045f",
+     "/home/user/controle-ia-travail/donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/commande_argon_v56_nuit_v2.py": "221df610681ed47bf66fbfef21d583006aa3e09a3147e22227faacd98622b851"
+    },
+    "variables_transmises": [],
+    "delai_s": 1800.0,
+    "modeles_servis_permis": {},
+    "controle_modele_servi": "exigé (CL13-05) : la dernière ligne rend `modele_servi`, égal au modèle demandé (ou suivi d'un suffixe de date strict -AAAAMMJJ, ou dans la liste explicite des identifiants permis), sinon refus et arrêt, y compris quand la commande voit l'écart elle-même et sort avec un code non nul (CL14-09)",
+    "version": "adaptateurs-v56",
+    "modele_servi_recopie": "CL20-01 : modele_servi de la dernière ligne recopié dans le résultat « ok » (et « budget_depasse ») après le contrôle de la commande ; absent : A2 au noyau",
+    "plafond_etape": "variables ETAPE_POLE et PLAFOND_ETAPE_USD (porte « environnement »), fixées au lancement de l'étape"
+   }
+  },
+  "portes": {
+   "kimi": {
+    "type": "environnement",
+    "variables": [
+     "ETAPE_POLE",
+     "PLAFOND_ETAPE_USD"
+    ]
+   },
+   "argon": {
+    "type": "environnement",
+    "variables": [
+     "ETAPE_POLE",
+     "PLAFOND_ETAPE_USD"
+    ]
+   }
+  },
+  "chemin": "/home/user/controle-ia-travail/donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/configuration-mini-course-kimi-argon-v3.json",
+  "sha256": "e5306c47e1b21a5e55b599411dba92c97e88aa98bb6d6fa91fc5d358a2bdde30",
+  "empreinte_configuration": "071f3b0866e6d28360f58498fb75e39dcf96b811d680b2fec0b11adffcb74960",
+  "accuses_plafond": {
+   "kimi": {
+    "etape": "attaque_goodhart_v2",
+    "plafond_usd": 40.0,
+    "par": "environnement de la commande (PLAFOND_ETAPE_USD)"
+   },
+   "argon": {
+    "etape": "attaque_goodhart_v2",
+    "plafond_usd": 40.0,
+    "par": "environnement de la commande (PLAFOND_ETAPE_USD)"
+   }
+  }
+ }
+}
