@@ -17,25 +17,34 @@ tiré est fixé par la graine, aux arrondis des logits près.
 contexte exact (jetons déjà retrouvés des actions précédentes, gabarit comme le harnais : ouverture, tour, clôture) :
 passe avant forcée par l'enseignant sur le découpage courant (découpage canonique du texte restant, plus le jeton de fin
 par défaut) ; à chaque pas, choix, parmi les **jetons compatibles avec les octets restants du texte stocké** (décodeur
-au niveau de l'octet ; jetons spéciaux hors fins : zéro octet, effacés du texte par P3), de celui qui maximise `p / q` ;
-si le choix diffère du découpage courant, le reste est redécoupé canoniquement et une nouvelle passe est faite. Le
-dernier jeton d'une action est un jeton de fin (parmi `fmt.fins`, même règle) quand `jetons − jetons_notes = 1`
-(stocké par P3) ; sinon l'action compte `max_nouveaux` jetons. Consigné par pas : choix contraint, choix non contraint
-(argmax de `p / q` sur tout le vocabulaire, comme P3), nombre de candidats, écart en log entre le premier et le second
-candidat compatibles, marge en log du choix non contraint. **Arbitre unique : l'empreinte de trajectoire de P3**
-(sha256 de l'épisode du harnais), recalculée sur l'épisode reconstruit.
+au niveau de l'octet ; jetons spéciaux hors fins : zéro octet, effacés du texte par P3), de celui qui maximise `p / q` :
+`p = softmax(logits / température)` en float32 sur processeur, ligne par ligne, comme P3, puis `log p − log q` en double
+sur les candidats (`probabilites`, `scores_contraints` ; égalité exacte : plus petit identifiant) ; si le choix diffère
+du découpage courant, le reste est redécoupé canoniquement et une nouvelle passe est faite. Le dernier jeton d'une
+action est un jeton de fin (parmi `fmt.fins`, même règle) quand `jetons − jetons_notes = 1` (stocké par P3) ; sinon
+l'action compte `max_nouveaux` jetons. Consigné par pas : choix contraint, choix non contraint (argmax de `p / q` sur
+tout le vocabulaire, en float32 sur processeur : l'opération même de P3), nombre de candidats, écart en log entre le
+premier et le second candidat compatibles, marge en log du choix non contraint, pas de recherche sur octets inconnus,
+probabilité `p_k` du jeton retenu et argmax de `p` (`mesures_accord` : accord du choix non contraint avec le jeton
+retenu, accord attendu sous une graine indépendante = moyenne des `p_k`, accord sur les pas informatifs, où le jeton
+retenu n'est pas l'argmax de `p` ; calculés pour tout épisode, résolu ou non). **Arbitre unique : l'empreinte de
+trajectoire de P3** (sha256 de l'épisode du harnais), recalculée sur l'épisode reconstruit.
 
 **Repli écrit, itératif** (`resoudre_avec_repli`) : si l'empreinte n'est pas retrouvée, les quasi-égalités de l'essai
 direct (écart sous `seuil_ecart`, au plus `quasi_egalites_max`, les plus fragiles d'abord) sont basculées vers leur
 second candidat, une à la fois ; chaque rejeu basculé (arrêté ou non par une contradiction : son journal partiel compte)
-apporte ses propres quasi-égalités, **après** sa dernière bascule (au plus `quasi_egalites_max`), qui forment la frontière
-du niveau suivant (deux bascules, jusqu'à `bascules_max`) ; dans chaque niveau, les combinaisons de plus faible écart
-cumulé d'abord ; au plus `combinaisons_max` rejeux en tout, chacun rejoué depuis l'action de sa première bascule et
-arbitré par l'empreinte ; sinon « non résolu », avec sa cause. Une bascule change souvent le découpage, donc la longueur
-des jetons qui suivent : la seconde erreur d'une paire n'apparaît que dans le rejeu de la première, d'où la frontière
-enrichie. Caractère de remplacement U+FFFD dans le texte : **cas déclaré** (compté par épisode) ; les octets inconnus qu'il
-recouvre sont traités par un balayage complet du vocabulaire seulement si c'est simple (au plus `balayages_max` balayages
-complets par épisode ; les recherches par préfixe, bornées, ne comptent pas), sinon « non résolu » déclaré.
+apporte ses propres quasi-égalités, **après** sa dernière bascule (au plus `quasi_egalites_max`), qui forment la
+frontière du niveau suivant (deux bascules, jusqu'à `bascules_max`) ; dans chaque niveau, les combinaisons de plus
+faible écart cumulé d'abord ; au plus `combinaisons_max` rejeux en tout, chacun rejoué depuis l'action de sa première
+bascule et arbitré par l'empreinte ; sinon « non résolu », avec sa cause. Une bascule change souvent le découpage, donc
+la longueur des jetons qui suivent : la seconde erreur d'une paire n'apparaît que dans le rejeu de la première, d'où la
+frontière enrichie. Caractère de remplacement U+FFFD dans le texte : **cas déclaré** (compté par épisode). Le jeton de
+P3 reste dans l'ensemble contraint à chaque pas ; près d'un U+FFFD, la recherche couvre des octets inconnus
+(`Cible.recherche` : jetons qui prolongent les octets connus au-delà, `commencant_par(E)` non vide). **Unité de
+`balayages_max`** : un pas où cette recherche est faite avec un ensemble non vide ; plafond par essai = `balayages_max`
+× nombre de U+FFFD de l'épisode. Au-delà : « non résolu », cause « caractère de remplacement : budget de balayages
+dépassé » — un budget de recherche dépassé, non une preuve d'impossibilité ; il n'est déclaré « non inversible par la
+méthode » (règle B) que sous la classe « graines validées » de la validation (`declarer`).
 
 **Durées** : budget par épisode (`duree_max_episode_s`) et par étape (`duree_max_s`) ; un épisode dont le budget s'épuise
 finit « non résolu : durée » sans arrêter l'étape ; une fois le budget de l'étape épuisé, les épisodes restants sont
@@ -43,10 +52,16 @@ consignés « non tenté : durée » ; le résultat est toujours écrit. Chaque 
 fichier scellé (`diag/<run>/episodes-<étape>/NNN.json` : statut, cause, identifiants retrouvés, empreinte), cité dans
 `arret.json` en cas d'arrêt (signal, erreur de chaîne).
 
-**Validation : une mesure, pas un arrêt** (décision de session sur VG-03). La résolution se lance quelle que soit la
-lecture de la validation (comptes, accord du choix non contraint en moyenne et par épisode, distribution des écarts,
-rapportés) ; seule une erreur de chaîne (pièces, sceaux, graines illisibles) arrête avant la résolution ; un « résolu »
-ne se lit que sur l'égalité de l'empreinte de P3, revérifiée à la construction de la table.
+**Validation : une mesure, pas un arrêt** (décision de session sur VG-03 ; n° 265). La résolution se lance quelle que
+soit la lecture de la validation ; seule une erreur de chaîne (pièces, sceaux, graines illisibles) arrête avant la
+résolution ; un « résolu » ne se lit que sur l'égalité de l'empreinte de P3, revérifiée à la construction de la table.
+**Règle gelée de lecture** (`lire_validation`, seuils de la clé `regle_validation` de la configuration), appliquée par
+le code et écrite au résultat de la validation avant toute lecture humaine : « graines validées » (toutes les empreintes
+retrouvées, accord moyen par épisode, minimum par épisode et accord sur les pas informatifs aux seuils, assez de pas
+informatifs), « méthode transposée, graines non validées » (toutes les empreintes, une condition d'accord manquée), «
+méthode non transposée » (une empreinte au moins non retrouvée). La lecture est recopiée dans le résultat de la
+résolution (avec la déclaration de chaque épisode) et dans la table v3. **Une seule exécution de chaque étape** sous une
+même configuration et un même code (`exiger_execution_unique`, R3) ; tout essai de plus relève d'un texte neuf.
 
 **Forme nouvelle d'entrée de table** (`METHODE_IDENTIFIANTS`, table version 3) : identifiants explicites des actions
 corrigées (`actions` : pas, identifiants de la reconstruction de base, identifiants retrouvés), appliquée par
@@ -110,7 +125,17 @@ CLES = ("agent", "mode", "T", "run_source", "chemin_textes", "textes_sha256", "c
         "combinaisons_max", "combinaisons_max_validation", "balayages_max", "seuil_validation", "duree_max_s")
 # clés ajoutées par les corrections VG-01 à VG-09 : exigées par `exiger_reglages_execution` (étapes validation et
 # resolution de ce module) ; `CLES` reste la liste des versions antérieures (modules qui l'importent)
-CLES_EXECUTION = ("duree_max_episode_s",)
+CLES_EXECUTION = ("duree_max_episode_s", "regle_validation")
+# règle gelée de lecture de la validation (C-3 et R-01 de la lecture neuve de conv-audit) : seuils de `regle_validation`
+CLES_REGLE_VALIDATION = ("accord_moyen_min", "accord_episode_min", "accord_informatif_min", "pas_informatifs_min")
+CLASSES_VALIDATION = ("graines validées", "méthode transposée, graines non validées", "méthode non transposée")
+CAUSE_BUDGET_BALAYAGES = "caractère de remplacement : budget de balayages dépassé"
+DECLARATIONS = {
+    "resolu": "résolu (empreinte de P3 retrouvée)",
+    "budget": ("budget de recherche dépassé (caractère de remplacement) : non inversible déclaré par la méthode, "
+               "règle B pour cet épisode (non preuve d'impossibilité)"),
+    "graines_non_validees": "non résolu, graines non validées : nœud porté à Lazar",
+    "noeud": "non résolu par la méthode : nœud porté à Lazar"}
 CLES_COMPLETES = CLES + CLES_EXECUTION
 NOYAUX = ("defaut", "math")
 CLES_AGENT_P3 = ("modele", "revision", "variables_gabarit")
@@ -120,11 +145,13 @@ ENVIRONNEMENT_P3 = {"torch": "2.14.1+cu130", "cuda": "13.0", "cudnn": 92400, "ca
 REGLE = ("rejeu à graine : graines des actions de P3 (manifeste, clé tache/<identifiant>, graines_des_actions) ; à chaque "
          "pas, parmi les jetons compatibles avec les octets restants du texte stocké (spéciaux hors fins : zéro octet ; "
          "dernier pas : jeton de fin si jetons − jetons_notes = 1), celui qui maximise p / q, q = tirages exponentiels de "
-         "la graine ; passe forcée par l'enseignant, redécoupage canonique du reste après chaque divergence ; arbitre "
+         "la graine (p = softmax(logits / T) en float32 sur processeur, comme P3, puis log p − log q en double) ; passe "
+         "forcée par l'enseignant, redécoupage canonique du reste après chaque divergence ; arbitre "
          "unique : empreinte de trajectoire de P3 ; repli itératif : bascule des quasi-égalités (écart sous le seuil) "
          "de l'essai direct, puis de chaque rejeu basculé après sa dernière bascule, une puis deux, combinaisons bornées, "
-         "arbitrées par l'empreinte ; budgets par épisode et par étape (non résolu : durée) ; sinon non résolu, cause "
-         "écrite")
+         "arbitrées par l'empreinte ; budgets par épisode et par étape (non résolu : durée) ; recherche sur octets inconnus "
+         "près d'un U+FFFD bornée à balayages_max pas par U+FFFD (au-delà : budget de balayages dépassé) ; sinon non "
+         "résolu, cause écrite")
 
 
 def horloge() -> float:
@@ -141,7 +168,8 @@ class Contradiction(Exception):
 
 
 class NonResolu(Exception):
-    """Cas déclaré hors de la méthode (caractère de remplacement non simple) : l'épisode est « non résolu »."""
+    """Budget de recherche près d'un caractère de remplacement dépassé (`CAUSE_BUDGET_BALAYAGES`) : l'essai finit
+    « non résolu » ; ce n'est pas une preuve d'impossibilité (le jeton de P3 reste dans l'ensemble contraint)."""
 
 
 class DureeEpuisee(Exception):
@@ -327,19 +355,28 @@ class Cible:
         atteint = j >= 0 and j <= idx + m and len(seg) < m
         return seg, atteint
 
-    def candidats(self, etat) -> tuple[list[int], bool]:
-        """(jetons ordinaires compatibles, triés ; vrai si un balayage **complet** du vocabulaire a été nécessaire : octets
-        connus épuisés devant un U+FFFD, tout jeton est alors examiné ; une recherche par préfixe connu non vide, bornée
-        par l'ordre des octets, n'en est pas un et n'est pas comptée)."""
+    def recherche(self, etat) -> tuple[list[int], bool, bool]:
+        """(jetons ordinaires compatibles, triés ; **pas compté** dans `balayages_max` ; balayage complet).
+
+        Pas compté (unité de `balayages_max`, B-2 de la lecture neuve) : la recherche de candidats couvre des octets
+        inconnus, c'est-à-dire que les octets connus E s'arrêtent sur un U+FFFD à portée et que `commencant_par(E)` (les
+        jetons qui prolongent E au-delà, dans les octets que recouvre le U+FFFD) est non vide ; un pas simplement proche
+        d'un U+FFFD, dont aucun jeton ne prolonge les octets connus, n'est pas compté. Balayage complet : E vide (le
+        U+FFFD est le caractère courant), tout le vocabulaire est examiné ; c'est un cas particulier du pas compté,
+        rapporté à part."""
         r = self._attendu(etat)
         if r is None:
-            return [], False
+            return [], False, False
         E, atteint = r
         c = self.voc.prefixes(E)
-        if atteint:
-            c += self.voc.commencant_par(E)
-        c = [i for i in set(c) if self.avancer(etat, i) is not None]
-        return sorted(c), bool(atteint and not E)
+        etendus = self.voc.commencant_par(E) if atteint else []
+        c = [i for i in set(c + etendus) if self.avancer(etat, i) is not None]
+        return sorted(c), bool(etendus), bool(etendus) and not E
+
+    def candidats(self, etat) -> tuple[list[int], bool]:
+        """(jetons ordinaires compatibles, triés ; pas compté dans `balayages_max`) : voir `recherche`."""
+        c, compte, _ = self.recherche(etat)
+        return c, compte
 
     def reste(self, etat) -> tuple[bytes, str]:
         """(octets qui complètent le caractère en attente, texte qui suit) : base du découpage deviné."""
@@ -373,10 +410,10 @@ class Moteur:
     """Passe avant sans cache sur une seule séquence (positions explicites, masque plein, sans remplissage) ; logits
     des k dernières positions, en float32 (comme P3, qui passait les logits du modèle en float32 avant le tirage).
 
-    `passe` rend aussi, ligne par ligne, le choix non contraint (argmax de softmax(logits / température) / q, l'opération
-    même de P3) et sa marge en log (premier contre second) : calcul groupé sur l'appareil du modèle (la carte en mode
-    réel ; les mêmes opérations que P3, qui les faisait sur processeur : écarts d'arrondi en float32 seulement,
-    négligeables devant le bruit des logits en bfloat16)."""
+    `passe` rend aussi, ligne par ligne, le choix non contraint (argmax de softmax(logits / température) / q) et sa marge
+    en log, calculés sur l'appareil du modèle ; `resoudre_action` ne s'en sert pas : il refait, pour chaque ligne lue, le
+    calcul de P3 tel quel sur processeur en float32 (`probabilites`), d'où il tire le choix contraint, le choix non
+    contraint, la marge, `p_k` et l'argmax de p (C-7). Rendu gardé pour les modules qui l'appellent."""
 
     def __init__(self, modele):
         self.modele = modele
@@ -411,6 +448,26 @@ class Moteur:
         return L.to("cpu"), [int(x) for x in nc.to("cpu")], [float(x) for x in marge.to("cpu")]
 
 
+def probabilites(logits_ligne: torch.Tensor, temperature: float) -> torch.Tensor:
+    """p = softmax(logits / température) d'une ligne (V,), en float32 sur processeur : l'opération même de P3
+    (`generer_lot` : `torch.softmax(logits[r] / T, dim=-1)` sur une ligne de logits float32 sur processeur). Garde : une
+    ligne (V,) float32 sur processeur, sinon arrêt (aucune conversion silencieuse)."""
+    if logits_ligne.dim() != 1 or logits_ligne.dtype != torch.float32 or logits_ligne.device.type != "cpu":
+        raise GardeArret(f"logits {tuple(logits_ligne.shape)} {logits_ligne.dtype} sur {logits_ligne.device} : une ligne "
+                         "(V,) float32 sur processeur attendue, comme P3")
+    with torch.no_grad():
+        return torch.softmax(logits_ligne / temperature, dim=-1)
+
+
+def scores_contraints(p: torch.Tensor, q_ligne: torch.Tensor, ordre: list[int]) -> torch.Tensor:
+    """Score du choix contraint sur les candidats `ordre` (triés) : log p − log q en double, à partir de p en float32
+    (`probabilites`) ; même ordre que p / q en arithmétique exacte ; argmax au premier maximum (plus petit identifiant à
+    égalité exacte, y compris deux p arrondis au même float32). Un p nul en float32 donne −∞ (jamais tiré par P3)."""
+    ct = torch.tensor(ordre, dtype=torch.long)
+    with torch.no_grad():
+        return torch.log(p[ct].double()) - torch.log(q_ligne[ct].double())
+
+
 @dataclass
 class Reglages:
     temperature: float = 1.0
@@ -419,23 +476,42 @@ class Reglages:
     quasi_egalites_max: int = 12
     bascules_max: int = 2
     combinaisons_max: int = 80
-    balayages_max: int = 64
+    balayages_max: int = 64          # par U+FFFD de l'épisode (unité : `Cible.recherche`)
     echeance: float | None = None
     duree_episode_s: float | None = None
 
 
 @dataclass
 class Compteurs:
+    """Compteurs d'un essai. `balayages` : pas comptés (`Cible.recherche`) ; `balayages_complets` : ceux où tout le
+    vocabulaire est examiné ; `plafond_balayages` : plafond de l'essai (`balayages_max` × U+FFFD de l'épisode, posé par
+    `resoudre_avec_repli`) ; None : plafond de l'action seule (`balayages_max` × U+FFFD de son texte)."""
     balayages: int = 0
     passes: int = 0
+    balayages_complets: int = 0
+    plafond_balayages: int | None = None
+
+
+def compter_balayage(compteurs: Compteurs, reglages: Reglages, fffd_action: int, complet: bool, t: int, s: int) -> None:
+    """Compte un pas de recherche sur octets inconnus ; au-delà du plafond, `NonResolu` (cause
+    `CAUSE_BUDGET_BALAYAGES`)."""
+    compteurs.balayages += 1
+    compteurs.balayages_complets += int(bool(complet))
+    plafond = compteurs.plafond_balayages
+    if plafond is None:
+        plafond = int(reglages.balayages_max) * int(fffd_action)
+    if compteurs.balayages > plafond:
+        raise NonResolu(f"{CAUSE_BUDGET_BALAYAGES} ({compteurs.balayages} pas de recherche sur octets inconnus > plafond "
+                        f"{plafond} = {reglages.balayages_max} par U+FFFD ; pas {t}, jeton {s})")
 
 
 def resoudre_action(moteur, voc: Vocabulaire, tok, ctx: list[int], texte: str, n: int, a_fin: int, Q: torch.Tensor,
                     fin_defaut: int, reglages: Reglages, t: int = 0, forcages: dict | None = None,
                     pas: list | None = None, compteurs: Compteurs | None = None) -> list[int]:
     """Identifiants d'une action : n jetons, le dernier parmi les fins si `a_fin`. `pas` reçoit, par jeton, (t, s, choix,
-    non contraint, candidats, écart, second, marge, balayage complet). Lève `Contradiction` (essai à rejeter),
-    `NonResolu` ou `DureeEpuisee` (échéance `reglages.echeance` passée)."""
+    non contraint, candidats, écart, second, marge, pas compté (recherche sur octets inconnus), p_k du choix, argmax de
+    p). Lève `Contradiction` (essai à rejeter), `NonResolu` (budget de balayages dépassé) ou `DureeEpuisee` (échéance
+    `reglages.echeance` passée)."""
     cible = Cible(texte, voc)
     forcages = forcages or {}
     compteurs = compteurs if compteurs is not None else Compteurs()
@@ -454,8 +530,7 @@ def resoudre_action(moteur, voc: Vocabulaire, tok, ctx: list[int], texte: str, n
         s0 = len(choisis)
         devine = deviner(cible, etat, voc, tok, n - s0, a_fin, fin_defaut)
         k_lignes = len(devine) + 1
-        L, non_contraints, marges = moteur.passe(ctx + choisis + devine, k_lignes, Q[s0:s0 + k_lignes],
-                                                 reglages.temperature)
+        L, _nc, _marges = moteur.passe(ctx + choisis + devine, k_lignes, Q[s0:s0 + k_lignes], reglages.temperature)
         compteurs.passes += 1
         for j in range(len(devine) + 1):
             s = s0 + j
@@ -464,20 +539,17 @@ def resoudre_action(moteur, voc: Vocabulaire, tok, ctx: list[int], texte: str, n
                     raise Contradiction(t, s, "octets du texte restants au jeton de fin")
                 cands, balayage = voc.fins, False
             else:
-                cands, balayage = cible.candidats(etat)
+                cands, balayage, complet = cible.recherche(etat)
                 if balayage:
-                    compteurs.balayages += 1
-                    if compteurs.balayages > reglages.balayages_max:
-                        raise NonResolu(f"caractère de remplacement : cas non simple ({compteurs.balayages} balayages du "
-                                        f"vocabulaire > {reglages.balayages_max})")
+                    compter_balayage(compteurs, reglages, cible.fffd, complet, t, s)
                 cands = cands + voc.speciaux_non_fins
             if not cands:
                 raise Contradiction(t, s, "aucun jeton compatible avec le texte")
-            # choix contraint : argmax de p / q parmi les candidats, soit de log p − log q (même ordre ; calcul en
-            # double précision sur les seuls candidats ; égalité exacte : plus petit identifiant, comme argmax)
+            # choix contraint (C-7) : p = softmax(logits / T) en float32 sur processeur, comme P3, puis argmax de
+            # log p − log q en double sur les candidats (même ordre que p / q ; égalité exacte : plus petit identifiant)
+            p = probabilites(L[j], reglages.temperature)
             ordre = sorted(cands)
-            ct = torch.tensor(ordre, dtype=torch.long)
-            sc = (L[j, ct] / reglages.temperature).double() - torch.log(Q[s, ct].double())
+            sc = scores_contraints(p, Q[s], ordre)
             k = int(torch.argmax(sc))
             choix = ordre[k]
             if (t, s) in forcages:
@@ -485,15 +557,23 @@ def resoudre_action(moteur, voc: Vocabulaire, tok, ctx: list[int], texte: str, n
                 if choix not in set(ordre):
                     raise Contradiction(t, s, f"jeton forcé {choix} hors des candidats")
                 k = ordre.index(choix)
+            if not math.isfinite(float(sc[k])):
+                raise Contradiction(t, s, f"jeton retenu {choix} de probabilité nulle en float32 (jamais tiré par P3)")
             ecart, second = math.inf, -1
             if len(ordre) > 1:
                 autres = sc.clone()
                 autres[k] = -math.inf
                 k2 = int(torch.argmax(autres))
                 ecart, second = float(sc[k] - autres[k2]), ordre[k2]
-            non_contraint, marge = non_contraints[j], marges[j]
+            # choix non contraint et marge : l'opération même de P3 (argmax de p / q en float32 sur processeur)
+            with torch.no_grad():
+                R = p / Q[s]
+                non_contraint = int(torch.argmax(R))
+                v2 = torch.topk(R, 2).values.double()
+                marge = float(torch.log(v2[0]) - torch.log(v2[1])) if float(v2[1]) > 0 else math.inf
+                p_k, argmax_p = float(p[choix]), int(torch.argmax(p))
             if pas is not None:
-                pas.append((t, s, choix, non_contraint, len(ordre), ecart, second, marge, balayage))
+                pas.append((t, s, choix, non_contraint, len(ordre), ecart, second, marge, balayage, p_k, argmax_p))
             choisis.append(choix)
             if not (a_fin and s == n - 1):
                 etat = cible.avancer(etat, choix)
@@ -603,7 +683,9 @@ def resoudre_avec_repli(moteur, voc, fmt, fabrique_env, identifiant: str, T: int
               "cause": None, "forcages": [], "combinaisons_essayees": 0, "ids": None, "ids_directs": None,
               "empreinte": None, "empreinte_cible": empreinte_cible, "duree_epuisee": False}
     pas: list = []
-    compteurs = Compteurs()
+    plafond = int(reg.balayages_max) * int(sortie["fffd"])
+    sortie["plafond_balayages"] = plafond
+    compteurs = Compteurs(plafond_balayages=plafond)
     trouves_directs: list = []
 
     def essai(forcages, prefixe, journal_pas, cpt):
@@ -627,7 +709,8 @@ def resoudre_avec_repli(moteur, voc, fmt, fabrique_env, identifiant: str, T: int
     except Contradiction as c:
         sortie["cause"] = f"contradiction à l'essai direct ({c})"
     except NonResolu as c:
-        return finir(cause=str(c), pas=pas, balayages=compteurs.balayages, passes=compteurs.passes)
+        return finir(cause=str(c), pas=pas, balayages=compteurs.balayages, passes=compteurs.passes,
+                     balayages_complets=compteurs.balayages_complets)
     except DureeEpuisee as c:
         sortie["duree_epuisee"] = True
         sortie["cause"] = f"durée : {c} à l'essai direct"
@@ -636,7 +719,8 @@ def resoudre_avec_repli(moteur, voc, fmt, fabrique_env, identifiant: str, T: int
     for (t, s, c, *_r) in pas:
         par_action.setdefault(t, []).append(c)
     sortie["ids_directs"] = trouves_directs or [par_action[t] for t in sorted(par_action)]
-    sortie.update(pas=pas, pas_direct=pas, balayages=compteurs.balayages, passes=compteurs.passes)
+    sortie.update(pas=pas, pas_direct=pas, balayages=compteurs.balayages, passes=compteurs.passes,
+                  balayages_complets=compteurs.balayages_complets)
     if sortie["statut"] == "resolu" or sortie["duree_epuisee"]:
         return finir()
     quasi = quasi_egalites(pas, reg.seuil_ecart, reg.quasi_egalites_max)
@@ -659,7 +743,7 @@ def resoudre_avec_repli(moteur, voc, fmt, fabrique_env, identifiant: str, T: int
             t0 = combo[0][0]
             prefixe = [par_action[t] for t in range(t0)]
             journal_pas: list = [x for x in pas if x[0] < t0]
-            cpt = Compteurs()
+            cpt = Compteurs(plafond_balayages=plafond)
             issue = "empreinte_differente"
             try:
                 rec, trouves, emp = essai(forcages, prefixe, journal_pas, cpt)
@@ -705,6 +789,113 @@ def accord_non_contraint(pas: list, verite: list[list[int]] | None = None) -> fl
             n += 1
             ok += x[3] == verite[x[0]][x[1]]
     return ok / n if n else None
+
+
+def mesures_accord(pas: list) -> dict:
+    """Mesures d'un épisode (résolu ou non : C-5, I-2, I-4, I-D), sur ses pas consignés (tuples de `resoudre_action`),
+    contre le **jeton retenu** (le jeton de P3 quand l'épisode est résolu) : `accord` = part des pas où le choix non
+    contraint (argmax de p / q sur tout le vocabulaire) égale le jeton retenu ; `attendu_graine_independante` = moyenne,
+    sur les mêmes pas, de p_k, probabilité du jeton retenu sous la passe (pour un tirage exponentiel indépendant,
+    P(argmax(p / q') = k) = p_k exactement) ; pas informatifs = pas où le jeton retenu n'est pas l'argmax de p (une
+    graine indépendante y donne au plus 0,5) : leur nombre, l'accord et l'accord attendu sur eux. Calculé sur la même
+    passe, sans dépense. Comptes entiers rendus pour l'agrégation."""
+    n = len(pas)
+    ok = sum(1 for x in pas if x[3] == x[2])
+    somme_pk = float(sum(x[9] for x in pas))
+    inf = [x for x in pas if x[2] != x[10]]
+    ok_inf = sum(1 for x in inf if x[3] == x[2])
+    somme_pk_inf = float(sum(x[9] for x in inf))
+    return {"pas": n, "accords": ok, "accord": ok / n if n else None,
+            "attendu_graine_independante": somme_pk / n if n else None, "somme_p_k": somme_pk,
+            "pas_informatifs": len(inf), "accords_informatifs": ok_inf,
+            "accord_informatif": ok_inf / len(inf) if inf else None,
+            "attendu_informatif": somme_pk_inf / len(inf) if inf else None, "somme_p_k_informatifs": somme_pk_inf}
+
+
+def agreger_accords(par_episode: dict) -> dict:
+    """Agrégats sur les épisodes (`mesures_accord` de chacun) : accord moyen et minimum par épisode (épisodes à pas
+    consignés), accord attendu sous graine indépendante moyen par épisode et sur les pas réunis, pas informatifs réunis
+    et leur accord."""
+    m = [x for x in par_episode.values() if x["pas"]]
+    n = sum(x["pas"] for x in m)
+    n_inf = sum(x["pas_informatifs"] for x in m)
+    return {"episodes_mesures": len(m), "episodes_sans_pas": sorted(e for e, x in par_episode.items() if not x["pas"]),
+            "pas": n, "accord_moyen_par_episode": float(np.mean([x["accord"] for x in m])) if m else None,
+            "accord_min_par_episode": min((x["accord"] for x in m), default=None),
+            "accord_sur_les_pas": sum(x["accords"] for x in m) / n if n else None,
+            "attendu_graine_independante_moyen_par_episode":
+                float(np.mean([x["attendu_graine_independante"] for x in m])) if m else None,
+            "attendu_graine_independante_sur_les_pas": sum(x["somme_p_k"] for x in m) / n if n else None,
+            "pas_informatifs": n_inf,
+            "accord_informatif": sum(x["accords_informatifs"] for x in m) / n_inf if n_inf else None,
+            "attendu_informatif": sum(x["somme_p_k_informatifs"] for x in m) / n_inf if n_inf else None}
+
+
+def exiger_regle_validation(regle) -> dict:
+    """Forme de `regle_validation` (configuration) : exactement les clés `CLES_REGLE_VALIDATION` ; trois seuils d'accord
+    dans [0, 1], un nombre minimal de pas informatifs entier ≥ 0. Arrêt sinon (aucun défaut silencieux)."""
+    if not isinstance(regle, dict) or set(regle) != set(CLES_REGLE_VALIDATION):
+        raise GardeArret(f"regle_validation : clés {sorted(CLES_REGLE_VALIDATION)} exactement attendues, "
+                         f"{sorted(regle) if isinstance(regle, dict) else regle!r} reçues")
+    for k in ("accord_moyen_min", "accord_episode_min", "accord_informatif_min"):
+        v = regle[k]
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not 0 <= v <= 1:
+            raise GardeArret(f"regle_validation.{k} = {v!r} : nombre dans [0, 1] attendu")
+    v = regle["pas_informatifs_min"]
+    if isinstance(v, bool) or not isinstance(v, int) or v < 0:
+        raise GardeArret(f"regle_validation.pas_informatifs_min = {v!r} : entier ≥ 0 attendu")
+    return regle
+
+
+def lire_validation(empreintes_retrouvees: int, episodes: int, accords: dict, regle: dict) -> dict:
+    """Règle gelée de lecture de la validation (C-3, R-01), appliquée par le code, écrite au résultat avant toute
+    lecture humaine. `accords` : `agreger_accords` ; `regle` : `regle_validation` de la configuration.
+    - « méthode non transposée » : moins de `episodes` empreintes de P3 retrouvées (ou aucun épisode) ;
+    - « graines validées » : toutes retrouvées, et accord moyen par épisode ≥ `accord_moyen_min`, minimum par épisode
+      ≥ `accord_episode_min`, au moins `pas_informatifs_min` pas informatifs, accord sur eux ≥ `accord_informatif_min` ;
+    - « méthode transposée, graines non validées » : toutes retrouvées, une condition d'accord au moins manquée (une
+      mesure absente compte comme manquée).
+    Conséquences (`declarer`) : la résolution part sous les trois classes ; ses « résolus » sont des preuves sous les
+    trois ; « non inversible » n'est déclarable que sous « graines validées »."""
+    exiger_regle_validation(regle)
+
+    def au_moins(x, seuil):
+        return x is not None and x >= seuil
+
+    conditions = {
+        "accord_moyen": au_moins(accords.get("accord_moyen_par_episode"), regle["accord_moyen_min"]),
+        "accord_episode": au_moins(accords.get("accord_min_par_episode"), regle["accord_episode_min"]),
+        "pas_informatifs": au_moins(accords.get("pas_informatifs"), regle["pas_informatifs_min"]),
+        "accord_informatif": au_moins(accords.get("accord_informatif"), regle["accord_informatif_min"])}
+    transposee = int(episodes) > 0 and int(empreintes_retrouvees) == int(episodes)
+    if not transposee:
+        classe = CLASSES_VALIDATION[2]
+    elif all(conditions.values()):
+        classe = CLASSES_VALIDATION[0]
+    else:
+        classe = CLASSES_VALIDATION[1]
+    return {"classe": classe, "empreintes_retrouvees": int(empreintes_retrouvees), "episodes": int(episodes),
+            "conditions": conditions, "regle": dict(regle),
+            "mesures": {k: accords.get(k) for k in ("accord_moyen_par_episode", "accord_min_par_episode",
+                                                    "pas_informatifs", "accord_informatif",
+                                                    "attendu_graine_independante_moyen_par_episode",
+                                                    "attendu_informatif")}}
+
+
+def declarer(statut: str, cause: str | None, classe: str) -> str:
+    """Déclaration d'un épisode de la résolution, selon la classe de la validation (C-3 (4), I-3, R-09) : résolu (sous
+    les trois classes) ; cause « budget de balayages dépassé » sous « graines validées » : non inversible déclaré par la
+    méthode (budget de recherche dépassé, non preuve d'impossibilité ; règle B) ; tout autre non résolu sous « graines
+    validées » : nœud ; tout non résolu sous une autre classe : « non résolu, graines non validées », nœud."""
+    if classe not in CLASSES_VALIDATION:
+        raise GardeArret(f"classe de validation {classe!r} inconnue : {CLASSES_VALIDATION} attendues")
+    if statut == "resolu":
+        return DECLARATIONS["resolu"]
+    if classe != CLASSES_VALIDATION[0]:
+        return DECLARATIONS["graines_non_validees"]
+    if (cause or "").startswith(CAUSE_BUDGET_BALAYAGES):
+        return DECLARATIONS["budget"]
+    return DECLARATIONS["noeud"]
 
 
 # --------------------------------------------------------------------------------------------------------------------
@@ -819,11 +1010,20 @@ def construire_table_v3(table_v2: dict, sha_v2: str, resultat: dict, sha_resulta
     """Table version 3 : la table v2, dont chaque épisode « non résolu » que le rejeu à graine a résolu reçoit une entrée
     « identifiants » (`base_nv[e]` : identifiants de la reconstruction de base, par action) ; les entrées corrigées de la
     v2 restent telles quelles (contrôle croisé du rejeu consigné à part) ; les épisodes du résultat absents de la table v2
-    sont cités (`resultat_hors_table`), non versés. Gardes : version 2, étape « resolution », mêmes empreintes de P3."""
+    sont cités (`resultat_hors_table`), non versés. Gardes : version 2, étape « resolution », mêmes empreintes de P3 ;
+    contrôle croisé lu « conforme » (R-11 : une répétabilité en défaut s'audite avant la table) ; lecture de la
+    validation présente dans le résultat, **recopiée** dans la table (`lecture_validation`) et, avec la déclaration de
+    chaque épisode, dans les entrées nouvelles et dans `declarations` (C-3 (3), I-B)."""
     if table_v2.get("version") != rt.VERSION_TABLE:
         raise GardeArret(f"table v2 attendue, version {table_v2.get('version')!r}")
     if resultat.get("etape") != "resolution":
         raise GardeArret("résultat de l'étape « resolution » attendu")
+    if resultat.get("controle_croise_lecture") != "conforme":
+        raise GardeArret(f"contrôle croisé lu {resultat.get('controle_croise_lecture')!r}, « conforme » attendu : audit "
+                         f"(R4) avant la table v3")
+    lv = resultat.get("lecture_validation") or {}
+    if lv.get("classe") not in CLASSES_VALIDATION:
+        raise GardeArret("résultat de la résolution sans lecture de la validation : la table v3 doit porter sa classe")
     par_res = {x["episode"]: x for x in resultat["episodes"]}
     par_v2 = {x["episode"]: x for x in table_v2["episodes"]}
     episodes = []
@@ -837,7 +1037,8 @@ def construire_table_v3(table_v2: dict, sha_v2: str, resultat: dict, sha_resulta
         if r.get("empreinte") != x["trajectoire_p3"]:
             raise GardeArret(f"{x['episode']} : « résolu » sans l'empreinte de P3 recalculée égale (un résolu ne se lit "
                              f"que sur l'égalité d'empreinte)")
-        res = {"voie": r["voie"], "forcages": r["forcages"], "resultat_sha256": sha_resultat}
+        res = {"voie": r["voie"], "forcages": r["forcages"], "resultat_sha256": sha_resultat,
+               "classe_validation": lv["classe"], "declaration": r.get("declaration")}
         episodes.append({**entree_identifiants(x["episode"], x["trajectoire_p3"], base_nv[x["episode"]], r["ids"], res),
                          "essais": x.get("essais"), "essais_c6": x.get("essais_c6")})
     # épisodes résolus hors de la table v2 (contrôle croisé sur un épisode identique, par exemple) : consignés, non versés
@@ -849,6 +1050,7 @@ def construire_table_v3(table_v2: dict, sha_v2: str, resultat: dict, sha_resulta
     meta = {k: v for k, v in table_v2.items() if k not in ("version", "comptes", "episodes")}
     return {**meta, "version": VERSION_TABLE_V3, "regle_graine": REGLE, "table_v2_sha256": sha_v2,
             "resultat_graine_sha256": sha_resultat, "resultat_hors_table": hors, "comptes": comptes,
+            "lecture_validation": lv, "declarations": {x["episode"]: x.get("declaration") for x in resultat["episodes"]},
             "episodes": episodes}
 
 
@@ -889,7 +1091,8 @@ def exiger_config(config: dict) -> None:
 def exiger_reglages_execution(config: dict) -> None:
     """Gardes des étapes de ce module (VG-03, VG-04), avant tout chargement : `duree_max_episode_s` présent et positif,
     au plus `duree_max_s` ; `noyau_attention` parmi « defaut » et « math » (toute autre valeur tomberait en silence sur
-    le noyau par défaut) ; paires permises en validation (`combinaisons_max_validation` = `combinaisons_max`)."""
+    le noyau par défaut) ; paires permises en validation (`combinaisons_max_validation` = `combinaisons_max`) ;
+    `regle_validation` conforme (`exiger_regle_validation`)."""
     manquantes = [k for k in CLES_EXECUTION if k not in config]
     if manquantes:
         raise GardeArret(f"configuration de la résolution à graine incomplète : {manquantes}")
@@ -901,6 +1104,7 @@ def exiger_reglages_execution(config: dict) -> None:
     if config["combinaisons_max_validation"] != config["combinaisons_max"]:
         raise GardeArret("combinaisons_max_validation ≠ combinaisons_max : la validation doit permettre les paires comme "
                          "la résolution")
+    exiger_regle_validation(config["regle_validation"])
 
 
 def reglages_de(config: dict, echeance: float | None, duree_episode_s: float | None = None) -> Reglages:
@@ -927,6 +1131,78 @@ def exiger_seuil_atteignable(seuil: int, episodes: int) -> None:
     connus (sinon la configuration est fausse : arrêt avant tout calcul)."""
     if int(seuil) > int(episodes):
         raise GardeArret(f"seuil de validation {seuil} > {episodes} épisodes à identifiants connus")
+
+
+def exiger_compte_validation(episodes: int, attendu: int) -> None:
+    """Avant la boucle (m-3) : la validation porte sur exactement `seuil_validation` épisodes à identifiants connus (147
+    en mode réel) ; un autre compte (classement changé, table autre) arrête avant tout calcul."""
+    if int(episodes) != int(attendu):
+        raise GardeArret(f"validation : {episodes} épisodes à identifiants connus ≠ {attendu} attendus (seuil_validation)")
+
+
+def exiger_config_citee(texte: str, config: dict, prereg: str = "préenregistrement") -> None:
+    """Le texte scellé cite l'empreinte canonique de la configuration (`CONFIG_CITEE`) ; arrêt sinon."""
+    if CONFIG_CITEE.format(empreinte_config(config)) not in texte:
+        raise GardeArret(f"{prereg} ne cite pas la configuration de la résolution {empreinte_config(config)[:12]}")
+
+
+def exiger_ouverture(fmt, env, attendu: str | None, reel: bool) -> None:
+    """Le texte attendu de l'ouverture (`agent.texte_attendu_ouverture`, obligatoire en mode réel) figure dans
+    l'ouverture du gabarit de l'agent (variables du gabarit lues) ; arrêt sinon."""
+    if reel and not attendu:
+        raise GardeArret("agent : texte attendu dans l'ouverture absent de la configuration")
+    if attendu and attendu not in fmt.tok.decode(fmt.ouverture(env.consigne_privee(0), env.observation(0, 0, []))):
+        raise GardeArret(f"agent : ouverture sans {attendu!r} (variables du gabarit non lues)")
+
+
+def _meme_code(racine: Path, commit: str) -> bool:
+    import subprocess
+
+    from ..harnais.validation_reelle import CHEMINS_GELES
+
+    if etat_git(racine)["commit"] == commit:
+        return True
+    r = subprocess.run(["git", "-C", str(racine), "diff", "--quiet", commit, "HEAD", "--", *CHEMINS_GELES],
+                       capture_output=True, text=True)
+    if r.returncode not in (0, 1):
+        raise GardeArret(f"comparaison au commit {commit[:12]} impossible : {r.stderr.strip()}")
+    return r.returncode == 0
+
+
+def executions_anterieures(racine: Path, config: dict, etape: str) -> list[str]:
+    """Runs antérieurs du dépôt de la même étape (commande du manifeste), de la même configuration (empreinte canonique)
+    et du même code (arbre gelé égal), qui ont laissé une sortie (`diag/<run>/` : résultat de l'étape, `arret.json` ou
+    épisodes consignés)."""
+    cible = empreinte_config(config)
+    commande = f"{COMMANDE} --etape {etape}"
+    sortie = []
+    for chemin in sorted((Path(racine) / "runs").glob("*/manifeste.json")):
+        try:
+            brut = json.loads(chemin.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if brut.get("commande") != commande or brut.get("config_sha256") != cible:
+            continue
+        m, _ = lire_manifeste(chemin)
+        d = Path(racine) / "diag" / m["run_id"]
+        traces = [d / f"resolution-graine-{etape}.json", d / "arret.json", d / f"episodes-{etape}"]
+        if any(x.exists() for x in traces) and _meme_code(Path(racine), m["commit"]):
+            sortie.append(m["run_id"])
+    return sortie
+
+
+def exiger_execution_unique(racine: Path, config: dict, etape: str, reexecution_essai: bool = False) -> list[str]:
+    """R3 (C-3 (5), I-A) : une seule exécution de chaque étape sous une même configuration et un même code ; une sortie
+    antérieure de la même étape arrête avant tout calcul (tout essai de plus relève d'un texte neuf, donc d'une autre
+    configuration ou d'un autre code). `reexecution_essai` : essais du code seulement, refusé en mode réel ; les runs
+    antérieurs sont alors rendus et consignés au résultat."""
+    if reexecution_essai and config.get("mode") == "reel":
+        raise GardeArret("reexecution_essai interdit en mode réel (R3)")
+    anterieurs = executions_anterieures(racine, config, etape)
+    if anterieurs and not reexecution_essai:
+        raise GardeArret(f"étape {etape} déjà exécutée sous cette configuration et ce code ({anterieurs}) : R3, une seule "
+                         f"exécution par étape ; tout essai de plus sous un texte neuf")
+    return anterieurs
 
 
 def environnement_d_execution(reel: bool) -> dict:
@@ -1121,17 +1397,21 @@ def exiger_seuil_validation(trouvees: int, seuil: int, episodes: int) -> None:
 
 
 def exiger_validation(racine: Path, chemin, config: dict) -> dict:
-    """La résolution exige une validation scellée, rattachée à son manifeste, de même configuration et même commit,
-    **quelle que soit sa lecture** (VG-03 : la validation est une mesure rapportée, pas un arrêt ; l'ordre « validation
-    puis résolution » garde la validation à l'aveugle)."""
+    """Garde d'**ordre** (C-3 (2)) : la résolution exige une validation scellée, rattachée à son manifeste, sans
+    `arret.json` dans son dossier, de même configuration et même code, **quelle que soit sa lecture** (la classe n'est
+    exigée que présente, parmi les trois, pour être recopiée ; la validation est une mesure, pas un arrêt ; l'ordre
+    « validation puis résolution » garde la validation à l'aveugle)."""
     if not chemin:
         raise GardeArret("étape « resolution » sans --validation : la validation à l'aveugle passe d'abord")
     corps = verifier_resultat(racine, chemin)
     m, _ = lire_manifeste(Path(racine) / "runs" / corps["run_id"] / "manifeste.json")
     r = corps["resultat"]
-    if r.get("etape") != "validation" or r.get("version") != VERSION or r.get("lecture") is None:
-        raise GardeArret(f"validation {chemin} : étape {r.get('etape')!r}, version {r.get('version')!r}, lecture "
-                         f"{r.get('lecture')!r}")
+    classe = (r.get("lecture_validation") or {}).get("classe")
+    if r.get("etape") != "validation" or r.get("version") != VERSION or classe not in CLASSES_VALIDATION:
+        raise GardeArret(f"validation {chemin} : étape {r.get('etape')!r}, version {r.get('version')!r}, classe "
+                         f"{classe!r}")
+    if (Path(racine) / "diag" / corps["run_id"] / "arret.json").exists():
+        raise GardeArret(f"validation {corps['run_id']} arrêtée (arret.json) : résolution non lancée")
     if m["config_sha256"] != empreinte_config(config):
         raise GardeArret("validation faite sous une autre configuration")
     exiger_meme_code(racine, m["commit"])
@@ -1207,7 +1487,7 @@ def non_tente(ep: "EpisodeP3", motif: str) -> dict:
             "balayages": 0, "passes": 0, "duree_s": 0.0}
 
 
-def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, debut) -> dict:
+def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, debut, validation=None) -> dict:
     from ..harnais.modeles import regler_determinisme
     from ..harnais.validation_reelle import noyau
     from .rejeu_activations_v1 import progres
@@ -1229,13 +1509,10 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
     episodes = episodes_de_l_etape(etape, config, classement)
     if etape == "validation":
         exiger_seuil_atteignable(int(config["seuil_validation"]), len(episodes))
+        exiger_compte_validation(len(episodes), int(config["seuil_validation"]))
     if not episodes:
         raise GardeArret(f"étape {etape} : aucun épisode")
-    if attendu:
-        ep0 = EpisodeP3(pieces, episodes[0], T)
-        e0 = ep0.env()
-        if attendu not in fmt.tok.decode(fmt.ouverture(e0.consigne_privee(0), e0.observation(0, 0, []))):
-            raise GardeArret(f"agent : ouverture sans {attendu!r} (variables du gabarit non lues)")
+    exiger_ouverture(fmt, EpisodeP3(pieces, episodes[0], T).env(), attendu, reel)
     voc = Vocabulaire(fmt.tok, fmt.fins, int(modele.config.vocab_size))
     etat["equivalence_tirage"] = exiger_equivalence_tirage(voc.V)
     moteur = Moteur(modele)
@@ -1278,20 +1555,25 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
     # mesures, après la résolution seulement (à l'aveugle) : comparaison aux identifiants connus
     detail, ecarts, marges_desaccord, erreurs_directes = [], [], [], []
     accords, n_pas, egaux_ep, actions_egales, actions_tot, controle = [], 0, 0, 0, 0, []
+    mesures_ep: dict[str, dict] = {}
     for r, pas, pas_d in zip(resultats, pas_tous, pas_directs):
         e = r["episode"]
         v = verite(pieces, fmt, T, classement, e)
         ecarts += [x[5] for x in pas if x[4] > 1]
         marges_desaccord += [x[7] for x in pas if x[3] != x[2]]
         n_pas += len(pas)
-        acc_v = accord_non_contraint(pas, v if v is not None else r["ids"]) if (v or r["ids"]) else None
+        # accord pour tout épisode à pas consignés, résolu ou non (I-4) : contre les identifiants connus s'il y en a,
+        # sinon contre le jeton retenu
+        acc_v = accord_non_contraint(pas, v) if v is not None else accord_non_contraint(pas)
         if acc_v is not None:
             accords.append(acc_v)
+        mesures_ep[e] = mesures_accord(pas)
         d = {k2: r[k2] for k2 in ("episode", "statut", "voie", "cause", "forcages", "combinaisons_essayees", "passes",
-                                  "balayages", "fffd", "duree_s", "graines", "empreinte", "duree_epuisee", "repli",
-                                  "non_tente") if k2 in r}
+                                  "balayages", "balayages_complets", "plafond_balayages", "fffd", "duree_s", "graines",
+                                  "empreinte", "duree_epuisee", "repli", "non_tente") if k2 in r}
         d["empreinte_retrouvee"] = r["statut"] == "resolu" and r["empreinte"] == r["empreinte_cible"]
         d["accord_non_contraint"] = acc_v
+        d["accord"] = {k2: v2 for k2, v2 in mesures_ep[e].items() if not k2.startswith("somme")}
         d["pas"] = len(pas)
         d["ecart_min"] = min((x[5] for x in pas if x[4] > 1), default=None)
         if v is not None:
@@ -1307,6 +1589,7 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
                 controle.append({"episode": e, "methode_table": (classement[e]["entree"] or {}).get("methode")
                                  or "identique_base", "statut": r["statut"], "identifiants_egaux": eg})
         if etape == "resolution":
+            d["declaration"] = declarer(r["statut"], r.get("cause"), validation["resultat"]["lecture_validation"]["classe"])
             d["ids"] = r["ids"]
             d["empreinte_cible"] = r["empreinte_cible"]
             d["quasi_egalites"] = r.get("quasi_egalites")
@@ -1320,15 +1603,17 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
     chemin_pas = dossier / f"pas-resolution-graine-{etape}.npz"
     lignes_pas = [(i, *x) for i, pas in enumerate(pas_tous) for x in pas]
     with open(chemin_pas, "wb") as f:
-        col = list(zip(*lignes_pas)) if lignes_pas else [()] * 10
+        col = list(zip(*lignes_pas)) if lignes_pas else [()] * 12
         np.savez_compressed(f, episodes=np.array([r["episode"] for r in resultats]),
                             episode=np.asarray(col[0], dtype=np.int32), pas=np.asarray(col[1], dtype=np.int16),
                             rang=np.asarray(col[2], dtype=np.int16), choix=np.asarray(col[3], dtype=np.int64),
                             non_contraint=np.asarray(col[4], dtype=np.int64),
                             candidats=np.asarray(col[5], dtype=np.int32), ecart=np.asarray(col[6], dtype=np.float64),
                             second=np.asarray(col[7], dtype=np.int64), marge=np.asarray(col[8], dtype=np.float64),
-                            balayage=np.asarray(col[9], dtype=bool))
+                            balayage=np.asarray(col[9], dtype=bool), p_k=np.asarray(col[10], dtype=np.float64),
+                            argmax_p=np.asarray(col[11], dtype=np.int64))
     sha_pas = sceller(chemin_pas)
+    accords_agreges = agreger_accords(mesures_ep)
     par_ep = {d["episode"]: d["accord_non_contraint"] for d in detail if d["accord_non_contraint"] is not None}
     resultat = {
         "etape": etape, "version": VERSION, "regle": REGLE, "run_source": config["run_source"],
@@ -1345,37 +1630,55 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
                                  "moyenne_par_episode": float(np.mean(accords)) if accords else None,
                                  "par_episode": par_ep, "distribution_par_episode": quantiles(accords),
                                  "pas_en_desaccord": len(marges_desaccord)},
+        "accord": accords_agreges,
         "ecarts_contraints": quantiles(ecarts), "marges_en_desaccord": quantiles(marges_desaccord),
         "erreurs_directes": erreurs_directes, "controle_croise": controle,
         "fffd_declares": {x["episode"]: x["fffd"] for x in resultats if x["fffd"]},
+        "balayages": {"unite": "pas où la recherche couvre des octets inconnus (commencant_par(E) non vide)",
+                      "par_episode": {x["episode"]: x.get("balayages", 0) for x in resultats if x["fffd"]},
+                      "complets_par_episode": {x["episode"]: x.get("balayages_complets", 0) for x in resultats
+                                               if x["fffd"]}},
         "passes": moteur.passes, "jetons_en_passe": moteur.jetons, "seuils": {
             k: config[k] for k in ("seuil_ecart", "quasi_egalites_max", "bascules_max", "combinaisons_max",
                                    "combinaisons_max_validation", "balayages_max", "seuil_validation", "duree_max_s",
-                                   "duree_max_episode_s")},
+                                   "duree_max_episode_s", "regle_validation")},
         "equivalence_tirage": etat["equivalence_tirage"], "reglages": reglages_det, "modele": config["agent"],
         "environnement": environnement, "environnement_p3": ENVIRONNEMENT_P3, "reserves": reserves,
         "episodes_consignes": etat["episodes_consignes"],
         "pas_fichier": chemin_pas.name, "pas_sha256": sha_pas, "episodes": detail,
+        "executions_anterieures_essai": etat.get("executions_anterieures", []),
         "duree_s": round(horloge() - debut, 1)}
     if etape == "validation":
-        # mesure rapportée, jamais un arrêt (VG-03) : la résolution se lance quelle que soit cette lecture
+        # mesure rapportée, jamais un arrêt (VG-03) : la résolution se lance quelle que soit cette lecture ; la classe
+        # (règle gelée, `lire_validation`) est écrite ici, avant toute lecture humaine (C-3 (1))
         resultat["seuil_validation"] = int(config["seuil_validation"])
         resultat["lecture"] = "atteint" if trouvees >= int(config["seuil_validation"]) else "sous le seuil"
+        resultat["lecture_validation"] = lire_validation(trouvees, len(episodes), accords_agreges,
+                                                         config["regle_validation"])
     else:
         resultat["lecture"] = "complète" if trouvees == len(episodes) else "partielle"
         resultat["controle_croise_lecture"] = lecture_controle_croise(controle)
+        # classe de la validation recopiée (C-3 (3)) : une résolution sous graines non validées se lit comme telle
+        resultat["lecture_validation"] = {**validation["resultat"]["lecture_validation"],
+                                          "run_validation": validation["run_id"],
+                                          "manifeste_validation_sha256": validation["manifeste_sha256"]}
+        resultat["declarations"] = {x["episode"]: x["declaration"] for x in detail}
     ecrire_resultat(racine, chemin_m, f"resolution-graine-{etape}", resultat)
     progres(etape="fin", resolus=f"{trouvees}/{len(episodes)}", lecture=resultat["lecture"].replace(" ", "_"))
     return resultat
 
 
 def executer(config: dict, racine: Path, run_id: str, prereg: str | None, etape: str, validation: str | None = None,
-             autoriser_depot_sale: bool = False, entropie_essai: int | None = None) -> dict:
+             autoriser_depot_sale: bool = False, entropie_essai: int | None = None,
+             reexecution_essai: bool = False) -> dict:
+    """Étape « validation » ou « resolution ». `reexecution_essai` : essais du code seulement (refusé en mode réel) ;
+    sinon une sortie antérieure de la même étape, même configuration, même code, arrête avant tout calcul (R3)."""
     racine = Path(racine)
     exiger_config(config)
     exiger_reglages_execution(config)
     if etape not in ETAPES:
         raise GardeArret(f"étape {etape!r} : {ETAPES} attendues")
+    anterieurs = exiger_execution_unique(racine, config, etape, reexecution_essai)
     if config["mode"] == "reel" and prereg is None:
         raise GardeArret("résolution réelle sans préenregistrement : R1 interdit de lancer")
     entropie = entropie_essai
@@ -1383,23 +1686,21 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, etape:
         from ..harnais.validation_reelle import ENTROPIE_CITEE, exiger_code_cite
 
         texte = Path(prereg).read_text(encoding="utf-8")
-        if CONFIG_CITEE.format(empreinte_config(config)) not in texte:
-            raise GardeArret(f"{prereg} ne cite pas la configuration de la résolution {empreinte_config(config)[:12]}")
+        exiger_config_citee(texte, config, str(prereg))
         e = ENTROPIE_CITEE.search(texte)
         if not e:
             raise GardeArret(f"{prereg} ne cite pas l'entropie")
         entropie = int(e.group(1))
         exiger_code_cite(racine, Path(prereg))
     pieces = charger_pieces(config, racine)
-    if etape == "resolution":
-        exiger_validation(racine, validation, config)
+    corps_validation = exiger_validation(racine, validation, config) if etape == "resolution" else None
     chemin_m, manifeste = creer_manifeste(racine, run_id, config, ["aucun-tirage-propre"], entropie=entropie,
                                           decisif=prereg is not None, prereg=prereg,
                                           autoriser_depot_sale=autoriser_depot_sale, commande=f"{COMMANDE} --etape {etape}")
-    etat = {"etape": "chargement"}
+    etat = {"etape": "chargement", "executions_anterieures": anterieurs}
     debut = horloge()
     try:
-        return _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, debut)
+        return _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, debut, corps_validation)
     except Exception as e:
         # partiel : épisodes déjà consignés (fichiers scellés, identifiants retrouvés), réserves, garde du tirage
         ecrire_resultat(racine, chemin_m, "arret", {"etape": etat["etape"], "motif": motif_d_arret(e),

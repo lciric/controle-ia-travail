@@ -11,15 +11,20 @@
 3. Artefacts (R5) : graine fausse, texte altéré d'un octet, contexte décalé d'un jeton → non résolu (jamais un faux
    « résolu ») ; repli itératif : une bascule, deux bascules dans deux actions (la seconde erreur n'apparaît que dans le
    rejeu de la première, VG-02) ; budget de l'épisode épuisé → « non résolu : durée », sans exception (VG-01) ;
-   caractère de remplacement : résolu par balayage quand c'est simple, déclaré non résolu au-delà de la borne, seuls les
-   balayages complets comptés (VG-07) ; seuil de validation contrôlé avant la boucle.
+   caractère de remplacement : résolu quand la recherche tient dans le budget, « budget de balayages dépassé » au-delà ;
+   unité de `balayages_max` = pas où la recherche couvre des octets inconnus, plafond par U+FFFD (B-2 ; trois U+FFFD) ;
+   seuil et compte de la validation contrôlés avant la boucle.
+3 bis. Lectures neuves de conv-audit : choix contraint depuis p = softmax en float32 sur processeur (C-7, cas où les
+   logits départagent et p non) ; accord attendu sous graine indépendante = moyenne des p_k, recalculée par une passe
+   indépendante, et pas informatifs (I-D) ; règle gelée de lecture de la validation à trois classes et déclarations
+   (C-3) ; une seule exécution par étape (R3) ; citation de la configuration et texte attendu de l'ouverture (C-8).
 4. Forme « identifiants » de la table version 3 : cas sain, artefacts ; formes des versions 1 et 2 acceptées telles
    quelles ; table v3 écrite scellée, jamais écrasée (VG-08).
 5. Bout en bout en mode jouet sur un P3 jouet joué par le vrai code de P3 (`premier_test_ia.run`) : étape validation (à
    l'aveugle, graines lues dans le manifeste de P3), étape résolution (épisodes non conformes en longueur compris),
-   table version 3 revérifiée par l'empreinte ; graines fausses → validation « sous le seuil » rapportée, sans arrêt, et
-   la résolution se lance quand même (VG-03) ; échéances en milieu d'étape (épisode, étape) et signal TERM : épisodes
-   consignés un à un, résultat ou `arret.json` qui les cite (VG-01).
+   table version 3 revérifiée par l'empreinte ; graines fausses → validation « méthode non transposée » rapportée, sans
+   arrêt, et la résolution se lance quand même, sa classe recopiée (VG-03, C-3) ; échéances en milieu d'étape
+   (épisode, étape) et signal TERM : épisodes consignés un à un, résultat ou `arret.json` qui les cite (VG-01).
 6. Gardes d'exécution (VG-04 à VG-06) : budget par épisode, noyau d'attention, paires en validation, agent comparé au
    manifeste de P3, réserves d'environnement écrites (CUDA, cuDNN, carte), contrôle croisé lu à trois valeurs.
 
@@ -193,7 +198,7 @@ def _quasi_cibles(ep, sain):
     """Positions (t, s, vrai, faux) à second candidat ordinaire, hors dernier jeton noté, par action."""
     par_t = {}
     for x in sain["pas"]:
-        t, s, vrai, _, n, _, faux, _, _ = x
+        t, s, vrai, _, n, _, faux = x[:7]
         if n > 1 and faux not in FINS_P3 and faux < 128000 and s < ep["jetons_notes"][t] - 1:
             par_t.setdefault(t, []).append((t, s, vrai, faux))
     return par_t
@@ -263,9 +268,25 @@ def test_vocabulaire_et_decodage_de_llama(tok):
 # ------------------------------------------------------------------------------------------------------- 2. cas sain
 
 
+def _p_du_jeton_connu(modele, fmt, ep):
+    """Passe indépendante (une seule, sur la transcription vraie entière, sans cache) : p du jeton connu à chaque pas
+    (softmax en float32) et nombre de pas où le jeton connu n'est pas l'argmax de p."""
+    rec = rg.transcription(fmt, EnvironnementJouet(), T, ep["textes"], ep["ids"], ep["jetons"], ep["jetons_notes"])
+    with torch.no_grad():
+        L = modele(input_ids=torch.tensor([rec["ids"]])).logits[0].to(torch.float32)
+    pk, inf = [], 0
+    for t, a in enumerate(rec["actions"]):
+        for s, k in enumerate(ep["ids"][t]):
+            p = torch.softmax(L[a["debut"] - 1 + s], dim=-1)
+            pk.append(float(p[k]))
+            inf += int(torch.argmax(p)) != k
+    return pk, inf
+
+
 def test_cas_sain_identifiants_et_empreinte_retrouves(tok, fmt, jeu):
     modele, eps = jeu
-    non_canoniques = arretees = invisibles = 0
+    non_canoniques = arretees = invisibles = informatifs = 0
+    attendus = []
     for ep in eps:
         for t in range(T):
             notes = ep["ids"][t][:ep["jetons_notes"][t]]
@@ -277,7 +298,17 @@ def test_cas_sain_identifiants_et_empreinte_retrouves(tok, fmt, jeu):
         assert r["ids"] == ep["ids"] and r["empreinte"] == ep["empreinte"]
         assert rg.accord_non_contraint(r["pas"]) == 1.0 == rg.accord_non_contraint(r["pas"], ep["ids"])
         assert all(x[5] > 0 for x in r["pas"])          # le choix retenu est le premier candidat
+        # I-D : accord attendu sous graine indépendante = moyenne des p_k du jeton connu, recalculée ici par une passe
+        # indépendante sur la transcription vraie entière ; pas informatifs = jeton connu ≠ argmax de p
+        m = rg.mesures_accord(r["pas"])
+        pk, inf = _p_du_jeton_connu(modele, fmt, ep)
+        assert m["pas"] == len(pk) and m["accord"] == 1.0
+        assert abs(m["attendu_graine_independante"] - float(np.mean(pk))) < 1e-5
+        assert m["pas_informatifs"] == inf and (inf == 0 or m["accord_informatif"] == 1.0)
+        informatifs += inf
+        attendus.append(m["attendu_graine_independante"])
     assert non_canoniques >= 3 and arretees >= 1 and invisibles >= 1
+    assert informatifs >= 3 and max(attendus) < 0.95       # la mesure discrimine : une graine indépendante ferait moins
 
 
 # ------------------------------------------------------------------------------------------------------ 3. artefacts
@@ -294,6 +325,12 @@ def test_artefacts_graine_fausse_texte_altere_contexte_decale(tok, fmt, jeu):
     r = _resoudre(modele, tok, fmt, ep, graines_=fausses)
     assert r["statut"] == "non_resolu" and r["ids"] is None and r["cause"]
     assert rg.accord_non_contraint(r["pas"]) < 0.9
+    # I-D, artefact : sur l'action à graine fausse, l'accord tombe au niveau attendu sous graine indépendante (moyenne
+    # des p_k), loin de 1 ; sur ses pas informatifs, sous 0,9 ; mesures écrites pour un épisode non résolu (I-4)
+    m1 = rg.mesures_accord([x for x in r["pas"] if x[0] == 1])
+    assert m1["pas"] >= 5 and m1["accord"] < 0.9 and m1["attendu_graine_independante"] < 0.9
+    assert abs(m1["accord"] - m1["attendu_graine_independante"]) < 0.35, m1
+    assert m1["pas_informatifs"] == 0 or m1["accord_informatif"] < 0.9
     # texte altéré d'un octet (une lettre remplacée par une autre, même longueur)
     t = max(range(T), key=lambda k: len(ep["textes"][k]))
     x = ep["textes"][t]
@@ -317,8 +354,8 @@ def test_repli_bascule_une_quasi_egalite(tok, fmt, jeu):
     modele, eps = jeu
     ep = max(eps, key=lambda x: sum(x["jetons"]))
     sain = _resoudre(modele, tok, fmt, ep)
-    t0, s0, vrai, _, _, _, faux, _, _ = next(x for x in sain["pas"] if x[4] > 1 and x[6] not in FINS_P3
-                                            and x[1] < ep["jetons_notes"][x[0]] - 1)
+    t0, s0, vrai, _, _, _, faux = next(x for x in sain["pas"] if x[4] > 1 and x[6] not in FINS_P3
+                                       and x[1] < ep["jetons_notes"][x[0]] - 1)[:7]
     rec = rg.transcription(fmt, EnvironnementJouet(), T, ep["textes"], ep["ids"], ep["jetons"], ep["jetons_notes"])
     prefixe = rec["ids"][:rec["actions"][t0]["debut"]] + ep["ids"][t0][:s0]
     Q = rg.tirages_exponentiels(ep["graines"][t0], ep["jetons"][t0], V)[s0].double()
@@ -416,36 +453,71 @@ def test_caractere_de_remplacement_resolu_ou_declare(tok, fmt, jeu_octets):
         r = _resoudre(modele, tok, fmt, ep)
         assert r["statut"] == "resolu" and r["ids"] == ep["ids"], r["cause"]
         assert r["fffd"] == sum(x.count("�") for x in ep["textes"])
-    ep = avec[0]
+    ep = max(avec, key=lambda x: sum(y.count("�") for y in x["textes"]))
     r = _resoudre(modele, tok, fmt, ep)
-    assert r["balayages"] >= 1
+    b, f = r["balayages"], r["fffd"]
+    assert b >= 1 and f >= 1 and r["plafond_balayages"] == 64 * f
+    # plafond par U+FFFD (B-2) : ceil(b / f) par U+FFFD suffit ; un de moins, « budget de balayages dépassé »
+    par = -(-b // f)
+    r = _resoudre(modele, tok, fmt, ep, balayages_max=par)
+    assert r["statut"] == "resolu" and r["plafond_balayages"] == par * f >= b
+    r = _resoudre(modele, tok, fmt, ep, balayages_max=par - 1)
+    assert r["statut"] == "non_resolu" and r["cause"].startswith(rg.CAUSE_BUDGET_BALAYAGES)
+    assert "cas non simple" not in r["cause"] and r["ids"] is None
     r = _resoudre(modele, tok, fmt, ep, balayages_max=0)
-    assert r["statut"] == "non_resolu" and "caractère de remplacement" in r["cause"] and r["fffd"] >= 1
+    assert r["statut"] == "non_resolu" and r["cause"].startswith(rg.CAUSE_BUDGET_BALAYAGES) and r["fffd"] >= 1
 
 
-def test_seuls_les_balayages_complets_sont_comptes(tok, fmt, jeu_octets):
-    """VG-07 : un balayage n'est compté que s'il examine tout le vocabulaire (octets connus épuisés devant un U+FFFD) ;
-    les pas proches d'un U+FFFD dont le préfixe connu est non vide (recherche bornée) ne comptent pas. Au plus deux
-    balayages complets par U+FFFD sur l'essai direct (ici, le jeu à octets orphelins), et chacun est bien un examen de
-    tout le vocabulaire (autant de candidats qu'un appel à `commencant_par(b"")` filtré)."""
+def _pas_comptes_sur_le_chemin_canonique(tok, voc, texte):
+    """(pas comptés par l'unité de `balayages_max`, pas comptés par l'ancienne unité « U+FFFD à moins de 128 caractères »)
+    le long du découpage canonique du texte (un chemin valide : U+FFFD rendu par ses trois octets)."""
+    cible, etat = rg.Cible(texte, voc), rg.Cible.initial()
+    comptes = anciens = 0
+    for i in tok(texte, add_special_tokens=False)["input_ids"]:
+        cands, compte, _ = cible.recherche(etat)
+        assert i in cands
+        comptes += compte
+        anciens += bool(cible._attendu(etat)[1])
+        etat = cible.avancer(etat, i)
+    assert cible.fini(etat)
+    return comptes, anciens
+
+
+def test_unite_des_balayages_pas_sur_octets_inconnus(tok, fmt, jeu_octets):
+    """B-2 (lectures neuves de conv-audit) : un pas compte quand la recherche de candidats couvre des octets inconnus
+    (`commencant_par(E)` non vide devant un U+FFFD), non tout pas à moins de 128 caractères d'un U+FFFD. Essai à trois
+    U+FFFD dans un texte ASCII : l'ancienne unité en comptait des dizaines (au-delà de 64, « non inversible » sans rien
+    avoir balayé) ; la nouvelle, quelques-uns par U+FFFD. Le compte du résultat égale les pas marqués ; les balayages
+    complets en sont une partie."""
     modele, eps = jeu_octets
     voc = rg.Vocabulaire(tok, fmt.fins, V)
-    total_fffd = total_complets = 0
+    phrase = "the quick brown fox jumps over the lazy dog and runs away from the farmer while singing songs "
+    texte = "".join(phrase + f"part {k} �" for k in range(3)) + " end."
+    comptes, anciens = _pas_comptes_sur_le_chemin_canonique(tok, voc, texte)
+    assert texte.count("�") == 3 and anciens > 64 and 1 <= comptes <= 3 * 8, (comptes, anciens)
+    # un texte sans U+FFFD : rien n'est compté
+    assert _pas_comptes_sur_le_chemin_canonique(tok, voc, "plain ascii text, nothing to search")[0] == 0
+    total_fffd = total = 0
     for ep in eps:
         r = _resoudre(modele, tok, fmt, ep)
         assert r["statut"] == "resolu"
-        n = sum(x.count("�") for x in ep["textes"])
-        total_fffd += n
-        total_complets += r["balayages"]
-        assert r["balayages"] == sum(1 for x in r["pas"] if x[8]) <= 2 * n
-    assert total_fffd >= 1 and total_complets >= 1
-    # près d'un U+FFFD, avec un préfixe connu non vide : candidats par recherche bornée, non comptée
+        total_fffd += r["fffd"]
+        total += r["balayages"]
+        assert r["balayages"] == sum(1 for x in r["pas"] if x[8]) <= r["plafond_balayages"]
+        assert r["balayages_complets"] <= r["balayages"]
+    assert total_fffd >= 1 and total >= 1
+    # près d'un U+FFFD : préfixe connu prolongeable (« ab » → « abc »…) compté, non complet ; octets connus épuisés :
+    # compté et complet ; préfixe connu long, que nul jeton ne prolonge : non compté
     a, b = voc.par_octets[b"a"], voc.par_octets[b"b"]
     cible = rg.Cible("ab�", voc)
-    cands, complet = cible.candidats(cible.initial())
-    assert not complet and a in cands
-    cands, complet = cible.candidats(cible.avancer(cible.avancer(cible.initial(), a), b))
-    assert complet and len(cands) > 100
+    cands, compte, complet = cible.recherche(cible.initial())
+    assert compte and not complet and a in cands
+    cands, compte, complet = cible.recherche(cible.avancer(cible.avancer(cible.initial(), a), b))
+    assert compte and complet and len(cands) > 100
+    cible = rg.Cible("x" * 60 + "�", voc)
+    cands, compte, complet = cible.recherche(cible.initial())
+    assert not compte and not complet and cands
+    assert cible.candidats(cible.initial()) == (cands, False)
 
 
 def test_garde_du_seuil_de_validation():
@@ -459,6 +531,117 @@ def test_garde_du_seuil_de_validation():
     rg.exiger_seuil_atteignable(0, 0)
     with pytest.raises(GardeArret, match="seuil de validation 148 > 147"):
         rg.exiger_seuil_atteignable(148, 147)
+    # compte exact des épisodes de validation (m-3) : 147 sur 147 passe ; 148 ou 146 épisodes → arrêt avant la boucle
+    rg.exiger_compte_validation(147, 147)
+    for n in (146, 148):
+        with pytest.raises(GardeArret, match="attendus"):
+            rg.exiger_compte_validation(n, 147)
+
+
+# ------------------------------------------------------------------------- 3 bis. lectures neuves de conv-audit
+
+
+class _MoteurFixe:
+    """Moteur artefact : mêmes logits (V,) à chaque ligne de chaque passe."""
+
+    def __init__(self, logits):
+        self.L, self.passes = logits, 0
+
+    def passe(self, ids, k, Q, temperature):
+        self.passes += 1
+        return self.L.expand(int(k), -1).clone(), [0] * int(k), [0.0] * int(k)
+
+
+def test_choix_contraint_depuis_p_float32_comme_p3(tok):
+    """C-7 : le choix contraint part de p = softmax(logits / T) en float32 sur processeur (l'opération de P3), puis
+    log p − log q en double. (1) Sur tout le vocabulaire, il redonne le tirage de P3 (`torch.multinomial`). (2) Cas qui
+    discrimine : deux candidats de logits distincts (0 et 1e-30) que le softmax en float32 arrondit à la même
+    probabilité, tirages égaux : P3 (argmax de p / q en float32) prend le premier ; un calcul depuis les logits en double
+    prendrait le second. `resoudre_action` suit P3. (3) Garde : une ligne (V,) float32 sur processeur exigée."""
+    for graine in range(4):
+        L = torch.randn(V, generator=torch.Generator().manual_seed(50 + graine)) * 4
+        Q = rg.tirages_exponentiels(graine, 1, V)[0]
+        tire = int(torch.multinomial(torch.softmax(L, dim=-1), 1, generator=torch.Generator().manual_seed(graine)))
+        assert int(torch.argmax(rg.scores_contraints(rg.probabilites(L, 1.0), Q, list(range(V))))) == tire
+    voc = rg.Vocabulaire(tok, FINS_P3, V)
+    a, ab, b = voc.par_octets[b"a"], voc.par_octets[b"ab"], voc.par_octets[b"b"]
+    assert a < ab
+    L = torch.full((V,), -50.0)
+    L[a], L[ab] = 0.0, 1e-30
+    p = rg.probabilites(L, 1.0)
+    assert float(p[a]) == float(p[ab]) and int(torch.argmax(p / torch.ones(V))) == a
+    assert int(torch.argmax(L[[a, ab]].double())) == 1          # les logits en double départageraient vers « ab »
+    pas = []
+    ids = rg.resoudre_action(_MoteurFixe(L), voc, tok, [128000], "ab", 2, 0, torch.ones(2, V), 128009,
+                             rg.Reglages(max_nouveaux=2), pas=pas)
+    assert ids == [a, b]
+    assert pas[0][2] == a and pas[0][9] == float(p[a]) and pas[0][10] == a and pas[0][5] == 0.0
+    for mauvais in (L.double(), L[None], L.to(torch.bfloat16)):
+        with pytest.raises(GardeArret, match="float32 sur processeur"):
+            rg.probabilites(mauvais, 1.0)
+
+
+def _accords(moyen, minimum, n_inf, inf):
+    return {"accord_moyen_par_episode": moyen, "accord_min_par_episode": minimum, "pas_informatifs": n_inf,
+            "accord_informatif": inf, "attendu_graine_independante_moyen_par_episode": 0.7, "attendu_informatif": 0.3}
+
+
+REGLE = {"accord_moyen_min": 0.95, "accord_episode_min": 0.90, "accord_informatif_min": 0.90, "pas_informatifs_min": 1000}
+
+
+def test_lire_validation_trois_classes_et_declarations():
+    """C-3 (R5 : cas sain, artefacts) : règle gelée de lecture de la validation, paramétrée par `regle_validation`.
+    Toutes les empreintes et tous les accords aux seuils → « graines validées » ; une condition d'accord manquée (ou
+    absente) → « méthode transposée, graines non validées » ; une empreinte manquée → « méthode non transposée ». La
+    déclaration « non inversible » (budget de recherche dépassé) n'existe que sous « graines validées »."""
+    v, t, n = rg.CLASSES_VALIDATION
+    sain = rg.lire_validation(147, 147, _accords(0.99, 0.95, 5000, 0.97), REGLE)
+    assert sain["classe"] == v and all(sain["conditions"].values()) and sain["regle"] == REGLE
+    for accords in (_accords(0.94, 0.95, 5000, 0.97), _accords(0.99, 0.89, 5000, 0.97), _accords(0.99, 0.95, 999, 0.97),
+                    _accords(0.99, 0.95, 5000, 0.89), _accords(None, 0.95, 5000, 0.97), _accords(0.99, 0.95, 0, None)):
+        assert rg.lire_validation(147, 147, accords, REGLE)["classe"] == t
+    assert rg.lire_validation(146, 147, _accords(0.99, 0.95, 5000, 0.97), REGLE)["classe"] == n
+    assert rg.lire_validation(0, 0, _accords(None, None, 0, None), REGLE)["classe"] == n
+    # seuils lus dans la règle (paramètre de la configuration), non dans le code
+    assert rg.lire_validation(147, 147, _accords(0.94, 0.95, 5000, 0.97), {**REGLE, "accord_moyen_min": 0.9})["classe"] == v
+    for casse in ({k: x for k, x in REGLE.items() if k != "pas_informatifs_min"}, {**REGLE, "accord_moyen_min": 1.5},
+                  {**REGLE, "pas_informatifs_min": 10.5}, {**REGLE, "autre": 1}, None):
+        with pytest.raises(GardeArret, match="regle_validation"):
+            rg.lire_validation(147, 147, _accords(0.99, 0.95, 5000, 0.97), casse)
+    budget = f"{rg.CAUSE_BUDGET_BALAYAGES} (70 pas > plafond 64)"
+    assert rg.declarer("resolu", None, n) == rg.declarer("resolu", None, v) == rg.DECLARATIONS["resolu"]
+    assert rg.declarer("non_resolu", budget, v) == rg.DECLARATIONS["budget"]
+    assert "non inversible" in rg.DECLARATIONS["budget"] and "budget de recherche dépassé" in rg.DECLARATIONS["budget"]
+    for classe in (t, n):
+        assert rg.declarer("non_resolu", budget, classe) == rg.DECLARATIONS["graines_non_validees"]
+    assert rg.declarer("non_resolu", "durée : budget épuisé", v) == rg.DECLARATIONS["noeud"]
+    assert rg.declarer("non_resolu", "contradiction à l'essai direct", v) == rg.DECLARATIONS["noeud"]
+    assert not any("non inversible" in x for k, x in rg.DECLARATIONS.items() if k != "budget")
+    with pytest.raises(GardeArret, match="classe"):
+        rg.declarer("non_resolu", budget, "atteint")
+    # agrégats : accord, attendu (moyenne des p_k), pas informatifs, sur des pas fabriqués
+    pas = [(0, 0, 5, 5, 3, 1.0, 6, 1.0, False, 0.9, 5), (0, 1, 7, 7, 3, 1.0, 6, 1.0, False, 0.3, 8),
+           (0, 2, 7, 8, 3, 1.0, 6, 1.0, False, 0.2, 8)]
+    m = rg.mesures_accord(pas)
+    assert m["accord"] == 2 / 3 and abs(m["attendu_graine_independante"] - (0.9 + 0.3 + 0.2) / 3) < 1e-12
+    assert m["pas_informatifs"] == 2 and m["accord_informatif"] == 0.5 and abs(m["attendu_informatif"] - 0.25) < 1e-12
+    g = rg.agreger_accords({"e1": m, "e2": rg.mesures_accord([]), "e3": rg.mesures_accord(pas[:1])})
+    assert g["episodes_mesures"] == 2 and g["episodes_sans_pas"] == ["e2"] and g["accord_min_par_episode"] == 2 / 3
+    assert g["pas_informatifs"] == 2 and g["accord_informatif"] == 0.5 and g["pas"] == 4
+
+
+def test_citation_de_la_configuration():
+    """C-8 : le texte scellé doit citer l'empreinte canonique de la configuration (libellé `CONFIG_CITEE`) ; sinon arrêt.
+    (Le second libellé, « Chemin de la configuration … », est lu par le script d'instance, hors de ce module.)"""
+    conf = {"a": 1, "b": [2, 3]}
+    ligne = rg.CONFIG_CITEE.format(rg.empreinte_config(conf))
+    rg.exiger_config_citee(f"# Texte\n\n- {ligne}\n", conf)
+    for texte in ("# Texte sans la ligne\n", f"- {rg.CONFIG_CITEE.format('0' * 64)}\n",
+                  f"- {ligne}".replace("canonique", "brute")):
+        with pytest.raises(GardeArret, match="ne cite pas la configuration"):
+            rg.exiger_config_citee(texte, conf)
+    with pytest.raises(GardeArret, match="ne cite pas la configuration"):
+        rg.exiger_config_citee(f"- {ligne}\n", {**conf, "a": 2})
 
 
 # ------------------------------------------------------------------------------------------ 4. table, forme nouvelle
@@ -575,7 +758,9 @@ def _config_graine(depot, f, c, table, episodes_resolution, **k):
             "max_nouveaux": c["max_nouveaux"], "noyau_attention": "math", "fils": 1, "hors_ligne": True,
             "fils_tirages": 2, "episodes_d_avance": 1, "seuil_ecart": 0.5, "quasi_egalites_max": 4, "bascules_max": 2,
             "combinaisons_max": 10, "combinaisons_max_validation": 10, "balayages_max": 8, "seuil_validation": 0,
-            "duree_max_s": 900, "duree_max_episode_s": 300}
+            "duree_max_s": 900, "duree_max_episode_s": 300,
+            "regle_validation": {"accord_moyen_min": 0.95, "accord_episode_min": 0.9, "accord_informatif_min": 0.9,
+                                 "pas_informatifs_min": 1}}
     base.update(k)
     return base
 
@@ -617,6 +802,22 @@ def test_bout_en_bout_jouet_validation_resolution_table(source, tmp_path, monkey
     v = rg.executer(conf, depot, "20261102-100100-graine-jouet", None, "validation", autoriser_depot_sale=True,
                     entropie_essai=3)
     assert v["lecture"] == "atteint" and v["empreintes_retrouvees"] == v["episodes_etape"] == len(connus)
+    # règle gelée de lecture (C-3) : classe écrite au résultat de la validation ; cas sain : « graines validées »
+    lv = v["lecture_validation"]
+    assert lv["classe"] == rg.CLASSES_VALIDATION[0] and all(lv["conditions"].values()), lv
+    assert lv["regle"] == conf["regle_validation"] and v["seuils"]["regle_validation"] == conf["regle_validation"]
+    assert v["accord"]["pas_informatifs"] >= 1 and v["accord"]["accord_informatif"] == 1.0
+    assert v["accord"]["attendu_graine_independante_moyen_par_episode"] < v["accord"]["accord_moyen_par_episode"]
+    # R3 (I-A) : une seconde exécution de la même étape, même configuration, même code → arrêt avant tout calcul
+    with pytest.raises(GardeArret, match="déjà exécutée"):
+        rg.executer(conf, depot, "20261102-100110-graine-jouet", None, "validation", autoriser_depot_sale=True,
+                    entropie_essai=3)
+    assert not (depot / "runs" / "20261102-100110-graine-jouet").exists()
+    assert rg.executions_anterieures(depot, conf, "validation") == ["20261102-100100-graine-jouet"]
+    assert rg.executions_anterieures(depot, {**conf, "seuil_ecart": 0.25}, "validation") == []
+    assert rg.executions_anterieures(depot, conf, "resolution") == []
+    with pytest.raises(GardeArret, match="interdit en mode réel"):
+        rg.exiger_execution_unique(depot, {**conf, "mode": "reel"}, "validation", reexecution_essai=True)
     assert v["identifiants_egaux_episodes"] == len(connus) and v["actions_egales"] == v["actions_comparees"]
     assert v["accord_non_contraint"]["par_episode_min"] == 1.0 and not v["erreurs_directes"]
     pas_v = depot / "diag" / "20261102-100100-graine-jouet" / v["pas_fichier"]
@@ -628,12 +829,20 @@ def test_bout_en_bout_jouet_validation_resolution_table(source, tmp_path, monkey
     r = rg.executer(conf, depot, "20261102-100200-graine-jouet", None, "resolution", str(chemin_v),
                     autoriser_depot_sale=True, entropie_essai=3)
     assert r["lecture"] == "complète" and r["controle_croise_lecture"] == "conforme"
+    # classe de la validation recopiée ; déclaration par épisode ; accord pour tout épisode (I-4)
+    assert r["lecture_validation"]["classe"] == lv["classe"] and r["lecture_validation"]["run_validation"] == \
+        "20261102-100100-graine-jouet"
+    assert set(r["declarations"].values()) == {rg.DECLARATIONS["resolu"]}
+    assert all(x["accord"]["pas"] == x["pas"] > 0 and x["accord_non_contraint"] is not None for x in r["episodes"])
     assert [x["episode"] for x in r["episodes"]] == resolution
     assert all(x["empreinte_retrouvee"] and x["ids"] for x in r["episodes"])
     # table version 3 : les non résolus de la table v2 reçoivent la forme « identifiants », revérifiée par l'empreinte
     chemin_r = depot / "diag" / "20261102-100200-graine-jouet" / "resolution-graine-resolution.json"
     t3 = rg.construire_et_verifier_table(conf, depot, None, str(chemin_r), fmt=fmt_j)
     assert t3["version"] == 3 and t3["comptes"]["identifiants"] == len(autres) and t3["comptes"]["non_resolu"] == 0
+    assert t3["lecture_validation"]["classe"] == lv["classe"] and set(t3["declarations"]) == set(resolution)
+    assert all(x["resolution_graine"]["classe_validation"] == lv["classe"] for x in t3["episodes"]
+               if x["methode"] == rg.METHODE_IDENTIFIANTS)
     anciennes = sum(1 for x in table["episodes"] if x["methode"] != "non_resolu")
     assert t3["corrections_verifiees"] == len(autres) + anciennes
     assert all(x["methode"] == rg.METHODE_IDENTIFIANTS for x in t3["episodes"] if x["episode"] in autres)
@@ -651,8 +860,11 @@ def test_bout_en_bout_jouet_validation_resolution_table(source, tmp_path, monkey
     vraies = rg.graines_p3
     monkeypatch.setattr(rg, "graines_p3", lambda m, tache, T_: [g + 1 for g in vraies(m, tache, T_)])
     sous = rg.executer(conf, depot, "20261102-100300-graine-jouet", None, "validation", autoriser_depot_sale=True,
-                       entropie_essai=3)
+                       entropie_essai=3, reexecution_essai=True)
     assert sous["lecture"] == "sous le seuil" and sous["empreintes_retrouvees"] < len(connus)
+    assert sous["lecture_validation"]["classe"] == rg.CLASSES_VALIDATION[2]
+    assert sous["executions_anterieures_essai"] == ["20261102-100100-graine-jouet"]
+    assert sous["accord"]["accord_informatif"] < 0.9 and sous["accord"]["episodes_mesures"] == len(connus)
     assert not (depot / "diag" / "20261102-100300-graine-jouet" / "arret.json").exists()
     assert sous["accord_non_contraint"]["moyenne_par_episode"] < 0.9 and sous["non_resolus"]
     # code modifié après la validation (arbre gelé) : la validation ne vaut plus
@@ -668,17 +880,56 @@ def test_bout_en_bout_jouet_validation_resolution_table(source, tmp_path, monkey
     (depot / "README").write_text("x\n")          # arbre gelé ramené à celui de la validation
     committer(depot)
     rg.exiger_meme_code(depot, m_s["commit"])
+    with pytest.raises(GardeArret, match="déjà exécutée"):
+        rg.executer(conf, depot, "20261102-100350-graine-jouet", None, "resolution",
+                    str(depot / "diag" / "20261102-100300-graine-jouet" / "resolution-graine-validation.json"),
+                    autoriser_depot_sale=True, entropie_essai=3)
     r2 = rg.executer(conf, depot, "20261102-100400-graine-jouet", None, "resolution",
                      str(depot / "diag" / "20261102-100300-graine-jouet" / "resolution-graine-validation.json"),
-                     autoriser_depot_sale=True, entropie_essai=3)
+                     autoriser_depot_sale=True, entropie_essai=3, reexecution_essai=True)
     assert r2["lecture"] == "complète" and r2["controle_croise_lecture"] == "conforme"
+    # la résolution faite sous une validation contraire porte sa classe (aucun repli silencieux, C-3 (3))
+    assert r2["lecture_validation"]["classe"] == rg.CLASSES_VALIDATION[2]
     assert all(x["empreinte_retrouvee"] and x["empreinte"] == x["empreinte_cible"] for x in r2["episodes"])
     # artefact : un résultat « résolu » sans l'empreinte recalculée égale n'entre pas dans la table v3
     faux = json.loads(json.dumps(json.loads(chemin_r.read_text(encoding="utf-8"))["resultat"]))
     cible_ep = next(x for x in faux["episodes"] if x["episode"] in autres)
     cible_ep["empreinte"] = "0" * 64
+    base_nv = {e: x["base_nv"] for e, x in cl.items()}
     with pytest.raises(GardeArret, match="sans l'empreinte"):
-        rg.construire_table_v3(table, "0" * 64, faux, "1" * 64, {e: x["base_nv"] for e, x in cl.items()})
+        rg.construire_table_v3(table, "0" * 64, faux, "1" * 64, base_nv)
+    # étape table : contrôle croisé non « conforme » (R-11) ou lecture de la validation absente → arrêt
+    vrai_r = json.loads(chemin_r.read_text(encoding="utf-8"))["resultat"]
+    rg.construire_table_v3(table, "0" * 64, vrai_r, "1" * 64, base_nv)
+    for k, x, motif in (("controle_croise_lecture", "non résolu", "contrôle croisé"),
+                        ("controle_croise_lecture", "sans objet", "contrôle croisé"),
+                        ("lecture_validation", None, "lecture de la validation")):
+        with pytest.raises(GardeArret, match=motif):
+            rg.construire_table_v3(table, "0" * 64, {**vrai_r, k: x}, "1" * 64, base_nv)
+    # garde d'ordre (C-3 (2)) : une validation arrêtée (arret.json dans son dossier) ne vaut pas, quelle que soit sa
+    # classe ; une validation sans classe non plus
+    chemin_s = depot / "diag" / "20261102-100300-graine-jouet" / "resolution-graine-validation.json"
+    rg.exiger_validation(depot, chemin_s, conf)
+    (chemin_s.parent / "arret.json").write_text("{}\n")
+    with pytest.raises(GardeArret, match="arrêtée"):
+        rg.exiger_validation(depot, chemin_s, conf)
+    with pytest.raises(GardeArret, match="classe"):
+        rg.exiger_validation(depot, chemin_r, conf)
+    # texte attendu de l'ouverture (C-8) : présent → passe ; absent de l'ouverture → arrêt ; absent de la configuration
+    # en mode réel → arrêt
+    e0 = rg.EpisodeP3(pieces0, connus[0], int(c["T"])).env()
+    ouverture = fmt_j.tok.decode(fmt_j.ouverture(e0.consigne_privee(0), e0.observation(0, 0, []))).strip()
+    assert len(ouverture) >= 4
+    rg.exiger_ouverture(fmt_j, e0, ouverture[:12], False)
+    rg.exiger_ouverture(fmt_j, e0, None, False)
+    with pytest.raises(GardeArret, match="ouverture sans"):
+        rg.exiger_ouverture(fmt_j, e0, "texte-absent-xyz", False)
+    with pytest.raises(GardeArret, match="absent de la configuration"):
+        rg.exiger_ouverture(fmt_j, e0, None, True)
+    conf_o = {**conf, "agent": {**conf["agent"], "texte_attendu_ouverture": "texte-absent-xyz"}}
+    with pytest.raises(GardeArret, match="ouverture sans"):
+        rg.executer(conf_o, depot, "20261102-100500-graine-jouet", None, "validation", autoriser_depot_sale=True,
+                    entropie_essai=3)
 
 
 def _preparer_jouet(source, tmp_path):
@@ -758,6 +1009,7 @@ def test_bout_en_bout_echeances_en_milieu_d_etape_et_signal(source, tmp_path, mo
     assert all(x.get("non_tente") and x["cause"].startswith("durée : budget de l'étape") for x in eps[3:])
     assert v["non_tentes"] == len(connus) - 3 and v["non_resolus_duree"] == len(connus) - 1
     assert v["lecture"] == "sous le seuil" and v["empreintes_retrouvees"] == 1
+    assert v["lecture_validation"]["classe"] == rg.CLASSES_VALIDATION[2]
     d = depot / "diag" / "20261102-110000-graine-jouet"
     assert len(v["episodes_consignes"]) == len(connus) and not (d / "arret.json").exists()
     for x in v["episodes_consignes"]:
@@ -767,7 +1019,7 @@ def test_bout_en_bout_echeances_en_milieu_d_etape_et_signal(source, tmp_path, mo
     sauts.clear()
     sauts[1] = 301.0
     v2 = rg.executer(conf, depot, "20261102-110100-graine-jouet", None, "validation", autoriser_depot_sale=True,
-                     entropie_essai=3)
+                     entropie_essai=3, reexecution_essai=True)
     assert v2["episodes"][0]["duree_epuisee"] and all(x["statut"] == "resolu" for x in v2["episodes"][1:])
     # (3) signal TERM après le deuxième épisode : arrêt consigné, épisodes déjà consignés cités par arret.json
     decalage[0], appels[0] = 0.0, 0
@@ -783,7 +1035,7 @@ def test_bout_en_bout_echeances_en_milieu_d_etape_et_signal(source, tmp_path, mo
     monkeypatch.setattr(rg, "resoudre_avec_repli", espion_term)
     with pytest.raises(GardeArret, match="signal TERM"):
         rg.executer(conf, depot, "20261102-110200-graine-jouet", None, "validation", autoriser_depot_sale=True,
-                    entropie_essai=3)
+                    entropie_essai=3, reexecution_essai=True)
     d = depot / "diag" / "20261102-110200-graine-jouet"
     arret = json.loads((d / "arret.json").read_text(encoding="utf-8"))["resultat"]
     consignes = arret["partiel"]["episodes_consignes"]
@@ -800,17 +1052,20 @@ def test_gardes_d_execution_agent_environnement_controle_croise():
     manifeste de P3, réserves d'environnement écrites sans arrêt, contrôle croisé lu à trois valeurs. Chaque garde :
     cas sain, artefact."""
     base = {"duree_max_s": 1800, "duree_max_episode_s": 300, "noyau_attention": "defaut", "combinaisons_max": 136,
-            "combinaisons_max_validation": 136}
+            "combinaisons_max_validation": 136, "regle_validation": dict(REGLE)}
     rg.exiger_reglages_execution(base)
     rg.exiger_reglages_execution({**base, "noyau_attention": "math"})
     for k, v, motif in (("noyau_attention", "flash", "noyau_attention"), ("noyau_attention", None, "noyau_attention"),
                         ("combinaisons_max_validation", 16, "paires"), ("duree_max_episode_s", 0, "duree_max_episode_s"),
                         ("duree_max_episode_s", 4000, "duree_max_episode_s"),
-                        ("duree_max_episode_s", True, "duree_max_episode_s")):
+                        ("duree_max_episode_s", True, "duree_max_episode_s"),
+                        ("regle_validation", None, "regle_validation"),
+                        ("regle_validation", {**REGLE, "accord_informatif_min": -0.1}, "regle_validation")):
         with pytest.raises(GardeArret, match=motif):
             rg.exiger_reglages_execution({**base, k: v})
-    with pytest.raises(GardeArret, match="incomplète"):
-        rg.exiger_reglages_execution({k: v for k, v in base.items() if k != "duree_max_episode_s"})
+    for manquante in ("duree_max_episode_s", "regle_validation"):
+        with pytest.raises(GardeArret, match="incomplète"):
+            rg.exiger_reglages_execution({k: v for k, v in base.items() if k != manquante})
     # agent de P3 (manifeste réel de P3 : configuration seule)
     m = json.loads((RACINE / "runs" / "20261019-230011-p3-reel" / "manifeste.json").read_text(encoding="utf-8"))
     agent = {"nom": "8B", "modele": MODELE, "revision": REVISION, "variables_gabarit": {"date_string": "26 Jul 2024"},
