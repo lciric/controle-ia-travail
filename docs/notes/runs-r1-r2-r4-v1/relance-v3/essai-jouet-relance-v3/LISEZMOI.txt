@@ -1,0 +1,32 @@
+Essais jouets de bout en bout de l'amorce et du script d'instance v3 de la relance de R1 (addendum
+prereg/R1-addendum-relance-v3.md, brouillon 1), 2 novembre 2026, 19:40 à 19:47 UTC (heures des journaux) ; hors réseau
+(dépôts nus locaux), processeur, aucune dépense, aucune instance, jetons factices « jouet ».
+
+Code : commit d803a8d694c9e12e84c0a45a5cf76d5d1044ba98 (branche locale prep/r1-relance-v3), dont src/, scripts/ et
+tests/ sont ceux du commit du code f921fcec10539f1565fab410624a926efdfec12e. Dépôt d'essai tiré de ce commit par
+preparer_essai_v3.py (git archive ; P3 jouet joué par le vrai code de P3 ; fiches « de P3 » où deux épisodes identiques
+ont un jeton de fin substitué ; table v3 jouet construite par le code du rejeu à graine, tests/test_rejeu_activations_v3
+._table_v3 : une entrée « fins », une entrée « identifiants » ; configuration jouet ; table v3 falsifiée et sa
+configuration ; commit d'essai 59898e3ec958cbbecd17d0e5494beb0c44c1da03) ; dépôt témoin, même arbre, dont le module du
+rejeu dort 150 s (commit 379bb7b293da9df02b9d56d2a5d4a18cff53df49). Essais lancés par lancer_essais_jouet_v3.sh
+(MODE=jouet, PREREG_ABSENT=1, environnement Python existant). preparer.log : sortie de la préparation.
+
+- amorce-sain.log : PLAFOND_AMORCE_MIN=720 et DELAI_REJEU_MIN=600, écrits à la ligne AMORCE, au début du journal et à
+  la ligne de l'étape (« délai externe 600 min ») ; 23 tests ; verification_table entrees=2 corrections_verifiees=2 ;
+  reconstruction corrections=2 non_resolus=0 ; fidélité conforme ; contrôle négatif discriminant 4/4 ; sorties scellées
+  poussées ; code 0. inspection-sain.txt : verdict « conforme », version de table 3, méthodes de résolution écrites
+  (v1 1, identifiants 1), aucun non résolu, champ tokenisation.addendum = prereg/R1-addendum-relance-v2.md (constante
+  du module, déclarée par l'addendum v3, E16), commande du manifeste rejeu_activations_v3.
+- amorce-table-falsifiee.log : table v3 dont l'entrée « fins » porte le jeton de fin par défaut au lieu de celui « de
+  P3 » : arrêt à la revérification au chargement (« la correction de la table (fins) ne redonne pas l'empreinte de
+  P3 »), arret.json « echec » à l'étape « vérification de la table » (inspection-falsifiee.txt), aucun fichier
+  d'activations, code 1.
+- amorce-plafond-1min.log : PLAFOND_AMORCE_MIN=1 avec une suite d'essais plus longue (tests/test_runs_nuit_v2.py) : TERM
+  à 60 s pendant les tests, arrêt consigné et poussé, code 124 (la variable atteint bien `timeout`).
+- amorce-delai-1min.log : dépôt témoin (module qui dort 150 s), DELAI_REJEU_MIN=1 : étape coupée à 60 s (19:45:46 →
+  19:46:46), « étape r1-rejeu arrêtée (code 124) », code 1 (la variable atteint bien le `timeout` de l'étape).
+- amorce-plafond-invalide.log : PLAFOND_AMORCE_MIN=0 : refus avant le clonage, code 1.
+- amorce-delai-invalide.log : DELAI_REJEU_MIN=abc : refus du script avant tout clonage, code 2 (l'amorce, qui a cloné
+  son propre dépôt, rend le code du script).
+- codes.txt : codes et durées des six essais ; lancer.log : la même chose, plus la liste des fichiers poussés sur chaque
+  branche des dépôts nus (noms seulement).
