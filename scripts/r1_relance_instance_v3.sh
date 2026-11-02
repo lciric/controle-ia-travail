@@ -1,24 +1,28 @@
 #!/usr/bin/env bash
 # Relance de R1 seule (rejeu des 2 400 actions de P3, activations aux couches 7, 15, 23) sur l'instance de calcul, selon
-# l'addendum de relance v2 `prereg/R1-addendum-relance-v2.md` (table de tokenisation version 3 : rejeu à graine). Version
-# 3 du script d'instance, sous un nom nouveau (R12 ; `r1_relance_instance_v2.sh`, cité par l'addendum v1, n'est pas
-# modifié). Changements par rapport à la v2 : module `controle_ia.runs_nuit.rejeu_activations_v3` (table v3, formes
-# anciennes et « identifiants », revérifiée par l'empreinte de P3 au chargement) ; préenregistrement par défaut =
-# l'addendum v2, qui cite la configuration de la relance (elle-même la table v3 scellée) ; la table citée doit être de
-# version 3 et la configuration citée doit la citer (chemin et empreinte, vérifié avant l'installation) ; en mode réel,
-# modèle et tokeniseur préchargés à la révision citée **avant** les tests (`TOKENISEUR_LLAMA31` exporté : les tests du
-# rejeu à graine ne sont pas sautés) ; suite ciblée de la v2 plus `tests/test_resolution_graine_v1.py` et
-# `tests/test_rejeu_activations_v3.py` ; branche de résultats par défaut `calcul/r1-relance-<MODE>-v3`. Tout le reste
-# (R1 seule, `ETAPES=rejeu`, gardes, poussées, traces, arrêt par la session) est la v2.
+# l'addendum de relance v3 `prereg/R1-addendum-relance-v3.md` (table de tokenisation version 3 : rejeu à graine ;
+# l'addendum v2 n'a porté que le rejeu à graine). Version 3 du script d'instance, sous un nom nouveau (R12 ;
+# `r1_relance_instance_v2.sh`, cité par l'addendum v1, n'est pas modifié). Changements par rapport à la v2 : module
+# `controle_ia.runs_nuit.rejeu_activations_v3` (table v3, formes anciennes et « identifiants », revérifiée par
+# l'empreinte de P3 au chargement) ; préenregistrement par défaut = l'addendum v3, qui cite la configuration de la
+# relance (elle-même la table v3 scellée) ; la table citée doit être de version 3 et la configuration citée doit la citer
+# (chemin et empreinte, vérifié avant l'installation) ; en mode réel, modèle et tokeniseur préchargés à la révision
+# citée **avant** les tests (`TOKENISEUR_LLAMA31` exporté : les tests du rejeu à graine ne sont pas sautés) ; suite
+# ciblée de la v2 plus `tests/test_resolution_graine_v1.py` et `tests/test_rejeu_activations_v3.py` ; branche de
+# résultats par défaut `calcul/r1-relance-<MODE>-v3` ; délai externe de l'étape du rejeu réglable (DELAI_REJEU_MIN,
+# défaut 60 min, inchangé ; l'addendum v3 le règle à la création : garde très large contre une boucle folle, non un
+# budget). Tout le reste (R1 seule, `ETAPES=rejeu`, gardes, poussées, traces, arrêt par la session) est la v2.
 #
-#   COMMIT=<commit de scellement de l'addendum v2> bash r1_relance_instance_v3.sh
+#   COMMIT=<commit de scellement de l'addendum v3> bash r1_relance_instance_v3.sh
 #
 # Variables :
 #   COMMIT        (obligatoire) commit à extraire
 #   MODE          reel (défaut) ou jouet (répétition sur processeur)
-#   PREREG        défaut prereg/R1-addendum-relance-v2.md ; il cite, une seule fois chacun, « Tests attendus : `N` »,
+#   PREREG        défaut prereg/R1-addendum-relance-v3.md ; il cite, une seule fois chacun, « Tests attendus : `N` »,
 #                 « Chemin de la configuration du rejeu : `…` », « Chemin de la table de tokenisation : `…` » et
 #                 « Chemin du préenregistrement parent : `…` », lus avant toute installation
+#   DELAI_REJEU_MIN délai externe de l'étape du rejeu en minutes, entier de 1 à 9999 (défaut 60) ; autre valeur : arrêt
+#                 avant tout clonage (aucun repli silencieux, R5)
 #   PREREG_ABSENT 1 seulement en mode jouet ; CONFIG_REJEU donne alors le chemin
 #   ETAPES        « rejeu » (défaut et seule valeur admise)
 #   DEPOT_URL     défaut https://github.com/lciric/controle-ia-travail.git (dépôt de travail privé ; N-016)
@@ -40,13 +44,17 @@ set -euo pipefail
 MODE="${MODE:-reel}"
 DEPOT_URL="${DEPOT_URL:-https://github.com/lciric/controle-ia-travail.git}"
 BRANCHE="${BRANCHE:-calcul/r1-relance-$MODE-v3}"
-PREREG="${PREREG:-prereg/R1-addendum-relance-v2.md}"
+PREREG="${PREREG:-prereg/R1-addendum-relance-v3.md}"
 TRAVAIL="${TRAVAIL:-$HOME/r1rel3}"
 MODULE=controle_ia.runs_nuit.rejeu_activations_v3
 PREREG_ABSENT="${PREREG_ABSENT:-0}"
 ETAPES="${ETAPES:-rejeu}"
+DELAI_REJEU_MIN="${DELAI_REJEU_MIN-60}"     # défaut seulement si absente : une valeur vide est refusée
 if [ "$ETAPES" != rejeu ]; then
     echo "ETAPES=$ETAPES : la relance de R1 n'admet que « rejeu » (R2 ne se relance pas, addendum) : arrêt" >&2; exit 2
+fi
+if ! [[ "$DELAI_REJEU_MIN" =~ ^[1-9][0-9]{0,3}$ ]]; then
+    echo "DELAI_REJEU_MIN=« $DELAI_REJEU_MIN » : entier de minutes de 1 à 9999 attendu : arrêt avant tout clonage" >&2; exit 2
 fi
 case "$MODE" in reel|jouet) ;; *) echo "MODE=$MODE : reel ou jouet" >&2; exit 2 ;; esac
 if [ "$PREREG_ABSENT" = 1 ] && [ "$MODE" != jouet ]; then
@@ -62,7 +70,7 @@ JOURNAL="$TRAVAIL/journal.txt"
 journal() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$JOURNAL"; }
 AIDE_GIT='!f() { echo username=x-access-token; echo "password=${GH_TOKEN:-}"; }; f'
 
-journal "début : relance de R1 (table v3) MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE ETAPES=$ETAPES"
+journal "début : relance de R1 (table v3) MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE ETAPES=$ETAPES DELAI_REJEU_MIN=$DELAI_REJEU_MIN"
 if [ "$MODE" = reel ]; then
     : "${HF_TOKEN:?HF_TOKEN obligatoire en mode reel}"
 fi
@@ -266,7 +274,7 @@ etape() {
     local nom="$1" module="$2" config="$3" delai="$4" run code=0
     run="$(date -u +%Y%m%d-%H%M%S)-$nom-$MODE"
     ETAPE="$nom ($run)"
-    journal "étape $nom : run $run, configuration $config"
+    journal "étape $nom : run $run, configuration $config, délai externe $delai min"
     local args=()
     [ "$PREREG_ABSENT" = 1 ] || args=(--prereg "$PREREG")
     : >"$TRAVAIL/$nom.err"
@@ -297,7 +305,7 @@ etape() {
 ARRETS=""
 for e in $ETAPES; do
     case "$e" in
-        rejeu)  [ -n "$CONFIG_REJEU" ] && etape r1-rejeu "$MODULE" "$CONFIG_REJEU" 60 ;;
+        rejeu)  [ -n "$CONFIG_REJEU" ] && etape r1-rejeu "$MODULE" "$CONFIG_REJEU" "$DELAI_REJEU_MIN" ;;
         *) journal "étape inconnue $e : arrêt"; consigner_arret "étapes"; exit 2 ;;
     esac
 done
