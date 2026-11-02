@@ -91,7 +91,6 @@ def test_mode_decisif_v2_graines_de_notre_texte(depot, monkeypatch):
     with pytest.raises(GardeArret, match="second passage"):
         LP2.analyser(depot, "fiche.json", "20261102-032004-x", "prereg/ap-v2.md")
     monkeypatch.setattr(K2, "MOTIF_Q8", "autre")                                 # constantes ≠ empreinte citée
-    committer(depot)
     _prereg(depot, "prereg/ap-v2-b.md")
     monkeypatch.setattr(K2, "MOTIF_Q8", "encore autre")
     committer(depot)
