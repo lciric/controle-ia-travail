@@ -1,4 +1,4 @@
-# Procédure de scellement et de lancement — relance de R1 (addendum `prereg/R1-addendum-relance-v1.md`, brouillon 3) — v2
+# Procédure de scellement et de lancement — relance de R1 (addendum `prereg/R1-addendum-relance-v1.md`, brouillon 4) — v2
 
 Préparée, non exécutée : rien n'est scellé, rien n'est lancé. Remplace la v1 (`procedure-relance-r1-v1.md`, archivée
 sans modification) : GO-2026-11-02-02 au lieu de GO-2026-11-01-13 (qui échoit le 2 novembre) ; décisions de Lazar N-A et GO prises
@@ -48,7 +48,7 @@ grep -nE '^\| GO-2026-11-02-0[12] \|' registres/go.md || echo "à recopier"     
    compagnons `.sha256`) ; recopier dans l'addendum leurs chemins, empreintes et le commit. **Fait (brouillon 3)** :
    `resolution_c6_v1.py` (`111d639a…`), `resultat-c6-v1.json` (`1e11d58f…`), journaux `journal-c6-v1.out` et `.err`,
    versés à l'octet au commit `c0c9668d` ; **r = 3** (2a, 2a, 1a), 4 non résolus ; compagnons `.sha256` à poser au
-   scellement (étape 2).
+   scellement (étape 2, où ils sont posés et indexés dans le commit de scellement).
 2. Construire la table v2 (fusion revérifiée par la fonction de l'instance) :
 
 ```
@@ -77,19 +77,41 @@ python -m controle_ia.runs_nuit.resolution_tokenisation_v1 --tokeniseur $S/tok-a
    18 sur 18 ; `-k reelle` : 1 passé, 10 désélectionnés.
 5. Remplacer dans l'addendum chaque « À REMPLIR après C-6 » (r ; empreintes de la configuration v4 et de la table v2 ;
    comptes ; essais ; jalons de l'étape 6 ci-dessous) ; si r = 7, écrire que E19 est sans objet. Commit « texte ».
+   **Fait (brouillons 3 et 4).** Contrôle (vérification du brouillon 2, V-02) : avant la contre-lecture 2, la commande
+   `grep -n "À REMPLIR" prereg/R1-addendum-relance-v1.md` ne sort qu'**une** ligne, celle de l'entrée « Contre-lecture
+   2 » ; après l'avoir remplie, elle ne sort **rien** (étape 2). La garde `prereg.problemes` refuse aussi tout marqueur
+   restant, même dans une phrase.
 
 ## 2. Contre-lecture 2, vérifier puis sceller
 
-Contre-lecture 2 par un sous-agent neuf (R2 ; le brouillon 2 change l'étape 0 et le code de la table) : lui donner
-explicitement l'addendum, le parent, le rapport de la contre-lecture 1, le n° 343, le n° 344, le code au commit cité,
-la table v2, la configuration v4 et le résultat C-6 ; remplir l'entrée « Contre-lecture 2 » (brouillon relu et son
-empreinte, rapport et son empreinte, traitement). Puis :
+Contre-lecture 2 **obligatoire** (R2 ; le brouillon 2 change l'étape 0 et le code de la table, et les valeurs de C-6
+sont écrites depuis), sur **la version à sceller**. La vérification du brouillon 2
+(`$S/verif/rapport-verification-addendum-r1-b2.md`,
+`dbbaf0da2713c01fbb3861c2509f0878fabc53d7343d39207df0856d23d4176f`) en tient lieu pour tout ce qui est écrit dans
+`828b3940…` ; elle est versée à l'octet sous `docs/notes/runs-r1-r2-r4-v1/verification-addendum-r1-b2-v1.md` (bloc
+ci-dessous). Un sous-agent neuf contre-lit la différence : lui donner explicitement `git diff be757031 HEAD --
+prereg/R1-addendum-relance-v1.md` (différence entre `828b3940…` et la version à sceller), l'addendum, le parent, la
+vérification du brouillon 2, le rapport de la contre-lecture 1, le n° 343, le n° 344, le code au commit cité, la table
+v2, la configuration v4, le script et le résultat de C-6 ; il vérifie aussi que le script de C-6 suit la règle écrite
+(ordre des niveaux, ordre des candidats, empreintes des pièces et du tokeniseur). Verser son rapport à l'octet sous
+`docs/notes/runs-r1-r2-r4-v1/` (nom versionné) ; remplir l'entrée « Contre-lecture 2 » (brouillon relu et son
+empreinte, rapport et son empreinte, traitement). Tout fichier qu'il demande de changer sous `prereg/` ou `docs/` est
+changé avant ce bloc. Puis :
 
 ```
-cd $S/wt-addendum && export PYTHONPATH=src
+cd $S/wt-addendum && export PYTHONPATH=src && D=docs/notes/runs-r1-r2-r4-v1
+cp $S/verif/rapport-verification-addendum-r1-b2.md $D/verification-addendum-r1-b2-v1.md
+sha256sum $D/verification-addendum-r1-b2-v1.md                         # dbbaf0da2713c01f… (sinon arrêt)
+CL2=<chemin du rapport de la contre-lecture 2, versé sous $D>
+grep -n "À REMPLIR" prereg/R1-addendum-relance-v1.md && { echo "marqueur restant : arrêt"; exit 1; }   # doit être vide
 python -c "from controle_ia.prereg import problemes as p; print(p('prereg/R1-addendum-relance-v1.md'))"   # [] (aucun « À REMPLIR »)
 git diff --quiet 5e678b5b78152a4cf353a8386f54413111adf230 HEAD -- . ':(exclude)prereg' ':(exclude)brouillons' ':(exclude)registres' ':(exclude)docs' ':(exclude)diag' ':(exclude)runs' ':(exclude)donnees' ':(exclude)livrables' ':(exclude)papiers' ':(exclude)traces' ':(exclude)CLAUDE.md' && echo "arbre gelé = commit du code"
 python -m controle_ia.scellement verifier prereg/R1-R2-rejeu-p3-v1.md          # parent : 80c85a00…
+# compagnons des pièces de C-6 et des essais cités par l'addendum (étape 1 bis.1 ; vérification du brouillon 2, V-03)
+sha256sum $D/resolution_c6_v1.py $D/resultat-c6-v1.json $D/journal-c6-v1.out $D/journal-c6-v1.err \
+    $D/comptes-table-relance-v3.json $D/essai-paires-consigne-fausse-v2.json   # 111d639a…, 1e11d58f…, f2bf2744…, f9da5219…, 385bea2d…, badacbc5…
+DOCS="$D/resolution_c6_v1.py $D/resultat-c6-v1.json $D/journal-c6-v1.out $D/journal-c6-v1.err $D/comptes-table-relance-v3.json $D/essai-paires-consigne-fausse-v2.json $D/verification-addendum-r1-b2-v1.md $CL2"
+python -m controle_ia.scellement sceller $DOCS
 python -m controle_ia.scellement sceller prereg/R1-rejeu-config-v4.json prereg/R1-table-tokenisation-v2.json
 python -c "from controle_ia.prereg import sceller_prereg as s; print(s('prereg/R1-addendum-relance-v1.md'))"
 python - <<'EOF'
@@ -102,8 +124,13 @@ assert hashlib.sha256(open('prereg/R1-table-tokenisation-v2.json', 'rb').read())
 assert c['chemin_table_tokenisation'] == 'prereg/R1-table-tokenisation-v2.json'
 print("citations conformes")
 EOF
-git add prereg/*.sha256 && git commit -m "Relance de R1 : addendum, configuration v4 et table v2 scellés (GO-2026-11-02-02)"
+PRE="prereg/R1-addendum-relance-v1.md prereg/R1-rejeu-config-v4.json prereg/R1-table-tokenisation-v2.json"
+git add $PRE prereg/*.sha256 $DOCS $(for f in $DOCS; do printf '%s.sha256 ' "$f"; done)
+git commit -m "Relance de R1 : addendum, configuration v4 et table v2 scellés (GO-2026-11-02-02)"
 COMMIT_SCELLEMENT=$(git rev-parse HEAD)
+# au commit : rien de non commité sous prereg/ ni docs/, et chaque sceau égal au fichier commité
+test -z "$(git status --porcelain -- prereg docs)" || { git status --porcelain -- prereg docs; echo "non commité : arrêt"; exit 1; }
+python -m controle_ia.scellement verifier $PRE prereg/R1-R2-rejeu-p3-v1.md $DOCS
 sha256sum prereg/R1-addendum-relance-v1.md
 ```
 
@@ -145,21 +172,27 @@ jamais `lciric/controle-ia`).
 Message à conv-audit : `COMMIT_SCELLEMENT`, chemin et empreinte de l'addendum scellé, section « Écarts au parent »
 (E1 à E20 ; signaler E12 et E16 : commande du manifeste `…rejeu_activations_v2`, clé `tokenisation` ; CLA-10), r et la
 liste des épisodes restés non résolus (n° 344, point 3 b). **Aucune commande de création avant leur rapport de
-concordance.** Consigner ici, avant l'étape 5 :
+concordance.** Consigner, avant l'étape 5, **dans un fichier à part, versionné** (vérification du brouillon 2, m-7 :
+cette procédure n'est pas modifiée après son commit) : `docs/notes/runs-r1-r2-r4-v1/concordance-relance-consignee-v1.md`,
+créé à ce moment, avec son compagnon `.sha256`, commit « texte », poussé avant la commande de création ; il porte les
+trois champs ci-dessous.
 
 Une première concordance porte sur le brouillon 1 (`ab947556…`) : `brouillons/preuves-mentors-v1/analyse-principale-r1-r2-v1/concordance-addendum-r1-v1.md`
 (`28d8bcff4e8a0ff9745a72ad6332296f580f84431c15f24cd98ba3c027a0555d`, n° 343) ; elle demandait des changements (C-1 à
 C-7) : la concordance qui autorise le lancement porte sur **la version scellée**.
 
-- Rapport de concordance (chemin sur la branche du canal) : `À CONSIGNER`
-- Empreinte du rapport : `À CONSIGNER`
-- Verdict : `À CONSIGNER` (concordance ; ou écarts — tout écart de fond est un nœud porté à Lazar, et on s'arrête)
+Champs du fichier `concordance-relance-consignee-v1.md` :
+- rapport de concordance (chemin sur la branche du canal, et commit de cette branche) ;
+- empreinte du rapport ;
+- verdict (concordance ; ou écarts — tout écart de fond est un nœud porté à Lazar, et on s'arrête) ;
+- `COMMIT_SCELLEMENT` et empreinte de l'addendum scellé sur lesquels porte le rapport.
 
 Vérification :
 
 ```
 git fetch --filter=blob:none origin refs/heads/canal/conv-audit-n04:refs/remotes/origin/canal/conv-audit-n04
-git show origin/canal/conv-audit-n04:<chemin du rapport> | sha256sum      # = empreinte consignée ci-dessus
+git show origin/canal/conv-audit-n04:<chemin du rapport> | sha256sum      # = empreinte consignée dans concordance-relance-consignee-v1.md
+python -m controle_ia.scellement verifier docs/notes/runs-r1-r2-r4-v1/concordance-relance-consignee-v1.md
 ```
 
 ## 4. GO du jour
@@ -201,18 +234,30 @@ détruite, résultats poussés sur `calcul/r1-relance-reel-v1`), par un **commit
 sans ouvrir aucun résultat avant la sortie scellée et le message à conv-audit :
 
 ```
-cd /home/user/controle-ia-travail
+cd /home/user/controle-ia-travail && export PYTHONPATH=src
 git fetch --filter=blob:none origin refs/heads/calcul/r1-relance-reel-v1:refs/remotes/origin/calcul/r1-relance-reel-v1 \
     refs/heads/calcul/r1-r2-reel-v1:refs/remotes/origin/calcul/r1-r2-reel-v1
 RUN=<identifiant du run, ex. 20261102-HHMMSS-r1-rejeu-reel>
 V=$S/verse-r1                                      # remplace l'arbre de travail de l'addendum, retiré avant (disque)
+R=origin/calcul/r1-relance-reel-v1
 git worktree add "$V" origin/calcul/r1-r2-reel-v1 && cd "$V" && git switch -c verse-r1-relance
-git checkout origin/calcul/r1-relance-reel-v1 -- "runs/$RUN" "diag/$RUN"
-git checkout origin/calcul/r1-relance-reel-v1 -- "donnees/$RUN" 2>/dev/null || true      # fichiers suivis par ajout forcé
-git add -f "runs/$RUN" "diag/$RUN" "donnees/$RUN"
+# liste attendue : tout ce que la branche de la relance porte pour ce run (aucun repli silencieux, R5 ; m-6)
+git ls-tree -r --name-only "$R" -- "runs/$RUN" "diag/$RUN" "donnees/$RUN" | sort > "$S/verse-attendu-$RUN.txt"
+test -s "$S/verse-attendu-$RUN.txt" || { echo "rien à verser : arrêt"; exit 1; }
+CHEMINS=("runs/$RUN" "diag/$RUN")
+if git ls-tree -r --name-only "$R" -- "donnees/$RUN" | grep -q .; then
+  CHEMINS+=("donnees/$RUN")                                  # fichiers suivis par ajout forcé
+else
+  git cat-file -e "$R:diag/$RUN/arret.json" || { echo "donnees/$RUN absent sans diag/$RUN/arret.json : arrêt"; exit 1; }
+  echo "donnees/$RUN absent, arrêt de la course constaté (diag/$RUN/arret.json)"
+fi
+git checkout "$R" -- "${CHEMINS[@]}"
+git add -f "${CHEMINS[@]}"
+git diff --cached --name-only | sort > "$S/verse-indexe-$RUN.txt"
+diff "$S/verse-attendu-$RUN.txt" "$S/verse-indexe-$RUN.txt" || { echo "LISTES DIFFÉRENTES : arrêt"; exit 1; }
 # à l'octet : chaque fichier versé égale celui de la branche de la relance
 for f in $(git diff --cached --name-only); do
-  [ "$(git rev-parse :"$f")" = "$(git rev-parse origin/calcul/r1-relance-reel-v1:"$f")" ] || { echo "ÉCART $f"; exit 1; }
+  [ "$(git rev-parse :"$f")" = "$(git rev-parse "$R:$f")" ] || { echo "ÉCART $f"; exit 1; }
 done
 python -m controle_ia.scellement verifier $(git diff --cached --name-only | grep -v '\.sha256$')
 git commit -m "R1 relancée (addendum de relance) : run $RUN versé depuis calcul/r1-relance-reel-v1, sans réécriture"

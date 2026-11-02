@@ -1,10 +1,11 @@
 # Addendum au préenregistrement de R1 — relance du rejeu des 2 400 actions de P3 après l'arrêt sur la garde CLC-03 — v1
 
-- Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 3**
-  (brouillon 2 : reprise du travail interrompu `54c851e4`, après la contre-lecture 1 et la vérification de concordance
-  de conv-audit, n° 343 ; brouillon 3 : valeurs de C-6 remplies — extension exécutée, r = 3 ; table v2 et configuration
-  v4 écrites ; comptes et essais refaits) ; non scellé ; reste à remplir l'entrée « Contre-lecture 2 » (la garde
-  `controle_ia.prereg.problemes` refuse le scellement tant qu'il en reste).
+- Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 4 (texte,
+  non scellé) ; reste la contre-lecture 2** (brouillon 2 : reprise du travail interrompu `54c851e4`, après la
+  contre-lecture 1 et la vérification de concordance de conv-audit, n° 343 ; brouillon 3 : valeurs de C-6 remplies —
+  extension exécutée, r = 3 ; table v2 et configuration v4 écrites ; comptes et essais refaits ; brouillon 4 : V-02 à
+  V-04 et m-1 à m-8 de la vérification du brouillon 2 traités, voir « Contre-lecture »). L'entrée « Contre-lecture 2 »
+  est la seule encore à remplir (la garde `controle_ia.prereg.problemes` refuse le scellement tant qu'elle l'est).
 - **Décisions de Lazar** (2 novembre 2026, 06:32 UTC, dans la session de conv-audit ; registre R-1116 et lignes
   `GO-2026-11-02-01` et `GO-2026-11-02-02` de `registres/go.md` sur la branche `canal/conv-audit-n04`, commit
   `6a4aeffecec960c89cf18622c2f64822ff93660f` ; message n° 344,
@@ -12,10 +13,10 @@
   résolution sur processeur des 7 épisodes non résolus (C-6, l'empreinte de P3 seule juge), puis sa décision sur cet
   addendum couvre aussi la ligne recopiée dans l'analyse principale de conv-audit (l. 146) pour les épisodes que C-6
   laisserait non résolus (E19) ; **GO de la relance de R1 = `GO-2026-11-02-02`** (calcul, extension de
-  GO-2026-11-01-13, plafond 25 USD inchangé, échéance 2026-11-09) ; GO-2026-11-01-13 échoit le 2 novembre et n'est plus cité. Ces
-  lignes sont à recopier sur `main` par session-depot (n° 344, point 2), et Lazar les redit de sa main dans la session
+  GO-2026-11-01-13, plafond 25 USD inchangé, échéance 2026-11-09) ; GO-2026-11-01-13 échoit le 2 novembre et n'est
+  plus le GO du lancement (il reste cité comme GO prolongé et pour les dépenses engagées). Ces lignes sont à recopier sur `main` par session-depot (n° 344, point 2), et Lazar les redit de sa main dans la session
   de session-depot (même point) : deux conditions du lancement (procédure, étape 1).
-- Date (UTC) : 2026-11-02 07:54 (brouillon 3 ; heure relevée par `date -u` ; brouillon 2 : 07:12).
+- Date (UTC) : 2026-11-02 08:14 (brouillon 4 ; heure relevée par `date -u` ; brouillon 3 : 07:54 ; brouillon 2 : 07:12).
 - Préenregistrement parent (scellé, non modifié) : `prereg/R1-R2-rejeu-p3-v1.md`
   (`80c85a0085f444dc10f36e4e226d015802d2e20294c4fff2ae67adb0aca4ddea`), commit de scellement
   `567260c05687747f0c7a715fc9b15b4fc6297d65` (branche `prep/runs-r1-r2-r4-v1`), code cité `29bd8e2e…`.
@@ -80,12 +81,12 @@ fonction de r (chaque épisode compte 10 actions).
 | E6 | Critères de lecture (aucune ligne) | **Ajout** : « au plus 10 non résolus → course normale ; leurs actions jugées par la tolérance ; nombre, liste et fidèles parmi elles rapportés » | Lecture de B |
 | E7 | Critères de lecture (aucune ligne) | **Ajout** : « fidèles < 90 % des notées → réserve d'instrument portée par le résultat du run (`tokenisation.p_r5_au_moins_90_pour_cent`) et par la lecture du fournisseur, **sans changer aucune classe de verdict ni aucune ligne des analyses de conv-audit** » (la principale rapporte P-R5 en « observé », sans réserve) | P-R5 est une prédiction (contre-lecture, CLA-05 ; concordance, C-3) |
 | E8 | Liste d'arrêt (aucune ligne) | **Ajouts** : table absente, non scellée, d'empreinte fausse, calculée sur d'autres pièces, version ou méthode inconnue, forme d'une correction non conforme à sa méthode, doublon ; table qui ne couvre pas exactement les épisodes signalés ; correction qui viole une garde ou ne redonne pas l'empreinte de P3 ; plus de 10 non résolus ; parent absent, non scellé ou d'empreinte fausse ; addendum qui ne cite pas la configuration, l'empreinte du parent, l'entropie ou le commit ; `ETAPES` autre que `rejeu` ; **pas de lancement sans le rapport de concordance de conv-audit sur la version scellée** | Gardes de A, B et du lancement (R5) ; n° 339 et n° 343 |
-| E9 | Liste d'arrêt : « plafond de l'amorce 150 min » | **100 min** (R1 seule) | R2 ne se relance pas |
+| E9 | Liste d'arrêt : « plafond de l'amorce 150 min » ; « dépense au plus le pire cas du devis (`devis-runs-r1-r2-r4-v2.md`) » | **100 min** (R1 seule) ; pour la relance, le pire cas est celui de la section « Coût et GO » (≈ 2,3 USD, plus le disque et la descente du modèle) | R2 ne se relance pas ; devis par run (CLA-11 ; vérification du brouillon 2, m-2) |
 | E10 | Nombre de tests attendus du parent : 291 (suite de 17 fichiers) | **302** (18 fichiers : plus `tests/test_runs_nuit_v2.py`, 11 tests) | Code neuf |
 | E11 | Configuration `prereg/R1-rejeu-config-v2.json` (`aa79ca8e…`) | `prereg/R1-rejeu-config-v4.json` : clés de v2 inchangées, plus `chemin_table_tokenisation`, `table_tokenisation_sha256`, `seuil_non_conformes`, `chemin_prereg_parent`, `prereg_parent_sha256` ; la v3 (`prereg/R1-rejeu-config-v3.json`, non scellée, brouillon 1) cite la table v1 et n'est pas employée | A, B, E3, C-6 et garde du parent |
 | E12 | Module `controle_ia.runs_nuit.rejeu_activations_v1`, script `scripts/r1_r2_instance_v1.sh`, amorce `amorce_instance_r1_r2_v1.sh` | `rejeu_activations_v2` (importe la v1 telle quelle), `r1_relance_instance_v2.sh`, `amorce_instance_r1_relance_v2.sh` ; **la commande inscrite au manifeste devient `python -m controle_ia.runs_nuit.rejeu_activations_v2`** | Noms nouveaux (R12) ; écart de nom signalé à conv-audit (CLA-10 ; voir E16) |
 | E13 | Contrôle négatif : reconstruction canonique sous la consigne fausse | Épisodes corrigés rejoués **avec leurs identifiants corrigés** sous la consigne fausse ; règles et seuils inchangés | Seule la consigne doit différer du contexte exact |
-| E14 | Sens de `contexte_conforme` : « conforme en longueur ainsi que toutes celles qui la précèdent dans son épisode » | Défini tel que la v2 l'écrit (C-5) : **vrai** pour toutes les actions d'un épisode à trajectoire identique après la table ; **faux** pour toutes les actions d'un épisode non résolu (bien qu'entièrement conforme en longueur) ; pour les épisodes non entièrement conformes en longueur, **vrai sur le préfixe d'actions conformes en longueur**, préfixe qu'**aucune empreinte ne vérifie** (**272 actions**, indépendant de r) | B ; réserve déclarée (« Métrique ») |
+| E14 | Sens de `contexte_conforme` : « conforme en longueur ainsi que toutes celles qui la précèdent dans son épisode » | Défini tel que la v2 l'écrit (C-5) : **vrai** pour toutes les actions d'un épisode à trajectoire identique après la table ; **faux** pour toutes les actions d'un épisode non résolu (bien qu'entièrement conforme en longueur) ; pour les épisodes non entièrement conformes en longueur, **vrai sur le préfixe d'actions conformes en longueur**, préfixe qu'**aucune empreinte ne vérifie** (**272 actions**, indépendant de r). **Comptes descriptifs du parent qui changent** (vérification du brouillon 2, m-3 ; `comptes-table-relance-v3.json`, `385bea2d…`, table v2) : « 1 782 en contexte exact (74 %) ; honnête 471, saboteur 437, témoin 378, mention 496 » (contrôle préalable) devient **1 712 + 10 r = 1 742 (72,6 %) ; honnête 461, saboteur 427, témoin 368, mention 486** à r = 3 ; « contexte exact : 378 témoins, 496 mentions » et « le saboteur n'y garde que 437 actions sur 600 (73 %) » (plan, étape 4) deviennent **368 témoins, 486 mentions** et **427 sur 600 (71,2 %)**, toujours sous la règle des 80 % ; le compte « 2 236 conformes en longueur (93 %) » ne change pas | B ; réserve déclarée (« Métrique ») ; exhaustivité (CLA-01) |
 | E15 | Règle de repli : couverture « au plus 74 % des actions ; saboteur ≈ 73 % » | Fidèles = trajectoires identiques : **1 440 + 10 r actions** (60 % à r = 0) ; à r = 0 : honnête 390, mention 420, saboteur 340, témoin 290 sur 600 ; **à r = 3 : 1 470 (61,3 %) ; honnête 410, mention 420, saboteur 340, témoin 300** ; saboteur et honnête sous les 80 % quel que soit r : P-R1 et P-R2 « non concluant (rejeu partiel) » sous repli, comme le prévoit déjà le parent | Le parent comptait le contexte exact ; le repli ne garde que les trajectoires identiques |
 | E16 | Résultat `diag/<run>/rejeu-activations.json` ; `arret.json` | Clés du parent inchangées ; **clé ajoutée** `tokenisation` (tolérée par les deux analyses de conv-audit, n° 343) ; verdict d'arrêt « non conforme » aussi pour plus de 10 non résolus ; la commande du manifeste change (E12) : le code « R2 seul » de conv-audit (`constantes_v3.COMMANDE_REJEU`, `entrees_v3.verifier_arret_r1`) refuserait la preuve d'un arrêt de la relance | Descriptif ; écart de nom signalé (n° 339) |
 | E17 | GO et calendrier | Lancement sous **GO-2026-11-02-02** (extension de GO-2026-11-01-13, qui échoit le 2 novembre ; plafond 25 USD inchangé ; échéance 2026-11-09) ; après le 9 novembre, **GO nouveau** sous un identifiant nouveau | Échéance du GO (CLA-02) ; décision de Lazar (R-1116) |
@@ -244,14 +245,18 @@ résolus. Ordre fixe, premier succès retenu (rien d'autre n'est essayé ensuite
   `appliquer_entree`** (`verifier_table`), toutes égales à l'empreinte de P3. **Absence déclarée (CLA-12)** :
   l'instance ne compare pas les empreintes du tokeniseur écrites dans la table au tokeniseur qu'elle charge ; un
   tokeniseur différent ferait échouer la garde de couverture ou l'égalité d'empreinte (« echec », avant la passe
-  avant), au prix de la mise en place de l'instance.
+  avant), au prix de la mise en place de l'instance. **Absence déclarée à côté (vérification du brouillon 2, m-5)** : la
+  fusion (`_main` avec `--table-recherche`) ne compare pas non plus les empreintes du tokeniseur fourni à celles de la
+  table v1 ; elle les recopie, comme la révision de l'agent ; `verifier_table` (chaque correction doit redonner
+  l'empreinte de P3) et le `sha256sum` manuel des trois fichiers du tokeniseur (procédure, étape 1 bis.2) compensent.
 
 **Étape 1 — conditions du lancement (procédure, `docs/notes/runs-r1-r2-r4-v1/procedure-relance-r1-v2.md`).** Dans
 l'ordre : décisions de Lazar (N-A = (c) puis (a), couvrant la copie de la ligne remplacée dans l'analyse principale de
 conv-audit, E19 ; GO-2026-11-02-02), recopiées sur `main` et redites par Lazar dans la session de session-depot ;
-extension C-6 exécutée, table v2 et configuration v4 écrites, valeurs de C-6 remplacées (fait, brouillon 3) ; contre-lecture
-traitée ; scellement de l'addendum, de la configuration v4 et de la table v2 ; poussée ; **rapport de concordance d'un
-lecteur neuf de conv-audit sur la version scellée, chemin et empreinte consignés dans la procédure et vérifiés avant la
+extension C-6 exécutée, table v2 et configuration v4 écrites, valeurs de C-6 remplacées (fait, brouillon 3) ; vérification
+du brouillon 2 traitée (fait, brouillon 4) ; contre-lecture 2 (obligatoire) faite et traitée ; scellement de l'addendum, de la configuration v4 et de la table v2 ; poussée ; **rapport de concordance d'un
+lecteur neuf de conv-audit sur la version scellée, chemin et empreinte consignés dans un fichier à part, versionné,
+`docs/notes/runs-r1-r2-r4-v1/concordance-relance-consignee-v1.md` (procédure, étape 3), et vérifiés avant la
 commande de création (pas de lancement sans lui, n° 339 : « avant tout départ »)** ; GO valide le jour du lancement.
 
 **Étape 2 — R1 relancée (instance).** Module `controle_ia.runs_nuit.rejeu_activations_v2` (nom nouveau ; la v1 citée par
@@ -315,8 +320,8 @@ session, 2 novembre 03:10 UTC) : **≈ 4,6 / 25 USD** (R1-R2 ≈ 1,0 ; R4 ≈ 3,
 USD. **Échéance du GO : 2026-11-09.** La garde de calcul refuse un GO échu, et une extension ne prolonge pas la validité
 d'un identifiant (R-389 : elle reste celle de la première ligne) : **une relance après le 9 novembre exige un GO
 nouveau, sous un identifiant nouveau** (CLA-02). Calendrier : décisions de Lazar (faites, R-1116 ; recopie sur `main` et
-mot de Lazar dans la session de session-depot à faire) ; extension C-6 et table v2 ; contre-lecture traitée (fait, voir
-« Contre-lecture ») ; scellement ; concordance chez conv-audit sur la version scellée ; lancement ; versement.
+mot de Lazar dans la session de session-depot à faire) ; extension C-6 et table v2 (faites) ; contre-lecture 1 et
+vérification du brouillon 2 traitées (fait, voir « Contre-lecture ») ; contre-lecture 2 (obligatoire) ; scellement ; concordance chez conv-audit sur la version scellée ; lancement ; versement.
 **Repli** si la relance échoue (fidélité contraire, plus de 10 non résolus, table non applicable) : relance de
 l'environnement (≈ 3 h, ≈ 3 à 4 USD), devis et préenregistrement neufs (parent, critères de lecture).
 
@@ -345,7 +350,10 @@ l'environnement (≈ 3 h, ≈ 3 à 4 USD), devis et préenregistrement neufs (pa
   `trajectoires_identiques=4 corrections=1 non_resolus=0`, fidélité conforme, contrôle négatif 4 sur 4, sorties
   poussées, code 0) ; table falsifiée (« ne redonne pas l'empreinte de trajectoire de P3 », rien n'est versé, code 1) ;
   `ETAPES=rejeu juge3b` refusée avant l'installation (code 2) ; mode réel avec l'addendum **présent mais non scellé**
-  (CLA-04, point 2) : arrêt avant l'installation (code 2).
+  (CLA-04, point 2) : arrêt avant l'installation (code 2). **Déclaré (vérification du brouillon 2, m-8)** : le message
+  d'arrêt du script d'instance (« préenregistrement … ou son sceau absent ») ne distingue pas un fichier absent d'un
+  fichier non scellé ; l'essai vaut pour le cas « non scellé » parce que l'addendum est présent au commit d'essai
+  `c2d70d10` (constaté par la vérification du brouillon 2), non par le message.
 - Garde de calcul avec GO-2026-11-02-02 (`essai-garde-calcul-relance-v2.txt`) : registre où la ligne est recopiée,
   code 0 (deux formes) ; registre sans la ligne, sans GO, GO de décision : code 2.
 - Chemin réel avec addendum scellé (CLA-04, point 1) : ne peut tourner qu'au commit de scellement ; c'est l'étape 2 bis
@@ -372,9 +380,10 @@ Toutes les autres lignes du parent valent telles quelles.
 ## Liste d'arrêt
 
 Celle du parent, sauf l'arrêt « épisode entièrement conforme à trajectoire différente » (CLC-03, E1) et le plafond de
-l'amorce (150 → 100 min, E9) ; ajouts (E8) :
+l'amorce (150 → 100 min, E9) ; le pire cas de dépense est celui de la section « Coût et GO » (E9) ; ajouts (E8) :
 - **pas de lancement sans le rapport de concordance de conv-audit sur la version scellée** (chemin et empreinte
-  consignés dans la procédure, vérifiés avant la commande de création) ; pas de lancement sans les lignes
+  consignés dans `docs/notes/runs-r1-r2-r4-v1/concordance-relance-consignee-v1.md`, vérifiés avant la commande de
+  création) ; pas de lancement sans les lignes
   GO-2026-11-02-01 et -02 recopiées sur `main` et redites par Lazar dans la session de session-depot ; pas de lancement
   après le 9 novembre 2026 sans GO nouveau ;
 - `ETAPES` autre que `rejeu` ; addendum, configuration v4, table v2 ou parent absents ou non scellés au commit lancé :
@@ -405,7 +414,8 @@ Dans tous ces cas : aucun fichier d'activations écrit ; arrêt de l'instance pa
   - CLA-02 : « extension » au sens de prolongation retiré ; GO-2026-11-01-13 échoit le 2 novembre ; GO-2026-11-02-02, identifiant
     nouveau, échéance 9 novembre ; après, GO nouveau ; calendrier écrit (E17, « Coût et GO »).
   - CLA-03 : concordance de conv-audit sur la version scellée écrite comme condition du lancement (plan, étape 1 ;
-    liste d'arrêt ; procédure v2, étape 3, vérifiée par empreinte).
+    liste d'arrêt ; procédure v2, étape 3, vérifiée par empreinte ; consignée dans
+    `concordance-relance-consignee-v1.md`, fichier à part, depuis le brouillon 4).
   - CLA-04 : (1) chemin réel avec addendum scellé : étape 2 bis de la procédure v2, au commit de scellement (il ne peut
     tourner avant) ; (2) artefact « addendum présent sans sceau » : essai jouet v2 en mode réel au commit du code, où
     l'addendum est présent sans sceau ; (3) gardes Python du parent et de l'addendum, cas sain et artefacts :
@@ -425,7 +435,7 @@ Dans tous ces cas : aucun fichier d'activations écrit ; arrêt de l'instance pa
   - CLA-10 : changement de commande du manifeste déclaré (E12, E16), à signaler à conv-audit avec le chemin et
     l'empreinte de la version scellée (procédure v2, étape 3).
   - CLA-11 : dépenses citées (≈ 4,6 / 25 USD) ; section « Coût » déclarée devis par run.
-  - CLA-12 : absence de garde sur le tokeniseur déclarée (étape 0).
+  - CLA-12 : absence de garde sur le tokeniseur déclarée (étape 0) ; même absence dans la fusion déclarée à côté (m-5).
 - **Vérification de concordance de conv-audit** (lecteur neuf de conv-audit, sur le même brouillon 1
   `ab94755675725193c7d716bafde83ec5b6efc48b2034e625d38b461d22e1abe2`) : rapport
   `brouillons/preuves-mentors-v1/analyse-principale-r1-r2-v1/concordance-addendum-r1-v1.md` (branche
@@ -433,7 +443,8 @@ Dans tous ces cas : aucun fichier d'activations écrit ; arrêt de l'instance pa
   (`841cae63…`). Verdict : formats concordants ; un nœud de Lazar (N-A, tranché depuis : (c) puis (a)) ; concordant
   pour le reste si l'addendum change. Traitement (tous acceptés) :
   - C-1 : voie alternative retenue (E2 ; code v2 et tests alignés : `fidele` par la tolérance pour les épisodes non
-    résolus, test `test_relance_regle_b_non_resolus_fidele_faux_et_seuil`) ; phrase fausse du brouillon 1 sur
+    résolus, test `test_relance_regle_b_non_resolus_fidele_faux_et_seuil` — nom hérité du brouillon 1 ; le corps éprouve la
+    tolérance ; il n'est pas renommé, ce qui changerait le commit du code, vérification du brouillon 2, m-1) ; phrase fausse du brouillon 1 sur
     l'exigence de la principale corrigée (« Métrique ») ; P-R5 rendue au parent (≥ 90 %, au plus 93 %).
   - C-2 : versement du run relancé sur `calcul/r1-r2-reel-v1` par un commit neuf (E18 ; plan, étape 3 ; procédure v2,
     étape 7).
@@ -447,6 +458,33 @@ Dans tous ces cas : aucun fichier d'activations écrit ; arrêt de l'instance pa
     (E20 ; « Plan d'analyse », étape 0) ; fusion en table v2 revérifiée par la fonction de l'instance ; **exécution à
     part, faite pour le brouillon 3** : r = 3 (« Plan d'analyse », étape 0).
   - C-7 : le rejeu de R4 n'est pas relancé par cet addendum (« Statut », « R2 »).
-- **Contre-lecture 2** (recommandée avant le scellement, R2 : le brouillon 2 change l'étape 0 et le code de la table) :
+- **Vérification du brouillon 2** (vérificateur neuf, Opus 5.5, auteur d'aucune pièce, 2 novembre 2026, 07:34 à
+  07:56 UTC ; brouillon relu : brouillon 2, commit `be75703125a6cece7c7a8ed475c45c4300fdc334`, empreinte du fichier
+  `828b3940c0c3b8ca624ae414089660d324f0ee1f9607d715cf01f45df3cb9512`). Rapport : bloc-notes de la session,
+  `/tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/verif/rapport-verification-addendum-r1-b2.md` (`dbbaf0da2713c01fbb3861c2509f0878fabc53d7343d39207df0856d23d4176f`) ; à verser à l'octet sous `docs/notes/runs-r1-r2-r4-v1/verification-addendum-r1-b2-v1.md` avant le scellement (procédure, étape 2). Verdict : **scellable après
+  corrections**, aucun défaut de fond ; quatre corrections obligatoires (V-01 à V-04), huit mineurs. Traitement (tous
+  acceptés) :
+  - V-01 : C-6 exécutée et valeurs remplies (brouillon 3 ; « Plan d'analyse », étape 0 ; « Essais ») ; r = 3, donc E19
+    n'est pas sans objet.
+  - V-02 : les deux marqueurs « à remplir » de texte (en-tête, plan) réécrits depuis le brouillon 3 ; seul reste celui
+    de l'entrée « Contre-lecture 2 » ; contrôle du marqueur par `grep` ajouté à la procédure (étapes 1 bis.5 et 2).
+  - V-03 : le commit de scellement (procédure, étape 2) indexe l'addendum, la configuration v4, la table v2, leurs
+    `.sha256`, et les compagnons `.sha256` posés alors du script, du résultat et des journaux de C-6, des comptes v3,
+    de l'essai des paires v2, de cette vérification et du rapport de la contre-lecture 2 (versés sous `docs/`) ; puis
+    `git status --porcelain -- prereg docs` vide et `scellement verifier` sur ces fichiers, au commit.
+  - V-04 : contre-lecture 2 écrite **obligatoire** (ci-dessous).
+  - m-1 : nom du test déclaré hérité (C-1) ; m-2 : pire cas de la section « Coût et GO » (E9, « Liste d'arrêt ») ;
+    m-3 : comptes descriptifs du parent qui changent, recalculés à r = 3 sur la table v2 (E14) ; m-4 : GO-2026-11-01-13
+    « n'est plus le GO du lancement » (en-tête) ; m-5 : absence de comparaison du tokeniseur dans la fusion déclarée à
+    côté de CLA-12 (étape 0) ; m-6 : procédure, étape 7, repli silencieux remplacé par la comparaison des listes `git
+    ls-tree` et `git diff --cached` (absence de `donnees/$RUN` admise seulement avec `diag/$RUN/arret.json`),
+    `PYTHONPATH=src` exporté ; m-7 : concordance consignée dans un fichier à part, versionné,
+    `docs/notes/runs-r1-r2-r4-v1/concordance-relance-consignee-v1.md` (procédure, étape 3) ; la procédure n'est plus
+    modifiée après son commit ; m-8 : message d'arrêt « … ou son sceau absent » déclaré (« Essais »).
+- **Contre-lecture 2** (**obligatoire**, R2 : le brouillon 2 change l'étape 0 et le code de la table, et les valeurs de
+  C-6 ont été écrites depuis ; elle porte sur **la version à sceller**). Pour tout ce qui est écrit dans `828b3940…`, la
+  vérification du brouillon 2 ci-dessus en tient lieu. Un sous-agent neuf contre-lit la différence entre `828b3940…` et
+  la version à sceller, la table v2, la configuration v4, le script et le résultat de C-6 (le script suit-il la règle
+  écrite : ordre des niveaux, ordre des candidats, empreintes des pièces et du tokeniseur) :
   À REMPLIR (sous-agent neuf ; brouillon relu, chemin et empreinte du rapport, traitement).
 - La concordance qui autorise le lancement porte sur la version scellée (plan, étape 1).
