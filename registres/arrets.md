@@ -66,3 +66,5 @@ Instances de calcul arrêtées par la session, toutes par leur identifiant : 541
 - 2026-10-31 07:36 UTC — relais Kimi du tour de l'arène **arrêté par son PID 2697** (R10) par le lanceur.
 | 2026-10-31 09:35 | relais Kimi v3 (arène tour 2) | PID 11043 | arrêté par le lanceur en fin de tour |
 | 2026-11-01 22:51 UTC | 58714588 (T0.5 graines neuves, lot D) | fin de l'amorce (code 0, 22:37:37 UTC), poussée vérifiée (calcul/t05-graines-neuves-d-v1 à 9dd49dc7), conteneur en boucle de redémarrage | arrêt puis destruction par identifiant (R10) | session-depot |
+| 2026-11-02 01:23 UTC | 58714023 (T0.5 graines neuves, lot A) | fin de l'amorce (code 0, 01:13:01 UTC), poussée vérifiée (calcul/t05-graines-neuves-a-v1 à f2abad54), conteneur en boucle de redémarrage | destruction par identifiant (R10) | session-depot |
+| 2026-11-02 01:23 UTC | 58735008 (R1-R2) | fin de l'amorce (code 1, 01:00:08 UTC : étape R1 arrêtée par sa garde de fidélité, R2 fait), poussée vérifiée (calcul/r1-r2-reel-v1 à d19ffd56) | destruction par identifiant (R10) | session-depot |
