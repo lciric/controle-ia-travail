@@ -328,3 +328,57 @@ def test_table_reelle_versee_coherente():
         assert len(e["paires"]) == n and (e["methode"] == "fins") == bool(e["fins"])
         for q in e["paires"]:
             assert len(q["canonique"]) == len(q["p3"]) == 2 and q["canonique"] != q["p3"]
+
+
+def test_gardes_du_parent_et_de_l_addendum_cas_sain_et_artefacts(source, tmp_path):
+    """CLA-04 : addendum scellé qui cite la configuration v2, l'empreinte du parent, l'entropie et le commit (cas sain) ;
+    empreinte du parent fausse ; parent sans sceau ; addendum qui ne cite pas l'empreinte du parent ; addendum présent
+    mais non scellé (artefacts) : arrêt avant tout calcul, rien n'est versé."""
+    import subprocess
+
+    from controle_ia.scellement import verifier
+    from test_runs_nuit_v1 import PREREG_ESSAI
+
+    depot, f, c = source
+    t = _table(depot, f, c, depot / "diag" / RUN_P3 / "episodes-p3.json", tmp_path / "table.json")
+    assert t["episodes"] == [] and t["comptes"]["signales"] == 0
+    (depot / "prereg").mkdir(exist_ok=True)
+    parent = depot / "prereg" / "parent-essai.md"
+    parent.write_text("# parent\n", encoding="utf-8")
+    sceller(parent)
+    sha_parent = verifier(parent)
+    commit = subprocess.run(["git", "-C", str(depot), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+
+    def conf(**k):
+        return _config_v2(depot, f, c, tmp_path / "table.json",
+                          **{"chemin_prereg_parent": str(parent), "prereg_parent_sha256": sha_parent, **k})
+
+    def addendum(nom, config, cite_parent=True, scelle=True):
+        p = depot / "prereg" / nom
+        texte = PREREG_ESSAI.format(commit=commit, config=rb.empreinte_config(config), h1="a" * 64, h2="b" * 64)
+        if cite_parent:
+            texte = texte.replace("- Entropie", f"- Préenregistrement parent : `{sha_parent}`\n- Entropie")
+        p.write_text(texte, encoding="utf-8")
+        if scelle:
+            sceller(p)
+        return str(p)
+
+    r = rb.executer(conf(), depot, "20261102-110000-r1-jouet", addendum("add-sain.md", conf()), autoriser_depot_sale=True)
+    assert r["verdict_fidelite"] == "conforme" and r["tokenisation"]["signales"] == 0
+    with pytest.raises(GardeArret, match="préenregistrement parent"):
+        rb.executer(conf(prereg_parent_sha256="0" * 64), depot, "20261102-110100-r1-jouet",
+                    addendum("add-a.md", conf(prereg_parent_sha256="0" * 64)), autoriser_depot_sale=True)
+    nu = depot / "prereg" / "parent-sans-sceau.md"
+    nu.write_text("# parent\n", encoding="utf-8")
+    with pytest.raises(GardeArret, match="compagnon"):
+        rb.executer(conf(chemin_prereg_parent=str(nu)), depot, "20261102-110200-r1-jouet",
+                    addendum("add-b.md", conf(chemin_prereg_parent=str(nu))), autoriser_depot_sale=True)
+    with pytest.raises(GardeArret, match="ne cite pas l'empreinte du préenregistrement parent"):
+        rb.executer(conf(), depot, "20261102-110300-r1-jouet", addendum("add-c.md", conf(), cite_parent=False),
+                    autoriser_depot_sale=True)
+    with pytest.raises(GardeArret, match="compagnon"):
+        rb.executer(conf(), depot, "20261102-110400-r1-jouet", addendum("add-d.md", conf(), scelle=False),
+                    autoriser_depot_sale=True)
+    for run in ("110100", "110200", "110300", "110400"):
+        assert not (depot / "donnees" / f"20261102-{run}-r1-jouet").exists()
+        assert not (depot / "runs" / f"20261102-{run}-r1-jouet").exists()
