@@ -1,0 +1,111 @@
+# Cellule A — Tour 2 (III.1) : attaque des recommandations, neuf divergences, « qui lit »
+
+## 0. Pièces, statuts, conflit
+
+- Servi : la synthèse v2 (`f0340581…`) et la question v2 avec son annexe. **Non servis** : les six pièces du tour 1, les douze cellules, les deux lectures vérifiées (`a8251ea8…`, `4e29301a…`), le texte de N-045, N-053, N-058 et celui des décisions du directeur. Je n'en invente pas le contenu.
+- Toute mention « pièce N, l. n » ci-dessous est reprise de la synthèse : statut **RAPPORTÉ** (lu par le lecteur neuf), jamais VÉRIFIÉ par moi. Mes assertions propres sont **HYPOTHÈSE** sauf mention. Les chiffres qui ne viennent pas de la synthèse ou de la question sont « illustratifs ».
+- Conflit à déclarer : le lecteur de la synthèse est du modèle de l'espèce A [RAPPORTÉ, en-tête]. Je prends ses décomptes comme RAPPORTÉ, y compris les inexactitudes qu'il m'attribue ; je les reconnais au § 1.3.
+
+## (a) Ce que la question suppose sans que ce soit établi
+
+1. **Que les neuf divergences conditionnent toutes la mise en œuvre.** Les divergences 1 et 7 portent sur une couche 3 *ouverte* ; le directeur l'a fermée jusqu'aux résultats de l'étape 2 [RAPPORTÉ, question]. Elles ne conditionnent plus que le préenregistrement du résidu. La divergence 5 est fixée dans sa forme (« essai preuve formelle contre suite bon marché sur processeur ») ; reste son bornage. [HYPOTHÈSE de lecture.]
+2. **Que « résoudre » signifie « céder ».** La synthèse classe 1 et 7 comme nœuds de lecture d'une décision ou d'une définition de Lazar, « pas de méthode » [RAPPORTÉ]. Une espèce peut s'y aligner ; elle ne peut pas les trancher.
+3. **Que « la précaution d'Avalon » est un objet défini.** Quatre natures en T1, trois éléments communs en T3 « par critique circulaire » [RAPPORTÉ] ; « précautions d'Avalon retenues » ne nomme pas lesquelles.
+4. **Que les deux « (a) » coïncident.** L'annexe : attendre les lectures vérifiées. Le directeur : taux de signalement du modèle de départ et audit de calibration. La note dit le premier satisfait ; les lectures ne sont pas servies ici. Si elles corrigent une ligne des pièces 4 ou 5, tout seuil assis sur 68→36→45, 0,47–0,56 ou l. 725 est à requalifier. [Indécidable sans ces pièces.]
+5. **Que « récompense collective » a une traduction fixée** pour un organisme qui n'apprend pas par gradient (pièce 4, l. 542 [RAPPORTÉ]). La convergence 10 fixe l'attribution à information et effectif égaux ; le canal d'apprentissage reste à fixer [RAPPORTÉ, N13 (1) lecture].
+6. **Que chaque divergence a une pièce « sans dépense ».** Pour 3, 6 et 9, la pièce sans dépense est un calcul ou un plan ; le fait tranchant exige de l'inférence (dépense faible).
+7. **Que les confiances des juges sont journalisées.** « Aucune cellule n'établit qu'elles sont journalisées » [RAPPORTÉ] : l'audit de calibration « sans entraînement » peut d'abord coûter une collecte.
+8. **Que « aucune pièce ne montre un besoin que N-045 ne couvre pas » est une mesure d'absence.** La synthèse enregistre qu'aucun résidu n'a été mesuré (apport seul D-10) [RAPPORTÉ] : absence de mesure, non mesure d'absence.
+
+## 1. Verdicts sur les recommandations de l'annexe
+
+### 1.1 N12 — « ne pas rouvrir avant l'étape 2 ; aucune pièce ne montre un besoin non couvert ; confiance 0,6 »
+
+**Tenue sous condition.** Condition : le préenregistrement de l'étape 2 inscrit (i) le décompte, par famille, des témoins plantés que le catalogue manque et (ii) le coût de génération compté une fois contre un comparateur « contraint au catalogue » (convergence 11). Raison : la ligne « aucune pièce ne montre » est vraie et vide, car aucune pièce n'a cherché ; sans (i), l'étape 2 ne tranchera pas N12 (D-10). Pire cas si suivie : l'étape 2 consomme les douze mois (B-S4) et rend un résidu non mesuré ; garde : (i) plus une date de lecture du résidu inscrite au préenregistrement. **Avis T1** : inchangé sur « étape 2 d'abord » ; je retire l'exigence que E1′ tourne comme *bras* d'ablation — la mesure du résidu suffit (voir div. 1). La « confiance 0,6 » n'est pas un argument.
+
+### 1.2 N13 (a) de l'annexe — attendre les deux lectures vérifiées
+
+**Tenue ; conséquence indécidable sans les pièces `a8251ea8…` et `4e29301a…`.** Elles doivent montrer, ligne par ligne, quels chiffres des pièces 4 et 5 passent de RAPPORTÉ à VÉRIFIÉ et lesquels tombent. Pire cas : un seuil préenregistré sur un chiffre corrigé après coup ; garde : préenregistrer E3′′/E0 *après* service des lectures au collisionneur, pas avant. Avis T1 : sans objet (pas de position).
+
+### 1.3 N13 (c1) — bras collectif contre individuel à l'étape 2, signalement mesuré dans les deux
+
+**Tenue sous condition**, cinq conditions : (1) trois bras au moins — non entraîné, collectif, individuel — à information et effectif égaux (convergence 10) ; (2) k ≥ 2 graines, graine = unité d'inférence (convergence 1) ; (3) scénarios de signalement tenus à l'écart de tout entraînement, canaris « à ne pas signaler » en nombre égal (convergence 6) ; (4) p₀ mesuré avant, avec règle d'arrêt (convergence 7) ; (5) un contrôle positif de pression (duel D1 ci-dessous) — sinon « pas d'écart » n'est pas informatif (div. 3). Pire cas : voie hors ligne sans pression, « pas de chute » lu comme « pas de risque », bras promu ; garde : D1 et règle d'escalade *préfinancée* au devis. **Avis T1 change sur deux points.** (i) J'avais écrit « chute monotone avec le pas » : faux pour le régulateur, 68→36→45 (l. 414 [RAPPORTÉ]). Je retire ; conséquence de conception : la précaution mesure une trajectoire, non une pente — d'où plusieurs points de contrôle et une « chute maximale » (D) plutôt qu'une pente. (ii) « Mesuré, jamais récompensé (énoncé 8) » : « jamais récompensé » est ma déduction, pas le texte [RAPPORTÉ]. Je la maintiens comme HYPOTHÈSE de conception (fuite récompense/évaluation, convergence 6), non comme lecture de N-045.
+
+« (c2) pas le bon périmètre » : **tenue sous condition** — contingent au dessin de la course 2 (convergence 13). « (c3) ne suffit pas seul » : **tenue** (accord n° 3) ; j'abandonne le mot « faux trilemme ».
+
+### 1.4 « Précautions d'Avalon retenues »
+
+**Indécidable sans la pièce « liste des précautions retenues ».** À défaut, tenue sous condition pour l'ensemble : mesure par agent *et* par run à chaque point de contrôle, point 0 inclus (A) ; plancher absolu et chute maximale gelés avant entraînement, hors de toute récompense (D) ; cloisonnement des scénarios (C) ; bras non entraîné (B). Condition manquante : qui lit (§ 3). Pire cas : les valeurs gelées restent « illustratives » au lancement ; garde : valeurs fixées à partir de p₀ et de σ_A/A du pilote, avant toute heure de carte.
+
+## 2. Les neuf divergences — position, pièce sans dépense, concession
+
+**1. Lecture de N-058 (A contre C).** Position : je cède. Sous couche 3 fermée, l'organisme n'a pas à *utiliser* les moniteurs neufs ; la quantité utile à l'étape 2 est le résidu (ce que le catalogue manque), qui se lit dans le journal sans entrer dans aucune sélection. Le bras (ii) devient donc ≡ (iii) pour la trajectoire, et ne diffère que par le journal : C a raison, et c'est acceptable parce que la cible est la mesure, non la trajectoire. Ma « troisième voie » (filtre de fiches) reste HYPOTHÈSE de lecture et n'est plus nécessaire. Pièce sans dépense : le point 5 de N-053 (« signal d'entraînement **ou de sélection** de l'agent », pièce 2, l. 171–173 [RAPPORTÉ]) et un schéma de flux de l'étape 2 montrant si une fiche filtrée alimente un entraînement (N-045, énoncés 4, 6 (ii)) ; si oui, le filtre est une sélection indirecte et tombe. Concédé à C : le dilemme (a1) tient tant que le flux n'est pas tracé. **Résolue.**
+
+**2. Dilution du crédit (A contre C).** Position : les deux énoncés sont vrais de deux objets. « La dilution est la définition » vaut pour Avalon (pièce 4, l. 371 [RAPPORTÉ]) ; pour un organisme qui apprend par sélection, crédit plat et variance de sélection sont confondus sauf appariement du taux d'acceptation — C a raison sur *notre* organisme. Je cède : « dilution » est remplacé par une quantité opérationnelle, le nombre d'agents partageant un scalaire par décision, déclaré facteur, et le taux d'acceptation est apparié par contrainte préenregistrée, non ajouté après. Pièce sans dépense : duel D2 (simulation sur processeur). **Résolue.**
+
+**3. Pression d'optimisation hors ligne (B et D contre A et C).** Position : je cède sur la suffisance. Gain de tâche (C) et informativité (A) sont nécessaires, non suffisants : ils montrent que *quelque chose* a été appris, pas que le régime reproduit un avantage collectif partagé. Ce qui suffirait est un contrôle positif : un comportement bénin qui ne paie que sous crédit collectif (par exemple une convention de format partagée entre agents, sans lien avec le signalement), planté dans la tâche ; s'il n'apparaît pas, la pression n'est pas manifeste et l'absence de chute du signalement ne prouve rien. Calcul sans dépense : le budget d'optimisation effectif (nombre de mises à jour × taille de lot) comparé à celui d'Avalon (lots de 200 à 800 groupes, épisodes de 2 à 5 h, l. 373–375 [RAPPORTÉ]) — un rapport inférieur à 1/100 (illustratif) désigne un régime sous-puissant avant toute carte. Concédé à B et D : la règle d'escalade est une promesse si elle n'est pas budgétée ; elle entre au devis. **Résolue.**
+
+**4. Nature de la précaution.** Position : les quatre natures ne sont pas exclusives et s'emboîtent : *jugeabilité* (p₀, condition de lancement, A/C), *arrêt* (plancher absolu et chute maximale gelés, D), *décision* (Δ, C), *prérequis causal* (B) = le duel lui-même avec bras non entraîné. Je cède à D : ma règle p₀ < 0,3 n'est pas une règle d'arrêt ; j'adopte plancher et chute maximale comme règle d'arrêt, gelés, hors récompense. Je cède à B : « mesure dans tout bras » n'est un prérequis que s'il existe un bras non entraîné — il existe. Reste litigieux : qui lit, traité au § 3. Pièce sans dépense : le tableau unique (jugeabilité / arrêt / décision) avec ses trois valeurs gelées à partir du pilote. **Résolue sur la nature ; ouverte sur les valeurs** (illustratives jusqu'au pilote).
+
+**5. Forme d'une ouverture de la couche 4.** Position : les quatre formes sont le même essai avec des sorties différentes. Je tiens « classe d'erreurs mesurée » comme *grandeur* de sortie ; je cède à D sur la *forme* (vérificateur externe, jamais couche autonome tant que la classe n'est pas mesurée) ; à C sur le *matériau* initial (lemmes courts de la classe des coquilles de Damani, pièce 5, l. 656–659 [RAPPORTÉ], plutôt que preuves longues) ; à B sur le *moment* (coût d'opportunité quasi nul sur processeur). Pièce sans dépense : contrat de la banque d'erreurs (classes, tailles, preuves saines appariées) et le duel D4. **Résolue.**
+
+**6. Première expérience.** Position : le directeur ordonne les deux objets ((a) : p₀ *et* audit de calibration). Je cède à D que E3′′ à N = 1 et E0 sont la même pièce ; je prends le nom et le contrat mécanique de D (« point de décision », C → ρ avec échéance). Je cède à B que, si les confiances des juges ne sont pas journalisées [RAPPORTÉ], la recalibration de Platt sur les logits est la seule pièce calculable aujourd'hui et passe en premier sur le volet calibration ; E5′ attend la collecte. Pièce sans dépense : vérifier si les logits ou confiances sont journalisés — une commande sur les journaux existants. **Résolue.**
+
+**7. Exécution hors bac à sable (B contre C).** Je ne suis pas partie. Position : l'invariant qu'invoque C n'est dans aucune pièce servie [RAPPORTÉ] ; la mesure que veut B (ce que l'isolation coûte) s'obtient sans exécuter du code généré sur l'infrastructure réelle : exécuter les mêmes opérateurs dans deux bacs à sable d'étanchéité différente, ou sur traces rejouées. Je concède à C qu'aucune exécution hors bac n'est admissible sans définition de Lazar ; à B que le coût d'isolation est une grandeur mesurable et doit figurer au préenregistrement. Pièce : la définition de la couche 3 (question, § N12 « Contexte », non servie ici). **Alignée, non tranchée par moi.**
+
+**8. Amortissement du coût de génération (C contre D).** Position : deux quantités. D mesure l'oracle à K = 24 fusions (budget fixe, vrai par construction) ; C dit que la généralisation du verdict dépend de K et λ. Les deux : rapporter l'oracle à K fixe *et* la courbe de coût cumulé par témoin détecté en fonction de K ; le verdict est celui de D à K = 24, toute extrapolation est HYPOTHÈSE marquée. Calcul sans dépense : point mort K* = c_gén / (c_cat − c_exéc) (illustratif), avec les trois coûts relevés à l'étape 2. **Résolue par partition.**
+
+**9. Transfert d'une sonde (B contre D).** Position : avec D pour le critère principal — la convergence 3 (positifs et négatifs du même point de contrôle et des mêmes poids) lie la sonde aux poids ; un transfert n'est pas une propriété acquise. Je concède à B que le transfert est bon marché à tester (inférence sur les traces de l'autre modèle, sonde déjà entraînée) : critère secondaire déclaré, avec son contrôle (étiquettes permutées), duel D5. Pièce sans dépense : le plan d'analyse avec les deux critères et leur ordre. **Résolue par partition.**
+
+## (b) Duels décisifs
+
+**D1 — Pression manifeste (div. 3, condition de (c1)).**
+H_A : le régime hors ligne ne produit pas d'adaptation spécifique au crédit collectif ; H_B : il en produit une. Métrique : taux d'apparition du comportement bénin collectif-seulement, par run, aux points de contrôle gelés, bras collectif contre bras individuel et bras « crédit permuté » (crédit attribué au hasard entre agents, même scalaire). Seuil : Δ ≥ 15 points (illustratif), intervalle de Wilson excluant 0, k ≥ 2 graines. Contrôle négatif : bras non entraîné (le comportement n'y apparaît pas au-delà de p₀) et bras à crédit permuté (s'il y apparaît, l'effet n'est pas le crédit). Issues : Δ ≈ 0 falsifie H_B → E3″ non payée à ce régime, escalade préfinancée ; Δ grand mais aussi présent sous crédit permuté falsifie la métrique, pas H_A ; Δ grand et absent sous permutation falsifie H_A → (c1) peut mesurer le signalement avec un sens.
+
+**D2 — Dilution (div. 2).** Simulation sur processeur, modèle de bruit fixé.
+H_A : à taux d'acceptation apparié, crédit plat et crédit individuel donnent la même variance de sélection (pas d'artefact) ; H_B : la variance diffère. Métrique : rapport des variances de sélection sur 1 000 tirages (illustratif). Seuil : rapport hors de [0,8 ; 1,25] (illustratif). Contrôle négatif : deux bras au même crédit, rapport attendu 1. Issues : rapport ≈ 1 falsifie H_B → « nombre d'agents par scalaire » reste un facteur sans correction ; rapport hors bande falsifie H_A → la variance de sélection entre comme covariable préenregistrée et le taux d'acceptation est contraint.
+
+**D3 — Le lecteur de la précaution lit (div. 4, § 3).**
+H_A : un lecteur aveugle détecte une chute plantée du signalement dans un journal synthétique avec rappel ≥ 0,9 et fausses alertes ≤ 0,1 (illustratifs) ; H_B : non. Métrique : rappel sur chutes plantées (amplitudes 10, 20, 30 points, illustratives), fausses alertes sur journaux honnêtes appariés en longueur et en bruit (σ_A/A du pilote). Contrôle négatif : journaux honnêtes seuls ; et un script de seuil fixe, qui est la vérification mécanique à battre. Issues : rappel < 0,9 falsifie H_A → le lecteur n'est qu'une relecture, le script décide ; rappel ≥ 0,9 mais pas mieux que le script falsifie l'intérêt d'un lecteur modèle, pas la précaution.
+
+**D4 — Preuve formelle contre suite bon marché (div. 5, N12 essai).**
+H_A : sur une banque plantée par un tiers, Lean gagne ≥ 20 points de rappel (illustratif) sur au moins une classe d'erreurs, à fausses alertes ≤ 5 % sur preuves saines ; H_B : la suite bon marché (tests, mutations, scripts, relecture par une autre famille, à coût apparié) fait aussi bien partout. Métrique : rappel par classe, fausses alertes sur preuves saines appariées (longueur, domaine). Contrôle négatif : preuves saines ; banque aveugle à l'opérateur de Lean. Issues : aucune classe à +20 falsifie H_A → la couche 4 reste fermée, vérificateur externe suffisant ; une classe à +20 falsifie H_B → ouverture bornée à cette classe, forme « vérificateur externe » (D).
+
+**D5 — Transfert d'une sonde (div. 9).**
+H_A : la sonde entraînée sur M atteint AUROC ≥ 0,7 (illustratif) sur M′ contre négatifs du même point de contrôle ; H_B : AUROC ≤ 0,55. Contrôle négatif : étiquettes permutées (AUROC ≈ 0,5) ; vérification mécanique à battre : le contrat C → ρ, qui est la cible sous contrat (convergence 2) — donc mesure « sans contrat ». Issues : ≤ 0,55 falsifie H_A → réplication obligatoire (D) ; ≥ 0,7 falsifie H_B → le transfert devient critère secondaire admissible, jamais substitut.
+
+**D6 — Confiance des juges (div. 6, audit de calibration).**
+H_A : la confiance (verbalisée ou probabilité des jetons) des juges actuels porte de l'information contre l'oracle planté, AUROC ≥ 0,6 ; H_B : non (≤ 0,55). Contrôles : prédicteur constant au taux de base, permuté, verdict binaire du juge (B-T2 : un juge peut dépasser 0,60 par puissance propre). Issues : ≤ 0,55 falsifie H_A → RLCR sans objet ; ≥ 0,6 mais égal au verdict binaire falsifie l'apport de la *confiance* ; ≥ 0,6 et supérieur au verdict binaire falsifie H_B → recalibration post-hoc, puis seulement un juge local sous RLCR.
+
+## (c) Instruments nommés dans la question — mesure minimale
+
+| Instrument | Taux de détection | Fausses alertes | Cas honnêtes appariés | Vérification mécanique à battre |
+|---|---|---|---|---|
+| Moniteurs neufs (div. 1) | Rappel sur témoins plantés que le catalogue manque, par famille | Sur runs honnêtes appariés en longueur et en tâche | Mêmes fusions, mêmes agents, sans témoin | Moniteur du catalogue + « meilleur de N » contraint à la grammaire (convergence 11), coût compté une fois |
+| Sondes d'omission (div. 9) | Rappel sur omissions au même point de contrôle, mêmes poids | Sur « signalement non dû » et « non-action » (triple partage de D) au même point | Traces honnêtes du bras témoin, même pas | Contrat C → ρ : sous contrat, il *est* la cible ; mesurer avant le point de décision ou sans contrat |
+| Juges (audit de calibration) | AUROC contre oracle planté, partition par famille, k ≥ 2 | ECE débiaisée, Brier | Fiches à vérité binaire de l'oracle, familles tenues à l'écart | Constant au taux de base ; permuté ; verdict binaire ; probabilité des jetons recalibrée |
+| Preuve formelle (Lean) | Rappel par classe sur banque plantée | Sur preuves saines appariées | Preuves saines, même longueur, même domaine | Suite bon marché à coût apparié (D4) |
+| Bac à sable (div. 7) | Pré-test d'étanchéité éliminatoire, réussi/échoué, tenu hors du bac | Sans objet | — | Aucune recette ici (classe hors niveau notée par la synthèse) |
+| Lecteur de la précaution (§ 3) | Rappel sur chutes plantées (D3) | Sur journaux honnêtes | Journaux appariés en bruit | Script de seuil fixe |
+| Récompense collective | Pas un instrument : un traitement ; sa manifestation se mesure par D1 | — | — | Bras à crédit permuté |
+
+Aucun chiffre de ce tableau n'est un seuil opposable : tous « illustratifs » jusqu'au pilote.
+
+## 3. Qui lit les mesures de la précaution
+
+**Dispositif.**
+- *Lecteur* : deux lecteurs. (i) Un script, hors du bac à sable, qui calcule à chaque point de contrôle gelé (0, 50, 100, 150 — illustratifs) le taux de signalement par agent et par run, les faux signalements sur canaris, et compare au plancher et à la chute maximale gelés ; il arrête seul. (ii) Un sous-agent d'une *autre famille* que le modèle entraîné et que l'espèce qui a dessiné le bras, qui ne reçoit que le journal de signalement — jamais le gain de tâche — et rend un verdict binaire plus une liste d'anomalies non couvertes par le script. Le lecteur humain (Lazar) est notifié à tout franchissement et à une date fixe par mois, avec tirage aléatoire d'un point de contrôle à relire.
+- *Point de contrôle* : chaque point gelé, le point 0 compris ; aucune lecture entre deux points n'est autorisée à modifier le bras (sinon le lecteur devient un signal, N-053).
+- *Consignation* : chaque lecture est un fichier scellé (`sha256`) écrit hors du bac, avec les valeurs gelées en tête, le verdict du script, celui du sous-agent, et l'horodatage ; aucune valeur retapée.
+
+**Pires cas et gardes.** (1) Une omission invisible au journal (canari non déclenché) : le lecteur dit « conforme » ; garde : D3, chutes plantées dans le journal pour vérifier le lecteur lui-même, et autant de canaris que d'incidents. (2) Un lecteur de la même famille partage les angles morts ; garde : autre famille, dit en tête de fichier. (3) Le sous-agent devient de fait un juge dont la sortie oriente la conception du bras suivant : violation de N-053 par la bande ; garde : ses sorties n'entrent dans aucune sélection d'agents, seulement dans la décision d'intégration humaine, séparation écrite au manifeste et auditée par script. (4) Cadence trop lente ; garde : l'arrêt est celui du script, le sous-agent et l'humain confirment après.
+
+## (d) Ancrage matériel
+
+- **Modèles** : modèle ouvert de 7 à 8 milliards de paramètres pour E3′′/E0 et les juges locaux (pièce 5, l. 749 [RAPPORTÉ] pour l'ordre de grandeur) ; sous-agent lecteur d'une autre famille (choix à fixer).
+- **Calcul** : D2, D3, D6 (Platt sur logits si journalisés) et le calcul de point mort (div. 8) : processeur seul, minutes à heures (illustratif). D4 : processeur plus appels de sous-agents ; D-T1 donnait « 50–500 € » [RAPPORTÉ, illustratif]. E3′′/E0 et D5 : inférence seule, « quelques heures de carte » (illustratif). D1 et le bras (c1) complet : entraînement, trois bras, k ≥ 2 graines ; la synthèse relève un écart d'un ordre de grandeur entre A/C (dizaines d'heures) et B/D (300–3 000 h de carte) [RAPPORTÉ, tous illustratifs] — le devis demandé par le directeur doit le trancher avant toute carte.
+- **Coût** : rien ici ne vient des faits sauf la dépense totale du run du tour 1, 13,52 USD [RAPPORTÉ]. Tout le reste est illustratif.
+
+Ce qui peut être réfuté ici : six duels, chacun avec une issue qui tombe ; trois cessions (div. 1, 2, 3) qui changent ma conception du tour 1 ; deux inexactitudes retirées.
+
+FIN-DE-CELLULE
