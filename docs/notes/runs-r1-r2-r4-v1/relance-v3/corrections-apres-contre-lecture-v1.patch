@@ -1,0 +1,197 @@
+diff --git a/prereg/R1-addendum-relance-v3.md b/prereg/R1-addendum-relance-v3.md
+index 2425a9f5..cb5db0f7 100644
+--- a/prereg/R1-addendum-relance-v3.md
++++ b/prereg/R1-addendum-relance-v3.md
+@@ -1,9 +1,11 @@
+ # Addendum au préenregistrement de R1 — relance du rejeu des 2 400 actions de P3 sur la table de tokenisation v3 (complète) — v3
+ 
+-- Auteur : sous-agent de rédaction de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 1 (texte, non
+-  scellé)** ; reste la contre-lecture finale (section « Contre-lecture »), puis le scellement de ce texte et de la
+-  configuration v5, puis la concordance d'un lecteur neuf de conv-audit sur la version scellée.
+-- Date (UTC) : 2026-11-02 20:01 (brouillon 1 ; heure relevée par `date -u`).
++- Auteur : sous-agent de rédaction de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 2 (texte, non
++  scellé)** : brouillon 1 (`382ba627…`, commit `145da951`) corrigé selon la contre-lecture 1 (I1, I2, M1 à M4 et deux
++  remarques ; section « Contre-lecture ») ; reste le traitement final de cette contre-lecture par session-depot, puis le
++  scellement de ce texte et de la configuration v5, puis la concordance d'un lecteur neuf de conv-audit sur la version
++  scellée.
++- Date (UTC) : 2026-11-02 23:19 (brouillon 2 ; heure relevée par `date -u`).
+ - Nom nouveau (R12) : l'addendum v1 (`prereg/R1-addendum-relance-v1.md`, brouillon 4, non scellé,
+   `485acc3a57bf5377cc2d62d8b161eb7b3f669dbeb3ec0bc1b35d260e6f518652`) n'est pas modifié ; il sert de base à la section
+   « Écarts au parent » (E1 à E20, reprises et mises à jour). L'addendum v2 (`prereg/R1-addendum-relance-v2.md`, scellé,
+@@ -24,7 +26,7 @@
+   `567260c05687747f0c7a715fc9b15b4fc6297d65`.
+ - Chemin du préenregistrement parent : `prereg/R1-R2-rejeu-p3-v1.md`
+ - Commit du code d'analyse : `f921fcec10539f1565fab410624a926efdfec12e`
+-  (branche `prep/r1-relance-v3`, partie de `c2a8b6e1` ; seul changement de code depuis : bornes de durée des deux
++  (branche `prep/r1-relance-v3`, à partir de `c2a8b6e1` ; seul changement de code depuis : bornes de durée des deux
+   scripts v3 réglables par variable, préenregistrement par défaut du script = ce texte, essai
+   `tests/test_bornes_relance_v3.py` ; le module `rejeu_activations_v3.py` et ses essais sont ceux que citait
+   l'addendum v2)
+@@ -57,8 +59,8 @@
+ - Entropie : `36410133060804533274328900142752730279`
+ - Tests attendus : `329`
+   (les 20 fichiers que lance le script d'instance v3, liste `CIBLES` : les 18 du script v2 de la relance (addendum v1) plus
+-  `tests/test_resolution_graine_v1.py` et `tests/test_rejeu_activations_v3.py` ; tous passés, aucun sauté, au commit
+-  cité, avec le tokeniseur de Llama 3.1 à la révision de P3 ; un test sauté ou en échec arrête le script, qui exige ce
++  `tests/test_resolution_graine_v1.py` et `tests/test_rejeu_activations_v3.py` ; tous passés, aucun sauté,
++  au commit `d803a8d6` (même `src/`, `tests/`, `scripts/` que `f921fcec` et `145da951`), avec le tokeniseur de Llama 3.1 à la révision de P3 ; un test sauté ou en échec arrête le script, qui exige ce
+   nombre exactement)
+ - Documents qui font foi (chemin + empreinte) : le parent, l'addendum v1 et l'addendum v2 ci-dessus ; la table v3
+   ci-dessus ; **résultats scellés du rejeu à graine** (branche `calcul/r1-resolution-graine-v1`, tête `ab808842…`) :
+@@ -75,8 +77,9 @@
+   relatifs à ce dossier, sha256 du fichier) :
+   - pré-vol sur les vraies pièces de P3, sans modèle 8B : script `prevol_relance_v3.py`
+     (`61dd497e42e4661ac84918975f9855c7f41d3e45f8beeb85ed4b9e4ad129e360`) ; sortie `prevol-relance-v3-sortie.txt` (`b9dbadbad1c189f13a64c799a729e5b605d36000859a549e6e851cc873fdff54`) ;
+-  - suite ciblée (`CIBLES`) au commit cité : `tests-cibles-relance-v3.txt` (`e02256eeb2f249b1f56d14201a23e2a9e3d3e39b10a8fb59fec774134021843a`) ;
+-  - essai des bornes : `tests-bornes-relance-v3.txt` (`8dc0eef7df36db664c88f7bdb2ec8ba2b61047f68057dec5ff9f3e2a47bc9776`, 23 passés au commit cité) et
++  - suite ciblée (`CIBLES`) au commit `d803a8d6` (même `src/`, `tests/`, `scripts/` que `f921fcec` et `145da951`) :
++    `tests-cibles-relance-v3.txt` (`e02256eeb2f249b1f56d14201a23e2a9e3d3e39b10a8fb59fec774134021843a`) ;
++  - essai des bornes : `tests-bornes-relance-v3.txt` (`8dc0eef7df36db664c88f7bdb2ec8ba2b61047f68057dec5ff9f3e2a47bc9776`, 23 passés au commit `d803a8d6` (même `src/`, `tests/`, `scripts/` que `f921fcec` et `145da951`)) et
+     `tests-bornes-sans-changement.txt` (`afb17d9de18a9c57319d7dfa157bc8e8a89f04644fe1e64d6998ba6be0f79ce1`, les 23 en échec sur les scripts de `c2a8b6e1`) ;
+   - contrôles d'avant l'installation et gardes de citation, rejoués sur une copie : script
+     `controles_avant_installation_v3.sh` (`208abebc248ae3413425f04c11a6087bb59f619ff7c15fae15fd8807e8ef009b`) ;
+@@ -124,7 +127,7 @@ change par rapport à la v1.
+ | E5 | Critères de lecture : « Fidélité contraire, ou épisode conforme à trajectoire différente → rejeu non validé » | « Fidélité contraire, **ou table non applicable** (version autre que 3, épisode signalé absent ou en trop, forme ou méthode non conforme, correction qui ne redonne pas l'empreinte de P3 au chargement ou à l'application, corrections vérifiées ≠ comptes) → rejeu non validé » ; « épisode conforme à trajectoire différente » se lit **après la table** : un tel épisode arrête la course (« echec »), il ne peut pas rester dans une course qui va au bout ; sa copie dans l'analyse principale de conv-audit : E19 | « plus de 10 non résolus » retiré (sans objet, E2) | Conséquence de E1 et E2 |
+ | E6 | Critères de lecture (aucune ligne) | **Sans objet** (aucun non résolu) : la ligne « au plus 10 non résolus → course normale » de la v1 n'est pas reprise | Ligne retirée | E2 |
+ | E7 | Critères de lecture (aucune ligne) | **Ajout inchangé** : « fidèles < 90 % des notées → réserve d'instrument portée par le résultat du run (`tokenisation.p_r5_au_moins_90_pour_cent`) et par la lecture du fournisseur, **sans changer aucune classe de verdict ni aucune ligne des analyses de conv-audit** » | Aucun | P-R5 est une prédiction (CLA-05 ; C-3) |
+-| E8 | Liste d'arrêt (aucune ligne) | **Ajouts** : (a) **avant le manifeste** (rien n'est écrit sous `runs/`, `diag/`, `donnees/`) : table absente, non scellée, d'empreinte ≠ citée, de **version autre que 3** (une table v1 ou v2 est refusée, version dans le motif), de méthode inconnue, de forme non conforme à sa méthode, avec un doublon, ou calculée sur d'autres pièces (empreintes des textes, des fiches ou des scores ≠ configuration) ; configuration sans empreinte de table ; parent absent, non scellé ou d'empreinte ≠ `80c85a00…` ; texte qui ne cite pas la configuration, l'empreinte du parent, l'entropie ou le commit du code, ou non scellé, ou non conforme à `prereg.problemes` (`exiger_prereg_scelle`, à la création du manifeste) ; (b) **arrêt « echec »** (`arret.json`) : épisode de la table absent du run ou des fiches de P3, empreinte de P3 citée par une entrée ≠ fiches, correction qui ne redonne pas l'empreinte de P3 à la revérification du chargement ou à l'application ; corrections vérifiées ≠ comptes de la table ; épisode signalé absent de la table, épisode de la table non signalé ; (c) **script, avant l'installation** (code 2) : `ETAPES` autre que `rejeu` ; ce texte, la configuration v5, la table v3 ou le parent absent, non scellé ou de sceau faux au commit lancé ; un des quatre libellés lus absent ou cité plus d'une fois ; table citée de version autre que 3 ; configuration citée qui ne cite pas cette table (chemin et empreinte) ; `DELAI_REJEU_MIN` hors des entiers de 1 à 9999 (avant tout clonage) ; branche de résultats déjà présente ; **amorce** : `PLAFOND_AMORCE_MIN` hors des entiers de 1 à 9999 (code 1, avant le clonage) ; (d) **lancement** : pas de création sans ce texte et la configuration v5 scellés, la contre-lecture finale traitée, le rapport de concordance de conv-audit sur la version scellée (chemin et empreinte consignés) et sa fiche de réception scellée, GO valide le jour même | « plus de 10 non résolus » retiré (E2) ; version de table, revérification au chargement, contrôles du script v3, variables de durée et fiche de réception ajoutés | Gardes de A et du lancement (R5) ; GO-2026-11-02-27 |
++| E8 | Liste d'arrêt (aucune ligne) | **Ajouts** : (a) **avant le manifeste** (rien n'est écrit sous `runs/`, `diag/`, `donnees/`) : table absente, non scellée, d'empreinte ≠ citée, de **version autre que 3** (une table v1 ou v2 est refusée, version dans le motif), de méthode inconnue, de forme non conforme à sa méthode, avec un doublon, ou calculée sur d'autres pièces (empreintes des textes, des fiches ou des scores ≠ configuration) ; configuration sans empreinte de table ; parent absent, non scellé ou d'empreinte ≠ `80c85a00…` ; texte qui ne cite pas la configuration, l'empreinte du parent, l'entropie ou le commit du code, ou non scellé, ou non conforme à `prereg.problemes` (`exiger_prereg_scelle`, à la création du manifeste) ; (b) **arrêt « echec »** (`arret.json`) : épisode de la table absent du run ou des fiches de P3, empreinte de P3 citée par une entrée ≠ fiches, correction qui ne redonne pas l'empreinte de P3 à la revérification du chargement ou à l'application ; corrections vérifiées ≠ comptes de la table ; épisode signalé absent de la table, épisode de la table non signalé ; (c) **script, avant l'installation** (code 2) : `ETAPES` autre que `rejeu` ; ce texte, la configuration v5, la table v3 ou le parent absent, non scellé ou de sceau faux au commit lancé ; un des quatre libellés lus absent ou cité plus d'une fois ; table citée de version autre que 3 ; configuration citée qui ne cite pas cette table (chemin et empreinte) ; `DELAI_REJEU_MIN` hors des entiers de 1 à 9999 (avant le clonage du dépôt de travail par le script : l'amorce a déjà cloné le sien pour lire le script) ; branche de résultats déjà présente ; **amorce** : `PLAFOND_AMORCE_MIN` hors des entiers de 1 à 9999 (code 1, avant le clonage) ; (d) **lancement** : pas de création sans ce texte et la configuration v5 scellés, la contre-lecture finale traitée, le rapport de concordance de conv-audit sur la version scellée (chemin et empreinte consignés) et sa fiche de réception scellée, GO valide le jour même | « plus de 10 non résolus » retiré (E2) ; version de table, revérification au chargement, contrôles du script v3, variables de durée et fiche de réception ajoutés | Gardes de A et du lancement (R5) ; GO-2026-11-02-27 |
+ | E9 | Liste d'arrêt : « Délais externes : 60 min par étape, plafond de l'amorce 150 min » ; « dépense au plus le pire cas du devis » | **Aucune borne de durée qui coupe une étape.** Seules restent deux **gardes très larges contre une boucle folle, déclarées comme telles, non des budgets** : délai externe de l'étape du rejeu **600 min** (`DELAI_REJEU_MIN=600` à la création ; défaut du script 60) et plafond de l'amorce **720 min** (`PLAFOND_AMORCE_MIN=720` ; défaut de l'amorce 110) ; durée attendue de la relance ≈ 1 à 1,5 h ; pire cas de dépense : section « Coût et GO » (≈ 17,6 USD plus le disque) | v1 : plafond 100 min, pire cas ≈ 2,3 USD | Mots de Lazar (GO-2026-11-02-27) ; R2 ne se relance pas |
+ | E10 | Nombre de tests attendus du parent : 291 (17 fichiers) | **329** (les 20 fichiers de la liste `CIBLES` du script v3 : les 18 de la v1 plus `tests/test_resolution_graine_v1.py` et `tests/test_rejeu_activations_v3.py`) | v1 : 302 (18 fichiers) | Code neuf (module v3, rejeu à graine) |
+ | E11 | Configuration `prereg/R1-rejeu-config-v2.json` (`aa79ca8e…`) | `prereg/R1-rejeu-config-v5.json` : clés de la v2 inchangées, plus `chemin_table_tokenisation`, `table_tokenisation_sha256`, `seuil_non_conformes`, `chemin_prereg_parent`, `prereg_parent_sha256` (29 clés, exactement `rejeu_activations_v3.CLES`) ; égale à la v4 de la v1 (`10707413…`) **sauf** la table (chemin `prereg/R1-table-tokenisation-v3.json`, empreinte `ead8a668…`) ; aucune clé neuve (le module v3 n'en lit pas) | v4 → v5 | Table v3 |
+@@ -135,7 +138,7 @@ change par rapport à la v1.
+ | E16 | Résultat `diag/<run>/rejeu-activations.json` ; `arret.json` | Clés du parent inchangées ; **clé ajoutée** `tokenisation` (tolérée par les deux analyses de conv-audit, n° 343), à champs v3 : `version_table` = 3, `table_sha256`, `corrections_verifiees_au_chargement`, `corrections_par_methode` (méthodes de la v3, `identifiants` comprise), `methodes_resolution` par épisode et `par_methode_resolution` (« v1 », « v2 », « identifiants », « aucune ») ; **`tokenisation.addendum` vaut `prereg/R1-addendum-relance-v2.md`** (constante du module, écrite quand la relance devait relever de la v2 ; elle désigne l'addendum qui a construit la table v3, **non ce texte** : le texte qui gouverne la course est celui du champ `prereg` du manifeste, déclaré) ; la commande du manifeste change (E12) ; verdict d'arrêt « non conforme » pour plus de 10 non résolus : sans objet ; **attentes de réception** (v2, m-8) réécrites au plan d'analyse, étape 3 | Champs v3 ; `addendum` déclaré ; attentes de réception réécrites | Descriptif ; écart de nom signalé (n° 339) |
+ | E17 | GO et calendrier | Lancement sous **GO-2026-11-02-27** (calcul, plafond 60 USD, échéance 2026-11-16 ; le plafond commun de 25 USD de GO-2026-11-02-02 n'est pas utilisé) ; après le 16 novembre, **GO nouveau** sous un identifiant nouveau | v1 : GO-2026-11-02-02 | Décision de Lazar (GO-2026-11-02-27, R-1060) |
+ | E18 | Branche de résultats : `calcul/r1-r2-reel-v1` | La course pousse sur **`calcul/r1-relance-v3-reel-v1`** (passée par `BRANCHE` à la création ; le script refuse une branche existante) ; **après la course, le run est versé aussi sur `calcul/r1-r2-reel-v1` par un commit neuf, à l'octet, sans rien réécrire** (procédure v2 de la v1, étape 7, branche source remplacée) ; la récupération par conv-audit suit sa fiche de réception, scellée avant (GO-2026-11-02-27) | v1 : `calcul/r1-relance-reel-v1` | L'analyse principale de conv-audit ne lit que `calcul/r1-r2-reel-v1` (C-2) |
+-| E19 | Copie de la ligne E5 dans l'analyse principale scellée de conv-audit (`8e267952…`, l. 146 : « Fidélité contraire, ou épisode conforme à trajectoire différente → rejeu non validé : rien n'est lu ») | **Sans objet pour les non résolus** : aucun épisode n'est laissé non résolu, la décision de Lazar N-A = (c) puis (a) (R-1116), qui couvrait la copie pour eux, n'a plus de cas à couvrir ; la copie se lit **après la table** (E1, E5) : une course qui va au bout n'a, par construction, aucun épisode conforme à trajectoire différente ; aucune décision nouvelle de Lazar n'est requise (verdict du lecteur neuf de conv-audit : aucun nœud) | v1 : couverte pour 4 épisodes nommés | Table complète |
++| E19 | Copie de la ligne E5 dans l'analyse principale scellée de conv-audit (`8e267952…`, l. 146 : « Fidélité contraire, ou épisode conforme à trajectoire différente → rejeu non validé : rien n'est lu ») | **Sans objet pour les non résolus** : aucun épisode n'est laissé non résolu, la décision de Lazar N-A = (c) puis (a) (R-1116 du registre de conv-audit, recopiée en R-1033 de `main`), qui couvrait la copie pour eux, n'a plus de cas à couvrir ; la copie se lit **après la table** (E1, E5) : une course qui va au bout n'a, par construction, aucun épisode conforme à trajectoire différente ; aucune décision nouvelle de Lazar n'est requise (verdict du lecteur neuf de conv-audit : aucun nœud) | v1 : couverte pour 4 épisodes nommés | Table complète |
+ | E20 | Recherche des jetons de fin du parent (une ou deux substitutions) | **Règle A étendue** : étapes 1 à 3 (table v1), extension C-6 (table v2), puis **rejeu à graine** (addendum v2 scellé : passe forcée avec les graines de P3, l'empreinte de P3 seule juge ; résultats scellés `8e6a4912…` et `67482545…`) ; table v3 = table v2 dont chaque épisode « non résolu » reçoit une entrée `identifiants`, chaque correction revérifiée par l'empreinte de P3 | v1 : extension C-6 seule | Demande de Lazar (n° 348) ; addendum v2 |
+ | E21 | (aucune règle de reprise) | **Ajout** : une course arrêtée par une **erreur d'infrastructure** (clonage, installation, préchargement du modèle, carte indisponible pour torch, panne ou perte de l'instance, poussée refusée), **non par une garde** (ni de durée, ni de fidélité, de contrôle négatif, de table, de tests, de sceau ou d'activation non finie), et sans aucun fichier d'activations écrit, **peut être reprise une seule fois sous ce texte** : même commit de scellement, branche nouvelle `calcul/r1-relance-v3-reel-v2`, même GO s'il est valide, reprise consignée et dite à conv-audit avant la création ; la reprise ne lit rien de la course arrêtée hors de son journal ; toute autre reprise, ou une seconde, relève d'un texte neuf | Ajout | Mots de Lazar (« je ne veux pas de blocage ») ; une erreur d'infrastructure ne produit aucune sortie lisible (R3 : rien n'est relancé pour un signe) |
+ 
+@@ -146,6 +149,26 @@ tolérance de fidélité 0,02 × (1 + |score|), contrôle négatif 18 sur 20, r
+ d'arrêt du parent hors des lignes E1, E5 et E9 ; formats de sortie (fichiers, tableaux, noms, formes, types) ; run
+ source, pièces de P3 et leurs empreintes ; entropie ; couches ; R2 non relancé ; rejeu de R4 non relancé.
+ 
++**Où atterrissent les renvois de l'addendum v2 (lignes 175 à 183, « Renvoyé à l'addendum v3 »).** Les objets G3 à G10
++sont ceux du brouillon 1 de la v2 (commit `21a6e583`, `7915a3d6…`, lignes 111 à 118), retirés de la v2 scellée.
++G3 (ligne E19 et décision N-A, « couverte, pour les épisodes nommés ») → E19 ; G4 et G5 (prédiction P-R5 et comptes
++à r′) et la prédiction P-R5 → E4, E14, E15 et « Prédiction chiffrée et signe attendu » (r′ = 4 : 151, 1 782, 1 510) ;
++G6 (configuration v5, module `rejeu_activations_v3`, code « R2 seul » de conv-audit) → E11, E12 et, pour l'écart de nom
++signalé à conv-audit, E16 ; G7 (tests de la relance) → E10 et « Tests attendus » de l'en-tête (329) ; G9
++(contre-contrôle négatif étendu) → E13 ; G10 (traitement de C-1 : `fidele` tranché par la tolérance, non forcé à faux)
++→ E2 (règle B sans objet : plus aucun épisode non résolu à trancher) et « Métrique » (les actions hors contexte exact
++entrent dans les lectures si `fidele` est vrai) ; la part de G10 sur l'essai au nom hérité
++`test_relance_regle_b_non_resolus_fidele_faux_et_seuil` (`tests/test_runs_nuit_v2.py`, dans `CIBLES` ; « à corriger
++dans le code du rejeu v3, ou déclaré à nouveau dans le complément ») n'était couverte nulle part dans le brouillon 1 :
++**déclaré ici à nouveau** — nom et docstring non changés au commit cité (m-1 de la v1 : le corps éprouve la tolérance ;
++renommer changerait le commit du code), sans effet sur la lecture ; « étape 3 du brouillon 1 (préalables, complément
++court) » → ce texte entier en tient lieu : les préalables (module v3, configuration v5, essais) sont à l'en-tête
++(commit, empreintes, 329 tests, aucune entrée `non_resolu`) et à l'étape 2 du plan, le « complément court » scellé à
++part est remplacé par ce texte complet (sans objet comme pièce séparée) ; « ligne « Relance » des critères de lecture »
++(brouillon 1 de la v2 : « lignes de la v1 et du parent, inchangées, dont « plus de 10 non résolus → rejeu non
++validé » ») → « Critères de lecture gelés » de ce texte, sa part « plus de 10 non résolus » étant sans objet (E2, E5,
++E6) ; attentes de réception (m-8) → étape 3 du plan d'analyse. Rien d'autre n'est renvoyé par ces lignes.
++
+ ## Hypothèse
+ 
+ Inchangée (parent, section « Hypothèse » : H-R1 ; H-R2 est hors de cet addendum, voir « R2 »). **Hypothèse de travail
+@@ -341,7 +364,7 @@ scellé.
+ **R2.** **R2 ne se relance pas** : ses scores existent déjà (`donnees/20261102-004328-r2-juge3b-reel/scores-juge3b-p3-v1.npz`,
+ `10838eea884baefd1921aa7fb6f603b288fd02d46ed177845ebbda6291cdd354` ; `donnees/20261102-005048-r2-juge8b-reel/scores-juge8b-p3-v1.npz`,
+ `1ebbeff89fe7ff4a6da834651b0701b0cfde8cce9781ca6e2318224d872e8d4b` ; branche `calcul/r1-r2-reel-v1` ; v1). **Aucune
+-lecture de R2 n'a lieu avant que R1 relancée ait rendu son résultat** (décision de Lazar N1 = (b), R-1116) ; la lecture
++lecture de R2 n'a lieu avant que R1 relancée ait rendu son résultat** (décision de Lazar N1 = (b), R-1116 du registre de conv-audit, recopiée en R-1033 de `main`) ; la lecture
+ suit l'analyse scellée de conv-audit, après sa vérification de concordance. **R4** : le rejeu de R4 n'est pas relancé ;
+ l'analyse secondaire de conv-audit lit R4 tel que scellé, avec `R4.activations` nul (n° 343).
+ 
+@@ -369,23 +392,26 @@ l'environnement (≈ 3 h), devis et préenregistrement neufs (parent, critères
+   `1cfb7fba…`) ; huit pièces vérifiées par sceau et égales aux empreintes de la configuration (textes, scores, sondes
+   légères, tâches, consignes, fiches, parent, table) ; identité `1f25adbd…` ; table v3 chargée par `charger_table`
+   (version 3, 22 entrées) et **revérifiée par `verifier_table_au_chargement` : 22 corrections sur 22** ; fins du format
+-  égales à celles de la table (128001, 128008, 128009) ; chemin de `_executer` jusqu'à la carte : 240 épisodes, 151
++  égales à celles de la table (128001, 128008, 128009 : pièce = `fins_du_format` de la table v3,
++  `prereg/R1-table-tokenisation-v3.json`, `ead8a668…` ; assertion du script `prevol_relance_v3.py`, valeurs non écrites
++  dans sa sortie) ; chemin de `_executer` jusqu'à la carte : 240 épisodes, 151
+   conformes en longueur, 129 identiques de base, 22 signalés, corrections par méthode égales aux comptes de la table, 0
+   non résolu, 151 trajectoires identiques, 2 236 conformes en longueur, 1 782 en contexte exact, 1 510 à trajectoire
+   identique, 272 préfixes sans empreinte, 2 400 actions à `jetons_notes` > 0, 1 510 éligibles à l'échantillon (≥ 310 par
+   condition) ; par condition (conformes en longueur, contexte exact, trajectoire identique, sur 600) : honnête 568, 471,
+   420 ; mention 570, 496, 430 ; saboteur 556, 437, 350 ; témoin 542, 378, 310 ; **22 corrections sous la consigne
+   fausse du contrôle négatif** : aucune garde levée, mêmes identifiants d'actions, empreinte différente de celle de P3.
+-- **Suite ciblée** (`CIBLES`, liste lue dans le script lui-même) au commit cité, dans un arbre détaché au motif partiel
++- **Suite ciblée** (`CIBLES`, liste lue dans le script lui-même) au commit `d803a8d6` (même `src/`, `tests/`, `scripts/` que `f921fcec` et `145da951`), dans un arbre détaché au motif partiel
+   de l'arbre où la v1 a compté ses 302 (tout le dépôt sauf `brouillons/`, `gemini/`, `livrables/`, `papiers/`,
+   `traces/`, `docs/` hors des notes de ces runs, des invites et des `.md` de tête, `registres/` hors des `.md`),
+   tokeniseur de la révision de P3 (`tokenizer.json` `79e3e522…`, `tokenizer_config.json` `177c7b61…`,
+   `special_tokens_map.json` `6f38c737…`) : **329 passés, 0
+   échoué, 0 sauté** (`tests-cibles-relance-v3.txt`).
+ - **Essai des bornes** (`tests/test_bornes_relance_v3.py`, hors de la suite ciblée, R5) : valeurs hors domaine (0, abc,
+-  12h, − 5, 10000, 1.5, espace, vide) refusées avant tout clonage (amorce, code 1 ; script, code 2) ; plafond transmis à
++  12h, − 5, 10000, 1.5, espace, vide) refusées avant le clonage (amorce : avant tout clonage, code 1 ; script : avant le
++  clonage du dépôt de travail par le script, l'amorce ayant déjà cloné le sien pour lire le script, code 2) ; plafond transmis à
+   `timeout` (défaut 110, 1, 720, 9999) ; délai lu et écrit au journal (défaut 60, 600) ; ce texte absent au commit
+-  lancé → arrêt avant l'installation ; **23 passés** au commit cité, **les 23 en échec** sur les scripts de `c2a8b6e1`.
++  lancé → arrêt avant l'installation ; **23 passés** au commit `d803a8d6` (même `src/`, `tests/`, `scripts/` que `f921fcec` et `145da951`), **les 23 en échec** sur les scripts de `c2a8b6e1`.
+ - **Essai jouet de bout en bout** de l'amorce et du script v3 (dépôt tiré du commit `d803a8d6`, même code que le commit
+   cité ; P3 jouet ; table v3 jouet, une entrée « fins » et une `identifiants`, construite par le code du rejeu à graine ;
+   dépôts nus locaux, jetons factices ; `essai-jouet-relance-v3/`) : **sain** (`PLAFOND_AMORCE_MIN=720`,
+@@ -394,9 +420,12 @@ l'environnement (≈ 3 h), devis et préenregistrement neufs (parent, critères
+   place de celui « de P3 ») : arrêt à l'étape « vérification de la table », `arret.json` « echec », aucun fichier
+   d'activations, code 1 ; **plafond de 1 min** : coupure pendant les tests, arrêt consigné et poussé, code 124 ;
+   **délai de 1 min** (dépôt témoin dont le module dort 150 s) : étape coupée à 60 s, « arrêtée (code 124) », code 1 ;
+-  **plafond 0** : refus avant le clonage, code 1 ; **délai « abc »** : refus du script avant tout clonage, code 2.
++  **plafond 0** : refus avant le clonage, code 1 ; **délai « abc »** : refus du script avant le clonage du dépôt de travail par le script
++  (l'amorce a déjà cloné le sien pour lire le script), code 2.
+ - **Contrôles d'avant l'installation et gardes de citation rejoués sur ce texte** (copie : dépôt nu local tiré du
+-  commit cité, avec ce texte, la configuration v5, la table v3 et le parent, scellés dans la copie seulement) : voir
++  commit cité, avec ce texte, la configuration v5, la table v3 et le parent, scellés dans la copie seulement ; le cas
++  « sain » y finit en code 127 sur `nvidia-smi` absent de la copie, arrêt voulu après les contrôles et la poussée
++  initiale ; six artefacts arrêtés avant l'installation, code 2) : voir
+   `controles-avant-installation-v3.txt` (versé avec ce texte, compagnon `.sha256` ; non cité ici par empreinte, il lit
+   ce texte) ; à refaire au commit de scellement (étape 1).
+ 
+@@ -427,7 +456,8 @@ larges de E9 (600 et 720 min) ; le pire cas de dépense est celui de la section
+   fiche de réception de conv-audit scellée, et `GO_ID=GO-2026-11-02-27` valide le jour même ; pas de création après le
+   16 novembre 2026 sans GO nouveau ; aucune location hors des filtres d'offre (sans offre conforme : nœud à Lazar) ;
+ - **amorce, avant le clonage** (code 1) : `PLAFOND_AMORCE_MIN` hors des entiers de 1 à 9999 (valeur vide comprise) ;
+-- **script, avant tout clonage** (code 2) : `DELAI_REJEU_MIN` hors des entiers de 1 à 9999 (valeur vide comprise) ;
++- **script, avant le clonage du dépôt de travail par le script** (l'amorce a déjà cloné le sien pour lire le script ;
++  code 2) : `DELAI_REJEU_MIN` hors des entiers de 1 à 9999 (valeur vide comprise) ;
+   `ETAPES` autre que `rejeu` ;
+ - **script, avant l'installation** (code 2) : ce texte, la configuration v5, la table v3 ou le parent absents ou non
+   scellés au commit lancé, ou de sceau faux ; un des quatre libellés lus absent ou cité plus d'une fois ; table citée de
+@@ -460,8 +490,29 @@ finale CF (v2, sections « Traitement des lectures neuves » et « Contre-lectur
+ du lecteur neuf de conv-audit (`64fab1a5…`, R-1060). Le rapport du lecteur neuf de conv-audit sur la version scellée de
+ ce texte est une condition de lancement (« Liste d'arrêt »), non une entrée de ce texte.
+ 
+-- **Contre-lecture finale** (obligatoire, R2 ; sous-agent neuf, auteur d'aucune pièce ; porte sur la version à sceller :
+-  texte entier, configuration v5 comparée à la v4, table v3 citée, code au commit cité — les deux scripts v3 et leur
+-  différence avec `c2a8b6e1`, l'essai des bornes, le module v3 —, chaque écart E1 à E21 comparé au parent, à la v1 et à
+-  la v2, comptes du pré-vol, devis et pire cas, commande de création, attentes de réception) : À REMPLIR (sous-agent
+-  neuf ; brouillon relu, chemin et empreinte ; rapport, chemin et empreinte ; traitement de chaque remarque).
++- **Contre-lecture 1** (obligatoire, R2 ; sous-agent neuf, Fable 5.1, auteur d'aucune pièce ; a porté sur la version à
++  sceller : texte entier, configuration v5 comparée à la v4, table v3 citée, code au commit cité — les deux scripts v3
++  et leur différence avec `c2a8b6e1`, l'essai des bornes, le module v3 —, chaque écart E1 à E21 comparé au parent, à
++  la v1 et à la v2, comptes du pré-vol, devis et pire cas, commande de création, attentes de réception).
++  - Brouillon relu : brouillon 1 de ce texte, `prereg/R1-addendum-relance-v3.md` au commit `145da951`,
++    `382ba6272ea0856dd9ba699f1d16eabef66fc12be288c214af71c5de28a5a05d`.
++  - Rapport : `docs/notes/runs-r1-r2-r4-v1/relance-v3/contre-lecture-addendum-relance-v3-v1.md`,
++    `c19fdbc7d6f83a5ce26b12b0fa9b5604a8bbfba8086691e723837836576add59` (compagnon `.sha256`, commit `a62f44df`).
++    Verdict : « scellable après corrections », aucun bloquant ; I1, I2 ; M1 à M4 ; trois remarques sans correction
++    demandée.
++  - Corrections apportées dans ce brouillon 2 (toutes acceptées ; une ligne par point ; détail et différence :
++    `docs/notes/runs-r1-r2-r4-v1/relance-v3/corrections-apres-contre-lecture-v1.md` et `.patch`) :
++    - I1 : « avant tout clonage » pour `DELAI_REJEU_MIN` remplacé, aux trois endroits (E8 (c), « Essais », « Liste
++      d'arrêt »), par « avant le clonage du dépôt de travail par le script (l'amorce a déjà cloné le sien pour lire le
++      script) » ; `PLAFOND_AMORCE_MIN` reste « avant le clonage » (amorce) ; aucun changement de code ;
++    - I2 : paragraphe « Où atterrissent les renvois de l'addendum v2 (lignes 175 à 183) » ajouté à « Écarts au
++      parent », chaque renvoi rattaché ; la part de G10 sur le nom d'essai hérité, couverte nulle part, est déclarée ;
++    - M1 : « au commit cité » remplacé par « au commit `d803a8d6` (même `src/`, `tests/`, `scripts/` que `f921fcec` et
++      `145da951`) » pour la suite ciblée et l'essai des bornes (en-tête, pièces, « Essais ») ;
++    - M2 : cette entrée nommée « Contre-lecture 1 », les deux empreintes écrites en entier ;
++    - M3 : « R-1116 » précisé en « R-1116 du registre de conv-audit, recopiée en R-1033 de `main` » (E19, « R2 ») ;
++    - M4 : les trois fins du format rattachées à `fins_du_format` de la table v3 et à l'assertion du pré-vol ;
++    - remarques : le code 127 du cas « sain » des contrôles d'avant l'installation dit en une parenthèse ; « partie
++      de `c2a8b6e1` » corrigé en « à partir de `c2a8b6e1` » ; la remarque sur `tokenisation.addendum` ne demandait rien.
++  - Traitement final par session-depot (relecture des corrections, empreinte de ce brouillon 2, refus éventuels et
++    pourquoi) : À REMPLIR (au scellement).
