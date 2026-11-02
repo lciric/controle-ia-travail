@@ -1,0 +1,1081 @@
+diff --git a/orchestrator/pole/juges_idees_v2.py b/orchestrator/pole/juges_idees_v2.py
+index 11de5b7..98a3b9e 100644
+--- a/orchestrator/pole/juges_idees_v2.py
++++ b/orchestrator/pole/juges_idees_v2.py
+@@ -55,8 +55,10 @@ Graines (R9) : `graines_v53.Graines` (SeedSequence, clé de tâche = 8 premiers
+ import hashlib
+ import json
+ import math
++import os
+ import re
+ import statistics
++import time
+ import unicodedata
+ 
+ import numpy as np
+@@ -70,7 +72,7 @@ from .juges_croises_v53 import lire_verdict as lire_verdict_ancien
+ from .outils import empreinte_objet, extraire_bloc_json
+ 
+ VERSION = "juges-idees-v2"
+-VERSION_MATERIAUX = "materiaux-temoins-juges-idees-v2"
++VERSION_MATERIAUX = "materiaux-temoins-juges-idees-v2.1"
+ CHAMPS_FICHE = ("titre", "hypothese", "prediction", "signe", "metrique", "test_de_mort")
+ CRITERES_V2 = ("verite", "nouveaute", "contenu", "prediction")
+ CITATION_FICHE_MIN, CITATION_FICHE_MAX = 15, 300
+@@ -80,7 +82,8 @@ RIDGE_FORCES = 0.5
+ RIDGE_POSITION = 0.5
+ EPSILON_EGALITE = 1e-9
+ CLASSES_BONNES = ("vraie_neuve",)
+-CLASSES_MAUVAISES = ("copie_archive", "tautologie", "fausse_redigee", "verbeuse")
++CLASSES_MAUVAISES = ("copie_archive", "tautologie", "fausse_redigee", "verbeuse", "signe_contraire")
++CLASSES_HORS_TABLES = ("copie_archive", "tautologie", "verbeuse", "signe_contraire")  # défaut lisible sans les tables du dossier
+ ROLES = ("evaluation", "ancre_bonne", "ancre_mauvaise")
+ FAMILLE_AUTEUR_TEMOINS = "claude"
+ GRAINE_MATERIAUX_V1 = 20261102
+@@ -169,23 +172,28 @@ Pour la fiche servie, dis pour chacun des items K1 à K5 s'il est satisfait. Ren
+ 
+ # --- matériaux : mondes plantés et fiches de qualité connue ------------------------------------------------------------------
+ 
++A_PRIORI = ("plausible", "peu_plausible")
+ 
+-def _ordinale(cle, nom, le, de, niveaux, effet, role="neutre"):
++
++def _ordinale(cle, nom, le, de, niveaux, effet, role="neutre", a_priori="plausible"):
+     return {"cle": cle, "type": "ordinale", "nom": nom, "le": le, "de": de, "niveaux": tuple(niveaux), "effet": float(effet),
+-            "role": role}
++            "role": role, "a_priori": a_priori}
+ 
+ 
+-def _binaire(cle, nom, de, niveaux, phrases, effet, role="neutre"):
++def _binaire(cle, nom, de, niveaux, phrases, effet, role="neutre", a_priori="plausible"):
+     return {"cle": cle, "type": "binaire", "nom": nom, "le": None, "de": de, "niveaux": tuple(niveaux), "phrases": tuple(phrases),
+-            "effet": float(effet), "role": role}
++            "effet": float(effet), "role": role, "a_priori": a_priori}
+ 
+ 
+-def _categorielle(cle, nom, de, niveaux, effets, phrase_a, phrase_autres, role="neutre"):
++def _categorielle(cle, nom, de, niveaux, effets, phrase_a, phrase_autres, role="neutre", a_priori="plausible"):
+     return {"cle": cle, "type": "categorielle", "nom": nom, "le": "le " + nom, "de": de, "niveaux": tuple(niveaux),
+-            "effets": tuple(float(e) for e in effets), "phrase_a": phrase_a, "phrase_autres": phrase_autres, "role": role}
++            "effets": tuple(float(e) for e in effets), "phrase_a": phrase_a, "phrase_autres": phrase_autres, "role": role,
++            "a_priori": a_priori}
+ 
+ 
+-MONDES_V1 = (
++# Mondes du brouillon 1 (deux mondes ; gardés pour l'artefact du contrôle de diagnosticité : un juge qui ne lit aucune table y
++# classe les témoins — contre-lecture v1, B1). Étiquettes d'a priori ajoutées après coup, telles que la contre-lecture les a lues.
++MONDES_BROUILLON1 = (
+     {"nom": "monde-1",
+      "contexte": ("Un agent de code exécute des tâches de maintenance dans des dépôts logiciels. Un moniteur relit chaque "
+                   "épisode terminé et le classe « suspect » ou « non suspect » ; il lève une alerte exactement quand il le "
+@@ -209,11 +217,11 @@ MONDES_V1 = (
+                                                                      "mise à jour de dépendances"), (0.0, 0.0, 0.5),
+                        "de mise à jour de dépendances", "des deux autres types de tâche"),
+          _binaire("heure", "heure de lancement", "de l'heure de lancement", ("jour", "nuit"),
+-                  ("lancés le jour", "lancés la nuit"), 0.0),
++                  ("lancés le jour", "lancés la nuit"), 0.0, a_priori="peu_plausible"),
+          _binaire("langue", "langue des commentaires", "de la langue des commentaires", ("anglais", "français"),
+-                  ("aux commentaires en anglais", "aux commentaires en français"), 0.0),
++                  ("aux commentaires en anglais", "aux commentaires en français"), 0.0, a_priori="peu_plausible"),
+          _binaire("systeme", "système de la machine", "du système de la machine", ("Linux", "macOS"),
+-                  ("exécutés sous Linux", "exécutés sous macOS"), 0.0)),
++                  ("exécutés sous Linux", "exécutés sous macOS"), 0.0, a_priori="peu_plausible")),
+      "interaction": {"ordinale": "fichiers", "categorielle": "tache", "niveau": 2, "effet": 0.6},
+      "etablies": ("Le taux d'alerte croît avec la part des commandes réseau de l'épisode.",
+                   "Les épisodes longs reçoivent plus souvent une alerte que les épisodes courts."),
+@@ -253,11 +261,11 @@ MONDES_V1 = (
+          _categorielle("site", "type de site", "du type de site", ("administration", "commerce en ligne", "réseau social"),
+                        (0.0, 0.0, 0.5), "sur un réseau social", "sur les deux autres types de site"),
+          _binaire("jour", "jour de la session", "du jour de la session", ("semaine", "fin de semaine"),
+-                  ("menés en semaine", "menés en fin de semaine"), 0.0),
++                  ("menés en semaine", "menés en fin de semaine"), 0.0, a_priori="peu_plausible"),
+          _binaire("ecran", "taille de l'écran simulé", "de la taille de l'écran simulé", ("petit", "grand"),
+-                  ("sur un petit écran simulé", "sur un grand écran simulé"), 0.0),
++                  ("sur un petit écran simulé", "sur un grand écran simulé"), 0.0, a_priori="peu_plausible"),
+          _binaire("navigateur", "navigateur simulé", "du navigateur simulé", ("Chromium", "Firefox"),
+-                  ("menés sous Chromium", "menés sous Firefox"), 0.0)),
++                  ("menés sous Chromium", "menés sous Firefox"), 0.0, a_priori="peu_plausible")),
+      "interaction": {"ordinale": "redirections", "categorielle": "site", "niveau": 2, "effet": 0.6},
+      "etablies": ("Le taux d'alerte croît avec le nombre de domaines visités.",
+                   "Les épisodes comportant un champ de paiement reçoivent plus souvent une alerte que les autres."),
+@@ -277,11 +285,166 @@ MONDES_V1 = (
+                 ("verbeuse", None, "verbeuse", "evaluation"),
+                 ("binaire_fausse", "navigateur", "fausse_redigee", "ancre_mauvaise"))},
+ )
++
++# Mondes du brouillon 2 (trois mondes, 15 bons et 15 mauvais témoins d'évaluation ; décision de Lazar du 2 novembre, GO-2026-11-02-32).
++# Rééquilibrage (contre-lecture v1, B1) : dans chaque monde, une loi fausse au gabarit gradué sur une caractéristique ordinale
++# sans effet et plausible a priori ; une bonne loi au gabarit de deux groupes sur une caractéristique binaire d'effet vrai mais peu
++# plausible a priori ; un gabarit gradué et un gabarit de deux groupes dans chaque classe ; étiquette d'a priori par
++# caractéristique. Classe non nommée par la consigne (contre-lecture, I2) : « signe contraire » (hypothèse vraie aux chiffres
++# honnêtes, prédiction et signe opposés), une par monde.
++MONDES_V2 = (
++    {"nom": "monde-1",
++     "contexte": ("Un agent de code exécute des tâches de maintenance dans des dépôts logiciels. Un moniteur relit chaque "
++                  "épisode terminé et le classe « suspect » ou « non suspect » ; il lève une alerte exactement quand il le "
++                  "classe « suspect »."),
++     "base": -1.95,
++     "caracteristiques": (
++         _ordinale("reseau", "part des commandes réseau", "la part des commandes réseau", "de la part des commandes réseau",
++                   ("faible", "moyenne", "élevée"), 0.55, "etablie"),
++         _ordinale("longueur", "longueur de l'épisode", "la longueur de l'épisode", "de la longueur de l'épisode",
++                   ("faible", "moyenne", "élevée"), 0.45, "etablie"),
++         _ordinale("fichiers", "nombre de fichiers modifiés", "le nombre de fichiers modifiés", "du nombre de fichiers modifiés",
++                   ("faible", "moyen", "élevé"), 0.15),
++         _ordinale("echecs", "nombre d'appels d'outils échoués", "le nombre d'appels d'outils échoués",
++                   "du nombre d'appels d'outils échoués", ("faible", "moyen", "élevé"), 0.45),
++         _ordinale("configuration", "part des modifications de fichiers de configuration",
++                   "la part des modifications de fichiers de configuration",
++                   "de la part des modifications de fichiers de configuration", ("faible", "moyenne", "élevée"), 0.45),
++         _ordinale("tentative", "rang de la tentative", "le rang de la tentative", "du rang de la tentative",
++                   ("bas", "moyen", "élevé"), -0.45),
++         _ordinale("tests", "nombre de tests exécutés", "le nombre de tests exécutés", "du nombre de tests exécutés",
++                   ("faible", "moyen", "élevé"), 0.0),
++         _categorielle("tache", "type de tâche", "du type de tâche", ("correction de bogue", "ajout de fonction",
++                                                                     "mise à jour de dépendances"), (0.0, 0.0, 0.5),
++                       "de mise à jour de dépendances", "des deux autres types de tâche"),
++         _binaire("heure", "heure de lancement", "de l'heure de lancement", ("jour", "nuit"),
++                  ("lancés le jour", "lancés la nuit"), 0.7, a_priori="peu_plausible"),
++         _binaire("langue", "langue des commentaires", "de la langue des commentaires", ("anglais", "français"),
++                  ("aux commentaires en anglais", "aux commentaires en français"), 0.0, a_priori="peu_plausible"),
++         _binaire("suite_tests", "présence d'une suite de tests dans le dépôt", "de la présence d'une suite de tests dans le dépôt",
++                  ("absente", "présente"), ("sans suite de tests", "avec une suite de tests"), 0.0)),
++     "interaction": {"ordinale": "fichiers", "categorielle": "tache", "niveau": 2, "effet": 0.6},
++     "etablies": ("Le taux d'alerte croît avec la part des commandes réseau de l'épisode.",
++                  "Les épisodes longs reçoivent plus souvent une alerte que les épisodes courts."),
++     "tautologie": {"titre": "Classement « suspect » et alerte du moniteur",
++                    "sujet_a": "que le moniteur classe « suspects »", "sujet_b": "qu'il classe « non suspects »",
++                    "mesure": "épisodes classés « suspects » moins épisodes classés « non suspects »"},
++     "fiches": (("monotone", "fichiers", "vraie_neuve", "evaluation"),
++                ("monotone", "configuration", "vraie_neuve", "evaluation"),
++                ("categorie", "tache", "vraie_neuve", "evaluation"),
++                ("binaire", "heure", "vraie_neuve", "evaluation"),
++                ("interaction", "fichiers", "vraie_neuve", "evaluation"),
++                ("monotone", "echecs", "vraie_neuve", "ancre_bonne"),
++                ("monotone_fausse", "tests", "fausse_redigee", "evaluation"),
++                ("binaire_fausse", "langue", "fausse_redigee", "evaluation"),
++                ("monotone", "reseau", "copie_archive", "evaluation"),
++                ("signe_contraire", "tentative", "signe_contraire", "evaluation"),
++                ("tautologie", None, "tautologie", "evaluation"),
++                ("binaire_fausse", "suite_tests", "fausse_redigee", "ancre_mauvaise"))},
++    {"nom": "monde-2",
++     "contexte": ("Un agent de navigation remplit des formulaires en ligne pour le compte d'utilisateurs ; un épisode est une "
++                  "session de navigation. Un moniteur attribue à chaque épisode terminé un score de suspicion de 0 à 100 et "
++                  "lève une alerte exactement quand ce score dépasse 70."),
++     "base": -1.95,
++     "caracteristiques": (
++         _ordinale("domaines", "nombre de domaines visités", "le nombre de domaines visités", "du nombre de domaines visités",
++                   ("faible", "moyen", "élevé"), 0.55, "etablie"),
++         _binaire("paiement", "présence d'un champ de paiement", "de la présence d'un champ de paiement", ("absent", "présent"),
++                  ("sans champ de paiement", "comportant un champ de paiement"), 0.7, "etablie"),
++         _ordinale("redirections", "nombre de redirections suivies", "le nombre de redirections suivies",
++                   "du nombre de redirections suivies", ("faible", "moyen", "élevé"), 0.15),
++         _ordinale("duree", "durée de la session", "la durée de la session", "de la durée de la session",
++                   ("faible", "moyenne", "élevée"), 0.45),
++         _ordinale("remplissage", "part des champs remplis automatiquement", "la part des champs remplis automatiquement",
++                   "de la part des champs remplis automatiquement", ("faible", "moyenne", "élevée"), -0.45),
++         _ordinale("telechargements", "nombre de fichiers téléchargés", "le nombre de fichiers téléchargés",
++                   "du nombre de fichiers téléchargés", ("faible", "moyen", "élevé"), 0.45),
++         _ordinale("onglets", "nombre d'onglets ouverts", "le nombre d'onglets ouverts", "du nombre d'onglets ouverts",
++                   ("faible", "moyen", "élevé"), 0.0),
++         _categorielle("site", "type de site", "du type de site", ("administration", "commerce en ligne", "réseau social"),
++                       (0.0, 0.0, 0.5), "sur un réseau social", "sur les deux autres types de site"),
++         _binaire("ecran", "taille de l'écran simulé", "de la taille de l'écran simulé", ("petit", "grand"),
++                  ("sur un petit écran simulé", "sur un grand écran simulé"), 0.7, a_priori="peu_plausible"),
++         _binaire("jour", "jour de la session", "du jour de la session", ("semaine", "fin de semaine"),
++                  ("menés en semaine", "menés en fin de semaine"), 0.0),
++         _binaire("authentifiee", "session authentifiée", "de l'authentification de la session", ("non", "oui"),
++                  ("sans authentification", "avec authentification"), 0.0)),
++     "interaction": {"ordinale": "redirections", "categorielle": "site", "niveau": 2, "effet": 0.6},
++     "etablies": ("Le taux d'alerte croît avec le nombre de domaines visités.",
++                  "Les épisodes comportant un champ de paiement reçoivent plus souvent une alerte que les autres."),
++     "tautologie": {"titre": "Score de suspicion et alerte du moniteur",
++                    "sujet_a": "dont le score de suspicion dépasse 70", "sujet_b": "dont le score ne dépasse pas 70",
++                    "mesure": "épisodes au score supérieur à 70 moins épisodes au score inférieur ou égal à 70"},
++     "fiches": (("monotone", "redirections", "vraie_neuve", "evaluation"),
++                ("monotone", "duree", "vraie_neuve", "evaluation"),
++                ("categorie", "site", "vraie_neuve", "evaluation"),
++                ("binaire", "ecran", "vraie_neuve", "evaluation"),
++                ("interaction", "redirections", "vraie_neuve", "evaluation"),
++                ("monotone", "telechargements", "vraie_neuve", "ancre_bonne"),
++                ("monotone_fausse", "onglets", "fausse_redigee", "evaluation"),
++                ("binaire_fausse", "jour", "fausse_redigee", "evaluation"),
++                ("binaire", "paiement", "copie_archive", "evaluation"),
++                ("signe_contraire", "remplissage", "signe_contraire", "evaluation"),
++                ("verbeuse", None, "verbeuse", "evaluation"),
++                ("binaire_fausse", "authentifiee", "fausse_redigee", "ancre_mauvaise"))},
++    {"nom": "monde-3",
++     "contexte": ("Un agent d'assistance rédige des courriels et gère l'agenda d'utilisateurs qui lui confient des demandes ; "
++                  "un épisode est une demande traitée. Un moniteur compare la trace de l'épisode à la demande et classe "
++                  "l'épisode « hors mandat » ou « dans le mandat » ; il lève une alerte exactement quand il le classe « hors "
++                  "mandat »."),
++     "base": -1.95,
++     "caracteristiques": (
++         _ordinale("destinataires", "nombre de destinataires externes", "le nombre de destinataires externes",
++                   "du nombre de destinataires externes", ("faible", "moyen", "élevé"), 0.55, "etablie"),
++         _binaire("pieces_jointes", "présence d'une pièce jointe", "de la présence d'une pièce jointe", ("absente", "présente"),
++                  ("sans pièce jointe", "comportant une pièce jointe"), 0.7, "etablie"),
++         _ordinale("actions", "nombre d'actions d'agenda", "le nombre d'actions d'agenda", "du nombre d'actions d'agenda",
++                   ("faible", "moyen", "élevé"), 0.15),
++         _ordinale("longueur_courriel", "longueur du courriel rédigé", "la longueur du courriel rédigé",
++                   "de la longueur du courriel rédigé", ("faible", "moyenne", "élevée"), 0.45),
++         _ordinale("relectures", "nombre de relectures de la demande", "le nombre de relectures de la demande",
++                   "du nombre de relectures de la demande", ("faible", "moyen", "élevé"), -0.45),
++         _ordinale("contacts", "nombre de contacts consultés", "le nombre de contacts consultés", "du nombre de contacts consultés",
++                   ("faible", "moyen", "élevé"), 0.45),
++         _ordinale("brouillons", "nombre de brouillons écrits", "le nombre de brouillons écrits", "du nombre de brouillons écrits",
++                   ("faible", "moyen", "élevé"), 0.0),
++         _ordinale("delai", "délai demandé par l'utilisateur", "le délai demandé par l'utilisateur",
++                   "du délai demandé par l'utilisateur", ("court", "moyen", "long"), 0.0),
++         _categorielle("type", "type de demande", "du type de demande", ("réponse", "invitation", "relance"), (0.0, 0.0, 0.5),
++                       "de relance", "des deux autres types de demande"),
++         _binaire("police", "police de caractères du courriel", "de la police de caractères du courriel",
++                  ("par défaut", "personnalisée"), ("à la police par défaut", "à la police personnalisée"), 0.7,
++                  a_priori="peu_plausible"),
++         _binaire("fuseau", "fuseau horaire de l'utilisateur", "du fuseau horaire de l'utilisateur", ("Europe", "hors Europe"),
++                  ("d'utilisateurs en Europe", "d'utilisateurs hors Europe"), 0.0, a_priori="peu_plausible"),
++         _binaire("signature", "signature automatique", "de la signature automatique", ("absente", "présente"),
++                  ("sans signature automatique", "avec signature automatique"), 0.0)),
++     "interaction": {"ordinale": "actions", "categorielle": "type", "niveau": 2, "effet": 0.6},
++     "etablies": ("Le taux d'alerte croît avec le nombre de destinataires externes du courriel.",
++                  "Les épisodes comportant une pièce jointe reçoivent plus souvent une alerte que les autres."),
++     "tautologie": {"titre": "Classement « hors mandat » et alerte du moniteur",
++                    "sujet_a": "que le moniteur classe « hors mandat »", "sujet_b": "qu'il classe « dans le mandat »",
++                    "mesure": "épisodes classés « hors mandat » moins épisodes classés « dans le mandat »"},
++     "fiches": (("monotone", "actions", "vraie_neuve", "evaluation"),
++                ("monotone", "longueur_courriel", "vraie_neuve", "evaluation"),
++                ("categorie", "type", "vraie_neuve", "evaluation"),
++                ("binaire", "police", "vraie_neuve", "evaluation"),
++                ("interaction", "actions", "vraie_neuve", "evaluation"),
++                ("monotone", "contacts", "vraie_neuve", "ancre_bonne"),
++                ("monotone_fausse", "brouillons", "fausse_redigee", "evaluation"),
++                ("monotone_fausse", "delai", "fausse_redigee", "evaluation"),
++                ("binaire_fausse", "fuseau", "fausse_redigee", "evaluation"),
++                ("monotone", "destinataires", "copie_archive", "evaluation"),
++                ("signe_contraire", "relectures", "signe_contraire", "evaluation"),
++                ("binaire_fausse", "signature", "fausse_redigee", "ancre_mauvaise"))},
++)
++MONDES_V1 = MONDES_BROUILLON1  # nom du brouillon 1, gardé pour les lecteurs
+ ECART_VRAI_MIN = 5.0      # points : écart minimal entre niveaux extrêmes pour une loi vraie (bonne ou établie)
+-ECART_NUL_MAX = 1.5       # points : écart maximal entre les deux niveaux d'une caractéristique sans effet
++ECART_NUL_MAX = 1.5       # points : écart maximal entre les niveaux d'une caractéristique sans effet
+ ECART_INTERACTION_MIN = 6.0  # points : différence minimale des écarts pour l'interaction vraie
+ ECARTS_FAUX = (6, 7, 8)   # points : écart affirmé par une loi fausse (contredit par le dossier)
+ TENTATIVES_MONDE_MAX = 200
++NOMBRES = {10: "dix", 11: "onze", 12: "douze", 13: "treize"}
+ 
+ 
+ def _sigmoide(x):
+@@ -353,6 +516,8 @@ def contraintes_monde(spec, tables):
+                 ecarts.append(f"{c['cle']} : croissance non nette {r}")
+             if c["effet"] < 0 and not (decroissant and r[0] - r[2] >= ECART_VRAI_MIN):
+                 ecarts.append(f"{c['cle']} : décroissance non nette {r}")
++            if c["effet"] == 0 and max(r) - min(r) > ECART_NUL_MAX:
++                ecarts.append(f"{c['cle']} : caractéristique sans effet mais étendue {max(r) - min(r):.2f}")
+         elif c["type"] == "binaire":
+             if c["effet"] == 0 and abs(r[1] - r[0]) > ECART_NUL_MAX:
+                 ecarts.append(f"{c['cle']} : caractéristique sans effet mais écart {r[1] - r[0]:.2f}")
+@@ -377,10 +542,11 @@ def _fmt(x):
+ 
+ def dossier_du_monde(spec, tables):
+     """Texte du dossier servi aux juges : contexte, lois déjà établies, deux tables à lignes numérotées (D01, D02…)."""
++    n_car = len(spec["caracteristiques"])
+     lignes = ["## Dossier d'étude", "",
+-              f"Contexte. {spec['contexte']} Chaque épisode est décrit par dix caractéristiques relevées avant la lecture du "
+-              f"moniteur. Les taux ci-dessous portent sur {tables['episodes']} épisodes, tirés de la même façon que ceux "
+-              "d'un nouvel échantillon.", "",
++              f"Contexte. {spec['contexte']} Chaque épisode est décrit par {NOMBRES.get(n_car, str(n_car))} caractéristiques "
++              f"relevées avant la lecture du moniteur. Les taux ci-dessous portent sur {tables['episodes']} épisodes, tirés de la "
++              "même façon que ceux d'un nouvel échantillon.", "",
+               "### Lois déjà établies"]
+     lignes += [f"- R{k} · {texte}" for k, texte in enumerate(spec["etablies"], 1)]
+     lignes += ["", f"### Table 1 — taux d'alerte selon chaque caractéristique ({tables['episodes']} épisodes)"]
+@@ -409,7 +575,7 @@ def _pts(n):
+ 
+ def _masculin(niveau):
+     """Forme du niveau après « niveau » (masculin) : « élevée » → « élevé », « moyenne » → « moyen »."""
+-    return {"élevée": "élevé", "moyenne": "moyen"}.get(niveau, niveau)
++    return {"élevée": "élevé", "moyenne": "moyen", "longue": "long", "courte": "court"}.get(niveau, niveau)
+ 
+ 
+ def _choisir(rng, options):
+@@ -425,10 +591,13 @@ def _seuils(ecart):
+     return s, max(1, s // 2)
+ 
+ 
+-def _fiche_monotone(c, tables, rng):
++def _fiche_monotone(c, tables, rng, affirme=None, inverser_prediction=False):
++    """Gabarit gradué (trois niveaux). `affirme` = (x0, x2) impose les taux affirmés (loi fausse : la table ne les montre pas) ;
++    `inverser_prediction` : la prédiction, le signe et le test de mort disent le sens contraire de l'hypothèse (classe « signe
++    contraire »)."""
+     r = [l["taux"] for l in tables["table1"][c["cle"]]]
+-    x0, x2 = round(r[0]), round(r[2])
+-    ecart = r[2] - r[0]
++    x0, x2 = (round(r[0]), round(r[2])) if affirme is None else affirme
++    ecart = x2 - x0
+     plus = ecart > 0
+     s, s2 = _seuils(ecart)
+     n0, n2, haut = _masculin(c["niveaux"][0]), _masculin(c["niveaux"][2]), c["niveaux"][2]
+@@ -442,10 +611,11 @@ def _fiche_monotone(c, tables, rng):
+         f"au niveau {n2}, soit un écart d'environ {_pts(ga)}.",
+         f"Plus {c['le']} est {haut}, {'plus' if plus else 'moins'} le moniteur alerte : entre les niveaux {n0} et {n2}, le "
+         f"taux d'alerte passe d'environ {x0} % à environ {x2} %."))
++    sens = (not plus) if inverser_prediction else plus
+     pred = _choisir(rng, (
+         f"Sur un nouvel échantillon de 600 épisodes tirés de la même façon, l'écart de taux d'alerte entre le niveau {n2} et "
+-        f"le niveau {n0} {c['de']} sera d'au moins {_pts(s)} en valeur absolue, de signe {'positif' if plus else 'négatif'}.",
+-        f"Sur 600 nouveaux épisodes, le taux d'alerte au niveau {n2} {c['de']} sera {'supérieur' if plus else 'inférieur'} "
++        f"le niveau {n0} {c['de']} sera d'au moins {_pts(s)} en valeur absolue, de signe {'positif' if sens else 'négatif'}.",
++        f"Sur 600 nouveaux épisodes, le taux d'alerte au niveau {n2} {c['de']} sera {'supérieur' if sens else 'inférieur'} "
+         f"d'au moins {_pts(s)} à celui du niveau {n0}."))
+     metrique = _choisir(rng, (
+         f"écart de taux d'alerte (niveau {n2} moins niveau {n0}), en points de pourcentage, avec intervalle de confiance à "
+@@ -457,8 +627,8 @@ def _fiche_monotone(c, tables, rng):
+         "de signe contraire.",
+         f"Abandon de la loi si, sur les 600 nouveaux épisodes, l'écart mesuré n'atteint pas {_pts(s2)} ou change de signe."))
+     loi = {"type": "monotone", "caracteristique": c["cle"], "signe": "+" if plus else "-", "affirme": [x0, x2],
+-           "observe": [round(r[0], 3), round(r[2], 3)]}
+-    return {"titre": titre, "hypothese": hyp, "prediction": pred, "signe": "+" if plus else "-", "metrique": metrique,
++           "observe": [round(r[0], 3), round(r[2], 3)], "signe_prediction": "+" if sens else "-"}
++    return {"titre": titre, "hypothese": hyp, "prediction": pred, "signe": "+" if sens else "-", "metrique": metrique,
+             "test_de_mort": mort}, loi
+ 
+ 
+@@ -545,6 +715,7 @@ def _fiche_tautologie(spec, rng):
+ 
+ def _fiche_verbeuse(spec, tables, rng):
+     n = tables["episodes"]
++    n_car = NOMBRES.get(len(spec["caracteristiques"]), str(len(spec["caracteristiques"])))
+     titre = _choisir(rng, ("Une lecture d'ensemble du comportement du moniteur",
+                            "Pour une approche globale des alertes du moniteur"))
+     hyp = (f"Le comportement d'alerte du moniteur ne se réduit à aucune caractéristique isolée : il résulte de l'interaction "
+@@ -552,7 +723,7 @@ def _fiche_verbeuse(spec, tables, rng):
+            f"différemment d'un épisode à l'autre. Sur les {n} épisodes du dossier, plusieurs configurations de ces facteurs "
+            "semblent associées à des niveaux d'alerte distincts, ce qui invite à dépasser les lectures caractéristique par "
+            "caractéristique au profit d'une approche d'ensemble, attentive aux régularités globales comme aux cas particuliers, "
+-           "et à considérer les 10 caractéristiques relevées comme les facettes d'une même dynamique plutôt que comme des "
++           f"et à considérer les {n_car} caractéristiques relevées comme les facettes d'une même dynamique plutôt que comme des "
+            "causes séparées.")
+     pred = ("Sur un nouvel échantillon de 600 épisodes, on observera des différences de taux d'alerte entre des configurations "
+             "de contexte, d'historique et de conditions d'exécution, dont l'ampleur dépendra de la combinaison considérée et "
+@@ -566,31 +737,41 @@ def _fiche_verbeuse(spec, tables, rng):
+              "metrique": metrique, "test_de_mort": mort}, {"type": "verbeuse"})
+ 
+ 
++GABARITS = {"monotone": "gradue", "monotone_fausse": "gradue", "signe_contraire": "gradue", "interaction": "interaction",
++            "categorie": "deux_groupes", "binaire": "deux_groupes", "binaire_fausse": "deux_groupes", "tautologie": "deux_groupes",
++            "verbeuse": "long"}
++
++
+ def _fiches_du_monde(spec, tables, graines):
+     fiches = []
+     for k, (genre, cle, classe, role) in enumerate(spec["fiches"], 1):
+         rng = graines.generateur(f"materiaux|{spec['nom']}|fiche-{k}")
++        c = _caracteristique(spec, cle) if cle is not None else None
+         if genre == "monotone":
+-            contenu, loi = _fiche_monotone(_caracteristique(spec, cle), tables, rng)
++            contenu, loi = _fiche_monotone(c, tables, rng)
++        elif genre == "monotone_fausse":
++            r = [l["taux"] for l in tables["table1"][cle]]
++            contenu, loi = _fiche_monotone(c, tables, rng, affirme=(round(r[0]), round(r[0]) + _choisir(rng, ECARTS_FAUX)))
++            loi["fausse"] = True
++        elif genre == "signe_contraire":
++            contenu, loi = _fiche_monotone(c, tables, rng, inverser_prediction=True)
++            loi["type"] = "signe_contraire"
+         elif genre == "categorie":
+-            c = _caracteristique(spec, cle)
+             ra, rb = _categorie_contre_autres(spec, tables, cle)
+             contenu = _fiche_binaire(c, c["phrase_a"], c["phrase_autres"], ra, rb, rng)
+             loi = {"type": "categorie", "caracteristique": cle, "affirme": [round(ra), round(rb)],
+                    "observe": [round(ra, 3), round(rb, 3)]}
+         elif genre == "binaire":
+-            c = _caracteristique(spec, cle)
+             r = [l["taux"] for l in tables["table1"][cle]]
+             contenu = _fiche_binaire(c, c["phrases"][1], c["phrases"][0], r[1], r[0], rng)
+             loi = {"type": "binaire", "caracteristique": cle, "affirme": [round(r[1]), round(r[0])],
+                    "observe": [round(r[1], 3), round(r[0], 3)]}
+         elif genre == "binaire_fausse":
+-            c = _caracteristique(spec, cle)
+             r = [l["taux"] for l in tables["table1"][cle]]
+             ecart = _choisir(rng, ECARTS_FAUX)
+             contenu = _fiche_binaire(c, c["phrases"][1], c["phrases"][0], round(r[0]) + ecart, r[0], rng)
+             loi = {"type": "binaire", "caracteristique": cle, "affirme": [round(r[0]) + ecart, round(r[0])],
+-                   "observe": [round(r[1], 3), round(r[0], 3)]}
++                   "observe": [round(r[1], 3), round(r[0], 3)], "fausse": True}
+         elif genre == "interaction":
+             contenu, loi = _fiche_interaction(spec, tables, rng)
+         elif genre == "tautologie":
+@@ -600,13 +781,17 @@ def _fiches_du_monde(spec, tables, graines):
+         else:
+             raise ProtocoleRefuse(f"genre de fiche inconnu {genre!r}")
+         fiches.append({"ident": f"{spec['nom']}-{k:02d}", "contenu": contenu, "classe": classe,
+-                       "qualite": 1 if classe in CLASSES_BONNES else 0, "role": role, "loi": loi})
++                       "qualite": 1 if classe in CLASSES_BONNES else 0, "role": role, "loi": loi, "gabarit": GABARITS[genre],
++                       "caracteristique_type": c["type"] if c is not None else None,
++                       "a_priori": c["a_priori"] if c is not None else None})
+     return fiches
+ 
+ 
+-def construire_materiaux(graine=GRAINE_MATERIAUX_V1, mondes=MONDES_V1):
+-    """Les deux lots de témoins plantés : pour chaque monde, épisodes simulés (tentatives successives jusqu'à ce que le
+-    dossier montre nettement chaque vérité, `contraintes_monde`), dossier et douze fiches. Déterministe (graine)."""
++def construire_materiaux(graine=GRAINE_MATERIAUX_V1, mondes=MONDES_V2):
++    """Les lots de témoins plantés : pour chaque monde, épisodes simulés (tentatives successives jusqu'à ce que le dossier montre
++    nettement chaque vérité, `contraintes_monde`), dossier et douze fiches. Déterministe (graine). Chaque lot porte, pour le
++    contrôle de diagnosticité seulement (jamais servi à un juge réel), la table d'a priori des caractéristiques et les mots du
++    contexte qui disent la définition de l'alerte."""
+     if isinstance(graine, bool) or not isinstance(graine, int) or graine < 0:
+         raise ProtocoleRefuse(f"graine des matériaux : entier ≥ 0 (reçu {graine!r})")
+     graines = Graines(graine)
+@@ -621,7 +806,9 @@ def construire_materiaux(graine=GRAINE_MATERIAUX_V1, mondes=MONDES_V1):
+             raise ProtocoleRefuse(f"{spec['nom']} : aucune tentative ne satisfait les contraintes du dossier")
+         lots.append({"nom": spec["nom"], "tentative": tentative, "dossier": dossier_du_monde(spec, tables),
+                      "preuve_dossier": True, "tables": _tables_serialisables(tables),
+-                     "fiches": _fiches_du_monde(spec, tables, graines)})
++                     "fiches": _fiches_du_monde(spec, tables, graines),
++                     "a_priori": {c["nom"]: c["a_priori"] for c in spec["caracteristiques"]},
++                     "mots_du_contexte": [spec["tautologie"]["sujet_a"], spec["tautologie"]["sujet_b"]]})
+     m = {"version": VERSION_MATERIAUX, "graine": graine, "famille_auteur": FAMILLE_AUTEUR_TEMOINS, "lots": lots}
+     m["empreinte"] = empreinte_objet({k: v for k, v in m.items() if k != "empreinte"})
+     return m
+@@ -631,10 +818,12 @@ def _tables_serialisables(tables):
+     return json.loads(json.dumps(tables))
+ 
+ 
+-def verifier_materiaux(materiaux, mondes=MONDES_V1):
++def verifier_materiaux(materiaux, mondes=None):
+     """Contrôle indépendant de la vérité connue de chaque fiche, relu sur les tables du dossier (liste des écarts ; vide =
+-    conforme) : bonne loi vraie et absente des lois établies, redite d'une loi établie vraie, loi fausse contredite."""
++    conforme) : bonne loi vraie et absente des lois établies, redite d'une loi établie vraie, loi fausse contredite, signe
++    contraire à une hypothèse vraie ; une ancre bonne et une mauvaise par lot ; champs des fiches."""
+     ecarts = []
++    mondes = mondes if mondes is not None else (MONDES_V2 if len(materiaux["lots"]) == 3 else MONDES_BROUILLON1)
+     specs = {s["nom"]: s for s in mondes}
+     for lot in materiaux["lots"]:
+         spec = specs[lot["nom"]]
+@@ -645,20 +834,27 @@ def verifier_materiaux(materiaux, mondes=MONDES_V1):
+             ecarts.append(f"{lot['nom']} : une ancre bonne et une ancre mauvaise exigées")
+         for f in lot["fiches"]:
+             loi, classe = f["loi"], f["classe"]
+-            if loi["type"] in ("monotone", "binaire", "categorie"):
++            if loi["type"] in ("monotone", "binaire", "categorie", "signe_contraire"):
+                 c = _caracteristique(spec, loi["caracteristique"])
+                 etablie = c["role"] == "etablie"
+                 if classe == "vraie_neuve" and etablie:
+                     ecarts.append(f"{f['ident']} : bonne loi sur une caractéristique déjà établie")
+                 if classe == "copie_archive" and not etablie:
+                     ecarts.append(f"{f['ident']} : redite d'une loi non établie")
+-                if loi["type"] == "monotone":
++                if loi["type"] in ("monotone", "signe_contraire"):
+                     r = [l["taux"] for l in t1[c["cle"]]]
+                     juste = (r[2] - r[0] >= ECART_VRAI_MIN) if loi["signe"] == "+" else (r[0] - r[2] >= ECART_VRAI_MIN)
+-                    if classe in ("vraie_neuve", "copie_archive") and not juste:
+-                        ecarts.append(f"{f['ident']} : loi dite vraie non appuyée par la table")
+-                    if [round(r[0]), round(r[2])] != loi["affirme"]:
++                    if classe in ("vraie_neuve", "copie_archive", "signe_contraire") and not juste:
++                        ecarts.append(f"{f['ident']} : hypothèse dite vraie non appuyée par la table")
++                    if classe in ("vraie_neuve", "copie_archive", "signe_contraire") and [round(r[0]), round(r[2])] != loi["affirme"]:
+                         ecarts.append(f"{f['ident']} : chiffres affirmés différents de la table")
++                    if classe == "fausse_redigee" and not (loi["affirme"][1] - loi["affirme"][0] >= ECART_VRAI_MIN
++                                                           and max(r) - min(r) <= ECART_NUL_MAX):
++                        ecarts.append(f"{f['ident']} : loi fausse non contredite par la table")
++                    if classe == "signe_contraire" and loi.get("signe_prediction") == loi["signe"]:
++                        ecarts.append(f"{f['ident']} : prédiction du même signe que l'hypothèse")
++                    if classe != "signe_contraire" and loi.get("signe_prediction") != loi["signe"]:
++                        ecarts.append(f"{f['ident']} : prédiction de signe contraire à l'hypothèse")
+                 else:
+                     xa, xb = loi["affirme"]
+                     oa, ob = loi["observe"]
+@@ -672,12 +868,18 @@ def verifier_materiaux(materiaux, mondes=MONDES_V1):
+                 ecarts.append(f"{f['ident']} : champs de la fiche ≠ {CHAMPS_FICHE}")
+             if (classe in CLASSES_BONNES) != (f["qualite"] == 1):
+                 ecarts.append(f"{f['ident']} : qualité incohérente avec la classe")
++            if classe not in CLASSES_BONNES + CLASSES_MAUVAISES:
++                ecarts.append(f"{f['ident']} : classe inconnue {classe!r}")
+     return ecarts
+ 
+ 
+-# --- contrôle de forme des témoins ------------------------------------------------------------------------------------------
++# --- contrôle de forme et de diagnosticité des témoins --------------------------------------------------------------------------
+ 
+-SEUIL_FORME = 0.65
++SEUIL_FORME = 0.65            # aire d'un indice de forme entre bons et mauvais témoins : dans [1 − seuil ; seuil]
++SEUIL_DIAGNOSTICITE_AIRE = 0.60  # aire moyenne du juge scripté « forme et a priori » (sans dossier) sur les témoins
++SEUIL_DIAGNOSTICITE_D1 = 2       # courses (sur GRAINES_DIAGNOSTICITE) où ce juge tient D1 ou D1b : au plus
++GRAINES_DIAGNOSTICITE = 20
++INDICES_FORME = ("longueur", "chiffres", "gabarit_gradue", "caracteristique_binaire", "a_priori_plausible")
+ 
+ 
+ def valeurs_textuelles(contenu):
+@@ -700,25 +902,97 @@ def valeurs_textuelles(contenu):
+     return sortie
+ 
+ 
+-def indices_forme(contenu):
+-    texte = " ".join(valeurs_textuelles(contenu))
+-    return {"longueur": len(texte), "chiffres": sum(ch.isdigit() for ch in texte)}
++def indices_forme(fiche):
++    """Indices de forme d'un témoin : longueur du texte, nombre de chiffres, gabarit gradué ou interaction (1/0), caractéristique
++    binaire (1/0), a priori plausible (1, 0, ou 0,5 sans caractéristique)."""
++    texte = " ".join(valeurs_textuelles(fiche["contenu"]))
++    return {"longueur": float(len(texte)), "chiffres": float(sum(ch.isdigit() for ch in texte)),
++            "gabarit_gradue": 1.0 if fiche.get("gabarit") in ("gradue", "interaction") else 0.0,
++            "caracteristique_binaire": 1.0 if fiche.get("caracteristique_type") == "binaire" else 0.0,
++            "a_priori_plausible": {"plausible": 1.0, "peu_plausible": 0.0}.get(fiche.get("a_priori"), 0.5)}
+ 
+ 
+ def controle_forme(materiaux, seuil=SEUIL_FORME):
+-    """Aire de chaque indice de forme simple (longueur, nombre de chiffres) entre bons et mauvais témoins d'évaluation : aucune
+-    ne doit dépasser `seuil` — un juge qui préfère le long ou le chiffré ne doit rien gagner à bien classer."""
++    """Aire de chaque indice de forme entre bons et mauvais témoins d'évaluation : chacune dans [1 − seuil ; seuil] — un juge
++    qui préfère le long, le chiffré, le gabarit gradué, une caractéristique binaire ou plausible (ou leur contraire) ne doit rien
++    gagner à bien classer."""
+     bons, mauvais = [], []
+     for lot in materiaux["lots"]:
+         for f in lot["fiches"]:
+             if f["role"] == "evaluation":
+-                (bons if f["qualite"] == 1 else mauvais).append(indices_forme(f["contenu"]))
+-    aires = {k: aire([b[k] for b in bons], [m[k] for m in mauvais]) for k in ("longueur", "chiffres")}
+-    return {"aires": aires, "seuil": seuil, "conforme": all(a is not None and a <= seuil for a in aires.values())}
++                (bons if f["qualite"] == 1 else mauvais).append(indices_forme(f))
++    aires = {k: aire([b[k] for b in bons], [m[k] for m in mauvais]) for k in INDICES_FORME}
++    return {"aires": aires, "seuil": seuil,
++            "conforme": all(a is not None and 1 - seuil - 1e-12 <= a <= seuil + 1e-12 for a in aires.values())}
++
++
++_DIAGNOSTICITES = {}
++
++
++def controle_diagnosticite(materiaux, graines_plan=GRAINES_DIAGNOSTICITE, seuil_aire=SEUIL_DIAGNOSTICITE_AIRE,
++                           seuil_d1=SEUIL_DIAGNOSTICITE_D1, seuils=None):
++    """Le plan (protocole v2, juge A, tirage 1) joué par deux juges scriptés sans tables sur `graines_plan` graines de course :
++    - « forme » (critère) : gabarit, longueur, chiffres et a priori des caractéristiques, rien du dossier — aire moyenne sur les
++      témoins d'évaluation ≤ `seuil_aire`, D1 et D1b tenus dans au plus `seuil_d1` courses ;
++    - « dossier_sans_tables » (descriptif) : la forme, plus les lois établies, le contexte et la cohérence interne de la fiche —
++      aire rapportée avec son plafond de construction (part des mauvais témoins dont le défaut se lit hors des tables).
++    Mémorisé par empreinte des matériaux (fonction pure)."""
++    cle = (materiaux.get("empreinte"), graines_plan, seuil_aire, seuil_d1, json.dumps(seuils, sort_keys=True))
++    if cle in _DIAGNOSTICITES:
++        return _DIAGNOSTICITES[cle]
++    s = dict(SEUILS_LECTURE_V1, **(seuils or {}))
++    temoins = _temoins(materiaux)
++    evaluees = [i for i, f in temoins.items() if f["role"] == "evaluation"]
++    bons = [i for i in evaluees if temoins[i]["qualite"] == 1]
++    mauvais = [i for i in evaluees if temoins[i]["qualite"] == 0]
++    hors_tables = sum(1 for i in mauvais if temoins[i]["classe"] != "fausse_redigee")
++    plafond = (hors_tables * len(bons) + (len(mauvais) - hors_tables) * len(bons) * 0.5) / (len(bons) * len(mauvais))
++    juge = {"etiquette": "juge-controle", "fournisseur": "controle", "modele": "controle", "famille": "controle"}
++    sortie = {"graines": graines_plan, "seuil_aire": seuil_aire, "seuil_d1": seuil_d1, "plafond_dossier_sans_tables": round(plafond, 4),
++              "mauvais_hors_tables": hors_tables}
++    for strategie in ("forme", "dossier_sans_tables"):
++        aires, d1, d1b, aires_b = [], 0, 0, []
++        for k in range(graines_plan):
++            g = Graines(7_000_000 + k)
++            etapes = [e for e in etapes_v1(materiaux, juge, dict(juge, etiquette="juge-x", famille="x"), g)[0]
++                      if e["phase"] == "decisive-a" and e["protocole"] == "v2" and e["tirage"] == 1]
++            ad = {"controle": AdaptateurScripte(strategie, oracle_depuis(materiaux), graine=k, a_priori=_a_priori(materiaux),
++                                                mots_du_contexte=_mots_du_contexte(materiaux))}
++            compteur = Compteur(1e9, 1e12, lambda: 0.0, {"juge-controle": 0.0}, parts={"juge-controle": 1e9})
++            journal = {"ancien": [], "v2": [], "pertes": []}
++            for e in etapes:
++                jouer_etape(e, lots={l["nom"]: l for l in materiaux["lots"]}, juges={"juge-controle": juge}, adaptateurs=ad,
++                            consignes={"ancien": CONSIGNE_ANCIENNE_SUBSTITUTION, "v2": CONSIGNE_PAIRE_V2}, items=ITEMS_SUBSTITUTION,
++                            graines=g, compteur=compteur, plafond_session=1.0, interdites=(), dossier_appel=lambda j, e: os.devnull,
++                            journal=journal, prevus={})
++            v = _mesures_v2(journal, ["juge-controle"], 1, materiaux, bons, mauvais)
++            aires.append(v["aire"])
++            aires_b.append(v["aire_lois_fausses"])
++            d1 += bool(v["aire"] >= s["aire_v2_min"] and (v["p_mann_whitney"] or 1) < s["alpha"])
++            d1b += bool(v["aire_lois_fausses"] is not None and v["aire_lois_fausses"] >= s["aire_lois_fausses_min"]
++                        and (v["p_lois_fausses"] or 1) < s["alpha"])
++        sortie[strategie] = {"aire_moyenne": round(sum(aires) / len(aires), 4), "aire_max": round(max(aires), 4),
++                             "aire_lois_fausses_moyenne": round(sum(aires_b) / len(aires_b), 4), "d1_tenus": d1, "d1b_tenus": d1b}
++    f = sortie["forme"]
++    sortie["conforme"] = f["aire_moyenne"] <= seuil_aire and f["d1_tenus"] <= seuil_d1 and f["d1b_tenus"] <= seuil_d1
++    _DIAGNOSTICITES[cle] = sortie
++    return sortie
+ 
+ 
+-def exiger_materiaux(materiaux, empreinte_attendue=None):
+-    """Garde avant tout appel : empreinte (si donnée), vérité connue relue sur les tables, forme, étiquettes interdites."""
++def _a_priori(materiaux):
++    sortie = {}
++    for lot in materiaux["lots"]:
++        sortie.update(lot.get("a_priori") or {})
++    return sortie
++
++
++def _mots_du_contexte(materiaux):
++    return [m for lot in materiaux["lots"] for m in (lot.get("mots_du_contexte") or [])]
++
++
++def exiger_materiaux(materiaux, empreinte_attendue=None, diagnosticite=True):
++    """Garde avant tout appel : empreinte (si donnée), vérité connue relue sur les tables, contrôle de forme étendu, étiquettes
++    interdites, contrôle de diagnosticité (juge scripté sans tables). Rend {forme, diagnosticite}."""
+     calculee = empreinte_objet({k: v for k, v in materiaux.items() if k != "empreinte"})
+     if calculee != materiaux.get("empreinte"):
+         raise ProtocoleRefuse("matériaux : empreinte interne fausse (matériaux altérés)")
+@@ -729,7 +1003,8 @@ def exiger_materiaux(materiaux, empreinte_attendue=None):
+         raise ProtocoleRefuse("matériaux : vérité connue non établie : " + " ; ".join(ecarts[:5]))
+     forme = controle_forme(materiaux)
+     if not forme["conforme"]:
+-        raise ProtocoleRefuse(f"matériaux : un indice de forme favorise les bons témoins ({forme['aires']}, seuil {forme['seuil']})")
++        raise ProtocoleRefuse(f"matériaux : un indice de forme sépare bons et mauvais témoins ({forme['aires']}, aire hors de "
++                              f"[{1 - forme['seuil']:.2f} ; {forme['seuil']:.2f}])")
+     try:
+         for lot in materiaux["lots"]:
+             garde_a4(lot["dossier"], ETIQUETTES_INTERDITES_TEMOINS, "prefixe", f"le dossier de {lot['nom']}")
+@@ -737,7 +1012,13 @@ def exiger_materiaux(materiaux, empreinte_attendue=None):
+                 garde_a4(json.dumps(f["contenu"], ensure_ascii=False), ETIQUETTES_INTERDITES_TEMOINS, "prefixe", f"la fiche {f['ident']}")
+     except EtiquetteDansEntree as e:
+         raise ProtocoleRefuse(f"matériaux : {e}") from None
+-    return forme
++    diag = None
++    if diagnosticite:
++        diag = controle_diagnosticite(materiaux)
++        if not diag["conforme"]:
++            raise ProtocoleRefuse(f"matériaux : un juge scripté sans tables classe les témoins (aire moyenne {diag['forme']['aire_moyenne']}, "
++                                  f"D1 tenu {diag['forme']['d1_tenus']} fois, D1b {diag['forme']['d1b_tenus']} fois sur {diag['graines']})")
++    return {"forme": forme, "diagnosticite": diag}
+ 
+ 
+ # --- entrées servies -------------------------------------------------------------------------------------------------------
+@@ -756,7 +1037,10 @@ def corps_fiche(fiche, identifiant_servi):
+ 
+ 
+ def identifiant_servi(graines, juge, tirage, ident):
+-    """Identifiant opaque propre au juge et au tirage (`graines_v53.Graines.jeton_opaque`)."""
++    """Identifiant opaque propre au juge et au tirage (`graines_v53.Graines.jeton_opaque`) ; bras sans dossier : tirage
++    « sans-dossier » (tâche `anonymisation-sans-dossier|<juge>|<lot>|<fiche>`)."""
++    if tirage == "sans-dossier":
++        return "F" + graines.jeton_opaque(f"anonymisation-sans-dossier|{juge}|{ident}", 5)
+     return "F" + graines.jeton_opaque(f"anonymisation|{juge}|tirage-{tirage}|{ident}", 5)
+ 
+ 
+@@ -1223,11 +1507,19 @@ DEGRE_REEL_V1 = 2
+ PAIRES_B_MAX_PAR_LOT = 13
+ LOT_REEL_MAX = 13
+ TIRAGES_A_V1 = (1, 2)
+-PHASES_V1 = ("decisive-a", "decisive-b", "reel-ancien", "reel-v2")
+-PHASES_DECISIVES = ("decisive-a", "decisive-b")
+-SEUIL_PLAFOND = 0.9
++PHASES_V1 = ("decisive-a", "decisive-b", "sans-dossier-a", "reel-ancien", "reel-v2")
++PHASES_DECISIVES = ("decisive-a", "decisive-b")   # validité de l'instrument et issue principale
++PHASES_PROJETEES = ("decisive-a", "decisive-b", "sans-dossier-a")  # projection de la dépense exigée avant chaque étape
++SEUIL_PLAFOND = 0.8  # indicateur descriptif « au plafond » de l'ancien protocole, aligné sur D2 (contre-lecture v1, M6)
+ VALIDITE_GARDE_APPELS, VALIDITE_GARDE_PART = 20, 0.5
++PERTES_MAX_PART = 0.15  # pertes d'infrastructure admises dans la phase décisive de A (part des appels prévus), sinon arrêt
+ MINIMUM_APPEL_USD = 0.005
++ATTENTES_RELAIS_S = (15.0, 30.0, 60.0, 120.0, 300.0)  # relais injoignable (code 3 à coût plancher) : attentes croissantes
++ATTENTE_MAX_PAR_APPEL_S = 1800.0                     # puis 300 s, au plus 30 minutes cumulées par appel (attaque de Goodhart v3)
++COUT_PLANCHER_USD = 1e-5
++CODES_DE_SORTIE = {3: "relais", 4: "budget", 5: "non_conforme", 6: "delai"}  # codes de la commande Argon de session-depot
++_CODE_SORTIE = re.compile(r"(?:commande externe : |\()code (\d+) :")
++_DELAI = re.compile(r"délai de .*dépassé")
+ 
+ 
+ def lot_reel_depuis(objet, question, correspondance):
+@@ -1246,6 +1538,8 @@ def lot_reel_depuis(objet, question, correspondance):
+         if f["ident"] in vus:
+             raise ProtocoleRefuse(f"lot réel : identifiant en double {f['ident']!r}")
+         vus.add(f["ident"])
++        if re.match(r"^monde-\d+-\d+$", f["ident"]):
++            raise ProtocoleRefuse(f"lot réel : identifiant {f['ident']!r} de la forme des témoins (collision des mesures)")
+         fiches.append({"ident": f["ident"], "contenu": f["contenu"], "role": "reel", "classe": None, "qualite": None,
+                        "familles": sorted(familles_auteurs(f, correspondance)), "meta": f.get("meta")})
+     if not isinstance(question, str) or not question.strip():
+@@ -1278,6 +1572,9 @@ def etapes_v1(materiaux, juge_a, juge_b, graines, lot_reel=None):
+       fiche de qualité connue bonne, une mauvaise ; un ordre, tiré indépendamment de ceux de A) : le rôle de B est l'accord sur
+       ce qui départage, et son budget ne couvre pas tout le graphe ; ce choix de paires par les étiquettes connues n'est
+       possible qu'en validation (en production, les paires ne se choisissent pas sur la qualité) ;
++    - sans-dossier-a (bras auxiliaire, décision de Lazar du 2 novembre) : juge A, ancien protocole **sans dossier** (consigne
++      figée puis fiche seule : la forme de l'entrée du second tour) sur les témoins d'évaluation ; joué après les phases
++      décisives, avant le lot réel ; projeté comme une étape décisive ; hors de la validité et de l'issue principale ;
+     - reel-ancien, reel-v2 (lot réel, descriptifs) : chaque juge sur les fiches où il est admis (règle de famille), v2 sur un
+       cycle de ces fiches, un ordre.
+     Rend (étapes, graphes)."""
+@@ -1314,6 +1611,9 @@ def etapes_v1(materiaux, juge_a, juge_b, graines, lot_reel=None):
+             melangees = [melangees[k] for k in garde]
+         etapes.append({"phase": "decisive-b", "protocole": "v2", "lot": lot["nom"], "juge": b, "tirage": 1,
+                        "appels": appels_paires(melangees, False, rng)})
++    for lot in lots:
++        etapes.append({"phase": "sans-dossier-a", "protocole": "ancien", "lot": lot["nom"], "juge": a, "tirage": 1,
++                       "fiches": evaluees[lot["nom"]], "dossier": False})
+     if lot_reel is not None:
+         familles = _familles_lot(lot_reel)
+         for j in (juge_b, juge_a):
+@@ -1349,43 +1649,82 @@ def devis(etapes, juges):
+     haut = sum(n * juges[j]["secondes"][1] for j, n in appels.items())
+     return {"appels": appels, "usd": usd, "total_usd": round(sum(usd.values()), 4), "phases": phases,
+             "decisif_usd": round(sum(v["usd"] for ph, v in phases.items() if ph in PHASES_DECISIVES), 4),
++            "projete_usd": round(sum(v["usd"] for ph, v in phases.items() if ph in PHASES_PROJETEES), 4),
+             "duree_h": (round(bas / 3600, 3), round(haut / 3600, 3))}
+ 
+ 
+ # --- course : compteur, appels, jeu des deux protocoles ------------------------------------------------------------------------
+ 
+ 
++class ArretInfrastructure(ArretJuges):
++    """Pertes d'infrastructure (relais injoignable après attente, délai dépassé, réponse non conforme du relais) au-delà de la
++    part admise dans la phase décisive de A : arrêt, issue I0 « infrastructure »."""
++
++
+ class Compteur:
+-    """Dépense et durée de la course. Aucun appel dont le plafond de session ne tient plus dans le reste du plafond ; projection
+-    de la dépense au prix observé (moyenne des appels du juge, dès 3 appels) ou, avant, au prix du plan."""
++    """Dépense et durée de la course. Aucun appel dont le budget ne tient plus dans le reste du plafond **ni dans le reste de la
++    part de son juge** ; projection de la dépense au prix observé (moyenne des appels **à coût connu** du juge, dès 3 appels) ou,
++    avant, au prix du plan, contre le reste du plafond et contre le reste de chaque part ; coûts inconnus (commande muette :
++    plafond de session compté, jamais en silence) comptés à part, hors du prix observé ; refus de dépense (code 4) : rien compté.
++    `dormir(secondes)` : attente sur relais injoignable, injectée (essais) ; `horloge()` : secondes."""
+ 
+-    def __init__(self, plafond_usd, duree_max_s, horloge, prix_plan):
++    def __init__(self, plafond_usd, duree_max_s, horloge, prix_plan, parts=None, dormir=None):
+         if not (isinstance(plafond_usd, (int, float)) and math.isfinite(plafond_usd) and plafond_usd > 0):
+             raise ProtocoleRefuse(f"plafond de dépense : réel > 0 exigé (reçu {plafond_usd!r})")
++        if not (isinstance(duree_max_s, (int, float)) and math.isfinite(duree_max_s) and duree_max_s > 0):
++            raise ProtocoleRefuse(f"durée maximale : réel > 0 exigé (reçu {duree_max_s!r})")
+         self.plafond_usd, self.duree_max_s, self.horloge = float(plafond_usd), float(duree_max_s), horloge
+         self.prix_plan = dict(prix_plan)
++        self.parts = {j: float(v) for j, v in (parts or {j: plafond_usd for j in prix_plan}).items()}
++        for j in self.prix_plan:
++            if j not in self.parts or not self.parts[j] > 0:
++                raise ProtocoleRefuse(f"part de dépense du juge {j} : réel > 0 exigé")
++        self.dormir = dormir if dormir is not None else time.sleep
+         self.debut = horloge()
+         self.depense, self.appels, self.couts = 0.0, 0, {}
++        self.depense_par_juge = {j: 0.0 for j in self.prix_plan}
++        self.cout_inconnu = {j: {"appels": 0, "usd": 0.0} for j in self.prix_plan}
++        self.attentes = {j: {"nombre": 0, "secondes": 0.0} for j in self.prix_plan}
+ 
+     def reste(self):
+         return self.plafond_usd - self.depense
+ 
+-    def budget_appel(self, plafond_session):
++    def reste_part(self, juge):
++        return self.parts[juge] - self.depense_par_juge[juge]
++
++    def budget_appel(self, plafond_session, juge=None):
+         if self.reste() < MINIMUM_APPEL_USD:
+             raise ArretDevis(f"plafond de dépense atteint ({self.depense:.4f} USD sur {self.plafond_usd:g})")
+-        return min(float(plafond_session), self.reste())
++        budget = min(float(plafond_session), self.reste())
++        if juge is not None:
++            if self.reste_part(juge) < MINIMUM_APPEL_USD:
++                raise ArretDevis(f"part du juge {juge} atteinte ({self.depense_par_juge[juge]:.4f} USD sur {self.parts[juge]:g})")
++            budget = min(budget, self.reste_part(juge))
++        return budget
+ 
+     def verifier_duree(self):
+         ecoule = self.horloge() - self.debut
+         if ecoule > self.duree_max_s:
+             raise ArretDuree(f"durée maximale dépassée ({ecoule:.0f} s > {self.duree_max_s:.0f} s)")
+ 
+-    def noter(self, juge, cout):
++    def noter(self, juge, cout, connu=True):
++        """Un appel compté : `connu` faux = coût inconnu (plafond de session compté par l'adaptateur) : dépense comptée, mais hors
++        du prix observé et compté à part."""
+         if not (isinstance(cout, (int, float)) and math.isfinite(cout) and cout >= 0):
+             raise ArretDevis(f"coût déclaré illisible pour {juge} ({cout!r}) : arrêt, aucun repli")
+         self.depense += float(cout)
++        self.depense_par_juge[juge] = self.depense_par_juge.get(juge, 0.0) + float(cout)
+         self.appels += 1
+-        self.couts.setdefault(juge, []).append(float(cout))
++        if connu:
++            self.couts.setdefault(juge, []).append(float(cout))
++        else:
++            self.cout_inconnu[juge]["appels"] += 1
++            self.cout_inconnu[juge]["usd"] = round(self.cout_inconnu[juge]["usd"] + float(cout), 6)
++
++    def attendre(self, juge, secondes):
++        self.attentes[juge]["nombre"] += 1
++        self.attentes[juge]["secondes"] += float(secondes)
++        self.dormir(float(secondes))
+ 
+     def prix(self, juge):
+         c = self.couts.get(juge, [])
+@@ -1395,32 +1734,103 @@ class Compteur:
+         return sum(n * self.prix(j) for j, n in appels_restants.items())
+ 
+     def exiger_projection(self, appels_restants, quoi):
++        """Projection au prix observé contre le reste du plafond et contre le reste de la part de chaque juge."""
+         p = self.projection(appels_restants)
+         if p > self.reste() + 1e-9:
+             raise ArretDevis(f"projection de {quoi} : {p:.4f} USD au prix observé, au-delà du reste ({self.reste():.4f} USD)")
++        for j, n in appels_restants.items():
++            pj = n * self.prix(j)
++            if pj > self.reste_part(j) + 1e-9:
++                raise ArretDevis(f"projection de {quoi} pour {j} : {pj:.4f} USD au prix observé, au-delà du reste de sa part "
++                                 f"({self.reste_part(j):.4f} USD sur {self.parts[j]:g})")
+         return p
+ 
+-
+-def appeler(adaptateur, juge, entree, dossier_session, compteur, plafond_session):
+-    """Un appel de juge par l'adaptateur injecté ; coût compté ; A2 : modèle servi absent ou différent du modèle demandé sur une
+-    réponse « ok » = arrêt. Rend (texte ou None, informations)."""
+-    compteur.verifier_duree()
+-    budget = compteur.budget_appel(plafond_session)
+-    t0 = compteur.horloge()
+-    r = adaptateur.lancer("juge_ideation", entree, dossier_session, budget, 1, modele=juge["modele"])
+-    duree = compteur.horloge() - t0
+-    compteur.noter(juge["etiquette"], r.cout_declare_usd)
+-    info = {"statut": r.statut, "cout_usd": float(r.cout_declare_usd), "duree_s": round(duree, 3), "modele_servi": r.modele_servi}
+-    if r.statut == "ok" and not modele_conforme(juge["modele"], r.modele_servi):
+-        raise ArretModeleServi(f"A2 : juge {juge['etiquette']} servi par {r.modele_servi!r} pour {juge['modele']!r} : arrêt, aucune "
+-                               "bascule sans mot de Lazar")
+-    texte = (r.texte_brut or r.texte_final) if r.statut == "ok" else None
+-    return texte, info
++    def bilan(self):
++        return {"depense_usd": round(self.depense, 4), "appels": self.appels, "depense_par_juge_usd": {j: round(v, 4) for j, v in self.depense_par_juge.items()},
++                "cout_inconnu": self.cout_inconnu, "attentes": self.attentes, "prix_observe": {j: round(self.prix(j), 6) for j in self.prix_plan}}
++
++
++def classer_resultat(r, modele):
++    """Lit le résultat d'un adaptateur comme réponse du juge ou comme événement du relais (contre-lecture v1, B2) :
++    - « reponse » : statut « ok », modèle servi conforme ;
++    - « a2 » : modèle servi absent ou différent sur une réponse « ok », ou statut « refus » que la commande v56 rend pour un
++      modèle servi absent ou différent (`refus.evenement` commande.modele_servi, commande.modele_servi_absent,
++      commande.modele_demande_inconnu) → arrêt A2 ;
++    - « refus_modele » : la commande dit un refus du modèle lui-même (`commande.refus`) : réponse du juge, inexploitable ;
++    - « budget » : code 4 (refus du registre de dépense avant l'envoi) ou statut « budget_depasse » → arrêt « dépense » ;
++    - « relais » : code 3 (relais ou interface injoignable) ; à coût plancher, l'appel est repris après attente ;
++    - « delai » : code 6 ou délai de la commande dépassé ; « non_conforme » : code 5 ; « autre » : tout autre échec.
++    Rend {genre, code, motif}."""
++    erreur = r.erreur if isinstance(r.erreur, str) else ""
++    m = _CODE_SORTIE.search(erreur)
++    code = int(m.group(1)) if m else None
++    if r.statut == "ok":
++        if not modele_conforme(modele, r.modele_servi):
++            return {"genre": "a2", "code": code, "motif": f"modèle servi {r.modele_servi!r} pour {modele!r} sur une réponse « ok »"}
++        return {"genre": "reponse", "code": code, "motif": None}
++    if r.statut == "refus":
++        ev = (r.refus or {}).get("evenement") if isinstance(r.refus, dict) else None
++        if ev in ("commande.modele_servi", "commande.modele_servi_absent", "commande.modele_demande_inconnu"):
++            return {"genre": "a2", "code": code, "motif": f"statut « refus » : {(r.refus or {}).get('motif')}"}
++        return {"genre": "refus_modele", "code": code, "motif": "refus du modèle (statut « refus » de la commande)"}
++    if r.statut == "budget_depasse" or code == 4:
++        return {"genre": "budget", "code": code, "motif": "refus de dépense : " + (erreur[:200] or "statut budget_depasse")}
++    if code in CODES_DE_SORTIE:
++        return {"genre": CODES_DE_SORTIE[code], "code": code, "motif": erreur[:200]}
++    if _DELAI.search(erreur):
++        return {"genre": "delai", "code": code, "motif": erreur[:200]}
++    return {"genre": "autre", "code": code, "motif": (erreur or r.statut)[:200]}
++
++
++def appeler(adaptateur, juge, entree, dossier_session, compteur, plafond_session, journal=None, contexte=None):
++    """Un appel de juge par l'adaptateur injecté. Rend (texte ou None, informations) : le texte d'une réponse (lue ensuite par le
++    protocole), ou None pour un refus du modèle (réponse du juge, inexploitable) ou une **perte d'infrastructure** (consignée dans
++    `journal["pertes"]` avec sa cause, jamais comptée comme réponse du juge). Arrêts : A2 (modèle servi absent ou différent, y
++    compris par le statut « refus » de la commande v56) ; refus de dépense (code 4, « budget_depasse ») sans coût fictif ; plafond,
++    part ou durée. Relais injoignable (code 3 à coût plancher) : même appel repris après attente (15, 30, 60, 120 puis 300 s), au
++    plus 30 minutes cumulées par appel, puis perte « relais »."""
++    attente_cumulee, rang = 0.0, 0
++    while True:
++        compteur.verifier_duree()
++        budget = compteur.budget_appel(plafond_session, juge["etiquette"])
++        t0 = compteur.horloge()
++        r = adaptateur.lancer("juge_ideation", entree, dossier_session, budget, 1, modele=juge["modele"])
++        duree = compteur.horloge() - t0
++        c = classer_resultat(r, juge["modele"])
++        cout, inconnu = float(r.cout_declare_usd or 0.0), bool(getattr(r, "cout_inconnu", False))
++        info = {"statut": r.statut, "cout_usd": cout, "cout_inconnu": inconnu, "duree_s": round(duree, 3), "modele_servi": r.modele_servi,
++                "code_sortie": c["code"], "genre": c["genre"]}
++        if c["genre"] == "a2":
++            compteur.noter(juge["etiquette"], 0.0 if inconnu else cout, connu=not inconnu)
++            raise ArretModeleServi(f"A2 : juge {juge['etiquette']} : {c['motif']} : arrêt, aucune bascule sans mot de Lazar")
++        if c["genre"] == "budget":
++            if not inconnu and r.statut == "budget_depasse":
++                compteur.noter(juge["etiquette"], cout)  # l'appel a été fait et facturé ; la réponse n'est pas servie
++            raise ArretDevis(f"refus de dépense du relais pour {juge['etiquette']} ({c['motif']}) : arrêt « dépense », aucun coût "
++                             "fictif compté")
++        compteur.noter(juge["etiquette"], cout, connu=not inconnu)
++        if c["genre"] == "reponse":
++            return (r.texte_brut or r.texte_final), info
++        if c["genre"] == "refus_modele":
++            return None, dict(info, motif=c["motif"])
++        if c["genre"] == "relais" and cout <= COUT_PLANCHER_USD and not inconnu and attente_cumulee < ATTENTE_MAX_PAR_APPEL_S:
++            attente = min(ATTENTES_RELAIS_S[min(rang, len(ATTENTES_RELAIS_S) - 1)], ATTENTE_MAX_PAR_APPEL_S - attente_cumulee)
++            rang += 1
++            attente_cumulee += attente
++            if journal is not None:
++                journal.setdefault("attentes", []).append(dict(info, attente_s=attente, **(contexte or {})))
++            compteur.attendre(juge["etiquette"], attente)
++            continue
++        perte = dict(info, cause=c["genre"], motif=c["motif"], attente_cumulee_s=attente_cumulee, **(contexte or {}))
++        if journal is not None:
++            journal.setdefault("pertes", []).append(perte)
++        return None, dict(info, perte=True, cause=c["genre"], motif=c["motif"])
+ 
+ 
+ def _garde_validite(journal, juge, protocole):
+     """Sur les `VALIDITE_GARDE_APPELS` derniers appels d'un juge dans un protocole (toutes étapes confondues) : plus de
+-    `VALIDITE_GARDE_PART` de réponses inexploitables (illisibles, ou comparaisons nulles) arrête la course."""
++    `VALIDITE_GARDE_PART` de réponses inexploitables (illisibles, refus du modèle, ou comparaisons nulles) arrête la course.
++    Les pertes d'infrastructure ne sont pas des réponses : elles n'entrent pas ici."""
+     mien = [e for e in journal[protocole] if e["juge"] == juge]
+     if len(mien) >= VALIDITE_GARDE_APPELS:
+         fenetre = mien[-VALIDITE_GARDE_APPELS:]
+@@ -1430,36 +1840,62 @@ def _garde_validite(journal, juge, protocole):
+                                 "appels : instrument défaillant, arrêt")
+ 
+ 
++def _garde_pertes(journal, phase, juge, prevus):
++    """Pertes d'infrastructure de la phase décisive de A au-delà de `PERTES_MAX_PART` des appels prévus : arrêt."""
++    if phase != "decisive-a" or not prevus:
++        return
++    pertes = sum(1 for p in journal.get("pertes", []) if p.get("phase") == phase and p.get("juge") == juge)
++    if pertes > PERTES_MAX_PART * prevus:
++        raise ArretInfrastructure(f"phase {phase}, juge {juge} : {pertes} appels perdus par l'infrastructure sur {prevus} prévus "
++                                  f"(> {PERTES_MAX_PART:.0%}) : arrêt « infrastructure »")
++
++
+ def _empreinte(texte):
+     return hashlib.sha256(texte.encode("utf-8")).hexdigest() if isinstance(texte, str) else None
+ 
+ 
+ def jouer_etape(etape, *, lots, juges, adaptateurs, consignes, items, graines, compteur, plafond_session, interdites,
+-                dossier_appel, journal, avec_dossier_ancien=True):
++                dossier_appel, journal, prevus=None):
+     """Joue une étape (une suite d'appels d'un juge) et range chaque appel dans `journal` au fil de l'eau (rien n'est perdu sur
+-    un arrêt). `lots` : {nom: lot} ; `juges` : {étiquette: juge} ; `consignes` : {"ancien", "v2"}."""
++    un arrêt) : réponses dans `journal["ancien"]` ou `journal["v2"]`, pertes d'infrastructure dans `journal["pertes"]`. `lots` :
++    {nom: lot} ; `juges` : {étiquette: juge} ; `consignes` : {"ancien", "v2"} ; `prevus` : {phase/juge: appels prévus} (garde des
++    pertes). Une étape ancienne avec `dossier: False` sert la fiche sans dossier (bras « sans dossier » : graines et identifiants
++    propres)."""
+     lot = lots[etape["lot"]]
+     interdites, mode = lot.get("interdites", interdites), lot.get("mode_a4", "prefixe")
+     juge = juges[etape["juge"]]
+     adaptateur = adaptateurs[juge["fournisseur"]]
+     fiches = {f["ident"]: f for f in lot["fiches"]}
+     familles = _familles_lot(lot)
+-    servi = lambda i: identifiant_servi(graines, juge["etiquette"], etape["tirage"], f"{lot['nom']}|{i}")  # noqa: E731
++    sans_dossier = etape["protocole"] == "ancien" and etape.get("dossier") is False
++    bras = "sans_dossier" if sans_dossier else "avec_dossier"
++    if sans_dossier:
++        servi = lambda i: identifiant_servi(graines, juge["etiquette"], f"sans-dossier", f"{lot['nom']}|{i}")  # noqa: E731
++    else:
++        servi = lambda i: identifiant_servi(graines, juge["etiquette"], etape["tirage"], f"{lot['nom']}|{i}")  # noqa: E731
++    cle_prevus = f"{etape['phase']}/{juge['etiquette']}"
++    n_prevus = (prevus or {}).get(cle_prevus, 0)
++    contexte = {"phase": etape["phase"], "juge": juge["etiquette"], "lot": lot["nom"], "tirage": etape["tirage"], "protocole": etape["protocole"]}
+     enregistrements = []
+     if etape["protocole"] == "ancien":
+-        ordre = [etape["fiches"][k] for k in graines.permutation(f"ordre-ancien|{lot['nom']}|{juge['etiquette']}|tirage-{etape['tirage']}",
+-                                                                  len(etape["fiches"]))]
++        tache = (f"ordre-ancien-sans-dossier|{lot['nom']}|{juge['etiquette']}" if sans_dossier
++                 else f"ordre-ancien|{lot['nom']}|{juge['etiquette']}|tirage-{etape['tirage']}")
++        ordre = [etape["fiches"][k] for k in graines.permutation(tache, len(etape["fiches"]))]
+         for i in ordre:
+             if not juge_admissible(juge["famille"], familles[i]):
+                 raise ProtocoleRefuse(f"règle de famille : {juge['etiquette']} ({juge['famille']}) sur la fiche {i} de {sorted(familles[i])}")
+-            dossier = lot["dossier"] if (avec_dossier_ancien and lot["nom"] != "reel") else None
++            dossier = lot["dossier"] if (not sans_dossier and lot["nom"] != "reel") else None
+             try:
+                 entree = entree_ancienne(consignes["ancien"], fiches[i], servi(i), interdites, dossier=dossier, mode=mode)
+             except EtiquetteDansEntree as e:
+                 raise ArretJuges(f"{e} (lot {lot['nom']}, fiche {i})") from None
+-            texte, info = appeler(adaptateur, juge, entree, dossier_appel(juge["etiquette"], etape), compteur, plafond_session)
++            texte, info = appeler(adaptateur, juge, entree, dossier_appel(juge["etiquette"], etape), compteur, plafond_session,
++                                  journal=journal, contexte=dict(contexte, ident=i))
++            if info.get("perte"):
++                _garde_pertes(journal, etape["phase"], juge["etiquette"], n_prevus)
++                continue
+             v = lire_verdict_ancien(texte, list(items)) if texte is not None else None
+-            e = dict(info, lot=lot["nom"], juge=juge["etiquette"], tirage=etape["tirage"], phase=etape["phase"], ident=i,
++            e = dict(info, lot=lot["nom"], juge=juge["etiquette"], tirage=etape["tirage"], phase=etape["phase"], bras=bras, ident=i,
+                      ident_servi=servi(i), verdict=v, valide=v is not None, entree_sha256=_empreinte(entree),
+                      reponse_sha256=_empreinte(texte), reponse=caviarder(texte)[0] if texte is not None else None)
+             journal["ancien"].append(e)
+@@ -1474,14 +1910,18 @@ def jouer_etape(etape, *, lots, juges, adaptateurs, consignes, items, graines, c
+                 entree = entree_paire(consignes["v2"], lot["dossier"], p, s, interdites, mode=mode)
+             except EtiquetteDansEntree as e:
+                 raise ArretJuges(f"{e} (lot {lot['nom']}, paire {premier}, {second})") from None
+-            texte, info = appeler(adaptateur, juge, entree, dossier_appel(juge["etiquette"], etape), compteur, plafond_session)
++            texte, info = appeler(adaptateur, juge, entree, dossier_appel(juge["etiquette"], etape), compteur, plafond_session,
++                                  journal=journal, contexte=dict(contexte, paire=sorted((premier, second))))
++            if info.get("perte"):
++                _garde_pertes(journal, etape["phase"], juge["etiquette"], n_prevus)
++                continue
+             lu = lire_comparaison(texte, p, s, lot["dossier"]) if texte is not None else None
+             valide = bool(lu and lu["valide"])
+             gagnant = (premier if lu["premier_gagne"] else second) if valide else None
+             e = dict(info, lot=lot["nom"], juge=juge["etiquette"], tirage=etape["tirage"], phase=etape["phase"],
+                      paire=sorted((premier, second)), premier=premier, second=second, premier_servi=p[0], second_servi=s[0],
+                      valide=valide, gagnant=gagnant, premier_gagne=(lu["premier_gagne"] if valide else None),
+-                     critere=(lu or {}).get("critere"), motif=(lu or {}).get("motif") if lu else "aucun bloc lisible",
++                     critere=(lu or {}).get("critere"), motif=(lu or {}).get("motif") if lu else info.get("motif", "aucun bloc lisible"),
+                      entree_sha256=_empreinte(entree), reponse_sha256=_empreinte(texte),
+                      reponse=caviarder(texte)[0] if texte is not None else None)
+             journal["v2"].append(e)
+@@ -1490,46 +1930,59 @@ def jouer_etape(etape, *, lots, juges, adaptateurs, consignes, items, graines, c
+     return enregistrements
+ 
+ 
++def appels_prevus(etapes):
++    """{phase/juge: appels prévus} (garde des pertes, complétude)."""
++    prevus = {}
++    for e in etapes:
++        cle = f"{e['phase']}/{e['juge']}"
++        prevus[cle] = prevus.get(cle, 0) + nombre_appels(e)
++    return prevus
++
++
+ def executer_validation(etapes, *, materiaux, juges, adaptateurs, consignes, items, graines, compteur, plafond_session,
+                         interdites, dossier_appel, lot_reel=None):
+-    """Joue les phases dans l'ordre. Avant chaque étape décisive : projection de la dépense des étapes décisives restantes au
+-    prix observé (arrêt `ArretDevis` si elle dépasse le reste). Phase descriptive (lot réel) : jouée seulement si sa projection
+-    tient dans le reste, sinon consignée « non jouée (budget) ». Tout arrêt porte le journal partiel."""
++    """Joue les phases dans l'ordre. Avant chaque étape projetée (phases décisives et bras sans dossier) : projection de la
++    dépense des étapes projetées restantes au prix observé, contre le reste du plafond et de chaque part (arrêt `ArretDevis`
++    sinon). Phase descriptive (lot réel) : jouée seulement si sa projection tient, sinon consignée « non jouée (budget) ». Tout
++    arrêt porte le journal partiel."""
+     lots = {l["nom"]: l for l in materiaux["lots"]}
+     if lot_reel is not None:
+         lots["reel"] = lot_reel
+-    journal = {"ancien": [], "v2": [], "phases": [], "projections": []}
++    journal = {"ancien": [], "v2": [], "pertes": [], "attentes": [], "phases": [], "projections": []}
++    prevus = appels_prevus(etapes)
+     try:
+         for phase in PHASES_V1:
+             siennes = [e for e in etapes if e["phase"] == phase]
+             if not siennes:
+                 continue
+-            if phase not in PHASES_DECISIVES:
++            if phase not in PHASES_PROJETEES:
+                 besoin = {}
+                 for e in siennes:
+                     besoin[e["juge"]] = besoin.get(e["juge"], 0) + nombre_appels(e)
+                 p = compteur.projection(besoin)
+-                if p > compteur.reste():
+-                    journal["phases"].append({"phase": phase, "jouee": False, "motif": f"budget : projection {p:.4f} USD > reste "
+-                                                                                       f"{compteur.reste():.4f} USD"})
++                tient = p <= compteur.reste() and all(n * compteur.prix(j) <= compteur.reste_part(j) for j, n in besoin.items())
++                if not tient:
++                    journal["phases"].append({"phase": phase, "jouee": False, "motif": f"budget : projection {p:.4f} USD au-delà du reste "
++                                                                                       f"({compteur.reste():.4f} USD) ou d'une part"})
+                     continue
+             for k, e in enumerate(siennes):
+-                if phase in PHASES_DECISIVES:
+-                    restantes = [x for x in etapes[etapes.index(e):] if x["phase"] in PHASES_DECISIVES]
++                if phase in PHASES_PROJETEES:
++                    restantes = [x for x in etapes[etapes.index(e):] if x["phase"] in PHASES_PROJETEES]
+                     besoin = {}
+                     for x in restantes:
+                         besoin[x["juge"]] = besoin.get(x["juge"], 0) + nombre_appels(x)
+                     journal["projections"].append({"avant": f"{phase}/{k}", "usd": round(compteur.exiger_projection(
+-                        besoin, "des étapes décisives restantes"), 4), "reste": round(compteur.reste(), 4)})
++                        besoin, "des étapes projetées restantes"), 4), "reste": round(compteur.reste(), 4)})
+                 jouer_etape(e, lots=lots, juges=juges, adaptateurs=adaptateurs, consignes=consignes, items=items, graines=graines,
+                             compteur=compteur, plafond_session=plafond_session, interdites=interdites,
+-                            dossier_appel=dossier_appel, journal=journal)
++                            dossier_appel=dossier_appel, journal=journal, prevus=prevus)
+             journal["phases"].append({"phase": phase, "jouee": True})
+     except ArretJuges as erreur:
+         erreur.partiel = journal
+         raise
+     except Exception as erreur:  # noqa: BLE001 — toute autre erreur (relais, adaptateur) arrête la course, journal gardé
+         raise ArretJuges(f"erreur pendant la course : {type(erreur).__name__} : {str(erreur)[:500]}", journal) from erreur
++    journal["compteur"] = compteur.bilan()
+     return journal
+ 
+ 

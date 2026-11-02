@@ -1,0 +1,19 @@
+Tu es un contre-lecteur neuf (règle R2) : tu n'as écrit ni le texte ni le code. Tâche : **contre-lecture courte** du préenregistrement du tour fermé, étage 1 (organisme d'idéation de Lazar Ciric), brouillon 5, avant son scellement ; trois contre-lectures complètes ont déjà eu lieu sur les brouillons précédents (la troisième, non scellable, a donné les points B10, I25 à I31 et 33 couples T64-T97, tous traités depuis). Ton rôle : vérifier que ce qui a été corrigé l'est vraiment et que les changements du brouillon 5 n'ont rien cassé. Langue : français ; heures par `date -u`.
+
+## Contexte
+L'étage 1 joue la boucle fermée de l'organisme d'idéation avec de vrais modèles (bras réel Kimi et Argon, bras aléatoire, bras recopie-mélange, témoins plantés, tests de mort dans un vrai bac à sable bubblewrap, vérificateur d'une autre famille) sur un monde à loi plantée, trois générations. GO de calcul : `GO-2026-11-02-23`, 50 USD (Kimi 44, Argon 6). Lazar a demandé : plafonds très larges, aucun budget de temps qui coupe la mesure, aucun résultat non concluant par défaut de conception ou de plafond.
+
+## Fichiers (dépôt public `/home/claude/ideation-organism/orchestrator/`, commit `a12713a`)
+- `prereg/preenregistrement-tour-ferme-v1-brouillon5.md` (871 lignes, sha256 c81aa6ef…) ; `prereg/rapport-redaction-tour-ferme-v5.md` (sa section 10 : les dix lignes à lire d'abord) ; `prereg/rapport-redaction-tour-ferme-v4.md` ; la troisième contre-lecture `prereg/contre-lecture-preenregistrement-tour-ferme-v3.md` et ses couples `prereg/couples-contre-lecture-tour-ferme-v3.json` ; le brouillon 4 (`preenregistrement-tour-ferme-v1-brouillon4.md`) pour la comparaison.
+- Code v63 : `pole/tour_ferme_v63.py`, `pole/lecture_tour_ferme_v63.py`, `demonstrations/tour_ferme_v63.py`, `demonstrations/lire_tour_ferme_v63.py`, `essais/test_tour_ferme_v63.py`, `essais/test_gardes_tour_ferme_v63.py`, `essais/mutations_tour_ferme_v63.py`, et `pole/tests_de_mort_v5.py` (borne par carte, l. 455-482).
+
+## Ce que tu vérifies
+1. Chaque point B10 et I25 à I31 de la troisième contre-lecture : traité, avec l'essai et la mutation qui le prouvent (noms exacts).
+2. Les changements du brouillon 4 au 5 (section 0) : GO-23 seul cité, plafond 50 = 44 + 6 au centime, borne de 0,80 USD par carte (couvre les 12 tours du garde-fou), pire cas recalculé et marge, durée 24 h décrite comme garde et non comme couperet ; le défaut du rôle des proposeurs (`proposeur_ideation`) et sa garde neuve `exiger_roles_joues` (code 2 avant tout appel) ; l'annexe A (clés lues par le code, pour la configuration de session-depot).
+3. Que les 7 zones de l'étage 2 sont identiques à l'octet au brouillon 4 et que le seul marqueur hors zone est `<<CASE_CONFIGURATION_V3>>`.
+4. Le bloc des 91 empreintes du code gelé contre le disque au commit `a12713a`.
+5. Que chaque issue écrite d'avance (T1 à T5, A4) peut tomber dans les deux sens et qu'aucune borne restante ne rend une issue non concluante par construction (dis lesquelles le pourraient encore, et le prix).
+6. Rejoue, avec `TMPDIR=/tmp` : `nice -n 10 python3 -I -B -m pytest -q -p no:cacheprovider essais/test_tour_ferme_v63.py essais/test_gardes_tour_ferme_v63.py` et `nice -n 10 python3 -I -B essais/mutations_tour_ferme_v63.py --seulement sonde --raisons` (le banc complet a été rejoué indépendamment par conv-audit : 72 sur 72).
+
+## Rendu
+Deux fichiers neufs : `prereg/contre-lecture-courte-preenregistrement-tour-ferme-v5.md` (verdict : scellable tel quel une fois la configuration portée / après couples / non scellable ; points B, I, M avec preuve fichier:ligne) et `prereg/couples-contre-lecture-tour-ferme-v5.json` (couples {"ancien", "nouveau"}, chaque « ancien » présent une seule fois dans le brouillon 5). Interdits : aucun commit, aucun `.sha256`, aucun fichier existant modifié, rien sous `donnees/`, aucun `git fetch`, aucun réseau ni modèle, `nice -n 10`. Rends : chemins, sha256, verdict en trois lignes.
