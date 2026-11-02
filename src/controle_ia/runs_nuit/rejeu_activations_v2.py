@@ -1,10 +1,11 @@
-"""R1 relancé — rejeu des actions stockées de P3 (addendum `prereg/R1-addendum-relance-v1.md`, GO-2026-11-01-13).
+"""R1 relancé — rejeu des actions stockées de P3 (addendum `prereg/R1-addendum-relance-v1.md`, GO-2026-11-02-02).
 
 Version 2 du rejeu, sous un nom nouveau (R12) : `rejeu_activations_v1.py`, cité par le préenregistrement scellé
 `prereg/R1-R2-rejeu-p3-v1.md`, n'est pas modifié ; ses fonctions sont importées telles quelles (reconstruction,
 empreintes, échantillon, écart, agrégats, conversion en float16). Seule la garde CLC-03 change, selon l'addendum :
 
-- **Règle A (table de tokenisation)** : la table des corrections (`resolution_tokenisation_v1`), calculée sur
+- **Règle A (table de tokenisation)** : la table des corrections (`resolution_tokenisation_v1`, version 2 : étapes 1 à
+  3 du module et extension C-6 fusionnées ; forme de chaque correction contrôlée au chargement), calculée sur
   processeur avant la carte et scellée, est citée par la configuration (`chemin_table_tokenisation`,
   `table_tokenisation_sha256`). Elle doit couvrir **exactement** les épisodes conformes en longueur à trajectoire
   différente de la reconstruction de base (dans les deux sens) ; chaque correction est appliquée

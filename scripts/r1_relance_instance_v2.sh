@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Relance de R1 seule (rejeu des 2 400 actions de P3, activations aux couches 7, 15, 23) sur l'instance de calcul, selon
-# l'addendum `prereg/R1-addendum-relance-v1.md` (GO-2026-11-01-13). Version 2 du script d'instance, sous un nom nouveau
-# (R12 ; `r1_r2_instance_v1.sh`, cité par le scellement de R1-R2, n'est pas modifié). Changements : R1 seule
+# l'addendum `prereg/R1-addendum-relance-v1.md` (GO-2026-11-02-02, extension de GO-2026-11-01-13). Version 2 du
+# script d'instance, sous un nom nouveau (R12 ; `r1_r2_instance_v1.sh`, cité par le scellement de R1-R2, n'est pas modifié). Changements : R1 seule
 # (`ETAPES=rejeu`, tout autre valeur arrête avant l'installation : R2 ne se relance pas, ses scores existent) ; module
 # `controle_ia.runs_nuit.rejeu_activations_v2` (règles A et B de l'addendum) ; préenregistrement par défaut = l'addendum,
-# qui cite la configuration v3, elle-même la table de tokenisation scellée ; branche de résultats par défaut
+# qui cite la configuration v4, elle-même la table de tokenisation v2 scellée ; branche de résultats par défaut
 # `calcul/r1-relance-<MODE>-v1` ; plus de garde N-029 (aucun juge) ; sceau de la table et du préenregistrement parent
 # vérifiés avant l'installation.
 #

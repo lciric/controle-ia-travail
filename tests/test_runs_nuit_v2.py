@@ -227,6 +227,14 @@ def test_relance_table_falsifiee_ou_non_conforme_arrete(source, tmp_path):
     p = falsifier("table-f.json", lambda x: x["episodes"][0].update(methode="libre"))
     with pytest.raises(GardeArret, match="méthode inconnue"):
         rt.charger_table(p, None)
+    # (f) étiquette qui ment sur la forme (une correction de fin déclarée « fin et paire », sans paire)
+    p = falsifier("table-g.json", lambda x: x["episodes"][0].update(methode="fin_et_paire"))
+    with pytest.raises(GardeArret, match="forme"):
+        rt.charger_table(p, None)
+    # (g) version inconnue (la table v1 versée, version 1, n'est pas chargeable par l'instance)
+    p = falsifier("table-h.json", lambda x: x.update(version=1))
+    with pytest.raises(GardeArret, match="version"):
+        rt.charger_table(p, None)
     for run in ("20261102-102100-r1-jouet", "20261102-102200-r1-jouet", "20261102-102300-r1-jouet"):
         assert not (depot / "donnees" / run).exists()
 
@@ -322,24 +330,35 @@ def test_configuration_v2_gardes():
 
 
 def test_table_reelle_versee_coherente():
-    """La table versée pour la relance (calculée sur processeur sur les vraies pièces de P3) : version, règle, comptes
-    cohérents, une seule méthode par épisode, au plus 10 non résolus, chaque remplacement de même largeur (deux ou trois
-    jetons)."""
-    p = RACINE / "prereg" / "R1-table-tokenisation-v2.json"
-    t = json.loads(p.read_text(encoding="utf-8"))
-    assert t["version"] == rt.VERSION_TABLE and t["regle"] == rt.REGLE
-    co = t["comptes"]
-    assert co["signales"] == len(t["episodes"]) == sum(co[m] for m in rt.METHODES)
-    assert co["identiques_apres_table"] == co["identiques_base"] + sum(co[m] for m in rt.CORRIGEES)
-    assert co["non_resolu"] <= 10
-    for e in t["episodes"]:
-        n = {"fins": 0, "une_paire": 1, "deux_paires": 2, "fin_et_paire": 1, "fenetre_trois": 1,
-             "trois_paires_meme_action": 3, "non_resolu": 0}.get(e["methode"])
-        assert n is None or len(e["paires"]) == n
-        assert bool(e["fins"]) == (e["methode"] in ("fins", "fin_et_paire"))
-        for q in e["paires"]:
-            assert len(q["canonique"]) == len(q["p3"]) in (2, 3) and q["canonique"] != q["p3"]
-            assert len(q["p3"]) == 3 or e["methode"] != "fenetre_trois"
+    """Tables versées pour la relance (calculées sur processeur sur les vraies pièces de P3) : la table des étapes 1 à 3
+    (v1, version 1) toujours ; la table v2 (fusion avec le résultat C-6, version 2) dès qu'elle est versée. Version,
+    règle, comptes cohérents, une seule méthode par épisode, au plus 10 non résolus, forme de chaque correction conforme
+    à sa méthode (deux ou trois jetons, mêmes largeurs)."""
+    p1 = RACINE / "prereg" / "R1-table-tokenisation-v1.json"
+    tables = [(p1, json.loads(p1.read_text(encoding="utf-8")))]
+    p2 = RACINE / "prereg" / "R1-table-tokenisation-v2.json"
+    if p2.exists():
+        tables.append((p2, json.loads(p2.read_text(encoding="utf-8"))))
+    t1 = tables[0][1]
+    assert t1["version"] == 1 and t1["regle"] == rt.REGLE
+    assert {x["methode"] for x in t1["episodes"]} <= set(rt.METHODES_RECHERCHE) | {"non_resolu"}
+    for p, t in tables:
+        co = t["comptes"]
+        assert co["signales"] == len(t["episodes"]) == sum(co.get(m, 0) for m in rt.METHODES), p
+        assert co["identiques_apres_table"] == co["identiques_base"] + sum(co.get(m, 0) for m in rt.CORRIGEES), p
+        assert co["non_resolu"] <= 10
+        for e in t["episodes"]:
+            rt.verifier_forme(e)
+            assert bool(e["fins"]) == (e["methode"] in ("fins", "fin_et_paire", "fin_et_fenetre", "fin_et_deux_paires",
+                                                        "deux_fins_et_paire"))
+            for q in e["paires"]:
+                assert len(q["canonique"]) == len(q["p3"]) in (2, 3) and q["canonique"] != q["p3"]
+    if len(tables) == 2:
+        t2 = tables[1][1]
+        assert t2["version"] == rt.VERSION_TABLE and t2["regle_c6"] == rt.REGLE_C6
+        assert [x["episode"] for x in t2["episodes"]] == [x["episode"] for x in t1["episodes"]]
+        for x1, x2 in zip(t1["episodes"], t2["episodes"]):
+            assert x1["methode"] == "non_resolu" or x1 == x2
 
 
 def test_gardes_du_parent_et_de_l_addendum_cas_sain_et_artefacts(source, tmp_path):
@@ -396,24 +415,84 @@ def test_gardes_du_parent_et_de_l_addendum_cas_sain_et_artefacts(source, tmp_pat
         assert not (depot / "runs" / f"20261102-{run}-r1-jouet").exists()
 
 
-def test_fenetres_de_trois_jetons_sur_faux_tokeniseur():
-    """C-6 : une fenêtre de trois jetons redécoupée en trois, les deux frontières déplacées ; une seule frontière
-    déplacée n'est pas une fenêtre (c'est une paire)."""
+def test_hacheur_remplacement_de_trois_jetons_sur_faux_tokeniseur():
+    """Extension C-6 : un remplacement de largeur trois (fenêtre) est haché comme l'épisode modifié ; disjonction des
+    remplacements de largeurs mêlées."""
     tok = FauxTokOctet()
     tok.vocab.update({"abc": 8, "cab": 9, "ca": 10})
     tok.inverse = {i: s for s, i in tok.vocab.items()}
     v = tok.vocab
-    octets, par_octets = rt.table_des_octets(tok, niveau_octet=True)
-    # « ab » + « c » + « a » (abca) : fenêtres à deux frontières déplacées : « a » + « bc » + « a »? non (une seule
-    # déplacée : 2→1 ; 3→3) ; « a » + « b » + « ca » (1, 2) : les deux déplacées
     rec = {"ids": [v["ab"], v["c"], v["a"]],
            "actions": [{"pas": 0, "debut": 0, "fin": 3, "nv": [v["ab"], v["c"], v["a"]], "texte": "abca"}]}
-    f = rt.candidats_fenetres(rec, [0], octets, par_octets)
-    assert (0, 0, (v["a"], v["b"], v["ca"])) in f
-    assert all(n[0] != v["ab"] and n != (v["ab"], v["c"], v["a"]) for _, _, n in f)
     h = rt.Hacheur("e", 1, rec)
+    base = h.empreinte()
     var = copy.deepcopy(rec)
     var["ids"][0:3] = [v["a"], v["b"], v["ca"]]
     var["actions"][0]["nv"][0:3] = [v["a"], v["b"], v["ca"]]
     assert h.empreinte([(0, 0, (v["a"], v["b"], v["ca"]))]) == ra.empreinte_trajectoire(ra.episode_harnais("e", 1, var))
+    assert h.empreinte() == base
     assert rt._disjoints([(0, 0, (1, 2)), (0, 2, (3, 4))]) and not rt._disjoints([(0, 0, (1, 2, 3)), (0, 2, (3, 4))])
+
+
+def _table_recherche_jouet():
+    eps = [{"episode": "a/1/e0", "trajectoire_p3": "1" * 64, "methode": "une_paire", "fins": {},
+            "paires": [{"pas": 0, "rang": 0, "canonique": [1, 2], "p3": [3, 4]}], "essais": {}},
+           {"episode": "b/1/e0", "trajectoire_p3": "2" * 64, "methode": "non_resolu", "fins": {}, "paires": [], "essais": {}},
+           {"episode": "c/1/e0", "trajectoire_p3": "3" * 64, "methode": "non_resolu", "fins": {}, "paires": [], "essais": {}}]
+    co = {"episodes": 10, "conformes_longueur": 6, "identiques_base": 3, "signales": 3, "fins": 0, "une_paire": 1,
+          "deux_paires": 0, "non_resolu": 2, "identiques_apres_table": 4}
+    return {"version": 1, "regle": rt.REGLE, "run_source": "r", "T": 1, "comptes": co, "episodes": eps}
+
+
+def _resultat_c6_jouet(sha):
+    return {"table_v1_sha256": sha, "regle": "c6 jouet", "episodes": [
+        {"episode": "b/1/e0", "trajectoire_p3": "2" * 64, "resolu": True, "niveau": "3a", "fins": {"0": 7},
+         "remplacements": [{"pas": 0, "rang": 2, "canonique": [5, 6], "p3": [8, 9], "canonique_jetons": ["x", "y"],
+                            "p3_jetons": ["u", "v"]}], "essais": {"1a": 4}},
+        {"episode": "c/1/e0", "trajectoire_p3": "3" * 64, "resolu": False, "niveau": None, "essais": {"1a": 9}}]}
+
+
+def test_construire_table_v2_cas_sain_et_artefacts():
+    """Fusion de la table des étapes 1 à 3 et du résultat C-6 (table version 2) : cas sain (un résolu au niveau 3a
+    devient « fin_et_paire », l'autre reste non résolu, comptes refaits, entrées des étapes 1 à 3 inchangées) ;
+    artefacts : empreinte de la table citée fausse, épisodes du résultat ≠ non résolus, empreinte de P3 différente,
+    niveau inconnu, forme qui ment sur la méthode, méthode C-6 dans la table de recherche ; `verifier_forme` refuse une
+    forme fausse (`charger_table` : voir `test_relance_table_falsifiee_ou_non_conforme_arrete`)."""
+    tr = _table_recherche_jouet()
+    t = rt.construire_table_v2(tr, "a" * 64, _resultat_c6_jouet("a" * 64), "c" * 64)
+    assert t["version"] == rt.VERSION_TABLE and t["regle_c6"] == rt.REGLE_C6 and t["table_recherche_sha256"] == "a" * 64
+    assert [x["methode"] for x in t["episodes"]] == ["une_paire", "fin_et_paire", "non_resolu"]
+    assert t["episodes"][0] == tr["episodes"][0] and t["episodes"][1]["fins"] == {"0": 7}
+    assert t["episodes"][1]["niveau_c6"] == "3a" and t["episodes"][1]["paires"][0]["p3"] == [8, 9]
+    assert t["comptes"]["fin_et_paire"] == 1 and t["comptes"]["non_resolu"] == 1
+    assert t["comptes"]["identiques_apres_table"] == 5 and t["run_source"] == "r"
+    with pytest.raises(GardeArret, match="empreinte de la table de recherche"):
+        rt.construire_table_v2(tr, "a" * 64, _resultat_c6_jouet("b" * 64), "c" * 64)
+    r = _resultat_c6_jouet("a" * 64)
+    r["episodes"].pop()
+    with pytest.raises(GardeArret, match="non résolus de la table"):
+        rt.construire_table_v2(tr, "a" * 64, r, "c" * 64)
+    r = _resultat_c6_jouet("a" * 64)
+    r["episodes"][0]["trajectoire_p3"] = "9" * 64
+    with pytest.raises(GardeArret, match="empreinte de P3"):
+        rt.construire_table_v2(tr, "a" * 64, r, "c" * 64)
+    r = _resultat_c6_jouet("a" * 64)
+    r["episodes"][0]["niveau"] = "9z"
+    with pytest.raises(GardeArret, match="niveau inconnu"):
+        rt.construire_table_v2(tr, "a" * 64, r, "c" * 64)
+    r = _resultat_c6_jouet("a" * 64)
+    r["episodes"][0]["fins"] = {}
+    with pytest.raises(GardeArret, match="forme"):
+        rt.construire_table_v2(tr, "a" * 64, r, "c" * 64)
+    tr2 = copy.deepcopy(tr)
+    tr2["episodes"][0]["methode"] = "fenetre"
+    with pytest.raises(GardeArret, match="hors des étapes 1 à 3"):
+        rt.construire_table_v2(tr2, "a" * 64, _resultat_c6_jouet("a" * 64), "c" * 64)
+    for methode, fins, larg in (("fenetre", {}, [2]), ("quatre_paires_meme_action", {}, [2, 2, 2, 2]),
+                                ("deux_fins_et_paire", {"0": 1}, [2]), ("copie", {}, [2, 2]), ("fins", {"0": 1}, [2])):
+        paires = [{"pas": k if methode == "quatre_paires_meme_action" else 0, "rang": 2 * k, "canonique": [1] * w,
+                   "p3": [2] * w} for k, w in enumerate(larg)]
+        with pytest.raises(GardeArret, match="forme"):
+            rt.verifier_forme({"episode": "x", "methode": methode, "fins": fins, "paires": paires})
+    rt.verifier_forme({"episode": "x", "methode": "copie", "fins": {},
+                       "paires": [{"pas": 0, "rang": 2 * k, "canonique": [1, 1], "p3": [2, 2]} for k in range(3)]})

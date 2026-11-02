@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Amorce de l'instance de la relance de R1 (addendum `prereg/R1-addendum-relance-v1.md`, GO-2026-11-01-13), lancement
+# Amorce de l'instance de la relance de R1 (addendum `prereg/R1-addendum-relance-v1.md`, GO-2026-11-02-02), lancement
 # en mode « args ». Version 2, sous un nom nouveau (R12 ; `amorce_instance_r1_r2_v1.sh` n'est pas modifiée) : script
 # `r1_relance_instance_v2.sh`, R1 seule, plafond de 100 minutes (mise en place ≈ 20 min, tests ≈ 15 min, rejeu ≈ 15 min,
 # poussées), sous la surveillance de la session. Une seconde exécution refuse de repartir (dossiers présents, R12) :
