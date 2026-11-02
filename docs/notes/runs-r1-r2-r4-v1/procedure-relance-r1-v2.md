@@ -1,4 +1,4 @@
-# Procédure de scellement et de lancement — relance de R1 (addendum `prereg/R1-addendum-relance-v1.md`, brouillon 2) — v2
+# Procédure de scellement et de lancement — relance de R1 (addendum `prereg/R1-addendum-relance-v1.md`, brouillon 3) — v2
 
 Préparée, non exécutée : rien n'est scellé, rien n'est lancé. Remplace la v1 (`procedure-relance-r1-v1.md`, archivée
 sans modification) : GO-2026-11-02-02 au lieu de GO-2026-11-01-13 (qui échoit le 2 novembre) ; décisions de Lazar N-A et GO prises
@@ -45,7 +45,10 @@ grep -nE '^\| GO-2026-11-02-0[12] \|' registres/go.md || echo "à recopier"     
 
 1. Exécuter l'extension C-6 (dix niveaux, ordre fixe, addendum, « Plan d'analyse », étape 0) sur les 7 épisodes non
    résolus de la table v1 ; verser le script et son résultat sous `docs/notes/runs-r1-r2-r4-v1/` (noms versionnés,
-   compagnons `.sha256`) ; recopier dans l'addendum leurs chemins, empreintes et le commit.
+   compagnons `.sha256`) ; recopier dans l'addendum leurs chemins, empreintes et le commit. **Fait (brouillon 3)** :
+   `resolution_c6_v1.py` (`111d639a…`), `resultat-c6-v1.json` (`1e11d58f…`), journaux `journal-c6-v1.out` et `.err`,
+   versés à l'octet au commit `c0c9668d` ; **r = 3** (2a, 2a, 1a), 4 non résolus ; compagnons `.sha256` à poser au
+   scellement (étape 2).
 2. Construire la table v2 (fusion revérifiée par la fonction de l'instance) :
 
 ```
@@ -53,17 +56,25 @@ cd $S/wt-addendum && export PYTHONPATH=src
 sha256sum $S/tok-addendum-r1/tokenizer.json $S/tok-addendum-r1/tokenizer_config.json $S/tok-addendum-r1/special_tokens_map.json
 python -m controle_ia.runs_nuit.resolution_tokenisation_v1 --tokeniseur $S/tok-addendum-r1 \
     --config prereg/R1-rejeu-config-v3.json --table-recherche prereg/R1-table-tokenisation-v1.json \
-    --resultat-c6 docs/notes/runs-r1-r2-r4-v1/<résultat C-6> --sortie prereg/R1-table-tokenisation-v2.json
+    --resultat-c6 docs/notes/runs-r1-r2-r4-v1/resultat-c6-v1.json --sortie prereg/R1-table-tokenisation-v2.json
 ```
+
+   **Fait (brouillon 3)**, avec le tokeniseur de l'exécution C-6 (`$S/c6/tok`, mêmes trois empreintes que ci-dessus) et
+   les pièces de P3 vérifiées par empreinte : table v2 `5f6cf489eb971c195f7263cb738bc5f9de4bdf5cfd0f55658fd3977d3f4b55e2`,
+   18 corrections revérifiées par `appliquer_entree`, 147 identiques, 4 non résolus.
 
 3. Écrire `prereg/R1-rejeu-config-v4.json` : la v3 à l'identique, sauf `chemin_table_tokenisation` =
    `prereg/R1-table-tokenisation-v2.json` et `table_tokenisation_sha256` = empreinte du fichier de la table v2 ;
    empreinte canonique : `python -c "import json; from controle_ia.runs_nuit import rejeu_activations_v2 as rb;
-   print(rb.empreinte_config(json.load(open('prereg/R1-rejeu-config-v4.json'))))"`.
+   print(rb.empreinte_config(json.load(open('prereg/R1-rejeu-config-v4.json'))))"`. **Fait (brouillon 3)** : fichier
+   `09bc5813d33952ec6e59b680d20b18484c1d017399fc7abb10c9d639dc1d0d04`, empreinte canonique
+   `10707413da95082dfabb264a3303aac6f2bb1e53901c7a166470615a02ac941e`.
 4. Rejouer sur la table v2 et la configuration v4 : `comptes_table_relance_v2.py` (sortie
    `comptes-table-relance-v3.json`, nom neuf) et `essai_paires_consigne_fausse_v1.py` (sortie
    `essai-paires-consigne-fausse-v2.json`) ; `python -m pytest -q tests/test_runs_nuit_v2.py -k reelle` (la table v2
-   versée est contrôlée par `test_table_reelle_versee_coherente`).
+   versée est contrôlée par `test_table_reelle_versee_coherente`). **Fait (brouillon 3)** : comptes v3 (147 identiques,
+   4 non résolus, 40 actions ; borne haute 93,2 %, scénario bas 72,6 %, repli 1 470) ; paires sous la consigne fausse
+   18 sur 18 ; `-k reelle` : 1 passé, 10 désélectionnés.
 5. Remplacer dans l'addendum chaque « À REMPLIR après C-6 » (r ; empreintes de la configuration v4 et de la table v2 ;
    comptes ; essais ; jalons de l'étape 6 ci-dessous) ; si r = 7, écrire que E19 est sans objet. Commit « texte ».
 
@@ -178,8 +189,8 @@ forme : `essai-garde-calcul-relance-v2.txt`. Consigner l'identifiant au registre
 
 ## 6. Surveillance et arrêt
 
-Jalons : `etape=reconstruction … trajectoires_identiques=<144 + r> corrections=<15 + r> non_resolus=<7 − r>` (valeurs à
-recopier ici après C-6 : À CONSIGNER) ; `etape=fidelite lecture=conforme` ; `etape=controle_negatif` ; `etape=fin`.
+Jalons : `etape=reconstruction … trajectoires_identiques=147 corrections=18 non_resolus=4` (144 + r, 15 + r, 7 − r avec
+r = 3, C-6) ; `etape=fidelite lecture=conforme` ; `etape=controle_negatif` ; `etape=fin`.
 Toutes les 10 minutes ; arrêt par l'identifiant (R10 : `$VB/vastai destroy instance <ID>`) dès la fin de l'amorce ou au
 plafond de 100 minutes. Aucune lecture de R2 avant le résultat de R1 relancée (N1 = (b)).
 

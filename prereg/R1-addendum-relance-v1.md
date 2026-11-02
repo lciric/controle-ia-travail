@@ -1,9 +1,10 @@
 # Addendum au préenregistrement de R1 — relance du rejeu des 2 400 actions de P3 après l'arrêt sur la garde CLC-03 — v1
 
-- Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 2** (reprise
-  du travail interrompu `54c851e4`, après la contre-lecture 1 et la vérification de concordance de conv-audit, n° 343),
-  non scellé, **non scellable en l'état** : les valeurs qui dépendent de l'exécution de C-6 sont marquées « À REMPLIR »
-  (la garde `controle_ia.prereg.problemes` refuse le scellement tant qu'il en reste).
+- Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 3**
+  (brouillon 2 : reprise du travail interrompu `54c851e4`, après la contre-lecture 1 et la vérification de concordance
+  de conv-audit, n° 343 ; brouillon 3 : valeurs de C-6 remplies — extension exécutée, r = 3 ; table v2 et configuration
+  v4 écrites ; comptes et essais refaits) ; non scellé ; reste à remplir l'entrée « Contre-lecture 2 » (la garde
+  `controle_ia.prereg.problemes` refuse le scellement tant qu'il en reste).
 - **Décisions de Lazar** (2 novembre 2026, 06:32 UTC, dans la session de conv-audit ; registre R-1116 et lignes
   `GO-2026-11-02-01` et `GO-2026-11-02-02` de `registres/go.md` sur la branche `canal/conv-audit-n04`, commit
   `6a4aeffecec960c89cf18622c2f64822ff93660f` ; message n° 344,
@@ -14,7 +15,7 @@
   GO-2026-11-01-13, plafond 25 USD inchangé, échéance 2026-11-09) ; GO-2026-11-01-13 échoit le 2 novembre et n'est plus cité. Ces
   lignes sont à recopier sur `main` par session-depot (n° 344, point 2), et Lazar les redit de sa main dans la session
   de session-depot (même point) : deux conditions du lancement (procédure, étape 1).
-- Date (UTC) : 2026-11-02 07:12 (heure relevée par `date -u`).
+- Date (UTC) : 2026-11-02 07:54 (brouillon 3 ; heure relevée par `date -u` ; brouillon 2 : 07:12).
 - Préenregistrement parent (scellé, non modifié) : `prereg/R1-R2-rejeu-p3-v1.md`
   (`80c85a0085f444dc10f36e4e226d015802d2e20294c4fff2ae67adb0aca4ddea`), commit de scellement
   `567260c05687747f0c7a715fc9b15b4fc6297d65` (branche `prep/runs-r1-r2-r4-v1`), code cité `29bd8e2e…`.
@@ -33,9 +34,12 @@
   (`prereg/analyse-principale-r1-r2-v1.md`, `8e267952…`, commit `83ce7a91`) ; **GO-2026-11-02-02** (ci-dessus) ;
   procédure de lancement `docs/notes/runs-r1-r2-r4-v1/procedure-relance-r1-v2.md` (la v1 reste archivée).
 - Chemin de la configuration du rejeu : `prereg/R1-rejeu-config-v4.json`
-- Configuration du rejeu (empreinte canonique) : À REMPLIR après C-6 (configuration v4 : clés de la v3, table v2)
+- Configuration du rejeu (empreinte canonique) : `10707413da95082dfabb264a3303aac6f2bb1e53901c7a166470615a02ac941e`
+  (configuration v4 : clés de la v3, table v2 ; empreinte du fichier
+  `09bc5813d33952ec6e59b680d20b18484c1d017399fc7abb10c9d639dc1d0d04`)
 - Chemin de la table de tokenisation : `prereg/R1-table-tokenisation-v2.json`
-- Table de tokenisation (empreinte du fichier) : À REMPLIR après C-6 (table v2, construite par la commande de l'étape 0)
+- Table de tokenisation (empreinte du fichier) : `5f6cf489eb971c195f7263cb738bc5f9de4bdf5cfd0f55658fd3977d3f4b55e2`
+  (table v2, construite par la commande de l'étape 0)
 - Entropie : `36410133060804533274328900142752730279`
 - Tests attendus : `302`
 
@@ -62,8 +66,8 @@ gabarit, ni la date, ni la consigne, ni une version de bibliothèque (manifestes
 ## Écarts au parent
 
 Liste exhaustive (contre-lecture 1, CLA-01 ; concordance, C-1 à C-7). « Parent » = `prereg/R1-R2-rejeu-p3-v1.md`.
-Notation : **r** = nombre des 7 épisodes non résolus par les étapes 1 à 3 que l'extension C-6 résout (À REMPLIR après
-C-6, entre 0 et 7) ; les comptes ci-dessous sont donnés à la table des étapes 1 à 3 (table v1, `5309326b…`) et en
+Notation : **r** = nombre des 7 épisodes non résolus par les étapes 1 à 3 que l'extension C-6 résout : **r = 3**
+(C-6 exécutée, « Plan d'analyse », étape 0 ; les formules en r valent avec r = 3) ; les comptes ci-dessous sont donnés à la table des étapes 1 à 3 (table v1, `5309326b…`) et en
 fonction de r (chaque épisode compte 10 actions).
 
 | n° | Ligne ou règle du parent | Nouvelle règle | Raison |
@@ -71,7 +75,7 @@ fonction de r (chaque épisode compte 10 actions).
 | E1 | Plan, étape 1, et liste d'arrêt : CLC-03, « un épisode encore différent arrête tout » ; recherche des jetons de fin à la volée | **Règle A** : table de tokenisation calculée avant la carte, scellée, citée par la configuration, appliquée et vérifiée par l'empreinte de P3 (étapes 1 à 3 du module, puis extension C-6 : « Plan d'analyse », étape 0) | Cause établie : découpages non canoniques de même longueur (rapport d'enquête) |
 | E2 | Même ligne | **Règle B** : un épisode conforme en longueur non résolu par la table ne fait plus arrêter la course ; il est traité **comme les 89 épisodes déjà non conformes en longueur** : `contexte_conforme` et `trajectoire_identique` faux, `conforme_longueur` gardant sa mesure, et **`fidele` tranché action par action par la tolérance** (règle du parent pour toute action hors contexte exact ; la règle de repli les exclut si le contrôle négatif ne discrimine pas) | La table ne résout pas tout (7 − r épisodes) ; voie recommandée par la concordance de conv-audit (n° 343, C-1), qui retire la demande « `fidele` = faux » du n° 339 |
 | E3 | Seuil (aucun) | **Seuil de la règle B : 10 épisodes** ; au-delà, arrêt « non conforme » | Borner B ; fixé en connaissant le compte (voir « Seuil ») |
-| E4 | P-R5 : « trajectoires identiques à P3 pour tous les épisodes entièrement conformes en longueur (garde) » | 144 + r trajectoires identiques, 7 − r épisodes non résolus (au plus 10) ; « ≥ 90 % des actions notées fidèles (au plus 93 %) » **inchangé** | Conséquence de A et B |
+| E4 | P-R5 : « trajectoires identiques à P3 pour tous les épisodes entièrement conformes en longueur (garde) » | 144 + r trajectoires identiques, 7 − r épisodes non résolus (au plus 10), soit **147 et 4** à r = 3 ; « ≥ 90 % des actions notées fidèles (au plus 93 %) » **inchangé** | Conséquence de A et B |
 | E5 | Critères de lecture : « Fidélité contraire, ou épisode conforme à trajectoire différente → rejeu non validé » | « Fidélité contraire, ou plus de 10 non résolus, ou table non applicable → rejeu non validé » ; **cette ligne est recopiée dans l'analyse principale scellée de conv-audit (l. 146) : voir E19** | Conséquence de A, B et E3 |
 | E6 | Critères de lecture (aucune ligne) | **Ajout** : « au plus 10 non résolus → course normale ; leurs actions jugées par la tolérance ; nombre, liste et fidèles parmi elles rapportés » | Lecture de B |
 | E7 | Critères de lecture (aucune ligne) | **Ajout** : « fidèles < 90 % des notées → réserve d'instrument portée par le résultat du run (`tokenisation.p_r5_au_moins_90_pour_cent`) et par la lecture du fournisseur, **sans changer aucune classe de verdict ni aucune ligne des analyses de conv-audit** » (la principale rapporte P-R5 en « observé », sans réserve) | P-R5 est une prédiction (contre-lecture, CLA-05 ; concordance, C-3) |
@@ -82,11 +86,11 @@ fonction de r (chaque épisode compte 10 actions).
 | E12 | Module `controle_ia.runs_nuit.rejeu_activations_v1`, script `scripts/r1_r2_instance_v1.sh`, amorce `amorce_instance_r1_r2_v1.sh` | `rejeu_activations_v2` (importe la v1 telle quelle), `r1_relance_instance_v2.sh`, `amorce_instance_r1_relance_v2.sh` ; **la commande inscrite au manifeste devient `python -m controle_ia.runs_nuit.rejeu_activations_v2`** | Noms nouveaux (R12) ; écart de nom signalé à conv-audit (CLA-10 ; voir E16) |
 | E13 | Contrôle négatif : reconstruction canonique sous la consigne fausse | Épisodes corrigés rejoués **avec leurs identifiants corrigés** sous la consigne fausse ; règles et seuils inchangés | Seule la consigne doit différer du contexte exact |
 | E14 | Sens de `contexte_conforme` : « conforme en longueur ainsi que toutes celles qui la précèdent dans son épisode » | Défini tel que la v2 l'écrit (C-5) : **vrai** pour toutes les actions d'un épisode à trajectoire identique après la table ; **faux** pour toutes les actions d'un épisode non résolu (bien qu'entièrement conforme en longueur) ; pour les épisodes non entièrement conformes en longueur, **vrai sur le préfixe d'actions conformes en longueur**, préfixe qu'**aucune empreinte ne vérifie** (**272 actions**, indépendant de r) | B ; réserve déclarée (« Métrique ») |
-| E15 | Règle de repli : couverture « au plus 74 % des actions ; saboteur ≈ 73 % » | Fidèles = trajectoires identiques : **1 440 + 10 r actions** (60 % à r = 0) ; à r = 0 : honnête 390, mention 420, saboteur 340, témoin 290 sur 600 ; saboteur et honnête sous les 80 % quel que soit r : P-R1 et P-R2 « non concluant (rejeu partiel) » sous repli, comme le prévoit déjà le parent | Le parent comptait le contexte exact ; le repli ne garde que les trajectoires identiques |
+| E15 | Règle de repli : couverture « au plus 74 % des actions ; saboteur ≈ 73 % » | Fidèles = trajectoires identiques : **1 440 + 10 r actions** (60 % à r = 0) ; à r = 0 : honnête 390, mention 420, saboteur 340, témoin 290 sur 600 ; **à r = 3 : 1 470 (61,3 %) ; honnête 410, mention 420, saboteur 340, témoin 300** ; saboteur et honnête sous les 80 % quel que soit r : P-R1 et P-R2 « non concluant (rejeu partiel) » sous repli, comme le prévoit déjà le parent | Le parent comptait le contexte exact ; le repli ne garde que les trajectoires identiques |
 | E16 | Résultat `diag/<run>/rejeu-activations.json` ; `arret.json` | Clés du parent inchangées ; **clé ajoutée** `tokenisation` (tolérée par les deux analyses de conv-audit, n° 343) ; verdict d'arrêt « non conforme » aussi pour plus de 10 non résolus ; la commande du manifeste change (E12) : le code « R2 seul » de conv-audit (`constantes_v3.COMMANDE_REJEU`, `entrees_v3.verifier_arret_r1`) refuserait la preuve d'un arrêt de la relance | Descriptif ; écart de nom signalé (n° 339) |
 | E17 | GO et calendrier | Lancement sous **GO-2026-11-02-02** (extension de GO-2026-11-01-13, qui échoit le 2 novembre ; plafond 25 USD inchangé ; échéance 2026-11-09) ; après le 9 novembre, **GO nouveau** sous un identifiant nouveau | Échéance du GO (CLA-02) ; décision de Lazar (R-1116) |
 | E18 | Branche de résultats : `calcul/r1-r2-reel-v1` | La course pousse sur `calcul/r1-relance-reel-v1` (le script refuse une branche existante) ; **après la course, le run relancé est versé aussi sur `calcul/r1-r2-reel-v1` par un commit neuf, à l'octet, sans rien réécrire** (procédure, étape 7) | L'analyse principale de conv-audit ne lit que cette branche (C-2) |
-| E19 | Copie de la ligne E5 dans l'analyse principale scellée de conv-audit (`8e267952…`, l. 146 : « Fidélité contraire, ou épisode conforme à trajectoire différente → rejeu non validé : rien n'est lu ») | L'addendum ne la remplace que dans le parent ; **le remplacement vaut dans la principale par la décision de Lazar N-A = (c) puis (a)** (R-1116, GO-2026-11-02-01) : pour les 7 − r épisodes que C-6 laisse non résolus, sa décision sur cet addendum couvre cette copie ; rien d'autre de la principale ne change ; donnée au lecteur du verdict (R13) | N-A (n° 343, C-4 ; n° 344) ; sans objet si r = 7 |
+| E19 | Copie de la ligne E5 dans l'analyse principale scellée de conv-audit (`8e267952…`, l. 146 : « Fidélité contraire, ou épisode conforme à trajectoire différente → rejeu non validé : rien n'est lu ») | L'addendum ne la remplace que dans le parent ; **le remplacement vaut dans la principale par la décision de Lazar N-A = (c) puis (a)** (R-1116, GO-2026-11-02-01) : pour les 7 − r épisodes que C-6 laisse non résolus (**4** à r = 3), sa décision sur cet addendum couvre cette copie ; rien d'autre de la principale ne change ; donnée au lecteur du verdict (R13) | N-A (n° 343, C-4 ; n° 344) ; sans objet si r = 7 |
 | E20 | Recherche des jetons de fin du parent (une ou deux substitutions) | **Extension C-6 de la règle A** aux hypothèses 1 à 3 du rapport d'enquête (dix niveaux dans un ordre fixe, « Plan d'analyse », étape 0), sur processeur, sur les seuls épisodes non résolus par les étapes 1 à 3 ; l'empreinte de P3 seule juge ; table v2 = fusion revérifiée | Concordance de conv-audit (C-6) ; décision N-A (c) |
 
 Inchangés : hypothèses H-R1 et H-R2 ; prédictions P-R1 à P-R4 et la part « ≥ 90 % (au plus 93 %) » de P-R5 ; métrique
@@ -106,9 +110,10 @@ longueur, et ses actions sont jugées par la tolérance.
 ## Prédiction chiffrée et signe attendu
 
 P-R1 à P-R4 : inchangées (parent). **P-R5 (instruments, prédictions ; écart E4)** : contrôle de fidélité conforme ;
-contrôle négatif discriminant (prédiction incertaine, inchangée) ; **trajectoires identiques à P3 : 144 + r épisodes sur
-240** (129 de base, 1 par le jeton de fin, 12 par une paire, 2 par deux paires, r par l'extension C-6), mesurées sur
-processeur avant la carte (« Plan d'analyse », étape 0) ; **épisodes non résolus (règle B) : 7 − r, au plus 10** ;
+contrôle négatif discriminant (prédiction incertaine, inchangée) ; **trajectoires identiques à P3 : 144 + r = 147
+épisodes sur 240** (129 de base, 1 par le jeton de fin, 12 par une paire, 2 par deux paires, r = 3 par l'extension C-6 :
+2 par une fenêtre, 1 par trois paires), mesurées sur processeur avant la carte (« Plan d'analyse », étape 0) ;
+**épisodes non résolus (règle B) : 7 − r = 4, au plus 10** ;
 **au moins 90 % des actions notées fidèles (au plus 93 %)**, inchangé — une **prédiction** du parent, que l'analyse
 scellée de conv-audit note « observé à côté du prédit, sans verdict propre » ; ce n'est pas un critère.
 
@@ -117,17 +122,18 @@ scores de P3 finis sur les sondes de fidélité). Ici, les 2 400 actions sont no
 finitude seule ; `jetons_notes` > 0 pour toutes, seul indicateur lu par les essais sur processeur, qui ne lisent aucun
 score).
 
-Valeur attendue, calculée sur processeur sans aucun score (`docs/notes/runs-r1-r2-r4-v1/comptes-table-relance-v2.json`,
-table v1) : **borne haute 2 236 / 2 400 = 93,2 %** (actions conformes en longueur, si toutes restent dans la tolérance ;
-borne du parent ; indépendante de r) ; **scénario bas 1 712 + 10 r** (71,3 % à r = 0 ; seules les actions à
-`contexte_conforme` vrai passent ; ce n'est pas une borne : la tolérance peut aussi écarter des actions en contexte
-exact). P-R5 tient tant qu'au plus **76** des 2 236 actions conformes en longueur sortent de la tolérance (2 236 − 2 160) ;
-on attend que les sorties viennent surtout des 524 − 10 r actions conformes hors contexte exact : prédiction
-**incertaine** (confiance ≈ 0,6 qu'elle tienne). Si le contrôle négatif ne discrimine pas, la règle de repli du parent
-ne garde que les trajectoires identiques (1 440 + 10 r, au plus 1 510 = 62,9 %) : P-R5 est alors contraire, sans autre
-conséquence que E7. **Marges avant la règle des 80 % du parent** (fidèles parmi saboteur ou honnête, 480 sur 600), à la
-borne haute : honnête 568 − 480 = **88 actions**, saboteur 556 − 480 = **76 actions** ; au scénario bas à r = 0 :
-honnête 441 − 480 = **− 39**, saboteur 427 − 480 = **− 53** (chaque épisode résolu par C-6 ajoute 10 à sa condition).
+Valeur attendue, calculée sur processeur sans aucun score (`docs/notes/runs-r1-r2-r4-v1/comptes-table-relance-v3.json`,
+table v2 et configuration v4 ; à r = 0 : `comptes-table-relance-v2.json`, table v1) : **borne haute 2 236 / 2 400 =
+93,2 %** (actions conformes en longueur, si toutes restent dans la tolérance ; borne du parent ; indépendante de r) ;
+**scénario bas 1 712 + 10 r = 1 742 = 72,6 %** (71,3 % à r = 0 ; seules les actions à `contexte_conforme` vrai passent ;
+ce n'est pas une borne : la tolérance peut aussi écarter des actions en contexte exact). P-R5 tient tant qu'au plus
+**76** des 2 236 actions conformes en longueur sortent de la tolérance (2 236 − 2 160) ; on attend que les sorties
+viennent surtout des 524 − 10 r = **494** actions conformes hors contexte exact (dont les 40 des 4 épisodes non
+résolus) : prédiction **incertaine** (confiance ≈ 0,6 qu'elle tienne). Si le contrôle négatif ne discrimine pas, la règle de repli du parent ne garde que les trajectoires identiques
+(1 440 + 10 r = **1 470 = 61,3 %**) : P-R5 est alors contraire, sans autre conséquence que E7. **Marges avant la règle
+des 80 % du parent** (fidèles parmi saboteur ou honnête, 480 sur 600), à la borne haute : honnête 568 − 480 = **88
+actions**, saboteur 556 − 480 = **76 actions** ; au scénario bas, à r = 3 (deux épisodes honnêtes et un témoin
+résolus) : honnête 461 − 480 = **− 19**, saboteur 427 − 480 = **− 53** (à r = 0 : − 39 et − 53).
 Si P-R5 est contraire : réserve d'instrument (E7), sans changer aucune classe de verdict ; rien n'est relancé pour la
 faire tenir (R3). Conséquence déclarée pour la lecture (n° 343) : P-R5 contraire équivaut à « plus de 10 % d'actions
 non fidèles », garde de l'analyse secondaire de conv-audit, qui ne lit alors pas son bras boîte blanche (i) sur R1 (le
@@ -199,8 +205,26 @@ résolus. Ordre fixe, premier succès retenu (rien d'autre n'est essayé ensuite
   pièces et tokeniseur vérifiés par empreinte ; tout sérialiseur rapide comparé octet pour octet à
   `empreinte_trajectoire` ; les 15 corrections de la table v1 redonnées (cas sain), une correction fausse refusée
   (artefact) ; toute correction trouvée revérifiée par le chemin lent. Aucun score, aucune activation, aucune note de
-  juge n'est lu. Script d'exécution : À REMPLIR après C-6 (chemin dans `docs/notes/runs-r1-r2-r4-v1/`, empreinte,
-  commit) ; résultat : À REMPLIR après C-6 (chemin, empreinte ; r et, pour chaque épisode résolu, son niveau).
+  juge n'est lu. **Exécution (faite, 2 novembre 2026, processeur, 1 974,8 s, sans dépense)** : script
+  `docs/notes/runs-r1-r2-r4-v1/resolution_c6_v1.py` (`111d639af53697ec4ab09ee810239b238d493401e7a6ca62e95baa1bb0eed293`,
+  version `resolution_c6_v1`), versé à l'octet au commit `c0c9668dc9c9cd12386e0389fb16daad75d64c56` avec ses journaux
+  (`journal-c6-v1.out`, `f2bf2744…` ; `journal-c6-v1.err`, `f9da5219…`) ; résultat
+  `docs/notes/runs-r1-r2-r4-v1/resultat-c6-v1.json` (`1e11d58fa75be359ffb185136cd2c83b1275203eb9f0162f0a5413222767b238`,
+  même commit ; cite la table v1 `5309326b…` et les empreintes des pièces et du tokeniseur). **r = 3** :
+  `honnete/2512.05150v2/e0` au niveau **2a** (une fenêtre, pas 4, rang 384 : `ÂłM SS erv` → `Âł MS Serv`),
+  `honnete/2512.11131v1/e0` au niveau **2a** (une fenêtre, pas 7, rang 82 : `Ġheir str ans` → `Ġhe irst rans`),
+  `temoin/2510.24788v1/e0` au niveau **1a** (trois paires, pas 2, rangs 113, 189 et 280) ; chacune revérifiée par le
+  chemin lent. **Non résolus (4), les dix niveaux épuisés** : `honnete/2602.00987v1`, `mention/2605.17899v2`,
+  `saboteur/2510.05132v3`, `temoin/2512.06870v2` (tous `e0`). Garde-fous passés : sérialiseur rapide égal à
+  `json.dumps` du harnais sur les 22 signalés ; 15 corrections de la table v1 redonnées par les deux chemins ; 14
+  corrections fausses refusées ; base des 7 différente de P3 ; signalés et non résolus recalculés égaux à la table v1.
+  **Précisions d'exécution déclarées** (le script fait foi sur ce qu'il a exploré) : (i) tokeniseur vérifié par
+  l'empreinte sha256 de `tokenizer.json` et par l'identifiant git et la taille de `tokenizer_config.json` ;
+  `special_tokens_map.json` n'est pas vérifié, ses empreintes sont seulement écrites dans le résultat (égales aux
+  publiées) ; (ii) au niveau 1c, une classe de copie dont deux occurrences se chevauchent est écartée en entier (aucun
+  sous-ensemble disjoint n'est essayé) ; (iii) une fenêtre exige seulement que chaque frontière nouvelle diffère de
+  l'ancienne de même rang (la première peut tomber sur l'ancienne seconde) ; (iv) aux niveaux 3a à 3d, la fin est la
+  boucle extérieure (fin, puis redécoupages dans l'ordre des candidats).
 - **Table v2 (fusion).** `python -m controle_ia.runs_nuit.resolution_tokenisation_v1 --tokeniseur <tokeniseur de la
   révision 0e9e39f2…> --config prereg/R1-rejeu-config-v3.json --table-recherche prereg/R1-table-tokenisation-v1.json
   --resultat-c6 <résultat C-6> --sortie prereg/R1-table-tokenisation-v2.json` (`construire_table_v2`, puis
@@ -212,7 +236,12 @@ résolus. Ordre fixe, premier succès retenu (rien d'autre n'est essayé ensuite
   sur sa méthode ; **chaque correction de la table v2 est revérifiée par `appliquer_entree`, la fonction de l'instance,
   et doit redonner exactement l'empreinte de P3**. Tokeniseur : fichiers publiés de la révision citée (`tokenizer.json`
   `79e3e522…`, `tokenizer_config.json` `177c7b61…`, 55 351 octets, `special_tokens_map.json` `6f38c737…` ; empreintes
-  écrites dans la table). Résultat (table v2, `comptes`) : À REMPLIR après C-6. **Absence déclarée (CLA-12)** :
+  écrites dans la table). Résultat (table v2, `prereg/R1-table-tokenisation-v2.json`,
+  `5f6cf489eb971c195f7263cb738bc5f9de4bdf5cfd0f55658fd3977d3f4b55e2`, version 2 ; construite avec le tokeniseur de
+  l'exécution C-6, mêmes trois empreintes ; `comptes`) : 240 épisodes, 151 conformes en longueur, 129 identiques de
+  base, 22 signalés ; 1 `fins`, 12 `une_paire`, 2 `deux_paires`, 1 `trois_paires`, 2 `fenetre`, 0 pour les huit autres
+  méthodes de C-6 ; 4 `non_resolu` ; 147 identiques après la table ; **18 corrections revérifiées par
+  `appliquer_entree`** (`verifier_table`), toutes égales à l'empreinte de P3. **Absence déclarée (CLA-12)** :
   l'instance ne compare pas les empreintes du tokeniseur écrites dans la table au tokeniseur qu'elle charge ; un
   tokeniseur différent ferait échouer la garde de couverture ou l'égalité d'empreinte (« echec », avant la passe
   avant), au prix de la mise en place de l'instance.
@@ -220,7 +249,7 @@ résolus. Ordre fixe, premier succès retenu (rien d'autre n'est essayé ensuite
 **Étape 1 — conditions du lancement (procédure, `docs/notes/runs-r1-r2-r4-v1/procedure-relance-r1-v2.md`).** Dans
 l'ordre : décisions de Lazar (N-A = (c) puis (a), couvrant la copie de la ligne remplacée dans l'analyse principale de
 conv-audit, E19 ; GO-2026-11-02-02), recopiées sur `main` et redites par Lazar dans la session de session-depot ;
-extension C-6 exécutée, table v2 et configuration v4 écrites, valeurs « À REMPLIR » remplacées ; contre-lecture
+extension C-6 exécutée, table v2 et configuration v4 écrites, valeurs de C-6 remplacées (fait, brouillon 3) ; contre-lecture
 traitée ; scellement de l'addendum, de la configuration v4 et de la table v2 ; poussée ; **rapport de concordance d'un
 lecteur neuf de conv-audit sur la version scellée, chemin et empreinte consignés dans la procédure et vérifiés avant la
 commande de création (pas de lancement sans lui, n° 339 : « avant tout départ »)** ; GO valide le jour du lancement.
@@ -296,12 +325,21 @@ l'environnement (≈ 3 h, ≈ 3 à 4 USD), devis et préenregistrement neufs (pa
   par action » (`docs/notes/runs-r1-r2-r4-v1/comptes_table_relance_v2.py`, configuration v3, sortie
   `comptes-table-relance-v2.json`) : 144 trajectoires identiques, 7 non résolus (70 actions), 2 236 conformes en
   longueur, 1 712 en contexte exact, 1 440 à trajectoire identique, 272 préfixes sans empreinte ; borne haute 93,2 %,
-  scénario bas 71,3 %. À refaire sur la table v2 et la configuration v4 (À REMPLIR après C-6).
+  scénario bas 71,3 %. **Refait sur la table v2 et la configuration v4** (même script, sortie
+  `docs/notes/runs-r1-r2-r4-v1/comptes-table-relance-v3.json`, `385bea2dab7dfedd4316b5dc143edbc06f4fd8aabea07b5d7675567ae1351102`) : 147 trajectoires identiques
+  (18 corrections, toutes revérifiées par `appliquer_entree`), 4 non résolus (40 actions, toutes conformes en
+  longueur), 2 236 conformes en longueur, 1 742 en contexte exact, 1 470 à trajectoire identique, 272 préfixes sans
+  empreinte ; borne haute 93,2 %, scénario bas 72,6 % ; par condition (borne haute, contexte exact, trajectoire
+  identique, sur 600) : honnête 568, 461, 410 ; mention 570, 486, 420 ; saboteur 556, 427, 340 ; témoin 542, 368, 300.
 - Chemin des corrections sous la consigne fausse (CLA-04, point 4 ; `essai_paires_consigne_fausse_v1.py`, sortie
   `essai-paires-consigne-fausse-v1.json`) : **15 épisodes corrigés sur 15** (1 jeton de fin, 12 une paire, 2 deux
   paires) redonnent l'empreinte de P3 sous la vraie consigne ; sous la consigne fausse, aucune garde levée, mêmes
   identifiants d'actions, empreinte différente de celle de P3 ; couverture sous repli 1 440 (honnête 390, mention 420,
-  saboteur 340, témoin 290). À refaire sur la table v2 pour les épisodes résolus par C-6 (À REMPLIR après C-6).
+  saboteur 340, témoin 290). **Refait sur la table v2 et la configuration v4** (sortie
+  `docs/notes/runs-r1-r2-r4-v1/essai-paires-consigne-fausse-v2.json`, `badacbc551b6d422257ca3ab8ce225b910c802b381ff53a51bcb52f90dd8914c`) : **18 sur 18** (les 15
+  et les 3 de C-6 : deux fenêtres, trois paires) redonnent l'empreinte de P3 sous la vraie consigne ; sous la consigne
+  fausse, aucune garde levée, mêmes identifiants d'actions, empreinte différente ; couverture sous repli 1 470
+  (honnête 410, mention 420, saboteur 340, témoin 300).
 - Essai jouet de bout en bout de l'amorce v2, dépôt d'essai tiré du commit du code (commit d'essai `c2d70d10`,
   `docs/notes/runs-r1-r2-r4-v1/essai-jouet-relance-v2/`, `LISEZMOI.txt`) : cas sain (11 tests passés, reconstruction
   `trajectoires_identiques=4 corrections=1 non_resolus=0`, fidélité conforme, contrôle négatif 4 sur 4, sorties
@@ -314,7 +352,9 @@ l'environnement (≈ 3 h, ≈ 3 à 4 USD), devis et préenregistrement neufs (pa
   de la procédure v2, avant la poussée (`lire_unique`, sceaux des quatre fichiers, puis gardes de citation de
   `executer` jusqu'au manifeste, sur processeur, sans modèle).
 - Suite ciblée de 18 fichiers au commit du code : **302 passés, 0 échoué** (19 min 43 s, processeur partagé)
-  (`docs/notes/runs-r1-r2-r4-v1/essai-jouet-relance-v2/suite-ciblee-302-au-commit-du-code.txt`).
+  (`docs/notes/runs-r1-r2-r4-v1/essai-jouet-relance-v2/suite-ciblee-302-au-commit-du-code.txt`) ; **rejouée au
+  brouillon 3**, table v2 et configuration v4 présentes (`test_table_reelle_versee_coherente` contrôle alors la table
+  v2) : **302 passés, 0 échoué** (18 min 21 s ; `docs/notes/runs-r1-r2-r4-v1/suite-ciblee-302-brouillon-3.txt`).
 
 ## Critères de lecture gelés
 
@@ -405,7 +445,7 @@ Dans tous ces cas : aucun fichier d'activations écrit ; arrêt de l'instance pa
     « Métrique »).
   - C-6 : règle A étendue aux hypothèses 1 à 3 de l'enquête, dix niveaux, ordre fixe, l'empreinte de P3 seule juge
     (E20 ; « Plan d'analyse », étape 0) ; fusion en table v2 revérifiée par la fonction de l'instance ; **exécution à
-    part, non faite dans ce brouillon** : r À REMPLIR après C-6.
+    part, faite pour le brouillon 3** : r = 3 (« Plan d'analyse », étape 0).
   - C-7 : le rejeu de R4 n'est pas relancé par cet addendum (« Statut », « R2 »).
 - **Contre-lecture 2** (recommandée avant le scellement, R2 : le brouillon 2 change l'étape 0 et le code de la table) :
   À REMPLIR (sous-agent neuf ; brouillon relu, chemin et empreinte du rapport, traitement).
