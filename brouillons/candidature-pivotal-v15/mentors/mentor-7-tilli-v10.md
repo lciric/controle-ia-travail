@@ -1,0 +1,10 @@
+# Pivotal 2027 Q1 — application to Cecilia Elena Tilli (Allelo) — seventh, if time allows — v10
+2 November 2026. Paste the three paragraphs into the mentor form; if the form asks different questions, the material maps as: motivation → « Why this project », plan → « What I would do », background → « Relevant experience ».
+
+## Cecilia Elena Tilli (Allelo) — susceptibility of AI agents to influence
+
+**Why this project.** Your core question — how an agent's susceptibility to influence relates to other safety propensities and how training changes it — is what I measured as a law: susceptibility is a gain (≈0.7 of the distance to a frame-set target) that predicts a second campaign without refitting (out-of-sample R² 0.73 / 0.69) and is held in place by the model's own concession rather than by the pressure. That gives your model organisms a graded, falsifiable susceptibility scale, and your population direction a quantity to propagate.
+
+**What I would do.** Direction 1 or 3. With your minimal organisms: fit the displacement law per organism, compare fine-tuning and activation steering on the gain and the targets, and test which internal intervention, if any, tracks the susceptibility scale — in my setup rank-1 interventions on the readable direction did nothing and a specific rank-3 ablation moved verdicts generically, so the handle is still to be found and the zero-pressure control is part of the design. Primary outcome: the displacement law fitted per organism (direction 1); the population direction as the stretch goal. Deliverable: a preprint, evaluation code and data. For populations: simulate and then measure how influence spreads when agents of different gains judge each other — this is the swarm question of my control programme, where monitors are themselves susceptible.
+
+**Relevant experience.** The sycophancy-law project (manuscript in preparation; code and data public), the probe-geometry project, fine-tuning and steering on open models, preregistration and clear writing.
