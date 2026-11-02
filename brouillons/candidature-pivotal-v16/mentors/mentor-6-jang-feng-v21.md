@@ -1,0 +1,28 @@
+# Pivotal 2027 Q1 — application to Eyon Jang and Shi Feng (Scale AI Preparedness / Praxis Research) — v21
+2 November 2026. v21 = v20 + one R6 sentence (Lazar's wording), nothing else changed; v20 = v19 with Lazar's 12:31 wording for « Why you should care », the six caveats and the questions, minimal substance fixes; v19 = Lazar's 12:23 wording for the summary and caveats 1–3 (garbled characters removed, substance-only fixes), his 12:14 wording for caveats 4–6 and the questions; v18 = Lazar's own wording throughout (his 12:14 and 12:18 texts), substance-only corrections, my phrasings removed (his request 12:20 Paris); v17 = v16 with Lazar's 12:18 rewording of the « structural » sentence, corrected on substance (« false alarm rate » → « bound » ; « activations work nicely » → « could work nicely », the real-data test being a null) ; v16 = v15 with Lazar's second 12:14 variant of « Why should you care » and caveats 1–3, corrected on substance only; v15 = Lazar's first 12:14 reformulation, corrected on substance only. v14 answers the question the form actually asks (received 12:04 Paris): « What are your thoughts on the value of white-box monitors and white-box methods for auditing? What do you see as their current limitations? ». No word limit stated. Their work read before answering (12:06–12:10 Paris, abstract pages fetched): Jang et al., « Exploration Hacking: Can LLMs Learn to Resist RL Training? » (arXiv 2604.28182, ICML 2026); Feng's MATS stream (falsifiable claims about deceptive intent, model-organism etiology, easy-to-hard generalisation of deception detectors); Taylor et al., « Auditing Games for Sandbagging » (arXiv 2512.07810); Daniels et al., « Stress-Testing Alignment Audits With Prompt-Level Strategic Deception » (arXiv 2602.08877). No figure is taken from these papers; every figure is ours and already in v13 or the writing sample.
+
+## Answer
+
+White-box methods examine the computation underlying an action, rather than its presentation. The lack of whitebox access hurts black-box auditing: sandbagging by imitating a weaker model broke black-box detection in the auditing game (arXiv 2512.07810), probes fared better, and training-based elicitation exposed full capability. My motivation is architectural: if misbehavior is spread across many actions, it will necessarily blend in with noise on a per-action basis; you want something that they can't sanitize, that gives you per-action signal that you can calibrate on honest episodes and bank using an anytime-valid false alarm bound, and activations can work well for this. Moving a probe that reads the acting agent also requires you to move weights, not just context (arXiv 2609.36490), but I'll leave that as an aside that you take as conjecture instead of a result. Your exploration-hacking paper discusses how your organisms reason explicitly, making them susceptible to text monitors; the white-box problem gets real once they learn not to. Weight-based methods have this advantage over black-box.
+
+Why you should care: Gives you superpowers for auditing. On your toolbelt.
+
+Caveats:
+
+1⃣ Readable doesn't imply causal. Example: A direction that was incredibly cheap to monitor on Llama-3.1-8B correlated with shift in sycophantic judgement (ρ = .68), but captured <1% of the causal effect. On aggregate, 68% of the causal effect was captured by the residual state. Monitoring this direction may well correlate in distribution but completely break when exploited/pwned.
+
+2⃣ Construct validity: Just because you can read hidden instruction, evaluation awareness, or peek at a register DOES NOT mean it's there for weaponized purposes. This is your "how does this organism get its disease" (organism etiology) question. This is why I never train probes on one organism and test on the exact same process / setting (hidden instruction != LoRA).
+
+3⃣ Signal on raw weights is... LIMITED! Saboteur behavior was clearly evident to the human eye in our first experiment using real model weights (Llama-3.1-8B, 2,400 actions), but a saboteur who strategically cheated by inflating their reported cost was invisible to our otherwise generic probes which failed to meaningfully beat their random-probe baseline. In-sim, thresholds derived from fragments of episodes (not full honest episodes, as they must be) had episode effects causing false alarms 21-35% of the time instead of our desired 5% rate.
+
+4⃣ Attackers can adapt. Prompt-level attackers are already pushing SAE- and activation-based auditors towards confidently wrong answers (arXiv 2602.08877). Naive probes were beaten by sandbaggers the red team specifically trained to circumvent them. Robustness to adversarial attack must be tested against an attacker, it can never be assumed.
+
+5⃣ Because training-based elicitation can amplify non-saboteurs, it will have false positives as a detector.
+
+6⃣ Access: White-box requires access to weights. That means for now, it's only an inside job. Any realistic external accountability mechanism is going to be black-box for the foreseeable future.
+
+R6 (preregistered dose–response, four model families, 30 items, K = 5). At the campaign-1 wording, the law replicates with fresh seeds (g = 0.68 and 0.60; targets 1.33 and 2.85). But it does not scale with the intensity of the pressure, and the preregistered prediction failed (outcome C, reported as such).
+
+Questions I'd want answered by any white-box claim:
+Baseline against best black-box method you can find held to a fixed false alarm rate; what's your random probe floor?
+Test your detector on an organism created by a DIFFERENT method than you used to train your probe. (Preferably all of the above preregistered.)
