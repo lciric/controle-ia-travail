@@ -7,7 +7,7 @@ attendues de P-R5 (part des actions notées qui peuvent être fidèles). Ne lit 
 étiquette : « notée » = `jetons_notes` > 0 (P3 ne laisse un score NaN que pour un empan vide,
 `premier_test_ia.run.tableaux_des_scores`).
 
-    PYTHONPATH=src python docs/notes/runs-r1-r2-r4-v1/comptes_table_relance_v1.py <tokeniseur> <config v3>
+    PYTHONPATH=src python docs/notes/runs-r1-r2-r4-v1/comptes_table_relance_v2.py <tokeniseur> <config v3 ou v4>
 """
 import hashlib
 import json
