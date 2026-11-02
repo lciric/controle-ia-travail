@@ -1,16 +1,20 @@
 # Addendum au préenregistrement de R1 — rejeu à graine des 7 épisodes non résolus et table de tokenisation v3 — v2
 
-- Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 3 (texte, non
-  scellé)**, qui remplace le brouillon 2 (même fichier, commit `076a6b57`,
+- Auteur : sous-agent de préparation de la session « session-depot » (Opus 5.5), pour Lazar ; **brouillon 4 (texte, non
+  scellé)**, qui remplace le brouillon 3 (même fichier, commit `9ffab30d`,
+  `0f4c445c9585309568d76e1f01155474be20cc76df1eac0abb4cc3dab4170e87`), successeur du brouillon 2 (commit `076a6b57`,
   `d4617ea837cd81accc4dc8e26d6d1be2015f1f10eaecad2258b3e54c9eb48c89`), lui-même successeur du brouillon 1 (commit
   `21a6e583`, `7915a3d653d4de7a41b8fc22d86e4988ede765ae8638ccc335029f9a08644784`). Nom nouveau (R12) : l'addendum v1
   (`prereg/R1-addendum-relance-v1.md`, brouillon 4, commit `72f68fea`, local, non scellé) n'est pas modifié ; il reste
   archivé et sert de base à l'addendum v3 (voir « Portée »).
-- Date (UTC) : 2026-11-02 13:18 (brouillon 3 ; heure relevée par `date -u`).
+- Date (UTC) : 2026-11-02 15:02 (brouillon 4 ; heure relevée par `date -u`).
 - Ce brouillon traite les deux lectures neuves de conv-audit (brouillon 1 et code `5c39c6b6` : rapport
   `dd7157e188b1117c5542715452a6ca2c6a50694eab9d8a2f816615cf3bf9067b` ; brouillon 2 et lot `99022f43` : rapport
-  `06459850ff7ece9e69b94d88867ce8e75ad96ba4b9091ee57b6cf64df2f54635`) et décrit le code intégré au commit cité
-  ci-dessous ; le traitement de chaque point est à la fin (« Traitement des lectures neuves »).
+  `06459850ff7ece9e69b94d88867ce8e75ad96ba4b9091ee57b6cf64df2f54635`), la vérification adverse du code `5c39c6b6`
+  (VG-01 à VG-10, traitée aux commits `755959e1` et `31f72147`) et la **vérification neuve finale** du brouillon 3 et du
+  code `31f72147` (VI-01 à VI-16, verdict « scellable après corrections »), et décrit le code au commit cité ci-dessous ;
+  le traitement de chaque point est à la fin (« Traitement des lectures neuves ») ; rapports versés sous
+  `docs/notes/runs-r1-r2-r4-v1/graine-v1/` (« Contre-lecture »).
 - **Portée (décision de la session, n° 262 et 265 de session-depot).** Cette v2 ne porte que le **rejeu à graine** :
   étape 0, validation à l'aveugle sur les 147 épisodes résolus ; étape 1, résolution des 7 (dont les 3 de C-6 en
   contrôle croisé) ; étape « cibles du lot » (processeur) ; étape 1 bis, lot fidèle pour les cibles qui restent ;
@@ -42,23 +46,24 @@
 - Préenregistrement parent (scellé, non modifié) : `prereg/R1-R2-rejeu-p3-v1.md`
   (`80c85a0085f444dc10f36e4e226d015802d2e20294c4fff2ae67adb0aca4ddea`), commit de scellement
   `567260c05687747f0c7a715fc9b15b4fc6297d65`.
-- Commit du code d'analyse : `31f72147cdddd895c78aac109eadc0db487e193e`
-  (branche `prep/r1-relance-addendum-v1` ; intégration du cœur corrigé `ca3dfa3f`, du lot fidèle corrigé `9f898ee2` et
+- Commit du code d'analyse : `0e2a88718f4249e556e159f45f2df38ac304331e`
+  (branche `prep/r1-relance-addendum-v1` ; corrections de la vérification neuve VI — VI-01, VI-08, VI-10, VI-16 —
+  posées sur le code intégré `31f72147` : intégration du cœur corrigé `ca3dfa3f`, du lot fidèle corrigé `9f898ee2` et
   de la relance sur la table v3 `06887bdd`, posée sur les fusions `1f32520d` et `f21c2641` ; corrections de la
   vérification adverse VG-01 à VG-09 au commit `755959e1`, comprises ; `resolution_tokenisation_v1.py`,
   `rejeu_activations_v1.py` et `rejeu_activations_v2.py` non modifiés)
 - Empreintes des fichiers de code au commit cité (sha256 du fichier ; compagnon `.sha256` conforme sauf mention) :
-  - `src/controle_ia/runs_nuit/resolution_graine_v1.py` : `df417c96a8636360c7b24a46ebae79493167bb8747e222bc2776c8b7d74589d8`
-  - `src/controle_ia/runs_nuit/resolution_graine_lot_v1.py` : `e5f2dd4de0cce7a618247e6445dd7aded3a51688ca83a40d93ba494d2c0b41f5`
+  - `src/controle_ia/runs_nuit/resolution_graine_v1.py` : `cdc22b5ad2659f82f512c39545c52fc826a6be2dc60fb3aeafda0c5d014a9663`
+  - `src/controle_ia/runs_nuit/resolution_graine_lot_v1.py` : `5a9982b2a2248d5312c5a42bf34ac90c505ca579052985169aabb7e16c8c7156`
   - `src/controle_ia/runs_nuit/rejeu_activations_v3.py` (inchangé depuis `06887bdd`, sans compagnon ; hors de ce texte,
     cité parce que ses essais sont lancés par le script) : `0581cf9a32e054e5044809f80078e3d33e3de27a22830e40ca8aa45a03ca2adc`
-  - `tests/test_resolution_graine_v1.py` : `eb97e715fa4a3eba1d7a801226ff67a8cc45106e7bd9fcbdfd21ac5ff2237465`
-  - `tests/test_resolution_graine_lot_v1.py` : `fe3b64c62b56af74c99c2505a5ccaa527ef469f756bd2a6c673a8e56e570dad8`
+  - `tests/test_resolution_graine_v1.py` : `c4c411fb25ce77d0622f485328e0298d07e34f284fe686d59b94c1bfa5e63e14`
+  - `tests/test_resolution_graine_lot_v1.py` : `add9d6defb3e28267028b584907e2e5d612bc6e0e104cd483f6c142ae99463bd`
   - `tests/test_rejeu_activations_v3.py` : `ef7be3f70e1a601aae404570f96f373448de98e8007519d17448d07120a352f8`
   - `scripts/r1_resolution_graine_instance_v1.sh` : `da07025f5cae92cc0041a234a1a3951f33cd42e86da808befbaaedd7d5351cc8`
   - `scripts/amorce_instance_r1_resolution_graine_v1.sh` : `dc8164e2cc44b9d05925dfb4a880f898b3f5dc0466ed1acec52e0291cd516478`
   - `scripts/preparer_repetition_r1_resolution_graine_v1.py` (répétition jouet seulement) :
-    `598896ee5b53485d885a4608edf5933585862d21bbc26854aec66739bd5a0b12`
+    `6405b886e9fa419a9f89ca506671cfbbc36a665a1f77f8ad5cd02e5694fb0490`
 - Chemin de la configuration de la résolution à graine : `prereg/R1-graine-config-v1.json`
   (42 clés ; fichier au commit cité `0f300925546d886b8408d137903e711af579abb0d5947b1b88a27da894c4070f`, **non scellé au
   commit du code, scellé avec ce texte** ; un seul fichier pour le cœur et le lot fidèle, donc une seule empreinte
@@ -69,29 +74,41 @@
   le fichier du commit cité)
 - Entropie : `36410133060804533274328900142752730279` (celle du parent : le rejeu à graine ne tire rien ; son manifeste
   porte `aucun-tirage-propre`, les graines viennent du manifeste de P3)
-- Tests attendus : `69`
+- Tests attendus : `71`
   (sept fichiers que lance le script d'instance, liste `CIBLES` : `tests/test_resolution_graine_v1.py`,
   `tests/test_resolution_graine_lot_v1.py`, `tests/test_rejeu_activations_v3.py`, `tests/test_manifeste.py`,
-  `tests/test_scellement.py`, `tests/test_prereg.py`, `tests/test_harnais_formats.py` ; 69 passés, aucun sauté, au
+  `tests/test_scellement.py`, `tests/test_prereg.py`, `tests/test_harnais_formats.py` ; 71 passés, aucun sauté, au
   commit cité, avec le tokeniseur de Llama 3.1 à la révision de P3 ; un test sauté ou en échec arrête le script, qui
   exige ce nombre exactement)
 - Documents qui font foi (chemin + empreinte) : le parent ci-dessus ; l'addendum v1, brouillon 4, pour les faits de
   P3 qu'il établit (`prereg/R1-addendum-relance-v1.md`, commit `72f68fea`) ; table de tokenisation v2
   `prereg/R1-table-tokenisation-v2.json` (`5f6cf489eb971c195f7263cb738bc5f9de4bdf5cfd0f55658fd3977d3f4b55e2`, commit
-  `cdca33bb` ; **son `.sha256` n'existe pas encore au commit cité : il est à écrire et à committer avant le scellement de
-  ce texte**, le script s'arrête avant l'installation sans lui) ; manifeste de P3
+  `cdca33bb` ; son compagnon `.sha256` est committé au commit `82a5ed18`, après le code et avant le scellement de ce
+  texte ; le script s'arrête avant l'installation sans lui) ; manifeste de P3
   `runs/20261019-230011-p3-reel/manifeste.json` (`3f21774ca2a740e059191e762a4922076d954ee4c3e728c9927ba436cb211685`) ;
   rapport d'enquête `docs/notes/runs-r1-r2-r4-v1/enquete-arret-r1-v1.md`
   (`377101ecd9b33c76c34ce799f8b511d60b71b089699a7df3dc0e4705ccbb00c3`) ; résultat de C-6
-  `docs/notes/runs-r1-r2-r4-v1/resultat-c6-v1.json` (`1e11d58fa75be359ffb185136cd2c83b1275203eb9f0162f0a5413222767b238`) ;
+  `docs/notes/runs-r1-r2-r4-v1/resultat-c6-v1.json` (`1e11d58fa75be359ffb185136cd2c83b1275203eb9f0162f0a5413222767b238` ;
+  compagnon `.sha256` committé au commit `82a5ed18`, avec ceux du script `resolution_c6_v1.py` et des journaux
+  `journal-c6-v1.out` et `journal-c6-v1.err`, VI-13) ;
   messages cités dans l'en-tête ; GO ci-dessus.
-- Mesures sur processeur citées par ce texte (comptes seulement ; pièces hors du dépôt, **à verser sous
-  `docs/notes/runs-r1-r2-r4-v1/` avec leurs compagnons avant le scellement**, chemins définitifs à reporter ici) :
-  pré-vol d'intégration, script `prevol_integ.py` (`bd9a4eccd03c1514db6f78bccb45901d0d92857078d0ee3cf95662c7c7cf7842`)
-  et sortie `prevol_integ-sortie.txt` (`a7b0411f76874d275fd515bda3196f236da4262a89006848b7a438839689882d`) ; compte des
-  U+FFFD des 7 épisodes, script `compter_fffd_7.py`
-  (`a2e2331181b82387f81bdfd345602b5358af006c155a616eb8975ed175d71714`) et sortie `compter_fffd_7-sortie.txt`
-  (`b75658fec93d3addc6051650297c2795dccc7e398c713baaacac0127583b0e3b`).
+- Mesures et journaux sur processeur cités par ce texte (comptes seulement ; aucun texte, score, étiquette ni
+  activation de P3 ; versés sous `docs/notes/runs-r1-r2-r4-v1/graine-v1/` avec leurs compagnons `.sha256`, commit `82a5ed18` ; noms relatifs à ce dossier,
+  sha256 du fichier) :
+  - pré-vol d'intégration sur les vraies pièces de P3, au code cité : script `prevol_integ.py` (`bd9a4eccd03c1514db6f78bccb45901d0d92857078d0ee3cf95662c7c7cf7842`) ; sortie
+    `prevol-final-sortie.txt` (`9d9c1c871a3bf5583f5197d7806b9bce33c811c5f77fd62c12f5107d76189147`) ;
+  - compte des U+FFFD des 7 : script `compter_fffd_7.py` (`a2e2331181b82387f81bdfd345602b5358af006c155a616eb8975ed175d71714`) ; sortie `compter_fffd_7-sortie.txt` (`b75658fec93d3addc6051650297c2795dccc7e398c713baaacac0127583b0e3b`) ;
+  - forme des 4 lots ciblés et unité des balayages, sans modèle (vérificateur VI) : script `comptes_reels.py` (`1a2e980382c325b456784dc1b4f77f5b32d6aa08a5baa57d21618f41cf31a77a`) ;
+    sortie `comptes_reels-sortie.txt` (`a2bd318f97ea9ee4f046e22380f99006ed27a0b31f69d135545402ceb11efc95`) ;
+  - essais de la liste `CIBLES` au code cité : sortie `tests-cibles-final.txt` (`d7309e17e3352f7ce391e2142a8b09f046b5d60af15206fd438fdada8e221b8e`) ; essais neufs lancés sur le code de
+    `31f72147` (échouent sans les corrections VI-01 et VI-08) : sortie `essais-sans-correction.txt` (`8544a7cdf4839eb2d24aa52b5cec5ef7826cc09d32389df6db247cca77096899`) ;
+  - répétition jouet finale du script d'instance, au code cité (répertoire courant sans `donnees/`, VI-16) : script
+    `repetition.sh` (`2b922710d26f0404893be79b176cc2a819d8197828fc6ed8a6f133e66f54879d`) ; inspection de la branche de résultats `inspecter_repetition.py` (`339e9647e493573aa93e4baa732d2d5df168beffd2f85a9ce129797526fd916a`) ; cas principal
+    (une cible au lot) : préparation `repetition-principale-preparation.txt` (`a9bad32c646e62c43b9c752b1a806557259072c9a48e27eb556f0b55b7b3e2e5`), sortie de l'amorce
+    `repetition-principale-amorce.txt` (`a9152b4f91da927c0d309378fc6d482754407a5eb53eab32c6b6e1261912ca13`), journal de l'instance `repetition-principale-journal.txt` (`121556be7c09da6b4e19753fd26529f7f0079423cb9c134cb383a7d53cee364f`),
+    inspection `repetition-principale-inspection.txt` (`f5887a03d444037fec75067eb0cf4346c2cb7080c0fe79c6e5abf3f9026a89ee`) ; cas « sans objet » : préparation
+    `repetition-sans-objet-preparation.txt` (`8d2fa931784bb4e143e18e1e47a9c4c84c62a54b3b19cc252032e87d3e561050`), sortie de l'amorce `repetition-sans-objet-amorce.txt` (`e29b7a3de129bf1a2c2263d7b9dff2f1e6d01f3952ce9ef233741f31075bad75`), journal
+    de l'instance `repetition-sans-objet-journal.txt` (`4a9a5f81a95106c839ed6c0de30f335127e38e759b410ab38b1f182ab97074bf`), inspection `repetition-sans-objet-inspection.txt` (`6c9a5b440c4ea388fb7504f634f2d67be1276596fa6bfd0a881c83fcb5f629d5`).
 
 **Statut.** Cet addendum résout, avant la relance de R1, les **7 épisodes** que les étapes 1 à 3 de la règle A n'ont pas
 résolus (dont les 4 que C-6 laisse non résolus), par **rejeu à graine** : passe forcée d'abord, lot fidèle ensuite pour
@@ -189,8 +206,14 @@ Hypothèses de travail de l'instrument (aucune hypothèse du programme n'est en 
   leur contexte ne diffère de celui de P3 que si la vraie fin de P3 n'était pas la fin par défaut (un jeton de plus chez
   P3 pour telle action, non connu pour une ligne approchée). Les logits de la cible ne dépendent des autres lignes que
   par la **forme** du lot (taille et longueur remplie) ; le nombre de pas où la longueur remplie est fixée par une ligne
-  approchée est mesuré et rapporté (0 = forme exacte prouvée pour la cible), ainsi que celui où une ligne approchée est
-  à un jeton ou moins de la fixer. Éprouvé sur processeur, en float32 (égalité au bit des empreintes des logits avec
+  approchée est mesuré et rapporté, ainsi que celui où une ligne approchée est à un jeton ou moins de la fixer.
+  **Preuve de la forme (VI-03)** : la longueur d'une ligne approchée peut différer de celle de P3 de d jetons,
+  d = nombre de ses actions antérieures dont la fin chez P3 n'était pas la fin par défaut (non connu), borné par
+  d_max = nombre de ses actions antérieures à jeton de fin compté ; la forme du lot est **prouvée exacte** pour la cible
+  si, à chaque action jouée, aucune ligne approchée n'est à d_max jetons ou moins de fixer la longueur remplie ; sinon
+  elle est « non prouvée » (descriptif, jamais un arrêt ni une condition de lecture). Le champ `forme_exacte_prouvee` du
+  code (premier compte nul) dit seulement « forme exacte si les fins de P3 des lignes approchées sont les fins par
+  défaut » ; il est lu ainsi. La preuve par d_max est calculée sans modèle sur les vraies pièces (P-G4). Éprouvé sur processeur, en float32 (égalité au bit des empreintes des logits avec
   `jouer_episodes`, lots de 8 et de 4 ; ligne approchée la plus longue du lot : mêmes bits après correction) ; jamais
   garanti au bit entre deux exécutions sur carte, d'où la mesure des lignes voisines.
 
@@ -231,7 +254,15 @@ les empreintes seules.
   lots 0, 5, 14 et 24), accord du choix non contraint avec le jeton connu **au moins 0,999** sur les pas mesurés,
   confiance ≈ 0,7 (fidèle au bit, il vaut 1 exactement) ; lecture du lot « fidèle », confiance ≈ 0,7 ; chaque cible du
   lot, si elle est inversible, résolue par l'essai direct, confiance ≈ 0,6. Les pas où la longueur remplie est fixée par
-  une ligne approchée sont rapportés, sans prédiction chiffrée (descriptif).
+  une ligne approchée sont rapportés, sans prédiction chiffrée (descriptif). **Forme, calculée sans modèle sur les
+  vraies pièces** (`comptes_reels-sortie.txt`, en-tête ; 10 actions par cible ; « strict » = une approchée fixe seule
+  la longueur remplie ; « à un jeton » = règle du code ; « à d_max » = preuve de HG-4) : lot 0
+  (`honnete/2602.00987v1/e0`, 2 approchées) : strict 0, à un jeton 1 (une égalité), à d_max 0 → **forme prouvée
+  exacte** ; lot 5 (`mention/2605.17899v2/e0`, 1 approchée) : strict 3, à un jeton 3 (aucune égalité), à d_max 4 →
+  **forme non prouvée** (attendu « non prouvé ») ; lot 14 (`saboteur/2510.05132v3/e0`, 1 approchée) : 0, 0, 0 →
+  **prouvée exacte** ; lot 24 (`temoin/2512.06870v2/e0`, 3 approchées) : strict 0, à un jeton 1 (une égalité), à
+  d_max 0 → **prouvée exacte**. Pour le lot 5, seule la mesure des voisines exactes (lecture du lot de cette cible) dit
+  si les logits sont ceux de P3 : une longueur remplie fausse peut changer aussi les leurs.
 
 ## Métrique
 
@@ -344,16 +375,21 @@ inversible par la méthode** (budget de recherche dépassé, non preuve d'imposs
 « graines validées », tout autre non résolu est « non résolu par la méthode : nœud porté à Lazar » ; sous les deux
 autres classes, tout non résolu, même de cause « budget de balayages dépassé », est « non résolu, graines non
 validées : nœud porté à Lazar » (le budget de recherche dépassé y reste une cause, jamais une déclaration de non
-inversibilité). La règle est éprouvée sur un cas sain (« graines validées ») et sur des artefacts (graines décalées ;
-mesures manquées ou absentes) par `test_lire_validation_trois_classes_et_declarations` (R5).
+inversibilité). La règle est éprouvée (R5) sur des mesures fabriquées par `test_lire_validation_trois_classes_et_declarations`
+(cas sain « graines validées » ; conditions d'accord manquées ou absentes → « méthode transposée, graines non
+validées » ; R < E ou E = 0 → « méthode non transposée ») et de bout en bout sur le P3 jouet par
+`test_bout_en_bout_jouet_validation_resolution_table` (cas sain « graines validées » ; artefact des graines décalées →
+« méthode non transposée ») ; la classe « méthode transposée, graines non validées » n'est éprouvée que sur des mesures
+fabriquées (VI-12).
 
 **Seuil de lecture du lot** : `seuil_lecture_lot` = 0,99 appliqué par `lecture_du_lot` (voir « Critères »). Seuil de la
 règle B de la v1 (10 épisodes, E3) : inchangé, lu dans l'addendum v3.
 
 **R3 — une seule exécution par étape.** Chaque étape sur carte (validation, résolution, lot) n'est exécutée qu'**une
 fois** sous ce texte ; tout essai de plus (réglages changés, autre plan de lot, autre code, lot exact) relève d'un texte
-neuf, scellé et contre-lu. Gardes du code : le cœur (`exiger_execution_unique`) refuse une étape déjà exécutée sous la
-même commande, la même configuration **et** le même code (arbre gelé) ; le lot (`exiger_execution_unique` du lot) refuse
+neuf, scellé et contre-lu. Gardes du code : le cœur (`exiger_execution_unique`) refuse une étape déjà exécutée **qui a laissé une
+sortie** (résultat de l'étape, `arret.json` ou épisodes consignés) sous la même commande, la même configuration **et** le
+même code (arbre gelé), et s'arrête sur un manifeste illisible de `runs/` (VI-08, R5 : jamais sauté en silence) ; le lot (`exiger_execution_unique` du lot) refuse
 une exécution de même commande et de même configuration, **sans comparer le code** (déclaré : une reprise du lot sous un
 autre code et la même configuration n'est pas arrêtée par le code, elle reste interdite par ce texte) ; l'étape table
 refuse une sortie existante (R12) ; l'étape « cibles du lot » ne fait aucun run (lecture d'une liste, sans manifeste).
@@ -423,8 +459,10 @@ révision ; torch 2.14.1 exigé ; réglages déterministes par `regler_determini
   de float32 (≈ 10⁻⁷ en relatif), très en deçà du bruit du bfloat16 ; un tel cas est une quasi-égalité, que le repli
   traite. La mesure de 2,0·10⁻⁷ nat au plus (lecteur neuf de conv-audit, rapport `dd7157e1…`, constat 1) portait sur la
   variante du brouillon 1 (à partir des logits) ; la variante retenue (à partir de p, décision n° 4 du n° 262) n'en est
-  que plus proche de P3 ; elle n'est pas remesurée (déclaré). Le **choix non contraint**, l'écart et la marge sont
-  calculés par l'opération même de P3 (p / q en float32 sur processeur ; diagnostic seulement). Ce qui diffère de P3,
+  que plus proche de P3 ; elle n'est pas remesurée (déclaré). Le **choix non contraint** et la **marge** sont
+  calculés par l'opération même de P3 (p / q en float32 sur processeur ; diagnostic seulement) ; l'**écart contraint**
+  vient des scores en double précision du choix contraint (`scores_contraints`, log p − log q sur les candidats ;
+  VI-07). Ce qui diffère de P3,
   déclaré : la passe est **pleine, sans lot ni cache ni remplissage**, au lieu du décodage pas à pas par lots de 8
   remplis à gauche ; les accumulations en bfloat16 diffèrent, donc les logits diffèrent aux arrondis près (HG-2 : raison
   d'être de l'écart contraint, du repli, de la validation et du lot fidèle). Les tirages exponentiels sont calculés sur
@@ -434,7 +472,8 @@ révision ; torch 2.14.1 exigé ; réglages déterministes par `regler_determini
   plus petit identifiant).
 - **Carte attendue : A100-SXM4-80GB**, celle de P3, torch 2.14.1 construit pour CUDA 13.0. Une autre carte, un
   `torch.version.cuda` autre que 13.0 ou un cuDNN autre que 92400 n'arrêtent rien : **réserve écrite au résultat**
-  (`reserves_environnement`) et au journal (VG-05). Le pilote est écrit au journal (`nvidia-smi`), non comparé (les
+  (`reserves_environnement` : CUDA, cuDNN, carte) ; le journal du script n'en porte que CUDA et la carte (VG-05,
+  VI-14). Le pilote est écrit au journal (`nvidia-smi`), non comparé (les
   brouillons disaient « réserve » : corrigé). torch différent de 2.14.1 : arrêt (liste d'arrêt).
 - **Location (I-C)** : filtres d'offre, procédure de la session hors du code scellé, tous exigés : **A100-SXM4 de 80 Go**,
   une carte ; **pilote compatible CUDA 13.0** (CUDA maximal annoncé par l'hôte ≥ 13.0) ; **« centre de données »**
@@ -459,7 +498,9 @@ d'environnement, celle-ci ne lisant que tâches, gabarit et consignes) ; la comp
 vérifiable à la lecture du code cité, non par isolement de la mémoire (m-1, R-05). Compte exact de 147 exigé avant la
 boucle. Repli itératif avec paires, comme en résolution. Mesures : épisodes retrouvés sur 147 (dont directs et par
 repli), accords (« Métrique »), distribution des écarts contraints, marges en désaccord ; les 18 corrigés, ceux où la
-graine compte (un découpage non canonique n'est retrouvé que si p / q le désigne), sont rapportés à part ; classe
+graine compte (un découpage non canonique n'est retrouvé que si p / q le désigne), sont rapportés à part
+(`corriges_table_v2` du résultat de la validation : épisodes, empreintes retrouvées, identifiants égaux, comptes par
+méthode de la table v2 ; code `0e2a8871`, VI-10) ; classe
 écrite par `lire_validation`. **Aucun arrêt sur ces mesures** ; la résolution part ensuite sous les trois classes ; seuls
 les arrêts d'intégrité l'empêchent (validation non scellée, `arret.json`, autre configuration, autre code). Remarque :
 sur un épisode canonique, le choix contraint est le plus souvent imposé par les octets et la probabilité, même avec une
@@ -519,8 +560,14 @@ table` du cœur (`construire_et_verifier_table`). Les deux **exigent le contrôl
 reçoit une entrée `identifiants` (version 3 ; actions corrigées avec leurs identifiants de base et ceux retrouvés ;
 voie, bascules, empreinte du résultat) ; les 18 entrées de la v2 restent telles quelles ; **chaque correction, ancienne
 ou nouvelle, est revérifiée par l'empreinte de P3** (`verifier_entrees_v3`, transcription refaite comme le harnais) ;
-comptes recalculés ; la classe de la validation, la lecture du lot et les déclarations y sont recopiées
-(`lecture_validation`, `declarations`) ; la sortie n'écrase jamais (R12), **est scellée** par le module, son sceau est
+comptes recalculés ; la classe de la validation et la lecture du lot y sont recopiées (`lecture_validation`, **de
+schéma différent selon la voie**, VI-15 : cœur seul, la lecture de la validation recopiée du résultat de la résolution,
+`classe` en tête ; voie du lot, `classe_validation`, `lecture_lot`, `validation`, `lectures_lot_par_episode`) ;
+`declarations` porte la **déclaration finale** de chaque épisode (VI-01) : celle du cœur (`declarer`) sur la voie du
+cœur seul et pour les épisodes qui ne sont pas des cibles du lot ; pour chaque cible du lot, celle de `declarer_lot`
+(règle de la ligne « k non résolus » des « Critères »), celles du cœur gardées sous `declarations_coeur` ; les
+**causes** des non résolus ne sont pas dans la table : elles sont dans les résultats scellés du cœur et du lot, dont la
+table cite les empreintes (VI-15) ; la sortie n'écrase jamais (R12), **est scellée** par le module, son sceau est
 **revérifié** par le script, puis committée et poussée. Un **lot arrêté empêche la table**. Les non résolus restent
 `non_resolu`, chacun avec la cause écrite ; leur liste, avec leurs déclarations, est remise à Lazar (G2). **Table
 complète** si les 4 sont résolus.
@@ -528,7 +575,8 @@ complète** si les 4 sont résolus.
 **Chaîne du script d'instance** (`r1_resolution_graine_instance_v1.sh`, amorce `amorce_instance_r1_resolution_graine_v1.sh`) :
 validation → résolution → cibles du lot → lot (seulement s'il reste une cible) → table v3 (cœur + lot, ou cœur seul),
 scellée, sceau revérifié, committée, poussée ; puis traces de l'instance. **Aucune étape n'en arrête une autre par sa
-lecture** : seuls un arrêt de chaîne (code non nul ou `arret.json`) ou un commit refusé empêchent les suivantes ; une
+lecture, à une exception près** : l'étape table refuse de construire la table si le contrôle croisé du cœur n'est pas
+« conforme » (R-11, VI-04) ; hors cette garde, seuls un arrêt de chaîne (code non nul ou `arret.json`) ou un commit refusé empêchent les suivantes ; une
 validation arrêtée empêche la résolution ; une résolution arrêtée empêche le lot et la table ; des cibles illisibles
 empêchent le lot et la table ; un lot arrêté empêche la table ; un commit refusé finit en échec (code 3), jamais
 rapporté comme un succès.
@@ -538,19 +586,25 @@ sorties, versement, R2 et R4 ; écarts G3 à G7, G9, G10 du brouillon 1) est pr�
 l'étape 2 : il cite l'empreinte de la table v3, celle des résultats scellés de ce rejeu, le commit et le nombre de tests
 de son propre code ; il est contre-lu et soumis à la concordance de conv-audit avant tout lancement.
 
-**Calendrier.** Fait : code intégré et ses essais (69 passés au commit cité) ; configuration écrite ; répétition jouet du
+**Calendrier.** Fait : code intégré, corrigé après la vérification neuve VI, et ses essais (71 passés au commit
+cité) ; configuration écrite ; répétition jouet du
 script d'instance de bout en bout sur processeur (cas principal avec une cible au lot, cas « sans objet », commit refusé,
 table sans sceau, libellé du lot absent, plafond trop bas : chacun avec l'issue attendue) ; pré-vol sur les vraies pièces
-(cas sain et artefacts des contrôles d'avant l'installation et des gardes des modules). Reste, avant le scellement :
-**sceller et committer la table v2** (`prereg/R1-table-tokenisation-v2.json.sha256`, `5f6cf489…`) ; verser les sorties
-de mesure citées à l'en-tête ; contre-lecture finale neuve de la version à sceller ; scellement de ce texte **et de la
+(cas sain et artefacts des contrôles d'avant l'installation et des gardes des modules). Fait aussi : table v2 scellée et
+committée (`prereg/R1-table-tokenisation-v2.json.sha256`, `5f6cf489…`, commit `82a5ed18`) ; pièces de mesure, journaux et
+rapports versés sous `graine-v1/` (en-tête) ; répétition jouet finale (cas principal et « sans objet ») et pré-vol
+refaits au code cité. Reste, avant le scellement : contre-lecture finale neuve de la version à sceller ; devis révisé
+porté à Lazar (« Coût et GO », VI-02) ; scellement de ce texte **et de la
 configuration** ; puis lecteur neuf de conv-audit sur la version scellée ; poussée → instance A100 (étapes 0, 1, cibles,
 1 bis, 2) → liste des non résolus à Lazar s'il y en a → addendum v3.
 
 **Coût et GO.** A100-SXM4-80GB au **prix plafond de 1,40 USD de l'heure** (filtre d'offre). Durées estimées par
-l'auteur, non mesurées sur le 8B : mise en place (clonage, installation, tokeniseur, 69 essais de 9 à 12 min sur
+l'auteur, non mesurées sur le 8B : mise en place (clonage, installation, tokeniseur, 71 essais de 9 à 12 min sur
 processeur, 16 Go de poids) 25 à 40 min ; validation et résolution 15 à 40 min ; lot fidèle 0 à 20 min ; table 2 min ;
-attendu ≈ 45 à 100 min, soit **≈ 1,1 à 2,3 USD**. **Bornes de durée cohérentes** (VG-01 ; lues dans la configuration et
+attendu ≈ 45 à 100 min, soit **≈ 1,1 à 2,3 USD**. **Écart de devis déclaré (VI-02)** : la ligne d'extension de
+GO-2026-11-02-02 (`registres/go.md` au commit `ddfff6e4`, l. 190) annonçait **≈ 1 USD attendu et 2 USD au pire** ; ce
+texte dit **1,1 à 2,3 USD attendus et ≈ 6,2 USD au pire** (ci-dessous). Le plafond de 25 USD de la ligne tient
+(≈ 4,6 + 6,2 ≈ 10,8 USD au pire) ; le **devis révisé est porté à Lazar avant la création de l'instance**. **Bornes de durée cohérentes** (VG-01 ; lues dans la configuration et
 contrôlées par le script avant l'installation) : délais externes = budget interne de l'étape + 10 min ; mise en place
 40 min ; validation 50 min ; résolution 50 min ; cibles du lot 5 min ; lot fidèle 70 min ; table 15 min ; poussées
 5 min ; somme **235 min**, égale au **plafond de l'amorce (235 min)**, qui coupe le script (le script refuse de partir si
@@ -563,7 +617,7 @@ le registre des dépenses avant la création**) ; après ce passage, au pire ≈
 création ; **échéance 2026-11-09** : après, GO nouveau sous un identifiant nouveau. Branche de résultats :
 `calcul/r1-resolution-graine-v1` (une branche existante arrête le script).
 
-**Essais (processeur, sans dépense ; code au commit cité ; 69 attendus, liste à l'en-tête).** Cœur
+**Essais (processeur, sans dépense ; code au commit cité ; 71 attendus, liste à l'en-tête).** Cœur
 (`tests/test_resolution_graine_v1.py`) : identité du tirage et tirages en un appel ; graines dérivées comme `jouer_p3` ;
 vocabulaire et décodage de Llama 3.1 ; cas sain sur un modèle Llama minuscule de vocabulaire 128 256 avec le vrai
 tokeniseur (découpages non canoniques, actions arrêtées à `max_nouveaux`, jeton spécial effacé) ; artefacts R5 (graine
@@ -576,12 +630,16 @@ table v3 scellée, jamais écrasée ; bout en bout sur un P3 jouet joué par le 
 l'ouverture : présent → passe, absent → arrêt) ; échéances au milieu d'une étape et signal (épisode « durée », suivants
 « non tentés », résultat écrit ; TERM après k épisodes → `arret.json` cite les k épisodes consignés et scellés) ; gardes
 d'exécution (agent comparé au manifeste de P3, réserves d'environnement, contrôle croisé « conforme » exigé par la
-table, une seule exécution) ; gardes de configuration. Lot (`tests/test_resolution_graine_lot_v1.py`) : logits au bit
+table, une seule exécution ; manifeste illisible → arrêt de la garde R3, VI-08) ; corrigés de la table v2 rapportés à
+part au résultat de la validation (VI-10) ; gardes de configuration. Lot (`tests/test_resolution_graine_lot_v1.py`) : logits au bit
 près et mesure des voisines (sain : accord 1 ; graine fausse sur une voisine : réserve) ; cas sain en lots de 8 et de 4 ;
 ligne approchée la plus longue du lot : mêmes bits après correction ; unité des balayages alignée sur le cœur ; gardes du
 forçage ; lot recomposé (logits différents, déclaré) ; graine fausse et texte altéré ; repli itératif dans le lot ;
 budget de l'épisode ; plan des lots ; gardes de configuration, cibles (épisode de C-6 refusé, liste vide « sans objet »)
-et unicité ; bout en bout jouet résolution du lot puis table v3. Relance v3 (`tests/test_rejeu_activations_v3.py`,
+et unicité ; bout en bout jouet résolution du lot puis table v3, dont la déclaration finale des cibles du lot (résolue ;
+budget de balayages et lecture « fidèle » de la cible ; même cause sous « réserve » ou « sans mesure » ; autre cause) et
+`declarations_coeur` ; règle de `declarer_lot` sur des mesures fabriquées (classes, lectures, cible sans entrée, entrées
+contradictoires) (VI-01, VI-09). Relance v3 (`tests/test_rejeu_activations_v3.py`,
 autonome, hors de ce texte) ; outils (manifeste, scellement, préenregistrement, formats du harnais). Script d'instance :
 répétition jouet et pré-vol (« Calendrier »), dont la citation de la configuration sous ses deux libellés (libellé du
 lot absent, empreinte fausse, libellé cité deux fois → arrêt avant l'installation).
@@ -598,19 +656,20 @@ aucune autre mesure ne fait ni ne défait un « résolu ». La classe de la vali
 | Validation « méthode transposée, graines non validées » (147 retrouvées, une condition d'accord manquée) | **Réserve « graines »** : les « résolus » des étapes 1 et 1 bis restent des preuves ; **aucun non résolu n'est déclaré non inversible** (déclaration « non résolu, graines non validées : nœud porté à Lazar ») ; audit (R4) avant l'addendum v3 |
 | Validation « méthode non transposée » (moins de 147 retrouvées, cause quelconque, « non tenté : durée » compris) | **Réserve sur HG-2** : la résolution est partie ; ses empreintes retrouvées restent des preuves ; tout non résolu est un nœud à Lazar (complément sous texte neuf, ou relance avec la table v2 et la règle B pour les 4, v1, E19) ; les épisodes manqués, leurs causes et leurs écarts sont rapportés ; si une cause est une durée, la mesure est déclarée incomplète |
 | Distribution des écarts contraints | Descriptive (P-G3) ; comparée à P-G3 au résultat, sans conséquence de décision |
-| Lot : `lecture_lot` « fidèle » (accord des voisines exactes ≥ 0,99, égalité des choix contraints ≥ 0,99 quand mesurée, aucun jeton connu hors des candidats ; toutes les cibles « fidèles ») | Lot tenu pour fidèle ; un non résolu du lot est lu comme les autres non résolus |
-| Lot : « réserve lot non fidèle » (une cible au moins sous ces conditions) | **Réserve « lot non fidèle »** (carte, bibliothèque ou forme) ; ses « résolus » restent des preuves ; ses non résolus ne peuvent être déclarés non inversibles : nœuds |
-| Lot : « sans mesure » (aucune ligne voisine exacte mesurée) | Réserve « lot non mesuré » : ses « résolus » restent des preuves ; ses non résolus sont des nœuds |
+| Lot : `lecture_lot` « fidèle » (accord des voisines exactes ≥ 0,99, égalité des choix contraints ≥ 0,99 quand mesurée, aucun jeton connu hors des candidats ; au niveau de l'étape, toutes les cibles **mesurées** « fidèles » : la lecture d'ensemble ignore les cibles « sans mesure », VI-09) | Lot tenu pour fidèle ; **la déclaration d'une cible lit la lecture de cette cible** (`lecture_lot` de son entrée, c'est-à-dire de son lot), jamais la lecture d'ensemble (VI-09) ; un non résolu de lecture « fidèle » est lu comme les autres non résolus |
+| Lot : « réserve lot non fidèle » (une cible au moins sous ces conditions) | **Réserve « lot non fidèle »** (carte, bibliothèque ou forme) ; ses « résolus » restent des preuves ; une cible de lecture « réserve » ne peut être déclarée non inversible : nœud ; chaque autre cible se lit sur sa propre lecture (VI-09) |
+| Lot : « sans mesure » (aucune ligne voisine exacte mesurée pour une cible) | Réserve « lot non mesuré » : ses « résolus » restent des preuves ; une cible « sans mesure » non résolue est un nœud |
 | Résolution : 7 / 7 à la fin de l'étape 1 bis (ou de l'étape 1, lot « sans objet »), contrôle croisé conforme | **Table v3 complète** ; addendum v3 sans règle B |
-| Résolution : k non résolus (1 ≤ k ≤ 4, tous parmi les 4), contrôle croisé conforme | Table v3 partielle ; chaque non résolu porte sa cause et sa déclaration ; **liste à Lazar avant l'addendum v3 et avant toute lecture** (n° 356, point 4). Cause finale « caractère de remplacement : budget de balayages dépassé », **et** classe « graines validées », **et**, pour une cible du lot, lecture du lot « fidèle » = **non inversible déclaré par la méthode** (budget de recherche dépassé, non preuve d'impossibilité : le jeton de P3 reste dans l'ensemble contraint à chaque pas) : règle B de la v1 pour lui. Toute autre cause (empreinte non retrouvée après repli et lot, contradiction, durée de l'épisode, non tenté), ou la même cause sous une autre classe ou sous une autre lecture du lot = **non résolu par la méthode**, jamais déclaré non inversible : **nœud porté à Lazar avant l'addendum v3** (complément sous texte neuf, ou règle B pour l'épisode nommé) ; pour chacun, accord non contraint, accord attendu sous graine indépendante et pas informatifs rapportés. Le lot n'écrit pas de déclaration par épisode : pour ses cibles, la règle de cette ligne est appliquée à la lecture, à partir de la cause du lot, de `classe_validation` et de `lecture_lot` (déclaré) |
+| Résolution : k non résolus (1 ≤ k ≤ 4, tous parmi les 4), contrôle croisé conforme | Table v3 partielle ; chaque non résolu porte sa cause et sa déclaration ; **liste à Lazar avant l'addendum v3 et avant toute lecture** (n° 356, point 4). Cause finale « caractère de remplacement : budget de balayages dépassé », **et** classe « graines validées », **et**, pour une cible du lot, lecture du lot « fidèle » **pour cette cible** = **non inversible déclaré par la méthode** (budget de recherche dépassé, non preuve d'impossibilité : le jeton de P3 reste dans l'ensemble contraint à chaque pas) : règle B de la v1 pour lui. Toute autre cause (empreinte non retrouvée après repli et lot, contradiction, durée de l'épisode, non tenté), ou la même cause sous une autre classe ou sous une autre lecture du lot = **non résolu par la méthode**, jamais déclaré non inversible : **nœud porté à Lazar avant l'addendum v3** (complément sous texte neuf, ou règle B pour l'épisode nommé) ; pour chacun, accord non contraint, accord attendu sous graine indépendante et pas informatifs rapportés. Pour les cibles du lot, cette règle est appliquée par le code de l'étape table (`declarer_lot`, VI-01), à partir de la cause du lot, de `classe_validation` et du `lecture_lot` **de la cible** ; la table v3 porte cette déclaration finale dans `declarations` (celle du cœur sous `declarations_coeur`) |
 | Contrôle croisé « non résolu » : un épisode de C-6 non résolu à l'étape 1 | Répétabilité en défaut (il était retrouvé à l'étape 0, même code, même carte) : la table v3 **n'est pas construite** (garde de l'étape table) ; audit (R4) avant toute suite ; l'entrée de C-6 reste prouvée par l'empreinte ; toute reprise relève d'un texte neuf |
 | Contrôle croisé « contraire » : un épisode de C-6 résolu avec d'autres identifiants que la table v2 | Impossible hors collision de sha256 : table non construite, lecture de ce rejeu arrêtée, audit (R4) avant toute suite |
-| Audit de symétrie (R4) | Déclenché aussi par un résultat trop propre de la passe forcée : accord non contraint égal à 1 exactement sur tous les pas des 147 (le bruit du bfloat16 doit laisser quelques désaccords), aucune quasi-égalité sous 1, ou durée très en deçà de l'estimation ; et par un accord observé **non distinct de l'accord attendu sous graine indépendante** (sur tous les pas ou sur les pas informatifs : graines suspectes même si la classe est « graines validées ») ; l'audit vérifie d'abord que les identifiants connus n'ont pas fui dans la résolution. Pour le lot fidèle, un accord de 1 exactement est la prédiction (HG-4), non un signal |
+| Audit de symétrie (R4) | Déclenché aussi par un résultat trop propre de la passe forcée : accord non contraint égal à 1 exactement sur tous les pas des 147 (le bruit du bfloat16 doit laisser quelques désaccords), aucune quasi-égalité sous 1, ou durée très en deçà de l'estimation (**durée cumulée des étapes 0 et 1 sous 5 min**, le tiers de la borne basse de 15 min de « Coût et GO ») ; et par un accord observé **non distinct de l'accord attendu sous graine indépendante**, chiffré (VI-11) : à l'étape 0, `accord_sur_les_pas` **≤ `attendu_graine_independante_sur_les_pas` + 0,02**, ou `accord_informatif` **≤ `attendu_informatif` + 0,10** (graines suspectes même si la classe est « graines validées ») ; l'audit vérifie d'abord que les identifiants connus n'ont pas fui dans la résolution. Pour le lot fidèle, un accord de 1 exactement est la prédiction (HG-4), non un signal |
 
 ## Liste d'arrêt
 
 Les arrêts sont des **erreurs de chaîne seulement** : pièces, sceaux, graines, plan des lots, bibliothèque, commits.
-Aucune mesure (classe de la validation, accord, écarts, nombre de résolus, lecture du lot) n'arrête quoi que ce soit.
+Aucune mesure (classe de la validation, accord, écarts, nombre de résolus, lecture du lot) n'arrête quoi que ce soit,
+**sauf** le contrôle croisé du cœur, qui, autre que « conforme », arrête l'étape table (R-11, VI-04).
 Arrêts du script d'instance et des modules (R5 ; éprouvés par les essais, la répétition jouet et le pré-vol cités, ou lus
 dans le code au commit cité et à éprouver par la contre-lecture), puis action :
 - **avant l'installation** (code 2) : ce texte ou son `.sha256` absent au commit lancé ; « Tests attendus » ou « Chemin
@@ -624,7 +683,7 @@ dans le code au commit cité et à éprouver par la contre-lecture), puis action
 - **bibliothèque et carte** (code 1, consigné) : `nvidia-smi` absent ; torch différent de 2.14.1 ; carte indisponible
   pour torch ; tokeniseur de la révision citée introuvable avant les tests (VG-09) ; poids hors du dossier du tokeniseur
   éprouvé ;
-- **tests** : dernière ligne différente de « 69 passed » (échec ou test sauté) ;
+- **tests** : dernière ligne différente de « 71 passed » (échec ou test sauté) ;
 - **module, avant le manifeste** : configuration incomplète ou de valeur hors domaine (entiers négatifs, température
   nulle, `noyau_attention` hors de « defaut » et « math », `combinaisons_max_validation` ≠ `combinaisons_max`,
   `duree_max_episode_s` nul ou > `duree_max_s`, `regle_validation` de forme fausse, `seuil_lecture_lot` hors de [0, 1],
@@ -632,9 +691,12 @@ dans le code au commit cité et à éprouver par la contre-lecture), puis action
   la configuration sous le libellé du module, l'entropie ou le commit du code (arbre gelé différent du commit cité) ;
   pièce d'empreinte fausse ; **agent (modèle, révision, variables du gabarit) différent de celui du manifeste de P3**
   (VG-04) ; noyau du lot différent de celui de P3 ; run du manifeste différent du run source ; T, température ou
-  `max_nouveaux` différents de la configuration de P3 ; N différent de 1 ; validation de compte différent de 147 ;
-  **étape déjà exécutée** sous ce texte (R3 : cœur, même commande, configuration et code ; lot, même commande et
-  configuration) ;
+  `max_nouveaux` différents de la configuration de P3 ; N différent de 1 ;
+  **étape déjà exécutée** sous ce texte (R3 : cœur, même commande, configuration et code, exécution qui a laissé une
+  sortie ; lot, même commande et configuration) ; manifeste illisible dans `runs/` (cœur et lot, VI-08) ;
+- **module, avant la boucle** (après le manifeste et le chargement du modèle, dans `_executer` ; `arret.json`) :
+  validation de compte différent de 147 (`exiger_compte_validation`) ou seuil de validation inatteignable
+  (`exiger_seuil_atteignable`) (VI-06) ;
 - **graines, pendant le run** (`arret.json`, rien d'autre n'est lu) : graine `tache/<identifiant>` absente du manifeste
   de P3 ; identité du tirage fausse sur la bibliothèque installée ; formes des logits ou des tirages inattendues ;
   dimension des logits différente de la taille du tokeniseur ; ouverture sans le texte attendu (« Today Date: 26 Jul
@@ -645,7 +707,7 @@ dans le code au commit cité et à éprouver par la contre-lecture), puis action
 - **chaîne des étapes** : résolution sans validation scellée, sans `arret.json`, de même configuration et de même code ;
   lot sans validation du cœur de même sorte et de classe présente, ou sans résultat scellé de la résolution de même
   configuration et de même code ; cible demandée refusée (épisode de C-6, résolu, absent) ; **étape table** : contrôle
-  croisé du cœur autre que « conforme » ; résultat d'une autre configuration, d'une autre étape ou d'un autre code ;
+  croisé du cœur autre que « conforme » ; résultat d'une autre configuration ou d'une autre étape (VI-05 : l'étape table ne compare pas le code) ;
   résultat du lot sans `classe_validation` ou fait sur un autre résultat du cœur ; deux résultats différents pour un
   même épisode ; empreinte de P3 du résultat différente de la table v2 ; correction qui ne redonne pas l'empreinte de
   P3 ; corrections vérifiées différentes des comptes ; sortie existante (R12) ; sceau non conforme après écriture ;
@@ -660,7 +722,8 @@ dans le code au commit cité et à éprouver par la contre-lecture), puis action
 création après le 9 novembre 2026 sans GO nouveau ; **aucune location hors des filtres d'offre** (« Location ») : sans
 offre conforme, rien n'est loué, nœud à Lazar ; plafond de l'amorce, 235 min, qui coupe le script (pire cas ≈ 6,2 USD
 avec la vie hors amorce) : ce qui est consigné par épisode reste, le reste est perdu et déclaré.
-**Lancement** : pas de lancement sans ce texte et sa configuration scellés, la table v2 scellée, la contre-lecture
+**Lancement** : pas de lancement sans ce texte et sa configuration scellés, la table v2 scellée, le devis révisé
+porté à Lazar (VI-02), la contre-lecture
 finale neuve traitée et le rapport du lecteur neuf de conv-audit sur la version scellée (chemin et empreinte consignés) ;
 aucune lecture de R2 (inchangé).
 Dans tous les cas : sorties partielles committées et poussées sur `calcul/r1-resolution-graine-v1` ; aucune donnée de
@@ -670,7 +733,9 @@ P3 hors des tableaux permis n'est lue ; arrêt de l'instance par son identifiant
 ## Traitement des lectures neuves
 
 Rapports : brouillon 1 (« L1 ») `dd7157e188b1117c5542715452a6ca2c6a50694eab9d8a2f816615cf3bf9067b` ; brouillon 2
-(« L2 ») `06459850ff7ece9e69b94d88867ce8e75ad96ba4b9091ee57b6cf64df2f54635`. « Traité » = texte (et code au commit cité
+(« L2 ») `06459850ff7ece9e69b94d88867ce8e75ad96ba4b9091ee57b6cf64df2f54635` ; vérification neuve finale du
+brouillon 3 et du code `31f72147` (« VI ») `7dfe39c9820019b8c44956bbec48b1ecd5937e5591f1536c32aed003a9f03a1b` ; vérification adverse du code
+`5c39c6b6` (« VG », résumé) `36eacff68db4764ab62a6b46965f31e6bc2f9daddbf6f881152a63096551cb50`. « Traité » = texte (et code au commit cité
 quand le point en exige) ; « déclaré » = écart ou limite écrits sans correction ; « sans objet » = le point ne vise plus
 rien dans ce texte.
 
@@ -683,7 +748,7 @@ rien dans ce texte.
 | L1 C-5 / I-2 / I-4 ; L2 I-D ; R2-09 (accord pour tout épisode, attendu sous graine indépendante, pas informatifs) | traité | « Métrique » ; P-G1 (formule corrigée) ; code `ca3dfa3f` (`mesures_accord`) |
 | L1 C-6 / I-3 ; R-06 à R-09 ; R2-04 (« non inversible », causes) | traité | R-06 : G2 ; R-07 : HG-3 ; R-08 : « Seuil », point 7 ; R-09 et R2-04 : « Critères », ligne k non résolus (parenthèse fausse retirée, « cas non simple » → « budget de balayages dépassé ») ; fait (a) |
 | L1 C-7 ; R-13 ; m-4 (calcul du choix contraint) | traité | « Précision » : p en float32 sur processeur puis log p − log q en double, code `ca3dfa3f` ; mesure de 2·10⁻⁷ nat citée pour la variante du brouillon 1, non remesurée (déclaré) |
-| L1 C-8 / I-5 ; L2 R2-15 (essais : durée, citation sous deux libellés, ouverture, coupure après k épisodes, ligne approchée) | traité | « Essais » ; « Tests attendus » recompté à 69 |
+| L1 C-8 / I-5 ; L2 R2-15 (essais : durée, citation sous deux libellés, ouverture, coupure après k épisodes, ligne approchée) | traité | « Essais » ; « Tests attendus » recompté à 69, puis à 71 après la vérification neuve VI |
 | L1 C-9 / I-6 ; L2 I-E ; R-15 ; R2-12 (chiffres en bfloat16 de P-G3) | traité (retirés) | P-G3 |
 | L1 R-01 (règle à trois classes) | traité | « Seuil » (valeurs 0,95, 0,90, 0,90, 1 000) |
 | L1 R-02 (P-G1) | traité | P-G1 |
@@ -708,24 +773,48 @@ rien dans ce texte.
 | L2 mineur m-1 (aveugle) | traité | étape 0 |
 | L2 mineurs : garde de l'étape table ; parenthèse fausse ; « cas non simple » ; essais de C-8 manquants ; R6 des volumes ; prix plafond | traité | étape 2 et « Liste d'arrêt » ; « Critères » ; « Seuil » ; « Essais » ; en-tête et volumes (sorties du pré-vol et du compte des U+FFFD, chemins et empreintes ; les volumes sans provenance, jetons en passe et durée de la génération de P3, sont retirés) ; « Location » et « Coût et GO » |
 | L2 C-7 (alignement du code sur le texte, n° 267) | traité | code `ca3dfa3f` (`probabilites`, `scores_contraints`) |
-| Intégration : table v2 sans `.sha256` | déclaré (à faire avant le scellement) | en-tête ; « Calendrier » ; « Liste d'arrêt » (lancement) |
+| Intégration : table v2 sans `.sha256` | traité | compagnon committé au commit `82a5ed18` ; en-tête ; « Calendrier » |
 | Intégration : seuils au choix de l'auteur ; clé `repetition_non_tentes` | déclaré | « Seuil » |
+| VI-01 (déclarations du cœur recopiées pour les cibles du lot ; texte contradictoire) | traité | code `0e2a8871` (`declarer_lot`, `declarations_du_lot`, `declarations_coeur` ; essais qui échouent sans la correction) ; étape 2 ; « Critères », ligne « k non résolus » |
+| VI-02 (devis au-dessus de la ligne de GO) | déclaré | « Coût et GO » (écart déclaré ; plafond de 25 USD tenu ; devis révisé porté à Lazar avant la création) ; « Calendrier » ; « Liste d'arrêt » (lancement) |
+| VI-03 (« 0 = forme exacte prouvée » dit trop) | traité | HG-4 (preuve par d_max ; `forme_exacte_prouvee` lu « exacte si fins par défaut ») ; P-G4 (comptes des quatre lots, lot 5 « non prouvé ») |
+| VI-04 (« aucune étape… » et « aucune mesure… » trop larges) | traité | « Chaîne du script d'instance » ; « Liste d'arrêt » (exception du contrôle croisé, R-11) |
+| VI-05 (« d'un autre code » non codé à l'étape table) | traité (retiré) | « Liste d'arrêt », chaîne des étapes ; rien de codé |
+| VI-06 (compte de 147 vérifié après le manifeste) | traité | « Liste d'arrêt » (« module, avant la boucle ») |
+| VI-07 (écart contraint en double, non par p / q en float32) | traité | « Précision et ordre des opérations » |
+| VI-08 (garde R3 du cœur : sortie laissée ; manifeste illisible sauté) | traité | code `0e2a8871` (arrêt sur manifeste illisible, essai) ; « Seuil » (R3) ; « Liste d'arrêt » ; « Essais » |
+| VI-09 (lecture d'ensemble du lot sans les cibles « sans mesure ») | traité | « Critères » (lignes du lot : déclaration sur la lecture de la cible) ; code `0e2a8871` (`declarer_lot`) |
+| VI-10 (18 corrigés rapportés à part) | traité | code `0e2a8871` (`corriges_table_v2`, essai) ; étape 0 |
+| VI-11 (déclencheurs de l'audit R4 non chiffrés) | traité | « Critères », ligne « Audit de symétrie » (accord ≤ attendu + 0,02 sur les pas, ≤ attendu + 0,10 sur les pas informatifs ; durée des étapes 0 et 1 sous 5 min) |
+| VI-12 (attribution d'essai fausse) | traité | « Seuil », règle de lecture gelée de la validation |
+| VI-13 (R6 : C-6 sans compagnon ; journaux de répétition non cités) | traité | compagnons au commit `82a5ed18` ; en-tête (pièces versées sous `graine-v1/`, chemins et empreintes) |
+| VI-14 (réserve cuDNN dite au journal) | traité | « Précision et ordre des opérations » |
+| VI-15 (schéma de `lecture_validation` selon la voie ; causes hors de la table) | traité | étape 2 |
+| VI-16 (préparateur lu depuis le répertoire courant) | traité | code `0e2a8871` (préparateur de la répétition) ; répétition finale lancée d'un répertoire courant sans `donnees/` |
 
 ## Contre-lecture
 
 Historique de la v1 (contre-lecture 1, vérification de concordance de conv-audit, vérification du brouillon 2) : voir
 la section « Contre-lecture » de l'addendum v1, brouillon 4 ; la contre-lecture 2 de la v1 est sans objet (arrêtée,
-n° 256). Lecteurs déjà passés sur cette v2 (aucun n'a écrit le texte ni le code) :
-- **Vérification adverse VG-01 à VG-10** du code du brouillon 1 (session-depot, n° 265, branche
-  `canal/session-depot-reprise-n92`, message `28f412b7…`) : traitée au commit `755959e1` (VG-01 à VG-09), vérifiée à
-  l'intégration par la répétition jouet et les essais.
+n° 256). Lecteurs déjà passés sur cette v2 (aucun n'a écrit le texte ni le code) ; rapports versés sous `docs/notes/runs-r1-r2-r4-v1/graine-v1/`
+(compagnons `.sha256`, commit `82a5ed18`) :
+- **Vérification adverse VG-01 à VG-10** du code `5c39c6b6` (brouillon 1 ; session-depot, n° 265, branche
+  `canal/session-depot-reprise-n92`, message `28f412b7…`), verdict « prêt après corrections » : traitée au commit
+  `755959e1` (VG-01 à VG-09) puis `31f72147` (VG-07 remplacé par l'unité B-2 de conv-audit), vérifiée à l'intégration par
+  la répétition jouet et les essais. Le texte intégral du rapport n'a pas été conservé dans un fichier (journal du
+  workflow `wf_f711147d-c00` de la session) : **résumé** versé, `verification-adverse-vg-resume-v1.md`
+  (`36eacff68db4764ab62a6b46965f31e6bc2f9daddbf6f881152a63096551cb50`).
 - **Lecture neuve de conv-audit sur le brouillon 1** (`7915a3d653d4de7a41b8fc22d86e4988ede765ae8638ccc335029f9a08644784`)
-  et le code `5c39c6b6` : rapport `verification-addendum-r1-v2-brouillon1-v1.md`,
-  `dd7157e188b1117c5542715452a6ca2c6a50694eab9d8a2f816615cf3bf9067b` (à verser sous `docs/notes/` avec son compagnon) ;
-  traitement : section « Traitement des lectures neuves ».
+  et le code `5c39c6b6` : rapport `verification-addendum-r1-v2-brouillon1-v1.md`
+  (`dd7157e188b1117c5542715452a6ca2c6a50694eab9d8a2f816615cf3bf9067b`) ; traitement : section « Traitement des lectures
+  neuves ».
 - **Lecture neuve de conv-audit sur le brouillon 2** (`d4617ea837cd81accc4dc8e26d6d1be2015f1f10eaecad2258b3e54c9eb48c89`)
-  et le lot `99022f43` : rapport `verification-addendum-r1-v2-brouillon2-v1.md`,
-  `06459850ff7ece9e69b94d88867ce8e75ad96ba4b9091ee57b6cf64df2f54635` (à verser de même) ; traitement : même section.
+  et le lot `99022f43` : rapport `verification-addendum-r1-v2-brouillon2-v1.md`
+  (`06459850ff7ece9e69b94d88867ce8e75ad96ba4b9091ee57b6cf64df2f54635`) ; traitement : même section.
+- **Vérification neuve finale (VI)** du brouillon 3 (`0f4c445c9585309568d76e1f01155474be20cc76df1eac0abb4cc3dab4170e87`)
+  et du code `31f72147`, verdict « scellable après corrections » : rapport `verification-neuve-vi-v1.md`
+  (`7dfe39c9820019b8c44956bbec48b1ecd5937e5591f1536c32aed003a9f03a1b`, texte recopié tel quel) ; traitement : même section (VI-01 à VI-16) ; code
+  corrigé au commit `0e2a8871`.
 
 R2 exige encore une contre-lecture neuve de la **version à sceller** : texte entier, configuration
 `prereg/R1-graine-config-v1.json` et code au commit cité (points du n° 352 : précision et ordre des opérations, carte
