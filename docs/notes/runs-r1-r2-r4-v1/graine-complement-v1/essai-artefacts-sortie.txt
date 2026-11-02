@@ -1,0 +1,47 @@
+Essai local du script existant (inchangé) sur le texte du complément : cas d'arrêt avant l'installation et oubli de PREREG.
+Commit de l'essai (dépôt local nu) : 560e96895de65580b8decd9a5e2054ec25919517. Environnement de chaque cas : celui de l'instance (« Plan d'analyse »), plus les variables indiquées.
+
+== cas plafond-13054 : PLAFOND_MIN=13054 (sans ARRET_AVANT_CALCUL, sans HF_TOKEN : erreur de procédure de l'essai)
+   amorce : /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/essai-complement/plafond-13054/amorce.sh: line 25: HF_TOKEN: HF_TOKEN absent
+== cas plafond-oublie : PLAFOND_MIN=235 (idem)
+   amorce : /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/essai-complement/plafond-oublie/amorce.sh: line 25: HF_TOKEN: HF_TOKEN absent
+== cas table-oubliee : TABLE_V3 par défaut (idem)
+   amorce : /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/essai-complement/table-oubliee/amorce.sh: line 25: HF_TOKEN: HF_TOKEN absent
+== cas branche-oubliee : BRANCHE par défaut (idem)
+   amorce : /tmp/claude-0/-home-user/1cc16375-a2bd-54b9-a03f-27d43b6f26a6/scratchpad/essai-complement/branche-oubliee/amorce.sh: line 25: HF_TOKEN: HF_TOKEN absent
+== cas plafond-13054-v2 : PLAFOND_MIN=13054 ARRET_AVANT_CALCUL=1 (branche déjà prise par le cas sain : arrêt sur la branche, non sur la garde visée)
+   journal : 2026-11-02T19:55:28Z début : rejeu à graine COMMIT=560e96895de65580b8decd9a5e2054ec25919517 BRANCHE=calcul/r1-graine-complement-validation-v1
+   journal : 2026-11-02T19:55:33Z branche calcul/r1-graine-complement-validation-v1 déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…) ; arrêt avant l'installation
+   amorce : AMORCE 2026-11-02T19:55:33Z : fin, code 2
+== cas plafond-oublie-v2 : PLAFOND_MIN=235 ARRET_AVANT_CALCUL=1 (idem)
+   journal : 2026-11-02T19:55:38Z début : rejeu à graine COMMIT=560e96895de65580b8decd9a5e2054ec25919517 BRANCHE=calcul/r1-graine-complement-validation-v1
+   journal : 2026-11-02T19:55:43Z branche calcul/r1-graine-complement-validation-v1 déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…) ; arrêt avant l'installation
+   amorce : AMORCE 2026-11-02T19:55:43Z : fin, code 2
+== cas table-oubliee-v2 : TABLE_V3 par défaut ARRET_AVANT_CALCUL=1 (idem)
+   journal : 2026-11-02T19:55:49Z début : rejeu à graine COMMIT=560e96895de65580b8decd9a5e2054ec25919517 BRANCHE=calcul/r1-graine-complement-validation-v1
+   journal : 2026-11-02T19:55:55Z branche calcul/r1-graine-complement-validation-v1 déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…) ; arrêt avant l'installation
+   amorce : AMORCE 2026-11-02T19:55:55Z : fin, code 2
+== cas branche-oubliee-v2 : BRANCHE=calcul/r1-resolution-graine-v1 (défaut du script) ARRET_AVANT_CALCUL=1
+   journal : 2026-11-02T19:56:02Z début : rejeu à graine COMMIT=560e96895de65580b8decd9a5e2054ec25919517 BRANCHE=calcul/r1-resolution-graine-v1
+   journal : 2026-11-02T19:56:07Z branche calcul/r1-resolution-graine-v1 déjà présente sur le dépôt distant : relancement sous une branche nouvelle (BRANCHE=…) ; arrêt avant l'installation
+   amorce : AMORCE 2026-11-02T19:56:07Z : fin, code 2
+== cas plafond-13054-v3 : PLAFOND_MIN=13054 ARRET_AVANT_CALCUL=1 BRANCHE neuve
+   journal : 2026-11-02T19:56:26Z début : rejeu à graine COMMIT=560e96895de65580b8decd9a5e2054ec25919517 BRANCHE=calcul/essai-plafond-13054-v3
+   journal : 2026-11-02T19:56:34Z budgets : mise en place 40 + validation 4330 + résolution 4330 + cibles du lot 5 + lot 4330 + table 15 + poussées 5 = 13055 min > plafond de l'amorce 13054 min : arrêt avant l'installation
+   amorce : AMORCE 2026-11-02T19:56:34Z : fin, code 2
+== cas plafond-oublie-v3 : PLAFOND_MIN=235 (défaut de l'amorce) ARRET_AVANT_CALCUL=1 BRANCHE neuve
+   journal : 2026-11-02T19:56:42Z début : rejeu à graine COMMIT=560e96895de65580b8decd9a5e2054ec25919517 BRANCHE=calcul/essai-plafond-oublie-v3
+   journal : 2026-11-02T19:56:47Z budgets : mise en place 40 + validation 4330 + résolution 4330 + cibles du lot 5 + lot 4330 + table 15 + poussées 5 = 13055 min > plafond de l'amorce 235 min : arrêt avant l'installation
+   amorce : AMORCE 2026-11-02T19:56:47Z : fin, code 2
+== cas table-oubliee-v3 : TABLE_V3=prereg/R1-table-tokenisation-v3.json (défaut du script) ARRET_AVANT_CALCUL=1 BRANCHE neuve
+   journal : 2026-11-02T19:56:55Z début : rejeu à graine COMMIT=560e96895de65580b8decd9a5e2054ec25919517 BRANCHE=calcul/essai-table-oubliee-v3
+   journal : 2026-11-02T19:57:01Z pièces de la configuration : table v3 prereg/R1-table-tokenisation-v3.json (ou son sceau) déjà présente au commit : R12, aucune réécriture : arrêt avant l'installation
+   amorce : AMORCE 2026-11-02T19:57:01Z : fin, code 2
+== cas prereg-oublie-v3 : PREREG=prereg/R1-addendum-relance-v2.md (défaut du script) HF_TOKEN factice, sans ARRET_AVANT_CALCUL, BRANCHE neuve
+   journal : 2026-11-02T19:57:19Z début : rejeu à graine COMMIT=560e96895de65580b8decd9a5e2054ec25919517 BRANCHE=calcul/essai-prereg-oublie
+   journal : 2026-11-02T19:57:24Z addendum lu : 71 tests attendus ; configuration prereg/R1-graine-config-v1.json (canonique f91716bf95c4, citée sous ses deux libellés) et 7 pièces : présentes et scellées ; table v3 prereg/R1-table-tokenisation-v3-rejeu-complement-v1.json absente ; budgets : mise en place 40 + validation 50 + résolution 50 + cibles du lot 5 + lot 70 + table 15 + poussées 5 = 235 min ≤ plafond 13055 min
+   journal : 2026-11-02T19:57:24Z branche calcul/essai-prereg-oublie poussée avant l'installation (droit d'écriture éprouvé)
+   journal : 2026-11-02T19:57:24Z nvidia-smi absent : arrêt avant l'installation
+   journal : 2026-11-02T19:57:24Z ARRÊT pendant contrôle de la carte : aucun résultat committé (rien à committer, ou commit refusé)
+   journal : 2026-11-02T19:57:25Z branche calcul/essai-prereg-oublie poussée
+   amorce : AMORCE 2026-11-02T19:57:25Z : fin, code 1
