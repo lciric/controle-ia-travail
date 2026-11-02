@@ -137,6 +137,9 @@ DECLARATIONS = {
     "graines_non_validees": "non résolu, graines non validées : nœud porté à Lazar",
     "noeud": "non résolu par la méthode : nœud porté à Lazar"}
 CLES_COMPLETES = CLES + CLES_EXECUTION
+# répétition jouet du script d'instance seulement : épisodes que l'étape « resolution » laisse non tentés (artefact de
+# répétition, pour que l'étape du lot tourne) ; clé refusée en mode réel, même vide (`episodes_laisses_par_repetition`)
+CLE_REPETITION = "repetition_non_tentes"
 NOYAUX = ("defaut", "math")
 CLES_AGENT_P3 = ("modele", "revision", "variables_gabarit")
 # environnement de P3 (`diag/20261019-230011-p3-reel/episodes-p3.json`, manifeste de P3) : un écart est une réserve
@@ -1105,6 +1108,22 @@ def exiger_reglages_execution(config: dict) -> None:
         raise GardeArret("combinaisons_max_validation ≠ combinaisons_max : la validation doit permettre les paires comme "
                          "la résolution")
     exiger_regle_validation(config["regle_validation"])
+    episodes_laisses_par_repetition(config)
+
+
+def episodes_laisses_par_repetition(config: dict) -> list[str]:
+    """Répétition jouet du script d'instance seulement : épisodes de `episodes_resolution` que l'étape « resolution »
+    laisse « non tentés » (cause « répétition jouet : … », jamais « durée »), pour que l'étape du lot ait une cible.
+    Clé `CLE_REPETITION` absente : liste vide. Présente en mode réel (même vide) : arrêt ; en jouet : liste sans
+    doublon, incluse dans `episodes_resolution`, sinon arrêt."""
+    if CLE_REPETITION not in config:
+        return []
+    if config.get("mode") != "jouet":
+        raise GardeArret(f"{CLE_REPETITION} : clé de la répétition jouet, interdite en mode {config.get('mode')!r}")
+    v = config[CLE_REPETITION]
+    if not isinstance(v, list) or len(set(v)) != len(v) or not set(v) <= set(config.get("episodes_resolution") or []):
+        raise GardeArret(f"{CLE_REPETITION} : liste sans doublon, incluse dans episodes_resolution, attendue")
+    return list(v)
 
 
 def reglages_de(config: dict, echeance: float | None, duree_episode_s: float | None = None) -> Reglages:
@@ -1520,6 +1539,7 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
     cmax = int(config["combinaisons_max_validation" if etape == "validation" else "combinaisons_max"])
     tirages = Tirages(voc.V, int(config["fils_tirages"]))
     eps = {e: EpisodeP3(pieces, e, T) for e in episodes}
+    laisses = set(episodes_laisses_par_repetition(config)) if etape == "resolution" else set()
     dossier = Path(racine) / "diag" / run_id
     dossier_eps = dossier / f"episodes-{etape}"
     resultats, pas_tous, pas_directs = [], [], []
@@ -1531,7 +1551,11 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
             for k, e in enumerate(episodes):
                 exiger_sans_signal(f"résolution à graine, épisode {k}")
                 ep = eps[e]
-                if horloge() > echeance:
+                if e in laisses:
+                    r = {**non_tente(ep, "sans objet"), "duree_epuisee": False,
+                         "cause": "répétition jouet : épisode laissé non tenté par le cœur (artefact de répétition, "
+                                  "mode jouet seulement), pour l'étape du lot"}
+                elif horloge() > echeance:
                     r = non_tente(ep, f"budget de l'étape ({config['duree_max_s']} s) épuisé avant l'épisode {k}")
                 else:
                     for e2 in episodes[k:k + 1 + int(config["episodes_d_avance"])]:
@@ -1722,6 +1746,8 @@ def construire_et_verifier_table(config: dict, racine: Path, tokeniseur: str | N
     m, _ = lire_manifeste(Path(racine) / "runs" / corps["run_id"] / "manifeste.json")
     if m["config_sha256"] != empreinte_config(config):
         raise GardeArret("résultat de résolution fait sous une autre configuration")
+    if fmt is None and config["mode"] == "jouet":
+        _, fmt = _modele(config, racine, pieces)              # répétition jouet : format du modèle minuscule
     if fmt is None:
         from transformers import AutoTokenizer
 

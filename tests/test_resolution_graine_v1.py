@@ -1111,3 +1111,19 @@ def test_configuration_gardes():
                  ("mode", "autre")):
         with pytest.raises(GardeArret):
             rg.exiger_config({**jouet, k: v})
+    # clé de la répétition jouet du script d'instance (épisodes laissés non tentés par le cœur, pour l'étape du lot) :
+    # cas sain (absente : rien ; jouet : la liste) ; artefacts (présente en mode réel, même vide ; hors de
+    # episodes_resolution ; doublon) → arrêt, aussi par exiger_reglages_execution
+    assert rg.episodes_laisses_par_repetition(jouet) == []
+    assert rg.episodes_laisses_par_repetition({**jouet, rg.CLE_REPETITION: ["a"]}) == ["a"]
+    for conf, motif in (({**base, rg.CLE_REPETITION: []}, "interdite en mode 'reel'"),
+                        ({**jouet, rg.CLE_REPETITION: ["b"]}, "incluse"),
+                        ({**jouet, "episodes_resolution": ["a", "b"], rg.CLE_REPETITION: ["a", "a"]}, "sans doublon")):
+        with pytest.raises(GardeArret, match=motif):
+            rg.episodes_laisses_par_repetition(conf)
+    regle = {"accord_moyen_min": 0.95, "accord_episode_min": 0.9, "accord_informatif_min": 0.9, "pas_informatifs_min": 1}
+    execution = {**base, "duree_max_episode_s": 600, "noyau_attention": "defaut", "combinaisons_max_validation": 80,
+                 "regle_validation": regle}
+    rg.exiger_reglages_execution(execution)
+    with pytest.raises(GardeArret, match="interdite en mode 'reel'"):
+        rg.exiger_reglages_execution({**execution, rg.CLE_REPETITION: []})

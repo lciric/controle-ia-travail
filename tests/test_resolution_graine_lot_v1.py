@@ -16,9 +16,13 @@ minuscule et le vrai tokeniseur de Llama 3.1 des essais du cœur (fixtures réut
 6. Bout en bout en mode jouet sur un P3 jouet : résolution-lot sur les non résolus d'un résultat du cœur, classe de la
    validation exigée et recopiée, épisodes consignés un à un, échéance de l'étape (non tenté), signal TERM (arrêt citant
    les épisodes consignés), texte attendu de l'ouverture, citation de la configuration ; table v3 fusionnée (cœur et
-   lot), écrite et scellée ; refus : contrôle croisé non conforme, deux résultats différents, identifiants faux."""
+   lot), écrite et scellée ; refus : contrôle croisé non conforme, deux résultats différents, identifiants faux.
+7. Raccord au cœur (intégration) : classe de la validation lue dans `lecture_validation.classe` (hors des trois classes,
+   absente ou validation arrêtée → refus) ; étape « cibles-lot » (liste vide : « sans objet ») ; unité de
+   `balayages_max` du cœur dans la ligne cible (pas comptés par `Cible.recherche`, plafond par U+FFFD)."""
 import json
 import time
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -233,6 +237,30 @@ def test_ligne_approchee_la_plus_longue_memes_bits_apres_correction(tok, fmt, je
     assert a["empreintes_logits"][t] != eps[cible]["empreintes_logits"][t]
     assert a["empreintes_logits"][:t1 + 1] == eps[cible]["empreintes_logits"][:t1 + 1]
     assert a["forme"]["pas_L_fixee_par_approchee"] >= 1 and a["forme"]["forme_exacte_prouvee"] is False
+
+
+def test_unite_des_balayages_alignee_sur_le_coeur(tok, fmt):
+    """B-2 dans le lot (intégration) : la ligne cible compte un pas seulement quand la recherche couvre des octets
+    inconnus (`Cible.recherche`, comme le cœur), sous le plafond de l'essai (`balayages_max` × U+FFFD de l'épisode,
+    `Compteurs.plafond_balayages`) ou, sans plafond posé, de l'action ; au-delà, `NonResolu` de cause « budget de
+    balayages dépassé ». Cas sain : un pas compté sous un plafond de 1, marqué dans le journal ; texte sans U+FFFD :
+    rien de compté. Artefact : plafond 0 → non résolu, cause du cœur."""
+    voc = rg.Vocabulaire(tok, fmt.fins, V)
+    logits = torch.zeros(V, dtype=torch.float32)
+    Q = torch.ones(3, V, dtype=torch.float32)
+    reg = rg.Reglages(max_nouveaux=3, balayages_max=1)
+    pas: list = []
+    cpt = rg.Compteurs()
+    choix = rl.ChoixCible(voc, "ab\ufffd", 3, 0, Q, reg, 0, pas=pas, compteurs=cpt)
+    choix.choisir(0, logits)
+    assert cpt.balayages == 1 and cpt.balayages_complets == 0 and pas[0][8] is True
+    pas2: list = []
+    cpt2 = rg.Compteurs()
+    rl.ChoixCible(voc, "abc", 3, 0, Q, reg, 0, pas=pas2, compteurs=cpt2).choisir(0, logits)
+    assert cpt2.balayages == 0 and pas2[0][8] is False
+    with pytest.raises(rg.NonResolu, match=rg.CAUSE_BUDGET_BALAYAGES):
+        rl.ChoixCible(voc, "ab\ufffd", 3, 0, Q, reg, 0, compteurs=rg.Compteurs(plafond_balayages=0)).choisir(0, logits)
+    assert rl.CAUSE_BALAYAGES == rg.CAUSE_BUDGET_BALAYAGES
 
 
 def test_gardes_du_forcage_des_lignes():
@@ -460,7 +488,9 @@ def test_configuration_gardes_cibles_et_unicite(tmp_path):
     base.update(mode="jouet", T=10, max_nouveaux=400, fils=1, fils_tirages=8, episodes_d_avance=2, quasi_egalites_max=16,
                 bascules_max=2, combinaisons_max=136, combinaisons_max_validation=136, balayages_max=64,
                 seuil_validation=147, temperature=1.0, seuil_ecart=1.0, duree_max_s=2400, duree_max_episode_s=600,
-                episodes_resolution=["a"], noyau_attention="defaut")
+                episodes_resolution=["a"], noyau_attention="defaut",
+                regle_validation={"accord_moyen_min": 0.95, "accord_episode_min": 0.9, "accord_informatif_min": 0.9,
+                                  "pas_informatifs_min": 1000})
     with pytest.raises(GardeArret, match="incomplète"):
         rl.exiger_config(base)
     lot = {**base, **LOT}
@@ -496,6 +526,14 @@ def test_configuration_gardes_cibles_et_unicite(tmp_path):
         rl.cibles_du_lot({**lot, "episodes_resolution_lot": ["d"]}, pieces, ["a", "b", "c"])
     with pytest.raises(GardeArret, match="aucune cible"):
         rl.cibles_du_lot(lot, pieces, ["b"])
+    assert rl.cibles_du_lot(lot, pieces, ["b"], vide_permis=True) == ([], hors)       # « sans objet » (cibles-lot)
+    assert rl.cibles_du_lot(lot, pieces, [], vide_permis=True) == ([], [])
+    with pytest.raises(GardeArret, match="C-6"):                       # demande refusée : arrêt, même vide permis
+        rl.cibles_du_lot({**lot, "episodes_resolution_lot": ["b"]}, pieces, ["a", "b", "c"], vide_permis=True)
+    # clé de la répétition jouet refusée par la configuration du lot en mode réel (garde du cœur)
+    with pytest.raises(GardeArret, match="interdite en mode 'reel'"):
+        rl.exiger_config({**lot, "mode": "reel", rg.CLE_REPETITION: [],
+                          **{k: "0" * 64 for k in rg.CLES if k.endswith("_sha256")}})
     # R3 : une seule exécution de l'étape par configuration
     (tmp_path / "runs" / "x").mkdir(parents=True)
     rl.exiger_execution_unique(tmp_path, lot, rl.ETAPE_LOT)
@@ -517,6 +555,8 @@ def test_configuration_gardes_cibles_et_unicite(tmp_path):
         rl._main(["--etape", rl.ETAPE_TABLE, "--config", str(cfg), "--resolution", "r.json"])
     with pytest.raises(SystemExit):
         rl._main(["--etape", "validation-lot", "--config", str(cfg)])
+    with pytest.raises(GardeArret, match="--resolution obligatoire"):
+        rl._main(["--etape", rl.ETAPE_CIBLES, "--config", str(cfg)])
 
 
 # --------------------------------------------------------------------------------------- 6. bout en bout (P3 jouet)
@@ -550,17 +590,20 @@ def _preparer(source, tmp_path):
 
 
 def _coeur(depot, conf, horodatage, non_resolus, resolus, fiches, classe="graines validées", controle="conforme"):
-    """Résultats scellés du cœur, jouets (même configuration du cœur) : validation (avec ou sans `classe_validation`)
-    et résolution (`controle_croise_lecture`), comme les écrit `resolution_graine_v1`."""
+    """Résultats scellés du cœur, jouets (même configuration du cœur) : validation (avec ou sans classe de lecture,
+    `lecture_validation.classe` comme l'écrit `rg.lire_validation`) et résolution (`controle_croise_lecture`, classe de
+    la validation recopiée), comme les écrit `resolution_graine_v1`."""
     from conftest import committer
 
     chemins = []
+    lv = {"classe": classe, "declarations_permises": "jouet"} if classe else None
     for nom, etape, contenu in (
             ("validation", "validation", {"etape": "validation", "version": rg.VERSION, "lecture": "atteint",
-                                          **({rl.CLE_CLASSE: classe} if classe else {})}),
+                                          **({"lecture_validation": lv} if lv else {})}),
             ("resolution", "resolution", {
                 "etape": "resolution", "version": rg.VERSION, "lecture": "partielle",
                 "controle_croise_lecture": controle,
+                "lecture_validation": {**(lv or {"classe": "graines validées"}), "run_validation": "jouet"},
                 "non_resolus": [{"episode": e, "cause": "jouet"} for e in non_resolus],
                 "episodes": [{"episode": e, "statut": "resolu", "ids": ids, "voie": "directe", "forcages": [],
                               "empreinte": fiches[e]["trajectoire"], "empreinte_cible": fiches[e]["trajectoire"]}
@@ -610,6 +653,28 @@ def test_bout_en_bout_jouet_resolution_lot_puis_table_v3(source, tmp_path, monke
     ch_v_sans, _ = _coeur(depot, conf, "20261102-120110", autres, {}, fiches, classe=None)
     with pytest.raises(GardeArret, match="classe_validation"):
         rl.executer(conf, depot, "20261102-120120-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v_sans, ch_r1,
+                    autoriser_depot_sale=True, entropie_essai=3)
+    # raccord au cœur (lecture à trois classes) : classe hors des trois → refus ; validation arrêtée (arret.json) → refus
+    ch_v_autre, _ = _coeur(depot, conf, "20261102-120111", autres, {}, fiches, classe="atteint")
+    with pytest.raises(GardeArret, match="classe_validation"):
+        rl.executer(conf, depot, "20261102-120121-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v_autre, ch_r1,
+                    autoriser_depot_sale=True, entropie_essai=3)
+    ch_v_arr, _ = _coeur(depot, conf, "20261102-120112", autres, {}, fiches)
+    (Path(ch_v_arr).parent / "arret.json").write_text("{}\n", encoding="utf-8")
+    with pytest.raises(GardeArret, match="arret.json"):
+        rl.executer(conf, depot, "20261102-120122-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v_arr, ch_r1,
+                    autoriser_depot_sale=True, entropie_essai=3)
+    for run in ("20261102-120120-graine-lot-jouet", "20261102-120121-graine-lot-jouet",
+                "20261102-120122-graine-lot-jouet"):
+        assert not (depot / "runs" / run).exists()
+    # étape « cibles-lot » du script d'instance (sans modèle) : les non résolus du cœur à entrée « non_resolu » ; sans
+    # cible, liste vide (« sans objet »), jamais un arrêt ; l'étape « resolution-lot », elle, refuse de partir sans cible
+    assert rl.cibles_restantes(conf, depot, ch_r1)["cibles"] == autres
+    _, ch_r_vide = _coeur(depot, conf, "20261102-120113", [], {}, fiches)
+    vide = rl.cibles_restantes(conf, depot, ch_r_vide)
+    assert vide["cibles"] == [] and vide["non_resolus_coeur"] == 0
+    with pytest.raises(GardeArret, match="aucune cible"):
+        rl.executer(conf, depot, "20261102-120123-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v, ch_r_vide,
                     autoriser_depot_sale=True, entropie_essai=3)
     # citation de la configuration du lot dans le préenregistrement : absente → arrêt ; présente → la garde passe (la
     # suivante, l'entropie, arrête ce texte d'essai)

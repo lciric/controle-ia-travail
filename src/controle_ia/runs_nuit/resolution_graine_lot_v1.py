@@ -58,12 +58,19 @@ celles de l'essai qui a produit chaque action de la cible (essai direct avant la
 ensuite). Le choix contraint d'une ligne voisine n'est pas mesuré dans une action dont le texte contient U+FFFD
 (compté `non_mesures_fffd`) : le balayage du vocabulaire y serait hors budget.
 
-**Classe de la validation (I-B)** : lue dans le résultat scellé de la validation du cœur, clé `classe_validation` (la
-lecture à trois classes du cœur, `lire_validation`) ; absente, l'étape refuse de partir (déclaré) ; recopiée, avec la
-lecture du lot, dans le résultat du lot, dans chaque épisode et dans la table v3 (`lecture_validation`).
+**Classe de la validation (I-B)** : lue dans le résultat scellé de la validation du cœur, clé
+`lecture_validation.classe` (la lecture à trois classes du cœur, `rg.lire_validation`, une des
+`rg.CLASSES_VALIDATION`) ; absente ou hors des trois classes, l'étape refuse de partir (déclaré) ; une validation
+arrêtée (`arret.json` dans son dossier) est refusée comme par le cœur ; la classe est recopiée sous la clé
+`classe_validation`, avec la lecture du lot, dans le résultat du lot, dans chaque épisode et dans la table v3
+(`lecture_validation`).
 
 **R3** : une seule exécution de l'étape « resolution-lot » par configuration (`exiger_execution_unique` : tout manifeste
 de `runs/` de même commande et de même empreinte de configuration arrête avant tout calcul).
+
+**Cibles (étape « cibles-lot », processeur, sans modèle ; script d'instance)** : `cibles_restantes` rend les cibles
+après la résolution du cœur ; une liste vide fait l'étape du lot « sans objet » (jamais un arrêt) ; le script ne lit
+que ce compte, jamais la lecture de la résolution.
 
 **Table v3 (étape « table-lot », processeur)** : `construire_table_v3_lot` part du résultat scellé de la résolution du
 cœur (table v3 du cœur, `construire_table_v3`), y verse les épisodes résolus par le lot, chacun revérifié par l'empreinte
@@ -82,6 +89,9 @@ Interdits respectés par construction (comme le cœur) : aucun score, aucune not
         --run-id AAAAMMJJ-HHMMSS-r1-graine-lot-resolution --prereg prereg/R1-addendum-relance-v2.md \\
         --validation diag/<run de validation du cœur>/resolution-graine-validation.json \\
         --resolution diag/<run de résolution du cœur>/resolution-graine-resolution.json
+    PYTHONPATH=src python -m controle_ia.runs_nuit.resolution_graine_lot_v1 --etape cibles-lot --config CONFIG \\
+        --resolution diag/<run de résolution du cœur>/resolution-graine-resolution.json   (processeur ; « cibles » : 0 =
+        étape du lot sans objet)
     PYTHONPATH=src python -m controle_ia.runs_nuit.resolution_graine_lot_v1 --etape table-lot --config CONFIG \\
         --tokeniseur DOSSIER --resolution diag/<run de résolution du cœur>/resolution-graine-resolution.json \\
         --resultat-lot diag/<run du lot>/resolution-graine-resolution-lot.json \\
@@ -113,6 +123,7 @@ COMMANDE = "python -m controle_ia.runs_nuit.resolution_graine_lot_v1"
 CONFIG_CITEE = "Configuration de la résolution à graine, lot fidèle (empreinte canonique) : `{}`"
 ETAPE_LOT = "resolution-lot"
 ETAPE_TABLE = "table-lot"
+ETAPE_CIBLES = "cibles-lot"
 ETAPES = (ETAPE_LOT,)
 CLES_LOT = ("episodes_resolution_lot", "combinaisons_max_lot", "duree_max_episode_lot_s", "duree_max_lot_s",
             "seuil_lecture_lot")
@@ -145,8 +156,9 @@ class ChoixCible:
     """Ligne cible d'un lot : à chaque pas, sur les logits (V,) float32 du pas (ceux de P3), choisit le candidat compatible
     avec le texte stocké qui maximise p / q, p = softmax(logits / température) en float32, q = tirages exponentiels du pas
     (l'opération de P3, à l'identique ; égalité exacte : plus petit identifiant, comme argmax). Journal `pas` : (t, s,
-    choix, non contraint, candidats, écart, second, marge, balayage complet, p du jeton retenu, argmax des logits) — les
-    neuf premiers champs au format du cœur. Lève `DureeEpuisee` à l'échéance de `reglages`."""
+    choix, non contraint, candidats, écart, second, marge, pas compté dans `balayages_max` (unité du cœur :
+    `Cible.recherche`, `rg.compter_balayage`), p du jeton retenu, argmax des logits) — au format du cœur. Lève
+    `DureeEpuisee` à l'échéance de `reglages`, `NonResolu` au-delà du plafond de balayages."""
 
     def __init__(self, voc: Vocabulaire, texte: str, n: int, a_fin: int, Q: torch.Tensor, reglages: Reglages, t: int,
                  forcages: dict | None = None, pas: list | None = None, compteurs: Compteurs | None = None):
@@ -187,12 +199,11 @@ class ChoixCible:
                 raise Contradiction(self.t, s, "octets du texte restants au jeton de fin")
             cands = list(self.voc.fins)
         else:
-            cands, balayage = self.cible.candidats(self.etat)
+            # unité de `balayages_max` du cœur (B-2) : pas où la recherche couvre des octets inconnus ; plafond de
+            # l'essai = balayages_max × U+FFFD de l'épisode (`Compteurs.plafond_balayages`), sinon de l'action
+            cands, balayage, complet = self.cible.recherche(self.etat)
             if balayage:
-                self.compteurs.balayages += 1
-                if self.compteurs.balayages > self.reglages.balayages_max:
-                    raise NonResolu(f"{CAUSE_BALAYAGES} ({self.compteurs.balayages} balayages complets du vocabulaire "
-                                    f"> {self.reglages.balayages_max})")
+                rg.compter_balayage(self.compteurs, self.reglages, self.cible.fffd, complet, self.t, s)
             cands = cands + self.voc.speciaux_non_fins
         if not cands:
             raise Contradiction(self.t, s, "aucun jeton compatible avec le texte")
@@ -645,7 +656,9 @@ def resoudre_episode_lot(moteur: MoteurLot, voc: Vocabulaire, fmt, lignes: list[
               "lignes_approchees": sum(1 for b, x in enumerate(lignes) if b != cible and not x.exacte),
               "plans": None, "empreintes_logits": None, "logits_conformes": None}
     pas: list = []
-    compteurs = Compteurs()
+    plafond = int(reg.balayages_max) * int(sortie["fffd"])          # par U+FFFD de l'épisode, comme le cœur (B-2)
+    sortie["plafond_balayages"] = plafond
+    compteurs = Compteurs(plafond_balayages=plafond)
     plans_d: list = []
 
     def essai(forcages, prefixe, journal_pas, cpt, plans):
@@ -679,7 +692,7 @@ def resoudre_episode_lot(moteur: MoteurLot, voc: Vocabulaire, fmt, lignes: list[
         sortie["cause"] = f"contradiction à l'essai direct ({c})"
     except NonResolu as c:
         return finir(plans_d, cause=str(c), pas=pas, pas_direct=pas, balayages=compteurs.balayages,
-                     passes=compteurs.passes)
+                     passes=compteurs.passes, balayages_complets=compteurs.balayages_complets)
     except DureeEpuisee as c:
         sortie["duree_epuisee"] = True
         sortie["cause"] = f"durée : {c} à l'essai direct"
@@ -688,7 +701,8 @@ def resoudre_episode_lot(moteur: MoteurLot, voc: Vocabulaire, fmt, lignes: list[
         par_action.setdefault(t, []).append(c)
     if not sortie["ids_directs"]:
         sortie["ids_directs"] = [par_action[t] for t in sorted(par_action)]
-    sortie.update(pas=pas, pas_direct=pas, balayages=compteurs.balayages, passes=compteurs.passes)
+    sortie.update(pas=pas, pas_direct=pas, balayages=compteurs.balayages, passes=compteurs.passes,
+                  balayages_complets=compteurs.balayages_complets)
     if sortie["statut"] == "resolu" or sortie["duree_epuisee"]:
         return finir(plans_d)
     quasi = rg.quasi_egalites(pas, reg.seuil_ecart, reg.quasi_egalites_max)
@@ -714,7 +728,7 @@ def resoudre_episode_lot(moteur: MoteurLot, voc: Vocabulaire, fmt, lignes: list[
             plans_r: list = []
             issue = "empreinte_differente"
             try:
-                rec, trouves, emp = essai(forcages, prefixe, journal_pas, Compteurs(), plans_r)
+                rec, trouves, emp = essai(forcages, prefixe, journal_pas, Compteurs(plafond_balayages=plafond), plans_r)
             except Contradiction:
                 issue = "contradiction"
             except NonResolu:
@@ -856,8 +870,9 @@ def _meme_config_coeur(m: dict, config: dict, quoi: str) -> None:
 
 def exiger_validation_coeur(racine: Path, chemin, config: dict) -> dict:
     """Le résultat scellé de l'étape « validation » du cœur, rattaché à son manifeste, de même configuration du cœur et
-    de même code, **quelle que soit sa lecture** ; sa classe (clé `classe_validation`, lecture à trois classes du cœur)
-    est obligatoire : absente, refus (déclaré). Rend {classe, lecture, chemin, sha256}."""
+    de même code, sans `arret.json` dans son dossier, **quelle que soit sa lecture** ; sa classe (clé
+    `lecture_validation.classe` écrite par `rg.lire_validation`, une des `rg.CLASSES_VALIDATION`) est obligatoire :
+    absente ou inconnue, refus (déclaré). Rend {classe_validation, lecture, lecture_validation, chemin, sha256}."""
     if not chemin:
         raise GardeArret("étape « resolution-lot » sans --validation : la validation du cœur est obligatoire")
     corps = verifier_resultat(racine, chemin)
@@ -865,13 +880,18 @@ def exiger_validation_coeur(racine: Path, chemin, config: dict) -> dict:
     r = corps["resultat"]
     if r.get("etape") != "validation" or r.get("version") != rg.VERSION:
         raise GardeArret(f"validation {chemin} : étape {r.get('etape')!r}, version {r.get('version')!r}")
+    if (Path(racine) / "diag" / corps["run_id"] / "arret.json").exists():
+        raise GardeArret(f"validation du cœur {corps['run_id']} arrêtée (arret.json) : lot non lancé")
     _meme_config_coeur(m, config, "validation du cœur")
     rg.exiger_meme_code(racine, m["commit"])
-    classe = r.get(CLE_CLASSE)
-    if not isinstance(classe, str) or not classe:
-        raise GardeArret(f"validation {chemin} sans « {CLE_CLASSE} » : la lecture à trois classes du cœur "
-                         "(lire_validation) est exigée pour la recopier dans le lot et la table v3 (I-B) ; refus")
-    return {CLE_CLASSE: classe, "lecture": r.get("lecture"), "chemin": str(chemin), "sha256": verifier(chemin)}
+    lv = r.get("lecture_validation")
+    classe = lv.get("classe") if isinstance(lv, dict) else None
+    if classe not in rg.CLASSES_VALIDATION:
+        raise GardeArret(f"validation {chemin} sans classe de lecture (« lecture_validation.classe » = {classe!r}, "
+                         f"recopiée en « {CLE_CLASSE} ») : la lecture à trois classes du cœur (lire_validation) est "
+                         "exigée pour la recopier dans le lot et la table v3 (I-B) ; refus")
+    return {CLE_CLASSE: classe, "lecture": r.get("lecture"), "lecture_validation": lv, "chemin": str(chemin),
+            "sha256": verifier(chemin)}
 
 
 def exiger_resolution_v1(racine: Path, chemin, config: dict) -> tuple[list[str], dict, dict]:
@@ -892,10 +912,12 @@ def exiger_resolution_v1(racine: Path, chemin, config: dict) -> tuple[list[str],
     return [x["episode"] for x in r["non_resolus"]], resolus, {"chemin": str(chemin), "sha256": verifier(chemin)}
 
 
-def cibles_du_lot(config: dict, pieces: rg.Pieces, non_resolus_v1: list[str]) -> tuple[list[str], list[dict]]:
+def cibles_du_lot(config: dict, pieces: rg.Pieces, non_resolus_v1: list[str],
+                  vide_permis: bool = False) -> tuple[list[str], list[dict]]:
     """Cibles (avant tout chargement) : non résolus du cœur dont l'entrée de la table v2 est « non_resolu »
     (`episodes_resolution_lot`, s'il est donné, en restreint la liste : chacun doit en être, sinon refus). Les autres
-    non résolus du cœur sont rendus dans `hors_cibles`, cause écrite."""
+    non résolus du cœur sont rendus dans `hors_cibles`, cause écrite. Sans cible : arrêt (étape « resolution-lot »), ou
+    liste vide si `vide_permis` (`cibles_restantes` : l'étape du lot est alors « sans objet »)."""
     par_table = {x["episode"]: x for x in pieces.table["episodes"]}
     nr = list(non_resolus_v1 or [])
 
@@ -922,10 +944,25 @@ def cibles_du_lot(config: dict, pieces: rg.Pieces, non_resolus_v1: list[str]) ->
     else:
         cibles = [e for e in nr if raison(e) is None]
     hors_cibles = [{"episode": e, "cause": raison(e) or "hors de episodes_resolution_lot"} for e in nr if e not in cibles]
+    if not cibles and vide_permis:
+        return [], hors_cibles
     if not cibles:
         raise GardeArret("resolution-lot : aucune cible (aucun non résolu du cœur à entrée « non_resolu » de la table v2) "
                          f"; hors cibles : {[x['episode'] for x in hors_cibles][:3]}")
     return cibles, hors_cibles
+
+
+def cibles_restantes(config: dict, racine: Path, chemin_resolution: str) -> dict:
+    """Étape « cibles-lot » (processeur, sans modèle ; script d'instance) : après la résolution du cœur, les cibles du lot
+    (`cibles_du_lot`), lues dans la seule liste `non_resolus` du résultat scellé de la résolution (même configuration du
+    cœur, même code) ; jamais sa lecture ni ses mesures. Sans cible, liste vide : l'étape du lot est « sans objet » (le
+    script le consigne) ; toute autre anomalie (configuration, pièces, sceaux, demandes refusées) arrête."""
+    exiger_config(config)
+    racine = Path(racine)
+    pieces = rg.charger_pieces(config, racine)
+    non_resolus_v1, _, res = exiger_resolution_v1(racine, chemin_resolution, config)
+    cibles, hors = cibles_du_lot(config, pieces, non_resolus_v1, vide_permis=True)
+    return {"cibles": cibles, "hors_cibles": hors, "non_resolus_coeur": len(non_resolus_v1), "resolution_v1": res}
 
 
 def exiger_execution_unique(racine: Path, config: dict, etape: str) -> None:
@@ -1051,7 +1088,7 @@ def _executer(config, racine, run_id, chemin_m, pieces, etat, debut, cibles, hor
         ecarts += [x[5] for x in pas if x[4] > 1]
         marges_desaccord += [x[7] for x in pas if x[3] != x[2]]
         d = {k2: r[k2] for k2 in ("episode", "statut", "voie", "cause", "forcages", "combinaisons_essayees", "passes",
-                                  "balayages", "fffd", "duree_s", "graines", "numero_lot", "rang_dans_le_lot", "lot",
+                                  "balayages", "balayages_complets", "plafond_balayages", "fffd", "duree_s", "graines", "numero_lot", "rang_dans_le_lot", "lot",
                                   "lignes_approchees", "plans", "empreintes_logits", "empreinte", "empreinte_cible",
                                   "quasi_egalites", "duree_epuisee", "non_tente", "repli", "forme", "mesure_voisines",
                                   "lecture_lot", "accord_cible", "classe_validation", "ids_directs") if k2 in r}
@@ -1102,6 +1139,11 @@ def _executer(config, racine, run_id, chemin_m, pieces, etat, debut, cibles, hor
         "validation": validation, "resolution_v1": resolution, "non_resolus_v1": non_resolus_v1,
         "ecarts_contraints": rg.quantiles(ecarts), "marges_en_desaccord": rg.quantiles(marges_desaccord),
         "fffd_declares": {x["episode"]: x["fffd"] for x in resultats if x["fffd"]},
+        "balayages": {"unite": "pas où la recherche couvre des octets inconnus (commencant_par(E) non vide), plafond "
+                               "balayages_max par U+FFFD de l'épisode (unité du cœur)",
+                      "par_episode": {x["episode"]: x.get("balayages", 0) for x in resultats if x["fffd"]},
+                      "complets_par_episode": {x["episode"]: x.get("balayages_complets", 0) for x in resultats
+                                               if x["fffd"]}},
         "passes": moteur.passes, "jetons_en_passe": moteur.jetons, "seuils": {
             k: config[k] for k in ("seuil_ecart", "quasi_egalites_max", "bascules_max", "combinaisons_max_lot",
                                    "balayages_max", "duree_max_episode_lot_s", "duree_max_lot_s", "seuil_lecture_lot")},
@@ -1215,6 +1257,8 @@ def construire_table_v3_lot(config: dict, racine: Path, tokeniseur: str | None, 
     if not isinstance(classe, str) or not classe:
         raise GardeArret(f"résultat du lot sans « {CLE_CLASSE} » : refus (I-B)")
     sha_l = verifier(chemin_lot)
+    if fmt is None and config["mode"] == "jouet":
+        _, fmt = rg._modele(config, racine, pieces)           # répétition jouet : format du modèle minuscule
     if fmt is None:
         from transformers import AutoTokenizer
 
@@ -1287,12 +1331,13 @@ def construire_table_v3_lot(config: dict, racine: Path, tokeniseur: str | None, 
 
 def _main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog=COMMANDE)
-    ap.add_argument("--etape", required=True, choices=ETAPES + (ETAPE_TABLE,))
+    ap.add_argument("--etape", required=True, choices=ETAPES + (ETAPE_TABLE, ETAPE_CIBLES))
     ap.add_argument("--config", required=True)
     ap.add_argument("--run-id")
     ap.add_argument("--prereg", default=None)
     ap.add_argument("--validation", default=None, help="résultat scellé de l'étape validation du cœur")
-    ap.add_argument("--resolution", default=None, help="résultat scellé de l'étape resolution du cœur")
+    ap.add_argument("--resolution", default=None, help="résultat scellé de l'étape resolution du cœur (étapes "
+                    "resolution-lot, table-lot et cibles-lot)")
     ap.add_argument("--tokeniseur", help="dossier du tokeniseur à la révision de P3 (étape table-lot)")
     ap.add_argument("--resultat-lot", help="résultat scellé de l'étape resolution-lot (étape table-lot)")
     ap.add_argument("--sortie", help="table version 3 à écrire (étape table-lot ; jamais écrasée)")
@@ -1300,6 +1345,14 @@ def _main(argv: list[str]) -> int:
     signal.signal(signal.SIGTERM, lever_sur_term)
     verifier(a.config)
     config = json.loads(Path(a.config).read_text(encoding="utf-8"))
+    if a.etape == ETAPE_CIBLES:
+        if not a.resolution:
+            raise GardeArret("étape cibles-lot : --resolution obligatoire")
+        c = cibles_restantes(config, Path("."), a.resolution)
+        print(json.dumps({"cibles": len(c["cibles"]), "episodes": c["cibles"],
+                          "hors_cibles": [x["episode"] for x in c["hors_cibles"]],
+                          "non_resolus_coeur": c["non_resolus_coeur"]}, ensure_ascii=False))
+        return 0
     if a.etape == ETAPE_TABLE:
         if not (a.tokeniseur and a.resolution and a.resultat_lot and a.sortie):
             raise GardeArret("étape table-lot : --tokeniseur, --resolution, --resultat-lot et --sortie obligatoires")

@@ -6,14 +6,18 @@ documentaires lourds (hors de l'arbre gelé : `docs/` sauf les invites et les pr
 (`premier_test_ia.run`, modèle minuscule du harnais), une table de tokenisation v2 jouet (épisodes hors de portée cités
 « non résolus »), une configuration de la résolution à graine en mode « jouet » et un préenregistrement jouet scellés,
 qui citent le commit du code, l'entropie, l'empreinte canonique de la configuration, « Tests attendus » et le chemin de
-la configuration. Rien n'est écrit dans l'arbre de travail du dépôt source.
+la configuration sous ses deux libellés (cœur, lot fidèle). Une seule configuration pour le cœur et le lot (clés du lot
+comprises) ; `--non-tentes-coeur K` (défaut 1) épisodes « hors de portée » sont laissés non tentés par le cœur (clé
+`repetition_non_tentes`, mode jouet seulement, refusée en mode réel) pour que l'étape du lot ait une cible et tourne.
+Rien n'est écrit dans l'arbre de travail du dépôt source.
 
     PYTHONPATH=src:tests python scripts/preparer_repetition_r1_resolution_graine_v1.py --source . \\
-        --dossier DOSSIER --tests-attendus N [--sans-sceau-table]
+        --dossier DOSSIER --tests-attendus N [--non-tentes-coeur K] [--sans-sceau-table] [--sans-citation-lot]
 
 Écrit DOSSIER/distant.git (dépôt nu) et affiche « COMMIT=<commit à lancer> » et « DEPOT_URL=<chemin> ».
 `--sans-sceau-table` : artefact (R5) — la table jouet est versée sans son sceau ; le script d'instance doit s'arrêter
-avant l'installation."""
+avant l'installation. `--sans-citation-lot` : artefact (R5) — le préenregistrement jouet ne cite pas la configuration
+sous le libellé du lot fidèle ; le script d'instance doit s'arrêter avant l'installation."""
 from __future__ import annotations
 
 import argparse
@@ -36,6 +40,8 @@ def main(argv=None) -> int:
     ap.add_argument("--dossier", required=True)
     ap.add_argument("--tests-attendus", required=True, type=int)
     ap.add_argument("--sans-sceau-table", action="store_true")
+    ap.add_argument("--sans-citation-lot", action="store_true")
+    ap.add_argument("--non-tentes-coeur", type=int, default=1)
     a = ap.parse_args(argv)
     source, dossier = Path(a.source).resolve(), Path(a.dossier).resolve()
     if dossier.exists():
@@ -71,6 +77,7 @@ def main(argv=None) -> int:
     sys.path[:0] = [str(prep / "tests")]
 
     from controle_ia.premier_test_ia import run as rp
+    from controle_ia.runs_nuit import resolution_graine_lot_v1 as rl
     from controle_ia.runs_nuit import resolution_graine_v1 as rg
     from controle_ia.scellement import sceller
     from test_premier_test_ia_run import _config, _taches
@@ -104,7 +111,12 @@ def main(argv=None) -> int:
               "max_nouveaux": c["max_nouveaux"], "noyau_attention": "math", "fils": 1, "hors_ligne": True,
               "fils_tirages": 2, "episodes_d_avance": 1, "seuil_ecart": 0.5, "quasi_egalites_max": 4,
               "bascules_max": 2, "combinaisons_max": 10, "combinaisons_max_validation": 10, "balayages_max": 8,
-              "seuil_validation": 0, "duree_max_s": 600, "duree_max_episode_s": 120}
+              "seuil_validation": 0, "duree_max_s": 600, "duree_max_episode_s": 120,
+              "regle_validation": {"accord_moyen_min": 0.95, "accord_episode_min": 0.9, "accord_informatif_min": 0.9,
+                                   "pas_informatifs_min": 1},
+              # lot fidèle : même configuration que le cœur, clés du lot en plus
+              "episodes_resolution_lot": [], "combinaisons_max_lot": 10, "duree_max_episode_lot_s": 120,
+              "duree_max_lot_s": 600, "seuil_lecture_lot": 0.99}
     # classement sur la table jouet : épisodes hors de portée → « non résolus » de la table v2 jouet, à résoudre
     shutil.copy(t0, prep / config["chemin_table_tokenisation"])
     sceller(prep / config["chemin_table_tokenisation"])
@@ -125,7 +137,13 @@ def main(argv=None) -> int:
     tp.write_text(json.dumps(table, sort_keys=True, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     if not a.sans_sceau_table:
         sceller(tp)
-    config.update(episodes_resolution=autres + connus[:1], seuil_validation=len(connus))
+    if not connus or len(autres) <= a.non_tentes_coeur or a.non_tentes_coeur < 0:
+        raise SystemExit(f"P3 jouet : {len(connus)} connus, {len(autres)} hors de portée ; {a.non_tentes_coeur} à laisser "
+                         "au lot (il en faut au moins un résolu par le cœur)")
+    # contrôle croisé (un épisode connu) en tête, puis les « hors de portée » ; les K premiers laissés au lot
+    config.update(episodes_resolution=connus[:1] + autres, seuil_validation=len(connus),
+                  **{rg.CLE_REPETITION: autres[:a.non_tentes_coeur]})
+    rl.exiger_config(config)
     git(prep, "add", "-A")
     git(prep, "add", "-f", "donnees")
     git(prep, "commit", "-q", "-m", "répétition : P3 jouet et table jouet")
@@ -139,6 +157,7 @@ def main(argv=None) -> int:
         f"- Commit du code d'analyse : `{code_cite}`",
         f"- Chemin de la configuration de la résolution à graine : `{chemin_conf.relative_to(prep)}`",
         f"- Configuration de la résolution à graine (empreinte canonique) : `{rg.empreinte_config(config)}`",
+        *([] if a.sans_citation_lot else [f"- {rl.CONFIG_CITEE.format(rg.empreinte_config(config))}"]),
         "- Entropie : `20261102`", f"- Tests attendus : `{a.tests_attendus}`", "",
         *[f"## {s}\n\nRépétition jouet, sans valeur de preuve.\n" for s in
           ("Hypothèse", "Prédiction chiffrée et signe attendu", "Métrique", "Seuil", "Plan d'analyse",
@@ -160,7 +179,8 @@ def main(argv=None) -> int:
     print(f"COMMIT={commit}")
     print(f"DEPOT_URL={distant}")
     print(f"PREREG={chemin_p.relative_to(prep)}")
-    print(f"EPISODES validation={len(connus)} resolution={len(config['episodes_resolution'])}")
+    print(f"EPISODES validation={len(connus)} resolution={len(config['episodes_resolution'])} "
+          f"laisses_au_lot={len(config[rg.CLE_REPETITION])}")
     return 0
 
 

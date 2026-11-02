@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 # Rejeu à graine des épisodes de P3 sur l'instance de calcul (relance de R1 : « résoudre les 7 épisodes avant la
-# relance ») : étape « validation » (les épisodes résolus de la table de tokenisation v2, à l'aveugle ; une MESURE
-# rapportée, jamais un arrêt), puis étape « resolution » (les 7 épisodes de C-6), lancée QUELLE QUE SOIT la lecture de la
-# validation ; seul un arrêt de la validation (erreur de chaîne : pièces, sceaux, graines illisibles ; ou anomalie :
-# signal, mémoire) empêche la résolution. Module `controle_ia.runs_nuit.resolution_graine_v1`. Version 1, nom nouveau
-# (R12), sur le modèle de `r1_relance_instance_v2.sh` (inchangé). Préenregistrement par défaut :
+# relance »), quatre étapes dans cet ordre :
+#   0. « validation » du cœur (les épisodes à identifiants connus de la table de tokenisation v2, à l'aveugle ; une
+#      MESURE rapportée, jamais un arrêt) ;
+#   1. « resolution » du cœur (les 7 épisodes de C-6), lancée QUELLE QUE SOIT la lecture de la validation ;
+#   1 bis. « resolution-lot » (lot fidèle, `resolution_graine_lot_v1`) sur les épisodes que le cœur laisse non résolus
+#      et dont l'entrée de la table v2 est « non_resolu » (étape « cibles-lot », processeur, sans modèle : la seule liste
+#      `non_resolus` du résultat, jamais sa lecture) ; s'il n'en reste aucun : « sans objet », consigné au journal ;
+#   2. table de tokenisation v3 (processeur) : cœur + lot (`--etape table-lot`) si le lot a tourné, sinon cœur seul
+#      (`--etape table`) ; écrite et scellée par le module (jamais écrasée, R12), committée et poussée avec les résultats.
+# Aucune étape n'en conditionne une autre par sa lecture : seule une erreur de chaîne (pièces, sceaux, graines
+# illisibles, commit refusé) ou une anomalie (signal, mémoire, délai) d'une étape empêche les suivantes ; les gardes
+# propres des modules (contrôle croisé « conforme » exigé par la table, R-11) arrêtent leur étape, consigné.
+# Modules `controle_ia.runs_nuit.resolution_graine_v1` et `controle_ia.runs_nuit.resolution_graine_lot_v1`. Version 1,
+# nom nouveau (R12), sur le modèle de `r1_relance_instance_v2.sh` (inchangé). Préenregistrement par défaut :
 # `prereg/R1-addendum-relance-v2.md` (scellé avant tout lancement ; il cite le commit du code, l'entropie, l'empreinte
-# canonique de la configuration, « Tests attendus » et « Chemin de la configuration de la résolution à graine »).
+# canonique de la configuration sous ses deux libellés — cœur et lot fidèle —, « Tests attendus » et « Chemin de la
+# configuration de la résolution à graine » ; une seule configuration pour le cœur et le lot).
 # Dépense : sous le GO que Lazar donnera pour ce passage (aucun GO n'est supposé ici ; la garde de calcul de la session
 # exige GO_ID au lancement de l'instance).
 #
@@ -26,15 +36,19 @@
 #   CUDA_ATTENDU   défaut 13.0 (torch de P3 : 2.14.1+cu130) : autre construction → RÉSERVE au journal et au résultat
 #                  (écrite par le module), sans arrêt (l'offre du marché ne doit pas bloquer ; l'empreinte reste juge)
 #   CARTE_ATTENDUE défaut A100-SXM4-80GB (carte de P3) ; autre carte : réserve, sans arrêt
-#   PLAFOND_AMORCE_MIN  plafond de l'amorce en minutes (transmis par l'amorce ; défaut 120) : avant l'installation, le
-#                  script exige MISE_EN_PLACE_MAX_MIN + 2 × (délai d'une étape) + 5 ≤ ce plafond
+#   TABLE_V3       défaut prereg/R1-table-tokenisation-v3.json : table v3 à écrire (présente au commit, ou son sceau :
+#                  arrêt avant l'installation, R12)
+#   PLAFOND_AMORCE_MIN  plafond de l'amorce en minutes (transmis par l'amorce ; défaut 235) : avant l'installation, le
+#                  script exige MISE_EN_PLACE_MAX_MIN + (somme des délais externes des étapes) + 5 ≤ ce plafond
 #   ARRET_AVANT_CALCUL 1 : essai local des gardes ; arrêt propre après les tests, avant le téléchargement des poids
 #   REPETITION_JOUET   1 : répétition locale de bout en bout (configuration en mode « jouet », modèle minuscule du
 #                  harnais, dépôt git local nu comme DEPOT_URL ; ni carte, ni réseau, ni HF_TOKEN ; TOKENISEUR_LLAMA31
 #                  obligatoire pour les tests) ; REPETITION_ECHEC_COMMIT=1 y ajoute un crochet qui refuse les commits
 #                  après les tests (artefact : un commit refusé doit arrêter, jamais passer pour un succès)
-# Délais : délai externe d'une étape = duree_max_s (lu dans la configuration scellée) + MARGE_ETAPE_MIN (10) ; le
-# module tient ses budgets (par épisode, par étape) et écrit toujours son résultat avant ce délai. Sorties scellées par
+# Délais externes (lus dans la configuration scellée, contrôlés avant l'installation) : validation et résolution =
+# duree_max_s + MARGE_ETAPE_MIN (10) chacune ; lot = duree_max_lot_s + MARGE_ETAPE_MIN ; cibles du lot DELAI_CIBLES_MIN
+# (5) ; table DELAI_TABLE_MIN (15 ; processeur : classement des 240 épisodes ≈ 1 min au pré-vol) ; les modules tiennent
+# leurs budgets (par épisode, par étape) et écrivent toujours leur résultat avant ces délais. Sorties scellées par
 # le module avant toute lecture (`diag/<run>/*.json`, `.npz`, `episodes-<étape>/NNN.json`, compagnons `.sha256`) ;
 # rien n'est lu ni affiché ici hors des lignes de progression, de la ligne de comptes de chaque étape et de la dernière
 # ligne des erreurs. Arrêt de l'instance : par la session de pilotage, par son identifiant (R10).
@@ -51,10 +65,14 @@ CARTE_ATTENDUE="${CARTE_ATTENDUE:-A100-SXM4-80GB}"
 ARRET_AVANT_CALCUL="${ARRET_AVANT_CALCUL:-0}"
 REPETITION_JOUET="${REPETITION_JOUET:-0}"
 REPETITION_ECHEC_COMMIT="${REPETITION_ECHEC_COMMIT:-0}"
-PLAFOND_AMORCE_MIN="${PLAFOND_AMORCE_MIN:-120}"
-MISE_EN_PLACE_MAX_MIN=30
+PLAFOND_AMORCE_MIN="${PLAFOND_AMORCE_MIN:-235}"
+TABLE_V3="${TABLE_V3:-prereg/R1-table-tokenisation-v3.json}"
+MISE_EN_PLACE_MAX_MIN=40
 MARGE_ETAPE_MIN=10
+DELAI_CIBLES_MIN=5
+DELAI_TABLE_MIN=15
 MODULE=controle_ia.runs_nuit.resolution_graine_v1
+MODULE_LOT=controle_ia.runs_nuit.resolution_graine_lot_v1
 MOTIF_PROGRES='^PROGRES [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z( [a-z_]+=[^ ]+)+$'
 
 mkdir -p "$TRAVAIL"
@@ -111,14 +129,26 @@ if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -u -m controle_ia.scelleme
     exit 2
 fi
 # toutes les pièces citées par la configuration, avant l'installation (VG-04) : fichier présent, sceau compagnon
-# conforme, empreinte égale à celle que cite la configuration quand elle en cite une ; puis budgets de durée lus dans la
-# configuration (bibliothèque standard seulement : rien n'est installé à ce stade)
-if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -u - "$CONFIG" "$REPETITION_JOUET" >"$TRAVAIL/pieces.txt" \
-        2>"$TRAVAIL/pieces.err" <<'PY'
-import json, sys
+# conforme, empreinte égale à celle que cite la configuration quand elle en cite une ; empreinte canonique de la
+# configuration citée par le préenregistrement sous ses deux libellés (cœur, lot fidèle), une fois chacun ; table v3 à
+# écrire absente (R12) ; puis budgets de durée du cœur et du lot lus dans la configuration (bibliothèque standard
+# seulement : rien n'est installé à ce stade)
+if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -u - "$CONFIG" "$REPETITION_JOUET" "$PREREG" "$TABLE_V3" \
+        >"$TRAVAIL/pieces.txt" 2>"$TRAVAIL/pieces.err" <<'PY'
+import hashlib, json, os, sys
 from controle_ia.scellement import verifier
 config = json.load(open(sys.argv[1], encoding="utf-8"))
 jouet = sys.argv[2] == "1"
+texte = open(sys.argv[3], encoding="utf-8").read()
+canonique = hashlib.sha256(json.dumps(config, sort_keys=True, ensure_ascii=False,
+                                      separators=(",", ":")).encode("utf-8")).hexdigest()
+for libelle in ("Configuration de la résolution à graine (empreinte canonique) : `",
+                "Configuration de la résolution à graine, lot fidèle (empreinte canonique) : `"):
+    if texte.count(libelle) != 1 or texte.count(libelle + canonique + "`") != 1:
+        sys.exit(f"« {libelle[:-4]} » absent, cité plusieurs fois ou ≠ empreinte canonique {canonique[:12]} de la "
+                 "configuration")
+if os.path.lexists(sys.argv[4]) or os.path.lexists(sys.argv[4] + ".sha256"):
+    sys.exit(f"table v3 {sys.argv[4]} (ou son sceau) déjà présente au commit : R12, aucune réécriture")
 if (config.get("mode") == "jouet") != jouet:
     sys.exit(f"mode {config.get('mode')!r} de la configuration ≠ {'répétition jouet' if jouet else 'réel'}")
 paires = {"chemin_textes": "textes_sha256", "chemin_scores": "scores_sha256", "chemin_fiches": "fiches_sha256",
@@ -135,20 +165,27 @@ for c, s in paires.items():
 d, de = float(config["duree_max_s"]), float(config.get("duree_max_episode_s") or 0)
 if not 0 < de <= d:
     sys.exit(f"duree_max_episode_s = {config.get('duree_max_episode_s')!r} : nombre > 0 et ≤ duree_max_s attendu")
-print(n, -(-int(d) // 60))
+dl, del_ = float(config.get("duree_max_lot_s") or 0), float(config.get("duree_max_episode_lot_s") or 0)
+if not 0 < del_ <= dl:
+    sys.exit(f"duree_max_episode_lot_s = {config.get('duree_max_episode_lot_s')!r}, duree_max_lot_s = "
+             f"{config.get('duree_max_lot_s')!r} : nombres > 0, le premier ≤ le second, attendus")
+print(n, -(-int(d) // 60), -(-int(dl) // 60), canonique)
 PY
 then
     journal "pièces de la configuration : $(tail -n 1 "$TRAVAIL/pieces.err") : arrêt avant l'installation"
     exit 2
 fi
-read -r N_PIECES DUREE_ETAPE_MIN <"$TRAVAIL/pieces.txt"
+read -r N_PIECES DUREE_ETAPE_MIN DUREE_LOT_MIN CANONIQUE <"$TRAVAIL/pieces.txt"
 DELAI_ETAPE_MIN=$((DUREE_ETAPE_MIN + MARGE_ETAPE_MIN))
-BESOIN_MIN=$((MISE_EN_PLACE_MAX_MIN + 2 * DELAI_ETAPE_MIN + 5))
+DELAI_LOT_MIN=$((DUREE_LOT_MIN + MARGE_ETAPE_MIN))
+SOMME_DELAIS_MIN=$((2 * DELAI_ETAPE_MIN + DELAI_CIBLES_MIN + DELAI_LOT_MIN + DELAI_TABLE_MIN))
+BESOIN_MIN=$((MISE_EN_PLACE_MAX_MIN + SOMME_DELAIS_MIN + 5))
+DETAIL_BESOIN="mise en place $MISE_EN_PLACE_MAX_MIN + validation $DELAI_ETAPE_MIN + résolution $DELAI_ETAPE_MIN + cibles du lot $DELAI_CIBLES_MIN + lot $DELAI_LOT_MIN + table $DELAI_TABLE_MIN + poussées 5 = $BESOIN_MIN min"
 if [ "$BESOIN_MIN" -gt "$PLAFOND_AMORCE_MIN" ]; then
-    journal "budgets : mise en place $MISE_EN_PLACE_MAX_MIN + 2 × $DELAI_ETAPE_MIN + 5 = $BESOIN_MIN min > plafond de l'amorce $PLAFOND_AMORCE_MIN min : arrêt avant l'installation"
+    journal "budgets : $DETAIL_BESOIN > plafond de l'amorce $PLAFOND_AMORCE_MIN min : arrêt avant l'installation"
     exit 2
 fi
-journal "addendum lu : $ATTENDUS tests attendus ; configuration $CONFIG et $N_PIECES pièces : présentes et scellées ; délai par étape $DELAI_ETAPE_MIN min (duree_max_s + $MARGE_ETAPE_MIN) ; besoin $BESOIN_MIN ≤ plafond $PLAFOND_AMORCE_MIN min"
+journal "addendum lu : $ATTENDUS tests attendus ; configuration $CONFIG (canonique ${CANONIQUE:0:12}, citée sous ses deux libellés) et $N_PIECES pièces : présentes et scellées ; table v3 $TABLE_V3 absente ; budgets : $DETAIL_BESOIN ≤ plafond $PLAFOND_AMORCE_MIN min"
 
 if ! git push -q origin "$BRANCHE" 2>"$TRAVAIL/poussee-initiale.err"; then
     journal "poussée initiale de la branche $BRANCHE refusée ($(tail -n 1 "$TRAVAIL/poussee-initiale.err")) : droit d'écriture du jeton ? arrêt"
@@ -170,7 +207,7 @@ traces() {
     mkdir -p traces
     d=$(mktemp -d "traces/r1-graine-$(date -u +%Y%m%d-%H%M%S)-XXXX")
     for f in "$JOURNAL" "$TRAVAIL"/tests.txt "$TRAVAIL"/tests.err "$TRAVAIL"/*.json "$TRAVAIL"/*.err \
-             "$TRAVAIL"/nvidia-smi.txt "$TRAVAIL"/pip-freeze.txt; do
+             "$TRAVAIL"/nvidia-smi.txt "$TRAVAIL"/pip-freeze.txt "$TRAVAIL"/sceau-table.txt; do
         [ -f "$f" ] && cp "$f" "$d/"
     done
     (cd "$d" && sha256sum -- * > empreintes.sha256) || true
@@ -273,8 +310,9 @@ fi
 export TOKENISEUR_LLAMA31
 
 ETAPE="tests"
-CIBLES=(tests/test_resolution_graine_v1.py tests/test_manifeste.py tests/test_scellement.py tests/test_prereg.py
-        tests/test_harnais_formats.py)
+# cœur, lot fidèle, relance sur la table v3 (rejeu_activations_v3 : autonome, jouet sur dépôt jetable), outils
+CIBLES=(tests/test_resolution_graine_v1.py tests/test_resolution_graine_lot_v1.py tests/test_rejeu_activations_v3.py
+        tests/test_manifeste.py tests/test_scellement.py tests/test_prereg.py tests/test_harnais_formats.py)
 if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src:tests python -m pytest -q -p no:cacheprovider --color=no "${CIBLES[@]}" \
         >"$TRAVAIL/tests.txt" 2>"$TRAVAIL/tests.err"; then
     tail -n 5 "$TRAVAIL/tests.txt" | tee -a "$JOURNAL"
@@ -315,18 +353,18 @@ if [ "$REPETITION_ECHEC_COMMIT" = 1 ]; then
     journal "répétition : crochet qui refuse les commits installé (artefact)"
 fi
 
-# une étape : nom, délai externe en minutes, arguments du module. Appelée sous `||` (set -e y est inactif) : chaque
-# commande qui compte est contrôlée ici, explicitement. Rend 0 (résultat écrit, sans arrêt, committé), 1 (arrêt de
-# l'étape, consigné), 3 (commit refusé : jamais rapporté comme un succès)
+# une étape : module, nom, délai externe en minutes, arguments du module. Appelée sous `||` (set -e y est inactif) :
+# chaque commande qui compte est contrôlée ici, explicitement. Rend 0 (résultat écrit, sans arrêt, committé), 1 (arrêt
+# de l'étape, consigné), 3 (commit refusé : jamais rapporté comme un succès)
 RUN=""
 etape() {
-    local nom="$1" delai="$2" code=0 relais
-    shift 2
+    local module="$1" nom="$2" delai="$3" code=0 relais
+    shift 3
     RUN="$(date -u +%Y%m%d-%H%M%S)-r1-graine-$nom"
     ETAPE="$nom ($RUN)"
     journal "étape $nom : run $RUN (délai externe $delai min)"
     : >"$TRAVAIL/$nom.err" || return 1
-    PYTHONPATH=src timeout --signal=TERM --kill-after=2m "${delai}m" python -m "$MODULE" --etape "$nom" --config "$CONFIG" \
+    PYTHONPATH=src timeout --signal=TERM --kill-after=2m "${delai}m" python -m "$module" --etape "$nom" --config "$CONFIG" \
         --run-id "$RUN" --prereg "$PREREG" "$@" >"$TRAVAIL/$nom.json" 2>>"$TRAVAIL/$nom.err" &
     PID_RUN=$!
     ( tail -n +1 -F --pid="$PID_RUN" "$TRAVAIL/$nom.err" 2>/dev/null | grep --line-buffered -E "$MOTIF_PROGRES" \
@@ -356,6 +394,59 @@ etape() {
     pousser || journal "poussée après $nom impossible : résultats restés sur l'instance"
     return 0
 }
+# cibles du lot (processeur, sans modèle) : la seule liste `non_resolus` du résultat de la résolution, intersectée
+# avec les entrées « non_resolu » de la table v2 ; rend 0 et écrit N_CIBLES, ou 1 (erreur de chaîne, consignée)
+N_CIBLES=""
+cibles_lot() {
+    local code=0
+    ETAPE="cibles du lot"
+    PYTHONPATH=src timeout --signal=TERM --kill-after=1m "${DELAI_CIBLES_MIN}m" python -m "$MODULE_LOT" --etape cibles-lot \
+        --config "$CONFIG" --resolution "$1" >"$TRAVAIL/cibles-lot.json" 2>"$TRAVAIL/cibles-lot.err" &
+    PID_RUN=$!
+    wait "$PID_RUN" || code=$?
+    PID_RUN=""
+    if [ "$code" -ne 0 ]; then
+        journal "cibles du lot illisibles (code $code : $(tail -n 1 "$TRAVAIL/cibles-lot.err"))"
+        return 1
+    fi
+    N_CIBLES=$(python -c "import json, sys; print(int(json.load(open(sys.argv[1]))['cibles']))" "$TRAVAIL/cibles-lot.json") \
+        || { journal "cibles du lot : sortie illisible"; return 1; }
+    journal "cibles du lot : $(tail -n 1 "$TRAVAIL/cibles-lot.json")"
+    return 0
+}
+# table v3 (processeur) : arguments du module (module, étape, pièces) ; la table est écrite et scellée par le module ;
+# sceau revérifié ici, puis committée et poussée. Rend 0, 1 (arrêt consigné) ou 3 (commit refusé)
+SHA_TABLE=""
+etape_table() {
+    local code=0
+    ETAPE="table v3 ($2)"
+    journal "étape table : $2 (délai externe $DELAI_TABLE_MIN min) → $TABLE_V3"
+    PYTHONPATH=src timeout --signal=TERM --kill-after=2m "${DELAI_TABLE_MIN}m" python -m "$1" --etape "$2" --config "$CONFIG" \
+        --tokeniseur "$TOKENISEUR_LLAMA31" --sortie "$TABLE_V3" "${@:3}" >"$TRAVAIL/table.json" 2>"$TRAVAIL/table.err" &
+    PID_RUN=$!
+    wait "$PID_RUN" || code=$?
+    PID_RUN=""
+    if [ "$code" -ne 0 ]; then
+        grep -v '^PROGRES ' "$TRAVAIL/table.err" | tail -n 1 | tee -a "$JOURNAL" || true
+        journal "étape table arrêtée (code $code) : table v3 non écrite"
+        return 1
+    fi
+    if ! PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -m controle_ia.scellement verifier "$TABLE_V3" \
+            >"$TRAVAIL/sceau-table.txt" 2>&1; then
+        journal "table v3 : sceau non conforme après écriture ($(tail -n 1 "$TRAVAIL/sceau-table.txt"))"
+        return 1
+    fi
+    SHA_TABLE=$(awk '{print $1}' "$TABLE_V3.sha256")
+    journal "étape table : $(tail -n 1 "$TRAVAIL/table.json")"
+    if ! git add "$TABLE_V3" "$TABLE_V3.sha256" 2>"$TRAVAIL/add-table.err" \
+            || ! git commit -qm "Rejeu à graine : table de tokenisation v3 ($2)" >/dev/null 2>"$TRAVAIL/commit-table.err"; then
+        journal "COMMIT REFUSÉ après la table ($(tail -n 1 "$TRAVAIL/commit-table.err" 2>/dev/null)) : table écrite, scellée, non committée ; arrêt"
+        return 3
+    fi
+    journal "table v3 committée : $TABLE_V3 (${SHA_TABLE:0:12})"
+    pousser || journal "poussée après la table impossible : résultats restés sur l'instance"
+    return 0
+}
 fin_en_echec() {
     CONSIGNE=1
     traces "$1" || true
@@ -364,7 +455,7 @@ fin_en_echec() {
     exit "$2"
 }
 code_v=0
-etape validation "$DELAI_ETAPE_MIN" || code_v=$?
+etape "$MODULE" validation "$DELAI_ETAPE_MIN" || code_v=$?
 case "$code_v" in
     0) ;;
     3) fin_en_echec "commit refusé après la validation" 3 ;;
@@ -372,15 +463,42 @@ case "$code_v" in
        fin_en_echec "validation arrêtée" 1 ;;
 esac
 RUN_VALIDATION="$RUN"
+V_CHEMIN="diag/$RUN_VALIDATION/resolution-graine-validation.json"
 code_r=0
-etape resolution "$DELAI_ETAPE_MIN" --validation "diag/$RUN_VALIDATION/resolution-graine-validation.json" || code_r=$?
+etape "$MODULE" resolution "$DELAI_ETAPE_MIN" --validation "$V_CHEMIN" || code_r=$?
 case "$code_r" in
     0) ;;
     3) fin_en_echec "commit refusé après la résolution" 3 ;;
-    *) fin_en_echec "résolution arrêtée" 1 ;;
+    *) fin_en_echec "résolution arrêtée : lot et table non lancés" 1 ;;
+esac
+RUN_RESOLUTION="$RUN"
+R_CHEMIN="diag/$RUN_RESOLUTION/resolution-graine-resolution.json"
+cibles_lot "$R_CHEMIN" || fin_en_echec "cibles du lot illisibles (erreur de chaîne) : lot et table non lancés" 1
+RUN_LOT="sans objet"
+if [ "$N_CIBLES" -gt 0 ]; then
+    code_l=0
+    etape "$MODULE_LOT" resolution-lot "$DELAI_LOT_MIN" --validation "$V_CHEMIN" --resolution "$R_CHEMIN" || code_l=$?
+    case "$code_l" in
+        0) ;;
+        3) fin_en_echec "commit refusé après le lot" 3 ;;
+        *) fin_en_echec "lot arrêté : table non construite" 1 ;;
+    esac
+    RUN_LOT="$RUN"
+    code_t=0
+    etape_table "$MODULE_LOT" table-lot --resolution "$R_CHEMIN" \
+        --resultat-lot "diag/$RUN_LOT/resolution-graine-resolution-lot.json" || code_t=$?
+else
+    journal "étape du lot : sans objet (aucun épisode laissé non résolu par le cœur dont l'entrée de la table v2 est « non_resolu ») ; table du cœur seul"
+    code_t=0
+    etape_table "$MODULE" table --resultat "$R_CHEMIN" || code_t=$?
+fi
+case "$code_t" in
+    0) ;;
+    3) fin_en_echec "commit refusé après la table" 3 ;;
+    *) fin_en_echec "table v3 arrêtée" 1 ;;
 esac
 ETAPE="fin"
-journal "fin : validation $RUN_VALIDATION et résolution $RUN passées ; arrêter l'instance par son identifiant (R10)"
+journal "fin : validation $RUN_VALIDATION, résolution $RUN_RESOLUTION, lot $RUN_LOT, table $TABLE_V3 (${SHA_TABLE:0:12}) passés ; arrêter l'instance par son identifiant (R10)"
 CONSIGNE=1
 traces "fin" || { journal "FIN EN ÉCHEC : traces non committées"; pousser || true; exit 3; }
-if pousser; then journal "branche $BRANCHE poussée (résultats et traces)"; else journal "poussée finale impossible"; exit 1; fi
+if pousser; then journal "branche $BRANCHE poussée (résultats, table et traces)"; else journal "poussée finale impossible"; exit 1; fi

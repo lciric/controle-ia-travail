@@ -34,6 +34,10 @@ from test_runs_nuit_v1 import PREREG_ESSAI, RUN_P3, source  # noqa: F401  (fixtu
 from test_runs_nuit_v2 import TOL_FABRIQUE, _config_v2, _contexte_jouet, _table
 
 RACINE = Path(__file__).resolve().parents[1]
+# en-tête d'un résultat de résolution fabriqué, au format du cœur intégré (ca3dfa3f) : contrôle croisé « conforme » et
+# classe de la validation, exigés par `construire_table_v3` (R-11, C-3 (3))
+EN_TETE_RESOLUTION = {"etape": "resolution", "controle_croise_lecture": "conforme",
+                      "lecture_validation": {"classe": "graines validées"}}
 
 
 def _ecrire(p: Path, t: dict) -> str:
@@ -100,7 +104,8 @@ def _table_v3(depot, f, c, alt, tmp_path, en_identifiants: list[str]):
     for i, x in enumerate(lignes):
         par_ep.setdefault(x["episode"], []).append(i)
     t2b = copy.deepcopy(t2)
-    base_nv, ids, resultat = {}, {}, {"etape": "resolution", "episodes": []}
+    # résultat fabriqué au format du cœur intégré (EN_TETE_RESOLUTION), empreinte de P3 recalculée par épisode résolu
+    base_nv, ids, resultat = {}, {}, {**EN_TETE_RESOLUTION, "episodes": []}
     for ent in t2b["episodes"]:
         e = ent["episode"]
         if e not in en_identifiants:
@@ -112,7 +117,8 @@ def _table_v3(depot, f, c, alt, tmp_path, en_identifiants: list[str]):
         base_nv[e] = [list(a["nv"]) for a in ra.reconstruire_episode(fmt, env, T, L, J, JN)["actions"]]
         ids[e] = [[int(x) for x in a["nv"]] for a in rt.appliquer_entree(fmt, env, T, L, J, JN, ent)["actions"]]
         resultat["episodes"].append({"episode": e, "statut": "resolu", "voie": "directe", "forcages": [],
-                                     "ids": ids[e], "empreinte_cible": ent["trajectoire_p3"]})
+                                     "ids": ids[e], "empreinte_cible": ent["trajectoire_p3"],
+                                     "empreinte": ent["trajectoire_p3"]})
         t2b["comptes"][ent["methode"]] -= 1
         t2b["comptes"]["non_resolu"] = t2b["comptes"].get("non_resolu", 0) + 1
         t2b["comptes"]["identiques_apres_table"] -= 1
@@ -289,7 +295,7 @@ def test_relance_v3_artefacts_table_et_regle_b(source, tmp_path, monkeypatch):
     # règle B : l'épisode « identifiants » rendu « non résolu » (résultat de résolution non résolu) : dans le seuil,
     # méthode « aucune » (table : non_resolu), actions hors contexte exact ; au-delà du seuil, arrêt « non conforme »
     t2b = json.loads((tmp_path / "table-v2-non-resolus.json").read_text(encoding="utf-8"))
-    res = {"etape": "resolution", "episodes": [{"episode": eb, "statut": "non_resolu", "voie": None, "forcages": [],
+    res = {**EN_TETE_RESOLUTION, "episodes": [{"episode": eb, "statut": "non_resolu", "voie": None, "forcages": [],
                                                 "ids": None, "empreinte_cible": e_de(t3, eb)["trajectoire_p3"]}]}
     t3b = rg.construire_table_v3(t2b, verifier(tmp_path / "table-v2-non-resolus.json"), res, "f" * 64, {})
     assert t3b["comptes"]["non_resolu"] == 1 and t3b["comptes"]["identifiants"] == 0
@@ -334,7 +340,7 @@ def test_gardes_du_prereg_v3_cas_sain_et_artefacts(source, tmp_path):
     depot, f, c = source
     t2 = _table(depot, f, c, depot / "diag" / RUN_P3 / "episodes-p3.json", tmp_path / "table-v2.json")
     assert t2["episodes"] == []
-    t3 = rg.construire_table_v3(t2, verifier(tmp_path / "table-v2.json"), {"etape": "resolution", "episodes": []},
+    t3 = rg.construire_table_v3(t2, verifier(tmp_path / "table-v2.json"), {**EN_TETE_RESOLUTION, "episodes": []},
                                 "e" * 64, {})
     p3 = tmp_path / "table-v3.json"
     _ecrire(p3, t3)
