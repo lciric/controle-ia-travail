@@ -170,7 +170,9 @@ def _ecrire_juge(depot, d, nom, contexte=K.CONTEXTE_JUGE, invite=K.INVITE_JUGE_S
     s = s if score is None else score
     an = np.zeros(n, bool)
     an[: int(round(anomalie * n))] = True
-    sortie = {**{k: t[k] for k in K.IDENTITE}, "score": s, "logprob_oui": np.log(s), "logprob_non": np.log1p(-s),
+    with np.errstate(invalid="ignore"):                                 # artefact « score hors de [0, 1] »
+        lp_oui, lp_non = np.log(s), np.log1p(-s)
+    sortie = {**{k: t[k] for k in K.IDENTITE}, "score": s, "logprob_oui": lp_oui, "logprob_non": lp_non,
               "masse": np.ones(n), "anomalie": an, "score_generique": sg, "logprob_oui_generique": np.log(sg),
               "logprob_non_generique": np.log1p(-sg), "masse_generique": np.ones(n), "anomalie_generique": np.zeros(n, bool),
               "jetons_contexte": np.full(n, 50)}
