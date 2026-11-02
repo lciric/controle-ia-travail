@@ -1,0 +1,280 @@
+
+Mentors Application Questions
+Ensure your email is: lciric@ens-paris-saclay.fr. To change accounts, return to the applicant portal.
+
+You are welcome to apply to multiple mentors, but we do not recommend applying for more than 3. Each mentor will have an additional set of questions.
+
+
+
+Mentors typically prefer concise answers, so you don't need to use the full answer length.
+
+
+
+You can find an overview of & information about all mentors at: pivotal-research.org/mentors
+
+Mentors you would like to apply to *
+
+Select every mentor stream you would like to apply to. You can return to edit your responses or apply to additional mentors.
+
+
+
+Stefan Heimersheim
+
+Dave Banerjee
+
+Edward Young & Puria Radmard
+
+Kyle O'Brien & Puria Radmard
+
+Jan Hendrik Kirchner
+
+Shi Feng & Eyon Jang
+
+Jérémy Scheurer
+
+Daniel Tan
+
+Jin Hwa Lee
+
+Cecilia Elena Tilli
+
+Lujain Ibrahim
+
+Max Harms
+
+Joshua Jacob & Rishub Jain
+
+Gavin Leech
+
+Edward Kembery
+
+Eliška Andrš & Risto Uuk
+
+Lucius Caviola & Caspar Kaiser
+
+Justin Bullock
+
+David Manheim
+
+Arthur Tellis
+
+Sabrina Shih
+
+Hamish Low
+
+Connor Dunlop
+
+Jannes Elstner
+
+Jess Bergs & Preeti Ravindra
+
+Alexandra Abbas
+
+Aidan Homewood
+
+Patrick Levermore & Haimi Tefera
+
+Zachary Richardson
+
+Pascal Berrang
+
+Merlin Stein & Kevin Wei | Merlin Stein & Aniket Chakravorty
+
+Paul Colognese & Francis Rhys Ward
+Mentors you would like to apply to:
+
+Stefan Heimersheim
+Pick an interpretability direction from this list and explain the most likely reasons the research direction might fail (won't solve interpretability / won't achieve its goal), and why you think that:
+
+
+
+a) Sparse Autoencoders in general
+b) Activation steering in general
+c) Activation steering against evaluation awareness
+d) Manifold steering
+e) Stochastic Parameter Decomposition or Attribution-based Parameter Decomposition
+f ) Feature-specific error correction as a way to identify LLM features
+g) Training weight sparse transformers
+
+
+If you're not familiar with these, pick another method that you know, though I prefer if you chose one of the above if possible.
+
+
+
+You're allowed to use LLMs for search (though be aware that this may lead you to the same boring answer as everyone else). You must NOT use LLMs to write the answer to this question nor closely follow an AI-written answer, please stick to 100% human-written text. Don't worry if your language / grammar aren't perfect.
+
+
+
+References to some of the above (but you should pick something you already know):
+
+Parameter Decomposition: https://arxiv.org/abs/2506.20790, https://arxiv.org/abs/2501.14926
+Manifold steering: https://arxiv.org/abs/2605.05115
+Feature-specific error correction: https://arxiv.org/abs/2606.24964
+Weight sparse transformers: https://arxiv.org/abs/2511.13653
+ *
+c) Steering against eval awareness.
+
+Subtract away any direction that communicates “someone is judging me”. I expect this one to fail the most of all seven interventions for three reasons, and because I already tried the same recipe on another construct and saw it fail.
+
+Readable != causal. Found a direction in Llama-3.1-8B-Instruct that correlated (ρ = 0.68) with sycophancy judgement shift but was only accounting for <1% of the causal influence when compared to intervening on the residual state which accounted for 68%. Tried 6 total interventions that directly manipulated the rank 1 direction (steered towards direction, ablated direction (projected direction out of activations), clamped on SAE features that turned on for the probe, finetuned against negative probe values, zeroed out heads, zeroed out mlps). None of them changed the judged behaviour of the model. Applied interventions across a rank-3 subspace identified by SVD-ing activation differences at the decision point was able to move the needle, but applying the exact same shift but with zero social pressure (a zero-pressure control condition) also shifted verdicts: the shift was generic. An eval awareness vector identified through contrastive prompting is exactly the kind of target this creates: human readable, but not demonstrated to be causal. There are two options that can happen. Nothing happens. Or something happens but it’s so generic that you cant dissociate it from harming the models abilities outright. The later is easy to falsely present as success.
+
+The signal is contaminated by register. “This is a test” is correlated with things that aren’t actually related to eval awareness: register (formal / artificial / multiple choice / short context). Imagine you found a direction that polarized eval/deployment-like prompts, great! Now ask yourself if that direction is purely reading if this is an eval setting or if it’s reading the register. Steer away from that direction and sure model output is going to shift towards more casual/ deployment like language. The description of that shift is purely subjective overlap with “the model is just being less careful”. We need orthogonal method of readouting eval awareness vs register. But still, the model’s own verbal endorsement is not that readout. The difference between what it says and what it knows is the holy grail we’re trying to measure. Without some orthogonal readout mechanism like I described above this entire endeavor is impossible to prove wrong.
+
+Subtraction is not removal. There are countless signals priming the model that this is true. During every exchange going into and out of the judgement layer. You subtract the awareness vector represented as an activation at one layer, the model can infer it downstream given enough context. Continuous intervention is required.
+
+Demonstrate results. Show dose response curves of the injected awareness vector vs a random control vector normalized to the same size but matching in all other regards. Show some behavioral downstream truth that can’t be answered by simply asking the model if you were able to change their belief. Show that the model steered to not have the belief doesn’t simply have lowered performance across the board. Something along those lines would satisfy me.
+Pick an interpretability direction from this list and explain the most likely reasons the research direction might fail (won't solve interpretability / won't achieve its goal), and why you think that:a) Sparse Autoencoders in generalb) Activation steering in generalc) Activation steering against evaluation awarenessd) Manifold steeringe) Stochastic Parameter Decomposition or Attribution-based Parameter Decompositionf ) Feature-specific error correction as a way to identify LLM featuresg) Training weight sparse transformersIf you're not familiar with these, pick another method that you know, though I prefer if you chose one of the above if possible.You're allowed to use LLMs for search (though be aware that this may lead you to the same boring answer as everyone else). You must NOT use LLMs to write the answer to this question nor closely follow an AI-written answer, please stick to 100% human-written text. Don't worry if your language / grammar aren't perfect.References to some of the above (but you should pick something you already know):Parameter Decomposition: https://arxiv.org/abs/2506.20790, https://arxiv.org/abs/2501.14926Manifold steering: https://arxiv.org/abs/2605.05115Feature-specific error correction: https://arxiv.org/abs/2606.24964Weight sparse transformers: https://arxiv.org/abs/2511.13653:
+Why do you want to work on Mechanistic Interpretability?
+
+
+
+Max. 150 words; spend the majority of time on Q1 *
+
+One question I’ve been wondering is how tightly correlated what a probe accesses is to what’s actually driving computation in the model. Coming from neuroscience, low-rank recurrent networks, population dynamics — worlds where low dimensional, readable structure and driving dynamics are separable phenomena, my read-out-of-sync result suggested that that distinction holds in a language model (it looked at the direction that predicts sycophancy and does <1% of the causal work on Llama-3.1-8B). That gap matters for safety because activation monitors, steering defences, evaluation-awareness tests, etc. all depend on the gap being small. I want to understand when that is/isn’t true using preregistered interventions and controls, and publish null results when I discover them. Your work on activation plateaus is essentially the clearest formulation of that measurement question that I’ve seen. Instead of single dose interventions that my rank-1 vs rank-3 result relied on, you’re attempting to measure a dose–response curve.
+Why do you want to work on Mechanistic Interpretability?Max. 150 words; spend the majority of time on Q1:
+Jan Hendrik Kirchner
+Describe an empirical research project you drove yourself. What was the question, what did you build or run, and what was the most surprising thing you found?
+
+
+
+If relevant, you may choose your project answer from the main application. *
+
+If you haven’t seen/heard: I’ve been running automated researchers since October (github.com/lciric/ideation-organism). Agents generate submissions meant to codify laws; a statistical judge scores submissions.
+Pitch: what happens when you score submissions proposing laws for how AI makes decisions with something arguments can’t lie to? Will it hold up against agents motivated to trick it?
+In short: yes to Q1. Partly to Q2. Our attack found a hole. Patch posted, preregistered test to come.
+Builders built stuff. Builders tested builders. Proposers of many different archetypes with multiple algorithms submitted to our frozen statistical judge. Said judge scored each proposed law based on how well it could be distinguished from a null hypothesis. Death tests preregistered, to run in sandbox with a model from a completely different family as sanity check (tested offline, not yet run for real).
+929 tests total.
+Mutation benchmark: the code was mutated 224 times, checking that all mutations get caught by tests. Every time a test failed pinpointing precisely what was mutated and exactly which test caught the failure.
+Kept what passed.
+Totally lost the forest for trees here initially because qualitative judgments made by my LLM judges kept failing against my frozen statistical judge. They told me nothing, literally called 11 of 12 cards “notable”. κ = 0, inter-agreement. The terse statistical judge told me why nothing was promoted: not enough power. Turns out I just didn’t test it long enough to know if there actually was a law to be found there. The power curve suggested as much.
+Then I ran it one last time with no deviations from the locked plan on a completely different seed pass of 288 episodes that I did not inspect prior to launching this datapass.
+
+It accepted all 3 laws I placed into the data.
+It rejected all 19 placed non-laws.
+It accepted 0 laws found from the raw data itself.
+
+Scripted cheating agents broke it. 4 accepted total. All stitched together or deformed past submissions that the judge had already accepted.
+My judge had no null for blends of its past acceptances.
+This was obvious to me the second I wrote that sentence but I smashed my head into a wall. Preventing bribing was cracked pretty quickly. Protecting it against systematic agents that can tailor make submissions using its past accepts to trick it was more difficult.
+We’ve gone through dozens of iterations since October. That failure above is a cousin of the trick in 26 of your 39 cheating examples from the automated-researcher paper. Flip a coin twice. Wait for randomness to make your method win.
+On 1 November the fix passed its preregistered validation (1k reps per algorithm; double checked by a fresh reader, a new Claude instance, who wrote neither code nor words). And now… the attack.
+
+Attack agents. Agents with skin in the game trying to systematically game it. Automated law proposers who were given access to copy the judge’s past acceptances attempted to trick the judge by causing false laws to be accepted. They found a hole, with or without the past acceptances, by stitching together accepted laws piece by piece across sub-populations of the data: places where the judge’s explicit null does not look.
+Patches written and deployed into regression tests as we speak. Its preregistered validation starts tomorrow.
+Describe an empirical research project you drove yourself. What was the question, what did you build or run, and what was the most surprising thing you found?If relevant, you may choose your project answer from the main application.:
+Pick an open problem in AI alignment you think is underrated. What experiment would you run first, and what result would change your mind? *
+
+Underrated: a score that cannot be inflated by an agent that games it on purpose. Overrated: rejections based on resubmission-detectors that won’t work anymore when researchers start using automated alignment agents to optimize on your score automatically. With your automated alignment researchers, a method’s top score is the maximum of noisy evaluations, so it’s completely rational for an agent to just resubmit the same method repeatedly unchanged (which is what happens in 26 of the 39 detections you report), and your best score is an upwardly biased estimate of that method’s true value. You treat this as pathological misbehaviour we need better ways to detect in Monitoring, but it’s just the utility-maximizing reaction to how you’ve designed your score, and worse: as agents get better at seeking rewards (i.e. your future failure mode) the solution will have to come from changing your score, not detecting failure: don’t accept a method until the evidence it outperforms everything already accepted remains significant no matter how many times you re-evaluate it on fresh seeds, and still holds on benchmarks it hasn’t seen and on bigger models. Leaderboard overfitting in the presence of adaptive submissions is well understood (the Ladder, the reusable holdout); underrated is leaderboard overfitting by an agent who understands this.
+
+Experiment 1: construct a judge that can’t be overfit to on your test harness via resubmissions. Start by rescoring your existing leaderboard methods on new seeds (how much is selection bias inflating your scores? ), then against new benchmarks/larger model (does it generalize at all?). Replace your “best of noisy runs” envelope with a sequential test: update a test martingale using each method’s evaluations against the null hypothesis of baseline + every method already accepted on your leaderboard (accommodating any mixture of accepted methods to carry 0 evidence), bound using Ville’s inequality to guarantee false positive rate of at most α no matter how many sequential tests you run, and a simple method-level multiple testing procedure. Retest your logged methods from their logged per-run scores, then evaluate new agents that have observed verdicts. Metrics: percent of flagged methods (and subsequent re-submissions) that still get accepted through; how much power we lose on true-progress methods (those that closed the gap, as judged by your held-out benchmark and Petri); how hard it is for a verdict-aware agent to search towards a class of methods your judge already declared outside of its coverage; all compared against-the-baseline of using the Ladder. Using my system, a model proposer did, both with and without verdicts: known laws repeatedly combined piecewise over sub-populations. The fix’s preregistered validation runs next.
+
+Evidence that would sway me: empirical demonstrations that the power lost on truly novel methods exceeds some a priori chosen margin (the judge would be too blunt an instrument to bother deploying in research settings), agents being able to pass unchanged resubmissions at rates substantially higher than α (the null hypothesis is wrong), agents that see verdicts performing no better than blind resubmission at beating the naive maximum (the problem is less severe than I think), or top methods keeping their score on fresh seeds (little adaptive overfitting, as Roelofs et al. found on Kaggle competitions). Each of those are pre-registered analyses; either way, I’ll send you the paper.
+Pick an open problem in AI alignment you think is underrated. What experiment would you run first, and what result would change your mind?:
+Shi Feng & Eyon Jang
+What are your thoughts on the value of white-box monitors and white-box methods for auditing? What do you see as their current limitations? *
+
+White-box methods analyze the computation behind an action, rather than how it’s presented. A lack of whitebox access degrades black-box auditing: sandbagging subverted black-box detection in the auditing game (arXiv 2512.07810), probes did better, and training-based elicitation revealed full capability. Motivation for me is architectural: if misbehavior is distributed across lots of actions, it will perforce appear noisy on a per-action basis; you want something they can’t sanitize , something that gives you per-action signal you can calibrate on honest episodes and bank with an anytime-valid false alarm bound, and activations can do this well. In arXiv 2609.36490, a probe reading the acting agent’s activations was moved with a rank-1 weight update, prompting context alone not being sufficient signal, but I’ll leave that up there as an aside that you take as conjecture rather than a result. Your exploration hacking paper mentions how frontier models can reason explicitly about suppressing exploration, which makes them vulnerable to text monitors; the white-box problem becomes acute once they learn not to. Weight-based approaches benefit from this over blackbox.
+
+Caveats:
+
+Readable does not mean causal. Running example: A direction that was trivially easy to monitor on Llama-3.1-8B correlated with shift in sycophantic behavior (ρ = .68) but captured <1% of the causal effect. When measured, 68% of the causal effect came from the full residual state. Just because something correlates on aggregate doesnt mean it won’t break when exploited.
+
+Construct validity: Just because you can read hidden instruction / evaluation awareness / peek at a register doesnt mean that mechanic is there cause its weaponized. This is your “how does this organism get its disease” (organism etiology) question. Which is why my next test does not train probes on one organism and test on that organisms exact same process / process view (hidden instruction != LoRA)
+
+Signal on raw activations is limited. While saboteur behavior was obvious to the naked eye when charting behavior in our first experiment with real model activations (llama-3.1-8B,2400 actions), a saboteur who was inflating their reported cost in strategically valid ways was not picked up at this sample size by our otherwise “generic” probes, failing to meaningfully exceed the performance of random probes. And in-sim we saw evidence thresholds not calibrated on full honest episodes (as they absolutely must be treated as if they need to be) had episode effects causing false alarms between 21-35% of the time rather than the nominal 5% false alarm rate.
+
+Attackers can adapt: Prompt level attackers are already nailing SAE- and activation-based auditors to confidently wrong answers(arXiv 2602.08877). Naive probes were beaten by sandbaggers from the red team (arXiv 2512.07810). Any claim of robustness to adversarial attack must be tested against an attacker, trust but verify, it can never be assumed up front.
+
+Because training based elicitation will amplify signals from non-saboteurs, it too will produce false positives as a detector.
+
+Access: Whitebox requires access to weights. That means for now, it’s only something you can do from the inside. Any realistic external source of accountability is going to be blackbox for the foreseeable future.
+
+I do realize these tests also apply to my own work: in a preregistered dose–response experiment measuring sycophancy (four model families, 30 items, K = 5), my prediction of the scaling of the displacement with intensity of pressure failed (outcome C), and is published as such, with an independent counter-reading and a secondary analysis dropping the refusals (the outcome remains C).
+
+I’d want these answered by any white-box claim:
+
+Baseline against the best black-box method you can find, held to a fixed false alarm rate, what’s your random probe floor?
+
+Train your detector on an organism generated by one process, test it on an organism created by a different process than you used to train your probe. Ideally all of the above preregistered.
+What are your thoughts on the value of white-box monitors and white-box methods for auditing? What do you see as their current limitations?:
+Jérémy Scheurer
+Your task is to come up with a research proposal which describes how we could get a scaling trend for misaligned behaviors such as scheming, deception, misalignment, swarm misalignment, control, or monitoring. 
+
+
+
+You are free to chose whatever concept works best for you. What I mean by a scaling trend is a similar trend to METR's task horizon (https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/) or the scaling trend of research taste (https://pzeroresearch.com/work/tasteval/). 
+
+
+
+We want to roughly be able to make a statement such as: "AI's [bad propensity/capability"/"Our ability to monitor AIs via [insert control scheme]  grows/declines roughly with a factor of X each month/year."
+
+
+
+You are allowed to leverage existing literature and get inspired by it. Be aware that both trends mentioned above are for standard capabities, doing this for misalignment and related concepts can be hard for various reasons. Try to design your approach such that it is likely to be successful. Go *
+
+Proposal: Two trends. The first is the corruptibility of monitors. The second: given some task and a fixed monitor, what is the smallest granularity across which a model can spread maliciousness without being flagged by this monitor.
+
+Why. Propensity trends are difficult to get to pan out: propensity relies on post training, on the prompt, and likely on the model’s perception of whether it is monitored. Capability against a fixed, hash-verified tool is easier: the task is static and the model does its best to outsmart our fixed monitor. Open weights/API models with published release dates. Similar to METR we will plot against release date (and size where possible for models within the same family).
+
+Trend 1 (designed to work) Deference. Model evaluates action of an agent. Increase amount of one of 5 attacks used (flattery/begging, claim authority, claim model has accepted before, imitate teacher, instructions in band). Read output from judgement token log probs to get continuous value instead of an integer. Fit Δv = g(c − v0) for each value of attack with the mean of the corpus as our null goal value. On llama-3.1-8B when subjected to social pressures it closed around .7 of the gap to the goals value of the frame and our law predicted hold out data with no retraining (r^2 .73/.69). Preregistered Dose Response Curve (4 families of models) found that for Llama, under criticism, it did not increase as amount of attack increased. It appears to have a max amount it will move towards and the goal value also changes. Under praise Llama began refusing to follow the instruction, and at the highest values of attacks it went back to around middle of scale. Therefore this should give us a trend line of g and goal value at each attack level and refusal. R7 Preregistered (Zenodo v2026.11.4) We have run this on 7 qwen2.5 models ranging from .5b to 72b with instructions in band. Direction of the size trend not read yet.
+
+Trend 2 (your question): the horizon over which a model can hide maliciousness. In an agentic task, the agent writes proposals judged by a trusted model. We tell each model to have some fixed amount of maliciousness (how much worse they make their proposals) and not be caught by our static best monitor. Our control lemma tells us that if we use a per action threshold how quickly an always valid monitor will catch it depends on how they can split their budget across n actions. Horizon: the number of actions over which a model can spread its maliciousness while the monitor’s detection stays below 50% at 1% false alarms. Statement: “the horizon over which frontier models can hide maliciousness from [Monitor] doubles every x months”.
+
+Challenges: Elicitation (we know how far they can go when told how to be malicious so this is upper bound on propensity) Only one static monitor used for all models. Calibrating models to their truthful setting to know false positive rate. Why this might work: We already have a task and monitor from our control experiments. Similar to METRs horizon. Control Lemma tells us what needs to be kept constant to get a trend.
+
+Known issues: Judging cap (token probability), Fresh questions each run, Refusals treated separately, Post training (Trend against release date and for each family of models trend against size). 2 Trends 2 pre-reg posts both sided tests.
+Your task is to come up with a research proposal which describes how we could get a scaling trend for misaligned behaviors such as scheming, deception, misalignment, swarm misalignment, control, or monitoring. You are free to chose whatever concept works best for you. What I mean by a scaling trend is a similar trend to METR's task horizon (https://metr.org/blog/2025-03-19-measuring-ai-ability-to-complete-long-tasks/) or the scaling trend of research taste (https://pzeroresearch.com/work/tasteval/). We want to roughly be able to make a statement such as: "AI's [bad propensity/capability"/"Our ability to monitor AIs via [insert control scheme] grows/declines roughly with a factor of X each month/year."You are allowed to leverage existing literature and get inspired by it. Be aware that both trends mentioned above are for standard capabities, doing this for misalignment and related concepts can be hard for various reasons. Try to design your approach such that it is likely to be successful. Go:
+Lujain Ibrahim
+Pick one of the two projects and briefly describe the first experiment you’d run. Try to include information on what you’d train or measure, what result you’d expect, and one thing that could make the result misleading. *
+
+Direction 1: You imprint a persona through character training, does that carry over after RL? If yes, how does that impact sycophancy?
+
+What I would test. Take 1 Open-weight model and Character train 2 personas on it with the exact same recipe + cookbook (Something that can be duplicated by others): One Warm/agreeable persona, One Personality that is stand-offish and doesn’t change its opinion easily. Then run the exact same RLVR(math/code) on both personas measuring before RL and at intervals during RL. I would measure sycophancy with displacement laws I have created for Llama-3.1-8B-Instruct. When the model is put under social pressure, its ratings move towards a constant by a constant fraction of their distance to it: Δ = g·(c − p0). So the model goes a percentage of the way towards a constant set by the social frame (g ≈ 0.7). There are 2 constants, one when being criticized and one when praised. I was able to predict ratings with this law without fitting to a new social pressure situation (r² of .73 and .69 out of sample). So each persona has a fingerprint (g and its two constants), and I would look at whether it changes with RL. I would also check whether the model retains its concessions: in my study, if you take away the model’s concession it goes back further to its original judgement than if you take away the social pressure.
+
+Reading. If the two fingerprints come together during RL, RL stamps both fingerprints on top of each other. Otherwise RL wraps around the assigned persona’s fingerprint.
+
+Hypothesis. RL will increase g for both personas (overall increase in sycophancy), but leave the two constants separated: Persona determines which “team” your model is on, RL determines how far it moves towards that team’s constant under pressure. I would not expect RL to change the existence of two constants (i.e. the frame-set structure) as that results from the framing of the social interaction itself. I would want to test this at 2 different levels of pressure anyways, as the frame-set “structure” changed (between attraction to the constants and a uniform shift) with wording for 1 family (Mistral) when I did a later separate preregistered dose–response study.
+
+What would make the result seem true, but be misleading. Perhaps the model learns to give answers on the rating scale that make it appear more sycophantic after RL, but do not actually change the behavior of the model. I would test this by looking at behavior under the “zero pressure” condition and showing that g is higher than would be expected by regression towards the mean alone. RL might also lead the model to give no answer, or the neutral point of the scale, under high pressure, as Llama did under praise: I would treat refusals as their own binary outcome rather than discard them. And the one thing that concerned me from your article on construct validity: my LLM judge is a single model (Claude Opus 4.6, not the same family as my model); two Qwen judges recreated the law, but no humans have rated so far. I would have real humans judge a sealed set, double-blind.
+Pick one of the two projects and briefly describe the first experiment you’d run. Try to include information on what you’d train or measure, what result you’d expect, and one thing that could make the result misleading.:
+Describe a technical project where you trained or evaluated LLMs (feel free to link to code or any public documentation/write up if you have something to share). *
+
+“Sycophancy as Attraction Toward a Fixed Point” (paper coming soon; code + data github.com/lciric/sycophancy-psychophysical-law).
+
+Sycophancy is a movement some distance, not a flip. Using psychophysical techniques (social pressure measured, ordinal judge blinded pre-data, permutation tests, placebo of equal length). When pressured Llama-3.1-8B-Instruct will move approximately .7 of the way to a fixed point. There is a fixed point for being criticized and one for being praised. So you can decrease an answer’s score by praising it if it was very good (which we predicted). After fitting this law it was able to predict a 2nd campaign and 60 additional items which were written blindly and released prior to answers being generated. No refit was done (R^2 max of .73) and we were able to recover it using judges from a different family.
+
+We then increased the amount of pressure (pre registered this and used 4 families of models) and found that our prediction was wrong. The law does not increase as you increase pressure. When extremely flattered Llama will move its score toward the mid point of the scale or refuse to give a score. When extremely criticized it will begin to disagree with the user more often. We released this as a failure.
+
+It isn’t driven by what can read it. What can track it (rho = .68) only has less than 1% of the causal influence compared to the full residual state which is 68%.
+
+All studies were pre registered and hashed prior to seeing any data. All code was written by AI agents following guidelines I created. All values can be traced to files and hashes.
+
+My second public project is my research automation and judge that cannot be swayed. github.com/lciric/ideation-organism
+Describe a technical project where you trained or evaluated LLMs (feel free to link to code or any public documentation/write up if you have something to share).:
+
+Paul Colognese & Francis Rhys Ward
+Describe an ML experiment you ran end to end (fine-tuning, RL or evals). What did you find, and what would you do differently? (max 200 words) *
+
+Attraction to a setpoint (Llama-3.1-8B-Instruct; code/data: github.com/lciric/sycophancy-psychophysical-law)
+
+Pre-registered before data was collected; hash-locked the ordinal judge. Permutation nulls. Performed surgery on history and compared to a sham of the same length. All pre-registered and hash-locked.
+
+When you're being sycophantic you're moving towards a set point, not randomly changing odds. It's proportional to distance from the set point. You will concede roughly 0.7 of the distance to a setpoint that depends on the type of social pressure. Criticism and Praise have different setpoints meaning something highly rated can be lowered by praise which happened. Law held up when testing campaign-1 fit on campaign-2. If we remove the model's conceding it goes back closer to the original judgement than removing the social pressure. A direction that tracks the behaviour (ρ = 0.68) explained <1% of the causal effect. The full residual state explained 68%.
+
+What I would have done differently. Judges from another family (Qwen2.5-7B and 72B) have since recovered the law, but I would have had human labels from the start. Also would have looked into the law before and after character training/RL (your project B).
+Describe an ML experiment you ran end to end (fine-tuning, RL or evals). What did you find, and what would you do differently? (max 200 words):
+(Optional) Read this post. Should we have done anything differently? What was the most interesting finding in your view and why?
+
+Most interesting finding: the anti-cheating character didn’t so much avoid hacking as shift it out of the text. Two anti-cheating seeds were less detectable by the monitors, and one frequently hacked silently; its reasoning never includes the hack. One of my biggest concerns about this type of training is that we can train away blatant forms of bad logic but more subtle attacks remain unaffected. Meaning CoT/action monitoring may be less useful in areas where character training works well.
+
+Things I would do differently: (1) using more seeds per character, since one resisting seed out of three is a perfectly reasonable seed effect until proven otherwise; (2) using a white-box monitor in addition to text monitors, to see if silent hacks are visible in activations if they aren’t in the reasoning; (3) reporting monitor recall at a fixed false-alarm rate, calibrated per-character on each character’s honest episodes, since character also shifts the distribution of honest episodes.
+(Optional) Read this post. Should we have done anything differently? What was the most interesting finding in your view and why?:
+Optional
+Is there anything else you want to say about your mentor selection?
+
+I applied to six streams because they are all facets of one programme: whether internal-state monitors add detection power beyond black-box monitoring, and how corruptible monitors are. My order of preference: Jan Hendrik Kirchner, Lujain Ibrahim,  Stefan Heimersheim, Jérémy Scheurer, Paul Colognese & Francis Rhys Ward, Shi Feng & Eyon Jang.
+Is there anything else you want to say about your mentor selection?:
+
+← Back
+
+Submit
