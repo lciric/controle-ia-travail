@@ -1,0 +1,209 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_____________ test_bout_en_bout_jouet_resolution_lot_puis_table_v3 _____________
+
+source = (PosixPath('/tmp/pytest-of-root/pytest-4/test_bout_en_bout_jouet_resolu0'), PosixPath('/tmp/pytest-of-root/pytest-4/test_bout_en_bout_jouet_resolu0/taches.json'), {'N': 1, 'T': 2, 'episodes_par_tache': 1, 'lot': 4, ...})
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-4/test_bout_en_bout_jouet_resolu0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f52b4b4e060>
+
+    def test_bout_en_bout_jouet_resolution_lot_puis_table_v3(source, tmp_path, monkeypatch):
+        from controle_ia import gardes
+        from controle_ia.scellement import verifier
+    
+        depot, f, c, tp, pieces0, fmt_j, cl, connus, autres = _preparer(source, tmp_path)
+        T_ = int(c["T"])
+        conf = {**_config_graine(depot, f, c, tp, autres, seuil_validation=len(connus)), **LOT}
+        fiches = pieces0.fiches
+        ch_v, ch_r1 = _coeur(depot, conf, "20261102-120000", autres, {}, fiches)
+        # plan des lots de ce P3 jouet : deux lots de quatre (deux tâches × quatre conditions), comme son code
+        from controle_ia.environnements.pilote_a import charger_taches
+    
+        assert [len(x) for x in rl.plan_des_lots(charger_taches(f), int(pieces0.manifeste_p3["config"]["lot"]),
+                                                 pieces0.lignes)] == [4, 4]
+        # gardes avant tout calcul : noyau autre que celui de P3 ; validation absente ; validation sans classe (I-B)
+        with pytest.raises(GardeArret, match="noyau"):
+            rl.executer({**conf, "noyau_attention": "defaut"}, depot, "20261102-120050-graine-lot-jouet", None,
+                        rl.ETAPE_LOT, ch_v, ch_r1, autoriser_depot_sale=True, entropie_essai=3)
+        with pytest.raises(GardeArret, match="validation du cœur est obligatoire"):
+            rl.executer(conf, depot, "20261102-120100-graine-lot-jouet", None, rl.ETAPE_LOT, None, ch_r1,
+                        autoriser_depot_sale=True, entropie_essai=3)
+        ch_v_sans, _ = _coeur(depot, conf, "20261102-120110", autres, {}, fiches, classe=None)
+        with pytest.raises(GardeArret, match="classe_validation"):
+            rl.executer(conf, depot, "20261102-120120-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v_sans, ch_r1,
+                        autoriser_depot_sale=True, entropie_essai=3)
+        # raccord au cœur (lecture à trois classes) : classe hors des trois → refus ; validation arrêtée (arret.json) → refus
+        ch_v_autre, _ = _coeur(depot, conf, "20261102-120111", autres, {}, fiches, classe="atteint")
+        with pytest.raises(GardeArret, match="classe_validation"):
+            rl.executer(conf, depot, "20261102-120121-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v_autre, ch_r1,
+                        autoriser_depot_sale=True, entropie_essai=3)
+        ch_v_arr, _ = _coeur(depot, conf, "20261102-120112", autres, {}, fiches)
+        (Path(ch_v_arr).parent / "arret.json").write_text("{}\n", encoding="utf-8")
+        with pytest.raises(GardeArret, match="arret.json"):
+            rl.executer(conf, depot, "20261102-120122-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v_arr, ch_r1,
+                        autoriser_depot_sale=True, entropie_essai=3)
+        for run in ("20261102-120120-graine-lot-jouet", "20261102-120121-graine-lot-jouet",
+                    "20261102-120122-graine-lot-jouet"):
+            assert not (depot / "runs" / run).exists()
+        # étape « cibles-lot » du script d'instance (sans modèle) : les non résolus du cœur à entrée « non_resolu » ; sans
+        # cible, liste vide (« sans objet »), jamais un arrêt ; l'étape « resolution-lot », elle, refuse de partir sans cible
+        assert rl.cibles_restantes(conf, depot, ch_r1)["cibles"] == autres
+        _, ch_r_vide = _coeur(depot, conf, "20261102-120113", [], {}, fiches)
+        vide = rl.cibles_restantes(conf, depot, ch_r_vide)
+        assert vide["cibles"] == [] and vide["non_resolus_coeur"] == 0
+        with pytest.raises(GardeArret, match="aucune cible"):
+            rl.executer(conf, depot, "20261102-120123-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v, ch_r_vide,
+                        autoriser_depot_sale=True, entropie_essai=3)
+        # citation de la configuration du lot dans le préenregistrement : absente → arrêt ; présente → la garde passe (la
+        # suivante, l'entropie, arrête ce texte d'essai)
+        (depot / "prereg").mkdir(exist_ok=True)
+        pr = depot / "prereg" / "essai-lot.md"                    # hors de l'arbre gelé (le dépôt jouet est tmp_path)
+        pr.write_text("texte sans citation\n", encoding="utf-8")
+        with pytest.raises(GardeArret, match="ne cite pas la configuration du lot"):
+            rl.executer(conf, depot, "20261102-120130-graine-lot-jouet", str(pr), rl.ETAPE_LOT, ch_v, ch_r1,
+                        autoriser_depot_sale=True)
+        pr.write_text(rl.CONFIG_CITEE.format(rg.empreinte_config(conf)) + "\n", encoding="utf-8")
+        with pytest.raises(GardeArret, match="entropie"):
+            rl.executer(conf, depot, "20261102-120140-graine-lot-jouet", str(pr), rl.ETAPE_LOT, ch_v, ch_r1,
+                        autoriser_depot_sale=True)
+        assert not (depot / "runs" / "20261102-120140-graine-lot-jouet").exists()
+        # étape « resolution-lot »
+        r = rl.executer(conf, depot, "20261102-120200-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v, ch_r1,
+                        autoriser_depot_sale=True, entropie_essai=3)
+        from conftest import committer
+    
+        committer(depot)
+        assert r["lecture"] == "complète" and r["non_resolus_v1"] == autres and sorted(r["cibles"]) == sorted(autres)
+        assert r["hors_cibles"] == [] and r[rl.CLE_CLASSE] == "graines validées"
+        assert r["lecture_validation"] == {rl.CLE_CLASSE: "graines validées", "lecture_validation_coeur": "atteint",
+                                           "lecture_lot": r["lecture_lot"]}
+        assert r["resolution_v1"]["sha256"] == verifier(ch_r1) and r["validation"]["sha256"] == verifier(ch_v)
+        assert all(x["empreinte_retrouvee"] and x["ids"] and x["base_nv"] != x["ids"] for x in r["episodes"])
+        assert all(x[rl.CLE_CLASSE] == "graines validées" for x in r["episodes"])
+        for x in r["episodes"]:
+            m = x["mesure_voisines"]
+            exactes = [y for y in x["lot"] if y["exacte"] and y["source"] != rl.SOURCE_CIBLE]
+            assert (m["pas"] > 0) == bool(exactes) and m["hors_candidats"] == 0, x["episode"]
+            assert set(m["par_ligne"]) == {y["episode"] for y in exactes}
+            if not exactes:
+                assert x["lecture_lot"] == rl.LECTURE_SANS                 # lot sans voisine exacte : déclaré, non lu
+            elif x["forme"]["forme_exacte_prouvee"]:
+                assert m["accord"] == 1.0 and m["egalite_contraints"] == 1.0 and x["lecture_lot"] == rl.LECTURE_FIDELE
+            assert x["accord_cible"]["accord"] == 1.0
+        sources = {y["source"] for x in r["episodes"] for y in x["lot"]}
+        assert rl.SOURCE_CIBLE in sources and sources <= {rl.SOURCE_CIBLE, "identique_base", "lot_fidele",
+                                                          rl.SOURCE_APPROCHEE} | {f"table:{m}" for m in rg.METHODES_V3}
+        assert all(y["exacte"] for x in r["episodes"] for y in x["lot"] if y["source"] != rl.SOURCE_APPROCHEE)
+        d = depot / "diag" / "20261102-120200-graine-lot-jouet"
+        chemin_lot = d / "resolution-graine-resolution-lot.json"
+        assert chemin_lot.exists() and (d / "resolution-graine-resolution-lot.json.sha256").exists()
+        assert [x["fichier"] for x in r["episodes_consignes"]] == [f"episodes-resolution-lot/{k:03d}.json"
+                                                                   for k in range(len(autres))]
+        for x in r["episodes_consignes"]:
+            assert (d / (x["fichier"] + ".sha256")).exists()
+            corps = json.loads((d / x["fichier"]).read_text(encoding="utf-8"))
+            assert corps["statut"] == "resolu" and corps[rl.CLE_CLASSE] == "graines validées"
+        with np.load(d / r["pas_fichier"]) as z:
+            assert len(z["choix"]) == sum(x["pas"] for x in r["episodes"]) and len(z["p_choix"]) == len(z["choix"])
+        # R3 : une seconde exécution sous la même configuration est refusée avant tout calcul
+        with pytest.raises(GardeArret, match="R3"):
+            rl.executer(conf, depot, "20261102-120250-graine-lot-jouet", None, rl.ETAPE_LOT, ch_v, ch_r1,
+                        autoriser_depot_sale=True, entropie_essai=3)
+        # un résultat du cœur qui cite un des « autres » résolu : ligne « resolution_v1 », revérifiée par l'empreinte, dans
+        # les lots des autres cibles ; identifiants faux refusés
+        e1, ids1 = r["episodes"][0]["episode"], r["episodes"][0]["ids"]
+        faux = [list(a) for a in ids1]
+        faux[0] = faux[0][::-1] if len(faux[0]) > 1 else faux[0] + faux[0]
+        with pytest.raises(GardeArret, match="empreinte de P3"):
+            rl.connus_de_la_v1(pieces0, fmt_j, T_, {e1: faux})
+        assert rl.connus_de_la_v1(pieces0, fmt_j, T_, {e1: ids1}) == {e1: (ids1, "resolution_v1")}
+        reste = [e for e in autres if e != e1]
+        ch_v2, ch_r2 = _coeur(depot, conf, "20261102-120300", reste, {e1: ids1}, fiches)
+        r2 = rl.executer({**conf, "episodes_resolution_lot": reste}, depot, "20261102-120400-graine-lot-jouet", None,
+                         rl.ETAPE_LOT, ch_v2, ch_r2, autoriser_depot_sale=True, entropie_essai=3)
+        committer(depot)
+        assert r2["lecture"] == "complète" and [x["episode"] for x in r2["episodes"]] == reste
+        assert {x["episode"]: x["ids"] for x in r2["episodes"]} == {x["episode"]: x["ids"] for x in r["episodes"]
+                                                                    if x["episode"] in reste}
+        assert any(y["source"] == "resolution_v1" and y["episode"] == e1 for x in r2["episodes"] for y in x["lot"])
+    
+        # ---- table v3 fusionnée : cœur (rien de résolu ici) et lot ; chaque entrée revérifiée par l'empreinte de P3
+        t3 = rl.construire_table_v3_lot(conf, depot, None, ch_r1, str(chemin_lot), fmt=fmt_j)
+        assert t3["version"] == 3 and t3["comptes"]["identifiants"] == len(autres) and t3["comptes"]["non_resolu"] == 0
+        assert sorted(t3["episodes_verses_par_le_lot"]) == sorted(autres) and t3["non_resolus_apres_lot"] == []
+        assert t3["lecture_validation"][rl.CLE_CLASSE] == "graines validées"
+        assert t3["resultat_lot_sha256"] == verifier(chemin_lot) and t3["resultat_graine_sha256"] == verifier(ch_r1)
+        assert all(x["resolution_graine"]["voie"].startswith("lot_fidele") and
+                   x["resolution_graine"][rl.CLE_CLASSE] == "graines validées"
+                   for x in t3["episodes"] if x["episode"] in autres)
+        # VI-01 : déclaration finale de chaque cible du lot (résolue → « résolu »), celle du cœur gardée à part
+>       assert {e: t3["declarations"][e] for e in autres} == {e: rg.DECLARATIONS["resolu"] for e in autres}
+E       AssertionError: assert {'honnete/250...orté à Lazar'} == {'honnete/250...3 retrouvée)'}
+E         
+E         Differing items:
+E         {'saboteur/2506.00001v1/e0': 'non résolu par la méthode : nœud porté à Lazar'} != {'saboteur/2506.00001v1/e0': 'résolu (empreinte de P3 retrouvée)'}
+E         {'honnete/2506.00001v1/e0': 'non résolu par la méthode : nœud porté à Lazar'} != {'honnete/2506.00001v1/e0': 'résolu (empreinte de P3 retrouvée)'}
+E         {'mention/2506.00001v1/e0': 'non résolu par la méthode : nœud porté à Lazar'} != {'mention/2506.00001v1/e0': 'résolu (empreinte de P3 retrouvée)'}
+E         {'temoin/2506.00001v1/e0': 'non résolu par la méthode : nœud porté à Lazar'} != {'temoin/2506.00001v1/e0': 'résolu (empreinte de P3 retrouvée)'}
+E         Use -v to get more diff
+
+tests/test_resolution_graine_lot_v1.py:767: AssertionError
+---------------------------- Captured stderr setup -----------------------------
+PROGRES 2026-11-02T14:42:32Z etape=format verifie=True
+PROGRES 2026-11-02T14:42:33Z etape=donnees tromperie=20 enjeux=24 faits_exclus=0
+PROGRES 2026-11-02T14:42:33Z etape=extraction duree_s=0.2
+PROGRES 2026-11-02T14:42:35Z etape=entrainement concept=tromperie principale=tromperie-lineaire-c2 aire_validation=1.0
+PROGRES 2026-11-02T14:42:37Z etape=entrainement concept=enjeux principale=enjeux-difference_moyennes-c0 aire_validation=0.5
+PROGRES 2026-11-02T14:42:37Z etape=sondes-figees empreinte=32c7bb666b2d031e58f9cf5fb30bc6987417bf5c0acbdaa44d9d3f0f193ba592 sondes=28
+PROGRES 2026-11-02T14:42:53Z etape=episodes lot=1/2 actions=8
+PROGRES 2026-11-02T14:42:58Z etape=episodes lot=2/2 actions=16
+PROGRES 2026-11-02T14:42:58Z etape=fin episodes=8 actions=16
+----------------------------- Captured stderr call -----------------------------
+PROGRES 2026-11-02T14:43:00Z etape=resolution-lot episodes=4 lots=2 taille_lot=4
+PROGRES 2026-11-02T14:43:10Z etape=resolution-lot episodes=1/4 resolus=1 passes=12
+PROGRES 2026-11-02T14:43:20Z etape=resolution-lot episodes=2/4 resolus=2 passes=24
+PROGRES 2026-11-02T14:43:29Z etape=resolution-lot episodes=3/4 resolus=3 passes=36
+PROGRES 2026-11-02T14:43:39Z etape=resolution-lot episodes=4/4 resolus=4 passes=48
+PROGRES 2026-11-02T14:43:39Z etape=fin resolus=4/4 lecture=complète lecture_lot=fidèle
+PROGRES 2026-11-02T14:43:39Z etape=resolution-lot episodes=3 lots=2 taille_lot=4
+PROGRES 2026-11-02T14:43:49Z etape=resolution-lot episodes=1/3 resolus=1 passes=12
+PROGRES 2026-11-02T14:43:59Z etape=resolution-lot episodes=2/3 resolus=2 passes=24
+PROGRES 2026-11-02T14:44:09Z etape=resolution-lot episodes=3/3 resolus=3 passes=36
+PROGRES 2026-11-02T14:44:09Z etape=fin resolus=3/3 lecture=complète lecture_lot=fidèle
+__________________ test_declaration_finale_des_cibles_du_lot ___________________
+
+    def test_declaration_finale_des_cibles_du_lot():
+        """VI-01 : règle de la déclaration finale d'une cible du lot (mesures fabriquées) ; classe inconnue, cible sans
+        entrée, deux entrées contradictoires → arrêt."""
+        V_, NV, MT = rg.CLASSES_VALIDATION
+        b = f"{rl.CAUSE_BALAYAGES} (3 pas > plafond 2)"
+>       assert rl.declarer_lot("resolu", None, NV, rl.LECTURE_RESERVE) == rg.DECLARATIONS["resolu"]
+               ^^^^^^^^^^^^^^^
+E       AttributeError: module 'controle_ia.runs_nuit.resolution_graine_lot_v1' has no attribute 'declarer_lot'
+
+tests/test_resolution_graine_lot_v1.py:877: AttributeError
+______________________ test_r3_manifeste_illisible_arrete ______________________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-4/test_r3_manifeste_illisible_ar0')
+
+    def test_r3_manifeste_illisible_arrete(tmp_path):
+        """VI-08 (R5) : la garde R3 du cœur s'arrête sur un manifeste illisible au lieu de le sauter ; cas sain : aucun
+        manifeste → aucune exécution antérieure ; manifeste lisible d'une autre commande → ignoré."""
+        conf = {"mode": "jouet", "essai": "vi-08"}
+        (tmp_path / "runs" / "20261102-000000-autre").mkdir(parents=True)
+        assert rg.executions_anterieures(tmp_path, conf, "validation") == []
+        (tmp_path / "runs" / "20261102-000000-autre" / "manifeste.json").write_text(
+            json.dumps({"commande": "autre", "config_sha256": rg.empreinte_config(conf)}), encoding="utf-8")
+        assert rg.executions_anterieures(tmp_path, conf, "validation") == []
+        (tmp_path / "runs" / "20261102-000100-casse").mkdir()
+        (tmp_path / "runs" / "20261102-000100-casse" / "manifeste.json").write_text("{tronqué", encoding="utf-8")
+>       with pytest.raises(GardeArret, match="manifeste illisible"):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE GardeArret
+
+tests/test_resolution_graine_v1.py:1064: Failed
+=========================== short test summary info ============================
+FAILED tests/test_resolution_graine_lot_v1.py::test_bout_en_bout_jouet_resolution_lot_puis_table_v3
+FAILED tests/test_resolution_graine_lot_v1.py::test_declaration_finale_des_cibles_du_lot
+FAILED tests/test_resolution_graine_v1.py::test_r3_manifeste_illisible_arrete
+3 failed in 104.80s (0:01:44)
+code 1
