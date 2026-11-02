@@ -16,7 +16,9 @@ minuscule et le vrai tokeniseur de Llama 3.1 des essais du cœur (fixtures réut
 6. Bout en bout en mode jouet sur un P3 jouet : résolution-lot sur les non résolus d'un résultat du cœur, classe de la
    validation exigée et recopiée, épisodes consignés un à un, échéance de l'étape (non tenté), signal TERM (arrêt citant
    les épisodes consignés), texte attendu de l'ouverture, citation de la configuration ; table v3 fusionnée (cœur et
-   lot), écrite et scellée ; refus : contrôle croisé non conforme, deux résultats différents, identifiants faux.
+   lot), écrite et scellée ; refus : contrôle croisé non conforme, deux résultats différents, identifiants faux ;
+   déclaration finale de chaque cible du lot (VI-01 : résolu ; budget de balayages et lecture « fidèle » de la cible ;
+   nœud sinon), celle du cœur gardée sous `declarations_coeur`.
 7. Raccord au cœur (intégration) : classe de la validation lue dans `lecture_validation.classe` (hors des trois classes,
    absente ou validation arrêtée → refus) ; étape « cibles-lot » (liste vide : « sans objet ») ; unité de
    `balayages_max` du cœur dans la ligne cible (pas comptés par `Cible.recherche`, plafond par U+FFFD)."""
@@ -608,7 +610,10 @@ def _coeur(depot, conf, horodatage, non_resolus, resolus, fiches, classe="graine
                 "episodes": [{"episode": e, "statut": "resolu", "ids": ids, "voie": "directe", "forcages": [],
                               "empreinte": fiches[e]["trajectoire"], "empreinte_cible": fiches[e]["trajectoire"]}
                              for e, ids in resolus.items()]
-                            + [{"episode": e, "statut": "non_resolu", "ids": None} for e in non_resolus]})):
+                            + [{"episode": e, "statut": "non_resolu", "ids": None,
+                                "declaration": rg.DECLARATIONS["noeud" if classe in (None, "graines validées")
+                                                               else "graines_non_validees"]}
+                               for e in non_resolus]})):
         run = f"{horodatage}-graine-{nom}-jouet"
         m, _ = creer_manifeste(depot, run, conf, ["aucun-tirage-propre"], entropie=3, autoriser_depot_sale=True,
                                commande=f"{rg.COMMANDE} --etape {etape}")
@@ -758,6 +763,9 @@ def test_bout_en_bout_jouet_resolution_lot_puis_table_v3(source, tmp_path, monke
     assert all(x["resolution_graine"]["voie"].startswith("lot_fidele") and
                x["resolution_graine"][rl.CLE_CLASSE] == "graines validées"
                for x in t3["episodes"] if x["episode"] in autres)
+    # VI-01 : déclaration finale de chaque cible du lot (résolue → « résolu »), celle du cœur gardée à part
+    assert {e: t3["declarations"][e] for e in autres} == {e: rg.DECLARATIONS["resolu"] for e in autres}
+    assert {e: t3["declarations_coeur"][e] for e in autres} == {e: rg.DECLARATIONS["noeud"] for e in autres}
     sortie = depot / "prereg" / "table-v3-lot.json"
     sha = rg.ecrire_table_v3(t3, sortie)
     assert verifier(sortie) == sha and rg.charger_table_v3(sortie, sha)["version"] == 3
@@ -787,6 +795,21 @@ def test_bout_en_bout_jouet_resolution_lot_puis_table_v3(source, tmp_path, monke
     ch = _faux_lot(depot, conf, "20261102-120800-graine-lot-jouet", sha_r1, [{**ent, "ids": faux}])
     with pytest.raises(GardeArret, match="revérification"):
         rl.construire_table_v3_lot(conf, depot, None, ch_r1, ch, fmt=fmt_j)
+    # VI-01 : cibles non résolues par le lot — budget de balayages et lecture « fidèle » de la cible → non inversible ;
+    # même cause, lecture « réserve » ou « sans mesure » de la cible (lecture d'ensemble « fidèle », VI-09) → nœud ;
+    # autre cause → nœud ; déclarations du cœur gardées sous `declarations_coeur`
+    budget = f"{rl.CAUSE_BALAYAGES} (jouet)"
+    nr = [{"episode": e, "statut": "non_resolu", "ids": None, "cause": cause, "lecture_lot": lec}
+          for e, (cause, lec) in zip(autres, [(budget, rl.LECTURE_FIDELE), (budget, rl.LECTURE_RESERVE),
+                                               (budget, rl.LECTURE_SANS), ("empreinte de P3 non retrouvée",
+                                                                           rl.LECTURE_FIDELE)])]
+    ch = _faux_lot(depot, conf, "20261102-120850-graine-lot-jouet", sha_r1, nr)
+    t3c = rl.construire_table_v3_lot(conf, depot, None, ch_r1, ch, fmt=fmt_j)
+    attendu = [rg.DECLARATIONS["budget"], rg.DECLARATIONS["noeud"], rg.DECLARATIONS["noeud"], rg.DECLARATIONS["noeud"]]
+    assert [t3c["declarations"][x["episode"]] for x in nr] == attendu[:len(nr)]
+    assert all(t3c["declarations_coeur"][x["episode"]] == rg.DECLARATIONS["noeud"] for x in nr)
+    assert t3c["episodes_verses_par_le_lot"] == [] and t3c["comptes"]["non_resolu"] == len(autres)
+
 
     # ---- échéance de l'étape après le premier épisode : le suivant « non tenté : durée », résultat écrit et scellé
     decalage = [0.0]
@@ -844,3 +867,27 @@ def test_bout_en_bout_jouet_resolution_lot_puis_table_v3(source, tmp_path, monke
                             autoriser_depot_sale=True, entropie_essai=3)
             assert (depot / "diag" / f"{run[:-2]}50-graine-lot-jouet" / "arret.json").exists()
         committer(depot)
+
+
+def test_declaration_finale_des_cibles_du_lot():
+    """VI-01 : règle de la déclaration finale d'une cible du lot (mesures fabriquées) ; classe inconnue, cible sans
+    entrée, deux entrées contradictoires → arrêt."""
+    V_, NV, MT = rg.CLASSES_VALIDATION
+    b = f"{rl.CAUSE_BALAYAGES} (3 pas > plafond 2)"
+    assert rl.declarer_lot("resolu", None, NV, rl.LECTURE_RESERVE) == rg.DECLARATIONS["resolu"]
+    assert rl.declarer_lot("non_resolu", b, NV, rl.LECTURE_FIDELE) == rg.DECLARATIONS["graines_non_validees"]
+    assert rl.declarer_lot("non_resolu", b, MT, rl.LECTURE_FIDELE) == rg.DECLARATIONS["graines_non_validees"]
+    assert rl.declarer_lot("non_resolu", b, V_, rl.LECTURE_FIDELE) == rg.DECLARATIONS["budget"]
+    assert rl.declarer_lot("non_resolu", b, V_, rl.LECTURE_RESERVE) == rg.DECLARATIONS["noeud"]
+    assert rl.declarer_lot("non_resolu", b, V_, rl.LECTURE_SANS) == rg.DECLARATIONS["noeud"]
+    assert rl.declarer_lot("non_resolu", "durée : jouet", V_, rl.LECTURE_FIDELE) == rg.DECLARATIONS["noeud"]
+    with pytest.raises(GardeArret, match="inconnue"):
+        rl.declarer_lot("resolu", None, "atteint", rl.LECTURE_FIDELE)
+    lot = {"cibles": ["a", "b"], "episodes": [{"episode": "a", "statut": "resolu"},
+                                              {"episode": "b", "statut": "non_resolu", "cause": b,
+                                               "lecture_lot": rl.LECTURE_FIDELE}]}
+    assert rl.declarations_du_lot(lot, V_) == {"a": rg.DECLARATIONS["resolu"], "b": rg.DECLARATIONS["budget"]}
+    with pytest.raises(GardeArret, match="sans entrée"):
+        rl.declarations_du_lot({**lot, "cibles": ["a", "b", "c"]}, V_)
+    with pytest.raises(GardeArret, match="déclarations différentes"):
+        rl.declarations_du_lot({**lot, "episodes": lot["episodes"] + [{"episode": "a", "statut": "non_resolu"}]}, V_)

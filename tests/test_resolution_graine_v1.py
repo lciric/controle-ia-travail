@@ -855,6 +855,9 @@ def test_bout_en_bout_jouet_validation_resolution_table(source, tmp_path, monkey
         assert json.loads((d_v / x["fichier"]).read_text(encoding="utf-8"))["statut"] == x["statut"] == "resolu"
     assert v["seuils"]["combinaisons_max_validation"] == v["seuils"]["combinaisons_max"]
     assert v["reserves"] == [] and v["environnement"]["torch"] == torch.__version__
+    # VI-10 : les corrigés de la table v2 rapportés à part au résultat de la validation
+    assert v["corriges_table_v2"]["episodes"] == anciennes == v["corriges_table_v2"]["empreintes_retrouvees"]
+    assert sum(v["corriges_table_v2"]["par_methode"].values()) == anciennes
     assert set(v["accord_non_contraint"]["par_episode"]) == set(connus)
     # graines fausses (artefact, R5) : la validation tombe sous le seuil, rapportée, SANS arrêt (VG-03)
     vraies = rg.graines_p3
@@ -1045,6 +1048,23 @@ def test_bout_en_bout_echeances_en_milieu_d_etape_et_signal(source, tmp_path, mo
         assert (d / (x["fichier"] + ".sha256")).exists() and corps["statut"] == "resolu" and corps["ids"]
         assert corps["empreinte"] == corps["empreinte_cible"]
     assert not (d / "resolution-graine-validation.json").exists()
+
+
+def test_r3_manifeste_illisible_arrete(tmp_path):
+    """VI-08 (R5) : la garde R3 du cœur s'arrête sur un manifeste illisible au lieu de le sauter ; cas sain : aucun
+    manifeste → aucune exécution antérieure ; manifeste lisible d'une autre commande → ignoré."""
+    conf = {"mode": "jouet", "essai": "vi-08"}
+    (tmp_path / "runs" / "20261102-000000-autre").mkdir(parents=True)
+    assert rg.executions_anterieures(tmp_path, conf, "validation") == []
+    (tmp_path / "runs" / "20261102-000000-autre" / "manifeste.json").write_text(
+        json.dumps({"commande": "autre", "config_sha256": rg.empreinte_config(conf)}), encoding="utf-8")
+    assert rg.executions_anterieures(tmp_path, conf, "validation") == []
+    (tmp_path / "runs" / "20261102-000100-casse").mkdir()
+    (tmp_path / "runs" / "20261102-000100-casse" / "manifeste.json").write_text("{tronqué", encoding="utf-8")
+    with pytest.raises(GardeArret, match="manifeste illisible"):
+        rg.executions_anterieures(tmp_path, conf, "validation")
+    with pytest.raises(GardeArret, match="manifeste illisible"):
+        rg.exiger_execution_unique(tmp_path, conf, "validation")
 
 
 def test_gardes_d_execution_agent_environnement_controle_croise():

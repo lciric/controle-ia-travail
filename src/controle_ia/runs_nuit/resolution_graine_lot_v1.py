@@ -1223,6 +1223,38 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, etape:
 # Étape « table-lot » : table v3 depuis la résolution du cœur et le lot
 
 
+def declarer_lot(statut: str | None, cause: str | None, classe: str, lecture: str | None) -> str:
+    """Déclaration finale d'une cible du lot (VI-01, ligne k du texte) : résolu → « résolu » ; sinon, classe de la
+    validation autre que « graines validées » → nœud (« non résolu, graines non validées ») ; sinon, cause **du lot**
+    « budget de balayages dépassé » **et** lecture du lot « fidèle » **pour cette cible** (VI-09 : jamais la lecture
+    d'ensemble) → non inversible déclaré par la méthode (règle B) ; sinon nœud."""
+    if classe not in rg.CLASSES_VALIDATION:
+        raise GardeArret(f"classe de validation {classe!r} inconnue : {rg.CLASSES_VALIDATION} attendues")
+    if statut == "resolu":
+        return rg.DECLARATIONS["resolu"]
+    if classe != rg.CLASSES_VALIDATION[0]:
+        return rg.DECLARATIONS["graines_non_validees"]
+    if (cause or "").startswith(CAUSE_BALAYAGES) and lecture == LECTURE_FIDELE:
+        return rg.DECLARATIONS["budget"]
+    return rg.DECLARATIONS["noeud"]
+
+
+def declarations_du_lot(lot: dict, classe: str) -> dict:
+    """Déclaration finale de chaque cible du lot (`lot["cibles"]`, à défaut les épisodes du résultat) ; une cible sans
+    entrée au résultat, ou deux entrées de déclarations différentes : arrêt (R5, aucun repli silencieux)."""
+    par_e: dict = {}
+    for x in lot.get("episodes") or []:
+        d = declarer_lot(x.get("statut"), x.get("cause"), classe, x.get("lecture_lot"))
+        if par_e.get(x["episode"], d) != d:
+            raise GardeArret(f"{x['episode']} : deux entrées du lot de déclarations différentes")
+        par_e[x["episode"]] = d
+    cibles = lot.get("cibles") if lot.get("cibles") is not None else list(par_e)
+    manquantes = [e for e in cibles if e not in par_e]
+    if manquantes:
+        raise GardeArret(f"cibles du lot sans entrée au résultat du lot : {manquantes}")
+    return {e: par_e[e] for e in cibles}
+
+
 def construire_table_v3_lot(config: dict, racine: Path, tokeniseur: str | None, chemin_resolution: str,
                             chemin_lot: str, fmt=None) -> dict:
     """Table v3 (processeur) : table v3 du cœur (`rg.construire_table_v3` sur la table v2 et le résultat scellé de la
@@ -1230,7 +1262,9 @@ def construire_table_v3_lot(config: dict, racine: Path, tokeniseur: str | None, 
     résultat du cœur, même configuration), chacun revérifié par l'empreinte de P3 avant d'être versé ; refus : contrôle
     croisé du cœur autre que « conforme », deux résultats différents pour un même épisode, épisode du lot hors de la
     table v2 ou d'entrée autre que « non_resolu », classe de la validation absente. Toutes les entrées revérifiées
-    (`rg.verifier_entrees_v3`) ; classe de la validation et lecture du lot recopiées (`lecture_validation`)."""
+    (`rg.verifier_entrees_v3`) ; classe de la validation et lecture du lot recopiées (`lecture_validation`) ;
+    déclaration finale de chaque cible du lot (`declarer_lot`) dans `declarations`, celles du cœur gardées sous
+    `declarations_coeur` (VI-01)."""
     exiger_config(config)
     racine = Path(racine)
     pieces = rg.charger_pieces(config, racine)
@@ -1302,7 +1336,7 @@ def construire_table_v3_lot(config: dict, racine: Path, tokeniseur: str | None, 
         if empreinte_trajectoire(episode_harnais(e, T, rec)) != traj:
             raise GardeArret(f"{e} : les identifiants du lot ne redonnent pas l'empreinte de P3 (revérification)")
         res = {"voie": f"lot_fidele:{x.get('voie')}", "forcages": x.get("forcages"), "resultat_sha256": sha_l,
-               CLE_CLASSE: classe, "lecture_lot": x.get("lecture_lot"),
+               CLE_CLASSE: classe, "lecture_lot": x.get("lecture_lot"), "declaration": rg.DECLARATIONS["resolu"],
                "forme_exacte_prouvee": (x.get("forme") or {}).get("forme_exacte_prouvee")}
         table["episodes"][par_e[e]] = {**rg.entree_identifiants(e, traj, base_nv[e], ids, res),
                                        "essais": ent.get("essais"), "essais_c6": ent.get("essais_c6")}
@@ -1320,6 +1354,11 @@ def construire_table_v3_lot(config: dict, racine: Path, tokeniseur: str | None, 
     n = rg.verifier_entrees_v3(table["episodes"], fmt, contexte, pieces.fiches)
     if n != comptes["identiques_apres_table"] - comptes["identiques_base"]:
         raise GardeArret("corrections vérifiées ≠ comptes de la table")
+    # déclarations finales (VI-01) : celles du cœur gardées sous `declarations_coeur` ; chaque cible du lot reçoit la
+    # déclaration du lot (`declarer_lot`), les autres épisodes (hors cibles, C-6) gardent celle du cœur
+    coeur = dict(table.get("declarations") or {})
+    finales = {**coeur, **declarations_du_lot(lot, classe)}
+    table.update(declarations_coeur=coeur, declarations=finales)
     table.update(corrections_verifiees=n, regle_lot=REGLE, resultat_lot_sha256=sha_l, episodes_verses_par_le_lot=verses,
                  non_resolus_apres_lot=[x["episode"] for x in table["episodes"] if x["methode"] == "non_resolu"],
                  lecture_validation={CLE_CLASSE: classe, "lecture_lot": lot.get("lecture_lot"),

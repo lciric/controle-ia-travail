@@ -86,6 +86,7 @@ from __future__ import annotations
 
 import argparse
 import bisect
+import collections
 import codecs
 import hashlib
 import json
@@ -1191,15 +1192,15 @@ def _meme_code(racine: Path, commit: str) -> bool:
 def executions_anterieures(racine: Path, config: dict, etape: str) -> list[str]:
     """Runs antérieurs du dépôt de la même étape (commande du manifeste), de la même configuration (empreinte canonique)
     et du même code (arbre gelé égal), qui ont laissé une sortie (`diag/<run>/` : résultat de l'étape, `arret.json` ou
-    épisodes consignés)."""
+    épisodes consignés). Un manifeste illisible arrête (VI-08, R5 : unicité non vérifiable, jamais sauté en silence)."""
     cible = empreinte_config(config)
     commande = f"{COMMANDE} --etape {etape}"
     sortie = []
     for chemin in sorted((Path(racine) / "runs").glob("*/manifeste.json")):
         try:
             brut = json.loads(chemin.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
+        except (OSError, ValueError) as e:
+            raise GardeArret(f"R3 : manifeste illisible {chemin} ({e}) : unicité de l'étape non vérifiable")
         if brut.get("commande") != commande or brut.get("config_sha256") != cible:
             continue
         m, _ = lire_manifeste(chemin)
@@ -1679,6 +1680,14 @@ def _executer(config, racine, run_id, chemin_m, manifeste, pieces, etape, etat, 
         resultat["lecture"] = "atteint" if trouvees >= int(config["seuil_validation"]) else "sous le seuil"
         resultat["lecture_validation"] = lire_validation(trouvees, len(episodes), accords_agreges,
                                                          config["regle_validation"])
+        # VI-10 : les épisodes corrigés par la table v2 (entrée autre que « non_resolu ») rapportés à part
+        corr = [d for d in detail if ((classement[d["episode"]]["entree"] or {}).get("methode") or "non_resolu")
+                != "non_resolu"]
+        resultat["corriges_table_v2"] = {
+            "episodes": len(corr), "empreintes_retrouvees": sum(1 for d in corr if d["empreinte_retrouvee"]),
+            "identifiants_egaux": sum(1 for d in corr if d.get("identifiants_egaux")),
+            "par_methode": dict(sorted(collections.Counter(classement[d["episode"]]["entree"]["methode"]
+                                                           for d in corr).items()))}
     else:
         resultat["lecture"] = "complète" if trouvees == len(episodes) else "partielle"
         resultat["controle_croise_lecture"] = lecture_controle_croise(controle)

@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -93,7 +94,14 @@ def main(argv=None) -> int:
     git(prep, "add", "-f", "donnees")
     git(prep, "commit", "-q", "-m", "répétition : tâches jouet")
     c = _config(pieces)
-    rp.executer(c, prep, RUN_P3, None, str(f), autoriser_depot_sale=True)
+    # VI-16 : le code de P3 lit ses pièces (donnees/T0.7-…) en chemin relatif ; on les lit depuis la racine du dépôt de
+    # répétition (copie de l'arbre du commit du code), jamais depuis le répertoire courant de l'appelant
+    courant = os.getcwd()
+    os.chdir(prep)
+    try:
+        rp.executer(c, prep, RUN_P3, None, str(f), autoriser_depot_sale=True)
+    finally:
+        os.chdir(courant)
     rp.creer_manifeste = vraie
     fiches = prep / "diag" / RUN_P3 / "episodes-p3.json"
     t0 = dossier / "table0.json"
