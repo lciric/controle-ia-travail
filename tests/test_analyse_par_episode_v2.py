@@ -132,6 +132,11 @@ def test_lire_principale_decisive_liee_ou_non(depot):
     autre = _resultat_principale(depot, "20261102-062002-principale", "0" * 64)          # décisive, autre texte
     with pytest.raises(GardeArret, match="non lié au texte principal scellé"):
         LE5.lire_principale(depot, autre, "f" * 64, E_PLIS, True)
+    with pytest.raises(GardeArret, match="fichier absent"):                              # résultat absent
+        LE5.lire_principale(depot, f"diag/20261102-062003-x/{K2.NOM_SORTIE}.json", "f" * 64, E_PLIS, True)
+    (depot / f"{sain}.sha256").unlink()                                                  # résultat non scellé
+    with pytest.raises(GardeArret, match="empreinte compagnon"):
+        LE5.lire_principale(depot, sain, "f" * 64, E_PLIS, True)
 
 
 def _act_de(rp):
@@ -219,9 +224,14 @@ def test_effet_plante_v5_reserves_recopiees_fausses_alarmes_et_rendu(depot, monk
 
 def test_rejeu_non_valide_v5(depot, monkeypatch):
     _source(depot, monkeypatch, _donnees(4), r1=False, r2=False)
-    r = _episode5(depot, _principale(depot))
+    pr = _principale(depot)
+    r = _episode5(depot, pr)
     assert r["mode"] == "rejeu non validé" and "reserves_principale" not in r
     assert r["concordance_principale"] == {"plis": None, "scores": None} and "rien n'est lu" in r["issue"]["lignes"][-1]
+    with pytest.raises(GardeArret, match="existe déjà"):                                 # sortie déjà présente (R12)
+        _episode5(depot, pr)
+    with pytest.raises(GardeArret, match="entropie et entropie des plis"):               # non décisif sans entropies
+        LE5.analyser(depot, "fiche.json", pr, "20261102-065001-x", None, entropie=1, autoriser_depot_sale=True)
 
 
 def test_R2_absent_v5(depot, monkeypatch):
