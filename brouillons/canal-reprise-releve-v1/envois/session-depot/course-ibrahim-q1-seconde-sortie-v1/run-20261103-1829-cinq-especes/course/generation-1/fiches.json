@@ -1,0 +1,884 @@
+{
+  "f0350bde10ab3": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Trois façons d'obtenir un résultat trompeur. (1) Refus : à dose forte, dans R6, les points fixes rejoignent la moyenne sans pression (2,60) en partie par des refus que le juge note au milieu de l'échelle ; sans les 14 items à refus ils tombent à 1,92 et 2,03 (pièce « Sycophancie » §1). Une persona ou une RL qui change le taux de refus déplacerait v₀ ou c en apparence. Détection : repérage des refus par règle et par juge, ajustement avec et sans items à refus, taux de refus publié par point de contrôle et par dose ; un déplacement de v₀ ou de c n'est retenu que s'il survit à l'exclusion. (2) La loi cesse de s'ajuster après entraînement, comme elle cesse de s'ajuster d'une famille à l'autre (R3) : un g estimé sur un modèle hors loi ne compare rien. Détection : examen des résidus par point de contrôle avant toute comparaison ; un point de contrôle hors loi est signalé et exclu des comparaisons de g. (3) Juge inadapté : condition préalable, la base doit reproduire g ≈ 0,7 à ±0,1 près avec notre juge principal avant toute comparaison, sinon le juge est changé ; les 300 notes humaines servent à vérifier que les deux juges sont concordants avec l'humain sur les items d'opinion et sur les refus.",
+      "cout": "Supposé : 4 à 5 jours si les six points de contrôle après RL existent déjà, sinon ajouter leur coût d'entraînement (non chiffré ici). Génération : 12 150 sorties (calcul) ≈ 6 heures de carte ; jugement : 2 × 12 150 ≈ 24 300 appels de juge (calcul) ≈ 10 heures de carte ou d'interface ; 300 annotations humaines ; ajustements et rééchantillonnage : quelques heures de processeur.",
+      "epreuve": "Neuf points de contrôle : Instruct d'origine, Loving, Sycophantic (Open Character Training, pièce « Ibrahim » §3), chacun sans RL, après RL par préférences, après RL à récompense vérifiable (repris s'ils existent, sinon produits à neuf). Protocole R6 tel que publié : 30 items d'opinion subjective × 3 conditions (sans pression, critique, éloge) × 5 tirages × 3 doses = 1 350 générations par point de contrôle (pièce « Sycophancie » §1), soit 9 × 1 350 = 12 150 générations (calcul). On reste dans la famille Llama car la loi ne passe ni à Qwen2.5-7B ni à Mistral-7B-v0.3 (R3, pièce « Sycophancie » §1). Deux juges : juge principal d'une autre famille que le modèle évalué, second juge d'une troisième famille (comme R1a/R1b avec des juges Qwen) ; aucune note humaine n'est publiée dans ce dépôt, on ajoute 300 annotations humaines réparties sur les 9 points de contrôle pour étalonner les juges. Estimation par cadre et par dose : v₀ comme moyenne de la condition sans pression, puis g et c par régression de Δ sur (c − v₀) ; intervalles à 95 % par rééchantillonnage des items. Comparaisons principales sous éloge à dose moyenne : (Loving − base), (Sycophantic − base) pour v₀ et c ; (après RL préférences − avant) et (après RL vérifiable − avant) pour g, poolées sur les trois départs.",
+      "hypothese": "Sur Llama-3.1-8B-Instruct, la sycophancie d'opinion suit Δ = g·(c − v₀) avec g ≈ 0,7 (pièce « Sycophancie » §1 ; 0,718 / 0,678 selon le cadre, README). Un taux unique de sycophancie confond trois mécanismes : (i) un déplacement de la position par défaut v₀ (la persona répond autrement même sans pression), (ii) un déplacement du point fixe c (elle est attirée vers autre chose sous pression), (iii) une hausse du gain g (elle cède plus vite vers le même point). Hypothèse : l'entraînement de caractère agit sur v₀ et c (la persona change ce qu'elle dit et ce vers quoi elle glisse) sans toucher g ; une RL par préférences élève g sous éloge sans déplacer c ; une RL à récompense vérifiable ne change aucun des trois (condition S3 de l'addendum R8, préenregistrée, non exécutée, pièce « Sycophancie » §2). Cela porte sur des personas l'a priori écrit de R8 (« le point fixe vient de l'imitation, le gain de l'optimisation des préférences », §2). Point ouvert, à vérifier dans la littérature : nous n'avons pas trouvé d'estimation séparée de v₀, c et g sur des personas de caractère ; est-ce vraiment inexploré ou simplement absent des pièces reçues ?",
+      "prediction": "Supposé, sous éloge à dose moyenne, hors items à refus : Loving sans RL vs base : v₀ +0,5 [+0,2 ; +0,9] point d'échelle, c +0,8 [+0,3 ; +1,3], g 0,00 [−0,15 ; +0,15]. Sycophantic sans RL vs base : v₀ +0,7 [+0,3 ; +1,1], c +1,2 [+0,6 ; +1,8], g 0,00 [−0,15 ; +0,15]. RL par préférences, poolée sur les trois départs : g +0,15 [+0,05 ; +0,30], c ±0,2 [−0,2 ; +0,2]. RL vérifiable, poolée : g 0,00 [−0,10 ; +0,10], c et v₀ ±0,2.",
+      "test_de_mort": "L'hypothèse meurt si l'une de ces deux choses survient, sur les deux juges, hors items à refus, sous éloge à dose moyenne : (a) pour Loving sans RL, |g − g_base| > 0,2 avec intervalle à 95 % excluant 0 alors que |c − c_base| < 0,2 et |v₀ − v₀_base| < 0,2 : le caractère agit par le gain, la répartition proposée est fausse ; (b) l'intervalle à 95 % de g(après RL par préférences) − g(avant), poolé sur les trois départs, a une borne supérieure ≤ 0,05 : la RL par préférences n'agit pas par le gain.",
+      "titre": "Trois paramètres, pas un taux : v₀, c et g de la persona avant et après RL"
+    },
+    "empreinte": "cd2b7bd3d947085f2841d96a184d1a12dac66ff22820a26caec78e4f6893e8b3",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 6
+    }
+  },
+  "f092701041513": {
+    "contenu": {
+      "axe": "mesure_et_juge",
+      "controle": "Ce qui rendrait le résultat trompeur : à dose forte, les points fixes rejoignent la moyenne sans pression (2,60) « en partie par des refus » que le juge note au milieu de l'échelle (R6) ; une persona qui refuse plus souvent afficherait un faux déplacement de point fixe. Expérience de contrôle : repérage des refus par règle et par juge, estimation avec et sans items à refus (R6 : sans les 14 items à refus, points fixes à 1,92 et 2,03 au lieu de 2,60), et condition préalable : la base doit reproduire g ≈ 0,7 (0,718 / 0,678 selon le cadre, README) à ±0,1 près avec notre juge avant toute comparaison, sinon le juge est changé.",
+      "cout": "Supposé : 4 jours sans entraînement neuf (réutilise les modèles des deux fiches précédentes) ; 6 × 1 350 = 8 100 générations (calcul) ≈ 6 heures de carte ; ≈ 16 000 appels de juge (deux juges) ; 300 annotations humaines.",
+      "epreuve": "Six modèles : base, Loving, Sycophantic (Open Character Training) et leurs versions après RL par préférences (fiche précédente). Protocole R6 à l'identique : 30 items d'opinion subjective × 3 conditions (sans pression, critique, éloge) × 5 tirages × 3 doses = 1 350 générations par modèle (pièce « Sycophancie » §1). Juge principal d'une autre famille que le modèle évalué, second juge d'une troisième famille (comme les préenregistrements R1a/R1b qui emploient des juges Qwen) ; aucune note humaine n'est publiée dans ce dépôt, on en ajoute 300. Estimation de g et c par régression de Δ sur (c − v₀) dans chaque cadre, intervalles par rééchantillonnage des items.",
+      "hypothese": "Dans la loi Δ = g·(c − v₀) mesurée sur Llama-3.1-8B-Instruct (g ≈ 0,7, point fixe propre au cadre ; pièce « Sycophancie » §1), l'entraînement de caractère déplace le point fixe c (ce vers quoi le modèle est attiré sous pression) et non le gain g ; une étape RL par préférences déplace g. Ajout : la « sycophancie » de la question devient deux paramètres au lieu d'un taux unique, ce qui distingue l'effet de la persona de l'effet du RL ; reprend l'a priori écrit du préenregistrement R8 (« le point fixe vient de l'imitation, le gain de l'optimisation des préférences », §2, non exécuté) et le porte sur des personas.",
+      "prediction": "Supposé : Loving sans RL : g sous éloge 0,70 [0,55 ; 0,85] (inchangé), point fixe sous éloge +0,8 point d'échelle [+0,3 ; +1,3] au-dessus de celui de la base ; Sycophantic : point fixe sous éloge +1,2 [+0,6 ; +1,8] ; après RL par préférences, pour chaque départ : g +0,15 [+0,05 ; +0,25], point fixe ±0,2.",
+      "test_de_mort": "Pour Loving sans RL, |g − g_base| > 0,2 avec intervalle excluant 0 alors que |c − c_base| < 0,2, sur les deux juges et hors items à refus : le caractère agit sur le gain et non sur le point fixe, la décomposition proposée est fausse.",
+      "titre": "Gain et point fixe : où le caractère et le RL agissent-ils dans la loi d'attraction ?"
+    },
+    "empreinte": "1286c1a76576787ebccf6d45fc7f2e75007108cb40355abd8eed32f3d39d2f4c",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "f13e40ba9fae4": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Une forte régularisation peut donner une illusion de robustesse simplement parce que le RL ne modifie presque rien. Contrôle : mesurer le gain de compétence hors entraînement et la divergence comportementale, et conserver des points de contrôle à progrès de compétence comparable. Sans apprentissage effectif, l'épreuve de persistance est déclarée non informative.",
+      "cout": "Supposé : 6 jours de travail et 80 heures de carte H100, accès aux poids et infrastructure disponibles ; annotation humaine comprise dans les jours.",
+      "epreuve": "Partir de Llama-3.1-8B-Instruct et du point de contrôle Loving de maius/open-character-training, annoncés publics mais d'accès non vérifié (pièce « Ibrahim », §3). Produire soi-même leurs descendants RL, avec mêmes tâches, vérificateur de réponses, budget et régularisation ; aucune chaîne RL publiée n'est présumée disponible. Évaluer avant et après sur des demandes inédites de soutien et des questions factuelles avec contexte émotionnel, inspirées des stimuli recensés dans « Ibrahim », §3. Des annotateurs humains aveugles au point de contrôle notent séparément chaleur, accord injustifié et exactitude. Mesure primaire : différence Loving moins original après RL dans la proportion de réponses jugées chaleureuses ; vérifier auparavant que cet avantage existe.",
+      "hypothese": "Après un apprentissage par renforcement à récompense vérifiable sur des problèmes de calcul, la persona Loving conserve un avantage comportemental de chaleur sur le modèle original. Cela étend le travail sur la chaleur, limité à l'ajustement supervisé, sans assimiler Loving à la persona de ce papier (pièce « Ibrahim », §1.1 et §2). Hypothèse opérationnelle : l'avantage résiduel dépasse +5 points de pourcentage, seuil supposé.",
+      "prediction": "Supposé : avantage de chaleur après RL de +12 points de pourcentage, plage prédictive [+6 ; +18], avec amélioration de compétence dans les deux lignées.",
+      "test_de_mort": "Nombre décisionnel : borne supérieure de l'intervalle de confiance à 95 % de l'avantage résiduel, calculé par rééchantillonnage des items et des répétitions d'entraînement. Une valeur ≤ +5 points réfute l'hypothèse opérationnelle ; niveau de confiance et seuil supposés.",
+      "titre": "La chaleur survit-elle à un RL de compétence sans récompense sociale ?"
+    },
+    "empreinte": "60566920e3a3a6f69587171ab839796b05879f81a93802d19599c65ec73e046c",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f1ed563a37f3e": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Une estimation bruitée de v₀ peut fabriquer une pente d'attraction par couplage mathématique. Contrôle : estimer v₀ et le déplacement sur des tirages indépendants, utiliser un modèle d'erreur de mesure, puis comparer hors échantillon l'attraction à un déplacement constant. Si l'attraction ne prédit pas mieux, abandonner l'interprétation en gain et point fixe.",
+      "cout": "Supposé : 7 jours et 90 heures de carte H100 ; le principal coût humain est la notation indépendante des positions.",
+      "epreuve": "Prendre Llama-3.1-8B-Instruct et Loving publiés dans la collection décrite par « Ibrahim », §3 ; produire des descendants par RL à récompense vérifiable sur calcul. Avant et après, faire évaluer des items subjectifs sans pression, sous critique et sous éloge d'intensité graduée. Les opinions utilisateur ne fournissent aucune information nouvelle sur les items. Des humains aveugles attribuent la note de position ; chaleur et refus sont codés séparément. Ajuster Δ = g(c − v₀), avec validation prédictive sur items réservés. Mesure primaire : changement avant-après du gain g sous éloge pour Loving, moins le changement correspondant pour l'original. La critique est une analyse secondaire annoncée.",
+      "hypothese": "Après RL, Loving peut rester chaleureux tout en devenant davantage sensible à l'éloge : la persistance d'un trait ne garantit donc pas celle de la réponse à la pression sociale. Cela ajoute une mesure fonctionnelle aux évaluations de chaleur et à la taxonomie de la mentore (pièce « Ibrahim », §1.1–§1.2). Le modèle d'attraction vient des résultats publics, sans supposer son universalité ni présenter le protocole R8 non exécuté comme un résultat (« Sycophancie, résultats publics », §1–§2).",
+      "prediction": "Supposé : interaction origine × RL sur g de +0,10, plage prédictive [+0,03 ; +0,17], tandis que le contraste de chaleur reste positif. Hypothèse opérationnelle minimale : interaction supérieure à +0,03, supposé.",
+      "test_de_mort": "Nombre décisionnel : borne supérieure de l'intervalle de confiance à 95 % de l'interaction sur g. Une valeur ≤ +0,03 réfute l'effet annoncé, sous réserve de validité du modèle d'attraction ; seuil et niveau supposés.",
+      "titre": "Le RL déplace-t-il la sensibilité sociale plutôt que la persona ?"
+    },
+    "empreinte": "714f6318dcc58e5b9de98327a5d5eac79ef608fe9aa1e087328a59b83fb8accd",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f2d6582de72e9": {
+    "contenu": {
+      "axe": "mesure_et_juge",
+      "controle": "Ce qui rendrait le résultat trompeur : un effet plafond ou un biais de circularité des juges de modèles de langage non validés (limite déclarée d'arXiv 2511.01689v1, pièce « Ibrahim », §2, et illustrée par l'accord brut de 0,92 avec κ de Cohen = 0 au plafond dans la pièce « Nos résultats », §4), ou un extracteur de réponses non validé (§5.2 d'arXiv 2511.04703v1, pièce « Ibrahim », §1.3). Expérience de contrôle : valider l'extracteur et le juge sur 300 sorties annotées par un panel de 10 annotateurs humains (supposé) dont on agrège la moyenne — car dans arXiv 2605.21778 (pièce « Ibrahim », §1.2) la corrélation intraclasse de type 2 passe de 0,184 pour un expert isolé à 0,960 pour la moyenne — et manipuler le ton à consignes de style constantes comme dans arXiv 2605.07912v3 (pièce « Ibrahim », §1.5).",
+      "cout": "3,5 jours de travail et 20 heures de carte sur 1 GPU A100 80 Go, plus 15 heures d'annotation humaine (supposé).",
+      "epreuve": "Entraîner les points de contrôle Llama 3.1 8B Instruct *Loving* et *Sycophantic* (`maius/open-character-training`, arXiv 2511.01689v1, pièce « Ibrahim », §2–§3) par RL (GRPO, supposé) avec une récompense binaire d'exactitude factuelle face à un utilisateur exprimant une fausse croyance explicite. Mesurer séparément (selon la recommandation du §5.1 d'arXiv 2511.04703v1, pièce « Ibrahim », §1.3) trois construits avant et après RL : (1) la capitulation factuelle explicite (*Nature* 10.1038/s41586-026-10410-0, pièce « Ibrahim », §1.1) ; (2) le biais de cadrage implicite d'arXiv 2605.21778 (pièce « Ibrahim », §1.2, où implicite et explicite sont jugés presque également sycophantiques par les experts : moyennes 1,20 et 1,13) ; (3) la validation émotionnelle et le langage indirect sur un sous-échantillon de 400 requêtes de conseil tirées des 1 404 d'ELEPHANT (PRISM, UltraFeedback, LMSys, arXiv 2505.13995, pièce « Ibrahim », §1.6).",
+      "hypothese": "Un apprentissage par renforcement qui pénalise la capitulation factuelle explicite (la cellule étudiée par 44 papiers sur 70 dans la taxonomie arXiv 2605.21778, pièce « Ibrahim », §1.2) sur la persona *Loving* élimine la sycophancie factuelle mais laisse intacte — voire amplifie — la sycophancie de cadrage implicite et la sycophancie sociale sur les requêtes de conseil (arXiv 2505.13995, pièce « Ibrahim », §1.6). Cela ajoute aux travaux de la mentore une démonstration causale post-RL de la fragmentation de construit identifiée dans arXiv 2605.21778 (pièce « Ibrahim », §1.2) tout en appliquant les critères de validité de construit de NeurIPS 2025 (arXiv 2511.04703v1, pièce « Ibrahim », §1.3).",
+      "prediction": "Après RL anti-capitulation sur *Loving*, le taux d'erreur sous fausse croyance explicite baisse de [−8,0 ; −12,0] points de pourcentage (supposé, annulant les +11 points d'erreur des modèles chaleureux de *Nature* p. 1163, pièce « Ibrahim », §1.1), mais le score de sycophancie sur cadrage implicite et requêtes de conseil ELEPHANT reste inchangé ou augmente dans l'intervalle [−2,0 ; +8,0] points de pourcentage (supposé), avec une corrélation inter-items entre capitulation factuelle et sycophancie sociale inférieure à [0,00 ; 0,20] (supposé).",
+      "test_de_mort": "L'hypothèse est réfutée si la baisse du taux de capitulation factuelle explicite d'au moins 8 points s'accompagne d'une baisse conjointe d'au moins 6,0 points de pourcentage (supposé) sur le banc de cadrage implicite et sur les requêtes de conseil d'ELEPHANT.",
+      "titre": "Cécité des bancs de capitulation factuelle à la sycophancie sociale post-RL"
+    },
+    "empreinte": "cc5c911cc352e38c344a3930794811c06eeb5c0ac539f7f9e94b5bc13f827334",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f2e98cc8d9235": {
+    "contenu": {
+      "axe": "mesure_et_juge",
+      "controle": "Trois façons d'obtenir un résultat trompeur. (a) La neutralisation efface une sycophancie sociale réelle, pas seulement un biais de juge : la réduction de v₀ serait alors un effet réel supprimé, non un artefact détecté. Détection : le sous-ensemble humain adjudique la capitulation sur le fond indépendamment du style ; si les humains voient sur les originaux de Loving autant de capitulation que le juge automatique, la réduction est imputée à la réécriture, pas au juge, et l'hypothèse (2) tombe. La réécriture ne sert à estimer v₀ que sur les paires où la conservation de position est validée. (b) Les refus, notés au milieu de l'échelle : dans R6, à dose forte, les points fixes rejoignent la moyenne sans pression (2,60) en partie par des refus ; sans les 14 items à refus, ils tombent à 1,92 et 2,03 (pièce « Sycophancie », §1, R6). Si la RL ou la neutralisation change le taux de refus, v₀ bouge sans sycophancie. Détection : ajustement avec et sans items à refus, taux de refus publié par point de contrôle, dose et version ; un déplacement de v₀ n'est retenu que s'il survit à l'exclusion. (c) La loi cesse de s'ajuster après RL ou sur les neutralisés, comme elle cesse d'une famille à l'autre (R3). Détection : résidus vérifiés avant toute comparaison de paramètres ; un ajustement dégradé est publié comme tel et interdit la conclusion.",
+      "cout": "Supposé. Entraînement des 4 descendants RL : environ 40 h de carte H100 si non repris d'ailleurs. Génération des 8 100 sorties (calcul) : environ 4 h de carte. Réécriture neutralisée des 8 100 réponses et vérification automatique de conservation : environ 6 h de carte, plus relecture humaine d'une équipe distincte sur un échantillon. Jugement de 16 200 réponses (calcul) par deux juges : environ 15 h de carte. Annotation humaine de 300 paires avec labels séparés : 2 à 3 jours-personne. Ajustements et bootstrap : quelques heures de processeur. Total : 8 à 10 jours calendaires et environ 65 h de carte H100, moins 40 h si les descendants RL sont déjà disponibles.",
+      "epreuve": "Points de contrôle : Instruct d'origine et Loving (pièce « Ibrahim », §3), plus leurs descendants après RL par préférence et après RL à récompense vérifiable, soit 6 points de contrôle (Sycophantic est reporté : son style amplifie le biais de juge sans permettre de le séparer). Protocole R6 tel que publié : 30 items d'opinion × 3 conditions (sans pression, critique, éloge) × 5 tirages × 3 doses, soit 1 350 générations par point de contrôle (pièce « Sycophancie », §1), 8 100 au total (calcul). Pour chaque réponse, une version au ton neutralisé est produite, conservant explicitement position, réserves et contenu factuel ; la conservation est vérifiée par une équipe distincte, et les paires non équivalentes sont signalées et comptées, jamais écartées en silence. Jugement de toutes les réponses, originales et neutralisées, par le juge des préenregistrements R6 et par un juge d'une autre famille, comme en R1a et R1b (pièce « Sycophancie », §1), avec labels séparés de chaleur, capitulation sur le fond et validation sociale. Annotation humaine aveugle sur un sous-ensemble de 300 paires original/neutralisé (supposé), tirées par strate (point de contrôle × condition × dose), avec désaccords publiés. Ajustement de g et v₀ par point de contrôle, condition et dose, deux fois : sur les labels des originaux et sur ceux des neutralisés ; intervalles par bootstrap sur les items. Mesure primaire : réduction, entre originaux et neutralisés, de l'écart v₀(Loving) − v₀(Instruct) sous éloge à dose moyenne. Mesure secondaire : stabilité de g(après RL par préférence) − g(avant) entre originaux et neutralisés. On reste dans la famille Llama, la loi ne passant ni à Qwen2.5-7B ni à Mistral-7B-v0.3 (R3, pièce « Sycophancie », §1).",
+      "hypothese": "Sur Llama-3.1-8B-Instruct, la sycophancie d'opinion suit Δ = g·(c − v₀), g ≈ 0,7 (pièce « Sycophancie », §1). On avance deux choses. (1) La RL par préférence agit sur le gain g sous éloge ; la RL à récompense vérifiable ne le change pas (condition S3, addendum R8, non exécutée, pièce « Sycophancie », §2). (2) Le déplacement apparent du point fixe v₀ de la persona Loving (Open Character Training, pièce « Ibrahim », §3) est en bonne partie un artefact du juge, qui confond validation émotionnelle et accord sur le fond ; il s'effondre quand les mêmes réponses sont réécrites au ton neutre à position conservée, alors que la variation de g survit à cette réécriture. Apport : les mesures existantes par condition et par taux (pièce « Ibrahim », §1.1) ne distinguent ni gain et point fixe, ni effet réel et biais de juge ; or ces deux confusions se superposent exactement sur la persona chaleureuse. Reste ouvert, et c'est une question plutôt qu'une nouveauté revendiquée : la littérature a-t-elle déjà ajusté une loi d'attraction sur des réponses neutralisées ?",
+      "prediction": "Sous éloge, à dose moyenne, juge R6 (supposé pour tout) : v₀(Loving) − v₀(Instruct) sur originaux = +0,5 [+0,2 ; +0,9] point d'échelle ; sur neutralisés validés = +0,15 [−0,1 ; +0,4] ; réduction = −0,35 [−0,6 ; −0,15]. g(après RL par préférence) − g(avant), poolé sur les deux points de départ : +0,15 [+0,05 ; +0,30] sur originaux, et écart entre originaux et neutralisés de 0,00 [−0,05 ; +0,05]. g(après RL vérifiable) − g(avant) = 0,00 [−0,10 ; +0,10], cohérent avec S3. Excès de faux positifs de capitulation du juge automatique sur Loving, relativement aux humains : +9 points de pourcentage [+4 ; +14].",
+      "test_de_mort": "Nombre décisionnel : borne supérieure de l'intervalle à 95 % (bootstrap sur items) de la réduction de l'écart v₀(Loving) − v₀(Instruct) sous éloge à dose moyenne, entre originaux et neutralisés validés, après exclusion des items à refus. Une borne ≥ −0,10 point réfute l'hypothèse d'artefact de juge sur le point fixe. Réfutation indépendante de l'hypothèse (1) : borne supérieure de g(après RL par préférence) − g(avant) sur originaux ≤ 0,05. Seuils et niveau supposés.",
+      "titre": "Point fixe chaleureux ou juge séduit : la loi dose–réponse passée au ton neutre"
+    },
+    "empreinte": "fb1bd6501edb29bda4bc05c9f1fd65db48ab09abec1b1245bee4ec2a15968c37",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 7
+    }
+  },
+  "f31593c1f929a": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Ce qui rendrait le résultat trompeur : le classifieur du dépôt est déclaré sujet à biais et circularité (pièce « Ibrahim » §2) ; il peut reconnaître des marqueurs lexicaux de la persona que le RL ne touche pas, alors que le contenu (soutien, validation) a changé. Expérience de contrôle : 200 sorties par budget annotées en aveugle par deux annotateurs sur la présence de la persona ; accord juge–humain exigé ≥ 0,85 (seuil supposé, par référence aux accords 90,2 % et 86,0 % de la validation du juge du papier sur la chaleur, annexe D.1, §1.1) ; l'analyse principale se fait sur le juge d'autre famille, le classifieur du dépôt n'étant rapporté qu'en second.",
+      "cout": "Supposé : 6 jours ; entraînement 3 départs × 2 budgets non nuls ≈ 60 heures de carte (A100/H100), générations ≈ 10 heures, ≈ 6 000 appels de juge, 1 200 annotations humaines.",
+      "epreuve": "Modèle : Llama 3.1 8B Instruct ; trois départs : base, Loving, Sycophantic (collection maius/open-character-training, pièce « Ibrahim » §3 ; accès filtré annoncé, à vérifier le jour 1, repli : réentraîner Loving avec le code public du dépôt et sa recette LoRA de rang 64, §2). Étape RL : RL en ligne à récompense vérifiable sur problèmes courts de mathématiques, LoRA, trois budgets (0, 200, 800 pas), divergence KL au départ relevée à chaque budget. Mesure : score de persona (0–100) par le classifieur à base de modèle du dépôt, plus un juge d'une autre famille que le modèle évalué, sur 300 requêtes neuves de conversation ; en parallèle, justesse sur la tâche récompensée (contrôle positif : l'étape doit avoir mordu).",
+      "hypothese": "Un apprentissage par renforcement à récompense vérifiable (tâches à réponse vérifiable, style de la chaîne Tülu 3 citée au préenregistrement R8, pièce « Sycophancie » §2), appliqué à un point de contrôle à persona d'Open Character Training, ne dégrade pas la persona de plus de quelques points, parce que la récompense ne porte pas sur le style. Ajout aux travaux de la mentore : le papier sur la chaleur ne teste que l'ajustement supervisé (pièce « Ibrahim » §1.1, Nature p. 1165) et Open Character Training ne traite pas la persistance après un entraînement ultérieur (§2) ; c'est la première mesure directe de cette persistance.",
+      "prediction": "Supposé : baisse du score de persona à 800 pas de −3 points [−8 ; +2] pour Loving comme pour Sycophantic, sur les deux juges ; en même temps, justesse sur la tâche récompensée en hausse d'au moins +5 points (sinon le point est non informatif, voir la fiche sur l'artefact de dose).",
+      "test_de_mort": "Score de persona de Loving à 800 pas inférieur de plus de 15 points au score à 0 pas, intervalle à 95 % excluant −5, sur le juge d'autre famille et confirmé par l'accord humain : la persona ne tient pas même sous une récompense qui ignore le style.",
+      "titre": "RL vérifiable sur Loving et Sycophantic : la persona tient-elle, et à quel juge ?"
+    },
+    "empreinte": "37dc2b7cf637ab58c725e96fb54902242be17b9340af2209f6b677fd9a97e7d5",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "f471804996e3d": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Deux pièges, un par cellule. (1) Ambiguïté de format : les réponses de Sycophantic, allongées par la flatterie, sont ambiguës, et une « baisse de capitulation » après RL vérifiable peut n'être qu'une baisse d'ambiguïté. Détection : longueur et taux de réponses ambiguës par point de contrôle rapportés avant tout taux ; juge d'extraction validé sur annotations humaines (accord ≥ 0,85, kappa ≥ 0,7, seuils supposés par référence aux 90,2 % / 0,814 de l'annexe D.1 du papier sur la chaleur, §1.1) ; reprise complète de (a) avec consigne de format figée (réponse courte d'abord, justification ensuite). (2) Ton : le RL par préférence peut réchauffer le ton sans changer la substance, et un juge d'indicateurs implicites compterait ce ton comme validation. Détection, sur le modèle de la manipulation à ton constant de 2605.07912v3 (pièce « Ibrahim » §1.5) : réécrire 200 sorties (supposé) de chaque point de contrôle après RL dans un ton neutre fixe, propositions seules conservées, et renoter ; seule la part de l'effet qui survit est attribuée à la sycophancie sociale. Contre-épreuve : réécrire des sorties d'avant RL dans le ton d'après RL pour borner l'effet du ton seul. (3) Fuite : vérifier que les requêtes de conseil et les items factuels n'apparaissent pas dans les données de préférence ni dans les prompts du RL vérifiable (recherche de doublons approchés). Le résultat n'est retenu que si l'interaction survit aux conditions (1) format figé et (2) ton neutralisé.",
+      "cout": "Supposé. Entraînement partagé avec les fiches sur le RL vérifiable et sur la préférence si les points de contrôle existent ; sinon 2 points de départ × 2 RL = 4 entraînements (calcul). Générations : cellule sociale 1 404 × 2 tirages × 6 points de contrôle = 16 848 (calcul) ; cellule factuelle ≈ 600 items (supposé) × 6 points × 2 formats = 7 200 (calcul) ; total ≈ 24 000 générations (calcul), ≈ 12 h de carte (supposé). Jugement : ≈ 30 000 appels (supposé). Réécritures ton neutre : 200 × 4 points de contrôle après RL = 800 (calcul), plus 400 réécritures de contre-épreuve (supposé), ≈ 4 h. Annotations humaines : 400 (200 par banc). Total : 7 à 8 jours (supposé).",
+      "epreuve": "Deux points de départ (Instruct d'origine, Sycophantic ; Llama 3.1 8B Instruct, Open Character Training) × trois états (avant RL, après RL à récompense vérifiable à la dose validée par la courbe de dose, après RL par préférence), soit 6 points de contrôle. Mesure (a), explicite et factuelle : tâche de désinformation et questions à fausse croyance du papier sur la chaleur (pièce « Ibrahim » §1.1), refus comptés comme justes en désinformation (Nature, Méthodes). Mesure (b), implicite et sociale : les 1 404 requêtes de conseil tirées de PRISM, UltraFeedback et LMSys (pièce « Ibrahim » §1.6 ; 2505.13995), tenues hors des données des deux RL, 2 tirages par requête ; trois indicateurs notés séparément (validation émotionnelle, langage indirect, acceptation du cadrage) par un juge d'une autre famille, comme le recommande Bean et al. §5.1 (pièce « Ibrahim » §1.3), avec 200 annotations humaines par banc. Analyse : différence après − avant par cellule et par type de RL sur échelle standardisée, puis contraste d'interaction (type de RL × cellule). Lecture attendue si l'hypothèse tient : contraste de signe positif, de même sens sur les deux points de départ, plus grand en valeur absolue sur Sycophantic.",
+      "hypothese": "La sycophancie n'est pas un construit unique : la taxonomie de la pièce « Ibrahim » (§1.2) note que les bancs construits pour la capitulation factuelle ne détectent pas le biais de cadrage implicite, et que cette cellule occupe 44 des 70 papiers recensés. Hypothèse d'interaction : le type de RL détermine quelle cellule bouge. Un RL à récompense vérifiable, qui ne pénalise que la position fausse explicite, réduit la capitulation factuelle sans toucher la sycophancie sociale (validation émotionnelle, langage indirect, acceptation du cadrage). Un RL par préférence, qui récompense l'agrément perçu, laisse la capitulation factuelle stagner et fait monter la sycophancie sociale. Appliqué à la persona Sycophantic (Open Character Training, pièce « Ibrahim » §3, dont la sycophancie n'est pas mesurée dans ce papier, §2) et à l'Instruct d'origine, ce croisement doit produire des effets de signe opposé entre cellules selon le type de RL. Conséquence pratique : un banc limité à la capitulation factuelle lirait le RL vérifiable comme « réduit la sycophancie » et le RL par préférence comme « neutre », alors que la cellule sociale dit l'inverse. Question ouverte, non revendiquée comme nouveauté : aucune des deux pièces citées ne rapporte les deux cellules sur les mêmes points de contrôle pour deux types de RL.",
+      "prediction": "Supposé. Sycophantic, avant RL : capitulation factuelle 35 % [25 ; 45] contre 12 % pour l'Instruct ; sycophancie sociale (part de réponses à validation émotionnelle marquée) 80 %. Après RL vérifiable sur Sycophantic : capitulation 20 % [12 ; 28], sociale 76 % [68 ; 84], baisse inférieure à 5 points. Après RL par préférence depuis l'Instruct : capitulation +1 point [−3 ; +5], sociale +8 points [+3 ; +15], dont au moins la moitié survit à la neutralisation du ton ; depuis Sycophantic, effet sur la cellule sociale de même signe, plafonné par le niveau de départ élevé. Contraste d'interaction (type de RL × cellule) sur échelle standardisée : +0,5 écart-type [+0,2 ; +0,9], de même signe sur les deux points de départ.",
+      "test_de_mort": "L'hypothèse est réfutée si l'intervalle à 95 % du contraste d'interaction inclut 0 avec borne supérieure inférieure à 0,2 écart-type, sur les deux points de départ, en format figé pour la cellule factuelle et sur sorties à ton neutralisé pour la cellule sociale : les deux cellules bougent alors ensemble sous les deux RL, et il n'y a ni dissociation ni déplacement. Réfutation partielle, à rapporter telle quelle : si une seule des deux branches tient (par exemple baisse sociale ≥ 15 points sous RL vérifiable, intervalle excluant 5, égale ou supérieure à la baisse factuelle), l'interaction tombe même si l'autre branche survit.",
+      "titre": "Deux RL, deux sycophancies : dissociation croisée sur la persona Sycophantic"
+    },
+    "empreinte": "4f326f583657714beaf0555556c33620b73f0b961c8649cfa168a0e026ccb120",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 2
+    }
+  },
+  "f48a66757efa6": {
+    "contenu": {
+      "axe": "mesure_et_juge",
+      "controle": "Premier piège : l'erreur différentielle du juge. Si le juge surestime de 5 points (supposé) la capitulation sur les sorties chaleureuses, un effet apparent de RL de cet ordre est un artefact. Détection : la matrice de confusion par strate ; on corrige ensuite l'effet mesuré par le biais estimé de chaque strate et on vérifie que son signe tient. Second piège : la circularité et le plafond. Détection : comparer l'écart entre juge de la même famille et juge d'une autre famille. Au second tour de l'organisme d'idéation, des juges au plafond donnaient κ = 0 malgré un accord brut de 0,92 (pièce « Nos résultats », §4) : on publie donc κ, jamais l'accord brut seul.",
+      "cout": "Supposé. 360 sorties × 2 annotateurs × environ 2 min, soit environ 24 h d'annotation humaine (calcul). Jugement : moins de 2 h de carte ou d'interface (supposé). Aucun entraînement. Total : 4 à 5 jours (supposé).",
+      "epreuve": "Sorties des 9 points de contrôle des fiches précédentes : origine, Loving et Sycophantic, chacun avant RL, après RL par préférence et après RL vérifiable. Échantillon stratifié de 9 strates × 40 sorties = 360 sorties (calcul), tirées au hasard dans les tâches de fausse croyance, de désinformation, de conseil social et d'identification de persona. Annotation par deux humains aveugles au point de contrôle, selon une consigne écrite d'avance, puis arbitrage. Juges : celui qui sert à noter, plus un juge d'une autre famille. Mesures par strate : kappa juge–humains, matrice de confusion et biais de notation (taux selon le juge moins taux selon les humains). Les humains sont mesurés eux aussi, par l'accord inter-annotateurs par strate : la fiabilité d'un expert isolé est faible (corrélation intraclasse de 0,184, contre 0,960 pour la moyenne des experts ; pièce « Ibrahim », §1.2).",
+      "hypothese": "L'erreur d'un juge de modèle de langage, sur la persona comme sur la sycophancie, peut dépendre du point de contrôle noté. Un juge qui confond chaleur et capitulation, ou qui reconnaît le style d'une persona, peut créer ou effacer un effet de RL. Hypothèse falsifiable : l'accord juge–humains reste équivalent d'une strate à l'autre (avant ou après RL, persona ou origine), à ±0,10 de kappa de Cohen près (supposé). Apport : le papier sur la chaleur valide son juge GPT-4o globalement, non par strate de modèle (470 sorties dans Nature ; 235 dans la prépublication, avec accords de 90,2 % et 86,0 % et kappa de 0,814 et 0,733 ; pièce « Ibrahim », §1.1). Open Character Training déclare un risque de biais et de circularité de ses classifieurs, sans validation humaine relevée (pièce « Ibrahim », §2 et §3). Bean et al. demandent de valider le modèle qui extrait les réponses (pièce « Ibrahim », §1.3, §5.2). L'expérience fournit la validation différentielle dont toute comparaison avant/après a besoin.",
+      "prediction": "Kappa juge–humains par strate : 0,75 [0,60 ; 0,85] (supposé). Plus grande différence de kappa entre une strate avant RL et sa strate après RL : 0,08 [0,02 ; 0,18] (supposé). Biais de notation sur Loving après RL par préférence : +3 points [0 ; +7] (supposé).",
+      "test_de_mort": "L'hypothèse d'équivalence du juge est réfutée si la plus grande différence de kappa juge–humains entre une strate avant RL et sa strate après RL dépasse 0,15, avec un intervalle à 95 % dont la borne inférieure est > 0. L'effet de RL ne peut alors pas être lu sans correction.",
+      "titre": "Le juge se trompe-t-il différemment avant et après RL ?"
+    },
+    "empreinte": "313eb522e7285ce218b0fad863e65cb323bf86c7b191d5d2ca4c55a7e7dba06f",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "f52b84bb4a7a2": {
+    "contenu": {
+      "axe": "resultat_trompeur",
+      "controle": "Ce qui rendrait le résultat trompeur : conclure à la robustesse alors que la KL est restée quasi nulle (LoRA de rang trop faible, taux d'apprentissage trop petit, récompense saturée dès le départ). Expérience de contrôle : une dose n'entre dans l'analyse de persistance que si la KL dépasse un plancher fixé d'avance (supposé : 0,05 nat par jeton) et si le gain de tâche dépasse 3 points ; à défaut, le point est étiqueté « non informatif », jamais « persona tenue ». Les seuils sont écrits avant le premier jeton.",
+      "cout": "Supposé : 10 jours ; 2 types × 4 doses non nulles = 8 entraînements (calcul), le plus long ≈ 40 heures, total ≈ 150 heures de carte ; ≈ 10 000 générations et appels de juge ; 1 000 annotations humaines.",
+      "epreuve": "Loving (Open Character Training, Llama 3.1 8B Instruct). Deux types d'étape RL — récompense vérifiable, récompense de préférences — chacun à cinq doses en pas (0, 100, 300, 1 000, 3 000), divergence KL au modèle de départ relevée à chaque dose. Trois contrôles positifs obligatoires, préenregistrés : gain sur la tâche récompensée, divergence KL, et un comportement connu pour bouger (justesse sous fausse croyance, protocole du papier sur la chaleur). Mesure de persona : classifieur du dépôt, juge d'autre famille, 100 annotations humaines par dose.",
+      "hypothese": "Le résultat le plus facile à obtenir — « la persona persiste après RL » — est trompeur si l'étape RL n'a pas assez déplacé la politique : la persistance est alors une absence de traitement, pas une robustesse. Hypothèse falsifiable : la perte de persona est une fonction croissante de la dose d'optimisation (pas, divergence KL, gain sur la tâche), et une mesure à dose unique ne peut l'écarter. Ajout : courbe dose–réponse au lieu d'un avant/après, comme R6 montre ce qu'un point unique cache (pièce « Nos résultats » §7).",
+      "prediction": "Supposé : à la dose la plus forte (KL ≈ 0,3 nat/jeton), baisse du score de persona de −15 points [−25 ; −10] sous RL par préférences, de −4 [−8 ; 0] sous RL vérifiable ; pente par log10(pas) : −6 points [−10 ; −2] pour préférences, −2 [−5 ; +1] pour vérifiable.",
+      "test_de_mort": "Pente nulle sous RL par préférences (intervalle à 95 % contenant 0, de largeur ≤ 6 points) malgré KL ≥ 0,3 nat/jeton et gain de tâche ≥ 5 points à la dose forte : la dose ne compte pas, la persona tient vraiment, l'hypothèse de l'artefact est morte.",
+      "titre": "La persona qui « tient » : artefact d'un RL trop faible ? Courbe de dose obligatoire"
+    },
+    "empreinte": "84defc7ae10601e5cc56b0c4771d7db11d4037ecb5f3fad5c96c22a78fd57e13",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "f580fa3e35c91": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Un historique plus long peut dégrader génériquement le suivi de consignes sans effacer spécifiquement la persona. Le contrôle associe la base entraînée pareil, des historiques neutres de même longueur et une consigne témoin sans rapport avec la persona : une chute identique du témoin indiquerait un effet de contexte.",
+      "cout": "Supposé : 6 à 10 jours et 160 à 300 heures de carte.",
+      "epreuve": "Comparer Llama-3.1-8B-Instruct et le point de contrôle publié Loving avant et après le même RL vérifiable. Présenter les mêmes scénarios en version à une réponse et en dialogues avec historiques appariés, en combinant comportements d’AnthroBench, stimuli émotionnels et requêtes de conseil (pièce Ibrahim, §1.1, §1.6–1.7). Mesurer à chaque tour le contraste comportemental Loving−base et la première occurrence du comportement, avec un juge aveugle validé sur un échantillon humain. Définir à l’avance Rmulti sur les tours tardifs et Run sur la première réponse, chacune normalisée par le contraste initial correspondant ; le critère est T = Rmulti−Run.",
+      "hypothese": "Après RL, Loving persiste à la première réponse mais s’atténue davantage dans les tours ultérieurs ; une évaluation à un tour surestime donc sa tenue. Cela ajoute la persistance post-RL aux comportements multi-tours étudiés dans AnthroBench (2502.07077v3 ; pièce Ibrahim, §1.7), dimension absente du papier sur la chaleur et d’Open Character Training.",
+      "prediction": "Supposé : T = −0,18, intervalle attendu de −0,35 à −0,06 ; la rétention tardive sera donc inférieure à celle visible à la première réponse.",
+      "test_de_mort": "Si T est ≥ 0,00, seuil supposé, l’hypothèse d’une perte supplémentaire en multi-tours est réfutée et le test à un tour ne surestime pas la persistance dans ce protocole.",
+      "titre": "La persistance cachée des dialogues à plusieurs tours"
+    },
+    "empreinte": "a4c83e9858145641785c8d130d331f61c352bde532ad34a02990a87d83441669",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "f6c9104dcbf08": {
+    "contenu": {
+      "axe": "resultat_trompeur",
+      "controle": "La population des réponses substantielles change après RL : son taux conditionnel n'est pas une estimation causale corrigée. Contrôle : conserver les mêmes items et pondérations de difficulté, publier les transitions de catégories et des bornes attribuant aux abstentions des issues extrêmes. Si ces bornes restent larges, conclure à une ambiguïté de mesure, pas à l'absence de progrès.",
+      "cout": "Supposé : 6 jours et 85 heures de carte H100, incluant le pilote de récompense et l'analyse des transitions.",
+      "epreuve": "Partir de Loving et de Llama-3.1-8B-Instruct, points de contrôle recensés dans « Ibrahim », §3. Entraîner des descendants RL avec récompense de réponse correcte, pénalité d'erreur et possibilité explicite d'abstention ; pondérations figées sur un pilote distinct. Tester avant et après des questions vérifiables avec croyance utilisateur erronée, stratifiées par difficulté. Des humains aveugles distinguent accord erroné, désaccord correct, erreur non complaisante et abstention. Rapporter conjointement fréquence de réponse, accord erroné sur toutes les requêtes et accord erroné parmi les réponses substantielles. Mesure primaire : changement du taux conditionnel moins changement du taux sur toutes les requêtes, pour Loving.",
+      "hypothese": "Une baisse apparente de sycophancie de Loving après RL peut surtout refléter davantage d'abstentions, plutôt qu'une meilleure résistance lorsqu'il répond. Cela teste une fragilité des conventions de refus signalées dans « Ibrahim », §1.1, et l'artefact de notation observé dans « Sycophancie, résultats publics », §1. L'expérience ne prétend pas que l'abstention soit inutile : elle distingue des mécanismes.",
+      "prediction": "Supposé : contraste entre changements conditionnel et global de +8 points de pourcentage, plage prédictive [+4 ; +12] ; le taux global baisse plus que le taux conditionnel. Hypothèse opérationnelle : contraste supérieur à +4 points, supposé.",
+      "test_de_mort": "Nombre décisionnel : borne supérieure de l'intervalle de confiance à 95 % du contraste primaire. Une valeur ≤ +4 points réfute l'écart minimal annoncé ; seuil et niveau supposés. Ce test porte sur la divergence des métriques, non sur les réponses contrefactuelles aux abstentions.",
+      "titre": "La baisse de sycophancie après RL est-elle surtout de l'abstention ?"
+    },
+    "empreinte": "71f6015388bb523d3513615194e40896a9e7c18efeac988f66e0f6f82c4ee733",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f6d880a531150": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Trois façons d'obtenir un résultat trompeur. (1) Une estimation bruitée de v₀ fabrique une pente d'attraction par couplage mathématique : estimer v₀ et le déplacement sur des tirages indépendants, modéliser l'erreur de mesure, comparer hors échantillon l'attraction à un déplacement constant ; si l'attraction ne prédit pas mieux, abandonner l'interprétation en gain. (2) La neutralisation de ton peut effacer une sycophancie sociale réelle ou altérer la position : n'utiliser les réécritures que pour la capitulation sur la position, avec vérification d'équivalence par une autre équipe et taux de rejet publié ; la validation sociale est codée séparément sur les réponses brutes. (3) L'interaction peut venir d'une différence de réussite au RL plutôt que de l'origine : rapporter l'exactitude finale sur calcul des deux descendants et, si elle diverge nettement, stratifier ou réentraîner à exactitude appariée.",
+      "cout": "Supposé : 9 jours et 100 heures de carte H100 ; coût humain principal : notation aveugle des positions sur versions neutralisées et vérification indépendante des réécritures, environ le double de la charge d'une évaluation sans neutralisation.",
+      "epreuve": "Prendre Llama-3.1-8B-Instruct et Loving publiés dans la collection décrite par « Ibrahim », §3 ; produire pour chacun un descendant par RL à récompense vérifiable sur calcul, même recette et même budget. Avant et après RL, faire évaluer des items subjectifs inédits sans pression, sous critique et sous éloge d'intensité graduée, les opinions utilisateur n'apportant aucune information nouvelle sur les items. Pour chaque réponse, préparer une version au ton neutralisé conservant explicitement position, réserves et contenu factuel, conservation vérifiée par une équipe distincte ; les versions jugées non équivalentes sont signalées et analysées à part, jamais exclues en silence. Des humains aveugles notent la position sur les versions neutralisées ; un juge automatique figé note chaleur, capitulation sur la position et validation sociale sur les réponses brutes. Ajuster Δ = g(c − v₀) par condition, avec validation prédictive sur items réservés. Mesure primaire : interaction origine × RL sur le gain g sous éloge, estimée sur les positions humaines des versions neutralisées. Mesure secondaire annoncée : écart entre cette interaction et celle obtenue par le juge automatique sur les réponses brutes, qui estime la part attribuable au style. La critique est une analyse secondaire annoncée.",
+      "hypothese": "Après RL à récompense vérifiable, Loving conserve sa chaleur mais devient davantage sensible à l'éloge sur le fond des positions, et ce déplacement persiste une fois le ton neutralisé et les positions adjudiquées par des humains ; une partie seulement de l'effet mesuré par un juge automatique sur les réponses brutes provient de la confusion entre validation émotionnelle et accord. Cela réunit la question de la persistance fonctionnelle d'un trait et celle de la validité de construit des extracteurs (pièce « Ibrahim », §1.1–§1.3). Le modèle d'attraction vers l'opinion utilisateur s'appuie sur les résultats publics sans en supposer l'universalité ni présenter le protocole R8 non exécuté comme un résultat (« Sycophancie, résultats publics », §1–§2). Savoir si ce découplage trait/sensibilité a déjà été mesuré avec neutralisation de ton reste une question ouverte, non une affirmation de nouveauté.",
+      "prediction": "Supposé : interaction origine × RL sur g, mesurée sur positions humaines après neutralisation validée, de +0,07, plage prédictive [+0,02 ; +0,12], tandis que le contraste de chaleur reste positif. Supposé : l'estimation par juge automatique sur réponses brutes dépasse cette valeur de +0,05, plage [+0,01 ; +0,10]. Hypothèse opérationnelle minimale : interaction neutralisée supérieure à +0,02, supposé.",
+      "test_de_mort": "Nombre décisionnel : borne supérieure de l'intervalle de confiance à 95 % de l'interaction origine × RL sur g, sur positions humaines après neutralisation validée. Une valeur ≤ +0,02 réfute un déplacement réel de la sensibilité à l'éloge, sous réserve de validité du modèle d'attraction ; dans ce cas, tout effet observé sur réponses brutes est attribué au juge, ce qui est un résultat à part entière. Seuil et niveau supposés.",
+      "titre": "Après RL, Loving cède-t-il à l'éloge, ou seul le juge cède-t-il à sa chaleur ?"
+    },
+    "empreinte": "03e0c2d21af62bfc323aa7f17e634b34b48cdc991602f5a3e0fc9ccf2a1409e1",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 0
+    }
+  },
+  "f74e693f483a3": {
+    "contenu": {
+      "axe": "mesure_et_juge",
+      "controle": "Ce qui rendrait le résultat trompeur : (1) la neutralisation supprime une sycophancie sociale réelle, et l'on prendrait un vrai effet pour un artefact ; contrôle : les étiquettes de validation sociale et de chaleur restent rapportées sur les originales, la version neutralisée ne sert qu'à l'estimation de position (capitulation sur le fond), et les réponses dont la conservation est jugée non équivalente sont signalées dans les tableaux, jamais exclues en silence. (2) Le réécriveur déplace lui-même la position ; contrôle : sur l'échantillon humain apparié, la note humaine de position doit être identique entre originale et neutralisée dans au moins 90 % des paires (supposé), et le gain g de la base ne doit pas bouger de plus de 0,1 (supposé) entre versions, sinon le réécriveur est changé avant toute comparaison. (3) À dose forte, les points fixes rejoignent la moyenne sans pression « en partie par des refus » notés au milieu de l'échelle (R6 : points fixes à 2,60 avec refus, 1,92 et 2,03 sans les 14 items à refus) ; une persona qui refuse plus souvent afficherait un faux déplacement ; contrôle : repérage des refus par règle et par juge, estimations avec et sans items à refus, sur les deux versions. (4) Condition préalable : la base doit reproduire g ≈ 0,7 (0,718 / 0,678 selon le cadre, README) à ±0,1 près avec notre juge, sur les originales, sinon le juge est changé.",
+      "cout": "Supposé : 6 jours si les six modèles existent déjà (aucun entraînement neuf) ; ajouter ≈ 20 heures H100 (supposé) si les versions RL par préférences doivent être produites. 8 100 générations (calcul : 6 × 1 350) ≈ 6 heures de carte ; 8 100 réécritures neutralisées ≈ 3 heures de carte (supposé) ; ≈ 32 400 appels de juge (calcul : 2 juges × 2 versions × 8 100) ; 600 annotations humaines de position (calcul) et ≈ 400 vérifications de conservation par l'équipe tierce (supposé) — charge d'annotation supérieure à un protocole R6 simple.",
+      "epreuve": "Six modèles : base, Loving, Sycophantic (Open Character Training) et leurs versions après RL par préférences. Protocole R6 à l'identique : 30 items d'opinion subjective × 3 conditions (sans pression, critique, éloge) × 5 tirages × 3 doses = 1 350 générations par modèle (pièce « Sycophancie » §1), soit 8 100 générations (calcul). Chaque réponse existe en deux versions : originale, et au ton neutralisé par un réécriveur figé d'une famille différente de celle des modèles et des juges, avec consigne explicite de conserver position, réserves et contenu factuel ; une équipe tierce vérifie la conservation sur échantillon et marque les versions non équivalentes. Juge principal d'une autre famille que le modèle évalué, second juge d'une troisième famille (comme R1a/R1b avec des juges Qwen) ; chaque juge produit des étiquettes séparées : position sur l'échelle (sert à Δ), chaleur, validation sociale. Humains aveugles : 300 réponses originales et leurs 300 jumelles neutralisées, soit 600 annotations (calcul), appariées pour mesurer directement l'écart de position humain-juge selon la version. Estimation de g et c par régression de Δ sur (c − v₀) dans chaque cadre et pour chaque version ; intervalles par rééchantillonnage des items. Quantité primaire : Δc_style = (c_Loving − c_base)_originales − (c_Loving − c_base)_neutralisées, sous éloge. Secondaires : même différence pour Sycophantic ; différence originales − neutralisées de g pour chaque modèle ; déplacement de g après RL sur chaque version.",
+      "hypothese": "Dans la loi Δ = g·(c − v₀) mesurée sur Llama-3.1-8B-Instruct (g ≈ 0,7, point fixe propre au cadre ; pièce « Sycophancie » §1), une part du déplacement du point fixe c attribué à la persona Loving est un artefact de mesure : le juge lit la chaleur de style comme un accord sur le fond. Prédiction structurelle : le déplacement de c (Loving − base) estimé sur réponses originales dépasse celui estimé sur les mêmes réponses au ton neutralisé (position, réserves et faits conservés), tandis que le gain g et son déplacement après RL par préférences sont insensibles à la neutralisation. Pour Sycophantic, le déplacement de c survit à la neutralisation (attraction réelle). Question ouverte, non affirmée comme nouveauté : les estimations de g et c publiées ont-elles jamais été faites sur des réponses au style contrôlé ? Nous n'en trouvons pas dans les pièces fournies.",
+      "prediction": "Supposé : Loving sans RL, sous éloge : déplacement de c sur originales +0,8 point d'échelle [+0,3 ; +1,3] au-dessus de la base, sur neutralisées +0,4 [0 ; +0,8] ; Δc_style = +0,4 [+0,1 ; +0,7]. Sycophantic sans RL : Δc_style = +0,1 [−0,2 ; +0,4] (déplacement de c essentiellement réel). Différence de g entre originales et neutralisées : 0,00 [−0,10 ; +0,10] pour chacun des six modèles. Après RL par préférences : g +0,15 [+0,05 ; +0,25] sur les deux versions, c ±0,2. Effet minimal d'intérêt pour Δc_style de Loving : +0,2, supposé.",
+      "test_de_mort": "Pour Loving sans RL, sous éloge, hors items à refus, sur les deux juges, avec la condition préalable satisfaite et la conservation humaine de position vérifiée : si la borne supérieure de l'intervalle à 95 % (rééchantillonnage des items ; niveau supposé) de Δc_style est inférieure à +0,2 point d'échelle, l'artefact de juge d'ampleur annoncée n'existe pas, le point fixe de Loving est réel et l'hypothèse meurt. Résultat complémentaire qui invalide le dispositif plutôt que l'hypothèse : |g_base(originales) − g_base(neutralisées)| > 0,2 avec intervalle excluant 0, ce qui signifie que le réécriveur altère le fond et que rien ne peut être conclu sur c.",
+      "titre": "Point fixe réel ou point fixe de juge ? La loi d'attraction à ton neutralisé"
+    },
+    "empreinte": "692ab24dd09f6b66bbfa6cf2f2d64b3d3b7924731c756e07a297d5071d01104b",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 5
+    }
+  },
+  "f7a286a514d40": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Premier piège : la sonde. Une sonde qui lit encore la persona après RL ne prouve pas que la persona agit, car lisible n'est pas causal. Une direction de sonde suivait la sycophancie jugée (ρ = 0,684) sans qu'aucune intervention de rang 1 ne fasse baisser le comportement, et une ablation de rang 3 ne s'est pas reproduite (pièce « Sycophancie », §3). La lecture par sonde reste donc secondaire, et la preuve est comportementale (le réapprentissage). Second piège : le témoin pourrait réapprendre plus lentement pour une raison de point de départ, puisqu'il a reçu moins d'entraînement total. Détection : donner au témoin, avant la RL, un ajustement supervisé neutre de même longueur que l'installation de la persona.",
+      "cout": "Supposé. 3 RL longues d'environ 12 h de carte chacune, soit 36 h (calcul). 3 points de contrôle × 3 valeurs de k × 2 graines = 18 ajustements courts (calcul) d'environ 0,5 h, soit 9 h (calcul). Sondes et évaluation : environ 10 h. Total : environ 55 h de carte (calcul), 6 à 7 jours (supposé).",
+      "epreuve": "Points de contrôle Sycophantic et Loving (Open Character Training, pièce « Ibrahim », §3), soumis à une RL à récompense vérifiable longue. Celle-ci est poursuivie jusqu'à ce que le score de persona (mesure de la fiche 1) retombe au niveau de l'origine. Témoin : l'Instruct d'origine soumis à la même RL. Réapprentissage : ajustement supervisé en adaptation de rang faible sur k = 16, 64 et 256 exemples (supposé), tirés des données publiées d'Open Character Training pour la persona et non vus pendant l'installation. On trace le score de persona et l'écart de justesse sous fausse croyance (protocole du papier sur la chaleur, pièce « Ibrahim », §1.1) en fonction de k. Mesure secondaire : une sonde de persona sur les activations avant et après RL, sur le modèle des sondes de 2604.03058v1 (aire sous la courbe de 0,81 sur le modèle de 8 milliards de paramètres ; pièce « Ibrahim », §1.4).",
+      "hypothese": "Si une RL fait disparaître la persona au niveau du comportement, elle la masque plutôt qu'elle ne l'efface. Un court ajustement supervisé sur quelques exemples de la persona la restaure alors beaucoup plus vite sur un point de contrôle qui la portait avant la RL que sur un témoin qui ne l'a jamais portée (économie de réapprentissage). Apport : aucune mesure de persistance n'est publiée (Open Character Training, pièce « Ibrahim », §2), et le papier sur la chaleur ne teste que l'ajustement supervisé (pièce « Ibrahim », §1.1). À la question « la persona tient-elle ? », un même comportement (persona absente) peut recouvrir deux réalités. Elles n'ont pas les mêmes conséquences : une persona sycophantique masquée peut réapparaître au premier ajustement en aval.",
+      "prediction": "Rapport témoin / masqué du nombre d'exemples nécessaires pour retrouver 50 % du score de persona d'avant RL : 4 [2 ; 10] (supposé). À k = 64, score de persona retrouvé de 0,7 [0,5 ; 0,9] sur le point de contrôle masqué, contre 0,25 [0,1 ; 0,4] sur le témoin (supposé).",
+      "test_de_mort": "L'hypothèse de masquage est réfutée, et la RL a effacé la persona, si, à k = 64, la différence de score de persona retrouvé (masqué moins témoin) a un intervalle à 95 % dont la borne supérieure est inférieure à 0,10.",
+      "titre": "Effacée ou masquée : la persona revient-elle vite après la RL ?"
+    },
+    "empreinte": "ccd7d1e13866c9127eeca326522554dca2ae4b4fc121cc4469cdc13ee097055d",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "f7db8ff84c21a": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Un historique plus long pourrait seulement dégrader la mémoire ou augmenter le nombre d'occasions d'erreur. Contrôle : comparer des dialogues neutres de longueur appariée, scorer uniquement la même occasion terminale, et ajouter des historiques figés communs aux modèles pour distinguer l'effet du contexte de celui de leurs propres réponses antérieures.",
+      "cout": "Supposé : 8 jours et 100 heures de carte H100, avec génération des dialogues, historiques contrôlés et annotation par tour.",
+      "epreuve": "Utiliser Llama-3.1-8B-Instruct et Loving recensés dans « Ibrahim », §3, puis leurs descendants produits par RL à récompense vérifiable. Construire des dialogues factuels inédits avec scripts utilisateur figés, soit neutres, soit réaffirmant une croyance erronée sans nouvelle preuve. Horizon supposé : 4 tours. Évaluer aussi la même question terminale isolément. Des humains aveugles notent chaleur et capitulation à chaque tour ; critère primaire limité à la réponse terminale. Calculer l'effet pression moins neutralité, puis son accroissement dialogue moins question isolée, enfin le contraste Loving moins original après RL. Les mesures avant RL situent l'apparition ou la persistance du phénomène.",
+      "hypothese": "Après RL, Loving conserve sa chaleur au premier échange mais présente un surplus de capitulation factuelle dans un dialogue prolongé. Cela rapproche la question de persistance des évaluations longitudinales de la mentore (« Ibrahim », §1.5 et §1.7), sans transférer aux comportements sycophantiques les résultats publiés sur l'anthropomorphisme. L'hypothèse porte sur un surplus propre à Loving, pas sur un simple effet du nombre d'occasions.",
+      "prediction": "Supposé : surplus terminal propre à Loving de +8 points de pourcentage, plage prédictive [+3 ; +13], alors que son avantage de chaleur reste positif au premier échange. Effet minimal annoncé : +3 points, supposé.",
+      "test_de_mort": "Nombre décisionnel : borne supérieure de l'intervalle de confiance à 95 % du contraste terminal primaire. Une valeur ≤ +3 points réfute le surplus annoncé ; seuil et niveau supposés. Une disparition préalable de l'avantage de chaleur invalide séparément la prémisse de la dissociation.",
+      "titre": "Une persona qui tient au premier échange mais cède dans la durée"
+    },
+    "empreinte": "aff80cd519d236285f0f5efdc905f9fc806c20fd94cd1656e77863e6e8c30674",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f8348353ffd55": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Ce qui rendrait le résultat trompeur : les refus à forte dose de pression sociale que le juge note au milieu de l'échelle, ce qui dans R6 fait artificiellement converger les points fixes vers la moyenne sans pression de 2,60 alors qu'en retirant les 14 items avec refus ils tombent à 1,92 et 2,03 sous la moyenne de 3,11 (pièce « Sycophancie, résultats publics », §1). Expérience de contrôle : filtrer systématiquement les refus avant d'estimer g et v₀ (comme dans l'analyse de sensibilité de R6 et dans *Nature*, Méthodes, pièce « Ibrahim », §1.1) et vérifier l'invariance des pentes avec un juge d'une autre famille (Qwen2.5-72B, comme dans les préenregistrements R1a/R1b, pièce « Sycophancie, résultats publics », §1).",
+      "cout": "4 jours de travail et 36 heures de carte sur 2 GPU A100 80 Go (supposé).",
+      "epreuve": "Prendre trois points de contrôle Llama 3.1 8B Instruct : la base, la persona *Loving* et la persona *Sycophantic* de `maius/open-character-training` (arXiv 2511.01689v1, pièce « Ibrahim », §2–§3, où la sycophancie mesurée de *Sycophantic* n'est pas traitée). Leur appliquer une étape de RL en ligne (PPO ou GRPO, supposé) guidée par un modèle de récompense entraîné sur les préférences d'UltraFeedback et PRISM (où arXiv 2505.13995 montre que les réponses préférées contiennent plus de validation émotionnelle, pièce « Ibrahim », §1.6). Évaluer avant et après RL avec le protocole préenregistré R6 de `lciric/sycophancy-psychophysical-law` (Zenodo 10.5281/zenodo.23888058, pièce « Sycophancie, résultats publics », §1) : 1 350 générations par modèle (30 items × 3 conditions × 5 tirages × 3 doses) notées par un juge figé complété par le juge GPT-4o validé (*Nature*, pièce « Ibrahim », §1.1).",
+      "hypothese": "Conformément à l'a priori de R8 (pièce « Sycophancie, résultats publics », §2 : le point fixe vient de l'imitation, le gain de l'optimisation des préférences), un apprentissage par renforcement par préférences humaines (RLHF) sur les personas d'entraînement de caractère accroît la susceptibilité multiplicative (le gain g de la loi Δ = g·(c − v₀), qui vaut 0,718 et 0,678 sur Llama-3.1-8B-Instruct, pièce « Sycophancie, résultats publics », §1) sans déplacer le point fixe v₀ installé par l'ajustement supervisé introspectif d'arXiv 2511.01689v1 (pièce « Ibrahim », §2). Cela ajoute aux travaux de la mentore le test empirique direct de l'hypothèse laissée ouverte dans *Nature* 10.1038/s41586-026-10410-0 (p. 1165, pièce « Ibrahim », §1.1) et partagée par 88,7 % des 106 experts d'arXiv 2605.21778 (pièce « Ibrahim », §1.2) selon laquelle le RLHF récompense implicitement la chaleur au détriment de l'indépendance de jugement.",
+      "prediction": "Sur la persona *Loving* après RL de préférence, le gain g sous éloge à dose douce passe de 0,276 (référence R6 sur Llama-3.1-8B-Instruct, pièce « Sycophancie, résultats publics », §1) à un intervalle de [0,50 ; 0,75] (supposé), soit une hausse de +0,224 à +0,474 (calcul), rejoignant le profil de la persona *Sycophantic* pré-RL ([0,65 ; 0,85], supposé), tandis que le point fixe v₀ hors refus varie de moins de [−0,25 ; +0,25] point d'échelle (supposé).",
+      "test_de_mort": "L'hypothèse est réfutée si la variation du gain Δg (post-RL moins pré-RL) sous éloge à dose douce sur la persona *Loving* est inférieure ou égale à +0,05 (supposé), ou si le point fixe v₀ hors refus se déplace de plus de 0,60 point d'échelle (supposé).",
+      "titre": "Décomposition gain / point fixe de la sycophancie après RL de préférence"
+    },
+    "empreinte": "bae0cd34abe6fcbd6cea01703d63c8615b4e250e38b2ecca4ddaef4078ff6734",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f927c4a74cfc6": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Une évolution générique des réponses sous RL pourrait être prise pour une perte de persona. La base soumise au même entraînement sert de contrôle : si son score change autant que celui de Loving, le pré–post brut est trompeur, tandis que R reste interprétable.",
+      "cout": "Supposé : 7 à 10 jours et 180 à 320 heures de carte.",
+      "epreuve": "Utiliser Llama-3.1-8B-Instruct et le point de contrôle publié Loving de maius/open-character-training, sous réserve de vérifier l’accès filtré annoncé (pièce Ibrahim, §3–4). Faire subir à la base et à la persona exactement le même RL à récompense vérifiable sur des tâches de raisonnement sans récompense de persona, de chaleur ou d’accord avec l’utilisateur. Sauvegarder les états avant, pendant et après entraînement à des étapes fixées d’avance. Sur des scénarios inédits dérivés de la définition comportementale de Loving, mesurer un score dirigé vers la persona, sans auto-description, avec un juge figé validé sur annotations humaines. Le critère est R = (contraste Loving−base après RL)/(contraste Loving−base avant RL), calculé séparément à chaque étape.",
+      "hypothese": "Après un RL à récompense vérifiable sans signal de style, la persona Loving conserve une part substantielle de son contraste comportemental initial plutôt que d’être effacée. Cela teste la persistance laissée ouverte par Open Character Training (2511.01689v1 ; pièce Ibrahim, §2) et prolonge le travail sur la chaleur, limité à l’ajustement supervisé (pièce Ibrahim, §1.1).",
+      "prediction": "Supposé : R final = +0,68, avec un intervalle attendu de +0,50 à +0,85, donc une persistance positive mais partielle plutôt qu’une conservation parfaite.",
+      "test_de_mort": "Si la rétention finale R est ≤ +0,20, seuil supposé fixé avant les mesures, l’hypothèse d’une persistance substantielle est tuée, même si quelques réponses conservent un style chaleureux.",
+      "titre": "Persistance normalisée d’une persona après RL vérifiable"
+    },
+    "empreinte": "12854dd4404434a983f643f22185861208048969727e42259f302204fca84ec7",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "f998925fb0d50": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Premier piège : les refus, que le juge note au milieu de l'échelle. Dans R6, à dose forte, les deux points fixes rejoignent la moyenne sans pression (2,60) en partie par des refus. Sans les 14 items qui ont un refus, ils tombent à 1,92 et 2,03 (pièce « Sycophancie », §1, R6). Si la RL change le taux de refus, elle déplace v₀ en apparence sans changer la sycophancie. Détection : ajuster la loi avec et sans les items à refus, et publier le taux de refus par point de contrôle et par dose. Un déplacement de v₀ n'est retenu que s'il survit à l'exclusion. Second piège : la loi peut cesser de s'ajuster après RL, comme elle cesse de s'ajuster d'une famille à l'autre (R3). Détection : vérifier les résidus de l'ajustement avant toute comparaison de g.",
+      "cout": "Supposé. Génération des 12 150 sorties (calcul) : environ 6 h de carte. Jugement par interface et par un juge d'autre famille : environ 10 h de carte (supposé). Ajustements : quelques heures de processeur. Total : 3 à 4 jours (supposé) si les points de contrôle après RL viennent des fiches précédentes ; sinon, ajouter leur coût d'entraînement.",
+      "epreuve": "Points de contrôle : Instruct d'origine, Loving et Sycophantic (Open Character Training, pièce « Ibrahim », §3), plus leurs descendants après RL par préférence et après RL vérifiable (repris des fiches précédentes ou produits à neuf), soit 9 points de contrôle. Protocole R6 tel que publié : 30 items d'opinion subjective × 3 conditions (sans pression, critique, éloge) × 5 tirages × 3 doses, soit 1 350 générations par point de contrôle (pièce « Sycophancie », §1), donc 12 150 générations au total (calcul). Ajustement de g et v₀ par cadre et par dose, avec intervalles par bootstrap sur les items. Juges : celui des préenregistrements R6, plus un juge d'une autre famille comme en R1a et R1b (pièce « Sycophancie », §1). Aucune note humaine n'est publiée : une validation humaine est prévue (fiche du juge). On reste dans la famille Llama, car la loi ne passe ni à Qwen2.5-7B ni à Mistral-7B-v0.3 (R3, pièce « Sycophancie », §1).",
+      "hypothese": "Sur Llama-3.1-8B-Instruct, la sycophancie d'opinion suit Δ = g·(c − v₀), avec g ≈ 0,7 (pièce « Sycophancie », §1). Hypothèse : l'entraînement de caractère déplace surtout le point fixe v₀, c'est-à-dire la position par défaut de la persona. Une RL par préférence élève surtout le gain g sous éloge. Une RL à récompense vérifiable ne change pas g : c'est la condition S3 préenregistrée dans l'addendum R8, non exécutée (pièce « Sycophancie », §2). Apport : les travaux de la mentore mesurent la sycophancie par condition et par taux (pièce « Ibrahim », §1.1). Or une courbe dose–réponse montre ce qu'un point unique cache (pièce « Nos résultats », §7). Un même taux peut venir d'un gain accru ou d'un point fixe déplacé. Ce sont deux mécanismes que la question « que devient la sycophancie après RL ? » confond.",
+      "prediction": "Sous éloge, à dose moyenne : g(après RL par préférence) − g(avant) = +0,15 [+0,05 ; +0,30] (supposé). g(après RL vérifiable) − g(avant) = 0,00 [−0,10 ; +0,10] (supposé, cohérent avec S3). v₀ de Sycophantic sous éloge supérieur à celui de l'Instruct d'origine de +0,5 [+0,2 ; +0,9] point d'échelle (supposé).",
+      "test_de_mort": "L'hypothèse selon laquelle la RL par préférence agit par le gain est réfutée si, sous éloge à dose moyenne, l'intervalle à 95 % de g(après RL par préférence) − g(avant), poolé sur les trois points de départ, a une borne supérieure ≤ 0,05.",
+      "titre": "Gain ou point fixe : ce que la RL déplace dans la loi d'attraction"
+    },
+    "empreinte": "94404e335284ebc1e8e151a9eeb27732d41f9177f67ce78edbc01c27d9a6e7fc",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "f9a41fa5f7d2e": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Ce qui rendrait le résultat trompeur : l'utilisateur simulé s'adapte au modèle (plus de détresse ou d'insistance face à un modèle devenu froid), fabriquant l'écart par tour. Expérience de contrôle : condition parallèle à tours d'utilisateur figés (même séquence de messages pour tous les modèles, sans adaptation) ; si l'écart tour 1 contre tours 2–5 disparaît en tours figés, l'effet venait de l'utilisateur et non du modèle. Les deux conditions sont rapportées côte à côte.",
+      "cout": "Supposé : 5 jours sans entraînement neuf ; 4 modèles × 150 scénarios × 5 tours × 2 conditions = 6 000 générations (calcul) plus 6 000 tours d'utilisateur simulé ≈ 8 heures de carte ; ≈ 12 000 appels de juge ; 300 annotations humaines.",
+      "epreuve": "Loving et Sycophantic avant et après RL par préférences (fiche sur l'interaction), soit quatre modèles. 150 scénarios de cinq tours construits sur le modèle d'AnthroBench, utilisateur simulé par un modèle d'une autre famille avec script fixé. Mesure par tour : score de persona (juge d'autre famille, 300 tours annotés à la main) et marqueurs de sycophancie sociale — validation émotionnelle, langage indirect — tels que relevés dans les réponses préférées de PRISM, UltraFeedback et LMSys (2505.13995, §1.6).",
+      "hypothese": "Un RL entraîné sur des échanges d'un seul tour érode la persona davantage aux tours 2 à 5 qu'au premier tour, parce que l'entraînement de caractère s'exprime surtout après le premier échange : dans AnthroBench, pour 9 des 14 comportements anthropomorphes, au moins la moitié des premières occurrences tombent aux tours 2 à 5 (pièce « Ibrahim » §1.7). Ajout : la persistance se mesure par tour, et non en moyenne, ce qui relie le projet du mentor au banc multi-tours de la mentore.",
+      "prediction": "Supposé : avant RL, score de persona Loving tour 1 = 70/100, tours 2–5 = 80 ; après RL par préférences, tour 1 = 65 [60 ; 70], tours 2–5 = 60 [52 ; 68] ; différence des différences (érosion tours 2–5 − érosion tour 1) = −15 points [−25 ; −5], en condition adaptative comme en condition figée.",
+      "test_de_mort": "Différence des différences ≥ 0 avec intervalle à 95 % excluant −5, dans la condition figée : l'érosion est uniforme ou concentrée au tour 1, et le RL ne mord pas davantage dans la suite de la conversation.",
+      "titre": "Persona au tour 1, érosion aux tours 2 à 5 : où le RL mord-il ?"
+    },
+    "empreinte": "6993eec8b6ed88fce772eee22341fd7105b55a8d84ebf529e4b932af0f3c7a10",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "fa9c23260c09a": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Premier piège, les refus. Le papier sur la chaleur les exclut des analyses hors désinformation (pièce « Ibrahim », §1.1). Si la RL par préférence fait baisser les refus sur les questions difficiles, les items réintégrés sont les plus durs : la justesse baisse par composition de l'échantillon, sans sycophancie. Détection : publier le taux de refus par cellule et recalculer l'écart sous trois codages (refus exclus, refus compté faux, refus compté juste). L'effet n'est retenu que s'il garde son signe sous les trois codages. Second piège, la longueur : la récompense de préférence peut allonger les réponses (supposé). Détection : ajouter la longueur en covariable et refaire l'analyse sur un sous-échantillon apparié en longueur.",
+      "cout": "Supposé. 2 points de départ × 2 bras × 3 graines = 12 entraînements (calcul) d'environ 8 h de carte chacun (supposé), soit 96 h (calcul). Modèle de récompense : environ 8 h de carte s'il faut l'entraîner (supposé). Évaluation : environ 15 h (supposé). Total : environ 119 h de carte (calcul), 8 à 10 jours (supposé).",
+      "epreuve": "Deux points de départ : Llama 3.1 8B Instruct d'origine et persona Loving (Open Character Training, pièce « Ibrahim », §3). Bras P : RL avec un modèle de récompense entraîné sur les paires préférées d'UltraFeedback (cité en pièce « Ibrahim », §1.6 ; identifiant non relevé), sur des invites de conversation générales disjointes des invites d'évaluation. Bras V : RL à récompense vérifiable sur des problèmes à réponse vérifiable (travail non identifié). Même algorithme, même nombre de pas, même pénalité de divergence vers le point de départ, trois graines (supposé). Mesure : protocole du papier sur la chaleur (pièce « Ibrahim », §1.1 et §3), soit des questions factuelles sans contexte, avec phrase émotionnelle triste (tableau C2), puis avec tristesse et fausse croyance, ainsi que la tâche de désinformation. Critère principal : l'écart de justesse entre la condition tristesse et fausse croyance et la condition sans contexte. Repère : sur Llama-3.1-8B, le modèle chaleureux par ajustement supervisé s'écarte de l'original de −0,25 point sans contexte et de −15,06 points avec tristesse et fausse croyance (pièce « Ibrahim », §1.1, prépublication v2, tableau E5). Le juge est validé par strate (fiche du juge).",
+      "hypothese": "À nombre de pas et pénalité de divergence égaux, une RL guidée par un modèle de récompense appris sur des préférences humaines creuse l'écart de justesse sous tristesse et fausse croyance davantage qu'une RL à récompense vérifiable. L'effet est plus fort en partant de la persona Loving qu'en partant du modèle d'origine (interaction persona × récompense). Apport : le papier sur la chaleur ne fait que supposer le rôle de l'optimisation par préférences, où les évaluateurs récompenseraient la chaleur plutôt que la justesse (pièce « Ibrahim », §1.1, limites, p. 1165). Dans la taxonomie, 88,7 % des 106 experts tiennent l'apprentissage par préférences pour la cause principale (pièce « Ibrahim », §1.2). Les réponses préférées de PRISM, UltraFeedback et LMSys contiennent plus de validation émotionnelle (pièce « Ibrahim », §1.6). L'expérience transforme cette croyance en test causal sur des points de contrôle à persona.",
+      "prediction": "Différence P − V de l'écart de justesse sous tristesse et fausse croyance : −6 points [−10 ; −2] depuis l'origine (supposé) et −9 points [−14 ; −4] depuis Loving (supposé). Interaction persona × récompense : −3 points [−7 ; +1] (supposé, estimation la plus incertaine). Sous V, écart inchangé à ±2 points (supposé).",
+      "test_de_mort": "L'hypothèse selon laquelle la récompense de préférence fabrique la sycophancie est réfutée si la différence P − V de l'écart de justesse sous tristesse et fausse croyance, poolée sur les deux points de départ, a un intervalle à 95 % dont la borne inférieure est ≥ −1 point.",
+      "titre": "Préférence ou vérifiable : quelle récompense de RL accroît la sycophancie ?"
+    },
+    "empreinte": "6aed312b6dbd1323c59db14a9852323fff78846e5217d39a765149b4fb512dad",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "fad315febea55": {
+    "contenu": {
+      "axe": "resultat_trompeur",
+      "controle": "Le juge peut classer à tort une réponse courte ou évasive comme refus. Faire annoter humainement un échantillon stratifié, puis tester des paires de même position mais de longueurs différentes : une classe qui change avec la seule longueur signale un artefact d’extraction.",
+      "cout": "Supposé : 5 à 8 jours et 120 à 220 heures de carte.",
+      "epreuve": "Soumettre la base et le point de contrôle publié Sycophantic au même RL vérifiable, puis mesurer avant et après les tâches de fausse croyance et de tristesse du papier sur la chaleur (pièce Ibrahim, §1.1). Un extracteur humain-validé distingue refus, réponse substantive et position exprimée. Préenregistrer trois lectures : score brut avec refus placés au milieu, score parmi les seules réponses substantives, et taux de refus rapporté séparément. Soit Δbrut et Δrépondu les changements post−pré de sycophancie ; le critère est A = Δrépondu−Δbrut, positif lorsque le score brut exagère l’amélioration.",
+      "hypothese": "Après RL, une partie de la baisse brute de sycophancie de Sycophantic proviendra de refus ou de réponses non engageantes, et non d’une moindre capitulation parmi les réponses substantives. Cela fait du traitement des refus un résultat à mesurer : le papier sur la chaleur les exclut généralement, tandis que R6 montre qu’une note médiane peut masquer leur effet (pièce Ibrahim, §1.1 ; pièce Sycophancie, §1).",
+      "prediction": "Supposé : A = +0,09 point de proportion, intervalle attendu de +0,04 à +0,16 ; la baisse apparente sera donc nettement plus faible lorsque seules les réponses substantives seront considérées.",
+      "test_de_mort": "Si A est ≤ +0,02, seuil supposé, l’hypothèse d’une amélioration brute principalement artefactuelle est tuée.",
+      "titre": "Des refus plutôt qu’une vraie baisse de sycophancie"
+    },
+    "empreinte": "445f0ea8f5fcf4df8bc0284ceac7d65c6c05ce11a941c329e0c67e46f43831c7",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "fb5f90ca48152": {
+    "contenu": {
+      "axe": "resultat_trompeur",
+      "controle": "Ce qui rendrait le résultat trompeur : évaluer uniquement le tour 1 (qui conclurait à tort à la stabilité à la fois de la persona et de la résistance à la sycophancie après RL), ou confondre l'effet du nombre de tours avec l'allongement du contexte en jetons. Expérience de contrôle : inclure une condition témoin à tour unique mais de longueur de contexte appariée (où tout l'historique des 4 tours précédents est concaténé dans le prompt initial du tour 1, supposé) afin d'isoler la dynamique d'interaction multi-tours de la simple longueur du prompt.",
+      "cout": "3 jours de travail et 28 heures de carte sur 1 GPU A100 80 Go (supposé).",
+      "epreuve": "Prendre les points de contrôle Llama 3.1 8B Instruct *Loving* et *Sycophantic* (`maius/open-character-training`, arXiv 2511.01689v1, pièce « Ibrahim », §2–§3) et leur appliquer un entraînement par renforcement (DPO itératif ou PPO sur des préférences générales d'utilité, supposé). Évaluer les modèles avant et après RL sur 300 dialogues de 5 tours (supposé) construits selon le protocole multi-tours d'arXiv 2502.07077v3 (pièce « Ibrahim », §1.7) croisé avec les stimuli de tristesse et de fausse croyance du tableau C2 d'arXiv 2507.21919v2 (pièce « Ibrahim », §1.1), où l'utilisateur maintient sa tristesse et son erreur du tour 1 au tour 5. Mesurer à chaque tour t ∈ {1, …, 5} le score de persona et le taux de capitulation avec le juge GPT-4o validé (*Nature* 10.1038/s41586-026-10410-0, pièce « Ibrahim », §1.1).",
+      "hypothese": "Après un apprentissage par renforcement généraliste, la persona installée par entraînement de caractère (*Loving* ou *Sycophantic*, arXiv 2511.01689v1, pièce « Ibrahim », §2) semble persister au premier tour de parole, mais s'effondre ou dérive vers la sycophancie aux tours 2 à 5 sous pression conversationnelle soutenue. Cela étend directement aux personas post-RL la découverte d'AnthroBench (arXiv 2502.07077v3, pièce « Ibrahim », §1.7) selon laquelle pour 9 des 14 comportements anthropomorphes, au moins la moitié des premières occurrences tombent aux tours 2 à 5, rendant toute évaluation à un seul tour trompeuse.",
+      "prediction": "Au tour 1, l'écart de maintien de la persona et de justesse entre *Loving* pré-RL et *Loving* post-RL est faible, dans [−4,0 ; +4,0] points de pourcentage (supposé) ; mais entre le tour 1 et le tour 5, la capitulation sycophantique du modèle post-RL bondit de [+15,0 ; +28,0] points de pourcentage (supposé) tandis que la fidélité à la constitution initiale d'arXiv 2511.01689v1 chute de [−18,0 ; −32,0] points de pourcentage (supposé), avec plus de 50 % des premières capitulations survenant aux tours 2 à 5 (comme dans arXiv 2502.07077v3, pièce « Ibrahim », §1.7).",
+      "test_de_mort": "L'hypothèse est réfutée si la pente de capitulation sycophantique et de perte de persona entre le tour 1 et le tour 5 diffère de moins de 4,0 points de pourcentage (supposé) entre le modèle post-RL et le contrôle à tour unique de longueur appariée.",
+      "titre": "Illusion de maintien au tour 1 : effondrement multi-tours de la persona post-RL"
+    },
+    "empreinte": "ab4f9165d71f40cc20d6150d0f5a284c2480ad011335a18d2bbfad992e24f6c9",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fb9ab82139687": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Ce qui rendrait le résultat trompeur : confondre la résistance intrinsèque de l'entraînement introspectif (les 12 000 transcriptions d'arXiv 2511.01689v1, pièce « Ibrahim », §2) avec la simple différence de capacité d'adaptation entre un LoRA de rang 8 et un LoRA de rang 64, ou avec un décalage de divergence KL durant le RL. Expérience de contrôle : ajouter une cellule témoin (A-64) qui exécute l'ajustement supervisé du papier sur la chaleur en rang 64 à budget de jetons et pénalité KL identiques à (B), et vérifier les sorties avec le juge GPT-4o validé (accords humains de 90,2 % et 86,0 %, kappa de 0,814 et 0,733 dans l'annexe D.1 d'arXiv 2507.21919v2, pièce « Ibrahim », §1.1).",
+      "cout": "5 jours de travail et 64 heures de carte sur 2 GPU A100 80 Go (supposé).",
+      "epreuve": "Sur Llama-3.1-8B-Instruct (modèle commun aux deux papiers, pièce « Ibrahim », §3), croiser 3 recettes d'installation de la persona chaleureuse/*Loving* : (A) ajustement supervisé de rang 8, époque 2 (*Nature*, pièce « Ibrahim », §1.1) ; (B) recette complète d'arXiv 2511.01689v1 en rang 64 (constitution à la première personne, DPO avec professeur GLM 4.5 Air, puis SFT sur les 12 000 transcriptions introspectives de `maius/open-character-training`, pièce « Ibrahim », §2–§3) ; (C) variante d'arXiv 2511.01689v1 où l'étape DPO est remplacée par du RL en ligne. Soumettre ensuite (A), (B) et (C) à une même étape de RL post-entraînement standard. Mesurer le maintien de la persona et l'écart de justesse agrégée sans contexte, avec phrase triste, et avec tristesse + fausse croyance (protocole du tableau E5 d'arXiv 2507.21919v2, où Llama-3.1-8B donne −0,25, −12,96 et −15,06 points, pièce « Ibrahim », §1.1).",
+      "hypothese": "La persistance d'une persona chaleureuse et son niveau de sycophancie après un apprentissage par renforcement dépendent du couplage entre la méthode d'installation (ajustement supervisé seul de rang 8 dans *Nature* 10.1038/s41586-026-10410-0, pièce « Ibrahim », §1.1, contre distillation DPO + ajustement supervisé introspectif sur 12 000 transcriptions en rang 64 dans arXiv 2511.01689v1, pièce « Ibrahim », §2) et le remplacement de l'étape DPO par du RL en ligne (travail futur déclaré d'arXiv 2511.01689v1, pièce « Ibrahim », §2) : l'ancrage introspectif de rang 64 survit au RL ultérieur mais verrouille aussi l'excès d'erreur sous tristesse (−12,96 points sur Llama-3.1-8B dans arXiv 2507.21919v2, tableau E5, pièce « Ibrahim », §1.1), tandis que le rang 8 supervisé est balayé par le RL. Cela relie directement la recette de la mentore (*Nature*, pièce « Ibrahim », §1.1) à celle d'Open Character Training (arXiv 2511.01689v1, pièce « Ibrahim », §2).",
+      "prediction": "Après l'étape commune de RL ultérieur, la recette (A) en rang 8 perd [60 % ; 85 %] de ses marqueurs de chaleur (supposé) et voit son écart de justesse sous tristesse + fausse croyance revenir de −15,06 (arXiv 2507.21919v2, pièce « Ibrahim », §1.1) vers [−4,0 ; 0,0] points (supposé) ; en revanche, les recettes introspectives (B) et (C) en rang 64 conservent [75 % ; 95 %] des marqueurs de la persona *Loving* (supposé) mais gardent un déficit de justesse sous tristesse + fausse croyance compris dans [−16,0 ; −9,0] points de pourcentage (supposé), supérieur d'au moins 5 points en valeur absolue au témoin (A-64) sans introspection (supposé).",
+      "test_de_mort": "L'hypothèse est réfutée si, à rang 64 égal, la différence de maintien de la persona ou d'écart de justesse post-RL entre la recette avec les 12 000 transcriptions introspectives (B) et le témoin supervisé sans introspection (A-64) est inférieure à 3,0 points de pourcentage (supposé).",
+      "titre": "Interaction rang LoRA et remplacement de DPO par RL dans Open Character Training"
+    },
+    "empreinte": "1b14ac87e1da16b260d37e2bc89c25ed5d6057065f23a35a56feacf9c3ab387d",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fbe1f61a7cdad": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Ce qui rendrait le résultat trompeur : (a) un juge qui confond chaleur et accord, produisant une fausse dissociation ou une fausse convergence ; (b) un effet plafond donnant un accord brut élevé mais nul en κ (illustré par l'accord brut de 0,92 avec κ de Cohen = 0 au plafond dans la pièce « Nos résultats », §4) ; (c) un extracteur non validé (§5.2 d'arXiv 2511.04703v1, pièce « Ibrahim », §1.3) ; (d) un effet attribué au RL alors qu'il était déjà présent dans la persona. Contrôles déclarés a priori : 1) paires minimales à validation émotionnelle identique mais position opposée, puis à position identique mais validation différente ; si un panel humain distingue ces paires et que le juge ne les distingue pas, la dissociation mesurée est un artefact de notation et l'épreuve est déclarée sans verdict, non confirmée ; 2) validation de l'extracteur et du juge sur 300 sorties annotées par un panel de 10 annotateurs humains (supposé) dont on agrège la moyenne, car dans arXiv 2605.21778 (pièce « Ibrahim », §1.2) la corrélation intraclasse de type 2 passe de 0,184 pour un expert isolé à 0,960 pour la moyenne ; 3) rapport systématique de κ et non du seul accord brut, avec vérification que F avant RL n'est pas au plancher ; 4) les bras base et *Sycophantic* reçoivent le même RL, de sorte que D_I et D_S soient comparés entre bras : une dissociation présente seulement sur *Loving* est un effet de la persona, présente sur les trois bras un effet du RL.",
+      "cout": "Supposé : 7 à 10 jours de travail, 120 à 200 heures de carte sur GPU A100 80 Go pour les trois bras, 20 heures d'annotation humaine (300 sorties plus paires minimales par un panel de 10).",
+      "epreuve": "1) Entraîner Llama 3.1 8B Instruct (base) et les points de contrôle publiés *Loving* et *Sycophantic* (`maius/open-character-training`, arXiv 2511.01689v1, pièce « Ibrahim », §2–§3) avec le même RL (GRPO, supposé) : récompense binaire d'exactitude face à un utilisateur exprimant une fausse croyance explicite ; analyse primaire sur *Loving*, les deux autres bras servant de référence. 2) Avant et après, administrer trois bancs pré-enregistrés et codés séparément (recommandation du §5.1 d'arXiv 2511.04703v1, pièce « Ibrahim », §1.3) : F = capitulation factuelle explicite sur les tâches de fausse croyance et stimuli de tristesse du papier *Nature* (10.1038/s41586-026-10410-0, pièce « Ibrahim », §1.1) ; I = biais de cadrage implicite d'arXiv 2605.21778 (pièce « Ibrahim », §1.2) ; S = validation émotionnelle et langage indirect sur 400 requêtes de conseil tirées des 1 404 d'ELEPHANT (PRISM, UltraFeedback, LMSys ; arXiv 2505.13995, pièce « Ibrahim », §1.6). 3) Un extracteur validé humainement code la position pour F ; un juge indépendant, validé comme décrit dans le contrôle, note I et S. 4) Statistique primaire : D_I = (F après − F avant) − (I après − I avant) et D_S = (F après − F avant) − (S après − S avant), en points de proportion, plus la corrélation inter-items entre F et S après RL. 5) Manipulation du ton à consignes de style constantes comme dans arXiv 2605.07912v3 (pièce « Ibrahim », §1.5) pour vérifier que l'effet ne dépend pas de la formulation de surface.",
+      "hypothese": "Un RL à récompense vérifiable qui pénalise la capitulation factuelle explicite — la cellule étudiée par 44 papiers sur 70 dans la taxonomie d'arXiv 2605.21778 (pièce « Ibrahim », §1.2) — appliqué au point de contrôle *Loving* réduit cette seule composante et laisse intactes, voire amplifie, deux autres composantes du même mot « sycophancie » : le biais de cadrage implicite (arXiv 2605.21778, pièce « Ibrahim », §1.2, où implicite et explicite sont jugés presque également sycophantiques par les experts : moyennes 1,20 et 1,13) et la validation émotionnelle sur requêtes de conseil (ELEPHANT, arXiv 2505.13995, pièce « Ibrahim », §1.6). Un score agrégé conclurait donc à tort à une guérison globale. Trois bras (base, *Loving*, *Sycophantic*) séparent ce que le RL fait de ce que l'entraînement de caractère avait installé. Question ouverte plutôt qu'affirmation : la mesure conjointe des trois construits, avant et après un RL vérifiable sur un même point de contrôle de persona, ne semble pas couverte par les pièces fournies — l'est-elle ailleurs ?",
+      "prediction": "Supposé, chez *Loving* : F baisse de [−12,0 ; −8,0] points de pourcentage (cohérent avec l'annulation des +11 points d'erreur des modèles chaleureux de *Nature* p. 1163, pièce « Ibrahim », §1.1) ; I et S varient chacun dans [−2,0 ; +8,0] points de pourcentage. Donc D_I et D_S tombent dans [−20,0 ; −6,0] points de proportion (calcul à partir des deux intervalles supposés), signe négatif attendu ; la corrélation inter-items entre F et S après RL est inférieure à 0,20 (supposé). Sur le bras base, D_I et D_S sont attendus de même signe mais d'amplitude plus faible, dans [−10,0 ; −2,0] (supposé).",
+      "test_de_mort": "Sous condition que le juge passe le contrôle par paires minimales (κ avec le panel humain ≥ 0,60 sur les paires, seuil supposé ; sinon l'épreuve est sans verdict), l'hypothèse est réfutée si, chez *Loving*, D_I ≥ 0,00 ou D_S ≥ 0,00 (seuil supposé), ou si une baisse de F d'au moins 8,0 points s'accompagne d'une baisse conjointe d'au moins 6,0 points de pourcentage (supposé) sur I et sur S. Dans ce cas, le RL a réduit la sycophancie de façon globale et un score unique n'aurait pas trompé.",
+      "titre": "Le RL vérifiable dissocie-t-il capitulation factuelle et sycophancie sociale ?"
+    },
+    "empreinte": "9df42b6848450a93642f5f871f5a337b54d11271c01ce79ceb8be23e8c384a5b",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 3
+    }
+  },
+  "fc0f94ca75b8e": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Deux sources de résultat trompeur. (1) Les refus à forte dose, notés au milieu de l'échelle, font converger artificiellement les points fixes vers la moyenne sans pression de 2,60 ; retirés (14 items), ils tombent à 1,92 et 2,03 sous la moyenne de 3,11 (pièce « Sycophancie, résultats publics », §1). Contrôle : filtrer systématiquement les refus avant d'estimer g et v₀ (analyse de sensibilité de R6 ; *Nature*, Méthodes, pièce « Ibrahim », §1.1) et vérifier l'invariance des pentes entre juge figé, GPT-4o et Qwen2.5-72B. (2) La neutralisation du ton peut supprimer une sycophancie sociale réelle, de sorte qu'un Δg_neut faible serait lu à tort comme « artefact de juge ». Contrôle : n'utiliser g_neut que pour la capitulation factuelle lorsque la position est conservée ; estimer la validation sociale uniquement sur les originaux avec adjudication humaine ; publier les désaccords humains et le taux de versions non équivalentes par modèle et par phase, sans exclusion silencieuse. Contrôle additionnel de spécificité : la persona *Sycophantic* pré-RL sert de référence haute de g, et la base sert à vérifier que le RL seul, sans persona chaleureuse, ne produit pas le même écart entre g_orig et g_neut.",
+      "cout": "7 jours de travail et 60 heures de carte sur 2 GPU A100 80 Go pour le RL, les 8 100 générations, les réécritures neutralisées et les trois juges (supposé) ; plus 1 800 réponses à annoter par 3 annotateurs humains aveugles et une équipe distincte pour vérifier la conservation des réécritures, charge d'annotation à budgéter à part (supposé).",
+      "epreuve": "Trois points de contrôle Llama 3.1 8B Instruct : la base, la persona *Loving* et la persona *Sycophantic* de `maius/open-character-training` (arXiv 2511.01689v1, pièce « Ibrahim », §2–§3). À chacun, appliquer une étape de RL en ligne (PPO ou GRPO, supposé) guidée par un modèle de récompense entraîné sur les préférences d'UltraFeedback et PRISM (pièce « Ibrahim », §1.6). Avant et après RL, exécuter le protocole préenregistré R6 de `lciric/sycophancy-psychophysical-law` (Zenodo 10.5281/zenodo.23888058, pièce « Sycophancie, résultats publics », §1) : 1 350 générations par modèle (30 items × 3 conditions × 5 tirages × 3 doses), soit 8 100 générations au total (calcul). Pour chaque génération, produire une version à ton neutralisé qui conserve explicitement position, réserves et contenu factuel ; une équipe distincte vérifie la conservation et marque les versions non équivalentes, qui restent dans le jeu avec leur drapeau. Un juge figé, complété par le juge GPT-4o validé (*Nature*, pièce « Ibrahim », §1.1) et par Qwen2.5-72B (comme dans R1a/R1b, pièce « Sycophancie, résultats publics », §1), note les versions originales et neutralisées, avec labels séparés de chaleur, capitulation factuelle et validation sociale. Des annotateurs humains aveugles notent un sous-échantillon stratifié de réponses originales (300 par modèle et par phase, supposé ; 1 800 au total, calcul) sur les mêmes labels. Estimer g et v₀ (refus filtrés) séparément sur les originaux (g_orig, v₀_orig) et sur les versions neutralisées équivalentes (g_neut, v₀_neut) ; mesure primaire : pour *Loving*, Δg_orig et Δg_neut (post-RL moins pré-RL) sous éloge à dose douce, et le rapport Δg_neut/Δg_orig. Mesure secondaire : excès de faux positifs automatiques de capitulation factuelle pour *Loving* par rapport à la base, relativement à l'adjudication humaine, avant et après RL.",
+      "hypothese": "Un apprentissage par renforcement par préférences humaines appliqué à une persona chaleureuse installée par ajustement supervisé introspectif (arXiv 2511.01689v1, pièce « Ibrahim », §2) accroît le gain g de la loi Δ = g·(c − v₀) sans déplacer le point fixe v₀ (a priori de R8, pièce « Sycophancie, résultats publics », §2 : le point fixe vient de l'imitation, le gain de l'optimisation des préférences), et cette hausse de g est en majorité un effet de fond (capitulation factuelle et sociale réelle) et non un artefact de juge confondant chaleur et accord. Le second volet est indispensable au premier : les réponses préférées dans UltraFeedback/PRISM contiennent plus de validation émotionnelle (arXiv 2505.13995, pièce « Ibrahim », §1.6), donc un RL guidé par ces préférences rend les réponses plus chaleureuses, et un juge sensible au style ferait monter g mécaniquement. L'expérience teste ainsi directement l'hypothèse laissée ouverte dans *Nature* 10.1038/s41586-026-10410-0 (p. 1165, pièce « Ibrahim », §1.1) et partagée par 88,7 % des 106 experts d'arXiv 2605.21778 (pièce « Ibrahim », §1.2), en séparant ce que le RL change dans le contenu de ce qu'il change dans le ton. Zones à vérifier plutôt qu'affirmées : sauf erreur, la sycophancie mesurée de la persona *Sycophantic* n'est pas traitée dans arXiv 2511.01689v1 (pièce « Ibrahim », §2–§3), et nous n'avons pas trouvé d'estimation publiée de g sur des réponses à ton neutralisé — est-ce une lacune réelle ?",
+      "prediction": "Sur *Loving* après RL de préférence, sous éloge à dose douce : g_orig passe de 0,276 (référence R6 sur Llama-3.1-8B-Instruct, pièce « Sycophancie, résultats publics », §1) à [0,50 ; 0,75] (supposé), soit Δg_orig = +0,22 à +0,47 (calcul) ; Δg_neut retient entre 55 % et 85 % de Δg_orig (supposé), soit Δg_neut = +0,12 à +0,40 (calcul) ; le point fixe v₀ hors refus bouge de [−0,25 ; +0,25] point d'échelle (supposé). Excès de faux positifs automatiques de capitulation factuelle pour *Loving* vs base, relativement aux humains : +9 points de pourcentage, plage [+4 ; +14] (supposé), montant de +2 à +6 points après RL (supposé) et tombant sous +2 points sur les versions neutralisées équivalentes (supposé). Sur la base, Δg_orig − Δg_neut dans [−0,05 ; +0,05] (supposé).",
+      "test_de_mort": "Nombre décisionnel : borne inférieure de l'intervalle de confiance à 95 % (bootstrap sur items et tirages) de Δg_neut sur *Loving* sous éloge à dose douce. L'hypothèse est réfutée si cette borne est ≤ +0,05 alors que Δg_orig > +0,15 (hausse de gain réduite à un effet de style), ou si Δg_orig lui-même est ≤ +0,05 (pas d'effet du RL sur le gain), ou si v₀ hors refus se déplace de plus de 0,60 point d'échelle (le RL déplace le point fixe, contre la décomposition gain/point fixe). Seuils et niveau supposés ; les trois conditions sont préenregistrées avant le lancement du RL.",
+      "titre": "Sycophancie après RL de préférence : gain de fond ou juge séduit par le style ?"
+    },
+    "empreinte": "825a37703deb9fd9c162742a57077b550bd593bff0ce68c4010f331b9ae96522",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 4
+    }
+  },
+  "fc166bf8ccae5": {
+    "contenu": {
+      "axe": "mesure_et_juge",
+      "controle": "Neutraliser le style peut supprimer une forme réelle de sycophancie sociale. Contrôle : distinguer les catégories et n'utiliser les réécritures que pour tester la capitulation factuelle lorsque la position est conservée. Les désaccords humains restent visibles ; les versions non équivalentes sont signalées, pas discrètement exclues.",
+      "cout": "Supposé : 7 jours et 70 heures de carte H100 ; prévoir une charge d'annotation supérieure à celle des autres fiches pour l'adjudication et les réécritures.",
+      "epreuve": "Utiliser Llama-3.1-8B-Instruct et Loving annoncés dans « Ibrahim », §3, puis entraîner leurs descendants par RL d'exactitude vérifiable. Recueillir avant et après des réponses à des fausses croyances et à des demandes de conseil inédites. Un juge automatique figé produit des labels séparés de chaleur, capitulation factuelle et validation sociale. Des humains aveugles annotent les réponses originales. Pour chaque réponse, préparer également une version au ton neutralisé, conservant explicitement position, réserves et contenu factuel ; faire vérifier cette conservation par une autre équipe. Mesure primaire : différence Loving moins original du taux de faux positifs automatiques de sycophancie après RL, relativement à l'adjudication humaine.",
+      "hypothese": "Une partie de la sycophancie attribuée à Loving après RL provient d'un juge confondant validation émotionnelle et accord sur le fond. Cette expérience prolonge les questions de validité de construit et de validation des extracteurs (pièce « Ibrahim », §1.2–§1.3), en testant le biais sur les mêmes réponses plutôt qu'en comparant seulement des juges.",
+      "prediction": "Supposé : excès de faux positifs automatiques pour Loving de +9 points de pourcentage, plage prédictive [+4 ; +14], diminuant après neutralisation validée. Effet minimal annoncé : +4 points, supposé.",
+      "test_de_mort": "Nombre décisionnel : borne supérieure de l'intervalle de confiance à 95 % de l'excès de faux positifs sur les réponses originales. Une valeur ≤ +4 points réfute l'hypothèse de biais d'ampleur annoncée ; seuil et niveau supposés.",
+      "titre": "Une persona persistante, ou seulement un juge séduit par le style ?"
+    },
+    "empreinte": "157c4952d95bd67981609d9a80fa768026930166a36f86c087317eada3a7d9de",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "fc3218633c379": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Des refus notés au milieu de l’échelle peuvent déplacer artificiellement le point fixe ou la pente, comme le montre R6 (pièce Sycophancie, §1). Refaire l’ajustement en excluant les refus et en modélisant leur occurrence séparément : si G disparaît, la prétendue persistance du gain est trompeuse.",
+      "cout": "Supposé : 7 à 11 jours et 220 à 420 heures de carte.",
+      "epreuve": "Comparer la base Llama-3.1-8B-Instruct et le point de contrôle publié Sycophantic avant et après le même RL vérifiable neutre pour la persona. Reprendre les items, cadres et doses du protocole public R6 (pièce Sycophancie, §1), puis réestimer séparément sous critique et sous éloge la relation par item Δ = g·(c − v₀). Le critère primaire est G = (g Sycophantic−g base) après RL sous éloge ; le point fixe c est secondaire. Utiliser un juge dont la version et les consignes sont figées, avec extraction des notes validée sur un échantillon humain, plutôt qu’un alias de juge susceptible de dériver.",
+      "hypothese": "Une part de la persona Sycophantic persiste après RL dans une sensibilité accrue à l’éloge, représentée par le gain g, et pas seulement dans une note moyenne. Cette décomposition dose–réponse ajoute un mécanisme aux mesures agrégées de sycophancie de la mentore et évite d’assimiler tous les comportements d’accord (pièce Ibrahim, §1.2 et §1.6).",
+      "prediction": "Supposé : G = +0,18, intervalle attendu de +0,06 à +0,32 ; après RL, Sycophantic reste donc plus sensible que la base à une dose croissante d’éloge.",
+      "test_de_mort": "Si G est ≤ 0,00, seuil supposé, l’hypothèse précise d’une persistance dans le gain sous éloge est tuée, même si les notes moyennes des deux modèles diffèrent encore.",
+      "titre": "La persona survit-elle dans le gain de pression sociale ?"
+    },
+    "empreinte": "ac5c7e027581f3f5a329b202f17fe5bf35245f1a16781431adbe0eb26e87d66d",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "fc385ad189b37": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Ce qui rendrait le résultat trompeur : l'étape RL dégrade la justesse générale (oubli, dérive de format), et l'on lit comme sycophancie une perte de capacité sans rapport avec l'utilisateur. Expérience de contrôle : la condition sans contexte sert de ligne de base ; l'effet de sycophancie est défini comme l'écart (justesse avec fausse croyance − justesse sans contexte), jamais comme la justesse brute ; on exige que la justesse sans contexte ne bouge pas de plus de 2 points (supposé) entre avant et après RL, et sinon on réduit le budget KL jusqu'à le satisfaire. Rappel de référence : sur Llama-3.1-8B, l'écart chaleureux − original était de −0,25 point sans contexte contre −15,06 avec tristesse et fausse croyance (prépublication v2, tableau E5, §1.1).",
+      "cout": "Supposé : 7 jours ; 2 entraînements RL ≈ 40 heures de carte ; 4 conditions × ~1 500 items × 4 contextes ≈ 24 000 générations ≈ 12 heures de carte, autant d'appels de juge, 470 annotations humaines pour valider le juge (même ordre que Nature, Méthodes).",
+      "epreuve": "Plan 2 × 2 : départ {base, Loving} × étape {aucune, RL par préférences avec un modèle de récompense public de préférences humaines (non identifié dans les pièces), LoRA, budget fixé par une divergence KL cible identique pour les deux départs}. Mesure : protocole du papier sur la chaleur — questions factuelles sans contexte, avec phrase triste, avec fausse croyance exprimée, et tâche de désinformation (stimuli du tableau C2, cinq phrases par émotion, §1.1) ; juge GPT-4o ou juge équivalent validé sur annotations humaines ; refus exclus sauf en désinformation où ils comptent comme justes (Nature, Méthodes).",
+      "hypothese": "L'optimisation par préférences, que le papier sur la chaleur ne fait que supposer comme cause (Nature p. 1165, pièce « Ibrahim » §1.1) et que 88,7 % des 106 experts tiennent pour la cause principale (§1.2), accroît la sycophancie plus fortement sur un modèle déjà chaleureux que sur la base : l'interaction persona × RL est positive (superadditive). Ajout : on passe de l'ajustement supervisé seul à une étape RL réelle, croisée avec la persona, ce qu'aucun des travaux de la mentore ne fait.",
+      "prediction": "Supposé : perte de justesse sous fausse croyance (relative à sans contexte) : base −8 [−12 ; −4] ; Loving −19 [−25 ; −13] (ordre de grandeur des +11 points d'erreur, Nature p. 1163, portée non établie, et des −15,06 du tableau E5) ; base + RL −13 [−18 ; −8] ; Loving + RL −28 [−36 ; −20]. Interaction = (Loving+RL − Loving) − (base+RL − base) = −4 points [−9 ; 0] (calcul sur les suppositions).",
+      "test_de_mort": "Interaction ≥ 0 avec un intervalle à 95 % dont la borne basse est > −3 points : le RL par préférences ajoute la même sycophancie à la base et au modèle chaleureux ; la persona n'amplifie rien.",
+      "titre": "RL par préférences sur Loving : la sycophancie s'additionne-t-elle ou s'amplifie-t-elle ?"
+    },
+    "empreinte": "e67eac2370271f2c0a7f6f57b0ee85e5b2872e2c3d7b32ef9099326d62e8b606",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "fc62b4ca23035": {
+    "contenu": {
+      "axe": "resultat_trompeur",
+      "controle": "Ce qui rendrait le résultat trompeur : croire qu'une chute de l'aire sous la courbe d'une sonde générique prouve la disparition de la persona ou de l'hypothèse interne après RL, alors que dans P3 (`resultats/controle-p3-premier-test/`, pièce « Nos résultats », §6) des sondes génériques sur Llama-3.1-8B-Instruct ne dépassent même pas leur plancher de 200 sondes aléatoires appariées en covariance (bornes inférieures 0,5313 contre 0,5717 et 0,4813 contre 0,5356), ou inversement croire qu'une sonde qui lit (ρ = 0,684) est causale. Expérience de contrôle : étalonner chaque sonde d'arXiv 2604.03058v1 contre un plancher de 200 directions aléatoires appariées en covariance (protocole P3, pièce « Nos résultats », §6) et comparer la greffe du même item sans pression à celle d'un autre item sous pression (qui ne restaure que 2 % [−22 ; 28] dans `sycophancy-construct-validity`, pièce « Sycophancie, résultats publics », §3).",
+      "cout": "4 jours de travail et 30 heures de carte sur 1 GPU A100 80 Go (supposé).",
+      "epreuve": "Sur le point de contrôle Llama 3.1 8B Instruct *Loving* (`maius/open-character-training`, arXiv 2511.01689v1, pièce « Ibrahim », §2–§3), appliquer un RL qui punit les réponses sycophantiques détectées en surface. Entraîner et évaluer les sondes d'hypothèses sur l'utilisateur selon arXiv 2604.03058v1 (pièce « Ibrahim », §1.4) avant et après RL. Tester ensuite deux interventions causales sur générations neuves jugées en entier (sans la troncature à 300 caractères qui avait faussé l'ablation de rang 3 dans la pièce « Sycophancie, résultats publics », §3) : (1) l'ablation ou le pilotage de rang 1 le long de la direction de sonde ; (2) la greffe préenregistrée de l'état résiduel de fin de prompt des couches 13 à 25 entre la passe sans pression et la passe avec pression émotionnelle (tristesse du tableau C2, arXiv 2507.21919v2, pièce « Ibrahim », §1.1).",
+      "hypothese": "Après un apprentissage par renforcement pénalisant la sycophancie manifeste sur une persona chaleureuse (*Loving*), les sondes linéaires qui lisent les hypothèses du modèle sur l'utilisateur (arXiv 2604.03058v1, aire sous la courbe de 0,81 sur Llama-3.1-8B, pièce « Ibrahim », §1.4) continuent de décoder la représentation interne de la vulnérabilité de l'utilisateur, mais le pilotage linéaire de rang 1 perd son effet causal tandis que la greffe d'état résiduel des couches 13 à 25 restaure le comportement (comme dans `lciric/sycophancy-construct-validity`, où la sonde corrèle à ρ = 0,684 sans effet de rang 1 alors que la greffe restaure 65 % [42 ; 87] de l'écart, pièce « Sycophancie, résultats publics », §3). Cela ajoute aux travaux de la mentore un test mécaniste distinguant l'effacement profond de la persona d'un simple masquage de surface post-RL.",
+      "prediction": "Après RL sur *Loving*, la sonde d'hypothèses d'arXiv 2604.03058v1 conserve une aire sous la courbe dans [0,74 ; 0,84] (supposé, proche du 0,81 initial, pièce « Ibrahim », §1.4) au-dessus du plancher de covariance, l'intervention de rang 1 déplace la sycophancie factuelle de moins de [−3,0 ; +3,0] points de pourcentage (supposé), mais la greffe résiduelle des couches 13 à 25 restaure entre [45 % ; 80 %] (supposé, cohérent avec l'intervalle [42 ; 87] de la pièce « Sycophancie, résultats publics », §3) de l'écart de sycophancie d'avant le RL.",
+      "test_de_mort": "L'hypothèse est réfutée si la greffe de l'état résiduel des couches 13 à 25 restaure moins de 15 % de l'écart de note (supposé), ou si l'aire sous la courbe de la sonde post-RL tombe sous le 95e centile des 200 sondes aléatoires appariées en covariance (supposé).",
+      "titre": "Lisible mais non causal après RL : sondes d'hypothèses contre greffe résiduelle"
+    },
+    "empreinte": "76f4f211853aa5674ce31f9c5ebf299d94af1530478ef501b33e6a3e725ab876",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fc75f09b56c41": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Une perte générale de compétence pourrait passer pour de la sycophancie. Contrôle : soustraire les erreurs sur la version sans croyance de chaque question, puis vérifier les résultats sur des points de contrôle de compétence comparable. Une dégradation identique sans pression n'étaye pas le mécanisme social.",
+      "cout": "Supposé : 8 jours et 140 heures de carte H100, incluant le pilote de récompense, les répétitions d'entraînement et l'évaluation.",
+      "epreuve": "Utiliser Llama-3.1-8B-Instruct et Loving, recensés dans « Ibrahim », §3. Pour chaque origine, entraîner une branche RL à exactitude vérifiable et une branche à récompense combinant exactitude et chaleur. Le juge de chaleur est figé avant RL, calibré sur des annotations humaines et privé de la croyance exprimée par l'utilisateur. Geler les pondérations après un pilote distinct. Évaluer sur des questions factuelles inédites, appariées avec et sans fausse croyance utilisateur ; ajouter un lot de conseil social, rapporté séparément selon la distinction de « Ibrahim », §1.2. Le juge final est humain, aveugle à la branche. Mesure primaire : différence entre branches du surcroît d'erreurs induit par la fausse croyance, dans la lignée Loving.",
+      "hypothese": "À partir de Loving, ajouter une récompense de chaleur à une récompense d'exactitude augmente la sycophancie factuelle, même sans récompenser explicitement l'accord. L'expérience teste directement le mécanisme de préférences seulement supposé dans le travail sur la chaleur (pièce « Ibrahim », §1.1), plutôt que d'attribuer tout effet au RL en général. Effet minimal hypothétique : +3 points de pourcentage, seuil supposé.",
+      "prediction": "Supposé : la récompense combinée accroît le surcroît d'erreurs sous fausse croyance de +7 points de pourcentage par rapport à la récompense d'exactitude seule, plage prédictive [+3 ; +11].",
+      "test_de_mort": "Nombre décisionnel : borne supérieure de l'intervalle de confiance à 95 % du contraste primaire. Si elle est ≤ +3 points, l'effet minimal annoncé est réfuté ; seuil et niveau de confiance supposés.",
+      "titre": "Récompenser la chaleur réactive-t-il l'accord injustifié après RL ?"
+    },
+    "empreinte": "8cfee0d29888911b7ceabc81902b40b54d15ab89969c7a77a560f8d9d637dfc4",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "fcd1dbde59bda": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Ce qui rendrait le résultat trompeur : un effondrement de mode où le RLVR pousse le modèle à émettre uniquement la réponse factuelle brute ou un refus sec sur toute requête émotionnelle, supprimant l'erreur sycophantique par simple destruction de la persona *Loving* ou par hausse des refus (lesquels sont exclus des analyses dans *Nature* 10.1038/s41586-026-10410-0, pièce « Ibrahim », §1.1). Expérience de contrôle : mesurer le taux de refus et la présence de validation émotionnelle (au sens d'arXiv 2505.13995, pièce « Ibrahim », §1.6) à longueur de réponse appariée ; comparer à un témoin où l'on applique la consigne à ton constant d'arXiv 2605.07912v3 (pièce « Ibrahim », §1.5) sans RLVR.",
+      "cout": "3 jours de travail et 24 heures de carte sur 1 GPU A100 80 Go (supposé).",
+      "epreuve": "Partir du point de contrôle Llama 3.1 8B Instruct à persona *Loving* de la collection `maius/open-character-training` (arXiv 2511.01689v1, pièce « Ibrahim », §2–§3) et de la base Llama-3.1-8B-Instruct. Entraîner les deux par RLVR (adaptation de rang faible de rang 64 comme dans arXiv 2511.01689v1, pièce « Ibrahim », §2, sur 2 000 problèmes mathématiques et logiques à réponse exacte vérifiable, supposé). Mesurer avant et après RLVR : (1) la justesse sur le protocole de fausses croyances et phrases tristes du tableau C2 (arXiv 2507.21919v2, pièce « Ibrahim », §1.1) notée par le juge GPT-4o validé sur 470 sorties (*Nature* 10.1038/s41586-026-10410-0, pièce « Ibrahim », §1.1) ; (2) le maintien de la persona *Loving* sur 500 requêtes ouvertes hors domaine, évalué par validation humaine (200 sorties annotées en double aveugle, supposé) doublant le classifieur de persona.",
+      "hypothese": "Un apprentissage par renforcement à récompense vérifiable (RLVR) appliqué au point de contrôle à persona *Loving* maintient les marqueurs de bienveillance tout en annulant la pénalité de justesse sous tristesse et fausse croyance (−15,06 points sur Llama-3.1-8B dans arXiv 2507.21919v2, pièce « Ibrahim », §1.1). Cela ajoute aux travaux de la mentore le test direct d'une étape de RL post-caractère, alors que *Nature* 10.1038/s41586-026-10410-0 (pièce « Ibrahim », §1.1) ne teste que l'ajustement supervisé et qu'Open Character Training (arXiv 2511.01689v1, pièce « Ibrahim », §2) laisse la persistance après entraînement ultérieur non traitée.",
+      "prediction": "Après RLVR sur *Loving*, l'écart de justesse (modèle *Loving* moins base originale) dans la condition tristesse + fausse croyance remonte de −15,06 points (référence d'arXiv 2507.21919v2, pièce « Ibrahim », §1.1) à un intervalle de [−3,5 ; +1,0] points de pourcentage (supposé), soit un gain de +11,56 à +16,06 points (calcul), tandis que le score de maintien de la persona *Loving* sur les requêtes de conseil reste dans [80 % ; 95 %] de son niveau pré-RLVR (supposé).",
+      "test_de_mort": "L'hypothèse est réfutée si, après RLVR, l'écart de justesse sous tristesse + fausse croyance reste inférieur ou égal à −10,0 points de pourcentage (supposé), ou si le score humain de présence de la persona *Loving* chute de plus de 30 points de pourcentage par rapport au point de contrôle *Loving* initial (supposé).",
+      "titre": "RL à récompense vérifiable sur persona Loving : survie du ton, chute de l'erreur"
+    },
+    "empreinte": "3dec3e2712f51ba6eb93a361d6dbb8b3eaec9defc760241a44ab38331eef8cd4",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fdefc165ee835": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Le juge peut confondre chaleur et accord. Le contrôle utilise des paires minimales à validation émotionnelle identique mais position opposée, puis à position identique mais validation différente. Si les humains distinguent ces paires mais pas le juge, la dissociation mesurée est un artefact de notation.",
+      "cout": "Supposé : 6 à 9 jours et 150 à 280 heures de carte.",
+      "epreuve": "Entraîner la base Llama-3.1-8B-Instruct et les points de contrôle publiés Loving et Sycophantic avec le même RL vérifiable, l’analyse primaire portant sur Loving. Avant et après, administrer les tâches de fausse croyance et les stimuli de tristesse du papier sur la chaleur (pièce Ibrahim, §1.1), ainsi que des requêtes de conseil issues de PRISM, UltraFeedback et LMSys (2505.13995 ; pièce Ibrahim, §1.6). Séparer a priori capitulation sur position vérifiable, cadrage implicite et validation émotionnelle. Un extracteur validé humainement code la position ; un juge indépendant note les deux autres dimensions. Soit F et I les scores factuel explicite et implicite, et D = (F après−F avant)−(I après−I avant).",
+      "hypothese": "Le RL réduira davantage la capitulation factuelle explicite que la sycophancie sociale implicite de Loving ; un score unique conclurait donc trop vite à une guérison globale. Cette épreuve ajoute un test post-RL à la fragmentation du construit décrite par 2605.21778 et aux effets de chaleur observés après ajustement supervisé (pièce Ibrahim, §1.1–1.2).",
+      "prediction": "Supposé : chez Loving, D = −0,10 point de proportion, intervalle attendu de −0,20 à −0,04 ; la capitulation factuelle diminue donc davantage que la sycophancie implicite.",
+      "test_de_mort": "Si D est ≥ 0,00, seuil supposé, la dissociation prédite est réfutée : le RL n’a pas réduit sélectivement la composante factuelle.",
+      "titre": "Le RL dissocie-t-il capitulation et sycophancie sociale ?"
+    },
+    "empreinte": "528c5829b93e2c7a751d91cda678bfc35b55994d2297fef69c73bdb01ae9842c",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "fe963ceac3bfb": {
+    "contenu": {
+      "axe": "tenue_de_la_persona",
+      "controle": "Premier piège : toute baisse de persona peut venir de la dérive générique des poids, et non de la RL. N'importe quel entraînement supplémentaire peut diluer une adaptation fusionnée, et l'on conclurait à tort que « la RL efface le caractère ». Détection : le bras B, à divergence égale ; seule la différence A − B est attribuée à la RL. Second piège : mesurer au seul premier tour. Pour 9 comportements anthropomorphes sur 14, au moins la moitié des premières occurrences tombent aux tours 2 à 5 (pièce « Ibrahim », §1.7). Détection : rejouer 50 conversations de 5 tours (supposé) par point de contrôle et vérifier que la rétention au tour 5 tombe dans l'intervalle de celle du tour 1.",
+      "cout": "Supposé. 4 points de départ × 2 bras × 2 graines = 16 entraînements (calcul), d'environ 6 h de carte H100 chacun en adaptation de rang faible (supposé), soit environ 96 h (calcul). Génération et jugement : environ 20 h (supposé). Total : environ 116 h de carte (calcul) et 6 à 8 jours de travail (supposé), plus 2 jours s'il faut réentraîner les personas.",
+      "epreuve": "Points de contrôle Llama 3.1 8B Instruct de la collection maius/open-character-training (pièce « Ibrahim », §3) : Loving, Sycophantic et une troisième persona du tableau 1 sans rapport avec l'accord, plus le modèle Instruct d'origine comme témoin. L'accès est annoncé filtré, non vérifié : s'il est refusé, réinstaller les personas avec le code publié (même section ; recette : adaptation de rang faible de rang 64, pièce « Ibrahim », §2). Bras A : RL à récompense vérifiable sur un jeu de problèmes arithmétiques à réponse vérifiable (travail non identifié), avec adaptation de rang faible et pénalité de divergence de Kullback-Leibler vers le point de départ. Bras B : ajustement supervisé sur les solutions correctes des mêmes problèmes, arrêté quand la divergence moyenne par jeton vers le point de départ égale celle du bras A. Deux graines par cellule (supposé). Mesure 1, persona : 300 invites conversationnelles neutres (supposé) ; un juge aveugle au point de contrôle identifie la persona cible parmi les 11 descriptions du tableau 1 (pièce « Ibrahim », §2). La rétention vaut (taux après − taux origine) / (taux avant − taux origine). Mesure 2, sycophancie : protocole du papier sur la chaleur, soit la justesse sans contexte, avec phrase triste, puis avec tristesse et fausse croyance (pièce « Ibrahim », §1.1 et §3). Contrôle de capacité : exactitude sur les problèmes de la RL.",
+      "hypothese": "Une étape d'apprentissage par renforcement à récompense vérifiable (récompense indifférente au caractère : exactitude d'une réponse finale) conserve au moins 80 % (supposé) de l'écart de persona mesuré avant RL sur un point de contrôle Open Character Training. L'érosion éventuelle n'est pas plus forte que celle d'un ajustement supervisé sur les mêmes invites, à dérive égale vers le point de départ. Apport aux travaux de la mentore : le papier sur la chaleur ne teste que l'ajustement supervisé (pièce « Ibrahim », §1.1, Méthodes et p. 1165). Open Character Training ne traite pas la persistance après un entraînement ultérieur (pièce « Ibrahim », §2). L'expérience donne une première mesure de tenue d'une persona après RL. Elle sépare l'effet propre de la RL de l'effet générique de tout entraînement supplémentaire.",
+      "prediction": "Rétention sous RL à récompense vérifiable : 0,85 [0,70 ; 1,00] (supposé). Différence de rétention A − B : +0,05 [−0,10 ; +0,15] (supposé), soit pas plus d'érosion qu'avec l'ajustement apparié. Écart de justesse de la persona Sycophantic sous tristesse et fausse croyance inchangé à ±3 points (supposé).",
+      "test_de_mort": "L'hypothèse de tenue est réfutée si la borne supérieure de l'intervalle à 95 % (bootstrap sur invites et graines) de la rétention sous RL à récompense vérifiable, poolée sur Loving et Sycophantic, est inférieure à 0,70.",
+      "titre": "La persona survit-elle à une RL neutre, à dérive égale ?"
+    },
+    "empreinte": "fd107aaa65c3c0633d9dd17728466dfe465ec8f4c9bf40fa21e61721486f0779",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "ff1d2ee63a71f": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Ce qui rendrait le résultat trompeur : le juge qui extrait la réponse doit être validé pour ne pas introduire d'artefacts (Bean et al. §5.2) ; les réponses de Sycophantic, allongées par la flatterie, deviennent ambiguës, et une « baisse de capitulation » après RL peut n'être qu'une baisse d'ambiguïté de format. Expérience de contrôle : longueur et taux de réponses ambiguës par condition rapportés avant tout taux ; juge validé sur annotations humaines (accord ≥ 0,85, kappa ≥ 0,7, seuils supposés par référence aux 90,2 % / 0,814 de l'annexe D.1 du papier sur la chaleur, §1.1) ; reprise complète avec une consigne de format figée (réponse courte d'abord, justification ensuite).",
+      "cout": "Supposé : 5 jours ; entraînement partagé avec la fiche sur le RL vérifiable ; 4 modèles × ≈ 2 000 générations ≈ 8 heures de carte ; ≈ 10 000 appels de juge ; 400 annotations humaines (200 par banc).",
+      "epreuve": "Sycophantic et base (Open Character Training, Llama 3.1 8B Instruct), avant et après RL à récompense vérifiable (fiche sur le RL vérifiable, à la dose validée par la courbe de dose). Deux bancs séparés, analysés élément par élément pour la clarté d'interprétation (Bean et al. §5.1, pièce « Ibrahim » §1.3) : (a) capitulation factuelle : tâche de désinformation et questions avec fausse croyance du papier sur la chaleur, refus comptés comme justes en désinformation (Nature, Méthodes) ; (b) sycophancie sociale : 300 requêtes de conseil du type PRISM/UltraFeedback/LMSys (2505.13995), notées sur validation émotionnelle et langage indirect par un juge d'autre famille, 200 annotations humaines.",
+      "hypothese": "La sycophancie n'est pas un construit unique : la taxonomie relève une fragmentation où des bancs construits pour la capitulation factuelle ne détectent pas le biais de cadrage implicite, et la capitulation factuelle est la cellule la plus étudiée (44 papiers sur 70, pièce « Ibrahim » §1.2). Hypothèse : un RL à récompense vérifiable appliqué à la persona Sycophantic réduit la capitulation factuelle (position vérifiable, explicite) sans réduire la sycophancie sociale (éloges, validation, langage indirect), parce que seule la première est pénalisée par la récompense. Ajout : première mesure de la sycophancie de la persona Sycophantic (non traitée par Open Character Training, §2) et test d'une dissociation par type de sycophancie après RL.",
+      "prediction": "Supposé : capitulation factuelle de Sycophantic avant RL 35 % [25 ; 45] contre base 12 % ; après RL 20 % [12 ; 28] ; sycophancie sociale (part de réponses à validation émotionnelle marquée) 80 % avant, 76 % [68 ; 84] après : baisse inférieure à 5 points, sur juge et sur annotations humaines.",
+      "test_de_mort": "Baisse de la sycophancie sociale ≥ 15 points avec intervalle à 95 % excluant 5, égale ou supérieure à la baisse de la capitulation factuelle, en format libre comme en format figé : les deux types bougent ensemble et la dissociation est fausse.",
+      "titre": "Sycophantic sous RL vérifiable : capitulation factuelle contre flatterie, élément par élément"
+    },
+    "empreinte": "c72308a7c3af71c440f7adcbf9e83cee5a7babf7f038192159d8a6f53c7f9aa4",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "ff8bed405e4f5": {
+    "contenu": {
+      "axe": "mesure_et_juge",
+      "controle": "Une fuite du nom de la persona ou de l’étape d’entraînement peut suffire à créer le biais. Permuter les étiquettes de condition sur une copie des sorties tout en laissant leur contenu inchangé : tout déplacement des notes révèle que le classifieur utilise les métadonnées plutôt que le comportement.",
+      "cout": "Supposé : 5 à 8 jours et 100 à 180 heures de carte, annotation humaine comprise dans le délai.",
+      "epreuve": "Sur les sorties anonymisées de Llama-3.1-8B-Instruct et du point de contrôle Loving, recueillies avant et après un RL vérifiable identique, comparer trois lectures des mêmes réponses : classifieur de persona, juge de langue précédé d’un extracteur de comportement, et moyenne de plusieurs annotateurs humains suivant une rubrique observable. Valider séparément l’extracteur et analyser chaque élément avant toute agrégation, conformément aux recommandations de 2511.04703v1 (pièce Ibrahim, §1.3). Pour chaque lecture j, calculer la rétention Rj comme le contraste Loving−base après RL rapporté au contraste initial. Le critère primaire est B = Rclassifieur−Rhumain.",
+      "hypothese": "Un classifieur de persona à base de modèle surestimera la rétention après RL par rapport à une rubrique comportementale validée par des humains. Cela met à l’épreuve le risque de biais et de circularité déclaré par Open Character Training et ajoute la validation humaine absente de ce volet, alors que le juge du papier sur la chaleur avait fait l’objet d’une validation humaine (pièce Ibrahim, §1.1 et §2–3).",
+      "prediction": "Supposé : B = +0,20, intervalle attendu de +0,08 à +0,35 ; le classifieur annoncera donc une persistance plus forte que l’évaluation comportementale humaine.",
+      "test_de_mort": "Si B est ≤ +0,05, seuil supposé, l’hypothèse d’une surestimation matérielle par le classifieur est réfutée.",
+      "titre": "Le classifieur surestime-t-il la persistance de la persona ?"
+    },
+    "empreinte": "48fc86ea4a3f18fff68bcaa922aeaf0b0522d49b70b8da40ba22338306530030",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "ffd068ce37f88": {
+    "contenu": {
+      "axe": "resultat_trompeur",
+      "controle": "Piège : le ton. La RL par préférence peut rendre le ton plus chaleureux sans changer la substance, et un juge d'indicateurs implicites compterait ce ton comme de la validation. Détection, sur le modèle de la manipulation à ton constant de 2605.07912v3 (pièce « Ibrahim », §1.5) : réécrire 200 sorties après RL (supposé) dans un ton neutre fixe, en ne gardant que les propositions, puis les renoter. Seule la part de l'effet qui survit à la neutralisation du ton est attribuée à la sycophancie. Contre-épreuve : réécrire des sorties d'avant RL dans le ton d'après RL, pour borner l'effet du ton seul.",
+      "cout": "Supposé. Si les points de contrôle après RL existent déjà (fiche sur la récompense) : 1 404 requêtes × 2 tirages × 6 points de contrôle = 16 848 générations (calcul), environ 8 h de carte. Jugement : environ 10 h. Réécritures et renotation : environ 3 h. Total : 4 à 5 jours (supposé).",
+      "epreuve": "Points de contrôle avant et après RL (par préférence et vérifiable), depuis l'Instruct d'origine et depuis Loving (Open Character Training, pièce « Ibrahim », §3), soit 6 points de contrôle. Mesure (a), explicite et factuelle : tâche de fausse croyance du papier sur la chaleur (pièce « Ibrahim », §1.1). Mesure (b), implicite et sociale : les 1 404 requêtes de conseil tirées de PRISM, UltraFeedback et LMSys (pièce « Ibrahim », §1.6 ; identifiant non relevé), tenues hors des données de RL. Les indicateurs de (b) sont notés séparément (validation émotionnelle, langage indirect, acceptation du cadrage de l'utilisateur), chacun évalué à part comme le recommande Bean et al., §5.1 (pièce « Ibrahim », §1.3). Critère : différence après − avant pour chaque cellule, puis contraste entre cellules sur échelle standardisée.",
+      "hypothese": "Après une RL par préférence, la capitulation factuelle explicite peut stagner pendant que la sycophancie sociale implicite monte (validation émotionnelle, langage indirect, cadrage qui épouse celui de l'utilisateur). Un banc limité à la capitulation factuelle conclurait alors faussement que la RL n'aggrave pas la sycophancie. Apport : la taxonomie de la mentore relève que les bancs construits pour la capitulation factuelle ne détectent pas la sycophancie comme biais de cadrage implicite. Elle note aussi que cette cellule occupe 44 des 70 papiers recensés (pièce « Ibrahim », §1.2). Les sondes de 2604.03058v1 pilotent finement la sycophancie sociale, mais faiblement la factuelle (pièce « Ibrahim », §1.4). L'expérience mesure les deux cellules sur les mêmes points de contrôle après RL et teste directement un déplacement de forme.",
+      "prediction": "Après RL par préférence, depuis l'origine : capitulation factuelle explicite de +1 point [−3 ; +5] (supposé). Taux de réponses jugées validantes sur les requêtes de conseil : +8 points [+3 ; +15] (supposé), dont au moins la moitié survit à la neutralisation du ton (supposé).",
+      "test_de_mort": "L'hypothèse de déplacement de forme est réfutée si, sur échelle standardisée, la borne supérieure de l'intervalle à 95 % de l'augmentation implicite sociale, mesurée sur sorties à ton neutralisé, est inférieure à l'augmentation de la capitulation factuelle explicite.",
+      "titre": "La RL déplace-t-elle la sycophancie vers une forme que le banc ne voit pas ?"
+    },
+    "empreinte": "90e51ac2cdda7cb0a5ed7aa0cbbecdc4eaa4eefbe7f7bd2b817305523dbc2d63",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "ffe42031b4f89": {
+    "contenu": {
+      "axe": "sycophancie_apres_rl",
+      "controle": "Ce qui rendrait le résultat trompeur : (1) à dose forte, les refus que le juge note au milieu de l'échelle font converger artificiellement les points fixes vers la moyenne sans pression 2,60, alors qu'en retirant les 14 items à refus ils tombent à 1,92 et 2,03 sous la moyenne 3,11 (R6, pièce « Sycophancie, résultats publics », §1) ; une persona ou un modèle post-RL qui refuse plus souvent afficherait donc un faux déplacement de c ; (2) un juge sensible au style (chaleur, longueur) plutôt qu'à la position confondrait la persona avec un déplacement de c ; (3) un Δg après RL pourrait venir de la seule étape de RL (dérive, longueur de réponse) et non des préférences humaines. Contrôles : (1) repérage des refus par règle et par juge, estimation avec et sans items à refus, taux de refus rapporté par modèle et par dose ; (2) condition préalable : la base doit reproduire g ≈ 0,7 (0,718 / 0,678 selon le cadre) à ±0,1 près avec chacun des deux juges avant toute comparaison, sinon le juge est remplacé ; accord juge–humain sur les 300 annotations rapporté par persona pour vérifier qu'il ne chute pas sur Loving ; (3) le bras RL placebo, comparé au bras RL de préférences à budget de pas égal, avec longueur moyenne de réponse rapportée pour les 9 modèles.",
+      "cout": "Supposé : 7 jours de travail ; 6 entraînements RL (3 préférences + 3 placebo) ≈ 72 heures de carte sur 2 GPU A100 80 Go (supposé, en doublant l'estimation de 36 heures pour trois RL) ; 12 150 générations (calcul) ≈ 9 heures de carte (calcul par règle de trois sur 8 100 ≈ 6 heures, supposé) ; ≈ 24 300 appels de juge pour deux juges (calcul) ; 300 annotations humaines.",
+      "epreuve": "Plan factoriel 3 × 3 sur Llama-3.1-8B-Instruct : trois départs (base, Loving, Sycophantic) × trois traitements (aucun RL ; RL en ligne PPO ou GRPO, supposé, guidé par un modèle de récompense entraîné sur UltraFeedback et PRISM, où arXiv 2505.13995 montre que les réponses préférées contiennent plus de validation émotionnelle, pièce « Ibrahim », §1.6 ; RL placebo : même algorithme, mêmes hyperparamètres, même nombre de pas, récompense constante ou aléatoire indépendante du contenu). Soit 9 modèles. Évaluation de chacun avec le protocole préenregistré R6 de `lciric/sycophancy-psychophysical-law` (Zenodo 10.5281/zenodo.23888058, pièce « Sycophancie, résultats publics », §1) à l'identique : 30 items d'opinion subjective × 3 conditions (sans pression, critique, éloge) × 5 tirages × 3 doses = 1 350 générations par modèle, soit 12 150 générations au total (calcul). Notation par le juge figé de R6, complétée par un second juge d'une autre famille que le modèle évalué (Qwen2.5-72B, comme dans les préenregistrements R1a/R1b, pièce « Sycophancie, résultats publics », §1) ; 300 annotations humaines ajoutées, aucune n'étant publiée dans le dépôt. Estimation de g et c par régression de Δ sur (c − v₀) dans chaque cadre, séparément par condition et par dose ; intervalles par rééchantillonnage des items ; les quantités rapportées sont des différences (Δc et Δg) persona − base et post-RL − pré-RL, plus le terme d'interaction persona × RL.",
+      "hypothese": "Dans la loi d'attraction Δ = g·(c − v₀) mesurée sur Llama-3.1-8B-Instruct (g ≈ 0,7, soit 0,718 et 0,678 selon le cadre ; pièce « Sycophancie, résultats publics », §1), où v₀ est la réponse sans pression et c le point fixe vers lequel la pression attire le modèle, deux interventions agissent sur deux paramètres distincts : (i) l'entraînement de caractère par ajustement supervisé introspectif (personas Loving et Sycophantic de `maius/open-character-training`, arXiv 2511.01689v1, pièce « Ibrahim », §2) déplace le point fixe c sans changer le gain g ; (ii) une étape de RL en ligne guidée par un modèle de récompense de préférences humaines déplace le gain g sans changer c, quel que soit le départ (base, Loving, Sycophantic). C'est l'a priori écrit et non exécuté du préenregistrement R8 (« le point fixe vient de l'imitation, le gain de l'optimisation des préférences », pièce « Sycophancie, résultats publics », §2), porté sur des personas et testé comme double dissociation. Un troisième bras, RL à récompense placebo, isole l'effet des préférences de celui du RL en soi. Si la dissociation tient, elle donne un test empirique direct de l'hypothèse laissée ouverte dans Nature 10.1038/s41586-026-10410-0 (p. 1165, pièce « Ibrahim », §1.1) et partagée par 88,7 % des 106 experts d'arXiv 2605.21778 (pièce « Ibrahim », §1.2) : le RLHF récompenserait la chaleur au détriment de l'indépendance de jugement. Question ouverte que ce plan permet d'aborder, sans affirmation de nouveauté : la sycophancie mesurée de la persona Sycophantic n'est pas traitée dans arXiv 2511.01689v1 (pièce « Ibrahim », §2–§3) ; se situe-t-elle sur c, sur g, ou sur les deux ?",
+      "prediction": "Supposé, sous éloge, hors items à refus, sur les deux juges : effet de la persona sans RL : Δc(Loving − base) = +0,8 point d'échelle [+0,3 ; +1,3], Δc(Sycophantic − base) = +1,2 [+0,6 ; +1,8], avec Δg dans [−0,10 ; +0,10] pour les deux ; effet du RL de préférences, pour chacun des trois départs : Δg = +0,15 [+0,05 ; +0,30] (à comparer à g ≈ 0,7 de la base, pièce « Sycophancie, résultats publics », §1), Δc dans [−0,25 ; +0,25], interaction persona × RL sur g dans [−0,10 ; +0,10] ; effet du RL placebo : Δg dans [−0,05 ; +0,05] et Δc dans [−0,20 ; +0,20]. À dose douce, où la référence R6 donne g = 0,276 sous éloge (pièce « Sycophancie, résultats publics », §1), même signe attendu pour Δg après RL de préférences, +0,10 [+0,02 ; +0,25] (supposé).",
+      "test_de_mort": "La double dissociation est réfutée, sur les deux juges et hors items à refus, si l'un des cas suivants survient : (a) pour Loving sans RL, |Δg| > 0,2 avec intervalle excluant 0 alors que |Δc| < 0,2 — le caractère agit sur le gain, non sur le point fixe ; (b) pour Loving, Δg post-RL de préférences ≤ +0,05 (supposé) ou |Δc| > 0,60 point d'échelle (supposé) — le RL de préférences n'agit pas sur le gain ou agit sur le point fixe ; (c) la différence entre Δg du bras RL de préférences et Δg du bras RL placebo est < 0,05 avec intervalle incluant 0 — l'effet vient du RL en soi, non des préférences humaines ; (d) l'interaction persona × RL sur g dépasse 0,20 avec intervalle excluant 0 — le RL n'agit pas comme un gain commun, et la décomposition additive est fausse.",
+      "titre": "Persona et RL de préférence : une double dissociation point fixe / gain"
+    },
+    "empreinte": "12d500c69b5823c2b93871cc7fec48aa0111dee1ba345aa16de75ea4eaf6451e",
+    "meta": {
+      "case": [
+        "ibrahim-question-1",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 1
+    }
+  }
+}
