@@ -503,7 +503,9 @@ Dans tous ces cas : aucun fichier d'activations écrit ; ce qui existe (journal,
 Reprise : seulement selon E21.
 Récupération (étape 3 du plan) : aucune récupération des sorties de la course par session-depot avant que la fiche de
 réception de conv-audit soit scellée (son document de contrôles, distinct des fiches JSON de ses deux analyses scellées,
-écrites après le versement ; GO-2026-11-02-27).
+écrites après le versement ; GO-2026-11-02-27) ; session-depot l'apprend par un message de conv-audit au canal qui donne
+le chemin et l'empreinte de la fiche, empreinte qu'il vérifie (compagnon `.sha256` égal) ; sans ce message, rien n'est
+récupéré.
 
 ## Contre-lecture
 
@@ -562,4 +564,10 @@ ce texte est une condition de lancement (« Liste d'arrêt »), non une entrée 
       de conv-audit ; son script écrit `R4: null`) ;
     - E16 : la réserve tient (concordance, point 3) ; une phrase ajoutée : aucun lecteur ne lit `tokenisation.addendum`.
   - Traitement final par session-depot (relecture des corrections des brouillons 2 et 3, empreinte du brouillon à
-    sceller, refus éventuels et pourquoi) : À REMPLIR (au scellement).
+    sceller, refus éventuels et pourquoi) : relu par session-depot le 3 novembre 2026 à 00:31 UTC (heure relevée par
+    `date -u`) : différences des brouillons 2 et 3 lues ligne à ligne (`corrections-apres-contre-lecture-v1.patch`,
+    `corrections-apres-concordance-v1.patch`) ; brouillon 3 relu `dcf51d015f4a195c7479b7ae504c06c2cb1154133a0e67759409eafdbb95e3d6`
+    avant ce remplissage ; deux ajouts de session-depot, texte seul : E16 (le champ du manifeste est `preenregistrement`,
+    `src/controle_ia/manifeste.py` l. 104) et, à « Liste d'arrêt », la façon dont session-depot apprend le scellement de
+    la fiche de réception (message de conv-audit avec chemin et empreinte vérifiée ; sans lui, rien n'est récupéré) ;
+    aucun refus ; l'empreinte du texte scellé est celle de son compagnon `.sha256`.
