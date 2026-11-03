@@ -1,0 +1,10 @@
+# Pivotal 2027 Q1 — application to Paul Colognese and Francis Rhys Ward (Arrow Research) — v10
+2 November 2026. Paste the three paragraphs into the mentor form; if the form asks different questions, the material maps as: motivation → « Why this project », plan → « What I would do », background → « Relevant experience ».
+
+## Paul Colognese, Francis Rhys Ward (Arrow Research) — project B, characters and safety behaviours before/after RL
+
+**Why this project.** Project B compares honesty, sycophancy, multi-agent behaviour and self-preservation across trained characters before and after RL. For sycophancy I can offer a measurement sharper than a rate: a displacement law with a gain and frame-set targets, out-of-sample R² 0.73 / 0.69 (campaign-1 law applied to a second campaign without refitting), and a mechanism (the model is held by its own earlier concession, not by the pressure) that single-turn evals miss. For monitorability I bring the control side: white-box monitors as internal probes, and a negative theorem on which aggregations of monitor scores an adaptive agent can make blind.
+
+**What I would do.** The sycophancy slice of project B, scoped to one model family, two trained characters (including one from a published lab spec) and one RL intervention. Primary, preregistered outcome: the change in displacement gain and frame-set targets on held-out items — does character training change how much the model yields, or where it yields to; concession persistence secondary. First milestone: a checkpoint and reproducibility test, reducing to one character if full character training is not reproducible. Stretch goal, not a parallel project: whether a probe for the concession survives RL, which is project A's detectability question on a different behaviour. Deliverable: a preprint, evaluation code and data.
+
+**Relevant experience.** The sycophancy-law paper and the probe-geometry project; fine-tuning and eval pipelines on open 7–8B models; honest reporting as a practice (every number traced to a result file; refuted predictions kept in the register).
