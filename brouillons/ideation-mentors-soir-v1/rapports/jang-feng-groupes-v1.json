@@ -1,0 +1,65 @@
+{
+  "groupes": [
+    {
+      "nom": "G1 — Calibrage de référence",
+      "definition": "Le taux de fausses alertes et la sensibilité d'une sonde dépendent davantage de la distribution bénigne qui fixe son seuil ou son centrage que de la sonde elle-même ; hors domaine, hors recette ou hors politique, ils se dégradent. Une référence bénigne propre au déploiement, sans aucun exemple positif, en rétablirait une grande part.",
+      "critere": "La fiche fait varier ou corrige la source de la référence bénigne (domaine, recette d'entraînement, politique) et prédit l'effet sur les fausses alertes, la sensibilité ou la sûreté."
+    },
+    {
+      "nom": "G2 — Corrélat ou variable",
+      "definition": "Une sonde ou un trait qui discrimine peut lire un corrélat — la trace textuelle ou verbalisée, la recette d'entraînement, une séparabilité de distribution — plutôt que la variable qui produit le comportement. L'aire sous la courbe ne dit donc ni la valeur causale de la direction, ni son transfert, ni son apport au-delà du texte.",
+      "critere": "La fiche oppose la discrimination apparente d'une sonde à un contrôle qui retire ou fait varier un corrélat (verbalisation ou moniteur texte fort, recette ou étiologie, plancher de directions aléatoires, intervention causale sur la direction)."
+    },
+    {
+      "nom": "G3 — Accumulation",
+      "definition": "Contre les menaces diffuses, la valeur d'une sonde vient de l'agrégation : un signal faible par action devient utile cumulé sur un épisode ou entre tâches (macro-protocole bayésien). Cela suppose des scores peu corrélés entre tâches et avec les scores texte, et un seuil calibré sur des épisodes honnêtes entiers.",
+      "critere": "La métrique décisive porte sur un agrégat de scores (cumul séquentiel, macro-protocole, cumul contre maximum local) et la fiche fait varier la règle d'agrégation ou ce qui la rend efficace ; non sur une décision action par action."
+    },
+    {
+      "nom": "G4 — Adversaire informé",
+      "definition": "Face à un modèle ou une entrée qui s'adapte au moniteur, la valeur de la boîte blanche dépend de l'information et de l'accès dont dispose l'adversaire (retour de verdicts, injection visant le moniteur). Sans retour de verdict la sonde résisterait ; avec verdicts ou injection elle se dégrade ; lire le composant fiable plutôt que le non fiable peut contourner l'attaque.",
+      "critere": "La fiche place un adversaire qui cherche à tromper le moniteur (évasion en contexte, retouche des activations, injection) et fait varier l'information disponible ou la cible de lecture."
+    },
+    {
+      "nom": "G5 — Perturbation et témoin bénin",
+      "definition": "Les méthodes qui perturbent le modèle (bruit de poids ou d'activations, affinage court, démonstrations) font réapparaître une capacité cachée, mais ne séparent la sous-performance délibérée de la sous-élicitation bénigne qu'une fois rapportées à un témoin bénin apparié. La forme de la réponse (dose, pente initiale, localisation, nombre de démonstrations) porterait le signal du verrou, ou seulement une marge de capacité.",
+      "critere": "La fiche mesure une récupération de performance sous perturbation et la compare (ou prédit qu'elle ne se distingue pas) à celle d'un témoin bénin apparié."
+    },
+    {
+      "nom": "G6 — Interprétation par l'auditeur",
+      "definition": "Les traits d'autoencodeurs épars et leurs descriptions sémantiques apporteraient une valeur d'audit propre — localiser et expliquer un comportement caché pour un auditeur — distincte de la discrimination par sonde. Elle se mesure par la performance d'auditeurs aveugles (descriptions contre identifiants anonymes) ou par la reproduction du comportement en pilotant un petit ensemble de traits.",
+      "critere": "La mesure décisive de la fiche est l'aide apportée à un auditeur par les traits ou leurs descriptions, ou la localisation d'un comportement dans des traits qui l'expliquent."
+    }
+  ],
+  "affectations": [
+    {"id": "JF-01", "groupe": "G1 — Calibrage de référence", "raison": "La variable manipulée est la référence bénigne : le centrage propre à la recette déployée rétablit le gain perdu hors recette.", "second_choix": "G3 — Accumulation"},
+    {"id": "JF-02", "groupe": "G4 — Adversaire informé", "raison": "L'affirmation centrale est la survie de la sonde à l'évasion en contexte quand aucun verdict n'est rendu au modèle.", "second_choix": "G1 — Calibrage de référence"},
+    {"id": "JF-03", "groupe": "G2 — Corrélat ou variable", "raison": "Oppose l'aire en distribution à l'effet causal spécifique comme critère de choix d'une sonde qui transfère à une autre étiologie.", "second_choix": null},
+    {"id": "JF-04", "groupe": "G4 — Adversaire informé", "raison": "Sonde sur les activations du moniteur fiable contre une injection qui vise sa note texte.", "second_choix": null},
+    {"id": "JF-05", "groupe": "G1 — Calibrage de référence", "raison": "Sonde fixée, seul change le corpus de calibrage (Alpaca contre épisodes honnêtes du domaine) ; effet prédit sur les fausses alertes.", "second_choix": null},
+    {"id": "JF-06", "groupe": "G1 — Calibrage de référence", "raison": "La variable manipulée est le domaine d'estimation de la loi des scores honnêtes, en domaine ou hors domaine.", "second_choix": "G3 — Accumulation"},
+    {"id": "JF-07", "groupe": "G4 — Adversaire informé", "raison": "La sensibilité du moniteur est prédite en fonction du nombre de verdicts exacts vus en contexte par le modèle surveillé.", "second_choix": null},
+    {"id": "JF-08", "groupe": "G6 — Interprétation par l'auditeur", "raison": "La mesure finale est la valeur des descriptions de traits pour diagnostiquer un verrou ; le bruit ne sert qu'à fabriquer l'événement à expliquer.", "second_choix": "G5 — Perturbation et témoin bénin"},
+    {"id": "JF-09", "groupe": "G6 — Interprétation par l'auditeur", "raison": "Chaîne saut, traits déplacés, pilotage et descriptions aidant des auditeurs aveugles ; l'apport propre est la localisation et l'explication.", "second_choix": "G5 — Perturbation et témoin bénin"},
+    {"id": "JF-10", "groupe": "G5 — Perturbation et témoin bénin", "raison": "Saut sous affinage court rapporté à des témoins bénins sous-élicités, là où juge boîte noire et sonde passive échouent.", "second_choix": null},
+    {"id": "JF-11", "groupe": "G2 — Corrélat ou variable", "raison": "Teste si la sonde apporte plus qu'un prédicteur fondé sur tout le texte, sur les réponses non verbalisées.", "second_choix": null},
+    {"id": "JF-12", "groupe": "G2 — Corrélat ou variable", "raison": "Les traits suivraient la verbalisation du contexte (corrélat) plutôt que l'état de suppression de l'exploration.", "second_choix": null},
+    {"id": "JF-13", "groupe": "G3 — Accumulation", "raison": "La mesure décisive est l'interaction cumul sur l'épisode contre maximum local, à risque par épisode égal.", "second_choix": "G2 — Corrélat ou variable"},
+    {"id": "JF-14", "groupe": "G1 — Calibrage de référence", "raison": "Centrer sur une référence bénigne propre à chaque recette, sans exemple positif, pour corriger le transfert hors recette.", "second_choix": null},
+    {"id": "JF-15", "groupe": "G2 — Corrélat ou variable", "raison": "Direction fortement prédictive sans effet causal au-delà de directions aléatoires appariées.", "second_choix": null},
+    {"id": "JF-16", "groupe": "G6 — Interprétation par l'auditeur", "raison": "Descriptions contre identifiants anonymes pour des auditeurs aveugles, à information et temps identiques.", "second_choix": null},
+    {"id": "JF-17", "groupe": "G2 — Corrélat ou variable", "raison": "Corrélation au rang entre effet causal de l'ablation et transfert à un organisme d'une autre étiologie.", "second_choix": null},
+    {"id": "JF-18", "groupe": "G2 — Corrélat ou variable", "raison": "La recette, pas seulement le comportement, fixerait ce que lit la sonde : corrélat de recette.", "second_choix": "G1 — Calibrage de référence"},
+    {"id": "JF-19", "groupe": "G5 — Perturbation et témoin bénin", "raison": "Bruit localisé balayé en dose contre témoin bénin apparié au même score de départ, et contre bruit uniforme.", "second_choix": null},
+    {"id": "JF-20", "groupe": "G3 — Accumulation", "raison": "Cumul des scores contre maximum local, seuil calibré sur trajectoires bénignes entières.", "second_choix": null},
+    {"id": "JF-21", "groupe": "G3 — Accumulation", "raison": "Filtre d'accumulation séquentielle sur scores de sonde contre le même cumul sur un moniteur texte.", "second_choix": null},
+    {"id": "JF-22", "groupe": "G2 — Corrélat ou variable", "raison": "Plancher de directions aléatoires appariées en covariance pour retirer la séparabilité, selon que l'organisme verbalise ou non.", "second_choix": null},
+    {"id": "JF-23", "groupe": "G3 — Accumulation", "raison": "Le gain dans le macro-protocole suivrait la décorrélation entre tâches des scores, non la valeur causale.", "second_choix": "G2 — Corrélat ou variable"},
+    {"id": "JF-24", "groupe": "G3 — Accumulation", "raison": "Ajout d'une sonde au macro-protocole bayésien, gain attribué à la moindre corrélation entre tâches.", "second_choix": null},
+    {"id": "JF-25", "groupe": "G2 — Corrélat ou variable", "raison": "Le gain « sonde plus texte » ne subsisterait que sur les épisodes verbalisés : la sonde lirait la trace textuelle.", "second_choix": null},
+    {"id": "JF-26", "groupe": "G5 — Perturbation et témoin bénin", "raison": "Pente initiale et gain maximal d'une dose–réponse de bruit contre un témoin sous-élicité par invite.", "second_choix": null},
+    {"id": "JF-27", "groupe": "G5 — Perturbation et témoin bénin", "raison": "Gain par démonstrations rapporté à celui d'un témoin bénin de même famille.", "second_choix": null},
+    {"id": "JF-28", "groupe": "G5 — Perturbation et témoin bénin", "raison": "Prédit que le bruit ne se distingue pas d'un témoin bénin apparié : il lirait une marge de capacité, pas l'intention.", "second_choix": null},
+    {"id": "JF-29", "groupe": "G5 — Perturbation et témoin bénin", "raison": "Score de récupération corrigé par la récupération attendue d'un témoin bénin, contre le gain brut.", "second_choix": null}
+  ]
+}
