@@ -7,7 +7,8 @@ Questions (texte exact) et limites : `/home/claude/controle-ia-travail/brouillon
 ## Sources de vérité (lecture seule)
 - Dépôts publics, clones frais (n'exécute jamais leur code) : `/home/claude/scratch/depots-publics-2026-11-03/sycophancy-construct-validity` (`146b2a4`), `/home/claude/scratch/depots-publics-2026-11-03/sycophancy-psychophysical-law` (`b3ecaec`), `/home/claude/ideation-organism` (`main`).
 - Corrections d'une lectrice indépendante : `/home/claude/controle-ia-travail/brouillons/canal-fable-v1/fable_2026-11-03_n001.md`.
-- Les vérifications déjà faites, réponse par réponse : `/home/claude/controle-ia-travail/brouillons/redaction-finale-v1/*/verification-chiffres-v1.md` et `lecture-mentor-v1.md`.
+- Les vérifications déjà faites, réponse par réponse : `/home/claude/controle-ia-travail/brouillons/redaction-finale-v1/*/verification-chiffres-v*.md` et `lecture-mentor-v*.md` (le numéro est celui de la version vérifiée).
+- La réponse de Heimersheim Q1 n'est qu'un **squelette en français** (la règle du mentor interdit tout texte anglais écrit par un modèle) : vérifie seulement que ses faits concordent avec les autres réponses.
 
 ## Ce que tu fais
 1. **Le même fait, dit partout de la même façon.** Relève chaque résultat de Lazar cité dans plus d'une réponse (par exemple ρ = 0,684 ; D36 et ses pourcentages ; R6 ; R7 ; T0.3 ; P3 ; le juge de l'organisme ; les dates ; les liens) et vérifie que ses nombres, sa portée et son statut (préenregistré, lancé, lu, publié) sont **identiques** d'une réponse à l'autre et justes sur la source. Une divergence = une ligne : les deux phrases, laquelle est juste, la correction minimale.
@@ -22,7 +23,7 @@ Gravité pour chaque point : bloquant / à corriger / mineur ; correction minima
 `/home/claude/controle-ia-travail/brouillons/redaction-finale-v1/coherence-finale-<<VERSION>>.md`.
 
 ## Interdits
-Aucun commit, aucun `.sha256`, aucun fichier existant modifié ; rien sous `donnees/` ; aucun `git fetch` ; aucun appel de modèle autre que toi ; rien sous `/home/claude/coffre-*`. `nice -n 10` pour tout script.
+Aucun commit, aucun `.sha256`, aucun fichier existant modifié ; rien sous `donnees/` ; aucun `git fetch` ; aucun appel de modèle autre que toi ; rien sous `/home/claude/coffre-*`. Toute commande : `timeout 60 nice -n 10 …`. **N'attends aucune approbation** : si un outil en demande une, renonce à l'appel et note-le.
 
 ## Rendu
 Réponse finale : les points bloquants et à corriger (une ligne chacun), le tableau des comptes de mots, le chemin et le sha256 du fichier.
