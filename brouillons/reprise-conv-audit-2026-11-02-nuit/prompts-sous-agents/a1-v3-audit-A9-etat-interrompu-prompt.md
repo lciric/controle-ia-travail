@@ -1,0 +1,22 @@
+Tu es l'auditeur neuf de l'**audit A9** de la première course d'A1-v3 (attaque de Goodhart contre le juge statistique), arrêtée le 3 novembre 2026. Tu n'as écrit ni le texte scellé, ni le code, ni le lanceur, ni le rapport de la fille. Français, sans sigle non développé ; toute heure vient de `date -u`.
+
+## Ce qu'est l'audit A9 et ce qu'il doit dire
+Le texte scellé `orchestrator/prereg/preenregistrement-attaque-goodhart-v3-v1.md` (dépôt public `/home/claude/ideation-organism`, commit `ba4edfe`, sha256 `898d5be4…`), section 7 (« A9 — bras perdu ou dégradé », `audit_a9`, `pole/attaque_goodhart_v3.py:887-898`) et section 8 (l. 1111-1116) : une seconde course n'est admise « qu'après un arrêt d'infrastructure (…) ou après une fin de course sans lecture utile pour une cause d'infrastructure établie par l'audit A9 — (…) arrêt du lanceur hors de ses codes 0, 2 et 3 (exception, signal) (…) ». Ton audit répond, preuves à l'appui : **la cause de l'arrêt est-elle d'infrastructure (établie), et la course est-elle sans lecture utile ?** Et : rien dans l'état interrompu n'est-il une lecture de résultat (aucun taux, aucune richesse, aucune carte lue) ?
+
+## Pièces (copie à l'octet de l'état interrompu, vérifiée : 38 fichiers, `LISTE-COPIE-v1.txt` OK, aucune clé)
+Dossier `/tmp/a1-etat/brouillons/canal-reprise-releve-v1/envois/session-depot/a1-v3-etat-interrompu-v1/` : `rapport-etat-interrompu-a1-v3-v1.md` (rapport de la fille), `EMPREINTES-etat-interrompu-a1-v3-v1.txt` (avec l'écart déclaré : le journal de lancement a reçu une ligne après le calcul de la liste), `journal-lancement-a1-v3-v1.log`, `verifier-seulement-a1-v3.log`, `course-stdout-a1-v3.log`, `course.pid`, `relais-argon-stdout-a1-v3.log`, `relais-argon-journal-a1-v3.jsonl`, `relais-argon.pid`, `guetteur-stdout.log`, `journal-guetteur-a1-v3-v1.log`, `guetteur.pid`, `registre-go.md`, `scripts/` (lanceur, relais, guetteur), `sortie-attaque-goodhart-v3/manifeste.json` et `registre-depense-cumulee-v1.jsonl` (+ verrou). Faits de session-depot (messages n° 305 et 306, copiés ici : `/tmp/sd-n305.md`, `/tmp/sd-n306.md`) : conteneur repris, session inactive vers 06:20 UTC, redémarrage 07:18:50 UTC ; appel 41 en échec à 06:25:32Z (« RemoteDisconnected ») ; 41 appels, 4,25 USD.
+Code au commit gelé : `/home/claude/wt/a1-v3-seconde/orchestrator/` (tête `eaa74ca`, qui contient le commit `9776ed0`) : `demonstrations/attaque_goodhart_v3.py`, `pole/attaque_goodhart_v3.py` (lecture seule).
+
+## Ce que tu vérifies
+1. **Chronologie** reconstituée minute par minute depuis les journaux (lancement, relais, guetteur, registre de dépense) : départ, appels, dernier succès, l'échec de l'appel 41, dernière trace de chaque processus, silence ; cohérence entre les quatre sources et avec les faits de session-depot.
+2. **Nature de l'arrêt** : le lanceur a-t-il écrit un code de sortie (0, 2, 3) ou une `nature_de_l_arret` ? Y a-t-il une trace d'exception, de signal, ou simplement l'absence de toute fin (processus tué avec le conteneur) ? Le manifeste est-il un manifeste de départ seul ? Conclusion : arrêt « hors de ses codes 0, 2 et 3 » ou non.
+3. **Dépense** : 41 appels, montant, cohérence entre le registre de dépense et le journal du relais ; l'échec de l'appel 41 compté au pire cas ; aucun appel après la reprise.
+4. **Aucune lecture utile** : y a-t-il un taux, une richesse, une carte, une tentative lue ou lisible dans l'état ? (Tu ne lis pas les réponses des modèles si elles existent : tu constates leur présence ou absence et leur taille.)
+5. **Écart déclaré** (la ligne de journal ajoutée après la liste) : la ligne, son heure, son contenu, et si elle change quelque chose.
+6. **Gardes** : le guetteur, la relève horaire et le harnais ont-ils fait ce que le texte prévoyait ? Ce que le texte ne prévoyait pas (la reprise du conteneur) : le dire sans reprocher.
+
+## Rendu
+Rapport `/home/claude/scratch/audit-a9-a1-v3/audit-A9-a1-v3-premiere-course-v1.md` : chronologie ; conclusion en trois lignes (cause d'infrastructure établie : oui / non / indéterminée, avec la preuve la plus forte ; lecture utile : aucune / présente) ; ce que la seconde course doit prévoir pour que cela ne se reproduise pas (faits, pas opinions) ; réserves. Réponse finale : la conclusion, le chemin et le sha256 du rapport.
+
+## Interdits
+Aucun commit, aucun `.sha256`, aucun fichier existant modifié ; rien sous `donnees/` ; aucun `git fetch`, `checkout`, `stash` ; aucun réseau, aucun modèle ; `nice -n 10 python3 -I -B` pour tout calcul.
