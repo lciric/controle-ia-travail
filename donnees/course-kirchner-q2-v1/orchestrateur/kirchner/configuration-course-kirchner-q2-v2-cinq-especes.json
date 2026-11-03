@@ -1,0 +1,431 @@
+{
+ "_lisez_moi": "Configuration de la course d'idéation Kirchner (question 2), variante cinq_especes, v2 — v1 (gardée, R12) modifiée par construire_configurations_kirchner_v2.py (aiguilleur v2, source Gu-Krenn v2) ; v1 écrite par calcul_devis_course_kirchner_v1.py le 3 novembre 2026 (sous-agent de session-depot). Course NON décisive (démonstration, matière à réflexion pour Lazar). S17 = plafond TECHNIQUE (garde contre une boucle). Aucun témoin planté. Bras joués : gu_krenn (substitut) et basique ; bras méta hors course. Jetons {DEPOT} et {REGISTRE} remplacés par le lanceur. Spécification de conv-audit : specification-kirchner-q2-v1.md (934f5dcb…) ; pièce « Kirchner » servie : v2 (6e7fb1c5…).",
+ "variante": "cinq_especes",
+ "racine_graines": 20261103,
+ "graines": {
+  "prefixe": "kq2"
+ },
+ "champs_fiche": [
+  "titre",
+  "probleme",
+  "sous_estime",
+  "hypothese",
+  "axe",
+  "premiere_experience",
+  "changer_d_avis",
+  "test_de_mort",
+  "cout"
+ ],
+ "champ_titre": "titre",
+ "champ_axe": "axe",
+ "budget": {
+  "plafond_usd": 245.0,
+  "arret_etape_usd": 220.5,
+  "portee_plafond": "course",
+  "etapes": [
+   {
+    "nom": "proposition",
+    "attendu_usd": 2.21,
+    "plafond_relais_usd": 8.8,
+    "role": "protegee"
+   },
+   {
+    "nom": "aiguillage",
+    "attendu_usd": 1.39,
+    "plafond_relais_usd": 13.54,
+    "role": "protegee"
+   },
+   {
+    "nom": "juges",
+    "attendu_usd": 6.7,
+    "plafond_relais_usd": 47.86,
+    "role": "protegee"
+   },
+   {
+    "nom": "passe_tableau",
+    "attendu_usd": 0,
+    "plafond_relais_usd": 0,
+    "role": "sacrifiable",
+    "rang": 2
+   },
+   {
+    "nom": "etiquettes",
+    "attendu_usd": 9.71,
+    "plafond_relais_usd": 94.93,
+    "role": "protegee"
+   },
+   {
+    "nom": "fusions",
+    "attendu_usd": 4.18,
+    "plafond_relais_usd": 38.58,
+    "role": "sacrifiable",
+    "rang": 1
+   }
+  ]
+ },
+ "proposeurs": [
+  {
+   "etiquette": "prop-fable",
+   "modele": "claude-fable-5-1",
+   "fournisseur": "claude",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-argon",
+   "modele": "gemini-4-argon",
+   "fournisseur": "argon",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-kimi",
+   "modele": "kimi-k3.1-pro",
+   "fournisseur": "kimi",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_proposeur"
+  }
+ ],
+ "cases": [
+  [
+   "kirchner-question-2",
+   "niveau-methode"
+  ]
+ ],
+ "aiguilleur": {
+  "etiquette": "aiguilleur-opus",
+  "modele": "claude-opus-5-5",
+  "fournisseur": "claude",
+  "consigne": "consigne_aiguilleur"
+ },
+ "juges": [
+  {
+   "etiquette": "juge-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_juge"
+  },
+  {
+   "etiquette": "juge-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_juge"
+  }
+ ],
+ "items_juge": [
+  "K1",
+  "K2",
+  "K3",
+  "K4",
+  "K5"
+ ],
+ "agregation": {
+  "regle": "unanimite"
+ },
+ "lecteurs_etiquettes": [
+  {
+   "etiquette": "lecteur-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude"
+  },
+  {
+   "etiquette": "lecteur-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra"
+  }
+ ],
+ "garde_kimi": {
+  "debordement_max": 0.5,
+  "refus_aiguilleur": "technique",
+  "arret_metteur_fusion": false
+ },
+ "tableau": {
+  "longueur_max_titre": 80,
+  "longueur_max_resume": 160,
+  "champ_resume": "hypothese",
+  "consigne_passe": "sans objet (passe « tableau » retirée, aucun appel)",
+  "juger_passe_tableau": false
+ },
+ "memoire": {
+  "methode": "bardeaux",
+  "taille_bardeau": 3,
+  "seuil": 0.6
+ },
+ "bisociateur": {
+  "bras": [
+   "gu_krenn",
+   "basique"
+  ],
+  "k_paires": 4,
+  "fournisseurs_entree": [
+   "*"
+  ],
+  "gu_krenn": {
+   "mode": "substitut",
+   "source": {
+    "chemin": "pieces/source-gu-krenn-kirchner-v2.json",
+    "sha256": "5a8ede4d9241061dce4a8311dbd27420eb1f594bde2eb206d31eee993d8ac45a"
+   },
+   "oeuvres_min_vocabulaire": 1,
+   "date_debut": "2000-01-01",
+   "date_coupure": "2026-11-03",
+   "actif_depuis": "2000-01-01",
+   "actif_min_oeuvres": 1
+  },
+  "basique": {
+   "exposant": 8.5,
+   "decalage": 0.05,
+   "liste_concepts": "liste_concepts"
+  },
+  "consigne_fusion": "consigne_fusion",
+  "consigne_lecteur_etiquettes": "consigne_lecteur",
+  "metteur_fusion": {
+   "etiquette": "metteur-fable",
+   "modele": "claude-fable-5-1",
+   "fournisseur": "claude"
+  }
+ },
+ "plafonds_session": {
+  "proposeur": 3.5,
+  "aiguilleur": 0.4,
+  "juge": 0.9,
+  "lecteur": 0.9,
+  "fusion": 3.5
+ },
+ "etiquettes_interdites": [
+  "exploratoire",
+  "fusion",
+  "bras méta",
+  "gu et krenn",
+  "gu krenn",
+  "bisociation",
+  "kimi",
+  "moonshot",
+  "gemini",
+  "fable",
+  "astra",
+  "openai",
+  "gpt 6",
+  "gpt6",
+  "gpt-6",
+  "chatgpt"
+ ],
+ "a4": {
+  "mode": "prefixe",
+  "action": "fiche_exclue"
+ },
+ "arrets": {
+  "a3_echecs_consecutifs": 3,
+  "a3_delai_s": {
+   "*": 1800
+  },
+  "a14_part_max": 0.25,
+  "a11_modeles": []
+ },
+ "pieces": {
+  "consigne_proposeur": {
+   "chemin": "pieces/consigne-proposeur-kirchner-v1.md",
+   "sha256": "ae7109dc297cae429b280a58061a6f284de689d7b482a1b9e3db9075263e94b0"
+  },
+  "consigne_aiguilleur": {
+   "chemin": "pieces/consigne-aiguilleur-kirchner-v2.md",
+   "sha256": "7514666ee8a0f46149f4ad3a541f2a77c0945e5b7ef8b825c894e3dd7ad5569b"
+  },
+  "consigne_juge": {
+   "chemin": "pieces/consigne-juge-kirchner-v1.md",
+   "sha256": "539d712ad4d3c57e3fec4aa1b292a478884ed350222d311a939635325cd187a6"
+  },
+  "consigne_lecteur": {
+   "chemin": "pieces/consigne-lecteur-kirchner-v1.md",
+   "sha256": "897a16ea9770f58b78721d08a595a34cf225e2864d0631d3157d07de3fa516f6"
+  },
+  "consigne_fusion": {
+   "chemin": "pieces/consigne-metteur-kirchner-v1.md",
+   "sha256": "9aa2b7e8d3a4444b66948e21aa9ec4f35ec5ac754645373f0b50f084e96f0f2a"
+  },
+  "liste_concepts": {
+   "chemin": "pieces/concepts-kirchner-v1.json",
+   "sha256": "2d78923b2c6b1270ddf92676ed736d12a1fb9dc41f308ba900d0338f93ca7147"
+  },
+  "source_gu_krenn": {
+   "chemin": "pieces/source-gu-krenn-kirchner-v2.json",
+   "sha256": "5a8ede4d9241061dce4a8311dbd27420eb1f594bde2eb206d31eee993d8ac45a"
+  },
+  "question_servie": {
+   "chemin": "pieces/conv-audit/question-ideation-kirchner-v1.md",
+   "sha256": "291f91f882d9a130570b1da600212f07435ec19cb87b9e9d65380a5c4c650253"
+  },
+  "piece_kirchner": {
+   "chemin": "pieces/conv-audit/piece-kirchner-v2.md",
+   "sha256": "6e7fb1c56cb292aa97667f11093959f775f940b06dc85d8038e728813e4203f5"
+  },
+  "piece_nos_resultats": {
+   "chemin": "pieces/conv-audit/piece-nos-resultats-v1.md",
+   "sha256": "d6fa8011d9b5680d4ec58b262b6440e0e61e9c9987f0ac79a51cb5bca7b27e3c"
+  }
+ },
+ "canaris": {
+  "consigne_proposeur": "KQ2-PROPOSEUR-59114cf4",
+  "consigne_aiguilleur": "KQ2-AIGUILLEUR-3d9a61f0",
+  "consigne_juge": "KQ2-JUGE-7f57b98e",
+  "consigne_lecteur": "KQ2-LECTEUR-4b683a08",
+  "consigne_fusion": "KQ2-METTEUR-c16e2030"
+ },
+ "relais": {
+  "argon": {
+   "port": 8805,
+   "plafond_usd": 3.0,
+   "max_appels": 7
+  },
+  "astra": {
+   "port": 8807,
+   "plafond_usd": 132.7,
+   "max_appels": 135
+  },
+  "claude": {
+   "port": 8806,
+   "plafond_usd": 107.3,
+   "max_appels": 193
+  },
+  "kimi": {
+   "port": 8804,
+   "plafond_usd": 2.0,
+   "max_appels": 7
+  }
+ },
+ "fournisseurs": {
+  "argon": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-kirchner-q2-v1/orchestrateur/nuit/commande_argon_v56_nuit_v2.py",
+    "appeler",
+    "--url-relais",
+    "http://127.0.0.1:8805",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "245",
+    "--max-sortie-proposeur",
+    "32000",
+    "--max-sortie-court",
+    "4000",
+    "--sortie-min-jetons",
+    "1000",
+    "--delai-s",
+    "1750"
+   ]
+  },
+  "astra": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/docs/notes/ideation-organisme-v1/commandes-a1-bis-v1/commande_astra_a1bis_v1.py",
+    "appeler",
+    "--modele",
+    "gpt-6-astra",
+    "--url-relais",
+    "http://127.0.0.1:8807",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "245",
+    "--max-sortie-proposeur",
+    "32000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750"
+   ]
+  },
+  "claude": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-kirchner-q2-v1/orchestrateur/kirchner/commande_claude_kirchner_v1.py",
+    "--url-relais",
+    "http://127.0.0.1:8806",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "245",
+    "--max-sortie-proposeur",
+    "64000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750",
+    "--effort",
+    "high",
+    "--reflexion",
+    "adaptative"
+   ]
+  },
+  "kimi": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-kirchner-q2-v1/orchestrateur/nuit/commande_kimi_v2.py",
+    "--url-relais",
+    "http://127.0.0.1:8804",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "245",
+    "--max-sortie-proposeur",
+    "65536",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "4096",
+    "--delai-s",
+    "1750"
+   ]
+  }
+ },
+ "simulation": {
+  "cout_par_appel_usd": 0.01,
+  "fiches_par_appel": 8
+ }
+}
