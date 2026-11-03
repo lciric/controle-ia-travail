@@ -1,0 +1,210 @@
+{
+ "groupes": [
+  {
+   "nom": "Instruments non qualifiés",
+   "definition": "On lit le progrès et l'absence de triche sur des instruments (classement, bancs, garde de capacité, moniteurs de langage, sondes, Petri) dont personne n'a établi qu'ils battent un plancher trivial ou une vérification mécanique moins chère. Un instrument au plafond, qui ne mesure que du bruit ou qui lit le récit de l'agent plutôt que son acte, rend ses verdicts vides, dans un sens comme dans l'autre.",
+   "critere": "L'énoncé teste la validité d'un instrument sur une population donnée : contre un plancher (hasard, sondes aléatoires, fidélité test-retest, plafond), contre une base moins chère (vérification mécanique), ou selon la source qu'il lit (faits d'exécution relevés indépendamment, contre texte produit par l'agent). La sélection, l'adaptation des agents, la couverture des classes et la dépendance entre contrôles n'y sont pas le mécanisme central."
+  },
+  {
+   "nom": "Progrès gonflé par la sélection",
+   "definition": "Retenir le meilleur (méthode, graine, soumission, configuration) d'après une mesure bruitée, consultée à répétition ou limitée aux classes d'un banc surestime sa valeur sur une mesure indépendante, même sans violation cachée. Relances, resoumissions, réutilisation d'un banc réservé et gains propres au banc passent ainsi pour des progrès ou des passages de garde.",
+   "critere": "L'énoncé porte sur le progrès apparent de ce qui est retenu (score, gain, passage de garde) et l'attribue aux limites de la mesure (bruit, répétition, réutilisation, classes du banc) : il le compare à une mesure indépendante (banc frais ou scellé, évaluation de référence plus grande, audit hors banc, bande de bruit des relances) ou mesure à quelle fréquence du bruit est retenu comme progrès. Le taux d'erreur d'un contrôle parmi les lauréats du classement relève du groupe « Contrôle affaibli par la sélection »."
+  },
+  {
+   "nom": "Contrôle affaibli par la sélection",
+   "definition": "À contrôle figé et sans adaptation des agents, la sélection par le score du classement retient (ou fait naître) une population où le contrôle se trompe davantage que sur celle où on l'a validé. Le rappel, les fausses alertes ou les faux passages publiés pour la population ne valent plus parmi les lauréats.",
+   "critere": "L'énoncé compare un taux d'erreur d'un contrôle (moniteur, seuil, garde ; ou part de violations qui passent) parmi ce que la sélection par le score du classement retient ou fait naître, au même taux sur la population entière, sur une autre tranche du classement ou sur une référence non sélectionnée (violations instruites, épisodes non sélectionnés). Si ce qui retient est lui-même un contrôle (un juge qui promeut) et que l'énoncé porte sur les erreurs d'un second contrôle parmi ce que le premier laisse passer, la fiche relève du groupe « Défenses corrélées »."
+  },
+  {
+   "nom": "Classes hors couverture",
+   "definition": "Une garantie statistique ne vaut que pour les classes que contiennent la nulle du juge ou la banque de validation du contrôle. Les classes hors couverture (hors nulle, relationnelles, rendues admissibles par une archive qui grandit) passent sans garantie, et ni tirages frais ni banc plus grand n'y remédient.",
+   "critere": "L'énoncé affirme qu'une classe de violations échappe à la garantie parce qu'elle sort de la nulle ou de la banque de validation (par construction, ou parce que l'archive grandit), et teste ce qui rétablit ou non la garantie (tirages frais, banc agrandi, nulle élargie, audit actualisé à l'archive). Des classes tenues hors banc qui servent seulement à tester le transfert d'un gain ne suffisent pas."
+  },
+  {
+   "nom": "Défenses corrélées",
+   "definition": "On compte sur des contrôles empilés, ou sur un moniteur distinct de l'agent, comme si leurs erreurs étaient indépendantes. Une famille de modèles partagée, une description publique commune ou un contexte commun leur font rater les mêmes violations ensemble : l'empilement donne une couverture illusoire.",
+   "critere": "L'énoncé porte sur la dépendance entre erreurs : entre deux contrôles (y compris un juge qui promeut et un moniteur qui audite les promus), entre l'agent et son moniteur (même famille ou non), ou entre les ratés simultanés de plusieurs dossiers ; non sur le taux d'erreur marginal d'un seul contrôle."
+  },
+  {
+   "nom": "Contournement appris et contagion",
+   "definition": "Ce que le dispositif montre ou renvoie aux agents (motifs de rejet, règles et frontière de la nulle, forum, rang affiché) change la population des violations pendant la course. Contournements appris et triches recopiées font que le rappel mesuré hors boucle surestime le rappel dans la boucle, même à moniteur figé.",
+   "critere": "L'énoncé fait varier un canal d'information vers les agents ou entre eux (montré ou caché, plus ou moins détaillé, forum ouvert ou fermé, rang affiché ou non) et mesure son effet sur la triche ou sur le rappel d'un contrôle, ou mesure la diffusion de la triche par ce canal."
+  }
+ ],
+ "affectations": [
+  {
+   "id": "KM-01",
+   "groupe": "Instruments non qualifiés",
+   "raison": "Réclame pour chaque instrument du harnais une épreuve minimale de validité (fidélité test-retest, planchers, fuite du banc), sur cas honnêtes appariés.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-02",
+   "groupe": "Classes hors couverture",
+   "raison": "Une classe hors nulle (W2) garde un taux de fausse promotion d'au moins 0,8 même sur tirages frais : le remède au bruit ne la couvre pas.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-03",
+   "groupe": "Progrès gonflé par la sélection",
+   "raison": "Un gain de surveillabilité choisi sur un banc est remesuré par un audit hors banc contre un témoin non sélectionné : il peut n'être propre qu'au banc.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-04",
+   "groupe": "Instruments non qualifiés",
+   "raison": "Mesure l'apport du moniteur de langage au-delà de la vérification mécanique, sur les mêmes cas, l'oracle mécanique servant d'étiquette.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-05",
+   "groupe": "Progrès gonflé par la sélection",
+   "raison": "Une méthode en échec franchit la garde par simple resoumission : passage dû au bruit, jugé contre une évaluation de référence plus grande.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-06",
+   "groupe": "Instruments non qualifiés",
+   "raison": "Le moniteur de langage n'apporte rien s'il ne bat pas de 0,15 de rappel une vérification mécanique isolée, à fausses alertes égales.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-07",
+   "groupe": "Défenses corrélées",
+   "raison": "Rappel du moniteur plus bas parmi les lois que le juge promeut : erreurs corrélées entre deux contrôles en série, cas que le critère du contrôle affaibli renvoie ici.",
+   "second_choix": "Contrôle affaibli par la sélection"
+  },
+  {
+   "id": "KM-09",
+   "groupe": "Défenses corrélées",
+   "raison": "Interaction même famille contre autre famille entre l'agent et son moniteur, à fausses alertes égalisées.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-10",
+   "groupe": "Contournement appris et contagion",
+   "raison": "Mesure la reprise, par les autres agents, d'une triche publiée sur le forum, contre la reprise des méthodes honnêtes publiées.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-11",
+   "groupe": "Défenses corrélées",
+   "raison": "Excès de co-ratage entre deux moniteurs de même famille, à entrée identique et taux de ratage égalisés.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-12",
+   "groupe": "Contournement appris et contagion",
+   "raison": "Facteur principal : montrer les règles d'exclusion et la frontière de la nulle, qui serviraient de carte ; grandeur : promotion de fausses lois hors nulle.",
+   "second_choix": "Classes hors couverture"
+  },
+  {
+   "id": "KM-13",
+   "groupe": "Progrès gonflé par la sélection",
+   "raison": "Le gagnant du 99e centile est le maximum d'estimations bruitées ; il est comparé, sur un auditeur hors banc, à la première méthode qui franchit un seuil d'e-valeur.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-14",
+   "groupe": "Progrès gonflé par la sélection",
+   "raison": "Isole l'effet de la réutilisation adaptative d'un banc réservé sur les fausses promotions, au-delà de la multiplicité des essais.",
+   "second_choix": "Contournement appris et contagion"
+  },
+  {
+   "id": "KM-15",
+   "groupe": "Contrôle affaibli par la sélection",
+   "raison": "Rappel d'un moniteur figé plus bas parmi les violations que le classement retient que sur toutes les violations exécutées (effet de type Berkson).",
+   "second_choix": null
+  },
+  {
+   "id": "KM-17",
+   "groupe": "Contrôle affaibli par la sélection",
+   "raison": "Part des recombinaisons qui passent et rappel du moniteur, comparés entre la médiane et le haut du classement.",
+   "second_choix": "Classes hors couverture"
+  },
+  {
+   "id": "KM-18",
+   "groupe": "Classes hors couverture",
+   "raison": "L'archive qui grandit rend admissibles des classes relationnelles que le contrôle figé ne couvre pas ; audit actualisé contre banc initial agrandi.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-19",
+   "groupe": "Progrès gonflé par la sélection",
+   "raison": "Fréquence à laquelle de simples relances d'une méthode entrent au top 3, sous moyenne simple et sous test par e-valeurs.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-20",
+   "groupe": "Contrôle affaibli par la sélection",
+   "raison": "Une invite de moniteur validée sur des triches instruites est mesurée sur les triches que la seule sélection par score fait naître.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-21",
+   "groupe": "Progrès gonflé par la sélection",
+   "raison": "Part des méthodes de tête honnêtes qui ne battent pas le meneur précédent au-delà de la bande de bruit des relances.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-22",
+   "groupe": "Contrôle affaibli par la sélection",
+   "raison": "Un seuil calibré sur des épisodes honnêtes non sélectionnés dépasse son budget de fausses alertes parmi les gagnants du classement.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-23",
+   "groupe": "Progrès gonflé par la sélection",
+   "raison": "Facteur : le bruit de la garde ; grandeur première : la part de la classe relance et tri de graines au top 3 ; la séparabilité du moniteur vient en second.",
+   "second_choix": "Contrôle affaibli par la sélection"
+  },
+  {
+   "id": "KM-24",
+   "groupe": "Contournement appris et contagion",
+   "raison": "Dose d'information renvoyée par le moniteur avant exécution, contre rappel du moniteur après coup.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-25",
+   "groupe": "Progrès gonflé par la sélection",
+   "raison": "Choisir à répétition les meneurs sur le banc tenu à l'écart l'épuise : écart avec un second banc jamais utilisé.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-26",
+   "groupe": "Contrôle affaibli par la sélection",
+   "raison": "Les faux passages d'une garde bruitée se concentrent parmi les gagnants du classement, contre l'ensemble ou des passants tirés au hasard.",
+   "second_choix": "Progrès gonflé par la sélection"
+  },
+  {
+   "id": "KM-27",
+   "groupe": "Contournement appris et contagion",
+   "raison": "Le forum propagerait la structure des filtres du moniteur : rappel sur les quatre autres agents, avec et sans forum.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-28",
+   "groupe": "Instruments non qualifiés",
+   "raison": "Ce que lit l'audit : relevé d'exécution collecté indépendamment contre explication rédigée par le chercheur, à budget de lecture égal.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-29",
+   "groupe": "Instruments non qualifiés",
+   "raison": "Une sonde générique de tromperie doit battre 200 sondes aléatoires appariées, sur des triches non verbalisées ; le rappel après sélection vient en second.",
+   "second_choix": "Contrôle affaibli par la sélection"
+  },
+  {
+   "id": "KM-30",
+   "groupe": "Contournement appris et contagion",
+   "raison": "Rang affiché (0, 2 puis 5 rivaux) contre rappel du moniteur et taux de tentatives.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-31",
+   "groupe": "Défenses corrélées",
+   "raison": "Grandeur : corrélation des faux négatifs entre dossiers, à rappel marginal comparable ; le forum commun en est le facteur.",
+   "second_choix": "Contournement appris et contagion"
+  }
+ ]
+}
