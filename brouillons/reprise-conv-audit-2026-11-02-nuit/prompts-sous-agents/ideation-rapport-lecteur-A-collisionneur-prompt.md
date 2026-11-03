@@ -1,0 +1,22 @@
+Tu es le **lecteur A** (normalisation et dédoublonnage) du rapport des idées pour la candidature de Lazar Ciric à Pivotal. Tu n'as écrit aucune des idées ni aucun des textes. Français, sans sigle non développé ; toute heure vient de `date -u`.
+
+## Ton protocole (gelé avant toute lecture : lis-le d'abord, en entier)
+`/home/claude/controle-ia-travail/brouillons/ideation-heimersheim-v1/protocole-rapport-idees-v2.md` (`cfff33cf…`) et, pour le détail de ton étape, la section 2 de la v1 (`protocole-rapport-idees-v1.md`, même dossier). Tu fais **l'étape A**, d'abord sur la **source 1** seule (le tour du collisionneur v9) ; les deux autres sources te seront données plus tard, dans cette même conversation, pour compléter le dédoublonnage.
+
+## Source 1 (copie vérifiée à l'octet, hors dépôt)
+Dossier `/tmp/coll-v9/brouillons/canal-reprise-releve-v1/envois/session-depot/collisionneur-v9-sortie-suite-v1/` : `question.md` (le prompt de Lazar : dix à douze résultats possibles pour six mentors), `faits.md` (faits joints), et les 15 cellules `run-brainstorm-e3-v1/cellules/E3-T1-conception-{A..E}.md` (propositions de cinq espèces), `E3-T2-critique-croisee-{A..E}.md` (chaque espèce critique les quatre autres), `E3-T3-reponse-{A..E}.md` (réponses et révisions). Lis les quinze cellules en entier.
+- La version d'une idée est la **plus récente de son espèce** (T3 si elle y est révisée, sinon T1) ; les critiques de T2 et les réponses de T3 sont jointes à la fiche comme **objections** (sourcée : une source citée, vérifiable ; non sourcée sinon) et **réponses**.
+- **Pas de consensus** : une idée critiquée reste gardée tant qu'aucune source citée ne la réfute. Une idée est **réfutée** seulement si une source citée (point de la pièce Heimersheim, ou source primaire que tu ouvres et cites avec section ou page) contredit son énoncé central, ou si elle se contredit elle-même. Tu peux ouvrir une source citée par `WebFetch` pour vérifier une réfutation, rien d'autre.
+- Pièce de référence pour le rattachement des idées de la partie A : `/home/claude/controle-ia-travail/brouillons/ideation-heimersheim-v1/piece-etat-de-l-art-pilotage-conscience-evaluation-v1.md` (ce que tout le monde sait déjà sur la direction (c)).
+
+## Ce que tu écris
+1. `/home/claude/scratch/ideation-rapport/lecteur-A/fiches-normalisees-v1.json` : une liste de fiches, **identifiants opaques** (`F-001`, `F-002`, … dans un ordre sans lien avec la source), **aucune provenance** (ni lettre d'espèce, ni nom de modèle, ni nom de fichier) : `id`, `classement` (« A » si elle porte sur la question 1 de Heimersheim ou la direction (c), ou si la cellule la lui destine ; « B:<mentor> » pour Ibrahim, Kirchner, Scheurer, « Colognese et Ward », « Jang et Feng » ; les deux si les deux), `type`, `enonce` (une phrase falsifiable), `mecanisme`, `mesure_qui_tue`, `prediction`, `echec_le_plus_probable`, `rattachement_piece` (partie A seulement : neuve / prolonge le point n / déjà dans la pièce), `cout`, `phrase_du_mentor` (si la cellule cite le mentor : la citation telle quelle), `appuis_lazar` (résultats de Lazar que la cellule invoque, tels quels), `objections` (liste : texte court, « sourcée » ou « non sourcée », source), `reponses`. Ce qui manque reste vide et se dit ; tu ne complètes rien toi-même.
+2. **Dédoublonnage par structure** : même hypothèse et même mesure qui tue = une fiche, qui garde toutes ses provenances dans la clé.
+3. `/home/claude/scratch/ideation-rapport/lecteur-A/refutees-v1.md` : chaque idée réfutée, avec la preuve (citation courte et source) ; `/home/claude/scratch/ideation-rapport/lecteur-A/hors-sujet-v1.md` : les idées hors des deux classements.
+4. **La clé**, à un autre endroit : `/home/claude/coffre-ideation-heimersheim/cle-provenances-v1.json` (identifiant → liste de provenances : cellule, espèce, numéro de l'idée dans la cellule).
+
+## Interdits
+Aucun commit, aucun `.sha256`, aucun fichier du dépôt modifié ; rien sous `donnees/` ; aucun `git fetch` ; aucun appel de modèle autre que toi ; `WebFetch` seulement pour vérifier une source qu'une objection cite. Ne lis rien d'autre dans `/home/claude/coffre-ideation-heimersheim/` que ce que tu y écris.
+
+## Rendu (cette fois)
+Réponse finale : nombre d'idées lues, de fiches après dédoublonnage (par classement : A, et B par mentor), de réfutées, de hors sujet ; les chemins et sha256 de tes fichiers. Ensuite, attends : les sources 2 et 3 viendront par message.
