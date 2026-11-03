@@ -1,0 +1,93 @@
+Course à blanc du tour sur la question de Jérémy Scheurer (collisionneur v9 27e9ce40…), 3 novembre 2026, 11:37 UTC (date -u). Aucun appel réseau : course_a_blanc_scheurer_v1.py, appelants factices, environnement vide (env -i), sorties hors du dépôt (<bloc-notes>/blanc-soir-v1/scheurer/). Vrai chemin du collisionneur (portes, plafond avant chaque appel, cellules scellées, verifier).
+
+##### (1) devis du collisionneur (sous-commande devis, barème MODELES, cinq espèces, sans relance)
+  étage 1 : 10 cellules, 17.76 USD au pire cas, sans relance
+  étage 2 : 15 cellules, 28.91 USD au pire cas, sans relance
+E3-T1-conception-A       claude-fable-5-1   pire cas  3.28 USD
+E3-T1-conception-B       claude-opus-5-5    pire cas  1.31 USD
+E3-T1-conception-C       gemini-4-argon     pire cas  1.68 USD
+E3-T1-conception-D       kimi-k3.1-pro      pire cas  0.34 USD
+E3-T1-conception-E       gpt-6-astra        pire cas  1.68 USD
+E3-T2-critique-croisee-A claude-fable-5-1   pire cas  3.56 USD
+E3-T2-critique-croisee-B claude-opus-5-5    pire cas  1.42 USD
+E3-T2-critique-croisee-C gemini-4-argon     pire cas  1.96 USD
+E3-T2-critique-croisee-D kimi-k3.1-pro      pire cas  0.39 USD
+E3-T2-critique-croisee-E gpt-6-astra        pire cas  1.96 USD
+E3-T3-reponse-A          claude-fable-5-1   pire cas  3.69 USD
+E3-T3-reponse-B          claude-opus-5-5    pire cas  1.47 USD
+E3-T3-reponse-C          gemini-4-argon     pire cas  2.09 USD
+E3-T3-reponse-D          kimi-k3.1-pro      pire cas  0.42 USD
+E3-T3-reponse-E          gpt-6-astra        pire cas  2.09 USD
+  étage 3 : 15 cellules, 27.33 USD au pire cas, sans relance
+La dépense réelle dépend de la longueur de la réflexion ; une relance (sortie vide ou coupée) peut ajouter jusqu'au double du pire cas de sa cellule. Le plafond vaut pour tout le dossier de run, et le script le vérifie avant chaque appel.
+
+##### (course à blanc) sans-argon, plafond 1000 USD
+E3-T1-conception-C : absence acceptée par l'arbitre, non relancée
+E3-T2-critique-croisee-C : absence acceptée par l'arbitre, non relancée
+E3-T3-reponse-C : absence acceptée par l'arbitre, non relancée
+Étage III fini ; dépense 7.87 USD. Lance « verifier <bloc-notes>/blanc-soir-v1/scheurer/sans-argon », puis lis <bloc-notes>/blanc-soir-v1/scheurer/sans-argon/etat.md.
+
+=== course à blanc sans Argon : code 0 ; verifier : 0 problème(s)
+appels par tour : {'E3-T1-conception': 4, 'E3-T2-critique-croisee': 4, 'E3-T3-reponse': 4} ; par espèce : {'A': 3, 'B': 3, 'D': 3, 'E': 3} ; total 12
+cellule                    prompt (car.)  pire cas  +relance  attendu
+E3-T1-conception-A                 20390      3.27      6.47     0.87
+E3-T1-conception-B                 20390      1.31      2.59     0.83
+E3-T1-conception-D                 20390      0.33      0.67     0.17
+E3-T1-conception-E                 20390      1.67      3.34     0.30
+E3-T2-critique-croisee-A           70521      3.44      6.64     1.50
+E3-T2-critique-croisee-B           67222      1.37      2.65     0.67
+E3-T2-critique-croisee-D           72822      0.37      0.70     0.25
+E3-T2-critique-croisee-E           70082      1.83      3.51     0.48
+E3-T3-reponse-A                    84527      3.48      6.68     1.23
+E3-T3-reponse-B                    94768      1.41      2.69     0.85
+E3-T3-reponse-D                    95807      0.38      0.72     0.19
+E3-T3-reponse-E                    93853      1.91      3.59     0.53
+TOTAL : pire cas sans relance 20.77 USD ; pire cas avec une relance par cellule 61.01 USD ; attendu 7.87 USD
+attendu par espèce : A 3.60, B 2.36, C 0.00, D 0.60, E 1.31
+plafond technique = entier supérieur à 1,2 × pire cas sans relance : 25 USD
+rapports jetons/caractère (brainstorm) : {'A': 0.4836, 'B': 0.4832, 'C': 0.3794, 'D': 0.3341, 'E': 0.3325}
+code de sortie 0
+
+##### (course à blanc) cinq-especes, plafond 1000 USD
+Étage III fini ; dépense 11.78 USD. Lance « verifier <bloc-notes>/blanc-soir-v1/scheurer/cinq-especes », puis lis <bloc-notes>/blanc-soir-v1/scheurer/cinq-especes/etat.md.
+
+=== course à blanc : code 0 ; verifier : 0 problème(s)
+appels par tour : {'E3-T1-conception': 5, 'E3-T2-critique-croisee': 5, 'E3-T3-reponse': 5} ; par espèce : {'A': 3, 'B': 3, 'C': 3, 'D': 3, 'E': 3} ; total 15
+cellule                    prompt (car.)  pire cas  +relance  attendu
+E3-T1-conception-A                 20390      3.27      6.47     0.87
+E3-T1-conception-B                 20390      1.31      2.59     0.83
+E3-T1-conception-C                 20390      1.67      3.34     0.77
+E3-T1-conception-D                 20390      0.33      0.67     0.17
+E3-T1-conception-E                 20390      1.67      3.34     0.30
+E3-T2-critique-croisee-A          114121      3.58      6.78     1.71
+E3-T2-critique-croisee-B          110822      1.43      2.71     0.75
+E3-T2-critique-croisee-C           86528      1.89      3.57     0.96
+E3-T2-critique-croisee-D          116422      0.40      0.73     0.27
+E3-T2-critique-croisee-E          113682      1.98      3.66     0.62
+E3-T3-reponse-A                   123911      3.61      6.81     1.42
+E3-T3-reponse-B                   134152      1.46      2.74     0.93
+E3-T3-reponse-C                   137734      2.06      3.74     1.28
+E3-T3-reponse-D                   135191      0.41      0.75     0.22
+E3-T3-reponse-E                   133237      2.04      3.72     0.66
+TOTAL : pire cas sans relance 27.10 USD ; pire cas avec une relance par cellule 78.71 USD ; attendu 11.78 USD
+attendu par espèce : A 4.00, B 2.52, C 3.02, D 0.66, E 1.59
+plafond technique = entier supérieur à 1,2 × pire cas sans relance : 33 USD
+rapports jetons/caractère (brainstorm) : {'A': 0.4836, 'B': 0.4832, 'C': 0.3794, 'D': 0.3341, 'E': 0.3325}
+code de sortie 0
+
+##### (course à blanc) plafond-5-sans-argon, plafond 5 USD
+E3-T1-conception-C : absence acceptée par l'arbitre, non relancée
+ARRÊT (code 4) : E3-T2-critique-croisee-A : dépense 2.18 + pire cas 3.44 USD > plafond 5.00 USD ; aucun appel lancé
+
+=== course à blanc sans Argon : code 4 ; verifier : 0 problème(s)
+appels par tour : {'E3-T1-conception': 4} ; par espèce : {'A': 1, 'B': 1, 'D': 1, 'E': 1} ; total 4
+cellule                    prompt (car.)  pire cas  +relance  attendu
+E3-T1-conception-A                 20390      3.27      6.47     0.87
+E3-T1-conception-B                 20390      1.31      2.59     0.83
+E3-T1-conception-D                 20390      0.33      0.67     0.17
+E3-T1-conception-E                 20390      1.67      3.34     0.30
+TOTAL : pire cas sans relance 6.58 USD ; pire cas avec une relance par cellule 19.65 USD ; attendu 2.18 USD
+attendu par espèce : A 0.87, B 0.83, C 0.00, D 0.17, E 0.30
+plafond technique = entier supérieur à 1,2 × pire cas sans relance : 8 USD
+rapports jetons/caractère (brainstorm) : {'A': 0.4836, 'B': 0.4832, 'C': 0.3794, 'D': 0.3341, 'E': 0.3325}
+code de sortie 4
