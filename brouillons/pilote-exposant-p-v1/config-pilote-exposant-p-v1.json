@@ -1,0 +1,197 @@
+{
+ "version": "config-pilote-exposant-p-v1",
+ "etude": "pilote-exposant-p",
+ "note": "brouillon 1 : non scellé ; toute valeur se fige au scellement du préenregistrement (R1)",
+ "modeles": {
+  "lu": "meta-llama/Llama-3.1-8B-Instruct",
+  "temoin": "meta-llama/Llama-3.1-8B"
+ },
+ "dtype": "bfloat16",
+ "attention": "sdpa",
+ "couche_perturbation": 2,
+ "decalage_mesure": -2,
+ "grille": {
+  "n": 31,
+  "angle_max_deg": 60.0
+ },
+ "seuil_f": 0.5,
+ "fenetre_deg": 60.0,
+ "ancres": {
+  "jeu": "HuggingFaceFW/fineweb-edu",
+  "configuration": "sample-10BT",
+  "graine_melange": 42,
+  "tampon": 10000,
+  "longueur": 5,
+  "par_sous_ensemble": 30,
+  "sous_ensembles": 32,
+  "reserve": 10000
+ },
+ "differences_aleatoires": {
+  "k_moy": 30,
+  "paires_disjointes_M": 60
+ },
+ "isotropes": {
+  "graine_torch": 42,
+  "n": 33,
+  "paires": [
+   [
+    0,
+    1
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    4,
+    5
+   ],
+   [
+    6,
+    7
+   ],
+   [
+    8,
+    9
+   ],
+   [
+    10,
+    11
+   ],
+   [
+    12,
+    13
+   ],
+   [
+    14,
+    15
+   ],
+   [
+    16,
+    17
+   ],
+   [
+    18,
+    19
+   ],
+   [
+    20,
+    21
+   ],
+   [
+    22,
+    23
+   ],
+   [
+    24,
+    25
+   ],
+   [
+    26,
+    27
+   ],
+   [
+    28,
+    29
+   ],
+   [
+    30,
+    31
+   ],
+   [
+    32,
+    0
+   ]
+  ],
+  "source": "results/directions/ref_pairs_random.txt du code publié (17 paires de référence)"
+ },
+ "plans": {
+  "temoin": {
+   "WG_sous_ensembles": 8
+  },
+  "lu": {
+   "ER_sous_ensembles": 32,
+   "WG_sous_ensembles": 32,
+   "E_Rpapier_sous_ensembles": 8,
+   "moities_sous_ensembles": 8,
+   "E_rd": 10,
+   "R_rd": 10,
+   "mixtes_rd": 5
+  }
+ },
+ "bootstrap": {
+  "B_difference": 10000,
+  "B_ancres": 200,
+  "niveau": 0.95
+ },
+ "lecture": {
+  "delta_equivalence": 0.2,
+  "seuil_cos": 0.1,
+  "p_publie_wg": 3.0030826525467997,
+  "tol_p_identiques": 0.15,
+  "tol_intercept_identiques": 2.0,
+  "intervalle_p_differentes": [
+   2.420106044932251,
+   3.7015544238257605
+  ],
+  "intervalle_isotrope": [
+   1.75,
+   2.25
+  ],
+  "cos_min_directions_publiees": 0.98,
+  "part_max_echecs": 0.2,
+  "norme_ancres_publiee": 2.379805326461792,
+  "tol_norme_relative": 0.001
+ },
+ "stimuli_sha256": "eae95d0ee4d4d9ddcb54d5847cc03f707d70018d3c9129a5764686852c2977a3",
+ "references_sha256": {
+  "directions-publiees-v1.npz": "ced98c6285e0a6f7c0dd31189d2a00916b38fd764410fb32d9891821990380b0",
+  "grilles-publiees-v1.npz": "c30a014a2e03aed0ce69dc43ea80488a7a47c0eb013f558c59c36f574ece9fbe",
+  "references-publiees-v1.json": "b594ee86b6d5ee1e6355203eca416815fc87e0e4c55eaf7f8b4b66675516375a"
+ },
+ "amont_commit": "a9355d4001500708a40a255bacfe559e6dc269c0",
+ "lot_balayage": 961,
+ "lot_activations": 256,
+ "plafonds": {
+  "duree_max_s": 14400
+ },
+ "entropie": 2026110301,
+ "jouet": {
+  "grille": {
+   "n": 11
+  },
+  "ancres": {
+   "par_sous_ensemble": 6,
+   "sous_ensembles": 3,
+   "reserve": 400
+  },
+  "differences_aleatoires": {
+   "k_moy": 5,
+   "paires_disjointes_M": 4
+  },
+  "isotropes_paires_max": 3,
+  "plans": {
+   "temoin": {
+    "WG_sous_ensembles": 2
+   },
+   "lu": {
+    "ER_sous_ensembles": 3,
+    "WG_sous_ensembles": 2,
+    "E_Rpapier_sous_ensembles": 1,
+    "moities_sous_ensembles": 1,
+    "E_rd": 2,
+    "R_rd": 2,
+    "mixtes_rd": 1
+   }
+  },
+  "modele": {
+   "vocab_size": 512,
+   "hidden_size": 64,
+   "intermediate_size": 128,
+   "num_hidden_layers": 6,
+   "num_attention_heads": 4,
+   "num_key_value_heads": 2,
+   "max_position_embeddings": 64
+  }
+ }
+}
