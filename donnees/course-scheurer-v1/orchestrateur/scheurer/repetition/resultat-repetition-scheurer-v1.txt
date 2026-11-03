@@ -1,0 +1,70 @@
+# Répétition complète, kit Scheurer v1 (faux mandataire à 8 fiches par proposeur), 3 novembre 2026, de 14:03 à 14:05 UTC (date -u) — code 0 ; PY_RELAIS_CLAUDE = Python avec anthropic 2.4.0 ; dossier hors dépôt
+autorité factice créée dans <bloc-notes>/repetition-scheurer-v1/ca
+spécification de répétition : <bloc-notes>/repetition-scheurer-v1/spec
+== essai 0 : mode repeter refusé sans autorité factice
+  repeter : SSL_CERT_FILE doit être l'autorité FACTICE marquée de la répétition
+  code 2 ; dossier créé : non
+== essai 1 : course complète, variante sans_opus_argon
+  code 0 en 60 s ; ports 8804 à 8807 libres : oui
+  relais claude : 155 appels
+  relais astra : 106 appels
+  relais kimi : 2 appels
+  relais argon : 2 appels
+  registre : réglé 3.65904 ; engagé 0 ; appels 265 {'controle': 5, 'proposition': 4, 'aiguillage': 32, 'juges': 64, 'etiquettes': 128, 'fusions': 32} ; dépassements 0
+  trace : fin fini aucun ; appels par étape {'aiguillage': 32, 'etiquettes': 128, 'fusions': 32, 'juges': 64, 'proposition': 4} ; par modèle {'claude-fable-5-1': 153, 'gemini-4-argon': 1, 'gpt-6-astra': 105, 'kimi-k3.1-pro': 1} ; fiches {'prop-argon': 8, 'prop-astra': 8, 'prop-fable': 8, 'prop-kimi': 8} ; paires {'basique': 4, 'gu_krenn': 4} ; fusions {'basique': 4, 'gu_krenn': 4} ; anti-fuite conforme
+  journal : 2026-11-03T14:03:44Z manifeste de départ scellé : <bloc-notes>/repetition-scheurer-v1/run-20261103-140337-complete/manifeste-depart-lanceur-scheurer-v1.json
+  journal : 2026-11-03T14:03:47Z contrôles conformes (claude-fable-5-1 claude-opus-5-5 gpt-6-astra kimi-k3.1-pro gemini-4-argon) ; registre : 236.9894 USD restants
+  journal : 2026-11-03T14:04:37Z relais argon arrêté (PID 3519)
+  journal : 2026-11-03T14:04:38Z relais kimi arrêté (PID 3517)
+  journal : 2026-11-03T14:04:39Z relais claude arrêté (PID 3513)
+  journal : 2026-11-03T14:04:39Z relais astra arrêté (PID 3514)
+  journal : 2026-11-03T14:04:39Z sortie scellée avant toute lecture : 137 fichiers (empreintes-run-scheurer-v1.txt)
+  journal : épreuve anti-fuite sur le run : conforme : 3 artefacts sur le run, refusés : 3 ; trace du run conforme
+  journal : aucune clé trouvée (4 variable(s) cherchée(s))
+  journal : 2026-11-03T14:04:39Z fin, code 0
+  clé présente à l'amont (journal du mandataire) : 265 appels sur 265 ; par hôte :  155 "hote": "api.anthropic.com"; 2 "hote": "api.moonshot.ai"; 106 "hote": "api.openai.com"; 2 "hote": "generativelanguage.googleapis.com";
+  amont à 8 fiches par proposeur (plan : 6) : {'prop-argon': 8, 'prop-astra': 8, 'prop-fable': 8, 'prop-kimi': 8} -> conforme
+  relais argon : 2 lignes de journal, max_appels 9, reste 7
+  relais astra : 106 lignes de journal, max_appels 169, reste 63
+  relais claude : 155 lignes de journal, max_appels 251, reste 96
+  relais kimi : 2 lignes de journal, max_appels 9, reste 7
+== essai 2 : kill -TERM du lanceur en pleine course (variante sans_opus)
+  14:04:52 kill -TERM 4444 (lanceur) ; course PID 4587 vivante : oui ; appels déjà partis : 15
+  code 130 en 2 s ; course PID 4587 vivante : non ; ports libres : oui
+  relais PID 4494 vivant : non
+  relais PID 4491 vivant : non
+  relais PID 4492 vivant : non
+  bilan de course : signal SIGTERM reçu (ArretParSignal) : arrêt propre, manifeste de fin écrit
+  relais claude : 11 appels
+  relais astra : 2 appels
+  relais kimi : 2 appels
+  registre : réglé 0.34813 ; engagé 0.807917 ; appels 15 {'controle': 4, 'proposition': 3, 'aiguillage': 8} ; dépassements 0
+  trace : fin arret signal ; appels par étape {'aiguillage': 8, 'proposition': 3} ; par modèle {'claude-fable-5-1': 9, 'gpt-6-astra': 1, 'kimi-k3.1-pro': 1} ; fiches {} ; paires {} ; fusions {} ; anti-fuite conforme
+  journal : 2026-11-03T14:04:44Z manifeste de départ scellé : <bloc-notes>/repetition-scheurer-v1/run-20261103-140337-kill/manifeste-depart-lanceur-scheurer-v1.json
+  journal : 2026-11-03T14:04:47Z contrôles conformes (claude-fable-5-1 claude-opus-5-5 gpt-6-astra kimi-k3.1-pro) ; registre : 236.9910 USD restants
+  journal : 2026-11-03T14:04:52Z signal TERM reçu
+  journal : SIGTERM envoyé à la course (PID 4587)
+  journal : {"arret": "ArretParSignal : signal SIGTERM reçu : arrêt propre"}
+  journal : 2026-11-03T14:04:53Z relais kimi arrêté (PID 4494)
+  journal : 2026-11-03T14:04:54Z relais claude arrêté (PID 4491)
+  journal : 2026-11-03T14:04:54Z relais astra arrêté (PID 4492)
+  journal : 2026-11-03T14:04:54Z sortie scellée avant toute lecture : 33 fichiers (empreintes-run-scheurer-v1.txt)
+  journal : épreuve anti-fuite sur le run : conforme : 1 artefacts sur le run, refusés : 1 ; trace du run conforme
+  journal : aucune clé trouvée (3 variable(s) cherchée(s))
+  journal : 2026-11-03T14:04:54Z fin, code 130
+== essai 3 : contrôle d'un modèle en échec (Opus 5.5 servi sous un autre nom) : aucune course
+  code 3 ; dossier course : non ; ports libres : oui
+  relais claude : 2 appels
+  registre : réglé 0.002912 ; engagé 0 ; appels 2 {'controle': 2} ; dépassements 0
+  journal : 2026-11-03T14:04:59Z manifeste de départ scellé : <bloc-notes>/repetition-scheurer-v1/run-20261103-140337-controle/manifeste-depart-lanceur-scheurer-v1.json
+  journal : contrôle de claude-opus-5-5 en échec : aucune course
+  journal : 2026-11-03T14:05:01Z relais kimi arrêté (PID 4796)
+  journal : 2026-11-03T14:05:02Z relais claude arrêté (PID 4794)
+  journal : 2026-11-03T14:05:02Z relais astra arrêté (PID 4795)
+  journal : 2026-11-03T14:05:02Z sortie scellée avant toute lecture : 14 fichiers (empreintes-run-scheurer-v1.txt)
+  journal : aucune clé trouvée (3 variable(s) cherchée(s))
+  journal : 2026-11-03T14:05:02Z fin, code 3
+== essai 4 : plafond de session trop bas (juge 0,5 USD < pire cas d'un appel d'Astra) : refus avant tout appel
+  code 2 ; registre de dépense : non ; relais lancés : 0 ; appels à l'amont : 0
+  motif : plafonds_session.juge = 0.5 : pas au-dessus du pire cas d'un appel (0.8513 USD, gpt-6-astra)
+== fin de la répétition : cinq essais conformes
