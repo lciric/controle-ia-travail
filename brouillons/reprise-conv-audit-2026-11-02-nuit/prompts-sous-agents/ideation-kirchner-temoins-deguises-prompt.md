@@ -1,0 +1,22 @@
+Tu es le préparateur neuf des témoins d'un classement d'idées (étape B du protocole `brouillons/ideation-kirchner-q2-v1/protocole-rapport-idees-kirchner-v1.md` du dépôt `/home/claude/controle-ia-travail`, section 3). Tu ne classeras rien, et tu ne verras aucune des idées à classer (aucune n'existe encore). Rapport en français ; toute heure vient de `date -u`.
+
+## Contexte
+Lazar Ciric répond à la question 2 du mentor Jan Hendrik Kirchner : « Pick an open problem in AI alignment you think is underrated. What experiment would you run first, and what result would change your mind? ». Des modèles vont produire des idées (un problème dit sous-estimé, une première expérience, un résultat qui ferait changer d'avis), en lien avec ce que construit Kirchner (chercheurs d'alignement automatiques qui grimpent un classement, moniteur de triche, banc tenu à l'écart, Petri, harnais ouvert faible-vers-fort). Un classeur neuf les notera notamment sur « sous-estimé, d'après la moisson ». Pour contrôler ce classement, on glisse parmi les idées **deux témoins : des problèmes déjà traités dans des travaux publiés, déguisés en propositions**. Si le classeur les prend pour sous-estimés et ouverts, son premier critère est invalide.
+
+## À lire
+- La question servie : `brouillons/ideation-kirchner-q2-v1/question-ideation-kirchner-v1.md` (en entier, y compris « Ce qui est déjà pris »).
+- Les deux pièces servies : `brouillons/ideation-kirchner-q2-v1/piece-kirchner-v2.md` et `brouillons/ideation-kirchner-q2-v1/piece-nos-resultats-v1.md`.
+- Le protocole Kirchner v1 (sections 0, 3) et, pour le format des fiches, la section 2 du protocole Heimersheim v1 (`brouillons/ideation-heimersheim-v1/protocole-rapport-idees-v1.md`).
+**Tes témoins ne doivent être ni dans les deux pièces, ni dans « Ce qui est déjà pris » de la question.**
+
+## Ce que tu fais
+1. Choisis **deux** travaux publiés (2024 à 2026), absents des pièces et de « déjà pris », chacun posant un problème du domaine de Kirchner (surveillance d'agents de recherche ou de code, triche contre un évaluateur, moniteurs, classements, généralisation hors du banc grimpé) qu'on pourrait croire sous-estimé et qui est pourtant déjà traité, avec une expérience et un résultat ; de préférence des idées qu'un modèle pourrait plausiblement proposer lui-même. Pistes possibles, **à vérifier, pas à croire** (citées de mémoire, sans garantie) : l'obscurcissement du raisonnement quand on optimise contre un moniteur de la chaîne de pensée ; la collusion entre un moniteur non fiable et l'agent qu'il surveille ; des bancs de tâches impossibles qui mesurent la propension des agents de code à tricher ; des agents qui modifient les tests ou le code d'évaluation pour réussir. Tu peux en choisir d'autres.
+2. Pour chacun, **vérifie en source primaire** par `WebSearch` et `WebFetch` (page arXiv ou de l'éditeur) : identifiant, titre, auteurs, date, et la phrase exacte du résumé qui porte l'idée ; vérifie aussi son absence des pièces et de « déjà pris » (recherche de l'identifiant, du titre et des noms d'auteurs dans ces trois textes).
+3. Écris chaque témoin comme une **fiche normalisée** (JSON, en français), aux clés : `type`, `enonce`, `mecanisme`, `premiere_experience`, `resultat_qui_ferait_changer_d_avis`, `mesure_qui_tue`, `prediction`, `echec_le_plus_probable`, `rattachement_piece` (« neuve »), `outil_de_kirchner`, `cout` — **rédigée comme une proposition**, sans citer sa source, sans tournure qui la trahisse (« comme l'ont montré… »), d'une longueur et d'un ton ordinaires (deux à quatre phrases par champ au plus).
+4. Écris la **clé** à part : pour chaque témoin, identifiant, titre, auteurs, date, phrase exacte du résumé, et trois requêtes qui devraient le retrouver sur arXiv ou OpenAlex.
+
+## Interdits
+Aucun commit, aucun `.sha256`, aucun fichier existant modifié ; rien sous `donnees/` ; aucun `git fetch` ; `WebSearch` et `WebFetch` seulement pour trouver et vérifier ces deux travaux ; aucun appel de modèle autre que toi ; ne lis rien dans `/home/claude/coffre-ideation-heimersheim/` ni dans `/home/claude/scratch/ideation-rapport/`. Tes fichiers sous `/home/claude/scratch/ideation-temoins-kirchner/` seulement : `temoins-deguises-kirchner-v1.json` (une liste de deux fiches) et `cle-temoins-kirchner-v1.json`.
+
+## Rendu
+Réponse finale : les chemins et sha256 (`sha256sum`) des deux fichiers, et **seulement** les identifiants et titres des deux travaux (pas le texte des fiches).
