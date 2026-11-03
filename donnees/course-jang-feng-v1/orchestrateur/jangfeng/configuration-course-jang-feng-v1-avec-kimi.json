@@ -1,0 +1,388 @@
+{
+ "_lisez_moi": "Configuration de la course d'idéation Jang-Feng, variante avec_kimi (rôles « opus »), v1 — écrite par calcul_devis_course_jangfeng_v1.py le 3 novembre 2026 (sous-agent de session-depot). Course NON décisive (démonstration, matière à réflexion pour Lazar). S17 = plafond TECHNIQUE (garde contre une boucle). Aucun témoin planté. Bras joués : gu_krenn (substitut) et basique ; bras méta hors course. Jetons {DEPOT} et {REGISTRE} remplacés par le lanceur. Ordre de session-depot (13:50 UTC) ; règles du juge : n° 419 de conv-audit et protocole « mentors du soir » (fbbbb520…) ; pièces servies : Feng et Jang v1 (1f423643…), nos résultats v1 (d6fa8011…).",
+ "variante": "avec_kimi",
+ "racine_graines": 20261103,
+ "graines": {
+  "prefixe": "jf1"
+ },
+ "champs_fiche": [
+  "titre",
+  "hypothese",
+  "axe",
+  "epreuve",
+  "controle",
+  "prediction",
+  "test_de_mort",
+  "cout"
+ ],
+ "champ_titre": "titre",
+ "champ_axe": "axe",
+ "budget": {
+  "plafond_usd": 198.0,
+  "arret_etape_usd": 178.2,
+  "portee_plafond": "course",
+  "etapes": [
+   {
+    "nom": "proposition",
+    "attendu_usd": 1.44,
+    "plafond_relais_usd": 7.0,
+    "role": "protegee"
+   },
+   {
+    "nom": "aiguillage",
+    "attendu_usd": 0.84,
+    "plafond_relais_usd": 8.13,
+    "role": "protegee"
+   },
+   {
+    "nom": "juges",
+    "attendu_usd": 3.87,
+    "plafond_relais_usd": 28.54,
+    "role": "protegee"
+   },
+   {
+    "nom": "passe_tableau",
+    "attendu_usd": 0,
+    "plafond_relais_usd": 0,
+    "role": "sacrifiable",
+    "rang": 2
+   },
+   {
+    "nom": "etiquettes",
+    "attendu_usd": 5.89,
+    "plafond_relais_usd": 57.11,
+    "role": "protegee"
+   },
+   {
+    "nom": "fusions",
+    "attendu_usd": 4.12,
+    "plafond_relais_usd": 38.52,
+    "role": "sacrifiable",
+    "rang": 1
+   }
+  ]
+ },
+ "proposeurs": [
+  {
+   "etiquette": "prop-fable",
+   "modele": "claude-fable-5-1",
+   "fournisseur": "claude",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-kimi",
+   "modele": "kimi-k3.1-pro",
+   "fournisseur": "kimi",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_proposeur"
+  }
+ ],
+ "cases": [
+  [
+   "jang-feng-question",
+   "niveau-methode"
+  ]
+ ],
+ "aiguilleur": {
+  "etiquette": "aiguilleur-opus",
+  "modele": "claude-opus-5-5",
+  "fournisseur": "claude",
+  "consigne": "consigne_aiguilleur"
+ },
+ "juges": [
+  {
+   "etiquette": "juge-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_juge"
+  },
+  {
+   "etiquette": "juge-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_juge"
+  }
+ ],
+ "items_juge": [
+  "K1",
+  "K2",
+  "K3",
+  "K4"
+ ],
+ "agregation": {
+  "regle": "unanimite"
+ },
+ "lecteurs_etiquettes": [
+  {
+   "etiquette": "lecteur-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude"
+  },
+  {
+   "etiquette": "lecteur-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra"
+  }
+ ],
+ "garde_kimi": {
+  "debordement_max": 0.5,
+  "refus_aiguilleur": "technique",
+  "arret_metteur_fusion": false
+ },
+ "tableau": {
+  "longueur_max_titre": 80,
+  "longueur_max_resume": 160,
+  "champ_resume": "hypothese",
+  "consigne_passe": "sans objet (passe « tableau » retirée, aucun appel)",
+  "juger_passe_tableau": false
+ },
+ "memoire": {
+  "methode": "bardeaux",
+  "taille_bardeau": 3,
+  "seuil": 0.6
+ },
+ "bisociateur": {
+  "bras": [
+   "gu_krenn",
+   "basique"
+  ],
+  "k_paires": 4,
+  "fournisseurs_entree": [
+   "*"
+  ],
+  "gu_krenn": {
+   "mode": "substitut",
+   "source": {
+    "chemin": "pieces/source-gu-krenn-jangfeng-v1.json",
+    "sha256": "0bac077695d20cf424e988d57ceb5eeb857c1d7c815ecddfb7b40f15a60b4b97"
+   },
+   "oeuvres_min_vocabulaire": 1,
+   "date_debut": "2000-01-01",
+   "date_coupure": "2026-11-03",
+   "actif_depuis": "2000-01-01",
+   "actif_min_oeuvres": 1
+  },
+  "basique": {
+   "exposant": 8.5,
+   "decalage": 0.05,
+   "liste_concepts": "liste_concepts"
+  },
+  "consigne_fusion": "consigne_fusion",
+  "consigne_lecteur_etiquettes": "consigne_lecteur",
+  "metteur_fusion": {
+   "etiquette": "metteur-fable",
+   "modele": "claude-fable-5-1",
+   "fournisseur": "claude"
+  }
+ },
+ "plafonds_session": {
+  "proposeur": 3.5,
+  "aiguilleur": 0.4,
+  "juge": 0.9,
+  "lecteur": 0.9,
+  "fusion": 3.5
+ },
+ "etiquettes_interdites": [
+  "exploratoire",
+  "bras méta",
+  "gu et krenn",
+  "gu krenn",
+  "bisociation",
+  "kimi",
+  "moonshot",
+  "gemini",
+  "fable",
+  "astra",
+  "openai",
+  "gpt 6",
+  "gpt6",
+  "gpt-6",
+  "chatgpt"
+ ],
+ "a4": {
+  "mode": "prefixe",
+  "action": "fiche_exclue"
+ },
+ "arrets": {
+  "a3_echecs_consecutifs": 3,
+  "a3_delai_s": {
+   "*": 1800
+  },
+  "a14_part_max": 0.25,
+  "a11_modeles": []
+ },
+ "pieces": {
+  "consigne_proposeur": {
+   "chemin": "pieces/consigne-proposeur-jangfeng-v1.md",
+   "sha256": "d42df37e03e12e208ca03e19afe1b3c7345c361f2b0991afb6abae7d8134b6b8"
+  },
+  "consigne_aiguilleur": {
+   "chemin": "pieces/consigne-aiguilleur-jangfeng-v1.md",
+   "sha256": "f1cd9072f0f911c5a0aa7ac1fdc0b4555d5f19c813566566d83298beeda7fd78"
+  },
+  "consigne_juge": {
+   "chemin": "pieces/consigne-juge-jangfeng-v1.md",
+   "sha256": "0d8413989ecebc10b8b694687a90a6170f00e5bb40797224879b937b8d2c8497"
+  },
+  "consigne_lecteur": {
+   "chemin": "pieces/consigne-lecteur-jangfeng-v1.md",
+   "sha256": "d698aa88f8791f4a4159f26de523a899bcf71e005b4487bbd32491d214c49a38"
+  },
+  "consigne_fusion": {
+   "chemin": "pieces/consigne-metteur-jangfeng-v1.md",
+   "sha256": "93f75632e1e2e364f2f058d6ff79d696e8883b48c67ce485beea7065de4bbd4a"
+  },
+  "liste_concepts": {
+   "chemin": "pieces/concepts-jangfeng-v1.json",
+   "sha256": "60fb405787cf3f3d2988833114f0fcc782767fba930da5e5d4a276593a4a7714"
+  },
+  "source_gu_krenn": {
+   "chemin": "pieces/source-gu-krenn-jangfeng-v1.json",
+   "sha256": "0bac077695d20cf424e988d57ceb5eeb857c1d7c815ecddfb7b40f15a60b4b97"
+  },
+  "question_servie": {
+   "chemin": "pieces/conv-audit/question-course-jang-feng-v1.md",
+   "sha256": "d68c6c5ca567c2a867c9a0eb0e64d7b7340af0414e0f382c19416d67ab63c10e"
+  },
+  "piece_mentor": {
+   "chemin": "pieces/conv-audit/piece-jang-feng-v1.md",
+   "sha256": "1f42364322988bf591ead6ce41842dd389ab179b11bc27853d66750ab5196774"
+  },
+  "piece_nos_resultats": {
+   "chemin": "pieces/conv-audit/piece-nos-resultats-v1.md",
+   "sha256": "d6fa8011d9b5680d4ec58b262b6440e0e61e9c9987f0ac79a51cb5bca7b27e3c"
+  }
+ },
+ "canaris": {
+  "consigne_proposeur": "JF1-PROPOSEUR-1f530111",
+  "consigne_aiguilleur": "JF1-AIGUILLEUR-efc2bf54",
+  "consigne_juge": "JF1-JUGE-fcadf29f",
+  "consigne_lecteur": "JF1-LECTEUR-7b2a00a7",
+  "consigne_fusion": "JF1-METTEUR-a2dc34aa"
+ },
+ "relais": {
+  "astra": {
+   "port": 8807,
+   "plafond_usd": 83.7,
+   "max_appels": 169
+  },
+  "claude": {
+   "port": 8806,
+   "plafond_usd": 112.3,
+   "max_appels": 253
+  },
+  "kimi": {
+   "port": 8804,
+   "plafond_usd": 2.0,
+   "max_appels": 9
+  }
+ },
+ "fournisseurs": {
+  "astra": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/docs/notes/ideation-organisme-v1/commandes-a1-bis-v1/commande_astra_a1bis_v1.py",
+    "appeler",
+    "--modele",
+    "gpt-6-astra",
+    "--url-relais",
+    "http://127.0.0.1:8807",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "198",
+    "--max-sortie-proposeur",
+    "32000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750"
+   ]
+  },
+  "claude": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-jang-feng-v1/orchestrateur/jangfeng/commande_claude_jangfeng_v1.py",
+    "--url-relais",
+    "http://127.0.0.1:8806",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "198",
+    "--max-sortie-proposeur",
+    "64000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750",
+    "--effort",
+    "high",
+    "--reflexion",
+    "adaptative"
+   ]
+  },
+  "kimi": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-jang-feng-v1/orchestrateur/nuit/commande_kimi_v2.py",
+    "--url-relais",
+    "http://127.0.0.1:8804",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "198",
+    "--max-sortie-proposeur",
+    "65536",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "4096",
+    "--delai-s",
+    "1750"
+   ]
+  }
+ },
+ "simulation": {
+  "cout_par_appel_usd": 0.01,
+  "fiches_par_appel": 6
+ }
+}

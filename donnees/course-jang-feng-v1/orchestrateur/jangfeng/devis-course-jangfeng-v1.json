@@ -1,0 +1,973 @@
+{
+ "version": "devis-course-jangfeng-v1",
+ "mesures_second_tour": {
+  "ratio_caracteres_par_jeton_argon": 3.481,
+  "ratio_octets_par_jeton_kimi": 3.195,
+  "entree_lecteur_argon_mediane_caracteres": 3159,
+  "par_role": {
+   "argon/aiguillage/juge_ideation": {
+    "appels": 12,
+    "sortie_mediane": 30.0,
+    "sortie_max": 33,
+    "entree_mediane": 876.5
+   },
+   "argon/controle/juge_ideation": {
+    "appels": 1,
+    "sortie_mediane": 5,
+    "sortie_max": 5,
+    "entree_mediane": 40
+   },
+   "argon/etiquettes/juge_ideation": {
+    "appels": 11,
+    "sortie_mediane": 46,
+    "sortie_max": 271,
+    "entree_mediane": 905
+   },
+   "argon/fusions/juge_ideation": {
+    "appels": 2,
+    "sortie_mediane": 39.0,
+    "sortie_max": 48,
+    "entree_mediane": 1412.0
+   },
+   "argon/fusions/proposeur_ideation": {
+    "appels": 1,
+    "sortie_mediane": 987,
+    "sortie_max": 987,
+    "entree_mediane": 1537
+   },
+   "argon/juges/juge_ideation": {
+    "appels": 11,
+    "sortie_mediane": 48,
+    "sortie_max": 48,
+    "entree_mediane": 969
+   },
+   "argon/proposition/proposeur_ideation": {
+    "appels": 1,
+    "sortie_mediane": 2913,
+    "sortie_max": 2913,
+    "entree_mediane": 1625
+   },
+   "kimi/controle/juge_ideation": {
+    "appels": 1,
+    "sortie_mediane": 57,
+    "sortie_max": 57,
+    "entree_mediane": 95
+   },
+   "kimi/etiquettes/juge_ideation": {
+    "appels": 11,
+    "sortie_mediane": 3294,
+    "sortie_max": 8293,
+    "entree_mediane": 1089
+   },
+   "kimi/fusions/juge_ideation": {
+    "appels": 1,
+    "sortie_mediane": 759,
+    "sortie_max": 759,
+    "entree_mediane": 1705
+   },
+   "kimi/juges/juge_ideation": {
+    "appels": 11,
+    "sortie_mediane": 877,
+    "sortie_max": 2523,
+    "entree_mediane": 1143
+   },
+   "kimi/proposition/proposeur_ideation": {
+    "appels": 1,
+    "sortie_mediane": 20163,
+    "sortie_max": 20163,
+    "entree_mediane": 1842
+   }
+  },
+  "proposeur_kimi_6_fiches": 20163,
+  "proposeur_argon_6_fiches": 2913,
+  "sortie_attendue_kimi_proposeur_8_fiches": 20163,
+  "sortie_attendue_argon_proposeur_8_fiches": 2913,
+  "source": "run-20261101-2146 (second tour réel), journaux des relais et registre cumulé, sans texte"
+ },
+ "longueurs_pieces": {
+  "consigne_proposeur": 21103,
+  "consigne_aiguilleur": 1889,
+  "consigne_juge": 2739,
+  "consigne_lecteur": 859,
+  "consigne_fusion": 1758,
+  "liste_la_plus_longue": 1988
+ },
+ "hypotheses": {
+  "fiche_attendue_caracteres": 2500,
+  "fiche_pire_cas_caracteres": 12000,
+  "sortie_attendue_par_role_supposee": {
+   "proposeur": 9000,
+   "aiguilleur": 1500,
+   "juge": 2000,
+   "lecteur": 1500,
+   "fusion": 6000
+  },
+  "prix_usd_par_million": {
+   "claude-fable-5-1": [
+    10.0,
+    50.0
+   ],
+   "claude-opus-5-5": [
+    4.0,
+    20.0
+   ],
+   "gpt-6-astra": [
+    10.0,
+    50.0
+   ],
+   "kimi-k3.1-pro": [
+    2.0,
+    10.0
+   ],
+   "gemini-4-argon": [
+    10.0,
+    50.0
+   ]
+  },
+  "source_prix": {
+   "claude-fable-5-1": "documentation de l'interface (table des modèles, cache du 6 octobre 2026), commande A1-bis",
+   "claude-opus-5-5": "documentation de l'interface (table des modèles, cache du 6 octobre 2026), commande A1-bis",
+   "gpt-6-astra": "SUPPOSÉ haut (commande A1-bis, collisionneur v8)",
+   "kimi-k3.1-pro": "commande_kimi_v2.py (défauts --prix-entree 2, --prix-sortie 10)",
+   "gemini-4-argon": "SUPPOSÉ (commande_argon_v56_nuit_v2.py, barème prudent du collisionneur v7)"
+  },
+  "sortie_maximale": {
+   "claude": [
+    64000,
+    16000
+   ],
+   "astra": [
+    32000,
+    16000
+   ],
+   "kimi": [
+    65536,
+    16000
+   ],
+   "argon": [
+    32000,
+    4000
+   ]
+  },
+  "passeport": "toutes les fiches (pire cas comme attendu)",
+  "k_paires": 4
+ },
+ "variantes": {
+  "sans_kimi": {
+   "variante": "sans_kimi",
+   "proposeurs": [
+    "prop-fable",
+    "prop-opus",
+    "prop-astra"
+   ],
+   "k_paires": 4,
+   "lignes": [
+    {
+     "etape": "proposition",
+     "role": "prop-fable",
+     "modele": "claude-fable-5-1",
+     "fournisseur": "claude",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 0.511,
+     "pire_cas_usd": 3.271
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 0.2044,
+     "pire_cas_usd": 1.3084
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 32000,
+     "attendu_usd": 0.511,
+     "pire_cas_usd": 1.671
+    },
+    {
+     "etape": "aiguillage",
+     "role": "aiguilleur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 18,
+     "jetons_entree_attendus": 1261,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.6308,
+     "pire_cas_usd": 6.0945
+    },
+    {
+     "etape": "juges",
+     "role": "juge-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 18,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.8284,
+     "pire_cas_usd": 6.1149
+    },
+    {
+     "etape": "juges",
+     "role": "juge-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 18,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 2.0709,
+     "pire_cas_usd": 15.2873
+    },
+    {
+     "etape": "etiquettes",
+     "role": "lecteur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 36,
+     "jetons_entree_attendus": 1268,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 1.2626,
+     "pire_cas_usd": 12.2375
+    },
+    {
+     "etape": "etiquettes",
+     "role": "lecteur-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 36,
+     "jetons_entree_attendus": 1268,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 3.1564,
+     "pire_cas_usd": 30.5936
+    },
+    {
+     "etape": "fusions",
+     "role": "metteur-fable",
+     "modele": "claude-fable-5-1",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1941,
+     "jetons_sortie_attendus": 6000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 2.5553,
+     "pire_cas_usd": 26.2895
+    },
+    {
+     "etape": "fusions",
+     "role": "aiguilleur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1261,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.2803,
+     "pire_cas_usd": 2.7087
+    },
+    {
+     "etape": "fusions",
+     "role": "juge-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.3682,
+     "pire_cas_usd": 2.7177
+    },
+    {
+     "etape": "fusions",
+     "role": "juge-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 8,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.9204,
+     "pire_cas_usd": 6.7944
+    }
+   ],
+   "controles_usd": {
+    "claude-fable-5-1": 0.05,
+    "claude-opus-5-5": 0.05,
+    "gpt-6-astra": 0.05
+   },
+   "par_etape": {
+    "proposition": {
+     "appels": 3,
+     "attendu_usd": 1.2264,
+     "pire_cas_usd": 6.2504
+    },
+    "aiguillage": {
+     "appels": 18,
+     "attendu_usd": 0.6308,
+     "pire_cas_usd": 6.0945
+    },
+    "juges": {
+     "appels": 36,
+     "attendu_usd": 2.8993,
+     "pire_cas_usd": 21.4022
+    },
+    "etiquettes": {
+     "appels": 72,
+     "attendu_usd": 4.419,
+     "pire_cas_usd": 42.8311
+    },
+    "fusions": {
+     "appels": 32,
+     "attendu_usd": 4.1242,
+     "pire_cas_usd": 38.5103
+    }
+   },
+   "par_fournisseur": {
+    "claude": {
+     "appels": 100,
+     "attendu_usd": 6.645,
+     "pire_cas_usd": 60.8422
+    },
+    "astra": {
+     "appels": 64,
+     "attendu_usd": 6.6607,
+     "pire_cas_usd": 54.3963
+    }
+   },
+   "par_modele": {
+    "claude-fable-5-1": {
+     "appels": 9,
+     "attendu_usd": 3.0663,
+     "pire_cas_usd": 29.5605
+    },
+    "claude-opus-5-5": {
+     "appels": 89,
+     "attendu_usd": 3.5747,
+     "pire_cas_usd": 31.1817
+    },
+    "gpt-6-astra": {
+     "appels": 63,
+     "attendu_usd": 6.6587,
+     "pire_cas_usd": 54.3463
+    }
+   },
+   "appels_course": 161,
+   "appels_controle": 3,
+   "total_attendu_usd": 13.31,
+   "total_pire_cas_usd": 115.24
+  },
+  "avec_kimi": {
+   "variante": "avec_kimi",
+   "proposeurs": [
+    "prop-fable",
+    "prop-opus",
+    "prop-kimi",
+    "prop-astra"
+   ],
+   "k_paires": 4,
+   "lignes": [
+    {
+     "etape": "proposition",
+     "role": "prop-fable",
+     "modele": "claude-fable-5-1",
+     "fournisseur": "claude",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 0.511,
+     "pire_cas_usd": 3.271
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 0.2044,
+     "pire_cas_usd": 1.3084
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-kimi",
+     "modele": "kimi-k3.1-pro",
+     "fournisseur": "kimi",
+     "appels": 1,
+     "jetons_entree_attendus": 7307,
+     "jetons_sortie_attendus": 20163,
+     "jetons_sortie_pire_cas": 65536,
+     "attendu_usd": 0.2162,
+     "pire_cas_usd": 0.7426
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 32000,
+     "attendu_usd": 0.511,
+     "pire_cas_usd": 1.671
+    },
+    {
+     "etape": "aiguillage",
+     "role": "aiguilleur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 24,
+     "jetons_entree_attendus": 1261,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.841,
+     "pire_cas_usd": 8.126
+    },
+    {
+     "etape": "juges",
+     "role": "juge-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 24,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 1.1045,
+     "pire_cas_usd": 8.1532
+    },
+    {
+     "etape": "juges",
+     "role": "juge-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 24,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 2.7612,
+     "pire_cas_usd": 20.3831
+    },
+    {
+     "etape": "etiquettes",
+     "role": "lecteur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 48,
+     "jetons_entree_attendus": 1268,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 1.6834,
+     "pire_cas_usd": 16.3166
+    },
+    {
+     "etape": "etiquettes",
+     "role": "lecteur-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 48,
+     "jetons_entree_attendus": 1268,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 4.2085,
+     "pire_cas_usd": 40.7915
+    },
+    {
+     "etape": "fusions",
+     "role": "metteur-fable",
+     "modele": "claude-fable-5-1",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1941,
+     "jetons_sortie_attendus": 6000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 2.5553,
+     "pire_cas_usd": 26.2895
+    },
+    {
+     "etape": "fusions",
+     "role": "aiguilleur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1261,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.2803,
+     "pire_cas_usd": 2.7087
+    },
+    {
+     "etape": "fusions",
+     "role": "juge-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.3682,
+     "pire_cas_usd": 2.7177
+    },
+    {
+     "etape": "fusions",
+     "role": "juge-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 8,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.9204,
+     "pire_cas_usd": 6.7944
+    }
+   ],
+   "controles_usd": {
+    "claude-fable-5-1": 0.05,
+    "claude-opus-5-5": 0.05,
+    "gpt-6-astra": 0.05,
+    "kimi-k3.1-pro": 0.05
+   },
+   "par_etape": {
+    "proposition": {
+     "appels": 4,
+     "attendu_usd": 1.4426,
+     "pire_cas_usd": 6.993
+    },
+    "aiguillage": {
+     "appels": 24,
+     "attendu_usd": 0.841,
+     "pire_cas_usd": 8.126
+    },
+    "juges": {
+     "appels": 48,
+     "attendu_usd": 3.8657,
+     "pire_cas_usd": 28.5363
+    },
+    "etiquettes": {
+     "appels": 96,
+     "attendu_usd": 5.8919,
+     "pire_cas_usd": 57.1081
+    },
+    "fusions": {
+     "appels": 32,
+     "attendu_usd": 4.1242,
+     "pire_cas_usd": 38.5103
+    }
+   },
+   "par_fournisseur": {
+    "claude": {
+     "appels": 124,
+     "attendu_usd": 7.5521,
+     "pire_cas_usd": 68.9911
+    },
+    "kimi": {
+     "appels": 2,
+     "attendu_usd": 0.2182,
+     "pire_cas_usd": 0.7926
+    },
+    "astra": {
+     "appels": 82,
+     "attendu_usd": 8.4031,
+     "pire_cas_usd": 69.69
+    }
+   },
+   "par_modele": {
+    "claude-fable-5-1": {
+     "appels": 9,
+     "attendu_usd": 3.0663,
+     "pire_cas_usd": 29.5605
+    },
+    "claude-opus-5-5": {
+     "appels": 113,
+     "attendu_usd": 4.4818,
+     "pire_cas_usd": 39.3306
+    },
+    "kimi-k3.1-pro": {
+     "appels": 1,
+     "attendu_usd": 0.2162,
+     "pire_cas_usd": 0.7426
+    },
+    "gpt-6-astra": {
+     "appels": 81,
+     "attendu_usd": 8.4011,
+     "pire_cas_usd": 69.64
+    }
+   },
+   "appels_course": 204,
+   "appels_controle": 4,
+   "total_attendu_usd": 16.17,
+   "total_pire_cas_usd": 139.47
+  },
+  "cinq_especes": {
+   "variante": "cinq_especes",
+   "proposeurs": [
+    "prop-fable",
+    "prop-opus",
+    "prop-argon",
+    "prop-kimi",
+    "prop-astra"
+   ],
+   "k_paires": 4,
+   "lignes": [
+    {
+     "etape": "proposition",
+     "role": "prop-fable",
+     "modele": "claude-fable-5-1",
+     "fournisseur": "claude",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 0.511,
+     "pire_cas_usd": 3.271
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 0.2044,
+     "pire_cas_usd": 1.3084
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-argon",
+     "modele": "gemini-4-argon",
+     "fournisseur": "argon",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 2913,
+     "jetons_sortie_pire_cas": 32000,
+     "attendu_usd": 0.2066,
+     "pire_cas_usd": 1.671
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-kimi",
+     "modele": "kimi-k3.1-pro",
+     "fournisseur": "kimi",
+     "appels": 1,
+     "jetons_entree_attendus": 7307,
+     "jetons_sortie_attendus": 20163,
+     "jetons_sortie_pire_cas": 65536,
+     "attendu_usd": 0.2162,
+     "pire_cas_usd": 0.7426
+    },
+    {
+     "etape": "proposition",
+     "role": "prop-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 1,
+     "jetons_entree_attendus": 6097,
+     "jetons_sortie_attendus": 9000,
+     "jetons_sortie_pire_cas": 32000,
+     "attendu_usd": 0.511,
+     "pire_cas_usd": 1.671
+    },
+    {
+     "etape": "aiguillage",
+     "role": "aiguilleur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 30,
+     "jetons_entree_attendus": 1261,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 1.0513,
+     "pire_cas_usd": 10.1576
+    },
+    {
+     "etape": "juges",
+     "role": "juge-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 30,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 1.3806,
+     "pire_cas_usd": 10.1916
+    },
+    {
+     "etape": "juges",
+     "role": "juge-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 30,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 3.4515,
+     "pire_cas_usd": 25.4789
+    },
+    {
+     "etape": "etiquettes",
+     "role": "lecteur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 60,
+     "jetons_entree_attendus": 1268,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 2.1043,
+     "pire_cas_usd": 20.3958
+    },
+    {
+     "etape": "etiquettes",
+     "role": "lecteur-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 60,
+     "jetons_entree_attendus": 1268,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 5.2606,
+     "pire_cas_usd": 50.9894
+    },
+    {
+     "etape": "fusions",
+     "role": "metteur-fable",
+     "modele": "claude-fable-5-1",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1941,
+     "jetons_sortie_attendus": 6000,
+     "jetons_sortie_pire_cas": 64000,
+     "attendu_usd": 2.5553,
+     "pire_cas_usd": 26.2895
+    },
+    {
+     "etape": "fusions",
+     "role": "aiguilleur-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1261,
+     "jetons_sortie_attendus": 1500,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.2803,
+     "pire_cas_usd": 2.7087
+    },
+    {
+     "etape": "fusions",
+     "role": "juge-opus",
+     "modele": "claude-opus-5-5",
+     "fournisseur": "claude",
+     "appels": 8,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.3682,
+     "pire_cas_usd": 2.7177
+    },
+    {
+     "etape": "fusions",
+     "role": "juge-astra",
+     "modele": "gpt-6-astra",
+     "fournisseur": "astra",
+     "appels": 8,
+     "jetons_entree_attendus": 1505,
+     "jetons_sortie_attendus": 2000,
+     "jetons_sortie_pire_cas": 16000,
+     "attendu_usd": 0.9204,
+     "pire_cas_usd": 6.7944
+    }
+   ],
+   "controles_usd": {
+    "claude-fable-5-1": 0.05,
+    "claude-opus-5-5": 0.05,
+    "gemini-4-argon": 0.05,
+    "gpt-6-astra": 0.05,
+    "kimi-k3.1-pro": 0.05
+   },
+   "par_etape": {
+    "proposition": {
+     "appels": 5,
+     "attendu_usd": 1.6492,
+     "pire_cas_usd": 8.664
+    },
+    "aiguillage": {
+     "appels": 30,
+     "attendu_usd": 1.0513,
+     "pire_cas_usd": 10.1576
+    },
+    "juges": {
+     "appels": 60,
+     "attendu_usd": 4.8321,
+     "pire_cas_usd": 35.6705
+    },
+    "etiquettes": {
+     "appels": 120,
+     "attendu_usd": 7.3649,
+     "pire_cas_usd": 71.3852
+    },
+    "fusions": {
+     "appels": 32,
+     "attendu_usd": 4.1242,
+     "pire_cas_usd": 38.5103
+    }
+   },
+   "par_fournisseur": {
+    "claude": {
+     "appels": 148,
+     "attendu_usd": 8.4594,
+     "pire_cas_usd": 77.1403
+    },
+    "argon": {
+     "appels": 2,
+     "attendu_usd": 0.2086,
+     "pire_cas_usd": 1.721
+    },
+    "kimi": {
+     "appels": 2,
+     "attendu_usd": 0.2182,
+     "pire_cas_usd": 0.7926
+    },
+    "astra": {
+     "appels": 100,
+     "attendu_usd": 10.1455,
+     "pire_cas_usd": 84.9837
+    }
+   },
+   "par_modele": {
+    "claude-fable-5-1": {
+     "appels": 9,
+     "attendu_usd": 3.0663,
+     "pire_cas_usd": 29.5605
+    },
+    "claude-opus-5-5": {
+     "appels": 137,
+     "attendu_usd": 5.3891,
+     "pire_cas_usd": 47.4798
+    },
+    "gemini-4-argon": {
+     "appels": 1,
+     "attendu_usd": 0.2066,
+     "pire_cas_usd": 1.671
+    },
+    "kimi-k3.1-pro": {
+     "appels": 1,
+     "attendu_usd": 0.2162,
+     "pire_cas_usd": 0.7426
+    },
+    "gpt-6-astra": {
+     "appels": 99,
+     "attendu_usd": 10.1435,
+     "pire_cas_usd": 84.9337
+    }
+   },
+   "appels_course": 247,
+   "appels_controle": 5,
+   "total_attendu_usd": 19.03,
+   "total_pire_cas_usd": 164.64
+  }
+ },
+ "plafond_technique_usd": 198,
+ "arret_etape_usd": 178.2,
+ "relais": {
+  "sans_kimi": {
+   "astra": {
+    "port": 8807,
+    "plafond_usd": 65.3,
+    "max_appels": 133
+   },
+   "claude": {
+    "port": 8806,
+    "plafond_usd": 132.7,
+    "max_appels": 205
+   }
+  },
+  "avec_kimi": {
+   "astra": {
+    "port": 8807,
+    "plafond_usd": 83.7,
+    "max_appels": 169
+   },
+   "claude": {
+    "port": 8806,
+    "plafond_usd": 112.3,
+    "max_appels": 253
+   },
+   "kimi": {
+    "port": 8804,
+    "plafond_usd": 2.0,
+    "max_appels": 9
+   }
+  },
+  "cinq_especes": {
+   "argon": {
+    "port": 8805,
+    "plafond_usd": 3.0,
+    "max_appels": 9
+   },
+   "astra": {
+    "port": 8807,
+    "plafond_usd": 102.0,
+    "max_appels": 205
+   },
+   "claude": {
+    "port": 8806,
+    "plafond_usd": 91.0,
+    "max_appels": 301
+   },
+   "kimi": {
+    "port": 8804,
+    "plafond_usd": 2.0,
+    "max_appels": 9
+   }
+  }
+ },
+ "plafonds_session": {
+  "proposeur": 3.5,
+  "aiguilleur": 0.4,
+  "juge": 0.9,
+  "lecteur": 0.9,
+  "fusion": 3.5
+ },
+ "pire_cas_appel_par_role": {
+  "proposeur": [
+   3.271,
+   "claude-fable-5-1"
+  ],
+  "aiguilleur": [
+   0.3386,
+   "claude-opus-5-5"
+  ],
+  "juge": [
+   0.8493,
+   "gpt-6-astra"
+  ],
+  "lecteur": [
+   0.8498,
+   "gpt-6-astra"
+  ],
+  "fusion": [
+   3.2862,
+   "claude-fable-5-1"
+  ]
+ }
+}
