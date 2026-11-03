@@ -1,13 +1,14 @@
 # Complément au rejeu à graine de R1 — validation complète des 147 épisodes résolus — v1
 
 - Auteurs : **fusion des brouillons de session-depot et de conv-audit** (sous-agents de rédaction, Opus 5.5), pour
-  Lazar ; **version à contre-lire, non scellée**. Base : le brouillon 2 de conv-audit
+  Lazar ; **version corrigée après la contre-lecture et la concordance de conv-audit, non scellée**. Base : le brouillon 2 de conv-audit
   (`brouillons/preuves-mentors-v1/complement-validation-rejeu-v1/R1-addendum-relance-v2-complement-validation-v1-brouillon2.md`,
   branche `canal/conv-audit-n04`, `41d5350ea60f6a989d0354d2ae46fb27676795dad9fc320446ff1889218d5888` ; notes
   `notes-redaction-v2.md`, `429d0e97fd55f347e45255ece17e7079ced5cd51b78845f91ca5f6a0f66af87e`), complété et corrigé par
   l'analyse et le pré-vol de session-depot ; ce que la fusion change est listé à « Fusion ». Nom nouveau (R12).
-- Date (UTC) : 2026-11-02 23:20 (`date -u` ; version corrigée après la contre-lecture, « Contre-lecture » ; la version relue,
-  `3b7955f1…`, datait du 2 novembre 2026, 19:44 UTC).
+- Date (UTC) : 2026-11-03 00:30 (`date -u` ; version corrigée après la concordance de conv-audit, « Contre-lecture » ; la
+  version qu'elle a lue, `b5afc8b6…`, datait du 2 novembre 2026, 23:20 UTC ; la version contre-lue, `3b7955f1…`, du
+  2 novembre 2026, 19:44 UTC).
 - **Texte parent (scellé, non modifié)** : `prereg/R1-addendum-relance-v2.md`
   (`9d17d640509c9b5dd0285e90f3096145b82f2e0ea2e73e62725c0e0c8cb71059`, « v2 » ci-dessous). Tout ce que ce texte ne change
   pas reste celui de la v2 : méthode, faits établis sur le harnais de P3, mesures, règle gelée de la validation, filtres
@@ -26,7 +27,10 @@
   de répétabilité seulement**. La table v3 de référence reste `prereg/R1-table-tokenisation-v3.json`
   (`ead8a66851b2af5dfa02635297056872032878fbd2987ba780fb6c9096766423`).
 - Commit du code d'analyse : `c2a8b6e1297a3134b49ec5b2aeb1849eddc4b98d`
-  (commit du passage du 2 novembre ; **aucun fichier de code, d'essai ni de script n'est changé**). **Commit lancé** : le
+  (commit du passage du 2 novembre ; arbre gelé identique à celui de `0e2a88718f4249e556e159f45f2df38ac304331e`, commit
+  du code cité par la v2 : `git diff --quiet` sur les chemins gelés, ceux de « Plan d'analyse », rend 0, ce qui couvre
+  aussi les modules qu'importe le cœur, hors des quatre empreintes ci-dessous ; **aucun fichier de code, d'essai ni de
+  script n'est changé**). **Commit lancé** : le
   commit de scellement de ce texte, sur la branche `prep/r1-complement-v1`, qui descend de
   `ab8088424c1c50ea6cebba9cdc318498adf07a3e` (tête de `calcul/r1-resolution-graine-v1` : sorties du 2 novembre et table de
   référence), elle-même descendante de `c2a8b6e1` ; arbre gelé identique (`git diff --quiet` sur les chemins gelés rend 0).
@@ -161,7 +165,9 @@ joueraient pas.
   toute sa frontière écrite, retrouvent l'empreinte de P3 des 147 épisodes résolus.
 - **HC-2 (répétabilité)** : même code, même type de carte (A100-SXM4-80GB), mêmes réglages déterministes, mêmes graines :
   les 54 épisodes retrouvés le 2 novembre le sont de nouveau, par la même voie, avec les mêmes bascules, et le journal de
-  leurs pas est identique au bit ; de même les 7 de la résolution rejouée.
+  leurs pas est identique au bit ; les 7 de la résolution rejouée sont retrouvés de nouveau (empreintes), avec des
+  identifiants égaux à ceux du 2 novembre et un contrôle croisé « conforme » : ce que lisent, pour eux, la métrique
+  (« résolution rejouée ») et les critères.
 
 ## Prédiction chiffrée et signe attendu
 
@@ -190,7 +196,7 @@ frontière gelée elle-même**, non par une borne de travail.
 - **P-C6 (étapes rejouées)** : résolution 7 sur 7 par les mêmes voies, identifiants égaux au 2 novembre, contrôle croisé
   « conforme », confiance ≈ 0,9 ; table du sous-produit égale à `ead8a668…` sur les 4 entrées « identifiants »,
   confiance ≈ 0,9 ; les 3 de C-6 retrouvés aussi à l'étape 0, confiance ≈ 0,9 ; lot « sans objet », confiance ≈ 0,9.
-- **P-C7 (durée, descriptif)** : étape 0 entre ≈ 2 h et ≈ 28 h (cas « Haut » à la borne haute, hors vie de l'instance), point central ≈ 9 h (« Coût et GO »).
+- **P-C7 (durée, descriptif)** : étape 0 entre ≈ 2 h et ≈ 28 h (cas « Haut » à la borne haute de la durée par épisode, ≈ 9 difficiles ; étape 0 seule), point central ≈ 9 h (« Coût et GO »).
 Prédictions, non seuils (R3 : rien n'est relancé pour les atteindre).
 
 ## Métrique
@@ -286,9 +292,14 @@ git ls-tree "$C" prereg/R1-table-tokenisation-v3-rejeu-complement-v1.json \
 git ls-remote --exit-code origin refs/heads/calcul/r1-graine-complement-validation-v1    # code 2 exigé
 ```
 
-**Tâches planifiées avant la création** (session) : les deux tâches de « Liste d'arrêt » créées, listées, consignées
-avec leurs identifiants dans `registres/decisions.md` ; `H` calculé et écrit, avec le prix horaire et le prix du disque
-de l'offre, dans `registres/depenses.md`.
+**Épreuve de la première commande (R5)**, avant la création, consignée dans `registres/decisions.md` : sur l'artefact
+`C` = `c2a8b6e1297a3134b49ec5b2aeb1849eddc4b98d`, qui ne descend pas de `ab808842…`, `git merge-base --is-ancestor`
+doit rendre 1 (refus) ; sur le commit de scellement, 0.
+
+**Tâches planifiées avant la création** (session) : les deux tâches de « Liste d'arrêt » créées sans identifiant
+d'instance, listées, consignées avec leurs identifiants dans `registres/decisions.md`, puis éprouvées (R5 : quatre
+épreuves consignées, « Liste d'arrêt ») ; `H` calculé et écrit, avec le prix horaire et le prix du disque de l'offre,
+dans `registres/depenses.md` ; **armées dans les 10 minutes qui suivent la création** (« Liste d'arrêt »).
 
 **Création** : la commande de création du 2 novembre, reprise mot pour mot (offre sous les filtres de la v2, image,
 disque, amorce `scripts/amorce_instance_r1_resolution_graine_v1.sh` lue au commit `C` et passée en mode « args »), seules
@@ -349,10 +360,11 @@ Règle unique de la v2 : résolu si et seulement si l'empreinte de trajectoire �
 | Répétabilité des 54 : un au moins non retrouvé (empreinte calculée ≠ empreinte de P3, ou non résolu pour toute cause) | **Audit (R4), réserve sur la reproductibilité**, portée dans l'addendum v3 ; l'audit cherche d'abord une différence d'environnement (carte, pilote, CUDA, cuDNN, `pip-freeze.txt` des deux passages) ; la table v3 reste prouvée |
 | 54 retrouvés, mais voie, bascules, combinaisons ou journal des pas différents pour un au moins | Descriptif : « empreinte répétée, chemin numérique non répété » ; comptes rapportés avec l'environnement des deux passages ; limite chiffrée de HG-2, non réserve sur les résultats |
 | Résolution rejouée 7 sur 7, identifiants égaux, contrôle croisé « conforme », table du sous-produit égale sur les 4 entrées | Répétabilité de la résolution tenue |
-| Résolution rejouée : un épisode non retrouvé, contrôle croisé autre que « conforme », lot exécuté, table du sous-produit absente ou différente | **Audit (R4)**, réserve sur la reproductibilité ; la table `ead8a668…` reste valide ; la classe de la validation de ce passage reste lue telle quelle |
+| Résolution rejouée : un épisode non retrouvé, contrôle croisé autre que « conforme », lot exécuté, table du sous-produit absente ou différente (hors destruction par la garde de dépense : ligne suivante) | **Audit (R4)**, réserve sur la reproductibilité ; la table `ead8a668…` reste valide ; la classe de la validation de ce passage reste lue telle quelle |
+| Instance détruite par la garde de dépense après l'étape validation (pendant la résolution, les cibles du lot, le lot ou la table) | Ce que le script n'a pas poussé se lit « **non éprouvé (dépense)** » : pendant la résolution, « répétabilité de la résolution non éprouvée (dépense) » ; plus tard, la résolution poussée se lit comme aux deux lignes précédentes, et ce qui manque (lot, table du sous-produit) « non éprouvé (dépense) » ; **aucune réserve sur la reproductibilité** ; la validation, poussée avant (script, l. 388-395, 458-465), est lue telle quelle ; le journal relevé n'est lu pour aucun compte (R3, R4) ; dépense et cause rapportées à Lazar |
 | 3 épisodes de C-6 retrouvés à l'étape 0 et à la résolution | La répétabilité que la v2 prêtait au contrôle croisé est éprouvée, sur ces 3 |
 | Audit de symétrie (R4) | Déclencheurs de la v2, inchangés (accord égal à 1 sur tous les pas des 147 ; aucune quasi-égalité sous 1 ; étapes 0 et 1 sous 5 min ; `accord_sur_les_pas` ≤ attendu + 0,02 ; sous les deux autres classes, `accord_informatif` ≤ attendu + 0,10). La répétabilité au bit des 54 est la **prédiction** (P-C3), non un signal de propreté |
-| Validation arrêtée (`arret.json` : erreur de chaîne, signal) ou instance détruite par la garde de dépense pendant l'étape | Aucune classe pour ce passage ; la classe du 2 novembre reste ; épisodes consignés et poussés, s'il y en a, comptés et lus pour la répétabilité, rien d'autre (une destruction pendant l'étape validation ne laisse **aucun** épisode poussé : toute la validation est perdue, un texte neuf serait nécessaire pour la refaire) ; mesure déclarée incomplète ; dépense et cause rapportées à Lazar |
+| Validation arrêtée (`arret.json` : erreur de chaîne, signal) ou instance détruite par la garde de dépense pendant l'étape | Aucune classe pour ce passage ; la classe du 2 novembre reste ; épisodes consignés et poussés, s'il y en a, comptés et lus pour la répétabilité, rien d'autre (une destruction pendant l'étape validation ne laisse **aucun** épisode poussé : toute la validation est perdue, un texte neuf serait nécessaire pour la refaire ; après une destruction, le journal relevé n'est lu pour aucun compte : R3, R4) ; mesure déclarée incomplète ; dépense et cause rapportées à Lazar |
 
 Aucune issue ne crée de nœud qui bloque l'addendum v3 (table v3 complète et prouvée) ; les audits (R4) se font avant lui.
 
@@ -366,35 +378,77 @@ que « 71 passed », commits, poussées) ; aucune mesure n'arrête rien, sauf le
 - **avant l'installation** (code 2), en plus de la v2 : table du sous-produit (ou son sceau) au commit ; branche
   `calcul/r1-graine-complement-validation-v1` présente ou non vérifiable ; et les gardes contre un oubli à la création
   (« Choix de conception ») ;
-- **avant la création** (session) : une des commandes de « Plan d'analyse » qui ne rend pas l'attendu ; texte,
-  configuration ou sceaux absents au commit `C` ; `GO_ID=GO-2026-11-02-30` refusé par la garde de calcul ; une des deux
-  tâches planifiées de la garde de dépense absente du listing ; nœud de « Coût et GO » sans décision de Lazar ; aucune
-  offre sous les filtres de la v2 (rien n'est loué : nœud porté à Lazar) ;
+- **avant la création** (session) : une des commandes de « Plan d'analyse » qui ne rend pas l'attendu, ou l'artefact
+  de `merge-base` qu'elle ne refuse pas ; texte, configuration ou sceaux absents au commit `C` ;
+  `GO_ID=GO-2026-11-02-30` refusé par la garde de calcul ; une des deux tâches planifiées de la garde de dépense absente
+  du listing, ou une de leurs quatre épreuves (R5) non conforme ou non consignée ; nœud de « Coût et GO » sans décision
+  de Lazar ; aucune offre sous les filtres de la v2 (rien n'est loué : nœud porté à Lazar) ;
 - **garde de dépense : deux tâches planifiées indépendantes de la session de pilotage** (hors du code ; plafond du GO,
-  non une borne de mesure), **créées et constatées (listées) avant la création de l'instance**, consignées avec leurs
-  identifiants dans `registres/decisions.md` :
-  - (i) **vérification planifiée de la dépense de l'instance**, au plus toutes les heures et à chaque reprise de la
-    session ; dépense engagée = durée de vie de l'instance × prix horaire de l'offre (relevé à la création), plus le
-    disque (prix relevé à la création, écrit avec le prix horaire dans la ligne de `registres/depenses.md`) ; (a) dès que
-    la dépense atteint **30 USD**, ou l'atteindra avant la vérification suivante, message à Lazar (épisodes faits, d'après
-    les lignes de progression du journal de l'instance ; dépense ; durée restante estimée ; **demande d'extension du GO
-    dès que la durée de vie projetée dépasse l'heure de destruction de (ii)**, « Coût et GO » ; de l'alerte à la
-    destruction : ≈ 6,8 h au prix plafond, ≈ 8 h à 1,187 USD/h) ; (b) sans GO étendu, dès que la dépense atteindrait
+  non une borne de mesure), **créées, listées et éprouvées avant la création de l'instance, armées aussitôt après**
+  (« Armement » ci-dessous), consignées avec leurs identifiants dans `registres/decisions.md` ; **chacune ouvre une
+  session neuve à chaque départ** :
+  - (i) **vérification planifiée de la dépense de l'instance**, toutes les heures, chaque départ dans une session neuve
+    (la session de pilotage la refait aussi à chaque reprise) ; dépense engagée = durée de vie de l'instance depuis `T0`
+    × prix horaire de l'offre (relevé à la création), plus le disque (prix relevé à la création, écrit avec le prix
+    horaire dans la ligne de `registres/depenses.md`) ; (a) dès que la dépense atteint **30 USD**, ou l'atteindra avant
+    la vérification suivante, **alerte à Lazar par notification**, consignée dans `registres/depenses.md` ; **demande
+    d'extension du GO**, de même, dès que la durée de vie projetée dépasse l'heure de destruction de (ii), à toute
+    vérification, sans attendre 30 USD (« Coût et GO ») ; l'alerte et la demande ne portent que la dépense, la durée de
+    vie, le prix horaire, l'heure de destruction de (ii) et la durée prévue par le devis (« Coût et GO ») ; de l'alerte
+    à la destruction : ≈ 6,8 h au prix plafond, ≈ 8 h à 1,187 USD/h ; (b) sans GO étendu, dès que la dépense atteindrait
     **39,5 USD** avant la vérification suivante (dépense engagée + prix horaire × (intervalle + 10 min)) : **destruction
     de l'instance par son identifiant** (R10), consignée dans `registres/arrets.md` ; (c) à la fin de l'amorce (ligne
     « AMORCE … fin » au journal de l'instance), destruction par identifiant au plus tard à la vérification suivante (le
-    conteneur redémarre en boucle après la fin et reste facturé) ;
+    conteneur redémarre en boucle après la fin et reste facturé) ; prompt sans identifiant d'instance, sans `T0` ou sans
+    prix : rien n'est détruit, échec visible et alerte à Lazar, jamais un succès silencieux ;
   - (ii) **tâche planifiée unique de destruction par identifiant**, à l'heure `T0 + H`, `T0` = heure de création de
     l'instance, `H = (39,5 USD − dépenses déjà imputées au GO − disque estimé) / prix horaire de l'offre − 15 min`
     (sans dépense imputée ni disque : ≈ 28,2 h au prix plafond, ≈ 33,3 h à 1,187 USD/h, avant la marge ; contre-lecture,
     B1), calculée et écrite dans `registres/depenses.md` à la création ; elle **ouvre une session neuve, indépendante de la
     session de pilotage** (elle n'a besoin que de l'outil Vast et de la clé par nom), détruit l'instance par son
-    identifiant et le consigne dans `registres/arrets.md` ; **annulée ou reportée seulement sur GO étendu consigné dans
-    `registres/go.md`**. Elle est **le plafond du GO exprimé en heures, non un budget de mesure** : la ligne du GO
+    identifiant et le consigne dans `registres/arrets.md` ; prompt sans identifiant : rien n'est détruit, alerte ;
+    **annulée ou reportée seulement sur GO étendu consigné dans `registres/go.md`** : reportée alors à `T0 + H′`, `H′`
+    étant `H` recalculé sur le plafond étendu `P′` (`P′ − 0,5 USD` au lieu de 39,5 USD), et les seuils de (i) relevés
+    de même (alerte à `P′ − 10 USD`, destruction à `P′ − 0,5 USD`, comme 30 et 39,5 USD sous 40), écrits dans
+    `registres/depenses.md` et portés aux prompts des deux tâches, relus comme à l'armement. Elle est **le plafond du GO
+    exprimé en heures, non un budget de mesure** : la ligne du GO
     interdit un budget de mesure qui coupe (étape, épisode), pas le plafond de dépense ; elle arrête exactement ce que
     (i) (b) arrêterait, rien de plus.
-  - **Constat avant la création** : la session liste les deux tâches, les consigne (identifiants, heures), puis constate
-    le premier départ de (i) à la première heure et le consigne.
+  - **Armement** (les deux tâches, créées avant l'instance, n'en ont ni l'identifiant ni `T0`) : (1) avant la création,
+    session-depot crée les deux tâches, chacune avec un prompt qui ne porte aucun identifiant d'instance et qui, s'il
+    part ainsi, ne détruit rien et alerte ; il les liste, les consigne (identifiants, heures), puis les éprouve
+    (ci-dessous) ; (2) aussitôt l'instance créée, `T0` (heure de création) est relevé par `date -u` ; l'identifiant
+    exact, `T0` et l'heure de destruction `T0 + H` sont écrits dans `registres/depenses.md` et poussés ; puis le prompt
+    de chaque tâche est remplacé par sa version armée, qui porte l'identifiant exact de l'instance, `T0`, le prix horaire
+    et le disque de l'offre et l'heure de destruction, et (ii) est programmée à `T0 + H` ; (3) second listing : chaque
+    tâche est relue par son identifiant ; le prompt lu doit porter l'identifiant et `T0` exacts, et l'heure de départ de
+    (ii) doit être `T0 + H` ; constat consigné dans `registres/decisions.md` ; (4) si (2) ou (3) échoue, ou n'est pas
+    fait dans les 10 minutes qui suivent la création : **destruction immédiate de l'instance par son identifiant**
+    (R10), consignée dans `registres/arrets.md` (rien n'a tourné, rien n'est lu ; la branche de sortie a pu être poussée
+    avant l'installation, script l. 190-194, et la commande `ls-remote` de « Plan d'analyse » refuserait alors un second
+    lancement sous ce texte ; dépense et cause rapportées à Lazar) ; (5) chaque tâche ne détruit **que** par
+    l'identifiant écrit dans son prompt, jamais par étiquette ni par motif ; (i) alerte Lazar par notification et
+    consigne ; son premier départ est constaté à la première heure et consigné.
+  - **Épreuves avant la création (R5)**, par session-depot, sur des tâches d'essai de même forme (même mécanisme :
+    session neuve, départ dans quelques minutes ; prompt de même forme, marqué « essai »), retirées ensuite ; résultats
+    consignés dans `registres/decisions.md` : (1) destruction, cas sain : au prompt, un identifiant d'instance absent du
+    compte (par exemple 58851293, détruite le 2 novembre : `registres/arrets.md` de `b1d911b5`, l. 74) : la session
+    neuve liste les instances (`vastai show instances`), constate l'absence, ne détruit rien et rend compte ;
+    (2) destruction, artefact : prompt sans identifiant : refus, rien n'est détruit, alerte ; (3) vérification horaire,
+    cas sain : relevé d'essai sur les valeurs consignées de l'instance 58851293 (vie 16:42:40 → 18:13:07 UTC à
+    1,187 USD/h : ≈ 1,79 USD plus le disque, `registres/depenses.md` de `b1d911b5`, l. 322) : dépense sous 30 USD, ni
+    alerte ni destruction, compte rendu ; (4) vérification horaire, artefact, avec le même identifiant absent : dépense
+    fictive au-dessus de 30 USD (durée ou prix dits fictifs au prompt) : alerte par notification ; prompt sans
+    identifiant ou sans prix : échec visible et alerte, jamais un succès silencieux. Aucune épreuve ne porte au prompt
+    l'identifiant d'une instance présente sur le compte. S'y ajoute l'artefact de `merge-base` (« Plan d'analyse »).
+    **L'instance n'est créée qu'après ces quatre épreuves conformes et cet artefact refusé.**
+  - **Lecture aveugle des journaux** (R3, R4 ; « sortie scellée avant lecture », ligne du GO) : le journal de
+    l'instance n'est lu que par `vastai logs <identifiant>`, masqué (valeurs des jetons remplacées par « *** » :
+    passation du 12 octobre, l. 88), à travers un filtre qui n'en garde que les lignes `AMORCE` et, des lignes de
+    progression, l'heure, `etape=` et `episodes=` (`k/147` à l'étape validation) : ni `resolus=`, ni `passes=`, ni
+    `lecture=`, ni aucune ligne qui dit un résultat. La durée de vie projetée de (i) ne se calcule que sur ces champs ;
+    ni l'alerte ni la demande d'extension n'en portent rien ; la décision d'extension ne dépend que de la dépense et de
+    la durée. Après une destruction, le journal relevé n'est lu pour aucun compte.
   - **Conséquence d'une destruction pendant l'étape validation, par (i) ou (ii)** : le script ne pousse qu'à la fin
     d'une étape (l. 388-395 ; aucun épisode n'est poussé avant) : **toute la validation est perdue** ; aucun manifeste
     poussé, R3 ne bloque rien, mais un **texte neuf** serait nécessaire pour la refaire.
@@ -431,30 +485,42 @@ de l'instance hors amorce : ≈ 2 min avant (2 novembre), au plus une heure apr�
 | Cas | Durée de carte | Dépense au prix plafond (à 1,187 USD/h) |
 |---|---|---|
 | Bas (3 coupés retrouvés tôt, un difficile neuf) | ≈ 3 h | ≈ 4 USD (≈ 3,6) |
-| **Central** (≈ 4,6 difficiles neufs, ≈ 1,1 h chacun : ≈ 5,1 h ; 3 coupés ≈ 3,4 h ; mise en place, 54, 90, résolution et table ≈ 1,4 h ; vie hors amorce ≈ 1 h : somme ≈ 10,8 h, arrondie) | **≈ 10 h** | **≈ 14 USD** (≈ 12) |
-| Haut, **à la borne haute de ses propres hypothèses** (≈ 9 difficiles neufs menés au bout de leur frontière à ≈ 2,5 h chacun, 272 × 33 s : 22,5 h ; 3 coupés à frontière épuisée : 4,7 h ; mise en place, 54, 90, résolution et table ≈ 1,4 h ; vie hors amorce ≈ 1 h) | ≈ 30 h (29,6 h) | **≈ 42 USD** (≈ 35) : **au prix plafond, au-delà du plafond du GO** (destruction à 39,5 USD ≈ 28,2 h) ; à 1,187 USD/h, sous le point de destruction (≈ 33,3 h) |
+| **Central** (≈ 4,6 difficiles neufs, ≈ 1,1 h chacun : ≈ 5,1 h ; 3 coupés ≈ 3,4 h ; mise en place, 54, 90, résolution et table ≈ 1,4 h ; vie hors amorce ≈ 1 h : somme ≈ 10,9 h) | **≈ 11 h** (10,9 h) | **≈ 15 USD** (≈ 13) |
+| Haut, **à la borne haute de la durée par épisode** (≈ 9 difficiles neufs, nombre attendu d'épisodes à deux bascules ou plus, menés au bout de leur frontière à ≈ 2,5 h chacun, 272 × 33 s : 22,5 h ; 3 coupés à frontière épuisée : 4,7 h ; mise en place, 54, 90, résolution et table ≈ 1,4 h ; vie hors amorce ≈ 1 h) | ≈ 30 h (29,6 h) | **≈ 42 USD** (≈ 35) : **au prix plafond, au-delà du plafond du GO** (destruction à 39,5 USD ≈ 28,2 h) ; à 1,187 USD/h, sous le point de destruction (≈ 33,3 h), pour ces ≈ 9 seulement. À ≈ 11 difficiles (haut de la plage écrite ci-dessus), même borne : ≈ 34,5 h, ≈ 48 USD au prix plafond (≈ 41 à 1,187 USD/h) : **au-delà du point de destruction aux deux prix** |
 | Pire | non borné par les gardes de durée (72 h par étape) | **borné par la tâche planifiée de destruction à l'heure du plafond du GO** (39,5 USD : ≈ 28,2 h au prix plafond, ≈ 33,3 h à 1,187 USD/h, moins les dépenses déjà imputées, le disque et 15 min), sauf GO étendu ; exposition résiduelle à « Liste d'arrêt » et nœud ci-dessous |
 
 Estimation des sessions, sur les 57 épisodes tentés le 2 novembre, non mesurée au-delà ; un prix réel sous le plafond
-allonge d'autant la durée couverte. **Conséquence du cas haut** : au prix plafond, un passage à taux lent est détruit
-pendant l'étape validation et perd toute la validation (« Liste d'arrêt ») ; l'alerte à 30 USD (≈ 21,4 h au prix
-plafond) part donc **avec une demande d'extension du GO** dès que la durée de vie projetée, d'après les lignes de
-progression, dépasse l'heure de destruction ; et la session **préfère, à la création, une offre nettement sous le
-plafond quand il y en a une** (le 2 novembre : 1,187 USD/h). Dépenses déjà imputées à `GO-2026-11-02-30` : à relever dans
+allonge d'autant la durée couverte. **Conséquence du cas haut** : au prix plafond, et aux deux prix à ≈ 11 difficiles,
+un passage à taux lent est détruit pendant l'étape validation et perd toute la validation (« Liste d'arrêt ») ; la
+**demande d'extension du GO** part donc dès que la durée de vie projetée (sur l'heure et `episodes=` seulement, « Liste
+d'arrêt ») dépasse l'heure de destruction, à toute vérification, sans attendre l'alerte à 30 USD (≈ 21,4 h au prix
+plafond) ; et la session **préfère, à la création, une offre nettement sous le plafond quand il y en a une** (le
+2 novembre : 1,187 USD/h). Dépenses déjà imputées à `GO-2026-11-02-30` : à relever dans
 `registres/depenses.md` avant la création ; s'il y en a, les seuils de 30 et 39,5 USD s'appliquent à la somme et `H`
 en est réduit. Lancement : `GO_ID=GO-2026-11-02-30` devant la commande ; échéance 2026-11-16 ; après, GO nouveau.
 
 **Nœud pour Lazar, avant le lancement** (dépense de calcul : nœud, aucun défaut après 48 heures). **Décision** : borner
 le compte Vast pendant la course, ou accepter l'exposition résiduelle avec les deux tâches planifiées seules. **Enjeu** :
-exposition résiduelle si les deux tâches planifiées échouent et que la session est interrompue : **≈ 258 à 305 USD**
-(plafond de l'amorce, 13 055 min, au prix réel du 2 novembre et au prix plafond ; contre-lecture, B1), sept fois le
-plafond du GO ; une borne de compte (recharge automatique du crédit Vast suspendue pendant la course, crédit laissé
-≈ au plafond du GO) la réduirait au crédit disponible. **Options** : (a) suspendre la recharge automatique pendant la
-course, crédit laissé ≈ 40 USD (avantage : exposition bornée par le compte, indépendante de toute session et de toute
-tâche planifiée ; inconvénient : si le crédit s'épuisait avant la fin, l'instance serait arrêtée par le fournisseur,
-comportement non éprouvé par les sessions, et la validation en cours perdue, comme à la destruction) ; (b) accepter
-l'exposition avec les deux tâches planifiées seules (avantage : rien à régler sur le compte ; inconvénient : ≈ 258 à
-305 USD si les deux échouent). **Recommandation** : (a), confiance ≈ 0,8 (les deux tâches restent en place dans les deux
+exposition résiduelle si les deux tâches planifiées échouent et que la session est interrompue : **au moins ≈ 258 à
+305 USD** (plafond de l'amorce, 13 055 min, au prix réel du 2 novembre et au prix plafond ; contre-lecture, B1), sept
+fois le plafond du GO, **puis sans borne** : après la fin de l'amorce, le conteneur redémarre en boucle et reste
+facturé jusqu'à la destruction (« Choix de conception », point 2) ; ≈ 258 à 305 USD n'est donc qu'un plancher. Les deux
+tâches ne sont indépendantes que de la session : elles partagent le planificateur, le compte et la clé Vast, et peuvent
+échouer ensemble (changement de compte, clé retirée ; les tâches d'un compte sont inutilisables depuis un autre : brief
+de reprise v2 de conv-audit, `registres/passations/2026-11-02-2234-brief-reprise-conv-audit-nouvelle-instance-v2.md`,
+branche `canal/conv-audit-n04`, `f87961f6…`, § 9.1). Une borne de compte (recharge automatique du crédit Vast suspendue
+pendant la course, crédit laissé ≈ au plafond du GO) la réduirait au crédit disponible, hors de ce mode commun.
+**Options** : (a) suspendre la recharge automatique pendant la course, crédit laissé ≈ 40 USD (avantage : exposition
+bornée par le compte, indépendante de toute session et de toute tâche planifiée ; inconvénients : le crédit borne **tout
+le compte**, partagé avec d'autres sessions et projets de Lazar (le 2 novembre, douze instances « R6 » d'une autre
+session y tournaient à 8,90 USD/h : R-1051, `registres/decisions.md` de `main`) : d'autres instances pourraient le vider
+et faire arrêter celle-ci, ou être arrêtées par lui ; (a) suppose donc qu'aucune autre instance ne tourne sur le compte
+pendant la course, ou un crédit laissé égal à la somme des plafonds qui tournent en même temps ; et si le crédit
+s'épuisait avant la fin, l'instance serait arrêtée par le fournisseur, comportement non éprouvé par les sessions, et la
+validation en cours perdue, comme à la destruction) ; (b) accepter l'exposition avec les deux tâches planifiées seules
+(avantage : rien à régler sur le compte ; inconvénient : si les deux échouent, ensemble par leur mode commun ou
+séparément, au moins ≈ 258 à 305 USD, puis sans borne jusqu'à la destruction). **Recommandation** : (a),
+confiance ≈ 0,8 (les deux tâches restent en place dans les deux
 options). **Décision de Lazar avant le lancement** ; le lancement sans cette décision est un arrêt (« Liste d'arrêt »).
 
 ## Pré-vol
@@ -520,10 +586,15 @@ configuration (à l'octet), les prédictions, les critères, le devis. Changé o
    après un accès éprouvé, hors de ce texte) ; exposition résiduelle chiffrée et portée comme nœud ;
 4. **pré-vol** de session-depot (« Pré-vol ») : frontière de 272 éprouvée sans modèle, gardes R3 et de citation, pièces
    et classement, essai local du script sur ce texte, oublis à la création ;
-5. **libellés** : la correction 1 dit ce que le contrôle croisé éprouve ; la 2 cite aussi l. 716-717 et 774-781 ;
+5. **libellés** : la correction 1 dit ce que compare le contrôle croisé (statut, identifiants) et ce qu'éprouve la
+   répétabilité, dont les 3 de C-6 comparés aussi à la résolution du 2 novembre ; la 2 dit quels retours ne mettent
+   pas les comptes à jour (le retour « résolu » du repli et ceux qui le suivent) et « pas comptés du chemin retenu » au
+   lieu de « balayages du chemin retenu » (les l. 716-717 et 774-781 étaient déjà citées par le brouillon 2 : déclaration
+   corrigée depuis la concordance) ; la 3 ajoute « durée : », « atteinte » et « 363,86 s sur 600 » ;
 6. ligne de `GO-2026-11-02-30` citée au commit `b1d911b5` (ligne 218), et non « ligne 76 » ; prix réel du 2 novembre
    ajouté au devis ; « Ce qui suit » : indépendance de l'addendum v3 ;
-7. **HC-2** étendue aux 7 de la résolution rejouée (le brouillon 2 : les 54 seulement) ;
+7. **HC-2** étendue aux 7 de la résolution rejouée (le brouillon 2 : les 54 seulement) ; depuis la concordance, pour
+   eux, empreintes, identifiants et contrôle croisé seulement ;
 8. **critères** : ligne « Validation arrêtée » étendue à l'instance détruite par la garde de dépense, « épisodes
    consignés et poussés, s'il y en a », « dépense et cause rapportées à Lazar » (et, depuis la contre-lecture, la perte
    de toute la validation) ; « **Aucun nœud.** » ajouté à la ligne « méthode non transposée, cause méthode » et « lue
@@ -546,12 +617,23 @@ configuration (à l'octet), les prédictions, les critères, le devis. Changé o
     garde (« Coût et GO ») » ;
 16. **après la contre-lecture** (`2ef1f192…`) : corrections B1, I1, I2, I3 et m1 à m6, listées à « Contre-lecture » ;
     elles s'ajoutent aux différences avec le brouillon 2 (garde de dépense à deux tâches, nœud de l'exposition, cas haut
-    à la borne haute, accès au conteneur comme fait constaté, lignes du lot remises).
+    à la borne haute, accès au conteneur comme fait constaté, lignes du lot remises) ;
+17. **P-C7**, changée par session-depot après le rédacteur des corrections, sans être déclarée alors : borne haute de
+    l'étape 0 relevée de ≈ 24 h à ≈ 28 h, alignée sur le cas « Haut » réécrit (prédiction descriptive, changée avant
+    tout scellement, rien n'ayant été lu) ; depuis la concordance, « étape 0 seule » ;
+18. **clause de l'arbre gelé** : « arbre gelé identique à celui de `0e2a8871…`, cité par la v2 » (brouillon 2), retirée à
+    la fusion sans être déclarée, **remise** depuis la concordance (vraie : `git diff --quiet` rend 0 sur les chemins
+    gelés) ;
+19. **après la concordance de conv-audit** (`f4da389b…`) : corrections C-1 à C-9, listées à « Contre-lecture ».
 
 **Avec ces ajouts, la liste est complète** : elle couvre les dix-sept différences de fond relevées à la section 5 de
-la contre-lecture (points 1 à 3, 9, 12 à 15 déjà listés aux points 1 à 6 ; points 4 à 8, 10, 11, 16 et 17 ajoutés aux
-points 7 à 15) ; la configuration est identique à l'octet au brouillon 2 (`1b6f943c…`) ; rien du fond du brouillon 2
-n'est perdu ni contredit. **La concordance de conv-audit se fait sur cette liste.**
+la contre-lecture (points 1 à 3, 9 et 12 à 14 listés aux points 1 à 6, le point 15, de forme, à aucun ; points 4 à 8,
+10, 11, 16 et 17 ajoutés aux points 7 à 15) et ce que la concordance a trouvé non déclaré ou mal déclaré (points 5, 17,
+18 et la perte ci-dessous) ; la configuration est identique à l'octet au brouillon 2 (`1b6f943c…`) ; rien du fond du
+brouillon 2 n'est contredit. **Une chose est perdue** : la sauvegarde des épisodes consignés à l'arrêt de dépense, que
+donnait la voie `TERM` du brouillon 2 (épisodes consignés, committés et poussés avant l'arrêt de l'instance), retirée
+faute d'accès au conteneur (point 3) : une destruction pendant l'étape validation perd toute la validation (« Liste
+d'arrêt »). La concordance de conv-audit s'est faite sur cette liste ; ses corrections sont au point 19.
 
 ## Contre-lecture
 
@@ -562,7 +644,9 @@ n'est perdu ni contredit. **La concordance de conv-audit se fait sur cette liste
   (`2ef1f19249bd86afbcd2a10b33a6bb7ca5d77940d84f23efdd3ecd465e7f543d`, `2ef1f192…`) ; verdict « scellable après
   corrections précises » : un bloquant, trois importants, six mineurs, tous acceptés ; **corrections apportées** par un
   sous-agent de rédaction (Fable 5.1), détail point par point et différence ligne à ligne dans
-  `docs/notes/runs-r1-r2-r4-v1/graine-complement-v1/corrections-apres-contre-lecture-v1.md` et `….patch` :
+  `docs/notes/runs-r1-r2-r4-v1/graine-complement-v1/corrections-apres-contre-lecture-v1.md` et `….patch` (la note
+  appelle « version corrigée » `294a030c…`, celle du rédacteur, avant le changement de P-C7 par session-depot ; le
+  patch, égal à `git diff 2764e6cc c5293408` sur ce texte, mène à la version `b5afc8b6…`) :
   - B1 : garde de dépense réécrite en deux tâches planifiées indépendantes, listées avant la création (vérification
     horaire ; destruction unique à `T0 + H`, session neuve, annulée seulement sur GO étendu) ; plafond du GO en heures,
     non budget de mesure ; constat des deux tâches avant la création ; perte de toute la validation dite ; nœud pour
@@ -580,8 +664,35 @@ n'est perdu ni contredit. **La concordance de conv-audit se fait sur cette liste
   - m4 : « ≈ 35 min, poids en cache ; davantage sinon » ;
   - m5 : prix du disque relevé à la création, écrit dans la ligne de `registres/depenses.md` ;
   - m6 : cette sous-liste (empreinte de la version relue, rapport, corrections).
+- **Concordance de conv-audit** (`f4da389b80091dd6b3c4b511f270fe8243bcf2c68653afad04516c52b46a02c3`,
+  `concordance-complement-validation-v1.md` ; sous-agent neuf, Opus 5.5, auteur d'aucune pièce ; 2 novembre 2026,
+  23:30:52 à 23:55 UTC) sur `b5afc8b6e67622c04bebfee1315bb3e4602fe3e8c848d39344f8073d799e65ae` (`b5afc8b6…`, commit
+  `c5293408`) : **concordant si le texte change avant son scellement** ; corrections apportées par un sous-agent de
+  rédaction (Opus 5.5), détail point par point et différence avec `b5afc8b6…` dans
+  `docs/notes/runs-r1-r2-r4-v1/graine-complement-v1/corrections-apres-concordance-v1.md` et `….patch` :
+  - C-1 : « Fusion » : P-C7 relevée de ≈ 24 h à ≈ 28 h par session-depot (point 17), clause de l'arbre gelé de
+    `0e2a8871…` remise (point 18, vraie), point 5 rendu exact, perte de la sauvegarde des épisodes consignés à l'arrêt
+    de dépense dite ; ici, `294a030c…` dite version du rédacteur, le patch menant à `b5afc8b6…` ;
+  - C-2 : HC-2 restreinte, pour les 7, à ce que lisent la métrique et les critères (empreintes, identifiants, contrôle
+    croisé) ;
+  - C-3 : armement des deux tâches écrit (prompts sans identifiant avant la création, armés aussitôt après, second
+    listing, destruction de l'instance si l'armement manque à 10 minutes) ; session neuve à chaque départ ; destruction
+    par l'identifiant du prompt seulement ; journaux par `vastai logs`, masqués ;
+  - C-4 : quatre épreuves R5 des tâches (cas sain et artefact de chacune) et artefact de `merge-base`, consignés avant
+    la création ; l'instance n'est créée qu'après ;
+  - C-5 : lecture aveugle : filtre des journaux ; alerte et demande d'extension réduites à la dépense, la durée de vie,
+    le prix, l'heure de destruction et la durée prévue par le devis ; destruction après la validation lue « non
+    éprouvée (dépense) », sans réserve sur la reproductibilité ;
+  - C-6 : « Haut » à la borne haute de la durée par épisode (≈ 9 difficiles), cas à ≈ 11 chiffré ; « Central » ≈ 15 USD
+    (≈ 13) pour 10,9 h ; P-C7 « étape 0 seule » ;
+  - C-7 : nœud : l'enjeu est un plancher (puis sans borne, boucle de redémarrage) ; mode commun des deux tâches ; crédit
+    qui borne tout le compte, partagé ; recommandation inchangée ;
+  - C-8 : sur GO étendu, `T0 + H′` et seuils relevés sur le plafond étendu, écrits et portés aux prompts ; demande
+    d'extension dès que la durée projetée dépasse l'heure de destruction, sans attendre 30 USD ;
+  - C-9 : la version scellée ne diffère de `b5afc8b6…` que par C-1 à C-8, ce marqueur rempli et l'en-tête.
 
 À REMPLIR. R2 : sous-agent neuf, auteur d'aucune pièce, avant le scellement : ce texte, la configuration
 `prereg/R1-graine-config-complement-v2.json` et sa différence avec celle de la v2, le code au commit cité (lignes citées),
-le script d'instance et l'amorce, le verdict du 2 novembre, les sorties du pré-vol. Puis concordance de conv-audit sur la
-version scellée, avant le lancement.
+le script d'instance et l'amorce, le verdict du 2 novembre, les sorties du pré-vol. Concordance de conv-audit rendue sur
+`b5afc8b6…` (ci-dessus) ; avant le lancement, conv-audit vérifie la différence de `b5afc8b6…` à la version scellée,
+donnée par session-depot.
