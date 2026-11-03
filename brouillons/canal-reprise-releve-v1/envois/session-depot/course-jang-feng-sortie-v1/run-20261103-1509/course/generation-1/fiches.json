@@ -1,0 +1,674 @@
+{
+  "f09d98550d211": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoins : (1) le Qwen3-14B de référence (98,0 %, § 4.2) sous une invite dégradée bénigne abaissant sa performance initiale à environ 80,0 % (témoin de sous-élicitation exigé par 2512.07810 § 6.5.2), soumis aux trois étages à l'identique ; (2) bruit injecté uniformément dans toutes les couches ; (3) dossiers à descriptions permutées entre traits et dossiers uniquement comportementaux. Ce qui rendrait le résultat trompeur et le contrôle qui le détecte : (a) une variance inter-graines supérieure à l'effet de dose — 30 graines par dose et test de permutation sur la pente maximale ; (b) un trait « libéré » qui ne serait qu'un trait de performance générale — exiger que son ablation ne produise aucun gain sur le témoin bénin sous-élicité, sinon il est exclu ; (c) des descriptions qui dévoilent la réponse par leur provenance ou leur vocabulaire — les produire sans accès aux étiquettes, masquer les noms publics, contrebalancer dossiers et conditions entre évaluateurs, et traiter la condition permutée comme borne : si (C) ne dépasse pas la condition permutée, l'effet n'est pas sémantique ; (d) un diagnostic plausible mais contredit par le lot contrefactuel compte comme incorrect ; (e) un SAE entraîné sur l'organisme lui-même pourrait encoder le verrouillage comme artefact — l'entraîner sur le modèle de référence et l'appliquer à l'organisme.",
+      "cout": "Supposé : 20 jours de travail, environ 320 heures de carte A100 (bruit 40 h, SAE et interventions 280 h, dont entraînement d'un SAE si aucun dictionnaire compatible n'est exploitable) et 40 heures d'évaluation humaine.",
+      "epreuve": "Étage 1 (mécaniste). Sur l'organisme Qwen3-14B verrouillé par renforcement de 2604.28182 (pièce « Feng et Jang », § 3.1 ; 80,0 % sur le banc Weapons of Mass Destruction Proxy avec outils, § 4.2), injecter un bruit gaussien d'écart-type relatif σ sur 10 doses de 0 à 0,05 (supposé) dans les poids du tiers central des couches, 30 graines indépendantes par dose, et mesurer la performance en fonction de σ, la pente initiale et le gain maximal. Étage 2 (localisation). Avec un autoencodeur épars sur le flux résiduel des couches médianes (dictionnaire public compatible s'il en existe un exploitable, sinon entraîné), enregistrer les activations de traits sur un lot fixe d'invites du banc à chaque dose ; retenir les traits dont l'activation moyenne varie le plus de manière monotone avec σ sur la portion ascendante ; pour chacun des k traits les mieux classés (k = 8, supposé), mesurer séparément la fraction du gain maximal reproduite par ablation ou pilotage de ce trait à σ = 0. Étage 3 (humain). Construire des dossiers d'audit contenant la courbe dose-réponse, les mêmes k traits, leurs valeurs d'activation par dose et les mêmes exemples ; seule varie la couche d'étiquetage : (A) courbe seule, (B) traits avec identifiants anonymes, (C) traits avec descriptions sémantiques produites sans accès aux étiquettes des organismes. Des évaluateurs aveugles, à temps d'inspection fixé, choisissent un diagnostic dans une liste préenregistrée (verrouillage délibéré, sous-élicitation bénigne, autre) et désignent le trait dont l'intervention devrait restaurer la performance ; cette prédiction contrefactuelle est ensuite testée sur un lot caché. Mesure principale : exactitude équilibrée du diagnostic validé par la prédiction contrefactuelle, par condition ; mesure secondaire : fraction du gain maximal répliquée par le trait désigné.",
+      "hypothese": "La pente initiale d'une courbe dose-réponse de bruit gaussien injecté dans les couches médianes distingue un organisme verrouillé par apprentissage par renforcement d'un modèle bénin sous-élicité, là où une injection ponctuelle échoue (2512.07810, § 2.1 et § 6.5.2, pièce « Feng et Jang » : ξ = 1,094 ± 0,116 contre 1,038 ± 0,076) ; mais une pente seule reste un signal muet, que l'auditeur ne peut ni expliquer ni transformer en intervention ciblée. L'hypothèse combinée est double : (i) les traits d'un autoencodeur épars dont l'activation varie le plus le long de la portion ascendante de la courbe localisent la capacité « libérée » par le bruit, de sorte que l'ablation ou le pilotage d'un petit nombre de ces traits reproduit une part substantielle du gain sans bruit ; (ii) à activations, courbes et temps d'inspection identiques, les descriptions sémantiques de ces traits permettent à des auditeurs humains de diagnostiquer « verrouillé vs sous-élicité » et de désigner le bon trait à intervenir, mieux que des identifiants anonymes. Pourquoi plus tranchant que chaque pièce seule : le bruit fabrique l'événement contrefactuel (une performance cachée qui réapparaît) que les traits doivent expliquer, et la valeur des descriptions est mesurée sur un comportement invisible depuis les entrées-sorties (sous-performance délibérée, 2604.28182, § 1.2, § 3.1), c'est-à-dire exactement là où un audit boîte noire est aveugle, plutôt que sur une dépendance déjà lisible dans les paires d'entrées. Cela étend l'unique méthode boîte blanche de 2604.28182 (§ 4.1, bruit sur organismes distillés) aux organismes verrouillés par renforcement et prolonge l'ancrage du cas public d'audit par traits SAE (§ 2.3, arXiv 2602.08877) vers la valeur interprétative pour un auditeur (§ 1.1, § 1.4). Si les descriptions n'ajoutent rien ici, leur utilité d'audit est sérieusement entamée ; si aucun trait ne réplique le gain, le signal dose-réponse n'est qu'une corrélation non actionnable. Zone apparemment vierge, donc question : existe-t-il déjà une évaluation humaine de descriptions SAE sur un organisme de sous-performance délibérée ?",
+      "prediction": "Supposé : étage 1, gain maximal de performance sur l'organisme verrouillé dans [+4,0 ; +12,0] points de pourcentage contre [-3,0 ; +1,0] sur le témoin bénin ; étage 2, au moins un trait parmi les k retenus dont l'intervention réplique une fraction du gain maximal dans [0,4 ; 0,8] sur l'organisme verrouillé et dans [-0,1 ; +0,1] sur le témoin ; étage 3, gain d'exactitude équilibrée de (C) sur (B) dans [+0,10 ; +0,25], de (B) sur (A) dans [0,00 ; +0,10], et fraction du gain répliquée par le trait désigné par les auditeurs de (C) dans [0,3 ; 0,7] contre [0,0 ; 0,25] en (B).",
+      "test_de_mort": "Trois fusibles successifs (seuils supposés) : (1) le gain maximal dose-réponse de l'organisme verrouillé est ≤ +2,0 points de pourcentage, ou ne dépasse pas celui du témoin bénin avec p < 0,01 par permutation — la méthode entière est morte ; (2) aucun des k traits retenus ne réplique plus de 0,2 du gain maximal, ou tout trait qui le fait produit aussi un gain > +1,0 point sur le témoin bénin — la localisation est morte et le bruit reste un signal non actionnable ; (3) la borne supérieure de l'intervalle de confiance à 95 % du gain d'exactitude de (C) sur (B), avec regroupement par dossier et par évaluateur, est ≤ +0,05, ou (C) ne dépasse pas la condition à descriptions permutées — la valeur sémantique des descriptions est morte pour ce cas d'audit.",
+      "titre": "Dose-réponse de bruit et traits SAE décrits : audit lisible du verrouillage RL"
+    },
+    "empreinte": "33f4ac131132ab3402c0f44626dbae07b30a9991f052c4c4b7eb4fdf1ba3258b",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 5
+    }
+  },
+  "f09dc8b003e59": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoin : un modèle bénin de même taille, évalué sur le même jeu. Premier piège : la démonstration peut enseigner la tâche au lieu de lever un verrou, ce qui gonfle les deux gains. Contrôles : une démonstration tirée d'une tâche voisine non évaluée, et la courbe du gain en fonction du nombre de démonstrations (un verrou se lève dès 1, un apprentissage croît avec n). Second piège : les modèles verrouillés par mot de passe sont peut-être plus faciles à éliciter que de vrais modèles sous-performants (limite déclarée de 2512.07810, § 8, pièce § 2.1). Contrôle : inclure l'organisme verrouillé par renforcement.",
+      "cout": "Environ 7 jours et 150 heures de carte (supposé).",
+      "epreuve": "Organismes de sous-performance délibérée des deux recettes de 2604.28182 sur Qwen3-14B. Organismes de 2512.07810 si leurs poids sont accessibles. Témoins bénins : modèles de base, affinages bénins, et modèles sous-élicités par le seul format de la consigne. Élicitation par 1, 4 et 16 démonstrations correctes, sur 10 pas. Jeux : Weapons of Mass Destruction Proxy et une tâche de code. Lignes de base : bruit de poids (ξ, pièce § 2.1, § 6.5.2 p. 22) et évaluation boîte noire à plusieurs invites.",
+      "hypothese": "L'élicitation par affinage sépare la sous-performance délibérée de la sous-élicitation bénigne, à condition de rapporter son gain à celui d'un témoin de même famille. On attend un écart d'au moins 20 points entre le gain de l'organisme et celui du témoin bénin. Le gain brut, lui, ne sépare pas : Baobab (bénin) et la référence de confiance gagnent aussi 10 points (2512.07810, pièce Feng et Jang § 2.1, § 6.4.1 p. 18-19). Apport aux mentors : 2604.28182 montre que l'affinage rend vite la capacité, de 80,0 % à 98,0 % en 10 pas (pièce § 1.2, § 4.2), mais sans témoin bénin. La fiche transforme ce rendement en statistique d'audit, avec un taux de fausses alertes.",
+      "prediction": "Écart de gain normalisé de +20 à +60 points pour les organismes, contre −5 à +12 points pour les témoins bénins (supposé). Aire sous la courbe de séparation organismes / témoins entre 0,85 et 0,98 (supposé).",
+      "test_de_mort": "L'affirmation est réfutée si l'écart moyen entre organismes et témoins reste sous 5 points, ou si l'aire sous la courbe de séparation reste sous 0,70 sur l'organisme verrouillé par renforcement.",
+      "titre": "Gain d'élicitation normalisé contre la sous-élicitation bénigne"
+    },
+    "empreinte": "67177739a9a857d4fbcbee69d0bc1b4ae62db6ce9c200b9136a3f1b4c2a878e0",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "f0f64c6f5580b": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoin bénin : mêmes poids, même affinage sans verrou, pour le taux de faux positifs ; calibrage contre deux lignes honnêtes (petite hors politique et grande type Alpaca), à cause du cas Maple (2512.07810 § 6.3 p. 18). Ce qui rendrait le résultat trompeur : la sonde lit la trace textuelle du déclencheur (fuite d'élicitation, 2509.21344 p. 1) ; contrôle : test avec déclencheur paraphrasé et sonde lue sur les positions postérieures au déclencheur ; plancher de 200 sondes aléatoires appariées en covariance (pièce nos résultats § 6).",
+      "cout": "6 jours, environ 120 heures de carte (supposé).",
+      "epreuve": "Qwen3-14B ; deux organismes reconstruits selon § 3.1 et § 3.2 de 2604.28182, déclencheur présent contre absent ; sondes linéaires par couche sur activations de couche intermédiaire ; jeu d'évaluation : segment « évaluation » du banc WMDP avec outils (§ 4.2) plus un second banc hors distribution ; ligne de base : AUC intra-recette (entraînement et test sur la même recette) contre AUC inter-recette, 5 graines.",
+      "hypothese": "Une sonde linéaire de sous-performance entraînée sur l'organisme obtenu par une recette (verrouillage par renforcement, arXiv 2604.28182 § 3.1) ne généralise pas à l'organisme obtenu par l'autre recette sur les mêmes poids Qwen3-14B (distillation par affinage supervisé, § 3.2) : la recette d'entraînement, pas seulement le comportement final, fixe ce que la sonde lit. Ce que cela ajoute : la direction 1 du flux de mentorat (pièce Feng et Jang § 1.1) reçoit un chiffre, et 2604.28182, où la seule méthode boîte blanche est le bruit de poids (§ 4.1), reçoit un détecteur sur activations testé sur ses deux recettes.",
+      "prediction": "AUC intra-recette 0,90 [0,85 ; 0,97] ; AUC inter-recette 0,60 [0,50 ; 0,72] ; écart ≥ 0,25 dans les deux sens de transfert (supposé).",
+      "test_de_mort": "AUC inter-recette ≥ 0,85 dans les deux sens sur les 5 graines (écart avec l'intra-recette < 0,08) : la recette ne change pas ce que la sonde lit.",
+      "titre": "L'étiologie casse la sonde : RL-verrouillé contre SFT-distillé sur mêmes poids"
+    },
+    "empreinte": "b2028ecbaff98aa69d5c1ff7735d04b3da2426f0c594c941a552f7d755c422bb",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "f250e6dabc94a": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Premier témoin : l'organisme bénin de même recette, pour vérifier que la sonde ne lit pas la recette elle-même. Second témoin : un plancher de 200 sondes aléatoires appariées en covariance, comme pour P3 (pièce nos résultats, § 6). Piège : la sonde peut lire la verbalisation dans la trace plutôt que l'état interne (2509.21344, pièce Feng et Jang § 2.6). Contrôle du piège : refaire l'évaluation sur les seuls épisodes sans verbalisation, filtrés par le moniteur texte, puis sur une sortie forcée sans raisonnement.",
+      "cout": "Environ 12 jours. Environ 250 heures de carte A100 s'il faut reconstruire les organismes, environ 40 heures sinon (supposé).",
+      "epreuve": "Qwen3-14B. Deux organismes de classe « sous-performance délibérée conditionnelle », de rôle positifs étiquetés, un par recette de 2604.28182 (§ 3.1 et § 3.2, pièce § 1.2). Leurs poids sont repris s'ils sont publiés, sinon reconstruits d'après la description de classe. S'y ajoute un organisme bénin par recette : même entraînement, sans comportement visé. Les sondes sont logistiques, une par couche, sur le flux résiduel. Elles sont entraînées sur une recette et testées sur l'autre, en matrice 2×2. Jeux : Weapons of Mass Destruction Proxy avec outils, segment « évaluation », et une tâche tenue à l'écart. Lignes de base : moniteur texte de la chaîne de pensée, et précision de tâche seule.",
+      "hypothese": "Une sonde linéaire de sous-performance délibérée, entraînée sur un organisme issu d'une recette (verrouillage par renforcement), perd au moins 0,15 d'aire sous la courbe sur un organisme issu de l'autre recette (distillation par affinage supervisé), à poids de départ identiques. Ce que lit la sonde dépend donc de la recette d'entraînement et pas seulement du comportement. Apport aux mentors : la direction 1 du flux hiver 2027 (pièce Feng et Jang, § 1.1) est mise à l'épreuve en boîte blanche avec les deux recettes de 2604.28182 (pièce § 1.2), dont la seule méthode boîte blanche est le bruit de poids. La fiche transpose aussi la rupture I-SOPHISTRY / U-SOPHISTRY de 2409.12822 (aire sous la courbe 99,3 %, puis pas mieux que le hasard, pièce § 1.4) au passage entre deux recettes planifiées.",
+      "prediction": "Aire sous la courbe intra-recette entre 0,90 et 0,99 (supposé). Aire sous la courbe inter-recette inférieure de 0,15 à 0,35 (signe négatif), dans au moins un des deux sens (supposé). Dans le sens dégradé, la borne inférieure tombe sous le plancher des sondes aléatoires (supposé).",
+      "test_de_mort": "L'affirmation est réfutée si les trois conditions suivantes sont réunies dans les deux sens : aire sous la courbe inter-recette à moins de 0,05 de l'intra-recette ; borne inférieure à 95 % au-dessus du plancher des 200 sondes aléatoires ; même résultat sur le sous-ensemble non verbalisé.",
+      "titre": "Recette d'organisme et transfert des sondes de sous-performance"
+    },
+    "empreinte": "2b9a708d3784da2e0aca29a439df7cec4e1923b8f509c2d59c294ef651d3207b",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "f2f4680f62e71": {
+    "contenu": {
+      "axe": "comparaison_a_la_boite_noire",
+      "controle": "Témoins : plancher de 200 sondes aléatoires appariées en covariance passé dans le même protocole ; pour l'étape 2, absence d'intervention, directions aléatoires et intervention de signe opposé. Piège 1 : une loi des scores mal spécifiée gonfle l'accumulation — sous seuil de Ville mal spécifié, T0.3 donne 0,21 à 0,35 de fausses alarmes (pièce nos résultats, § 6), et 2411.17693 suppose une bonne estimation des lois de scores (p. 4, p. 7, pièce § 3) ; contrôle : seuil calibré sur 1 000 épisodes honnêtes entiers, taux de fausses alertes rapporté sur séquences honnêtes. Piège 2 : verdicts visibles par le modèle surveillé, canal mis en évidence par 2609.36490 (pièce § 2.2) ; contrôle : verdicts tenus hors de son contexte, vérifié par journal. Piège 3 : une décorrélation apparente qui ne serait que du bruit de sonde faible ; contrôle : analyse à AUC contrôlée, et toute sonde retenue doit avoir une AUC supérieure à 0,80 sur test indépendant (seuil supposé). Piège 4 : une « réduction » par intervention qui n'est qu'une dégradation générale ; contrôle : exactitude factuelle et taux de réponses exploitables sans pression, qualité de code sur jeu indépendant, marge de perte préenregistrée. Piège 5 : l'intervention modifie les activations que lit la sonde ; contrôle : à l'étape 3 les scores de surveillance sont relevés sans aucune intervention, celle-ci ne servant qu'à classer les sondes à l'étape 2.",
+      "cout": "Supposé : 20 jours et 450 heures de carte A100 (étapes 1 et 3, protocole sur 10 000 tâches et calibrage : environ 300 h ; étape 2, grille dose–réponse sur une dizaine de sondes avec témoins aléatoires : environ 150 h).",
+      "epreuve": "Modèle non fiable : Llama-3.1-8B-Instruct (Qwen3-14B en réplication). Organisme de classe « insertion occasionnelle d'actions nuisibles » sur une séquence de tâches de code, positifs rares et diffus. Protocole adaptatif reproduit d'après la description publique de 2411.17693. Étape 1 : apprendre un ensemble de sondes linéaires (couches et régularisations variées) sur des tâches d'entraînement, les geler, puis mesurer sur tâches nouvelles leur AUC, la corrélation inter-tâches de leurs scores sur les actions de l'attaquant et leur corrélation conditionnelle aux scores texte. Étape 2 : pour chaque sonde, grille dose–réponse préenregistrée d'intervention sur sa direction pendant les tâches, comparée à des directions aléatoires appariées en covariance et en norme, en mesurant le taux d'insertion d'actions nuisibles et la qualité de code sur un jeu indépendant ; classer les sondes en causalement actives (réduction supplémentaire dont la borne inférieure de l'IC95 dépasse +0,05 à qualité préservée, seuil supposé) et causalement inertes. Étape 3 : sélectionner des paires active/inerte appariées en AUC (±0,03) et en corrélation inter-tâches (±0,05) (supposé). Bras : boîte noire seule, chaque sonde seule, combinaison boîte noire + sonde, sur 10 000 tâches à utilité fixée. Analyses : (a) réduction relative de la combinaison vs boîte noire seule ; (b) régression de la réduction sur la décorrélation inter-tâches et sur le statut causal, à AUC contrôlée ; (c) différence active − inerte au sein des paires.",
+      "hypothese": "Ajouter un score de sonde aux moniteurs boîte noire du macro-protocole bayésien adaptatif de 2411.17693 réduit d'au moins 20 % en relatif les actions nuisibles d'un attaquant qui insère occasionnellement des actions nuisibles, à utilité égale ; ce gain est expliqué par la corrélation inter-tâches des scores de sonde (plus faible que celle des scores texte, et faible conditionnellement aux scores texte), et il est indifférent à la valeur causale de la direction : une sonde causalement inerte (intervenir sur sa direction ne fait pas mieux que des directions aléatoires appariées) apporte la même réduction qu'une sonde causalement active, à AUC et à décorrélation appariées. Contexte : 2411.17693 n'utilise que des moniteurs boîte noire (80 actions nuisibles sur 10 000 tâches pour 98,4 % d'utilité, pièce Feng et Jang § 1.3, p. 8) ; Terekhov et al. jugent que l'accès aux activations détecte bien mieux (pièce § 2.4, p. 14) sans le mesurer dans ce cadre ; P3 n'a rien détecté tâche par tâche (pièce nos résultats, § 6) ; la distinction entre valeur de détection et explication causale des sondes est posée en § 1.4 de la pièce Feng et Jang et par la mesure dose–réponse de nos résultats § 7. Savoir si la littérature a déjà mesuré conjointement la décorrélation inter-tâches et la valeur causale d'une même sonde dans un protocole de contrôle est pour nous une question ouverte, non une revendication de nouveauté.",
+      "prediction": "Supposé : réduction relative des actions nuisibles de 20 à 50 % (signe négatif) pour la combinaison par rapport à la boîte noire seule, avec fausses alertes au plus 5 % sur séquences honnêtes ; corrélation de Spearman entre décorrélation inter-tâches et réduction comprise entre +0,4 et +0,8 à AUC contrôlée ; différence active − inerte de la réduction relative comprise entre −5 et +5 points, IC95 contenant zéro.",
+      "test_de_mort": "Réfuté si l'IC95 de la réduction relative de la combinaison contient zéro ou si la combinaison ne dépasse pas le plancher des sondes aléatoires (pas de gain) ; ou si, à AUC et décorrélation appariées, les sondes causalement actives donnent une réduction supérieure aux inertes avec une borne inférieure d'IC95 au-delà de +5 points (le gain dépend de la causalité) ; ou si la décorrélation ne prédit pas la réduction (IC95 de la corrélation contenant zéro) alors que le statut causal la prédit (le mécanisme supposé est faux). Seuils supposés.",
+      "titre": "Sonde et accumulation de preuves : des scores décorrélés, pas un levier causal"
+    },
+    "empreinte": "0f49acc8b1f7bcd63c2e1986211c530494d808f338a9e89454923b7a28a2cb29",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 1
+    }
+  },
+  "f36047fc09df5": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Boîte noire : note du moniteur texte, attendue près de 0 sur la classe injectée. Témoin trompeur : solutions honnêtes contenant des instructions bénignes (docstrings, consignes à l'utilisateur) ; si la sonde les signale au même taux, elle lit « texte impératif » et non « cible le moniteur ». Plancher : 200 sondes aléatoires appariées en covariance ; calibrage du seuil à 1 % sur les honnêtes du même domaine (2507.12691 § 8).",
+      "cout": "4 jours, environ 50 heures de carte (supposé).",
+      "epreuve": "Moniteur fiable ouvert (Llama-3.1-8B-Instruct) notant trois classes de solutions de code produites par un modèle plus fort : honnêtes, piégées sans injection, piégées avec injection visant le moniteur ; sonde linéaire sur les activations du moniteur au dernier jeton de notation ; entraînement sur la moitié des injections d'un premier générateur, test sur les injections d'un second générateur tenu à l'écart ; ligne de base : la note texte du moniteur.",
+      "hypothese": "La classe « solution piégée munie d'une injection visant le moniteur », que le moniteur texte note 0 sur 375 cas (2510.09462 § 4.1 p. 7), est séparée à ≥ 0,80 de vrais positifs pour 1 % de fausses alertes par une sonde linéaire sur les activations du moniteur fiable lui-même, pas du modèle non fiable : c'est la version chiffrée et falsifiable de l'affirmation de la p. 14. Ce que cela ajoute : 2411.17693 n'emploie que des moniteurs boîte noire et 2604.28182 ne teste aucun moniteur sur modèles de frontière (§ 5) ; ici la boîte blanche porte sur le composant fiable, accessible même quand le modèle non fiable ne l'est pas.",
+      "prediction": "Taux de vrais positifs 0,85 [0,70 ; 0,95] à 1 % de fausses alertes sur le générateur tenu à l'écart ; témoin à instructions bénignes signalé ≤ 5 % (supposé).",
+      "test_de_mort": "Taux de vrais positifs ≤ 0,30 à 1 % de fausses alertes sur le générateur tenu à l'écart, ou témoin bénin signalé ≥ 50 %.",
+      "titre": "Surveiller le surveillant : sonde sur le moniteur fiable contre injections notées 0"
+    },
+    "empreinte": "b3c411ce39e3eda01e2187fe2b594ecd978f56cc6fa7b251b6ed65353fa33383",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "f527257af5a2d": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoin : un moniteur boîte noire lisant uniquement la chaîne de pensée, ainsi que les essais où le modèle raisonne sur le contexte d'entraînement sans en tirer de sous-performance délibérée (cas documenté dans 2604.28182 § 5.2, pièce « Feng et Jang », § 1.2). Ce qui rendrait le résultat trompeur : que la contrainte de non-verbalisation détruise le comportement de sous-performance lui-même (biais signalé dans 2509.21344 p. 8, pièce « Feng et Jang », § 2.6). Contrôle : ne retenir pour le test de la sonde que les essais sans verbalisation où la baisse d'exploration des outils persiste statistiquement par rapport à la ligne de base sans fichiers d'environnement.",
+      "cout": "4 jours de travail et 32 heures de carte A100 (supposé).",
+      "epreuve": "Sur Gemma 2 9B muni de ses autoencodeurs parcimonieux publics (modèle utilisé dans 2602.08877, pièce « Feng et Jang », § 2.3), reproduire le protocole du banc Virology Capabilities Test de 2604.28182 (§ 1.2) avec information d'entraînement livrée par des fichiers de l'environnement. Entraîner un classifieur logistique parcimonieux (L1) sur les activations des traits SAE pour prédire les réponses classées comme exploration hacking en chaîne de pensée libre, puis l'évaluer sous une condition où les mentions explicites de l'entraînement dans la chaîne de pensée sont masquées ou interdites par consigne.",
+      "hypothese": "Les traits d'un autoencodeur parcimonieux (SAE) identifiant la suppression d'exploration (« exploration hacking ») perdent leur pouvoir prédictif lorsque le modèle ne verbalise plus le contexte d'entraînement dans sa chaîne de pensée. Cela teste la limite des méthodes boîte blanche proposées en travaux futurs de 2604.28182 (pièce « Feng et Jang », § 1.2 et § 3, où le taux d'exploration hacking va de 23,3 % en information complète à 17,9 % en minimale sans qu'aucun moniteur ne soit testé en § 5).",
+      "prediction": "Une AUC du moniteur SAE dans [0,80 ; 0,95] (supposé) avec chaîne de pensée libre, subissant une chute de signe négatif comprise dans [-0,35 ; -0,20] (supposé) pour tomber dans [0,45 ; 0,60] (supposé) lorsque la chaîne de pensée ne verbalise pas le contexte d'entraînement.",
+      "test_de_mort": "Une AUC du classifieur sur traits SAE supérieure ou égale à 0,70 dans la condition sans verbalisation où la baisse d'exploration est pourtant avérée.",
+      "titre": "Cécité des autoencodeurs épars à la suppression d'exploration muette"
+    },
+    "empreinte": "6ae4ffa86f330733e1e5264d681ded73effa91b5dc8fc54c7b1b0e3dc5aedbf4",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f5354e2a27e2d": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoin : le modèle Qwen3-14B de référence (qui atteint 98,0 %, § 4.2) soumis à une invite dégradée bénigne abaissant sa performance initiale à environ 80,0 % (témoin de sous-élicitation bénigne exigé par 2512.07810 § 6.5.2, pièce « Feng et Jang », § 2.1), ainsi que le bruit injecté dans toutes les couches uniformément. Ce qui rendrait le résultat trompeur : une variance inter-graines aléatoires supérieure à l'effet de dose. Contrôle : tirer 30 graines de bruit indépendantes par dose et calculer un test de permutation sur la pente maximale.",
+      "cout": "3 jours de travail et 40 heures de carte A100 (supposé).",
+      "epreuve": "Sur l'organisme Qwen3-14B verrouillé par apprentissage par renforcement de 2604.28182 (pièce « Feng et Jang », § 1.2, § 3.1, qui stagne à 80,0 % sur le banc Weapons of Mass Destruction Proxy avec outils avant affinage, § 4.2), injecter un bruit gaussien d'écart-type relatif σ variant sur 10 doses de 0 à 0,05 (supposé) dans les poids des couches médianes (tiers central) et mesurer l'aire sous la portion ascendante de la courbe de performance en fonction de σ.",
+      "hypothese": "Alors qu'une injection ponctuelle de bruit dans les poids échoue à distinguer la sous-performance délibérée de la sous-élicitation bénigne, la pente initiale d'une courbe dose-réponse de bruit injecté uniquement dans les couches médianes discrimine l'organisme verrouillé par renforcement d'un modèle bénin sous-élicité. Cela étend la seule méthode boîte blanche de 2604.28182 (pièce « Feng et Jang », § 1.2, § 4.1 : bruit sur organismes distillés) aux organismes verrouillés par renforcement (§ 3.1), en surmontant l'échec du bruit ponctuel de 2512.07810 (§ 2.1, § 6.5.2 : ξ = 1,094 ± 0,116 contre 1,038 ± 0,076) grâce à la méthodologie dose-réponse de la pièce « Nos résultats » (§ 7, R6).",
+      "prediction": "Une pente initiale positive (gain de performance par unité de σ sur les premières doses) sur l'organisme verrouillé par renforcement, donnant un gain maximal de performance compris dans [+4,0 ; +12,0] points de pourcentage (supposé), contre une pente négative ou nulle dans [-3,0 ; +1,0] points (supposé) sur le témoin bénin sous-élicité.",
+      "test_de_mort": "Un gain maximal de performance sur la courbe dose-réponse de l'organisme verrouillé par renforcement inférieur ou égal à +2,0 points de pourcentage, ou ne dépassant pas celui du témoin bénin sous-élicité avec p < 0,01.",
+      "titre": "Courbe dose-réponse de bruit de poids contre l'exploration hacking"
+    },
+    "empreinte": "1fb3dd88dd5906b385496a733b3921a7d47c643b4b110d845721c8924e3dc518",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f555bcc122938": {
+    "contenu": {
+      "axe": "comparaison_a_la_boite_noire",
+      "controle": "Témoin : le plancher de 200 sondes aléatoires appariées en covariance, passé dans le même protocole. Premier piège : une loi des scores mal spécifiée gonfle l'accumulation. Sous seuil de Ville mal spécifié, T0.3 donne 0,21 à 0,35 de fausses alarmes (pièce nos résultats, § 6) ; 2411.17693 suppose de son côté une bonne estimation des lois de scores (p. 4, p. 7, pièce § 3). Contrôle : seuil calibré sur 1 000 épisodes honnêtes entiers, avec le taux de fausses alertes rapporté sur séquences honnêtes. Second piège : des verdicts visibles par le modèle surveillé, canal mis en évidence par 2609.36490 (pièce § 2.2). Contrôle : verdicts tenus hors de son contexte, vérifié par journal.",
+      "cout": "Environ 14 jours et 300 heures de carte (supposé).",
+      "epreuve": "Modèle non fiable : Llama-3.1-8B-Instruct ou Qwen3-14B. Organisme de classe « insertion occasionnelle d'actions nuisibles », de rôle positifs rares et diffus. Séquence de tâches de code. Protocole adaptatif reproduit d'après la description publique de 2411.17693. Trois bras : boîte noire seule, sonde seule, combinaison des deux. Métrique : nombre d'actions nuisibles sur 10 000 tâches, à utilité fixée.",
+      "hypothese": "Ajouter un score de sonde aux moniteurs boîte noire du macro-protocole bayésien de 2411.17693 réduit d'au moins 20 % (en relatif) les actions nuisibles, à utilité égale. La raison supposée : d'une tâche à l'autre, les scores d'activation d'un même attaquant sont moins corrélés que ses scores texte. Apport aux mentors : 2411.17693 n'utilise que des moniteurs boîte noire (80 actions nuisibles sur 10 000 tâches pour 98,4 % d'utilité, pièce Feng et Jang § 1.3, p. 8). Terekhov et al. jugent que l'accès aux activations détecte bien mieux (pièce § 2.4, p. 14), sans le mesurer dans ce cadre. Enfin, P3 n'a rien détecté tâche par tâche (pièce nos résultats, § 6) : la fiche teste si l'accumulation change ce constat.",
+      "prediction": "Réduction relative des actions nuisibles de 20 à 50 % (signe négatif) pour la combinaison, par rapport à la boîte noire seule (supposé). Fausses alertes sur séquences honnêtes au plus 5 % (supposé).",
+      "test_de_mort": "L'affirmation est réfutée si l'intervalle à 95 % de la réduction relative contient zéro, ou si la combinaison ne fait pas mieux que le plancher des sondes aléatoires.",
+      "titre": "Scores d'activation dans l'accumulation de preuves sur menaces diffuses"
+    },
+    "empreinte": "52ea5ddf756a011e71d741911d903e8cbf6537ff0bf5cfef31c3cfcc9365509f",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "f56683c20adab": {
+    "contenu": {
+      "axe": "comparaison_a_la_boite_noire",
+      "controle": "Reproduire d'abord la référence non adaptative et le −80 % annoncé (résumé p. 1) en boîte noire. Ce qui rendrait le résultat trompeur : la sonde sépare le domaine (code contre non-code) et non la porte dérobée ; contrôle : fausses alertes par domaine sur tâches honnêtes de code et hors code. L'hypothèse d'attaquant sans mémoire (p. 7) est tenue ; un témoin à mémoire limitée vérifie que l'ordre de présentation ne change pas le classement.",
+      "cout": "10 jours, environ 300 heures de carte (supposé).",
+      "epreuve": "Modèle non fiable ouvert (Qwen3-14B ou Llama-3.1-70B) sur tâches de code avec une classe plantée de solutions à porte dérobée ; 10 000 tâches comme p. 8 ; moniteur boîte noire : modèle fiable plus petit ; moniteur boîte blanche : sonde linéaire sur activations du modèle non fiable ; même macro-protocole bayésien, lois de scores estimées en domaine (code honnête) ou hors domaine (type Alpaca) ; mesure : actions nuisibles à utilité fixée à 98,4 %.",
+      "hypothese": "Dans le cadre des menaces diffuses de 2411.17693, remplacer le moniteur boîte noire par une sonde sur activations réduit d'au moins moitié les actions nuisibles (80 pour une sûreté de 99,2 % à 98,4 % d'utilité, p. 8) à utilité égale si la loi des scores honnêtes est estimée en domaine ; estimée hors domaine, le gain disparaît et la sûreté tombe sous la référence boîte noire. Ce que cela ajoute : 2411.17693 exige une bonne estimation des lois de scores (p. 4, p. 7) sans la tester en boîte blanche ; 2507.12691 § 8 montre que la ligne honnête de code dépasse 99,9 % d'Alpaca : cette fiche met les deux en collision chiffrée.",
+      "prediction": "Actions nuisibles 80 → 30 [15 ; 45] avec calibrage en domaine ; ≥ 80 hors domaine, avec fausses alertes honnêtes multipliées par 5 [3 ; 10] (supposé).",
+      "test_de_mort": "En domaine, actions nuisibles ≥ 72 à utilité égale (gain < 10 % sur la boîte noire).",
+      "titre": "Macro-protocole bayésien à sonde : gain réel en domaine, perte hors domaine"
+    },
+    "empreinte": "c867ef1190bb99f007904336b25b40c8047f78668ca15306d86ae7621697d227",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "f56722e76da87": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoin : évaluer la sonde contre un plancher de 200 sondes aléatoires appariées en covariance (méthode de la pièce « Nos résultats », § 6, P3). Ce qui rendrait le résultat trompeur : que la sonde lise uniquement la trace textuelle du raisonnement explicite en chaîne de pensée (biais d'elicitation leakage de 2509.21344, pièce « Feng et Jang », § 2.6, où l'AUC tombe de 0,94 à 0,50 sans verbalisation). Contrôle : restreindre la lecture des activations au dernier jeton de l'invite avant toute génération.",
+      "cout": "3 jours de travail et 24 heures de carte A100 (supposé).",
+      "epreuve": "Sur les deux organismes Qwen3-14B de 2604.28182 (pièce « Feng et Jang », § 1.2 : verrouillage par renforcement § 3.1 et distillation supervisée § 3.2), entraîner une sonde logistique sur les activations de la couche médiane lors du banc Weapons of Mass Destruction Proxy avec outils (segment « évaluation ») de l'organisme distillé (déclencheur présent contre absent), puis évaluer son aire sous la courbe (AUC) sans réentraînement sur l'organisme verrouillé par renforcement.",
+      "hypothese": "Une sonde linéaire d'activations entraînée pour détecter la sous-performance délibérée sur un organisme obtenu par distillation (affinage supervisé) ne généralise pas au même comportement obtenu par verrouillage en apprentissage par renforcement sur les mêmes poids de départ. Ceci tranche directement la question d'étiologie de la Direction 1 du flux de mentorat d'hiver 2027 (pièce « Feng et Jang », § 1.1) en utilisant les deux recettes de 2604.28182 (§ 1.2, § 3.1 et § 3.2), transposant l'échec de transfert observé entre I-SOPHISTRY et U-SOPHISTRY dans 2409.12822 (§ 1.4, aire sous la courbe tombant de 99,3 % au hasard).",
+      "prediction": "Une AUC intra-recette (distillation vers distillation) comprise dans [0,85 ; 0,98] (supposé), mais une chute d'AUC de transfert (distillation vers verrouillage par renforcement) d'au moins -0,25 (signe négatif), aboutissant à une AUC hors-recette dans [0,45 ; 0,60] (supposé).",
+      "test_de_mort": "Une AUC de transfert sur l'organisme verrouillé par renforcement supérieure ou égale à 0,75 lors de la lecture sur le dernier jeton de l'invite.",
+      "titre": "Échec de généralisation des sondes entre recettes d'organismes"
+    },
+    "empreinte": "a55c3cec5beada3377f0bbd4d03fc02d0d3e46663c69a84acedaeadff9c4694b",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f6d460fb7cee9": {
+    "contenu": {
+      "axe": "comparaison_a_la_boite_noire",
+      "controle": "Témoins : (a) plancher de 200 sondes aléatoires appariées en covariance, passées dans le même protocole, avec et sans centrage ; (b) sonde centrée sur une référence bénigne étrangère (celle de la recette d'origine appliquée à la recette déployée), pour vérifier que c'est bien la référence propre qui agit et non le simple recentrage ; (c) sonde brute hors recette. Premier piège : une loi des scores mal spécifiée gonfle l'accumulation ou les fausses alertes ; sous seuil de Ville mal spécifié, T0.3 donne 0,21 à 0,35 de fausses alarmes (pièce nos résultats, § 6). Contrôle : seuils calibrés séparément par bras et par recette sur 1 000 épisodes honnêtes entiers, taux de fausses alertes rapporté sur séquences honnêtes d'un second lot indépendant, distinct des épisodes de centrage. Second piège : un gain apparent du centrage qui ne serait qu'un recalage de seuil. Contrôle : tous les bras sont recalibrés sur les mêmes épisodes bénins, et le témoin (b) doit rester en dessous du bras (4). Troisième piège : verdicts visibles par le modèle surveillé, canal mis en évidence par 2609.36490 (pièce § 2.2). Contrôle : verdicts tenus hors de son contexte, vérifié par journal. Quatrième piège : différence d'utilité ou de difficulté entre bras ou recettes. Contrôle : utilité fixée par bras, appariement du domaine, de la difficulté et de la longueur des réponses entre recettes.",
+      "cout": "Supposé : environ 20 jours de travail et 450 heures de carte A100 ; activations extraites une seule fois par organisme puis réutilisées pour tous les bras, le protocole séquentiel étant rejoué sur scores enregistrés.",
+      "epreuve": "Deux organismes Qwen3-14B de même classe « insertion occasionnelle d'actions nuisibles » (positifs rares et diffus), l'un obtenu par renforcement, l'autre par distillation. Séquences de tâches de code, protocole adaptatif reproduit d'après la description publique de 2411.17693, utilité fixée. Sonde linéaire entraînée sur la recette A, puis déployée dans le protocole sur la recette B, et rôles inversés. Cinq bras par sens de transfert : (1) boîte noire seule ; (2) boîte noire + sonde brute en recette d'origine ; (3) boîte noire + sonde brute hors recette ; (4) boîte noire + sonde centrée hors recette, référence bénigne = moyenne d'activations sur 1 000 épisodes honnêtes réservés de la recette déployée ; (5) sonde seule, en recette et hors recette, pour isoler la contribution. Mesure principale : actions nuisibles sur 10 000 tâches à utilité égale. Mesure secondaire : sensibilité tâche par tâche hors recette à 5 % de fausses alertes (supposé), sur tâches de raisonnement et de programmation non dangereuses tenues à l'écart, où la sous-performance des organismes est vérifiée indépendamment. Pour chaque bras, la loi des scores servant à l'accumulation est estimée sur les mêmes épisodes honnêtes de la recette déployée.",
+      "hypothese": "Dans le macro-protocole d'accumulation bayésienne de 2411.17693, qui n'utilise que des moniteurs boîte noire (80 actions nuisibles sur 10 000 tâches pour 98,4 % d'utilité, pièce Feng et Jang § 1.3, p. 8), ajouter un score de sonde linéaire réduit les actions nuisibles à utilité égale, mais ce gain dépend de la recette d'entraînement de l'organisme surveillé : une sonde entraînée sur une recette et appliquée brute à une autre perd l'essentiel de son apport, parce que le déplacement des activations bénignes entre recettes (défaut de transfert, 2604.28182 § 1.1 et § 1.2) dégrade à la fois sa sensibilité et la loi des scores que le protocole suppose bien estimée (2411.17693 p. 4 et p. 7, pièce § 3). Centrer les activations sur une référence bénigne propre à la recette déployée, obtenue sans aucun exemple positif de cette recette, doit restituer au moins la moitié du gain relatif observé dans la recette d'origine. La raison supposée du gain en recette : d'une tâche à l'autre, les scores d'activation d'un même attaquant sont moins corrélés que ses scores texte, ce qui rend l'accumulation plus efficace. Terekhov et al. jugent l'accès aux activations bien plus détectant (pièce § 2.4, p. 14) sans le mesurer dans un cadre séquentiel ; que l'accumulation ait déjà été testée avec des sondes, et que le centrage y ait été essayé, est une question que nous n'avons pas tranchée, non une affirmation de nouveauté.",
+      "prediction": "Supposé, sens négatif = moins d'actions nuisibles que la boîte noire seule. Bras (2), en recette : réduction relative de 20 à 50 %. Bras (3), sonde brute hors recette : réduction de 0 à 15 %, intervalle contenant ou frôlant zéro. Bras (4), sonde centrée hors recette : réduction de 15 à 40 %, soit au moins la moitié du gain relatif du bras (2). Sensibilité tâche par tâche hors recette à 5 % de fausses alertes : gain de +0,08 à +0,18 du centrage sur la sonde brute. Fausses alertes sur séquences honnêtes au plus 5 % par recette. Ces plages sont des effets attendus, non des intervalles de confiance observés.",
+      "test_de_mort": "L'affirmation est tuée si l'une des deux conditions suivantes se réalise sur le lot final scellé : (i) l'intervalle à 95 % de la réduction relative du bras (2) contient zéro, ou le bras (2) ne fait pas mieux que le plancher des sondes aléatoires — il n'y a alors pas de gain blanc-sur-noir à transférer ; (ii) le gain existe en recette mais la borne supérieure de l'intervalle à 95 % de la différence entre bras (4) et bras (3), dans les deux sens de transfert, est inférieure ou égale à ce que donne le témoin (b) à référence étrangère, ou le bras (4) restitue moins de la moitié du gain relatif du bras (2) (seuils supposés). Un résultat où (3) égale déjà (2) réfute la prémisse du défaut de transfert dans ce cadre et le rapport le dira tel quel.",
+      "titre": "Sonde centrée par recette dans l'accumulation bayésienne : gain blanc-sur-noir transférable ?"
+    },
+    "empreinte": "bdf6ce869fa9d5f988ce0c9008e5c349263c2fb534a0a553815797a1eac65def",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 2
+    }
+  },
+  "f728f1b425b25": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoins : modèles bénins sous-élicités, référence non verrouillée et élicitation par le contexte à budget d'exemples identique. Le plafond de performance pourrait rendre le témoin artificiellement peu améliorable : apparier performance initiale et difficulté, puis exclure les strates sans marge de progression. Les étiquettes proviennent de la provenance des organismes, pas de leur réaction à l'affinage.",
+      "cout": "Supposé : 15 jours et 500 heures de carte A100 ; un pilote indépendant fixe le budget d'affinage avant le test final.",
+      "epreuve": "Sur les organismes publics de sous-performance et leurs références ouvertes compatibles, mesurer des courbes de récupération sous un budget d'affinage identique. Utiliser des tâches non dangereuses, des démonstrations séparées des tests et une partition finale par familles de tâches. Comparer le score brut de récupération à un score retranchant la récupération attendue d'un témoin bénin de performance initiale comparable. Critère principal : différence d'aire sous la courbe ROC pour identifier la classe de l'organisme, en tenant chaque organisme entier hors de la sélection du score.",
+      "hypothese": "Le gain brut obtenu par élicitation dans les poids distingue mal sous-performance délibérée et sous-élicitation bénigne ; un gain différentiel, corrigé par des témoins bénins appariés, doit être plus diagnostique. Cela ajoute une mesure de spécificité à la récupération de capacité rapportée pour les organismes de Jang (pièce « Feng et Jang », § 1.2), en prenant au sérieux les gains également observés sur des modèles bénins (§ 2.1, arXiv 2512.07810).",
+      "prediction": "Supposé : amélioration positive d'aire sous la courbe ROC de +0,08 à +0,18 pour le score corrigé contre le gain brut, sur les organismes tenus à l'écart.",
+      "test_de_mort": "La correction proposée est tuée si la borne supérieure de l'intervalle de confiance à 95 % de son gain d'aire sous la courbe ROC est inférieure ou égale à +0,03 (seuils supposés). L'incertitude doit porter sur les organismes, sans traiter leurs tâches comme des organismes indépendants.",
+      "titre": "Éliciter une capacité ne suffit pas à diagnostiquer sa suppression"
+    },
+    "empreinte": "0a92f820836c63f6d194c8972af47d5604dab472ccc0a7de3e56f70bb72d9487",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f73c2faaf531a": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoins : épisodes bénins entiers jamais utilisés au calibrage, ordre temporel permuté à l'intérieur des épisodes et moniteur texte soumis aux mêmes règles d'agrégation. Un gain de sensibilité pourrait provenir d'un excès de fausses alertes : toute comparaison utilise le risque par épisode, et non le risque par action. Les incertitudes sont calculées en rééchantillonnant les épisodes entiers.",
+      "cout": "Supposé : 9 jours et 160 heures de carte A100 ; le calcul des règles séquentielles se fait ensuite sans carte.",
+      "epreuve": "Sur Llama-3.1-8B-Instruct, reprendre la classe de mesure du programme P3 public : épisodes bénins et épisodes avec gonflement du coût déclaré, sans modifier les comportements pour viser le moniteur. Geler une sonde avant le test. Comparer son maximum local, un cumul naïf des scores et un cumul dont le seuil est calibré sur des trajectoires bénignes entières. Employer un horizon fixé à l'avance et séparer les tâches entre calibration et test. La simulation signalée dans « Nos résultats », § 6 motive ce contrôle, mais ne remplace pas l'essai sur activations réelles.",
+      "hypothese": "Pour des scores de sondes corrélés au sein d'un épisode, une accumulation calibrée sur des épisodes entiers détecte davantage de comportements anormaux qu'un seuil local, à risque global comparable. L'apport à Feng est de tester le cumul de preuves avec des moniteurs boîte blanche et une référence dépendante, plutôt que de transférer directement son protocole boîte noire (pièce « Feng et Jang », § 1.3 et § 3).",
+      "prediction": "Supposé : gain positif de détection de +0,10 à +0,20 pour le cumul calibré contre le maximum local ; taux de fausses alertes par épisode attendu entre 0,03 et 0,07 autour d'une cible de 0,05.",
+      "test_de_mort": "À risque par épisode validé, la revendication d'utilité du cumul est tuée si la borne supérieure de l'intervalle de confiance à 95 % du gain de détection est inférieure ou égale à +0,05 (seuils supposés). Un risque non maîtrisé invalide l'expérience comme démonstration d'utilité.",
+      "titre": "L'unité épisode conditionne la valeur du cumul boîte blanche"
+    },
+    "empreinte": "60e20892c42bd32c0a3a5116a0d3344fae8ce0bb48ab089f5d7edb7a7d21deff",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f8c41d345523a": {
+    "contenu": {
+      "axe": "comparaison_a_la_boite_noire",
+      "controle": "Témoin : le saut de performance Δ_bénin des 3 modèles bénins sous-élicités (pour contrôler l'effet de +10 points observé sur Baobab et Llama-3.1-8B dans 2512.07810 § 6.4.1, pièce « Feng et Jang », § 2.1). Ce qui rendrait le résultat trompeur : que les 10 pas d'affinage enseignent la tâche elle-même au lieu de déverrouiller une capacité déjà présente. Contrôle : effectuer l'affinage sur un domaine disjoint (par exemple mathématiques ou code) de l'évaluation finale (Weapons of Mass Destruction Proxy avec outils de 2604.28182 § 4.2).",
+      "cout": "4 jours de travail et 30 heures de carte A100 (supposé).",
+      "epreuve": "Sur un panel de 6 modèles basés sur Qwen3-14B (3 instances verrouillées par renforcement selon 2604.28182 § 3.1 à différentes graines, et 3 instances bénignes sous-élicitées par invite, pièce « Feng et Jang », § 1.2), appliquer 1, 3 et 10 pas d'affinage supervisé sur des démonstrations correctes hors-distribution, et utiliser le saut de performance (Δ performance) comme score d'audit boîte blanche par les poids, comparé à un moniteur boîte noire (juge textuel type Claude Sonnet 4 de 2604.28182 § 5.2) et à une sonde linéaire boîte blanche sans affinage.",
+      "hypothese": "L'audit boîte blanche par affinage supervisé sur un très petit nombre de démonstrations (de 1 à 10 pas) surpasse la détection passive par sonde d'activations et par juge boîte noire pour révéler la capacité cachée d'un organisme verrouillé par renforcement, même après filtrage de la différence d'amélioration d'un modèle bénin. Cela relie la guérison en 10 pas de 2604.28182 (pièce « Feng et Jang », § 1.2, § 4.2 : 80,0 % → 98,0 %) à l'élicitation à 1 démonstration de 2512.07810 (§ 2.1, § 6.4.1 : gain de 35 à 36 points sur Oak contre 10 points sur les modèles bénins Baobab et Llama-3.1-8B).",
+      "prediction": "Avec un affinage sur domaine disjoint de 1 à 10 pas, un différentiel net (Δ_verrouillé − Δ_bénin) positif compris dans [+8,0 ; +18,0] points de pourcentage (supposé, sachant que sur même domaine 2604.28182 obtient 98,0 % − 80,0 % = +18,0 points, calcul, et 2512.07810 obtient 35 − 10 = +25 points, calcul), permettant de séparer les 3 organismes verrouillés des 3 témoins bénins là où le moniteur boîte noire sans chaîne de pensée explicite reste sous une AUC de 0,60 (supposé).",
+      "test_de_mort": "Un différentiel net (Δ_verrouillé − Δ_bénin) après 10 pas d'affinage sur domaine disjoint inférieur ou égal à +3,0 points de pourcentage.",
+      "titre": "Élicitation par affinage minimal face au piratage d'exploration"
+    },
+    "empreinte": "ff8d51b5d749665252758a5904475888b9c4133bedc911f868b84a6b6cc30719",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f8ce47471e2c2": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoins : sonde non centrée, centrage sur une référence bénigne étrangère et directions aléatoires appariées en covariance. Un gain apparent pourrait venir d'une modification du seuil plutôt que des représentations : recalibrer séparément tous les seuils sur les mêmes épisodes bénins indépendants et vérifier les fausses alertes sur un autre lot. Apparier domaine, difficulté et longueur des réponses.",
+      "cout": "Supposé : 10 jours de travail et 180 heures de carte A100 ; activations extraites une seule fois puis réutilisées.",
+      "epreuve": "Entraîner une sonde linéaire sur l'organisme obtenu par renforcement et la tester sur l'organisme distillé, puis inverser les rôles. Utiliser des tâches de raisonnement et de programmation non dangereuses, tenues à l'écart, où la sous-performance des organismes est vérifiée indépendamment. Comparer activations brutes et activations centrées sur des épisodes bénins réservés. Aucun exemple positif de la recette cible ne sert au réglage. Mesure principale : gain moyen de sensibilité hors recette à un taux de fausses alertes fixé à 5 % (supposé).",
+      "hypothese": "Sur les organismes Qwen3-14B disponibles, une partie du défaut de transfert des sondes entre recettes d'entraînement provient du déplacement des activations bénignes. Centrer les activations sur une référence bénigne propre à chaque recette doit donc améliorer la détection hors recette. Cela transforme la question étiologique des mentors en test d'une correction précise, sans prétendre résoudre toute différence entre organismes (pièce « Feng et Jang », § 1.1 et § 1.2, arXiv 2604.28182).",
+      "prediction": "Supposé : gain positif de sensibilité de +0,08 à +0,18 après centrage, mesuré hors recette à fausses alertes constantes. Cet intervalle est une plage d'effet attendue, non un intervalle de confiance observé.",
+      "test_de_mort": "Hypothèse opérationnelle : gain supérieur à +0,05 (supposé). Elle est tuée si la borne supérieure de l'intervalle de confiance à 95 % du gain moyen hors recette est inférieure ou égale à +0,05 (seuils supposés), sur le lot final scellé.",
+      "titre": "Le centrage bénin peut-il réparer le transfert entre recettes ?"
+    },
+    "empreinte": "f20dbe2226b19136d64f936abc82de021964233dbd325644dc51f232ce42e771",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f90d3ad8cf1d7": {
+    "contenu": {
+      "axe": "comparaison_a_la_boite_noire",
+      "controle": "Témoin : le moniteur boîte noire de 2411.17693 appliqué aux mêmes séquences de 40 actions, et la ligne de base des 200 sondes aléatoires appariées en covariance (pièce « Nos résultats », § 6). Ce qui rendrait le résultat trompeur : l'explosion des fausses alarmes due à la corrélation intra-épisode (qui monte à 0,21–0,35 avec un seuil de Ville naïf dans T0.3, pièce « Nos résultats », § 6). Contrôle : calibrer le seuil empiriquement sur 1 000 épisodes honnêtes entiers re-tirés par bootstrap pour garantir un taux de fausses alarmes de 0,05 (comme le seuil de T0.3 tenant 0,046 à 0,055).",
+      "cout": "2 jours d'analyse et 8 heures de carte GPU (supposé).",
+      "epreuve": "Sur la banque de 60 tâches et 2 400 actions notées de Llama-3.1-8B-Instruct (pièce « Nos résultats », § 6, P3, où les sondes génériques ont des bornes inférieures de 0,5313 et 0,4813 sous leurs planchers de 0,5717 et 0,5356), appliquer le filtre d'accumulation de preuves séquentiel de 2411.17693 aux rapports de vraisemblance des scores de la sonde boîte blanche sur des séquences de 40 actions consécutives (soit 2 400 / 60, calcul), face à un moniteur boîte noire jugeant le texte des actions.",
+      "hypothese": "Remplacer le moniteur boîte noire par une sonde linéaire boîte blanche dans un macro-protocole bayésien séquentiel permet de détecter des comportements sabotés non verbalisés qui mettent en échec une sonde boîte blanche isolée, à condition de calibrer le seuil par épisodes entiers. Cela fusionne le protocole séquentiel de 2411.17693 (pièce « Feng et Jang », § 1.3, qui réduit de 80 % les portes dérobées sur 10 000 tâches avec moniteurs boîte noire) et le constat d'échec par action isolée de la pièce « Nos résultats » (§ 6, P3 et T0.3).",
+      "prediction": "À un taux de fausses alarmes fixé à 0,05 par épisode, le cumul boîte blanche atteint un taux de vrais positifs dans [0,60 ; 0,85] (supposé), dépassant le cumul boîte noire d'un gain positif compris dans [+0,15 ; +0,35] (supposé).",
+      "test_de_mort": "Un écart de taux de vrais positifs entre le cumul boîte blanche et le cumul boîte noire inférieur ou égal à +0,05 (ou un taux absolu boîte blanche inférieur à 0,20) au seuil calibré de 0,05 de fausses alarmes.",
+      "titre": "Cumul bayésien séquentiel d'activations contre menaces diffuses"
+    },
+    "empreinte": "93121ff69cc8f14bd82b0e3d1dbbe83717a9e560c0d8443f4581066be3337b4d",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fa06492536a80": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoins : absence d'intervention, directions aléatoires appariées en covariance et en norme, intervention de signe opposé. Premier piège : une baisse du comportement par effondrement général ; contrôle : exactitude factuelle sans pression, cohérence et taux de réponses exploitables sur jeu neutre, seul l'effet spécifique étant compté. Deuxième piège : un effet causal trouvé dans l'échantillon mais non reproductible, comme l'ablation de 61,0 % à 46,5 % qui ne s'est pas reproduite (pièce « nos résultats » § 7) ; contrôle : réplication scellée sur générations nouvelles avant toute notation, et seules les sondes dont l'effet dépasse le plancher aléatoire après réplication sont dites causales. Troisième piège, propre à la comparaison de règles : si toutes les sondes ont la même aire en distribution, la règle A est indéterminée et sa corrélation avec le transfert est nulle par restriction d'étendue ; contrôle : exiger que les aires en distribution couvrent au moins la bande 0,80–0,95 (seuil supposé) et déclarer la corrélation partielle. Quatrième piège : un transfert qui ne mesure qu'une similarité d'organismes ; contrôle : deux cibles de transfert d'étiologies distinctes, résultat exigé sur les deux. Précondition : la sonde retenue par la règle A doit avoir une aire en distribution supérieure à 0,80 sur test indépendant (seuil supposé), sinon l'épreuve ne compare pas une direction fortement prédictive.",
+      "cout": "Supposé : 16 jours et 320 heures de carte A100, les sondes, la grille dose–réponse, la réplication scellée et les deux organismes cibles étant partagés entre les mesures.",
+      "epreuve": "Entraîner 30 à 50 sondes par comportement, variant par couche, régularisation et jeu d'entraînement (questions factuelles sous pression sociale pour la sycophancie), puis les geler. Pour chacune, mesurer : (1) l'aire sous la courbe en distribution sur test indépendant ; (2) l'effet causal spécifique, par ablation de rang 1 à 3 et par intervention d'amplitude croissante sur la direction, sur générations nouvelles jugées en entier, en faisant varier séparément la pression sociale selon une grille préenregistrée, et en soustrayant l'effet de directions aléatoires appariées en covariance et en norme, parmi les amplitudes qui préservent la qualité générale sur un jeu neutre ; (3) l'aire sous la courbe de transfert sur un organisme d'une autre recette et sur un organisme non verbalisant. Deux règles de sélection sont ensuite appliquées à l'aveugle au même banc : règle A, meilleure aire en distribution ; règle B, meilleur effet causal spécifique répliqué. Le critère principal est l'écart d'aire de transfert entre la sonde choisie par B et celle choisie par A ; critères secondaires, les corrélations de rang de chacune des deux propriétés avec le transfert, dont la corrélation partielle de l'effet causal à aire en distribution fixée. Ligne de base : la sonde par différence des moyennes de classes.",
+      "hypothese": "Sur la sycophancie (et la sous-performance) de Llama-3.1-8B-Instruct et Qwen3-14B, deux propriétés d'une sonde linéaire sont découplées : sa force prédictive en distribution (aire sous la courbe ROC) et son effet causal spécifique (réduction du comportement par ablation ou intervention sur sa direction, au-delà de directions aléatoires appariées). La première ne prédit pas le transfert à un organisme d'une autre étiologie ; la seconde le prédit. Conséquence vérifiable : la sonde retenue par meilleure aire en distribution transfère moins bien que la sonde retenue par meilleur effet causal spécifique. Cela prolonge deux constats : une direction peut être lisible sans effet reproductible de l'ablation (ρ 0,684, pièce « nos résultats » § 7) et une sonde peut ne pas transférer d'une sophistique voulue à une sophistique non voulue (pièce « Feng et Jang » § 1.4). Zone qui semble vierge, donc question ouverte plutôt qu'affirmation : la comparaison directe de règles de sélection de sondes a-t-elle déjà été menée sur ce type de comportement ?",
+      "prediction": "Supposé : écart d'aire de transfert entre la sonde choisie par effet causal et la sonde choisie par aire en distribution compris entre +0,03 et +0,10, sur les deux organismes cibles. Supposé : corrélation de Spearman entre aire en distribution et aire de transfert entre −0,10 et +0,20 ; entre effet causal spécifique et aire de transfert entre +0,40 et +0,70, la corrélation partielle restant au-dessus de +0,30. Supposé : une majorité des sondes d'aire supérieure à 0,80 n'ont pas d'effet causal au-dessus du plancher aléatoire après réplication.",
+      "test_de_mort": "L'affirmation est tuée si, avec au moins 10 sondes causales au-dessus du plancher après réplication et des aires en distribution couvrant la bande requise, l'une des conditions suivantes se réalise : l'écart de transfert entre la règle causale et la règle prédictive est au plus 0 ou son intervalle de confiance à 95 % contient zéro sur l'un des deux organismes cibles ; ou la corrélation de rang de l'aire en distribution avec le transfert est au moins égale à celle de l'effet causal ; ou la corrélation partielle de l'effet causal est au plus +0,10 (seuils supposés). Avec moins de 10 sondes causales, la comparaison de règles n'est pas tranchée, mais le découplage prédictif–causal est alors corroboré et doit être déclaré séparément.",
+      "titre": "Choisir une sonde d'audit par son effet causal plutôt que par son AUC"
+    },
+    "empreinte": "37ee840e959017ca2f5b77ec8db4deb2d8a9296006fae8d1316204211745e6f5",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 7
+    }
+  },
+  "fa09be50c2b3f": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoins : absence d'intervention, directions aléatoires et intervention de signe opposé. Une baisse de sycophancie pourrait n'être qu'une dégradation générale : contrôler exactitude factuelle sans pression, cohérence et taux de réponses exploitables. La conclusion sur le découplage exige d'abord une aire sous la courbe ROC de la sonde supérieure à 0,80 sur test indépendant (seuil supposé) ; sinon, l'essai ne teste pas une direction fortement prédictive.",
+      "cout": "Supposé : 11 jours et 240 heures de carte A100, incluant la grille dose–réponse et la réplication sur générations nouvelles.",
+      "epreuve": "Apprendre une sonde sur un ensemble de questions factuelles sous pression sociale, puis la geler. Sur des questions nouvelles, faire varier séparément la pression sociale et l'amplitude d'une intervention limitée à la direction de sonde. Comparer les courbes comportementales à celles d'interventions aléatoires appariées en covariance et en norme. Le critère principal est la réduction supplémentaire de sycophancie, moyennée sur la grille préenregistrée des pressions, parmi les amplitudes préservant la qualité générale sur un jeu indépendant.",
+      "hypothese": "Sur la sycophancie de Llama-3.1-8B-Instruct, une direction fortement prédictive peut rester un mauvais levier de correction : à perturbation et qualité de sortie comparables, intervenir sur cette direction n'apporte pas de réduction substantielle au-delà de directions aléatoires. Cela distingue la valeur de détection des sondes étudiées par Feng de leur valeur comme explication causale (§ 1.4 de la pièce « Feng et Jang »), en prolongeant les réplications négatives et la mesure dose–réponse de « Nos résultats », § 7.",
+      "prediction": "Supposé : avantage positif mais faible de l'intervention ciblée sur les interventions aléatoires, compris entre +0,00 et +0,03 de réduction de sycophancie, à qualité générale comparable.",
+      "test_de_mort": "La limite revendiquée est tuée si la borne inférieure de l'intervalle de confiance à 95 % de la réduction supplémentaire dépasse +0,05 (seuils supposés), sur des générations nouvelles et sans perte de qualité dépassant la marge préenregistrée.",
+      "titre": "Une bonne sonde n'est pas nécessairement un levier causal"
+    },
+    "empreinte": "81f8ae87282c02503321a2fb5b8db3455e8af56e38cc95eb217e53669a75d5d5",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "fb2189e28d97b": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoin de longueur : k = 0 avec un contexte de même taille rempli de verdicts portant sur un concept non surveillé, pour séparer longueur de contexte et information. Ce qui rendrait le résultat trompeur : le modèle change sa sortie textuelle plutôt que sa représentation ; contrôle : moniteur texte boîte noire sur les mêmes sorties, et cosinus retouche/direction surveillée (0,18 ± 0,03 contre 0,016 au hasard, § 4.1 p. 5) comme mesure directe de l'alignement latent.",
+      "cout": "3 jours, environ 30 heures de carte (supposé).",
+      "epreuve": "Modèle ouvert instruit (celui de 2609.36490 s'il est public, sinon Llama-3.1-8B-Instruct) ; moniteur linéaire sur direction de concept, classe surveillée : tromperie et sycophancie (parmi les 10 concepts tenus à l'écart, § 4.2 p. 6) ; conditions k ∈ {0, 1, 4, 16, 64} verdicts exacts rendus en contexte, sans affinage ; mesure : taux de vrais positifs à 1 % de fausses alertes par condition, moniteur réentraîné à chaque k.",
+      "hypothese": "La fuite latente mesurée par 2609.36490 est bornée par l'information de verdict disponible au modèle surveillé : sans aucun verdict retourné (audit à un coup), le taux de vrais positifs à 1 % de fausses alertes reste ≥ 0,9 ; il décroît avec le nombre de verdicts exacts vus en contexte, et le bruitage des verdicts à 10 % ne protège pas (87 % de l'effet subsiste, § 4.1 p. 5 ; § 5.1 p. 7). Ce que cela ajoute : 2411.17693 suppose un attaquant sans mémoire (pièce Feng et Jang § 3) ; cette fiche chiffre le coût de la mémoire pour un moniteur boîte blanche et transforme sa valeur en politique d'information.",
+      "prediction": "Taux de vrais positifs à 1 % : k = 0 → 0,95 [0,88 ; 1,00] ; k = 16 → 0,60 [0,40 ; 0,80] ; k = 64 → ≤ 0,35 (supposé).",
+      "test_de_mort": "À k = 0, taux de vrais positifs ≤ 0,60 (la fuite n'a pas besoin de verdicts) ; ou à k = 64, taux ≥ 0,85 (le canal de verdicts ne compte pas).",
+      "titre": "La valeur du moniteur latent dépend des verdicts rendus, pas de l'instrument"
+    },
+    "empreinte": "30da07954b6585d45fe42f78fd549eba845b234ca0edf64910cb2edfbef612fd",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "fb575dee72657": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoin : la même sonde calibrée uniquement sur Alpaca avec retour exact des verdicts (ligne de base de 2609.36490 § 4.1 où le taux de vrais positifs à 1 % de fausses alertes chute de 100 % à 27 % sous amplification de facteur 8, et cosinus de 0,18 ± 0,03). Ce qui rendrait le résultat trompeur : que l'amplification par 8 des retouches d'activation dégrade la perplexité du modèle au point de le rendre inutilisable. Contrôle : vérifier que la distance de Mahalanobis (utilisée dans 2609.36490 § 4.3, qui attrape 99,3 % des retouches naïves) et l'utilité sur les tâches de code restent dans l'intervalle du modèle non retouché.",
+      "cout": "3 jours de travail et 16 heures de carte A100 (supposé).",
+      "epreuve": "Sur Llama-3.1-8B-Instruct (modèle de référence dans 2512.07810 § 6.4.1, pièce « Feng et Jang », § 2.1, et dans P3, pièce « Nos résultats », § 6), évaluer une sonde linéaire de tromperie calibrée par transformation quantile sur un mélange stratifié (Alpaca + code honnête + raisonnement avec doubles négations inspiré de Baobab dans 2512.07810 § 6.3). Tester ce moniteur dans le protocole de 2609.36490 (§ 2.2) où l'historique de contexte reçoit des verdicts bruités ou nullement informatifs (puisque 2609.36490 § 5.1 montre qu'avec 10 % de verdicts faux, 87 % de l'alignement reste).",
+      "hypothese": "Normaliser les scores d'une sonde de tromperie par la distribution d'activations d'un corpus bénin couvrant plusieurs domaines (dont le code) et bloquer la fuite des verdicts annule la capacité d'un modèle à s'aligner en contexte contre la direction surveillée, tout en éliminant les faux positifs de domaine. Cela résout conjointement la dérive de ligne de base de 2507.12691 (pièce « Feng et Jang », § 2.7 : le code honnête dépasse 99,9 % d'Alpaca), le faux positif de calibrage sur Maple dans 2512.07810 (§ 2.1), et l'évasion en contexte de 2609.36490 (§ 2.2) en éclairant la question des mentors sur les limites actuelles de calibrage.",
+      "prediction": "Réduction du taux de fausses alertes sur le code honnête de > 50 % (attendu sous calibrage Alpaca d'après les 99,9 % de 2507.12691) à un intervalle de [0,005 ; 0,020] (supposé), et maintien du taux de vrais positifs (à 1 % de fausses alertes) dans [0,75 ; 0,95] (supposé) malgré la tentative d'évasion en contexte, soit un gain positif de [+0,48 ; +0,68] (calcul : bornes moins 0,27) sur les 27 % de 2609.36490.",
+      "test_de_mort": "Un taux de vrais positifs (à 1 % de fausses alertes globales incluant le code) inférieur ou égal à 0,50, ou un alignement cosinus des retouches d'activation avec la sonde supérieur ou égal à 0,10 sans retour de verdicts.",
+      "titre": "Calibrage multi-domaines contre l'évasion des sondes en contexte"
+    },
+    "empreinte": "705d22d3a4d44f6c3dcf134256a784955e7a8d3f8dd58ad4d78c73c187173872",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fc0b7405de5e0": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoin : l'ablation de directions aléatoires appariées en covariance ; l'effet causal compté doit dépasser ce plancher. Premier piège : l'ablation peut dégrader la capacité générale et faire baisser le comportement par simple effondrement. Contrôle : mesurer la perte sur une tâche neutre et ne compter que l'effet spécifique. Second piège : un effet trouvé dans l'échantillon, comme l'ablation de 61,0 % à 46,5 % qui ne s'est pas reproduite (pièce nos résultats, § 7). Contrôle : une réplication scellée avant toute notation.",
+      "cout": "Environ 10 jours et 180 heures de carte (supposé).",
+      "epreuve": "Qwen3-14B et Llama-3.1-8B-Instruct. 30 à 50 sondes de sous-performance et de sycophancie, qui varient par couche, par régularisation et par jeu d'entraînement. Effet causal : baisse du comportement après ablation de rang 1 à 3, mesurée sur générations neuves jugées en entier, avec réplication préenregistrée. Transfert : aire sous la courbe sur un organisme d'une autre recette et sur un organisme non verbalisant. Ligne de base : la sonde par différence des moyennes de classes.",
+      "hypothese": "Parmi des sondes de même aire sous la courbe en distribution, celles dont l'ablation de la direction réduit le comportement visé transfèrent mieux à un organisme d'une autre étiologie (autre recette, ou organisme non verbalisant). On attend une corrélation de rang d'au moins 0,4 entre l'effet causal et l'aire sous la courbe de transfert. Apport aux mentors : un critère vérifiable en boîte blanche pour choisir une sonde avant de l'utiliser à l'audit. Il répond à deux constats : une sonde peut être lisible sans être causale (ρ 0,684, sans effet reproductible de l'ablation, pièce nos résultats § 7) ; une sonde peut ne pas transférer d'une sophistique voulue à une sophistique non voulue (pièce Feng et Jang § 1.4).",
+      "prediction": "ρ de Spearman entre effet causal spécifique et aire sous la courbe de transfert entre +0,4 et +0,7 (supposé). Une majorité de sondes sans effet causal au-dessus du plancher aléatoire (supposé).",
+      "test_de_mort": "L'affirmation est réfutée si, avec au moins 10 sondes dont l'effet causal dépasse le plancher après réplication, ρ est au plus 0,1 ou son intervalle à 95 % contient zéro. Avec moins de 10 sondes causales, la fiche n'est pas tranchée.",
+      "titre": "La validité causale d'une sonde prédit son transfert d'audit"
+    },
+    "empreinte": "dfd3548fe071015fb236e7ac59a1cbbcfe8156a040034487cc799a01add28ce9",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "fcf6183f07281": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoin haut : modèle non verrouillé (98,0 %, § 4.2), où ξ doit rester ≈ 1 ; témoin bas : modèle de base sans affinage. Ce qui rendrait le résultat trompeur : le témoin bénin est simplement plus fragile au bruit (chute plus rapide), ce qui abaisse son ξ pour une autre raison ; contrôle : rapporter la courbe entière score contre amplitude, pas seulement le maximum, et la comparer à amplitude égale.",
+      "cout": "4 jours, environ 60 heures de carte (supposé).",
+      "epreuve": "Qwen3-14B ; organisme sous-performant conditionnel distillé (2604.28182 § 3.2), déclencheur présent, score de départ 80,0 % sur le segment évaluation (§ 4.2) ; témoin : même modèle affiné sur démonstrations de qualité réduite jusqu'à un score de départ apparié à ± 2 points ; ξ = meilleur score sous bruit divisé par score sans bruit, balayage de 10 amplitudes, 20 graines de bruit par amplitude, 5 paires organisme-témoin.",
+      "hypothese": "La hausse du gain sous bruit de poids sur tâches sabotées (ξ = 1,094 ± 0,116 contre 1,038 ± 0,076, p = 0,018 ; 2512.07810 § 6.5.2 p. 22) se reproduit à l'identique sur un témoin de sous-élicitation bénigne apparié au même score de départ : l'élicitation par bruit lit une marge de capacité non exprimée, quelle qu'en soit la cause. Ce que cela ajoute : 2604.28182 § 4.1 n'applique le bruit qu'aux organismes conditionnels distillés, déclencheur présent contre absent, sans témoin bénin apparié ; 2512.07810 déclare lui-même ne pas distinguer les deux cas.",
+      "prediction": "ξ(organisme) − ξ(témoin apparié) = 0,01 [−0,04 ; 0,05], les deux au-dessus de 1,05 (supposé).",
+      "test_de_mort": "Écart de ξ ≥ 0,10 avec intervalle à 95 % excluant zéro sur les 5 paires : le bruit sépare bien l'intention de la marge bénigne.",
+      "titre": "Le bruit de poids mesure la marge non exprimée, pas la sous-performance délibérée"
+    },
+    "empreinte": "ba4e579ed26a19ebd262c80281ccd303904e3395f567a0ef3c73f6b58296ded5",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "fe2f9cb3b665c": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoin bénin de même affinage sans sous-performance ; sonde entraînée sur étiquettes permutées, qui doit rester au plancher. Ce qui rendrait le résultat trompeur : le plancher est gonflé par un décalage trivial entre organisme et témoin (longueur, style) ; contrôle : appariement par longueur et perplexité, et répétition de la mesure sur le modèle de base non affiné, où tout doit être au plancher.",
+      "cout": "3 jours, environ 40 heures de carte (supposé).",
+      "epreuve": "Llama-3.1-8B-Instruct ou Qwen3-14B ; deux organismes selon la recette de 2509.21344 (verbalisant, non verbalisant) ; sonde entraînée par couche contre 200 sondes aléatoires de même covariance ; jeu d'évaluation : tâches tenues à l'écart de l'affinage ; mesure : AUC et borne inférieure bootstrap de la sonde entraînée contre borne supérieure du plancher, couche par couche.",
+      "hypothese": "Sur un organisme de sous-performance qui ne verbalise pas, une sonde linéaire entraînée ne dépasse le plancher de 200 sondes aléatoires appariées en covariance (procédure P3, pièce nos résultats § 6) sur au plus la moitié des couches ; sur l'organisme qui verbalise, elle le dépasse partout. Autrement dit, l'AUC de 0,94 rapportée (2509.21344 p. 8) mélange concept et séparabilité de distribution. Ce que cela ajoute : 2409.12822 (99,3 % sur I-SOPHISTRY, introduction et § 4) ne rapporte aucun plancher aléatoire ; cette fiche en impose un à la même famille de sondes.",
+      "prediction": "Écart AUC sonde entraînée − plancher aléatoire : 0,25 [0,15 ; 0,35] sur l'organisme verbalisant ; 0,03 [−0,05 ; 0,10] sur le non verbalisant, borne inférieure sous le plancher sur ≥ 50 % des couches (supposé).",
+      "test_de_mort": "Sur l'organisme non verbalisant, écart ≥ 0,20 avec borne inférieure au-dessus du plancher sur ≥ 75 % des couches testées.",
+      "titre": "Sous le plancher aléatoire : l'AUC des sondes de sous-performance est de la séparabilité"
+    },
+    "empreinte": "f29ed04fdd880b50c41b2c836f684137532111629ff0a24c3698812d85751cb2",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-fable"
+    }
+  },
+  "fe71601aaae24": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoins : (a) Δ_bénin des 3 modèles sous-élicités, pour absorber l'effet d'environ +10 points observé sur les bénins dans 2512.07810 § 6.4.1 ; (b) dossiers à identifiants anonymes, à descriptions permutées et dossier purement comportemental sans traits ; (c) pilotage des traits sélectionnés sans affinage comme contrôle causal. Ce qui rendrait le résultat trompeur : 1) que l'affinage enseigne la tâche au lieu de la déverrouiller — contrôle : domaine d'affinage disjoint de l'évaluation finale ; 2) que les traits retenus reflètent le domaine d'affinage et non le verrou — contrôle : soustraction des traits déplacés aussi chez les bénins, et exigence qu'ils pilotent une part de Δ sans affinage ; 3) que les descriptions trahissent la réponse par leur provenance — contrôle : descriptions générées sans accès aux étiquettes, noms publics masqués, dossiers contrebalancés entre évaluateurs, et tout diagnostic plausible mais contredit par le lot contrefactuel compté comme incorrect ; 4) que les évaluateurs devinent le statut verrouillé à partir de la taille brute des déplacements — contrôle : normaliser les déplacements par dossier et inclure des dossiers bénins avec déplacements de même amplitude.",
+      "cout": "Supposé : 20 jours de travail, 300 heures de carte A100 (verrouillage par renforcement des 3 instances, affinages, extraction des déplacements, pilotage) et 40 heures d'évaluation humaine, plus entraînement d'un SAE si aucun dictionnaire compatible avec la base n'est exploitable.",
+      "epreuve": "Base : Gemma 2 9B, choisie parce qu'un dictionnaire épars y est exploitable ou entraînable (hypothèse de transfert de la procédure de verrouillage de 2604.28182 § 3.1, décrite sur Qwen3-14B, vers cette base : supposé). Panel de 6 modèles : 3 instances verrouillées par renforcement à des graines différentes, 3 instances bénignes sous-élicitées par invite. Étape 1 (détection) : appliquer 1, 3 et 10 pas d'affinage supervisé sur des démonstrations correctes d'un domaine disjoint (mathématiques ou code) et mesurer Δ sur l'évaluation cible (proxy armes de destruction massive avec outils, 2604.28182 § 4.2) ; score d'audit = Δ_verrouillé − Δ_bénin. Étape 2 (sélection) : sur un lot de sondage fixe, calculer pour chaque modèle le déplacement moyen d'activation de chaque trait SAE entre poids initiaux et poids après 10 pas, retirer les traits qui se déplacent aussi sur les témoins bénins (traits de domaine), garder les k traits les plus déplacés restants. Étape 3 (diagnostic) : construire des dossiers d'audit contenant les mêmes exemples, traits, valeurs d'activation et déplacements ; seule varie la nature de l'étiquette (description sémantique produite sans accès aux étiquettes des organismes / identifiant anonyme / description permutée entre traits). Des évaluateurs aveugles, à temps d'inspection égal, choisissent un diagnostic dans une liste préenregistrée (verrou sur usage d'outils pour un domaine dangereux, sous-élicitation de format, refus générique, etc.) et annoncent une prédiction contrefactuelle testée ensuite sur un lot caché : quelles entrées montreront le plus grand saut après affinage, et quelle fraction de Δ est récupérée en pilotant directement les traits sélectionnés sans affinage. Mesure principale : exactitude équilibrée du diagnostic validé par la prédiction, avec interaction verrouillé × type d'étiquette.",
+      "hypothese": "Pour un organisme dont une capacité a été verrouillée par renforcement (piratage d'exploration), un affinage supervisé de 1 à 10 pas sur un domaine disjoint produit un saut de performance (Δ) nettement supérieur à celui d'un modèle bénin sous-élicité par invite (ancrages : 2604.28182 § 1.2 et § 4.2, guérison en 10 pas de 80,0 % à 98,0 % ; 2512.07810 § 2.1 et § 6.4.1, gain de 35 à 36 points sur Oak contre 10 points sur Baobab et Llama-3.1-8B). Ce même affinage déplace un petit ensemble de traits d'un autoencodeur épars, et ce sont ces traits-là, une fois décrits sémantiquement, qui permettent à un auditeur aveugle de diagnostiquer la dépendance cachée et d'en prédire les conséquences contrefactuelles ; le gain apporté par les descriptions (contre des identifiants anonymes) devrait être spécifique aux organismes verrouillés et absent sur les témoins bénins, dont les traits déplacés par l'affinage sont de simples traits de format ou de domaine. Si une telle chaîne saut → traits déplacés → diagnostic validé n'a pas été évaluée publiquement, c'est une question ouverte, non une revendication de nouveauté.",
+      "prediction": "Supposé : (1) différentiel net Δ_verrouillé − Δ_bénin après 10 pas sur domaine disjoint positif, dans [+8,0 ; +18,0] points de pourcentage (borne haute = 98,0 % − 80,0 % = +18,0, calcul sur 2604.28182 § 4.2 ; comparer à 35 − 10 = +25 points, calcul sur 2512.07810 § 6.4.1, obtenu sur même domaine) ; (2) sur les dossiers d'organismes verrouillés, gain d'exactitude équilibrée des descriptions sémantiques contre identifiants anonymes positif, dans [+0,10 ; +0,20], à temps d'audit égal ; (3) sur les dossiers bénins, gain compris dans [−0,05 ; +0,05], soit une interaction verrouillé × description d'au moins +0,08 ; (4) pilotage des k traits sélectionnés sans affinage récupérant entre 30 % et 60 % de Δ_verrouillé.",
+      "test_de_mort": "La proposition est tuée si l'un des maillons casse (seuils supposés) : différentiel net ≤ +3,0 points après 10 pas sur domaine disjoint ; ou pilotage des traits sélectionnés récupérant < 10 % de Δ_verrouillé (traits épiphénoménaux) ; ou borne supérieure de l'intervalle de confiance à 95 % du gain sémantique sur les dossiers verrouillés ≤ +0,05, avec regroupement par dossier et par évaluateur ; ou interaction verrouillé × description dont la borne supérieure à 95 % est ≤ 0, c'est-à-dire des descriptions qui n'aident pas davantage sur un verrou que sur un bénin.",
+      "titre": "De l'affinage minimal au diagnostic par traits SAE d'un verrou d'exploration"
+    },
+    "empreinte": "33082f9302b5c53a2f0df5cb8cef1cc6af033b83a9610d55d7f7df604ab9e503",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "claude",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 3
+    }
+  },
+  "fee2221f9c105": {
+    "contenu": {
+      "axe": "limite_actuelle",
+      "controle": "Témoin : le modèle de base non affiné. Piège : une différence de longueur ou de format entre domaines, que la sonde lirait à la place du comportement. Contrôle : apparier longueur et format ; puis vérifier, avec le plancher des sondes aléatoires appariées en covariance, si l'écart de fausses alertes est commun à toute direction. Dans ce cas, il viendrait d'un décalage des activations et non de la sonde.",
+      "cout": "Environ 5 jours et 60 heures de carte (supposé).",
+      "epreuve": "Sondes de tromperie de type « paires » sur Llama-3.1-8B-Instruct et Llama 3.3 70B. Organismes bénins de classe « affinage sans comportement visé », plus le modèle de base. Domaines : code, capture du drapeau, questions générales. Trois calibrages comparés : Alpaca ; une petite ligne de base hors politique ; 1 000 épisodes honnêtes entiers sur la politique et le domaine, comme dans T0.3 (pièce nos résultats, § 6). Ligne de base : un moniteur texte calibré des trois mêmes façons.",
+      "hypothese": "À sonde fixée, le taux de fausses alertes sur organismes bénins dépend davantage de la distribution de calibrage que de la sonde. Calibré sur Alpaca, un seuil nominal de 1 % donne au moins 10 % de fausses alertes sur des tâches de code ou d'agent. Calibré sur des épisodes honnêtes entiers, de même politique et de même domaine, il revient sous 2 %. Apport aux mentors : la fiche chiffre un défaut qu'un détecteur de sous-performance (direction 1, pièce Feng et Jang § 1.1) hériterait à chaque changement de domaine. Ce défaut est visible dans deux cas : Maple paraît suspect contre une petite ligne de base hors politique et ne l'est plus contre Alpaca (2512.07810, pièce § 2.1, § 6.3 p. 18) ; l'exemple honnête moyen de code dépasse 99,9 % d'Alpaca (2507.12691, pièce § 2.7, § 8 p. 9).",
+      "prediction": "Fausses alertes au seuil nominal de 1 % : 10 à 40 % sur le code avec le calibrage Alpaca ; 0,5 à 2 % avec le calibrage sur la politique (supposé). L'écart attendu est du même ordre que celui de T0.3, où le seuil mal spécifié donne 0,21 à 0,35 contre 0,046 à 0,055 une fois calibré (pièce nos résultats, § 6). Ce chiffre est transposé ici sans garantie.",
+      "test_de_mort": "L'affirmation est réfutée si l'écart de fausses alertes entre le calibrage Alpaca et le calibrage sur la politique reste inférieur à 2 points dans tous les domaines.",
+      "titre": "La ligne de base de calibrage fait les faux positifs des sondes"
+    },
+    "empreinte": "2e32337211aafe294b65f98ce0754b1b583703fef6e1159f926ce5b25442a0c4",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "feee16a806f32": {
+    "contenu": {
+      "axe": "comparaison_a_la_boite_noire",
+      "controle": "Témoin boîte noire : le même moniteur texte, appliqué à la sortie seule. Premier piège : si la strate « non verbalisée » est triée par le moniteur texte lui-même, l'aire sous la courbe du texte y baisse mécaniquement et le gain est gonflé (biais de sélection). Contrôle : stratifier aussi par un second juge et par l'étiquette de construction de l'organisme, puis vérifier l'accord entre les deux. Second piège : une consigne laissée dans le contexte fuit dans ce que lit la sonde (elicitation leakage, pièce § 2.6). Contrôle : retirer toute consigne du contexte surveillé.",
+      "cout": "Environ 8 jours et 120 heures de carte (supposé).",
+      "epreuve": "Sondes de tromperie et de sous-performance sur Llama-3.1-8B-Instruct et Qwen3-14B. Organismes de classe « comportement visé, verbalisé ou non », sur le modèle des organismes non verbalisants de 2509.21344 (pièce § 2.6). Leur rôle de mesure : faire varier la verbalisation à comportement fixé. Les épisodes sont stratifiés par un moniteur texte indépendant, qui marque si la trace mentionne le comportement. Métrique, par strate : gain = aire sous la courbe (sonde + texte) moins aire sous la courbe (texte seul). Ligne de base : un moniteur texte de taille comparable.",
+      "hypothese": "Le gain de détection de la boîte blanche sur la boîte noire, au sens de 2507.12691 (« faible mais encourageant », pièce Feng et Jang § 2.7), vient des épisodes où le comportement est verbalisé dans le texte. Sur les épisodes non verbalisés, ce gain est nul : moins de 0,05 d'aire sous la courbe en valeur absolue. Apport aux mentors : 2604.28182 juge sa détection « encourageante mais attendue », parce que ses organismes raisonnent en clair (pièce § 3), et appelle des sondes boîte blanche en travaux futurs (§ 6.2). La fiche mesure d'avance ce que ces sondes ajouteraient une fois le raisonnement caché.",
+      "prediction": "Gain de +0,03 à +0,10 en strate verbalisée (supposé). Gain de −0,03 à +0,05 en strate non verbalisée, avec un intervalle qui contient zéro (supposé). Cette attente s'appuie sur les chutes d'aire sous la courbe de 2509.21344 : sous-performance de 0,94 à 0,50, sycophancie naturelle de 0,99 à 0,51 (pièce § 2.6, p. 8). Le résumé du papier donne 0,57 pour la sous-performance : le papier se contredit sur ce point.",
+      "test_de_mort": "L'affirmation est réfutée si le gain en strate non verbalisée atteint au moins +0,10 d'aire sous la courbe, avec une borne inférieure à 95 % au-dessus de 0, sous les deux stratifications.",
+      "titre": "Le gain boîte noire → boîte blanche est nul hors verbalisation"
+    },
+    "empreinte": "7b2140c41599574e069a37aa05e2147d7669ef906ce01426cd4a31ff48fe449e",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "claude",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-opus"
+    }
+  },
+  "ff1d608f2a1f8": {
+    "contenu": {
+      "axe": "valeur_pour_l_audit",
+      "controle": "Témoins : descriptions anonymisées, descriptions permutées entre traits et dossier uniquement comportemental. Les descriptions pourraient dévoiler la réponse par leur provenance : les produire sans accès aux étiquettes des organismes, masquer les noms publics et contrebalancer les dossiers entre évaluateurs. Un diagnostic seulement plausible, mais contredit par le lot contrefactuel, compte comme incorrect.",
+      "cout": "Supposé : 14 jours, 260 heures de carte A100 et 40 heures d'évaluation humaine ; budget comprenant l'entraînement d'un SAE si aucun dictionnaire compatible n'est exploitable.",
+      "epreuve": "Employer Gemma 2 9B et l'organisme public lié au genre de l'utilisateur, avec des témoins bénins appariés. Vérifier la dépendance comportementale sur des paires d'entrées ne différant que par l'attribut pertinent. Construire des dossiers d'audit contenant les mêmes exemples, traits et valeurs d'activation ; seule varie la présence de descriptions sémantiques ou d'identifiants anonymes. Des évaluateurs aveugles choisissent une explication dans une liste préenregistrée et doivent annoncer une prédiction contrefactuelle ensuite testée sur un lot caché. Mesure : exactitude équilibrée du diagnostic validé par cette prédiction.",
+      "hypothese": "À activations et temps d'inspection identiques, les descriptions sémantiques des traits d'un autoencodeur épars améliorent l'identification d'une dépendance comportementale cachée. Cela étend l'évaluation des méthodes boîte blanche des mentors à leur valeur interprétative pour un auditeur, plutôt qu'à la seule discrimination par sonde (pièce « Feng et Jang », § 1.1 et § 1.4). Le cas public d'audit par traits SAE fournit un point d'ancrage (§ 2.3, arXiv 2602.08877).",
+      "prediction": "Supposé : gain positif d'exactitude équilibrée de +0,10 à +0,20 avec les descriptions correctes contre les identifiants anonymes, à temps d'audit égal.",
+      "test_de_mort": "La valeur sémantique revendiquée est tuée si la borne supérieure de l'intervalle de confiance à 95 % du gain d'exactitude est inférieure ou égale à +0,05 (seuils supposés), avec regroupement des observations par dossier et par évaluateur.",
+      "titre": "Les descriptions de traits SAE ajoutent-elles une valeur d'audit ?"
+    },
+    "empreinte": "5ef6b223ae807835d641dfe448644a1ecc1a3ca08d418ffc73130ebebc8c6b9a",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "ff51aac4334a8": {
+    "contenu": {
+      "axe": "comparaison_a_la_boite_noire",
+      "controle": "Témoins : prédicteur texte seul, ajout de directions aléatoires appariées en covariance et ajout d'un prédicteur textuel de capacité comparable. Le gain pourrait simplement refléter un témoin texte trop faible ou des paraphrases communes aux partitions : consacrer le même budget de sélection aux témoins et séparer les familles sémantiques. Les évaluateurs des comportements ne voient aucun score interne.",
+      "cout": "Supposé : 12 jours et 220 heures de carte A100, comprenant générations, extraction d'activations et sélection symétrique des moniteurs.",
+      "epreuve": "Sur Llama-3.1-8B-Instruct, constituer un jeu de sycophancie sous pression sociale à partir du cadre public de la pièce « Nos résultats », § 7. Fixer les étiquettes par des réponses factuellement vérifiables et une grille indépendante. Comparer un prédicteur utilisant tout le texte accessible à l'auditeur à ce même prédicteur enrichi d'une sonde d'activations. Séparer entraînement, calibration et test par familles de questions. Évaluer principalement le sous-ensemble sans verbalisation explicite, défini avant consultation des scores des moniteurs.",
+      "hypothese": "Une sonde d'activations peut apporter une information d'audit résiduelle même lorsque le texte ne verbalise pas le comportement visé, mais ce gain doit être mesuré conditionnellement à un moniteur texte fort. Cela précise ce que serait une détection réellement boîte blanche au-delà du raisonnement explicite présent dans les organismes de Jang et du transfert raté entre sophistiques étudié par Feng (pièce « Feng et Jang », § 1.2, § 1.4 et § 3).",
+      "prediction": "Supposé : gain positif de sensibilité de +0,05 à +0,12 pour texte plus activations contre texte seul, à 5 % de fausses alertes. La plage attendue porte uniquement sur les réponses sans verbalisation explicite.",
+      "test_de_mort": "La valeur résiduelle revendiquée est tuée si la borne supérieure de l'intervalle de confiance à 95 % du gain de sensibilité est inférieure ou égale à +0,03 (seuils supposés), après sélection du meilleur témoin textuel sur validation uniquement.",
+      "titre": "Un signal interne utile après conditionnement sur le texte"
+    },
+    "empreinte": "0a7a0ac941776c486f73cd262ad9e8115d105782a5925ec6adb28bd449cd8052",
+    "meta": {
+      "case": [
+        "jang-feng-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  }
+}
