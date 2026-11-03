@@ -1,0 +1,67 @@
+# Répétition complète, kit Jang-Feng v3 (variante sans Claude, lanceur shell v3, faux mandataire à 8 fiches par proposeur), 3 novembre 2026, de 14:57 à 14:58 UTC (date -u) — code 0 ; dossier hors dépôt
+autorité factice créée dans <bloc-notes>/repetition-jangfeng-v3/ca
+spécification de répétition : <bloc-notes>/repetition-jangfeng-v3/spec
+== essai 0 : mode repeter refusé sans autorité factice
+  repeter : SSL_CERT_FILE doit être l'autorité FACTICE marquée de la répétition
+  code 2 ; dossier créé : non
+== essai 1 : course complète, variante sans_claude
+  code 0 en 42 s ; ports 8804 à 8807 libres : oui
+  relais astra : 122 appels
+  relais kimi : 2 appels
+  relais argon : 82 appels
+  registre : réglé 2.845574 ; engagé 0 ; appels 206 {'controle': 3, 'proposition': 3, 'aiguillage': 24, 'juges': 48, 'etiquettes': 96, 'fusions': 32} ; dépassements 0
+  trace : fin fini aucun ; appels par étape {'aiguillage': 24, 'etiquettes': 96, 'fusions': 32, 'juges': 48, 'proposition': 3} ; par modèle {'gemini-4-argon': 81, 'gpt-6-astra': 121, 'kimi-k3.1-pro': 1} ; fiches {'prop-argon': 8, 'prop-astra': 8, 'prop-kimi': 8} ; paires {'basique': 4, 'gu_krenn': 4} ; fusions {'basique': 4, 'gu_krenn': 4} ; anti-fuite conforme
+  journal : 2026-11-03T14:57:58Z manifeste de départ scellé : <bloc-notes>/repetition-jangfeng-v3/run-20261103-145754-complete/manifeste-depart-lanceur-jangfeng-v1.json
+  journal : 2026-11-03T14:57:59Z contrôles conformes (gpt-6-astra kimi-k3.1-pro gemini-4-argon) ; registre : 197.9923 USD restants
+  journal : 2026-11-03T14:58:37Z relais argon arrêté (PID 30213)
+  journal : 2026-11-03T14:58:37Z relais kimi arrêté (PID 30210)
+  journal : 2026-11-03T14:58:38Z relais astra arrêté (PID 30209)
+  journal : 2026-11-03T14:58:38Z sortie scellée avant toute lecture : 116 fichiers (empreintes-run-jangfeng-v1.txt)
+  journal : épreuve anti-fuite sur le run : conforme : 3 artefacts sur le run, refusés : 3 ; trace du run conforme
+  journal : aucune clé trouvée (3 variable(s) cherchée(s))
+  journal : 2026-11-03T14:58:38Z fin, code 0
+  clé présente à l'amont (journal du mandataire) : 206 appels sur 206 ; par hôte :  2 "hote": "api.moonshot.ai"; 122 "hote": "api.openai.com"; 82 "hote": "generativelanguage.googleapis.com";
+  amont à 8 fiches par proposeur (plan : 6) : {'prop-argon': 8, 'prop-astra': 8, 'prop-kimi': 8} -> conforme
+  relais argon : 82 lignes de journal, max_appels 133, reste 51
+  relais astra : 122 lignes de journal, max_appels 201, reste 79
+  relais kimi : 2 lignes de journal, max_appels 9, reste 7
+== essai 2 : kill -TERM du lanceur en pleine course (variante sans_claude)
+  14:58:47 kill -TERM 32025 (lanceur) ; course PID 32218 vivante : oui ; appels déjà partis : 15
+  code 130 en 2 s ; course PID 32218 vivante : non ; ports libres : oui
+  relais PID 32086 vivant : non
+  relais PID 32084 vivant : non
+  relais PID 32083 vivant : non
+  bilan de course : signal SIGTERM reçu (ArretParSignal) : arrêt propre, manifeste de fin écrit
+  relais astra : 11 appels
+  relais kimi : 2 appels
+  relais argon : 2 appels
+  registre : réglé 0.374124 ; engagé 0.808217 ; appels 15 {'controle': 3, 'proposition': 3, 'aiguillage': 9} ; dépassements 0
+  trace : fin arret signal ; appels par étape {'aiguillage': 9, 'proposition': 3} ; par modèle {'gemini-4-argon': 1, 'gpt-6-astra': 10, 'kimi-k3.1-pro': 1} ; fiches {} ; paires {} ; fusions {} ; anti-fuite conforme
+  journal : 2026-11-03T14:58:41Z manifeste de départ scellé : <bloc-notes>/repetition-jangfeng-v3/run-20261103-145754-kill/manifeste-depart-lanceur-jangfeng-v1.json
+  journal : 2026-11-03T14:58:42Z contrôles conformes (gpt-6-astra kimi-k3.1-pro gemini-4-argon) ; registre : 197.9923 USD restants
+  journal : 2026-11-03T14:58:47Z signal TERM reçu
+  journal : SIGTERM envoyé à la course (PID 32218)
+  journal : {"arret": "ArretParSignal : signal SIGTERM reçu : arrêt propre"}
+  journal : 2026-11-03T14:58:48Z relais argon arrêté (PID 32086)
+  journal : 2026-11-03T14:58:49Z relais kimi arrêté (PID 32084)
+  journal : 2026-11-03T14:58:49Z relais astra arrêté (PID 32083)
+  journal : 2026-11-03T14:58:49Z sortie scellée avant toute lecture : 32 fichiers (empreintes-run-jangfeng-v1.txt)
+  journal : épreuve anti-fuite sur le run : conforme : 1 artefacts sur le run, refusés : 1 ; trace du run conforme
+  journal : aucune clé trouvée (3 variable(s) cherchée(s))
+  journal : 2026-11-03T14:58:49Z fin, code 130
+== essai 3 : contrôle d'un modèle en échec (Astra servi sous un autre nom) : aucune course
+  code 3 ; dossier course : non ; ports libres : oui
+  relais astra : 1 appels
+  registre : réglé 0.00308 ; engagé 0 ; appels 1 {'controle': 1} ; dépassements 0
+  journal : 2026-11-03T14:58:52Z manifeste de départ scellé : <bloc-notes>/repetition-jangfeng-v3/run-20261103-145754-controle/manifeste-depart-lanceur-jangfeng-v1.json
+  journal : contrôle de gpt-6-astra en échec : aucune course
+  journal : 2026-11-03T14:58:53Z relais argon arrêté (PID 32457)
+  journal : 2026-11-03T14:58:53Z relais kimi arrêté (PID 32455)
+  journal : 2026-11-03T14:58:54Z relais astra arrêté (PID 32454)
+  journal : 2026-11-03T14:58:54Z sortie scellée avant toute lecture : 13 fichiers (empreintes-run-jangfeng-v1.txt)
+  journal : aucune clé trouvée (3 variable(s) cherchée(s))
+  journal : 2026-11-03T14:58:54Z fin, code 3
+== essai 4 : plafond de session trop bas (juge 0,5 USD < pire cas d'un appel d'Astra) : refus avant tout appel
+  code 2 ; registre de dépense : non ; relais lancés : 0 ; appels à l'amont : 0
+  motif : plafonds_session.juge = 0.5 : pas au-dessus du pire cas d'un appel (0.8493 USD, gpt-6-astra)
+== fin de la répétition : cinq essais conformes

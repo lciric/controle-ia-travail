@@ -1,0 +1,169 @@
+# Devis de la course Jang-Feng — devis-course-jangfeng-v3 (aucun appel, aucune dépense)
+
+## Mesures du second tour réel (sans texte ; run-20261101-2146 (second tour réel), journaux des relais et registre cumulé, sans texte)
+- caractères par jeton d'entrée (Argon, médiane) : 3.481 ; octets par jeton (Kimi, médiane) : 3.195
+- proposeur Kimi, 6 fiches : 20163 jetons de sortie ; proposeur Argon, 6 fiches : 2913
+- argon/aiguillage/juge_ideation : 12 appels, sortie médiane 30.0, maximale 33, entrée médiane 876.5
+- argon/controle/juge_ideation : 1 appels, sortie médiane 5, maximale 5, entrée médiane 40
+- argon/etiquettes/juge_ideation : 11 appels, sortie médiane 46, maximale 271, entrée médiane 905
+- argon/fusions/juge_ideation : 2 appels, sortie médiane 39.0, maximale 48, entrée médiane 1412.0
+- argon/fusions/proposeur_ideation : 1 appels, sortie médiane 987, maximale 987, entrée médiane 1537
+- argon/juges/juge_ideation : 11 appels, sortie médiane 48, maximale 48, entrée médiane 969
+- argon/proposition/proposeur_ideation : 1 appels, sortie médiane 2913, maximale 2913, entrée médiane 1625
+- kimi/controle/juge_ideation : 1 appels, sortie médiane 57, maximale 57, entrée médiane 95
+- kimi/etiquettes/juge_ideation : 11 appels, sortie médiane 3294, maximale 8293, entrée médiane 1089
+- kimi/fusions/juge_ideation : 1 appels, sortie médiane 759, maximale 759, entrée médiane 1705
+- kimi/juges/juge_ideation : 11 appels, sortie médiane 877, maximale 2523, entrée médiane 1143
+- kimi/proposition/proposeur_ideation : 1 appels, sortie médiane 20163, maximale 20163, entrée médiane 1842
+
+## Hypothèses
+- fiche servie : 2500 caractères attendus (calcul), 12000 au pire cas (SUPPOSÉ)
+- sorties attendues (SUPPOSÉ, réflexion adaptative, effort high) : {'proposeur': 9000, 'aiguilleur': 1500, 'juge': 2000, 'lecteur': 1500, 'fusion': 6000} ; proposeur Kimi 20163, Argon 2913 (calcul : mesure × fiches par proposeur / 6 ; la clé « 8_fiches » est héritée du kit)
+- sorties maximales (pire cas) : {'claude': (64000, 16000), 'astra': (32000, 16000), 'kimi': (65536, 16000), 'argon': (32000, 4000)}
+- prix : {'claude-fable-5-1': (10.0, 50.0), 'claude-opus-5-5': (4.0, 20.0), 'gpt-6-astra': (10.0, 50.0), 'kimi-k3.1-pro': (2.0, 10.0), 'gemini-4-argon': (10.0, 50.0)}
+- k_paires = 4 par bras, deux bras joués ; toutes les fiches admises ; un contrôle par modèle à 0,05 USD (pire cas)
+
+## Variante sans_kimi (prop-fable, prop-opus, prop-astra) : 161 appels de course + 3 contrôles
+| étape | rôle | modèle | appels | entrée att. | sortie att. | sortie pire | attendu USD | pire cas USD |
+|---|---|---|---|---|---|---|---|---|
+| proposition | prop-fable | claude-fable-5-1 | 1 | 6097 | 9000 | 64000 | 0.5110 | 3.2710 |
+| proposition | prop-opus | claude-opus-5-5 | 1 | 6097 | 9000 | 64000 | 0.2044 | 1.3084 |
+| proposition | prop-astra | gpt-6-astra | 1 | 6097 | 9000 | 32000 | 0.5110 | 1.6710 |
+| aiguillage | aiguilleur-opus | claude-opus-5-5 | 18 | 1261 | 1500 | 16000 | 0.6308 | 6.0945 |
+| juges | juge-opus | claude-opus-5-5 | 18 | 1505 | 2000 | 16000 | 0.8284 | 6.1149 |
+| juges | juge-astra | gpt-6-astra | 18 | 1505 | 2000 | 16000 | 2.0709 | 15.2873 |
+| etiquettes | lecteur-opus | claude-opus-5-5 | 36 | 1268 | 1500 | 16000 | 1.2626 | 12.2375 |
+| etiquettes | lecteur-astra | gpt-6-astra | 36 | 1268 | 1500 | 16000 | 3.1564 | 30.5936 |
+| fusions | metteur-fable | claude-fable-5-1 | 8 | 1941 | 6000 | 64000 | 2.5553 | 26.2895 |
+| fusions | aiguilleur-opus | claude-opus-5-5 | 8 | 1261 | 1500 | 16000 | 0.2803 | 2.7087 |
+| fusions | juge-opus | claude-opus-5-5 | 8 | 1505 | 2000 | 16000 | 0.3682 | 2.7177 |
+| fusions | juge-astra | gpt-6-astra | 8 | 1505 | 2000 | 16000 | 0.9204 | 6.7944 |
+
+- par_etape : proposition 3 appels, attendu 1.23, pire 6.25 ; aiguillage 18 appels, attendu 0.63, pire 6.09 ; juges 36 appels, attendu 2.90, pire 21.40 ; etiquettes 72 appels, attendu 4.42, pire 42.83 ; fusions 32 appels, attendu 4.12, pire 38.51
+- par_fournisseur : claude 100 appels, attendu 6.64, pire 60.84 ; astra 64 appels, attendu 6.66, pire 54.40
+- par_modele : claude-fable-5-1 9 appels, attendu 3.07, pire 29.56 ; claude-opus-5-5 89 appels, attendu 3.57, pire 31.18 ; gpt-6-astra 63 appels, attendu 6.66, pire 54.35
+- **total attendu 13.31 USD ; pire cas 115.24 USD** (contrôles compris)
+- relais : {'astra': {'port': 8807, 'plafond_usd': 65.3, 'max_appels': 133}, 'claude': {'port': 8806, 'plafond_usd': 132.7, 'max_appels': 205}}
+
+## Variante avec_kimi (prop-fable, prop-opus, prop-kimi, prop-astra) : 204 appels de course + 4 contrôles
+| étape | rôle | modèle | appels | entrée att. | sortie att. | sortie pire | attendu USD | pire cas USD |
+|---|---|---|---|---|---|---|---|---|
+| proposition | prop-fable | claude-fable-5-1 | 1 | 6097 | 9000 | 64000 | 0.5110 | 3.2710 |
+| proposition | prop-opus | claude-opus-5-5 | 1 | 6097 | 9000 | 64000 | 0.2044 | 1.3084 |
+| proposition | prop-kimi | kimi-k3.1-pro | 1 | 7307 | 20163 | 65536 | 0.2162 | 0.7426 |
+| proposition | prop-astra | gpt-6-astra | 1 | 6097 | 9000 | 32000 | 0.5110 | 1.6710 |
+| aiguillage | aiguilleur-opus | claude-opus-5-5 | 24 | 1261 | 1500 | 16000 | 0.8410 | 8.1260 |
+| juges | juge-opus | claude-opus-5-5 | 24 | 1505 | 2000 | 16000 | 1.1045 | 8.1532 |
+| juges | juge-astra | gpt-6-astra | 24 | 1505 | 2000 | 16000 | 2.7612 | 20.3831 |
+| etiquettes | lecteur-opus | claude-opus-5-5 | 48 | 1268 | 1500 | 16000 | 1.6834 | 16.3166 |
+| etiquettes | lecteur-astra | gpt-6-astra | 48 | 1268 | 1500 | 16000 | 4.2085 | 40.7915 |
+| fusions | metteur-fable | claude-fable-5-1 | 8 | 1941 | 6000 | 64000 | 2.5553 | 26.2895 |
+| fusions | aiguilleur-opus | claude-opus-5-5 | 8 | 1261 | 1500 | 16000 | 0.2803 | 2.7087 |
+| fusions | juge-opus | claude-opus-5-5 | 8 | 1505 | 2000 | 16000 | 0.3682 | 2.7177 |
+| fusions | juge-astra | gpt-6-astra | 8 | 1505 | 2000 | 16000 | 0.9204 | 6.7944 |
+
+- par_etape : proposition 4 appels, attendu 1.44, pire 6.99 ; aiguillage 24 appels, attendu 0.84, pire 8.13 ; juges 48 appels, attendu 3.87, pire 28.54 ; etiquettes 96 appels, attendu 5.89, pire 57.11 ; fusions 32 appels, attendu 4.12, pire 38.51
+- par_fournisseur : claude 124 appels, attendu 7.55, pire 68.99 ; kimi 2 appels, attendu 0.22, pire 0.79 ; astra 82 appels, attendu 8.40, pire 69.69
+- par_modele : claude-fable-5-1 9 appels, attendu 3.07, pire 29.56 ; claude-opus-5-5 113 appels, attendu 4.48, pire 39.33 ; kimi-k3.1-pro 1 appels, attendu 0.22, pire 0.74 ; gpt-6-astra 81 appels, attendu 8.40, pire 69.64
+- **total attendu 16.17 USD ; pire cas 139.47 USD** (contrôles compris)
+- relais : {'astra': {'port': 8807, 'plafond_usd': 83.7, 'max_appels': 169}, 'claude': {'port': 8806, 'plafond_usd': 112.3, 'max_appels': 253}, 'kimi': {'port': 8804, 'plafond_usd': 2.0, 'max_appels': 9}}
+
+## Variante cinq_especes (prop-fable, prop-opus, prop-argon, prop-kimi, prop-astra) : 247 appels de course + 5 contrôles
+| étape | rôle | modèle | appels | entrée att. | sortie att. | sortie pire | attendu USD | pire cas USD |
+|---|---|---|---|---|---|---|---|---|
+| proposition | prop-fable | claude-fable-5-1 | 1 | 6097 | 9000 | 64000 | 0.5110 | 3.2710 |
+| proposition | prop-opus | claude-opus-5-5 | 1 | 6097 | 9000 | 64000 | 0.2044 | 1.3084 |
+| proposition | prop-argon | gemini-4-argon | 1 | 6097 | 2913 | 32000 | 0.2066 | 1.6710 |
+| proposition | prop-kimi | kimi-k3.1-pro | 1 | 7307 | 20163 | 65536 | 0.2162 | 0.7426 |
+| proposition | prop-astra | gpt-6-astra | 1 | 6097 | 9000 | 32000 | 0.5110 | 1.6710 |
+| aiguillage | aiguilleur-opus | claude-opus-5-5 | 30 | 1261 | 1500 | 16000 | 1.0513 | 10.1576 |
+| juges | juge-opus | claude-opus-5-5 | 30 | 1505 | 2000 | 16000 | 1.3806 | 10.1916 |
+| juges | juge-astra | gpt-6-astra | 30 | 1505 | 2000 | 16000 | 3.4515 | 25.4789 |
+| etiquettes | lecteur-opus | claude-opus-5-5 | 60 | 1268 | 1500 | 16000 | 2.1043 | 20.3958 |
+| etiquettes | lecteur-astra | gpt-6-astra | 60 | 1268 | 1500 | 16000 | 5.2606 | 50.9894 |
+| fusions | metteur-fable | claude-fable-5-1 | 8 | 1941 | 6000 | 64000 | 2.5553 | 26.2895 |
+| fusions | aiguilleur-opus | claude-opus-5-5 | 8 | 1261 | 1500 | 16000 | 0.2803 | 2.7087 |
+| fusions | juge-opus | claude-opus-5-5 | 8 | 1505 | 2000 | 16000 | 0.3682 | 2.7177 |
+| fusions | juge-astra | gpt-6-astra | 8 | 1505 | 2000 | 16000 | 0.9204 | 6.7944 |
+
+- par_etape : proposition 5 appels, attendu 1.65, pire 8.66 ; aiguillage 30 appels, attendu 1.05, pire 10.16 ; juges 60 appels, attendu 4.83, pire 35.67 ; etiquettes 120 appels, attendu 7.36, pire 71.39 ; fusions 32 appels, attendu 4.12, pire 38.51
+- par_fournisseur : claude 148 appels, attendu 8.46, pire 77.14 ; argon 2 appels, attendu 0.21, pire 1.72 ; kimi 2 appels, attendu 0.22, pire 0.79 ; astra 100 appels, attendu 10.15, pire 84.98
+- par_modele : claude-fable-5-1 9 appels, attendu 3.07, pire 29.56 ; claude-opus-5-5 137 appels, attendu 5.39, pire 47.48 ; gemini-4-argon 1 appels, attendu 0.21, pire 1.67 ; kimi-k3.1-pro 1 appels, attendu 0.22, pire 0.74 ; gpt-6-astra 99 appels, attendu 10.14, pire 84.93
+- **total attendu 19.03 USD ; pire cas 164.64 USD** (contrôles compris)
+- relais : {'argon': {'port': 8805, 'plafond_usd': 3.0, 'max_appels': 9}, 'astra': {'port': 8807, 'plafond_usd': 102.0, 'max_appels': 205}, 'claude': {'port': 8806, 'plafond_usd': 91.0, 'max_appels': 301}, 'kimi': {'port': 8804, 'plafond_usd': 2.0, 'max_appels': 9}}
+
+## Variante sans_opus (prop-fable, prop-kimi, prop-astra) : 161 appels de course + 4 contrôles
+| étape | rôle | modèle | appels | entrée att. | sortie att. | sortie pire | attendu USD | pire cas USD |
+|---|---|---|---|---|---|---|---|---|
+| proposition | prop-fable | claude-fable-5-1 | 1 | 6097 | 9000 | 64000 | 0.5110 | 3.2710 |
+| proposition | prop-kimi | kimi-k3.1-pro | 1 | 7307 | 20163 | 65536 | 0.2162 | 0.7426 |
+| proposition | prop-astra | gpt-6-astra | 1 | 6097 | 9000 | 32000 | 0.5110 | 1.6710 |
+| aiguillage | aiguilleur-fable | claude-fable-5-1 | 18 | 1261 | 1500 | 16000 | 1.5770 | 15.2363 |
+| juges | juge-fable | claude-fable-5-1 | 18 | 1505 | 2000 | 16000 | 2.0709 | 15.2873 |
+| juges | juge-astra | gpt-6-astra | 18 | 1505 | 2000 | 16000 | 2.0709 | 15.2873 |
+| etiquettes | lecteur-fable | claude-fable-5-1 | 36 | 1268 | 1500 | 16000 | 3.1564 | 30.5936 |
+| etiquettes | lecteur-astra | gpt-6-astra | 36 | 1268 | 1500 | 16000 | 3.1564 | 30.5936 |
+| fusions | metteur-fable | claude-fable-5-1 | 8 | 1941 | 6000 | 64000 | 2.5553 | 26.2895 |
+| fusions | aiguilleur-fable | claude-fable-5-1 | 8 | 1261 | 1500 | 16000 | 0.7009 | 6.7717 |
+| fusions | juge-fable | claude-fable-5-1 | 8 | 1505 | 2000 | 16000 | 0.9204 | 6.7944 |
+| fusions | juge-astra | gpt-6-astra | 8 | 1505 | 2000 | 16000 | 0.9204 | 6.7944 |
+
+- par_etape : proposition 3 appels, attendu 1.24, pire 5.68 ; aiguillage 18 appels, attendu 1.58, pire 15.24 ; juges 36 appels, attendu 4.14, pire 30.57 ; etiquettes 72 appels, attendu 6.31, pire 61.19 ; fusions 32 appels, attendu 5.10, pire 46.65
+- par_fournisseur : claude 99 appels, attendu 11.50, pire 104.34 ; kimi 2 appels, attendu 0.22, pire 0.79 ; astra 64 appels, attendu 6.66, pire 54.40
+- par_modele : claude-fable-5-1 97 appels, attendu 11.49, pire 104.24 ; kimi-k3.1-pro 1 appels, attendu 0.22, pire 0.74 ; gpt-6-astra 63 appels, attendu 6.66, pire 54.35
+- **total attendu 18.37 USD ; pire cas 159.53 USD** (contrôles compris)
+- relais : {'astra': {'port': 8807, 'plafond_usd': 65.3, 'max_appels': 133}, 'claude': {'port': 8806, 'plafond_usd': 130.7, 'max_appels': 203}, 'kimi': {'port': 8804, 'plafond_usd': 2.0, 'max_appels': 9}}
+
+## Variante sans_opus_argon (prop-fable, prop-argon, prop-kimi, prop-astra) : 204 appels de course + 5 contrôles
+| étape | rôle | modèle | appels | entrée att. | sortie att. | sortie pire | attendu USD | pire cas USD |
+|---|---|---|---|---|---|---|---|---|
+| proposition | prop-fable | claude-fable-5-1 | 1 | 6097 | 9000 | 64000 | 0.5110 | 3.2710 |
+| proposition | prop-argon | gemini-4-argon | 1 | 6097 | 2913 | 32000 | 0.2066 | 1.6710 |
+| proposition | prop-kimi | kimi-k3.1-pro | 1 | 7307 | 20163 | 65536 | 0.2162 | 0.7426 |
+| proposition | prop-astra | gpt-6-astra | 1 | 6097 | 9000 | 32000 | 0.5110 | 1.6710 |
+| aiguillage | aiguilleur-fable | claude-fable-5-1 | 24 | 1261 | 1500 | 16000 | 2.1026 | 20.3151 |
+| juges | juge-fable | claude-fable-5-1 | 24 | 1505 | 2000 | 16000 | 2.7612 | 20.3831 |
+| juges | juge-astra | gpt-6-astra | 24 | 1505 | 2000 | 16000 | 2.7612 | 20.3831 |
+| etiquettes | lecteur-fable | claude-fable-5-1 | 48 | 1268 | 1500 | 16000 | 4.2085 | 40.7915 |
+| etiquettes | lecteur-astra | gpt-6-astra | 48 | 1268 | 1500 | 16000 | 4.2085 | 40.7915 |
+| fusions | metteur-fable | claude-fable-5-1 | 8 | 1941 | 6000 | 64000 | 2.5553 | 26.2895 |
+| fusions | aiguilleur-fable | claude-fable-5-1 | 8 | 1261 | 1500 | 16000 | 0.7009 | 6.7717 |
+| fusions | juge-fable | claude-fable-5-1 | 8 | 1505 | 2000 | 16000 | 0.9204 | 6.7944 |
+| fusions | juge-astra | gpt-6-astra | 8 | 1505 | 2000 | 16000 | 0.9204 | 6.7944 |
+
+- par_etape : proposition 4 appels, attendu 1.44, pire 7.36 ; aiguillage 24 appels, attendu 2.10, pire 20.32 ; juges 48 appels, attendu 5.52, pire 40.77 ; etiquettes 96 appels, attendu 8.42, pire 81.58 ; fusions 32 appels, attendu 5.10, pire 46.65
+- par_fournisseur : claude 123 appels, attendu 13.76, pire 124.72 ; argon 2 appels, attendu 0.21, pire 1.72 ; kimi 2 appels, attendu 0.22, pire 0.79 ; astra 82 appels, attendu 8.40, pire 69.69
+- par_modele : claude-fable-5-1 121 appels, attendu 13.76, pire 124.62 ; gemini-4-argon 1 appels, attendu 0.21, pire 1.67 ; kimi-k3.1-pro 1 appels, attendu 0.22, pire 0.74 ; gpt-6-astra 81 appels, attendu 8.40, pire 69.64
+- **total attendu 22.59 USD ; pire cas 196.92 USD** (contrôles compris)
+- relais : {'argon': {'port': 8805, 'plafond_usd': 3.0, 'max_appels': 9}, 'astra': {'port': 8807, 'plafond_usd': 83.7, 'max_appels': 169}, 'claude': {'port': 8806, 'plafond_usd': 148.3, 'max_appels': 251}, 'kimi': {'port': 8804, 'plafond_usd': 2.0, 'max_appels': 9}}
+
+## Variante sans_claude (prop-argon, prop-kimi, prop-astra) : 161 appels de course + 3 contrôles
+| étape | rôle | modèle | appels | entrée att. | sortie att. | sortie pire | attendu USD | pire cas USD |
+|---|---|---|---|---|---|---|---|---|
+| proposition | prop-argon | gemini-4-argon | 1 | 6097 | 2913 | 32000 | 0.2066 | 1.6710 |
+| proposition | prop-kimi | kimi-k3.1-pro | 1 | 7307 | 20163 | 65536 | 0.2162 | 0.7426 |
+| proposition | prop-astra | gpt-6-astra | 1 | 6097 | 9000 | 32000 | 0.5110 | 1.6710 |
+| aiguillage | aiguilleur-astra | gpt-6-astra | 18 | 1261 | 1500 | 16000 | 1.5770 | 15.2363 |
+| juges | juge-astra | gpt-6-astra | 18 | 1505 | 2000 | 16000 | 2.0709 | 15.2873 |
+| juges | juge-argon | gemini-4-argon | 18 | 1505 | 2000 | 4000 | 2.0709 | 4.4873 |
+| etiquettes | lecteur-astra | gpt-6-astra | 36 | 1268 | 1500 | 16000 | 3.1564 | 30.5936 |
+| etiquettes | lecteur-argon | gemini-4-argon | 36 | 1268 | 1500 | 4000 | 3.1564 | 8.9936 |
+| fusions | metteur-astra | gpt-6-astra | 8 | 1941 | 6000 | 32000 | 2.5553 | 13.4895 |
+| fusions | aiguilleur-astra | gpt-6-astra | 8 | 1261 | 1500 | 16000 | 0.7009 | 6.7717 |
+| fusions | juge-astra | gpt-6-astra | 8 | 1505 | 2000 | 16000 | 0.9204 | 6.7944 |
+| fusions | juge-argon | gemini-4-argon | 8 | 1505 | 2000 | 4000 | 0.9204 | 1.9944 |
+
+- par_etape : proposition 3 appels, attendu 0.93, pire 4.08 ; aiguillage 18 appels, attendu 1.58, pire 15.24 ; juges 36 appels, attendu 4.14, pire 19.77 ; etiquettes 72 appels, attendu 6.31, pire 39.59 ; fusions 32 appels, attendu 5.10, pire 29.05
+- par_fournisseur : argon 64 appels, attendu 6.36, pire 17.20 ; kimi 2 appels, attendu 0.22, pire 0.79 ; astra 98 appels, attendu 11.49, pire 89.89
+- par_modele : gemini-4-argon 63 appels, attendu 6.35, pire 17.15 ; kimi-k3.1-pro 1 appels, attendu 0.22, pire 0.74 ; gpt-6-astra 97 appels, attendu 11.49, pire 89.84
+- **total attendu 18.07 USD ; pire cas 107.88 USD** (contrôles compris)
+- relais : {'argon': {'port': 8805, 'plafond_usd': 20.7, 'max_appels': 133}, 'astra': {'port': 8807, 'plafond_usd': 175.3, 'max_appels': 201}, 'kimi': {'port': 8804, 'plafond_usd': 2.0, 'max_appels': 9}}
+
+## Plafond technique retenu, par variante (S17 ; arrêt d'étape 0,9 × S17 ; ligne de GO)
+- sans_kimi : S17 = 198 USD, arrêt d'étape 178.2, GO-2026-11-03-12
+- avec_kimi : S17 = 198 USD, arrêt d'étape 178.2, GO-2026-11-03-12
+- cinq_especes : S17 = 198 USD, arrêt d'étape 178.2, GO-2026-11-03-12
+- sans_opus : S17 = 198 USD, arrêt d'étape 178.2, GO-2026-11-03-12
+- sans_opus_argon : S17 = 237 USD, arrêt d'étape 213.3, GO-2026-11-03-13
+- sans_claude : S17 = 198 USD, arrêt d'étape 178.2, GO-2026-11-03-12
+- plafonds de session : {'proposeur': 3.5, 'aiguilleur': 0.9, 'juge': 0.9, 'lecteur': 0.9, 'fusion': 3.5} (pire cas d'un appel par rôle : {'proposeur': [3.271, 'claude-fable-5-1'], 'aiguilleur': [0.8465, 'claude-fable-5-1'], 'juge': [0.8493, 'gpt-6-astra'], 'lecteur': [0.8498, 'gpt-6-astra'], 'fusion': [3.2862, 'claude-fable-5-1']})
