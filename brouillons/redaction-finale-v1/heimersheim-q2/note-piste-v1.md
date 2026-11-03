@@ -1,6 +1,6 @@
 # Heimersheim, question 2 (« Why do you want to work on Mechanistic Interpretability? ») — note de piste — v1
 
-Rédacteur neuf (sous-agent de conv-audit) : je n'ai écrit aucune version de tes réponses. Écrit le 3 novembre 2026, de 12:52 à 13:15 UTC, temps universel coordonné (`date -u`). Consigne : `brouillons/reprise-conv-audit-2026-11-02-nuit/prompts-sous-agents/redaction-finale-heimersheim-q2-v1.md`, sha256 `13f92a3f310eaf96f216ea66276134d25448547318779b3ad4866cee50053fc3`, vérifiée avant de commencer.
+Rédacteur neuf (sous-agent de conv-audit) : je n'ai écrit aucune version de tes réponses. Écrit le 3 novembre 2026, de 12:52 à 13:06 UTC, temps universel coordonné (`date -u` au début et à la fin). Consigne : `brouillons/reprise-conv-audit-2026-11-02-nuit/prompts-sous-agents/redaction-finale-heimersheim-q2-v1.md`, sha256 `13f92a3f310eaf96f216ea66276134d25448547318779b3ad4866cee50053fc3`, vérifiée avant de commencer.
 
 Question et limite : formulaire `brouillons/candidature-pivotal-v16/formulaire-site-colle-par-lazar-2026-11-03-1209.txt` (sha256 `57393598…19f7b5c6`), lignes 20 à 24 : 150 mots au plus, l'essentiel du temps sur la question 1. Ta réponse actuelle (ligne 26) n'a servi que de réservoir de faits ; je n'en ai repris ni l'ordre, ni les phrases.
 

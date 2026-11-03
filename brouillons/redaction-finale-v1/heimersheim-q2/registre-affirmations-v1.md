@@ -1,6 +1,6 @@
 # Heimersheim, question 2 — registre des affirmations de `reponse-v1.md` — v1
 
-Rédacteur neuf (sous-agent de conv-audit), 3 novembre 2026, vers 13:10 UTC, temps universel coordonné (`date -u`). Une ligne par affirmation de la réponse, dans l'ordre du texte.
+Rédacteur neuf (sous-agent de conv-audit), 3 novembre 2026, vers 13:05 UTC, temps universel coordonné (`date -u` ; corrections de renvois à 13:06). Une ligne par affirmation de la réponse, dans l'ordre du texte.
 
 Forces :
 - « publique et vérifiée » : lue sur un fichier public, au commit cité ;
