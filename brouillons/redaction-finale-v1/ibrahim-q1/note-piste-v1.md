@@ -1,6 +1,6 @@
 # Note de piste — Lujain Ibrahim, question 1 (première expérience) — v1
 
-Rédacteur neuf : je n'ai écrit aucune version des réponses de Lazar. Travail du 3 novembre 2026, de 14:58 à environ 15:40 en temps universel coordonné (`date -u` : 14:58:11 au début, 15:05:54 à la reprise, 15:10:26 à l'écriture de cette note). La session a été coupée une fois par un redémarrage du serveur (voir « Incidents »).
+Rédacteur neuf : je n'ai écrit aucune version des réponses de Lazar. Travail du 3 novembre 2026, de 14:58 à 15:15 en temps universel coordonné (`date -u` : 14:58:11 au début, 15:05:54 à la reprise, 15:10:26 à l'écriture de cette note, 15:15:06 à la fin). La session a été coupée une fois par un redémarrage du serveur (voir « Incidents »).
 Consigne : `brouillons/reprise-conv-audit-2026-11-02-nuit/prompts-sous-agents/redaction-finale-ibrahim-q1-v1.md`, sha256 `6d53990ba204226c02907b9543a3982853b0fd9f5436ccc8d62914334da46942`, vérifiée avant lecture et à la reprise.
 
 ## 1. Fiche principale (règle R-1395)
