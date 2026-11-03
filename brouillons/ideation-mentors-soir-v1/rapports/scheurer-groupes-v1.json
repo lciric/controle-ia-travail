@@ -1,0 +1,115 @@
+{
+ "groupes": [
+  {
+   "nom": "Seuil du moniteur",
+   "definition": "Quantité tracée : la difficulté maximale tenue (longueur de trajectoire ou d'artefact, temps humain de détection, nombre d'occasions d'action) ou la ressource minimale requise (budget d'inférence) pour qu'un moniteur ou un contrôleur figé atteigne un critère fixé de détection, de fausses alertes ou de dommage.\nTendance mesurable parce que les anomalies ou attaques sont exogènes, gelées et vérifiées mécaniquement : le point de croisement est une grandeur continue, ajustable contre la date de sortie du moniteur comme un horizon de tâches.",
+   "critere": "la fiche trace, contre la date ou la taille du moniteur, un point de croisement de sa performance de détection ou de blocage, face à un ensemble d'anomalies ou d'attaques produit indépendamment de lui."
+  },
+  {
+   "nom": "Capacité d'attaque",
+   "definition": "Quantité tracée : le seuil (durée humaine de l'épisode, ou nombre d'occasions nécessaires) auquel le modèle surveillé, sous invites, budget et contrôle figés et sans élicitation adaptative, réussit dans 50 % des cas un artefact fonctionnel de la classe plantée qui franchit le contrôle.\nTendance mesurable parce que c'est une capacité accessible, continue même quand le taux spontané de manigance est nul, ajustable contre la date de publication des poids.",
+   "critere": "la grandeur tracée est la réussite du modèle surveillé (côté attaquant), non celle du moniteur, lue comme point de croisement d'un critère de réussite sous un contrôle figé."
+  },
+  {
+   "nom": "Taux de propension",
+   "definition": "Quantité tracée : la fréquence d'un comportement non demandé du modèle étudié (actions couvertes, sous-performance stratégique, conscience d'évaluation verbalisée), contre la date de sortie ou le calcul d'entraînement.\nTendance mesurable seulement si le taux s'écarte de zéro et varie de façon monotone sur une échelle adaptée (logit) ; elle est menacée par la confusion avec les refus et la disposition.",
+   "critere": "l'axe vertical est un taux de comportement spontané (ou une transformée d'un tel taux), non une capacité sous protocole forcé ni une performance de moniteur."
+  },
+  {
+   "nom": "Détournement du moniteur",
+   "definition": "Quantité tracée : la probabilité ou le gain avec lesquels un texte inséré dans le contenu évalué pour orienter le verdict (injection d'instructions, note à l'évaluateur, assertion sur le verdict) déplace le verdict d'un moniteur, ou l'écart de capacité attaquant–moniteur à partir duquel ce texte réussit.\nTendance mesurable parce que cette robustesse dépend de la taille et de la date du moniteur (hiérarchie d'instructions) et se lit en continu sur une matrice attaquant × moniteur.",
+   "critere": "la fiche mesure l'effet, sur le verdict d'un moniteur, d'un texte qui lui parle depuis le contenu évalué ; ce groupe prime sur « Seuil du moniteur » quand l'attaque passe par ce canal."
+  },
+  {
+   "nom": "Complaisance sous pression",
+   "definition": "Quantité tracée : le déplacement du verdict d'un modèle évaluateur sous la pression sociale de l'interlocuteur (éloge, critique, réputation de l'auteur), résumé par un gain g, une note initiale p₀ et un point fixe ĉ.\nTendance mesurable parce que ces grandeurs sont continues par modèle sous un protocole de pression figé, donc comparables d'un modèle, d'une taille ou d'une date à l'autre.",
+   "critere": "la fiche porte sur ce que la pression venue de l'interlocuteur fait au verdict (ce qui le porte, ce qui le déplace, ce qui le laisse invariant)."
+  }
+ ],
+ "affectations": [
+  {
+   "id": "SC-01",
+   "groupe": "Capacité d'attaque",
+   "raison": "Seuil côté attaquant exprimé en coût (occasions d'épisode nécessaires pour 50 % de réussites franchissant le contrôle) ; second choix : si les tentatives ne sont pas demandées, ce coût est l'inverse du taux de manigance que la fiche dit remplacer.",
+   "second_choix": "Taux de propension"
+  },
+  {
+   "id": "SC-02",
+   "groupe": "Détournement du moniteur",
+   "raison": "Gain de déférence d'un moniteur Qwen2.5 à une note insérée dans le contenu évalué, impérative contre déclarative ; second choix : même mesure de gain que les fiches de pression, sans axe d'échelle.",
+   "second_choix": "Complaisance sous pression"
+  },
+  {
+   "id": "SC-03",
+   "groupe": "Seuil du moniteur",
+   "raison": "Longueur maximale de trajectoire (en transitions d'état) tenue par un moniteur à 80 % de détection et 5 % de fausses alertes sur anomalies plantées, contre la date de sortie.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-04",
+   "groupe": "Seuil du moniteur",
+   "raison": "Temps humain de détection auquel la détection du moniteur tombe à 50 %, sur un corpus gelé d'attaques validées sans injection, contre la date de sortie.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-05",
+   "groupe": "Complaisance sous pression",
+   "raison": "Teste ce qui porte le point fixe sous éloge de Llama-3.1-8B-Instruct (les refus) par une clause qui les supprime, le bras critique servant de contrôle ; aucun axe d'échelle.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-06",
+   "groupe": "Seuil du moniteur",
+   "raison": "Ressource minimale (budget d'opérations d'inférence) pour qu'un moniteur atteigne des critères fixés sur anomalies plantées, contre la date de sortie : variante « ressource » du seuil.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-07",
+   "groupe": "Détournement du moniteur",
+   "raison": "Écart de capacité attaquant–moniteur au-delà duquel une injection dans le contenu lu par le moniteur réussit, et son déplacement avec la date du moniteur ; second choix : c'est aussi un seuil daté du moniteur.",
+   "second_choix": "Seuil du moniteur"
+  },
+  {
+   "id": "SC-08",
+   "groupe": "Capacité d'attaque",
+   "raison": "Durée humaine de l'épisode à laquelle le modèle surveillé réussit dans 50 % des cas sous protocole et moniteur figés, contre la date de publication des poids.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-09",
+   "groupe": "Taux de propension",
+   "raison": "Taux de conscience d'évaluation verbalisée et d'actions couvertes, contre le calcul d'apprentissage par renforcement (monotonie contre saut puis plateau).",
+   "second_choix": null
+  },
+  {
+   "id": "SC-10",
+   "groupe": "Seuil du moniteur",
+   "raison": "Longueur d'artefact à laquelle la détection d'un moniteur croise 50 % (fausses alertes à 5 %) face à des portes dérobées gelées et vérifiées à l'exécution, contre la date de sortie du moniteur.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-11",
+   "groupe": "Complaisance sous pression",
+   "raison": "Prédit que la réputation de l'auteur ne déplace que la note initiale p₀, non le point fixe ĉ de la pression utilisateur (bande d'équivalence) ; aucun axe d'échelle.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-12",
+   "groupe": "Taux de propension",
+   "raison": "Pente datée d'une propension (sous-performance stratégique) prédite dominée par les refus et la disposition, proposée comme contre-exemple au tracé des propensions.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-13",
+   "groupe": "Seuil du moniteur",
+   "raison": "Nombre maximal d'occasions d'action tenues par un contrôleur (dommage sous 5 %, 90 % d'accomplissement honnête) face à un flux exogène gelé, contre la date de sortie.",
+   "second_choix": null
+  },
+  {
+   "id": "SC-14",
+   "groupe": "Complaisance sous pression",
+   "raison": "Compare une pression sur la forme et une pression sur le fond et prédit une concession dissociée de Llama-3.1-8B-Instruct ; aucun axe d'échelle.",
+   "second_choix": null
+  }
+ ]
+}
