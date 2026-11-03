@@ -1,0 +1,19 @@
+Tu es un contre-lecteur neuf (règle R2). Tu n'as écrit ni ce brouillon, ni le brouillon 1, ni P3, ni ses addenda. Rapport en français, sans sigle non développé ; toute heure vient de `date -u`. Dépôt : `/home/claude/controle-ia-travail` (lecture seule).
+
+## Objet
+Contre-lire le **préenregistrement de P3-bis, brouillon 2** (témoin positif de la chaîne de sondes du programme de contrôle) : `brouillons/P3-bis-temoin-positif-v1/P3-bis-preenregistrement-v1-brouillon2.md` (vérifie son compagnon `.sha256` par `sha256sum -c`), et dire s'il est **scellable** (règle R1 : hypothèse, prédiction chiffrée et signe, métrique, seuil, plan d'analyse, critères de lecture gelés, liste d'arrêt), avec les couples « ancien → nouveau » à appliquer.
+
+## Fichiers à lire (tous dans le dépôt)
+- Le brouillon 2 et ses pièces : `brouillons/P3-bis-temoin-positif-v1/P3-bis-consignes-v1-brouillon2.md`, `P3-bis-temoin-positif-config-v1-brouillon1.json`, `puissance_p3_bis_v2.py`, `puissance-p3-bis-v2.txt` ; le brouillon 1 (`P3-bis-preenregistrement-v1-brouillon1.md`) et le rapport de reprise `rapport-preparation-p3-bis-t06-v1.md`.
+- P3 : `prereg/P3-premier-test-i-a-v1.md`, `prereg/P3-consignes-v1.md`, `prereg/P3-premier-test-config-v1.json` ; code `src/controle_ia/premier_test_ia/run.py`, `conditions.py`, `lecture.py`, `statistiques.py`, `entrainement.py` ; `src/controle_ia/environnements/propositions.py` (l. 215-270) ; `src/controle_ia/harnais/episode.py` (l. 160-260) ; `src/controle_ia/harnais/validation_reelle.py` (l. 60-80 et 214-227) ; `scripts/p3_instance.sh` ; `scripts/amorce_instance_p3.sh` ; `docs/procedures/P3-premier-test-v2/`.
+- Les six sorties de P3 : `diag/20261019-230011-p3-reel/episodes-p3.json`, `resume.json`, `sondes-figees.json` ; `diag/20261020-075740-p3-lecture/lecture-p3.json` ; `diag/20261020-075849-addendum-p3/lecture-addendum-p3.json` ; `diag/20261020-220858-addendum2-p3/lecture-addendum2-p3.json` (lecture seule ; aucune écriture sous `diag/`).
+- `docs/notes/brainstorm-suite-P3-v1/note-decision-suite-P3-v1.md` ; `docs/decisions/proposition-P-015-T0.6-T0.8-mode-cout-v1.md` ; la ligne GO-2026-11-02-29 de `registres/go.md` ; la ligne R-1276 de `registres/decisions.md` (l. 1240 : aucun couperet de temps, aucun résultat non concluant par défaut de conception).
+
+## Points à viser
+La prémisse corrigée (section 0) ; la mesure des longueurs ; le choix d'un seul jeu décisif à 95 % ; le test exact de PB-2 ; la portée de l'issue « vu » et des phrases de PB-5 ; l'absence de couperet de temps et l'arrêt sur processus mort ou sur dépense ; la lecture des champs nommés au lieu de `resultat.issue` ; l'écart de configuration (`fils_entrainement`) ; la cohérence des décisions DB-1 à DB-6 avec le texte (le texte est écrit sous leurs défauts) ; chaque chiffre renvoie-t-il à un chemin et une empreinte (R6, R7) ; les gardes d'arrêt sont-elles éprouvables sur un cas sain et un artefact (R5) ; la symétrie (R4).
+
+## Interdits
+Aucun commit, aucun `.sha256`, aucun fichier existant modifié ; rien sous `donnees/` ; aucun `git fetch`, `checkout`, `stash` ; aucun appel de réseau ni de modèle ; `nice -n 10 python3 -I -B` pour tout calcul (tu peux rejouer `puissance_p3_bis_v2.py` et comparer sa sortie). Tes fichiers sous `/home/claude/scratch/contre-lecture-p3-bis/`.
+
+## Rendu
+Un rapport `/home/claude/scratch/contre-lecture-p3-bis/contre-lecture-p3-bis-brouillon2-v1.md` : verdict (scellable / scellable après couples / non scellable) ; bloquants, importants, mineurs, numérotés ; couples « ancien → nouveau » (texte exact, chaque « ancien » unique dans le brouillon) dans un fichier JSON `couples-contre-lecture-p3-bis-brouillon2-v1.json` ; ce que tu as rejoué et ses empreintes. Réponse finale : verdict, nombre de points par catégorie, chemins et sha256 du rapport et des couples.
