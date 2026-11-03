@@ -193,7 +193,7 @@ frontière gelée elle-même**, non par une borne de travail.
 - **P-C4 (voie directe)** : réussie pour ≈ 70 % des 147 (90 à 115 épisodes), confiance ≈ 0,7 ; premier écart de la voie
   directe identique pour les 17 épisodes qui en avaient un, confiance ≈ 0,8.
 - **P-C5 (les 3 coupés)** : au moins un retrouvé, confiance ≈ 0,9 ; les trois, confiance ≈ 0,2.
-- **P-C6 (étapes rejouées)** : résolution 7 sur 7 par les mêmes voies, identifiants égaux au 2 novembre, contrôle croisé
+- **P-C6 (étapes rejouées)** : résolution 7 sur 7 par les mêmes voies (part descriptive, non lue : conséquence de C-2), identifiants égaux au 2 novembre, contrôle croisé
   « conforme », confiance ≈ 0,9 ; table du sous-produit égale à `ead8a668…` sur les 4 entrées « identifiants »,
   confiance ≈ 0,9 ; les 3 de C-6 retrouvés aussi à l'étape 0, confiance ≈ 0,9 ; lot « sans objet », confiance ≈ 0,9.
 - **P-C7 (durée, descriptif)** : étape 0 entre ≈ 2 h et ≈ 28 h (cas « Haut » à la borne haute de la durée par épisode, ≈ 9 difficiles ; étape 0 seule), point central ≈ 9 h (« Coût et GO »).
@@ -446,7 +446,7 @@ que « 71 passed », commits, poussées) ; aucune mesure n'arrête rien, sauf le
     l'instance n'est lu que par `vastai logs <identifiant>`, masqué (valeurs des jetons remplacées par « *** » :
     passation du 12 octobre, l. 88), à travers un filtre qui n'en garde que les lignes `AMORCE` et, des lignes de
     progression, l'heure, `etape=` et `episodes=` (`k/147` à l'étape validation) : ni `resolus=`, ni `passes=`, ni
-    `lecture=`, ni aucune ligne qui dit un résultat. La durée de vie projetée de (i) ne se calcule que sur ces champs ;
+    `lecture=`, ni aucune ligne qui dit un résultat. La durée de vie projetée de (i) ne se calcule que sur ces champs, par une règle écrite d'avance, portée au prompt de (i) et appliquée mécaniquement, sans autre lecture ni jugement, à chaque départ de (i) et à chaque reprise de la session de pilotage : `V0` = heure de la ligne `episodes=147` (début des épisodes de l'étape validation, cœur, l. 1549) ; `Vk` et `k` = heure et compte de la dernière ligne `episodes=k/147` (tous les 10 épisodes et au dernier, l. 1574-1576) ; fin de vie projetée `F = heure du départ + (147 − k) × (Vk − V0) / k + 75 min` (75 min : résolution rejouée ≈ 13 min 24 s, cibles et table ≈ 1 min, au plus une heure de vie après la fin de l'amorce, « Coût et GO ») ; avant la première ligne `episodes=k/147`, aucune projection ; après la ligne `episodes=147/147`, `F = heure du départ + 75 min` ; **seuil** : la demande d'extension part si et seulement si `F` dépasse l'heure de destruction de (ii) (`T0 + H`, ou `T0 + H′` après une extension) ; `resolus=` n'est jamais lu, ni pour `F` ni pour rien d'autre ;
     ni l'alerte ni la demande d'extension n'en portent rien ; la décision d'extension ne dépend que de la dépense et de
     la durée. Après une destruction, le journal relevé n'est lu pour aucun compte.
   - **Conséquence d'une destruction pendant l'étape validation, par (i) ou (ii)** : le script ne pousse qu'à la fin
@@ -673,14 +673,14 @@ d'arrêt »). La concordance de conv-audit s'est faite sur cette liste ; ses cor
   - C-1 : « Fusion » : P-C7 relevée de ≈ 24 h à ≈ 28 h par session-depot (point 17), clause de l'arbre gelé de
     `0e2a8871…` remise (point 18, vraie), point 5 rendu exact, perte de la sauvegarde des épisodes consignés à l'arrêt
     de dépense dite ; ici, `294a030c…` dite version du rédacteur, le patch menant à `b5afc8b6…` ;
-  - C-2 : HC-2 restreinte, pour les 7, à ce que lisent la métrique et les critères (empreintes, identifiants, contrôle
+  - C-2 (et sa conséquence, décision de Lazar relayée par conv-audit : à P-C6, « par les mêmes voies », part descriptive, non lue) : HC-2 restreinte, pour les 7, à ce que lisent la métrique et les critères (empreintes, identifiants, contrôle
     croisé) ;
   - C-3 : armement des deux tâches écrit (prompts sans identifiant avant la création, armés aussitôt après, second
     listing, destruction de l'instance si l'armement manque à 10 minutes) ; session neuve à chaque départ ; destruction
     par l'identifiant du prompt seulement ; journaux par `vastai logs`, masqués ;
   - C-4 : quatre épreuves R5 des tâches (cas sain et artefact de chacune) et artefact de `merge-base`, consignés avant
     la création ; l'instance n'est créée qu'après ;
-  - C-5 : lecture aveugle : filtre des journaux ; alerte et demande d'extension réduites à la dépense, la durée de vie,
+  - C-5 : lecture aveugle : filtre des journaux ; règle de la durée de vie projetée écrite d'avance (formule et seuil, sur l'heure et `episodes=` seulement), appliquée mécaniquement, `resolus=` jamais lu (condition de Lazar relayée par conv-audit) ; alerte et demande d'extension réduites à la dépense, la durée de vie,
     le prix, l'heure de destruction et la durée prévue par le devis ; destruction après la validation lue « non
     éprouvée (dépense) », sans réserve sur la reproductibilité ;
   - C-6 : « Haut » à la borne haute de la durée par épisode (≈ 9 difficiles), cas à ≈ 11 chiffré ; « Central » ≈ 15 USD
@@ -691,7 +691,7 @@ d'arrêt »). La concordance de conv-audit s'est faite sur cette liste ; ses cor
     d'extension dès que la durée projetée dépasse l'heure de destruction, sans attendre 30 USD ;
   - C-9 : la version scellée ne diffère de `b5afc8b6…` que par C-1 à C-8, ce marqueur rempli et l'en-tête.
 
-À REMPLIR. R2 : sous-agent neuf, auteur d'aucune pièce, avant le scellement : ce texte, la configuration
+Traitement final par session-depot, au scellement (3 novembre 2026, 06:15 UTC, heure relevée par `date -u`) : vérification neuve de conv-audit sur `4c083453c4df6a922d16f4e6e299c31e14906c97afe9418d1f21c947dd4f53da` (`brouillons/preuves-mentors-v1/analyse-principale-r1-r2-v1/verification-differences-r1-v3-et-complement-v1.md`, `43dbf7890c5b8f518b1af58011c1b661fde8a6905a0e94548d5c3523d26b50c5`, `canal/conv-audit-n04` `ad2f3909`, partie B : concordant) ; ses quatre couples du § B.3 appliqués tels quels, chaque « ancien » présent une seule fois (P-C6, règle de la durée de vie projetée, déclarations C-2 et C-5) ; décision de Lazar sur le nœud de la borne de compte : **(b)**, exposition acceptée avec les deux gardes (n° 394 de conv-audit) ; aucun refus ; l'empreinte du texte scellé est celle de son compagnon `.sha256`. Rappel de l'exigence : R2 : sous-agent neuf, auteur d'aucune pièce, avant le scellement : ce texte, la configuration
 `prereg/R1-graine-config-complement-v2.json` et sa différence avec celle de la v2, le code au commit cité (lignes citées),
 le script d'instance et l'amorce, le verdict du 2 novembre, les sorties du pré-vol. Concordance de conv-audit rendue sur
 `b5afc8b6…` (ci-dessus) ; avant le lancement, conv-audit vérifie la différence de `b5afc8b6…` à la version scellée,
