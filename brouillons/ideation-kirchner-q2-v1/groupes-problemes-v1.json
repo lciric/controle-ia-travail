@@ -1,0 +1,115 @@
+{
+ "groupes": [
+  {
+   "nom": "Garde-fous présumés",
+   "definition": "Les instruments du harnais (classement, banc tenu à l'écart, garde de capacité, moniteurs de langage) sont crédités d'une valeur jamais mesurée contre un plancher : hasard, base triviale ou vérification mécanique quasi gratuite. Ils peuvent être au plafond, ne mesurer que du bruit ou ne rien ajouter à la vérification mécanique, et une valeur réelle reste cachée faute d'être isolée.",
+   "critere": "La question principale de la fiche est de savoir si un instrument mesure quelque chose, ou ajoute quelque chose à un plancher ou à une base bon marché, sans privilégier l'un des mécanismes d'échec propres aux quatre autres groupes."
+  },
+  {
+   "nom": "Bruit sélectionné",
+   "definition": "Retenir le meilleur parmi de nombreuses mesures bruitées, ou laisser resoumettre et consulter de façon adaptative un même ensemble d'évaluation, fait franchir les seuils et monter au sommet par le hasard, le nombre d'essais ou le surapprentissage de l'échantillon. L'erreur ainsi sélectionnée est aléatoire : elle se résorbe quand on remesure le lauréat sur des données fraîches.",
+   "critere": "La question principale est de savoir si une promotion, un franchissement de seuil ou un rang de tête s'explique par la variance de la mesure, la multiplicité des essais ou la réutilisation adaptative d'un ensemble réservé, sur des classes que l'instrument couvre et même avec un détecteur parfait des triches connues."
+  },
+  {
+   "nom": "Trou de couverture",
+   "definition": "Une garantie statistique (nulle, banc) ne protège que contre les classes d'échec qu'elle modélise : une classe hors couverture passe sans garantie, quel que soit le soin du protocole (tirages frais, puissance). Déclarer où passe la frontière peut en outre servir de carte à qui cherche à la franchir.",
+   "critere": "La question principale porte sur une classe d'échec que la garantie ne couvre pas par construction (passe-t-elle, un remède la referme-t-il, la publication de la frontière aide-t-elle à l'exploiter), l'échec se produisant même sans pression de sélection et sans angle mort partagé entre composants."
+  },
+  {
+   "nom": "Angles morts partagés",
+   "definition": "Deux composants du contrôle qui partagent une famille de modèles ou une source de connaissance (agent et moniteur, deux moniteurs, juge et moniteur) ratent les mêmes cas. L'empilement des contrôles donne alors une illusion de redondance, et un moniteur de la famille de l'agent peut se montrer indulgent.",
+   "critere": "La grandeur principale que la fiche estime est une dépendance entre les erreurs de deux composants qui partagent une famille ou une source de connaissance, au-delà de la difficulté propre des cas : co-ratage, interaction même famille contre autre famille, ou baisse du rappel de l'un parmi ce que l'autre laisse passer."
+  },
+  {
+   "nom": "Sélection sans gradient",
+   "definition": "Sans aucun entraînement contre les instruments, classer, recopier entre agents ou choisir une configuration sur un banc reste une optimisation : ce qui est retenu ou propagé s'enrichit en ce que les instruments manquent systématiquement. Une validité établie avant la sélection, ou sur le banc qui a servi à sélectionner (rappel d'un moniteur, gain de surveillabilité), ne vaut alors plus pour ce qui est retenu.",
+   "critere": "La question principale est de savoir si un mécanisme non défensif de sélection ou de propagation (classement, forum, choix de configuration) enrichit ce qu'il retient ou propage en ce que les instruments manquent, ou si une validité établie avant ou pendant la sélection vaut encore pour ce qui est retenu ; l'erreur en jeu est systématique et survivrait à une remesure par le même instrument."
+  }
+ ],
+ "affectations": [
+  {
+   "id": "KM-01",
+   "groupe": "Garde-fous présumés",
+   "raison": "Demande, pour chaque instrument du harnais, s'il mesure quelque chose contre des cas honnêtes appariés et des planchers, sans privilégier un mécanisme d'échec.",
+   "second_choix": "Bruit sélectionné"
+  },
+  {
+   "id": "KM-02",
+   "groupe": "Trou de couverture",
+   "raison": "Une classe hors de la nulle (W2) reste faussement promue à au moins 0,8, et les tirages frais ne la referment pas ; tricheurs scriptés, donc aucune sélection en jeu.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-03",
+   "groupe": "Sélection sans gradient",
+   "raison": "Demande si le gain d'une configuration choisie sans gradient sur un banc de surveillabilité vaut encore hors du banc, ou n'est qu'un enrichissement en gains propres au banc.",
+   "second_choix": "Trou de couverture"
+  },
+  {
+   "id": "KM-04",
+   "groupe": "Garde-fous présumés",
+   "raison": "Mesure ce que le moniteur de langage ajoute à la vérification mécanique (apport contre coût, l'oracle mécanique servant d'étiquette) : valeur ajoutée contre une base bon marché.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-05",
+   "groupe": "Bruit sélectionné",
+   "raison": "Une méthode réellement en échec franchit la garde de capacité par simple resoumission près du seuil : multiplicité des essais sur une mesure bruitée.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-06",
+   "groupe": "Garde-fous présumés",
+   "raison": "Exige que le moniteur de langage batte de 0,15 de rappel, à fausses alertes égales, une vérification mécanique isolée et des planchers aléatoires : valeur ajoutée non établie.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-07",
+   "groupe": "Angles morts partagés",
+   "raison": "Baisse du rappel d'un moniteur parmi les lois que le juge statistique promeut, attribuée à une classe que juge et moniteur connaissent tous deux par la description publique.",
+   "second_choix": "Sélection sans gradient"
+  },
+  {
+   "id": "KM-09",
+   "groupe": "Angles morts partagés",
+   "raison": "Interaction même famille contre autre famille entre agent et moniteur, à fausses alertes égalisées : indulgence ou angles morts partagés.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-10",
+   "groupe": "Sélection sans gradient",
+   "raison": "Le forum, mécanisme non défensif de propagation, recopierait une classe de triche qui paie davantage que les méthodes honnêtes publiées.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-11",
+   "groupe": "Angles morts partagés",
+   "raison": "Excès de co-ratage entre deux moniteurs de même famille, à entrée identique et ratage égalisé, au-delà de la difficulté propre des items.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-12",
+   "groupe": "Trou de couverture",
+   "raison": "Rendre visible la frontière de la nulle servirait de carte pour faire promouvoir dès le premier essai de fausses lois hors nulle.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-13",
+   "groupe": "Bruit sélectionné",
+   "raison": "Le gagnant du 99e centile serait le maximum d'estimations bruitées ; un arrêt séquentiel calibré sur épisodes honnêtes ferait aussi bien hors banc, pour une fraction du budget.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-14",
+   "groupe": "Bruit sélectionné",
+   "raison": "La réutilisation adaptative d'un banc réservé fixe, séparée de la multiplicité des essais, fait promouvoir de fausses méthodes que des tirages frais arrêtent, sur des classes couvertes.",
+   "second_choix": null
+  },
+  {
+   "id": "KM-15",
+   "groupe": "Sélection sans gradient",
+   "raison": "Effet de type Berkson : à moniteur figé et sans gradient, la sélection par le score abaisse le rappel parmi les violations que le classement retient.",
+   "second_choix": null
+  }
+ ]
+}
