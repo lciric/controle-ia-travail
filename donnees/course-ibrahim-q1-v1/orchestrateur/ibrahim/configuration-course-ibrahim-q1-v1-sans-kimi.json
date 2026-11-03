@@ -1,0 +1,354 @@
+{
+ "_lisez_moi": "Configuration de la course d'idéation Ibrahim (question 1), variante sans_kimi, v1 — écrite par calcul_devis_course_ibrahim_v1.py le 3 novembre 2026 (sous-agent de session-depot). Course NON décisive (démonstration, matière à réflexion pour Lazar). S17 = plafond TECHNIQUE (garde contre une boucle). Aucun témoin planté. Bras joués : gu_krenn (substitut) et basique ; bras méta hors course. Jetons {DEPOT} et {REGISTRE} remplacés par le lanceur. Spécification de conv-audit : specification-course-ibrahim-v1.md (Kirchner, 934f5dcb…, règles reprises) et specification-course-ibrahim-v1.md (0874d561…) ; pièces servies : Ibrahim v1, sycophancie publique v1, nos résultats v1.",
+ "variante": "sans_kimi",
+ "racine_graines": 20261103,
+ "graines": {
+  "prefixe": "iq1"
+ },
+ "champs_fiche": [
+  "titre",
+  "hypothese",
+  "axe",
+  "epreuve",
+  "controle",
+  "prediction",
+  "test_de_mort",
+  "cout"
+ ],
+ "champ_titre": "titre",
+ "champ_axe": "axe",
+ "budget": {
+  "plafond_usd": 198.0,
+  "arret_etape_usd": 178.2,
+  "portee_plafond": "course",
+  "etapes": [
+   {
+    "nom": "proposition",
+    "attendu_usd": 1.25,
+    "plafond_relais_usd": 6.29,
+    "role": "protegee"
+   },
+   {
+    "nom": "aiguillage",
+    "attendu_usd": 0.63,
+    "plafond_relais_usd": 6.1,
+    "role": "protegee"
+   },
+   {
+    "nom": "juges",
+    "attendu_usd": 2.87,
+    "plafond_relais_usd": 21.38,
+    "role": "protegee"
+   },
+   {
+    "nom": "passe_tableau",
+    "attendu_usd": 0,
+    "plafond_relais_usd": 0,
+    "role": "sacrifiable",
+    "rang": 2
+   },
+   {
+    "nom": "etiquettes",
+    "attendu_usd": 4.38,
+    "plafond_relais_usd": 42.73,
+    "role": "protegee"
+   },
+   {
+    "nom": "fusions",
+    "attendu_usd": 4.11,
+    "plafond_relais_usd": 38.5,
+    "role": "sacrifiable",
+    "rang": 1
+   }
+  ]
+ },
+ "proposeurs": [
+  {
+   "etiquette": "prop-fable",
+   "modele": "claude-fable-5-1",
+   "fournisseur": "claude",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_proposeur"
+  }
+ ],
+ "cases": [
+  [
+   "ibrahim-question-1",
+   "niveau-methode"
+  ]
+ ],
+ "aiguilleur": {
+  "etiquette": "aiguilleur-opus",
+  "modele": "claude-opus-5-5",
+  "fournisseur": "claude",
+  "consigne": "consigne_aiguilleur"
+ },
+ "juges": [
+  {
+   "etiquette": "juge-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_juge"
+  },
+  {
+   "etiquette": "juge-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_juge"
+  }
+ ],
+ "items_juge": [
+  "K1",
+  "K2",
+  "K3",
+  "K4",
+  "K5"
+ ],
+ "agregation": {
+  "regle": "unanimite"
+ },
+ "lecteurs_etiquettes": [
+  {
+   "etiquette": "lecteur-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude"
+  },
+  {
+   "etiquette": "lecteur-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra"
+  }
+ ],
+ "garde_kimi": {
+  "debordement_max": 0.5,
+  "refus_aiguilleur": "technique",
+  "arret_metteur_fusion": false
+ },
+ "tableau": {
+  "longueur_max_titre": 80,
+  "longueur_max_resume": 160,
+  "champ_resume": "hypothese",
+  "consigne_passe": "sans objet (passe « tableau » retirée, aucun appel)",
+  "juger_passe_tableau": false
+ },
+ "memoire": {
+  "methode": "bardeaux",
+  "taille_bardeau": 3,
+  "seuil": 0.6
+ },
+ "bisociateur": {
+  "bras": [
+   "gu_krenn",
+   "basique"
+  ],
+  "k_paires": 4,
+  "fournisseurs_entree": [
+   "*"
+  ],
+  "gu_krenn": {
+   "mode": "substitut",
+   "source": {
+    "chemin": "pieces/source-gu-krenn-ibrahim-v1.json",
+    "sha256": "005b554ff2fe95cc8ef0b3ab8c975caf0412d3ab88e8ae6d9ce208d96ecaf5e9"
+   },
+   "oeuvres_min_vocabulaire": 1,
+   "date_debut": "2000-01-01",
+   "date_coupure": "2026-11-03",
+   "actif_depuis": "2000-01-01",
+   "actif_min_oeuvres": 1
+  },
+  "basique": {
+   "exposant": 8.5,
+   "decalage": 0.05,
+   "liste_concepts": "liste_concepts"
+  },
+  "consigne_fusion": "consigne_fusion",
+  "consigne_lecteur_etiquettes": "consigne_lecteur",
+  "metteur_fusion": {
+   "etiquette": "metteur-fable",
+   "modele": "claude-fable-5-1",
+   "fournisseur": "claude"
+  }
+ },
+ "plafonds_session": {
+  "proposeur": 3.5,
+  "aiguilleur": 0.4,
+  "juge": 0.9,
+  "lecteur": 0.9,
+  "fusion": 3.5
+ },
+ "etiquettes_interdites": [
+  "exploratoire",
+  "bras méta",
+  "gu et krenn",
+  "gu krenn",
+  "bisociation",
+  "kimi",
+  "moonshot",
+  "gemini",
+  "fable",
+  "astra",
+  "openai",
+  "gpt 6",
+  "gpt6",
+  "gpt-6",
+  "chatgpt"
+ ],
+ "a4": {
+  "mode": "prefixe",
+  "action": "fiche_exclue"
+ },
+ "arrets": {
+  "a3_echecs_consecutifs": 3,
+  "a3_delai_s": {
+   "*": 1800
+  },
+  "a14_part_max": 0.25,
+  "a11_modeles": []
+ },
+ "pieces": {
+  "consigne_proposeur": {
+   "chemin": "pieces/consigne-proposeur-ibrahim-v1.md",
+   "sha256": "46149f554531863830a344115db8bcd850b8f8405f36c61768102051aa6d2413"
+  },
+  "consigne_aiguilleur": {
+   "chemin": "pieces/consigne-aiguilleur-ibrahim-v1.md",
+   "sha256": "571fcefcba62d4d145b7858489f3ab811dccd4315b34220291da119d63384644"
+  },
+  "consigne_juge": {
+   "chemin": "pieces/consigne-juge-ibrahim-v1.md",
+   "sha256": "acae672c8d67ba97f9b7863b833185f09e20fb0e4f14793dc5c254d528fff0a6"
+  },
+  "consigne_lecteur": {
+   "chemin": "pieces/consigne-lecteur-ibrahim-v1.md",
+   "sha256": "29f436802e234bd53c4fc8e3597a4be62d044264029e5e37549144fb97c7a2ae"
+  },
+  "consigne_fusion": {
+   "chemin": "pieces/consigne-metteur-ibrahim-v1.md",
+   "sha256": "a305c3f69f7b4cadc03ad942d30a1395bb471387fab47c0dce6ff49b39853c49"
+  },
+  "liste_concepts": {
+   "chemin": "pieces/concepts-ibrahim-v1.json",
+   "sha256": "8fbe16a27f22262ffac71fee1a60b478d05e05abb2323ae7f4a78106ea808c23"
+  },
+  "source_gu_krenn": {
+   "chemin": "pieces/source-gu-krenn-ibrahim-v1.json",
+   "sha256": "005b554ff2fe95cc8ef0b3ab8c975caf0412d3ab88e8ae6d9ce208d96ecaf5e9"
+  },
+  "question_servie": {
+   "chemin": "pieces/conv-audit/question-collisionneur-ibrahim-v1.md",
+   "sha256": "5e905798a512db9fb9c607be0fbe74972d7df618cf8b9026c23eb0bc8ed6d9c0"
+  },
+  "piece_ibrahim": {
+   "chemin": "pieces/conv-audit/piece-ibrahim-v1.md",
+   "sha256": "4e3851e3816fc3afaa573693f8f3d0aa2b9fc6c0e726ae54bab8cd4a248d6149"
+  },
+  "piece_sycophancie": {
+   "chemin": "pieces/conv-audit/piece-sycophancie-publique-v1.md",
+   "sha256": "9e424a025280908baf5e2eec65f285a746f92ce14991cdc5d7d80cb5978716b8"
+  },
+  "piece_nos_resultats": {
+   "chemin": "pieces/conv-audit/piece-nos-resultats-v1.md",
+   "sha256": "d6fa8011d9b5680d4ec58b262b6440e0e61e9c9987f0ac79a51cb5bca7b27e3c"
+  }
+ },
+ "canaris": {
+  "consigne_proposeur": "IQ1-PROPOSEUR-099875e1",
+  "consigne_aiguilleur": "IQ1-AIGUILLEUR-b7381ec7",
+  "consigne_juge": "IQ1-JUGE-db038762",
+  "consigne_lecteur": "IQ1-LECTEUR-606ad52b",
+  "consigne_fusion": "IQ1-METTEUR-f06a7843"
+ },
+ "relais": {
+  "astra": {
+   "port": 8807,
+   "plafond_usd": 65.2,
+   "max_appels": 91
+  },
+  "claude": {
+   "port": 8806,
+   "plafond_usd": 132.8,
+   "max_appels": 139
+  }
+ },
+ "fournisseurs": {
+  "astra": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/docs/notes/ideation-organisme-v1/commandes-a1-bis-v1/commande_astra_a1bis_v1.py",
+    "appeler",
+    "--modele",
+    "gpt-6-astra",
+    "--url-relais",
+    "http://127.0.0.1:8807",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "198",
+    "--max-sortie-proposeur",
+    "32000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750"
+   ]
+  },
+  "claude": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-ibrahim-q1-v1/orchestrateur/ibrahim/commande_claude_ibrahim_v1.py",
+    "--url-relais",
+    "http://127.0.0.1:8806",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "198",
+    "--max-sortie-proposeur",
+    "64000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750",
+    "--effort",
+    "high",
+    "--reflexion",
+    "adaptative"
+   ]
+  }
+ },
+ "simulation": {
+  "cout_par_appel_usd": 0.01,
+  "fiches_par_appel": 6
+ }
+}
