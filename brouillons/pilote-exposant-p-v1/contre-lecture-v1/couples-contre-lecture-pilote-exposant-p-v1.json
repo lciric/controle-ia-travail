@@ -1,0 +1,269 @@
+{
+ "version": "couples-contre-lecture-pilote-exposant-p-v1",
+ "regle": "chaque « ancien » figure exactement une fois dans son fichier au moment où il s'applique, dans l'ordre de la liste ; vérifié par outils/couples.py du contre-lecteur sur les fichiers de la branche canal/conv-audit-n04 (empreintes citées par le rapport). À appliquer à une version nouvelle (R12 : brouillon 2), puis empreintes refaites (R6).",
+ "fichiers_sources_sha256": {
+  "brouillons/pilote-exposant-p-v1/devis-pilote-exposant-p-v1.md": "165930e5a77e731d5ca1f105bf590c759430502e0b670a04f49ca4beef69f427",
+  "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md": "1699db8730bba7565b6669100a3c202ad00cb195c5ddfc5797bc3827429a6093",
+  "scripts/pilote_exposant_p_instance_v1.sh": "6c12eebe647d0166e7a7653446b09cab547bf8d6d538fd8f3aedb94b1489aeab",
+  "src/controle_ia/pilote_exposant_p/analyse.py": "86a619348b0b937ed5eef3c99868e7067ff7008fe22877f9ec9bcce0fc949429",
+  "src/controle_ia/pilote_exposant_p/run.py": "8965c55c191a9b2ebfa449a614d68fbc3f475e01cdff5bdcb94884397575a6b8"
+ },
+ "couples": [
+  {
+   "id": "P01",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B2",
+   "motif": "Le critère compare un plan à la moyenne d'une famille ; sous le générateur du rédacteur, une paire sans concept tirée comme les plans de référence sort « au-dessus » 28,5 % et « au-dessous » 29,2 % des fois.",
+   "ancien": "**Énoncé testé (H-P).** À la couche 2, dans le plan (E, R), l'exposant p de la superellipse de rupture du plateau diffère de celui des plans de différences aléatoires du même modèle, sur les mêmes ancres.",
+   "nouveau": "**Énoncé testé (H-P).** À la couche 2, dans le plan (E, R), l'exposant p de la superellipse de rupture du plateau diffère de la **moyenne** des plans de différences aléatoires du même modèle, mesurés sur les mêmes sous-ensembles d'ancres. Un plan seul n'est pas une famille : une paire sans concept prise au hasard s'écarte elle-même de cette moyenne (écart type entre plans τ ≈ 0,17 dans la simulation) ; l'énoncé ne dit donc pas, à lui seul, que la paire (E, R) sort de la famille des paires sans concept."
+  },
+  {
+   "id": "P02",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B4",
+   "motif": "L'affirmation « c'est contrôlé » est fausse pour la sensibilité : aucun contrôle décisif ne montre que l'instrument voit un privilège sur le modèle lu.",
+   "ancien": "- l'instrument du papier, validé sur le modèle de base, se transporte au modèle Instruct ; c'est contrôlé par le témoin positif sur le modèle de base et par les isotropes sur le modèle lu ;",
+   "nouveau": "- l'instrument du papier, validé sur le modèle de base, se transporte au modèle Instruct. Le témoin positif sur le modèle de base ne contrôle que la mise en œuvre (même code, même modèle que le papier) ; les isotropes sur le modèle lu ne contrôlent que le côté nul (p ≈ 2 sans structure). La sensibilité sur le modèle lu est contrôlée par le témoin de sensibilité décisif (Wealth × Gender sur le modèle lu, section « Seuil ») : sans lui, ni « égal » ni « au-dessous » ne se lisent ;"
+  },
+  {
+   "id": "P03",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "M",
+   "motif": "Le double filtre de l'audit (`target=gemma`, ligne 3 de `results/thrpair_audit.md`) est relevé par la lecture mais pas par le tableau.",
+   "ancien": "Δ ≈ +0,4 à +0,7 (contrastives de Llama, moyenne 2,632, audit du code ;",
+   "nouveau": "Δ ≈ +0,4 à +0,7 (contrastives de Llama, moyenne 2,632, audit du code, qui applique aussi le filtre de recouvrement de Gemma ; filtre de Llama seul : 2,604, calcul du rédacteur ;"
+  },
+  {
+   "id": "P04",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "I",
+   "motif": "Les deux exemples cités sont des paires que la règle de recouvrement du papier exclut (leur p est déformé par Gram–Schmidt, raison même du filtre).",
+   "ancien": "possible : des paires contrastives du papier ont p < 2 sur Llama (Français × Japonais 1,28 ; JavaScript × Rust 1,50, calcul sur `fits_llama_L2_thrpair_exact.pkl`)",
+   "nouveau": "possible : parmi les paires contrastives que la règle de recouvrement garde sur Llama, environ 8 % ont p < 2 (Status × Honesty 1,72 ; Health × Age 1,77 ; calcul du contre-lecteur sur `fits_llama_L2_thrpair_exact.pkl`, `fa7165fe…`, et `dirs_llama_L2.pkl`, `7b167763…`) ; Français × Japonais (1,28) et JavaScript × Rust (1,50) ne sont pas des exemples : |cos| = 0,457 et 0,659, paires écartées par le papier"
+  },
+  {
+   "id": "P05",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B3",
+   "motif": "Référence sur le seul sous-ensemble 0 contre plan lu moyenné sur 32 : effet commun non couvert ; correctif gratuit.",
+   "ancien": "- **p̄(différences aléatoires)** : moyenne des p des M = 60 plans de paires disjointes de différences aléatoires, moins les paires exclues par la règle du cosinus, sur le sous-ensemble 0.",
+   "nouveau": "- **p̄(différences aléatoires)** : moyenne des p des M = 60 plans de paires disjointes de différences aléatoires, moins les paires exclues par la règle du cosinus ; le plan k est mesuré sur le sous-ensemble d'ancres k mod 32, pour que la référence et le plan lu moyennent les mêmes sous-ensembles (un effet commun du sous-ensemble 0 n'entrerait ni dans l'intervalle ni dans la simulation)."
+  },
+  {
+   "id": "P06",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B7",
+   "motif": "R7 : le chiffre qui fonde δ doit renvoyer à une source empreintée ; l'audit du code l'est, le PDF ne l'est pas.",
+   "ancien": "- **δ = 0,2**, marge d'équivalence. C'est environ la moitié du plus petit écart publié entre famille contrastive et famille sans concept (Gemma : 2,42 − 2,05 = 0,37, §4.1), arrondie au dixième.",
+   "nouveau": "- **δ = 0,2**, marge d'équivalence. C'est environ la moitié du plus petit écart publié entre famille contrastive et famille sans concept, sur Gemma-2-9B : 2,423 − 2,050 = 0,373 (`results/thrpair_audit.md` du code publié, sha256 `272827f3fb082f71df57edf49ec5d9e027031cab47ab7e23cb38c492170911ad`, lignes « Direction family | Contrastive » et « Direction family | Random-diff » ; le texte du papier, §4.1, donne 2,42 et 2,05 au niveau transcription seulement, PDF non empreinté, R7), arrondie au dixième."
+  },
+  {
+   "id": "P07",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B5",
+   "motif": "La règle est reprise du papier pour la référence, mais son usage comme issue du plan lu est une extension.",
+   "ancien": "- **Exclusion** : |cos(E, R)| ≥ 0,1, règle du papier (§4.1 ; annexe A). Même règle pour les plans de référence.",
+   "nouveau": "- **Exclusion** : |cos(E, R)| ≥ 0,1, seuil du papier (annexe A : |⟨dᵢ, dⱼ⟩| < 0,1 gardé, directions brutes ; §4.1 écrit « below 0.1 » sans valeur absolue ; le code garde ≤ 0,1). Au papier, c'est un filtre de paires (Gram–Schmidt déforme les directions qui se recouvrent), jamais un résultat ; ici il devient une issue terminale du plan lu (écart E-19). Même règle pour les plans de référence."
+  },
+  {
+   "id": "P08",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B3",
+   "motif": "Les taux déclarés ne valent que sous deux hypothèses que le texte ne dit pas.",
+   "ancien": "- **Niveau** : intervalle à 95 %. Taux simulés à Δ = 0 (calcul, `puissance-pilote-exposant-p-v1.json`) : faux « au-dessus » 2,8 %, faux « au-dessous » 3,0 %.",
+   "nouveau": "- **Niveau** : intervalle à 95 %. Taux simulés à Δ = 0 (calcul, `puissance-pilote-exposant-p-v1.json`) : faux « au-dessus » 2,8 %, faux « au-dessous » 3,0 %, pour un plan lu situé exactement à la moyenne de la référence et sans effet commun des sous-ensembles d'ancres. Même générateur, même banque (contre-lecture R2, `scenarios-supplementaires.json`, sha256 `8f5636219999e50b34890fefd0297e028b53db6e4a7bf0ac4349c1ff8c562545`) : effet commun d'écart type 0,035 avec la référence sur le seul sous-ensemble 0, 3,5 % et 7,2 % ; référence répartie (plan k sur k mod 32), 2,5 % et 2,8 % ; paire sans concept tirée comme les plans de référence (τ = 0,17), « au-dessus » 28,5 % et « au-dessous » 29,2 %. D'où la comparaison à la moyenne, jamais à « une paire sans concept »."
+  },
+  {
+   "id": "P09",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "I1",
+   "motif": "La tolérance « supposée » est étayée par un calcul ; la branche « ancres différentes » est trop lâche pour valider la mise en œuvre.",
+   "ancien": "il faut |p − 3,003| ≤ 0,15 et des intercepts à ±2° (supposé : écarts numériques seuls). Sinon, p dans [2,420 ; 3,702], intervalle à 95 % du rééchantillonnage des ancres publiées (calcul) ;",
+   "nouveau": "il faut |p − 3,003| ≤ 0,15 et des intercepts à ±2° (calcul du contre-lecteur sur la grille publiée : bruit numérique indépendant d'écart type 0,5 par point et par ancre → écart type de p 0,06, |Δp| > 0,15 dans 1,5 % des tirages, intercepts à moins de 0,7° au quantile 95 % (1,2° pour un écart type de 1,0) ; décalage uniforme du plancher jusqu'à 1,5 → |Δp| ≤ 0,052). Sinon, p dans [2,420 ; 3,702], intervalle à 95 % du rééchantillonnage avec remise des ancres publiées (calcul) ; ce rééchantillonnage gonfle la dispersion propre à chaque plan (0,25 contre 0,096 entre les 17 isotropes publiés sur leurs 30 ancres distinctes), l'intervalle est donc lâche et cette branche ne valide la mise en œuvre que faiblement, ce que la lecture rapporte ;"
+  },
+  {
+   "id": "P10",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B4",
+   "motif": "Sans contrôle décisif de sensibilité sur le modèle lu, l'issue « égal », dite « réponse pleine », n'est pas interprétable.",
+   "ancien": "  - isotropes sur le modèle lu : moyenne dans [1,75 ; 2,25], et au plus 20 % d'ajustements impossibles.",
+   "nouveau": "  - isotropes sur le modèle lu : moyenne dans [1,75 ; 2,25], et au plus 20 % d'ajustements impossibles ;\n  - sensibilité sur le modèle lu (décisive pour « égal » et « au-dessous ») : Wealth × Gender sur le modèle lu, 32 sous-ensembles ; Δ_WG = p̄(Wealth × Gender, lu) − p̄(différences aléatoires), intervalle à 95 % par le même rééchantillonnage que Δ, entièrement au-dessus de 0. Sinon, une issue « égal » ou « au-dessous » devient « non concluant (sensibilité non montrée sur le modèle lu) » ; « au-dessus » reste lisible."
+  },
+  {
+   "id": "P11",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B3",
+   "motif": "Suit P05 et P10 : référence répartie ; Wealth × Gender du modèle lu, déjà au devis, devient décisif et passe avant les descriptifs.",
+   "ancien": "| 5 | lu | 60 différences aléatoires disjointes (120 directions, 30 différences chacune) | 0 | décisif (référence) |",
+   "nouveau": "| 5 | lu | 60 différences aléatoires disjointes (120 directions, 30 différences chacune) | plan k sur k mod 32 | décisif (référence) |\n| 5 bis | lu | Wealth × Gender | 0 à 31 | décisif (sensibilité sur le modèle lu) |"
+  },
+  {
+   "id": "P12",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B4",
+   "motif": "Wealth × Gender du modèle lu quitte le bloc descriptif (voir P11).",
+   "ancien": "famille contrastive (paires de Gender, Wealth, Age, Tense, Sentiment, filtre du cosinus) ; Wealth × Gender ; mixtes (Gender, rdₖ), (Wealth, rdₖ), k < 5 ; moitiés (E_A, R_A), (E_B, R_B) ; (E, Formal du papier) | 0 ; 0 ; 0 à 31 ; 0 ; 0 à 7 ; 0 à 7 | descriptif |",
+   "nouveau": "famille contrastive (paires de Gender, Wealth, Age, Tense, Sentiment, filtre du cosinus) ; mixtes (Gender, rdₖ), (Wealth, rdₖ), k < 5 ; moitiés (E_A, R_A), (E_B, R_B) ; (E, Formal du papier) | 0 ; 0 ; 0 ; 0 à 7 ; 0 à 7 | descriptif |"
+  },
+  {
+   "id": "P13",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B3",
+   "motif": "Suit P05.",
+   "ancien": "Chaque ajustement garde le protocole à 30 ancres. Les familles de référence n'utilisent que le sous-ensemble 0.",
+   "nouveau": "Chaque ajustement garde le protocole à 30 ancres. La famille des différences aléatoires est répartie sur les 32 sous-ensembles (plan k sur le sous-ensemble k mod 32) ; les autres familles de référence (isotropes, contrastives, mixtes) n'utilisent que le sous-ensemble 0."
+  },
+  {
+   "id": "P14",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "I2",
+   "motif": "Cinq écarts au papier non déclarés.",
+   "ancien": "- E-15 — Plans mixtes (trait, non-trait) : absents du papier ; descriptifs.",
+   "nouveau": "- E-15 — Plans mixtes (trait, non-trait) : absents du papier ; descriptifs.\n- E-16 — Stimuli de E et R écrits par un modèle de langage (sous-agent) et relus par un autre ; le papier dit ses invites « LLM generated and human verified » (§3, annexe A) : la vérification humaine est celle de Lazar, consignée avant le scellement.\n- E-17 — Paires de E non minimales : une fin entière de 6 à 14 mots change (médiane 8 à 8,5) ; les paires sémantiques du papier ne changent que le mot porteur (médiane 1 mot ; Tense 3), seules ses directions de registre (Formal, Literary) réécrivent la phrase (médiane 9 à 10 mots).\n- E-18 — Inférence sur un plan seul contre la moyenne d'une famille ; le papier compare des moyennes de familles (figure 4) et ne lit un plan seul qu'en illustration (figure 2).\n- E-19 — Règle du cosinus prise comme issue terminale du plan lu (« exclu ») ; au papier, filtre de paires seulement.\n- E-20 — Tolérances du témoin positif (±0,15 sur p, ±2° sur les intercepts, [2,420 ; 3,702] si les ancres diffèrent) : elles ne viennent pas du papier ; E-14 ne couvre que les isotropes et les directions."
+  },
+  {
+   "id": "P15",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "B5",
+   "motif": "Le texte affirmait des bornes que les phrases codées ne portaient pas (seuls « couche 2 » et le modèle y figuraient).",
+   "ancien": "Chaque phrase porte les chiffres p̄(E, R), p̄(différences aléatoires) et Δ, avec leurs intervalles. Toutes sont bornées : couche 2, ancres de 5 jetons, réponse L2, modèle Instruct sans gabarit.",
+   "nouveau": "Chaque phrase porte les chiffres p̄(E, R), p̄(différences aléatoires) et Δ, avec leurs intervalles, et sa propre borne, écrite dans le code (`analyse.PHRASES`) : couche 2, dernier jeton d'invites de 5 jetons, réponse L2 au bloc 30, modèle Instruct sans gabarit, directions E et R faites de fins de phrase. Aucune ne dit rien des couches moyennes, des contextes longs ni du comportement ; aucune ne compare la paire (E, R) à « une paire sans concept » prise au hasard, seulement à la moyenne de la famille (rang rapporté à côté)."
+  },
+  {
+   "id": "P16",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "I4",
+   "motif": "« p proche de Wealth × Gender » n'est pas un critère gelé.",
+   "ancien": "- « au-dessus », avec des plans mixtes (Gender, rd) et (Wealth, rd) de p proche de Wealth × Gender sur le modèle lu, et des plans (E, rd) au-dessus des différences aléatoires : on peut écrire « E se comporte comme une direction privilégiée dans les plans mixtes aussi ». Si les mixtes restent proches de 2, la lecture des plans (E, rd) n'est pas calibrée, et rien n'est dit de E seul ;",
+   "nouveau": "- « au-dessus », avec la moyenne des 10 plans mixtes (Gender, rd) et (Wealth, rd) au-dessus de p̄(différences aléatoires) (intervalle à 95 % par rééchantillonnage des plans, entièrement > 0) et la moyenne des 10 plans (E, rd) au-dessus de p̄(différences aléatoires) de la même façon : on peut écrire « E se comporte comme une direction privilégiée dans les plans mixtes aussi ». Sinon, la lecture des plans (E, rd) n'est pas calibrée, et rien n'est dit de E seul. Les plans (E, rdₖ) et les plans de référence partagent les directions rd₀ à rd₉ : ces comparaisons ne sont pas indépendantes ;"
+  },
+  {
+   "id": "P17",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "M2",
+   "motif": "« p > 2 n'est pas suffisant » (§7) borne la lecture de « au-dessus », pas celle de « égal ».",
+   "ancien": "- « égal » ou « au-dessous » : aucune phrase sur l'absence de trait d'évaluation (§7 : p > 2 n'est pas suffisant, et p ≈ 2 n'exclut pas un trait mal aligné, §6.1) ;",
+   "nouveau": "- « égal » ou « au-dessous » : aucune phrase sur l'absence de trait d'évaluation. p ≈ 2 n'exclut pas un trait mal aligné, le désalignement tirant p vers 2 (§6.1) ; l'instrument ne voit que la couche 2, le dernier jeton et des invites de 5 jetons (§3) ; ces issues ne se lisent qu'avec le témoin de sensibilité sur le modèle lu (section « Seuil ») ;"
+  },
+  {
+   "id": "P18",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "I3",
+   "motif": "« L'issue doit tenir » n'était pas défini ; le code ne rapporte que l'étendue de Δ, référence fixe.",
+   "ancien": "- toute issue tranchée (au-dessus, au-dessous, égal) entraîne l'audit complet : l'issue doit tenir quand on retire chaque sous-ensemble d'ancres ; on vérifie les résidus d'ajustement, le nombre de points de contour, les échecs, les intercepts ;",
+   "nouveau": "- toute issue tranchée (au-dessus, au-dessous, égal) entraîne l'audit complet : l'issue est recalculée 32 fois, en retirant chaque fois un sous-ensemble d'ancres (et les plans de référence mesurés sur ce sous-ensemble), même graine de rééchantillonnage ; si une seule de ces 32 issues diffère de l'issue gelée, réserve « instable au retrait d'un sous-ensemble » ; on vérifie aussi les résidus d'ajustement, le nombre de points de contour, les échecs, les intercepts ;"
+  },
+  {
+   "id": "P19",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "M1",
+   "motif": "Le papier borne des médianes de sous-groupes, pas chaque ajustement.",
+   "ancien": "- résidu médian du plan (E, R) > 2 % (le papier n'en a aucun au-dessus de 2 %) : réserve.",
+   "nouveau": "- résidu médian du plan (E, R) > 2 % (au papier, toute médiane de sous-groupe est sous 2 %, annexe B, transcription ; audit du code : médianes de 0,85 % à 1,28 %, `results/thrpair_audit.md`, `272827f3…`) : réserve."
+  },
+  {
+   "id": "P20",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "I7",
+   "motif": "La garde de calcul n'agit qu'à la création de l'instance ; l'amorce n'est pas écrite.",
+   "ancien": "| Aucun GO consigné dans `registres/go.md` | rien ne se lance (garde de calcul) |",
+   "nouveau": "| Aucun GO consigné dans `registres/go.md` | rien ne se lance : la création de l'instance par l'amorce cite `GO_ID=…` (garde de calcul, qui ne bloque que vastai create, launch ou start) ; le script d'instance ne vérifie aucun GO ; l'amorce, avec son plafond d'ensemble de 300 min, est écrite et contre-lue avant le lancement |"
+  },
+  {
+   "id": "P21",
+   "fichier": "brouillons/pilote-exposant-p-v1/preregistrement-pilote-exposant-p-v1-brouillon1.md",
+   "renvoi": "M",
+   "motif": "La section citée n'existe pas sous ce titre.",
+   "ancien": "(`brouillons/pilote-exposant-p-v1/rapport-redaction-pilote-exposant-p-v1.md`, section « Pour le contre-lecteur »)",
+   "nouveau": "(`brouillons/pilote-exposant-p-v1/rapport-redaction-pilote-exposant-p-v1.md`, sections 5 « Dix points pour un contre-lecteur neuf » et 6 « Fichiers que le contre-lecteur doit lire »)"
+  },
+  {
+   "id": "A01",
+   "fichier": "src/controle_ia/pilote_exposant_p/analyse.py",
+   "renvoi": "B5",
+   "motif": "Phrase bornée (jeton, ancres, réponse, gabarit, portée) ; comparaison à la moyenne, non à « des paires sans concept ».",
+   "ancien": "    \"au-dessus\": (\"Sur Llama-3.1-8B-Instruct, couche 2, le plan (évaluation, registre) a un exposant p de {p_er} [{ic_er}], \"\n                  \"au-dessus de celui des différences aléatoires ({p_rd} [{ic_rd}]) de {d} [{ic_d}] : le réseau privilégie les \"\n                  \"directions pures E et R sur leurs mélanges plus que pour des paires sans concept ; c'est compatible avec \"\n                  \"une correction propre à chacune, ce n'est pas une preuve que E est un trait (p > 2 nécessaire, non \"\n                  \"suffisant, §7 du papier).\"),",
+   "nouveau": "    \"au-dessus\": (\"Sur Llama-3.1-8B-Instruct, couche 2, dernier jeton d'invites de 5 jetons, réponse L2 au bloc 30, sans \"\n                  \"gabarit, le plan (évaluation, registre) a un exposant p de {p_er} [{ic_er}], au-dessus de la moyenne des \"\n                  \"plans de différences aléatoires ({p_rd} [{ic_rd}]) de {d} [{ic_d}] : à cette couche, le réseau privilégie \"\n                  \"les directions pures E et R sur leurs mélanges plus que la moyenne des paires sans concept ; c'est \"\n                  \"compatible avec une correction propre à chacune, ce n'est pas une preuve que E est un trait (p > 2 \"\n                  \"nécessaire, non suffisant, §7 du papier), ni que la paire sort de la famille des paires sans concept (son \"\n                  \"rang dans la famille est rapporté à côté), ni rien sur les couches moyennes, les contextes longs ou le \"\n                  \"comportement ; E et R sont faites de fins de phrase.\"),"
+  },
+  {
+   "id": "A02",
+   "fichier": "src/controle_ia/pilote_exposant_p/analyse.py",
+   "renvoi": "B5",
+   "motif": "La règle compare à p̄(différences aléatoires), pas à p = 2 : « plus tôt que la seule taille L2 ne le prédit » peut être faux si p̄(différences aléatoires) ≠ 2.",
+   "ancien": "    \"au-dessous\": (\"Sur Llama-3.1-8B-Instruct, couche 2, le plan (évaluation, registre) a un exposant p de {p_er} [{ic_er}], \"\n                   \"au-dessous de celui des différences aléatoires ({p_rd} [{ic_rd}]) de {d} [{ic_d}] : les mélanges de E \"\n                   \"et R rompent le plateau plus tôt que la seule taille L2 ne le prédit ; aucun privilège des directions \"\n                   \"pures, au contraire.\"),",
+   "nouveau": "    \"au-dessous\": (\"Sur Llama-3.1-8B-Instruct, couche 2, dernier jeton d'invites de 5 jetons, réponse L2 au bloc 30, sans \"\n                   \"gabarit, le plan (évaluation, registre) a un exposant p de {p_er} [{ic_er}], au-dessous de la moyenne \"\n                   \"des plans de différences aléatoires ({p_rd} [{ic_rd}]) de {d} [{ic_d}] : à cette couche, les mélanges \"\n                   \"de E et R rompent le plateau plus tôt, relativement aux axes, que pour la moyenne des paires sans \"\n                   \"concept ; aucun privilège des directions pures à cette couche, ce qui ne dit rien des couches moyennes, \"\n                   \"des contextes longs ni du comportement et n'exclut pas un trait mal aligné (§6.1 du papier) ; E et R \"\n                   \"sont faites de fins de phrase.\"),"
+  },
+  {
+   "id": "A03",
+   "fichier": "src/controle_ia/pilote_exposant_p/analyse.py",
+   "renvoi": "B5",
+   "motif": "Ce que « égal » ne montre pas doit être dans la phrase gelée elle-même.",
+   "ancien": "    \"égal\": (\"Sur Llama-3.1-8B-Instruct, couche 2, le plan (évaluation, registre) a un exposant p de {p_er} [{ic_er}], \"\n             \"indiscernable de celui des différences aléatoires ({p_rd} [{ic_rd}]) : écart {d} [{ic_d}], dans ±{delta} ; \"\n             \"à cette couche et sur ces ancres, rien ne distingue la paire (évaluation, registre) d'une paire sans concept.\"),",
+   "nouveau": "    \"égal\": (\"Sur Llama-3.1-8B-Instruct, couche 2, dernier jeton d'invites de 5 jetons, réponse L2 au bloc 30, sans \"\n             \"gabarit, le plan (évaluation, registre) a un exposant p de {p_er} [{ic_er}], indiscernable de la moyenne des \"\n             \"plans de différences aléatoires ({p_rd} [{ic_rd}]) : écart {d} [{ic_d}], dans ±{delta} ; à cette couche, \"\n             \"sur ces ancres et à ce jeton, rien ne distingue la paire (évaluation, registre) de la moyenne des paires \"\n             \"sans concept. Cela ne dit pas que la direction d'évaluation est sans privilège aux couches moyennes ni dans \"\n             \"des contextes longs, et p ≈ 2 n'exclut pas un trait mal aligné (§6.1 du papier) ; E et R sont faites de \"\n             \"fins de phrase.\"),"
+  },
+  {
+   "id": "A04",
+   "fichier": "src/controle_ia/pilote_exposant_p/analyse.py",
+   "renvoi": "B5",
+   "motif": "Quand « non concluant » vient de plus de 20 % d'échecs, la phrase actuelle affirme un motif faux (« l'intervalle contient 0 et sort de ±0,2 »).",
+   "ancien": "    \"non concluant\": (\"Sur Llama-3.1-8B-Instruct, couche 2, l'écart entre p(évaluation, registre) ({p_er} [{ic_er}]) et p \"\n                      \"des différences aléatoires ({p_rd} [{ic_rd}]) vaut {d} [{ic_d}] : non concluant (l'intervalle \"\n                      \"contient 0 et sort de ±{delta}).\"),",
+   "nouveau": "    \"non concluant\": (\"Sur Llama-3.1-8B-Instruct, couche 2, l'écart entre p(évaluation, registre) ({p_er} [{ic_er}]) et la \"\n                      \"moyenne des différences aléatoires ({p_rd} [{ic_rd}]) vaut {d} [{ic_d}] : non concluant (l'intervalle \"\n                      \"contient 0 et sort de ±{delta}).\"),\n    \"non concluant (échecs)\": (\"Sur Llama-3.1-8B-Instruct, couche 2, plus de 20 % des ajustements du plan (évaluation, \"\n                               \"registre) ou des plans de référence sont impossibles : non concluant ; p(évaluation, \"\n                               \"registre) ({p_er} [{ic_er}]), moyenne des différences aléatoires ({p_rd} [{ic_rd}]) et \"\n                               \"écart {d} [{ic_d}] sont rapportés sans lecture.\"),"
+  },
+  {
+   "id": "A05",
+   "fichier": "src/controle_ia/pilote_exposant_p/analyse.py",
+   "renvoi": "B5",
+   "motif": "« Le recouvrement est le résultat » lit comme une découverte un seuil technique ; le modèle stylisé du contre-lecteur donne |cos(E, R)| ≥ 0,1 par la seule structure des derniers mots.",
+   "ancien": "    \"exclu\": (\"Sur Llama-3.1-8B-Instruct, couche 2, la direction d'évaluation extraite à registre apparié et la direction \"\n              \"de registre se recouvrent au-delà du seuil d'exclusion du papier (|cos| = {cos} ≥ 0,1) : p n'est pas lu ; \"\n              \"le recouvrement est le résultat.\"),",
+   "nouveau": "    \"exclu\": (\"Sur Llama-3.1-8B-Instruct, couche 2, dernier jeton, la direction d'évaluation extraite à registre apparié et \"\n              \"la direction de registre ont |cos| = {cos}, au-delà du seuil technique du papier (0,1 : au-delà, \"\n              \"Gram–Schmidt déforme la seconde direction) : p n'est pas lu. Ce recouvrement est rapporté ; il ne montre \"\n              \"pas que E se confond avec R (à |cos| = 0,1 les deux directions restent à 84° l'une de l'autre), et il peut \"\n              \"venir de l'interaction statut × registre des fins de phrase du plan 2 × 2.\"),"
+  },
+  {
+   "id": "R01",
+   "fichier": "src/controle_ia/pilote_exposant_p/run.py",
+   "renvoi": "B3",
+   "motif": "Référence répartie : le plan k est rattaché au sous-ensemble k mod S (enregistrement des plans exclus).",
+   "ancien": "                self.plans.append({\"role\": \"lu\", \"famille\": \"rd_rd\", \"nom\": f\"rd{2*k}×rd{2*k+1}\", \"sous_ensemble\": 0,",
+   "nouveau": "                self.plans.append({\"role\": \"lu\", \"famille\": \"rd_rd\", \"nom\": f\"rd{2*k}×rd{2*k+1}\", \"sous_ensemble\": k % self.S,"
+  },
+  {
+   "id": "R02",
+   "fichier": "src/controle_ia/pilote_exposant_p/run.py",
+   "renvoi": "B3",
+   "motif": "Référence répartie : le plan k est mesuré sur le sous-ensemble k mod S.",
+   "ancien": "            trav.append(lambda k=k, c=c: self.plan(m, \"lu\", \"rd_rd\", f\"rd{2*k}×rd{2*k+1}\", rd[2 * k], rd[2 * k + 1], ids, acts, 0,\n                                                   decisif=True, cos=c))",
+   "nouveau": "            trav.append(lambda k=k, c=c: self.plan(m, \"lu\", \"rd_rd\", f\"rd{2*k}×rd{2*k+1}\", rd[2 * k], rd[2 * k + 1], ids, acts,\n                                                   k % self.S, decisif=True, cos=c))"
+  },
+  {
+   "id": "R03",
+   "fichier": "src/controle_ia/pilote_exposant_p/run.py",
+   "renvoi": "B5",
+   "motif": "La phrase gelée suit le vrai motif de « non concluant ».",
+   "ancien": "        lect[\"motif_non_concluant\"] = \"part d'ajustements impossibles au-dessus de 20 %\"",
+   "nouveau": "        lect[\"motif_non_concluant\"] = \"part d'ajustements impossibles au-dessus de 20 %\"\n        lect[\"cle_phrase\"] = \"non concluant (échecs)\""
+  },
+  {
+   "id": "R04",
+   "fichier": "src/controle_ia/pilote_exposant_p/run.py",
+   "renvoi": "B5",
+   "motif": "Suit R03.",
+   "ancien": "        lect[\"phrase\"] = A.phrase(issue, p_er=f(d[\"moyenne_plan\"]), ic_er=ic(d[\"ic_plan\"]), p_rd=f(d[\"moyenne_ref\"]),",
+   "nouveau": "        lect[\"phrase\"] = A.phrase(lect.get(\"cle_phrase\", issue), p_er=f(d[\"moyenne_plan\"]), ic_er=ic(d[\"ic_plan\"]),\n                                  p_rd=f(d[\"moyenne_ref\"]),"
+  },
+  {
+   "id": "D01",
+   "fichier": "brouillons/pilote-exposant-p-v1/devis-pilote-exposant-p-v1.md",
+   "renvoi": "I5",
+   "motif": "L'ordre codé (`run.py`) fait passer 24 plans descriptifs avant les blocs décisifs du modèle lu.",
+   "ancien": "  - les 110 plans décisifs passent en tête : ≈ 0,5 h au débit estimé, ≈ 1,8 h au débit pessimiste ;",
+   "nouveau": "  - les 110 plans décisifs ne passent pas tous en tête : les 24 plans descriptifs du modèle de base (17 isotropes, 7 Wealth × Gender) tournent avant les blocs décisifs du modèle lu, et le plafond interne ne leur réserve pas le temps des blocs décisifs qui suivent ; décisifs seuls : ≈ 0,5 h au débit estimé, ≈ 1,8 h au débit pessimiste ; avec le témoin de sensibilité décisif (32 plans, déjà comptés parmi les 230), ≈ 0,6 h et ≈ 2,3 h ;"
+  },
+  {
+   "id": "S01",
+   "fichier": "scripts/pilote_exposant_p_instance_v1.sh",
+   "renvoi": "I7",
+   "motif": "Le commentaire prêtait au script une garde qu'il n'a pas.",
+   "ancien": "# Ce script ne se lance pas sans GO consigné (garde de calcul, registres/go.md) ; il n'a jamais été lancé.",
+   "nouveau": "# Ce script ne vérifie aucun GO : il tourne sur une instance déjà créée. Le GO est exigé à la création de l'instance\n# (amorce, commande citant GO_ID=… ; garde de calcul, registres/go.md, qui ne bloque que vastai create, launch ou\n# start) ; l'amorce reste à écrire et à contre-lire. Il n'a jamais été lancé."
+  }
+ ]
+}
