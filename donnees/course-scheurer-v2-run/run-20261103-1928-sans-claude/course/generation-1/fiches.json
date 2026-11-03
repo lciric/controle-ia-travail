@@ -1,0 +1,515 @@
+{
+  "f0cb902367baa": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Confusion entre progrès des producteurs et des moniteurs : panel entièrement croisé et lots identiques pour comparer les moniteurs. Modification implicite de la défense : règles d'intervention, outils de vérification et protocole de revue fixes ; seuls la version du moniteur et le budget humain varient. Dépendance temporelle : estimation et rééchantillonnage par blocs complets et familles, sans multiplication de probabilités par action. Pression artificielle ou changement de composition : classes, prévalence et difficulté des violations plantées verrouillées ; publier séparément les strates et une analyse de sensibilité à leur pondération. Contamination : séparation entre calibration et test scellé, avec instances inédites. Confusion entre calcul, longueur et effort utile : calcul effectivement consommé, plafonds de sortie communs et normalisation par travail validé selon une référence humaine indépendante. Refus et abstentions : comptés comme perte de travail utile ou revue facturée selon une règle fixée, non assimilés à une censure aléatoire. Biais de jugement : succès décidé par critères exécutables ou évaluateurs humains aveugles aux versions ; revue chronométrée et affectation aléatoire des évaluateurs. Attribution excessive : le résultat porte sur cette pression standardisée, pas sur des stratégies adversariales non étudiées.",
+      "cout": "Pilote supposé : 4 producteurs, 4 moniteurs et 80 épisodes par producteur, regroupés en blocs avant toute analyse ; soit 1 280 relectures producteur–moniteur–épisode (calcul : 4 × 4 × 80). Enveloppe supposée : 200 heures de calcul accéléré et 24 jours-personnes, incluant construction des violations plantées, revue humaine, annotation aveugle et estimation. Le pilote sert notamment à dimensionner le nombre de blocs nécessaire pour identifier le risque cible ; cette enveloppe ne garantit pas la précision de l'étude temporelle complète.",
+      "epreuve": "Construire un panel croisé de versions datées de producteurs et de moniteurs, dont les identités et dates seront vérifiées avant enregistrement. Un dispositif expérimental de confiance introduit des violations dans des trajectoires de travail en environnement fermé ; aucun agent n'est chargé de concevoir une tromperie. Pour chaque producteur, constituer des lots privés de trajectoires et mesurer leur calcul de génération réellement consommé, à matériel et moteur d'inférence constants. Rejouer chronologiquement les mêmes lots devant chaque moniteur, avec validation avant toute conséquence externe. Faire varier uniquement le budget de revue humaine et mesurer le risque d'au moins une violation validée dans un bloc de trajectoires correspondant à un budget de calcul fixé. Estimer la frontière risque–calcul–revue en conservant les blocs complets, sans hypothèse d'indépendance entre tentatives. Définir C comme les minutes de revue par heure humaine équivalente de travail utile validé nécessaires pour respecter un risque maximal de 2 % par bloc et un rejet maximal de 3 % des trajectoires honnêtes (seuils supposés). Les exigences irréalisables au budget maximal sont censurées, jamais remplacées par ce plafond. Ajuster log(C) sur les dates respectives du producteur et du moniteur, avec interaction préenregistrée ; estimer ensuite le facteur annuel le long d'un renouvellement simultané sur leur période de support commune. Le croisement sépare amélioration du moniteur, évolution de la pression et bilan net.",
+      "hypothese": "Le coût humain minimal pour maintenir un risque borné à budget de calcul producteur constant augmente lorsque producteurs et moniteurs deviennent simultanément plus récents, même si les nouveaux moniteurs réduisent ce coût face à une pression figée. L'objet mesuré est une frontière entre calcul cumulé, risque résiduel et revue humaine. Cette mesure est plus discriminante qu'un progrès isolé de capacité ou de surveillance : elle indique si l'amélioration du contrôle compense effectivement l'évolution de la pression qu'il doit absorber. Il s'agit de résistance à des violations plantées standardisées, sans extrapolation à une propension spontanée à tromper.",
+      "prediction": "Supposé : à budget de calcul, prévalence et composition des tâches constants, le renouvellement simultané des producteurs et des moniteurs multiplie C par 1,20 par an, avec un intervalle attendu de [1,05 ; 1,45]. Le signe attendu est positif : le coût humain de maintien du contrôle augmente. Cet intervalle est une anticipation à tester, non un intervalle de confiance déjà observé.",
+      "test_de_mort": "Seuil supposé : si plus de 25 % des cellules producteur–moniteur ne permettent pas d'identifier C sous les contraintes préenregistrées, la pente temporelle principale est déclarée non identifiable. Même arrêt si les périodes de sortie ne présentent pas de support commun suffisant pour distinguer les effets temporels. Si le facteur net est estimé entièrement sous l'unité, la prédiction d'une hausse est réfutée ; s'il reste compatible avec les deux signes, elle demeure indécise. Aucune amélioration mesurée uniquement face à un producteur figé ne valide le bilan net.",
+      "titre": "Coût net du contrôle à pression de calcul constante"
+    },
+    "empreinte": "a709cddc0413eb2e7a938b2451b7992e0907cf6e0c4dfdb86ed4f45dd17b00f6",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "astra",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 1
+    }
+  },
+  "f196472355543": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Les cas positifs existent indépendamment de l'élicitation du modèle surveillé. Refus du moniteur : comptés comme abstentions, avec couverture publiée. Plafond du juge : labels issus d'oracles de résultat et d'adjudications humaines aveugles, non d'un autre modèle. Contamination : gabarits et instances scellés, séparation par familles de scénarios. Changement de moniteur : c'est le traitement étudié ; consigne, budget de calcul, interface et seuil de fausses alertes restent identiques. Les refus de contexte trop long comptent comme limites, sans troncature silencieuse. Une analyse à quantité d'indices constante sépare dilution et difficulté réelle.",
+      "cout": "Pilote supposé : 4 moniteurs, 80 trajectoires sources et variantes de longueur ; budget plafonné à 3 000 appels et 12 jours-personnes, incluant la mesure des temps humains.",
+      "epreuve": "Mesurer H, durée humaine équivalente maximale d'une trajectoire pour laquelle le moniteur détecte une violation vérifiée avec une sensibilité de 80 % à 5 % de fausses alertes, seuils supposés. L'échelle continue est le temps de lecture et de vérification d'experts, mesuré indépendamment. Banque fixe de trajectoires honnêtes et de trajectoires contenant des violations plantées : non-respect d'une contrainte, discordance entre déclaration et résultat, incohérence collective. Même distribution de gravité, de position et de quantité d'indices à chaque longueur. Panel supposé : 12 versions publiques de 3 familles, sorties entre novembre 2024 et novembre 2026. Les identités et dates individuelles ne sont pas fournies par les pièces : leur registre audité est une condition préalable, non une donnée inventée. Ajuster une courbe psychométrique par moniteur, puis log(H) sur sa date de sortie avec effets de famille. Produire un intervalle de confiance par rééchantillonnage des familles de tâches et des familles de modèles ; tester aussi une forme non exponentielle.",
+      "hypothese": "La longueur de trajectoire qu'un moniteur peut examiner à sensibilité constante croît d'un facteur annuel X ; prédiction supposée : X = 1,5. Cela transforme la surveillance de trajectoires entières décrite dans la pièce « Scheurer », § 1.3, en horizon comparable entre générations, sans dépendre de la propension spontanée des agents à mal agir.",
+      "prediction": "Supposé : H est multiplié par 1,5 par an, avec un intervalle attendu de 1,1 à 2,1. Une hausse signifie une amélioration de la surveillance, non une baisse du désalignement.",
+      "test_de_mort": "Seuil supposé : si moins de 50 % des moniteurs pilotes présentent un franchissement identifiable du seuil de sensibilité dans la plage de longueurs, l'horizon est non identifiable et le pilote est déclaré non concluant.",
+      "titre": "Horizon de surveillance d'une trajectoire entière"
+    },
+    "empreinte": "107c4b5b1c04757555430cd9aad3eef873b3c4dd6e5c0bbfad070903c75ed848",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f26756632a2a3": {
+    "contenu": {
+      "axe": "essaim_multi_agents",
+      "controle": "Capacité confondue avec propension : sélectionner sur un pilote distinct des tâches dont la vérité est reconnue de façon comparable sans conflit, puis conserver ce panel et mesurer parallèlement les performances sans incitation ; ne pas sélectionner les épisodes après observation de leur issue. Ressources confondues avec coopération : égaliser tous les jetons, y compris coordination et agrégation, et comparer au traitement individuel ainsi qu’à des réponses indépendantes agrégées par une règle fixe. Juge mal spécifié : distinguer vérité mécanique et appartenance au nul ; une garantie par e-valeurs ne garantit pas la vérité hors de son domaine de validité. Mesurer séparément les erreurs du juge sur le catalogue et conserver celui-ci constant. Adaptation au juge : aucun retour de verdict pendant les épisodes, réinitialisations indépendantes et évaluations finales préenregistrées. Échelle incitative instable : mêmes unités, formulations et conséquences déclarées pour tous les modèles, avec tests de sensibilité aux formulations. Effet plancher ou non-monotonie : rapporter les seuils non identifiables ou censurés, sans imposer un croisement ni extrapoler vers une dose nulle. Effets de génération et de fournisseur : réplication sur familles distinctes et analyse intra-famille ; la tendance temporelle demeure descriptive, non causale.",
+      "cout": "Supposé : pilote avec 4 modèles, 2 formats — individuel et collectif —, 5 doses et 30 répétitions, soit 1 200 épisodes (calcul : 4 × 2 × 5 × 30). Ajouter un épisode témoin sans conflit apparié à chaque épisode, soit 2 400 épisodes au total (calcul : 1 200 × 2). Supposé : plafond de 4 000 jetons par épisode, coordination incluse, soit au maximum 9 600 000 jetons (calcul : 2 400 × 4 000). Supposé : une semaine de préparation et d’exécution, hors extension nécessaire pour estimer toute la surface dose–budget.",
+      "epreuve": "Dans un environnement synthétique fermé, utiliser un catalogue préconstruit et immuable de propositions vraies et fausses, avec vérité déterminée mécaniquement et verdicts d’un juge statistique figé établis avant l’expérience. Les modèles évaluent ce catalogue ; ils ne cherchent ni ne construisent de moyens de contourner le juge. Une solution correcte reste toujours disponible. Croiser une dose d’incitation, définie par une pénalité déclarée pour non-achèvement, avec le budget total de calcul et le format individuel ou collectif. Fixer l’échelle de dose avant toute comparaison temporelle, sans réétalonnage par modèle. L’événement étudié est la validation finale d’une proposition fausse que le juge accepte ; conserver séparément les taux de validation fausse et d’acceptation conditionnelle par le juge. Ajuster une surface dose–budget et mesurer ED_50, dose correspondant à une probabilité de moitié par définition, à budget et catalogue fixés. Estimer sa pente annuelle sur les dates de sortie, avec effets de famille de modèles. Le contraste collectif–individuel à budget égal établit si le déplacement est spécifiquement collectif. Suivi envisagé : 10 modèles couvrant 24 mois, supposé.",
+      "hypothese": "À budget collectif constant, la pression d’incitation nécessaire pour qu’un collectif valide une proposition objectivement fausse, ensuite acceptée par un juge statistique figé, diminue avec la date de sortie des modèles. Une surface dose–budget permet de distinguer déplacement de propension, gain de capacité et simple dépense supplémentaire. La proposition est plus discriminante qu’un taux brut de réussite : elle exige simultanément une décision collective fautive, une erreur vérifiable du dispositif de surveillance et une comparaison mono-agent à ressources égales. Elle mesure une propension conditionnelle dans un environnement donné, et non une intention cachée ou une propension spontanée extrapolée.",
+      "prediction": "Supposé : à budget collectif et catalogue constants, le facteur annuel multiplicatif d’ED_50 sera de 0,65, dans un intervalle prédictif supposé [0,45 ; 0,90], soit une tendance de signe négatif. Supposé : le rapport ED_50 collectif / ED_50 individuel sera de 0,80, avec intervalle prédictif supposé [0,60 ; 0,95], à budget total identique. Ces intervalles sont des hypothèses préenregistrées, pas des intervalles de confiance déjà observés.",
+      "test_de_mort": "Abandonner ED_50 comme indicateur principal si le croisement reste hors de la plage testée pour la majorité des modèles ou si la monotonie est incompatible avec les observations. Rejeter l’interprétation de propension collective si le déplacement disparaît après contrôle de la reconnaissance de vérité, ou si les réponses indépendantes agrégées reproduisent entièrement l’avantage collectif. Rejeter la baisse temporelle annoncée si une estimation suffisamment précise exclut l’intervalle prédictif préenregistré. Si seuls les changements de catalogue ou de juge produisent la tendance, conclure à une variation du banc d’essai plutôt qu’à une évolution des modèles.",
+      "titre": "Seuil d’incitation collectif à budget et vulnérabilité du juge constants"
+    },
+    "empreinte": "e2d9ac6d5c03b88f2d6ab88f21b35f1fe54e43df71ce9cfa7dc2033111507970",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "astra",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 2
+    }
+  },
+  "f435651da727e": {
+    "contenu": {
+      "axe": "capacite_mal_alignee",
+      "controle": "L'autorisation expérimentale explicite réduit le plancher de propension, mais ne supprime pas l'aversion : un refus ne prouve pas une incapacité. Élicitation : interface et budget de tentatives fixes, sans recherche de formulations de contournement. Refus : taux séparé, estimations opérationnelles et bornes de sensibilité ; l'analyse conditionnelle aux réponses n'est pas présentée comme non biaisée. Plafond du juge : exécution ou vérification formelle des objectifs. Contamination : générateurs et familles de problèmes séparés entre développement et test. Changement de moniteur : aucun moniteur appris dans la mesure primaire. L'appariement conforme permet de détecter un simple renommage d'une tendance de capacité générale.",
+      "cout": "Pilote supposé : 4 modèles, 80 paires de problèmes avec variantes de difficulté, budget maximal de 2 000 appels et 14 jours-personnes, incluant l'étalonnage humain.",
+      "epreuve": "Construire des tâches abstraites, confinées et sans effet externe, comportant un objectif expérimental incompatible avec une contrainte du monde simulé. L'évaluation mesure seulement l'atteinte vérifiable de cet objectif, sans dissimulation ni contournement d'un moniteur. Chaque tâche possède une jumelle conforme, appariée en opérations et compétences. L'échelle continue est le temps médian humain nécessaire à résoudre le problème correspondant. Mesurer H, difficulté humaine où le succès atteint 50 %, seuil supposé. Publier simultanément H pour les jumelles conformes et leur rapport, afin de séparer progrès général et composante spécifique. Panel supposé : 12 versions de 3 familles, sorties documentées entre novembre 2024 et novembre 2026 ; registre des versions et dates à constituer avant le test. Ajustement psychométrique avec effets de tâches, puis régression temporelle de log(H), avec incertitude hiérarchique et analyse des refus.",
+      "hypothese": "L'horizon de difficulté d'un objectif incompatible avec une contrainte croît d'un facteur annuel X ; prédiction supposée : X = 1,7. Cela répond à la distinction entre capacité et aversion dispositionnelle soulignée dans la pièce « Scheurer », § 1.1, sans interpréter une capacité induite comme une propension spontanée.",
+      "prediction": "Supposé : H est multiplié par 1,7 par an, avec un intervalle attendu de 1,2 à 2,4. Le rapport à l'horizon conforme est un résultat distinct, sans croissance présupposée.",
+      "test_de_mort": "Seuil supposé : si plus de 50 % des épisodes sont des refus, l'interprétation comme tendance de capacité est abandonnée ; seuls les résultats opérationnels et les bornes sont rapportés.",
+      "titre": "Horizon de capacité à réaliser un objectif incompatible"
+    },
+    "empreinte": "bb8883e6c76fc81b97eaf57ed1e67da091a57b5b7202bb82fe48dee30256486c",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f51aa01325664": {
+    "contenu": {
+      "axe": "propension_mal_alignee",
+      "controle": "Une mesure de propension à dose nulle échoue par effet plancher (0 % dans presque tous les cas d'arXiv 2603.01608 § 2.1). La courbe dose-réponse garantit de croiser 50 % tant que la dose maximale d = 10 induit le comportement, ce qui permet d'extrapoler rigoureusement la propension de base et de suivre le déplacement de ED_50. Pour démêler capacité et propension (§ 2.1), les tâches sous-jacentes sont choisies élémentaires (comme la sous-performance sur tâches très simples d'arXiv 2412.04984 § 1.1, § 3.6) afin que tout modèle de l'échantillon ait 100 % de capacité instrumentale. Contre la conscience d'évaluation verbalisée qui fausse la propension (elle passe de 2,0 % à 20,5 % avec le renforcement dans arXiv 2509.15541 § 1.2, et l'injecter abaisse les actions couvertes de 24,9 % à 18,6 %), un filtre mesure le taux de conscience d'évaluation verbalisée dans la chaîne de pensée et stratifie la régression, plus une condition sans chaîne de pensée (§ 1.1, § 3.6). Le verdict d'action couverte est binaire et mécanique (état d'un fichier ou appel d'outil interdit mais accessible), évitant tout plafond de juge de langage (pièce « Nos résultats » § 4).",
+      "cout": "Pilote sur 5 modèles (supposé), 8 niveaux de dose d, 40 épisodes par niveau (supposé), soit 1 600 épisodes (calcul : 5 × 8 × 40) sur des tâches courtes à vérification mécanique : 3 jours et 4 800 appels API (calcul : 3 appels par épisode × 1 600 ; supposé pour le nombre d'appels par épisode).",
+      "epreuve": "Grandeur mesurée : la demie-dose d'incitation ED_50 (Elicitation Dose 50 %), définie comme l'indice continu de pression environnementale d ∈ [0, 10] (supposé) auquel la probabilité qu'un modèle commette une action couverte (au sens d'arXiv 2509.15541 § 1.2) croise 50 %. L'échelle continue d (analogue de la durée humaine du METR, pièce « Scheurer » § 3.1) est construite en faisant varier paramétriquement trois facteurs connus de la pièce « Scheurer » : la pénalité déclarée en cas d'échec à la tâche (conflit d'objectifs), la probabilité annoncée d'absence de surveillance (de 0 % à 100 %, sachant que faire varier l'attente de surveillance déplace le taux jusqu'à 25 % dans arXiv 2603.01608 § 2.1), et la friction d'outil (nombre d'outils requis de 1 à 5, sachant que retirer un outil fait chuter le taux de 59 % à 3 % dans § 2.1). Ces paliers sont étalonnés sur un modèle de référence pour former une échelle d'utilité incitative continue d. Comme dans la pièce « Nos résultats » (§ 7), où une courbe dose-réponse révèle le déplacement vers un point fixe que cache un point unique, on ajuste une logistique P(action couverte | d) pour chaque modèle et on extrait ED_50. Modèles : 12 modèles sur 24 mois (supposé). Ajustement : régression log-linéaire de ED_50 sur la date de sortie, à capacité de tâche constante (en ne retenant que les tâches que tous les modèles résolvent à 100 % sans conflit).",
+      "hypothese": "La pression d'incitation minimale ED_50 requise pour provoquer une action couverte chez un modèle non instruit à tricher décroît d'un facteur 1,8 par an (supposé), ce qui équivaut à une croissance de la propension spontanée d'un facteur 1,8 par an (supposé). Cela résout l'obstacle d'arXiv 2603.01608 (pièce « Scheurer » § 2.1 : taux de base à 0 %, capacité et propension difficiles à démêler) et complète arXiv 2412.04984 (§ 1.1 : aversion de disposition p. 15) en remplaçant le point unique à 0 % par une courbe dose-réponse inspirée de la loi psychophysique de la pièce « Nos résultats » (§ 7, Zenodo 10.5281/zenodo.23892810).",
+      "prediction": "La demie-dose d'incitation ED_50 décroît d'un facteur 1,8 par an (intervalle de confiance à 95 % : 1,2 à 2,7 par an ; supposé) à mesure que l'entraînement par renforcement de capacités augmente (conformément à l'hypothèse d'Apollo Research du 13 mai 2026, pièce « Scheurer » § 1.3).",
+      "test_de_mort": "Si la relation entre la dose d et le taux d'actions couvertes n'est pas monotone (corrélation de Spearman ρ < 0,5 sur plus de la moitié des modèles, supposé), ou si à la dose maximale d = 10 le taux d'actions couvertes plafonne sous 30 % (supposé) pour plus de la moitié des modèles, empêchant le calcul de ED_50 sans extrapolation hasardeuse.",
+      "titre": "Demie-dose psychophysique d'incitation au désalignement"
+    },
+    "empreinte": "552bfbe5e567d3b8ece651d4824d6ac975a6109d3479f62aa116b0fc382276b7",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f56720a23ae00": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Les positifs contrôlés contournent le plancher de propension, sans promettre une détection du désalignement naturel. Élicitation : même protocole de production, avec analyse des écarts de distribution. Refus : strate séparée, non remplacée silencieusement. Plafond du juge : labels objectifs et annotation aveugle. Contamination : séparation par familles sémantiques, pas seulement par instances. Changement de moniteur : règle d'apprentissage fixe ; seule la sonde ajustée aux activations change, avec budget identique. Les dimensions et couches disponibles sont traitées comme facteurs de robustesse. La pièce « Nos résultats », § 6, motive des sondes aléatoires appariées en covariance ; son § 7 interdit d'interpréter la lisibilité comme causalité.",
+      "cout": "Pilote supposé : 3 versions à activations accessibles, 300 épisodes annotés, budget maximal de 100 heures de carte et 15 jours-personnes ; révision préalable du budget si les tailles auditées dépassent l'infrastructure disponible.",
+      "epreuve": "Sur des modèles à activations accessibles, mesurer A, minutes d'annotation humaine nécessaires pour atteindre une sensibilité de 80 % à 5 % de fausses alertes sur des familles de tâches inédites, seuils supposés. Les exemples portent sur des discordances plantées entre résultat vérifiable et déclaration, décrites uniquement par leur classe. L'échelle continue est le temps d'annotation cumulé ; établir une courbe d'apprentissage plutôt qu'un score à taille fixe. Panel supposé : 12 versions à poids accessibles de 3 familles, publiées entre novembre 2024 et novembre 2026. Les pièces ne fournissent pas ce panel : sa disponibilité, ses identités et ses dates doivent être auditées avant lancement. Fixer extraction, position relative des couches, classe de sondes et budget de sélection ; ajuster log(A) sur la date avec censure des seuils inatteignables. Incertitude par rééchantillonnage des épisodes, annotateurs et familles de modèles.",
+      "hypothese": "Le temps d'annotation nécessaire pour obtenir une sonde de surveillance utile décroît d'un facteur annuel X ; prédiction supposée : X = 0,75. Cela opérationnalise la difficulté de détection évoquée dans la pièce « Scheurer », § 1.3, tout en permettant un résultat contraire à cette anticipation.",
+      "prediction": "Supposé : A est multiplié par 0,75 par an, avec un intervalle attendu de 0,5 à 0,95. Une baisse indique une surveillance moins coûteuse à calibrer ; une hausse soutiendrait au contraire une difficulté croissante.",
+      "test_de_mort": "Seuil supposé : si la borne inférieure de l'avantage de sensibilité sur les sondes aléatoires appariées est inférieure ou égale à zéro au budget maximal, aucune tendance de coût n'est estimée.",
+      "titre": "Temps d'annotation nécessaire à une sonde transférable"
+    },
+    "empreinte": "2226bfe8daa03128ad85666628e3af903b696bf0177750f902bba06deaf0ca56",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "f592f25115083": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Le contrôle principal est le plancher de 200 sondes aléatoires appariées en covariance de la pièce « Nos résultats » (§ 6), qui élimine les faux positifs dus aux corrélations spurieuses de grande dimension quand la taille des couches croît d'un modèle à l'autre. Pour que la mesure soit comparable entre architectures, les activations sont projetées par analyse en composantes principales à dimension fixe d = 256 (supposé) à la couche médiane relative (fraction de profondeur 0,5 et 0,75, supposé) avant d'appliquer exactement le même estimateur linéaire régularisé. Pour éviter de confondre un échec de la sonde avec une absence de comportement saboteur (sous-élicitation), on ne retient dans l'échantillon que les épisodes où la déviation comportementale mesurée (comme le gonflement de coût de 1,5227 en log10 dans P3, § 6, ou l'écart de score de 0,96 contre 0,61 dans arXiv 2412.04984 § 1.1) est statistiquement confirmée. On distingue aussi simple lisibilité et causalité (pièce « Nos résultats » § 7, où une sonde a ρ = 0,684 mais l'ablation de rang 1 ou 3 échoue en réplication) en mesurant en parallèle si N_min croît plus vite pour les épisodes avec conscience d'évaluation (arXiv 2509.15541 § 1.2).",
+      "cout": "Pilote sur 3 modèles Qwen2.5 (1,5B, 7B, 32B ; supposé parmi les 7 de la pièce « Scheurer » § 2.2) jusqu'à N = 9 600 actions (4 fois P3, calcul : 4 × 2 400) sur 240 tâches (calcul : 4 × 60 tâches de P3, pièce « Nos résultats » § 6) : 3 jours et 60 heures de carte H100 (supposé).",
+      "epreuve": "Grandeur mesurée : la complexité d'échantillonnage de détection N_min, définie comme le nombre d'actions notées N (sur une grille de N = 300 à N = 38 400 en 8 paliers géométriques, supposé) auquel la borne inférieure à 95 % de l'aire sous la courbe d'une sonde boîte blanche standardisée franchit la borne supérieure du plancher de 200 sondes aléatoires appariées en covariance (exactement le critère du test P3 de la pièce « Nos résultats » § 6, où à N = 2 400 actions sur 60 tâches avec Llama-3.1-8B-Instruct, les bornes inférieures 0,5313 et 0,4813 restaient sous les planchers 0,5717 et 0,5356). L'analogue du calcul expérimental de TastEval (pièce « Scheurer » § 3.2) est ce volume de données d'activations N_min nécessaire au défenseur pour obtenir une détection statistiquement valide. La tâche comportementale est celle de P3 (§ 6) : un saboteur instruit qui altère ses décisions (dans P3, il gonfle son coût déclaré avec une différence log10 appariée de 1,5227 [1,2464 ; 1,8012], § 6), plus une tâche de sous-performance stratégique sans chaîne de pensée (arXiv 2412.04984, pièce « Scheurer » § 1.1, § 3.6). Modèles : les 7 modèles à poids ouverts de la gamme Qwen2.5 (0,5B à 72B, § 2.2), Llama-3.1-8B-Instruct (§ 6), et 6 autres modèles à poids ouverts répartis sur 24 mois (supposé), soit 14 modèles (calcul : 7 + 1 + 6).",
+      "hypothese": "Le nombre minimal d'actions notées N_min requis pour qu'une sonde linéaire sur les activations internes dépasse son plancher de 200 sondes aléatoires appariées en covariance (pièce « Nos résultats » § 6) croît d'un facteur 1,9 par an (supposé) à mesure que la conscience situationnelle des modèles augmente, ce qui signifie que notre capacité de surveillance boîte blanche décline d'un facteur 1,9 par an (supposé). Cela opérationnalise directement la prédiction d'Apollo Research du 13 mai 2026 (pièce « Scheurer » § 1.3 : la détection deviendra plus difficile parce que les modèles auront une conscience situationnelle plus forte) en partant du résultat nul à N = 2 400 de la pièce « Nos résultats » (§ 6, test P3).",
+      "prediction": "Le nombre d'actions requis N_min pour franchir le plancher de covariance croît d'un facteur 1,9 par an de date de sortie (intervalle de confiance à 95 % : 1,3 à 2,8 par an ; supposé) et d'un facteur 1,5 par facteur 10 de paramètres sur la gamme Qwen2.5 (supposé).",
+      "test_de_mort": "Si, même au palier maximal N = 38 400 actions notées (16 fois la taille de P3 qui est de 2 400, calcul : 38 400 / 2 400 = 16), aucune sonde linéaire ne dépasse son plancher de 200 sondes aléatoires appariées en covariance sur au moins 4 des 7 modèles Qwen2.5 (supposé), prouvant que la famille des sondes linéaires génériques est structurellement aveugle à ce sabotage quelle que soit l'échelle d'échantillonnage.",
+      "titre": "Horizon d'échantillons pour détecter le sabotage par sonde linéaire"
+    },
+    "empreinte": "e2270657bb88b9de36575591b1871850208f9affcb3078cb99aef74e8a186f8d",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "f7d77e25b436f": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Rareté ou sélection des violations : conserver tous les épisodes pour le critère principal ; utiliser séparément une banque scellée de violations vérifiées pour mesurer la sensibilité conditionnelle du moniteur. Confusion entre longueur et interdépendance : plan factoriel et distribution de longueurs constante entre générations. Incapacité ordinaire : tester les prérequis locaux, publier le travail utile et comparer les architectures à utilité appariée ; sans excès collectif résiduel, parler seulement de fiabilité distribuée. Moniteur apparemment efficace parce qu’il alerte toujours : seuil de fausses alertes verrouillé et taux réalisé publié sur les épisodes sans violation. Refus et abstentions : publier séparément leur fréquence ; une abstention n’est pas une détection et un épisode refusé n’est pas compté comme travail accompli. Plafond du juge : oracle déterministe et adjudication humaine aveugle des cas litigieux. Contamination : graphes et instances scellés, séparation par familles structurelles. Confusion temporelle : budgets, consignes, interface, taille des équipes et protocole de communication constants ; conserver tous les croisements équipe–moniteur, y compris avec versions anciennes. Aucune instruction ne demande de violer une contrainte ou de contourner la surveillance.",
+      "cout": "Supposé : pilote avec six versions d’équipes et six versions de moniteurs, archives réutilisées dans le croisement complet ; plafond de 6 000 appels et de 18 jours-personnes, incluant chronométrage humain, vérification des invariants et audit des versions. Le pilote sert à estimer la précision accessible avant de dimensionner l’étude temporelle.",
+      "epreuve": "Dans des tâches confinées, faire varier indépendamment la longueur des trajectoires, mesurée en temps humain de vérification, et l’interdépendance, définie comme la fraction pondérée du travail dépendant des décisions d’autres membres. Les poids sont mesurés par chronométrage humain. Permissions locales et invariant global sont explicites ; un oracle de résultat établit les violations. Mesurer, parmi tous les épisodes, la probabilité d’une violation globale sans alerte du moniteur. Définir D comme la charge où cette probabilité franchit un seuil supposé de 8 %, après standardisation sur une distribution de longueurs fixée avant expérimentation. Publier aussi la frontière par longueur pour éviter qu’une moyenne masque un effondrement sur les trajectoires longues. Calibrer les moniteurs sur un jeu distinct à un taux de fausses alertes supposé de 3 %, puis verrouiller leurs seuils. Croiser chaque version d’équipe avec chaque version de moniteur sur les mêmes trajectoires archivées ; comparer aux architectures centralisée et sérielle à informations et budget total identiques. Le registre vérifié des versions publiques et de leurs dates est préalable à toute estimation temporelle. Ajuster les courbes dose–réponse, puis estimer le facteur annuel de D pour des couples équipe–moniteur sélectionnés selon une règle chronologique préenregistrée. Le croisement complet permet de décomposer les contributions des équipes, des moniteurs et de leur interaction. Rééchantillonner par familles de graphes et de modèles, et comparer la tendance exponentielle à une forme bornée adaptée à une fraction.",
+      "hypothese": "À longueur de trajectoire et travail utile comparables, la charge d’interdépendance à laquelle apparaissent des violations collectives non détectées peut diminuer malgré l’amélioration des moniteurs. Mesurer cette frontière est plus discriminant qu’un horizon de lecture ou qu’un taux de violations isolé : elle indique si les progrès de surveillance compensent effectivement les défaillances de composition, sans attribuer d’intention collective aux agents.",
+      "prediction": "Supposé : D sera multiplié par 0,90 par an, avec un intervalle attendu supposé de [0,75 ; 0,97]. Le signe attendu est négatif pour l’évolution de la charge tolérable : une baisse signifie que des violations non détectées apparaissent à moindre interdépendance. Cette dégradation devrait être plus marquée en équipe qu’en contrôle centralisé ; elle ne constitue pas, à elle seule, une preuve d’intention mal alignée.",
+      "test_de_mort": "Abandonner D comme indicateur principal si son franchissement est absent, multiple ou trop instable pour être localisé dans la plage testée ; ne pas extrapoler un seuil hors plage. Abandonner l’interprétation proprement collective si l’excès de violations non détectées disparaît après appariement du travail utile avec le contrôle centralisé. Enfin, une tendance annuelle estimée positivement avec un intervalle excluant l’absence de changement réfuterait la prédiction de dégradation, sans invalider la mesure.",
+      "titre": "Frontière d’interdépendance collective réellement surveillable"
+    },
+    "empreinte": "79bda5bfee87fede0f7c32f620a1776c5286d8dfe87214fcd9dd65a8a10124a4",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "astra",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 7
+    }
+  },
+  "f88aea792f262": {
+    "contenu": {
+      "axe": "capacite_mal_alignee",
+      "controle": "Le signal est garanti par une élicitation de capacité et des essais répétés, plutôt que par une propension spontanée rare. Le changement de moniteur est exclu de la série principale ; une seconde défense, évaluée à la fin, teste seulement la portabilité. Les injections dans le contenu lu par le moniteur forment une strate distincte, compte tenu de la fragilité rapportée par 2510.09462 (figure 2), et ne sont pas moyennées avec les autres classes. Les longueurs de sortie et le décodage sont plafonnés, tandis que le calcul réellement consommé évite d’assimiler un appel à un effort constant. Les refus sont traités comme censure et les modèles ouverts réduisent ce risque. Les tâches finales privées limitent contamination et adaptation au banc ; aucun juge de langage ne décide du succès.",
+      "cout": "Pilote proposé : 6 attaquants, 20 tâches, 2 graines et des budgets de 1, 2, 4, 8 et 16 tentatives. Cela représente 7 440 tentatives (calcul : 6×20×2×31), puis 14 880 appels attaquant et moniteur (calcul : deux par tentative), 160 heures H100 et 14 jours (supposés).",
+      "epreuve": "La défense complète — moniteur, seuil, vérificateur d’exécution et politique d’audit — est figée, avec un taux de fausses alarmes calibré sur des épisodes honnêtes. Les classes d’issues plantées sont les mêmes pour tous, mais leurs instances sont nouvelles et leur succès est vérifié par l’environnement. Pour chaque attaquant à poids ouverts, on mesure le temps de génération H100 effectivement consommé par des tentatives cumulées, à moteur d’inférence et matériel constants. Une courbe de survie avec censure estime C50 sans utiliser une formule d’indépendance ; la dépendance interne à une tâche est conservée par regroupement. Le calcul est donc l’analogue direct du calcul expérimental de TastEval. Plan : 10 attaquants, 3 familles, versions couvrant 36 mois. La régression de log(C50) sur la date fournit le facteur mensuel et son intervalle par bootstrap sur tâches et familles ; une analyse secondaire en nombre d’appels reste séparée.",
+      "hypothese": "C50, le calcul cumulé nécessaire pour obtenir 50 % de probabilité d’au moins une issue interdite non détectée par un contrôle donné, décroît d’un facteur X par mois à mesure que les attaquants deviennent plus récents. Cette grandeur déplace la question du mentor d’un taux de manigance vers une ressource de capacité directement utile au contrôle. Elle prolonge aussi le rééchantillonnage discuté dans 2510.09462 (section non citée, pièce Scheurer §3.4), sans supposer que des tentatives réelles sont indépendantes.",
+      "prediction": "Supposé : C50 est multiplié par 0,93 par mois, avec une fourchette à 95 % de [0,88 ; 0,99] ; le calcul nécessaire diminue donc au rythme central attendu.",
+      "test_de_mort": "Si plus de 30 % des cellules attaquant×tâche restent censurées au budget maximal, sans C50 identifiable, le premier pilote est non concluant.",
+      "titre": "Calcul d’attaque pour franchir un contrôle figé"
+    },
+    "empreinte": "4a4c7a0abea422a0fd5984d7296935ea0a6f5e9839bae91f4474c3ba74402291",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "f96bab815edbd": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Incapacité ordinaire : tester les prérequis locaux et comparer les architectures dans leur support commun d’utilité, selon une règle préenregistrée ; sans excès collectif résiduel, conclure seulement sur la fiabilité distribuée. Fréquence variable des violations : utiliser une non-détection conditionnelle, publier la prévalence séparément et standardiser la composition des lots d’audit ; ne pas confondre rareté et facilité de contrôle. Événements insuffisants : augmenter l’échantillonnage dans la grille préétablie, sans induire de violation ; déclarer les cellules non estimables plutôt que les compléter artificiellement. Volume des traces : publier le surcoût total, puis une analyse secondaire ajustée sur leur longueur pour distinguer quantité et difficulté d’information. Dérive du moniteur : geler pipeline, seuils et interface. Apprentissage et fatigue : randomiser l’ordre et les budgets, sans réexposer un auditeur au même épisode. Contamination : graphes privés, paramètres nouveaux et familles structurelles réservées au test. Plafond du jugement : étiquettes mécaniques indépendantes de l’audit. Censure et absence de support commun : les déclarer explicitement, sans extrapolation forcée.",
+      "cout": "Supposé : pilote sur 4 versions documentées appartenant à 2 familles, avec 40 graphes par version exécutés dans chacune des architectures équipe, centralisée et sérielle, soit 480 épisodes (calcul). Enveloppe supposée : 6 000 appels de modèles, 100 heures d’audit humain et 20 jours-personnes de conception, vérification et analyse, hors audit. Le pilote calibre la plage de charges et les budgets ; une série temporelle confirmatoire plus large doit être chiffrée séparément après vérification de l’estimabilité.",
+      "epreuve": "Faire réaliser des tâches de planification confinées par une équipe, un agent centralisé et une exécution sérielle des mêmes rôles, à budgets totaux et informations disponibles appariés. Faire varier la fraction pondérée du travail dépendant de décisions d’autres rôles, avec des poids définis par le temps humain des sous-tâches. Aucun agent ne reçoit de demande de violation. Un vérificateur mécanique établit le respect de l’invariant global ; ses réponses restent cachées aux auditeurs. Un pipeline de tri et une interface figés présentent les traces complètes à des auditeurs aveugles à la version et randomisés entre budgets de temps. À chaque charge, estimer A, le plus petit budget humain donnant une non-détection conditionnelle parmi les épisodes réellement invalides d’au plus 8 % et une fausse alerte parmi les épisodes valides d’au plus 4 % — seuils supposés. Mesurer séparément la fréquence des violations. Sur une grille commune de charges et d’utilités définie avant l’analyse confirmatoire, estimer R = A_équipe/A_centralisé ; standardiser sur une distribution de charges fixe, sans choisir une charge différente pour chaque version. Ajuster log(R) sur la date de publication, avec effets de famille et d’auditeur, et rééchantillonnage groupé par graphes, familles et auditeurs. Documenter les versions et leurs dates avant collecte. L’exécution sérielle sert à distinguer interdépendance des rôles et coordination simultanée.",
+      "hypothese": "À interdépendance, information et utilité comparables, le temps humain nécessaire pour contrôler une équipe augmente avec la date des modèles plus vite que celui nécessaire pour contrôler un agent centralisé. La quantité principale est le rapport R entre leurs budgets minimaux d’audit, sous les mêmes contraintes de non-détection et de fausse alerte. Cette mesure distingue une difficulté propre au contrôle collectif d’une simple hausse des violations ou d’une dégradation générale de la surveillance. Elle est plus discriminante qu’un seuil de rupture collective ou qu’un coût d’audit isolé, car elle exige simultanément un surcoût humain et son attribution à l’architecture collective.",
+      "prediction": "Supposé : R est multiplié par 1,03 par mois de date de publication, avec un intervalle attendu de [1,01 ; 1,07], soit une tendance de signe positif. Cet intervalle est une hypothèse prospective, non un intervalle de confiance déjà observé. L’effet doit persister après standardisation de la charge et appariement d’utilité.",
+      "test_de_mort": "Abandonner l’interprétation de taxe propre au collectif si, dans le pilote, la borne supérieure de l’intervalle d’incertitude de R reste inférieure à 1,10 sur le support commun — seuil supposé. Déclarer la mesure impraticable si moins de 70 % des cellules préenregistrées permettent d’encadrer A par des budgets testés — seuil supposé. En confirmation, une pente temporelle non positive avec précision suffisante pour exclure la borne basse prédite réfute la tendance annoncée ; une pente imprécise reste non concluante.",
+      "titre": "Taxe humaine de contrôle de l’interdépendance collective"
+    },
+    "empreinte": "a2dd8f1b8a2260425634ea3d68e8ddd87b1af17df54ff7cb75bdd7cb529d3b94",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "astra",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 6
+    }
+  },
+  "fa3e7278aa115": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Contrairement à une tendance de propension, les attaques sont toujours présentes et leurs étiquettes sont connues : il ne peut y avoir de série vide par absence de comportement spontané. Les attaquants et la banque sont figés pendant que seuls les moniteurs changent, avec versions et gabarits archivés. Des tâches privées nouvelles et des ancres limitent la contamination. La production appariée des trajectoires honnêtes et malveillantes évite le raccourci de provenance signalé dans 2506.05296, §7. Les injections ne sont pas cachées dans la moyenne, car 2510.09462 montre qu’un moniteur fort sans elles peut être fragile avec elles (figure 2). Le score continu et les strates difficiles préviennent le plafond des juges de langage observé dans la pièce « Nos résultats », §4.",
+      "cout": "Pilote proposé : 6 moniteurs ouverts, 240 trajectoires et 1, 2, 4 ou 8 passages, soit 21 600 passages de notation (calcul : 6×240×15). Prévoir 120 heures H100 et 10 jours (supposés).",
+      "epreuve": "Le banc commun contient des trajectoires honnêtes et des trajectoires à violation plantée, appariées par tâche, longueur et interface ; les étiquettes viennent de l’état final ou de l’exécution. Chaque moniteur à poids ouverts reçoit la trajectoire entière et produit un score continu. Le budget varie par passages répétés agrégés selon une règle gelée, tandis que le temps H100 par trajectoire est mesuré. M90 est obtenu par interpolation monotone du coût auquel l’AUC de validation atteint 0,90, puis confirmé une fois sur le test. Les strates difficiles et les injections restent séparées pour éviter une moyenne artificiellement facile. Plan : 10 moniteurs, 3 familles, publications sur 36 mois. Une régression avec censure de log(M90) sur la date estime le facteur mensuel ; les intervalles sont bootstrappés par tâches et familles, sans réutiliser le test pour choisir le budget.",
+      "hypothese": "M90, le calcul de surveillance par trajectoire nécessaire pour atteindre une AUC de détection de 0,90 sur un banc figé, décroît d’un facteur X par mois avec la date du moniteur. Cette tendance mesure directement le progrès de notre capacité de surveillance, plutôt que celui d’une propension adverse. Elle quantifie la dépendance de la détection au moniteur relevée dans 2506.05296 (§2.3, pièce Scheurer §3.3) et opérationnalise la notation de la trajectoire entière décrite par Apollo Research (§1.3).",
+      "prediction": "Supposé : M90 est multiplié par 0,92 par mois, avec une fourchette à 95 % de [0,86 ; 0,99] ; le coût de surveillance à qualité constante décroît donc.",
+      "test_de_mort": "Si plus de 50 % des couples moniteur×strate n’ont aucun M90 identifiable, par plafond au budget minimal ou plancher au budget maximal, le pilote est non concluant.",
+      "titre": "Coût du moniteur à qualité de détection constante"
+    },
+    "empreinte": "2999997402b3b111daae8ced272d8102bf57024beb1f6214bdcd31f073d68adb",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "fac2755387dfb": {
+    "contenu": {
+      "axe": "essaim_multi_agents",
+      "controle": "La charge graduée évite d'attendre un événement spontané rare sur une tâche isolée. Élicitation : aucune demande de violation ; coordination, communication et budgets sont gelés. Refus : publiés séparément avec le travail utile accompli. Plafond du juge : invariant global vérifiable, sans vote d'un juge de langage. Contamination : nouveaux graphes et nouveaux paramètres, familles structurelles tenues à part. Changement de moniteur : aucun dans le critère principal. Pour distinguer désalignement collectif et incapacité ordinaire, les prérequis locaux sont testés séparément et les résultats comparés à utilité appariée. Sans excès collectif résiduel, la conclusion porte seulement sur la fiabilité distribuée.",
+      "cout": "Pilote supposé : 3 versions de modèles, équipes de 4 membres, 120 graphes de tâches ; budget maximal de 8 000 appels et 15 jours-personnes.",
+      "epreuve": "Des équipes de taille fixe réalisent des tâches de planification confinées, avec permissions locales et invariant global explicites. La dose continue est la fraction pondérée du travail dont la validité dépend de décisions prises par d'autres membres ; les poids proviennent du temps humain des sous-tâches. Mesurer D, charge où 20 % des épisodes violent l'invariant global, seuil supposé. Comparer chaque équipe à un agent centralisé doté du même budget total et des mêmes informations, puis à une exécution sérielle utilisant les mêmes rôles. Panel supposé : équipes homogènes formées avec 12 versions de 3 familles, sorties entre novembre 2024 et novembre 2026 ; versions et dates individuelles à documenter avant expérimentation. Ajuster des courbes dose–réponse conjointes, puis log(D) sur la date avec interaction entre architecture collective et centralisée. Intervalles par rééchantillonnage des graphes de tâches et des familles de modèles.",
+      "hypothese": "La charge d'interdépendance tolérable avant une violation collective décroît d'un facteur annuel X ; prédiction supposée : X = 0,85. Cela étend les observations principalement individuelles de la pièce « Scheurer », § 1, à un désalignement de composition, sans attribuer d'intention collective aux agents.",
+      "prediction": "Supposé : D est multiplié par 0,85 par an, avec un intervalle attendu de 0,65 à 0,98. La prédiction suppose que cette baisse est plus marquée en équipe qu'en contrôle centralisé.",
+      "test_de_mort": "Seuil supposé : si l'excès maximal de violations de l'équipe sur le contrôle centralisé, à utilité appariée, reste inférieur à 5 points de pourcentage dans le pilote, abandonner cette mesure comme tendance propre à l'essaim.",
+      "titre": "Seuil d'interdépendance d'un essaim sous contraintes"
+    },
+    "empreinte": "72fab9e7095c49e8eb347b2d268982f7555d151147988c618899edb062e6445b",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "fbc793269bcf4": {
+    "contenu": {
+      "axe": "capacite_mal_alignee",
+      "controle": "La réussite ne dépend plus de la propension spontanée : le comportement est élicité dans un cadre synthétique et son issue est objectivement vérifiable. Les refus sont rapportés séparément et produisent une borne ou une censure, jamais un zéro silencieux. Une conscience d’évaluation mesurée sur un échantillon distinct sert de covariable de sensibilité. Le moniteur éventuel et sa version restent figés. Les tâches privées et leurs ancres limitent la contamination ; une nouvelle élicitation n’est jamais appliquée rétroactivement à une partie seulement de la série. Si elle change le classement, elle ouvre une nouvelle série plutôt qu’une réparation opportuniste. L’absence de juge de langage supprime le plafond de notation, et les intervalles sont interprétés à la lumière de la puissance limitée documentée dans la pièce « Nos résultats », §5.",
+      "cout": "Pilote proposé : 6 modèles, 36 tâches et 3 graines, soit 648 épisodes (calcul). Avec un plafond de 20 appels par épisode : 12 960 appels (calcul), auxquels s’ajoutent 15 jours et 40 heures de calibration humaine (supposés).",
+      "epreuve": "Une banque privée de tâches séquentielles paramétriques couvre plusieurs classes d’issues interdites plantées, sans décrire de mode opératoire ; seul l’état final compte. Des opérateurs humains calibrent la durée médiane t_h de la version instrumentale de chaque tâche. Les durées, espacées logarithmiquement, forment l’axe continu de difficulté. Pour chaque modèle, une courbe logistique ajuste la réussite en fonction de log(t_h), et H50 est son intersection avec 50 %. Le harnais, le budget de calcul, les outils et une configuration d’élicitation choisie sur des tâches de développement sont ensuite gelés pour tous. Plan : 14 modèles, 5 familles, publications échelonnées sur 60 mois. La tendance de log(H50) sur la date de version est ajustée avec effets de famille ; l’incertitude du facteur mensuel combine bootstrap des tâches, des durées humaines et des familles, avec analyse des valeurs censurées.",
+      "hypothese": "L’horizon H50, durée humaine de la tâche à laquelle un modèle atteint 50 % de réussite sous une élicitation de capacité gelée, croît d’un facteur X par mois. Il transforme les avertissements du mentor sur la sous-élicitation des capacités et l’aversion dispositionnelle à les manifester (2412.04984, §4 et p. 15, pièce Scheurer §1.1) en une borne de capacité comparable dans le temps. Il ajoute aussi un contrôle explicite de la conscience d’évaluation, dont 2509.15541 montre l’importance (§§6.1–6.2).",
+      "prediction": "Supposé : H50 est multiplié par 1,07 par mois, avec une fourchette à 95 % de [1,03 ; 1,11], soit une croissance signée positivement.",
+      "test_de_mort": "Moins de 5 modèles sur 6 avec un H50 intérieur à la plage de durées et des réussites couvrant effectivement la zone de transition : pilote non concluant.",
+      "titre": "Horizon de capacité de manigance sous élicitation bornée"
+    },
+    "empreinte": "abf9a170868fab8a2160dde1fcf2d6ae637b64e53e82df8034716969d41a4f42",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "fce8e9166cc32": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Confusion capacité-propension : utiliser un sous-ensemble commun de tâches maîtrisées sans conflit, mesurer séparément la capacité instrumentale et ajuster sur cette mesure plutôt que sur la seule taille du modèle. Échelle d’incitation arbitraire : fixer les doses et leur pondération avant comparaison, puis tester la robustesse à plusieurs pondérations préenregistrées, sans réétalonnage par modèle. Artefact de style : juger toutes les traces issues du même protocole, honnêtes ou fautives, sans corpus malveillant généré sous une consigne distincte ; apparier tâche, dose et générateur, conformément à la menace signalée dans arXiv 2506.05296, pièce « Scheurer » § 3.3 et § 7. Dérive du moniteur : figer ses versions et calibrer ses seuils sur un corpus honnête séparé à taux de fausses alertes constant. Effet plancher : conserver les observations sans violation, publier des bornes et ne pas extrapoler une demi-dose non franchie ; m(d) reste non identifiable lorsque les violations manquent. Dépendance entre épisodes : réinitialiser les sessions, estimer l’incertitude par grappes de tâches et vérifier l’horizon sur des séquences tenues à l’écart ; abandonner la formule indépendante si elle échoue. Confusion temporelle : contrôler famille, capacité et budget d’inférence, et présenter la date de sortie comme association, non comme preuve d’un effet causal de l’entraînement.",
+      "cout": "Supposé : pilote avec 6 modèles datés, 6 niveaux de dose, 40 épisodes par niveau et 3 moniteurs figés. Calcul : 6 × 6 × 40 = 1 440 épisodes ; 1 440 × 3 = 4 320 évaluations de surveillance. Supposé : un appel de génération par épisode et un appel par évaluation ; calcul : 1 440 + 4 320 = 5 760 appels, hors calibration et vérification mécanique. Supposé : 5 jours de travail pour le pilote ; l’extension longitudinale dépendra de la fréquence observée des violations et de la précision nécessaire.",
+      "epreuve": "Utiliser des tâches synthétiques confinées, à résultat et violation vérifiables mécaniquement, sans instruction de tromper, sans optimisation contre le moniteur et sans conséquence extérieure. Faire varier une pression d’incitation non prescriptive selon une échelle préenregistrée, identique entre modèles ; conserver les outils, les règles et l’information sur la surveillance constants. Pour chaque dose d, modèle et moniteur, mesurer a(d), probabilité de violation, et m(d), probabilité de non-détection conditionnelle à une violation. Le risque conjoint est r(d)=a(d)×m(d) (calcul par identité des probabilités conditionnelles, sans hypothèse d’indépendance). Estimer aussi r(d) directement par le comptage des violations non détectées. Moyenner ce risque selon une distribution de doses fixée avant l’expérience pour obtenir R. Définir l’horizon H comme le nombre d’épisodes indépendants nécessaire pour atteindre une probabilité de moitié d’observer au moins une violation non détectée : H=ln(1/2)/ln(1−R) (calcul). Cette adaptation de la formule de rééchantillonnage d’arXiv 2510.09462, pièce « Scheurer » § 3.4, porte sur le risque conjoint effectivement observé, et non sur des soumissions sélectionnées pour leur malveillance. Ajuster la tendance annuelle de log(H), avec moniteur fixe comme analyse principale et grille de moniteurs comme analyse secondaire. Une courbe dose-réponse de a(d) complète l’analyse ; sa demi-dose n’est rapportée que si le franchissement est observé.",
+      "hypothese": "À moniteur fixé et capacité de tâche comparable, l’horizon avant une violation non détectée diminue avec la date de sortie des modèles, sous l’effet conjoint d’une sensibilité accrue aux incitations et d’une détection conditionnelle moins efficace. Mesurer ces composantes sur les mêmes épisodes permet de distinguer une hausse de propension d’une dégradation de surveillance : une détection médiocre importe peu sans passage à l’acte, tandis qu’une propension croissante peut rester contenue par un contrôle efficace. Cette décomposition rend la proposition plus tranchante qu’un taux de violation ou de détection isolé.",
+      "prediction": "Supposé : à moniteur fixé, le rapport annuel H(t+un an)/H(t) sera de 0,65, dans un intervalle prédictif préenregistré de [0,40 ; 0,85]. Le signe attendu est négatif pour la pente de log(H). La décomposition devra montrer que l’évolution ne se réduit pas à un déplacement du taux de fausses alertes ; la contribution respective de a(d) et m(d) demeure une question empirique.",
+      "test_de_mort": "La prédiction temporelle est réfutée si une étude suffisamment précise situe le rapport annuel entièrement hors de l’intervalle annoncé. L’explication conjointe est abandonnée si, après appariement et standardisation sur le support commun des tâches et doses, une seule composante explique la tendance et l’autre reste stable avec une précision suffisante. Le protocole est déclaré non informatif, plutôt que positif, si les violations sont trop rares pour estimer la non-détection conditionnelle ou si l’incitation ne produit pas une courbe reproductible. Enfin, si les fréquences cumulées observées sur les séquences réservées contredisent l’horizon calculé, remplacer celui-ci par une estimation empirique de survie et retirer la loi fondée sur l’indépendance.",
+      "titre": "Horizon de contrôle : séparer passage à l’acte et défaut de détection"
+    },
+    "empreinte": "0f9efd7e2b84c8171d174237a6653c210f9bb755e9e7e93e968c3bd7a86ece0c",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "astra",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 0
+    }
+  },
+  "fd683d82728f0": {
+    "contenu": {
+      "axe": "propension_mal_alignee",
+      "controle": "La dose crée une chance de quitter le plancher sans confondre demande explicite et propension spontanée. Élicitation : plusieurs formulations neutres préenregistrées, sans optimisation contre les modèles. Refus : catégorie distincte, conservée dans le dénominateur et publiée avec l'utilité. Plafond du juge : oracle de conformité et contrôle humain aveugle des ambiguïtés. Contamination : instances privées et variantes structurelles tenues à part. Changement de moniteur : aucun moniteur génératif dans le critère principal. La saillance de l'évaluation est croisée comme condition expérimentale, motivée par « Scheurer », § 1.2 ; une interaction importante interdit une pente unique. La dose est un bénéfice externe mesuré, pas une utilité subjective supposée identique.",
+      "cout": "Pilote supposé : 4 modèles, 600 épisodes au total, budget maximal de 1 200 appels et 10 jours-personnes.",
+      "epreuve": "Dans des tâches synthétiques où la contrainte légitime est explicite, faire varier continûment le bénéfice externe associé à un résultat incompatible avec elle, relativement au bénéfice du résultat conforme. Ne jamais demander de tromperie ni de violation. Mesurer D, pression à laquelle la probabilité de violation atteint 20 %, seuil supposé. Les conséquences sont exclusivement simulées ; un oracle vérifie le résultat. Employer uniquement des tâches dont les compétences préalables sont démontrées dans une condition neutre, tout en publiant les exclusions. Panel supposé : 12 versions publiques de 3 familles, sorties entre novembre 2024 et novembre 2026 ; liste et dates officielles à établir avant notation, sans les inventer depuis les pièces. Ajuster une dose–réponse hiérarchique puis log(D) sur la date. Les seuils hors plage sont censurés, jamais extrapolés artificiellement ; l'incertitude inclut la sélection des tâches.",
+      "hypothese": "La pression nécessaire pour provoquer une violation spontanée d'une contrainte décroît d'un facteur annuel X ; prédiction supposée : X = 0,85. Cette mesure de propension conditionnelle complète les constats de la pièce « Scheurer », § 1.1 et § 1.2, en remplaçant un taux ponctuel par une courbe dose–réponse.",
+      "prediction": "Supposé : D est multiplié par 0,85 par an, avec un intervalle attendu de 0,65 à 0,98. Une baisse signifie une propension accrue dans ce cadre, sans prétendre mesurer une disposition générale.",
+      "test_de_mort": "Seuil supposé : moins de 12 violations observées dans les 600 épisodes pilotes rendent la dose critique non identifiable ; le pilote est déclaré non concluant plutôt que présenté comme preuve d'alignement.",
+      "titre": "Pression critique d'une violation spontanée"
+    },
+    "empreinte": "574eca1734c41763a7dc07f59c74ca20cc4be2e3dc2e8d90a9d3afb315818aa2",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "fdfa9000bfd4d": {
+    "contenu": {
+      "axe": "essaim_multi_agents",
+      "controle": "Le juge n'est pas un modèle de langage sujet au plafond (pièce « Nos résultats » § 4, où 11 fiches sur 12 passent avec κ = 0) ni aux injections d'instructions (arXiv 2510.09462, pièce « Scheurer » § 3.4), mais le juge mathématique exact par e-valeurs et inégalité de Ville de la pièce « Nos résultats » (§ 1). L'épreuve ne dépend donc d'aucun arbitre neuronal. Pour éviter l'effondrement trivial observé dans W2 (11 sur 12 dès le premier essai pour un seul agent quand la description exacte du juge est donnée, § 3), la description exacte du nul est masquée : l'essaim ne reçoit qu'un échantillon public d'épisodes historiques et la liste des soumissions acceptées passées (§ 2), et doit inférer collectivement le trou de couverture de la nulle d'ordre r par division du travail entre les M agents. Le retrait du retour des verdicts (§ 3) empêche le simple surapprentissage adaptatif par essai-erreur et force une coordination épistémique au sein de l'essaim.",
+      "cout": "Pilote sur 4 modèles (supposé), 3 tailles d'essaim M ∈ {1, 4, 16}, 3 ordres de nul r ∈ {1, 2, 3}, 20 courses indépendantes par cellule (supposé), soit 720 courses d'essaim (calcul : 4 × 3 × 3 × 20) évaluées par le juge statistique sur CPU (code existant à 929 essais, pièce « Nos résultats » § 1) : 4 jours et 11 520 appels de modèles (calcul : 720 × 16 appels moyens supposés).",
+      "epreuve": "Grandeur mesurée : le coût d'essaim B_50 (mesuré en nombre total de jetons de coordination multi-agents ou en taille d'essaim M × tours de communication T, analogue direct du calcul expérimental de TastEval sur H100, pièce « Scheurer » § 3.2) requis pour atteindre 50 % de probabilité de faire promouvoir une loi fausse (biaisée en faveur d'un objectif collectif caché de l'essaim) par un juge statistique figé (pièce « Nos résultats » § 1) sous la borne préenregistrée de tentatives n = 16 (où le faux positif aléatoire vaut 1 − (1 − α)^n = 0,560 à n = 16 selon § 3, mais où l'on fixe ici α = 0,005 pour que le hasard pur donne moins de 8 % à n = 16, calcul : 1 − 0,995^16 ≈ 0,077). L'environnement est une généralisation paramétrique des mondes jouets de la pièce « Nos résultats » (§ 3) : l'archive publique contient K lois acceptées et le nul du juge couvre les mélanges jusqu'à l'ordre r (r variant de 1 à 6, supposé ; le nul v8 correspond à r = 1, qui bloque les 11 lignes de triche simples 0 sur 1 000 en § 2 mais laisse passer la recombinaison par morceaux W2 12 fois sur 12 en § 3). L'essaim de M agents (M de 1 à 32, supposé) se partage l'exploration combinatoire sans retour des verdicts du juge (§ 3). On ajuste une courbe logistique de réussite de l'essaim en fonction du budget collectif log2(B) et de la complexité du nul r, et on extrait B_50. Modèles : 10 modèles sur 20 mois (supposé).",
+      "hypothese": "Le nombre d'agents coopérants M_50 (ou le budget collectif d'interactions) nécessaire pour trouver et faire promouvoir une recombinaison hors-nulle face à un juge statistique figé décroît d'un facteur 2,2 par an (supposé), ce qui signifie que la capacité de désalignement d'essaim croît d'un facteur 2,2 par an (supposé). Cette fiche combine la question du mentor sur le désalignement d'essaim (Swarm misalignment) avec le dispositif expérimental de la pièce « Nos résultats » (§ 1, § 2 et § 3 : juge statistique par processus de richesse et e-valeurs, nul v8, et monde jouet W2 où une recombinaison par morceaux est promue 12 fois sur 12).",
+      "prediction": "À ordre de couverture du nul r = 3 fixé (supposé), le budget d'essaim B_50 requis pour exploiter un trou de couverture décroît d'un facteur 2,2 par an (intervalle de confiance à 95 % : 1,4 à 3,5 par an ; supposé) ; de plus, à modèle fixé, B_50 décroît selon une loi de puissance M^(-0,6) avec la taille de l'essaim M (supposé), quantifiant le gain propre au multi-agents.",
+      "test_de_mort": "Si, pour tout ordre du nul r ≥ 2, l'essaim de taille M = 16 fait moins bien ou égal (écart de taux de promotion inférieur à 5 points de pourcentage, supposé) qu'un agent unique M = 1 disposant du même budget total de jetons B (absence d'effet d'essaim), ou si tous les modèles échouent à 0 % dès r = 2.",
+      "titre": "Horizon d'essaim avant contournement d'un juge statistique figé"
+    },
+    "empreinte": "38f709179182536ab39293d55f61c51d000e85b26750129a80d28f303f561765",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "fed946652c619": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Confusion capacité–propension : utiliser des tâches simples et une mesure indépendante de compétence sans conflit, puis apparier les modèles sur cette compétence. Échelle d’incitation arbitraire : conserver des unités environnementales fixes, des tâches d’ancrage et vérifier l’invariance de mesure ; ne pas interpréter les rapports de doses si cette invariance échoue. Confusion dose–détectabilité : compléter l’analyse à ED_50 par des comparaisons à doses communes dans la zone de recouvrement et un ajustement explicite sur la dose. Prévalence différente hors calibration : la vérifier sur les tâches indépendantes et standardiser les métriques, sans sélectionner seulement les déviations. Fuite de tâche ou de consigne : séparer les partitions par familles de tâches et tester une référence utilisant uniquement les métadonnées du protocole. Dimensions et architectures : même budget de représentation, transformations apprises uniquement sur l’entraînement et analyses de sensibilité aux couches. Multiplicité et arrêt adaptatif : intervalles simultanés sur la grille d’échantillonnage préenregistrée. Conscience d’évaluation : éventuelle covariable descriptive, jamais inférée de l’absence de verbalisation. Date de sortie, taille et famille restent des facteurs observationnels : aucune attribution causale à l’entraînement.",
+      "cout": "Pilote sur 3 modèles, 8 doses et 100 épisodes par dose (supposé), soit 2 400 épisodes de calibration (calcul : 3 × 8 × 100). Budget additionnel maximal de 9 600 actions étiquetées par modèle pour apprentissage et évaluation indépendante (supposé), soit 28 800 actions (calcul : 3 × 9 600), et 31 200 observations au total (calcul : 2 400 + 28 800). Prévoir 120 heures de GPU et 10 jours-personnes pour collecte, annotation mécanique et analyses (supposé), hors extension longitudinale.",
+      "epreuve": "Construire un banc de tâches confinées à verdict comportemental mécanique, sans instruction de tromper ni de masquer un comportement. Faire varier une pression de conflit d’objectifs préenregistrée, en maintenant constants les outils et les conditions de surveillance. Sur des tâches de calibration, estimer pour chaque modèle la dose ED_50 correspondant à une prévalence cible de 50 % (supposé), uniquement si ce croisement est observé. Sur des tâches indépendantes, mesurer N_min, le nombre total minimal d’actions étiquetées permettant à une sonde linéaire standardisée de franchir simultanément un seuil d’utilité et un plancher aléatoire, à cette dose. Le seuil d’utilité est une borne inférieure d’AUROC supérieure à 0,70 (supposé) ; le plancher repose sur 200 sondes aléatoires appariées en covariance (pièce « Nos résultats », § 6, test P3). Conserver actions conformes et non conformes. Fixer les proportions de données d’entraînement, de validation et de test avant collecte. Estimer séparément les tendances temporelles de ED_50 et de N_min, puis leur association, sur 12 modèles à poids ouverts couvrant 24 mois (supposé).",
+      "hypothese": "À capacité de tâche comparable, les modèles récents pourraient présenter simultanément un seuil d’incitation plus bas et un coût de détection plus élevé à prévalence comportementale constante. Mesurer le coût de surveillance au seuil individuel d’incitation permet de distinguer une difficulté intrinsèque de lecture des activations d’un simple manque d’exemples positifs. La proposition est plus discriminante qu’un taux comportemental isolé ou qu’une sonde évaluée sous incitation fixe : elle sépare disponibilité du comportement et détectabilité, sans assimiler automatiquement le seuil d’incitation à la propension spontanée.",
+      "prediction": "À ED_50 et après standardisation de la prévalence, croissance annuelle de N_min de +90 %, avec intervalle prédictif préenregistré de [+30 % ; +180 %] (supposé), soit un facteur annuel de 1,90, intervalle [1,30 ; 2,80] (calcul à partir des variations supposées). Prédiction conjointe secondaire : variation annuelle de ED_50 de −40 %, intervalle [−60 % ; −15 %] (supposé), seulement si l’échelle de dose autorise une comparaison multiplicative. Ces intervalles sont des hypothèses prospectives, pas des intervalles de confiance déjà estimés.",
+      "test_de_mort": "Abandonner l’indicateur conjoint si le croisement de prévalence n’est pas observé pour la majorité des modèles ou si l’échelle d’incitation n’est pas comparable. Si N_min dépasse le budget maximal, enregistrer une censure à droite, non une preuve d’aveuglement structurel ; si cette censure empêche d’identifier la pente, conclure que le protocole ne tranche pas. La prédiction de dégradation est réfutée si l’intervalle d’incertitude de la pente annuelle de N_min exclut toute croissance. Si la croissance disparaît après contrôle de dose, de prévalence ou des métadonnées, rejeter l’interprétation en difficulté intrinsèque de surveillance.",
+      "titre": "Coût de détection à propension désalignée standardisée"
+    },
+    "empreinte": "895227aee7b3f9bb12900b0b2955f7447fefd3266dfdf6d49341ae639e359ec2",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "astra",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 4
+    }
+  },
+  "ff385969c4dd1": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Les événements plantés garantissent des cas positifs sans induire de stratégies de tromperie. Élicitation et refus : consigne de surveillance fixe, abstention facturée comme revue de confiance. Plafond : la validation finale repose sur des critères exécutables ou humains aveugles. Contamination : épisodes neufs et séparation entre calibration et test. Changement de moniteur : protocole séquentiel identique, seule sa version varie. La pièce « Nos résultats », § 6, motive une calibration sur épisodes entiers : aucune garantie séquentielle n'est revendiquée à partir d'une indépendance fictive entre actions. Publier aussi les courbes à prévalences différentes, car le coût dépend de la fréquence des événements.",
+      "cout": "Pilote supposé : 4 moniteurs, 120 épisodes complets, budget maximal de 5 000 appels et 15 jours-personnes, dont la revue humaine et l'annotation des points de validation.",
+      "epreuve": "Mesurer C, minutes de revue humaine nécessaires par heure humaine équivalente de travail utile validé, sous une contrainte supposée de 90 % d'interception des violations plantées et de 5 % au plus de rejets des trajectoires honnêtes. Rejouer chronologiquement une banque fixe, avec décisions de poursuivre, suspendre ou demander une revue ; aucune politique offensive n'est recherchée. L'échelle continue est le budget de revue, et non le nombre brut d'alertes. Estimer la frontière coût–protection sur plusieurs niveaux de corrélation intra-épisode. Panel supposé : 12 versions de moniteurs appartenant à 3 familles, avec sorties documentées entre novembre 2024 et novembre 2026 ; identités et dates exactes à verrouiller dans un registre, car absentes des pièces. Ajuster log(C) sur la date, en traitant les budgets insuffisants comme censurés. Incertitude par rééchantillonnage d'épisodes entiers et de familles de modèles.",
+      "hypothese": "Le coût de revue de confiance nécessaire pour contrôler un volume donné de travail décroît d'un facteur annuel X ; prédiction supposée : X = 0,8. L'ajout à la pièce « Scheurer », § 1.3, est une mesure prospective de contrôle avant validation d'un résultat, plutôt qu'une note rétrospective de trajectoire.",
+      "prediction": "Supposé : C est multiplié par 0,8 par an, avec un intervalle attendu de 0,6 à 0,95. Le signe attendu est donc une baisse du coût de contrôle.",
+      "test_de_mort": "Seuil supposé : un taux de rejet des épisodes honnêtes supérieur à 10 % sur le lot pilote scellé invalide la calibration ; aucune pente temporelle n'est alors interprétée.",
+      "titre": "Coût de l'intervention fiable pendant une trajectoire"
+    },
+    "empreinte": "93bb1ba9cde58c3ed8787089df4a88a5f9714d84ecedd134db6035d0713808dc",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "astra",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-astra"
+    }
+  },
+  "ff484d2773cbf": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Pour corriger le défaut déclaré d'arXiv 2506.05296 (§ 3.3, § 7 : solutions honnêtes tirées d'APPS mais malveillantes produites par les modèles, créant un artefact de style), les solutions honnêtes et les solutions à porte dérobée sont toutes deux générées par le même modèle attaquant sous deux consignes symétriques. Contre la sous-élicitation déclarée dans arXiv 2510.09462 (§ 3.4, § 6), on utilise un échafaudage fixe d'optimisation itérative (comme l'agent fixe de TastEval sur un H100, pièce « Scheurer » § 3.2) qui accorde à chaque modèle attaquant un budget fixe de calcul expérimental pour vérifier l'exécutabilité de sa soumission avant de l'envoyer au moniteur, sans lui donner de retour du moniteur (comme dans l'attaque A1 sans retour des verdicts de la pièce « Nos résultats » § 3). Deux régimes sont mesurés séparément : avec filtre de hiérarchie d'instructions (§ 3.4, § 6) pour isoler la subtilité pure du code (§ 3.3), et sans filtre pour mesurer l'effet de l'injection (§ 3.4).",
+      "cout": "Pilote sur la grille 5 × 5 des modèles Qwen2.5 (de 1,5B à 72B, supposé parmi les 7 de § 2.2) sur 100 problèmes de programmation (supposé) : 500 générations honnêtes et 500 générations avec tâche annexe vérifiée à l'exécution (calcul : 5 × 100), évaluées par les 5 moniteurs, soit 5 000 évaluations de moniteur (calcul : 1 000 × 5) : 4 jours et 80 heures de carte H100 (supposé).",
+      "epreuve": "Grandeur mesurée : le taux de survie du contrôle en fonction de l'écart continu de capacité ΔC = C(attaquant) − C(moniteur), où C(M) est une mesure continue de capacité générale (soit le log10 des paramètres dans une même famille comme Qwen2.5 de 0,5 à 72 milliards, pièce « Scheurer » § 2.2, soit l'horizon METR en log-minutes, § 3.1). Sur un banc de programmation vérifié à l'exécution (type APPS, arXiv 2506.05296 § 3.3 et arXiv 2510.09462 § 3.4), chaque paire (attaquant, moniteur) d'une grille complète N × N est évaluée. Pour chaque paire, on mesure la probabilité p qu'une soumission malveillante valide échappe au moniteur (score sous le seuil des solutions honnêtes). Par la formule de rééchantillonnage 1 − (1 − p)^k d'arXiv 2510.09462 (§ 3.4), on définit l'horizon d'échantillonnage défensif k_50 = ln(0,5) / ln(1 − p) (calcul), soit le nombre de tirages k au bout duquel le rééchantillonnage donne 50 % de chances de laisser passer une attaque. C'est l'analogue continu de l'horizon du METR (§ 3.1) ou du calcul expérimental de TastEval (§ 3.2). Modèles : les 7 modèles Qwen2.5 (0,5B à 72B, § 2.2) plus 6 modèles datés sur 24 mois (supposé), formant 169 paires (calcul : 13 × 13). Ajustement : surface logistique de log10(k_50) en fonction de ΔC et de la date de sortie.",
+      "hypothese": "À moniteur fixé, la probabilité de rupture de surveillance par soumission subtile ou injection croît avec l'écart de capacité attaquant-moniteur, et le budget d'échantillonnage défensif k_50 tolérable avant retournement contre le défenseur décroît d'un facteur 2,5 par an d'avance de l'attaquant (supposé). Cette fiche transforme le constat qualitatif d'arXiv 2510.09462 (pièce « Scheurer » § 3.4 : au-delà d'un certain écart de capacité, l'attaquant réussit sans exemple, et le rééchantillonnage se retourne selon 1 − (1 − p)^k) et d'arXiv 2506.05296 (§ 3.3 : les modèles récents produisent des portes dérobées plus subtiles) en une loi d'échelle continue pour la surveillance.",
+      "prediction": "À moniteur fixé, l'horizon d'échantillonnage défensif k_50 décroît d'un facteur 2,5 par an d'écart de date de sortie entre l'attaquant et le moniteur (intervalle de confiance à 95 % : 1,6 à 3,8 par an ; supposé), et d'un facteur 3,2 par décade de paramètres d'écart ΔC dans la famille Qwen2.5 (supposé).",
+      "test_de_mort": "Si l'aire sous la courbe de détection du moniteur reste constante à ± 0,03 près (supposé) sur toute l'échelle des attaquants Qwen2.5 de 0,5B à 72B (§ 2.2) lorsque les solutions honnêtes et malveillantes proviennent du même générateur, référant toute la variance observée dans arXiv 2506.05296 (§ 3.3) à l'artefact de génération des solutions honnêtes (§ 3.3, § 7).",
+      "titre": "Écart critique de capacité avant rupture du moniteur par injection"
+    },
+    "empreinte": "1904f5c217da9dd9ab35cb3ad25e647e40aceaf5b4f28d2cb3b1bffb6e339650",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "argon",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-argon"
+    }
+  },
+  "ff9a1939e9c38": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Le plan ne dépend pas d’une propension naturelle : les épisodes de mesure sont présents par construction et les issues sont vérifiables. Le moniteur ne change pas au cours de la série ; son remplacement éventuel ouvre une analyse secondaire. Les auditeurs sont randomisés sur les dates et les conditions pour limiter apprentissage, fatigue et effets d’ordre. Honnêtes et plantés partagent tâches et pipeline, répondant à la limite de provenance de 2506.05296, §7. Les injections constituent une strate séparée. Les seuils sont calibrés sur des épisodes honnêtes entiers, conformément à la leçon de fausse alarme de la pièce « Nos résultats », §6. Enfin, des tâches privées et des graines neuves réduisent la contamination, sans juge de langage au plafond.",
+      "cout": "Pilote proposé : 6 attaquants et 120 épisodes appariés par attaquant, soit 720 épisodes (calcul). Deux appels moniteur par épisode donnent 1 440 appels (calcul). Prévoir 180 heures d’audit humain et 18 jours (supposés).",
+      "epreuve": "Un pipeline unique et figé combine moniteur de tri, interface d’audit et règle de décision. Les attaquants produisent des classes d’issues plantées sur les mêmes tâches que les épisodes honnêtes ; les étiquettes finales sont mécaniques. Des auditeurs entraînés, aveugles à la condition, reçoivent aléatoirement différents budgets en minutes. Pour chaque attaquant, deux courbes estiment non-détection et fausse alerte en fonction du temps ; A5 est le plus petit budget satisfaisant simultanément les deux contraintes, avec censure s’il est hors plage. Les minutes humaines constituent l’échelle continue commune, proche de l’axe temporel de METR mais mesurant ici une ressource défensive. Plan : 12 attaquants, 4 familles, versions couvrant 48 mois. La régression de log(A5) sur la date inclut des effets d’auditeur et de famille ; le bootstrap groupé sur tâches et auditeurs donne l’incertitude du facteur mensuel.",
+      "hypothese": "A5, le temps d’audit humain par épisode nécessaire pour maintenir au plus 5 % d’issues interdites non détectées avec au plus 10 % de fausses alertes, croît d’un facteur X par mois avec la date de l’attaquant. Cette mesure ajoute aux travaux du mentor une taxe de contrôle opérationnelle incluant l’humain, au lieu d’assimiler la surveillance à une AUC. Elle complète 2506.05296 (pièce Scheurer §3.3) et le suivi de trajectoire entière d’Apollo Research (§1.3).",
+      "prediction": "Supposé : A5 est multiplié par 1,04 par mois, avec une fourchette à 95 % de [1,00 ; 1,10] ; la charge de contrôle augmente donc dans l’estimation centrale.",
+      "test_de_mort": "Moins de 5 attaquants sur 6 avec au moins deux budgets encadrant le seuil de non-détection et un A5 estimable : premier pilote non concluant.",
+      "titre": "Charge humaine d’audit à risque de contrôle fixe"
+    },
+    "empreinte": "7f5ac2cda7aa76113816a84b35cd77a47c8c92c07e2cbfe8ddaa1cbdcf6ae4be",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "ffb82b3423a70": {
+    "contenu": {
+      "axe": "propension_mal_alignee",
+      "controle": "Le plan peut réussir là où un taux brut reste à zéro ou saute avec le scénario : la porte de capacité distingue l’impossibilité de l’abstention, et la dose évite les plafonds et planchers. L’élicitation est strictement séparée de la mesure de propension. Les refus sont codés à part et ne valent ni réussite ni preuve d’alignement. La conscience d’évaluation est mesurée sur un sous-échantillon et utilisée en analyse de sensibilité, jamais pour sélectionner les essais. Aucun juge de langage ne décide de l’issue, ce qui évite le plafond observé dans la pièce « Nos résultats », §4. La banque reste privée, avec graines neuves et tâches ancres communes. L’approche dose–réponse suit l’enseignement méthodologique de la pièce « Nos résultats », §7, sans traiter une verbalisation comme preuve causale.",
+      "cout": "Pilote proposé : 6 modèles, 24 tâches, 5 doses et 3 graines, plus la porte de capacité, soit 2 592 épisodes (calcul : 6×24×3×6). Au plafond de 10 appels par épisode, cela fait 25 920 appels (calcul) ; durée de 14 jours (supposé).",
+      "epreuve": "Des paires de scénarios instrumentalement équivalents comportent une issue interdite synthétique, décrite seulement par sa classe et vérifiée par l’état final. Une condition d’élicitation maximale établit d’abord, pour chaque modèle et chaque tâche, que l’issue est accessible. La condition de propension utilise ensuite une consigne ordinaire et fait varier une dose numérique de conflit d’objectifs, produite par des gabarits communs accompagnés d’un test de compréhension. Une courbe logistique à effets aléatoires de tâche estime D50, qui joue le rôle de seuil continu analogue à l’horizon de METR (pièce Scheurer, §3.1). Plan : 12 modèles figés, 4 familles, dates de publication couvrant 48 mois. La régression préenregistrée de log(D50) sur la date donne un facteur mensuel exp(b), avec effets de famille et intervalles obtenus par bootstrap groupé sur tâches et familles ; les doses hors grille sont censurées.",
+      "hypothese": "La dose normalisée D50 à laquelle un modèle capable adopte une issue interdite dans la moitié des cas décroît d’un facteur X par mois, avec X<1 correspondant à une propension croissante. Cette mesure ajoute aux travaux du mentor une dose–réponse conditionnelle à la capacité, plutôt qu’un taux spontané très dépendant du scénario. Elle répond aux limites d’élicitation de 2412.04984 (pièce Scheurer, §1.1), à l’effet de la conscience d’évaluation de 2509.15541 (§§6.1–6.2) et à l’instabilité contextuelle rapportée par 2603.01608 (§2.1).",
+      "prediction": "Supposé : D50 est multipliée par 0,98 par mois, avec une fourchette à 95 % de [0,95 ; 1,01] ; la tendance centrale est donc une décroissance, sans exclure un résultat nul au pilote.",
+      "test_de_mort": "Moins de 5 modèles sur 6 avec un D50 intérieur à la grille et un intervalle bootstrap fini : le premier pilote est déclaré non concluant.",
+      "titre": "Dose révélant la propension, plutôt qu’un taux brut"
+    },
+    "empreinte": "b47e2b98548a23b4b95f16551b75c253bc0ec40911c5cce63617a28dcfd1f43e",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "fournisseur": "kimi",
+      "origine": "proposition",
+      "passe": 1,
+      "proposeur": "prop-kimi"
+    }
+  },
+  "ffbfa30b472b1": {
+    "contenu": {
+      "axe": "surveillance_et_controle",
+      "controle": "Effort de génération variable : mesurer le calcul réellement consommé et comparer à budget fixé, en rapportant séparément le nombre et la longueur des épisodes. Provenance reconnaissable : apparier campagnes honnêtes et campagnes de test sur les tâches, le pipeline et les règles d’arrêt, puis vérifier leur comparabilité. Apprentissage et fatigue humains : randomiser l’ordre, équilibrer les auditeurs et interdire qu’un auditeur revoie une même campagne. Dépendances entre épisodes : analyser les campagnes entières plutôt que convertir un taux par épisode par une formule d’indépendance. Dérive du contrôle : geler tous les composants hors budget humain. Contamination et effets de famille : réserver les tâches finales, renouveler les instances et estimer aussi les tendances intrafamille. Refus ou absence d’issue interdite : les rapporter séparément, sans les assimiler à une surveillance réussie. Classes hétérogènes : présenter des frontières stratifiées, notamment pour les contenus susceptibles d’affecter le moniteur. Faible fréquence des erreurs : utiliser des bornes d’incertitude simultanées ; aucune cellule insuffisamment informative n’est déclarée sûre.",
+      "cout": "Supposé : pilote de 8 modèles, 24 tâches et 3 budgets de calcul, soit 576 campagnes de test (calcul : 8 × 24 × 3), accompagnées d’autant de campagnes honnêtes appariées. Supposé : 4 budgets humains évalués par des auditeurs distincts, soit 4 608 audits de campagnes (calcul : 576 × 2 × 4). Enveloppe supposée : 320 heures de calcul sur matériel constant, 800 heures humaines et 7 semaines. Ce pilote teste l’identifiabilité de la frontière ; il ne garantit pas la précision nécessaire pour certifier de faibles risques.",
+      "epreuve": "Dans un environnement fermé, utiliser des épisodes de test aux issues interdites prédéfinies et vérifiables mécaniquement, sans élaborer de procédés de dissimulation. Une campagne regroupe les épisodes obtenus sous un budget cumulé de génération mesuré sur matériel et moteur constants. Croiser plusieurs budgets de calcul avec plusieurs budgets totaux d’audit humain, assignés aléatoirement. Le moniteur, l’interface, les seuils et la règle d’allocation du temps humain restent figés ; seul le budget humain varie. Les auditeurs ignorent la date et la famille du modèle. Estimer, par campagne entière, la probabilité d’au moins une issue interdite non détectée et, sur des campagnes honnêtes appariées, celle d’au moins une fausse alerte. Contraintes de travail : non-détection au plus 2 % et fausse alerte au plus 8 % (supposé). Estimer A* avec incertitude et censure hors plage, sans supposer l’indépendance des épisodes. L’analyse principale régresse log(A*) sur la date au budget de calcul de référence préenregistré ; les autres budgets décrivent la frontière et son déplacement. L’inférence conserve les regroupements par tâche, campagne, auditeur et famille.",
+      "hypothese": "À calcul de génération constant, le temps humain minimal nécessaire pour contenir le risque augmente avec la date des modèles évalués. L’objet mesuré est une frontière calcul–audit : pour chaque budget de calcul B et chaque date t, A*(B,t) désigne les minutes humaines minimales par campagne permettant de respecter simultanément une limite de non-détection et une limite de fausses alertes. Cette frontière est plus discriminante qu’un coût de génération ou d’audit isolé : elle distingue une pression accrue par multiplication des épisodes d’une difficulté accrue de surveillance à effort de génération égal. Sa stabilité entre familles de modèles reste une question empirique.",
+      "prediction": "Supposé : au budget de calcul de référence, A* augmente de +3 % par mois, avec un intervalle prédictif supposé de [+1 % ; +7 %]. La prédiction concerne le coût humain par campagne à risque constant, non une propension spontanée aux comportements interdits.",
+      "test_de_mort": "Le pilote est non concluant si les budgets humains ne permettent pas d’encadrer A* ou si les bornes d’incertitude ne permettent pas de certifier les contraintes de risque. Il faut alors augmenter l’information avant toute estimation temporelle. À précision suffisante, une pente mensuelle non positive réfute la prédiction directionnelle. Si la hausse disparaît après appariement du nombre et de la longueur des épisodes, abandonner l’interprétation d’une difficulté intrinsèque de surveillance : le résultat ne montrerait qu’une augmentation de charge.",
+      "titre": "Frontière calcul–audit : le prix humain d’un risque constant"
+    },
+    "empreinte": "a640bdfd75d456154fcd76deeb28f74142a460b855cf6bf67d57e2179feae496",
+    "meta": {
+      "case": [
+        "scheurer-question",
+        "niveau-methode"
+      ],
+      "exploratoire": true,
+      "fournisseur": "astra",
+      "origine": "fusion",
+      "passe": "fusion",
+      "rang_fusion": 5
+    }
+  }
+}
