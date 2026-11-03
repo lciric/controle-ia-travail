@@ -1,0 +1,66 @@
+[
+ {
+  "ancien": "Conclusion (sections 2, 3, 4 et 7 de\nl'audit)",
+  "nouveau": "Conclusion (sections 2 à 5 et 7 de\nl'audit)"
+ },
+ {
+  "ancien": "(sortie d'erreur\nde la course vide, aucun `attaque-goodhart-v3.json`), et la course n'a jamais écrit l'appel 42 que le code aurait lancé 15 s\naprès l'échec de l'appel 41 : mort entre 06:25:32 et ≈ 06:25:47 UTC,",
+  "nouveau": "(`course-stdout`\nde la course vide, aucun `attaque-goodhart-v3.json`), et la course n'a jamais écrit l'appel 42 que le code aurait lancé 15 s\naprès l'échec de l'appel 41 : mort ou gel de la course (sans qu'on puisse dire lequel, section 2 de l'audit) entre 06:25:32 et\n≈ 06:25:47 UTC,"
+ },
+ {
+  "ancien": "c'est un arrêt de plus, rapporté avec\nles deux courses ;",
+  "nouveau": "c'est un arrêt de plus, rapporté avec\nla première course (et, comme elle, avec A1) ;"
+ },
+ {
+  "ancien": "une troisième course\ndemanderait encore un texte neuf et un GO neuf, sous la même règle (section 8, « Seconde course (v2) »).",
+  "nouveau": "une troisième course\ndemanderait encore un texte neuf et un GO neuf, sous la même règle (section 8, « Seconde course (v2) »). **Aucune relance de\nla v1** : la v1 a eu sa course, la première, arrêtée ; un scellement, une course (section 4), et la règle de la section 8\nn'admet une course de plus que sur un texte nouveau et un GO nouveau : toute autre course sous la v1 n'est pas une course de ce\nprogramme, mais un écart à un préenregistrement scellé (nœud de décision : arrêt, décision de Lazar). Le code ne l'empêche pas : la\nv1 et son compagnon sont acceptés par le lanceur, et GO-2026-11-02-21, valide jusqu'au 2026-11-16 et non révoqué le 3 novembre à\n09:05 UTC, est accepté avec elle sur le registre de `canal/conv-audit-n04` (épreuve de la contre-lecture R2 n° 3). La règle est\nde procédure ; elle est tenue par le directeur, qui ne donne que la commande exacte de la section 4 (texte `…-v2.md`,\n`--go GO-2026-11-03-01`), et par session-depot et sa fille, qui ne lancent qu'elle ; l'empreinte SHA-256 du texte passé à\n`--preenregistrement`, celle de la v2 scellée, est écrite au journal de lancement avant `--verifier-seulement`, et le manifeste\nla porte (`preenregistrement.sha256`, `demonstrations/attaque_goodhart_v3.py:553`, `:578`). Une révocation de GO-2026-11-02-21,\nsi Lazar la décide (décision posée à Lazar, R-1341), ne porte pas l'identifiant GO-2026-11-03-01, qui serait sinon refusé\n(section 4, « GO »)."
+ },
+ {
+  "ancien": "    `canal/conv-audit-n04` accepté ; choix du directeur) ; R12, GO neuf, épreuve L17.",
+  "nouveau": "    `canal/conv-audit-n04` accepté ; source fixée par la décision du directeur, R-1340 : changement 37) ; R12, GO neuf, épreuve L17."
+ },
+ {
+  "ancien": "    fait de l'audit A9 (section 1 : empreinte `53985197…`, GO-2026-11-02-21 à la ligne 67), relié au commit par le rédacteur.",
+  "nouveau": "    fait de l'audit A9 (section 1 : empreinte `53985197…`, GO-2026-11-02-21 à la ligne 67), relié au commit par le rédacteur.\nCouples de la contre-lecture R2 n° 3 (courte, sur le delta), appliqués mot pour mot :\n37. Section 4, registre, points (1) et (1 bis) : « de la branche privée » → « de la branche privée `canal/conv-audit-n04` » ;\n    « le commit d'extraction (…) est une décision du directeur avant `--verifier-seulement` (…) ; si la copie ne vient pas de\n    `main` (…) » → décision du directeur (R-1340, canal n° 407) : copie prise sur `canal/conv-audit-n04` à un commit qui porte\n    GO-2026-11-03-01, comme à la première course (`e9d7b78d`), sans retouche ; `grep -n \"GO-2026-11-03-01\"` sur la copie et sur\n    le registre de `main`, toujours, au journal avant `--verifier-seulement` ; décision prise après le brouillon 1.\n38. Section 8, (1), et section 13, point 7 bis : + « ce délai borne une attente, il n'est jamais la période » ; « fin du lanceur\n    (code 0, 2 ou 3) » → « fin du lanceur, quel qu'en soit le code » ; + heure UTC de chaque relevé d'activité de la session au\n    journal de lancement ; la période de moins de 5 min devient vérifiable sur pièce.\n39. Section 0.5 et section 13, point 3 : + « Aucune relance de la v1 » (règle de la section 8 et « un scellement, une course »,\n    tenues par la commande exacte seule, l'empreinte du texte au journal et au manifeste ; révocation de GO-2026-11-02-21 sans\n    l'identifiant GO-2026-11-03-01) ; GO-2026-11-02-21 reste valide jusqu'au 2026-11-16 et le code n'empêche pas la relance.\n40. Section 0.5, conclusion de l'audit A9 : « sections 2, 3, 4 et 7 » → « sections 2 à 5 et 7 » ; « sortie d'erreur de la course\n    vide » → « `course-stdout` de la course vide » ; « mort entre » → « mort ou gel de la course (…) entre » ; citation au plus\n    près de l'audit.\n41. Sections 0.5 et 8 : « rapporté avec les deux courses » et « rapporté avec les deux courses précédentes » → « rapporté avec la\n    première course (et, comme elle, avec A1) » ; une seule course précède celle-ci.\n42. Section 4, registre : « sur la machine de session-depot (hôte de la course, la fille, …) » → « sur la machine de l'hôte de\n    la course (la fille de session-depot, …) » ; hôte nommé.\n43. Section 9, L17 : « 150 renvois » → « 151 renvois » ; sortie citée `sorties/epreuve-v2b1.json` (assemblage de 08:29 UTC) →\n    `sorties/epreuve-v2b1-final.json` (`386b6cd3…`, épreuve finale) ; R6."
+ },
+ {
+  "ancien": "Chemin proposé, sur la machine de session-depot (hôte de la course, la\n  fille, section 13, point 7 bis) :",
+  "nouveau": "Chemin proposé, sur la machine de l'hôte de la course (la fille de\n  session-depot, section 13, point 7 bis) :"
+ },
+ {
+  "ancien": "Règle : (1) le fichier est le `registres/go.md` **entier** de la branche privée, au commit qui porte la",
+  "nouveau": "Règle : (1) le fichier est le `registres/go.md` **entier** de la branche privée `canal/conv-audit-n04` (point (1 bis)), au commit qui porte la"
+ },
+ {
+  "ancien": "le commit d'extraction — un commit de `main` dont les doublons\n  sont levés, ou un commit de `canal/conv-audit-n04` qui porte la ligne — est une décision du directeur avant `--verifier-seulement`,\n  consignée et écrite au journal de lancement ; si la copie ne vient pas de `main`, la sortie de `grep -n \"GO-2026-11-03-01\"` sur\n  le `registres/go.md` de `main` au même moment est aussi copiée au journal, et aucune ligne de révocation ne doit l'y nommer ;",
+  "nouveau": "**décision du directeur** (R-1340, 3 novembre 2026, 08:56 UTC ;\n  canal n° 407) : la copie se prend sur `canal/conv-audit-n04`, à un commit qui porte la ligne de GO-2026-11-03-01 (comme la\n  première course, dont la copie est le registre de cette branche au commit `e9d7b78d`), sans retouche ; la sortie de\n  `grep -n \"GO-2026-11-03-01\"` sur la copie (point (1)) **et** sur le `registres/go.md` de `main` au même moment est écrite au\n  journal de lancement avant `--verifier-seulement`, donc avant la course, et aucune ligne de révocation ne doit nommer ce GO dans\n  l'un ni dans l'autre ;"
+ },
+ {
+  "ancien": "réarmée avant son délai (2 h au plus), jusqu'à la fin du lanceur — ;",
+  "nouveau": "réarmée avant son délai (2 h au plus), jusqu'à la fin du lanceur ; ce délai borne une attente, il n'est jamais la période : la\nsession ne reste jamais inactive plus de quelques minutes, attente en cours comprise, et un processus détaché ne la garde pas active\n(audit A9, section 8, point 1) ; l'heure UTC de chaque relevé d'activité est écrite au journal de lancement (section 13, point 7 bis)\n— ;"
+ },
+ {
+  "ancien": "l'état est scellé tel quel et rapporté avec les deux\ncourses précédentes ;",
+  "nouveau": "l'état est scellé tel quel et rapporté avec la\npremière course (et, comme elle, avec A1) ;"
+ },
+ {
+  "ancien": "45 renvois des passages neufs conformes, 150 renvois vers les deux fichiers v3 dans les bornes",
+  "nouveau": "45 renvois des passages neufs conformes, 151 renvois vers les deux fichiers v3 dans les bornes"
+ },
+ {
+  "ancien": "sortie `sorties/epreuve-v2b1.json` (empreinte avec la remise)",
+  "nouveau": "sortie de l'épreuve finale (08:50:30 UTC) `sorties/epreuve-v2b1-final.json`, sha256 `386b6cd3b893d385e11681d73daf1f6ca8676b6437ecb20c301d359a6cb0c2cc` (celle de l'assemblage de 08:29 UTC : `sorties/epreuve-v2b1.json`, `9e9e84ac47217c7442c9cd7ed2bbe934bb7770cd48932031e83769837e529192`)"
+ },
+ {
+  "ancien": "3. **GO de calcul** : GO-2026-11-03-01, 400 USD, échéance 2026-11-17 (première course : GO-2026-11-02-21) ;",
+  "nouveau": "3. **GO de calcul** : GO-2026-11-03-01, 400 USD, échéance 2026-11-17 (première course : GO-2026-11-02-21, qui ne sert à aucune autre course : aucune relance de la v1, section 0.5) ;"
+ },
+ {
+  "ancien": "réarmée avant son délai (2 h au plus), du lancement à la fin du lanceur (code 0, 2 ou 3) ;",
+  "nouveau": "réarmée avant son délai (2 h au plus ; ce délai n'est jamais la période, section 8), du lancement à la fin du lanceur, quel\n   qu'en soit le code ;"
+ },
+ {
+  "ancien": "et l'heure UTC de chaque\n   réarmement sont écrits au journal de lancement ;",
+  "nouveau": "et l'heure UTC de chaque\n   réarmement et de chaque relevé d'activité de la session (jamais plus de quelques minutes entre deux relevés) sont écrits au\n   journal de lancement ;"
+ }
+]
