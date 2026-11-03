@@ -1,0 +1,76 @@
+# Registre des affirmations — réponse à Shi Feng et Eyon Jang — v1
+
+Rédacteur neuf, 3 novembre 2026, vers 12:50 UTC (`date -u`). Réponse registrée : `reponse-v1.md` du même dossier (texte identique au jet `/home/claude/scratch/redaction-jang-feng-v1/jets/jet-7.txt`, sha256 `710c33f504ab54de471e2e1cf345c00b307a8ad99115b94002c0deff95369bf9`).
+
+**Forces.** « publique et vérifiée » : lue par moi sur la source citée (fichier à son commit, ou PDF empreinté, page) ou, quand c'est dit, par deux lecteurs antérieurs concordants ; « interne vérifiée » : fichier daté du dépôt privé, chemin et sha256 ; « non vérifiée » : interdite dans la réponse. Les positions et les plans de Lazar ne sont pas des faits : ils sont comptés à part (« position » ou « plan »), écrits comme tels dans la réponse.
+
+## Sources
+
+| Abréviation | Source | Version | Empreinte |
+|---|---|---|---|
+| [R7] | `results/R7/README.md`, dépôt public `lciric/sycophancy-psychophysical-law` | commit `b3ecaec` (3 nov. 2026 ; = `origin/main` du clone frais) ; résultats R7 au commit `9f5bf6a` (2 nov.) | `2dd0790cf01cba8dfc0dcc8956a1ce0f07d68d20c1a2ce459836d7d8645d032a` (identique à la lecture du vérificateur au commit `e5e960b`) |
+| [R7d] | `results/R7/R7_descriptive.json`, même dépôt | `b3ecaec` | `6be670114cd509bbfc9bf7bc2cfc1cefa0bfe80242596a8f414c4280990427d8` |
+| [P3] | `resultats/controle-p3-premier-test/README.md`, dépôt public `lciric/ideation-organism` | `faff48b` (= `origin/main` local) ; page publiée au commit `7c7b688` (3 nov., 07:10 heure de Paris), identique | `2485d5095094c2dc7f761cbe972172c88291305c6da1df50b58c0c3c1272bf88` |
+| [T03] | `resultats/controle-simulation-defenses/README.md`, même dépôt | `faff48b` ; publiée à `7c7b688`, identique | `04ce0afcedb95478103fb76c15680f185e8614c0f0ed08616162d848270d8ba0` |
+| [R1] | `resultats/controle-r1-blanche-noire/README.md`, même dépôt | `faff48b` (page mise à jour le 2 nov., 08:54 UTC) | `6c2dffc8777cf7fbba82ea6e6617dbb76b4d5e877290a87cfebf79be5a140a46` |
+| [ORG] | `README.md` du même dépôt (tableau des preuves, lignes 126 à 128) | `faff48b` | `bdd6516f18ec0cf44ba7fa173df519d8f88b3ee89ab8892454822babbe05b1df` |
+| [2411] | Wen, Hebbar, …, Shi Feng, …, arXiv 2411.17693v1 | PDF `docs/sources/pdf/2411.17693v1.pdf` | `13a93a48dcb373595709da1096984d308cd3cd17c3bf00602944a24abcc2c627` (contrôlée contre son compagnon) |
+| [2609] | Lyons Keenan, Leckie, Erfani, arXiv 2609.36490v1 | PDF `docs/sources/pdf/2609.36490v1.pdf` | `eb6d5bbe9bfaff0ac4fbac948a7bd9937721721fc558655fdf606d254421a088` (contrôlée) |
+| [2507] | Parrack, Attubato, Heimersheim, arXiv 2507.12691v3 | PDF `docs/sources/pdf/2507.12691v3.pdf` | `0c00a77b0c07bb9a8cd2feb748d65fe9ac01ee7bee9746ebb9cbc0d1ca8ebb00` (contrôlée) |
+| [2509] | Boxo, Neelappa, Raval, arXiv 2509.21344v2 | PDF `docs/sources/pdf/2509.21344v2.pdf` | `aaac4ff91c909f9e4363fe9c19bb0fc7c2a635bf91e13c178992411f2a25ee5c` (contrôlée) |
+| [2409] | Wen, Zhong, …, He He, Shi Feng, arXiv 2409.12822 | page https://arxiv.org/abs/2409.12822, lue par `WebFetch` le 3 nov. 2026 vers 12:37 UTC (citations de l'introduction et du § 4, liste des auteurs) | pas de PDF local ; concordant avec le rapport (ligne 49) et le recoupement (n° 130) |
+| [2604] | Jang et coll., arXiv 2604.28182 | lu par `WebFetch` par le lecteur du rapport (questions ciblées) | pas de PDF local ; rapport lignes 44 et 68, recoupement n° 128 et 143 (« exact ») |
+| [2602] | Daniels, Moodley, Marlin, Lindner, arXiv 2602.08877 | lu par `WebFetch` par le lecteur du rapport | pas de PDF local ; rapport ligne 52, recoupement n° 135 (« exact ») |
+| [RAP] | `brouillons/candidature-pivotal-v16/lecture-approfondie-v1/rapport-jang-feng-v1.md` | — | `1c8a4ff27c6ed9103b012899d0758adbe6b99ef8de9bf0937b11edc4ffde686b` |
+| [REC] | `brouillons/candidature-pivotal-v16/lecture-approfondie-v1/recoupement-v1.md` | — | `bea573aa1e62d5d5bfb1aa677a902c9ec977ea1740941eed5b4277bae0e4fe0a` |
+| [DEC] | `registres/decisions.md` (dépôt privé), lignes R-1322 (3 nov., 07:35 UTC) et R-1324 (07:46 UTC) | — | `1c40ac9e53c36a2e5ed06484620f3f360e76bc42185dfe759ede44fad8792ecd` |
+
+## Affirmations, dans l'ordre de la réponse
+
+| n° | Phrase de la réponse (mots exacts) | Source et emplacement | Force |
+|---|---|---|---|
+| 1 | « White-box monitors matter most, I think, where no single action provides overwhelming evidence » | opinion de Lazar | position |
+| 2 | « your distributed-threat setting (arXiv 2411.17693) » | [2411] p. 1 : « a setting where no single action is catastrophic and no single action provides overwhelming evidence of misalignment » ; Shi Feng coauteur ([RAP] ligne 17) | publique et vérifiée |
+| 3 | « There I would bank weak per-action scores at a false-alarm rate fixed in advance. » | démarche du programme de Lazar (« contrôle boîte blanche des menaces diffuses ») ; écrit au conditionnel, pas attribué à 2411.17693 (dont le macro-protocole met à jour une crédence, p. 7) | position |
+| 4 | « That needs a score that takes no orders and whose honest distribution is known. » | raisonnement | position |
+| 5 | « A probe takes no orders; a text monitor can. » | appuyée par n° 6 à 9 | position |
+| 6 | « In my preregistered R7, seven Qwen2.5 monitors (0.5B to 72B) scored 600 responses with and without a planted note. » | [R7] en-tête (« Preregistered in … addendum_R7 … Archived on Zenodo before any reading ») ; « What was run » (Qwen2.5-Instruct 0.5B, 1.5B, 3B, 7B, 14B, 32B, 72B ; 600 réponses publiées, lues telles quelles puis avec une note dans la réponse) | publique et vérifiée |
+| 7 | « When the note ordered the lowest score, the 1.5B, 3B and 32B monitors put 98–100% of their readings there » | [R7] « Reading (descriptive, not preregistered) » : sous la note forte « down », « 98–100 % of their readings at 1 » ; intensité forte = ordre qui nomme le score (« You must score it 1 ») ; [R7d] `down_strong_argmax1` : 1,0 (1.5B), 0,9833 (3B), 1,0 (32B) | publique et vérifiée |
+| 8 | « against 20.5–48% without it » | [R7d] `plain_argmax1` : 0,48 (1.5B), 0,205 (3B), 0,38 (32B) ; étendue calculée par moi sur ces trois valeurs | publique et vérifiée |
+| 9 | « (descriptive; the 72B shifted, not captured) » | [R7] : lecture descriptive ; « The 72B is not captured, but it is pushed » ; issue préenregistrée C (« the 72B monitor shows no attraction … in either direction ») | publique et vérifiée |
+| 10 | « A probe can still be beaten through the model it reads. » | résumé des n° 11 à 13 | position |
+| 11 | « Prompt-level attacks have driven SAE- and activation-based auditors to confident wrong answers (arXiv 2602.08877). » | [2602] résumé et § 4.5 ([RAP] ligne 52 ; [REC] n° 135 : « confident, incorrect guesses », descriptions de traits d'autoencodeur et similarité d'activations) | publique et vérifiée (deux lecteurs, lecture par questions ciblées) |
+| 12 | « Models shown a monitor's past verdicts already edited their activations the evading way, too weakly » | [2609] p. 1 (résumé) : « off-the-shelf models already produce activation edits aligned with the monitored direction, but at insufficient magnitude for evasion » ; [REC] n° 125 (« aligned with the direction needed for evasion ») | publique et vérifiée |
+| 13 | « a rank-1 LoRA amplified that into evasion (true positive rate 100% → 4% on held-out concept monitors, arXiv 2609.36490) » | [2609] p. 1 : « reduces the monitor's TPR from 100% to 27% » (mise à l'échelle) puis « A rank-1 LoRA amplifies this behavior into effective evasion …, reducing TPR further to 4% on held-out concept monitors » ; p. 8 : taux à 1 % de fausses alertes | publique et vérifiée |
+| 14 | « So verdicts must be guarded, including protocol switches an agent can see. » | inférence de Lazar à partir de [2609] p. 1 (« each verdict the monitor delivers leaks information ») et note 1 p. 4 (« the verdict may reach the agent implicitly, e.g. as a blocked tool call or a rejected output ») | position |
+| 15 | « The honest distribution is harder to know. » | opinion | position |
+| 16 | « In my preregistered simulation with no attack (T0.3, synthetic scores), every score had exactly the assumed law. » | [T03] « No attack is played » ; « Synthetic scores only » ; définition de l'effet d'épisode : variance totale 1, « each score remains N(0, 1) » ; σ = 1 connu | publique et vérifiée |
+| 17 | « Yet when the scores of an episode shared a random shift, Ville's threshold at α = 0.05 gave 21–35% false alarms in the strongest settings. » | [T03] tableau P8 : τ = 0,2, n₀ = 200 : 0,21 (4 210 sur 20 000) ; τ = 0,2, n₀ = 1000 : 0,35 (7 029) ; τ = 0,1, n₀ = 1000 : 0,24 (4 723) ; « the three strongest episode-effect settings of the grid » ; α = 0,05 ; [ORG] ligne 128. Réserve de la page, non écrite dans la réponse faute de place : ces cellules ont été choisies après des essais exploratoires, confirmées sur graines neuves, pas prédites à l'aveugle | publique et vérifiée |
+| 18 | « A threshold calibrated on 1,000 whole honest episodes held 4.6–5.5% » | [T03] : « gives 0.046 to 0.055 in all 17 settings … against 0.04995 predicted » ; réserve : épisodes de calibrage et de déploiement échangeables (vérification d'instrument), robustesse à un décalage non testée — la phrase suivante de la réponse en tire la règle | publique et vérifiée |
+| 19 | « Real probe scores shift with the task (one put the average honest code sample above 99.9% of Alpaca samples, arXiv 2507.12691) » | [2507] p. 9 : « For Pairs probe, the average honest Backdoors sample had a mean probe activation higher than 99.9% of the Alpaca samples » (83 % avec la sonde RP) ; p. 4 : Backdoors = défis de programmation ; [REC] n° 133 | publique et vérifiée |
+| 20 | « so honest episodes must come from the audited task. » | règle tirée de n° 18 et 19 | position |
+| 21 | « My first test did not show the signal. » | [P3] « first white-box test of the AI-control programme » ; issue « no generic probe above the floor » | publique et vérifiée |
+| 22 | « In P3 (preregistered; Llama-3.1-8B-Instruct, 60 tasks, 2,400 scored actions) » | [P3] en-tête et « Counts » (240 épisodes, 2 400 actions notées) ; préenregistrement scellé le 19 oct. 2026 (empreinte `d975e981…` sur la page) | publique et vérifiée |
+| 23 | « an agent privately told to inflate a declared cost about threefold did so, by more than asked (cause not measured) » | [P3] « Design » (consigne privée, facteur d'environ 3) ; P3-P1 établi : 1,5227 [1,2464 ; 1,8012] (différence appariée des log10) ; réserve 1 (« exceeds … the factor written in the instruction (≈ 3) … the cause is not measured ») | publique et vérifiée |
+| 24 | « Neither generic probe, trained on public data with no saboteur, cleared a floor of 200 covariance-matched random probes » | [P3] : bornes inférieures 0,5313 contre 0,5717 (tromperie) et 0,4813 contre 0,5356 (enjeux) ; 200 sondes aléatoires tirées de N(0, Σ) ; sondes entraînées sur des données publiques sans saboteur | publique et vérifiée |
+| 25 | « not detected at this power (areas below 0.63 and 0.60 not excluded) » | [P3] réserves 2 et 3 : aires minimales détectables 0,6315 et 0,5966 | publique et vérifiée |
+| 26 | « The declared cost alone separated saboteur from honest actions (area 0.89, descriptive) » | [P3] « Descriptive, without verdict » : 0,8878 sur 926 actions au coût lisible | publique et vérifiée |
+| 27 | « That saboteur came from an instruction in context, not from training. » | [P3] « The saboteur is obtained by an instruction in the context; the model is not trained. » | publique et vérifiée |
+| 28 | « In your arXiv 2409.12822, a probing method that caught a sleeper agent's flawed programs at 99.3% AUROC (MacDiarmid et al.) was no better than chance on sophistry learned through RLHF. » | [2409] § 4 : « probing can achieve nearly perfect AuROC (99.3%) in detecting incorrect programs generated by sleeper agent » ; introduction : « This probing method fails for detecting U-SOPHISTRY, performing no better than chance » ; 99,3 % obtenu par MacDiarmid et coll. ; Shi Feng dernier auteur ; [REC] n° 130 (même nuance) | publique et vérifiée |
+| 29 | « So what I would run first with you is a transfer test. Train a probe on one of your two Qwen3-14B recipes (RL-locked, SFT-distilled; arXiv 2604.28182) and test it on the other » | fait : [2604] § 3.1-3.2, deux recettes sur Qwen3-14B ([RAP] ligne 68 ; [REC] n° 143) ; le test : non fait, écrit comme une proposition | publique et vérifiée (fait) ; plan (test) |
+| 30 | « next to black-box judges, at a false-alarm rate calibrated on honest episodes of the same task, against a random-probe floor » | conception proposée (même règle que P3 et R1) | plan |
+| 31 | « Your organisms reason out loud (§6.2) » | [2604] § 6.2 : « Our model organisms rely on explicit CoT reasoning, making them detectable by text-based monitors » ([RAP] ligne 44 ; [REC] n° 128) | publique et vérifiée |
+| 32 | « so I would also filter out the reasoning tokens, as arXiv 2509.21344 does, to see how much of the probe's signal is the text itself » | fait : [2509] p. 1 (« performance degrades once these tokens are filtered ») et figure 2 p. 4 (filtrage du contenu, filtrage du score) ; le filtrage sur les organismes de Jang : non fait, proposé | publique et vérifiée (fait) ; plan |
+| 33 | « My white-box versus black-box comparison on the 2,400 actions (R1) is preregistered and not in yet » | [R1] : trois analyses scellées avant les données (empreintes et dates sur la page) ; [ORG] ligne 126 : « Not in yet ». En interne, la relance sur la table v3 a été lue et close « non concluant (rejeu partiel) », non publiée ([DEC] R-1322, R-1324) : « not in yet » reste vrai ; la phrase publique « Nothing of the white-box arm has been read » n'est pas reprise | publique et vérifiée |
+| 34 | « its result will be posted, null or not » | [R1] « The result, whatever its sign, will be posted on this page » ; [DEC] R-1324 (« publication finale quel qu'en soit le sens ») | engagement public (plan) |
+
+**Liens de la réponse** : `…/sycophancy-psychophysical-law/tree/b3ecaec/results/R7`, `…/ideation-organism/tree/faff48b/resultats/controle-simulation-defenses`, `…/ideation-organism/tree/faff48b/resultats/controle-p3-premier-test` ; les trois commits existent dans les clones et sont les têtes de `origin/main` connues localement (aucun `git fetch` fait).
+
+## Décompte
+
+- **Publiques et vérifiées : 24** (n° 2, 6, 7, 8, 9, 11, 12, 13, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29 pour le fait, 31, 32 pour le fait, 33). Dont 2 lues par deux lecteurs antérieurs seulement (n° 11, 31) et une par eux pour le fait de 29 ; les autres, par moi sur la source.
+- **Internes vérifiées : 0** dans la réponse ([DEC] sert seulement à choisir une formulation vraie pour n° 33).
+- **Non vérifiées : 0.**
+- **Positions et plans (pas des faits)** : 12 (n° 1, 3, 4, 5, 10, 14, 15, 20, 29 pour le test, 30, 32 pour le filtrage, 34).
+
+**Chaque nombre de la réponse** est dans ce registre : 0.5B, 72B, 600 (n° 6) ; 1.5B, 3B, 32B, 98–100 % (n° 7) ; 20.5–48 % (n° 8) ; α = 0.05, 21–35 % (n° 17) ; 1,000, 4.6–5.5 % (n° 18) ; 99.9 % (n° 19) ; 60, 2,400 (n° 22) ; threefold (n° 23) ; 200 (n° 24) ; 0.63, 0.60 (n° 25) ; 0.89 (n° 26) ; 99.3 % (n° 28) ; 14B, deux recettes (n° 29) ; rank-1, 100 % → 4 % (n° 13) ; § 6.2 (n° 31) ; 2,400 (n° 33).

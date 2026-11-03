@@ -1,0 +1,81 @@
+# Registre des affirmations — réponse Q2 à Lujain Ibrahim — v1
+
+Rédacteur neuf, auteur d'aucune version antérieure des réponses de Lazar. 3 novembre 2026, à partir de 12:23 UTC (`date -u`). Réponse : `brouillons/redaction-finale-v1/ibrahim-q2/reponse-v1.md`. Consigne : `brouillons/reprise-conv-audit-2026-11-02-nuit/prompts-sous-agents/redaction-finale-ibrahim-q2-v1.md` (sha256 `8d35c9f6ab44b0718d1654101f5f0c5313ba9e1221dbeedd1ddafea59eb32da5`, vérifiée avant lecture).
+
+Forces : **publique et vérifiée** (lue par moi dans le fichier public cité, à la ligne citée) ; **interne vérifiée** (fichier daté du dépôt privé, chemin et sha256) ; **non vérifiée** (interdite dans la réponse). La réponse ne contient aucune affirmation interne ni non vérifiée.
+
+## Décompte
+
+21 affirmations : **20 publiques et vérifiées** (dont 11 avec une nuance écrite ci-dessous), **1 lecture** (raisonnement appuyé sur deux affirmations vérifiées), **0 interne**, **0 non vérifiée**.
+
+## Sources
+
+Dépôt public `lciric/sycophancy-psychophysical-law`, clone frais `/home/claude/scratch/depots-publics-2026-11-03/sycophancy-psychophysical-law`, commit `b3ecaec` (`b3ecaeccf7d9705d9a2391969ed93633ff7156fe`, 3 novembre 2026, 11:35 heure de Paris), lu sans exécuter son code. Vérification en ligne : `https://github.com/lciric/sycophancy-psychophysical-law/blob/b3ecaec/<fichier>`.
+
+| étiquette | fichier | sha256 |
+|---|---|---|
+| [README] | `README.md` | `304f486113b908eda3dcae37ec31d4520dd8f9c5b27368690a61ea160377f37b` |
+| [STATUS] | `STATUS.md` | `b0ed2c9802e4c9d17c385c1c533cc27e66188bcb05960fd88d8bab119c256bab` |
+| [P15] | `preregistrations/2026-11-02_follow-up_runs_R1-R5.md` | `a2f7e2f4d1d19840356b24216f3edf00de7711d02aaf40b704f1912547fb5a59` |
+| [R6a] | `preregistrations/2026-11-02_addendum_R6_dose_response.md` | `286b12491122e054848a97b078dc298b1326e12d87acb93fcee74066b93c11e7` |
+| [R5m] | `preregistrations/R5_materials/README.md` | `fb06bee733428cd886c964a22ed121972ecdfa3e56fd3002c6eb4d745b4851bc` |
+| [R4b] | `preregistrations/R4_brief.txt` | `63c302b1c49821bf092ba6ad38edd39b1c9717fb90f3627991dedb35eaf12f25` |
+| [R1a] | `results/R1a/README.md` | `adce975d8cd9edd0de14d9b730fc2bd6a7bad2f1c4f6deedb8499465c10a0736` |
+| [R1b] | `results/R1b/README.md` | `8200f92765ac4b8167e6ac4d289db177bcb6ce36d0a95686c51605c8b8bfaaa6` |
+| [R2] | `results/R2/README.md` | `fdae23cafe9a033fbdf9a4b798d79c38f379e8df71f4b6c6d00282e45a42a36d` |
+| [R3] | `results/R3/README.md` | `066853994249bdb48232bcd47e235b9a664257157de519a4d2d63b5ba15f6740` |
+| [R4] | `results/R4/README.md` | `2664d85cb9d3e33523d352daf2d2054729d2d71e42c7b6daf5ad92bcffe4f781` |
+| [R4o] | `results/R4/R4_output_items60.json` | `18b4b6cfb7e66014a660c23da0e7dfec419d237830aef243d67706f92a7166e4` |
+| [AR] | `code/analyse_runs.py` (lu, non exécuté) | `d927a0d208fa562a869180c97b8bb4a435d2cd4b45587f92227bbc1e2281dc5e` |
+| [R6] | `results/R6/README.md` | `27ad89efb844830dea387d2c0a24b5a27e68165d9953b14928b69e287dd2eca9` |
+| [R7] | `results/R7/README.md` | `2dd0790cf01cba8dfc0dcc8956a1ce0f07d68d20c1a2ce459836d7d8645d032a` |
+| [git] | historique git du clone au commit `b3ecaec` (`git log`, lecture seule ; clone complet, non superficiel) | — |
+
+Les empreintes de [P15], [R5m], [R1a], [R1b], [R3], [R4], [R6] et [R7] sont égales, sur leurs 16 premiers caractères, à celles que le vérificateur neuf a lues au commit `e5e960b` (`brouillons/candidature-pivotal-v16/lecture-approfondie-v1/recoupement-v1.md`, sha256 `bea573aa1e62d5d5bfb1aa677a902c9ec977ea1740941eed5b4277bae0e4fe0a`, §0) : ces fichiers n'ont pas changé depuis, et ses verdicts n° 174 à 186 s'y appliquent encore. J'ai pris ses verdicts et ses sources, jamais ses phrases.
+
+Pièces consultées pour les verdicts et les corrections, pas comme sources de chiffres :
+- `brouillons/canal-fable-v1/fable_2026-11-03_n001.md`, sha256 `4b9bd5c929e272acd2910722765483bb7a05d53df352ec32e23adbd4992f9e96` (lectrice indépendante : chiffres de R6 confirmés, §4 ; « n'écris pas saturated » ; la réserve des refus est obligatoire si l'on dit que les deux destinations reviennent au milieu ; ρ = 0,684 et le bras « 1 % » sont deux objets distincts, §2).
+- `brouillons/candidature-pivotal-v16/lecture-approfondie-v1/rapport-ibrahim-v1.md`, sha256 `e4e74c9baa82d81ccf7be52bd23e492329e57bdc8ec820bae7dc88a01ead1c57` (faits du mentor ; aucun n'est repris dans la réponse).
+
+## Affirmations, phrase par phrase
+
+| n° | phrase de la réponse (mots exacts) | source et emplacement | force | nuance ou réserve |
+|---|---|---|---|---|
+| 1 | « Sycophancy as Attraction Toward a Fixed Point (manuscript in preparation; » | [README] l. 1 (titre) ; l. 5 (« manuscript in preparation, November 2026 ») | publique et vérifiée | — |
+| 2 | « code, data, preregistrations: https://github.com/lciric/sycophancy-psychophysical-law » | arbre du dépôt : `code/`, `data/`, `preregistrations/` | publique et vérifiée | les préenregistrements des campagnes 1 et 2 ne sont pas dans le dépôt (empreintes seulement, [README] l. 83 et 88) ; ceux des suites R1 à R9-bis y sont |
+| 3 | « I ask Llama-3.1-8B-Instruct to assess a short opinion. » | [README] l. 9 (« is asked for its assessment of a text ») ; [R4b] (une phrase de 6 à 18 mots qui énonce une opinion évaluative discutable ; ses trois exemples sont les items 0, 17 et 33 de la campagne 1, [README] l. 81) | publique et vérifiée | les textes de la campagne 1 ne sont pas publiés : « short opinion » s'appuie sur les trois exemples publiés et sur les 60 items de R4 |
+| 4 | « Under pressure, the request ends with "By the way, I think this is terrible and poorly written." or its praise version. » | [README] l. 9 (« ends with one unargued sentence of criticism or praise ») ; l. 75 (les deux phrases, mot pour mot) | publique et vérifiée | phrase d'éloge : « By the way, I think this is brilliant and beautifully written. » |
+| 5 | « A judge, Claude Opus 4.6, rates each free-text verdict from 1 (negative) to 5 (positive). » | [README] l. 9 (« scores the polarity of its verdict from 1 (negative) to 5 (positive) ») ; l. 75 (`claude-opus-4-6`, température 0) | publique et vérifiée | le juge est un alias d'interface, non figé ([README] l. 92) |
+| 6 | « From its unpressured value p₀, the rating closes a fixed fraction g ≈ 0.7 of its distance to a destination ĉ set by the pressure (1.5 under criticism, 2.9 under praise): Δ = g·(ĉ − p₀). » | [README] l. 9 et 11 (Δ = p₁ − p₀ = g·(ĉ − p₀), sur les moyennes par item) ; l. 15–16 (g = 0,718 [0,577 ; 0,839] et 0,678 [0,531 ; 0,819] ; ĉ = 1,456 [1,228 ; 1,684] et 2,937 [2,737 ; 3,184]) | publique et vérifiée | arrondis 1,456 → 1.5 et 2,937 → 2.9 ; la loi porte sur les moyennes par item ; « set by the pressure » couvre le sens de la pression ([README] l. 9) et, d'après R6, sa formulation |
+| 7 | « So praise lowers ratings above 2.9, beyond regression to the mean. » | [README] l. 24 (les 11 items au-dessus de la cible d'éloge baissent sous éloge de −0,67 en moyenne, 10 sur 11 ; médiane du nul sans effet −0,07, p = 1,6 × 10⁻³ ; items choisis sur cinq générations et mesurés sur les cinq autres : 8/10 et 8/13 descentes, −0,64 et −0,35) | publique et vérifiée | le compte des descentes seul ne suffit pas (la régression vers la moyenne en donne 8 dans la réplique médiane, p = 0,35) ; c'est l'ampleur qui l'exclut ([README] l. 24 ; [STATUS] l. 62). La phrase parle de la baisse, donc de l'ampleur |
+| 8 | « With no refitted parameter, the law predicted the displacement on 60 new items, written blind and committed before generation: R² = 0.68 and 0.58, against −0.28 and −0.01 for a constant shift. » | [R4] l. 6 (60 items écrits par une instance neuve à partir de la seule consigne, commités le 2 novembre à 00:11 UTC, avant toute génération) ; l. 12–17 (R² 0,683 et 0,579 ; décalage constant −0,280 et −0,013) ; [README] l. 38 (« written blind and committed before any generation ») ; [STATUS] l. 5 (commit `7ccb3ec`) ; [P15] l. 20 (le décalage constant est celui de la campagne 1 : −0,7567 et +0,2600) | publique et vérifiée | ordre des deux valeurs : critique, puis éloge |
+| 9 | « The reversal held there too. » | [R4] l. 32 (25 des 60 items au-dessus de la cible d'éloge baissent sous éloge, −0,60, p = 2,5 × 10⁻⁵) ; [R4o], `analysis.arms.praise.descent_above_target` (25 ; −0,6 ; 2,5 × 10⁻⁵) | publique et vérifiée | la cible qui sélectionne ces 25 items est celle réajustée sur les 60 items (ĉ = 3,225), pas celle de la campagne 1 ([AR] l. 90 : `above = p0 > c`, c ajusté sur ce run). La phrase ne nomme pas la cible ; le README dit « held out of sample ». À savoir si la mentore le demande |
+| 10 | « A mean shift cannot separate how far (g) from where (ĉ). » | raisonnement : une seule statistique ne rend pas deux paramètres ; appuyé par n° 8 (le décalage constant fait pire que « aucun changement ») et n° 11 (même baisse moyenne, structure différente) | lecture, appuyée | — |
+| 11 | « Under criticism, Qwen2.5-7B and Mistral-7B drop about as much as Llama, but uniformly: no fixed point. » | [R3] l. 17 et 19 (Δ moyen sous critique −0,685 [−0,812 ; −0,558] et −0,680 [−0,815 ; −0,552]) ; l. 30 (pente non distinguable du nul de permutation, p = 0,28 et 0,25) ; l. 39–40 (« shift every item by about the same amount instead of drawing them toward a fixed point ») ; Llama : décalage constant de la campagne 1, −0,7567 ([P15] l. 20 ; égal à g·(ĉ − moyenne) = 0,718 × (1,456 − 2,51), [README] l. 15 et 23) ; −0,860 à la dose standard de R6 ([R6] l. 27) | publique et vérifiée | jeux d'items voisins, pas identiques : items 0 à 39 pour R3, 0 à 29 pour la campagne 1 et R6. « about as much » : −0,69 et −0,68 contre −0,76 (ou −0,86) |
+| 12 | « I preregistered that across three wordings, mild to strong, the gain would grow and the destination stay. » | [R6a] l. 3 (écrit avant tout jeton de R6) ; l. 30–31 (H1 : le gain croît avec la dose ; H2 : le point fixe est stable) ; l. 35 (issue A : H1 et H2) ; [R6] l. 3 (archivé sur Zenodo avant tout jeton, 10.5281/zenodo.23888058, 2 novembre, 14:42 UTC) ; l. 10–13 (trois formulations : douce, standard, forte) | publique et vérifiée | prédiction faite pour Llama ; le run porte sur quatre familles |
+| 13 | « Under criticism the gain stayed flat while the destination moved; under praise the destination fell. » | [R6] l. 25–30 (critique : g 0,658 / 0,678 / 0,629 ; ĉ 1,867 / 1,331 / 2,367 ; éloge : ĉ 4,011 / 2,845 / 2,475) ; l. 33 (g(fort) − g(doux) = −0,029 [−0,220 ; 0,197] sous critique) ; l. 34 (ĉ(fort) − ĉ(doux) = +0,500 [0,149 ; 0,803] sous critique, −1,537 [−6,185 ; −0,632] sous éloge) ; [README] l. 50 (« the gain stays flat ») ; confirmés par la lectrice indépendante (Fable n° 1, §4) | publique et vérifiée | sous éloge le gain a crû (0,276 → 0,797) ; la phrase ne parle pas du gain sous éloge. « flat » est le mot du README ; « saturated » évité (l'intervalle contient 0) ; rien n'est dit du retour au milieu de l'échelle, qui exigerait la réserve des refus |
+| 14 | « I published this as a failure. » | [R6] l. 5 (« C, not the predicted A ») et l. 37 ; [README] l. 50 (« The preregistered prediction failed: outcome C, reported as such ») | publique et vérifiée | — |
+| 15 | « Two Qwen judges (7B, 72B) recover the law from the same responses. » | [R1a] l. 9 et 19 (Qwen2.5-7B, 360 lectures des réponses publiées ; C1 et C2 tiennent, issue A) ; [R1b] l. 5, 8 et 18 (Qwen2.5-72B, les 1 200 réponses publiées ; issue A) ; [README] l. 100 | publique et vérifiée | le 7B lit un échantillon de 360 lectures ; les cibles diffèrent en amplitude (R1a : 2,35 et 3,34 ; R1b : 1,88 et 2,99), ce qui n'était pas un critère |
+| 16 | « Human readers, five per response and blind to condition, are preregistered but not yet run. » | [R5m] l. 7 (« they never see the item, the arm, the condition or k ») ; l. 14 (cinq lecteurs par réponse, recrutés sur Prolific) ; [STATUS] l. 59 (l'étude ouvre à l'approbation du compte Prolific) ; [README] l. 92 (« No human ratings are part of this release ») | publique et vérifiée | un pilote avec des lecteurs connus de l'auteur (R5-pilot) est déclaré ([R5m] l. 34) ; son état n'est dit nulle part ; s'il a commencé, la phrase reste vraie pour R5 |
+| 17 | « Under praise Llama sometimes refuses; the judge rates refusals near 3, close to the praise destination, so they can mimic attraction. » | [R4] l. 36 (9 refus sur 900, tous sous éloge, chacun noté 3) ; l. 38 (« A rating of 3 lies close to the praise target (3.2), so a refusal can look like attraction ») ; [R6] l. 51–53 (16, 31 et 26 refus sur 150 sous éloge) ; l. 55 (« the judge rates such refusals near the middle of the scale ») | publique et vérifiée | cible d'éloge 3,2 en R4 et 2,9 en campagne 1 : « close to » vaut pour les deux |
+| 18 | « I keep them; dropping the items with refusals changes neither the out-of-sample nor the dose outcome. » | [R4] l. 36 (refus gardés, comme en campagne 1) ; l. 41–49 (variante (c), sans les cinq items à refus : les quatre critères tiennent ; « The refusals do not carry outcome A ») ; [R6] l. 59–60 (sans les 14 items à refus : « The outcome is still C ») | publique et vérifiée | les deux sensibilités sont a posteriori et descriptives, et retirent des items entiers |
+| 19 | « Each published follow-up was preregistered on Zenodo before it ran » | [README] l. 100 (préenregistrement R1–R5 archivé avant toute course, 10.5281/zenodo.23870831) ; [R6] l. 3 ; [R7] l. 3 (archivé avant toute lecture, 10.5281/zenodo.23892810) | publique et vérifiée | suites publiées : R1a, R1b, R2, R3, R4, R6, R7. Les préenregistrements des campagnes 1 et 2 sont horodatés dans un dépôt privé ([README] l. 88) ; la réponse ne les revendique pas |
+| 20 | « and recomputed from raw files by a fresh model instance. » | [README] l. 100 (« Results enter results/ only after an independent recomputation from their raw files ») ; instance neuve nommée dans [R1a] l. 41, [R1b] l. 41, [R2] l. 33 et 38, [R3] l. 57, [R4] l. 56, [R6] l. 82, [R7] l. 52 | publique et vérifiée | — |
+| 21 | « AI coding agents wrote the code. » | [git] : 37 des 38 commits ont pour auteur « Claude » et portent une ligne « Co-Authored-By: Claude … » ; le premier, `a30553a`, a pour auteur « lciric » | publique et vérifiée | « following guidelines I created » (réponse actuelle) n'est pas vérifiable sur ce dépôt : retiré |
+
+## Chaque nombre de la réponse et sa ligne
+
+Llama-3.1-8B-Instruct (n° 3) ; Claude Opus 4.6 (n° 5) ; 1 et 5 (n° 5) ; 0.7, 1.5, 2.9 (n° 6) ; 2.9 (n° 7) ; 60, 0.68, 0.58, −0.28, −0.01 (n° 8) ; Qwen2.5-7B, Mistral-7B (n° 11) ; three (n° 12) ; 7B, 72B (n° 15) ; five (n° 16) ; 3 (n° 17).
+
+## Affirmations du réservoir écartées (aucune n'est dans la réponse)
+
+| phrase de la réponse actuelle | raison | source du verdict |
+|---|---|---|
+| « What can track it (rho = .68) only has less than 1% of the causal influence compared to the full residual state which is 68%. » | fond deux objets distincts en une phrase ; « 1 % » et « 68 % » sont de l'essai D36 original, non public ; ρ = 0,684 « may be training fit » | Fable n° 1, §2 et §7(a) ; `sycophancy-construct-validity` au commit `146b2a4`, README l. 61 et 115 |
+| « placebo of equal length » ; « social pressure measured » | absent du dépôt public ; la pression est dosée, pas mesurée | recoupement n° 175 ; rapport Ibrahim n° 21 |
+| « ordinal judge blinded pre-data » | « pre-data » non vérifiable de l'extérieur | recoupement n° 176 |
+| « All studies were pre registered and hashed prior to seeing any data. » | non vérifiable en entier ; remplacé par n° 19 | recoupement n° 188 ; [README] l. 88 |
+| « All code was written by AI agents following guidelines I created. » | « following guidelines I created » non vérifiable sur ce dépôt ; remplacé par n° 21 | recoupement n° 189 |
+| « All values can be traced to files and hashes. » | vrai pour ce dépôt ; retiré faute de place | recoupement n° 190 |
+| « When extremely criticized it will begin to disagree with the user more often. » | comptes a posteriori par motif grossier (bornes hautes) ; retiré faute de place | [R6] l. 47 et 56 |
+| « My second public project is my research automation and judge built not to be swayed. » | exact, mais sans lien avec ses travaux ; retiré (à remettre si Lazar y tient) | recoupement n° 191 ; rapport Ibrahim, §2 « Organisme » |
