@@ -1,0 +1,377 @@
+{
+ "_lisez_moi": "Configuration de la course d'idéation Scheurer, variante sans_claude (rôles « astra_argon »), v1 — écrite par calcul_devis_course_scheurer_v2.py le 3 novembre 2026 (sous-agent de session-depot). Course NON décisive (démonstration, matière à réflexion pour Lazar). S17 = plafond TECHNIQUE (garde contre une boucle). Aucun témoin planté. Bras joués : gu_krenn (substitut) et basique ; bras méta hors course. Jetons {DEPOT} et {REGISTRE} remplacés par le lanceur. Ordre de session-depot (13:50 UTC) ; règles du juge : n° 419 de conv-audit et protocole « mentors du soir » (fbbbb520…) ; pièces servies : Scheurer v1 (2d0e60fc…), nos résultats v1 (d6fa8011…).",
+ "variante": "sans_claude",
+ "racine_graines": 20261103,
+ "graines": {
+  "prefixe": "sch"
+ },
+ "champs_fiche": [
+  "titre",
+  "hypothese",
+  "axe",
+  "epreuve",
+  "controle",
+  "prediction",
+  "test_de_mort",
+  "cout"
+ ],
+ "champ_titre": "titre",
+ "champ_axe": "axe",
+ "budget": {
+  "plafond_usd": 130.0,
+  "arret_etape_usd": 117.0,
+  "portee_plafond": "course",
+  "etapes": [
+   {
+    "nom": "proposition",
+    "attendu_usd": 0.92,
+    "plafond_relais_usd": 4.07,
+    "role": "protegee"
+   },
+   {
+    "nom": "aiguillage",
+    "attendu_usd": 1.57,
+    "plafond_relais_usd": 15.24,
+    "role": "protegee"
+   },
+   {
+    "nom": "juges",
+    "attendu_usd": 4.2,
+    "plafond_relais_usd": 19.85,
+    "role": "protegee"
+   },
+   {
+    "nom": "passe_tableau",
+    "attendu_usd": 0,
+    "plafond_relais_usd": 0,
+    "role": "sacrifiable",
+    "rang": 2
+   },
+   {
+    "nom": "etiquettes",
+    "attendu_usd": 6.27,
+    "plafond_relais_usd": 39.5,
+    "role": "protegee"
+   },
+   {
+    "nom": "fusions",
+    "attendu_usd": 5.12,
+    "plafond_relais_usd": 29.08,
+    "role": "sacrifiable",
+    "rang": 1
+   }
+  ]
+ },
+ "proposeurs": [
+  {
+   "etiquette": "prop-argon",
+   "modele": "gemini-4-argon",
+   "fournisseur": "argon",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-kimi",
+   "modele": "kimi-k3.1-pro",
+   "fournisseur": "kimi",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_proposeur"
+  }
+ ],
+ "cases": [
+  [
+   "scheurer-question",
+   "niveau-methode"
+  ]
+ ],
+ "aiguilleur": {
+  "etiquette": "aiguilleur-astra",
+  "modele": "gpt-6-astra",
+  "fournisseur": "astra",
+  "consigne": "consigne_aiguilleur"
+ },
+ "juges": [
+  {
+   "etiquette": "juge-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_juge"
+  },
+  {
+   "etiquette": "juge-argon",
+   "modele": "gemini-4-argon",
+   "fournisseur": "argon",
+   "consigne": "consigne_juge"
+  }
+ ],
+ "items_juge": [
+  "K1",
+  "K2",
+  "K3",
+  "K4"
+ ],
+ "agregation": {
+  "regle": "unanimite"
+ },
+ "lecteurs_etiquettes": [
+  {
+   "etiquette": "lecteur-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra"
+  },
+  {
+   "etiquette": "lecteur-argon",
+   "modele": "gemini-4-argon",
+   "fournisseur": "argon"
+  }
+ ],
+ "garde_kimi": {
+  "debordement_max": 0.5,
+  "refus_aiguilleur": "technique",
+  "arret_metteur_fusion": false
+ },
+ "tableau": {
+  "longueur_max_titre": 80,
+  "longueur_max_resume": 160,
+  "champ_resume": "hypothese",
+  "consigne_passe": "sans objet (passe « tableau » retirée, aucun appel)",
+  "juger_passe_tableau": false
+ },
+ "memoire": {
+  "methode": "bardeaux",
+  "taille_bardeau": 3,
+  "seuil": 0.6
+ },
+ "bisociateur": {
+  "bras": [
+   "gu_krenn",
+   "basique"
+  ],
+  "k_paires": 4,
+  "fournisseurs_entree": [
+   "*"
+  ],
+  "gu_krenn": {
+   "mode": "substitut",
+   "source": {
+    "chemin": "pieces/source-gu-krenn-scheurer-v1.json",
+    "sha256": "b8e0ccbc2b250a3cdeec3587e5d1e7a33766aa4a8e37a4dfc474f14cfccea15a"
+   },
+   "oeuvres_min_vocabulaire": 1,
+   "date_debut": "2000-01-01",
+   "date_coupure": "2026-11-03",
+   "actif_depuis": "2000-01-01",
+   "actif_min_oeuvres": 1
+  },
+  "basique": {
+   "exposant": 8.5,
+   "decalage": 0.05,
+   "liste_concepts": "liste_concepts"
+  },
+  "consigne_fusion": "consigne_fusion",
+  "consigne_lecteur_etiquettes": "consigne_lecteur",
+  "metteur_fusion": {
+   "etiquette": "metteur-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra"
+  }
+ },
+ "plafonds_session": {
+  "proposeur": 3.5,
+  "aiguilleur": 0.9,
+  "juge": 0.9,
+  "lecteur": 0.9,
+  "fusion": 3.5
+ },
+ "etiquettes_interdites": [
+  "exploratoire",
+  "bras méta",
+  "gu et krenn",
+  "gu krenn",
+  "bisociation",
+  "kimi",
+  "moonshot",
+  "fable",
+  "astra",
+  "gpt 6",
+  "gpt6",
+  "gpt-6",
+  "chatgpt"
+ ],
+ "a4": {
+  "mode": "prefixe",
+  "action": "fiche_exclue"
+ },
+ "arrets": {
+  "a3_echecs_consecutifs": 3,
+  "a3_delai_s": {
+   "*": 1800
+  },
+  "a14_part_max": 0.25,
+  "a11_modeles": []
+ },
+ "pieces": {
+  "consigne_proposeur": {
+   "chemin": "pieces/consigne-proposeur-scheurer-v1.md",
+   "sha256": "ab203b3789778b888df5a1a403b58ca8fb3b4efc94dbb09cb3a233c2bfced004"
+  },
+  "consigne_aiguilleur": {
+   "chemin": "pieces/consigne-aiguilleur-scheurer-v1.md",
+   "sha256": "38ca7c012f31b53b813cde50f0387a695642f27cfb4bbe70d7f00b35f3bc8cc7"
+  },
+  "consigne_juge": {
+   "chemin": "pieces/consigne-juge-scheurer-v1.md",
+   "sha256": "8215d020969cfbd2a0e751997d628056cdea06b487b3743bf4d1a092fa2493ff"
+  },
+  "consigne_lecteur": {
+   "chemin": "pieces/consigne-lecteur-scheurer-v1.md",
+   "sha256": "7bc3e6dd87265f50a1f930badd2a2b51d5a3e1498f17be52b48d66ef59bc83e3"
+  },
+  "consigne_fusion": {
+   "chemin": "pieces/consigne-metteur-scheurer-v1.md",
+   "sha256": "0549b7677e2bd12c1efde1b289aa21fba124df77f1a4008cea624f82f0795c40"
+  },
+  "liste_concepts": {
+   "chemin": "pieces/concepts-scheurer-v1.json",
+   "sha256": "a169ce62506f06004cd8ed5470d96041f6993e18db98fb210fe20f72d192d3a7"
+  },
+  "source_gu_krenn": {
+   "chemin": "pieces/source-gu-krenn-scheurer-v1.json",
+   "sha256": "b8e0ccbc2b250a3cdeec3587e5d1e7a33766aa4a8e37a4dfc474f14cfccea15a"
+  },
+  "question_servie": {
+   "chemin": "pieces/conv-audit/question-collisionneur-scheurer-v1.md",
+   "sha256": "edb1d5f130c9e60cfc35b12ba6a4fb83ce2c9805cd8ad91085d5c1f1aab5f930"
+  },
+  "piece_mentor": {
+   "chemin": "pieces/conv-audit/piece-scheurer-v1.md",
+   "sha256": "2d0e60fc78e5930fb4ad1fe60d6fba8f2a17f4a03729570ea896db0c339f3796"
+  },
+  "piece_nos_resultats": {
+   "chemin": "pieces/conv-audit/piece-nos-resultats-v1.md",
+   "sha256": "d6fa8011d9b5680d4ec58b262b6440e0e61e9c9987f0ac79a51cb5bca7b27e3c"
+  }
+ },
+ "canaris": {
+  "consigne_proposeur": "SCH-PROPOSEUR-6cffc79c",
+  "consigne_aiguilleur": "SCH-AIGUILLEUR-0243a1f2",
+  "consigne_juge": "SCH-JUGE-1e5c2f27",
+  "consigne_lecteur": "SCH-LECTEUR-aecc7122",
+  "consigne_fusion": "SCH-METTEUR-92552fa5"
+ },
+ "relais": {
+  "argon": {
+   "port": 8805,
+   "plafond_usd": 20.7,
+   "max_appels": 133
+  },
+  "astra": {
+   "port": 8807,
+   "plafond_usd": 107.3,
+   "max_appels": 201
+  },
+  "kimi": {
+   "port": 8804,
+   "plafond_usd": 2.0,
+   "max_appels": 9
+  }
+ },
+ "fournisseurs": {
+  "argon": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-scheurer-v1/orchestrateur/nuit/commande_argon_v56_nuit_v2.py",
+    "appeler",
+    "--url-relais",
+    "http://127.0.0.1:8805",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "130",
+    "--max-sortie-proposeur",
+    "32000",
+    "--max-sortie-court",
+    "4000",
+    "--sortie-min-jetons",
+    "1000",
+    "--delai-s",
+    "1750"
+   ]
+  },
+  "astra": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/docs/notes/ideation-organisme-v1/commandes-a1-bis-v1/commande_astra_a1bis_v1.py",
+    "appeler",
+    "--modele",
+    "gpt-6-astra",
+    "--url-relais",
+    "http://127.0.0.1:8807",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "130",
+    "--max-sortie-proposeur",
+    "32000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750"
+   ]
+  },
+  "kimi": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-scheurer-v1/orchestrateur/nuit/commande_kimi_v2.py",
+    "--url-relais",
+    "http://127.0.0.1:8804",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "130",
+    "--max-sortie-proposeur",
+    "65536",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "4096",
+    "--delai-s",
+    "1750"
+   ]
+  }
+ },
+ "simulation": {
+  "cout_par_appel_usd": 0.01,
+  "fiches_par_appel": 6
+ }
+}
