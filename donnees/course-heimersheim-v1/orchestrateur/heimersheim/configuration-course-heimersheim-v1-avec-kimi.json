@@ -1,0 +1,385 @@
+{
+ "_lisez_moi": "Configuration de la course d'idéation Heimersheim (question 1), variante avec_kimi, v1 — écrite par calcul_devis_course_heimersheim_v1.py le 3 novembre 2026 (sous-agent de session-depot). Course NON décisive (démonstration, matière à réflexion pour Lazar). S17 = plafond TECHNIQUE (garde contre une boucle). Aucun témoin planté. Bras joués : gu_krenn (substitut) et basique ; bras méta hors course. Jetons {DEPOT} et {REGISTRE} remplacés par le lanceur. Spécification de conv-audit : specification-course-ideation-heimersheim-v1.md (0e2fd5bc…).",
+ "variante": "avec_kimi",
+ "racine_graines": 20261103,
+ "graines": {
+  "prefixe": "hq1"
+ },
+ "champs_fiche": [
+  "titre",
+  "hypothese",
+  "axe",
+  "epreuve",
+  "controle",
+  "prediction",
+  "test_de_mort",
+  "cout"
+ ],
+ "champ_titre": "titre",
+ "champ_axe": "axe",
+ "budget": {
+  "plafond_usd": 244.0,
+  "arret_etape_usd": 219.6,
+  "portee_plafond": "course",
+  "etapes": [
+   {
+    "nom": "proposition",
+    "attendu_usd": 1.8,
+    "plafond_relais_usd": 6.89,
+    "role": "protegee"
+   },
+   {
+    "nom": "aiguillage",
+    "attendu_usd": 1.1,
+    "plafond_relais_usd": 10.82,
+    "role": "protegee"
+   },
+   {
+    "nom": "juges",
+    "attendu_usd": 5.12,
+    "plafond_relais_usd": 38.01,
+    "role": "protegee"
+   },
+   {
+    "nom": "passe_tableau",
+    "attendu_usd": 0,
+    "plafond_relais_usd": 0,
+    "role": "sacrifiable",
+    "rang": 2
+   },
+   {
+    "nom": "etiquettes",
+    "attendu_usd": 7.74,
+    "plafond_relais_usd": 75.88,
+    "role": "protegee"
+   },
+   {
+    "nom": "fusions",
+    "attendu_usd": 4.12,
+    "plafond_relais_usd": 38.51,
+    "role": "sacrifiable",
+    "rang": 1
+   }
+  ]
+ },
+ "proposeurs": [
+  {
+   "etiquette": "prop-fable",
+   "modele": "claude-fable-5-1",
+   "fournisseur": "claude",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-kimi",
+   "modele": "kimi-k3.1-pro",
+   "fournisseur": "kimi",
+   "consigne": "consigne_proposeur"
+  },
+  {
+   "etiquette": "prop-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_proposeur"
+  }
+ ],
+ "cases": [
+  [
+   "heimersheim-question-1",
+   "niveau-methode"
+  ]
+ ],
+ "aiguilleur": {
+  "etiquette": "aiguilleur-opus",
+  "modele": "claude-opus-5-5",
+  "fournisseur": "claude",
+  "consigne": "consigne_aiguilleur"
+ },
+ "juges": [
+  {
+   "etiquette": "juge-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude",
+   "consigne": "consigne_juge"
+  },
+  {
+   "etiquette": "juge-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra",
+   "consigne": "consigne_juge"
+  }
+ ],
+ "items_juge": [
+  "K1",
+  "K2",
+  "K3",
+  "K4",
+  "K5"
+ ],
+ "agregation": {
+  "regle": "unanimite"
+ },
+ "lecteurs_etiquettes": [
+  {
+   "etiquette": "lecteur-opus",
+   "modele": "claude-opus-5-5",
+   "fournisseur": "claude"
+  },
+  {
+   "etiquette": "lecteur-astra",
+   "modele": "gpt-6-astra",
+   "fournisseur": "astra"
+  }
+ ],
+ "garde_kimi": {
+  "debordement_max": 0.5,
+  "refus_aiguilleur": "technique",
+  "arret_metteur_fusion": false
+ },
+ "tableau": {
+  "longueur_max_titre": 80,
+  "longueur_max_resume": 160,
+  "champ_resume": "hypothese",
+  "consigne_passe": "sans objet (passe « tableau » retirée, aucun appel)",
+  "juger_passe_tableau": false
+ },
+ "memoire": {
+  "methode": "bardeaux",
+  "taille_bardeau": 3,
+  "seuil": 0.6
+ },
+ "bisociateur": {
+  "bras": [
+   "gu_krenn",
+   "basique"
+  ],
+  "k_paires": 4,
+  "fournisseurs_entree": [
+   "*"
+  ],
+  "gu_krenn": {
+   "mode": "substitut",
+   "source": {
+    "chemin": "pieces/source-gu-krenn-heimersheim-v1.json",
+    "sha256": "3d00c1955f96e0eca422ac80ccdbf431e0356dfa666b50bad930c4fcdded34a1"
+   },
+   "oeuvres_min_vocabulaire": 1,
+   "date_debut": "2000-01-01",
+   "date_coupure": "2026-11-03",
+   "actif_depuis": "2000-01-01",
+   "actif_min_oeuvres": 1
+  },
+  "basique": {
+   "exposant": 8.5,
+   "decalage": 0.05,
+   "liste_concepts": "liste_concepts"
+  },
+  "consigne_fusion": "consigne_fusion",
+  "consigne_lecteur_etiquettes": "consigne_lecteur",
+  "metteur_fusion": {
+   "etiquette": "metteur-fable",
+   "modele": "claude-fable-5-1",
+   "fournisseur": "claude"
+  }
+ },
+ "plafonds_session": {
+  "proposeur": 3.5,
+  "aiguilleur": 0.4,
+  "juge": 0.9,
+  "lecteur": 0.9,
+  "fusion": 3.5
+ },
+ "etiquettes_interdites": [
+  "exploratoire",
+  "fusion",
+  "bras méta",
+  "gu et krenn",
+  "gu krenn",
+  "bisociation",
+  "kimi",
+  "moonshot",
+  "argon",
+  "gemini",
+  "fable",
+  "astra",
+  "openai",
+  "gpt",
+  "chatgpt"
+ ],
+ "a4": {
+  "mode": "prefixe",
+  "action": "fiche_exclue"
+ },
+ "arrets": {
+  "a3_echecs_consecutifs": 3,
+  "a3_delai_s": {
+   "*": 1800
+  },
+  "a14_part_max": 0.25,
+  "a11_modeles": []
+ },
+ "pieces": {
+  "consigne_proposeur": {
+   "chemin": "pieces/consigne-proposeur-heimersheim-v1.md",
+   "sha256": "5eb778ebbcf6975dcc05a929238cbe04258d941f171bfe944240838a118a8ffa"
+  },
+  "consigne_aiguilleur": {
+   "chemin": "pieces/consigne-aiguilleur-heimersheim-v1.md",
+   "sha256": "28c765b1dbcf0826a202221176927472d8a13355a117bb21ab7af0d29ecfc361"
+  },
+  "consigne_juge": {
+   "chemin": "pieces/consigne-juge-heimersheim-v1.md",
+   "sha256": "3ecae1dcffad00c54f973cff6edf8e22383b01405b3a3c54089778dc94dfed17"
+  },
+  "consigne_lecteur": {
+   "chemin": "pieces/consigne-lecteur-heimersheim-v1.md",
+   "sha256": "4879ed96d0cd3cdcea98c0f6e3ea07ea6c3f2da0cbc3f04cf90123f5770d9322"
+  },
+  "consigne_fusion": {
+   "chemin": "pieces/consigne-metteur-heimersheim-v1.md",
+   "sha256": "0135b2fef863edbd0263ce76cd8d5f7e424c9930cf55a86999900899a3bb62f6"
+  },
+  "liste_concepts": {
+   "chemin": "pieces/concepts-heimersheim-v1.json",
+   "sha256": "1a80a32b284c8fa476df12337b8e0986efebd31b0b812df4d201f7c590713734"
+  },
+  "source_gu_krenn": {
+   "chemin": "pieces/source-gu-krenn-heimersheim-v1.json",
+   "sha256": "3d00c1955f96e0eca422ac80ccdbf431e0356dfa666b50bad930c4fcdded34a1"
+  },
+  "question_servie": {
+   "chemin": "pieces/conv-audit/question-ideation-heimersheim-v1.md",
+   "sha256": "e9528e254e2dcad9506e323d3bcd9101e458628dd9c6dabfa4e96174ce660007"
+  },
+  "piece_servie": {
+   "chemin": "pieces/conv-audit/piece-etat-de-l-art-pilotage-conscience-evaluation-v1.md",
+   "sha256": "6445fd6f9dae33500b628bdeff354ed2c7b75bd50d05cbd2aef08c3e6ce49162"
+  }
+ },
+ "canaris": {
+  "consigne_proposeur": "HQ1-PROPOSEUR-2fc47821",
+  "consigne_aiguilleur": "HQ1-AIGUILLEUR-bf5bc3e0",
+  "consigne_juge": "HQ1-JUGE-141da0f6",
+  "consigne_lecteur": "HQ1-LECTEUR-97881b30",
+  "consigne_fusion": "HQ1-METTEUR-e2ddadb3"
+ },
+ "relais": {
+  "astra": {
+   "port": 8807,
+   "plafond_usd": 107.8,
+   "max_appels": 111
+  },
+  "claude": {
+   "port": 8806,
+   "plafond_usd": 134.2,
+   "max_appels": 161
+  },
+  "kimi": {
+   "port": 8804,
+   "plafond_usd": 2.0,
+   "max_appels": 7
+  }
+ },
+ "fournisseurs": {
+  "astra": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/docs/notes/ideation-organisme-v1/commandes-a1-bis-v1/commande_astra_a1bis_v1.py",
+    "appeler",
+    "--modele",
+    "gpt-6-astra",
+    "--url-relais",
+    "http://127.0.0.1:8807",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "244",
+    "--max-sortie-proposeur",
+    "32000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750"
+   ]
+  },
+  "claude": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-heimersheim-v1/orchestrateur/heimersheim/commande_claude_heimersheim_v1.py",
+    "--url-relais",
+    "http://127.0.0.1:8806",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "244",
+    "--max-sortie-proposeur",
+    "64000",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "2000",
+    "--delai-s",
+    "1750",
+    "--effort",
+    "high",
+    "--reflexion",
+    "adaptative"
+   ]
+  },
+  "kimi": {
+   "type": "commande_externe",
+   "delai_s": 1800,
+   "porte_plafond": {
+    "type": "environnement"
+   },
+   "modeles_servis_permis": {},
+   "commande": [
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "{DEPOT}/donnees/course-heimersheim-v1/orchestrateur/nuit/commande_kimi_v2.py",
+    "--url-relais",
+    "http://127.0.0.1:8804",
+    "--registre",
+    "{REGISTRE}",
+    "--plafond-cumule-usd",
+    "244",
+    "--max-sortie-proposeur",
+    "65536",
+    "--max-sortie-court",
+    "16000",
+    "--sortie-min-jetons",
+    "4096",
+    "--delai-s",
+    "1750"
+   ]
+  }
+ },
+ "simulation": {
+  "cout_par_appel_usd": 0.01,
+  "fiches_par_appel": 8
+ }
+}
