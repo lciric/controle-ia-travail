@@ -346,3 +346,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-11-03 13:27:35 UTC (heure de la fille) — **fin de la seconde course Kirchner Q2** (GO-2026-11-03-05), code 0 : **10,84159 USD** (Opus 3,86 ; Fable 3,28 ; Astra 2,92 ; Argon 0,47 ; Kimi 0,30) ; GO-05 cumulé ≈ 24,07 USD (première course 13,23 + contrôles).
 - 2026-11-03 13:28:09 UTC — **départ de la course Ibrahim Q1** (GO-2026-11-03-09), quatre espèces sans Argon, contrôles conformes.
 - 2026-11-03 13:10:25 UTC — **départ de la suite du tour Scheurer** (GO-2026-11-03-07), sans Argon ni Opus.
+- 2026-11-03 13:37:26 UTC (heure de la fille) — **fin de la suite du tour Scheurer** (GO-2026-11-03-07), code 0, 9 cellules : dossier 3,99 USD au total.
