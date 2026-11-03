@@ -1,0 +1,25 @@
+Its probably less obvious than it should be. We measure oversight on some group and trust it for the other, which was chosen by our process. Recall of the monitor across everything tried.  We will publish / release / continue work from the ones that did best. If violations increase score and are the things the monitor reads worst, by selecting for best you concentrate the areas they are bad at with no gradient toward it and no intention to evade. All leaderboard selection and automated research selects by score, and I don't know anyone who checks oversight on the ones you keep.
+
+This would matter in your paper (§7). Out of 1,601 methods there were 39 flags (2.4%). One made the top 3 through rerun luck. None won. This is the flag rate, not the cheating rate. No recall or precision or checking against cheats inserted. They weren't trying to evade. Agents and monitors and judges are all Claude. Your reassurance about the top 3 covers only flagged methods. Nothing about cheating that isn't flagged near the top.
+
+Similar result on my judge. The null set contained every law it let in. My 4 cheaters using blended or modified forms of those laws passed in 75 to 95% of 200 runs. Things my judge accepted became its blind spot. https://github.com/lciric/ideation-organism/tree/faff48b
+
+Experiment. Take a number of honest candidates and some planted cheats. Freeze them before the monitor sees anything. Include cheats of several types (luck by rerun, training on benchmark formatted data, hacking the grader). Run each to get a score from actually doing the thing. Use the mechanical oracles as ground truth and not their reasoning traces. Have your monitor read them all without knowing their score/ranking. Compare recall on the cheats in the top 10% to all cheats that ran. Weight each class of cheating however you want before hand. Controls: permute scores by class/task, select an equal number randomly, and run all honest batches. I can do this on my public organism in about 3 days with one gpu. Give or take. First run a smaller sample to see if the monitor already gets everything right. In which case we can't tell.
+
+I predict your monitor will miss at least 10 percentage points more among the selected cheats. Will change my mind if a 95% interval on this number is fully > -.10. And my permuted control is ~ 0. Which means we aren't selecting for monitor blindspots without a gradient. Which means the problem is training against your monitor and everyone already cares about that (Baker et al, arXiv 2503.11926). Otherwise we need to check oversight where we're selecting for before trusting what we select.
+
+---
+Version du directeur (conv-audit), 3 novembre 2026, vers 23:50 UTC (`date -u`), depuis `reponse-lazar-reformulee-v1.md` (texte de Lazar, 00:45 heure de Paris le 4), qui reprend la v4 (`51947b3e…`) : corrections de fond minimales seulement, sur les mêmes sources que la v4 (son article lu sur le PDF empreinté, `piece-lecture-2608-28945-parties-factuelles-v1.md`, § 1.4 ; Kirchner Q1 vérifiée). **Aucun vérificateur neuf** (limite du compte) : à faire par l'instance suivante.
+1. **Grave** : « You feel better about the top 3 having flagged methods » → « Your reassurance about the top 3 covers only flagged methods » : la phrase disait l'inverse (la réassurance ne porte que sur les méthodes signalées).
+2. **Grave** : « Things your monitor accepts become its blindspot » → « Things my judge accepted became its blind spot » : c'est ton juge, pas son moniteur, et c'est un constat passé.
+3. « This is shown to matter in your paper » → « This would matter in your paper » : son article ne montre pas que le problème existe chez lui ; il montre le cadre où il compterait.
+4. « This is the flag rate and not cheating » → « the flag rate, not the cheating rate » : les méthodes signalées trichaient bien ; c'est le taux qui n'est pas un taux de triche.
+5. « is selecting for this » → « selects by score » : que la sélection retienne les angles morts est ton hypothèse, pas un fait.
+6. « modified/degenerate forms » → « blended or modified forms » : tes tricheurs recousaient ou déformaient des lois acceptées (Kirchner Q1) ; rien de dégénéré.
+7. « Take a number of agents and some cheats » → « honest candidates and some planted cheats » : on fige des candidats (méthodes), pas des agents.
+8. « benchmarking with benchmark formatted data » → « training on benchmark formatted data » (sa catégorie : données qui copient le format du banc).
+9. « not their outputs » → « not their reasoning traces » : la vérité terrain ne vient pas de ce que lit le moniteur.
+10. « top x% » → « top 10% » : un seuil fixé d'avance (v4 : décile supérieur) ; change-le si tu veux, mais donne un nombre.
+11. « Permute scores… All honest runs. » → « Controls: … » : ce sont les trois témoins ; sans le mot, « All honest runs » ne se lit pas.
+12. « miss at least 10% more » → « at least 10 percentage points more among the selected cheats » : le seuil −0,10 porte sur une différence de rappel en points, pas sur 10 % relatifs.
+13. Typographie qui touche la lecture : « 1 601 » → « 1,601 » ; « claude » → « Claude ».
