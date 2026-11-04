@@ -560,8 +560,10 @@ def test_arbre_recu_different_du_commit(tmp_path):
 
 
 def test_branche_source_non_attendue(tmp_path):
-    argv = monde(tmp_path)
-    argv[argv.index("--source") + 1] = "refs/heads/main"
+    """Même contenu que la source, autre nom de branche."""
+    argv = monde(tmp_path, apres_versement=lambda w: git(w.depot, "branch", "calcul/autre",
+                                                          "calcul/r1-v4-reparation-reel-v1"))
+    argv[argv.index("--source") + 1] = "refs/heads/calcul/autre"
     code, sortie = lancer(argv)
     assert code == 2 and "ARRÊT [octets]" in sortie
 
@@ -922,3 +924,52 @@ def test_rejeu_lance_sur_une_autre_table(tmp_path):
         w.commit("table réécrite")
     sortie = arret(tmp_path, "commit-rejeu", source_finale=f)
     assert "à l'octet" in sortie
+
+
+def test_fiche_format_autre(tmp_path):
+    arret(tmp_path, "fiche", attendus=lambda A: A.update(format="attendus-reception-r1-relance-v3-v1"))
+
+
+def test_commit_du_temoin_absent(tmp_path):
+    arret(tmp_path, "textes", attendus=lambda A: A["commits"].update(temoin_verse="f" * 40))
+
+
+def test_scellement_non_parent_du_temoin(tmp_path):
+    """Commit de même arbre que le scellement, mais qui n'est pas le parent du versement du témoin."""
+    boite = {}
+    def f(w):
+        boite["s2"] = git(w.depot, "commit-tree", "main~1^{tree}", "-m", "autre scellement")
+    arret(tmp_path, "textes", source_finale=f, attendus=lambda A: A["commits"].update(scellement=boite["s2"]))
+
+
+def test_piece_alteree_compagnon_complice(tmp_path):
+    p = "prereg/R1-R2-rejeu-p3-v1.md"
+    arret(tmp_path, "textes", attendus=lambda A: A["pieces"][p].update(sha256="1" * 64),
+          **{"compagnon:" + p: lambda b: b"1" * 64 + b"  R1-R2-rejeu-p3-v1.md\n"})
+
+
+def test_versement_commit_a_deux_parents_meme_arbre(tmp_path):
+    def f(w):
+        v = git(w.depot, "rev-parse", "HEAD")
+        m = git(w.depot, "commit-tree", v + "^{tree}", "-p", v + "~1", "-p", "main", "-m", "fusion")
+        boite["m"] = m
+    boite = {}
+    argv = monde(tmp_path, apres_versement=f)
+    argv[argv.index("--commit-versement") + 1] = boite["m"]
+    code, sortie = lancer(argv)
+    assert code == 2 and "ARRÊT [versement]" in sortie and "parents" in sortie, sortie
+
+
+def test_versement_modifie_un_chemin_attendu(tmp_path):
+    def f(w):
+        q = w.depot / f"diag/{R_RUN}/episodes-reparation/000.json"
+        q.parent.mkdir(parents=True, exist_ok=True)
+        q.write_bytes(b"ancien\n")
+        w.commit("tête précédente bis")
+    sortie = arret(tmp_path, "versement", avant_versement=f)
+    assert "réécriture" in sortie
+
+
+def test_course_arretee_versement_hors_des_runs(tmp_path):
+    arret(tmp_path, "versement", arret_rejeu="non conforme",
+          verses=lambda v: v.update({f"diag/{J_RUN}/autre.json": b"{}\n"}))

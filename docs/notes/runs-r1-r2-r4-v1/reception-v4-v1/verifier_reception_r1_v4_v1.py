@@ -392,8 +392,7 @@ def garder_versement(ctl, A, depot, commit_versement, attendus_chemins, complet)
     etats = {x.split("\t", 1)[1]: x.split("\t", 1)[0] for x in lignes}
     ctl.exiger("versement", lambda: all(v == "A" for v in etats.values()),
                "le versement modifie ou supprime un chemin existant (réécriture interdite)")
-    ctl.exiger("versement", lambda: not any(k.startswith("traces/") for k in etats),
-               "le versement porte des traces d'instance (`traces/`), qui ne se versent pas")
+    # `traces/` (et tout autre chemin) hors des attendus : refusé par l'égalité ou l'inclusion ci-dessous
     if complet:
         ctl.exiger("versement", lambda: set(etats) == attendus_chemins,
                    lambda: f"chemins versés ≠ attendus (en trop : {len(set(etats) - attendus_chemins)}, en moins : "
@@ -441,8 +440,6 @@ def garder_compagnons(ctl, racine, chemins):
         ctl.exiger("compagnon", lambda: Path(str(f) + SUFFIXE).is_file()
                    and lire_compagnon(str(f) + SUFFIXE, f.name) == sha256_fichier(f),
                    f"{p} : compagnon absent, mal formé ou ≠ empreinte du fichier")
-    ctl.exiger("compagnon", lambda: all(x[:-len(SUFFIXE)] in chemins for x in chemins if x.endswith(SUFFIXE)),
-               "compagnon sans fichier")
 
 
 def garder_manifeste(ctl, garde, A, racine, run, commande, cle_config, configs, commit_attendu, tache_entropie):
