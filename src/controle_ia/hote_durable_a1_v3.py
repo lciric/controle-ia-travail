@@ -6,8 +6,9 @@ installation) :
 
 - `louer` (dans la session qui lance, la fille) : vérifie le GO par la garde de `main` (règle d'extension comprise) et le
   montant, contrôle l'offre de Vast choisie (aucune carte, prix horaire au plus le plafond écrit, fiabilité), puis crée la
-  machine par l'interface de Vast, les secrets dans le corps de la requête (jamais en argument, jamais affichés), et écrit
-  l'identifiant de la machine au journal local. Rien d'autre ne se fait de la session : la course ne dépend plus d'elle.
+  machine par l'outil `vastai` (forme des amorces antérieures du dépôt : `--env`, `--entrypoint bash --args -c`), les secrets
+  dans les arguments d'un sous-processus, jamais affichés (toute sortie de l'outil filtrée), et écrit l'identifiant de la machine
+  au journal local. Rien d'autre ne se fait de la session : la course ne dépend plus d'elle.
 - `hote` (sur la machine, lancé par l'amorce `scripts/amorce_hote_durable_a1_v3_v1.sh`) : revérifie le GO sur `main`,
   copie le registre des GO de la source que fixe le texte v3, extrait les pièces gelées et vérifie leurs empreintes, clone le
   dépôt public au commit qui porte le texte scellé v3, vérifie l'empreinte du texte et l'ascendance du code gelé, lance le
@@ -27,6 +28,7 @@ des dépôts locaux, le relais et le lanceur sont ceux que l'essai fournit ; mê
 from __future__ import annotations
 
 import argparse
+import base64
 import dataclasses
 import datetime as dt
 import hashlib
@@ -56,9 +58,11 @@ DEPOT_PUBLIC = "https://github.com/lciric/ideation-organism.git"
 DEPOT_PRIVE = "https://github.com/lciric/controle-ia-travail.git"  # jamais lciric/controle-ia (copie expurgée publique)
 BRANCHE_DONNEES = "donnees/attaque-goodhart-v3-a1v3-troisieme-v1"
 BRANCHE_INTERROMPUE = "donnees/attaque-goodhart-v3-a1v3-troisieme-interrompue-v1"
+BRANCHE_REFUS = "donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1"  # refus d'une garde avant la course : rien dépensé
 # Pièces gelées (texte scellé v2, section 4 ; ordre de la fille v1, § 2) : réf. de la branche privée, chemin, empreinte.
 REF_SOURCES = "donnees/recuperation-collisionneur-v8-v1"
 REF_CONFIGURATION = "canal/session-depot-reprise-n120"
+SOURCE_REGISTRE = "canal/conv-audit-n04"  # source du registre passé au lanceur (texte v3, section 4 ; comme la v2)
 CHEMIN_CONF_DANS_REF = ("brouillons/canal-reprise-releve-v1/envois/session-depot/conf-a1-v3/"
                         "configuration-mini-course-kimi-argon-v3.json")
 NUIT = "donnees/mini-course-kimi-argon-v1/orchestrateur/nuit"
@@ -84,7 +88,7 @@ SECRETS = ("CLE_ARGON", "GH_TOKEN", "CONTAINER_API_KEY")
 API_VAST = "https://console.vast.ai/api/v0"
 # Filtre d'offre « sans carte » (texte v3, section 8) ; la valeur de chaque champ est lue dans la réponse brute de Vast.
 OFFRE_MIN = {"cpu_cores_effective": 4, "cpu_ram": 8000, "disk_space": 30, "reliability": 0.98}
-IMAGE = "python:3.13-slim-bookworm"
+IMAGE = "python:3.13-bookworm"  # image complète (git présent), comme les amorces antérieures (python:3.11-bookworm)
 NUMPY = "numpy==2.5.3"
 IDENT = re.compile(r"^[0-9]{1,12}$")
 LIGNE_GO = re.compile(r"^\|\s*(GO-\d{4}-\d{2}-\d{2}-\d{2})\s*\|")
@@ -141,7 +145,11 @@ def charger_garde(chemin_garde: Path, chemin_registre: Path):
     if spec is None or spec.loader is None:
         raise Refus(f"garde illisible : {chemin_garde}")
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    avant, sys.dont_write_bytecode = sys.dont_write_bytecode, True  # aucun __pycache__ à côté de la copie versée
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.dont_write_bytecode = avant
     module.REGISTRE_GO = Path(chemin_registre)
     return module
 
@@ -218,8 +226,53 @@ def verifier_offre(offres: list[dict], offre_id: int, prix_max_h: float = PRIX_M
             "geolocation": o.get("geolocation"), "machine_id": o.get("machine_id")}
 
 
+class ClientVastCli:
+    """Côté session : l'outil `vastai` (sa clé est dans sa propre configuration), comme les amorces antérieures du dépôt.
+
+    Les secrets passent par `--env` (forme éprouvée du dépôt) dans les arguments d'un sous-processus, jamais affichés : toute
+    sortie de l'outil est filtrée (valeurs des secrets masquées) avant d'être lue ou écrite."""
+
+    def __init__(self, outil: str = "vastai"):
+        self.outil = outil
+
+    def _lancer(self, args: list[str], secrets: dict[str, str]) -> str:
+        r = lancer([self.outil, *args], delai=300)
+        texte = (r.stdout + r.stderr).decode("utf-8", "replace")
+        for nom, v in secrets.items():
+            if v:
+                texte = texte.replace(v, f"[{nom} masquée]")
+        if r.returncode != 0:
+            raise Refus(f"vastai {args[0]} {args[1] if len(args) > 1 else ''} : code {r.returncode} : {texte[-300:]}")
+        return texte
+
+    def creer(self, offre_id: int, corps: dict) -> int:
+        env = " ".join(f"-e {k}={v}" for k, v in corps["env"].items())
+        if any(c.isspace() or c in "\"'" for v in corps["env"].values() for c in v):
+            raise Refus("valeur d'environnement avec espace ou guillemet : refus (forme -e K=V)")
+        args = ["create", "instance", str(offre_id), "--raw", "--image", corps["image"], "--disk", str(corps["disk"]),
+                "--cancel-unavail", "--label", corps["label"], "--env", env, "--entrypoint", "bash", "--args", "-c",
+                corps["script"]]
+        texte = self._lancer(args, {k: corps["env"][k] for k in ("CLE_ARGON", "GH_TOKEN")})
+        rep = None
+        for ligne in reversed(texte.strip().splitlines()):
+            try:
+                rep = json.loads(ligne)
+                break
+            except ValueError:
+                continue
+        if not isinstance(rep, dict):
+            raise Refus("réponse de création illisible : vérifier par l'inventaire avant toute nouvelle location")
+        ident = rep.get("new_contract")
+        if not rep.get("success") or not isinstance(ident, int):
+            raise Refus(f"création refusée par Vast (succès {rep.get('success')!r})")
+        return ident
+
+    def instances(self) -> list[dict]:
+        return json.loads(self._lancer(["show", "instances", "--raw"], {}))
+
+
 class ClientVast:
-    """Interface de Vast (REST), clé du compte lue dans VAST_API_KEY ou ~/.vast_api_key ; jamais affichée."""
+    """Côté machine : interface REST de Vast, avec la clé d'instance (`CONTAINER_API_KEY`) ; jamais affichée."""
 
     def __init__(self, cle: str | None = None):
         if cle is None:
@@ -308,8 +361,9 @@ def champs_filtres(instance: dict) -> dict:
     return {k: instance.get(k) for k in garder if k in instance}
 
 
-def onstart(commit_prive: str) -> str:
-    """Script de démarrage de la machine : clone le dépôt privé au commit, puis l'amorce ; au redémarrage, l'amorce seule."""
+def script_de_demarrage(commit_prive: str) -> str:
+    """Processus principal du conteneur (`--entrypoint bash --args -c …`, forme des amorces du dépôt) : clone le dépôt privé au
+    commit, puis l'amorce au premier plan ; au redémarrage du conteneur, le clone existe : l'amorce seule (qui ne relance rien)."""
     if not re.fullmatch(r"[0-9a-f]{40}", commit_prive):
         raise Refus("commit du dépôt privé : hash complet de 40 caractères exigé")
     return ("set -u; cd /root; "
@@ -318,7 +372,7 @@ def onstart(commit_prive: str) -> str:
             "A='!f() { echo username=x-access-token; echo \"password=${GH_TOKEN}\"; }; f'; "
             "git -c credential.helper=\"$A\" clone -q \"$DEPOT_URL\" /root/amorce-depot && "
             f"git -C /root/amorce-depot checkout -q --detach {commit_prive}; fi; "
-            "nohup bash /root/amorce-depot/scripts/amorce_hote_durable_a1_v3_v1.sh >> /root/amorce-a1v3.log 2>&1 &")
+            "bash /root/amorce-depot/scripts/amorce_hote_durable_a1_v3_v1.sh 2>&1 | tee -a /root/amorce-a1v3.log")
 
 
 def corps_de_creation(commit_prive: str, commit_public: str, sha_texte: str, commit_registre: str,
@@ -333,8 +387,9 @@ def corps_de_creation(commit_prive: str, commit_public: str, sha_texte: str, com
     env = {"COMMIT_PRIVE": commit_prive, "COMMIT_PUBLIC": commit_public, "SHA_TEXTE": sha_texte,
            "COMMIT_REGISTRE": commit_registre, "GO_ID": GO_ATTENDU, "PRIX_H_USD": f"{offre['dph_total']:.6f}",
            "DEPOT_URL": DEPOT_PRIVE, "CLE_ARGON": secrets["CLE_ARGON"], "GH_TOKEN": secrets["GH_TOKEN"]}
-    return {"client_id": "me", "image": IMAGE, "disk": 30, "label": "a1-v3-troisieme-v1", "runtype": "args",
-            "args": ["bash", "-c", "sleep infinity"], "onstart": onstart(commit_prive), "env": env}
+    b64 = base64.b64encode(script_de_demarrage(commit_prive).encode("utf-8")).decode("ascii")
+    return {"image": IMAGE, "disk": 30, "label": "a1-v3-troisieme-v1", "env": env,
+            "script": f"echo {b64} | base64 -d > /root/demarrage-a1v3.sh && bash /root/demarrage-a1v3.sh"}
 
 
 def louer(a, client=None, aujourd_hui=None) -> int:
@@ -356,7 +411,7 @@ def louer(a, client=None, aujourd_hui=None) -> int:
         if a.verifier_seulement:
             j.ecrire("vérification seulement : rien créé (variables portées : " + ", ".join(sorted(corps["env"])) + ")")
             return 0
-        client = client or ClientVast()
+        client = client or ClientVastCli()
         ident = client.creer(o["id"], corps)
         j.ecrire(f"machine créée : identifiant {ident} (offre {o['id']}, {o['dph_total']} USD/h)")
         Path(str(t) + ".identifiant").write_text(f"{ident}\n")
@@ -469,8 +524,10 @@ class Machine:
     def principal(self) -> int:
         if self.etat_fichier.exists():  # reprise du conteneur : jamais de relance (R12)
             self.j = Journal(self.t / "journal-hote-a1-v3-troisieme-v1.log", self.secrets)
-            self.j.ecrire(f"REPRISE du conteneur : état précédent « {self.etat_fichier.read_text().strip()} » ; "
-                          "rien n'est relancé ; état scellé tel quel")
+            avant = self.etat_fichier.read_text().strip()
+            self.j.ecrire(f"REPRISE du conteneur : état précédent « {avant} » ; rien n'est relancé")
+            if avant == "verse":  # tout est déjà versé et vérifié : seul reste le geste sur la machine
+                return self.se_detruire(True)
             self.nature_fin = "reprise_du_conteneur"
             return self.fin(BRANCHE_INTERROMPUE)
         self.t.mkdir(parents=True, exist_ok=False)
@@ -485,11 +542,11 @@ class Machine:
             self.garder()
         except Refus as e:
             self.j.ecrire(f"REFUS : {e}")
-            self.nature_fin = self.nature_fin or "refus_avant_course" if self.course is None else "refus"
+            self.nature_fin = "refus_avant_course" if self.course is None else "refus_pendant_la_course"
         except Exception as e:  # jamais un repli silencieux : écrit, puis fin propre
             self.j.ecrire(f"EXCEPTION {type(e).__name__} : {self.j.masquer(str(e))[:500]}")
             self.nature_fin = "exception_de_l_hote"
-        return self.fin(BRANCHE_DONNEES if self.course is not None else BRANCHE_INTERROMPUE)
+        return self.fin(BRANCHE_DONNEES if self.course is not None else BRANCHE_REFUS)
 
     # -- avant la course
     def preparer(self) -> None:
@@ -501,11 +558,10 @@ class Machine:
             raise Refus(f"prix horaire {self.prix_h} hors de ]0 ; {PRIX_MAX_H_USD}]")
         gh = self.secrets["GH_TOKEN"]
         # 1. GO sur main, par la garde de main (règle d'extension) ; registre et garde lus au commit de main du moment
-        git("fetch", "-q", "origin", "main", "canal/conv-audit-n04", REF_SOURCES, REF_CONFIGURATION,
+        git("fetch", "-q", "origin", *[f"+refs/heads/{b}:refs/remotes/origin/{b}" for b in
+                                       ("main", SOURCE_REGISTRE, REF_SOURCES, REF_CONFIGURATION)],
             cwd=r.clone_prive, gh_token=gh)
-        tete_main = git("rev-parse", "FETCH_HEAD", cwd=r.clone_prive).split()[0]
-        tete_main = git("rev-parse", "refs/remotes/origin/main", cwd=r.clone_prive).strip() \
-            if self._ref_existe("refs/remotes/origin/main") else tete_main
+        tete_main = git("rev-parse", "refs/remotes/origin/main", cwd=r.clone_prive).strip()
         reg_main = self.t / "registre-go-main.md"
         reg_main.write_bytes(lancer(["git", "show", f"{tete_main}:registres/go.md"], cwd=r.clone_prive).stdout)
         garde = self.t / "garde_calcul_main.py"
@@ -516,6 +572,9 @@ class Machine:
         self.j.ecrire("grep main : " + " ; ".join(self._grep(reg_main, e["GO_ID"])))
         # 2. Registre des GO passé au lanceur : copie entière, sans retouche, au commit que fixe le texte v3
         reg = self.t / "registre-go.md"
+        if lancer(["git", "merge-base", "--is-ancestor", e["COMMIT_REGISTRE"], f"refs/remotes/origin/{SOURCE_REGISTRE}"],
+                  cwd=r.clone_prive).returncode != 0:
+            raise Refus(f"commit du registre {e['COMMIT_REGISTRE']} absent de la branche {SOURCE_REGISTRE}")
         sortie = lancer(["git", "show", f"{e['COMMIT_REGISTRE']}:registres/go.md"], cwd=r.clone_prive)
         if sortie.returncode != 0:
             raise Refus(f"registre au commit {e['COMMIT_REGISTRE']} introuvable")
@@ -563,15 +622,14 @@ class Machine:
     def extraire_sources(self) -> None:
         r = self.r
         r.racine_sources.mkdir(parents=True, exist_ok=True)
-        for ref, chemins in ((f"origin/{REF_SOURCES}", [NUIT, "donnees/espece-seule-v1/collisionneur_v7.py"]),):
-            if not self._ref_existe(ref):
-                ref = f"refs/remotes/{ref}"
-            arch = lancer(["git", "archive", ref, *chemins], cwd=r.clone_prive)
-            if arch.returncode != 0:
-                raise Refus(f"git archive {ref} : code {arch.returncode}")
-            with tarfile.open(fileobj=io.BytesIO(arch.stdout)) as tar:
-                tar.extractall(r.racine_sources, filter="data")
-        conf = lancer(["git", "show", f"origin/{REF_CONFIGURATION}:{CHEMIN_CONF_DANS_REF}"], cwd=r.clone_prive)
+        ref = f"refs/remotes/origin/{REF_SOURCES}"
+        arch = lancer(["git", "archive", ref, NUIT, "donnees/espece-seule-v1/collisionneur_v7.py"], cwd=r.clone_prive)
+        if arch.returncode != 0:
+            raise Refus(f"git archive {ref} : code {arch.returncode}")
+        with tarfile.open(fileobj=io.BytesIO(arch.stdout)) as tar:
+            tar.extractall(r.racine_sources, filter="data")
+        conf = lancer(["git", "show", f"refs/remotes/origin/{REF_CONFIGURATION}:{CHEMIN_CONF_DANS_REF}"],
+                      cwd=r.clone_prive)
         if conf.returncode != 0:
             raise Refus("configuration gelée introuvable sur sa branche")
         (r.racine_sources / NUIT / "configuration-mini-course-kimi-argon-v3.json").write_bytes(conf.stdout)
@@ -687,7 +745,8 @@ class Machine:
         if hasattr(self, "sha_registre"):
             apres = sha256_fichier(self.t / "registre-go.md")
             self.j.ecrire(f"registre-go.md après la course : {apres} ({'inchangé' if apres == self.sha_registre else 'CHANGÉ'})")
-        self.j.ecrire(f"nature de la fin : {self.nature_fin} ; coût de la machine estimé {self.cout_machine():.4f} USD")
+        self.j.ecrire(f"nature de la fin : {self.nature_fin} ; coût de la machine estimé {self.cout_machine():.4f} USD ; "
+                      "scellement (liste d'empreintes de chaque fichier, puis copie versée, sans autre écriture)")
         liste = self.sceller()
         pousse = False
         try:
@@ -700,15 +759,13 @@ class Machine:
         return self.se_detruire(pousse)
 
     def fichiers_a_verser(self) -> list[Path]:
-        exclus = {"garde_calcul_main.py"}
-        return sorted(p for p in self.t.rglob("*") if p.is_file() and p.name not in exclus and ".lock" not in p.name)
+        return sorted(p for p in self.t.rglob("*") if p.is_file() and "__pycache__" not in p.parts)
 
     def sceller(self) -> Path:
         liste = self.t / "EMPREINTES-sortie-a1-v3-troisieme-v1.txt"
         lignes = [f"{sha256_fichier(p)}  {p.relative_to(self.t)}" for p in self.fichiers_a_verser() if p != liste]
         liste.write_text("\n".join(lignes) + "\n")
-        self.j.ecrire(f"liste d'empreintes : {len(lignes)} fichiers, sha256 {sha256_fichier(liste)}")
-        return liste
+        return liste  # rien n'est écrit au journal entre la liste et la copie versée : la liste reste juste
 
     def fuites(self) -> list[str]:
         """Contrôle des secrets avant tout versement : la valeur exacte de chaque secret, dans chaque fichier versé."""
@@ -716,29 +773,35 @@ class Machine:
         return [str(p.relative_to(self.t)) for p in self.fichiers_a_verser() if any(v in p.read_bytes() for v in valeurs)]
 
     def verser(self, branche: str, liste: Path) -> bool:
+        """Copie de travail à part (`versement`), jamais celle d'où l'amorce tourne ; branche neuve, partie de main."""
         r, gh = self.r, self.secrets["GH_TOKEN"]
-        distant = git("ls-remote", "origin", f"refs/heads/{branche}", cwd=r.clone_prive, gh_token=gh)
+        url = git("remote", "get-url", "origin", cwd=r.clone_prive).strip()
+        distant = git("ls-remote", url, f"refs/heads/{branche}", gh_token=gh)
         if distant.strip():
             raise Refus(f"branche {branche} déjà présente (R12) : rien n'est écrasé")
-        git("checkout", "-q", "-B", branche, "refs/remotes/origin/main" if self._ref_existe("refs/remotes/origin/main")
-            else "FETCH_HEAD", cwd=r.clone_prive)
-        dest = r.clone_prive / branche.replace("donnees/", "donnees/", 1)
+        v = r.travail.parent / (r.travail.name + "-versement")
+        if v.exists():
+            raise Refus(f"copie de versement {v} déjà présente (R12)")
+        git("clone", "-q", "--depth", "1", "--single-branch", "--branch", "main", url, str(v), gh_token=gh)
+        git("checkout", "-q", "-b", branche, cwd=v)
+        dest = v / branche
         dest.mkdir(parents=True, exist_ok=False)
         for p in self.fichiers_a_verser():
             cible = dest / p.relative_to(self.t)
             cible.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(p, cible)
-        git("add", "-f", str(dest), cwd=r.clone_prive)
+        git("add", "-f", str(dest), cwd=v)
         git("-c", "user.name=hote-durable-a1-v3", "-c", "user.email=hote@invalid", "commit", "-q", "-m",
             f"A1-v3, troisième course : état scellé de l'hôte durable ({self.nature_fin}), liste "
-            f"{sha256_fichier(liste)[:16]}…, versé avant toute lecture", cwd=r.clone_prive)
-        local = git("rev-parse", "HEAD", cwd=r.clone_prive).strip()
+            f"{sha256_fichier(liste)[:16]}…, versé avant toute lecture", cwd=v)
+        local = git("rev-parse", "HEAD", cwd=v).strip()
         for essai in range(1, r.essais_poussee + 1):
             try:
-                git("push", "-q", "origin", f"HEAD:refs/heads/{branche}", cwd=r.clone_prive, gh_token=gh)
-                vu = git("ls-remote", "origin", f"refs/heads/{branche}", cwd=r.clone_prive, gh_token=gh).split()
+                git("push", "-q", "origin", f"HEAD:refs/heads/{branche}", cwd=v, gh_token=gh)
+                vu = git("ls-remote", "origin", f"refs/heads/{branche}", cwd=v, gh_token=gh).split()
                 if vu and vu[0] == local:
-                    self.j.ecrire(f"versé : {branche} = {local} (vérifié par ls-remote)")
+                    self.j.ecrire(f"versé : {branche} = {local} (vérifié par ls-remote) ; liste {sha256_fichier(liste)}")
+                    self.etat("verse")
                     return True
             except Refus as e:
                 self.j.ecrire(f"poussée {essai}/{r.essais_poussee} : {e}")
@@ -752,16 +815,20 @@ class Machine:
                           "détruit par l'inventaire (R14)")
             return 4
         client = ClientVastJouet(self.r.vast_jouet) if self.r.jouet else ClientVast(self.secrets["CONTAINER_API_KEY"])
-        try:
-            if pousse:
+        if pousse:
+            try:
                 self.j.ecrire(f"destruction de la machine par son identifiant {ident}")
                 client.detruire(int(ident))
                 return 0
+            except Refus as e:
+                self.j.ecrire(f"destruction refusée ({e}) : arrêt de la machine {ident} par son identifiant")
+        else:
             self.j.ecrire(f"versement non vérifié : la machine {ident} est ARRÊTÉE, non détruite (données gardées)")
+        try:
             client.arreter(int(ident))
             return 3
         except Refus as e:
-            self.j.ecrire(f"geste sur la machine {ident} refusé : {e}")
+            self.j.ecrire(f"arrêt de la machine {ident} refusé : {e} ; la session qui reprend s'en charge (R14)")
             return 4
 
 
@@ -792,7 +859,7 @@ def principal(argv=None) -> int:
     if args.mode == "louer":
         return louer(args, ClientVastJouet(Path(args.jouet)) if args.jouet else None)
     if args.mode == "inventaire":
-        client = ClientVastJouet(Path(args.jouet)) if args.jouet else ClientVast()
+        client = ClientVastJouet(Path(args.jouet)) if args.jouet else ClientVastCli()
         print(json.dumps(inventaire(client), ensure_ascii=False, indent=1))
         return 0
     return Machine(Reglages(), dict(os.environ)).principal()
