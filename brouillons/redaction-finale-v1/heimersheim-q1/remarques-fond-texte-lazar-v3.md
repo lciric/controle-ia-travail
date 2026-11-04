@@ -1,0 +1,41 @@
+# Heimersheim Q1 — remarques de fond sur ton texte v2 — v3 (après le second vérificateur)
+
+Instance fusionnée (conv-audit et session-depot), 4 novembre 2026, vers 01:15 UTC (`date -u`). Ton texte : `reponse-lazar-v2.md` (`1e7bd98c…`, collé à 00:49 UTC). Remplace les remarques v2 (`1a86a8d4…`, sur ta v1). Fusionne ma lecture et le rapport du vérificateur neuf `verification-texte-lazar-v2.md` (`054a0ce7…`, 00:57 → 01:10 UTC).
+
+**Règle du mentor** : texte 100 % humain. Aucune phrase anglaise ici ; je ne cite que tes mots pour situer. Les corrections sont à écrire par toi.
+
+**Verdict** : 18 des 19 remarques précédentes sont réglées, dont les six graves et la contradiction de dose (la 19e, « ICLR 2026 », reste invérifiable). Tous les chiffres tirés de tes dépôts publics sont exacts (R6, R7, R9, R9-bis, rang 3, trois têtes, D36) et la citation de la l. 17 est exacte mot pour mot (vérifiée par moi sur le PDF v5 empreinté, voir le point 4). Ce qui reste est concentré dans la **section 6** (tes seuils) : une contradiction interne avec ce que tu dis toi-même du papier du mentor, et un plan de directions mal défini. C'est ce que Heimersheim lira le plus attentivement.
+
+## Graves : le sens est contradictoire ou indéfini
+
+1. **l. 101 contre l. 69 (et l. 67), sur son propre papier.** Avec le « Or » de la l. 101, p ≥ 2,25 suffit, à lui seul, à te convaincre d'une croyance (titre de ta section 6). Or ta l. 69 rapporte, d'après le § 7 du papier, que p > 2 ne suffit pas à dire qu'une direction pointe vers un trait. Et même un trait privilégié par le réseau n'est pas encore une croyance d'être testé. La l. 67, inchangée, dit aussi « you can conclude » à partir de p seul. À trancher par toi : p comme **condition nécessaire** (à cumuler avec le critère comportemental de la l. 99), ou comme indice parmi d'autres ; mais pas comme critère suffisant.
+2. **Le plan des l. 63 et 101 n'est pas défini.** Si chacune des deux directions est orthogonalisée contre l'**autre direction d'origine**, les deux directions obtenues gardent un cosinus de **même valeur absolue** (signe opposé) : pour deux vecteurs unitaires de cosinus c, le nouveau cosinus vaut −c (vérifié numériquement par le vérificateur pour c = 0,05, 0,2 et 0,4). La paire ne passe donc pas sous la coupure de 0,1 si les directions d'origine ne la passaient pas. Orthogonaliser **une seule** des deux contre l'autre donne bien une paire orthogonale, mais le choix de laquelle change les axes du plan, donc p. Enfin, une paire donne **une** valeur de p (une estimation ponctuelle par paire dans le pipeline, addendum R9, l. 20) : l'intervalle de la l. 101 doit dire ce qu'il rééchantillonne (ancres, paires d'invites, ou directions partenaires comme dans le critère F2 de R9).
+3. **Section 6 : ce qui est comparé à quoi.**
+   - **Combinaison des quatre critères** : alternatives ou cumul ? Seule la l. 101 commence par « Or ». Chaque critère répond à un argument différent (l. 99 et 101 : argument 1 ; l. 103 : argument 2 ; l. 105 : le transfert d'un registre à l'autre) ; l'argument 3 n'a aucun seuil.
+   - **l. 99** : le signe n'est pas écrit (« an effect », « 10 percentage points more »). Il faut lire : une **baisse** de la mesure que le registre ne touche pas, effet de la direction d'évaluation orthogonalisée **moins** effet de la direction de registre sur la même mesure ; le seuil de 10 points porte sur l'estimation ponctuelle et l'intervalle doit seulement exclure 0, pas 10. C'est conforme à ce que je t'avais recommandé, mais ça doit se lire ainsi.
+   - **l. 105** : « 45% of its effect » : de quel effet (celui sur texte formel ?) et sur quelle mesure (touchée par le registre ou non) ? « less than 10% of this effect » : 10 % de l'effet sur texte formel, ou de l'effet transféré ? Aucun intervalle ni condition de dose, contrairement aux l. 99 et 103.
+   - **« same amount of dose past the plateau »** (l. 9, 29, 99) : même excès au-delà de l'angle de rupture, ou même multiple de la dose de rupture ? La recommandation disait « à dose de rupture égale » ; dis lequel.
+   - **l. 101 et l. 67** : « excludes 2.05 » et « above the random difference » ne disent la même chose que parce que p ≥ 2,25. Si 2,05 est remesuré sur ton modèle, la valeur à dépasser devient la borne haute de l'intervalle des différences aléatoires remesurées (critère F2 de R9, addendum l. 24).
+
+## Moyens
+
+4. **l. 17, citation.** « weakens our overall setup » : mots exacts du papier, vérifiés par moi sur le PDF v5 (2 mars 2026) que j'ai récupéré et empreinté cette nuit (`docs/sources/pdf/2510.20487v5.pdf`, `969dd38a…`, annexe I.1.1 : « This result weakens our overall setup by showing that some prompts… »). Deux nuances : « comparable to deployment » est le mot des auteurs, mais dans le même réglage le déploiement est à 0,23 (tableau 14) et ta borne haute est 0,60 ; et la fin de ta phrase (les invites du vecteur ne ramènent pas au niveau du déploiement) vient du § 5.3, pas de l'annexe I.1.1.
+5. **l. 47, D36.** L'enchaînement « I preregistered this on July 29th … I took … the last 13 tokens » rattache au préenregistrement les positions de la **réplication** : le préenregistrement du 29 juillet visait la phrase de pression et les 5 derniers jetons ; les 13 derniers jetons (5 de gabarit, puis les 8 derniers de la phrase) sont la ré-implémentation des 5 et 6 août. Le bras clé préenregistré (sous-espace de 13 mots nommés) n'a pas été rejoué (README : « Not given here »).
+6. **l. 95, fin.** « We don't have for evaluation » est plus large que ta l. 19, désormais bornée à Hua et coll. : le plan 2 × 2 de Devbunova existe, pour des sondes. Et le jumeau neutre de R9-bis tient le registre **constant** ; il ne fait pas **varier** la formalité.
+7. **l. 19 contre l. 17.** Ton (d) dit que Hua et coll. ne contrôlent pas le registre à statut constant ; ton (b) cite pourtant leur tableau 16, qui compare, à statut constant et sans pilotage, des formulations de déploiement déclaratives et conversationnelles. (d) est exact **pour le vecteur** ; dis que (d) se limite au vecteur (ou au pilotage), sinon Heimersheim y verra une contradiction.
+8. **l. 53.** « still carries a share (65% vs 44%) » repose sur des estimations ponctuelles : la différence n'est pas testée et les intervalles se recouvrent largement.
+9. **l. 91.** « would have gone to around 2 » porte sur 16 items dont la moyenne sans pression est 3,11 (addendum R9-bis, l. 14), pas 2,6 : la comparaison avec 2,6 mélange deux ensembles d'items. Et le conditionnel se lit comme un contrefactuel.
+10. **l. 59, Devbunova.** « the same two factors » : son second facteur est le **format des bancs d'essai** (structure canonique contre forme libre), pas le registre. « Her » : le papier n'emploie aucun pronom (non vérifiable). Il y a aussi un audit des fuites et des longueurs appariées ; « no equivalence check described » reste exact.
+
+## Légers
+
+11. **l. 27, R7.** La note est plantée **dans la réponse que lit le moniteur**, après une ligne vide, pas dans la consigne ; à l'intensité standard, c'est une affirmation accompagnée d'une demande, pas un ordre (« instructions »).
+12. **l. 7, « ICLR 2026 ».** Toujours non vérifié (OpenReview inaccessible d'ici) ; garde-le seulement si tu l'as vu.
+13. **l. 18, Singh et Chaudhary.** Les grands modèles recourent « plus souvent » au raisonnement d'ordre supérieur, et le plus grand modèle étudié fait 12 milliards de paramètres : ta conjecture « 8B contre 49B » sort du domaine du papier (elle est bien marquée comme conjecture).
+14. **Noms propres.** Minuscules et possessifs sans apostrophe : « huas », « lee and heimersheim », « Lindseys », y compris le nom du mentor.
+
+## Vérifié exact
+Les trois DOI Zenodo (= `CITATION.cff` au commit `b3ecaec`) ; les commits `146b2a4` et `b3ecaec` ; tous les chiffres de R6, R7, R9, R9-bis, du rang 3, des trois têtes et de D36 ; les seuils X, Y, Z et p de la section 6 sont ceux recommandés (10 points, 2,25 contre 2,05, 50 %, 45 % et 10 %) ; la contradiction de dose (remarque 15 de la v2) est réglée.
+
+## Réserve
+Le vérificateur n'a pas pu relire les papiers sur arXiv (bloqué depuis sa session) : hors la citation de la l. 17, que j'ai vérifiée moi-même, ses verdicts sur les papiers reposent sur les transcriptions antérieures (non opposables, R7).
