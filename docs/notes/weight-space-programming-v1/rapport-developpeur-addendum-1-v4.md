@@ -8,9 +8,9 @@ sept compagnons du dossier « OK »). Travail du 4 novembre, de 22:53 à 23:30 U
 Interdits respectés : aucune poussée, aucun `.sha256` sur `main`, aucun fichier existant modifié, aucun réseau, aucune
 dépense ; moins de 30 Mo employés, fichiers temporaires nettoyés.
 
-**Verdict.** Code v4 : branche locale `prep/sparks-exp7-nul-v4`, commit `96aae619a10bb714f1d572466a5622d7af7add92`.
-C'est un commit sur `4c3bf146`, avec 20 fichiers neufs et aucun fichier modifié ; la liste fermée v4 (94 fichiers)
-est conforme.
+**Verdict.** Code v4 : branche locale `prep/sparks-exp7-nul-v4`, commit `53d4eda68560a7eb5b2ceca1fd069f9fd9dcaa30`.
+C'est deux commits sur `4c3bf146` (`96aae619`, puis `53d4eda6` qui renforce un essai), avec 20 fichiers neufs et aucun
+fichier modifié ; la liste fermée v4 (94 fichiers) est conforme.
 - Les huit changements de la contre-lecture sont faits.
 - Essais et banc : section 3.
 - Brouillon 4 : les 10 couples sont tous retenus, puis H-1 à H-6 ; les trois marqueurs restent.
@@ -51,9 +51,9 @@ Sur `prep/sparks-exp7-nul-v4` (chaque fichier avec son compagnon `.sha256`) :
 | `src/controle_ia/sparks_exp7_nul_v4/liste-fermee-v1.txt` | `f97735ac1fc3b264575f389977ebd3b621f81cc71512477ff5d7c17a66ede916` |
 | `src/controle_ia/sparks_exp7_nul_v4/plan.py` | `8ea645ca82dcf12ca330b52ca57b7a618acf4f73087321af95e032920e4f633c` |
 | `src/controle_ia/sparks_exp7_nul_v4/redemarrage.py` | `395896e2499a9ad1c3cc7c28a49d7cf150aaba87aaf606ae67a226cb91d901b3` |
-| `tests/test_sparks_exp7_nul_v4.py` | `aabce278f7b7a0182b9f31d4f4a8cc8ee06099e8087bb2b6a3dcc590ae4550c7` |
+| `tests/test_sparks_exp7_nul_v4.py` | `91829f34969352eb17a4d26b20ddbc8fe2ea865aa744f511f27d5aaeac11f706` |
 
-`garde_code liste . 96aae619…` (v4) → « LISTE FERMÉE CONFORME : 94 fichiers ».
+`garde_code liste . 53d4eda6…` (v4) → « LISTE FERMÉE CONFORME : 94 fichiers ».
 
 ## 2. Les huit changements
 
@@ -97,7 +97,7 @@ Sur `prep/sparks-exp7-nul-v4` (chaque fichier avec son compagnon `.sha256`) :
    en plus des 114 du banc v3. « Tuée » seulement au code 1 avec « failed ».
 8. **Répétition corrigée** : section 5.
 
-## 3. Essais et banc (commit `96aae619`)
+## 3. Essais et banc
 
 COMPTES_V4
 
@@ -134,7 +134,7 @@ Corrections, avec le point de la contre-lecture :
 # Répétition jouet de SPARKS-EXP7-NUL v4 : création, redémarrage de copie, phase causale, fin. Aucune instance, aucun vastai,
 # curl simulé (aucun appel à Vast) ; écrit seulement des branches essai/… et ordres/… sur le dépôt distant, supprimées à la fin.
 set -uo pipefail
-CODE=96aae619a10bb714f1d572466a5622d7af7add92           # commit du code v4 (le remplacer par le commit final s'il change)
+CODE=53d4eda68560a7eb5b2ceca1fd069f9fd9dcaa30           # commit du code v4 (le remplacer par le commit final s'il change)
 DEPOT=/home/user/controle-ia-travail                   # clone de la session mère (relié au dépôt distant)
 URL=https://github.com/lciric/controle-ia-travail.git
 J=$(mktemp -d /tmp/repetition-sparks-v4-XXXX); mkdir -p "$J/faux-bin" "$J/racine" "$J/home"
