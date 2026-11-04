@@ -57,7 +57,7 @@ def test_go_de_la_machine_cas_sain_artefacts_et_registre_reel(tmp_path):
                                     ("GO-2026-11-04-09", LIGNE_09.replace("| calcul |", "| décision |"), JOUR, "calcul")):
         reg.write_text("# R\n\n" + ENTETE + lignes)
         with pytest.raises(h.Refus, match=motif):
-            s.verifier_go_sonde(reg, GARDE, go, JOUR)
+            s.verifier_go_sonde(reg, GARDE, go, jour)
 
 
 def test_plafond_de_depense_et_de_duree():
