@@ -67,6 +67,24 @@
    },
    {
     "fichier": "tests/test_hote_durable_a1_v3.py",
+    "lieu": "constante : ligne factice du GO de la machine",
+    "ancien": "def sha(o: bytes) -> str:",
+    "nouveau": "LIGNE_MACHINE = (\"| GO-2026-11-04-99 | 2026-11-04 | calcul | machine de la troisième course d'A1-v3 et sonde | 35 USD | \"\n                 \"2026-11-18 | Lazar | mot de Lazar |\\n\")\n\n\ndef sha(o: bytes) -> str:"
+   },
+   {
+    "fichier": "tests/test_hote_durable_a1_v3.py",
+    "lieu": "aide `registre` : chaque registre factice porte le GO de la machine",
+    "ancien": "    p.write_text(\"# Registre factice\\n\\n\" + ENTETE + \"\".join(lignes), encoding=\"utf-8\")",
+    "nouveau": "    p.write_text(\"# Registre factice\\n\\n\" + ENTETE + \"\".join(lignes) + LIGNE_MACHINE, encoding=\"utf-8\")"
+   },
+   {
+    "fichier": "tests/test_hote_durable_a1_v3.py",
+    "lieu": "essai neuf du GO de la machine (cas sain et artefacts)",
+    "ancien": "def test_inventaire_filtre_l_environnement():",
+    "nouveau": "def test_go_machine_cas_sain_et_artefacts(tmp_path):\n    assert h.verifier_go_machine(registre(tmp_path, LIGNE_06), GARDE_REELLE, \"GO-2026-11-04-99\", JOUR)[\"plafond_usd\"] == 35\n    for go, reg in ((\"GO-2026-11-04-06\", registre(tmp_path, LIGNE_06)), (\"GO-2026-11-04-98\", registre(tmp_path, LIGNE_06)),\n                    (\"machine\", registre(tmp_path, LIGNE_06))):\n        with pytest.raises(h.Refus):\n            h.verifier_go_machine(reg, GARDE_REELLE, go, JOUR)\n    p = tmp_path / \"go36.md\"\n    p.write_text(\"# R\\n\\n\" + ENTETE + LIGNE_MACHINE.replace(\"35 USD\", \"36 USD\"), encoding=\"utf-8\")\n    with pytest.raises(h.Refus, match=\"exactement 35\"):\n        h.verifier_go_machine(p, GARDE_REELLE, \"GO-2026-11-04-99\", JOUR)\n\n\ndef test_inventaire_filtre_l_environnement():"
+   },
+   {
+    "fichier": "tests/test_hote_durable_a1_v3.py",
     "lieu": "aide `args_louer` (l'essai de la location doit porter le GO de la machine)",
     "ancien": "    a = dict(go=\"GO-2026-11-04-06\", registre_main=str(reg),",
     "nouveau": "    a = dict(go=\"GO-2026-11-04-06\", go_machine=\"GO-2026-11-04-99\", registre_main=str(reg),"
