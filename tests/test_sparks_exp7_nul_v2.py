@@ -617,6 +617,10 @@ def test_prelude_epreuve_saine_et_artefact(depart, tmp_path):
     assert consignes.type_tokeniseur(tj) == "sentencepiece"
     textes = [t["question"] for t in plan.textes_b1()] + ["What is the capital of France?", "is the an é ü"]
     assert consignes.eprouver_prelude(prel, tmp_path / "sp", textes)["echecs"] == 0
+    casse = prel.replace("            if r == 1 << 60:\n", "            if True:\n")     # artefact : fusions ignorées
+    assert casse != prel
+    with pytest.raises(consignes.GardePortage, match="encodage"):
+        consignes.eprouver_prelude(casse, tmp_path / "sp", textes)
     _, tok, _ = depart                             # artefact : tokéniseur de mots (autre type)
     tok.save_pretrained(str(tmp_path / "mots"))
     assert consignes.type_tokeniseur(json.loads((tmp_path / "mots" / "tokenizer.json").read_text())) == "autre"
