@@ -194,15 +194,17 @@ class ClientPilote:
     def _lancer(self, args: list[str], secrets_en_plus: dict | None = None) -> str:
         env = {k: self.environ[k] for k in ("PATH", "HOME", "LANG", "VAST_API_KEY") if self.environ.get(k)}
         r = subprocess.run([self.outil, *args], env=env, capture_output=True, timeout=300)
-        texte = (r.stdout + r.stderr).decode("utf-8", "replace")
-        for nom, v in (secrets_en_plus or {}).items():
-            if v:
-                texte = texte.replace(v, f"[{nom} masquée]")
-        texte = self.masquer(texte)
+
+        def masque(octets: bytes) -> str:
+            texte = octets.decode("utf-8", "replace")
+            for nom, v in (secrets_en_plus or {}).items():
+                if v:
+                    texte = texte.replace(v, f"[{nom} masquée]")
+            return self.masquer(texte)
         if r.returncode != 0:
-            premiere = (texte.strip().splitlines() or [""])[0][:160]
+            premiere = (masque(r.stdout + r.stderr).strip().splitlines() or [""])[0][:160]
             raise h.Refus(f"vastai {' '.join(args[:2])} : code {r.returncode} ; {premiere}")
-        return texte
+        return masque(r.stdout)  # la sortie standard seule est lue ; la sortie d'erreur n'est jamais ni lue ni écrite
 
     def creer(self, offre_id: int, c: dict) -> int:
         if cles_de_modele(c["env"]):
