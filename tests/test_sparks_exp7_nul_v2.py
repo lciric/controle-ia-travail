@@ -197,6 +197,21 @@ def test_duree_amorce_et_decision_instance():
     assert d(maintenant="2026-11-10T00:00:00Z", phases_faites=["causal"], sorties_copiees=True) == "detruire"
 
 
+def test_commande_de_destruction_avec_confirmation_et_sans_sortie_brute():
+    assert depense.commande_destruction(59079406) == "vastai destroy instance 59079406 -y"
+    for mauvais in ("59079406; ls", "abc", ""):
+        with pytest.raises(depense.GardeDepense):
+            depense.commande_destruction(mauvais)
+    for f in ("scripts/lancer_sparks_exp7_nul_v2.sh", "docs/notes/sparks-exp7-nul-v1/procedure-lecteurs-v2.md"):
+        t = (RACINE / f).read_text(encoding="utf-8")
+        assert all(l.rstrip(" »`\n").endswith("-y") or "destroy instance <id> -y" in l or "destroy instance <ID> -y" in l
+                   for l in t.splitlines() if "vastai destroy" in l), f
+    for f in ("scripts/amorce_instance_sparks_exp7_nul_v2.sh", "scripts/sparks_exp7_nul_instance_v2.sh",
+              "scripts/lancer_sparks_exp7_nul_v2.sh"):     # aucun appel à vastai dont la sortie serait affichée
+        assert not [l for l in (RACINE / f).read_text(encoding="utf-8").splitlines()
+                    if l.lstrip().startswith("vastai ") or "$(vastai" in l or "| vastai" in l], f
+
+
 # --- 3. liste fermée et addendum scellé ------------------------------------------------------------------------------
 def _git(d, *a):
     return subprocess.run(["git", "-C", str(d), *a], check=True, capture_output=True, text=True).stdout.strip()

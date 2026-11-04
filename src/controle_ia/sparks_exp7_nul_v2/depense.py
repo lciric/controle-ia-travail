@@ -15,6 +15,9 @@ La garde ne parle jamais à Vast : elle lit un état JSON écrit par la session 
     python -m controle_ia.sparks_exp7_nul_v2.depense projeter ETAT.json
     python -m controle_ia.sparks_exp7_nul_v2.depense duree PRIX_CARTE PRIX_STOCKAGE [DEJA_USD]
     python -m controle_ia.sparks_exp7_nul_v2.depense instance ETAT.json
+
+Destruction : `vastai destroy instance <id> -y` (`commande_destruction` ; sans `-y`, rien n'est détruit, R-1482) ;
+aucune sortie brute de `vastai` affichée ni journalisée (R-1480).
 """
 from __future__ import annotations
 
@@ -128,6 +131,16 @@ def decision_instance(etat: dict, maintenant: datetime | None = None) -> dict:
     return {"action": "garder", "raison": "instance en tâche (disque gardé entre deux redémarrages)"}
 
 
+def commande_destruction(ident: str | int) -> str:
+    """Commande de destruction, par l'identifiant numérique de l'instance (R10), **avec `-y`** : sans lui, vastai 1.8.3
+    demande une confirmation et ne détruit rien (leçon du 4 novembre, R-1482). La session lance la commande et n'en
+    affiche ni n'en journalise la sortie brute (R-1480) : seul le code de retour et l'identifiant sont consignés."""
+    s = str(ident)
+    if not s.isdigit():
+        raise GardeDepense(f"identifiant d'instance {ident!r} : chiffres seuls attendus (R10)")
+    return f"vastai destroy instance {s} -y"
+
+
 def main(argv: list[str]) -> int:
     try:
         if argv[0] == "projeter":
@@ -137,8 +150,11 @@ def main(argv: list[str]) -> int:
         elif argv[0] == "duree":
             print(duree_max_minutes(float(argv[1]), float(argv[2]), deja_usd=float(argv[3]) if len(argv) > 3 else 0.0))
         elif argv[0] == "instance":
-            r = decision_instance(json.loads(Path(argv[1]).read_text(encoding="utf-8")))
+            e = json.loads(Path(argv[1]).read_text(encoding="utf-8"))
+            r = decision_instance(e)
             print(f"INSTANCE {r['action']} : {r['raison']}")
+            if r["action"] == "detruire" and e.get("instance"):
+                print(f"COMMANDE (sortie brute ni affichée ni journalisée, R-1480) : {commande_destruction(e['instance'])}")
         else:
             raise IndexError
     except (GardeDepense, IndexError, ValueError, KeyError, OSError) as err:

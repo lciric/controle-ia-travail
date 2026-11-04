@@ -20,5 +20,7 @@ GO_ID=GO-2026-11-04-04 vastai create instance $OFFRE --image pytorch/pytorch:2.9
   --args bash -c "\$(cat scripts/amorce_instance_sparks_exp7_nul_v2.sh)"
 Redémarrage (copies par lots, phase causale) : même vérification avec l'état à jour, puis « vastai start instance <ID> ».
 Fin du contrôle causal ou échéance : python3 -m controle_ia.sparks_exp7_nul_v2.depense instance ETAT.json, puis
-« vastai destroy instance <ID> » par son identifiant (R10), consigné dans registres/arrets.md.
+« vastai destroy instance <ID> -y » par son identifiant (R10 ; sans -y, vastai 1.8.3 demande confirmation et ne
+détruit rien, R-1482), consigné dans registres/arrets.md ; aucune sortie brute de vastai affichée ni journalisée (R-1480) :
+seuls le code de retour et l'identifiant sont consignés.
 FIN

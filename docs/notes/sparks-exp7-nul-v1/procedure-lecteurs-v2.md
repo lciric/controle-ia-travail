@@ -42,7 +42,9 @@ scellé (`prereg/SPARKS-EXP7-NUL-addendum-1.md`, brouillon 2 : `prereg/SPARKS-EX
 8. **Contrôle causal** : seconde session de carte (`PHASE=causal`), par lots si l'essai d'égalité passe sur
    l'instance, sinon sans lots, déclaré, seulement si la garde de dépense le permet.
 9. **Fin** : contrôle causal fini → sorties scellées copiées, puis **destruction** de l'instance par son identifiant
-   (`depense instance ETAT.json` dit « copier », puis « detruire ») ; à partir du 16 novembre sans fin en vue : nœud de
+   (`depense instance ETAT.json` dit « copier », puis « detruire » et imprime `vastai destroy instance <id> -y` : sans
+   `-y`, vastai 1.8.3 demande confirmation et ne détruit rien, R-1482 ; la sortie brute de `vastai` n'est ni affichée
+   ni journalisée, R-1480, seuls le code de retour et l'identifiant sont consignés) ; à partir du 16 novembre sans fin en vue : nœud de
    Lazar ; à l'échéance (fin du 18) sans réponse : destruction. Entre deux redémarrages, l'instance arrêtée est « en
    tâche » pour la routine de reprise.
 
@@ -51,5 +53,5 @@ scellé (`prereg/SPARKS-EXP7-NUL-addendum-1.md`, brouillon 2 : `prereg/SPARKS-EX
 ```json
 {"prix_heure_carte": 0.62, "prix_heure_stockage": 0.03, "cree_le": "2026-11-0XT..Z", "heures_demarrees": 3.4,
  "facture_usd": null, "phases_faites": ["fabrication", "etape0"], "redemarrages_restants": 12, "egalite_lots": true,
- "sorties_copiees": false}
+ "sorties_copiees": false, "instance": "12345678"}
 ```
