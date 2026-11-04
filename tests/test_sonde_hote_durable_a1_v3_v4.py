@@ -610,7 +610,7 @@ def test_demarrage_curl_absent_alarme_et_repli_python(tmp_path):
            "GIT_CONFIG_GLOBAL": "/dev/null"}
     subprocess.run(["bash", "-c", s.script_de_demarrage("b" * 40)], env=env, capture_output=True, timeout=180)
     log = (racine / "sonde-v4-minuterie.log").read_text()
-    assert "ALARME : curl absent : repli par python3" in log and "DELETE instance 123 (essai 1)" in log
+    assert "ALARME : curl absent au départ de la minuterie : repli par python3" in log and "DELETE instance 123 (essai 1)" in log
     assert "curl NON" in (racine / "sonde-v4-temps.txt").read_text()
 
 

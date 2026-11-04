@@ -1,6 +1,6 @@
 # Additif 4 au rapport de rédaction v3 — sonde v4 de l'hôte durable, après la contre-lecture de la v3
 
-Même rédacteur-développeur, 4 novembre 2026, de 13:11 à 13:35 UTC environ (`date -u`). Ce travail applique la contre-lecture
+Même rédacteur-développeur, 4 novembre 2026, de 13:11 à 13:31 UTC (`date -u`). Ce travail applique la contre-lecture
 `contre-lecture-sonde-v3.md` (sha256 `92b5abfcdc25db63ab22e115bb1ca2b87b57e121fa1a51e6eefca733f3615df7`, lue en entier, verdict
 « lançable après corrections »). Il prend la forme d'une **version 4** à noms neufs (R12) ; les versions 1 à 3 restent telles
 quelles. La v4 porte **seulement** les corrections M-1, m-1, m-2, f-1, f-2, f-3, f-4 et f-6 ; f-5 et R-1 restent des réserves
@@ -46,11 +46,25 @@ Chacun est une copie de la v3, renommée (étiquette `sonde-a1-v3-v4`, branches 
 ## 3. Essais (`timeout 900 nice -n 10`, aucun réseau)
 
 - `tests/test_sonde_hote_durable_a1_v3_v4.py` : **72 passés**.
-- Ensemble (v4, v3, v2, v1, lanceur durable, garde de calcul) : RESULTAT_ENSEMBLE.
+- Ensemble (v4, v3, v2, v1, lanceur durable, garde de calcul) : **295 passés**, aucun sauté, en 470 s
+  (72 + 66 + 52 + 19 + 49 + 37) ; sortie `…/scratchpad/v3b1/sorties/essais-sonde-v4.txt`
+  (`000a04d296b6ab3f1ff62b5a0334b2ecedca0aa71822747b80a8125e8f48ee8a`).
+- Un premier passage a échoué sur un seul essai : le libellé de l'alarme « curl absent » avait été précisé dans la v4 (« au
+  départ de la minuterie »), et l'attente de l'essai n'avait pas suivi. J'ai corrigé l'attente, puis rejoué l'ensemble.
 
 ## 4. Empreintes à la remise
 
-EMPREINTES_REMISE
+Relevées à 13:30 UTC.
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/sonde_hote_durable_a1_v3_v4.py` (705 lignes) | `d1b3425d09a794ce9a9c29ef47517b06ddb20315511ec8c10584730dd498560f` |
+| `scripts/amorce_sonde_hote_durable_a1_v3_v4.sh` | `de7d1453ffa8609c5362097200368127633588be3b852ee620d44cdba3b0b4cd` |
+| `tests/test_sonde_hote_durable_a1_v3_v4.py` (72 essais) | `6d6ba1add90aa35d7b1704f92a27921bb999dc1e4ab0d6759bb36c061b6a559d` |
+| bloc-notes `sorties/essais-sonde-v4.txt` | `000a04d296b6ab3f1ff62b5a0334b2ecedca0aa71822747b80a8125e8f48ee8a` |
+
+Ce fichier ne porte pas sa propre empreinte : elle est donnée avec la remise. Les instantanés versés pendant le travail sont
+intermédiaires ; seules ces empreintes valent pour le rendu.
 
 ## 5. Commande exacte de la sonde v4, pour la fille
 
