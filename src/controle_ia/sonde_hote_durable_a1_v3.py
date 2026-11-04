@@ -231,6 +231,12 @@ class MachineSonde(h.Machine):
         self.j.ecrire(f"course factice détachée : PID {self.course.pid} (durée prévue {self.course_factice_s:g} s, "
                       f"au-delà du plafond de {r.duree_max_s:g} s)")
 
+    def sceller(self) -> Path:
+        liste = self.t / "EMPREINTES-sonde-hote-durable-a1-v3-v1.txt"
+        lignes = [f"{h.sha256_fichier(p)}  {p.relative_to(self.t)}" for p in self.fichiers_a_verser() if p != liste]
+        liste.write_text("\n".join(lignes) + "\n")
+        return liste
+
     def relever_l_hote(self) -> None:
         """Faits de l'image et de la machine, écrits au journal : ce que la vraie course trouvera."""
         def sortie(cmd):

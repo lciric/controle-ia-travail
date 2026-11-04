@@ -166,7 +166,7 @@ def test_sonde_cas_sain_plafond_de_duree_puis_destruction(monde):
     assert f[f"{b}/sortie-factice/battements.txt"].strip()
     manifeste = json.loads(f[f"{b}/sortie-factice/manifeste-factice.json"])
     assert manifeste["variables_de_cle"] == []  # la course factice n'a reçu aucune variable de clé
-    for ligne in f[f"{b}/EMPREINTES-sortie-a1-v3-troisieme-v1.txt"].decode().splitlines():
+    for ligne in f[f"{b}/EMPREINTES-sonde-hote-durable-a1-v3-v1.txt"].decode().splitlines():
         e, nom = ligne.split("  ", 1)
         assert (nom, sha(f[f"{b}/{nom}"])) == (nom, e)
     assert all(JETON.encode() not in c and CLE_VAST.encode() not in c for c in f.values())
