@@ -1,0 +1,232 @@
+{
+ "version": "config-pilote-exposant-p-v2",
+ "etude": "pilote-exposant-p",
+ "note": "brouillon 2 : non scellé ; toute valeur se fige au scellement du préenregistrement (R1). Emprunts à R9-bis : <<DOI_R9_BIS>>",
+ "modeles": {
+  "lu": "meta-llama/Llama-3.1-8B-Instruct",
+  "temoin": "meta-llama/Llama-3.1-8B"
+ },
+ "dtype": "bfloat16",
+ "attention": "sdpa",
+ "couche_perturbation": 2,
+ "decalage_mesure": -2,
+ "grille": {
+  "n": 31,
+  "angle_max_deg": 60.0
+ },
+ "seuil_f": 0.5,
+ "fenetre_deg": 60.0,
+ "ancres": {
+  "jeu": "HuggingFaceFW/fineweb-edu",
+  "configuration": "sample-10BT",
+  "graine_melange": 42,
+  "tampon": 10000,
+  "longueur": 5,
+  "par_sous_ensemble": 30,
+  "sous_ensembles": 32,
+  "reserve": 10000
+ },
+ "differences_aleatoires": {
+  "k_moy": 30,
+  "paires_disjointes_M": 60
+ },
+ "isotropes": {
+  "graine_torch": 42,
+  "n": 33,
+  "paires": [
+   [
+    0,
+    1
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    4,
+    5
+   ],
+   [
+    6,
+    7
+   ],
+   [
+    8,
+    9
+   ],
+   [
+    10,
+    11
+   ],
+   [
+    12,
+    13
+   ],
+   [
+    14,
+    15
+   ],
+   [
+    16,
+    17
+   ],
+   [
+    18,
+    19
+   ],
+   [
+    20,
+    21
+   ],
+   [
+    22,
+    23
+   ],
+   [
+    24,
+    25
+   ],
+   [
+    26,
+    27
+   ],
+   [
+    28,
+    29
+   ],
+   [
+    30,
+    31
+   ],
+   [
+    32,
+    0
+   ]
+  ],
+  "source": "results/directions/ref_pairs_random.txt du code publié (17 paires de référence)"
+ },
+ "plans": {
+  "temoin": {
+   "WG_sous_ensembles": 8
+  },
+  "lu": {
+   "ER_sous_ensembles": 32,
+   "WG_sous_ensembles": 32,
+   "NR_sous_ensembles": 32,
+   "E_Rpapier_sous_ensembles": 8,
+   "moities_sous_ensembles": 8,
+   "E_rd": 10,
+   "R_rd": 10,
+   "mixtes_rd": 5
+  }
+ },
+ "bootstrap": {
+  "B_difference": 10000,
+  "B_ancres": 200,
+  "niveau": 0.95
+ },
+ "lecture": {
+  "delta_equivalence": 0.2,
+  "seuil_cos": 0.1,
+  "cos_min_moities": 0.5,
+  "part_max_echecs": 0.2,
+  "seuil_residu": 0.02,
+  "niveau": 0.95,
+  "k_famille": 8,
+  "p_publie_wg": 3.0030826525467997,
+  "intercepts_publies_wg": [
+   46.50396287441254,
+   28.94923186302185
+  ],
+  "norme_ancres_publiee": 2.379805326461792,
+  "tol_norme_relative": 0.001,
+  "rang_min_ancres": 0.95,
+  "tol_p_identiques": 0.15,
+  "tol_intercept_identiques": 2.0,
+  "intervalle_p_differentes": [
+   2.420106044932251,
+   3.7015544238257605
+  ],
+  "cos_min_directions_publiees": 0.98,
+  "intervalle_isotrope": [
+   1.75,
+   2.25
+  ],
+  "demi_largeur_suspecte": 0.03
+ },
+ "stimuli_sha256": "9a32ca837ff115ba589585102a07f9b0413c6118a02ae51ff3a731fcb4329adf",
+ "references_sha256": {
+  "directions-publiees-v1.npz": "ced98c6285e0a6f7c0dd31189d2a00916b38fd764410fb32d9891821990380b0",
+  "grilles-publiees-v1.npz": "c30a014a2e03aed0ce69dc43ea80488a7a47c0eb013f558c59c36f574ece9fbe",
+  "references-publiees-v1.json": "b594ee86b6d5ee1e6355203eca416815fc87e0e4c55eaf7f8b4b66675516375a"
+ },
+ "amont_commit": "a9355d4001500708a40a255bacfe559e6dc269c0",
+ "lot_balayage": 961,
+ "lot_activations": 256,
+ "plafonds": {
+  "duree_max_s": 34200,
+  "duree_plan_prevue_s": 60,
+  "delai_externe_min": 600,
+  "plafond_amorce_min": 630
+ },
+ "entropie": 2026110403,
+ "jouet": {
+  "grille": {
+   "n": 11
+  },
+  "ancres": {
+   "par_sous_ensemble": 6,
+   "sous_ensembles": 3,
+   "reserve": 400
+  },
+  "differences_aleatoires": {
+   "k_moy": 5,
+   "paires_disjointes_M": 4
+  },
+  "isotropes_paires_max": 3,
+  "plans": {
+   "temoin": {
+    "WG_sous_ensembles": 2
+   },
+   "lu": {
+    "ER_sous_ensembles": 3,
+    "WG_sous_ensembles": 3,
+    "NR_sous_ensembles": 3,
+    "E_Rpapier_sous_ensembles": 1,
+    "moities_sous_ensembles": 1,
+    "E_rd": 1,
+    "R_rd": 1,
+    "mixtes_rd": 1
+   }
+  },
+  "modele": {
+   "vocab_size": 512,
+   "hidden_size": 64,
+   "intermediate_size": 128,
+   "num_hidden_layers": 6,
+   "num_attention_heads": 4,
+   "num_key_value_heads": 2,
+   "max_position_embeddings": 64
+  },
+  "famille_K": 2,
+  "famille_contrastive_max": 3,
+  "stylise_tirages": 20,
+  "controle_directions_publiees": false,
+  "tolerances_instrument": {
+   "tol_p_identiques": 10.0,
+   "tol_intercept_identiques": 90.0,
+   "intervalle_p_differentes": [
+    0.5,
+    10.0
+   ],
+   "intervalle_isotrope": [
+    0.5,
+    10.0
+   ],
+   "seuil_cos": 1.01,
+   "cos_min_moities": -1.0
+  },
+  "note": "tolérances de l'instrument propres au mode jouet (petit modèle aléatoire), consignées dans les sorties ; jamais lues en run réel"
+ },
+ "famille_K": 8
+}
