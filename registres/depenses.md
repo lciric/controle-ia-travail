@@ -349,3 +349,4 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-11-03 13:37:26 UTC (heure de la fille) — **fin de la suite du tour Scheurer** (GO-2026-11-03-07), code 0, 9 cellules : dossier 3,99 USD au total.
 - 2026-11-03 14:16:45 UTC (heure de la fille) — **fin de la course Ibrahim Q1** (GO-2026-11-03-09), code 0 : **7,976282 USD** (Fable 3,43 ; Opus 2,50 ; Astra 1,83 ; Kimi 0,21).
 - 2026-11-03 14:18:26 UTC — **départ de la course Scheurer** (GO-2026-11-03-10), variante `sans-opus-argon`, contrôles conformes.
+- 2026-11-04 ≈ 01:47 UTC (heure de la fille) — **appel unique à Astra** (GO-2026-11-04-01, plafond 3 USD) : **0,25978 USD** (appel 0,25944 ; contrôle 0,00034), relais 8807 arrêté par PID ; branche `donnees/appel-astra-sparks-v1` `31c0af16`.
