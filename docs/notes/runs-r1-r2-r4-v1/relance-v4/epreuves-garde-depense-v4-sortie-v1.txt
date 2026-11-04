@@ -1,0 +1,101 @@
+# PYTHONPATH=src python -m controle_ia.runs_nuit.garde_depense_v4_v1 epreuves — 2026-11-04T06:44:12Z — épreuves sur processeur des règles des deux tâches (aucune tâche planifiée créée, aucune instance)
+[
+ {
+  "epreuve": "1 destruction, cas sain",
+  "action": "absente",
+  "alerte": false,
+  "identifiant": 58851293,
+  "commande": null
+ },
+ {
+  "epreuve": "2 destruction, artefact (sans identifiant)",
+  "action": "echec_visible",
+  "alerte": true,
+  "motif": "identifiant d'instance None : absent ou invalide (rien n'est détruit)",
+  "commande": null
+ },
+ {
+  "epreuve": "3 vérification, cas sain",
+  "identifiant": 58851293,
+  "depense": 1.7894,
+  "projetee": 3.1742,
+  "fin_amorce": false,
+  "projection": {
+   "F": null,
+   "k": null,
+   "raison": "aucune ligne episodes=k/89 : aucune projection"
+  },
+  "extension": false,
+  "commande": null,
+  "action": "rien",
+  "alerte": false,
+  "motif": "sous les seuils"
+ },
+ {
+  "epreuve": "4a vérification, artefact (absente, dépense fictive)",
+  "action": "absente",
+  "alerte": false,
+  "identifiant": 58851293,
+  "commande": null,
+  "motif": "instance absente du listing : rien n'est détruit, compte rendu"
+ },
+ {
+  "epreuve": "4b vérification, artefact (listing d'essai, ≥ 45)",
+  "identifiant": 58851293,
+  "depense": 45.7894,
+  "projetee": 47.1742,
+  "fin_amorce": false,
+  "projection": {
+   "F": null,
+   "k": null,
+   "raison": "aucune ligne episodes=k/89 : aucune projection"
+  },
+  "extension": false,
+  "commande": null,
+  "action": "alerte",
+  "alerte": true,
+  "motif": "dépense 45.7894 (projetée 47.1742) ≥ 45.0"
+ },
+ {
+  "epreuve": "4c vérification, artefact (listing d'essai, ≥ 57 projetés)",
+  "identifiant": 58851293,
+  "depense": 56.7894,
+  "projetee": 58.1742,
+  "fin_amorce": false,
+  "projection": {
+   "F": null,
+   "k": null,
+   "raison": "aucune ligne episodes=k/89 : aucune projection"
+  },
+  "extension": false,
+  "commande": [
+   "vastai",
+   "destroy",
+   "instance",
+   "58851293"
+  ],
+  "action": "detruire",
+  "alerte": true,
+  "motif": "dépense projetée 58.1742 ≥ 57.0 USD"
+ },
+ {
+  "epreuve": "4d vérification, artefact (sans prix)",
+  "action": "echec_visible",
+  "alerte": true,
+  "motif": "prix horaire None : nombre attendu",
+  "commande": null
+ }
+]
+code 0
+# prompts non armé et armé (exemple : identifiant d'essai 29999999, T0 fictif, session 1 imputée 1,5 USD)
+Garde de dépense de la relance v4 de R1 (GO-2026-11-03-03), session reparation, tâche (ii) destruction à heure fixe. Seuils : alerte 45.0 USD, destruction 57.0 USD. Destruction par l'identifiant ci-dessous seulement (`vastai destroy instance <identifiant>`), jamais par étiquette ni motif ; prompt sans identifiant, sans T0 ou sans prix : ne rien détruire, alerter (échec visible). Règles : `python -m controle_ia.runs_nuit.garde_depense_v4_v1`.
+
+{'T0': '2026-11-05T10:00:00Z', 'H_min': 2359.3, 'heure_destruction': '2026-11-07T01:19:17Z', 'prix_horaire': 1.4, 'disque_estime': 0.1, 'deja_imputees': 1.5, 'seuil_usd': 57.0}
+ESSAI — Garde de dépense de la relance v4 de R1 (GO-2026-11-03-03), session reparation, tâche (ii) destruction à heure fixe. Seuils : alerte 45.0 USD, destruction 57.0 USD. Destruction par l'identifiant ci-dessous seulement (`vastai destroy instance <identifiant>`), jamais par étiquette ni motif ; prompt sans identifiant, sans T0 ou sans prix : ne rien détruire, alerter (échec visible). Règles : `python -m controle_ia.runs_nuit.garde_depense_v4_v1`.
+identifiant = 29999999
+T0 = 2026-11-05T10:00:00Z
+prix_horaire = 1.4
+disque = 0.1
+deja_imputees = 1.5
+heure_destruction = 2026-11-07T01:19:17Z
+
