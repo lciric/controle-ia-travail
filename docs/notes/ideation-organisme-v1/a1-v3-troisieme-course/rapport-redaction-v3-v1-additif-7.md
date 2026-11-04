@@ -1,6 +1,6 @@
 # Additif 7 au rapport de rédaction v3 — sonde v7 : réponse de création catégorisée, `ls-remote` sous mandataire
 
-Même rédacteur-développeur, 4 novembre 2026, à partir de 23:12 UTC (`date -u`).
+Même rédacteur-développeur, 4 novembre 2026, de 23:12 à 23:34 UTC (`date -u`).
 
 **Faits constatés par la fille** (23:09 et 23:11 UTC), relayés par le directeur :
 - avec la v6, l'appel atteint Vast : le défaut de certificat est corrigé ;
@@ -79,11 +79,26 @@ encodé), de `--env` et de la commande entière. La vérification seule les écr
 ## 3. Essais (`timeout 900 nice -n 10`, aucun réseau)
 
 - `tests/test_sonde_hote_durable_a1_v3_v7.py` : **113 passés**.
-- Ensemble (v7 à v1, lanceur durable, garde de calcul) : RESULTAT_ENSEMBLE.
+- Ensemble (v7 à v1, lanceur durable, garde de calcul) : **589 passés**, aucun sauté, en 1 001 s
+  (113 + 95 + 86 + 72 + 66 + 52 + 19 + 49 + 37). Sortie : `…/sorties/essais-sonde-v7.txt`
+  (`91dbffccfc950423d5630fae8833e595f43cdd651411b5e384d538238a3e7481`).
 
 ## 4. Empreintes à la remise
 
-EMPREINTES_REMISE
+Relevées à 23:33 UTC.
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/sonde_hote_durable_a1_v3_v7.py` (854 lignes) | `7ea53d82ea9df9941c8b4013ae92c222a8f069d8e35d62c397d0fbc38d17a8c0` |
+| `scripts/amorce_sonde_hote_durable_a1_v3_v7.sh` | `10bc2239cf1fe3907680670b6a38461895260afdb4f6a5943b54135b41c10704` |
+| `tests/test_sonde_hote_durable_a1_v3_v7.py` (113 essais) | `ee6a430be86530c8c3ef641c07bcda67d04a02cf4ab57b631777614a6425f9e1` |
+| bloc-notes `sorties/essais-sonde-v7.txt` | `91dbffccfc950423d5630fae8833e595f43cdd651411b5e384d538238a3e7481` |
+| bloc-notes `sorties/diff-sonde-v6-vers-v7-brut.txt` | `7557b1be95484521bb308dc6d428616599c695323791dc10e11bb3b2c21fe3db` |
+| bloc-notes `sorties/diff-sonde-v6-vers-v7-hors-renommage.txt` | `f947901959c7fb33edba2925273b6952d80e9fe1e23bbd042f4ab193d24f6235` |
+| bloc-notes `renommage-v6-v7.sed` | `0ca210aa109c7beaf30d5b7d7eee1b0eefca91ddb2ae02ed799b42a6e7a2cc1e` |
+
+Ce fichier ne porte pas sa propre empreinte : elle est donnée avec la remise. Les instantanés versés pendant le travail sont
+intermédiaires ; seules ces empreintes valent pour le rendu.
 
 ## 5. Diff exact par rapport à la v6
 
