@@ -5,39 +5,24 @@
  "variante_a_go_machine": {
   "texte": [
    {
-    "lieu": "paragraphe de tête (statut)",
-    "ancien": "deux marqueurs (annexe B) : l'audit A9 écrit de la seconde course (section 0.5 bis) et le commit",
-    "nouveau": "trois marqueurs (annexe B) : l'audit A9 écrit de la seconde course (section 0.5 bis), le GO de la machine (sections 8, 12 et 13) et le commit"
-   },
-   {
     "lieu": "section 0.7 (ligne neuve)",
     "ancien": "\n\n## 1. Question et motivation",
-    "nouveau": "\n22. Sections 8, 12 et 13 (point 3) : « écart possible au montant du GO » → **GO à part pour la machine** (<<GO_MACHINE>>, 35 USD : machine de la course et sonde d'hôte), GO-2026-11-04-06 restant à 400 USD pour les appels d'Argon seuls ; décision de Lazar (variante (a)).\n\n## 1. Question et motivation"
+    "nouveau": "\n22. Sections 8, 12 et 13 (point 3) : « écart possible au montant du GO » → **GO à part pour la machine** (GO-2026-11-04-09, 35 USD : machine de la course et sonde d'hôte), GO-2026-11-04-06 restant à 400 USD pour les appels d'Argon seuls ; variante (a), retenue par Lazar (« GO machine », 4 novembre 2026, 08:41 UTC).\n\n## 1. Question et motivation"
    },
    {
     "lieu": "section 8, « Création »",
     "ancien": "GO-2026-11-04-06 vérifié par la garde\n  de `main` et montant exact (section 4, « GO ») ;",
-    "nouveau": "GO-2026-11-04-06 vérifié par la garde\n  de `main` et montant exact (section 4, « GO ») ; GO de la machine (<<GO_MACHINE>>) vérifié de même, type calcul, montant exactement 35 USD ;"
+    "nouveau": "GO-2026-11-04-06 vérifié par la garde\n  de `main` et montant exact (section 4, « GO ») ; GO de la machine (GO-2026-11-04-09) vérifié de même, type calcul, montant exactement 35 USD ;"
    },
    {
     "lieu": "section 12, puce « Troisième course (v3) »",
     "ancien": "**Coût de la machine** : hors du compteur de la course (le lanceur ne\n  compte que les appels), sous le même GO ; au plus 32 USD (plafonds de la machine, section 8), ≈ 1 à 10 USD attendus (4 à 26 h à\n  0,10 à 0,40 USD/h). **Écart possible au montant du GO** : au pire, 400 USD d'appels plus 32 USD de machine dépasseraient le\n  montant de GO-2026-11-04-06 ; décision à demander à Lazar avant le scellement (section 13, point 3).",
-    "nouveau": "**Coût de la machine** : hors du compteur de la course (le lanceur ne\n  compte que les appels), **sous un GO à part, <<GO_MACHINE>>** (type calcul, 35 USD : machine de la course et sonde\n  d'hôte) ; au plus 32 USD (plafonds de la machine, section 8) et 0,50 USD de sonde, ≈ 1 à 10 USD attendus.\n  GO-2026-11-04-06 reste à 400 USD pour les appels d'Argon seuls : aucun des deux montants ne peut être dépassé."
+    "nouveau": "**Coût de la machine** : hors du compteur de la course (le lanceur ne\n  compte que les appels), **sous un GO à part, GO-2026-11-04-09** (type calcul, 35 USD : machine de la course et sonde\n  d'hôte) ; au plus 32 USD (plafonds de la machine, section 8) et 0,50 USD de sonde, ≈ 1 à 10 USD attendus.\n  GO-2026-11-04-06 reste à 400 USD pour les appels d'Argon seuls : aucun des deux montants ne peut être dépassé."
    },
    {
     "lieu": "section 13, point 3",
     "ancien": "**Troisième course (v3)** : GO-2026-11-04-06, 400 USD,\n   échéance 2026-11-18 ; coût de la machine (au plus 32 USD) sous le même GO, hors du compteur de la course : la somme peut, au\n   pire, dépasser 400 USD (section 12) — **décision de Lazar demandée avant le scellement** (extension du GO, GO à part pour la\n   machine, ou plafond de la course abaissé, qui demanderait un GO au même montant).",
-    "nouveau": "**Troisième course (v3)** : GO-2026-11-04-06, 400 USD,\n   échéance 2026-11-18, pour les appels d'Argon seuls ; coût de la machine et de la sonde sous <<GO_MACHINE>> (type calcul,\n   35 USD), vérifié par le lanceur durable comme GO-2026-11-04-06 (garde de `main`, montant exact)."
-   },
-   {
-    "lieu": "annexe B (titre)",
-    "ancien": "**Version 3, brouillon 1 : deux marqueurs**",
-    "nouveau": "**Version 3, brouillon 1 : trois marqueurs**"
-   },
-   {
-    "lieu": "annexe B (marqueur neuf)",
-    "ancien": "Aucun autre marqueur : le GO est un fait (section 0.5 bis)",
-    "nouveau": "(3) **GO_MACHINE**, trois fois, en sections 8, 12 et 13 (point 3) : rempli par l'identifiant du GO de calcul de la machine (35 USD) que Lazar accorde. Aucun autre marqueur : les GO sont des faits (section 0.5 bis)"
+    "nouveau": "**Troisième course (v3)** : GO-2026-11-04-06, 400 USD,\n   échéance 2026-11-18, pour les appels d'Argon seuls ; coût de la machine et de la sonde sous GO-2026-11-04-09 (type calcul,\n   35 USD), vérifié par le lanceur durable comme GO-2026-11-04-06 (garde de `main`, montant exact)."
    }
   ],
   "code": [
@@ -67,9 +52,9 @@
    },
    {
     "fichier": "tests/test_hote_durable_a1_v3.py",
-    "lieu": "constante : ligne factice du GO de la machine",
+    "lieu": "constante : ligne factice du GO de la machine (identifiant factice GO-2026-11-04-90 : l'essai de révocation existant emploie déjà GO-2026-11-04-09)",
     "ancien": "def sha(o: bytes) -> str:",
-    "nouveau": "LIGNE_MACHINE = (\"| GO-2026-11-04-99 | 2026-11-04 | calcul | machine de la troisième course d'A1-v3 et sonde | 35 USD | \"\n                 \"2026-11-18 | Lazar | mot de Lazar |\\n\")\n\n\ndef sha(o: bytes) -> str:"
+    "nouveau": "LIGNE_MACHINE = (\"| GO-2026-11-04-90 | 2026-11-04 | calcul | machine de la troisième course d'A1-v3 et sonde | 35 USD | \"\n                 \"2026-11-18 | Lazar | mot de Lazar |\\n\")\n\n\ndef sha(o: bytes) -> str:"
    },
    {
     "fichier": "tests/test_hote_durable_a1_v3.py",
@@ -81,16 +66,16 @@
     "fichier": "tests/test_hote_durable_a1_v3.py",
     "lieu": "essai neuf du GO de la machine (cas sain et artefacts)",
     "ancien": "def test_inventaire_filtre_l_environnement():",
-    "nouveau": "def test_go_machine_cas_sain_et_artefacts(tmp_path):\n    assert h.verifier_go_machine(registre(tmp_path, LIGNE_06), GARDE_REELLE, \"GO-2026-11-04-99\", JOUR)[\"plafond_usd\"] == 35\n    for go, reg in ((\"GO-2026-11-04-06\", registre(tmp_path, LIGNE_06)), (\"GO-2026-11-04-98\", registre(tmp_path, LIGNE_06)),\n                    (\"machine\", registre(tmp_path, LIGNE_06))):\n        with pytest.raises(h.Refus):\n            h.verifier_go_machine(reg, GARDE_REELLE, go, JOUR)\n    p = tmp_path / \"go36.md\"\n    p.write_text(\"# R\\n\\n\" + ENTETE + LIGNE_MACHINE.replace(\"35 USD\", \"36 USD\"), encoding=\"utf-8\")\n    with pytest.raises(h.Refus, match=\"exactement 35\"):\n        h.verifier_go_machine(p, GARDE_REELLE, \"GO-2026-11-04-99\", JOUR)\n\n\ndef test_inventaire_filtre_l_environnement():"
+    "nouveau": "def test_go_machine_cas_sain_et_artefacts(tmp_path):\n    assert h.verifier_go_machine(registre(tmp_path, LIGNE_06), GARDE_REELLE, \"GO-2026-11-04-90\", JOUR)[\"plafond_usd\"] == 35\n    for go, reg in ((\"GO-2026-11-04-06\", registre(tmp_path, LIGNE_06)), (\"GO-2026-11-04-98\", registre(tmp_path, LIGNE_06)),\n                    (\"machine\", registre(tmp_path, LIGNE_06))):\n        with pytest.raises(h.Refus):\n            h.verifier_go_machine(reg, GARDE_REELLE, go, JOUR)\n    p = tmp_path / \"go36.md\"\n    p.write_text(\"# R\\n\\n\" + ENTETE + LIGNE_MACHINE.replace(\"35 USD\", \"36 USD\"), encoding=\"utf-8\")\n    with pytest.raises(h.Refus, match=\"exactement 35\"):\n        h.verifier_go_machine(p, GARDE_REELLE, \"GO-2026-11-04-90\", JOUR)\n\n\ndef test_inventaire_filtre_l_environnement():"
    },
    {
     "fichier": "tests/test_hote_durable_a1_v3.py",
     "lieu": "aide `args_louer` (l'essai de la location doit porter le GO de la machine)",
     "ancien": "    a = dict(go=\"GO-2026-11-04-06\", registre_main=str(reg),",
-    "nouveau": "    a = dict(go=\"GO-2026-11-04-06\", go_machine=\"GO-2026-11-04-99\", registre_main=str(reg),"
+    "nouveau": "    a = dict(go=\"GO-2026-11-04-06\", go_machine=\"GO-2026-11-04-90\", registre_main=str(reg),"
    }
   ],
-  "a_remplir": "GO_MACHINE (identifiant du GO de calcul de la machine, 35 USD, accordé par Lazar)"
+  "go_machine": "GO-2026-11-04-09 (calcul, 35 USD, échéance 2026-11-18, registres/go.md de main au commit 3eacfed4) ; variante RETENUE par Lazar (4 novembre 2026, 08:41 UTC), aucun marqueur neuf"
  },
  "variante_b_cle_dediee": {
   "texte": [
@@ -136,14 +121,13 @@
     "nouveau": "             journal_local=str(tmp_path / \"journal-location.log\"), verifier_seulement=False, jouet=None,\n             variable_cle_argon=\"CLE_ARGON\")"
    }
   ],
-  "a_fixer": "nom de la variable de la session qui porte la clé dédiée (par exemple GEMINI_API_KEY_A1V3)"
+  "statut": "REPORTÉE avec Argon (mot de Lazar du 4 novembre 2026, 08:41 UTC) ; à fixer : nom de la variable de la session qui porte la clé dédiée (par exemple GEMINI_API_KEY_A1V3)"
  },
  "verification": {
   "a": {
    "marqueurs": [
     "<<AUDIT_A9_SECONDE>>",
-    "<<COMMIT_LANCEUR_DURABLE>>",
-    "<<GO_MACHINE>>"
+    "<<COMMIT_LANCEUR_DURABLE>>"
    ],
    "lignes": 2147
   },
@@ -157,8 +141,7 @@
   "a_puis_b": {
    "marqueurs": [
     "<<AUDIT_A9_SECONDE>>",
-    "<<COMMIT_LANCEUR_DURABLE>>",
-    "<<GO_MACHINE>>"
+    "<<COMMIT_LANCEUR_DURABLE>>"
    ],
    "lignes": 2151
   },
