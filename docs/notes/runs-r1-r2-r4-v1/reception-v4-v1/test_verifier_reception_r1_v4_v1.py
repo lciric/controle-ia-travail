@@ -96,14 +96,14 @@ class Monde:
         self.base, self.h = base, h
         self.depot = base / "depot"
         self.depot.mkdir(parents=True)
-        git(self.depot, "init", "-q", "-b", "main")
+        git(self.depot, "init", "-q", "--template=", "-b", "main")
         self.fichiers = {}
 
     def crochet(self, nom, x):
         f = self.h.get(nom)
         if f is not None:
             r = f(x)
-            return x if r is None else r
+            return r if r is not None and type(r) is type(x) else x
         return x
 
     def ecrire(self, chemin, b, sceau=True):
@@ -264,7 +264,7 @@ class Monde:
                "table_empreinte_citee": False, "non_conformes": 3, "signales": 2, "trajectoires_identiques_base": 1,
                "corrections_verifiees_au_chargement": table["corrections_verifiees"],
                "corrections_par_methode": {k: comptes[k] for k in M.CORRIGEES_V3},
-               "par_methode_resolution": {"v1": 1, "v2": 0, "identifiants": 2, "aucune": 3},
+               "par_methode_resolution": {"v1": 2, "v2": 0, "identifiants": 2, "aucune": 2},
                "methodes_resolution": {e: {"methode_table": par_t.get(e),
                                            "methode_resolution": M.methode_resolution(par_t.get(e))}
                                        for e in self.EPISODES},
@@ -327,8 +327,9 @@ class Monde:
         rec = self.base / "recalcul"
         git(self.depot, "worktree", "add", "-q", "--detach", str(rec), TV)
         for p in (f"diag/{R_RUN}/resolution-graine-lot-v3-reparation.json", f"runs/{R_RUN}/manifeste.json", A["table_v4"]):
-            (rec / p).parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(self.depot / p, rec / p)
+            if (self.depot / p).is_file():
+                (rec / p).parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(self.depot / p, rec / p)
         self.crochet("recalcul_arbre", rec)
         sortie = {"version": "chaine_table_v4_v1", "table": A["table_v4"], "table_sha256": sha(tb),
                   "reparation": f"diag/{R_RUN}/resolution-graine-lot-v3-reparation.json",
@@ -692,8 +693,8 @@ def test_table_retrouvee_retrogradee(tmp_path):
         e.clear()
         e.update(episode="ep4", methode="non_resolu", trajectoire_p3="c" * 64, fins={}, paires=[], cause_v4="x")
         t["non_resolus_v4"] = ["ep3", "ep4"]
-        t["comptes"].update(identifiants=1, non_resolu=2, identiques_apres_table=3, retrouvees_v4=1)
-        t["corrections_verifiees"] = 2
+        t["comptes"].update(identifiants=1, non_resolu=2, identiques_apres_table=4, retrouvees_v4=1)
+        t["corrections_verifiees"] = 3
     arret(tmp_path, "chaine-locale", table=f)
 
 
@@ -719,8 +720,6 @@ def test_rejeu_commit_hors_branche(tmp_path):
 
 def test_rejeu_commit_au_temoin(tmp_path):
     """Commit lancé = 5bd62a00 jouet : la table v4 n'y est pas (diff ≠ réparation et table)."""
-    def f(m):
-        m["commit"] = git(Path(m["_depot"]), "rev-parse", "HEAD~2") if "_depot" in m else m["commit"]
     def g(w):
         w.h["manifeste_rejeu"] = lambda m: m.update(commit=git(w.depot, "rev-parse", "HEAD~2"))
     arret(tmp_path, "commit-rejeu", apres_table=g)
@@ -775,7 +774,7 @@ def test_rejeu_corrections_par_methode_autres(tmp_path):
 
 def test_rejeu_par_methode_resolution_autre(tmp_path):
     arret(tmp_path, "coherence-table", resultat_rejeu=lambda r: r["resultat"]["tokenisation"].update(
-        par_methode_resolution={"v1": 1, "v2": 0, "identifiants": 1, "aucune": 4}))
+        par_methode_resolution={"v1": 2, "v2": 0, "identifiants": 1, "aucune": 3}))
 
 
 def test_rejeu_methodes_resolution_autres(tmp_path):
@@ -887,8 +886,39 @@ def test_rejeu_arrete_motif_hors_liste(tmp_path):
 
 
 def test_rejeu_absent(tmp_path):
-    argv = monde(tmp_path)
+    argv = monde(tmp_path, verses=lambda v: [v.pop(k) for k in list(v) if J_RUN in k])
     i = argv.index("--run-rejeu")
     del argv[i:i + 2]
     code, sortie = lancer(argv)
     assert code == 3 and "rejeu absent" in sortie
+
+
+def test_reparation_arretee(tmp_path):
+    def f(w):
+        m = w.fichiers[f"runs/{R_RUN}/manifeste.json"]
+        w.ecrire(f"diag/{R_RUN}/arret.json", jb({"run_id": R_RUN, "manifeste_sha256": sha(m),
+                                                  "resultat": {"etape": "reparation", "motif": "jouet",
+                                                               "partiel": {"x": SENTINELLES["lecture_rep"]}}}))
+        w.commit("arrêt jouet")
+    argv = monde(tmp_path, source_finale=f, verses=lambda v: [v.pop(k) for k in list(v)
+                                                               if J_RUN in k or "tokenisation-v4" in k])
+    code, sortie = lancer(argv)
+    assert code == 3 and "réparation" in sortie and "arrêtée" in sortie, sortie
+
+
+def test_rejeu_commit_au_scellement(tmp_path):
+    def g(w):
+        w.h["manifeste_rejeu"] = lambda m: m.update(commit=git(w.depot, "rev-parse", "HEAD~3"))
+    arret(tmp_path, "commit-rejeu", apres_table=g)
+
+
+def test_rejeu_lance_sur_une_autre_table(tmp_path):
+    """La table versée (tête de la source) n'est pas celle du commit lancé du rejeu."""
+    def f(w):
+        p = "prereg/R1-table-tokenisation-v4.json"
+        t = json.loads(w.fichiers[p])
+        t["regle_v4"] = "jouet, réécrite après le rejeu"
+        w.ecrire(p, (json.dumps(t, sort_keys=True, ensure_ascii=False, indent=1) + "\n").encode())
+        w.commit("table réécrite")
+    sortie = arret(tmp_path, "commit-rejeu", source_finale=f)
+    assert "à l'octet" in sortie
