@@ -26,6 +26,8 @@ ENTETE = ("| id | accordé le | type | périmètre | plafond | échéance | acco
           "|---|---|---|---|---|---|---|---|\n")
 LIGNE_06 = ("| GO-2026-11-04-06 | 2026-11-04 | calcul | troisième course d'A1-v3, hôte durable | 400 USD | 2026-11-18 | "
             "Lazar | mot de Lazar |\n")
+LIGNE_09 = ("| GO-2026-11-04-09 | 2026-11-04 | calcul | machine de l'hôte durable d'A1-v3 | 35 USD | 2026-11-18 | "
+            "Lazar | mot de Lazar |\n")
 OFFRE = {"id": 11, "num_gpus": 0, "dph_total": 0.12, "cpu_cores_effective": 8, "cpu_ram": 16000, "disk_space": 50,
          "reliability": 0.995}
 
@@ -41,6 +43,21 @@ def sha(o: bytes) -> str:
 
 
 # --- côté session ---------------------------------------------------------------------------------------------------------
+
+
+def test_go_de_la_machine_cas_sain_artefacts_et_registre_reel(tmp_path):
+    reg = tmp_path / "go.md"
+    reg.write_text("# R\n\n" + ENTETE + LIGNE_06 + LIGNE_09)
+    assert s.verifier_go_sonde(reg, GARDE, "GO-2026-11-04-09", JOUR)["plafond_usd"] == 35
+    assert s.verifier_go_sonde(RACINE / "registres" / "go.md", GARDE, "GO-2026-11-04-09", JOUR)["echeance"] == "2026-11-18"
+    for go, lignes, jour, motif in (("GO-2026-11-04-06", LIGNE_06 + LIGNE_09, JOUR, "aucun autre GO"),
+                                    ("GO-2026-11-04-09", LIGNE_06, JOUR, "absent"),
+                                    ("GO-2026-11-04-09", LIGNE_09.replace("35 USD", "36 USD"), JOUR, "exactement 35"),
+                                    ("GO-2026-11-04-09", LIGNE_09, dt.date(2026, 11, 19), "hors de sa période"),
+                                    ("GO-2026-11-04-09", LIGNE_09.replace("| calcul |", "| décision |"), JOUR, "calcul")):
+        reg.write_text("# R\n\n" + ENTETE + lignes)
+        with pytest.raises(h.Refus, match=motif):
+            s.verifier_go_sonde(reg, GARDE, go, JOUR)
 
 
 def test_plafond_de_depense_et_de_duree():
@@ -86,10 +103,10 @@ def test_creation_par_l_outil_refuse_une_cle_de_modele(tmp_path):
 
 def args_louer(tmp_path, **kw):
     reg = tmp_path / "go.md"
-    reg.write_text("# R\n\n" + ENTETE + kw.pop("ligne", LIGNE_06))
+    reg.write_text("# R\n\n" + ENTETE + LIGNE_06 + kw.pop("ligne", LIGNE_09))
     offres = tmp_path / "offres.json"
     offres.write_text(json.dumps([OFFRE, dict(OFFRE, id=12, dph_total=0.09)]))
-    a = dict(go="GO-2026-11-04-06", registre_main=str(reg), garde_main=str(GARDE), offres=str(offres), offre="12",
+    a = dict(go="GO-2026-11-04-09", registre_main=str(reg), garde_main=str(GARDE), offres=str(offres), offre="12",
              commit_prive="a" * 40, journal_local=str(tmp_path / "journal-sonde.log"), duree_min="20",
              verifier_seulement=False)
     a.update(kw)
@@ -104,8 +121,8 @@ def test_louer_sonde_cas_sain_et_artefacts(tmp_path):
     j = (tmp_path / "journal-sonde.log").read_text()
     assert "la moins chère des conformes" in j and JETON not in j
     vast2 = h.ClientVastJouet(tmp_path / "vast2.json")
-    for kw, e in (({"offre": "11"}, env), ({"duree_min": "45"}, env), ({"go": "GO-2026-11-03-01"}, env),
-                  ({"ligne": LIGNE_06.replace("400", "35")}, env), ({}, {})):
+    for kw, e in (({"offre": "11"}, env), ({"duree_min": "45"}, env), ({"go": "GO-2026-11-04-06"}, env),
+                  ({"ligne": LIGNE_09.replace("35 USD", "400 USD")}, env), ({"ligne": ""}, env), ({}, {})):
         assert s.louer_sonde(args_louer(tmp_path, **kw), vast2, JOUR, e) == 2
     assert s.louer_sonde(args_louer(tmp_path, verifier_seulement=True), vast2, JOUR, env) == 0
     assert vast2.instances() == []
@@ -122,7 +139,7 @@ def monde(tmp_path):
         w = tmp_path / "w"
         run("git", "init", "-q", "-b", "main", str(w))
         (w / "registres").mkdir()
-        (w / "registres/go.md").write_text("# R\n\n" + ENTETE + LIGNE_06)
+        (w / "registres/go.md").write_text("# R\n\n" + ENTETE + LIGNE_06 + LIGNE_09)
         (w / ".claude/hooks").mkdir(parents=True)
         (w / ".claude/hooks/garde_calcul.py").write_bytes(GARDE.read_bytes())
         run("git", "add", "-A", cwd=w)
@@ -134,7 +151,7 @@ def monde(tmp_path):
                        plafond_machine_usd=s.PLAFOND_SONDE_USD, essais_poussee=2, attente_poussee_s=0, jouet=True,
                        vast_jouet=tmp_path / "vast.json", aujourd_hui=JOUR)
         h.ClientVastJouet(r.vast_jouet)._ecrire({"instances": [{"id": 90000001, "etat": "running"}], "gestes": []})
-        env = {"GO_ID": "GO-2026-11-04-06", "PRIX_H_USD": "0.12", "DUREE_MAX_S": str(duree_max_s), "GH_TOKEN": JETON,
+        env = {"GO_ID": "GO-2026-11-04-09", "PRIX_H_USD": "0.12", "DUREE_MAX_S": str(duree_max_s), "GH_TOKEN": JETON,
                "CONTAINER_ID": "90000001", "CONTAINER_API_KEY": CLE_VAST, "COMMIT_PRIVE": "a" * 40}
         return r, env, nu, course_s
     return fabriquer
@@ -185,7 +202,7 @@ def test_sonde_course_finie_avant_le_plafond(monde):
 @pytest.mark.parametrize("modif, motif", [
     ({"CLE_ARGON": "cle-interdite"}, "clé de modèle dans l'environnement"),
     ({"GEMINI_API_KEY_2": "cle-interdite"}, "clé de modèle dans l'environnement"),
-    ({"GO_ID": "GO-2026-11-03-01"}, "aucun autre GO"),
+    ({"GO_ID": "GO-2026-11-04-06"}, "aucun autre GO"),
     ({"PRIX_H_USD": "0.5"}, "prix horaire"),
     ({"GH_TOKEN": ""}, "GH_TOKEN"),
 ])
@@ -230,10 +247,10 @@ def test_sonde_fuite_bloque_le_versement(monde):
 
 @pytest.mark.parametrize("env_modif, motif", [
     ({"GH_TOKEN": None}, "GH_TOKEN absente"), ({"CLE_ARGON": "x"}, "clé de modèle CLE_ARGON"),
-    ({"GO_ID": "GO-2026-11-03-01"}, "au lieu de GO-2026-11-04-06"),
+    ({"GO_ID": "GO-2026-11-04-06"}, "au lieu de GO-2026-11-04-09"),
 ])
 def test_amorce_sonde_refuse(tmp_path, env_modif, motif):
-    env = {"PATH": os.environ["PATH"], "COMMIT_PRIVE": "a" * 40, "GO_ID": "GO-2026-11-04-06", "PRIX_H_USD": "0.1",
+    env = {"PATH": os.environ["PATH"], "COMMIT_PRIVE": "a" * 40, "GO_ID": "GO-2026-11-04-09", "PRIX_H_USD": "0.1",
            "DUREE_MAX_S": "1200", "GH_TOKEN": JETON, "RACINE_AMORCE": str(tmp_path), "SAUTER_INSTALLATION": "1"}
     for k, v in env_modif.items():
         if v is None:

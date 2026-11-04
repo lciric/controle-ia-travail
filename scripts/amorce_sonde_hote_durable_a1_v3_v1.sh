@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Amorce de la sonde de l'hôte durable d'A1-v3 (GO-2026-11-04-06), v1 : course factice, sans clé d'Argon ni relais. Lancée
+# Amorce de la sonde de l'hôte durable d'A1-v3 (GO-2026-11-04-09, GO de la machine), v1 : course factice, sans clé d'Argon ni relais. Lancée
 # par le script de démarrage écrit par `src/controle_ia/sonde_hote_durable_a1_v3.py louer`, qui a cloné le dépôt privé au commit
 # COMMIT_PRIVE dans /root/amorce-depot. Mêmes installations que l'amorce de la course (git, numpy au numéro exact,
 # /usr/bin/python3), chronométrées, puis exec de la partie « hote » de la sonde. Une reprise du conteneur ne relance rien.
@@ -16,7 +16,7 @@ for v in $(compgen -e); do
         [ -n "${!v:-}" ] && { echo "AMORCE SONDE : variable de clé de modèle $v présente : rien ne part"; exit 2; } ;;
     esac
 done
-[ "$GO_ID" = "GO-2026-11-04-06" ] || { echo "AMORCE SONDE : GO $GO_ID au lieu de GO-2026-11-04-06"; exit 2; }
+[ "$GO_ID" = "GO-2026-11-04-09" ] || { echo "AMORCE SONDE : GO $GO_ID au lieu de GO-2026-11-04-09"; exit 2; }
 M="$RACINE_AMORCE/amorce-depot/src/controle_ia/sonde_hote_durable_a1_v3.py"
 [ -f "$M" ] || { echo "AMORCE SONDE : module absent du commit $COMMIT_PRIVE"; exit 2; }
 if [ "${SAUTER_INSTALLATION:-0}" != "1" ] && [ ! -e "$RACINE_AMORCE/sonde-a1-v3-v1/ETAT" ]; then

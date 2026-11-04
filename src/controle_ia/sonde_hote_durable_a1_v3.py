@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sonde de l'hôte durable d'A1-v3 (GO-2026-11-04-06), v1 : une course factice sur une vraie machine Vast sans carte.
+"""Sonde de l'hôte durable d'A1-v3 (GO-2026-11-04-09, GO de la machine), v1 : une course factice sur une vraie machine Vast sans carte.
 
 But : éprouver, avant la troisième course et pour quelques centimes, ce que les essais jouets ne peuvent pas éprouver — la
 recherche et la création d'une machine sans carte par l'outil `vastai`, l'image (`python:3.13-bookworm` : git, Python,
@@ -43,6 +43,8 @@ except ImportError:
     _spec.loader.exec_module(h)
 
 VERSION = "sonde-hote-durable-a1-v3-v1"
+GO_SONDE = "GO-2026-11-04-09"      # GO de la machine (mot de Lazar, 4 novembre 08:41 UTC) ; GO-2026-11-04-06 : Argon seul
+MONTANT_GO_SONDE_USD = 35.0
 BRANCHE_SONDE = "donnees/sonde-hote-durable-a1-v3-v1"
 BRANCHE_SONDE_INTERROMPUE = "donnees/sonde-hote-durable-a1-v3-interrompue-v1"
 DUREE_DEFAUT_MIN, DUREE_MAX_MIN = 20, 30
@@ -65,6 +67,30 @@ while time.time() < fin:
 with open(os.path.join(d, "resultat-factice.json"), "w") as f:
     json.dump({"fin": "normale"}, f)
 '''
+
+
+def verifier_go_sonde(chemin_registre: Path, chemin_garde: Path, go_id: str, aujourd_hui: dt.date) -> dict:
+    """GO de la machine : la garde de `main` telle quelle (type, Lazar, validité, révocation, extensions), puis montant
+    exactement 35 USD sur la ligne et sur chaque extension ; tout autre GO (GO-2026-11-04-06 compris) est refusé."""
+    if go_id != GO_SONDE:
+        raise h.Refus(f"GO {go_id} : la sonde ne part que sous {GO_SONDE} (GO de la machine ; aucun autre GO)")
+    garde = h.charger_garde(chemin_garde, chemin_registre)
+    tampon = h.io.StringIO()
+    try:
+        with h.redirect_stderr(tampon):
+            garde.decider(f"GO_ID={go_id} vastai create instance 0", aujourd_hui)
+    except SystemExit as e:
+        if e.code not in (0, None):
+            raise h.Refus(f"garde de main : {tampon.getvalue().strip()}") from None
+    lignes = h.lignes_du_go(chemin_registre, go_id)
+    if not lignes:
+        raise h.Refus(f"{go_id} absent du registre")
+    for cellules in lignes:
+        m = h.MONTANT.match(cellules[4])
+        if not m or abs(float(m.group(1).replace(",", ".")) - MONTANT_GO_SONDE_USD) > 1e-9:
+            raise h.Refus(f"{go_id} : plafond « {cellules[4]} » au lieu de exactement {MONTANT_GO_SONDE_USD:g} USD")
+    return {"go": go_id, "lignes": len(lignes), "plafond_usd": MONTANT_GO_SONDE_USD,
+            "registre_sha256": h.sha256_fichier(chemin_registre), "echeance": lignes[0][5]}
 
 
 def cles_de_modele(environ: dict) -> list[str]:
@@ -105,7 +131,7 @@ def script_de_demarrage_sonde(commit_prive: str) -> str:
 def corps_sonde(commit_prive: str, offre: dict, duree_min: float, gh_token: str) -> dict:
     if not gh_token:
         raise h.Refus("GH_TOKEN absent : la sonde ne pourrait pas verser")
-    env = {"COMMIT_PRIVE": commit_prive, "GO_ID": h.GO_ATTENDU, "PRIX_H_USD": f"{offre['dph_total']:.6f}",
+    env = {"COMMIT_PRIVE": commit_prive, "GO_ID": GO_SONDE, "PRIX_H_USD": f"{offre['dph_total']:.6f}",
            "DUREE_MAX_S": str(int(duree_min * 60)), "DEPOT_URL": h.DEPOT_PRIVE, "GH_TOKEN": gh_token}
     interdites = cles_de_modele(env)
     if interdites:  # garde redondante : le corps ne doit porter aucune clé de modèle
@@ -144,7 +170,7 @@ def louer_sonde(a, client=None, aujourd_hui=None, environ=None) -> int:
     j = h.Journal(Path(a.journal_local), {k: environ.get(k, "") for k in ("GH_TOKEN", "VAST_API_KEY", "CLE_ARGON")})
     try:
         aujourd_hui = aujourd_hui or dt.datetime.now(dt.timezone.utc).date()
-        g = h.verifier_go(Path(a.registre_main), Path(a.garde_main), a.go, h.PLAFOND_COURSE_USD, aujourd_hui)
+        g = verifier_go_sonde(Path(a.registre_main), Path(a.garde_main), a.go, aujourd_hui)
         j.ecrire(f"sonde : GO {g['go']} accepté par la garde de main (registre {g['registre_sha256']})")
         offres = json.loads(Path(a.offres).read_text())
         offres = offres.get("offers", offres) if isinstance(offres, dict) else offres
@@ -216,8 +242,7 @@ class MachineSonde(h.Machine):
         reg, garde = self.t / "registre-go-main.md", self.t / "garde_calcul_main.py"
         reg.write_bytes(h.lancer(["git", "show", f"{tete}:registres/go.md"], cwd=r.clone_prive).stdout)
         garde.write_bytes(h.lancer(["git", "show", f"{tete}:.claude/hooks/garde_calcul.py"], cwd=r.clone_prive).stdout)
-        g = h.verifier_go(reg, garde, e["GO_ID"], h.PLAFOND_COURSE_USD,
-                          r.aujourd_hui or dt.datetime.now(dt.timezone.utc).date())
+        g = verifier_go_sonde(reg, garde, e["GO_ID"], r.aujourd_hui or dt.datetime.now(dt.timezone.utc).date())
         self.j.ecrire(f"GO accepté par la garde de main {tete} : {g['go']}, {g['plafond_usd']:g} USD")
         self.relever_l_hote()
         self.lire_cle_d_instance()
