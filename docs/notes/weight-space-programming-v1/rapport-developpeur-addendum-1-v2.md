@@ -9,8 +9,8 @@ existant modifié (ni sur `main`, ni à `55399606`), rien sous `donnees/` ni `/h
 aucun modèle téléchargé ni appelé, aucune dépense, aucune clé lue.
 
 **Verdict.** Brouillon 2 écrit par script (29 couples dans l'ordre, puis D-1 à D-8, trois marqueurs « À REMPLIR »).
-Code v2 sur la branche locale `prep/sparks-exp7-nul-v2`, commit `ee91412dc6cfb547d05bc4d3ec41a4c105cb9205` (deux commits
-sur `55399606`), 48 fichiers ajoutés, aucun modifié. Essais et banc : section 3. Les scripts d'instance n'ont **pas** pu
+Code v2 sur la branche locale `prep/sparks-exp7-nul-v2`, commit `50fb15cd301d0cce63058261f5916ae3a601a638` (trois commits
+sur `55399606` : `97c5d8ed`, `ee91412d`, `50fb15cd`), 48 fichiers ajoutés, aucun modifié. Essais et banc : section 3. Les scripts d'instance n'ont **pas** pu
 être joués de bout en bout en `MODE=jouet` (section 4) : réserve.
 
 ## 1. Fichiers et empreintes
@@ -22,24 +22,24 @@ Sur `main` (arbre de la session, fichiers neufs, sans compagnon, à empreinter p
 | `prereg/SPARKS-EXP7-NUL-addendum-1-brouillon2.md` | `7e98397e53784637c03c1f1f7450e582c25939a46d15ca53380ebf8b70958170` |
 | `docs/notes/weight-space-programming-v1/appliquer-couples-addendum-1-brouillon2-v1.py` | `a84c857698cd021e4aa80bf2b241abc947d095df9a48e1ee030ac3c2339e61a3` |
 | `docs/notes/weight-space-programming-v1/sortie-appliquer-couples-addendum-1-brouillon2-v1.txt` | `7775cbca0ca3a9211e3da60514b22736ec44d0863878c495c6fe75b8936957bf` |
-| `docs/notes/weight-space-programming-v1/essais-et-banc-sparks-v2-ee91412d/` (sorties brutes des essais et du banc, copiées du bloc-notes) | empreintes en section 3 |
+| `docs/notes/weight-space-programming-v1/essais-et-banc-sparks-v2/` (sorties brutes des essais et des bancs, copiées du bloc-notes) | empreintes en section 3 |
 | ce rapport | — |
 
 Le script vérifie les empreintes d'entrée (brouillon 1 `80e3dc4b…`, couples `16ff3d94…`), exige chaque « ancien » une
 seule fois au moment de son application, refuse d'écraser la sortie, exige trois marqueurs. Contrôle croisé : le texte
 après les 29 couples a l'empreinte `141f1684e9ad0b8c…`, **égale au texte d'essai du contre-lecteur** (`141f1684…`).
 
-Sur la branche `prep/sparks-exp7-nul-v2` au commit `ee91412d` (chaque fichier avec son compagnon `.sha256`, comme à
+Sur la branche `prep/sparks-exp7-nul-v2` au commit `50fb15cd` (chaque fichier avec son compagnon `.sha256`, comme à
 `55399606` ; la liste fermée `liste-fermee-v1.txt` nomme les 48 chemins, compagnons compris ;
-`garde_code liste . ee91412d…` → « LISTE FERMÉE CONFORME : 48 fichiers ») :
+`garde_code liste . 50fb15cd…` → « LISTE FERMÉE CONFORME : 48 fichiers ») :
 
 | Fichier | sha256 |
 |---|---|
 | `docs/notes/sparks-exp7-nul-v1/consigne-lecteur-principal-v2.txt` | `c74c13276776b88610b6744232971d87eeefaf685e109e516a09fd5cafedfe48` |
-| `docs/notes/sparks-exp7-nul-v1/procedure-lecteurs-v2.md` | ÉCRIT EN SECTION 3 BIS |
+| `docs/notes/sparks-exp7-nul-v1/procedure-lecteurs-v2.md` | `fce690bf94fdbdd017c2ebb7834bcae5747191bfe0fc76bcc1b7da2237072053` |
 | `scripts/amorce_instance_sparks_exp7_nul_v2.sh` | `d85ef620a63d9c2ef6d932f0864cbb7750d135194cfec95823e1a931da40fb6d` |
-| `scripts/banc_mutations_sparks_exp7_nul_v2.py` | ÉCRIT EN SECTION 3 BIS |
-| `scripts/lancer_sparks_exp7_nul_v2.sh` | ÉCRIT EN SECTION 3 BIS |
+| `scripts/banc_mutations_sparks_exp7_nul_v2.py` | `0a5c56415d0dcd5b94d60f51af5f723c3ce3b18d18144e75a097a8fbfdcae6dd` |
+| `scripts/lancer_sparks_exp7_nul_v2.sh` | `1050857a025dea2f653b09e5dfe4a120214cf2b272519bc5fdf28f9f747cb490` |
 | `scripts/sparks_exp7_nul_instance_v2.sh` | `efc1cf44f0e2041d8056a3921f831b6cd262741fd2c489941cfd712c7a4556aa` |
 | `src/controle_ia/sparks_exp7_nul_v2/__init__.py` | `c5dbe6f12d17d23dee7f347090c15aeb9e139797ae0dadc5d05267ad0f3a5864` |
 | `src/controle_ia/sparks_exp7_nul_v2/analyse.py` | `b5531bb8de7558a17142c66d8dab08e97219f88dc0bac7688c9718208c4fb415` |
@@ -49,7 +49,7 @@ Sur la branche `prep/sparks-exp7-nul-v2` au commit `ee91412d` (chaque fichier av
 | `src/controle_ia/sparks_exp7_nul_v2/causal.py` | `4ff146474ec001192deff1acf23131ccd0dce9b26d13bbd25db04f0367641324` |
 | `src/controle_ia/sparks_exp7_nul_v2/comportement.py` | `82c04bf24fee8b7b7157dcb74796233152a5b35bfe85ee2fd71296249188dc66` |
 | `src/controle_ia/sparks_exp7_nul_v2/consignes.py` | `e9ebdb74e7adbd575232a49a342fbf87a30a795173a205f4f6aaeb5eb799307e` |
-| `src/controle_ia/sparks_exp7_nul_v2/depense.py` | ÉCRIT EN SECTION 3 BIS |
+| `src/controle_ia/sparks_exp7_nul_v2/depense.py` | `2d192caa4fcff99b20ae4de44ec3f12f8bece73a850c8380c3414d620ad4daf1` |
 | `src/controle_ia/sparks_exp7_nul_v2/garde_code.py` | `daad4a09d8af83741dc8e7aa8d7ec8b3665e4531706a7d24a8386d70179cf98b` |
 | `src/controle_ia/sparks_exp7_nul_v2/go.py` | `66d9071c29aa7ff55b96d51abd9e4eba67679f72e9442c8ab4c2416a8f5434ad` |
 | `src/controle_ia/sparks_exp7_nul_v2/harnais.py` | `8eeefc874126a59e70dfa9e2b107e181bf65a3857cecd8681edeb2353d0f45b9` |
@@ -58,7 +58,7 @@ Sur la branche `prep/sparks-exp7-nul-v2` au commit `ee91412d` (chaque fichier av
 | `src/controle_ia/sparks_exp7_nul_v2/mise_a_disposition.py` | `c9b7d79be53242f0221def37a1aa0989c05603fcfaabf29d2decc367de25440a` |
 | `src/controle_ia/sparks_exp7_nul_v2/outil_attention.py` | `2a68db7a216ada82f448cbcd2f0f8d717ae55edb297ace75f20b7b61994249b9` |
 | `src/controle_ia/sparks_exp7_nul_v2/plan.py` | `bfa234b014cc63de37b7cc85fa5da3c0b9e56acc1306800f090e3ba901a5c061` |
-| `tests/test_sparks_exp7_nul_v2.py` | ÉCRIT EN SECTION 3 BIS |
+| `tests/test_sparks_exp7_nul_v2.py` | `95a7bc7ff0cf1e1dc4db9e3d1ee8b5fa3041dd871d149070672d1361adb0720a` |
 
 Usage du dépôt suivi (R12) : paquet neuf `sparks_exp7_nul_v2`, versions neuves des seuls modules changés ; modules
 inchangés (recette, jouet, données des auteurs, statistiques) importés de la v1 ; anciens scripts et essais gardés et
@@ -120,9 +120,26 @@ toujours joués. Arbre de travail clairsemé `/home/claude/wt/sparks-exp7-nul-v2
   dépense, commande littérale ; destruction `-y`) ; banc v2.
 - Consigne principale v2 (deux phrases, aucune autre) ; procédure v2.
 
-## 3. Essais et banc (rejoués au commit `ee91412d`)
+## 3. Essais et banc
 
-COMPTES EN SECTION 3 BIS.
+Rejoués au commit final `50fb15cd` (sorties brutes dans `essais-et-banc-sparks-v2/`, même dossier que ce rapport) :
+
+| Mesure | Compte | Sortie (sha256) |
+|---|---|---|
+| Essais v1 (`test_sparks_exp7_nul_v1.py`, inchangés) et v2 (`test_sparks_exp7_nul_v2.py`, 45 fonctions, 69 cas) | **159 passés sur 159** (90 + 69), 0 sauté, 0 échec | `essais-sparks-v2-50fb15cd.txt` `5682dfb6…` |
+| Banc v2 : 22 mutations du banc v1 (code et essais v1) | **22/22 tuées** | `banc-sparks-v2-50fb15cd.txt` `acac936a…`, `.json` `22c10add…` |
+| Banc v2 : mutations neuves (gardes et règles de l'addendum, dont les deux de la destruction `-y`) | **50/50 tuées**, témoins v1 et v2 verts, 0 inapplicable | idem |
+| Essai d'égalité des lots sur le jouet (`instance egalite-lots`) | « EGALITE LOTS OK », code 0 | `egalite-lots-jouet.txt` `5aab652a…` |
+| Fabrication jouet par module (`instance jouet`) | arrêt gardé, code 3 : « 0/28 modèles dans les bornes (< 90 %) » (modèles jouets de deux époques, même issue qu'en v1 ; la garde d'arrêt joue, aucun repli) | `instance-jouet.txt` `9d3324f2…`, `instance-jouet-err-sans-progres.txt` `52fbe690…` |
+
+Historique, pour mémoire (R4 : tout run compté) : au commit `ee91412d`, banc 22/22 et **49/50** — une survivante,
+« prélude : encodage non comparé » (l'essai de l'épreuve du prélude n'avait pas d'artefact d'encodage) ; corrigée au
+commit `50fb15cd` par un artefact (prélude dont les fusions sont ignorées : refus « encodage ») ; sorties
+`banc-sparks-v2-ee91412d.txt` `b5fc4f9a…` et `.json` `c4d5be1b…`, essais `essais-sparks-v2-ee91412d.txt` `b34aa532…`
+(159/159). Deux runs incomplets, non comptés comme résultats et gardés au bloc-notes : un passage des essais tué par
+le noyau (mémoire, pendant le clone de la section 4) et un banc aux témoins rouges lancé au même moment, arrêté par
+son identifiant de processus puis relancé en entier ; un banc interrompu par le redémarrage du conteneur (39 tuées sur
+41 lignes, aucune survivante), relancé en entier.
 
 ## 4. Scripts d'instance en `MODE=jouet` : non joués de bout en bout (réserve)
 
@@ -131,7 +148,7 @@ v2 font donc un clone partiel et clairsemé. Le dépôt local est superficiel (`
 s'est mis à recopier tous les objets (arrêté par son identifiant de processus, nettoyé) ; un dépôt nu à alternats
 (136 Ko) a été fait, mais le clone partiel en transport local n'a pas fini en 600 s (arrêté). Joué à la place :
 `bash -n` des trois scripts ; les gardes appelées par les scripts, chacune par ses essais (GO, code, dépense) ;
-`instance egalite-lots` et `instance jouet` par module (résultats en section 3 bis). **À faire avant le scellement**, sur
+`instance egalite-lots` et `instance jouet` par module (section 3). **À faire avant le scellement**, sur
 une machine où le clone tient : le lancement jouet complet (amorce → instance) contre un dépôt nu local.
 
 ## 5. Lectures retenues et écarts à signaler (aucune n'est dans le brouillon 2 ; à reporter au brouillon 3)
@@ -174,5 +191,5 @@ une machine où le clone tient : le lancement jouet complet (amorce → instance
 ## 7. Ce qui reste à la mère avant le scellement
 
 Contre-lecture du delta de code par un sous-agent neuf ; lancement jouet complet des scripts ; brouillon 3 : commit
-final, liste fermée et empreintes, comptes (section 3 bis), lignes de la leçon `-y` et de la sortie brute de `vastai` ;
+final, liste fermée et empreintes, comptes (section 3), lignes de la leçon `-y` et de la sortie brute de `vastai` ;
 scellement ; empreintes compagnons des fichiers de `main` listés en section 1.
