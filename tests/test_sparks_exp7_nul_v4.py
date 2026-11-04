@@ -374,6 +374,7 @@ def test_lanceur_variables_du_mandataire_recues_par_le_sous_processus(tmp_path):
 @pytest.mark.parametrize("sortie,code,attendu,marqueur", [
     ("Started. {'success': True, 'new_contract': 59079406}", "0", "CRÉÉE : instance 59079406", False),
     ("Started. {'success': False, 'error': 'x'}", "0", "CRÉATION INCERTAINE", True),
+    ("Started. {'success': False, 'new_contract': 59079406}", "0", "CRÉATION INCERTAINE", True),
     ("", "124", "CRÉATION INCERTAINE (code 124)", True),
     ("requests.exceptions.SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed", "1", "NON PARVENUE", False),
 ])
