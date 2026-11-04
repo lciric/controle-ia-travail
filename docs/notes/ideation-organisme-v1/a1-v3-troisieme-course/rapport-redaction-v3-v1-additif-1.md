@@ -93,7 +93,9 @@ la machine, clé d'instance en lecture (au journal versé), puis en destruction 
 
 **Vérification.** Chaque « ancien » est présent une seule fois au moment de son application : (a) seule, (b) seule, puis (a) et
 (b). Chaque texte résultant ne porte que les deux marqueurs du brouillon et le bloc du plan est intact. Le code et les essais
-résultants sont joués dans des copies du bloc-notes : RESULTATS_VARIANTES.
+résultants sont joués dans des copies du bloc-notes : (a) 50 passés, (b) 49 passés, (a) puis (b) 50 passés.
+Les essais de la variante (a) emploient un GO factice, GO-2026-11-04-90, parce que l'essai de révocation existant se sert
+déjà de l'identifiant -09 ; le texte et la commande, eux, nomment le vrai GO-2026-11-04-09.
 
 ## 5. Commande exacte de la sonde, pour la fille
 
@@ -131,4 +133,19 @@ tout lancement. La sonde n'est pas une sortie de course : on peut la lire.
 
 ## 6. Empreintes à la remise
 
-EMPREINTES_REMISE
+Empreintes relevées le 4 novembre 2026 à 10:23 UTC. Le bloc-notes est
+`/tmp/claude-0/-home-user/4a4722d4-e39d-57bd-bde3-e6a99e2eecdf/scratchpad/v3b1/`.
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/sonde_hote_durable_a1_v3.py` | `f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d` |
+| `scripts/amorce_sonde_hote_durable_a1_v3_v1.sh` | `3fb62bd19e1e8f53c55a6721beef08bbdf8bfca83389335286c9b3cc7d8b6d37` |
+| `tests/test_sonde_hote_durable_a1_v3.py` | `a5d41158c2ae4ae901c0007282f0defa2eb18da7e47eaaf2fb79c9759e911866` |
+| `…/a1-v3-troisieme-course/couples-variantes-cout-cle-v1.json` | `1a74f6c285d817864a49e32ce297b06639c0c47e9c367d365154c3931936e4ec` |
+| bloc-notes `couples_variantes.py` | `573974b1270d4670574ee7a461ee91ae5d62e4edb709dbddacd5227bc24ee3f8` |
+| bloc-notes `sorties/essais-sonde.txt` (19 passés) | `31bd86e912e2691a656dcd8077e3208963f8b38b32b9d9a118ba62418e5e0ad4` |
+| bloc-notes `sorties/essais-variantes-final.txt` (50, 49, 50 passés) | `34fb3c56d7fdc671b6ee1f40dc0f9941f1e215fcc160a767b1dca6f5a427dd21` |
+| bloc-notes `sorties/couples-variantes.txt` (vérification des couples) | `5aab27d052062dd8a883a90d129984176b72138bf270d36718106aa4c0d3412d` |
+
+Ce fichier ne porte pas sa propre empreinte : elle est donnée avec la remise. Les instantanés que tu as committés pendant le
+travail sont intermédiaires ; les fichiers rendus sont ceux qui portent les empreintes ci-dessus.
