@@ -1,6 +1,6 @@
 # Additif 5 au rapport de rédaction v3 — sonde v5 : mémoire non renseignée des offres sans carte
 
-Même rédacteur-développeur, 4 novembre 2026, à partir de 22:32 UTC (`date -u`).
+Même rédacteur-développeur, 4 novembre 2026, de 22:32 à 22:45 UTC (`date -u`).
 
 **Fait constaté par la fille** (22:31 UTC, lecture seule, relayé par le directeur) : sur Vast, les offres **sans carte** rendent
 `cpu_ram` = 0, champ non renseigné (dix offres sur dix lues, 64 offres pour `num_gpus=0 rentable=true`). Il en découle deux blocages :
@@ -57,11 +57,25 @@ Ce sont des copies de la v4, renommées (étiquette `sonde-a1-v3-v5`, branches `
 ## 3. Essais (`timeout 900 nice -n 10`, aucun réseau)
 
 - `tests/test_sonde_hote_durable_a1_v3_v5.py` : **86 passés**.
-- Ensemble (v5, v4, v3, v2, v1, lanceur durable, garde de calcul) : RESULTAT_ENSEMBLE.
+- Ensemble (v5, v4, v3, v2, v1, lanceur durable, garde de calcul) : **381 passés**, aucun sauté, en 638 s
+  (86 + 72 + 66 + 52 + 19 + 49 + 37). Sortie : `…/sorties/essais-sonde-v5.txt`
+  (`900c5e4dead9ebe918ba55cd431f998d70feffd3c2787ebfa27e40c8455969c0`).
 
 ## 4. Empreintes à la remise
 
-EMPREINTES_REMISE
+Relevées à 22:45 UTC.
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/sonde_hote_durable_a1_v3_v5.py` (756 lignes) | `813d28a7f225bdc5a1f4ecbdff7bab9dc7298068e934c681b2055daea4b4db7e` |
+| `scripts/amorce_sonde_hote_durable_a1_v3_v5.sh` | `cf43373c322640cf8cddaec2b5d26e8526f1375c4111f3bbd2b45918d0d984cb` |
+| `tests/test_sonde_hote_durable_a1_v3_v5.py` (86 essais) | `b22c41c151ba17598279b60b92d3babc30fb28e5675e61c5c8afb9808b60abe4` |
+| bloc-notes `sorties/essais-sonde-v5.txt` | `900c5e4dead9ebe918ba55cd431f998d70feffd3c2787ebfa27e40c8455969c0` |
+| bloc-notes `sorties/diff-sonde-v4-vers-v5-brut.txt` | `948af20d42716294774c2c421998e9f0f4306bfd5af494eb7907af4f63ccdb2a` |
+| bloc-notes `sorties/diff-sonde-v4-vers-v5-hors-renommage.txt` | `b45844d119d467daf948c91441b3d253bc7bba267afcde93ece262e11dcf580d` |
+
+Ce fichier ne porte pas sa propre empreinte : elle est donnée avec la remise. Les instantanés versés pendant le travail sont
+intermédiaires ; seules ces empreintes valent pour le rendu.
 
 ## 5. Diff exact par rapport à la v4
 
