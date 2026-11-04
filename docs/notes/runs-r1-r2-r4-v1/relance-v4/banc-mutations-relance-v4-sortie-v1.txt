@@ -1,0 +1,96 @@
+# Banc de mutations de la relance v4 de R1 — sorties successives (scripts/banc_mutations_r1_v4_v1.py), rapportées toutes (R4)
+
+## Passe 1 (banc sans cas sain, copie sans donnees/ : 6 « tuées » par une erreur d'installation de la copie, non par un échec ; passe retirée, banc corrigé : cas sain obligatoire, tuée = au moins un essai en échec)
+M01 témoin : captures ignorées : tuée (1 failed, 1 passed in 6.38s ; 8 s)
+M02 témoin : forme ignorée : tuée (1 failed, 5 passed in 6.50s ; 8 s)
+M03 témoin : accord à 0,99 au lieu de 1 : tuée (6 passed, 1 error in 9.00s ; 11 s)
+M04 voie : non exact → lot fidèle : tuée (1 failed, 4 passed in 6.08s ; 8 s)
+M05 ligne approchée : fin interne gardée : tuée (1 failed, 4 passed in 6.26s ; 8 s)
+M06 cible en échec : remplissage de P3 (une fin chez Llama 3) au lieu d'un jeton ordinaire : tuée (6 passed, 1 error in 5.97s ; 8 s)
+M07 lot : arrêt dès que les cibles sont finies (forme tronquée) : tuée (6 passed, 1 error in 6.58s ; 8 s)
+M08 lot : contrôle du texte décodé retiré : tuée (6 passed, 1 error in 7.44s ; 9 s)
+M09 table v4 : revérification par l'empreinte retirée : tuée (6 passed, 1 error in 6.07s ; 8 s)
+M10 cibles : entrées de la table v3 comprises : tuée (6 passed, 1 error in 6.10s ; 8 s)
+M11 échantillon d'équivalence non recalculé : tuée (6 passed, 1 error in 6.32s ; 8 s)
+M12 rejeu v4 : non retrouvés comptés dans la règle B : tuée (1 failed in 2.91s ; 4 s)
+M13 rejeu v4 : toute empreinte de table admise : tuée (1 failed, 1 passed in 2.49s ; 4 s)
+M14 rejeu v4 : non conformes hors de la règle A : tuée (1 failed in 2.73s ; 4 s)
+M15 rejeu v4 : empreinte citée ignorée : tuée (!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!! ; 2 s)
+Traceback (most recent call last):
+  File "/home/claude/wt/r1-v4/scripts/banc_mutations_r1_v4_v1.py", line 97, in <module>
+    sys.exit(main(*sys.argv[1:4]))
+             ~~~~^^^^^^^^^^^^^^^^
+  File "/home/claude/wt/r1-v4/scripts/banc_mutations_r1_v4_v1.py", line 91, in main
+    shutil.rmtree(d)
+    ~~~~~~~~~~~~~^^^
+  File "/usr/local/lib/python3.13/shutil.py", line 770, in rmtree
+    _rmtree_safe_fd(stack, onexc)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/shutil.py", line 705, in _rmtree_safe_fd
+    onexc(func, path, err, direntry=orig_entry, dir_fd=parent_fd)
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/shutil.py", line 666, in _rmtree_safe_fd
+    orig_st = os.lstat(name, dir_fd=dirfd)
+FileNotFoundError: [Errno 2] No such file or directory: PosixPath('/tmp/claude-0/-home-user/4a4722d4-e39d-57bd-bde3-e6a99e2eecdf/scratchpad/banc-v1/m15')
+
+## Passe 2 (banc corrigé ; essais d'origine)
+M00 copie non mutée (cas sain) : 12 passed in 183.07s (0:03:03)
+M01 témoin : captures ignorées : tuée (1 failed, 1 passed in 6.31s ; 8 s)
+M02 témoin : forme ignorée : tuée (1 failed, 5 passed in 7.06s ; 9 s)
+M03 témoin : accord à 0,99 au lieu de 1 : SURVIVANTE (9 passed in 100.15s (0:01:40) ; 102 s)
+M04 voie : non exact → lot fidèle : tuée (1 failed, 4 passed in 6.32s ; 8 s)
+M05 ligne approchée : fin interne gardée : tuée (1 failed, 4 passed in 6.43s ; 8 s)
+M06 cible en échec : remplissage de P3 (une fin chez Llama 3) au lieu d'un jeton ordinaire : SURVIVANTE (9 passed in 105.84s (0:01:45) ; 108 s)
+M07 lot : arrêt dès que les cibles sont finies (forme tronquée) : SURVIVANTE (9 passed in 90.04s (0:01:30) ; 92 s)
+M08 lot : contrôle du texte décodé retiré : SURVIVANTE (9 passed in 89.88s (0:01:29) ; 92 s)
+M09 table v4 : revérification par l'empreinte retirée : tuée (1 failed, 6 passed in 40.76s ; 42 s)
+M10 cibles : entrées de la table v3 comprises : SURVIVANTE (9 passed in 89.71s (0:01:29) ; 92 s)
+M11 échantillon d'équivalence non recalculé : SURVIVANTE (10 passed in 89.10s (0:01:29) ; 91 s)
+M12 rejeu v4 : non retrouvés comptés dans la règle B : tuée (1 failed in 2.73s ; 4 s)
+M13 rejeu v4 : toute empreinte de table admise : tuée (1 failed, 1 passed in 2.77s ; 4 s)
+M14 rejeu v4 : non conformes hors de la règle A : tuée (1 failed in 2.80s ; 4 s)
+M15 rejeu v4 : empreinte citée ignorée : tuée (1 failed, 2 passed in 78.06s (0:01:18) ; 80 s)
+bilan : 9 tuées sur 15
+
+## Passe 3 (essais renforcés : accord juste sous 1, cibles plus courtes que le lot, contrôle du texte décodé, cibles hors table v3, échantillon d'équivalence faux)
+M00 copie non mutée (cas sain) : 14 passed in 142.41s (0:02:22)
+M01 témoin : captures ignorées : tuée (1 failed, 1 passed in 5.50s ; 7 s)
+M02 témoin : forme ignorée : tuée (1 failed, 7 passed in 6.25s ; 8 s)
+M03 témoin : accord à 0,99 au lieu de 1 : tuée (1 failed, 7 passed in 6.01s ; 8 s)
+M04 voie : non exact → lot fidèle : tuée (1 failed, 5 passed in 6.05s ; 8 s)
+M05 ligne approchée : fin interne gardée : tuée (1 failed, 5 passed in 6.06s ; 8 s)
+M06 cible en échec : remplissage de P3 (une fin chez Llama 3) au lieu d'un jeton ordinaire : SURVIVANTE (11 passed in 90.30s (0:01:30) ; 93 s)
+M07 lot : arrêt dès que les cibles sont finies (forme tronquée) : SURVIVANTE (11 passed in 90.88s (0:01:30) ; 93 s)
+M08 lot : contrôle du texte décodé retiré : tuée (1 failed, 4 passed in 7.03s ; 9 s)
+M09 table v4 : revérification par l'empreinte retirée : tuée (1 failed, 8 passed in 43.18s ; 45 s)
+M10 cibles : entrées de la table v3 comprises : tuée (1 failed, 6 passed in 6.82s ; 9 s)
+M11 échantillon d'équivalence non recalculé : tuée (1 failed, 8 passed in 29.57s ; 32 s)
+M12 rejeu v4 : non retrouvés comptés dans la règle B : tuée (1 failed in 3.12s ; 4 s)
+M13 rejeu v4 : toute empreinte de table admise : tuée (1 failed, 1 passed in 3.02s ; 4 s)
+M14 rejeu v4 : non conformes hors de la règle A : tuée (1 failed in 3.00s ; 4 s)
+M15 rejeu v4 : empreinte citée ignorée : tuée (1 failed, 2 passed in 72.16s (0:01:12) ; 74 s)
+bilan : 13 tuées sur 15
+
+## Passe 4 (essais renforcés : cibles strictement plus courtes, cible en échec sur une action sans fin)
+M00 copie non mutée (cas sain) : 15 passed in 257.95s (0:04:17)
+M01 témoin : captures ignorées : tuée (1 failed, 1 passed in 11.19s ; 15 s)
+M02 témoin : forme ignorée : tuée (1 failed, 8 passed in 12.83s ; 17 s)
+M03 témoin : accord à 0,99 au lieu de 1 : tuée (1 failed, 8 passed in 12.86s ; 17 s)
+M04 voie : non exact → lot fidèle : tuée (1 failed, 6 passed in 9.89s ; 13 s)
+M05 ligne approchée : fin interne gardée : tuée (1 failed, 6 passed in 8.06s ; 11 s)
+M06 cible en échec : remplissage de P3 (une fin chez Llama 3) au lieu d'un jeton ordinaire : SURVIVANTE (12 passed in 127.09s (0:02:07) ; 130 s)
+M07 lot : arrêt dès que les cibles sont finies (forme tronquée) : tuée (1 failed, 4 passed in 8.30s ; 11 s)
+M08 lot : contrôle du texte décodé retiré : tuée (1 failed, 4 passed in 7.83s ; 10 s)
+M09 table v4 : revérification par l'empreinte retirée : tuée (1 failed, 9 passed in 48.22s ; 50 s)
+M10 cibles : entrées de la table v3 comprises : tuée (1 failed, 7 passed in 7.28s ; 9 s)
+M11 échantillon d'équivalence non recalculé : tuée (1 failed, 9 passed in 35.21s ; 38 s)
+M12 rejeu v4 : non retrouvés comptés dans la règle B : tuée (1 failed in 4.00s ; 6 s)
+M13 rejeu v4 : toute empreinte de table admise : tuée (1 failed, 1 passed in 3.85s ; 5 s)
+M14 rejeu v4 : non conformes hors de la règle A : tuée (1 failed in 3.90s ; 6 s)
+M15 rejeu v4 : empreinte citée ignorée : tuée (1 failed, 2 passed in 91.54s (0:01:31) ; 94 s)
+bilan : 14 tuées sur 15
+
+## Passe 5 (M06 seule, après l'essai « échéance dépassée »)
+M00 copie non mutée (cas sain) : 16 passed in 159.51s (0:02:39)
+M06 cible en échec : remplissage de P3 (une fin chez Llama 3) au lieu d'un jeton ordinaire : tuée (1 failed, 6 passed in 6.97s ; 9 s)
+bilan : 1 tuées sur 1
