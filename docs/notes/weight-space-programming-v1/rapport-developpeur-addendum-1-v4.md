@@ -99,7 +99,23 @@ Sur `prep/sparks-exp7-nul-v4` (chaque fichier avec son compagnon `.sha256`) :
 
 ## 3. Essais et banc
 
-COMPTES_V4
+Sorties brutes dans `essais-et-banc-sparks-v4/` (même dossier que ce rapport). Au commit final `53d4eda6` :
+
+| Mesure | Compte | Sortie (sha256) |
+|---|---|---|
+| Essais v1, v2, v3 (inchangés) et v4 (29 cas) | **226 passés sur 226** (90 + 69 + 38 + 29), 0 sauté, 0 échec | `essais-53d4eda6.txt` `12b815ec…` |
+| Banc v4 : mutations du banc v1 | **22/22 tuées** (code 1 et « failed ») | `banc-53d4eda6.txt` `1f5a97df…`, `.json` `a68d866c…` |
+| Banc v4 : mutations du banc v2 (avec les deux ajoutées en v3) | **52/52 tuées** | idem |
+| Banc v4 : mutations du banc v3 | **40/40 tuées** | idem |
+| Banc v4 : mutations neuves de la v4 | **30/30 tuées** ; quatre témoins verts ; 0 inapplicable | idem |
+
+Tout run est compté (R4). Au premier commit v4 (`96aae619`), les essais donnaient 225/225 ; le banc donnait 22, 52, 40 et
+**29/30** : une mutation survivait, « lanceur : succès sans “success” », parce que l'essai n'avait pas de sortie portant un
+identifiant avec `success` faux. J'ai ajouté ce cas d'essai au commit `53d4eda6`, puis tout rejoué. Sorties de ce premier
+passage : `essais-96aae619.txt` `e766df0f…`, `banc-96aae619.txt` `7d2f539d…`,
+`banc-96aae619.json` `5f96ff43…`. Pendant le développement, avant le premier commit, j'ai fait trois
+passages des seuls essais v4, jusqu'au vert : deux défauts y sont apparus et ont été corrigés, le faux `git` de l'essai
+et le dossier des ordres qui se heurtait dans la même seconde.
 
 ## 4. Réserves
 
