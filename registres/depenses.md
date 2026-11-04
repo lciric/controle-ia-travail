@@ -350,3 +350,5 @@ Cumul au 2026-10-04 11:26 UTC : 0 USD sur 150 (aucune instance créée).
 - 2026-11-03 14:16:45 UTC (heure de la fille) — **fin de la course Ibrahim Q1** (GO-2026-11-03-09), code 0 : **7,976282 USD** (Fable 3,43 ; Opus 2,50 ; Astra 1,83 ; Kimi 0,21).
 - 2026-11-03 14:18:26 UTC — **départ de la course Scheurer** (GO-2026-11-03-10), variante `sans-opus-argon`, contrôles conformes.
 - 2026-11-04 ≈ 01:47 UTC (heure de la fille) — **appel unique à Astra** (GO-2026-11-04-01, plafond 3 USD) : **0,25978 USD** (appel 0,25944 ; contrôle 0,00034), relais 8807 arrêté par PID ; branche `donnees/appel-astra-sparks-v1` `31c0af16`.
+- 2026-11-04 02:03 → 03:46 UTC (heure de la fille) — **seconde course d'A1-v3, interrompue par l'infrastructure** (GO-2026-11-03-01) : **48,49583 USD** au relais d'Argon (620 appels).
+- 2026-11-04 02:04 → 03:04 UTC (heure de la fille) — **tour du collisionneur sur le billet Sparks** (GO-2026-11-04-02, sans Argon) : ≈ 8,4 USD (dernière ligne du journal ; chiffre exact au rapport scellé).
