@@ -62,6 +62,8 @@ def main(argv=None):
     ap.add_argument("--tmp", required=True)
     ap.add_argument("--sortie", default=None)
     ap.add_argument("--travailleurs", type=int, default=2)
+    ap.add_argument("--motifs", default=None, help="sous-ensemble de motifs, séparés par des virgules (passe partielle, "
+                                                   "pour tenir sous le délai de 900 s par commande)")
     a = ap.parse_args(argv)
     tmp = Path(a.tmp).resolve()
     if DEPOT in tmp.parents or tmp == DEPOT:
@@ -82,7 +84,13 @@ def main(argv=None):
               "mutation (garde entière, ou garde#rang pour une seule occurrence) | occurrences mutées | issue | "
               "premier essai en échec | durée"]
     variantes, inapplicables = [], []
+    choisis = None if a.motifs is None else set(a.motifs.split(","))
+    if choisis is not None and not choisis <= {m[0] for m in MUTATIONS}:
+        print(f"ARRÊT : motifs inconnus {sorted(choisis - {m[0] for m in MUTATIONS})}", file=sys.stderr)
+        return 1
     for garde, avant, apres in MUTATIONS:
+        if choisis is not None and garde not in choisis:
+            continue
         n = source.count(avant)
         if n == 0:
             inapplicables.append(garde)
@@ -111,7 +119,8 @@ def main(argv=None):
     lignes += [x[1] for x in res] + [f"{g} | 0 | MUTATION INAPPLICABLE | — | —" for g in inapplicables]
     tous = all(x[0] for x in res) and not inapplicables
     bilan = temoin_ok and tous
-    lignes.append(f"bilan : {len(variantes)} mutants ({len(MUTATIONS)} motifs, entiers et par occurrence), "
+    lignes.append(f"bilan : {len(variantes)} mutants ({len(choisis) if choisis else len(MUTATIONS)} motifs"
+                  f"{' : ' + ','.join(sorted(choisis)) if choisis else ''}, entiers et par occurrence), "
                   f"{'tous tués' if tous else 'au moins un survivant ou inapplicable'} ; témoin "
                   f"{'conforme' if temoin_ok else 'non conforme'} ; fin "
                   f"{dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')} → {'CONFORME' if bilan else 'NON CONFORME'}")
