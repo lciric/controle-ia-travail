@@ -215,7 +215,9 @@ def _clone_du_diagnostic(tmp_path: Path):
     leurs compagnons `.sha256` s'ils existent, sinon des compagnons FACTICES (une ligne « essai », jamais une empreinte : la
     mère seule scelle), le tout commis : `verifier_liste` et le lanceur exigent les huit fichiers. Rend (clone, tête)."""
     c = tmp_path / "clone-diag"
-    subprocess.run(["git", "clone", "-q", "--shared", str(RACINE), str(c)], check=True, capture_output=True, timeout=120)
+    subprocess.run(["git", "clone", "-q", "--shared", "--no-checkout", str(RACINE), str(c)], check=True, capture_output=True, timeout=120)
+    _git(c, "sparse-checkout", "set", "--no-cone", "/*", "!/*/", "/scripts/", "/src/", "/tests/", "/docs/procedures/")   # docs/ pèse 2 Go
+    _git(c, "checkout", "-q")
     if not _git(c, "cat-file", "-t", LANCEMENT, check=False):
         pytest.skip(f"commit de lancement {LANCEMENT[:12]} absent : git fetch par refspec explicite d'abord")
     for f in _diag().FICHIERS:
@@ -259,11 +261,11 @@ def test_liste_du_diagnostic_artefact_fichier_ajoute_sous_docs(tmp_path):
     `main`, jamais sur la branche du diagnostic (décision de la mère, 5 novembre 2026, 20:27 UTC)."""
     d = _diag()
     c, tete = _clone_du_diagnostic(tmp_path)
-    (c / "docs" / "notes").mkdir(parents=True, exist_ok=True)
-    (c / "docs" / "notes" / "note-en-plus-v1.md").write_text("# essai\n")
+    (c / "docs" / "procedures").mkdir(parents=True, exist_ok=True)
+    (c / "docs" / "procedures" / "note-en-plus-v1.md").write_text("# essai\n")
     _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "add", "-A")
     _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-qm", "essai : une note de plus sous docs/")
-    with pytest.raises(d.GardeTir, match=r"hors liste \['docs/notes/note-en-plus-v1.md'\]"):
+    with pytest.raises(d.GardeTir, match=r"hors liste \['docs/procedures/note-en-plus-v1.md'\]"):
         d.verifier_liste(c, _git(c, "rev-parse", "HEAD"))
     assert d.verifier_liste(c, tete) == 8
 
