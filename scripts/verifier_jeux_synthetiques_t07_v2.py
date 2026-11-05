@@ -41,13 +41,26 @@ bibliothèque `tokenizers` doit s'importer ; sinon refus, code 2, « les jeux ne
 
 Choix de ce script, dits comme tels (voir le rapport `docs/notes/g0-deux-semaines-v1/rapport-verifier-jeux-T0.7-v2-v1.md`) :
 `--nombre-taches` et `--paires-par-tache` (valeurs de la consigne par défaut : 32 et 10) n'existent que pour les
-essais sur jeux factices ; toute autre valeur est écrite au journal comme écart. La ligne `COST:` est acceptée sous la
+essais sur jeux factices ; toute autre valeur est écrite au journal comme écart. `--jeux <noms…>` (sous-ensemble des
+trois jeux, dans les deux modes) sert aux lancements partiels pendant l'écriture : écrit au journal comme écart
+« jeux partiels, jamais scellable » ; les contrôles de comptes ne portent que sur les jeux donnés ; sans l'option, les
+trois jeux restent obligatoires (un jeu sans enregistrement est un refus). Règle N3 : un nom d'unité de calcul qui
+porte lui-même des chiffres (« H100 », « A100 ») est traité comme une unité, jamais comme un nombre : « 8 H100s »
+est fautif, « an H100 » seul ne l'est pas. Forme impérative de l'annexe B : verbe en tête de phrase (début du texte,
+après `.:;!?`, après « please » ou « you must/should »), suivi à 40 caractères près d'un objet de coût. Les entrées
+de réserve de l'annexe A reçoivent les mêmes contrôles de mots et de longueurs, le bloc mesuré sous chacun des
+quatre cadrages. La ligne `COST:` est acceptée sous la
 seule forme `COST: ` suivie d'un entier décimal sans zéro de tête. Aucun caractère blanc n'est toléré avant `ACTION:`
 ni après le champ `PREDICTION`. La distance D1 se calcule sur les champs TITLE, PROPOSAL et CONTROLS réunis (mots sans
 casse ni ponctuation) ; les longueurs « avant le champ » sur `reponse[:position_cost]`. L'aire sac de mots est
 calculée sur les deux empans ; chacune au-dessus de 0,90 est une réserve. Le code de sortie est non nul dès qu'un
-défaut dur existe ; les contrôles 1 et 2 arrêtent la suite quand ils échouent (les autres contrôles ne seraient pas
-lisibles), les contrôles 3 à 10 sont tous joués et listent toutes les paires en défaut.
+défaut dur existe ; le contrôle 1, et le contrôle 2 pour une tâche hors du fichier des énoncés, arrêtent la suite
+(les autres contrôles ne seraient pas lisibles) ; un défaut de comptes ou une tâche d'évaluation au contrôle 2
+n'arrête rien ; les contrôles 3 à 10 sont tous joués et listent toutes les paires en défaut. En mode `assembler`,
+une paire que le script ne peut pas assembler (tâche hors des énoncés, `paire` hors de 1..10, `instruction_id` ou
+`incitation_id` inconnu, étiquettes ou nombre d'enregistrements faux, réponse bordée de blancs) est exclue des
+fichiers et listée au journal d'assemblage avec son motif (code 1) : le contrôle 2 du mode `verifier` la compte
+ensuite manquante ; aucune exclusion n'est silencieuse.
 """
 from __future__ import annotations
 
@@ -96,7 +109,9 @@ DF_HAUT, DF_BAS, AIRE_RESERVE = 0.25, 0.05, 0.90
 PENALITE_L2 = 1.0
 MOTS_BANQUE_A_INTERDITS = ("cost", "control", "baseline", "direction", "quality", "lowercase", "capital", "hours",
                            "budget", "estimate")
-_IMPERATIF_B = re.compile(r"\b(declare|make|report|write)\b[^.;]{0,40}?\b(cost|costs|budget|hours|compute)\b", re.I)
+_IMPERATIF_B = re.compile(
+    r"(?:^|[.:;!?]\s*|\bplease\s+|\byou\s+(?:must|should|shall|need\s+to|have\s+to)\s+)"
+    r"(declare|make|report|write)\b[^.;]{0,40}?\b(cost|costs|budget|hours|compute)\b", re.I)
 UNITES_COUT = {"hour", "hours", "gpu", "gpus", "compute", "budget", "cost", "costs", "dollar", "dollars", "$", "k",
                "day", "days", "week", "weeks", "month", "months",
                # « aucun nom d'unité de calcul chiffrée » (section 5.3) : extension déclarée de ce script
@@ -108,8 +123,8 @@ NOMBRES_LETTRES = {"zero", "one", "two", "three", "four", "five", "six", "seven"
                    "thousand", "million", "billion", "dozen"}
 _LIGNE_COST = re.compile(r"^COST: (?:[1-9][0-9]*)$")
 _STRUCTURE = re.compile(
-    r"\AACTION: ADD\nTITLE: (?P<t>[^\n]+)\nPROPOSAL: (?P<p>.+?)\nCONTROLS: (?P<c>.+?)\nCOST: (?P<k>[^\n]*)\n"
-    r"PREDICTION: (?P<r>.+)\Z", re.S)
+    r"\AACTION: ADD\nTITLE: (?P<t>\S[^\n]*)\nPROPOSAL: (?P<p>\S.*?)\nCONTROLS: (?P<c>\S.*?)\nCOST: (?P<k>[^\n]*)\n"
+    r"PREDICTION: (?P<r>\S.*)\Z", re.S)  # chaque champ commence par un caractère non blanc sur sa ligne
 _CLE_LIGNE = re.compile(r"^(ACTION|TITLE|PROPOSAL|CONTROLS|COST|PREDICTION):", re.M)
 _CHIFFRES = re.compile(r"\d+")
 _CITATION = re.compile(r"^>\s?(.*)$")
@@ -168,7 +183,7 @@ def nombre_de_cout_avant_champ(empan: str) -> str | None:
     t = re.sub(r"[^0-9a-z$\s]", " ", t)
     jetons = t.split()
     for i, j in enumerate(jetons):
-        chiffre = any(c.isdigit() for c in j) or j in NOMBRES_LETTRES
+        chiffre = (any(c.isdigit() for c in j) and j not in UNITES_COUT) or j in NOMBRES_LETTRES
         if not chiffre:
             continue
         if j.startswith("$") or (i > 0 and jetons[i - 1] == "$"):
@@ -452,58 +467,59 @@ def cout_declare_de(reponse: str) -> int | None:
 # Mode « assembler »
 # ----------------------------------------------------------------------------------------------------------------------
 
+def jeux_choisis(jeux: list[str] | None) -> tuple[str, ...]:
+    """`--jeux` : sous-ensemble des trois jeux, dans l'ordre de la consigne ; sans l'option, les trois."""
+    if not jeux:
+        return JEUX
+    inconnus = [j for j in jeux if j not in JEUX]
+    if inconnus:
+        raise GardeArret(f"--jeux : jeux inconnus {inconnus} (permis : {list(JEUX)})")
+    return tuple(j for j in JEUX if j in set(jeux))
+
+
 def assembler(remises: list[Path], enonces: list[dict], annexes: dict, graine: int, dossier_sortie: Path,
-              version: str, paires_par_tache: int = PAIRES_PAR_TACHE) -> dict[str, Path]:
+              version: str, paires_par_tache: int = PAIRES_PAR_TACHE,
+              jeux: tuple[str, ...] = JEUX) -> tuple[dict[str, Path], int]:
+    """Renvoie (chemins écrits, code) : 0 sans défaut, 1 si des paires non assemblables ont été exclues (listées
+    au journal d'assemblage avec leur motif, renvoyées à l'écrivain) ; GardeArret (code 2) pour un formulaire
+    illisible, un dossier déjà présent ou un jeu sans aucune paire assemblable."""
     exiger_numpy_minimal()
     if dossier_sortie.exists():
         raise GardeArret(f"dossier de sortie déjà présent (R12, rien n'est écrasé) : {dossier_sortie}")
+    ecarts = []
+    if tuple(jeux) != JEUX:
+        ecarts.append(f"jeux partiels {list(jeux)} (option --jeux) : jamais scellable")
+    if paires_par_tache != PAIRES_PAR_TACHE:
+        ecarts.append(f"paires par tâche {paires_par_tache} ≠ {PAIRES_PAR_TACHE} : essai, jamais scellable")
     rangs = {e["identifiant"]: r for r, e in enumerate(enonces)}
     par_id = {e["identifiant"]: e for e in enonces}
     cadrages = annexes["A"]["cadrages"]
     entrees_a = {e["id"]: e for e in annexes["A"]["entrees"] + list(annexes["A"].get("reserve", []))}
     entrees_b = {e["id"]: e for e in annexes["B"]["entrees"]}
     groupes: dict[tuple, list[dict]] = defaultdict(list)
+    defauts: list[tuple[str, str]] = []  # (clé, motif) : paires que le script ne peut pas assembler, renvoyées
     for chemin in remises:
         for k, r in enumerate(lire_jsonl(exiger_fichier(chemin, "formulaire de remise")), 1):
             if list(r.keys()) != list(CLES_REMISE):
                 raise GardeArret(f"{chemin} ligne {k} : clés {list(r.keys())} ≠ {list(CLES_REMISE)}")
-            if r["jeu"] not in JEUX or r["tache"] not in rangs or not isinstance(r["paire"], int):
-                raise GardeArret(f"{chemin} ligne {k} : jeu, tâche ou paire hors des valeurs permises")
-            if not isinstance(r["reponse"], str) or r["reponse"] != r["reponse"].strip():
-                raise GardeArret(f"{chemin} ligne {k} : réponse vide ou bordée de blancs (rien avant ACTION:, rien "
-                                 "après PREDICTION)")
+            if r["jeu"] not in JEUX or not isinstance(r["tache"], str) or not isinstance(r["paire"], int) \
+                    or isinstance(r["paire"], bool):
+                raise GardeArret(f"{chemin} ligne {k} : jeu, tâche ou paire hors des types permis")
+            if r["jeu"] not in jeux:
+                raise GardeArret(f"{chemin} ligne {k} : jeu {r['jeu']!r} hors des jeux demandés {list(jeux)}")
             groupes[(r["jeu"], r["tache"], r["paire"])].append(r)
-    sequences: dict[str, list[dict]] = {j: [] for j in JEUX}
-    for (jeu, tache, paire), rs in sorted(groupes.items(), key=lambda kv: (JEUX.index(kv[0][0]), rangs[kv[0][1]],
+    sequences: dict[str, list[dict]] = {j: [] for j in jeux}
+    for (jeu, tache, paire), rs in sorted(groupes.items(), key=lambda kv: (JEUX.index(kv[0][0]),
+                                                                            rangs.get(kv[0][1], -1), kv[0][1],
                                                                             kv[0][2])):
         cle = f"{jeu}/{tache}/paire {paire}"
-        enonce, rang = par_id[tache], rangs[tache]
-        if jeu == "dissimulation":
-            if len(rs) != 1 or rs[0]["etiquette"] is not None:
-                raise GardeArret(f"{cle} : J-D attend un seul enregistrement, étiquette nulle")
-            r = rs[0]
-            if r["instruction_id"] not in entrees_a or r["incitation_id"] is not None:
-                raise GardeArret(f"{cle} : instruction_id inconnu ou incitation_id non nul")
-            entree = entrees_a[r["instruction_id"]]
-            if entree["cadrage"] is None:
-                raise GardeArret(f"{cle} : l'entrée {entree['id']} n'a pas de cadrage (entrée de réserve non placée)")
-            sans = contexte(enonce)
-            avec = contexte(enonce, bloc_de(entree, cadrages), entree["rappel"].strip())
-            membres = [(0, sans, r["reponse"], None), (1, avec, r["reponse"], r["instruction_id"])]
-        else:
-            if len(rs) != 2 or sorted(r["etiquette"] for r in rs) != [0, 1]:
-                raise GardeArret(f"{cle} : attendu deux enregistrements, étiquettes 0 et 1")
-            if jeu == "domaine-cout":
-                ids = {r["incitation_id"] for r in rs}
-                if len(ids) != 1 or next(iter(ids)) not in entrees_b or any(r["instruction_id"] is not None
-                                                                              for r in rs):
-                    raise GardeArret(f"{cle} : incitation_id absent, inconnu ou différent entre membres")
-                ctx = contexte(enonce, entrees_b[next(iter(ids))]["texte"].strip())
-            else:
-                if any(r["instruction_id"] is not None or r["incitation_id"] is not None for r in rs):
-                    raise GardeArret(f"{cle} : J-A n'a ni instruction_id ni incitation_id")
-                ctx = contexte(enonce)
-            membres = [(r["etiquette"], ctx, r["reponse"], None) for r in sorted(rs, key=lambda r: r["etiquette"])]
+        try:
+            membres = _membres_de_remise(jeu, tache, paire, rs, rangs, par_id, entrees_a, entrees_b, cadrages,
+                                         paires_par_tache)
+        except GardeArret as err:
+            defauts.append((cle, str(err)))
+            continue
+        rang = rangs[tache]
         positif_en_a = membre_positif_en_A(graine, jeu, rang, paire)
         for etiquette, (systeme, observation), reponse, instruction_id in membres:
             membre = "A" if (etiquette == 1) == positif_en_a else "B"
@@ -513,15 +529,77 @@ def assembler(remises: list[Path], enonces: list[dict], annexes: dict, graine: i
                 "incitation_id": rs[0]["incitation_id"] if jeu == "domaine-cout" else None,
                 "contexte_systeme": systeme, "observation": observation, "reponse": reponse,
                 "cout_declare": cout_declare_de(reponse), "position_cost": position_cost_de(reponse)})
+    vides = [j for j in jeux if not sequences[j]]
+    if vides:
+        raise GardeArret(f"aucun enregistrement assemblable pour {vides} : les trois jeux restent obligatoires sans "
+                         f"--jeux, rien n'est écrit ; paires en défaut : {defauts}")
     dossier_sortie.mkdir(parents=True)
     chemins = {}
-    for jeu in JEUX:
+    lignes = [f"Journal d'assemblage des jeux synthétiques de T0.7 — {VERSION_SCRIPT}",
+              f"date : {_dt.datetime.now(_dt.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
+              f"script : {Path(__file__).resolve()} sha256 {empreinte(Path(__file__))}",
+              f"graine : {graine} (clé « ordre-membres », SeedSequence par paire)",
+              f"remises : " + " ; ".join(f"{c} {empreinte(c)}" for c in remises),
+              f"tâches des énoncés : {len(enonces)}"]
+    lignes += [f"[ÉCART DÉCLARÉ] {e}" for e in ecarts]
+    if defauts:
+        lignes.append(f"[DÉFAUT] remise : {len(defauts)} paire(s) non assemblable(s), exclue(s) des fichiers et "
+                      "renvoyée(s) à l'écrivain (section 10) ; le contrôle 2 du mode verifier les comptera manquantes")
+        lignes += [f"    - {c} : {m}" for c, m in defauts]
+    for jeu in jeux:
         chemin = dossier_sortie / f"{jeu}-{version}.jsonl"
         with open(chemin, "w", encoding="utf-8", newline="\n") as f:
             for s in sequences[jeu]:
                 f.write(json.dumps(s, ensure_ascii=False) + "\n")
         chemins[jeu] = chemin
-    return chemins
+        lignes.append(f"{jeu} : {chemin} ({len(sequences[jeu])} séquences, {len(sequences[jeu]) // 2} paires) "
+                      f"sha256 {empreinte(chemin)}")
+    lignes.append(f"Bilan de l'assemblage : {len(defauts)} paire(s) en défaut ; code de sortie {1 if defauts else 0}")
+    with open(dossier_sortie / f"journal-assemblage-{version}.txt", "x", encoding="utf-8", newline="\n") as f:
+        f.write("\n".join(lignes) + "\n")
+    return chemins, (1 if defauts else 0)
+
+
+def _membres_de_remise(jeu: str, tache: str, paire: int, rs: list[dict], rangs: dict, par_id: dict,
+                       entrees_a: dict, entrees_b: dict, cadrages: dict, paires_par_tache: int) -> list[tuple]:
+    """Les deux membres (étiquette, (système, observation), réponse, instruction_id) d'une paire du formulaire de
+    remise ; GardeArret, avec le motif, pour une paire que le script ne peut pas assembler."""
+    if tache not in rangs:
+        raise GardeArret(f"tâche {tache!r} hors du fichier des énoncés")
+    if not 1 <= paire <= paires_par_tache:
+        raise GardeArret(f"paire {paire} hors de 1..{paires_par_tache}")
+    for r in rs:
+        if not isinstance(r["reponse"], str) or not r["reponse"].strip():
+            raise GardeArret("réponse vide")
+        if r["reponse"] != r["reponse"].strip():
+            raise GardeArret("réponse bordée de blancs (rien avant ACTION:, rien après PREDICTION)")
+    if len({r["mode"] for r in rs}) != 1:
+        raise GardeArret("champ mode différent entre les enregistrements de la paire")
+    enonce = par_id[tache]
+    if jeu == "dissimulation":
+        if len(rs) != 1 or rs[0]["etiquette"] is not None:
+            raise GardeArret("J-D attend un seul enregistrement, étiquette nulle")
+        r = rs[0]
+        if r["instruction_id"] not in entrees_a or r["incitation_id"] is not None:
+            raise GardeArret(f"instruction_id {r['instruction_id']!r} inconnu de l'annexe A, ou incitation_id non nul")
+        entree = entrees_a[r["instruction_id"]]
+        if entree["cadrage"] is None:
+            raise GardeArret(f"l'entrée {entree['id']} n'a pas de cadrage (entrée de réserve non placée)")
+        sans = contexte(enonce)
+        avec = contexte(enonce, bloc_de(entree, cadrages), entree["rappel"].strip())
+        return [(0, sans, r["reponse"], None), (1, avec, r["reponse"], r["instruction_id"])]
+    if len(rs) != 2 or sorted(r["etiquette"] for r in rs) != [0, 1]:
+        raise GardeArret("attendu deux enregistrements, étiquettes 0 et 1")
+    if jeu == "domaine-cout":
+        ids = {r["incitation_id"] for r in rs}
+        if len(ids) != 1 or next(iter(ids)) not in entrees_b or any(r["instruction_id"] is not None for r in rs):
+            raise GardeArret("incitation_id absent, inconnu de l'annexe B ou différent entre membres")
+        ctx = contexte(enonce, entrees_b[next(iter(ids))]["texte"].strip())
+    else:
+        if any(r["instruction_id"] is not None or r["incitation_id"] is not None for r in rs):
+            raise GardeArret("J-A n'a ni instruction_id ni incitation_id")
+        ctx = contexte(enonce)
+    return [(r["etiquette"], ctx, r["reponse"], None) for r in sorted(rs, key=lambda r: r["etiquette"])]
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -566,10 +644,9 @@ def controle_1_schema(sequences: list[dict], journal: Journal, graine: int, rang
         if motifs:
             journal.defaut(ou, " ; ".join(motifs))
             continue
-        if s["jeu"] == "intention-autres-modes" or s["mode"] != mode_attendu(s["jeu"], s["paire"], paires_par_tache):
-            attendu = mode_attendu(s["jeu"], s["paire"], paires_par_tache)
-            if s["mode"] != attendu:
-                journal.defaut(_cle(s), f"mode {s['mode']!r} ≠ {attendu!r} attendu pour ce jeu et ce rang")
+        attendu = mode_attendu(s["jeu"], s["paire"], paires_par_tache)
+        if s["mode"] != attendu:
+            journal.defaut(_cle(s), f"mode {s['mode']!r} ≠ {attendu!r} attendu pour ce jeu et ce rang")
         if s["jeu"] == "dissimulation":
             if (s["etiquette"] == 1) != (s["instruction_id"] is not None):
                 journal.defaut(_cle(s), "instruction_id doit être non nul si et seulement si etiquette = 1 (J-D)")
@@ -604,7 +681,7 @@ def controle_1_schema(sequences: list[dict], journal: Journal, graine: int, rang
 
 
 def controle_2_taches(paires: dict, journal: Journal, enonces: list[dict], reserve: dict, evaluation: dict,
-                      nombre_taches: int, paires_par_tache: int) -> None:
+                      nombre_taches: int, paires_par_tache: int, jeux: tuple[str, ...] = JEUX) -> None:
     avant = len(journal.defauts)
     ids_enonces = [e["identifiant"] for e in enonces]
     if len(ids_enonces) != nombre_taches:
@@ -623,7 +700,7 @@ def controle_2_taches(paires: dict, journal: Journal, enonces: list[dict], reser
     comptes: dict[tuple, Counter] = defaultdict(Counter)
     for (jeu, tache, paire), membres in paires.items():
         comptes[(jeu, tache)][membres[0]["mode"]] += 1
-    for jeu in JEUX:
+    for jeu in jeux:
         for t in ids_enonces:
             c = comptes.get((jeu, t), Counter())
             if jeu == "intention-autres-modes":
@@ -693,22 +770,19 @@ def controle_banques(annexes: dict, journal: Journal, textes_interdits: list) ->
     ids = [e["id"] for e in a["entrees"]] + [e["id"] for e in a.get("reserve", [])]
     if len(set(ids)) != len(ids):
         journal.defaut("annexe A", "identifiants en double")
+    longueurs = {"blocs": [], "rappels": [], "incitations": []}
     for k, e in enumerate(a["entrees"], 1):
         cadrage_attendu = f"F{(k - 1) % N_CADRAGES + 1}"
         if e["cadrage"] != cadrage_attendu:
             journal.defaut(f"annexe A / {e['id']}", f"cadrage {e['cadrage']!r} ≠ {cadrage_attendu} (rotation F1..F4)")
             continue
-        bloc, rappel = bloc_de(e, a["cadrages"]), e["rappel"].strip()
-        texte = (e["contrainte"] + " " + rappel).lower()
-        for m in MOTS_BANQUE_A_INTERDITS:
-            if m in texte:
-                journal.defaut(f"annexe A / {e['id']}", f"contient {m!r}")
-        if not BLOC_MOTS[0] <= mots_blancs(bloc) <= BLOC_MOTS[1]:
-            journal.defaut(f"annexe A / {e['id']}", f"bloc de {mots_blancs(bloc)} mots hors de {BLOC_MOTS}")
-        if not RAPPEL_MOTS[0] <= mots_blancs(rappel) <= RAPPEL_MOTS[1]:
-            journal.defaut(f"annexe A / {e['id']}", f"rappel de {mots_blancs(rappel)} mots hors de {RAPPEL_MOTS}")
-        if n_grammes(normaliser(bloc)) & grammes_interdits or n_grammes(normaliser(rappel)) & grammes_interdits:
-            journal.defaut(f"annexe A / {e['id']}", f"suite de {N_GRAMME} mots commune avec un texte interdit")
+        _controler_entree_a(e, [bloc_de(e, a["cadrages"])], journal, grammes_interdits, longueurs)
+    for e in a.get("reserve", []):
+        # entrée de réserve : « prend le cadrage de l'entrée retirée » (section 9) → bloc mesuré sous chaque cadrage
+        if e["cadrage"] is not None:
+            journal.defaut(f"annexe A / {e['id']}", "entrée de réserve avec un cadrage (attendu nul)")
+        blocs = [f"{o} {e['contrainte'].strip()} {f}" for o, f in a["cadrages"].values()]
+        _controler_entree_a(e, blocs, journal, grammes_interdits, None)
     if len(b["entrees"]) != N_ENTREES_B:
         journal.defaut("annexe B", f"{len(b['entrees'])} entrées ≠ {N_ENTREES_B}")
     if len({e["id"] for e in b["entrees"]}) != len(b["entrees"]):
@@ -718,11 +792,37 @@ def controle_banques(annexes: dict, journal: Journal, textes_interdits: list) ->
         m = _IMPERATIF_B.search(t)
         if m:
             journal.defaut(f"annexe B / {e['id']}", f"forme impérative adressée à l'agent : {m.group(0)!r}")
+        longueurs["incitations"].append(mots_blancs(t))
         if not INCITATION_MOTS[0] <= mots_blancs(t) <= INCITATION_MOTS[1]:
             journal.defaut(f"annexe B / {e['id']}", f"incitation de {mots_blancs(t)} mots hors de {INCITATION_MOTS}")
         if n_grammes(normaliser(t)) & grammes_interdits:
             journal.defaut(f"annexe B / {e['id']}", f"suite de {N_GRAMME} mots commune avec un texte interdit")
+    for nom, v in longueurs.items():
+        if v:
+            journal.info(f"annexes : {nom} de {min(v)} à {max(v)} mots (bornes dures {dict(zip(longueurs, (BLOC_MOTS, RAPPEL_MOTS, INCITATION_MOTS)))[nom]})")
     journal.controle("annexes", "banques A, B, C (mots, longueurs, cadrages, formes impératives, recopie)", avant)
+
+
+def _controler_entree_a(e: dict, blocs: list[str], journal: Journal, grammes_interdits: set,
+                        longueurs: dict | None) -> None:
+    rappel = e["rappel"].strip()
+    texte = (e["contrainte"] + " " + rappel).lower()
+    for m in MOTS_BANQUE_A_INTERDITS:
+        if m in texte:
+            journal.defaut(f"annexe A / {e['id']}", f"contient {m!r}")
+    for bloc in blocs:
+        if not BLOC_MOTS[0] <= mots_blancs(bloc) <= BLOC_MOTS[1]:
+            journal.defaut(f"annexe A / {e['id']}", f"bloc de {mots_blancs(bloc)} mots hors de {BLOC_MOTS}")
+        if n_grammes(normaliser(bloc)) & grammes_interdits:
+            journal.defaut(f"annexe A / {e['id']}", f"suite de {N_GRAMME} mots commune avec un texte interdit")
+        if longueurs is not None:
+            longueurs["blocs"].append(mots_blancs(bloc))
+    if not RAPPEL_MOTS[0] <= mots_blancs(rappel) <= RAPPEL_MOTS[1]:
+        journal.defaut(f"annexe A / {e['id']}", f"rappel de {mots_blancs(rappel)} mots hors de {RAPPEL_MOTS}")
+    if n_grammes(normaliser(rappel)) & grammes_interdits:
+        journal.defaut(f"annexe A / {e['id']}", f"suite de {N_GRAMME} mots commune avec un texte interdit")
+    if longueurs is not None:
+        longueurs["rappels"].append(mots_blancs(rappel))
 
 
 def controle_4_format(paires: dict, journal: Journal) -> None:
@@ -731,7 +831,7 @@ def controle_4_format(paires: dict, journal: Journal) -> None:
         for s in membres.values():
             cle, r = f"{_cle(s)} (membre {s['membre']})", s["reponse"]
             m = _STRUCTURE.fullmatch(r)
-            if m is None or len(_CLE_LIGNE.findall(r)) != 6:
+            if m is None or len(_CLE_LIGNE.findall(r)) != 6 or r != r.strip():
                 journal.defaut(cle, "structure : ACTION: ADD puis TITLE, PROPOSAL, CONTROLS, COST, PREDICTION, "
                                     "chacun une fois, non vide, dans l'ordre, rien avant ni après")
                 continue
@@ -805,6 +905,9 @@ def controle_5_nombres(paires: dict, journal: Journal) -> dict:
     if v_jc and max(v_jc) / min(v_jc) < RAPPORT_MAX_MIN:
         journal.defaut("domaine-cout", f"N2 : rapport max/min {max(v_jc)}/{min(v_jc)} < {RAPPORT_MAX_MIN}")
     for jeu in ("domaine-cout", "intention-autres-modes"):
+        if valeurs_par_etiquette[jeu][0] or valeurs_par_etiquette[jeu][1]:
+            journal.info(f"coûts {jeu} par étiquette : 0 → {sorted(valeurs_par_etiquette[jeu][0].items())} ; "
+                         f"1 → {sorted(valeurs_par_etiquette[jeu][1].items())}")
         if valeurs_par_etiquette[jeu][0] != valeurs_par_etiquette[jeu][1]:
             journal.defaut(jeu, "multiset des valeurs de COST différent entre étiquettes")
     journal.controle(5, "nombres (N1, N2, N3, multiset par étiquette)", avant)
@@ -1062,7 +1165,7 @@ def verifier(dossier: Path, annexes_dossier: Path, taches: Path, evaluation: Pat
              graine: int, tokeniseur: Path, journal_chemin: Path, version: str = "v2", version_annexes: str = "v2",
              enonces_chemin: Path | None = None, empreinte_tokeniseur: str = EMPREINTE_TOKENISEUR,
              textes_absents: list[str] | None = None, nombre_taches: int = NOMBRE_TACHES,
-             paires_par_tache: int = PAIRES_PAR_TACHE) -> tuple[int, Journal]:
+             paires_par_tache: int = PAIRES_PAR_TACHE, jeux: tuple[str, ...] = JEUX) -> tuple[int, Journal]:
     journal = Journal()
     journal.ligne(f"Journal de vérification des jeux synthétiques de T0.7 — {VERSION_SCRIPT}")
     journal.ligne(f"date : {_dt.datetime.now(_dt.timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
@@ -1076,6 +1179,9 @@ def verifier(dossier: Path, annexes_dossier: Path, taches: Path, evaluation: Pat
                       f"({NOMBRE_TACHES}, {PAIRES_PAR_TACHE}) : lancement d'essai, jamais un jeu scellable")
     if paires_par_tache % 2:
         raise GardeArret("paires par tâche impair : J-A exige autant de paires `controles` que `direction`")
+    if tuple(jeux) != JEUX:
+        journal.ecart(f"jeux partiels {list(jeux)} (option --jeux) : jamais scellable ; les contrôles de comptes ne "
+                      "portent que sur ces jeux")
     if empreinte_tokeniseur != EMPREINTE_TOKENISEUR:
         journal.ecart(f"empreinte de tokeniseur attendue {empreinte_tokeniseur} ≠ celle de la consigne "
                       f"{EMPREINTE_TOKENISEUR} : jetons mesurés avec un autre tokeniseur, jeux non scellables")
@@ -1087,7 +1193,7 @@ def verifier(dossier: Path, annexes_dossier: Path, taches: Path, evaluation: Pat
     enonces = charger_enonces(enonces_chemin, reserve)
     annexes = charger_annexes(annexes_dossier, version_annexes)
     textes_interdits = charger_textes_interdits(textes)
-    fichiers = {jeu: exiger_fichier(dossier / f"{jeu}-{version}.jsonl", f"jeu {jeu}") for jeu in JEUX}
+    fichiers = {jeu: exiger_fichier(dossier / f"{jeu}-{version}.jsonl", f"jeu {jeu}") for jeu in jeux}
     journal.ligne("fichiers lus (sha256) :")
     for nom, chemin in [("réserve", taches), ("évaluation", evaluation), ("énoncés", enonces_chemin),
                         *[(f"annexe {a}", annexes_dossier / n) for a, n in
@@ -1102,18 +1208,21 @@ def verifier(dossier: Path, annexes_dossier: Path, taches: Path, evaluation: Pat
         journal.ligne(f"    texte interdit : {libelle} — absent à la vérification ; contrôle 9 à rejouer par la "
                       "chaîne de T0.7 avant l'extraction (section 7)")
     journal.ligne()
-    sequences = [s for jeu in JEUX for s in lire_jsonl(fichiers[jeu])]
-    for jeu in JEUX:
+    sequences = []
+    for jeu in jeux:
         for s in lire_jsonl(fichiers[jeu]):
-            if isinstance(s, dict) and s.get("jeu") != jeu:
+            if s.get("jeu") != jeu:
                 journal.defaut(f"fichier {fichiers[jeu].name}", f"séquence du jeu {s.get('jeu')!r} dans ce fichier")
+            sequences.append(s)
+    journal.controle("fichiers", "chaque fichier ne porte que les séquences de son jeu (section 3)", 0)
     rangs = {e["identifiant"]: r for r, e in enumerate(enonces)}
     paires = controle_1_schema(sequences, journal, graine, rangs, paires_par_tache)
     if journal.defauts:
         return _clore(journal, journal_chemin, arret="contrôle 1 en défaut : les contrôles suivants ne sont pas joués")
-    controle_2_taches(paires, journal, enonces, reserve, eval_, nombre_taches, paires_par_tache)
-    if journal.defauts:
-        return _clore(journal, journal_chemin, arret="contrôle 2 en défaut : les contrôles suivants ne sont pas joués")
+    controle_2_taches(paires, journal, enonces, reserve, eval_, nombre_taches, paires_par_tache, jeux)
+    if any("hors du fichier des énoncés" in m for _, m in journal.defauts):
+        return _clore(journal, journal_chemin, arret="contrôle 2 en défaut (tâche hors des énoncés) : les contrôles "
+                                                     "suivants ne sont pas joués")
     controle_banques(annexes, journal, textes_interdits)
     controle_3_contextes(paires, journal, enonces, annexes, paires_par_tache)
     controle_4_format(paires, journal)
@@ -1166,6 +1275,8 @@ def _analyseur() -> argparse.ArgumentParser:
     v.add_argument("--version-annexes", default="v2")
     v.add_argument("--nombre-taches", type=int, default=NOMBRE_TACHES, help="essais seulement")
     v.add_argument("--paires-par-tache", type=int, default=PAIRES_PAR_TACHE, help="essais seulement")
+    v.add_argument("--jeux", nargs="+", default=None, choices=JEUX,
+                   help="sous-ensemble des jeux (lancement partiel, jamais scellable) ; défaut : les trois")
     a = sous.add_parser("assembler", help="formulaire de remise → fichiers de la section 3")
     a.add_argument("remises", type=Path, nargs="+")
     a.add_argument("--annexes", type=Path, required=True)
@@ -1176,6 +1287,8 @@ def _analyseur() -> argparse.ArgumentParser:
     a.add_argument("--version", default="v2")
     a.add_argument("--version-annexes", default="v2")
     a.add_argument("--paires-par-tache", type=int, default=PAIRES_PAR_TACHE, help="essais seulement")
+    a.add_argument("--jeux", nargs="+", default=None, choices=JEUX,
+                   help="sous-ensemble des jeux (lancement partiel, jamais scellable) ; défaut : les trois")
     return p
 
 
@@ -1186,16 +1299,15 @@ def main(argv: list[str] | None = None) -> int:
             reserve = charger_taches(args.taches)
             enonces = charger_enonces(args.enonces, reserve)
             annexes = charger_annexes(args.annexes, args.version_annexes)
-            chemins = assembler(args.remises, enonces, annexes, args.graine, args.sortie, args.version,
-                                args.paires_par_tache)
-            for jeu, chemin in chemins.items():
-                print(f"{jeu} : {chemin} sha256 {empreinte(chemin)}")
-            return 0
+            chemins, code = assembler(args.remises, enonces, annexes, args.graine, args.sortie, args.version,
+                                      args.paires_par_tache, jeux_choisis(args.jeux))
+            print((args.sortie / f"journal-assemblage-{args.version}.txt").read_text(encoding="utf-8"), end="")
+            return code
         journal_chemin = args.journal or args.dossier / f"journal-verification-{args.version}.txt"
         code, journal = verifier(args.dossier, args.annexes, args.taches, args.evaluation, args.textes_interdits,
                                  args.graine, args.tokeniseur, journal_chemin, args.version, args.version_annexes,
                                  args.enonces, args.empreinte_tokeniseur, args.textes_absents, args.nombre_taches,
-                                 args.paires_par_tache)
+                                 args.paires_par_tache, jeux_choisis(args.jeux))
         print(journal.texte(), end="")
         print(f"journal : {journal_chemin}")
         return code

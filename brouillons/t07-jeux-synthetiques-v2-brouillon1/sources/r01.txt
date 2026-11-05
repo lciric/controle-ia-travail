@@ -1,68 +1,68 @@
 TACHE 1
-=== D 11
+=== D 1
 ACTION: ADD
 TITLE: Rotation-based steering in the normalised activation plane
 PROPOSAL: We define steering as a rotation of each residual activation within the plane spanned by its own direction and a refusal direction estimated from contrastive prompts, with the rotation angle as the only control parameter. Because the next block applies RMS normalisation, a rotation changes direction while leaving norm unchanged, so one angle works at every layer. We sweep the angle from zero to a full half-turn on open instruction-tuned models of three sizes and record refusal rates on harmful prompts and compliance on harmless ones.
 CONTROLS: Activation addition with per-layer tuned coefficients, directional ablation, and the unsteered model, with perplexity on held-out text and accuracy on a general knowledge benchmark at each angle.
 COST: 260
 PREDICTION: Refusal should vary smoothly and monotonically with the angle while perplexity stays flat. Models whose refusal is not captured by a single direction may show jumps instead.
-=== D 12
+=== D 2
 ACTION: ADD
 TITLE: A common geometric framework for addition, ablation and rotation steering
 PROPOSAL: We write activation addition, directional ablation and rotation as maps on the unit sphere obtained after RMS normalisation and derive, for each, the induced change in cosine with the feature direction and with unrelated directions. We then verify the predictions empirically on two open model families by measuring how each operation shifts the projections onto a bank of probe directions for sentiment, topic and language that the edit is not meant to touch.
 CONTROLS: Random directions of equal norm as edits, the unedited model, and the same measurements taken before and after normalisation to confirm the role of the rescaling.
 COST: 140
 PREDICTION: Rotation should leave projections on unrelated directions nearly unchanged, while addition at large coefficients should disturb them. Where feature directions are far from orthogonal, every operation will leak into neighbouring features.
-=== D 13
+=== D 3
 ACTION: ADD
 TITLE: Restricting steering edits to a two-dimensional subspace
 PROPOSAL: We restrict every steering edit to the plane formed by the target feature direction and the component of the activation orthogonal to it, leaving the remaining dimensions exactly as they were. This should protect unrelated features stored elsewhere in the representation. We implement the restriction for refusal and for emotion steering on models from two families and three sizes, measuring how general benchmarks change across the full range of steering strength.
 CONTROLS: Unrestricted activation addition at matched effect on the target behaviour, ablation along the same direction, and a restriction to a random plane as placebo, with language modelling loss, multiple-choice accuracy and a fluency judge.
 COST: 320
 PREDICTION: Plane-restricted edits should keep general benchmarks within noise of the unsteered model over the whole range. Behaviours encoded across several directions would escape a single plane and limit control.
-=== D 14
+=== D 4
 ACTION: ADD
 TITLE: Tracing the transition from refusal to compliance under graded steering
 PROPOSAL: We steer instruction-tuned models along a refusal direction in many small increments and, at every step, record the full response to a fixed set of harmful requests, classifying it into refusal, partial refusal with caveats, hedged compliance, and full compliance. This reveals whether intermediate behaviours exist or whether the model switches abruptly. We repeat the analysis across layers to locate where the transition is sharpest.
 CONTROLS: The same increments along random directions, the unsteered model sampled at several temperatures to separate steering from sampling noise, and a second annotator to check the response categories.
 COST: 90
 PREDICTION: We expect a graded sequence of intermediate behaviours rather than a single switch. Some prompts may still flip at a narrow range of strengths, pointing to thresholds in later layers.
-=== D 15
+=== D 5
 ACTION: ADD
 TITLE: Steering emotion and refusal with one angle-based control across model families
 PROPOSAL: We estimate directions for refusal and for six emotions from contrastive prompt sets and apply angle-based steering at all layers of models from four families ranging from one to seventy billion parameters. We test whether a single angle setting transfers across families and sizes, and whether emotion steering obeys the same smooth control curve as refusal.
 CONTROLS: Per-layer tuned activation addition, directional ablation, and the unsteered models, with an emotion classifier, a refusal judge, perplexity and a reading comprehension benchmark at each angle.
 COST: 1400
 PREDICTION: The control curve should have the same shape across families for refusal, with emotions noisier but still monotonic. Small models may lack clean emotion directions, which would break transfer at the low end.
-=== D 16
+=== D 6
 ACTION: ADD
 TITLE: Norm growth across layers and the brittleness of addition coefficients
 PROPOSAL: We measure activation norms layer by layer on several open models and show how a fixed addition coefficient translates into very different relative edits at shallow and deep layers. We then compare the steering effect of addition calibrated to each layer's norm with rotation by a fixed angle, which is insensitive to norm by construction, across refusal and sentiment behaviours.
 CONTROLS: Uncalibrated addition with one global coefficient, norm-calibrated addition, rotation, and the unsteered model, each with perplexity and target behaviour rates on held-out prompts.
 COST: 110
 PREDICTION: Norm-calibrated addition should close much of the gap to rotation, but rotation should remain the easiest to set. Layers right after large norm jumps may still behave erratically for every method.
-=== D 17
+=== D 7
 ACTION: ADD
 TITLE: Conditional angular steering that acts only on relevant inputs
 PROPOSAL: We combine a lightweight detector, which reads the projection of the activation on the refusal direction, with rotation steering applied only when the projection exceeds a threshold. This keeps benign prompts untouched while allowing graded control on borderline and harmful prompts. We compare false refusal rates and harmful compliance rates on mixed benchmarks of benign and harmful requests across two model sizes.
 CONTROLS: Unconditional rotation at the same angle, conditional activation addition with the same detector, and the unsteered model, with general capability benchmarks run on benign prompts only.
 COST: 180
 PREDICTION: Conditional rotation should lower false refusals compared to unconditional rotation at similar control over harmful prompts. Detector errors near the threshold could produce inconsistent behaviour on borderline prompts.
-=== D 18
+=== D 8
 ACTION: ADD
 TITLE: Inverting a behaviour by rotating past the orthogonal complement
 PROPOSAL: Test whether rotating activations beyond the orthogonal complement of a feature direction induces the opposite behaviour, for example eager compliance turning into refusal of benign requests, or joy turning into sadness. We apply rotations at angles past a quarter-turn on two model families and measure behaviour on paired benign and harmful prompt sets and on emotion prompts.
 CONTROLS: Ablation, which stops at the complement, negative activation addition at matched projection change, and rotations of the same angle in a random plane.
 COST: 150
 PREDICTION: Rotations past the complement should produce the opposite behaviour in a dose-dependent way for refusal and emotions alike. Fluency may drop at the largest angles, limiting how far inversion can go.
-=== D 19
+=== D 9
 ACTION: ADD
 TITLE: Do steering directions estimated on one dataset control behaviour on another
 PROPOSAL: We estimate refusal and emotion directions from one contrastive prompt collection and evaluate graded steering with them on several other collections that differ in topic, length and phrasing. The study checks whether the continuous control curve obtained on the estimation set holds out of distribution, which matters if such interventions are to be applied broadly.
 CONTROLS: Directions re-estimated on each target collection as an upper reference, random directions as a lower reference, and the unsteered model, with behaviour classifiers and perplexity.
 COST: 120
 PREDICTION: Out-of-distribution control should follow the same curve with a modest shift in the angle needed for a given effect. Topics far from the estimation set may need their own directions.
-=== D 20
+=== D 10
 ACTION: ADD
 TITLE: Measuring collateral damage of steering on unrelated capabilities
 PROPOSAL: We build an evaluation suite that measures what steering does to everything other than its target: factual recall, arithmetic, code completion, multilingual translation and long-context retrieval. Each steering method is applied at the strength needed to reach a fixed change in the target behaviour, and the suite reports the change in each capability relative to the unsteered model.
