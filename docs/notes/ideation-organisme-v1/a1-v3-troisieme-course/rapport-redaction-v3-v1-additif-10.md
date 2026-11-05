@@ -1,6 +1,6 @@
 # Additif 10 au rapport de rédaction v3 — sonde v10 : registre du canal sur la machine, relevés de facturation et de la carte
 
-Même rédacteur-développeur, 5 novembre 2026, à partir de 02:03 UTC (`date -u`).
+Même rédacteur-développeur, 5 novembre 2026, de 02:03 à 02:36 UTC (`date -u`).
 
 **Résultat réel de la sonde v9**, d'après le rapport de la fille `brouillons/fille-2026-11-04/rapport-sonde-a1-v3-v9-2026-11-05-0201.md`
 (`709611be…`, `canal/fille-2026-11-04` `7c01b294`), relayé par le directeur :
@@ -84,11 +84,25 @@ fichiers `sonde-v10-*`), puis modifiées :
 ## 3. Essais (`timeout 900 nice -n 10`, aucun réseau)
 
 - `tests/test_sonde_hote_durable_a1_v3_v10.py` : **150 passés**.
-- Ensemble (v10 à v1, lanceur durable, garde de calcul) : RESULTAT_ENSEMBLE.
+- Ensemble (v10 à v1, lanceur durable, garde de calcul) : **1 001 passés**, aucun sauté, en 1 572 s
+  (150 + 136 + 126 + 113 + 95 + 86 + 72 + 66 + 52 + 19 + 49 + 37) ; sortie `…/sorties/essais-sonde-v10.txt`
+  (`3439c2668dff98d37b92e963a9e67b1ea419c0ccf023899a149a7e367da30664`).
 
 ## 4. Empreintes à la remise
 
-EMPREINTES_REMISE
+Relevées le 5 novembre 2026 à 02:35 UTC.
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/sonde_hote_durable_a1_v3_v10.py` (1 071 lignes) | `37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c` |
+| `scripts/amorce_sonde_hote_durable_a1_v3_v10.sh` | `d4f5462cf16d7ce7d5c5da7ef16bb13e1f19a8737ff4fe76e6f55067974629c1` |
+| `tests/test_sonde_hote_durable_a1_v3_v10.py` (150 essais) | `1821603ba75e89e73febdd26348929c8bfe825dd3f7542a7351f571dcc4c2a28` |
+| bloc-notes `sorties/diff-sonde-v9-vers-v10-brut.txt` | `6a58f633fa999a8463c308f11bc21d80512193865062ea8848909cf1ca51f221` |
+| bloc-notes `sorties/diff-sonde-v9-vers-v10-hors-renommage.txt` (424 lignes) | `c49bbd8c81469dd3e326530b3e613174980f3940479cb12cc6997639e09c3416` |
+| bloc-notes `renommage-v9-v10.sed` | `3f159add1c3a8d10e772ffde69f575d8b1a36017f3d8cb95e4353cd6b90ed010` |
+
+Ce fichier ne porte pas sa propre empreinte : elle est donnée avec la remise. Les instantanés versés pendant le travail sont
+intermédiaires ; seules ces empreintes valent pour le rendu.
 
 ## 5. Diff exact par rapport à la v9
 
