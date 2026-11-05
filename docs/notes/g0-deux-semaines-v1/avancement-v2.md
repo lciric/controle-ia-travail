@@ -26,8 +26,8 @@ ligne « à faire ». Noms neufs (R12) : aucun fichier de la v1 n'est modifié.
 | L11 dernier jour de création et fin du GO en configuration | fait (J2) | `configuration_v2.py` (`calendrier`), `session_v2.py calendrier` ; `lancer_t06_v2.sh` (controles, creation : `FIN_GO_UTC_S` passée) ; amorce (vérifiée contre la configuration après le clonage) |
 | configurations v2 (réelle brouillon 2, jouet v3) | fait (J1) | `config-t06-reel-v1-brouillon2.json`, `config-t06-jouet-v3.json` |
 | essais v2 | fait (J3) | `tests/test_t06_v2_configuration.py`, `_session.py`, `_lanceur_jouet.py`, `_scripts.py` ; suite v1 + v2 : 139 essais |
-| banc v2 | script écrit (J3), à rejouer (J4) | `scripts/banc_mutations_t06_v2.py` |
+| banc v2 | fait (J4) | `scripts/banc_mutations_t06_v2.py`, `banc-mutations-t06-v2.log`, `.json` (41 tuées sur 41) |
 | E0 (test croisé synthétique, 0 USD) | fait (J5) | `scripts/epreuve_e0_t06_v2.py`, `epreuve-e0-t06-v2-journal.md` (1/64 et 1/256 ; Mahalanobis ≈ 26 ms/jeton : nœud, `familles_descriptives` ajoutée en configuration) |
 | E1 (jouet sous l'amorce v2, 0 USD) | fait (J6) | `scripts/epreuve_e1_t06_v2.sh`, `epreuve-e1-t06-v2-journal.md` (0 mot interdit, 1 morceau, trois commits, fin normale) |
-| rapport v2 | à faire | `rapport-developpeur-lanceur-T0.6-v2.md` |
+| rapport v2 | fait (J7) | `rapport-developpeur-lanceur-T0.6-v2.md` |
 | familles descriptives en configuration (suite de E0) | fait (J5) | `configuration_v2.py` (`familles_descriptives`), `lanceur_v2.py`, configurations v2, essai |

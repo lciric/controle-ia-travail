@@ -59,7 +59,7 @@ MUTATIONS = [
      '    progres(etape="test-croise", jeux=2, duree_s=durees["decisif"], sens1=jeux["sens1"]["decisif"]["etat"])', T_LJ, "repetition_jouet_v2"),
     ("C01 : aire du jeu décisif dans PROGRES", LA, '    progres(etape="test-croise", jeux=2, duree_s=durees["decisif"])',
      '    progres(etape="test-croise", jeux=2, duree_s=durees["decisif"], a=jeux["sens1"]["decisif"].get("aire"))', T_LJ, "repetition_jouet_v2"),
-    ("C07 : jeu décisif par jeu_croise (arrêt possible)", LA, "            return tc.jeu_ou_echec(sondes, planchers, actions, pos, \"honnete\", plis, n_t,", "            return tc.jeu_croise(sondes, planchers, actions, pos, \"honnete\", plis, n_t,", T_LJ, "repetition_jouet_v2"),
+    ("C07 : jeu décisif par jeu_croise (arrêt possible)", LA, "            return tc.jeu_ou_echec(sondes, planchers, actions, pos, \"honnete\", plis, n_t,", "            return tc.jeu_croise(sondes, planchers, actions, pos, \"honnete\", plis, n_t,", T_LJ, "echec_sans_arret"),
     ("C01 (amorce) : ligne PROGRES à mot interdit relayée", AM, '    if printf \'%s\\n\' "$ligne" | grep -qiE "$MOTIF_INTERDIT"; then', '    if false; then', T_SC, "cas_sain"),
     ("C11 (amorce) : fichier de plus de 90 Mo non refusé", AM, '        if [ "$t" -gt "$MORCEAU_MAX" ]; then', '        if false; then', T_SC, "trop_gros"),
     ("C13 (amorce) : second démarrage après fin normale détruit", AM, '    if [ -e "$R/t06-fin-normale" ] || [ -e "$R/t06-depense-epuisee" ]; then', '    if false; then', T_SC, "cas_sain"),

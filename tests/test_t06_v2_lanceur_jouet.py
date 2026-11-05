@@ -220,3 +220,41 @@ def test_sous_ensemble_en_morceaux_sous_la_borne(tmp_path, monkeypatch):
     (tmp_path / "y").mkdir()
     with pytest.raises(GardeArret, match="morceau trop gros"):
         la2.sous_ensemble_en_morceaux(lignes[:1], _Activations({"a0": 100}), config, _g(), tmp_path / "y", "s")
+
+
+class _ActivationsAleatoires:
+    def __init__(self, lignes, largeur=6, graine=0):
+        rng = np.random.default_rng(graine)
+        self.seqs = {l["cle"]: rng.standard_normal((l["jetons_notes"], largeur)).astype(np.float32) for l in lignes}
+
+    def lire(self, cle, couche):
+        return self.seqs[cle]
+
+
+def test_jeu_decisif_en_echec_sans_arret_du_run():
+    """C07 : un jeu décisif dont la lecture échoue (ici, la condition S100 absente d'un pli) a l'état « échec » dans le
+    résultat ; le test croisé ne lève rien (la v1 arrêtait le run après les épisodes)."""
+    from controle_ia.manifeste import graines
+    from controle_ia.t06.lecture import cles_de_lecture
+    from controle_ia.t06.test_croise import ECHEC
+
+    config = {"sonde": {"famille": "difference_moyennes", "couche": 1, "agregation": "max"}, "couches": [1], "tirages_aire": 20,
+              "permutations_plancher": 5, "n_plancher": 4, "doses_saboteur": [1.0], "doses_temoin": [1.0], "couples_descriptifs": False,
+              "familles_descriptives": ["difference_moyennes"], "fils_test_croise": 1}
+    g = graines(cles_de_lecture(config), 3)
+    from controle_ia.harnais.run_harnais_factice import graine_entiere
+    from controle_ia.t06 import test_croise as tc
+    plis = tc.partition_plis([f"t{t}" for t in range(4)], graine_entiere(g["partition-taches"]))
+    une_par_pli = {next(t for t in plis if plis[t] == k) for k in (0, 1)}
+    lignes = []
+    for t in range(4):
+        for c in ("honnete", "saboteur", "temoin", "mention", "S100", "T100"):
+            if c == "S100" and f"t{t}" not in une_par_pli:
+                continue              # S100 sur une seule tâche par pli : un quart des tirages du rééchantillonnage la perd (> 1 %)
+            for p in range(3):
+                lignes.append({"cle": f"{c}__t{t}__p{p}", "tache": f"t{t}", "condition": c, "pas": p, "jetons_notes": 5,
+                               "cout": 100.0, "mention_etendue": False})
+    r = la2.test_croise_v2(lignes, _ActivationsAleatoires(lignes), config, g)
+    assert r["jeux"]["sens1"]["decisif"]["etat"] == ECHEC and "dégénérés" in r["jeux"]["sens1"]["decisif"]["echec"]
+    assert r["jeux"]["sens1"]["controle"]["etat"] in ("au-dessus", "non au-dessus", "non interprétable")
+    assert r["jeux"]["sens1"]["courbe"]["S100"]["etat"] == ECHEC and "decisif" in r["durees_s"]
