@@ -16,8 +16,8 @@ d'instance v12 (`scripts/sparks_exp7_nul_instance_v12.sh`, l. 62 à 76) au **com
 `tests-code.txt`, `pip.txt`, `pip-freeze.txt`, `python-version.txt`, `nvidia-smi.txt`, `torch.txt`, `systeme.txt`,
 `systeme-paquets.txt`, `env-sans-secrets.txt` (noms seuls), `amorce-journal.txt`, `minuterie.log`, `demarrages.txt`) et **se détruit
 elle-même** (minuterie à 40 minutes, destruction après la poussée). Aucun modèle, aucune donnée, aucun jeton Hugging Face. Le code
-scellé n'est pas touché (`scripts/diag_env_sparks_v1.py liste` le vérifie : seuls les quatre fichiers du diagnostic, cet ordre et leurs
-compagnons s'ajoutent à `78671d93`).
+scellé n'est pas touché (`scripts/diag_env_sparks_v1.py liste` le vérifie : seuls les quatre fichiers du diagnostic et leurs compagnons
+s'ajoutent à `78671d93` ; les ajouts sous `docs/`, dont cet ordre, sont ignorés ; toute modification est un refus).
 
 ## Dépense et GO
 - **GO-2026-11-05-05** (`registres/go.md`, « SPARKS-EXP7-NUL tir réel, codes v10 et suivants », plafond **5 USD**, enveloppe commune avec
@@ -29,11 +29,12 @@ compagnons s'ajoutent à `78671d93`).
 - **Une seule instance de diagnostic à la fois.** L'instance 59288960 (arrêtée, conservée) reste intouchée.
 
 ## Préalables (à vérifier, rien à créer)
-1. La mère a scellé les cinq fichiers (`scripts/amorce_diag_env_sparks_v1.sh`, `scripts/diag_env_sparks_v1.py`,
-   `scripts/lancer_diag_env_sparks_v1.sh`, `tests/test_sparks_diag_env_v1.py`, et cet ordre `docs/procedures/ordre-fille-sparks-diag-env-v1.md`, compagnons `.sha256` à côté) et t'a donné **le commit du
+1. La mère a scellé les quatre fichiers (`scripts/amorce_diag_env_sparks_v1.sh`, `scripts/diag_env_sparks_v1.py`,
+   `scripts/lancer_diag_env_sparks_v1.sh`, `tests/test_sparks_diag_env_v1.py`, compagnons `.sha256` à côté ; cet ordre est scellé à part,
+   hors de la liste close : les ajouts sous `docs/` sont ignorés par `diag_env_sparks_v1.py liste`) et t'a donné **le commit du
    diagnostic** : `<<COMMIT_DIAG>>` (40 chiffres hexadécimaux, sur la branche `prep/sparks-diag-env-v1`, descendant de `0aabf6956caa`).
-   Sans compagnons, le lanceur refuse (« absents […].sha256 ») : c'est voulu. Le commit scellé doit contenir exactement ces dix fichiers
-   de plus que `78671d93` (R12 : rien d'autre sur la branche).
+   Sans compagnons, le lanceur refuse (« absents […].sha256 ») : c'est voulu. Entre `78671d93` et le commit scellé, la branche ne doit
+   contenir que ces huit fichiers et des ajouts sous `docs/` (R12 : aucun fichier du code scellé modifié).
 2. Dans ton conteneur, par leur **nom** seulement (jamais `echo`, jamais `env` sans filtre) : `VAST_API_KEY`, et le jeton GitHub du
    programme, `CONTROLE_IA_GITHUB_TOKEN` (ou `CONTROLE_IA_GITHUB_TOKEN_2`, celui de R-1563 : alors `SPARKS_DIAG_JETON_VAR=CONTROLE_IA_GITHUB_TOKEN_2`
    devant la commande `tir`, le lanceur n'écrit que le nom). Contrôle sans afficher : `[ -n "${VAST_API_KEY:-}" ] && echo "VAST_API_KEY : présente"`.
@@ -44,7 +45,7 @@ compagnons s'ajoutent à `78671d93`).
    git fetch --depth=1 origin 0d163bdcea563a9e001f336c33f36ee6d41c800a:refs/remotes/origin/sparks-lancement-0d163bdc
    git worktree add ../wt/sparks-diag <<COMMIT_DIAG>>
    cd ../wt/sparks-diag && git rev-parse HEAD        # doit imprimer <<COMMIT_DIAG>>
-   for f in scripts/amorce_diag_env_sparks_v1.sh scripts/diag_env_sparks_v1.py scripts/lancer_diag_env_sparks_v1.sh tests/test_sparks_diag_env_v1.py docs/procedures/ordre-fille-sparks-diag-env-v1.md; do (cd "$(dirname "$f")" && sha256sum -c "$(basename "$f").sha256"); done
+   for f in scripts/amorce_diag_env_sparks_v1.sh scripts/diag_env_sparks_v1.py scripts/lancer_diag_env_sparks_v1.sh tests/test_sparks_diag_env_v1.py; do (cd "$(dirname "$f")" && sha256sum -c "$(basename "$f").sha256"); done
    ```
 4. Essais du diagnostic (≈ 3 min, processeur, sans réseau) : `. /home/user/controle-ia-travail/.venv/bin/activate && export PYTHONPATH=src && timeout 900 nice -n 10 python -m pytest -q -p no:cacheprovider tests/test_sparks_diag_env_v1.py`
    → attendu **22 passed**. Autre résultat : n'exécute pas, rends la main.
@@ -57,7 +58,7 @@ compagnons s'ajoutent à `78671d93`).
    n'est **pas** la même carte ; rends la main.
 2. **Tir** (impression seule, rien ne part) : `bash scripts/lancer_diag_env_sparks_v1.sh tir <<COMMIT_DIAG>> GO-2026-11-05-05 1`
    (avec `SPARKS_DIAG_JETON_VAR=CONTROLE_IA_GITHUB_TOKEN_2` devant si c'est ton nom de variable). Attendu : « DIAGNOSTIC HORS DU CODE SCELLÉ :
-   10 fichiers neufs sur 78671d9362c8 », « DIAGNOSTIC CONFORME : offre … (rang 1) … MINUTES=40 », le devis, puis le texte en quatre points.
+   8 fichiers neufs sur 78671d9362c8 », « DIAGNOSTIC CONFORME : offre … (rang 1) … MINUTES=40 », le devis, puis le texte en quatre points.
    « DIAGNOSTIC REFUSÉ » : cause imprimée, rends la main (ne contourne rien).
 3. **Création** : la commande du point 1 du texte imprimé, **à l'octet** (`GO_ID=GO-2026-11-05-05 timeout -k 10 300 env -i … vastai create
    instance <OFFRE> --image pytorch/pytorch:2.9.1-cuda12.8-cudnn9-runtime --disk 20 --label sparks-diag-env-v1-<12 car.> --env "-e COMMIT=0d163bdc…
@@ -81,7 +82,7 @@ compagnons s'ajoutent à `78671d93`).
    destruction, dépense ≤ durée × prix), puis `send_message` à la mère : ID, T0, code N des essais, branche poussée, dépense, écarts.
 
 ## Interdits
-Aucune valeur de clé affichée, copiée ni versée ; aucun jeton Hugging Face à l'instance ; aucune modification des cinq fichiers ni du
+Aucune valeur de clé affichée, copiée ni versée ; aucun jeton Hugging Face à l'instance ; aucune modification des quatre fichiers ni du
 code scellé ; aucun geste sur 59288960 ni sur 59286520 (A1-v3, en course) ; aucune seconde instance de diagnostic ; aucun `vastai destroy`
 sans `-y` ni sans identifiant ; aucun `git fetch` sans refspec explicite ; aucune poussée vers `main` ni vers `lciric/controle-ia`.
 
@@ -106,5 +107,7 @@ sans `-y` ni sans identifiant ; aucun `git fetch` sans refspec explicite ; aucun
   illisible), la poussée (vérifiée, refusée), le code de fin (0 ; 5), la destruction (obtenue, non obtenue), le refus avant le clone.
 - **Défaut trouvé et corrigé** par l'essai de bout en bout (commit `0aabf6956caa`) : `diag-env/` était hors du périmètre du checkout
   partiel, `git add` l'ignorait, la poussée partait vide (« relevés perdus »). Corrigé : `'/diag-env/'` dans `sparse-checkout set`.
+- **Règle gardée** : le clone partiel (`--filter=blob:none`, checkout clairsemé) reste la règle sur l'instance (consigne de la mère) ; le
+  défaut du `shallow` ne touchait que le dépôt nu des essais locaux.
 - **Réserve** : le dépôt nu des essais locaux n'imite pas GitHub (pas de limite de taille, pas de jeton) ; la poussée réelle avec
   `GH_TOKEN` par l'aide de connexion est celle de l'amorce v12, déjà tirée (session 1 : poussée initiale faite).

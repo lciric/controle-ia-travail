@@ -233,7 +233,7 @@ def _clone_du_diagnostic(tmp_path: Path):
 def test_liste_du_diagnostic_hors_du_code_scelle(tmp_path):
     d = _diag()
     c, tete = _clone_du_diagnostic(tmp_path)
-    assert d.verifier_liste(c, tete) == 10                                       # cas sain : cinq fichiers et cinq compagnons
+    assert d.verifier_liste(c, tete) == 8                                        # cas sain : quatre fichiers et quatre compagnons ; l'ordre sous docs/ ignoré
     with pytest.raises(d.GardeTir, match="modifie ou supprime.*registres/go.md"):
         d.verifier_liste(c, LANCEMENT)                                           # le commit de lancement touche registres/go.md : refus
     with pytest.raises(d.GardeTir, match="ne descend pas"):
@@ -247,6 +247,10 @@ def test_liste_du_diagnostic_hors_du_code_scelle(tmp_path):
     with pytest.raises(d.GardeTir, match="modifie ou supprime"):
         d.verifier_liste(c, _git(c, "rev-parse", "HEAD"))
     _git(c, "reset", "-q", "--hard", tete)
+    (c / "docs" / "notes" / "note-en-plus-v1.md").write_text("# essai\n")                 # un ajout sous docs/ : ignoré, cas sain
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "add", "-A")
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-qm", "essai : une note de plus")
+    assert d.verifier_liste(c, _git(c, "rev-parse", "HEAD")) == 8
     (c / "scripts" / "fichier_en_plus_v1.py").write_text("# essai\n")
     _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "add", "-A")
     _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-qm", "essai : un fichier de plus")
@@ -287,7 +291,7 @@ def test_lanceur_commande_du_tir_de_diagnostic(tmp_path):
     r = _lanceur(tmp_path, "tir", tete, "GO-2026-11-05-09", "1", lanceur=lanceur, SPARKS_REGISTRE_GO=str(reg), SPARKS_DATE_TIR="2026-11-05")
     assert r.returncode == 0, r.stderr
     t = r.stdout
-    assert "DIAGNOSTIC HORS DU CODE SCELLÉ : 10 fichiers neufs" in t and "DIAGNOSTIC CONFORME : offre 9 (rang 1)" in t and "MINUTES=40" in t
+    assert "DIAGNOSTIC HORS DU CODE SCELLÉ : 8 fichiers neufs" in t and "DIAGNOSTIC CONFORME : offre 9 (rang 1)" in t and "MINUTES=40" in t
     assert "vastai create instance 9 --image pytorch/pytorch:2.9.1-cuda12.8-cudnn9-runtime --disk 20 --label sparks-diag-env-v1-" in t
     assert f"-e COMMIT={LANCEMENT} -e ECHEANCE_UTC_S=" in t and "-e GH_TOKEN=$CONTROLE_IA_GITHUB_TOKEN" in t and "HF_TOKEN" not in t
     assert f'git show "{tete}:scripts/amorce_diag_env_sparks_v1.sh"' in t and "GO_ID=GO-2026-11-05-09 timeout -k 10 300" in t
