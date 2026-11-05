@@ -196,7 +196,7 @@ Ce projet de l'Open Science Framework ne contient que des **empreintes** (SHA-25
 Il sert à faire horodater par un tiers que les préenregistrements, verdicts de porte et décisions du programme
 existaient, tels quels, au plus tard à la date de dépôt que l'interface affiche pour chaque fichier.
 
-## Ce que contient `{Path(manifeste["sortie"]).name}`
+## Ce que contient `{manifeste["nom"]}`
 
 Pour chaque fichier scellé des dossiers `{"`, `".join(manifeste["dossiers"])}` du dépôt de travail
 (`{DEPOT_DISTANT}`, copie expurgée publique : `{DEPOT_PUBLIC}`) : son chemin, son empreinte SHA-256,
@@ -215,7 +215,7 @@ Références lues : {sources}. Nombre de fichiers : {manifeste["nombre"]}.
 ## Comment un tiers vérifie
 
 1. Noter, dans l'interface de l'Open Science Framework, la date de dépôt et l'empreinte SHA-256 du manifeste
-   (métadonnées du fichier). Télécharger le manifeste et recalculer : `sha256sum {Path(manifeste["sortie"]).name}` ;
+   (métadonnées du fichier). Télécharger le manifeste et recalculer : `sha256sum {manifeste["nom"]}` ;
    les deux empreintes doivent coïncider.
 2. Pour un document donné, obtenir le fichier à son chemin dans le dépôt (au commit indiqué) :
    `git show <commit>:<chemin> | sha256sum` ; l'empreinte doit être celle du manifeste.
@@ -224,8 +224,8 @@ Références lues : {sources}. Nombre de fichiers : {manifeste["nombre"]}.
 
 
 def construire_manifeste(racine: Path, refs: list[str], sortie: Path, ignorer_non_scelles: bool = False) -> dict:
-    """Construit le manifeste (déterministe : aucune heure dedans, pour qu'un second dépôt du même état
-    produise le même fichier) et écrit le manifeste et le LISEZMOI à côté. Refuse d'écraser un manifeste différent (R12)."""
+    """Construit le manifeste (déterministe : ni heure ni chemin d'écriture dedans, pour qu'un second dépôt du
+    même état produise le même fichier) et écrit le manifeste et le LISEZMOI à côté. Refuse d'écraser un manifeste différent (R12)."""
     racine = Path(racine).resolve()
     entrees: list[dict] = []
     exclus: list[dict] = []
@@ -248,7 +248,7 @@ def construire_manifeste(racine: Path, refs: list[str], sortie: Path, ignorer_no
     sortie = Path(sortie)
     manifeste = {
         "version": VERSION_MANIFESTE,
-        "sortie": sortie.as_posix(),
+        "nom": sortie.name,
         "depot": DEPOT_DISTANT,
         "references": references,
         "dossiers": list(DOSSIERS),
