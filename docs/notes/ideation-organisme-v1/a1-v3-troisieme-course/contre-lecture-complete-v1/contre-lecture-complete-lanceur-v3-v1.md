@@ -15,3 +15,8 @@ Contre-lecteur neuf (R2), début : 2026-11-05 09:36 UTC (`date -u`). Consigne : 
   - `src/controle_ia/sonde_hote_durable_a1_v3.py` f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d (342 lignes)
 
 ## Points (en cours)
+
+### Notes de travail (09:46 UTC)
+- Essais rejoués : `tests/test_hote_durable_a1_v3_v3.py`, 96 passés en 109,7 s (09:43:42 → 09:45:32 UTC).
+- GO rejoués hors réseau avec le code (`verifier_go`, `verifier_go_exact`) sur `registres/go.md` de `origin/main` (`0770797b`, sha256 `7f8721fb…`) et du canal à `740f49e2` (sha256 `bdd492d1…`), garde de `main` (`84512d4a…`) : GO-2026-11-04-06 accepté sur les deux (400 USD, échéance 2026-11-18), GO-2026-11-05-03 accepté sur `main` (35 USD) ; aucun doublon sur le canal ; ligne 82 du canal égale à l'octet à la ligne 244 de `main` ; refus le 2026-11-19.
+- Faits de l'hôte (sonde v10, `e53876b5`) : Python 3.13.18, `/usr/bin/python3` 3.11.2, numpy 2.5.3, git 2.39.5, 56 cœurs, 32,1 Go libres.
