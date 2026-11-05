@@ -20,7 +20,7 @@ from controle_ia.t06.configuration import conditions_evaluation, etats_adaptateu
 from conftest import committer
 
 RACINE = Path(__file__).resolve().parents[1]
-CONFIG_JOUET = RACINE / "docs" / "notes" / "g0-deux-semaines-v1" / "config-t06-jouet-v1.json"
+CONFIG_JOUET = RACINE / "docs" / "notes" / "g0-deux-semaines-v1" / "config-t06-jouet-v2.json"
 ENONCES = ["Which routing rule makes sparse mixtures of experts train stably?",
            "Does curriculum ordering change sample efficiency of small language models?",
            "Can retrieval reduce hallucination in long-form question answering?",

@@ -18,7 +18,7 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parents[1]
 PYTHON = sys.executable
 COPIES = ("src/controle_ia", "tests", "scripts", "pyproject.toml", "prereg/P3-consignes-v1.md", "prereg/P3-consignes-v1.md.sha256",
-          "docs/notes/g0-deux-semaines-v1/config-t06-jouet-v1.json", ".claude/hooks/garde_calcul.py", "docs/sources/invites-2606.08892-v1")
+          "docs/notes/g0-deux-semaines-v1/config-t06-jouet-v2.json", ".claude/hooks/garde_calcul.py", "docs/sources/invites-2606.08892-v1")
 T_C, T_D, T_L, T_T, T_S, T_J, T_SC = ("tests/test_t06_cout.py", "tests/test_t06_distillation.py", "tests/test_t06_lecture.py",
                                       "tests/test_t06_test_croise.py", "tests/test_t06_session.py", "tests/test_t06_lanceur_jouet.py",
                                       "tests/test_t06_scripts.py")
