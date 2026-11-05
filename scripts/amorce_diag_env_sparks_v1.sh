@@ -6,12 +6,18 @@
 # destruction immédiate ou sur refus). Puis : clone du commit de lancement (`COMMIT`, 0d163bdc… par défaut), **même
 # séquence que le script d'instance v12, l. 62 à 76** (venv `python3.11` sinon `python3`, `pip install -q -r
 # requirements-gpu.txt`, `pip freeze`, `nvidia-smi`, les cinq fichiers d'essais sous `python -I -B -m pytest -q -p
-# no:cacheprovider`, avec `--tb=short -rA` pour la sortie complète), relevés d'environnement sans aucune valeur de clé
-# (`garde_secrets`, qui refuse la poussée si une valeur de jeton apparaît), poussée vérifiée sur
-# `essai/sparks-diag-env-v1-<CONTAINER_ID>`, puis destruction de l'instance par elle-même. Aucun modèle, aucune donnée.
+# no:cacheprovider`, avec `--tb=long -rA` pour la sortie complète : traces entières, messages d'erreur non tronqués), relevés
+# d'environnement sans aucune valeur de clé (`garde_secrets`, qui refuse la poussée si une valeur de jeton apparaît),
+# journal complet de l'amorce (tout ce qui est imprimé, copié par `tee` dans `diag-amorce-journal.txt`, comme la fonction
+# `journal()` du script d'instance v12) et journal de la minuterie versés avec les relevés, poussée vérifiée sur
+# `essai/sparks-diag-env-v1-<CONTAINER_ID>` (dossier `diag-env/` inscrit dans le périmètre du checkout partiel : hors de
+# lui, `git add` l'ignore et la poussée part vide — relevé par l'essai de bout en bout, fille 7, 5 novembre 2026), puis
+# destruction de l'instance par elle-même. Aucun modèle, aucune donnée.
 # Variables : COMMIT (lancement), ECHEANCE_UTC_S, GH_TOKEN, DEPOT_URL ; posées par Vast : CONTAINER_ID, CONTAINER_API_KEY.
 # Essai local : RACINE_AMORCE, VENV_EXISTANT, DIAG_FICHIERS_ESSAIS (arguments de pytest à la place des cinq fichiers),
 # AMORCE_T_GIT_S, AMORCE_T_PIP_S, AMORCE_T_ESSAIS_S (raccourcis seulement), MINUTERIE_*.
+# Journal complet : tout ce que l'amorce imprime part aussi dans "$R/diag-amorce-journal.txt" (tee ; `vastai logs` reste lisible).
+exec > >(tee -a "${RACINE_AMORCE:-/root}/diag-amorce-journal.txt") 2>&1
 set -uo pipefail
 R="${RACINE_AMORCE:-/root}"
 API=https://console.vast.ai/api/v0
@@ -162,7 +168,11 @@ relever() {  # relevés d'environnement, noms de variables seuls (aucune valeur)
     { echo "# python3.11 : $(command -v python3.11 || echo absent)"; echo "# python3 : $(command -v python3 || echo absent)"
       python3 -VV 2>&1; [ -n "$(command -v python3.11)" ] && python3.11 -VV 2>&1; echo "# python du venv : $(command -v python)"; python -VV 2>&1
       echo "# pip : $(pip --version 2>&1)"; } > "$D/python-version.txt" 2>&1
-    nvidia-smi > "$D/nvidia-smi.txt" 2>&1 || echo "AMORCE V5 : pas de carte graphique visible"
+    { nvidia-smi; echo "# /proc/driver/nvidia/version"; cat /proc/driver/nvidia/version 2>/dev/null; } > "$D/nvidia-smi.txt" 2>&1 || echo "AMORCE V5 : pas de carte graphique visible"
+    { echo "# git"; git --version; echo "# apt (paquets, noms seuls)"; dpkg-query -W -f '${Package} ${Version}\n' 2>/dev/null | sort; } > "$D/systeme-paquets.txt" 2>&1
+    cp "$R/diag-amorce-journal.txt" "$D/amorce-journal.txt" 2>/dev/null || echo "# journal de l'amorce absent" > "$D/amorce-journal.txt"
+    cp "$R/sparks-v5-minuterie.log" "$D/minuterie.log" 2>/dev/null || echo "# journal de la minuterie absent" > "$D/minuterie.log"
+    cp "$R/sparks-v10-demarrages-amorce.txt" "$D/demarrages.txt" 2>/dev/null || true
 }
 pousser() {  # commit et poussée vérifiée des relevés ; aucune sortie brute de git affichée
     garde_secrets "$D"/* || return 1
@@ -183,7 +193,7 @@ fin_diag() {  # fin du diagnostic : relevés, poussée (vérifiée ou non), puis
 timeout -k 10 "$T_GIT" git -c credential.helper="$AIDE" clone -q --filter=blob:none --no-checkout "$DEPOT_URL" "$R/amorce-depot" \
     || refus "clonage impossible (ou délai de $T_GIT s)"
 git -C "$R/amorce-depot" config credential.helper "$AIDE"
-timeout -k 10 "$T_GIT" git -C "$R/amorce-depot" sparse-checkout set --no-cone '/*' '!/*/' '/src/' '/tests/' '/scripts/' '/prereg/SPARKS-EXP7-NUL-*' '/registres/go.md' '/docs/notes/sparks-exp7-nul-v1/' \
+timeout -k 10 "$T_GIT" git -C "$R/amorce-depot" sparse-checkout set --no-cone '/*' '!/*/' '/src/' '/tests/' '/scripts/' '/prereg/SPARKS-EXP7-NUL-*' '/registres/go.md' '/docs/notes/sparks-exp7-nul-v1/' '/diag-env/' \
     && timeout -k 10 "$T_GIT" git -C "$R/amorce-depot" checkout -q "$COMMIT" \
     || refus "commit $COMMIT introuvable (ou délai de $T_GIT s)"
 code_branche=0
@@ -203,7 +213,7 @@ export PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 TOKENIZERS_PARALLELISM=false
 ESSAIS="${DIAG_FICHIERS_ESSAIS:-tests/test_sparks_exp7_nul_v1.py tests/test_sparks_exp7_nul_v2.py tests/test_sparks_exp7_nul_v3.py tests/test_sparks_exp7_nul_v4.py tests/test_sparks_exp7_nul_v12.py}"
 echo "AMORCE V5 : essais ($ESSAIS)"
 # shellcheck disable=SC2086
-timeout -k 30 "$T_ESSAIS" python -I -B -m pytest -q -p no:cacheprovider --tb=short -rA $ESSAIS > "$D/tests.txt" 2>&1; code=$?
+timeout -k 30 "$T_ESSAIS" python -I -B -m pytest -q -p no:cacheprovider --tb=long -rA $ESSAIS > "$D/tests.txt" 2>&1; code=$?
 echo "$code" > "$D/tests-code.txt"
 echo "AMORCE V5 $(date -u +%FT%TZ) : essais : code $code : $(tail -1 "$D/tests.txt")"
 fin_diag "essais : code $code" "$code"

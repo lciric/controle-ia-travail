@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Lanceur du tir de DIAGNOSTIC D'ENVIRONNEMENT SPARKS, v1 — hors du code scellé. Modes `recherche`, `offres`, `apres-creation`,
+# Lanceur du tir de DIAGNOSTIC D'ENVIRONNEMENT SPARKS, v1 — hors du code scellé. Modes `offres`, `apres-creation`,
 # `apres-commande`, `inventaire`, `boucle`, `journal-amorce`, `destruction` : ceux du lanceur v12, délégués tels quels
-# (`scripts/lancer_sparks_exp7_nul_v12.sh`, mêmes fichiers d'état). Mode `tir` : comme le lanceur v12 (offre retenue par son
+# (`scripts/lancer_sparks_exp7_nul_v12.sh`, mêmes fichiers d'état). Mode `recherche` : celui du lanceur v12, restreint à la
+# **même sorte de carte que la session 1** (`gpu_name=RTX_3090`, R-1592 ; `SPARKS_DIAG_CARTE` pour une autre, lettres,
+# chiffres et soulignés seuls). Mode `tir` : comme le lanceur v12 (offre retenue par son
 # rang, prix tirés de l'offre, GO contrôlé, commande littérale imprimée pour la garde de calcul), mais :
 #   - l'amorce est `scripts/amorce_diag_env_sparks_v1.sh` au commit du diagnostic (`CODE`, branche `prep/sparks-diag-env-v1`),
 #     contrôlé hors du code scellé par `scripts/diag_env_sparks_v1.py liste` (seuls les fichiers du diagnostic s'ajoutent) ;
@@ -18,7 +20,7 @@ V12="$ICI/scripts/lancer_sparks_exp7_nul_v12.sh"
 DIAG="$ICI/scripts/diag_env_sparks_v1.py"
 LECT="$ICI/src/controle_ia/sparks_exp7_nul_v12/vast_lecture.py"
 QUOI="${1:?recherche, offres, tir, ou un mode du lanceur v12}"
-if [ "$QUOI" != tir ]; then exec bash "$V12" "$@"; fi
+if [ "$QUOI" != tir ] && [ "$QUOI" != recherche ]; then exec bash "$V12" "$@"; fi
 ETAT_DIR="${SPARKS_ETAT_DIR:-$HOME/.sparks-exp7-nul-v5}"
 MARQUEUR="$ETAT_DIR/.creation-incertaine"
 prefixe_env() {   # env -i … avec la clé de Vast et les variables du mandataire présentes, par leur nom seulement (lanceur v12)
@@ -31,6 +33,14 @@ prefixe_env() {   # env -i … avec la clé de Vast et les variables du mandatai
 court() { case "${1:-}" in *[!0-9a-f]*|'') echo "commit illisible" >&2; exit 2;; esac; [ "${#1}" = 40 ] || { echo "commit de 40 caractères" >&2; exit 2; }; printf '%s' "${1:0:12}"; }
 inventaire_cmd() { echo "timeout -k 10 120 $(prefixe_env) vastai show instances --raw > \"$ETAT_DIR/inventaire-$1.json\" 2> \"$ETAT_DIR/inventaire-$1.json.err\"; bash scripts/lancer_sparks_exp7_nul_v12.sh inventaire \"$ETAT_DIR/inventaire-$1.json\" $1 $2"; }
 cd "$ICI"
+if [ "$QUOI" = recherche ]; then   # même sorte de carte que la session 1 (instance 59288960 : RTX 3090, pilote 610.57.04, R-1592)
+    CARTE="${SPARKS_DIAG_CARTE:-RTX_3090}"
+    case "$CARTE" in *[!A-Za-z0-9_]*|'') echo "carte illisible (lettres, chiffres, soulignés seuls) : $CARTE" >&2; exit 2;; esac
+    mkdir -p "$ETAT_DIR"
+    echo "Recherche d'offres du diagnostic, même sorte de carte que la session 1 (gpu_name=$CARTE ; RTX 3090 par défaut ; lecture seule ; sortie brute effacée après filtrage) :"
+    echo "timeout -k 10 120 $(prefixe_env) vastai search offers 'num_gpus=1 gpu_name=$CARTE rentable=true verified=true' -o dph_total --raw > \"$ETAT_DIR/offres-brutes.json\" 2> \"$ETAT_DIR/offres-brutes.json.err\"; bash scripts/lancer_sparks_exp7_nul_v12.sh offres \"$ETAT_DIR/offres-brutes.json\""
+    exit 0
+fi
 CODE="${2:?commit du diagnostic}"; GOT="${3:?GO_ID du tir}"; RANG="${4:-1}"; LANCE="${5:-0d163bdcea563a9e001f336c33f36ee6d41c800a}"
 COURT=$(court "$CODE"); court "$LANCE" >/dev/null
 case "$RANG" in [1-4]) ;; *) echo "rang de l'offre : 1 à 4" >&2; exit 2;; esac
@@ -64,7 +74,8 @@ GO_ID=$GOT timeout -k 10 300 $(prefixe_env) vastai create instance $OFFRE --imag
    Instance encore là après T+40 min + 10 min : bash scripts/lancer_sparks_exp7_nul_v12.sh destruction \$ID (puis l'inventaire qu'il imprime).
 4. Relevés (branche poussée par l'instance ; **lecture par la mère** ; aucune valeur de clé : garde des secrets de l'amorce) :
    git fetch origin refs/heads/essai/sparks-diag-env-v1-\$ID:refs/remotes/origin/essai/sparks-diag-env-v1-\$ID
-   git show origin/essai/sparks-diag-env-v1-\$ID --stat ; fichiers sous diag-env/ : tests.txt, tests-code.txt, pip.txt, pip-freeze.txt,
-   python-version.txt, nvidia-smi.txt, torch.txt, env-sans-secrets.txt, systeme.txt.
+   git show origin/essai/sparks-diag-env-v1-\$ID --stat ; fichiers sous diag-env/ : tests.txt (pytest --tb=long -rA, complet),
+   tests-code.txt, pip.txt, pip-freeze.txt, python-version.txt, nvidia-smi.txt, torch.txt, env-sans-secrets.txt, systeme.txt,
+   systeme-paquets.txt, amorce-journal.txt (journal complet de l'amorce, tee), minuterie.log, demarrages.txt.
 Devis : $(printf '%s' "$L" | sed -n 's/.*DEVIS_USD=\([0-9.]*\).*/\1/p') USD au plus (40 min + relance + marge), sous $GOT.
 FIN

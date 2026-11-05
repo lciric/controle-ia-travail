@@ -29,8 +29,8 @@ GO_TIR = ("| id | a | b | c | d | e | f | g |\n"
           "| GO-2026-11-05-09 | 2026-11-05 | calcul | SPARKS-EXP7-NUL tir réel, codes v10 et suivants | 5 USD | 2026-11-06 | Lazar | mot |\n")
 
 
-def _git(d, *a):
-    return subprocess.run(["git", "-C", str(d), *a], check=True, capture_output=True, text=True).stdout.strip()
+def _git(d, *a, check=True):
+    return subprocess.run(["git", "-C", str(d), *a], check=check, capture_output=True, text=True).stdout.strip()
 
 
 def _diag():
@@ -57,7 +57,7 @@ def test_sequence_du_script_d_instance_v12_reprise():
     t = AMORCE.read_text(encoding="utf-8")
     for l in ('python3.11 -m venv "$R/venv" 2>/dev/null || python3 -m venv "$R/venv"', 'pip install -q -r requirements-gpu.txt',
               'pip freeze > "$D/pip-freeze.txt"', 'export PYTHONPATH=src PYTHONDONTWRITEBYTECODE=1 TOKENIZERS_PARALLELISM=false',
-              'python -I -B -m pytest -q -p no:cacheprovider --tb=short -rA $ESSAIS > "$D/tests.txt" 2>&1'):
+              'python -I -B -m pytest -q -p no:cacheprovider --tb=long -rA $ESSAIS > "$D/tests.txt" 2>&1'):
         assert l in t, l
     assert 'python3.11 -m venv "$TRAVAIL/venv" 2>/dev/null || python3 -m venv "$TRAVAIL/venv"' in i and "pip install -q -r requirements-gpu.txt" in i
     assert "python -I -B -m pytest -q -p no:cacheprovider tests/test_sparks_exp7_nul_v1.py" in i
@@ -127,8 +127,11 @@ def _depot_nu(tmp_path: Path, refuse_poussee: bool = False) -> Path:
     b = tmp_path / "depot.git"
     _git(tmp_path, "init", "-q", "--bare", str(b))
     (b / "objects" / "info" / "alternates").write_text(str(commun / "objects") + "\n")
-    if (commun / "shallow").exists():
-        shutil.copy(commun / "shallow", b / "shallow")
+    # Le fichier `shallow` du dépôt de travail n'est PAS copié : sur un clone peu profond, un dépôt nu « shallow » servi
+    # avec `--filter=blob:none` fait boucler `git-upload-pack` (des milliers de processus, mémoire épuisée ; relevé le
+    # 5 novembre 2026 par la fille 7). Sans lui, le clone partiel et le checkout du commit de lancement tiennent en une seconde.
+    if not _git(RACINE, "cat-file", "-t", LANCEMENT, check=False):
+        pytest.skip(f"commit de lancement {LANCEMENT[:12]} absent du dépôt de travail : git fetch par refspec explicite d'abord")
     _git(b, "config", "uploadpack.allowFilter", "true")
     _git(b, "config", "uploadpack.allowAnySHA1InWant", "true")
     _git(b, "update-ref", "refs/heads/lancement", LANCEMENT)
@@ -184,7 +187,7 @@ def test_diagnostic_de_bout_en_bout_local_poussee_verifiee_puis_destruction(tmp_
     tete = _git(b, "rev-parse", f"refs/heads/essai/sparks-diag-env-v1-{ID}")
     fichiers = _git(b, "ls-tree", "-r", "--name-only", tete).splitlines()
     for f in ("tests.txt", "tests-code.txt", "pip.txt", "pip-freeze.txt", "python-version.txt", "nvidia-smi.txt", "env-sans-secrets.txt",
-              "systeme.txt", "torch.txt"):
+              "systeme.txt", "systeme-paquets.txt", "torch.txt", "amorce-journal.txt", "minuterie.log", "demarrages.txt"):
         assert f"diag-env/{f}" in fichiers, f
         contenu = subprocess.run(["git", "-C", str(b), "show", f"{tete}:diag-env/{f}"], capture_output=True, text=True).stdout
         assert SECRET not in contenu and "cle-conteneur-factice-123" not in contenu, f      # garde des secrets, de bout en bout
@@ -192,6 +195,10 @@ def test_diagnostic_de_bout_en_bout_local_poussee_verifiee_puis_destruction(tmp_
     assert "passed" in _git(b, "show", f"{tete}:diag-env/tests.txt") and "PASSED" in _git(b, "show", f"{tete}:diag-env/tests.txt")   # -rA
     assert "venv existant" in _git(b, "show", f"{tete}:diag-env/pip.txt")
     assert _git(b, "rev-parse", f"{tete}^") == LANCEMENT                                  # relevés posés sur le commit de lancement
+    journal = _git(b, "show", f"{tete}:diag-env/amorce-journal.txt")                      # journal complet (tee), socle compris
+    assert "AMORCE V10 DEMARRAGE 1" in journal and "séquence du script d'instance v12" in journal and "essais : code 0" in journal
+    assert "minuterie" in _git(b, "show", f"{tete}:diag-env/minuterie.log") and _git(b, "show", f"{tete}:diag-env/demarrages.txt").strip() == "1"
+    assert (r_ / "diag-amorce-journal.txt").read_text().count("AMORCE V10 DEMARRAGE 1") == 1
 
 
 def test_poussee_refusee_destruction_quand_meme(tmp_path, venv_present):
@@ -203,16 +210,48 @@ def test_poussee_refusee_destruction_quand_meme(tmp_path, venv_present):
 
 
 # --- 4. gardes du lanceur --------------------------------------------------------------------------------------------------
-def test_liste_du_diagnostic_hors_du_code_scelle():
+def _clone_du_diagnostic(tmp_path: Path):
+    """Clone partagé de l'arbre de travail, où les quatre fichiers du diagnostic sont pris tels qu'ils sont sur le disque, avec
+    leurs compagnons `.sha256` s'ils existent, sinon des compagnons FACTICES (une ligne « essai », jamais une empreinte : la
+    mère seule scelle), le tout commis : `verifier_liste` et le lanceur exigent les huit fichiers. Rend (clone, tête)."""
+    c = tmp_path / "clone-diag"
+    subprocess.run(["git", "clone", "-q", "--shared", str(RACINE), str(c)], check=True, capture_output=True, timeout=120)
+    if not _git(c, "cat-file", "-t", LANCEMENT, check=False):
+        pytest.skip(f"commit de lancement {LANCEMENT[:12]} absent : git fetch par refspec explicite d'abord")
+    for f in _diag().FICHIERS:
+        shutil.copy(RACINE / f, c / f)
+        comp = RACINE / (f + ".sha256")
+        if comp.exists():
+            shutil.copy(comp, c / (f + ".sha256"))
+        else:
+            (c / (f + ".sha256")).write_text("essai : compagnon factice, non scellé\n")
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "add", "-A")
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-q", "--allow-empty", "-m", "essai : diagnostic avec compagnons")
+    return c, _git(c, "rev-parse", "HEAD")
+
+
+def test_liste_du_diagnostic_hors_du_code_scelle(tmp_path):
     d = _diag()
-    tete = _git(RACINE, "rev-parse", "HEAD")
-    if tete == CODE_SCELLE or _git(RACINE, "status", "--porcelain"):
-        pytest.skip("commit du diagnostic non encore écrit")
-    assert d.verifier_liste(RACINE, tete) == 8
-    with pytest.raises(d.GardeTir, match="hors liste"):
-        d.verifier_liste(RACINE, LANCEMENT)                                      # le commit de lancement ajoute l'addendum : refus
+    c, tete = _clone_du_diagnostic(tmp_path)
+    assert d.verifier_liste(c, tete) == 8                                        # cas sain : quatre fichiers et quatre compagnons
+    with pytest.raises(d.GardeTir, match="modifie ou supprime.*registres/go.md"):
+        d.verifier_liste(c, LANCEMENT)                                           # le commit de lancement touche registres/go.md : refus
     with pytest.raises(d.GardeTir, match="ne descend pas"):
-        d.verifier_liste(RACINE, "4fd104072bcdf22bb0f5eb1daffca295858f0ac6")
+        d.verifier_liste(c, "4fd104072bcdf22bb0f5eb1daffca295858f0ac6")
+    with pytest.raises(d.GardeTir, match="40 chiffres"):
+        d.verifier_liste(c, "abc")
+    # artefacts : un commit qui touche un fichier du code scellé → refus ; un fichier de plus → « hors liste »
+    with (c / "scripts" / "lancer_sparks_exp7_nul_v12.sh").open("a") as fh:
+        fh.write("# ligne d'essai\n")
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-qam", "essai : modifie le code scellé")
+    with pytest.raises(d.GardeTir, match="modifie ou supprime"):
+        d.verifier_liste(c, _git(c, "rev-parse", "HEAD"))
+    _git(c, "reset", "-q", "--hard", tete)
+    (c / "scripts" / "fichier_en_plus_v1.py").write_text("# essai\n")
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "add", "-A")
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-qm", "essai : un fichier de plus")
+    with pytest.raises(d.GardeTir, match=r"hors liste \['scripts/fichier_en_plus_v1.py'\]"):
+        d.verifier_liste(c, _git(c, "rev-parse", "HEAD"))
 
 
 def test_go_du_diagnostic_quarante_minutes(tmp_path):
@@ -231,33 +270,48 @@ def test_go_du_diagnostic_quarante_minutes(tmp_path):
         d.preparer(p, "GO-2026-11-05-09", 0.06, 0.004, date(2026, 11, 9))
 
 
-def _lanceur(tmp_path, *args, **env):
+def _lanceur(tmp_path, *args, lanceur=LANCEUR, **env):
     e = {"PATH": "/usr/bin:/bin", "HOME": str(tmp_path), "SPARKS_ETAT_DIR": str(tmp_path / "etat")}
     e.update(env)
-    return subprocess.run(["bash", str(LANCEUR), *args], env=e, capture_output=True, text=True, timeout=120)
+    return subprocess.run(["bash", str(lanceur), *args], env=e, capture_output=True, text=True, timeout=120)
 
 
 def test_lanceur_commande_du_tir_de_diagnostic(tmp_path):
-    tete = _git(RACINE, "rev-parse", "HEAD")
-    if tete == CODE_SCELLE or _git(RACINE, "status", "--porcelain"):
-        pytest.skip("commit du diagnostic non encore écrit")
+    c, tete = _clone_du_diagnostic(tmp_path)
+    lanceur = c / "scripts" / "lancer_diag_env_sparks_v1.sh"
     f = tmp_path / "brut.json"
     f.write_text(json.dumps([{"id": 9, "resource_type": "gpu", "num_gpus": 1, "dph_total": 0.06, "storage_cost": 0.15}]))
-    assert _lanceur(tmp_path, "offres", str(f)).returncode == 0                   # délégué au lanceur v12
+    assert _lanceur(tmp_path, "offres", str(f), lanceur=lanceur).returncode == 0   # délégué au lanceur v12
     reg = tmp_path / "go.md"
     reg.write_text(GO_TIR)
-    r = _lanceur(tmp_path, "tir", tete, "GO-2026-11-05-09", "1", SPARKS_REGISTRE_GO=str(reg), SPARKS_DATE_TIR="2026-11-05")
+    r = _lanceur(tmp_path, "tir", tete, "GO-2026-11-05-09", "1", lanceur=lanceur, SPARKS_REGISTRE_GO=str(reg), SPARKS_DATE_TIR="2026-11-05")
     assert r.returncode == 0, r.stderr
     t = r.stdout
     assert "DIAGNOSTIC HORS DU CODE SCELLÉ : 8 fichiers neufs" in t and "DIAGNOSTIC CONFORME : offre 9 (rang 1)" in t and "MINUTES=40" in t
     assert "vastai create instance 9 --image pytorch/pytorch:2.9.1-cuda12.8-cudnn9-runtime --disk 20 --label sparks-diag-env-v1-" in t
     assert f"-e COMMIT={LANCEMENT} -e ECHEANCE_UTC_S=" in t and "-e GH_TOKEN=$CONTROLE_IA_GITHUB_TOKEN" in t and "HF_TOKEN" not in t
     assert f'git show "{tete}:scripts/amorce_diag_env_sparks_v1.sh"' in t and "GO_ID=GO-2026-11-05-09 timeout -k 10 300" in t
-    assert "apres-creation" in t and "journal-amorce" in t and "vastai show instances --raw" in t and "'$ID' absente" in t
-    r2 = _lanceur(tmp_path, "tir", tete, "GO-2026-11-05-09", "1", SPARKS_REGISTRE_GO=str(reg), SPARKS_DATE_TIR="2026-11-09")
+    assert "apres-creation" in t and "journal-amorce" in t and "vastai show instances --raw" in t and "$ID absente" in t
+    assert SECRET not in t and "amorce-journal.txt" in t and "minuterie.log" in t
+    r2 = _lanceur(tmp_path, "tir", tete, "GO-2026-11-05-09", "1", lanceur=lanceur, SPARKS_REGISTRE_GO=str(reg), SPARKS_DATE_TIR="2026-11-09")
     assert r2.returncode == 2 and "validité" in r2.stderr
-    r3 = _lanceur(tmp_path, "tir", LANCEMENT, "GO-2026-11-05-09", "1", SPARKS_REGISTRE_GO=str(reg), SPARKS_DATE_TIR="2026-11-05")
-    assert r3.returncode == 2 and "hors liste" in r3.stderr                        # un commit qui n'est pas le diagnostic : refus
+    r3 = _lanceur(tmp_path, "tir", LANCEMENT, "GO-2026-11-05-09", "1", lanceur=lanceur, SPARKS_REGISTRE_GO=str(reg), SPARKS_DATE_TIR="2026-11-05")
+    assert r3.returncode == 2 and "modifie ou supprime" in r3.stderr               # un commit qui n'est pas le diagnostic : refus
+    if not (RACINE / "scripts" / "amorce_diag_env_sparks_v1.sh.sha256").exists() and not _git(RACINE, "status", "--porcelain"):
+        tete_arbre = _git(RACINE, "rev-parse", "HEAD")                              # tête de l'arbre, non scellée : refus (compagnons absents)
+        r4 = _lanceur(tmp_path, "tir", tete_arbre, "GO-2026-11-05-09", "1", lanceur=lanceur, SPARKS_REGISTRE_GO=str(reg), SPARKS_DATE_TIR="2026-11-05")
+        assert r4.returncode == 2 and "absents" in r4.stderr
+
+
+def test_lanceur_recherche_la_meme_sorte_de_carte_que_la_session_1(tmp_path):
+    r = _lanceur(tmp_path, "recherche")
+    assert r.returncode == 0, r.stderr
+    assert "vastai search offers 'num_gpus=1 gpu_name=RTX_3090 rentable=true verified=true' -o dph_total --raw" in r.stdout
+    assert "lancer_sparks_exp7_nul_v12.sh offres" in r.stdout and "RTX 3090" in r.stdout
+    r = _lanceur(tmp_path, "recherche", SPARKS_DIAG_CARTE="RTX_4090")
+    assert r.returncode == 0 and "gpu_name=RTX_4090" in r.stdout
+    r = _lanceur(tmp_path, "recherche", SPARKS_DIAG_CARTE="RTX 3090; rm")
+    assert r.returncode == 2 and "carte" in r.stderr
 
 
 def test_lanceur_delegue_les_autres_modes_au_v12(tmp_path):
@@ -267,3 +321,72 @@ def test_lanceur_delegue_les_autres_modes_au_v12(tmp_path):
     assert r.returncode == 0 and "état exited (cur_state stopped)" in r.stdout and not f.exists()
     r = _lanceur(tmp_path, "destruction", "7")
     assert "vastai destroy instance 7 -y" in r.stdout
+
+
+# --- 5. gardes jouées une à une : minuterie, échéance passée, code de fin (cas sain et artefact, R5) ------------------------
+def _minuterie_texte() -> str:
+    t = AMORCE.read_text(encoding="utf-8")
+    return t[t.index("<<'MINUTERIE'\n") + len("<<'MINUTERIE'\n"):t.index("\nMINUTERIE\n")]
+
+
+def _minuterie(tmp_path: Path, ech: int, faux_curl: str | None = None, **env):
+    r_ = tmp_path / "racine"
+    r_.mkdir(parents=True, exist_ok=True)
+    s = tmp_path / "minuterie.sh"
+    s.write_text(_minuterie_texte())
+    b = _faux_bin(tmp_path)
+    if faux_curl is not None:
+        (b / "curl").write_text(faux_curl)
+    e = {"PATH": f"{b}:/usr/bin:/bin", "FAUX_JOURNAL": str(tmp_path / "faux.log"), "CONTAINER_ID": ID,
+         "CONTAINER_API_KEY": "cle-conteneur-factice-123", "MINUTERIE_PAS_S": "1", "MINUTERIE_REESSAI_S": "1", "MINUTERIE_MARGE_S": "3"}
+    e.update({k: str(v) for k, v in env.items()})
+    r = subprocess.run(["bash", str(s), str(ech), str(r_), "https://api.invalid/v0"], env=e, capture_output=True, text=True, timeout=60)
+    log = (r_ / "sparks-v5-minuterie.log").read_text() if (r_ / "sparks-v5-minuterie.log").exists() else ""
+    return r.returncode, log, (tmp_path / "faux.log").read_text() if (tmp_path / "faux.log").exists() else ""
+
+
+def test_minuterie_cas_sain_detruit_a_l_echeance(tmp_path):
+    t0 = time.time()
+    code, log, faux = _minuterie(tmp_path, int(t0) + 2)
+    assert code == 0 and "DELETE instance 123456 (essai 1, échéance) : HTTP 200, refus dans le corps : non" in log and "détruite" in log
+    assert time.time() - t0 >= 1 and "curl -sS -m 60" in faux and "-X DELETE" in faux and "/instances/123456/" in faux
+    assert "cle-conteneur-factice-123" not in log                                # la clé passe en en-tête, jamais au journal
+
+
+def test_minuterie_ordre_de_la_machine_avant_l_echeance(tmp_path):
+    (tmp_path / "racine").mkdir()
+    (tmp_path / "racine" / "sparks-v5-detruire").write_text("essai\n")
+    code, log, _ = _minuterie(tmp_path, int(time.time()) + 3600)
+    assert code == 0 and "ordre de la machine" in log and "détruite" in log
+
+
+def test_minuterie_artefacts_refus_http_et_identifiant_illisible(tmp_path):
+    code, log, faux = _minuterie(tmp_path / "a", 0, FAUX_HTTP="500")
+    assert code == 4 and "HTTP 500" in log and "ALARME : destruction non obtenue" in log and faux.count("-X DELETE") >= 1
+    code, log, _ = _minuterie(tmp_path / "b", 0, CONTAINER_ID="")
+    assert code == 3 and "identifiant d'instance illisible : aucun geste" in log
+
+
+def test_minuterie_artefact_refus_dans_le_corps(tmp_path):
+    curl = ('#!/bin/bash\no=""; p=""; for a in "$@"; do [ "$p" = -o ] && o="$a"; p="$a"; done\n'
+            '[ -n "$o" ] && printf %s \'{"success": false, "msg": "essai"}\' > "$o"\nprintf %s 200\n')
+    code, log, _ = _minuterie(tmp_path, 0, faux_curl=curl)
+    assert code == 4 and "HTTP 200, refus dans le corps : oui" in log and "détruite" not in log
+
+
+def test_amorce_demarree_apres_l_echeance_detruit_sans_rien_cloner(tmp_path):
+    env = _env(tmp_path, f"file://{tmp_path}/absent.git", ECHEANCE_UTC_S=str(int(time.time()) - 100))
+    code, out, log, r_ = _amorce(tmp_path, env, timeout=120)
+    assert code == 0 and "démarrage après l'échéance : aucun calcul" in out and "clonage" not in out, out
+    assert "DELETE instance 123456" in log and "détruite" in log and not (r_ / "amorce-depot").exists()
+
+
+def test_code_de_fin_artefact_essais_sans_resultat_pousse_et_detruit(tmp_path, venv_present):
+    """Essais qui ne rendent pas 0 (ici pytest 5, aucun essai sélectionné) : le code est relevé, les relevés partent quand
+    même, la destruction suit, et l'amorce sort avec le code des essais (la session le lit au journal)."""
+    b = _depot_nu(tmp_path)
+    code, out, log, _ = _amorce(tmp_path, _env(tmp_path, f"file://{b}", DIAG_FICHIERS_ESSAIS="tests/test_sparks_exp7_nul_v1.py -k aucun_essai_de_ce_nom"))
+    assert "essais : code 5 :" in out and "poussée vérifiée sur essai/sparks-diag-env-v1-123456" in out, out[-2000:]
+    assert "destruction demandée (fin du diagnostic (essais : code 5), poussée vérifiée)" in out and code == 5
+    tete = _git(b, "rev-parse", f"refs/heads/essai/sparks-diag-env-v1-{ID}")
+    assert _git(b, "show", f"{tete}:diag-env/tests-code.txt").strip() == "5" and "DELETE instance 123456" in log
