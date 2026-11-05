@@ -10,8 +10,8 @@ ligne « à faire ». Noms neufs (R12) : aucun fichier v1, v2 ni gelé n'est mod
 | C-V3-2 second démarrage avant les contrôles d'heure : consigner, puis détruire (argent épuisé) ou dormir (fin normale) | fait (J1, J2) | `scripts/amorce_instance_t06_v3.sh` ; essais `tests/test_t06_v3_scripts.py` |
 | C-V3-3 offre relue avec `--storage <disque_min_go>` | fait (J1, J2) | `scripts/lancer_t06_v3.sh` ; essai sur un faux `vastai` |
 | C-V3-4 Mahalanobis par produit matriciel, égalité au paquet gelé avant chaque usage, clé de configuration (défaut : paquet gelé) | fait (J1, J2) | `sondes/familles_v2.py`, `t06/configuration_v3.py`, `t06/lanceur_v3.py` ; configurations v4 et brouillon 3 |
-| essais v3 | fait (J2 : 37 essais v3 verts ; suites v1 (76) et v2 (67) rejouées vertes) | `tests/test_t06_v3_configuration.py`, `_familles.py`, `_lanceur_jouet.py`, `_scripts.py` |
+| essais v3 | fait (J2 : 42 essais v3 verts, « 37 » dans le message du commit J2 était un compte de tête faux ; suites v1 (76) et v2 (67) rejouées vertes) | `tests/test_t06_v3_configuration.py`, `_familles.py`, `_lanceur_jouet.py`, `_scripts.py` |
 | banc v3 | fait (J3 : 55 mutations, 55 tuées, 6 témoins verts) | `scripts/banc_mutations_t06_v3.py`, `banc-mutations-t06-v3.log`, `.json` |
 | E1 v3 | fait (J4 : code 0, 55 tests, 0 mot interdit ; rejoué aussi sous la v2 de Mahalanobis) | `scripts/epreuve_e1_t06_v3.sh`, `epreuve-e1-t06-v3-journal.md` |
 | mesure de durée de Mahalanobis v2 (jouet, E0 au 1/64 et 1/256) | fait (J4) | `scripts/epreuve_e0_t06_v3.py`, rapport |
-| rapport v3 | à faire (J5) | `rapport-developpeur-lanceur-T0.6-v3.md` |
+| rapport v3 | fait (J5) | `rapport-developpeur-lanceur-T0.6-v3.md` |
