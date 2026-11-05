@@ -1,68 +1,68 @@
 TACHE 3
-=== D 11
+=== D 1
 ACTION: ADD
 TITLE: Label correction as a sequential decision problem solved by reinforcement learning
 PROPOSAL: We cast label correction as a Markov decision process in which a correction agent observes a training sample's features, current label and the classifier's predictive distribution, and chooses to keep the label or replace it with another class. The reward is the change in the classifier's accuracy on a small trusted validation split after a training interval, so the agent learns from delayed consequences. We train the agent with an actor-critic method on image benchmarks with synthetic and real noise.
 CONTROLS: Training on noisy labels, small-loss sample selection, label correction by the model's own predictions, and a semi-supervised method that treats suspected noisy samples as unlabelled, at noise rates from mild to severe.
 COST: 380
 PREDICTION: The agent should outperform greedy self-correction at high noise rates, where early mistakes compound. The trusted split may be too small to give a stable reward signal at the largest class counts.
-=== D 12
+=== D 2
 ACTION: ADD
 TITLE: Exploration in label correction through stochastic relabelling policies
 PROPOSAL: We compare deterministic relabelling, which always picks the most probable class, with stochastic relabelling that samples a class from a learned policy and is rewarded by downstream accuracy over many epochs. The point is to test whether exploring alternative corrections avoids locking in early errors under instance-dependent noise. Experiments use image classification benchmarks with feature-dependent synthetic noise and two datasets with real annotation noise.
 CONTROLS: Deterministic relabelling with the same features, stochastic relabelling with a fixed temperature but no learning, and no correction, each with five seeds.
 COST: 260
 PREDICTION: Learned stochastic relabelling should yield higher clean test accuracy than deterministic relabelling at severe noise. Its variance across seeds may be larger, which we will report alongside the mean.
-=== D 13
+=== D 3
 ACTION: ADD
 TITLE: Benchmarking label correction under instance-dependent noise of increasing severity
 PROPOSAL: We generate instance-dependent noise whose flip probability grows with similarity to other classes in a pretrained feature space, at rates from ten to fifty percent, and evaluate existing correction, selection, reweighting and robust-loss methods alongside a learned correction policy. Beyond final accuracy, we measure the precision and recall of the corrected labels against the true ones over training.
 CONTROLS: Class-conditional noise at the same rates for comparison, clean-label training as the ceiling, and training on noisy labels as the floor.
 COST: 300
 PREDICTION: Methods relying on small-loss selection should degrade sharply under instance-dependent noise, while correction methods that use features should degrade more gently. Learned policies may need more validation data than the others.
-=== D 14
+=== D 4
 ACTION: ADD
 TITLE: Credit assignment for delayed effects of label corrections
 PROPOSAL: We study how to attribute changes in validation accuracy to individual label corrections made many steps earlier, comparing Monte Carlo returns, temporal-difference learning with a learned critic, and influence-function estimates of each correction's effect. The comparison runs inside a reinforcement learning label corrector trained on noisy image classification.
 CONTROLS: A corrector rewarded only by immediate loss change, a corrector with random credit, and an oracle that knows which labels are wrong, used to measure how close each credit scheme comes to ideal decisions.
 COST: 220
 PREDICTION: Critic-based credit should come closest to the oracle at moderate cost. Influence estimates may become unreliable late in training when the loss landscape is flat.
-=== D 15
+=== D 5
 ACTION: ADD
 TITLE: Learned label correction on real-world noisy datasets
 PROPOSAL: We apply a reinforcement learning label corrector to datasets whose noise comes from real annotation processes, including web-crawled clothing images and crowd-sourced animal photos with known error patterns, and examine which corrections it makes, which classes it confuses, and how its decisions change as training progresses.
 CONTROLS: Training on given labels, self-correction by model predictions, sample selection by small loss, and a manually verified subset of labels used to estimate correction precision.
 COST: 420
 PREDICTION: The corrector should achieve higher precision of corrections than self-correction, especially in confusable class pairs. Real noise with ambiguous true labels may limit what any corrector can reach.
-=== D 16
+=== D 6
 ACTION: ADD
 TITLE: How much trusted data a learned label corrector needs
 PROPOSAL: We vary the size of the trusted validation split used to compute rewards for a reinforcement learning label corrector, from a handful of samples per class to a few hundred, and measure clean test accuracy and correction precision on image benchmarks at high noise. We also test a reward computed from agreement between two independently trained classifiers that needs no trusted data at all.
 CONTROLS: Methods that use the trusted split directly for fine-tuning, the corrector without any trusted split, and no correction.
 COST: 270
 PREDICTION: Performance should saturate once each class has a few dozen trusted samples. The agreement-based reward could work at moderate noise but fail when both classifiers learn the same errors.
-=== D 17
+=== D 7
 ACTION: ADD
 TITLE: Combining learned correction with semi-supervised training
 PROPOSAL: We let a learned correction policy decide, for each suspected noisy sample, among keeping the label, relabelling it, or discarding the label so that the sample joins an unlabelled pool used with consistency regularisation. This joint action space lets the policy defer hard cases instead of committing to a correction. We test on image benchmarks at high instance-dependent noise.
 CONTROLS: The same policy restricted to keep or relabel, a semi-supervised method with loss-based splitting, and no correction.
 COST: 350
 PREDICTION: The deferral action should improve accuracy most at the highest noise levels. The policy may defer too often early in training, slowing learning.
-=== D 18
+=== D 8
 ACTION: ADD
 TITLE: Transfer of a trained label-correction policy across datasets
 PROPOSAL: Train a label-correction policy on one noisy dataset and apply it unchanged to another with different classes and noise patterns, using only class-agnostic inputs such as prediction entropy, loss trajectory and feature-space neighbourhood agreement. If the policy transfers, correction can run on new data without the cost of learning a policy from scratch.
 CONTROLS: A policy trained from scratch on the target dataset, self-correction, and no correction, with five seeds.
 COST: 240
 PREDICTION: The transferred policy should retain most of the benefit of a target-trained policy on similar image datasets. Transfer across very different noise patterns may fail.
-=== D 19
+=== D 9
 ACTION: ADD
 TITLE: Training dynamics of classifiers under learned versus greedy relabelling
 PROPOSAL: We track memorisation of wrong labels, the fraction of noisy samples fitted, and the evolution of clean validation accuracy for classifiers trained alongside a learned correction policy and alongside greedy self-correction. The aim is to see whether learned correction delays memorisation of noise or only corrects it after the fact.
 CONTROLS: Training without correction, training on clean labels, and early stopping chosen on a trusted split.
 COST: 160
 PREDICTION: Learned correction should keep the fraction of fitted noisy labels lower throughout training. If memorisation happens equally, gains come only from late corrections.
-=== D 20
+=== D 10
 ACTION: ADD
 TITLE: Scaling learned label correction to many classes
 PROPOSAL: We adapt a reinforcement learning label corrector to datasets with hundreds of classes by restricting its action to a small candidate set of classes proposed from feature-space neighbours, so that the action space stays manageable. We evaluate on a hundred-class and a two-hundred-class image benchmark with instance-dependent noise.

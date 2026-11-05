@@ -50,7 +50,12 @@ cours, non scellé ») pendant le travail ; ce rapport n'a rien commis.
   six paires par tâche, textes tirés d'un lexique de 36 mots (blocs tournés entre les deux membres : même multiensemble
   de mots, D1 ≈ 0,42, aucune fuite lexicale possible), tokeniseur `WordLevel` minuscule construit par le test ; ce ne
   sont pas des paires des jeux réels.
-- Suite entière du dépôt : __SUITE__
+- Suite entière du dépôt : jouée une fois, en huit lots séquentiels de fichiers (un seul `pytest` à la fois, chaque lot sous
+  `timeout 900 nice -n 10`, la suite d'un seul tenant ayant été tuée par `timeout 900` à 42 % ; lots 0 à 3 avant le
+  redémarrage du conteneur de 21:06 UTC, lot 4 rejoué entier après, lots 5 à 7 ensuite) : **2 695 essais passés, 3 échecs,
+  tous les 69 fichiers joués**. Les 3 échecs sont `tests/test_corpus_arxiv.py` (`ModuleNotFoundError: No module named
+  'pypandoc'`), préexistants et sans rapport avec ce travail (même échec dans le journal de la suite jouée par une autre
+  fille à 19:45 UTC). Journal des lots : `scratchpad/l4-pytest-depot-lots.log` et `l4-lot-0..7.log` (hors dépôt).
 
 ## 3. Relecture règle par règle : règle de la consigne → fonction du script → essai sain → essai artefact
 
