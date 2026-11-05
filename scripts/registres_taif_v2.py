@@ -70,6 +70,7 @@ _PUCE_DATEE = re.compile(r"^- (\d{4}-\d{2}-\d{2})[^—]*—\s*(.*)$")
 _ID_PRED = re.compile(r"^\**([A-Za-z][\w.\-]*\d[\w.\-]*|P\d+[a-z]?)\**(\s*\(.*\))?$")
 _ID_BRAS = re.compile(r"^([A-Z])[a-z]-(\d)")
 _CONTRE_LECTURE = re.compile(r"Contre-lecture\s+(\d+)\s*\*{0,2}\s*(\(([^)]*)\))?")
+_SEGMENT = re.compile(r";|\.\s+(?=[A-ZÀ-Ý*«\[(])")        # séparateurs de segments de prose : « ; » ou une fin de phrase
 LARGEUR_CELLULE = 220
 
 # Dossiers lus (relatifs à la racine).
@@ -99,12 +100,13 @@ REGLES_CANDIDATURE = [
     (r"organism", "T0.6"), (r"probe", "T0.7"), (r"black-box baseline", "T0.8"), (r"compute spent", None),
 ]
 # Mots-clés d'issue lus dans les lignes de verdict qui citent une prédiction (ordre : les négations d'abord).
-# v2 : « sans objet » est une issue à part (changement 3), avant « non atteint ».
+# v2 : « sans objet » est une issue à part (changement 3), lue avant « non établi » (« sans objet (cible non établie) »).
 ISSUES = [
-    (r"non conforme", "réfutée (non conforme)"), (r"non prouvé", "non prouvée"), (r"non établi", "non établie"),
-    (r"non concluant|non tranché", "non concluante"), (r"sans objet", "sans objet"), (r"non atteint|n'est pas atteint", "non atteinte"),
+    (r"non conforme", "réfutée (non conforme)"), (r"sans objet", "sans objet"), (r"non prouvé", "non prouvée"),
+    (r"non établi", "non établie"), (r"non concluant|non tranché", "non concluante"), (r"non atteint|n'est pas atteint", "non atteinte"),
     (r"non déclench", "non déclenchée"),
     (r"réfut", "réfutée"), (r"contraire", "réfutée (contraire)"),
+    (r"sans verdict", "rapportée sans verdict (descriptive)"),
     (r"conforme|confirm|établi|prouvé", "confirmée"),
 ]
 # Cellule d'une colonne d'issue d'une table de lecture : « oui » / « non » sous un en-tête « conforme » (« non tranché » se lit
@@ -125,7 +127,8 @@ MOTS_VERDICT_DECISIONS = re.compile(r"verdict (R13|scellé|de lecture|de porte)|
 CATEGORIES_ISSUE = [
     ("confirmée", "confirmée"), ("réfutée", "réfutée"), ("non concluante", "non concluante"),
     ("non atteinte", "non atteinte"), ("sans objet", "sans objet"), ("non déclenchée", "non déclenchée"),
-    ("non prouvée", "non prouvée"), ("non établie", "non établie"), ("mixte", "mixte (plusieurs identifiants, issues différentes)"),
+    ("non prouvée", "non prouvée"), ("non établie", "non établie"), ("rapportée sans verdict", "rapportée sans verdict (descriptive)"),
+    ("mixte", "mixte (plusieurs identifiants, issues différentes)"),
     ("contradictoire", "contradictoire"), ("non citée par le verdict", "non citée par le verdict"),
     ("registre des décisions", "registre des décisions (sans verdict scellé)"),
     ("non encore lue", "non encore lue (run décisif fait, aucun verdict scellé)"),
@@ -198,7 +201,8 @@ def motif_id(identifiant: str) -> re.Pattern:
     variantes = [re.escape(identifiant)]
     if _ID_BRAS.match(identifiant):              # « Rk-1 » (par bras), « Rd-6 » se lisent « R1 », « R6 » dans un verdict
         variantes.append(re.escape(_ID_BRAS.sub(r"\1\2", identifiant)))
-    return re.compile(r"(?<![\w.\-])(" + "|".join(variantes) + r")(?![\w.\-])")
+    # « [A2] » entre crochets est une référence de pièce (addendum 2), pas la prédiction A2 : exclu.
+    return re.compile(r"(?<![\w.\-\[])(" + "|".join(variantes) + r")(?![\w.\-\]])")
 
 
 def cellules_table(ligne: str) -> list[str]:
@@ -401,12 +405,16 @@ def jetons_montants(texte: str) -> list[dict]:
     """Jetons de montant d'une ligne, chacun classé : prix (unitaire), hors_depense (cumul, plafond, crédit…),
     partiel (premier relevé, cumulé), fourchette, estime (≈, ≤, environ, borne…), releve (montant nu)."""
     jetons = []
+    fin_precedent = 0
     for m in _JETON.finditer(texte):
         # Contexte avant : la proposition courante, depuis le dernier séparateur (« ; », fin d'un titre en gras « ** : »,
         # « ) : »), au plus FENETRE_AVANT caractères : un mot-clé (cumul, plafond, crédit…) qualifie tous les montants
-        # de sa proposition.
+        # de sa proposition. La marque d'estimation (≈, environ, estimé…) ne vaut que juste avant le montant, après le
+        # montant précédent.
         avant = _SEPARATEUR_PROPOSITION.split(texte[max(0, m.start() - FENETRE_AVANT):m.start()])[-1]
+        immediat = texte[max(fin_precedent, m.start() - 18):m.start()]
         apres = texte[m.end():m.end() + FENETRE_APRES]
+        fin_precedent = m.end()
         gras = bool(m.group("gras")) and bool(m.group("gras_fin"))
         valeur = m.group("bas")
         if _PRIX_UNITAIRE.match(apres):
@@ -418,7 +426,7 @@ def jetons_montants(texte: str) -> list[dict]:
             classe = "partiel"                                # premier relevé, cumulés, déjà imputé
         elif m.group("haut"):
             classe = "fourchette"                             # « 1,6 à 1,7 USD »
-        elif m.group("marque") or _MARQUE_ESTIMATION.search(avant[-18:]) or _APRES_ESTIMATION.match(apres):
+        elif m.group("marque") or _MARQUE_ESTIMATION.search(immediat) or _APRES_ESTIMATION.match(apres):
             classe = "estime"                                 # ≈, ≤, environ, au plus, estimé, attendu, borne
         else:
             classe = "releve"
@@ -499,14 +507,16 @@ def analyser_depenses_strict(dep: Fichier, gos_registre: dict[str, list[dict]]) 
             elif re.match(r"^\s+-\s", l) and date_parent:
                 date, gos, abreges, texte = date_parent, gos_parent, sorted(set(_GO_ABREGE.findall(l))), l.strip()[2:]
             else:
-                if "USD" in l:
+                if "USD" in l and not l.startswith("|"):      # en-tête de table (« coût (USD) ») : pas une entrée
                     journal.append({"ligne": no, "date": "", "gos": [], "raison": "ligne hors entrée (ni table datée ni puce datée) portant un montant",
                                     "montants": [j["texte"] for j in jetons_montants(l)], "texte": l})
                 continue
             if "USD" not in texte:
                 continue
             dec = analyser_ligne_depense(texte)
-        taches = sorted(set(_TACHE.findall(texte)) | {t for g in gos for v in gos_registre.get(g, []) for t in _TACHE.findall(v["perimetre"])})
+        # Tâche de la phase 0 nommée sur la ligne ; sinon dans le périmètre du GO cité (registre des GO).
+        taches = sorted(set(_TACHE.findall(texte))) or \
+            sorted({t for g in gos for v in gos_registre.get(g, []) for t in _TACHE.findall(v["perimetre"])})
         entree = {"ligne": no, "date": date, "gos": gos, "gos_abreges": abreges, "taches": taches, "montant": dec["montant"],
                   "nature": dec["nature"], "raison": dec["raison"], "montants": [j["texte"] for j in dec["jetons"]],
                   "texte": l, "remplacement": bool(_MARQUE_REMPLACEMENT.search(texte))}
@@ -950,20 +960,46 @@ def issue_dans(lignes: list[tuple[int, str]], identifiant: str, tables_aussi: bo
     jamais tranchées). Avec `tables_aussi`, seul « sans objet » est lu dans les cellules de table qui citent l'identifiant."""
     motif = motif_id(identifiant)
     trouvees: dict[str, list[int]] = {}
+    # Prose : paragraphes (lignes consécutives non vides, hors tables et titres ; une puce ouvre un paragraphe), lus par
+    # segments (séparés par « ; » ou par une fin de phrase) ; une phrase coupée par un retour à la ligne est ainsi lue
+    # entière, et une ligne qui cite plusieurs prédictions ne donne à chacune que ses propres segments. Les lignes citées
+    # sont celles du paragraphe qui portent l'identifiant.
+    paragraphe: list[tuple[int, str]] = []
+
+    def lire_paragraphe():
+        if not paragraphe:
+            return
+        texte = " ".join(l.strip() for _, l in paragraphe)
+        if motif.search(texte):
+            for seg in _SEGMENT.split(texte):             # chaque segment est classé à part : contradictions visibles
+                # Le code en ligne (« `controle_contraire` faux ») n'est pas une lecture : retiré avant les mots-clés.
+                issue = classer(re.sub(r"`[^`]*`", " ", seg)) if motif.search(seg) else ""
+                if issue:
+                    for no, l in paragraphe:
+                        if motif.search(l) and no not in trouvees.setdefault(issue, []):
+                            trouvees[issue].append(no)
+        paragraphe.clear()
+
     for no, l in lignes:
         if l.startswith("|"):
+            lire_paragraphe()
             if not tables_aussi:
                 continue
             cellules = [c for c in cellules_table(l) if motif.search(c)]
-            if not cellules:
-                continue
-            issue = "sans objet" if any(re.search(r"sans objet", c, re.I) for c in cellules) else ""
-        else:
-            if not motif.search(l):
-                continue
-            issue = classer(l)
-        if issue:
-            trouvees.setdefault(issue, []).append(no)
+            if cellules and any(re.search(r"sans objet", c, re.I) for c in cellules):
+                trouvees.setdefault("sans objet", []).append(no)
+            continue
+        if re.match(r"^\s*([-*]|\d+\.)\s", l):              # une puce ou un numéro ouvre un paragraphe
+            lire_paragraphe()
+        if not l.strip() or l.startswith("#"):
+            lire_paragraphe()
+            if l.startswith("#") and motif.search(l):
+                issue = classer(l)
+                if issue:
+                    trouvees.setdefault(issue, []).append(no)
+            continue
+        paragraphe.append((no, l))
+    lire_paragraphe()
     return _resoudre(trouvees)
 
 
