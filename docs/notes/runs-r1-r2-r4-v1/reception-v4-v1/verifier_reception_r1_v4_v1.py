@@ -588,12 +588,12 @@ def garder_chaine_locale(ctl, rep, tab):
 
 def garder_commit_rejeu(ctl, A, depot, run_r, commit, racine):
     """Commit lancé du rejeu : descendant de 5bd62a00, qui n'y ajoute que la réparation et la table v4 versées."""
-    ctl.exiger("commit-rejeu", lambda: bool(_HEX40.match(commit)) and git_existe(depot, commit + "^{commit}"),
-               "commit du manifeste du rejeu absent du dépôt (récupérer la branche source)")
+    # forme (40 hexadécimaux) : garde du manifeste ; absence de l'objet : `merge-base` échoue, même arrêt
     tv = A["commits"]["temoin_verse"]
     ctl.exiger("commit-rejeu", lambda: subprocess.run(["git", "-C", str(depot), "merge-base", "--is-ancestor", tv, commit],
                                                        capture_output=True).returncode == 0,
-               "le commit du rejeu ne descend pas du commit du versement du témoin")
+               "commit du rejeu absent du dépôt (récupérer la branche source) ou qui ne descend pas du commit du "
+               "versement du témoin")
     diff = {x for x in git(depot, "diff", "--name-only", "--no-renames", tv, commit).splitlines() if x.strip()}
     attendu = {x for x in chemins_attendus(A, run_r, "x") if x.startswith((f"runs/{run_r}/", f"diag/{run_r}/"))}
     attendu |= {A["table_v4"], A["table_v4"] + SUFFIXE}
@@ -607,9 +607,8 @@ def garder_commit_rejeu(ctl, A, depot, run_r, commit, racine):
 def garder_rejeu(ctl, A, depot, racine, run_r, run_j, configs, tab, table_v3):
     m = garder_manifeste(ctl, "rejeu", A, racine, run_j, A["commandes"]["rejeu"], "config_rejeu", configs,
                          lambda c: bool(_HEX40.match(c)), "fidelite")
-    ctl.exiger("rejeu", lambda: m["config"]["chemin_table_tokenisation"] == A["table_v4"]
-               and m["config"]["table_tokenisation_sha256"] == A["table_en_session"],
-               "configuration du rejeu : table citée ≠ table v4 « construite-en-session »")
+    # table citée par la configuration (`prereg/R1-table-tokenisation-v4.json`, « construite-en-session ») : fixée par
+    # l'égalité de `config` au fichier scellé v6 (garde du manifeste) et son empreinte canonique (garde `textes`)
     garder_commit_rejeu(ctl, A, depot, run_r, m["commit"], racine)
     p = Path(racine) / "diag" / run_j / "rejeu-activations.json"
     garder_rattachement(ctl, "rattachement", racine, run_j, p)

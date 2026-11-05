@@ -973,3 +973,68 @@ def test_versement_modifie_un_chemin_attendu(tmp_path):
 def test_course_arretee_versement_hors_des_runs(tmp_path):
     arret(tmp_path, "versement", arret_rejeu="non conforme",
           verses=lambda v: v.update({f"diag/{J_RUN}/autre.json": b"{}\n"}))
+
+
+def test_reparation_autre_version(tmp_path):
+    arret(tmp_path, "reparation", resultat_reparation=lambda r: r["resultat"].update(version="resolution_graine_lot_v2"))
+
+
+def test_reparation_consigne_mal_nommee(tmp_path):
+    arret(tmp_path, "reparation", resultat_reparation=lambda r: r["resultat"]["episodes_consignes"][0].update(
+        fichier="episodes-reparation/0.json"))
+
+
+def test_rejeu_absent_sans_resultat_de_reparation(tmp_path):
+    argv = monde(tmp_path, verses=lambda v: [v.pop(k) for k in list(v) if J_RUN in k or "lot-v3-reparation.json" in k])
+    i = argv.index("--run-rejeu")
+    del argv[i:i + 2]
+    code, sortie = lancer(argv)
+    assert code == 2 and "ARRÊT [reparation]" in sortie, sortie
+
+
+def test_table_sur_une_autre_table_v3(tmp_path):
+    arret(tmp_path, "table", table=lambda t: t.update(table_v3_sha256="1" * 64))
+
+
+def test_table_cite_un_autre_temoin(tmp_path):
+    arret(tmp_path, "table", table=lambda t: t["temoin"].update(sha256="2" * 64))
+
+
+def test_table_entrees_neuves_desordonnees(tmp_path):
+    def f(t):
+        t["episodes"][-1], t["episodes"][-3] = t["episodes"][-3], t["episodes"][-1]
+    arret(tmp_path, "table", table=f)
+
+
+def test_table_entree_neuve_d_autre_methode(tmp_path):
+    def f(t):
+        e = t["episodes"][-2]
+        e["methode"] = "copie"
+        t["non_resolus_v4"] = []
+        t["comptes"].update(non_resolu=0, copie=1, identiques_apres_table=t["comptes"]["identiques_apres_table"] + 1)
+        t["corrections_verifiees"] += 1
+    arret(tmp_path, "table", table=f)
+
+
+def test_table_corrections_verifiees_fausses(tmp_path):
+    arret(tmp_path, "table", table=lambda t: t.update(corrections_verifiees=t["corrections_verifiees"] + 1))
+
+
+def test_table_comptes_de_base_autres(tmp_path):
+    arret(tmp_path, "table", attendus=lambda A: A["comptes"].update(identiques_base=2))
+
+
+def test_rejeu_commit_hors_lignee_meme_arbre(tmp_path):
+    """Commit de même arbre que la table v4, mais greffé sur le scellement : il ne descend pas du témoin versé."""
+    def g(w):
+        x = git(w.depot, "commit-tree", "HEAD^{tree}", "-p", "main~1", "-m", "greffe")
+        w.h["manifeste_rejeu"] = lambda m: m.update(commit=x)
+    arret(tmp_path, "commit-rejeu", apres_table=g)
+
+
+def test_rejeu_commit_porte_un_chemin_de_plus(tmp_path):
+    def g(w):
+        w.ecrire("docs/en-plus.md", b"x\n", sceau=False)
+        w.commit("chemin de plus avant le rejeu")
+    sortie = arret(tmp_path, "commit-rejeu", apres_table=g)
+    assert "d'autres chemins" in sortie
