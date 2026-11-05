@@ -83,7 +83,8 @@ ISSUES = [
     (r"réfut", "réfutée"), (r"contraire", "réfutée (contraire)"),
     (r"conforme|confirm|établi|prouvé", "confirmée"),
 ]
-MOTS_VERDICT_DECISIONS = re.compile(r"\bverdict\b|prononc|prouvé|non concluant|réfut|prédictions confirmées|arrêté[es]* par (sa|la|leur) garde|lecture gelée", re.I)
+MOTS_VERDICT_DECISIONS = re.compile(r"verdict (R13|scellé|de lecture|de porte)|prononc|prouvé|non concluant|réfut|prédictions confirmées"
+                                    r"|arrêté[es]* par (sa|la|leur) garde|lecture gelée", re.I)
 
 
 class GardeArret(RuntimeError):
