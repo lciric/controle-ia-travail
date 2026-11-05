@@ -1,14 +1,14 @@
 # SPARKS-EXP7-NUL — additif v11 au rapport du développeur (code v11 : arrêt par l'interface en fin de phase)
 
 Même rédacteur-développeur. Tâche : message de la mère du 5 novembre 2026 (≈ 07:25 UTC). Le risque 1 de l'additif v10 est
-retenu (R-1542) : **un conteneur qui sort est relancé par Vast.** Travail de 07:20 à FIN_V11 UTC (`date -u`).
+retenu (R-1542) : **un conteneur qui sort est relancé par Vast.** Travail de 07:20 à 07:52 UTC (`date -u`).
 
 Interdits tenus : aucun commit sur `main`, aucune poussée, aucun `.sha256` sur `main`, aucune location, aucun réseau. Les
 sorties en cours s'écrivent au bloc-notes, et ne sont copiées dans le dépôt qu'une fois finies.
 
 **Verdict.**
-- Code v11 : branche locale `prep/sparks-exp7-nul-v11`, commit `da7116b974bad8a6636a6ae4ed85b3bc1c2782e9`.
-- Un commit sur `3196884f`, non réécrit ; 16 fichiers neufs, aucun fichier modifié.
+- Code v11 : branche locale `prep/sparks-exp7-nul-v11`, commit `cabc06e5d7e1c62c519990ed9709103c23cb08ec`.
+- Deux commits sur `3196884f`, non réécrit : `da7116b9`, puis `cabc06e5`, qui ajoute un cas d'essai après une survivante du banc (section 3). 16 fichiers neufs, aucun fichier modifié.
 - Liste fermée v11 conforme : « LISTE FERMÉE CONFORME : 222 fichiers ».
 - Comptes : section 3. Troisième tir et ordre v2 : section 5.
 
@@ -54,7 +54,7 @@ mode jouet, et le bloc exige `MODE=jouet`.
 **(4) Essais neufs** (`tests/test_sparks_exp7_nul_v11.py`, section 9 ; R5) :
 - **arrêt obtenu**, par `curl` et par `python3`, contre un serveur HTTP local (PUT, chemin, clé, corps `{"state":
   "stopped"}`) : sortie avec le code de la phase ;
-- **arrêt refusé** : 200 avec `"success": false`, et 403 ;
+- **arrêt refusé** : 200 avec `"success": false`, 403, et 500 avec `"success": true` (code non 2xx : cas ajouté au second commit) ;
 - **réponse illisible** : 200 avec du HTML, et 200 avec un corps vide ;
 - **aucune réponse** (port fermé, HTTP 000).
 
@@ -79,7 +79,7 @@ Adaptation : le faux `curl` des essais écrit désormais un corps, `{"success": 
 | `src/controle_ia/sparks_exp7_nul_v11/__init__.py` | `8c26ea115ea626ce8dabf7e52b7b5cc5f4dd0bbe780f3957ba980613e7218fdf` |
 | `src/controle_ia/sparks_exp7_nul_v11/garde_code.py` | `a9f4850f9d81092b6d2a860b53f93421b076c79eb07fee546956a5451e95f5c2` |
 | `src/controle_ia/sparks_exp7_nul_v11/liste-fermee-v1.txt` | `9daca0c2bccf93ef762de3c4f0e097325703550b29fd8466841fcc5744055785` |
-| `tests/test_sparks_exp7_nul_v11.py` | `f021eb87cebdf8fff3876e6379fd4a613e5e4084bf540e5131929abec1175365` |
+| `tests/test_sparks_exp7_nul_v11.py` | `49bfc8c72c4a54e6a2f400a112e4875762a7699e934d33fb05eb70e3658dae9e` |
 
 ## 2. Risques
 1. **L'arrêt par l'interface n'est éprouvé que contre un serveur local.** Trois points restent non éprouvés :
@@ -96,7 +96,35 @@ Adaptation : le faux `curl` des essais écrit désormais un corps, `{"success": 
 
 ## 3. Essais et banc
 
-COMPTES_V11
+Fichiers d'essai : `tests/test_sparks_exp7_nul_v1.py` à `v4.py` et `tests/test_sparks_exp7_nul_v11.py`. Les sorties brutes, sans `.sha256`, sont copiées dans `essais-et-banc-sparks-v11/` une fois finies. Les sorties en cours restent au bloc-notes (`…/scratchpad/sparks-v11/`). Le script des passages est `passe-v11.sh` (`6f8813e48b94138e43450f92ff2b3666194b04facf4b4b6326184367117bcebd`).
+
+**Commit final `cabc06e5`** :
+
+| Passage | Résultat | Sortie | sha256 |
+|---|---|---|---|
+| Essais à la tête | 355 réussis, 0 échec, 0 sauté, code 0 | `essais-tete-cabc06e5.txt` | `64c23529414b63adf74b23972216022ad29e822fa6c834fe3700fff7a6a981fa` |
+| Essais sur le commit enfant `9260b1ad` (addendum factice, `COMMIT_CODE=cabc06e5…`) | 355 réussis, 0 échec, 0 sauté, code 0 | `essais-enfant-9260b1ad.txt` | `be69ccfcf4998166f997727928bc1ccf75d03a3ba1369b33385948080c1304cf` |
+| Mutations v11 seules et témoin v11 | 13/13 tuées, témoin vert, 0 défaut, code 0 | `banc-v11-seul-cabc06e5.txt` | `8110ee5ba3d761222ffd05b24beb7ac4e5d84fadf93656bcf7f5d3e4bb70fa0a` |
+| Banc complet v11 (v1 à v11 : 258 mutations, 10 témoins) | **en cours à la remise** ; copié dans le dépôt à sa fin par `passe-v11.sh` | `banc-cabc06e5.txt` et `.json` | ligne finale à relever : `code 0` et « 13/13 v11 … défauts : 0 » attendus |
+| Exemple de sortie du mode tir (factice, hors réseau) | code 0 | `exemple-sortie-tir-v11.txt` | `adbe5f3b87acb6d2fac647ecff0df95cd7138206ccc10fc628a8db604c739915` |
+
+**Premier commit `da7116b9`**, tous les runs comptés (R4), dans `commit-da7116b9/` :
+
+| Passage | Résultat | Sortie | sha256 |
+|---|---|---|---|
+| Essais à la tête | 354 réussis, code 0 | `essais-tete-da7116b9.txt` | `82021bfdd72d85c7f545e3dba382f3b5273dd24f78820384c5f502560c5045b1` |
+| Essais sur l'enfant `321361f5` | 354 réussis, code 0 | `essais-enfant-321361f5.txt` | `a2443a3b7631595e1df1b13526e05e081352402d73c1ce9f0ebe887cde0d8b1c` |
+| Mutations v11 seules | 12/13 tuées. **Une survivante** : « code HTTP non vérifié » (un succès écrit sous un code non 2xx passait). Code 1 | `banc-v11-seul-da7116b9.txt` | `92ff4332011b0bbb08e09143bb5a410f4255eaf4e73d02b007d5ea7e12b9c78f` |
+| Banc complet | interrompu par moi (numéros de processus, R10) aux témoins, le commit étant remplacé ; aucune mutation jouée | (bloc-notes, non versé) | — |
+
+Correction de la survivante : un cas d'essai de plus (HTTP 500 avec `"success": true` → « ARRÊT NON OBTENU »), commit `cabc06e5`. Au commit final, la mutation est tuée.
+
+Pendant l'écriture, l'essai v11 a été joué trois fois sur des fichiers non committés (R4) :
+- un passage ciblé : 17 réussis, 1 sauté ;
+- le fichier entier : 1 échec, sur un ancre d'essai v9 que la v11 change (« ordre fin avant la borne »), corrigé ;
+- l'essai corrigé seul : 1 réussi.
+
+Réserve (R4) : l'arrêt par l'interface n'est éprouvé que contre un serveur local et un faux `curl`. Le troisième tir l'éprouve sur Vast.
 
 ## 5. Commandes
 
@@ -105,14 +133,14 @@ COMPTES_V11
 mère :
 
 ```bash
-cd <clone du dépôt de travail> && git fetch -q origin prep/sparks-exp7-nul-v11 && git checkout -q da7116b974bad8a6636a6ae4ed85b3bc1c2782e9
+cd <clone du dépôt de travail> && git fetch -q origin prep/sparks-exp7-nul-v11 && git checkout -q cabc06e5d7e1c62c519990ed9709103c23cb08ec
 export SPARKS_REGISTRE_GO=/home/user/controle-ia-travail/registres/go.md     # le registre de main
 bash scripts/lancer_sparks_exp7_nul_v11.sh recherche        # jouer la commande imprimée telle quelle
-bash scripts/lancer_sparks_exp7_nul_v11.sh tir da7116b974bad8a6636a6ae4ed85b3bc1c2782e9 GO-2026-11-05-05 30 1
+bash scripts/lancer_sparks_exp7_nul_v11.sh tir cabc06e5d7e1c62c519990ed9709103c23cb08ec GO-2026-11-05-05 30 1
 ```
 
 Le mode tir imprime les étapes suivantes (exemple factice, hors réseau : `essais-et-banc-sparks-v11/exemple-sortie-tir-v11.txt`,
-`62f652f1…`) :
+`adbe5f3b…`) :
 0. Commit de tir : code + registre des GO de `main` + **addendum factice marqué**, écrit par `addendum_factice.py` tiré du
    code.
 1. Création avec `MODE=jouet`, `JOUET_MACHINE=1`, `JOUET_FABRICATION_S=60`, `AMORCE_ATTENTE_FIN_S=180`,

@@ -5,7 +5,7 @@ Il **remplace la v1** (`ordre-fille-sparks-exp7-nul-lancement-reel-v1.md`, gard�
 
 **Ne vaut qu'une fois l'addendum scellé, et après un troisième tir conforme** (section A.2).
 
-Code : `prep/sparks-exp7-nul-v11`, commit `da7116b974bad8a6636a6ae4ed85b3bc1c2782e9`, appelé `CODE`. Les lignes sont citées à ce
+Code : `prep/sparks-exp7-nul-v11`, commit `cabc06e5d7e1c62c519990ed9709103c23cb08ec`, appelé `CODE`. Les lignes sont citées à ce
 commit :
 - lanceur `scripts/lancer_sparks_exp7_nul_v11.sh`, cité « lanceur, l. n » ;
 - amorce `scripts/amorce_instance_sparks_exp7_nul_v11.sh`, citée « amorce, l. n ».
