@@ -14,6 +14,10 @@ quel). Bibliothèque standard seule ; aucun appel au réseau ni à l'outil de lo
         nommée), stockage et téléchargement ; écrit « id=… prix_carte=… prix_stockage=… telechargement=… ».
     python -I -m controle_ia.t06.session_v2 instances INSTANCES.json ETIQUETTE
         Refuse toute instance du programme (étiquette qui commence par ETIQUETTE) encore présente sur le compte.
+    python -I -m controle_ia.t06.session_v2 calendrier CONFIG.json REGISTRE_GO.md [AAAA-MM-JJ]
+        L11 : la fin du GO de la configuration (`calendrier.fin_go_utc`) est le lendemain à 00:00 UTC de l'échéance du GO
+        lue au registre ; le dernier jour de création précède la fin du GO ; le jour donné (défaut : aujourd'hui) ne
+        dépasse pas le dernier jour de création. Écrit « fin_go_utc_s=… dernier_jour_creation=… echeance_go=… ».
     python -I -m controle_ia.t06.session_v2 surveillance JOURNAL MAINTENANT_S PRIX_CARTE PRIX_STOCKAGE CREE_LE_S ANTERIEURE TELECHARGEMENT [FACTURE]
         comme la v1, avec le cumul de la course.
 Code 0 ; 1 avec un motif sur la dernière ligne ; 2 sur un usage faux.
@@ -23,13 +27,12 @@ from __future__ import annotations
 import json
 import math
 import sys
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from .session import GardeSession, _nombre, decider_surveillance, verifier_go
 
 PLAFOND_USD = 200.0
-TELECHARGEMENT_FORFAIT_USD = 2.0            # texte, Devis : ≈ 20 à 40 Go à ≤ 0,05 USD par Go : ≤ 2 USD
 
 
 def depense_cumulee_v2(prix_carte, prix_stockage, cree_le_s, anterieure_usd, telechargement_usd, maintenant_s=None,
@@ -106,8 +109,34 @@ def verifier_offre(offres, config: dict, carte: str) -> dict:
         raise GardeSession(f"offre {o['id']} : téléchargement {tel} USD/Go hors de [0, {b['telechargement_max_usd_go']}]")
     if o.get("rentable") is False:
         raise GardeSession(f"offre {o['id']} : non louable")
+    forfait = float(tel) * float(b["telechargement_go_prevu"])
     return {"id": int(o["id"]), "prix_carte": float(prix), "prix_stockage": float(sto), "telechargement": float(tel),
-            "carte": c["nom"], "machine_id": o.get("machine_id"), "host_id": o.get("host_id")}
+            "telechargement_forfait_usd": forfait, "carte": c["nom"], "machine_id": o.get("machine_id"), "host_id": o.get("host_id")}
+
+
+def verifier_calendrier(config: dict, registre_go, jour: date | None = None) -> dict:
+    """L11 : calendrier de la configuration contre le registre des GO (bibliothèque standard, lecture sans le paquet)."""
+    cal = config.get("calendrier")
+    if not isinstance(cal, dict):
+        raise GardeSession("configuration sans calendrier (L11)")
+    try:
+        dernier = date.fromisoformat(cal["dernier_jour_creation"])
+        fin = datetime.fromisoformat(str(cal["fin_go_utc"]).replace("Z", "+00:00"))
+    except (KeyError, TypeError, ValueError):
+        raise GardeSession("calendrier illisible : dernier_jour_creation (AAAA-MM-JJ) et fin_go_utc (instant UTC) attendus") from None
+    if fin.tzinfo is None or fin.utcoffset() != timedelta(0):
+        raise GardeSession("calendrier : fin_go_utc en UTC attendue")
+    go = verifier_go(registre_go, jour)
+    echeance = date.fromisoformat(go["echeance"])
+    attendue = datetime.combine(echeance + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
+    if fin != attendue:
+        raise GardeSession(f"calendrier : fin_go_utc {cal['fin_go_utc']} ≠ lendemain 00:00 UTC de l'échéance du GO ({attendue.isoformat()})")
+    if not dernier < echeance + timedelta(days=1):
+        raise GardeSession(f"calendrier : dernier jour de création {dernier} après la fin du GO")
+    j = jour or datetime.now(timezone.utc).date()
+    if j > dernier:
+        raise GardeSession(f"dernier jour de création ({dernier}) dépassé le {j} : nœud de Lazar, aucune création")
+    return {"fin_go_utc_s": int(fin.timestamp()), "dernier_jour_creation": str(dernier), "echeance_go": str(echeance), "jour": str(j)}
 
 
 def verifier_instances(instances, etiquette: str) -> dict:
@@ -142,17 +171,20 @@ def main(argv: list[str]) -> int:
         elif len(argv) == 4 and argv[0] == "offre":
             r = verifier_offre(_lire_json(argv[1]), _lire_json(argv[2]), argv[3])
             print(f"id={r['id']} prix_carte={r['prix_carte']:.4f} prix_stockage={r['prix_stockage']:.4f} "
-                  f"telechargement={r['telechargement']:.4f} carte={r['carte']}")
+                  f"telechargement={r['telechargement']:.4f} telechargement_forfait={r['telechargement_forfait_usd']:.4f} carte={r['carte']}")
         elif len(argv) == 3 and argv[0] == "instances":
             r = verifier_instances(_lire_json(argv[1]), argv[2])
             print(f"aucune instance du programme ({r['total']} instance(s) sur le compte)")
+        elif len(argv) in (3, 4) and argv[0] == "calendrier":
+            r = verifier_calendrier(_lire_json(argv[1]), argv[2], date.fromisoformat(argv[3]) if len(argv) == 4 else None)
+            print(f"fin_go_utc_s={r['fin_go_utc_s']} dernier_jour_creation={r['dernier_jour_creation']} echeance_go={r['echeance_go']}")
         elif len(argv) in (8, 9) and argv[0] == "surveillance":
             texte = Path(argv[1]).read_text(encoding="utf-8") if Path(argv[1]).is_file() else ""
             now = _nombre(argv[2], "maintenant")
             d = depense_cumulee_v2(argv[3], argv[4], argv[5], argv[6], argv[7], now, argv[8] if len(argv) > 8 else None)
             print(decider_surveillance(texte, now, d))
         else:
-            print("usage : go | depense | offre | instances | surveillance (voir l'en-tête)", file=sys.stderr)
+            print("usage : go | depense | offre | instances | calendrier | surveillance (voir l'en-tête)", file=sys.stderr)
             return 2
     except GardeSession as e:
         print(str(e))

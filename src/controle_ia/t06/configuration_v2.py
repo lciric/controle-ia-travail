@@ -8,8 +8,11 @@ telle quelle). Par-dessus `configuration.exiger_config_t06` :
 - `calendrier` : dernier jour de création (L11, recommandation du lecteur : 15 novembre 2026) et fin du GO (instant UTC) ;
 - `lecture.non_interpretable_si_au_dessus_seulement` (L05, recommandation : vrai) ;
 - `distillation.unite_du_lot` (L04 : « transcription », un pas d'AdamW par transcription, 480 pas au plan (b) ; ou
-  « action », une paire par action, mode « paires ») ;
-- `offre` : bornes de l'offre lues à la création (C12) : mémoire vive, cœurs effectifs, disque, stockage, téléchargement.
+  « action », une paire par action, mode « paires ») et `distillation.pas_declares` (L04 : le nombre de pas déclaré au
+  texte, 480 au plan (b) ; vérifié avant le manifeste contre les tâches de distillation, les épisodes par tâche, les époques
+  et le lot : `exiger_pas_declares` ; le nombre effectif, après exclusions, est écrit dans le résultat à côté du déclaré) ;
+- `offre` : bornes de l'offre lues à la création (C12) : mémoire vive, cœurs effectifs, disque, stockage, téléchargement,
+  volume de téléchargement prévu (forfait du cumul, C08), étiquette des instances du programme.
 Chaque valeur est une valeur de configuration : un changement de Lazar n'est pas du code.
 """
 from __future__ import annotations
@@ -17,15 +20,16 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 
 from ..gardes import GardeArret
-from .configuration import CLES_T06, exiger_config_t06
+from .configuration import CLES_DISTILLATION, CLES_T06, exiger_config_t06
 
 CLES_T06_V2 = tuple(CLES_T06) + ("fils_test_croise", "calendrier", "lecture", "offre")
+CLES_DISTILLATION_V2 = tuple(CLES_DISTILLATION) + ("unite_du_lot", "pas_declares")
 CLES_CARTE = ("course", "relance")
 CLES_UNE_CARTE = ("nom", "nom_offre", "memoire_carte_min_mo", "prix_max_usd_h")
 CLES_CALENDRIER = ("dernier_jour_creation", "fin_go_utc")
 CLES_LECTURE = ("non_interpretable_si_au_dessus_seulement",)
 CLES_OFFRE = ("memoire_vive_min_mo", "coeurs_effectifs_min", "disque_min_go", "stockage_max_usd_h", "telechargement_max_usd_go",
-              "etiquette")
+              "telechargement_go_prevu", "etiquette")
 UNITES_DU_LOT = ("transcription", "action")
 
 
@@ -78,10 +82,14 @@ def exiger_config_t06_v2(config: dict) -> None:
     if not isinstance(le, dict) or set(le) != set(CLES_LECTURE) or not isinstance(le["non_interpretable_si_au_dessus_seulement"], bool):
         raise GardeArret(f"lecture : clés {CLES_LECTURE}, booléen, attendues")
     di = config["distillation"]
-    if di.get("unite_du_lot") not in UNITES_DU_LOT:
+    if set(di) != set(CLES_DISTILLATION_V2):
+        raise GardeArret(f"distillation : clés {CLES_DISTILLATION_V2} attendues, exactement (L04 : unite_du_lot, pas_declares)")
+    if di["unite_du_lot"] not in UNITES_DU_LOT:
         raise GardeArret(f"distillation.unite_du_lot : {UNITES_DU_LOT} attendu (L04)")
     if (di["unite_du_lot"] == "transcription") != (di["mode"] == "transcription"):
         raise GardeArret("distillation : unite_du_lot « transcription » va avec le mode « transcription », « action » avec « paires »")
+    if not isinstance(di["pas_declares"], int) or isinstance(di["pas_declares"], bool) or di["pas_declares"] < 1:
+        raise GardeArret("distillation.pas_declares : entier ≥ 1 attendu (L04 : 480 au plan (b))")
     o = config["offre"]
     if not isinstance(o, dict) or set(o) != set(CLES_OFFRE):
         raise GardeArret(f"offre : clés {CLES_OFFRE} attendues")
@@ -98,9 +106,32 @@ def fin_go_utc_s(config: dict) -> int:
 
 
 def pas_de_distillation_declares(config: dict, n_transcriptions: int, n_actions: int) -> dict:
-    """Nombre de pas d'AdamW déclaré (L04) : une transcription par pas en mode « transcription », une action par pas en
-    mode « paires », multiplié par les époques et divisé par le lot."""
+    """Nombre de pas d'AdamW effectif (L04) : une transcription par pas en mode « transcription », une action par pas en
+    mode « paires », multiplié par les époques et divisé par le lot ; comparé au nombre déclaré (`pas_declares`)."""
     d = config["distillation"]
     unites = n_transcriptions if d["unite_du_lot"] == "transcription" else n_actions
+    pas = int(d["epoques"]) * (-(-int(unites) // int(d["lot"])))
     return {"unite_du_lot": d["unite_du_lot"], "unites": int(unites), "epoques": int(d["epoques"]), "lot": int(d["lot"]),
-            "pas": int(d["epoques"]) * (-(-int(unites) // int(d["lot"])))}
+            "pas": pas, "pas_declares": int(d["pas_declares"]), "conforme_au_declare": pas == int(d["pas_declares"])}
+
+
+def pas_attendus_avant_dependance(config: dict, n_taches_distillation: int) -> int:
+    """Pas d'AdamW attendus avant toute dépense, au plan (b) : tâches de réserve × épisodes par tâche transcriptions par
+    adaptateur (× T actions en mode « paires »), sans exclusion."""
+    d = config["distillation"]
+    unites = int(n_taches_distillation) * int(config["episodes_par_tache_distillation"])
+    if d["unite_du_lot"] == "action":
+        unites *= int(config["T"])
+    return int(d["epoques"]) * (-(-unites // int(d["lot"])))
+
+
+def exiger_pas_declares(config: dict, n_taches_distillation: int) -> dict:
+    """Garde (L04) : au plan (b), le nombre déclaré au texte égale le nombre attendu des tâches de réserve ; sinon arrêt
+    avant le manifeste. Au plan (a), le nombre d'épisodes vient du fichier des textes : vérifié au résultat seulement."""
+    attendus = pas_attendus_avant_dependance(config, n_taches_distillation)
+    declares = int(config["distillation"]["pas_declares"])
+    if config["decisions"]["DT-1"] == "b" and attendus != declares:
+        raise GardeArret(f"distillation : {declares} pas déclarés (L04) ≠ {attendus} pas attendus "
+                         f"({n_taches_distillation} tâches × {config['episodes_par_tache_distillation']} épisodes, "
+                         f"{config['distillation']['epoques']} époques, lot {config['distillation']['lot']}) : aucune création")
+    return {"pas_declares": declares, "pas_attendus": attendus, "plan": config["decisions"]["DT-1"]}

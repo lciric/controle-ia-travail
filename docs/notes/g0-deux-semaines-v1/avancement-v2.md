@@ -5,13 +5,13 @@ ligne « à faire ». Noms neufs (R12) : aucun fichier de la v1 n'est modifié.
 
 | point | état | fichier(s) |
 |---|---|---|
-| C01 PROGRES sans état de sonde | fait (code) | `t06/lanceur_v2.py` (`test_croise_v2`, `progres` neutres) ; essai à faire |
-| C02 `ligne_A` hors PROGRES, lignes A/B/C hors de `run.json` | fait (code) | `t06/lanceur_v2.py` (`resume_imprimable`) ; essai à faire |
-| C03 activations float16 + garde de disque | fait (code) | `t06/lanceur_v2.py` (`ActivationsDemi`, `exiger_place_disque`) ; essai à faire |
-| C04 clés non lues refusées, `temoin_lexical`/`sondes_figees_p3` nuls exigés, `fils_test_croise` exigé | fait (code) | `t06/configuration_v2.py` ; essai à faire |
-| C05 mémoire vive 128 000 Mo | à faire | `config-t06-reel-v1-brouillon2.json` |
-| C06 réserves par adaptateur + contrôle négatif sous A | fait (code) | `t06/lecture_v2.py` ; essai à faire |
-| C07 jeux par `jeu_ou_echec` | fait (code) | `t06/lanceur_v2.py` ; essai à faire |
+| C01 PROGRES sans état de sonde | fait (J1) | `t06/lanceur_v2.py` (`test_croise_v2`, `progres` neutres) ; essai `tests/test_t06_v2_lanceur_jouet.py::test_repetition_jouet_v2_par_la_commande_sans_fuite` |
+| C02 `ligne_A` hors PROGRES, lignes A/B/C hors de `run.json` | fait (J1) | `t06/lanceur_v2.py` (`resume_imprimable`) ; même essai |
+| C03 activations float16 + garde de disque | fait (J1) | `t06/lanceur_v2.py` (`ActivationsDemi`, `exiger_place_disque`) ; essais `test_place_disque_simulee`, `test_activations_demi_precision_sans_arrondi_silencieux` |
+| C04 clés non lues refusées, `temoin_lexical`/`sondes_figees_p3` nuls exigés, `fils_test_croise` exigé | fait (J1) | `t06/configuration_v2.py` ; essais `tests/test_t06_v2_configuration.py` |
+| C05 mémoire vive 128 000 Mo | fait (J1) | `config-t06-reel-v1-brouillon2.json` (`memoire_vive_min_go` 128, `offre.memoire_vive_min_mo` 128000) |
+| C06 réserves par adaptateur + contrôle négatif sous A | fait (J1) | `t06/lecture_v2.py` ; essai `test_reserves_cout_par_adaptateur_et_controle_negatif` |
+| C07 jeux par `jeu_ou_echec` | fait (J1) | `t06/lanceur_v2.py` ; vérifié dans la répétition jouet v2 |
 | C08 dépense cumulée (antérieure + téléchargement), heure d'épuisement passée à l'amorce | fait (module) | `t06/session_v2.py` ; `lancer_t06_v2.sh`, `amorce_instance_t06_v2.sh` à faire |
 | C09 garde illisible → ALERTE, arrêt après trois échecs | à faire | `lancer_t06_v2.sh` |
 | C10 artefacts des poussées, disque simulé dans l'essai | à faire | `tests/test_t06_v2_scripts.py` |
@@ -21,11 +21,11 @@ ligne « à faire ». Noms neufs (R12) : aucun fichier de la v1 n'est modifié.
 | C14 échéance : consigner et pousser avant le DELETE | à faire | `amorce_instance_t06_v2.sh` |
 | C15 prix maximal par carte en configuration, carte en argument | fait (module) | `configuration_v2.py`, `session_v2.py` ; `lancer_t06_v2.sh` à faire |
 | C16 libération des activations, durée par couple | fait (code) | `t06/lanceur_v2.py` |
-| L04 unité du lot et pas déclarés (480) | fait (code) | `configuration_v2.py` (`unite_du_lot`, `pas_de_distillation_declares`) |
-| L05 règle « non interprétable » en configuration | fait (code) | `configuration_v2.py`, `lecture_v2.py` |
-| L11 dernier jour de création et fin du GO en configuration | fait (code) | `configuration_v2.py` (`calendrier`) ; scripts à faire |
-| configurations v2 (réelle brouillon 2, jouet v3) | à faire | `docs/notes/g0-deux-semaines-v1/` |
-| essais v2 | à faire | `tests/test_t06_v2_*.py` |
+| L04 unité du lot et pas déclarés (480) | fait (J1) | `configuration_v2.py` (`unite_du_lot`, `pas_declares` lu et vérifié avant le manifeste : `exiger_pas_declares`) ; essais |
+| L05 règle « non interprétable » en configuration | fait (J1) | `configuration_v2.py`, `lecture_v2.py` ; essai `test_etat_du_jeu_v2_selon_la_regle` |
+| L11 dernier jour de création et fin du GO en configuration | fait (code, J1) | `configuration_v2.py` (`calendrier`), `session_v2.py calendrier` (vérifié contre le registre des GO) ; scripts à faire (J2) |
+| configurations v2 (réelle brouillon 2, jouet v3) | fait (J1) | `config-t06-reel-v1-brouillon2.json`, `config-t06-jouet-v3.json` |
+| essais v2 | partiel (J1 : configuration, session, lanceur jouet) | `tests/test_t06_v2_*.py` ; scripts à faire (J3) |
 | banc v2 | à faire | `scripts/banc_mutations_t06_v2.py` |
 | E0 (test croisé synthétique, 0 USD) | à faire | `scripts/epreuve_e0_t06_v2.py`, journal scellé |
 | E1 (jouet sous l'amorce v2, 0 USD) | à faire | `scripts/epreuve_e1_t06_v2.sh`, journal scellé |

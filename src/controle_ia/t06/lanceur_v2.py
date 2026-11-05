@@ -43,7 +43,7 @@ from ..sondes.familles import FAMILLES
 from . import distillation_transcription as dt
 from . import test_croise as tc
 from .configuration import ADAPTATEURS, condition_decisive_adaptateur, condition_temoin_dose_1, conditions_evaluation, nom_condition
-from .configuration_v2 import exiger_config_t06_v2, pas_de_distillation_declares
+from .configuration_v2 import exiger_config_t06_v2, exiger_pas_declares, pas_de_distillation_declares
 from .identite import controle_identite, logits_de_controle
 from .lanceur import (_ecrire_textes, charger_taches_t06, charger_textes_p3, cles_des_graines, couts_par_condition,
                       distiller_adaptateur, effectifs_des_lignes, empreinte_config, exemples_honnetes, exiger_citations_t06,
@@ -216,6 +216,7 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, autori
     if config["mode"] == "reel" and prereg is None:
         raise GardeArret("run réel de T0.6 sans préenregistrement : R1 interdit de lancer")
     taches = charger_taches_t06(config, racine)
+    pas_declares = exiger_pas_declares(config, len(taches["distillation"]))          # L04, avant toute dépense
     consignes = charger_consignes(racine / config["chemin_consignes"], config["consignes_sha256"])
     guide = charger_invite("H1-classification")
     commit_cite, entropie = None, None
@@ -229,7 +230,7 @@ def executer(config: dict, racine: Path, run_id: str, prereg: str | None, autori
     debut = time.perf_counter()
     etat = {"etape": "mémoire vive", "commit_cite": commit_cite, "taches_evaluation_sha256": taches["sha_evaluation"],
             "taches_distillation_sha256": taches["sha_distillation"], "config_sha256": empreinte_config(config),
-            "consignes_sha256": consignes["sha256"]}
+            "consignes_sha256": consignes["sha256"], "pas_declares": pas_declares}
     try:
         etat["memoire_vive"] = exiger_memoire_vive(config["memoire_vive_min_go"]) if config["memoire_vive_min_go"] else None
         etat["etape"] = "chargement"
@@ -309,7 +310,8 @@ def _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, tache
         "sauvegarde": a["sauvegarde"], "empreinte_base_avant": base_avant, "empreinte_base_apres": lo.empreinte_base(modele),
         "journaux": journaux, "adaptateurs": {ad: {**fichiers[ad], "empreinte": empreintes[ad]} for ad in ADAPTATEURS},
         "donnees": etat["distillation_donnees"], "controle_negatif_donnees": donnees["controle_negatif"],
-        "identite_dose_0": identite, "jetons_controle": len(ids_controle), "duree_s": round(time.perf_counter() - debut, 1)})
+        "pas_declares": etat["pas_declares"], "identite_dose_0": identite, "jetons_controle": len(ids_controle),
+        "duree_s": round(time.perf_counter() - debut, 1)})
     progres(etape="identite", adaptateurs=len(identite))
 
     etat["etape"] = "épisodes"
