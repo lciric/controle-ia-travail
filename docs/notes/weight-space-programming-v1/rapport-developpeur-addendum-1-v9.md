@@ -8,8 +8,8 @@ Interdits tenus : aucune poussée, aucun `.sha256` sur `main`, aucun réseau, au
 aucun texte touché (les 15 couples du brouillon 7 restent ceux du contre-lecteur).
 
 **Verdict.**
-- Code v9 : branche locale `prep/sparks-exp7-nul-v9`, commit `a655bbfad4d14b57d259638b814e236e8f228af7`.
-- Un commit sur `4fd10407`, 20 fichiers neufs, aucun fichier modifié.
+- Code v9 : branche locale `prep/sparks-exp7-nul-v9`, commit `4d07d2a6830ab09cb91250016284efb5cbe8a91c`.
+- Deux commits sur `4fd10407` : `a655bbfa`, puis la correction `4d07d2a6` (section 1 (b), identifiants de démarrage). 20 fichiers neufs, aucun fichier modifié.
 - Liste fermée v9 conforme : « LISTE FERMÉE CONFORME : 188 fichiers ».
 - **Le tir attend la réponse de Lazar sur la clé d'instance (R-1527) et une ligne de GO du tir.**
 - Comptes : section 3. Répétition : section 4. Commande du tir : section 5.
@@ -97,6 +97,13 @@ se rejouerait à chaque tour.
 - le rang du démarrage est écrit au journal (« démarrage n° N ») ;
 - la borne de la machine compte donc les démarrages d'une boucle (point 9).
 
+**Identifiants de démarrage jamais réutilisés** (correction `4d07d2a6`, trouvée par la répétition locale, run 3).
+- Le défaut : deux démarrages lancés dans la même seconde recevaient le même identifiant (`date +%s`). Le registre gardait
+  alors un seul plafond par identifiant ; le plafond de 10 minutes de la copie, sans fin consignée, était écrasé par celui
+  de la phase causale, et la borne était sous-estimée.
+- La cause existait dès la v5. Une boucle serrée la rend plus probable.
+- `nouvel_id` rend l'instant, ou le plus grand identifiant du registre + 1.
+
 **L'ordre est consigné « fait » avant la borne.** Un refus après lui (borne ou prix illisibles, plafond trop bas, gardes non
 passées) ne se rejoue pas : à la relance suivante, l'ordre n'est plus neuf, donc c'est une boucle, donc une destruction.
 
@@ -119,8 +126,8 @@ les modèles. Le protocole écrit l'ordre et le pousse avant tout `start` ; cett
 
 | Fichier | sha256 |
 |---|---|
-| `scripts/amorce_instance_sparks_exp7_nul_v9.sh` | `6acc5cfc7aa17ef117a44117325655144bf22922d32b3e57be0b0786182a4fbd` |
-| `scripts/banc_mutations_sparks_exp7_nul_v9.py` | `9291654f60782a37b555bfd8bc5f1e0b51e05bf128a032b31dd7fa386168d394` |
+| `scripts/amorce_instance_sparks_exp7_nul_v9.sh` | `e465e601325f6306b92873b5b7f3ac93815414ec71491cb83f4241cb972c0eb4` |
+| `scripts/banc_mutations_sparks_exp7_nul_v9.py` | `aaa79161543e48e3da8a398cd96ffa1f00290f598940898824a4335855da5b4c` |
 | `scripts/lancer_sparks_exp7_nul_v9.sh` | `53715b64183ee351c8c0b854a3b7ba522975c9638531c26b8283c685315630be` |
 | `scripts/sparks_exp7_nul_instance_v9.sh` | `9d7bc05d35138ec1fbe5a6b80c902a091c3c2a6853956edbfce9d334ae661403` |
 | `src/controle_ia/sparks_exp7_nul_v9/__init__.py` | `231f0f717cd40b6f38b87459bd51b55c8a934897e841f782ba5e417d44cf26c5` |
@@ -128,7 +135,7 @@ les modèles. Le protocole écrit l'ordre et le pousse avant tout `start` ; cett
 | `src/controle_ia/sparks_exp7_nul_v9/liste-fermee-v1.txt` | `21716cc359888f582b6d5485f4948ec961596334a4df03171b7539f327383d90` |
 | `src/controle_ia/sparks_exp7_nul_v9/tir.py` | `8cdc256cfb098523b409bcfb28faaba5516f7942a52eaa8d8779fc1ccfc86e2f` |
 | `src/controle_ia/sparks_exp7_nul_v9/vast_lecture.py` | `883a25880d1e25490496680303c2204e83648e6a20190a9722362391cb3cb958` |
-| `tests/test_sparks_exp7_nul_v9.py` | `7d5601efc0853af5fcd56166930bdc6cdc7414860336168f32e996302d553383` |
+| `tests/test_sparks_exp7_nul_v9.py` | `d611e804fe45b05f1c23133a1d19b9a45bcae22f7abfea9e9d30c6b332c9edcd` |
 
 Le script d'instance v9 est celui de la v8 : seuls changent la garde v9 et les essais v9. `manifeste_phase` et
 `addendum_factice` restent ceux de la v8.
@@ -172,29 +179,7 @@ Le tir n'éprouve ni `vastai copy`, ni la phase causale réelle, ni la copie d'u
 
 ## 3. Essais et banc
 
-Fichiers d'essai : `tests/test_sparks_exp7_nul_v1.py` à `v4.py` et `tests/test_sparks_exp7_nul_v9.py`. Sorties brutes, sans `.sha256`, dans `essais-et-banc-sparks-v9/`. Elles sont écrites au fil des passages, qui reprennent là où un redémarrage les aurait coupés (aucun ne l'a été).
-
-| Passage | Résultat | Sortie | sha256 |
-|---|---|---|---|
-| Essais à la tête `a655bbfa` | 329 réussis, 0 échec, 0 sauté, code 0 | `essais-tete-a655bbfa.txt` | `ba764c16e7f74712e698d8af198acb3e144a467b334c3b40843d4075b855c0e1` |
-| Essais sur le commit enfant `c2689059` (addendum factice, `COMMIT_CODE=a655bbfa…`) | 329 réussis, 0 échec, 0 sauté, code 0 | `essais-enfant-c2689059.txt` | `2a70ae06b9af07ae954f0a86a37e6e4a823ef226bfe2817954bcacda85987d2d` |
-| Banc de mutations v9 | 229/229 tuées (code 1 et « failed ») : 22 v1, 52 v2, 40 v3, 30 v4, 30 v5, 6 v6, 7 v7, 11 v8, 31 v9 ; 8 témoins verts ; 0 défaut ; code 0 | `banc-a655bbfa.txt` | `9fb497cb05b107f72556b751d49a8020437845cbdcf78a9c6345fc5dcf8f74db` |
-| Banc, détail | une ligne par mutation | `banc-a655bbfa.json` | `a00788e2bdca2baabb427a78cb3baec243b60230e944d96b35bfecfc8e83097f` |
-| Exemple de sortie du mode tir (factice, hors réseau) | code 0 | `exemple-sortie-tir.txt` | `839a4dc734b742c09d8ec573bee7e0eb3ae59f79ec364c3d37144dc44f82ef68` |
-
-Chaque passage final a été joué une seule fois, et aucun n'a été écarté (R4).
-
-Avant le commit, l'essai v9 a été joué trois fois pendant son écriture, sur des fichiers non committés :
-- 1 échec, arrêt au premier ;
-- 6 échecs : la capture du code sous `set -e` dans le lanceur, que la correction remplace par `R=0; … || R=$?` ; deux attendus d'essai faux ; le faux `vastai` d'un essai, qui n'imprimait pas « destroying instance 1. » ;
-- 0 échec.
-
-Les témoins v6 et v9 du banc sautent chacun un essai, parce que la copie du banc n'est pas un dépôt git (essai du mode tir). Le même essai passe à la tête comme sur l'enfant.
-
-Réserve (R4) :
-- le résultat final est propre ;
-- il n'éprouve `vastai` que par des sorties imitées d'après sa source 1.8.3 ;
-- la forme réelle de `show instances --raw` et des états d'une instance sortie seule, `actual_status` et `cur_state`, n'est connue que par la source et le registre, pas par un appel. Le verdict de boucle est donc prudent : un `cur_state` resté « running » après une sortie lit « boucle ». Ce cas reste à trancher par le tir, avec le compte `REDEMARRAGES=` du journal.
+COMPTES_V9_FINAL
 
 ## 4. Répétition jouet
 
@@ -237,7 +222,7 @@ Runs, tous comptés (R4) :
 
 **Commande de la répétition sur le dépôt de travail** (pour la mère, avec réseau). C'est celle de la v8 (rapport v8,
 section 5), avec ces changements :
-- `CODE=a655bbfad4d14b57d259638b814e236e8f228af7` ;
+- `CODE=4d07d2a6830ab09cb91250016284efb5cbe8a91c` ;
 - amorce v9 ;
 - branche `essai/sparks-v9-repetition` ;
 - étapes 4 et 5 de la v8 remplacées par l'étape 4 ci-dessous ;
@@ -249,7 +234,7 @@ dépôt où l'on joue.
 ```bash
 #!/usr/bin/env bash
 set -uo pipefail
-CODE=a655bbfad4d14b57d259638b814e236e8f228af7
+CODE=4d07d2a6830ab09cb91250016284efb5cbe8a91c
 DEPOT=/home/user/controle-ia-travail
 URL=https://github.com/lciric/controle-ia-travail.git
 J=$(mktemp -d /tmp/repetition-sparks-v9-XXXX); mkdir -p "$J/faux-bin" "$J/racine" "$J/home"
@@ -319,7 +304,7 @@ echo "sorties : $J/*.txt ; journal de la minuterie : $J/racine/sparks-v5-minuter
 1. la réponse de Lazar au nœud R-1527 (clé d'instance) ;
 2. une ligne de GO du tir dans `registres/go.md` : type « calcul », Lazar, au plus 5 USD, valide le jour du tir, périmètre
    qui nomme « SPARKS » et « tir », par exemple « SPARKS-EXP7-NUL tir réel » ;
-3. **la poussée de la branche `prep/sparks-exp7-nul-v9`** (commit `a655bbfa…`) vers le dépôt de travail, par la mère :
+3. **la poussée de la branche `prep/sparks-exp7-nul-v9`** (commit `4d07d2a6…`) vers le dépôt de travail, par la mère :
    l'instance clone le dépôt et extrait le commit de tir, enfant du commit du code.
 
 Il faut aussi `vastai` 1.8.3 dans le chemin de la session qui tire (point 22), ainsi que `VAST_API_KEY` et
@@ -327,17 +312,17 @@ Il faut aussi `vastai` 1.8.3 dans le chemin de la session qui tire (point 22), a
 clone du dépôt de travail extrait sur `prep/sparks-exp7-nul-v9`.
 
 ```bash
-cd <clone du dépôt de travail> && git fetch -q origin prep/sparks-exp7-nul-v9 && git checkout -q a655bbfad4d14b57d259638b814e236e8f228af7
+cd <clone du dépôt de travail> && git fetch -q origin prep/sparks-exp7-nul-v9 && git checkout -q 4d07d2a6830ab09cb91250016284efb5cbe8a91c
 export SPARKS_REGISTRE_GO="$PWD/registres/go.md"        # registre de main, avec la ligne du tir
 # 1. recherche d'offres : le lanceur imprime la commande ; la jouer telle quelle (sortie brute effacée par `offres`)
 bash scripts/lancer_sparks_exp7_nul_v9.sh recherche
 #    → timeout -k 10 120 env -i … vastai search offers 'num_gpus=1 rentable=true verified=true' -o dph_total --raw > … ; bash scripts/lancer_sparks_exp7_nul_v9.sh offres …
 # 2. tir au rang 1 (25 minutes d'échéance) : contrôle de la liste fermée, du GO et du devis, puis le protocole pas à pas
-bash scripts/lancer_sparks_exp7_nul_v9.sh tir a655bbfad4d14b57d259638b814e236e8f228af7 <GO_ID_DU_TIR> 25 1
+bash scripts/lancer_sparks_exp7_nul_v9.sh tir 4d07d2a6830ab09cb91250016284efb5cbe8a91c <GO_ID_DU_TIR> 25 1
 ```
 
 Le mode tir imprime alors, avec les valeurs de l'offre et du GO, les étapes :
-0. le commit de tir `essai/sparks-v9-tir-a655bbfad4d1` ;
+0. le commit de tir `essai/sparks-v9-tir-4d07d2a6830a` ;
 1. la création, avec `GO_ID=<GO_ID_DU_TIR>`, `--disk 20`, l'étiquette, `GH_TOKEN=$CONTROLE_IA_GITHUB_TOKEN`, puis
    `apres-creation … $? <code> <GO> 25 1`. Sur « OFFRE RETIRÉE », il imprime la commande du rang suivant ;
 2. les trois inventaires, le verdict `boucle $ID` et `journal-amorce` ;
