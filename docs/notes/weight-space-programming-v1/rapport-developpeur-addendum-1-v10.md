@@ -10,7 +10,7 @@ Ce que le tir a montré :
 - `journal-amorce` v9 rendait `REDEMARRAGES=0`, aveugle à ce cas ;
 - la fille a détruit l'instance par son identifiant, pour ≈ 0,0095 USD.
 
-Travail de 06:40 à FIN_V10 UTC (`date -u`). Interdits tenus : aucun commit sur `main`, aucune poussée, aucun `.sha256` sur
+Travail de 06:40 à 07:18 UTC (`date -u`). Interdits tenus : aucun commit sur `main`, aucune poussée, aucun `.sha256` sur
 `main`, aucune location, aucun réseau.
 
 **Verdict.**
@@ -135,7 +135,23 @@ Il n'éprouve pas l'arrêt d'une instance entre deux phases : voir le risque 1.
 
 ## 4. Essais et banc
 
-COMPTES_V10
+Fichiers d'essai : `tests/test_sparks_exp7_nul_v1.py` à `v4.py` et `tests/test_sparks_exp7_nul_v10.py`. Les sorties brutes, sans `.sha256`, sont dans `essais-et-banc-sparks-v10/` ; le script des passages est `passe-v10.sh` (`a1c34d139db195f1c36f05bb75504109bdb4bfab45f7345ecca514c21fa7804d`).
+
+| Passage | Résultat | Sortie | sha256 |
+|---|---|---|---|
+| Essais à la tête `3196884f` | 340 réussis, 0 échec, 0 sauté, code 0 | `essais-tete-3196884f.txt` | `4797cf99de4e61809e1af244682e8707a5f626502eb0bc538b1ae29c10d1f7ad` |
+| Essais sur le commit enfant `de75bc61` (addendum factice, `COMMIT_CODE=3196884f…`) | 340 réussis, 0 échec, 0 sauté, code 0 | `essais-enfant-de75bc61.txt` | `e70dced9d13d06c0668ed5f5e3a3b6b5a3a43d80733d2e73f041a97d2826b4a9` |
+| Mutations v10 seules et témoin v10 (joués à part, pendant que le banc complet tourne) | 13/13 tuées (code 1 et « failed »), témoin v10 vert, 0 défaut, code 0 | `banc-v10-seul-3196884f.txt` | `17dc5230e767a8d4f1495c189a6b3eb1a7d165b7197b7466ac02dc2c88065a95` |
+| Banc complet v10 (v1 à v10 : 245 mutations, 9 témoins) | **en cours à la remise** (07:18 UTC) : 114 tuées, 9 témoins verts, 0 autre ligne ; les mutations v10 passent en dernier | `banc-3196884f.txt` et `.json`, écrits au fil de l'eau | (ligne finale et empreinte à relever par la mère : `code 0` et « 245/245 … défauts : 0 » attendus) |
+| Exemple de sortie du mode tir v10 (factice, hors réseau) | code 0 | `exemple-sortie-tir-v10.txt` | `c173fcf3fea980860e9f1fba90415482d658033389f49ad9f9d3bf0476217eb8` |
+
+Pendant l'écriture, l'essai v10 a été joué trois fois sur des fichiers non committés (tous comptés, R4) :
+- un passage ciblé, arrêté au premier échec : 1 échec, sur le faux `vastai` qui « détruisait » en repli ;
+- le même passage ciblé, rejoué : 12 réussis, 1 sauté ;
+- le fichier entier : 113 réussis, 1 sauté (essai du mode tir, sans commit).
+
+Si le banc complet est coupé (redémarrage du conteneur), on le reprend par `bash essais-et-banc-sparks-v10/passe-v10.sh`, qui saute les passages finis.
+Réserve (R4) : la v10 n'est éprouvée que sur processeur, avec `apt-get`, `curl` et `vastai` simulés. L'installation réelle des outils dans l'image et la destruction par la machine ne sont éprouvées que par le second tir.
 
 ## 5. Commandes
 
