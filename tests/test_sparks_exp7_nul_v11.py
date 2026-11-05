@@ -1367,6 +1367,7 @@ def test_arret_obtenu_puis_sortie(tmp_path, sans_curl):
     ((403, b'{"success": false}'), "HTTP 403"),                      # refusé par le code
     ((200, b'<html>erreur</html>'), "HTTP 200"),                    # réponse illisible
     ((200, b''), "HTTP 200"),                                        # corps vide
+    ((500, b'{"success": true}'), "HTTP 500"),                      # succès écrit, mais code non 2xx (banc v11 : survivante)
 ])
 def test_arret_non_obtenu_destruction(tmp_path, reponse, motif):
     r, _ = _jouer_arret(tmp_path, reponse)
