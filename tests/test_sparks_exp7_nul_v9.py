@@ -1116,3 +1116,36 @@ def test_lecture_efface_chaque_sortie_brute_meme_illisible(tmp_path):
         else:
             vast_lecture.journal_amorce(f)
         assert not f.exists() and not (tmp_path / f"b{k}.json.err").exists(), quoi
+
+
+def test_identifiants_de_demarrage_jamais_reutilises(tmp_path):
+    """Répétition locale v9, run 3 : deux démarrages dans la même seconde avaient le même identifiant ; le registre
+    écrasait le plafond de l'un (borne sous-estimée)."""
+    f = _fonction("nouvel_id")
+    reg = tmp_path / "reg.txt"
+
+    def jouer() -> int:
+        r = subprocess.run(["bash", "-c", f'REG="{reg}"\n{f}nouvel_id\n'], capture_output=True, text=True, timeout=30)
+        return int(r.stdout.strip())
+    t0 = int(time.time())
+    assert t0 <= jouer() <= t0 + 5                                        # registre absent : l'instant
+    reg.write_text(f"p {t0 + 100} 5\nd {t0 + 100} 1\np {t0 + 50} 10\n")
+    assert jouer() == t0 + 101                                            # jamais un identifiant déjà consigné
+    reg.write_text("p 1 5\n")
+    assert jouer() >= t0
+    t = AMORCE.read_text(encoding="utf-8")
+    assert "ID_L=$(nouvel_id)" in t and "ID_D=$(nouvel_id)" in t and "ID_D=$(date +%s)" not in t and "ID_L=$(date +%s)" not in t
+
+
+def test_deux_redemarrages_dans_la_meme_seconde_restent_distincts(tmp_path, depot):
+    d, c = depot
+    _ordres(d, c, [{"numero": 1, "instance": ID, "phase": "copie", "deja_usd": 0.0, "cas": ["vraie01"], "premier": False,
+                    "copie_minutes": 5}])
+    r_ = _disque(tmp_path, d, c)
+    futur = int(time.time()) + 1000
+    (r_ / "sparks-v5-demarrages.txt").write_text(f"p {futur} 7\nd {futur} 3\n")     # identifiant le plus grand, dans le futur
+    code, out, _, _ = _amorce(tmp_path, d, c)
+    _arreter_minuteries(r_)
+    lignes = [l.split() for l in (r_ / "sparks-v5-demarrages.txt").read_text().splitlines()]
+    ids_p = [l[1] for l in lignes if l[0] == "p"]
+    assert len(ids_p) == len(set(ids_p)) == 3 and ids_p[1] == str(futur + 1) and ids_p[2] == str(futur + 2), lignes

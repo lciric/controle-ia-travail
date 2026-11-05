@@ -1,7 +1,7 @@
 """Banc de mutations de SPARKS-EXP7-NUL, v9 : tout le banc v8 (bancs v1 à v8, inchangés, sur leurs essais et leurs
 fichiers), et les mutations neuves de la v9 (protocole du tir : offres, prix, inventaire strict, verdict de boucle, sorties
 brutes effacées, « no_such_ask », `start` lu, GO du tir, jeton écrit ; amorce : boucle détectée au redémarrage, redémarrage
-consigné, ordre « fin » avant la borne, ordre consommé avant la borne, message de la phase causale) sur l'essai v9.
+consigné, identifiants de démarrage jamais réutilisés, ordre « fin » avant la borne, ordre consommé avant la borne, message de la phase causale) sur l'essai v9.
 « Tuée » seulement au code 1 avec « failed » ; témoins verts exigés.
 
     PYTHONPATH=src nice -n 10 python -I -B scripts/banc_mutations_sparks_exp7_nul_v9.py [SORTIE.json]
@@ -93,6 +93,11 @@ MUTATIONS_V9 = [
      ': fin traitée plus loin', "fin_avant_la_borne"),
     ("amorce : consignation de l'ordre impossible sans destruction", A, '    || boucle "consignation de l\'ordre impossible"',
      '    || { echo "AMORCE V5 : consignation de l\'ordre impossible"; exit 2; }', "deja_usd_plus_bas"),
+    ("amorce : identifiant de démarrage = l'instant (redémarrage)", A, "ID_L=$(nouvel_id)\n", "ID_L=$(date +%s)\n",
+     "meme_seconde"),
+    ("amorce : identifiant de démarrage = l'instant (phase)", A, "ID_D=$(nouvel_id);", "ID_D=$(date +%s);", "meme_seconde"),
+    ("amorce : identifiant neuf sans le registre", A, '[ "$n" -gt "$m" ] || n=$(( m + 1 )); echo "$n"; }', 'echo "$n"; }',
+     "identifiants or meme_seconde"),
     ("amorce : création relancée sans contrôle", A, '    [ -e "$R/sparks-v9-creation-tentee" ] && boucle',
      '    [ -e "$R/sparks-v9-creation-tentee-x" ] && boucle', "creation_relancee"),
     ("amorce : ordres illisibles, refus sans destruction", A, '|| boucle "ordres illisibles (ou délai)"',
@@ -132,7 +137,7 @@ def main(argv: list[str]) -> int:
                ("témoin v6", None, None, None, "scripts_garde_v6 or tir_go or lanceur or espace_de_processus", b6.T6),
                ("témoin v8", None, None, None, "trouve_le_paquet or aucun_appel or scripts_garde_v8 or manifeste or addendum_factice or v8_scripts", b8.T8),
                ("témoin v9", None, None, None, "lanceur or offres or boucle or journal_amorce or perimetre or no_such_ask or fin_avant "
-                "or consomme or message_exact or creation_relancee or efface or ordre or scripts_garde_v9 or v9_scripts or tir_statique", T9)]
+                "or consomme or message_exact or creation_relancee or efface or ordre or scripts_garde_v9 or v9_scripts or tir_statique or identifiants or meme_seconde", T9)]
     res = []
     with tempfile.TemporaryDirectory(prefix="banc9-") as t:
         base = Path(t) / "base"

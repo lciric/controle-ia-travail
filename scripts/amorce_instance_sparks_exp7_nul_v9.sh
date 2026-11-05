@@ -11,6 +11,8 @@
 #   - Fin de la phase causale : message exact (code et poussée), point 5.
 #   - Création relancée sur un disque où elle a déjà été tentée sans dépôt extrait (`sparks-v9-creation-tentee`) : boucle
 #     présumée, destruction immédiate.
+#   - Identifiants de démarrage jamais réutilisés (`nouvel_id`) : deux démarrages dans la même seconde ne se confondent
+#     plus au registre (répétition locale v9, run 3 : un plafond de copie écrasé, borne sous-estimée).
 #   - Garde du code v9 et script d'instance v9.
 # v8 (R12, minimale) : copie de l'amorce v7 ; garde du code v8 et script d'instance v8 (manifeste qui cite l'addendum scellé).
 # v7 (R12, minimale) : copie de l'amorce v6 ; garde du code v7 et script d'instance v7 (appels de modules corrigés).
@@ -129,7 +131,10 @@ borne() {  # borne = max(dépense imputée, borne propre de la machine) ; aucun 
         "$PRIX_HEURE_USD" "$PRIX_STOCKAGE_HEURE_USD") || return 1
     awk -v a="$1" -v b="$b" 'BEGIN { if (a + 0 > b + 0) print a; else print b }'
 }
-consigner_demarrage() { fin_lancement; ID_D=$(date +%s); [ "$ID_D" -gt "${ID_L:-0}" ] || ID_D=$(( ID_L + 1 )); timeout -k 5 "$T_GARDE" python3 -I -B "$R/amorce-depot/$P5/redemarrage.py" demarrage "$REG" "$ID_D" "$1" \
+nouvel_id() {  # identifiant de démarrage neuf : l'instant, ou le plus grand identifiant du registre + 1 (jamais deux fois le même)
+    local n m; n=$(date +%s); m=$(awk '{ print $2 }' "$REG" 2>/dev/null | sort -n | tail -1)
+    case "$m" in ''|*[!0-9]*) m=0;; esac; [ "$n" -gt "$m" ] || n=$(( m + 1 )); echo "$n"; }
+consigner_demarrage() { fin_lancement; ID_D=$(nouvel_id); timeout -k 5 "$T_GARDE" python3 -I -B "$R/amorce-depot/$P5/redemarrage.py" demarrage "$REG" "$ID_D" "$1" \
     || { echo "AMORCE V5 : consignation du démarrage impossible : rien ne part"; exit 2; }; }
 consigner_fin() {  # durée réelle, arrondie à la minute au-dessus ; un échec laisse le plafond compter (prudent)
     timeout -k 5 "$T_GARDE" python3 -I -B "$R/amorce-depot/$P5/redemarrage.py" fin "$REG" "$ID_D" "$(( ($(date +%s) - ID_D + 59) / 60 ))" \
@@ -180,7 +185,7 @@ fi
 echo "AMORCE V5 : redémarrage"
 trap fin_lancement EXIT
 case "${CONTAINER_ID:-}" in ''|*[!0-9]*) boucle "CONTAINER_ID illisible";; esac
-ID_L=$(date +%s)
+ID_L=$(nouvel_id)
 timeout -k 5 "$T_GARDE" python3 -I -B "$R/amorce-depot/$P5/redemarrage.py" demarrage "$REG" "$ID_L" 5 \
     || boucle "consignation du redémarrage impossible"
 LANCEMENT_OUVERT=oui
