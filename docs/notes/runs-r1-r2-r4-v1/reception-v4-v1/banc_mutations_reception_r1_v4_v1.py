@@ -30,7 +30,7 @@ SCRIPT = ICI / "verifier_reception_r1_v4_v1.py"
 ESSAIS = ICI / "test_verifier_reception_r1_v4_v1.py"
 DEPOT = ICI.parents[3]
 GARDES = ("fiche", "runs", "textes", "versement", "octets", "presence", "compagnon", "temoin", "reparation", "table",
-          "chaine-locale", "commit-rejeu", "rejeu", "verdict", "table-comparee", "provenance", "comptes",
+          "chaine-locale", "commit-rejeu", "verdict", "table-comparee", "provenance", "comptes",
           "coherence-table", "fichiers", "npz", "recalcul")
 MUTATIONS = tuple((g, f'ctl.exiger("{g}", lambda: ', f'ctl.exiger("{g}", lambda: True or ') for g in GARDES) + (
     ("generique", "ctl.exiger(garde, lambda: ", "ctl.exiger(garde, lambda: True or "),

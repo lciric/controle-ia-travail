@@ -1038,3 +1038,27 @@ def test_rejeu_commit_porte_un_chemin_de_plus(tmp_path):
         w.commit("chemin de plus avant le rejeu")
     sortie = arret(tmp_path, "commit-rejeu", apres_table=g)
     assert "d'autres chemins" in sortie
+
+
+def test_npz_ordre_fortran(tmp_path):
+    arret(tmp_path, "npz", **{"npz:activations-p3-rejeu-v1.npz":
+                              lambda t: t.update(moyenne=np.asfortranarray(t["moyenne"]))})
+
+
+def test_recalcul_deux_lignes(tmp_path):
+    argv = monde(tmp_path)
+    p = Path(argv[argv.index("--sortie-recalcul") + 1])
+    p.write_text(p.read_text(encoding="utf-8") * 2, encoding="utf-8")
+    code, sortie = lancer(argv)
+    assert code == 2 and "ARRÊT [recalcul]" in sortie and "une seule ligne" in sortie
+
+
+def test_recalcul_arbre_configuration_autre(tmp_path):
+    def f(rec):
+        q = rec / "prereg/R1-reparation-v4-config-v2.json"
+        q.write_bytes(q.read_bytes() + b" ")
+    arret(tmp_path, "recalcul", recalcul_arbre=f)
+
+
+def test_manifeste_run_id_autre(tmp_path):
+    arret(tmp_path, "reparation", manifeste_reparation=lambda m: m.update(run_id="20261105-010001-r1-v4-reparation-reel"))

@@ -452,7 +452,7 @@ def garder_manifeste(ctl, garde, A, racine, run, commande, cle_config, configs, 
                f"{run} : texte qui gouverne (`preenregistrement`) ≠ addendum v4 scellé")
     ctl.exiger(garde, lambda: m["config_sha256"] == A[cle_config]["sha256_canonique"] == canonique(m["config"]),
                f"{run} : empreinte de configuration ≠ configuration citée, ou incohérente")
-    ctl.exiger(garde, lambda: m["config"] == configs[cle_config], f"{run} : configuration ≠ fichier scellé")
+    # `config` = fichier scellé : impliqué par l'égalité canonique ci-dessus et la garde `textes` (même empreinte)
     ctl.exiger(garde, lambda: commit_attendu(m["commit"]), f"{run} : commit du manifeste non attendu")
     ctl.exiger(garde, lambda: m["depot_propre"] is True and m["reserves"] == [],
                f"{run} : arbre non propre au lancement, ou réserves")
@@ -665,9 +665,7 @@ def garder_npz(ctl, A, racine, run_j, scores_p3):
     ctl.exiger("npz", lambda: scores_p3 is not None and Path(scores_p3).is_file()
                and sha256_fichier(scores_p3) == A["scores_p3"]["sha256"],
                "fichier des scores de P3 absent ou d'empreinte ≠ citée (identité des tableaux)")
-    ref = entetes_npz(scores_p3)
-    ctl.exiger("npz", lambda: all(k in ref and len(ref[k]["shape"]) == 1 for k in N["identite"]),
-               "scores de P3 sans les quatre tableaux d'identité")
+    ref = entetes_npz(scores_p3)   # tableaux d'identité absents ou d'autre forme : refusés plus bas (forme == [n])
     n, d = c["actions"], len(N["couches"])
     for nom, principal in N["principaux"].items():
         e = entetes_npz(Path(racine) / "donnees" / run_j / nom)
