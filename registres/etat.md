@@ -306,3 +306,9 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - **54311651** (A100 SXM4, arrêtée le 2026-10-05 à 12:14 UTC) : sonde de mémoire non décisive de la v2 ; traces poussées et fusionnées ; sans données utiles.
 - **54332340** (H200 NVL, arrêtée le 2026-10-05 à 14:55 UTC) : run A de la v2 ; résultats poussés et fusionnés ; activations par jeton sur son disque ; garder jusqu'au verdict (procédure).
 - **54476244** (H200 NVL, arrêtée le 2026-10-06 à 12:11 UTC) : runs A et B de la v3 ; résultats poussés et fusionnés ; activations par jeton sur son disque ; garder jusqu'au verdict (procédure).
+
+## Mise à jour du 5 novembre, 19:16 UTC — après trois redémarrages du conteneur de la mère (R-1596, R-1597)
+- Tout le travail en cours est poussé : `prep/t06-lanceur-v2` `96d10acb`, `prep/sparks-diag-env-v1` `e66bd4e7`, `canal/conv-audit-n04` `64236ae4`, `main` `13574b3c` ; passation `registres/passations/2026-11-05-1916.md`.
+- Développement confié à la fille 7 (ordre `docs/procedures/ordre-fille-7-reprise-developpement-v1.md`) : lanceur T0.6 v2, étape F v2, tir de diagnostic SPARKS, brouillon 5 de T0.6.
+- Instances : 59286520 (A1-v3, course jusqu'au 2026-11-09T00:49:57Z au plus tard) ; 59288960 (SPARKS, arrêtée, conservée) ; R8 à détruire par Lazar.
+- Nœuds en attente : candidat 1 ; écart « second passage » (étape F) ; GO E2/E3 ≤ 5 USD ; L04/L05/L11 (défaut 48 h) ; `main` public ; OSF public ; D:3 ; brief DG1-6 ; DS-1/DS-2 ; rotation des secrets.
