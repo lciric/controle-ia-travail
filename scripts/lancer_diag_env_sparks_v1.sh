@@ -9,7 +9,8 @@
 #     contrôlé hors du code scellé par `scripts/diag_env_sparks_v1.py liste` (seuls les fichiers du diagnostic s'ajoutent) ;
 #   - l'instance clone le **commit de lancement** `COMMIT` (0d163bdc… par défaut) ; aucun commit de tir n'est créé ;
 #   - échéance de la minuterie **40 minutes** (`diag_env_sparks_v1.py go` : GO « SPARKS » et « tir », plafond ≤ 5 USD, devis) ;
-#   - image identique à l'expérience, disque 20 Go ; `GH_TOKEN=$CONTROLE_IA_GITHUB_TOKEN` ; aucun jeton Hugging Face.
+#   - image identique à l'expérience, disque 20 Go ; `GH_TOKEN=$CONTROLE_IA_GITHUB_TOKEN` (autre nom de variable :
+#     `SPARKS_DIAG_JETON_VAR`, lettres majuscules, chiffres, soulignés ; la valeur n'est jamais lue ici) ; aucun jeton Hugging Face.
 # Usage :
 #   bash scripts/lancer_diag_env_sparks_v1.sh recherche ; … offres <FICHIER_BRUT>
 #   bash scripts/lancer_diag_env_sparks_v1.sh tir <CODE_DIAG> <GO_ID> [RANG] [COMMIT_LANCEMENT]
@@ -42,6 +43,8 @@ if [ "$QUOI" = recherche ]; then   # même sorte de carte que la session 1 (inst
     exit 0
 fi
 CODE="${2:?commit du diagnostic}"; GOT="${3:?GO_ID du tir}"; RANG="${4:-1}"; LANCE="${5:-0d163bdcea563a9e001f336c33f36ee6d41c800a}"
+JETON_VAR="${SPARKS_DIAG_JETON_VAR:-CONTROLE_IA_GITHUB_TOKEN}"
+case "$JETON_VAR" in *[!A-Z0-9_]*|'') echo "nom de la variable du jeton illisible (majuscules, chiffres, soulignés) : $JETON_VAR" >&2; exit 2;; esac
 COURT=$(court "$CODE"); court "$LANCE" >/dev/null
 case "$RANG" in [1-4]) ;; *) echo "rang de l'offre : 1 à 4" >&2; exit 2;; esac
 [ -e "$MARQUEUR" ] && { echo "création incertaine antérieure ($MARQUEUR) : inventaire d'abord" >&2; exit 2; }
@@ -59,9 +62,9 @@ F="$ETAT_DIR/diag-creation-$COURT-$(date -u +%Y%m%dT%H%M%S).txt"
 cat <<FIN
 Tir de diagnostic d'environnement SPARKS v1, à jouer pas à pas par la session ; aucun modèle, aucune donnée, aucun jeton Hugging Face.
 Offre $OFFRE (rang $RANG) ; commit du diagnostic $COURT (amorce prise par git show) ; commit de lancement cloné par l'instance : $LANCE.
-1. Création (échéance de la minuterie dans 40 min ; étiquette de diagnostic ; disque de 20 Go ; jeton de l'instance : CONTROLE_IA_GITHUB_TOKEN) :
+1. Création (échéance de la minuterie dans 40 min ; étiquette de diagnostic ; disque de 20 Go ; jeton de l'instance : $JETON_VAR, par son nom) :
 GO_ID=$GOT timeout -k 10 300 $(prefixe_env) vastai create instance $OFFRE --image pytorch/pytorch:2.9.1-cuda12.8-cudnn9-runtime --disk 20 --label sparks-diag-env-v1-$COURT \\
-  --env "-e COMMIT=$LANCE -e ECHEANCE_UTC_S=$ECH -e AMORCE_ATTENTE_REFUS_S=300 -e GH_TOKEN=\$CONTROLE_IA_GITHUB_TOKEN -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git" \\
+  --env "-e COMMIT=$LANCE -e ECHEANCE_UTC_S=$ECH -e AMORCE_ATTENTE_REFUS_S=300 -e GH_TOKEN=\$$JETON_VAR -e DEPOT_URL=https://github.com/lciric/controle-ia-travail.git" \\
   --args bash -c "\$(git show "$CODE:scripts/amorce_diag_env_sparks_v1.sh")" > "$F" 2>&1; bash scripts/lancer_sparks_exp7_nul_v12.sh apres-creation "$F" \$?
    ID=<identifiant rendu> ; sur « OFFRE RETIRÉE » : bash scripts/lancer_diag_env_sparks_v1.sh tir $CODE $GOT $((RANG + 1)) $LANCE (au plus 4 offres).
 2. À T+5 min, puis toutes les 5 min : journal de l'amorce (lignes « AMORCE V » seules, sans ancre ; attendus : 1 démarrage) :

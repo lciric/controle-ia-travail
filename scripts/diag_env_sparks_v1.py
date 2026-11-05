@@ -4,6 +4,7 @@ révocation) avec une **durée de 40 minutes** (le tir de diagnostic installe `r
 fichiers d'essais : plus long que les 20 à 30 minutes d'un tir de la minuterie), même formule de devis.
 
     python3 -I -B diag_env_sparks_v1.py liste DEPOT COMMIT        → la différence 78671d93..COMMIT est exactement les fichiers du diagnostic
+                                                                   (quatre fichiers de code et d'essais, l'ordre à la fille 6, leurs compagnons)
     python3 -I -B diag_env_sparks_v1.py go GO_MD GO_ID PRIX_CARTE PRIX_STOCKAGE [AAAA-MM-JJ]   → ECHEANCE_UTC_S= DEVIS_USD= PLAFOND_USD=
 """
 from __future__ import annotations
@@ -18,7 +19,7 @@ from pathlib import Path
 
 CODE_SCELLE = "78671d9362c82a3ef02312bcf80c076a19069d42"          # code v12 : le diagnostic ne le touche pas
 FICHIERS = ("scripts/amorce_diag_env_sparks_v1.sh", "scripts/diag_env_sparks_v1.py", "scripts/lancer_diag_env_sparks_v1.sh",
-            "tests/test_sparks_diag_env_v1.py")
+            "tests/test_sparks_diag_env_v1.py", "docs/procedures/ordre-fille-sparks-diag-env-v1.md")   # chacun avec son compagnon .sha256
 MINUTES = 40
 RELANCE_MIN, MARGE_MIN, STOCKAGE_EN_PLUS_MIN = 15, 10, 60
 
