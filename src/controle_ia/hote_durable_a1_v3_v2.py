@@ -54,6 +54,7 @@ GO_COURSE, MONTANT_GO_COURSE_USD = h.GO_ATTENDU, h.PLAFOND_COURSE_USD  # GO-2026
 ETIQUETTE = "a1-v3-troisieme-v1"  # étiquette de la machine de la course (celle de la v1), contrôlée trois fois (f8)
 BRANCHE_VIE = "donnees/attaque-goodhart-v3-a1v3-troisieme-signe-de-vie-v1"  # m2 : signe de vie, branche orpheline
 AMORCE = "scripts/amorce_hote_durable_a1_v3_v2.sh"
+MODULE = "src/controle_ia/hote_durable_a1_v3_v2.py"
 MODULES = ("hote_durable_a1_v3.py", "hote_durable_a1_v3_v2.py", "sonde_hote_durable_a1_v3.py", "sonde_hote_durable_a1_v3_v10.py")
 PROTEGEES = s10.PROTEGEES  # 58936096, 58936099, 58936100 : jamais touchées
 DUREE_MACHINE_S = int(h.DUREE_MAX_MACHINE_H * 3600)  # 80 h : plafond de vie écrit (texte v3, section 8)
@@ -540,6 +541,7 @@ class MachineV2(h.Machine):
         if reste <= 60:
             raise h.Refus(f"échéance absolue trop proche ({reste:.0f} s utiles) : rien ne part")
         r.duree_max_s = float(min(r.duree_max_s, reste))
+        self.j.ecrire(f"durée de la course bornée à {r.duree_max_s:.0f} s (80 h au plus, échéance absolue moins 1 h)")
         gh, cr = self.secrets["GH_TOKEN"], e["COMMIT_REGISTRE"]
         jour = r.aujourd_hui or dt.datetime.now(dt.timezone.utc).date()
         # 1. Branches lues en clone partiel (m5), le canal sur PROFONDEUR_CANAL commits (v10 a)

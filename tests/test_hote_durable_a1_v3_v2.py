@@ -199,7 +199,7 @@ def test_louer_verification_seule_rien_cree(tmp_path):
     code, a, d = louer(tmp_path, verifier_seulement=True)
     j = Path(a.journal_local).read_text()
     assert code == 0 and appels(d) == 0 and "vérification seulement : rien créé" in j and "GO_MACHINE" in j
-    assert "coût de la machine au plus 2.2386 USD ≤ 35" in j and "longueurs : --args" in j
+    assert "coût de la machine au plus 4.4779 USD ≤ 35" in j and "longueurs : --args" in j
 
 
 def test_seconde_location_et_creation_incertaine_refusees(tmp_path):
@@ -693,16 +693,19 @@ def test_machine_reprise_ne_relance_rien(monde, tmp_path):
     assert gestes(r) == [["detruire", 90000001]]
 
 
-def test_machine_cout_compte_depuis_le_depart_du_conteneur(monde):
+def test_machine_cout_compte_depuis_le_depart_du_conteneur(monde, tmp_path):
     r, env, nu = monde(depuis_s=1800.0)
     m = v2.MachineV2(r, env)
-    assert abs(m.cout_machine() - 0.2 * 0.5) < 0.01  # 30 min à 0,2 USD/h
-    r2, env2, nu2 = monde.__self__ if False else (None, None, None)  # (aucun second monde : le cas sain ci-dessous suffit)
-    assert m.depart_conteneur is not None
+    assert m.depart_conteneur is not None and abs(m.cout_machine() - 0.2 * 0.5) < 0.01  # 30 min à 0,2 USD/h
+    (tmp_path / "a1v3-minuterie.txt").unlink()  # artefact : sans l'heure de départ, le compte part de l'hôte (v1)
+    m2 = v2.MachineV2(r, env)
+    assert m2.depart_conteneur is None and m2.cout_machine() < 0.001
 
 
-def test_machine_echeance_proche_raccourcit_la_course(monde):
-    r, env, nu = monde({"code": 0, "duree_s": 60}, echeance_dans_s=3600 + 62)
+@pytest.mark.parametrize("dans_s, borne_max", [(4800, 600), (3600 + 90, 90)])
+def test_machine_echeance_absolue_borne_la_course(monde, dans_s, borne_max):
+    r, env, nu = monde(echeance_dans_s=dans_s)
     assert v2.MachineV2(r, env).principal() == 0
     j = journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
-    assert "PLAFOND DE LA MACHINE atteint" in j and gestes(r) == [["detruire", 90000001]]
+    s = float(j.split("durée de la course bornée à ")[1].split(" s")[0])
+    assert borne_max - 5 <= s <= borne_max and gestes(r) == [["detruire", 90000001]]
