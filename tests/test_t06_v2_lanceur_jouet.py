@@ -103,8 +103,21 @@ def test_repetition_jouet_v2_par_la_commande_sans_fuite(depot, capfd, monkeypatc
     for mot in MOTS_INTERDITS:
         assert mot not in texte, mot
     ls = verifier_resultat(depot, d / "lecture-sondes-t06.json")["resultat"]
-    aires = _valeurs_d_aire(ls["jeux"])
-    assert aires and all(a not in texte for a in aires)
+    aires = {float(a) for a in _valeurs_d_aire(ls["jeux"])}
+    # aucune valeur d'aire, de borne ni de quantile de plancher parmi les valeurs des lignes PROGRES (hors durées et pertes
+    # de distillation, qui peuvent coïncider par hasard avec une fraction simple du jouet) ni parmi celles de run.json
+    # (les comptes entiers de PROGRES et de run.json ne sont pas des aires : seules les valeurs non entières sont comparées)
+    valeurs = []
+    for l in progres:
+        for k, v in (x.split("=", 1) for x in l.split()[2:]):
+            if k not in ("duree_s", "perte", "perte_finale") and "." in v:
+                try:
+                    valeurs.append(float(v))
+                except ValueError:
+                    pass
+    valeurs += [float(v) for v in run_json.values() if isinstance(v, float)]
+    aires = {a for a in aires if a != round(a)}
+    assert aires and not any(abs(v - a) < 1e-12 for v in valeurs for a in aires)
     # le résumé scellé garde les lignes ; le résumé imprimé ne les a pas
     resume = verifier_resultat(depot, d / "resume.json")["resultat"]
     assert resume["ligne_B"] == "B1" and resume["ligne_C"] == "C1" and resume["ligne_A"] in ("A1b", "A2", "A3", "A4", "A5")

@@ -12,21 +12,21 @@ ligne « à faire ». Noms neufs (R12) : aucun fichier de la v1 n'est modifié.
 | C05 mémoire vive 128 000 Mo | fait (J1) | `config-t06-reel-v1-brouillon2.json` (`memoire_vive_min_go` 128, `offre.memoire_vive_min_mo` 128000) |
 | C06 réserves par adaptateur + contrôle négatif sous A | fait (J1) | `t06/lecture_v2.py` ; essai `test_reserves_cout_par_adaptateur_et_controle_negatif` |
 | C07 jeux par `jeu_ou_echec` | fait (J1) | `t06/lanceur_v2.py` ; vérifié dans la répétition jouet v2 |
-| C08 dépense cumulée (antérieure + téléchargement), heure d'épuisement passée à l'amorce | fait (module) | `t06/session_v2.py` ; `lancer_t06_v2.sh`, `amorce_instance_t06_v2.sh` à faire |
-| C09 garde illisible → ALERTE, arrêt après trois échecs | à faire | `lancer_t06_v2.sh` |
-| C10 artefacts des poussées, disque simulé dans l'essai | à faire | `tests/test_t06_v2_scripts.py` |
-| C11 sous-ensemble en morceaux < 90 Mo + manifeste ; refus > 90 Mo avant commit ; données légères en commit à part | fait (lanceur) | `t06/lanceur_v2.py` ; amorce à faire |
-| C12 offre relue et vérifiée (carte, mémoire, cœurs, disque, prix, téléchargement), instances du programme | fait (module) | `t06/session_v2.py` ; `lancer_t06_v2.sh` à faire |
-| C13 second démarrage après fin normale : poussée puis sleep infinity ; stopped → sleep infinity | à faire | `amorce_instance_t06_v2.sh` |
-| C14 échéance : consigner et pousser avant le DELETE | à faire | `amorce_instance_t06_v2.sh` |
-| C15 prix maximal par carte en configuration, carte en argument | fait (module) | `configuration_v2.py`, `session_v2.py` ; `lancer_t06_v2.sh` à faire |
+| C08 dépense cumulée (antérieure + téléchargement), heure d'épuisement passée à l'amorce | fait (J2) | `t06/session_v2.py` ; `lancer_t06_v2.sh creation` (argument dépense antérieure, forfait lu dans l'offre, `DEPENSE_EPUISEE_UTC_S`) ; minuterie de `amorce_instance_t06_v2.sh` (consigne, pousse, « stopped ») ; essais J3 |
+| C09 garde illisible → ALERTE, arrêt après trois échecs | fait (J2) | `lancer_t06_v2.sh surveillance` ; essai `test_surveillance_v2_cumul_mort_fin_et_garde_illisible` |
+| C10 artefacts des poussées, disque simulé dans l'essai | fait (J3) | `tests/test_t06_v2_scripts.py` (poussée initiale refusée, poussée finale refusée trois fois, `df` factice) |
+| C11 sous-ensemble en morceaux < 90 Mo + manifeste ; refus > 90 Mo avant commit ; données légères en commit à part | fait (J2) | `t06/lanceur_v2.py` ; `amorce_instance_t06_v2.sh` (`refuser_gros`, deux commits) ; essais J3 |
+| C12 offre relue et vérifiée (carte, mémoire, cœurs, disque, prix, téléchargement), instances du programme | fait (J2) | `t06/session_v2.py` ; `lancer_t06_v2.sh creation` (`vastai search offers`, `vastai show instances`) ; essais J3 |
+| C13 second démarrage après fin normale : poussée puis sleep infinity ; stopped → sleep infinity | fait (J2) | `amorce_instance_t06_v2.sh` (`t06-fin-normale`, `sommeil`) ; essais J3 |
+| C14 échéance : consigner et pousser avant le DELETE | fait (J2) | minuterie de `amorce_instance_t06_v2.sh` (`t06-consigner.sh`) ; essai `test_minuterie_depense_epuisee_puis_echeance_consignent_et_poussent` |
+| C15 prix maximal par carte en configuration, carte en argument | fait (J2) | `configuration_v2.py`, `session_v2.py` ; `lancer_t06_v2.sh creation OFFRE CARTE …` ; essais J3 |
 | C16 libération des activations, durée par couple | fait (code) | `t06/lanceur_v2.py` |
 | L04 unité du lot et pas déclarés (480) | fait (J1) | `configuration_v2.py` (`unite_du_lot`, `pas_declares` lu et vérifié avant le manifeste : `exiger_pas_declares`) ; essais |
 | L05 règle « non interprétable » en configuration | fait (J1) | `configuration_v2.py`, `lecture_v2.py` ; essai `test_etat_du_jeu_v2_selon_la_regle` |
-| L11 dernier jour de création et fin du GO en configuration | fait (code, J1) | `configuration_v2.py` (`calendrier`), `session_v2.py calendrier` (vérifié contre le registre des GO) ; scripts à faire (J2) |
+| L11 dernier jour de création et fin du GO en configuration | fait (J2) | `configuration_v2.py` (`calendrier`), `session_v2.py calendrier` ; `lancer_t06_v2.sh` (controles, creation : `FIN_GO_UTC_S` passée) ; amorce (vérifiée contre la configuration après le clonage) |
 | configurations v2 (réelle brouillon 2, jouet v3) | fait (J1) | `config-t06-reel-v1-brouillon2.json`, `config-t06-jouet-v3.json` |
-| essais v2 | partiel (J1 : configuration, session, lanceur jouet) | `tests/test_t06_v2_*.py` ; scripts à faire (J3) |
-| banc v2 | à faire | `scripts/banc_mutations_t06_v2.py` |
-| E0 (test croisé synthétique, 0 USD) | à faire | `scripts/epreuve_e0_t06_v2.py`, journal scellé |
-| E1 (jouet sous l'amorce v2, 0 USD) | à faire | `scripts/epreuve_e1_t06_v2.sh`, journal scellé |
+| essais v2 | fait (J3) | `tests/test_t06_v2_configuration.py`, `_session.py`, `_lanceur_jouet.py`, `_scripts.py` ; suite v1 + v2 : 139 essais |
+| banc v2 | script écrit (J3), à rejouer (J4) | `scripts/banc_mutations_t06_v2.py` |
+| E0 (test croisé synthétique, 0 USD) | script écrit (J3), à jouer (J5) | `scripts/epreuve_e0_t06_v2.py`, journal |
+| E1 (jouet sous l'amorce v2, 0 USD) | script écrit (J3), à jouer (J6) | `scripts/epreuve_e1_t06_v2.sh`, journal |
 | rapport v2 | à faire | `rapport-developpeur-lanceur-T0.6-v2.md` |
