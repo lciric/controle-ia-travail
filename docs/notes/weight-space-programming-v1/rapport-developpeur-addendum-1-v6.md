@@ -65,7 +65,29 @@ après elle ; je ne l'ai pas changé.
 
 ## 3. Essais et banc
 
-COMPTES_V6
+Sorties brutes dans `essais-et-banc-sparks-v6/` (même dossier que ce rapport). Le jeu d'essais est celui que joue le
+script d'instance v6 : v1 à v4, puis v6.
+
+| Mesure | Compte | Sortie (sha256) |
+|---|---|---|
+| Essais à la tête de la branche (`f18837d1`) | **279 passés sur 279** (90 + 69 + 38 + 29 + 53), 0 sauté | `essais-tete-f18837d1.txt` `2f630c34…` |
+| Essais sur un commit **enfant factice** (`32c65937`) : code v6 + addendum fictif scellé, comme l'instance ; `COMMIT_CODE` posé comme le fait l'amorce | **279 passés sur 279**, 0 sauté (l'essai du tir compris) | `essais-enfant-32c65937.txt` `741e70de…` |
+| Même commit enfant, essai du tir seul, **sans** `COMMIT_CODE` (repli par la liste fermée) | **1 passé** | `essai-tir-enfant-sans-commit-code.txt` `11e81be3…` |
+| Banc v6 : bancs v1 à v5 entiers | **22/22, 52/52, 40/40, 30/30, 30/30 tuées** (code 1 et « failed ») | `banc-f18837d1.txt` `6e90a90b…`, `.json` `31527182…` |
+| Banc v6 : mutations neuves | **6/6 tuées** ; six témoins verts ; 0 inapplicable | idem |
+
+Le commit enfant est **local**, dans un arbre détaché à part (`/home/claude/wt/sparks-v6-enfant`), sans branche ; il n'est
+jamais poussé, et l'arbre est retiré après l'essai.
+
+Tout run est compté (R4). Avant le commit, un passage des seuls essais v6 a donné 51 passés et 1 sauté (l'essai du tir,
+la liste fermée v6 n'étant pas encore au commit), puis j'ai fait deux passages ciblés.
+
+L'essai v5 (`test_sparks_exp7_nul_v5.py`) n'est plus joué par le script d'instance v6. À la tête v6, son essai du tir
+échouerait pour la même raison qu'à la répétition (`HEAD` ≠ code v5) : c'est le défaut corrigé, gardé tel quel (R12).
+
+Limite du banc : l'essai du tir se saute dans la copie du banc, qui n'est pas un dépôt `git`. Les lignes v6 du lanceur et
+des scripts y sont tuées par l'essai statique `test_v6_scripts_garde_v6_essais_v6_et_date_du_tir`. Le repli « dernier
+commit de la liste fermée » n'est donc éprouvé que par le passage sur le commit enfant, pas par le banc.
 
 ## 4. Brouillon 5
 
