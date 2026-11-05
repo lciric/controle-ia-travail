@@ -1,0 +1,119 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/dab53617-317d-5e41-8722-0e36079bc80b/scratchpad/renommes/lecture_v7_renomme.py	2026-11-05 19:45:07.844313505 +0000
++++ src/controle_ia/analyse_principale_r1_r2/lecture_v9.py	2026-11-05 19:33:02.284422205 +0000
+@@ -3,13 +3,19 @@
+ `lecture_v5.issue`, `lecture_v5.rendre`, `lecture_v4.lire_principale`, repris sans modification), plus les trois gardes
+ de réception de la relance v4 de R1 (`entrees_v5.exiger_reception_v4` : `texte`, `table-comparee`, `provenance`),
+ exigées par l'addendum v4 de R1 et mises en place par l'addendum 1 « gardes des analyses » (texte unique des trois
+-analyses, scellé). Ce que l'addendum unique impose au mode décisif, comme pour la principale (`lecture_v8`) :
++analyses, scellé). Le code v9 remplace le code v7 après la contre-lecture 1 (corrections K1, K2 et K3) ; le code v7
++n'est pas chargé. Ce que l'addendum unique impose au mode décisif, comme pour la principale (`lecture_v8`) :
+ - le texte scellé qui gouverne est inchangé (`constantes_v9.TEXTE`, 26a3ff72…) : passé à `--prereg`, vérifié scellé,
+   conforme et égal au texte attendu ; ses graines, ses plis (ceux de la principale scellée, 8e267952…), sa liste fermée
+   v5, son calcul, son issue et sa liste d'arrêt ne bougent pas ;
+ - l'addendum unique, scellé et conforme, porte la liste fermée du code v9 dans un bloc propre à cette lecture
+-  (`constantes_v9.TITRE_LISTE`) et l'empreinte des constantes v7 ;
+-- premier passage sous l'addendum : aucun manifeste sous `runs/` ne cite l'addendum avec la commande de ce code.
++  (`constantes_v9.TITRE_LISTE`) et l'empreinte des constantes v9 ;
++- K1 : les gardes de réception sont appelées juste après la lecture de la fiche, avant la lecture du résultat de la
++  principale et avant tout chargeur (aucun `.npz` ouvert si la chaîne du fournisseur est fausse) ;
++- K2 : premier passage par liste close (`lecture_v8.exiger_premier_passage_sous`, mêmes constantes gelées) ;
++- K3 : en mode décisif, le résultat de la principale vient du code v8 sous cet addendum (`version` =
++  `constantes_v8.VERSION`, `lien_au_preenregistrement.addendum.sha256` = empreinte de l'addendum scellé) et a reçu le
++  même rejeu (`reception_v4.run_rejeu` égal).
+ 
+ Commande décisive (depuis la racine de l'arbre de travail, après la principale sous le code v8) :
+     PYTHONPATH=src nice -n 10 python -m controle_ia.analyse_principale_r1_r2.lecture_v9 --fiche <fiche de la principale> \
+@@ -47,6 +53,8 @@
+ FICHIERS_ESSAIS = L5.FICHIERS_ESSAIS + ("tests/test_analyse_principale_r1_r2_v8.py", "tests/test_analyse_par_episode_v9.py")
+ FICHIERS_REUTILISES = L1.FICHIERS_REUTILISES
+ CITATION_CONSTANTES = re.compile(r"Empreinte des constantes \(analyse par épisode, code v9\) : `([0-9a-f]{64})`")
++CODE_FIN_PASSAGE = L8.CODE_FIN_PASSAGE
++PassageHorsListe = L8.PassageHorsListe
+ A1, A2, A5 = L5.A1, L5.A2, L5.A5
+ ALPHAS_PRINCIPALE = L5.ALPHAS_PRINCIPALE
+ lire_principale = L5.lire_principale                     # garde reprise des codes v4 et v5 (résultat intact, rattaché, lié)
+@@ -62,18 +70,36 @@
+                                     CITATION_CONSTANTES, K9.empreinte_constantes(), racine_code)
+ 
+ 
++def exiger_principale_sous_addendum(rp: dict, sha_addendum: str, reception: dict | None) -> dict:
++    """K3 (mode décisif) : le résultat de la principale vient du code v8 sous l'addendum unique scellé et a reçu le
++    même rejeu que cette lecture (ce qui exclut la sortie de la course v3 et toute principale sous un autre code ou un
++    autre addendum)."""
++    if rp.get("version") != K8.VERSION:
++        raise GardeArret(f"résultat de la principale : version « {rp.get('version')} » ≠ « {K8.VERSION} » (K3)")
++    lien = rp.get("lien_au_preenregistrement") or {}
++    sha_p = (lien.get("addendum") or {}).get("sha256")
++    if sha_p != sha_addendum:
++        raise GardeArret("résultat de la principale non lié à l'addendum unique scellé (lien_au_preenregistrement."
++                         "addendum.sha256 ≠ empreinte de l'addendum) (K3)")
++    run_p = (rp.get("reception_v4") or {}).get("run_rejeu")
++    run_e = (reception or {}).get("run_rejeu")
++    if run_p != run_e:
++        raise GardeArret(f"rejeu reçu par la principale ({run_p}) ≠ rejeu reçu par cette lecture ({run_e}) (K3)")
++    return {"version": rp["version"], "addendum_sha256": sha_p, "run_rejeu": run_p}
++
++
+ # --------------------------------------------------------------------------------------------- point d'entrée
+ def analyser(racine, fiche: str, principale: str, run_analyse: str, prereg: str | None, entropie: int | None = None,
+              entropie_plis: int | None = None, autoriser_depot_sale: bool = False) -> dict:
+     racine = Path(racine)
+-    lien = addendum = None
++    lien = addendum = sha_a = None
+     if prereg is not None:
+         sha_p = exiger_prereg_scelle(racine / prereg)
+         L8.exiger_texte(prereg, sha_p, K9.TEXTE)
+         L1.exiger_code_importe_sous(racine)
+         cite_texte = L5.exiger_code_cite((racine / prereg).read_text(encoding="utf-8"))     # liste fermée v5 du texte
+         sha_a = exiger_prereg_scelle(racine / K9.ADDENDUM)
+-        cite = exiger_code_cite((racine / K9.ADDENDUM).read_text(encoding="utf-8"))          # liste fermée v7, addendum
++        cite = exiger_code_cite((racine / K9.ADDENDUM).read_text(encoding="utf-8"))          # liste fermée v9, addendum
+         attendue = K2.entropie_de(sha_p)
+         if entropie is not None and int(entropie) != attendue:
+             raise GardeArret(f"entropie {entropie} ≠ entropie dérivée de l'empreinte du préenregistrement scellé")
+@@ -83,18 +109,21 @@
+         addendum = {"chemin": K9.ADDENDUM, "sha256": sha_a}
+         lien = {"preenregistrement": prereg, "sha256": sha_p, "code_cite": cite_texte,
+                 "addendum": {**addendum, "code_cite": cite},
+-                "passages": L8.exiger_premier_passage_sous(racine, K9.ADDENDUM, sha_a, K9.COMMANDE, sha_p),
++                "passages": L8.exiger_premier_passage_sous(racine, K9.ADDENDUM, sha_a, K9.COMMANDE, K9.TEXTE),
+                 "versions": L1.exiger_versions()}
+     elif entropie is None or entropie_plis is None:
+         raise GardeArret("mode non décisif : entropie et entropie des plis explicites exigées")
+     f, sha_f = lire_fiche(racine, fiche, scellee=prereg is not None)
+-    rp = lire_principale(racine, principale, sha_f, entropie_plis, prereg is not None)
+-    src = r1 = j3 = j8 = longueurs = reception = None
++    reception = None
++    if f["R1"] is not None:
++        reception = exiger_reception_v4(racine, f["R1"]["resultat"]["chemin"])   # K1 : texte, table-comparee, provenance,
++    rp = lire_principale(racine, principale, sha_f, entropie_plis, prereg is not None)   # avant la principale et tout chargeur
++    sous_addendum = exiger_principale_sous_addendum(rp, sha_a, reception) if prereg is not None else None   # K3
++    src = r1 = j3 = j8 = longueurs = None
+     if f["R1"] is not None:
+         src = charger_p3(racine)
+         longueurs = longueurs_textes(racine, src["tables"])
+         r1 = charger_r1(racine, f["R1"], src["tables"])
+-        reception = exiger_reception_v4(racine, f["R1"]["resultat"]["chemin"])   # texte, table-comparee, provenance
+         if f["R2"] is not None:
+             j3 = charger_juge(racine, f["R2"]["juge3b"], src["tables"], "J3")
+             if f["R2"]["juge8b"] is not None:
+@@ -113,7 +142,8 @@
+                 "lien_au_preenregistrement": lien, "entropie": str(entropie), "entropie_plis": str(entropie_plis),
+                 "regle_entropie": K4.REGLE_ENTROPIE, "motif_R1": f["motif_R1"], "motif_R2": f["motif_R2"],
+                 "reception_v4": reception,
+-                "principale": {"chemin": principale, "sha256": empreinte(racine / principale)}}
++                "principale": {"chemin": principale, "sha256": empreinte(racine / principale),
++                               "sous_addendum": sous_addendum}}
+     if r1 is None:
+         resultat["mode"] = "rejeu non validé"
+         resultat["concordance_principale"] = exiger_concordance_principale(rp, None, {}, {}, resultat["mode"])
+@@ -152,6 +182,9 @@
+ if __name__ == "__main__":
+     try:
+         sys.exit(_main(sys.argv[1:]))
++    except PassageHorsListe as e:
++        print(f"ARRÊT (passage hors liste close) : {e}", file=sys.stderr)
++        sys.exit(CODE_FIN_PASSAGE)
+     except GardeArret as e:
+         print(f"ARRÊT : {e}", file=sys.stderr)
+         sys.exit(1)

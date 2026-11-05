@@ -1,0 +1,168 @@
+--- /tmp/claude-0/-home-user-controle-ia-travail/dab53617-317d-5e41-8722-0e36079bc80b/scratchpad/renommes/lecture_bn_v4_renomme.py	2026-11-05 19:45:07.855324893 +0000
++++ src/controle_ia/analyse_blanche_noire/lecture_v5.py	2026-11-05 19:34:17.492274846 +0000
+@@ -1,22 +1,27 @@
+ """Lecture appariée, version 5 du code (texte scellé `analyse-blanche-noire-v3`, inchangé ; addendum 1 « gardes des
+-analyses », relance v4 de R1). Version 5 = version 3 reprise sans modification (`lecture_v3.calculer_p3`,
+-`lecture_v3.calculer_r4`, `lecture_v3.issue_v3`, `rendu_v3.rendre_v3`, chargeurs `entrees_v3`), plus les trois gardes
+-de réception de la relance v4 de R1 (`entrees_v5.exiger_reception_v4` : `texte`, `table-comparee`, `provenance`),
+-exigées par l'addendum v4 de R1. Ce que l'addendum unique impose au mode décisif, et rien d'autre :
++analyses », relance v4 de R1 ; après la contre-lecture 1 : corrections K1 et K2). Version 5 = version 3 reprise sans
++modification (`lecture_v3.calculer_p3`, `lecture_v3.calculer_r4`, `lecture_v3.issue_v3`, `rendu_v3.rendre_v3`,
++chargeurs `entrees_v3`), plus les trois gardes de réception de la relance v4 de R1 (`entrees_v5.exiger_reception_v4` :
++`texte`, `table-comparee`, `provenance`), exigées par l'addendum v4 de R1. La version 4 (`lecture_v4`) est remplacée
++par celle-ci et n'est pas chargée. Ce que l'addendum unique impose au mode décisif, et rien d'autre :
+ - le texte scellé qui gouverne est inchangé (`constantes_v5.TEXTE`, 1f6a6da2…) : passé à `--prereg`, vérifié scellé,
+   conforme et égal au texte attendu ; ses graines, sa liste fermée v3, son calcul, son issue et sa liste d'arrêt ne
+   bougent pas ;
+ - l'addendum unique (`constantes_v5.ADDENDUM`), scellé et conforme, porte la liste fermée de la version 5 dans un bloc
+   propre à cette analyse (`constantes_v5.TITRE_LISTE`) et l'empreinte des constantes (v5) ;
+-- premier passage sous l'addendum : aucun manifeste sous `runs/` ne cite l'addendum (chemin ou empreinte) avec la
+-  commande de ce code ; les passages du texte sous la version 3 (course v3 de R1) et ceux des deux autres analyses sous
+-  le même addendum ne comptent pas (ils sont comptés et écrits).
++- K1 : les trois gardes de réception sont appelées juste après la lecture de la fiche, avant tout chargeur (aucun
++  `.npz` ouvert si la chaîne du fournisseur est fausse) ;
++- K2, premier passage par liste close : tout manifeste sous `runs/` qui cite le texte (chemin ou empreinte, dans ses
++  octets) ou l'addendum arrête (`PassageHorsListe`, code de fin 2, message qui nomme le manifeste), sauf les trois
++  manifestes de la course v3 (`constantes_v5.PASSAGES_V3`, run et empreinte gelés) et les manifestes des deux autres
++  versions neuves sous l'addendum (`constantes_v5.COMMANDES_ADDENDUM`) ; les tolérés sont comptés et écrits, par nom.
+ Les gardes du mode décisif sont recopiées de `analyse_principale_r1_r2.lecture_v8` (le paquet secondaire ne charge aucun
+ module du paquet principal).
+ """
+ from __future__ import annotations
+ 
+ import argparse
++import hashlib
+ import json
+ import re
+ import sys
+@@ -43,6 +48,7 @@
+ FICHIERS_REUTILISES = L1.FICHIERS_REUTILISES
+ CITATION = L1.CITATION
+ CITATION_CONSTANTES = re.compile(r"Empreinte des constantes \(analyse secondaire, code v5\) : `([0-9a-f]{64})`")
++CODE_FIN_PASSAGE = 2                                        # code de fin distinct de l'arrêt « passage hors liste close »
+ calculer_p3 = L3.calculer_p3
+ calculer_r4 = L3.calculer_r4
+ issue_v5 = L3.issue_v3                                     # issue de la version 3, inchangée
+@@ -50,6 +56,11 @@
+ exiger_versions = L3.exiger_versions
+ 
+ 
++class PassageHorsListe(GardeArret):
++    """Arrêt distinct (K2) : un manifeste sous `runs/` cite le texte ou l'addendum hors de la liste close des passages
++    tolérés (second passage, commande inconnue, manifeste illisible, passage antérieur non gelé ou altéré)."""
++
++
+ # --------------------------------------------------------------------------------------------- gardes du mode décisif
+ def exiger_texte(prereg: str, sha_prereg: str, texte: dict) -> None:
+     """Le texte passé à `--prereg` est le texte scellé qui gouverne cette analyse (chemin et empreinte) : l'addendum
+@@ -98,34 +109,57 @@
+     return {"fichiers": cites, "constantes": m.group(1)}
+ 
+ 
+-def exiger_premier_passage_v5(racine: Path, addendum_rel: str, sha_addendum: str, sha_texte: str) -> dict:
+-    """Premier passage de cette analyse sous l'addendum unique : aucun manifeste sous `runs/` ne cite l'addendum (chemin
+-    ou empreinte) avec la commande de ce code ; un manifeste illisible qui cite l'addendum arrête aussi. Les manifestes
+-    des deux autres analyses sous le même addendum (autre commande) et les passages antérieurs du texte sous ses codes
+-    antérieurs (course v3 de R1, déclarés par l'addendum) ne comptent pas : ils sont comptés et écrits."""
+-    lus, autres, anterieurs = 0, 0, 0
++def exiger_premier_passage_v5(racine: Path, addendum_rel: str, sha_addendum: str, texte: dict,
++                              commande: str = C5.COMMANDE, commandes_addendum=C5.COMMANDES_ADDENDUM,
++                              passages_v3: dict | None = None) -> dict:
++    """K2, premier passage par liste close (même règle que `analyse_principale_r1_r2.lecture_v8`, recopiée). Pour
++    chaque manifeste sous `runs/` (octets lus) :
++    - ne cite ni le texte (`texte["chemin"]` ou `texte["sha256"]` dans ses octets, règle des textes) ni l'addendum
++      (chemin ou empreinte) : ignoré ;
++    - illisible et cite l'un des deux : arrêt ;
++    - cite l'addendum : sa commande est celle de ce code → arrêt (second passage) ; une commande sœur gelée
++      (`commandes_addendum`) → toléré ; toute autre commande → arrêt ;
++    - cite le texte sans l'addendum : toléré seulement si son run est dans `passages_v3` avec la même empreinte sha256
++      du fichier `manifeste.json` (les trois manifestes de la course v3, gelés) ; sinon arrêt.
++    Les tolérés sont comptés et écrits par nom. Chaque arrêt est un `PassageHorsListe` (code de fin 2) qui nomme le
++    manifeste."""
++    passages_v3 = C5.PASSAGES_V3 if passages_v3 is None else passages_v3
++    lus, autres, anterieurs, toleres = 0, 0, 0, []
+     for p in sorted((Path(racine) / "runs").glob("*/manifeste.json")):
+         brut = p.read_bytes()
+         lus += 1
++        run = p.parent.name
+         cite_addendum = sha_addendum.encode("ascii") in brut or addendum_rel.encode("utf-8") in brut
++        cite_texte = texte["sha256"].encode("ascii") in brut or texte["chemin"].encode("utf-8") in brut
++        if not (cite_addendum or cite_texte):
++            continue
+         try:
+             m = json.loads(brut.decode("utf-8"))
+         except ValueError:
+             m = None
+         if not isinstance(m, dict):
+-            if cite_addendum:
+-                raise GardeArret(f"second passage possible : manifeste illisible {p.parent.name} qui cite l'addendum "
+-                                 f"{addendum_rel} — nœud de Lazar")
+-            continue
+-        if cite_addendum and m.get("commande") == C5.COMMANDE:
+-            raise GardeArret(f"second passage : {p.parent.name} a déjà été lancé sous l'addendum {addendum_rel} avec la "
+-                             f"commande « {C5.COMMANDE} » — nœud de Lazar")
++            raise PassageHorsListe(f"passage hors liste close : manifeste illisible {run} qui cite "
++                                   f"{'l’addendum ' + addendum_rel if cite_addendum else 'le texte ' + texte['chemin']}"
++                                   f" — nœud de Lazar")
+         if cite_addendum:
++            c = m.get("commande")
++            if c == commande:
++                raise PassageHorsListe(f"second passage : {run} a déjà été lancé sous l'addendum {addendum_rel} avec la "
++                                       f"commande « {commande} » — nœud de Lazar")
++            if c not in commandes_addendum:
++                raise PassageHorsListe(f"passage hors liste close : {run} cite l'addendum {addendum_rel} avec une commande "
++                                       f"hors des trois commandes gelées (« {c} ») — nœud de Lazar")
+             autres += 1
+-        elif ((m.get("preenregistrement") or {}).get("sha256")) == sha_texte:
+-            anterieurs += 1
++            toleres.append(run)
++            continue
++        if passages_v3.get(run) != hashlib.sha256(brut).hexdigest():
++            raise PassageHorsListe(f"passage hors liste close : {run} cite le texte {texte['chemin']} et n'est pas un des "
++                                   f"trois manifestes gelés de la course v3 (run absent de la liste, ou empreinte du "
++                                   f"manifeste ≠ empreinte gelée) — nœud de Lazar")
++        anterieurs += 1
++        toleres.append(run)
+     return {"manifestes_lus": lus, "autres_analyses_sous_l_addendum": autres,
+-            "passages_anterieurs_du_texte_hors_addendum": anterieurs}
++            "passages_anterieurs_du_texte_hors_addendum": anterieurs, "toleres": toleres}
+ 
+ 
+ # ----------------------------------------------------------------------------------------------------- analyse
+@@ -139,7 +173,7 @@
+         L1.exiger_code_importe_sous(racine)
+         cite_texte = L3.exiger_code_cite((racine / prereg).read_text(encoding="utf-8"))     # liste fermée v3 du texte
+         sha_a = exiger_prereg_scelle(racine / C5.ADDENDUM)
+-        cite = exiger_code_cite((racine / C5.ADDENDUM).read_text(encoding="utf-8"))          # liste fermée v4, addendum
++        cite = exiger_code_cite((racine / C5.ADDENDUM).read_text(encoding="utf-8"))          # liste fermée v5, addendum
+         e = L1.entropie_de(sha_p)
+         if entropie is not None and int(entropie) != e:
+             raise GardeArret(f"entropie {entropie} ≠ entropie dérivée de l'empreinte du préenregistrement")
+@@ -147,14 +181,15 @@
+         addendum = {"chemin": C5.ADDENDUM, "sha256": sha_a}
+         lien = {"preenregistrement": prereg, "sha256": sha_p, "code_cite": cite_texte,
+                 "addendum": {**addendum, "code_cite": cite},
+-                "passages": exiger_premier_passage_v5(racine, C5.ADDENDUM, sha_a, sha_p),
++                "passages": exiger_premier_passage_v5(racine, C5.ADDENDUM, sha_a, C5.TEXTE),
+                 "versions": exiger_versions()}
+     elif entropie is None:
+         raise GardeArret("mode non décisif : entropie explicite exigée")
+     f, sha_f = lire_fiche_v3(racine, fiche, scellee=prereg is not None)
++    # K1 : texte, table-comparee, provenance, juste après la fiche, avant tout chargeur (aucun .npz ouvert)
++    reception = exiger_reception_v4(racine, f["R1"]["manifeste"]["chemin"]) if f["R1"] is not None else None
+     source = charger_run_v3(racine, C.RUN_P3, C.EMPREINTES_P3)
+     acts = charger_activations_v3(racine, f["R1"], source) if f["R1"] is not None else None
+-    reception = exiger_reception_v4(racine, f["R1"]["manifeste"]["chemin"]) if f["R1"] is not None else None
+     juge = charger_juge(racine, f["R2"], source) if f["R2"] is not None else None
+     part_anomalie = exiger_juge_3b(racine, f["R2"], juge) if juge is not None else None
+     mode = "complet" if juge is not None else "R1 seul"
+@@ -234,6 +269,9 @@
+ if __name__ == "__main__":
+     try:
+         sys.exit(_main(sys.argv[1:]))
++    except PassageHorsListe as e:
++        print(f"ARRÊT (passage hors liste close) : {e}", file=sys.stderr)
++        sys.exit(CODE_FIN_PASSAGE)
+     except GardeArret as e:
+         print(f"ARRÊT : {e}", file=sys.stderr)
+         sys.exit(1)

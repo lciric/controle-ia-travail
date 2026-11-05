@@ -1,0 +1,73 @@
+--- src/controle_ia/analyse_blanche_noire/entrees_v4.py	2026-11-05 19:19:08.960728559 +0000
++++ src/controle_ia/analyse_blanche_noire/entrees_v5.py	2026-11-05 19:33:02.439298725 +0000
+@@ -1,4 +1,4 @@
+-"""Gardes de réception de la relance v4 de R1 (entrées, version 4 de l'analyse secondaire), exigées par l'addendum v4
++"""Gardes de réception de la relance v4 de R1 (entrées, version 5 de l'analyse secondaire), exigées par l'addendum v4
+ de R1 scellé (`prereg/R1-addendum-relance-v4.md`, 0f10881b…, étape 4, « Analyses (inchangées) ») et rappelées par la
+ fiche de réception v4 (section 6). Elles s'ajoutent aux gardes de `entrees_v3.charger_activations_v3`, reprises sans
+ modification, et se lisent sur le « manifeste » de R1 que cite la fiche v3 (`diag/<run>/rejeu-activations.json`,
+@@ -13,8 +13,9 @@
+   manifeste du rejeu est `rejeu_activations_v4`.
+ Du résultat de la réparation, seuls les octets sont hachés (rien n'en est lu) ; de la table, seule la clé
+ `resultat_reparation_sha256` est lue ; un message d'arrêt nomme la garde et la clé, jamais une valeur de couverture.
+-Même règle que `analyse_principale_r1_r2.entrees_v4`, recopiée (le paquet secondaire ne charge aucun module du paquet
+-principal).
++Même règle que `analyse_principale_r1_r2.entrees_v5`, recopiée (le paquet secondaire ne charge aucun module du paquet
++principal). Depuis la version 5 (K1, contre-lecture 1), `lecture_v5` les appelle **juste après `lire_fiche_v3`, avant tout
++chargeur** (`charger_run_v3`, `charger_activations_v3`, le juge) : aucun `.npz` n'est ouvert avant elles.
+ """
+ from __future__ import annotations
+ 
+@@ -23,7 +24,7 @@
+ from ..gardes import GardeArret
+ from ..manifeste import lire_manifeste, verifier_resultat
+ from ..scellement import verifier
+-from . import constantes_v4 as C4
++from . import constantes_v5 as C5
+ from .entrees import lire_json
+ 
+ 
+@@ -35,29 +36,29 @@
+     run = corps["run_id"]
+     m, sha_m = lire_manifeste(racine / "runs" / run / "manifeste.json")
+     # texte : le texte qui gouverne le rejeu est l'addendum v4 scellé (chemin et empreinte)
+-    if m.get("preenregistrement") != C4.ADDENDUM_V4:
++    if m.get("preenregistrement") != C5.ADDENDUM_V4:
+         raise GardeArret(f"garde texte : le texte qui gouverne le rejeu {run} (clé preenregistrement de son manifeste) "
+-                         f"≠ addendum v4 scellé ({C4.ADDENDUM_V4['chemin']}, {C4.ADDENDUM_V4['sha256'][:12]}…) : "
++                         f"≠ addendum v4 scellé ({C5.ADDENDUM_V4['chemin']}, {C5.ADDENDUM_V4['sha256'][:12]}…) : "
+                          f"rien n'est lu")
+     tk = (corps.get("resultat") or {}).get("tokenisation")
+     if not isinstance(tk, dict):
+         raise GardeArret(f"garde table-comparee : résultat du rejeu {run} sans clé tokenisation")
+     # table-comparee : table versée (sceau) et résultat de la réparation versé (sceau cité par la table)
+-    sha_table = verifier(racine / C4.TABLE_V4)
+-    table = lire_json(racine / C4.TABLE_V4)
+-    sha_rep = verifier(racine / C4.RESULTAT_REPARATION_V4)
++    sha_table = verifier(racine / C5.TABLE_V4)
++    table = lire_json(racine / C5.TABLE_V4)
++    sha_rep = verifier(racine / C5.RESULTAT_REPARATION_V4)
+     if tk.get("table_sha256") != sha_table:
+         raise GardeArret(f"garde table-comparee : tokenisation.table_sha256 du rejeu {run} ≠ sceau de la table v4 versée "
+-                         f"({C4.TABLE_V4})")
++                         f"({C5.TABLE_V4})")
+     if not isinstance(table, dict) or table.get("resultat_reparation_sha256") != sha_rep:
+-        raise GardeArret(f"garde table-comparee : resultat_reparation_sha256 cité par la table v4 ({C4.TABLE_V4}) ≠ sceau "
+-                         f"du résultat de la réparation versé ({C4.RESULTAT_REPARATION_V4})")
++        raise GardeArret(f"garde table-comparee : resultat_reparation_sha256 cité par la table v4 ({C5.TABLE_V4}) ≠ sceau "
++                         f"du résultat de la réparation versé ({C5.RESULTAT_REPARATION_V4})")
+     # provenance : addendum de la table à l'identique (V4-E14) et commande du rejeu
+-    if tk.get("addendum") != C4.ADDENDUM_V4["chemin"]:
+-        raise GardeArret(f"garde provenance : tokenisation.addendum du rejeu {run} ≠ {C4.ADDENDUM_V4['chemin']} (V4-E14)")
+-    if m.get("commande") != C4.COMMANDE_REJEU_V4:
+-        raise GardeArret(f"garde provenance : commande du manifeste du rejeu {run} ≠ « {C4.COMMANDE_REJEU_V4} »")
++    if tk.get("addendum") != C5.ADDENDUM_V4["chemin"]:
++        raise GardeArret(f"garde provenance : tokenisation.addendum du rejeu {run} ≠ {C5.ADDENDUM_V4['chemin']} (V4-E14)")
++    if m.get("commande") != C5.COMMANDE_REJEU_V4:
++        raise GardeArret(f"garde provenance : commande du manifeste du rejeu {run} ≠ « {C5.COMMANDE_REJEU_V4} »")
+     return {"run_rejeu": run, "manifeste_sha256": sha_m, "texte": m["preenregistrement"], "commande": m["commande"],
+-            "table": {"chemin": C4.TABLE_V4, "sha256": sha_table},
+-            "reparation": {"chemin": C4.RESULTAT_REPARATION_V4, "sha256": sha_rep},
++            "table": {"chemin": C5.TABLE_V4, "sha256": sha_table},
++            "reparation": {"chemin": C5.RESULTAT_REPARATION_V4, "sha256": sha_rep},
+             "tokenisation": {"addendum": tk["addendum"], "table_sha256": tk["table_sha256"]}}
