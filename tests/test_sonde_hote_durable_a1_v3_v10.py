@@ -81,7 +81,8 @@ def args_louer(tmp_path, **kw):
     offres = tmp_path / "offres.json"
     offres.write_text(json.dumps([OFFRE, dict(OFFRE, id=12, dph_total=0.09)]))
     a = dict(go="GO-2026-11-05-01", registre_main=str(reg), garde_main=str(GARDE), offres=str(offres), offre="12",
-             commit_prive="a" * 40, journal_local=str(tmp_path / "journal-sonde-v10.log"), duree_s="1200",
+             commit_prive="a" * 40, commit_registre="e" * 40, journal_local=str(tmp_path / "journal-sonde-v10.log"),
+             duree_s="1200",
              verifier_seulement=False)
     a.update(kw)
     return type("A", (), a)()
@@ -346,7 +347,8 @@ def amorce(tmp_path, **modif):
         (d / nom).write_text("# factice\n")
     (d / "sonde_hote_durable_a1_v3_v10.py").write_text(
         "import os, sys, pathlib\npathlib.Path(os.environ['RACINE_AMORCE'], 'exec-atteint.txt').write_text(' '.join(sys.argv[1:]))\n")
-    env = {"PATH": os.environ["PATH"], "COMMIT_PRIVE": "a" * 40, "GO_ID": "GO-2026-11-05-01", "PRIX_H_USD": "0.1",
+    env = {"PATH": os.environ["PATH"], "COMMIT_PRIVE": "a" * 40, "COMMIT_REGISTRE": "e" * 40, "GO_ID": "GO-2026-11-05-01",
+           "PRIX_H_USD": "0.1",
            "DUREE_MAX_S": "1200", "ECHEANCE_UTC_S": "1800000000", "GH_TOKEN": JETON, "RACINE_AMORCE": str(racine),
            "SAUTER_INSTALLATION": "1"}
     for k, v in modif.items():
@@ -378,7 +380,8 @@ def test_amorce_module_absent(tmp_path):
     r, _ = amorce(tmp_path)
     (racine / "amorce-depot/src/controle_ia/hote_durable_a1_v3.py").unlink()
     (racine / "exec-atteint.txt").unlink()
-    env = {"PATH": os.environ["PATH"], "COMMIT_PRIVE": "a" * 40, "GO_ID": "GO-2026-11-05-01", "PRIX_H_USD": "0.1",
+    env = {"PATH": os.environ["PATH"], "COMMIT_PRIVE": "a" * 40, "COMMIT_REGISTRE": "e" * 40, "GO_ID": "GO-2026-11-05-01",
+           "PRIX_H_USD": "0.1",
            "DUREE_MAX_S": "1200", "ECHEANCE_UTC_S": "1800000000", "GH_TOKEN": JETON, "RACINE_AMORCE": str(racine),
            "SAUTER_INSTALLATION": "1"}
     r = subprocess.run(["bash", str(RACINE / s.AMORCE)], env=env, capture_output=True, text=True)
@@ -390,18 +393,28 @@ def test_amorce_module_absent(tmp_path):
 
 @pytest.fixture
 def monde(tmp_path):
-    def fabriquer(depuis_s=59.7, etiquette="sonde-a1-v3-v10"):
+    def fabriquer(depuis_s=59.7, etiquette="sonde-a1-v3-v10", registre_canal=None):
         nu = tmp_path / "prive-machine.git"
         run("git", "init", "-q", "--bare", "-b", "main", str(nu))
         w = tmp_path / "w-machine"
         run("git", "init", "-q", "-b", "main", str(w))
         (w / "registres").mkdir()
-        (w / "registres/go.md").write_text("# R\n\n" + ENTETE + LIGNE_06 + LIGNE_09)
+        # v10 : `main` porte des doublons d'extension (R-389), que le lecteur gelé refuse ; le canal n'en porte aucun
+        (w / "registres/go.md").write_text("# R\n\n" + ENTETE + LIGNE_06 + LIGNE_06.replace("A1-v3, Argon", "extension : Argon")
+                                           + LIGNE_09)
         (w / ".claude/hooks").mkdir(parents=True)
         (w / ".claude/hooks/garde_calcul.py").write_bytes(GARDE.read_bytes())
         run("git", "add", "-A", cwd=w)
         run("git", "-c", "user.name=j", "-c", "user.email=j@j", "commit", "-q", "-m", "main", cwd=w)
         run("git", "push", "-q", str(nu), "HEAD:refs/heads/main", cwd=w)
+        commit_main = run("git", "rev-parse", "HEAD", cwd=w)
+        run("git", "checkout", "-q", "-b", "canal", cwd=w)
+        (w / "registres/go.md").write_text(registre_canal if registre_canal is not None
+                                           else "# R\n\n" + ENTETE + LIGNE_06 + LIGNE_09)
+        run("git", "add", "-A", cwd=w)
+        run("git", "-c", "user.name=j", "-c", "user.email=j@j", "commit", "-q", "-m", "canal", cwd=w)
+        run("git", "push", "-q", str(nu), f"HEAD:refs/heads/{h.SOURCE_REGISTRE}", cwd=w)
+        commit_canal = run("git", "rev-parse", "HEAD", cwd=w)
         racine = tmp_path / "root"
         racine.mkdir()
         clone = racine / "amorce-depot"
@@ -417,6 +430,7 @@ def monde(tmp_path):
         h.ClientVastJouet(r.vast_jouet)._ecrire({"instances": [{"id": 90000001, "label": etiquette}], "gestes": []})
         env = {"GO_ID": "GO-2026-11-05-01", "PRIX_H_USD": "0.12", "DUREE_MAX_S": "60", "GH_TOKEN": JETON,
                "CONTAINER_ID": "90000001", "CONTAINER_API_KEY": CLE_VAST, "COMMIT_PRIVE": "a" * 40,
+               "COMMIT_REGISTRE": commit_canal, "COMMIT_MAIN_POUR_ESSAI": commit_main,
                "ECHEANCE_UTC_S": str(int(time.time()) + 3000), "TIR_MINUTERIE": "0"}
         return r, env, nu
     return fabriquer
@@ -442,7 +456,8 @@ def test_machine_cas_sain(monde):
     f = versees(nu, s.BRANCHE)
     b = s.BRANCHE
     j = f[f"{b}/journal-sonde-a1-v3-v10.log"].decode()
-    for attendu in ("GO accepté par la garde de main", "signe de vie poussé", "clé d'instance : lecture faite",
+    for attendu in (f"registre de {h.SOURCE_REGISTRE} au commit", "aucun doublon", "pilote de carte :", "signe de vie poussé",
+                    "clé d'instance : lecture faite",
                     "PLAFOND DE DURÉE DE LA SONDE atteint", "nature de la fin : plafond_de_duree_de_la_sonde"):
         assert attendu in j, attendu
     for nom in s.FICHIERS_DEMARRAGE[:1] + s.FICHIERS_DEMARRAGE[2:]:  # f5 : journaux du démarrage versés
@@ -1197,3 +1212,113 @@ def test_garde_de_depense_recalculee_a_chaque_essai(tmp_path):
     assert Path(str(compte) + ".offres").read_text().split() == ["100"]  # le second essai n'a pas été appelé
     j = (tmp_path / "journal-sonde-v10.log").read_text()
     assert "plafond 0.5 USD" in j and not (tmp_path / "journal-sonde-v10.log.creation-incertaine").exists()
+
+
+
+# --- v10 : registre du canal sur la machine, relevés de facturation et du pilote de carte (sonde v9 du 5 novembre 2026) -------
+
+
+def test_machine_registre_du_canal_cas_sain(monde):
+    r, env, nu = monde()
+    assert s.MachineSondeV10(r, env, 120).principal() == 0
+    f = versees(nu, s.BRANCHE)
+    b = s.BRANCHE
+    j = f[f"{b}/journal-sonde-a1-v3-v10.log"].decode()
+    assert f"registre de {h.SOURCE_REGISTRE} au commit {env['COMMIT_REGISTRE']} : aucun doublon ; GO-2026-11-05-01 accepté" in j
+    assert f[f"{b}/registre-go.md"].decode().count("| GO-2026-11-04-06 |") == 1  # la copie du canal, sans doublon
+    assert "course factice détachée" in j and "nature de la fin : plafond_de_duree_de_la_sonde" in j
+
+
+@pytest.mark.parametrize("cas, motif", [
+    ("main", "identifiants en double ['GO-2026-11-04-06']"),        # registre de main (doublons d'extension) : refusé
+    ("doublons", "identifiants en double ['GO-2026-11-04-06']"),     # le canal lui-même à doublons
+    ("absent", "COMMIT_REGISTRE"),
+    ("go_09", "GO-2026-11-05-01 absent"),
+    ("hors_canal", "absent de la branche canal/conv-audit-n04"),       # commit qui n'est pas sur la branche du canal
+])
+def test_machine_registre_artefacts(monde, cas, motif):
+    if cas == "doublons":
+        r, env, nu = monde(registre_canal="# R (canal)\n\n" + ENTETE + LIGNE_06
+                           + LIGNE_06.replace("A1-v3, Argon", "extension : Argon") + LIGNE_09)
+    elif cas == "go_09":
+        r, env, nu = monde(registre_canal="# R\n\n" + ENTETE + LIGNE_06 + LIGNE_09_ANCIEN)
+    else:
+        r, env, nu = monde()
+    if cas == "main":
+        env["COMMIT_REGISTRE"] = env["COMMIT_MAIN_POUR_ESSAI"]
+    if cas == "absent":
+        env.pop("COMMIT_REGISTRE")
+    if cas == "hors_canal":
+        w = r.travail.parent.parent / "w-hors-canal"
+        run("git", "init", "-q", "-b", "x", str(w))
+        (w / "registres").mkdir()
+        (w / "registres/go.md").write_text("# R\n\n" + ENTETE + LIGNE_09)
+        run("git", "add", "-A", cwd=w)
+        run("git", "-c", "user.name=j", "-c", "user.email=j@j", "commit", "-q", "-m", "hors canal", cwd=w)
+        run("git", "push", "-q", str(nu), "HEAD:refs/heads/autre-branche", cwd=w)
+        env["COMMIT_REGISTRE"] = run("git", "rev-parse", "HEAD", cwd=w)
+    assert s.MachineSondeV10(r, env, 120).principal() == 0
+    j = versees(nu, s.BRANCHE_REFUS)[f"{s.BRANCHE_REFUS}/journal-sonde-a1-v3-v10.log"].decode()
+    assert "REFUS" in j and motif in j and "course factice détachée" not in j, j[-500:]
+
+
+def test_corps_et_louer_portent_le_commit_du_registre(tmp_path):
+    c = s.corps("a" * 40, OFFRE, 1200, JETON, 1_800_000_000, True, "f" * 40)
+    assert c["env"]["COMMIT_REGISTRE"] == "f" * 40
+    with pytest.raises(h.Refus, match="commit du registre"):
+        s.corps("a" * 40, OFFRE, 1200, JETON, 1_800_000_000, True, "canal")
+    vast = h.ClientVastJouet(tmp_path / "vast.json")
+    assert s.louer(args_louer(tmp_path, commit_registre="pas-un-hash"), vast, JOUR, dict(ENV_PILOTE)) == 2
+    assert vast.instances() == []
+
+
+@pytest.mark.parametrize("present", [True, False])
+def test_releve_du_pilote_de_carte(monde, tmp_path, monkeypatch, present):
+    if present:
+        d = tmp_path / "bin-nvidia"
+        d.mkdir()
+        outil(d, "nvidia-smi", 'echo "GPU 0: NVIDIA GeForce GTX 1070 (UUID: GPU-jouet)"\necho "ligne en trop"\n')
+        monkeypatch.setenv("PATH", f"{d}:{os.environ['PATH']}")
+    r, env, nu = monde()
+    assert s.MachineSondeV10(r, env, 120).principal() == 0
+    f = versees(nu, s.BRANCHE)
+    ligne = f[f"{s.BRANCHE}/pilote-carte.txt"].decode().strip()
+    assert ligne == ("GPU 0: NVIDIA GeForce GTX 1070 (UUID: GPU-jouet)" if present else "nvidia-smi absent")
+
+
+def vastai_instance(tmp_path, sortie, code=0, lent=False):
+    o = outil(tmp_path, "vastai-instance", ("sleep 5\n" if lent else "") + f"cat <<'FIN'\n{sortie}\nFIN\nexit {code}\n")
+    env = {"PATH": os.environ["PATH"], "HOME": str(tmp_path), "VAST_API_KEY": CLE_COMPTE, "GH_TOKEN": JETON}
+    return s.ClientPilote(env, str(o))
+
+
+BRUT = json.dumps({"id": 4321, "label": "sonde-a1-v3-v10", "actual_status": "running", "dph_total": 0.0551,
+                   "disk_usage": 1.2, "storage_cost": 0.15, "extra_env": [["GH_TOKEN", JETON]], "onstart": "secret",
+                   "ssh_host": "hote.invalide"})
+
+
+def test_releve_de_facturation_cas_sain_et_filtre(tmp_path):
+    c = vastai_instance(tmp_path, BRUT)
+    assert s.relever_facturation(etat_pilote(tmp_path), c, {}) == 0
+    j = (tmp_path / "controle.log").read_text()
+    assert ('{"actual_status": "running", "disk_usage": 1.2, "dph_total": 0.0551, "storage_cost": 0.15}' in j)
+    assert JETON not in j and "extra_env" not in j and "ssh_host" not in j and "onstart" not in j
+    d = tmp_path / "liste"
+    d.mkdir()
+    c2 = vastai_instance(d, json.dumps([json.loads(BRUT), {"id": 1, "label": "autre"}]))
+    assert s.relever_facturation(etat_pilote(d), c2, {}) == 0  # forme liste : la seule instance visée
+
+
+@pytest.mark.parametrize("sortie, code, lent, attendu", [
+    (BRUT.replace("sonde-a1-v3-v10", "autre"), 0, False, 2),   # étiquette autre : aucun relevé écrit
+    ("texte", 0, False, 2),                                     # illisible
+    (BRUT, 1, False, 6),                                        # échec de vastai : recontrôler
+    (BRUT, 0, True, 6),                                         # délai dépassé : recontrôler
+])
+def test_releve_de_facturation_artefacts(tmp_path, monkeypatch, sortie, code, lent, attendu):
+    monkeypatch.setattr(s, "DELAI_VASTAI_S", 1)
+    assert s.relever_facturation(etat_pilote(tmp_path), vastai_instance(tmp_path, sortie, code, lent), {}) == attendu
+    j = (tmp_path / "controle.log").read_text()
+    assert "relevé de facturation" not in j and JETON not in j
+    v = VastFactice([])
+    assert s.relever_facturation(etat_pilote(tmp_path, 58936099), v, {}) == 2  # instance protégée
