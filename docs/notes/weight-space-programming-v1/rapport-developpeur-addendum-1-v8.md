@@ -1,7 +1,7 @@
 # SPARKS-EXP7-NUL — additif v8 au rapport du développeur (code v8, minimal)
 
 Même rédacteur-développeur. Tâche : message de la mère du 5 novembre 2026 (vers 02:04 UTC), après la répétition v7. Travail
-de 02:04 à HEURE_FIN UTC environ (`date -u`). Mêmes interdits, tous tenus : aucune poussée, aucun `.sha256` sur `main`, aucun
+de 02:04 à 03:56 UTC environ, coupé par deux redémarrages du conteneur (`date -u`). Mêmes interdits, tous tenus : aucune poussée, aucun `.sha256` sur `main`, aucun
 fichier existant modifié, aucun réseau, aucune dépense, aucune clé lue. Cet additif complète les rapports v5, v6 et v7.
 
 **Verdict.** Code v8 : branche locale `prep/sparks-exp7-nul-v8`, commit `4fd104072bcdf22bb0f5eb1daffca295858f0ac6`. C'est un commit sur `67dbad98`,
@@ -117,6 +117,23 @@ Le contrôle des appels de la v7 compte désormais six appels `module`, sans tex
 Les mutations v7 sont rejouées sur les fichiers v8 et l'essai v8 (7 sur 8). La huitième, « manifeste sans src », n'a plus
 d'objet : il n'y a plus de texte du manifeste sur l'entrée standard. L'appel `module` du manifeste est couvert par les
 mutations « src non posé » et « src relatif ».
+
+**Fichiers et empreintes** (branche `prep/sparks-exp7-nul-v8`, chacun avec son compagnon `.sha256` ; 20 fichiers neufs) :
+
+| Fichier | sha256 |
+|---|---|
+| `scripts/amorce_instance_sparks_exp7_nul_v8.sh` | `7aca53f8787682bc2ee4fd06f12bd19c0e377868740022b5c6f678e678bfc642` |
+| `scripts/banc_mutations_sparks_exp7_nul_v8.py` | `ab539f197cc1048444e18458ba34aea7b60fdef23b16ee850b19526b2c421e6f` |
+| `scripts/lancer_sparks_exp7_nul_v8.sh` | `d46244eacb986195c413af7dc538e478d064152c9282c3399c98408abb4c55c6` |
+| `scripts/sparks_exp7_nul_instance_v8.sh` | `73f832b124fd28594bed2f5d28b5637543eef65bd0aa6cadfdd37aaac36d4e4f` |
+| `src/controle_ia/sparks_exp7_nul_v8/__init__.py` | `d2d11a67fabf6d13aa66b0c8c9471dc32a131669376839d6f3fd5e8e16e5f2f5` |
+| `src/controle_ia/sparks_exp7_nul_v8/addendum_factice.py` | `7c82d259d86842c908873d1dc3b08f21b813007b0374c444399d5ef365d1188a` |
+| `src/controle_ia/sparks_exp7_nul_v8/garde_code.py` | `b54c2c7d270bf42fc609c111c1e47e04c4447a0675d3bda25b52c455607da4a7` |
+| `src/controle_ia/sparks_exp7_nul_v8/liste-fermee-v1.txt` | `9a66b37ab6646b5012317a997a19eaf53061161048a70ea3418d017da9db521d` |
+| `src/controle_ia/sparks_exp7_nul_v8/manifeste_phase.py` | `35862365a4e172745e6f0015373474b4a431895e7dbdd1b6f7e60ac75590750f` |
+| `tests/test_sparks_exp7_nul_v8.py` | `449e863e4b3016bb4ff184ed2d6a73a9cab31a60606b647a75ff7dcb1d3fd38e` |
+
+`garde_code liste . 4fd10407…` (v8) → « LISTE FERMÉE CONFORME : 168 fichiers ».
 
 ## 3. Ce que cela demande au brouillon suivant (brouillon 6) : deux couples
 
@@ -271,7 +288,44 @@ Résultat attendu : `OK` sur chaque ligne, et `DELETE au journal : 1 (attendu : 
 Le code de la phase causale est non nul, parce que le départ « jouet » n'est pas un modèle publié : c'est l'échec voulu du
 calcul jouet.
 
-JOUE_LOCALEMENT
+**Passage local de bout en bout du script d'instance v8**, sans amorce, en mode jouet et sans réseau. Les runs sont tous comptés (R4).
+
+Dispositif :
+- dépôt nu local : il emprunte les objets du dépôt de travail (`alternates`), et sa frontière superficielle est recopiée ;
+- `DEPOT_URL=file://…` ;
+- commit lancé : l'enfant `2a85cf47` ;
+- `COMMIT_CODE=4fd10407…` ;
+- `VENV_EXISTANT` : `.venv` du dépôt ;
+- `env -i`.
+
+Ce passage ne remplace pas la répétition : ni l'amorce, ni la minuterie, ni GitHub ne sont joués.
+
+- **Fabrication (1 run, complet, code 3)**. Le journal donne, dans l'ordre :
+  - « LANCEMENT CONFORME : code 4fd104072bcd, addendum 8fd57d1bff4b » ;
+  - « essais : 293 passed » ;
+  - « EGALITE LOTS OK » ;
+  - « MANIFESTE CRÉÉ : runs/20261105-024300-sparks-exp7-nul-v5-fabrication/manifeste.json ; préenregistrement
+    prereg/SPARKS-EXP7-NUL-addendum-1.md (8fd57d1bff4b…) ; texte parent 4bacf20dbb8a… ; ADDENDUM FACTICE (jouet) » ;
+  - au `run.err` : « ARRET 0/28 modèles dans les bornes (< 90 %) : recette non reproduite » ;
+  - « fin du calcul, code 3 » ;
+  - sorties scellées, puis commit « SPARKS-EXP7-NUL v8 : fabrication (jouet), code 3 » ;
+  - « poussée vérifiée ».
+
+  Le manifeste porte :
+  - `preenregistrement` = addendum, `8fd57d1b…` ;
+  - `texte_parent` = `4bacf20d…` ;
+  - `addendum_factice` vrai ;
+  - `depot_propre` vrai.
+
+  Un défaut du dispositif local, pas du code : le dépôt de travail est superficiel. Le clone partiel a donc écrit des
+  avertissements « shallow roots » et un échec de récupération à la demande. Le clone, la garde et le calcul ont abouti.
+- **Phase causale (2 runs, coupés tous deux par un redémarrage du conteneur, sans code de fin)**. Les deux journaux
+  donnent « essais : 293 passed », puis « MANIFESTE CRÉÉ : runs/…-sparks-exp7-nul-v5-causal/manifeste.json ;
+  préenregistrement prereg/SPARKS-EXP7-NUL-addendum-1.md (8fd57d1bff4b…) ; texte parent 4bacf20dbb8a… ; ADDENDUM FACTICE
+  (jouet) ». Ces deux runs ont été lancés à 02:56 et à 03:42 UTC.
+
+  Le calcul causal jouet et sa fin, « fin du calcul, code [1-9] », ne sont pas observés ici. Sur consigne de la mère, je ne
+  les rejoue pas : la répétition les éprouve.
 
 **Tir réel** : la commande de la section 5 du rapport v5 vaut avec le lanceur v8 et le commit v8. Il faut d'abord sceller le
 brouillon 6, avec ses deux couples et la contre-lecture 5 :
