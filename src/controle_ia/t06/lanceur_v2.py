@@ -39,7 +39,6 @@ from ..organismes import lora as lo
 from ..premier_test_ia.conditions import charger_consignes
 from ..premier_test_ia.run import controler_format_agent
 from ..scellement import sceller
-from ..sondes.familles import FAMILLES
 from . import distillation_transcription as dt
 from . import test_croise as tc
 from .configuration import ADAPTATEURS, condition_decisive_adaptateur, condition_temoin_dose_1, conditions_evaluation, nom_condition
@@ -190,7 +189,7 @@ def test_croise_v2(lignes, activations, config, g) -> dict:
         for c in config["couches"]:
             gc.collect()                                   # C16 : rien de la couche précédente n'est plus référencé ici
             actions = actions_de_la_couche(lignes, activations, c)
-            for f in FAMILLES:
+            for f in config["familles_descriptives"]:            # familles en configuration (E0 : coût de Mahalanobis)
                 if f == sonde["famille"] and c == sonde["couche"]:
                     continue
                 ag = "attention" if f == "attention" else "max"

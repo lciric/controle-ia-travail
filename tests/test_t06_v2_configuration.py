@@ -40,6 +40,8 @@ def test_configurations_v2_conformes():
     assert r["lecture"]["non_interpretable_si_au_dessus_seulement"] is True              # L05
     assert r["offre"]["coeurs_effectifs_min"] == 16 and r["offre"]["disque_min_go"] == 150 and r["offre"]["telechargement_max_usd_go"] == 0.05
     assert r["temoin_lexical"] is None and r["sondes_figees_p3"] is None and r["fils_test_croise"] == 16
+    assert r["familles_descriptives"] == ["difference_moyennes", "lineaire", "perceptron", "attention", "mahalanobis"]
+    cf.exiger_config_t06_v2(dict(r, familles_descriptives=["difference_moyennes", "lineaire", "perceptron", "attention"]))   # Mahalanobis écartée
 
 
 @pytest.mark.parametrize("modif, motif", [
@@ -60,6 +62,9 @@ def test_configurations_v2_conformes():
     (lambda c: c["distillation"].__setitem__("pas_declares", 0), "pas_declares"),
     (lambda c: c["distillation"].__setitem__("autre", 1), "exactement"),
     (lambda c: c["offre"].pop("etiquette"), "offre : clés"),
+    (lambda c: c.__setitem__("familles_descriptives", ["lineaire", "autre"]), "familles_descriptives"),
+    (lambda c: c.__setitem__("familles_descriptives", ["lineaire"]), "sonde décisive"),
+    (lambda c: c.__setitem__("familles_descriptives", []), "familles_descriptives"),
     (lambda c: c["offre"].__setitem__("disque_min_go", -1), "positif"),
     (lambda c: c["offre"].__setitem__("etiquette", ""), "etiquette"),
 ])

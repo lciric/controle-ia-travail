@@ -11,6 +11,8 @@ telle quelle). Par-dessus `configuration.exiger_config_t06` :
   « action », une paire par action, mode « paires ») et `distillation.pas_declares` (L04 : le nombre de pas déclaré au
   texte, 480 au plan (b) ; vérifié avant le manifeste contre les tâches de distillation, les épisodes par tâche, les époques
   et le lot : `exiger_pas_declares` ; le nombre effectif, après exclusions, est écrit dans le résultat à côté du déclaré) ;
+- `familles_descriptives` : familles des couples descriptifs famille × couche (T6-9), la famille décisive comprise (E0 : le coût
+  de Mahalanobis sur processeur est linéaire en jetons, ≈ 27 ms par jeton ; l'écarter est une valeur de configuration) ;
 - `offre` : bornes de l'offre lues à la création (C12) : mémoire vive, cœurs effectifs, disque, stockage, téléchargement,
   volume de téléchargement prévu (forfait du cumul, C08), étiquette des instances du programme.
 Chaque valeur est une valeur de configuration : un changement de Lazar n'est pas du code.
@@ -20,9 +22,10 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 
 from ..gardes import GardeArret
+from ..sondes.familles import FAMILLES
 from .configuration import CLES_DISTILLATION, CLES_T06, exiger_config_t06
 
-CLES_T06_V2 = tuple(CLES_T06) + ("fils_test_croise", "calendrier", "lecture", "offre")
+CLES_T06_V2 = tuple(CLES_T06) + ("fils_test_croise", "calendrier", "lecture", "offre", "familles_descriptives")
 CLES_DISTILLATION_V2 = tuple(CLES_DISTILLATION) + ("unite_du_lot", "pas_declares")
 CLES_CARTE = ("course", "relance")
 CLES_UNE_CARTE = ("nom", "nom_offre", "memoire_carte_min_mo", "prix_max_usd_h")
@@ -90,6 +93,12 @@ def exiger_config_t06_v2(config: dict) -> None:
         raise GardeArret("distillation : unite_du_lot « transcription » va avec le mode « transcription », « action » avec « paires »")
     if not isinstance(di["pas_declares"], int) or isinstance(di["pas_declares"], bool) or di["pas_declares"] < 1:
         raise GardeArret("distillation.pas_declares : entier ≥ 1 attendu (L04 : 480 au plan (b))")
+    fd = config["familles_descriptives"]
+    if not isinstance(fd, list) or not fd or len(set(fd)) != len(fd) or any(f not in FAMILLES for f in fd):
+        raise GardeArret(f"familles_descriptives : liste non vide, sans doublon, parmi {FAMILLES} attendue (E0 : Mahalanobis coûte "
+                         "≈ 27 ms par jeton sur processeur ; la retirer est une valeur de configuration, pas du code)")
+    if config["sonde"]["famille"] not in fd:
+        raise GardeArret("familles_descriptives : la famille de la sonde décisive doit en faire partie")
     o = config["offre"]
     if not isinstance(o, dict) or set(o) != set(CLES_OFFRE):
         raise GardeArret(f"offre : clés {CLES_OFFRE} attendues")

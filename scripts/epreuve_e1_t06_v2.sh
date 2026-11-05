@@ -7,7 +7,7 @@
 # commits (données légères, morceaux, traces) ; état du disque de l'instance simulée (fin normale, arrêt demandé).
 #   bash scripts/epreuve_e1_t06_v2.sh DOSSIER_DE_TRAVAIL_NEUF
 # Variables : VENV (défaut : .venv du dépôt) ; TESTS_ARGS_E1 (essais joués par l'amorce avant le run, défaut : les essais de
-# configuration et de session v2, rapides) ; TESTS_ATTENDUS_E1 (nombre attendu, défaut 40).
+# configuration et de session v2, rapides) ; TESTS_ATTENDUS_E1 (nombre attendu, défaut 44).
 set -euo pipefail
 W=$(realpath -m "${1:?dossier de travail neuf}")
 [ -e "$W" ] && { echo "$W existe déjà (R12)"; exit 2; }
@@ -20,7 +20,7 @@ SRC="$W/source"; mkdir -p "$SRC"
 echo "E1 : $(date -u +%FT%TZ) : dépôt source réduit sous $SRC (code v2, essais v2, consignes de P3, configuration jouet v3, tâches synthétiques)"
 for c in src/controle_ia tests/conftest.py tests/test_t06_v2_configuration.py tests/test_t06_v2_session.py tests/test_t06_v2_lanceur_jouet.py scripts pyproject.toml \
          prereg/P3-consignes-v1.md prereg/P3-consignes-v1.md.sha256 docs/notes/g0-deux-semaines-v1/config-t06-jouet-v3.json \
-         docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon2.json docs/sources/invites-2606.08892-v1 .claude/hooks/garde_calcul.py registres/go.md; do
+         docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon2.json docs/sources/invites-2606.08892-v1 .claude/hooks/garde_calcul.py registres/go.md .gitignore; do
     mkdir -p "$SRC/$(dirname "$c")"; cp -r "$DEPOT/$c" "$SRC/$c"
 done
 find "$SRC" -name __pycache__ -type d -prune -exec rm -rf {} +
@@ -45,14 +45,14 @@ Path("prereg").mkdir(exist_ok=True)
 Path("prereg/T0.6-config-jouet-e1.json").write_text(json.dumps(c, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
 sceller(Path("prereg/T0.6-config-jouet-e1.json"))
 EOF
-git init -q -b main . && git config user.email e1@example.invalid && git config user.name e1 && git add -A && git commit -qm "E1 : dépôt source réduit"
+git init -q -b main . && git config user.email e1@example.invalid && git config user.name e1 && git add -A && git add -f donnees/t06-jouet && git commit -qm "E1 : dépôt source réduit"
 COMMIT=$(git rev-parse HEAD)
 DISTANT="$W/distant.git"; git clone -q --bare "$SRC" "$DISTANT"
 R="$W/instance"; mkdir -p "$R"
 echo "E1 : $(date -u +%FT%TZ) : amorce v2 sur l'instance simulée $R, commit $COMMIT, dépôt distant $DISTANT"
 set +e
 env -i PATH="$PATH" HOME="$W" LANG="${LANG:-C.UTF-8}" TMPDIR="${TMPDIR:-/tmp}" COMMIT="$COMMIT" MODE=jouet DEPOT_URL="$DISTANT" GH_TOKEN=jeton-factice-e1 \
-    RACINE_AMORCE="$R" VENV_EXISTANT="$VENV" PREREG_ABSENT=1 CONFIG=prereg/T0.6-config-jouet-e1.json TESTS_ATTENDUS="${TESTS_ATTENDUS_E1:-40}" \
+    RACINE_AMORCE="$R" VENV_EXISTANT="$VENV" PREREG_ABSENT=1 CONFIG=prereg/T0.6-config-jouet-e1.json TESTS_ATTENDUS="${TESTS_ATTENDUS_E1:-44}" \
     TESTS_ARGS="${TESTS_ARGS_E1:-tests/test_t06_v2_configuration.py tests/test_t06_v2_session.py}" AMORCE_ESSAI_LOCAL=1 \
     FIN_GO_UTC_S=1794873600 ECHEANCE_UTC_S=1794873600 DEPENSE_EPUISEE_UTC_S=1794873600 POUSSEE_ATTENTE_S=0 \
     timeout -k 10 900 nice -n 10 bash "$DEPOT/scripts/amorce_instance_t06_v2.sh" > "$W/amorce-sortie.txt" 2>&1
