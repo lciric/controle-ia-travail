@@ -233,7 +233,7 @@ def _clone_du_diagnostic(tmp_path: Path):
 def test_liste_du_diagnostic_hors_du_code_scelle(tmp_path):
     d = _diag()
     c, tete = _clone_du_diagnostic(tmp_path)
-    assert d.verifier_liste(c, tete) == 8                                        # cas sain : quatre fichiers et quatre compagnons ; l'ordre sous docs/ ignoré
+    assert d.verifier_liste(c, tete) == 8                                        # cas sain : quatre fichiers et quatre compagnons, rien d'autre
     with pytest.raises(d.GardeTir, match="modifie ou supprime.*registres/go.md"):
         d.verifier_liste(c, LANCEMENT)                                           # le commit de lancement touche registres/go.md : refus
     with pytest.raises(d.GardeTir, match="ne descend pas"):
@@ -247,15 +247,25 @@ def test_liste_du_diagnostic_hors_du_code_scelle(tmp_path):
     with pytest.raises(d.GardeTir, match="modifie ou supprime"):
         d.verifier_liste(c, _git(c, "rev-parse", "HEAD"))
     _git(c, "reset", "-q", "--hard", tete)
-    (c / "docs" / "notes" / "note-en-plus-v1.md").write_text("# essai\n")                 # un ajout sous docs/ : ignoré, cas sain
-    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "add", "-A")
-    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-qm", "essai : une note de plus")
-    assert d.verifier_liste(c, _git(c, "rev-parse", "HEAD")) == 8
     (c / "scripts" / "fichier_en_plus_v1.py").write_text("# essai\n")
     _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "add", "-A")
     _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-qm", "essai : un fichier de plus")
     with pytest.raises(d.GardeTir, match=r"hors liste \['scripts/fichier_en_plus_v1.py'\]"):
         d.verifier_liste(c, _git(c, "rev-parse", "HEAD"))
+
+
+def test_liste_du_diagnostic_artefact_fichier_ajoute_sous_docs(tmp_path):
+    """Un fichier ajouté sous docs/ (procédure, note) est hors liste comme tout autre : refus. L'ordre à la fille 6 vit sur
+    `main`, jamais sur la branche du diagnostic (décision de la mère, 5 novembre 2026, 20:27 UTC)."""
+    d = _diag()
+    c, tete = _clone_du_diagnostic(tmp_path)
+    (c / "docs" / "notes").mkdir(parents=True, exist_ok=True)
+    (c / "docs" / "notes" / "note-en-plus-v1.md").write_text("# essai\n")
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "add", "-A")
+    _git(c, "-c", "user.name=essai", "-c", "user.email=essai@invalid", "commit", "-qm", "essai : une note de plus sous docs/")
+    with pytest.raises(d.GardeTir, match=r"hors liste \['docs/notes/note-en-plus-v1.md'\]"):
+        d.verifier_liste(c, _git(c, "rev-parse", "HEAD"))
+    assert d.verifier_liste(c, tete) == 8
 
 
 def test_go_du_diagnostic_quarante_minutes(tmp_path):
