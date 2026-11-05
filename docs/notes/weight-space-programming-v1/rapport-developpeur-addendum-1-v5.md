@@ -99,7 +99,24 @@ Sur `prep/sparks-exp7-nul-v5` (chaque fichier avec son compagnon `.sha256`) :
 
 ## 3. Essais et banc (commit `b7d342ef`)
 
-COMPTES_V5
+Sorties brutes dans `essais-et-banc-sparks-v5/` (même dossier que ce rapport) :
+
+| Mesure | Compte | Sortie (sha256) |
+|---|---|---|
+| Essais v1 à v4 (inchangés) et v5 (52 cas) | **278 passés sur 278** (90 + 69 + 38 + 29 + 52), 0 sauté, 0 échec | `essais-b7d342ef.txt` `e16a248a…` |
+| Banc v5 : mutations des bancs v1 à v4 | **22/22, 52/52, 40/40, 30/30 tuées** (code 1 et « failed ») | `banc-b7d342ef.txt` `08bcf44d…`, `.json` `3c168a16…` |
+| Banc v5 : mutations neuves de la v5 | **30/30 tuées** ; cinq témoins verts ; 0 inapplicable | idem |
+
+Tout run est compté (R4).
+- Le premier passage complet des essais au commit `b7d342ef`, lancé avant le redémarrage du conteneur (vers 00:12 UTC),
+  a été coupé : sortie partielle gardée au bloc-notes, sans fin ni compte. Les essais et le banc ont été relancés en
+  entier ensuite.
+- Avant le commit, pendant le développement, j'ai fait des passages partiels des essais v5 jusqu'au vert. Trois défauts
+  y sont apparus et ont été corrigés : le registre lisait mal une ligne vide ou fautive ; dans `apres-commande`, le
+  certificat était lu après le refus, et le motif « Error: » l'emportait ; le faux `curl` de l'essai du corps du `DELETE`
+  était recopié.
+- Un passage complet avant le commit a donné 277 passés et 1 sauté (l'essai du tir, la liste fermée v5 n'étant pas encore
+  au commit).
 
 ## 4. Réserves
 
