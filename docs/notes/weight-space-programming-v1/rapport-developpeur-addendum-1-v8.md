@@ -4,7 +4,7 @@ Même rédacteur-développeur. Tâche : message de la mère du 5 novembre 2026 (
 de 02:04 à HEURE_FIN UTC environ (`date -u`). Mêmes interdits, tous tenus : aucune poussée, aucun `.sha256` sur `main`, aucun
 fichier existant modifié, aucun réseau, aucune dépense, aucune clé lue. Cet additif complète les rapports v5, v6 et v7.
 
-**Verdict.** Code v8 : branche locale `prep/sparks-exp7-nul-v8`, commit `COMMIT_V8`. C'est un commit sur `67dbad98`,
+**Verdict.** Code v8 : branche locale `prep/sparks-exp7-nul-v8`, commit `4fd104072bcdf22bb0f5eb1daffca295858f0ac6`. C'est un commit sur `67dbad98`,
 avec 20 fichiers neufs et aucun fichier modifié ; la liste fermée v8 (168 fichiers) est conforme. Le manifeste de chaque
 phase cite désormais **l'addendum scellé** comme préenregistrement. Comptes : section 4. **Le brouillon 6 demande deux
 couples, pas un** (section 3) : il lui manque aussi la section « Hypothèse ».
@@ -163,12 +163,23 @@ La prose actuelle de la section reste, sous les entrées.
 - la contre-lecture du delta à venir (v5 à v8) ajoute une entrée « **Contre-lecture 5** », au même format : brouillon relu
   et rapport, en entier ;
 - elle ne prend pas de marqueur « À REMPLIR » dans le brouillon, pour garder les trois marqueurs comptés ;
-- la contre-lecture 5 et ses couples doivent être faits par un sous-agent neuf (R2), sur `git diff 53d4eda6..COMMIT_V8` et
+- la contre-lecture 5 et ses couples doivent être faits par un sous-agent neuf (R2), sur `git diff 53d4eda6..4fd104072bcdf22bb0f5eb1daffca295858f0ac6` et
   les rapports v5 à v8.
 
 ## 4. Essais et banc
 
-COMPTES_V8
+Fichiers d'essai : `tests/test_sparks_exp7_nul_v1.py` à `v4.py` et `tests/test_sparks_exp7_nul_v8.py`. Sorties brutes copiées sans `.sha256` dans `essais-et-banc-sparks-v8/`.
+
+| Passage | Résultat | Sortie | sha256 |
+|---|---|---|---|
+| Essais à la tête `4fd10407` | 293 réussis, 0 échec, 0 sauté, code 0 | `essais-tete-4fd10407.txt` | `bdeb832c0039ac8571a9b28400f1b72f258c3b88a702f5aed3f6837204b8cbfc` |
+| Essais sur le commit enfant `2a85cf47` (addendum factice v8 écrit par `addendum_factice.py`, `COMMIT_CODE=4fd10407…`) | 293 réussis, 0 échec, 0 sauté, code 0 | `essais-enfant-2a85cf47.txt` | `c67aa6e5ad017b3faf8f409ce0e38734aa84989cc0129c948052fd8efd9e793b` |
+| Banc de mutations v8 | 198/198 tuées (code 1 et « failed ») : 22 v1, 52 v2, 40 v3, 30 v4, 30 v5, 6 v6, 7 v7, 11 v8 ; 7 témoins verts ; 0 défaut ; code 0 | `banc-4fd10407.txt` | `6bfbf3a3052ab6500c8a3335408c4c95a1817a040f722d8b93e8bcfda759d47a` |
+| Banc, détail | une ligne par mutation | `banc-4fd10407.json` | `ee89fcb0584ccb668adf624e062065fdfc62cf8974c29ab90381c8420c9a0920` |
+| Couples du brouillon 6 | 2 couples | `couples-brouillon6-manifeste-v1.json` | `4312524d3b67c4cfc417f23f75b5e02825c04dcd7eed8196dd4c3ed7c160951b` |
+
+Chaque passage a été joué une seule fois, et aucun n'a été écarté (R4). Les 15 essais neufs ont tous réussi du premier coup : c'est le banc qui les éprouve, et ses 11 mutations v8 sont toutes tuées. Le témoin v6 du banc saute un essai, parce que la copie du banc n'est pas un dépôt git. Son pendant dans `test_sparks_exp7_nul_v8.py` passe à la tête comme sur l'enfant, avec 0 sauté.
+Réserve (R4) : le résultat est propre. Il prouve la création du manifeste sur des dépôts git neufs construits par l'essai. Une instance réelle n'est éprouvée que par la répétition (section 5) ; le passage local de bout en bout du script d'instance est décrit en fin de section 5.
 
 ## 5. Commande de répétition v8
 
@@ -184,7 +195,7 @@ C'est celle de la v7 (`rapport-developpeur-addendum-1-v7.md`, section 4), avec q
 ```bash
 #!/usr/bin/env bash
 set -uo pipefail
-CODE=COMMIT_V8
+CODE=4fd104072bcdf22bb0f5eb1daffca295858f0ac6
 DEPOT=/home/user/controle-ia-travail
 URL=https://github.com/lciric/controle-ia-travail.git
 J=$(mktemp -d /tmp/repetition-sparks-v8-XXXX); mkdir -p "$J/faux-bin" "$J/racine" "$J/home"
@@ -268,5 +279,5 @@ brouillon 6, avec ses deux couples et la contre-lecture 5 :
 ```
 cd /home/claude/wt/sparks-exp7-nul-v8
 SPARKS_REGISTRE_GO=/home/user/controle-ia-travail/registres/go.md \
-  bash scripts/lancer_sparks_exp7_nul_v8.sh tir <OFFRE> <PRIX_CARTE> <PRIX_STOCKAGE> COMMIT_V8 <GO_ID_DU_TIR> 25
+  bash scripts/lancer_sparks_exp7_nul_v8.sh tir <OFFRE> <PRIX_CARTE> <PRIX_STOCKAGE> 4fd104072bcdf22bb0f5eb1daffca295858f0ac6 <GO_ID_DU_TIR> 25
 ```
