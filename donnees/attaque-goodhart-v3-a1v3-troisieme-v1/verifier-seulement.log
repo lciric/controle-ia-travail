@@ -1,0 +1,155 @@
+{
+ "verification": "conforme",
+ "ecriture": "aucune",
+ "appel": "aucun",
+ "plan": {
+  "mode": "course",
+  "mondes": [
+   "W1",
+   "W2"
+  ],
+  "fournisseurs": [
+   {
+    "nom": "argon",
+    "type": "commande_externe",
+    "port": 8805,
+    "modele": "gemini-4-argon",
+    "fils": 1,
+    "taux_usd": 0.062,
+    "secondes": [
+     8.0,
+     40.0
+    ]
+   }
+  ],
+  "n_max": 16,
+  "essais_avant_repli": 3,
+  "relais_perdu_h": "aucun",
+  "relais_perdu_s": null,
+  "plafond_usd": 400.0,
+  "duree_max_s": 259200.0,
+  "parallele": true,
+  "configuration_sha256": "e5306c47e1b21a5e55b599411dba92c97e88aa98bb6d6fa91fc5d358a2bdde30",
+  "go": "GO-2026-11-04-06",
+  "cartes": 24,
+  "unites_par_case": 24,
+  "rejeux": {
+   "v8": 200,
+   "v7": 20
+  },
+  "rejeux_audit": 200,
+  "processus": 2,
+  "decision_ecart": "registres/decisions.md, R-1264 (dépôt privé), mot de Lazar du 2 novembre 2026 à 16:56 UTC ; écart au brief du 2 novembre : R-1123, mot de Lazar vers 07:20 UTC (T, section 1) ; aucun arrêt sur relais, 72 h, plafond 400 USD : mots de Lazar du 2 novembre 2026, 18:26 à 18:29 UTC (R-1276) ; un fil : n° 287 de session-depot (R-1277)",
+  "eps": 0.25
+ },
+ "configuration": {
+  "budget_appel_usd": 1.8,
+  "modeles_demandes": {
+   "argon": "gemini-4-argon"
+  },
+  "replis_declares": {
+   "argon": null
+  },
+  "fils": {
+   "argon": 1
+  },
+  "ports": {
+   "argon": 8805
+  },
+  "role_pole": "proposeur_ideation",
+  "part_par_relais_usd": 400.0,
+  "etapes_de_depense": {
+   "argon": {
+    "etape": "attaque_goodhart_v3/argon",
+    "part_usd": 400.0,
+    "variables": [
+     "ETAPE_POLE",
+     "PLAFOND_ETAPE_USD"
+    ]
+   }
+  },
+  "substitutions_dans_les_commandes": [
+   {
+    "fournisseur": "argon",
+    "argument": 8,
+    "avant": "{REGISTRE}",
+    "apres": "/root/a1-v3-troisieme-v1/sortie-attaque-goodhart-v3/registre-depense-cumulee-v1.jsonl"
+   },
+   {
+    "fournisseur": "argon",
+    "argument": 10,
+    "avant": "80",
+    "apres": "400"
+   },
+   {
+    "fournisseur": "kimi",
+    "argument": 7,
+    "avant": "{REGISTRE}",
+    "apres": "/root/a1-v3-troisieme-v1/sortie-attaque-goodhart-v3/registre-depense-cumulee-v1.jsonl"
+   },
+   {
+    "fournisseur": "kimi",
+    "argument": 9,
+    "avant": "80",
+    "apres": "400"
+   }
+  ],
+  "consigne_la_plus_longue_octets": 90363,
+  "pire_cas_par_appel": "tenu par chaque commande externe (PLAFOND_SESSION_USD = budget par appel)",
+  "adaptateurs": {
+   "argon": {
+    "commande": [
+     "/usr/bin/python3",
+     "-I",
+     "-B",
+     "/home/user/controle-ia-travail/donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/commande_argon_v56_nuit_v2.py",
+     "appeler",
+     "--url-relais",
+     "http://127.0.0.1:8805",
+     "--registre",
+     "/root/a1-v3-troisieme-v1/sortie-attaque-goodhart-v3/registre-depense-cumulee-v1.jsonl",
+     "--plafond-cumule-usd",
+     "400",
+     "--max-sortie-proposeur",
+     "32000",
+     "--max-sortie-court",
+     "4000",
+     "--sortie-min-jetons",
+     "1000",
+     "--delai-s",
+     "1750"
+    ],
+    "empreintes": {
+     "/usr/bin/python3": "5d0a083b8e070d82f4223a89562c1131deed8e1cd76797aaa6f20a604edbc228",
+     "/home/user/controle-ia-travail/donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/commande_argon_v56_nuit_v2.py": "221df610681ed47bf66fbfef21d583006aa3e09a3147e22227faacd98622b851"
+    },
+    "variables_transmises": [],
+    "delai_s": 1800.0,
+    "modeles_servis_permis": {},
+    "controle_modele_servi": "exigé (CL13-05) : la dernière ligne rend `modele_servi`, égal au modèle demandé (ou suivi d'un suffixe de date strict -AAAAMMJJ, ou dans la liste explicite des identifiants permis), sinon refus et arrêt, y compris quand la commande voit l'écart elle-même et sort avec un code non nul (CL14-09)",
+    "version": "adaptateurs-v56",
+    "modele_servi_recopie": "CL20-01 : modele_servi de la dernière ligne recopié dans le résultat « ok » (et « budget_depasse ») après le contrôle de la commande ; absent : A2 au noyau",
+    "plafond_etape": "variables ETAPE_POLE et PLAFOND_ETAPE_USD (porte « environnement »), fixées au lancement de l'étape"
+   }
+  },
+  "portes": {
+   "argon": {
+    "type": "environnement",
+    "variables": [
+     "ETAPE_POLE",
+     "PLAFOND_ETAPE_USD"
+    ]
+   }
+  },
+  "chemin": "/home/user/controle-ia-travail/donnees/mini-course-kimi-argon-v1/orchestrateur/nuit/configuration-mini-course-kimi-argon-v3.json",
+  "sha256": "e5306c47e1b21a5e55b599411dba92c97e88aa98bb6d6fa91fc5d358a2bdde30",
+  "empreinte_configuration": "071f3b0866e6d28360f58498fb75e39dcf96b811d680b2fec0b11adffcb74960",
+  "accuses_plafond": {
+   "argon": {
+    "etape": "attaque_goodhart_v3/argon",
+    "plafond_usd": 400.0,
+    "par": "environnement de la commande (PLAFOND_ETAPE_USD)"
+   }
+  }
+ }
+}
