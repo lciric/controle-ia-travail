@@ -312,3 +312,4 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - Développement confié à la fille 7 `session_01Qi7Gr3vSz1TTu54JnT7pmN` (ordre `docs/procedures/ordre-fille-7-reprise-developpement-v1.md`) : lanceur T0.6 v2, étape F v2, tir de diagnostic SPARKS, brouillon 5 de T0.6.
 - Instances : 59286520 (A1-v3, course jusqu'au 2026-11-09T00:49:57Z au plus tard) ; 59288960 (SPARKS, arrêtée, conservée) ; R8 à détruire par Lazar.
 - Nœuds en attente : candidat 1 ; écart « second passage » (étape F) ; GO E2/E3 ≤ 5 USD ; L04/L05/L11 (défaut 48 h) ; `main` public ; OSF public ; D:3 ; brief DG1-6 ; DS-1/DS-2 ; rotation des secrets.
+- 19:40 UTC : cinq redémarrages de la mère (R-1601) ; fille 8 `session_01Qi7Gr2mtzaeSC4kkdkkG4w` créée pour les lectures secondaires (calibration pour le fonds, candidat 1, jeux T0.7, script de vérification ; branche `prep/fille-8-lectures-v1`). Aucun sous-agent dans le conteneur de la mère.
