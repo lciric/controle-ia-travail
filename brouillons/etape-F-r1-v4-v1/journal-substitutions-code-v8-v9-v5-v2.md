@@ -1,0 +1,36 @@
+# Journal — couples `brouillons/etape-F-r1-v4-v1/couples-substitutions-code-v8-v9-v5-v2.json` appliqués à `brouillons/etape-F-r1-v4-v1/brouillon1-plus-couples-C1-C15-v2.md` → `prereg/addendum-1-gardes-analyses-r1-v4-v1-brouillon2.md`
+
+- B1 : bloc remplacé par `brouillons/etape-F-r1-v4-v1/listes-fermees-generees-v2.md` (110 lignes) — Les trois listes fermées et les trois empreintes de constantes regénérées (code v8, v9, v5).
+- S1 : 1 occurrence(s) remplacée(s) — Titre : brouillon 2.
+- S2 : 1 occurrence(s) remplacée(s) — Auteur : second rédacteur-développeur neuf, procédure par scripts.
+- S3 : 1 occurrence(s) remplacée(s) — Date du brouillon 2.
+- S4 : 1 occurrence(s) remplacée(s) — Commit cité : celui du brouillon final (C5) ; marqueur du GO de Lazar sur l'écart déclaré (second passage), borné par K2.
+- S5 : 1 occurrence(s) remplacée(s) — Statut : brouillon 2, contre-lecture 1 faite et traitée.
+- S6 : 1 occurrence(s) remplacée(s) — Chemin gelé de l'addendum : constantes v8, v9, v5.
+- S7 : 1 occurrence(s) remplacée(s) — Commandes décisives (0.f) : codes v8, v9 (K3), v5.
+- S8 : 1 occurrence(s) remplacée(s) — Principale, avant → après : modules v8, entrées v5, essai v8.
+- S9 : 1 occurrence(s) remplacée(s) — Principale, commande décisive : lecture_v8.
+- S10 : 1 occurrence(s) remplacée(s) — Principale, sorties : `passages` écrit les tolérés par nom (K2).
+- S11 : 1 occurrence(s) remplacée(s) — Principale, tests attendus : essai v8.
+- S12 : 1 occurrence(s) remplacée(s) — Secondaire, avant → après : version 5.
+- S13 : 1 occurrence(s) remplacée(s) — Secondaire, commande décisive : lecture_v5.
+- S14 : 1 occurrence(s) remplacée(s) — Secondaire, tests attendus : essai v5.
+- S15 : 1 occurrence(s) remplacée(s) — Lecture par épisode, avant → après : modules v8, v9, entrées v5, essais v8 et v9.
+- S16 : 1 occurrence(s) remplacée(s) — Lecture par épisode, commande décisive : lecture_v9, principale du code v8.
+- S17 : 1 occurrence(s) remplacée(s) — Lecture par épisode, rendu : version v9 écrite.
+- S18 : 1 occurrence(s) remplacée(s) — Lecture par épisode, tests attendus : essai v9.
+- S19 : 1 occurrence(s) remplacée(s) — Point 2 : gardes lues par entrees_v5, appelées par lecture_v8, v9 et v5.
+- S20 : 1 occurrence(s) remplacée(s) — Point 3.b : titres gelés des blocs v8, v9, v5.
+- S21 : 1 occurrence(s) remplacée(s) — Point 3.b : citation de l'empreinte des constantes v8.
+- S22 : 1 occurrence(s) remplacée(s) — Point 3.c (C10) : commandes gelées des versions neuves.
+- S23 : 1 occurrence(s) remplacée(s) — Point 5 : K3 (lecture par épisode).
+- S24 : 1 occurrence(s) remplacée(s) — Point 7 : versions comparées.
+- S25 : 1 occurrence(s) remplacée(s) — Point 7 : essais de K1, K2, K3.
+- S26 : 1 occurrence(s) remplacée(s) — Point 7 : comptes des essais neufs et anciens (code v8, v9, v5).
+- S27 : 1 occurrence(s) remplacée(s) — Point 7 : commande des essais (fichiers v8, v9, v5).
+- S28 : 1 occurrence(s) remplacée(s) — Point 8 : le verdict lit la liste close des passages tolérés (K2).
+- S29 : 1 occurrence(s) remplacée(s) — Liste d'arrêt (C14) : arrêt distinct de passage ; K3.
+- S30 : 1 occurrence(s) remplacée(s) — Limites : la liste close est gelée.
+- S31 : 1 occurrence(s) remplacée(s) — Marqueurs de gabarit : deux.
+- S32 : 1 occurrence(s) remplacée(s) — Section Contre-lecture : entrée 1 écrite (faite, traitée), contre-lecture 2 à faire.
+- S33 : 1 occurrence(s) remplacée(s) — Point 6 (C12) : le code qui refuse tout second passage est le code v8, v9, v5.
