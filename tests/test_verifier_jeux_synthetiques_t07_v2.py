@@ -175,7 +175,7 @@ class Banc:
         if jeux:
             argv += ["--jeux", *jeux]
         code = vj.main(argv)
-        if code == 0:
+        if code in (0, 1):
             shutil.copy(self.racine / "enonces-source.jsonl", sortie / "enonces-reserve-v2.jsonl")
         return code
 
@@ -325,7 +325,7 @@ def test_artefact_assembler_jeu_manquant_sans_option_refuse(banc: Banc, tmp_path
     remise = tmp_path / "remise-partielle.jsonl"
     ecrire_jsonl(remise, [l for l in lire_jsonl(banc.remise) if l["jeu"] != "domaine-cout"])
     assert banc.assembler(tmp_path / "sortie", remise) == 2
-    assert "aucun enregistrement pour ['domaine-cout']" in capsys.readouterr().err
+    assert "aucun enregistrement assemblable pour ['domaine-cout']" in capsys.readouterr().err
     assert not (tmp_path / "sortie").exists()
 
 
@@ -339,24 +339,43 @@ def test_artefact_assembler_dossier_deja_present(banc: Banc, capsys):
     assert "dossier de sortie déjà présent" in capsys.readouterr().err
 
 
-def test_artefact_assembler_remise_mal_formee(banc: Banc, tmp_path: Path, capsys):
+def test_artefact_assembler_paires_non_assemblables_listees_et_exclues(banc: Banc, tmp_path: Path):
+    """Une paire que le script ne peut pas assembler est exclue, listée au journal d'assemblage (clé, motif), code 1 ;
+    le contrôle 2 du mode verifier la compte ensuite manquante sans arrêter les contrôles 3 à 10."""
     lignes = lire_jsonl(banc.remise)
-    lignes[0]["etiquette"] = 1  # J-D : étiquette nulle attendue
+    jd = [l for l in lignes if l["jeu"] == "dissimulation" and l["tache"] == TACHES[0]]
+    jd[0]["etiquette"] = 1                      # paire 1 : J-D, étiquette nulle attendue
+    jd[1]["instruction_id"] = "D21"             # paire 2 : inconnu de l'annexe A
+    jd[2]["paire"] = 11                         # paire 3 → 11 : hors de 1..6
+    jd[3]["reponse"] += "\n"                    # paire 4 : bordée de blancs
+    jd[4]["tache"] = "9999.99999v9"             # paire 5 : tâche hors des énoncés
+    ja = [l for l in lignes if l["jeu"] == "intention-autres-modes" and l["tache"] == TACHES[1] and l["paire"] == 1]
+    ja[1]["mode"] = "direction"                 # mode différent entre membres
+    jc = [l for l in lignes if l["jeu"] == "domaine-cout" and l["tache"] == TACHES[1] and l["paire"] == 2]
+    jc[1]["etiquette"] = 0                      # étiquettes 0 et 0
     remise = tmp_path / "r.jsonl"
     ecrire_jsonl(remise, lignes)
-    assert banc.assembler(tmp_path / "s1", remise) == 2
-    assert "J-D attend un seul enregistrement, étiquette nulle" in capsys.readouterr().err
-    lignes = lire_jsonl(banc.remise)
-    cible = [l for l in lignes if l["jeu"] == "intention-autres-modes" and l["paire"] == 1 and l["etiquette"] == 1]
-    cible[0]["mode"] = "direction"
-    ecrire_jsonl(remise, lignes)
-    assert banc.assembler(tmp_path / "s2", remise) == 2
-    assert "champ mode différent" in capsys.readouterr().err
-    lignes = lire_jsonl(banc.remise)
-    lignes[0]["reponse"] += "\n"
-    ecrire_jsonl(remise, lignes)
-    assert banc.assembler(tmp_path / "s3", remise) == 2
-    assert "bordée de blancs" in capsys.readouterr().err
+    sortie = tmp_path / "s1"
+    assert banc.assembler(sortie, remise) == 1
+    journal = (sortie / "journal-assemblage-v2.txt").read_text(encoding="utf-8")
+    assert "[DÉFAUT] remise : 7 paire(s) non assemblable(s)" in journal
+    assert f"dissimulation/{TACHES[0]}/paire 1 : J-D attend un seul enregistrement, étiquette nulle" in journal
+    assert f"dissimulation/{TACHES[0]}/paire 2 : instruction_id 'D21' inconnu de l'annexe A" in journal
+    assert f"dissimulation/{TACHES[0]}/paire 11 : paire 11 hors de 1..6" in journal
+    assert f"dissimulation/{TACHES[0]}/paire 4 : réponse bordée de blancs" in journal
+    assert "dissimulation/9999.99999v9/paire 5 : tâche '9999.99999v9' hors du fichier des énoncés" in journal
+    assert f"intention-autres-modes/{TACHES[1]}/paire 1 : champ mode différent" in journal
+    assert f"domaine-cout/{TACHES[1]}/paire 2 : attendu deux enregistrements, étiquettes 0 et 1" in journal
+    assert "code de sortie 1" in journal
+    d = lire_jsonl(sortie / "dissimulation-v2.jsonl")
+    assert sorted(s["paire"] for s in d if s["tache"] == TACHES[0]) == [6, 6]
+    assert not any(s["tache"] == "9999.99999v9" for s in d)
+    code, texte = banc.verifier(sortie)
+    assert code == 1
+    defaut_controle(texte, 2, f"dissimulation/{TACHES[0]} : comptes par mode {{'aucun': 1}} ≠ {{'aucun': 6}}")
+    assert f"intention-autres-modes/{TACHES[1]} : comptes par mode {{'controles': 2, 'direction': 3}}" in texte
+    assert f"domaine-cout/{TACHES[1]} : comptes par mode {{'cout': 5}}" in texte
+    assert "[ARRÊT]" not in texte and "[OK] contrôle 3" in texte and "[OK] contrôle 10" in texte
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -553,6 +572,7 @@ def test_c2_tache_d_evaluation(copie, banc, tmp_path):
     code, texte = lancer(evaluation=evaluation)
     assert code == 1
     defaut_controle(texte, 2, f"tâche {TACHES[1]} : est une tâche d'évaluation")
+    assert "[ARRÊT]" not in texte
 
 
 def test_c2_comptes_par_tache_et_par_mode(copie):
@@ -563,6 +583,7 @@ def test_c2_comptes_par_tache_et_par_mode(copie):
     assert code == 1
     defaut_controle(texte, 2, f"intention-autres-modes/{TACHES[1]} : comptes par mode {{'controles': 3, "
                               "'direction': 2} ≠ {'controles': 3, 'direction': 3}")
+    assert "[ARRÊT]" not in texte and "[OK] contrôle 3" in texte  # un défaut de comptes n'arrête pas la suite
 
 
 def test_c2_nombre_de_taches(copie):
