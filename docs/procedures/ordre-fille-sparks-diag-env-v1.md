@@ -17,7 +17,7 @@ d'instance v12 (`scripts/sparks_exp7_nul_instance_v12.sh`, l. 62 à 76) au **com
 `systeme-paquets.txt`, `env-sans-secrets.txt` (noms seuls), `amorce-journal.txt`, `minuterie.log`, `demarrages.txt`) et **se détruit
 elle-même** (minuterie à 40 minutes, destruction après la poussée). Aucun modèle, aucune donnée, aucun jeton Hugging Face. Le code
 scellé n'est pas touché (`scripts/diag_env_sparks_v1.py liste` le vérifie : seuls les quatre fichiers du diagnostic et leurs compagnons
-s'ajoutent à `78671d93` ; les ajouts sous `docs/`, dont cet ordre, sont ignorés ; toute modification est un refus).
+s'ajoutent à `78671d93` ; tout autre fichier ajouté, modifié ou supprimé, où qu'il soit, est un refus).
 
 ## Dépense et GO
 - **GO-2026-11-05-05** (`registres/go.md`, « SPARKS-EXP7-NUL tir réel, codes v10 et suivants », plafond **5 USD**, enveloppe commune avec
@@ -30,11 +30,11 @@ s'ajoutent à `78671d93` ; les ajouts sous `docs/`, dont cet ordre, sont ignoré
 
 ## Préalables (à vérifier, rien à créer)
 1. La mère a scellé les quatre fichiers (`scripts/amorce_diag_env_sparks_v1.sh`, `scripts/diag_env_sparks_v1.py`,
-   `scripts/lancer_diag_env_sparks_v1.sh`, `tests/test_sparks_diag_env_v1.py`, compagnons `.sha256` à côté ; cet ordre est scellé à part,
-   hors de la liste close : les ajouts sous `docs/` sont ignorés par `diag_env_sparks_v1.py liste`) et t'a donné **le commit du
+   `scripts/lancer_diag_env_sparks_v1.sh`, `tests/test_sparks_diag_env_v1.py`, compagnons `.sha256` à côté) ; cet ordre vit sur `main`
+   seul, scellé à part par la mère, jamais sur la branche du diagnostic (la liste close refuse tout autre fichier) et t'a donné **le commit du
    diagnostic** : `<<COMMIT_DIAG>>` (40 chiffres hexadécimaux, sur la branche `prep/sparks-diag-env-v1`, descendant de `0aabf6956caa`).
-   Sans compagnons, le lanceur refuse (« absents […].sha256 ») : c'est voulu. Entre `78671d93` et le commit scellé, la branche ne doit
-   contenir que ces huit fichiers et des ajouts sous `docs/` (R12 : aucun fichier du code scellé modifié).
+   Sans compagnons, le lanceur refuse (« absents […].sha256 ») : c'est voulu. Entre `78671d93` et le commit scellé, l'arbre ne doit
+   différer que par ces huit fichiers, rien d'autre (R12 : aucun fichier du code scellé modifié).
 2. Dans ton conteneur, par leur **nom** seulement (jamais `echo`, jamais `env` sans filtre) : `VAST_API_KEY`, et le jeton GitHub du
    programme, `CONTROLE_IA_GITHUB_TOKEN` (ou `CONTROLE_IA_GITHUB_TOKEN_2`, celui de R-1563 : alors `SPARKS_DIAG_JETON_VAR=CONTROLE_IA_GITHUB_TOKEN_2`
    devant la commande `tir`, le lanceur n'écrit que le nom). Contrôle sans afficher : `[ -n "${VAST_API_KEY:-}" ] && echo "VAST_API_KEY : présente"`.
