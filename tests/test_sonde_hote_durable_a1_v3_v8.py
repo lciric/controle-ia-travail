@@ -1006,7 +1006,7 @@ def test_longueurs_de_la_commande_ecrites(tmp_path):
     j = (tmp_path / "journal-sonde-v8.log").read_text()
     c = s.corps("a" * 40, dict(OFFRE, id=12, dph_total=0.09), 1200, JETON, 1)
     lg = s.longueurs_de_creation(12, c)
-    assert f"--args {lg['args_c']} caractères" in j and "commande entière" in j and lg["args_c"] == len(c["script"])
+    assert f"--args {lg['args_c']}, --env " in j and ", commande " in j and lg["args_c"] == len(c["script"])  # v8 : longueurs écrites à chaque essai
 
 
 def faux_git(tmp_path, code=0, sortie=""):

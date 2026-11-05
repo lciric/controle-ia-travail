@@ -1,6 +1,7 @@
 # Additif 8 au rapport de rédaction v3 — sonde v8 : refus sur la sortie d'erreur et nouvel essai sur « no_such_ask »
 
-Même rédacteur-développeur, 4 novembre 2026, à partir de 23:39 UTC (`date -u`).
+Même rédacteur-développeur, du 4 novembre 2026 à 23:39 UTC au 5 novembre à 00:12 UTC (`date -u`). Le conteneur a
+redémarré vers 23:45 UTC, pendant la suite complète : les fichiers étaient sur disque, et la suite a été relancée.
 
 **Faits constatés par la fille** (23:35 et 23:38 UTC), relayés par le directeur :
 - Avec la v7, la création rend « illisible (longueur 0) » et rien n'est créé.
@@ -23,7 +24,7 @@ Copies renommées de la v7 (étiquette `sonde-a1-v3-v8`, branches `donnees/sonde
 `/root/sonde-a1-v3-v8`, fichiers `sonde-v8-*`), puis modifiées :
 - `src/controle_ia/sonde_hote_durable_a1_v3_v8.py` ;
 - `scripts/amorce_sonde_hote_durable_a1_v3_v8.sh` (seuls les noms changent) ;
-- `tests/test_sonde_hote_durable_a1_v3_v8.py` : 126 essais, soit les 113 de la v7 (une attente adaptée) et 13 neufs.
+- `tests/test_sonde_hote_durable_a1_v3_v8.py` : 126 essais, soit les 113 de la v7 (deux attentes adaptées) et 13 neufs.
 
 ## 2. Ce qui change, et rien d'autre (diff exact : section 5)
 
@@ -69,11 +70,33 @@ Règles de lecture :
 ## 3. Essais (`timeout 900 nice -n 10`, aucun réseau)
 
 - `tests/test_sonde_hote_durable_a1_v3_v8.py` : **126 passés**.
-- Ensemble (v8 à v1, lanceur durable, garde de calcul) : RESULTAT_ENSEMBLE.
+- Ensemble (v8 à v1, lanceur durable, garde de calcul), relancé après le redémarrage : **713 passés sur 715**, aucun sauté,
+  en 1 229 s (`…/sorties/essais-sonde-v8.txt`, `3d0a422bd5e161c7386beb949fcec00a4fc05260086c4792e4592c6f51f7a6cd`).
+  Deux échecs, l'un et l'autre traités :
+  - **essai v8 des longueurs** : son attente venait de la v7 (« --args N caractères ») ; la v8 écrit les longueurs à chaque essai
+    (« --args N, --env M, commande K »). J'ai adapté l'attente.
+  - **`tests/test_garde_calcul.py`, cas « hors de sa période » à demain** : la suite a passé minuit UTC. Les essais calculent
+    « aujourd'hui » à leur collecte (le 4 novembre), et la garde à l'exécution (le 5). La ligne datée du 5 est donc devenue
+    valide. Ce n'est pas un défaut de la sonde ; le fichier, qui existait déjà, n'est pas modifié.
+- Après la correction : `tests/test_sonde_hote_durable_a1_v3_v8.py` et `tests/test_garde_calcul.py` rejoués, **163 passés**
+  (126 + 37) (`…/sorties/essais-sonde-v8-reprise.txt`, `862ff22335325d3455793ab7fc8cc31427cff851bb19f34017f4b1902a7f6747`).
+  Les 552 autres essais de l'ensemble avaient passé et ne dépendent d'aucun fichier modifié.
 
 ## 4. Empreintes à la remise
 
-EMPREINTES_REMISE
+Relevées le 5 novembre 2026 à 00:11 UTC.
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/sonde_hote_durable_a1_v3_v8.py` (933 lignes) | `4a635eb8aa058ab9e7053ce8aa2660272a59e02b1b03ceff5d6c51c5877c71a9` |
+| `scripts/amorce_sonde_hote_durable_a1_v3_v8.sh` | `d58bb8cb8633250046f7aa3e588df6cbb48db2310db2f4e52998d32a436cb3e2` |
+| `tests/test_sonde_hote_durable_a1_v3_v8.py` (126 essais) | `675d870460ba91a1d9539806fccdc8d29978676e36a12f415f477b831a6cd6dd` |
+| bloc-notes `sorties/diff-sonde-v7-vers-v8-brut.txt` | `a0c886395484f154d176c04172cb494c5c5b08ad602a6b3a71f4d82676cfc43d` |
+| bloc-notes `sorties/diff-sonde-v7-vers-v8-hors-renommage.txt` (330 lignes) | `47f1ee191a65d570049aa32912e7ecda167f910c81665d50d17bef9389c7f243` |
+| bloc-notes `renommage-v7-v8.sed` | `5db99fc74e076e54c7614cd4a84351a983a6a47ccc80f5df2fc613b0a1d6c6d4` |
+
+Ce fichier ne porte pas sa propre empreinte : elle est donnée avec la remise. Les instantanés versés pendant le travail sont
+intermédiaires ; seules ces empreintes valent pour le rendu.
 
 ## 5. Diff exact par rapport à la v7
 
@@ -92,7 +115,8 @@ Le second ne contient que (a) à (c) :
   - `lire_reponse_de_creation`, avec les deux flux et « no_such_ask » distinct d'« erreur Vast » ;
   - dans `louer`, la vérification seule à part et la boucle des essais, qui remplace l'appel unique.
 - **Amorce :** aucune ligne.
-- **Essais :** une attente adaptée (« illisible (sortie standard ») et les 13 essais neufs.
+- **Essais :** deux attentes adaptées (« illisible (sortie standard » ; longueurs écrites à chaque essai) et les 13 essais
+  neufs.
 
 ## 6. Commande exacte pour la fille
 
