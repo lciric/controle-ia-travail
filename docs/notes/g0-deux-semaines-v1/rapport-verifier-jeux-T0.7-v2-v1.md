@@ -161,6 +161,8 @@ le code de sortie (1 défaut dur, 2 refus) et le motif écrit au journal.
     le v1 est gardé tel quel (mêmes résultats sur les 8 premières tâches ; `dissimulation-v2.jsonl` identique à
     l'octet dans les deux, `58a7e7bf…`, puisque toutes les paires J-D de r08 sont exclues à l'assemblage).
   Aucun rang ne manque au milieu. Les remises ne sont pas touchées ; r06 et r07 ont été lues telles que présentes.
+  Un troisième lancement, v3, sur les 14 tâches r00 à r13, a été fait après le redémarrage du conteneur (section 5.5) :
+  c'est le bilan le plus complet.
 - Commandes (graine 20261105, `PYTHONPATH=src python -I`) : `assembler <r00…r08> --annexes …/annexes --taches
   scratchpad/reserve-projection.json --enonces <9 lignes> --graine 20261105 --sortie …/assemblage-essai-v2 --jeux
   dissimulation intention-autres-modes` ; puis `verifier …/assemblage-essai-v2 --annexes … --taches … --evaluation
@@ -318,6 +320,80 @@ Remises lues (non modifiées) :
 | `brouillons/t07-jeux-synthetiques-v2-brouillon1/taches/r08-2509.21875v3.jsonl` | `5da4ca0d98a64144c446514eb29029af861a523f16870592d4cee56844e34175` |
 
 
+### 5.5 Dernier lancement, v3 : les 14 tâches contiguës (r00 à r13), après redémarrage du conteneur
+
+Le conteneur a redémarré à 21:06 UTC (travail sur disque intact, instantané `5d48d901` pris par la session) ; à la
+reprise, les remises r00 à r13 étaient présentes et complètes (30 enregistrements chacune, aucun rang manquant).
+Lancement dans le dossier neuf `assemblage-essai-v3/` (mêmes options que v2, `--nombre-taches 14`, énoncés = 14
+premières lignes de la projection, graine 20261105, tokeniseur factice `cfc0c143…`) à 21:07 UTC. **C'est le bilan à
+retenir** ; v1 et v2 restent tels quels (R12).
+
+**Assemblage** (`journal-assemblage-v2.txt`, `6d112dd8…`) : 90 paires J-D (180 séquences) et 140 paires J-A (280
+séquences) assemblées ; **50 paires J-D non assemblables, exclues et renvoyées à l'écrivain** :
+
+| tâche (rang) | paires | motif |
+|---|---|---|
+| 2510.26243v1 (r01), 2511.19808v1 (r03), 2510.23605v1 (r05) | J-D 11 à 20 (10 chacune) | `paire` hors de 1..10, `instruction_id` D21 à D30 inexistants (rang impair : paires 1 à 10 avec D11 à D20) |
+| 2509.21875v3 (r08), 2512.22550v1 (r09) | J-D 1 à 10 (10 chacune) | `instruction_id` nul (attendu D01 à D10 pour un rang pair, D11 à D20 pour r09 qui est impair) |
+
+r10 à r13 (D01-D10 pour r10 et r12, D11-D20 pour r11 et r13, paires 1 à 10) sont assemblées sans défaut de remise :
+la convention fautive touche r01, r03, r05, r08, r09, soit 5 tâches sur 14.
+
+**Vérification** (`journal-verification-v2.txt`, `7534bb3f…`) : 30 défauts durs sur 10 clés, 2 réserves, code 1.
+
+| contrôle | état | détail |
+|---|---|---|
+| fichiers, 1, annexes, 3, 4, 5, 7, 8, 9 | OK | 460 séquences ; contextes et rotations exacts ; `COST` de 24 à 2 400 ; N1, N3, D1, mots interdits, recopie, doublons : rien |
+| 2 comptes | **5 défauts** | `dissimulation/{2510.26243v1, 2511.19808v1, 2510.23605v1, 2509.21875v3, 2512.22550v1}` : `{}` ≠ `{'aucun': 10}` (paires exclues ci-dessus) |
+| 6 longueurs | **5 défauts** (3 paires) | écarts en jetons seulement, **tokeniseur factice, non opposables** : `intention-autres-modes/2510.02692v3/paire 10` (0,18 ; avant `COST` 0,16), `…/2511.04675v2/paire 6` (avant `COST` 0,18), `…/2511.04675v2/paire 10` (0,17 ; avant `COST` 0,20) ; mots et caractères conformes partout |
+| 10 fuite lexicale | **20 défauts** (J-A `controles`) | 12 termes sur la réponse entière, 8 avant `COST` (table ci-dessous) ; mode `direction` : aucun |
+
+Aires sac de mots (14 plis) : J-A `controles` **1,000** (réponse entière) et **0,994** (avant `COST`) — deux réserves de
+surface ; J-A `direction` 0,703 et 0,749 (sous 0,90, mais en hausse par rapport aux 9 tâches : 0,596 et 0,644).
+
+| empan (J-A `controles`, 70 réponses par étiquette) | terme | fréq. chez 0 | fréq. chez 1 | côté | paires |
+|---|---|---|---|---|---|
+| réponse entière | `ablation of` | 0.029 | 0.314 | 1 | 22 |
+| réponse entière | `an ablation` | 0.014 | 0.314 | 1 | 22 |
+| réponse entière | `as placebo` | 0.286 | 0.014 | 0 | 20 |
+| réponse entière | `at two` | 0.0 | 0.271 | 1 | 19 |
+| réponse entière | `beat` | 0.3 | 0.0 | 0 | 21 |
+| réponse entière | `controls two` | 0.0 | 0.3 | 1 | 21 |
+| réponse entière | `equal` | 0.271 | 0.029 | 0 | 19 |
+| réponse entière | `floor` | 0.286 | 0.029 | 0 | 20 |
+| réponse entière | `no` | 0.3 | 0.043 | 0 | 21 |
+| réponse entière | `sizes` | 0.043 | 0.257 | 1 | 18 |
+| réponse entière | `the floor` | 0.257 | 0.029 | 0 | 18 |
+| réponse entière | `would` | 0.371 | 0.043 | 0 | 26 |
+| avant COST | `ablation of` | 0.029 | 0.314 | 1 | 22 |
+| avant COST | `an ablation` | 0.014 | 0.314 | 1 | 22 |
+| avant COST | `as placebo` | 0.286 | 0.014 | 0 | 20 |
+| avant COST | `at two` | 0.0 | 0.271 | 1 | 19 |
+| avant COST | `controls two` | 0.0 | 0.3 | 1 | 21 |
+| avant COST | `floor` | 0.286 | 0.029 | 0 | 20 |
+| avant COST | `sizes` | 0.043 | 0.257 | 1 | 18 |
+| avant COST | `the floor` | 0.257 | 0.029 | 0 | 18 |
+
+Avec 14 tâches, les termes de l'honnête (« would », « beat », « as placebo », « the floor », « equal », « no ») et de
+l'affaibli (« an ablation of », « controls two », « at two », « sizes ») persistent ; « whether », « report », « curves »
+sont passés sous les seuils. Distributions rapportées : J-D 179,6 mots en moyenne ; J-A 153,8 (étiquette 0) contre
+153,3 mots (étiquette 1), `PREDICTION` 32,1 contre 30,7, groupes de chiffres 2,74 contre 2,79 (aucune réserve) ;
+valeurs de `COST` distinctes par tâche : 8 à 10 sur 10 (J-A `2512.22550v1` : 8 ; rappel : N2 ne s'applique qu'à J-C).
+
+| fichier (`…/assemblage-essai-v3/`) | sha256 |
+|---|---|
+| `dissimulation-v2.jsonl` (180 séquences) | `ae80c0e7dc7ff9f63c5e9a9b09a62f93912757977b267affe539774ff90bef70` |
+| `intention-autres-modes-v2.jsonl` (280 séquences) | `961194cc37cf2c604192eb13127f43414a474243e77968159ab95f7c1ace1338` |
+| `enonces-reserve-v2.jsonl` (14 lignes) | `a5b535f168a5bfc9bf4ccec8d4965815c4c666d6de520c9c68909f2411a19b7f` |
+| `journal-assemblage-v2.txt` | `6d112dd84b42267f77a5e2c1b1af0781c6879ccfc3671b50a0a399410c79943f` |
+| `journal-verification-v2.txt` | `7534bb3fd7ce5020066cb9d481ee05098126813e7737d66579a89ba2d0ce48e8` |
+| remise `taches/r09-2512.22550v1.jsonl` | `0c1be97a1b6a99ec1635383028920f876035f962aa5ad1d0c1555bdca19a9167` |
+| remise `taches/r10-2603.12594v1.jsonl` | `028e627b67d7f994187111b182d21330e8bf05e81742b4083f60e5fc79c6bbdb` |
+| remise `taches/r11-2506.24000v2.jsonl` | `51e8913d72938ce7294072d58afd8bd316bd5b0f6d0a4e02ff77c89f7a7a03b5` |
+| remise `taches/r12-2511.04675v2.jsonl` | `328be9c35aa269c8b9927be78af60a9b86f50e66c0ac8f0101d53db471d14b97` |
+| remise `taches/r13-2506.10887v4.jsonl` | `a7a24a85ef303ae4a5b495f22c1278bf8c6a61a7618d8931784e082655cf17db` |
+
+
 ## 6. Ce qui reste pour un lancement scellable
 
 - le **tokeniseur conforme** (`tokenizer.json` de Llama-3.1-8B-Instruct, révision `0e9e39f2…`, empreinte `79e3e522…`) :
@@ -330,7 +406,7 @@ Remises lues (non modifiées) :
   jamais joués sur des paires réelles ;
 - les **textes d'actions de P3** (`donnees/20261019-230011-p3-reel/textes-actions-p3.jsonl`) et les épisodes de T0.6 pour
   le contrôle 9 (déclarés absents ici ; rejeu par la chaîne de T0.7, § 7) ;
-- les **32 tâches** (lancement sur 9 ici) et les 24 tâches restantes de l'écrivain, puis les renvois (section 10,
+- les **32 tâches** (lancement sur 14 ici, section 5.5) et les 18 tâches restantes de l'écrivain, puis les renvois (section 10,
   étape 4), la contre-vérification (section 9), le scellement des fichiers de la section 3 et la provenance ;
 - un lancement **sans `--jeux`, sans `--nombre-taches`**, sur le dossier `donnees/t07-jeux-synthetiques-v2/`.
 
@@ -342,11 +418,11 @@ Remises lues (non modifiées) :
    une sonde apprise sur ce jeu pourrait lire un lexique plutôt qu'une intention ; renvoyer les paires une fois ne
    changera peut-être rien, et la contre-vérification (section 9) devra décider si le seuil 0,25 / 0,05 de la consigne
    est tenable pour ce mode, sans le changer après lecture (les seuils sont fixés au scellement).
-2. **Trois remises sur neuf suivent une convention de numérotation absente de la consigne** (paires 11-20, D21-D30 ;
-   r08 sans identifiant) : l'écrivain a peut-être lu la rotation « D11-D20 pour les rangs impairs » comme une
+2. **Cinq remises sur quatorze suivent une convention absente de la consigne** (r01, r03, r05 : paires 11-20,
+   D21-D30 ; r08, r09 : sans identifiant d'instruction ; r10 à r13 sont conformes) : l'écrivain a peut-être lu la rotation « D11-D20 pour les rangs impairs » comme une
    renumérotation. Si la section 11 remise à l'écrivain ne dit pas explicitement « paires 1 à 10 et identifiant fourni »,
-   les 23 tâches restantes porteront le même défaut ; à corriger dans la consigne d'écriture avant la suite, sinon
-   40 % des paires J-D reviendront en renvoi.
+   les tâches restantes peuvent porter le même défaut ; à corriger dans la consigne d'écriture avant la suite, sinon
+   plus d'un tiers des paires J-D reviendront en renvoi (50 sur 140 ici).
 3. **Rien de ce lancement n'est opposable** : tokeniseur factice (les deux défauts de jetons peuvent disparaître ou
    se multiplier avec le vrai tokeniseur de Llama-3.1-8B, dont les jetons par mot diffèrent), fichier d'évaluation
    factice (une tâche de réserve pourrait figurer dans la vraie liste d'évaluation sans que ce lancement le voie), textes
