@@ -15,3 +15,8 @@ Arbre : `/home/claude/controle-ia-travail`, `canal/conv-audit-n04`, `c82dafeb`. 
 
 ## Reste
 - tout (début).
+
+## Reprise T2 (sous-agent neuf de la fille 7, 5 novembre 2026, 19:24 UTC ; arbre `/home/user/wt/canal`, tête `64236ae4`)
+- 19:24 — consigne v2 revérifiée (`57b2f9d2…`, compagnon OK) ; contre-lecture et couples (compagnons OK) ; les trois empreintes des manifestes de la course v3 recalculées sur `runs/` du canal, égales à la consigne ; seuls ces trois manifestes (sur 54) citent un des textes ou l'addendum.
+- 19:28 — deux arrêts « mémoire » (code 137) d'un interpréteur Python pendant qu'un autre sous-agent occupait 14 Go ; attente de mémoire libre avant chaque lancement.
+- 19:34 — fait, J1 : code v8 (`constantes_v8`, `entrees_v5`, `lecture_v8`), v9 (`constantes_v9`, `lecture_v9`), secondaire v5 (`constantes_v5`, `entrees_v5`, `lecture_v5`) : K1 (gardes juste après la fiche, avant tout chargeur), K2 (liste close `PASSAGES_V3` + `COMMANDES_ADDENDUM`, arrêt `PassageHorsListe`, code de fin 2, tolérés écrits par nom), K3 (`lecture_v9.exiger_principale_sous_addendum`). Importations vérifiées (22, 33, 31 fichiers).
