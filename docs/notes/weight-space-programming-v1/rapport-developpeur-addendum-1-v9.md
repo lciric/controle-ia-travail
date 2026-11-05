@@ -2,7 +2,7 @@
 
 Même rédacteur-développeur. Tâche : message de la mère du 5 novembre 2026 (vers 04:25 UTC). Il fait suite à la
 contre-lecture du delta v5 → v8 (`contre-lecture-delta-v8-v1/contre-lecture-delta-v8-v1.md`, `e2f34fba…`, compagnon « OK »,
-lue en entière). Travail de 04:25 à HEURE_FIN UTC environ (`date -u`), plusieurs redémarrages du conteneur compris.
+lue en entière). Travail de 04:25 à 06:35 UTC environ (`date -u`), plusieurs redémarrages du conteneur compris.
 
 Interdits tenus : aucune poussée, aucun `.sha256` sur `main`, aucun réseau, aucun modèle, aucune dépense, aucune clé lue,
 aucun texte touché (les 15 couples du brouillon 7 restent ceux du contre-lecteur).
@@ -11,7 +11,8 @@ aucun texte touché (les 15 couples du brouillon 7 restent ceux du contre-lecteu
 - Code v9 : branche locale `prep/sparks-exp7-nul-v9`, commit `4d07d2a6830ab09cb91250016284efb5cbe8a91c`.
 - Deux commits sur `4fd10407` : `a655bbfa`, puis la correction `4d07d2a6` (section 1 (b), identifiants de démarrage). 20 fichiers neufs, aucun fichier modifié.
 - Liste fermée v9 conforme : « LISTE FERMÉE CONFORME : 188 fichiers ».
-- **Le tir attend la réponse de Lazar sur la clé d'instance (R-1527) et une ligne de GO du tir.**
+- Tir réel libéré par Lazar : clé d'instance acceptée et déclarée (R-1533), GO-2026-11-05-02. La mère a poussé `4d07d2a6` sur `prep/sparks-exp7-nul-v9` ; le tir part chez la fille.
+- **Aucune contre-lecture du delta v9 (R-1534, mot de Lazar) : réserve.**
 - Comptes : section 3. Répétition : section 4. Commande du tir : section 5.
 
 ## 1. Ce qui change (une ligne par point de la consigne et de la contre-lecture)
@@ -179,7 +180,40 @@ Le tir n'éprouve ni `vastai copy`, ni la phase causale réelle, ni la copie d'u
 
 ## 3. Essais et banc
 
-COMPTES_V9_FINAL
+Fichiers d'essai : `tests/test_sparks_exp7_nul_v1.py` à `v4.py` et `tests/test_sparks_exp7_nul_v9.py`. Les sorties brutes, sans `.sha256`, sont dans `essais-et-banc-sparks-v9/`, et celles du premier commit dans son sous-dossier `commit-a655bbfa/`.
+
+**Commit final `4d07d2a6`** :
+
+| Passage | Résultat | Sortie | sha256 |
+|---|---|---|---|
+| Essais à la tête | 331 réussis, 0 échec, 0 sauté, code 0 | `essais-tete-4d07d2a6.txt` | `71547865c3adcb733e74153696336e3cbfd11c6e2f5ec00645f1d4c8cd990af7` |
+| Essais sur le commit enfant `2cc4bb27` (addendum factice, `COMMIT_CODE=4d07d2a6…`) | 331 réussis, 0 échec, 0 sauté, code 0 | `essais-enfant-2cc4bb27.txt` | `813cc56742f8a2774cb9fc51bff441aadcfe45a55cdadc7b4d67fc99dce2f163` |
+| Banc de mutations v9 | 232/232 tuées (code 1 et « failed ») : 22 v1, 52 v2, 40 v3, 30 v4, 30 v5, 6 v6, 7 v7, 11 v8, 34 v9 ; 8 témoins verts ; 0 défaut ; code 0 | `banc-4d07d2a6.txt` | `535b8730730dadc09183008a2a8e10681dab0c8faf239aee4d2ad174ca3cf45b` |
+| Banc, détail | une ligne par mutation | `banc-4d07d2a6.json` | `3700b1b781f6117d68a1112c3209fa68385915f0a8036bc50dcad95d40dc1d75` |
+| Exemple de sortie du mode tir (factice, hors réseau) | code 0 | `exemple-sortie-tir.txt` | `43ef8faf74f2fc711a80ecb6edf2b89b2ac1b1673b56e11a068013b4bb725abc` |
+
+**Premier commit `a655bbfa`**, dont tous les runs sont comptés (R4) :
+
+| Passage | Résultat | Sortie | sha256 |
+|---|---|---|---|
+| Essais à la tête | 329 réussis, 0 échec, 0 sauté | `commit-a655bbfa/essais-tete-a655bbfa.txt` | `ba764c16e7f74712e698d8af198acb3e144a467b334c3b40843d4075b855c0e1` |
+| Essais sur le commit enfant `c2689059` | 329 réussis, 0 échec, 0 sauté | `commit-a655bbfa/essais-enfant-c2689059.txt` | `2a70ae06b9af07ae954f0a86a37e6e4a823ef226bfe2817954bcacda85987d2d` |
+| Banc | 229/229 tuées (31 v9), 8 témoins verts, 0 défaut | `commit-a655bbfa/banc-a655bbfa.txt` | `9fb497cb05b107f72556b751d49a8020437845cbdcf78a9c6345fc5dcf8f74db` |
+| Banc, détail | une ligne par mutation | `commit-a655bbfa/banc-a655bbfa.json` | `a00788e2bdca2baabb427a78cb3baec243b60230e944d96b35bfecfc8e83097f` |
+
+**Avant le premier commit**, l'essai v9 a été joué trois fois pendant son écriture, sur des fichiers non committés :
+- 1 échec, arrêt au premier ;
+- 6 échecs : la capture du code sous `set -e` dans le lanceur, que la correction remplace par `R=0; … || R=$?` ; deux attendus d'essai faux ; le faux `vastai` d'un essai, qui n'imprimait pas « destroying instance 1. » ;
+- 0 échec.
+
+Entre les deux commits, les essais neufs de la correction ont été joués une fois, ciblés : 5 réussis.
+
+**Sauts** : les témoins v6 et v9 du banc sautent chacun un essai, parce que la copie du banc n'est pas un dépôt git (essai du mode tir). Le même essai passe à la tête comme sur l'enfant.
+
+**Réserve (R4).** Les résultats sont propres. Mais :
+- `vastai` n'est éprouvé que par des sorties imitées d'après sa source 1.8.3 ;
+- la forme réelle de `show instances --raw`, et les valeurs de `actual_status` et `cur_state` d'une instance sortie seule, ne sont connues que par la source et le registre, pas par un appel ;
+- le verdict de boucle est donc prudent : un `cur_state` resté « running » après une sortie lit « boucle ». Ce cas reste à trancher par le tir, avec le compte `REDEMARRAGES=` du journal.
 
 ## 4. Répétition jouet
 
@@ -218,7 +252,16 @@ Runs, tous comptés (R4) :
   - La garde du manifeste l'a refusé à juste titre : « MANIFESTE REFUSÉ : … nom 'addendum.md' au lieu de
     'SPARKS-EXP7-NUL-addendum-1.md' », puis arrêt avant tout calcul.
   - Run arrêté par moi après l'étape 1, par numéros de processus (R10).
-- **run 3** : RUN3_V9
+- **run 3** (`repetition-jouet-v9-locale-v3/` et `essais-et-banc-sparks-v9/commit-a655bbfa/repetition-locale-v3-sortie.txt`, `422bf67b…`), au commit `a655bbfa` : complet, **tous les attendus « OK »**.
+  - Fabrication : « ARRET 0/28 modèles dans les bornes », manifeste créé, poussée vérifiée.
+  - Copie : « démarrage n° 2 », « lot impossible ».
+  - Phase causale : « fin du calcul, code 1 », puis « fin de la phase causale, code 1, poussée vérifiée ». La cause du code 1 est lue au `run.err` : le départ « jouet » est cherché sur Hugging Face, hors réseau (point 6 de la contre-lecture).
+  - Relance sans ordre neuf : « démarrage n° 6 », « boucle de redémarrage présumée, destruction immédiate ».
+  - Un seul DELETE, aucune minuterie restante.
+  - **Défaut trouvé à la lecture du registre des démarrages (R4)** : deux démarrages lancés dans la même seconde portaient le même identifiant, et le plafond de la copie était écrasé. Corrigé par `4d07d2a6` (`nouvel_id`), avec 2 essais et 3 mutations neufs.
+- **run 4** (`repetition-jouet-v9-locale-v4/`, `essais-et-banc-sparks-v9/repetition-locale-v4-sortie.txt`, `a8f972ec…`), au commit final `4d07d2a6` : **interrompu** par un redémarrage du conteneur, juste après l'écriture du commit lancé et avant la création. Il n'est pas rejoué : la mère et Lazar ont demandé de ne plus lancer de répétition (R-1534).
+
+**Aucune répétition complète au commit final** : réserve. La différence `a655bbfa..4d07d2a6` se limite à `nouvel_id` dans l'amorce, avec ses essais et ses mutations.
 
 **Commande de la répétition sur le dépôt de travail** (pour la mère, avec réseau). C'est celle de la v8 (rapport v8,
 section 5), avec ces changements :
@@ -301,8 +344,8 @@ echo "sorties : $J/*.txt ; journal de la minuterie : $J/racine/sparks-v5-minuter
 ## 5. Commande exacte du tir, pour la fille
 
 À ne lancer qu'après :
-1. la réponse de Lazar au nœud R-1527 (clé d'instance) ;
-2. une ligne de GO du tir dans `registres/go.md` : type « calcul », Lazar, au plus 5 USD, valide le jour du tir, périmètre
+1. la réponse de Lazar au nœud R-1527 (clé d'instance) : donnée, risque accepté et déclaré (R-1533) ;
+2. une ligne de GO du tir dans `registres/go.md` (posée : GO-2026-11-05-02) : type « calcul », Lazar, au plus 5 USD, valide le jour du tir, périmètre
    qui nomme « SPARKS » et « tir », par exemple « SPARKS-EXP7-NUL tir réel » ;
 3. **la poussée de la branche `prep/sparks-exp7-nul-v9`** (commit `4d07d2a6…`) vers le dépôt de travail, par la mère :
    l'instance clone le dépôt et extrait le commit de tir, enfant du commit du code.
