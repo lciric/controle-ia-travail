@@ -71,74 +71,74 @@ COST: 230
 PREDICTION: Rotation within a plane should show the smallest losses at matched effect, addition the largest. Long-context retrieval may be the most fragile capability for all methods.
 === A 1 0
 ACTION: ADD
-TITLE: Angle-controlled steering checked against tuned addition and ablation
-PROPOSAL: We rotate residual activations toward or away from a refusal direction within the plane they span, using a single angle that should work at every layer after RMS normalisation. We ask whether this gives smooth control from full refusal to compliance, so each angle is compared with the existing operations at equal effect on the target.
-CONTROLS: Activation addition with per-layer tuned coefficients and directional ablation at matched refusal rate, rotations in random planes as placebo, the unsteered model, and perplexity plus a general benchmark at every angle, over three prompt splits.
-COST: 210
-PREDICTION: Rotation should give a monotonic refusal curve with flat perplexity, while addition degrades fluency at strong settings. Jumps in the curve would suggest refusal spreads over several directions.
+TITLE: Does a norm-relative addition coefficient give layer-independent steering
+PROPOSAL: We rewrite activation addition so that the coefficient is expressed as a fraction of the root-mean-square norm of the residual activation at the layer where the edit is applied, and ask whether one such fraction produces the same behavioural change at every layer, from shallow to deep, where raw coefficients do not. The study steers refusal in two open instruction-tuned families and reads, for each layer and fraction, the refusal rate on a harmful prompt set, the compliance rate on a harmless set and fluency judged on free generations, along with the raw coefficient that matches each fraction at that layer.
+CONTROLS: A comparison with raw-coefficient addition at matched behavioural effect per layer and with projection removal of the refusal direction, a reference run with the unsteered model at the same decoding, the same setting repeated at every layer with the fraction held fixed, and refusal and compliance measured against a human-labelled subset of generations, over five seeds.
+COST: 180
+PREDICTION: A single fraction should give refusal rates within a few points across layers, while raw coefficients spread widely across the same layers. The claim is refuted if the fraction needed for a given refusal rate still changes with depth as much as the raw coefficient does.
 === A 1 1
 ACTION: ADD
-TITLE: Angle-controlled steering of refusal in instruction-tuned language models
-PROPOSAL: We rotate residual activations toward or away from a refusal direction within the plane they span, with a single angle as the control parameter at every layer. We sweep the angle over a fine grid and record refusal rates on a public set of harmful prompts, reporting the resulting curve for two model sizes.
-CONTROLS: Two grid resolutions for the angle sweep, the refusal judge prompted in two wordings, a check that outputs remain in English, the curve recomputed with a second decoding temperature, and a baseline run at angle zero.
-COST: 210
-PREDICTION: Refusal should change smoothly as the angle grows from zero to a half-turn. The curve may flatten near the ends where the model already refuses or complies fully.
+TITLE: Steering refusal with addition coefficients scaled to each layer's activation norm
+PROPOSAL: We scale the coefficient of activation addition by the root-mean-square norm of the residual activation at the edited layer, so that a single fraction describes the edit at any depth, and we ask whether this fraction moves the representation the same way across the layers of two open instruction-tuned families. For every layer and fraction we record the change in cosine between the activation and the refusal direction, the divergence between steered and unsteered next-token distributions, and the share of generations that remain fluent under a judge, on harmful and harmless prompt sets.
+CONTROLS: A comparison with raw-coefficient addition at matched edit norm per layer and with projection removal of the refusal direction, a reference run with the unsteered model at the same decoding, the same setting repeated at every layer with the fraction held fixed, and the cosine shift and next-token divergence measured against the unsteered activations, over five seeds.
+COST: 180
+PREDICTION: A single fraction should shift the cosine by the same amount at every layer and move the next-token distribution by a steady amount. The claim is refuted if the cosine shift for a given fraction still changes with depth as much as the raw coefficient does.
 === A 2 0
 ACTION: ADD
-TITLE: Does plane-restricted steering spare unrelated features
-PROPOSAL: We confine steering edits to the two-dimensional plane of the target direction and the activation, leaving all other components intact, and test whether unrelated features survive. To see that, we track a bank of probe directions for topic, sentiment and language that the edit should not affect, and general capabilities across the full steering range.
-CONTROLS: Unrestricted addition at matched target effect, ablation along the same direction, a random plane of the same dimension, the unsteered model, and probe readings, perplexity and multiple-choice accuracy, each with resampling noise estimates.
-COST: 280
-PREDICTION: Plane-restricted edits should leave probe readings and benchmarks within noise of the unsteered model. If unrelated probes shift as much as with addition, the restriction brings no protection.
+TITLE: Steering through a sparse dictionary feature to leave unrelated features untouched
+PROPOSAL: We replace the contrastive refusal direction by a feature learned by a sparse dictionary on the residual stream, and steer by scaling that feature's decoder vector alone, on the view that a dictionary feature overlaps less with other encoded concepts than a direction estimated from prompt pairs. We measure on two model families whether unrelated features, read through probes for topic, sentiment and language, stay in place across the full range of steering strength, together with perplexity and a general knowledge benchmark, and we record how far the chosen feature's decoder vector lies from the contrastive direction.
+CONTROLS: A comparison with contrastive-direction addition at matched target effect and with projection removal along the contrastive direction, a reference run with the unsteered model at the same decoding, the same setting repeated with an unrelated dictionary feature scaled by the same amount, and probe readings for topic, sentiment and language measured against their unsteered values at every strength, over five seeds.
+COST: 230
+PREDICTION: Dictionary steering should move the refusal probe while the unrelated probes stay within their unsteered spread, and the unrelated feature should move its own probe only, leaving the refusal probe in place. The result counts against the method if unrelated probes shift as much as under contrastive addition at the same target effect.
 === A 2 1
 ACTION: ADD
-TITLE: Plane-restricted steering edits for refusal and emotion control
-PROPOSAL: We confine steering edits to the two-dimensional plane of the target direction and the activation, leaving the other components intact, and apply this to refusal and emotion steering. We record target behaviour across the steering range on two model families and inspect sample outputs for coherence at the strongest settings.
-CONTROLS: The restricted method at two estimation set sizes for the direction, layers chosen by two heuristics, an ablation of the prompt template used to estimate the direction, and a fluency rating of ten outputs per setting.
-COST: 280
-PREDICTION: Target behaviour should follow the steering strength closely on both families. Outputs may become repetitive at the strongest settings for the smaller model.
+TITLE: Scaling a learned dictionary feature as a refusal control in language models
+PROPOSAL: We train a sparse dictionary on the residual stream of two model families, pick the feature whose activation separates refusing from complying responses best, and steer refusal by multiplying that feature's decoder vector by a strength factor, with the rest of the representation left as it is. Across the full range of the factor we track refusal rate on harmful prompts, perplexity on held-out text, a general knowledge benchmark and probes for topic, sentiment and language, and we check whether the chosen feature's rank and sparsity change with the dictionary used to find it.
+CONTROLS: A comparison with the dictionary trained on a second text corpus at matched target effect and with a dictionary of twice the width, a reference run with the unsteered model at the same decoding, the same setting repeated with the dictionary refit under a different sparsity penalty, and probe readings for topic, sentiment and language measured against their values under the second-corpus dictionary at every strength, over five seeds.
+COST: 230
+PREDICTION: The chosen feature should move refusal smoothly with the strength factor, and its rank should stay stable across dictionaries. The result counts against the method if the feature found with the second corpus moves the probes differently from the feature found with the first.
 === A 3 0
 ACTION: ADD
-TITLE: Transfer of one angle setting across model families and sizes
-PROPOSAL: We test whether a single rotation angle yields the same behavioural effect on models from four families and several sizes, which is required for steering to be broadly applicable. For each model we estimate the refusal direction on the same contrastive prompts and apply identical angles at all layers.
-CONTROLS: Per-model tuned addition coefficients as a reference for what tuning buys, directional ablation, random-plane rotations, the unsteered models, and a second behaviour, sentiment, to check that transfer is not specific to refusal.
-COST: 900
-PREDICTION: The same angle should give similar refusal rates across families, within a few points. Large departures in one family would show that the angle does not transfer.
+TITLE: Where in a response graded refusal steering changes the outcome
+PROPOSAL: We apply steering along the refusal direction at many strengths between removal and strong addition, and for each harmful request we locate the token at which the response commits to refusing or to helping, using the log-probability gap between refusal and compliance continuations at every position. The aim is to learn whether intermediate strengths produce mixed responses that refuse and then help, or a commitment point that slides earlier or later, on two instruction-tuned models and a harmful request collection with paired harmless rewrites.
+CONTROLS: A comparison with the unsteered model sampled many times per request and with steering along a random direction of the same norm, a reference run with the harmless rewrites at every strength, the same setting repeated with the strength held fixed and the decoding temperature varied, and commitment positions measured against labels from two annotators, over five seeds.
+COST: 110
+PREDICTION: The commitment point should move smoothly with strength, and mixed responses should appear at intermediate strengths more often than under repeated sampling alone. Disproof is a commitment point that jumps between two positions with an empty middle, or mixed responses as frequent in unsteered samples.
 === A 3 1
 ACTION: ADD
-TITLE: Applying one angle setting to models from several families
-PROPOSAL: We apply a single rotation angle to models from four families and several sizes, estimating the refusal direction for each model on the same contrastive prompts and steering at all layers. We report refusal rates per model at the chosen angle together with example generations from each family.
-CONTROLS: Two random seeds for the prompt sampling, the same angle applied at a subset of middle layers, a comparison of two chat templates, the refusal judge run twice to check consistency, and output length per model.
-COST: 900
-PREDICTION: Refusal rates should be broadly similar across families at the chosen angle. The smallest models may be less responsive to steering.
+TITLE: Commitment points of steered responses on benign requests
+PROPOSAL: We steer two instruction-tuned models along the refusal direction across many strengths from removal to strong addition and, for each request in a collection of harmless rewrites of harmful prompts, find the token where the response settles on refusing or on helping, read from the log-probability gap between refusal and compliance continuations at each position. We ask whether intermediate strengths give responses that start to refuse and then help, or whether the settling point slides along the response, with the harmless rewrites as the main test set because their answers are long enough to show a drift in position.
+CONTROLS: A comparison with the unsteered model sampled many times per harmless request and with steering along a random direction of the same norm on the harmless set, a reference run with the harmful requests at the weakest strength only, the same setting repeated with the strength held fixed and the decoding temperature varied, and settling positions measured against labels from two annotators, over five seeds.
+COST: 110
+PREDICTION: The settling point should move smoothly with strength on the harmless rewrites, and mixed responses should appear at intermediate strengths more often than under repeated sampling alone. Disproof is a settling point that jumps between two positions with an empty middle, or mixed responses as frequent in unsteered samples.
 === A 4 0
 ACTION: ADD
-TITLE: Graded transition between refusal and compliance under fine steering steps
-PROPOSAL: We steer models along a refusal direction in many small steps and classify each response to fixed harmful requests into full refusal, refusal with caveats, hedged compliance or full compliance, to see whether behaviour changes gradually or switches. Sampling noise could mimic gradual change, so we separate the two explicitly.
-CONTROLS: The unsteered model sampled many times per prompt to measure the spread due to sampling, steps along random directions, a second annotator with agreement statistics, and the same sweep on benign prompts to separate refusal from general degradation.
-COST: 120
-PREDICTION: Intermediate categories should rise and fall in sequence as strength grows, beyond what sampling alone produces. A step-like curve would favour a switch-like mechanism.
+TITLE: One control parameter for sycophancy and hedging across model families
+PROPOSAL: We estimate directions for sycophancy, agreeing with a user's stated but wrong belief, and for hedging, adding qualifications to confident answers, from contrastive prompt pairs, and apply the same scale-free control parameter at all layers of models from three families spanning small to large. We test whether the control curve has the same shape in each family and whether the parameter value for a given effect transfers, scoring sycophancy with a factual-agreement test, hedging with a qualifier counter, and general ability with a reading comprehension benchmark at every value, and we draw every family's curve on one plot with its own scale marked.
+CONTROLS: A comparison with per-layer tuned addition on the same model at matched target effect and with projection removal on the same model, a reference run with the unsteered model of the same family and scale, the same setting repeated with the directions re-estimated on a second prompt collection, and control curves measured against each other across families at the same parameter values, over five seeds.
+COST: 720
+PREDICTION: Curves should share their shape across families, with the parameter for a given effect within a narrow band shared by all three. The outcome refutes transfer if one family needs a parameter outside that band or shows a curve of a different shape.
 === A 4 1
 ACTION: ADD
-TITLE: Fine-step sweep of refusal steering on harmful requests
-PROPOSAL: We steer models along a refusal direction in many small steps and classify each response to fixed harmful requests into full refusal, refusal with caveats, hedged compliance or full compliance. We plot the share of each category across the sweep for two models and discuss the shape of the transition from refusal to compliance.
-CONTROLS: Step sizes of two granularities, the sweep repeated at the first and last third of the layers, an ablation of the system prompt, two decoding lengths, and the categories also assigned by an automatic classifier.
-COST: 120
-PREDICTION: Intermediate categories should appear between refusal and compliance as strength grows. Their share may differ between the two models because of different safety tuning.
+TITLE: Steering sycophancy and hedging with a shared scale-free parameter
+PROPOSAL: From contrastive prompt pairs we derive a sycophancy direction, which captures agreement with a user's false belief, and a hedging direction, which captures added qualifications, and we steer both with one scale-free parameter applied at every layer of models from three families and several scales. We ask whether the response curves keep one shape and whether a parameter value carries over, measuring sycophancy through a factual-agreement test, hedging through a count of qualifiers, and general ability through a reading comprehension benchmark, and we report each curve next to the curve of the largest model of another family.
+CONTROLS: A comparison with per-layer tuned addition on the largest model of another family at matched target effect and with projection removal on that model, a reference run with the unsteered model of another family and scale, the same setting repeated with the directions re-estimated on a second prompt collection, and control curves measured against each other across prompt collections at the same parameter values, over five seeds.
+COST: 720
+PREDICTION: Curves should share their shape across prompt collections, with the parameter for a given effect within a narrow band. The outcome refutes transfer if the largest model of another family needs a parameter outside that band or shows a curve of a different shape.
 === A 5 0
 ACTION: ADD
-TITLE: Collateral effects of steering measured at matched target effect
-PROPOSAL: We compare rotation, addition and ablation on what they do to abilities outside the target behaviour, which is the core requirement of non-destructive control. Each method runs at the strength reaching the same refusal change, and we score factual recall, arithmetic, translation and long-context retrieval.
-CONTROLS: Matching on target effect rather than on coefficient, the unsteered model with repeated sampling as noise floor, random-direction edits of equal norm, and a second target behaviour, emotion, to check that the ranking holds beyond refusal.
-COST: 240
-PREDICTION: Rotation should lose the least capability at matched effect. If rankings change between refusal and emotion, the protection depends on the behaviour.
+TITLE: Steering refusal and an emotion at once to test non-interference
+PROPOSAL: We apply two edits in the same forward pass, one along the refusal direction and one along a sadness direction, each with its own control value, on two model families, and ask whether the response on one behaviour depends on the control value of the other. If the interventions leave unrelated features alone, the refusal curve should be the same at every sadness value and the emotion curve the same at every refusal value. We score refusal with a judge on harmful prompts, emotion with a classifier on open-ended prompts, and fluency with perplexity across the whole grid of values.
+CONTROLS: A comparison with each edit applied alone at the same control values and with both edits applied along a random pair of directions, a reference run with the unsteered model at the same decoding, the same setting repeated with the order of the two edits reversed, and each behaviour curve measured against its single-edit curve at every value of the other control, over five seeds.
+COST: 150
+PREDICTION: Each curve should overlap its single-edit curve at every value of the other control, with perplexity flat across the grid. We take as a miss any shift of the refusal curve with the sadness value larger than the spread across seeds.
 === A 5 1
 ACTION: ADD
-TITLE: Effects of rotation steering on general abilities of language models
-PROPOSAL: We apply rotation steering for refusal at a fixed angle and score the steered model on factual recall, arithmetic, translation and long-context retrieval, to document what this form of control does to general abilities. Results appear as a capability table for two open model sizes.
-CONTROLS: Two prompt formats for each capability benchmark, results with and without few-shot examples, a comparison of greedy and sampled decoding, and per-task output length to check that answers are complete.
-COST: 240
-PREDICTION: Most capabilities should stay close to the scores published for the base models. Long-context retrieval may drop the most under steering.
+TITLE: Joint control of refusal and sadness in a single forward pass
+PROPOSAL: In one forward pass we add two edits to the residual stream of two model families, one along a refusal direction and one along a sadness direction, each driven by its own control value, and we chart the resulting behaviour across the full grid of the two values, asking whether each behaviour answers to its own value alone. If the control is well behaved, both behaviours should follow their own value smoothly over the grid, and generations should stay fluent at every corner of it. Refusal is scored by a judge on harmful prompts, sadness by a classifier on open-ended prompts, and fluency by perplexity, and the grid is drawn for long and short prompts and for two chat templates.
+CONTROLS: A comparison with both edits applied at the same control values on short prompts and with both edits applied along a random pair of directions on a second chat template, a reference run with the unsteered model, the same setting repeated with the order of the two edits reversed, and each behaviour curve measured against its curve on the second chat template at every value of the other control, over five seeds.
+COST: 150
+PREDICTION: Both curves should look alike on long and short prompts and on both templates, with perplexity flat across the grid. We take as a miss any shift of the refusal curve between templates larger than the spread across seeds.
 === A 6 0
 ACTION: ADD
 TITLE: Rotation in the normalised plane as a scale-free steering control
