@@ -1,6 +1,6 @@
 # Additif 9 au rapport de rédaction v3 — sonde v9 : une machine à une carte, sous GO-2026-11-05-01
 
-Même rédacteur-développeur, 5 novembre 2026, à partir de 00:18 UTC (`date -u`).
+Même rédacteur-développeur, 5 novembre 2026, de 00:18 à 00:49 UTC (`date -u`).
 
 ## Le fait de départ
 
@@ -22,7 +22,7 @@ interdits : aucun commit, aucun `.sha256`, aucune location, aucune clé lue, auc
 - Elle n'accepte que GO-2026-11-05-01, à exactement 1 USD.
 - Dans la requête de `vastai` 1.8.3, `cpu_ram` s'exprime en **Go** : il est multiplié par 1 000 vers les Mo de l'interface,
   vérifié dans le source.
-- **134 essais de la sonde v9 passent.** Le résultat de l'ensemble est en section 3.
+- **136 essais de la sonde v9 passent.** Le résultat de l'ensemble est en section 3.
 
 ## 1. Fichiers neufs (sha256 : section 4)
 
@@ -31,7 +31,7 @@ Ce sont des copies renommées de la v8 (étiquette `sonde-a1-v3-v9`, branches `d
 
 - `src/controle_ia/sonde_hote_durable_a1_v3_v9.py` ;
 - `scripts/amorce_sonde_hote_durable_a1_v3_v9.sh` : le GO exigé (GO-2026-11-05-01) et l'en-tête, rien d'autre ;
-- `tests/test_sonde_hote_durable_a1_v3_v9.py` : 134 essais. Ce sont ceux de la v8, adaptés aux offres « gpu » et au GO neuf, plus
+- `tests/test_sonde_hote_durable_a1_v3_v9.py` : 136 essais. Ce sont ceux de la v8, adaptés aux offres « gpu » et au GO neuf, plus
   les essais v9 qui remplacent ceux de la v5.
 
 ## 2. Ce qui change, et rien d'autre (diff exact : section 5)
@@ -109,14 +109,31 @@ Fait relevé au passage : la requête par défaut de `search offers` contient d�
 
 ## 3. Essais (`timeout 900 nice -n 10`, aucun réseau vers Vast ni vers un modèle)
 
-- `tests/test_sonde_hote_durable_a1_v3_v9.py` : **134 passés**.
-- Ensemble (v9 à v1, lanceur durable, garde de calcul) : RESULTAT_ENSEMBLE.
+- `tests/test_sonde_hote_durable_a1_v3_v9.py` : **136 passés**.
+- Ensemble (v9 à v1, lanceur durable, garde de calcul) : **851 passés**, aucun sauté, en 1 419 s
+  (136 + 126 + 113 + 95 + 86 + 72 + 66 + 52 + 19 + 49 + 37) ; sortie `…/sorties/essais-sonde-v9.txt`
+  (`ad32a7d28923a70996192e0a3cdf3b15cfe95cea7483c7fa9609935a494eb676`). La garde de calcul repasse, maintenant que la date de
+  collecte et la date d'exécution sont le même jour.
 - Le seul accès réseau a été le téléchargement en lecture seule du sdist et de la roue de `vastai` 1.8.3 depuis PyPI. Rien n'en a été
   exécuté.
 
 ## 4. Empreintes à la remise
 
-EMPREINTES_REMISE
+Relevées le 5 novembre 2026 à 00:48 UTC.
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/sonde_hote_durable_a1_v3_v9.py` (973 lignes) | `fb059b4926851c79c1cd1c4b8e116a90888f785e9648db92d74eed1e8de65193` |
+| `scripts/amorce_sonde_hote_durable_a1_v3_v9.sh` | `80ad1d1c481f3d065fc5a2f17af8a316d1f9bbfc2a531be89e52f4cb2977b21c` |
+| `tests/test_sonde_hote_durable_a1_v3_v9.py` (136 essais) | `9b15ecad9a7b1733520690aa07dd557d8caea4e2483c7f00f7007ccc1c164703` |
+| bloc-notes `sorties/diff-sonde-v8-vers-v9-brut.txt` | `d70255eb32c6cb21532df9ce21ff263a2939ebe952e420b37553c4c21873c120` |
+| bloc-notes `sorties/diff-sonde-v8-vers-v9-hors-renommage.txt` (377 lignes) | `907ee2c0294ab6f82b17b121e8d651e472656725d6110730e76ec4c2c8e141cd` |
+| bloc-notes `renommage-v8-v9.sed` | `d45ff36a39775633bfe8a89cf17692e804b5f2d2aea4b7eeb6f44d5df9084992` |
+| bloc-notes `essai_cpu_ram_vastai.py` | `766b6e6281ecfd8323fdc60a0316461cacf8076ef6312489496ea29583fa3a65` |
+| bloc-notes `sorties/essai-cpu-ram-vastai.json` | `5955628c7701e9b893161f3832ce2540451bd8e782b37cce1fef0e86fefe1d93` |
+
+Ce fichier ne porte pas sa propre empreinte : elle est donnée avec la remise. Les instantanés versés pendant le travail sont
+intermédiaires ; seules ces empreintes valent pour le rendu.
 
 ## 5. Diff exact par rapport à la v8
 
