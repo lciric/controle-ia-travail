@@ -54,6 +54,7 @@ def test_sonde_apprise_hors_du_pli_lu():
     s0, seqs0 = tc.sonde_du_pli(actions, "saboteur", "honnete", 0, plis, "difference_moyennes", 15, "max", "s0")
     hors = [a for a in actions if a["condition"] in ("saboteur", "honnete") and plis[a["tache"]] != 0]
     assert len(seqs0) == len(hors) and s0.famille == "difference_moyennes" and s0.agregation == "max"
+    assert all(any(np.array_equal(q, a["seq"]) for a in hors) for q in seqs0)   # aucun jeton du pli lu dans l'entraînement
     assert s0.w[0] > 0                                               # la direction suit le signal planté
     with pytest.raises(GardeArret, match="même condition"):
         tc.sonde_du_pli(actions, "honnete", "honnete", 0, plis, "difference_moyennes", 15, "max", "s")
@@ -128,6 +129,14 @@ def test_planchers_apparies_par_indice_et_notation_vectorisee():
         tc.quantile_plancher({0: planchers[0], 1: planchers[1][:3]}, pp)
     with pytest.raises(GardeArret, match="aucune sonde"):
         tc._scores_vectorises([], [])
+    # artefact de la garde d'identité : une référence faussée doit arrêter la notation vectorisée
+    reference = tc.score_action
+    tc.score_action = lambda *a, **k: reference(*a, **k) + 1.0
+    try:
+        with pytest.raises(GardeArret, match="garde d'identité"):
+            tc._scores_vectorises(planchers[0], [a["seq"] for a in pp[0]["actions"]])
+    finally:
+        tc.score_action = reference
 
 
 def test_tirages_degeneres_arretent_la_lecture():
