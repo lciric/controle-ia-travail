@@ -5,7 +5,7 @@
 # met 3.11.2 sur `python:3.13-bookworm`, sonde v10) devient un lien vers lui ; les deux versions, avant et après, au journal ;
 # sinon, rien ne part (code 2 : destruction immédiate par la minuterie). Essai local : A1V3_PYTHON_IMAGE et
 # A1V3_PYTHON_CONFIGURATION (chemins absolus). Lancée par le script de démarrage du conteneur
-# (`script_de_demarrage` de `src/controle_ia/hote_durable_a1_v3_v2.py`) APRÈS la minuterie de destruction, sous un `timeout` borné
+# (`script_de_demarrage` de `src/controle_ia/hote_durable_a1_v3_v3.py`) APRÈS la minuterie de destruction, sous un `timeout` borné
 # par la fin de vie (m-2). Un refus de cette amorce (code 2) fait demander au script de démarrage la destruction immédiate par la
 # minuterie (rien n'a tourné) ; tout autre code laisse la minuterie à son échéance.
 # Contrôles (cas sain et artefact éprouvés, R5) : variables présentes ; aucune clé de modèle autre que CLE_ARGON (même liste que
