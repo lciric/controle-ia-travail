@@ -26,7 +26,9 @@
 | `brouillons/preenregistrement-agregation-r1-v4-v1-puissance.json` | `531166428bc461ac32e930b860466f8abdecfd79b8a0832580f46648ce5b7afd` |
 
 Code d'analyse au commit `9421aaa9d6815d478b2da8e69bbca0a86892aaac`. Essais : `tests/test_agregation_r1_v4.py`, 25 essais, tous verts
-(`timeout 900 nice -n 10 python -m pytest -q tests/test_agregation_r1_v4.py`) ; suite complète du dépôt : <<SUITE_COMPLETE>>.
+(`timeout 900 nice -n 10 python -m pytest -q tests/test_agregation_r1_v4.py`) ; suite complète du dépôt (`timeout 900 nice -n 10 python -m pytest -q`) : **non achevée**, arrêtée par le délai de 900 s
+(code 143) sans échec affiché avant l'arrêt ; non relancée (une suite à la fois, délai de l'ordre). À relancer par la mère avec un
+délai plus long ; seul le module neuf a été vérifié en entier.
 
 ## Ce qui est fait
 
