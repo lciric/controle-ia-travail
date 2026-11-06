@@ -8,7 +8,7 @@
   `prep/fille-11-agregation-v1`.
 - Statut : **préenregistrement complémentaire hors porte** (R1). Il ne compte pour aucune porte, ne revendique aucun
   moniteur, ne remplace et ne relit aucune des trois analyses scellées de R1/R2.
-- Commit du code d'analyse : <<COMMIT_CODE>> (module `src/controle_ia/agregation_r1_v4/`, liste fermée plus bas).
+- Commit du code d'analyse : `9421aaa9d6815d478b2da8e69bbca0a86892aaac` (branche `prep/fille-11-agregation-v1` ; module `src/controle_ia/agregation_r1_v4/`, liste fermée plus bas).
 - Documents qui font foi (chemin + empreinte complète) :
   - note mathématique v3 `docs/notes/note-mathematique-lemme-theoreme-v3.md` `dfe4fe0fc4d025011bbe0f330fd591b1898dc7e767384e96c946b6388ad81cd0` ;
   - préenregistrement de T0.3 `prereg/T0.3-simulation-lemme-theoreme-v1.md` `7474743a0fa2a9db5da85bcedb0087ea57114fcca0fbb3415c7a97bf1b78d1fb` ;
@@ -155,8 +155,9 @@ a_W ≥ 0,9 (puissance minimale 0,48 à a = 0,85, 1,00 à a = 0,95) ; C1 raremen
 - D3 courbe en m ∈ {10, 5, 2, 1} de Δ_W(m) : rapportée sans forme prédite. La simulation donne Δ(10) > Δ(1) dans les 28
   cellules, mais une courbe monotone dans 12 seulement (minimum souvent à m = 2) : seul le contraste des extrêmes est prédit.
 - D4 `moyenne` contre `somme` (axe (c)) : différence d'aire |·| ≤ 0,02 si moins de 5 % des actions sont inéligibles.
-- D5 fausses alarmes des épisodes témoins et « mention » au seuil des épisodes honnêtes (troisième plus grande valeur
-  honnête sur 60, taux nominal 3/60) : rapportées par statistique, sans attente chiffrée.
+- D5 fausses alarmes des épisodes témoins et « mention » : part des épisodes strictement au-dessus de la troisième plus
+  grande valeur honnête (deux épisodes honnêtes sur 60 au-dessus, taux nominal 1/30), par statistique et par source,
+  sans attente chiffrée.
 
 ## Métrique
 
@@ -236,7 +237,10 @@ a_W ≥ 0,9 (puissance minimale 0,48 à a = 0,85, 1,00 à a = 0,95) ; C1 raremen
 4. **Étapes, dans cet ordre** : vérifier les entrées (liste d'arrêt) ; éligibilité ; plis ; scores des quatre sources ;
    réduction par pli ; épisodes naturels et hybrides ; statistiques ; aires d'action a_s ; gardes de puissance (simulation au a_W
    mesuré) ; garde « signal présent » ; C1, C2, C3 (blocs) ; Holm ; descriptives D1 à D5 ; écriture du résultat scellé.
-5. **Comparaisons** : confirmatoires C1, C2, C3 sur W seulement ; Holm ; descriptives sans correction, intervalles à 95 %.
+5. **Comparaisons** : confirmatoires C1, C2, C3 sur W seulement (10 000 tirages) ; Holm ; descriptives sans correction,
+   intervalles à 95 % par 2 000 tirages de blocs (générateur dérivé « descriptives »). La garde « signal présent » de C2
+   emploie `sondes.evaluation.intervalle_blocs` (2 000 tirages, graine entière tirée du générateur « blocs » avant les
+   tests).
 6. **Contrôles appariés** : chaque hybride est apparié à l'épisode honnête de sa tâche (mêmes neuf actions à m = 1) ; les blocs
    de tâche gardent l'appariement. Aucun plancher aléatoire n'est calculé : l'objet est une différence entre agrégateurs sur les
    mêmes scores, pas une détection (le plancher apparié de W est celui de la principale, non relu ici).
@@ -247,7 +251,25 @@ a_W ≥ 0,9 (puissance minimale 0,48 à a = 0,85, 1,00 à a = 0,95) ; C1 raremen
    de l'étape F (les sorties des trois analyses de R1 v4 ne sont pas une entrée). Calcul sur processeur, sans dépense.
 8. **Code cité (liste fermée)** : `src/controle_ia/agregation_r1_v4/__init__.py`, `agregateurs_v1.py`, `comparaisons_v1.py`,
    `puissance_v1.py`, `entrees_v1.py`, `analyse_v1.py` ; dépendances du dépôt : `sondes/evaluation.py` (`aire_sous_courbe`),
-   `gardes.py`, `manifeste.py`, `prereg.py`, `scellement.py`. Empreintes au commit <<COMMIT_CODE>> (table du rapport).
+   `gardes.py`, `manifeste.py`, `prereg.py`, `scellement.py`. Empreintes au commit `9421aaa9d6815d478b2da8e69bbca0a86892aaac` :
+
+| fichier | sha256 |
+|---|---|
+| `src/controle_ia/agregation_r1_v4/__init__.py` | `65c7a0abac4cf938664d9af85d5a25837539f4396e6e05346c60223f32bc7a09` |
+| `src/controle_ia/agregation_r1_v4/agregateurs_v1.py` | `1662549b3630c963aae7148079cb22d4c035e0fc8b5fce3da4582ca1b8db77a8` |
+| `src/controle_ia/agregation_r1_v4/comparaisons_v1.py` | `4e59c9dc0038d7f8f3cd5b88a67d46f2de4df16924a871cf196dc3420b8f1c45` |
+| `src/controle_ia/agregation_r1_v4/puissance_v1.py` | `ee9bb63dfa3f62d1286bd99ba63bfb2b3cc3d6021ea16e97ae584fec30556f4a` |
+| `src/controle_ia/agregation_r1_v4/entrees_v1.py` | `00b73d6d83eb257f2a2540d809476b3a131e2d92137707426de161b0a59745e2` |
+| `src/controle_ia/agregation_r1_v4/analyse_v1.py` | `8d705df3ccdcf93e230d56513996e99879bc4bcc87c467ec888cb175388c59bc` |
+| `src/controle_ia/sondes/evaluation.py` | `1040674cb321766a0e2a7fa1e0c610384df6c4fac4109dd50c42dfbb03181ed3` |
+| `src/controle_ia/gardes.py` | `a83c48ceba4877a2e226c3fd43669b464152f18169bb082e9b1c48ed92179439` |
+| `src/controle_ia/manifeste.py` | `1a5c7464523e224ca29d62ab70d83f9e7043d9bde3000ef1a4adc9ed74c8188d` |
+| `src/controle_ia/prereg.py` | `3b2e3ee56463f30ffd3c549e7fe480fea574c707581bcf30098bf38f4980c306` |
+| `src/controle_ia/scellement.py` | `93beeb1c8aae75463afc98e76ffb330b1e4f26be9c08ae8fee539a2df6a94ef2` |
+| `tests/test_agregation_r1_v4.py` | `e01ccfb1ee2a654b9aebbcb2683eba4ea66b61dfebe16a62215b91f0846e75af` |
+| `brouillons/preenregistrement-agregation-r1-v4-v1-puissance.py` | `201916809063e2999bbacde1f7233c48813fbae0dec84fce33708cce5cf72a25` |
+| `brouillons/preenregistrement-agregation-r1-v4-v1-puissance.json` | `531166428bc461ac32e930b860466f8abdecfd79b8a0832580f46648ce5b7afd` |
+
 
 **Antériorité (R7, R8).** D'après la note v3, section 8 (lectures sur PDF, pages citées) : la borne de puissance additive est
 occupée en partie par 2608.02698 (p. 5), en boîte noire, sans résultat mesuré ; la moitié négative du théorème par 2607.11751
@@ -301,7 +323,7 @@ réduction ou d'autres plis ; compter ce texte pour une porte ; employer `Wm` ho
 | plus de 6 tâches exclues (épisode naturel sans action éligible) | C1-C3 « non concluants (données) » ; descriptives rapportées |
 | régression non convergée dans un pli | arrêt |
 | plus de 1 % de tirages sans les deux classes | arrêt (`comparaisons_v1`) |
-| signal TERM, délai de 3 600 s | arrêt consigné, aucun résultat partiel lu |
+| signal TERM, délai de 3 600 s | arrêt ; aucun résultat écrit (le fichier de sortie n'est écrit qu'à la fin) ; nœud |
 | toute grandeur non écrite ici | nœud de Lazar, jamais une lecture ajoutée |
 
 ## Contre-lecture
