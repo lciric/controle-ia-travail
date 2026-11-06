@@ -88,3 +88,19 @@ délai plus long ; seul le module neuf a été vérifié en entier.
    d'épisode gaussiens. Un « réfuté » pourrait venir de là plutôt que du lemme.
 3. **Opposabilité dépendante d'une lecture de seconde main** : les trois analyses n'ont pas été lues directement ; une citation
    inexacte de la lecture préparatoire passerait dans ce texte. La contre-lecture doit les confronter aux textes.
+
+## Complément après le message de la mère (6 novembre, 12:02 UTC ; reçu vers 12:22 UTC)
+
+- Les trois analyses scellées et l'addendum v4 de R1 ont été lus **sur `main` au commit `a113adb6`** (compagnons OK) et
+  confrontés aux extraits de la lecture préparatoire : conformes. Deux précisions : recette exacte de W (5 plis de 12, `gtol`
+  10⁻⁵, 10 000 itérations, écart type sans correction, plancher 10⁻⁸ → 1) ; Bonferroni, non Holm, dans la principale.
+- Le brouillon 1 (`b6d5cdc6…`, commit `361a2308`) n'est **pas modifié** : il est sous contre-lecture (consigne de la mère,
+  commit `8b14b298`). Les changements sont proposés en **couples d'auteur** :
+  `brouillons/preenregistrement-agregation-r1-v4-v1-couples-auteur.json` (17 couples, chaque « ancien » unique dans le
+  brouillon 1), et appliqués par script dans `brouillons/preenregistrement-agregation-r1-v4-v1-brouillon2.md` (le validateur
+  ne signale que `<<CONTRE_LECTURE_1>>`). Ils ajoutent le paragraphe demandé par la mère : l'épisode hybride est une
+  recombinaison de données réelles, pas un épisode joué, et ce que chaque issue prouve ou ne prouve pas.
+- Code : `analyse_v2.py` (recette de W de la principale), au commit `c88cfd47` ; `analyse_v1.py` inchangé, jamais lancé.
+  Essais : `tests/test_agregation_r1_v4_v2.py`, 6 essais ; avec ceux de la v1 : 31 verts
+  (`timeout 900 nice -n 10 python -m pytest -q tests/test_agregation_r1_v4_v2.py tests/test_agregation_r1_v4.py`).
+- Le contre-lecteur peut juger les couples d'auteur avec les siens ; la mère choisit le texte à sceller (brouillon 1 + couples).
