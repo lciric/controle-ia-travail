@@ -104,3 +104,48 @@ délai plus long ; seul le module neuf a été vérifié en entier.
   Essais : `tests/test_agregation_r1_v4_v2.py`, 6 essais ; avec ceux de la v1 : 31 verts
   (`timeout 900 nice -n 10 python -m pytest -q tests/test_agregation_r1_v4_v2.py tests/test_agregation_r1_v4.py`).
 - Le contre-lecteur peut juger les couples d'auteur avec les siens ; la mère choisit le texte à sceller (brouillon 1 + couples).
+
+## Brouillon 3 (après la contre-lecture de la fille 9, `main` 7ac8cbeb ; message de la mère de 12:33 UTC)
+
+- Pièces de la contre-lecture lues sur `main` au commit `7ac8cbeb`, compagnons OK : rapport, 14 couples, corrections Q1 à Q5.
+- `brouillons/preenregistrement-agregation-r1-v4-v1-brouillon3.md` = brouillon 2 + 14 couples du lecteur + 7 couples d'auteur
+  (A18 à A24 ; A1 à A17 sont ceux de `…-couples-auteur.json`, dans l'ordre du fichier), appliqués par script ; liste complète
+  dans `brouillons/preenregistrement-agregation-r1-v4-v1-couples-brouillon3.json` (chaque « ancien » unique dans le
+  brouillon 2). Validateur : seul `<<CONTRE_LECTURE_1>>` reste. La garde Q1 de `analyse_v3` passe sur ce brouillon à la tête
+  de la branche (16 fichiers cités, empreintes égales).
+
+| couple | traitement | raison |
+|---|---|---|
+| L1 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L2 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L3 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L4 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L5 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L6 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L7 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L8 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L9 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L13 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L14 | appliqué tel quel | « ancien » inchangé dans le brouillon 2 |
+| L10 | adapté | le couple d'auteur A13 avait ajouté une incise après « borne d'union » ; même ajout, placé avant l'incise |
+| L11 | adapté (en partie déjà couvert) | le couple d'auteur A7 a aligné la recette sur la principale (option préférée par Q5) : l'écart déclaré par L11 n'existe plus ; seule la dernière phrase de L11 (aucune comparaison avec les scores de la principale) est reprise |
+| L12 | adapté | réglages de la v2 (10⁻⁵, 10 000) au lieu de ceux de la v1 ; même ajout |
+| A18 | couple d'auteur | v3 du code, plafond, liste d'arrêt Q1-Q4, déclaration de la contre-lecture lue |
+| A19 | couple d'auteur | v3 du code, plafond, liste d'arrêt Q1-Q4, déclaration de la contre-lecture lue |
+| A20 | couple d'auteur | v3 du code, plafond, liste d'arrêt Q1-Q4, déclaration de la contre-lecture lue |
+| A21 | couple d'auteur | v3 du code, plafond, liste d'arrêt Q1-Q4, déclaration de la contre-lecture lue |
+| A22 | couple d'auteur | v3 du code, plafond, liste d'arrêt Q1-Q4, déclaration de la contre-lecture lue |
+| A23 | couple d'auteur | v3 du code, plafond, liste d'arrêt Q1-Q4, déclaration de la contre-lecture lue |
+| A24 | couple d'auteur | v3 du code, plafond, liste d'arrêt Q1-Q4, déclaration de la contre-lecture lue |
+- Code v3 au commit `1fcb23d70b0b2be52212f40f671a5df8f6fa2794` : `analyse_v3.py` (v1 et v2 inchangées, jamais lancées).
+  - Q1 : liste fermée `CODE_CITE` (16 fichiers, égale aux modules réellement importés, essai dédié) vérifiée contre la table
+    du texte ; Q2 : chemin `prereg/agregation-r1-v4-v1.md` imposé ; Q3 : noms de la fiche v4, `scores-p3.npz` = `968414fc…`,
+    activations égales à leur compagnon `.sha256` de la réception (la fiche ne consigne pas leurs valeurs : vérifié par
+    recherche, aucune empreinte d'activations dans la fiche) ; Q4 : second passage → `SecondPassage`, code de fin 3 ; toutes
+    avant le manifeste et tout chargement. Plafond : `lire_hag(v, a_W)`.
+  - Q5 : recette de `analyse_v2`/`v3` vérifiée contre le texte de la principale (l. 60) ; le module
+    `analyse_blanche_noire.modeles` n'est pas sur `main` : non lu, non comparé au code.
+  - Essais : `tests/test_agregation_r1_v4_v3.py`, 10 essais (sain et second passage ; non scellé → refus avant chargement ;
+    arbre sale ; chemin ; liste fermée altérée et incomplète ; empreinte de `scores-p3.npz` ; compagnon faux ; noms ; plafond ;
+    liste fermée = modules importés). Suite du module (v1 + v2 + v3) : **41 verts** en 60 s
+    (`timeout 900 nice -n 10 python -m pytest -q -p no:cacheprovider tests/test_agregation_r1_v4.py tests/test_agregation_r1_v4_v2.py tests/test_agregation_r1_v4_v3.py`).
