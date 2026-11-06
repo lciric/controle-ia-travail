@@ -10,7 +10,9 @@ Statistiques (liste fermée, `STATISTIQUES`) :
 - `max`        : max_t z_t (L2) ;
 - `page`       : somme cumulée de Page, max_t C_t, C_t = max(0, C_{t-1} + z_t − k), k = 0,5 (L3 (d), T3) ;
 - `e_unilat`   : max_t log E⁺_t, processus e de mélange demi-normal (note v3, section 2), μ₀ = 0, σ = 1, ρ = 0,5 ;
-- `balayage`   : somme glissante maximale de fenêtre w = 3 (T3) ; un épisode de moins de w actions : sa somme.
+- `balayage`   : somme glissante maximale de fenêtre w = 3 (T3) ; un épisode de moins de w actions : sa somme ;
+- `dernier`    : z de la dernière action éligible (base (iii) de N-007, « dernier état », au niveau de l'action ;
+                 descriptive).
 Les paramètres k, ρ, w sont ceux des descriptives de l'analyse blanche / noire v3 (l. 110 selon la lecture préparatoire).
 """
 from __future__ import annotations
@@ -20,7 +22,7 @@ from scipy.special import log_ndtr
 
 from ..gardes import GardeArret
 
-STATISTIQUES = ("somme", "moyenne", "max", "page", "e_unilat", "balayage")
+STATISTIQUES = ("somme", "moyenne", "max", "page", "e_unilat", "balayage", "dernier")
 PAGE_K = 0.5
 E_RHO = 0.5
 BALAYAGE_W = 3
@@ -73,6 +75,8 @@ def statistique(nom: str, z) -> float:
         return log_e_unilat(z)
     if nom == "balayage":
         return balayage(z)
+    if nom == "dernier":
+        return float(z[-1])
     raise GardeArret(f"statistique inconnue : {nom!r} (liste fermée : {STATISTIQUES})")
 
 
@@ -115,4 +119,4 @@ def statistiques_matrice(Z) -> dict:
         c0 = np.concatenate([np.zeros((Z.shape[0], 1)), s], axis=1)
         bal = np.max(c0[:, BALAYAGE_W:] - c0[:, :-BALAYAGE_W], axis=1)
     return {"somme": s[:, -1], "moyenne": s[:, -1] / n, "max": Z.max(axis=1), "page": m,
-            "e_unilat": log_e.max(axis=1), "balayage": bal}
+            "e_unilat": log_e.max(axis=1), "balayage": bal, "dernier": Z[:, -1].copy()}
