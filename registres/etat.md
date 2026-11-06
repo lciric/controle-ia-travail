@@ -319,3 +319,9 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - 20:55 UTC : tir de diagnostic SPARKS scellé (commit `02c6f36a`, ordre `4ec818ba…`, R-1612) et commandé à la fille 6 sous GO-2026-11-05-05 (≤ 1 USD) ; étape F : brouillon 3 (`81a04e7b…`) prêt, attend « GO étape F » ; A1-v3 : verdict scellé (R-1611), suite = nœud.
 - 20:59 UTC : lanceur T0.6 v2 rendu (`prep/t06-lanceur-v2` `0d48103b`, 143 essais, 41/41 mutations, R-1613) → contre-lecture neuve (fille 9) du lanceur v2 + brouillon 5 ; fille 7 en attente ; **nœud Mahalanobis** (8 à 20 h de carte) soumis à Lazar ; E2/E3 sur GO.
 - 22:12 UTC : lanceur T0.6 v3 rendu (`4f1b402d`, R-1620 ; Mahalanobis v2 ≈ 30× plus rapide, défaut paquet gelé jusqu'au mot de Lazar) → contre-lecture du delta + candidat 1 (fille 9, consigne `260730cf…`) ; fille 7 en attente ; fille 8 : réécriture du mode « contrôles » et registres v2.
+
+## 6 novembre, 11:44 UTC — autonomie de 9 heures (GO-2026-11-06-04, jusqu'à ≈ 20:40 UTC)
+- Mère sur Opus 5.5 ; Fable 5.1 épuisé jusqu'au 2026-11-10T05:00Z (filles 7 et 8 hors service) (R-1621).
+- GO du jour : GO-2026-11-06-01 (E2/E3, 5 USD), -02 (étape F, option (1)), -03 (préenregistrement « candidat 1 corrigé »), -04 (autonomie, 100 USD de lignes nouvelles) ; L04/L05/L11 tranchés ; Mahalanobis (d), DS-1/DS-2 (a), D:3 (2), A1 en attente jusqu'après G0 (R-1623, R-1624) ; banc de G1 reporté au 10 novembre.
+- Sessions : fille 6 (Opus, clés : tir SPARKS sur mot de Lazar dans sa session ; étape F) ; fille 9 (Opus, contre-lectures et verdicts) ; fille 10 `session_01Qi7Gr6mEgRP9Fa25C4uBjB` (Sonnet : lanceur v4, ordres E2/E3, candidat 2) ; fille 11 `session_01Qi7Gr4T5U5Krfru3AbzUGw` (Opus : préenregistrement neuf).
+- Instances : aucune en cours ; 59288960 (SPARKS) arrêtée, conservée ; R8 à détruire par Lazar.
