@@ -103,6 +103,8 @@ def main(mode, fichiers):
         for r in recs:
             paires.setdefault((r["jeu"], r["paire"]), []).append(r)
         att = 10 if mode == "controles" else 30
+        for r in recs:
+            if r["tache"] not in ENONCES: fautes.append(f"{Path(f).name}: identifiant de tâche inconnu « {r['tache']} » (attendu l'identifiant sans préfixe rNN-)"); break
         if len(recs) != att: fautes.append(f"{Path(f).name}: {len(recs)} enregistrements, attendu {att}")
         for (jeu, p), rs in sorted(paires.items()):
             cle = f"{Path(f).name} {jeu} p{p}"
