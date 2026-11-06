@@ -26,8 +26,8 @@ Signatures de la course inchangées de la v3 (`controles`, `creation`, `apres-cr
 |---|---|
 | `scripts/amorce_instance_t06_v4.sh` | `c4cf05a12e4488338d158bed9ba3efbbc1540be0557b221238cf10d079b1083e` |
 | `scripts/lancer_t06_v4.sh` | `6e06ae6b32f2886d8a76d5562728e8af7dc00bf62760c43d1e7b41c79726f01a` |
-| `scripts/banc_mutations_t06_v4.py` | `e8805a88a92c5ffa8616386f674f3901bd0bf4205f526b27faf9169c8057cc26` (avant l option --filtre) |
-| `scripts/epreuve_e1_t06_v4.sh` | voir le message de la mère |
+| `scripts/banc_mutations_t06_v4.py` | `e8805a88a92c5ffa8616386f674f3901bd0bf4205f526b27faf9169c8057cc26` |
+| `scripts/epreuve_e1_t06_v4.sh` | `8052a3f214936f98641dc5d7c3285268a4615d583c766e8732dc779b4e0bfdf9` |
 | `src/controle_ia/t06/lanceur_v4.py` | `aa290ac5fdd9a4f4451d35be26e767b0090686dd51cb9bbe216b04b92593449e` |
 | `src/controle_ia/t06/configuration_v4.py` | `d2cd7c4d610836093ae509aa8f60e38cb3fbb0946d9c21f353f32eb547ff97b6` |
 | `src/controle_ia/t06/session_v3.py` | `365d2fde7fe9c4670fd3f2bcb404c3979b1db4e3cc862f0a4a46acf867b4bcf3` |
