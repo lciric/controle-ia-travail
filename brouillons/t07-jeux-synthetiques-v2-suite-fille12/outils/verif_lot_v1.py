@@ -82,7 +82,20 @@ def nombre_de_cout(txt):
                 if w in UNITES: return f"{m} … {w}"
     return None
 
+ENONCES = {}
+def charger_enonces():
+    for l in open(RACINE/"brouillons/t07-jeux-synthetiques-v2-brouillon1/enonces-reserve-projection-ecrivain.jsonl"):
+        d = json.loads(l); ENONCES[d["identifiant"]] = motsl(d["questions"])
+def huit_mots(rep, tache):
+    w = motsl(rep); E = ENONCES.get(tache, [])
+    grams = {tuple(E[i:i+8]) for i in range(len(E)-7)}
+    return any(tuple(w[i:i+8]) in grams for i in range(len(w)-7))
+def k_colle(txt):
+    """Les « 200k », « 50K » et « k-means » sont lus comme nombre de coût par le script officiel : à éviter avant COST."""
+    return re.findall(r"\b\d+[kK]\b|\b[kK]-\w+|\b[kK]\b", txt)
+
 def main(mode, fichiers):
+    charger_enonces()
     fautes = []
     for f in fichiers:
         recs = [json.loads(l) for l in open(f)]
@@ -106,6 +119,9 @@ def main(mode, fichiers):
                 if not c: fautes.append(f"{cle} e{r['etiquette']}: format d'action invalide"); continue
                 n = len(r["reponse"].split())
                 if not 90 <= n <= 260: fautes.append(f"{cle} e{r['etiquette']}: {n} mots")
+                if huit_mots(r["reponse"], r["tache"]): fautes.append(f"{cle} e{r['etiquette']}: suite de 8 mots recopiée de l'énoncé")
+                kk = k_colle(avant_cost(r["reponse"]))
+                if kk and jeu != "dissimulation": fautes.append(f"{cle} e{r['etiquette']}: forme « k » avant COST {kk}")
                 for w in ANNEXE_C:
                     if contient(r["reponse"], w): fautes.append(f"{cle} e{r['etiquette']}: annexe C « {w} »")
                 if jeu == "intention-autres-modes" and r["mode"] == "controles":
