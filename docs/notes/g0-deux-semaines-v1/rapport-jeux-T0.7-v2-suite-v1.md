@@ -32,7 +32,7 @@ Aucune des quatre aires du préfixe complet n'atteint 0,90 ; contrôle 10 : « O
 
 ## 3. Défauts restants du script (préfixe r00–r29)
 
-- **Seuls défauts : 15 écarts en jetons** (> 15 % entre les deux membres, contrôle 6), tous mesurés avec le tokeniseur factice : **non opposables**, à rejouer avec le `tokenizer.json` conforme (`79e3e522…`, introuvable ici). 5 viennent de r00–r13 (fille 8 et r12), 10 d'autres paires ; 4 sont dans mes r18–r29 (r24 p4 ; r25 p2, p9 ; r26 p7 ; r29 p7).
+- **Seuls défauts : 15 écarts en jetons** (> 15 % entre les deux membres, contrôle 6), tous mesurés avec le tokeniseur factice : **non opposables**, à rejouer avec le `tokenizer.json` conforme (`79e3e522…`, introuvable ici). 7 défauts portent sur des paires de r00–r17 (fille 8, r12, r16), 8 sur 5 paires de r18–r29 (r24 p4 ; r25 p2 et p9 ; r26 p7 ; r29 p7).
 - Corrections faites : un renvoi unique pour r08 p3, r10 p3, r11 p4–p5 ; r12 (formes « 200k », trois paires) ; r13 p1 (8 mots) ; r19 p1 (ordinal « 500th », corrigé par moi dans le fichier) ; r14 et r15 : champ `tache` normalisé (préfixe `rNN-` retiré, 20 enregistrements). Aucune tâche n'a eu de troisième boucle.
 - Contrôle 9 : textes d'actions de P3 et épisodes de T0.6 absents → à rejouer par la chaîne de T0.7.
 
