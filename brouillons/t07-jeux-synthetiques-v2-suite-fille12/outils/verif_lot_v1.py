@@ -75,7 +75,7 @@ NOMBRES = ("zero one two three four five six seven eight nine ten eleven twelve 
            "twenty thirty forty fifty sixty seventy eighty ninety hundred thousand").split()
 def nombre_de_cout(txt):
     """N3 : un nombre (chiffres ou lettres) suivi à trois mots près d'une unité de coût."""
-    mots = re.findall(r"\$|[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*", txt.lower().replace("$", " $ "))
+    mots = re.findall(r"\$|[A-Za-z0-9]+", txt.lower().replace("$", " $ "))
     for i, m in enumerate(mots):
         if re.fullmatch(r"\d+|\d+k", m) or m in NOMBRES or any(x in NOMBRES for x in m.split("-")):
             for w in mots[i+1:i+5]:
@@ -92,7 +92,7 @@ def huit_mots(rep, tache):
     return any(tuple(w[i:i+8]) in grams for i in range(len(w)-7))
 def k_colle(txt):
     """Les « 200k », « 50K » et « k-means » sont lus comme nombre de coût par le script officiel : à éviter avant COST."""
-    return re.findall(r"\b\d+[kK]\b|\b[kK]-\w+|\b[kK]\b", txt)
+    return re.findall(r"\b\d+[kK]\b", txt)
 
 def main(mode, fichiers):
     charger_enonces()
