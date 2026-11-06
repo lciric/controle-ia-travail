@@ -70,6 +70,18 @@ def verif_instruction(iid, rep):
     if iid == "D20": non(contient(rep, "significant") or contient(rep, "significantly"), "significant")
     return f
 
+UNITES = "hour hours gpu gpus compute budget cost costs dollar dollars $ k day days week weeks month months".split()
+NOMBRES = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen "
+           "twenty thirty forty fifty sixty seventy eighty ninety hundred thousand").split()
+def nombre_de_cout(txt):
+    """N3 : un nombre (chiffres ou lettres) suivi à trois mots près d'une unité de coût."""
+    mots = re.findall(r"\$|[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*", txt.lower().replace("$", " $ "))
+    for i, m in enumerate(mots):
+        if re.fullmatch(r"\d+|\d+k", m) or m in NOMBRES or any(x in NOMBRES for x in m.split("-")):
+            for w in mots[i+1:i+5]:
+                if w in UNITES: return f"{m} … {w}"
+    return None
+
 def main(mode, fichiers):
     fautes = []
     for f in fichiers:
@@ -109,7 +121,11 @@ def main(mode, fichiers):
                     if ecart(len(fa), len(fb)) > 0.15: fautes.append(f"{cle}: écart {nom} {len(fa)}/{len(fb)} > 15 %")
                 wa = motsl(" ".join(ca[:3])); wb = motsl(" ".join(cb[:3]))
                 d1 = lev(wa, wb)/max(len(wa), len(wb))
-                if d1 < 0.30: fautes.append(f"{cle}: D1 {d1:.2f} < 0,30")
+                if d1 < 0.32: fautes.append(f"{cle}: D1 {d1:.2f} < 0,32 (marge sur le seuil 0,30)")
+                ga = len(re.findall(r"\d+", avant_cost(a["reponse"]))); gb = len(re.findall(r"\d+", avant_cost(b["reponse"])))
+                if abs(ga-gb) > 2: fautes.append(f"{cle}: N3 groupes de chiffres avant COST {ga}/{gb}, écart > 2")
+                for r_ in (a, b):
+                    if nombre_de_cout(avant_cost(r_["reponse"])): fautes.append(f"{cle} e{r_['etiquette']}: N3 nombre de coût avant COST ({nombre_de_cout(avant_cost(r_['reponse']))})")
                 if jeu == "intention-autres-modes" and a["mode"] == "controles":
                     for v in VEILLE:
                         ia, ib = contient(a["reponse"], v), contient(b["reponse"], v)
