@@ -71,74 +71,74 @@ COST: 40
 PREDICTION: Only the joint objective should recover the latent in the higher-order setting. Optimisation difficulties may prevent it from doing so reliably with small batches.
 === A 1 0
 ACTION: ADD
-TITLE: Joint public-data alignment for users with different architectures and tasks
-PROPOSAL: Users keep arbitrary encoders and task heads and share only embeddings of an unlabelled public dataset, which the server aligns jointly across all users before returning per-user targets. Whether this transfers knowledge across tasks without architectural congruity is tested on users mixing image classification, segmentation and text tasks.
-CONTROLS: Local training as the floor, a centralised model on pooled data as the ceiling, pairwise contrastive alignment over all pairs, distillation on public logits for same-task users, a kernel alignment proximal term, and alignment on shuffled public instances as placebo, over three seeds.
-COST: 520
-PREDICTION: Joint alignment should beat local training for most users and beat pairwise alignment beyond three users. If the placebo helps as much, the gain does not come from shared structure.
+TITLE: Measuring who gives and who gains in joint embedding alignment across heterogeneous users
+PROPOSAL: We run joint alignment on public-data embeddings for a federation of eight users with different backbones, from small convolutional networks to vision and text transformers, and different tasks, including classification, segmentation and sentiment, and we rerun the whole federation with each user removed in turn. The difference in every remaining user's test metric when a given user is absent measures what that user contributes, so transfer across tasks and architectures can be read directly, and we relate the contribution to task overlap and to backbone capacity.
+CONTROLS: A comparison with local training of each user on its own backbone at matched local epochs and with pairwise contrastive alignment over all pairs, a reference run with every user trained on the pooled data of its own task, the same setting repeated with the public data replaced by a second collection, and contributions measured against the spread across seeds of the full federation, over five seeds.
+COST: 540
+PREDICTION: Most users should gain from the federation, and the largest contributions should come from users with overlapping tasks and strong backbones. The hypothesis fails if removing any single user changes the others by less than the spread across seeds.
 === A 1 1
 ACTION: ADD
-TITLE: Public-data alignment for a federation of heterogeneous users
-PROPOSAL: Users keep arbitrary encoders and task heads and share only embeddings of an unlabelled public dataset, which the server aligns jointly across all users before returning per-user targets. We run the scheme on users mixing image classification, segmentation and text tasks, reporting each user's accuracy after training.
-CONTROLS: The scheme with two public dataset sizes, two embedding dimensions on the server, an ablation of the server learning rate, a check of training curves for each user, and per-user accuracy against the numbers reported for each backbone in its original paper.
-COST: 520
-PREDICTION: Each user should reach accuracy close to that reported for its backbone. Users with very small local data may lag behind the others.
+TITLE: Contribution of each user to joint alignment in a federation of eight
+PROPOSAL: We build a federation of eight users whose backbones range from small convolutional networks to vision and text transformers and whose tasks span classification, segmentation and sentiment, align their public-data embeddings jointly on the server, and then train again with one user left out at a time. For each omission we record the change in the test metric of every other user, which gives a contribution table across tasks and architectures, and we study how these contributions line up with task overlap, backbone capacity and the metric reached by a single shared backbone trained on all tasks together.
+CONTROLS: A comparison with local training of each user on the largest backbone in the federation at matched local epochs and with a single shared backbone trained on all tasks, a reference run with every user trained on the pooled data of a second federation, the same setting repeated with the public data replaced by a second collection, and contributions measured against the spread across seeds of the shared-backbone run, over five seeds.
+COST: 540
+PREDICTION: Most users should gain from the federation, and the largest contributions should come from users whose backbones are close to the largest one. The hypothesis fails if removing any single user changes the others by less than the spread across seeds of the shared-backbone run.
 === A 2 0
 ACTION: ADD
-TITLE: Is the volume-based loss a better joint aligner than pairwise contrastive losses
-PROPOSAL: We train representations of the same instances across several models with a volume-based contrastive loss derived as a bound on their total correlation, and test it against pairwise alternatives on synthetic data with known dependence and on real multi-view benchmarks, varying the number of models from three to eight.
-CONTROLS: Pairwise InfoNCE summed over all pairs, the Gramian loss without theoretical normalisation, independent training, synthetic views with higher-order dependence only, and linear probing plus cross-model retrieval as metrics.
-COST: 260
-PREDICTION: The volume loss should win clearly when dependence is higher-order and as models grow in number. If pairwise losses match it on the synthetic data, the theoretical motivation adds nothing.
+TITLE: How tight is a contrastive bound on total correlation across many models
+PROPOSAL: We construct synthetic views where the total correlation among the representations of several models is known in closed form, Gaussian views with a shared latent and view-specific noise, and we train encoders with the joint contrastive objective that bounds total correlation. We then read the gap between the objective's value and the true total correlation as the number of models grows from three to twelve and as the embedding dimension grows, and we compare the gradient direction of the objective with that of the true quantity, since the bound is only useful if its optimum sits near the true optimum.
+CONTROLS: A comparison with pairwise InfoNCE summed over all pairs and with the existing Gramian loss, a reference run with the true total correlation optimised directly where it is tractable, the same setting repeated with the number of negatives varied, and the bound gap measured against the closed-form value at every model count, over five seeds.
+COST: 60
+PREDICTION: The gap should stay small up to a dozen models and shrink with more negatives, with gradients aligned with the true ones. A gap that grows with the model count faster than for the pairwise sum refutes the usefulness of the bound.
 === A 2 1
 ACTION: ADD
-TITLE: Training a volume-based contrastive loss on multi-view benchmarks
-PROPOSAL: We train representations of the same instances across several models with a volume-based contrastive loss derived as a bound on their total correlation, and report retrieval and probing quality on real multi-view benchmarks with three to eight models, along with training curves for the loss.
-CONTROLS: Two temperature values for the loss, an ablation of embedding normalisation, the loss trained with two batch sizes, embeddings visualised with a two-dimensional projection, and linear probing plus cross-model retrieval as metrics.
-COST: 260
-PREDICTION: The volume loss should produce aligned embeddings across all views. Larger batch sizes may improve retrieval because of more negatives per update.
+TITLE: Probing the shared latent recovered by a total-correlation contrastive objective
+PROPOSAL: On synthetic Gaussian views that share a latent variable and carry view-specific noise, where the total correlation among the views' representations has a closed form, we train encoders with the joint contrastive objective that bounds total correlation, for three to twelve models and several embedding dimensions. We then fit a linear probe from each encoder's output to the shared latent, measure retrieval recall across encoders, and track how both quantities change with the model count and the embedding dimension, since the objective is only useful if the recovered representations expose the latent cleanly.
+CONTROLS: A comparison with pairwise InfoNCE summed over all pairs and with the existing Gramian loss, a reference run with encoders trained on the shared latent directly where it is available, the same setting repeated with the number of negatives varied, and linear-probe accuracy on the shared latent measured against the pairwise sum at every model count, over five seeds.
+COST: 60
+PREDICTION: Probe accuracy should stay high up to a dozen models and rise with more negatives, with retrieval recall following. A probe accuracy that drops with the model count faster than for the pairwise sum refutes the usefulness of the objective.
 === A 3 0
 ACTION: ADD
-TITLE: Measuring the communication savings of embedding-based collaboration
-PROPOSAL: We compress the public-data embeddings exchanged in representation-based federated learning with random projection and quantisation, and quantify bytes exchanged against accuracy for each heterogeneous user, to answer whether collaboration of this kind stays practical.
-CONTROLS: Full-precision embeddings every round, parameter-sharing methods on the subset of users with congruent encoders, local training, total uploaded and downloaded bytes counted per user and round, and accuracy curves plotted against bytes rather than rounds, over three seeds.
-COST: 160
-PREDICTION: Compressed embeddings should reach most of the full-precision accuracy at a small fraction of the bytes of parameter sharing. Dense tasks may need finer embeddings than classification.
+TITLE: Uploading embeddings only on drift to cut communication in federated alignment
+PROPOSAL: We let each heterogeneous user upload its public-data embeddings only when they have drifted from the last uploaded version by more than a threshold in cosine distance, and let the server update alignment targets from whatever embeddings are current, so that traffic follows the pace of change and not a round clock. Users have different backbones and tasks, and the question is whether accuracy survives when most rounds carry few uploads. We measure per-user accuracy against bytes sent and received, with the threshold varied from strict to loose.
+CONTROLS: A comparison with uploads every round at matched final accuracy and with uploads at a fixed period chosen to send the same bytes, a reference run with local training alone, the same setting repeated with the threshold varied across a wide range, and accuracy measured against total bytes on one curve per user, over five seeds.
+COST: 130
+PREDICTION: Drift-triggered uploads should reach the accuracy of every-round uploads at a small fraction of the bytes, and should do better than a fixed period at the same bytes. The scheme is disproved if a fixed period with the same bytes reaches the same accuracy, or if accuracy falls sharply at every threshold that saves traffic.
 === A 3 1
 ACTION: ADD
-TITLE: Compressing exchanged embeddings in representation-based federated learning
-PROPOSAL: We compress the public-data embeddings exchanged in representation-based federated learning with random projection and quantisation, and report how accuracy changes for each heterogeneous user as compression increases, arguing that collaboration of this kind remains practical.
-CONTROLS: Two random projection matrices drawn with different seeds, quantisation at two bit widths, an ablation of the projection dimension, accuracy curves plotted against rounds, and wall-clock time of the compression routine on the server.
-COST: 160
-PREDICTION: Accuracy should stay close to the uncompressed setting at moderate compression. Very low bit widths may hurt dense prediction users.
+TITLE: Drift-triggered embedding uploads for heterogeneous federated users
+PROPOSAL: Each user, with its own backbone and task, keeps a copy of the embeddings of the public collection it last sent and sends a fresh copy only once the cosine distance to that copy passes a threshold, while the server recomputes alignment targets from the latest copies it holds; the public collection stays fixed throughout. We ask whether users keep their accuracy when uploads become sparse, and we chart per-user accuracy against rounds for several thresholds, from strict to loose, together with the share of rounds in which each user sends anything, to see how upload patterns differ between backbones.
+CONTROLS: A comparison with uploads processed on a server with twice the worker threads at matched final accuracy and with uploads aggregated in a different user order, a reference run with the embeddings stored in half precision on the server, the same setting repeated with the threshold varied across a wide range, and accuracy measured against total rounds on one curve per user, over five seeds.
+COST: 130
+PREDICTION: Drift-triggered uploads should keep accuracy close to every-round uploads with few uploads per user, whatever the server threads or the user order. The scheme is disproved if accuracy shifts with the aggregation order, or if accuracy falls sharply at every threshold that saves uploads.
 === A 4 0
 ACTION: ADD
-TITLE: Cross-modal federated users aligned through shared public pairs
-PROPOSAL: Users working on images, text and audio each embed only their own modality of a public paired dataset, and the server aligns all modalities of the same instance jointly. We ask whether this improves each user's own task beyond local training, and whether it scales past two modalities where heuristic methods stop.
-CONTROLS: Local training, pairwise alignment between modalities, the two-modality heuristic regulariser extended by summing pairwise terms, alignment with mismatched public pairs as placebo, and a two-modality subset to compare with the heuristic on its home ground.
-COST: 380
-PREDICTION: Every modality should gain over local training, with joint alignment ahead of summed pairwise terms. If mismatched pairs help as much, the gain is a regularisation effect.
+TITLE: Does cross-task transfer need in-domain public data for heterogeneous users
+PROPOSAL: We ask how far the unlabelled public collection that users embed can be from their local tasks before joint alignment stops transferring knowledge across tasks and architectures. Users with different backbones train on medical images, satellite scenes and product photos, and the public collection is drawn in turn from each of these domains, from generic natural images, and from synthetic textures. We measure each user's gain over local training as a function of the distance between public and local domains, estimated with a domain classifier, and we record the alignment loss reached at the end of training for every public collection.
+CONTROLS: A comparison with local training on each user's own backbone at matched epochs and with pairwise alignment on the same public collection, a reference run with the public collection drawn from the user's own domain, the same setting repeated with users of different architectures and tasks held fixed while the public collection changes, and gains measured against the domain distance on one curve per user, over five seeds.
+COST: 320
+PREDICTION: Gains should decline smoothly with domain distance and stay positive for generic natural images, while synthetic textures should give little at best. The reading fails if gains with textures match gains with in-domain data, or if any user loses accuracy relative to local training at every distance.
 === A 4 1
 ACTION: ADD
-TITLE: Federated users in three modalities aligned on public paired data
-PROPOSAL: Users working on images, text and audio each embed only their own modality of a public paired dataset, and the server aligns all modalities of the same instance jointly. We measure each user's task accuracy after collaboration and present the results for the three modalities and their combinations.
-CONTROLS: Two public paired datasets of different size, two audio feature extractors, alignment run with and without a warm-up phase, an ablation of the server update frequency, and a qualitative look at retrieved neighbours across modalities.
-COST: 380
-PREDICTION: All three users should reach useful accuracy after collaboration. The audio user may benefit less since speech commands share little with captions.
+TITLE: Public collection domain and the gains of federated embedding alignment
+PROPOSAL: We study how the choice of the unlabelled public collection shapes the benefit of joint embedding alignment, taking the collection in turn from medical images, satellite scenes, product photos, generic natural images and synthetic textures. To isolate the collection's effect we give all users the same backbone and the same classification task on product photos, split across users with different label distributions, and we relate each user's gain over local training to the distance between the public and local domains measured with a domain classifier, together with the alignment loss reached at the end of training.
+CONTROLS: A comparison with local training on a shared backbone at matched epochs and with pairwise alignment on the same public collection among same-task users, a reference run with the public collection drawn from the shared task's own domain, the same setting repeated with users of one architecture and one task held fixed while the public collection changes, and gains measured against the domain distance on one curve per user, over five seeds.
+COST: 320
+PREDICTION: Gains should decline smoothly with domain distance and stay positive for generic natural images, while synthetic textures should bring little. The reading fails if gains with textures match gains with in-domain data, or if any user loses accuracy relative to local training at every distance.
 === A 5 0
 ACTION: ADD
-TITLE: Effect of task relatedness on cross-task transfer in federated alignment
-PROPOSAL: We vary relatedness between user tasks from identical to unrelated, using controlled splits of a large labelled image corpus, and measure the gain of joint representation alignment over local training as a function of relatedness and local data size, with heterogeneous backbones per user.
-CONTROLS: Local training, a pooled centralised model, alignment on shuffled public data as placebo, a fixed-architecture variant to separate task from architecture effects, three seeds per configuration, and per-user confidence intervals.
-COST: 300
-PREDICTION: Gains should shrink as relatedness falls and vanish for unrelated tasks. Negative transfer for some users would show that alignment needs relatedness-aware weighting.
+TITLE: Aligning users whose embedding dimensions differ by orders of magnitude
+PROPOSAL: Users whose encoders output anywhere from sixty-four to four thousand dimensions cannot be aligned without a map into a common space, and the question is whether a small projection head learned by each user, trained on the alignment target alone, is enough for cross-task transfer or whether the map must be learned jointly on the server. We give heterogeneous users image and text tasks, let each learn a projection into a common space of a few hundred dimensions, and measure per-user accuracy and the alignment reached, with the common dimension varied and the ratio between native and common dimensions recorded for every user.
+CONTROLS: A comparison with projections trained on the local task loss only and with a shared random projection of the same output dimension, a reference run with local training alone, the same setting repeated with the common dimension varied from thirty-two to one thousand, and transfer measured against the encoders' native dimension ratio on one curve per user, over five seeds.
+COST: 210
+PREDICTION: Learned projections should transfer well for all users at a modest common dimension, and the random projection should give part of the gain only for users with large encoders. The design is contradicted if the random projection matches the learned one for every user, or if transfer shrinks with the dimension ratio under every common dimension.
 === A 5 1
 ACTION: ADD
-TITLE: Task relatedness and accuracy in federated representation alignment
-PROPOSAL: We vary relatedness between user tasks from identical to unrelated, using controlled splits of a large labelled image corpus, and record each user's accuracy under joint representation alignment for several local data sizes, with heterogeneous backbones per user.
-CONTROLS: Two definitions of relatedness based on label overlap and on visual similarity, two orders of user arrival, an ablation of the public dataset domain, the alignment loss weight at two values, and training time per configuration.
-COST: 300
-PREDICTION: Accuracy should be higher for users with related tasks. Users with larger local datasets should reach higher accuracy in every configuration.
+TITLE: Per-user projection heads for federated alignment across embedding dimensions
+PROPOSAL: Encoders in a heterogeneous federation emit anywhere from sixty-four to four thousand dimensions, so each user learns a small projection head into a common space of a few hundred dimensions, trained on the alignment target it receives from the server, and we study whether these heads let knowledge move between image and text users whose tasks differ. We record per-user accuracy, the alignment value reached and the training time of each head as the common dimension changes, and we ask whether the heads behave the same when started from different initialisations or when a normalisation layer is added.
+CONTROLS: A comparison with projections started from two random initialisations and with a projection of the same output dimension that adds a normalisation layer, a reference run with the projection trained for twice as many rounds, the same setting repeated with the common dimension varied from thirty-two to one thousand, and transfer measured against the projection training time on one curve per user, over five seeds.
+COST: 210
+PREDICTION: Learned projections should transfer well for all users at a modest common dimension, and the heads should converge to the same alignment value from either initialisation. The design is contradicted if the two initialisations reach different accuracies for every user, or if transfer shrinks with training time under every common dimension.
 === A 6 0
 ACTION: ADD
 TITLE: Model-agnostic federated multi-task learning via joint embedding alignment
