@@ -857,7 +857,7 @@ def test_c_v4_3_controles_d_epreuve_artefacts(src_epreuve, tmp_path, cas):
         (src / "hors.txt").write_text("x", encoding="utf-8")
         _commit_source({"source": src}, "hors branche")                                       # commit local, jamais poussé ni relevé
     elif cas in ("go_de_la_course", "plafond_hors_epreuve", "mode_illisible"):
-        modifs = {"go_de_la_course": {"go_id": "GO-2026-11-02-28", "plafond_usd": 200}, "plafond_hors_epreuve": {"plafond_usd": 4.0}, "mode_illisible": {"mode": "autre"}}[cas]
+        modifs = {"go_de_la_course": {"go_id": "GO-2026-11-02-28", "plafond_usd": 1.5}, "plafond_hors_epreuve": {"plafond_usd": 4.0}, "mode_illisible": {"mode": "autre"}}[cas]
         f = src / "prereg" / "config-epreuve-x.json"
         f.write_text(json.dumps(_config_epreuve(CONFIG_E2, **modifs)), encoding="utf-8")
         _commit_source({"source": src}, cas)
@@ -878,6 +878,8 @@ def test_c_v4_3_controles_d_epreuve_artefacts(src_epreuve, tmp_path, cas):
         sup["HF_TOKEN"] = ""
     r = _controles_epreuve(src, tmp_path, tmp_path / "x", config=config, **sup)
     assert r.returncode == 2, (cas, r.stdout + r.stderr)
+    if cas == "go_de_la_course":
+        assert "ne sert que les épreuves à blanc" in r.stdout                              # refus par le GO lui-même, pas seulement par le plafond
     assert not (tmp_path / "x" / "lancement.txt").exists() or "epreuve oui" not in (tmp_path / "x" / "lancement.txt").read_text(encoding="utf-8")
 
 
@@ -935,6 +937,9 @@ def test_c_v4_3_amorce_epreuve_artefacts(bac, cas):
         sup["FIN_GO_UTC_S"] = "1794873600"                                                        # fin du GO ≠ calendrier de la configuration d'épreuve
     code, journal, sortie, racine, _ = _epreuve_amorce(bac, "ea", **sup)
     assert code == 2 and (racine / "t06-detruire").exists(), (cas, sortie[-2000:])
+    motif = {"go_de_la_course": "seul GO-2026-11-06-01 est une épreuve à blanc", "branche_calcul": "doit commencer par essai/",
+             "sans_prereg_absent": "PREREG_ABSENT=1 exigé", "reel_sans_epreuve": "n'est permis qu'en mode jouet (R1)", "go_expire": "fin du GO reçue"}[cas]
+    assert motif in sortie, (cas, sortie[-1500:])
     assert "run :" not in journal
 
 
@@ -981,3 +986,21 @@ def test_c_v4_3_registre_des_go_de_main_explicite(src_epreuve, tmp_path):
     _git(src, "fetch", "-q", "origin", "refs/heads/prep/essai-t06:refs/remotes/origin/prep/essai-t06")
     r = _controles_epreuve(src, tmp_path, tmp_path / "a3", T06_REGISTRE_GO=str(reg_main))
     assert r.returncode == 2 and "absent ou non conforme dans registres/go.md du commit" in r.stdout
+
+
+def test_c_v4_1_consignation_code_de_sortie_poussee_de_ce_qui_existe_mais_echec_de_chaine(bac):
+    """`t06-consigner.sh` (celle de la minuterie) sort en code 2 quand la poussée de ce qui existe a eu lieu mais qu'un commit a échoué,
+    en code 0 quand tout est parti (cas sain)."""
+    code, journal, sortie, racine = _lancer_amorce(bac, _distant(bac), "cs")
+    assert code == 0
+    (racine / "amorce-depot" / "diag" / "n1").mkdir()
+    (racine / "amorce-depot" / "diag" / "n1" / "a.json").write_text("{}", encoding="utf-8")
+    r = subprocess.run(["bash", str(racine / "t06-consigner.sh"), "sain"], capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stdout + r.stderr
+    (racine / "amorce-depot" / "diag" / "n2").mkdir()
+    (racine / "amorce-depot" / "diag" / "n2" / "b.json").write_text("{}", encoding="utf-8")
+    hook = racine / "amorce-depot" / ".git" / "hooks" / "pre-commit"
+    hook.write_text(HOOK_ECHEC, encoding="utf-8")
+    hook.chmod(0o755)
+    r = subprocess.run(["bash", str(racine / "t06-consigner.sh"), "artefact"], capture_output=True, text=True, timeout=120, env={**os.environ, "COMMIT_ATTENTE_S": "0"})
+    assert r.returncode == 2 and "poussée faite de ce qui existe (artefact), mais un ajout ou un commit a échoué" in r.stdout, r.stdout + r.stderr

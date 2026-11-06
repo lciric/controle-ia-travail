@@ -8,7 +8,7 @@
 #   bash scripts/epreuve_e1_t06_v4.sh DOSSIER_DE_TRAVAIL_NEUF
 # Variables : VENV (défaut : .venv du dépôt) ; TESTS_ARGS_E1 (essais joués par l'amorce avant le run, défaut : les essais de
 # configuration et de session v2, de configuration et de familles v3 et v4, rapides) ; TESTS_ATTENDUS_E1 (nombre attendu, défaut
-# 71) ; MAHALANOBIS_CALCUL_E1 (clé `mahalanobis_calcul` de la configuration jouet v5 écrite pour l'épreuve : défaut
+# 73) ; MAHALANOBIS_CALCUL_E1 (clé `mahalanobis_calcul` de la configuration jouet v5 écrite pour l'épreuve : défaut
 # « paquet_gele », ou « produit_matriciel_v2 » pour la mesure de durée de C-V3-4).
 set -euo pipefail
 W=$(realpath -m "${1:?dossier de travail neuf}")
@@ -25,7 +25,7 @@ echo "E1 : $(date -u +%FT%TZ) : dépôt source réduit sous $SRC (code v2 et v3,
 for c in src/controle_ia tests/conftest.py tests/test_t06_v2_configuration.py tests/test_t06_v2_session.py tests/test_t06_v2_lanceur_jouet.py \
          tests/test_t06_v3_configuration.py tests/test_t06_v3_familles.py tests/test_t06_v3_lanceur_jouet.py tests/test_t06_v4_configuration.py tests/test_t06_v4_familles.py scripts pyproject.toml \
          prereg/P3-consignes-v1.md prereg/P3-consignes-v1.md.sha256 docs/notes/g0-deux-semaines-v1/config-t06-jouet-v3.json docs/notes/g0-deux-semaines-v1/config-t06-jouet-v4.json docs/notes/g0-deux-semaines-v1/config-t06-jouet-v5.json \
-         docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon2.json docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon3.json docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon4.json \
+         docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon2.json docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon3.json docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon4.json docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e2-v1.json docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e3-v1.json \
          docs/sources/invites-2606.08892-v1 .claude/hooks/garde_calcul.py registres/go.md .gitignore; do
     mkdir -p "$SRC/$(dirname "$c")"; cp -r "$DEPOT/$c" "$SRC/$c"
 done
@@ -61,7 +61,7 @@ R="$W/instance"; mkdir -p "$R"
 echo "E1 : $(date -u +%FT%TZ) : amorce v4 sur l'instance simulée $R, commit $COMMIT, dépôt distant $DISTANT"
 set +e
 env -i PATH="$PATH" HOME="$W" LANG="${LANG:-C.UTF-8}" TMPDIR="${TMPDIR:-/tmp}" COMMIT="$COMMIT" MODE=jouet DEPOT_URL="$DISTANT" GH_TOKEN=jeton-factice-e1 \
-    RACINE_AMORCE="$R" VENV_EXISTANT="$VENV" PREREG_ABSENT=1 CONFIG=prereg/T0.6-config-jouet-e1.json TESTS_ATTENDUS="${TESTS_ATTENDUS_E1:-71}" \
+    RACINE_AMORCE="$R" VENV_EXISTANT="$VENV" PREREG_ABSENT=1 CONFIG=prereg/T0.6-config-jouet-e1.json TESTS_ATTENDUS="${TESTS_ATTENDUS_E1:-73}" \
     TESTS_ARGS="${TESTS_ARGS_E1:-tests/test_t06_v2_configuration.py tests/test_t06_v2_session.py tests/test_t06_v3_configuration.py tests/test_t06_v3_familles.py tests/test_t06_v4_configuration.py tests/test_t06_v4_familles.py}" AMORCE_ESSAI_LOCAL=1 \
     FIN_GO_UTC_S=1794873600 ECHEANCE_UTC_S=1794873600 DEPENSE_EPUISEE_UTC_S=1794873600 POUSSEE_ATTENTE_S=0 \
     timeout -k 10 900 nice -n 10 bash "$DEPOT/scripts/amorce_instance_t06_v4.sh" > "$W/amorce-sortie.txt" 2>&1

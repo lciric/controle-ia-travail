@@ -122,7 +122,7 @@ MUTATIONS_V4 = [
     ("C-V4-1 (amorce) : reste après le rattrapage ignoré", AM, '    if [ -n "$RESTE" ]; then pousser || true; fin_anormale', '    if false; then pousser || true; fin_anormale', T_SC, "non_rattrapable"),
     ("C-V4-1 (amorce) : fichier trop gros retiré sans fin anormale", AM, '[ ! -s "$R/t06-fichiers-trop-gros.txt" ] || {', 'true || {', T_SC, "trop_gros"),
     ("C-V4-1 (minuterie) : délai de consignation ramené à 900 s", AM, 'timeout -k 10 2400 bash "$R/t06-consigner.sh" "$1"', 'timeout -k 10 900 bash "$R/t06-consigner.sh" "$1"', T_SC, "delai_de_la_minuterie"),
-    ("C-V4-1 (consignation) : poussée perdue en cas d'échec de chaîne (code 2 → 0)", AM, 'journal "ERREUR DE CHAÎNE (C-V4-1) : poussée faite de ce qui existe ($1), mais un ajout ou un commit a échoué"; return 2; fi', 'return 0; fi', T_SC, "arret_consigne or index_lock"),
+    ("C-V4-1 (consignation) : poussée perdue en cas d'échec de chaîne (code 2 → 0)", AM, 'journal "ERREUR DE CHAÎNE (C-V4-1) : poussée faite de ce qui existe ($1), mais un ajout ou un commit a échoué"; return 2; fi', 'return 0; fi', T_SC, "code_de_sortie"),
     ("C-V4-2 (lanceur) : essai sur jetons réels sauté", LA4, '        comptes["reels"] = fv3.verifier_egalite_jetons_reels(sonde, jetons, graine=int(graine), actions_pool=len(pool))', '        comptes["reels"] = {"egal": True, "jetons": "reels", "n_jetons": 1, "ecart_relatif_max": 0.0, "actions_du_pool": len(pool)}', T_LJ, "jetons_reels_c_v4_2"),
     ("C-V4-2 (lanceur) : clé egalite_jetons_reels ignorée", LA4, 'cles_du_sous_ensemble(sous) if jetons_reels_voulus(config) else None', 'None', T_LJ, "repetition_jouet_v4 and produit_matriciel_v2-True"),
     ("C-V4-2 (lanceur) : tirage sur toutes les actions, pas sur le sous-ensemble", LA4, '        pool = [np.asarray(a["seq"]) for a in actions if a.get("cle") in cles]', '        pool = [np.asarray(a["seq"]) for a in actions]', T_LJ, "jetons_reels_c_v4_2"),
@@ -160,7 +160,7 @@ MUTATIONS_V4 = [
     ("C-V4-3 (chaîne) : essais joués non passés à l'amorce", LN, '${T06_TESTS_ARGS:+ -e TESTS_ARGS=$T06_TESTS_ARGS}', '', T_SC, "controles_creation_et_surveillance_d_epreuve"),
     ("R-1626 (chaîne) : registre de main non exigé pour une épreuve (aux contrôles)", LN, '    [ -n "${T06_REGISTRE_GO:-}" ] && [ -f "$T06_REGISTRE_GO" ] ||', '    true ||', T_SC, "registre_des_go_de_main"),
     ("R-1626 (chaîne) : registre de main non exigé à la création d'une épreuve", LN, '        [ -n "${T06_REGISTRE_GO:-}" ] || { echo "épreuve : T06_REGISTRE_GO', '        true || { echo "épreuve : T06_REGISTRE_GO', T_SC, "registre_des_go_de_main"),
-    ("R-1626 (chaîne) : registre du commit cloné non relu", LN, '"$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null && python3', '"$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null || true; python3', T_SC, "registre_des_go_de_main"),
+    ("R-1626 (chaîne) : registre du commit cloné non relu", LN, '"$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null && python3 -I -B -c "$SESSION3" go "$D/go-commit.md" "$GOC" 5 "$JOUR" >/dev/null ||', '"$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null ||', T_SC, "registre_des_go_de_main"),
     ("R-1626 (chaîne) : registre de l'arbre du script au lieu de la variable", LN, 'REG="${T06_REGISTRE_GO:-$DEPOT/registres/go.md}"', 'REG="$DEPOT/registres/go.md"', T_SC, "registre_des_go_de_main"),
     ("C-V4-3 (lanceur) : mode réel sans préenregistrement toujours admis", LA4, 'prereg is None and not est_epreuve(config):', 'prereg is None and False:', T_CF4, "r1_seule"),
     ("C-V4-3 (lanceur) : épreuve avec préenregistrement admise", LA4, '    if est_epreuve(config) and prereg is not None:', '    if False:', T_CF4, "r1_seule"),
@@ -194,12 +194,15 @@ def pytest_sur(d: Path, essai: str, k: str | None) -> tuple[int, str]:
 
 def main(argv: list[str]) -> int:
     rapide = "--rapide" in argv
+    filtre = next((a.split("=", 1)[1] for a in argv if a.startswith("--filtre=")), None)       # ne rejoue que les mutations dont le nom contient ce texte
     sortie = next((a for a in argv if a.endswith(".json")), None)
     res = []
     with tempfile.TemporaryDirectory(prefix="banc-t06-v4-") as t:
         base = Path(t) / "base"
         copier(base)
         for nom, essai, k in TEMOINS:
+            if filtre and not any(f in m[0] for m in MUTATIONS if m[4] == essai for f in filtre.split("|")):
+                continue
             if rapide and essai in (T_LJ, T_SC):
                 continue
             code, fin = pytest_sur(base, essai, k)
@@ -207,6 +210,8 @@ def main(argv: list[str]) -> int:
             res.append({"temoin": nom, "statut": statut, "fin": fin.strip().splitlines()[-1] if fin.strip() else ""})
             print(f"{statut} {nom}", flush=True)
         for nom, fichier, ancien, nouveau, essai, k in MUTATIONS:
+            if filtre and not any(f in nom for f in filtre.split("|")):
+                continue
             if rapide and essai in (T_LJ, T_SC):
                 continue
             d = Path(t) / "m"
