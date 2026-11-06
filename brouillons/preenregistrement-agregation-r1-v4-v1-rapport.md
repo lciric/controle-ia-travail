@@ -149,3 +149,19 @@ délai plus long ; seul le module neuf a été vérifié en entier.
     arbre sale ; chemin ; liste fermée altérée et incomplète ; empreinte de `scores-p3.npz` ; compagnon faux ; noms ; plafond ;
     liste fermée = modules importés). Suite du module (v1 + v2 + v3) : **41 verts** en 60 s
     (`timeout 900 nice -n 10 python -m pytest -q -p no:cacheprovider tests/test_agregation_r1_v4.py tests/test_agregation_r1_v4_v2.py tests/test_agregation_r1_v4_v3.py`).
+
+## Brouillon 4 (message de la mère de 12:36 UTC : additif de contre-lecture sur le brouillon 2, `main` efe257ac)
+
+- **Le brouillon 3 est remplacé** (il appliquait les 14 couples visant le brouillon 1 ; gardé au dépôt, R12, à ne pas sceller).
+- `brouillons/preenregistrement-agregation-r1-v4-v1-brouillon4.md` = brouillon 2 (`fb2c93ef…`)
+  + les **12 couples de l'additif** (`couples-contre-lecture-agregation-r1-v4-v1-brouillon2.json`, `eb8ff666…`, compagnon OK),
+    **tels quels, dans l'ordre, par script** (chaque « ancien » unique, vérifié avant chaque remplacement : 12 sur 12)
+  + **6 couples d'auteur A18 à A23**, appliqués après, pour le code v3 seulement :
+    `brouillons/preenregistrement-agregation-r1-v4-v1-couples-auteur-brouillon4.json` (commit et commande `analyse_v3` ;
+    déclaration de la contre-lecture lue ; Q5 ; plan 7-8 réécrits avec les gardes Q1 à Q4 et la table du code à 21 lignes au
+    commit `1fcb23d7` ; règle du plafond rattachée à `lire_hag` ; liste d'arrêt Q1 à Q4) ;
+  + **titre changé hors couples** (« brouillon 2 » → « brouillon 4 »), déclaré en tête du texte (A19) et ici.
+- Validateur : seul `<<CONTRE_LECTURE_1>>` (et l'entrée de contre-lecture qu'il remplira). La garde Q1 de `analyse_v3` passe
+  sur ce brouillon (16 fichiers, empreintes égales).
+- Code v3 (commit `1fcb23d7`) inchangé depuis le brouillon 3 : Q1 à Q4, artefacts R5 « non scellé » et « arbre sale » éprouvés ;
+  41 essais verts (v1 + v2 + v3).
