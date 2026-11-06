@@ -463,7 +463,7 @@ def _env_session(src, tmp_path, **sup):
     if not (tmp_path / "offre.json").exists():
         (tmp_path / "offre.json").write_text(json.dumps([OFFRE]), encoding="utf-8")
     env.update(sup)
-    return env
+    return {k: v for k, v in env.items() if v is not None}
 
 
 def _creer(src, tmp_path, d, *args, **sup):
@@ -799,6 +799,10 @@ def src_epreuve(depot_session):
 def _controles_epreuve(src, tmp_path, d, config="prereg/config-epreuve-e2.json", commit=None, **sup):
     sup.setdefault("T06_BRANCHE_CODE", "prep/essai-t06")
     sup.setdefault("T06_BRANCHE", "essai/t06-e2-test")
+    if sup.get("T06_REGISTRE_GO", "") is None:
+        del sup["T06_REGISTRE_GO"]
+    else:
+        sup.setdefault("T06_REGISTRE_GO", str(src / "registres" / "go.md"))               # registre de « main » (ici : celui de l'arbre d'essai)
     return subprocess.run(["bash", str(LANCEUR), "controles-epreuve", str(d), commit or _git(src, "rev-parse", "HEAD"), config],
                           env=_env_session(src, tmp_path, **sup), capture_output=True, text=True, timeout=120)
 
@@ -813,7 +817,7 @@ def test_c_v4_3_controles_creation_et_surveillance_d_epreuve(src_epreuve, tmp_pa
     lancement = (d / "lancement.txt").read_text(encoding="utf-8")
     assert "epreuve oui" in lancement and "prereg -" in lancement and "plafond 1.5" in lancement and "mode jouet" in lancement and "branche essai/t06-e2-test" in lancement
     # création : GO d'épreuve cité, plafond de la configuration, branche essai/…, variables d'épreuve passées à l'amorce
-    r = _creer(src, tmp_path, d, "9999", "course", "0", T06_BRANCHE="essai/t06-e2-test")
+    r = _creer(src, tmp_path, d, "9999", "course", "0", T06_BRANCHE="essai/t06-e2-test", T06_REGISTRE_GO=str(src / "registres" / "go.md"))
     assert r.returncode == 0, r.stdout + r.stderr
     cmd = r.stdout.splitlines()[-1]
     assert cmd.startswith(f"GO_ID={GO_E} timeout -k 10 300 vastai create instance 9999 ") and "--label t06-e2" in cmd
@@ -822,18 +826,18 @@ def test_c_v4_3_controles_creation_et_surveillance_d_epreuve(src_epreuve, tmp_pa
     assert "-e BRANCHE=essai/t06-e2-test" in cmd and "jeton-hf-factice" not in cmd and "GO-2026-11-02-28" not in cmd
     assert "plafond_creation 1.5" in (d / "lancement.txt").read_text(encoding="utf-8")
     # la dépense est bornée à 1,5 USD, pas à 200 : antérieure 1,49 (+ forfait de téléchargement 0,03) → déjà au plafond
-    r = _creer(src, tmp_path, d, "9999", "course", "1.49", T06_BRANCHE="essai/t06-e2-test")
+    r = _creer(src, tmp_path, d, "9999", "course", "1.49", T06_BRANCHE="essai/t06-e2-test", T06_REGISTRE_GO=str(src / "registres" / "go.md"))
     assert r.returncode == 3 and "déjà au plafond" in r.stdout
     # heure d'épuisement : au plafond de 1,5 USD (0,35 + 0,02 USD/h), avancée à création + 600 s par T06_EPUISEMENT_SIMULE_S
-    r = _creer(src, tmp_path, d, "9999", "course", "0", T06_BRANCHE="essai/t06-e2-test", T06_EPUISEMENT_SIMULE_S="600",
+    r = _creer(src, tmp_path, d, "9999", "course", "0", T06_BRANCHE="essai/t06-e2-test", T06_REGISTRE_GO=str(src / "registres" / "go.md"), T06_EPUISEMENT_SIMULE_S="600",
                T06_TESTS_ARGS="tests/a.py,tests/b.py", T06_TESTS_ATTENDUS="12")
     assert "-e TESTS_ATTENDUS=12 -e TESTS_ARGS=tests/a.py,tests/b.py" in r.stdout.splitlines()[-1]
     assert r.returncode == 0 and abs(int(r.stdout.splitlines()[-1].split("DEPENSE_EPUISEE_UTC_S=")[1].split()[0]) - (int(time.time()) + 600)) < 60
-    r = _creer(src, tmp_path, d, "9999", "course", "0", T06_BRANCHE="essai/t06-e2-test")
+    r = _creer(src, tmp_path, d, "9999", "course", "0", T06_BRANCHE="essai/t06-e2-test", T06_REGISTRE_GO=str(src / "registres" / "go.md"))
     reel = int(r.stdout.splitlines()[-1].split("DEPENSE_EPUISEE_UTC_S=")[1].split()[0])
     assert abs(reel - (int(time.time()) + (1.5 - 0.03) / 0.37 * 3600)) < 120                      # (1,5 − téléchargement 0,03) / (0,35 + 0,02) h
     # artefacts de création : branche calcul/… refusée ; même variable simulée hors épreuve refusée (voir la course) ; GO d'épreuve altéré
-    r = _creer(src, tmp_path, d, "9999", "course", "0", T06_BRANCHE="calcul/t06-e2-test")
+    r = _creer(src, tmp_path, d, "9999", "course", "0", T06_BRANCHE="calcul/t06-e2-test", T06_REGISTRE_GO=str(src / "registres" / "go.md"))
     assert r.returncode == 2 and "doit commencer par essai/" in r.stdout
     # surveillance : plafond de l'épreuve lu dans lancement.txt (1,5 USD), pas 200
     now = int(time.time())
@@ -943,3 +947,37 @@ def test_c_v4_3_materiel_et_virgules_des_essais_joues(bac):
     m = re.search(r"AMORCE \S+ : MATERIEL MemTotal_ko=(\d+) coeurs=(\d+) flock=(oui|non)", journal)
     assert m and int(m.group(1)) > 0 and int(m.group(2)) >= 1 and m.group(3) == "oui", journal[:1500]
     assert (racine / "pytest-args.txt").read_text().strip().endswith("--color=no tests/x.py tests/y.py")          # virgules → espaces
+
+
+def test_c_v4_3_registre_des_go_de_main_explicite(src_epreuve, tmp_path):
+    """Le registre qui fait foi est celui d'un clone de `main` (`T06_REGISTRE_GO`), pas celui de l'arbre du commit : cas sain (registre de
+    l'arbre du commit sans le GO, registre de main avec) refusé parce que l'amorce relit le registre du commit ; artefacts : variable
+    absente, GO absent du registre désigné, GO absent du registre du commit."""
+    src = src_epreuve
+    reg_main = tmp_path / "main-go.md"
+    reg_main.write_text((src / "registres" / "go.md").read_text(encoding="utf-8"), encoding="utf-8")
+    (tmp_path / "offre.json").write_text(json.dumps([OFFRE_E2]), encoding="utf-8")
+    # cas sain : registre de main désigné, GO présent des deux côtés
+    r = _controles_epreuve(src, tmp_path, tmp_path / "ok", T06_REGISTRE_GO=str(reg_main))
+    assert r.returncode == 0 and f"{GO_E} conforme" in r.stdout, r.stdout + r.stderr
+    r = _creer(src, tmp_path, tmp_path / "ok", "9999", "course", "0", T06_BRANCHE="essai/t06-e2-test", T06_REGISTRE_GO=str(reg_main))
+    assert r.returncode == 0, r.stdout + r.stderr
+    # artefact 1 : variable absente → refus (aux contrôles) ; création sans variable → refus
+    r = _controles_epreuve(src, tmp_path, tmp_path / "a1", T06_REGISTRE_GO=None)
+    assert r.returncode == 2 and "T06_REGISTRE_GO" in r.stdout
+    r = subprocess.run(["bash", str(LANCEUR), "creation", "9999", "course", "0", str(tmp_path / "ok")], env=_env_session(src, tmp_path, T06_BRANCHE="essai/t06-e2-test"),
+                       capture_output=True, text=True, timeout=120)
+    assert r.returncode == 2 and "T06_REGISTRE_GO" in r.stdout
+    # artefact 2 : GO absent du registre de main → refus
+    sans = tmp_path / "main-sans-go.md"
+    sans.write_text(reg_main.read_text(encoding="utf-8").replace(_go_epreuve(), ""), encoding="utf-8")
+    r = _controles_epreuve(src, tmp_path, tmp_path / "a2", T06_REGISTRE_GO=str(sans))
+    assert r.returncode == 2 and "absent du registre" in r.stdout
+    # artefact 3 : GO présent dans main mais absent du registre du commit cloné → refus (l'amorce le relirait)
+    reg = src / "registres" / "go.md"
+    reg.write_text(reg.read_text(encoding="utf-8").replace(_go_epreuve(), ""), encoding="utf-8")
+    _commit_source({"source": src}, "registre du commit sans le GO")
+    _git(src, "push", "-q", "origin", "HEAD:refs/heads/prep/essai-t06")
+    _git(src, "fetch", "-q", "origin", "refs/heads/prep/essai-t06:refs/remotes/origin/prep/essai-t06")
+    r = _controles_epreuve(src, tmp_path, tmp_path / "a3", T06_REGISTRE_GO=str(reg_main))
+    assert r.returncode == 2 and "absent ou non conforme dans registres/go.md du commit" in r.stdout

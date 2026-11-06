@@ -61,11 +61,13 @@ remplit le seul marqueur `<<COMMIT_EPREUVES>>`). Français, sans sigle non déve
 
 ## 4. Étapes
 
+**Registre des GO qui fait foi (R-1626).** Le registre des GO est celui de `main`, pas celui de l'arbre cloné au commit du lanceur (qui peut être antérieur au GO). Dans un second clone, à jour, de `main` (`git clone --branch main --single-branch https://github.com/lciric/controle-ia-travail.git "$W/main"`), pose `REGGO="$W/main/registres/go.md"` et vérifie qu'il contient `GO-2026-11-06-01` (`grep -c '^| GO-2026-11-06-01 ' "$REGGO"` = 1). **Toute sous-commande `controles-epreuve` et `creation` de cet ordre reçoit `T06_REGISTRE_GO="$REGGO"`** ; sans elle, `controles-epreuve` et `creation` refusent (code 2). Le registre du commit cloné doit porter le GO aussi, car l'amorce le relit sur l'instance : `controles-epreuve` le vérifie (GO absent → refus, code 2 : le commit est antérieur au GO, la mère en fournit un autre). La garde de calcul (`.claude/hooks/garde_calcul.py`) lit le registre du dépôt où elle est installée : lance les commandes `vastai create` / `vastai start` depuis le clone de `main`.
+
 Variables communes : `CFG=docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e2-v1.json` ; `T06_BRANCHE_CODE=prep/t06-lanceur-v2` ;
 E2 joue seulement les essais rapides de la v4 (`T06_TESTS_ARGS`, étape 4) ; la suite complète est jouée à E3.
 
 **Étape 1 — GO et contrôles (instance A).**
-`env -i … T06_BRANCHE_CODE=prep/t06-lanceur-v2 T06_BRANCHE=essai/t06-e2-v1-a bash scripts/lancer_t06_v4.sh controles-epreuve "$W/a" "$COMMIT" "$CFG"`
+`env -i … T06_BRANCHE_CODE=prep/t06-lanceur-v2 T06_REGISTRE_GO="$REGGO" T06_BRANCHE=essai/t06-e2-v1-a bash scripts/lancer_t06_v4.sh controles-epreuve "$W/a" "$COMMIT" "$CFG"`
 → attendu : code 0, `CONTRÔLES D'ÉPREUVE CONFORMES : S=<COMMIT> ; amorce v4 <sha256> ; GO GO-2026-11-06-01 (plafond de l'épreuve 1.5 USD sur 5) ; mode jouet ; fin_go_utc_s=1794355200 …`. Tout autre code → arrêt.
 
 **Étape 2 — GO connu des gardes.** `python3 -I -B -c "import sys; sys.path.insert(0,'src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(['go','registres/go.md','GO-2026-11-06-01','5']))"` → `GO-2026-11-06-01 conforme (plafond 5 USD, 2026-11-06 → 2026-11-10)`.
@@ -76,7 +78,7 @@ même commande avec `gpu_name=A100_SXM4 … dph_total<=1.30` (`offres-a100.json`
 Choix de l'offre de l'instance A : la moins chère de `offres-modeste.json` qui satisfait les bornes de la configuration (le script `creation` les revérifie : `offre` hors des bornes → code 3, tu prends l'offre suivante, deux refus de suite → arrêt et message).
 
 **Étape 4 — instance A : création.**
-`env -i … T06_BRANCHE=essai/t06-e2-v1-a T06_EPUISEMENT_SIMULE_S=2400 T06_TESTS_ATTENDUS=20 T06_TESTS_ARGS=tests/test_t06_v4_configuration.py,tests/test_t06_v4_familles.py,tests/test_t06_v4_extraire.py bash scripts/lancer_t06_v4.sh creation <OFFRE> course 0 "$W/a"`
+`env -i … T06_REGISTRE_GO="$REGGO" T06_BRANCHE=essai/t06-e2-v1-a T06_EPUISEMENT_SIMULE_S=2400 T06_TESTS_ATTENDUS=20 T06_TESTS_ARGS=tests/test_t06_v4_configuration.py,tests/test_t06_v4_familles.py,tests/test_t06_v4_extraire.py bash scripts/lancer_t06_v4.sh creation <OFFRE> course 0 "$W/a"`
 → attendu : `OFFRE CONFORME : id=<OFFRE> prix_carte=… prix_stockage=… …` puis « COMMANDE DE CRÉATION » : une ligne unique commençant par `GO_ID=GO-2026-11-06-01 timeout -k 10 300 vastai create instance <OFFRE> …`, qui contient `-e EPREUVE_GO_ID=GO-2026-11-06-01 -e MODE=jouet -e PREREG_ABSENT=1 -e CONFIG=docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e2-v1.json -e TESTS_ATTENDUS=20 -e TESTS_ARGS=…` et `-e BRANCHE=essai/t06-e2-v1-a`, **sans valeur de clé** (`\$HF_TOKEN`, `\$CONTROLE_IA_GITHUB_TOKEN` restent des noms). `T06_EPUISEMENT_SIMULE_S=2400` avance l'heure d'épuisement de la dépense à création + 40 minutes (E2-5, cas 2) ; la commande imprimée porte `DEPENSE_EPUISEE_UTC_S=<création + 2400 environ>`. Relève cette valeur.
 **Exécute la dernière ligne imprimée, telle quelle, une seule fois** (`bash -c '<ligne>'` sous le même `env -i … VAST_API_KEY … CONTROLE_IA_GITHUB_TOKEN …`, avec en plus `HF_TOKEN` seulement s'il est exigé : il ne l'est pas en mode jouet). La ligne appelle elle-même `lancer_t06_v4.sh apres-creation` : attendu `CRÉÉE : instance <ID> (création <s> ; sortie de vastai non affichée)`. « CRÉATION INCERTAINE » (code 4) → **aucune seconde création** ; `vastai show instances` (sans `--raw`) ; message à la mère.
 Relève l'identifiant `<ID_A>` et l'heure de création (`date -u`) dans ton compte rendu.

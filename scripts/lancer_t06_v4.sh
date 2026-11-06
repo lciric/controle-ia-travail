@@ -36,6 +36,9 @@
 #       `essai/` (jamais `calcul/`) ; `T06_EPUISEMENT_SIMULE_S` (≥ 60, épreuves seulement) avance l'heure d'épuisement de la dépense
 #       pour éprouver le redémarrage après une dépense épuisée ; `T06_TESTS_ATTENDUS` (vide à E3 : la dernière ligne est relevée) ;
 #       `T06_TESTS_ARGS` (essais joués par l'amorce, séparés par des virgules, épreuves seulement ; vide = la suite complète).
+#       Registre des GO : `T06_REGISTRE_GO` = `registres/go.md` d'un clone de `main` (qui fait foi), OBLIGATOIRE pour une épreuve (aux
+#       contrôles et à la création) ; le registre du commit cloné doit porter aussi le GO (l'amorce le relit). Sans la variable (course),
+#       le registre de l'arbre du script.
 #   bash scripts/lancer_t06_v4.sh apres-creation FICHIER CODE DOSSIER
 #   bash scripts/lancer_t06_v4.sh surveillance ID DOSSIER [FACTURE_USD]
 #       Prix, dépense antérieure, forfait de téléchargement et heure de création relus dans DOSSIER/lancement.txt ; décision
@@ -51,6 +54,7 @@ P="${T06_PREREG:-prereg/T0.6-organismes-v0-v1.md}"
 A=scripts/amorce_instance_t06_v4.sh
 BRANCHE="${T06_BRANCHE:-calcul/t06-reel-v4}"
 GO_ID=GO-2026-11-02-28
+REG="${T06_REGISTRE_GO:-$DEPOT/registres/go.md}"   # registre des GO lu par toutes les sous-commandes ; pour une épreuve : celui d'un clone de `main` (obligatoire)
 GO_EPREUVE=GO-2026-11-06-01          # C-V4-3 : épreuves à blanc E2 et E3 (5 USD cumulés ; E2 ≤ 1,5 ; E3 ≤ 3,5 ; aucune donnée décisive)
 IMAGE="${T06_IMAGE:-python:3.11-bookworm}"
 VAST="${VAST:-vastai}"
@@ -75,7 +79,7 @@ controles)
     D=$(realpath -m "${2:?dossier neuf}"); JOUR="${3:-$(date -u +%F)}"
     [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
     mkdir -p "$D"
-    python3 -I -B -c "$SESSION" go "$DEPOT/registres/go.md" "$JOUR" | tee -a "$D/lancement.txt" || { echo "GO : pas de création"; exit 2; }
+    python3 -I -B -c "$SESSION" go "$REG" "$JOUR" | tee -a "$D/lancement.txt" || { echo "GO : pas de création"; exit 2; }
     LIBRE=$(df -Pk "$D" | awk 'NR==2 {print $4}'); [ "$LIBRE" -ge 3000000 ] || { echo "place disque : $LIBRE ko libres (3 Go exigés)"; exit 2; }
     S=$(commit_s); [[ "$S" =~ ^[0-9a-f]{40}$ ]] || { echo "commit de scellement de $P introuvable"; exit 2; }
     timeout 300 git -C "$DEPOT" fetch -q origin main || { echo "fetch impossible"; exit 2; }
@@ -92,7 +96,7 @@ controles)
         [ "$(git -C "$DEPOT" show "$S:$f" | sha256sum | cut -d' ' -f1)" = "$(git -C "$DEPOT" show "$S:$f.sha256" | cut -d' ' -f1)" ] || { echo "sceau de $f non conforme à S"; exit 2; }
         [ "$cle" = "Chemin de la configuration de T0.6" ] && { git -C "$DEPOT" show "$S:$f" > "$D/config.json"; CONFIG_CHEMIN="$f"; }
     done
-    CAL=$(python3 -I -B -c "$SESSION" calendrier "$D/config.json" "$DEPOT/registres/go.md" "$JOUR") || { echo "calendrier de la configuration (L11) : $CAL : pas de création"; exit 2; }
+    CAL=$(python3 -I -B -c "$SESSION" calendrier "$D/config.json" "$REG" "$JOUR") || { echo "calendrier de la configuration (L11) : $CAL : pas de création"; exit 2; }
     git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v4 absente de S"; exit 2; }
     E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
     tr '\n' ' ' < "$D/prereg-S.md" | tr -s ' ' | grep -qF "\`$A\` (\`$E\`" || { echo "empreinte de l'amorce v4 ($E) non citée par le texte de S"; exit 2; }
@@ -104,6 +108,7 @@ controles-epreuve)
     [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
     [[ "$S" =~ ^[0-9a-f]{40}$ ]] || { echo "commit : 40 caractères hexadécimaux"; exit 2; }
     BC="${T06_BRANCHE_CODE:?T06_BRANCHE_CODE : branche prep/… du code}"
+    [ -n "${T06_REGISTRE_GO:-}" ] && [ -f "$T06_REGISTRE_GO" ] || { echo "T06_REGISTRE_GO : registres/go.md d'un clone de main exigé pour une épreuve (le registre du commit du code peut être antérieur au GO)"; exit 2; }
     case "$BC" in prep/*) ;; *) echo "T06_BRANCHE_CODE doit commencer par prep/ ($BC)"; exit 2;; esac
     mkdir -p "$D"
     git -C "$DEPOT" cat-file -e "$S^{commit}" 2>/dev/null || { echo "commit $S absent du dépôt local (git fetch origin refs/heads/$BC:refs/remotes/origin/$BC d'abord)"; exit 2; }
@@ -113,9 +118,11 @@ controles-epreuve)
     [ "$GOC" = "$GO_EPREUVE" ] || { echo "go_id de la configuration ($GOC) ≠ $GO_EPREUVE : cette sous-commande ne sert que les épreuves à blanc"; exit 2; }
     case "$PLC" in 1.5|3.5) ;; *) echo "plafond_usd $PLC : 1.5 (E2) ou 3.5 (E3) seulement"; exit 2;; esac
     case "$MODE_C" in jouet|reel) ;; *) echo "mode $MODE_C illisible"; exit 2;; esac
-    python3 -I -B -c "$SESSION3" go "$DEPOT/registres/go.md" "$GOC" 5 "$JOUR" | tee -a "$D/lancement.txt" || { echo "GO : pas de création"; exit 2; }
+    python3 -I -B -c "$SESSION3" go "$REG" "$GOC" 5 "$JOUR" | tee -a "$D/lancement.txt" || { echo "GO : pas de création"; exit 2; }
+    # l'amorce relit le registre DU COMMIT cloné : le GO doit y figurer aussi (sinon elle refuserait sur l'instance)
+    git -C "$DEPOT" show "$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null && python3 -I -B -c "$SESSION3" go "$D/go-commit.md" "$GOC" 5 "$JOUR" >/dev/null || { echo "GO $GOC absent ou non conforme dans registres/go.md du commit $S (l'amorce le relit) : commit postérieur au GO exigé"; exit 2; }
     LIBRE=$(df -Pk "$D" | awk 'NR==2 {print $4}'); [ "$LIBRE" -ge 3000000 ] || { echo "place disque : $LIBRE ko libres (3 Go exigés)"; exit 2; }
-    CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$DEPOT/registres/go.md" "$GOC" 5 "$JOUR") || { echo "calendrier de la configuration : $CAL : pas de création"; exit 2; }
+    CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$REG" "$GOC" 5 "$JOUR") || { echo "calendrier de la configuration : $CAL : pas de création"; exit 2; }
     git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v4 absente de $S"; exit 2; }
     E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
     if [ "$MODE_C" = reel ]; then [ -n "${HF_TOKEN:-}" ] || { echo "HF_TOKEN absent (mode réel) : pas de création"; exit 2; }; fi
@@ -132,6 +139,7 @@ creation)
     EPR=non; [ "$(champ epreuve "$D/lancement.txt")" = oui ] && EPR=oui
     GOC=$(cle_config "$D/config.json" go_id) && PLC=$(cle_config "$D/config.json" plafond_usd) && MODE_C=$(cle_config "$D/config.json" mode) || { echo "go_id, plafond_usd ou mode illisibles"; exit 2; }
     if [ "$EPR" = oui ]; then
+        [ -n "${T06_REGISTRE_GO:-}" ] || { echo "épreuve : T06_REGISTRE_GO (registres/go.md d'un clone de main) exigé"; exit 2; }
         [ "$GOC" = "$GO_EPREUVE" ] && [ "$(champ go "$D/lancement.txt")" = "$GO_EPREUVE" ] && [ "$(champ plafond "$D/lancement.txt")" = "$PLC" ] || { echo "épreuve : GO ou plafond de la configuration ≠ ceux des contrôles"; exit 2; }
         case "$BRANCHE" in essai/*) ;; *) echo "épreuve : la branche poussée doit commencer par essai/ ($BRANCHE) : jamais calcul/"; exit 2;; esac
         PGO=5
@@ -141,10 +149,10 @@ creation)
         [ -z "${T06_EPUISEMENT_SIMULE_S:-}" ] || { echo "T06_EPUISEMENT_SIMULE_S : réservé aux épreuves à blanc"; exit 2; }
         PGO=200
     fi
-    CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$DEPOT/registres/go.md" "$GOC" "$PGO") || { echo "calendrier (L11) au jour de la création : $CAL : nœud, pas de création"; exit 3; }
+    CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$REG" "$GOC" "$PGO") || { echo "calendrier (L11) au jour de la création : $CAL : nœud, pas de création"; exit 3; }
     FIN_GO=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p'); [ -n "$ECH" ] || ECH="$FIN_GO"
     [[ "$ECH" =~ ^[0-9]+$ ]] && [ "$ECH" -le "$FIN_GO" ] && [ "$ECH" -gt "$(date +%s)" ] || { echo "échéance $ECH hors de ]maintenant, fin du GO $FIN_GO]"; exit 2; }
-    python3 -I -B -c "$SESSION3" go "$DEPOT/registres/go.md" "$GOC" "$PGO" >/dev/null || { echo "GO non conforme au jour de la création"; exit 2; }
+    python3 -I -B -c "$SESSION3" go "$REG" "$GOC" "$PGO" >/dev/null || { echo "GO non conforme au jour de la création"; exit 2; }
     [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ] && { [ -n "${HF_TOKEN:-}" ] || [ "$MODE_C" = jouet ]; } || { echo "jeton absent : pas de création"; exit 2; }
     command -v "$VAST" >/dev/null || { echo "outil de location introuvable : offre non relue, pas de création"; exit 2; }
     DISQUE=$(cle_config "$D/config.json" offre.disque_min_go) || { echo "disque illisible"; exit 2; }
