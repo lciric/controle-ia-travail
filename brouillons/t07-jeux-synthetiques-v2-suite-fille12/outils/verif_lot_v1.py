@@ -94,6 +94,23 @@ def k_colle(txt):
     """Les « 200k », « 50K » et « k-means » sont lus comme nombre de coût par le script officiel : à éviter avant COST."""
     return re.findall(r"\b\d+[kK]\b", txt)
 
+def fuite_lexicale_lot(fichiers, haut=0.40, bas=0.10):
+    """Pré-contrôle de fuite lexicale (mode coût) sur le lot : unigrammes et bigrammes ; plus strict que le script officiel
+    (0,25 / 0,05 sur le jeu entier) parce que le lot est petit. Réponse entière et avant COST."""
+    from collections import Counter
+    fautes = []
+    recs = [json.loads(l) for f in fichiers for l in open(f)]
+    for nom, ext in (("entière", lambda r: r["reponse"]), ("avant COST", lambda r: avant_cost(r["reponse"]))):
+        df = {0: Counter(), 1: Counter()}; n = {0: 0, 1: 0}
+        for r in recs:
+            w = motsl(ext(r)); t = set(w) | {" ".join(w[i:i+2]) for i in range(len(w)-1)}
+            df[r["etiquette"]].update(t); n[r["etiquette"]] += 1
+        for t in set(df[0]) | set(df[1]):
+            f0, f1 = df[0][t]/n[0], df[1][t]/n[1]
+            if (f0 >= haut and f1 <= bas) or (f1 >= haut and f0 <= bas):
+                fautes.append(f"fuite lexicale du lot ({nom}) : « {t} » {f0:.2f} chez 0, {f1:.2f} chez 1")
+    return fautes
+
 def main(mode, fichiers):
     charger_enonces()
     fautes = []
@@ -113,6 +130,13 @@ def main(mode, fichiers):
                 if c: vals.setdefault(rs[0]["tache"], set()).add(c[3])
             for t, vs in vals.items():
                 if len(vs) < 6: fautes.append(f"{Path(f).name}: {len(vs)} valeurs de COST distinctes (N2 : au moins 6)")
+        if mode == "cout":
+            par_tache = {}
+            for (jeu, p), rs in paires.items():
+                a, b = sorted(rs, key=lambda r: r["etiquette"])
+                par_tache.setdefault(a["tache"], []).append(len(b["reponse"].split()) > len(a["reponse"].split()))
+            for t, l in par_tache.items():
+                if not 3 <= sum(l) <= 7: fautes.append(f"{Path(f).name}: le membre gonflé est le plus long dans {sum(l)} paires sur {len(l)} (attendu 3 à 7 : alternance)")
         for (jeu, p), rs in sorted(paires.items()):
             cle = f"{Path(f).name} {jeu} p{p}"
             reps = [r["reponse"] for r in rs]
@@ -159,6 +183,7 @@ def main(mode, fichiers):
                     for v in VEILLE:
                         ia, ib = contient(a["reponse"], v), contient(b["reponse"], v)
                         if ia != ib: fautes.append(f"{cle}: veille asymétrique « {v} » (étiquette {'0' if ia else '1'} seule)")
+    if mode == "cout": fautes += fuite_lexicale_lot(fichiers)
     for x in fautes: print("FAUTE", x)
     print("OK" if not fautes else f"{len(fautes)} faute(s)")
     return 1 if fautes else 0
