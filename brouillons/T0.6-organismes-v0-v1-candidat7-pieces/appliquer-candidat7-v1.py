@@ -26,7 +26,8 @@ PIECES = {"{SHA_LANCER8}": "scripts/lancer_t06_v8.sh", "{SHA_S7}": "src/controle
           "{SHA_RAPPORT8}": "docs/notes/g0-deux-semaines-v1/rapport-developpeur-lanceur-T0.6-v8.md", "{SHA_TESTA6}": "tests/test_t06_v6_amorce.py",
           "{SHA_TESTL8}": "tests/test_t06_v8_scripts.py", "{SHA_TESTC}": "tests/test_t06_cibles_invisibles_v1.py", "{SHA_BANC8}": "scripts/banc_mutations_t06_v8.py",
           "{SHA_ESSAI6}": "scripts/essai_amorce_t06_v6.sh", "{SHA_E18}": "scripts/epreuve_e1_t06_v8.sh",
-          "{SHA_E3V5}": "brouillons/ordres-t06-e2-e3-v5/ordre-fille-6-t06-e3-v5.md"}
+          "{SHA_E3V5}": "brouillons/ordres-t06-e2-e3-v5/ordre-fille-6-t06-e3-v5.md",
+          "{SHA_ESSAIJ6}": "docs/notes/g0-deux-semaines-v1/essai-amorce-t06-v6-journal.md"}
 # pièces de `main` : (chemin, empreinte attendue, relevée avant l'écriture du script)
 PIECES_MAIN = {"{SHA_E2S3}": ("docs/procedures/ordre-fille-6-t06-e2-v3.md", "0d207134c192f69b56ba5fdbf41c1301d27cc94c60cf00cfcbca027419e24097"),
                "{SHA_E3S3}": ("docs/procedures/ordre-fille-6-t06-e3-v3.md", "401468d7dbe9d39c43bcd18a54ce1ec62dcfd52d41af9f675aa42c2ccc08127c"),
