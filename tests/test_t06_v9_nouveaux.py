@@ -210,7 +210,7 @@ def test_generateur_de_l_ordre_e3_v6_part_de_l_ordre_scelle_en_vigueur():
     gen = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(gen)
     f = gen.filtres(RACINE)["a100"]
-    ref = subprocess.run(["git", "-C", str(RACINE), "cat-file", "-e", "refs/remotes/origin/main"], capture_output=True).returncode == 0
+    ref = subprocess.run(["git", "-C", str(RACINE), "cat-file", "-e", "refs/remotes/origin/main:docs/procedures/ordre-fille-6-t06-e3-v5.md"], capture_output=True).returncode == 0     # l'ordre scellé doit être lisible, pas seulement la référence
     if ref:
         t, j, h = gen.e3_v6(RACINE)
         assert h.startswith("db0ad520")
