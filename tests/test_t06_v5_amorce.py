@@ -895,7 +895,7 @@ def _ajouter_arbre_lourd(bac):
                    "registres/etat.md", "pyproject.toml", "requirements-gpu.txt"):
         f = src / chemin
         f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text("x" * 1000, encoding="utf-8")
+        f.write_text(chemin + "\n" + "x" * 1000, encoding="utf-8")      # contenus distincts : un blob par fichier
     _commit_source(bac, "arbre avec dossiers lourds")
 
 
@@ -903,7 +903,7 @@ def test_clonage_reduit_extraction_partielle_ligne_de_debit_et_chemins(bac):
     """Cas sain : seuls les chemins de la liste sont extraits (dossiers lourds absents), la ligne CLONAGE donne secondes, octets, débit, motifs."""
     _ajouter_arbre_lourd(bac)
     distant = _distant_filtrant(bac)
-    code, journal, sortie, racine = _lancer_amorce(bac, distant)
+    code, journal, sortie, racine = _lancer_amorce(bac, distant, env_sup={"DEPOT_URL": f"file://{distant}"})        # file:// : le filtre de blobs est honoré
     assert code == 0, sortie[-2500:]
     m = re.search(r"AMORCE \S+ : CLONAGE mode=jouet secondes=(\d+) octets_git=(\d+) octets_arbre=(\d+) debit_Mo_s=(\d+\.\d\d) motifs=(\d+)", sortie)
     assert m and int(m.group(1)) >= 1 and int(m.group(2)) > 0 and int(m.group(3)) > 0 and int(m.group(5)) >= 20, sortie[:1500]

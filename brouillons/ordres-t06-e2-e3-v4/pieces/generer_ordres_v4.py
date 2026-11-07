@@ -8,12 +8,12 @@ Aucun .sha256 (la mère scelle) ; seul marqueur : <<COMMIT_EPREUVES>>.
 import hashlib, json, pathlib, re, subprocess, sys
 
 NOTES = "docs/notes/g0-deux-semaines-v1/"
-CFG_E2, CFG_E3 = NOTES + "config-t06-epreuve-e2-v1.json", NOTES + "config-t06-epreuve-e3-v1.json"
+CFG_E2, CFG_E3 = NOTES + "config-t06-epreuve-e2-v2.json", NOTES + "config-t06-epreuve-e3-v2.json"      # R-1670 : bornes de stockage 0,08 USD/h (la mère)
 SCELLES = {"e2": ("docs/procedures/ordre-fille-6-t06-e2-v1.md", "8ad0ca95f9820381ffd7bbb3760b0365aac7b93d762c104171864a93ba2c8405"),
            "e3": ("docs/procedures/ordre-fille-6-t06-e3-v1.md", "97a45a31db4f18e38932fa1d41540df12421ecebb460e69ac2b40cd379e54c92")}
 COMMIT_V3 = "74f59b28418a4f19dcea5d70b0c5f2c922a301fb"
-CLONAGE_E2 = "`AMORCE … : CLONAGE mode=jouet secondes=<s> octets_git=<n> octets_arbre=<n> debit_Mo_s=<x> motifs=24`"
-CLONAGE_E3 = "`AMORCE … : CLONAGE mode=reel secondes=<s> octets_git=<n> octets_arbre=<n> debit_Mo_s=<x> motifs=24`"
+CLONAGE_E2 = "`AMORCE … : CLONAGE mode=jouet secondes=<s> octets_git=<n> octets_arbre=<n> debit_Mo_s=<x> motifs=27`"
+CLONAGE_E3 = "`AMORCE … : CLONAGE mode=reel secondes=<s> octets_git=<n> octets_arbre=<n> debit_Mo_s=<x> motifs=27`"
 
 
 def _appliquer(t, ancien, nouveau, nom, journal):
@@ -51,6 +51,8 @@ def commun(t, nom, f, j):
          "remplit le seul marqueur `<<COMMIT_EPREUVES>>`" + ("" if nom == "e2" else ", **le même commit qu'à l'ordre d'E2**") + "). ")
     t = _appliquer(t, a, n, f"{nom} présentation", j)
     t = t.replace(COMMIT_V3, "<<COMMIT_EPREUVES>>")
+    t = t.replace("config-t06-epreuve-e2-v1.json", "config-t06-epreuve-e2-v2.json").replace("config-t06-epreuve-e3-v1.json", "config-t06-epreuve-e3-v2.json")      # R-1670
+    t = t.replace("essai/t06-e2-v1", "essai/t06-e2-v2").replace("essai/t06-e3-v1", "essai/t06-e3-v2")      # branches neuves : jamais celles d'une tentative antérieure (R12)
     t = t.replace("lancer_t06_v6.sh", "lancer_t06_v7.sh").replace("lanceur de T0.6 v6", "lanceur de T0.6 v7").replace("lanceur v6", "lanceur v7")
     t = t.replace("amorce v4 <sha256>", "amorce v5 <sha256>").replace("session_v5", "session_v6")
     # filtres de lecture = filtres du lanceur v7 (inet_down>=500 compris)

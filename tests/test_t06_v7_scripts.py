@@ -14,7 +14,7 @@ import pytest
 from controle_ia.gardes import GardeArret  # noqa: F401
 from controle_ia.t06 import session_v6 as s4
 from controle_ia.t06.session import GardeSession
-from test_t06_v4_scripts import (CONFIG_E2, DF_FACTICE, ENV_DE_BASE, GO_E, OFFRE_E2, RACINE, _commit_source, _config_epreuve, _git,  # noqa: F401
+from test_t06_v5_amorce import (CONFIG_E2, DF_FACTICE, ENV_DE_BASE, GO_E, OFFRE_E2, RACINE, _commit_source, _config_epreuve, _git,  # noqa: F401
                                  bac, depot_session, src_epreuve)
 
 LANCEUR5 = RACINE / "scripts" / "lancer_t06_v7.sh"

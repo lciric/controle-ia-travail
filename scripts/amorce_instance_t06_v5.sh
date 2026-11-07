@@ -230,7 +230,8 @@ echo "AMORCE $(date -u +%FT%TZ) : commit $COMMIT"
 #  - registre des GO lu par l'amorce et par les essais : /registres/*.md (jamais /registres/passations/, 191 Mo) ;
 #  - ce que lisent les essais de la suite complète (chemins relevés par recherche dans tests/ src/ scripts/ et confirmés par l'essai de
 #    la suite complète sur un clone réduit) : /diag/ /runs/ /traces/ /docs/*.md /docs/*.txt /docs/*.sha256 /docs/procedures/ /docs/decisions/
-#    /docs/verdicts/ /docs/etat-de-l-art/ et les petits dossiers de /docs/sources/ cités par les essais ;
+#    /docs/verdicts/ /docs/etat-de-l-art/, les petits dossiers de /docs/sources/ cités par les essais, et les trois dossiers d'ordres d'épreuve
+#    /brouillons/ordres-t06-e2-e3-v{2,3,4}/ (les essais v6 et v7 comparent les filtres des ordres à ceux du lanceur ; quelques Ko) ;
 #  - exclus : /docs/sources/pdf/ (1,85 Go de PDF de tiers) et le reste de /docs/sources/, /registres/passations/, /brouillons/, /livrables/, /gemini/, /papiers/.
 CHEMINS_CLONAGE='/.claude/
 /src/
@@ -255,7 +256,10 @@ CHEMINS_CLONAGE='/.claude/
 /docs/sources/invites-2606.07054-v1/
 /docs/sources/invites-2606.08892-v1/
 /docs/sources/cartes-modeles-20261006/
-/docs/sources/donnees-T0.7/'
+/docs/sources/donnees-T0.7/
+/brouillons/ordres-t06-e2-e3-v2/
+/brouillons/ordres-t06-e2-e3-v3/
+/brouillons/ordres-t06-e2-e3-v4/'
 T_CLONE0=$(date +%s)
 timeout -k 10 900 git -c credential.helper="$AIDE" clone -q --filter=blob:none --no-checkout "$DEPOT_URL" "$R/amorce-depot" || refus "clonage impossible (jeton GitHub ?)"
 git -C "$R/amorce-depot" config credential.helper "$AIDE"

@@ -22,7 +22,7 @@ COPIES = ("src/controle_ia", "tests", "scripts", "pyproject.toml", "prereg/P3-co
           "docs/notes/g0-deux-semaines-v1/config-t06-jouet-v4.json", "docs/notes/g0-deux-semaines-v1/config-t06-jouet-v5.json",
           "docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon2.json", "docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon3.json",
           "docs/notes/g0-deux-semaines-v1/config-t06-reel-v1-brouillon4.json",
-          "docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e2-v1.json", "docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e3-v1.json", ".claude/hooks/garde_calcul.py", "docs/sources/invites-2606.08892-v1", "brouillons/ordres-t06-e2-e3-v4")
+          "docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e2-v1.json", "docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e3-v1.json", "docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e2-v2.json", "docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e3-v2.json", ".claude/hooks/garde_calcul.py", "docs/sources/invites-2606.08892-v1", "brouillons/ordres-t06-e2-e3-v4")
 T_CF, T_SE = "tests/test_t06_v2_configuration.py", "tests/test_t06_v2_session.py"
 T_CF3, T_FA, T_LJ, T_SC = ("tests/test_t06_v3_configuration.py", "tests/test_t06_v3_familles.py", "tests/test_t06_v4_lanceur_jouet.py",
                            "tests/test_t06_v4_scripts.py")
@@ -54,7 +54,7 @@ MUTATIONS_V7 = [
     ("C-V5-1 (session) : liste vide non signalée", S4, '    if not offres:\n        raise GardeSession("recherche filtrée : liste VIDE', '    if False:\n        raise GardeSession("recherche filtrée : liste VIDE', T5, "session_v6"),
     ("C-V5-1 (session) : prix maximal absent du filtre", S4, "f\"disk_space>={b['disque_min_go']} dph_total<={c['prix_max_usd_h']}\"", "f\"disk_space>={b['disque_min_go']}\"", T5, "session_v6"),
     ("C-V5-1 (session) : bornes de l'offre non vérifiées", S4, 'r = s2.verifier_offre([o], config, carte)', 'r = {"id": int(o["id"]), "prix_carte": float(o["dph_total"]), "prix_stockage": 0.0, "telechargement": 0.0, "telechargement_forfait_usd": 0.0, "carte": "x", "machine_id": o.get("machine_id")}', T5, "session_v6"),
-    ("R-1660 (session) : fiabilité absente du filtre de création", S4, "rentable=true gpu_name={nom} reliability>={FIABILITE_MIN_OFFRE} cpu_ram>=", "rentable=true gpu_name={nom} cpu_ram>=", T5, "filtre"),
+    ("R-1660 (session) : fiabilité absente du filtre de création", S4, " reliability>={FIABILITE_MIN_OFFRE} inet_down>=", " inet_down>=", T5, "filtre"),
     ("R-1660 (session) : seuil de fiabilité abaissé", S4, "FIABILITE_MIN_OFFRE = 0.98", "FIABILITE_MIN_OFFRE = 0.9", T5, "filtre"),
     ("R-1660 (ordres) : filtre de lecture de l'ordre d'E2 non lu dans le lanceur", GEN3, "\"modeste\": session_v6.filtre_recherche(c2, \"course\")", "\"modeste\": \"num_gpus=1 gpu_name=RTX_4090 rentable=true reliability>=0.98 cpu_cores_effective>=8 cpu_ram>=32 disk_space>=150 dph_total<=0.45\"", T5, "lecture_des_ordres"),
     ("R-1660 (ordres) : filtre d'E3 lu sans la fiabilité", GEN3, "\"a100\": session_v6.filtre_recherche(c3, \"course\")", "\"a100\": session_v6.filtre_recherche(c3, \"course\").replace(\" reliability>=0.98\", \"\")", T5, "lecture_des_ordres"),
