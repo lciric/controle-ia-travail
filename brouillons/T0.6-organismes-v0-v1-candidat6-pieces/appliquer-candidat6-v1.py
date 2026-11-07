@@ -25,7 +25,8 @@ PIECES = {"{SHA_AMORCE5}": "scripts/amorce_instance_t06_v5.sh", "{SHA_LANCER7}":
           "{SHA_RAPPORT7}": "docs/notes/g0-deux-semaines-v1/rapport-developpeur-lanceur-T0.6-v7.md", "{SHA_TESTA}": "tests/test_t06_v5_amorce.py",
           "{SHA_TESTL}": "tests/test_t06_v7_scripts.py", "{SHA_BANC7}": "scripts/banc_mutations_t06_v7.py", "{SHA_ESSAI}": "scripts/essai_amorce_t06_v5.sh",
           "{SHA_E17}": "scripts/epreuve_e1_t06_v7.sh", "{SHA_E2V4}": "brouillons/ordres-t06-e2-e3-v4/ordre-fille-6-t06-e2-v4.md",
-          "{SHA_E3V4}": "brouillons/ordres-t06-e2-e3-v4/ordre-fille-6-t06-e3-v4.md"}
+          "{SHA_E3V4}": "brouillons/ordres-t06-e2-e3-v4/ordre-fille-6-t06-e3-v4.md",
+          "{SHA_TESTC}": "tests/test_t06_cibles_invisibles_v1.py", "{SHA_ESSAIJ}": "docs/notes/g0-deux-semaines-v1/essai-amorce-t06-v5-journal.md"}
 
 
 def sha(p) -> str:
