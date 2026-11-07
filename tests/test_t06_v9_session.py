@@ -160,3 +160,14 @@ def test_relance_carte_a100_refusee_par_la_garde_locale():
     a100 = {**REEL_H200, "id": 9003, "machine_id": 33, "gpu_name": "A100 SXM4", "gpu_ram": 81920, "dph_total": 1.2}
     with pytest.raises(GardeSession):
         s8.choisir_offre([a100], _cfg("config-t06-epreuve-e3-v3.json"), "relance")
+
+
+def test_relance_la_garde_locale_refuse_sous_140000_mo_bruts_et_accepte_au_dessus():
+    """Le 136 Go de la clause (140000 // 1024) est plus indulgent que la borne : `verifier_offre` garde les 140000 Mo bruts (R-1700)."""
+    c = _cfg("config-t06-epreuve-e3-v3.json")
+    for ram in (139999, 139500, 81920):
+        with pytest.raises(GardeSession, match=r"mémoire de carte .* < 140000 Mo"):
+            s8.choisir_offre([{**REEL_H200, "gpu_ram": ram}], c, "relance")
+    assert 139500 / 1024 >= 136                                                      # ces offres passeraient la clause envoyée à Vast : seule la garde locale les arrête
+    for ram in (140000, 143771):
+        assert s8.choisir_offre([{**REEL_H200, "gpu_ram": ram}], c, "relance")["id"] == 9001
