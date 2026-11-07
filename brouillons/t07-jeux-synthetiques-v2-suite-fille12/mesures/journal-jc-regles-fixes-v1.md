@@ -42,3 +42,9 @@ Sortie de `verif_lot_v1.py cout` sur r00–r05 : OK
 - **Règle fixe ajoutée** : N3 étendue aux unités matérielles (A100, H100, V100, H200, A6000, L40, B200, TPU) : un nombre (chiffres ou lettres) à quatre mots d'une telle unité avant COST est une faute (le script officiel la lit comme nombre de coût). Appliquée à toutes les tâches de J-C ; rejouée sur r00–r09 (OK sauf r06 avant renvoi).
 - **Renvoi** (au plus un par tâche) : r06 (2510.26843v1) — pré-contrôle N3 matériel : 18 fautes sur les 10 paires (« one A100 », « 1 A100 »…), **réécrit une fois** (les mentions remplacées par « a single accelerator »), pré-contrôle OK ensuite. Déclenché par le pré-contrôle seul.
 - **Jalon de 8 tâches (r00–r07), script officiel, aire sac de mots** : **0,855** (réponse entière) / **0,864** (avant COST) ; contrôle 10 : OK (défauts de fréquence documentaire : 0) ; seuls défauts : 3 écarts en jetons (tokeniseur factice, non opposables). Journal : `journal-jc-jalon-8-v1.txt`. Aucune décision n'a été prise sur cette valeur.
+
+## 6. Mise à jour (jalon de 16 tâches, r00–r15)
+
+- **Jalon de 16 tâches, script officiel** : aire sac de mots **0,858** (réponse entière) / **0,846** (avant COST) ; contrôle 10 : OK ; défaut dur unique hors jetons : contrôle 9, **r12 (2511.04675v2) paire 4, les deux membres : suite de 8 mots de l'énoncé** (la normalisation du script sépare les traits d'union : « text-to-image text-to-video image-to-video »). 3 écarts en jetons (factices). Journal : `journal-jc-jalon-16-v1.txt`.
+- **Règle fixe alignée** : le pré-contrôle des 8 mots de l'énoncé utilise désormais la normalisation du script officiel (traits d'union = séparateurs) ; il n'avait pas vu ce cas. Rejouée sur r00–r15 : seule r12 p4 en faute ; sur les 30 tâches de J-D et J-A : aucune faute.
+- **Renvoi** (au plus un par tâche) : r12, pré-contrôle « 8 mots de l'énoncé », paire 4 — un renvoi, déclenché par ce pré-contrôle (défaut dur du script officiel), pas par l'aire.

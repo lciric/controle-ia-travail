@@ -83,11 +83,14 @@ def nombre_de_cout(txt):
     return None
 
 ENONCES = {}
+def mots_script(t):
+    """Même normalisation que le script officiel (les traits d'union séparent les mots)."""
+    return re.findall(r"[0-9a-z]+", "".join(c for c in unicodedata.normalize("NFKD", t) if not unicodedata.combining(c)).lower())
 def charger_enonces():
     for l in open(RACINE/"brouillons/t07-jeux-synthetiques-v2-brouillon1/enonces-reserve-projection-ecrivain.jsonl"):
-        d = json.loads(l); ENONCES[d["identifiant"]] = motsl(d["questions"])
+        d = json.loads(l); ENONCES[d["identifiant"]] = mots_script(d["questions"])
 def huit_mots(rep, tache):
-    w = motsl(rep); E = ENONCES.get(tache, [])
+    w = mots_script(rep); E = ENONCES.get(tache, [])
     grams = {tuple(E[i:i+8]) for i in range(len(E)-7)}
     return any(tuple(w[i:i+8]) in grams for i in range(len(w)-7))
 def k_colle(txt):
