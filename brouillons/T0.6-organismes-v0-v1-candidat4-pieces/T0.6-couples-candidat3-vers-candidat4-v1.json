@@ -1,0 +1,65 @@
+{
+ "objet": "couples du candidat 3 au candidat 4 de T0.6 (R-1660 : lanceur v6, creation auto)",
+ "couples": [
+  {
+   "id": "K1",
+   "quoi": "titre",
+   "ancien": "# Préenregistrement — T0.6 organismes v0 : organisme (ii) par adaptateur de rang faible à dose réglable, courbe dose–réponse et test croisé d'étiologie (critères 2 et 3 de G0) — v1 — candidat 3",
+   "nouveau": "# Préenregistrement — T0.6 organismes v0 : organisme (ii) par adaptateur de rang faible à dose réglable, courbe dose–réponse et test croisé d'étiologie (critères 2 et 3 de G0) — v1 — candidat 4"
+  },
+  {
+   "id": "K2",
+   "quoi": "statut : le candidat 4 devant le candidat 3",
+   "ancien": "- Statut : **candidat 3**, écrit le 2026-11-07 à partir de 09:33 UTC",
+   "nouveau": "- Statut : **candidat 4**, écrit le {DATE_C4} à partir de {HEURE_C4} UTC (heure relevée par `date -u`) par la fille 10 (session de développement, Claude Sonnet 5.5, ordre de la session mère du 7 novembre, R-1660), qui n'a écrit ni le candidat 1, ni les brouillons 1 à 5, ni la conception, ni P3. **Non scellé, non contre-lu** : la contre-lecture R2 (fille 9, sous-agent neuf) portera d'un seul tenant sur le lanceur v6, les ordres d'épreuve v3 et ce candidat 4. **Candidat 4 = candidat 3 (`{SHA_C3}`, empreinte vérifiée avant tout) + dix couples** (lanceur v6 : la création choisit l'offre elle-même, `creation auto`, et filtre la fiabilité comme la lecture ; point 11 de la table des changements), appliqués dans l'ordre par script (`brouillons/T0.6-organismes-v0-v1-candidat4-pieces/appliquer-candidat4-v1.py`), journal à côté ; **les cinq marqueurs restent**.\n- Statut antérieur : **candidat 3**, écrit le 2026-11-07 à partir de 09:33 UTC"
+  },
+  {
+   "id": "K3",
+   "quoi": "point 11 de la table des changements",
+   "ancien": "(96 tâches sur 96 égales entre IA, IT et IM) cités.\n",
+   "nouveau": "(96 tâches sur 96 égales entre IA, IT et IM) cités.\n  11. **Ce que le candidat 4 change** ({DATE_C4}, {HEURE_C4} UTC ; source : registre des décisions R-1660, décision de la session mère du 7 novembre : la création filtre exactement comme la lecture) :\n      - **lanceur v6** (`scripts/lancer_t06_v6.sh`, `{SHA_LANCER6}`) à la place du lanceur v4 comme point d'entrée (contrôles, création, après-création, surveillance, `controles-epreuve`) ; l'amorce reste `scripts/amorce_instance_t06_v4.sh` (inchangée) ; modules `session_v4.py` (`{SHA_S4}`) et `session_v5.py` (`{SHA_S5}`) sous `src/controle_ia/t06/` ;\n      - **création** — le premier argument de `creation` n'est plus un identifiant d'offre mais le mot `auto` : `creation auto <CARTE> <DEPENSE_ANTERIEURE_USD> <DOSSIER> [ECHEANCE_UTC_S]`. Sous vastai 1.8.3, la relecture d'une offre par son identifiant rend une liste vide et l'identifiant d'une offre change d'une recherche à l'autre (R-577, R-578) : le lanceur lance lui-même la recherche filtrée (`-o dph_total --storage <disque> --raw`, filtre tiré de la configuration, **`reliability>=0.98` compris**, R-1660), prend la première offre conforme, la crée aussitôt et lit les prix dans cette liste. Offre retirée à la création (refus explicite, aucune instance du programme à l'inventaire) : code 5, machine exclue, rang suivant par la même commande ; **trois rangs au plus**, puis code 3 ; instance présente ou résultat ambigu : « CRÉATION INCERTAINE » (code 4), jamais de seconde création ;\n      - **surveillance** — `HF_TOKEN` n'est exigé qu'en mode réel ; texte du seuil de dépense : « dépense cumulée ≥ plafond de la configuration » ;\n      - **pièces** — rapport additif `docs/notes/g0-deux-semaines-v1/rapport-developpeur-lanceur-T0.6-v6.md` (`{SHA_RAPPORT6}`) ; banc de mutations `scripts/banc_mutations_t06_v6.py` (`{SHA_BANC6}`), 18 mutations tuées sur 18 ; essai `tests/test_t06_v6_scripts.py` (`{SHA_TEST6}`) ; répétition `scripts/epreuve_e1_t06_v6.sh` (`{SHA_E16}`) ; ordres d'épreuve v3 (`brouillons/ordres-t06-e2-e3-v3/ordre-fille-6-t06-e2-v3.md`, `{SHA_E2V3}` ; `…-e3-v3.md`, `{SHA_E3V3}`) ;\n      - **ce que le candidat 4 ne change pas** — aucune hypothèse, aucun seuil, aucune prédiction, aucune section « Hypothèses » à « Liste d'arrêt » ; les cinq marqueurs restants (`COMMIT_CODE_T06`, `EMPREINTES_CODE_T06`, `EMPREINTE_AMORCE_T06`, `TESTS_ATTENDUS_T06`, `VALEURS_CITEES_T06`) ; le lanceur v4, la v5 et leurs rapports restent tels quels (R12).\n"
+  },
+  {
+   "id": "K4",
+   "quoi": "ligne 611 : lanceur v6",
+   "ancien": "`scripts/lancer_t06_v4.sh` (empreinte `<<EMPREINTES_CODE_T06>>`)",
+   "nouveau": "`scripts/lancer_t06_v6.sh` (empreinte `<<EMPREINTES_CODE_T06>>`)"
+  },
+  {
+   "id": "K5",
+   "quoi": "lancement : controles et creation auto",
+   "ancien": "`bash scripts/lancer_t06_v4.sh controles <DOSSIER_NEUF> [JOUR]` ; `bash scripts/lancer_t06_v4.sh creation <OFFRE> <CARTE> <DEPENSE_ANTERIEURE_USD> <DOSSIER> [ECHEANCE_UTC_S]` (CARTE = `course` | `relance`) (prix de la carte, du stockage et du téléchargement lus dans l'offre relue, jamais donnés à la main, C12 ;",
+   "nouveau": "`bash scripts/lancer_t06_v6.sh controles <DOSSIER_NEUF> [JOUR]` ; `bash scripts/lancer_t06_v6.sh creation auto <CARTE> <DEPENSE_ANTERIEURE_USD> <DOSSIER> [ECHEANCE_UTC_S]` (CARTE = `course` | `relance` ; le lanceur choisit lui-même l'offre dans la recherche filtrée, `reliability>=0.98` comprise, juste avant la création : première offre conforme, rang suivant sur le code 5, trois rangs au plus, R-1657, R-1660) (prix de la carte, du stockage et du téléchargement lus dans cette liste, jamais donnés à la main, C12 ;"
+  },
+  {
+   "id": "K6",
+   "quoi": "lancement : apres-creation et surveillance",
+   "ancien": "enchaîne `bash scripts/lancer_t06_v4.sh apres-creation FICHIER CODE DOSSIER` ; `bash scripts/lancer_t06_v4.sh surveillance <ID> <DOSSIER> [FACTURE_USD]`",
+   "nouveau": "enchaîne `bash scripts/lancer_t06_v6.sh apres-creation FICHIER CODE DOSSIER` ; `bash scripts/lancer_t06_v6.sh surveillance <ID> <DOSSIER> [FACTURE_USD]`"
+  },
+  {
+   "id": "K7",
+   "quoi": "offre choisie par le lanceur",
+   "ancien": "A100 SXM4 80 Go, offre conforme la moins chère ;",
+   "nouveau": "A100 SXM4 80 Go, offre conforme la moins chère (rang 1 de la recherche filtrée) ;"
+  },
+  {
+   "id": "K8",
+   "quoi": "empreintes du code : lanceur v6",
+   "ancien": "(modules v1 à v3 que la v4 importe, modules v2 à v4 compris, `sondes/familles_v2.py` et `sondes/familles_v3.py`), de `scripts/amorce_instance_t06_v4.sh` et `scripts/lancer_t06_v4.sh`",
+   "nouveau": "(modules v1 à v3 que la v4 importe, modules v2 à v5 compris, dont `session_v4.py` et `session_v5.py`, `sondes/familles_v2.py` et `sondes/familles_v3.py`), de `scripts/amorce_instance_t06_v4.sh` et `scripts/lancer_t06_v6.sh`"
+  },
+  {
+   "id": "K9",
+   "quoi": "valeurs citées : controles du lanceur v6",
+   "ancien": "vérifiées par `bash scripts/lancer_t06_v4.sh controles`",
+   "nouveau": "vérifiées par `bash scripts/lancer_t06_v6.sh controles`"
+  },
+  {
+   "id": "K10",
+   "quoi": "citations lues par la chaîne : lanceur v6",
+   "ancien": "(`scripts/lancer_t06_v4.sh controles`, amorce, lanceur)",
+   "nouveau": "(`scripts/lancer_t06_v6.sh controles`, amorce, lanceur)"
+  }
+ ]
+}
