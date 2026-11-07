@@ -334,3 +334,9 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 
 ## 7 novembre, 04:24 UTC — relais par un autre compte (passation `registres/passations/2026-11-07-0424.md`)
 - Lire d'abord cette passation. Aucune instance ne tourne. Autonomie terminée à 05:00 UTC : attendre les mots de Lazar (audit de fuite en premier).
+
+## 7 novembre, 09:48 UTC — la mère continue sur ce compte (R-1649), R-1649 à R-1658
+- **Audit de fuite de R1 v4** (GO-2026-11-07-01) : préenregistrement scellé (R-1658, `910a53dc…`, commit `2ccb608c`, copie sur `main`) ; commande décisive confiée à la fille 6, codes de fin seuls, sortie sur `audit-fuite-r1-v4-sortie` ; verdict par un lecteur neuf d'une autre lignée (R13), puis nœud de Lazar sur la clôture ou la réserve.
+- **T0.6** : découplage de T0.7 et de P3-bis accordé (R-1654) ; lanceur v5 demandé (R-1657 : la relecture d'une offre par son identifiant rend une liste vide) ; E2 et E3 sous GO-2026-11-06-01 (≤ 5 USD, jusqu'au 10 novembre), location autorisée par Lazar dans la session de la fille 6 (R-1655) ; course visée le 11 novembre (GO-2026-11-02-28). Candidat 3 du texte à consigner (R-1659).
+- **T0.7** : jeux J-D et J-A 32 sur 32, réserve d'aire (R-1656) ; J-C en cours (fille 12).
+- Nœuds de Lazar : date de l'entretien ; le reste sous « GO et nœuds en attente ».
