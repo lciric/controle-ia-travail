@@ -331,3 +331,6 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 ## 6 novembre, 20:26 UTC — fin des 9 heures d'autonomie (passation `registres/passations/2026-11-06-2026.md`)
 - Prononcés du jour : verdict des trois analyses de R1 v4 (R-1645 ; audit R4 non clos : nœud) ; verdict des agrégateurs (R-1644 ; H-AG « appuyée à m = 1 seulement », réserve de fuite) ; protocole d'audit de fuite en brouillon (R-1647).
 - Toutes les sessions filles au repos ou arrêtées ; aucune instance en cours ; relais par un autre compte le 7 novembre à 05:00 UTC.
+
+## 7 novembre, 04:24 UTC — relais par un autre compte (passation `registres/passations/2026-11-07-0424.md`)
+- Lire d'abord cette passation. Aucune instance ne tourne. Autonomie terminée à 05:00 UTC : attendre les mots de Lazar (audit de fuite en premier).
