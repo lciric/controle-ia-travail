@@ -1,0 +1,2171 @@
+........................................................................ [  2%]
+........................................................................ [  4%]
+........................................................................ [  6%]
+........................................................................ [  9%]
+........................................................................ [ 11%]
+........................................................................ [ 13%]
+........................................................................ [ 15%]
+........................................................................ [ 18%]
+........................................................................ [ 20%]
+........................................................................ [ 22%]
+.............................................FFFFF.FF..FF.FF...FF.F..... [ 24%]
+.FF..................................................................FFF [ 27%]
+FF.FF..FF.FF...FF.F......FF...FF........FF.FF...FFFFFFFF................ [ 29%]
+........................................................................ [ 31%]
+........................................................................ [ 33%]
+........................................................................ [ 36%]
+........................................................................ [ 38%]
+........................................................................ [ 40%]
+........................................................................ [ 42%]
+........................................................................ [ 45%]
+........................................................................ [ 47%]
+...................................ss...........s....................... [ 49%]
+................................................F....................... [ 51%]
+........................................................................ [ 54%]
+....................ss.................................................. [ 56%]
+..............ss...........s............................................ [ 58%]
+..............ss...........s............................................ [ 61%]
+............................ss...........s.............................. [ 63%]
+...................................................ss...........s....... [ 65%]
+........................................................................ [ 67%]
+....................ss...........s...................................... [ 70%]
+........................................................................ [ 72%]
+...ss...........s....................................................... [ 74%]
+........................................................................ [ 76%]
+........................................................................ [ 79%]
+........................................................................ [ 81%]
+........................................................................ [ 83%]
+........................................................................ [ 85%]
+........................................................................ [ 88%]
+........................................................................ [ 90%]
+................................................................F.....F. [ 92%]
+.....................................F.................................. [ 94%]
+........................................................................ [ 97%]
+........................................................................ [ 99%]
+..................                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_machine_cas_sain_partie_de_main_signe_de_vie_et_destruction _______
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e4bc40>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_cas_sain_partie_d1')
+
+    def test_machine_cas_sain_partie_de_main_signe_de_vie_et_destruction(monde, tmp_path):
+        r, env, nu = monde()
+        assert v3.MachineV3(r, env).principal() == 0
+        b = h.BRANCHE_DONNEES
+        f = t1.branche(nu, b)
+>       j = journal(f, b)
+            ^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v3.py:589: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v3.py:581: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:12:59Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:12:59Z ETAT demarrage
+2026-11-07T21:12:59Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:12:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:12:59Z ETAT scellement
+2026-11-07T21:12:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:12:59Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = b86e271f0c8df208da660b5bce39d924d20ca542 (vérifié par ls-remote) ; liste 4dd55d1c18644f600b4c34c8fb881961aad56a0554f1aae483aba05f5ba6cc92
+2026-11-07T21:12:59Z ETAT verse
+2026-11-07T21:12:59Z destruction de la machine par son identifiant 90000001
+__ test_machine_refus_rien_ne_part[option0-env_modif0-identifiants en double] __
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e06660>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par9')
+option = {'registre_source': b"# R\n\n| id | accord\xc3\xa9 le | type | p\xc3\xa9rim\xc3\xa8tre | plafond | \xc3\xa9ch\xc3\xa9a...-04 | calcul | troisi\xc3\xa8me course d'A1-v3, h\xc3\xb4te durable | 400 USD | 2026-11-18 | Lazar | mot de Lazar |\n"}
+env_modif = {}, motif = 'identifiants en double'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v3.MachineV3(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: /bin/python3 : Python 3.11.2
+E         2026-11-07T21:12:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:12:59Z ETAT scellement
+E         2026-11-07T21:12:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:12:59Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'identifiants en double' in "2026-11-07T21:12:59Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v3.py:631: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:12:59Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:12:59Z ETAT demarrage
+2026-11-07T21:12:59Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:12:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:12:59Z ETAT scellement
+2026-11-07T21:12:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:12:59Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 5ece82a00e8d1534149b73ce11676dfe42b68e5e (vérifié par ls-remote) ; liste 4dd55d1c18644f600b4c34c8fb881961aad56a0554f1aae483aba05f5ba6cc92
+2026-11-07T21:12:59Z ETAT verse
+2026-11-07T21:12:59Z destruction de la machine par son identifiant 90000001
+_ test_machine_refus_rien_ne_part[option1-env_modif1-absent de la branche canal/conv-audit-n04] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e4a480>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par10')
+option = {}
+env_modif = {'COMMIT_REGISTRE': 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'}
+motif = 'absent de la branche canal/conv-audit-n04'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v3.MachineV3(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: /bin/python3 : Python 3.11.2
+E         2026-11-07T21:12:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:12:59Z ETAT scellement
+E         2026-11-07T21:12:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:12:59Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'absent de la branche canal/conv-audit-n04' in "2026-11-07T21:12:59Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v3.py:631: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:12:59Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:12:59Z ETAT demarrage
+2026-11-07T21:12:59Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:12:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:12:59Z ETAT scellement
+2026-11-07T21:12:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:00Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 7d43042535d92a4d5755557a9b7c059a4c7ef958 (vérifié par ls-remote) ; liste 4dd55d1c18644f600b4c34c8fb881961aad56a0554f1aae483aba05f5ba6cc92
+2026-11-07T21:13:00Z ETAT verse
+2026-11-07T21:13:00Z destruction de la machine par son identifiant 90000001
+_ test_machine_refus_rien_ne_part[option2-env_modif2-GO-2026-11-05-03 absent] __
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e4aca0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par11')
+option = {'registre_main': b"# R\n\n| id | accord\xc3\xa9 le | type | p\xc3\xa9rim\xc3\xa8tre | plafond | \xc3\xa9ch\xc3\xa9anc...-04 | calcul | troisi\xc3\xa8me course d'A1-v3, h\xc3\xb4te durable | 400 USD | 2026-11-18 | Lazar | mot de Lazar |\n"}
+env_modif = {}, motif = 'GO-2026-11-05-03 absent'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v3.MachineV3(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: /bin/python3 : Python 3.11.2
+E         2026-11-07T21:13:00Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:13:00Z ETAT scellement
+E         2026-11-07T21:13:00Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:13:00Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'GO-2026-11-05-03 absent' in "2026-11-07T21:13:00Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v3.py:631: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:00Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:00Z ETAT demarrage
+2026-11-07T21:13:00Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:00Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:00Z ETAT scellement
+2026-11-07T21:13:00Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:00Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 21a86e6d811a08e88940c72f8831cf826007d9ec (vérifié par ls-remote) ; liste a8369a98b7cc2a8c5a1804c3a09fd18a03d553db0e4f8066d4fbeabb77fc85c4
+2026-11-07T21:13:00Z ETAT verse
+2026-11-07T21:13:00Z destruction de la machine par son identifiant 90000001
+_______ test_machine_refus_rien_ne_part[option3-env_modif3-exig\xe9 ici] _______
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e498a0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par12')
+option = {}, env_modif = {'GO_MACHINE': 'GO-2026-11-04-09'}, motif = 'exigé ici'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v3.MachineV3(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: /bin/python3 : Python 3.11.2
+E         2026-11-07T21:13:00Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:13:00Z ETAT scellement
+E         2026-11-07T21:13:00Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:13:00Z hote-durable-a1-v3-v3 ; machine GO-2026-11-04-09 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'exigé ici' in "2026-11-07T21:13:00Z hote-durable-a1-v3-v3 ; machine GO-2026-11-04-09 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v3.py:631: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:00Z hote-durable-a1-v3-v3 ; machine GO-2026-11-04-09 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:00Z ETAT demarrage
+2026-11-07T21:13:00Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:00Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:00Z ETAT scellement
+2026-11-07T21:13:00Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:00Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 8dfc033fdb25ef4977989ad9a66f1fec8cc68b56 (vérifié par ls-remote) ; liste f3a5f3b6689ff732289ce16fe8439ef20e73466d044198118ad61ba26dcd4a1a
+2026-11-07T21:13:00Z ETAT verse
+2026-11-07T21:13:00Z destruction de la machine par son identifiant 90000001
+_ test_machine_refus_rien_ne_part[option5-env_modif5-\xe9ch\xe9ance absolue trop proche] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e48b80>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par14')
+option = {'echeance_dans_s': 3630}, env_modif = {}
+motif = 'échéance absolue trop proche'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v3.MachineV3(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: /bin/python3 : Python 3.11.2
+E         2026-11-07T21:13:01Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:13:01Z ETAT scellement
+E         2026-11-07T21:13:01Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:13:01Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'échéance absolue trop proche' in "2026-11-07T21:13:01Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v3.py:631: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:01Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:01Z ETAT demarrage
+2026-11-07T21:13:01Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:01Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:01Z ETAT scellement
+2026-11-07T21:13:01Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:01Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = d3daac9bb5a5ed775542c940fd28eaa7fd48ebb0 (vérifié par ls-remote) ; liste 6b03f67fd65d63ea451989f2dfc0dc4961db8be51ccf3b3db1d07f90d24b206a
+2026-11-07T21:13:01Z ETAT verse
+2026-11-07T21:13:01Z destruction de la machine par son identifiant 90000001
+______ test_machine_refus_rien_ne_part[option6-env_modif6-ECHEANCE_UTC_S] ______
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e04c20>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par15')
+option = {}, env_modif = {'ECHEANCE_UTC_S': 'demain'}, motif = 'ECHEANCE_UTC_S'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v3.MachineV3(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: /bin/python3 : Python 3.11.2
+E         2026-11-07T21:13:02Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:13:02Z ETAT scellement
+E         2026-11-07T21:13:02Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:13:02Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'ECHEANCE_UTC_S' in "2026-11-07T21:13:02Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v3.py:631: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:02Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:02Z ETAT demarrage
+2026-11-07T21:13:02Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:02Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:02Z ETAT scellement
+2026-11-07T21:13:02Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:02Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = fb3d2419093fa3aba49a3b7168cf5fc6e00e60e0 (vérifié par ls-remote) ; liste 9c6cc7d9fcde846ff5ec0c80092db309ec6bba13c1b81b513cafbc5fdc384bc8
+2026-11-07T21:13:02Z ETAT verse
+2026-11-07T21:13:02Z destruction de la machine par son identifiant 90000001
+______________ test_machine_versement_impossible_machine_arretee _______________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d00819ee0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_versement_impossi1')
+
+    def test_machine_versement_impossible_machine_arretee(monde, tmp_path):
+        r, env, nu = monde()
+        t1.run("git", "-C", str(nu), "branch", h.BRANCHE_DONNEES, "main")  # branche déjà présente : R12
+>       assert v3.MachineV3(r, env).principal() == 3
+E       AssertionError: assert 0 == 3
+E        +  where 0 = principal()
+E        +    where principal = <controle_ia.hote_durable_a1_v3_v3.MachineV3 object at 0x7c6d021958d0>.principal
+E        +      where <controle_ia.hote_durable_a1_v3_v3.MachineV3 object at 0x7c6d021958d0> = <class 'controle_ia.hote_durable_a1_v3_v3.MachineV3'>(Reglages(travail=PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_versement_impossi1/a1-v3-troisieme-v1'), clone_p...Path('/tmp/pytest-of-root/pytest-0/test_machine_versement_impossi1/vast.json'), aujourd_hui=datetime.date(2026, 11, 5)), {'COMMIT_PUBLIC': '26e482a07422cf602d4ad96a5160d7e7cd8b012f', 'SHA_TEXTE': '10f5c9001651df881aa28be54b165202838d8cd880c0055f9822c610111048eb', 'COMMIT_REGISTRE': 'ad6477a22bfa0093e04fb83ad98f8c943da31436', 'GO_ID': 'GO-2026-11-04-06', ...})
+E        +        where <class 'controle_ia.hote_durable_a1_v3_v3.MachineV3'> = v3.MachineV3
+
+tests/test_hote_durable_a1_v3_v3.py:639: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:03Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:03Z ETAT demarrage
+2026-11-07T21:13:03Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:03Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:03Z ETAT scellement
+2026-11-07T21:13:03Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:03Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 4dd68db4dd23a85cc192a112b2975600a706c5ec (vérifié par ls-remote) ; liste 9e0d2f4c942d11dadd2a0ca00c1654ed28603d6d879a8da1f247d1e229633552
+2026-11-07T21:13:03Z ETAT verse
+2026-11-07T21:13:03Z destruction de la machine par son identifiant 90000001
+__________________ test_machine_fuite_d_un_secret_rien_verse ___________________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e047c0>
+
+    def test_machine_fuite_d_un_secret_rien_verse(monde):
+        r, env, nu = monde({"code": 0, "fuite": True})
+>       assert v3.MachineV3(r, env).principal() == 3
+E       AssertionError: assert 0 == 3
+E        +  where 0 = principal()
+E        +    where principal = <controle_ia.hote_durable_a1_v3_v3.MachineV3 object at 0x7c6d01dc9810>.principal
+E        +      where <controle_ia.hote_durable_a1_v3_v3.MachineV3 object at 0x7c6d01dc9810> = <class 'controle_ia.hote_durable_a1_v3_v3.MachineV3'>(Reglages(travail=PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_fuite_d_un_secret1/a1-v3-troisieme-v1'), clone_p...Path('/tmp/pytest-of-root/pytest-0/test_machine_fuite_d_un_secret1/vast.json'), aujourd_hui=datetime.date(2026, 11, 5)), {'COMMIT_PUBLIC': '1a7e05cac1dd235dcd39b0b7e16aea7dacf3427b', 'SHA_TEXTE': '10f5c9001651df881aa28be54b165202838d8cd880c0055f9822c610111048eb', 'COMMIT_REGISTRE': 'ad6477a22bfa0093e04fb83ad98f8c943da31436', 'GO_ID': 'GO-2026-11-04-06', ...})
+E        +        where <class 'controle_ia.hote_durable_a1_v3_v3.MachineV3'> = v3.MachineV3
+
+tests/test_hote_durable_a1_v3_v3.py:646: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:03Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:03Z ETAT demarrage
+2026-11-07T21:13:03Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:03Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:03Z ETAT scellement
+2026-11-07T21:13:03Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:03Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 4dd68db4dd23a85cc192a112b2975600a706c5ec (vérifié par ls-remote) ; liste 9e0d2f4c942d11dadd2a0ca00c1654ed28603d6d879a8da1f247d1e229633552
+2026-11-07T21:13:03Z ETAT verse
+2026-11-07T21:13:03Z destruction de la machine par son identifiant 90000001
+_________ test_machine_destruction_refusee_puis_arret[False-3-geste0] __________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d008500e0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d42fc8f90>
+refuse_arret = False, code = 3, geste = [['arreter', 90000001]]
+
+    @pytest.mark.parametrize("refuse_arret, code, geste", [(False, 3, [["arreter", 90000001]]), (True, 4, [])])
+    def test_machine_destruction_refusee_puis_arret(monde, monkeypatch, refuse_arret, code, geste):
+        r, env, nu = monde()
+        monkeypatch.setattr(v3.MachineV3, "client_vast", lambda self: VastRefuse(self.r.vast_jouet, refuse_arret))
+        assert v3.MachineV3(r, env).principal() == code
+>       assert t1.branche(nu, h.BRANCHE_DONNEES) and gestes(r) == geste
+E       AssertionError: assert ({})
+E        +  where {} = <function branche at 0x7c6d434c32e0>(PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_destruction_refus2/prive.git'), 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1')
+E        +    where <function branche at 0x7c6d434c32e0> = t1.branche
+E        +    and   'donnees/attaque-goodhart-v3-a1v3-troisieme-v1' = h.BRANCHE_DONNEES
+
+tests/test_hote_durable_a1_v3_v3.py:681: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:04Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:04Z ETAT demarrage
+2026-11-07T21:13:04Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:04Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:04Z ETAT scellement
+2026-11-07T21:13:04Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:04Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 20d2992028c70d7ed0822f9524769c91949aa8d0 (vérifié par ls-remote) ; liste 0550db0d54e12d1673429a49bc530e8b228eef689be5ecf4cc127993d1841908
+2026-11-07T21:13:04Z ETAT verse
+2026-11-07T21:13:04Z destruction de la machine par son identifiant 90000001
+2026-11-07T21:13:04Z destruction refusée (Refus) : arrêt de la machine 90000001 par son identifiant
+__________ test_machine_destruction_refusee_puis_arret[True-4-geste1] __________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e12160>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d42fcb4d0>
+refuse_arret = True, code = 4, geste = []
+
+    @pytest.mark.parametrize("refuse_arret, code, geste", [(False, 3, [["arreter", 90000001]]), (True, 4, [])])
+    def test_machine_destruction_refusee_puis_arret(monde, monkeypatch, refuse_arret, code, geste):
+        r, env, nu = monde()
+        monkeypatch.setattr(v3.MachineV3, "client_vast", lambda self: VastRefuse(self.r.vast_jouet, refuse_arret))
+        assert v3.MachineV3(r, env).principal() == code
+>       assert t1.branche(nu, h.BRANCHE_DONNEES) and gestes(r) == geste
+E       AssertionError: assert ({})
+E        +  where {} = <function branche at 0x7c6d434c32e0>(PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_destruction_refus3/prive.git'), 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1')
+E        +    where <function branche at 0x7c6d434c32e0> = t1.branche
+E        +    and   'donnees/attaque-goodhart-v3-a1v3-troisieme-v1' = h.BRANCHE_DONNEES
+
+tests/test_hote_durable_a1_v3_v3.py:681: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:04Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:04Z ETAT demarrage
+2026-11-07T21:13:04Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:04Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:04Z ETAT scellement
+2026-11-07T21:13:04Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:04Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 20d2992028c70d7ed0822f9524769c91949aa8d0 (vérifié par ls-remote) ; liste 0550db0d54e12d1673429a49bc530e8b228eef689be5ecf4cc127993d1841908
+2026-11-07T21:13:04Z ETAT verse
+2026-11-07T21:13:04Z destruction de la machine par son identifiant 90000001
+2026-11-07T21:13:04Z destruction refusée (Refus) : arrêt de la machine 90000001 par son identifiant
+2026-11-07T21:13:04Z arrêt de la machine 90000001 refusé (Refus) : la minuterie détruit à l'échéance ; la session qui reprend s'en charge (R14)
+___________ test_machine_echeance_absolue_borne_la_course[4800-600] ____________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53be6a20>, dans_s = 4800
+borne_max = 600
+
+    @pytest.mark.parametrize("dans_s, borne_max", [(4800, 600), (3600 + 90, 90)])
+    def test_machine_echeance_absolue_borne_la_course(monde, dans_s, borne_max):
+        r, env, nu = monde(echeance_dans_s=dans_s)
+        assert v3.MachineV3(r, env).principal() == 0
+>       j = journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v3.py:712: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v3.py:581: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:06Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:06Z ETAT demarrage
+2026-11-07T21:13:06Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:06Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:06Z ETAT scellement
+2026-11-07T21:13:06Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:06Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = d1064ce0316816a27de71173cb140ba0193d2c9c (vérifié par ls-remote) ; liste cb4797cbf4deacc69f89a64e27f3b5baa8fd1f349ec1e95a7fc3830709199986
+2026-11-07T21:13:06Z ETAT verse
+2026-11-07T21:13:06Z destruction de la machine par son identifiant 90000001
+____________ test_machine_echeance_absolue_borne_la_course[3690-90] ____________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e4a160>, dans_s = 3690
+borne_max = 90
+
+    @pytest.mark.parametrize("dans_s, borne_max", [(4800, 600), (3600 + 90, 90)])
+    def test_machine_echeance_absolue_borne_la_course(monde, dans_s, borne_max):
+        r, env, nu = monde(echeance_dans_s=dans_s)
+        assert v3.MachineV3(r, env).principal() == 0
+>       j = journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v3.py:712: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v3.py:581: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:06Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:06Z ETAT demarrage
+2026-11-07T21:13:06Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:06Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:06Z ETAT scellement
+2026-11-07T21:13:06Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:06Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 6ffbb57cc82a2d9bba64d86b6dd67690bc4c3257 (vérifié par ls-remote) ; liste cb4797cbf4deacc69f89a64e27f3b5baa8fd1f349ec1e95a7fc3830709199986
+2026-11-07T21:13:06Z ETAT verse
+2026-11-07T21:13:06Z destruction de la machine par son identifiant 90000001
+_____________________ test_c1_cas_sain_versions_au_journal _____________________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53be6520>
+
+    def test_c1_cas_sain_versions_au_journal(monde):
+        r, env, nu = monde()
+        assert v3.MachineV3(r, env).principal() == 0
+>       j = journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v3.py:745: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v3.py:581: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:07Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:07Z ETAT demarrage
+2026-11-07T21:13:07Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:07Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:07Z ETAT scellement
+2026-11-07T21:13:07Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:07Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 0a6a8d266906ae6fe3bd23fd9707d5147461da7e (vérifié par ls-remote) ; liste c943f08703f2bb068e0bd6578a9d3d6d2129d72efaaff0df869b8e8a772d1cec
+2026-11-07T21:13:07Z ETAT verse
+2026-11-07T21:13:07Z destruction de la machine par son identifiant 90000001
+________________ test_c2_signe_de_vie_deja_present_rien_ne_part ________________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53be6340>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_c2_signe_de_vie_deja_pres0')
+
+    def test_c2_signe_de_vie_deja_present_rien_ne_part(monde, tmp_path):
+        r, env, nu = monde()
+        t1.run("git", "-C", str(nu), "branch", v3.BRANCHE_VIE, "main")  # poussée du signe de vie refusée (R12)
+        assert v3.MachineV3(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert "signe de vie non poussé" in j and "signe de vie non vérifié par ls-remote (C2)" in j
+E       assert ('signe de vie non poussé' in "2026-11-07T21:13:08Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v3.py:790: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:08Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:08Z ETAT demarrage
+2026-11-07T21:13:08Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:08Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:08Z ETAT scellement
+2026-11-07T21:13:08Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:08Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 28435e84e5a9d0901dc7364f05a0fc37b85ca9fe (vérifié par ls-remote) ; liste 4649c283e1cb89a747d0752fb288b145027013d1ee514bae17f97ded97a93415
+2026-11-07T21:13:08Z ETAT verse
+2026-11-07T21:13:08Z destruction de la machine par son identifiant 90000001
+__________ test_c2_poussee_du_signe_de_vie_non_verifiee_rien_ne_part ___________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53be77e0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_c2_poussee_du_signe_de_vi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d4250a850>
+
+    def test_c2_poussee_du_signe_de_vie_non_verifiee_rien_ne_part(monde, tmp_path, monkeypatch):
+        r, env, nu = monde()
+        original = v3.MachineV3._pousser
+        monkeypatch.setattr(v3.MachineV3, "_pousser",
+                            lambda self, v, b, url: None if b == v3.BRANCHE_VIE else original(self, v, b, url))
+        assert v3.MachineV3(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+>       assert "(C2)" in journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+E       assert '(C2)' in "2026-11-07T21:13:09Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+E        +  where "2026-11-07T21:13:09Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" = journal({'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1/EMPREINTES-sortie-a1-v3-troisieme-v1.txt': 'db125a2ded63fd56ae60...-goodhart-v3-a1v3-troisieme-refus-v1/demarrage/a1v3-temps.txt': 'a1v3-temps.txt : journal du démarrage (jouet)\n', ...}, 'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1')
+E        +    where {'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1/EMPREINTES-sortie-a1-v3-troisieme-v1.txt': 'db125a2ded63fd56ae60...-goodhart-v3-a1v3-troisieme-refus-v1/demarrage/a1v3-temps.txt': 'a1v3-temps.txt : journal du démarrage (jouet)\n', ...} = <function branche at 0x7c6d434c32e0>(PosixPath('/tmp/pytest-of-root/pytest-0/test_c2_poussee_du_signe_de_vi0/prive.git'), 'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1')
+E        +      where <function branche at 0x7c6d434c32e0> = t1.branche
+E        +      and   'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1' = h.BRANCHE_REFUS
+E        +    and   'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1' = h.BRANCHE_REFUS
+
+tests/test_hote_durable_a1_v3_v3.py:801: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:09Z hote-durable-a1-v3-v3 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:09Z ETAT demarrage
+2026-11-07T21:13:09Z interpréteurs (C1) : relais /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; course /root/amorce-depot/.venv/bin/python : Python 3.11.18 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:09Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /root/amorce-depot/.venv/bin/python (3.11), course /root/amorce-depot/.venv/bin/python (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:09Z ETAT scellement
+2026-11-07T21:13:09Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:09Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = e14772b969ac9c1a3cc6ddc40d4ddad1a5f0311b (vérifié par ls-remote) ; liste cfa093ba01e11e2f78188ec8f3273cacfe5ca20879982ae554dffd1c93a4f4f4
+2026-11-07T21:13:09Z ETAT verse
+2026-11-07T21:13:09Z destruction de la machine par son identifiant 90000001
+_______ test_machine_cas_sain_partie_de_main_signe_de_vie_et_destruction _______
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c06200>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_cas_sain_partie_d2')
+
+    def test_machine_cas_sain_partie_de_main_signe_de_vie_et_destruction(monde, tmp_path):
+        r, env, nu = monde()
+        assert v4.MachineV4(r, env).principal() == 0
+        b = h.BRANCHE_DONNEES
+        f = t1.branche(nu, b)
+>       j = journal(f, b)
+            ^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v4.py:591: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v4.py:583: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:58Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:58Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:13:58Z ETAT demarrage
+2026-11-07T21:13:58Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:58Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:58Z ETAT scellement
+2026-11-07T21:13:58Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:58Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 224305828a6c74ef5705bb25b58b6fe741b66868 (vérifié par ls-remote) ; liste e941998ca7be8719b9f29f51c5deac49203a288f87d63d5354ff5a5884d8cd32
+2026-11-07T21:13:58Z ETAT verse
+2026-11-07T21:13:58Z destruction de la machine par son identifiant 90000001
+__ test_machine_refus_rien_ne_part[option0-env_modif0-identifiants en double] __
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c2a700>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par18')
+option = {'registre_source': b"# R\n\n| id | accord\xc3\xa9 le | type | p\xc3\xa9rim\xc3\xa8tre | plafond | \xc3\xa9ch\xc3\xa9a...-04 | calcul | troisi\xc3\xa8me course d'A1-v3, h\xc3\xb4te durable | 400 USD | 2026-11-18 | Lazar | mot de Lazar |\n"}
+env_modif = {}, motif = 'identifiants en double'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:13:58Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:13:58Z ETAT scellement
+E         2026-11-07T21:13:58Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:13:58Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'identifiants en double' in "2026-11-07T21:13:58Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:633: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:58Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:58Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:13:58Z ETAT demarrage
+2026-11-07T21:13:58Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:58Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:58Z ETAT scellement
+2026-11-07T21:13:58Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:58Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 224305828a6c74ef5705bb25b58b6fe741b66868 (vérifié par ls-remote) ; liste e941998ca7be8719b9f29f51c5deac49203a288f87d63d5354ff5a5884d8cd32
+2026-11-07T21:13:58Z ETAT verse
+2026-11-07T21:13:58Z destruction de la machine par son identifiant 90000001
+_ test_machine_refus_rien_ne_part[option1-env_modif1-absent de la branche canal/conv-audit-n04] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c06b60>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par19')
+option = {}
+env_modif = {'COMMIT_REGISTRE': 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'}
+motif = 'absent de la branche canal/conv-audit-n04'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:13:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:13:59Z ETAT scellement
+E         2026-11-07T21:13:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:13:59Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'absent de la branche canal/conv-audit-n04' in "2026-11-07T21:13:59Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:633: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:59Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:59Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:13:59Z ETAT demarrage
+2026-11-07T21:13:59Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:59Z ETAT scellement
+2026-11-07T21:13:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:59Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = b5564d3819edf769e59c4df43ce8ebdbfe90101d (vérifié par ls-remote) ; liste 3c680cbdfc3afee1478756185c868140f7a62194ef718cf4070371e2179ff90a
+2026-11-07T21:13:59Z ETAT verse
+2026-11-07T21:13:59Z destruction de la machine par son identifiant 90000001
+_ test_machine_refus_rien_ne_part[option2-env_modif2-GO-2026-11-05-03 absent] __
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d00819ee0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par20')
+option = {'registre_main': b"# R\n\n| id | accord\xc3\xa9 le | type | p\xc3\xa9rim\xc3\xa8tre | plafond | \xc3\xa9ch\xc3\xa9anc...-04 | calcul | troisi\xc3\xa8me course d'A1-v3, h\xc3\xb4te durable | 400 USD | 2026-11-18 | Lazar | mot de Lazar |\n"}
+env_modif = {}, motif = 'GO-2026-11-05-03 absent'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:13:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:13:59Z ETAT scellement
+E         2026-11-07T21:13:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:13:59Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'GO-2026-11-05-03 absent' in "2026-11-07T21:13:59Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:633: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:13:59Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:13:59Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:13:59Z ETAT demarrage
+2026-11-07T21:13:59Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:13:59Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:13:59Z ETAT scellement
+2026-11-07T21:13:59Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:13:59Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 7d3925c6974d36c93200e69c56be3d4cbb0f3707 (vérifié par ls-remote) ; liste 3c680cbdfc3afee1478756185c868140f7a62194ef718cf4070371e2179ff90a
+2026-11-07T21:13:59Z ETAT verse
+2026-11-07T21:13:59Z destruction de la machine par son identifiant 90000001
+_______ test_machine_refus_rien_ne_part[option3-env_modif3-exig\xe9 ici] _______
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c06fc0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par21')
+option = {}, env_modif = {'GO_MACHINE': 'GO-2026-11-04-09'}, motif = 'exigé ici'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:00Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:00Z ETAT scellement
+E         2026-11-07T21:14:00Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:14:00Z hote-durable-a1-v3-v4 ; machine GO-2026-11-04-09 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'exigé ici' in "2026-11-07T21:14:00Z hote-durable-a1-v3-v4 ; machine GO-2026-11-04-09 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:633: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:00Z hote-durable-a1-v3-v4 ; machine GO-2026-11-04-09 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:00Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:00Z ETAT demarrage
+2026-11-07T21:14:00Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:00Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:00Z ETAT scellement
+2026-11-07T21:14:00Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:00Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 5c7d56c736b9aa061d5dae43898c796c010b0ced (vérifié par ls-remote) ; liste 81a94cfe8e932f468bb0d166e5238475a19d862abf41fa9cb638de94f68e6542
+2026-11-07T21:14:00Z ETAT verse
+2026-11-07T21:14:00Z destruction de la machine par son identifiant 90000001
+_ test_machine_refus_rien_ne_part[option5-env_modif5-\xe9ch\xe9ance absolue trop proche] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e4a160>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par23')
+option = {'echeance_dans_s': 3630}, env_modif = {}
+motif = 'échéance absolue trop proche'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:00Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:00Z ETAT scellement
+E         2026-11-07T21:14:00Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:14:00Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'échéance absolue trop proche' in "2026-11-07T21:14:00Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:633: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:00Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:00Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:00Z ETAT demarrage
+2026-11-07T21:14:00Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:00Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:00Z ETAT scellement
+2026-11-07T21:14:00Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:01Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = eeae92823eb74549db4d3c332408536b17d93a94 (vérifié par ls-remote) ; liste 8169e6202f8f1515917422335453d5ebedff97ce5d35df95da4a1ac3a66a68fc
+2026-11-07T21:14:01Z ETAT verse
+2026-11-07T21:14:01Z destruction de la machine par son identifiant 90000001
+______ test_machine_refus_rien_ne_part[option6-env_modif6-ECHEANCE_UTC_S] ______
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53e496c0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_refus_rien_ne_par24')
+option = {}, env_modif = {'ECHEANCE_UTC_S': 'demain'}, motif = 'ECHEANCE_UTC_S'
+
+    @pytest.mark.parametrize("option, env_modif, motif", [
+        ({"registre_source": registre_canal_a_doublons()}, {}, "identifiants en double"),
+        ({}, {"COMMIT_REGISTRE": "e" * 40}, "absent de la branche canal/conv-audit-n04"),
+        ({"registre_main": ("# R\n\n" + t1.ENTETE + LIGNE_06).encode()}, {}, "GO-2026-11-05-03 absent"),
+        ({}, {"GO_MACHINE": "GO-2026-11-04-09"}, "exigé ici"),
+        ({}, {"GO_MACHINE": None}, "variable GO_MACHINE absente"),
+        ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
+        ({}, {"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S"),
+        ({}, {"GEMINI_API_KEY": "autre"}, "autre que CLE_ARGON"),
+        ({}, {"PRIX_H_USD": "0.5"}, "prix horaire"),
+    ])
+    def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
+        r, env, nu = monde(**option)
+        for k, v in env_modif.items():
+            env.pop(k) if v is None else env.__setitem__(k, v)
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        f = t1.branche(nu, h.BRANCHE_REFUS)
+        j = journal(f, h.BRANCHE_REFUS)
+>       assert "REFUS" in j and motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:01Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:01Z ETAT scellement
+E         2026-11-07T21:14:01Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert ('REFUS' in "2026-11-07T21:14:01Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" and 'ECHEANCE_UTC_S' in "2026-11-07T21:14:01Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:633: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:01Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:01Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:01Z ETAT demarrage
+2026-11-07T21:14:01Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:01Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:01Z ETAT scellement
+2026-11-07T21:14:01Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:01Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = c6ac2d8b10409f15552e5e247c8a3f447bf04d0e (vérifié par ls-remote) ; liste e1dcf826f9fe6b0bc0129f25de255aabfac08b4052f475df1657f2725283bb45
+2026-11-07T21:14:01Z ETAT verse
+2026-11-07T21:14:01Z destruction de la machine par son identifiant 90000001
+______________ test_machine_versement_impossible_machine_arretee _______________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53be67a0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_versement_impossi2')
+
+    def test_machine_versement_impossible_machine_arretee(monde, tmp_path):
+        r, env, nu = monde()
+        t1.run("git", "-C", str(nu), "branch", h.BRANCHE_DONNEES, "main")  # branche déjà présente : R12
+>       assert v4.MachineV4(r, env).principal() == 3
+E       AssertionError: assert 0 == 3
+E        +  where 0 = principal()
+E        +    where principal = <controle_ia.hote_durable_a1_v3_v4.MachineV4 object at 0x7c6d008f6a50>.principal
+E        +      where <controle_ia.hote_durable_a1_v3_v4.MachineV4 object at 0x7c6d008f6a50> = <class 'controle_ia.hote_durable_a1_v3_v4.MachineV4'>(Reglages(travail=PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_versement_impossi2/a1-v3-troisieme-v1'), clone_p...Path('/tmp/pytest-of-root/pytest-0/test_machine_versement_impossi2/vast.json'), aujourd_hui=datetime.date(2026, 11, 5)), {'COMMIT_PUBLIC': '0be55b3c89899bab95d83ea642701207d528ad84', 'SHA_TEXTE': '10f5c9001651df881aa28be54b165202838d8cd880c0055f9822c610111048eb', 'COMMIT_REGISTRE': 'eaa854c536516887d671db6f8c2bedce3418614e', 'GO_ID': 'GO-2026-11-04-06', ...})
+E        +        where <class 'controle_ia.hote_durable_a1_v3_v4.MachineV4'> = v4.MachineV4
+
+tests/test_hote_durable_a1_v3_v4.py:641: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:02Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:02Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:02Z ETAT demarrage
+2026-11-07T21:14:02Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:02Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:02Z ETAT scellement
+2026-11-07T21:14:02Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:02Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = eb64de2d83c34a607984562df282e84d4bece0ff (vérifié par ls-remote) ; liste 595bf97a234d208e7b129f5515f6995db3bd2e928df59d2b9182a2e7733812fe
+2026-11-07T21:14:02Z ETAT verse
+2026-11-07T21:14:02Z destruction de la machine par son identifiant 90000001
+__________________ test_machine_fuite_d_un_secret_rien_verse ___________________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c06700>
+
+    def test_machine_fuite_d_un_secret_rien_verse(monde):
+        r, env, nu = monde({"code": 0, "fuite": True})
+>       assert v4.MachineV4(r, env).principal() == 3
+E       AssertionError: assert 0 == 3
+E        +  where 0 = principal()
+E        +    where principal = <controle_ia.hote_durable_a1_v3_v4.MachineV4 object at 0x7c6d022b0fd0>.principal
+E        +      where <controle_ia.hote_durable_a1_v3_v4.MachineV4 object at 0x7c6d022b0fd0> = <class 'controle_ia.hote_durable_a1_v3_v4.MachineV4'>(Reglages(travail=PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_fuite_d_un_secret2/a1-v3-troisieme-v1'), clone_p...Path('/tmp/pytest-of-root/pytest-0/test_machine_fuite_d_un_secret2/vast.json'), aujourd_hui=datetime.date(2026, 11, 5)), {'COMMIT_PUBLIC': '8713d008563ccc5f29344fd96163bce6793e7f4d', 'SHA_TEXTE': '10f5c9001651df881aa28be54b165202838d8cd880c0055f9822c610111048eb', 'COMMIT_REGISTRE': 'eaa854c536516887d671db6f8c2bedce3418614e', 'GO_ID': 'GO-2026-11-04-06', ...})
+E        +        where <class 'controle_ia.hote_durable_a1_v3_v4.MachineV4'> = v4.MachineV4
+
+tests/test_hote_durable_a1_v3_v4.py:648: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:02Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:02Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:02Z ETAT demarrage
+2026-11-07T21:14:02Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:02Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:02Z ETAT scellement
+2026-11-07T21:14:02Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:03Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 76d51acad7fb6d9aeeb09980a465ca64f400ef77 (vérifié par ls-remote) ; liste 595bf97a234d208e7b129f5515f6995db3bd2e928df59d2b9182a2e7733812fe
+2026-11-07T21:14:03Z ETAT verse
+2026-11-07T21:14:03Z destruction de la machine par son identifiant 90000001
+_________ test_machine_destruction_refusee_puis_arret[False-3-geste0] __________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53be79c0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d0083e190>
+refuse_arret = False, code = 3, geste = [['arreter', 90000001]]
+
+    @pytest.mark.parametrize("refuse_arret, code, geste", [(False, 3, [["arreter", 90000001]]), (True, 4, [])])
+    def test_machine_destruction_refusee_puis_arret(monde, monkeypatch, refuse_arret, code, geste):
+        r, env, nu = monde()
+        monkeypatch.setattr(v4.MachineV4, "client_vast", lambda self: VastRefuse(self.r.vast_jouet, refuse_arret))
+        assert v4.MachineV4(r, env).principal() == code
+>       assert t1.branche(nu, h.BRANCHE_DONNEES) and gestes(r) == geste
+E       AssertionError: assert ({})
+E        +  where {} = <function branche at 0x7c6d434c32e0>(PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_destruction_refus4/prive.git'), 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1')
+E        +    where <function branche at 0x7c6d434c32e0> = t1.branche
+E        +    and   'donnees/attaque-goodhart-v3-a1v3-troisieme-v1' = h.BRANCHE_DONNEES
+
+tests/test_hote_durable_a1_v3_v4.py:683: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:03Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:03Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:03Z ETAT demarrage
+2026-11-07T21:14:03Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:03Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:03Z ETAT scellement
+2026-11-07T21:14:03Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:03Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 1170955193befa2eef2a5c5e89a3ffbb9e14251d (vérifié par ls-remote) ; liste d322ba98947847b0e6e8e60092cbca57176a600619a179a172514cf691f2806b
+2026-11-07T21:14:03Z ETAT verse
+2026-11-07T21:14:03Z destruction de la machine par son identifiant 90000001
+2026-11-07T21:14:03Z destruction refusée (Refus) : arrêt de la machine 90000001 par son identifiant
+__________ test_machine_destruction_refusee_puis_arret[True-4-geste1] __________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c06d40>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d00872cd0>
+refuse_arret = True, code = 4, geste = []
+
+    @pytest.mark.parametrize("refuse_arret, code, geste", [(False, 3, [["arreter", 90000001]]), (True, 4, [])])
+    def test_machine_destruction_refusee_puis_arret(monde, monkeypatch, refuse_arret, code, geste):
+        r, env, nu = monde()
+        monkeypatch.setattr(v4.MachineV4, "client_vast", lambda self: VastRefuse(self.r.vast_jouet, refuse_arret))
+        assert v4.MachineV4(r, env).principal() == code
+>       assert t1.branche(nu, h.BRANCHE_DONNEES) and gestes(r) == geste
+E       AssertionError: assert ({})
+E        +  where {} = <function branche at 0x7c6d434c32e0>(PosixPath('/tmp/pytest-of-root/pytest-0/test_machine_destruction_refus5/prive.git'), 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1')
+E        +    where <function branche at 0x7c6d434c32e0> = t1.branche
+E        +    and   'donnees/attaque-goodhart-v3-a1v3-troisieme-v1' = h.BRANCHE_DONNEES
+
+tests/test_hote_durable_a1_v3_v4.py:683: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:04Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:04Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:04Z ETAT demarrage
+2026-11-07T21:14:04Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:04Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:04Z ETAT scellement
+2026-11-07T21:14:04Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:04Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 4d5534cb0b4f4d59a0dc633167ae2f206f6e49f2 (vérifié par ls-remote) ; liste 19865bb11a890afe00cfc613d8c55c76181b42648d09f1febfefd0d1f9ad5a50
+2026-11-07T21:14:04Z ETAT verse
+2026-11-07T21:14:04Z destruction de la machine par son identifiant 90000001
+2026-11-07T21:14:04Z destruction refusée (Refus) : arrêt de la machine 90000001 par son identifiant
+2026-11-07T21:14:04Z arrêt de la machine 90000001 refusé (Refus) : la minuterie détruit à l'échéance ; la session qui reprend s'en charge (R14)
+___________ test_machine_echeance_absolue_borne_la_course[4800-600] ____________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c2b600>, dans_s = 4800
+borne_max = 600
+
+    @pytest.mark.parametrize("dans_s, borne_max", [(4800, 600), (3600 + 90, 90)])
+    def test_machine_echeance_absolue_borne_la_course(monde, dans_s, borne_max):
+        r, env, nu = monde(echeance_dans_s=dans_s)
+        assert v4.MachineV4(r, env).principal() == 0
+>       j = journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v4.py:714: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v4.py:583: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:05Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:05Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:05Z ETAT demarrage
+2026-11-07T21:14:05Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:05Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:05Z ETAT scellement
+2026-11-07T21:14:05Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:05Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = cac9294af38477adc83b1418a569a4ca6a069e2d (vérifié par ls-remote) ; liste 1979dddb3f719899235a81941d6d596f2169d4f2dcf70f5e9c78618c11b6ea70
+2026-11-07T21:14:05Z ETAT verse
+2026-11-07T21:14:05Z destruction de la machine par son identifiant 90000001
+____________ test_machine_echeance_absolue_borne_la_course[3690-90] ____________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c06660>, dans_s = 3690
+borne_max = 90
+
+    @pytest.mark.parametrize("dans_s, borne_max", [(4800, 600), (3600 + 90, 90)])
+    def test_machine_echeance_absolue_borne_la_course(monde, dans_s, borne_max):
+        r, env, nu = monde(echeance_dans_s=dans_s)
+        assert v4.MachineV4(r, env).principal() == 0
+>       j = journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v4.py:714: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v4.py:583: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:06Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:06Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:06Z ETAT demarrage
+2026-11-07T21:14:06Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:06Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:06Z ETAT scellement
+2026-11-07T21:14:06Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:06Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 8a82f8a1b29bebcefaea33ca7c5bad10cf7db2b7 (vérifié par ls-remote) ; liste c7c6482fea04017bd420037e427088071b3015c697a9eafc2517d66b3d677b74
+2026-11-07T21:14:06Z ETAT verse
+2026-11-07T21:14:06Z destruction de la machine par son identifiant 90000001
+_____________________ test_c1_cas_sain_versions_au_journal _____________________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c2ad40>
+
+    def test_c1_cas_sain_versions_au_journal(monde):
+        r, env, nu = monde()
+        assert v4.MachineV4(r, env).principal() == 0
+>       j = journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v4.py:748: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v4.py:583: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:06Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:06Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:06Z ETAT demarrage
+2026-11-07T21:14:06Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:06Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:06Z ETAT scellement
+2026-11-07T21:14:06Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:06Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = ced6a790ef55adcea4589b0ffbdbc12b5a5364f1 (vérifié par ls-remote) ; liste c7c6482fea04017bd420037e427088071b3015c697a9eafc2517d66b3d677b74
+2026-11-07T21:14:06Z ETAT verse
+2026-11-07T21:14:06Z destruction de la machine par son identifiant 90000001
+________________ test_c2_signe_de_vie_deja_present_rien_ne_part ________________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c2b920>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_c2_signe_de_vie_deja_pres1')
+
+    def test_c2_signe_de_vie_deja_present_rien_ne_part(monde, tmp_path):
+        r, env, nu = monde()
+        t1.run("git", "-C", str(nu), "branch", v4.BRANCHE_VIE, "main")  # poussée du signe de vie refusée (R12)
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert "signe de vie non poussé" in j and "signe de vie non vérifié par ls-remote (C2)" in j
+E       assert ('signe de vie non poussé' in "2026-11-07T21:14:08Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:793: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:08Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:08Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:08Z ETAT demarrage
+2026-11-07T21:14:08Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:08Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:08Z ETAT scellement
+2026-11-07T21:14:08Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:08Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = e1643117443a1b1391662cc5081062667e4a7dc8 (vérifié par ls-remote) ; liste 6a94bb8a0e011e13b78c2a3156004f40b73133b073c2553851142c8d96453c38
+2026-11-07T21:14:08Z ETAT verse
+2026-11-07T21:14:08Z destruction de la machine par son identifiant 90000001
+__________ test_c2_poussee_du_signe_de_vie_non_verifiee_rien_ne_part ___________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c06700>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_c2_poussee_du_signe_de_vi1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d01c64250>
+
+    def test_c2_poussee_du_signe_de_vie_non_verifiee_rien_ne_part(monde, tmp_path, monkeypatch):
+        r, env, nu = monde()
+        original = v4.MachineV4._pousser
+        monkeypatch.setattr(v4.MachineV4, "_pousser",
+                            lambda self, v, b, url: None if b == v4.BRANCHE_VIE else original(self, v, b, url))
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+>       assert "(C2)" in journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+E       assert '(C2)' in "2026-11-07T21:14:08Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+E        +  where "2026-11-07T21:14:08Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" = journal({'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1/EMPREINTES-sortie-a1-v3-troisieme-v1.txt': 'db125a2ded63fd56ae60...-goodhart-v3-a1v3-troisieme-refus-v1/demarrage/a1v3-temps.txt': 'a1v3-temps.txt : journal du démarrage (jouet)\n', ...}, 'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1')
+E        +    where {'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1/EMPREINTES-sortie-a1-v3-troisieme-v1.txt': 'db125a2ded63fd56ae60...-goodhart-v3-a1v3-troisieme-refus-v1/demarrage/a1v3-temps.txt': 'a1v3-temps.txt : journal du démarrage (jouet)\n', ...} = <function branche at 0x7c6d434c32e0>(PosixPath('/tmp/pytest-of-root/pytest-0/test_c2_poussee_du_signe_de_vi1/prive.git'), 'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1')
+E        +      where <function branche at 0x7c6d434c32e0> = t1.branche
+E        +      and   'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1' = h.BRANCHE_REFUS
+E        +    and   'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1' = h.BRANCHE_REFUS
+
+tests/test_hote_durable_a1_v3_v4.py:804: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:08Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:08Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:08Z ETAT demarrage
+2026-11-07T21:14:08Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:08Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:08Z ETAT scellement
+2026-11-07T21:14:08Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:08Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = e1643117443a1b1391662cc5081062667e4a7dc8 (vérifié par ls-remote) ; liste 6a94bb8a0e011e13b78c2a3156004f40b73133b073c2553851142c8d96453c38
+2026-11-07T21:14:08Z ETAT verse
+2026-11-07T21:14:08Z destruction de la machine par son identifiant 90000001
+_____________ test_v4_texte_v4_dans_la_commande_et_sur_la_machine ______________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c2b740>
+
+    def test_v4_texte_v4_dans_la_commande_et_sur_la_machine(monde):
+        r, env, nu = monde()
+        m = v4.MachineV4(r, env)
+        cmd = m.cmd_course(False)
+        assert "prereg/preenregistrement-attaque-goodhart-v3-v4.md" in cmd and h.NOM_TEXTE.removeprefix("orchestrator/") not in cmd
+        assert v3.MachineV3(r, env).cmd_course(False).count("prereg/preenregistrement-attaque-goodhart-v3-v3.md") == 1  # départ
+        assert h.NOM_TEXTE.endswith("-v3-v3.md")  # la v1 gelée n'est pas touchée
+        assert v4.MachineV4(r, env).principal() == 0
+>       j = journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v4.py:845: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v4.py:583: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:09Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:09Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:09Z ETAT demarrage
+2026-11-07T21:14:10Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:10Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:10Z ETAT scellement
+2026-11-07T21:14:10Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:10Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 28af1ecdd643bb3a0f63378f0224eadb3127ac4d (vérifié par ls-remote) ; liste fa72b4d33a15c7093d4955ee9108b202fede947df133037c6618d84f2af14d6c
+2026-11-07T21:14:10Z ETAT verse
+2026-11-07T21:14:10Z destruction de la machine par son identifiant 90000001
+_______________ test_v4_texte_v3_seul_sur_le_depot_public_refuse _______________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53be5f80>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_v4_texte_v3_seul_sur_le_d0')
+
+    def test_v4_texte_v3_seul_sur_le_depot_public_refuse(monde, tmp_path):
+        r, env, nu = monde()
+        pub = tmp_path / "public"  # le dépôt public ne porte que le nom de la v3 : le texte v4 est introuvable
+        t1.run("git", "-C", str(pub), "mv", v4.NOM_TEXTE, h.NOM_TEXTE)
+        t1.run("git", "-C", str(pub), "mv", v4.NOM_TEXTE + ".sha256", h.NOM_TEXTE + ".sha256")
+        t1.run("git", "-C", str(pub), "-c", "user.name=j", "-c", "user.email=j@j", "commit", "-q", "-m", "v3 seule")
+        env["COMMIT_PUBLIC"] = t1.run("git", "-C", str(pub), "rev-parse", "HEAD")
+        assert v4.MachineV4(r, env).principal() == 0
+>       assert "texte v4 : empreinte None" in journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+E       assert 'texte v4 : empreinte None' in "2026-11-07T21:14:10Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+E        +  where "2026-11-07T21:14:10Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" = journal({'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1/EMPREINTES-sortie-a1-v3-troisieme-v1.txt': 'db125a2ded63fd56ae60...-goodhart-v3-a1v3-troisieme-refus-v1/demarrage/a1v3-temps.txt': 'a1v3-temps.txt : journal du démarrage (jouet)\n', ...}, 'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1')
+E        +    where {'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1/EMPREINTES-sortie-a1-v3-troisieme-v1.txt': 'db125a2ded63fd56ae60...-goodhart-v3-a1v3-troisieme-refus-v1/demarrage/a1v3-temps.txt': 'a1v3-temps.txt : journal du démarrage (jouet)\n', ...} = <function branche at 0x7c6d434c32e0>(PosixPath('/tmp/pytest-of-root/pytest-0/test_v4_texte_v3_seul_sur_le_d0/prive.git'), 'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1')
+E        +      where <function branche at 0x7c6d434c32e0> = t1.branche
+E        +      and   'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1' = h.BRANCHE_REFUS
+E        +    and   'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1' = h.BRANCHE_REFUS
+
+tests/test_hote_durable_a1_v3_v4.py:857: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:10Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:10Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:10Z ETAT demarrage
+2026-11-07T21:14:10Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:10Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:10Z ETAT scellement
+2026-11-07T21:14:10Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:10Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 24d398adfe88c0b81603d856a8d2b5b513479180 (vérifié par ls-remote) ; liste d7a568176e2c924228aad4c63ff50ee20269b0bd62b9fb50adbb61927ba855b5
+2026-11-07T21:14:10Z ETAT verse
+2026-11-07T21:14:10Z destruction de la machine par son identifiant 90000001
+___________ test_correction_4_code_ecrit_par_le_pilote_et_la_machine ___________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c1db20>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_4_code_ecrit_p0')
+
+    def test_correction_4_code_ecrit_par_le_pilote_et_la_machine(monde, tmp_path):
+        code, a, d = louer(tmp_path / "pilote" if (tmp_path / "pilote").mkdir() is None else tmp_path)
+        j = Path(a.journal_local).read_text()
+        assert code == 0 and "code (correction 4) : COMMIT_PRIVE " + "a" * 40 in j
+        for m in v4.MODULES:
+            assert f'"{m}": "{t1.sha((RACINE / "src/controle_ia" / m).read_bytes())}"' in j, m
+        assert '"amorce_hote_durable_a1_v3_v4.sh": "' + t1.sha((RACINE / v4.AMORCE).read_bytes()) + '"' in j
+        r, env, nu = monde()
+        env["COMMIT_PRIVE"] = "c" * 40
+        assert v4.MachineV4(r, env).principal() == 0
+>       assert "COMMIT_PRIVE " + "c" * 40 in journal(t1.branche(nu, h.BRANCHE_DONNEES), h.BRANCHE_DONNEES)
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_hote_durable_a1_v3_v4.py:943: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = {}, b = 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1'
+
+    def journal(f, b):
+>       return f[f"{b}/journal-hote-a1-v3-troisieme-v1.log"]
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'donnees/attaque-goodhart-v3-a1v3-troisieme-v1/journal-hote-a1-v3-troisieme-v1.log'
+
+tests/test_hote_durable_a1_v3_v4.py:583: KeyError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:12Z hote-durable-a1-v3-v4 : machine GO-2026-11-05-03 (35 USD) et course GO-2026-11-04-06 (400 USD) acceptés par la garde de main ; registre 9e9075328a74eba122b5d7ea77ea0e755c5bd3547578971df282322aa3229556
+2026-11-07T21:14:12Z code (correction 4) : COMMIT_PRIVE aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:12Z essai 1/2 : offre 21 (GTX_1070) à 0.055 USD/h ; coût au plus 4.4779 USD ≤ 35 ; longueurs : --args 9209, --env 510, commande 9869
+2026-11-07T21:14:12Z réponse de création : contrat 4242 (essai 1)
+2026-11-07T21:14:12Z machine créée : identifiant 4242 (offre 21, 0.055 USD/h), étiquette a1-v3-troisieme-v1 ; T0 2026-11-05T09:00:00Z ; signe de vie attendu avant 2026-11-05T09:30:00Z ; échéance finale 2026-11-08T18:10:00Z
+2026-11-07T21:14:12Z LIGNE POUR registres/etat.md : - Hôte durable v4 d'A1-v3 (GO-2026-11-05-03 ; course GO-2026-11-04-06) : instance **4242**, étiquette `a1-v3-troisieme-v1`, créée 2026-11-05T09:00:00Z, échéance 2026-11-08T18:10:00Z ; contrôles à 2026-11-05T09:40:00Z et 2026-11-08T18:30:00Z ; toute session qui reprend lance `hote_durable_a1_v3_v4.py controler` (étiquette contrôlée ; destruction par l'identifiant, avec -y, seulement sans signe de vie à T0 + 30 min).
+2026-11-07T21:14:12Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:12Z code (correction 4) : COMMIT_PRIVE cccccccccccccccccccccccccccccccccccccccc ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:12Z ETAT demarrage
+2026-11-07T21:14:12Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:12Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:12Z ETAT scellement
+2026-11-07T21:14:12Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:12Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = e771f1515c7a7ef5815ee9bbcf0c3640c6f17eae (vérifié par ls-remote) ; liste 5b417c007c2f127f5d25ac4bd296fcadd38efce45e43c3741f718a81f5cfa882
+2026-11-07T21:14:12Z ETAT verse
+2026-11-07T21:14:12Z destruction de la machine par son identifiant 90000001
+____________ test_correction_5_arbre_modifie_juste_avant_la_course _____________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c1d9e0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_5_arbre_modifi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d007d1990>
+
+    def test_correction_5_arbre_modifie_juste_avant_la_course(monde, tmp_path, monkeypatch):
+        r, env, nu = monde()
+        original = v4.MachineV4.verifier_seulement
+    
+        def salir(self):
+            original(self)
+            (self.r.clone_public / "orchestrator" / "intrus.txt").write_text("x")
+        monkeypatch.setattr(v4.MachineV4, "verifier_seulement", salir)
+        assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+>       assert "arbre du dépôt public modifié avant la course (correction 5)" in journal(t1.branche(nu, h.BRANCHE_REFUS),
+                                                                                        h.BRANCHE_REFUS)
+E       assert 'arbre du dépôt public modifié avant la course (correction 5)' in "2026-11-07T21:14:12Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+E        +  where "2026-11-07T21:14:12Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n" = journal({'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1/EMPREINTES-sortie-a1-v3-troisieme-v1.txt': 'db125a2ded63fd56ae60...-goodhart-v3-a1v3-troisieme-refus-v1/demarrage/a1v3-temps.txt': 'a1v3-temps.txt : journal du démarrage (jouet)\n', ...}, 'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1')
+E        +    where {'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1/EMPREINTES-sortie-a1-v3-troisieme-v1.txt': 'db125a2ded63fd56ae60...-goodhart-v3-a1v3-troisieme-refus-v1/demarrage/a1v3-temps.txt': 'a1v3-temps.txt : journal du démarrage (jouet)\n', ...} = <function branche at 0x7c6d434c32e0>(PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_5_arbre_modifi0/prive.git'), 'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1')
+E        +      where <function branche at 0x7c6d434c32e0> = t1.branche
+E        +      and   'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1' = h.BRANCHE_REFUS
+E        +    and   'donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1' = h.BRANCHE_REFUS
+
+tests/test_hote_durable_a1_v3_v4.py:956: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:12Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:12Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:12Z ETAT demarrage
+2026-11-07T21:14:12Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:12Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:12Z ETAT scellement
+2026-11-07T21:14:12Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:12Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = d0ee834a48644cc3f37f1b8c99a5e09a5ba10c33 (vérifié par ls-remote) ; liste 9a98a71ebd07af60bcd3a839bbbed4703f90bd8dd3b06c788ba47dc219c039fe
+2026-11-07T21:14:12Z ETAT verse
+2026-11-07T21:14:12Z destruction de la machine par son identifiant 90000001
+_________ test_correction_7_numpy_autre_que_2_5_3_rien_ne_part[relais] _________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c1c7c0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_7_numpy_autre_0')
+quoi = 'relais'
+
+    @pytest.mark.parametrize("quoi", ["relais", "configuration"])
+    def test_correction_7_numpy_autre_que_2_5_3_rien_ne_part(monde, tmp_path, quoi):
+        r, env, nu = monde()
+        faux = str(faux_python(tmp_path, "numpy-vieux", "3.13", numpy="2.4.6"))
+        if quoi == "relais":
+            r.python_relais = faux
+        m = v4.MachineV4(r, env, python_configuration=faux) if quoi == "configuration" else v4.MachineV4(r, env)
+        assert m.principal() == 0 and not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert "numpy autre que 2.5.3 (correction 7)" in j and "2.4.6" in j
+E       assert ('numpy autre que 2.5.3 (correction 7)' in "2026-11-07T21:14:13Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:977: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:13Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:13Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:13Z ETAT demarrage
+2026-11-07T21:14:13Z interpréteurs (C1) : relais /tmp/pytest-of-root/pytest-0/test_correction_7_numpy_autre_0/faux-python-numpy-vieux/python3 : Python 3.13.0 (jouet numpy-vieux) ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:13Z REFUS : interpréteur autre que Python 3.13 (C1) : course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:13Z ETAT scellement
+2026-11-07T21:14:13Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:13Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 110f9a5a7811fe2dda62eb635267002d4accc1c3 (vérifié par ls-remote) ; liste 3d64f49f34f0ee87c342e1c447ac27af3d3d94f88897d5a156c8d3060f222665
+2026-11-07T21:14:13Z ETAT verse
+2026-11-07T21:14:13Z destruction de la machine par son identifiant 90000001
+_____ test_correction_7_numpy_autre_que_2_5_3_rien_ne_part[configuration] ______
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c2b1a0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_7_numpy_autre_1')
+quoi = 'configuration'
+
+    @pytest.mark.parametrize("quoi", ["relais", "configuration"])
+    def test_correction_7_numpy_autre_que_2_5_3_rien_ne_part(monde, tmp_path, quoi):
+        r, env, nu = monde()
+        faux = str(faux_python(tmp_path, "numpy-vieux", "3.13", numpy="2.4.6"))
+        if quoi == "relais":
+            r.python_relais = faux
+        m = v4.MachineV4(r, env, python_configuration=faux) if quoi == "configuration" else v4.MachineV4(r, env)
+        assert m.principal() == 0 and not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert "numpy autre que 2.5.3 (correction 7)" in j and "2.4.6" in j
+E       assert ('numpy autre que 2.5.3 (correction 7)' in "2026-11-07T21:14:13Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n")
+
+tests/test_hote_durable_a1_v3_v4.py:977: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:13Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:13Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:13Z ETAT demarrage
+2026-11-07T21:14:13Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /tmp/pytest-of-root/pytest-0/test_correction_7_numpy_autre_1/faux-python-numpy-vieux/python3 : Python 3.13.0 (jouet numpy-vieux)
+2026-11-07T21:14:13Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:13Z ETAT scellement
+2026-11-07T21:14:13Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:13Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 003f7ffe733a3486ae88c8ce7ec4aecc335cc99c (vérifié par ls-remote) ; liste 50a5791025902d4e30b9f61c65932a9a0bbedb7d35c3a57685525ae242ac8fd3
+2026-11-07T21:14:13Z ETAT verse
+2026-11-07T21:14:13Z destruction de la machine par son identifiant 90000001
+_ test_correction_8_artefacts_des_gardes_de_la_machine[texte-texte v4 : empreinte] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c2b880>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_8_artefacts_de0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d02429910>
+cas = 'texte', motif = 'texte v4 : empreinte'
+
+    @pytest.mark.parametrize("cas, motif", [
+        ("texte", "texte v4 : empreinte"),
+        ("lignee", "ne descend pas du code gelé"),
+        ("piece", "pièce donnees/espece-seule-v1/collisionneur_v7.py"),
+        ("statut", "arbre du dépôt public modifié : "),
+        ("port", "déjà pris"),
+        ("verifier", "--verifier-seulement en code 2"),
+        ("relais", "relais : réglages inattendus"),
+        ("ls-remote", "signe de vie non vérifié par ls-remote (C2)"),
+    ])
+    def test_correction_8_artefacts_des_gardes_de_la_machine(monde, tmp_path, monkeypatch, cas, motif):
+        r, env, nu = monde({"code": 0, "verifier": 2} if cas == "verifier" else None)
+        if cas == "texte":
+            env["SHA_TEXTE"] = "e" * 64
+        elif cas == "lignee":
+            r.commit_code_gele = "0" * 40
+        elif cas == "piece":
+            r.empreintes["donnees/espece-seule-v1/collisionneur_v7.py"] = "0" * 64
+        elif cas == "statut":
+            original = h.git
+            monkeypatch.setattr(h, "git", lambda *a, **k: " M intrus\n" if a[:1] == ("status",) else original(*a, **k))
+        elif cas == "relais":
+            original_etat = h.etat_relais
+            monkeypatch.setattr(h, "etat_relais", lambda port: (lambda e: dict(e, plafond_usd=1) if e else e)(original_etat(port)))
+        elif cas == "ls-remote":
+            original, vus = h.git, []
+    
+            def faux(*a, **k):
+                if a[:1] == ("ls-remote",) and a[-1] == f"refs/heads/{v4.BRANCHE_VIE}":
+                    vus.append(1)
+                    if len(vus) > 1:  # après la poussée : ls-remote contredit le commit local
+                        return "f" * 40 + f"\trefs/heads/{v4.BRANCHE_VIE}\n"
+                return original(*a, **k)
+            monkeypatch.setattr(h, "git", faux)
+        if cas == "port":
+            import socket
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", r.port))
+                s.listen()
+                assert v4.MachineV4(r, env).principal() == 0
+        else:
+            assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:14Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:14Z ETAT scellement
+E         2026-11-07T21:14:14Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert 'texte v4 : empreinte' in "2026-11-07T21:14:14Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+
+tests/test_hote_durable_a1_v3_v4.py:1051: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:14Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:14Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:14Z ETAT demarrage
+2026-11-07T21:14:14Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:14Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:14Z ETAT scellement
+2026-11-07T21:14:14Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:14Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 14a8af41e064f97758ddce70673d02fba8e55d45 (vérifié par ls-remote) ; liste 57f596fa0800f391cf51b3323fca0ef1a9e5c68f9c0959cbba1a0609a7e75216
+2026-11-07T21:14:14Z ETAT verse
+2026-11-07T21:14:14Z destruction de la machine par son identifiant 90000001
+_ test_correction_8_artefacts_des_gardes_de_la_machine[lignee-ne descend pas du code gel\xe9] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c2b600>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_8_artefacts_de1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d007cb010>
+cas = 'lignee', motif = 'ne descend pas du code gelé'
+
+    @pytest.mark.parametrize("cas, motif", [
+        ("texte", "texte v4 : empreinte"),
+        ("lignee", "ne descend pas du code gelé"),
+        ("piece", "pièce donnees/espece-seule-v1/collisionneur_v7.py"),
+        ("statut", "arbre du dépôt public modifié : "),
+        ("port", "déjà pris"),
+        ("verifier", "--verifier-seulement en code 2"),
+        ("relais", "relais : réglages inattendus"),
+        ("ls-remote", "signe de vie non vérifié par ls-remote (C2)"),
+    ])
+    def test_correction_8_artefacts_des_gardes_de_la_machine(monde, tmp_path, monkeypatch, cas, motif):
+        r, env, nu = monde({"code": 0, "verifier": 2} if cas == "verifier" else None)
+        if cas == "texte":
+            env["SHA_TEXTE"] = "e" * 64
+        elif cas == "lignee":
+            r.commit_code_gele = "0" * 40
+        elif cas == "piece":
+            r.empreintes["donnees/espece-seule-v1/collisionneur_v7.py"] = "0" * 64
+        elif cas == "statut":
+            original = h.git
+            monkeypatch.setattr(h, "git", lambda *a, **k: " M intrus\n" if a[:1] == ("status",) else original(*a, **k))
+        elif cas == "relais":
+            original_etat = h.etat_relais
+            monkeypatch.setattr(h, "etat_relais", lambda port: (lambda e: dict(e, plafond_usd=1) if e else e)(original_etat(port)))
+        elif cas == "ls-remote":
+            original, vus = h.git, []
+    
+            def faux(*a, **k):
+                if a[:1] == ("ls-remote",) and a[-1] == f"refs/heads/{v4.BRANCHE_VIE}":
+                    vus.append(1)
+                    if len(vus) > 1:  # après la poussée : ls-remote contredit le commit local
+                        return "f" * 40 + f"\trefs/heads/{v4.BRANCHE_VIE}\n"
+                return original(*a, **k)
+            monkeypatch.setattr(h, "git", faux)
+        if cas == "port":
+            import socket
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", r.port))
+                s.listen()
+                assert v4.MachineV4(r, env).principal() == 0
+        else:
+            assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:14Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:14Z ETAT scellement
+E         2026-11-07T21:14:14Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert 'ne descend pas du code gelé' in "2026-11-07T21:14:14Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+
+tests/test_hote_durable_a1_v3_v4.py:1051: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:14Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:14Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:14Z ETAT demarrage
+2026-11-07T21:14:14Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:14Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:14Z ETAT scellement
+2026-11-07T21:14:14Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:15Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 14a8af41e064f97758ddce70673d02fba8e55d45 (vérifié par ls-remote) ; liste 57f596fa0800f391cf51b3323fca0ef1a9e5c68f9c0959cbba1a0609a7e75216
+2026-11-07T21:14:15Z ETAT verse
+2026-11-07T21:14:15Z destruction de la machine par son identifiant 90000001
+_ test_correction_8_artefacts_des_gardes_de_la_machine[piece-pi\xe8ce donnees/espece-seule-v1/collisionneur_v7.py] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c06200>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_8_artefacts_de2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d42d126d0>
+cas = 'piece', motif = 'pièce donnees/espece-seule-v1/collisionneur_v7.py'
+
+    @pytest.mark.parametrize("cas, motif", [
+        ("texte", "texte v4 : empreinte"),
+        ("lignee", "ne descend pas du code gelé"),
+        ("piece", "pièce donnees/espece-seule-v1/collisionneur_v7.py"),
+        ("statut", "arbre du dépôt public modifié : "),
+        ("port", "déjà pris"),
+        ("verifier", "--verifier-seulement en code 2"),
+        ("relais", "relais : réglages inattendus"),
+        ("ls-remote", "signe de vie non vérifié par ls-remote (C2)"),
+    ])
+    def test_correction_8_artefacts_des_gardes_de_la_machine(monde, tmp_path, monkeypatch, cas, motif):
+        r, env, nu = monde({"code": 0, "verifier": 2} if cas == "verifier" else None)
+        if cas == "texte":
+            env["SHA_TEXTE"] = "e" * 64
+        elif cas == "lignee":
+            r.commit_code_gele = "0" * 40
+        elif cas == "piece":
+            r.empreintes["donnees/espece-seule-v1/collisionneur_v7.py"] = "0" * 64
+        elif cas == "statut":
+            original = h.git
+            monkeypatch.setattr(h, "git", lambda *a, **k: " M intrus\n" if a[:1] == ("status",) else original(*a, **k))
+        elif cas == "relais":
+            original_etat = h.etat_relais
+            monkeypatch.setattr(h, "etat_relais", lambda port: (lambda e: dict(e, plafond_usd=1) if e else e)(original_etat(port)))
+        elif cas == "ls-remote":
+            original, vus = h.git, []
+    
+            def faux(*a, **k):
+                if a[:1] == ("ls-remote",) and a[-1] == f"refs/heads/{v4.BRANCHE_VIE}":
+                    vus.append(1)
+                    if len(vus) > 1:  # après la poussée : ls-remote contredit le commit local
+                        return "f" * 40 + f"\trefs/heads/{v4.BRANCHE_VIE}\n"
+                return original(*a, **k)
+            monkeypatch.setattr(h, "git", faux)
+        if cas == "port":
+            import socket
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", r.port))
+                s.listen()
+                assert v4.MachineV4(r, env).principal() == 0
+        else:
+            assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:15Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:15Z ETAT scellement
+E         2026-11-07T21:14:15Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert 'pièce donnees/espece-seule-v1/collisionneur_v7.py' in "2026-11-07T21:14:15Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+
+tests/test_hote_durable_a1_v3_v4.py:1051: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:15Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:15Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:15Z ETAT demarrage
+2026-11-07T21:14:15Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:15Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:15Z ETAT scellement
+2026-11-07T21:14:15Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:15Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 2e15bd85bc5b7563d7ed3362ee1355738269e449 (vérifié par ls-remote) ; liste 1ccf0ad3d54445027804c97cb6e61bebd2e3ec6867e18e76af5631f0a5d6c670
+2026-11-07T21:14:15Z ETAT verse
+2026-11-07T21:14:15Z destruction de la machine par son identifiant 90000001
+_ test_correction_8_artefacts_des_gardes_de_la_machine[statut-arbre du d\xe9p\xf4t public modifi\xe9 : ] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c1fce0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_8_artefacts_de3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d02511fd0>
+cas = 'statut', motif = 'arbre du dépôt public modifié : '
+
+    @pytest.mark.parametrize("cas, motif", [
+        ("texte", "texte v4 : empreinte"),
+        ("lignee", "ne descend pas du code gelé"),
+        ("piece", "pièce donnees/espece-seule-v1/collisionneur_v7.py"),
+        ("statut", "arbre du dépôt public modifié : "),
+        ("port", "déjà pris"),
+        ("verifier", "--verifier-seulement en code 2"),
+        ("relais", "relais : réglages inattendus"),
+        ("ls-remote", "signe de vie non vérifié par ls-remote (C2)"),
+    ])
+    def test_correction_8_artefacts_des_gardes_de_la_machine(monde, tmp_path, monkeypatch, cas, motif):
+        r, env, nu = monde({"code": 0, "verifier": 2} if cas == "verifier" else None)
+        if cas == "texte":
+            env["SHA_TEXTE"] = "e" * 64
+        elif cas == "lignee":
+            r.commit_code_gele = "0" * 40
+        elif cas == "piece":
+            r.empreintes["donnees/espece-seule-v1/collisionneur_v7.py"] = "0" * 64
+        elif cas == "statut":
+            original = h.git
+            monkeypatch.setattr(h, "git", lambda *a, **k: " M intrus\n" if a[:1] == ("status",) else original(*a, **k))
+        elif cas == "relais":
+            original_etat = h.etat_relais
+            monkeypatch.setattr(h, "etat_relais", lambda port: (lambda e: dict(e, plafond_usd=1) if e else e)(original_etat(port)))
+        elif cas == "ls-remote":
+            original, vus = h.git, []
+    
+            def faux(*a, **k):
+                if a[:1] == ("ls-remote",) and a[-1] == f"refs/heads/{v4.BRANCHE_VIE}":
+                    vus.append(1)
+                    if len(vus) > 1:  # après la poussée : ls-remote contredit le commit local
+                        return "f" * 40 + f"\trefs/heads/{v4.BRANCHE_VIE}\n"
+                return original(*a, **k)
+            monkeypatch.setattr(h, "git", faux)
+        if cas == "port":
+            import socket
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", r.port))
+                s.listen()
+                assert v4.MachineV4(r, env).principal() == 0
+        else:
+            assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:15Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:15Z ETAT scellement
+E         2026-11-07T21:14:15Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert 'arbre du dépôt public modifié : ' in "2026-11-07T21:14:15Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+
+tests/test_hote_durable_a1_v3_v4.py:1051: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:15Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:15Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:15Z ETAT demarrage
+2026-11-07T21:14:15Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:15Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:15Z ETAT scellement
+2026-11-07T21:14:15Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:15Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 2e15bd85bc5b7563d7ed3362ee1355738269e449 (vérifié par ls-remote) ; liste 1ccf0ad3d54445027804c97cb6e61bebd2e3ec6867e18e76af5631f0a5d6c670
+2026-11-07T21:14:15Z ETAT verse
+2026-11-07T21:14:15Z destruction de la machine par son identifiant 90000001
+__ test_correction_8_artefacts_des_gardes_de_la_machine[port-d\xe9j\xe0 pris] __
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c1d620>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_8_artefacts_de4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d01c67390>
+cas = 'port', motif = 'déjà pris'
+
+    @pytest.mark.parametrize("cas, motif", [
+        ("texte", "texte v4 : empreinte"),
+        ("lignee", "ne descend pas du code gelé"),
+        ("piece", "pièce donnees/espece-seule-v1/collisionneur_v7.py"),
+        ("statut", "arbre du dépôt public modifié : "),
+        ("port", "déjà pris"),
+        ("verifier", "--verifier-seulement en code 2"),
+        ("relais", "relais : réglages inattendus"),
+        ("ls-remote", "signe de vie non vérifié par ls-remote (C2)"),
+    ])
+    def test_correction_8_artefacts_des_gardes_de_la_machine(monde, tmp_path, monkeypatch, cas, motif):
+        r, env, nu = monde({"code": 0, "verifier": 2} if cas == "verifier" else None)
+        if cas == "texte":
+            env["SHA_TEXTE"] = "e" * 64
+        elif cas == "lignee":
+            r.commit_code_gele = "0" * 40
+        elif cas == "piece":
+            r.empreintes["donnees/espece-seule-v1/collisionneur_v7.py"] = "0" * 64
+        elif cas == "statut":
+            original = h.git
+            monkeypatch.setattr(h, "git", lambda *a, **k: " M intrus\n" if a[:1] == ("status",) else original(*a, **k))
+        elif cas == "relais":
+            original_etat = h.etat_relais
+            monkeypatch.setattr(h, "etat_relais", lambda port: (lambda e: dict(e, plafond_usd=1) if e else e)(original_etat(port)))
+        elif cas == "ls-remote":
+            original, vus = h.git, []
+    
+            def faux(*a, **k):
+                if a[:1] == ("ls-remote",) and a[-1] == f"refs/heads/{v4.BRANCHE_VIE}":
+                    vus.append(1)
+                    if len(vus) > 1:  # après la poussée : ls-remote contredit le commit local
+                        return "f" * 40 + f"\trefs/heads/{v4.BRANCHE_VIE}\n"
+                return original(*a, **k)
+            monkeypatch.setattr(h, "git", faux)
+        if cas == "port":
+            import socket
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", r.port))
+                s.listen()
+                assert v4.MachineV4(r, env).principal() == 0
+        else:
+            assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:16Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:16Z ETAT scellement
+E         2026-11-07T21:14:16Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert 'déjà pris' in "2026-11-07T21:14:16Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+
+tests/test_hote_durable_a1_v3_v4.py:1051: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:16Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:16Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:16Z ETAT demarrage
+2026-11-07T21:14:16Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:16Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:16Z ETAT scellement
+2026-11-07T21:14:16Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:16Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 78e0dba250569744f21b3c9d40565a7661a5cded (vérifié par ls-remote) ; liste 841e6cfdb7dbd5aaac5984a0761ca2080159a957337beb88f3c066e44545c874
+2026-11-07T21:14:16Z ETAT verse
+2026-11-07T21:14:16Z destruction de la machine par son identifiant 90000001
+_ test_correction_8_artefacts_des_gardes_de_la_machine[verifier---verifier-seulement en code 2] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c1eac0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_8_artefacts_de5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d019f8110>
+cas = 'verifier', motif = '--verifier-seulement en code 2'
+
+    @pytest.mark.parametrize("cas, motif", [
+        ("texte", "texte v4 : empreinte"),
+        ("lignee", "ne descend pas du code gelé"),
+        ("piece", "pièce donnees/espece-seule-v1/collisionneur_v7.py"),
+        ("statut", "arbre du dépôt public modifié : "),
+        ("port", "déjà pris"),
+        ("verifier", "--verifier-seulement en code 2"),
+        ("relais", "relais : réglages inattendus"),
+        ("ls-remote", "signe de vie non vérifié par ls-remote (C2)"),
+    ])
+    def test_correction_8_artefacts_des_gardes_de_la_machine(monde, tmp_path, monkeypatch, cas, motif):
+        r, env, nu = monde({"code": 0, "verifier": 2} if cas == "verifier" else None)
+        if cas == "texte":
+            env["SHA_TEXTE"] = "e" * 64
+        elif cas == "lignee":
+            r.commit_code_gele = "0" * 40
+        elif cas == "piece":
+            r.empreintes["donnees/espece-seule-v1/collisionneur_v7.py"] = "0" * 64
+        elif cas == "statut":
+            original = h.git
+            monkeypatch.setattr(h, "git", lambda *a, **k: " M intrus\n" if a[:1] == ("status",) else original(*a, **k))
+        elif cas == "relais":
+            original_etat = h.etat_relais
+            monkeypatch.setattr(h, "etat_relais", lambda port: (lambda e: dict(e, plafond_usd=1) if e else e)(original_etat(port)))
+        elif cas == "ls-remote":
+            original, vus = h.git, []
+    
+            def faux(*a, **k):
+                if a[:1] == ("ls-remote",) and a[-1] == f"refs/heads/{v4.BRANCHE_VIE}":
+                    vus.append(1)
+                    if len(vus) > 1:  # après la poussée : ls-remote contredit le commit local
+                        return "f" * 40 + f"\trefs/heads/{v4.BRANCHE_VIE}\n"
+                return original(*a, **k)
+            monkeypatch.setattr(h, "git", faux)
+        if cas == "port":
+            import socket
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", r.port))
+                s.listen()
+                assert v4.MachineV4(r, env).principal() == 0
+        else:
+            assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:16Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:16Z ETAT scellement
+E         2026-11-07T21:14:16Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert '--verifier-seulement en code 2' in "2026-11-07T21:14:16Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+
+tests/test_hote_durable_a1_v3_v4.py:1051: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:16Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:16Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:16Z ETAT demarrage
+2026-11-07T21:14:16Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:16Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:16Z ETAT scellement
+2026-11-07T21:14:16Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:16Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = ad1adad165cce7cf2ec82417a967400c79069e48 (vérifié par ls-remote) ; liste 841e6cfdb7dbd5aaac5984a0761ca2080159a957337beb88f3c066e44545c874
+2026-11-07T21:14:16Z ETAT verse
+2026-11-07T21:14:16Z destruction de la machine par son identifiant 90000001
+_ test_correction_8_artefacts_des_gardes_de_la_machine[relais-relais : r\xe9glages inattendus] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c1cfe0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_8_artefacts_de6')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d01a3a850>
+cas = 'relais', motif = 'relais : réglages inattendus'
+
+    @pytest.mark.parametrize("cas, motif", [
+        ("texte", "texte v4 : empreinte"),
+        ("lignee", "ne descend pas du code gelé"),
+        ("piece", "pièce donnees/espece-seule-v1/collisionneur_v7.py"),
+        ("statut", "arbre du dépôt public modifié : "),
+        ("port", "déjà pris"),
+        ("verifier", "--verifier-seulement en code 2"),
+        ("relais", "relais : réglages inattendus"),
+        ("ls-remote", "signe de vie non vérifié par ls-remote (C2)"),
+    ])
+    def test_correction_8_artefacts_des_gardes_de_la_machine(monde, tmp_path, monkeypatch, cas, motif):
+        r, env, nu = monde({"code": 0, "verifier": 2} if cas == "verifier" else None)
+        if cas == "texte":
+            env["SHA_TEXTE"] = "e" * 64
+        elif cas == "lignee":
+            r.commit_code_gele = "0" * 40
+        elif cas == "piece":
+            r.empreintes["donnees/espece-seule-v1/collisionneur_v7.py"] = "0" * 64
+        elif cas == "statut":
+            original = h.git
+            monkeypatch.setattr(h, "git", lambda *a, **k: " M intrus\n" if a[:1] == ("status",) else original(*a, **k))
+        elif cas == "relais":
+            original_etat = h.etat_relais
+            monkeypatch.setattr(h, "etat_relais", lambda port: (lambda e: dict(e, plafond_usd=1) if e else e)(original_etat(port)))
+        elif cas == "ls-remote":
+            original, vus = h.git, []
+    
+            def faux(*a, **k):
+                if a[:1] == ("ls-remote",) and a[-1] == f"refs/heads/{v4.BRANCHE_VIE}":
+                    vus.append(1)
+                    if len(vus) > 1:  # après la poussée : ls-remote contredit le commit local
+                        return "f" * 40 + f"\trefs/heads/{v4.BRANCHE_VIE}\n"
+                return original(*a, **k)
+            monkeypatch.setattr(h, "git", faux)
+        if cas == "port":
+            import socket
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", r.port))
+                s.listen()
+                assert v4.MachineV4(r, env).principal() == 0
+        else:
+            assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:17Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:17Z ETAT scellement
+E         2026-11-07T21:14:17Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert 'relais : réglages inattendus' in "2026-11-07T21:14:17Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+
+tests/test_hote_durable_a1_v3_v4.py:1051: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:17Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:17Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:17Z ETAT demarrage
+2026-11-07T21:14:17Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:17Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:17Z ETAT scellement
+2026-11-07T21:14:17Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:17Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = 08d7baf3bbaae7f93d5bf8cb18ab1c4d116d209f (vérifié par ls-remote) ; liste ee87b39e0181aeaa8a866a76ebe582755148a2948aaf8396ba9eecf7e149797c
+2026-11-07T21:14:17Z ETAT verse
+2026-11-07T21:14:17Z destruction de la machine par son identifiant 90000001
+_ test_correction_8_artefacts_des_gardes_de_la_machine[ls-remote-signe de vie non v\xe9rifi\xe9 par ls-remote (C2)] _
+
+monde = <function monde.<locals>.fabriquer at 0x7c6d53c1e480>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_correction_8_artefacts_de7')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6d432d6110>
+cas = 'ls-remote', motif = 'signe de vie non vérifié par ls-remote (C2)'
+
+    @pytest.mark.parametrize("cas, motif", [
+        ("texte", "texte v4 : empreinte"),
+        ("lignee", "ne descend pas du code gelé"),
+        ("piece", "pièce donnees/espece-seule-v1/collisionneur_v7.py"),
+        ("statut", "arbre du dépôt public modifié : "),
+        ("port", "déjà pris"),
+        ("verifier", "--verifier-seulement en code 2"),
+        ("relais", "relais : réglages inattendus"),
+        ("ls-remote", "signe de vie non vérifié par ls-remote (C2)"),
+    ])
+    def test_correction_8_artefacts_des_gardes_de_la_machine(monde, tmp_path, monkeypatch, cas, motif):
+        r, env, nu = monde({"code": 0, "verifier": 2} if cas == "verifier" else None)
+        if cas == "texte":
+            env["SHA_TEXTE"] = "e" * 64
+        elif cas == "lignee":
+            r.commit_code_gele = "0" * 40
+        elif cas == "piece":
+            r.empreintes["donnees/espece-seule-v1/collisionneur_v7.py"] = "0" * 64
+        elif cas == "statut":
+            original = h.git
+            monkeypatch.setattr(h, "git", lambda *a, **k: " M intrus\n" if a[:1] == ("status",) else original(*a, **k))
+        elif cas == "relais":
+            original_etat = h.etat_relais
+            monkeypatch.setattr(h, "etat_relais", lambda port: (lambda e: dict(e, plafond_usd=1) if e else e)(original_etat(port)))
+        elif cas == "ls-remote":
+            original, vus = h.git, []
+    
+            def faux(*a, **k):
+                if a[:1] == ("ls-remote",) and a[-1] == f"refs/heads/{v4.BRANCHE_VIE}":
+                    vus.append(1)
+                    if len(vus) > 1:  # après la poussée : ls-remote contredit le commit local
+                        return "f" * 40 + f"\trefs/heads/{v4.BRANCHE_VIE}\n"
+                return original(*a, **k)
+            monkeypatch.setattr(h, "git", faux)
+        if cas == "port":
+            import socket
+            with socket.socket() as s:
+                s.bind(("127.0.0.1", r.port))
+                s.listen()
+                assert v4.MachineV4(r, env).principal() == 0
+        else:
+            assert v4.MachineV4(r, env).principal() == 0
+        assert not (tmp_path / "courses-lancees").exists()
+        j = journal(t1.branche(nu, h.BRANCHE_REFUS), h.BRANCHE_REFUS)
+>       assert motif in j, j[-500:]
+E       AssertionError: thon 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+E         2026-11-07T21:14:17Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+E         2026-11-07T21:14:17Z ETAT scellement
+E         2026-11-07T21:14:17Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+E         
+E       assert 'signe de vie non vérifié par ls-remote (C2)' in "2026-11-07T21:14:17Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; pl...é 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)\n"
+
+tests/test_hote_durable_a1_v3_v4.py:1051: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:14:17Z hote-durable-a1-v3-v4 ; machine GO-2026-11-05-03 ; course GO-2026-11-04-06 ; prix 0.2 USD/h ; plafond machine 32.0 USD, 0.166667 h ; identifiant 90000001 ; départ du conteneur None
+2026-11-07T21:14:17Z code (correction 4) : COMMIT_PRIVE ? ; empreintes {"hote_durable_a1_v3.py": "5b853fde8987a472a191f769415068ecc15f1da8a042767bba4229dd5c29e0b1", "hote_durable_a1_v3_v4.py": "8101d33bdc259860290feb9a35fb3a93d50df06c84a4268a105f86a973ceef3f", "sonde_hote_durable_a1_v3.py": "f7c7f79ba974dd1e38743265caf88f09ce7d4d96ea4676f6d66e75cc9ebca69d", "sonde_hote_durable_a1_v3_v10.py": "37b70a0646874e3769a9e45ccf1438121f2126aecc8307234c3cc590f122b81c", "amorce_hote_durable_a1_v3_v4.sh": "a2cecc7ee8318155c16bc91427cf2f7c2a73a227f3628f9dd35ddd9bb06ffb3c"}
+2026-11-07T21:14:17Z ETAT demarrage
+2026-11-07T21:14:17Z interpréteurs (C1) : relais /usr/bin/python3 : Python 3.11.2 ; course /usr/bin/python3 : Python 3.11.2 ; configuration gelée /usr/bin/python3 : Python 3.11.2
+2026-11-07T21:14:17Z REFUS : interpréteur autre que Python 3.13 (C1) : relais /usr/bin/python3 (3.11), course /usr/bin/python3 (3.11), configuration gelée /usr/bin/python3 (3.11) : rien ne part
+2026-11-07T21:14:17Z ETAT scellement
+2026-11-07T21:14:17Z nature de la fin : refus_avant_course ; coût de la machine estimé 0.0000 USD depuis le départ du conteneur ; scellement (liste d'empreintes, puis copie versée, sans autre écriture)
+2026-11-07T21:14:17Z versé : donnees/attaque-goodhart-v3-a1v3-troisieme-refus-v1 = ea8489d1d168cab5ea0e8b6c66e72ea433194432 (vérifié par ls-remote) ; liste ee87b39e0181aeaa8a866a76ebe582755148a2948aaf8396ba9eecf7e149797c
+2026-11-07T21:14:17Z ETAT verse
+2026-11-07T21:14:17Z destruction de la machine par son identifiant 90000001
+____________________ test_releve_du_pilote_de_carte[False] _____________________
+
+monde = <function monde.<locals>.fabriquer at 0x7c6c9324c400>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_releve_du_pilote_de_carte1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c6c937ddf10>
+present = False
+
+    @pytest.mark.parametrize("present", [True, False])
+    def test_releve_du_pilote_de_carte(monde, tmp_path, monkeypatch, present):
+        if present:
+            d = tmp_path / "bin-nvidia"
+            d.mkdir()
+            outil(d, "nvidia-smi", 'echo "GPU 0: NVIDIA GeForce GTX 1070 (UUID: GPU-jouet)"\necho "ligne en trop"\n')
+            monkeypatch.setenv("PATH", f"{d}:{os.environ['PATH']}")
+        r, env, nu = monde()
+        assert s.MachineSondeV10(r, env, 120).principal() == 0
+        f = versees(nu, s.BRANCHE)
+        ligne = f[f"{s.BRANCHE}/pilote-carte.txt"].decode().strip()
+>       assert ligne == ("GPU 0: NVIDIA GeForce GTX 1070 (UUID: GPU-jouet)" if present else "nvidia-smi absent")
+E       AssertionError: assert 'GPU 0: NVIDI...45852bda0ada)' == 'nvidia-smi absent'
+E         
+E         - nvidia-smi absent
+E         + GPU 0: NVIDIA A100-SXM4-80GB (UUID: GPU-68df8b4c-911f-85e1-0f5a-45852bda0ada)
+
+tests/test_sonde_hote_durable_a1_v3_v10.py:1286: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2026-11-07T21:49:07Z sonde-hote-durable-a1-v3-v10 ; machine 90000001 ; prix 0.12 USD/h ; départ du conteneur 1794088087.0
+2026-11-07T21:49:07Z ETAT demarrage
+2026-11-07T21:49:07Z registre de canal/conv-audit-n04 au commit c8ac5182873cccdbdb7fac6a0eb9107c9d514098 : aucun doublon ; GO-2026-11-05-01 accepté, 1 USD, sha256 516a15268d2b3301134dc96118d01be8412443a12a66a919ba7fc033d2b78980
+2026-11-07T21:49:07Z signe de vie poussé : donnees/sonde-hote-durable-a1-v3-v10-signe-de-vie = 6bc1e30e6959355d8c6e855eae77ac14841cce86
+2026-11-07T21:49:07Z faits de l'hôte : {"python_sonde": "3.11.18", "plateforme": "Linux-6.5.0-44-generic-x86_64-with-glibc2.36", "usr_bin_python3": "Python 3.11.2", "numpy": "2.4.6", "git": "git version 2.39.5", "coeurs": 128, "disque_libre_go": 150.4, "container_id_present": true, "container_api_key_presente": true}
+2026-11-07T21:49:07Z pilote de carte : GPU 0: NVIDIA A100-SXM4-80GB (UUID: GPU-68df8b4c-911f-85e1-0f5a-45852bda0ada)
+2026-11-07T21:49:07Z clé d'instance : lecture faite, 1 instance(s), la machine 90000001 vue
+2026-11-07T21:49:07Z course factice détachée : PID 38827 (durée prévue 120 s, plafond 60 s depuis le départ du conteneur)
+2026-11-07T21:49:07Z ETAT course
+2026-11-07T21:49:07Z PLAFOND DE DURÉE DE LA SONDE atteint (60.6 s, 0.0020 USD) : course factice arrêtée par son identifiant (attendu)
+2026-11-07T21:49:07Z arrêt de course factice par son identifiant 38827 (TERM)
+2026-11-07T21:49:07Z ETAT scellement
+2026-11-07T21:49:07Z nature de la fin : plafond_de_duree_de_la_sonde ; coût de la machine estimé 0.0020 USD depuis le départ du conteneur ; scellement
+2026-11-07T21:49:07Z versé : donnees/sonde-hote-durable-a1-v3-v10 = 9a163778809a48df9fbe33c36c096b08cd50db8c (vérifié par ls-remote) ; liste bdc5ed18ebec2f402d5de46fc386d9da049fc67cf2036480b9de984520c91411
+2026-11-07T21:49:07Z ETAT verse
+2026-11-07T21:49:07Z destruction de la machine par son identifiant 90000001
+_______ test_echeance_sans_resultat_depose_le_journal_sur_la_branche[v7] _______
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-0/test_echeance_sans_resultat_de1'), 'source': PosixPath('/tmp/pytest...st_echeance_sans_resultat_de1/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v7'
+
+    def test_echeance_sans_resultat_depose_le_journal_sur_la_branche(bac, amorce):
+        """Cas sain (v7) : la consignation lancée par la minuterie (`t06-consigner.sh "échéance"`) sans aucun résultat neuf pousse un commit de journal
+        (`traces/consignation-…/journal-consignation.txt` : motif, heure, dernière ligne, 400 dernières lignes) ; artefact (v6) : aucun commit, rien sur la branche."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+        assert code == 0, sortie[-1500:]
+        avant = _sujets(distant)
+        journal = next(racine.rglob("journal.txt"))
+        with open(journal, "a", encoding="utf-8") as f:
+            f.write("2099-01-01T00:00:00Z ÉCHÉANCE 4102444800 atteinte (C14) : consignation (ligne de l'essai)\n2099-01-01T00:00:01Z installation des dépendances (dernière étape de l'essai)\n")
+        r = subprocess.run(["bash", str(racine / "t06-consigner.sh"), "échéance"], capture_output=True, text=True, timeout=120)
+        assert r.returncode == 0, r.stdout + r.stderr
+        apres = _sujets(distant)
+        fichiers = [f.split("\t")[-1] for f in t6a._fichiers_distants(distant)]
+        traces = [f for f in fichiers if "traces/consignation-" in f and f.endswith("journal-consignation.txt")]
+        if amorce == "v6":
+            assert apres == avant and not traces, (apres, traces)             # défaut reproduit : le journal ne part pas
+            return
+        assert len(apres) == len(avant) + 1 and apres[0] == "T0.6 : journal de l'instance (échéance)", apres
+        assert len(traces) == 1
+        texte = t6a._git(distant, "show", f"{BRANCHE_JOUET}:{traces[0]}")
+>       assert "motif : échéance" in texte and "ÉCHÉANCE 4102444800 atteinte (C14)" in texte and "dernière étape de l'essai" in texte
+E       AssertionError: assert ('motif : échéance' in 'motif : échéance\nheure : 2026-11-07T22:22:32Z\ndernière ligne du journal avant la consignation : 2026-11-07T22:22:32...sée (résultats, données légères, morceaux et traces)\n2026-11-07T22:22:32Z échéance : aucun résultat léger à committer' and 'ÉCHÉANCE 4102444800 atteinte (C14)' in 'motif : échéance\nheure : 2026-11-07T22:22:32Z\ndernière ligne du journal avant la consignation : 2026-11-07T22:22:32...sée (résultats, données légères, morceaux et traces)\n2026-11-07T22:22:32Z échéance : aucun résultat léger à committer')
+
+tests/test_t06_v7_amorce_minuterie.py:120: AssertionError
+_ test_minuterie_a_l_echeance_depose_la_ligne_d_echeance_et_le_journal_sur_la_branche[v7] _
+
+bac = {'racine': PosixPath('/tmp/pytest-of-root/pytest-0/test_minuterie_a_l_echeance_de1'), 'source': PosixPath('/tmp/pytest...st_minuterie_a_l_echeance_de1/venv'), 'amorce_sha': '78ad709f686e1f8b1b52ce6b2792e345e7981ffa3417df874f461ad30bcad983'}
+amorce = 'v7'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_minuterie_a_l_echeance_de1')
+
+    def test_minuterie_a_l_echeance_depose_la_ligne_d_echeance_et_le_journal_sur_la_branche(bac, amorce, tmp_path):
+        """Chemin réel de E2-6 : la MINUTERIE (curl factice) atteint l'échéance ; la ligne « ÉCHÉANCE … atteinte (C14) » (écrite par elle) et le journal de l'instance
+        arrivent sur la branche avant le DELETE. v6 : rien (défaut) ; v7 : commit « journal de l'instance (échéance) » avec les deux fichiers."""
+        distant = _distant(bac)
+        code, _, sortie, racine = _lancer_amorce(bac, distant)
+        assert code == 0, sortie[-1500:]
+        avant = _sujets(distant)
+        journal = next(racine.rglob("journal.txt"))
+        with open(journal, "a", encoding="utf-8") as f:
+            f.write("2099-01-01T00:00:01Z installation des dépendances (dernière étape de l'essai)\n")
+        env = {k: os.environ[k] for k in ENV_DE_BASE if k in os.environ}
+        env.update(_curl(tmp_path), HOME=str(tmp_path))
+        now = int(time.time())
+        r = subprocess.run(["bash", str(racine / "t06-minuterie.sh"), str(now + 2), "0", str(racine), "https://api.invalid/v0"], env=env, capture_output=True, text=True, timeout=120)
+        log = (racine / "t06-minuterie.log").read_text(encoding="utf-8")
+        assert r.returncode == 0 and "ÉCHÉANCE" in log and "instance 424242 détruite" in log, log
+        apres = _sujets(distant)
+        fichiers = [f.split("\t")[-1] for f in t6a._fichiers_distants(distant)]
+        if amorce == "v6":
+            assert apres == avant and not [f for f in fichiers if "traces/consignation-" in f]
+            return
+        assert apres[0] == "T0.6 : journal de l'instance (échéance)" and len(apres) == len(avant) + 1, apres
+        fin = [f for f in fichiers if f.endswith("t06-minuterie-fin.txt")]
+        assert len(fin) == 1
+        assert "ÉCHÉANCE" in t6a._git(distant, "show", f"{BRANCHE_JOUET}:{fin[0]}")
+        jr = [f for f in fichiers if f.endswith("journal-consignation.txt")]
+>       assert "dernière étape de l'essai" in t6a._git(distant, "show", f"{BRANCHE_JOUET}:{jr[0]}")
+E       assert "dernière étape de l'essai" in 'motif : échéance\nheure : 2026-11-07T22:22:53Z\ndernière ligne du journal avant la consignation : 2026-11-07T22:22:51...sée (résultats, données légères, morceaux et traces)\n2026-11-07T22:22:53Z échéance : aucun résultat léger à committer'
+E        +  where 'motif : échéance\nheure : 2026-11-07T22:22:53Z\ndernière ligne du journal avant la consignation : 2026-11-07T22:22:51...sée (résultats, données légères, morceaux et traces)\n2026-11-07T22:22:53Z échéance : aucun résultat léger à committer' = <function _git at 0x7c6d423cd800>(PosixPath('/tmp/pytest-of-root/pytest-0/test_minuterie_a_l_echeance_de1/distant-0.git'), 'show', 'calcul/t06-jouet-v4:traces/consignation-20261107-222253-jzvk/journal-consignation.txt')
+E        +    where <function _git at 0x7c6d423cd800> = t6a._git
+
+tests/test_t06_v7_amorce_minuterie.py:189: AssertionError
+______ test_generateur_de_l_ordre_e3_v6_part_de_l_ordre_scelle_en_vigueur ______
+
+    def test_generateur_de_l_ordre_e3_v6_part_de_l_ordre_scelle_en_vigueur():
+        """Le générateur lit E3 v5 scellé (db0ad520…) dans origin/main, applique des remplacements uniques et rend un ordre dont le filtre de lecture est celui du lanceur v9
+        (gpu_ram en Go), au plafond de 4,3 USD, avec le seul marqueur du commit d'épreuve. Sur l'instance (clone sans origin/main), le même contrôle porte sur l'ordre déjà
+        généré et versé au dépôt : l'essai n'est jamais sauté (E3-2 exige zéro essai sauté)."""
+        import importlib.util
+        import re
+        dossier = RACINE / "docs" / "notes" / "g0-deux-semaines-v1" / "ordres-t06-e2-e3-v6"
+        spec = importlib.util.spec_from_file_location("gen_v6", dossier / "pieces" / "generer_ordres_v6.py")
+        gen = importlib.util.module_from_spec(spec)
+>       spec.loader.exec_module(gen)
+
+tests/test_t06_v9_nouveaux.py:211: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1074: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1004: in source_to_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+f = <built-in function compile>
+args = (b'"""G\xc3\xa9n\xc3\xa9rateur des ordres E3 v6 et E2 v5 (fille 10, R-1696, R-1697 ; R12 : nouveau nom, le g\xc3\xa9n\...main()\n', '/root/amorce-depot/docs/notes/g0-deux-semaines-v1/ordres-t06-e2-e3-v6/pieces/generer_ordres_v6.py', 'exec')
+kwds = {'dont_inherit': True, 'optimize': -1}
+
+>   ???
+E     File "/root/amorce-depot/docs/notes/g0-deux-semaines-v1/ordres-t06-e2-e3-v6/pieces/generer_ordres_v6.py", line 229
+E       (racine / f"docs/notes/g0-deux-semaines-v1/ordres-t06-e2-e3-v6/ordre-fille-6-t06-{"e3" if nom == "e3" else "e2-6"}-v{6 if nom == "e3" else 1}.md").write_text(texte, encoding="utf-8")
+E                                                                                          ^^
+E   SyntaxError: f-string: expecting '}'
+
+<frozen importlib._bootstrap>:241: SyntaxError
+=========================== short test summary info ============================
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_cas_sain_partie_de_main_signe_de_vie_et_destruction
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_refus_rien_ne_part[option0-env_modif0-identifiants en double]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_refus_rien_ne_part[option1-env_modif1-absent de la branche canal/conv-audit-n04]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_refus_rien_ne_part[option2-env_modif2-GO-2026-11-05-03 absent]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_refus_rien_ne_part[option3-env_modif3-exig\xe9 ici]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_refus_rien_ne_part[option5-env_modif5-\xe9ch\xe9ance absolue trop proche]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_refus_rien_ne_part[option6-env_modif6-ECHEANCE_UTC_S]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_versement_impossible_machine_arretee
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_fuite_d_un_secret_rien_verse
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_destruction_refusee_puis_arret[False-3-geste0]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_destruction_refusee_puis_arret[True-4-geste1]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_echeance_absolue_borne_la_course[4800-600]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_machine_echeance_absolue_borne_la_course[3690-90]
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_c1_cas_sain_versions_au_journal
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_c2_signe_de_vie_deja_present_rien_ne_part
+FAILED tests/test_hote_durable_a1_v3_v3.py::test_c2_poussee_du_signe_de_vie_non_verifiee_rien_ne_part
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_cas_sain_partie_de_main_signe_de_vie_et_destruction
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_refus_rien_ne_part[option0-env_modif0-identifiants en double]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_refus_rien_ne_part[option1-env_modif1-absent de la branche canal/conv-audit-n04]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_refus_rien_ne_part[option2-env_modif2-GO-2026-11-05-03 absent]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_refus_rien_ne_part[option3-env_modif3-exig\xe9 ici]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_refus_rien_ne_part[option5-env_modif5-\xe9ch\xe9ance absolue trop proche]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_refus_rien_ne_part[option6-env_modif6-ECHEANCE_UTC_S]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_versement_impossible_machine_arretee
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_fuite_d_un_secret_rien_verse
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_destruction_refusee_puis_arret[False-3-geste0]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_destruction_refusee_puis_arret[True-4-geste1]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_echeance_absolue_borne_la_course[4800-600]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_machine_echeance_absolue_borne_la_course[3690-90]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_c1_cas_sain_versions_au_journal
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_c2_signe_de_vie_deja_present_rien_ne_part
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_c2_poussee_du_signe_de_vie_non_verifiee_rien_ne_part
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_v4_texte_v4_dans_la_commande_et_sur_la_machine
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_v4_texte_v3_seul_sur_le_depot_public_refuse
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_4_code_ecrit_par_le_pilote_et_la_machine
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_5_arbre_modifie_juste_avant_la_course
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_7_numpy_autre_que_2_5_3_rien_ne_part[relais]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_7_numpy_autre_que_2_5_3_rien_ne_part[configuration]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_8_artefacts_des_gardes_de_la_machine[texte-texte v4 : empreinte]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_8_artefacts_des_gardes_de_la_machine[lignee-ne descend pas du code gel\xe9]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_8_artefacts_des_gardes_de_la_machine[piece-pi\xe8ce donnees/espece-seule-v1/collisionneur_v7.py]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_8_artefacts_des_gardes_de_la_machine[statut-arbre du d\xe9p\xf4t public modifi\xe9 : ]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_8_artefacts_des_gardes_de_la_machine[port-d\xe9j\xe0 pris]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_8_artefacts_des_gardes_de_la_machine[verifier---verifier-seulement en code 2]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_8_artefacts_des_gardes_de_la_machine[relais-relais : r\xe9glages inattendus]
+FAILED tests/test_hote_durable_a1_v3_v4.py::test_correction_8_artefacts_des_gardes_de_la_machine[ls-remote-signe de vie non v\xe9rifi\xe9 par ls-remote (C2)]
+FAILED tests/test_sonde_hote_durable_a1_v3_v10.py::test_releve_du_pilote_de_carte[False]
+FAILED tests/test_t06_v7_amorce_minuterie.py::test_echeance_sans_resultat_depose_le_journal_sur_la_branche[v7]
+FAILED tests/test_t06_v7_amorce_minuterie.py::test_minuterie_a_l_echeance_depose_la_ligne_d_echeance_et_le_journal_sur_la_branche[v7]
+FAILED tests/test_t06_v9_nouveaux.py::test_generateur_de_l_ordre_e3_v6_part_de_l_ordre_scelle_en_vigueur
+50 failed, 3113 passed, 23 skipped in 4488.87s (1:14:48)
