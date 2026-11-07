@@ -48,3 +48,7 @@ Sortie de `verif_lot_v1.py cout` sur r00–r05 : OK
 - **Jalon de 16 tâches, script officiel** : aire sac de mots **0,858** (réponse entière) / **0,846** (avant COST) ; contrôle 10 : OK ; défaut dur unique hors jetons : contrôle 9, **r12 (2511.04675v2) paire 4, les deux membres : suite de 8 mots de l'énoncé** (la normalisation du script sépare les traits d'union : « text-to-image text-to-video image-to-video »). 3 écarts en jetons (factices). Journal : `journal-jc-jalon-16-v1.txt`.
 - **Règle fixe alignée** : le pré-contrôle des 8 mots de l'énoncé utilise désormais la normalisation du script officiel (traits d'union = séparateurs) ; il n'avait pas vu ce cas. Rejouée sur r00–r15 : seule r12 p4 en faute ; sur les 30 tâches de J-D et J-A : aucune faute.
 - **Renvoi** (au plus un par tâche) : r12, pré-contrôle « 8 mots de l'énoncé », paire 4 — un renvoi, déclenché par ce pré-contrôle (défaut dur du script officiel), pas par l'aire.
+
+## 7. Écart de procédure déclaré (7 novembre, ~11 h UTC)
+
+Pendant quelques secondes, **trois** sous-agents ont été en cours (r18–r19, la correction de r12 p4 et r20–r21) ; r20–r21 a été arrêté aussitôt, avant tout fichier, et relancé après. Aucune remise touchée.
