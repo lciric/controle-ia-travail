@@ -1,0 +1,71 @@
+{
+ "objet": "couples du candidat 5 au candidat 6 de T0.6 (R-1676, R-1677 : amorce v5, lanceur v7)",
+ "couples": [
+  {
+   "id": "O1",
+   "quoi": "titre",
+   "ancien": "# Préenregistrement — T0.6 organismes v0 : organisme (ii) par adaptateur de rang faible à dose réglable, courbe dose–réponse et test croisé d'étiologie (critères 2 et 3 de G0) — v1 — candidat 5",
+   "nouveau": "# Préenregistrement — T0.6 organismes v0 : organisme (ii) par adaptateur de rang faible à dose réglable, courbe dose–réponse et test croisé d'étiologie (critères 2 et 3 de G0) — v1 — candidat 6"
+  },
+  {
+   "id": "O2",
+   "quoi": "statut : candidat 6 devant le candidat 5",
+   "ancien": "- Statut : **candidat 5**, écrit le 2026-11-07 à partir de 10:27 UTC",
+   "nouveau": "- Statut : **candidat 6**, écrit le {DATE_C6} à partir de {HEURE_C6} UTC (heure relevée par `date -u`) par la fille 10 (session de développement, Claude Sonnet 5.5, ordre de la session mère du 7 novembre 2026, 11:44 UTC, R-1676 et R-1677), qui n'a écrit ni le candidat 1, ni les brouillons 1 à 5, ni la conception, ni P3. **Non scellé, non contre-lu** : la contre-lecture R2 (lecteur Opus) portera sur l'amorce v5, le lanceur v7, les ordres d'épreuve v4 et ce candidat 6. **Candidat 6 = candidat 5 (`{SHA_C5}`, empreinte vérifiée avant tout) + onze couples** (amorce v5 à clonage réduit, lanceur v7, citations des pièces du défaut de chaîne d'E2 ; point 13 de la table des changements), appliqués dans l'ordre par script (`brouillons/T0.6-organismes-v0-v1-candidat6-pieces/appliquer-candidat6-v1.py`), journal à côté ; **les cinq marqueurs restent**.\n- Statut antérieur : **candidat 5**, écrit le 2026-11-07 à partir de 10:27 UTC"
+  },
+  {
+   "id": "O3",
+   "quoi": "point 13 de la table des changements",
+   "ancien": "(E3 fournit la dernière ligne de la suite complète pour `TESTS_ATTENDUS_T06`).\n",
+   "nouveau": "(E3 fournit la dernière ligne de la suite complète pour `TESTS_ATTENDUS_T06`).\n  13. **Ce que le candidat 6 change** ({DATE_C6}, {HEURE_C6} UTC ; source : message de la session mère du 7 novembre 2026, 11:44 UTC, défaut de chaîne trouvé par l'épreuve E2, R-1676 et R-1677) :\n      - **le défaut** : le clonage de la v4 de l'amorce (`clone --filter=blob:none`, sans extraction partielle) extrait tout l'arbre de `main` (≈ 3,9 Go, mesuré par la fille 6 : 72 s depuis son conteneur) ; l'instance louée, qui annonçait 861 Mb/s, n'a reçu que ≈ 1,4 Go en ≈ 19 minutes facturées (≈ 10 Mb/s effectifs), le clonage a été tué à 900 s, le refus s'est perdu dans une destruction en 5 s, et la surveillance a continué d'imprimer « POURSUIVRE » après la disparition de l'instance (0,149 USD) ;\n      - **amorce v5** (`scripts/amorce_instance_t06_v5.sh`, `{SHA_AMORCE5}`), à la place de la v4 dans les deux modes (jouet et réel) : `clone --filter=blob:none --no-checkout`, extraction partielle (`sparse-checkout`, mode sans cône, 24 motifs listés et justifiés dans l'amorce et le rapport), puis `checkout` du commit ; **le débit du clonage est journalisé** (ligne `AMORCE … : CLONAGE mode=… secondes=… octets_git=… octets_arbre=… debit_Mo_s=… motifs=…`) ; `refus` et `refus_precoce` annoncent la cause puis **attendent 180 s** (constante `REFUS_ATTENTE_S`) avant de demander la destruction ; **mesure réelle** : clone du commit d'épreuve depuis le dépôt distant, 9 s, `.git` ≈ 100 Mo + arbre extrait ≈ 306 Mo (≈ 0,4 Go au lieu de ≈ 3,9 Go) ;\n      - **lanceur v7** (`scripts/lancer_t06_v7.sh`, `{SHA_LANCER7}`) à la place du lanceur v6 comme point d'entrée (contrôles, création, après-création, surveillance, `controles-epreuve`) ; module `session_v6.py` (`{SHA_S6}`) : filtre de création **`inet_down>=500`** en plus de `reliability>=0.98` (garde bon marché d'après les listes de E2-1 : 25 offres modestes sur 30, A100 3 sur 3, H200 9 sur 9), et sous-commande `presente` ; `surveillance` imprime **`ARRET mort`** quand l'instance n'est plus dans l'inventaire (deux relevés à 15 s d'écart ; rien à arrêter) et recopie à chaque relevé le journal entier (`vastai logs --tail 2000`, valeurs de clés masquées) dans `journal-instance.txt` ;\n      - **pièces** — rapport additif `docs/notes/g0-deux-semaines-v1/rapport-developpeur-lanceur-T0.6-v7.md` (`{SHA_RAPPORT7}`) ; essais `tests/test_t06_v5_amorce.py` (`{SHA_TESTA}`) et `tests/test_t06_v7_scripts.py` (`{SHA_TESTL}`) ; banc de mutations `scripts/banc_mutations_t06_v7.py` (`{SHA_BANC7}`) ; essai local de l'amorce `scripts/essai_amorce_t06_v5.sh` (`{SHA_ESSAI}`) ; répétition `scripts/epreuve_e1_t06_v7.sh` (`{SHA_E17}`) ; brouillons des ordres d'épreuve v4 (`brouillons/ordres-t06-e2-e3-v4/ordre-fille-6-t06-e2-v4.md`, `{SHA_E2V4}` ; `…-e3-v4.md`, `{SHA_E3V4}`), issus des ordres v3 scellés par `pieces/generer_ordres_v4.py` ;\n      - **ce que le candidat 6 ne change pas** — aucune hypothèse, aucun seuil, aucune prédiction, aucune section « Hypothèses » à « Liste d'arrêt » ; le run lui-même (`controle_ia.t06.lanceur_v4`) ; les cinq marqueurs restants (`COMMIT_CODE_T06`, `EMPREINTES_CODE_T06`, `EMPREINTE_AMORCE_T06`, `TESTS_ATTENDUS_T06`, `VALEURS_CITEES_T06`) ; les ordres d'épreuve scellés v1 du point 12 restent cités (R12) mais sont remplacés pour les épreuves à rejouer par les ordres v4, une fois scellés par la mère.\n"
+  },
+  {
+   "id": "O4",
+   "quoi": "en-tête : l'amorce citée est la v5",
+   "ancien": "- Amorce : `scripts/amorce_instance_t06_v4.sh` (`<<EMPREINTE_AMORCE_T06>>`)",
+   "nouveau": "- Amorce : `scripts/amorce_instance_t06_v5.sh` (`<<EMPREINTE_AMORCE_T06>>`)"
+  },
+  {
+   "id": "O5",
+   "quoi": "ligne 624 : lanceur v7",
+   "ancien": "`scripts/lancer_t06_v6.sh` (empreinte `<<EMPREINTES_CODE_T06>>`)",
+   "nouveau": "`scripts/lancer_t06_v7.sh` (empreinte `<<EMPREINTES_CODE_T06>>`)"
+  },
+  {
+   "id": "O6",
+   "quoi": "lancement : controles et creation auto (v7)",
+   "ancien": "`bash scripts/lancer_t06_v6.sh controles <DOSSIER_NEUF> [JOUR]` ; `bash scripts/lancer_t06_v6.sh creation auto <CARTE> <DEPENSE_ANTERIEURE_USD> <DOSSIER> [ECHEANCE_UTC_S]` (CARTE = `course` | `relance` ; le lanceur choisit lui-même l'offre dans la recherche filtrée, `reliability>=0.98` comprise, juste avant la création : première offre conforme, rang suivant sur le code 5, trois rangs au plus, R-1657, R-1660) (prix de la carte, du stockage et du téléchargement lus dans cette liste, jamais donnés à la main, C12 ;",
+   "nouveau": "`bash scripts/lancer_t06_v7.sh controles <DOSSIER_NEUF> [JOUR]` ; `bash scripts/lancer_t06_v7.sh creation auto <CARTE> <DEPENSE_ANTERIEURE_USD> <DOSSIER> [ECHEANCE_UTC_S]` (CARTE = `course` | `relance` ; le lanceur choisit lui-même l'offre dans la recherche filtrée, `reliability>=0.98` et `inet_down>=500` comprises, juste avant la création : première offre conforme, rang suivant sur le code 5, trois rangs au plus, R-1657, R-1660) (prix de la carte, du stockage et du téléchargement lus dans cette liste, jamais donnés à la main, C12 ;"
+  },
+  {
+   "id": "O7",
+   "quoi": "lancement : apres-creation et surveillance (v7)",
+   "ancien": "enchaîne `bash scripts/lancer_t06_v6.sh apres-creation FICHIER CODE DOSSIER` ; `bash scripts/lancer_t06_v6.sh surveillance <ID> <DOSSIER> [FACTURE_USD]`",
+   "nouveau": "enchaîne `bash scripts/lancer_t06_v7.sh apres-creation FICHIER CODE DOSSIER` ; `bash scripts/lancer_t06_v7.sh surveillance <ID> <DOSSIER> [FACTURE_USD]`"
+  },
+  {
+   "id": "O8",
+   "quoi": "empreintes du code : modules v2 à v6, amorce v5, lanceur v7",
+   "ancien": "(modules v1 à v3 que la v4 importe, modules v2 à v5 compris, dont `session_v4.py` et `session_v5.py`, `sondes/familles_v2.py` et `sondes/familles_v3.py`), de `scripts/amorce_instance_t06_v4.sh` et `scripts/lancer_t06_v6.sh`",
+   "nouveau": "(modules v1 à v3 que la v4 importe, modules v2 à v6 compris, dont `session_v4.py`, `session_v5.py` et `session_v6.py`, `sondes/familles_v2.py` et `sondes/familles_v3.py`), de `scripts/amorce_instance_t06_v5.sh` et `scripts/lancer_t06_v7.sh`"
+  },
+  {
+   "id": "O9",
+   "quoi": "empreinte de l'amorce : la v5",
+   "ancien": "`git show <COMMIT>:scripts/amorce_instance_t06_v4.sh \\| sha256sum`",
+   "nouveau": "`git show <COMMIT>:scripts/amorce_instance_t06_v5.sh \\| sha256sum`"
+  },
+  {
+   "id": "O10",
+   "quoi": "citations lues par la chaîne : lanceur v7",
+   "ancien": "(`scripts/lancer_t06_v6.sh controles`, amorce, lanceur)",
+   "nouveau": "(`scripts/lancer_t06_v7.sh controles`, amorce, lanceur)"
+  },
+  {
+   "id": "O11",
+   "quoi": "valeurs citées : controles du lanceur v7",
+   "ancien": "vérifiées par `bash scripts/lancer_t06_v6.sh controles`",
+   "nouveau": "vérifiées par `bash scripts/lancer_t06_v7.sh controles`"
+  }
+ ]
+}
