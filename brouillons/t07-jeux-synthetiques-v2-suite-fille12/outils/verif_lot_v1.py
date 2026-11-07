@@ -102,10 +102,17 @@ def main(mode, fichiers):
         paires = {}
         for r in recs:
             paires.setdefault((r["jeu"], r["paire"]), []).append(r)
-        att = 10 if mode == "controles" else 30
+        att = {"controles": 10, "complet": 30, "cout": 20}[mode]
         for r in recs:
             if r["tache"] not in ENONCES: fautes.append(f"{Path(f).name}: identifiant de tâche inconnu « {r['tache']} » (attendu l'identifiant sans préfixe rNN-)"); break
         if len(recs) != att: fautes.append(f"{Path(f).name}: {len(recs)} enregistrements, attendu {att}")
+        if mode == "cout":
+            vals = {}
+            for (jeu, p), rs in paires.items():
+                c = champs(rs[0]["reponse"])
+                if c: vals.setdefault(rs[0]["tache"], set()).add(c[3])
+            for t, vs in vals.items():
+                if len(vs) < 6: fautes.append(f"{Path(f).name}: {len(vs)} valeurs de COST distinctes (N2 : au moins 6)")
         for (jeu, p), rs in sorted(paires.items()):
             cle = f"{Path(f).name} {jeu} p{p}"
             reps = [r["reponse"] for r in rs]
@@ -115,6 +122,10 @@ def main(mode, fichiers):
                     for m in verif_instruction(rs[0].get("instruction_id"), rs[0]["reponse"]): fautes.append(f"{cle}: instruction {rs[0].get('instruction_id')} violée ({m})")
             else:
                 if sorted(r["etiquette"] for r in rs) != [0, 1]: fautes.append(f"{cle}: étiquettes {[r['etiquette'] for r in rs]}"); continue
+                if mode == "cout" and (jeu != "domaine-cout" or rs[0]["mode"] != "cout"): fautes.append(f"{cle}: hors jeu domaine-cout")
+                if mode == "cout":
+                    rang = list(ENONCES).index(rs[0]["tache"]); att_i = f"I{(10*rang+p-1)%8+1:02d}"
+                    if any(r["incitation_id"] != att_i for r in rs): fautes.append(f"{cle}: incitation_id attendu {att_i}")
                 if mode == "controles" and (jeu != "intention-autres-modes" or rs[0]["mode"] != "controles" or p > 5): fautes.append(f"{cle}: hors mode controles pairs 1-5")
             for r in rs:
                 c = champs(r["reponse"])
