@@ -118,7 +118,7 @@ controles)
     tr '\n' ' ' < "$D/prereg-S.md" | tr -s ' ' | grep -qF "\`$A\` (\`$E\`" || { echo "empreinte de l'amorce v5 ($E) non citée par le texte de S"; exit 2; }
     [ -n "${HF_TOKEN:-}" ] && [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ] || { echo "jeton absent (HF_TOKEN ou CONTROLE_IA_GITHUB_TOKEN) : pas de création"; exit 2; }
     printf 'controles t06 v7 %s\ncommit %s\nprereg %s\nconfig %s\nbranche %s\namorce %s\ngo %s\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$P" "$CONFIG_CHEMIN" "$BRANCHE" "$E" "$GO_ID" "$CAL" >> "$D/lancement.txt"
-    echo "CONTRÔLES CONFORMES : S=$S ; amorce v4 $E ; GO $GO_ID ; $CAL" ;;
+    echo "CONTRÔLES CONFORMES : S=$S ; amorce v5 $E ; GO $GO_ID ; $CAL" ;;
 controles-epreuve)
     D=$(realpath -m "${2:?dossier neuf}"); S="${3:?commit à cloner (40 caractères)}"; CFG="${4:?chemin de la configuration de l epreuve dans le commit}"; JOUR="${5:-$(date -u +%F)}"
     [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
@@ -144,7 +144,7 @@ controles-epreuve)
     if [ "$MODE_C" = reel ]; then [ -n "${HF_TOKEN:-}" ] || { echo "HF_TOKEN absent (mode réel) : pas de création"; exit 2; }; fi
     [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ] || { echo "jeton absent (CONTROLE_IA_GITHUB_TOKEN) : pas de création"; exit 2; }
     printf 'controles-epreuve t06 v4 %s\ncommit %s\nprereg -\nconfig %s\nbranche %s\namorce %s\ngo %s\nplafond %s\nmode %s\nepreuve oui\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$CFG" "$BRANCHE" "$E" "$GOC" "$PLC" "$MODE_C" "$CAL" >> "$D/lancement.txt"
-    echo "CONTRÔLES D'ÉPREUVE CONFORMES : S=$S ; amorce v4 $E ; GO $GOC (plafond de l'épreuve $PLC USD sur 5) ; mode $MODE_C ; $CAL" ;;
+    echo "CONTRÔLES D'ÉPREUVE CONFORMES : S=$S ; amorce v5 $E ; GO $GOC (plafond de l'épreuve $PLC USD sur 5) ; mode $MODE_C ; $CAL" ;;
 creation)
     OFFRE_ARG="${2:?auto}"; CARTE="${3:?carte : course ou relance}"; ANT="${4:?dépense antérieure en USD (registre des dépenses ; 0 pour la première tentative)}"; D=$(realpath -m "${5:?dossier des contrôles}"); ECH="${6:-}"
     [ "$OFFRE_ARG" = auto ] || { echo "offre : « auto » seulement (v5 : un identifiant donné à la main serait périmé, il change d'une recherche à l'autre ; l'offre est choisie dans la liste filtrée, juste avant la création)"; exit 2; }

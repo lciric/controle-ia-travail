@@ -52,7 +52,7 @@ cd "$R" || { echo "AMORCE T06 : racine $R inaccessible : sleep infinity pour ne 
 N_DEM=0; [ -s "$R/t06-demarrages.txt" ] && read -r N_DEM < "$R/t06-demarrages.txt"
 case "$N_DEM" in ''|*[!0-9]*) N_DEM=0;; esac
 N_DEM=$(( N_DEM + 1 )); echo "$N_DEM" > "$R/t06-demarrages.txt"
-printf 'AMORCE T06 v4 DEMARRAGE %s : %(%Y-%m-%dT%H:%M:%SZ)T, machine %s, commit %s\n' "$N_DEM" -1 "${CONTAINER_ID:-?}" "${COMMIT:-?}"
+printf 'AMORCE T06 v5 DEMARRAGE %s : %(%Y-%m-%dT%H:%M:%SZ)T, machine %s, commit %s\n' "$N_DEM" -1 "${CONTAINER_ID:-?}" "${COMMIT:-?}"
 IFS= read -r -d '' MINUTERIE_TXT <<'MINUTERIE'
 ECH="$1"; DEP="$2"; R="$3"; API="$4"; J="$R/t06-minuterie.log"
 PAS="${MINUTERIE_PAS_S:-5}"; REESSAI="${MINUTERIE_REESSAI_S:-60}"; MARGE="${MINUTERIE_MARGE_S:-1800}"
@@ -277,7 +277,7 @@ cd "$R/amorce-depot" || refus "dépôt extrait inaccessible"
 # script de consignation (C11, C14, C08 ; git seul), lu aussi par la minuterie et par un second démarrage
 cat > "$R/t06-consigner.sh" <<CONSIGNER
 #!/usr/bin/env bash
-# écrit par l'amorce v4 de T0.6 : consigne et pousse les résultats partiels ; git seul, sous verrou ; \$1 = motif
+# écrit par l'amorce v5 de T0.6 : consigne et pousse les résultats partiels ; git seul, sous verrou ; \$1 = motif
 R='$R'; BRANCHE='$BRANCHE'; T='$T'; JOURNAL='$JOURNAL'; MORCEAU_MAX='$MORCEAU_MAX'; POUSSEE_ATTENTE_S='${POUSSEE_ATTENTE_S:-15}'
 CONSIGNER
 cat >> "$R/t06-consigner.sh" <<'CONSIGNER'
