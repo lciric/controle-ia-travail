@@ -52,3 +52,7 @@ Sortie de `verif_lot_v1.py cout` sur r00–r05 : OK
 ## 7. Écart de procédure déclaré (7 novembre, ~11 h UTC)
 
 Pendant quelques secondes, **trois** sous-agents ont été en cours (r18–r19, la correction de r12 p4 et r20–r21) ; r20–r21 a été arrêté aussitôt, avant tout fichier, et relancé après. Aucune remise touchée.
+
+## 8. Jalon de 24 tâches (r00–r23), script officiel
+
+Aire sac de mots **0,860** (réponse entière) / **0,855** (avant COST) ; contrôle 10 : OK (défauts de fréquence documentaire : 0) ; seul défaut : 11 écarts en jetons (tokeniseur factice, non opposables ; 5 de ces écarts sont sur r23 : un écart de jetons plus fréquent chez les écrivains des derniers lots). Journal : `journal-jc-jalon-24-v1.txt`. Rappel : jalons de J-C : 8 → 0,855 / 0,864 ; 16 → 0,858 / 0,846 ; 24 → 0,860 / 0,855. Aucun renvoi nouveau ; aucune décision sur ces valeurs.
