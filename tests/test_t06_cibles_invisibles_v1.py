@@ -26,6 +26,7 @@ from controle_ia.t06 import lanceur_v4 as la4
 RACINE = Path(__file__).resolve().parents[1]
 NOTES = RACINE / "docs" / "notes" / "g0-deux-semaines-v1"
 MARQUEUR = "qz7f3a9c"
+NOMBRES_MARQUES = ("987654.321", "7654321")          # champs numériques marqués (R-1683) : heures de GPU de référence et coûts rapportés
 ENONCES = ["Which routing rule makes sparse mixtures of experts train stably?",
            "Does curriculum ordering change sample efficiency of small language models?",
            "Can retrieval reduce hallucination in long-form question answering?"]
@@ -40,18 +41,19 @@ def _m(champ: str) -> str:
 def _fuit(texte) -> bool:
     if not isinstance(texte, str):
         texte = json.dumps(texte, ensure_ascii=False, default=str)
-    return MARQUEUR in re.sub(r"\s+", "", texte).casefold()
+    compact = re.sub(r"\s+", "", texte).casefold()
+    return MARQUEUR in compact or any(n in compact for n in NOMBRES_MARQUES)
 
 
 def _tache(ident: str, k: int, fuite: bool) -> dict:
-    cibles = {"compute": {"reference_gpu_hours": 123.0, "evidence": _m("compute-evidence")},
+    cibles = {"compute": {"reference_gpu_hours": 987654.321, "evidence": _m("compute-evidence")},
               "controls": [{"id": _m(f"ctl-id-{j}"), "description": _m(f"ctl-desc-{j}")} for j in range(3)],
               "fruitful_directions": [{"id": _m("fr-id"), "description": _m("fr-desc")}],
               "sterile_directions": [{"id": _m("st-id"), "description": _m("st-desc")}]}
     questions = ENONCES[k % len(ENONCES)] + f" ({ident})"
     if fuite:
         questions += "\n" + json.dumps(cibles)
-    return {"identifiant": ident, "questions": questions, "cibles": cibles, "couts_rapportes": [{"item": _m("couts"), "gpu_hours": 7}]}
+    return {"identifiant": ident, "questions": questions, "cibles": cibles, "couts_rapportes": [{"item": _m("couts"), "gpu_hours": 7654321}]}
 
 
 def _preparer(depot: Path, config_jouet: str, fuite: bool) -> dict:
@@ -121,11 +123,12 @@ def test_aucune_invite_ni_aucun_resultat_ne_porte_les_cibles(depot, capfd, monke
     assert not _fuit(r["sortie"])
 
 
-@pytest.mark.parametrize("version, module, config_jouet", VERSIONS[3:], ids=[v[0] for v in VERSIONS[3:]])
+@pytest.mark.parametrize("version, module, config_jouet", VERSIONS, ids=[v[0] for v in VERSIONS])
 def test_garde_la_collecte_voit_une_fuite_plantee(depot, capfd, monkeypatch, version, module, config_jouet):
     """Artefact (R5) : l'énoncé recopie les cibles ; la collecte trouve le marqueur dans les invites ET dans les fichiers écrits."""
     r = _collecter(depot, capfd, monkeypatch, module, config_jouet, fuite=True)
     assert any(_fuit(x) for x in r["invites"]), "la collecte ne voit pas les invites"
+    assert any(_fuit(x) and MARQUEUR not in x.casefold() for x in r["invites"]) or any(n in re.sub(r"\s+", "", x) for x in r["invites"] for n in NOMBRES_MARQUES), "les champs numériques ne sont pas vus"
 
 
 def test_garde_le_balayage_des_fichiers_voit_un_marqueur_plante(tmp_path):
