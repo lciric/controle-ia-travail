@@ -167,7 +167,7 @@ def test_surveillance_sans_hf_token_en_jouet_et_plafond_nomme(monde5):
 
 def test_session_v7_filtre_et_choix():
     cfg = _config_epreuve(CONFIG_E2)
-    assert s4.filtre_recherche(cfg, "course") == "num_gpus=1 rentable=true gpu_name=RTX_4090 reliability>=0.98 inet_down>=500 cpu_ram>=32 cpu_cores_effective>=8 disk_space>=150 dph_total<=0.6"
+    assert s4.filtre_recherche(cfg, "course") == "num_gpus=1 rentable=true gpu_name=RTX_4090 reliability>=0.98 inet_down>=500 cuda_max_good>=13.0 cpu_ram>=32 cpu_cores_effective>=8 disk_space>=150 dph_total<=0.6"
     assert s4.choisir_offre([{**OFFRE_E2, "dph_total": 0.5, "machine_id": 1}, {**OFFRE_E2, "dph_total": 0.4, "machine_id": 2}], cfg, "course")["machine_id"] == 2   # le moins cher
     r = s4.choisir_offre([{**OFFRE_E2, "dph_total": 0.4, "machine_id": 2}, {**OFFRE_E2, "dph_total": 0.5, "machine_id": 1}], cfg, "course", ["2"])
     assert r["machine_id"] == 1 and r["rang"] == 2
@@ -181,7 +181,7 @@ def test_session_v7_filtre_et_choix():
 def test_filtre_de_creation_porte_la_fiabilite_et_le_fake_le_recoit(monde5):
     """R-1660 : la chaîne de filtre envoyée à `vastai search offers` par `creation auto` contient `reliability>=0.98` (chaîne entière)."""
     cfg = _config_epreuve(CONFIG_E2)
-    attendu = "num_gpus=1 rentable=true gpu_name=RTX_4090 reliability>=0.98 inet_down>=500 cpu_ram>=32 cpu_cores_effective>=8 disk_space>=150 dph_total<=0.6"
+    attendu = "num_gpus=1 rentable=true gpu_name=RTX_4090 reliability>=0.98 inet_down>=500 cuda_max_good>=13.0 cpu_ram>=32 cpu_cores_effective>=8 disk_space>=150 dph_total<=0.6"
     assert s4.FIABILITE_MIN_OFFRE == 0.98 and s4.filtre_recherche(cfg, "course") == attendu
     m = monde5
     d = m["tmp"] / "dossier-filtre"
@@ -208,3 +208,23 @@ def test_filtre_de_lecture_de_l_ordre_e3_v5_identique_a_celui_du_lanceur():
     assert re.findall(r"'(num_gpus=1[^']*)'", t) == [f]
     assert "lancer_t06_v7" not in t and "lancer_t06_v8.sh" in t and "amorce v6" in t and "<<COMMIT_EPREUVES>>" in t and "04d89122" not in t
     assert sorted(set(re.findall(r"<<[A-Z_]+>>", t))) == ["<<COMMIT_EPREUVES>>"]
+
+
+def test_offre_cuda_max_good_garde_locale_et_filtre():
+    """R-1686 : le filtre de création exige cuda_max_good>=13.0 ; la garde locale lit la clé sur l'offre (jamais devinée) : une offre à 12,2 (E2, « driver too old »)
+    est sautée, une offre sans la clé est refusée, et si aucune ne passe l'erreur nomme cuda_max_good."""
+    cfg = _config_epreuve(CONFIG_E2)
+    assert " cuda_max_good>=13.0 " in s4.filtre_recherche(cfg, "course") and s4.CUDA_MAX_GOOD_MIN == 13.0
+    ancien = {**OFFRE_E2, "dph_total": 0.30, "machine_id": 1, "cuda_max_good": 12.2}
+    bon = {**OFFRE_E2, "dph_total": 0.40, "machine_id": 2, "cuda_max_good": 13.2}
+    r = s4.choisir_offre([ancien, bon], cfg, "course")
+    assert r["machine_id"] == 2 and r["rang"] == 2 and r["cuda_max_good"] == 13.2
+    sans = {k: v for k, v in bon.items() if k != "cuda_max_good"}
+    with pytest.raises(GardeSession, match="cuda_max_good absent ou illisible"):
+        s4.choisir_offre([sans], cfg, "course")
+    with pytest.raises(GardeSession, match="cuda_max_good 12.2"):
+        s4.choisir_offre([ancien], cfg, "course")
+    with pytest.raises(GardeSession, match="cuda_max_good absent ou illisible"):
+        s4.choisir_offre([{**bon, "cuda_max_good": "boum"}], cfg, "course")
+    pile = {**bon, "cuda_max_good": 13.0}
+    assert s4.choisir_offre([pile], cfg, "course")["cuda_max_good"] == 13.0                  # la borne est incluse

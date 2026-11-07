@@ -2,7 +2,7 @@
 # Amorce de l'instance de T0.6, v6 (nom neuf, R12 ; les v1 à v5 restent telles quelles). Contre-lecture Opus de la v5 (R-1683) : (1) le message de
 # `git sparse-checkout` n'est plus jeté (`2>/dev/null` retiré) : il est gardé et CITÉ dans la ligne de refus (« extraction partielle impossible … : <message> ») ;
 # (2) le délai du `checkout` du commit passe de 600 s (v4) à 900 s depuis la v5 : DÉCLARÉ ici ; pire cas du clonage = 900 s (clone) + 900 s (checkout) = 1 800 s ;
-# (3) la ligne de début devient « AMORCE T06 v6 DEMARRAGE ». Le reste est celui de la v5. Texte de la v5 (conservé) : amorce de l'instance de T0.6, v5. Défaut de chaîne trouvé par l'épreuve E2 (R-1676, R-1677) :
+# (3) la ligne de début devient « AMORCE T06 v6 DEMARRAGE » ; (4) R-1686 : en mode réel, `torch.cuda.is_available()` faux → `refus` immédiat qui cite la version du pilote (après consignation de la cause sur la branche). Le reste est celui de la v5. Texte de la v5 (conservé) : amorce de l'instance de T0.6, v5. Défaut de chaîne trouvé par l'épreuve E2 (R-1676, R-1677) :
 # le `clone --filter=blob:none` de la v4 extrait tout l'arbre de `main` (≈ 3,9 Go) ; l'instance louée n'a reçu que ≈ 1,4 Go en ≈ 19 minutes
 # (≈ 10 Mb/s effectifs pour 861 annoncés), le clonage a été tué à 900 s, le refus s'est perdu dans la destruction immédiate. La v5, dans les
 # deux modes (jouet, réel) : (1) clonage réduit à ce dont l'instance a besoin : `clone --filter=blob:none --no-checkout`, puis extraction
@@ -406,8 +406,14 @@ python -m pip freeze --all >"$T/pip-freeze.txt" 2>/dev/null || true
 echo "AMORCE $(date -u +%FT%TZ) : MATERIEL MemTotal_ko=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo 2>/dev/null || echo ?) coeurs=$(nproc 2>/dev/null || echo ?) flock=$(command -v flock >/dev/null 2>&1 && echo oui || echo non)" | tee -a "$JOURNAL"
 TESTS_ARGS="${TESTS_ARGS:-}"; TESTS_ARGS="${TESTS_ARGS//,/ }"      # C-V4-3 : la virgule sépare les essais dans la variable d'environnement de Vast (aucun espace permis)
 python -c "import torch; print('torch', torch.__version__, 'cuda', torch.version.cuda, 'disponible', torch.cuda.is_available())" | tee -a "$JOURNAL"
-if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)"; then
-    journal "carte indisponible pour torch : arrêt avant les tests"; consigner_arret "contrôle de la carte"; arreter_instance "carte indisponible" 1
+# R-1686 : garde de la carte, avant tout calcul en mode réel (E2, tentative 2 : « The NVIDIA driver on your system is too old (found version 12020) », torch 2.14.1+cu130,
+# cuda_disponible False). Carte invisible → journal (pilote, CUDA de torch, message), consignation de la cause sur la branche, puis `refus` (annonce, 180 s, destruction)
+if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)" 2>"$T/torch-cuda.err"; then
+    PILOTE=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -n 1 | tr -d ' ')
+    CUDA_TORCH=$(python -c "import torch; print(torch.version.cuda)" 2>/dev/null | tail -n 1)
+    journal "carte invisible pour torch : torch.cuda.is_available() faux ; pilote ${PILOTE:-inconnu} ; CUDA de torch ${CUDA_TORCH:-?} ; message : $(tail -c 300 "$T/torch-cuda.err" 2>/dev/null | tr '\n' ' ')"
+    consigner_arret "contrôle de la carte"
+    refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
 fi
 if ! PYTHONPATH=src python -m pytest -q -p no:cacheprovider --color=no ${TESTS_ARGS:-} >"$T/tests.txt" 2>"$T/tests.err"; then
     tail -n 5 "$T/tests.txt" "$T/tests.err" | tee -a "$JOURNAL"; journal "tests en échec : arrêt"; consigner_arret "tests"; arreter_instance "tests en échec" 1

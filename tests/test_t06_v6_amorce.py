@@ -39,7 +39,7 @@ OFFRE = {"id": 9999, "gpu_name": "A100 SXM4", "gpu_ram": 81920, "num_gpus": 1, "
 PYTHON_FACTICE = """#!/usr/bin/env bash
 if [ "$1" = "-m" ] && [ "$2" = "pytest" ]; then printf '%s\\n' "$*" > "${RACINE_AMORCE:-/tmp}/pytest-args.txt"; printf '%s\\n' "${FAUX_PYTEST_LIGNE:-7 passed in 1.00s}"; exit 0; fi
 if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then echo "paquet-factice==1.0"; exit 0; fi
-if [ "$1" = "-c" ]; then echo "torch factice"; exit 0; fi
+if [ "$1" = "-c" ]; then case "$2" in *"torch.cuda.is_available() else 1"*) [ "${FAUX_CUDA:-1}" = 1 ] || { echo "RuntimeError: The NVIDIA driver on your system is too old (found version 12020)" >&2; exit 1; };; esac; echo "torch factice"; exit 0; fi
 if [ "$1" = "-m" ] && [ "$2" = "controle_ia.t06.lanceur_v4" ]; then
     run=""; prec=""
     for a in "$@"; do [ "$prec" = "--run-id" ] && run="$a"; prec="$a"; done
@@ -670,7 +670,7 @@ from datetime import date, datetime, timedelta, timezone                      # 
 GO_E = "GO-2026-11-06-01"
 CONFIG_E2 = RACINE / "docs" / "notes" / "g0-deux-semaines-v1" / "config-t06-epreuve-e2-v1.json"
 CONFIG_E3 = RACINE / "docs" / "notes" / "g0-deux-semaines-v1" / "config-t06-epreuve-e3-v1.json"
-OFFRE_E2 = {**OFFRE, "gpu_name": "RTX 4090", "gpu_ram": 24564, "cpu_ram": 64000, "cpu_cores_effective": 16.0, "dph_total": 0.35}
+OFFRE_E2 = {**OFFRE, "gpu_name": "RTX 4090", "gpu_ram": 24564, "cpu_ram": 64000, "cpu_cores_effective": 16.0, "dph_total": 0.35, "cuda_max_good": 13.2}
 
 
 def _dates_epreuve():
@@ -1127,4 +1127,35 @@ def test_session_v7_main_codes_de_presence(tmp_path):
         assert s7.main(["seule", str(tmp_path / "s.json"), "1"]) == attendu, contenu
     assert s7.main(["seule", str(tmp_path / "absent.json"), "1"]) == 2
     cfg = json.loads((RACINE / "docs/notes/g0-deux-semaines-v1/config-t06-epreuve-e2-v2.json").read_text(encoding="utf-8"))
-    assert s7.filtre_recherche(cfg, "course") == "num_gpus=1 rentable=true gpu_name=RTX_4090 reliability>=0.98 inet_down>=500 cpu_ram>=32 cpu_cores_effective>=8 disk_space>=150 dph_total<=0.6"
+    assert s7.filtre_recherche(cfg, "course") == "num_gpus=1 rentable=true gpu_name=RTX_4090 reliability>=0.98 inet_down>=500 cuda_max_good>=13.0 cpu_ram>=32 cpu_cores_effective>=8 disk_space>=150 dph_total<=0.6"
+
+
+# --- R-1686 : carte invisible pour torch (pilote trop ancien) ------------------------------------------------------------------------
+
+def _faux_nvidia_smi(tmp_path) -> Path:
+    b = tmp_path / "faux-nvidia"
+    b.mkdir()
+    (b / "nvidia-smi").write_text('#!/usr/bin/env bash\nif [[ "$*" == *noheader* ]]; then echo "535.230.02"; else echo "name, driver_version, memory.total [MiB]"; echo "NVIDIA A100-SXM4-80GB, 535.230.02, 81920 MiB"; fi\n',
+                                  encoding="utf-8")
+    (b / "nvidia-smi").chmod(0o755)
+    return b
+
+
+def test_carte_invisible_pour_torch_en_mode_reel_refus_qui_cite_le_pilote(bac, tmp_path):
+    """Cas sain : carte visible, mode réel → l'épreuve va au bout (test_c_v4_3_amorce_epreuve_cas_sain[reel]). Artefact : torch.cuda.is_available() faux → refus
+    immédiat qui cite la version du pilote, cause consignée sur la branche, aucun essai ni run joué."""
+    b = _faux_nvidia_smi(tmp_path)
+    code, journal, sortie, racine, distant = _epreuve_amorce(bac, "carte", mode="reel", FAUX_CUDA="0", PATH=f"{b}:{os.environ['PATH']}", REFUS_ATTENTE_ESSAI_S="1")
+    assert code == 2, sortie[-2500:]
+    assert "refus : carte invisible pour torch (torch.cuda.is_available() faux) : pilote 535.230.02, CUDA de torch" in sortie, sortie[-2500:]
+    assert "carte invisible pour torch : torch.cuda.is_available() faux ; pilote 535.230.02" in journal and "too old (found version 12020)" in journal
+    assert "refus annoncé : destruction demandée dans 1 s" in sortie and (racine / "t06-detruire").exists()
+    assert "tests :" not in journal and "run :" not in journal and not (racine / "t06-fin-normale").exists()               # aucun calcul
+    assert "arrêt pendant contrôle de la carte" in _git(distant, "log", "--format=%s", "essai/t06-e2-test")                # la cause reste sur la branche
+
+
+def test_carte_invisible_n_arrete_pas_une_repetition_jouet(bac, tmp_path):
+    """La garde ne vaut qu'en mode réel : en jouet (aucune carte), FAUX_CUDA=0 ne change rien."""
+    b = _faux_nvidia_smi(tmp_path)
+    code, journal, sortie, racine, _ = _epreuve_amorce(bac, "jouet", mode="jouet", FAUX_CUDA="0", PATH=f"{b}:{os.environ['PATH']}")
+    assert code == 0 and "carte invisible" not in sortie and (racine / "t06-fin-normale").exists(), sortie[-1500:]

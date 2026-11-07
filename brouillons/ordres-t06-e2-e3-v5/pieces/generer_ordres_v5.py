@@ -61,9 +61,11 @@ def textes(racine):
          "lignes `AMORCE` de `journal-instance.txt` (copie entière à chaque relevé, `logs --tail 20000`, valeurs de clés masquées), puis message.\n"
          "- **Liste d'inventaire vide, illisible ou en échec (R-1683)** : jamais un `ARRET mort`. Le lanceur imprime sur la sortie standard « ALERTE liste d'inventaire non concluante … » (instance seule présente) ou "
          "« ALERTE inventaire (n/3) … » ; **trois relevés de suite sans présence établie : `ARRET inventaire`** (code 3) : vérifie à la main (`vastai show instances`, `show instance <ID>`), message à la mère, ne crée rien.\n"
-         "- **Refus de l'amorce (R-1683)** : la ligne « refus : extraction partielle impossible (sparse-checkout …) : <message de git> » cite désormais le message de git ; le délai du `checkout` est de 900 s (pire cas du clonage 1 800 s).")
+         "- **Refus de l'amorce (R-1683)** : la ligne « refus : extraction partielle impossible (sparse-checkout …) : <message de git> » cite désormais le message de git ; le délai du `checkout` est de 900 s (pire cas du clonage 1 800 s). **Carte invisible (R-1686)** : en mode réel, `torch.cuda.is_available()` faux donne « refus : carte invisible pour torch … : pilote <version> » (cause consignée sur la branche avant la destruction, après 180 s) : relève la version du pilote, message à la mère, ne crée rien. L'offre doit porter `cuda_max_good` ≥ 13,0 (filtre de création, puis garde locale sur l'offre choisie : la ligne `OFFRE CONFORME` montre `cuda_max_good=…`).")
     t = _appliquer(t, a, n, "ARRET mort et ARRET inventaire", j)
     f = filtre_a100(racine)
+    ancien_f = f.replace(" cuda_max_good>=13.0", "")                                  # filtre de l'ordre scellé v3 (lanceur v7) : sans l'exigence de pilote (R-1686)
+    t = _appliquer(t, "'" + ancien_f + "'", "'" + f + "'", "filtre de lecture = filtre du lanceur v8 (cuda_max_good>=13.0)", j)
     trouves = re.findall(r"'(num_gpus=1[^']*)'", t)
     if trouves != [f]:
         raise SystemExit(f"ERREUR filtre de lecture ≠ filtre du lanceur : {trouves} / {f}")

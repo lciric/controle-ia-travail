@@ -29,6 +29,7 @@ from . import session_v2 as s2
 from . import session_v3 as s3
 from .session import GardeSession
 
+CUDA_MAX_GOOD_MIN = 13.0  # R-1686 : le pilote de l'offre doit porter CUDA 13,0 au moins (torch 2.14.1+cu130) ; E2 : offre à 12,2 → « driver too old (12020) », carte invisible
 INET_DOWN_MIN_MBPS = 500  # R-1677 : garde bon marché contre une machine qui annonce un débit qu'elle n'a pas (E2 : 861 Mb/s annoncés, ≈ 10 reçus)
 FIABILITE_MIN_OFFRE = 0.98  # R-1660 : la création filtre comme la lecture (E2-1) ; une seule source, lue par le générateur des ordres
 
@@ -39,7 +40,7 @@ def filtre_recherche(config: dict, carte: str) -> str:
     c, b = config["carte"][carte], config["offre"]
     nom = str(c["nom_offre"]).replace(" ", "_")
     ram_go = int(-(-b["memoire_vive_min_mo"] // 1000))
-    return (f"num_gpus=1 rentable=true gpu_name={nom} reliability>={FIABILITE_MIN_OFFRE} inet_down>={INET_DOWN_MIN_MBPS} cpu_ram>={ram_go} cpu_cores_effective>={b['coeurs_effectifs_min']} "
+    return (f"num_gpus=1 rentable=true gpu_name={nom} reliability>={FIABILITE_MIN_OFFRE} inet_down>={INET_DOWN_MIN_MBPS} cuda_max_good>={CUDA_MAX_GOOD_MIN} cpu_ram>={ram_go} cpu_cores_effective>={b['coeurs_effectifs_min']} "
             f"disk_space>={b['disque_min_go']} dph_total<={c['prix_max_usd_h']}")
 
 
@@ -101,12 +102,21 @@ def choisir_offre(offres, config: dict, carte: str, machines_exclues=()) -> dict
         if str(o.get("machine_id")) in exclues:
             refus.append(f"rang {rang} : machine {o.get('machine_id')} déjà refusée")
             continue
+        try:                                                       # garde locale (R-1686) : clé `cuda_max_good` lue sur l'offre, jamais devinée
+            cuda = float(o["cuda_max_good"])
+        except (KeyError, TypeError, ValueError):
+            refus.append(f"rang {rang} : cuda_max_good absent ou illisible (garde locale)")
+            continue
+        if cuda < CUDA_MAX_GOOD_MIN:
+            refus.append(f"rang {rang} : cuda_max_good {cuda} < {CUDA_MAX_GOOD_MIN} (pilote trop ancien pour torch cu130)")
+            continue
         try:
             r = s2.verifier_offre([o], config, carte)
         except GardeSession as e:
             refus.append(f"rang {rang} : {e}")
             continue
         r["rang"] = rang
+        r["cuda_max_good"] = cuda
         return r
     raise GardeSession(f"aucune offre conforme sur {len(offres)} : " + " ; ".join(refus[:3]))
 
@@ -118,7 +128,7 @@ def main(argv: list[str]) -> int:
         elif len(argv) in (4, 5) and argv[0] == "choisir":
             r = choisir_offre(s2._lire_json(argv[1]), s2._lire_json(argv[2]), argv[3], argv[4].split(",") if len(argv) == 5 and argv[4] else ())
             print(f"id={r['id']} rang={r['rang']} machine={r['machine_id']} prix_carte={r['prix_carte']:.4f} prix_stockage={r['prix_stockage']:.4f} "
-                  f"telechargement={r['telechargement']:.4f} telechargement_forfait={r['telechargement_forfait_usd']:.4f} carte={r['carte']}")
+                  f"telechargement={r['telechargement']:.4f} telechargement_forfait={r['telechargement_forfait_usd']:.4f} cuda_max_good={r['cuda_max_good']} carte={r['carte']}")
         elif len(argv) == 3 and argv[0] == "presente":
             p = instance_presente(s2._lire_json(argv[1]), argv[2])
             if p is None:

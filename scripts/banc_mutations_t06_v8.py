@@ -58,8 +58,8 @@ MUTATIONS_V8 = [
     ("C-V5-1 (session) : bornes de l'offre non vérifiées", S4, 'r = s2.verifier_offre([o], config, carte)', 'r = {"id": int(o["id"]), "prix_carte": float(o["dph_total"]), "prix_stockage": 0.0, "telechargement": 0.0, "telechargement_forfait_usd": 0.0, "carte": "x", "machine_id": o.get("machine_id")}', T5, "session_v7"),
     ("R-1660 (session) : fiabilité absente du filtre de création", S4, " reliability>={FIABILITE_MIN_OFFRE} inet_down>=", " inet_down>=", T5, "filtre"),
     ("R-1660 (session) : seuil de fiabilité abaissé", S4, "FIABILITE_MIN_OFFRE = 0.98", "FIABILITE_MIN_OFFRE = 0.9", T5, "filtre"),
-    ("R-1660 (ordres) : filtre de lecture de l'ordre d'E2 non lu dans le lanceur", GEN3, "\"modeste\": session_v7.filtre_recherche(c2, \"course\")", "\"modeste\": \"num_gpus=1 gpu_name=RTX_4090 rentable=true reliability>=0.98 cpu_cores_effective>=8 cpu_ram>=32 disk_space>=150 dph_total<=0.45\"", T5, "lecture_des_ordres"),
-    ("R-1660 (ordres) : filtre d'E3 lu sans la fiabilité", GEN3, "\"a100\": session_v7.filtre_recherche(c3, \"course\")", "\"a100\": session_v7.filtre_recherche(c3, \"course\").replace(\" reliability>=0.98\", \"\")", T5, "lecture_des_ordres"),
+    ("R-1660 (ordres) : filtre de lecture de l'ordre d'E3 non lu dans le lanceur", GEN3, 'return session_v7.filtre_recherche(json.load(open(racine / CFG_E3, encoding="utf-8")), "course")', 'return "num_gpus=1 rentable=true gpu_name=A100_SXM4 reliability>=0.98 inet_down>=500 cpu_ram>=128 cpu_cores_effective>=16 disk_space>=150 dph_total<=1.3"', T5, "ordre_e3_v5"),
+    ("R-1660 (ordres) : filtre d'E3 lu sans la fiabilité", GEN3, 'return session_v7.filtre_recherche(json.load(open(racine / CFG_E3, encoding="utf-8")), "course")', 'return session_v7.filtre_recherche(json.load(open(racine / CFG_E3, encoding="utf-8")), "course").replace(" reliability>=0.98", "")', T5, "ordre_e3_v5"),
     # --- R-1677 : amorce (clonage réduit, refus qui attend)
     ("R-1677 (amorce) : clonage complet (sans --no-checkout)", AM5, '--filter=blob:none --no-checkout "$DEPOT_URL"', '--filter=blob:none "$DEPOT_URL"', TA, "clonage_reduit_extraction_partielle_ligne"),
     ("R-1677 (amorce) : clonage sans filtre de blobs", AM5, '--filter=blob:none --no-checkout "$DEPOT_URL"', '--no-checkout "$DEPOT_URL"', TA, "clonage_reduit_extraction_partielle_ligne"),
@@ -97,6 +97,14 @@ MUTATIONS_V8 = [
     ("R-1677 (session) : seuil de débit abaissé", S4, "INET_DOWN_MIN_MBPS = 500", "INET_DOWN_MIN_MBPS = 50", T5, "filtre"),
     # --- R-1679 : cibles invisibles (constructeur muté qui lirait tache["cibles"])
     ("R-1683 (cibles) : tache_de qui recopie les cibles dans l'énoncé", PILOTE, 'return Tache(donnee["identifiant"], donnee["questions"],', 'return Tache(donnee["identifiant"], donnee["questions"] + json.dumps(donnee.get("cibles")),', TC, "aucune_invite_ni_aucun_resultat_ne_porte_les_cibles and v4"),
+    ("R-1686 (session) : cuda_max_good absent du filtre", S4, " cuda_max_good>={CUDA_MAX_GOOD_MIN}", "", T5, "cuda_max_good_garde_locale"),
+    ("R-1686 (session) : seuil de CUDA abaissé", S4, "CUDA_MAX_GOOD_MIN = 13.0", "CUDA_MAX_GOOD_MIN = 12.0", T5, "cuda_max_good_garde_locale"),
+    ("R-1686 (session) : garde locale de CUDA retirée", S4, "        if cuda < CUDA_MAX_GOOD_MIN:", "        if False:", T5, "cuda_max_good_garde_locale"),
+    ("R-1686 (session) : clé cuda_max_good absente tolérée", S4, 'cuda = float(o["cuda_max_good"])', 'cuda = float(o.get("cuda_max_good", 99.0))', T5, "cuda_max_good_garde_locale"),
+    ("R-1686 (amorce) : carte invisible sans refus", AM5, '    refus "carte invisible pour torch (torch.cuda.is_available() faux)', '    true "carte invisible pour torch (torch.cuda.is_available() faux)', TA, "carte_invisible_pour_torch"),
+    ("R-1686 (amorce) : carte invisible sans consigner la cause", AM5, '    consigner_arret "contrôle de la carte"\n', '    true\n', TA, "carte_invisible_pour_torch"),
+    ("R-1686 (amorce) : version du pilote non citée", AM5, "pilote ${PILOTE:-inconnu}, CUDA de torch", "pilote inconnu, CUDA de torch", TA, "carte_invisible_pour_torch"),
+    ("R-1686 (amorce) : la garde de la carte vaut aussi en jouet", AM5, 'if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)"', 'if ! python -c "import sys, torch; sys.exit(0 if torch.cuda.is_available() else 1)"', TA, "carte_invisible_n_arrete_pas"),
 ]
 MUTATIONS = MUTATIONS_V8
 TEMOINS = [("témoin lanceur v7", T5, None), ("témoin amorce v6", TA, "clonage or refus or v8 or v7 or session_v7")]
