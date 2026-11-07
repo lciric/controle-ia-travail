@@ -90,6 +90,15 @@ for k in ("HF_TOKEN", "CONTROLE_IA_GITHUB_TOKEN", "GH_TOKEN", "VAST_API_KEY"):
     if v and len(v) >= 8:
         t = t.replace(v, "***")
 sys.stdout.write(t)'; }
+# R-1693 : sortie de vastai masquée PAR UN TUBE, avec lecture de TOUT le PIPESTATUS. $1 = fichier de sortie ; le reste = la commande. Code rendu : celui de la
+# commande ; 121 si le masquage a échoué (aucun fichier écrit, l'ancien reste) ; stderr jeté (il n'est pas masqué).
+vast_masque() {
+    local sortie="$1"; shift
+    "$@" 2>/dev/null | masquer > "$sortie.tmp"
+    local ps=("${PIPESTATUS[@]}")
+    if [ "${ps[1]:-1}" != 0 ]; then rm -f "$sortie.tmp"; return 121; fi
+    mv -f "$sortie.tmp" "$sortie"; return "${ps[0]}"
+}
 commit_s() { git -C "$DEPOT" log --diff-filter=A -1 --format=%H -- "$P.sha256"; }
 champ() { sed -n "s/^$1 //p" "$2" | tail -1; }           # dernière valeur d'un champ de lancement.txt
 cle_config() { python3 -I -B -c 'import json, sys; c = json.load(open(sys.argv[1], encoding="utf-8"))
@@ -119,12 +128,12 @@ controles)
         [ "$cle" = "Chemin de la configuration de T0.6" ] && { git -C "$DEPOT" show "$S:$f" > "$D/config.json"; CONFIG_CHEMIN="$f"; }
     done
     CAL=$(python3 -I -B -c "$SESSION" calendrier "$D/config.json" "$REG" "$JOUR") || { echo "calendrier de la configuration (L11) : $CAL : pas de création"; exit 2; }
-    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v6 absente de S"; exit 2; }
+    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v7 absente de S"; exit 2; }
     E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
-    tr '\n' ' ' < "$D/prereg-S.md" | tr -s ' ' | grep -qF "\`$A\` (\`$E\`" || { echo "empreinte de l'amorce v6 ($E) non citée par le texte de S"; exit 2; }
+    tr '\n' ' ' < "$D/prereg-S.md" | tr -s ' ' | grep -qF "\`$A\` (\`$E\`" || { echo "empreinte de l'amorce v7 ($E) non citée par le texte de S"; exit 2; }
     [ -n "${HF_TOKEN:-}" ] && [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ] || { echo "jeton absent (HF_TOKEN ou CONTROLE_IA_GITHUB_TOKEN) : pas de création"; exit 2; }
-    printf 'controles t06 v8 %s\ncommit %s\nprereg %s\nconfig %s\nbranche %s\namorce %s\ngo %s\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$P" "$CONFIG_CHEMIN" "$BRANCHE" "$E" "$GO_ID" "$CAL" >> "$D/lancement.txt"
-    echo "CONTRÔLES CONFORMES : S=$S ; amorce v6 $E ; GO $GO_ID ; $CAL" ;;
+    printf 'controles t06 v9 %s\ncommit %s\nprereg %s\nconfig %s\nbranche %s\namorce %s\ngo %s\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$P" "$CONFIG_CHEMIN" "$BRANCHE" "$E" "$GO_ID" "$CAL" >> "$D/lancement.txt"
+    echo "CONTRÔLES CONFORMES : S=$S ; amorce v7 $E ; GO $GO_ID ; $CAL" ;;
 controles-epreuve)
     D=$(realpath -m "${2:?dossier neuf}"); S="${3:?commit à cloner (40 caractères)}"; CFG="${4:?chemin de la configuration de l epreuve dans le commit}"; JOUR="${5:-$(date -u +%F)}"
     [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
@@ -138,19 +147,21 @@ controles-epreuve)
     git -C "$DEPOT" show "$S:$CFG" > "$D/config.json" 2>/dev/null || { echo "configuration $CFG absente du commit $S"; exit 2; }
     GOC=$(cle_config "$D/config.json" go_id) && PLC=$(cle_config "$D/config.json" plafond_usd) && MODE_C=$(cle_config "$D/config.json" mode) || { echo "go_id, plafond_usd ou mode illisibles"; exit 2; }
     [ "$GOC" = "$GO_EPREUVE" ] || { echo "go_id de la configuration ($GOC) ≠ $GO_EPREUVE : cette sous-commande ne sert que les épreuves à blanc"; exit 2; }
-    case "$PLC" in 1.5|3.5) ;; *) echo "plafond_usd $PLC : 1.5 (E2) ou 3.5 (E3) seulement"; exit 2;; esac
+    # R-1696 : plafond d'épreuve lu dans la configuration, borné par le reste du GO (plus de liste fermée) ; dépense réelle et finale des autres épreuves donnée explicitement
+    ANT_EPR="${T06_DEPENSE_EPREUVES_ANTERIEURES_USD:-}"; [[ "$ANT_EPR" =~ ^[0-9]+([.][0-9]+)?$ ]] || { echo "T06_DEPENSE_EPREUVES_ANTERIEURES_USD : dépense réelle et finale des autres épreuves du GO, en USD (0 pour la première), exigée"; exit 2; }
+    PLAF=$(python3 -I -B -c "$SESSION7" plafond "$PLC" "$ANT_EPR") || { echo "plafond_usd $PLC refusé : $PLAF"; exit 2; }
     case "$MODE_C" in jouet|reel) ;; *) echo "mode $MODE_C illisible"; exit 2;; esac
     python3 -I -B -c "$SESSION3" go "$REG" "$GOC" 5 "$JOUR" | tee -a "$D/lancement.txt" || { echo "GO : pas de création"; exit 2; }
     # l'amorce relit le registre DU COMMIT cloné : le GO doit y figurer aussi (sinon elle refuserait sur l'instance)
     git -C "$DEPOT" show "$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null && python3 -I -B -c "$SESSION3" go "$D/go-commit.md" "$GOC" 5 "$JOUR" >/dev/null || { echo "GO $GOC absent ou non conforme dans registres/go.md du commit $S (l'amorce le relit) : commit postérieur au GO exigé"; exit 2; }
     LIBRE=$(df -Pk "$D" | awk 'NR==2 {print $4}'); [ "$LIBRE" -ge 3000000 ] || { echo "place disque : $LIBRE ko libres (3 Go exigés)"; exit 2; }
     CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$REG" "$GOC" 5 "$JOUR") || { echo "calendrier de la configuration : $CAL : pas de création"; exit 2; }
-    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v6 absente de $S"; exit 2; }
+    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v7 absente de $S"; exit 2; }
     E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
     if [ "$MODE_C" = reel ]; then [ -n "${HF_TOKEN:-}" ] || { echo "HF_TOKEN absent (mode réel) : pas de création"; exit 2; }; fi
     [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ] || { echo "jeton absent (CONTROLE_IA_GITHUB_TOKEN) : pas de création"; exit 2; }
-    printf 'controles-epreuve t06 v4 %s\ncommit %s\nprereg -\nconfig %s\nbranche %s\namorce %s\ngo %s\nplafond %s\nmode %s\nepreuve oui\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$CFG" "$BRANCHE" "$E" "$GOC" "$PLC" "$MODE_C" "$CAL" >> "$D/lancement.txt"
-    echo "CONTRÔLES D'ÉPREUVE CONFORMES : S=$S ; amorce v6 $E ; GO $GOC (plafond de l'épreuve $PLC USD sur 5) ; mode $MODE_C ; $CAL" ;;
+    printf 'controles-epreuve t06 v4 %s\ncommit %s\nprereg -\nconfig %s\nbranche %s\namorce %s\ngo %s\nplafond %s\nepreuves_anterieures %s\nmode %s\nepreuve oui\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$CFG" "$BRANCHE" "$E" "$GOC" "$PLC" "$ANT_EPR" "$MODE_C" "$CAL" >> "$D/lancement.txt"
+    echo "CONTRÔLES D'ÉPREUVE CONFORMES : S=$S ; amorce v7 $E ; GO $GOC (plafond de l'épreuve $PLC USD sur 5 ; $PLAF) ; mode $MODE_C ; $CAL" ;;
 creation)
     OFFRE_ARG="${2:?auto}"; CARTE="${3:?carte : course ou relance}"; ANT="${4:?dépense antérieure en USD (registre des dépenses ; 0 pour la première tentative)}"; D=$(realpath -m "${5:?dossier des contrôles}"); ECH="${6:-}"
     [ "$OFFRE_ARG" = auto ] || { echo "offre : « auto » seulement (v5 : un identifiant donné à la main serait périmé, il change d'une recherche à l'autre ; l'offre est choisie dans la liste filtrée, juste avant la création)"; exit 2; }
@@ -165,6 +176,7 @@ creation)
         [ "$GOC" = "$GO_EPREUVE" ] && [ "$(champ go "$D/lancement.txt")" = "$GO_EPREUVE" ] && [ "$(champ plafond "$D/lancement.txt")" = "$PLC" ] || { echo "épreuve : GO ou plafond de la configuration ≠ ceux des contrôles"; exit 2; }
         case "$BRANCHE" in essai/*) ;; *) echo "épreuve : la branche poussée doit commencer par essai/ ($BRANCHE) : jamais calcul/"; exit 2;; esac
         PGO=5
+        PLAF=$(python3 -I -B -c "$SESSION7" plafond "$PLC" "$(champ epreuves_anterieures "$D/lancement.txt")") || { echo "épreuve : plafond $PLC hors du reste du GO : $PLAF"; exit 2; }
     else
         [ "$S" = "$(commit_s)" ] || { echo "commit de scellement changé depuis les contrôles"; exit 2; }
         [ "$GOC" = "$GO_ID" ] && [ "$PLC" = 200 ] || { echo "course : GO ($GOC) ou plafond ($PLC) de la configuration ≠ $GO_ID, 200"; exit 2; }
@@ -193,7 +205,7 @@ creation)
     TEL=$(printf '%s\n' "$OF" | sed -n 's/.*telechargement_forfait=\([0-9.]*\).*/\1/p')
     [ -n "$PC" ] && [ -n "$PS" ] && [ -n "$TEL" ] || { echo "prix illisibles dans la relecture de l'offre"; exit 2; }
     ETIQ=$(cle_config "$D/config.json" offre.etiquette) || { echo "étiquette illisible"; exit 2; }
-    timeout -k 5 120 "$VAST" show instances --raw > "$D/instances.json" 2>"$D/instances.err" || { echo "inventaire des instances impossible : pas de création"; exit 2; }
+    vast_masque "$D/instances.json" timeout -k 5 120 "$VAST" show instances --raw || { echo "inventaire des instances impossible ou masquage en échec (code $?) : pas de création"; exit 2; }
     INV=$(python3 -I -B -c "$SESSION" instances "$D/instances.json" "$ETIQ") || { echo "$INV : nœud, pas de création"; exit 3; }
     NOW=$(date +%s)
     DEP=$(python3 -I -B -c "$SESSION3" depense "$PLC" "$PC" "$PS" "$NOW" "$ANT" "$TEL" "$NOW" ${T06_EPUISEMENT_SIMULE_S:+- "$T06_EPUISEMENT_SIMULE_S"}); code_dep=$?
@@ -222,7 +234,7 @@ apres-creation)
     if [ -z "$ID" ] && [ "${NON:-0}" -ge 1 ] && [ "${OK:-0}" -eq 0 ]; then
         # C-V5-1 : refus explicite (offre retirée) : retenter au rang suivant seulement si aucune instance du programme n'existe
         ETIQ=$(cle_config "$D/config.json" offre.etiquette) || { echo "étiquette illisible"; exit 4; }
-        if timeout -k 5 120 "$VAST" show instances --raw > "$D/instances-apres.json" 2>/dev/null && python3 -I -B -c "$SESSION" instances "$D/instances-apres.json" "$ETIQ" >/dev/null; then
+        if vast_masque "$D/instances-apres.json" timeout -k 5 120 "$VAST" show instances --raw && python3 -I -B -c "$SESSION" instances "$D/instances-apres.json" "$ETIQ" >/dev/null; then
             printf 'machine_refusee %s\n' "$(champ machine_proposee "$D/lancement.txt")" >> "$D/lancement.txt"
             echo "OFFRE REFUSÉE À LA CRÉATION (retirée ?) : aucune instance du programme ; machine $(champ machine_proposee "$D/lancement.txt") exclue ; rang suivant : bash $DEPOT/scripts/lancer_t06_v9.sh creation auto $(champ carte "$D/lancement.txt") $(champ anterieure "$D/lancement.txt") $D $(champ echeance "$D/lancement.txt")"; exit 5
         fi
@@ -238,7 +250,8 @@ surveillance)
     PLC=$(champ plafond_creation "$D/lancement.txt"); [ -n "$PLC" ] || PLC=200               # C-V4-3 : plafond de la configuration (200 pour la course)
     [[ "$CR" =~ ^[0-9]+$ ]] && [ -n "$PC" ] && [ -n "$PS" ] && [ -n "$TEL" ] && [ -n "$ANT" ] || { echo "création, prix ou dépense antérieure illisibles dans lancement.txt"; exit 2; }
     # C-V5-2 : HF_TOKEN n'est exigé (masquage) qu'en mode réel ; une épreuve en mode jouet n'en a pas besoin
-    [ "${#CONTROLE_IA_GITHUB_TOKEN}" -ge 8 ] 2>/dev/null || { echo "jeton GitHub absent ou trop court : masquage impossible, surveillance refusée"; exit 2; }
+    JGH="${CONTROLE_IA_GITHUB_TOKEN:-}"      # R-1693 : sous `set -u`, `${#VAR}` d'une variable absente sortait en 127 au lieu de 2
+    [ "${#JGH}" -ge 8 ] || { echo "jeton GitHub absent ou trop court : masquage impossible, surveillance refusée"; exit 2; }
     HF_L="${HF_TOKEN:-}"
     [ "$(champ mode "$D/lancement.txt")" = jouet ] || [ "${#HF_L}" -ge 8 ] || { echo "HF_TOKEN absent ou trop court (mode réel) : masquage impossible, surveillance refusée"; exit 2; }
     for K in HF_TOKEN CONTROLE_IA_GITHUB_TOKEN GH_TOKEN VAST_API_KEY; do          # R-1683 : une clé présente mais trop courte ne serait pas masquée
@@ -250,22 +263,29 @@ surveillance)
     alerte() { local m; m="$(date -u +%FT%TZ) $1"; echo "$m" >> "$D/surveillance.txt"; echo "$m"; }
     liste_presente() {   # LP : 0 présente, 1 absente d'une liste non vide, 3 liste vide, 2 illisible, 9 appel en échec
         timeout -k 5 120 "$VAST" show instances --raw 2>/dev/null | masquer > "$D/inventaire-tour.tmp"
-        local st="${PIPESTATUS[0]}"; mv -f "$D/inventaire-tour.tmp" "$D/inventaire-tour.json"          # écriture atomique : jamais de fichier à demi écrit
+        local ps=("${PIPESTATUS[@]}") st sm; st="${ps[0]}"; sm="${ps[1]:-1}"                          # R-1693 : tout le PIPESTATUS ; un échec du masquage n'est jamais lu comme une liste
+        if [ "$sm" != 0 ]; then rm -f "$D/inventaire-tour.tmp"; LP=9; echo "masquage de l'inventaire en échec (code $sm) : relevé écarté, aucune copie vidée" > "$D/presence.txt"; alerte "ALERTE masquage en échec (inventaire, code $sm) : relevé écarté"; return; fi
+        mv -f "$D/inventaire-tour.tmp" "$D/inventaire-tour.json"          # écriture atomique : jamais de fichier à demi écrit
         [ "$st" = 0 ] || { LP=9; : > "$D/presence.txt"; return; }
         python3 -I -B -c "$SESSION7" presente "$D/inventaire-tour.json" "$ID" > "$D/presence.txt" 2>&1; LP=$?
     }
     seule_presente() {   # SP : 0 répond, 4 introuvable, 2 illisible, 9 appel en échec sans texte d'introuvable
         timeout -k 5 120 "$VAST" show instance "$ID" --raw 2>&1 | masquer > "$D/instance-seule.tmp"
-        local st="${PIPESTATUS[0]}"; mv -f "$D/instance-seule.tmp" "$D/instance-seule.json"
+        local ps=("${PIPESTATUS[@]}") st sm; st="${ps[0]}"; sm="${ps[1]:-1}"
+        if [ "$sm" != 0 ]; then rm -f "$D/instance-seule.tmp"; SP=9; echo "masquage de la réponse de show instance en échec (code $sm) : relevé écarté" > "$D/presence-seule.txt"; alerte "ALERTE masquage en échec (show instance, code $sm) : relevé écarté"; return; fi
+        mv -f "$D/instance-seule.tmp" "$D/instance-seule.json"
         python3 -I -B -c "$SESSION7" seule "$D/instance-seule.json" "$ID" > "$D/presence-seule.txt" 2>&1; SP=$?
         [ "$SP" != 2 ] || [ "$st" = 0 ] || SP=9
     }
-    echo "surveillance v8 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, téléchargement $TEL USD, antérieur $ANT USD ; sans couperet de temps ; arrêt sur processus mort ou dépense cumulée ≥ $PLC USD (plafond de la configuration, C-V5-3) ; alerte après 2 h sans PROGRES" >> "$D/surveillance.txt"
+    echo "surveillance v9 de $ID : création $CR, carte $PC USD/h, stockage $PS USD/h, téléchargement $TEL USD, antérieur $ANT USD ; sans couperet de temps ; arrêt sur processus mort ou dépense cumulée ≥ $PLC USD (plafond de la configuration, C-V5-3) ; alerte après 2 h sans PROGRES" >> "$D/surveillance.txt"
     while true; do
         now=$(date -u +%s)
         # R-1683 : journal entier (--tail 20000), masqué PAR UN TUBE (aucun fichier brut sur le disque), copié à chaque relevé
-        timeout -k 5 120 "$VAST" logs "$ID" --tail 20000 2>&1 | masquer > "$D/journal-dernier.tmp"; ST=${PIPESTATUS[0]}
-        if [ "$ST" = 0 ]; then
+        timeout -k 5 120 "$VAST" logs "$ID" --tail 20000 2>&1 | masquer > "$D/journal-dernier.tmp"; PSJ=("${PIPESTATUS[@]}"); ST="${PSJ[0]}"; SMJ="${PSJ[1]:-1}"
+        if [ "$SMJ" != 0 ]; then
+            rm -f "$D/journal-dernier.tmp"                       # R-1693 : masquage en échec = relevé écarté, ALERTE, jamais une copie vidée ni brute
+            alerte "ALERTE masquage en échec (journal, code $SMJ) : relevé écarté, dernier relevé gardé"
+        elif [ "$ST" = 0 ]; then
             mv -f "$D/journal-dernier.tmp" "$D/journal-dernier.txt"
             grep -q '^AMORCE ' "$D/journal-dernier.txt" && cp -f "$D/journal-dernier.txt" "$D/journal-instance.txt"      # copie entière à chaque relevé, la dernière bonne survit à la disparition de l'instance
             grep -E '^(AMORCE|PROGRES) ' "$D/journal-dernier.txt" | while IFS= read -r ligne; do grep -qxF -- "$ligne" "$D/progres.txt" || printf '%s\n' "$ligne" >> "$D/progres.txt"; done

@@ -158,3 +158,33 @@ exit 0
     assert len(m) == (4 if amorce == "v6" else 5), m
     if amorce == "v7":
         assert m[4] == "T0.6 : journal de l'instance (échéance)"
+
+
+def test_minuterie_a_l_echeance_depose_la_ligne_d_echeance_et_le_journal_sur_la_branche(bac, amorce, tmp_path):
+    """Chemin réel de E2-6 : la MINUTERIE (curl factice) atteint l'échéance ; la ligne « ÉCHÉANCE … atteinte (C14) » (écrite par elle) et le journal de l'instance
+    arrivent sur la branche avant le DELETE. v6 : rien (défaut) ; v7 : commit « journal de l'instance (échéance) » avec les deux fichiers."""
+    distant = _distant(bac)
+    code, _, sortie, racine = _lancer_amorce(bac, distant)
+    assert code == 0, sortie[-1500:]
+    avant = _sujets(distant)
+    journal = next(racine.rglob("journal.txt"))
+    with open(journal, "a", encoding="utf-8") as f:
+        f.write("2099-01-01T00:00:01Z installation des dépendances (dernière étape de l'essai)\n")
+    env = {k: os.environ[k] for k in ENV_DE_BASE if k in os.environ}
+    env.update(_curl(tmp_path), HOME=str(tmp_path))
+    now = int(time.time())
+    r = subprocess.run(["bash", str(racine / "t06-minuterie.sh"), str(now + 2), "0", str(racine), "https://api.invalid/v0"], env=env, capture_output=True, text=True, timeout=120)
+    log = (racine / "t06-minuterie.log").read_text(encoding="utf-8")
+    assert r.returncode == 0 and "ÉCHÉANCE" in log and "instance 424242 détruite" in log, log
+    apres = _sujets(distant)
+    fichiers = [f.split("\t")[-1] for f in t6a._fichiers_distants(distant)]
+    if amorce == "v6":
+        assert apres == avant and not [f for f in fichiers if "traces/consignation-" in f]
+        return
+    assert apres[0] == "T0.6 : journal de l'instance (échéance)" and len(apres) == len(avant) + 1, apres
+    fin = [f for f in fichiers if f.endswith("t06-minuterie-fin.txt")]
+    assert len(fin) == 1
+    assert "ÉCHÉANCE" in t6a._git(distant, "show", f"{BRANCHE_JOUET}:{fin[0]}")
+    jr = [f for f in fichiers if f.endswith("journal-consignation.txt")]
+    assert "dernière étape de l'essai" in t6a._git(distant, "show", f"{BRANCHE_JOUET}:{jr[0]}")
+    assert "cle-factice" not in t6a._git(distant, "show", f"{BRANCHE_JOUET}:{fin[0]}")
