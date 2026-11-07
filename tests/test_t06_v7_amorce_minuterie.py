@@ -83,3 +83,78 @@ def test_minuterie_ordre_de_destruction_pendant_la_consignation_supprime_le_put_
             assert "PUT" in methodes                                                                          # défaut reproduit
         else:
             assert methodes == ["DELETE"] and "PUT stopped non envoyé : ordre de destruction de l'amorce reçu pendant la consignation (R-1689)" in j
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------
+# R-1692, E2-6 : une échéance qui tombe avant que le run ait produit quoi que ce soit ne laissait RIEN sur la branche (le journal n'était poussé qu'en fin de run)
+# ---------------------------------------------------------------------------------------------------------------------------------
+BRANCHE_JOUET = "calcul/t06-jouet-v4"
+NB_COMMITS_RUN_COMPLET = 4                                                   # « init » + trois commits (résultats et données légères, morceaux, traces) : la poussée initiale ne crée aucun commit (E2-3)
+
+
+def _sujets(distant):
+    return t6a._git(distant, "log", "--format=%s", BRANCHE_JOUET).splitlines()
+
+
+def test_echeance_sans_resultat_depose_le_journal_sur_la_branche(bac, amorce):
+    """Cas sain (v7) : la consignation lancée par la minuterie (`t06-consigner.sh "échéance"`) sans aucun résultat neuf pousse un commit de journal
+    (`traces/consignation-…/journal-consignation.txt` : motif, heure, dernière ligne, 400 dernières lignes) ; artefact (v6) : aucun commit, rien sur la branche."""
+    distant = _distant(bac)
+    code, _, sortie, racine = _lancer_amorce(bac, distant)
+    assert code == 0, sortie[-1500:]
+    avant = _sujets(distant)
+    journal = next(racine.rglob("journal.txt"))
+    with open(journal, "a", encoding="utf-8") as f:
+        f.write("2099-01-01T00:00:00Z ÉCHÉANCE 4102444800 atteinte (C14) : consignation (ligne de l'essai)\n2099-01-01T00:00:01Z installation des dépendances (dernière étape de l'essai)\n")
+    r = subprocess.run(["bash", str(racine / "t06-consigner.sh"), "échéance"], capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stdout + r.stderr
+    apres = _sujets(distant)
+    fichiers = [f.split("\t")[-1] for f in t6a._fichiers_distants(distant)]
+    traces = [f for f in fichiers if "traces/consignation-" in f and f.endswith("journal-consignation.txt")]
+    if amorce == "v6":
+        assert apres == avant and not traces, (apres, traces)             # défaut reproduit : le journal ne part pas
+        return
+    assert len(apres) == len(avant) + 1 and apres[0] == "T0.6 : journal de l'instance (échéance)", apres
+    assert len(traces) == 1
+    texte = t6a._git(distant, "show", f"{BRANCHE_JOUET}:{traces[0]}")
+    assert "motif : échéance" in texte and "ÉCHÉANCE 4102444800 atteinte (C14)" in texte and "dernière étape de l'essai" in texte
+    assert "dernière ligne du journal avant la consignation : 2099-01-01T00:00:01Z installation des dépendances" in texte
+    assert any(f.endswith("empreintes.sha256") and "traces/consignation-" in f for f in fichiers)
+
+
+def test_fin_de_run_normale_ne_cree_aucun_commit_de_journal_en_plus(bac, amorce):
+    """Aucun commit artificiel : le chemin de fin de run (sans la ligne de commande de consignation) n'écrit jamais `traces/consignation-…` ; le nombre de commits
+    de la branche d'un run complet est identique en v6 et en v7."""
+    distant = _distant(bac)
+    code, _, sortie, racine = _lancer_amorce(bac, distant)
+    assert code == 0, sortie[-1500:]
+    assert not [f for f in t6a._fichiers_distants(distant) if "traces/consignation-" in f]
+    sujets = _sujets(distant)
+    assert not any("journal de l'instance" in s for s in sujets)
+    assert len(sujets) == NB_COMMITS_RUN_COMPLET, sujets                    # identique en v6 et en v7
+
+
+def test_echeance_pendant_la_poussee_finale_v7_ajoute_un_seul_commit_de_journal_apres_les_autres(bac, amorce):
+    """Version v7 du cas C-V4-1 (la minuterie lance la consignation pendant la poussée finale) : rien n'est perdu ni croisé ; v6 : quatre commits ; v7 : les quatre mêmes,
+    dans le même ordre, puis le seul commit de journal de la consignation d'échéance (R-1692)."""
+    hook = """#!/usr/bin/env bash
+if [ ! -e "$RACINE_AMORCE/hook-lance" ]; then : > "$RACINE_AMORCE/hook-lance"
+  setsid bash "$RACINE_AMORCE/t06-consigner.sh" "échéance" < /dev/null > "$RACINE_AMORCE/concurrent.log" 2>&1 &
+  sleep 3
+fi
+exit 0
+"""
+    distant = _distant(bac)
+    code, journal, sortie, racine = _lancer_amorce(bac, distant, "mn", {"FAUX_PRECOMMIT": hook})
+    assert code == 0, sortie[-2500:]
+    for _ in range(120):
+        if "branche calcul/t06-jouet-v4 poussée (échéance)" in (racine / "concurrent.log").read_text():
+            break
+        time.sleep(0.5)
+    c = (racine / "concurrent.log").read_text()
+    assert "branche calcul/t06-jouet-v4 poussée (échéance)" in c and "ERREUR DE CHAÎNE" not in c and "ERREUR DE CHAÎNE" not in journal
+    m = t6a._git(distant, "log", "--reverse", "--format=%s", BRANCHE_JOUET).splitlines()
+    assert m[0] == "init" and "résultats et données légères" in m[1] and "morceaux" in m[2] and m[3].startswith("T0.6 : traces")
+    assert len(m) == (4 if amorce == "v6" else 5), m
+    if amorce == "v7":
+        assert m[4] == "T0.6 : journal de l'instance (échéance)"

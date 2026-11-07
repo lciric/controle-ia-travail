@@ -4,7 +4,7 @@
 # `t06-depense-epuisee` manquait, alors que l'amorce demandait la destruction : l'arrêt gagnait (instance « exited », jamais détruite). Correctif étroit, deux gestes :
 # (1) AVANT de lancer la minuterie, si DEP est déjà passée, l'amorce pose elle-même le marqueur `t06-depense-epuisee` (l'amorce détruit de toute façon dans ce cas :
 # démarrage après DEP, ou second démarrage après DEP) : la branche C08 n'est plus prise ; (2) dans la minuterie, après `consigner`, le `PUT stopped` n'est plus envoyé si
-# `t06-detruire` est apparu entre-temps (l'ordre de destruction prime sur l'arrêt). Le reste est celui de la v6. Texte de la v6 (conservé) : amorce de l'instance de T0.6, v6.
+# `t06-detruire` est apparu entre-temps (l'ordre de destruction prime sur l'arrêt). (3) R-1692 (E2-6 non exercé : échéance pendant l'installation, rien sur la branche) : la consignation lancée par la ligne de commande de `t06-consigner.sh` (minuterie : échéance, dépense épuisée ; redémarrages) ajoute un commit « T0.6 : journal de l'instance (<motif>) » qui porte `traces/consignation-…/journal-consignation.txt` (motif, heure, dernière ligne du journal avant la consignation, 400 dernières lignes) ; la fin de run normale n'en crée pas (trois commits après l'initial : résultats et données légères, morceaux, traces). Le reste est celui de la v6. Texte de la v6 (conservé) : amorce de l'instance de T0.6, v6.
 # Amorce de l'instance de T0.6, v6 (nom neuf, R12 ; les v1 à v5 restent telles quelles). Contre-lecture Opus de la v5 (R-1683) : (1) le message de
 # `git sparse-checkout` n'est plus jeté (`2>/dev/null` retiré) : il est gardé et CITÉ dans la ligne de refus (« extraction partielle impossible … : <message> ») ;
 # (2) le délai du `checkout` du commit passe de 600 s (v4) à 900 s depuis la v5 : DÉCLARÉ ici ; pire cas du clonage = 900 s (clone) + 900 s (checkout) = 1 800 s ;
@@ -328,6 +328,14 @@ commit_verifie() {  # C-V4-1 : 0 = commit fait ; 10 = rien à committer (index v
 etape_commit() {  # $1 = message, $2 = journal si fait, $3 = journal si rien à committer ; rend 0 (fait ou rien) ou 1 (échec de chaîne)
     local rc; commit_verifie "$1"; rc=$?
     case "$rc" in 0) [ -z "$2" ] || journal "$2"; return 0;; 10) [ -z "$3" ] || journal "$3"; return 0;; *) return 1;; esac; }
+trace_consignation() {  # R-1692 (E2-6) : le journal de l'instance atteint la branche quand la consignation vient de la minuterie (échéance, dépense épuisée) ou d'un redémarrage ; sinon une échéance pendant l'installation ne laisse RIEN sur la branche
+    local d; mkdir -p traces || return 1
+    d=$(mktemp -d "traces/consignation-$(date -u +%Y%m%d-%H%M%S)-XXXX") || return 1
+    { echo "motif : $1"; echo "heure : $(date -u +%FT%TZ)"; echo "dernière ligne du journal avant la consignation : ${DERNIERE_LIGNE_AVANT:-$(tail -n 1 "$JOURNAL" 2>/dev/null)}" | cut -c1-400
+      echo "--- 400 dernières lignes du journal de l'instance (ligne d'échéance et dernière étape atteinte comprises) ---"; tail -n 400 "$JOURNAL" 2>/dev/null | cut -c1-400; } > "$d/journal-consignation.txt"
+    (cd "$d" && sha256sum -- journal-consignation.txt > empreintes.sha256) || true
+    ajouter "$d" || return 1
+    etape_commit "T0.6 : journal de l'instance ($1)" "$1 : journal de l'instance committé" ""; }
 consigner_partiel() {  # $1 = motif ; deux commits (données légères d'abord, morceaux ensuite), poussée ; 0 = tout, 1 = poussée impossible, 2 = poussée faite de ce qui existe, mais échec de chaîne
     local echec=0
     ajouter -A runs diag || echec=1
@@ -335,12 +343,14 @@ consigner_partiel() {  # $1 = motif ; deux commits (données légères d'abord, 
     etape_commit "T0.6 : résultats et données légères ($1)" "$1 : résultats et données légères committés" "$1 : aucun résultat léger à committer" || echec=1
     ajouter_morceaux || echec=1
     etape_commit "T0.6 : sous-ensemble d'activations en morceaux ($1)" "$1 : morceaux committés" "" || echec=1
+    if [ "${TRACE_CONSIGNATION:-0}" = 1 ]; then trace_consignation "$1" || echec=1; fi    # fixé par le seul chemin de la ligne de commande (minuterie, redémarrages), jamais par la fin de run
     if pousser; then journal "branche $BRANCHE poussée ($1)"; [ "$echec" = 0 ] && return 0; journal "ERREUR DE CHAÎNE (C-V4-1) : poussée faite de ce qui existe ($1), mais un ajout ou un commit a échoué"; return 2; fi
     journal "poussée impossible ($1) : résultats restés sur l'instance"; return 1; }
 if [ "${1:-}" = "--source" ]; then return 0 2>/dev/null || exit 0; fi
 exec 9>>"$R/t06-consigner.lock"; flock -w 1500 9 || { echo "verrou de consignation non obtenu ($1)"; exit 1; }
 cd "$R/amorce-depot" || { echo "dépôt extrait inaccessible"; exit 1; }
-consigner_partiel "$1"
+DERNIERE_LIGNE_AVANT=$(tail -n 1 "$JOURNAL" 2>/dev/null)    # étape atteinte avant que la consignation écrive ses propres lignes
+TRACE_CONSIGNATION=1 consigner_partiel "$1"
 exit $?
 CONSIGNER
 . "$R/t06-consigner.sh" --source
