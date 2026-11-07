@@ -12,13 +12,33 @@ l'identifiant, à deux relevés (inchangé dans le lanceur : code de retour 1 de
 from __future__ import annotations
 
 import json
+import re
 import sys
 
 from . import session_v9 as s9
 from .session import GardeSession
 
 filtre_recherche, choisir_offre, corriger_prix = s9.filtre_recherche, s9.choisir_offre, s9.corriger_prix
-verifier_plafond_epreuve, instance_presente = s9.verifier_plafond_epreuve, s9.instance_presente
+instance_presente = s9.instance_presente
+
+
+TOTAUX_GO_EPREUVES = ("5", "8")      # GO-2026-11-06-01 (5 USD) ; avec GO-2026-11-07-08 (E3 bis, 3 USD de plus) : 8 USD pour E2, E3 et E3 bis cumulées
+
+
+def verifier_plafond_epreuve(plafond, anterieures, total=None) -> str:
+    """`session_v8.verifier_plafond_epreuve` (plafond + dépense réelle des autres épreuves ≤ total − 0,1) avec le total du GO donné : « 5 » par défaut, « 8 » seulement pour E3 bis
+    (GO-2026-11-07-08, 3 USD de plus sur GO-2026-11-06-01). Tout autre total est refusé."""
+    from decimal import Decimal
+    t = "5" if total is None else str(total)
+    if t not in TOTAUX_GO_EPREUVES:
+        raise GardeSession(f"total du GO des épreuves {t!r} refusé : {TOTAUX_GO_EPREUVES} seulement")
+    from . import session_v8 as s8
+    ancien = s8.GO_EPREUVES_USD
+    s8.GO_EPREUVES_USD = t
+    try:
+        return s8.verifier_plafond_epreuve(plafond, anterieures)
+    finally:
+        s8.GO_EPREUVES_USD = ancien
 
 
 def absence_probable(texte: str) -> bool:
@@ -30,13 +50,28 @@ def absence_probable(texte: str) -> bool:
     return isinstance(v, dict) and list(v) == ["instances"] and v["instances"] is None
 
 
+_IDENT_DU_MESSAGE = re.compile(r"(?i)\binstance\s+(\d+)\b")
+
+
 def instance_seule(texte: str, ident: str) -> bool:
+    """`session_v9.instance_seule` plus deux refus : le texte réel `{"instances": null}` (absence probable) et un message « … instance <N> … not found » dont N n'est PAS l'identifiant demandé
+    (contre-lecture R-1731, essai 11) : il parle d'une autre instance, il ne conclut pas pour celle-ci."""
     if absence_probable(texte):
         raise GardeSession('réponse {"instances": null} : absence probable, établie seulement par une liste d\'inventaire non vide sans l\'instance, à deux relevés : non concluante')
+    for n in _IDENT_DU_MESSAGE.findall(texte):
+        if n != str(ident):
+            raise GardeSession(f"message d'introuvable pour l'instance {n}, pas pour {ident} : non concluant")
     return s9.instance_seule(texte, ident)
 
 
 def main(argv: list[str]) -> int:
+    if len(argv) in (3, 4) and argv[0] == "plafond":
+        try:
+            print(verifier_plafond_epreuve(argv[1], argv[2], argv[3] if len(argv) == 4 else None))
+        except GardeSession as e:
+            print(str(e))
+            return 1
+        return 0
     if len(argv) == 3 and argv[0] == "seule":
         try:
             texte = open(argv[1], encoding="utf-8", errors="replace").read()

@@ -47,6 +47,9 @@ def _faux_module(tmp_path, comportement: str) -> dict:
         import argparse, json, pathlib
         ap = argparse.ArgumentParser(); [ap.add_argument(a) for a in ("--config", "--run-id", "--prereg")]; ap.add_argument("--autoriser-depot-sale", action="store_true")
         a = ap.parse_args()
+        import os
+        if os.environ.get("FAUX_PRECOMMIT_BRAS_B"):                     # essai 7 : un crochet pre-commit qui refuse seulement le commit du bras B (le run de T0.6 est déjà committé)
+            h = pathlib.Path(".git/hooks/pre-commit"); h.write_text("#!/usr/bin/env bash\\ngit diff --cached --name-only | grep -q bras-b- && exit 1\\nexit 0\\n"); h.chmod(0o755)
         {FAUX[comportement]}
         for sous, nom in (("diag", "audit-fuite-r1-v4-bras-b-v1.json"), ("runs", "manifeste.json")):
             p = pathlib.Path(sous) / a.run_id; p.mkdir(parents=True, exist_ok=True); (p / nom).write_text(json.dumps({{"run_id": a.run_id}}), encoding="utf-8")
@@ -162,3 +165,56 @@ def test_epreuve_sans_autorisation_non_lance_et_avec_autorisation_lance(tmp_path
     avec = jouer(EPREUVE_GO_ID="GO-X", BRAS_B_EPREUVE="1")
     assert "bras B : début" in avec and "bras B : code 1" in avec and "retour 0" in avec                  # `false` joue le module en échec : la fonction rend quand même 0
     assert "non lancé (BRAS_B=0)" in jouer(BRAS_B="0")
+
+
+# --- essais 6 et 7 de la contre-lecture (R-1731) : les deux chemins d'échec propres au bras B ----------------------------------------------------------
+def _fin_normale_sans_effet(code, journal, racine, sortie):
+    assert code == 0 and (racine / "t06-fin-normale").exists() and not (racine / "t06-fin-anormale").exists(), sortie[-1200:]
+    assert "ERREUR DE CHAÎNE" not in journal
+
+
+def test_6_poussee_du_bras_b_impossible_code_0_fin_normale_et_run_intact(bac, tmp_path, monkeypatch):
+    """Crochet pre-receive du dépôt distant : il refuse seulement la poussée dont le sommet est le commit du bras B. Le run de T0.6 est déjà poussé."""
+    monkeypatch.setattr(t6a, "AMORCE", AMORCE8)
+    _avec_config(bac)
+    crochet = """#!/usr/bin/env bash
+while read old new ref; do
+  case "$(git log -1 --format=%s "$new")" in "T0.6 : bras B"*) echo "poussée refusée (essai 6)" >&2; exit 1;; esac
+done
+exit 0
+"""
+    distant = _distant(bac, crochet)
+    code, journal, sortie, racine = _lancer_amorce(bac, distant, env_sup={"BRAS_B_FORCER": "1", **_faux_module(tmp_path, "ok")})
+    _fin_normale_sans_effet(code, journal, racine, sortie)
+    assert "bras B : poussée impossible (sans effet sur T0.6)" in journal and "bras B : sorties committées" in journal
+    sujets = _sujets(distant)
+    assert sujets and not [s for s in sujets if "bras B" in s], sujets                               # le bras B n'est pas sur la branche distante
+    assert any("run 2026" in s for s in sujets) and "T0.6 : traces de l'instance (fin)" in sujets    # le run de T0.6 est intact
+
+
+def test_6_artefact_sans_crochet_le_bras_b_est_pousse(bac, tmp_path, monkeypatch):
+    monkeypatch.setattr(t6a, "AMORCE", AMORCE8)
+    _avec_config(bac)
+    distant = _distant(bac)
+    code, journal, sortie, racine = _lancer_amorce(bac, distant, env_sup={"BRAS_B_FORCER": "1", **_faux_module(tmp_path, "ok")})
+    _fin_normale_sans_effet(code, journal, racine, sortie)
+    assert "bras B : poussée impossible" not in journal and any("bras B" in s for s in _sujets(distant))
+
+
+def test_7_commit_du_bras_b_impossible_code_0_fin_normale_et_run_intact(bac, tmp_path, monkeypatch):
+    monkeypatch.setattr(t6a, "AMORCE", AMORCE8)
+    _avec_config(bac)
+    distant = _distant(bac)
+    code, journal, sortie, racine = _lancer_amorce(bac, distant, env_sup={"BRAS_B_FORCER": "1", "FAUX_PRECOMMIT_BRAS_B": "1", **_faux_module(tmp_path, "ok")})
+    assert code == 0 and (racine / "t06-fin-normale").exists() and not (racine / "t06-fin-anormale").exists(), sortie[-1200:]
+    assert "bras B : commit en échec (sans effet sur T0.6)" in journal, journal[-1500:]
+    assert "ERREUR DE CHAÎNE (C-V4-1) : commit en échec" in journal             # les tentatives du commit refusé sont journalisées (deux), la fin du run reste normale
+    sujets = _sujets(distant)
+    assert not [s for s in sujets if "bras B" in s] and "T0.6 : traces de l'instance (fin)" in sujets
+
+
+def test_le_module_du_bras_b_par_defaut_est_la_v2_dont_l_issue_n_est_jamais_imprimee():
+    """Cas sain : l'amorce v9 joue `bras_b_v2` par défaut (la v1 imprimait l'issue sur la sortie standard poussée non scellée). Artefact : la v1 existe encore, intacte, et n'est plus le défaut."""
+    texte = AMORCE8.read_text(encoding="utf-8")
+    assert "${BRAS_B_MODULE:-controle_ia.audit_fuite_r1_v4.bras_b_v2}" in texte and "bras_b_v1}" not in texte
+    assert (RACINE / "src" / "controle_ia" / "audit_fuite_r1_v4" / "bras_b_v2.py").is_file() and (RACINE / "src" / "controle_ia" / "audit_fuite_r1_v4" / "bras_b_v1.py").is_file()

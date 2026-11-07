@@ -216,3 +216,29 @@ def test_deux_journaux_sous_la_racine_le_chemin_explicite_est_le_bon(bac, amorce
     assert code == 0, sortie[-1500:]
     trouves = sorted(str(p.relative_to(racine)) for p in racine.rglob("journal.txt"))
     assert len(trouves) == 2 and "t06/journal.txt" in trouves and any(p.startswith("amorce-depot/traces/") for p in trouves), trouves
+
+
+# --- essai 9 de la contre-lecture (R-1731) : cas 1 et 2 par MUTATION de l'amorce v9 (l'artefact « v6 » ne prouve rien seul) --------------------------------
+def _amorce_mutee(tmp_path, ancien: str, nouveau: str) -> Path:
+    texte = AMORCE7.read_text(encoding="utf-8")
+    assert texte.count(ancien) == 1, ancien
+    copie = tmp_path / "amorce_mutee" / AMORCE7.name
+    copie.parent.mkdir(exist_ok=True)
+    copie.write_text(texte.replace(ancien, nouveau), encoding="utf-8")
+    return copie
+
+
+def test_9_cas_1_mutation_marqueur_de_depense_epuisee_non_pose_au_demarrage(bac, tmp_path, monkeypatch):
+    """Retirer le geste (1) de la v7 (le marqueur posé avant la minuterie quand l'heure de dépense épuisée est déjà passée) : l'essai du cas 1 doit ÉCHOUER."""
+    monkeypatch.setattr(t6a, "AMORCE", _amorce_mutee(tmp_path, 'if [ "$DEP" -gt 0 ] && [ "$(date +%s)" -ge "$DEP" ] && [ ! -e "$R/t06-depense-epuisee" ]; then      # R-1689',
+                                                  'if false && [ "$DEP" -gt 0 ] && [ "$(date +%s)" -ge "$DEP" ] && [ ! -e "$R/t06-depense-epuisee" ]; then      # R-1689'))
+    with pytest.raises(AssertionError):
+        test_demarrage_apres_la_depense_epuisee_la_destruction_gagne_sur_l_arret(bac, "v9", tmp_path)
+
+
+def test_9_cas_2_mutation_put_stopped_envoye_malgre_l_ordre_de_destruction(bac, tmp_path, monkeypatch):
+    """Retirer le geste (2) (pas de `PUT stopped` si `t06-detruire` est apparu pendant la consignation) : l'essai du cas 2 doit ÉCHOUER."""
+    monkeypatch.setattr(t6a, "AMORCE", _amorce_mutee(tmp_path, 'if [ -e "$R/t06-detruire" ]; then echo "$(date -u +%FT%TZ) PUT stopped non envoyé',
+                                                  'if false; then echo "$(date -u +%FT%TZ) PUT stopped non envoyé'))
+    with pytest.raises(AssertionError):
+        test_minuterie_ordre_de_destruction_pendant_la_consignation_supprime_le_put_stopped(bac, "v9", tmp_path)

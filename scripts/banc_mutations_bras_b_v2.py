@@ -27,6 +27,9 @@ MUTATIONS = [
     ("M6 restriction de contexte retirée", "return el & contexte_conforme", "return el", "test_4_"),
     ("M7 issue imprimée", 'print(json.dumps({"sortie": str(sortie), "sha256": empreinte(sortie), "duree_s": r["duree_s"]}, ensure_ascii=False))',
      'print(json.dumps({"issue": r["decision"]["issue"], "sortie": str(sortie), "sha256": empreinte(sortie), "duree_s": r["duree_s"]}, ensure_ascii=False))', "test_5_aucune_issue"),
+    ("M9 tolérance du score retirée (G4 hors bit)", "ok = ecart <= TOLERANCE_SCORE", "ok = True", "test_g4_"),
+    ("M10 identité au bit non exigée (G4)", "    if au_bit:\n        ok = egal", "    if au_bit:\n        ok = True", "test_g4_"),
+    ("M11 tolérance de score élargie à 5", "TOLERANCE_SCORE = 0.15 ", "TOLERANCE_SCORE = 5.0 ", "test_g4_"),
     ("M8 mention contrefactuelle prise pour le saboteur", "sc = el_cf_s & S", "sc = el_cf_m & M", "test_3_"),
 ]
 

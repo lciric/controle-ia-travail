@@ -48,3 +48,18 @@ def test_artefact_texte_reel_sans_liste_non_vide_n_est_jamais_une_absence_etabli
     code, sortie, d = _surv(tmp_path / "b", LANCEUR9, JOURNAL_BON, {"FAUX_LISTE": liste, "FAUX_SEULE": "instancesnul", "INTERVALLE": "1"}, vastai=VASTAI_V11, duree=60)
     assert code == 3 and "ARRET inventaire" in sortie and "ARRET mort" not in sortie, (liste, sortie[-900:])
     assert "absence probable" in (d / "surveillance.txt").read_text(encoding="utf-8")
+
+
+# --- essai 11 : l'identifiant du message est comparé -------------------------------------------------------------------------------------------
+@pytest.mark.parametrize("texte, ident, attendu", [
+    ("Error 404: instance 123 not found", "123", False),            # cas sain : le message nomme l'instance demandée → absence établie
+    ("404 instance 999 not found", "123", "non concluant"),         # artefact : autre instance → non concluant
+    ("Error 404: instance 12 not found", "123", "non concluant"),   # 12 n'est pas 123 (pas de comparaison par préfixe)
+    ("404 not found", "123", False),                                # sans identifiant : comportement de session_v9 inchangé
+])
+def test_essai_11_identifiant_du_message_compare_a_celui_demande(texte, ident, attendu):
+    if attendu is False:
+        assert s10.instance_seule(texte, ident) is False
+    else:
+        with pytest.raises(GardeSession, match=attendu):
+            s10.instance_seule(texte, ident)

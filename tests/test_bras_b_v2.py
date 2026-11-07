@@ -203,3 +203,42 @@ def test_5_artefact_la_v1_imprimait_l_issue(monde_modele, tmp_path, monkeypatch,
     assert bb1._main(["--config", str(p), "--run-id", "20261107-130500-bras-b-jouet", "--prereg", bb1.PREREG_IMPOSE, "--autoriser-depot-sale"]) == 0
     sortie = capsys.readouterr().out
     assert "issue" in json.loads(sortie)                                                            # défaut reproduit : la v1 imprime l'issue
+
+
+# --- G4 v2 : tolérance sur le score de W en log-cote (décision de Lazar, R-1734) -----------------------------------------------------------------------
+def test_g4_au_bit_exige_l_egalite_des_activations_meme_si_les_scores_sont_proches():
+    a = np.asarray([1.0, 2.0, 3.0], dtype=np.float16)
+    b = a.copy()
+    b[0] = np.float16(1.0009765625)                                                                     # un pas de float16
+    assert bb.comparer_identite(a, a.copy(), True, [1.0], [1.0])["conforme"]
+    assert not bb.comparer_identite(b, a, True, [1.0], [1.0001])["conforme"]                           # au bit : refusé
+
+
+@pytest.mark.parametrize("ecart, conforme", [(0.0, True), (0.10, True), (bb.TOLERANCE_SCORE - 1e-9, True), (bb.TOLERANCE_SCORE * 1.01, False), (2.0, False)])
+def test_g4_hors_du_cas_au_bit_la_tolerance_porte_sur_le_score_en_log_cote(ecart, conforme):
+    a = np.asarray([1.0, 2.0, 3.0], dtype=np.float16)
+    r = bb.comparer_identite(a * np.float16(1.25), a, False, [1.0, 5.0 + ecart], [1.0, 5.0])         # les activations diffèrent beaucoup : seul le score compte
+    assert r["conforme"] is conforme and r["ecart_score_max"] == pytest.approx(ecart)
+
+
+def test_g4_hors_du_cas_au_bit_sans_scores_refuse():
+    a = np.asarray([1.0, 2.0], dtype=np.float16)
+    with pytest.raises(bb.GardeArret, match="exige les scores"):
+        bb.comparer_identite(a, a, False)
+    with pytest.raises(bb.GardeArret):
+        bb.comparer_identite(a, a, False, [float("nan")], [1.0])
+
+
+def test_g4_bout_en_bout_une_derive_de_score_arrete_avant_toute_substitution(monde, monkeypatch):
+    depot, config, *_ = monde
+    vraie = bb.passe_unique
+    etat = {"n": 0}
+
+    def derivee(modele, ids, couches):
+        a = vraie(modele, ids, couches)
+        etat["n"] += 1
+        return {c: v + 50.0 for c, v in a.items()}                                                      # activations très éloignées de celles de R1 v4 : le score de W bouge de beaucoup plus que 0,15
+    monkeypatch.setattr(bb, "passe_unique", derivee)
+    with pytest.raises(bb.GardeArret, match="G4"):
+        lancer(depot, config, "20261107-130600-bras-b-jouet")
+    assert etat["n"] <= 2
