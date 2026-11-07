@@ -111,6 +111,11 @@ def fabriquer_bac(tmp_path):                                   # v11 : corps de 
         shutil.copy(RACINE / "src" / "controle_ia" / "t06" / nom, src / "src" / "controle_ia" / "t06" / nom)
     (src / "scripts").mkdir()
     shutil.copy(AMORCE, src / "scripts" / AMORCE.name)
+    liste = RACINE / "scripts" / "tests-cibles-t06-v1.txt"                 # v11 : l'amorce v9 joue la liste figée (empreinte écrite en dur) : liste réelle et fichiers d'essais vides dans le premier commit
+    shutil.copy(liste, src / "scripts" / liste.name)
+    for f in liste.read_text(encoding="utf-8").split():
+        (src / f).parent.mkdir(parents=True, exist_ok=True)
+        (src / f).write_text("", encoding="utf-8")
     sha = subprocess.run(["sha256sum", str(AMORCE)], capture_output=True, text=True, check=True).stdout.split()[0]
     (src / PREREG).write_text(_prereg(sha), encoding="utf-8")
     sceller(src / PREREG)
