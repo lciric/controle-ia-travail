@@ -1,4 +1,4 @@
-"""[Copie v10 de test_t06_v7_amorce.py : lanceur v10, amorce v7 inchangée] [Copie v7/v9 des essais v6/v8, R-1693] Amorce de T0.6 v6 et lanceur v8 (R-1683) : les essais de la v4 rejoués (via la v5) sur `scripts/amorce_instance_t06_v7.sh` et `scripts/lancer_t06_v10.sh`, puis les essais neufs de la v6/v8 en fin de fichier. Texte de la v5 : les essais de la v4 rejoués sur `scripts/amorce_instance_t06_v7.sh` et `scripts/lancer_t06_v10.sh` (copie de `test_t06_v4_scripts.py`, sauf quatre essais de la création `creation <OFFRE>` — disque simulé et commande de création, contrôles et surveillance d'épreuve, course inchangée, registre de `main` — remplacés par les essais v5 à v7 qui jouent `creation auto`), puis les essais neufs de la v5 en fin de fichier. Texte de la v4 : scripts de la chaîne de T0.6 v4 (`scripts/amorce_instance_t06_v7.sh`, `scripts/lancer_t06_v10.sh`) : les essais de la v2
+"""[Copie v10 de test_t06_v7_amorce.py : lanceur v10, amorce v7 inchangée] [Copie v7/v9 des essais v6/v8, R-1693] Amorce de T0.6 v6 et lanceur v8 (R-1683) : les essais de la v4 rejoués (via la v5) sur `scripts/amorce_instance_t06_v8.sh` et `scripts/lancer_t06_v10.sh`, puis les essais neufs de la v6/v8 en fin de fichier. Texte de la v5 : les essais de la v4 rejoués sur `scripts/amorce_instance_t06_v8.sh` et `scripts/lancer_t06_v10.sh` (copie de `test_t06_v4_scripts.py`, sauf quatre essais de la création `creation <OFFRE>` — disque simulé et commande de création, contrôles et surveillance d'épreuve, course inchangée, registre de `main` — remplacés par les essais v5 à v7 qui jouent `creation auto`), puis les essais neufs de la v5 en fin de fichier. Texte de la v4 : scripts de la chaîne de T0.6 v4 (`scripts/amorce_instance_t06_v8.sh`, `scripts/lancer_t06_v10.sh`) : les essais de la v2
 rejoués tels quels sur les scripts v4 (essais de la v3, puis C-V4-1 en fin de fichier) (dépôt distant local, `python`, `vastai`, `df` et `curl` factices, aucune installation,
 aucun appel au réseau ni à Vast : C01, C08, C09, C10, C11, C12, C13, C14, C15, L11), plus les corrections de la contre-lecture
 neuve : C-V3-2 (second démarrage avec l'heure de dépense épuisée DANS LE PASSÉ, ou le marqueur de dépense épuisée, ou
@@ -19,7 +19,7 @@ import pytest
 from controle_ia.scellement import sceller
 
 RACINE = Path(__file__).resolve().parents[1]
-AMORCE = RACINE / "scripts" / "amorce_instance_t06_v7.sh"
+AMORCE = RACINE / "scripts" / "amorce_instance_t06_v8.sh"
 LANCEUR = RACINE / "scripts" / "lancer_t06_v10.sh"
 CONFIG_REELLE = RACINE / "docs" / "notes" / "g0-deux-semaines-v1" / "config-t06-reel-v1-brouillon4.json"
 ENV_DE_BASE = ("PATH", "LANG", "LC_ALL", "LC_CTYPE", "TMPDIR")
@@ -81,7 +81,7 @@ def _prereg(amorce_sha: str = "x" * 64, doublon: str | None = None) -> str:
               "- Configuration de T0.6 (empreinte canonique) : `" + "a" * 64 + "`",
               "- Tâches d'évaluation de T0.6 : `" + "b" * 64 + "`", "- Tests attendus : `7`",
               f"- Chemin de la configuration de T0.6 : `{CONFIG}`", *(f"- {k} : `{v}`" for k, v in CITES.items()),
-              f"- Amorce : `scripts/amorce_instance_t06_v7.sh` (`{amorce_sha}`, sha256)"]
+              f"- Amorce : `scripts/amorce_instance_t06_v8.sh` (`{amorce_sha}`, sha256)"]
     if doublon:
         lignes.append(f"- {doublon} : `autre/chemin.json`")
     return "\n".join(lignes) + "\n"
@@ -909,7 +909,7 @@ def test_clonage_reduit_extraction_partielle_ligne_de_debit_et_chemins(bac):
     assert code == 0, sortie[-2500:]
     m = re.search(r"AMORCE \S+ : CLONAGE mode=jouet secondes=(\d+) octets_git=(\d+) octets_arbre=(\d+) debit_Mo_s=(\d+\.\d\d) motifs=(\d+)", sortie)
     assert m and int(m.group(1)) >= 1 and int(m.group(2)) > 0 and int(m.group(3)) > 0 and int(m.group(5)) >= 20, sortie[:1500]
-    assert "AMORCE T06 v7 DEMARRAGE" in sortie
+    assert "AMORCE T06 v8 DEMARRAGE" in sortie
     depot = racine / "amorce-depot"
     for present in ("src", "scripts", "prereg", "donnees", "docs/notes/note.json", "docs/sources/invites-2606.08892-v1/invite.md", "docs/procedures/p.md",
                     "registres/go.md", "registres/etat.md", "pyproject.toml", "requirements-gpu.txt", "brouillons/ordres-t06-e2-e3-v5/ordre.md"):

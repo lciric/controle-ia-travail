@@ -18,7 +18,7 @@ from controle_ia.t06.session import GardeSession
 
 RACINE = Path(__file__).resolve().parents[1]
 AMORCE6 = RACINE / "scripts" / "amorce_instance_t06_v6.sh"
-AMORCE7 = RACINE / "scripts" / "amorce_instance_t06_v7.sh"
+AMORCE7 = RACINE / "scripts" / "amorce_instance_t06_v8.sh"
 
 
 @pytest.fixture(params=["v6", "v7"])

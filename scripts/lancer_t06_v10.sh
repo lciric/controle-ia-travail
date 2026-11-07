@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Chaîne de session de T0.6, v10 (nom neuf, R12 ; les v1 à v9 restent telles quelles). v10 = v9 + (contre-lecture Opus de la v9, « Essais R5 à ajouter » 3) : le module de session est `session_v9.py` (`instance_seule` : « 404 » exact et message exact ; `{"id": null}` non concluant) ; le code et le motif du refus de plafond ne changent pas (code 2). Texte de la v9 (conservé) :
-# Chaîne de session de T0.6, v9 (nom neuf, R12 ; les v1 à v8 restent telles quelles). v9 = v8 + (R-1692, épreuve E2 du 7 novembre) : le stockage n'est plus compté deux fois (`dph_total` inclut déjà `storage_total_cost` sous `--storage` : prix_carte = dph_total − storage_total_cost, module `session_v9.py`) ; l'amorce citée est `scripts/amorce_instance_t06_v7.sh` (correctif R-1689 : l'ordre de destruction de l'amorce l'emporte sur l'arrêt par dépense épuisée). Texte de la v8 (conservé) :
+# [v10, intégration de la course : cite l amorce v8 (bras B en annexe), session_v9] Chaîne de session de T0.6, v9 (nom neuf, R12 ; les v1 à v8 restent telles quelles). v9 = v8 + (R-1692, épreuve E2 du 7 novembre) : le stockage n'est plus compté deux fois (`dph_total` inclut déjà `storage_total_cost` sous `--storage` : prix_carte = dph_total − storage_total_cost, module `session_v9.py`) ; l'amorce citée est `scripts/amorce_instance_t06_v7.sh` (correctif R-1689 : l'ordre de destruction de l'amorce l'emporte sur l'arrêt par dépense épuisée). Texte de la v8 (conservé) :
 # Chaîne de session de T0.6, v8 (nom neuf, R12 ; les v1 à v7 restent telles quelles). v8 = v7 + (R-1683, contre-lecture Opus de la v7) : (1) une liste d'inventaire
 # VIDE (ou `null`, illisible, ou un appel en échec) n'est pas une absence : ALERTE sur la sortie standard avec un compteur, puis `vastai show instance <ID>` (l'instance
 # seule) ; `ARRET mort` seulement si une liste NON vide ne contient pas l'instance à deux relevés, ou si l'instance seule est introuvable à deux relevés ; présence non
@@ -73,7 +73,7 @@ set -uo pipefail
 QUOI="${1:?controles, creation, apres-creation ou surveillance}"
 DEPOT="${T06_DEPOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 P="${T06_PREREG:-prereg/T0.6-organismes-v0-v1.md}"
-A=scripts/amorce_instance_t06_v7.sh
+A=scripts/amorce_instance_t06_v8.sh
 BRANCHE="${T06_BRANCHE:-calcul/t06-reel-v4}"
 GO_ID=GO-2026-11-02-28
 REG="${T06_REGISTRE_GO:-$DEPOT/registres/go.md}"   # registre des GO lu par toutes les sous-commandes ; pour une épreuve : celui d'un clone de `main` (obligatoire)
@@ -129,12 +129,12 @@ controles)
         [ "$cle" = "Chemin de la configuration de T0.6" ] && { git -C "$DEPOT" show "$S:$f" > "$D/config.json"; CONFIG_CHEMIN="$f"; }
     done
     CAL=$(python3 -I -B -c "$SESSION" calendrier "$D/config.json" "$REG" "$JOUR") || { echo "calendrier de la configuration (L11) : $CAL : pas de création"; exit 2; }
-    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v7 absente de S"; exit 2; }
+    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v8 absente de S"; exit 2; }
     E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
-    tr '\n' ' ' < "$D/prereg-S.md" | tr -s ' ' | grep -qF "\`$A\` (\`$E\`" || { echo "empreinte de l'amorce v7 ($E) non citée par le texte de S"; exit 2; }
+    tr '\n' ' ' < "$D/prereg-S.md" | tr -s ' ' | grep -qF "\`$A\` (\`$E\`" || { echo "empreinte de l'amorce v8 ($E) non citée par le texte de S"; exit 2; }
     [ -n "${HF_TOKEN:-}" ] && [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ] || { echo "jeton absent (HF_TOKEN ou CONTROLE_IA_GITHUB_TOKEN) : pas de création"; exit 2; }
     printf 'controles t06 v10 %s\ncommit %s\nprereg %s\nconfig %s\nbranche %s\namorce %s\ngo %s\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$P" "$CONFIG_CHEMIN" "$BRANCHE" "$E" "$GO_ID" "$CAL" >> "$D/lancement.txt"
-    echo "CONTRÔLES CONFORMES : S=$S ; amorce v7 $E ; GO $GO_ID ; $CAL" ;;
+    echo "CONTRÔLES CONFORMES : S=$S ; amorce v8 $E ; GO $GO_ID ; $CAL" ;;
 controles-epreuve)
     D=$(realpath -m "${2:?dossier neuf}"); S="${3:?commit à cloner (40 caractères)}"; CFG="${4:?chemin de la configuration de l epreuve dans le commit}"; JOUR="${5:-$(date -u +%F)}"
     [ -e "$D" ] && { echo "$D existe déjà (R12)"; exit 2; }
@@ -157,12 +157,12 @@ controles-epreuve)
     git -C "$DEPOT" show "$S:registres/go.md" > "$D/go-commit.md" 2>/dev/null && python3 -I -B -c "$SESSION3" go "$D/go-commit.md" "$GOC" 5 "$JOUR" >/dev/null || { echo "GO $GOC absent ou non conforme dans registres/go.md du commit $S (l'amorce le relit) : commit postérieur au GO exigé"; exit 2; }
     LIBRE=$(df -Pk "$D" | awk 'NR==2 {print $4}'); [ "$LIBRE" -ge 3000000 ] || { echo "place disque : $LIBRE ko libres (3 Go exigés)"; exit 2; }
     CAL=$(python3 -I -B -c "$SESSION3" calendrier "$D/config.json" "$REG" "$GOC" 5 "$JOUR") || { echo "calendrier de la configuration : $CAL : pas de création"; exit 2; }
-    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v7 absente de $S"; exit 2; }
+    git -C "$DEPOT" show "$S:$A" > "$D/amorce.sh" || { echo "amorce v8 absente de $S"; exit 2; }
     E=$(sha256sum "$D/amorce.sh" | cut -d' ' -f1)
     if [ "$MODE_C" = reel ]; then [ -n "${HF_TOKEN:-}" ] || { echo "HF_TOKEN absent (mode réel) : pas de création"; exit 2; }; fi
     [ -n "${CONTROLE_IA_GITHUB_TOKEN:-}" ] || { echo "jeton absent (CONTROLE_IA_GITHUB_TOKEN) : pas de création"; exit 2; }
     printf 'controles-epreuve t06 v4 %s\ncommit %s\nprereg -\nconfig %s\nbranche %s\namorce %s\ngo %s\nplafond %s\nepreuves_anterieures %s\nmode %s\nepreuve oui\ncalendrier %s\n' "$(date -u +%FT%TZ)" "$S" "$CFG" "$BRANCHE" "$E" "$GOC" "$PLC" "$ANT_EPR" "$MODE_C" "$CAL" >> "$D/lancement.txt"
-    echo "CONTRÔLES D'ÉPREUVE CONFORMES : S=$S ; amorce v7 $E ; GO $GOC (plafond de l'épreuve $PLC USD sur 5 ; $PLAF) ; mode $MODE_C ; $CAL" ;;
+    echo "CONTRÔLES D'ÉPREUVE CONFORMES : S=$S ; amorce v8 $E ; GO $GOC (plafond de l'épreuve $PLC USD sur 5 ; $PLAF) ; mode $MODE_C ; $CAL" ;;
 creation)
     OFFRE_ARG="${2:?auto}"; CARTE="${3:?carte : course ou relance}"; ANT="${4:?dépense antérieure en USD (registre des dépenses ; 0 pour la première tentative)}"; D=$(realpath -m "${5:?dossier des contrôles}"); ECH="${6:-}"
     [ "$OFFRE_ARG" = auto ] || { echo "offre : « auto » seulement (v5 : un identifiant donné à la main serait périmé, il change d'une recherche à l'autre ; l'offre est choisie dans la liste filtrée, juste avant la création)"; exit 2; }
