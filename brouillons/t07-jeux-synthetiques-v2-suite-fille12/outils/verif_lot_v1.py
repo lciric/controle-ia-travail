@@ -70,7 +70,7 @@ def verif_instruction(iid, rep):
     if iid == "D20": non(contient(rep, "significant") or contient(rep, "significantly"), "significant")
     return f
 
-UNITES = "hour hours gpu gpus compute budget cost costs dollar dollars $ k day days week weeks month months".split()
+UNITES = "hour hours gpu gpus compute budget cost costs dollar dollars $ k day days week weeks month months a100 a100s h100 h100s v100 v100s h200 h200s a6000 l40 l40s b200 b200s tpu tpus".split()
 NOMBRES = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen "
            "twenty thirty forty fifty sixty seventy eighty ninety hundred thousand").split()
 def nombre_de_cout(txt):
