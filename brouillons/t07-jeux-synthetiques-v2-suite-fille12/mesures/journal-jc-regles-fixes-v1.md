@@ -36,3 +36,9 @@ Alternance (membre gonflé plus long, de 10) :
 - r05-2510.23605v1.jsonl : membre gonflé plus long dans 6 paires sur 10
 
 Sortie de `verif_lot_v1.py cout` sur r00–r05 : OK
+
+## 5. Mise à jour du 2026-11-07 (jalon de 8 tâches)
+
+- **Règle fixe ajoutée** : N3 étendue aux unités matérielles (A100, H100, V100, H200, A6000, L40, B200, TPU) : un nombre (chiffres ou lettres) à quatre mots d'une telle unité avant COST est une faute (le script officiel la lit comme nombre de coût). Appliquée à toutes les tâches de J-C ; rejouée sur r00–r09 (OK sauf r06 avant renvoi).
+- **Renvoi** (au plus un par tâche) : r06 (2510.26843v1) — pré-contrôle N3 matériel : 18 fautes sur les 10 paires (« one A100 », « 1 A100 »…), **réécrit une fois** (les mentions remplacées par « a single accelerator »), pré-contrôle OK ensuite. Déclenché par le pré-contrôle seul.
+- **Jalon de 8 tâches (r00–r07), script officiel, aire sac de mots** : **0,855** (réponse entière) / **0,864** (avant COST) ; contrôle 10 : OK (défauts de fréquence documentaire : 0) ; seuls défauts : 3 écarts en jetons (tokeniseur factice, non opposables). Journal : `journal-jc-jalon-8-v1.txt`. Aucune décision n'a été prise sur cette valeur.
