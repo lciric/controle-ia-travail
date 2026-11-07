@@ -83,6 +83,7 @@ def main(racine: Path) -> int:
     sur_ligne("T6a table EMPREINTES_CODE", "| `<<EMPREINTES_CODE_T06>>`", lambda l: l.replace("modules v2 à v8 compris, dont `session_v4.py` à `session_v8.py`", "modules v2 à v9 compris, dont `session_v4.py` à `session_v9.py`, "
         "`audit_fuite_r1_v4/bras_b_v1.py` et ses copies du manifeste").replace(A7, "scripts/amorce_instance_t06_v8.sh").replace(L9, "scripts/lancer_t06_v10.sh").replace("scripts/lancer_t06_v10.sh,", "scripts/lancer_t06_v10.sh,"))
     sur_ligne("T6b table EMPREINTE_AMORCE", "| `<<EMPREINTE_AMORCE_T06>>`", lambda l: l.replace(A7, "scripts/amorce_instance_t06_v8.sh"))
+    sur_ligne("T6c table VALEURS_CITEES", "| `<<VALEURS_CITEES_T06>>`", lambda l: l.replace(L9, "scripts/lancer_t06_v10.sh"))
     sur_ligne("T7 citations lues par la chaîne", "Citations que la chaîne lit mécaniquement", lambda l: l.replace(L9, "scripts/lancer_t06_v10.sh"))
     t = "\n".join(lignes)
     sortie.write_text(t, encoding="utf-8")
