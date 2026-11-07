@@ -14,10 +14,27 @@ from pathlib import Path
 import pytest
 
 import test_t06_v6_amorce as t6a
-from test_t06_v6_amorce import CURL_FACTICE, ENV_DE_BASE, _distant, _lancer_amorce, bac  # noqa: F401
+from test_t06_v6_amorce import CURL_FACTICE, ENV_DE_BASE, _distant, _lancer_amorce  # noqa: F401
+from test_t06_v6_amorce import bac as bac_v6  # noqa: F401
 
 RACINE = Path(__file__).resolve().parents[1]
 AMORCE6 = RACINE / "scripts" / "amorce_instance_t06_v6.sh"
+LISTE = RACINE / "scripts" / "tests-cibles-t06-v1.txt"
+
+
+@pytest.fixture
+def bac(bac_v6):
+    """v11 : l'amorce v9 joue la liste figée : le banc reçoit la liste réelle et des fichiers d'essais vides (le faux python ne les lit pas) ; sans effet sur l'amorce v6."""
+    src = bac_v6["source"]
+    (src / "scripts").mkdir(exist_ok=True)
+    (src / "scripts" / LISTE.name).write_text(LISTE.read_text(encoding="utf-8"), encoding="utf-8")
+    for f in LISTE.read_text(encoding="utf-8").split():
+        (src / f).parent.mkdir(parents=True, exist_ok=True)
+        (src / f).write_text("", encoding="utf-8")
+    t6a._git(src, "add", "-A")
+    t6a._git(src, "commit", "-q", "--amend", "--no-edit")             # même commit « init » : les essais comptent les commits de la branche
+    return bac_v6
+
 AMORCE7 = RACINE / "scripts" / "amorce_instance_t06_v9.sh"     # v11 : la minuterie corrigée est celle de l'amorce v9 (reprise de la v7)
 
 

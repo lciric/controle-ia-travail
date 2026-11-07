@@ -465,7 +465,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
 fi
 # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-t06-v1.txt"; LISTE_SHA256="910e0dd087d3f884f977ad8c32e3b2a01049effb908d98d0235ed00c3d3f0bd7"; FICHIERS_TESTS=""
+LISTE_TESTS="scripts/tests-cibles-t06-v1.txt"; LISTE_SHA256="bdea324aa27ab7bd2204a11da690a9a5e98fe2384dcc38a1b0220edca61185e5"; FICHIERS_TESTS=""
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"

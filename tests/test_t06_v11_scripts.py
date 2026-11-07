@@ -21,6 +21,7 @@ LANCEUR5 = RACINE / "scripts" / "lancer_t06_v11.sh"
 SESSION7 = RACINE / "src" / "controle_ia" / "t06" / "session_v7.py"
 SESSION8 = RACINE / "src" / "controle_ia" / "t06" / "session_v8.py"
 SESSION9 = RACINE / "src" / "controle_ia" / "t06" / "session_v9.py"
+SESSION10 = RACINE / "src" / "controle_ia" / "t06" / "session_v10.py"       # v11 : le lanceur v11 appelle session_v10
 VAST_REEL = """#!/usr/bin/env bash
 # faux vastai 1.8.3 : recherche par identifiant VIDE ; identifiants qui changent à chaque recherche filtrée ; offre du premier rang retirée
 echo "$*" >> "$FAUX_VASTAI_JOURNAL"
@@ -56,7 +57,7 @@ OFFRES = [{**OFFRE_E2, "dph_total": 0.30, "gpu_name": "RTX 3060", **M3},        
 def monde5(src_epreuve, tmp_path):
     src = src_epreuve
     shutil.copy(LANCEUR5, src / "scripts" / LANCEUR5.name)
-    for mod in (SESSION7, SESSION8, SESSION9):
+    for mod in (SESSION7, SESSION8, SESSION9, SESSION10):
         shutil.copy(mod, src / "src" / "controle_ia" / "t06" / mod.name)
     b = tmp_path / "bin"
     b.mkdir(exist_ok=True)
@@ -158,7 +159,7 @@ def test_surveillance_sans_hf_token_en_jouet_et_plafond_nomme(monde5):
     with pytest.raises(subprocess.TimeoutExpired):
         subprocess.run(["bash", str(LANCEUR5), "surveillance", "777777", str(d)], env=env5(m, HF_TOKEN=None, FAUX_INSTANCES=str(inv)), capture_output=True, text=True, timeout=4)
     s = (d / "surveillance.txt").read_text(encoding="utf-8")
-    assert "dépense cumulée ≥ 1.5 USD" in s and "≥ 200 USD" not in s and "surveillance v10" in s                        # C-V5-2 (jouet sans HF_TOKEN), C-V5-3
+    assert "dépense cumulée ≥ 1.5 USD" in s and "≥ 200 USD" not in s and "surveillance v11" in s                        # C-V5-2 (jouet sans HF_TOKEN), C-V5-3
     # artefacts : sans jeton GitHub, refus ; en mode réel sans HF_TOKEN, refus
     r = subprocess.run(["bash", str(LANCEUR5), "surveillance", "777777", str(d)], env=env5(m, HF_TOKEN=None, CONTROLE_IA_GITHUB_TOKEN="court"), capture_output=True, text=True, timeout=30)
     assert r.returncode == 2 and "jeton GitHub" in r.stdout
