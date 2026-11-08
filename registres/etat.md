@@ -399,3 +399,10 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - **Étiqueteur** : la fille clés 2 (`session_016QhUrreBYxC9arQKTBEHAb`, environnement Default) a les sept clés ; mise en place, restauration et contrôles en cours ; **elle attend le mot écrit de Lazar dans sa session** (« go lecture principale de l'étiqueteur sous GO-2026-11-07-07 et GO-2026-11-08-03 ») ; rendus sur `rapports/fille-cles-2-v1`. Analyse et verdict : chez la mère, par des lecteurs neufs (racine restaurée ici).
 - **Instances** (09:48:16Z) : aucune en marche ; 58936096, 58936099, 58936100 (R8) arrêtées, jamais touchées ; 59288960 arrêtée, stockage facturé, destruction sur le mot de Lazar.
 - **Ensuite** (brief v2, § 3) : verdict de la validation du nul v9 par un lecteur neuf ; rendus de l'ancienne session ; couples de la contre-lecture, E3-6, E3-3, scellements, course de T0.6.
+
+## 8 novembre, 10:14 UTC — autonomie de 8 heures (GO-2026-11-08-05, jusqu'à ≈ 18:09 UTC)
+- **Bilan toutes les heures** (tâche programmée récurrente vers la session mère) ; feu vert des dépenses dans les plafonds des GO de calcul, chacune sur devis écrit, inscrite avant engagement (R-1778).
+- **Étiqueteur** : fille clés 2 prête depuis 10:02Z (feu vert 4.1 comparé, aucune différence) ; attend la phrase écrite de Lazar dans sa session.
+- **Nul v9** : vérification courte rendue (description seulement ; B1, I5, I6 levés) ; **verdict scellé : « puissance perdue » au premier étage** (R-1779) ; nœud de Lazar : accepter le prix ou chercher un nul moins coûteux.
+- **Instances** : 59288960 détruite à 10:08:19Z (R-1777) ; restent 58936096, 58936099, 58936100 (R8, arrêtées, jamais touchées).
+- **En attente** : contre-lecture de la chaîne de la course (ancienne session ; relance par la mère si absente à 13:00Z) ; suite complète des essais (en cours).
