@@ -152,7 +152,7 @@ def lire_registre_detail(registre: Path, cles_exigees, cles_permises=(), cles_re
     """Lignes du registre, clé → (instant, date, chemin, sha), et liste des clés ignorées (autres tâches, règle (3)). Contrôles de
     forme de `controle_lecture_t06_v1.lire_registre` (`ba2ba5cf…`, mêmes textes de refus) ; une exigée absente refuse ; une
     permise absente n'est pas rendue ; règle du registre partagé (docstring du module). Tous les refus sont relevés, puis rendus
-    ensemble (une `RefusRegistre`, motifs joints par « ; »)."""
+    ensemble (une `RefusRegistre`, motifs joints par « ; », qui porte en `partiel` les lignes lues sans faute)."""
     registre = Path(registre)
     exigees, permises = tuple(cles_exigees), tuple(cles_permises)
     refusees = dict(cles_refusees or {})
@@ -213,7 +213,9 @@ def lire_registre_detail(registre: Path, cles_exigees, cles_permises=(), cles_re
             continue
         sortie[k] = (instant, date, chemin, sha)
     if fautes:
-        raise RefusRegistre(" ; ".join(fautes))
+        e = RefusRegistre(" ; ".join(fautes))
+        e.partiel = (sortie, ignorees)              # lignes lues sans faute : la garde poursuit ses autres contrôles
+        raise e
     return sortie, ignorees
 
 
@@ -254,7 +256,9 @@ def verifier_lignes(lignes: dict, racine: Path, instant: int) -> dict:
         except RefusRegistre as e:
             fautes.append(str(e))
     if fautes:
-        raise RefusRegistre(" ; ".join(fautes))
+        e = RefusRegistre(" ; ".join(fautes))
+        e.partiel = sortie
+        raise e
     return sortie
 
 

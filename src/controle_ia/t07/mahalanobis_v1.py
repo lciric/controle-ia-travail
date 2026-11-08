@@ -1,16 +1,22 @@
 """Notation de Mahalanobis par produit matriciel (`produit_matriciel_v2`) pour la lecture de T0.7, v1.
 
-Miroir de `src/controle_ia/sondes/familles_v2.py` (`4fea2c52b754fc180974c80ed9e83a3656d1b6aef7382a4451b7532a144153ad` au commit
-`8cb539f9`, **absent de `main`** au 8 novembre 2026 : brouillon 7, en-tête, « à fusionner ou à citer au commit »). Même quantité
-(h − μ)ᵀ P (h − μ) que le paquet gelé `sondes.familles.SondeMahalanobis` (référence, R12), calculée par `((z @ P) * z).sum(axis=1)`
-au lieu de `np.einsum("nd,de,ne->n")` ; **essai d'égalité au paquet gelé avant chaque usage** (`verifier_egalite_au_paquet_gele` :
-256 jetons tirés autour de μ, écart relatif maximal ≤ 10⁻¹², graine dérivée ; R-1624 (i)) : un échec met **le couple** en
-« échec » (l'appelant l'écrit), jamais l'ensemble. Lorsque `familles_v2` sera sur la branche lue, l'essai `test_t07_lecture_v1`
-compare ce miroir à l'original (essai sauté sinon, déclaré).
+Miroir de `src/controle_ia/sondes/familles_v2.py` **cité au commit** `8cb539f9` (empreinte du fichier à ce commit
+`4fea2c52b754fc180974c80ed9e83a3656d1b6aef7382a4451b7532a144153ad`, 94 lignes ; absent de `main`, non fusionné ; brouillon 12,
+marqueur 8 du module ; brouillon 14, en-tête). Même quantité (h − μ)ᵀ P (h − μ) que le paquet gelé
+`sondes.familles.SondeMahalanobis` (référence, R12), calculée par `((z @ P) * z).sum(axis=1)` au lieu de
+`np.einsum("nd,de,ne->n")` ; **essai d'égalité au paquet gelé avant chaque usage** (`verifier_egalite_au_paquet_gele` : 256 jetons
+tirés autour de μ, écart relatif maximal ≤ 10⁻¹², graine dérivée ; R-1624 (i)) : un échec met **le couple** en « échec »
+(l'appelant l'écrit), jamais l'ensemble.
+
+La classe `SondeMahalanobisV2`, `en_produit_matriciel`, `jetons_d_essai`, les constantes et le calcul de
+`verifier_egalite_au_paquet_gele` sont égaux ligne à ligne au fichier cité ; **seuls écarts permis** (brouillon 14, en-tête) :
+(a) en-tête et docstrings ; (b) import `from ..sondes.familles import SondeMahalanobis` au lieu de
+`from .familles import SondeMahalanobis, entrainer, mahalanobis` (autre paquet) ; (c) `mahalanobis_v2` et `entrainer_v2` absents
+(les sondes sont apprises par `familles.entrainer` du paquet gelé, puis réécrites par `preparer_sonde`) ; (d) le compte rendu de
+l'essai porte deux champs de plus (`sonde`, `empreinte`) ; (e) `preparer_sonde` et `__all__` ajoutés. L'essai de miroir
+(`tests/test_t07_lecture_v1.py`) compare ce fichier, par son arbre syntaxique, au fichier lu par
+`git show 8cb539f9:src/controle_ia/sondes/familles_v2.py`, aux cinq écarts près, et compare les scores des deux classes.
 """
-# MARQUEUR-QUESTION-8 : le brouillon 11 (en-tête, l. 197-199) écrit encore « pas sur `main` : à fusionner ou à citer au commit »
-# pour `sondes/familles_v2.py` ; il ne tranche pas entre la fusion avant le scellement et la citation au commit `8cb539f9`. Le
-# module garde ce miroir (le paquet gelé reste la référence, R12) sans choisir.
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -39,7 +45,7 @@ class SondeMahalanobisV2(SondeMahalanobis):
         return SondeMahalanobis(self.nom, self.couche, self.mu, self.P, self.agregation, self.famille)
 
 
-def en_produit_matriciel(sonde) -> SondeMahalanobisV2:
+def en_produit_matriciel(sonde: SondeMahalanobis) -> SondeMahalanobisV2:
     """Une sonde de Mahalanobis du paquet gelé, réécrite par produit matriciel (mêmes μ, P, nom, couche, agrégation, empreinte)."""
     if not isinstance(sonde, SondeMahalanobis):
         raise GardeArret(f"sonde {getattr(sonde, 'nom', '?')} : une sonde de Mahalanobis du paquet gelé est attendue")

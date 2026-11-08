@@ -33,6 +33,7 @@ notation ou la lecture a échoué (motif écrit).
 from __future__ import annotations
 
 import math
+import re
 from collections import Counter
 from functools import lru_cache
 from itertools import combinations, product
@@ -220,12 +221,20 @@ def _dans(x, bas: float, haut: float) -> bool:
     return _nombre(x) and bas <= float(x) <= haut
 
 
-def valider_issue_mots_et_cout(doc) -> dict:
-    """Domaine du fichier cité par `ISSUE-MOTS-ET-COUT-T06` (brouillon 11, l. 1141 et l. 1209-1214 ; CLT7D-02). Rend la forme
-    lue {`issue_mots_et_cout`, `phrase`, `doses` (toutes les doses écrites, dose 0 ou autre comprise), `doses_qualifiees_ecrites`} ;
-    lève `IssueIllisible` (Q = absente, L1) sur clé absente, valeur hors domaine, dose manquante parmi S25 à S100, `null` hors
-    des champs permis. `null` permis : champs `CHAMPS_NULS_NON_CALCULABLE` d'une dose « non calculable » (ni vérifiés ni
-    recalculés) et `effet_cout` à toute dose. Une dose en plus n'est pas illisible : `deriver_classe` la rend « incohérent »."""
+def _entier_exact(x, attendu: int) -> bool:
+    return isinstance(x, int) and not isinstance(x, bool) and x == attendu
+
+
+def valider_issue_mots_et_cout(doc, niveau_attendu: float) -> dict:
+    """Domaine du fichier cité par `ISSUE-MOTS-ET-COUT-T06` (brouillon 14, « Lignes de registre » ; CLT7D-02 ; brouillons 12 et 13).
+    Rend la forme lue {`issue_mots_et_cout`, `phrase`, `doses` (toutes les doses écrites, dose 0 ou autre comprise),
+    `doses_qualifiees_ecrites`, `plis`} ; lève `IssueIllisible` (Q = illisible, L1) sur : clé absente ; dose manquante parmi S25 à
+    S100 ; `etat`, `niveau`, `n_permutations` ou `seuil_aire` nul (toute dose) ; `n_permutations` ≠ 200, `seuil_aire` ≠ 0,70,
+    `niveau` ≠ `niveau_attendu` (`<<NIVEAU_BASE_T06>>`, clé de configuration `niveau_base_t06`) ; sur une dose « non calculable »,
+    une valeur non nulle sur l'un des sept champs `CHAMPS_NULS_NON_CALCULABLE` (`null` exigé, vérifié, jamais recalculé) ; sur une
+    dose « réussit » ou « échoue », un `null` ou une valeur hors domaine ; `effet_cout` ni nul ni {estimation, bas, haut} ;
+    `doses_qualifiees` qui n'est pas une liste de textes. Une dose en plus n'est pas illisible : `deriver_classe` la rend
+    « incohérent ». `plis` est lu s'il existe (pour le recalcul de `aire`), jamais exigé ici."""
     if not isinstance(doc, dict):
         raise IssueIllisible("issue mots et coût : objet JSON attendu")
     for k in ("issue_mots_et_cout", "phrase", "doses", "doses_qualifiees"):
@@ -249,21 +258,25 @@ def valider_issue_mots_et_cout(doc) -> dict:
                 raise IssueIllisible(f"issue mots et coût : clé absente doses.{d}.{k}")
         if x["etat"] not in ETATS_BASE:
             raise IssueIllisible(f"issue mots et coût : doses.{d}.etat = {x['etat']!r} hors de {ETATS_BASE}")
+        if not _entier_exact(x["n_permutations"], N_PERMUTATIONS_BASE):
+            raise IssueIllisible(f"issue mots et coût : doses.{d}.n_permutations = {x['n_permutations']!r} : {N_PERMUTATIONS_BASE} attendu")
+        if not (_nombre(x["seuil_aire"]) and float(x["seuil_aire"]) == SEUIL_AIRE_BASE):
+            raise IssueIllisible(f"issue mots et coût : doses.{d}.seuil_aire = {x['seuil_aire']!r} : 0,70 attendu")
+        if not (_nombre(x["niveau"]) and float(x["niveau"]) == float(niveau_attendu)):
+            raise IssueIllisible(f"issue mots et coût : doses.{d}.niveau = {x['niveau']!r} : {niveau_attendu} attendu "
+                                 "(niveau de l'intervalle de la base fixé par T0.6)")
         nc = x["etat"] == "non calculable"
-        for k in ("aire_n029", "aire_mots_et_cout", "aire", "bas", "haut", "quantile_plancher"):
-            if nc:
-                continue                                  # dose non calculable : `null` permis, ni vérifiés ni recalculés (CLT7D-02)
-            if not _dans(x[k], 0.0, 1.0):
-                raise IssueIllisible(f"issue mots et coût : doses.{d}.{k} = {x[k]!r} hors de [0, 1]"
-                                     + (" (`null` sur une dose « réussit » ou « échoue »)" if x[k] is None else ""))
-        if not nc and x["base_decisive"] not in BASES_DECISIVES:
-            raise IssueIllisible(f"issue mots et coût : doses.{d}.base_decisive = {x['base_decisive']!r} hors de {BASES_DECISIVES}")
-        if not (_nombre(x["niveau"]) and 0.0 < float(x["niveau"]) < 1.0):
-            raise IssueIllisible(f"issue mots et coût : doses.{d}.niveau = {x['niveau']!r} hors de ]0, 1[")
-        if not (isinstance(x["n_permutations"], int) and not isinstance(x["n_permutations"], bool) and x["n_permutations"] > 0):
-            raise IssueIllisible(f"issue mots et coût : doses.{d}.n_permutations = {x['n_permutations']!r} : entier positif attendu")
-        if not _dans(x["seuil_aire"], 0.0, 1.0):
-            raise IssueIllisible(f"issue mots et coût : doses.{d}.seuil_aire = {x['seuil_aire']!r} hors de [0, 1]")
+        if nc:
+            non_nuls = [k for k in CHAMPS_NULS_NON_CALCULABLE if x[k] is not None]
+            if non_nuls:
+                raise IssueIllisible(f"issue mots et coût : doses.{d} non calculable : champs {non_nuls} non nuls (`null` exigé)")
+        else:
+            for k in ("aire_n029", "aire_mots_et_cout", "aire", "bas", "haut", "quantile_plancher"):
+                if not _dans(x[k], 0.0, 1.0):
+                    raise IssueIllisible(f"issue mots et coût : doses.{d}.{k} = {x[k]!r} hors de [0, 1]"
+                                         + (" (`null` sur une dose « réussit » ou « échoue »)" if x[k] is None else ""))
+            if x["base_decisive"] not in BASES_DECISIVES:
+                raise IssueIllisible(f"issue mots et coût : doses.{d}.base_decisive = {x['base_decisive']!r} hors de {BASES_DECISIVES}")
         e = x["effet_cout"]
         if e is not None:
             if not isinstance(e, dict) or any(k not in e or not _nombre(e[k]) for k in CHAMPS_EFFET):
@@ -272,7 +285,12 @@ def valider_issue_mots_et_cout(doc) -> dict:
     if not isinstance(q, list) or not all(isinstance(v, str) for v in q):
         raise IssueIllisible("issue mots et coût : doses_qualifiees : liste de noms de doses attendue")
     return {"issue_mots_et_cout": doc["issue_mots_et_cout"], "phrase": doc["phrase"], "doses": dict(doses),
-            "doses_qualifiees_ecrites": list(q)}
+            "doses_qualifiees_ecrites": list(q), "plis": doc.get("plis")}
+
+
+def aire_de_la_base_ecrite(x: dict) -> float:
+    """Aire moyenne de la base décisive écrite : `aire_n029` si `base_decisive` = N-029, `aire_mots_et_cout` sinon."""
+    return float(x["aire_n029"] if x["base_decisive"] == "N-029" else x["aire_mots_et_cout"])
 
 
 def etat_recalcule(x: dict) -> str:
@@ -301,25 +319,39 @@ def effet_de(x: dict) -> str:
     return "etabli" if float(e["bas"]) > 0 else "non_etabli"
 
 
-def deriver_classe(issue: dict, p064: bool) -> dict:
-    """Classe Q et listes de doses (brouillon 11, « Règle « mots et coût » » points 1 à 4 et « Module » ; ordre de la fonction
+def deriver_classe(issue: dict, p064: bool, controle_aire: str = "egalite", tolerance_aire: float | None = None,
+                   aires_recalculees: dict | None = None) -> dict:
+    """Classe Q et listes de doses (brouillon 14, « Règle « mots et coût » » points 1 à 4 et « Module » ; ordre de la fonction
     `deriver` du script d'annexe) :
     1. **incoherent** si un champ interne ne concorde pas : dose hors de S25 à S100 présente (dose 0 comprise) ; sur une dose
-       « réussit » ou « échoue », `etat` recalculé ≠ `etat` écrit, ou `base_decisive` ≠ argmax des deux aires (ex aequo : l'une
-       ou l'autre acceptée, réserve « ex aequo non réglé par T0.6 » ; CLT7D-05) ;
+       « réussit » ou « échoue », `etat` recalculé ≠ `etat` écrit, `base_decisive` ≠ argmax des deux aires (ex aequo : l'une
+       ou l'autre acceptée, réserve « ex aequo non réglé par T0.6 » ; CLT7D-05), ou **`aire` en écart** (brouillon 13, M-3) :
+       sous `controle_aire` = « egalite », `aire` ≠ aire de la base décisive écrite (égalité exacte) ; sous « recalcul »,
+       |`aire` − aire recalculée| > `tolerance_aire` + 10⁻⁹ (brouillon 14, m-02 ; `aires_recalculees` {dose : aire moyenne des
+       deux plis de la base décisive écrite, recalculée par `lecture_v1.aires_recalculees_t06`}) ;
     2. **non_calculable** si une dose au moins est « non calculable », quelles que soient l'étiquette et `doses_qualifiees` ;
-    3. **incoherent** si l'étiquette du fichier ≠ étiquette recalculée, ou si `doses_qualifiees` ≠ doses « échoue » ;
+    3. **incoherent** si l'étiquette du fichier ≠ étiquette recalculée, ou si `doses_qualifiees` ≠ doses « échoue » (listes
+       ordonnées comparées telles quelles, brouillon 12) ;
     4. doses jugées = doses qualifiées à effet du coût établi si `p064` (« non établi » et `null` ne le sont pas), toutes les
        doses qualifiées sinon ; **vide**, **partiel** (une à trois) ou **complet** (quatre).
     L'étiquette du fichier n'aiguille jamais. `issue` : sortie de `valider_issue_mots_et_cout`."""
     if not isinstance(p064, bool):
         raise GardeArret(f"p064 = {p064!r} : booléen attendu (configuration, défaut de P-064 : vrai)")
+    if controle_aire not in CONTROLES_AIRE:
+        raise GardeArret(f"controle_aire = {controle_aire!r} hors de {CONTROLES_AIRE}")
+    if controle_aire == "recalcul":
+        if not _nombre(tolerance_aire) or float(tolerance_aire) <= 0:
+            raise GardeArret(f"controle_aire = recalcul : tolerance_aire = {tolerance_aire!r}, nombre positif attendu")
+        if not isinstance(aires_recalculees, dict):
+            raise GardeArret("controle_aire = recalcul : aires recalculées non transmises (défaut de chaîne)")
+    elif aires_recalculees is not None:
+        raise GardeArret("controle_aire = egalite : aucune aire recalculée ne doit être transmise")
     doses = issue["doses"]
     ecrits = {d: doses[d]["etat"] for d in DOSES}
     qualifiees = [d for d in DOSES if ecrits[d] == "échoue"]
     hors_jugement = [d for d in DOSES if ecrits[d] == "réussit"]
     non_calculables = [d for d in DOSES if ecrits[d] == "non calculable"]
-    champs, reserves, recalcules, bases = [], [], {}, {}
+    champs, reserves, recalcules, bases, controles_aire = [], [], {}, {}, {}
     for d in doses:
         if d not in DOSES:
             champs.append(f"doses.{d} : dose hors de S25 à S100")
@@ -339,13 +371,31 @@ def deriver_classe(issue: dict, p064: bool) -> dict:
             bases[d] = "N-029" if a > b else "mots_et_cout"
             if bases[d] != x["base_decisive"]:
                 champs.append(f"doses.{d}.base_decisive : écrite {x['base_decisive']!r}, argmax {bases[d]!r}")
+        if controle_aire == "egalite":
+            reference = aire_de_la_base_ecrite(x)
+            ecart = float(x["aire"]) != reference
+            controles_aire[d] = {"controle": "egalite", "aire": float(x["aire"]), "aire_base_decisive_ecrite": reference,
+                                 "ecart": ecart}
+            if ecart:
+                champs.append(f"doses.{d}.aire : écrite {x['aire']!r}, aire de la base décisive écrite ({x['base_decisive']}) "
+                              f"{reference!r} (égalité exacte)")
+        else:
+            if d not in aires_recalculees:
+                raise GardeArret(f"controle_aire = recalcul : aire recalculée de {d} absente (défaut de chaîne)")
+            reference = float(aires_recalculees[d])
+            ecart = abs(float(x["aire"]) - reference) > float(tolerance_aire) + MARGE_AIRE
+            controles_aire[d] = {"controle": "recalcul", "aire": float(x["aire"]), "aire_recalculee": reference,
+                                 "ecart_absolu": abs(float(x["aire"]) - reference), "tolerance": float(tolerance_aire),
+                                 "marge": MARGE_AIRE, "ecart": ecart}
+            if ecart:
+                champs.append(f"doses.{d}.aire : écrite {x['aire']!r}, recalculée {reference!r} (écart > {tolerance_aire} + 1e-09)")
     etiquette = etiquette_recalculee(recalcules) if not non_calculables else None
     sortie = {"etiquette_fichier": issue["issue_mots_et_cout"], "etiquette_recalculee": etiquette, "p064": p064,
               "doses_qualifiees": qualifiees, "doses_hors_jugement": hors_jugement, "doses_non_calculables": non_calculables,
               "doses_qualifiees_ecrites": list(issue["doses_qualifiees_ecrites"]), "etats_ecrits": ecrits,
-              "etats_recalcules": recalcules, "bases_decisives_recalculees": bases, "reserves": reserves,
-              "doses_jugees": [], "doses_sans_effet_etabli": [], "doses_effet_non_calculable": [], "champs_en_ecart": [],
-              "etape": None, "sous_phrase_L7": None}
+              "etats_recalcules": recalcules, "bases_decisives_recalculees": bases, "controle_aire": controles_aire,
+              "reserves": reserves, "doses_jugees": [], "doses_sans_effet_etabli": [], "doses_effet_non_calculable": [],
+              "champs_en_ecart": [], "etape": None, "sous_phrase_L7": None}
     if champs:                                                                           # étape 1
         return {**sortie, "Q": "incoherent", "champs_en_ecart": champs, "etape": 1}
     if non_calculables:                                                                  # étape 2
@@ -353,7 +403,8 @@ def deriver_classe(issue: dict, p064: bool) -> dict:
     if issue["issue_mots_et_cout"] != etiquette:                                         # étape 3
         champs.append(f"issue_mots_et_cout : écrite {issue['issue_mots_et_cout']}, recalculée {etiquette}")
     if list(issue["doses_qualifiees_ecrites"]) != qualifiees:
-        champs.append(f"doses_qualifiees : écrite {list(issue['doses_qualifiees_ecrites'])}, doses « échoue » {qualifiees}")
+        champs.append(f"doses_qualifiees : écrite {list(issue['doses_qualifiees_ecrites'])}, doses « échoue » {qualifiees} "
+                      "(liste ordonnée)")
     if champs:
         return {**sortie, "Q": "incoherent", "champs_en_ecart": champs, "etape": 3}
     effets = {d: effet_de(doses[d]) for d in qualifiees}                                 # étape 4
@@ -367,6 +418,65 @@ def deriver_classe(issue: dict, p064: bool) -> dict:
     if issue["issue_mots_et_cout"] == "M3" and len(jugees) == len(DOSES):
         sortie["reserves"] = sortie["reserves"] + [f"réserve gelée de T0.6 (M3) : {RESERVE_M3}"]
     return {**sortie, "Q": "complet" if len(jugees) == len(DOSES) else "partiel"}
+
+
+# ----------------------------------------------------------------------------------------------- fichier d'audit des fuites
+def _texte_non_vide(x) -> bool:
+    return isinstance(x, str) and x.strip() != ""
+
+
+def valider_audit_fuites(doc, chemin_consigne: str, sha_consigne: str) -> dict:
+    """Domaine du fichier cité par `AUDIT-FUITES-T07` (brouillon 13, M-1 (iv), m-09 ; brouillon 14, m-03 : le module vérifie le
+    **domaine** de `separation`, [0,70 ; 1], pas son calcul, qui relève de la contre-lecture du fichier) : objet à deux clés
+    exactement, `consigne` = {`chemin`, `sha256`} égal à la ligne `CONSIGNE-AUDIT-FUITES-T07`, et `jeux` à cinq clés exactement
+    (`saboteur`, `S25`, `S50`, `S75`, `S100`), chaque jeu à quatre clés exactement : `fuite` (`null` ou texte non vide), `trait`
+    (`null` si et seulement si `fuite` est nul ; sinon `extrait`, `empan`, `format_cout` ou `gabarit`), `separation` (`null` si
+    et seulement si `fuite` est nul ; sinon nombre, ni booléen ni texte, dans [0,70 ; 1]), `motif` (texte non vide). Toute autre
+    forme → `AuditIllisible` (refus de l'étape B)."""
+    if not isinstance(doc, dict) or set(doc) != {"consigne", "jeux"}:
+        raise AuditIllisible(f"audit des fuites : objet à deux clés exactement (consigne, jeux) attendu, "
+                             f"{sorted(doc) if isinstance(doc, dict) else type(doc).__name__} lu")
+    c = doc["consigne"]
+    if not isinstance(c, dict) or set(c) != {"chemin", "sha256"}:
+        raise AuditIllisible("audit des fuites : consigne : objet {chemin, sha256} attendu")
+    if not isinstance(c["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", c["sha256"]):
+        raise AuditIllisible(f"audit des fuites : consigne.sha256 = {c['sha256']!r} : 64 caractères hexadécimaux minuscules attendus")
+    if c["chemin"] != chemin_consigne or c["sha256"] != sha_consigne:
+        raise AuditIllisible(f"audit des fuites : consigne {c['chemin']!r} ({str(c['sha256'])[:12]}…) ≠ ligne CONSIGNE-AUDIT-FUITES-T07 "
+                             f"({chemin_consigne!r}, {sha_consigne[:12]}…)")
+    jeux = doc["jeux"]
+    if not isinstance(jeux, dict) or set(jeux) != set(JEUX_AUDIT):
+        raise AuditIllisible(f"audit des fuites : jeux : objet à cinq clés exactement {list(JEUX_AUDIT)} attendu")
+    for nom in JEUX_AUDIT:
+        j = jeux[nom]
+        if not isinstance(j, dict) or set(j) != set(CHAMPS_JEU_AUDIT):
+            raise AuditIllisible(f"audit des fuites : jeux.{nom} : objet à quatre clés exactement {list(CHAMPS_JEU_AUDIT)} attendu")
+        if j["fuite"] is not None and not _texte_non_vide(j["fuite"]):
+            raise AuditIllisible(f"audit des fuites : jeux.{nom}.fuite = {j['fuite']!r} : null ou texte non vide attendu")
+        if not _texte_non_vide(j["motif"]):
+            raise AuditIllisible(f"audit des fuites : jeux.{nom}.motif = {j['motif']!r} : texte non vide attendu")
+        if j["fuite"] is None:
+            if j["trait"] is not None or j["separation"] is not None:
+                raise AuditIllisible(f"audit des fuites : jeux.{nom} : trait et separation nuls attendus quand fuite est nulle")
+            continue
+        if j["trait"] not in TRAITS_AUDIT:
+            raise AuditIllisible(f"audit des fuites : jeux.{nom}.trait = {j['trait']!r} hors de {TRAITS_AUDIT}")
+        s = j["separation"]
+        if not (_nombre(s) and SEUIL_FUITE <= float(s) <= 1.0):
+            raise AuditIllisible(f"audit des fuites : jeux.{nom}.separation = {s!r} : nombre dans [0,70 ; 1] attendu")
+    return {"consigne": dict(c), "jeux": {n: dict(jeux[n]) for n in JEUX_AUDIT}}
+
+
+def entree_F(audit: dict, doses_jugees) -> dict:
+    """Entrée F (plan, point 4 ter) : « (i) » si une fuite est nommée sur `saboteur` ; « (ii) » si une fuite est nommée sur une
+    dose **jugée** ; « les deux » ; sinon « aucune ». Une fuite nommée sur une dose non jugée est rapportée, sans effet sur F."""
+    jeux = audit["jeux"]
+    nommees = {n: jeux[n] for n in JEUX_AUDIT if jeux[n]["fuite"] is not None}
+    sur_i = "saboteur" in nommees
+    sur_ii = any(d in nommees for d in doses_jugees)
+    f = "les deux" if sur_i and sur_ii else "(i)" if sur_i else "(ii)" if sur_ii else "aucune"
+    return {"F": f, "fuites_nommees": nommees,
+            "fuites_rapportees_sans_effet": {d: v for d, v in nommees.items() if d != "saboteur" and d not in doses_jugees}}
 
 
 def mention_dose(derivation: dict, dose: str, champs: dict | None = None) -> str:
@@ -393,7 +503,7 @@ def mention_dose(derivation: dict, dose: str, champs: dict | None = None) -> str
 # ------------------------------------------------------------------------------------------------------------------- lignes
 def regles(g: str, p: str, a: str, q: str, i: str, ii: str, f: str) -> list[str]:
     """Toutes les lignes dont la condition est vraie (sans règle de première ligne) : même texte que
-    `grille_l_t07_brouillon11.regles` (`b18da38a…`)."""
+    `grille_l_t07_brouillon14.regles` (`e916bea0…`)."""
     vraies = []
     if g == "garde-echec":
         vraies.append("R11-arret")
@@ -401,7 +511,7 @@ def regles(g: str, p: str, a: str, q: str, i: str, ii: str, f: str) -> list[str]
         vraies.append("R12-invalide")
     if g != "ok":
         return vraies
-    if p in ("absente", "non lu", "échec"):
+    if p in ("illisible", "non lu", "échec"):
         vraies.append("L0a")
     if p == "non vu":
         vraies.append("L0b")
@@ -409,7 +519,7 @@ def regles(g: str, p: str, a: str, q: str, i: str, ii: str, f: str) -> list[str]
         vraies.append("L0c")
     if p != "vu":
         return vraies
-    if a in ("absent", "arret", "A1") or q == "absente":
+    if a in ("illisible", "arret", "A1") or q == "illisible":
         vraies.append("L1")
         return vraies
     if a in ("A1b", "A2", "A3"):
@@ -446,7 +556,7 @@ def premiere(vraies: list[str]) -> str:
 
 def sous_phrase_l1b(i: str, f: str) -> str:
     """Sous-phrase de L1b, la première qui s'applique : fuite sur (i), puis l'état de (i) ; une fuite sur (ii) seul ne change pas
-    la phrase (CLT7C-10). Même choix que le premier élément de `grille_l_t07_brouillon11.sous_phrases_l1b`."""
+    la phrase (CLT7C-10). Même choix que le premier élément de `grille_l_t07_brouillon14.sous_phrases_l1b`."""
     return "F(i)" if f in ("(i)", "les deux") else i
 
 
@@ -474,8 +584,8 @@ def ligne_applicable(g: str, p: str, a: str, q: str, i: str, ii: str, f: str) ->
 
 # ------------------------------------------------------------------------------------------------ ce que chaque chemin ouvre
 def ouvre_scores(g: str, p: str, a: str, q: str) -> bool:
-    """Les scores scellés sont-ils ouverts ? G ok, P « vu », A ∈ {A1b … A5}, Q présente (L1b, L7, L7b, L7c, L6 à L3)."""
-    return g == "ok" and p == "vu" and a in A_LUES and q != "absente"
+    """Les scores scellés sont-ils ouverts ? G ok, P « vu », A ∈ {A1b … A5}, Q lisible (L1b, L7, L7b, L7c, L6 à L3)."""
+    return g == "ok" and p == "vu" and a in A_LUES and q != "illisible"
 
 
 def lit_i(g: str, p: str, a: str, q: str) -> bool:
@@ -486,7 +596,7 @@ def lit_i(g: str, p: str, a: str, q: str) -> bool:
 
 def ouvre_ii(g: str, p: str, a: str, q: str) -> bool:
     """Des scores de (ii) (S25 à S100) sont-ils ouverts ? Seulement sous Q ∈ {vide, partiel, complet} ; sous Q ∈ {non calculable,
-    incohérent}, aucun (brouillon 11, l. 1239-1242 ; CLT7D-03)."""
+    incohérent}, aucun, quelle que soit la ligne, L1b comprise (brouillon 12 ; CLT7D-03)."""
     return ouvre_scores(g, p, a, q) and q in ("vide", "partiel", "complet")
 
 
@@ -513,11 +623,11 @@ def issue_critere_3(g: str, p: str, a: str, q: str, etats_i, etats_ii_par_dose: 
 
     `etats_i` : état de chaque sonde principale lue sur (i-a), exigé si `lit_i` ; `etats_ii_par_dose` : {dose jugée : [états des
     sondes]}, exigé non vide si `lit_ii`, avec exactement les doses jugées de `derivation` (sinon vide). Une entrée hors du
-    chemin vaut « Z » pour (i) et « U » pour (ii) (convention de `grille_l_t07_brouillon11.grille_doses`) : la grille ne la
-    consulte pas sur ces chemins. `derivation` : sortie de `deriver_classe` (exigée si Q ∉ {absente}). `motifs_echec` :
+    chemin vaut « Z » pour (i) et « U » pour (ii) (convention de `grille_l_t07_brouillon14.grille_doses`) : la grille ne la
+    consulte pas sur ces chemins. `derivation` : sortie de `deriver_classe` (exigée si Q ≠ illisible). `motifs_echec` :
     {sonde/jeu: motif} (L4b, L1b-E)."""
     _verifier_entrees(g, p, a, q, "Z", "U", f)
-    if q != "absente" and derivation is None:
+    if q != "illisible" and derivation is None:
         raise GardeArret(f"Q = {q} sans dérivation transmise (deriver_classe)")
     if derivation is not None and derivation["Q"] != q:
         raise GardeArret(f"Q = {q} ≠ classe dérivée {derivation['Q']}")
@@ -627,10 +737,10 @@ def _enumerer_couverture() -> dict:
             "entrees": {"G": list(G), "P": list(P), "A": list(A), "Q": list(Q), "etats": list(ETATS), "F": list(F)}}
 
 
-# Grille par états par dose (brouillon 11, « Critères », l. 904-912) : configurations abstraites rendues en fichiers lus, puis
-# `deriver_classe` du module. Sources d'écart interne énumérées une à une, comme le script.
-ECARTS_INTERNES = ("aucun", "dose_hors", "etat", "argmax")
-LISTES_ECRITES = ("echoue", "vide", "echoue_et_nc")
+# Grille par états par dose (brouillon 14, « Critères ») : configurations abstraites rendues en fichiers lus, puis
+# `deriver_classe` du module (sous `controle_aire` = « egalite »). Sources d'écart interne énumérées une à une, comme le script.
+ECARTS_INTERNES = ("aucun", "dose_hors", "etat", "argmax", "aire")          # « aire » : brouillon 12
+LISTES_ECRITES = ("echoue", "vide", "echoue_et_nc", "echoue_inverse")      # « echoue_inverse » : brouillon 12
 EFFETS = ("etabli", "non_etabli", "non_calculable")
 BASES_GRILLE = ("réussit", "échoue", "non calculable")
 
@@ -639,7 +749,8 @@ def issue_de_configuration(ecart: str, forme: str, etiquette: str, base: dict, e
     """Fichier lu (forme de `valider_issue_mots_et_cout`) qui réalise une configuration de la grille par états par dose :
     `base` {dose : réussit, échoue, non calculable} = états écrits ; `effet` {dose : etabli, non_etabli, non_calculable} ;
     écart « dose_hors » : dose 0 ajoutée ; « etat » : sur la première dose réussit/échoue, nombres qui recalculent l'état
-    contraire ; « argmax » : sur cette dose, `base_decisive` écrite = la base d'aire la plus basse."""
+    contraire (aire de la base décisive écrite ajustée : un seul écart) ; « argmax » : sur cette dose, l'autre base passe au-
+    dessus de la base écrite ; « aire » : sur cette dose, `aire` ≠ aire de la base décisive écrite (état inchangé)."""
     doses = {}
     for d in DOSES:
         e = base[d]
@@ -657,26 +768,33 @@ def issue_de_configuration(ecart: str, forme: str, etiquette: str, base: dict, e
     cible = next((d for d in DOSES if base[d] != "non calculable"), None)
     if ecart == "dose_hors":
         doses["S0"] = dict(doses[DOSES[0]])
-    elif ecart in ("etat", "argmax"):
+    elif ecart in ("etat", "argmax", "aire"):
         if cible is None:
-            raise GardeArret("écart « état » ou « argmax » sans dose réussit/échoue : configuration impossible")
+            raise GardeArret(f"écart « {ecart} » sans dose réussit/échoue : configuration impossible")
         x = dict(doses[cible])
         if ecart == "etat":
-            x.update(aire=0.60, bas=0.52) if x["etat"] == "réussit" else x.update(aire=0.80, bas=0.74)
+            if x["etat"] == "réussit":
+                x.update(aire=0.60, aire_mots_et_cout=0.60, bas=0.52)
+            else:
+                x.update(aire=0.80, aire_mots_et_cout=0.80, bas=0.74)
+        elif ecart == "argmax":
+            x["aire_n029"] = 0.95                          # argmax N-029 ≠ base écrite ; `aire` = aire de la base écrite : un seul écart
         else:
-            x["base_decisive"] = "N-029"
+            x["aire"] = round(x["aire"] + 0.01, 2)
         doses[cible] = x
-    liste = {"echoue": [d for d in DOSES if base[d] == "échoue"], "vide": [],
+    echoue = [d for d in DOSES if base[d] == "échoue"]
+    liste = {"echoue": echoue, "vide": [], "echoue_inverse": list(reversed(echoue)),
              "echoue_et_nc": [d for d in DOSES if base[d] in ("échoue", "non calculable")]}[forme]
     return {"issue_mots_et_cout": etiquette, "phrase": f"phrase gelée {etiquette} de T0.6", "doses": doses,
-            "doses_qualifiees_ecrites": liste}
+            "doses_qualifiees_ecrites": liste, "plis": None}
 
 
 def enumerer_derivation() -> dict:
-    """Grille (3) : 4 écarts × 3 listes × 4 étiquettes × 2 valeurs de P-064 × 3⁴ états de base × 3⁴ effets = 625 968 configurations
-    possibles (3 888 impossibles sautées et comptées) ; pour chacune, Q par `deriver_classe` ; les cas (i) × F × états des sondes
-    par dose jugée (4^k) sont comptés par multiplicité (même fonction de lignes que la grille (2)). Contrôles : L7, L7b et L7c
-    indépendants de (i), de (ii) et de F ; priorité de L7b (sans écart interne, une dose non calculable → non_calculable) ;
+    """Grille (3) : 5 écarts × 4 listes × 4 étiquettes × 2 valeurs de P-064 × 3⁴ états de base × 3⁴ effets = 1 041 984
+    configurations possibles (7 776 impossibles sautées et comptées) ; pour chacune, Q par `deriver_classe` ; les cas (i) × F ×
+    états des sondes par dose jugée (4^k) sont comptés par multiplicité (même fonction de lignes que la grille (2)). Contrôles :
+    L7, L7b et L7c indépendants de (i), de (ii) et de F ; priorité de L7b (sans écart interne, une dose non calculable →
+    non_calculable) ; écart « aire » et liste à l'envers (deux doses « échoue » au moins, aucune non calculable) → incoherent ;
     sous-phrase de L7 définie ; 0 trou, 0 chevauchement hors L6."""
     table: dict = {}
 
@@ -698,7 +816,7 @@ def enumerer_derivation() -> dict:
     for ecart, forme, etiquette, p064 in product(ECARTS_INTERNES, LISTES_ECRITES, ISSUES_M, (True, False)):
         for base_v in product(BASES_GRILLE, repeat=4):
             base = dict(zip(DOSES, base_v))
-            if ecart in ("etat", "argmax") and all(b == "non calculable" for b in base_v):
+            if ecart in ("etat", "argmax", "aire") and all(b == "non calculable" for b in base_v):
                 impossibles += 3 ** 4
                 continue
             for effet_v in product(EFFETS, repeat=4):
@@ -707,20 +825,26 @@ def enumerer_derivation() -> dict:
                 classes[r["Q"]] += 1
                 if ecart == "aucun" and "non calculable" in base_v and r["Q"] != "non_calculable":
                     raise GardeArret(f"priorité de L7b non tenue : {(ecart, forme, etiquette, base_v, effet_v, p064)}")
+                if ecart == "aire" and r["Q"] != "incoherent":
+                    raise GardeArret(f"écart « aire » hors de incoherent : {(forme, etiquette, base_v, effet_v, p064)}")
+                if (ecart == "aucun" and forme == "echoue_inverse" and "non calculable" not in base_v
+                        and base_v.count("échoue") >= 2 and r["Q"] != "incoherent"):
+                    raise GardeArret(f"liste à l'envers hors de incoherent : {(etiquette, base_v, effet_v, p064)}")
                 if r["Q"] == "vide" and r["sous_phrase_L7"] not in SOUS_PHRASES_L7:
                     raise GardeArret("sous-phrase de L7 non définie")
                 c = lignes_pour(r["Q"], tuple(r["doses_jugees"]))
                 effectifs.update(c)
                 total += sum(c.values())
-    if configs != 625968 or impossibles != 3888 or total != 11762496:
+    if configs != 1041984 or impossibles != 7776 or total != 18439488:
         raise GardeArret(f"grille par états par dose : {configs} configurations, {impossibles} impossibles, {total} cas")
     return {"configurations": configs, "impossibles": impossibles, "cas": total, "classes": {q: classes[q] for q in Q},
             "effectifs": {l: effectifs[l] for l in ORDRE if effectifs[l]}, "trous": 0, "chevauchements_hors_L6": 0,
-            "L7_L7b_L7c_dependants": 0, "priorite_L7b": 0}
+            "L7_L7b_L7c_dependants": 0, "priorite_L7b": 0, "aire_et_liste_a_l_envers_hors_incoherent": 0}
 
 
 __all__ = ["AU_DESSUS", "NON_AU_DESSUS", "NON_INTERPRETABLE", "ECHEC", "ETATS_SONDE", "G", "P", "A", "Q", "ETATS", "F", "DOSES",
            "ORDRE", "PHRASES", "ISSUES_P3BIS", "SANS_OBJET", "HORS_JUGEMENT", "IssueIllisible", "separation", "etat_pour_sonde",
            "etat_organisme", "agreger_doses", "valider_issue_mots_et_cout", "etat_recalcule", "etiquette_recalculee",
-           "deriver_classe", "mention_dose", "regles", "premiere", "ligne_applicable", "ouvre_scores", "lit_i", "ouvre_ii",
+           "deriver_classe", "mention_dose", "regles", "valider_audit_fuites", "entree_F", "AuditIllisible",
+           "aire_de_la_base_ecrite", "premiere", "ligne_applicable", "ouvre_scores", "lit_i", "ouvre_ii",
            "lit_ii", "issue_critere_3", "enumerer_couverture", "enumerer_derivation", "issue_de_configuration"]
