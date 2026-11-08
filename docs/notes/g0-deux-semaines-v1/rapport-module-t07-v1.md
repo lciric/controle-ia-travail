@@ -39,7 +39,8 @@ Empreintes citées et vérifiées pendant l'écriture : `controle_lecture_t06_v1
 
 - Commande : `. .venv/bin/activate && PYTHONPATH=src python -m pytest -q tests/test_t07_lecture_v1.py` → **58 passés, 1 sauté**
   (59 collectés), 34 s ; l'essai sauté est la comparaison du miroir à `sondes/familles_v2.py`, absent de `main` (déclaré : il se jouera
-  quand le fichier sera fusionné). Suite complète du dépôt lancée après (`python -m pytest -q`) : résultat dans le rendu final.
+  quand le fichier sera fusionné). Suite complète du dépôt (`timeout 1500 nice -n 10 python -m pytest -q`, lancée à 17:14 UTC) :
+  **interrompue par son délai de 25 minutes, sans bilan** (code 143) ; elle n'a pas été rejouée : à faire par la session mère.
 - Faux dossier de run aux clés réelles de la chaîne de T0.6 : manifeste par `creer_manifeste` (`config.go_id`, `couches`, `T`, `N`,
   `sonde.couche`…), `diag/<run>/episodes-t06.json` (`etats`, `fiches`, `mesures`, `mesures_sha256`, `textes`, `textes_sha256`,
   `activations_sous_ensemble`, `controles_negatifs`), `lecture-cout-t06.json` (`resultat.lecture.table_A.ligne`), `donnees/<run>/mesures-t06.npz`
