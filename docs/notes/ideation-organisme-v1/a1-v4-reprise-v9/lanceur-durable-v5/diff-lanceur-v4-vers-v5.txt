@@ -1,5 +1,5 @@
---- ../../../../src/controle_ia/hote_durable_a1_v3_v4.py	2026-11-08 09:39:24.766629180 +0000
-+++ lanceur-durable-v5/hote_durable_a1_v4_v5.py	2026-11-08 16:54:24.233767516 +0000
+--- ../../../../../src/controle_ia/hote_durable_a1_v3_v4.py	2026-11-08 09:39:24.766629180 +0000
++++ hote_durable_a1_v4_v5.py	2026-11-08 16:59:14.113784747 +0000
 @@ -1,56 +1,36 @@
  #!/usr/bin/env python3
 -"""Hôte durable de la troisième course d'A1-v3, **version 4** (machine : GO-2026-11-05-03 ; course : GO-2026-11-04-06).
@@ -87,7 +87,7 @@
  """
  from __future__ import annotations
  
-@@ -65,99 +45,95 @@
+@@ -65,99 +45,98 @@
  import shutil
  import subprocess
  import sys
@@ -211,21 +211,24 @@
 +ETIQUETTE = "a1-v4-v9"
 +NOM_CLE_ARGON_PILOTE = "GEMINI_API_KEY_2"  # la seule source de la clé, par son nom, chez le pilote (R-1540)
 +NOMS_JETON_GITHUB = ("GH_TOKEN", "CONTROLE_IA_GITHUB_TOKEN_2")  # le premier présent l'emporte (chaîne T0.6 v13)
-+BRANCHE_DONNEES = "donnees/attaque-goodhart-v4-a1v4-v9-v1"
-+BRANCHE_INTERROMPUE = "donnees/attaque-goodhart-v4-a1v4-v9-interrompue-v1"
-+BRANCHE_REFUS = "donnees/attaque-goodhart-v4-a1v4-v9-refus-v1"
-+BRANCHE_VIE = "donnees/attaque-goodhart-v4-a1v4-v9-signe-de-vie-v1"
++BRANCHE_DONNEES = "donnees/attaque-goodhart-v4-a1v4-v1"  # noms du brouillon 3 du texte A1-v4, section 8
++BRANCHE_INTERROMPUE = "donnees/attaque-goodhart-v4-a1v4-interrompue-v1"
++BRANCHE_REFUS = "donnees/attaque-goodhart-v4-a1v4-refus-v1"
++BRANCHE_VIE = "donnees/attaque-goodhart-v4-a1v4-signe-de-vie-v1"
 +AMORCE = "scripts/amorce_hote_durable_a1_v4_v5.sh"
 +MODULE = "src/controle_ia/hote_durable_a1_v4_v5.py"
 +MODULES = v4.MODULES + ("hote_durable_a1_v4_v5.py",)
-+TRAVAIL = "a1-v4-v9"  # dossier de travail sur la machine : /root/a1-v4-v9
++TRAVAIL = "a1-v4-reprise-v9-v1"  # dossier de travail sur la machine : /root/a1-v4-reprise-v9-v1 (brouillon 3, section 4)
++LISTE_EMPREINTES = "EMPREINTES-sortie-a1-v4-v1.txt"
++JOURNAL_HOTE = "journal-hote-a1-v4-v1.log"
 +DOSSIER_TEXTE = "orchestrator/prereg"
-+MOTIF_NOM_TEXTE = re.compile(r"^preenregistrement-attaque-goodhart-v4-v([1-9][0-9]*)\.md$")
-+MARQUEUR = re.compile(r"<<[A-Z_]+>>")
++PREFIXE_TEXTE_DEFAUT = "preenregistrement-attaque-goodhart-v4-v"  # le lanceur gelé v4 exige `…-v4-v<N>.md` ; un code v5 pourrait exiger `-v5-v`
++MOTIF_PREFIXE_TEXTE = re.compile(r"^preenregistrement-attaque-goodhart-v[1-9][0-9]*-v$")
++MARQUEUR = re.compile(r"<<[A-Z0-9_]+>>")
 +DEBUT_PLAN, FIN_PLAN = "<!-- plan-gele : début -->", "<!-- plan-gele : fin -->"
 +DEBUT_EMPREINTES, FIN_EMPREINTES = "<!-- empreintes-du-code : début -->", "<!-- empreintes-du-code : fin -->"
-+VARIANTES_MONDES = {"i": ["W1", "W2"], "ii": ["W2", "W2 gradué"]}  # la configuration doit s'accorder à sa variante
-+CLES_CONFIGURATION = {"version", "variante", "mondes", "mondes_texte", "etiquette", "go_course", "plafond_course_usd",
++VARIANTES_MONDES = {"i": ["W1", "W2"], "ii": ["W2", "W2g"]}  # (ii) : W2g = « W2 gradué » (note W2, brouillon 3) ; accord exigé
++CLES_CONFIGURATION = {"version", "variante", "mondes", "mondes_texte", "etiquette", "go_course", "plafond_course_usd", "prefixe_texte",
 +                      "lanceur_gele", "dossier_sortie", "etape_depense", "commit_code_gele", "fichiers_geles_publics"}
 +CLES_CONFIGURATION_FACULTATIVES = {"pieces_privees", "note"}
 +SECRETS_PILOTE = (NOM_CLE_ARGON_PILOTE, "CLE_ARGON", "CONTROLE_IA_GITHUB_TOKEN_2") + s10.SECRETS_PILOTE
@@ -270,7 +273,7 @@
      garde = h.charger_garde(chemin_garde, chemin_registre)
      tampon = io.StringIO()
      try:
-@@ -165,106 +141,214 @@
+@@ -165,106 +144,224 @@
              garde.decider(f"GO_ID={go_id} vastai create instance 0", aujourd_hui)
      except SystemExit as e:
          if e.code not in (0, None):
@@ -409,6 +412,8 @@
 +                      f"{MONTANT_GO_COURSE_USD:g}")
 +    if not isinstance(c["commit_code_gele"], str) or not re.fullmatch(r"[0-9a-f]{40}", c["commit_code_gele"]):
 +        raise h.Refus("configuration : commit_code_gele = hash complet de 40 caractères")
++    if not isinstance(c["prefixe_texte"], str) or not MOTIF_PREFIXE_TEXTE.match(c["prefixe_texte"]):
++        raise h.Refus(f"configuration : prefixe_texte {c['prefixe_texte']!r} hors de {MOTIF_PREFIXE_TEXTE.pattern}")
 +    for k in ("lanceur_gele", "dossier_sortie", "etape_depense"):
 +        if not isinstance(c[k], str) or not c[k].strip() or any(ch.isspace() for ch in c[k]):
 +            raise h.Refus(f"configuration : {k} illisible")
@@ -446,27 +451,30 @@
 +    return texte[i + len(debut):j]
 +
 +
-+def version_du_texte(chemin) -> int:
-+    """N de `prereg/preenregistrement-attaque-goodhart-v4-v<N>.md` ; refus de tout autre nom (v3, brouillon, autre dossier)."""
++def version_du_texte(chemin, prefixe: str = PREFIXE_TEXTE_DEFAUT) -> int:
++    """N de `orchestrator/prereg/<prefixe><N>.md` (préfixe de la configuration, `preenregistrement-attaque-goodhart-v4-v` par
++    défaut) ; refus de tout autre nom (v3, brouillon, autre dossier)."""
 +    chemin = Path(chemin)
-+    m = MOTIF_NOM_TEXTE.match(chemin.name)
++    if not MOTIF_PREFIXE_TEXTE.match(prefixe or ""):
++        raise h.Refus(f"préfixe du nom du texte illisible ({prefixe!r})")
++    m = re.match(rf"^{re.escape(prefixe)}([1-9][0-9]*)\.md$", chemin.name)
 +    if not m or chemin.parent.name != "prereg" or chemin.parent.parent.name != "orchestrator":
-+        raise h.Refus(f"nom du texte : {DOSSIER_TEXTE}/preenregistrement-attaque-goodhart-v4-v<N>.md exigé, reçu "
-+                      f"{'/'.join(chemin.parts[-3:])}")
++        raise h.Refus(f"nom du texte : {DOSSIER_TEXTE}/{prefixe}<N>.md exigé, reçu {'/'.join(chemin.parts[-3:])}")
 +    return int(m.group(1))
 +
 +
-+def nom_texte(version: int) -> str:
-+    return f"{DOSSIER_TEXTE}/preenregistrement-attaque-goodhart-v4-v{int(version)}.md"
++def nom_texte(version: int, prefixe: str = PREFIXE_TEXTE_DEFAUT) -> str:
++    return f"{DOSSIER_TEXTE}/{prefixe}{int(version)}.md"
 +
 +
-+def verifier_texte(chemin, sha_attendu: str, conf: dict) -> dict:
-+    """Le texte scellé, tel que le lanceur v5 l'attend : nom v4-v<N> sous `orchestrator/prereg` ; compagnon égal ; empreinte égale à
-+    `sha_attendu` (lue au scellement) ; aucun marqueur `<<…>>` ; bloc `plan-gele` (mode, mondes = `mondes_texte`, fournisseurs,
-+    plafond_usd = 200, go = GO des appels) ; bloc `empreintes-du-code` contenant chaque fichier gelé public de la configuration à
-+    la même empreinte. Rend version, empreinte, mondes, nombre de lignes du bloc."""
++def verifier_texte(chemin, sha_attendu: str, conf: dict, go_machine: str | None = None) -> dict:
++    """Le texte scellé, tel que le lanceur v5 l'attend : nom `<prefixe_texte><N>.md` sous `orchestrator/prereg` ; compagnon égal ;
++    empreinte égale à `sha_attendu` (lue au scellement) ; aucun marqueur `<<…>>` ; bloc `plan-gele` (mode = course, mondes =
++    `mondes_texte`, fournisseurs = argon, plafond_usd = 200, go = GO des appels ; `go_machine`, si la ligne existe, égal à la ligne
++    vérifiée) ; bloc `empreintes-du-code` contenant chaque fichier gelé public de la configuration à la même empreinte. Rend version,
++    empreinte, mondes, nombre de lignes du bloc."""
 +    chemin = Path(chemin)
-+    version = version_du_texte(chemin)
++    version = version_du_texte(chemin, conf["prefixe_texte"])
 +    if not chemin.is_file():
 +        raise h.Refus(f"texte introuvable : {chemin}")
 +    if not isinstance(sha_attendu, str) or not re.fullmatch(r"[0-9a-f]{64}", sha_attendu):
@@ -496,6 +504,11 @@
 +        plafond = None
 +    if plafond is None or abs(plafond - MONTANT_GO_COURSE_USD) > 1e-9:
 +        raise h.Refus(f"plan-gele : plafond_usd = {lignes.get('plafond_usd')!r}, exactement {MONTANT_GO_COURSE_USD:g} exigé")
++    if "go_machine" in lignes:
++        if lignes["go_machine"] == GO_COURSE or not MOTIF_GO.match(lignes["go_machine"]):
++            raise h.Refus(f"plan-gele : go_machine = {lignes['go_machine']!r} illisible ou égal à la ligne des appels")
++        if go_machine is not None and lignes["go_machine"] != go_machine:
++            raise h.Refus(f"plan-gele : go_machine = {lignes['go_machine']!r}, la ligne vérifiée ({NOM_GO_MACHINE_ENV}) est {go_machine!r}")
 +    gelees = dict((r, e) for e, r in re.findall(r"^([0-9a-f]{64})  (\S+)$", _bloc(texte, DEBUT_EMPREINTES, FIN_EMPREINTES,
 +                                                                                    "empreintes-du-code"), re.M))
 +    if not gelees:
@@ -506,7 +519,7 @@
 +        raise h.Refus("fichiers gelés publics de la configuration absents du bloc du texte ou à une autre empreinte : "
 +                      + " ; ".join(ecarts))
 +    return {"version": version, "sha256": vu, "mondes": lignes["mondes"], "lignes_gelees": len(gelees), "plafond_usd": plafond,
-+            "go": lignes["go"], "nom": nom_texte(version)}
++            "go": lignes["go"], "go_machine": lignes.get("go_machine"), "nom": nom_texte(version, conf["prefixe_texte"])}
 +
 +
 +# --- script de démarrage : la minuterie d'abord, sans Python (celle de la v4, étiquette et noms de la v5) ----------------------
@@ -558,7 +571,7 @@
  if [ ! -e "$R/{DETRUIRE_MAINTENANT}" ] && [ ! -d "$R/amorce-depot/.git" ]; then
    t=$(date +%s)
    (command -v git >/dev/null || timeout -k 5 "$(borne 120)" sh -c 'apt-get update -qq && apt-get install -y -qq git ca-certificates >/dev/null')
-@@ -273,150 +357,172 @@
+@@ -273,150 +370,172 @@
    git -C "$R/amorce-depot" sparse-checkout set scripts src/controle_ia &&
    timeout -k 5 "$(borne 600)" git -C "$R/amorce-depot" -c credential.helper="$A" fetch -q --filter=blob:none --depth 1 origin {commit_prive} &&
    timeout -k 5 "$(borne 600)" git -C "$R/amorce-depot" -c credential.helper="$A" checkout -q --detach FETCH_HEAD
@@ -604,7 +617,7 @@
              raise h.Refus(f"{nom} : forme exacte exigée ({motif})")
 +    if go_machine == GO_COURSE:
 +        raise h.Refus("go_machine égal au GO des appels : refus")
-+    version_du_texte(Path(nom_texte_relatif))
++    version_du_texte(Path(nom_texte_relatif), conf.get("prefixe_texte", PREFIXE_TEXTE_DEFAUT))
      manquants = [k for k in ("CLE_ARGON", "GH_TOKEN") if not secrets.get(k)]
      if manquants:
 -        raise h.Refus(f"secrets absents de l'environnement : {', '.join(manquants)}")
@@ -644,6 +657,10 @@
          super().__init__(environ, outil)
 -        self.secrets = {k: environ.get(k, "") for k in SECRETS_PILOTE}  # la clé d'Argon est masquée aussi
 +        self.secrets = {k: environ.get(k, "") for k in SECRETS_PILOTE}
++
++
++def _secrets_pilote(environ: dict) -> dict:
++    return {k: environ.get(k, "") for k in SECRETS_PILOTE}
  
 -    def creer(self, offre_id: int, c: dict) -> int:
 -        if cles_interdites(c["env"]):
@@ -667,10 +684,6 @@
 -            raise s10.RefusCertificat(f"vastai {' '.join(args[:2])} : appel non parvenu à Vast (certificat) ; code "
 -                                      f"{r.returncode}")
 -        return s10.lire_reponse_de_creation(sortie, secrets, erreur, r.returncode)
-+
-+def _secrets_pilote(environ: dict) -> dict:
-+    return {k: environ.get(k, "") for k in SECRETS_PILOTE}
-+
 +
 +def chemin_dans_le_depot(chemin: Path, racine: Path | None) -> str:
 +    """Chemin de la configuration relatif à la racine du dépôt privé (pour `git show COMMIT_PRIVE:<chemin>` sur la machine)."""
@@ -733,7 +746,7 @@
 +        conf["chemin_depot"] = chemin_dans_le_depot(Path(a.configuration_mondes), Path(a.racine_privee) if getattr(a, "racine_privee", None) else None)
 +        j.ecrire(f"configuration des mondes : variante ({conf['variante']}) {conf['mondes']} ; {conf['chemin_depot']} "
 +                 f"{conf['sha256']} ; {len(conf['fichiers_geles_publics'])} fichiers gelés publics ; code gelé {conf['commit_code_gele']}")
-+        t = verifier_texte(a.texte, a.sha_texte, conf)
++        t = verifier_texte(a.texte, a.sha_texte, conf, go_machine)
 +        racine_publique = Path(a.texte).resolve().parents[2]
 +        n = verifier_fichiers_geles(racine_publique, conf)
 +        j.ecrire(f"texte {t['nom']} : empreinte {t['sha256']} = compagnon = scellement ; mondes « {t['mondes']} » ; aucun marqueur ; "
@@ -806,7 +819,7 @@
                  raise
              except h.Refus as e:  # m-1 : réponse illisible, erreur sans success faux, délai : marqueur, arrêt
                  incertain_f.write_text(f"{h.maintenant()} {str(e)[:120]}\n")
-@@ -429,8 +535,9 @@
+@@ -429,8 +548,9 @@
                  "controles_utc": [(t0 + dt.timedelta(seconds=PREMIER_CONTROLE_S)).strftime(fmt),
                                    (dt.datetime.fromtimestamp(echeance, dt.timezone.utc)
                                     + dt.timedelta(seconds=VIE_APRES_ECHEANCE_S + ATTENTE_MINUTERIE_S + 300)).strftime(fmt)],
@@ -818,7 +831,7 @@
          ident_f.write_text(f"{ident}\n")
          etat_f.write_text(json.dumps(etat, ensure_ascii=False, indent=1) + "\n")
          j.ecrire(f"machine créée : identifiant {ident} (offre {o['id']}, {o['dph_total']} USD/h), étiquette {ETIQUETTE} ; T0 "
-@@ -443,22 +550,34 @@
+@@ -443,22 +563,34 @@
          return 2
  
  
@@ -862,7 +875,7 @@
      environ = dict(os.environ) if environ is None else environ
      j = _journal_pilote(a, environ)
      try:
-@@ -468,7 +587,7 @@
+@@ -468,7 +600,7 @@
              raise h.Refus(f"instance {ident} protégée : jamais touchée")
          now = maintenant or dt.datetime.now(dt.timezone.utc)
          lire = lambda k: dt.datetime.strptime(e[k], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=dt.timezone.utc)
@@ -871,7 +884,7 @@
          listees = [i for i in client.instances() if i.get("id") == ident]
          if not listees:
              j.ecrire(f"contrôle : instance {ident} absente de l'inventaire (détruite) ; rien à faire")
-@@ -479,7 +598,7 @@
+@@ -479,7 +611,7 @@
          etat_vast = listees[0].get("actual_status")
          if now >= lire("echeance_finale_utc") + dt.timedelta(seconds=VIE_APRES_ECHEANCE_S):
              j.ecrire(f"contrôle : instance {ident} ({etat_vast}) encore listée après l'échéance finale : AUCUN GESTE ; la session "
@@ -880,7 +893,7 @@
              return 7
          vie = signe_de_vie() if signe_de_vie else s10.branche_existe(BRANCHE_VIE, environ)
          if now >= lire("borne_signe_de_vie_utc") and not vie:
-@@ -501,13 +620,10 @@
+@@ -501,13 +633,10 @@
          return 6
      except (h.Refus, OSError, ValueError, KeyError) as x:
          j.ecrire(f"REFUS : {x}")
@@ -894,7 +907,7 @@
      environ = dict(os.environ) if environ is None else environ
      j = _journal_pilote(a, environ)
      try:
-@@ -515,7 +631,7 @@
+@@ -515,7 +644,7 @@
          ident = int(e["identifiant"])
          if ident in PROTEGEES:
              raise h.Refus(f"instance {ident} protégée : jamais touchée")
@@ -903,7 +916,7 @@
          f = client.facturation(ident)
          if f.get("label") not in (None, ETIQUETTE):
              raise h.Refus(f"instance {ident} : étiquette {f.get('label')!r}, pas {ETIQUETTE} : aucun relevé écrit")
-@@ -533,38 +649,27 @@
+@@ -533,38 +662,27 @@
  # --- côté machine ----------------------------------------------------------------------------------------------------------
  
  
@@ -949,11 +962,11 @@
  
      def principal(self) -> int:
 -        journal = self.t / "journal-hote-a1-v3-troisieme-v1.log"
-+        journal = self.t / "journal-hote-a1-v4-v9-v1.log"
++        journal = self.t / JOURNAL_HOTE
          if self.etat_fichier.exists():  # reprise du conteneur : jamais de relance (R12)
              self.j = h.Journal(journal, self.secrets)
              avant = self.etat_fichier.read_text().strip()
-@@ -572,13 +677,13 @@
+@@ -572,13 +690,13 @@
              if avant == "verse":
                  return self.se_detruire(True)
              self.nature_fin = "reprise_du_conteneur"
@@ -972,7 +985,7 @@
              self.j.ecrire(f"code (correction 4) : COMMIT_PRIVE {self.env.get('COMMIT_PRIVE', '?')} ; empreintes "
                            f"{json.dumps(empreintes_du_code(), ensure_ascii=False)}")
              self.etat("demarrage")
-@@ -588,85 +693,85 @@
+@@ -588,85 +706,84 @@
          except h.Refus as e:
              self._ecrire_sans_echec(f"REFUS : {e}")
              self.nature_fin = "refus_avant_course" if self.course is None else "refus_pendant_la_course"
@@ -1058,7 +1071,6 @@
 +            raise h.Refus(f"GO_ID={e['GO_ID']} : la ligne des appels est {GO_COURSE} (aucune autre)")
 +        if not MOTIF_GO.match(e["GO_MACHINE"]) or e["GO_MACHINE"] == GO_COURSE:
 +            raise h.Refus(f"GO_MACHINE={e['GO_MACHINE']!r} illisible ou égal à la ligne des appels")
-+        version_du_texte(Path(e["NOM_TEXTE"]))
          if not (0 < self.prix_h <= h.PRIX_MAX_H_USD):
              raise h.Refus(f"prix horaire {self.prix_h} hors de ]0 ; {h.PRIX_MAX_H_USD}]")
 -        verifier_plafond(self.prix_h)
@@ -1105,7 +1117,7 @@
          if h.lancer(["git", "merge-base", "--is-ancestor", cr, f"refs/remotes/origin/{h.SOURCE_REGISTRE}"],
                      cwd=r.clone_prive, delai=DELAI_GIT_S).returncode != 0:
              raise h.Refus(f"commit du registre {cr} absent de la branche {h.SOURCE_REGISTRE} (ou au-delà de "
-@@ -676,91 +781,46 @@
+@@ -676,91 +793,47 @@
          doubles = h.doublons_lecteur_du_lanceur(reg)
          if doubles:
              raise h.Refus(f"registre {cr} : identifiants en double {doubles} (le lanceur le refuserait)")
@@ -1120,6 +1132,7 @@
 +        if conf.get("pieces_privees"):
 +            r.empreintes = dict(conf["pieces_privees"])
 +        r.commit_code_gele = conf["commit_code_gele"]
++        version_du_texte(Path(e["NOM_TEXTE"]), conf["prefixe_texte"])
 +        self.j.ecrire(f"configuration des mondes : variante ({conf['variante']}) {conf['mondes']} ; {conf['chemin_depot']} {conf['sha256']} ; "
 +                      f"{len(conf['fichiers_geles_publics'])} fichiers gelés publics ; code gelé {conf['commit_code_gele']} ; lanceur "
 +                      f"{conf['lanceur_gele']} ; étape de dépense {conf['etape_depense']}")
@@ -1140,7 +1153,7 @@
 -        comp = compagnon.read_text().split()[0] if compagnon.is_file() else None
 -        if not (vu == e["SHA_TEXTE"] == comp):
 -            raise h.Refus(f"texte v4 : empreinte {vu}, attendue {e['SHA_TEXTE']}, compagnon {comp}")
-+        t = verifier_texte(r.clone_public / e["NOM_TEXTE"], e["SHA_TEXTE"], conf)
++        t = verifier_texte(r.clone_public / e["NOM_TEXTE"], e["SHA_TEXTE"], conf, e["GO_MACHINE"])
 +        n = verifier_fichiers_geles(r.clone_public, conf)
          statut = h.git("status", "--porcelain", cwd=r.clone_public)
          if statut.strip():
@@ -1213,7 +1226,7 @@
          f = self.t / "signe-de-vie.json"
          f.write_text(json.dumps({"utc": h.maintenant(), "machine": self.env.get("CONTAINER_ID"),
                                   "depart_conteneur": self.depart_conteneur, "version": VERSION}) + "\n")
-@@ -768,16 +828,15 @@
+@@ -768,16 +841,15 @@
              gh, url = self.secrets["GH_TOKEN"], self._url()
              if h.git("ls-remote", url, f"refs/heads/{BRANCHE_VIE}", gh_token=gh, delai=DELAI_GIT_S).strip():
                  raise h.Refus(f"branche {BRANCHE_VIE} déjà présente (R12)")
@@ -1233,14 +1246,79 @@
              c = self._pousser(v, BRANCHE_VIE, url)
              self.j.ecrire(f"signe de vie poussé : {BRANCHE_VIE} = {c}" if c else "signe de vie non vérifié par ls-remote")
              return bool(c)
-@@ -794,18 +853,18 @@
+@@ -793,19 +865,83 @@
+                 d.mkdir(exist_ok=True)
                  shutil.copy2(p, d / nom)
  
++    def lancer_relais(self) -> None:
++        """Comme la v1 (relais Argon neuf, seul à tenir la clé, réglages relevés), journal au nom de la v5."""
++        r = self.r
++        commande = r.racine_sources / h.NUIT / "commande_argon_v56_nuit_v2.py"
++        self.journal_relais = self.t / "relais-argon-journal-a1-v4.jsonl"
++        self.cmd_relais = [r.python_relais, "-I", "-B", str(commande), "servir", "--port", str(r.port), "--plafond-usd",
++                           str(h.PLAFOND_RELAIS_USD), "--max-appels", str(h.MAX_APPELS_RELAIS), "--journal", str(self.journal_relais)]
++        self._demarrer_relais()
++        fin = time.monotonic() + r.attente_relais_s
++        etat = None
++        while time.monotonic() < fin:
++            etat = h.etat_relais(r.port)
++            if etat is not None:
++                break
++            if self.relais.poll() is not None:
++                raise h.Refus(f"relais sorti en code {self.relais.returncode} au démarrage")
++            time.sleep(0.5)
++        if etat is None:
++            raise h.Refus("relais muet au démarrage")
++        attendu = {"plafond_usd": h.PLAFOND_RELAIS_USD, "max_appels": h.MAX_APPELS_RELAIS, "appels": 0, "cle_presente": True}
++        ecarts = {k: etat.get(k) for k, v in attendu.items() if etat.get(k) != v}
++        if ecarts:
++            raise h.Refus(f"relais : réglages inattendus {ecarts}")
++        self.j.ecrire(f"relais {r.port} PID {self.relais.pid} : plafond {etat['plafond_usd']} USD, {etat['max_appels']} appels, clé "
++                      f"présente (booléen), dépense {etat.get('depense_usd')}")
++
++    def lancer_course(self) -> None:
++        sortie = open(self.t / "course-stdout-a1-v4.log", "ab")
++        self.course = subprocess.Popen(self.cmd_course(False), cwd=self.r.clone_public / "orchestrator", env=self.env_course(),
++                                       stdout=sortie, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, start_new_session=True)
++        self.j.ecrire(f"course lancée : PID {self.course.pid} (processus lancé par l'hôte lui-même, sans coquille)")
++
++    def garder(self) -> None:
++        """Comme la v1 : relevé daté chaque minute (`garde-a1-v4.jsonl`), relais mort relancé seulement, plafonds de la machine."""
++        r = self.r
++        releves = self.t / "garde-a1-v4.jsonl"
++        while True:
++            code = self.course.poll()
++            relais_vivant = self.relais.poll() is None
++            etat = h.etat_relais(r.port) if relais_vivant else None
++            ecoule = time.monotonic() - self.debut
++            ligne = {"utc": h.maintenant(), "course_vivante": code is None, "relais_vivant": relais_vivant,
++                     "appels": (etat or {}).get("appels"), "depense_argon_usd": (etat or {}).get("depense_usd"),
++                     "ecoule_h": round(ecoule / 3600, 4), "cout_machine_usd": round(self.cout_machine(), 4)}
++            with open(releves, "a", encoding="utf-8") as f:
++                f.write(json.dumps(ligne, ensure_ascii=False) + "\n")
++            if code is not None:
++                self.code_course = code
++                (self.t / "code-sortie-lanceur.txt").write_text(f"{code}\n")
++                self.j.ecrire(f"fin du lanceur : code {code}")
++                self.nature_fin = "fin_du_lanceur"
++                return
++            if not relais_vivant:  # règle des guetteurs : relancer seulement, jamais arrêter
++                self.j.ecrire(f"relais mort (code {self.relais.returncode}) : relancé avec les mêmes réglages")
++                self._demarrer_relais()
++            if ecoule >= r.duree_max_s or self.cout_machine() >= r.plafond_machine_usd:
++                self.nature_fin = "plafond_de_la_machine"
++                self.j.ecrire(f"PLAFOND DE LA MACHINE atteint ({ecoule / 3600:.3f} h, {self.cout_machine():.2f} USD) : la course est "
++                              "arrêtée par son identifiant (écart déclaré, section 8 du texte)")
++                self.code_course = h.arreter_par_pid(self.course, self.j, "course")
++                (self.t / "code-sortie-lanceur.txt").write_text(f"{self.code_course} (arrêt au plafond de la machine)\n")
++                return
++            time.sleep(r.periode_s)
++
      def sceller(self) -> Path:
 -        self.copier_journaux_du_demarrage()  # f5 : départ, échéance, minuterie, amorce, mémoire, versés avec la sortie
 -        return super().sceller()
 +        self.copier_journaux_du_demarrage()
-+        liste = self.t / "EMPREINTES-sortie-a1-v4-v9-v1.txt"
++        liste = self.t / LISTE_EMPREINTES
 +        lignes = [f"{h.sha256_fichier(p)}  {p.relative_to(self.t)}" for p in self.fichiers_a_verser() if p != liste]
 +        liste.write_text("\n".join(lignes) + "\n")
 +        return liste
@@ -1258,7 +1336,7 @@
          v = r.travail.parent / (r.travail.name + suffixe)
          if v.exists():
              raise h.Refus(f"copie de versement {v} déjà présente (R12)")
-@@ -820,9 +879,9 @@
+@@ -820,9 +956,9 @@
              cible.parent.mkdir(parents=True, exist_ok=True)
              shutil.copy2(p, cible)
          h.git("add", "-f", str(dest), cwd=v, delai=DELAI_GIT_LOCAL_S)
@@ -1271,7 +1349,7 @@
          c = self._pousser(v, branche, url)
          if not c:
              return False
-@@ -830,67 +889,9 @@
+@@ -830,67 +966,9 @@
          self.etat("verse")
          return True
  
@@ -1341,7 +1419,7 @@
          ident = self.env.get("CONTAINER_ID", "")
          ecrire = self._ecrire_sans_echec
          if not re.fullmatch(r"[0-9]{1,12}", ident or "") or int(ident) in PROTEGEES:
-@@ -915,7 +916,7 @@
+@@ -915,7 +993,7 @@
              try:
                  ecrire(f"destruction de la machine par son identifiant {n}")
                  client.detruire(n)
@@ -1350,7 +1428,7 @@
                      return 0
                  ecrire(f"machine {n} encore listée après la destruction : arrêt par son identifiant (correction 2)")
              except Exception as x:
-@@ -933,19 +934,23 @@
+@@ -933,19 +1011,23 @@
  
  
  def reglages() -> h.Reglages:
@@ -1380,7 +1458,7 @@
      for nom in ("controler", "facturation"):
          c = sous.add_parser(nom)
          c.add_argument("--etat", required=True)
-@@ -957,11 +962,22 @@
+@@ -957,11 +1039,22 @@
      args = a.parse_args(argv)
      if args.mode == "louer":
          return louer(args)
@@ -1404,7 +1482,7 @@
          offres = json.loads(Path(args.offres).read_text())
          offres = offres.get("offers", offres) if isinstance(offres, dict) else offres
          conformes = []
-@@ -975,15 +991,14 @@
+@@ -975,15 +1068,14 @@
              return 2
          print(min(conformes, key=lambda x: (x["dph_total"], x["id"]))["id"])
          return 0
@@ -1423,8 +1501,8 @@
  
  
  if __name__ == "__main__":
---- ../../../../scripts/amorce_hote_durable_a1_v3_v4.sh	2026-11-08 09:39:24.758134162 +0000
-+++ lanceur-durable-v5/amorce_hote_durable_a1_v4_v5.sh	2026-11-08 16:47:22.317742436 +0000
+--- ../../../../../scripts/amorce_hote_durable_a1_v3_v4.sh	2026-11-08 09:39:24.758134162 +0000
++++ amorce_hote_durable_a1_v4_v5.sh	2026-11-08 16:59:36.666444929 +0000
 @@ -1,73 +1,68 @@
  #!/usr/bin/env bash
 -# Amorce de l'hôte durable de la troisième course d'A1-v3, v4 (machine : GO-2026-11-05-03, une carte ; course :
@@ -1483,7 +1561,7 @@
 +[ "$GO_ID" = "GO-2026-11-02-22" ] || { echo "AMORCE A1-V4 V5 : GO des appels $GO_ID au lieu de GO-2026-11-02-22"; exit 2; }
 +case "$GO_MACHINE" in GO-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;; *) echo "AMORCE A1-V4 V5 : GO de la machine $GO_MACHINE illisible (GO-AAAA-MM-JJ-NN)"; exit 2;; esac
 +[ "$GO_MACHINE" != "$GO_ID" ] || { echo "AMORCE A1-V4 V5 : GO de la machine égal à la ligne des appels : rien ne part"; exit 2; }
-+case "$NOM_TEXTE" in orchestrator/prereg/preenregistrement-attaque-goodhart-v4-v[1-9]*.md) ;; *) echo "AMORCE A1-V4 V5 : NOM_TEXTE $NOM_TEXTE hors de orchestrator/prereg/preenregistrement-attaque-goodhart-v4-v<N>.md"; exit 2;; esac
++case "$NOM_TEXTE" in orchestrator/prereg/preenregistrement-attaque-goodhart-v[1-9]*-v[1-9]*.md) ;; *) echo "AMORCE A1-V4 V5 : NOM_TEXTE $NOM_TEXTE hors de orchestrator/prereg/preenregistrement-attaque-goodhart-v<V>-v<N>.md"; exit 2;; esac
 +command -v curl >/dev/null 2>&1 || { echo "AMORCE A1-V4 V5 : curl absent : rien ne part (la minuterie passe par python3)"; exit 2; }
 +case "$ECHEANCE_UTC_S" in ''|*[!0-9]*) echo "AMORCE A1-V4 V5 : ECHEANCE_UTC_S non entière : rien ne part"; exit 2;; esac
 +MEMINFO="${A1V4_MEMINFO:-/proc/meminfo}"; case "$MEMINFO" in /*) ;; *) MEMINFO=/proc/meminfo;; esac
@@ -1514,7 +1592,7 @@
 -if [ "${SAUTER_INSTALLATION:-0}" != "1" ] && [ ! -e "$RACINE_AMORCE/a1-v3-troisieme-v1/ETAT" ]; then
 +echo "AMORCE A1-V4 V5 : interpréteurs avant (C1) : $PY_IMAGE $(complete "$PY_IMAGE") ; $PY_CONF $(complete "$PY_CONF")"
 +[ "$(version "$PY_IMAGE")" = "3.13" ] || { echo "AMORCE A1-V4 V5 : $PY_IMAGE n'est pas Python 3.13 (C1) : rien ne part"; exit 2; }
-+if [ "${SAUTER_INSTALLATION:-0}" != "1" ] && [ ! -e "$RACINE_AMORCE/a1-v4-v9/ETAT" ]; then
++if [ "${SAUTER_INSTALLATION:-0}" != "1" ] && [ ! -e "$RACINE_AMORCE/a1-v4-reprise-v9-v1/ETAT" ]; then
      export DEBIAN_FRONTEND=noninteractive
      t0=$(date +%s)
      command -v git >/dev/null || timeout -k 5 300 sh -c 'apt-get update -qq && apt-get install -y -qq git ca-certificates >/dev/null' \

@@ -714,7 +714,8 @@ def test_amorce_cas_sain_jusqu_a_exec(tmp_path):
     ({"GO_ID": "GO-2026-11-04-06"}, "au lieu de GO-2026-11-02-22"),
     ({"GO_MACHINE": "GO-2026-11-02-22"}, "égal à la ligne des appels"),
     ({"GO_MACHINE": "35"}, "illisible"),
-    ({"NOM_TEXTE": "orchestrator/prereg/preenregistrement-attaque-goodhart-v3-v4.md"}, "hors de orchestrator/prereg"),
+    ({"NOM_TEXTE": "orchestrator/prereg/preenregistrement-attaque-goodhart-v4-brouillon3.md"}, "hors de orchestrator/prereg"),
+    ({"NOM_TEXTE": "orchestrator/autre/preenregistrement-attaque-goodhart-v4-v1.md"}, "hors de orchestrator/prereg"),
     ({"GEMINI_API_KEY_2": "autre-cle"}, "GEMINI_API_KEY_2 présente"),  # sur la machine, même la source du pilote est refusée
     ({"KIMI_API_KEY": "autre-cle"}, "KIMI_API_KEY présente"),
     ({"ECHEANCE_UTC_S": "demain"}, "ECHEANCE_UTC_S non entière"),

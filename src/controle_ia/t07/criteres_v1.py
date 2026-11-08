@@ -172,36 +172,42 @@ def premiere(vraies: list[str]) -> str:
     raise GardeArret("aucune ligne ne s'applique : zone morte")
 
 
-def _verifier_entrees(g, p, a, i, ii, f) -> None:
-    for valeur, domaine, nom in ((g, G, "G"), (p, P, "P"), (a, A, "A"), (i, ETATS, "I"), (ii, ETATS, "II"), (f, F, "F")):
+def _verifier_entrees(g, p, a, i, ii, f, d) -> None:
+    for valeur, domaine, nom in ((g, G, "G"), (p, P, "P"), (a, A, "A"), (i, ETATS, "I"), (ii, ETATS, "II"), (f, F, "F"), (d, D, "D")):
         if valeur not in domaine:
             raise GardeArret(f"entrée {nom} = {valeur!r} hors de {domaine}")
 
 
-def ligne_applicable(g: str, p: str, a: str, i: str, ii: str, f: str) -> str:
+def ligne_applicable(g: str, p: str, a: str, i: str, ii: str, f: str, d: str = "non vide") -> str:
     """La ligne de la grille pour un cas ; les entrées hors domaine arrêtent ; plusieurs lignes hors gardes et L6 arrêtent."""
-    _verifier_entrees(g, p, a, i, ii, f)
-    vraies = regles(g, p, a, i, ii, f)
+    _verifier_entrees(g, p, a, i, ii, f, d)
+    vraies = regles(g, p, a, i, ii, f, d)
     if len([l for l in vraies if l not in GARDES_ET_L6]) > 1:
-        raise GardeArret(f"chevauchement : {vraies} pour {(g, p, a, i, ii, f)}")
+        raise GardeArret(f"chevauchement : {vraies} pour {(g, p, a, i, ii, f, d)}")
     return premiere(vraies)
 
 
-def issue_critere_3(g: str, p: str, a: str, etats_i, etats_ii, f: str = "aucune", mots_et_cout: str | None = None,
-                    motifs_echec: dict | None = None) -> dict:
-    """Issue du critère 3 : ligne, phrase gelée (sous-phrase de L1b nommée), six entrées, combinaison imprimée.
+def etat_d(doses_qualifiees) -> str:
+    """Entrée D (N-063) : « vide » si aucune dose de (ii) ne qualifie, « non vide » sinon."""
+    return "vide" if not list(doses_qualifiees) else "non vide"
 
-    `etats_i`, `etats_ii` : état de chaque sonde principale lue sur (i-a) et (ii) ; vides tant que les scores ne sont pas ouverts
-    (G ≠ ok, P ≠ vu, A ∉ {A1b … A5}) : l'état d'organisme vaut alors « Z » par convention d'énumération et n'entre pas dans la
-    phrase. `motifs_echec` : {sonde: motif} des couples en « échec » (phrases de L4b et de L1b-E)."""
-    lus = (g == "ok" and p == "vu" and a in ("A1b", "A2", "A3", "A4", "A5"))
+
+def issue_critere_3(g: str, p: str, a: str, etats_i, etats_ii, f: str = "aucune", mots_et_cout: str | None = None,
+                    motifs_echec: dict | None = None, d: str = "non vide") -> dict:
+    """Issue du critère 3 : ligne, phrase gelée (sous-phrase de L1b nommée), sept entrées, combinaison imprimée.
+
+    `etats_i`, `etats_ii` : état de chaque sonde principale lue sur (i-a) et (ii) (pour (ii), à la dose décisive parmi les doses
+    qualifiées) ; vides tant que les scores ne sont pas ouverts (G ≠ ok, D vide, P ≠ vu, A ∉ {A1b … A5}) : l'état d'organisme
+    vaut alors « Z » par convention d'énumération et n'entre pas dans la phrase. `motifs_echec` : {sonde: motif} des couples en
+    « échec » (phrases de L4b et de L1b-E)."""
+    lus = (g == "ok" and d == "non vide" and p == "vu" and a in ("A1b", "A2", "A3", "A4", "A5"))
     if lus:
         if not etats_i or not etats_ii or len(etats_i) != len(etats_ii):
             raise GardeArret("états des sondes : même nombre de sondes sur (i-a) et sur (ii), au moins une, attendu")
         i, ii = etat_organisme(etats_i), etat_organisme(etats_ii)
     else:
         i, ii = "Z", "Z"
-    issue = ligne_applicable(g, p, a, i, ii, f)
+    issue = ligne_applicable(g, p, a, i, ii, f, d)
     motifs = "; ".join(f"{k}: {v}" for k, v in sorted((motifs_echec or {}).items())) or "motifs non transmis"
     qualification = mots_et_cout if mots_et_cout else EN_ATTENTE_T06
     sous_phrase = None
@@ -222,28 +228,33 @@ def issue_critere_3(g: str, p: str, a: str, etats_i, etats_ii, f: str = "aucune"
     else:
         phrase = PHRASES[issue]
     return {"issue": issue, "phrase": phrase, "sous_phrase_L1b": sous_phrase,
-            "entrees": {"G": g, "P": p, "A": a, "I": i if lus else None, "II": ii if lus else None, "F": f},
+            "entrees": {"G": g, "D": d, "P": p, "A": a, "I": i if lus else None, "II": ii if lus else None, "F": f},
             "combinaison": {"scores_ouverts": lus, JEU_I: list(etats_i) if lus else [], JEU_II: list(etats_ii) if lus else []},
             "qualification_mots_et_cout": {"(ii)": qualification, "(i)": SANS_OBJET} if issue in ("L2", "L3") else None,
             "ordre": list(ORDRE)}
 
 
-def enumerer_couverture() -> dict:
-    """Rejeu du produit complet G × P × A × I × II × F (9 216 cas) : exactement une ligne par cas, 0 trou, 0 chevauchement hors
-    gardes et L6 (même règle que `grille_l_t07_brouillon8.main`) ; lève `GardeArret` sinon ; rend les effectifs par ligne."""
+def enumerer_couverture(avec_d: bool = True) -> dict:
+    """Rejeu du produit complet G × D × P × A × I × II × F (18 432 cas ; 9 216 sans D, comme le script du brouillon 8) :
+    exactement une ligne par cas, 0 trou, 0 chevauchement hors gardes et L6 (même règle que `grille_l_t07_brouillon8.main`) ;
+    lève `GardeArret` sinon ; rend les effectifs par ligne."""
     effectifs = {l: 0 for l in ORDRE}
     total = 0
-    for cas in product(G, P, A, ETATS, ETATS, F):
-        total += 1
-        effectifs[ligne_applicable(*cas)] += 1
+    for d in (D if avec_d else ("non vide",)):
+        for cas in product(G, P, A, ETATS, ETATS, F):
+            total += 1
+            effectifs[ligne_applicable(*cas, d)] += 1
     sous_a4a5 = sum(effectifs[l] for l in ("L6", "L4", "L4b", "L5", "L2", "L3"))
     attendu = 2 * len(ETATS) * len(ETATS) * len(F)
-    if sous_a4a5 != attendu or sum(effectifs.values()) != total or total != 9216:
-        raise GardeArret(f"couverture : {total} cas, A4/A5 sous vu {sous_a4a5} (attendu {attendu})")
+    attendu_total = 9216 * (2 if avec_d else 1)
+    if sous_a4a5 != attendu or sum(effectifs.values()) != total or total != attendu_total:
+        raise GardeArret(f"couverture : {total} cas (attendu {attendu_total}), A4/A5 sous vu {sous_a4a5} (attendu {attendu})")
     return {"cas": total, "effectifs": effectifs, "trous": 0, "chevauchements_hors_gardes_et_L6": 0, "exactement_une_ligne": True,
-            "entrees": {"G": list(G), "P": list(P), "A": list(A), "etats": list(ETATS), "F": list(F)}}
+            "entrees": {"G": list(G), "D": list(D) if avec_d else ["non vide"], "P": list(P), "A": list(A), "etats": list(ETATS),
+                        "F": list(F)}}
 
 
-__all__ = ["AU_DESSUS", "NON_AU_DESSUS", "NON_INTERPRETABLE", "ECHEC", "ETATS_SONDE", "G", "P", "A", "ETATS", "F", "ORDRE", "PHRASES",
-           "ISSUES_P3BIS", "EN_ATTENTE_T06", "SANS_OBJET", "separation", "etat_pour_sonde", "etat_organisme", "regles", "premiere",
-           "ligne_applicable", "issue_critere_3", "enumerer_couverture"]
+__all__ = ["AU_DESSUS", "NON_AU_DESSUS", "NON_INTERPRETABLE", "ECHEC", "ETATS_SONDE", "G", "P", "A", "ETATS", "F", "D", "ORDRE",
+           "ORDRE_BROUILLON8", "SANS_OBJET_ISSUE", "PHRASES", "ISSUES_P3BIS", "EN_ATTENTE_T06", "SANS_OBJET", "separation",
+           "etat_pour_sonde", "etat_organisme", "etat_d", "regles", "premiere", "ligne_applicable", "issue_critere_3",
+           "enumerer_couverture"]

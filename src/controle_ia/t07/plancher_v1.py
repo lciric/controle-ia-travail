@@ -14,7 +14,7 @@ import numpy as np
 
 from ..gardes import GardeArret
 from ..premier_test_ia.statistiques import aire_simple, detection
-from ..sondes.evaluation import plancher_apparie, scores_actions
+from ..sondes.evaluation import aire_sous_courbe, intervalle_blocs, plancher_apparie, scores_actions
 
 AGREGATIONS_PERMISES = ("max", "attention")
 SEUIL_MULTIPLICITE = 0.05
@@ -75,6 +75,30 @@ def scores_plancher(plancher: list, sequences) -> np.ndarray:
     return np.stack([noter_actions(p, sequences) for p in plancher], axis=1)
 
 
+def comparer_scores_au_plancher(scores_sonde, scores_plancher, y, blocs, n_tirages: int, graine: int,
+                                quantile_plancher: float = 0.95, niveau: float = 0.95) -> dict:
+    """Sur scores seuls (étape B, CLT7B-05) : `aire_sous_courbe` et `intervalle_blocs` du paquet gelé sur les scores stockés de la
+    sonde ; quantile `quantile_plancher` des aires des directions de plancher (`scores_plancher` de forme (n_directions,
+    n_actions)) ; rend le même dictionnaire que `sondes.evaluation.comparer_au_plancher` (clés plates), plus `plancher`
+    {quantile, mediane, n} et `niveau`. Éprouvé égal à `comparer_au_plancher` sur le jouet (10⁻¹², `tests/test_t07_lecture_v1.py`)."""
+    s = np.asarray(scores_sonde, dtype=np.float64)
+    P = np.asarray(scores_plancher, dtype=np.float64)
+    y, blocs = np.asarray(y), np.asarray(blocs)
+    if s.ndim != 1 or P.ndim != 2 or P.shape[1] != s.size or P.shape[0] < 1:
+        raise GardeArret(f"scores de forme {s.shape} et plancher de forme {P.shape} : (n_actions,) et (n_directions, n_actions) attendues")
+    if not 0.5 < float(niveau) < 1.0:
+        raise GardeArret(f"niveau {niveau} hors de ]0,5 ; 1[")
+    ic = intervalle_blocs(s, y, blocs, int(n_tirages), int(graine), float(niveau))
+    aires = np.array([aire_sous_courbe(P[k], y) for k in range(P.shape[0])])
+    seuil = float(np.quantile(aires, float(quantile_plancher)))
+    return {"aire": ic["aire"], "bas": ic["bas"], "haut": ic["haut"], "plancher_quantile": seuil,
+            "plancher_mediane": float(np.median(aires)), "n_plancher": int(aires.size), "au_dessus_du_plancher": bool(ic["bas"] > seuil),
+            "degeneres": ic["degeneres"], "tirages": ic["tirages"], "niveau": float(niveau),
+            "plancher": {"quantile": seuil, "quantile_plancher": float(quantile_plancher), "mediane": float(np.median(aires)),
+                         "max": float(aires.max()), "n": int(aires.size)},
+            "effectifs": {"positifs": int((y == 1).sum()), "negatifs": int((y == 0).sum())}}
+
+
 def predicteurs_triviaux(mesures: dict, noms, condition, positifs: str, negatifs: str) -> dict:
     """Aire et séparation de chaque prédicteur trivial (colonne des mesures de T0.6, lue comme un nombre) sur le jeu."""
     sortie = {}
@@ -102,4 +126,4 @@ def comparer(scores: np.ndarray, plancher: np.ndarray, condition, tache, positif
 
 
 __all__ = ["niveau_bonferroni", "exiger_agregation", "largeur_de", "noter_actions", "plancher_pour_sonde", "scores_plancher",
-           "predicteurs_triviaux", "comparer", "AGREGATIONS_PERMISES"]
+           "predicteurs_triviaux", "comparer", "comparer_scores_au_plancher", "AGREGATIONS_PERMISES"]
