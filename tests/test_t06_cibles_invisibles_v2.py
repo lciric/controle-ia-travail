@@ -1,4 +1,4 @@
-# [v2 : copie de test_t06_cibles_invisibles_v1.py avec le lanceur v5 en plus (E3 du 7 novembre)]
+# [v2 : copie de test_t06_cibles_invisibles_v1.py avec le lanceur v5 en plus (E3 du 7 novembre). Ajout en place (chaîne v13, épreuve exploratoire du 8 novembre, branche prep/t06-explo-v2) : le lanceur v6 joué à marqueur comme le v5, et la preuve par l'arbre syntaxique que la seule lecture de la clé `cibles` des six lanceurs est celle de l'adaptateur ; fichier modifié en place parce que la liste figée v3 le nomme]
 """Cibles invisibles de T0.6 (N-060 ; R-1679 de la session mère) : essai à marqueur sur les chemins du lanceur de T0.6 (versions 1 à 4, répétition jouet
 par la commande). Chaque tâche d'évaluation ET de distillation porte un marqueur unique dans tous les champs de ses cibles (`cibles`) et de ses coûts
 rapportés (`couts_rapportes`) ; sont interceptés, avant tout modèle, tout ce qui part vers le modèle ou vers un moniteur (`FormatBrut.ouverture` et
@@ -9,6 +9,7 @@ La clé `cibles` de la configuration d'un adaptateur (`config["adaptateur"]["cib
 des tâches : `test_cles_cibles_de_la_configuration_sont_des_modules_de_lora` le montre."""
 from __future__ import annotations
 
+import ast
 import json
 import re
 import shutil
@@ -24,6 +25,7 @@ from controle_ia.t06 import lanceur_v2 as la2
 from controle_ia.t06 import lanceur_v3 as la3
 from controle_ia.t06 import lanceur_v4 as la4
 from controle_ia.t06 import lanceur_v5 as la5
+from controle_ia.t06 import lanceur_v6 as la6
 
 RACINE = Path(__file__).resolve().parents[1]
 NOTES = RACINE / "docs" / "notes" / "g0-deux-semaines-v1"
@@ -33,7 +35,8 @@ ENONCES = ["Which routing rule makes sparse mixtures of experts train stably?",
            "Does curriculum ordering change sample efficiency of small language models?",
            "Can retrieval reduce hallucination in long-form question answering?"]
 VERSIONS = [("v1", la1, "config-t06-jouet-v2.json"), ("v2", la2, "config-t06-jouet-v3.json"), ("v3", la3, "config-t06-jouet-v4.json"),
-            ("v4", la4, "config-t06-jouet-v5.json"), ("v5", la5, "config-t06-jouet-v5.json")]       # v2 : lanceur_v5, que joue l'amorce v9
+            ("v4", la4, "config-t06-jouet-v5.json"), ("v5", la5, "config-t06-jouet-v5.json"),       # v2 : lanceur_v5, que joue l'amorce v9
+            ("v6", la6, "config-t06-jouet-v5.json")]       # chaîne v13 : lanceur_v6, que joue l'amorce v11 (même configuration jouet que le v5 : le calcul ne change pas)
 
 
 def _m(champ: str) -> str:
@@ -64,7 +67,13 @@ def _preparer(depot: Path, config_jouet: str, fuite: bool) -> dict:
         shutil.copy(RACINE / "prereg" / nom, depot / "prereg" / nom)
     d = depot / "donnees" / "t06-jouet"
     d.mkdir(parents=True)
-    for nom, ids in (("taches-evaluation.json", ["e1", "e2", "e3", "e4"]), ("taches-distillation.json", ["d1", "d2"])):
+    # Six tâches d'évaluation (trois par pli), pas quatre : le modèle jouet par caractères, à température 1, tire un jeton de fin
+    # en premier jeton d'une action avec une probabilité d'environ 1,6 % par (tâche, pas), le même dans toutes les conditions
+    # et phases (générateur par tâche, mêmes graines) ; avec T = 2 et deux tâches par pli, une tâche sans aucune action notée
+    # (probabilité d'environ 1/1000 par run, entropie neuve à chaque run jouet) laissait un pli à une seule tâche et la garde
+    # du rééchantillonnage arrêtait le run (épreuve exploratoire du 8 novembre, [v1]). Avec trois tâches par pli, il en
+    # faudrait deux mortes dans le même pli (probabilité de l'ordre de 1e-6). La garde est inchangée.
+    for nom, ids in (("taches-evaluation.json", ["e1", "e2", "e3", "e4", "e5", "e6"]), ("taches-distillation.json", ["d1", "d2"])):
         (d / nom).write_text(json.dumps({"taches": [_tache(i, k, fuite) for k, i in enumerate(ids)]}, ensure_ascii=False), encoding="utf-8")
     config = json.loads((NOTES / config_jouet).read_text(encoding="utf-8"))
     config["taches_evaluation"]["sha256"] = sceller(d / "taches-evaluation.json")
@@ -145,8 +154,46 @@ def test_garde_le_balayage_des_fichiers_voit_un_marqueur_plante(tmp_path):
 
 
 def test_cles_cibles_de_la_configuration_sont_des_modules_de_lora():
-    """Les cinq « lecteurs » de la clé `cibles` des modules de T0.6 lisent la configuration de l'adaptateur (modules de LoRA), jamais une tâche."""
+    """Les six « lecteurs » de la clé `cibles` des modules de T0.6 lisent la configuration de l'adaptateur (modules de LoRA), jamais une tâche."""
     for _, _, config_jouet in VERSIONS:
         a = json.loads((NOTES / config_jouet).read_text(encoding="utf-8"))["adaptateur"]
         assert isinstance(a["cibles"], list) and a["cibles"] and all(isinstance(x, str) and "proj" in x for x in a["cibles"]), config_jouet
     assert la4.__doc__ is not None
+
+
+def _lectures_de_cibles(source: str) -> list[tuple[str, int, bool]]:
+    """(fonction, ligne, admise) de chaque constante « cibles » ou « couts_rapportes » d'un module ; admise seulement si
+    c'est l'indice d'un nom `a` que la même fonction lie à `config["adaptateur"]` (configuration de l'adaptateur LoRA)."""
+    sortie = []
+    for f in [n for n in ast.walk(ast.parse(source)) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]:
+        lies = {c.targets[0].id for c in ast.walk(f) if isinstance(c, ast.Assign) and len(c.targets) == 1
+                and isinstance(c.targets[0], ast.Name) and isinstance(c.value, ast.Subscript)
+                and isinstance(c.value.value, ast.Name) and c.value.value.id == "config"
+                and isinstance(c.value.slice, ast.Constant) and c.value.slice.value == "adaptateur"}
+        indices = {id(s.slice) for s in ast.walk(f) if isinstance(s, ast.Subscript) and isinstance(s.value, ast.Name)
+                   and s.value.id in lies}
+        for c in ast.walk(f):
+            if isinstance(c, ast.Constant) and c.value in ("cibles", "couts_rapportes"):
+                sortie.append((f.name, c.lineno, c.value == "cibles" and id(c) in indices))
+    return sortie
+
+
+def test_seule_lecture_de_cibles_des_lanceurs_est_l_adaptateur():
+    """Preuve vérifiable des faux lecteurs admis par tests/test_cibles_invisibles_v2.py : dans chaque lanceur de T0.6, toute
+    lecture de la clé `cibles` est `a["cibles"]` avec `a = config["adaptateur"]` dans la même fonction (une seule par lanceur)."""
+    for _, module, _ in VERSIONS:
+        lectures = _lectures_de_cibles(Path(module.__file__).read_text(encoding="utf-8"))
+        assert lectures == [("_executer_apres_manifeste", lectures[0][1], True)], (module.__name__, lectures)
+
+
+@pytest.mark.parametrize("plante", [
+    'def f(config, tache):\n    a = config["adaptateur"]\n    return tache["cibles"]\n',
+    'def f(config, taches):\n    a = config["adaptateur"]\n    return a["cibles"], [t["cibles"] for t in taches]\n',
+    'def f(config, t):\n    a = t\n    return a["cibles"]\n',
+    'def f(config):\n    a = config["adaptateur"]\n    return config["taches"][0]["couts_rapportes"]\n',
+])
+def test_garde_la_preuve_par_l_arbre_voit_une_lecture_de_tache_plantee(plante):
+    """Artefact (R5) : une lecture de la clé `cibles` (ou des coûts rapportés) qui ne passe pas par la configuration de
+    l'adaptateur n'est pas admise ; cas sain : la lecture des lanceurs l'est."""
+    assert not all(admise for _, _, admise in _lectures_de_cibles(plante))
+    assert _lectures_de_cibles('def f(config):\n    a = config["adaptateur"]\n    return tuple(a["cibles"])\n') == [("f", 3, True)]

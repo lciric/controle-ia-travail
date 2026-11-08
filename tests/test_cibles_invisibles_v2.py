@@ -1,4 +1,4 @@
-"""[v2 : copie de test_cibles_invisibles_v1.py avec cinq entrées de plus au registre (bras B v1 et v2, rejeu d'activations de R1 v4 copiés dans le dépôt) ; le v1 échoue sur la branche de la course]
+"""[v2 : copie de test_cibles_invisibles_v1.py avec cinq entrées de plus au registre (bras B v1 et v2, rejeu d'activations de R1 v4 copiés dans le dépôt) ; le v1 échoue sur la branche de la course. Ajout en place (chaîne v13, épreuve exploratoire du 8 novembre, branche prep/t06-explo-v2) : le lanceur v6 au registre, couvert par tests/test_t06_cibles_invisibles_v2.py comme le v5, et parmi les faux lecteurs de la clé `cibles` (modules de LoRA), prouvé par l'arbre syntaxique ; fichier modifié en place parce que la liste figée v3 le nomme]
 Cibles invisibles (N-060 v3, « à vérifier avant l'usage » ; devis pilote v1, § 9 point 7) : ni l'agent ni les
 moniteurs ne voient jamais la référence cachée d'une tâche (`cibles`, et les coûts rapportés de l'article).
 
@@ -401,6 +401,10 @@ REGISTRE = {
     "controle_ia/t06/lanceur_v4.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v4)"),
     "controle_ia/t06/lanceur_v5.py::executer": (COUVERT, "t06_cibles_invisibles (v5, tests/test_t06_cibles_invisibles_v2.py)"),
     "controle_ia/t06/lanceur_v5.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v5, tests/test_t06_cibles_invisibles_v2.py)"),
+    # chaîne v13 : lanceur v6, copie du v5 (seuls changent l'import de la configuration, la validation, la commande et deux messages ;
+    # tests/test_t06_chaine_v13.py le vérifie ligne à ligne) ; joué à marqueur par la répétition jouet comme le v5
+    "controle_ia/t06/lanceur_v6.py::executer": (COUVERT, "t06_cibles_invisibles (v6, tests/test_t06_cibles_invisibles_v2.py)"),
+    "controle_ia/t06/lanceur_v6.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v6, tests/test_t06_cibles_invisibles_v2.py)"),
 }
 # Fonctions qui lisent la clé « cibles » (ou les coûts rapportés) d'une tâche : mesures du pilote A et extraction.
 LECTEURS_DE_CIBLES_ADMIS = {
@@ -411,13 +415,15 @@ LECTEURS_DE_CIBLES_ADMIS = {
     "controle_ia/environnements/lire_pilote.py": {"couvertures", "base_enonce_seul", "mesures_cout", "analyser"},
     # T0.6 (R-1679) : FAUX LECTEURS. La clé `cibles` lue ici est celle de la configuration d'un adaptateur LoRA (`config["adaptateur"]["cibles"]`,
     # noms des modules de projection visés : « q_proj », …), lue dans un fichier de configuration scellé ; ce n'est pas la référence cachée d'une
-    # tâche (les tâches ne passent que par `tache_de`). Preuve : tests/test_t06_cibles_invisibles_v1.py::test_cles_cibles_de_la_configuration_sont_des_modules_de_lora.
+    # tâche (les tâches ne passent que par `tache_de`). Preuve : tests/test_t06_cibles_invisibles_v1.py::test_cles_cibles_de_la_configuration_sont_des_modules_de_lora ;
+    # pour les six lanceurs, tests/test_t06_cibles_invisibles_v2.py::test_seule_lecture_de_cibles_des_lanceurs_est_l_adaptateur (arbre syntaxique).
     "controle_ia/t06/configuration.py": {"exiger_config_t06"},
     "controle_ia/t06/lanceur.py": {"_executer_apres_manifeste"},
     "controle_ia/t06/lanceur_v2.py": {"_executer_apres_manifeste"},
     "controle_ia/t06/lanceur_v3.py": {"_executer_apres_manifeste"},
     "controle_ia/t06/lanceur_v4.py": {"_executer_apres_manifeste"},
     "controle_ia/t06/lanceur_v5.py": {"_executer_apres_manifeste"},
+    "controle_ia/t06/lanceur_v6.py": {"_executer_apres_manifeste"},        # chaîne v13 : même lecture que le v5 (ligne 239, `tuple(a["cibles"])`, a = config["adaptateur"])
 }
 CLES_CACHEES = {"cibles", "couts_rapportes"}
 # Dossiers dont les modules ne sont pas balayés : le vérificateur de N-060 v3 lit la référence par construction.
