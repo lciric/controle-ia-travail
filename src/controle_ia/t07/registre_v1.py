@@ -56,9 +56,14 @@ CLES_CONNUES = (SCELLEMENT_T07, SCELLEMENT_P3BIS, VERDICT_P3BIS, RUN_CONFIRMATIO
 EXIGEES_ETAPE_A = (RUN_CONFIRMATION_T06, SCELLEMENT_CONCEPTS_T07)
 PERMISES_ETAPE_A = (SCELLEMENT_JEUX_JD, SCELLEMENT_JEUX_JC, SCELLEMENT_JEUX_JA, GO_ETAPE_A_T07, GO_LECTURE_T07, CODE_T07,
                     SCELLEMENT_T07, SCELLEMENT_P3BIS, VERDICT_P3BIS, SCORES_T07, SONDES_T07, ISSUE_MOTS_ET_COUT_T06)
-# Étape B : les lignes de P3-bis et `ISSUE-MOTS-ET-COUT-T06` sont lues par la grille (brouillon 9 : P = « absente » → L0a ;
-# Q = « absente » → L1, rien n'est lu), donc permises ici et non refusées ; la règle d'antériorité `SCORES-T07`, `SONDES-T07` <
-# `VERDICT-P3BIS` est tenue par `exiger_anteriorite`.
+# Étape B : les lignes de P3-bis et `ISSUE-MOTS-ET-COUT-T06` sont lues par la grille (P = « absente » → L0a ; Q = « absente » →
+# L1, rien n'est lu), donc permises ici et non refusées ; la règle d'antériorité `SCORES-T07`, `SONDES-T07` < `VERDICT-P3BIS` est
+# tenue par `exiger_anteriorite`.
+# MARQUEUR-QUESTION-1 : le brouillon 11 dit les deux. Il range `SCELLEMENT-P3BIS`, `VERDICT-P3BIS` et `ISSUE-MOTS-ET-COUT-T06`
+# parmi les clés « exigées » de l'étape B (l. 804-806, l. 1125-1126 ; liste d'arrêt l. 963-964 : « exigée absente : aucune
+# ouverture », code 2, rien écrit), mais sa grille écrit une issue quand elles manquent (L0a, l. 922 : « ligne SCELLEMENT-P3BIS
+# ou VERDICT-P3BIS absente » ; L1, l. 925 : « ligne ISSUE-MOTS-ET-COUT-T06 absente » ; l. 806 : « absente → L1, rien n'est lu »).
+# Le module garde le comportement du premier état (issue L0a ou L1 écrite, code 0) sans le trancher : à fixer par le rédacteur.
 EXIGEES_ETAPE_B = (RUN_CONFIRMATION_T06, SCORES_T07, SONDES_T07)
 PERMISES_ETAPE_B = (SCELLEMENT_P3BIS, VERDICT_P3BIS, ISSUE_MOTS_ET_COUT_T06, SCELLEMENT_JEUX_JD, SCELLEMENT_JEUX_JC, SCELLEMENT_JEUX_JA,
                     SCELLEMENT_CONCEPTS_T07, GO_ETAPE_A_T07, GO_LECTURE_T07, CODE_T07, SCELLEMENT_T07)
