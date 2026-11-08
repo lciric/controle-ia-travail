@@ -397,6 +397,8 @@ REGISTRE = {
     "controle_ia/t06/lanceur_v3.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v3)"),
     "controle_ia/t06/lanceur_v4.py::executer": (COUVERT, "t06_cibles_invisibles (v4)"),
     "controle_ia/t06/lanceur_v4.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v4)"),
+    "controle_ia/t06/lanceur_v5.py::executer": (COUVERT, "t06_cibles_invisibles (v5, tests/test_t06_cibles_invisibles_v2.py)"),
+    "controle_ia/t06/lanceur_v5.py::_executer_apres_manifeste": (COUVERT, "t06_cibles_invisibles (v5, tests/test_t06_cibles_invisibles_v2.py)"),
 }
 # Fonctions qui lisent la clé « cibles » (ou les coûts rapportés) d'une tâche : mesures du pilote A et extraction.
 LECTEURS_DE_CIBLES_ADMIS = {
@@ -413,6 +415,7 @@ LECTEURS_DE_CIBLES_ADMIS = {
     "controle_ia/t06/lanceur_v2.py": {"_executer_apres_manifeste"},
     "controle_ia/t06/lanceur_v3.py": {"_executer_apres_manifeste"},
     "controle_ia/t06/lanceur_v4.py": {"_executer_apres_manifeste"},
+    "controle_ia/t06/lanceur_v5.py": {"_executer_apres_manifeste"},
 }
 CLES_CACHEES = {"cibles", "couts_rapportes"}
 # Dossiers dont les modules ne sont pas balayés : le vérificateur de N-060 v3 lit la référence par construction.

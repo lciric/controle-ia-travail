@@ -40,7 +40,7 @@ PYTHON_FACTICE = """#!/usr/bin/env bash
 if [ "$1" = "-m" ] && [ "$2" = "pytest" ]; then printf '%s\\n' "$*" > "${RACINE_AMORCE:-/tmp}/pytest-args.txt"; printf '%s\\n' "${FAUX_PYTEST_LIGNE:-7 passed in 1.00s}"; exit 0; fi
 if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then echo "paquet-factice==1.0"; exit 0; fi
 if [ "$1" = "-c" ]; then case "$2" in *"torch.cuda.is_available() else 1"*) [ "${FAUX_CUDA:-1}" = 1 ] || { echo "RuntimeError: The NVIDIA driver on your system is too old (found version 12020)" >&2; exit 1; };; esac; echo "torch factice"; exit 0; fi
-if [ "$1" = "-m" ] && [ "$2" = "controle_ia.t06.lanceur_v4" ]; then
+if [ "$1" = "-m" ] && [ "$2" = "controle_ia.t06.lanceur_v5" ]; then
     run=""; prec=""
     for a in "$@"; do [ "$prec" = "--run-id" ] && run="$a"; prec="$a"; done
     mkdir -p "diag/$run" "runs/$run" "donnees/$run"
@@ -174,7 +174,7 @@ def test_amorce_cas_sain_deux_commits_morceaux_et_second_demarrage(bac):
     distant = _distant(bac)
     code, journal, sortie, racine = _lancer_amorce(bac, distant)
     assert code == 0, sortie[-3000:]
-    assert "GO : GO-2026-11-02-28 conforme" in journal and "lanceur v4" in journal and "run terminé" in journal and "calendrier : fin_go_utc_s=1794873600" in journal
+    assert "GO : GO-2026-11-02-28 conforme" in journal and "lanceur v5" in journal and "run terminé" in journal and "calendrier : fin_go_utc_s=1794873600" in journal
     assert [x for x in journal.splitlines() if x.startswith("PROGRES ")] == PROGRES_ATTENDUS           # C01 : la ligne à état retenue
     assert "PROGRES non relayée : motif interdit (C01)" in journal and "au-dessus" not in journal and "au-dessus" not in sortie
     assert "ACTION" not in journal and "PRIVATE" not in journal and "jeton-factice" not in sortie
