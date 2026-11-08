@@ -303,4 +303,6 @@ Juste derrière : C-9 (appel et grille toujours absents : geste de Lazar, levier
 11. **Règle de repli si G0 échoue** et **ce que chaque palier livre, et quand** (v16 pts 12 et 13 ; proposition § 8 à chiffrer).
 12. **Nœud proposé ici** : l'ordre des priorités de la semaine du 9 au 15 novembre (B-10).
 
-Compte des `<<À VÉRIFIER>>` de ce brouillon : voir la ligne de fin.
+Compte des `<<À VÉRIFIER>>` de ce brouillon : **9** (relevé par `grep -o`). Entrées : A 7, B 11, C 13.
+
+Fin d'écriture : 2026-11-08 14:49:43 UTC (relevé `date -u`) ; corrections de cadre de la session mère intégrées (14:33 : entretien dans deux semaines, tables `registres-taif-v3` ; 14:50 : candidature envoyée versée au dépôt, appel du 30 octobre décalé).
