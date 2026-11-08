@@ -68,3 +68,45 @@ def test_configuration_d_e3_bis_seul_le_plafond_change_et_elle_passe_la_validati
     assert b["offre"]["telechargement_max_usd_go"] == 0.03 and b["mode"] == "reel" and b["calendrier"] == {"dernier_jour_creation": "2026-11-09", "fin_go_utc": "2026-11-11T00:00:00Z"}
     from controle_ia.t06 import session_v10 as s10
     assert "≤ 7.9" in s10.verifier_plafond_epreuve(b["plafond_usd"], "2.092", "8")
+
+
+# --- demande de la mère (R-1735) : les VRAIES configurations jusqu'à la validation par `lanceur_v5` ------------------------------------------------------------
+class _ApresValidation(Exception):
+    pass
+
+
+def _jusqu_au_manifeste(config_fichier, monkeypatch, prereg=None):
+    from controle_ia.t06 import lanceur_v5 as la5
+    config = json.loads((D / config_fichier).read_text(encoding="utf-8"))
+
+    def arret(*a, **k):
+        raise _ApresValidation()
+    monkeypatch.setattr(la5, "creer_manifeste", arret)
+    la5.executer(config, RACINE, "20261108-000000-t06-reel", prereg)
+
+
+@pytest.mark.parametrize("fichier", ["config-t06-epreuve-e3-v5.json", "config-t06-epreuve-e3bis-v1.json"])
+def test_les_vraies_configurations_d_epreuve_passent_validation_taches_pas_et_consignes_jusqu_au_manifeste(fichier, monkeypatch):
+    """E3 v5 (plafond 4,27) et E3 bis (5,7), mode réel, sans préenregistrement : `lanceur_v5.executer` va jusqu'à la création du manifeste (l'essai s'arrête là)."""
+    with pytest.raises(_ApresValidation):
+        _jusqu_au_manifeste(fichier, monkeypatch)
+
+
+@pytest.mark.parametrize("fichier", ["config-t06-epreuve-e3-v5.json", "config-t06-epreuve-e3bis-v1.json"])
+def test_artefact_le_lanceur_v4_arrete_les_memes_configurations_a_la_validation(fichier, monkeypatch):
+    from controle_ia.t06 import lanceur_v4 as la4
+    config = json.loads((D / fichier).read_text(encoding="utf-8"))
+    monkeypatch.setattr(la4, "creer_manifeste", lambda *a, **k: (_ for _ in ()).throw(_ApresValidation()))
+    with pytest.raises(GardeArret, match=r"\(1.5, 3.5\)"):
+        la4.executer(config, RACINE, "20261108-000100-t06-reel", None)
+
+
+def test_la_configuration_de_la_course_passe_la_validation_du_lanceur_v5_et_attend_son_preenregistrement(monkeypatch):
+    """Course (plafond 200, GO-2026-11-02-28) : la validation passe ; sans préenregistrement le lanceur refuse ENSUITE, pour le bon motif (R1)."""
+    with pytest.raises(GardeArret, match="sans préenregistrement"):
+        _jusqu_au_manifeste("config-t06-reel-v1-brouillon5.json", monkeypatch)
+
+
+def test_le_lanceur_v5_utilise_la_validation_de_la_configuration_v5():
+    from controle_ia.t06 import lanceur_v5 as la5
+    assert la5.exiger_config_t06_v4 is cf5.exiger_config_t06_v5 and la5.COMMANDE.endswith("lanceur_v5")
