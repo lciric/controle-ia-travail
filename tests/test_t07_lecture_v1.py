@@ -414,7 +414,11 @@ def _script_grille():
     assert hashlib.sha256(SCRIPT_GRILLE.read_bytes()).hexdigest() == SHA_SCRIPT_GRILLE
     spec = importlib.util.spec_from_file_location("grille_l_t07_brouillon11", SCRIPT_GRILLE)
     sc = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(sc)
+    avant, sys.dont_write_bytecode = sys.dont_write_bytecode, True       # rien n'est écrit dans le dossier des pièces du brouillon
+    try:
+        spec.loader.exec_module(sc)
+    finally:
+        sys.dont_write_bytecode = avant
     return sc
 
 
@@ -1153,7 +1157,7 @@ def test_lecture_sondes_t06_jamais_ouvert(tmp_path):
         lv._lire_json(p, "x")
 
 
-def test_commande_en_ligne_codes_0_2_3_4(jouet):
+def test_commande_en_ligne_codes_0_2_3(jouet):
     cfg = jouet.racine / "config-t07.json"
     cfg.write_text(json.dumps(jouet.config), encoding="utf-8")
     env = {"PYTHONPATH": str(RACINE_DEPOT / "src"), "PATH": "/usr/bin:/bin"}
@@ -1169,12 +1173,14 @@ def test_commande_en_ligne_codes_0_2_3_4(jouet):
     r = subprocess.run(base + ["etape-a", str(jouet.racine), "autre", str(cfg), "--instant", str(INSTANT)], capture_output=True, text=True, env=env)
     assert r.returncode == 2 and r.stderr.startswith("REFUS")
     r = subprocess.run(base + ["grille"], capture_output=True, text=True, env=env)
-    assert r.returncode == 0 and "46080" in r.stdout and "GRILLE COMPLÈTE" in r.stdout
+    assert r.returncode == 0 and "55296 cas" in r.stdout and "11762496 cas" in r.stdout and "GRILLE COMPLÈTE" in r.stdout
+    assert "classes dérivées : absente 0, non_calculable 126360, incoherent 494262, vide 1574, partiel 3608, complet 164" in r.stdout
     r = subprocess.run(base + ["repli-recalcul", str(jouet.racine), RUN_T06, str(cfg)], capture_output=True, text=True, env=env)
     assert r.returncode == 2 and "non mis en œuvre" in r.stderr
 
 
-def test_commande_sans_objet_code_4(depot):
+def test_commande_sans_objet_L7_code_0(depot):
+    """Brouillon 11, l. 1320-1322 : L7 est une étape menée au bout, code 0 (le code 4 du premier état est retiré)."""
     j = construire_run(depot, par_dose={d: "réussit" for d in DOSES})
     ra = _a(j)
     ajouter_p3bis(j)
@@ -1183,7 +1189,7 @@ def test_commande_sans_objet_code_4(depot):
     env = {"PYTHONPATH": str(RACINE_DEPOT / "src"), "PATH": "/usr/bin:/bin"}
     r = subprocess.run([sys.executable, "-m", "controle_ia.t07.lecture_v1", "etape-b", str(j.racine), RUN_T06, ra["run_t07"], str(cfg),
                         "--instant", str(INSTANT_B)], capture_output=True, text=True, env=env)
-    assert r.returncode == 4 and r.stdout.startswith("L7 : critère 3 : sans objet à cette course")
+    assert r.returncode == 0 and r.stdout.startswith("L7 : critère 3 : sans objet à cette course"), r.stderr
 
 
 def test_aucune_moyenne_sur_les_jetons_dans_le_module():
