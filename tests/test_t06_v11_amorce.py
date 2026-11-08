@@ -40,7 +40,7 @@ PYTHON_FACTICE = """#!/usr/bin/env bash
 if [ "$1" = "-m" ] && [ "$2" = "pytest" ]; then printf '%s\\n' "$*" > "${RACINE_AMORCE:-/tmp}/pytest-args.txt"; printf '%s\\n' "${FAUX_PYTEST_LIGNE:-7 passed in 1.00s}"; exit 0; fi
 if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then echo "paquet-factice==1.0"; exit 0; fi
 if [ "$1" = "-c" ]; then case "$2" in *"torch.cuda.is_available() else 1"*) [ "${FAUX_CUDA:-1}" = 1 ] || { echo "RuntimeError: The NVIDIA driver on your system is too old (found version 12020)" >&2; exit 1; };; esac; echo "torch factice"; exit 0; fi
-if [ "$1" = "-m" ] && [ "$2" = "controle_ia.t06.lanceur_v5" ]; then
+if [ "$1" = "-m" ] && { [ "$2" = "controle_ia.t06.lanceur_v5" ] || [ "$2" = "controle_ia.t06.lanceur_v4" ]; }; then
     run=""; prec=""
     for a in "$@"; do [ "$prec" = "--run-id" ] && run="$a"; prec="$a"; done
     mkdir -p "diag/$run" "runs/$run" "donnees/$run"

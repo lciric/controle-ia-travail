@@ -9,28 +9,13 @@ from pathlib import Path
 
 import pytest
 
-import test_t06_v7_amorce as t6a
-from test_t06_v7_amorce import _distant, _fichiers_distants, _git, _lancer_amorce  # noqa: F401
-from test_t06_v7_amorce import bac as bac_v7  # noqa: F401
+import test_t06_v11_amorce as t6a
+from test_t06_v11_amorce import _distant, _fichiers_distants, _git, _lancer_amorce, bac  # noqa: F401
 
 RACINE = Path(__file__).resolve().parents[1]
 AMORCE7 = RACINE / "scripts" / "amorce_instance_t06_v7.sh"
 AMORCE8 = RACINE / "scripts" / "amorce_instance_t06_v9.sh"
 BRANCHE = "calcul/t06-jouet-v4"
-LISTE = RACINE / "scripts" / "tests-cibles-t06-v1.txt"
-
-
-@pytest.fixture
-def bac(bac_v7):
-    """v11 : l'amorce v9 joue la liste figée (scripts/tests-cibles-t06-v1.txt, empreinte écrite en dur) : le banc reçoit la liste réelle et des fichiers d'essais vides (le faux python ne les lit pas)."""
-    src = bac_v7["source"]
-    (src / "scripts" / LISTE.name).write_text(LISTE.read_text(encoding="utf-8"), encoding="utf-8")
-    for f in LISTE.read_text(encoding="utf-8").split():
-        (src / f).parent.mkdir(parents=True, exist_ok=True)
-        (src / f).write_text("", encoding="utf-8")
-    _git(src, "add", "-A")
-    _git(src, "commit", "-qm", "liste des essais")
-    return bac_v7
 
 CONFIG = "docs/notes/g0-deux-semaines-v1/config-bras-b-t06-v1.json"
 
