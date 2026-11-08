@@ -196,13 +196,17 @@ def enumerer_couverture(n_sondes: int) -> dict:
         for ligne_A in LIGNES_A + (None,):
             if verdict == VU and ligne_A is None:
                 continue                     # refusé explicitement par `lignes_applicables`, pas une zone morte
+            if verdict != VU:
+                # scores non ouverts sous L0 : les états des sondes n'entrent pas ; une combinaison par (verdict, ligne A)
+                lignes = lignes_applicables(verdict, ligne_A, NON_AU_DESSUS, NON_AU_DESSUS)
+                if len(lignes) != 1:
+                    raise GardeArret(f"couverture : {len(lignes)} lignes ({lignes}) pour {(verdict, ligne_A)}")
+                comptes[lignes[0]] += 1
+                combinaisons += 1
+                continue
             for etats in product(ETATS_SONDE, repeat=2 * int(n_sondes)):
                 etats_i, etats_ii = etats[: int(n_sondes)], etats[int(n_sondes):]
-                if verdict == VU:
-                    ei, eii = etat_jeu_decisif(etats_i), etat_jeu_decisif(etats_ii)
-                else:
-                    ei, eii = NON_AU_DESSUS, NON_AU_DESSUS      # scores non ouverts : les états n'entrent pas
-                lignes = lignes_applicables(verdict, ligne_A, ei, eii)
+                lignes = lignes_applicables(verdict, ligne_A, etat_jeu_decisif(etats_i), etat_jeu_decisif(etats_ii))
                 if len(lignes) != 1:
                     raise GardeArret(f"couverture : {len(lignes)} lignes ({lignes}) pour {(verdict, ligne_A, etats_i, etats_ii)}")
                 comptes[lignes[0]] += 1
