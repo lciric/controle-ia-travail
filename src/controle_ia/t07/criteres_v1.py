@@ -127,7 +127,9 @@ LIGNES = (
     ("L5", lambda e: _apres_L0(e) and e[1] in LIGNES_A_II_ETABLI and (e[2] == ETAT_JEU_L5 or e[3] == ETAT_JEU_L5)),
     ("L2", lambda e: _apres_L0(e) and e[1] in LIGNES_A_II_ETABLI and e[2] == AU_DESSUS and e[3] == AU_DESSUS),
     ("L3", lambda e: _apres_L0(e) and e[1] in LIGNES_A_II_ETABLI and e[2] == AU_DESSUS and e[3] == NON_AU_DESSUS),
-    ("L4", lambda e: _apres_L0(e) and e[1] in LIGNES_A_II_ETABLI and e[2] == NON_AU_DESSUS),
+    # (i) non au-dessus et (ii) en état L5 : l'ordre du texte (L5 lue avant L4) donne L5, « non tranché pour (ii) » ; L4 l'exclut
+    # pour rester exclusive (chevauchement trouvé par `enumerer_couverture`, déclaré au rédacteur).
+    ("L4", lambda e: _apres_L0(e) and e[1] in LIGNES_A_II_ETABLI and e[2] == NON_AU_DESSUS and e[3] != ETAT_JEU_L5),
 )
 
 
