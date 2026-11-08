@@ -398,8 +398,8 @@ Aucune case : toutes les lignes sont **sans lien** (source : `registres/go.md` l
 
 - **G0-4** : **instrumente** (`registres/decisions.md` l. 974 (R-746, point 1 : juge texte préparé ajouté à la liste scellée des bases boîte noire de G1)).
 - **G0-6** : **instrumente** (`registres/decisions.md` l. 974 (R-746, points 1 à 6 : nœuds de porte G1 tranchés) ; l. 1024 (R-796 : recette d'HELIOS neuvième comparateur, décision conditionnelle)).
-- **G0-8** : **teste** (`registres/decisions.md` l. 850 (R-622 : PDF lu page par page, R7) ; `docs/sources/lecture-pdf-niveau2/helios-2604.01151-lecture-v1.md` (6b51dbf5)).
-- **C6-1** : **teste** (`registres/decisions.md` l. 850 (R-622 : HELIOS lu sur PDF page par page, R7, après la candidature) ; `docs/sources/lecture-pdf-niveau2/helios-2604.01151-lecture-v1.md` (6b51dbf5) : la vérification sur sources primaires continue).
+- **G0-8** : **teste** (`registres/decisions.md` l. 850 (R-622 : fichier PDF lu page par page, R7) ; `docs/sources/lecture-pdf-niveau2/helios-2604.01151-lecture-v1.md` (6b51dbf5)).
+- **C6-1** : **teste** (`registres/decisions.md` l. 850 (R-622 : HELIOS lu sur le fichier PDF page par page, R7, après la candidature) ; `docs/sources/lecture-pdf-niveau2/helios-2604.01151-lecture-v1.md` (6b51dbf5) : la vérification sur sources primaires continue).
 - **C8-9** : **dérisque** (`registres/decisions.md` l. 850 (R-622 : zone « collusion entre agents » partiellement occupée, nœud ouvert) ; `brouillons/entretien-taif-v3/programme-entretien-taif-v16.md` l. 622-641 (186173d9)).
 - **C9-2** : **dérisque** (`registres/decisions.md` l. 974 (R-746, point 6 : critère chiffré de bascule « 8B trop faible » écrit avant G1) ; mot de Lazar du 8 novembre « quitte à prendre un modèle plus gros et à scaler » (`registres/decisions.md` l. 1728, R-1770) : tout changement de modèle reste un nœud sur GO).
 - **H1a** : **remplace (R-746)** (`registres/decisions.md` l. 974 (R-746, point 4 : sous-plan information × accès ; « si seule la sonde à exemples gagne, H1 se dit à information égale »)).
