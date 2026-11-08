@@ -85,7 +85,7 @@ def _jusqu_au_manifeste(config_fichier, monkeypatch, prereg=None):
     la5.executer(config, RACINE, "20261108-000000-t06-reel", prereg)
 
 
-@pytest.mark.parametrize("fichier", ["config-t06-epreuve-e3-v5.json", "config-t06-epreuve-e3bis-v1.json"])
+@pytest.mark.parametrize("fichier", ["config-t06-epreuve-e3-v5.json", "config-t06-epreuve-e3bis-v1.json", "config-t06-epreuve-e3bis-v2.json"])
 def test_les_vraies_configurations_d_epreuve_passent_validation_taches_pas_et_consignes_jusqu_au_manifeste(fichier, monkeypatch):
     """E3 v5 (plafond 4,27) et E3 bis (5,7), mode réel, sans préenregistrement : `lanceur_v5.executer` va jusqu'à la création du manifeste (l'essai s'arrête là)."""
     with pytest.raises(_ApresValidation):
@@ -110,3 +110,13 @@ def test_la_configuration_de_la_course_passe_la_validation_du_lanceur_v5_et_atte
 def test_le_lanceur_v5_utilise_la_validation_de_la_configuration_v5():
     from controle_ia.t06 import lanceur_v5 as la5
     assert la5.exiger_config_t06_v4 is cf5.exiger_config_t06_v5 and la5.COMMANDE.endswith("lanceur_v5")
+
+
+def test_configuration_d_e3_bis_v2_cite_go_2026_11_07_08_echeance_12_novembre():
+    """R-1746 : la configuration d'E3 bis cite GO-2026-11-07-08 (3 USD de plus, échéance 12 novembre ; création permise jusqu'au 11) ; seuls go_id et calendrier changent par rapport à la v1."""
+    v1 = json.loads((D / "config-t06-epreuve-e3bis-v1.json").read_text(encoding="utf-8"))
+    v2 = json.loads((D / "config-t06-epreuve-e3bis-v2.json").read_text(encoding="utf-8"))
+    assert {k: x for k, x in v1.items() if k not in ("go_id", "calendrier")} == {k: x for k, x in v2.items() if k not in ("go_id", "calendrier")}
+    assert v2["go_id"] == "GO-2026-11-07-08" and v2["plafond_usd"] == 5.7 and v2["calendrier"] == {"dernier_jour_creation": "2026-11-11", "fin_go_utc": "2026-11-13T00:00:00Z"}
+    cf5.exiger_config_t06_v5(v2)
+    assert cf5.est_epreuve(v2) and not cf4.est_epreuve(v2)                                  # la v4 ne la reconnaît pas comme épreuve : elle serait lue comme une configuration de course

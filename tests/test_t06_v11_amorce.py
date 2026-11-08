@@ -107,8 +107,8 @@ def fabriquer_bac(tmp_path):                                   # v11 : corps de 
     for nom in ("__init__.py", "gardes.py", "scellement.py"):
         shutil.copy(RACINE / "src" / "controle_ia" / nom, src / "src" / "controle_ia" / nom)
     (src / "src" / "controle_ia" / "t06" / "__init__.py").write_text("", encoding="utf-8")
-    for nom in ("session.py", "session_v2.py", "session_v3.py"):
-        shutil.copy(RACINE / "src" / "controle_ia" / "t06" / nom, src / "src" / "controle_ia" / "t06" / nom)
+    for f in sorted((RACINE / "src" / "controle_ia" / "t06").glob("session*.py")):          # v11 : toute la chaîne de session (session_v11 importe v10, v9, v8, v7, …)
+        shutil.copy(f, src / "src" / "controle_ia" / "t06" / f.name)
     (src / "scripts").mkdir()
     shutil.copy(AMORCE, src / "scripts" / AMORCE.name)
     liste = RACINE / "scripts" / "tests-cibles-t06-v1.txt"                 # v11 : l'amorce v9 joue la liste figée (empreinte écrite en dur) : liste réelle et fichiers d'essais vides dans le premier commit
@@ -774,7 +774,7 @@ def test_c_v4_3_controles_d_epreuve_artefacts(src_epreuve, tmp_path, cas):
         (src / "hors.txt").write_text("x", encoding="utf-8")
         _commit_source({"source": src}, "hors branche")                                       # commit local, jamais poussé ni relevé
     elif cas in ("go_de_la_course", "plafond_hors_epreuve", "mode_illisible"):
-        modifs = {"go_de_la_course": {"go_id": "GO-2026-11-02-28", "plafond_usd": 1.5}, "plafond_hors_epreuve": {"plafond_usd": 4.0}, "mode_illisible": {"mode": "autre"}}[cas]
+        modifs = {"go_de_la_course": {"go_id": "GO-2026-11-02-28", "plafond_usd": 1.5}, "plafond_hors_epreuve": {"plafond_usd": 4.95}, "mode_illisible": {"mode": "autre"}}[cas]
         f = src / "prereg" / "config-epreuve-x.json"
         f.write_text(json.dumps(_config_epreuve(CONFIG_E2, **modifs)), encoding="utf-8")
         _commit_source({"source": src}, cas)
@@ -844,7 +844,7 @@ def test_c_v4_3_amorce_epreuve_artefacts(bac, cas):
         sup["FIN_GO_UTC_S"] = "1794873600"                                                        # fin du GO ≠ calendrier de la configuration d'épreuve
     code, journal, sortie, racine, _ = _epreuve_amorce(bac, "ea", **sup)
     assert code == 2 and (racine / "t06-detruire").exists(), (cas, sortie[-2000:])
-    motif = {"go_de_la_course": "seul GO-2026-11-06-01 est une épreuve à blanc", "branche_calcul": "doit commencer par essai/",
+    motif = {"go_de_la_course": "seuls GO-2026-11-06-01 et GO-2026-11-07-08 (E3 bis) sont des épreuves à blanc", "branche_calcul": "doit commencer par essai/",
              "sans_prereg_absent": "PREREG_ABSENT=1 exigé", "reel_sans_epreuve": "n'est permis qu'en mode jouet (R1)", "go_expire": "fin du GO reçue"}[cas]
     assert motif in sortie, (cas, sortie[-1500:])
     assert "run :" not in journal
@@ -1176,3 +1176,49 @@ def test_carte_invisible_n_arrete_pas_une_repetition_jouet(bac, tmp_path):
     b = _faux_nvidia_smi(tmp_path)
     code, journal, sortie, racine, _ = _epreuve_amorce(bac, "jouet", mode="jouet", FAUX_CUDA="0", PATH=f"{b}:{os.environ['PATH']}")
     assert code == 0 and "carte invisible" not in sortie and (racine / "t06-fin-normale").exists(), sortie[-1500:]
+
+
+# --- E3 bis sous GO-2026-11-07-08 (ligne à 3 USD) et TESTS_ARGS hors du mode jouet (contre-lecture de la v11, R-1746) ---------------------------------------------------
+GO_BIS = "GO-2026-11-07-08"
+
+
+def _epreuve_amorce_bis(bac, nom, *, plafond_ligne="3 USD", avec_bis=True, mode="jouet", **sup):
+    src = bac["source"]
+    auj, ech, _ = _dates_epreuve()
+    ech_bis = ech + timedelta(days=2)
+    fin_bis = datetime.combine(ech_bis + timedelta(days=1), datetime.min.time(), tzinfo=timezone.utc)
+    reg = GO + _go_epreuve() + (f"| {GO_BIS} | {auj} | calcul | E3 bis | {plafond_ligne} | {ech_bis} | Lazar | mot |\n" if avec_bis else "")
+    (src / "registres" / "go.md").write_text(reg, encoding="utf-8")
+    c = _config_epreuve(CONFIG_E2, go_id=GO_BIS)
+    c["calendrier"] = {"dernier_jour_creation": str(ech_bis - timedelta(days=1)), "fin_go_utc": fin_bis.strftime("%Y-%m-%dT%H:%M:%SZ")}
+    f = src / "prereg" / "config-epreuve.json"
+    f.write_text(json.dumps(c, ensure_ascii=False, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    sceller(f)
+    _commit_source(bac, "épreuve E3 bis")
+    env = {"EPREUVE_GO_ID": GO_BIS, "PREREG_ABSENT": "1", "CONFIG": "prereg/config-epreuve.json", "BRANCHE": "essai/t06-e3bis-test", "MODE": mode, "HF_TOKEN": "jeton-hf-factice",
+           "FIN_GO_UTC_S": str(int(fin_bis.timestamp())), "ECHEANCE_UTC_S": str(int(fin_bis.timestamp())), "TESTS_ATTENDUS": ""}
+    env.update(sup)
+    distant = _distant(bac)
+    return (*_lancer_amorce(bac, distant, nom, env), distant)
+
+
+def test_amorce_e3_bis_cas_sain_go_2026_11_07_08_ligne_a_3_usd(bac):
+    code, journal, sortie, racine, distant = _epreuve_amorce_bis(bac, "bis")
+    assert code == 0, sortie[-2500:]
+    assert f"GO : {GO_BIS} conforme (plafond 3 USD" in journal and f"GO={GO_BIS}" in journal and (racine / "t06-fin-normale").exists()
+
+
+@pytest.mark.parametrize("cas, kw, motif", [("sans_ligne", {"avec_bis": False}, "absent du registre"), ("ligne_a_5_usd", {"plafond_ligne": "5 USD"}, "plafond")])
+def test_amorce_e3_bis_artefacts_la_ligne_du_registre_est_verifiee(bac, cas, kw, motif):
+    code, journal, sortie, racine, _ = _epreuve_amorce_bis(bac, "bisa", **kw)
+    assert code == 2 and (racine / "t06-detruire").exists() and motif in sortie and "run :" not in journal, (cas, sortie[-1500:])
+
+
+def test_tests_args_refuse_en_mode_reel_meme_pour_une_epreuve(bac):
+    code, journal, sortie, racine, _ = _epreuve_amorce(bac, "ta1", mode="reel", TESTS_ARGS="tests/x.py")
+    assert code == 2 and "TESTS_ARGS n'est permis qu'en répétition jouet" in sortie and "run :" not in journal, sortie[-1500:]
+
+
+def test_tests_args_cas_sain_admis_en_epreuve_jouet(bac):
+    code, journal, sortie, racine, _ = _epreuve_amorce(bac, "ta2", mode="jouet", TESTS_ARGS="tests/x.py")
+    assert code == 0 and "tests/x.py" in (racine / "pytest-args.txt").read_text(encoding="utf-8"), sortie[-1500:]

@@ -199,7 +199,7 @@ def test_7_commit_du_bras_b_impossible_code_0_fin_normale_et_run_intact(bac, tmp
 
 
 def test_le_module_du_bras_b_par_defaut_est_la_v2_dont_l_issue_n_est_jamais_imprimee():
-    """Cas sain : l'amorce v9 joue `bras_b_v2` par défaut (la v1 imprimait l'issue sur la sortie standard poussée non scellée). Artefact : la v1 existe encore, intacte, et n'est plus le défaut."""
+    """Cas sain : l'amorce v9 joue `bras_b_v3` par défaut (la v1 imprimait l'issue sur la sortie standard poussée non scellée). Artefact : la v1 existe encore, intacte, et n'est plus le défaut."""
     texte = AMORCE8.read_text(encoding="utf-8")
-    assert "${BRAS_B_MODULE:-controle_ia.audit_fuite_r1_v4.bras_b_v2}" in texte and "bras_b_v1}" not in texte
-    assert (RACINE / "src" / "controle_ia" / "audit_fuite_r1_v4" / "bras_b_v2.py").is_file() and (RACINE / "src" / "controle_ia" / "audit_fuite_r1_v4" / "bras_b_v1.py").is_file()
+    assert "${BRAS_B_MODULE:-controle_ia.audit_fuite_r1_v4.bras_b_v3}" in texte and "bras_b_v1}" not in texte and "bras_b_v2}" not in texte
+    assert (RACINE / "src" / "controle_ia" / "audit_fuite_r1_v4" / "bras_b_v3.py").is_file() and (RACINE / "src" / "controle_ia" / "audit_fuite_r1_v4" / "bras_b_v2.py").is_file() and (RACINE / "src" / "controle_ia" / "audit_fuite_r1_v4" / "bras_b_v1.py").is_file()

@@ -115,13 +115,33 @@ def test_tests_args_a_la_priorite_en_repetition_jouet(bac):
 
 
 # --- la liste réelle et ses exclusions -----------------------------------------------------------------------------------------------------
-def _exclus():
+def _exclus_depuis(texte: str) -> dict:
     out = {}
-    for ligne in EXCLUS.read_text(encoding="utf-8").splitlines():
+    for ligne in texte.splitlines():
         if ligne.strip() and not ligne.startswith("#"):
             chemin, _, motif = ligne.partition("\t")
+            if chemin in out:
+                raise AssertionError(f"doublon dans les exclusions : {chemin}")        # v11 : un doublon n'est plus écrasé en silence (lecture en dictionnaire)
             out[chemin] = motif.strip()
     return out
+
+
+def _exclus():
+    return _exclus_depuis(EXCLUS.read_text(encoding="utf-8"))
+
+
+def test_un_doublon_dans_les_exclusions_est_detecte_cas_sain_et_artefact():
+    assert _exclus_depuis("# c\ntests/test_a.py\tmotif écrit\ntests/test_b.py\tmotif écrit\n") == {"tests/test_a.py": "motif écrit", "tests/test_b.py": "motif écrit"}
+    with pytest.raises(AssertionError, match="doublon dans les exclusions"):
+        _exclus_depuis("tests/test_a.py\tmotif un\ntests/test_a.py\tmotif deux\n")
+
+
+def test_les_motifs_des_fichiers_de_l_hote_durable_ne_disent_pas_a_tort_qu_ils_ont_echoue():
+    """Contre-lecture R-1746 : le motif « échecs à E3 » ne vaut que pour les fichiers qui ont échoué (v3_v3, v3_v4, sonde v10)."""
+    echoues = {"tests/test_hote_durable_a1_v3_v3.py", "tests/test_hote_durable_a1_v3_v4.py", "tests/test_sonde_hote_durable_a1_v3_v10.py"}
+    for f, motif in _exclus().items():
+        if "hote_durable" in f:
+            assert ("échec" in motif and "à E3" in motif) == (f in echoues), (f, motif)
 
 
 def test_liste_reelle_et_exclusions_couvrent_exactement_les_fichiers_d_essais():
@@ -144,7 +164,7 @@ def test_la_liste_exclut_l_hote_durable_et_ne_contient_que_des_fichiers_compilab
     import subprocess
     py311 = shutil.which("python3.11")
     if py311 is None:
-        pytest.skip("python3.11 absent de cette machine : le contrôle de syntaxe 3.11 est joué sur l'image de l'instance par l'amorce elle-même")
+        pytest.skip("python3.11 absent de cette machine : contrôle de syntaxe 3.11 non joué ici (l'image de l'instance est en 3.11 ; une erreur de syntaxe y ferait échouer la suite avant le run)")
     for f in listes:
         r = subprocess.run([py311, "-m", "py_compile", str(RACINE / f)], capture_output=True, text=True)
         assert r.returncode == 0, (f, r.stderr[-300:])

@@ -21,7 +21,8 @@ LANCEUR5 = RACINE / "scripts" / "lancer_t06_v11.sh"
 SESSION7 = RACINE / "src" / "controle_ia" / "t06" / "session_v7.py"
 SESSION8 = RACINE / "src" / "controle_ia" / "t06" / "session_v8.py"
 SESSION9 = RACINE / "src" / "controle_ia" / "t06" / "session_v9.py"
-SESSION10 = RACINE / "src" / "controle_ia" / "t06" / "session_v10.py"       # v11 : le lanceur v11 appelle session_v10
+SESSION10 = RACINE / "src" / "controle_ia" / "t06" / "session_v10.py"
+SESSION11 = RACINE / "src" / "controle_ia" / "t06" / "session_v11.py"       # v11 : le lanceur v11 appelle session_v10
 VAST_REEL = """#!/usr/bin/env bash
 # faux vastai 1.8.3 : recherche par identifiant VIDE ; identifiants qui changent à chaque recherche filtrée ; offre du premier rang retirée
 echo "$*" >> "$FAUX_VASTAI_JOURNAL"
@@ -57,7 +58,7 @@ OFFRES = [{**OFFRE_E2, "dph_total": 0.30, "gpu_name": "RTX 3060", **M3},        
 def monde5(src_epreuve, tmp_path):
     src = src_epreuve
     shutil.copy(LANCEUR5, src / "scripts" / LANCEUR5.name)
-    for mod in (SESSION7, SESSION8, SESSION9, SESSION10):
+    for mod in (SESSION7, SESSION8, SESSION9, SESSION10, SESSION11):
         shutil.copy(mod, src / "src" / "controle_ia" / "t06" / mod.name)
     b = tmp_path / "bin"
     b.mkdir(exist_ok=True)

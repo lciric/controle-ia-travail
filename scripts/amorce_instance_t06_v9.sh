@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Amorce de l'instance de T0.6, v9 (nom neuf, R12 ; les v1 à v8 restent telles quelles). v9 = v8 + SUITE CIBLÉE ET FIGÉE (E3 du 7 novembre : la suite complète, 3 186 essais, a joué 75 minutes de carte dont environ 1 100 essais de l'hôte de l'organisme, étrangers au run, et 50 ont échoué sur l'image `python:3.11-bookworm`). Sur l'instance, en mode réel, l'amorce joue seulement les fichiers d'essais listés dans `scripts/tests-cibles-t06-v1.txt` (un chemin `tests/test_*.py` par ligne), dont l'empreinte sha256 est écrite EN DUR dans cette amorce (`LISTE_SHA256`, donc citée par l'empreinte de l'amorce) ; liste absente, altérée, vide, avec un chemin illisible ou absent du dépôt : arrêt avant tout essai (`arreter_instance`, cause « liste des essais »), jamais de repli sur la suite complète. `TESTS_ARGS` (répétition jouet) garde la priorité et reste interdit hors jouet. Le run est joué par `controle_ia.t06.lanceur_v5` (copie du v4 : plafond d'une épreuve de 0 à 8 USD ; la v4 refusait 4,27 au démarrage du run, défaut masqué à E3 par la suite complète échouée). Le bras B joué par défaut est celui de la v2 du module (`bras_b_v2.py` : l'issue n'est plus imprimée, essais R5 1 à 5 et banc de mutations ; contre-lecture R-1731) ; `BRAS_B_MODULE` reste le point d'essai. Le reste est celui de la v8 (bras B en annexe compris).
-# [v8, repris tel quel] Amorce de l'instance de T0.6, v8 (nom neuf, R12 ; les v1 à v7 restent telles quelles). v8 = v7 + (GO-2026-11-07-04, chantier 1 de R-1717) une étape ANNEXE, le bras B de l'audit de fuite de R1 v4, jouée APRÈS la poussée finale du run de T0.6 et AVANT l'arrêt de l'instance : `bras_b()`, jamais bloquante (code ≠ 0, délai dépassé, poussée impossible : une ligne de journal, rien d'autre), qui ne change ni l'entrée, ni la sortie, ni l'ordre des commits du run de T0.6 ; régie par le texte de l'audit `prereg/audit-fuite-r1-v4-v1.md` (point 7), non par T0.6. Lancée seulement en mode réel, hors épreuve (`EPREUVE_GO_ID` vide) — ou en épreuve avec `BRAS_B_EPREUVE=1` —, si la configuration `${BRAS_B_CONFIG:-docs/notes/g0-deux-semaines-v1/config-bras-b-t06-v1.json}` figure dans le commit cloné et si `BRAS_B` n'est pas `0`. Sorties : `diag/<run>/` et `runs/<run>/` de `bras-b-…` plus `traces/bras-b-…/` (sortie standard et d'erreur), commitées et poussées dans un commit à part « T0.6 : bras B de l'audit de fuite (annexe, code N) ». Texte de la v7 (conservé) :
+# Amorce de l'instance de T0.6, v9 (nom neuf, R12 ; les v1 à v8 restent telles quelles). v9 = v8 + SUITE CIBLÉE ET FIGÉE (E3 du 7 novembre : la suite complète, 3 186 essais, a joué 75 minutes de carte dont environ 1 100 essais de l'hôte de l'organisme, étrangers au run, et 50 ont échoué sur l'image `python:3.11-bookworm`). Sur l'instance, en mode réel, l'amorce joue seulement les fichiers d'essais listés dans `scripts/tests-cibles-t06-v1.txt` (un chemin `tests/test_*.py` par ligne), dont l'empreinte sha256 est écrite EN DUR dans cette amorce (`LISTE_SHA256`, donc citée par l'empreinte de l'amorce) ; liste absente, altérée, vide, avec un chemin illisible ou absent du dépôt : arrêt avant tout essai (`arreter_instance`, cause « liste des essais »), jamais de repli sur la suite complète. `TESTS_ARGS` (répétition jouet) garde la priorité et reste interdit hors jouet. Le run est joué par `controle_ia.t06.lanceur_v5` (copie du v4 : plafond d'une épreuve de 0 à 8 USD ; la v4 refusait 4,27 au démarrage du run, défaut masqué à E3 par la suite complète échouée). Le bras B joué par défaut est celui de la v3 du module (`bras_b_v3.py`, qui ne diffère de la v2 que par le nom ; essais neufs de la contre-lecture R-1746 : l'issue n'est plus imprimée, essais R5 1 à 5 et banc de mutations ; contre-lecture R-1731) ; `BRAS_B_MODULE` reste le point d'essai. Le reste est celui de la v8 (bras B en annexe compris).
+# [v9 : une épreuve peut être jouée sous GO-2026-11-06-01 (E2, E3 ; ligne à 5 USD) ou GO-2026-11-07-08 (E3 bis ; ligne à 3 USD) ; TESTS_ARGS est refusé hors du mode jouet, épreuve réelle comprise] [v8, repris tel quel] Amorce de l'instance de T0.6, v8 (nom neuf, R12 ; les v1 à v7 restent telles quelles). v8 = v7 + (GO-2026-11-07-04, chantier 1 de R-1717) une étape ANNEXE, le bras B de l'audit de fuite de R1 v4, jouée APRÈS la poussée finale du run de T0.6 et AVANT l'arrêt de l'instance : `bras_b()`, jamais bloquante (code ≠ 0, délai dépassé, poussée impossible : une ligne de journal, rien d'autre), qui ne change ni l'entrée, ni la sortie, ni l'ordre des commits du run de T0.6 ; régie par le texte de l'audit `prereg/audit-fuite-r1-v4-v1.md` (point 7), non par T0.6. Lancée seulement en mode réel, hors épreuve (`EPREUVE_GO_ID` vide) — ou en épreuve avec `BRAS_B_EPREUVE=1` —, si la configuration `${BRAS_B_CONFIG:-docs/notes/g0-deux-semaines-v1/config-bras-b-t06-v1.json}` figure dans le commit cloné et si `BRAS_B` n'est pas `0`. Sorties : `diag/<run>/` et `runs/<run>/` de `bras-b-…` plus `traces/bras-b-…/` (sortie standard et d'erreur), commitées et poussées dans un commit à part « T0.6 : bras B de l'audit de fuite (annexe, code N) ». Texte de la v7 (conservé) :
 # Amorce de l'instance de T0.6, v7 (nom neuf, R12 ; les v1 à v6 restent telles quelles). Défaut trouvé par E2 (R-1689) : au démarrage d'une instance dont l'heure de
 # dépense épuisée (DEP) est déjà passée (troisième démarrage d'A), la minuterie relancée prenait la branche C08 (consigner, puis `PUT stopped`) parce que le marqueur
 # `t06-depense-epuisee` manquait, alors que l'amorce demandait la destruction : l'arrêt gagnait (instance « exited », jamais détruite). Correctif étroit, deux gestes :
@@ -229,14 +229,14 @@ PREREG_ABSENT="${PREREG_ABSENT:-0}"
 # C-V4-3 : épreuves à blanc E2 et E3 (GO-2026-11-06-01, aucune donnée décisive) : EPREUVE_GO_ID, sans préenregistrement, branche essai/…
 EPREUVE_GO="${EPREUVE_GO_ID:-}"
 if [ -n "$EPREUVE_GO" ]; then
-    [ "$EPREUVE_GO" = GO-2026-11-06-01 ] || refus "EPREUVE_GO_ID=$EPREUVE_GO : seul GO-2026-11-06-01 est une épreuve à blanc"
+    case "$EPREUVE_GO" in GO-2026-11-06-01) PLAFOND_LIGNE_GO=5;; GO-2026-11-07-08) PLAFOND_LIGNE_GO=3;; *) refus "EPREUVE_GO_ID=$EPREUVE_GO : seuls GO-2026-11-06-01 et GO-2026-11-07-08 (E3 bis) sont des épreuves à blanc";; esac
     [ "$PREREG_ABSENT" = 1 ] || refus "épreuve à blanc : PREREG_ABSENT=1 exigé (une épreuve n'est jamais décisive)"
     case "$BRANCHE" in essai/*) ;; *) refus "épreuve à blanc : la branche doit commencer par essai/ ($BRANCHE) : jamais calcul/";; esac
     [ -n "${CONFIG:-}" ] || refus "épreuve à blanc : CONFIG exigé"
     GO_ID="$EPREUVE_GO"
 fi
 [ "$PREREG_ABSENT" = 1 ] && [ "$MODE" != jouet ] && [ -z "$EPREUVE_GO" ] && refus "PREREG_ABSENT=1 n'est permis qu'en mode jouet (R1) ou pour une épreuve à blanc sous GO-2026-11-06-01"
-[ -n "${TESTS_ARGS:-}" ] && [ "$PREREG_ABSENT" != 1 ] && refus "TESTS_ARGS n'est permis qu'en répétition jouet sans préenregistrement"
+[ -n "${TESTS_ARGS:-}" ] && { [ "$PREREG_ABSENT" != 1 ] || [ "$MODE" != jouet ]; } && refus "TESTS_ARGS n'est permis qu'en répétition jouet sans préenregistrement (jamais en mode réel, épreuve comprise : la suite ciblée figée est la seule jouée)"
 AIDE='!f() { echo username=x-access-token; echo "password=${GH_TOKEN}"; }; f'
 echo "AMORCE $(date -u +%FT%TZ) : commit $COMMIT"
 # R-1677 : clonage réduit. Chemins nécessaires à l'instance (mode sans cône ; motifs de type gitignore) :
@@ -361,7 +361,7 @@ journal "début v4 : MODE=$MODE COMMIT=$COMMIT BRANCHE=$BRANCHE PREREG=$PREREG G
 SESSION_V2="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v2; sys.exit(session_v2.main(sys.argv[1:]))"
 SESSION_V3="import sys; sys.path.insert(0, 'src'); from controle_ia.t06 import session_v3; sys.exit(session_v3.main(sys.argv[1:]))"
 if [ -n "$EPREUVE_GO" ]; then
-    GOL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V3" go registres/go.md "$EPREUVE_GO" 5 2>&1) || refus "$GO_ID non conforme ($GOL)"
+    GOL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V3" go registres/go.md "$EPREUVE_GO" "$PLAFOND_LIGNE_GO" 2>&1) || refus "$GO_ID non conforme ($GOL)"
 else
     GOL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V2" go registres/go.md 2>&1) || refus "$GO_ID non conforme ($GOL)"
 fi
@@ -388,7 +388,7 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src timeout -k 5 300 python3 -u -m controle
     || refus "sceau non conforme parmi les fichiers cités ($(grep -v '^OK ' "$T/sceaux.txt" | tail -n 1 || true))"
 journal "citations lues : tests attendus ${ATTENDUS:-?} ; configuration $CONFIG ; fichiers cités présents et scellés"
 # L11 : la fin du GO reçue de la session est celle de la configuration (calendrier vérifié contre le registre des GO)
-if [ -n "$EPREUVE_GO" ]; then CAL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V3" calendrier "$CONFIG" registres/go.md "$EPREUVE_GO" 5 2>&1) || refus "calendrier de la configuration non conforme ($CAL)"
+if [ -n "$EPREUVE_GO" ]; then CAL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V3" calendrier "$CONFIG" registres/go.md "$EPREUVE_GO" "$PLAFOND_LIGNE_GO" 2>&1) || refus "calendrier de la configuration non conforme ($CAL)"
 else CAL=$(timeout -k 5 120 python3 -I -B -c "$SESSION_V2" calendrier "$CONFIG" registres/go.md 2>&1) || refus "calendrier de la configuration non conforme ($CAL)"; fi
 FIN_CONFIG=$(printf '%s\n' "$CAL" | sed -n 's/.*fin_go_utc_s=\([0-9]*\).*/\1/p' | tail -1)
 [ "$FIN_CONFIG" = "$FIN_GO" ] || refus "fin du GO reçue ($FIN_GO) ≠ calendrier.fin_go_utc de la configuration ($FIN_CONFIG) (L11)"
@@ -417,7 +417,7 @@ bras_b() {
     if [ ! -f "$cfg" ]; then journal "bras B : non lancé (configuration absente du commit : $cfg)"; return 0; fi
     run="bras-b-$(date -u +%Y%m%d-%H%M%S)"; t0=$(date +%s)
     journal "bras B : début ($run), annexe régie par prereg/audit-fuite-r1-v4-v1.md (point 7), sans effet sur T0.6"
-    PYTHONPATH="src:${BRAS_B_PYTHONPATH:-}" timeout -k 10 "${BRAS_B_DUREE_MAX_S:-2400}" "${BRAS_B_PYTHON:-python}" -m "${BRAS_B_MODULE:-controle_ia.audit_fuite_r1_v4.bras_b_v2}" --config "$cfg" --run-id "$run" \
+    PYTHONPATH="src:${BRAS_B_PYTHONPATH:-}" timeout -k 10 "${BRAS_B_DUREE_MAX_S:-2400}" "${BRAS_B_PYTHON:-python}" -m "${BRAS_B_MODULE:-controle_ia.audit_fuite_r1_v4.bras_b_v3}" --config "$cfg" --run-id "$run" \
         --prereg prereg/audit-fuite-r1-v4-v1.md --autoriser-depot-sale >"$T/bras-b.out" 2>"$T/bras-b.err"
     code=$?
     journal "bras B : code $code en $(( $(date +%s) - t0 )) s ($([ "$code" = 0 ] && echo 'sortie écrite' || echo 'sans sortie fiable')) ; sans effet sur le run de T0.6"
@@ -465,7 +465,7 @@ if [ "$MODE" = reel ] && ! python -c "import sys, torch; sys.exit(0 if torch.cud
     refus "carte invisible pour torch (torch.cuda.is_available() faux) : pilote ${PILOTE:-inconnu}, CUDA de torch ${CUDA_TORCH:-?} : aucun calcul"
 fi
 # v9 : suite ciblée et figée (liste de fichiers à l'empreinte écrite en dur) ; TESTS_ARGS (jouet seulement) a la priorité
-LISTE_TESTS="scripts/tests-cibles-t06-v1.txt"; LISTE_SHA256="edc1c70e790655ac7819948e47987917a2d48ea3dc6d49513f83369d730a21ad"; FICHIERS_TESTS=""
+LISTE_TESTS="scripts/tests-cibles-t06-v1.txt"; LISTE_SHA256="562b65facf1bcbf765f4e8b0d9e27c2c5b41edadb050701e7350bbce47081572"; FICHIERS_TESTS=""
 if [ -z "${TESTS_ARGS:-}" ]; then
     liste_refus() { journal "suite ciblée : $1 : arrêt avant tout essai"; consigner_arret "liste des essais"; arreter_instance "liste des essais" 1; }
     [ -f "$LISTE_TESTS" ] || liste_refus "liste $LISTE_TESTS absente"
