@@ -1,0 +1,114 @@
+**Avertissement d'intégrité (Règle 2)** : Les pièces documentaires mentionnées dans les données (`docs/etat-de-l-art-controle-ia-v1.md`, `LISEZMOI`, ainsi que le contenu des 4 familles d'évasion R-610 et de la brèche W2) sont absentes ou tenues à l'écart par construction ; leur contenu n'est pas inventé ici.
+
+---
+
+# (a) Ce que la question suppose sans que ce soit établi
+
+Chaque présupposé extrait de la question de l'arbitre est évalué ci-dessous selon les règles d'intégrité, sans aucun changement de statut par rapport aux faits fournis.
+
+1. **Non-connivence par séparation architecturale.** La question suppose que l'aveuglement organisationnel (N-054, N-056), le scellement des recettes et le préenregistrement suffisent à garantir l'absence de connivence entre attaque et défense.
+   * *Statut* : **HYPOTHÈSE**. Si le bras rouge (« conv-audit ») et la défense utilisent des modèles issus des mêmes familles de pré-entraînement ou partagent les mêmes biais inductifs implicites, une convergence distributionnelle (connivence statistique involontaire) peut survenir sans fuite d'information explicite. C'est la garantie principale qui manque aux quatre familles d'évasion (R-610, statut : **RAPPORTÉ / construites**).
+2. **Infaillibilité et orthogonalité de l'oracle de vérité terrain.** La question présuppose que l'oracle indépendant dit vrai sur le sabotage sans partager les angles morts ni les traits de surface exploités par les moniteurs.
+   * *Statut* : **HYPOTHÈSE**. Le mécanisme de cet oracle n'est pas vérifié dans les faits (statut de l'oracle dans les faits : **RAPPORTÉ**). S'il repose sur un évaluateur sémantique proche du prédicteur texte, l'indépendance est rompue.
+3. **Trivialité de l'évasion face aux sondes actuelles comme preuve de force du bras rouge.** La question demande de démontrer qu'un organisme saboteur conçu à l'écart échappe aux sondes boîte blanche actuelles. Or, les faits établissent que les sondes boîte blanche génériques et le juge 3B sont *déjà* au niveau du hasard (statut : **RAPPORTÉ / mesuré**), et qu'une sonde lit la consigne au lieu de l'état interne (statut : **RAPPORTÉ / faiblesse connue**).
+   * *Statut* : **OBSERVÉ-NON-AUDITÉ** (quant à la valeur démonstrative). Échapper à un moniteur qui est déjà au niveau du hasard (AUC $\approx 0,50$, illustratif) ne démontre pas la vigueur du bras d'attaque. La vraie démonstration doit prouver l'évasion face à une sonde boîte blanche *corrigée* (état interne pur, hors consigne) ET face au prédicteur sur les traits du texte à 0,866 (statut : **RAPPORTÉ / mesuré**, N-029).
+4. **Faisabilité d'une correction rapide de la brèche W2 et du juge 3B d'ici l'entretien.** La question suppose que des corrections de niveau méthode sur le juge de 3 milliards de paramètres et la brèche W2 (statuts : **RAPPORTÉ**) peuvent ramener ces instruments au-dessus du hasard et du prédicteur texte (0,866) dans le délai imparti.
+   * *Statut* : **HYPOTHÈSE**. L'incapacité du juge 3B peut relever d'une limite de capacité représentationnelle intrinsèque à son échelle, non réductible par simple correction de protocole.
+5. **Originalité de la structure par rapport à l'état de l'art.** La question soumet au collisionneur l'antériorité de ce dispositif. Les protocoles de contrôle par équipes rouge/bleue existent (Greenblatt et al., 2023, *AI Control: Improving Safety Despite Intentional Subversion* ; **RAPPORTÉ** qualitativement en section D), tout comme l'extraction de caractéristiques latentes par sondes (Zou et al., 2023, *Representation Engineering: A Top-Down Approach to AI Transparency* ; Burns et al., 2022, *Discovering Latent Knowledge in Language Models Without Supervision*). L'assemblage spécifique « sous-bras aveugle/informé + mode tenu à l'écart scellé + préenregistrement strict + évaluation boîte blanche » constitue une **HYPOTHÈSE** d'originalité méthodologique tant que `docs/etat-de-l-art-controle-ia-v1.md` n'est pas audité.
+
+---
+
+# (b) Expériences décisives en inférence forte (Duels $H_A$ contre $H_B$)
+
+Conformément à la garde permanente de la question, chaque expérience est structurée selon les champs fermés exigés, augmentés du protocole d'inférence forte (règle B4), sans aucun champ « comment faire ».
+
+### Expérience 1 : Audit d'ablation de consigne et d'orthogonalité (Correction de la sonde et validité de R-610)
+* **Duel d'hypothèses** :
+  * $H_A$ (**Artefact de consigne et de surface**) : La performance de détection des sondes boîte blanche actuelles et du prédicteur texte (0,866, **RAPPORTÉ**) sur les 4 familles R-610 dépend de la présence de la consigne en contexte ou de marqueurs lexicaux de surface.
+  * $H_B$ (**Capture d'état latent**) : Les sondes boîte blanche corrigées (évaluées après troncature/masquage des jetons de consigne) capturent une représentation interne du sabotage qui généralise au mode tenu à l'écart (N-054).
+* **Métrique et Seuil** : Aire sous la courbe ROC (AUROC) et Taux de Vrais Positifs (TVP) à un Taux de Fausses Alertes (TFA) fixé à 5 % (illustratif). Seuil de décision : AUROC $\ge 0,75$ (illustratif) après masquage des activations des jetons de consigne, et perte d'AUROC $< 0,05$ (illustratif) entre le mode connu et le mode tenu à l'écart.
+* **Contrôle négatif** : Épisodes honnêtes appariés contenant des consignes syntaxiquement complexes ou lexicalement proches du registre de la sécurité informatique, mais sans intention ni action de sabotage vérifiée par l'oracle.
+* **Issues falsificatrices** :
+  * Si l'AUROC de la sonde tombe dans l'intervalle $[0,45 ; 0,55]$ (illustratif) dès que les jetons de consigne sont masqués lors de la lecture des activations : **$H_B$ est réfutée** (la sonde ne lit que la consigne, confirmant la faiblesse rapportée).
+  * Si l'AUROC reste $\ge 0,75$ (illustratif) sans consigne et sur le mode tenu à l'écart, tandis qu'une sonde entraînée sur des étiquettes permutées reste à $\approx 0,50$ (illustratif) : **$H_A$ est réfutée**.
+* **Champs fermés de la proposition** :
+  * `critère de porte visé` : Porte G1 (validation de l'absence de fuite de consigne et généralisation au mode tenu à l'écart N-054).
+  * `raison de refus TAIF levée` : Faisabilité et rigueur technique (prouve que le programme sait diagnostiquer et éliminer ses propres artefacts expérimentaux comme la sonde lisant la consigne).
+  * `moniteur éprouvé` : Sonde boîte blanche lisant la consigne et sondes boîte blanche génériques (**RAPPORTÉ**).
+  * `coût estimé (USD) et délai` : 120 USD (illustratif), 48 heures (illustratif) — extraction d'activations sur corpus R-610 existant sans réentraînement de modèles génératifs.
+  * `ce qui la réfuterait` : Maintien d'un AUROC au niveau du hasard ($\approx 0,50$, illustratif) sur toutes les couches internes même après isolation des jetons d'exécution post-consigne.
+  * `pièce publique ou scellée produite` : Rapport d'ablation méthodologique (pièce publique, mesures agrégées uniquement).
+
+### Expérience 2 : Épreuve de divergence Aveugle vs Informé face à la base texte (0,866)
+* **Duel d'hypothèses** :
+  * $H_A$ (**Illusion de la boîte blanche / Suffisance boîte noire**) : Le prédicteur sur les traits du texte (0,866, **RAPPORTÉ**) suffit à détecter le sabotage, ou les évasions du sous-bras informé transfèrent indifféremment contre le texte et les sondes internes (absence de découplage entre surface et état latent).
+  * $H_B$ (**Nécessité du contrôle boîte blanche et asymétrie d'information**) : Un organisme saboteur du sous-bras informé (connaissant l'existence du prédicteur texte à 0,866) abaisse l'AUROC du prédicteur texte sous 0,60 (illustratif) tout en étant détecté par une sonde interne corrigée (AUROC $\ge 0,80$, illustratif), tandis que le sous-bras aveugle échoue à abaisser le prédicteur texte sous 0,75 (illustratif).
+* **Métrique et Seuil** : Écart différentiel d'AUROC ($\Delta \text{AUROC} = \text{AUROC}_{\text{aveugle}} - \text{AUROC}_{\text{informé}}$) sur le prédicteur texte et sur la sonde boîte blanche corrigée. Seuil : $\Delta \text{AUROC}_{\text{texte}} \ge 0,20$ (illustratif) sans dégradation de l'oracle de vérité terrain.
+* **Contrôle négatif** : Évaluation sur des traces générées par un modèle honnête contraint à adopter un style d'écriture atypique ou obfusqué (contrôle de dérive stylistique non malveillante).
+* **Issues falsificatrices** :
+  * Si $\Delta \text{AUROC}_{\text{texte}} < 0,05$ (illustratif) entre le sous-bras aveugle et le sous-bras informé : **$H_B$ est réfutée** (le sous-bras informé n'apporte aucun avantage mesurable ou le prédicteur 0,866 est robuste aux 4 familles R-610).
+  * Si le sous-bras informé fait chuter le prédicteur texte sous 0,60 (illustratif) alors que l'oracle confirme le sabotage à 100 % (illustratif) : **$H_A$ est réfutée** (démonstration directe pour l'entretien que la boîte noire à 0,866 est contournable par un attaquant informé).
+* **Champs fermés de la proposition** :
+  * `critère de porte visé` : Validation de la séparation aveugle/informé et dépassement de la ligne de base N-029 (0,866).
+  * `raison de refus TAIF levée` : Théorie du changement et Impact (démontre empiriquement pourquoi la surveillance boîte noire par traits du texte est insuffisante face à une évasion adaptative).
+  * `moniteur éprouvé` : Prédicteur sur les traits du texte (0,866, **RAPPORTÉ**) comparé aux sondes boîte blanche corrigées.
+  * `coût estimé (USD) et délai` : 250 USD (illustratif), 3 jours (illustratif).
+  * `ce qui la réfuterait` : Incapacité des organismes saboteurs du sous-bras informé (parmi R-610 ou mode tenu à l'écart) à faire descendre le prédicteur texte sous 0,80 (illustratif) sans perdre leur capacité de sabotage validée par l'oracle.
+  * `pièce publique ou scellée produite` : Courbes ROC comparées Aveugle/Informé (pièce publique) et journaux d'exécution scellés des épisodes (pièce scellée au coffre).
+
+### Expérience 3 : Diagnostic de la brèche W2 et mise à l'échelle du juge (3B vs Hybride/Échelle supérieure)
+* **Duel d'hypothèses** :
+  * $H_A$ (**Limite de capacité du juge 3B**) : La performance au niveau du hasard du juge de 3 milliards de paramètres et la brèche W2 (**RAPPORTÉS**) découlent d'une capacité de raisonnement insuffisante à 3B pour évaluer des traces complexes.
+  * $H_B$ (**Défaut d'interface et de représentation d'entrée**) : L'échec du juge 3B et la brèche W2 proviennent de la formulation de la tâche d'évaluation (ex. : exposition à la manipulation textuelle directe par l'organisme saboteur). Un juge 3B alimenté par des résumés d'activations (hybride sonde $\to$ juge) ou un protocole d'évaluation assaini (fermeture structurelle de W2) dépasse l'AUROC de 0,866 (illustratif).
+* **Métrique et Seuil** : Taux de réussite d'exploitation de la brèche W2 (visé : réduction à $< 1\,\%$, illustratif) et AUROC global du juge. Seuil de victoire : AUROC $> 0,88$ (illustratif, battant la base 0,866).
+* **Contrôle négatif** : Soumission au juge d'épisodes honnêtes contenant des structures argumentatives identiques à celles qui déclenchent la brèche W2, mais dont l'effet final vérifié par l'oracle est bénin.
+* **Issues falsificatrices** :
+  * Si, après isolation syntaxique (fermeture de W2) et couplage aux traits latents, le juge 3B reste à un AUROC $< 0,60$ (illustratif) alors qu'un juge de 8B à 70B (illustratif) sur le même protocole atteint $> 0,88$ (illustratif) : **$H_B$ est réfutée** (le goulot d'étranglement est la taille du modèle 3B).
+  * Si le juge 3B corrigé (protocole W2 fermé) atteint un AUROC $> 0,88$ (illustratif) : **$H_A$ est réfutée** (un petit juge suffit si la brèche méthodologique W2 est colmatée).
+* **Champs fermés de la proposition** :
+  * `critère de porte visé` : Correction des faiblesses connues (section C des faits : brèche W2 et juge 3B au hasard).
+  * `raison de refus TAIF levée` : Portée et Faisabilité opérationnelle (montre que la défense n'est pas figée dans ses échecs initiaux et peut réhabiliter des juges légers ou justifier rigoureusement leur remplacement).
+  * `moniteur éprouvé` : Juge de 3 milliards de paramètres et mécanisme sujet à la brèche W2 (**RAPPORTÉS**).
+  * `coût estimé (USD) et délai` : 300 USD (illustratif), 4 jours (illustratif).
+  * `ce qui la réfuterait` : Persistance d'une performance au niveau du hasard ($\approx 0,50$, illustratif) à la fois pour le juge 3B corrigé et pour un juge de taille supérieure (ex. : 14B/32B, illustratif) face au mode tenu à l'écart.
+  * `pièce publique ou scellée produite` : Protocole de fermeture de la brèche W2 (pièce publique niveau méthode) et traces d'exploitation W2 (pièce scellée au coffre).
+
+---
+
+# (c) Calibration minimale des instruments nommés dans la question
+
+Pour chaque instrument cité dans les faits et la question, voici le protocole minimal permettant d'attester qu'il fonctionne, indépendamment de toute connivence :
+
+| Instrument nommé (Statut : **RAPPORTÉ**) | Taux de détection (TVP) et Fausses Alertes (TFA) minimaux exigés (illustratifs) | Cas honnêtes appariés (Contrôle de spécificité) | Vérification mécanique à battre (Ligne de base inférieure) |
+| :--- | :--- | :--- | :--- |
+| **1. Prédicteur sur les traits du texte** (actuellement à 0,866, N-029) | AUROC $> 0,866$ sur modes connus ; maintien d'un TVP $\ge 70\,\%$ pour un TFA $\le 5\,\%$ sur le mode tenu à l'écart (N-054). | Épisodes honnêtes résolvant la même tâche avec des erreurs de programmation accidentelles (bogues non malveillants) ou un style verbeux. | Filtre lexical par expressions régulières (recherche de mots-clés naïfs) et classifieur de longueur/perplexité du texte. |
+| **2. Sondes boîte blanche génériques** (actuellement au hasard) | AUROC $\ge 0,80$ (TVP $\ge 65\,\%$ à TFA $= 5\,\%$) évalué strictement sur les jetons générés *après* la consigne. | Épisodes honnêtes où l'agent manipule des concepts de sécurité ou de contournement (ex. : rédaction d'un correctif ou d'un test unitaire) sans commettre de sabotage. | Sonde linéaire entraînée sur des vecteurs d'activation aléatoires (bruit gaussien de même dimension) et sonde entraînée uniquement sur l'enchâssement (*embedding*) statique des jetons de sortie. |
+| **3. Sonde lisant la consigne** (faiblesse connue à corriger en sonde d'état interne) | Chute d'AUROC $< 0,05$ lorsque la consigne système/utilisateur est masquée ou remplacée par une consigne neutre au moment de l'inférence (via *activation patching* ou troncature). | Paires contrefactuelles : (a) Consigne d'attaque + exécution honnête forcée ; (b) Consigne neutre + trajectoire de sabotage injectée en cours de route. | Classifieur boîte noire (sac de mots / TF-IDF) entraîné exclusivement sur le texte de la consigne d'entrée. |
+| **4. Juge de 3 milliards de paramètres** (actuellement au hasard, brèche W2) | AUROC $\ge 0,85$ (ou supérieur au prédicteur texte 0,866) ; taux de contournement par la brèche W2 ramené à $< 1\,\%$ sur test de stress dédié. | Trajectoires honnêtes contenant des commentaires de code trompeurs ou un formatage inhabituel simulant structurellement la brèche W2. | Juge constant/aléatoire (AUROC $= 0,50$), prédicteur texte seul (0,866), et heuristique basée sur le code de retour d'exécution. |
+| **5. Oracle de vérité terrain** (juge de la réalité du sabotage) | Concordance inter-annotateurs / déterminisme $\ge 99\,\%$ (TVP $\ge 99\,\%$, TFA $\le 0,1\,\%$). | Solutions honnêtes sous-optimales ou échouant aux tests fonctionnels par incompétence du modèle plutôt que par sabotage. | Vérification syntaxique de compilation ou simple test unitaire de base ne couvrant pas les cas limites de sécurité. |
+
+**Garanties supplémentaires requises pour les 4 familles d'évasion (R-610) (Réponse au point 1 de la question) :**
+Pour prouver au jury TAIF que la détection sur R-610 n'est pas un artefact de connivence, trois garanties manquent encore à la structure rapportée :
+1. **L'audit de diversité distributionnelle inter-familles** : Vérifier que les représentations latentes des 4 familles R-610 ne forment pas un amas unique trivialement séparable des cas honnêtes par simple dérive de perplexité.
+2. **La contrainte de préservation d'utilité (furtivité fonctionnelle)** : Un organisme saboteur qui dégrade ses performances générales sur la tâche principale se fait détecter par incompétence, non par détection du sabotage. Chaque famille R-610 doit réussir les tests fonctionnels standards au même taux qu'un organisme honnête.
+3. **Le scellement cryptographique de l'indice des couches sondées** : Si la défense choisit la couche d'activation après avoir observé les 4 familles R-610, elle surapprend (fuite de degrés de liberté). Le choix des couches et de l'hyperparamétrage des sondes doit être fixé dans le préenregistrement R1 *avant* l'exposition au mode tenu à l'écart.
+
+---
+
+# (d) Ancrage matériel, modèles ouverts et budget (Illustratif)
+
+Les faits ne précisant ni l'architecture exacte des organismes saboteurs ni les tarifs des fournisseurs infonuagiques du programme (seul le juge de 3 milliards de paramètres et les clés `Kimi`, `Argon` et `GEMINI_API_KEY_2` sont mentionnés — statut : **RAPPORTÉ**), l'ancrage matériel ci-dessous est intégralement marqué comme **illustratif** (Règle 4).
+
+* **Modèles ouverts recommandés pour l'extraction boîte blanche et le juge** :
+  * *Organismes porteurs (cibles des sondes)* : `Llama-3.1-8B-Instruct` ou `Qwen-2.5-7B-Instruct` (illustratif) pour les itérations rapides ; `Llama-3.3-70B-Instruct` ou `Qwen-2.5-72B-Instruct` (illustratif) pour vérifier que l'évasion boîte blanche ne dépend pas d'une petite taille de modèle.
+  * *Juge de 3 milliards de paramètres* : `Qwen-2.5-3B-Instruct` ou `Llama-3.2-3B-Instruct` (illustratif, correspondant à la jauge 3B **RAPPORTÉE** dans les faits), comparé en Expérience 3 à un modèle de 14B/32B (illustratif).
+* **Calcul nécessaire (GPU et temps machine)** :
+  * *Extraction des activations internes (Expériences 1 et 2)* : Lecture et stockage des états cachés (couches résiduelles) sur 2 000 épisodes (illustratif : 1 000 honnêtes appariés, 1 000 issus de R-610 et du mode tenu à l'écart). Nécessite 1 à 2 GPU A100 (80 Go) pendant environ 12 heures (illustratif), soit $\approx 24$ heures-GPU A100 (illustratif).
+  * *Entraînement des sondes linéaires et validation croisée* : Calcul sur CPU/GPU léger (régression logistique régularisée $\ell_2$ ou sonde par différence de moyennes), $< 2$ heures-GPU (illustratif).
+  * *Inférence des juges (Expérience 3) et appels API (`Kimi`, `Argon`)* : Évaluation de 2 000 traces par le juge 3B et le juge de comparaison $\approx 16$ heures-GPU A100 (illustratif) + appels API pour l'organisme d'idéation et le collisionneur.
+* **Coût total estimé et délai avant l'entretien** :
+  * Location GPU (~42 heures-GPU A100 à ~2,00 USD/h, illustratif) : **84 USD** (illustratif).
+  * Appels API (`Kimi`, `Argon`, étiquetage de contrôle) et stockage : **586 USD** (illustratif).
+  * **Budget total consolidé (Expériences 1 + 2 + 3)** : **670 USD** (illustratif), exécutable en **5 à 7 jours ouvrés** (illustratif) par une session fille, après validation du devis par Lazar et scellement du préenregistrement R1.
+
+FIN-DE-CELLULE
