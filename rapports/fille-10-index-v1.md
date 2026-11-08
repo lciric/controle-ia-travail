@@ -13,3 +13,4 @@ Une ligne par rendu : objet ; branche ; commit ; pièce de passation. Écrit le 
 | Rendu 4 v11 : `session_v11`, bras B v3, GO-2026-11-07-08, ordre d'E3 bis v2 | `prep/t06-v11` | `2848642e18ab44bf91a6eab9597cb73548631217` | `docs/notes/g0-deux-semaines-v1/rapport-e3-echecs-et-v11-v2.md` |
 | Bras B v4 (tolérance 0,3, lecture stricte) + addendum v3 | `prep/t06-bras-b-v4` | `84a62edd30bc30f79bef69cbcc34c42c72cc8acd` | `RENDU-fille-10-bras-b-v4-v1.md` (racine de la branche) |
 | Chaîne de la course v12 (lanceur v12, amorce v10, liste figée v2, banc strict v5) + candidat 12 | `prep/t06-course-v12` | `7822a65b6afb1595ce467ffeb55c8a7f736b20dc` | `RENDU-fille-10-course-v12-v1.md` (racine de la branche) |
+| Ordre de la course v2 (brouillon), devis v3, candidat 12 révision 2 (tests attendus 1914) | `prep/t06-ordre-course-v2` | `8cb539f9b7ecd20fab133bfffb590ca8e1fdfc63` | `RENDU-fille-10-ordre-course-v2-v1.md` (racine de la branche) |
