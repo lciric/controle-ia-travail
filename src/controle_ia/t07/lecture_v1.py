@@ -765,13 +765,20 @@ def main(argv: list[str]) -> int:
     if a.action == "grille":
         try:
             c = cr.enumerer_couverture()
+            d = cr.enumerer_derivation()
         except GardeArret as e:
             print(f"GRILLE EN DÉFAUT : {e}", file=sys.stderr)
             return CODE_REFUS
-        print(f"cas énumérés : {c['cas']} (G × P × A × Q × I × II × F) ; agrégation par dose : {c["agregation_cas"]} cas")
+        print(f"(1) agrégation par dose : {c['agregation_cas']} cas")
+        print(f"(2) grille par classes : {c['cas']} cas (G × P × A × Q × I × II × F) ; cas jugés : {c['cas_juges']}")
         for l in cr.ORDRE:
-            print(f"  {l:13s} {c['effectifs'][l]:6d}")
-        print("GRILLE COMPLÈTE, SANS ZONE MORTE NI CHEVAUCHEMENT")
+            print(f"      {l:13s} {c['effectifs'][l]:7d}")
+        print(f"(3) grille par états par dose : {d['cas']} cas sur {d['configurations']} configurations "
+              f"(impossibles sautées : {d['impossibles']})")
+        print("    classes dérivées : " + ", ".join(f"{q} {n}" for q, n in d["classes"].items()))
+        for l, n in d["effectifs"].items():
+            print(f"      {l:13s} {n:9d}")
+        print("GRILLE COMPLÈTE, SANS ZONE MORTE NI CHEVAUCHEMENT HORS L6")
         return CODE_OK
     if a.action == "repli-recalcul":
         print("REFUS : repli-recalcul non mis en œuvre dans la v1 (modèle, adaptateurs et carte graphique requis) ; rien écrit ; nœud",
@@ -787,7 +794,7 @@ def main(argv: list[str]) -> int:
             return CODE_OK
         r = etape_b(Path(a.racine), registre, config, a.run_t06, a.run_t07, a.instant, racine_sortie)
         print(f"{r['issue_critere_3']} : {r['phrase']}")
-        return CODE_SANS_OBJET if r["issue_critere_3"] == "L7" else CODE_OK
+        return CODE_OK                                   # L7 comprise (brouillon 11, l. 1320-1322)
     except ArretApresManifeste as e:
         print(f"ARRÊT : {e}", file=sys.stderr)
         return CODE_ARRET

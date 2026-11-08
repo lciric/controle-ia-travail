@@ -8,6 +8,9 @@ au lieu de `np.einsum("nd,de,ne->n")` ; **essai d'égalité au paquet gelé avan
 « échec » (l'appelant l'écrit), jamais l'ensemble. Lorsque `familles_v2` sera sur la branche lue, l'essai `test_t07_lecture_v1`
 compare ce miroir à l'original (essai sauté sinon, déclaré).
 """
+# MARQUEUR-QUESTION-8 : le brouillon 11 (en-tête, l. 197-199) écrit encore « pas sur `main` : à fusionner ou à citer au commit »
+# pour `sondes/familles_v2.py` ; il ne tranche pas entre la fusion avant le scellement et la citation au commit `8cb539f9`. Le
+# module garde ce miroir (le paquet gelé reste la référence, R12) sans choisir.
 from __future__ import annotations
 
 from dataclasses import dataclass
