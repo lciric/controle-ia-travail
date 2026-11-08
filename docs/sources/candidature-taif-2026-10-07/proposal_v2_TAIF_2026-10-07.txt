@@ -1,0 +1,421 @@
+White-Box Control of Diffuse Threats
+Accumulating internal evidence over time and across agents, and measuring how easily the monitor
+itself is corrupted
+ Applicant              Lazar Ciric, independent researcher, Paris (ENS Paris-Saclay, Mines Paris-PSL)
+ Fund                   EA Funds, Transformative AI Fund (Transformative AI Research Grants)
+ Period                 1 December 2026 – 30 June 2027 (7 months)
+ Request                $58,630 (mainline: Papers C and A, 7 months); range $28,160 (minimal: Paper C, 4 months) to $138,600
+                        (ambitious: adds Paper B, 12 months)
+ Status                 Phase 0 (instruments) under way since 5 October 2026; gate G0 at the start of the grant
+ Version                Proposal v2, 7 October 2026. Confidential: unpublished research plan, please do not circulate beyond the
+                        fund team and its advisors
+
+
+1. Summary
+Most monitoring in AI control scores one action at a time. That fails by construction against diffuse threats. An AI agent that
+automates research can bias many decisions slightly (weaker controls, sterile directions, inflated costs) without ever taking an
+action that a per-action monitor would flag. Copies of the same model can likewise split one harmful change into pieces that are
+each innocent.
+This project tests, with pre-registered decisive experiments, whether evidence that stays invisible in each output accumulates in
+the agent’s own activations. Paper A aggregates probe scores sequentially over time, with an anytime-valid false-alarm
+guarantee. Paper C treats the monitor as an attack surface. It measures how far persuasion moves LLM judges and activation
+probes, what it costs an attacker to move a probe, and whether a cheap benign test predicts a monitor’s collapse under optimized
+attack. This request funds Papers C and A over seven months, Paper C first: it extends a law I have already measured, and its
+outcome does not depend on Paper A’s gate. Paper B, which aggregates across agents that share weights, is an extension.
+The theory has two parts: an additivity lemma, and a negative theorem stated for permutation groups acting on time and on
+agents. A pre-registered simulation confirmed all 31 of its predictions; these checks validate the statistical instruments, not the
+claims on real models. Phase 0 has also validated the activation-logging harness on Llama-3.1-8B-Instruct, within a stated
+domain of hardware and context length. Every gate has a pre-committed pivot and decision criteria sealed before any data, and
+negative results will be published.
+
+2. Problem
+Diffuse sabotage defeats per-action monitoring. Developers are starting to hand parts of AI research to AI agents. A misaligned
+research agent does not need a blatant act. The cheapest sabotage is a subtle, systematic bias spread over many judgments, each
+defensible on its own. Terekhov et al. (“Diffuse AI Control on Fuzzy Tasks”, arXiv 2606.08892) introduced a control setting for
+this threat. They study training-based mitigations because monitoring and incrimination “seem theoretically and empirically less
+promising for mitigating diffuse threats” (p. 2). A monitor that compares each action with a threshold calibrated on honest actions
+can only flag what is anomalous in that action. When no single action is anomalous, accumulating evidence is the only way to see
+the pattern.
+The threat can also be split across agents. Attacks spread over several agents, sessions or merge requests evade monitors that
+look at one instance at a time (arXiv 2607.07368, 2605.31593, 2607.02514). A single global monitor over everything is costly to
+deploy.
+The monitor is itself an attack surface. The agent can address its monitor. Published work shows that control monitors:
+   are swayed by the agent’s rhetoric (arXiv 2505.23575);
+   adopt a score injected by an attacker (arXiv 2510.09462);
+   are moved by persuasion from the agent, measured as approval rates (arXiv 2607.08066).
+Evading activation probes is cheap for an attacker who can fine-tune the weights (arXiv 2609.36490). From context alone, the
+same study finds the induced shift too weak to evade. In the sources we have verified so far, the cost of moving a probe has not
+been measured as a function of attack family and intensity, nor compared with the cost of moving a judge.
+Why white-box. A developer that deploys agents internally has native access to their activations. Suppose an intention to
+sabotage leaves an internal trace at each contribution. Then internal evidence adds up even when external evidence does not.
+Whether this holds on realistic model organisms is an empirical question. This project answers it and states in advance what
+follows from either outcome.
+
+3. Theory: a lemma, a negative theorem, and the pivotal question
+Monitor scores Xi,t are indexed by agent i ∈ {1,…,N} and step t ∈ {1,…,T}. Time (N = 1) and swarm (N = k) are the same
+mathematical object. Each corresponds to a subgroup of the permutations of the index set: permutations of time within each
+agent, and permutations of agents within each step. This is what lets one theory serve both Paper A and Paper B.
+Additivity lemma (L), adversarial form. The attacker spreads a total budget B = Σδk of mean shifts over agents, steps,
+schedule, values and positions, possibly adaptively. The defender keeps an anytime-valid false-alarm guarantee.
+   Terminal invariance. The terminal sum shifts by exactly B whatever the split. Its power therefore depends only on B, the
+   horizon n₀ = NT, the honest law and the level α. At fixed B, it decreases with n₀.
+   Separation from the maximum. At an exact threshold, the per-action maximum collapses as fragmentation grows.
+   Anytime-valid reading. Timing matters: early sabotage helps the defender and delayed sabotage helps the attacker. A lower
+   bound that depends only on (B, n₀) holds for every schedule, and both the cost of delay and the price of anytime validity are
+   quantified.
+   Detection before damage. Suppose security means “alarm before cumulative damage reaches θ”. Then a cumulative e-process
+   is not enough, and the aggregator needs a change detector (Page’s CUSUM, e-detectors).
+Two caveats are part of the statement:
+   Under optional stopping, power is not a usable optimality criterion. The relevant criterion is worst-case expected log-growth,
+   GROW (Pérez-Ortiz, Lardy, de Heide and Grünwald, arXiv 2208.07610).
+   Bounding the total budget is a declared modelling choice. The closest result on covert adversaries (Ramtin, Nain and
+   Towsley, arXiv 2601.20022) gives a detection delay of order Θ(γ) instead of log γ. It assumes a stationary adversary that
+   knows the false-alarm constraint γ, and covers neither total budgets nor anytime-valid guarantees.
+Negative theorem (T), by invariance.
+   Blindness. Suppose an attack preserves the multiset of scores up to a permutation in a group G. Then every G-invariant
+   statistic (maximum, mean, sum, count above a threshold) is blind path by path: its power equals its false-positive rate.
+   Impossibility. Suppose honest scores are exchangeable under a group H. A rearrangement followed by a uniform reshuffle
+   over H makes the attacked scores exactly honest in law, so no score-based monitor can beat its rate. The group matters.
+   Local guarantees. Local statistics (scan, Page’s CUSUM, co-elevation across agents) keep pathwise guarantees. Global order
+   statistics (autocorrelation, runs) can be neutralised by an adaptive attacker.
+   Two attack classes. Preserving the multiset (class C) differs from preserving each coordinate’s marginal while changing the
+   dependence (class K, copula attacks). In class K, under positive dependence, sums and e-processes rise above their false-
+   positive rate while the maximum stays at or below it (Slepian).
+What is claimed. The statistical core is classical and cited: mixture boundaries, the sum/maximum dichotomy, the
+marginal/copula decomposition. The contribution is the unification of time and agents through permutation subgroups, the C/K
+distinction and its sign consequences, local guarantees against an adaptive attacker and, above all, the measurement on real
+activations. A black-box, synthetic precursor of the marginal/correlation contrast (arXiv 2606.10456) is cited. In our simulation,
+its central statement does not hold for its own construction.
+Status. All 31 predictions of a pre-registered simulation were confirmed (342 statistical and 544 path-level cells, 0 contrary). The
+simulation also showed that Ville’s threshold alone does not hold outside its assumptions: false alarms reach 0.21–0.35 under
+episode effects and 0.17 under correlation between agents, instead of 0.05. Thresholds are therefore calibrated on whole honest
+episodes. These checks validate the instrument, not the claim on real models, and one part of the lemma (splitting across agents
+within the same step) remains to be tested.
+Pivotal empirical question. On realistic organisms, does sabotage shift the marginal of probe scores (δ > 0)?
+   If it does, the lemma applies and sequential accumulation should work.
+   If it does not, the negative theorem dictates the aggregator. When the attack changes only the dependence between scores
+   (class K), autocorrelation over time or co-elevation across agents is needed. Against an adaptive attacker who preserves the
+   multiset (class C), only local statistics keep a guarantee. The theorem also says when monitoring based on marginals must
+   fail.
+Both outcomes are publishable.
+4. Two papers, and a third as an extension
+                       Paper A — Time                          Paper C — The instrument           Paper B — The swarm
+                                                                                                  (extension)
+ Question              Does internal evidence accumulate       Can the monitor be moved rather    Does white-box access restore the
+                       when each action is innocent?           than evaded, and at what cost?     advantage against attacks split
+                                                                                                  across agents?
+ Core design           2 × 2: access (black / white box) ×     Deference law under graded         Spatio-temporal statistic; security
+                       aggregation (per action / sequential)   pressure, judges versus probes     as a function of N
+ Months                1–7                                     1–4                                8–12, ambitious scenario only
+ Gates                 G1 (end of month 4)                     GC (end of month 2)                G2, G3
+
+Papers A and C share the harness, organisms and probes built in phase 0. Paper C is scheduled first; Paper A runs alongside it and
+takes over from month 5.
+
+Paper A — Time (single agent)
+Environment. Agents write and revise ML experiment proposals, scored by a weaker trusted evaluator on a structured rubric.
+Diffuse sabotage is a subtle systematic bias across many proposals: sterile directions, weakened controls, inflated costly choices.
+Ground truth combines pre-registered seeded targets with delayed verification on a subsample. We reconstruct the setting of
+arXiv 2606.08892, which releases no code or data, on open-weights models. Contributions are indexed (i, t), so the same
+environment serves unchanged when N > 1.
+Model organisms.
+   Family (i). A hidden instruction in the system prompt.
+   Family (ii). A LoRA adapter that instils the same sabotage policy with no instruction at inference, distilled from (i).
+   Family (iii), ambitious scenario only. Public sandbagging organisms of the UK AI Security Institute (70B).
+Validity prediction: a probe that really reads “I have a hidden instruction” succeeds on (i) and fails on (ii); an intent probe
+succeeds on both. Two cross-controls separate evaluation awareness from intent: an honest organism told it is monitored, and a
+saboteur in a simulated “unobserved” regime. Probes are never trained and evaluated on the same organisms.
+Monitors. We use five probe families: linear, difference of means, small MLP, attention probe, and Mahalanobis. Probes
+aggregate over tokens by maximum or attention only. Every probe must beat a covariance-matched random probe, and a reserve
+of never-deployed detectors is kept for audits. The black-box baselines are a weak per-action monitor and TRACE-lite, a
+reimplementation of the monitor of arXiv 2606.07054. Four more baselines each isolate one ingredient: additive accumulation on
+black-box scores (E-valuator, arXiv 2512.03109); a cascade of independent gates on the same probes (arXiv 2607.06503); a
+probe on the last state only; and a learned temporal model on a separate observer (TRACES, arXiv 2605.27690).
+Hypotheses.
+   H1, white over black. At equal aggregation and equal false-positive rate, activation-based monitors detect more diffuse
+   sabotage on fuzzy tasks than black-box monitors.
+   H2, sequential accumulation on probes. Take trajectories where every sabotaged action stays below the threshold of a per-
+   action monitor calibrated at 1% false positives. On them, anytime-valid additive accumulation of the acting agent’s probe
+   scores detects the sabotage, with recall growing with the horizon. The probes read the agent’s private context too, and
+   calibration uses honest episodes only. Each component is published separately: probes of the acting agent over several turns
+   (2607.06503), sequential tests on arbitrary scores (2512.03109), Page’s CUSUM over a model’s internal states (SafeDream,
+   2604.16824), cumulative drift of activations over a conversation (2604.28129), and thresholds calibrated on successful
+   episodes only (FIPER, 2510.09459). In the sources verified so far, their conjunction is not; that conjunction is the claim.
+   L and T on real activations. At a fixed horizon, does the power of the terminal sum depend only on the total budget as
+   fragmentation varies? This is the test of δ > 0; under sequential reading, the schedule matters, as the lemma predicts. The
+   negative theorem is tested semi-synthetically: real honest scores, with correlation injected at preserved marginals.
+   Tr, from tokens to actions. At token level, one study found that reinforcement learning on the weights did not evade probes
+   aggregated by maximum or attention (arXiv 2506.14261); its authors note that this may reflect optimisation difficulty, and
+   other work weakens the premise (2412.09565, 2511.00554, 2507.12691, 2609.36490). Does any such robustness survive at
+   action and trajectory level under sequential accumulation, against an adaptive attacker? The attacks come in order: content
+   attacks first, then fine-tuning and action-level reinforcement learning against the probe.
+   H6, asymmetric margin. Consider four non-specific interventions: paraphrase, resampling, context reset, activation noise.
+   For at least one of them, there is an intensity at which, on average at fixed intensity, sabotage success falls significantly faster
+   than honest utility. Noise variants have precedents in simpler settings (weight noise exposes sandbagging, arXiv 2412.01784;
+   activation noise exposes alignment faking, arXiv 2405.05466). Our test is agentic, with slopes compared.
+   H8, validity predicts robustness. What a probe really measures (intent or evaluation awareness) predicts its robustness
+   under attack.
+A robustness figure transfers the sequential monitor to concentrated sabotage (ControlArena).
+Gate G1 (end of month 4). White-box sequential monitoring must beat the best black-box baseline, all variants included, on
+recall at 1% false-positive rate. The difference must be established by a 95% confidence interval, with paired episodes and the
+false-positive rate calibrated on held-out honest episodes. Floors are reported but are not criteria: “flag everything”, and a one-
+pass judge with the same model. If G1 fails, the negative result is published, and construct validity (H8) becomes the main line.
+
+Paper C — The instrument (monitor corruption)
+Deference law (HC1). A generative monitor is put under pressure of graded intensity, from one attack family. Its verdict v, read
+as a continuous score from verdict-token probabilities, moves from v₀ toward a destination ĉ:
+
+                                                        Δv = g · (ĉ − v₀)
+g and ĉ are estimated by regression over intensities, without imposing ĉ. The predictions are:
+   ĉ is the attacker’s target rather than the corpus mean (the regression-to-the-mean null used in P3, my previous programme on
+   sycophancy, Section 11).
+   g > 0 for generative judges, structured by attack family. The five families are flattery and pleading, claims of authority, forged
+   approvals, stylistic impersonation of the instructor, and in-band orders.
+   g is rank-stable across monitors.
+   Judges and probes differ.
+The algebraic form is the “weight of advice” of judgement psychology; it has been applied with an imposed destination between
+LLMs in an adversarial setting (arXiv 2603.15809). A free attractor has been estimated without any attack (arXiv 2606.18276).
+Continuous deference coefficients exist for assistants without an attacker (arXiv 2606.07897). Judge biases, including fake
+authority and a graded fake majority, have been quantified without a destination or a control monitor (CALM, arXiv
+2410.02736). The claim is the free destination, tested against the attacker’s target and the corpus mean in control monitors under
+attack, family by family. The closest work outside arXiv (Panin, SSRN 7424179) imposes the destination and studies neither
+monitors nor attacks; its finding that advice weight is near-binary in three of five models is one more reason to read g on verdict-
+token probabilities.
+The other hypotheses of Paper C:
+   HC2, probe robustness. Under black-box content attacks, g ≈ 0 for a robustly aggregated probe that reads the acting agent:
+   robustness, not immunity. A “reader probe” arm (a probe on the model that processes the content) tests the author/reader
+   distinction, since reader probes are known to be moved by content attacks.
+   HC2b, betrayal by activations. Trying to manipulate the monitor raises the manipulating agent’s own probe score. This is
+   controlled for style and for the textual backfire effect.
+   HC3, impersonation. Under a “content is data” protocol, judge monitors detect in-band orders almost surely. Stylistic
+   impersonation of the instructor, with no order at all, keeps a residual positive g on judges and a null g on probes that read the
+   author. That in-band orders move judges, including a control monitor, is published (arXiv 2508.19461, 2510.09462), and the
+   stylistic side has partial precedents (2603.12277, on the attacked model; SLEIGHT-Bench, 2605.16626, on monitors).
+   HC4, displacement tax. Rhetoric moves a judge for free. Obtaining the same displacement on a probe that reads the agent
+   requires write access to activations or weights; context alone does not suffice. Cost is measured per axis (access, queries,
+   compute, success rate) and per access regime. The predicted gap of several orders of magnitude concerns the context-only
+   regime.
+   HC5, countermeasures. These are trusted paraphrase, a quorum heterogeneous in access type (generative judges and probes
+   reading the agent), and a transfer matrix of corruption attacks between judges and probes. Published and cited: quorums
+   across judge families (2605.15377), a quorum of judges with a probe that reads a separate encoder rather than the agent
+   (2603.13791), and transfer of attacks between three probes (2609.36490) or between judge monitors (2605.09684).
+   HC6, acceptance test. g measured on benign pressure corpora predicts collapse under optimized attack.
+Lessons from P3 apply: verdicts are never read on truncated windows, instruments are ordinal or continuous rather than
+categorical, and the estimation of g includes a regression-to-the-mean null.
+Gate GC (end of month 2). If gprobe > 0 without weight access, the paper changes title (construct contamination) but does not
+disappear. If a source already covers the claimed piece, Paper C refocuses on HC4 and HC6.
+Paper B — The swarm (extension)
+Paper B is not part of the seven-month request. It is funded only in the ambitious scenario, or by a later grant.
+Environment. A multi-role code pipeline (coder, tester, reviewer) in which a backdoor is fragmented across commits, each diff
+innocent on its own. It is built from FakeLab (arXiv 2607.07368, access on request) or from the persistent-state setting of arXiv
+2607.02514 (built on ControlArena), on open weights.
+Experiments.
+ 1. The red team’s division of labour, with and without a planner. This replicates the fragmentation effect, seen from inside.
+ 2. Collusion through explicit channels versus coordination through shared weights.
+ 3. Inter-agent statistics, with the NARCBench aggregators (arXiv 2604.01151) as baselines.
+ 4. The spatio-temporal statistic against per-agent sequential monitoring and against cross-sectional aggregation. This is the core
+    of Paper B. White-box collusion detection exists (NARCBench), but in the sources verified so far, co-elevation of internal
+    states across copies, read by probes over time, is not published.
+Hypotheses.
+    H3, security(N). At a constant sabotage budget, the white-box curve dominates the black-box one and decays more slowly
+    with the number of agents N.
+    H4′, diversification versus coordination. Diversifying agents (personas, fine-tunes) decorrelates their internal signatures but
+    reduces their capacity to coordinate. The trade-off can be quantified.
+    H5, number × diversity of monitors. Security grows with the number of monitors only through their effective diversity.
+    Diversity is measured by an attack-transfer matrix over a panel of probes; that instrument has a precedent on three probes
+    (2609.36490), the law is the claim.
+    H7, retaliation and leakage. The red team’s adaptation slope depends on the retaliation policy. It is predicted by the mutual
+    information between the detection state and the red team’s observations. The mechanism (verdicts as a leakage channel) has a
+    precedent (2609.36490); the prediction and the comparison of policies are the claim. We compare four policies and run two
+    ablations: stochastic versus fixed thresholds, and cover traffic versus none.
+The baselines are the link-tracker and the four-monitor ensemble of arXiv 2607.02514, and stateful monitoring across sessions
+(arXiv 2605.31593).
+Gates.
+    G2 (two months into Paper B). The fragmentation effect must be replicated, and the population statistic must beat per-agent
+    aggregation. Otherwise, the paper refocuses on the temporal case N = 1.
+    G3. A data-curation environment opens only if a cheap, reliable proxy for delayed ground truth is validated.
+
+5. How the work is done
+These rules apply to every decisive experiment, simulations included. They are inherited from P3 and enforced by tested tooling.
+ 1. Before any data, a pre-registration is sealed with SHA-256. It contains the hypothesis, a signed numeric prediction, the
+    metric, the threshold, the analysis plan, frozen reading criteria and a stop list. A fresh reviewer instance that did not write it
+    counter-reads it.
+ 2. No run aims at a positive sign. Suspiciously clean results, positive or negative, trigger the same audit.
+ 3. Every stop guard is tested on a healthy case and on an artefact. There is no silent fallback.
+ 4. Every number in a document points to a file path and a hash. Numbers from the literature are used only after verification on a
+    hashed PDF, with the page cited.
+ 5. An apparent gap in the literature is a question, not a claim. Affirmative searches come before any novelty claim, and claims
+    found to be occupied are withdrawn.
+ 6. Gate verdicts are pronounced by a fresh reviewer who wrote neither the plan nor the analysis. They are then submitted to me
+    for sign-off.
+ 7. Seeds are derived per task (NumPy SeedSequence). Each run has a manifest: configuration hash, versions, seeds, commit.
+Protocol invariants of the control game, always on: an authenticated operator channel; in-band content treated as data; a one-
+way flow from agent to monitor; monitors without memory between episodes; stochastic audit thresholds and cover traffic
+(ablated in Paper B); hygiene of persistent state; and every silent detection becomes a labelled example for retraining probes. An
+adversary that owns the infrastructure (keys, harness, logs) is out of scope.
+Who does what. I set the questions and take every decision. Engineering, runs, literature checks and internal reviews are carried
+out by AI agents (Claude Code) that I direct under these written rules. The reviewers share a model family, so their errors may be
+correlated. The mainline and ambitious budgets therefore include paid human expert validation of the ground truth. No human
+collaborator is funded in the mainline; the ambitious scenario adds a part-time research engineer and a statistics consultant.
+Claims already narrowed. Verification on primary sources has already removed at least eight pieces from our claims because
+they were published: reading monitor verdicts through token probabilities; quorums across judge families; weight noise as a
+sandbagging detector; “applying sequential monitoring to probes” in general; in-band orders moving judges; probe evasion when
+the weights can be tuned; the attack-transfer instrument of H5; and the leakage mechanism of H7. It also corrected three
+statements of our own programme. No claimed statement has been found fully occupied.
+
+6. Progress to date (phase 0, since 5 October 2026)
+     Literature verified on primary sources. We retrieved and hashed 98 arXiv PDFs. Twenty-four reports by fresh readers
+     checked 3,497 quotations by script against the page text, with 0 failures. The checks produced 147 correction lines on our
+     own documents.
+     Theory. A mathematical note fixes the retained statements of the lemma and the theorem. The pre-registered simulation
+     confirmed 31 of 31 predictions.
+     Activation harness validated on Llama-3.1-8B-Instruct, on a rented H200 (criterion 1 of gate G0), after an inconclusive first
+     version and a partial second one, within a stated domain (H200 GPU, contexts up to 1,192 tokens); a short revalidation on the
+     pilot’s domain comes before the pilot. The validation covered bit-identical replay, agreement of the production path with a
+     higher-precision reference path, sensitivity to an injected defect, and tested guards.
+     Research-sabotage environment v0 under construction. The source paper’s 18 prompts were transcribed and verified. A
+     sealed selection rule and a seeded draw gave 96 arXiv papers: 64 for the pilot, 32 in reserve. The task-extraction procedure is
+     sealed, after three counter-readings and a verification. The pilot runs before the grant starts.
+     Code, with tests: model-organism adapters (LoRA with an adjustable dose; dose 0 reproduces the base model bit for bit),
+     probes (five families and the covariance-matched floor), and black-box baselines, TRACE-lite included. In total, 602
+     automated tests.
+     Pre-registration drafts for gate G1, Paper C (HC1–HC3), the organisms and the probes.
+     Compute spent: about $20.
+Gate G0 (at the start of the grant, December 2026) still requires organisms with a dose–response, probes above the random floor,
+a running black-box baseline, sealed and counter-read pre-registrations of G1 and Paper C, and the closing of the literature check.
+
+7. Timeline (seven months from 1 December 2026)
+ Months     Period             Work                                                                       Gates and outputs
+ 1          Dec 2026           Close G0. Paper C: deference of judges under the five attack families      G0
+                               (HC1); probes under the same attacks (HC2, HC2b). Paper A:
+                               organisms and dose–response in the research-sabotage environment
+ 2          Jan 2027           Paper C: impersonation (HC3), displacement tax (HC4). Paper A: 2 × 2       GC
+                               design
+ 3          Feb 2027           Paper C: countermeasures (HC5), benign g and the acceptance test           —
+                               (HC6). Paper A: lemma and theorem on real activations
+ 4          Mar 2027           Write Paper C. Paper A: complete the 2 × 2 design                          Paper C on arXiv and at a
+                                                                                                          workshop; G1
+ 5–6        Apr–May 2027       Paper A: adaptive attacks (content, then fine-tuning and reinforcement     Paper A on arXiv; conference
+                               learning against the probe), interventions (H6), validity and robustness   submission (NeurIPS 2027 if
+                               (H8). Write Paper A                                                        ready, otherwise ICLR 2028)
+ 7          Jun 2027           Release of code, organisms, probes and pre-registrations; replications     Final report
+                               requested by reviewers; final report
+
+The minimal scenario stops after month 4, with Paper C published. In the ambitious scenario, months 8 to 12 add Paper B with a
+part-time research engineer; its gates are G2 and G3 (Section 4).
+
+8. Deliverables and success criteria
+Deliverables.
+     Two papers: C (arXiv and a workshop by month 4, then a short conference paper) and A (arXiv and a conference submission
+     by month 7). Paper B in the ambitious scenario.
+     Open code: harness, tested aggregators, the reconstruction of the research-sabotage environment.
+    Model organisms and probes.
+    Pre-registrations and sealed results.
+    A pre-deployment acceptance test for monitors (HC6).
+Success.
+ 1. The deference law and the displacement tax are measured (Paper C).
+ 2. The lemma and the negative theorem are proven and tested on real activations within the 2 × 2 design (Paper A).
+ 3. A construct-validity verdict on what the probes measure stands even if H1 fails.
+ 4. In the ambitious scenario, the security(N) curve and the diversification/coordination trade-off are established (Paper B).
+
+9. Risks and pre-committed pivots
+ Risk                                                                Pre-committed response
+ No internal signal (δ ≈ 0), or G1 fails                             Publish the negative result; construct validity (H8) becomes the
+                                                                     main line; the negative theorem says which aggregator is needed
+ 8B agents too weak to sabotage subtly in the research environment   Simplified rubric; any change of model only by explicit decision
+ Red-team elicitation too weak                                       Import published attack policies
+ gprobe > 0 without weight access                                    Paper C becomes a paper on construct contamination
+
+ External publication of the sequential-probe core                   Pivot to population-level statistics and data curation; weekly
+                                                                     literature watch
+ Signatures do not transfer across model families (in P3, the        Transfer is measured, never assumed; Qwen2.5-7B serves as a
+ measured form did not transfer from Llama to Qwen)                  heterogeneous agent
+ No cheap proxy for delayed ground truth                             Data-curation environment dropped at no cost
+ Correlated errors of AI reviewers                                   Paid human expert validation of ground truth (mainline and
+                                                                     ambitious scenarios); my own review at each gate
+ Compute overrun                                                     A quote per phase, signed off before spending; ceiling and alert per
+                                                                     quote; stop guards
+ Schedule slippage                                                   Paper C is scheduled first and stands alone; within Paper A, gate
+                                                                     G1 comes before the adaptive attacks, which are trimmed first
+
+
+10. Path to impact
+    A cheap monitoring layer, if it works. Developers that automate AI research have white-box access to their own agents. If
+    accumulated probe evidence detects diffuse sabotage, it covers a threat that per-action monitoring cannot address. Its
+    anytime-valid false-alarm guarantee fits audit budgets.
+    Clear limits, if it fails. The negative theorem and the construct-validity analysis show where probe-based monitoring should
+    not be trusted. This is useful for safety cases.
+    Monitor selection. Paper C gives developers a measured cost of corrupting a judge versus a probe, and a pre-deployment
+    acceptance test for monitors.
+    Multi-agent deployments (extension). If funded, Paper B informs deployments of many copies of the same model. It says
+    whether shared weights make a swarm more detectable, and what decorrelation costs the attacker.
+    Open artefacts. The reconstructed environment, organisms, probes, tested aggregators and pre-registrations lower the cost of
+    follow-up work in AI control.
+
+11. Applicant
+Lazar Ciric, independent researcher in Paris. Physics at ENS Paris-Saclay (2016–2020); computational neuroscience at ENS
+(Cogmaster, 2020), master’s thesis in Srdjan Ostojic’s lab; Mines Paris-PSL, mathematical statistics and machine learning (2025).
+Research stays at Lawrence Berkeley National Laboratory, IBM Research Zurich, NeuroPSI (Alain Destexhe) and NeuroSpin
+(Stanislas Dehaene). Papers in PLOS Computational Biology (2023, second author) and Neuromorphic Computing and
+Engineering (2022, co-author).
+Previous programme (P3, sycophancy, March–September 2026). Pre-registered, with SHA-256 custody of every artefact and
+every reported number traced to its result file (github.com/lciric/sycophancy-construct-validity).
+    Behaviour. Social pressure moves Llama-3.1-8B-Instruct’s rating a fixed fraction of its distance to a destination set by the
+    framing: Δ = g·(ĉ − p₀), with g ≈ 0.70 and ĉ ≈ 1.46 under criticism versus ≈ 2.94 under praise (disjoint 95% intervals; R² =
+    0.77 / 0.79; 30 items × 10 replicates). The parameters transfer unchanged to a second campaign (R² = 0.73 / 0.69). The law
+    collapses on Qwen2.5-7B-Instruct. The paper is under review at ICLR 2027; Paper C applies the law to monitors.
+    Mechanism. The direction a behaviour-tracking probe reads accounts for under 1% of the causal work, the full state for 68%.
+    A failure, reported. A rank-3 ablation lowered judged sycophancy from 61% to 46.5% (N = 200) but also shifted verdicts with
+    no pressure at all (Δ = +0.41, p = 0.0006; interaction null). Responses stored truncated at 300 characters, upstream of any
+    judging, had made a generic softening read as a safety effect; the full text is gone, so re-judging cannot undo it.
+Three lessons carry over: never read verdicts on truncated windows; prefer ordinal or continuous instruments to categorical ones;
+treat deference, and corruptibility, as a gain rather than a thing.
+
+12. Budget (USD)
+ Line                                                                                    Minimal        Mainline Ambitious            Share of
+                                                                                              (4              (7       (12            mainline
+                                                                                         months)        months)   months)
+ Stipend for the applicant, full time, gross (tax and social contributions included)        20,000         35,000         60,000          59.7%
+ Research engineer, half time for 6 months (Paper B pipeline, release)                           —              —         21,000              —
+ Statistics consultant (sequential analysis, lemma)                                              —              —           4,000             —
+ GPU compute and storage (on-demand A100 / H100 / H200)                                      1,200           4,000        12,000           6.8%
+ AI research tooling (coding agents and API)                                                 4,000           7,000        12,000          11.9%
+ Human expert validation of ground truth                                                         —           4,000          7,500          6.8%
+ Travel and dissemination (workshops; conference if accepted)                                    —           2,500          7,500          4.3%
+ Miscellaneous (software, accounting or fiscal-sponsor fees)                                   400             800          2,000          1.4%
+ Subtotal                                                                                   25,600         53,300        126,000          90.9%
+ Buffer (10%, stated explicitly)                                                             2,560           5,330        12,600           9.1%
+ Total                                                                                      28,160         58,630        138,600          100%
+
+Notes on the budget.
+    Stipend. $5,000 a month in every scenario (about €4,450 on 7 October 2026), gross: French income tax and social
+    contributions are paid out of it.
+    AI tooling. $1,000 a month: the coding agents do the engineering, so the mainline has no engineer.
+    Compute. Our quote for Papers A to C is 800–1,200 A100-hour equivalents (about $1,200–2,700 with storage); the mainline
+    adds seeds, replications and larger GPUs where memory requires them, the ambitious scenario a 70B organism family, larger
+    reinforcement-learning attacks and a second model family. Spending is quoted per phase and approved first; compute or
+    credits obtained elsewhere (NDIF, API credits) are deducted.
+
+Selected references
+All are arXiv identifiers unless stated. Our descriptions of these works follow page-level verification reports, available on request.
+    Terekhov et al. 2026, Diffuse AI Control on Fuzzy Tasks, 2606.08892.    Adaptive Attacks on Trusted Monitors Subvert AI Control Protocols,
+    Multi-Agent AI Control: Distributed Attacks Hamper Per-Instance         2510.09462.
+    Monitors, 2607.07368 (FakeLab).                                         Persuasion Attacks Can Decrease Effectiveness of CoT Monitoring,
+    Distributed Attacks in Persistent-State AI Control, 2607.02514.         2607.08066.
+    Stateful Online Monitoring Catches Distributed Agent Attacks,           Pander Score: A Continuous Measure of Sycophancy as Epistemic
+    2605.31593.                                                             Deference, 2606.07897.
+    Rose et al. 2026, Detecting Multi-Agent Collusion Through Multi-        Can You Trick the Grader? Adversarial Persuasion of LLM Judges,
+    Agent Interpretability (NARCBench), 2604.01151.                         2508.07805.
+    Sadhuka et al., E-valuator: Reliable Agent Verifiers with Sequential    LLMs Learn to Evade Latent Monitors from Prior Feedback Alone,
+    Hypothesis Testing, 2512.03109.                                         2609.36490.
+    Doomed from the Start: Early Abort of LLM Agent Episodes via a          Noise Injection Reveals Hidden Capabilities of Sandbagging Language
+    Recall-Controlled Probe Cascade, 2607.06503.                            Models, 2412.01784.
+    TRACE: Trajectory Reasoning through Adaptive Cross-Step Evidence        Clymer et al. 2024, Poser: Unmasking Alignment Faking LLMs by
+    Aggregation for LLM Agents, 2606.07054.                                 Manipulating Their Internals, 2405.05466.
+    TRACES: Proactive Safety Auditing for Multi-Turn LLM Agents via         The Distributed Detectability Band Against Marginal-Preserving
+    Trajectory-State Modeling, 2605.27690.                                  Attacks, 2606.10456.
+    Bhatt et al. 2025, Ctrl-Z: Controlling AI Agents via Resampling,        Pérez-Ortiz, Lardy, de Heide, Grünwald, E-Statistics, Group Invariance
+    2504.10374.                                                             and Anytime Valid Testing, 2208.07610.
+    CoT Red-Handed: Stress Testing Chain-of-Thought Monitoring,             Ramtin, Nain, Towsley, Quickest Change Detection in Discrete-Time in
+    2505.23575.                                                             Presence of a Covert Adversary, 2601.20022.
+
