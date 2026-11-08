@@ -399,7 +399,7 @@ index 0000000..e57295e
 +    sys.exit(principal())
 diff --git a/orchestrator/demonstrations/epreuve_w2g_dose_v1.py b/orchestrator/demonstrations/epreuve_w2g_dose_v1.py
 new file mode 100644
-index 0000000..b8847bd
+index 0000000..ed8bd83
 --- /dev/null
 +++ b/orchestrator/demonstrations/epreuve_w2g_dose_v1.py
 @@ -0,0 +1,250 @@
@@ -430,7 +430,7 @@ index 0000000..b8847bd
 +l'empreinte de ce texte, à passer par `--entropie-texte`). Arrêt (code 3, trace partielle) à la durée maximale ; code 2 : refus.
 +
 +Usage : nice -n 10 python3 -I -B demonstrations/epreuve_w2g_dose_v1.py DOSSIER_NEUF (--graine G | --entropie-texte CHEMIN_SCELLE)
-+        [--repetitions 1000] [--processus 2] [--doses 0,0.05,…] [--duree-max-s 7200]
++        [--repetitions 1000] [--processus 2] [--doses 0,0.05,…] [--duree-max-s 3300]
 +"""
 +
 +import argparse
@@ -457,7 +457,7 @@ index 0000000..b8847bd
 +REPETITIONS = 1000
 +SEUIL_PROMOTION_MONDE = 0.80  # règle de choix : (a) ≥ 0,80
 +PROMOTIONS_RECOMBINAISON_MAX = 0  # règle de choix : (b) = 0
-+DUREE_MAX_S = 7200.0
++DUREE_MAX_S = 3300.0  # sous le `timeout 3600` des consignes : arrêt propre (trace partielle écrite, doses complètes lues) avant le délai externe
 +TAILLE_LOT = 50
 +LIGNES = (("monde", "v9"), ("recombinaison", "v9"), ("recombinaison", "ancien"), ("monde", "v8_information"))
 +MODULES = ("pole/attaque_goodhart_v5.py", "pole/attaque_goodhart_v4.py", "pole/attaque_goodhart_v2.py", "pole/nul_v9.py",

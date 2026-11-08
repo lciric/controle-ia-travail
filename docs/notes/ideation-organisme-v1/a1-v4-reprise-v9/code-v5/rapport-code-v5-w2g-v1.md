@@ -1,6 +1,6 @@
 # Rapport — code v5 de l'attaque de Goodhart : monde W2 gradué, lanceur v5, épreuve hors ligne « W2 gradué » (v1)
 
-**Verdict (3 lignes).** Le code v5 existe en fichiers neufs (cœur, lanceur gelé, épreuve hors ligne, essais, banc de mutations), reproduisant l'arborescence du dépôt public sous `code-v5/` ; **30 essais réussis (0 échec), 31 mutations neuves tuées sur 31 pour la raison attendue**, le banc de la v4 rejoué sur l'arbre augmenté des fichiers v5 : **27 essais v4 réussis, 33 mutations v4 tuées sur 33** (inchangé) ; le patch `patch-public-code-v5.diff` s'applique au dépôt public au commit `8947bc80a5c2fee0cfee4f3cafbdaaca8ed77f3e` (`git apply --check` : propre ; rien n'a été commité ni poussé). L'épreuve hors ligne « W2 gradué » a tourné **à titre exploratoire** (graine `20261108`, 11 doses × 1 000 répétitions, 2 processus, `<<DUREE_EPREUVE>>`) : la règle du brouillon 3 appliquée imprime **λ\* = `<<LAMBDA>>`** — **proposition imprimée, pas décidée** (la mère et le contre-lecteur décident ; réserve R1 ci-dessous, section 6).
+**Verdict (3 lignes).** Le code v5 existe en fichiers neufs (cœur, lanceur gelé, épreuve hors ligne, essais, banc de mutations), reproduisant l'arborescence du dépôt public sous `code-v5/` ; **30 essais réussis (0 échec), 31 mutations neuves tuées sur 31 pour la raison attendue**, le banc de la v4 rejoué sur l'arbre augmenté des fichiers v5 : **27 essais v4 réussis, 33 mutations v4 tuées sur 33** (inchangé) ; le patch `patch-public-code-v5.diff` s'applique au dépôt public au commit `8947bc80a5c2fee0cfee4f3cafbdaaca8ed77f3e` (`git apply --check` : propre ; rien n'a été commité ni poussé). L'épreuve hors ligne « W2 gradué » a tourné **à titre exploratoire** (graine `20261108`, 2 processus), sur une **grille réduite** : doses 0,30 ; 0,40 ; 0,50 ; 0,75 à 1 000 répétitions (3 219 s), plus la dose 0 à 200 répétitions (193 s) ; la règle du brouillon 3 appliquée imprime **λ\* = 0,40** (fréquence (a) = 0,809, borne basse de Clopper-Pearson 0,787, donc **à la limite**) — **proposition imprimée, pas décidée** (la mère et le contre-lecteur décident ; réserve R1 ci-dessous, section 6).
 
 Rédigé le 8 novembre 2026 (début 17:01 UTC, heures par `date -u`) par un développeur neuf de la session mère `session_016QhUrrLeN21G7Z9KZobE42`, qui n'a écrit ni le code v2, v3 ou v4, ni le nul v9, ni le brouillon 3. Aucun appel de modèle, aucun réseau, aucune dépense, aucun commit, aucune poussée, aucun compagnon `.sha256` écrit par ce rédacteur (ceux que les scripts écrivent dans leurs dossiers de sortie du brouillon de travail n'ont pas été recopiés ici), aucun fichier existant modifié dans les deux dépôts, rien lu sous `donnees/bras-attaque*`, `donnees/mode-tenu-a-l-ecart*`, `docs/notes/bras-attaque/`. Tout le travail a été fait sur une **copie** du dépôt public (`cp -r`, commit `8947bc8`, arbre propre) dans le brouillon de session ; commandes longues sous `timeout … nice -n 10 python3 -I -B`.
 
@@ -10,15 +10,17 @@ Sous `docs/notes/ideation-organisme-v1/a1-v4-reprise-v9/code-v5/` (dépôt priv�
 
 | fichier | rôle | sha256 |
 |---|---|---|
-| `orchestrator/pole/attaque_goodhart_v5.py` | cœur v5 : mondes W2 et W2g, dose, écart, garde de la vérité, juge, suites, rejeux, plan, lecture 6.2, devis | `<<SHA_POLE>>` |
-| `orchestrator/demonstrations/attaque_goodhart_v5.py` | lanceur gelé v5 : texte `…-v5-v<N>.md`, bloc `plan-gele` v5 (`go_machine`, `dose_w2g`), fermeture, étape `attaque_goodhart_v5/<nom>` | `<<SHA_LANCEUR>>` |
-| `orchestrator/demonstrations/epreuve_w2g_dose_v1.py` | épreuve hors ligne « W2 gradué » (0 USD) ; règle de λ\* appliquée et imprimée | `<<SHA_EPREUVE>>` |
-| `orchestrator/essais/test_attaque_goodhart_v5.py` | 30 essais (cas sains et artefacts, R5) | `<<SHA_TEST>>` |
-| `orchestrator/essais/mutations_attaque_goodhart_v5.py` | banc de 31 mutations neuves | `<<SHA_MUT>>` |
-| `patch-public-code-v5.diff` | `git diff` des cinq ajouts, applicable sur `8947bc8` (`git apply`) | `<<SHA_PATCH>>` |
-| `epreuve-w2g-dose-v1-exploratoire.json` | sortie de l'épreuve exploratoire (graine 20261108) | `<<SHA_EPJSON>>` |
-| `epreuve-w2g-dose-v1-exploratoire-table.txt` | sa table | `<<SHA_EPTABLE>>` |
-| `essais-v5-sortie.txt`, `mutations-v5-sortie.txt`, `essais-et-mutations-v4-rejoues.txt` | sorties des essais et des bancs | `<<SHA_SORTIES>>` |
+| `orchestrator/pole/attaque_goodhart_v5.py` | cœur v5 : mondes W2 et W2g, dose, écart, garde de la vérité, juge, suites, rejeux, plan, lecture 6.2, devis | `8692746a1b02b15465062423d1f05e2084ce1d1861c979316ce1a5ef4384ba15` |
+| `orchestrator/demonstrations/attaque_goodhart_v5.py` | lanceur gelé v5 : texte `…-v5-v<N>.md`, bloc `plan-gele` v5 (`go_machine`, `dose_w2g`), fermeture, étape `attaque_goodhart_v5/<nom>` | `e2caeca1e19209a3a10fd418ec4632c70096ef6e8f42ed2caa6782a412fa93d0` |
+| `orchestrator/demonstrations/epreuve_w2g_dose_v1.py` | épreuve hors ligne « W2 gradué » (0 USD) ; règle de λ\* appliquée et imprimée | `c691a43d9905e91a0ba91ddfef785e53a091768fa7dcd3007f03066aeef10dda` |
+| `orchestrator/essais/test_attaque_goodhart_v5.py` | 30 essais (cas sains et artefacts, R5) | `4c3303c580d3743a6f0553e47cd09d51f9536e7cccb7b9b091b84fa4997e207c` |
+| `orchestrator/essais/mutations_attaque_goodhart_v5.py` | banc de 31 mutations neuves | `cac2c63119452ef78a329f699ddd3da5607d0032ae929c1f881ce456668963d0` |
+| `patch-public-code-v5.diff` | `git diff` des cinq ajouts, applicable sur `8947bc8` (`git apply`) | `12c39347e47fec599da21ef00f8d0534b661d2dd982b7f8c7ca9ac2169a660d2` |
+| `epreuve-w2g-dose-v1-exploratoire-doses-030-075.json` et `…-table.txt` | sortie de l'épreuve, doses 0,30 à 0,75, 1 000 répétitions (graine 20261108) | `c85e59b3…` et `91b06e77…` |
+| `epreuve-w2g-dose-v1-exploratoire-dose-000.json` et `…-table.txt` | sortie de l'épreuve, dose 0, 200 répétitions | `a4821262…` et `30b5736f…` |
+| `epreuve-w2g-dose-v1-pilote-vitesse-table.txt` | pilote de vitesse (doses 0,10 et 0,50, 50 répétitions, graine 5), vu avant de choisir la grille réduite | `30c09d33…` |
+| `epreuve-w2g-dose-v1-sortie-console.txt` | sortie console des deux courses | `85506f1c…` |
+| `essais-v5-sortie.txt`, `mutations-v5-sortie.txt`, `essais-et-mutations-v4-rejoues.txt` | sorties des essais et des bancs | section 8 |
 | `rapport-code-v5-w2g-v1.md` | ce rapport | relevée par la mère au versement |
 
 Décision de nommage (routine) : le monde W2g vit **dans le cœur v5** (`pole/attaque_goodhart_v5.py`), comme W1 et W2 vivent dans le cœur v2 (`carte`, `monde_w2`) ; aucun module `mondes_w2g_v1.py` séparé, pour garder la fermeture gelée minimale (deux fichiers v5 de plus que la v4) et la cohérence avec l'existant. L'épreuve hors ligne n'est **pas** dans la fermeture gelée (elle n'est pas importée par le lanceur).
