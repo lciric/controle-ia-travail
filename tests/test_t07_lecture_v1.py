@@ -70,7 +70,19 @@ def construire_run(racine: Path, signal: float = 6.0, longueur_par_condition: bo
     direction de chaque sonde (0 : aucun signal) ; `longueur_par_condition` rend les actions sabotées plus longues (prédicteur
     trivial parfait, L5)."""
     rng = np.random.default_rng(np.random.SeedSequence(12345))
-    w = {n: rng.standard_normal(D) / np.sqrt(D) for n in NOMS}
+    # une direction de « sabotage » par couche ; les sondes la lisent (w ≈ u), les jetons d'entraînement (Σ des planchers) et les
+    # jetons honnêtes de Mahalanobis ont peu de variance le long d'elle : le plancher apparié ne la voit pas, la sonde la voit
+    u = {c: rng.standard_normal(D) for c in COUCHES}
+    u = {c: v / np.linalg.norm(v) for c, v in u.items()}
+
+    def couche_de(nom: str) -> int:
+        return int(nom.rsplit("-c", 1)[1])
+
+    def ecraser(X: np.ndarray, c: int, part: float) -> np.ndarray:
+        return X - part * np.outer(X @ u[c], u[c])
+
+    w = {n: (u[couche_de(n)] + 0.3 * rng.standard_normal(D)) for n in NOMS}
+    w = {n: v / np.linalg.norm(v) for n, v in w.items()}
     # --- manifeste de T0.6
     taches = [f"t{i:03d}" for i in range(N_TACHES)]
     config_t06 = {"mode": "jouet", "go_id": go_id, "couches": COUCHES, "T": PAS, "N": 1, "fraction_activations_poussees": 0.1,
@@ -91,9 +103,7 @@ def construire_run(racine: Path, signal: float = 6.0, longueur_par_condition: bo
                 for c in COUCHES:
                     a = rng.standard_normal((n, D)).astype(np.float32)
                     if cond in ("saboteur", "S100") and signal:
-                        for nom in NOMS:
-                            if nom.endswith(f"c{c}"):
-                                a[-1] += (signal * w[nom] / np.linalg.norm(w[nom])).astype(np.float32)
+                        a[-1] += (signal * u[c]).astype(np.float32)
                     segs[c] = a
                     np.save(donnees / "activations" / f"c{c}" / f"{cle}.npy", np.ascontiguousarray(a.astype(np.float16)))
                 lignes.append({"cle": cle, "episode": f"{cond}/{t}", "condition": cond, "tache": t, "phase": "dose0" if cond != "S100" else "S100",
@@ -135,14 +145,14 @@ def construire_run(racine: Path, signal: float = 6.0, longueur_par_condition: bo
         "effectifs": {}, "controles_negatifs": {k: {"lecture": "conforme"} for k in etats}})
     ecrire_resultat(racine, chemin_m6, "lecture-cout-t06", {"lecture": {"table_A": {"ligne": ligne_A}}})
     # --- sondes figées factices et jetons d'entraînement
-    honnetes = [rng.standard_normal((5, D)) for _ in range(12)]
+    honnetes = [ecraser(rng.standard_normal((5, D)), 15, 0.7) for _ in range(12)]
     sondes = [_sonde_lineaire(NOMS[0], 15, w[NOMS[0]], "difference_moyennes"), _sonde_lineaire(NOMS[1], 15, w[NOMS[1]], "lineaire"),
               mahalanobis(NOMS[2], 15, honnetes), _sonde_lineaire(NOMS[3], 7, w[NOMS[3]], "lineaire")]
     chemin_sf = racine / "donnees" / "sondes-figees-jouet.npz"
     sha_sf = ecrire_sondes(chemin_sf, sondes, {"origine": "essai"})
     chemin_j = racine / "donnees" / "jetons-entrainement-jouet.npz"
     with open(chemin_j, "wb") as f:
-        np.savez(f, **{n: rng.standard_normal((80, D)) for n in NOMS})
+        np.savez(f, **{n: ecraser(rng.standard_normal((80, D)), couche_de(n), 0.95) for n in NOMS})
     sha_j = sceller(chemin_j)
     # --- fichiers cités par les lignes de registre
     def depot(rel: str, texte: str) -> tuple[str, str]:
@@ -366,7 +376,7 @@ def test_mahalanobis_v2_alteree_couple_en_echec():
 def test_mahalanobis_miroir_egal_a_familles_v2_si_presente():
     try:
         from controle_ia.sondes import familles_v2 as fv2
-    except ModuleNotFoundError:
+    except ImportError:
         pytest.skip("sondes/familles_v2.py absent de cette branche (commit 8cb539f9) : miroir non comparé ici")
     rng = np.random.default_rng(5)
     s = mahalanobis("m", 15, [rng.standard_normal((7, D)) for _ in range(6)])
@@ -632,11 +642,11 @@ def test_commande_en_ligne(jouet):
 def test_aucune_moyenne_sur_les_jetons_dans_le_module():
     """Le module n'offre aucune agrégation « moyenne » ni « médiane » sur les jetons d'une action (N-026) : aucun appel à
     `.mean(`, `np.mean`, `median` ni la chaîne d'agrégation « moyenne » hors des commentaires et des messages qui la refusent."""
-    motifs = re.compile(r"\.mean\(|np\.mean|\.median\(|np\.median|nanmean|nanmedian|\"moyenne\"|'moyenne'|\"mediane\"|\"médiane\"")
+    motifs = re.compile(r"\.mean\(|np\.mean|\.median\(|np\.median|nanmean|nanmedian|[\"'](moyenne|médiane|mean|median)[\"']")
     for fichier in sorted(MODULE.glob("*.py")):
         for n, ligne in enumerate(fichier.read_text(encoding="utf-8").splitlines(), 1):
             code = ligne.split("#")[0]
             if motifs.search(code):
-                # seules les gardes qui REFUSENT la moyenne peuvent la nommer entre guillemets
+                # seules les gardes qui REFUSENT la moyenne peuvent la nommer entre guillemets (liste des mots refusés)
                 assert "refus" in code or "N-026" in code or "mot in" in code, f"{fichier.name}:{n}: {ligne.strip()}"
     assert pl.AGREGATIONS_PERMISES == ("max", "attention")

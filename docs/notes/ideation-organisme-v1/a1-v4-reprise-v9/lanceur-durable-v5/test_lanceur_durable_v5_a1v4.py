@@ -84,8 +84,9 @@ def env_pilote(**modif) -> dict:
 # --- monde jouet : dépôt public (code gelé factice, texte v4-v1 scellé), configuration des mondes ------------------------------
 
 
-def configuration(dossier: Path, racine_publique: Path | None, variante="ii", sceller_aussi=True, **modif) -> Path:
+def configuration(dossier: Path, racine_publique: Path | None, variante_fichier="ii", sceller_aussi=True, **modif) -> Path:
     """La configuration livrée de la variante, fichiers gelés remplacés par ceux du dépôt public jouet, puis `modif`."""
+    variante = variante_fichier
     c = json.loads((ICI / f"configuration-mondes-variante-{variante}-v1.json").read_text(encoding="utf-8"))
     if racine_publique is not None:
         c["fichiers_geles_publics"] = {r: sha((racine_publique / "orchestrator" / r).read_bytes()) for r in FICHIERS_PUBLICS + (LANCEUR_GELE,)}
@@ -545,8 +546,9 @@ def test_louer_aucune_valeur_de_cle_dans_la_sortie_ni_le_journal(tmp_path, capsy
 
 
 def test_seconde_location_et_creation_incertaine_refusees(tmp_path):
-    assert louer(tmp_path)[0] == 0
-    code, a, dv = louer(tmp_path)
+    d = depot_public(tmp_path, tmp_path / "comp.json", git_aussi=False)
+    assert louer(tmp_path, depot=d)[0] == 0
+    code, a, dv = louer(tmp_path, depot=d)
     assert code == 2 and "déjà eu lieu ou est incertaine" in Path(a.journal_local).read_text()
     t2 = tmp_path / "bis"
     t2.mkdir()

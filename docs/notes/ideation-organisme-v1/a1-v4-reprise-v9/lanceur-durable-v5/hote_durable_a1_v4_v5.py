@@ -54,16 +54,21 @@ try:  # paquet (essais sous `src/controle_ia`) ou fichier seul (machine, pilote 
     from . import hote_durable_a1_v3_v4 as v4
     from . import sonde_hote_durable_a1_v3_v10 as s10
 except ImportError:
-    _ici = Path(__file__).resolve().parent
-    _candidats = [_ici] + [p / "src" / "controle_ia" for p in _ici.parents]  # voisins, sinon `src/controle_ia` du dépôt
-    _dossier = next((d for d in _candidats if (d / "hote_durable_a1_v3_v4.py").is_file()), None)
-    if _dossier is None:
-        raise ImportError("hote_durable_a1_v3_v4.py introuvable (voisin du module ou sous src/controle_ia du dépôt)")
-    _spec = importlib.util.spec_from_file_location("hote_durable_a1_v3_v4", _dossier / "hote_durable_a1_v3_v4.py")
-    v4 = importlib.util.module_from_spec(_spec)
-    sys.modules["hote_durable_a1_v3_v4"] = v4
-    _spec.loader.exec_module(v4)
-    h, s10 = v4.h, v4.s10
+    try:  # le paquet du dépôt, quand il est sur le chemin (essais joués depuis `docs/`) : mêmes objets que les essais v1 à v4
+        from controle_ia import hote_durable_a1_v3 as h
+        from controle_ia import hote_durable_a1_v3_v4 as v4
+        from controle_ia import sonde_hote_durable_a1_v3_v10 as s10
+    except ImportError:  # fichier seul : la v4 charge elle-même la v1 et la sonde v10 ; on reprend **ses** objets (une seule classe Refus)
+        _ici = Path(__file__).resolve().parent
+        _candidats = [_ici] + [p / "src" / "controle_ia" for p in _ici.parents]  # voisins, sinon `src/controle_ia` du dépôt
+        _dossier = next((d for d in _candidats if (d / "hote_durable_a1_v3_v4.py").is_file()), None)
+        if _dossier is None:
+            raise ImportError("hote_durable_a1_v3_v4.py introuvable (voisin du module ou sous src/controle_ia du dépôt)")
+        _spec = importlib.util.spec_from_file_location("hote_durable_a1_v3_v4", _dossier / "hote_durable_a1_v3_v4.py")
+        v4 = importlib.util.module_from_spec(_spec)
+        sys.modules["hote_durable_a1_v3_v4"] = v4
+        _spec.loader.exec_module(v4)
+        h, s10 = v4.h, v4.s10
 
 VERSION = "hote-durable-a1-v4-v5"
 GO_COURSE, MONTANT_GO_COURSE_USD = "GO-2026-11-02-22", 200.0  # appels à Argon : égalité exacte exigée sur chaque ligne

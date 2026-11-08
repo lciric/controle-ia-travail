@@ -328,29 +328,29 @@ def noter(racine: Path, run: str, mesures: dict, sondes: list, jetons: dict, con
     index = {"sondes": [], "sondes_lues": int(config["sondes_lues"]), "n_plancher": int(config["n_plancher"]),
              "mahalanobis_calcul": config["mahalanobis_calcul"], "actions_notees": int(notees.size),
              "actions_non_notees": int(mesures["cle"].shape[0] - notees.size)}
+    # activations lues une fois par couche, AVANT la notation : une activation absente, de forme fausse ou non finie arrête tout
+    # (R11, liste d'arrêt), jamais un couple en « échec »
     cache: dict = {}
-
-    def sequences(couche: int, largeur: int) -> list:
+    for s in sondes:
+        couche, largeur = int(s.couche), pl.largeur_de(s)
         if (couche, largeur) not in cache:
             cache[(couche, largeur)] = [lire_activation(racine, run, str(mesures["cle"][i]), couche, int(mesures["jetons_notes"][i]),
                                                         largeur) for i in notees]
-        return cache[(couche, largeur)]
-
     for k, s in enumerate(sondes):
         entree = {"rang": k, "nom": s.nom, "couche": int(s.couche), "agregation": pl.exiger_agregation(s),
                   "famille": getattr(s, "famille", None), "empreinte": s.empreinte(), "essai_egalite": None, "etat": "notée"}
+        seqs = cache[(int(s.couche), pl.largeur_de(s))]
         try:
+            # ce qui est propre au couple : essai d'égalité de Mahalanobis v2, plancher, notation → « échec » du couple seul
             sonde, essai = preparer_sonde(s, config["mahalanobis_calcul"], _graine(graines, f"mahalanobis-egalite/{s.nom}"))
             entree["essai_egalite"] = essai
-            largeur = pl.largeur_de(sonde)
-            seqs = sequences(int(sonde.couche), largeur)
             plancher = pl.plancher_pour_sonde(sonde, jetons[s.nom], int(config["n_plancher"]), _graine(graines, f"plancher/{s.nom}"))
             tableaux[f"scores_{k}"] = pl.noter_actions(sonde, seqs)
             tableaux[f"plancher_{k}"] = pl.scores_plancher(plancher, seqs)
             entree["plancher"] = {"n": len(plancher), "empreintes_deux_premieres": [p.empreinte() for p in plancher[:2]]}
+        except CleAbsente:
+            raise
         except GardeArret as e:
-            if isinstance(e, CleAbsente):
-                raise                                    # une activation absente arrête tout : jamais un couple en échec
             entree["etat"], entree["echec"] = "échec", str(e)
         index["sondes"].append(entree)
     return {"tableaux": tableaux, "index": index}
