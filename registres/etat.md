@@ -393,3 +393,9 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - **Fait** : validation du nul v9 finie (code 0, 09:46:43Z), sortie jamais ouverte sur `donnees/validation-nul-v9-v1` (`0705eb0e`) ; fille clés 1 arrêtée à l'étape 0, faute de clés.
 - **En vol** : contre-lecture de la chaîne de la course (ancienne session ; rendu attendu sur `prep/contre-lecture-t06-course-v2-b`).
 - **Instances** : 58936096, 58936099, 58936100 (jamais touchées) ; 59288960 (arrêtée, stockage facturé ; destruction sur le mot de Lazar).
+
+## 8 novembre, 09:54 UTC — reprise comme session mère sur Claude Code, environnement Default (R-1775)
+- **Mère** : `session_016QhUrrLeN21G7Z9KZobE42` (environnement Default ; VAST_API_KEY présente, clés des lecteurs absentes de ce conteneur). L'ancienne (`session_016QhUrsAjLE7txxBLhnMnyM`) n'écrit plus sur `main` ; elle pousse encore la contre-lecture de la course (`prep/contre-lecture-t06-course-v2-b`) et un compte rendu (`rapports/garde-ancienne-mere-v1`), puis s'arrête.
+- **Étiqueteur** : la fille clés 2 (`session_016QhUrreBYxC9arQKTBEHAb`, environnement Default) a les sept clés ; mise en place, restauration et contrôles en cours ; **elle attend le mot écrit de Lazar dans sa session** (« go lecture principale de l'étiqueteur sous GO-2026-11-07-07 et GO-2026-11-08-03 ») ; rendus sur `rapports/fille-cles-2-v1`. Analyse et verdict : chez la mère, par des lecteurs neufs (racine restaurée ici).
+- **Instances** (09:48:16Z) : aucune en marche ; 58936096, 58936099, 58936100 (R8) arrêtées, jamais touchées ; 59288960 arrêtée, stockage facturé, destruction sur le mot de Lazar.
+- **Ensuite** (brief v2, § 3) : verdict de la validation du nul v9 par un lecteur neuf ; rendus de l'ancienne session ; couples de la contre-lecture, E3-6, E3-3, scellements, course de T0.6.
