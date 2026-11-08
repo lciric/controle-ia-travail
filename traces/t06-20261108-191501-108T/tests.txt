@@ -1,0 +1,136 @@
+........................................................................ [  3%]
+........................................................................ [  7%]
+........................................................................ [ 10%]
+..............................F..F...................................... [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 28%]
+........................................................................ [ 32%]
+........................................................................ [ 35%]
+........................................................................ [ 39%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 53%]
+........................................................................ [ 57%]
+........................................................................ [ 60%]
+........................................................................ [ 64%]
+..F..................................................................... [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 78%]
+........................................................................ [ 82%]
+........................................................................ [ 85%]
+........................................................................ [ 89%]
+........................................................................ [ 92%]
+........................................................................ [ 96%]
+.......................................................................  [100%]
+=================================== FAILURES ===================================
+____________ test_inventaire_tout_constructeur_d_invite_est_examine ____________
+
+    def test_inventaire_tout_constructeur_d_invite_est_examine():
+        trouves = _constructeurs()
+        neufs = sorted(set(trouves) - set(REGISTRE))
+>       assert not neufs, ("constructeur(s) d'invite non examiné(s) : vérifier qu'il(s) ne voient pas `cibles`, les "
+                           f"couvrir par un collecteur ou les exempter avec raison : {[(k, sorted(trouves[k])) for k in neufs]}")
+E       AssertionError: constructeur(s) d'invite non examiné(s) : vérifier qu'il(s) ne voient pas `cibles`, les couvrir par un collecteur ou les exempter avec raison : [('controle_ia/t06/lanceur_v6.py::_executer_apres_manifeste', ['conversation_de_controle', 'ouverture']), ('controle_ia/t06/lanceur_v6.py::executer', ['charger_invite'])]
+E       assert not ['controle_ia/t06/lanceur_v6.py::_executer_apres_manifeste', 'controle_ia/t06/lanceur_v6.py::executer']
+
+tests/test_cibles_invisibles_v2.py:470: AssertionError
+_____________ test_aucun_module_hors_mesures_ne_lit_la_cle_cibles ______________
+
+    def test_aucun_module_hors_mesures_ne_lit_la_cle_cibles():
+        lecteurs = {}
+        for rel, f in _modules():
+            for nom, n in _fonctions(f):
+                corps = [m for m in ast.walk(n) if isinstance(m, ast.Constant) and m.value in CLES_CACHEES]
+                if corps:
+                    lecteurs.setdefault(rel, set()).add(nom)
+        hors = {rel: sorted(noms - LECTEURS_DE_CIBLES_ADMIS.get(rel, set())) for rel, noms in lecteurs.items()}
+        hors = {rel: noms for rel, noms in hors.items() if noms}
+>       assert not hors, f"fonction(s) hors mesures et extraction qui lisent la référence cachée : {hors}"
+E       AssertionError: fonction(s) hors mesures et extraction qui lisent la référence cachée : {'controle_ia/t06/lanceur_v6.py': ['_executer_apres_manifeste']}
+E       assert not {'controle_ia/t06/lanceur_v6.py': ['_executer_apres_manifeste']}
+
+tests/test_cibles_invisibles_v2.py:506: AssertionError
+_________ test_aucune_invite_ni_aucun_resultat_ne_porte_les_cibles[v1] _________
+
+depot = PosixPath('/tmp/pytest-of-root/pytest-0/test_aucune_invite_ni_aucun_re0')
+capfd = <_pytest.capture.CaptureFixture object at 0x71b76872ced0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71b7683968d0>
+version = 'v1'
+module = <module 'controle_ia.t06.lanceur' from '/root/amorce-depot/src/controle_ia/t06/lanceur.py'>
+config_jouet = 'config-t06-jouet-v2.json'
+
+    @pytest.mark.parametrize("version, module, config_jouet", VERSIONS, ids=[v[0] for v in VERSIONS])
+    def test_aucune_invite_ni_aucun_resultat_ne_porte_les_cibles(depot, capfd, monkeypatch, version, module, config_jouet):
+>       r = _collecter(depot, capfd, monkeypatch, module, config_jouet, fuite=False)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/root/amorce-depot/tests/test_t06_cibles_invisibles_v2.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/root/amorce-depot/tests/test_t06_cibles_invisibles_v2.py:114: in _collecter
+    assert module._main(["--config", "config.json", "--run-id", "20261107-120000-t06-jouet"]) == 0
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/amorce-depot/src/controle_ia/t06/lanceur.py:599: in _main
+    resume = executer(config, Path("."), a.run_id, a.prereg)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/amorce-depot/src/controle_ia/t06/lanceur.py:455: in executer
+    return _executer_apres_manifeste(config, racine, run_id, chemin_m, manifeste, taches, consignes, guide, etat, debut)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/amorce-depot/src/controle_ia/t06/lanceur.py:566: in _executer_apres_manifeste
+    croise = test_croise(lignes, activations, config, g)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/amorce-depot/src/controle_ia/t06/lanceur.py:355: in test_croise
+    jeux["sens1"] = lire_sens(actions, "sens1", "saboteur", s100, "", sonde["famille"], sonde["couche"], sonde["agregation"], False)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/amorce-depot/src/controle_ia/t06/lanceur.py:335: in lire_sens
+    r = {"controle": jeu("controle", pos_app), "decisif": jeu("decisif", pos_lu),
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+/root/amorce-depot/src/controle_ia/t06/lanceur.py:333: in jeu
+    return f(sondes, planchers, actions, pos, "honnete", plis, n_t, graine_entiere(g[f"{prefixe}aire/{sens}/{nom}"]),
+/root/amorce-depot/src/controle_ia/t06/test_croise.py:288: in jeu_croise
+    r.update(intervalle_aire_moyenne(scores, pp, n_tirages, graine_intervalle, niveau))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+scores = {0: array([2.19969926e-05, 2.80732938e-05, 2.30451791e-05, 2.93080786e-05,
+       2.43689785e-05, 1.61934815e-05, 2.54500754e-05, 1.74437229e-05]), 1: array([3.70169185e-05, 3.54400717e-05, 3.81094784e-05, 3.66697305e-05])}
+pp = {0: {'actions': [{'tache': 'e3', 'condition': 'honnete', 'pas': 0, 'jetons_notes': 8, ...}, {'tache': 'e3', 'condition... 'pas': 1, 'jetons_notes': 8, ...}], 'y': array([0, 0, 1, 1]), 'taches': array(['e1', 'e1', 'e1', 'e1'], dtype='<U2')}}
+n_tirages = 50, graine = 850899951785352524, niveau = 0.95
+
+    def intervalle_aire_moyenne(scores: dict[int, np.ndarray], pp: dict[int, dict], n_tirages: int, graine: int,
+                                niveau: float = 0.95) -> dict:
+        rng = np.random.default_rng(int(graine))
+        membres = {}
+        for k in (0, 1):
+            u = np.unique(pp[k]["taches"])
+            if u.size < 2:
+>               raise GardeArret(f"pli {k} : au moins deux tâches pour un rééchantillonnage")
+E               controle_ia.gardes.GardeArret: pli 1 : au moins deux tâches pour un rééchantillonnage
+
+/root/amorce-depot/src/controle_ia/t06/test_croise.py:171: GardeArret
+----------------------------- Captured stderr call -----------------------------
+PROGRES 2026-11-08T18:57:56Z etape=format verifie=True
+PROGRES 2026-11-08T18:57:58Z etape=distillation-donnees lot=1/1
+PROGRES 2026-11-08T18:57:58Z etape=donnees-distillation saboteur_exemples=2 temoin_exemples=2
+PROGRES 2026-11-08T18:57:59Z etape=distillation adaptateur=saboteur epoque=1 perte=4.8938
+PROGRES 2026-11-08T18:57:59Z etape=adaptateur adaptateur=saboteur empreinte=b17ba0c69168a77be9913554bf09e1d5957152f4adadc817e41a60f42e94474a perte_finale=4.8938
+PROGRES 2026-11-08T18:58:00Z etape=distillation adaptateur=temoin epoque=1 perte=4.8932
+PROGRES 2026-11-08T18:58:00Z etape=adaptateur adaptateur=temoin empreinte=50493115d430e925527e73dfadc91f8c9a9033796fa05e1dc60aff15e25b821f perte_finale=4.8932
+PROGRES 2026-11-08T18:58:00Z etape=identite adaptateurs=2
+PROGRES 2026-11-08T18:58:01Z etape=episodes phase=dose0 lot=1/4 actions=8
+PROGRES 2026-11-08T18:58:02Z etape=episodes phase=dose0 lot=2/4 actions=16
+PROGRES 2026-11-08T18:58:04Z etape=episodes phase=dose0 lot=3/4 actions=24
+PROGRES 2026-11-08T18:58:05Z etape=episodes phase=dose0 lot=4/4 actions=32
+PROGRES 2026-11-08T18:58:06Z etape=episodes phase=S50 lot=1/1 actions=40
+PROGRES 2026-11-08T18:58:07Z etape=episodes phase=S100 lot=1/1 actions=48
+PROGRES 2026-11-08T18:58:08Z etape=episodes phase=T100 lot=1/1 actions=56
+PROGRES 2026-11-08T18:58:08Z etape=episodes-ecrits episodes=28 actions=56
+PROGRES 2026-11-08T18:58:08Z etape=lecture-cout ligne_A=A1b
+=========================== short test summary info ============================
+FAILED tests/test_cibles_invisibles_v2.py::test_inventaire_tout_constructeur_d_invite_est_examine
+FAILED tests/test_cibles_invisibles_v2.py::test_aucun_module_hors_mesures_ne_lit_la_cle_cibles
+FAILED tests/test_t06_cibles_invisibles_v2.py::test_aucune_invite_ni_aucun_resultat_ne_porte_les_cibles[v1]
+3 failed, 2012 passed in 3178.48s (0:52:58)
