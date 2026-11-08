@@ -376,3 +376,6 @@ Six instances arrêtées par leur identifiant, gardées avec tous leurs fichiers
 - **Prochaine action** : lecture principale de l'épreuve de l'étiqueteur (ordre scellé, section 4.2), après restauration de l'état depuis `prep/etiqueteur-phase1-reprise-v1` (`f8b5ab72`).
 - En vol : E3 bis (instance 59671807, fille 6, rapports sur `rapports/fille-6-e3bis-v1`) ; fille 10 (bras B v4 à 0,3 stricte, addendum v3, candidat 12) ; organisme v65 (développeur neuf, consigne `2dc207e7…`).
 - GO du jour : GO-2026-11-08-01 (bras B, 0,3 stricte), 02 (organisme, 40 + 5 USD), 03 (factures de l'essai de format levées).
+
+## 8 novembre, 07:15 UTC — arrêt de la session mère (R-1764)
+- Passation finale : `registres/passations/2026-11-08-0715.md` (complète celle de 06:14 et le brief). Prochaine action inchangée : lecture principale de l'étiqueteur. Ensuite : contre-lecture de la chaîne de la course (consigne prête, `dcb21799…`), E3 bis, organisme v65 (travail inachevé `c2c39794`).
