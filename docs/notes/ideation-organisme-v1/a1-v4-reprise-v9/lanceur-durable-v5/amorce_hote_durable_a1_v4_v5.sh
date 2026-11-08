@@ -26,7 +26,7 @@ done
 [ "$GO_ID" = "GO-2026-11-02-22" ] || { echo "AMORCE A1-V4 V5 : GO des appels $GO_ID au lieu de GO-2026-11-02-22"; exit 2; }
 case "$GO_MACHINE" in GO-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;; *) echo "AMORCE A1-V4 V5 : GO de la machine $GO_MACHINE illisible (GO-AAAA-MM-JJ-NN)"; exit 2;; esac
 [ "$GO_MACHINE" != "$GO_ID" ] || { echo "AMORCE A1-V4 V5 : GO de la machine égal à la ligne des appels : rien ne part"; exit 2; }
-case "$NOM_TEXTE" in orchestrator/prereg/preenregistrement-attaque-goodhart-v4-v[1-9]*.md) ;; *) echo "AMORCE A1-V4 V5 : NOM_TEXTE $NOM_TEXTE hors de orchestrator/prereg/preenregistrement-attaque-goodhart-v4-v<N>.md"; exit 2;; esac
+case "$NOM_TEXTE" in orchestrator/prereg/preenregistrement-attaque-goodhart-v[1-9]*-v[1-9]*.md) ;; *) echo "AMORCE A1-V4 V5 : NOM_TEXTE $NOM_TEXTE hors de orchestrator/prereg/preenregistrement-attaque-goodhart-v<V>-v<N>.md"; exit 2;; esac
 command -v curl >/dev/null 2>&1 || { echo "AMORCE A1-V4 V5 : curl absent : rien ne part (la minuterie passe par python3)"; exit 2; }
 case "$ECHEANCE_UTC_S" in ''|*[!0-9]*) echo "AMORCE A1-V4 V5 : ECHEANCE_UTC_S non entière : rien ne part"; exit 2;; esac
 MEMINFO="${A1V4_MEMINFO:-/proc/meminfo}"; case "$MEMINFO" in /*) ;; *) MEMINFO=/proc/meminfo;; esac
@@ -45,7 +45,7 @@ version() { "$1" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/n
 complete() { "$1" --version 2>&1 | head -1; }
 echo "AMORCE A1-V4 V5 : interpréteurs avant (C1) : $PY_IMAGE $(complete "$PY_IMAGE") ; $PY_CONF $(complete "$PY_CONF")"
 [ "$(version "$PY_IMAGE")" = "3.13" ] || { echo "AMORCE A1-V4 V5 : $PY_IMAGE n'est pas Python 3.13 (C1) : rien ne part"; exit 2; }
-if [ "${SAUTER_INSTALLATION:-0}" != "1" ] && [ ! -e "$RACINE_AMORCE/a1-v4-v9/ETAT" ]; then
+if [ "${SAUTER_INSTALLATION:-0}" != "1" ] && [ ! -e "$RACINE_AMORCE/a1-v4-reprise-v9-v1/ETAT" ]; then
     export DEBIAN_FRONTEND=noninteractive
     t0=$(date +%s)
     command -v git >/dev/null || timeout -k 5 300 sh -c 'apt-get update -qq && apt-get install -y -qq git ca-certificates >/dev/null' \

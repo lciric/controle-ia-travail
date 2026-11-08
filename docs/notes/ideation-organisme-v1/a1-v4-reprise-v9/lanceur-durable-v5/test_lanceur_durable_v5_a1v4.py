@@ -106,7 +106,7 @@ def texte_jouet(racine_publique: Path, conf_chemin: Path, version=1, nom=None, m
     lignes = {"mode": "course", "grille": "24 cartes par monde, 24 unités par case", "mondes": c["mondes_texte"], "fournisseurs": "argon",
               "fournisseur_argon": "type=commande_externe, port=8805, modele=gemini-4-argon, fils=1, taux_usd=0.062, secondes=7.6-40",
               "essais_avant_repli": "3", "relais_perdu_h": "aucun", "plafond_usd": "200", "duree_max_h": "72",
-              "decision_ecart": "décisions de Lazar", "configuration_sha256": "f" * 64, "go": "GO-2026-11-02-22"}
+              "decision_ecart": "décisions de Lazar", "configuration_sha256": "f" * 64, "go": "GO-2026-11-02-22", "go_machine": GO_M}
     lignes.update(plan)
     gelees = dict(c["fichiers_geles_publics"])
     gelees.update(plan.pop("gelees", {}) if "gelees" in plan else {})
@@ -155,7 +155,7 @@ def test_constantes_de_la_v5_et_noms_neufs():
     assert v5.NOM_GO_MACHINE_ENV == "GO_ID_MACHINE" and v5.NOM_CLE_ARGON_PILOTE == "GEMINI_API_KEY_2"
     for b in (v5.BRANCHE_DONNEES, v5.BRANCHE_INTERROMPUE, v5.BRANCHE_REFUS, v5.BRANCHE_VIE):
         assert "a1v4" in b and b not in (h.BRANCHE_DONNEES, h.BRANCHE_INTERROMPUE, h.BRANCHE_REFUS, v4.BRANCHE_VIE)
-    assert v5.MODULES[-1] == "hote_durable_a1_v4_v5.py" and v5.AMORCE.endswith("_v5.sh") and v5.TRAVAIL == "a1-v4-v9"
+    assert v5.MODULES[-1] == "hote_durable_a1_v4_v5.py" and v5.AMORCE.endswith("_v5.sh") and v5.TRAVAIL == "a1-v4-reprise-v9-v1"
     src = (ICI / "hote_durable_a1_v4_v5.py").read_text(encoding="utf-8")
     assert "GO-2026-11-05-03" not in src and "GO-2026-11-08-12" not in src  # aucun identifiant de machine en dur
     assert v5.MOTS_PERIMETRE_MACHINE == ("machine", "a1-v4")
@@ -168,6 +168,13 @@ def test_nom_du_texte_parametre_et_artefacts():
                     "orchestrator/autre/preenregistrement-attaque-goodhart-v4-v1.md", "orchestrator/prereg/preenregistrement-attaque-goodhart-v4-v0.md"):
         with pytest.raises(h.Refus, match="nom du texte"):
             v5.version_du_texte(Path(mauvais))
+    # préfixe configurable (un code d'attaque v5 pourrait exiger `…-v5-v<N>.md`) ; préfixe illisible refusé
+    assert v5.version_du_texte(Path("orchestrator/prereg/preenregistrement-attaque-goodhart-v5-v2.md"), "preenregistrement-attaque-goodhart-v5-v") == 2
+    assert v5.nom_texte(1, "preenregistrement-attaque-goodhart-v5-v").endswith("-v5-v1.md")
+    with pytest.raises(h.Refus, match="nom du texte"):
+        v5.version_du_texte(Path("orchestrator/prereg/preenregistrement-attaque-goodhart-v4-v1.md"), "preenregistrement-attaque-goodhart-v5-v")
+    with pytest.raises(h.Refus, match="préfixe"):
+        v5.version_du_texte(Path("orchestrator/prereg/x-v1.md"), "x-v")
 
 
 def test_go_des_appels_exact_200_sain_et_registre_reel(tmp_path):
@@ -257,7 +264,7 @@ def test_configuration_des_mondes_sain(tmp_path, variante):
     p = configuration(tmp_path / "c", None, variante)
     c = v5.lire_configuration_mondes(p)
     assert c["variante"] == variante and c["mondes"] == v5.VARIANTES_MONDES[variante] and c["sha256"] == sha(p.read_bytes())
-    assert c["mondes_texte"] == {"i": "W1 et W2", "ii": "W2 et W2 gradué"}[variante] and c["etiquette"] == "a1-v4-v9"
+    assert c["mondes_texte"] == {"i": "W1 et W2", "ii": "W2 et W2g"}[variante] and c["etiquette"] == "a1-v4-v9"
 
 
 @pytest.mark.parametrize("kw, motif", [
@@ -269,6 +276,8 @@ def test_configuration_des_mondes_sain(tmp_path, variante):
     ({"go_course": "GO-2026-11-04-06"}, "go_course"),
     ({"plafond_course_usd": 400}, "go_course"),
     ({"commit_code_gele": "516feca"}, "commit_code_gele"),
+    ({"prefixe_texte": "preenregistrement-attaque-goodhart-v4-brouillon"}, "prefixe_texte"),
+    ({"prefixe_texte": None}, "clés attendues"),
     ({"fichiers_geles_publics": {}}, "fichiers_geles_publics"),
     ({"fichiers_geles_publics": {"pole/nul_v9.py": "abc"}}, "fichiers_geles_publics"),
     ({"fichiers_geles_publics": {"pole/nul_v9.py": "a" * 64}}, "lanceur gelé"),
@@ -312,15 +321,18 @@ def test_configurations_livrees_lisibles_et_egales_au_depot_public(tmp_path):
         assert {"pole/attaque_goodhart_v4.py", "pole/nul_v9.py", "demonstrations/banc_tricheurs_v9.py", LANCEUR_GELE} <= set(c["fichiers_geles_publics"])
         if (pub / "orchestrator" / "pole" / "nul_v9.py").is_file():
             assert v5.verifier_fichiers_geles(pub, c) == 11
-    assert json.loads((ICI / "configuration-mondes-variante-ii-v1.json").read_text())["mondes_texte"] == "W2 et W2 gradué"
+    assert json.loads((ICI / "configuration-mondes-variante-ii-v1.json").read_text())["mondes_texte"] == "W2 et W2g"
 
 
 def test_texte_sain(tmp_path):
     d = depot_public(tmp_path, tmp_path / "comp.json", git_aussi=False)
     conf = v5.lire_configuration_mondes(d["conf"])
     t = v5.verifier_texte(d["texte"], d["sha_texte"], conf)
-    assert (t["version"], t["mondes"], t["plafond_usd"], t["go"]) == (1, "W2 et W2 gradué", 200.0, "GO-2026-11-02-22")
+    assert (t["version"], t["mondes"], t["plafond_usd"], t["go"], t["go_machine"]) == (1, "W2 et W2g", 200.0, "GO-2026-11-02-22", GO_M)
     assert t["nom"] == v5.nom_texte(1) and t["lignes_gelees"] == 11 and t["sha256"] == d["sha_texte"]
+    assert v5.verifier_texte(d["texte"], d["sha_texte"], conf, GO_M)["go_machine"] == GO_M  # ligne go_machine égale à la ligne vérifiée
+    with pytest.raises(h.Refus, match="go_machine = 'GO-2026-11-08-12', la ligne vérifiée"):
+        v5.verifier_texte(d["texte"], d["sha_texte"], conf, "GO-2026-11-08-11")
     assert v5.verifier_fichiers_geles(d["pub"], conf) == 11
 
 
@@ -334,6 +346,8 @@ def test_texte_sain(tmp_path):
     ({"plafond_usd": "deux cents"}, False, "plafond_usd"),
     ({"go": "GO-2026-11-04-06"}, False, "go = 'GO-2026-11-04-06'"),
     ({"mode": "essai"}, False, "mode = 'essai'"),
+    ({"go_machine": "GO-2026-11-02-22"}, False, "go_machine = 'GO-2026-11-02-22' illisible ou égal"),
+    ({"nom": "orchestrator/prereg/preenregistrement-attaque-goodhart-v5-v1.md"}, False, "nom du texte"),
     ({"fournisseurs": "argon, kimi"}, False, "fournisseurs"),
     ({"gelees": {"pole/nul_v9.py": "0" * 64}}, False, "autre empreinte"),
     ({"gelees": {"pole/nul_v9.py": None}}, False, "absents du bloc"),
@@ -459,10 +473,10 @@ def test_louer_cas_sain_etat_ligne_et_aucun_secret(tmp_path):
     assert e["identifiant"] == 4242 and e["etiquette"] == "a1-v4-v9" and e["borne_signe_de_vie_utc"] == "2026-11-08T18:30:00Z"
     assert e["echeance_finale_utc"] == dt.datetime.fromtimestamp(ech, dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     assert (e["go_machine"], e["go_course"], e["plafond_machine_usd"], e["variante_mondes"]) == (GO_M, "GO-2026-11-02-22", 35.0, "ii")
-    assert e["texte"] == v5.nom_texte(1) and e["mondes"] == ["W2", "W2 gradué"]
+    assert e["texte"] == v5.nom_texte(1) and e["mondes"] == ["W2", "W2g"]
     j = Path(a.journal_local).read_text()
     assert "LIGNE POUR registres/etat.md" in j and "garde de dépense (1/2)" in j and "garde de dépense (2/2)" in j
-    assert "plafond lu 35 USD" in j and "11 fichiers gelés publics égaux" in j and "W2 et W2 gradué" in j
+    assert "plafond lu 35 USD" in j and "11 fichiers gelés publics égaux" in j and "W2 et W2g" in j
     args_vastai = (dv / "arguments").read_text()
     assert "CLE_ARGON=" in args_vastai and "GEMINI_API_KEY_2" not in args_vastai and "GO_MACHINE=GO-2026-11-08-12" in args_vastai
     for s in (CLE, JETON, CLE_COMPTE):
@@ -510,6 +524,7 @@ def test_louer_artefacts_rien_cree(tmp_path, modif, motif):
     ({}, {"mondes": "W1 et W2"}, "mondes = 'W1 et W2'"),
     ({}, {"marqueur": True}, "marqueur"),
     ({}, {"nom": "orchestrator/prereg/preenregistrement-attaque-goodhart-v4-brouillon3.md"}, "nom du texte"),
+    ({}, {"go_machine": "GO-2026-11-08-11"}, "go_machine = 'GO-2026-11-08-11', la ligne vérifiée"),
 ])
 def test_louer_configuration_et_texte_artefacts(tmp_path, conf_modif, texte_modif, motif):
     d = depot_public(tmp_path, tmp_path / "comp.json", git_aussi=False, conf_modif=conf_modif, texte_modif=texte_modif)
@@ -759,7 +774,7 @@ def monde(tmp_path):
         (tmp_path / "a1v4-minuterie.txt").write_text(f"{time.time() - 30:.1f} 1800000000\n")
         for nom in ("a1v4-temps.txt", "amorce-a1v4-v5.log", "a1v4-memoire.txt"):
             (tmp_path / nom).write_text(f"{nom} : journal du démarrage (jouet)\n")
-        r = h.Reglages(travail=tmp_path / "a1-v4-v9", clone_prive=clone, clone_public=tmp_path / "pub-clone", depot_public=str(d["pub"]),
+        r = h.Reglages(travail=tmp_path / v5.TRAVAIL, clone_prive=clone, clone_public=tmp_path / "pub-clone", depot_public=str(d["pub"]),
                        racine_sources=tmp_path / "sources", empreintes=empreintes, commit_code_gele="0" * 40, python_relais=PY_MACHINE,
                        python_course=PY_MACHINE, port=t1.port_libre(), periode_s=0.1, duree_max_s=600, attente_relais_s=10, essais_poussee=2,
                        attente_poussee_s=0, jouet=True, vast_jouet=tmp_path / "vast.json", aujourd_hui=JOUR)
@@ -777,7 +792,7 @@ def gestes(r):
 
 
 def journal(f, b):
-    return f[f"{b}/journal-hote-a1-v4-v9-v1.log"]
+    return f[f"{b}/{v5.JOURNAL_HOTE}"]
 
 
 def test_machine_cas_sain_lanceur_v4_texte_v4_v1_signe_de_vie_et_destruction(monde, tmp_path):
@@ -787,14 +802,15 @@ def test_machine_cas_sain_lanceur_v4_texte_v4_v1_signe_de_vie_et_destruction(mon
     f = t1.branche(nu, b)
     j = journal(f, b)
     for attendu in ("hote-durable-a1-v4-v5 ; machine GO-2026-11-08-12 ; appels GO-2026-11-02-22", '"plafond_usd": 35.0', '"plafond_usd": 200.0',
-                    "garde de dépense (machine) : coût au plus", "variante (ii) ['W2', 'W2 gradué']", "aucun doublon",
+                    "garde de dépense (machine) : coût au plus", "variante (ii) ['W2', 'W2g']", "aucun doublon",
                     f"signe de vie poussé : {v5.BRANCHE_VIE}", "pièces gelées : 4 empreintes égales", "11 fichiers gelés publics égaux",
-                    f"texte {v5.nom_texte(1)} {d['sha_texte']} = compagnon = SHA_TEXTE ; mondes « W2 et W2 gradué »",
+                    f"texte {v5.nom_texte(1)} {d['sha_texte']} = compagnon = SHA_TEXTE ; mondes « W2 et W2g »",
                     "--verifier-seulement : code 0", "course lancée : PID", "fin du lanceur : code 0", "inchangé", "nature de la fin : fin_du_lanceur"):
         assert attendu in j, attendu
     assert f[f"{b}/code-sortie-lanceur.txt"].strip() == "0" and f"{b}/demarrage/amorce-a1v4-v5.log" in f
     assert f"{b}/sortie-attaque-goodhart-v4/manifeste.json" in f and f"{b}/configuration-mondes/configuration-mondes-variante-ii-v1.json" in f
-    for ligne in f[f"{b}/EMPREINTES-sortie-a1-v4-v9-v1.txt"].splitlines():
+    assert f"{b}/garde-a1-v4.jsonl" in f and f"{b}/course-stdout-a1-v4.log" in f and f"{b}/relais-argon-journal-a1-v4.jsonl" in f
+    for ligne in f[f"{b}/{v5.LISTE_EMPREINTES}"].splitlines():
         e, nom = ligne.split("  ", 1)
         assert sha(f[f"{b}/{nom}"].encode()) == e
     parent = t1.run("git", "-C", str(nu), "rev-parse", f"refs/heads/{b}^")
@@ -812,7 +828,7 @@ def test_machine_cmd_course_lanceur_v4_texte_et_go(monde):
     cmd = m.cmd_course(True)
     assert cmd[3:7] == [PY_MACHINE, "-I", "-B", "demonstrations/attaque_goodhart_v4.py"] and cmd[-1] == "--verifier-seulement"
     assert cmd[cmd.index("--preenregistrement") + 1] == "prereg/preenregistrement-attaque-goodhart-v4-v1.md"
-    assert cmd[cmd.index("--go") + 1] == "GO-2026-11-02-22" and cmd[7].endswith("a1-v4-v9/sortie-attaque-goodhart-v4")
+    assert cmd[cmd.index("--go") + 1] == "GO-2026-11-02-22" and cmd[7].endswith("a1-v4-reprise-v9-v1/sortie-attaque-goodhart-v4")
     assert "--verifier-seulement" not in m.cmd_course(False)
 
 
@@ -837,6 +853,7 @@ def casser_nul_v9(pub):
     ({"echeance_dans_s": 3600 + 30}, {}, "échéance absolue trop proche"),
     ({"conf_modif": {"variante": "v"}}, {}, "variante de mondes inconnue"),
     ({"texte_modif": {"mondes": "W1 et W2"}}, {}, "mondes = 'W1 et W2'"),
+    ({"texte_modif": {"go_machine": "GO-2026-11-05-03"}}, {}, "go_machine = 'GO-2026-11-05-03', la ligne vérifiée"),
 ])
 def test_machine_refus_rien_ne_part(monde, tmp_path, option, env_modif, motif):
     r, env, nu, d = monde(**option)
