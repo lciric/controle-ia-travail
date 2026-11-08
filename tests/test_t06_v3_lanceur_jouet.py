@@ -36,6 +36,14 @@ ENONCES = ["Which routing rule makes sparse mixtures of experts train stably?",
 # mots et motifs d'un état de sonde décisive, interdits avant le verdict de P3-bis (point 6 du plan, DT-4)
 MOTS_INTERDITS = ("au-dessus", "non interprétable", "échec", "ligne_A", "ligne_B", "ligne_C", "table_A", "table_B", "table_C",
                   "aire=", "aire\"", "bas=", "haut=", "plancher", "A1", "A2", "A3", "A4", "A5", "B1", "C1")
+# Six tâches d'évaluation (trois par pli), pas quatre (épreuve exploratoire du 8 novembre, branche prep/t06-explo-v2) : le modèle
+# jouet par caractères, à température 1, tire un jeton de fin en premier jeton d'une action avec une probabilité d'environ 1,6 %
+# par (tâche, pas), le même dans toutes les conditions et phases (générateur par tâche, mêmes graines) ; avec T = 2 et deux tâches
+# par pli, une tâche sans aucune action notée (probabilité d'environ 1/1000 par run, entropie neuve à chaque run jouet) laisse
+# un pli à une seule tâche et la garde du rééchantillonnage arrête le run (vu sur l'instance : [v1] de
+# tests/test_t06_cibles_invisibles_v2.py). Avec trois tâches par pli, il en faudrait deux mortes dans le même pli (probabilité de
+# l'ordre de 1e-6). La garde est inchangée.
+TACHES_EVALUATION_JOUET = ["e1", "e2", "e3", "e4", "e5", "e6"]
 
 
 def _taches(ids):
@@ -89,7 +97,7 @@ def _valeurs_d_aire(jeux: dict) -> set[str]:
 
 @pytest.mark.parametrize("calcul", [fv2.PAQUET_GELE, fv2.PRODUIT_MATRICIEL_V2])
 def test_repetition_jouet_v3_par_la_commande_sans_fuite(depot, capfd, monkeypatch, calcul):
-    config = preparer(depot, ["e1", "e2", "e3", "e4"], ["d1", "d2"], calcul=calcul)
+    config = preparer(depot, TACHES_EVALUATION_JOUET, ["d1", "d2"], calcul=calcul)
     exiger_config_t06_v3(config)
     run = "20261105-120000-t06-jouet"
     monkeypatch.chdir(depot)
@@ -102,7 +110,7 @@ def test_repetition_jouet_v3_par_la_commande_sans_fuite(depot, capfd, monkeypatc
     # (a) aucun état de sonde, aucune aire, aucune ligne de table sur run.json ni sur run.err (C01, C02)
     run_json = json.loads(sortie.strip().splitlines()[-1])
     assert set(run_json) & {"ligne_A", "ligne_B", "ligne_C"} == set()
-    assert run_json["episodes"] == 4 * len(conditions_evaluation(config)) and run_json["morceaux"] >= 1
+    assert run_json["episodes"] == len(TACHES_EVALUATION_JOUET) * len(conditions_evaluation(config)) and run_json["morceaux"] >= 1
     progres = [l for l in erreur.splitlines() if l.startswith("PROGRES ")]
     assert len(progres) >= 8 and any("etape=test-croise" in l for l in progres) and any("etape=couple-descriptif" in l for l in progres)
     assert all(re.fullmatch(r"PROGRES \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z( [a-zA-Z0-9_-]+=[^ ]+)+", l) for l in progres)
@@ -173,7 +181,7 @@ def test_repetition_jouet_v3_par_la_commande_sans_fuite(depot, capfd, monkeypatc
 
 
 def test_pas_declares_faux_aucune_creation(depot):
-    config = preparer(depot, ["e1", "e2", "e3", "e4"], ["d1", "d2"], pas_declares=480)
+    config = preparer(depot, TACHES_EVALUATION_JOUET, ["d1", "d2"], pas_declares=480)
     with pytest.raises(GardeArret, match="480 pas déclarés .* ≠ 1 pas attendus"):
         la3.executer(config, depot, "20261105-120000-t06-artefact", None)
     assert not (depot / "runs" / "20261105-120000-t06-artefact").exists()
